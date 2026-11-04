@@ -6,8 +6,11 @@ the victim believes it has lost them, and wakes from it), so DSCLOG's PROBE_WORN
 routine's "or byte [si],1" after the damage (79707h), adds each party member's loss to BLAST_HP;
 once the fight is over (the game's fight flag down FIGHT_OVER seconds) the Loader gives the
 hit points back to each member still standing (Okay), no more than its most, says so in the
-dice log, and clears the field. A member Out Cold or dead keeps what it has: what took it down
-was real. A game loaded (the game's clock gone back) clears the field with nothing given.
+dice log, and clears the field. While a member has them still to come, a blow that would kill it
+knocks it out instead (PROBE_WORN at the damage routine's death test, 5860Bh: the blast's wounds
+are imagined; Disintegrate still kills); one Out Cold at the fight's end gets them back too and
+wakes, as the game wakes a creature (Okay, with hit points: 7C1F9h). One Dying or dead keeps
+what it has. A game loaded (the game's clock gone back) clears the field with nothing given.
 """
 
 import struct
@@ -40,18 +43,24 @@ def give_back(gd, tsr_hdr: int) -> List[str]:
         if len(rec) < game.CREATURE_SIZE or len(sheet) < game.SHEET_SIZE:
             continue
         who = gd.creature_name(member)
-        if rec[game.CREATURE_STATUS] != game.STATUS_OKAY:
+        status = rec[game.CREATURE_STATUS]
+        if status not in (game.STATUS_OKAY, game.OUT_COLD):
             out.append(f"{who}'s {lost} hit points lost to Psionic Blast don't come back: "
-                       f"{who} is down, from real wounds")
+                       f"{who} is {game.STATUS_NAMES.get(status, 'down').lower()}")
             continue
         hp, = struct.unpack_from("<h", rec, 0)
+        hp = max(hp, 0)
         most, = struct.unpack_from("<h", sheet, game.SHEET_MAX_HP)
         now = min(most, hp + lost) if most > 0 else hp + lost
         if now <= hp:
             continue
-        gd.guest.write(table + member * game.CREATURE_SIZE, struct.pack("<h", now))
-        out.append(f"{who} shakes off Psionic Blast's imagined wounds as the fight ends: "
-                   f"+{now - hp} HP, now {now}/{most}")
+        at = table + member * game.CREATURE_SIZE
+        gd.guest.write(at, struct.pack("<h", now))
+        woke = status == game.OUT_COLD
+        if woke:
+            gd.guest.write(at + game.CREATURE_STATUS, bytes((game.STATUS_OKAY,)))
+        out.append(f"{who} {'wakes and ' if woke else ''}shakes off Psionic Blast's imagined wounds "
+                   f"as the fight ends: +{now - hp} HP, now {now}/{most}")
     return out
 
 

@@ -9,6 +9,16 @@ notes](PATCH-NOTES.md).
 ## Next pull request (not opened yet)
 
 **Fixed: the game's code**
+- **Psionic Blast knocks out, not kills:** while a party member has the blast's hit points still
+  to come back (`BLAST_HP`), a blow that would kill it (the damage routine's death test, damage
+  at hit points + 10, 5860Bh) knocks it out instead: `PROBE_WORN` takes the test's `cmp ax,dx`
+  (`gamepatch`'s `blast_knockout`; its return address 194Dh) and gives the flags of "greater",
+  so the routine's `jg` goes to Out Cold; Disintegrate (10000 and up) still kills. At the fight's
+  end one knocked out gets the hit points back and wakes (status 1, as the game wakes one,
+  7C1F9h); one Dying or dead gets none. As yuan-ti's v0.1.55 has it. Seen in DOSBox (Gerakis at
+  -9 HP with 40 kept: a 1-point Psychic Crush left him at 0, not dead, and the fight's end gave
+  the 40). Tests: `WornTests.test_blast_knocks_out`, `test_psiblast.py`. DSCLOG's image 64,640
+  bytes (+48).
 - **Scare's save** (from yuan-ti's v0.1.55, checked in DSUN.EXE): below 6th level only a priest
   whose race is elf (3) and half-elf (4) at once got the usual save ("cmp 3 / jne fail" at 79FEAh,
   then "cmp 4 / je save"), so no one did. `gamepatch`'s `scare_elves` makes the first test's

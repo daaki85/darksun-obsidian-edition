@@ -666,6 +666,26 @@ class WornTests(unittest.TestCase):
         self.item(6, 9)
         self.assertEqual(self.gladiator(0x01), (True, False))  # not a gladiator: no bonus, armour or not
 
+    def test_blast_knocks_out(self):
+        """The damage routine's death test (612E:194Bh, "cmp ax,dx" then jg): its own flags,
+        except for a party member (DI 0-3) with Psionic Blast's hit points still in BLAST_HP and
+        damage under 10000, whose flags say "greater" (knocked out, not killed)."""
+        mu, image = self.mu, load_image()
+        hdr = TSR * 16 + struct.unpack_from("<H", image, 20)[0]
+        def greater(di, ax, dx, kept):
+            mu.mem_write(hdr + 1814, struct.pack("<4h", 0, kept, 0, 0))
+            self.run_at(0x194B, edi=di, eax=ax, edx=dx, ebx=0x1234)
+            f = mu.reg_read(r.UC_X86_REG_EFLAGS)
+            zf, sf, of = bool(f & 0x40), bool(f & 0x80), bool(f & 0x800)
+            self.assertEqual((mu.reg_read(r.UC_X86_REG_AX), mu.reg_read(r.UC_X86_REG_DX), mu.reg_read(r.UC_X86_REG_BX)),
+                             (ax, dx, 0x1234))
+            return not zf and sf == of
+        self.assertFalse(greater(1, 20, 25, 0))   # (nothing kept: killed, as the game)
+        self.assertTrue(greater(1, 20, 25, 7))    # (kept: knocked out)
+        self.assertTrue(greater(1, 30, 25, 0))    # (not enough to kill: the game's own)
+        self.assertFalse(greater(1, 20, 10000, 7))  # (Disintegrate still kills)
+        self.assertFalse(greater(5, 20, 25, 7))   # (not a party member)
+
     def test_psionic_blast_kept(self):
         """Psionic Blast's "or byte [si],1" (80F5:0B67h): the OR done, and the loss ([BP-18h]) added
         to BLAST_HP (header +1814) for party member DI (0-3); a monster's (DI 4 up) not kept."""

@@ -318,7 +318,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** Items that raise or lower an **ability score** worked from the backpack as well as worn. Now only while worn. (Found by OpenDS and yuan-ti.)
 - **[Fixed]** The **gladiator**'s better AC (1 for every 5 levels) came with no armour on. Now only in armour, as Dark Sun has it. (Found by OpenDS and yuan-ti.)
 - **[Fixed]** **Scare** let no one below 6th level save: its save for elf and half-elf priests asked for both races at once. Now an elf or half-elf priest saves as usual. (Found by yuan-ti.)
-- **[Fixed]** **Psionic Blast**'s wounds are imagined (its victim believes it has lost most of its hit points), but the game took them for good. Now a party member still standing gets them back as the fight ends.
+- **[Fixed]** **Psionic Blast**'s wounds are imagined (its victim believes it has lost most of its hit points), but the game took them for good. Now a party member gets them back as the fight ends, and until then a blow that would kill them only knocks them out; they wake with the hit points back.
 - **[Fixed]** Thief skills no longer drop for holding a weapon. The game's equipment penalty looked at the hands, quiver and legs, and never at the armour worn.
 - **[Fixed]** **DELETE** in the character roster deleted the wrong character when the list was scrolled.
 - **[Fixed]** A character not yet played showed 0 in every thief skill.

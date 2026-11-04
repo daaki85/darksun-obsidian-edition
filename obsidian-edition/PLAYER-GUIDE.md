@@ -1636,8 +1636,9 @@ raises the best defence mode it knows and can pay for, by itself.
 | Thought Shield (defence) | telepathy | 1 | |
 
 Psionic Blast leaves a victim that fails its save at a fifth of its hit
-points; the wounds are imagined, so a party member still standing gets them
-back as the fight ends. Mind Bar gives 75% magic resistance to mind-affecting spells. Body Weaponry
+points; the wounds are imagined, so a party member gets them back as the fight
+ends, and until then a blow that would kill it only knocks it out (it wakes
+with them). Mind Bar gives 75% magic resistance to mind-affecting spells. Body Weaponry
 makes unarmed blows 2d4, and Animal Affinity at least 1d10: a thri-kreen's
 claws, not its bite. The Mind Bender, Kineticist and Titan Mind
 [kits](#kits) change some costs.

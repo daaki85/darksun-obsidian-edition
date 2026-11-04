@@ -4902,9 +4902,16 @@ nc_who  dw 0                            ; (the character the test was asked abou
 ;   (case 169) has taken a target that failed its save down to a fifth of its most hit points: it
 ;   does the OR, and adds the loss (the routine's [BP-18h]) to BLAST_HP for target DI if a party
 ;   member (0-3), for the Loader to give back as the fight ends (psiblast.py): the blast's wounds
-;   are imagined.
+;   are imagined;
+; - the damage routine's death test, "cmp ax,dx" (612E:194Bh, 5860Bh; the INT alone, its "jg"
+;   kept), AX the creature's hit points + 10, DX the damage, DI the thing: while a party member
+;   (0-3) has hit points of Psionic Blast's still to come back (BLAST_HP), a blow that would kill
+;   it (DX at AX or more) knocks it out instead (the flags of "greater": the jg goes to the Out
+;   Cold case), as the blast's wounds are imagined; Disintegrate's (DX 10000 and up) still kills.
 WORN_AC_RET equ 0x22C8                  ; (the AC routine's INT's return address)
 BLAST_RET   equ 0x0B69                  ; (Psionic Blast's)
+KO_RET      equ 0x194D                  ; (the death test's)
+KO_UNMADE   equ 10000                   ; (the damage routine's Disintegrate: status 8)
 FIRST_PACK  equ 14                      ; the first backpack slot
 probe_worn:
         sti
@@ -4912,6 +4919,8 @@ probe_worn:
         mov bp, sp
         cmp word [bp+2], WORN_AC_RET
         je .ac_bp
+        cmp word [bp+2], KO_RET
+        je .ko_bp
         cmp word [bp+2], BLAST_RET
         pop bp
         je .blast
@@ -4932,6 +4941,24 @@ probe_worn:
         pop ax
         pop bx
 .bout:  iret
+.ko_bp: pop bp
+        cmp di, 3
+        ja .ko_cmp
+        cmp dx, KO_UNMADE
+        jge .ko_cmp
+        push bx
+        mov bx, di
+        add bx, bx
+        cmp word [cs:bx + blast_hp], 0
+        pop bx
+        jle .ko_cmp
+        push ax
+        mov ax, 1
+        cmp ax, 0                       ; "greater": knocked out, not killed
+        pop ax
+        retf 2
+.ko_cmp: cmp ax, dx                     ; (the game's)
+        retf 2
 .ac_bp: pop bp
 .ac:    test word [es:bx+0x12], 0x40
         jz .out                         ; not a gladiator (ZF set)

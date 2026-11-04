@@ -277,6 +277,10 @@ PATCHES = (
     # a fifth of its most hit points: or byte [si],1 (DSCLOG does it, and keeps a party member's
     # loss for the Loader to give back as the fight ends: psiblast.py)
     Patch("psionic_blast", 0x79707, bytes.fromhex("800c01"), _interrupt(VEC_WORN, 3)),
+    # ... and the damage routine's death test (612E:18E0h: hit points + 10 against the damage):
+    # cmp ax,dx (DSCLOG does it, and a party member with Psionic Blast's hit points still to come
+    # back is knocked out, not killed: the jg after it kept)
+    Patch("blast_knockout", 0x5860B, bytes.fromhex("3bc2"), _interrupt(VEC_WORN, 2)),
     # the routine that lists a creature's weapons (the inventory screen, the Look box), straight
     # after drawing one: add sp,10h (DSCLOG does it, then adds that weapon's THAC0)
     Patch("weapon", 0x7276E, bytes.fromhex("83c410"), _interrupt(VEC_WEAPON, 3)),

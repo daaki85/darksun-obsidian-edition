@@ -294,6 +294,12 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   bit of the sheet's +45h (`game.NEW_KNOWN`: Erdlu Claw 20h), which a scratch write can set for a
   shot (the sheet from SHEETS_PTR and the creature's +4 index). Doc panels like
   `new-spells.png` are crops of `shot.sh`'s 320x200 picture scaled 2.09 (304x188 each).
+- **Testing Psionic Blast without a blaster** (2026-11-04): find DSCLOG's header in memory
+  (`b'DSCLOGva'`, 16-aligned; 0xC91B0 in that run), write a member's kept hit points at +1814
+  (a word per combatant 0-3) and the member's HP (creature record +0) to -9, so any blow would
+  kill by the game's rule (damage at HP + 10); pass turns until it's hit: it goes to 0 HP, not
+  dead, and the fight's end gives the hit points back ("shakes off Psionic Blast's imagined
+  wounds"). CON 20+ regeneration can wake it first (Gerakis did).
 - **The parts of an AC** (2026-11-02): run the dice log with `--all` (kill its process by pid,
   then `python3 -u -m dsloader dicelog --all >> $WORK/dice.txt` from obsidian-edition): each AC the
   game works out gets a line "AC of X against Y: 8 (base 10, armour -1, DEX -1, other +0)".

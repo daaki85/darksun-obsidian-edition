@@ -385,8 +385,17 @@ DSUN.EXE with yuan-ti's notes; Psionic Blast from yuan-ti's issue #129.) One hel
   each loss back once the fight flag has been down `FIGHT_OVER` (2 s), up to the member's most
   and only to one still Okay (one Out Cold or dead was put there by something real), says so
   ("Cilla shakes off Psionic Blast's imagined wounds as the fight ends: +23 HP, now 30/38"), and
-  clears the field; a game loaded (the clock gone back) clears it with nothing given. The three
-  places are told apart by the return address (`WORN_AC_RET` 22C8h, `BLAST_RET` 0B69h, else the
+  clears the field; a game loaded (the clock gone back) clears it with nothing given.
+  **Knocked out, not killed:** the damage routine (612E:18E0h) kills a creature when the
+  damage reaches its hit points + 10 (status 5; 8 for 10000 and up, Disintegrate's), else knocks
+  it out when the damage reaches its hit points (status 3, 0 HP). Its death test, `cmp ax,dx`
+  (5860Bh, before a `jg` to the Out Cold case), is the interrupt too (`blast_knockout`): for a
+  party member with hit points still in `BLAST_HP` and damage under 10000, the flags of
+  "greater", so the blow knocks it out. At the fight's end one Out Cold gets the hit points back
+  too and is woken (status 1, as the game wakes a creature at 7C1F9h); one Dying or dead gets
+  none. Seen in DOSBox: Gerakis at -9 HP with 40 kept, a 1-point Psychic Crush (death by the
+  game's rule) left him at 0, and the fight's end gave him the 40. The four places are told
+  apart by the return address (`WORN_AC_RET` 22C8h, `BLAST_RET` 0B69h, `KO_RET` 194Dh, else the
   ability routine's), so the one vector serves them all.
 
 ## New spells (wizard and 6th-level priest)
