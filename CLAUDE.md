@@ -67,7 +67,8 @@ Return on party turns, E for a member out of movement, and messages and level-up
 kills.
 
 **Git.** Other sessions push to `obsidian-edition` too: fetch and rebase onto
-`origin/obsidian-edition` before every push.
+`origin/obsidian-edition` before every push. GitHub deletes the branch when its pull request
+merges: then make it again from `origin/main` and put any unmerged commits on top.
 
 **Shell.** Never `pkill -f` or `pgrep -f | kill` a pattern your own command line contains: it
 kills your shell. Kill by pid, in a command of its own. Long runs go in the background with a
