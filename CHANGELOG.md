@@ -13,10 +13,13 @@ notes](PATCH-NOTES.md).
   on the rack from the start (in place of its first bone polearm). Now the rack's data
   (`worldgear`'s gift) keeps its two plain bone polearms, and Semyon, in his pen, has a new
   question, "Did you see anything on your way back in?": a weapon shipment, one polearm carried
-  "like it might bite", put on the weapon rack. His answer sets flag 756; on the next pass in
-  the pens `semyon.ship` puts a Thornwall (an item from the game's free list) first on the
+  "like it might bite", put on the weapon rack. His answer sets flag 756; once the game has
+  made the rack (it makes a region's objects as the party nears them: the rack is looked for by
+  its object, 2599, as a coffin shares its item type, 6Ch) `semyon.ship` puts a Thornwall (an item from the game's free list) first on the
   rack's contents and sets 757. A Thornwall already in the game (a save from before) sets 757
-  with none made. Tests: `test_semyon.ShipmentTests`, `test_worldgear`.
+  with none made. Seen in DOSBox: the rack made as the party came beside it, with Thornwall
+  first (then its polearms, quarterstaff and axe), still there after walking off and after a
+  save and load. Tests: `test_semyon.ShipmentTests`, `test_worldgear`.
 
 **Fixed: the game's code**
 - **Psionic Blast knocks out, not kills:** while a party member has the blast's hit points still

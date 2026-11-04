@@ -21,3 +21,8 @@ cannot be loaded in a fresh install (2026-11-01).
   saved again there at once (slot name RECOMP1), to check a save made by the program loads in
   DOSBox and the other way round. Its `DARKSAVE.GFF` is the one the load put in the folder (the
   program did not rewrite it at the save, as DOSBox doesn't).
+- `pens-thornwall-rack` (2026-11-04): a new game with the ready-made party, through the arena's
+  waves and out by the gate, Kurzak followed to his stop; flag 756 (Semyon's tip) set in memory,
+  the party moved in memory beside the weapon rack and back, so Thornwall is on the rack (flag
+  757). Party at (1816, 1384), the east passage by the locked door (113, 90). Semyon is not in
+  his pen in it. Its `DARKSAVE.GFF` is the install's own (991 bytes): the game didn't rewrite it.

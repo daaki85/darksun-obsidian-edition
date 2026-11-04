@@ -107,7 +107,18 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
 - `sh shot.sh OUT.png`, then Read the picture: the game's own 320x200 capture. Look at the screen
   before any key that could do harm (Escape) and whenever a step didn't do what it should.
 - `live.py` (exec'd by the Python tools) gives `g` (memory), `ds`, `gd` (dsloader's GameData);
-  `CAMERA` (DS:1178h) and `POINTER` (DS:A133h).
+  `CAMERA` (DS:1178h) and `POINTER` (DS:A133h). A script outside `playtest/` that execs it needs
+  `sys.path.insert(0, PLAYTEST)` and `__file__` set to live.py's path first.
+- **The game makes a region's map objects near the party** (2026-11-04): on arriving in the pens
+  the weapon rack (object 2599, square 48,34) and many others were not among the map objects
+  (`gd.things_of(obj)`, DS:66AEh), and so their items were not in memory either; walking south made
+  more (1221, 1224, 1230...). Once made they stayed after the party walked off. To find an
+  object's items, look it up by its object number when it is made, not by item type: type 6Ch is
+  the weapon rack's and a coffin's (1574, at 75,43, holding a gem).
+- **Moving the party in memory** (2026-11-04, for a check where the way is shut): write each of map
+  objects 0-3's x, y words at DS:669Dh + 32n (map units) and the camera at DS:1178h, then walk one
+  step with `walkto.py`: the game redraws and makes the objects near the new place. Only for
+  checks; the scripts see none of it.
 
 ## 3. Controls that work
 
@@ -402,6 +413,13 @@ escaped slaves, the exits, Goodbye: "Get moving! I gotta get back to work."). Sa
   266 at 1264,848 is gone or flag 317 is set; otherwise "presses the button, but nothing happens".)
 - The grate, object 1234 at (46, 86), the far northwest; walking onto squares 3-4, 5-6 (map
   48-79, 80-111) runs its menu (137:29Bh): Pick the lock / Rip it open / Hack the lock off.
+- **The door at (113, 90) was locked** on 2026-11-04 (look box "Door", its third button: "The door
+  is locked. It appears quite sturdy."), with the party straight from the arena and Kurzak
+  followed to his stop: the way west by the bottom corridor isn't always open.
+- **The weapon rack** (Thornwall's, object 2599) is at square (48, 34), map (779, 550), in the room
+  west of the door at (65, 38-39); from (52, 36) beside it the game has made it. Its contents (map
+  object 478 on 2026-11-04): Polearm, Quarterstaff, Polearm, Axe, with Thornwall first once
+  Semyon has told of the shipment (flags 756, then 757).
 - The pens' cell doors (2141-2164) have USE (script 138) and ATTACK handlers ("This door is too
   strong to bash open" for the cells').
 

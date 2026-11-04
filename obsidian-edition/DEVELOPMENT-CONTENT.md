@@ -964,8 +964,10 @@ game's, which keeps its place.
 The weapon shipment: his answer to "Did you see anything on your way back in?"
 sets flag 756 (between the game's 755 and the Loader's own 760). Each pass in
 the pens with it set and flag 757 not, `semyon.ship` puts Thornwall on the
-pens' weapon rack: the rack found by its item type (6Ch) among the region's
-things, an item record from the game's free list, first in the rack's contents
+pens' weapon rack: the rack found by its object (2599) among the map objects
+(the game makes a region's objects as the party comes near them, so nothing
+happens until it has made the rack; its item type, 6Ch, is a coffin's too), an
+item record from the game's free list, first in the rack's contents
 list (the object its +8 names), then flag 757. A Thornwall somewhere already
 (the rack's data had it from 1.2.0 to 2.13.4, so a save from then that has been
 to the pens) sets 757 with none made. Once on the rack it is the game's own,

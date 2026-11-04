@@ -282,6 +282,12 @@ class ShipmentTests(unittest.TestCase):
         pole = bytearray.fromhex("5efb000000000700000013000000000004ff120000")  # (the game's bone polearm)
         struct.pack_into("<h", pole, game.ITEM_NEXT, game.NO_ITEM)
         self.m[items + 11 * game.ITEM_SIZE:items + 12 * game.ITEM_SIZE] = pole
+        self.place(300, worldgear.PENS_RACK_OBJECT)
+
+    def place(self, thing, obj):
+        """Map object THING made as object OBJ (the game's THING_OBJECT field)."""
+        from test_ring import DS
+        struct.pack_into("<h", self.m, DS * 16 + self.game_.THING_OBJECT + thing * 32, obj)
 
     def rack_items(self):
         return [i for i, _ in self.ring.Items(self.gd).chain(301)]
@@ -297,6 +303,18 @@ class ShipmentTests(unittest.TestCase):
         self.assertEqual(rec[self.game_.ITEM_PLUS], 1)
         self.assertTrue(self.gd.flag(semyon.SHIPPED))
         self.assertFalse(semyon.ship(self.gd))  # (once)
+        self.assertEqual(self.rack_items(), [60, 11])
+
+    def test_rack_not_made(self):
+        """The rack not among the map objects yet (the party far from it), and a coffin of the
+        racks' item type: nothing, till the rack is made."""
+        self.place(300, 1574)
+        self.gd.set_flag(semyon.TOLD)
+        self.assertFalse(semyon.ship(self.gd))
+        self.assertEqual(self.rack_items(), [11])
+        self.assertFalse(self.gd.flag(semyon.SHIPPED))
+        self.place(300, self.wg.PENS_RACK_OBJECT)
+        self.assertTrue(semyon.ship(self.gd))
         self.assertEqual(self.rack_items(), [60, 11])
 
     def test_not_twice(self):

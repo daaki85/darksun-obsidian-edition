@@ -251,23 +251,32 @@ def conversation() -> bytes:
 def ship(gd) -> bool:
     """In the pens, once Semyon has told of the shipment (TOLD), Thornwall onto the pens' weapon
     rack (first among its contents), once (SHIPPED); none if a Thornwall is somewhere already. An
-    item record from the game's free list, as the Loader's other gifts. True when put there."""
+    item record from the game's free list, as the Loader's other gifts. True when put there.
+    The game makes a region's map objects near the party only (walking on makes more and drops
+    far ones), so the rack is looked for by its own object (worldgear.PENS_RACK_OBJECT) among
+    the map objects, and nothing is done until it is there (a Thornwall on it, from a save of
+    before, seen then too). Its item type, 6Ch, is a coffin's as well."""
     import struct
     from . import game, icons, ring, worldgear
     if gd.region() != PENS or not gd.flag(TOLD) or gd.flag(SHIPPED):
         return False
     it = ring.Items(gd)
     rack = None
+    for thing in gd.things_of(worldgear.PENS_RACK_OBJECT):
+        kind, first = it.thing(thing)
+        if kind == game.THING_ITEM and 0 <= first < game.NO_ITEM:
+            rec = it.item(first)
+            if struct.unpack_from("<H", rec, game.ITEM_TYPE)[0] == worldgear.RACK_TYPE:
+                rack = rec
+                break
+    if rack is None:
+        return False  # (not made yet: the party is far from it)
     for thing in range(ring.THING_COUNT):
-        for index, rec in it.chain(thing):
+        for _, rec in it.chain(thing):
             if struct.unpack_from("<H", rec, game.ITEM_NAME)[0] == worldgear.THORNWALL:
                 gd.set_flag(SHIPPED)
                 return False
-            if rack is None and struct.unpack_from("<H", rec, game.ITEM_TYPE)[0] == worldgear.RACK_TYPE:
-                rack = (index, rec)
-    if rack is None:
-        return False
-    index, rec = rack
+    rec = rack
     contents, = struct.unpack_from("<H", rec, ring.ITEM_CONTENTS)
     item = it.word(ring.FREE_ITEMS)
     if not 0 <= contents < ring.THING_COUNT or item >= game.NO_ITEM:
