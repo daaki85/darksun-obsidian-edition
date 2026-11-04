@@ -423,6 +423,12 @@ PATCHES = (
     # creature but the region's first got another's level or a byte past the list. The SHL made two
     # NOPs: the creature's own level (found by CalvinRodo's yuan-ti, checked in DSUN.EXE)
     Patch("fight_music", 0x62FC0, bytes.fromhex("d1e3b848038ec0"), bytes.fromhex("9090b848038ec0")),
+    # Scare's save (the save modifiers' routine, 80F5:119Ch: spell 15h): a target of 6th level or
+    # more always saves, and one below may save as usual only if a priest whose race is elf (3)
+    # and half-elf (4) at once ("cmp race,3 / jne fail", then "cmp race,4 / je save"), so no one
+    # could. The first test's jne to the fail made "je" to the save: an elf or half-elf priest
+    # saves as usual (found by CalvinRodo's yuan-ti, checked in DSUN.EXE)
+    Patch("scare_elves", 0x79FEA, bytes.fromhex("752c"), bytes.fromhex("7431")),
     # ... and a berserk or confused party member kept the side its last turn rolled: "jmp 788BBh",
     # where an effect's end has no case of its own (DSCLOG's NS_SIDE: a charm's, the side put back)
     Patch("side_back", 0x78785, bytes.fromhex("e93301"), _site(NS_SIDE, 3)),

@@ -207,7 +207,9 @@ rangers) can; against Dismissal the target adds its level and takes away the
 caster's; and against Scare, 6th level and up always save and everyone below
 can't. The Scare code looks meant to let some elf or half-elf priests save
 (AD&D gives elves, half-elves and priests a bonus), but it asks for a
-creature that is both an elf and a half-elf, so no one qualifies.
+creature that is both an elf and a half-elf, so no one qualifies (the
+patched game lets an elf or half-elf priest save:
+[The game's bugs, fixed](FEATURES.md#the-games-bugs-fixed)).
 
 Rules in the code that never come into play: Cloak of Bravery's +4 against
 fear applies only to a kind of spell that no spell in the game is marked as

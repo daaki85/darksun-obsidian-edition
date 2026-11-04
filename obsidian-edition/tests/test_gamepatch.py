@@ -292,3 +292,13 @@ class PowerEndTests(unittest.TestCase):
         mu.emu_start(cs * 16 + 0x100, 0, count=2000)
         self.assertEqual(removed, [(1, 5, 30, 12, 7), (2, 5, 30, 12, 8), (0, 5, 30, 12, 11)])
         self.assertEqual(records, [(3, 6, 30, 12, 9), (4, 5, 31, 12, 10)])
+
+
+class ScareTests(unittest.TestCase):
+    def test_elf_or_half_elf_priest_saves(self):
+        """Scare's race tests (79FEAh, 7A011h): the first's jump now goes where the second's does
+        for its race (the usual save, 7A01Dh), so race 3 or 4 saves as usual; the rest still fail."""
+        patch = next(p for p in gamepatch.PATCHES if p.name == "scare_elves")
+        self.assertEqual(patch.replacement[0], 0x74)  # je
+        self.assertEqual(patch.offset + 2 + patch.replacement[1], 0x7A01D)  # the second test's je
+        self.assertEqual(patch.offset + 2 + patch.original[1], 0x7A018)  # was: the -100

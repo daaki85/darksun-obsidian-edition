@@ -1266,8 +1266,9 @@ Other modifiers:
 | +4 | against a spell at you alone, when its caster can't see you |
 
 Creatures of 6th level or less can't save against Cloudkill; only warriors
-save against Chaos; against Scare, 6th level and up always save and others
-can't.
+save against Chaos; against Scare, 6th level and up always save, an elf or
+half-elf priest below that saves as usual, and others can't. *Without the
+mod:* no one below 6th level could save against Scare.
 
 ### Monsters
 

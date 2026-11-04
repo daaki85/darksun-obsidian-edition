@@ -6,6 +6,18 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
+## Next pull request (not opened yet)
+
+**Fixed: the game's code**
+- **Scare's save** (from yuan-ti's v0.1.55, checked in DSUN.EXE): below 6th level only a priest
+  whose race is elf (3) and half-elf (4) at once got the usual save ("cmp 3 / jne fail" at 79FEAh,
+  then "cmp 4 / je save"), so no one did. `gamepatch`'s `scare_elves` makes the first test's
+  `jne` a `je` to the save (7A01Dh): an elf or half-elf priest saves as usual. Tests:
+  `ScareTests`. The rest of v0.1.55 (Cause Wounds' dice, a thri-kreen's claws cutting, random
+  monster groups' size, Psionic Blast, the gladiator, ability items, the damage lines, the
+  Sling's icon, Slay Living's text) the Edition already has; v0.1.56-58 add yuan-ti's own spells
+  as mods. OpenDS since 2026-11-01: Wake of the Ravager's mine elevator and its tools' docs.
+
 ## Pull request #85 ([merged 2026-11-02](https://github.com/daaki85/darksun-obsidian-edition/pull/85))
 
 Obsidian Edition 2.13.4 ([release notes](release-notes/v2.13.4.md)).

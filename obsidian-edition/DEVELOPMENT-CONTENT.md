@@ -277,6 +277,12 @@ after the `ns_list_` patches):
   the spells that make one Afraid (effect 17): Scare (21), Fear (43), Cause
   Fear (78; a Cloak of Fear's too) and Insect Plague (132); Spook (200) has it
   from DSCLOG's `NS_PATCHES`. The Loader's saves show the +4 (`FEAR_CATEGORY`).
+- **Scare's save** (spell 21, in the save modifiers' routine, 80F5:119Ch): a target of 6th
+  level or more always saves (+100); below, the usual save only for a priest (7C01Dh) whose race
+  (the sheet's +18h) is 3 and is 4: "cmp 3 / jne fail" (79FEAh), then "cmp 4 / je save"
+  (7A011h), so everyone below 6th failed (-100). `scare_elves` makes the first "je" to the save
+  (7A01Dh): an elf or half-elf priest saves as usual, as AD&D's elves, half-elves and priests
+  resist fear (found by yuan-ti).
 - **Negative Plane Protection** (effect 42): an undead's negative-energy touch
   (element 100h) on a creature under it (7A7C5h) uses a charge, then the
   target saves (79A71h) as against Vampiric Touch (27h), whose record allows
