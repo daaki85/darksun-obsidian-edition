@@ -145,7 +145,9 @@ notes](PATCH-NOTES.md).
   `ScareTests`. The rest of v0.1.55 (Cause Wounds' dice, a thri-kreen's claws cutting, random
   monster groups' size, Psionic Blast, the gladiator, ability items, the damage lines, the
   Sling's icon, Slay Living's text) the Edition already has; v0.1.56-58 add yuan-ti's own spells
-  as mods. OpenDS since 2026-11-01: Wake of the Ravager's mine elevator and its tools' docs.
+  as mods. OpenDS since 2026-11-01 (checked to 2026-11-03, c25a547): Wake of the Ravager's mine
+  elevator and its tools' docs only; its Shattered Lands patch and bug catalogue unchanged since
+  2026-10-07 (all four of its repairs considered: three taken, the stage gate left out).
 
 **Docs**
 - The champions' bout in the patch notes' World list, the README's What it does and the Options
