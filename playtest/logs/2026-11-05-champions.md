@@ -75,3 +75,12 @@ Scar.
     tied-up prisoner (base 10, DEX 12): the Loader's count 10, 8, 7, 6, 5 as the chest, arm, leg
     and helm went on, the game's sum. The earlier gap was the reading: the script read the AC,
     then the lists, and the Loader's pass put the helm (and the shields after it) on between.
+
+## Aside: a time-of-day palette tint, mocked up
+
+An arena view (outdoors) captured and every colour tinted as a palette tint would tint it (the
+same thing: each pixel is a palette colour): dawn (R 1.0, G 0.78, B 0.72), noon (1.04, 1.02,
+0.95), dusk (1.0, 0.70, 0.48), night (0.36, 0.44, 0.74). `img/2026-11-05-tint-mockup.png`. The
+game writes its palette at 144DCh (all 256, from a buffer, 8-bit values shifted to 6), 288ADh (a
+block: the colour cycling's) and 1168Ch (one colour), and reads it back at 116A7h and 288C4h (its
+fades): a tint in the game would take all five.
