@@ -116,7 +116,7 @@ def report_text(read: Callable[[int, int], bytes], hdr: Optional[int], ds: Optio
                          f"(0: the game's timer isn't striking) and the map's main loop ran {moved['main']} times.")
         found = ticks(read, hdr)
         lines += [""] + summary(found, tsr_seg, load_seg)
-        lines += ["", "Where the game was as its timer struck, newest first (every 16th strike):",
+        lines += ["", "Where the game was as its timer struck, newest first (every 32nd strike):",
                   "  CS:IP      flags SS:SP      BP   DS   ES    whose"]
         for t in reversed(found):
             lines.append(f"  {t.cs:04X}:{t.ip:04X}  {t.flags:04X}  {t.ss:04X}:{t.sp:04X}  {t.bp:04X} {t.ds:04X} "

@@ -2517,7 +2517,7 @@ woman's; see [Elves and half-elves](#elves-and-half-elves)), and a click on a
 spell's icon on the Effects screen ending it ([Spells on the Effects
 screen](#spells-on-the-effects-screen)). The script bugs are mended in the
 Loader's copy of the game's scripts; many were found by yuan-ti and the OpenDS
-project ([credits](../README.md#credits)). How the fixes work:
+project ([credits](https://github.com/daaki85/darksun-obsidian-edition#credits)). How the fixes work:
 [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#the-games-spells).
 
 **Saved games.** There's no need to start a new game for these: they're in
