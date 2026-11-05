@@ -1774,7 +1774,7 @@ effect in regions the party hasn't visited yet; start a new game to have them
 all. The dice log doesn't say where they are; [Items](ITEMS.md) does, with spoilers.
 
 **New items, magical and mundane** on the Options tab places them all, the
-arena's ring too. A thief can [lift](#picking-pockets) Pehtucl's ring,
+arena's ring too, and brings [the champions' bout](#the-champions-bout). A thief can [lift](#picking-pockets) Pehtucl's ring,
 Shadowseeker, Gutterknot and Mindshard (200 XP for each weapon).
 
 **Where they are.** The mod's items are in the [item tables](ITEMS.md) with the
@@ -1976,13 +1976,14 @@ of his own above Kalzith's, the first time the party is in the pens after it.
 His other ways out stay as in the game, and so does a Semyon who was killed: he
 isn't in the pens. Talk to him (Look, then Talk): he says why the templars tied
 him up in the arena (he was asking about the Veiled Alliance), passes on what he
-has heard (who carries keys), tells of a weapon shipment he passed ("Guards were
-fussing over one crate like it held something special. I didn't see where they
-took it, but it can't have gone far": from then on the pens' weapon rack holds
-**Thornwall**, a bone polearm +1, and once the party carries it he has a word
-about it),
-reminds the party where he hid his gem (the grain pots), and talks about the
-Alliance's plans, in his own voice from the arena.
+has heard (who carries keys), reminds the party where he hid his gem (the grain
+pots), and talks about the Alliance's plans, in his own voice from the arena.
+With the new items on, he also tells of a weapon shipment he passed ("Seen
+anything useful?": "Guards were fussing over one crate like it held something
+special. I didn't see where they took it, but it can't have gone far"). From
+then on the pens' weapon rack holds **Thornwall**, a bone polearm +1, and once
+the party carries it he has a word about it ("We found what was in that
+crate.").
 As with the game's own people, each question goes from the list once asked,
 and comes back the next time you talk to him.
 
@@ -2044,15 +2045,20 @@ visit to the arena the Announcer has news:
 > leader, a Tohr-kreen, carries a gythka that has drunk the blood of a hundred
 > gladiators.
 
-The first wave is six **champions** in place of the game's: a Tohr-kreen with
-**Kreenfang** (a gythka +1), a half-giant with a metal great axe, a leather
-shield, full scale armour and a bone helm, a mul gladiator with two bone axes
-and the same armour, a halfling with a sling, a bone short sword, full leather
-armour, a leather helm and a leather shield, an elven ranger with a bow and
-arrows, an obsidian long sword and the same leather and shield (the Tohr-kreen and the defiler wear none), and a defiler with a bone dagger and a scroll (Fogbolt, Spook or
-Reflected Image, chosen as the bout starts). They fight with their weapons, the
-two archers shooting, and their armour counts for their AC, as the party's
-does: the game's own people carry their gear but fight with their bare numbers.
+The first wave is six **champions** in place of the game's:
+
+| Champion | Weapons | Armour |
+|---|---|---|
+| Tohr-kreen | **Kreenfang** (a gythka +1) | none |
+| Half-giant | a metal great axe | full scale, a bone helm, a leather shield |
+| Mul gladiator | two bone axes | full scale, a bone helm |
+| Halfling | a sling, a bone short sword | full leather, a leather helm, a leather shield |
+| Elf | a bow and arrows, an obsidian long sword | full leather, a leather helm, a leather shield |
+| Defiler | a bone dagger, and a scroll of Fogbolt, Spook or Reflected Image (chosen as the bout starts) | none |
+
+They fight with their weapons, the two archers shooting, and their armour counts
+on top of their kinds' AC, as the party's does (the game's own people carry
+their gear but fight with their bare numbers).
 What they carry is on their bodies afterwards; the Tohr-kreen falls as a dead
 Tohr-kreen of its own, Kreenfang in it. It comes once. A party that breaks out
 with Scar instead, or leaves the pens another way, doesn't meet them. (The dead

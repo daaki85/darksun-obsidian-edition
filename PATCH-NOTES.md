@@ -245,6 +245,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 
 - **[New]** **Kalzith**, a defiler slave who scribes spell scrolls by night and sells them to anyone who treats him with respect.
 - **[New]** More of **Semyon**'s story, for players who help him in the arena.
+- **[New]** A last arena bout: once Scar dies in the arena, six champions from a distant arena come to test the new king, led by a Tohr-kreen carrying **Kreenfang** ([the champions' bout](obsidian-edition/FEATURES.md#the-champions-bout)).
 - **[New]** A use for the cooked vulture: share it with the pens' cook for a full rest and 100 XP each.
 - **[New]** Merchants give your party leader a discount for high Charisma, from 5% at CHA 18 to 40% at 25.
 - **[Changed]** Merchants pay 60% of an item's price *(was all of it)*.
@@ -359,6 +360,6 @@ Rules the game got wrong are put right too, each under its own heading above wit
 - With ages on, each character in a save, the game's own party too, is given a starting age the first time the Loader sees them (the dice log shows the roll).
 - **A save made with 2.13.0 or later is not for earlier versions, and one made with 2.13.2 or later not for 2.13.1 or earlier:** the weapon specs are kept packed with the age and each character's starting roll beside them, which an older Loader reads as other specs. Older saves load in newer versions as they are: a character keeps its age, and its roll is put on its sheet when the game is loaded.
 - A thri-kreen **druid/fighter** Wasteland Seer from an earlier version has no kit now: the Wasteland Seer is for a thri-kreen druid/fighter/psionicist.
-- In a save from 1.2.0 to 2.5.0 that has already been to the slave pens, the weapon rack holding **Thornwall** is gone from the pens (a new game has it). Fixing items that couldn't be swapped in a pack meant renumbering the rack, and the game drops an object it no longer finds.
+- In a save from 1.2.0 to 2.5.0 that has already been to the slave pens, the weapon rack is gone from the pens, so **Thornwall** never comes onto it after Semyon's tip (a new game has the rack). Fixing items that couldn't be swapped in a pack meant renumbering the rack, and the game drops an object it no longer finds.
 
 **A new game is still the way to see all of the mod.** Kits, STORE and RECALL and fuller starting gear come with characters made with the mod, and much of the new content (Kalzith, Semyon, the vulture, the new items in the slave pens) is in the game's first areas. A save made with the original game loads and plays with every fix and rule change, but its characters have no kits, and what it has already been through stays as it was.

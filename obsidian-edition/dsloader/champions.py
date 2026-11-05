@@ -9,7 +9,7 @@ Kreenfang (the arena's gythka +1, no longer on the dead body by the stone arch).
   gladiator (the Wild Mul, 290) with two bone axes and the same armour; a halfling renegade (the
   Renegade, 289) with a sling, a bone short sword, full leather armour, a leather helm and a
   leather shield; an elven ranger (an elven caravan guard, 103) with a bow and arrows, an obsidian
-  long sword and the same leather and shield (a thri-kreen and a defiler wear none); a
+  long sword and the same leather, helm and shield (the Tohr-kreen and the defiler wear none); a
   defiler (the arena's, 296) with a bone dagger and one scroll, chosen as it comes on, of
   Fogbolt, Spook or Reflected Image (the new spells; without them, of the game's own spells).
 - Worn and wielded: the game makes a person's items in its backpack list (+0Ch) and fights with

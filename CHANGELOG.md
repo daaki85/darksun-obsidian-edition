@@ -87,6 +87,13 @@ notes](PATCH-NOTES.md).
   Sling's icon, Slay Living's text) the Edition already has; v0.1.56-58 add yuan-ti's own spells
   as mods. OpenDS since 2026-11-01: Wake of the Ravager's mine elevator and its tools' docs.
 
+**Docs**
+- The champions' bout in the patch notes' World list, the README's What it does and the Options
+  tab (New content's note and the New items switch; `options.png` retaken); FEATURES' champions
+  in a table (the elf's helm, left out, is leather), Semyon's shipment tip as needing the new
+  items. The 1.2.0-2.5.0 saves' known issue says Thornwall never comes (it was "the rack holding
+  Thornwall is gone"); `arms.py`'s docstring has Kreenfang on the champion.
+
 ## Pull request #85 ([merged 2026-11-02](https://github.com/daaki85/darksun-obsidian-edition/pull/85))
 
 Obsidian Edition 2.13.4 ([release notes](release-notes/v2.13.4.md)).

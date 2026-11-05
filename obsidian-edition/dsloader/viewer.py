@@ -367,7 +367,7 @@ class Viewer:
         # the Loader's own content: people, a quest and items in the game, and the new spells. Some
         # are written into the game's files when it is started; what a save already has stays
         new = section("new_content", "New content")
-        ttk.Label(new, text="People, a quest and items: from the next start, in places "
+        ttk.Label(new, text="People, a quest, an arena bout and items: from the next start, in places "
                   "not yet visited. What a saved game already has (people met, items given) stays in it. "
                   "The new spells: at once.",
                   wraplength=460).pack(anchor="w")
@@ -482,7 +482,7 @@ class Viewer:
                                     "preserver spell one time in 20, dropped where it dies"),
                 (launch.NEW_ITEMS, "New items, magical and mundane: weapons, armour and other gear the game "
                                    "lacks or never placed, on its people, in its shops and chests (the guide's "
-                                   "New items lists them)")):
+                                   "New items lists them), and the champions' arena bout after Scar's death")):
             self.content_vars[key] = tk.BooleanVar(value=settings.get(key, True) is not False)
             ttk.Checkbutton(new, text=text, variable=self.content_vars[key],
                             command=self._options_changed).pack(anchor="w", pady=(4, 0))

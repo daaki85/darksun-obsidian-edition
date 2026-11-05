@@ -76,7 +76,8 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   Friends](FEATURES.md#new-wizard-spells)) and ten [6th-level priest
   spells](FEATURES.md#6th-level-priest-spells) (Heal, Blade Barrier,
   Whirlwind, Restore Youth...), Kalzith (a defiler who sells scrolls), defilers who drop
-  scrolls, more of Semyon's story, and a use for the cooked vulture ([New
+  scrolls, more of Semyon's story, a last arena bout against six champions,
+  and a use for the cooked vulture ([New
   content](FEATURES.md#new-content)). On the map, the party wears its weapons
   and armour (its magic gear glinting), figures cast shadows and kick up dust,
   and elves and half-elves have a look of their own; and the game's magic items
@@ -281,7 +282,7 @@ save:
   (a level up, or a game starting): the game's own bonuses for CON, INT and WIS
   are counted right now, and the most only ever rises.
 - In a save from 1.2.0 to 2.5.0 that has already been to the slave pens, the
-  weapon rack is gone, and with it Thornwall's place (a new game has it).
+  weapon rack is gone, so Thornwall never comes (a new game has the rack).
 - A new game whose arena fight never began (no announcer, and walking said NO
   PATH FROM HERE: a 2.4.0 bug) can't be mended: start a new one.
 - **A save made with 2.13.0 or later is not for earlier versions**, and one
