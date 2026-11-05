@@ -38,5 +38,13 @@ DOSBox, new games with the ready-made party, in the arena's first visit.
    with Kreenfang in it; the others' were Dead Bodies (1101) with their gear; the dead body by the
    arch had a plain Gythka.
 
-Not seen yet: the Announcer's speech (a visit past the fifth), the bout after a real kill of
-Scar, and the dead Tohr-kreen's picture on screen.
+## Second run: the body on screen
+
+10. The same test build, the party's hit points raised to 250 in memory: the champions killed
+    (fightout.sh). The Tohr-kreen's body, object 2666, is drawn with its own picture, a dead
+    Tohr-kreen on its side, in the heap where the six fell (`img/2026-11-05-kreen-body.png`, the
+    heap five times its size; `img/2026-11-05-kreen-body-picture.png`, the picture alone). The
+    human Dead Bodies of the others lie over part of it.
+
+Not seen yet: the Announcer's speech (a visit past the fifth) and the bout after a real kill of
+Scar.
