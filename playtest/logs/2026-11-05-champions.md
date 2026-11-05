@@ -84,3 +84,12 @@ same thing: each pixel is a palette colour): dawn (R 1.0, G 0.78, B 0.72), noon 
 game writes its palette at 144DCh (all 256, from a buffer, 8-bit values shifted to 6), 288ADh (a
 block: the colour cycling's) and 1168Ch (one colour), and reads it back at 116A7h and 288C4h (its
 fades): a tint in the game would take all five.
+
+Can the interface stay untinted? The 45 palettes in GPLDATA.GFF agree on colours 30-79 and
+128-222 and differ on 80-127 (each region's own) and the animated 224-255. Decoded pictures: the
+figures and objects (SEGOBJEX) use all 256; the interface's art (RESOURCE.GFF) nearly all, but its
+292 icons almost never 80-127; the portraits never 80-127; the walls 94% and the ground tiles
+52-88% in 80-127. A live message box with its portrait: 24 of 15,360 pixels only 80-127 explains.
+So tinting 80-127 alone leaves the interface, portraits, figures and objects as they are and tints
+most of the ground and the walls: `img/2026-11-05-tint-ground-only.png` (the bone wall, an
+object, stays bright at night).
