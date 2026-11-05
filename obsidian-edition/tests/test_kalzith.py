@@ -166,20 +166,14 @@ class KalzithTests(unittest.TestCase):
         self.assertEqual(kalzith.object_chunks({}), {})
 
     def test_portrait(self):
-        """His own face: the game's portrait 61, branded on the brow, at a number the game leaves
-        free; the rest of the picture the game's."""
-        from dsloader import icons
-        face = [[150] * 32 for _ in range(32)]
-        out = kalzith.portrait_chunk({("PORT", kalzith.PORTRAIT_FROM): icons.encode(face)})
-        rows = icons.decode(out)
-        changed = {(x, y) for y in range(32) for x in range(32) if rows[y][x] != 150}
-        x0, y0 = kalzith.BRAND_AT
-        self.assertEqual(changed, {(x0 + dx, y0 + dy) for dy, l in enumerate(kalzith.BRAND)
-                                   for dx, c in enumerate(l) if c != "."})
-        self.assertEqual(rows[y0][x0], kalzith.BRAND_GROOVE)
-        self.assertEqual(rows[y0 + 1][x0], kalzith.BRAND_RIM)
-        self.assertIsNone(kalzith.portrait_chunk({}))
-        self.assertNotEqual(kalzith.PORTRAIT, kalzith.PORTRAIT_FROM)
+        """His own face (kalzithface.py), 32 x 32, at a number the game leaves free, in colours the
+        game's portraits use without animating them or a region changing them."""
+        from dsloader import icons, kalzithface
+        rows = icons.decode(kalzith.portrait_chunk({}))
+        self.assertEqual(rows, [list(r) for r in kalzithface.FACE])
+        self.assertEqual((len(rows), {len(r) for r in rows}), (32, {32}))
+        self.assertTrue(all(16 <= v <= 79 or 128 <= v <= 223 for r in rows for v in r))
+        self.assertEqual(kalzith.PORTRAIT, 101)
 
     def test_scroll(self):
         """The game's own spell scroll, teaching the spell at the price (named one past the

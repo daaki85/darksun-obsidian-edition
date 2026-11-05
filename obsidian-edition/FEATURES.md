@@ -1906,10 +1906,12 @@ arena. A save made after that keeps the pens as they were.
 **Kalzith** is a defiler slave the templars put
 in the arena now and then (the crowd loves to watch a defiler burn), kept in a
 pen of his own in the middle column the rest of the time. He has the arena
-Defiler's figure and a face of his own: the game's portrait 61 with a slave's
-brand on the brow, so the Dialogue tab never mistakes him for anyone else.
+Defiler's figure and a face of his own, painted for him in the game's own
+portrait style: an old man, white of brow and beard, in the green-teal hood his
+figure wears. No one else has it, so the Dialogue tab never mistakes him for
+anyone else.
 
-![Kalzith: his talk, and his shop of six scrolls, 3,000 to 9,000 ceramic, here with the party leader's CHA discount](docs/kalzith.png)
+![Kalzith: his talk, and his shop of six scrolls, 3,000 to 9,000 ceramic](docs/kalzith.png)
 
 Talk to him as to anyone (click him with the look pointer, then the Look box's
 Talk button). His conversation is the game's kind, just him speaking:

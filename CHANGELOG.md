@@ -9,6 +9,10 @@ notes](PATCH-NOTES.md).
 ## Next pull request (not opened yet)
 
 **New**
+- **Kalzith's own portrait** (`kalzithface.py`): a face painted for him in the game's portrait
+  style and colours (an old man, white of brow and beard, in his figure's green-teal hood),
+  chosen by the user from three artists' attempts ("A", the frontal one), in place of the game's
+  portrait 61 with a brand. Seen in DOSBox in his talk and his shop; `docs/kalzith.png` retaken.
 - **See-through figures** (`ghost.py`; the Options tab's new "drawn see-through" switch, on): a
   thief or ranger hidden and unheard in a fight, and anyone invisible (a party member always, an
   enemy while no party member detects invisibility), drawn half see-through, the user's look E

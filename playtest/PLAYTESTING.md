@@ -406,6 +406,13 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   for a look without a fight or a spell. Outside a fight the party is one figure, the leader's;
   walking, it spreads into four. Unicorn tests that look for "mov ax,25xxh / mov dx,handler" in
   the image must search from the end: the same bytes for vector 62h turn up earlier by chance.
+- **Kalzith** (2026-11-05): from `pens-after-scar`, walkto (1816,408), (1704,408), (1592,440), then
+  clicks at screen (200,178) (camera 1392,384) take the party through Kurzak's entryway past him
+  (route.py wouldn't: he stands in front of it); then `route.py 1560 880` reaches Kalzith's pen
+  (him at 1576,888, thing 220). The arrow's click on him does nothing (the party stands on him):
+  the look pointer (two right-clicks on bare floor) on him opens the Look box (KALZITH, LEVEL 5),
+  and its first button (163,150) talks. Replies are lines from y 162, 8 apart; "We mean no harm",
+  then click the box twice, then "Show us what you have" opens his shop.
 - **route.py won't walk through a figure** (2026-11-05): with someone standing at (99, 31), in
   front of Kurzak's entryway (99, 33-34, open), it found no way south from his stop and gave up;
   the live grid showed the doorway clear. Walk round with clicks, or wait for him to move.

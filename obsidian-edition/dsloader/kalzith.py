@@ -16,8 +16,8 @@ folder is never changed; DSCLOG has the game open the copies):
   * GPLDATA.GFF: his conversation, script SCRIPT, and in the pens' master script (MAS 41) the
     command that runs it when the party talks to him (6Eh, as for Dinos and the rest), with its
     entry in the game's table of entry points (GPLI, which saves go by); and his
-    portrait, PORTRAIT: the game's PORTRAIT_FROM with an X branded on the brow, so that no one
-    else's face is his (the Loader's dialogue tab shows it too).
+    portrait, PORTRAIT: his own face, painted for him (kalzithface.py; the Loader's dialogue
+    tab shows it too).
 
 The game reads the pens' people from RGN29 only the first time the party goes there (a save keeps
 them as they were), so he is in new games: those started after the Loader has these copies.
@@ -40,8 +40,7 @@ REGION, ETAB_ID, MASTER = 0x29, 41, 41  # the slave pens, its entity table and m
 SCRIPT = 218  # his conversation (the game's run to 217)
 BEGIN, START = 0x19, 1  # the byte every game script opens with, and where talking starts: after it
                          # (the game takes a talk command for offset 0 as none: clicking did nothing)
-PORTRAIT = 101  # his own: the game's portrait 61 with a slave's brand (101 is free in the game's)
-PORTRAIT_FROM = 61  # a gaunt, bald man (shown also for another of the game's people)
+PORTRAIT = 101  # his own face (kalzithface.py; 101 is free in the game's)
 PEN = (1580, 880)  # by the straw in a free pen of the middle column (its door on the left)
 ENTITY_FLAGS = 14  # as the pens' other people have
 OJFF_PICTURE = 0x0C  # an object's picture
@@ -136,33 +135,10 @@ def object_chunks(chunks) -> Dict[Tuple[str, int], bytes]:
 # ---------------------------------------------------------------------------------------------
 # His portrait
 
-BRAND = (  # an X burned into the brow: "#" the groove, "o" its raised rim (lit from the upper right)
-    "#...#",
-    "o#.#o",
-    ".o#o.",
-    ".#o#.",
-    "#o.o#",
-)
-BRAND_AT = (12, 3)  # its top left, on the left of the brow's highlight
-BRAND_GROOVE, BRAND_RIM = 133, 152  # (portrait palette: a dark red-brown, a pale skin highlight)
-
-
-def portrait(rows):
-    """Portrait PORTRAIT_FROM's pixels (rows of palette indexes) with the brand."""
-    out = [list(r) for r in rows]
-    x0, y0 = BRAND_AT
-    for dy, line in enumerate(BRAND):
-        for dx, c in enumerate(line):
-            if c != ".":
-                out[y0 + dy][x0 + dx] = BRAND_GROOVE if c == "#" else BRAND_RIM
-    return out
-
-
-def portrait_chunk(chunks) -> Optional[bytes]:
-    """His portrait as a PORT chunk, from the game's own (None without it)."""
-    from . import icons
-    source = chunks.get(("PORT", PORTRAIT_FROM))
-    return icons.encode(portrait(icons.decode(source))) if source else None
+def portrait_chunk(chunks=None) -> bytes:
+    """His portrait as a PORT chunk: his own face (kalzithface.py)."""
+    from . import icons, kalzithface
+    return icons.encode([list(row) for row in kalzithface.FACE])
 
 
 # ---------------------------------------------------------------------------------------------
