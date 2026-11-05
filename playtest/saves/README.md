@@ -26,3 +26,7 @@ cannot be loaded in a fresh install (2026-11-01).
   the party moved in memory beside the weapon rack and back, so Thornwall is on the rack (flag
   757). Party at (1816, 1384), the east passage by the locked door (113, 90). Semyon is not in
   his pen in it. Its `DARKSAVE.GFF` is the install's own (991 bytes): the game didn't rewrite it.
+- `pens-fire-count4` (2026-11-05): from `pens-after-arena`, Kurzak followed to his stop and the
+  party in the east hall's fire room (map 1896, 872; its door 115, 53 opened), with the arena
+  count (the game's number 12) set to 4 in memory before the save, so the next trip is Scar's.
+  Not rested yet. Its `DARKSAVE.GFF` is the one in the game folder (not rewritten at this save).

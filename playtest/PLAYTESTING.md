@@ -343,6 +343,14 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   scores (opening the inventory doesn't); clearing the bytes of a worn item leaves its effect
   behind: reload. `itemedit.py MEMBER SLOT [slot= e= f=]`, `sheetedit.py MEMBER [levelN= flags|=]`
   and `party.py` (classes, flags, scores, items) are the tools.
+- **Resting** (the user, 2026-11-05): the fire room off the east passage, its door at square
+  (115, 53), map (1848, 856), opened with the look pointer; in it a small fire ring among
+  haystacks (map about 1931, 856): the **look pointer on the ring** rests ("THE PARTY RESTS",
+  hit points full). After two or three rests and a step, Kurzak calls ("Gerakis! Get up here!
+  It's your turn in the arena!"). **Answer the call quickly**: twice the party walked to Kurzak's
+  stop and on toward the gate (1816, 408) and he ran out of patience ("That's it! Time's run
+  out!"), then the alarm and a fight with every guard. How to get into the arena from there:
+  still to be found (asked the user).
 - **The pens' main door** (objects 2145-2146 at 1571-1611, 559: the entryway Kurzak opens) has
   the "Take me to the Arena! I want a fight!" menu (137:14CEh), but open it answers nothing to
   the look pointer. **Resting** is at a fire ring (the game's rest, 8066Dh); the east hall's
