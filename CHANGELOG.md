@@ -8,6 +8,35 @@ notes](PATCH-NOTES.md).
 
 ## Next pull request (not opened yet)
 
+**New**
+- **The champions' bout** (`champions.py`, `bodyart.py`; with the magic weapons' switch): once a
+  party member has killed Scar (flag 759, set beside the game's 19 where script 3 says "This
+  makes ... king of the pens!"), the first wave of the next visit (the count, the game's number
+  12, at 5 or more) is six champions from a distant arena, after a speech of the Announcer's,
+  once (flag 807): a Tohr-kreen with Kreenfang, a half-giant (metal great axe, leather shield,
+  full scale), a mul (two bone axes, scale chest and arm), a halfling (sling, bone short sword,
+  leather), an elf (bow and arrows, obsidian long sword, leather) and a defiler (bone dagger and a
+  scroll of Fogbolt, Spook or Reflected Image). Objects 2660-2665, copies of the arena's kinds
+  with gear of their own; script 2's default opening (0AD4h) and its call to the random wave maker
+  (1581h) go to parts of ours while the bout is due. Kreenfang moves off the dead body by the arch
+  (its gythka plain).
+- **Champions wear and wield their gear:** the game makes a person's items in its backpack list,
+  and its people carry all theirs there, fighting with their bare numbers. The melee routine
+  fights with the held list's weapon for anyone, and the AC routine counts the worn list for
+  anyone (both seen in DOSBox), so `champions.Gear` moves each champion's items to their slots as
+  it comes on (`pickpocket.place`); the armoured ones' sheets have base AC 10.
+- **The Tohr-kreen champion's own body:** where the game makes a Dead Body for a creature that
+  dies carrying something ("push 0FFFF044Dh", 59412h), `gamepatch`'s `champion_body` asks DSCLOG's
+  `PROBE_WORN` (return address 2754h), which answers object 2666 for that champion (a copy of the
+  Dead Body, its picture a Tohr-kreen fallen on its side, drawn from its own frames) and 1101 for
+  anyone else. DSCLOG's image 64,688 bytes (+48). Tests: `test_champions.py`,
+  `WornTests.test_champion_body`.
+- Seen in DOSBox (the bout forced due in a test build): the six came on with their gear in place;
+  the mul's two axes, the halfling's sling, the elf's bow, the half-giant's great axe (1d10 +8
+  STR) and Kreenfang (2d4+1, twice, then the bite) each attacked; the Tohr-kreen's body was object
+  2666 with Kreenfang in it. Not yet seen: the speech, the bout coming after Scar's death in a
+  real game, and the body's picture on screen (the level-1 test party was defeated first).
+
 **Changed**
 - **Thornwall comes onto the slave pens' weapon rack once Semyon has told of it.** It had been
   on the rack from the start (in place of its first bone polearm). Now the rack's data

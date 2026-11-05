@@ -1,0 +1,42 @@
+# The champions' bout: their gear, their attacks, the Tohr-kreen's body (2026-11-05)
+
+Build: `obsidian-edition` with the champions' bout (champions.py, bodyart.py, DSCLOG's body case).
+DOSBox, new games with the ready-made party, in the arena's first visit.
+
+## Do the game's people use what they carry?
+
+1. In the pens (`pens-thornwall-rack`): every person's gear is in the backpack list (+0Ch), none
+   worn (+08h) or held (+0Ah): Kurzak, the Arena Guards, Scar, the Templars.
+2. Arena, first visit, second wave: the two Tohr-kreen given Headsman (a metal great axe +2) in
+   the held list, right hand (slot 3). Next attack: "Tohr-kreen attacks Cermak with Headsman +2
+   (1d10+2) ... +2 weapon", twice, then its natural 1d6. So the melee routine uses an NPC's held
+   weapon.
+3. The same two given Scale Chest Armor in the worn list (slot 9): K'ratchek's attacks then read
+   "target AC -2" (before: 3). The game counts NPC armour. (The Loader's own count said 1: a gap
+   to look at.)
+4. Killed: each left a Dead Body (object 1101) with its Headsman and armour.
+5. A body's map record has a picture number (+18h, 495). Changing it to the Tohr-kreen's picture
+   changed nothing on screen, so the body's object is changed instead (DSCLOG at 59412h).
+
+## The champions
+
+6. The arena's flags and numbers have no place in memory between script runs, or even while a
+   script waits on a message, so the bout couldn't be made due from outside. Test build: the
+   bout's test forced true (script 2's parts of ours), the module put back afterwards.
+7. Fifth wave of the visit (the wave maker's call for waves past the fourth): six "Champion" came
+   on (objects 2660-2665). Their lists, by the Loader:
+   - Tohr-kreen: Kreenfang held (3). AC 3.
+   - Half-giant: Great Axe held (3); Scale Chest/Arm/Leg Armor and Shield worn (9, 0, 6, 10). AC 5.
+   - Mul: two Axes held (3, 10); Scale Chest and Arm worn. AC 3.
+   - Halfling: Short Sword (3) and Sling (2) held; Chest Armor worn. AC 5.
+   - Elf: Long Sword (3) and Bow (2) held; Chest Armor and Arrows (1) worn. AC 9.
+   - Defiler: Dagger held (3); a Scroll in the backpack. AC 10.
+8. Their attacks: the mul with both bone axes (1d8 each), the halfling with the Leather Sling
+   (1d4, at range), Kreenfang "+1 (2d4+1)" twice then a 1d6, the elf with the Wooden Bow (1d8),
+   the half-giant with the Great Axe (1d10 +8 STR 20).
+9. The party (level 1) was defeated. Before that: the Tohr-kreen champion's body was object 2666
+   with Kreenfang in it; the others' were Dead Bodies (1101) with their gear; the dead body by the
+   arch had a plain Gythka.
+
+Not seen yet: the Announcer's speech (a visit past the fifth), the bout after a real kill of
+Scar, and the dead Tohr-kreen's picture on screen.

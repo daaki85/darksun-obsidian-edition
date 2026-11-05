@@ -74,6 +74,7 @@ running the game, the Loader's window and its dice log are in the
     - [Semyon](#semyon)
     - [What Dinos and the Trustee say about
       them](#what-dinos-and-the-trustee-say-about-them)
+  - [The champions' bout](#the-champions-bout)
   - [The cooked vulture](#the-cooked-vulture)
   - [Defilers' scrolls](#defilers-scrolls)
 - [Graphics](#graphics)
@@ -2030,6 +2031,33 @@ Semyon is never put in his pen after it.
 
 How it works:
 [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#what-dinos-and-the-trustee-say-about-them).
+
+### The champions' bout
+
+Kill **Scar** in the arena, and the pens have a new king. On the party's next
+visit to the arena the Announcer has news:
+
+> Citizens of Draj! Scar is dead, and the pens have a new king. But word travels
+> fast across the sands. From a distant arena come champions who have never known
+> defeat, and they have come to see if the new king is worthy of the crown. Their
+> leader, a Tohr-kreen, carries a gythka that has drunk the blood of a hundred
+> gladiators.
+
+The first wave is six **champions** in place of the game's: a Tohr-kreen with
+**Kreenfang** (a gythka +1), a half-giant with a metal great axe, a leather
+shield and full scale armour, a mul gladiator with two bone axes and scale
+chest and arm armour, a halfling with a sling, a bone short sword and leather
+armour, an elven ranger with a bow and arrows, an obsidian long sword and
+leather armour, and a defiler with a bone dagger and a scroll (Fogbolt, Spook or
+Reflected Image, chosen as the bout starts). They fight with their weapons, the
+two archers shooting, and their armour counts for their AC, as the party's
+does: the game's own people carry their gear but fight with their bare numbers.
+What they carry is on their bodies afterwards; the Tohr-kreen falls as a dead
+Tohr-kreen of its own, Kreenfang in it. It comes once. A party that breaks out
+with Scar instead, or leaves the pens another way, doesn't meet them. (The dead
+body by the arena's stone arch has a plain gythka.)
+
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#the-champions-bout).
 
 ### The cooked vulture
 

@@ -580,7 +580,7 @@ def with_entry(entries: bytes, script: int = SCRIPT) -> bytes:
 def script_chunks(gpldata: bytes, kalzith: bool = True, semyon: bool = True,
                   vulture: bool = True, ring: bool = True, arms: bool = True,
                   magic: bool = True, cloak: bool = False, tome: bool = False,
-                  pens: bool = True, hay: bool = False) -> Dict[Tuple[str, int], bytes]:
+                  pens: bool = True, hay: bool = False, champions: bool = False) -> Dict[Tuple[str, int], bytes]:
     """For the Loader's copy of GPLDATA: his conversation, and the master script running it (and
     Semyon's, semyon.py; Dinos's and the Trustee's questions, pensasks.py; Alagorn on Kreenfang
     and Shadowseeker, alagorn.py), each part only if switched on (the Options tab's new content)."""
@@ -633,6 +633,9 @@ def script_chunks(gpldata: bytes, kalzith: bool = True, semyon: bool = True,
     out.update(scriptfixes.script_chunks(chunks, out))
     from . import kurzak  # Kurzak noticing Legcrusher is gone (kurzak.py): always
     out.update(kurzak.script_chunks(chunks, field_types, out))
+    if champions:  # the champions' bout after Scar's death (champions.py; their objects in the objects' copy)
+        from . import champions as ch
+        out.update(ch.script_chunks(chunks, field_types, out))
     if ring:  # the XP for finding the arena's ring (ring.py), in the same script as Semyon's exit
         from . import ring as rg
         body = ("GPL ", rg.BODY_SCRIPT)
@@ -856,11 +859,11 @@ def _write(source: str, dest: str, added) -> None:
 
 def write_scripts(source: str, dest: str, kalzith: bool = True, semyon: bool = True, vulture: bool = True,
                   ring: bool = True, arms: bool = True, magic: bool = True, cloak: bool = False,
-                  tome: bool = False, pens: bool = True, hay: bool = False) -> None:
+                  tome: bool = False, pens: bool = True, hay: bool = False, champions: bool = False) -> None:
     """The game's GPLDATA.GFF (SOURCE, only read) with Kalzith's conversation (and the rest of
     the new content switched on), to DEST."""
     _write(source, dest, lambda data: script_chunks(data, kalzith, semyon, vulture, ring, arms, magic, cloak, tome, pens,
-                                                             hay))
+                                                             hay, champions))
 
 
 def write_region(source: str, dest: str, gifts=()) -> None:

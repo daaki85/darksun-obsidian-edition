@@ -489,19 +489,19 @@ the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
 each time it opens ("Out of memory in OEOpenGraph" when it can't). What it
 puts there (`UMB_NEED`, the header's +372) is checked against the room
 (`UMB_ROOM`, D00Ah to F000h): the build fails past it (a negative `times`),
-and so does `test_fits_upper_memory`. It needs 6,134 of the room's 8,182
-paragraphs, so 2,048 (32.0 KB) are spare, and with `UMBPLUS.COM`
+and so does `test_fits_upper_memory`. It needs 6,137 of the room's 8,182
+paragraphs, so 2,045 (32.0 KB) are spare, and with `UMBPLUS.COM`
 about 51.0 KB are free in one piece (worked out from C90Ah to F000h less the
-helper, the overlay buffer and the music buffer, each with its MCB: 3,329
+helper, the overlay buffer and the music buffer, each with its MCB: 3,326
 paragraphs; 57.8 KB was measured in DOSBox with a smaller helper). The helper's own segment is the
-limit for new code: its image with the install code is 64,640 bytes
-(`image_len`; the resident part ends at `resident_end`, F570h), so with the
-install's 256-byte stack 640 bytes of its 64 KB are spare, and the build
+limit for new code: its image with the install code is 64,688 bytes
+(`image_len`; the resident part ends at `resident_end`, F5A0h), so with the
+install's 256-byte stack 592 bytes of its 64 KB are spare, and the build
 fails past it (2.12.5's 62,016 bytes; 2.13.0's ages, Haste's aging, Restore
 Youth and the Enlarge and CON rules took 736 bytes, 2.13.1's age on the
 creation screen 560, RECALL's frames 48, Table 7's rolls on the creation screen and the
 specs base 17 320, three-class kits and the Elementalist's least slot 32, the Wasteland Seer's PSP 48, EDIT keeping a member's kit, age and weapon specs 496, the Shinobi's slots to 13th and 4th-level spells 48, the creation screen's THAC0 240, its kit and the review's fixes 240; moving the crash report's
-two 256-byte buffers into the far block gave back 464, Erdlu Claw's talons for the claws alone 32, the max PSP's bonuses put right 112, `PROBE_WORN` (ability items, the gladiator's armour) 80, Psionic Blast's hit points 48, its knock-out 48); the HMA has 6,566 bytes left for more buffers (the far block ends at
+two 256-byte buffers into the far block gave back 464, Erdlu Claw's talons for the claws alone 32, the max PSP's bonuses put right 112, `PROBE_WORN` (ability items, the gladiator's armour) 80, Psionic Blast's hit points 48, its knock-out 48, the champions' Tohr-kreen's body 48); the HMA has 6,566 bytes left for more buffers (the far block ends at
 `FAR_END`, 58,970). (Before this pass the segment had about 2 KB and upper
 memory 0.5 KB: the right button's scrolling, the rings under every enemy and
 the strip below the map had been taken out, and the freeze report cut to 16

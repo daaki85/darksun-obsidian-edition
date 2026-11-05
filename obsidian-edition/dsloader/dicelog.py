@@ -28,7 +28,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import aging, bowyer, buyback, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, bowyer, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
@@ -568,6 +568,7 @@ class DiceLog:
         self._cast: Tuple[Optional[int], Optional[int]] = (None, None)  # (the last spell cast: its caster, the spell)
         self.tracker: Optional[PartyTracker] = None
         self.defilers = defilerscrolls.DefilerScrolls()  # (a defiler in a fight may carry a scroll)
+        self.champions = champions.Gear()  # (the champions' bout: their gear worn and held)
         self.walkers = stuckwalk.StuckWalkers()  # (people a saved walk left standing)
         self.defiler_scrolls = True
         self.buyback = buyback.Buyback()  # (magical items sold, kept to buy back: the rule's DSCLOG part)
@@ -603,6 +604,7 @@ class DiceLog:
         self._arena_count = None
         self.tracker = PartyTracker(self.game)
         self.defilers = defilerscrolls.DefilerScrolls()
+        self.champions = champions.Gear()
         self.walkers.forget()
         heapcheck.WATCH = heapcheck.Watch()  # (a new game, a new session's lowest)
         self.text = TextBuffer(self.guest.read, hdr)
@@ -1204,6 +1206,8 @@ class DiceLog:
                         out += self.buyback.watch(self.game, self.tsr_hdr)
                     if self.defiler_scrolls:  # (a defiler in a fight may carry a scroll: defilerscrolls.py)
                         out += self.defilers.watch(self.game, bool(self.rules & game.RULE_NEW_SPELLS))
+                    # (the champions' gear to where it is worn and held: champions.py)
+                    out += self.champions.watch(self.game, bool(self.rules & game.RULE_NEW_SPELLS))
                 except itemgate.ItemsBusy:
                     pass
                 finally:

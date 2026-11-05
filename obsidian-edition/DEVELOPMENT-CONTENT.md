@@ -16,6 +16,7 @@
 - [Semyon](#semyon)
 - [What Dinos and the Trustee say about them](#what-dinos-and-the-trustee-say-about-them)
 - [The cooked vulture](#the-cooked-vulture)
+- [The champions' bout](#the-champions-bout)
 - [Defilers' scrolls](#defilers-scrolls)
 - [What the party wears](#what-the-party-wears)
 - [Elves and half-elves](#elves-and-half-elves)
@@ -704,8 +705,10 @@ Kreenfang) are in the game's data (`dsloader/dataitems.py`, `worldgear.py`,
 or chest's object (its RDFF: the object's record, then its items, each a child
 or the next of the one before, with its type and name as attributes) has the new
 items after its own, so the game makes them where it makes the object. Kreenfang
-is the arena's dead body's (object 1204) own gythka made +1 and renamed, its
-name attribute with it. One Castle Guard, one Undermountain miner and one Magera
+(`arms.magic`: a gythka made +1 and renamed, its name attribute with it) is the
+champions' Tohr-kreen's ([the champions' bout](#the-champions-bout)); without
+the champions' objects it is the arena's dead body's (object 1204) own gythka,
+as before 2.13.5. One Castle Guard, one Undermountain miner and one Magera
 (Drakejaw's) have an object of their own (2560, 2561, 2562: copies of their
 kind's, their record renumbered), their entity in the Loader's copies of
 `RGN1C.GFF`, `RGN1E.GFF` and `RGN08.GFF` pointing to it; so does one skeleton of
@@ -1014,6 +1017,65 @@ when he heals Gilal and the talk ends): it opens a narration window and ends
 there, and the menu came back after it with only "Goodbye." The
 Loader then refills the party, once (flag 781), only while the party is
 talking with him (never from a game being loaded).
+
+## The champions' bout
+
+([In the features page](FEATURES.md#the-champions-bout).)
+
+How (`champions.py`, `bodyart.py`): six objects of the Loader's own, 2660-2665,
+copies of the arena's kinds (the Tohr-kreen 292, the Guard 293, a half-giant;
+the Wild Mul 290; the Renegade 289, a halfling; an elven caravan guard 103; the
+Defiler 296), their records renumbered, named "Champion", their own items left
+out and their gear in (as the new items, after the person), the armoured ones'
+sheets at base AC 10. Their pictures are their kinds'.
+
+The scripts: the arena's deaths (script 3) say "This makes ... king of the
+pens!" and set flag 19 only when a party member kills Scar (flag 19 is set at
+the end of Scar's visit too, whatever happened, so it doesn't tell); that set
+becomes a jump to the same after the script's end, then flag 759 (KING), then
+back. The arena's visits (script 2) count in the game's number 12; a visit past
+the fifth (12 at 5 or more) opens with the default speech ("Once again,
+expectant spectators...", 0AD4h), and its waves come from the random wave maker
+(called at 1581h, since the count is over 4). Both are jumps to parts of ours
+that, while the bout is due (12 at 5 or more, 759 set, 807 clear), say the
+speech, and put the six in (each a group of one: the wave's own subroutine at
+9301 with its locals 12 and 13, as the game's waves do) and set 807 (FOUGHT);
+else they do what the game did. What a jump leaves of a longer command is
+filled with one-byte commands, so the script still decodes (the Loader's other
+changes read it).
+
+Worn and wielded: the game makes a person's items in its backpack list
+(+0Ch), and the people of the game's pens and arena carry everything there
+(Kurzak's armour and sword, the Arena Guards' bows): none of it is fought with
+or counts for AC. The melee routine fights with what is in the held list
+(+0Ah) for anyone: seen, a Tohr-kreen given Headsman there attacked "with
+Headsman +2 (1d10+2)" in place of its first two natural attacks, its third
+kept; and the AC routine counts the worn list (+08h) for anyone (two Tohr-kreen
+given scale chest armour went from AC 3 to -2 against the party's attacks).
+`champions.Gear` (each pass of the dice log, in the arena) moves each living
+champion's items, by type, to its slot (`pickpocket.place`, as the inventory
+screen would), once; the defiler gets its scroll first (into its backpack, while
+it still has one), a random one of `SCROLL_SPELLS` (the game's wizard spells
+without the new ones).
+
+The body: the game makes a Dead Body (object 1101, a container) where a
+creature carrying something dies, and puts its things in it (DSUN.EXE 59412h,
+"push 0FFFF044Dh" before the call that makes an object at the dying one's
+place). The map's records hold a picture number too (+18h) but the game
+doesn't draw from it (changed in memory, nothing changed on screen), so the
+object itself is swapped: `gamepatch`'s `champion_body` makes the push INT
+81h (`PROBE_WORN`, told apart by its return address 2754h), "push 0FFFFh",
+"push ax", and DSCLOG answers 2666 (`champions.BODY`) when the dying map
+object ([BP+6], its object at DS:66AEh + 32 each) is the Tohr-kreen champion,
+else 1101. Object 2666 is a copy of 1101 (its record renumbered) with a picture
+of its own, 2666 (`bodyart.py`: the Tohr-kreen's frame 8 turned on its side,
+squashed to 0.75 of its height, darkened to 0.7, its gythka's pale pixels left
+out, over the red of the Dead Body's blood). Seen in DOSBox: the six came on
+(the bout forced due for the test: the arena's flags have no place in memory
+to be set from outside), each with its gear in place, the mul's two axes, the
+halfling's sling, the elf's bow and the half-giant's great axe each attacking,
+Kreenfang 2d4+1; the Tohr-kreen's body object 2666 with Kreenfang in it, the
+others' Dead Bodies with their gear.
 
 ## Defilers' scrolls
 

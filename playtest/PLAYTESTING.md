@@ -115,6 +115,21 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   more (1221, 1224, 1230...). Once made they stayed after the party walked off. To find an
   object's items, look it up by its object number when it is made, not by item type: type 6Ch is
   the weapon rack's and a coffin's (1574, at 75,43, holding a gem).
+- **People's gear** (2026-11-05): the game makes a person's items in its backpack list (+0Ch):
+  Kurzak's, the Arena Guards', Scar's are all there, none worn or held, so none counts for AC or
+  is fought with. Moved into the held list (`pickpocket.place(gd, creature, item, 3)`) a weapon is
+  fought with by anyone (a Tohr-kreen with Headsman: "attacks Cermak with Headsman +2 (1d10+2)");
+  armour in the worn list counts for anyone's AC. A creature that dies carrying something leaves
+  a Dead Body (object 1101) with its things.
+- **The arena's flags and numbers can't be set from outside** (2026-11-05): the pointers at
+  DS:1352h and 1356h stay null in the arena even while a script waits on a message, so a poller
+  never found them. To test a script's branch there, build a copy of the scripts with the test
+  forced (edit the module, run `start.sh`, which writes `dos/GPLDATA.GFF`, then put the module
+  back) and say so in the log.
+- **Fighting a wave without killing it** (2026-11-05): `fightout.sh` puts every foe at 1 HP first;
+  to see foes attack, pass the party's turns instead (Tab, Return, E for a member out of
+  movement, Escape if E opened the Effects screen), as in `logs/2026-11-05-champions.md`. A
+  level-1 party loses to the champions.
 - **Moving the party in memory** (2026-11-04, for a check where the way is shut): write each of map
   objects 0-3's x, y words at DS:669Dh + 32n (map units) and the camera at DS:1178h, then walk one
   step with `walkto.py`: the game redraws and makes the objects near the new place. Only for

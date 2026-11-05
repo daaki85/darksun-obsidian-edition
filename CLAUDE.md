@@ -60,6 +60,8 @@ capture; window grabs (`import -window`) are 320x240, so y x 1.2.
 - E opens the Effects screen. In an END <NAME>'S MOVE menu, E is END TURN, and clicks there
   don't register.
 - Escape with nothing open brings EXIT: SAVE GAME?; press Escape only with a screen or menu up.
+- The arena's flags and numbers have no place in memory to set from outside (even mid-script):
+  to test a branch there, force it in a test build of the scripts, then put the module back.
 
 **Fights.** `fightout.sh` does a story fight the game's way: foes to 1 HP (not prisoners), Tab +
 Return on party turns, E for a member out of movement, and messages and level-ups (CHOOSE A SPELL,

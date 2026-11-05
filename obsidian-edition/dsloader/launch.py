@@ -18,7 +18,7 @@ import threading
 import time
 from typing import Dict, Iterator, List, Optional, Tuple
 
-from . import gamepatch, gff, gpl, icons, kalzith, scenepointer, tome, worldgear
+from . import champions, gamepatch, gff, gpl, icons, kalzith, scenepointer, tome, worldgear
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOS_DIR = os.path.join(HERE, "dos")
@@ -446,7 +446,8 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
         source, dest, with_kalzith, on["semyon"], on["vulture"], on["arena_ring"],
         on["magic_arms"] and objects_ok, on["world_magic"] and objects_ok,
         worldgear.ELVEN_CLOAK_OBJECT in new_objects, tome.TOME_OBJECT in new_objects,
-        on["pens_gear"] and objects_ok, worldgear.HAYNEEDLE_OBJECT in new_objects))]  # (Alagorn knows
+        on["pens_gear"] and objects_ok, worldgear.HAYNEEDLE_OBJECT in new_objects,
+        champions.TOHR_KREEN in new_objects))]  # (Alagorn knows
     # the weapons by their own pictures; the Elven Leader gives the cloak, Father Garyn the tome and
     # Merzol's hay stash Hayneedle, of its own object)
     if with_kalzith:

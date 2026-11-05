@@ -4907,8 +4907,17 @@ nc_who  dw 0                            ; (the character the test was asked abou
 ;   kept), AX the creature's hit points + 10, DX the damage, DI the thing: while a party member
 ;   (0-3) has hit points of Psionic Blast's still to come back (BLAST_HP), a blow that would kill
 ;   it (DX at AX or more) knocks it out instead (the flags of "greater": the jg goes to the Out
-;   Cold case), as the blast's wounds are imagined; Disintegrate's (DX 10000 and up) still kills.
+;   Cold case), as the blast's wounds are imagined; Disintegrate's (DX 10000 and up) still kills;
+; - where the game makes a Dead Body for a creature that dies carrying something (612E:2752h,
+;   59412h: "push 0FFFF044Dh", object 1101; the INT, then "push 0FFFFh / push ax"): AX the body's
+;   object, 1101, or the champions' Tohr-kreen's own (champions.py) when the dying creature (its
+;   map object [BP+6], DS the game's) is that champion.
 WORN_AC_RET equ 0x22C8                  ; (the AC routine's INT's return address)
+BODY_RET    equ 0x2754                  ; (the dead body's)
+DEAD_BODY   equ 1101                    ; (the game's Dead Body)
+KREEN_CHAMPION equ 2660                 ; (champions.TOHR_KREEN)
+KREEN_BODY  equ 2666                    ; (champions.BODY)
+MAP_OBJECT  equ 0x66AE                  ; (a map object's object number: DS:66AEh + 32 each)
 BLAST_RET   equ 0x0B69                  ; (Psionic Blast's)
 KO_RET      equ 0x194D                  ; (the death test's)
 KO_UNMADE   equ 10000                   ; (the damage routine's Disintegrate: status 8)
@@ -4921,6 +4930,8 @@ probe_worn:
         je .ac_bp
         cmp word [bp+2], KO_RET
         je .ko_bp
+        cmp word [bp+2], BODY_RET
+        je .body
         cmp word [bp+2], BLAST_RET
         pop bp
         je .blast
@@ -4959,6 +4970,20 @@ probe_worn:
         retf 2
 .ko_cmp: cmp ax, dx                     ; (the game's)
         retf 2
+.body:  pop bp
+        push bx
+        mov bx, [bp+6]                  ; the dying creature's map object (the game's frame)
+        shl bx, 5
+        mov ax, [bx+MAP_OBJECT]
+        pop bx
+        cmp ax, KREEN_CHAMPION
+        je .kreen
+        cmp ax, -KREEN_CHAMPION
+        je .kreen
+        mov ax, DEAD_BODY
+        iret
+.kreen: mov ax, KREEN_BODY
+        iret
 .ac_bp: pop bp
 .ac:    test word [es:bx+0x12], 0x40
         jz .out                         ; not a gladiator (ZF set)

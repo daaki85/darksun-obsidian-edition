@@ -194,7 +194,7 @@ A few of them:
 | **Glasshewer** | an obsidian axe +2 a fire or earth cleric can wield |
 | **Drakejaw** | a bone axe +1 a water cleric can wield |
 | **Headsman** | a metal great axe +2 |
-| **Kreenfang** | a bone gythka +1 |
+| **Kreenfang** | a bone gythka +1, the champions' Tohr-kreen's ([the champions' bout](obsidian-edition/FEATURES.md#the-champions-bout)) |
 | **Linebreaker** | a metal polearm +2 |
 | **Thornwall** | a bone polearm +1, on the slave pens' weapon rack once Semyon has told of it |
 | **Gutterknot** | a club +1, the game's first magic club |

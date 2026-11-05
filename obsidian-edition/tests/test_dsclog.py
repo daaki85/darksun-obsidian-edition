@@ -686,6 +686,19 @@ class WornTests(unittest.TestCase):
         self.assertFalse(greater(1, 20, 10000, 7))  # (Disintegrate still kills)
         self.assertFalse(greater(5, 20, 25, 7))   # (not a party member)
 
+    def test_champion_body(self):
+        """Where the game makes a Dead Body (612E:2752h, its INT returning to 2754h): AX the body's
+        object, 1101, or the champions' Tohr-kreen's own (2666) for the dying creature's map object
+        ([BP+6], its object at DS:66AEh + 32 each) when that is the Tohr-kreen champion (2660)."""
+        mu = self.mu
+        for thing, obj, want in ((7, 292, 1101), (7, 2660, 2666), (40, -2660, 2666), (40, 2661, 1101)):
+            with self.subTest(thing=thing, obj=obj):
+                mu.mem_write(SS * 16 + BP + 6, struct.pack("<H", thing))
+                mu.mem_write(GAME_DS * 16 + 0x66AE + thing * 32, struct.pack("<h", obj))
+                self.run_at(0x2752, eax=0x1234, ebx=0x5555, edx=0x6666)
+                self.assertEqual((mu.reg_read(r.UC_X86_REG_AX), mu.reg_read(r.UC_X86_REG_BX), mu.reg_read(r.UC_X86_REG_DX)),
+                                 (want, 0x5555, 0x6666))
+
     def test_psionic_blast_kept(self):
         """Psionic Blast's "or byte [si],1" (80F5:0B67h): the OR done, and the loss ([BP-18h]) added
         to BLAST_HP (header +1814) for party member DI (0-3); a monster's (DI 4 up) not kept."""

@@ -457,10 +457,14 @@ def data_chunks(chunks, on: Dict[str, bool]) -> Dict[Tuple[str, int], bytes]:
         extra += npcitems.pens(magic_arms)
     try:
         out = object_chunks(chunks, gifts, extra)
-        if magic_arms:
-            out.update(arms.kreenfang_chunks(chunks))
     except (ValueError, struct.error):
         return {}
+    if magic_arms:  # (Kreenfang the champions' Tohr-kreen's: the arena's dead body keeps its plain one)
+        from . import champions
+        try:
+            out.update(champions.object_chunks(chunks))
+        except (KeyError, ValueError, IndexError, struct.error):
+            out.update(arms.kreenfang_chunks(chunks))  # (no champions: Kreenfang on the body, as before)
     if on.get("world_magic", True) is not False:
         out[("RDFF", ELVEN_CLOAK_OBJECT)] = dataitems.item_object(ELVEN_CLOAK, header_numbers(chunks).get(65, 0))
         out[("RDFF", HAYNEEDLE_OBJECT)] = dataitems.item_object(
