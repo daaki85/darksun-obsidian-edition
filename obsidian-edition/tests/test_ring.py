@@ -180,7 +180,9 @@ class XpTests(unittest.TestCase):
         script = self._body()
         out = ring.with_xp(script)
         self.assertEqual(out[:ring.BODY_AT], script[:ring.BODY_AT])
-        self.assertEqual(out[ring.BODY_AT + 3:len(script)], script[ring.BODY_AT + 3:])
+        end = next(op.at for op in gpl.decode(script, b"") if op.at > ring.BODY_AT)  # (the command's rest filled)
+        self.assertEqual(out[ring.BODY_AT + 3:end], bytes((gpl.FILL,)) * (end - ring.BODY_AT - 3))
+        self.assertEqual(out[end:len(script)], script[end:])
         r = gpl._Reader(out, b"")
         r.i = ring.BODY_AT
         jump = gpl._op(r)

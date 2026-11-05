@@ -53,11 +53,10 @@ def with_dagger(script: bytes, field_types: bytes) -> bytes:
     out = bytearray(script) + added
     if len(out) > LONGEST:
         return script
-    jump = gpl.encode_op((GOTO, [("n", s.at["dagger"])]))
-    place = ops[at].at
-    if len(jump) > ops[at + 1].at - place:
+    try:
+        gpl.put_jumps(out, script, field_types, [(ops[at].at, s.at["dagger"])])
+    except gpl.ScriptError:
         return script
-    out[place:place + len(jump)] = jump
     return bytes(out)
 
 

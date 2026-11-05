@@ -219,3 +219,24 @@ class ScriptTests(unittest.TestCase):
         ops = [o for o in gpl.decode(new, self.types) if o.at >= len(was)]
         self.assertEqual([o.args for o in ops[:2]], [[("n", 1), ("var", 13, 19)], [("n", 1), ("var", 13, champions.KING)]])
         self.assertEqual(ops[2].code, champions.GOTO)
+
+
+@unittest.skipUnless(GPLDATA and os.path.isfile(GPLDATA), "needs the game's GPLDATA.GFF (DSUN_GPLDATA)")
+class AllScriptsTests(unittest.TestCase):
+    """The Loader's whole copy of the scripts, every switch on: each script it changes still
+    decodes (a change made after another's reads it), and script 3 has the king's flag (it was lost
+    when Semyon's change, made first, left the script undecodable)."""
+
+    def test_all_decode(self):
+        from dsloader import kalzith
+        with open(GPLDATA, "rb") as f:
+            raw = f.read()
+        _, types = gpl.load_scripts(raw)
+        out = kalzith.script_chunks(raw, kalzith=True, semyon=True, vulture=True, ring=True, arms=True,
+                                    magic=True, cloak=True, tome=True, pens=True, hay=True, champions=True)
+        for key, script in out.items():
+            if key[0] in ("GPL ", "MAS "):
+                with self.subTest(key=key):
+                    gpl.decode(script, types)
+        deaths = out[("GPL ", champions.DEATHS_SCRIPT)]
+        self.assertEqual(deaths[champions.KING_AT], champions.GOTO)

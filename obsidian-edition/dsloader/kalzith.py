@@ -46,7 +46,7 @@ PEN = (1580, 880)  # by the straw in a free pen of the middle column (its door o
 ENTITY_FLAGS = 14  # as the pens' other people have
 OJFF_PICTURE = 0x0C  # an object's picture
 RDFF_SELF, RDFF_NAME, RDFF_NAME_SIZE = 0x10, 0x32, 8  # the record's own object number; its name
-RDFF_CLASS, RDFF_LEVEL = 0x6F, 0x72  # (as the arena Defiler's: a defiler, of level 9)
+RDFF_CLASS, RDFF_LEVEL = 0x6F, 0x72  # (as the arena Defiler's: a defiler, of level 5)
 DEFILER_CLASS, LEVEL = 18, 5
 
 # his state, in four of the game's global flags (bits; it uses 1-755, a save keeps 808): met
@@ -791,8 +791,8 @@ def stock(gd, new_spells: bool) -> List[str]:
     his gear, worn (DRESSED); the game's flag STOCKED marks it done (a save keeps it, a new game
     starts without it). What was given, by name."""
     from . import npcitems
-    if gd.region() != REGION or gd.flag(STOCKED):
-        return []
+    if gd.region() != REGION or not gd.flags_ready() or gd.flag(STOCKED):
+        return []  # (STOCKED reads clear while the flags have no place: not given again then)
     # (found by name among the region's creatures: not among the first 256 objects, where he
     # is not - the pens' last, past the 256th)
     table = gd.creatures(CREATURES_SEEN)

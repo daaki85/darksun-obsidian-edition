@@ -50,6 +50,15 @@ notes](PATCH-NOTES.md).
   was no memory for them ("no memory for its buffers (57 KB). Not loaded.") it exited with its
   vectors still pointing into freed memory. It now sets up the buffers first and hooks nothing
   when that fails. Seen in DOSBox: loads and logs as before (image still 64,688 bytes).
+- Fixed before release: **the champions' bout never came with Semyon on** (the default). Semyon's
+  changes to scripts 3 and 5 put a jump over a longer command and left the rest of it as it was,
+  so the script no longer decoded; the champions' change to script 3, made after, reads it, and
+  left it alone (no flag 759 on Scar's death). Eleven scripts in all were left so (3, 5, the Elven
+  Leader's 46, Garyn's 174, Dinos's and the Trustee's 137, 139 and 146, Alagorn's 212, 213, 220
+  and 221). Each such jump is now `gpl.put_jumps`, which fills what is left of the command with a
+  one-byte command (`gpl.FILL`, 61h, as the champions' own jumps did), so every changed script
+  decodes: the dice log's explanations of the scripts' rolls read them too. Test:
+  `AllScriptsTests` (the whole copy, every switch on: each script decodes, script 3 has the hook).
 
 **Changed**
 - **Thornwall comes onto the slave pens' weapon rack once Semyon has told of it.** It had been
@@ -66,6 +75,27 @@ notes](PATCH-NOTES.md).
   Thornwall to tell of). Seen in DOSBox: the rack made as the party came beside it, with Thornwall
   first (then its polearms, quarterstaff and axe), still there after walking off and after a
   save and load. Tests: `test_semyon.ShipmentTests`, `test_worldgear`.
+
+**Fixed: the Loader** (found in an audit)
+- **A save of the same party loaded wasn't seen as a load:** the check for it read the game's
+  clock after another step of the same pass had just noted it, so the clock never went back; the
+  dice log then gave the loaded save's differences as news (hit points, PSP, abilities, kills and
+  XP). It keeps its own note of the clock now (test `LoadSeenTests`).
+- **The Options tab's combat log level was undone** while the panel showed: the panel's own level
+  was put back (and saved) on the next pass. The panel takes the tab's level now (test
+  `PanelLevelTests`).
+- **The Loader's window forgot the combat log panel's size and whether it was open** (only the
+  logs without a window read them), and its item reports had no switches: it reads the saved
+  settings first now.
+- **Kalzith's scrolls weren't trimmed** if the game was busy with its item lists on the pass he was
+  seen dead: the trim is tried each pass until done.
+- Semyon's word on the crate counts a Thornwall in a bag too; Kalzith's stock waits while the
+  flags have no place in memory (it read as not given); a monster's THAC0 read signed (0 or less
+  showed as 255); WIS's save adjustment read only within its table; Restore Youth's system shock
+  skips a creature with no CON, as Haste's does; a palette from an earlier start isn't kept when
+  the game's can't be read; crash reports show the new spells' old setting name, the ring and the
+  panel's level as used; a failure counting effects' charges no longer loses the pass's lines.
+- DSCLOG's message when its interrupts are taken names them right (81h-FFh, not 8Ch-FEh).
 
 **Fixed: the game's code**
 - **Psionic Blast knocks out, not kills:** while a party member has the blast's hit points still

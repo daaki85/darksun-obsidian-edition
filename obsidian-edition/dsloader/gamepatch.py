@@ -277,7 +277,7 @@ PATCHES = (
     # a fifth of its most hit points: or byte [si],1 (DSCLOG does it, and keeps a party member's
     # loss for the Loader to give back as the fight ends: psiblast.py)
     Patch("psionic_blast", 0x79707, bytes.fromhex("800c01"), _interrupt(VEC_WORN, 3)),
-    # ... and the damage routine's death test (612E:18E0h: hit points + 10 against the damage):
+    # ... and the damage routine's death test (612E:194Bh: hit points + 10 against the damage):
     # cmp ax,dx (DSCLOG does it, and a party member with Psionic Blast's hit points still to come
     # back is knocked out, not killed: the jg after it kept)
     Patch("blast_knockout", 0x5860B, bytes.fromhex("3bc2"), _interrupt(VEC_WORN, 2)),

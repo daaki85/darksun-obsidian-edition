@@ -415,6 +415,26 @@ def _put_destination(t) -> bytes:
     return b"\xB1" + _put_field(t)
 
 
+FILL = 0x61  # a command of one byte and no arguments: what is left of a command a jump is put over
+
+
+def put_jumps(out: bytearray, script: bytes, field_types: bytes, jumps) -> None:
+    """Into OUT (SCRIPT with commands added after its end), for each (AT, TO) of JUMPS a jump to
+    TO (GOTO, 64h) over SCRIPT's command at AT, what is left of that command filled with FILL, so
+    the script still decodes: the Loader's later changes, and the dice log, read it. A ScriptError
+    if AT isn't where a command starts, or the command is shorter than the jump."""
+    ops = decode(script, field_types)
+    ends = {a.at: b.at for a, b in zip(ops, ops[1:])}
+    ends[ops[-1].at] = len(script)
+    for at, to in jumps:
+        if at not in ends:
+            raise ScriptError(f"no command at {at:X}h")
+        jump = encode_op((0x64, [("n", to)]))
+        if ends[at] - at < len(jump):
+            raise ScriptError(f"the command at {at:X}h is shorter than a jump")
+        out[at:ends[at]] = jump + bytes((FILL,)) * (ends[at] - at - len(jump))
+
+
 def encode_op(op) -> bytes:
     """One command's bytes (an Op, or a (code, args) pair)."""
     code, args = (op.code, op.args) if isinstance(op, Op) else op

@@ -1959,3 +1959,42 @@ class PassTests(unittest.TestCase):
             out = log.lines(now=100.0)
         self.assertEqual((log._dice, log._save_rolls), ({}, {}))
         self.assertIn("(3 rolls came too fast to record)", out)
+
+
+class LoadSeenTests(unittest.TestCase):
+    """A save of the same party loaded: its clock goes back, and _party_check holds the news back
+    (it once shared the clock _forget_undone_picks had just set, and saw no going back)."""
+
+    def test_same_party_clock_back(self):
+        from unittest import mock
+        log = make_game()
+        clock = [5000]
+        with mock.patch.object(log.game, "game_time", side_effect=lambda: clock[0]), \
+                mock.patch.object(log.game, "party_signature", return_value=b"party"):
+            log._forget_undone_picks()
+            log._party_check(now=100.0)
+            self.assertFalse(log._party_check(now=200.0))  # (settled)
+            clock[0] = 3000  # (an earlier save of the same party)
+            log._forget_undone_picks()  # (as in a pass: it reads the clock first)
+            self.assertTrue(log._party_check(now=300.0))
+
+
+class PanelLevelTests(unittest.TestCase):
+    """The Options tab's combat log level, chosen while the panel shows, is kept: the panel takes
+    it (it once put its own back, and saved that)."""
+
+    def test_options_level_kept(self):
+        from unittest import mock
+        from dsloader import combatlog
+        log = make_game()
+        log._wheel = mock.Mock(take=mock.Mock(return_value=0))
+        panel = log._panel
+        panel.level = combatlog.SHORT
+        log.combat_log_level = combatlog.DETAIL  # (the Options tab's radio)
+        with mock.patch.object(type(panel), "shown", new_callable=mock.PropertyMock, return_value=True), \
+                mock.patch.object(panel, "mouse"), mock.patch.object(log, "_update_panel") as update, \
+                mock.patch.object(dicelog, "_remember") as remember:
+            log._panel_input(1.0)
+        self.assertEqual((log.combat_log_level, panel.level), (combatlog.DETAIL, combatlog.DETAIL))
+        remember.assert_not_called()
+        update.assert_called_once()

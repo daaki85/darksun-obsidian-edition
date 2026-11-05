@@ -64,12 +64,17 @@ class PensAsksTests(unittest.TestCase):
         return [gpl.Op(o.at + at, o.code, o.args) for o in gpl.decode(self.out[at:], b"")]
 
     def test_game_bytes_kept(self):
-        """Only two of the game's commands change, each to a jump (64h) as long as or shorter than
-        itself; everything else of the game's is where it was, the new code after it."""
+        """Only two of the game's commands change, each to a jump (64h), the rest of it filled
+        (gpl.FILL); everything else of the game's is where it was, the new code after it."""
         n = len(self.script)
         self.assertGreater(len(self.out), n)
         changed = {i for i in range(n) if self.out[i] != self.script[i]}
-        self.assertLessEqual(changed, {*range(self.start.at, self.start.at + 3), *range(self.menu.at, self.menu.at + 3)})
+        ends = {a.at: b.at for a, b in zip(self.ops, self.ops[1:])}
+        spans = [(o.at, ends[o.at]) for o in (self.start, self.menu)]
+        self.assertLessEqual(changed, {i for at, end in spans for i in range(at, end)})
+        for at, end in spans:
+            self.assertEqual(self.out[at + 3:end], bytes((gpl.FILL,)) * (end - at - 3))
+        gpl.decode(self.out, b"")  # (still decodes)
         for at in (self.start.at, self.menu.at):
             self.assertEqual(self._op_at(at).code, pensasks.GOTO)
             self.assertGreaterEqual(self._op_at(at).args[0][1], n)
@@ -239,7 +244,8 @@ class BusyOnceTests(unittest.TestCase):
         jump = gpl.encode_op((0x64, [("n", len(script))]))
         self.assertEqual(out[line.at:line.at + len(jump)], jump)
         self.assertEqual(out[:line.at], script[:line.at])
-        self.assertEqual(out[line.at + len(jump):len(script)], script[line.at + len(jump):])
+        self.assertEqual(out[line.at + len(jump):after.at], bytes((gpl.FILL,)) * (after.at - line.at - len(jump)))
+        self.assertEqual(out[after.at:len(script)], script[after.at:])
         added = [(o.code, o.args) for o in gpl.decode(out[len(script):], b"")]
         self.assertEqual(added, [(0x16, [("n", 0), ("var", 13, pensasks.BUSY)]),
                                  (0x14, [("n", pensasks.ROUNDS_AT), ("n", pensasks.ROUNDS_SCRIPT)]),

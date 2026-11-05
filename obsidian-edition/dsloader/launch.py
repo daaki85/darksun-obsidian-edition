@@ -607,7 +607,11 @@ def effective_switches(settings: dict) -> Dict[str, object]:
     from . import game
     out: Dict[str, object] = {key: settings.get(key, default) for key, default in SWITCH_DEFAULTS.items()}
     out.update(content(settings))
-    out.update({key: bool(settings.get(key, True)) for key, _ in game.RULE_SETTINGS})
+    out.update({key: bool(settings.get(key, settings.get(game.OLD_SETTING_NAMES.get(key, key), True)))
+                for key, _ in game.RULE_SETTINGS})  # (as game.rules_from_settings reads them)
+    from . import dicelog, rings
+    out["rings"] = rings.mode(settings)  # (an older "all" is the chosen enemy's now)
+    out["combat_log_level"] = dicelog.combat_log_level(settings)
     return out
 
 

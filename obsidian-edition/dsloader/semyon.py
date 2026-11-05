@@ -33,7 +33,7 @@ SEMYON = 280  # his object (RDFF 280, "Semyon"; the Tied-up Prisoner is 319)
 SCRIPT = 219  # his conversation in the pens (Kalzith's is 218; the game's run to 217)
 PORTRAIT = 118  # the game's portrait for him
 GONE = 7  # the game's flag: he has gone to the holding pens (any way he left)
-PLACED, MET = 764, 765  # (the Loader's flags: Kalzith's are 760-763; the game's run to 755)
+PLACED, MET = 764, 765  # (the Loader's flags: Kalzith's are 760-763; the game's run to 755, the Loader's from 756)
 LEFT, DIED = 770, 771  # (the Loader's) he left the arena after the fight he helped in; he died
 ARENA_TALK, EXIT = 5, 2400  # his arena script, and where in it he is taken off the map then
 REMOVE = 0x5E  # (object, region, x, y, ...): an object moved to a region (255: none)
@@ -144,7 +144,7 @@ def with_exit(script: bytes, field_types: bytes = b"") -> bytes:
     s.op(op.code, *op.args)
     s.op(GOTO, ("n", ops[at + 1].at))
     out = bytearray(script) + s.bytes(base=len(script), end=False)
-    out[EXIT:EXIT + 3] = gpl.encode_op((GOTO, [("n", len(script))]))
+    gpl.put_jumps(out, script, field_types, [(EXIT, len(script))])
     return bytes(out)
 
 
@@ -181,7 +181,7 @@ def with_escape(script: bytes, field_types: bytes = b"") -> bytes:
     s.when(recruited, lambda: s.when(not_against, along))
     s.op(GOTO, ("n", ops[at + 1].at))
     out = bytearray(script) + s.bytes(base=len(script), end=False)
-    out[ESCAPE_AT:ESCAPE_AT + 3] = gpl.encode_op((GOTO, [("n", len(script))]))
+    gpl.put_jumps(out, script, field_types, [(ESCAPE_AT, len(script))])
     return bytes(out)
 
 
@@ -258,16 +258,22 @@ def conversation(thornwall: bool = True) -> bytes:
 
 def found(gd) -> bool:
     """FOUND set once, after his tip (TOLD), a party member carries Thornwall (worn, held or in
-    the pack): he speaks of it then. True when it was set now."""
+    the pack, a bag in it too): he speaks of it then. True when it was set now."""
     import struct
-    from . import game, worldgear
+    from . import game, ring, worldgear
     if not gd.flag(TOLD) or gd.flag(FOUND):
         return False
+
+    def thornwall(rec) -> bool:
+        return struct.unpack_from("<H", rec, game.ITEM_NAME)[0] == worldgear.THORNWALL
+
+    it = ring.Items(gd)
     for member in range(game.PARTY_SIZE):
-        if any(struct.unpack_from("<H", item, game.ITEM_NAME)[0] == worldgear.THORNWALL
-               for _, item, _ in gd._worn(member)):
-            gd.set_flag(FOUND)
-            return True
+        for _, item, _ in gd._worn(member):
+            contents, = struct.unpack_from("<H", item, ring.ITEM_CONTENTS)
+            if thornwall(item) or any(thornwall(rec) for _, rec in it.chain(contents)):
+                gd.set_flag(FOUND)
+                return True
     return False
 
 

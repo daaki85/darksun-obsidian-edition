@@ -41,6 +41,9 @@ extracted game (`DS_GAME`, default `$PLAYTEST_WORK/inst`). Nothing in the work f
    the built copy (`GPLDATA=../obsidian-edition/dos/GPLDATA.GFF python3 dec.py SCRIPT LO HI`) and
    check the change is there before trusting anything seen in play. Memory edits are lost on any
    restart.
+   `dec.py` stops with "unknown term" when LO falls inside a command: start it at a command
+   (or decode the whole script with `dsloader.gpl.load_scripts` and `decode`). Every script in
+   the built copy should decode (2026-11-05: eleven didn't, and a later change gave up on one).
 5. **The watchdog**: `sh guard_start.sh`, then a Monitor on `$WORK/guard.log` (grep
    `STUCK|GONE`) for the whole test. Stop it (`kill $(cat $WORK/guard.pid)`) before going idle.
 6. **DOSBox dies when the session sits idle** (the container's processes are reclaimed). After

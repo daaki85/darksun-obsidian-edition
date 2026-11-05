@@ -130,7 +130,9 @@ class SemyonTests(unittest.TestCase):
         arena = self._arena()
         out = semyon.with_exit(arena)
         self.assertEqual(out[:semyon.EXIT], arena[:semyon.EXIT])
-        self.assertEqual(out[semyon.EXIT + 3:len(arena)], arena[semyon.EXIT + 3:])
+        end = next(op.at for op in gpl.decode(arena, b"") if op.at > semyon.EXIT)  # (the command's rest filled)
+        self.assertEqual(out[semyon.EXIT + 3:end], bytes((gpl.FILL,)) * (end - semyon.EXIT - 3))
+        self.assertEqual(out[end:len(arena)], arena[end:])
         r = gpl._Reader(out, b"")
         r.i = semyon.EXIT
         jump = gpl._op(r)
@@ -163,7 +165,9 @@ class SemyonTests(unittest.TestCase):
         out = semyon.with_escape(script)
         at = semyon.ESCAPE_AT
         self.assertEqual(out[:at], script[:at])
-        self.assertEqual(out[at + 3:len(script)], script[at + 3:])
+        end = next(op.at for op in gpl.decode(script, b"") if op.at > at)  # (the command's rest filled)
+        self.assertEqual(out[at + 3:end], bytes((gpl.FILL,)) * (end - at - 3))
+        self.assertEqual(out[end:len(script)], script[end:])
         r = gpl._Reader(out, b"")
         r.i = at
         jump = gpl._op(r)
@@ -335,6 +339,15 @@ class ShipmentTests(unittest.TestCase):
         self.assertTrue(semyon.found(self.gd))
         self.assertTrue(self.gd.flag(semyon.FOUND))
         self.assertFalse(semyon.found(self.gd))  # (once)
+
+    def test_found_in_a_bag(self):
+        """Thornwall inside something a party member carries counts (here the rack itself, as a
+        container holding it)."""
+        self.gd.set_flag(semyon.TOLD)
+        self.assertTrue(semyon.ship(self.gd))
+        rack = self.ring.Items(self.gd).item(10)
+        self.gd._worn = lambda member, lists=None: [(11, rack, b"")] if member == 2 else []
+        self.assertTrue(semyon.found(self.gd))
 
     def test_found_needs_the_tip(self):
         thorn = bytes(self.wg.weapon(*self.wg.BONE_POLEARM_1))

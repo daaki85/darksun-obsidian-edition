@@ -305,7 +305,7 @@ def _due() -> tuple:
             + _flag(FOUGHT, 0))
 
 
-FILL = 0x61  # a one-byte command, for what is left of a command made a jump (never run: decoded)
+FILL = gpl.FILL  # (what is left of a command made a jump: never run, decoded)
 
 
 def _put(out: bytearray, at: int, length: int, op) -> None:

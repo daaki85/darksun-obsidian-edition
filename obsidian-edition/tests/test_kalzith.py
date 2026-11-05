@@ -203,6 +203,7 @@ class KalzithTests(unittest.TestCase):
             flags = set()
             def region(self): return kalzith.REGION
             def flag(self, n): return n in self.flags
+            def flags_ready(self): return True
             def set_flag(self, n, on=True): self.flags.add(n)
             def creatures(self, count):
                 t = bytearray(count * game.CREATURE_SIZE)

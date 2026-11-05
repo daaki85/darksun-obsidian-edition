@@ -466,7 +466,7 @@ class DiceLog:
         self.starting_gear = True  # new characters' starting gear filled out (startgear.py)
         self.show_shadows = True  # shadows under the figures on the map (shadows.py)
         self._shadows = shadows.Shadows()
-        self.combat_log = False  # the combat log's panel in the game, in a fight (combatlog.py)
+        self.combat_log = True  # (on, as the Options tab has it) the combat log's panel in the game, in a fight (combatlog.py)
         self.floating_names = True  # spells' names over their casters, "Miss" over the missed (labels.py)
         self._panel = combatlog.Panel()
         self._labels = labels.Labels()  # names floating over figures: a spell's, a miss (labels.py)
@@ -497,7 +497,7 @@ class DiceLog:
         # forgotten when that save is loaded (the clock goes back past it)
         self.picked_at: Dict[str, Optional[int]] = {}
         self._picked_changed = False
-        self._clock: Optional[int] = None
+        self._clock: Optional[int] = None  # (the game's clock at _forget_undone_picks' last look)
         self._mended_in: Optional[int] = None  # the area Kalzith's scrolls were last mended in
         self._party_done: set = set()  # the game's own party's changes made (defaultparty.py)
         self._swap_seq = 0  # DSCLOG's text swaps seen (the arena ring's search, ring.py)
@@ -535,7 +535,7 @@ class DiceLog:
         self._effects: Optional[Counter] = None
         self._party: Optional[bytes] = None
         self._party_changed_at = 0.0
-        self._clock: Optional[int] = None  # (the game's clock at the last look: back means a game loaded)
+        self._party_clock: Optional[int] = None  # (the game's clock at _party_check's last look: back means a game loaded)
         self._aging_at: Optional[Tuple[bytes, int, tuple]] = None  # (natural aging: the last look's party, clock, count and years)
         self._next_effect_check = 0.0
         self._initiative: List[Tuple[int, int]] = []  # this round's (0-9 roll, 0-199 roll) pairs
@@ -1151,7 +1151,10 @@ class DiceLog:
         entries = self.poll()
         if self.missed > missed:  # (rolls lost from the ring: none half seen may be finished by others)
             self._forget_partial_rolls()
-        self.count_charges(entries)
+        try:  # (the charges: a failure leaves the rolls' lines without them, not lost)
+            self.count_charges(entries)
+        except Exception as e:
+            out += self._error_once(e)
         for e in entries:
             out += self.describe(e, show_all, now)
         try:  # (what fails after this is said once; the rolls already read are never lost with it)
@@ -1309,10 +1312,12 @@ class DiceLog:
             semyon.found(self.game)  # (and his word on it, once the party has it)
             if self.vulture_on:
                 out += vulture.meal(self.game)  # (Dinos's script has set its flag: XP and a full rest)
-            if kalzith.watch(self.game):  # (killed: Dinos and the Trustee speak of him so)
-                left = kalzith.loot(self.game)  # (one of his scrolls, his Cloak and Quarterstaff)
-                if left:
-                    out.append("Kalzith leaves: " + ", ".join(left))
+            kalzith.watch(self.game)  # (killed: Dinos and the Trustee speak of him so)
+            # (one of his scrolls, his Cloak and Quarterstaff: each pass until done, as the game's
+            # lists can be busy the first time)
+            left = kalzith.loot(self.game)
+            if left:
+                out.append("Kalzith leaves: " + ", ".join(left))
             region = self.game.region()
             if region != self._mended_in:  # (his scrolls of before the fix, once in each area)
                 kalzith.mend(self.game)
@@ -1384,6 +1389,9 @@ class DiceLog:
             except (struct.error, IndexError, ValueError):
                 pass
             return
+        options = panel.level != self.combat_log_level  # (the Options tab's level, chosen since)
+        if options:
+            panel.level = self.combat_log_level
         before = (panel.first, panel.size, panel.level, panel.filter, panel.open)
         try:
             panel.mouse(self.game, self.tsr_hdr)
@@ -1393,7 +1401,7 @@ class DiceLog:
                 self.combat_log_level = panel.level  # (the panel's level chip: the Options tab's too)
                 _remember({"combat_log_level": panel.level, "combat_log_size": panel.size,
                            "combat_log_open": panel.open})
-            if (panel.first, panel.size, panel.level, panel.filter, panel.open) != before:
+            if options or (panel.first, panel.size, panel.level, panel.filter, panel.open) != before:
                 self._update_panel(now)
         except (struct.error, IndexError, ValueError):
             pass
@@ -1834,9 +1842,9 @@ class DiceLog:
     def _party_check(self, now: float) -> bool:
         """True for a while after the party changes (a game was loaded): what's there is not news."""
         party, clock = self.game.party_signature(), self.game.game_time()
-        back = clock is not None and self._clock is not None and clock < self._clock
-        if clock is not None:
-            self._clock = clock
+        back = clock is not None and self._party_clock is not None and clock < self._party_clock
+        if clock is not None:  # (its own: _forget_undone_picks has read the clock this pass already)
+            self._party_clock = clock
         if party != self._party or back:  # (the same party loaded again: its clock goes back)
             self._party, self._party_changed_at = party, now
         if now - self._party_changed_at < LOAD_SETTLE:

@@ -1080,6 +1080,7 @@ class Viewer:
             self.next_try = now + RETRY_SECONDS
             if self.dice is None:
                 self.dice = DiceLog(self.guest)
+                self.dice.use_settings(launch.load_settings())  # (the panel's size and state as saved; then the tab's own)
                 self.dice.answer_stats_in_background()
                 self.dice.speaker_names = launch.speaker_names()
                 self.dice.learned_speakers = launch.learned_speakers()

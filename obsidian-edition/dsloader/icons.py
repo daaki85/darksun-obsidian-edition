@@ -975,6 +975,7 @@ def _palette(source: str) -> None:
     half-elf man's colours are picked by their brightness). Without it, a half-elf is the human
     figure in the half-elf's colours (halfelf.py)."""
     from . import art, spritegear as sg
+    sg.set_palette([])  # (none from an earlier start kept: another game folder's, perhaps)
     gpl = art._find(os.path.dirname(os.path.abspath(source)), "GPLDATA.GFF")
     if not gpl:
         return

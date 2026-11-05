@@ -1472,7 +1472,7 @@ class GameData:
         abilities = creature[CREATURE_ABILITIES:CREATURE_ABILITIES + 6]
         if category & SAVE_WIS_CATEGORY:
             wis = abilities[4]
-            adjust = struct.unpack("b", self.guest.read(self.ds * 16 + SAVE_WIS + wis, 1))[0]
+            adjust = struct.unpack("b", self.guest.read(self.ds * 16 + SAVE_WIS + wis, 1))[0] if wis < 26 else 0
             if adjust:
                 out.append((adjust, f"WIS {wis}"))
         if category & CATEGORY_DODGE:  # (the game's rule; see CATEGORY_DODGE)

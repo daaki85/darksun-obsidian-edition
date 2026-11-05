@@ -80,7 +80,7 @@ def _button(exit_button: bytes, new_id: int) -> bytes:
 
 
 def window_with_buttons(window: bytes) -> bytes:
-    """The window with the two buttons put in after its items (unchanged if they are there)."""
+    """The window with the page buttons (PAGES) put in after its items (unchanged if they are there)."""
     if any(struct.pack("<I", cid) in window for cid, _, _ in PAGES):
         return window
     items = b"".join(bytes(4) + b"BUTN" + struct.pack("<IHH", cid, BUTTON_X, y) + bytes(ITEM_SIZE - 16)
