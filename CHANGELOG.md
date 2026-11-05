@@ -12,8 +12,8 @@ notes](PATCH-NOTES.md).
 - **Thornwall comes onto the slave pens' weapon rack once Semyon has told of it.** It had been
   on the rack from the start (in place of its first bone polearm). Now the rack's data
   (`worldgear`'s gift) keeps its two plain bone polearms, and Semyon, in his pen, has a new
-  question, "Did you see anything on your way back in?": a weapon shipment, one polearm carried
-  "like it might bite", put on the weapon rack. His answer sets flag 756; once the game has
+  question, "Seen anything useful?": a weapon shipment, one crate the guards fussed over "like
+  it held something special", its contents put on the weapon rack. His answer sets flag 756; once the game has
   made the rack (it makes a region's objects as the party nears them: the rack is looked for by
   its object, 2599, as a coffin shares its item type, 6Ch) `semyon.ship` puts a Thornwall (an item from the game's free list) first on the
   rack's contents and sets 757. A Thornwall already in the game (a save from before) sets 757

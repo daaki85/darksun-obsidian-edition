@@ -33,7 +33,7 @@ class AskedOnceTests(unittest.TestCase):
         self.assertEqual(replies["Why did they tie you up out there?"],
                          ("expr", ["(", ("var", 0x8E, 2), "==", ("n", 0), ")"]))
         self.assertEqual(replies["Tell me about the Alliance."][1][1], ("var", 0x8E, 6))
-        self.assertEqual(replies["Did you see anything on your way back in?"][1][1], ("var", 0x8E, 4))
+        self.assertEqual(replies["Seen anything useful?"][1][1], ("var", 0x8E, 4))
         self.assertEqual(replies["Farewell."], ("n", 1))
 
     def test_kalzith(self):

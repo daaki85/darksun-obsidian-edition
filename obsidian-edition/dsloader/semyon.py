@@ -52,8 +52,8 @@ GONE_AT = (255, 20, 20, 1)  # where the game puts the pens' people then (region 
 # and with their 12 (STEADY), once (SETTLED; also for one put in his pen before). Attacked, he is then as any of them is.
 SET_FIELD, SIDE, NEUTRAL, STEADY, SLAVES_STEADY = 0x40, 74, 4, 70, 12
 SETTLED = 779
-# The weapon shipment: asked "Did you see anything on your way back in?", he tells of a polearm
-# brought in with it and racked (his script sets TOLD); then, in the pens, the Loader puts Thornwall
+# The weapon shipment: asked "Seen anything useful?", he tells of a crate the guards fussed
+# over, its weapon racked (his script sets TOLD); then, in the pens, the Loader puts Thornwall
 # on the pens' weapon rack, once (SHIPPED), unless a Thornwall is somewhere already (a save from
 # when the rack's data had it). (Two of the flags between the game's 755 and the Loader's 760.)
 TOLD, SHIPPED = 756, 757
@@ -215,10 +215,10 @@ def conversation() -> bytes:
                 ("Have you heard anything useful?", reply(
                     "Only the trustee, the head templar and Kurzak carry keys. The trustee keeps "
                     "his on his belt. Do with that what you will."), ALWAYS),
-                ("Did you see anything on your way back in?", lambda: (s.say(
-                    "As the guards brought me to my cell, a weapon shipment was coming in. Mostly "
-                    "the usual bone junk, but they carried one polearm like it might bite. Whatever "
-                    "it is, it's no ordinary weapon. They put it on the weapon rack with the rest."),
+                ("Seen anything useful?", lambda: (s.say(
+                    "When they marched me in, I passed a weapon shipment coming the other way. "
+                    "Guards were fussing over one crate like it held something special. Whatever "
+                    "was in it went onto the weapon rack."),
                     s.flag(TOLD, 1)), ALWAYS),
                 ("Where was that gem again?", reply(
                     "In one of the grain pots: the kitchen, the storage room, or near the "

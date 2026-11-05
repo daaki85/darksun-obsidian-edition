@@ -961,7 +961,7 @@ party, and only guards near him join the fight; in a fight in the pens he isn't
 on the party's side. Like Kalzith's, his commands come after everything of the
 game's, which keeps its place.
 
-The weapon shipment: his answer to "Did you see anything on your way back in?"
+The weapon shipment: his answer to "Seen anything useful?"
 sets flag 756 (between the game's 755 and the Loader's own 760). Each pass in
 the pens with it set and flag 757 not, `semyon.ship` puts Thornwall on the
 pens' weapon rack: the rack found by its object (2599) among the map objects
