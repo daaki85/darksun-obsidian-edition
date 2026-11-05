@@ -73,6 +73,10 @@ class ObjectTests(unittest.TestCase):
                 self.assertEqual(out[("OJFF", obj)], self.chunks[("OJFF", champions.BASES[obj])])
                 sheet = next(r.data for r in dataitems.records(rdff)[0] if r.kind == champions.SHEET_RECORD)
                 self.assertEqual(sheet[game.SHEET_BASE_AC], 5)  # (the kind's: armour counts on top)
+        for obj, dex in champions.DEX.items():  # (DEX in the creature record and the sheet)
+            recs = dataitems.records(out[("RDFF", obj)])[0]
+            self.assertEqual(recs[0].data[game.CREATURE_ABILITIES + 1], dex)
+            self.assertEqual(recs[1].data[game.SHEET_ABILITIES + 1], dex)
         gythka, = dataitems.items_of(out[("RDFF", champions.TOHR_KREEN)])
         self.assertEqual((gythka[game.ITEM_PLUS], struct.unpack_from("<H", gythka, game.ITEM_NAME)[0]), (1, 0x148))
         self.assertEqual(struct.unpack_from("<H", out[("OJFF", champions.BODY)], kalzith.OJFF_PICTURE)[0], champions.BODY)

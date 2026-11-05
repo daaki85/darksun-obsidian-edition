@@ -117,6 +117,23 @@ def _without_items(rdff: bytes) -> bytes:
     return dataitems.chunk(recs[:first], end)
 
 
+DEX = {HALF_GIANT: 15, ELF: 18, DEFILER: 18}  # (the rest keep their kinds': the mul's and halfling's 18)
+
+
+def _with_dex(rdff: bytes, dex: int) -> bytes:
+    """An object's record with its person's DEX made DEX: in its creature record (+22h on, the
+    AC adjustment's) and its sheet (+1Bh on)."""
+    recs, end = dataitems.records(rdff)
+    recs = list(recs)
+    for i, r in enumerate(recs):
+        at = {2: game.CREATURE_ABILITIES, SHEET_RECORD: game.SHEET_ABILITIES}.get(r.kind)
+        if at is not None and len(r.data) > at + 1 and r.level in (1, 3):
+            data = bytearray(r.data)
+            data[at + 1] = dex
+            recs[i] = r._replace(data=bytes(data))
+    return dataitems.chunk(recs, end)
+
+
 def _named(rdff: bytes, name: str) -> bytes:
     out = bytearray(rdff)
     field = 16  # (the creature record's name: 15 letters and its end)
@@ -144,6 +161,8 @@ def object_chunks(chunks) -> Dict[Tuple[str, int], bytes]:
     for obj in OBJECTS:
         base = BASES[obj]
         rdff = _named(dataitems.renumbered(_without_items(chunks[("RDFF", base)]), obj), NAME)
+        if obj in DEX:
+            rdff = _with_dex(rdff, DEX[obj])
         out[("RDFF", obj)] = dataitems.with_items(rdff, [rec for rec, _ in things[obj]], numbers)
         out[("OJFF", obj)] = chunks[("OJFF", base)]
     body = bytearray(chunks[("OJFF", DEAD_BODY)])

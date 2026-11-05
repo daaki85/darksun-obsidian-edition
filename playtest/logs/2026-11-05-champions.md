@@ -65,7 +65,13 @@ Scar.
     | Elf (DEX 12) | 5 (once 6) | 6 |
     | Defiler | 10 | 10 |
 
-    The game counts a point more than the Loader for each one wearing a helm: the Loader's count
-    leaves the helm out. (Left to look into.)
+    (The Loader's figures here were read before its pass had put the last pieces on: see 13.)
 12. Found: the halfling's and elf's helm was Dapartea's Helm, the game's first item of the leather
     Helm's type. Now the plain Helm's own record.
+13. Fourth run, DEX now 15 (half-giant) and 18 (elf, defiler), the dice log with `--all`: the
+    game's AC with its parts ("armour" is the body pieces, [BP-6]; "other" the helm, shield and
+    the rest): half-giant 3 (10, -4, DEX -1, other -2), mul 1 (10, -4, -4, -1), halfling 1, elf 1
+    (10, -3, -4, -2), Tohr-kreen 3, defiler 6 (10, 0, -4). The mul's armour copied onto the
+    tied-up prisoner (base 10, DEX 12): the Loader's count 10, 8, 7, 6, 5 as the chest, arm, leg
+    and helm went on, the game's sum. The earlier gap was the reading: the script read the AC,
+    then the lists, and the Loader's pass put the helm (and the shields after it) on between.
