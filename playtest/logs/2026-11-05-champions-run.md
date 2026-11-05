@@ -90,3 +90,15 @@ script 3 at 3A7h). DOSBox, the ready-made party.
 
 **Found:** Kurzak's lines about Legcrusher misfire (step 4, 7: "he never came back" with
 Legcrusher alive and beside the party); the Look box's AC leaves out Helms give AC 1 (step 16).
+
+## After the fixes (62328e7)
+
+- Kurzak's lines by the Loader's flag 797 (Legcrusher seen dead): from `pens-after-scar`, Kurzak's
+  stop, the fire room, three rests, the call: "Legcrusher! Get gladiators!" and "I had to send
+  Legcrusher after you. It's good that you found me before I found you. The crowd is waiting!
+  Get moving!": the game's own lines, Legcrusher alive. (Before: "Where has that lump got to?".)
+- The Look box's AC with a helm: covered by `test_helm_before_dsclog_sets_it` (the champions
+  weren't fought again). In memory before the fix: every helm type (5, 89, 109, 117) counts for AC
+  (+0Fh 80h) and reads AC 0 at +12h until DSCLOG writes it.
+- Seen still: the dice log names Kurzak's portrait (5) "Trustee" (a speaker name it learnt wrongly
+  at some point and keeps in the settings): to look into.
