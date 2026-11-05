@@ -1213,6 +1213,7 @@ class Viewer:
             self.status.set(f"The options could not be saved just now ({e}); change one again to retry.")
             return
         if self.dice is not None:
+            self.dice._settings = settings  # (the item reports' switches, as now)
             self.dice.set_monster_info(self.monster_info.get())
             self.dice.arena_ring = self.content_vars[launch.NEW_ITEMS].get()
             self.dice.set_pickpockets(self.pickpockets.get())

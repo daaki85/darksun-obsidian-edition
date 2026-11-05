@@ -93,7 +93,8 @@ ATTACK = re.compile(r"(?P<who>.+?) attacks (?P<target>.+?)(?: with .+?)?: d20 = 
                     r"(?:needs (?P<need>-?\d+)\+|only a 20 hits|(?P<any>hits on anything but a 1))(?: \([^)]*\))?.*-> (?P<result>HIT|miss)$")
 HIT_FOR = re.compile(r"(?P<who>.+?) hits (?P<target>.+?) for (?P<n>\d+): (?P<dice>[0-9d+\-]+)")
 SAVE = re.compile(r"(?P<who>.+?)'s saving throw vs (?P<what>.+?)(?: from .+?)?: d20 = (?P<d20>\d+)"
-                  r"(?: \(natural \d+\))?(?:, needs (?P<need>-?\d+))?(?: \([^)]*\))? -> (?P<result>\w+)")
+                  r"(?: \(natural \d+\))?(?:,? [^>]*? = (?P<total>-?\d+))?"  # (its modifiers, then the total)
+                  r"(?:, needs (?P<need>-?\d+))?(?: \([^)]*\))? -> (?P<result>\w+)")
 RESIST = re.compile(r"(?P<who>.+?) magic resistance (?P<pct>\d+)% vs (?P<what>.+?): d100 = (?P<roll>\d+) -> "
                     r"(?P<result>.+)")
 DAMAGE_ROLL = re.compile(r"(?P<what>.+?) damage: (?P<dice>\S+) = (?:\[[^\]]*\](?: [+-]\s?\d+)? = )?(?P<total>\d+)")
@@ -131,7 +132,7 @@ def shorten(line: str, level: str) -> Optional[str]:
         if level == MINIMAL:
             return f"{m.group('who')} {'saves' if saved else 'fails to save'} vs {m.group('what')}"
         need = f" vs {m.group('need')}" if m.group("need") else ""
-        return f"{m.group('who')}'s save vs {m.group('what')}: {m.group('d20')}{need}, {m.group('result')}"
+        return f"{m.group('who')}'s save vs {m.group('what')}: {m.group('total') or m.group('d20')}{need}, {m.group('result')}"
     m = RESIST.match(text)
     if m:
         resisted = m.group("result").startswith("resisted")

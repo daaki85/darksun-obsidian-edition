@@ -2348,7 +2348,7 @@ class DiceLog:
             parts.append(("Prayer", 1 if same else -1))
             situational -= 1 if same else -1
         if situational:
-            parts.append(("STR" if mode <= 1 else "DEX", situational))
+            parts.append(("STR" if mode is not None and mode <= 1 else "DEX", situational))
         rest = hit_bonus
         if weapon:
             if weapon.plus:
@@ -2367,7 +2367,7 @@ class DiceLog:
         # bonus at DEX 5 or less, nothing otherwise. The manual's off-hand penalty isn't there,
         # unless the Loader's rule puts AD&D's in (GameData.two_weapons).
         weapons_ready = e.parent_local(-0x16)
-        if mode <= 1 and weapons_ready is not None and weapons_ready >= 2:
+        if mode is not None and mode <= 1 and weapons_ready is not None and weapons_ready >= 2:
             item = e.arg(0x12)
             slot = None
             if item is not None and 0 <= item < game.NO_ITEM:
@@ -2878,9 +2878,7 @@ class DiceLog:
             return [f"    {who}{name} can't break"] if show_all and first else []
         if first:
             self._break_first = scaled(e.raw, 8)
-            if self._break_first == 0 or show_all:
-                return []  # wait for the second roll (there is one only if this was 0)
-            return []
+            return []  # (the second roll, if this was 0, says it)
         second, first_roll, self._break_first = scaled(e.raw, 20), self._break_first, None
         if second == 0:
             return [f"    {who}{name} BREAKS: 0 on 0-7 and 0 on 0-19 (1 in 160 after each hit)"]

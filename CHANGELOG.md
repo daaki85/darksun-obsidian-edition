@@ -97,6 +97,10 @@ notes](PATCH-NOTES.md).
   the game's can't be read; crash reports show the new spells' old setting name, the ring and the
   panel's level as used; a failure counting effects' charges no longer loses the pass's lines.
 - DSCLOG's message when its interrupts are taken names them right (81h-FFh, not 8Ch-FEh).
+- **The combat log panel shortened only plain saves:** a save showing its modifiers or total
+  (`d20 = 13 +2 Blessed = 15`, a doubled d20 against fire) stayed at its whole length in short and
+  at the least; now it's shortened to its total against the need (test `test_save_with_modifiers`).
+  The item reports' switches follow the Options tab's changes in the Loader's window.
 
 **Fixed: the game's code**
 - **Psionic Blast knocks out, not kills:** while a party member has the blast's hit points still
