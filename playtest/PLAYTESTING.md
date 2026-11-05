@@ -315,7 +315,7 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
 - **The inventory screen's places** (2026-11-02, from hovering: the name shows in the bar at the
   bottom; the ones used): ammo (66,26), missile (66,48), arm (66,70), right hand (66,92); chest
   (173,70), left hand (173,92), legs (173,128); the backpack fills down its first column first: (195,26),
-  (195,48), (195,70)..., then (213,26)... Click an item to pick it up, click a place to put it;
+  (195,44), (195,62), (195,80)... (rows 18 apart; 48 and 70 are between cells), then (213,26)... Click an item to pick it up, click a place to put it;
   armour can't be put on in a fight ("CANNOT USE THIS ITEM"); a wrong place says "ILLEGAL
   PLACEMENT" and keeps it on the pointer.
 - **A spell's description box** (2026-11-02): U, a member's portrait (Cermak 66,108), then
@@ -374,6 +374,19 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   the "Take me to the Arena! I want a fight!" menu (137:14CEh), but open it answers nothing to
   the look pointer. **Resting** is at a fire ring (the game's rest, 8066Dh); the east hall's
   object 2264 (1908, 675) is a haystack (137:F5h), not the fire ring.
+- **Reading a scroll** (2026-11-05): right-click it in the backpack to open its item box, which shows
+  the price, "Scroll" and the spell's icon. The box opens beside the item's row (row 26: icon at
+  288,20; row 44: 289,33; rows 62 and 70: 289,47; row 80: 290,65), so take a shot and read where the
+  icon is. Then point at the icon (`click.py X Y none`), wait, and press slowly (`xdotool mousedown 1`,
+  0.15 s, `mouseup 1`): click.py's quick click there was lost about half the time. The result is on
+  the line under the paper doll and in the dice log ("X reads the scroll of Y: ..."). The dice log
+  doesn't repeat a `Message:` line the same as the last one, so look for the "reads the scroll" line.
+  The screen can draw the backpack one change behind: close the inventory and open it again (Escape, I)
+  before believing a cell is empty.
+- **A Shinobi for a test** (2026-11-05): `scrolltest.py shinobi` makes member 0 an 8th-level thief
+  with the Shinobi kit in memory (class 17 at sheet +21h, level +24h, kit byte +43h = 3, flags 0400h).
+  `give` adds the defilers' scrolls (`defilerscrolls.scroll`). Never save after. live.py's `gd` has
+  no rules set, so `gd.kit_ids` reads []: use `kitpages.kits_of(gd.sheet(m))`.
 - **The inventory panel's picture for the docs** (2026-11-05): I opens the inventory; the panel is
   `shot.sh`'s x 230-319, y 0-199, scaled 2x (`convert -crop 90x200+230+0 +repage -scale 200%`).
   A class can be tried in memory: the sheet's class byte (`SHEET_CLASSES`, 13 a ranger) and its

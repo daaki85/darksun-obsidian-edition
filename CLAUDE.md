@@ -57,6 +57,9 @@ capture; window grabs (`import -window`) are 320x240, so y x 1.2.
   The arena gate's "Do you wish to continue?" is **Y**; the Announcer's question is N.
 - Talk menus: click the line (the list scrolls, down arrow at 311,187); number keys don't work.
 - The combat log panel covers the bottom right: `panel.sh hide`.
+- Inventory: the backpack's cells are 18 apart (195,26, 195,44...). A right-click opens an item's
+  box beside its row. Click a scroll's spell icon with a slow press (point, mousedown, 0.15 s, mouseup).
+  `scrolltest.py` makes a Shinobi in memory and gives the defilers' scrolls.
 - E opens the Effects screen. In an END <NAME>'S MOVE menu, E is END TURN, and clicks there
   don't register.
 - Escape with nothing open brings EXIT: SAVE GAME?; press Escape only with a screen or menu up.
