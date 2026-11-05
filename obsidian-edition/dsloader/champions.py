@@ -117,7 +117,7 @@ def _without_items(rdff: bytes) -> bytes:
     return dataitems.chunk(recs[:first], end)
 
 
-DEX = {HALF_GIANT: 15, ELF: 18, DEFILER: 18}  # (the rest keep their kinds': the mul's and halfling's 18)
+DEX = {TOHR_KREEN: 18, HALF_GIANT: 15, ELF: 18, DEFILER: 18}  # (the mul and the halfling keep their kinds' 18)
 
 
 def _with_dex(rdff: bytes, dex: int) -> bytes:
