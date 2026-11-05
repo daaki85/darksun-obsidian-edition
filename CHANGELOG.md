@@ -15,8 +15,8 @@ notes](PATCH-NOTES.md).
   12, at 5 or more) is six champions from a distant arena, after a speech of the Announcer's,
   once (flag 807): a Tohr-kreen with Kreenfang, a half-giant (metal great axe, leather shield,
   full scale and a bone helm), a mul (two bone axes, the same armour), a halfling (sling, bone
-  short sword, full leather and a leather helm), an elf (bow and arrows, obsidian long sword, the
-  same leather) and a defiler (bone dagger and a
+  short sword, full leather, a leather helm and shield), an elf (bow and arrows, obsidian long
+  sword, the same leather and shield) and a defiler (bone dagger and a
   scroll of Fogbolt, Spook or Reflected Image). Objects 2660-2665, copies of the arena's kinds
   with gear of their own; script 2's default opening (0AD4h) and its call to the random wave maker
   (1581h) go to parts of ours while the bout is due. Kreenfang moves off the dead body by the arch

@@ -2048,8 +2048,8 @@ The first wave is six **champions** in place of the game's: a Tohr-kreen with
 **Kreenfang** (a gythka +1), a half-giant with a metal great axe, a leather
 shield, full scale armour and a bone helm, a mul gladiator with two bone axes
 and the same armour, a halfling with a sling, a bone short sword, full leather
-armour and a leather helm, an elven ranger with a bow and arrows, an obsidian
-long sword and the same leather (the Tohr-kreen and the defiler wear none), and a defiler with a bone dagger and a scroll (Fogbolt, Spook or
+armour, a leather helm and a leather shield, an elven ranger with a bow and
+arrows, an obsidian long sword and the same leather and shield (the Tohr-kreen and the defiler wear none), and a defiler with a bone dagger and a scroll (Fogbolt, Spook or
 Reflected Image, chosen as the bout starts). They fight with their weapons, the
 two archers shooting, and their armour counts for their AC, as the party's
 does: the game's own people carry their gear but fight with their bare numbers.

@@ -7,9 +7,9 @@ Kreenfang (the arena's gythka +1, no longer on the dead body by the stone arch).
   its record: the Tohr-kreen (the arena's, 292) with Kreenfang; a half-giant (the arena's Guard,
   293) with a metal great axe, a leather shield and full scale armour and a bone helm; a mul
   gladiator (the Wild Mul, 290) with two bone axes and the same armour; a halfling renegade (the
-  Renegade, 289) with a sling, a bone short sword and full leather armour and a leather helm; an
-  elven ranger (an elven caravan guard, 103) with a bow and arrows, an obsidian long sword and the
-  same leather (a thri-kreen and a defiler wear none); a
+  Renegade, 289) with a sling, a bone short sword, full leather armour, a leather helm and a
+  leather shield; an elven ranger (an elven caravan guard, 103) with a bow and arrows, an obsidian
+  long sword and the same leather and shield (a thri-kreen and a defiler wear none); a
   defiler (the arena's, 296) with a bone dagger and one scroll, chosen as it comes on, of
   Fogbolt, Spook or Reflected Image (the new spells; without them, of the game's own spells).
 - Worn and wielded: the game makes a person's items in its backpack list (+0Ch) and fights with
@@ -96,10 +96,10 @@ def gear(chunks) -> Dict[int, List[Tuple[bytes, int]]]:
               (bonescale.HELM, HEAD)],
         HALFLING: [(item(SLING_TYPE), MISSILE), (worldgear.weapon(worldgear.BONE_SHORT_SWORD), RIGHT),
                    (item(LEATHER_CHEST), CHEST), (item(LEATHER_ARM), ARM), (item(LEATHER_LEGS), LEGS),
-                   (item(LEATHER_HELM), HEAD)],
+                   (item(LEATHER_HELM), HEAD), (item(SHIELD_TYPE), LEFT)],
         ELF: [(item(BOW_TYPE), MISSILE), (item(ARROWS_TYPE), AMMO), (item(LONG_SWORD_TYPE), RIGHT),
               (item(LEATHER_CHEST), CHEST), (item(LEATHER_ARM), ARM), (item(LEATHER_LEGS), LEGS),
-              (item(LEATHER_HELM), HEAD)],
+              (item(LEATHER_HELM), HEAD), (item(SHIELD_TYPE), LEFT)],
         DEFILER: [(worldgear.weapon(worldgear.BONE_DAGGER), RIGHT)],
     }
     missing = [obj for obj, items in out.items() if any(rec is None for rec, _ in items)]
@@ -163,9 +163,9 @@ SLOTS: Dict[int, Sequence[Tuple[int, int]]] = {
     MUL: ((game.BONE_AXE_TYPE, RIGHT), (game.BONE_AXE_TYPE, LEFT), (SCALE_CHEST, CHEST), (SCALE_ARM, ARM),
           (SCALE_LEGS, LEGS), (BONE_HELM, HEAD)),
     HALFLING: ((SLING_TYPE, MISSILE), (BONE_SHORT_SWORD_TYPE, RIGHT), (LEATHER_CHEST, CHEST),
-               (LEATHER_ARM, ARM), (LEATHER_LEGS, LEGS), (LEATHER_HELM, HEAD)),
+               (LEATHER_ARM, ARM), (LEATHER_LEGS, LEGS), (LEATHER_HELM, HEAD), (SHIELD_TYPE, LEFT)),
     ELF: ((BOW_TYPE, MISSILE), (ARROWS_TYPE, AMMO), (LONG_SWORD_TYPE, RIGHT), (LEATHER_CHEST, CHEST),
-          (LEATHER_ARM, ARM), (LEATHER_LEGS, LEGS), (LEATHER_HELM, HEAD)),
+          (LEATHER_ARM, ARM), (LEATHER_LEGS, LEGS), (LEATHER_HELM, HEAD), (SHIELD_TYPE, LEFT)),
     DEFILER: ((BONE_DAGGER_TYPE, RIGHT),),
 }
 
