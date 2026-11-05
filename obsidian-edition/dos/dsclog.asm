@@ -23809,6 +23809,22 @@ install:                        ; DS = ES = PSP, CS = the image
         int 21h
 .no_pointer:
 
+        mov es, [cs:psp]
+        mov es, [es:0x2C]       ; free our copy of the environment
+        mov ah, 49h
+        int 21h
+        mov dx, msg
+        mov ah, 9
+        int 21h
+        call far_init                   ; the far block: the HMA, else a block of its own, before
+        jnc .far                        ;   any vector is ours (none to leave behind if there's none)
+        mov dx, no_far
+        mov ah, 9
+        int 21h
+        mov ax, 4C01h
+        int 21h
+.far:
+
         mov ax, 2500h + VEC_RAND
         mov dx, int_rand
         int 21h
@@ -24239,22 +24255,7 @@ install:                        ; DS = ES = PSP, CS = the image
         mov dx, probe_dos_open
         int 21h
         mov byte [hooked], 1
-
-        mov es, [cs:psp]
-        mov es, [es:0x2C]       ; free our copy of the environment
-        mov ah, 49h
-        int 21h
-        mov dx, msg
-        mov ah, 9
-        int 21h
-        call far_init                   ; the far block: the HMA, else a block of its own
-        jnc .far
-        mov dx, no_far
-        mov ah, 9
-        int 21h
-        mov ax, 4C01h
-        int 21h
-.far:   mov byte [cs:quit_saved], 0     ; (DOS_QUIT's from now on)
+        mov byte [cs:quit_saved], 0     ; (DOS_QUIT's from now on)
         mov ax, [cs:far_seg]
         mov [cs:ring_seg], ax
         mov [cs:panel_seg], ax

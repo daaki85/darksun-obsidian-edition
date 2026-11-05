@@ -46,6 +46,10 @@ notes](PATCH-NOTES.md).
   again from a save in the arena came on unequipped (now reset on a load, as the defilers' rolls,
   and a champion with gear still in its backpack is equipped whatever was remembered; test
   `test_again_after_a_load`).
+- Fixed before release: DSCLOG hooked its interrupts before setting up its buffers, so when there
+  was no memory for them ("no memory for its buffers (57 KB). Not loaded.") it exited with its
+  vectors still pointing into freed memory. It now sets up the buffers first and hooks nothing
+  when that fails. Seen in DOSBox: loads and logs as before (image still 64,688 bytes).
 
 **Changed**
 - **Thornwall comes onto the slave pens' weapon rack once Semyon has told of it.** It had been
