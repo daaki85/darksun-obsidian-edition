@@ -357,6 +357,16 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   "Enter the arena?" **Y**. In the arena: south from the gate (488, 200) with clicks (each passes
   time), through the bone wall's gap (504, 360), and on south onto the stone platform until the
   bone gate closes behind the party (488, 408-424): then the Announcer and the bout.
+- **Looting a body** (the user, 2026-11-05): the **look pointer** on the body's picture; the plain
+  eye (not the red one) shows when it is over it. A body's map position isn't where its picture
+  is drawn when others lie on it: move the pointer over the picture, beside the party (a body far
+  off opened nothing). A window of cells opens: a click on an item puts it on the pointer (the
+  cells light yellow), a click on a party member's figure gives it to that member. A party
+  member standing on the heap takes the click instead (the Effects screen opened): walk off first.
+- **Level-ups in fights**: PICK A PSIONIC POWER (a psionicist's level) isn't levelup.sh's: click a
+  red power's icon (about 158, 62), then FINISHED (112, 139).
+- **Staying in the arena after "Go back to the pens"** for a few minutes brings "If you don't want
+  to return to the pens, then you must want another fight!" and a wave.
 - **Setting the arena's visit count**: in the pens the game's numbers have a place in memory;
   number 12 is the count (4: the next trip is Scar's; 5 and up the everyday speech, or the
   champions' after Scar's death in the arena). Write it at the far pointer DS:1356h + 2 x 12.

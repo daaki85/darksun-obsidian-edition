@@ -67,3 +67,26 @@ script 3 at 3A7h). DOSBox, the ready-made party.
     each other champion a Dead Body (1101) with all its gear (the defiler's: Scroll, Bone Dagger).
     Not done: looting it in the game (how a body is opened: asked the user), and the champions'
     Look boxes (to see on a second run from `pens-after-scar`).
+16. DOSBox died while the session sat idle; reloaded `pens-after-scar` and did the visit again
+    (`toarena.sh`, in the scratch folder: the way up as in step 7). On the platform the bout came
+    as before. **Look boxes** (the look pointer on each, on a party turn; `look-kreen.png`):
+    Tohr-kreen "LEVEL: 7, +1 Kreenfang, HP 28/28, AC -1, THAC0 13, AL CN", 2 attacks a round;
+    half-giant HP 50, AC 4, THAC0 17, 3/2 a round, CG; mul HP 25, AC 2, THAC0 14, 1 a round, TN;
+    halfling HP 20, AC 2, THAC0 15, 1 a round, CN; elf "Bow, Long Sword", HP 35, AC 2, THAC0 14,
+    3/2 a round; defiler HP 18, AC 6, THAC0 18, 1 a round, NE. **The four with helms show 1 worse
+    than the AC measured in the fight before (3, 1, 1, 1)**: the Look box doesn't count Helms
+    give AC 1. To look into.
+17. Fought (`fightout.sh`; K'ratchek's PICK A PSIONIC POWER again: a red power's icon, then
+    FINISHED at 112, 139), the follow-on wave, "Yell something back" N. Then, taking too long over
+    the bodies, "If you don't want to return to the pens, then you must want another fight!": one
+    more wave, fought.
+18. **Looting the Tohr-kreen's body** (the user: the look pointer): the party walked beside the
+    heap (360, 472), the look pointer moved over the bloody Tohr-kreen shape until it showed the
+    plain eye (screen 190, 88: the body's map position 388, 468 is under the figures heaped on
+    it), a click: a container window with one item, Kreenfang's icon (`img/2026-11-05-kreen-body-open.png`).
+    A click on the icon (the cells light yellow: it's on the pointer), a click on a party member's
+    figure: **K'ratchek has Bone Kreenfang +1**, and object 2666 is empty.
+19. Not left the arena (leavearena.sh didn't from 360, 472); nothing saved after.
+
+**Found:** Kurzak's lines about Legcrusher misfire (step 4, 7: "he never came back" with
+Legcrusher alive and beside the party); the Look box's AC leaves out Helms give AC 1 (step 16).
