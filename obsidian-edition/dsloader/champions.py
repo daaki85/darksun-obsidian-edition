@@ -361,7 +361,7 @@ def with_bout(script: bytes, field_types: bytes = b"") -> bytes:
     out = bytearray(script) + added
     _put(out, INTRO_AT, INTRO_END - INTRO_AT, (GOTO, [("n", s.at["intro"])]))
     _put(out, WAVE_CALL, len(gpl.encode_op(call)), (CALL, [("n", s.at["waves"])]))
-    return bytes(out)
+    return bytes(out) if len(out) <= _longest() else script
 
 
 def with_king(script: bytes, field_types: bytes = b"") -> bytes:
@@ -383,7 +383,12 @@ def with_king(script: bytes, field_types: bytes = b"") -> bytes:
     s.op(GOTO, ("n", after.at))
     out = bytearray(script) + s.bytes(base=len(script), end=False)
     _put(out, KING_AT, after.at - KING_AT, (GOTO, [("n", len(script))]))
-    return bytes(out)
+    return bytes(out) if len(out) <= _longest() else script
+
+
+def _longest() -> int:
+    from .pensasks import LONGEST  # (the longest script the game's buffer takes, as the Loader has it)
+    return LONGEST
 
 
 def script_chunks(chunks, field_types: bytes, out) -> Dict[Tuple[str, int], bytes]:
