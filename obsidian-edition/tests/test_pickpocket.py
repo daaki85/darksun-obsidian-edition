@@ -77,12 +77,14 @@ class PickTests(unittest.TestCase):
         self.assertEqual(self.dag_items()[0], (CLUB, 14))
         self.assertIn("d100 = 11, needs 11 or less -> success", result.log[0])
         self.assertIsNone(result.key)
+        self.assertTrue(result.lifted)  # (the purse's sound)
         money = self.log.game.money()
         again = self.attempt(1)  # (Dag a 4th level thief: 3 for each level, as rolled here)
         self.assertEqual(again.text, "Dag lifts 12 ceramic pieces from Guard's purse, all there was to take.")
         self.assertIn("  coins: 4d4+4 (2 to 5 for each of 4 thief levels) = 12", again.log)
         self.assertEqual(self.log.game.money(), money + 12)
         self.assertIsNotNone(again.key)
+        self.assertTrue(again.lifted)
 
     def test_kurzaks_sword(self):
         """Kurzak's short sword lifted (whatever its weight): SWORD_XP to the thief, in the text
@@ -127,6 +129,7 @@ class PickTests(unittest.TestCase):
 
     def test_caught(self):
         result = self.attempt(12, 17)  # pick pockets 11, move silently 16
+        self.assertFalse(result.lifted)
         self.assertEqual(result.text, "Guard catches Dag's hand! Guard will be too wary for Dag to try again.")
         self.assertEqual(self.guard_items(), [CLUB, SWORD, KEY, BOOTS])
         self.assertIn("moves silently to get away: d100 = 17, needs 16 or less -> failed", result.log[1])
@@ -138,6 +141,7 @@ class PickTests(unittest.TestCase):
         result = self.attempt(50, 16)
         self.assertEqual(result.text, "Dag fumbles Guard's pockets, but slips away unnoticed.")
         self.assertIsNone(result.key)
+        self.assertFalse(result.lifted)  # (no sound)
         self.assertEqual(self.attempt(5).text, "Dag lifts Bag from Guard unnoticed.")
 
     def test_not_a_thief(self):

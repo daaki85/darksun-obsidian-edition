@@ -387,6 +387,23 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   with the Shinobi kit in memory (class 17 at sheet +21h, level +24h, kit byte +43h = 3, flags 0400h).
   `give` adds the defilers' scrolls (`defilerscrolls.scroll`). Never save after. live.py's `gd` has
   no rules set, so `gd.kit_ids` reads []: use `kitpages.kits_of(gd.sheet(m))`.
+- **Hearing the game** (2026-11-05): start.sh sends DOSBox's sound to a file when `PT_AUDIO` names
+  one (`export PT_AUDIO=$WORK/audio.raw` before start.sh or loadsave.sh; else /dev/null): raw
+  16-bit stereo at 44100 Hz, about 176 KB a second, real time. Note the file's size before and
+  after an action, then `python3.13 soundmatch.py $PT_AUDIO A B clip.wav...` gives the loudest
+  sample and how well each clip matches (r about 1.0 for the one played; 0.04 for another).
+  `playsound.py N` has DSCLOG play sound N (its SOUND_REQ). The game plays nothing much on its
+  own while the party stands about: a recording of minutes was silence but for a second at the
+  start. The game's own 53 and 96 recorded at peaks near 2,800.
+- **The game's table of sounds** (2026-11-05): at load segment + 3A98h, offset 08A2h, 6 bytes each:
+  +1 the kind (5 a digital clip), +2 a far pointer to a 12-byte descriptor (+7 its BVOC). 0-130
+  are digital, 131-180 another kind (4), past 180 other data: a BVOC numbered past 130 isn't
+  played by its number (the mod's 140 and 141 were silent until DSCLOG lent itself entries 131 and
+  132 for the call), and the game keeps the last clip loaded under a number (one lent entry for
+  both sounds played the first again).
+- **route.py won't walk through a figure** (2026-11-05): with someone standing at (99, 31), in
+  front of Kurzak's entryway (99, 33-34, open), it found no way south from his stop and gave up;
+  the live grid showed the doorway clear. Walk round with clicks, or wait for him to move.
 - **The inventory panel's picture for the docs** (2026-11-05): I opens the inventory; the panel is
   `shot.sh`'s x 230-319, y 0-199, scaled 2x (`convert -crop 90x200+230+0 +repage -scale 200%`).
   A class can be tried in memory: the sheet's class byte (`SHEET_CLASSES`, 13 a ranger) and its

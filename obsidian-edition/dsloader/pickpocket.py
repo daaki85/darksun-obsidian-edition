@@ -63,6 +63,7 @@ class Attempt:
     key: Optional[str] = None  # the person's pockets, now out of reach (the thief was caught)
     xp_to: Optional[int] = None  # a party member given XP for what was lifted (the game's routine)
     xp: int = 0
+    lifted: bool = False  # something (or the coins) taken: the purse's sound (sounds.PICK_SOUND)
 
 
 def _seen(data: bytes) -> Optional[str]:
@@ -285,7 +286,7 @@ def attempt(gd: GameData, tried: set, roll: Callable[[], int] = lambda: random.r
             text = f"{thief} lifts {coins} ceramic pieces from {npc}'s purse, all there was to take."
             lines.append(f"  coins: {level}d4+{level} (2 to 5 for each of {level} thief levels) = {coins}")
             lines.append("  " + text)
-            return Attempt(text, lines, key)
+            return Attempt(text, lines, key, lifted=True)
         else:
             list_no, item, before = random.choice(loot)
             data = it.item(item)
@@ -302,9 +303,9 @@ def attempt(gd: GameData, tried: set, roll: Callable[[], int] = lambda: random.r
                 seen = f"{thief} lifts {special} from {npc} unnoticed."
                 reward = f"{thief} receives {SWORD_XP} experience points!"
                 lines += ["  " + text, "  " + reward]
-                return Attempt(f"{seen} {reward}", lines, xp_to=leader, xp=SWORD_XP)
+                return Attempt(f"{seen} {reward}", lines, xp_to=leader, xp=SWORD_XP, lifted=True)
         lines.append("  " + text)
-        return Attempt(text, lines)  # free to try again
+        return Attempt(text, lines, lifted=True)  # free to try again
     quiet = _skill(gd, leader, "move silently") or 0
     d100 = roll()
     lines.append(f"  {thief} moves silently to get away: d100 = {d100}, needs {quiet} or less -> "

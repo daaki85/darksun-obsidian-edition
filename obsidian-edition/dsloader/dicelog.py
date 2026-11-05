@@ -28,7 +28,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import aging, bowyer, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, bowyer, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
@@ -53,6 +53,7 @@ BIOS_TIMER = 0x46C
 TSR_RULES = 170
 TSR_MAIN_TICKS = 260  # the map's main loop run (counted)
 TSR_XP_WHO, TSR_XP_AMOUNT = 262, 264  # a party member to be given XP with the pick's text (FFFFh: none)
+TSR_SOUND_REQ, TSR_PICK_SOUND = 1822, 1824  # a sound to play from the main loop, and one with the pick's text
 TSR_SKILLS_ON = 266  # bits: item boxes name a cloak's and boots' bonus to hiding and moving silently;
 SKILLS_STEALTH, SKILLS_BELT = 1, 2  # a worn belt adds to picking pockets and opening locks (and its box says)
 SKILLS_ELVEN = 4  # the Cloak and Boots of Elvenkind's boxes name their chances (the hiding rule on)
@@ -711,8 +712,11 @@ class DiceLog:
 
     def _write_xp(self, result: Optional["pickpocket.Attempt"]) -> None:
         """The XP that came with what was lifted (Kurzak's Short Sword), for DSCLOG to give with
-        the game's own routine as it shows the text; none otherwise."""
+        the game's own routine as it shows the text (and the quest's sound); none otherwise. With
+        no XP, a thing or the coins lifted has the purse's sound (sounds.PICK_SOUND)."""
         who, xp = (result.xp_to, result.xp) if result is not None and result.xp_to is not None else (0xFFFF, 0)
+        sound = sounds.PICK_SOUND if result is not None and result.lifted and who == 0xFFFF else 0xFFFF
+        self.guest.write(self.tsr_hdr + TSR_PICK_SOUND, struct.pack("<H", sound))
         self.guest.write(self.tsr_hdr + TSR_XP_AMOUNT, struct.pack("<H", xp))
         self.guest.write(self.tsr_hdr + TSR_XP_WHO, struct.pack("<H", who))
 
@@ -2031,9 +2035,12 @@ class DiceLog:
             return False
 
     def _set_stealth(self, hidden: bool, member: int = 0) -> None:
-        """Have DSCLOG make this party member's next attack one from behind (or no one's)."""
+        """Have DSCLOG make this party member's next attack one from behind (or no one's); hidden,
+        with the hiding's sound (sounds.HIDE_SOUND, played from the map's main loop)."""
         if self.tsr_hdr is not None:
             self.guest.write(self.tsr_hdr + stealth.TSR_STEALTH, struct.pack("<H", 1 << member if hidden else 0))
+            if hidden:
+                self.guest.write(self.tsr_hdr + TSR_SOUND_REQ, struct.pack("<H", sounds.HIDE_SOUND))
 
     def round_status(self, acted_creatures: frozenset = frozenset()) -> Optional[dict]:
         """The round in progress, for keeping its order in view: {"round", "now": (name, score),

@@ -1421,7 +1421,9 @@ comes in a fight with no enemy in any of the eight squares around them tries to
 hide in shadows; if they do, they try to move silently up to someone; and if
 both succeed, their next attack that turn counts as one from behind: +2 to hit,
 the target's DEX and shield don't count, and with a weapon that can backstab it
-is a backstab, the damage multiplied as usual. The attack gives the thief away,
+is a backstab, the damage multiplied as usual. Hidden and unheard, the thief
+makes a soft sound, a breath sinking away into the dark (the mod's own, played
+through the game's sound effects, so not with them turned off). The attack gives the thief away,
 and so does the turn ending without one. An enemy next to the thief when the
 turn comes means no hiding at all: get clear first (a
 [Shadowblade](KITS.md#multiclass-kits) tries anyway). A [Military
@@ -1543,6 +1545,8 @@ a worn belt's 5 counted, as in the thief rows):
   worth 200 XP to the thief, given as the game gives a quest's ("Cilla
   receives 200 experience points!", with the quest's sound; split among a
   multiclass thief's classes). Keys stay, as scripts may look for them.
+  Anything else lifted, or the coins, comes with a purse's jingle (the mod's
+  own sound; the three weapons keep the quest's).
   People outside the party keep all they own in their pack, so this goes by
   what each thing is.
 - **Failure:** a move silently roll. Made, the thief slips away unnoticed;

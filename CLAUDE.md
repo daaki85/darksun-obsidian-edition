@@ -39,7 +39,8 @@ What stalls on it and not in DOSBox is a program fault to report.
 **Reading the game.** `state.py [FLAGS]` (fight, whose turn, region, leader, camera; a flag reads
 0 whenever the flags have no place in memory, as in the arena). The dice log's tail after every
 action (dialogue, narration, menus, "NO PATH FROM HERE"). `itemlists.py` (each member's worn +08h, held +0Ah and backpack +0Ch lists: the game's AC
-counts +08h only). The dice log with `--all` gives each AC's parts. `shot.sh OUT.png` is the 320x200
+counts +08h only). The dice log with `--all` gives each AC's parts. Sounds: `PT_AUDIO=FILE` before start.sh
+records DOSBox's output; `playsound.py N` plays one, `soundmatch.py` checks a clip was the one played. `shot.sh OUT.png` is the 320x200
 capture; window grabs (`import -window`) are 320x240, so y x 1.2.
 
 **Controls.**

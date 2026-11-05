@@ -9,6 +9,21 @@ notes](PATCH-NOTES.md).
 ## Next pull request (not opened yet)
 
 **New**
+- **Sounds for hiding and picking pockets** (`sounds.py`, the user's picks of eight made for it):
+  a thief or ranger hidden and unheard in a fight makes a soft breath sinking away (BVOC 140), and
+  a pocket picked, a thing or the coins, a purse's jingle (BVOC 141); the three weapons worth XP
+  keep the quest's sound, now with nothing else. The samples are `dsloader/sound-data/*.wav`
+  (8000 Hz, 8-bit mono, the game's form; `make.py` made them), put in the Loader's RESOURCE.GFF as
+  Creative Voice Files like the game's own. The game's table of sounds (3A98:08A2h, 181 entries)
+  has digital ones for 0-130 only, so DSCLOG's `PLAY_SOUND` lends itself entry 131 or 132 for the
+  call, as a digital one with a descriptor of its own naming the BVOC, and puts it back (one
+  entry each: the game keeps the last clip it loaded by its number). Two words at the header's
+  end: `SOUND_REQ` (+1822, played from the main loop: `SOUND_TICK`) and `PICK_SOUND` (+1824, with
+  the pick's text: `GIVE_XP`). DSCLOG.EXE 64,848 bytes (+160; 464 of its segment spare). Seen in
+  DOSBox: both played on request (DOSBox's output recorded, `PT_AUDIO`, and matched with the
+  clips, r 0.997 and 0.995), in either order and after one of the game's; entries 131 and 132 as
+  the game had them afterwards. Tests: `test_sounds.py`, `UseItemTests.test_sound_tick`, `test_xp`,
+  `test_pick_sound`, the stealth and pocket tests.
 - **The champions' bout** (`champions.py`, `bodyart.py`; with the magic weapons' switch): once a
   party member has killed Scar (flag 759, set beside the game's 19 where script 3 says "This
   makes ... king of the pens!"), the first wave of the next visit (the count, the game's number

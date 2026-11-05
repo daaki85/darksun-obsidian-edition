@@ -920,8 +920,8 @@ def objects_beside(path: str) -> Optional[gff.Chunks]:
 def write_resources(source: str, dest: str, roll_store: bool = True) -> None:
     """The game's RESOURCE.GFF (SOURCE, only read) with the new spells' icons, the Pick Pockets
     button's, the descriptions of both and of the spell arrows (spelltexts.py), the save/load
-    window's PAGE 1 to PAGE 4 buttons (savepages.py) and, with ROLL_STORE, the creation screen's
-    STORE and RECALL (rollstore.py), to DEST."""
+    window's PAGE 1 to PAGE 4 buttons (savepages.py), the mod's sounds (sounds.py) and, with
+    ROLL_STORE, the creation screen's STORE and RECALL (rollstore.py), to DEST."""
     with open(source, "rb") as f:
         data = f.read()
     chunks = gff.read_gff(data)
@@ -936,6 +936,8 @@ def write_resources(source: str, dest: str, roll_store: bool = True) -> None:
                 for icon, (touch, *how) in ARROW_BUTTONS.items()}}
     from . import spelltexts
     added.update(spelltexts.chunks())
+    from . import sounds  # the hiding's and the picked pocket's sounds (BVOC chunks past the game's)
+    added.update(sounds.chunks())
     from . import art, game, wotrart  # the 6th-level priest spells' (Wake of the Ravager's, else tinted ones)
     folder = os.path.dirname(os.path.abspath(source))
     gpldata = art._find(folder, "GPLDATA.GFF")

@@ -411,7 +411,7 @@ game, `DOSBOX/dosbox-0.74-2.1.tar.gz`):
 | Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (it needs 60,000 bytes in one piece to open it again) |
 | C000h-C7FFh | 32 KB | the video BIOS (ROM) |
 | C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
-| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 61.7 KB, the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, 50.2 KB free in one piece (DOS's memory blocks read in the running game, 2026-11-05) |
+| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 61.8 KB, the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, 50.0 KB free in one piece (DOS's memory blocks read in the running game, 2026-11-05, and the 160 bytes the mod's sounds added since) |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
 | 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's far block, 57.6 KB (the ring, the panel's picture, the shadows' cache, the text buffer, spans, the dust's places, the frames steady pace holds back, the crash report's buffers), 6.4 KB free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
@@ -486,13 +486,14 @@ the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
 each time it opens ("Out of memory in OEOpenGraph" when it can't). What it
 puts there (`UMB_NEED`, the header's +372) is checked against the room
 (`UMB_ROOM`, D00Ah to F000h): the build fails past it (a negative `times`),
-and so does `test_fits_upper_memory`. It needs 6,137 of the room's 8,182
-paragraphs, so 2,045 (32.0 KB) are spare, and with `UMBPLUS.COM`
-50.2 KB are free in one piece (DOS's memory blocks read in the running game: the helper 3,946
-paragraphs from C90Ah, the overlay buffer 2,062, the music buffer 751, 3,211 free). The helper's
-own segment is the limit for new code: its image with the install code is 64,656 bytes
-(`image_len`; `DSCLOG.EXE` is 32 bytes more, 64,688, with its header; the resident part ends at
-`resident_end`, F5A0h), so with the install's 256-byte stack 624 bytes of its 64 KB are spare,
+and so does `test_fits_upper_memory`. It needs 6,147 of the room's 8,182
+paragraphs, so 2,035 (31.8 KB) are spare, and with `UMBPLUS.COM`
+50.0 KB are free in one piece (DOS's memory blocks read in the running game before the mod's
+sounds, 2026-11-05: the helper 3,946 paragraphs from C90Ah, the overlay buffer 2,062, the music
+buffer 751, 3,211 free; the sounds' code took 10 more). The helper's
+own segment is the limit for new code: its image with the install code is 64,816 bytes
+(`image_len`; `DSCLOG.EXE` is 32 bytes more, 64,848, with its header; the resident part ends at
+`resident_end`, F640h), so with the install's 256-byte stack 464 bytes of its 64 KB are spare,
 and the build fails past it (what each change took is in the CHANGELOG). The HMA has 6,566 bytes
 left for more buffers (the far block ends at `FAR_END`, 58,970). The game's sound-effects buffer (24,001 bytes, kept
 for good like the music's) could go to upper memory next for the game's 640

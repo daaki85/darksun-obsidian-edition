@@ -402,6 +402,11 @@ lbl_slots  times LBL_SLOTS * LBL_SIZE db 0 ; +374 the Loader's: names floating o
 blast_hp   times 4 dw 0         ; +1814 the hit points Psionic Blast took
                                 ;      from each party member this fight (PROBE_WORN), for the Loader
                                 ;      to give back and clear as the fight ends (psiblast.py)
+sound_req  dw 0xFFFF            ; +1822 the Loader sets a sound to play from the map's main loop
+                                ;      (SOUND_TICK: a thief hidden, sounds.py's HIDE_SOUND); DSCLOG
+                                ;      sets it back to FFFFh (none) once played
+pick_sound dw 0xFFFF            ; +1824 ... and one to play with PICK_TEXT when no XP is given
+                                ;      (GIVE_XP: a pocket picked, PICK_SOUND), set back as well
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -1301,8 +1306,10 @@ pick_text times PICK_SIZE db 0
 XP_SEG    equ 0x4251            ; (DSUN.EXE segments, less the load segment) an overlay's entry:
 XP_OFF    equ 0x005C            ;   (who, how many)
 give_xp:
+        mov ax, 0xFFFF
+        xchg ax, [cs:pick_sound]        ; (PICK_SOUND: played in the XP's place, once)
         cmp word [cs:xp_who], 0xFFFF
-        je .ret
+        je play_sound
         mov ax, ds
         sub ax, DGROUP_SEG - XP_SEG
         mov [cs:xp_call + 2], ax
@@ -1310,13 +1317,81 @@ give_xp:
         push word [cs:xp_who]
         call far [cs:xp_call]
         add sp, 4
-        mov ax, ds
-        sub ax, DGROUP_SEG - DROP_SEG
-        mov [cs:sound_call + 2], ax
-        push word QUEST_SOUND
+        mov word [cs:xp_who], 0xFFFF
+        mov ax, QUEST_SOUND
+        ; (on into PLAY_SOUND)
+
+; PLAY_SOUND: the game's sound AX (FFFFh: none) by its own routine, which does nothing with the
+; sounds turned off; or one of the mod's (MOD_SOUND on: BVOC AX of the Loader's RESOURCE.GFF,
+; sounds.py). The game's table of sounds (SFX_SEG:SFX_TABLE, 6 bytes each: +1 the kind, 5 a digital
+; one, then a far pointer to its 12-byte descriptor, whose +7 is its BVOC) has digital ones for
+; 0-130 only (131-180 are another kind), so for the call an entry from SFX_SLOT on is made a
+; digital one with MOD_DESC (its BVOC AX), and then put back: one for each of the mod's sounds, as
+; the game keeps the last one it loaded by its number. DS the game's; AX, BX, CX, DX, ES changed.
+SFX_SEG    equ 0x3A98           ; (DSUN.EXE segments, less the load segment)
+SFX_TABLE  equ 0x08A2
+SFX_SLOT   equ 131              ; (the first entry past the digital ones: 131 and 132 lent)
+SFX_DIGITAL equ 5
+MOD_SOUND  equ 140              ; (sounds.HIDE_SOUND; PICK_SOUND the next)
+MOD_SOUNDS equ 2
+play_sound:
+        cmp ax, 0xFFFF
+        je .ret
+        mov bx, ds
+        sub bx, DGROUP_SEG - DROP_SEG
+        mov [cs:sound_call + 2], bx
+        sub ax, MOD_SOUND
+        cmp ax, MOD_SOUNDS
+        jb .mod
+        add ax, MOD_SOUND
+        push ax
         call far [cs:sound_call]
         add sp, 2
-        mov word [cs:xp_who], 0xFFFF
+.ret:   ret
+.mod:   push si
+        imul si, ax, 12
+        add si, mod_desc                ; (its descriptor)
+        imul bx, ax, 6
+        add bx, SFX_TABLE + SFX_SLOT * 6  ; (the entry it borrows)
+        add al, MOD_SOUND
+        mov [cs:si + 5], al             ; (its BVOC, and its number for another kind of card)
+        mov [cs:si + 7], al
+        mov dx, ds
+        sub dx, DGROUP_SEG - SFX_SEG
+        mov es, dx
+        push ax
+        push word [es:bx + 1]           ; (the entry as it was)
+        push dword [es:bx + 3]
+        mov byte [es:bx + 1], SFX_DIGITAL
+        mov [es:bx + 2], si
+        mov [es:bx + 4], cs
+        push es
+        push bx
+        sub al, MOD_SOUND - SFX_SLOT
+        push ax
+        call far [cs:sound_call]
+        add sp, 2
+        pop bx
+        pop es
+        pop dword [es:bx + 3]
+        pop word [es:bx + 1]
+        pop ax
+        pop si
+        ret
+mod_desc times MOD_SOUNDS db 1, 0, 0xFF, 0xFF, 0, 0, 1, 0, 0, 1, 0x6E, 0x40 ; (as the game's, BVOC +7)
+
+; SOUND_TICK: from the map's main loop (PROBE_SCROLL, DS the game's), the sound the Loader asked
+; for (SOUND_REQ), once. All registers kept.
+sound_tick:
+        cmp word [cs:sound_req], 0xFFFF
+        je .ret
+        pusha
+        push es
+        mov ax, 0xFFFF
+        xchg ax, [cs:sound_req]
+        call play_sound
+        pop es
+        popa
 .ret:   ret
 
 use_done dw 0                   ; (the way on when the Loader answered: the routine's end, less the INT's)
@@ -20911,6 +20986,7 @@ probe_scroll:
         mov byte [cs:arc_hold], 0       ; (an Arcanist's cast is over: PROBE_END_TURN)
         call dust_tick
         call whirl_tick
+        call sound_tick
         call target_click
         cmp word [cs:view_redraw], 0
         je .panel

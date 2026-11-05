@@ -445,11 +445,12 @@ class UseItemTests(unittest.TestCase):
 
     def test_xp(self):
         """What was lifted is worth XP (Kurzak's sword): before its text, DSCLOG's GIVE_XP calls
-        the game's routine for a quest's XP (who, amount) and plays the quest's sound, once."""
+        the game's routine for a quest's XP (who, amount) and plays the quest's sound, once; with
+        no XP, the sound the Loader asked for (PICK_SOUND: the purse's), once."""
         mu, calls = self.mu, []
         image = load_image()
-        xp_who = image.find(HDR_SIG) + 262
-        give_xp = image.find(bytes.fromhex("2e833e") + struct.pack("<H", xp_who) + bytes.fromhex("ff74"))
+        pick_sound = image.find(HDR_SIG) + 1824
+        give_xp = image.find(bytes.fromhex("b8ffff2e8706") + struct.pack("<H", pick_sound))  # (its start)
         self.assertGreater(give_xp, 0)
         to_game = GAME_DS - 0x4356  # (the game's segments, from its DS)
         xp, sound = (to_game + 0x4251) * 16 + 0x005C, (to_game + 0x1A0A) * 16 + 0x0663
@@ -476,7 +477,75 @@ class UseItemTests(unittest.TestCase):
         self.assertEqual(struct.unpack("<H", mu.mem_read(self.hdr + 262, 2))[0], 0xFFFF)
         run()
         self.assertEqual(len(calls), 2)  # (asked for once)
+        # no XP: the purse's sound the Loader asked for (PICK_SOUND, +1824), once, and the quest's
+        # sound never with it
+        mu.mem_write(self.hdr + 1824, struct.pack("<H", 141))
+        run()
+        self.assertEqual(calls[2:], [("sound", (132,))])  # (the mod's 141, as the lent entry 132)
+        self.assertEqual(struct.unpack("<H", mu.mem_read(self.hdr + 1824, 2))[0], 0xFFFF)
+        run()
+        self.assertEqual(len(calls), 3)
+        # XP and a purse's sound both asked for: the quest's sound only, and the other forgotten
+        mu.mem_write(self.hdr + 262, struct.pack("<HH", 3, 200))
+        mu.mem_write(self.hdr + 1824, struct.pack("<H", 141))
+        run()
+        self.assertEqual(calls[3:], [("xp", (3, 200)), ("sound", (53,))])
+        self.assertEqual(struct.unpack("<H", mu.mem_read(self.hdr + 1824, 2))[0], 0xFFFF)
 
+
+    def test_sound_tick(self):
+        """SOUND_TICK, from the map's main loop: the sound the Loader asked for (SOUND_REQ, +1822:
+        the hiding's), by the game's routine, once; nothing with none asked for; registers kept.
+        The mod's own (140, 141) through the game's entries 131 and 132, lent for the call as
+        digital ones whose descriptor names the BVOC, and put back."""
+        mu, calls = self.mu, []
+        image = load_image()
+        req = image.find(HDR_SIG) + 1822
+        tick = image.find(bytes.fromhex("2e833e") + struct.pack("<H", req) + bytes.fromhex("ff74"))
+        self.assertGreater(tick, 0)
+        sound = (GAME_DS - 0x4356 + 0x1A0A) * 16 + 0x0663
+        mu.mem_write(sound, b"\xcb")  # retf
+
+        table = (GAME_DS - 0x4356 + 0x3A98) * 16 + 0x08A2  # (the game's sounds: 6 bytes each)
+        game_entries = bytes(range(1, 13))
+        mu.mem_write(table + 131 * 6, game_entries)
+        seen = []
+
+        def called(uc, address, size, _):
+            sp = uc.reg_read(r.UC_X86_REG_SS) * 16 + uc.reg_read(r.UC_X86_REG_SP)
+            n = struct.unpack("<H", uc.mem_read(sp + 4, 2))[0]
+            calls.append(n)
+            if n in (131, 132):  # (the entry lent: a digital one, its descriptor naming the BVOC)
+                entry = uc.mem_read(table + n * 6, 6)
+                off, seg = struct.unpack_from("<HH", entry, 2)
+                seen.append((entry[1], uc.mem_read(seg * 16 + off + 7, 1)[0]))
+        mu.hook_add(UC_HOOK_CODE, called, begin=sound, end=sound)
+        back = 0xE000
+
+        def run():
+            for name, value in dict(cs=TSR, ds=GAME_DS, ss=SS, esp=0x7FE, ebp=BP, eax=0x1111, ebx=0x2222,
+                                    ecx=0x3333, edx=0x4444, es=0x5555).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.mem_write(SS * 16 + 0x7FE, struct.pack("<H", back))
+            mu.emu_start(TSR * 16 + tick, TSR * 16 + back, count=10000)
+            self.assertEqual([mu.reg_read(getattr(r, "UC_X86_REG_" + x)) for x in ("IP", "SP", "AX", "BX", "CX", "DX", "ES")],
+                             [back, 0x800, 0x1111, 0x2222, 0x3333, 0x4444, 0x5555])
+        run()
+        self.assertEqual(calls, [])
+        mu.mem_write(self.hdr + 1822, struct.pack("<H", 140))
+        run()
+        self.assertEqual(calls, [131])  # (the mod's 140, played as the lent entry 131)
+        self.assertEqual(seen, [(5, 140)])
+        self.assertEqual(struct.unpack("<H", mu.mem_read(self.hdr + 1822, 2))[0], 0xFFFF)
+        self.assertEqual(bytes(mu.mem_read(table + 131 * 6, 12)), game_entries)  # (put back)
+        run()
+        self.assertEqual(calls, [131])  # (once)
+        for n, slot in ((141, 132), (53, 53)):  # (the next of the mod's; one of the game's as it is)
+            mu.mem_write(self.hdr + 1822, struct.pack("<H", n))
+            run()
+            self.assertEqual(calls[-1], slot)
+        self.assertEqual(seen, [(5, 140), (5, 141)])
+        self.assertEqual(bytes(mu.mem_read(table + 131 * 6, 12)), game_entries)
 
 @unittest.skipIf(Uc is None, "unicorn is not installed")
 class BeltTests(unittest.TestCase):
