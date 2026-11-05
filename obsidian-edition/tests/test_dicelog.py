@@ -1571,6 +1571,7 @@ class NewLinesTests(unittest.TestCase):
         struct.pack_into("<H", log.guest.mem, HDR + dicelog.TSR_SLOTS_OFF, 0x1800)  # spell slots out of the way
         talking_to = [None]
         log.game.talk_target = lambda: talking_to[0]
+        log.game.talk_target_distance = lambda: 16  # (beside the party: a speech without replies counts)
         def conversation(*portraits):
             data = b""
             for p in portraits:

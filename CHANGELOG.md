@@ -109,6 +109,14 @@ notes](PATCH-NOTES.md).
   into its type's record only when the game's AC routine first counts one, and the Loader read
   the record's 0. `counted_ac` gives a helm the rule's AC itself (`game.HELM_TYPES`). Test
   `test_helm_before_dsclog_sets_it`.
+- **The dice log learned a speaker's name wrongly from a script's speech:** it names a face after
+  the creature the script was started on (the game's talk target), when one face shows. Kurzak's
+  call to the arena isn't started on him, and the script running then was the Trustee's rounds,
+  so it learned "Portrait 5 is Trustee" and named Kurzak so from then on (kept in the settings). A
+  speech with no replies for the party now teaches a name only when its speaker stands within 4
+  squares of the party (`GameData.talk_target_distance`: Legcrusher fetching the party still
+  counts); a talk with replies teaches it as before, and puts a wrong one right. Seen in DOSBox:
+  the call shows as "[Portrait 5]" and nothing is learned. Test `SpeakerTests`.
 - **The combat log panel shortened only plain saves:** a save showing its modifiers or total
   (`d20 = 13 +2 Blessed = 15`, a doubled d20 against fire) stayed at its whole length in short and
   at the least; now it's shortened to its total against the need (test `test_save_with_modifiers`).

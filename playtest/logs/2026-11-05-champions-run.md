@@ -102,3 +102,8 @@ Legcrusher alive and beside the party); the Look box's AC leaves out Helms give 
   (+0Fh 80h) and reads AC 0 at +12h until DSCLOG writes it.
 - Seen still: the dice log names Kurzak's portrait (5) "Trustee" (a speaker name it learnt wrongly
   at some point and keeps in the settings): to look into.
+- The speaker name: the dice log had learned "Portrait 5 is Trustee" from Kurzak's call (a
+  script's speech started on whoever the running script's thing was: the Trustee on his rounds).
+  After the fix (a speech without replies teaches a name only with its speaker within 4 squares of
+  the party): from `pens-fire-count4`, three rests, the call: "[Portrait 5] Gerakis! Get up
+  here!...", and no "(Portrait 5 is ...)" line; the learned names keep Legcrusher and Scar only.

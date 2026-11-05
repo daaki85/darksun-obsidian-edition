@@ -1014,6 +1014,18 @@ class GameData:
         return index >= PARTY_SIZE and len(rec) >= CREATURE_SIZE and bool(rec[CREATURE_NAME]) \
             and struct.unpack_from("<h", rec, 0)[0] > 0
 
+    def talk_target_distance(self) -> Optional[int]:
+        """How far the thing the current script was started on stands from the party's leader, in
+        map units (16 a square, the larger of across and down); None when it isn't a thing."""
+        combatant, = struct.unpack("<h", self.guest.read((self.load_seg + TALK_SEG) * 16 + TALK_TARGET, 2))
+        if not PARTY_SIZE <= combatant < THINGS:
+            return None
+        x, y = struct.unpack("<HH", self.guest.read(self.ds * 16 + POSITIONS + combatant * 32, 4))
+        lx, ly = self.party_position()
+        if x >= 0xFFF0 or y >= 0xFFF0:  # (off the map)
+            return None
+        return max(abs(x - lx), abs(y - ly))
+
     def talk_target_creature(self) -> Optional[int]:
         """The creature index of the person being talked to (see talk_target), or None."""
         combatant, = struct.unpack("<h", self.guest.read((self.load_seg + TALK_SEG) * 16 + TALK_TARGET, 2))

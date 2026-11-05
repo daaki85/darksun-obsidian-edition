@@ -33,7 +33,7 @@ from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CR
                    EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
 from .itemwatch import ItemWatch
-from .textlog import KIND_MESSAGE, KIND_PORTRAIT, KIND_TEXT, Dialogue, DialogueEntry, TextBuffer
+from .textlog import KIND_MESSAGE, KIND_PORTRAIT, KIND_SHOW_REPLIES, KIND_TEXT, Dialogue, DialogueEntry, TextBuffer
 from .tracker import PartyTracker
 
 HDR_SIG = b"DSCLOGva"
@@ -263,6 +263,7 @@ RING_INTERVAL = 3.0  # seconds between looks for the arena's Ring +1
 STATS_ANSWER_STEP = 0.001  # seconds between the stats thread's looks at DSCLOG's requests
 STATS_ANSWER_IDLE = 0.5  # ... while the game isn't attached, or a look failed
 ITEMS_STILL_WAIT = 0.06  # seconds the game's free lists are watched for, before the Loader changes item lists
+NEAR_SPEAKER = 4 * 16  # map units: a speaker beside the party (a talk without replies: _follow_talk)
 LOAD_SETTLE = 3.0  # seconds after the party changes (a game was loaded) when effects are not news
 DRESSER_RETRY = 30.0  # seconds before the party's figures are tried again when the game's files couldn't be read
 NATURAL_JUMP = 2 * 24 * 60 * 60  # game seconds between looks past which the clock may be a load's: aging waits a look
@@ -1785,19 +1786,27 @@ class DiceLog:
     def _follow_talk(self, rec) -> None:
         """Learn portraits' names: a conversation (the window opening to CLOSE) that shows a single
         face, started on a named creature, is that creature talking. With several faces (a scene
-        where others speak too) it can't be told who is who, so nothing is learned."""
+        where others speak too) it can't be told who is who, so nothing is learned. A speech with no
+        replies for the party may be a script's that isn't started on its speaker (Kurzak's call
+        to the arena, while the Trustee's rounds were the script running: "Portrait 5 is
+        Trustee", 2026-11-05): from one, a name is learned only when that creature stands beside
+        the party (NEAR_SPEAKER: Legcrusher fetching it); a talk with replies teaches its name in
+        any case (and puts a wrong one right)."""
         if rec.kind == KIND_PORTRAIT:
             if self._talk is None:
                 try:
-                    target = self.game.talk_target()
+                    target, far = self.game.talk_target(), self.game.talk_target_distance()
                 except (struct.error, IndexError, ValueError):
-                    target = None
-                self._talk = {"portraits": set(), "with": target}
+                    target, far = None, None
+                near = far is not None and far <= NEAR_SPEAKER
+                self._talk = {"portraits": set(), "with": target, "replies": False, "near": near}
             if rec.value:
                 self._talk["portraits"].add(rec.value)
+        elif rec.kind == KIND_SHOW_REPLIES and self._talk is not None:
+            self._talk["replies"] = True  # (a talk the party answers: one started on its speaker)
         elif rec.kind == KIND_TEXT and rec.text == "CLOSE" and self._talk is not None:
             talk, self._talk = self._talk, None
-            if len(talk["portraits"]) == 1 and talk["with"]:
+            if len(talk["portraits"]) == 1 and talk["with"] and (talk["replies"] or talk["near"]):
                 portrait = next(iter(talk["portraits"]))
                 if portrait in game.SPEAKERS:
                     pass  # known already (the Announcer calls out mid-fight, "started on" a fighter)
