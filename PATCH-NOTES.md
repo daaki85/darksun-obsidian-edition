@@ -2,7 +2,7 @@
 
 *A Dark Sun: Shattered Lands mod · Current version 2.13.4 · Every change from the original game*
 
-Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. You start the game with the Loader, which loads the mod with your options and logs every roll as it happens. Everything is switchable, the game's own files are never touched, and your saves stay where they are.
+Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. You start the game with the Loader, which loads the mod with your options and logs every roll as it happens. Nearly everything is switchable, the game's own files are never touched, and your saves stay where they are.
 
 **Download:** https://github.com/daaki85/darksun-obsidian-edition/releases/latest
 
@@ -225,7 +225,7 @@ A few of them:
 **Other magic items**
 
 - **[New]** **Tome of Understanding**: read it for +1 WIS for good.
-- **[New]** **Kalzith's six scrolls**: Shield, Burning Hands, Blur, Cat's Grace, Lightning Bolt and Haste, spells the game has no scroll of.
+- **[New]** **Kalzith's six scrolls**: Shield, Burning Hands, Blur, Cat's Grace (with the new spells on), Lightning Bolt and Haste, spells the game has no scroll of.
 - **[New]** **Defilers' scrolls**: a defiler in a fight may carry a scroll of a preserver spell, one time in 20, found on its body.
 - **[New]** **Burning, Chill, Shocking and Vampiric Arrows**: a Spellarcher's own, woven from its touch spells; each casts its spell on what it hits, and they fade at the next rest.
 
@@ -346,7 +346,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** A preserver or psionicist with another class couldn't claim to have scried the **haystack** or read the man's thoughts, and the cave guide told even a dwarf or halfling to "go bother someone your own size". **Dagolar's slime book** counted a fighter's or an air cleric's training as magical but not an earth, fire or water cleric's or a druid's: now any cleric, druid, preserver or psionicist can read it.
 - **[Fixed]** Cilla, an elf in the ready-made party, was drawn with the half-elf woman's figure; she looks like an elf now (a switch keeps the game's figure).
 
-Rules the game got wrong are put right too, each under its own heading above with a switch, on by default: the saving throws against spells and the doubled d20 against fire, cold and electricity, two weapons, warriors' attacks and acid on armour (Combat); class restrictions, multiclass hit points, the class tables, rangers' spells, CON's regeneration and poison saves, and Haste's aging (Classes and Kits); Enlarge's dice (Magic and Psionics); and thief skills (Improved Thieving).
+Rules the game got wrong are put right too, each under its own heading above with a switch, on by default: the saving throws against spells and the doubled d20 against fire, cold and electricity, two weapons, warriors' attacks, helms' AC and acid on armour (Combat); class restrictions, multiclass hit points, the class tables, rangers' spells, preservers' learning from scrolls, CON's regeneration and poison saves (Classes and Kits); Enlarge's dice (Magic and Psionics); and thief skills (Improved Thieving).
 
 ## Your Saved Games
 
@@ -355,6 +355,7 @@ Rules the game got wrong are put right too, each under its own heading above wit
 - A character who kept the strength from Share Strength after the power ended still has it (it shows on their Effects screen). Load a save from before the power was used to be rid of it.
 - A character silenced by the preserver's Dispel Magic ("No spell use" on their Effects screen) casts again once it wears off.
 - A new game whose arena fight never began (no announcer, and walking said NO PATH FROM HERE: a 2.4.0 bug) can't be mended: start a new one.
+- A character's most PSP may go up once, the next time the game works it out (a level up, or a game starting): the game's own bonuses for CON, INT and WIS are counted right now, and the most only ever rises.
 - Thieves' Tools from an earlier version of the mod (Mirlon's or Kel's) do nothing now: a thief picks pockets with the Pick Pockets button.
 - A Healer from an earlier version keeps its sphere and is given the cosmos spells when the game is loaded (the dice log says so).
 - With ages on, each character in a save, the game's own party too, is given a starting age the first time the Loader sees them (the dice log shows the roll).

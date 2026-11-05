@@ -2308,7 +2308,7 @@ class DiceLog:
         """'THAC0 16, +6 STR, +1 Blessed, ... = 9', from the attack setup's locals and the game's rules
         (and SKILL, weapon specialization's (name, to-hit), which DSCLOG takes off after them)."""
         g = self.game
-        base = g.creature(attacker)[CREATURE_THAC0]
+        base = struct.unpack("b", g.creature(attacker)[CREATURE_THAC0:CREATURE_THAC0 + 1])[0]  # (signed)
         after_f1, hit_bonus = e.parent_local(-0x20), e.parent_local(-8)
         rear, backstab = e.parent_local(-0x1A), e.parent_local(-0x24)
         parts: List[Tuple[str, int]] = []

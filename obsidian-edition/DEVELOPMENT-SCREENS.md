@@ -72,7 +72,7 @@ compares the random command with a field of the character acting (fields 23 to
 28, STR to CHA), as Chahl's `random(19) <= CHA` when asked about his scars
 (script 181), the chains a strong character breaks (76) or a secret door an
 intelligent one spots (69, `INT - 10`). `dsloader/scriptchecks.py` finds every
-such condition in the Loader's copy of GPLDATA.GFF (13 of them) by the position
+such condition in the Loader's copy of GPLDATA.GFF (15 of them; 14 in the game's own) by the position
 DSCLOG records past its random command (as the searches are told apart; a
 position two scripts share is left out), and the dice log evaluates the
 condition with the roll and the score of whoever's turn it is (outside a fight
@@ -121,8 +121,7 @@ dice log running:
   frame where upper memory would be, and with the helper loaded `mem` shows 1
   KB of upper memory free. With `ems=false` (the launcher's own config, after
   GOG's) it shows 65 KB (largest block 64 KB), conventional memory unchanged
-  at 632 KB, and the panel has its room (see
-  [Room in the helper](DEVELOPMENT.md#room-in-the-helper)). The game's memory layer (VMEM)
+  at 632 KB ([Room in the helper](DEVELOPMENT.md#room-in-the-helper)). The game's memory layer (VMEM)
   takes EMS, XMS or extended memory, whichever there is: without EMS it loaded
   a save, walked the pens, opened a conversation and a shop, and played the
   arena's opening fight to the end without a fault (a check, not a whole

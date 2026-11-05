@@ -28,7 +28,7 @@ from this branch's helper (`tools/build_mod.sh` there) or `$WORK/dsun.log` shows
 What stalls on it and not in DOSBox is a program fault to report.
 
 **Start from a save.** `sh loadsave.sh pens-after-arena` loads the slave pens after the arena
-(region 29h). Save at every milestone (Escape, S, click a slot at 120,46, type a name, SAVE at
+(region 29h); `saves/README.md` lists the others (`pens-thornwall-rack`: by the weapon rack). Save at every milestone (Escape, S, click a slot at 120,46, type a name, SAVE at
 253,46: the game then quits) and add it to `playtest/saves/` with a README line.
 
 **The window must be 320x240** (`xdotool getwindowgeometry`): start.sh sets the Loader's
@@ -86,5 +86,5 @@ Monitor, and every step gets a `timeout`.
 3. The pens: the party arrives at (1816,440) and Kurzak greets it (choose Goodbye). The cluebook
    (`Cluebook.PDF`, `pdftotext -layout`) gives the rest. Kurzak's door is the entryway south of
    his stop (99,33-34) into the hall; the corridor gate (81,20-21) is locked, so the way west is
-   the door at (113,90), the bottom corridor and its door (93,94) (`doorpath.py`). Then: #11, break into the stalker pen, kill
+   the door at (113,90) (locked once, 2026-11-04: check its look box), the bottom corridor and its door (93,94) (`doorpath.py`). Then: #11, break into the stalker pen, kill
    the mountain stalker, push the button on the north wall; #12 is the sewer grate (46,86).

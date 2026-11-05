@@ -23,7 +23,8 @@ extracted game (`DS_GAME`, default `$PLAYTEST_WORK/inst`). Nothing in the work f
    assume a place is reachable from a new game: check what the story requires (the slave pens'
    sewer grate, for one, is behind the stalker pen's secret door).
 3. **Start from a saved game past the parts you don't need**: `sh loadsave.sh NAME` loads one of
-   `playtest/saves/` (see its README: `pens-after-arena`, the slave pens after the arena). None
+   `playtest/saves/` (see its README: `pens-after-arena`, the slave pens after the arena;
+   `pens-thornwall-rack`, the party by the weapon rack with Thornwall on it). None
    came with the game and none were on the Drive (2026-11-01). **Save at every milestone** (below)
    and add the save to `playtest/saves/` with a line in its README, then commit: replaying the
    arena took most of a day.
@@ -217,7 +218,7 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   opens the SAVE screen: click a slot (the first at 120, 46), type a name (`xdotool type`), click
   SAVE (253, 46). "GAME SAVED", and then **the game quits to DOS** (it's the exit menu): restart
   with loadsave.sh. The slot is `SAVE01.SAV` in the game folder (85,680 bytes), with
-  `CHARSAVE.GFF` and `DARKRUN.GFF` written at the same time; keep all three.
+  `CHARSAVE.GFF` and `DARKSAVE.GFF` written at the same time; keep all three (`saves/README.md`).
 - **The save name field keeps the slot's old name**: typing goes in front of it (KURZAK DOORPENS),
   and Backspace from the start does nothing: press End, then Backspace enough times, then type.
 - **Look needs line of sight**: "NO LINE OF SIGHT" from a party round a wall corner, and still
@@ -271,7 +272,7 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
    a readied missile weapon with ammunition in the missile slot.
 8. **Never `pkill -f` or `pgrep -f | kill` a pattern your own command line contains**: it kills
    the shell running it (exit 144, twice on 2026-11-01, the second time with this rule already
-   written: run the kill as its own command, by pid, and nothing else in it). Kill by pid (`pgrep -f "sh leavearena.sh"`, then `kill PID`). And
+   written: run the kill as its own command, by pid, and nothing else in it). Kill by pid, found by a pattern your command line can't match (`pgrep -f "sh [l]eavearena.sh"`), then `kill PID` in a command of its own. And
    stopping a background task can leave its children running: check with pgrep afterwards.
 9. **Never cut steps out of a bigger script with sed**: its header may restart the whole game.
    Use the small tools.
@@ -346,6 +347,10 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   the "Take me to the Arena! I want a fight!" menu (137:14CEh), but open it answers nothing to
   the look pointer. **Resting** is at a fire ring (the game's rest, 8066Dh); the east hall's
   object 2264 (1908, 675) is a haystack (137:F5h), not the fire ring.
+- **The inventory panel's picture for the docs** (2026-11-05): I opens the inventory; the panel is
+  `shot.sh`'s x 230-319, y 0-199, scaled 2x (`convert -crop 90x200+230+0 +repage -scale 200%`).
+  A class can be tried in memory: the sheet's class byte (`SHEET_CLASSES`, 13 a ranger) and its
+  flags (0200h a ranger, 0040h a gladiator); never save after.
 - **The combat log panel**: `sh panel.sh hide|show` checks the panel's pixel before pressing L
   (L alone toggles, and can leave it the wrong way round).
 
@@ -418,7 +423,7 @@ escaped slaves, the exits, Goodbye: "Get moving! I gotta get back to work."). Sa
   corridor (rows 91-95) through the door at (93, 94), north up columns 34-35 to the south hall
   (rows 66-70), and north at columns 17-20 to the stalker pen's anteroom (its door 16, 54-56).
   On the way, two slaves whisper "Is it time to break out yet?" / "Shh, not yet!".
-- **Opening that door sets off the alarm** (the user, 2026-11-01): plan for it (the guards come)
+- **Opening the stalker pen's door sets off the alarm** (the user, 2026-11-01): plan for it (the guards come)
   or find another way to the button.
 - On the recompiled program (2026-11-01) the same: the look pointer on the doorway's drawing
   (square 95,27, above the door square) opens the mod's Look box "Door" (INFO only); the arrow,

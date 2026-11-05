@@ -10,3 +10,10 @@ Build: `obsidian-edition` after the audit's fixes (`gpl.put_jumps`). DOSBox.
 Not seen: the champions' bout after Scar's death in a real run (the arena's route to Scar is
 long); the changed scripts' own talks (Dinos, the Trustee, Alagorn, Garyn, the Elven Leader) in
 play. Their commands are unchanged: only bytes past a jump, never run, are now one-byte commands.
+
+## inventory-ranger.png retaken
+
+The picture was Gerakis's gladiator panel (no ranger skills) since 2026-10-30. Retaken: Gerakis
+made a 3rd-level ranger in memory (his sheet's class byte 10 to 13, flags 0040h to 0200h; never
+saved), the inventory opened with I, the panel cropped from `shot.sh`'s 320x200 at x 230, 90x200,
+scaled 2x: MOVE 27, HIDE 20 beside INT and WIS.

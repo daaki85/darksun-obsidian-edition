@@ -6,7 +6,9 @@
 Everything the mod changes and adds in the game, in the sections of the
 Loader's Options tab, each with its switch there; the game's bugs fixed come
 last. A switch's name here in bold (**Rangers' casting level**) is the short
-form of the sentence the Options tab gives it, in the same section. How each is
+form of the sentence the Options tab gives it, in the same section. (The tab's
+**Saves** section is under [More saves](#more-saves); where Wake of the Ravager is
+installed, in the README's [Requirements](README.md#requirements).) How each is
 done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works). Installing,
 running the game, the Loader's window and its dice log are in the
 [README](README.md).
@@ -148,7 +150,7 @@ there; **-** makes it smaller.
   game has run, `Day 47, 14:20`: from day 1 at 00:00, the game's own clock (it
   has no time of day, so 14:20 is the hours into that day; a rest moves it on 8
   hours). Saves keep it.
-- **The arena's count of fights.** Between fights in the arena, the top line
+- **The arena's count of fights.** Between fights, in the slave pens and the arena, the top line
   says instead how many arena fights the party has had (`Arena fights: 4`; the
   time until the game has shown the count to the Loader): the game's
   own count, one a trip into the arena however many waves come (see [the
@@ -332,7 +334,7 @@ spells) or `PRI` on the CLERIC list (clerics', druids' and rangers' priest
 spells), as `left/most` (`PRI 3/5`). The PSIONIC list shows none. Another level
 or list shows its own when the LEVEL or list button turns to it:
 
-![The USE screen with K'ratchek's spell slots: a 2nd-level druid, five first-level spells](docs/use-slots.png)
+![The USE screen with K'ratchek's spell slots: a 2nd-level druid, five first-level slots](docs/use-slots.png)
 
 The numbers go down as spells are cast (the screen shows the new count when it
 is next drawn) and back up after resting. A preserver in armour reads `NO
@@ -412,9 +414,8 @@ in its lower panel and under the pointer:
   better for each 3 levels above 5). DEX and the rest are still added
   to it, and armour already better is kept, so a spell showing a worse AC
   than the character's armour does nothing for them.
-- **A click on a spell's icon leaves it on** (the game ended it); a psionic
-  power's icon still ends the power, as that is how one is stopped ([Spells on
-  the Effects screen](#spells-on-the-effects-screen)).
+- **A click on a spell's icon** no longer ends it: [Spells on the Effects
+  screen](#spells-on-the-effects-screen).
 
 ![The Effects screen for Cilla: the pointer on Armor's icon, and IMPROVED AC (4 CHARGES) at the foot](docs/effects-charges.png)
 
@@ -1125,7 +1126,7 @@ thri-kreen's chatkcha, else the long sword (a gladiator's second the club), each
 only if it may be chosen, else the first that may. EXIT can't go back to the
 creation screen: DONE has made the character by then.
 
-![After DONE on the creation screen: the weapon window over it, a picture of each weapon spec, PICK A WEAPON SPECIALTY, the new character's name, and the picks left (1) beside EXIT; the hit points, PSP and age below it](docs/creation-weapons.png)
+![After DONE on the creation screen: the weapon window over it, a picture of each weapon spec, PICK A WEAPON SPECIALTY, the new character's name, and the picks left (1) beside EXIT; the hit points and age below it](docs/creation-weapons.png)
 
 A new character starts the game with a plain weapon of its first weapon spec in
 place of the bone long sword the game gives warriors, in a material it may use,
@@ -1829,7 +1830,7 @@ wear the game's chain (no single-class thieves), and kept from more with
 [class restrictions](#class-restrictions). **Grey's Scale**'s arm and leg
 armour is AC 3 each (the game's is 2).
 
-![The inventory screen in the game: Arrowbane, a silver circlet, in a backpack cell; the Sunking Crown, a gold crown, in the head's slot](docs/head-items.png)
+![Two item icons from the inventory screen: Arrowbane, a silver circlet, and the Sunking Crown, a gold crown](docs/head-items.png)
 
 ![Dream's pack with the bone scale set: the chest, arm and leg pieces, and the Bone Helm under the pointer with its name](docs/bonescale.png)
 
@@ -1891,9 +1892,9 @@ How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#robes).
 
 ### New people
 
-Two new people in the slave pens. They are there when the party first enters
-the pens in a game started from the Loader; a save made after that keeps the
-pens as they were.
+Two new people in the slave pens: Kalzith, there when the party first enters
+the pens in a game started from the Loader, and Semyon, once he has left the
+arena. A save made after that keeps the pens as they were.
 
 #### Kalzith
 
@@ -2055,7 +2056,7 @@ The first wave is six **champions** in place of the game's:
 | Mul gladiator | two bone axes | full scale, a bone helm |
 | Halfling | a sling, a bone short sword | full leather, a leather helm, a leather shield |
 | Elf | a bow and arrows, an obsidian long sword | full leather, a leather helm, a leather shield |
-| Defiler | a bone dagger, and a scroll of Fogbolt, Spook or Reflected Image (chosen as the bout starts) | none |
+| Defiler | a bone dagger, and a scroll of Fogbolt, Spook or Reflected Image (chosen as the bout starts; of the game's own spells with the new spells off) | none |
 
 They fight with their weapons, the two archers shooting, and their armour counts
 on top of their kinds' AC, as the party's does (the game's own people carry
@@ -2544,3 +2545,7 @@ got plainly wrong:
 | **Acid on armour** | Any armour without a magical power destroyed outright, its plus ignored | A save by material, a plus helping ([items saving against acid](#items-saving-against-acid)) |
 | **Class tables** | Priests' THAC0 improving a level early (19 at 3rd), fewer priest and preserver spell slots (3 2 1 at 5th), and gladiators, rangers and thieves needing AD&D's XP less a little | AD&D's tables ([AD&D's class tables](#adds-class-tables)) |
 | **Thief skills** | A table of the game's own, high from the start (a 3rd-level elf: move silently 66, hide in shadows 61) | AD&D's table by level, with Dark Sun's race and DEX adjustments ([thief skills from AD&D's table](#thief-skills-from-adds-table)) |
+| **Helms** | AC 0 | AC 1 ([helms](#helms)) |
+| **Preservers learning from scrolls** | Any spell from any scroll learnt, and every spell known | AD&D's INT chance and most known ([preservers' INT](#preservers-int)) |
+| **CON** | A hit point back every 5 minutes at any CON from 20; dwarves and halflings adding CON's poison save to their racial bonus | AD&D's regeneration by CON, and the racial bonus alone ([CON as in AD&D](#con-as-in-add)) |
+| **Enlarge** | The whole melee damage multiplied, STR included | The weapon's dice only, rounded up ([Enlarge](#enlarge-multiplies-the-weapons-dice-only)) |

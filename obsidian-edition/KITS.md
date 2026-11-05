@@ -238,8 +238,8 @@ The kits that change spell slots, by the level of the kit's class (spells of
 1st to 6th level), with [AD&D's class tables](FEATURES.md#adds-class-tables) on,
 to the highest level each class reaches under the
 [XP cap](FEATURES.md#level-cap-by-xp) (a preserver and a cleric 11th, a druid
-12th, a ranger 10th, a thief 13th; a blank is past it, and — is before the class's
-first spells). The druid has no kit that
+12th, a ranger 10th, a thief 13th; a blank means the class has no level there, and — no slot yet at that
+level). The druid has no kit that
 changes its slots; it is here, as the cleric is, to set the kits beside:
 
 | Level | Preserver | Scholar | Battle Mage | Cleric | Crusader | Elementalist | Druid | Seeker (ranger) | Justifier (ranger) | Shinobi (thief) |

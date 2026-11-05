@@ -246,8 +246,9 @@ Limitations:
   rolls there (for example treasure or random encounters) show up only with
   **Show unlabelled rolls**, as raw numbers.
 - A save-file load from the main menu is recognised, so the spells already
-  active in it aren't reported as new. Loading a save of the same party in the
-  middle of play isn't, and its effects may be listed as if just cast.
+  active in it aren't reported as new. A save of the same party loaded in the
+  middle of play is seen only when its clock is earlier than the game's was; a
+  later one's effects may be listed as if just cast.
 - Dialogue speakers are portrait numbers until the log learns their names or you
   name them (see [the Dialogue tab](README.md#the-dialogue-tab)): the game
   doesn't keep a name with the dialogue. A learned name is the creature the
@@ -395,7 +396,7 @@ gives the Loader each buffer's segment and offset: the ring's `ring_seg`
 `tbuf_off` (+128), the panel's `panel_seg` (+328) and `panel_off` (+140). The
 helper reaches the internal ones through FS, pushed and set around each use
 (the game never sees it changed). The text buffer (`TSIZE`) is 2 KB; the
-Loader reads its size from the header and drains it every 20 ms (at most 251
+Loader reads its size from the header and drains it every 20 ms from the command line and every 50 ms in the Loader's window (at most 251
 bytes came in between two reads in the opening show, the busiest stretch
 measured).
 
@@ -427,11 +428,11 @@ and C900h-CFFFh is all zero and keeps what is written to it; otherwise it
 changes nothing and the helper loads at D00Ah as before. 63 paragraphs stay
 between DOSBox's tables and the block. Measured with a save in the arena
 (walking, the arena's fight): the tables at C8C0h throughout, the helper at
-C90Ah, the overlay buffer in upper memory, 29.1 KB free in one piece.
+C90Ah, the overlay buffer in upper memory (the free piece then and now: the table above).
 
 The helper still has to fit D000h-EFFFh (`UMB_ROOM`, below), so it works
 where the block can't be moved; the 28 KB more holds what it can do without:
-the shadows' cache ([Shadows](DEVELOPMENT-CONTENT.md#shadows)) and the game's music buffer.
+the game's music buffer.
 
 **The game's blocks kept for good.** Of the game's far heap (Borland's,
 farmalloc at load:1231h, farfree 1127h, farrealloc 138Eh), 134 KB is taken
@@ -458,20 +459,14 @@ arena's area change and a fight as usual.
 With GOG's settings there
 is one upper memory block of 63 KB, EMS's 64 KB page frame taking the rest; the
 launcher's config turns EMS off (`launch.DOS_LINES`: the game uses XMS instead),
-which leaves the helper a second 64 KB block (65 KB free with it loaded; see
-[the combat log](DEVELOPMENT-SCREENS.md#what-the-game-allows)). The helper's own segment is still at
-most 64 KB (everything through CS), so the second block is room for data kept
-apart from it. The helper asks for its image and the install's stack
-(`LOAD_EXTRA`); with EMS on, `mem` in DOSBox showed 632 KB free and a few
-KB of upper memory left. A change that adds much code should check that again:
-the ring is 63 entries, not 128 (96 until the new spells' code, when the game no
-longer started for lack of memory; 88 until STORE and RECALL; 84 until spells
-199-201 and `seg_space`, when the helper no longer fitted in the block and
-loaded low; 74 until the names over figures; 66 until Whirlwind's funnel turned;
-65 until Wall of Thorns counted a monster's armour, 64 until the pointer kept its place), and the text buffer 2 KB,
-not 8 (4 until the memory pass for 6th-level spells), to make that room. The
-most entries put in the ring in 2 seconds, measured, is 43 (the opening show),
-16 in a fight.
+which leaves upper memory for the helper and the game's buffers (above). The
+helper's own segment is at most 64 KB (everything through CS); its big buffers
+are in the far block. The helper asks for its image and the install's stack
+(`LOAD_EXTRA`); with EMS on, `mem` in DOSBox showed 632 KB free and a few KB of
+upper memory left. A change that adds much code should check that again. The
+ring is 63 entries and the text buffer 2 KB (how they shrank: the CHANGELOG);
+the most entries put in the ring in 2 seconds, measured, is 43 (the opening
+show), 16 in a fight.
 
 The second block also holds the game's overlay buffer (32,992 bytes: twice the
 largest overlay, the code the overlay manager loads as needed). The game asks

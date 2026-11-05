@@ -85,7 +85,7 @@ A natural 20 on an attack always hits, and a natural 1 always misses, but
 that is all the d20 does: the game has no critical hits or fumbles. Its attack
 routine uses the d20 only for those two checks and the comparison with THAC0,
 and never passes it to the damage routine, so a hit on a 20 rolls the same
-damage as any other. A backstab is the only thing in a fight that multiplies a blow's damage.
+damage as any other. A backstab is the only thing that multiplies a blow's damage by a whole number (Enlarge scales it by 10% a caster level).
 
 ## The game's two weapons
 
@@ -447,7 +447,7 @@ their own:
   (` K'ratchek spends 18 PSP (52 -> 34)`).
 - **The power check.** Each use rolls a d20 that must come up at or under the
   power's score: the ability the power uses (CON for most psychometabolism and
-  psychokinesis, WIS for telepathy and Disintegrate, INT for Superior
+  psychokinesis, WIS for telepathy, Disintegrate and Enhanced Strength, INT for Superior
   Invisibility, Mind Bar and Synaptic Static) plus the power's adjustment, from
   −1 (Lend Health) to −7 (Mind Blank). A 1 always works and a 20 always fails;
   a failure says "psionic power check fails" and costs half the PSP. The game

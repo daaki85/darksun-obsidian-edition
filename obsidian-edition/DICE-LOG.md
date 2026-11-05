@@ -45,8 +45,9 @@ hits (see [No critical hits](HOW-THE-GAME-WORKS.md#no-critical-hits)).
 
 **Kits in the lines.** A kit shows where it changes a number, by name: an attack's THAC0 line has
 `from behind (Rescuer)` for the Rescuer's +1, the initiative's parts `Wayfinder's Path-finder`
-(or `Wayfinder down`) ([Kits](KITS.md)). A new character whose weapon spec its starting weapon
-doesn't suit `starts with a plain ...` weapon of the spec instead.
+(or `Wayfinder down`) ([Kits](KITS.md)). A new character whose starting weapon doesn't suit its
+weapon spec gets a plain weapon of the spec instead: `starts with a plain bone axe for the weapon
+specialization chosen, in place of the bone long sword`.
 
 ## Spells, saves and effects
 

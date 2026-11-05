@@ -20,7 +20,7 @@ scripts hand it out (a reward, a gift or a find).
 A weapon's spell (Dark Flame's Burning Hands, Balk's Staff's Slow...) goes on
 whoever it hits, every hit, with no charge used. The items that change a
 score (Draketooth, Dag's Dagger, the Helm and Belt of Might, El's Ring, the
-Steadfast Ring and the Ring of Insight) do it while their owner has them, the
+Steadfast Ring and the Ring of Insight) do it while worn, the
 Belt of Might making STR at least 24.
 
 **Weapons**, by material, then type:
@@ -248,14 +248,14 @@ off AC 10 (the game's own numbers; a character's AC adds up its pieces).
 | Arms | leather | Leather Arm Armor | 1 | Armor Merchant | Churrr, Krikor, Ranger, Kurzak, Chaero, Castle Guard, Guard, Arant's Guard, Scar, Arena Guard, Warrior, Dagolar Guard, Tobrian, Caravan Guard, Lt. Kwerin, Mayor of Gedron, Slaver Guard, Merzol, Messenger, Visitor, Notaku, Village Hero, Kalinin |  |
 | Arms | bone | Ring Arm Armor | 1 | Armor Merchant | Wyvern Master, Mikquetzl |  |
 | Arms | bone | Brigandine Arm Armor | 1 | Armor Merchant | Keldar, Templar, Chaya, Caravan Master, Chahl, Elven Leader, Gladiator, Uzoma |  |
-| Arms | bone | Scale Arm Armor | 1 | Jark | Uskuye, Elite Guard, a chest in the slave pens | placed in the slave pens' chest, with the chest piece (the game places only that) |
+| Arms | bone | Scale Arm Armor | 1 | Jark | Uskuye, Elite Guard, a chest in the slave pens | **new** placement |
 | Arms | metal | Chain Arm Armor | 2 | — | Templar, Army Commander, a chest in the Undermountain |  |
 | Legs | leather | Leather Leg Armor | 1 | Armor Merchant | Warren Chief, Churrr, Ranger, Skull Guardian, Worshipper, Mayor of Gedron, Council Member, Notaku, Village Hero, a chest in the Upper Castle |  |
 | Legs | bone | Ring Leg Armor | 1 | Jark, Armor Merchant | Mikquetzl |  |
 | Legs | bone | Brigandine Leg Armor | 1 | Jark, Armor Merchant | Keldar, Templar, Chaya, Caravan Master, Chahl, Elven Leader |  |
-| Legs | bone | Scale Leg Armor | 1 | Jark | Uskuye, Elite Guard, a chest in the slave pens | placed in the slave pens' chest, with the chest piece (the game places only that) |
+| Legs | bone | Scale Leg Armor | 1 | Jark | Uskuye, Elite Guard, a chest in the slave pens | **new** placement |
 | Legs | metal | Chain Leg Armor | 1 | Armor Merchant | Army Commander, a skeleton in the Upper Castle |  |
-| Head | leather | Helm | 0 (1 with [Helms give AC 1](FEATURES.md#helms)) | Armor Merchant | Kurzak, a chest in the Upper Castle, a chest in the slave pens, a bag in the slave pens | placed in Kurzak's pack |
+| Head | leather | Helm | 0 (1 with [Helms give AC 1](FEATURES.md#helms)) | Armor Merchant | Kurzak, a chest in the Upper Castle, a chest in the slave pens, a bag in the slave pens | **new** placement |
 | Head | bone | Bone Helm | 0 (1 with [Helms give AC 1](FEATURES.md#helms)) | — | a chest in the slave pens | **new**: the bone scale set's helm |
 | Hand | wood | Shield | 1 | — | Wyvern Master, Arant, Chaya, Elven Leader, Templar, a chest in the slave pens |  |
 | Hand | leather | Shield | 1 | — | Keldar, Templar, Caravan Master, Gladiator |  |
@@ -310,6 +310,7 @@ no magical power is lost at once in the game (0%); one with a power never is
 | The mod's plain obsidian weapons (Short Sword, Axe, Mace, Great Axe) | 65% | 80% (needs 5) |
 | The mod's plain metal weapons (Short Sword, Dagger, Mace, Great Axe, Pick, Polearm) | 65% | 65% (the game's: needs 8) |
 | Kreenfang, Drakejaw, Stillwater, Thornwall, Hayneedle (bone, +1) | 70% | 70% (the game's: needs 7) |
+| The Elven Leader's Gythka +2 (bone, +2) | 75% | 75% (the game's: needs 6) |
 | Mindshard (obsidian, +1) | 70% | 85% (needs 4) |
 | Flame Blade (obsidian, +1, a power) | 70% | 90% (needs 3) |
 | Glasshewer, Nightsliver, Skycutter (obsidian, +2) | 75% | 90% (needs 3) |

@@ -854,7 +854,7 @@ THIEF_PER_LEVEL = 4
 THIEF_PENALTY_LIST, PENALTY_LIST_END = 0xD0, 13
 THIEF_PENALTY_SLOTS = tuple(EQUIP_SLOTS.index(s) for s in ("legs", "ammo", "left hand", "right hand"))
 # RULE_THIEF_TABLE (DSCLOG's PROBE_THIEF_SKILL does the same in the game): a skill is AD&D's
-# average for the thief level (1-10, by skill) in place of the game's base + 4 a level, plus the
+# average for the thief level (1-13, by skill) in place of the game's base + 4 a level, plus the
 # game's race adjustment (Dark Sun's own numbers already), plus Dark Sun's DEX adjustment (AD&D's
 # table to 19, the Dark Sun rules' past it, 9-22; none for the last three skills) in place of the
 # game's DEX formula

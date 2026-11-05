@@ -286,7 +286,7 @@ the game time in seconds over `YEAR`), put in the stored age as it happens, so
 a save holds the age and the scores' changes together. The years counted so
 far are in the game's own flags, so a save keeps them too (`counted_years`,
 `set_counted`: flag 798 set once the count has begun, 799 to 806 the number;
-the game's flags run to 755, the Loader's people 760-783, Alagorn's menus at
+the game's flags run to 755, the Loader's people 756-783, Alagorn's menus at
 most 784-797, and a save keeps 808). The dice log's `_natural_aging`, after
 `give_ages`, looks only when the look is steady (the same party as the last,
 the clock on by no more than 2 days, `NATURAL_JUMP`, and the count and the

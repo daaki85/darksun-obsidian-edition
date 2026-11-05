@@ -147,14 +147,20 @@ def club_to_gythka(gd: GameData, member: int, name: str) -> List[str]:
 
 
 def take_armour(gd: GameData, member: int, name: str) -> List[str]:
-    """Plain armour (not a shield) taken from MEMBER, as many pieces as there are."""
+    """Plain armour (not a shield) taken from MEMBER, as many pieces as there are. ItemsBusy if
+    the game's lists moved under a piece (the step tried again, for what is left, next pass)."""
+    from . import itemgate
     it = ring.Items(gd)
-    taken = 0
+    taken = missed = 0
     for index, item, _ in list(gd._worn(member)):
         type_ = struct.unpack_from("<H", item, game.ITEM_TYPE)[0]
-        if item[game.ITEM_PLUS] == 0 and restrict.is_armour(_type_record(gd, type_)) \
-                and ring.unlink(gd, it, index, f"{name}'s armour, taken away", empty=True):
-            taken += 1
+        if item[game.ITEM_PLUS] == 0 and restrict.is_armour(_type_record(gd, type_)):
+            if ring.unlink(gd, it, index, f"{name}'s armour, taken away", empty=True):
+                taken += 1
+            else:
+                missed += 1
+    if missed:
+        raise itemgate.ItemsBusy(f"{name}'s armour: the game's item lists moved")
     return [f"{name} has no armour: a druid wears none."] if taken else []
 
 

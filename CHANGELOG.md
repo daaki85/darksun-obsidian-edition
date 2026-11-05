@@ -104,6 +104,8 @@ notes](PATCH-NOTES.md).
 - A party member the player names Kalzith or Semyon, dying, no longer counts as his death (the
   check skips the party's places); a script repair too short for its jump is left out rather
   than shifting the script (none is, today).
+- An attacker's THAC0 in the dice log read signed (one below 0 showed as 255); Cilla's armour,
+  when the game's lists moved under a piece, is taken on the next pass (the step was marked done).
 
 **Fixed: the game's code**
 - **Psionic Blast knocks out, not kills:** while a party member has the blast's hit points still
@@ -151,6 +153,16 @@ notes](PATCH-NOTES.md).
   shown. KITS: the Wilderness Avenger's stealth below a ranger's table, the Healer's 6th-level
   cosmos spells, the Mind Warrior's PSP. The dispel chance in HOW-THE-GAME-WORKS and the dice log
   page, and the dice log's kit lines.
+- A second round: `inventory-ranger.png` retaken (it had been Gerakis's gladiator panel since
+  2026-10-30, with no ranger skills); FEATURES' Rules the game got wrong has helms, preservers'
+  learning, CON and Enlarge (the patch notes' list the same, without Haste's aging, which is new);
+  the score items work while worn (ITEMS); Semyon comes to the pens once he has left the arena;
+  the defiler champion's scroll without the new spells; Kalzith's Cat's Grace with them; the
+  arena count shown in the pens too; the game window's sizes in the guide; Enhanced Strength's
+  power check by WIS; "nearly everything is switchable"; the PSP known issue in the patch notes;
+  the Elven Leader's Gythka +2 against acid; the DEVELOPMENT pages' leftover memory history, the
+  same-party load, the flags 756-783 and the scripts' 15 ability checks; the playtesting guide's
+  DARKSAVE.GFF, its kill-by-pid example and the alarm door; a few alt texts.
 
 ## Pull request #85 ([merged 2026-11-02](https://github.com/daaki85/darksun-obsidian-edition/pull/85))
 
