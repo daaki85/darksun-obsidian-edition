@@ -34,7 +34,7 @@ notes](PATCH-NOTES.md).
   dies carrying something ("push 0FFFF044Dh", 59412h), `gamepatch`'s `champion_body` asks DSCLOG's
   `PROBE_WORN` (return address 2754h), which answers object 2666 for that champion (a copy of the
   Dead Body, its picture a Tohr-kreen fallen on its side, drawn from its own frames) and 1101 for
-  anyone else. DSCLOG's image 64,688 bytes (+48). Tests: `test_champions.py`,
+  anyone else. DSCLOG.EXE 64,688 bytes (+48). Tests: `test_champions.py`,
   `WornTests.test_champion_body`.
 - Seen in DOSBox (the bout forced due in a test build): the six came on with their gear in place;
   the mul's two axes, the halfling's sling, the elf's bow, the half-giant's great axe (1d10 +8
@@ -42,15 +42,16 @@ notes](PATCH-NOTES.md).
   2666 with Kreenfang in it. Not yet seen: the speech, the bout coming after Scar's death in a
   real game, and the body's picture on screen (the level-1 test party was defeated first).
 
-- Fixed before release: the champions' gear watcher forgot nothing on a load, so champions made
+**Fixed before release** (in the new work above)
+- The champions' gear watcher forgot nothing on a load, so champions made
   again from a save in the arena came on unequipped (now reset on a load, as the defilers' rolls,
   and a champion with gear still in its backpack is equipped whatever was remembered; test
   `test_again_after_a_load`).
-- Fixed before release: DSCLOG hooked its interrupts before setting up its buffers, so when there
+- DSCLOG hooked its interrupts before setting up its buffers, so when there
   was no memory for them ("no memory for its buffers (57 KB). Not loaded.") it exited with its
   vectors still pointing into freed memory. It now sets up the buffers first and hooks nothing
-  when that fails. Seen in DOSBox: loads and logs as before (image still 64,688 bytes).
-- Fixed before release: **the champions' bout never came with Semyon on** (the default). Semyon's
+  when that fails. Seen in DOSBox: loads and logs as before (DSCLOG.EXE still 64,688 bytes).
+- **The champions' bout never came with Semyon on** (the default). Semyon's
   changes to scripts 3 and 5 put a jump over a longer command and left the rest of it as it was,
   so the script no longer decoded; the champions' change to script 3, made after, reads it, and
   left it alone (no flag 759 on Scar's death). Eleven scripts in all were left so (3, 5, the Elven
@@ -106,7 +107,7 @@ notes](PATCH-NOTES.md).
   end one knocked out gets the hit points back and wakes (status 1, as the game wakes one,
   7C1F9h); one Dying or dead gets none. As yuan-ti's v0.1.55 has it. Seen in DOSBox (Gerakis at
   -9 HP with 40 kept: a 1-point Psychic Crush left him at 0, not dead, and the fight's end gave
-  the 40). Tests: `WornTests.test_blast_knocks_out`, `test_psiblast.py`. DSCLOG's image 64,640
+  the 40). Tests: `WornTests.test_blast_knocks_out`, `test_psiblast.py`. DSCLOG.EXE 64,640
   bytes (+48).
 - **Scare's save** (from yuan-ti's v0.1.55, checked in DSUN.EXE): below 6th level only a priest
   whose race is elf (3) and half-elf (4) at once got the usual save ("cmp 3 / jne fail" at 79FEAh,
@@ -128,6 +129,21 @@ notes](PATCH-NOTES.md).
   flag-19 hook in plain words and the script buffer's limit. HOW-THE-GAME-WORKS: the champions
   after the arena's count, and the game's people's unused gear under Monsters' defences.
   FEATURES' New content intro counts the bout.
+- From an audit's reviews: DEVELOPMENT's room in the helper with the sizes read in the running
+  game (the helper 61.7 KB of upper memory, 50.2 KB free; its image 64,656 bytes, 624 spare: the
+  64,688 quoted was the file's), the release-by-release ledger left to this file, the helper's
+  interrupts 81h-FFh, the How each part works lists pointing at each page's own Contents, and
+  `--recompiled` among the command-line options; the panel's picture in the far block
+  (DEVELOPMENT-SCREENS); the worn-items section's fifth place, the champion's body. The README's
+  Game window has Single and its recompiled commands `python -m dsloader`; FEATURES says Thornwall
+  is handed over at run time, the panel's three sizes, the Trustee's second fix, Spells on the
+  Effects screen under Controls (its switch's section), and its bug table and Kurzak's row in
+  fewer words; ITEMS marks the bone scale arm and leg pieces and Kurzak's helm as placed by the
+  mod; Windlash is the Bowyer's in the patch notes. The guide: the druid's weapons in its
+  restrictions table, the Options table's New content and when each counts, where the saves are
+  shown. KITS: the Wilderness Avenger's stealth below a ranger's table, the Healer's 6th-level
+  cosmos spells, the Mind Warrior's PSP. The dispel chance in HOW-THE-GAME-WORKS and the dice log
+  page, and the dice log's kit lines.
 
 ## Pull request #85 ([merged 2026-11-02](https://github.com/daaki85/darksun-obsidian-edition/pull/85))
 

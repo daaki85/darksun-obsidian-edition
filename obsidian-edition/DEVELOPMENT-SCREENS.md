@@ -132,9 +132,9 @@ dice log running:
 
 - **Where it lives.** The Loader draws the panel's picture (`combatlog.py`:
   180 × 78 palette indices in the area's own colours, matched to the palette
-  DSCLOG last read) into an upper memory block DSCLOG takes for it at install
-  (`panel_seg`, header `+328`); the dice log's ring has a block of its own
-  there too. With EMS on there is no such block and no panel.
+  DSCLOG last read) into the helper's far block, beside the dice log's ring
+  (`FAR_PANEL`; its segment `panel_seg`, header `+328`: [Room in the
+  helper](DEVELOPMENT.md#room-in-the-helper)).
 - **Putting it on screen.** DSCLOG copies the picture into the screen on show,
   a plane at a time (`PANEL_BLIT`, its height kept on the screen; the Loader
   stores each row as its four planes' bytes in turn, `combatlog.planar`, so a
@@ -359,7 +359,7 @@ screen pages as it redraws, and its flip (14414h) waits for the next vertical
 retrace each time; `PROBE_FLIP` (INT 8Bh in place of the flip's call to the
 wait, 1445Fh) skips the wait while a full screen is up (`SCREEN_IS` 2: the
 inventory, View Character, USE, a talk) and waits as the game does on the map,
-whose pace may hang on it. Measured with the user's save (Zulak's inventory,
+whose pace may hang on it. Measured with a save (Zulak's inventory,
 20,000 cycles, where the game last drew the pointer, `DS:A137h`): 56-103 ms
 (85 on average) before, 42-45 putting an item down and 63-67 picking one up
 after; skipping every retrace wait saves no more, and the rest is the game's

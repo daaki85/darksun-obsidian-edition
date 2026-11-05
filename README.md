@@ -23,8 +23,8 @@ with your options and keeps the full dice log while you play.
   the Loader's dice log writes, and what it means
 - [Patch notes](PATCH-NOTES.md): every change from the original game, in one
   page to share
-- [Items](obsidian-edition/ITEMS.md): every magic item and every weapon, with
-  its icon and where it is (spoilers)
+- [Items](obsidian-edition/ITEMS.md): every magic item, weapon and piece of armour,
+  with its icon and where it is (spoilers)
 - [How the game works](obsidian-edition/HOW-THE-GAME-WORKS.md): the original
   game's own rules, from its code
 - [Changelog](CHANGELOG.md) and [development

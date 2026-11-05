@@ -122,8 +122,10 @@ python -m dsloader processes                     # is DOSBox found?
 ```
 
 After `launch` or `play`, `--window-scale 1` to `4`, `--fullscreen` or
-`--windowed` choose the game's window as **Game window** does. If more than
-one DOSBox is running, add `--pid <number>` (from `processes`).
+`--windowed` choose the game's window as **Game window** does, and
+`--recompiled PROGRAM` runs Dark Sun Recompiled in place of DOSBox from then on (`--dosbox` goes
+back: [the README](README.md#other-ways-to-start)). If more than one DOSBox is running, add
+`--pid <number>` (from `processes`).
 
 ### Practising without the game
 
@@ -179,7 +181,7 @@ Every roll in the game goes through one function, Borland C++'s `rand()`.
 1. When you start the game with the dice log, the launcher writes
    `dos\DSUNLOG.EXE`: a copy of the game's `DSUN.EXE` with a few hundred
    small changes, listed in `PATCHES` in `dsloader/gamepatch.py`. Most replace a few
-   bytes of the game's code with an `INT` (60h to 65h, and 8Ch to FEh; all of
+   bytes of the game's code with an `INT` (60h to 65h, and 81h to FFh; all of
    them are taken, so later sites share one, a site number after the `INT`, as
    in [Scores and hit points as rolled](DEVELOPMENT-RULES.md#scores-and-hit-points-as-rolled)) that
    the helper answers: `rand()`, the saving throw, AC, the dialogue window and
@@ -315,7 +317,7 @@ body and isn't a weapon), the weapons it holds in its `+0x0a` one, and what's
 in its backpack in its `+0x0c` one. The inventory screen moves an item from
 one to another as it's put on or away, by its type's kind (`+0x00`): a melee,
 missile or thrown weapon to `+0x0a`, anything else to `+0x08` (a new list when
-there's none; seen in the game 2026-11-02: chest and leg armour, a shield in
+there's none; seen in the game: chest and leg armour, a shield in
 the left hand and arrows went to `+0x08`, a long sword, a gythka and a bow to
 `+0x0a`). The game fights with every weapon in the `+0x0a` list, whatever the
 item's slot byte says: a dagger put in a backpack cell but left in that list
@@ -408,7 +410,7 @@ game, `DOSBOX/dosbox-0.74-2.1.tar.gz`):
 | Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (it needs 60,000 bytes in one piece to open it again) |
 | C000h-C7FFh | 32 KB | the video BIOS (ROM) |
 | C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
-| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 60.6 KB, the game's overlay buffer 32 KB, the game's music buffer 12 KB, about 51.1 KB free in one piece |
+| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 61.7 KB, the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, 50.2 KB free in one piece (DOS's memory blocks read in the running game, 2026-11-05) |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
 | 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's far block, 57.6 KB (the ring, the panel's picture, the shadows' cache, the text buffer, spans, the dust's places, the frames steady pace holds back, the crash report's buffers), 6.4 KB free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
@@ -423,7 +425,7 @@ block's MCB goes at C900h, reaching F000h as before. It does so only if the
 chain is exactly DOSBox 0.74's (9FFFh 'M' to D000h, D000h 'Z' free to F000h)
 and C900h-CFFFh is all zero and keeps what is written to it; otherwise it
 changes nothing and the helper loads at D00Ah as before. 63 paragraphs stay
-between DOSBox's tables and the block. Measured with the user's arena save
+between DOSBox's tables and the block. Measured with a save in the arena
 (walking, the arena's fight): the tables at C8C0h throughout, the helper at
 C90Ah, the overlay buffer in upper memory, 29.1 KB free in one piece.
 
@@ -449,8 +451,8 @@ reads for the guard byte); farfree of it marks it free for the next such
 request; farrealloc of it keeps it if the size fits, else moves the contents to
 a block of the heap. Nothing else changes. The music buffer was chosen as it fits
 with the shadows' cache (the sound effects' 24 KB would leave the cache 6 KB):
-with the map open the game has 97 KB spare, not 85 KB. Measured with the user's
-arena save: the buffer in upper memory holding the XMIDI file, walking, the
+with the map open the game has 97 KB spare, not 85 KB. Measured with a save in
+the arena: the buffer in upper memory holding the XMIDI file, walking, the
 arena's area change and a fight as usual.
 
 With GOG's settings there
@@ -491,21 +493,13 @@ puts there (`UMB_NEED`, the header's +372) is checked against the room
 (`UMB_ROOM`, D00Ah to F000h): the build fails past it (a negative `times`),
 and so does `test_fits_upper_memory`. It needs 6,137 of the room's 8,182
 paragraphs, so 2,045 (32.0 KB) are spare, and with `UMBPLUS.COM`
-about 51.0 KB are free in one piece (worked out from C90Ah to F000h less the
-helper, the overlay buffer and the music buffer, each with its MCB: 3,326
-paragraphs; 57.8 KB was measured in DOSBox with a smaller helper). The helper's own segment is the
-limit for new code: its image with the install code is 64,688 bytes
-(`image_len`; the resident part ends at `resident_end`, F5A0h), so with the
-install's 256-byte stack 592 bytes of its 64 KB are spare, and the build
-fails past it (2.12.5's 62,016 bytes; 2.13.0's ages, Haste's aging, Restore
-Youth and the Enlarge and CON rules took 736 bytes, 2.13.1's age on the
-creation screen 560, RECALL's frames 48, Table 7's rolls on the creation screen and the
-specs base 17 320, three-class kits and the Elementalist's least slot 32, the Wasteland Seer's PSP 48, EDIT keeping a member's kit, age and weapon specs 496, the Shinobi's slots to 13th and 4th-level spells 48, the creation screen's THAC0 240, its kit and the review's fixes 240; moving the crash report's
-two 256-byte buffers into the far block gave back 464, Erdlu Claw's talons for the claws alone 32, the max PSP's bonuses put right 112, `PROBE_WORN` (ability items, the gladiator's armour) 80, Psionic Blast's hit points 48, its knock-out 48, the champions' Tohr-kreen's body 48); the HMA has 6,566 bytes left for more buffers (the far block ends at
-`FAR_END`, 58,970). (Before this pass the segment had about 2 KB and upper
-memory 0.5 KB: the right button's scrolling, the rings under every enemy and
-the strip below the map had been taken out, and the freeze report cut to 16
-records, to make room.) The game's sound-effects buffer (24,001 bytes, kept
+50.2 KB are free in one piece (DOS's memory blocks read in the running game: the helper 3,946
+paragraphs from C90Ah, the overlay buffer 2,062, the music buffer 751, 3,211 free). The helper's
+own segment is the limit for new code: its image with the install code is 64,656 bytes
+(`image_len`; `DSCLOG.EXE` is 32 bytes more, 64,688, with its header; the resident part ends at
+`resident_end`, F5A0h), so with the install's 256-byte stack 624 bytes of its 64 KB are spare,
+and the build fails past it (what each change took is in the CHANGELOG). The HMA has 6,566 bytes
+left for more buffers (the far block ends at `FAR_END`, 58,970). The game's sound-effects buffer (24,001 bytes, kept
 for good like the music's) could go to upper memory next for the game's 640
 KB, but the sound driver may play it by DMA, which can't cross a 64 KB page. Text the game reads from RESOURCE.GFF belongs in the Loader's
 copy of it, not in the helper (`spelltexts.py`: the descriptions moved there
@@ -639,6 +633,6 @@ Every place the game deletes an item goes through A0:1CD6h. Its ten callers:
 
 How each part of the [features page](FEATURES.md) and the [README](README.md) is done, on three pages of its own:
 
-- [What the game and the Loader show](DEVELOPMENT-SCREENS.md): [The Dialogue tab](DEVELOPMENT-SCREENS.md#the-dialogue-tab), [Searching junk, hay and wardrobes](DEVELOPMENT-SCREENS.md#searching-junk-hay-and-wardrobes), [The Bowyer's archery target](DEVELOPMENT-SCREENS.md#the-bowyers-archery-target), [Ability checks in the scripts' conditions](DEVELOPMENT-SCREENS.md#ability-checks-in-the-scripts-conditions), [The combat log in the game](DEVELOPMENT-SCREENS.md#the-combat-log-in-the-game), [Names over figures](DEVELOPMENT-SCREENS.md#names-over-figures), [THAC0, saves and thief skills](DEVELOPMENT-SCREENS.md#thac0-saves-and-thief-skills), [Detonate's blast on an item](DEVELOPMENT-SCREENS.md#detonates-blast-on-an-item), [The psionic power check](DEVELOPMENT-SCREENS.md#the-psionic-power-check), [What hurts a monster (the Look box)](DEVELOPMENT-SCREENS.md#what-hurts-a-monster-the-look-box), [Charges in item boxes](DEVELOPMENT-SCREENS.md#charges-in-item-boxes), [No manual check](DEVELOPMENT-SCREENS.md#no-manual-check), [Scripts' requests and refused casts in the dice log](DEVELOPMENT-SCREENS.md#scripts-requests-and-refused-casts-in-the-dice-log), [Choosing an enemy: Tab, Enter and the rings](DEVELOPMENT-SCREENS.md#choosing-an-enemy-tab-enter-and-the-rings), [Scrolling the map](DEVELOPMENT-SCREENS.md#scrolling-the-map), [The pointer in scenes, and where it starts](DEVELOPMENT-SCREENS.md#the-pointer-in-scenes-and-where-it-starts), [More saves](DEVELOPMENT-SCREENS.md#more-saves), [More characters](DEVELOPMENT-SCREENS.md#more-characters), [Game speed](DEVELOPMENT-SCREENS.md#game-speed)
-- [The rules](DEVELOPMENT-RULES.md): [Class restrictions](DEVELOPMENT-RULES.md#class-restrictions), [Multiclass hit points](DEVELOPMENT-RULES.md#multiclass-hit-points), [Hit dice: the better of two](DEVELOPMENT-RULES.md#hit-dice-the-better-of-two), [Scores and hit points as rolled](DEVELOPMENT-RULES.md#scores-and-hit-points-as-rolled), [AD&D's class tables](DEVELOPMENT-RULES.md#adds-class-tables), [CON as in AD&D](DEVELOPMENT-RULES.md#con-as-in-add), [Ages](DEVELOPMENT-RULES.md#ages), [Two weapons](DEVELOPMENT-RULES.md#two-weapons), [Half-giants' two-handed weapons](DEVELOPMENT-RULES.md#half-giants-two-handed-weapons), [Rings and cloaks of protection](DEVELOPMENT-RULES.md#rings-and-cloaks-of-protection), [Helms](DEVELOPMENT-RULES.md#helms), [Items saving against acid](DEVELOPMENT-RULES.md#items-saving-against-acid), [Rangers' casting level](DEVELOPMENT-RULES.md#rangers-casting-level), [Preservers' INT](DEVELOPMENT-RULES.md#preservers-int), [Spells saved against with the spell save](DEVELOPMENT-RULES.md#spells-saved-against-with-the-spell-save), [Fire, cold and electricity: DEX instead of a doubled d20](DEVELOPMENT-RULES.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20), [Enlarge's dice](DEVELOPMENT-RULES.md#enlarges-dice), [Weapon specialization](DEVELOPMENT-RULES.md#weapon-specialization), [Kits](DEVELOPMENT-RULES.md#kits), [Level cap by XP](DEVELOPMENT-RULES.md#level-cap-by-xp), [STORE and RECALL on the creation screen](DEVELOPMENT-RULES.md#store-and-recall-on-the-creation-screen), [Fuller starting gear](DEVELOPMENT-RULES.md#fuller-starting-gear), [The game's own party](DEVELOPMENT-RULES.md#the-games-own-party), [The leader's CHA at shops](DEVELOPMENT-RULES.md#the-leaders-cha-at-shops), [Buying back magical items](DEVELOPMENT-RULES.md#buying-back-magical-items), [Thief skills from AD&D's table](DEVELOPMENT-RULES.md#thief-skills-from-adds-table), [Hiding in shadows to backstab](DEVELOPMENT-RULES.md#hiding-in-shadows-to-backstab), [Spell arrows](DEVELOPMENT-RULES.md#spell-arrows), [Picking pockets](DEVELOPMENT-RULES.md#picking-pockets)
-- [Spells, items, people, graphics and the game's bugs](DEVELOPMENT-CONTENT.md): [The game's script bugs](DEVELOPMENT-CONTENT.md#the-games-script-bugs), [Mirror Image](DEVELOPMENT-CONTENT.md#mirror-image), [The game's spells](DEVELOPMENT-CONTENT.md#the-games-spells), [New spells (wizard and 6th-level priest)](DEVELOPMENT-CONTENT.md#new-spells-wizard-and-6th-level-priest), [New items](DEVELOPMENT-CONTENT.md#new-items), [Bracers of defense](DEVELOPMENT-CONTENT.md#bracers-of-defense), [Robes](DEVELOPMENT-CONTENT.md#robes), [Girdles and the amulet](DEVELOPMENT-CONTENT.md#girdles-and-the-amulet), [Kalzith](DEVELOPMENT-CONTENT.md#kalzith), [Semyon](DEVELOPMENT-CONTENT.md#semyon), [What Dinos and the Trustee say about them](DEVELOPMENT-CONTENT.md#what-dinos-and-the-trustee-say-about-them), [The cooked vulture](DEVELOPMENT-CONTENT.md#the-cooked-vulture), [Defilers' scrolls](DEVELOPMENT-CONTENT.md#defilers-scrolls), [What the party wears](DEVELOPMENT-CONTENT.md#what-the-party-wears), [Elves and half-elves](DEVELOPMENT-CONTENT.md#elves-and-half-elves), [Shadows](DEVELOPMENT-CONTENT.md#shadows), [Dust](DEVELOPMENT-CONTENT.md#dust)
+- [What the game and the Loader show](DEVELOPMENT-SCREENS.md) (its Contents lists each section)
+- [The rules](DEVELOPMENT-RULES.md) (its Contents lists each section)
+- [Spells, items, people, graphics and the game's bugs](DEVELOPMENT-CONTENT.md) (its Contents lists each section)

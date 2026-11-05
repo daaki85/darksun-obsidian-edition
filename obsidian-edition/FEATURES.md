@@ -3,10 +3,10 @@
 *Part of Obsidian Edition's documentation, from the [README](README.md). The
 [player's guide](PLAYER-GUIDE.md) tells the same without the detail.*
 
-Everything the mod changes and adds in the game, in the order of the Loader's
-Options tab, each with its switch there; the game's bugs fixed come last. A
-switch's name here in bold (**Rangers' casting level**) is the short form of the
-sentence the Options tab gives it, in the same section and order. How each is
+Everything the mod changes and adds in the game, in the sections of the
+Loader's Options tab, each with its switch there; the game's bugs fixed come
+last. A switch's name here in bold (**Rangers' casting level**) is the short
+form of the sentence the Options tab gives it, in the same section. How each is
 done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works). Installing,
 running the game, the Loader's window and its dice log are in the
 [README](README.md).
@@ -93,13 +93,13 @@ running the game, the Loader's window and its dice log are in the
   - [The view in fights](#the-view-in-fights)
   - [The pointer in scenes, and where it
     starts](#the-pointer-in-scenes-and-where-it-starts)
+  - [Spells on the Effects screen](#spells-on-the-effects-screen)
 - [More saves and characters](#more-saves-and-characters)
   - [More saves](#more-saves)
     - [Saves under their names](#saves-under-their-names)
   - [More characters](#more-characters)
 - [Game speed](#game-speed)
 - [The game's bugs, fixed](#the-games-bugs-fixed)
-  - [Spells on the Effects screen](#spells-on-the-effects-screen)
   - [Rules the game got wrong](#rules-the-game-got-wrong)
 
 ## In the game
@@ -159,8 +159,8 @@ there; **-** makes it smaller.
 - **Its buttons**, on the right of its top line: **L**, which hides it as the
   key does; the level (**Least**, **Short**, **Detail**; a click goes to the
   next, and the Options tab follows); and **-** and **+** for a smaller or
-  bigger panel. Collapsed, it is one line, the newest; expanded, it is
-  taller (11 lines) and has filters along its top: **All**, **Party** (the
+  bigger panel. It starts at six lines; collapsed, it is one line, the
+  newest; expanded, it is taller (11 lines) and has filters along its top: **All**, **Party** (the
   party's lines), **Damage** (hits, damage and deaths) and **Saves** (saving
   throws and magic resistance). Its size is remembered.
 
@@ -1766,8 +1766,8 @@ How it works:
 
 ### New items
 
-Items the game never had, or never placed. All but the arena's ring (which the
-Loader hands over itself, while it runs) are written into the game's own data
+Items the game never had, or never placed. All but the arena's ring and
+Thornwall (which the Loader hands over itself, while it runs) are written into the game's own data
 each time the Loader starts the game, so the game makes them with their people
 and chests and then keeps and saves them like its own. A changed switch takes
 effect in regions the party hasn't visited yet; start a new game to have them
@@ -1783,7 +1783,8 @@ game's own: in ***bold italics*** in
 it does, and marked **new** in
 [Every mundane weapon](ITEMS.md#every-mundane-weapon). The game has no short
 sword at all, no bone or obsidian axe or great axe, no bone dagger, few plain
-metal weapons and no magic club, pick or staff sling. Two more, armour:
+metal weapons and no magic club, pick or staff sling. And armour the game has
+but never placed:
 
 | Icon | Item | Where | What it is |
 |---|---|---|---|
@@ -2329,6 +2330,19 @@ Each has its switch on the Options tab, on by default (from the next start).
 How it works:
 [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#the-pointer-in-scenes-and-where-it-starts).
 
+### Spells on the Effects screen
+
+On the Effects screen (a character's spells and powers in effect), a click on
+an effect's icon ends it in the game, so a stray click loses a spell. With the
+Loader a click leaves a spell on; a psionic power's effect still ends, as that
+is how a power is stopped. It has a switch in the Options tab's **Controls**
+section (**A click on a spell's icon on the Effects screen leaves it on**,
+from the next start).
+
+What else the Effects screen shows (a spell's charges left, Enlarge's damage,
+the armour spells' AC, kits and weapon specs): [the Effects
+screen](#the-effects-screen).
+
 ## More saves and characters
 
 ### More saves
@@ -2456,8 +2470,8 @@ got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
 | **Share Strength** (any maintained power on someone else) | Ended, it stayed on the one who got it, and could end another of the psionicist's own effects instead | It ends on everyone it was on |
 | **Dispel Magic** (the preserver's) | Also laid "No spell use" on everyone it caught, your own party too, which Dispel Magic can't remove | Only dispels, as the cleric's always did |
 | **Cause Serious and Critical Wounds** | 2d9 and 3d9 (the Cure spells heal AD&D's 2d8+1 and 3d8+3) | 2d8+1 and 3d8+3 |
-| **Absorb Disease** (the psionic power) | Also gave the psionicist 1d6 STR, as Strength does (its code ran on into Strength's), and the STR alone when there was no disease to take | Takes the disease only |
-| **Bless** and **Aid** | Left out those of the caster's side with an enemy beside them, but measured it from the wrong place (a slip in the code), so the wrong ones were left out | Measured from where each stands |
+| **Absorb Disease** (the psionic power) | Also gave the psionicist 1d6 STR, as Strength does, and the STR alone when there was no disease to take | Takes the disease only |
+| **Bless** and **Aid** | Left out those of the caster's side with an enemy beside them, but measured it from the wrong place, so the wrong ones were left out | Measured from where each stands |
 | **Negative Plane Protection** | Saved as against Vampiric Touch, which allows no save, so it never stopped anything | A save against paralysis, poison and death, as AD&D's against death magic: saved, the undead's touch is stopped and it takes 2d6 |
 | **Acid Arrow** | After the hit its acid never burned again: its time was a timer that only ended it, and nothing spent it a round at a time | 2d4 acid at the start of each round it lasts (a round for each started minute of its time: four for an 11th-level caster) |
 | **Scare**'s save | Everyone below 6th level failed: the save it meant for an elf or half-elf priest asked for both races at once | An elf or half-elf priest below 6th level saves as usual; others below 6th still fail, 6th and up still always save |
@@ -2472,14 +2486,14 @@ got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
 | **Psionic Blast** on a party member | Its imagined wounds (down to a fifth of its hit points) were real and stayed | Given back as the fight ends; until then a blow that would kill it knocks it out instead, and one knocked out wakes with them (the dice log says so; [how](DEVELOPMENT-CONTENT.md#worn-items-the-gladiators-armour-and-psionic-blast)) |
 | **DELETE** in the roster | With the list scrolled, deleted another character | Deletes the one chosen ([more characters](#more-characters)) |
 | A **New** character's thief skills | Shown as 0 | Shown as they are ([more characters](#more-characters)) |
-| **The Trustee** in the slave pens | His rounds' two pauses took their corner from numbers other scripts in the pens change, so he could set off for a spot that doesn't exist and stay busy ("I'd love to talk more...") for good | The pauses keep a corner of their own, and his busy line starts his rounds again, so one already stuck walks on once talked to |
+| **The Trustee** in the slave pens | His rounds' two pauses took their corner from numbers other scripts in the pens change, so he could set off for a spot that doesn't exist and stay busy ("I'd love to talk more...") for good | The pauses keep a corner of their own, and his busy line starts his rounds again, so one already stuck walks on once talked to; and a save made while he (or anyone on rounds of their own) walked no longer leaves him standing when loaded |
 | A thief skill rolled **for the whole party** (a trap going off, hearing the men by the wagon) | Meant for the member with the best chance, but the pick compared the wrong way round, so the first party member always rolled | The member with the best chance rolls ([where the game rolls them](HOW-THE-GAME-WORKS.md#where-the-game-rolls-thief-skills)) |
 | **Random monsters** (a vanishing body, a survivor's warning) | How many came was worked out from the wrong monster's strength, and in seven regions the last monster on the list divided by 0, which ended the game ("Divide error") | Worked out from the monster that comes: 1 to 6, fewer of the strong ones |
 | A magic item's **glow in a shop** | Stood still: a shop runs its own loop, which never turned the colours that make it shine | Shines, as on the map and in the inventory |
 | The game's **Sling +1** | A blank icon (its picture is missing from the game's data) | The Sling's, with a glow |
 | **View Character's DAM line** with a wooden, bone, stone or obsidian weapon | One or two more than the attack does: it left out the weaker material's damage (2 for wood, 1 for the others, on a weapon with no plus), which the inventory's line and the attack take off | The same as the inventory's and the attack's |
 | The **DAM lines** of a **hasted** or **slowed** character (the inventory screen, View Character) | The attacks a round as if neither: a fight's attack doubles them for Haste and halves them for Slow, but the lines never did, and the inventory's showed half an attack a round (Slow's) as one | Twice, or half, as the attack has them (`3x1D8+13` hasted, `0.5x1D8+6` slowed), as on the Loader's Characters tab |
-| **Kurzak** calling for **Legcrusher** once the party has killed him (he sends him when they're slow to come to a fight; at the fountain they can kill him with no alarm) | Kurzak went on shouting "Legcrusher! Get gladiators!" at every call after, and greeted them with "I had to send Legcrusher after you", or "I'm glad you listened to Legcrusher", and called him good with monsters when asked who the half-giant is; Dinos warned that he'd send out Legcrusher | He notices: "Legcrusher! ... Legcrusher? Where has that lump got to? Gladiators! Get up here yourselves!", when they come, "I sent Legcrusher after you, and he never came back. You wouldn't know anything about that, would you?", after Legcrusher had found them, "So Legcrusher found you. Then where's he got to?", and asked who the half-giant is, "That was Legcrusher, the monster trainer. He's gone missing." Dinos no longer warns them that Kurzak will send out Legcrusher, but that he'll come down himself |
+| **Kurzak** calling for **Legcrusher** once the party has killed him (he sends him when they're slow to come to a fight) | Kurzak went on calling for him, greeting the party as if he'd brought them, and speaking of him as still about (Dinos too) | He notices: "Legcrusher? Where has that lump got to? Gladiators! Get up here yourselves!", "I sent Legcrusher after you, and he never came back. You wouldn't know anything about that, would you?", "That was Legcrusher, the monster trainer. He's gone missing."; Dinos says Kurzak will come down himself |
 | **Darkhold**'s scripts | Story events left some creatures' triggers pointing at an empty script: the wyvern scene's creature and two in the queen's chamber lost their look text, and the portcullis guard no longer fought back when attacked | Each keeps its own |
 | The **Lava Rifts** ranger | His sight trigger, set again, pointed at the hermit's script: endless hermit talk, and a second Iron Necklace | He keeps his own |
 | **Linara** in Gedron | Once the extract was delivered, her talk ended with no menu, so Jasmine's spellbook could never come up | Her talk goes on to her menu |
@@ -2494,44 +2508,29 @@ got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
 | Lines that depend on the **race or sex** of the one talking to someone | Read from the wrong record, so they always took the party's active member for a man of no race: a halfling was never greeted as a fellow halfling ("Oh, it is a relief to see a fellow halfling") nor named by race in the insult that follows, a woman was told "only a mad man would think of fighting Draj" and of "his purse", a thri-kreen never heard the bell the mastyrial hears near Demothi's camp, nor was told "your help" rather than "the help of any humanoid" | Each reads the active member's own race or sex |
 | **"Out of memory in OEOpenGraph"** in a long session | The map needs 60,000 bytes in one piece each time it comes back (after the USE screen, a talk, a menu), and with the map up the game had about 57 KB to spare, so it could stop | Part of the game's code and its music buffer kept in upper memory: about 97 KB to spare with the map up, and a warning in the dice log if it runs low ([crash, freeze and item reports](README.md#crash-freeze-and-item-reports)) |
 | **Slay Living**'s description | Said a creature that saves takes 3 to 17 | Says 2 to 16 (half of 4d8), what the game does |
-| A character's **most PSP** (worked out at each level-up check, for every party member) | The WIS bonus read from the creation screen's record, not the character's (in play, any byte that memory holds: 183 in one test), and the bonus tables 8 scores long, so INT 22 gave nothing, INT 23 to 25 20 to 24 too many, WIS 23 to 25 none at all, CON 23 to 25 0 to 2 | Each from the character's own score: CON and INT the score less 15, WIS twice it less 10, on to 25 (found by CalvinRodo's yuan-ti, checked in DSUN.EXE). The most only ever rises, so a character's may go up once, the next time it's worked out |
-| A fight's **music** | An attack that starts a fight asks for the music level the region gives its creature, but read it with the wrong step, so every creature but the region's first got another's level | The creature's own level (found by yuan-ti, checked in DSUN.EXE) |
+| A character's **most PSP** (worked out at each level-up check, for every party member) | The WIS bonus read from the creation screen's record, not the character's (in play, any byte that memory holds: 183 in one test), and the bonus tables 8 scores long, so INT 22 gave nothing, INT 23 to 25 20 to 24 too many, WIS 23 to 25 none at all, CON 23 to 25 0 to 2 | Each from the character's own score: CON and INT the score less 15, WIS twice it less 10, on to 25 (found by yuan-ti). The most only ever rises, so a character's may go up once, the next time it's worked out |
+| A fight's **music** | An attack that starts a fight asks for the music level the region gives its creature, but read it with the wrong step, so every creature but the region's first got another's level | The creature's own level (found by yuan-ti) |
 | An archer's **pointer** after a shot | Showed "can't shoot" once any shot of the round was made (one that killed its target, say), though the click still shot the shots left | Shows "can't" only once every shot of the round is made |
 
 Two more have a switch: Cilla's figure (the game gives the elf the half-elf
 woman's; see [Elves and half-elves](#elves-and-half-elves)), and a click on a
 spell's icon on the Effects screen ending it ([Spells on the Effects
-screen](#spells-on-the-effects-screen)). How the fixes work:
-[DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#the-games-spells). The script bugs
-(Darkhold, the Lava Rifts, Linara) were found by the OpenDS project and checked
-by yuan-ti, the ranger's tracking, the sewer grate, the Rebel Mindhome, region 9's messenger, the Draj serf and the halfling's lines by
-yuan-ti, and the other race and sex lines, the haystack, the cave guide and the slime book by
-the Loader's own search of the scripts; the Loader mends them in its copy of the game's scripts
-(`scriptfixes.py`).
+screen](#spells-on-the-effects-screen)). The script bugs are mended in the
+Loader's copy of the game's scripts; many were found by yuan-ti and the OpenDS
+project ([credits](../README.md#credits)). How the fixes work:
+[DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#the-games-spells).
 
 **Saved games.** There's no need to start a new game for these: they're in
 the patched game, not in a save, so they work from the moment a game is
 loaded. What a bug already did stays in the save: [your saved
 games](README.md#updating-backups-saved-games-and-the-loaders-files) says what.
 
-### Spells on the Effects screen
-
-On the Effects screen (a character's spells and powers in effect), a click on
-an effect's icon ends it in the game, so a stray click loses a spell. With the
-Loader a click leaves a spell on; a psionic power's effect still ends, as that
-is how a power is stopped. It has a switch in the Options tab's **Controls**
-section (**A click on a spell's icon on the Effects screen leaves it on**,
-from the next start).
-
-What else the Effects screen shows (a spell's charges left, Enlarge's damage,
-the armour spells' AC, kits and weapon specs): [the Effects
-screen](#the-effects-screen).
-
 ### Rules the game got wrong
 
 Where the game's own rules contradict its manual or AD&D, or each other, a
-[rule change](#rule-changes) puts them right. Each has a switch on the
-Options tab, on by default:
+change on the Options tab puts them right (most of them [rule
+changes](#rule-changes)), each with its switch, on by default. The ones the game
+got plainly wrong:
 
 | | The game | With the rule |
 |---|---|---|

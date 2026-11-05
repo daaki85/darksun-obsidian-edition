@@ -388,17 +388,21 @@ DSUN.EXE with yuan-ti's notes; Psionic Blast from yuan-ti's issue #129.) One hel
   and only to one still Okay (one Out Cold or dead was put there by something real), says so
   ("Cilla shakes off Psionic Blast's imagined wounds as the fight ends: +23 HP, now 30/38"), and
   clears the field; a game loaded (the clock gone back) clears it with nothing given.
-  **Knocked out, not killed:** the damage routine (612E:18E0h) kills a creature when the
+  **Knocked out, not killed:** the damage routine kills a creature when the
   damage reaches its hit points + 10 (status 5; 8 for 10000 and up, Disintegrate's), else knocks
   it out when the damage reaches its hit points (status 3, 0 HP). Its death test, `cmp ax,dx`
-  (5860Bh, before a `jg` to the Out Cold case), is the interrupt too (`blast_knockout`): for a
+  (5860Bh, 612E:194Bh, before a `jg` to the Out Cold case), is the interrupt too (`blast_knockout`): for a
   party member with hit points still in `BLAST_HP` and damage under 10000, the flags of
   "greater", so the blow knocks it out. At the fight's end one Out Cold gets the hit points back
   too and is woken (status 1, as the game wakes a creature at 7C1F9h); one Dying or dead gets
   none. Seen in DOSBox: Gerakis at -9 HP with 40 kept, a 1-point Psychic Crush (death by the
-  game's rule) left him at 0, and the fight's end gave him the 40. The four places are told
-  apart by the return address (`WORN_AC_RET` 22C8h, `BLAST_RET` 0B69h, `KO_RET` 194Dh, else the
-  ability routine's), so the one vector serves them all.
+  game's rule) left him at 0, and the fight's end gave him the 40.
+- **The champion's body** ([the champions' bout](#the-champions-bout)): where the game makes a
+  Dead Body for a creature dying with things on it, the object number is asked of the interrupt.
+
+The five places are told apart by the return address (`WORN_AC_RET` 22C8h, `BLAST_RET` 0B69h,
+`KO_RET` 194Dh, `BODY_RET` 2754h, else the ability routine's), so the one vector serves them
+all.
 
 ## New spells (wizard and 6th-level priest)
 
@@ -966,7 +970,7 @@ on the party's side. Like Kalzith's, his commands come after everything of the
 game's, which keeps its place.
 
 The weapon shipment: his answer to "Seen anything useful?"
-sets flag 756 (between the game's 755 and the Loader's own 760). Each pass in
+sets flag 756 (the game's flags run to 755; the Loader's 756-759 are Semyon's shipment and the champions'). Each pass in
 the pens with it set and flag 757 not, `semyon.ship` puts Thornwall on the
 pens' weapon rack: the rack found by its object (2599) among the map objects
 (the game makes a region's objects as the party comes near them, so nothing
@@ -1223,7 +1227,7 @@ a figure moves are widened by the length of a shadow, so none is left behind.
 
 **Pictures out of memory.** The shadow is traced from the figure's picture in
 the game's picture cache, and in a big fight (the arena, ten monsters) the game
-lets go of most pictures between drawings: in the user's arena save every figure
+lets go of most pictures between drawings: in a save in the arena every figure
 but one had its picture out of memory as the floor was drawn, so no shadow.
 Loading one from here, in the middle of a drawing, could push out or move a
 picture the game is about to draw, so instead DSCLOG keeps each frame's shadow

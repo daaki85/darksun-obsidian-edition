@@ -248,14 +248,14 @@ off AC 10 (the game's own numbers; a character's AC adds up its pieces).
 | Arms | leather | Leather Arm Armor | 1 | Armor Merchant | Churrr, Krikor, Ranger, Kurzak, Chaero, Castle Guard, Guard, Arant's Guard, Scar, Arena Guard, Warrior, Dagolar Guard, Tobrian, Caravan Guard, Lt. Kwerin, Mayor of Gedron, Slaver Guard, Merzol, Messenger, Visitor, Notaku, Village Hero, Kalinin |  |
 | Arms | bone | Ring Arm Armor | 1 | Armor Merchant | Wyvern Master, Mikquetzl |  |
 | Arms | bone | Brigandine Arm Armor | 1 | Armor Merchant | Keldar, Templar, Chaya, Caravan Master, Chahl, Elven Leader, Gladiator, Uzoma |  |
-| Arms | bone | Scale Arm Armor | 1 | Jark | Uskuye, Elite Guard, a chest in the slave pens |  |
+| Arms | bone | Scale Arm Armor | 1 | Jark | Uskuye, Elite Guard, a chest in the slave pens | placed in the slave pens' chest, with the chest piece (the game places only that) |
 | Arms | metal | Chain Arm Armor | 2 | — | Templar, Army Commander, a chest in the Undermountain |  |
 | Legs | leather | Leather Leg Armor | 1 | Armor Merchant | Warren Chief, Churrr, Ranger, Skull Guardian, Worshipper, Mayor of Gedron, Council Member, Notaku, Village Hero, a chest in the Upper Castle |  |
 | Legs | bone | Ring Leg Armor | 1 | Jark, Armor Merchant | Mikquetzl |  |
 | Legs | bone | Brigandine Leg Armor | 1 | Jark, Armor Merchant | Keldar, Templar, Chaya, Caravan Master, Chahl, Elven Leader |  |
-| Legs | bone | Scale Leg Armor | 1 | Jark | Uskuye, Elite Guard, a chest in the slave pens |  |
+| Legs | bone | Scale Leg Armor | 1 | Jark | Uskuye, Elite Guard, a chest in the slave pens | placed in the slave pens' chest, with the chest piece (the game places only that) |
 | Legs | metal | Chain Leg Armor | 1 | Armor Merchant | Army Commander, a skeleton in the Upper Castle |  |
-| Head | leather | Helm | 0 (1 with [Helms give AC 1](FEATURES.md#helms)) | Armor Merchant | Kurzak, a chest in the Upper Castle, a chest in the slave pens, a bag in the slave pens |  |
+| Head | leather | Helm | 0 (1 with [Helms give AC 1](FEATURES.md#helms)) | Armor Merchant | Kurzak, a chest in the Upper Castle, a chest in the slave pens, a bag in the slave pens | placed in Kurzak's pack |
 | Head | bone | Bone Helm | 0 (1 with [Helms give AC 1](FEATURES.md#helms)) | — | a chest in the slave pens | **new**: the bone scale set's helm |
 | Hand | wood | Shield | 1 | — | Wyvern Master, Arant, Chaya, Elven Leader, Templar, a chest in the slave pens |  |
 | Hand | leather | Shield | 1 | — | Keldar, Templar, Caravan Master, Gladiator |  |

@@ -200,7 +200,7 @@ A few of them:
 | **Gutterknot** | a club +1, the game's first magic club |
 | **Deepbiter** | a stone pick +1, the game's first magic pick |
 | **Dunesong** | a bow +1, sold by the Bowyer, whose archery target counts it as it does the game's own bows |
-| **Windlash** | a staff sling +1, the game's first magic staff sling, sold in a shop |
+| **Windlash** | a staff sling +1, the game's first magic staff sling, sold by the Bowyer |
 | **Skycutter** | a chatkcha +2 |
 
 - **[Changed]** The Elven Leader's gift is a **Gythka +2** *(was +1)*.
@@ -278,7 +278,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** Crash reports: if the game stops with an error, the message stays on screen and a report is written, with the game's own error message and how much memory it had left; if it freezes, a freeze report saves what it was doing; if DOSBox closes while the game still runs, a report says so.
 - **[New]** A warning when memory runs low: the dice log tells you to save and restart before the game runs out (a fresh start has all of it back).
 - **[New]** Item reports: if an item vanishes from the party with nothing ordinary to explain it (not dropped, given, sold, used up or broken), or the game destroys one (acid, Detonate's blast), the Loader saves a report in `crash-logs`, as it does for a crash, and says so in the dice log.
-- **[New]** The game's window at double, triple or quadruple size, or full screen, chosen in the Loader.
+- **[New]** The game's window at its own size, double, triple or quadruple, or full screen, chosen in the Loader.
 - **[Changed]** No more copy protection: the dragon asking for a word from the manual never comes.
 
 ## The Loader

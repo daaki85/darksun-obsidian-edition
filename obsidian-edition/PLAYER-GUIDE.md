@@ -330,7 +330,7 @@ the strictest winning:
 | Psionicist, whatever its other classes | light only (leather, hide, silk) | none alone; leather with a fighter, gladiator, ranger or cleric class | daggers, bone and obsidian short swords, clubs, chatkchas, bows; with another class, also the maces, metal short sword and slings its lists allow |
 | Thief | light only; with a warrior or cleric class, as that class allows, but no thief skills in heavier armour | leather ones only; with another class, only if that class is fighter, gladiator, ranger or cleric | as its classes allow |
 | Preserver, one class | none | none | a preserver's |
-| Druid | none | none | any |
+| Druid | none | none | any but great axes |
 | Cleric | any | any | air: missile and thrown weapons, daggers; earth: stone, obsidian, metal, wood; fire: obsidian; water: bone, wood |
 
 - A preserver with another class may wear what that class allows, but casts
@@ -1239,7 +1239,8 @@ someone else, and no one hides in a fight.
 A save succeeds when **d20 + its modifiers reaches the save's number**; a 1
 always fails and a 20 always saves. Everyone has five: paralysis, poison and
 death (`PPD`), rod, staff and wand (`RSW`), petrification and polymorph
-(`PP`), breath weapon (`BW`) and spell (`SP`).
+(`PP`), breath weapon (`BW`) and spell (`SP`). Each character's five numbers,
+by class and level, are on the inventory screen's panel and on View Character.
 
 - **Spells are saved against with the spell save**, except poisons, death
   spells and psionic attacks (paralysis, poison and death).
@@ -1824,7 +1825,7 @@ without).
 | Rule changes | *characters:* class restrictions; multiclass hit points; hit dice rolled twice; scores and hit points as rolled; AD&D's class tables; CON as in AD&D; ages and magical aging; the XP level cap. *Weapons and armour:* two weapons; half-giants' two-handed weapons; rings and cloaks of protection; helms AC 1; items saving against acid. *Magic:* rangers' casting level; preservers' INT; the spell save; DEX instead of a doubled d20; Enlarge multiplying the weapon's dice only | all on |
 | More character customization | weapon specialization; kits; STORE and RECALL on the creation screen; fuller starting gear | all on |
 | Expanded features | the leader's CHA at shops; buying back magical items; improved thieving: thief skills from AD&D's table, hiding in shadows to backstab, the cloak, boots and belt, backstabs multiplying the weapon's dice only, picking pockets | all on |
-| New content | the new spells (six wizard spells and ten 6th-level priest spells); new people; a small quest; new items; defilers' scrolls | all on |
+| New content | the new spells (six wizard spells and ten 6th-level priest spells); new people; a small quest; defilers' scrolls; new items | all on |
 | Graphics | elves' ears and half-elves' own figures; Cilla drawn as an elf; what the party wears; shadows; dust | all on |
 | Controls | Tab and Enter; scrolling with the mouse wheel; the view in fights moving only to a figure off the screen; the pointer in scenes, a click skipping one; the pointer starting in the middle and as fast up and down as across; the whole party in view after a start, load or fight; spells kept on a click on the Effects screen (M, U and I have no switch) | all on |
 | | a red ring in a fight: none, or under the enemy chosen with Tab | under the enemy chosen |
@@ -1833,10 +1834,9 @@ without).
 | Wake of the Ravager (optional) | where Wake of the Ravager is installed, for the new priest spells' icons and pictures (found by itself when it can be) | (a folder) |
 | Saves | open the Named saves folder; put a save back in a slot | (buttons) |
 
-Rule changes, customization, expanded features, the new spells and defilers'
-scrolls count at once in a game started from the Loader; the new people, quest,
-vulture and items, and
-any switch that says "from the next start", come the next time the game is
-started (a saved game keeps what it has). Kits, weapon specs and fuller starting
-gear go to characters made from then on. **Restore defaults**, at the bottom
+Rule changes, expanded features, the new spells and defilers' scrolls count at
+once in a game started from the Loader; the new people, quest and items,
+and any switch that says "from the next start" (STORE and RECALL among them),
+come the next time the game is started (a saved game keeps what it has). Kits,
+weapon specs and fuller starting gear go to characters made from then on. **Restore defaults**, at the bottom
 of the tab, sets every switch back.

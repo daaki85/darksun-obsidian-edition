@@ -192,8 +192,8 @@ for the game in the usual GOG folders; if it can't find it, it asks you where
 the game is installed and remembers the answer.
 
 DOSBox opens in a window three times the game's size (960x720). **Game
-window** at the top of the Loader picks **Double**, **Triple**, **Quadruple**
-or **Full screen** from the next start, and Alt+Enter switches between window
+window** at the top of the Loader picks **Single**, **Double**, **Triple**,
+**Quadruple** or **Full screen** from the next start, and Alt+Enter switches between window
 and full screen while playing. Quadruple has DOSBox stretch its window with
 OpenGL; if your graphics driver doesn't take to that, pick Triple.
 
@@ -228,11 +228,12 @@ folder, and the Loader starts that program instead of DOSBox from then on,
 the dice log and the Loader's window attached as usual. As the game starts,
 the dice log says which one runs (`... in DOSBox` or `... as Dark Sun Recompiled`
 and where it is). The game's own `DSUN.EXE` is never taken for it, even with
-this folder in the game's. A program elsewhere is named once:
+this folder in the game's. A program elsewhere is named once, in a command
+prompt opened in this folder:
 
 ```
-dsloader launch --recompiled "C:\path\to\dsun.exe"
-dsloader launch --dosbox
+python -m dsloader launch --recompiled "C:\path\to\dsun.exe"
+python -m dsloader launch --dosbox
 ```
 
 The second line goes back to DOSBox (and stays there until `--recompiled`
