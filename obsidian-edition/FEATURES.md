@@ -1976,8 +1976,10 @@ His other ways out stay as in the game, and so does a Semyon who was killed: he
 isn't in the pens. Talk to him (Look, then Talk): he says why the templars tied
 him up in the arena (he was asking about the Veiled Alliance), passes on what he
 has heard (who carries keys), tells of a weapon shipment he passed ("Guards were
-fussing over one crate like it held something special. Whatever was in it went
-onto the weapon rack": from then on the pens' weapon rack holds **Thornwall**, a bone polearm +1),
+fussing over one crate like it held something special. I didn't see where they
+took it, but it can't have gone far": from then on the pens' weapon rack holds
+**Thornwall**, a bone polearm +1, and once the party carries it he has a word
+about it),
 reminds the party where he hid his gem (the grain pots), and talks about the
 Alliance's plans, in his own voice from the arena.
 As with the game's own people, each question goes from the list once asked,

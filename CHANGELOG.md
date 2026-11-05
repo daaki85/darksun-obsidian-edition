@@ -13,11 +13,12 @@ notes](PATCH-NOTES.md).
   on the rack from the start (in place of its first bone polearm). Now the rack's data
   (`worldgear`'s gift) keeps its two plain bone polearms, and Semyon, in his pen, has a new
   question, "Seen anything useful?": a weapon shipment, one crate the guards fussed over "like
-  it held something special", its contents put on the weapon rack. His answer sets flag 756; once the game has
+  it held something special" (he didn't see where it went). His answer sets flag 756; once the game has
   made the rack (it makes a region's objects as the party nears them: the rack is looked for by
   its object, 2599, as a coffin shares its item type, 6Ch) `semyon.ship` puts a Thornwall (an item from the game's free list) first on the
   rack's contents and sets 757. A Thornwall already in the game (a save from before) sets 757
-  with none made. Seen in DOSBox: the rack made as the party came beside it, with Thornwall
+  with none made. Once a party member carries Thornwall (worn, held or in the pack: flag 758,
+  `semyon.found`), Semyon has "We found what was in that crate." Seen in DOSBox: the rack made as the party came beside it, with Thornwall
   first (then its polearms, quarterstaff and axe), still there after walking off and after a
   save and load. Tests: `test_semyon.ShipmentTests`, `test_worldgear`.
 

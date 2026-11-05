@@ -55,8 +55,9 @@ SETTLED = 779
 # The weapon shipment: asked "Seen anything useful?", he tells of a crate the guards fussed
 # over, its weapon racked (his script sets TOLD); then, in the pens, the Loader puts Thornwall
 # on the pens' weapon rack, once (SHIPPED), unless a Thornwall is somewhere already (a save from
-# when the rack's data had it). (Two of the flags between the game's 755 and the Loader's 760.)
-TOLD, SHIPPED = 756, 757
+# when the rack's data had it). Once a party member carries it (FOUND, set by found()), he has a
+# word about it. (Three of the flags between the game's 755 and the Loader's 760.)
+TOLD, SHIPPED, FOUND = 756, 757, 758
 PENS = 0x29
 
 # Breaking out with Scar (the game's script 3, when the party reaches the arena's west exit after
@@ -217,9 +218,13 @@ def conversation() -> bytes:
                     "his on his belt. Do with that what you will."), ALWAYS),
                 ("Seen anything useful?", lambda: (s.say(
                     "When they marched me in, I passed a weapon shipment coming the other way. "
-                    "Guards were fussing over one crate like it held something special. Whatever "
-                    "was in it went onto the weapon rack."),
+                    "Guards were fussing over one crate like it held something special. I didn't "
+                    "see where they took it, but it can't have gone far."),
                     s.flag(TOLD, 1)), ALWAYS),
+                ("We found what was in that crate.", reply(
+                    "So that's what had the guards so nervous! A weapon like that is wasted on "
+                    "Draj's templars. Put it to good use when we break out."),
+                    ("expr", _flag(TOLD) + ["and"] + _flag(FOUND))),
                 ("Where was that gem again?", reply(
                     "In one of the grain pots: the kitchen, the storage room, or near the "
                     "fountain. I can't remember which, so check them all."), ALWAYS),
@@ -246,6 +251,21 @@ def conversation() -> bytes:
     escaping = ("expr", _flag(ESCAPING) + ["and"] + _flag(ESCAPED, 0))
     s.when(escaping, breaking_out, at_home)
     return s.bytes()
+
+
+def found(gd) -> bool:
+    """FOUND set once, after his tip (TOLD), a party member carries Thornwall (worn, held or in
+    the pack): he speaks of it then. True when it was set now."""
+    import struct
+    from . import game, worldgear
+    if not gd.flag(TOLD) or gd.flag(FOUND):
+        return False
+    for member in range(game.PARTY_SIZE):
+        if any(struct.unpack_from("<H", item, game.ITEM_NAME)[0] == worldgear.THORNWALL
+               for _, item, _ in gd._worn(member)):
+            gd.set_flag(FOUND)
+            return True
+    return False
 
 
 def ship(gd) -> bool:

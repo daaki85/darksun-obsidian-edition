@@ -971,7 +971,9 @@ item record from the game's free list, first in the rack's contents
 list (the object its +8 names), then flag 757. A Thornwall somewhere already
 (the rack's data had it from 1.2.0 to 2.13.4, so a save from then that has been
 to the pens) sets 757 with none made. Once on the rack it is the game's own,
-kept and saved as any item.
+kept and saved as any item. Once a party member carries it (any of its three
+item lists), `semyon.found` sets flag 758, and his menu has "We found what was
+in that crate." (shown with 756 and 758 set).
 
 ## What Dinos and the Trustee say about them
 

@@ -32,9 +32,12 @@ class AskedOnceTests(unittest.TestCase):
         replies = menu_replies(semyon.conversation())
         self.assertEqual(replies["Why did they tie you up out there?"],
                          ("expr", ["(", ("var", 0x8E, 2), "==", ("n", 0), ")"]))
-        self.assertEqual(replies["Tell me about the Alliance."][1][1], ("var", 0x8E, 6))
+        self.assertEqual(replies["Tell me about the Alliance."][1][1], ("var", 0x8E, 7))
         self.assertEqual(replies["Seen anything useful?"][1][1], ("var", 0x8E, 4))
         self.assertEqual(replies["Farewell."], ("n", 1))
+        found = replies["We found what was in that crate."][1]  # (only once told, and found)
+        self.assertEqual(found[:13], ["(", "(", ("var", 0x8D, semyon.TOLD), "==", ("n", 1), ")", "and",
+                                      "(", ("var", 0x8D, semyon.FOUND), "==", ("n", 1), ")", ")"])
 
     def test_kalzith(self):
         replies = menu_replies(kalzith.conversation())
@@ -316,6 +319,24 @@ class ShipmentTests(unittest.TestCase):
         self.place(300, self.wg.PENS_RACK_OBJECT)
         self.assertTrue(semyon.ship(self.gd))
         self.assertEqual(self.rack_items(), [60, 11])
+
+    def test_found(self):
+        """FOUND once a party member carries Thornwall, after the tip; not before it."""
+        self.gd.set_flag(semyon.TOLD)
+        self.assertFalse(semyon.found(self.gd))
+        self.assertTrue(semyon.ship(self.gd))
+        self.assertFalse(semyon.found(self.gd))  # (on the rack: not found yet)
+        thorn = self.ring.Items(self.gd).item(60)
+        self.gd._worn = lambda member, lists=None: [(60, thorn, b"")] if member == 1 else []
+        self.assertTrue(semyon.found(self.gd))
+        self.assertTrue(self.gd.flag(semyon.FOUND))
+        self.assertFalse(semyon.found(self.gd))  # (once)
+
+    def test_found_needs_the_tip(self):
+        thorn = bytes(self.wg.weapon(*self.wg.BONE_POLEARM_1))
+        self.gd._worn = lambda member, lists=None: [(60, thorn, b"")]
+        self.assertFalse(semyon.found(self.gd))
+        self.assertFalse(self.gd.flag(semyon.FOUND))
 
     def test_not_twice(self):
         """A Thornwall somewhere already (a save from when the rack's data had it): none more."""

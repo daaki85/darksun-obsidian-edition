@@ -1301,6 +1301,7 @@ class DiceLog:
             kalzith.stock(self.game, bool(self.rules & game.RULE_NEW_SPELLS))  # (once a game, by its flag)
             semyon.watch(self.game)  # (killed: never put in the pens)
             semyon.ship(self.game)  # (Thornwall onto the pens' rack, once he has told of it)
+            semyon.found(self.game)  # (and his word on it, once the party has it)
             if self.vulture_on:
                 out += vulture.meal(self.game)  # (Dinos's script has set its flag: XP and a full rest)
             if kalzith.watch(self.game):  # (killed: Dinos and the Trustee speak of him so)
