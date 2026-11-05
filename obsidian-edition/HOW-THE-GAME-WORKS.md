@@ -259,6 +259,12 @@ From the game's damage code (DSUN.EXE); none of this is in the manual:
   against acid](FEATURES.md#items-saving-against-acid)).
 - Undead (race 9 on the character sheet) take nothing from poison and
   draining, and mind-affecting spells, charms and holds don't work on them.
+- The people the party fights carry their gear (Kurzak's armour and sword, the
+  Arena Guards' bows) in their backpacks, where the game makes it, and leave it
+  on their bodies; but they fight and defend with their sheets' numbers.
+  The game would use it: anyone's melee attack is made with a weapon in hand
+  (in place of the first two natural attacks), and anyone's AC counts the
+  armour worn. The Loader's champions have theirs in hand and worn.
 
 The dice log notes a weapon hit that takes less than its roll, or nothing at
 all, with what the monster's defences say about it
@@ -701,6 +707,10 @@ Checked in play: the count going up once a trip, Scar's challenge on the fifth,
 and, with the count set to 5000, the 5000th trip's speech, the party sent back
 with no fight, and the final battle marked won. The 1000th trip is as its
 script reads; it wasn't played.
+
+With the Loader's new items on, the first trip after a party member kills Scar
+in the arena (the count at 5 or more) brings a speech of its own and six
+champions instead ([the champions' bout](FEATURES.md#the-champions-bout)).
 
 ## How fast the party walks
 

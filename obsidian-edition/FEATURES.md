@@ -1582,10 +1582,10 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#picking-pockets).
 *Spoilers: this section says where the new items and people are, and what
 they say. [The player's guide](PLAYER-GUIDE.md) has the rules without them.*
 
-Spells, people, a quest and items the mod adds to the game, each with a box
-in the Options tab's **New content** section: the people, the quest and the
-items from the next time the game is started, the spells and the defilers'
-scrolls at once.
+Spells, people, a quest, an arena bout and items the mod adds to the game,
+each with a box in the Options tab's **New content** section (the bout with the
+items'): the people, the quest, the bout and the items from the next time the
+game is started, the spells and the defilers' scrolls at once.
 
 ### New wizard spells
 

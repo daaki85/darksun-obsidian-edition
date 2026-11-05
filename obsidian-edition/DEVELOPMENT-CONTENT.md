@@ -7,6 +7,7 @@
 - [The game's script bugs](#the-games-script-bugs)
 - [Mirror Image](#mirror-image)
 - [The game's spells](#the-games-spells)
+- [Worn items, the gladiator's armour and Psionic Blast](#worn-items-the-gladiators-armour-and-psionic-blast)
 - [New spells (wizard and 6th-level priest)](#new-spells-wizard-and-6th-level-priest)
 - [New items](#new-items)
 - [Bracers of defense](#bracers-of-defense)
@@ -15,8 +16,8 @@
 - [Kalzith](#kalzith)
 - [Semyon](#semyon)
 - [What Dinos and the Trustee say about them](#what-dinos-and-the-trustee-say-about-them)
-- [The cooked vulture](#the-cooked-vulture)
 - [The champions' bout](#the-champions-bout)
+- [The cooked vulture](#the-cooked-vulture)
 - [Defilers' scrolls](#defilers-scrolls)
 - [What the party wears](#what-the-party-wears)
 - [Elves and half-elves](#elves-and-half-elves)
@@ -998,26 +999,6 @@ bytes ran; one of 10,000 ended with "BAD GPL EXIT" (the game's own largest is
 it is allocated (`push dword 10000` at 6A692h becomes 2E00h), about 1.7 KB
 more of the game's memory.
 
-## The cooked vulture
-
-([In the features page](FEATURES.md#the-cooked-vulture).)
-
-How: in the Loader's copy of `GPLDATA.GFF`, Dinos's talk (script 139) has the
-question in its first menu (a copy of the game's with the question added, as
-for the questions about Kalzith and Semyon, see
-[Dinos and the Trustee](FEATURES.md#what-dinos-and-the-trustee-say-about-them)),
-shown while the game's own test says someone in the party carries the cooked
-vulture (33h, as the campfire's script asks about the plucked one; the game's
-object A4Ch), the test being the question's own condition in the menu. Chosen,
-the script takes it (5Ch, as the campfire takes the plucked one) and sets the
-Loader's flag 780, then gives the XP as the game's quests do in the middle of a
-talk (the Tari's, script 125: the words, the quest's sound, then 21h). Not
-through the game's routine for it (script 74 at 135, which Dinos's script calls
-when he heals Gilal and the talk ends): it opens a narration window and ends
-there, and the menu came back after it with only "Goodbye." The
-Loader then refills the party, once (flag 781), only while the party is
-talking with him (never from a game being loaded).
-
 ## The champions' bout
 
 ([In the features page](FEATURES.md#the-champions-bout).)
@@ -1027,16 +1008,18 @@ copies of the arena's kinds (the Tohr-kreen 292, the Guard 293, a half-giant;
 the Wild Mul 290; the Renegade 289, a halfling; an elven caravan guard 103; the
 Defiler 296), their records renumbered, named "Champion", their own items left
 out and their gear in (as the new items, after the person), their sheets their
-kinds' (the armour counting on top of their AC). Their pictures are their kinds'.
+kinds' (the armour counting on top of their AC) but for DEX (`champions.DEX`:
+18, the half-giant 15; the mul and the halfling have 18 already). Their pictures
+are their kinds'.
 
 The scripts: the arena's deaths (script 3) say "This makes ... king of the
 pens!" and set flag 19 only when a party member kills Scar (flag 19 is set at
 the end of Scar's visit too, whatever happened, and by the pens' script 144
 when he is killed there, so it doesn't tell); that handler (script 3 at 176h)
 is hooked on Scar only in the arena (MAS 42 and script 2, and script 154 calls
-it for region 2Ah alone), so a kill in the pens gives no bout; that set
-becomes a jump to the same after the script's end, then flag 759 (KING), then
-back. The arena's visits (script 2) count in the game's number 12; a visit past
+it for region 2Ah alone), so a kill in the pens gives no bout. The command
+setting 19 there (3A7h) becomes a jump past the script's end, to the same
+command, then one setting flag 759 (KING), then a jump back. The arena's visits (script 2) count in the game's number 12; a visit past
 the fifth (12 at 5 or more) opens with the default speech ("Once again,
 expectant spectators...", 0AD4h), and its waves come from the random wave maker
 (called at 1581h, since the count is over 4). Both are jumps to parts of ours
@@ -1045,7 +1028,8 @@ speech, and put the six in (each a group of one: the wave's own subroutine at
 9301 with its locals 12 and 13, as the game's waves do) and set 807 (FOUGHT);
 else they do what the game did. What a jump leaves of a longer command is
 filled with one-byte commands, so the script still decodes (the Loader's other
-changes read it).
+changes read it); and the longer script must still fit the game's script buffer
+(`pensasks.LONGEST`), as the Loader's other script changes must.
 
 Worn and wielded: the game makes a person's items in its backpack list
 (+0Ch), and the people of the game's pens and arena carry everything there
@@ -1079,6 +1063,26 @@ to be set from outside), each with its gear in place, the mul's two axes, the
 halfling's sling, the elf's bow and the half-giant's great axe each attacking,
 Kreenfang 2d4+1; the Tohr-kreen's body object 2666 with Kreenfang in it, the
 others' Dead Bodies with their gear.
+
+## The cooked vulture
+
+([In the features page](FEATURES.md#the-cooked-vulture).)
+
+How: in the Loader's copy of `GPLDATA.GFF`, Dinos's talk (script 139) has the
+question in its first menu (a copy of the game's with the question added, as
+for the questions about Kalzith and Semyon, see
+[Dinos and the Trustee](FEATURES.md#what-dinos-and-the-trustee-say-about-them)),
+shown while the game's own test says someone in the party carries the cooked
+vulture (33h, as the campfire's script asks about the plucked one; the game's
+object A4Ch), the test being the question's own condition in the menu. Chosen,
+the script takes it (5Ch, as the campfire takes the plucked one) and sets the
+Loader's flag 780, then gives the XP as the game's quests do in the middle of a
+talk (the Tari's, script 125: the words, the quest's sound, then 21h). Not
+through the game's routine for it (script 74 at 135, which Dinos's script calls
+when he heals Gilal and the talk ends): it opens a narration window and ends
+there, and the menu came back after it with only "Goodbye." The
+Loader then refills the party, once (flag 781), only while the party is
+talking with him (never from a game being loaded).
 
 ## Defilers' scrolls
 

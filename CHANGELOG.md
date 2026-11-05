@@ -93,6 +93,11 @@ notes](PATCH-NOTES.md).
   in a table (the elf's helm, left out, is leather), Semyon's shipment tip as needing the new
   items. The 1.2.0-2.5.0 saves' known issue says Thornwall never comes (it was "the rack holding
   Thornwall is gone"); `arms.py`'s docstring has Kreenfang on the champion.
+- DEVELOPMENT-CONTENT's contents list the worn items' section (it was missing) and put the
+  champions before the vulture, as FEATURES does; its champions' section has their DEX, the
+  flag-19 hook in plain words and the script buffer's limit. HOW-THE-GAME-WORKS: the champions
+  after the arena's count, and the game's people's unused gear under Monsters' defences.
+  FEATURES' New content intro counts the bout.
 
 ## Pull request #85 ([merged 2026-11-02](https://github.com/daaki85/darksun-obsidian-edition/pull/85))
 
