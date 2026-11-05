@@ -46,6 +46,7 @@ class ObjectTests(unittest.TestCase):
     def setUp(self):
         stock = [item(t) for t in (game.GYTHKA_TYPE, champions.SHIELD_TYPE, champions.SCALE_CHEST,
                                    champions.SCALE_ARM, champions.SCALE_LEGS, champions.SLING_TYPE,
+                                   champions.LEATHER_ARM, champions.LEATHER_LEGS, champions.LEATHER_HELM,
                                    champions.LEATHER_CHEST, champions.BOW_TYPE, champions.ARROWS_TYPE,
                                    champions.LONG_SWORD_TYPE)]
         self.chunks = {("RDFF", 900): person(900, b"Merchant", items=stock)}

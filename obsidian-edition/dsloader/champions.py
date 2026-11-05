@@ -5,10 +5,11 @@ Kreenfang (the arena's gythka +1, no longer on the dead body by the stone arch).
 - The team: six people of the arena's own kinds, each an object of its own (a copy of the kind's,
   OBJECTS, so the others of the kind stay as they are), named "Champion", with gear of its own in
   its record: the Tohr-kreen (the arena's, 292) with Kreenfang; a half-giant (the arena's Guard,
-  293) with a metal great axe, a leather shield and full scale armour; a mul gladiator (the Wild
-  Mul, 290) with two bone axes and scale chest and arm armour; a halfling renegade (the Renegade,
-  289) with a sling, leather chest armour and a bone short sword; an elven ranger (an elven
-  caravan guard, 103) with a bow and arrows, leather chest armour and an obsidian long sword; a
+  293) with a metal great axe, a leather shield and full scale armour and a bone helm; a mul
+  gladiator (the Wild Mul, 290) with two bone axes and the same armour; a halfling renegade (the
+  Renegade, 289) with a sling, a bone short sword and full leather armour and a leather helm; an
+  elven ranger (an elven caravan guard, 103) with a bow and arrows, an obsidian long sword and the
+  same leather (a thri-kreen and a defiler wear none); a
   defiler (the arena's, 296) with a bone dagger and one scroll, chosen as it comes on, of
   Fogbolt, Spook or Reflected Image (the new spells; without them, of the game's own spells).
 - Worn and wielded: the game makes a person's items in its backpack list (+0Ch) and fights with
@@ -48,10 +49,11 @@ KING, FOUGHT = 759, 807  # flags: a party member killed Scar; the champions have
 BASES = {TOHR_KREEN: 292, HALF_GIANT: 293, MUL: 290, HALFLING: 289, ELF: 103, DEFILER: 296}
 
 # slots (game.EQUIP_SLOTS)
-ARM, AMMO, MISSILE, RIGHT, LEGS, CHEST, LEFT = 0, 1, 2, 3, 6, 9, 10
+ARM, AMMO, MISSILE, RIGHT, LEGS, HEAD, CHEST, LEFT = 0, 1, 2, 3, 6, 7, 9, 10
 
 # the game's item types used
 SHIELD_TYPE, LEATHER_CHEST, SCALE_CHEST, SCALE_ARM, SCALE_LEGS = 0x04, 0x06, 0x0F, 0x37, 0x38
+LEATHER_ARM, LEATHER_LEGS, LEATHER_HELM, BONE_HELM = 0x07, 0x08, 0x05, game.BONE_HELM_TYPE
 BOW_TYPE, ARROWS_TYPE, SLING_TYPE, LONG_SWORD_TYPE = 0x01, 0x3E, 0x40, 0x2D
 BONE_SHORT_SWORD_TYPE, BONE_DAGGER_TYPE = game.BONE_SHORT_SWORD_TYPE, game.BONE_DAGGER_TYPE
 
@@ -81,19 +83,23 @@ def game_item(chunks, kind: int) -> Optional[bytes]:
 
 def gear(chunks) -> Dict[int, List[Tuple[bytes, int]]]:
     """Each champion's items, as (item record, the slot it is worn or held in)."""
-    from . import arms, worldgear
+    from . import arms, bonescale, worldgear
     item = lambda kind: game_item(chunks, kind)
     gythka = item(game.GYTHKA_TYPE)
     out = {
         TOHR_KREEN: [(arms.magic(gythka, arms.GYTHKA_VALUE, arms.GYTHKA_NAME) if gythka else None, RIGHT)],
         HALF_GIANT: [(worldgear.weapon(worldgear.METAL_GREAT_AXE), RIGHT), (item(SHIELD_TYPE), LEFT),
-                     (item(SCALE_CHEST), CHEST), (item(SCALE_ARM), ARM), (item(SCALE_LEGS), LEGS)],
+                     (item(SCALE_CHEST), CHEST), (item(SCALE_ARM), ARM), (item(SCALE_LEGS), LEGS),
+                     (bonescale.HELM, HEAD)],
         MUL: [(worldgear.weapon(worldgear.BONE_AXE), RIGHT), (worldgear.weapon(worldgear.BONE_AXE), LEFT),
-              (item(SCALE_CHEST), CHEST), (item(SCALE_ARM), ARM)],
+              (item(SCALE_CHEST), CHEST), (item(SCALE_ARM), ARM), (item(SCALE_LEGS), LEGS),
+              (bonescale.HELM, HEAD)],
         HALFLING: [(item(SLING_TYPE), MISSILE), (worldgear.weapon(worldgear.BONE_SHORT_SWORD), RIGHT),
-                   (item(LEATHER_CHEST), CHEST)],
+                   (item(LEATHER_CHEST), CHEST), (item(LEATHER_ARM), ARM), (item(LEATHER_LEGS), LEGS),
+                   (item(LEATHER_HELM), HEAD)],
         ELF: [(item(BOW_TYPE), MISSILE), (item(ARROWS_TYPE), AMMO), (item(LONG_SWORD_TYPE), RIGHT),
-              (item(LEATHER_CHEST), CHEST)],
+              (item(LEATHER_CHEST), CHEST), (item(LEATHER_ARM), ARM), (item(LEATHER_LEGS), LEGS),
+              (item(LEATHER_HELM), HEAD)],
         DEFILER: [(worldgear.weapon(worldgear.BONE_DAGGER), RIGHT)],
     }
     missing = [obj for obj, items in out.items() if any(rec is None for rec, _ in items)]
@@ -153,10 +159,13 @@ def object_chunks(chunks) -> Dict[Tuple[str, int], bytes]:
 SLOTS: Dict[int, Sequence[Tuple[int, int]]] = {
     TOHR_KREEN: ((game.GYTHKA_TYPE, RIGHT),),
     HALF_GIANT: ((game.METAL_GREAT_AXE_TYPE, RIGHT), (SHIELD_TYPE, LEFT), (SCALE_CHEST, CHEST),
-                 (SCALE_ARM, ARM), (SCALE_LEGS, LEGS)),
-    MUL: ((game.BONE_AXE_TYPE, RIGHT), (game.BONE_AXE_TYPE, LEFT), (SCALE_CHEST, CHEST), (SCALE_ARM, ARM)),
-    HALFLING: ((SLING_TYPE, MISSILE), (BONE_SHORT_SWORD_TYPE, RIGHT), (LEATHER_CHEST, CHEST)),
-    ELF: ((BOW_TYPE, MISSILE), (ARROWS_TYPE, AMMO), (LONG_SWORD_TYPE, RIGHT), (LEATHER_CHEST, CHEST)),
+                 (SCALE_ARM, ARM), (SCALE_LEGS, LEGS), (BONE_HELM, HEAD)),
+    MUL: ((game.BONE_AXE_TYPE, RIGHT), (game.BONE_AXE_TYPE, LEFT), (SCALE_CHEST, CHEST), (SCALE_ARM, ARM),
+          (SCALE_LEGS, LEGS), (BONE_HELM, HEAD)),
+    HALFLING: ((SLING_TYPE, MISSILE), (BONE_SHORT_SWORD_TYPE, RIGHT), (LEATHER_CHEST, CHEST),
+               (LEATHER_ARM, ARM), (LEATHER_LEGS, LEGS), (LEATHER_HELM, HEAD)),
+    ELF: ((BOW_TYPE, MISSILE), (ARROWS_TYPE, AMMO), (LONG_SWORD_TYPE, RIGHT), (LEATHER_CHEST, CHEST),
+          (LEATHER_ARM, ARM), (LEATHER_LEGS, LEGS), (LEATHER_HELM, HEAD)),
     DEFILER: ((BONE_DAGGER_TYPE, RIGHT),),
 }
 
