@@ -599,7 +599,7 @@ def script_chunks(gpldata: bytes, kalzith: bool = True, semyon: bool = True,
             out[("PORT", PORTRAIT)] = face
     if semyon:  # Semyon, in the pens as he promises (semyon.py): his part after Kalzith's
         from . import semyon as sm
-        out[("GPL ", sm.SCRIPT)] = sm.conversation()
+        out[("GPL ", sm.SCRIPT)] = sm.conversation(thornwall=magic)
         out[("MAS ", MASTER)] = sm.with_semyon(out.get(("MAS ", MASTER), chunks[("MAS ", MASTER)]), field_types)
         if ENTRIES in chunks:
             out[ENTRIES] = with_entry(out.get(ENTRIES, chunks[ENTRIES]), sm.SCRIPT)

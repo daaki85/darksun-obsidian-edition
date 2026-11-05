@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from dsloader import game, psiblast
-from test_dicelog import CREATURES, DS, HDR, SHEETS, make_game
+from test_dicelog import CREATURES, HDR, SHEETS, make_game
 
 
 class BlastTests(unittest.TestCase):

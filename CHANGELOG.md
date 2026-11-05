@@ -42,6 +42,11 @@ notes](PATCH-NOTES.md).
   2666 with Kreenfang in it. Not yet seen: the speech, the bout coming after Scar's death in a
   real game, and the body's picture on screen (the level-1 test party was defeated first).
 
+- Fixed before release: the champions' gear watcher forgot nothing on a load, so champions made
+  again from a save in the arena came on unequipped (now reset on a load, as the defilers' rolls,
+  and a champion with gear still in its backpack is equipped whatever was remembered; test
+  `test_again_after_a_load`).
+
 **Changed**
 - **Thornwall comes onto the slave pens' weapon rack once Semyon has told of it.** It had been
   on the rack from the start (in place of its first bone polearm). Now the rack's data
@@ -52,7 +57,9 @@ notes](PATCH-NOTES.md).
   its object, 2599, as a coffin shares its item type, 6Ch) `semyon.ship` puts a Thornwall (an item from the game's free list) first on the
   rack's contents and sets 757. A Thornwall already in the game (a save from before) sets 757
   with none made. Once a party member carries Thornwall (worn, held or in the pack: flag 758,
-  `semyon.found`), Semyon has "We found what was in that crate." Seen in DOSBox: the rack made as the party came beside it, with Thornwall
+  `semyon.found`), Semyon has "We found what was in that crate." Both questions only with the
+  world's magic items on (`semyon.conversation(thornwall=...)`: without them there is no
+  Thornwall to tell of). Seen in DOSBox: the rack made as the party came beside it, with Thornwall
   first (then its polearms, quarterstaff and axe), still there after walking off and after a
   save and load. Tests: `test_semyon.ShipmentTests`, `test_worldgear`.
 

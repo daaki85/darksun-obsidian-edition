@@ -143,8 +143,8 @@ def _named(rdff: bytes, name: str) -> bytes:
 
 
 def body_picture(chunks) -> bytes:
-    """The dead Tohr-kreen's picture (a BMP chunk of one frame): the Tohr-kreen's lunge (its last
-    frame) laid on its side, darkened, over the blood of the game's Dead Body."""
+    """The dead Tohr-kreen's picture (a BMP chunk of one frame): a frame of the Tohr-kreen's laid
+    on its side, darkened, over the blood of the game's Dead Body (bodyart.py)."""
     from . import bodyart
     return bodyart.picture(chunks)
 
@@ -203,9 +203,10 @@ class Gear:
     """Puts each champion's gear where it is worn or held as it comes on, once."""
 
     def __init__(self):
-        self.done: set = set()  # (area, creature, name)
+        self.done: set = set()  # (creature, name, object) equipped, while in the arena
 
     def reset(self) -> None:
+        """Forget who was equipped (a game loaded: its champions are made again)."""
         self.done.clear()
 
     def watch(self, gd, new_spells: bool = True, choose: Optional[Callable[[Sequence[int]], int]] = None) -> List[str]:
@@ -222,7 +223,7 @@ class Gear:
                 continue
             name = rec[game.CREATURE_NAME:game.CREATURE_NAME + 16].split(b"\0", 1)[0]
             key = (index, name, obj)
-            if key in self.done:
+            if key in self.done and not self._unplaced(gd, index, obj):
                 continue
             if struct.unpack_from("<h", rec, 0)[0] <= 0 or rec[game.CREATURE_STATUS] in DEAD_STATUS:
                 continue
@@ -230,6 +231,15 @@ class Gear:
             self.equip(gd, index, obj, new_spells, choose)
             self.done.add(key)
         return []
+
+    @staticmethod
+    def _unplaced(gd, index: int, obj: int) -> bool:
+        """Something of champion INDEX's gear still in its backpack (a game loaded from before it
+        was put on, under the same creature and name)."""
+        kinds = {kind for kind, _ in SLOTS.get(obj, ())}
+        pack, = struct.unpack_from("<h", gd.creature(index), game.CREATURE_ITEM_LISTS[2])
+        return any(struct.unpack_from("<H", data, game.ITEM_TYPE)[0] in kinds
+                   for _, data in ring.Items(gd).chain(pack, inside=False))
 
     @staticmethod
     def equip(gd, index: int, obj: int, new_spells: bool, choose) -> None:

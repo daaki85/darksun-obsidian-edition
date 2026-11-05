@@ -195,8 +195,9 @@ def watch(gd) -> bool:
     return True
 
 
-def conversation() -> bytes:
-    """Semyon's conversation in the pens (script SCRIPT)."""
+def conversation(thornwall: bool = True) -> bytes:
+    """Semyon's conversation in the pens (script SCRIPT); with THORNWALL (the world's magic items
+    on: the rack's Thornwall, worldgear.MAGIC), his tip about the crate and his word once it's found."""
     s = _Script()
     met = ("var", 0x8D, MET)
 
@@ -209,22 +210,24 @@ def conversation() -> bytes:
         s.leave()
 
     def menu():
+        tip = [
+            ("Seen anything useful?", lambda: (s.say(
+                "When they marched me in, I passed a weapon shipment coming the other way. "
+                "Guards were fussing over one crate like it held something special. I didn't "
+                "see where they took it, but it can't have gone far."),
+                s.flag(TOLD, 1)), ALWAYS),
+            ("We found what was in that crate.", reply(
+                "So that's what had the guards so nervous! A weapon like that is wasted on "
+                "Draj's templars. Put it to good use when we break out."),
+                ("expr", _flag(TOLD) + ["and"] + _flag(FOUND))),
+        ] if thornwall else []
         s.menu([("Why did they tie you up out there?", reply(
                     "I was asking around the pens about the Veiled Alliance. Someone told the "
                     "templars, so they tied me out in the arena under the sun to see if I'd talk. "
                     "I didn't. After the fight they threw me back in here."), ALWAYS),
                 ("Have you heard anything useful?", reply(
                     "Only the trustee, the head templar and Kurzak carry keys. The trustee keeps "
-                    "his on his belt. Do with that what you will."), ALWAYS),
-                ("Seen anything useful?", lambda: (s.say(
-                    "When they marched me in, I passed a weapon shipment coming the other way. "
-                    "Guards were fussing over one crate like it held something special. I didn't "
-                    "see where they took it, but it can't have gone far."),
-                    s.flag(TOLD, 1)), ALWAYS),
-                ("We found what was in that crate.", reply(
-                    "So that's what had the guards so nervous! A weapon like that is wasted on "
-                    "Draj's templars. Put it to good use when we break out."),
-                    ("expr", _flag(TOLD) + ["and"] + _flag(FOUND))),
+                    "his on his belt. Do with that what you will."), ALWAYS)] + tip + [
                 ("Where was that gem again?", reply(
                     "In one of the grain pots: the kitchen, the storage room, or near the "
                     "fountain. I can't remember which, so check them all."), ALWAYS),

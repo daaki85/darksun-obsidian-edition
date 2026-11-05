@@ -35,6 +35,10 @@ class AskedOnceTests(unittest.TestCase):
         self.assertEqual(replies["Tell me about the Alliance."][1][1], ("var", 0x8E, 7))
         self.assertEqual(replies["Seen anything useful?"][1][1], ("var", 0x8E, 4))
         self.assertEqual(replies["Farewell."], ("n", 1))
+        plain = menu_replies(semyon.conversation(thornwall=False))  # (no Thornwall: no tip)
+        self.assertNotIn("Seen anything useful?", plain)
+        self.assertNotIn("We found what was in that crate.", plain)
+        self.assertIn("Where was that gem again?", plain)
         found = replies["We found what was in that crate."][1]  # (only once told, and found)
         self.assertEqual(found[:13], ["(", "(", ("var", 0x8D, semyon.TOLD), "==", ("n", 1), ")", "and",
                                       "(", ("var", 0x8D, semyon.FOUND), "==", ("n", 1), ")", ")"])

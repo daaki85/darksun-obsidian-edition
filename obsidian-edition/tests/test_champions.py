@@ -8,7 +8,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from dsloader import champions, dataitems, game, gff, gpl, kalzith, sprites  # noqa: E402
+from dsloader import champions, dataitems, game, gpl, kalzith, sprites  # noqa: E402
 
 
 def item(kind: int, name: int = 0, plus: int = 0) -> bytes:
@@ -147,6 +147,19 @@ class GearTests(unittest.TestCase):
         self.assertEqual(pack, [])
         gear.watch(self.gd)  # (once)
         self.assertEqual(self.lists()[1], held)
+
+    def test_again_after_a_load(self):
+        """A game loaded where the champions were already equipped (the same creature, name and
+        object): its gear, back in the backpack, is put on again."""
+        kinds = [game.BONE_AXE_TYPE, champions.SCALE_CHEST]
+        self.make(champions.MUL, kinds)
+        gear = champions.Gear()
+        gear.watch(self.gd)
+        self.make(champions.MUL, kinds)  # (as the save had them: in the backpack)
+        gear.watch(self.gd)
+        worn, held, pack = self.lists()
+        self.assertEqual((worn, held, pack), ([(champions.SCALE_CHEST, champions.CHEST)],
+                                              [(game.BONE_AXE_TYPE, champions.RIGHT)], []))
 
     def test_not_a_champion(self):
         self.make(champions.MUL, [game.BONE_AXE_TYPE])

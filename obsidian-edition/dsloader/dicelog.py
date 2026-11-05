@@ -686,6 +686,7 @@ class DiceLog:
         went_back = self._clock is not None and now < self._clock
         if went_back:
             self.defilers.reset()  # (a save loaded: its fights rolled for again)
+            self.champions.reset()  # (and its champions equipped again)
             self._mended_in = None  # (a save loaded: its scrolls looked at again)
         # A try later than the game's clock is not this game's: one undone by loading an earlier
         # save, or another game's (a new game started with the same party, the Loader started
@@ -1842,6 +1843,7 @@ class DiceLog:
             if self.tracker:
                 self.tracker.reset()
             self.defilers.reset()
+            self.champions.reset()
             self.itemwatch.reset()
             return True
         return False
