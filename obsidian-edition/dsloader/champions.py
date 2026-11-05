@@ -15,16 +15,17 @@ Kreenfang (the arena's gythka +1, no longer on the dead body by the stone arch).
   what is in its held list (+0Ah: seen, a Tohr-kreen given Headsman there attacked with it, 1d10+2,
   in place of its first two natural attacks) and counts the worn list's armour (+08h) for its AC,
   so the Loader moves each champion's gear to its place as it comes on (Gear.watch), as the
-  inventory screen would. Their sheets' base AC is 10 where armour is worn, so that the armour
-  makes it.
+  inventory screen would. Their sheets keep their kinds' AC, the armour counting on top.
 - Killed, the Tohr-kreen leaves a body of its own: the game makes a Dead Body (object 1101) for
   a creature that dies carrying something (DSUN.EXE 59412h, "push 0FFFF044Dh"); DSCLOG's
   PROBE_WORN takes that push (gamepatch's champion_body) and names BODY instead when the dying
   creature is the Tohr-kreen champion: a dead Tohr-kreen's picture (a copy of 1101's object and
   record, its own picture drawn from the Tohr-kreen's), Kreenfang and the rest in it as the
   game puts them.
-- The bout (the arena's scripts, script_chunks): where the death handler (script 3) says "This
-  makes ... king of the pens!", KING is set too; the arena's sixth visit (the visit count, the
+- The bout (the arena's scripts, script_chunks): where the arena's death handler (script 3 at
+  176h, hooked on Scar only in the arena: MAS 42, script 2, and script 154 for region 2Ah) says
+  "This makes ... king of the pens!", KING is set too (Scar killed in the pens, script 144, sets
+  the game's flag 19 alone: no bout); the arena's sixth visit (the visit count, the
   game's number 12, at 5: the one after Scar's), with KING set and FOUGHT not, has the
   Announcer's speech (SPEECH) and the six in place of the game's wave, and sets FOUGHT: once.
 """
@@ -45,8 +46,6 @@ KING, FOUGHT = 759, 807  # flags: a party member killed Scar; the champions have
 
 # (the kind each is a copy of)
 BASES = {TOHR_KREEN: 292, HALF_GIANT: 293, MUL: 290, HALFLING: 289, ELF: 103, DEFILER: 296}
-ARMOURED = (HALF_GIANT, MUL, HALFLING, ELF)  # their sheets' base AC made 10
-BASE_AC = 10
 
 # slots (game.EQUIP_SLOTS)
 ARM, AMMO, MISSILE, RIGHT, LEGS, CHEST, LEFT = 0, 1, 2, 3, 6, 9, 10
@@ -110,17 +109,6 @@ def _without_items(rdff: bytes) -> bytes:
     return dataitems.chunk(recs[:first], end)
 
 
-def _with_sheet(rdff: bytes, change: Callable[[bytearray], None]) -> bytes:
-    recs, end = dataitems.records(rdff)
-    recs = list(recs)
-    for i, r in enumerate(recs):
-        if r.kind == SHEET_RECORD and len(r.data) >= game.SHEET_SIZE - 0:
-            data = bytearray(r.data)
-            change(data)
-            recs[i] = r._replace(data=bytes(data))
-    return dataitems.chunk(recs, end)
-
-
 def _named(rdff: bytes, name: str) -> bytes:
     out = bytearray(rdff)
     field = 16  # (the creature record's name: 15 letters and its end)
@@ -148,8 +136,6 @@ def object_chunks(chunks) -> Dict[Tuple[str, int], bytes]:
     for obj in OBJECTS:
         base = BASES[obj]
         rdff = _named(dataitems.renumbered(_without_items(chunks[("RDFF", base)]), obj), NAME)
-        if obj in ARMOURED:
-            rdff = _with_sheet(rdff, lambda s: s.__setitem__(game.SHEET_BASE_AC, BASE_AC))
         out[("RDFF", obj)] = dataitems.with_items(rdff, [rec for rec, _ in things[obj]], numbers)
         out[("OJFF", obj)] = chunks[("OJFF", base)]
     body = bytearray(chunks[("OJFF", DEAD_BODY)])

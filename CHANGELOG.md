@@ -24,7 +24,9 @@ notes](PATCH-NOTES.md).
   and its people carry all theirs there, fighting with their bare numbers. The melee routine
   fights with the held list's weapon for anyone, and the AC routine counts the worn list for
   anyone (both seen in DOSBox), so `champions.Gear` moves each champion's items to their slots as
-  it comes on (`pickpocket.place`); the armoured ones' sheets have base AC 10.
+  it comes on (`pickpocket.place`); their sheets keep their kinds' AC, the armour on top. Only a
+  kill in the arena counts: the handler setting 759 is hooked on Scar only there (MAS 42, script
+  2, script 154 for region 2Ah); killed in the pens (script 144) he sets the game's flag 19 alone.
 - **The Tohr-kreen champion's own body:** where the game makes a Dead Body for a creature that
   dies carrying something ("push 0FFFF044Dh", 59412h), `gamepatch`'s `champion_body` asks DSCLOG's
   `PROBE_WORN` (return address 2754h), which answers object 2666 for that champion (a copy of the

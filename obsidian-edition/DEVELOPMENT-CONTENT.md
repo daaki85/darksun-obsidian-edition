@@ -1026,12 +1026,15 @@ How (`champions.py`, `bodyart.py`): six objects of the Loader's own, 2660-2665,
 copies of the arena's kinds (the Tohr-kreen 292, the Guard 293, a half-giant;
 the Wild Mul 290; the Renegade 289, a halfling; an elven caravan guard 103; the
 Defiler 296), their records renumbered, named "Champion", their own items left
-out and their gear in (as the new items, after the person), the armoured ones'
-sheets at base AC 10. Their pictures are their kinds'.
+out and their gear in (as the new items, after the person), their sheets their
+kinds' (the armour counting on top of their AC). Their pictures are their kinds'.
 
 The scripts: the arena's deaths (script 3) say "This makes ... king of the
 pens!" and set flag 19 only when a party member kills Scar (flag 19 is set at
-the end of Scar's visit too, whatever happened, so it doesn't tell); that set
+the end of Scar's visit too, whatever happened, and by the pens' script 144
+when he is killed there, so it doesn't tell); that handler (script 3 at 176h)
+is hooked on Scar only in the arena (MAS 42 and script 2, and script 154 calls
+it for region 2Ah alone), so a kill in the pens gives no bout; that set
 becomes a jump to the same after the script's end, then flag 759 (KING), then
 back. The arena's visits (script 2) count in the game's number 12; a visit past
 the fifth (12 at 5 or more) opens with the default speech ("Once again,

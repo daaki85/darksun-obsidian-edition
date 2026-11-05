@@ -2034,7 +2034,8 @@ How it works:
 
 ### The champions' bout
 
-Kill **Scar** in the arena, and the pens have a new king. On the party's next
+Kill **Scar** in the arena, and the pens have a new king (killed in the pens,
+he makes no one king, and the champions don't come). On the party's next
 visit to the arena the Announcer has news:
 
 > Citizens of Draj! Scar is dead, and the pens have a new king. But word travels
