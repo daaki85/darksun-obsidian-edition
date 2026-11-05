@@ -55,3 +55,15 @@ script 3 at 3A7h). DOSBox, the ready-made party.
     Arm and Chest Armor, a Bone Short Sword and a Leather Sling; the elf the same leather, Wooden
     Arrows, an Obsidian Long Sword and a Wooden Bow; the defiler a Bone Dagger, a Scroll in its
     pack. Nothing left in a backpack but the scroll.
+13. `fightout.sh` (a PICK A PSIONIC POWER screen for K'ratchek's level stopped it once: a red
+    power's icon clicked, about 158, 62, closed it). The champions fought with their gear: the
+    mul "with Bone Axe (1d8)", the elf "with Obsidian Long Sword (1d8)", the Tohr-kreen "with Bone
+    Kreenfang +1 (2d4+1)" twice, then its bite. All six killed: 2000 XP each. **Flag 807 set**.
+14. Then "That was too easy. Perhaps these monsters would be more of a challenge!" and a wave of
+    the game's own (Renegades, Xorns, a Sand Howler): the same line and the same next wave as
+    after Scar's fight. The champions are the visit's first wave only, as built. Fought; then
+    "Yell something back at the Announcer?" N; "Go back to the pens...".
+15. In memory: the Tohr-kreen's body is **object 2666** (map 388, 412) holding **Bone Kreenfang +1**;
+    each other champion a Dead Body (1101) with all its gear (the defiler's: Scroll, Bone Dagger).
+    Not done: looting it in the game (how a body is opened: asked the user), and the champions'
+    Look boxes (to see on a second run from `pens-after-scar`).
