@@ -48,3 +48,24 @@ DOSBox, new games with the ready-made party, in the arena's first visit.
 
 Not seen yet: the Announcer's speech (a visit past the fifth) and the bout after a real kill of
 Scar.
+
+## Third run: the AC with full armour and helms
+
+11. The same test build, with full armour sets and helms (the halfling and the elf with leather
+    shields), the sheets keeping their kinds' AC (10, the Tohr-kreen's 3). Each champion renamed in
+    memory (Kreen, HalfGiant, ...) so the dice log tells them apart. The game's AC against the
+    party's attacks, and the Loader's count (`counted_ac`):
+
+    | Champion | Game | Loader |
+    |---|---|---|
+    | Tohr-kreen | 3 | 3 |
+    | Half-giant (DEX 14) | 4 | 5 |
+    | Mul (DEX 18) | 1 | 2 |
+    | Halfling (DEX 18) | 1 | 2 |
+    | Elf (DEX 12) | 5 (once 6) | 6 |
+    | Defiler | 10 | 10 |
+
+    The game counts a point more than the Loader for each one wearing a helm: the Loader's count
+    leaves the helm out. (Left to look into.)
+12. Found: the halfling's and elf's helm was Dapartea's Helm, the game's first item of the leather
+    Helm's type. Now the plain Helm's own record.

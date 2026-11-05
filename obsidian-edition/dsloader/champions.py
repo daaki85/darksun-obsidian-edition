@@ -54,6 +54,8 @@ ARM, AMMO, MISSILE, RIGHT, LEGS, HEAD, CHEST, LEFT = 0, 1, 2, 3, 6, 7, 9, 10
 # the game's item types used
 SHIELD_TYPE, LEATHER_CHEST, SCALE_CHEST, SCALE_ARM, SCALE_LEGS = 0x04, 0x06, 0x0F, 0x37, 0x38
 LEATHER_ARM, LEATHER_LEGS, LEATHER_HELM, BONE_HELM = 0x07, 0x08, 0x05, game.BONE_HELM_TYPE
+# the game's plain leather Helm (its first of the type is Dapartea's Helm, named: not that)
+HELM = npcitems._item("03fc000000000500000005000000000004ff060000")
 BOW_TYPE, ARROWS_TYPE, SLING_TYPE, LONG_SWORD_TYPE = 0x01, 0x3E, 0x40, 0x2D
 BONE_SHORT_SWORD_TYPE, BONE_DAGGER_TYPE = game.BONE_SHORT_SWORD_TYPE, game.BONE_DAGGER_TYPE
 
@@ -96,10 +98,10 @@ def gear(chunks) -> Dict[int, List[Tuple[bytes, int]]]:
               (bonescale.HELM, HEAD)],
         HALFLING: [(item(SLING_TYPE), MISSILE), (worldgear.weapon(worldgear.BONE_SHORT_SWORD), RIGHT),
                    (item(LEATHER_CHEST), CHEST), (item(LEATHER_ARM), ARM), (item(LEATHER_LEGS), LEGS),
-                   (item(LEATHER_HELM), HEAD), (item(SHIELD_TYPE), LEFT)],
+                   (HELM, HEAD), (item(SHIELD_TYPE), LEFT)],
         ELF: [(item(BOW_TYPE), MISSILE), (item(ARROWS_TYPE), AMMO), (item(LONG_SWORD_TYPE), RIGHT),
               (item(LEATHER_CHEST), CHEST), (item(LEATHER_ARM), ARM), (item(LEATHER_LEGS), LEGS),
-              (item(LEATHER_HELM), HEAD), (item(SHIELD_TYPE), LEFT)],
+              (HELM, HEAD), (item(SHIELD_TYPE), LEFT)],
         DEFILER: [(worldgear.weapon(worldgear.BONE_DAGGER), RIGHT)],
     }
     missing = [obj for obj, items in out.items() if any(rec is None for rec, _ in items)]
