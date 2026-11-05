@@ -349,8 +349,17 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   hit points full). After two or three rests and a step, Kurzak calls ("Gerakis! Get up here!
   It's your turn in the arena!"). **Answer the call quickly**: twice the party walked to Kurzak's
   stop and on toward the gate (1816, 408) and he ran out of patience ("That's it! Time's run
-  out!"), then the alarm and a fight with every guard. How to get into the arena from there:
-  still to be found (asked the user).
+  out!"), then the alarm and a fight with every guard.
+- **Into the arena from the pens** (the user, 2026-11-05): after the call, Kurzak's entryway
+  (`route.py 1592 584`), his stop (1592, 520), north to (1592, 440), east along the corridor at
+  y 408 (walkto in two steps: further north, y 376, counts as escaping and sets off the alarm)
+  to (1816, 408), then a click into the gap in the brick wall just south of it (1816, 440):
+  "Enter the arena?" **Y**. In the arena: south from the gate (488, 200) with clicks (each passes
+  time), through the bone wall's gap (504, 360), and on south onto the stone platform until the
+  bone gate closes behind the party (488, 408-424): then the Announcer and the bout.
+- **Setting the arena's visit count**: in the pens the game's numbers have a place in memory;
+  number 12 is the count (4: the next trip is Scar's; 5 and up the everyday speech, or the
+  champions' after Scar's death in the arena). Write it at the far pointer DS:1356h + 2 x 12.
 - **The pens' main door** (objects 2145-2146 at 1571-1611, 559: the entryway Kurzak opens) has
   the "Take me to the Arena! I want a fight!" menu (137:14CEh), but open it answers nothing to
   the look pointer. **Resting** is at a fire ring (the game's rest, 8066Dh); the east hall's

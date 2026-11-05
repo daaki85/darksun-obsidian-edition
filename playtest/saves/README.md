@@ -30,3 +30,7 @@ cannot be loaded in a fresh install (2026-11-01).
   party in the east hall's fire room (map 1896, 872; its door 115, 53 opened), with the arena
   count (the game's number 12) set to 4 in memory before the save, so the next trip is Scar's.
   Not rested yet. Its `DARKSAVE.GFF` is the one in the game folder (not rewritten at this save).
+- `pens-after-scar` (2026-11-05): from `pens-fire-count4`: rested, called, into the arena, Scar
+  killed there by Cilla ("This makes Cilla king of the pens!"), the waves fought and out by the
+  gate; in the pens at (1816, 440). The arena count 5, flags 19 and 759 set, 807 clear: the
+  champions' bout is due on the next trip.
