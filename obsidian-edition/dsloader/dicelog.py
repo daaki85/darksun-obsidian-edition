@@ -28,7 +28,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import aging, bowyer, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, bowyer, ghost, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
@@ -481,6 +481,8 @@ class DiceLog:
         self.game_dir: Optional[str] = None  # the game's folder (its font)
         self._wheel: Optional[wheel.WheelHook] = None  # ... the mouse wheel over it (Windows)
         self.show_dust = True  # dust raised by walkers on sand and dirt (dust.py)
+        self.see_through = True  # the hidden and the invisible drawn see-through (ghost.py)
+        self._ghosts = ghost.Ghosts()
         self.elf_looks = True  # elves' ears and half-elves' own figures, as the copy was written (sprites.py)
         self.cilla_elf = True  # Cilla, an elf, given the elf woman's figure (defaultparty.py)
         self.vulture_on = True  # the cooked vulture quest (vulture.py)
@@ -802,6 +804,7 @@ class DiceLog:
         self.game_dir = settings.get("game_dir") or self.game_dir
         self.scroll_map = bool(settings.get("scroll_map", True))
         self.show_dust = bool(settings.get("dust", True))
+        self.see_through = settings.get("see_through", True) is not False
         self.elf_looks = settings.get("elf_looks", True) is not False
         self.cilla_elf = settings.get("cilla_elf", True) is not False
         self.vulture_on = bool(settings.get("vulture", True))
@@ -1348,7 +1351,8 @@ class DiceLog:
             return []
         try:
             self._shadows.update(self.game, self.tsr_hdr, self.show_shadows, now,
-                                 needed=self.show_dust or self.ring_mode != rings.OFF or self.combat_log)
+                                 needed=self.show_dust or self.ring_mode != rings.OFF or self.combat_log
+                                 or self.see_through)
             self._update_panel(now)
             self._labels.on = self.floating_names
             self._labels.tick(self.game.guest, self.tsr_hdr, now)
@@ -1357,6 +1361,9 @@ class DiceLog:
             self._rings.update(self.game, self.tsr_hdr, self.ring_mode != rings.OFF, self._shadows.palettes,
                                self._targeting.chosen)
             self._dust.update(self.game, self.tsr_hdr, self.show_dust, self._shadows.palettes)
+            hdr = self.tsr_hdr
+            self._ghosts.update(self.game, hdr, self.see_through, self._shadows.palettes,
+                                lambda: shadows.redraw(self.game, hdr))
         except (struct.error, IndexError, ValueError):
             return []
         return out
@@ -2038,9 +2045,13 @@ class DiceLog:
         """Have DSCLOG make this party member's next attack one from behind (or no one's); hidden,
         with the hiding's sound (sounds.HIDE_SOUND, played from the map's main loop)."""
         if self.tsr_hdr is not None:
-            self.guest.write(self.tsr_hdr + stealth.TSR_STEALTH, struct.pack("<H", 1 << member if hidden else 0))
+            was = self.guest.read(self.tsr_hdr + stealth.TSR_STEALTH, 2)
+            now = struct.pack("<H", 1 << member if hidden else 0)
+            self.guest.write(self.tsr_hdr + stealth.TSR_STEALTH, now)
             if hidden:
                 self.guest.write(self.tsr_hdr + TSR_SOUND_REQ, struct.pack("<H", sounds.HIDE_SOUND))
+            if now != was and self.see_through:
+                shadows.redraw(self.game, self.tsr_hdr)  # (drawn see-through, or no longer)
 
     def round_status(self, acted_creatures: frozenset = frozenset()) -> Optional[dict]:
         """The round in progress, for keeping its order in view: {"round", "now": (name, score),

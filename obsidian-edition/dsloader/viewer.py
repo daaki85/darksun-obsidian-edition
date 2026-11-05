@@ -512,6 +512,10 @@ class Viewer:
         self.show_dust = tk.BooleanVar(value=bool(settings.get("dust", True)))
         ttk.Checkbutton(looks, text="Dust raised behind the feet of anyone walking on sand or dirt",
                         variable=self.show_dust, command=self._options_changed).pack(anchor="w", pady=(4, 0))
+        self.see_through = tk.BooleanVar(value=settings.get("see_through", True) is not False)
+        ttk.Checkbutton(looks, text="A thief hidden in shadows, and anyone invisible, drawn see-through (an "
+                        "invisible enemy solid while one of the party detects invisibility)",
+                        variable=self.see_through, command=self._options_changed).pack(anchor="w", pady=(4, 0))
 
         # the mouse and keys in the game
         controls = section("controls", "Controls")
@@ -677,7 +681,7 @@ class Viewer:
         for var in list(self.rule_vars.values()) + list(self.content_vars.values()):
             var.set(True)
         for var in (self.monster_info, self.floating_names, self.stealth_gear, self.pickpockets, self.roll_store, self.elf_looks, self.cilla_elf,
-                    self.starting_gear, self.show_gear, self.show_shadows, self.show_dust, self.use_targeting,
+                    self.starting_gear, self.show_gear, self.show_shadows, self.show_dust, self.see_through, self.use_targeting,
                     self.scroll_map, self.effects_kept, self.camera_still, self.scene_pointer, self.mouse_start,
                     self.steady_pace, self.party_spread):
             var.set(True)
@@ -1095,6 +1099,7 @@ class Viewer:
                 self.dice.floating_names = self.floating_names.get()
                 self.dice.game_dir = launch.find_game_dir()
                 self.dice.show_dust = self.show_dust.get()
+                self.dice.see_through = self.see_through.get()
                 self.dice.elf_looks = self.elf_looks.get()
                 self.dice.cilla_elf = self.cilla_elf.get()
                 self.dice.ring_mode = self.ring_mode.get()
@@ -1191,6 +1196,7 @@ class Viewer:
                 settings["starting_gear"] = self.starting_gear.get()
                 settings["shadows"] = self.show_shadows.get()
                 settings["dust"] = self.show_dust.get()
+                settings["see_through"] = self.see_through.get()
                 settings["elf_looks"] = self.elf_looks.get()
                 settings["cilla_elf"] = self.cilla_elf.get()
                 settings["rings"] = self.ring_mode.get()
@@ -1221,6 +1227,7 @@ class Viewer:
             self.dice.starting_gear = self.starting_gear.get()
             self.dice.show_shadows = self.show_shadows.get()
             self.dice.show_dust = self.show_dust.get()
+            self.dice.see_through = self.see_through.get()
             self.dice.combat_log = self.combat_log.get()
             self.dice.combat_log_level = self.combat_log_level.get()
             self.dice.floating_names = self.floating_names.get()

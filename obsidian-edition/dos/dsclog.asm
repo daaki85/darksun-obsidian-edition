@@ -125,6 +125,7 @@ VEC_EL_KNOW equ 0x9E       ; PROBE_EL_KNOW
 VEC_DUAL_BAN equ 0x9D      ; PROBE_DUAL_BAN
 VEC_DUAL_SPELLS equ 0x9C   ; PROBE_DUAL_SPELLS
 VEC_SOUND_42 equ 0x9B      ; PROBE_SOUND_42
+VEC_GHOST  equ 0x62        ; PROBE_GHOST
 VEC_SOUND_44 equ 0x9A      ; PROBE_SOUND_44
 VEC_DUAL_KIT equ 0x99      ; PROBE_DUAL_KIT
 VEC_CR_SPELLS equ 0x98     ; PROBE_CR_SPELLS
@@ -175,8 +176,8 @@ section mz start=0
         dw 2                                    ; header size in paragraphs
         dw LOAD_EXTRA                           ; min extra paragraphs: the ring's end past the image
         dw LOAD_EXTRA                           ; max extra paragraphs (so the whole fits in upper memory)
-        dw 0                                    ; SS (relative to the image)
-        dw image_len + STACK                    ; SP
+        dw image_len / 16                       ; SS (relative to the image): just past it, so
+        dw STACK                                ; SP    the image may have all of its 64 KB
         dw 0                                    ; checksum
         dw install                              ; IP
         dw 0                                    ; CS (relative to the image)
@@ -407,6 +408,11 @@ sound_req  dw 0xFFFF            ; +1822 the Loader sets a sound to play from the
                                 ;      sets it back to FFFFh (none) once played
 pick_sound dw 0xFFFF            ; +1824 ... and one to play with PICK_TEXT when no XP is given
                                 ;      (GIVE_XP: a pocket picked, PICK_SOUND), set back as well
+ghost_seg  dw 0                 ; +1826 GHOST's block in upper memory (KEEP; 0: none, no see-through
+                                ;      figures): the Loader writes BLEND, REP and GHOST_TAB into it
+ghost_on   dw 0                 ; +1828 the Loader sets 1 once BLEND and REP are made for the palette
+                                ;      as it is (0 while they're being made again: figures drawn as
+                                ;      ever)
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -20181,17 +20187,15 @@ floor_post:
 
 F_ARGS equ 38                   ; (FLOOR_POST's frame: ES, DS, PUSHAD, flags, then the arguments)
 
-shadow_pass:
-        cld
-        inc word [cs:shadow_passes]
+; PAGE_SETUP: page BX (DS the game's): where it is (its bounds, the clip: CLIP_X0...) and the page it
+; is part of (its memory: V_SEG, V_Y0, V_X0, V_ROW); GAME_DS and LOAD_SEG too. AX, BX, CX, ES changed.
+page_setup:
         mov [cs:game_ds], ds
         mov ax, ds
         sub ax, DGROUP_SEG
         mov [cs:load_seg], ax
-        ; the page: where it is (its bounds, the clip), and the page it is part of (its memory)
         add ax, PAGES_SEG
         mov es, ax
-        mov bx, [bp + F_ARGS]
         shl bx, 1
         mov ax, [es:bx + 0x404]
         mov [cs:clip_x0], ax
@@ -20218,6 +20222,13 @@ shadow_pass:
         sub cx, ax
         inc cx
         mov [cs:v_row], cx
+        ret
+
+shadow_pass:
+        cld
+        inc word [cs:shadow_passes]
+        mov bx, [bp + F_ARGS]           ; the page: where it is, and its memory
+        call page_setup
         ; the camera, and for a rectangle's floor the rectangle
         cmp byte [cs:floor_kind], 0
         jne .rect
@@ -20711,6 +20722,267 @@ spans_flush:                            ; the noted runs darkened, a plane at a 
 
 n_spans dw 0                    ; (the spans in the far block, FAR_SPANS: 6 bytes each, the row's
                                 ;   place in the page, first x, last x)
+
+; SEE-THROUGH FIGURES (GHOST): a party member hidden in shadows and unheard (STEALTH's bit), and a
+; creature the Loader marks in GHOST_TAB (invisible: ghost.py), are drawn half see-through, each
+; pixel the colour halfway between the figure's and what is under it. GHOST's block (GHOST_SEG, in
+; upper memory) holds BLEND at 0: for each of the figure's REP_COUNT colours (REP maps each of the
+; palette's to one) a row of 256, the colour halfway between it and each of the palette's; the
+; Loader makes REP and BLEND from the palette as the area changes (GHOST_ON 0 meanwhile).
+GH_BLEND    equ 0                       ; (GHOST's block: BLEND, REP_COUNT x 256 bytes)
+REP_COUNT   equ 32
+GH_REP      equ REP_COUNT * 256         ; ... REP, 256 bytes
+GH_TAB      equ GH_REP + 256            ; ... GHOST_TAB, a bit for each of the game's things
+GH_PIX      equ GH_TAB + 80             ; ... the figure's pixels, as REP numbers (GHOST_DRAW)
+GH_PIX_MOST equ 4096
+GH_SPANS    equ GH_PIX + GH_PIX_MOST    ; ... its runs on the screen, 8 bytes each: the row's place
+GH_SPANS_MOST equ 192                   ;   in the page, first x, last x, its first pixel
+GH_SPANS_ROOM equ 0              ; (pixels may fill GH_PIX up to GH_SPANS)
+GHOST_PARAS equ (GH_SPANS + GH_SPANS_MOST * 8 + 15) / 16
+PIC_DRAW_OFF equ 0x3180                 ; (the resident routine at DROP_SEG that draws a picture)
+
+; PROBE_GHOST: INT VEC_GHOST replaces "call far 1A0A:3180" (9Ah 80h 31h, then the segment) in the
+; routine drawing a thing on the map (25EBEh; DI the thing), the call's arguments on the stack:
+; the page, x, y, mirrored, the picture (far), the frame. A see-through figure DSCLOG draws itself
+; (GHOST_DRAW); anything else is drawn by the game's routine as it was. Back past the segment.
+probe_ghost:
+        pop word [cs:g_resume]
+        pop word [cs:g_resume + 2]
+        pop word [cs:g_resume_fl]
+        add word [cs:g_resume], 3
+        cmp word [cs:ghost_on], 0
+        je .game
+        cmp di, MAP_COUNT - 1
+        ja .game                        ; (a wall or a tile: -1)
+        cmp di, 3
+        ja .tab
+        bt [cs:stealth], di
+        jc .ghost
+.tab:   push es
+        mov es, [cs:ghost_seg]
+        bt [es:GH_TAB], di
+        pop es
+        jnc .game
+.ghost: call ghost_draw
+        jmp .back
+.game:  mov ax, ds
+        sub ax, DGROUP_SEG - DROP_SEG
+        mov [cs:draw_call + 2], ax
+        call far [cs:draw_call]
+.back:  push word [cs:g_resume_fl]
+        push word [cs:g_resume + 2]
+        push word [cs:g_resume]
+        iret
+g_resume    dd 0
+g_resume_fl dw 0
+draw_call   dw PIC_DRAW_OFF, 0
+
+; GHOST_DRAW: the frame of PROBE_GHOST's call drawn see-through (its arguments at [BP+4] on). The
+; frame's runs decoded into GH_PIX as REP numbers, each run within the page noted (GH_SPANS: the
+; pixel at its first x; a mirrored frame's pixels are read from the other end), then a plane at a
+; time each pixel there made BLEND's of its REP number and the colour under it. DS, SI, DI kept.
+GD_SPANS equ -2                         ; (locals: the next span's place, the row on the screen,
+GD_W     equ -4                         ;   the frame's width, a run's first x on the screen and its
+GD_X     equ -6                         ;   pixels, the step from one pixel to the next on a plane)
+GD_N     equ -8
+GD_STEP  equ -10
+ghost_draw:
+        push bp
+        mov bp, sp                      ; [bp+4] page, +6 x, +8 y, +10 mirrored, +12 picture, +16 frame
+        push ds
+        push si
+        push di
+        push fs
+        sub sp, 12
+        mov ax, 4
+        test byte [bp + 10], 1
+        jz .step
+        neg ax
+.step:  mov [bp + GD_STEP - 10], ax
+        mov bx, [bp + 4]
+        call page_setup
+        les si, [bp + 12]               ; the picture: its frames' places from +6
+        mov bx, [bp + 16]
+        cmp bx, [es:si + 4]
+        jae .out
+        shl bx, 2
+        movzx eax, word [cs:zero]
+        mov ax, es
+        shl eax, 4
+        movzx ecx, si
+        add eax, ecx
+        add eax, [es:si + bx + 6]
+        mov si, ax
+        and si, 0x0F
+        shr eax, 4
+        mov ds, ax                      ; DS:SI the frame: width, height, then its rows
+        cld
+        lodsw
+        mov [bp + GD_W - 10], ax
+        lodsw
+        mov es, [cs:ghost_seg]
+        mov di, GH_PIX
+        mov word [bp + GD_SPANS - 10], GH_SPANS
+.row:   lodsb
+        cmp al, 0xFF
+        je .flush
+        movzx dx, al
+        add dx, [bp + 8]                ; DX its row on the screen
+.run:   lodsw
+        push ax                         ; x (8000h: the row's last)
+        and ah, 0x7F
+        movzx cx, byte [si]             ; its pixels
+        mov [bp + GD_N - 10], cx
+        test byte [bp + 10], 1
+        jz .fwd
+        neg ax                          ; (mirrored: from the right)
+        sub ax, cx
+        add ax, [bp + GD_W - 10]
+.fwd:   add ax, [bp + 6]
+        mov [bp + GD_X - 10], ax
+        movzx ax, byte [si + 1]
+        add si, 2
+        add ax, si
+        push ax                         ; (past its data)
+        lea ax, [di + GH_SPANS_ROOM]
+        add ax, cx
+        jc .full
+        cmp ax, GH_SPANS
+        ja .full                        ; (no room: what is decoded drawn)
+        mov bx, di                      ; BX its first pixel
+.data:  jcxz .noted
+        push cx
+        lodsb                           ; a control byte: bit 0 clear, (b >> 1) + 1 bytes to copy;
+        movzx cx, al                    ;   set, one byte (b >> 1) + 1 times
+        shr cx, 1
+        inc cx
+        test al, 1
+        jz .copy
+        call .rep
+        rep stosb
+        jmp .took
+.copy:  call .rep
+        stosb
+        loop .copy
+.took:  pop cx
+        mov cx, [bp + GD_N - 10]        ; (pixels left)
+        mov ax, di
+        sub ax, bx
+        sub cx, ax
+        jg .data
+.noted: pop si
+        cmp dx, [cs:clip_y0]            ; the run within the page: noted
+        jl .next
+        cmp dx, [cs:clip_y1]
+        jg .next
+        mov ax, [bp + GD_X - 10]        ; AX its first x, CX its last, BX the pixel there
+        mov cx, ax
+        add cx, [bp + GD_N - 10]
+        dec cx
+        test byte [bp + 10], 1
+        jz .clip
+        add bx, [bp + GD_N - 10]
+        dec bx
+.clip:  push dx
+        mov dx, [cs:clip_x0]
+        sub dx, ax
+        jle .x1
+        add ax, dx
+        cmp word [bp + GD_STEP - 10], 0
+        jg .ahead
+        neg dx
+.ahead: add bx, dx
+.x1:    pop dx
+        cmp cx, [cs:clip_x1]
+        jle .span
+        mov cx, [cs:clip_x1]
+.span:  cmp ax, cx
+        jg .next
+        push di
+        mov di, [bp + GD_SPANS - 10]
+        mov [es:di + 2], ax
+        mov [es:di + 4], cx
+        mov [es:di + 6], bx
+        mov ax, dx                      ; the row's place in the page
+        sub ax, [cs:v_y0]
+        push dx
+        mul word [cs:v_row]
+        pop dx
+        sub ax, [cs:v_x0]
+        stosw
+        add word [bp + GD_SPANS - 10], 8
+        pop di
+.next:  pop ax
+        test ah, 0x80
+        jz .run
+        jmp .row
+.rep:   lodsb                           ; (AL: the next pixel's REP number)
+        movzx ax, al
+        xchg ax, bx
+        mov bl, [es:GH_REP + bx]
+        xchg ax, bx
+        ret
+.full:  pop ax
+        pop ax
+.flush: push es
+        pop fs
+        call vga_save
+        mov es, [cs:v_seg]
+        xor cx, cx                      ; the plane
+.plane: mov dx, 0x3C4                   ; write to this plane, read from it
+        mov al, 2
+        mov ah, 1
+        shl ah, cl
+        out dx, ax
+        mov dx, 0x3CE
+        mov al, 4
+        mov ah, cl
+        out dx, ax
+        mov si, GH_SPANS
+.gspan: cmp si, [bp + GD_SPANS - 10]
+        jae .nplane
+        mov ax, cx
+        sub ax, [fs:si + 2]
+        and ax, 3                       ; how far on its first pixel on this plane is
+        mov bx, [fs:si + 6]
+        cmp word [bp + GD_STEP - 10], 0
+        jg .on
+        sub bx, ax
+        sub bx, ax
+.on:    add bx, ax
+        add ax, [fs:si + 2]
+        mov dx, [fs:si + 4]
+        sub dx, ax
+        jl .nspan
+        shr dx, 2
+        inc dx                          ; DX: how many
+        shr ax, 2
+        add ax, [fs:si]
+        mov di, ax
+        push si
+        mov si, bx
+.pix:   mov bl, [es:di]                 ; what is under it, and the figure's: BLEND's
+        mov bh, [fs:si]
+        mov al, [fs:bx]
+        stosb
+        add si, [bp + GD_STEP - 10]
+        dec dx
+        jnz .pix
+        pop si
+.nspan: add si, 8
+        jmp .gspan
+.nplane:
+        inc cx
+        cmp cx, 4
+        jb .plane
+        call vga_restore
+.out:   add sp, 12
+        pop fs
+        pop di
+        pop si
+        pop ds
+        pop bp
+        ret
 
 ; the VGA's registers the shadows change, kept and put back
 vga_save:
@@ -23811,6 +24083,11 @@ keep:   mov ax, [cs:psp]
         mov es, ax
         mov word [es:0], POOL_PARAS
 .no_pool:
+        mov bx, GHOST_PARAS             ; the see-through figures' tables (GHOST_DRAW), if there's room
+        call umb_alloc
+        jc .no_ghost
+        mov [cs:ghost_seg], ax
+.no_ghost:
         pop dx
         mov ax, 3100h
         int 21h
@@ -24064,6 +24341,9 @@ install:                        ; DS = ES = PSP, CS = the image
 %endif
         mov ax, 2500h + VEC_SCROLL
         mov dx, probe_scroll
+        int 21h
+        mov ax, 2500h + VEC_GHOST
+        mov dx, probe_ghost
         int 21h
         mov ax, 2500h + VEC_HIT
         mov dx, probe_hit
@@ -24416,12 +24696,12 @@ psp     dw 0
 busy    db 'DSCLOG: interrupts 60h-65h or 81h-FFh are in use (already loaded?). Not loaded.', 13, 10, '$'
 all_vectors db VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR, VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK, VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_MISSILE_LINE, VEC_USE_ITEM, VEC_TWO, VEC_DOUBLE, VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY, VEC_NAMES_SIZE, VEC_NAMES_FILL, VEC_STEALTH, VEC_TYPES_SIZE, VEC_TYPES_FILL, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED, VEC_SPELL_TEXT, VEC_CHUNK_ID, VEC_FLOOR_ALL, VEC_FLOOR_RECT, VEC_REDRAW, VEC_REDRAW_ALL, VEC_SCROLL, VEC_HIT, VEC_ITEM_BOX, VEC_BELT, VEC_SAVE_PAGE, VEC_SAVE_CLICK, VEC_ITEM_WEAPON, VEC_ITEM_SKIP, VEC_ITEM_ARMOUR, VEC_SCRIPT_RAND, VEC_XP_NEXT, VEC_ATTACKS, VEC_SPEC_DAMAGE, VEC_DAM_LINE, VEC_VIEW_DAM, VEC_CAN_USE, VEC_NO_CAST, VEC_MC_CON, VEC_MC_UNCON, VEC_WP_DISC_WIN, VEC_WP_SPHERE_WIN, VEC_WP_DISC_CLICK, VEC_WP_SPHERE_CLICK, VEC_WP_SHOWN, VEC_WP_CLASS, VEC_LV_PICK, VEC_PK_COUNT, VEC_PK_WIN, VEC_PK_LEFT, VEC_PK_TITLE, VEC_PK_FILL, VEC_PK_CLICK, VEC_EF_ROWS, VEC_HP_BEST, VEC_TOME, VEC_INIT, VEC_THAC0, VEC_SLOTS, VEC_SLOT_LEVEL
             db VEC_PSP_USE, VEC_PSP_TABLE, VEC_PSP_DEFENCE, VEC_CURE, VEC_PSP_KEEP, VEC_RANGER_CAST, VEC_PSP_KEEP_DX
-            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_POINTER, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC, VEC_TICK, VEC_POISON, VEC_ARROW, VEC_OVR_BUF, VEC_HEAP, VEC_FLIP, VEC_PACE_PASS, VEC_PACE_DRAW, VEC_WORN, VEC_TAKE, VEC_SPHERE
+            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_POINTER, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC, VEC_TICK, VEC_POISON, VEC_ARROW, VEC_OVR_BUF, VEC_HEAP, VEC_FLIP, VEC_PACE_PASS, VEC_PACE_DRAW, VEC_WORN, VEC_TAKE, VEC_SPHERE, VEC_GHOST
 all_vectors_end:
 
         align 16, db 0
 image_len equ $ - $$
 file_len  equ image_len + 32
-        times -(image_len + STACK > 0x10000) db 0   ; (a negative count: past the helper's 64 KB segment)
+        times -(image_len > 0x10000) db 0   ; (a negative count: past the helper's 64 KB segment)
 ; the memory past the image to load in: the install's stack
 LOAD_EXTRA equ (STACK + 15) / 16

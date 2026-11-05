@@ -44,6 +44,7 @@ VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED = 0xE7, 0xE6
 VEC_SPELL_TEXT, VEC_CHUNK_ID = 0xE2, 0xE1
 VEC_FLOOR_ALL, VEC_FLOOR_RECT, VEC_REDRAW, VEC_REDRAW_ALL = 0xE0, 0xDF, 0xDE, 0xDD
 VEC_SCROLL, VEC_HIT, VEC_ITEM_BOX = 0xDC, 0xDB, 0xDA
+VEC_GHOST = 0x62  # (a see-through figure: DSCLOG's PROBE_GHOST)
 VEC_BELT = 0xD9
 VEC_SAVE_PAGE, VEC_SAVE_CLICK = 0xD8, 0xD7
 VEC_ITEM_WEAPON, VEC_ITEM_SKIP, VEC_ITEM_ARMOUR = 0xD6, 0xD5, 0xD4  # (item saves)
@@ -629,6 +630,9 @@ PATCHES = (
     # 3118:002E", its first 3 bytes (the segment after them is relocated as the game loads: A9h
     # makes the 5 a "test ax,<segment>", which DSCLOG returns past)
     Patch("scroll", 0x1CAAC, bytes.fromhex("9a2e00"), bytes((0xCD, VEC_SCROLL, 0xA9))),
+    # a thing on the map drawn ("call far 1A0A:3180" in its routine, 25E0Ch; DI the thing): a hidden
+    # or invisible one drawn see-through by DSCLOG (PROBE_GHOST), back past the call's segment
+    Patch("ghost", 0x25EBE, bytes.fromhex("9a8031"), bytes((0xCD, VEC_GHOST, 0x90))),
     # targeting (DSCLOG's TARGETING): the start, "push bp / mov bp,sp / sub sp,10h", of the routine
     # that finds the thing under the pointer
     Patch("hit", 0x25B52, bytes.fromhex("558bec83ec10"), _interrupt(VEC_HIT, 6)),

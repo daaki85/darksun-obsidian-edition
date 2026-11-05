@@ -401,6 +401,11 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   played by its number (the mod's 140 and 141 were silent until DSCLOG lent itself entries 131 and
   132 for the call), and the game keeps the last clip loaded under a number (one lent entry for
   both sounds played the first again).
+- **See-through figures** (2026-11-05): `ghostchk.py` shows DSCLOG's block (GHOST_SEG), GHOST_ON and
+  the tables; `ghostchk.py 0` marks thing 0 (the leader) see-through and has the view drawn again,
+  for a look without a fight or a spell. Outside a fight the party is one figure, the leader's;
+  walking, it spreads into four. Unicorn tests that look for "mov ax,25xxh / mov dx,handler" in
+  the image must search from the end: the same bytes for vector 62h turn up earlier by chance.
 - **route.py won't walk through a figure** (2026-11-05): with someone standing at (99, 31), in
   front of Kurzak's entryway (99, 33-34, open), it found no way south from his stop and gave up;
   the live grid showed the doorway clear. Walk round with clicks, or wait for him to move.

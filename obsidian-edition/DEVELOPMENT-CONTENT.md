@@ -23,6 +23,7 @@
 - [Elves and half-elves](#elves-and-half-elves)
 - [Shadows](#shadows)
 - [Dust](#dust)
+- [See-through figures](#see-through-figures)
 
 ## The game's script bugs
 
@@ -1274,3 +1275,39 @@ fades, by a pattern fixed to the map, so a puff looks the same however much of
 it the game draws again. While anyone walks, the rectangle the game draws again
 round what moved is made to take the puffs in; once everyone stands, DSCLOG has
 the view drawn again a few times a second until the last puff is gone.
+
+## See-through figures
+
+([In the features page](FEATURES.md#see-through-figures).)
+
+How: the game draws each thing on the map through one call, `call far 1A0A:3180` in its routine
+at 25E0Ch (25EBEh; DI the thing, the call's arguments the page, x, y, mirrored, the picture and
+the frame). Gamepatch's `ghost` puts DSCLOG's `INT 62h` (`PROBE_GHOST`) over it. A thing that is
+neither a hidden party member (its `STEALTH` bit, which `PROBE_STEALTH` clears at the attack) nor
+marked in `GHOST_TAB` goes on to the game's routine as ever. A see-through one DSCLOG draws itself
+(`GHOST_DRAW`):
+- it decodes the frame's runs, each pixel mapped to one of 32 colours (`REP`), into a buffer, and
+  notes each run within the page (the page's bounds and memory found as the shadows find them,
+  `PAGE_SETUP`); a mirrored frame's pixels are read from the run's other end;
+- then, a plane at a time (the VGA's map mask and read map), it reads the pixel under each and
+  writes `BLEND[rep][under]`, the colour nearest the halfway mix.
+Every pass that draws figures draws the floor first (the routines `PROBE_FLOOR` hooks), so the
+floor read is the fresh one, with the shadows and the figures behind already on it.
+
+The game draws an invisible creature as any other. Its rules for it are numbers only (7BD4Bh,
+"can't see": the attacker Blind, or the target Invisible, effect 23, or Invisible to Undead, 24,
+against the undead, unless the attacker has Detect Invisibility, 15; its two callers give -4 to
+hit, 7C6B8h, and +4 to the target's save against a spell, 79E99h). Among the game's foes only the
+psurlons turn invisible: their psionic list (37F0:001Ch, list 8) has Superior Invisibility, which
+puts on effect 23. No foe's spell list (3FB9:0110h) has an invisibility spell, and no script or
+item makes a creature invisible.
+
+`dsloader/ghost.py` keeps `GHOST_TAB` (520 bits) from the game's effects: a party member with
+effect 23 always, anyone else only while no party member has effect 15. It makes `REP` (the
+palette's colours 16-223, the ones the game doesn't animate, cut into 32 boxes by median cut) and
+`BLEND` (32 x 256) from DSCLOG's copy of the palette each time DSCLOG reads it again with `DARK`
+(0.2 s of Python, in a thread, kept by palette), and writes them into DSCLOG's block, 885
+paragraphs of upper memory taken at `KEEP` (`GHOST_SEG`, header +1826; none, no see-through
+figures). `GHOST_ON` (+1828) is 0 until they are written. The view is drawn again when a figure
+turns see-through or solid (`TSR_VIEW_REDRAW`). Seen in DOSBox, 2026-11-05: a figure marked drew
+half see-through over floor, wall and its shadow, facing either way and walking.

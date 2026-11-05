@@ -547,6 +547,57 @@ class UseItemTests(unittest.TestCase):
         self.assertEqual(seen, [(5, 140), (5, 141)])
         self.assertEqual(bytes(mu.mem_read(table + 131 * 6, 12)), game_entries)
 
+    def test_ghost_dispatch(self):
+        """PROBE_GHOST, over the game's "call far 1A0A:3180" drawing a thing (DI): with GHOST_ON 0,
+        or a thing neither hidden (STEALTH, for 0-3) nor marked in GHOST_TAB, the game's routine is
+        called with the call's arguments as they were, and the way on is past the call's segment;
+        a see-through one isn't given to the game's routine (DSCLOG draws it: here a frame the
+        picture doesn't have, so nothing)."""
+        from dsloader import ghost
+        from dsloader.gamepatch import VEC_GHOST
+        mu, calls = self.mu, []
+        image = load_image()
+        at = image.rfind(bytes((0xB8, VEC_GHOST, 0x25, 0xBA)))  # (the install's: the same bytes
+        self.assertGreater(at, 0)                                  #   come earlier, by chance)
+        handler = struct.unpack_from("<H", image, at + 4)[0]
+        draw = (GAME_DS - 0x4356 + 0x1A0A) * 16 + 0x3180
+        mu.mem_write(draw, b"\xcb")  # retf
+        seg = 0x8800
+        mu.mem_write(self.hdr + ghost.TSR_GHOST_SEG, struct.pack("<H", seg))
+        mu.mem_write(seg * 16 + ghost.GH_TAB, bytes(65))
+        picture = 0x8000
+        mu.mem_write(picture * 16, bytes(16))  # (a picture of no frames)
+
+        def called(uc, address, size, _):
+            sp = uc.reg_read(r.UC_X86_REG_SS) * 16 + uc.reg_read(r.UC_X86_REG_SP)
+            calls.append(struct.unpack("<7H", uc.mem_read(sp + 4, 14)))
+        mu.hook_add(UC_HOOK_CODE, called, begin=draw, end=draw)
+        site = 0x0600
+        args = (3, 100, 80, 1, 0, picture, 2)  # page, x, y, mirrored, the picture (offset, segment), frame
+
+        def run(thing):
+            sp = 0x7F0 - 14
+            mu.mem_write(SS * 16 + sp, struct.pack("<7H", *args))
+            sp -= 6
+            mu.mem_write(SS * 16 + sp, struct.pack("<3H", site + 2, CALLER, 0x0202))  # (the INT's frame)
+            for name, value in dict(cs=TSR, ds=GAME_DS, ss=SS, esp=sp, ebp=BP, edi=thing, esi=0x4444).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(TSR * 16 + handler, CALLER * 16 + site + 5, count=20000)
+            self.assertEqual((mu.reg_read(r.UC_X86_REG_SP), mu.reg_read(r.UC_X86_REG_DI), mu.reg_read(r.UC_X86_REG_SI)),
+                             (0x7F0 - 14, thing, 0x4444))
+        mu.mem_write(self.hdr + ghost.TSR_GHOST_ON, struct.pack("<H", 0))
+        mu.mem_write(self.hdr + 204, struct.pack("<H", 1))  # (party member 0 hidden)
+        run(0)
+        self.assertEqual(calls, [args])  # (GHOST_ON 0: as ever)
+        mu.mem_write(self.hdr + ghost.TSR_GHOST_ON, struct.pack("<H", 1))
+        for thing in (0xFFFF, 1, 5):  # (a wall; a party member not hidden; a creature not marked)
+            run(thing)
+        self.assertEqual(calls, [args] * 4)
+        run(0)  # (hidden: DSCLOG's)
+        mu.mem_write(seg * 16 + ghost.GH_TAB, bytes((0x20,)))  # (thing 5 invisible)
+        run(5)
+        self.assertEqual(len(calls), 4)
+
 @unittest.skipIf(Uc is None, "unicorn is not installed")
 class BeltTests(unittest.TestCase):
     """PROBE_BELT, at the end of the game's thief skill routine (where "mov ax,si" was): a thief

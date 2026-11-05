@@ -84,6 +84,7 @@ running the game, the Loader's window and its dice log are in the
   - [What the party wears](#what-the-party-wears)
   - [Shadows](#shadows)
   - [Dust](#dust)
+  - [See-through figures](#see-through-figures)
   - [Magic items' icons](#magic-items-icons)
   - [Spells on the ground](#spells-on-the-ground)
 - [Controls](#controls)
@@ -2205,6 +2206,27 @@ stand in front of them, as with the shadows. Switch it off on the Options tab.
 ![The party walking across the arena's sand: puffs of dust behind them, spreading and fading](docs/dust.png)
 
 How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#dust).
+
+### See-through figures
+
+A thief or ranger hidden in shadows and unheard in a fight (see [Hiding in
+shadows to backstab](#hiding-in-shadows-to-backstab)), and anyone invisible (the
+Invisibility spells; among the game's foes only the psurlons, by their Superior
+Invisibility), is drawn half see-through: each pixel halfway between the
+figure's colour and what lies under it, so the floor, a wall or a shadow shows
+through. The hidden thief turns solid again with the attack that gives them
+away, or as the turn ends. A party member who is invisible is always drawn so;
+an invisible enemy is drawn solid while one of the party detects invisibility
+(the spell, or [Shadowseeker](ITEMS.md) readied), as the party sees it then. The
+game itself draws the invisible like anyone else: being unseen only makes them
+harder to hit (4 worse) and better at shrugging off a spell aimed at them (4
+better), for whoever can't detect invisibility. Switch it off on the Options
+tab. It needs upper memory to spare (about 14 KB; with `UMBPLUS.COM`, as the
+Loader starts the game, there is plenty).
+
+![Gerakis in the slave pens drawn as ever (left) and see-through (right): the floor, the wall below and his shadow show through him](docs/see-through.png)
+
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#see-through-figures).
 
 ### Magic items' icons
 
