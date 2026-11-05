@@ -101,6 +101,9 @@ notes](PATCH-NOTES.md).
   (`d20 = 13 +2 Blessed = 15`, a doubled d20 against fire) stayed at its whole length in short and
   at the least; now it's shortened to its total against the need (test `test_save_with_modifiers`).
   The item reports' switches follow the Options tab's changes in the Loader's window.
+- A party member the player names Kalzith or Semyon, dying, no longer counts as his death (the
+  check skips the party's places); a script repair too short for its jump is left out rather
+  than shifting the script (none is, today).
 
 **Fixed: the game's code**
 - **Psionic Blast knocks out, not kills:** while a party member has the blast's hit points still

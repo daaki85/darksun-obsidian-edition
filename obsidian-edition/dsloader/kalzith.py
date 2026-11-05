@@ -668,11 +668,11 @@ DEAD_STATUS = (4, 5)  # a creature's status: dying, dead (as stealth.py)
 
 def dead(gd, name: str, seen: int = CREATURES_SEEN) -> bool:
     """Whether a creature named NAME is among the first SEEN, dead (no hit points, or dying or
-    dead)."""
+    dead): not a party member (one the player named so)."""
     table = gd.creatures(seen)
     want = name.encode("ascii") + b"\0"
     size = game.CREATURE_SIZE
-    for at in range(0, len(table) - size + 1, size):
+    for at in range(game.PARTY_SIZE * size, len(table) - size + 1, size):
         rec = table[at:at + size]
         if rec[game.CREATURE_NAME:game.CREATURE_NAME + len(want)] != want:
             continue

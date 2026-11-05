@@ -204,7 +204,7 @@ class SemyonTests(unittest.TestCase):
                 rec = bytearray(size)
                 struct.pack_into("<h", rec, 0, hp)
                 rec[game.CREATURE_NAME:game.CREATURE_NAME + 7] = b"Semyon\0"
-                self.table, self.flags = bytes(size * 3) + bytes(rec), set()
+                self.table, self.flags = bytes(size * game.PARTY_SIZE) + bytes(rec), set()
 
             def creatures(self, count):
                 return self.table

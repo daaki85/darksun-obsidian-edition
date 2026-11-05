@@ -277,7 +277,7 @@ class DeathTests(unittest.TestCase):
         rec[game.CREATURE_NAME:game.CREATURE_NAME + len(name) + 1] = name.encode() + b"\0"
 
         class GD:
-            table, flags = bytes(size * 2) + bytes(rec), set()
+            table, flags = bytes(size * game.PARTY_SIZE) + bytes(rec), set()
 
             def creatures(self, count):
                 return self.table
@@ -294,6 +294,9 @@ class DeathTests(unittest.TestCase):
         self.assertTrue(kalzith.dead(self._gd("Kalzith", 0), "Kalzith"))
         self.assertTrue(kalzith.dead(self._gd("Kalzith", 3, status=5), "Kalzith"))
         self.assertFalse(kalzith.dead(self._gd("Kalzithx", 0), "Kalzith"))
+        party = self._gd("Kalzith", 0)  # (a party member the player named so: not him)
+        party.table = party.table[game.PARTY_SIZE * game.CREATURE_SIZE:]
+        self.assertFalse(kalzith.dead(party, "Kalzith"))
 
     def test_watch(self):
         gd = self._gd("Kalzith", -2)
