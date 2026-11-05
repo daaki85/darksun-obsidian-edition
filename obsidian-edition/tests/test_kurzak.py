@@ -47,8 +47,8 @@ def strings(ops):
 
 class KurzakTests(unittest.TestCase):
     def test_the_call_asks_first(self):
-        """The call's line becomes a jump to the test: Legcrusher there, the game's line; gone,
-        Kurzak's own; then back to the click after it."""
+        """The call's line becomes a jump to the test: Legcrusher alive (DEAD clear), the game's
+        line; dead, Kurzak's own; then back to the click after it."""
         script = call()
         out = k.with_notice(script, FIELDS, k.CALL_SCRIPT)
         ops = gpl.decode(out, FIELDS)
@@ -58,8 +58,8 @@ class KurzakTests(unittest.TestCase):
         self.assertEqual(jump.args, [("n", len(script))])
         added = [o for o in ops if o.at >= len(script)]
         self.assertEqual(added[0].code, 0x18)
-        where = next(o for o in gpl.walk(added[0].args) if o.code == k.WHERE)
-        self.assertEqual(where.args, [("n", -k.KURZAK), ("n", -k.LEGCRUSHER)])
+        self.assertEqual(added[0].args[0], k.HERE)  # (the flag read, not whether he is on the map)
+        self.assertIn(("var", 0x8D, k.DEAD), added[0].args[0][1])
         self.assertEqual(strings(added), [k.LINES[0][1], "Legcrusher! ... Legcrusher? Where has that lump got to? ",
                                           "Gladiators! Get up here yourselves! "])
         self.assertEqual(added[-1].args, [("n", gpl.decode(script, FIELDS)[2].at)])  # (back to the click)
@@ -103,3 +103,39 @@ class KurzakTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class WatchTests(unittest.TestCase):
+    """DEAD set once Legcrusher is seen dead; not while he lives, nor without the flags."""
+
+    def _gd(self, hp, ready=True):
+        import struct
+        from dsloader import game
+        size = game.CREATURE_SIZE
+        rec = bytearray(size)
+        struct.pack_into("<h", rec, 0, hp)
+        rec[game.CREATURE_NAME:game.CREATURE_NAME + 11] = b"Legcrusher\0"
+
+        class GD:
+            table, flags = bytes(size * game.PARTY_SIZE) + bytes(rec), set()
+
+            def creatures(self, count):
+                return self.table
+
+            def flags_ready(self):
+                return ready
+
+            def flag(self, n):
+                return n in self.flags
+
+            def set_flag(self, n, on=True):
+                self.flags.add(n)
+        return GD()
+
+    def test_watch(self):
+        self.assertFalse(k.watch(self._gd(40)))
+        gd = self._gd(0)
+        self.assertTrue(k.watch(gd))
+        self.assertIn(k.DEAD, gd.flags)
+        self.assertFalse(k.watch(gd))  # (once)
+        self.assertFalse(k.watch(self._gd(0, ready=False)))

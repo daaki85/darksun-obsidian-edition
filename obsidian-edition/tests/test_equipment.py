@@ -91,6 +91,22 @@ class CountedAcTests(unittest.TestCase):
         self.lists(50, 51, 9999)
         self.assertEqual(self.ac(), 5)
 
+    def test_helm_before_dsclog_sets_it(self):
+        """A helm whose type still reads AC 0 (DSCLOG writes its AC only when the game first counts
+        one): AC 1 with Helms give AC 1, 0 without (a champion's bone helm in the Look box,
+        2026-11-05)."""
+        at = ITEMS + 20 * game.ITEM_SIZE
+        struct.pack_into("<H", self.m, at + game.ITEM_TYPE, game.BONE_HELM_TYPE)
+        self.m[at + game.ITEM_PLUS] = 0
+        typ = ITEM_TYPES + game.BONE_HELM_TYPE * game.ITEM_TYPE_SIZE
+        self.m[typ + 0x0F], self.m[typ + 0x12] = 0x80, 0
+        self.lists(50, 51, 9999)
+        gd = game.GameData(self.log.guest, DS)
+        gd.rules = game.RULE_HELMS
+        self.assertEqual(gd.counted_ac(STALKER), 6)  # 10, DEX -3, the helm 1
+        gd.rules = 0
+        self.assertEqual(gd.counted_ac(STALKER), 7)
+
     def test_held_armour_doesnt_count(self):
         """In the held list (+0Ah: weapons; earlier versions' starting gear put armour there), as
         the game's routine: no AC (Gerakis in a fight, 2026-11-02)."""

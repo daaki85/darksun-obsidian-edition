@@ -97,6 +97,18 @@ notes](PATCH-NOTES.md).
   the game's can't be read; crash reports show the new spells' old setting name, the ring and the
   panel's level as used; a failure counting effects' charges no longer loses the pass's lines.
 - DSCLOG's message when its interrupts are taken names them right (81h-FFh, not 8Ch-FEh).
+- **Kurzak spoke of Legcrusher as gone while he lived** (seen in the champions' run): his lines
+  asked whether Legcrusher was on the map, but script 136 makes him only as Kurzak calls (after
+  the call's first line), and he is off the map again once he has fetched the party, so "he never
+  came back" came with Legcrusher beside the party. They ask the Loader's flag 797 now, which the
+  dice log sets once it sees him dead (`kurzak.watch`; 797 is the top of 784-797, kept for
+  Alagorn's menus, which use none). A save where he was killed with an earlier version has the
+  game's lines until the flag is set (it can't be, as he's gone). Test `WatchTests`.
+- **The Look box's AC left out Helms give AC 1** before anyone wearing that kind of helm had been
+  attacked (the four champions with helms, one worse than in the fight): DSCLOG writes a helm's AC
+  into its type's record only when the game's AC routine first counts one, and the Loader read
+  the record's 0. `counted_ac` gives a helm the rule's AC itself (`game.HELM_TYPES`). Test
+  `test_helm_before_dsclog_sets_it`.
 - **The combat log panel shortened only plain saves:** a save showing its modifiers or total
   (`d20 = 13 +2 Blessed = 15`, a doubled d20 against fire) stayed at its whole length in short and
   at the least; now it's shortened to its total against the need (test `test_save_with_modifiers`).

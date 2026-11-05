@@ -85,6 +85,9 @@ RING_TYPE = 102
 # on saves as a ring's does
 GAME_TYPES = 115
 SHORT_SWORD_TYPE, CLOAK_TYPE, BONE_HELM_TYPE = GAME_TYPES, GAME_TYPES + 1, GAME_TYPES + 2
+# the helms' item types (DSCLOG's HELM_LEATHER, HELM_METAL, HELM_OTHER, HELM_BONE): their AC is DSCLOG's
+# (1 with RULE_HELMS, else 0), written into the type's record only once the AC routine first counts one
+HELM_TYPES = (5, 89, 109, BONE_HELM_TYPE)
 BONE_SHORT_SWORD_TYPE, BONE_AXE_TYPE = GAME_TYPES + 3, GAME_TYPES + 4  # (a new warrior's, weaponchoice.py)
 OBSIDIAN_SHORT_SWORD_TYPE, OBSIDIAN_AXE_TYPE = GAME_TYPES + 5, GAME_TYPES + 6
 METAL_SHORT_SWORD_TYPE = GAME_TYPES + 7  # a plain one (Kurzak's type is his alone: Shadowseeker)
@@ -2328,7 +2331,7 @@ class GameData:
         """A creature's AC as the game's AC routine (58DD3h) counts it for each attack, spells' part
         aside: the sheet's base, less each worn item's plus and its type's AC where the type counts
         for AC (+0Fh 80h; a shield too), a fifth of a gladiator's level (in armour: DSCLOG's PROBE_WORN)
-        and the DEX adjustment. Worn: in the first item list, +08h, whatever the slot byte says
+        and the DEX adjustment; a helm's AC as DSCLOG gives it (HELM_TYPES). Worn: in the first item list, +08h, whatever the slot byte says
         (the inventory screen puts all but weapons there; the routine counts nothing in the held
         list, +0Ah, or the backpack's, +0Ch: pickpocket.list_for). As DSCLOG's THORNS_AC counts
         it. None without a record and sheet."""
@@ -2347,8 +2350,13 @@ class GameData:
                     break
         ac += self.dex_ac(rec[CREATURE_ABILITIES + 1])
         for _, item, typ in self._worn(creature, CREATURE_ITEM_LISTS[:1]):
-            if struct.unpack_from("<H", item, ITEM_TYPE)[0] < NO_ITEM and typ[0x0F] & 0x80:
-                ac -= struct.unpack_from("b", item, ITEM_PLUS)[0] + struct.unpack_from("b", typ, 0x12)[0]
+            kind = struct.unpack_from("<H", item, ITEM_TYPE)[0]
+            if kind < NO_ITEM and typ[0x0F] & 0x80:
+                # (a helm's AC as DSCLOG's PROBE_RING_AC gives it: its type's record reads 0 until
+                # then, as before anyone wearing one has been attacked)
+                type_ac = (1 if self.rules & RULE_HELMS else 0) if kind in HELM_TYPES \
+                    else struct.unpack_from("b", typ, 0x12)[0]
+                ac -= struct.unpack_from("b", item, ITEM_PLUS)[0] + type_ac
         return ac
 
     def dex_ac(self, dex: int) -> int:
