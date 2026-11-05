@@ -257,8 +257,7 @@ once. Experience is split evenly between them, so each rises more slowly; hit
 points are shared out ([hit points](#hit-points)); and the strictest class
 decides what may be worn and wielded
 ([what each class may use](#what-each-class-may-use)). **Gladiators never
-multiclass.** Each class's section below lists its combinations and the races
-that can take them; in all:
+multiclass.** The combinations, by race:
 
 | Race | Two classes | Three classes |
 |---|---|---|
@@ -409,16 +408,7 @@ starting gear, also a sling.
 
 **More than one class.**
 
-- *Multiclass:* cleric/fighter (all but humans); druid/fighter (half-elf,
-  halfling, mul, thri-kreen); fighter/preserver (elf, half-elf);
-  fighter/psionicist (all but humans); fighter/thief (dwarf, elf, half-elf,
-  halfling, mul); cleric/fighter/preserver (elf, half-elf);
-  cleric/fighter/psionicist (dwarf, elf, half-elf, thri-kreen);
-  cleric/fighter/thief (elf, half-elf, mul); druid/fighter/preserver
-  (half-elf); druid/fighter/psionicist (half-elf, thri-kreen);
-  druid/fighter/thief (half-elf, mul); fighter/preserver/psionicist and
-  fighter/preserver/thief (elf, half-elf); fighter/psionicist/thief (dwarf,
-  elf, half-elf, halfling, mul).
+- *Multiclass:* the combinations and their races are in [More than one class](#more-than-one-class).
 - *Dual class:* with STR 15, a human fighter can become a cleric, druid,
   preserver, psionicist or thief, never a gladiator or ranger. Its weapon
   specs sleep with the class; once awake, its specialized weapon specs stay
@@ -541,12 +531,7 @@ Stalker a cloak too).
 
 **More than one class.**
 
-- *Multiclass:* cleric/ranger and psionicist/ranger (elf, half-elf,
-  half-giant, halfling, thri-kreen); preserver/ranger (elf, half-elf);
-  ranger/thief (elf, half-elf, halfling); cleric/preserver/ranger,
-  cleric/ranger/thief, preserver/psionicist/ranger, preserver/ranger/thief
-  (elf, half-elf); cleric/psionicist/ranger (elf, half-elf, thri-kreen);
-  psionicist/ranger/thief (elf, half-elf, halfling).
+- *Multiclass:* the combinations and their races are in [More than one class](#more-than-one-class).
 - *Dual class:* with WIS 15, a human ranger can become a cleric, preserver,
   psionicist or thief (a druid must be neutral, a ranger good). A human of
   another class with WIS 17 and a good alignment can become a ranger. Some kits rule out a change of class
@@ -617,16 +602,7 @@ too).
 
 **More than one class.**
 
-- *Multiclass:* cleric/thief (elf, half-elf, halfling, mul); druid/thief
-  (half-elf, halfling, mul); fighter/thief and psionicist/thief (dwarf, elf,
-  half-elf, halfling, mul); preserver/thief (elf, half-elf); ranger/thief
-  (elf, half-elf, halfling); cleric/fighter/thief (elf, half-elf, mul);
-  druid/fighter/thief (half-elf, mul); fighter/psionicist/thief (dwarf, elf,
-  half-elf, halfling, mul); psionicist/ranger/thief (elf, half-elf,
-  halfling); cleric/preserver/thief, cleric/psionicist/thief,
-  cleric/ranger/thief, fighter/preserver/thief, preserver/psionicist/thief,
-  preserver/ranger/thief (elf, half-elf); druid/preserver/thief,
-  druid/psionicist/thief (half-elf).
+- *Multiclass:* the combinations and their races are in [More than one class](#more-than-one-class).
 - *Dual class:* with DEX 15, a human thief can become a cleric, druid,
   fighter, gladiator, preserver, psionicist or ranger. Some kits rule out a change of class
   ([which](KITS.md#kits-that-rule-out-classes-and-each-other)).
@@ -688,14 +664,7 @@ Each kit's gains, costs and starting gear:
 
 **More than one class.**
 
-- *Multiclass:* with cleric, fighter, psionicist, ranger or thief (elf,
-  half-elf), with druid (half-elf); in threes cleric/fighter/preserver,
-  cleric/preserver/psionicist, cleric/preserver/ranger,
-  cleric/preserver/thief, fighter/preserver/psionicist,
-  fighter/preserver/thief, preserver/psionicist/ranger,
-  preserver/psionicist/thief, preserver/ranger/thief (elf, half-elf), and
-  druid/fighter/preserver, druid/preserver/psionicist, druid/preserver/thief
-  (half-elf).
+- *Multiclass:* the combinations and their races are in [More than one class](#more-than-one-class).
 - *Dual class:* with INT 15, a human preserver can become a cleric, druid,
   fighter, gladiator, psionicist, ranger or thief. A human who becomes a
   preserver chooses its first two spells. Some kits rule out a change of class
@@ -761,15 +730,7 @@ and fire a chatkcha; water none).
 
 **More than one class.**
 
-- *Multiclass:* cleric/fighter and cleric/psionicist (all but humans);
-  cleric/ranger (elf, half-elf, half-giant, halfling, thri-kreen);
-  cleric/thief (elf, half-elf, halfling, mul); cleric/preserver (elf,
-  half-elf); cleric/fighter/psionicist (dwarf, elf, half-elf, thri-kreen);
-  cleric/fighter/thief (elf, half-elf, mul); cleric/psionicist/ranger (elf,
-  half-elf, thri-kreen); cleric/fighter/preserver,
-  cleric/preserver/psionicist, cleric/preserver/ranger,
-  cleric/preserver/thief, cleric/psionicist/thief, cleric/ranger/thief (elf,
-  half-elf).
+- *Multiclass:* the combinations and their races are in [More than one class](#more-than-one-class).
 - *Dual class:* with WIS 15, a human cleric can become a fighter, gladiator,
   preserver, psionicist, ranger (if good) or thief; never a druid. Some kits rule out a change of class
   ([which](KITS.md#kits-that-rule-out-classes-and-each-other)).
@@ -833,12 +794,7 @@ Each kit's gains, costs and starting gear:
 
 **More than one class.**
 
-- *Multiclass:* druid/fighter and druid/psionicist (half-elf, halfling, mul,
-  thri-kreen); druid/thief (half-elf, halfling, mul); druid/preserver
-  (half-elf); druid/fighter/psionicist (half-elf, thri-kreen);
-  druid/fighter/thief (half-elf, mul); druid/fighter/preserver,
-  druid/preserver/psionicist, druid/preserver/thief, druid/psionicist/thief
-  (half-elf).
+- *Multiclass:* the combinations and their races are in [More than one class](#more-than-one-class).
 - *Dual class:* with WIS 15, a human druid can become a fighter, gladiator,
   preserver, psionicist or thief; never a cleric, nor a ranger (who must be
   good). A human of another class becomes a druid only if true neutral. Some kits rule out a change of class
@@ -893,18 +849,7 @@ starting gear, also leather arm and leg armour.
 
 **More than one class.**
 
-- *Multiclass:* cleric/psionicist and fighter/psionicist (all but humans);
-  druid/psionicist (half-elf, halfling, mul, thri-kreen); psionicist/ranger
-  (elf, half-elf, half-giant, halfling, thri-kreen); psionicist/thief (dwarf,
-  elf, half-elf, halfling, mul); preserver/psionicist (elf, half-elf);
-  cleric/fighter/psionicist (dwarf, elf, half-elf, thri-kreen);
-  fighter/psionicist/thief (dwarf, elf, half-elf, halfling, mul);
-  cleric/psionicist/ranger (elf, half-elf, thri-kreen);
-  psionicist/ranger/thief (elf, half-elf, halfling); druid/fighter/psionicist
-  (half-elf, thri-kreen); cleric/preserver/psionicist,
-  cleric/psionicist/thief, fighter/preserver/psionicist,
-  preserver/psionicist/ranger, preserver/psionicist/thief (elf, half-elf);
-  druid/preserver/psionicist, druid/psionicist/thief (half-elf).
+- *Multiclass:* the combinations and their races are in [More than one class](#more-than-one-class).
 - *Dual class:* with WIS 15, a human psionicist can become a cleric, druid,
   fighter, gladiator, preserver, ranger or thief. Some kits rule out a change of class
   ([which](KITS.md#kits-that-rule-out-classes-and-each-other)).

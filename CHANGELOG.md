@@ -163,6 +163,8 @@ notes](PATCH-NOTES.md).
   the Elven Leader's Gythka +2 against acid; the DEVELOPMENT pages' leftover memory history, the
   same-party load, the flags 756-783 and the scripts' 15 ability checks; the playtesting guide's
   DARKSAVE.GFF, its kill-by-pid example and the alarm door; a few alt texts.
+- The player's guide lists the multiclass combinations once, in its race table (More than one
+  class): each class's section had its own copy, seven in all, and now points there.
 
 ## Pull request #85 ([merged 2026-11-02](https://github.com/daaki85/darksun-obsidian-edition/pull/85))
 
