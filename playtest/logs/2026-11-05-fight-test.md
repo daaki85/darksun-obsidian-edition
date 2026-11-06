@@ -44,4 +44,4 @@
   - `VEC_GHOST` is now 0x80, in dsclog.asm and gamepatch.py. 78h-80h read 0000:0000 in the live table; 66h-6Fh are out (the game calls them looking for drivers), and so are 70h-77h (IRQs).
   - A new test, `test_vectors_distinct`, checks each of dsclog.asm's vectors is used once, none is in 66h-77h, and gamepatch's VEC_ names match. It fails on the old 62h.
   - `test_ghost_dispatch` now wants the install's bytes exactly once.
-- **Seen after the fix:** INT 62h goes to C91B:08EA (PROBE_AC) and INT 80h to C62D (PROBE_GHOST), and the drawing site reads `CD 80 90`. The attacks themselves at real ACs: to be checked in the next fight.
+- **Seen after the fix:** INT 62h goes to C91B:08EA (PROBE_AC) and INT 80h to C62D (PROBE_GHOST), and the drawing site reads `CD 80 90`. An attack after the fix went through the AC routine at a real AC: Gerakis on Cilla, "target AC 5", her counted AC (the rest script's click landed on her with the sword pointer, out of a fight: a slip of the tool, not the game).
