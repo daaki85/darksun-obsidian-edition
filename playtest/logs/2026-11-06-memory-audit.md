@@ -44,3 +44,10 @@ call (stepping on and off the gap at 1816,440 did nothing, 2026-11-06).
 - Error lines in the viewer and `play` mode are told apart by their text: one with an address in
   it would be a new line each pass (play.log could grow fast).
 - Everything else is bounded (the log panes 3,000 lines, the panel 200, the dialogue drained).
+
+## After the fixes
+
+`ghost.key` (the colours 16-223) and `dicelog.error_key`: in the fire room again, the Loader
+restarted with them (loadsave via toalarm.sh), `ghostwatch.py 75`: four palette copies in 75 s,
+GHOST_ON 1 in all 3,722 samples (every 20 ms). The old behaviour wasn't recorded live; the unit
+test shows it (GHOST_ON 0 at the first cycled colour).

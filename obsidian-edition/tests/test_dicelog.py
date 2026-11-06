@@ -1976,6 +1976,24 @@ class PassTests(unittest.TestCase):
         semyon.assert_called_once()
         kurzak.assert_called_once()
 
+    def test_error_key_by_where(self):
+        """Errors told apart by kind and where they were raised, not their text: the same failure
+        with another address in it each pass is one error (the window's and play.log's keys)."""
+        def fail(addr):
+            raise ValueError(f"write at {addr:#x} is outside guest RAM")
+        keys = set()
+        for addr in (0x10, 0x20, 0x30):
+            try:
+                fail(addr)
+            except ValueError as e:
+                keys.add(dicelog.error_key(e))
+        self.assertEqual(len(keys), 1)
+        try:
+            raise KeyError("x")
+        except KeyError as e:
+            self.assertNotIn(dicelog.error_key(e), keys)
+        self.assertEqual(dicelog.error_key(ValueError("never raised"))[0], "ValueError")
+
     def test_refused_write_said_once(self):
         """A write the Loader stopped (GuestMemory.refused, a deque) is said in the pass's lines and
         cleared: slicing the deque raised TypeError, every pass from then on."""

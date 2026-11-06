@@ -299,6 +299,15 @@ def _fine_timer() -> None:
     except (AttributeError, OSError):
         pass
 
+
+def error_key(err: BaseException) -> Tuple[str, str, int]:
+    """What tells one unexpected error from another, to say each once: its kind and where it was
+    raised, not its text (one carrying an address or a count would be new on every pass)."""
+    import traceback
+    frames = traceback.extract_tb(err.__traceback__)
+    where = frames[-1] if frames else None
+    return (type(err).__name__, where.filename if where else "", where.lineno or 0 if where else 0)
+
 class DiceLogError(Exception):
     pass
 
@@ -1182,8 +1191,8 @@ class DiceLog:
         came from, for a report); the pass's other lines are kept and the next pass goes on."""
         import traceback
         where = traceback.extract_tb(err.__traceback__)[-1]
-        key = (type(err).__name__, where.filename, where.lineno)  # (not its text: one carrying an
-        if key in self._errors_said:                              #   address would be said each pass)
+        key = error_key(err)
+        if key in self._errors_said:
             return []
         self._errors_said.add(key)
         return [f"Loader error in the dice log: {type(err).__name__}: {err} "

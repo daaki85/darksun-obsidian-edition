@@ -263,7 +263,7 @@ def cmd_play(args) -> None:
     import time
     import traceback
     from . import launch
-    from .dicelog import DiceLog, DiceLogError
+    from .dicelog import DiceLog, DiceLogError, error_key
     from .guestmem import GuestMemoryError
     from .process import ProcessError
     log_path = os.path.join(launch.HERE, "play.log")
@@ -339,7 +339,7 @@ def cmd_play(args) -> None:
                 time.sleep(0.2)
                 continue
             except Exception as e:  # (anything else: written once, and the dice log carries on, as the window's)
-                key = (type(e).__name__, str(e))
+                key = error_key(e)  # (by where, not its text: one with an address would be new each pass)
                 if key not in errors:
                     errors.add(key)
                     note("The dice log carries on after: " + traceback.format_exc())

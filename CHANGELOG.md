@@ -156,6 +156,18 @@ notes](PATCH-NOTES.md).
   again from the same Loader: the checks were read from `dos/GPLDATA.GFF` once a session, and the
   Loader writes it afresh at each start. Read again when the file changes, and a failed read is
   not kept. Test `LoadTests`.
+- **See-through figures drawn solid for a moment every 30 s, and their tables kept for good:**
+  the tables were kept by DSCLOG's whole palette copy, which changes every 30 s where the game
+  cycles fire's or water's colours (four in 75 s in the pens' fire room, measured); each change
+  made them again (0.2 s, with GHOST_ON 0 meanwhile: a hidden thief or an invisible figure drawn
+  solid) and kept another 13 KB, all session. Now they are kept by the colours the game never
+  cycles (16-223, `ghost.key`), the last eight (`MADE_KEPT`). Seen in DOSBox: four palettes in 75
+  s in the fire room, GHOST_ON 1 in all 3,722 samples. Test
+  `test_cycling_colours_keep_the_tables`.
+- **An error with an address in its text was said on every pass** in the Loader's window and
+  written to play.log each time in `play` mode (they told errors apart by their text); now all
+  three places key them as the dice log does, by kind and where raised (`dicelog.error_key`).
+  Test `test_error_key_by_where`.
 - **A dressed figure could be written past its room in the Loader's copy of SEGOBJEX.GFF:** the
   Dresser reckoned the room from the settings as they are now (Pictures' LOOKS), while the copy
   was written at the game's start with them as they were; with "Elves have pointed ears" changed

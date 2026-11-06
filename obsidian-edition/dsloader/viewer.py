@@ -1062,7 +1062,8 @@ class Viewer:
         """An error a refresh loop didn't expect: written to the dice log once for each kind (with
         where it came from, for a report), and the loop goes on."""
         import traceback
-        key = (what, type(err).__name__, str(err))
+        from .dicelog import error_key
+        key = (what,) + error_key(err)  # (by where, not its text: dicelog.error_key)
         seen = self.__dict__.setdefault("_loop_errors", set())
         if key in seen:
             return

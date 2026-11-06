@@ -124,6 +124,37 @@ class UpdateTests(unittest.TestCase):
         g.update(self.gd, self.HDR, False, 1, self.redraw)
         self.assertEqual(self.on(), 0)
 
+    def wait_on(self, g, palettes):
+        for _ in range(100):
+            g.update(self.gd, self.HDR, True, palettes, self.redraw)
+            if self.on():
+                return
+            time.sleep(0.05)
+        self.fail("tables never made")
+
+    def test_cycling_colours_keep_the_tables(self):
+        """DSCLOG's palette copy changing only in the colours the game cycles (fire, water: 11-15,
+        224-255, every 30 s): the tables kept, GHOST_ON left on, nothing made, the view not drawn
+        again. A change in colours 16-223 (another area) makes them anew. At most MADE_KEPT kept."""
+        g = ghost.Ghosts()
+        self.wait_on(g, 1)
+        m = self.gd.guest.mem
+        drawn = self.redraws
+        for n, colour in enumerate((12, 230, 250), start=2):
+            m[self.DAC + colour * 3] = (m[self.DAC + colour * 3] + 7) % 64
+            g.update(self.gd, self.HDR, True, n, self.redraw)
+            self.assertEqual(self.on(), 1)
+        self.assertEqual((self.redraws, len(g._made)), (drawn, 1))
+        m[self.DAC + 100 * 3] = (m[self.DAC + 100 * 3] + 9) % 64  # (another area's palette)
+        g.update(self.gd, self.HDR, True, 9, self.redraw)
+        self.assertEqual(self.on(), 0)  # (being made)
+        self.wait_on(g, 9)
+        self.assertEqual(len(g._made), 2)
+        for n in range(ghost.MADE_KEPT + 2):
+            m[self.DAC + 50 * 3] = n
+            self.wait_on(g, 20 + n)
+        self.assertEqual(len(g._made), ghost.MADE_KEPT)
+
     def test_no_block(self):
         struct.pack_into("<H", self.gd.guest.mem, self.HDR + ghost.TSR_GHOST_SEG, 0)
         g = ghost.Ghosts()

@@ -624,4 +624,4 @@ game's, DSCLOG's, the overlay buffer, the see-through tables, the music buffer, 
 `memsample.py LABEL` gives one line (free DOS memory after the game: 100,016 bytes on the map in the
 pens, 131-138 KB while the inventory or USE screen is open); `dacwatch.py SECONDS` shows DSCLOG's
 palette copy changing (every 30 s where the game cycles colours). The arena gate (the gap at
-1816,440) asks nothing before Kurzak's call.
+1816,440) asks nothing before Kurzak's call. `ghostwatch.py SECONDS` counts samples with GHOST_ON 0.

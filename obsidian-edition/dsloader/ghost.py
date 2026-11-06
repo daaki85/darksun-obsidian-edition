@@ -16,12 +16,17 @@ the palette as it is (DSCLOG's copy, made again with DARK as the area changes: s
     by cutting the palette's (the ones the game doesn't animate) into that many boxes;
   * BLEND (GH_BLEND): for each of those, a row of 256, the palette's colour nearest the halfway
     mix of it and each of the palette's.
-Made in a thread (about 0.2 s of Python), and kept by the palette for the next time; DSCLOG
-draws figures as ever (GHOST_ON 0) until they are written.
+Made in a thread (about 0.2 s of Python), and kept for the next time by the palette's colours
+16-223 (KEY), the ones the game never cycles: DSCLOG's copy of the palette changes every 30 s where
+fire or water cycle theirs (shadows.py's DARK made again), and keyed on all of it the tables were
+made again each time, kept for good (about 13 KB each), and DSCLOG drew the figures solid
+(GHOST_ON 0) for the moment it took. The last MADE_KEPT are kept. DSCLOG draws figures as ever
+(GHOST_ON 0) until the first are written, and while those for a new area's palette are made.
 """
 
 import struct
 import threading
+from collections import OrderedDict
 from typing import Dict, List, Optional, Sequence, Tuple
 
 from . import game
@@ -34,6 +39,12 @@ GH_BLEND, GH_REP = 0, REP_COUNT * 256
 GH_TAB = GH_REP + 256
 THINGS = 520
 FIRST, LAST = 16, 223  # (the colours the game doesn't animate: as DSCLOG's DARK)
+MADE_KEPT = 8  # (the tables kept, by KEY: the areas lately in)
+
+
+def key(dac: bytes) -> bytes:
+    """What the tables are kept by: the palette's colours FIRST-LAST, which the game never cycles."""
+    return dac[FIRST * 3:(LAST + 1) * 3]
 INVISIBLE, DETECT_INVISIBILITY = 23, 15  # (the game's effect numbers)
 PARTY = range(game.PARTY_SIZE)
 
@@ -118,7 +129,7 @@ class Ghosts:
 
     def __init__(self):
         self._palettes = -1
-        self._made: Dict[bytes, Tuple[bytes, bytes]] = {}
+        self._made: "OrderedDict[bytes, Tuple[bytes, bytes]]" = OrderedDict()  # (by key(): MADE_KEPT)
         self._making: Optional[bytes] = None
         self._lock = threading.Lock()
         self._dac: Optional[bytes] = None
@@ -129,7 +140,9 @@ class Ghosts:
     def _make(self, dac: bytes) -> None:
         made = tables(dac)
         with self._lock:
-            self._made[dac] = made
+            self._made[key(dac)] = made
+            while len(self._made) > MADE_KEPT:
+                self._made.popitem(last=False)
             self._making = None
 
     def update(self, gd, tsr_hdr: int, on: bool, palettes: int, redraw) -> None:
@@ -150,12 +163,15 @@ class Ghosts:
             dac_off, = struct.unpack("<H", guest.read(tsr_hdr + TSR_DAC, 2))
             self._dac = guest.read(base + dac_off, 768)
             self._palettes = palettes
-        if self._dac is not None and self._dac != self._written:
+        if self._dac is not None and key(self._dac) != self._written:
+            wanted = key(self._dac)
             with self._lock:
-                made = self._made.get(self._dac)
-                start = made is None and self._making != self._dac
+                made = self._made.get(wanted)
+                if made is not None:
+                    self._made.move_to_end(wanted)
+                start = made is None and self._making != wanted
                 if start:
-                    self._making = self._dac
+                    self._making = wanted
             if start:
                 guest.write(tsr_hdr + TSR_GHOST_ON, struct.pack("<H", 0))  # (till they are made)
                 threading.Thread(target=self._make, args=(self._dac,), daemon=True).start()
@@ -164,7 +180,7 @@ class Ghosts:
                 guest.write(seg * 16 + GH_BLEND, blend)
                 guest.write(seg * 16 + GH_REP, rep)
                 guest.write(tsr_hdr + TSR_GHOST_ON, struct.pack("<H", 1))
-                self._written, self._on = self._dac, True
+                self._written, self._on = wanted, True
                 redraw()
         table = ghost_table(gd.effects())
         if table != self._table:
