@@ -111,3 +111,28 @@ def index_places(data: bytes, ctype: str) -> Dict[int, Tuple[int, int, int]]:
         return out
     except struct.error as e:
         raise GffError(f"Truncated GFF table of contents: {e}") from e
+
+
+def rooms(data: bytes, ctype: str) -> Dict[int, int]:
+    """{id: the bytes from where each chunk of CTYPE starts to where the next chunk of any type
+    (or the table of contents, or the file's end) does}: how much may be written there in place."""
+    try:
+        toc_offset, = struct.unpack_from("<I", data, 12)
+        type_count, = struct.unpack_from("<H", data, toc_offset + 8)
+    except struct.error as e:
+        raise GffError(f"Truncated GFF table of contents: {e}") from e
+    kinds, pos = [], toc_offset + 10
+    for _ in range(type_count):
+        try:
+            kind, count = struct.unpack_from("<4sI", data, pos)
+        except struct.error as e:
+            raise GffError(f"Truncated GFF table of contents: {e}") from e
+        kinds.append(kind.decode("latin1"))
+        pos += 8 + (12 + 8 * struct.unpack_from("<I", data, pos + 16)[0] if count & 0x80000000 else 12 * count)
+    starts = sorted({off for kind in kinds for _, off, _ in index_places(data, kind).values()}
+                    | {toc_offset, len(data)})
+    out: Dict[int, int] = {}
+    for cid, (_, off, _) in index_places(data, ctype).items():
+        after = next((s for s in starts if s > off), len(data))
+        out[cid] = after - off
+    return out

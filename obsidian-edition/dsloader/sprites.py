@@ -314,6 +314,7 @@ class Dresser:
             except (OSError, GffError, ValueError, struct.error):
                 pass
         self.places: Dict[int, Tuple[int, int, int]] = {}  # picture: (index entry, offset, length)
+        self.rooms: Dict[int, int] = {}  # picture: the bytes free from its offset in the copy (gff.rooms)
         self._stamp: Optional[Tuple[int, int]] = None  # the copy as the Loader last saw it
         self.shown: Dict[int, tuple] = {}  # object: the outfit its pictures in the copy show
         self.request_redraw: Optional[Callable[[], None]] = None  # has the view drawn again (DSCLOG)
@@ -340,7 +341,7 @@ class Dresser:
         """The copy's index read (again, if the launcher has written it anew since: then what it
         shows is plain). Whether there is a copy to dress."""
         import os
-        from .gff import GffError, index_places
+        from .gff import GffError, index_places, rooms
         if not self.copy_file:
             return False
         try:
@@ -351,7 +352,9 @@ class Dresser:
         if stamp != self._stamp:
             try:
                 with open(self.copy_file, "rb") as f:
-                    self.places = index_places(f.read(), "BMP ")
+                    data = f.read()
+                self.places = index_places(data, "BMP ")
+                self.rooms = rooms(data, "BMP ")
             except (OSError, GffError):
                 return False
             self._stamp = stamp
@@ -360,11 +363,13 @@ class Dresser:
 
     def _write(self, pictures: Dict[int, bytes]) -> bool:
         """PICTURES ({number: chunk}) into the copy, each where its plain one is, its length in the
-        file's index. False (nothing written) if one has no place or no room there."""
+        file's index. False (nothing written) if one has no place or no room there: the room the
+        copy has after it (ROOMS), whatever Pictures reckons (the copy may have been written with
+        the other LOOKS, the switch changed and the Loader connected again since)."""
         import os
         for picture, chunk in pictures.items():
             place = self.places.get(picture)
-            if place is None:
+            if place is None or len(chunk) > self.rooms.get(picture, 0):
                 return False
         try:
             with open(self.copy_file, "r+b") as f:
@@ -472,10 +477,12 @@ class Dresser:
             if fresh:
                 pictures = {}
                 for combat, picture in zip((False, True), picture_ids(obj)):
+                    # (the room the copy has, which Pictures' reckoning may overstate: _write)
+                    room = min(self.pics.room(obj, combat), self.rooms.get(picture, 0))
                     chunk = self.pics.build(obj, combat, outfit[0], outfit[1], model, figure, stage)
-                    if len(chunk) > self.pics.room(obj, combat):  # (more than there is room for: plain)
+                    if len(chunk) > room:  # (more than there is room for: plain)
                         chunk = self.pics.build(obj, combat, {}, (), model, figure, stage)
-                    if len(chunk) > self.pics.room(obj, combat):
+                    if len(chunk) > room:
                         chunk = self.pics.build(obj, combat, {}, (), model, figure)
                     pictures[picture] = chunk
                 if not self._write(pictures):

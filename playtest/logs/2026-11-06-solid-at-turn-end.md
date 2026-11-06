@@ -38,3 +38,12 @@ each window grab with her position, whose turn and STEALTH.
   went nowhere. Start Xvfb by hand (`setsid nohup Xvfb :55 -screen 0 1024x768x24 &`) after a restart.
 - `memberpos.py`'s spot missed the figure twice in this fight (it opened nothing, or walked
   Cilla a step): about 12 pixels higher (y - 24 from the feet) opened the END menu; check a shot.
+
+## Later: a smoke run after the review's fixes (2026-11-06)
+
+The Loader's fixes (each pass step on its own, the deque, pickpocket XP once, buy-back, script
+checks, the pointer file, the Dresser's room) and DSCLOG's (VGA_BUSY, a late use request marked
+answered, shorter messages) loaded from `pens-after-scar`: the new VGA_SAVE and GHOST_UNION once in
+memory, vectors 80h, DDh, 62h each their own handler (C91B:C640, BEF8, 08EA); three walks to
+(1592, 440) with Kurzak's lines in the dice log, the party dressed, shadows and dust as before, and
+no "Loader error" line. Nothing saved.

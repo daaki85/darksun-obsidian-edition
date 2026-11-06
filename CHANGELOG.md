@@ -156,6 +156,13 @@ notes](PATCH-NOTES.md).
   again from the same Loader: the checks were read from `dos/GPLDATA.GFF` once a session, and the
   Loader writes it afresh at each start. Read again when the file changes, and a failed read is
   not kept. Test `LoadTests`.
+- **A dressed figure could be written past its room in the Loader's copy of SEGOBJEX.GFF:** the
+  Dresser reckoned the room from the settings as they are now (Pictures' LOOKS), while the copy
+  was written at the game's start with them as they were; with "Elves have pointed ears" changed
+  and the Loader connected again, a half-elf's picture could run into the chunk after it. Now
+  each picture's room is read from the copy itself (`gff.rooms`: to the next chunk), nothing
+  longer is written, and a dressed picture that won't fit is drawn plain. Tests
+  `test_never_past_the_copys_room`, `test_rooms`.
 - **The scenes' pointer could stop the game from starting:** `POINTER.BIN` held by another
   program, or the `dos` folder read-only, raised from `prepare_patched_game`. Now DSCLOG's own
   pointer is used. Test `test_unwritable`.
