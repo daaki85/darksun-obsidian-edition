@@ -42,6 +42,10 @@ extracted game (`DS_GAME`, default `$PLAYTEST_WORK/inst`). Nothing in the work f
    the built copy (`GPLDATA=../obsidian-edition/dos/GPLDATA.GFF python3 dec.py SCRIPT LO HI`) and
    check the change is there before trusting anything seen in play. Memory edits are lost on any
    restart.
+   For a DSCLOG change, find a few of the new code's bytes in memory where they are in
+   `dos/DSCLOG.EXE` (less its 20h header, from DSCLOG's segment: C91B0h in the 2026-11 runs), and
+   read the vectors it hooks in the table at segment 0 (each its own handler: two probes on one
+   vector once made every attack's AC 255). `ghostchk.py` shows the see-through block is there.
    `dec.py` stops with "unknown term" when LO falls inside a command: start it at a command
    (or decode the whole script with `dsloader.gpl.load_scripts` and `decode`). Every script in
    the built copy should decode (2026-11-05: eleven didn't, and a later change gave up on one).
@@ -132,7 +136,9 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   back) and say so in the log.
 - **Fighting a wave without killing it** (2026-11-05): `fightout.sh` puts every foe at 1 HP first;
   to see foes attack, pass the party's turns instead (Tab, Return, E for a member out of
-  movement, Escape if E opened the Effects screen), as in `logs/2026-11-05-champions.md`. A
+  movement, Escape if E opened the Effects screen: that leaves the view at the map's corner, so
+  drag it back, or pass the turn through the END menu, section 4 rule 11), as in
+  `logs/2026-11-05-champions.md`. A
   level-1 party loses to the champions.
 - **Moving the party in memory** (2026-11-04, for a check where the way is shut): write each of map
   objects 0-3's x, y words at DS:669Dh + 32n (map units) and the camera at DS:1178h, then walk one
@@ -285,7 +291,7 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
    the screen (memberpos gives y below 0) can't be clicked: drag the view first. Tab + Return
    didn't end Gerakis's turn (his weapons' reach); the END menu does.
 12. **"target AC" in the dice log** is the AC the game uses for an attack: check it against
-   `gd.counted_ac` (scratch `acs.py`) whenever the foes seem to hit too often. A test fight that
+   `gd.counted_ac` (`acs.py`) whenever the foes seem to hit too often. A test fight that
    goes badly: `healparty.py` puts the party's hit points back in memory (never save after).
 
 ## 5. The story so far: what's known of the route
@@ -343,7 +349,7 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   then `python3 -u -m dsloader dicelog --all >> $WORK/dice.txt` from obsidian-edition): each AC the
   game works out gets a line "AC of X against Y: 8 (base 10, armour -1, DEX -1, other +0)".
 - **Getting a party member attacked**: a scratch loop that passes the party's turns (Tab +
-  Return, then E if the turn stays) and stops once the dice log has N more "attacks NAME"
+  Return, then the END menu if the turn stays: section 4 rule 11) and stops once the dice log has N more "attacks NAME"
   lines; between waves click the messages and walk about in the arena (staying brings more
   fights). It can lose the whole party ("YOUR PARTY HAS BEEN DEFEATED"): have a save to go back to.
 - **Ability items and memory edits** (2026-11-02): an item's +0Fh is also the spell the game casts
@@ -358,7 +364,12 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   hit points full). After two or three rests and a step, Kurzak calls ("Gerakis! Get up here!
   It's your turn in the arena!"). **Answer the call quickly**: twice the party walked to Kurzak's
   stop and on toward the gate (1816, 408) and he ran out of patience ("That's it! Time's run
-  out!"), then the alarm and a fight with every guard.
+  out!"), then the alarm and a fight with every guard. **The alarm fight on purpose**:
+  `toalarm.sh` (loads `pens-after-scar`, records the sound, raises Cilla's thief level in memory,
+  walks to the fire room), then `restalarm.sh` (rests, then waits Kurzak out); about 15 minutes in
+  all, in the background with a Monitor. **The pointer must be the eye before restalarm.sh**: on
+  2026-11-06 it was the sword, no rest came ("rests: 0") and the click on the ring fell on Cilla
+  (Gerakis attacked her out of a fight). `toarena.sh` answers the call instead (up to the arena).
 - **Into the arena from the pens** (the user, 2026-11-05): after the call, Kurzak's entryway
   (`route.py 1592 584`), his stop (1592, 520), north to (1592, 440), east along the corridor at
   y 408 (walkto in two steps: further north, y 376, counts as escaping and sets off the alarm)

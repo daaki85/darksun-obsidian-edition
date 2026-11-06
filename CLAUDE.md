@@ -17,7 +17,8 @@ wins where they differ.
 `PLAYTEST_WORK` to a scratch folder; the game is `$PLAYTEST_WORK/inst`, from `setup_game.sh`).
 `start.sh` starts Xvfb, the Loader's patched game in DOSBox and the dice log
 (`$PLAYTEST_WORK/dice.txt`). Check the build under test is in place before trusting anything
-(`GPLDATA=../obsidian-edition/dos/GPLDATA.GFF python3 dec.py SCRIPT LO HI`). Start the watchdog
+(`GPLDATA=../obsidian-edition/dos/GPLDATA.GFF python3 dec.py SCRIPT LO HI`; for DSCLOG, new code's
+bytes in memory and each hooked vector its own handler). Start the watchdog
 (`guard_start.sh`, a Monitor on `guard.log` for STUCK/GONE). Keep a test log the user can read and
 send it at each milestone; copy it to `playtest/logs/` and commit.
 
@@ -74,8 +75,11 @@ kills. To pass one member's turn: click its figure (`memberpos.py N`) for its EN
 no menu opens Effects, and closing that leaves the view at the map's corner: `scroll.py` back).
 `walktime.py` times a walk; `healparty.py` heals in memory (never save after). Check the dice
 log's "target AC" against `counted_ac` when foes hit too often (a vector clash once made it 255).
+A fight with the guards on purpose: `toalarm.sh`, then `restalarm.sh` (the pointer the eye first).
 
-**Git.** Other sessions push to `obsidian-edition` too: fetch and rebase onto
+**Git.** The repository is `daaki85/darksun-obsidian-edition` (was `milenkovicdarko`: if `git remote -v`
+still shows that, `git remote set-url origin https://github.com/daaki85/darksun-obsidian-edition.git`).
+Other sessions push to `obsidian-edition` too: fetch and rebase onto
 `origin/obsidian-edition` before every push. GitHub deletes the branch when its pull request
 merges: then make it again from `origin/main` and put any unmerged commits on top.
 
