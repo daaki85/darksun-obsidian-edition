@@ -1023,9 +1023,14 @@ game's fight still off, which came on only after his alarm call was read.
 comes on the map, once each (by creature, name and object; forgotten with a new area or a game
 loaded), the champions left to `champions.Gear`, the party to the player: `plan` sorts the
 backpack by its type's kind (+00h: melee, missile, shield, thrown) and where it is worn (+09h:
-1 chest, 3 arm, 5 a hand, 6 head, 10 legs, 11 ammunition, 12 a missile weapon), the best melee
-weapon (its plus) to the right hand, a shield to the left or else a second melee weapon, into
-slots nothing fills yet; rings, cloaks and the rest stay packed (not seen put on by the game).
+1 chest, 2 waist, 3 arm, 4 feet, 5 a hand, 6 head, 7 neck, 8 cloak, 9 a finger, 10 legs, 11
+ammunition, 12 a missile weapon: the game's item types, read in the running game), the best
+melee weapon (its plus) to the right hand, a shield to the left or else a second melee weapon,
+rings to the two fingers in turn, into slots nothing fills yet. The game itself wasn't seen to put
+on rings, cloaks, belts, boots or amulets; worn here, they count as the party's do (Pehtucl's
+Templar: his Ring of Protection +1 worn, AC 4 to the other Templar's 5 and +1 on saves; his Cloak
+of Protection +1 worn but nothing under AD&D's rule, with his leather shield). Keys, food and
+scrolls stay packed.
 Each move is `pickpocket.place` (the list for its slot, a new one from the game's allocator if
 need be), after `itemgate.hold`. Test: `test_people.py`.
 

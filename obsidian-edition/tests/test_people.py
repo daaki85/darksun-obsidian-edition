@@ -62,8 +62,15 @@ class PlanTests(unittest.TestCase):
         self.assertEqual(people.plan(pack, {people.RIGHT, people.CHEST, people.LEFT}), [])
         self.assertEqual(people.plan(pack, {people.RIGHT, people.CHEST}), [(1, people.LEFT)])
 
-    def test_rings_cloaks_keys_stay(self):
-        self.assertEqual(people.plan([(1, item(), RING), (2, item(), CLOAK), (3, item(), KEY)], set()), [])
+    def test_rings_cloaks_worn_keys_stay(self):
+        """Pehtucl's ring and cloak go on (a finger, the cloak slot); a second ring the other finger,
+        a third stays; boots, a belt and an amulet theirs; a key stays packed."""
+        pack = [(1, item(1), RING), (2, item(1), CLOAK), (3, item(), KEY), (4, item(), RING), (5, item(), RING),
+                (6, item(), typ(0, 4)), (7, item(), typ(0, 2)), (8, item(), typ(0, 7))]
+        self.assertEqual(sorted(people.plan(pack, set())),
+                         [(1, people.FINGER), (2, people.CLOAK), (4, people.FINGER2), (6, people.FOOT),
+                          (7, people.WAIST), (8, people.NECK)])
+        self.assertEqual(people.plan([(1, item(), RING)], {people.FINGER}), [(1, people.FINGER2)])
 
     def test_only_one_of_each(self):
         """Two chest armours (one bought, one found): the first worn, the other kept."""

@@ -187,8 +187,11 @@ notes](PATCH-NOTES.md).
   blow from outside a fight (struck before the game starts the fight: a sling shot at Legcrusher
   hit AC 9, the fight on only after his alarm call) met no armour. `people.py` puts each person's
   gear on as it comes on the map, as the game would (the best weapon in the right hand, a shield
-  or a second weapon in the left, a bow and arrows, chest, arm and leg armour and a helm; rings
-  and cloaks left packed), into free slots only, after the item gate. Seen in DOSBox: loaded in
+  or a second weapon in the left, a bow and arrows, chest, arm and leg armour and a helm), and
+  what the game never put on as well (a cloak, a belt, boots, an amulet, two rings: counting by
+  the party's rules), into free slots only, after the item gate. Pehtucl's Templar: ring and
+  cloak of protection worn, AC 4 and +1 on saves (the cloak nothing, with his shield, under AD&D's
+  rule). Seen in DOSBox: loaded in
   the pens, all 21 people with gear wearing and holding it (Kurzak Shadowseeker +1 and his sword,
   helm and leather; the Templars their brigandine and shields), keys and fruit left packed. Tests
   `test_people.py`. FEATURES' bug table, HOW-THE-GAME-WORKS' Monsters' defences, DEVELOPMENT-CONTENT

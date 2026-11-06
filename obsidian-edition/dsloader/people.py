@@ -17,8 +17,10 @@ its gear put where the game would put it, as soon as it is there (People.watch, 
 log's pass): by its type's kind (TYPE_FLAGS) and where it is worn (TYPE_WORN), into a slot that
 is free: the best melee weapon (its plus) in the right hand, a shield in the left, or else a
 second melee weapon there; a missile weapon in the missile slot, its ammunition in the ammunition
-slot; chest, arm, leg armour and a helm in theirs. Rings, cloaks and the rest stay in the pack:
-the game wasn't seen to put those on. Nothing is moved that the game has put in place already.
+slot; chest, arm, leg armour and a helm in theirs, and a cloak, a belt, boots, an amulet and up to
+two rings (the game wasn't seen to put those on: they are worn as the party's are, and count by
+the same rules, a cloak of protection with a shield none under AD&D's). Keys, food, scrolls and
+the rest stay in the pack. Nothing is moved that the game has put in place already.
 """
 
 import struct
@@ -26,10 +28,13 @@ from typing import Dict, List, Optional, Sequence, Set, Tuple
 
 from . import game, itemgate, pickpocket, restrict, ring
 
-ARM, AMMO, MISSILE, RIGHT, LEGS, HEAD, CHEST, LEFT = 0, 1, 2, 3, 6, 7, 9, 10  # (the game's slots)
+ARM, AMMO, MISSILE, RIGHT, FINGER, WAIST, LEGS, HEAD, NECK, CHEST, LEFT, FINGER2, CLOAK, FOOT = range(14)  # (the game's slots)
 TYPE_FLAGS, TYPE_WORN = restrict.TYPE_FLAGS, pickpocket.TYPE_WORN
 HAND = 5  # (TYPE_WORN: held in a hand, a weapon or a shield)
-WORN_SLOTS = {1: CHEST, 3: ARM, 6: HEAD, 10: LEGS, 11: AMMO}  # (TYPE_WORN: the slot, as the game puts them)
+WORN_SLOTS = {1: CHEST, 2: WAIST, 3: ARM, 4: FOOT, 6: HEAD, 7: NECK, 8: CLOAK, 10: LEGS, 11: AMMO}  # (TYPE_WORN:
+# the slot; the game's item types read in the running game, 2026-11-06: 2 the girdles, 3 armour and bracers, 4 boots,
+# 6 helms and circlets, 7 the amulet, 8 cloaks, 9 rings, 12 bows and slings)
+FINGER_WORN = 9  # (a ring: the first finger free, then the other)
 MISSILE_WORN = 12  # (TYPE_WORN of a bow or a sling)
 SEEN = 128  # (creature records looked at: as champions.SEEN)
 
@@ -52,6 +57,10 @@ def plan(items: Sequence[Tuple[int, bytes, bytes]], taken: Set[int]) -> List[Tup
         elif flags & (restrict.MELEE | restrict.THROWN) and worn == HAND:
             plus = struct.unpack("b", data[game.ITEM_PLUS:game.ITEM_PLUS + 1])[0]
             melee.append((-plus, len(melee), item))
+        elif worn == FINGER_WORN:
+            finger = next((f for f in (FINGER, FINGER2) if free(f)), None)
+            if finger is not None:
+                out.append((item, finger))
         elif worn in WORN_SLOTS and free(WORN_SLOTS[worn]):
             out.append((item, WORN_SLOTS[worn]))
     melee.sort()
