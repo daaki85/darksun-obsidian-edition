@@ -474,7 +474,16 @@ open): check a shot before clicking a door. With the door open, the walk arrow o
   enemies' turns (about 1.4 s) and was drawn solid when a party member's turn began: the view is
   drawn again from the map's main loop, which doesn't run in the enemies' turns. The 2026-11-05
   "two solid frames" weren't seen in 38 more hidden steps (beside Gerakis and K'ratchek too):
-  closed as not reproducible after the vector fix.
+  closed as not reproducible after the vector fix. **Since GHOST_UNION** (logs/2026-11-06-solid-at-turn-end.md)
+  the figure is solid about 0.1 s after the hiding ends, in the next enemy's turn, if that enemy
+  steps or swings; one that does nothing redraws nothing, and the old wait applies. A turn passed
+  can come straight back (her END TURN was the round's last but one; round 2 opened with her and
+  a new hide roll): check the round order in the dice log.
+- **After a worker restart Xvfb is gone too**, and start.sh in the background didn't restart it
+  (every xdotool call: "Can't open display"). `pgrep -a Xvfb`; else `setsid nohup Xvfb :55 -screen
+  0 1024x768x24 &` by hand. **memberpos.py can miss** a figure in a crowd: about 12 pixels higher
+  opened the END menu; check a shot first. toalarm.sh still stops at (1832, 856): a click on the
+  fire room's floor (screen 240,160, camera 1656,720) goes in.
 - **Kalzith** (2026-11-05): from `pens-after-scar`, walkto (1816,408), (1704,408), (1592,440), then
   clicks at screen (200,178) (camera 1392,384) take the party through Kurzak's entryway past him
   (route.py wouldn't: he stands in front of it); then `route.py 1560 880` reaches Kalzith's pen
