@@ -103,6 +103,22 @@ class PickTests(unittest.TestCase):
         self.assertEqual(self.guard_items(), [CLUB, KEY, BOOTS])
         self.assertEqual(self.attempt(11).xp_to, None)  # (the bag's too heavy: just coins now)
 
+    def test_kurzaks_sword_in_his_hand(self):
+        """Kurzak's sword lifted from his held list (+0Ah), where people.py puts it as he comes on
+        the map, as from his pack: the XP given, and it gone from the list."""
+        m = self.m
+        guard = CREATURES + GUARD * game.CREATURE_SIZE
+        struct.pack_into("<hhh", m, guard + 8, game.NO_ITEM, 450, game.NO_ITEM)  # (the held list)
+        struct.pack_into("<H", m, ITEMS + CLUB * game.ITEM_SIZE + game.ITEM_TYPE, 45)
+        struct.pack_into("<H", m, ITEMS + SWORD * game.ITEM_SIZE + game.ITEM_TYPE, game.SHORT_SWORD_TYPE)
+        m[ITEMS + SWORD * game.ITEM_SIZE + game.ITEM_SLOT] = 3  # (the right hand)
+        typ = ITEM_TYPES + game.SHORT_SWORD_TYPE * game.ITEM_TYPE_SIZE
+        struct.pack_into("<H", m, typ + pickpocket.TYPE_WEIGHT, 30)
+        m[typ + pickpocket.TYPE_WORN] = 5
+        result = self.attempt(11)
+        self.assertEqual((result.xp_to, result.xp), (0, pickpocket.SWORD_XP))
+        self.assertNotIn(SWORD, self.guard_items())
+
     def test_sword_xp_once(self):
         """The XP for a weapon worth it is paid once a game: lifted again (sold, and its buyer's
         pocket picked) it is only a thing lifted."""

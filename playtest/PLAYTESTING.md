@@ -639,3 +639,11 @@ palette copy changing (every 30 s where the game cycles colours). The arena gate
   weapons, shows none for them; the champions (`champions.py` moves their gear to hand and body)
   are the only people whose weapons it lists before they have acted (see the correction above:
   the game equips everyone else on their first action in a fight).
+- **The combat log panel in tests** (2026-11-06): `panel.sh` reads "hidden" when the panel is
+  expanded (its pixel check is for the small panel): look at a shot, and press L yourself. The
+  expanded panel's filter chips are at y 87 (All 148, Party about 175); a filter chosen stays
+  (Party leaves out the foes' attacks). A party member's figure under the panel can't be clicked
+  (its END menu): hide the panel first. **Picking a pocket:** U, the thief's portrait (Cilla
+  108,108), the purse under the spell counts (157,145, a slow press), then the talk pointer on the
+  person. `orderwatch.py`-style logging (fight_on and the dice log every 10 ms) showed a blow from
+  outside a fight is struck before the fight begins.

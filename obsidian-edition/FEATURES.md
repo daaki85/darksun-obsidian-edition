@@ -136,6 +136,10 @@ a click.
 
 ![The combat log in the arena, in short, as a fight is played with Tab and Enter: Wild Fighting, attacks, a kill and its XP, and hiding in shadows, each line as it happens](docs/combat-log-live.gif)
 
+In detail, each attack names the weapon and its dice, and the THAC0's parts follow:
+
+![The combat log in detail, expanded, in the slave pens' alarm fight: Kurzak, at the top beside K'ratchek, attacks K'ratchek with Shadowseeker +1 (1d6+1), d20 = 4 against 15+, a miss, and under it his THAC0 14, +1 for the weapon, -2 for two weapons, in the main hand, = 15; above, the end of his off-hand blow with his obsidian long sword](docs/combat-log-detail.png)
+
 **The panel** sits over the map's lower right. A window the game opens over
 the map (a character's menu, a question) hides it until it closes. Expanded, it
 covers that part of the map, and the game's damage numbers over a creature
