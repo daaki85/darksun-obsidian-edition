@@ -56,6 +56,15 @@ extracted game (`DS_GAME`, default `$PLAYTEST_WORK/inst`). Nothing in the work f
    start again from `start.sh`. Don't leave a test half-done across a pause expecting it to be
    there.
 
+**Fresh container (2026-11-06):** `apt-get update` then install `dosbox xdotool innoextract`
+(`Xvfb`, ImageMagick, poppler were there). The Drive installer download is blocked by the default
+network policy (403 on `drive.usercontent.google.com`): allow that host with update_environment, wait
+~20 s, then `setup_game.sh` works (22 MB). `start.sh` shows the window at 640x400 until a save is
+loaded; after `loadsave.sh` it is 320x240. `toalarm.sh` then `restalarm.sh` worked first time (the
+pointer: two right-clicks on bare floor; a red eye with a bar over floor is the eye). Cilla's
+hide lands often at 95 (d100 94 ok); her walk frames: `walktime.py 3 X Y DIR`, crops of
+`import` grabs (120,50 70x70) tiled with montage.
+
 ## 1b. The recompiled program as the target (Dark Sun Recompiled)
 
 The kit drives the recompiled program too (`PT_TARGET=recomp`, exported for every tool; `DSUN`
