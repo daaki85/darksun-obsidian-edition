@@ -743,6 +743,8 @@ class DiceLog:
                     result = pickpocket.Attempt(spellarrows.NOT_IN_A_FIGHT, [])
                 else:
                     result = self._arrows.make(self.game, item & 0xFF, thing)
+                    if result and not result.text:  # (made: the spell's own cast sound, as it is cast)
+                        self._play_game_sound(spellarrows.cast_sound(self.game, thing))
             elif PICKED_BY <= item < 0xFFFF and self.pickpockets:
                 taken = True
                 if self._fighting():
@@ -2040,6 +2042,11 @@ class DiceLog:
             return self.game.fight_on()
         except (struct.error, IndexError, ValueError):
             return False
+
+    def _play_game_sound(self, number: int) -> None:
+        """Have DSCLOG play the game's sound NUMBER from the map's main loop (SOUND_REQ), if any."""
+        if self.tsr_hdr is not None and 0 < number <= 130:
+            self.guest.write(self.tsr_hdr + TSR_SOUND_REQ, struct.pack("<H", number))
 
     def _set_stealth(self, hidden: bool, member: int = 0) -> None:
         """Have DSCLOG make this party member's next attack one from behind (or no one's); hidden,
