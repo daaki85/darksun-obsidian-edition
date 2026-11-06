@@ -301,6 +301,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 
 ## Bug Fixes
 
+- **[Fixed]** The game's **people put on their weapons and armour only at their first action in a fight**: until then they were AC 10, their armour unworn, so an opening blow, a backstab or a first-round hit met none, and their Look box showed no weapon. Now they wear and wield their gear from the moment they're on the map, as the game puts it on.
 - **[Fixed]** **Mirror Image** stopped no weapon blow, and swallowed the caster's own spells (Armor cast on oneself was lost three times in four, an image with it). Now each hit, and each foe's spell aimed at one creature, has a 75% chance to strike an image instead (50% for Reflected Image); spells from your own side always get through.
 - **[Fixed]** **Armor** used up two charges for each hit, and one for any spell cast on its wearer, even a friend's Bless. Now one charge for each damaging hit, a weapon's or a spell's.
 - **[Fixed]** **Share Strength** left its strength on the one who got it after the power ended. Now it ends on them too.

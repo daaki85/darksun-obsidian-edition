@@ -12,7 +12,8 @@ Kreenfang (the arena's gythka +1, no longer on the dead body by the stone arch).
   long sword and the same leather, helm and shield (the Tohr-kreen and the defiler wear none); a
   defiler (the arena's, 296) with a bone dagger and one scroll, chosen as it comes on, of
   Fogbolt, Spook or Reflected Image (the new spells; without them, of the game's own spells).
-- Worn and wielded: the game makes a person's items in its backpack list (+0Ch) and fights with
+- Worn and wielded: the game makes a person's items in its backpack list (+0Ch), puts them on at
+  its first action in a fight (people.py does it as it comes on the map), and fights with
   what is in its held list (+0Ah: seen, a Tohr-kreen given Headsman there attacked with it, 1d10+2,
   in place of its first two natural attacks) and counts the worn list's armour (+08h) for its AC,
   so the Loader moves each champion's gear to its place as it comes on (Gear.watch), as the

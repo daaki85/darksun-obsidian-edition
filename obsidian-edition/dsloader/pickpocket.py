@@ -94,9 +94,9 @@ def _chain(it: ring.Items, thing: int) -> List[Tuple[int, bytes]]:
 
 
 def _carried(gd: GameData, it: ring.Items, creature: int) -> List[Tuple[int, int, int]]:
-    """What a thief can lift from a creature: (list, item, the item before it or -1). People
-    outside the party keep everything in backpack cells, what they wear and wield too, so it
-    goes by the item's type: MAX_WEIGHT or less, nothing worn ON_THE_BODY, no keys (scripts
+    """What a thief can lift from a creature: (list, item, the item before it or -1), from any of
+    its lists (people outside the party carry their gear in the backpack's, worn and held once
+    put on: people.py), so it goes by the item's type: MAX_WEIGHT or less, nothing worn ON_THE_BODY, no keys (scripts
     may need them) and no scenery."""
     rec = gd.creature(creature)
     out = []

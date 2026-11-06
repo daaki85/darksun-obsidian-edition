@@ -179,6 +179,21 @@ notes](PATCH-NOTES.md).
   program, or the `dos` folder read-only, raised from `prepare_patched_game`. Now DSCLOG's own
   pointer is used. Test `test_unwritable`.
 
+**Fixed: the game**
+- **The game's people put their weapons and armour on only at their first action in a fight**
+  (seen in DOSBox, 2026-11-06): it makes a person's items in its backpack list and moves them to
+  the worn and held lists then. Until then a person was AC 10 with its armour unworn and its Look
+  box listed no weapon: a first round's blow on one who hadn't acted, a backstab, or an opening
+  blow from outside a fight (struck before the game starts the fight: a sling shot at Legcrusher
+  hit AC 9, the fight on only after his alarm call) met no armour. `people.py` puts each person's
+  gear on as it comes on the map, as the game would (the best weapon in the right hand, a shield
+  or a second weapon in the left, a bow and arrows, chest, arm and leg armour and a helm; rings
+  and cloaks left packed), into free slots only, after the item gate. Seen in DOSBox: loaded in
+  the pens, all 21 people with gear wearing and holding it (Kurzak Shadowseeker +1 and his sword,
+  helm and leather; the Templars their brigandine and shields), keys and fruit left packed. Tests
+  `test_people.py`. FEATURES' bug table, HOW-THE-GAME-WORKS' Monsters' defences, DEVELOPMENT-CONTENT
+  (a section of its own) and the patch notes say so; the "bare numbers" of earlier notes was wrong.
+
 **Fixed: DSCLOG** (found in the second review, 2026-11-06)
 - **The timer's labels and the shadows shared the VGA's kept registers:** LABEL_STAMP (the floating
   names, from the timer) keeps the registers in VGA_SAVE's slots, and the shadow pass, the combat

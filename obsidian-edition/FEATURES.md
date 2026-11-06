@@ -2066,8 +2066,8 @@ The first wave is six **champions** in place of the game's:
 | Defiler | a bone dagger, and a scroll of Fogbolt, Spook or Reflected Image (chosen as the bout starts; of the game's own spells with the new spells off) | none |
 
 They fight with their weapons, the two archers shooting, and their armour counts
-on top of their kinds' AC, as the party's does (the game's own people carry
-their gear but fight with their bare numbers).
+on top of their kinds' AC, as the party's does (and as the game's own people's
+do: [their gear is worn](#the-games-bugs-fixed) from the start too).
 What they carry is on their bodies afterwards; the Tohr-kreen falls as a dead
 Tohr-kreen of its own, Kreenfang in it. It comes once. A party that breaks out
 with Scar instead, or leaves the pens another way, doesn't meet them. (The dead
@@ -2513,6 +2513,7 @@ got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
 | Items that raise or lower an **ability score** | Changed the score wherever they were, the backpack too, so one carried did as much as one worn | Only while worn ([how](DEVELOPMENT-CONTENT.md#worn-items-the-gladiators-armour-and-psionic-blast)) |
 | The **gladiator's armour optimisation** (AC 1 better a 5 gladiator levels) | Given with no armour on, where Dark Sun gives it to armour worn | Only with armour on (arms, legs, head or chest; not a shield, bracers or a robe) |
 | **Psionic Blast** on a party member | Its imagined wounds (down to a fifth of its hit points) were real and stayed | Given back as the fight ends; until then a blow that would kill it knocks it out instead, and one knocked out wakes with them (the dice log says so; [how](DEVELOPMENT-CONTENT.md#worn-items-the-gladiators-armour-and-psionic-blast)) |
+| The game's **people's weapons and armour** | Carried in their packs until each one's first action in a fight: until then AC 10, armour unworn, no weapon in the Look box; anyone hit before acting (an opening blow, a backstab, the first round) met no armour | Worn and in hand as they come on the map, as the game puts them on: the best weapon in the main hand, a shield or a second weapon in the other, a bow and its arrows, armour and a helm (rings and cloaks stay packed) |
 | **DELETE** in the roster | With the list scrolled, deleted another character | Deletes the one chosen ([more characters](#more-characters)) |
 | A **New** character's thief skills | Shown as 0 | Shown as they are ([more characters](#more-characters)) |
 | **The Trustee** in the slave pens | His rounds' two pauses took their corner from numbers other scripts in the pens change, so he could set off for a spot that doesn't exist and stay busy ("I'd love to talk more...") for good | The pauses keep a corner of their own, and his busy line starts his rounds again, so one already stuck walks on once talked to; and a save made while he (or anyone on rounds of their own) walked no longer leaves him standing when loaded |

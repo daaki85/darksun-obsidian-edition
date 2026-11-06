@@ -16,6 +16,7 @@
 - [Kalzith](#kalzith)
 - [Semyon](#semyon)
 - [What Dinos and the Trustee say about them](#what-dinos-and-the-trustee-say-about-them)
+- [The game's people's gear](#the-games-peoples-gear)
 - [The champions' bout](#the-champions-bout)
 - [The cooked vulture](#the-cooked-vulture)
 - [Defilers' scrolls](#defilers-scrolls)
@@ -1004,6 +1005,30 @@ bytes ran; one of 10,000 ended with "BAD GPL EXIT" (the game's own largest is
 it is allocated (`push dword 10000` at 6A692h becomes 2E00h), about 1.7 KB
 more of the game's memory.
 
+## The game's people's gear
+
+([In the bugs fixed](FEATURES.md#the-games-bugs-fixed); `people.py`.)
+
+The game makes a person's items in its backpack list (+0Ch) and puts them on only at its first
+action in a fight. Seen in DOSBox (2026-11-06, `playtest/logs/2026-11-06-npcs-equip.md`): at the
+alarm fight's start all 30 people's gear was in their packs; Kurzak, backstabbed before his turn,
+was AC 10; once Legcrusher and an Arena Guard had acted, the Guard wore his leather chest armour
+(slot 9), arm armour (0) and arrows (1) and held his obsidian long sword (3) and bow (2), and
+Legcrusher's AC from behind was 8 with his Leather Inixhide +1 on. Kurzak with two weapons fought
+"main hand" with Shadowseeker +1 and "off hand" with his obsidian sword. A blow from outside a
+fight is struck before the game starts it: Gerakis's sling shot at Legcrusher hit AC 9 with the
+game's fight still off, which came on only after his alarm call was read.
+
+`People.watch` (from the dice log's item watches, each pass) puts each person's gear on as it
+comes on the map, once each (by creature, name and object; forgotten with a new area or a game
+loaded), the champions left to `champions.Gear`, the party to the player: `plan` sorts the
+backpack by its type's kind (+00h: melee, missile, shield, thrown) and where it is worn (+09h:
+1 chest, 3 arm, 5 a hand, 6 head, 10 legs, 11 ammunition, 12 a missile weapon), the best melee
+weapon (its plus) to the right hand, a shield to the left or else a second melee weapon, into
+slots nothing fills yet; rings, cloaks and the rest stay packed (not seen put on by the game).
+Each move is `pickpocket.place` (the list for its slot, a new one from the game's allocator if
+need be), after `itemgate.hold`. Test: `test_people.py`.
+
 ## The champions' bout
 
 ([In the features page](FEATURES.md#the-champions-bout).)
@@ -1038,8 +1063,9 @@ changes read it); and the longer script must still fit the game's script buffer
 
 Worn and wielded: the game makes a person's items in its backpack list
 (+0Ch), and the people of the game's pens and arena carry everything there
-(Kurzak's armour and sword, the Arena Guards' bows): none of it is fought with
-or counts for AC. The melee routine fights with what is in the held list
+(Kurzak's armour and sword, the Arena Guards' bows) until their first action in
+a fight, when the game puts it on (and the Loader's `people.py` as they come on
+the map: [The game's people's gear](#the-games-peoples-gear)). The melee routine fights with what is in the held list
 (+0Ah) for anyone: seen, a Tohr-kreen given Headsman there attacked "with
 Headsman +2 (1d10+2)" in place of its first two natural attacks, its third
 kept; and the AC routine counts the worn list (+08h) for anyone (two Tohr-kreen
