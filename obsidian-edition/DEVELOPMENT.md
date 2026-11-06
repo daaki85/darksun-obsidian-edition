@@ -181,7 +181,7 @@ Every roll in the game goes through one function, Borland C++'s `rand()`.
 1. When you start the game with the dice log, the launcher writes
    `dos\DSUNLOG.EXE`: a copy of the game's `DSUN.EXE` with a few hundred
    small changes, listed in `PATCHES` in `dsloader/gamepatch.py`. Most replace a few
-   bytes of the game's code with an `INT` (60h to 65h, and 81h to FFh; all of
+   bytes of the game's code with an `INT` (60h to 65h, and 80h to FFh; all of
    them are taken, so later sites share one, a site number after the `INT`, as
    in [Scores and hit points as rolled](DEVELOPMENT-RULES.md#scores-and-hit-points-as-rolled)) that
    the helper answers: `rand()`, the saving throw, AC, the dialogue window and

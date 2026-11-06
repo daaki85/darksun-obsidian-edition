@@ -1469,8 +1469,10 @@ probe_use_item:
         jae .late_use_reply
         call rtc_waited         ; (the BIOS clock can stand still: the game's timer
         jnc .wait               ;   doesn't always pass its ticks on; at most 2 s by the real-time clock)
-.late_use_reply:
-        jmp .go                 ; no answer: the Loader isn't reading
+.late_use_reply:                        ; no answer: the Loader isn't reading, or the game's lists
+        mov ax, [cs:use_seq]            ;   held it up; the request marked answered, so a late
+        mov [cs:use_reply], ax          ;   answer isn't carried out unseen (dicelog's _answer_use)
+        jmp .go
 .ready: cmp word [cs:use_taken], 0
         je .go
         cmp word [cs:use_taken], 2
@@ -18660,8 +18662,10 @@ arrows_ask:
         jae .late
         call rtc_waited
         jnc .wait
-.late:  pop es
-        ret                     ; (no answer: the Loader isn't reading)
+.late:  mov ax, [cs:use_seq]            ; (no answer: the Loader isn't reading; marked answered,
+        mov [cs:use_reply], ax          ;   so no arrows are made later unseen)
+        pop es
+        ret
 .ready: pop es
         cmp byte [cs:pick_text], 0
         je .done                ; (made: nothing to say)
@@ -20991,8 +20995,13 @@ ghost_draw:
         pop bp
         ret
 
-; the VGA's registers the shadows change, kept and put back
+; the VGA's registers the shadows change, kept and put back. VGA_BUSY while they are kept: the
+; timer's LABEL_STAMP, which keeps them in the same slots, waits for its next strike then (it once
+; struck in a shadow pass, the panel's or a see-through figure's, and the game's registers were
+; put back as the pass had them: map mask 8, read map 3)
+vga_busy db 0
 vga_save:
+        mov byte [cs:vga_busy], 1
         mov dx, 0x3C4
         in al, dx
         mov [cs:sc_index], al
@@ -21043,6 +21052,7 @@ vga_restore:
         out dx, ax
         mov al, [cs:sc_index]
         out dx, al
+        mov byte [cs:vga_busy], 0
         ret
 
 ; DARK: for each colour of the palette as it is now, the nearest to it at 3/4 strength among the
@@ -21859,6 +21869,8 @@ label_stamp:
         shr ax, 4
         add ax, 0xA000
         mov es, ax
+        cmp byte [cs:vga_busy], 0
+        jne .out                        ; (the main code's own kept in VGA_SAVE's slots: VGA_BUSY)
         call panel_live
         sete [cs:lp_clip]
         call vga_save
@@ -24716,9 +24728,9 @@ hma_given db 0
 no_far  db 'DSCLOG: no memory for its buffers (57 KB). Not loaded.', 13, 10, '$'
 
 
-msg     db 'Dark Sun companion dice log helper loaded.', 13, 10, '$'
+msg     db 'DSCLOG loaded.', 13, 10, '$'
 psp     dw 0
-busy    db 'DSCLOG: interrupts 60h-65h or 81h-FFh are in use (already loaded?). Not loaded.', 13, 10, '$'
+busy    db 'DSCLOG: interrupts 60h-65h or 80h-FFh in use (already loaded?). Not loaded.', 13, 10, '$'
 all_vectors db VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR, VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK, VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_MISSILE_LINE, VEC_USE_ITEM, VEC_TWO, VEC_DOUBLE, VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY, VEC_NAMES_SIZE, VEC_NAMES_FILL, VEC_STEALTH, VEC_TYPES_SIZE, VEC_TYPES_FILL, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED, VEC_SPELL_TEXT, VEC_CHUNK_ID, VEC_FLOOR_ALL, VEC_FLOOR_RECT, VEC_REDRAW, VEC_REDRAW_ALL, VEC_SCROLL, VEC_HIT, VEC_ITEM_BOX, VEC_BELT, VEC_SAVE_PAGE, VEC_SAVE_CLICK, VEC_ITEM_WEAPON, VEC_ITEM_SKIP, VEC_ITEM_ARMOUR, VEC_SCRIPT_RAND, VEC_XP_NEXT, VEC_ATTACKS, VEC_SPEC_DAMAGE, VEC_DAM_LINE, VEC_VIEW_DAM, VEC_CAN_USE, VEC_NO_CAST, VEC_MC_CON, VEC_MC_UNCON, VEC_WP_DISC_WIN, VEC_WP_SPHERE_WIN, VEC_WP_DISC_CLICK, VEC_WP_SPHERE_CLICK, VEC_WP_SHOWN, VEC_WP_CLASS, VEC_LV_PICK, VEC_PK_COUNT, VEC_PK_WIN, VEC_PK_LEFT, VEC_PK_TITLE, VEC_PK_FILL, VEC_PK_CLICK, VEC_EF_ROWS, VEC_HP_BEST, VEC_TOME, VEC_INIT, VEC_THAC0, VEC_SLOTS, VEC_SLOT_LEVEL
             db VEC_PSP_USE, VEC_PSP_TABLE, VEC_PSP_DEFENCE, VEC_CURE, VEC_PSP_KEEP, VEC_RANGER_CAST, VEC_PSP_KEEP_DX
             db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_POINTER, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC, VEC_TICK, VEC_POISON, VEC_ARROW, VEC_OVR_BUF, VEC_HEAP, VEC_FLIP, VEC_PACE_PASS, VEC_PACE_DRAW, VEC_WORN, VEC_TAKE, VEC_SPHERE, VEC_GHOST

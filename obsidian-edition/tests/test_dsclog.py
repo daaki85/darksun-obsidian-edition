@@ -443,6 +443,52 @@ class UseItemTests(unittest.TestCase):
         self.taken = 1
         self.run_use(300, self.DONE)
 
+    def test_vga_busy(self):
+        """VGA_SAVE sets VGA_BUSY and VGA_RESTORE clears it, and the timer's LABEL_STAMP, which
+        keeps the registers in the same slots, tests it before its own VGA_SAVE (a strike in a
+        shadow pass once left the game's registers as the pass had them)."""
+        mu = self.mu
+        image = load_image()
+        found = re.search(re.escape(bytes.fromhex("2ec606")) + b"(..)" + re.escape(bytes.fromhex("01bac403")), image, re.S)
+        self.assertIsNotNone(found)
+        busy, save = struct.unpack("<H", found.group(1))[0], found.start()
+        clear = bytes.fromhex("2ec606") + struct.pack("<H", busy) + b"\x00\xc3"
+        restore_end = image.find(clear)
+        self.assertGreater(restore_end, save)
+        self.assertEqual(image.count(bytes.fromhex("2e803e") + struct.pack("<H", busy) + b"\x00\x75"), 1)
+        back = 0xE000
+
+        def run(at):
+            for name, value in dict(cs=TSR, ds=GAME_DS, ss=SS, esp=0x7FE).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.mem_write(SS * 16 + 0x7FE, struct.pack("<H", back))
+            mu.emu_start(TSR * 16 + at, TSR * 16 + back, count=1000)
+        run(save)
+        self.assertEqual(mu.mem_read(TSR * 16 + busy, 1)[0], 1)
+        restore = image.rfind(bytes.fromhex("bace03"), save, restore_end)  # (VGA_RESTORE's "mov dx,3CEh")
+        run(restore)
+        self.assertEqual(mu.mem_read(TSR * 16 + busy, 1)[0], 0)
+
+    def test_unanswered_marked(self):
+        """No answer in time (the Loader not reading, or held up by the game's busy item lists):
+        on as the game would go, and the request marked answered (USE_REPLY = USE_SEQ), so the
+        Loader doesn't pick the pocket later with no one seeing it."""
+        from unicorn import UC_HOOK_MEM_READ
+        mu = Uc(UC_ARCH_X86, UC_MODE_16)  # (no companion: nothing answers)
+        mu.mem_map(0, 0x100000)
+        image = load_image()
+        mu.mem_write(TSR * 16, image)
+        mu.mem_write(VEC_USE_ITEM * 4, struct.pack("<HH", struct.unpack("<HH", self.mu.mem_read(VEC_USE_ITEM * 4, 4))[0], TSR))
+        mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
+
+        def tick(uc, access, address, size, value, _):  # (the BIOS clock moves on at each look)
+            uc.mem_write(0x46C, struct.pack("<H", (struct.unpack("<H", uc.mem_read(0x46C, 2))[0] + 4) & 0xFFFF))
+        mu.hook_add(UC_HOOK_MEM_READ, tick, begin=0x46C, end=0x46D)
+        self.mu = mu
+        self.run_use(300, self.SOME)  # (the game's own way: the JNE's target)
+        seq, reply = struct.unpack("<HH", mu.mem_read(self.hdr + 180, 4))
+        self.assertEqual((seq, reply), (1, 1))
+
     def test_xp(self):
         """What was lifted is worth XP (Kurzak's sword): before its text, DSCLOG's GIVE_XP calls
         the game's routine for a quest's XP (who, amount) and plays the quest's sound, once; with

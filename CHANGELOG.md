@@ -160,6 +160,23 @@ notes](PATCH-NOTES.md).
   program, or the `dos` folder read-only, raised from `prepare_patched_game`. Now DSCLOG's own
   pointer is used. Test `test_unwritable`.
 
+**Fixed: DSCLOG** (found in the second review, 2026-11-06)
+- **The timer's labels and the shadows shared the VGA's kept registers:** LABEL_STAMP (the floating
+  names, from the timer) keeps the registers in VGA_SAVE's slots, and the shadow pass, the combat
+  log panel's and a see-through figure's keep theirs there too, with interrupts on. A strike in
+  such a pass wrote over the game's registers there, which were then put back as the pass had
+  them (map mask 8, read map 3, no set/reset): a likely cause of rare drawing gone wrong. Now
+  VGA_SAVE sets VGA_BUSY until VGA_RESTORE, and LABEL_STAMP waits for its next strike while it is
+  set. Test `test_vga_busy`.
+- **A pocket picked, or spell arrows made, after DSCLOG had stopped waiting:** with no answer
+  within PICK_WAIT (the Loader held up, the game busy with its item lists) DSCLOG went on as the
+  game would, and the Loader, answering in a later pass, still did it: the pocket picked with no
+  text, sound or XP shown, the arrows made unseen. DSCLOG now marks such a request answered
+  (USE_REPLY = USE_SEQ), which the Loader takes as nothing to do. Test `test_unanswered_marked`.
+- Its message when its interrupts are taken says 80h-FFh (VEC_GHOST is 80h); "Dark Sun companion
+  dice log helper loaded." is "DSCLOG loaded." (the room for the two above). DSCLOG.EXE still
+  65,536 bytes.
+
 **Fixed: the Loader** (found in an audit)
 - **A save of the same party loaded wasn't seen as a load:** the check for it read the game's
   clock after another step of the same pass had just noted it, so the clock never went back; the
