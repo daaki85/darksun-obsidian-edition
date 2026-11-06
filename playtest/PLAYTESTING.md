@@ -278,6 +278,15 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
    Use the small tools.
 10. **Every step gets its own `timeout`**; long runs go in the background and are followed through
    the watchdog's Monitor, not by sleeping.
+11. **Passing one member's turn** (2026-11-05): `memberpos.py N` gives its figure on the screen;
+   a click there opens its END menu, and E in that menu ends the turn. E with no menu up opens
+   the Effects screen, and closing that (Escape) left the view at the map's corner (camera 0,0):
+   drag it back with `scroll.py` (about 216 x 72 map units for each -216 -96 drag). A member off
+   the screen (memberpos gives y below 0) can't be clicked: drag the view first. Tab + Return
+   didn't end Gerakis's turn (his weapons' reach); the END menu does.
+12. **"target AC" in the dice log** is the AC the game uses for an attack: check it against
+   `gd.counted_ac` (scratch `acs.py`) whenever the foes seem to hit too often. A test fight that
+   goes badly: `healparty.py` puts the party's hit points back in memory (never save after).
 
 ## 5. The story so far: what's known of the route
 
@@ -404,8 +413,17 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
 - **See-through figures** (2026-11-05): `ghostchk.py` shows DSCLOG's block (GHOST_SEG), GHOST_ON and
   the tables; `ghostchk.py 0` marks thing 0 (the leader) see-through and has the view drawn again,
   for a look without a fight or a spell. Outside a fight the party is one figure, the leader's;
-  walking, it spreads into four. Unicorn tests that look for "mov ax,25xxh / mov dx,handler" in
-  the image must search from the end: the same bytes for vector 62h turn up earlier by chance.
+  walking, it spreads into four. **The install's bytes turning up twice in the image meant two
+  probes on one vector**, not chance: VEC_GHOST was given 62h, VEC_AC's, and every attack's AC went
+  to the see-through probe (the dice log's "target AC 255" on every attack on the party, 2026-11-05;
+  now 80h, and test_gamepatch checks the vectors are distinct). The live table of vectors
+  (segment 0, 4 bytes each) shows which handler has each.
+- **The see-through figures in a fight** (2026-11-05/06, logs/2026-11-05-fight-test.md): seen from a
+  real hide (Cilla, thief level raised to 12 in memory: hides at 95) and a real Invisibility. The
+  pale bits behind a walking figure are the mod's dust (dust.py), not a smear: solid figures leave
+  them too, and a full redraw clears them; an END menu left up keeps them on screen. Pace:
+  `walktime.py N X Y [DIR]` (about 0.07 s a step, see-through or not). Hidden, Tab + Return walks
+  the thief up and backstabs; it is drawn solid from the blow on.
 - **Kalzith** (2026-11-05): from `pens-after-scar`, walkto (1816,408), (1704,408), (1592,440), then
   clicks at screen (200,178) (camera 1392,384) take the party through Kurzak's entryway past him
   (route.py wouldn't: he stands in front of it); then `route.py 1560 880` reaches Kalzith's pen

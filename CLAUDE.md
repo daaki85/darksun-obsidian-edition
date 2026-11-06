@@ -70,7 +70,10 @@ capture; window grabs (`import -window`) are 320x240, so y x 1.2.
 **Fights.** `fightout.sh` does a story fight the game's way: foes to 1 HP (not prisoners), Tab +
 Return on party turns, E for a member out of movement, and messages and level-ups (CHOOSE A SPELL,
 `levelup.sh`) cleared. Never `killfoes.py` in a fight a script waits on: the scripts miss the
-kills.
+kills. To pass one member's turn: click its figure (`memberpos.py N`) for its END menu, then E (E with
+no menu opens Effects, and closing that leaves the view at the map's corner: `scroll.py` back).
+`walktime.py` times a walk; `healparty.py` heals in memory (never save after). Check the dice
+log's "target AC" against `counted_ac` when foes hit too often (a vector clash once made it 255).
 
 **Git.** Other sessions push to `obsidian-edition` too: fetch and rebase onto
 `origin/obsidian-edition` before every push. GitHub deletes the branch when its pull request

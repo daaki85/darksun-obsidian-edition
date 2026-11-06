@@ -557,8 +557,10 @@ class UseItemTests(unittest.TestCase):
         from dsloader.gamepatch import VEC_GHOST
         mu, calls = self.mu, []
         image = load_image()
-        at = image.rfind(bytes((0xB8, VEC_GHOST, 0x25, 0xBA)))  # (the install's: the same bytes
-        self.assertGreater(at, 0)                                  #   come earlier, by chance)
+        install = bytes((0xB8, VEC_GHOST, 0x25, 0xBA))  # (the install's mov ax,25xxh / mov dx: once,
+        at = image.find(install)                         #   its vector no other probe's)
+        self.assertGreater(at, 0)
+        self.assertEqual(image.find(install, at + 1), -1)
         handler = struct.unpack_from("<H", image, at + 4)[0]
         draw = (GAME_DS - 0x4356 + 0x1A0A) * 16 + 0x3180
         mu.mem_write(draw, b"\xcb")  # retf

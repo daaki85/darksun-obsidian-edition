@@ -125,7 +125,7 @@ VEC_EL_KNOW equ 0x9E       ; PROBE_EL_KNOW
 VEC_DUAL_BAN equ 0x9D      ; PROBE_DUAL_BAN
 VEC_DUAL_SPELLS equ 0x9C   ; PROBE_DUAL_SPELLS
 VEC_SOUND_42 equ 0x9B      ; PROBE_SOUND_42
-VEC_GHOST  equ 0x62        ; PROBE_GHOST
+VEC_GHOST  equ 0x80        ; PROBE_GHOST (not 66h-6Fh: the game looks for drivers there; 70h-77h: IRQs)
 VEC_SOUND_44 equ 0x9A      ; PROBE_SOUND_44
 VEC_DUAL_KIT equ 0x99      ; PROBE_DUAL_KIT
 VEC_CR_SPELLS equ 0x98     ; PROBE_CR_SPELLS

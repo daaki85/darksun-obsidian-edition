@@ -1282,7 +1282,7 @@ the view drawn again a few times a second until the last puff is gone.
 
 How: the game draws each thing on the map through one call, `call far 1A0A:3180` in its routine
 at 25E0Ch (25EBEh; DI the thing, the call's arguments the page, x, y, mirrored, the picture and
-the frame). Gamepatch's `ghost` puts DSCLOG's `INT 62h` (`PROBE_GHOST`) over it. A thing that is
+the frame). Gamepatch's `ghost` puts DSCLOG's `INT 80h` (`PROBE_GHOST`) over it. A thing that is
 neither a hidden party member (its `STEALTH` bit, which `PROBE_STEALTH` clears at the attack) nor
 marked in `GHOST_TAB` goes on to the game's routine as ever. A see-through one DSCLOG draws itself
 (`GHOST_DRAW`):

@@ -16,7 +16,7 @@ notes](PATCH-NOTES.md).
 - **See-through figures** (`ghost.py`; the Options tab's new "drawn see-through" switch, on): a
   thief or ranger hidden and unheard in a fight, and anyone invisible (a party member always, an
   enemy while no party member detects invisibility), drawn half see-through, the user's look E
-  of the mock-ups. DSCLOG's `PROBE_GHOST` (`INT 62h`, gamepatch's `ghost` over 25EBEh's "call far
+  of the mock-ups. DSCLOG's `PROBE_GHOST` (`INT 80h`, gamepatch's `ghost` over 25EBEh's "call far
   1A0A:3180", the game's draw of a thing) draws such a figure itself (`GHOST_DRAW`): its frame's
   pixels as 32 colours, blended plane by plane with what's under them through `BLEND` (32 x 256),
   which the Loader makes from the palette. The block for the tables is 885 paragraphs of upper
@@ -25,8 +25,13 @@ notes](PATCH-NOTES.md).
   DSCLOG.EXE 65,472 bytes (+624; 96 of its segment spare). The game draws the invisible like
   anyone (its only rules: -4 to hit and +4 to saves, 7BD4Bh); among foes only the psurlons turn
   invisible (Superior Invisibility). Seen in DOSBox: a figure marked in GHOST_TAB drawn half
-  see-through over floor, wall and shadow, either way round and walking. Not yet seen: a hiding
-  in a fight. Tests: `test_ghost.py`, `UseItemTests.test_ghost_dispatch`.
+  see-through over floor, wall and shadow, either way round and walking; in a fight, a real hide
+  (Cilla see-through, the hide sound with it, solid from her backstab on) and a real Invisibility
+  (cast by Cermak), walking at the same pace as a solid figure (about 0.07 s a step). Its vector
+  was first 62h, which is `PROBE_AC`'s: every attack's AC went to the see-through probe (the dice
+  log's "target AC 255" on each attack on the party, so foes hit on anything but a 1), and it was
+  found in that test before any release; now 80h, and `test_vectors_distinct` checks each of
+  DSCLOG's vectors is used once. Tests: `test_ghost.py`, `UseItemTests.test_ghost_dispatch`.
 - **Sounds for hiding and picking pockets** (`sounds.py`, the user's picks of eight made for it):
   a thief or ranger hidden and unheard in a fight makes a soft breath sinking away (BVOC 140), and
   a pocket picked, a thing or the coins, a purse's jingle (BVOC 141); the three weapons worth XP
@@ -40,7 +45,8 @@ notes](PATCH-NOTES.md).
   the pick's text: `GIVE_XP`). DSCLOG.EXE 64,848 bytes (+160; 464 of its segment spare). Seen in
   DOSBox: both played on request (DOSBox's output recorded, `PT_AUDIO`, and matched with the
   clips, r 0.997 and 0.995), in either order and after one of the game's; entries 131 and 132 as
-  the game had them afterwards. Tests: `test_sounds.py`, `UseItemTests.test_sound_tick`, `test_xp`,
+  the game had them afterwards; and from their real triggers, a pocket picked (Cilla on Kalzith,
+  r 0.995) and a hide in a fight (r 0.997). Tests: `test_sounds.py`, `UseItemTests.test_sound_tick`, `test_xp`,
   `test_pick_sound`, the stealth and pocket tests.
 - **The champions' bout** (`champions.py`, `bodyart.py`; with the magic weapons' switch): once a
   party member has killed Scar (flag 759, set beside the game's 19 where script 3 says "This
