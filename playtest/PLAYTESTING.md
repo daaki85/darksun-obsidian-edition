@@ -149,7 +149,12 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   is fought with. Moved into the held list (`pickpocket.place(gd, creature, item, 3)`) a weapon is
   fought with by anyone (a Tohr-kreen with Headsman: "attacks Cermak with Headsman +2 (1d10+2)");
   armour in the worn list counts for anyone's AC. A creature that dies carrying something leaves
-  a Dead Body (object 1101) with its things.
+  a Dead Body (object 1101) with its things. **Correction (2026-11-06, logs/2026-11-06-npcs-equip.md):
+  the game equips a person itself, on its first action in a fight**: Legcrusher then wore his
+  Leather Inixhide +1 and held both clubs, an Arena Guard wore his leather and arrows and held his
+  long sword and bow, and they attacked with them; Legcrusher's AC from behind was then 8, not 10.
+  Before its first action (out of a fight, or killed first, as Kurzak by a backstab: target AC 10)
+  everything is in the backpack list.
 - **The arena's flags and numbers can't be set from outside** (2026-11-05): the pointers at
   DS:1352h and 1356h stay null in the arena even while a script waits on a message, so a poller
   never found them. To test a script's branch there, build a copy of the scripts with the test
@@ -630,4 +635,5 @@ palette copy changing (every 30 s where the game cycles colours). The arena gate
   everything in the backpack list, nothing worn or held: Kurzak (Shadowseeker, a long sword, his
   armour), the guards, the templars, Merzol, Kalzith. So the game's Look box, which lists held
   weapons, shows none for them; the champions (`champions.py` moves their gear to hand and body)
-  are the only people whose weapons it lists.
+  are the only people whose weapons it lists before they have acted (see the correction above:
+  the game equips everyone else on their first action in a fight).
