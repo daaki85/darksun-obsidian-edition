@@ -5,8 +5,10 @@
 - Legcrusher, the half-giant monster trainer: Inixhide, his Leather Chest Armor +1 (a name of its
   own, as the magic items Alagorn tells of have: alagorn.py).
 - Pehtucl, the head templar (the Templar in the pens' south-west corner, who carries the
-  Obsidian Bloodwrath): a Cloak of Protection +1 (+1 AC, +1 on saves) and a Ring of
-  Protection +1 (a thief can lift it).
+  Obsidian Bloodwrath): a Ring of Protection +1 (+1 AC, +1 on saves; a thief can lift it); and
+  the chest beside him (object 1568, its sling and two trinkets the game's) the Cloak of
+  Protection +1, which he would gain nothing from: under AD&D's rule a cloak does nothing with a
+  shield, and he carries one (people.py puts on what people carry).
 
 The game has no short sword, and no cloak whose plus counts, so those two have item types of
 the Loader's own: DSCLOG adds TYPES after the game's 115 each time it reads its type table
@@ -121,13 +123,16 @@ CHEST_ARMOR = _item("02fc000000000a00000006000000000004ff070000", plus=1, name=I
 CLOAK_ITEM = _item("e3fb000000001400000041003500000003ff0e0000", plus=1, type_=CLOAK_TYPE, name=CLOAK, value=CLOAK_VALUE)
 RING_ITEM = ring.RING[:game.ITEM_NAME] + struct.pack("<H", RING) + ring.RING[game.ITEM_NAME + 2:]
 KURZAK, LEGCRUSHER, PEHTUCL = 29, 326, 37  # their objects (Pehtucl's: the Templar with the Bloodwrath)
+PEHTUCL_CHEST = 1568  # the chest beside him, at (201, 1402) (only there: RGN29's entity table)
 
 
 def pens(magic_arms: bool = True) -> List[Tuple[int, Tuple[bytes, ...]]]:
-    """(object, items) for each of the three: Kurzak's sword Shadowseeker with MAGIC_ARMS."""
+    """(object, items) for each of the three, and Pehtucl's chest: Kurzak's sword Shadowseeker
+    with MAGIC_ARMS."""
     from . import arms
     sword = arms.shadowseeker(SWORD) if magic_arms else SWORD
-    return [(KURZAK, (sword, HELM)), (LEGCRUSHER, (CHEST_ARMOR,)), (PEHTUCL, (CLOAK_ITEM, RING_ITEM))]
+    return [(KURZAK, (sword, HELM)), (LEGCRUSHER, (CHEST_ARMOR,)), (PEHTUCL, (RING_ITEM,)),
+            (PEHTUCL_CHEST, (CLOAK_ITEM,))]
 
 
 def types_ready(gd: GameData, tsr_hdr) -> bool:

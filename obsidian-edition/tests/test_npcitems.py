@@ -64,12 +64,13 @@ class NpcItemTests(unittest.TestCase):
         self.assertFalse(npcitems.types_ready(self.gd, None))
 
     def test_pens(self):
-        """Kurzak's sword and helm, Legcrusher's armour, Pehtucl's cloak and ring, in their
-        objects; the sword Shadowseeker with the magic weapons' switch, else plain."""
+        """Kurzak's sword and helm, Legcrusher's armour, Pehtucl's ring, in their objects, and the
+        cloak in the chest beside Pehtucl; the sword Shadowseeker with the magic weapons' switch,
+        else plain."""
         objects = [obj for obj, _ in npcitems.pens()]
-        self.assertEqual(objects, [29, 326, 37])
+        self.assertEqual(objects, [29, 326, 37, 1568])
         name = lambda rec: struct.unpack_from("<H", rec, game.ITEM_NAME)[0]
-        (_, (sword, helm)), (_, (armour,)), (_, (cloak, ring_)) = npcitems.pens()
+        (_, (sword, helm)), (_, (armour,)), (_, (ring_,)), (_, (cloak,)) = npcitems.pens()
         self.assertEqual((sword[game.ITEM_PLUS], name(sword)), (1, arms.SWORD_NAME))
         self.assertEqual(npcitems.pens(False)[0][1], (npcitems.SWORD, npcitems.HELM))
         self.assertEqual((armour[game.ITEM_PLUS], cloak[game.ITEM_PLUS], ring_[game.ITEM_PLUS]), (1, 1, 1))
@@ -79,7 +80,7 @@ class NpcItemTests(unittest.TestCase):
         """The three's items, as the game makes them from their objects and readies them (the
         helm, the armour and the cloak worn)."""
         worn = {npcitems.HELM: "head", npcitems.CHEST_ARMOR: "chest", npcitems.CLOAK_ITEM: "cloak"}
-        for creature, (_, items) in zip((KURZAK, LEGCRUSHER, PEHTUCL), npcitems.pens(False)):
+        for creature, (_, items) in zip((KURZAK, LEGCRUSHER, PEHTUCL), npcitems.pens(False)[:3]):
             for rec in items:
                 slot = game.EQUIP_SLOTS.index(worn[rec]) if rec in worn else None
                 self.assertTrue(npcitems.add_to(self.gd, creature, rec, slot))

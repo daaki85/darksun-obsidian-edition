@@ -179,6 +179,13 @@ notes](PATCH-NOTES.md).
   program, or the `dos` folder read-only, raised from `prepare_patched_game`. Now DSCLOG's own
   pointer is used. Test `test_unwritable`.
 
+**Changed**
+- **The Cloak of Protection +1 is in the chest beside Pehtucl,** not on him (`npcitems.PEHTUCL_CHEST`,
+  object 1568, the only one of its kind: a sling and two trinkets of the game's in it). Worn by
+  him (people.py) it did nothing: under AD&D's rule a cloak counts for nothing with a shield, and he
+  carries one. He keeps his Ring of Protection +1. In a new game only: a save that has been to the
+  pens keeps the chest and Pehtucl as they were made.
+
 **Fixed: the game**
 - **The game's people put their weapons and armour on only at their first action in a fight**
   (seen in DOSBox, 2026-11-06): it makes a person's items in its backpack list and moves them to

@@ -53,3 +53,22 @@ all theirs there, fighting with their bare numbers" (HOW-THE-GAME-WORKS, champio
   lifts Metal Shadowseeker +1 from Kurzak unnoticed. / Cilla receives 200 experience points!".
   Afterwards Cilla's backpack held it (type 115, cell 14) and Kurzak held only his obsidian sword.
   Nothing saved.
+
+## Pehtucl's cloak to the chest beside him (later)
+
+- Pehtucl (object 37) stands at (130, 1419); the chest beside him is object 1568 at (201, 1402),
+  square (12, 87), the only entity of that object (RGN29 ETAB 41): a sling and two trinkets in it.
+  The Cloak of Protection +1 moved there (`npcitems.pens`); `worldgear.data_chunks` built: object 37
+  ends with the ring, 1568 has the cloak.
+- **Not seen in the game yet:** a save that has been to the pens (`pens-after-scar`, every save in
+  `saves/`) keeps the region's objects as they were made, so its chest has no cloak: a new game is
+  needed. To reach the chest from a save: things 0-3 written to (200, 1432) and the camera to
+  (40, 1322), one step (walkto 216 1440); move the party off the chest (walkto 120 1470) or the
+  look click lands on a party member (the USE screen); the look box "Chest": its first button
+  closes it, its second **moves the chest** (it was picked up and set down by the bed), its third
+  opens it (cells: two of its items shown).
+- **A crash once:** the first try, with the party beside the chest straight after the move in
+  memory, the third button gave the game's "Failed to open window" (code 1; DSCLOG's GAMEMSG.BIN).
+  Not seen again in two more tries (the same steps after moving the party off it). It can't have
+  been the cloak (not in this save's chest); the memory move is the likelier cause. Open: watch for
+  it opening chests in play.
