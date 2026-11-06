@@ -625,3 +625,9 @@ game's, DSCLOG's, the overlay buffer, the see-through tables, the music buffer, 
 pens, 131-138 KB while the inventory or USE screen is open); `dacwatch.py SECONDS` shows DSCLOG's
 palette copy changing (every 30 s where the game cycles colours). The arena gate (the gap at
 1816,440) asks nothing before Kurzak's call. `ghostwatch.py SECONDS` counts samples with GHOST_ON 0.
+- **Who holds weapons** (2026-11-06): `npcgear.py` lists every creature on the map with its worn, held
+  and backpack items. In the pens (`pens-after-scar`) all 25 creatures besides the party carry
+  everything in the backpack list, nothing worn or held: Kurzak (Shadowseeker, a long sword, his
+  armour), the guards, the templars, Merzol, Kalzith. So the game's Look box, which lists held
+  weapons, shows none for them; the champions (`champions.py` moves their gear to hand and body)
+  are the only people whose weapons it lists.
