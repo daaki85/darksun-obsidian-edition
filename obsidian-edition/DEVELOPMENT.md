@@ -492,8 +492,8 @@ before the mod's sounds and see-through figures (DOS's memory blocks read in the
 2026-11-05: the helper 3,946 paragraphs from C90Ah, the overlay buffer 2,062, the music buffer 751,
 3,211 free); their code took 49 paragraphs more and the see-through figures' block
 (`GHOST_PARAS`) 885, so about 35.6 KB are left. The helper's
-own segment is the limit for new code: its image with the install code is 65,440 bytes
-(`image_len`; `DSCLOG.EXE` is 32 bytes more, 65,472, with its header), so 96 bytes of its 64 KB
+own segment is the limit for new code: its image with the install code is 65,456 bytes
+(`image_len`; `DSCLOG.EXE` is 32 bytes more, 65,488, with its header), so 80 bytes of its 64 KB
 are spare. (The install's 256-byte stack is past the image, in its own segment, since the
 see-through figures: `SS` in the EXE's header is the paragraph after the image.)
 and the build fails past it (what each change took is in the CHANGELOG). The HMA has 6,566 bytes

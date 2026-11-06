@@ -600,6 +600,45 @@ class UseItemTests(unittest.TestCase):
         run(5)
         self.assertEqual(len(calls), 4)
 
+    def test_ghost_draw_many_runs(self):
+        """GHOST_DRAW over a frame of more runs than its spans hold (300: two one-pixel runs on each
+        of 150 rows; some of the game's pictures have up to 563): the figure drawn as far as they
+        go (BLEND's colour, 0 here, over the page), and nothing written past GHOST's block."""
+        from dsloader import ghost
+        from dsloader.gamepatch import VEC_GHOST
+        mu = self.mu
+        image = load_image()
+        at = image.find(bytes((0xB8, VEC_GHOST, 0x25, 0xBA)))
+        handler = struct.unpack_from("<H", image, at + 4)[0]
+        seg = 0x8800
+        end = ghost.GH_TAB + 80 + 4096 + 192 * 8  # (GH_SPANS past GH_PIX's 4096, then 192 spans)
+        mu.mem_write(seg * 16, bytes(end))  # (BLEND all 0)
+        mu.mem_write(seg * 16 + end, b"\xAA" * 4096)
+        mu.mem_write(self.hdr + ghost.TSR_GHOST_SEG, struct.pack("<H", seg))
+        mu.mem_write(self.hdr + ghost.TSR_GHOST_ON, struct.pack("<H", 1))
+        mu.mem_write(self.hdr + 204, struct.pack("<H", 1))  # (party member 0 hidden)
+        # page 3: the whole screen at A000h (the page table at the load segment + 980h)
+        pages = ((GAME_DS - 0x4356 + 0x0980) & 0xFFFF) * 16  # (segments wrap, as in real mode)
+        for field, value in ((4, 0xA000), (0x404, 0), (0x604, 0), (0x804, 319), (0xA04, 199), (0xC04, 0)):
+            mu.mem_write(pages + 6 + field, struct.pack("<H", value))
+        mu.mem_write(0xA0000, b"\x55" * 16000)
+        rows = b"".join(bytes((y, 10, 0, 1, 2, 0, 7, 30, 0x80, 1, 2, 0, 7)) for y in range(150))
+        frame = struct.pack("<HH", 40, 150) + rows + b"\xFF"
+        picture = 0x8000
+        mu.mem_write(picture * 16, struct.pack("<HHHI", 0, 0, 1, 10) + frame)
+        sp = 0x7F0 - 14
+        mu.mem_write(SS * 16 + sp, struct.pack("<7H", 3, 100, 10, 0, 0, picture, 0))
+        sp -= 6
+        mu.mem_write(SS * 16 + sp, struct.pack("<3H", 0x602, CALLER, 0x0202))
+        for name, value in dict(cs=TSR, ds=GAME_DS, ss=SS, esp=sp, ebp=BP, edi=0, esi=0x4444).items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+        mu.emu_start(TSR * 16 + handler, CALLER * 16 + 0x605, count=200000)
+        self.assertEqual((mu.reg_read(r.UC_X86_REG_SP), mu.reg_read(r.UC_X86_REG_SI)), (0x7F0 - 14, 0x4444))
+        self.assertEqual(bytes(mu.mem_read(seg * 16 + end, 4096)), b"\xAA" * 4096)
+        screen = bytes(mu.mem_read(0xA0000, 16000))
+        self.assertEqual(screen[10 * 80 + 110 // 4], 0)  # (the first row's first pixel: drawn)
+        self.assertEqual(screen[10 * 80 + 120 // 4], 0x55)  # (between its two runs: not)
+
 @unittest.skipIf(Uc is None, "unicorn is not installed")
 class BeltTests(unittest.TestCase):
     """PROBE_BELT, at the end of the game's thief skill routine (where "mov ax,si" was): a thief

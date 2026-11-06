@@ -21,8 +21,8 @@ notes](PATCH-NOTES.md).
   pixels as 32 colours, blended plane by plane with what's under them through `BLEND` (32 x 256),
   which the Loader makes from the palette. The block for the tables is 885 paragraphs of upper
   memory taken at `KEEP` (`GHOST_SEG` +1826, `GHOST_ON` +1828). `PAGE_SETUP` is now shared with the
-  shadows. The image grew to 65,440 bytes, so the install's stack moved past it (the EXE's `SS`).
-  DSCLOG.EXE 65,472 bytes (+624; 96 of its segment spare). The game draws the invisible like
+  shadows. The image grew to 65,456 bytes, so the install's stack moved past it (the EXE's `SS`).
+  DSCLOG.EXE 65,488 bytes (+640; 80 of its segment spare). The game draws the invisible like
   anyone (its only rules: -4 to hit and +4 to saves, 7BD4Bh); among foes only the psurlons turn
   invisible (Superior Invisibility). Seen in DOSBox: a figure marked in GHOST_TAB drawn half
   see-through over floor, wall and shadow, either way round and walking; in a fight, a real hide
@@ -31,7 +31,10 @@ notes](PATCH-NOTES.md).
   was first 62h, which is `PROBE_AC`'s: every attack's AC went to the see-through probe (the dice
   log's "target AC 255" on each attack on the party, so foes hit on anything but a 1), and it was
   found in that test before any release; now 80h, and `test_vectors_distinct` checks each of
-  DSCLOG's vectors is used once. Tests: `test_ghost.py`, `UseItemTests.test_ghost_dispatch`.
+  DSCLOG's vectors is used once. `GHOST_DRAW` notes at most 192 runs (the party's figures have
+  up to 78 a frame; some of the game's pictures 563): past that it draws what it has, where it
+  had written on past its block. Tests: `test_ghost.py`, `UseItemTests.test_ghost_dispatch`,
+  `test_ghost_draw_many_runs`.
 - **Sounds for hiding and picking pockets** (`sounds.py`, the user's picks of eight made for it):
   a thief or ranger hidden and unheard in a fight makes a soft breath sinking away (BVOC 140), and
   a pocket picked, a thing or the coins, a purse's jingle (BVOC 141); the three weapons worth XP

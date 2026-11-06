@@ -1288,7 +1288,10 @@ marked in `GHOST_TAB` goes on to the game's routine as ever. A see-through one D
 (`GHOST_DRAW`):
 - it decodes the frame's runs, each pixel mapped to one of 32 colours (`REP`), into a buffer, and
   notes each run within the page (the page's bounds and memory found as the shadows find them,
-  `PAGE_SETUP`); a mirrored frame's pixels are read from the run's other end;
+  `PAGE_SETUP`); a mirrored frame's pixels are read from the run's other end. Room for 4,096
+  pixels and 192 runs (`GH_PIX_MOST`, `GH_SPANS_MOST`): the party's figures have at most 78 runs a
+  frame, but some of the game's pictures up to 563, so past either it draws what it has (it once
+  wrote past its block instead: `test_ghost_draw_many_runs`);
 - then, a plane at a time (the VGA's map mask and read map), it reads the pixel under each and
   writes `BLEND[rep][under]`, the colour nearest the halfway mix.
 Every pass that draws figures draws the floor first (the routines `PROBE_FLOOR` hooks), so the
@@ -1310,4 +1313,6 @@ palette's colours 16-223, the ones the game doesn't animate, cut into 32 boxes b
 paragraphs of upper memory taken at `KEEP` (`GHOST_SEG`, header +1826; none, no see-through
 figures). `GHOST_ON` (+1828) is 0 until they are written. The view is drawn again when a figure
 turns see-through or solid (`TSR_VIEW_REDRAW`). Seen in DOSBox, 2026-11-05: a figure marked drew
-half see-through over floor, wall and its shadow, facing either way and walking.
+half see-through over floor, wall and its shadow, facing either way and walking; in a fight, a real
+hide (solid again from the backstab on) and a real Invisibility, walking at the solid pace
+(`playtest/logs/2026-11-05-fight-test.md`).

@@ -16,7 +16,7 @@ the palette as it is (DSCLOG's copy, made again with DARK as the area changes: s
     by cutting the palette's (the ones the game doesn't animate) into that many boxes;
   * BLEND (GH_BLEND): for each of those, a row of 256, the palette's colour nearest the halfway
     mix of it and each of the palette's.
-Made in a thread (a second or two of Python), and kept by the palette for the next time; DSCLOG
+Made in a thread (about 0.2 s of Python), and kept by the palette for the next time; DSCLOG
 draws figures as ever (GHOST_ON 0) until they are written.
 """
 

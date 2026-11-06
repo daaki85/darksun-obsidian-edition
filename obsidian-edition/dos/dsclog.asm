@@ -20898,6 +20898,8 @@ ghost_draw:
         mov cx, [cs:clip_x1]
 .span:  cmp ax, cx
         jg .next
+        cmp word [bp + GD_SPANS - 10], GH_SPANS + GH_SPANS_MOST * 8
+        jae .spans_full                 ; (no room for its span: what is noted drawn)
         push di
         mov di, [bp + GD_SPANS - 10]
         mov [es:di + 2], ax
@@ -20923,6 +20925,7 @@ ghost_draw:
         xchg ax, bx
         ret
 .full:  pop ax
+.spans_full:
         pop ax
 .flush: push es
         pop fs
