@@ -10,7 +10,7 @@ from unittest import mock
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from dsloader import tracker as tracker_module
-from dsloader import dicelog, game, names
+from dsloader import dicelog, game, itemgate, names
 from dsloader.dicelog import AcDetail, DiceLog, Entry, KIND_AC, KIND_ROLL, KIND_SAVE
 from dsloader.textlog import KIND_MESSAGE, KIND_PORTRAIT, KIND_TEXT, TextBuffer
 from dsloader.tracker import PartyTracker
@@ -1943,6 +1943,54 @@ class PassTests(unittest.TestCase):
         self.assertTrue(first[1].startswith("Loader error in the dice log: KeyError"))
         self.assertEqual(second, ["Dag attacks: HIT"])
 
+    def test_each_step_on_its_own(self):
+        """A step of the pass failing leaves the steps after it to run (one failing once stopped
+        every one after it, silently): said once; the game busy with its lists, nothing said;
+        DOSBox gone (ProcessError) passed on."""
+        from unittest import mock
+        from dsloader.process import ProcessError
+        log = make_game()
+        log.combat_log = False
+        with mock.patch.object(log, "_answer_look", side_effect=KeyError("new")), \
+                mock.patch.object(log, "turn_lines", return_value=["Dag's turn"]):
+            out = log._after_rolls(False, 1.0)
+            again = log._after_rolls(False, 2.0)
+        self.assertIn("Dag's turn", out)
+        self.assertEqual(sum(line.startswith("Loader error in the dice log: KeyError") for line in out), 1)
+        self.assertNotIn("KeyError", " ".join(again))  # (said once)
+        self.assertIn("Dag's turn", again)
+        self.assertEqual(log._step(mock.Mock(side_effect=itemgate.ItemsBusy("busy"))), [])
+        self.assertEqual(log._step(mock.Mock(side_effect=struct.error("half made")), quiet=True), [])
+        with self.assertRaises(ProcessError):
+            log._step(mock.Mock(side_effect=ProcessError("gone")))
+
+    def test_watches_go_on_past_a_failing_one(self):
+        """The people's watches each on their own: Kalzith's stock busy, Semyon and Kurzak still
+        watched in the same pass."""
+        from unittest import mock
+        log = make_game()
+        with mock.patch.object(dicelog.kalzith, "stock", side_effect=itemgate.ItemsBusy("busy")), \
+                mock.patch.object(dicelog.semyon, "watch") as semyon, \
+                mock.patch.object(dicelog.kurzak, "watch") as kurzak:
+            log._watches()
+        semyon.assert_called_once()
+        kurzak.assert_called_once()
+
+    def test_refused_write_said_once(self):
+        """A write the Loader stopped (GuestMemory.refused, a deque) is said in the pass's lines and
+        cleared: slicing the deque raised TypeError, every pass from then on."""
+        from collections import deque
+        from unittest import mock
+        log = make_game()
+        log.combat_log = False
+        log.guest.refused = deque(["2 bytes at 0x10 (low memory), from test"], maxlen=200)
+        with mock.patch.object(log, "poll", return_value=[]), \
+                mock.patch.object(log, "_after_rolls", return_value=[]):
+            first = log.lines(now=1.0)
+            second = log.lines(now=2.0)
+        self.assertTrue(any("2 bytes at 0x10" in line for line in first), first)
+        self.assertEqual((len(log.guest.refused), second), (0, []))
+
     def test_half_seen_rolls_dropped_when_rolls_are_missed(self):
         """Dice of an NdS roll collected so far, and a save's natural d20, dropped when the ring
         overran (rolls missed): the next roll from that place starts afresh."""
@@ -1978,6 +2026,21 @@ class LoadSeenTests(unittest.TestCase):
             clock[0] = 3000  # (an earlier save of the same party)
             log._forget_undone_picks()  # (as in a pass: it reads the clock first)
             self.assertTrue(log._party_check(now=300.0))
+
+    def test_default_party_again_in_a_new_game(self):
+        """The game's own party's changes, once a session, are made again once the clock goes back
+        (a new game from the menu, after the first one's party was made ready)."""
+        from unittest import mock
+        log = make_game()
+        clock = [3000]
+        with mock.patch.object(log.game, "game_time", side_effect=lambda: clock[0]):
+            log._forget_undone_picks()
+            log._party_done.add(("Gerakis", "kinds"))
+            log._forget_undone_picks()
+            self.assertEqual(log._party_done, {("Gerakis", "kinds")})  # (the same game)
+            clock[0] = 100  # (a new game)
+            log._forget_undone_picks()
+            self.assertEqual(log._party_done, set())
 
 
 class PanelLevelTests(unittest.TestCase):

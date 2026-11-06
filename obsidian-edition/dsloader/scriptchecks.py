@@ -84,18 +84,28 @@ def find(scripts: Dict[Tuple[str, int], bytes], field_types: bytes) -> Dict[int,
     return found
 
 
-_cache: Dict[str, Dict[int, Check]] = {}
+_cache: Dict[str, Tuple[Tuple[int, int], Dict[int, Check]]] = {}
 
 
 def load(path: str) -> Dict[int, Check]:
-    """The checks in the GPLDATA.GFF at PATH (read once); none if it can't be read."""
-    if path not in _cache:
-        try:
-            with open(path, "rb") as f:
-                _cache[path] = find(*gpl.load_scripts(f.read()))
-        except (OSError, ValueError, KeyError, gpl.ScriptError):
-            _cache[path] = {}
-    return _cache[path]
+    """The checks in the GPLDATA.GFF at PATH, read again whenever the file has changed (the
+    Loader writes its copy afresh at each start, with the switches' changes in or out, which
+    moves the scripts' code); none if it can't be read (tried again on the next call)."""
+    try:
+        st = os.stat(path)
+        stamp = (st.st_mtime_ns, st.st_size)
+    except OSError:
+        return {}
+    kept = _cache.get(path)
+    if kept is not None and kept[0] == stamp:
+        return kept[1]
+    try:
+        with open(path, "rb") as f:
+            checks = find(*gpl.load_scripts(f.read()))
+    except (OSError, ValueError, KeyError, gpl.ScriptError):
+        return {}
+    _cache[path] = (stamp, checks)
+    return checks
 
 
 def evaluate(tokens: list, roll: int, ability: int) -> int:

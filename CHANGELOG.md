@@ -129,6 +129,37 @@ notes](PATCH-NOTES.md).
   first (then its polearms, quarterstaff and axe), still there after walking off and after a
   save and load. Tests: `test_semyon.ShipmentTests`, `test_worldgear`.
 
+**Fixed: the Loader** (found in a second review, 2026-11-06)
+- **One write the Loader stopped ended the dice log's lines for the session:** the line saying so
+  sliced `GuestMemory.refused`, a deque, which raises TypeError, outside any guard, before the
+  deque was cleared; every pass then failed (the log, dialogue, speakers' names and picked
+  pockets no longer kept up). Test `test_refused_write_said_once`.
+- **Each step of the pass on its own** (`DiceLog._step`): a step that failed stopped every one
+  after it, every pass, said once or not at all (one `try` round thirty steps in `_after_rolls`,
+  a silent one round the people's watches in `_arena_ring`, where Kalzith's stock waiting on a
+  busy item list skipped Semyon's, Kurzak's and the vulture's). Now the game busy with its lists
+  waits for a later pass, DOSBox gone (`ProcessError`) is passed on, and anything else is said
+  once by where it happened (not by its text, which could carry an address: said each pass).
+  Tests `test_each_step_on_its_own`, `test_watches_go_on_past_a_failing_one`.
+- **A weapon's 200 XP for a picked pocket could be had again and again:** Shadowseeker, Gutterknot
+  or Mindshard sold, then lifted back from the buyer. Paid once a game now, remembered with the
+  pockets tried (`Attempt.paid`, kept and forgotten as they are). Test `test_sword_xp_once`.
+- **The game's own party wasn't made ready in a second new game** started without closing the
+  Loader (no specs, gythka, Cermak's kit or starting gear): what was done is forgotten with the
+  clock going back, as the picks are. Test `test_default_party_again_in_a_new_game`.
+- **A sold magical item could be lost** when the game was busy with its item lists: the pointer's
+  thing (523) was emptied before the gate was asked (it covered things 0-519 only), and the items
+  were then in no list. `Buyback.keep` asks first (`itemgate.hold`), and the gate covers the
+  things past 519 (`THINGS_PAST`). Tests `test_busy_before_anything_moved`,
+  `test_gate_covers_the_pointers_thing`.
+- **The dice log named the wrong script checks** after a switch changed and the game started
+  again from the same Loader: the checks were read from `dos/GPLDATA.GFF` once a session, and the
+  Loader writes it afresh at each start. Read again when the file changes, and a failed read is
+  not kept. Test `LoadTests`.
+- **The scenes' pointer could stop the game from starting:** `POINTER.BIN` held by another
+  program, or the `dos` folder read-only, raised from `prepare_patched_game`. Now DSCLOG's own
+  pointer is used. Test `test_unwritable`.
+
 **Fixed: the Loader** (found in an audit)
 - **A save of the same party loaded wasn't seen as a load:** the check for it read the game's
   clock after another step of the same pass had just noted it, so the clock never went back; the

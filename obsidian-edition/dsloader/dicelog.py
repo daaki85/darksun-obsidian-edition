@@ -32,6 +32,7 @@ from . import aging, bowyer, ghost, buyback, champions, gamepatch, itemgate, com
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
+from .process import ProcessError
 from .itemwatch import ItemWatch
 from .textlog import KIND_MESSAGE, KIND_PORTRAIT, KIND_SHOW_REPLIES, KIND_TEXT, Dialogue, DialogueEntry, TextBuffer
 from .tracker import PartyTracker
@@ -692,6 +693,7 @@ class DiceLog:
             self.defilers.reset()  # (a save loaded: its fights rolled for again)
             self.champions.reset()  # (and its champions equipped again)
             self._mended_in = None  # (a save loaded: its scrolls looked at again)
+            self._party_done.clear()  # (a new game: the game's own party made ready again; each step checks itself)
         # A try later than the game's clock is not this game's: one undone by loading an earlier
         # save, or another game's (a new game started with the same party, the Loader started
         # after it: seen the first time the clock is read)
@@ -765,6 +767,8 @@ class DiceLog:
             return []
         if result.key:
             self._remember_pick(result.key)
+        if result.paid:
+            self._remember_pick(result.paid)
         return result.log or [result.text]
 
     def _arrows_pass(self) -> List[str]:
@@ -1177,28 +1181,88 @@ class DiceLog:
         """A line for an error the dice log's pass didn't expect, once for each kind (with where it
         came from, for a report); the pass's other lines are kept and the next pass goes on."""
         import traceback
-        key = (type(err).__name__, str(err))
-        if key in self._errors_said:
+        where = traceback.extract_tb(err.__traceback__)[-1]
+        key = (type(err).__name__, where.filename, where.lineno)  # (not its text: one carrying an
+        if key in self._errors_said:                              #   address would be said each pass)
             return []
         self._errors_said.add(key)
-        where = traceback.extract_tb(err.__traceback__)[-1]
         return [f"Loader error in the dice log: {type(err).__name__}: {err} "
                 f"({os.path.basename(where.filename)}:{where.lineno}); it carries on"]
 
+    def _step(self, fn: Callable[[], object], quiet: bool = False) -> List[str]:
+        """One step of a pass, on its own: its lines (none if it gives none). The game busy with
+        its item lists (ItemsBusy): none, the step tried again in a later pass. DOSBox gone
+        (ProcessError): passed on. Anything else: said once (_error_once), or with QUIET nothing
+        for memory read while the game has it half made (struct.error, IndexError, ValueError);
+        either way the pass's next steps go on (one failing step once stopped all after it)."""
+        try:
+            got = fn()
+        except itemgate.ItemsBusy:
+            return []
+        except ProcessError:
+            raise
+        except (struct.error, IndexError, ValueError) as e:
+            return [] if quiet else self._error_once(e)
+        except Exception as e:
+            return self._error_once(e)
+        return got if isinstance(got, list) else []
+
     def _after_rolls(self, show_all: bool, now: float) -> List[str]:
         """The pass's lines after the rolls: answers to the game, hit points and effects, the
-        party's items, initiative and turns, the creation screen."""
+        party's items, initiative and turns, the creation screen. Each step on its own (_step)."""
         out: List[str] = []
-        self._forget_undone_picks()
-        self._kit_tick(now)
-        self._answer_stats()
-        out += self._answer_use()
-        out += self._arrows_pass()
-        out += self._answer_look()
+        step = self._step
+        step(self._forget_undone_picks)
+        step(lambda: self._kit_tick(now))
+        step(self._answer_stats)
+        out += step(self._answer_use)
+        out += step(self._arrows_pass)
+        out += step(self._answer_look)
+        out += step(lambda: self._changes(now))
+        out += step(lambda: self._take_text(now))
+        if now >= self._next_effect_check:
+            self._next_effect_check = now + EFFECT_INTERVAL
+            out += step(lambda: self.effect_changes(now))
+            step(self._write_slots)
+            step(self._write_stats)
+            try:
+                loading = self._party_check(now)
+            except ProcessError:
+                raise
+            except Exception as e:  # (unknown: the party's watches wait for a pass that can tell)
+                out += self._error_once(e)
+                loading = True
+            if not loading:  # (not while a game is loading: its records are half-filled)
+                out += step(lambda: self.tracker.check(now))
+                out += step(self._item_watches)
+                out += step(lambda: self._arena_ring(now))
+                out += step(lambda: self._drawn(now))
+                step(self._kalzith_sold_out)
+                out += step(self._learn_lines)
+                step(lambda: self._dress_now(now))
+                out += step(lambda: self.itemwatch.check(self.game, now, self._settings))
+        step(self._scroll)
+        if self._initiative and now - self._initiative_at >= INITIATIVE_WAIT:
+            out += step(self.initiative_lines)
+        out += step(self.turn_lines)  # after the round's order and the last turn's XP
+        step(lambda: self._creation_tries_moved(now))
+        if (self._creation_hp or self._creation_abilities or self._tries_new) \
+                and now - self._creation_hp_at >= CREATION_HP_WAIT:
+            out += step(self.creation_lines)
+        out += step(lambda: self.flush(now))
+        return out
+
+    def _changes(self, now: float) -> List[str]:
+        """Hit points, PSP and abilities changed (always read, to keep up), said unless a game is
+        loading (its records half-filled); Psionic Blast's imagined wounds."""
         changes = self.hp_changes(now) + self.psp_changes() + self.ability_changes()
-        if not self._party_check(now):  # not while a game is loading: its records are half-filled
-            out += changes
-            out += self._blast.tick(self.game, self.tsr_hdr, now)
+        if self._party_check(now):
+            return []
+        return changes + self._blast.tick(self.game, self.tsr_hdr, now)
+
+    def _take_text(self, now: float) -> List[str]:
+        """The messages DSCLOG copied (lines), and the dialogue (kept for take_dialogue)."""
+        out: List[str] = []
         for rec in self.text.poll():
             if rec.kind == KIND_MESSAGE:
                 if rec.text.strip():
@@ -1208,39 +1272,22 @@ class DiceLog:
                 self._dialogue += self._not_ours(self.dialogue.add(rec, now))
         self._dialogue += self._not_ours(self.dialogue.idle(now))
         self._dialogue += self._not_ours(self._reply_choice(now))
-        if now >= self._next_effect_check:
-            self._next_effect_check = now + EFFECT_INTERVAL
-            out += self.effect_changes(now)
-            self._write_slots()
-            self._write_stats()
-            if not self._party_check(now):
-                out += self.tracker.check(now)
-                try:  # (each waits for a later pass while the game changes its item lists)
-                    if self.rules & game.RULE_BUYBACK:  # (a magical item sold: into its merchant's pack)
-                        out += self.buyback.watch(self.game, self.tsr_hdr)
-                    if self.defiler_scrolls:  # (a defiler in a fight may carry a scroll: defilerscrolls.py)
-                        out += self.defilers.watch(self.game, bool(self.rules & game.RULE_NEW_SPELLS))
-                    # (the champions' gear to where it is worn and held: champions.py)
-                    out += self.champions.watch(self.game, bool(self.rules & game.RULE_NEW_SPELLS))
-                except itemgate.ItemsBusy:
-                    pass
-                finally:
-                    itemgate.release(self.game)
-                out += self._arena_ring(now)
-                out += self._drawn(now)
-                self._kalzith_sold_out()
-                out += self._learn_lines()
-                self._dress_now(now)
-                out += self.itemwatch.check(self.game, now, self._settings)
-        self._scroll()
-        if self._initiative and now - self._initiative_at >= INITIATIVE_WAIT:
-            out += self.initiative_lines()
-        out += self.turn_lines()  # after the round's order and the last turn's XP
-        self._creation_tries_moved(now)
-        if (self._creation_hp or self._creation_abilities or self._tries_new) \
-                and now - self._creation_hp_at >= CREATION_HP_WAIT:
-            out += self.creation_lines()
-        out += self.flush(now)
+        return out
+
+    def _item_watches(self) -> List[str]:
+        """The watches that move items: each waits for a later pass while the game changes its
+        item lists; the game let go of after them."""
+        out: List[str] = []
+        new_spells = bool(self.rules & game.RULE_NEW_SPELLS)
+        try:
+            if self.rules & game.RULE_BUYBACK:  # (a magical item sold: into its merchant's pack)
+                out += self._step(lambda: self.buyback.watch(self.game, self.tsr_hdr))
+            if self.defiler_scrolls:  # (a defiler in a fight may carry a scroll: defilerscrolls.py)
+                out += self._step(lambda: self.defilers.watch(self.game, new_spells))
+            # (the champions' gear to where it is worn and held: champions.py)
+            out += self._step(lambda: self.champions.watch(self.game, new_spells))
+        finally:
+            itemgate.release(self.game)
         return out
 
     def _lines_end(self, out: List[str], now: float) -> List[str]:
@@ -1248,7 +1295,7 @@ class DiceLog:
         refused = getattr(self.guest, "refused", None)
         if refused:
             out += [f"(The Loader stopped one of its own writes over the game's memory: {r}. "
-                    "Please send this line.)" for r in refused[:3]]
+                    "Please send this line.)" for r in list(refused)[:3]]
             refused.clear()
         if self.missed:
             # (not while the creation die tumbles: DSCLOG keeps the rolls that count, RL_TRY)
@@ -1287,63 +1334,86 @@ class DiceLog:
             ring.name_items(self.game, self.rules)
             if not names.update(self.game, self.tsr_hdr):
                 return out  # no names for them yet: none given
-            still = self._items_still()
-            if still:  # (the item lists changed only while the game leaves them be: itemgate.py)
-                # A new character's gear waits while DSCLOG's weapon window is up after DONE: its weapon
-                # specs decide its weapon, and the steps after build on that weapon, in this order.
-                new_ok = not self._weapons_asked()
-                if self.rules & game.RULE_SPECIALIZE and new_ok:  # (new characters' weapon kinds and starting weapon:
-                    out += weaponchoice.finish_new(self.game)  #   the long sword made a club before a psionicist's classes leave it behind)
-                if self.rules & game.RULE_RESTRICT and new_ok:  # (new characters' gear their classes can't use: left behind)
-                    out += weaponchoice.class_gear(self.game)
-                if self.rules & game.RULE_KITS:  # (new characters' starting gear fitted to their kits; a
-                    if new_ok:  #   Healer's cosmos spells, one made by an earlier version)
-                        out += weaponchoice.kit_gear(self.game)
-                    for member in range(game.PARTY_SIZE):  # (and a Wilderness Avenger's healing spells)
-                        out += kits.cosmos_spells(self.game, member) + kits.avenger_heals(self.game, member)
-                if self.starting_gear and new_ok:  # (new characters' starting gear filled out)
-                    out += startgear.fill(self.game)
-                out += defaultparty.ready(self.game, self.rules, self._party_done, self.starting_gear)  # (the game's own party, once)
-                if self.rules & game.RULE_AGING and new_ok:  # (a starting age for each who has none)
-                    out += aging.give_ages(self.game)
-                if self.rules & game.RULE_AGING:  # (a year of the game's clock: each a year older)
-                    out += self._natural_aging()
-                if not self.game.in_combat():  # (items an earlier version put in the wrong list)
-                    out += pickpocket.mend_lists(self.game)
-                itemgate.release(self.game)
-            if self.cilla_elf:
-                out += defaultparty.elf_figure(self.game)  # (Cilla, an elf, drawn as one)
-            # (the slave pens' and the world's new items are in the game's data: worldgear.py)
-            if self.stealth_gear:
-                stealth.reprice(self.game)  # (cloaks and boots: they help a thief hide and move silently)
-            kalzith.stock(self.game, bool(self.rules & game.RULE_NEW_SPELLS))  # (once a game, by its flag)
-            semyon.watch(self.game)  # (killed: never put in the pens)
-            kurzak.watch(self.game)  # (Legcrusher killed: Kurzak's lines about him missing)
-            semyon.ship(self.game)  # (Thornwall onto the pens' rack, once he has told of it)
-            semyon.found(self.game)  # (and his word on it, once the party has it)
-            if self.vulture_on:
-                out += vulture.meal(self.game)  # (Dinos's script has set its flag: XP and a full rest)
-            kalzith.watch(self.game)  # (killed: Dinos and the Trustee speak of him so)
-            # (one of his scrolls, his Cloak and Quarterstaff: each pass until done, as the game's
-            # lists can be busy the first time)
-            left = kalzith.loot(self.game)
-            if left:
-                out.append("Kalzith leaves: " + ", ".join(left))
-            region = self.game.region()
-            if region != self._mended_in:  # (his scrolls of before the fix, once in each area)
-                kalzith.mend(self.game)
-                self._mended_in = region
-            tools.repaint(self.game)  # (sets of Thieves' Tools an earlier version gave: their name and picture)
-            out += [stuckwalk.stopped_line(name) for name in self.walkers.check(self.game)]
-            out += heapcheck.WATCH.take(self.guest.read, self.game.load_seg, self.game.ds, self.tsr_hdr)  # (the game's memory: a crash report's, and a word when it runs low)
-            out += self._ring_search()
-            icons.COPY_OPEN = icons.ready(self.game, self.tsr_hdr)
-            icons.repaint(self.game, icons.COPY_OPEN)  # the items' own icons
-        except (struct.error, IndexError, ValueError):  # (itemgate.ItemsBusy too: tried in a later pass)
+        except (struct.error, IndexError, ValueError):
             return out
+        quiet = lambda fn: self._step(fn, quiet=True)  # (each on its own: memory half made, the next pass)
+        try:
+            quiet(lambda: self._new_gear(out))
+            out += quiet(self._watches)
         finally:
             itemgate.release(self.game)
         return out
+
+    def _new_gear(self, out: List[str]) -> None:
+        """New characters' gear, the game's own party, ages and lists mended, in this order (each
+        builds on the last), only while the game leaves its item lists be (_items_still); their
+        lines into OUT as they come (a step failing keeps those before it)."""
+        still = self._items_still()
+        if still:  # (the item lists changed only while the game leaves them be: itemgate.py)
+            # A new character's gear waits while DSCLOG's weapon window is up after DONE: its weapon
+            # specs decide its weapon, and the steps after build on that weapon, in this order.
+            new_ok = not self._weapons_asked()
+            if self.rules & game.RULE_SPECIALIZE and new_ok:  # (new characters' weapon kinds and starting weapon:
+                out += weaponchoice.finish_new(self.game)  #   the long sword made a club before a psionicist's classes leave it behind)
+            if self.rules & game.RULE_RESTRICT and new_ok:  # (new characters' gear their classes can't use: left behind)
+                out += weaponchoice.class_gear(self.game)
+            if self.rules & game.RULE_KITS:  # (new characters' starting gear fitted to their kits; a
+                if new_ok:  #   Healer's cosmos spells, one made by an earlier version)
+                    out += weaponchoice.kit_gear(self.game)
+                for member in range(game.PARTY_SIZE):  # (and a Wilderness Avenger's healing spells)
+                    out += kits.cosmos_spells(self.game, member) + kits.avenger_heals(self.game, member)
+            if self.starting_gear and new_ok:  # (new characters' starting gear filled out)
+                out += startgear.fill(self.game)
+            out += defaultparty.ready(self.game, self.rules, self._party_done, self.starting_gear)  # (the game's own party, once)
+            if self.rules & game.RULE_AGING and new_ok:  # (a starting age for each who has none)
+                out += aging.give_ages(self.game)
+            if self.rules & game.RULE_AGING:  # (a year of the game's clock: each a year older)
+                out += self._natural_aging()
+            if not self.game.in_combat():  # (items an earlier version put in the wrong list)
+                out += pickpocket.mend_lists(self.game)
+            itemgate.release(self.game)
+
+    def _watches(self) -> List[str]:
+        """The Loader's people and items watched, each on its own (one failing leaves the rest)."""
+        out: List[str] = []
+        quiet = lambda fn: self._step(fn, quiet=True)
+        new_spells = bool(self.rules & game.RULE_NEW_SPELLS)
+        if self.cilla_elf:
+            out += quiet(lambda: defaultparty.elf_figure(self.game))  # (Cilla, an elf, drawn as one)
+        # (the slave pens' and the world's new items are in the game's data: worldgear.py)
+        if self.stealth_gear:
+            quiet(lambda: stealth.reprice(self.game))  # (cloaks and boots: they help a thief hide and move silently)
+        quiet(lambda: kalzith.stock(self.game, new_spells))  # (once a game, by its flag)
+        quiet(lambda: semyon.watch(self.game))  # (killed: never put in the pens)
+        quiet(lambda: kurzak.watch(self.game))  # (Legcrusher killed: Kurzak's lines about him missing)
+        quiet(lambda: semyon.ship(self.game))  # (Thornwall onto the pens' rack, once he has told of it)
+        quiet(lambda: semyon.found(self.game))  # (and his word on it, once the party has it)
+        if self.vulture_on:
+            out += quiet(lambda: vulture.meal(self.game))  # (Dinos's script has set its flag: XP and a full rest)
+        quiet(lambda: kalzith.watch(self.game))  # (killed: Dinos and the Trustee speak of him so)
+        # (one of his scrolls, his Cloak and Quarterstaff: each pass until done, as the game's
+        # lists can be busy the first time)
+        left = quiet(lambda: kalzith.loot(self.game))
+        if left:
+            out.append("Kalzith leaves: " + ", ".join(left))
+        quiet(self._mend_scrolls)
+        quiet(lambda: tools.repaint(self.game))  # (sets of Thieves' Tools an earlier version gave: their name and picture)
+        out += quiet(lambda: [stuckwalk.stopped_line(name) for name in self.walkers.check(self.game)])
+        # (the game's memory: a crash report's, and a word when it runs low)
+        out += quiet(lambda: heapcheck.WATCH.take(self.guest.read, self.game.load_seg, self.game.ds, self.tsr_hdr))
+        out += quiet(self._ring_search)
+        quiet(self._icons)
+        return out
+
+    def _mend_scrolls(self) -> None:
+        region = self.game.region()
+        if region != self._mended_in:  # (Kalzith's scrolls of before the fix, once in each area)
+            kalzith.mend(self.game)
+            self._mended_in = region
+
+    def _icons(self) -> None:
+        icons.COPY_OPEN = icons.ready(self.game, self.tsr_hdr)
+        icons.repaint(self.game, icons.COPY_OPEN)  # the items' own icons
 
     def _drawn(self, now: float) -> List[str]:
         """What DSCLOG draws and does for the Loader, kept up four times a second (not with the

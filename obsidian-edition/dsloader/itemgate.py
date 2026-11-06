@@ -24,6 +24,7 @@ from . import game
 WAIT = 0.06  # seconds the game's lists must stay the same before the Loader changes them
 ITEM_RECORDS = 400  # the game's item table: records 0-399
 THING_COUNT = 0x208  # (ring.THING_COUNT: objects 0-519, 3 bytes each)
+THINGS_PAST = 4  # (... and the few past them: the pointer's, 523, that a sale empties: buyback.py)
 FREE_THINGS, THINGS_USED, FREE_ITEMS = 0x4D72, 0x4C48, 0x4D76  # (ring.py's)
 REGION = 0x117C  # (ring.REGION)
 MAX_CREATURES = 512  # (buyback.MAX_CREATURES)
@@ -59,7 +60,7 @@ class ItemGate:
         if any(addr < heads + at + 2 and end > heads + at for at in (FREE_ITEMS, FREE_THINGS, THINGS_USED)):
             return True
         things = (self.gd.load_seg + game.COMBATANTS_SEG) * 16 + game.COMBATANTS_OFF
-        if addr < things + THING_COUNT * 3 and end > things:
+        if addr < things + (THING_COUNT + THINGS_PAST) * 3 and end > things:
             return True
         items = game.far_pointer(guest, ds, game.ITEMS_PTR)
         if items and addr < items + ITEM_RECORDS * game.ITEM_SIZE and end > items:

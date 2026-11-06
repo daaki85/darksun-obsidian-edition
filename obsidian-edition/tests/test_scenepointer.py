@@ -46,6 +46,26 @@ class PointerDataTests(unittest.TestCase):
         self.assertFalse(scenepointer.write_pointer(None, None, dest))
         self.assertFalse(os.path.exists(dest))
 
+    def test_unwritable(self):
+        """POINTER.BIN that can't be written (held by another program, a read-only folder): False,
+        not an error that would stop the game starting."""
+        import os, tempfile
+        from unittest import mock
+        dest = os.path.join(tempfile.mkdtemp(), scenepointer.POINTER_FILE)
+        real_open = open
+
+        def opener(path, mode="r", *a, **k):
+            if path == dest and "w" in mode:
+                raise PermissionError("held")
+            return real_open(path, mode, *a, **k)
+        with mock.patch.object(scenepointer.gff, "read_gff", return_value=mock.MagicMock()), \
+                mock.patch.object(scenepointer, "pointer_data", return_value=b"data"), \
+                mock.patch("builtins.open", side_effect=opener):
+            self.assertFalse(scenepointer.write_pointer(__file__, __file__, dest))
+        with mock.patch.object(scenepointer.gff, "read_gff", return_value=mock.MagicMock()), \
+                mock.patch.object(scenepointer, "pointer_data", side_effect=__import__("struct").error("short")):
+            self.assertFalse(scenepointer.write_pointer(__file__, __file__, dest))
+
 
 if __name__ == "__main__":
     unittest.main()

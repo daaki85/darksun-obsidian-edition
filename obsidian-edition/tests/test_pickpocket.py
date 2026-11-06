@@ -103,6 +103,32 @@ class PickTests(unittest.TestCase):
         self.assertEqual(self.guard_items(), [CLUB, KEY, BOOTS])
         self.assertEqual(self.attempt(11).xp_to, None)  # (the bag's too heavy: just coins now)
 
+    def test_sword_xp_once(self):
+        """The XP for a weapon worth it is paid once a game: lifted again (sold, and its buyer's
+        pocket picked) it is only a thing lifted."""
+        m = self.m
+        struct.pack_into("<H", m, ITEMS + CLUB * game.ITEM_SIZE + game.ITEM_TYPE, 45)
+        struct.pack_into("<H", m, ITEMS + SWORD * game.ITEM_SIZE + game.ITEM_TYPE, game.SHORT_SWORD_TYPE)
+        typ = ITEM_TYPES + game.SHORT_SWORD_TYPE * game.ITEM_TYPE_SIZE
+        struct.pack_into("<H", m, typ + pickpocket.TYPE_WEIGHT, 30)
+        m[typ + pickpocket.TYPE_WORN] = 5
+        first = self.attempt(11)
+        self.assertEqual(first.xp, pickpocket.SWORD_XP)
+        self.assertIsNotNone(first.paid)
+        self.tried.add(first.paid)  # (as DiceLog remembers it)
+        self.setUp()  # (a fresh game's memory: the sword on the Guard again)
+        self.tried.add(first.paid)
+        m = self.m
+        struct.pack_into("<H", m, ITEMS + CLUB * game.ITEM_SIZE + game.ITEM_TYPE, 45)
+        struct.pack_into("<H", m, ITEMS + SWORD * game.ITEM_SIZE + game.ITEM_TYPE, game.SHORT_SWORD_TYPE)
+        typ = ITEM_TYPES + game.SHORT_SWORD_TYPE * game.ITEM_TYPE_SIZE
+        struct.pack_into("<H", m, typ + pickpocket.TYPE_WEIGHT, 30)
+        m[typ + pickpocket.TYPE_WORN] = 5
+        again = self.attempt(11)
+        self.assertEqual((again.xp_to, again.xp, again.paid), (None, 0, None))
+        self.assertTrue(again.lifted)
+        self.assertNotIn("experience", again.text)
+
     def test_churrrs_club(self):
         """Churrr's Gutterknot lifted (whatever its weight), by its name: SWORD_XP to the thief."""
         from dsloader import worldgear

@@ -64,6 +64,7 @@ class Attempt:
     xp_to: Optional[int] = None  # a party member given XP for what was lifted (the game's routine)
     xp: int = 0
     lifted: bool = False  # something (or the coins) taken: the purse's sound (sounds.PICK_SOUND)
+    paid: Optional[str] = None  # SWORD_XP given for this weapon: remembered with the tries, once a game
 
 
 def _seen(data: bytes) -> Optional[str]:
@@ -298,12 +299,14 @@ def attempt(gd: GameData, tried: set, roll: Callable[[], int] = lambda: random.r
                 return Attempt(f"{thief} can't take anything now.", lines)
             text = f"{thief} lifts {name} from {npc} unnoticed."
             special = _seen(data)
-            if special is not None:  # Kurzak's sword, Churrr's club, Maris's Mindshard
+            # (paid once a game: a weapon sold and lifted back again is worth nothing more)
+            paid = f"{gd.creature_name(0)}|paid|{special}" if special is not None else None
+            if special is not None and paid not in tried:  # Kurzak's sword, Churrr's club, Maris's Mindshard
                 # (what it is, Shadowseeker, Gutterknot or Mindshard, is for the inventory screen to show: the log says)
                 seen = f"{thief} lifts {special} from {npc} unnoticed."
                 reward = f"{thief} receives {SWORD_XP} experience points!"
                 lines += ["  " + text, "  " + reward]
-                return Attempt(f"{seen} {reward}", lines, xp_to=leader, xp=SWORD_XP, lifted=True)
+                return Attempt(f"{seen} {reward}", lines, xp_to=leader, xp=SWORD_XP, lifted=True, paid=paid)
         lines.append("  " + text)
         return Attempt(text, lines, lifted=True)  # free to try again
     quiet = _skill(gd, leader, "move silently") or 0

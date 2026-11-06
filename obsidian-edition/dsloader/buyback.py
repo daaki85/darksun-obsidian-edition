@@ -13,7 +13,7 @@ game would have. Anything else sold is gone, as in the game.
 import struct
 from typing import List, Optional
 
-from . import game, npcitems, pickpocket, ring
+from . import game, itemgate, npcitems, pickpocket, ring
 
 SOLD_SEQ, SOLD_Q, SOLD_SLOTS = 308, 310, 4  # (DSCLOG's header)
 PERSON, MAX_CREATURES = 2, 512  # (an object's kind for a creature, as GameData.combatants reads them)
@@ -90,6 +90,9 @@ class Buyback:
         return out
 
     def keep(self, gd, thing: int, merchant: int) -> List[str]:
+        # (before anything is moved: the game busy with its lists, ItemsBusy and the sale tried
+        # again in a later pass, not the thing emptied and its items left in no list)
+        itemgate.hold(gd)
         it = ring.Items(gd)
         if not 0 <= thing < LAST_THING:
             return []
