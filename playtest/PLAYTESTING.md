@@ -65,6 +65,18 @@ pointer: two right-clicks on bare floor; a red eye with a bar over floor is the 
 hide lands often at 95 (d100 94 ok); her walk frames: `walktime.py 3 X Y DIR`, crops of
 `import` grabs (120,50 70x70) tiled with montage.
 
+**The environment's setup script (2026-11-06):** the user's "Google Drive" cloud environment now
+installs `innoextract nasm dosbox xdotool`, `pip install capstone unicorn`, and runs
+`setup_game.sh` into `/tmp/playtest/inst` when the container is built fresh, with
+`drive.usercontent.google.com` and `drive.google.com` already allowed. So a new session should
+only need `export PLAYTEST_WORK=/tmp/playtest`, then `loadsave.sh` (check `command -v dosbox` and
+`$PLAYTEST_WORK/inst/DSUN.EXE` first; if missing, run the steps above by hand). Checked by hand
+that day: the download went through with no environment change, `loadsave.sh pens-after-scar`
+loaded (region 29h, leader 1816,440, window 320x240, dice log attached). A worker restart of
+the session killed DOSBox as an idle pause does. With the game's files the unit tests run
+more: `DSUN_GPLDATA=$G/GPLDATA.GFF DSUN_OBJECTS=$G/SEGOBJEX.GFF DSUN_RESOURCE=$G/RESOURCE.GFF`
+(`G=$PLAYTEST_WORK/inst`) left 8 skipped (tkinter's), not 15.
+
 ## 1b. The recompiled program as the target (Dark Sun Recompiled)
 
 The kit drives the recompiled program too (`PT_TARGET=recomp`, exported for every tool; `DSUN`
