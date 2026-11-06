@@ -108,7 +108,9 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
 - **The view does not scroll by itself** here either; the middle-button drag did nothing on the
   program until its runtime passed the middle button through (fixed 2026-11-01: every button but
   the left had been the right one). A kit tool that stalls on the program and not in DOSBox is a
-  program fault to report, not a tool to work around.
+  program fault to report, not a tool to work around. **The drag scrolls only with the Loader
+  attached** (the dice log counts: it switches the helper's `scroll_on` on at attach); a program
+  started with no Loader, as its own headless tests run, keeps the view still (2026-11-06).
 
 ## 2. Reading the game
 
