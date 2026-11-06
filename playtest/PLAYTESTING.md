@@ -424,6 +424,12 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   them too, and a full redraw clears them; an END menu left up keeps them on screen. Pace:
   `walktime.py N X Y [DIR]` (about 0.07 s a step, see-through or not). Hidden, Tab + Return walks
   the thief up and backstabs; it is drawn solid from the blow on.
+- **A big frame see-through** (2026-11-06, logs/2026-11-06-see-through-after-fix.md): `bigthings.py`
+  lists the map's things with their pictures' most runs (near the pens' gate none past 164);
+  `setpic.py THING PICTURE` draws a thing with another picture in memory (picture 459, a tuft of
+  grass of 563 runs; put the old number back after), `ghostchk.py 0 1` marks things 0 and 1 (each
+  call replaces the marks), and `pastblock.py save|cmp FILE` keeps and compares the 4 KB past
+  GHOST's block. Past 192 runs only the frame's top is drawn see-through, by design.
 - **Kalzith** (2026-11-05): from `pens-after-scar`, walkto (1816,408), (1704,408), (1592,440), then
   clicks at screen (200,178) (camera 1392,384) take the party through Kurzak's entryway past him
   (route.py wouldn't: he stands in front of it); then `route.py 1560 880` reaches Kalzith's pen
