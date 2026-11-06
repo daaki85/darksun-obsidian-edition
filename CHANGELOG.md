@@ -85,6 +85,16 @@ notes](PATCH-NOTES.md).
   real game, and the body's picture on screen (the level-1 test party was defeated first).
 
 **Fixed before release** (in the new work above)
+- **A hidden thief stayed see-through after its turn**, through the enemies' turns, until a party
+  member's (about 1.4 s, seen in DOSBox 2026-11-06): the Loader ends the hiding as the turn
+  passes and asks for the view to be drawn again, but that is done from the map's main loop, which
+  doesn't run in the enemies' turns. Now `PROBE_GHOST` notes each party member it draws
+  see-through while hidden (`GH_SHOWN`), and `GHOST_UNION`, in `PROBE_REDRAW_ALL` (the game's
+  redrawing of what moved, at each step), has the whole view drawn once when one of them is
+  hidden no longer. DSCLOG.EXE 65,536 bytes (+48; 32 of its segment spare). Test
+  `UseItemTests.test_solid_at_turn_end`. (The 2026-11-05 "two solid frames" in a hidden walk were
+  not seen again in 53 more hidden steps: running out of Move doesn't pass the turn, the game waits
+  on the END menu; closed as not reproducible after the vector fix.)
 - The champions' gear watcher forgot nothing on a load, so champions made
   again from a save in the arena came on unequipped (now reset on a load, as the defilers' rolls,
   and a champion with gear still in its backpack is equipped whatever was remembered; test

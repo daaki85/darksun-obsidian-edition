@@ -10,5 +10,5 @@ for p in "1816 408" "1704 408" "1592 440" "1592 600"; do timeout 90 python3 walk
 for i in 1 2 3; do timeout 20 python3 click.py 200 178 left >/dev/null; sleep 2.5; done
 for p in "1600 600" "1720 600" "1832 600"; do timeout 90 python3 walkto.py $p | tail -1; done
 timeout 300 python3 route.py 1832 856 | tail -1
-timeout 90 python3 walkto.py 1896 856 | tail -1
+timeout 90 python3 walkto.py 1896 888 | tail -1   # (1896,856 said NO PATH FROM HERE, 2026-11-06)
 timeout 20 python3 state.py | tail -1

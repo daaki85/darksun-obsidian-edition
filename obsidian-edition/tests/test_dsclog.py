@@ -600,6 +600,56 @@ class UseItemTests(unittest.TestCase):
         run(5)
         self.assertEqual(len(calls), 4)
 
+    def test_solid_at_turn_end(self):
+        """A party member drawn see-through while hidden (PROBE_GHOST) and hidden no longer has the
+        next redrawing of what moved (PROBE_REDRAW_ALL) take in the whole view, once: so it is drawn
+        solid within the enemies' turns, when the main loop (VIEW_REDRAW) doesn't run."""
+        from dsloader import ghost
+        from dsloader.gamepatch import VEC_GHOST, VEC_REDRAW_ALL
+        mu = self.mu
+        image = load_image()
+
+        def handler(vector):
+            install = bytes((0xB8, vector, 0x25, 0xBA))
+            at = image.find(install)
+            self.assertGreater(at, 0)
+            return struct.unpack_from("<H", image, at + 4)[0]
+        ghost_at, redraw_at = handler(VEC_GHOST), handler(VEC_REDRAW_ALL)
+        seg, picture, site = 0x8800, 0x8000, 0x0600
+        mu.mem_write(seg * 16 + ghost.GH_TAB, bytes(65))
+        mu.mem_write(picture * 16, bytes(16))  # (a picture of no frames: nothing drawn)
+        mu.mem_write(self.hdr + ghost.TSR_GHOST_SEG, struct.pack("<H", seg))
+        mu.mem_write(self.hdr + ghost.TSR_GHOST_ON, struct.pack("<H", 1))
+
+        def run(at, sp, bp=BP, thing=0):
+            sp -= 6
+            mu.mem_write(SS * 16 + sp, struct.pack("<3H", site + 2, CALLER, 0x0202))  # (the INT's frame)
+            for name, value in dict(cs=TSR, ds=GAME_DS, ss=SS, esp=sp, ebp=bp, edi=thing).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(TSR * 16 + at, CALLER * 16 + site + 2, count=20000)
+
+        def drawn(hidden):
+            mu.mem_write(self.hdr + 204, struct.pack("<H", hidden))
+            sp = 0x7F0 - 14
+            mu.mem_write(SS * 16 + sp, struct.pack("<7H", 3, 100, 80, 0, 0, picture, 2))
+            run(ghost_at, sp)
+
+        def redrawn(hidden):  # the rectangle round what moved: x0, x1, y0, y1 at [BP-8] down
+            mu.mem_write(self.hdr + 204, struct.pack("<H", hidden))
+            mu.mem_write(SS * 16 + BP - 0x0E, struct.pack("<4H", 120, 60, 151, 40))  # y1, y0, x1, x0
+            mu.mem_write(SS * 16 + BP + 6, struct.pack("<2H", 0, 0))
+            run(redraw_at, BP - 0x20)
+            y1, y0, x1, x0 = struct.unpack("<4H", mu.mem_read(SS * 16 + BP - 0x0E, 8))
+            return x0, x1, y0, y1
+        moved, whole = (40, 151, 60, 120), (0, 0x13F, 0, 0xC7)
+        self.assertEqual(redrawn(0), moved)  # (no one drawn see-through)
+        drawn(1)  # (party member 0 hidden: see-through)
+        self.assertEqual(redrawn(1), moved)  # (still hidden)
+        self.assertEqual(redrawn(0), whole)  # (the turn passed)
+        self.assertEqual(redrawn(0), moved)  # (once)
+        drawn(1)
+        self.assertEqual(redrawn(2), whole)  # (another hidden: still member 0's)
+
     def test_ghost_draw_many_runs(self):
         """GHOST_DRAW over a frame of more runs than its spans hold (300: two one-pixel runs on each
         of 150 rows; some of the game's pictures have up to 563): the figure drawn as far as they

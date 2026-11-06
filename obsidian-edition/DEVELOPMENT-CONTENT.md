@@ -1312,7 +1312,12 @@ palette's colours 16-223, the ones the game doesn't animate, cut into 32 boxes b
 (0.2 s of Python, in a thread, kept by palette), and writes them into DSCLOG's block, 885
 paragraphs of upper memory taken at `KEEP` (`GHOST_SEG`, header +1826; none, no see-through
 figures). `GHOST_ON` (+1828) is 0 until they are written. The view is drawn again when a figure
-turns see-through or solid (`TSR_VIEW_REDRAW`). Seen in DOSBox, 2026-11-05: a figure marked drew
+turns see-through or solid (`TSR_VIEW_REDRAW`). That is done from the map's main loop, which doesn't
+run in the enemies' turns, so a thief whose turn had ended kept the see-through picture until a
+party member's turn (about 1.4 s, seen 2026-11-06). So `PROBE_GHOST` notes each party member it
+draws see-through while hidden (`GH_SHOWN`), and `GHOST_UNION`, in `PROBE_REDRAW_ALL` (the game's
+drawing again of what moved, at each step of anyone's), has the whole view drawn once when one of
+them is hidden no longer: solid at the enemies' first step (test `test_solid_at_turn_end`). Seen in DOSBox, 2026-11-05: a figure marked drew
 half see-through over floor, wall and its shadow, facing either way and walking; in a fight, a real
 hide (solid again from the backstab on) and a real Invisibility, walking at the solid pace
 (`playtest/logs/2026-11-05-fight-test.md`).

@@ -20072,6 +20072,7 @@ probe_redraw_all:
         jle .dust
         mov word [bp-0x0E], 0xC7
 .dust:  call dust_union
+        call ghost_union
         push ax                         ; (over the combat log's panel: drawn in parts round it,
         push bx                         ;   the routine's own drawing left out: on at its end)
         push cx
@@ -20757,7 +20758,9 @@ probe_ghost:
         cmp di, 3
         ja .tab
         bt [cs:stealth], di
-        jc .ghost
+        jnc .tab
+        bts [cs:gh_shown], di           ; (drawn see-through while hidden: GHOST_UNION)
+        jmp .ghost
 .tab:   push es
         mov es, [cs:ghost_seg]
         bt [es:GH_TAB], di
@@ -20775,6 +20778,7 @@ probe_ghost:
         iret
 g_resume    dd 0
 g_resume_fl dw 0
+gh_shown    dw 0                        ; (party members drawn see-through while hidden: a bit each)
 draw_call   dw PIC_DRAW_OFF, 0
 
 ; GHOST_DRAW: the frame of PROBE_GHOST's call drawn see-through (its arguments at [BP+4] on). The
@@ -22549,6 +22553,24 @@ dust_union:
 .bx1:   cmp bx, [bp-0x0E]
         jle .ret
         mov [bp-0x0E], bx
+.ret:   ret
+
+; GHOST_UNION: in PROBE_REDRAW_ALL, after DUST_UNION (the same rectangle at [BP-8] to [BP-0Eh]):
+; a party member drawn see-through while hidden (GH_SHOWN) and hidden no longer (its STEALTH bit
+; cleared: the turn passed, or it attacked) has the whole view drawn, so it is solid at the next
+; step of anyone's: in the enemies' turns the main loop, and VIEW_REDRAW with it, doesn't run.
+ghost_union:
+        mov ax, [cs:stealth]
+        not ax
+        test ax, [cs:gh_shown]
+        jz .ret
+        not ax
+        and [cs:gh_shown], ax
+        xor ax, ax
+        mov [bp-8], ax
+        mov [bp-0x0C], ax
+        mov word [bp-0x0A], 0x13F
+        mov word [bp-0x0E], 0xC7
 .ret:   ret
 
 ; DUST_PASS: in SHADOW_PASS (the VGA's registers kept; the clip, camera and page known), each puff
