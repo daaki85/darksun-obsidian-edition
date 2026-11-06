@@ -618,3 +618,10 @@ commit and push. Do it at each stop, not only at the end: a pause can lose the c
 2. Send the test log; copy it to `playtest/logs/` and commit.
 3. Add any new kind of stall to this guide (a numbered rule, the date and the test), and any new
    tool to this folder, then commit and push both.
+
+**Memory** (2026-11-06, logs/2026-11-06-memory-audit.md): `memaudit.py` lists every DOS block (the
+game's, DSCLOG's, the overlay buffer, the see-through tables, the music buffer, free) and the heap;
+`memsample.py LABEL` gives one line (free DOS memory after the game: 100,016 bytes on the map in the
+pens, 131-138 KB while the inventory or USE screen is open); `dacwatch.py SECONDS` shows DSCLOG's
+palette copy changing (every 30 s where the game cycles colours). The arena gate (the gap at
+1816,440) asks nothing before Kurzak's call.

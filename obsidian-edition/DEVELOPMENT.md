@@ -486,8 +486,8 @@ the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
 each time it opens ("Out of memory in OEOpenGraph" when it can't). What it
 puts there (`UMB_NEED`, the header's +372) is checked against the room
 (`UMB_ROOM`, D00Ah to F000h): the build fails past it (a negative `times`),
-and so does `test_fits_upper_memory`. It needs 6,186 of the room's 8,182
-paragraphs, so 1,996 (31.2 KB) are spare. With `UMBPLUS.COM`, 50.2 KB were free in one piece
+and so does `test_fits_upper_memory`. It needs 6,190 of the room's 8,182
+paragraphs, so 1,992 (31.1 KB) are spare. With `UMBPLUS.COM`, 50.2 KB were free in one piece
 before the mod's sounds and see-through figures (DOS's memory blocks read in the running game,
 2026-11-05: the helper 3,946 paragraphs from C90Ah, the overlay buffer 2,062, the music buffer 751,
 3,211 free); their code took 49 paragraphs more and the see-through figures' block
