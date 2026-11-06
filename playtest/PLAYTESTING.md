@@ -388,7 +388,11 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   out!"), then the alarm and a fight with every guard. **The alarm fight on purpose**:
   `toalarm.sh` (loads `pens-after-scar`, records the sound, raises Cilla's thief level in memory,
   walks to the fire room), then `restalarm.sh` (rests, then waits Kurzak out); about 15 minutes in
-  all, in the background with a Monitor. **The pointer must be the eye before restalarm.sh**: on
+  all, in the background with a Monitor. **toalarm.sh can stop short at (1832, 856)**, outside the
+fire room (2026-11-06: its last walkto said NO PATH FROM HERE with the door open). **A look click on
+an open door closes it** (the closed door is the gold pole; the user caught a close taken for an
+open): check a shot before clicking a door. With the door open, the walk arrow on the room's floor
+(screen 240,160, camera 1656,720) took the party in. **The pointer must be the eye before restalarm.sh**: on
   2026-11-06 it was the sword, no rest came ("rests: 0") and the click on the ring fell on Cilla
   (Gerakis attacked her out of a fight). `toarena.sh` answers the call instead (up to the arena).
 - **Into the arena from the pens** (the user, 2026-11-05): after the call, Kurzak's entryway
@@ -462,6 +466,15 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   grass of 563 runs; put the old number back after), `ghostchk.py 0 1` marks things 0 and 1 (each
   call replaces the marks), and `pastblock.py save|cmp FILE` keeps and compares the 4 KB past
   GHOST's block. Past 192 runs only the frame's top is drawn see-through, by design.
+- **A hidden walk to Move 0, and the turn's end** (2026-11-06, logs/2026-11-06-solid-frames-turn-end.md):
+  `walkprobe.py N X Y DIR [SECS]` clicks, then keeps a window grab with N's position, whose turn and
+  DSCLOG's STEALTH word (header +204) as often as it can (about 50 a second). **Move running out
+  doesn't pass the turn**: the walk stops and END <NAME>'S MOVE opens and waits. After E, STEALTH
+  went to 0 within one Loader pass, but the figure kept its see-through picture through the
+  enemies' turns (about 1.4 s) and was drawn solid when a party member's turn began: the view is
+  drawn again from the map's main loop, which doesn't run in the enemies' turns. The 2026-11-05
+  "two solid frames" weren't seen in 38 more hidden steps (beside Gerakis and K'ratchek too):
+  closed as not reproducible after the vector fix.
 - **Kalzith** (2026-11-05): from `pens-after-scar`, walkto (1816,408), (1704,408), (1592,440), then
   clicks at screen (200,178) (camera 1392,384) take the party through Kurzak's entryway past him
   (route.py wouldn't: he stands in front of it); then `route.py 1560 880` reaches Kalzith's pen
