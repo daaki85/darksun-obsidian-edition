@@ -612,6 +612,9 @@ def script_chunks(gpldata: bytes, kalzith: bool = True, semyon: bool = True,
     if champions:  # the champions' bout after Scar's death (champions.py; their objects in the objects' copy)
         from . import champions as ch
         out.update(ch.script_chunks(chunks, field_types, out))
+    if pens:  # Pehtucl's chest, locked and trapped (pehtuclchest.py; the cloak in it, npcitems.py)
+        from . import pehtuclchest
+        out.update(pehtuclchest.script_chunks(chunks, field_types, out))
     if ring:  # the XP for finding the arena's ring (ring.py), in the same script as Semyon's exit
         from . import ring as rg
         body = ("GPL ", rg.BODY_SCRIPT)
