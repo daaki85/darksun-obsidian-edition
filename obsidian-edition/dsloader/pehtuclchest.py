@@ -11,33 +11,52 @@ the Cloak of Protection +1 in it), locked and trapped: a script of its own runs 
   and springs the needle (unless a thief has disarmed it), failure only makes noise; again as
   often as wanted.
 - The needle is a trap object of the Loader's own (TRAP_OBJECT, a copy of the game's trap object
-  2039 casting the monsters' poison, spell 176: 10 damage, a save against poison), set off with
-  the game's trap action, so the party's best at find/remove traps rolls to avoid it first, as
-  for every trap in the game.
+  2039), set off with the game's trap action (DSUN.EXE 80A11h): the party's best at find/remove
+  traps rolls to avoid it first, as for every trap in the game, and Detect Traps avoids it; else
+  NEEDLE_DICE d6 of poison to whoever stands at its square. A trap object's +0Fh (as an item, its
+  spell's place) is what the routine reads: bits 0-2 the d6, bits 3-4 how far from its square it
+  reaches, bits 5-6 the damage kind (DS:251Ch: poison, fire, edged, electricity), bit 7 Detect
+  Traps no help (the game's 2039 is 04h: 4d6 of poison on its square, and no save: a trap's damage
+  has none, the thief's roll or Detect Traps is all).
+
+Shut: the game opens a container as its USE script ends, whatever the script said (seen in
+DOSBox), so the chest is made with the game's safe's item type (SHUT_TYPE), which it doesn't open;
+the script, unlocking it, ends with a click to wait for, and watch (each quarter second) makes it a
+chest again (CHEST_TYPE) meanwhile, so the game opens it then and every time after. The script ends
+each time with that click and the window cleared, as the safe's does (without them, shut, the
+game waited on the window for good).
 
 The two flags are the Loader's (DISARMED, UNLOCKED: the top of 784-796, which Alagorn's menus
 keep for their overflow and don't reach: test_pehtuclchest). The chest, its cloak and its USE
 command come with a new game: a save keeps the pens' objects and commands as they were made.
 """
 
-from typing import Dict, Tuple
+import struct
+from typing import Dict, List, Optional, Tuple
 
-from . import dataitems, gpl, kalzith, npcitems
+from . import dataitems, game, gpl, itemgate, kalzith, npcitems
 
 SCRIPT = 220  # the chest's (Kalzith's is 218, Semyon's 219; the game's run to 217)
 USE = 0x6D  # (place in a script, script, object): what using the object runs (the cell doors': script 138)
 OBJECT = npcitems.PEHTUCL_CHEST
 DISARMED, UNLOCKED = 795, 796  # the Loader's flags: the needle gone; the lock open
 TRAP_OBJECT, GAME_TRAP = 2667, 2039  # the poison needle (past the champions' 2660-2666), and its model
-POISON_SPELL = 176  # the monsters' poison: 10 damage (game.POISON_POWERS)
-ITEM_SPELL = 0x0F  # an item's spell, one past its number
+NEEDLE_DICE, NEEDLE_REACH, POISON_KIND = 2, 0, 0  # 2d6, on its square only, poison (DS:251Ch's first)
+TRAP_BYTE = 0x0F  # (the trap object's descriptor, where an item has its spell)
+NEEDLE = NEEDLE_DICE | NEEDLE_REACH << 3 | POISON_KIND << 5
+REGION = kalzith.REGION  # the slave pens
+CHEST_TYPE, SHUT_TYPE = 0x31, 0x67  # the chest's item type, and the one it has while locked: the
+# game's safe's (GPL 71 hands that one's loot out itself), which the game doesn't open as a container
+# once the USE script has run (with the chest's own type it opened it whatever the script said)
 
 NARRATION = 98  # (the dialogue window's lines as the game's safe has them)
 ACTING = ("var", 137, 37)  # the character using it
 NAME = ("field", 0x8025, [19])  # ... its name
 STRENGTH = ("field", 0x8025, [23])  # ... its STR
-NOT_THIEF = ("expr", [("var", 142, 26), "==", ("n", 0)])  # ... no thief levels (the safe's test)
-WHERE = (("var", 137, 33), ("var", 137, 34))  # where the needle goes off (the safe's)
+THIEF_FLAG = 0x400  # (the sheet's class flags: a thief's, as the safe's script tests it)
+NOT_THIEF = ("expr", ["(", "(", ("field", 0x8025, [71, 17]), "&", ("n", THIEF_FLAG), ")", "==", ("n", 0), ")"])
+WHERE = (("var", 137, 33), ("var", 137, 34))  # where the needle goes off: the character's square,
+LOCATE = 0x09  # as command 09h on it gives them (the safe's script does so before its trap)
 FLAG_READ = 0x8D
 OPEN_LOCKS, FIND_TRAPS = 1, 2  # (gpl.SKILLS)
 LOCK_BONUS = TRAP_BONUS = 0
@@ -62,6 +81,7 @@ def script() -> bytes:
             s.op(0x4F, ("n", NARRATION), part if isinstance(part, tuple) else ("str", part))
 
     def needle():
+        s.op(LOCATE, ACTING)
         s.op(gpl.DO_ACTION, ("n", gpl.ACTION_TRAP), ("n", -TRAP_OBJECT), *WHERE)
         s.flag(DISARMED, 1)
 
@@ -74,7 +94,7 @@ def script() -> bytes:
             tell(NAME, " checks the lock for traps, ")
             s.when(_skill(FIND_TRAPS, TRAP_BONUS),
                    lambda: (tell("and draws out a poisoned needle hidden in it. "), s.flag(DISARMED, 1)),
-                   lambda: (tell("and pricks a finger on a poisoned needle! "), needle()))
+                   lambda: (tell("and springs a poisoned needle! "), needle()))
         s.when(kalzith._is(_flag(DISARMED), 0), disarm)
         tell(NAME, " works at the lock ")
         s.when(_skill(OPEN_LOCKS, LOCK_BONUS),
@@ -104,24 +124,54 @@ def script() -> bytes:
     def locked():
         tell("The chest is locked. ")
         s.when(NOT_THIEF, not_thief, thief)
+        s.op(0x4F, ("n", NARRATION), kalzith.MORE)  # (a click, and the window cleared: as the safe ends)
+        s.op(0x4F, ("n", NARRATION), kalzith.CLEAR)
 
     s.when(kalzith._is(_flag(UNLOCKED), 0), locked, lambda: open_it(s))
     return s.bytes()
 
 
 def open_it(s) -> None:
-    """The chest opened for the party (to be settled: whether the game opens it once the script
-    has run, as it does a door)."""
+    """(Unlocked, the chest is opened by the game as the script ends: watch makes it a chest again
+    while the script waits for its last click.)"""
 
 
-def object_chunks(chunks) -> Dict[Tuple[str, int], bytes]:
+def object_chunks(chunks, out=None) -> Dict[Tuple[str, int], bytes]:
     """For the Loader's copy of SEGOBJEX: the poison needle, a copy of the game's trap object
-    GAME_TRAP under TRAP_OBJECT, casting POISON_SPELL."""
-    if ("OJFF", GAME_TRAP) not in chunks or ("RDFF", GAME_TRAP) not in chunks:
+    GAME_TRAP under TRAP_OBJECT, its descriptor NEEDLE; and the chest shut (SHUT_TYPE: OUT's record
+    of it if the Loader has changed it, the cloak put in it)."""
+    if ("OJFF", GAME_TRAP) not in chunks or ("RDFF", GAME_TRAP) not in chunks or ("RDFF", OBJECT) not in chunks:
         return {}
     record = bytearray(dataitems.renumbered(chunks[("RDFF", GAME_TRAP)], TRAP_OBJECT))
-    record[dataitems.HEADER.size + ITEM_SPELL] = POISON_SPELL + 1
-    return {("OJFF", TRAP_OBJECT): chunks[("OJFF", GAME_TRAP)], ("RDFF", TRAP_OBJECT): bytes(record)}
+    record[dataitems.HEADER.size + TRAP_BYTE] = NEEDLE
+    chest = bytearray((out or {}).get(("RDFF", OBJECT), chunks[("RDFF", OBJECT)]))
+    struct.pack_into("<H", chest, dataitems.HEADER.size + game.ITEM_TYPE, SHUT_TYPE)
+    return {("OJFF", TRAP_OBJECT): chunks[("OJFF", GAME_TRAP)], ("RDFF", TRAP_OBJECT): bytes(record),
+            ("RDFF", OBJECT): bytes(chest)}
+
+
+def _chest(gd) -> Optional[int]:
+    """The chest's item record's place in memory, if the game has made it (its picture: OBJECT)."""
+    items = game.far_pointer(gd.guest, gd.ds, game.ITEMS_PTR)
+    table = gd.guest.read(items, itemgate.ITEM_RECORDS * game.ITEM_SIZE)
+    picture = struct.pack("<h", -OBJECT)
+    for at in range(0, len(table) - game.ITEM_SIZE + 1, game.ITEM_SIZE):
+        if table[at:at + 2] == picture:
+            return items + at
+    return None
+
+
+def watch(gd) -> List[str]:
+    """Each pass: once UNLOCKED is set (the script, as the lock gives), the chest a chest again
+    (CHEST_TYPE), so the game opens it as the script ends and ever after. No lines."""
+    if gd.region() != REGION or not gd.flags_ready() or not gd.flag(UNLOCKED):
+        return []
+    at = _chest(gd)
+    if at is None or struct.unpack("<H", gd.guest.read(at + game.ITEM_TYPE, 2))[0] != SHUT_TYPE:
+        return []
+    itemgate.hold(gd)  # (an item record: as the game leaves its lists)
+    gd.guest.write(at + game.ITEM_TYPE, struct.pack("<H", CHEST_TYPE))
+    return []
 
 
 def with_use(master: bytes, field_types: bytes = b"") -> bytes:

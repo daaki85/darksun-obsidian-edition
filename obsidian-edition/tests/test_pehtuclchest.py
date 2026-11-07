@@ -67,10 +67,59 @@ class ScriptTests(unittest.TestCase):
         self.assertEqual(chest.with_use(out), out)
 
 
+class WatchTests(unittest.TestCase):
+    """Once the lock is picked (UNLOCKED), the chest's item record is a chest again: the game opens it."""
+
+    def setUp(self):
+        import struct
+        from dsloader import game
+        self.struct, self.game = struct, game
+        DS, ITEMS = 0x1000, 0x30000
+        mem = bytearray(0x40000)
+        struct.pack_into("<HH", mem, DS * 16 + game.ITEMS_PTR, ITEMS & 0xF, ITEMS >> 4)
+        self.at = ITEMS + 7 * game.ITEM_SIZE
+        struct.pack_into("<h", mem, self.at, -chest.OBJECT)
+        struct.pack_into("<H", mem, self.at + game.ITEM_TYPE, chest.SHUT_TYPE)
+        self.mem, self.flags = mem, set()
+
+        class Guest:
+            def read(g, addr, n):
+                return bytes(mem[addr:addr + n])
+
+            def write(g, addr, data):
+                mem[addr:addr + len(data)] = data
+
+        test = self
+
+        class GD:
+            guest, ds = Guest(), DS
+
+            def region(gd):
+                return chest.REGION
+
+            def flags_ready(gd):
+                return True
+
+            def flag(gd, n):
+                return n in test.flags
+        self.gd = GD()
+
+    def kind(self):
+        return self.struct.unpack_from("<H", self.mem, self.at + self.game.ITEM_TYPE)[0]
+
+    def test_opened_once_unlocked(self):
+        chest.watch(self.gd)
+        self.assertEqual(self.kind(), chest.SHUT_TYPE)  # (still locked)
+        self.flags.add(chest.UNLOCKED)
+        chest.watch(self.gd)
+        self.assertEqual(self.kind(), chest.CHEST_TYPE)
+
+
 @unittest.skipUnless(OBJECTS and os.path.isfile(OBJECTS), "needs the game's SEGOBJEX.GFF (DSUN_OBJECTS)")
 class NeedleTests(unittest.TestCase):
     def test_poison_needle(self):
-        """A copy of the game's trap object 2039 under its own number, casting the monsters' poison."""
+        """A copy of the game's trap object 2039 under its own number: 2d6 of poison on its square
+        (the game's is 4d6 of poison: 04h)."""
         from dsloader import gff
         with open(OBJECTS, "rb") as f:
             chunks = gff.read_gff(f.read())
@@ -78,7 +127,12 @@ class NeedleTests(unittest.TestCase):
         out = chest.object_chunks(chunks)
         self.assertEqual(out[("OJFF", chest.TRAP_OBJECT)], chunks[("OJFF", chest.GAME_TRAP)])
         item = out[("RDFF", chest.TRAP_OBJECT)][dataitems.HEADER.size:]
-        self.assertEqual(item[chest.ITEM_SPELL], chest.POISON_SPELL + 1)
+        self.assertEqual(item[chest.TRAP_BYTE], 0x02)
+        self.assertEqual(chunks[("RDFF", chest.GAME_TRAP)][dataitems.HEADER.size + chest.TRAP_BYTE], 0x04)
+        import struct
+        from dsloader import game
+        shut = out[("RDFF", chest.OBJECT)][dataitems.HEADER.size:]
+        self.assertEqual(struct.unpack_from("<H", shut, game.ITEM_TYPE)[0], chest.SHUT_TYPE)
 
 
 @unittest.skipUnless(GPLDATA and os.path.isfile(GPLDATA), "needs the game's GPLDATA.GFF (DSUN_GPLDATA)")

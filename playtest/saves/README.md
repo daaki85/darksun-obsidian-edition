@@ -34,3 +34,8 @@ cannot be loaded in a fresh install (2026-11-01).
   killed there by Cilla ("This makes Cilla king of the pens!"), the waves fought and out by the
   gate; in the pens at (1816, 440). The arena count 5, flags 19 and 759 set, 807 clear: the
   champions' bout is due on the next trip.
+- `pens-new-chest` (2026-11-06): a new game with the ready-made party, made with the Loader of that
+  day (Pehtucl's Cloak of Protection in the chest beside him, the chest's USE command in the pens'
+  master script: pehtuclchest.py), through the arena's waves and out by the gate; in the pens at
+  (1816, 440), Kurzak's greeting answered Goodbye. Nothing else done. Its `DARKSAVE.GFF` is the
+  one in the game folder (not rewritten at this save).

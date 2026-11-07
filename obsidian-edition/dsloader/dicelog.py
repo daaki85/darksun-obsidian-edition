@@ -28,7 +28,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import aging, bowyer, ghost, people, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
@@ -1300,6 +1300,8 @@ class DiceLog:
             out += self._step(lambda: self.champions.watch(self.game, new_spells))
             # (the game's people wearing and wielding their gear as they come on the map: people.py)
             out += self._step(lambda: self.people.watch(self.game))
+            # (Pehtucl's chest a chest again once its lock is picked: pehtuclchest.py)
+            out += self._step(lambda: pehtuclchest.watch(self.game))
         finally:
             itemgate.release(self.game)
         return out

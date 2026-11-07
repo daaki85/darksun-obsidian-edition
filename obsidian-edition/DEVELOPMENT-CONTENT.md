@@ -17,6 +17,7 @@
 - [Semyon](#semyon)
 - [What Dinos and the Trustee say about them](#what-dinos-and-the-trustee-say-about-them)
 - [The game's people's gear](#the-games-peoples-gear)
+- [Pehtucl's chest](#pehtucls-chest)
 - [The champions' bout](#the-champions-bout)
 - [The cooked vulture](#the-cooked-vulture)
 - [Defilers' scrolls](#defilers-scrolls)
@@ -1033,6 +1034,21 @@ of Protection +1 worn but nothing under AD&D's rule, with his leather shield). K
 scrolls stay packed.
 Each move is `pickpocket.place` (the list for its slot, a new one from the game's allocator if
 need be), after `itemgate.hold`. Test: `test_people.py`.
+
+## Pehtucl's chest
+
+([In the new items](FEATURES.md#new-items); `pehtuclchest.py`, whose docstring has the detail.)
+
+A USE command in the pens' master script (MAS 41: 6Dh, (place, script, object), as each cell door
+has one running script 138) runs script 220 when the chest (object 1568) is used. Its parts are the
+game's own: the thief test the safe in GPL 71 makes (the class flags' 400h), the scripts' skill
+check (22h action 3: who, skill, bonus), the safe's bash odds, and the trap action (22h action 7:
+object, square, the square from command 09h on the character). A trap object's item +0Fh is read
+by the trap routine (DSUN.EXE 80A11h) as dice, reach and damage kind, not as a spell; the needle
+(object 2667) is 02h, 2d6 poison on its square. The game opens a container as its USE script ends
+(the script can't stop it), so the chest is made with the safe's item type (67h), which it doesn't
+open, and `pehtuclchest.watch` makes it a chest (31h) once flag 796 is set, while the script waits
+for a click. Flags 795 and 796; script 220 has its entry in GPLI (saves keep commands by entry).
 
 ## The champions' bout
 

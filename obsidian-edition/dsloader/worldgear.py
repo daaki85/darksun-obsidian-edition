@@ -461,7 +461,7 @@ def data_chunks(chunks, on: Dict[str, bool]) -> Dict[Tuple[str, int], bytes]:
         return {}
     if on.get("pens_gear", True) is not False:  # (the poison needle of Pehtucl's chest: pehtuclchest.py)
         from . import pehtuclchest
-        out.update(pehtuclchest.object_chunks(chunks))
+        out.update(pehtuclchest.object_chunks(chunks, out))
     if magic_arms:  # (Kreenfang the champions' Tohr-kreen's: the arena's dead body keeps its plain one)
         from . import champions
         try:

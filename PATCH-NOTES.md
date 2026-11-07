@@ -245,6 +245,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 
 - **[New]** **Kalzith**, a defiler slave who scribes spell scrolls by night and sells them to anyone who treats him with respect.
 - **[New]** More of **Semyon**'s story, for players who help him in the arena.
+- **[New]** **Pehtucl's chest**, locked and trapped with a poisoned needle: a thief disarms it and picks the lock, anyone else can try to bash it open and set the needle off. The Cloak of Protection +1 is inside.
 - **[New]** A last arena bout: once Scar dies in the arena, six champions from a distant arena come to test the new king, led by a Tohr-kreen carrying **Kreenfang** ([the champions' bout](obsidian-edition/FEATURES.md#the-champions-bout)).
 - **[New]** A use for the cooked vulture: share it with the pens' cook for a full rest and 100 XP each.
 - **[New]** Merchants give your party leader a discount for high Charisma, from 5% at CHA 18 to 40% at 25.

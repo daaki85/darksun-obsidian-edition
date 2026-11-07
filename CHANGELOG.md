@@ -179,6 +179,26 @@ notes](PATCH-NOTES.md).
   program, or the `dos` folder read-only, raised from `prepare_patched_game`. Now DSCLOG's own
   pointer is used. Test `test_unwritable`.
 
+**New**
+- **Pehtucl's chest, locked and trapped** (`pehtuclchest.py`; with the pens' gear): a USE command
+  for it in the pens' master script (6Dh, as the cell doors have theirs) runs script 220. A thief
+  (the class flags' 400h, as the game's safe tests it) checks for traps (find/remove traps: the
+  needle drawn out, or sprung) and picks the lock (open locks, +0; tried again as often as wanted);
+  anyone else may bash it (the safe's odds: 5%, +5% for each of STR 18, 20, 22, 24), springing the
+  needle if it is still there. Flags 795 (the needle gone) and 796 (unlocked), above what Alagorn's
+  menus reach (tested). The needle is a trap object of the Loader's own (2667, a copy of the game's
+  2039), set off with the game's trap action; its descriptor byte (+0Fh, read by the trap routine
+  at DSUN.EXE 80A11h: bits 0-2 the d6, 3-4 its reach, 5-6 the damage kind of DS:251Ch's poison,
+  fire, edged, electricity, 7 Detect Traps no help) is 02h: 2d6 poison on its square (the game's
+  2039 is 4d6). The game opens a container as its USE script ends, whatever the script did, so the
+  chest is made with the safe's item type (67h), which it doesn't open, and the Loader makes it a
+  chest again (31h) while the unlocking script waits for its last click. Seen in DOSBox
+  (`saves/pens-new-chest`, a new game): no thief, No: nothing opens; bashes failing ("a lot of
+  noise"); a bash breaking it (the odds raised in a test build), the party's thief dodging the
+  needle (16, 37, 6, 27 against 45) and, with no thief, the needle's 2d6 = 6 on Gerakis alone; a
+  thief springing it (then dodging it), the lock failing again and again and then opening, the
+  chest opened after the click, and at once on every use after. Tests `test_pehtuclchest.py`.
+
 **Changed**
 - **The Cloak of Protection +1 is in the chest beside Pehtucl,** not on him (`npcitems.PEHTUCL_CHEST`,
   object 1568, the only one of its kind: a sling and two trinkets of the game's in it). Worn by

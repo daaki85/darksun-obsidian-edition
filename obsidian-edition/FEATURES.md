@@ -1787,6 +1787,15 @@ all. The dice log doesn't say where they are; [Items](ITEMS.md) does, with spoil
 arena's ring too, and brings [the champions' bout](#the-champions-bout). A thief can [lift](#picking-pockets) Pehtucl's ring,
 Shadowseeker, Gutterknot and Mindshard (200 XP for each weapon).
 
+**Pehtucl's chest**, beside the slave pens' head templar, holds the Cloak of Protection +1 and is
+locked, with a poisoned needle in the lock. Used by a thief, it is first searched for traps
+(find/remove traps: the needle drawn out, or set off) and then picked (open locks; a failed try
+can be tried again). Anyone else can try to bash it open (5% a try, more with STR 18 and up),
+which sets the needle off if it is still there. A needle set off is a trap as the game's are: the
+party's best at find/remove traps may still spot it in time (or Detect Traps), else it does 2d6
+poison damage to whoever opened it. Once open, it stays open. (In a new game; with **New items,
+magical and mundane** on.)
+
 **Where they are.** The mod's items are in the [item tables](ITEMS.md) with the
 game's own: in ***bold italics*** in
 [Every magic item](ITEMS.md#every-magic-item), each with where it is and what

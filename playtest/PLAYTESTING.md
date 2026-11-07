@@ -647,3 +647,9 @@ palette copy changing (every 30 s where the game cycles colours). The arena gate
   108,108), the purse under the spell counts (157,145, a slow press), then the talk pointer on the
   person. `orderwatch.py`-style logging (fight_on and the dice log every 10 ms) showed a blow from
   outside a fight is struck before the fight begins.
+- **Pehtucl's chest** (2026-11-07, logs/2026-11-07-pehtucls-chest.md): `saves/pens-new-chest` is a new
+  game with the chest's USE command (older saves lack it). The chest's look box: first button closes,
+  second **moves the chest**, third uses it. A thief in memory needs the class byte and level and the
+  sheet's flags 400h (`sheetedit.py N flags|=0x400`). The game's trap objects: +0Fh is the trap's
+  descriptor (d6, reach, damage kind), DSUN.EXE 80A11h. A new game to the pens in the background:
+  `start.sh`, `topartyfight.sh`, `arenawaves.sh`, `leavearena.sh` (about 30 minutes).
