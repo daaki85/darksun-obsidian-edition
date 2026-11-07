@@ -1,8 +1,8 @@
 # passmiss.sh: in a fight, the party's turns passed through each member's END menu (memberpos.py, E) until a
 # foe misses (the dice log's "-> miss"), then the view dragged and shots taken (missdrag.png,
 # missafter.png). E that opened the Effects screen (the camera at 0,0) is closed and the view brought back.
-. /home/user/darksun-obsidian-edition/playtest/env.sh
-cd /home/user/darksun-obsidian-edition/playtest
+. "$(dirname "$0")/env.sh"
+cd "$(dirname "$0")"
 start=$(wc -l < $WORK/dice.txt)
 for i in $(seq 1 80); do
   st=$(timeout 10 python3 state.py)
