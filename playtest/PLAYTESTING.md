@@ -384,6 +384,16 @@ palette copy changing (every 30 s where the game cycles colours). The arena gate
   flags (0200h a ranger, 0040h a gladiator); never save after.
 - **The combat log panel**: `sh panel.sh hide|show` checks the panel's pixel before pressing L
   (L alone toggles, and can leave it the wrong way round).
+- **The Loader's own window for a screenshot** (2026-11-07, `docs/dicelog.png`): the container's
+  Python has no tkinter; `apt-get install -y python3-tk` gives it to `/usr/bin/python3.12`, which
+  runs `python3.12 -m dsloader view` from `obsidian-edition/`. Stop start.sh's text dice log first
+  (by pid: two Loaders would both write to the game), and start Xvfb big enough (`-screen 0
+  1440x900x24`: the window is 1320x780; topartyfight.sh's checks need the text log, so play the
+  opening by hand: S at the menu, the proclamation's seal at 262,165, then boxclick.sh). The two
+  windows overlap there: `xdotool windowraise` the one to click. DOSBox keeps the mouse once it has
+  it: Ctrl+F10 (`xdotool key --window DOSBOX ctrl+F10`) lets it go, then `xdotool windowfocus` the
+  Loader before typing (keys typed with DOSBox focused reach the game: the letters toggled its
+  animations). `import -window` grabs the window at its size.
 - **The combat log panel in tests** (2026-11-06): `panel.sh` reads "hidden" when the panel is
   expanded (its pixel check is for the small panel): look at a shot, and press L yourself. The
   expanded panel's filter chips are at y 87 (All 148, Party about 175); a filter chosen stays

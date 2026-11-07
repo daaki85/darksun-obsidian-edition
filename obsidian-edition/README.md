@@ -476,7 +476,7 @@ How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#the-dialogue-tab).
 
 ## The dice log
 
-![The Loader during the arena's opening show: the Characters tab with the game's own party (K'ratchek's chatkcha 5/2 attacks a round, her own second throw counted, and her features, open sky spells and psionics; Gerakis's age), and the dice log with Find on the first of 124 lines naming the Rampager: the party's features and ages as the game begins, the first round's initiative, Gerakis's Wild Fighting roll (passed: one more attack a round and +3 damage), and the Rampager's first attacks on the Defiler](docs/dicelog.png)
+![The Loader during the arena's opening show: the Characters tab with the game's own party (K'ratchek's chatkcha 5/2 attacks a round, her own second throw counted, and her features, open sky spells and psionics; Gerakis's age), and the dice log with Find on the first of 27 lines naming the Rampager: the party's features and ages as the game begins (Cilla an Elven Shadow-walker), the first round's initiative, Gerakis's Wild Fighting roll (passed: one more attack a round and +3 damage), and the Defiler's Ice Storm](docs/dicelog.png)
 
 **Finding something.** Type a word in **Find** above the log (Ctrl+F puts
 you there) and press Enter: every match lights up, the log jumps to the first,
