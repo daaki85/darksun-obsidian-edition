@@ -1311,7 +1311,7 @@ elf's figure, with its own switch: see
 | **Gerakis**, half-giant gladiator | specializes in the long sword and the gythka; with [half-giants' two-handed weapons](#half-giants-two-handed-weapons), his club is a bone gythka, a two-handed weapon beside his long sword | | **Wild Fighting**, as a [Wild Fury](KITS.md#multiclass-kits) has it, as each fight starts |
 | **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | | is a [Wasteland Seer](KITS.md#multiclass-kits) (druid spells 2 levels higher under the open sky, 1 lower under a roof; psionic powers 2 PSP less under the open sky, 1 more under a roof); her **chatkcha comes back as if she had several**: one more throw a round (2 instead of 1, or more with its weapon spec) |
 | **Cermak**, human preserver, once a gladiator | specializes in the long sword and the axe, which count once his gladiator levels do again (when his preserver level passes them) | | an **Arcanist**, the kit of his preserver class: two preserver spells a turn in a fight |
-| **Cilla**, elf preserver, druid and thief | | no leather armour (a druid wears none), and she knows the **Armor** spell in its place | an **Elven Wanderer** (her own feature, not the druid kit Wanderer): with the [stealth rule](#hiding-in-shadows-to-backstab), her hiding in shadows is never halved in daylight |
+| **Cilla**, elf preserver, druid and thief | | no leather armour (a druid wears none), and she knows the **Armor** spell in its place | an **Elven Shadow-walker** (her own feature): with the [stealth rule](#hiding-in-shadows-to-backstab), her hiding in shadows is never halved in daylight |
 
 Gerakis's, K'ratchek's and Cilla's features are their own: no character made
 on the creation screen can have them. The Effects screen lists them (as it
@@ -1456,7 +1456,7 @@ more, x3 to x6). Only the round's first attack is a backstab: the game multiplie
 swing (an off-hand one after a miss) was multiplied too.
 
 The chance to hide is **halved in daylight** (with [kits](#kits) on, not for an
-Assassin, a Military Scout or Cilla, the Elven Wanderer). Which maps are under
+Assassin, a Military Scout or Cilla, the Elven Shadow-walker). Which maps are under
 the open sky goes by the game's regions: open desert and rock, the villages'
 open ground and the arena are; the slave pens, the sewers, the lava caverns and
 the other underground or roofed places aren't. Three maps have both, buildings

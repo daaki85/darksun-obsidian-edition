@@ -30,7 +30,7 @@ Releases, newest first: [2.13.4](#pull-request-85-merged-2026-11-02) (#85),
 
 ## Next pull request (not opened yet)
 
-DSCLOG.EXE 65,440 bytes (+848 since #85; its image 65,408, 128 bytes of its segment spare).
+DSCLOG.EXE 65,472 bytes (+880 since #85; its image 65,440, 96 bytes of its segment spare).
 
 **New**
 - **Kalzith's own portrait:** a face painted for him in the game's portrait style (an old man,
@@ -77,6 +77,8 @@ DSCLOG.EXE 65,440 bytes (+848 since #85; its image 65,408, 128 bytes of its segm
 - **The game's people wear the cloaks, belts, boots, amulets and up to two rings they carry,**
   which the game never put on; each counts by the same rules as the party's. (`people.py`, with
   the fix below.)
+- **Cilla's own feature is the "Elven Shadow-walker"** (her hiding never halved in daylight), not
+  the "Elven Wanderer", which read like the druid kit Wanderer. (`kits.OWN_FEATURES`.)
 - **The freeze report samples every 32nd strike of the timer,** not every 16th (`freeze.py`).
 
 **Fixed: the game**
@@ -123,6 +125,11 @@ DSCLOG.EXE 65,440 bytes (+848 since #85; its image 65,408, 128 bytes of its segm
 - **A floating name could be drawn above the page,** into other video memory, when the view was
   dragged so that its figure was off the top of the screen; it isn't drawn then. And a timer strike
   while a name was being erased could leave its old place on screen (the erase marked busy first).
+- **A figure stayed see-through (or solid) through the enemies' turns** when an invisibility ended
+  or began then, until a party member's turn: the view is drawn again from the map's main loop,
+  which doesn't run in those turns. The Loader now marks the table changed (`GH_CHANGED`, the last
+  byte of GHOST_TAB's room), and `GHOST_UNION` draws the whole view once at the next step of
+  anyone's. (Test: `test_whole_view_when_the_table_changes`.)
 - **The sound of the mod's own lent the game's table entry back one byte too far,** over the next
   entry's "loaded" flag (latent: nothing changes it during a play).
 - **Room for new code:** the end shared by seven handlers that return through the overlay

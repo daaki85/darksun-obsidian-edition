@@ -17,7 +17,7 @@ starts. Each is known by name, race and classes together.
   (the Arcanist's d3 counts from his next level). The other three get features of their own, which
   no character made on the creation screen can have (kits.own_race: the kit byte's OWN_BIT):
   Gerakis Wild Fighting, K'ratchek a Wasteland Seer's casting and PSP and a chatkcha that comes back as if
-  she had several, Cilla the Elven Wanderer's hiding, never halved in daylight.
+  she had several, Cilla the Elven Shadow-walker's hiding, never halved in daylight.
 - With class restrictions: Cilla (a preserver, druid and thief) can't wear armour (the druid's
   rule), so her leather armour is taken away and she knows Armor, the first wizard spell (0),
   the one Old One-Eye's scroll in the fields teaches.
@@ -200,7 +200,7 @@ def _add_slots(gd: GameData, member: int, before: Dict[str, List[int]]) -> None:
 
 OWN_LINES = {"Gerakis": "Gerakis fights wild: Wild Fighting, as a fight starts.",
              "K'ratchek": "K'ratchek is a Wasteland Seer, spells and psionics, and her chatkcha comes back as if she had several.",
-             "Cilla": "Cilla is an Elven Wanderer: her hiding is never halved in daylight."}
+             "Cilla": "Cilla is an Elven Shadow-walker: her hiding is never halved in daylight."}
 
 
 def set_own(gd: GameData, member: int, name: str) -> List[str]:

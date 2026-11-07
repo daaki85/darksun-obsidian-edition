@@ -20706,6 +20706,7 @@ GH_BLEND    equ 0                       ; (GHOST's block: BLEND, REP_COUNT x 256
 REP_COUNT   equ 32
 GH_REP      equ REP_COUNT * 256         ; ... REP, 256 bytes
 GH_TAB      equ GH_REP + 256            ; ... GHOST_TAB, a bit for each of the game's things
+GH_CHANGED  equ GH_TAB + 79             ; ... 1 once the Loader has written GHOST_TAB anew (GHOST_UNION)
 GH_PIX      equ GH_TAB + 80             ; ... the figure's pixels, as REP numbers (GHOST_DRAW)
 GH_PIX_MOST equ 4096
 GH_SPANS    equ GH_PIX + GH_PIX_MOST    ; ... its runs on the screen, 8 bytes each: the row's place
@@ -22546,14 +22547,25 @@ dust_union:
 ; a party member drawn see-through while hidden (GH_SHOWN) and hidden no longer (its STEALTH bit
 ; cleared: the turn passed, or it attacked) has the whole view drawn, so it is solid at the next
 ; step of anyone's: in the enemies' turns the main loop, and VIEW_REDRAW with it, doesn't run.
+; The same once the Loader has written GHOST_TAB anew (GH_CHANGED: an invisibility begun or ended,
+; Detect Invisibility readied or lost), so a figure turns solid or see-through in those turns too.
 ghost_union:
+        cmp word [cs:ghost_on], 0       ; (GHOST_TAB written anew, an invisibility begun or
+        je .hidden                      ; ended: the whole view drawn, the enemies' turns too)
+        push es
+        mov es, [cs:ghost_seg]
+        cmp byte [es:GH_CHANGED], 0
+        mov byte [es:GH_CHANGED], 0
+        pop es
+        jne .whole
+.hidden:
         mov ax, [cs:stealth]
         not ax
         test ax, [cs:gh_shown]
         jz .ret
         not ax
         and [cs:gh_shown], ax
-        xor ax, ax
+.whole: xor ax, ax
         mov [bp-8], ax
         mov [bp-0x0C], ax
         mov word [bp-0x0A], 0x13F

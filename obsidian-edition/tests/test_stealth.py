@@ -55,7 +55,7 @@ class StealthTests(unittest.TestCase):
         self.assertTrue(lines[1].startswith("  Dag moves silently: d100 = 16, needs 16 or less -> unheard"))
 
     def test_not_halved_by_the_sun(self):
-        """A Military Scout, and Cilla (the game's own party's elf, the Elven Wanderer: kits.own_race),
+        """A Military Scout, and Cilla (the game's own party's elf, the Elven Shadow-walker: kits.own_race),
         hide with their whole chance in daylight (the Scout with its +10 under the open sky)."""
         from unittest import mock
         from dsloader import kits
@@ -65,7 +65,7 @@ class StealthTests(unittest.TestCase):
                                    "not halved in daylight) -> hidden")
         with mock.patch.object(self.gd, "own_race", lambda creature: kits.ELF):
             lines, _ = stealth.turn(self.gd, 0, rolls(16, 99))
-        self.assertIn("(16, the Elven Wanderer: not halved in daylight) -> hidden", lines[0])
+        self.assertIn("(16, the Elven Shadow-walker: not halved in daylight) -> hidden", lines[0])
         with mock.patch.object(self.gd, "own_race", lambda creature: kits.THRI_KREEN):
             lines, _ = stealth.turn(self.gd, 0, rolls(16, 99))
         self.assertIn("halved in daylight) -> seen", lines[0])

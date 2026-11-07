@@ -121,6 +121,7 @@ class UpdateTests(unittest.TestCase):
         self.gd.fx = [game.Effect(3, 3, ghost.INVISIBLE)]
         g.update(self.gd, self.HDR, True, 1, self.redraw)
         self.assertEqual(m[self.SEG * 16 + ghost.GH_TAB], 0x08)
+        self.assertEqual(m[self.SEG * 16 + ghost.GH_CHANGED], 1)  # (DSCLOG draws the whole view: GHOST_UNION)
         self.assertEqual(self.redraws, drawn + 1)
         # off: DSCLOG draws them as ever
         g.update(self.gd, self.HDR, False, 1, self.redraw)

@@ -895,7 +895,7 @@ kit's. Gerakis fights wild, as a Wild Fury does; K'ratchek's spells and psionics
 are stronger under the open sky, as a Wasteland Seer's are, and her chatkcha
 comes back as if she had several (one more throw a round, which no kit gives);
 Cilla's hiding is never halved in daylight, as an Assassin's isn't (the dice
-log calls her an "Elven Wanderer": not the druid kit Wanderer).
+log calls her an Elven Shadow-walker).
 
 ### Kits' spell slots
 

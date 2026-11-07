@@ -696,6 +696,43 @@ class UseItemTests(unittest.TestCase):
         drawn(1)
         self.assertEqual(redrawn(2), whole)  # (another hidden: still member 0's)
 
+    def test_whole_view_when_the_table_changes(self):
+        """The Loader having written GHOST_TAB anew (GH_CHANGED: an invisibility ended in the
+        enemies' turns), the next redrawing of what moved takes in the whole view, once, and
+        clears the mark; with see-through figures off, nothing."""
+        from dsloader import ghost
+        from dsloader.gamepatch import VEC_REDRAW_ALL
+        mu = self.mu
+        image = load_image()
+        at = image.find(bytes((0xB8, VEC_REDRAW_ALL, 0x25, 0xBA)))
+        self.assertGreater(at, 0)
+        redraw_at = struct.unpack_from("<H", image, at + 4)[0]
+        seg, site = 0x8800, 0x0600
+        mu.mem_write(seg * 16 + ghost.GH_TAB, bytes(80))
+        mu.mem_write(self.hdr + ghost.TSR_GHOST_SEG, struct.pack("<H", seg))
+        mu.mem_write(self.hdr + 204, struct.pack("<H", 0))  # (no one hidden)
+
+        def redrawn():
+            sp = BP - 0x20 - 6
+            mu.mem_write(SS * 16 + sp, struct.pack("<3H", site + 2, CALLER, 0x0202))
+            mu.mem_write(SS * 16 + BP - 0x0E, struct.pack("<4H", 120, 60, 151, 40))
+            mu.mem_write(SS * 16 + BP + 6, struct.pack("<2H", 0, 0))
+            for name, value in dict(cs=TSR, ds=GAME_DS, ss=SS, esp=sp, ebp=BP, edi=0).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(TSR * 16 + redraw_at, CALLER * 16 + site + 2, count=20000)
+            y1, y0, x1, x0 = struct.unpack("<4H", mu.mem_read(SS * 16 + BP - 0x0E, 8))
+            return x0, x1, y0, y1
+        moved, whole = (40, 151, 60, 120), (0, 0x13F, 0, 0xC7)
+        mu.mem_write(self.hdr + ghost.TSR_GHOST_ON, struct.pack("<H", 1))
+        self.assertEqual(redrawn(), moved)
+        mu.mem_write(seg * 16 + ghost.GH_CHANGED, b"\x01")
+        self.assertEqual(redrawn(), whole)
+        self.assertEqual(mu.mem_read(seg * 16 + ghost.GH_CHANGED, 1), b"\x00")
+        self.assertEqual(redrawn(), moved)  # (once)
+        mu.mem_write(self.hdr + ghost.TSR_GHOST_ON, struct.pack("<H", 0))
+        mu.mem_write(seg * 16 + ghost.GH_CHANGED, b"\x01")
+        self.assertEqual(redrawn(), moved)  # (see-through figures off)
+
     def test_ghost_draw_many_runs(self):
         """GHOST_DRAW over a frame of more runs than its spans hold (300: two one-pixel runs on each
         of 150 rows; some of the game's pictures have up to 563): the figure drawn as far as they

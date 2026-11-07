@@ -156,11 +156,11 @@ def extra(kid: int, dance: int = 0) -> int:
 # classes' kits, 7 Friends known), set by the Loader as a new game starts; which feature by the
 # race (DSCLOG's OWN_RACE_B). Gerakis (a half-giant) Wild Fighting (wild.py); K'ratchek (a
 # thri-kreen) a Wasteland Seer's casting and PSP (SKY_LEVEL, PSI_KIT) and one more chatkcha throw a round
-# (OWN_THROWS); Cilla (an elf) the Elven Wanderer's hiding, never halved in daylight (stealth.py).
+# (OWN_THROWS); Cilla (an elf) the Elven Shadow-walker's hiding, never halved in daylight (stealth.py).
 OWN_BIT, KIT_OPEN = 0x40, 0xFF
 HALF_GIANT, ELF, THRI_KREEN = 5, 3, 8
 OWN_FEATURES = {HALF_GIANT: ("Wild Fighting",), THRI_KREEN: ("Open sky spells and psionics", "Chatkcha 2 a round"),
-                ELF: ("Elven Wanderer",)}
+                ELF: ("Elven Shadow-walker",)}
 CHATKCHA, OWN_THROWS_MORE = 12, 2  # (the chatkcha's weapon kind; one more throw a round, in halves)
 
 
@@ -186,12 +186,12 @@ def default_kind(kid: int) -> Optional[int]:
 
 def not_halved_by_sun(kids, race: int) -> str:
     """Who hides with their whole chance in daylight (stealth.py), named, or "": an Assassin, a
-    Military Scout, or Cilla, the Elven Wanderer (own race ELF)."""
+    Military Scout, or Cilla, the Elven Shadow-walker (own race ELF)."""
     if ASSASSIN in kids:
         return "an Assassin"
     if SCOUT in kids:
         return "a Military Scout"
-    return "the Elven Wanderer" if race == ELF else ""
+    return "the Elven Shadow-walker" if race == ELF else ""
 
 
 # the dance's and Wild Fighting's checks: a d20 against DEX or CON with this (a proficiency check's

@@ -37,6 +37,7 @@ TSR_HDR_OFF = 20
 REP_COUNT = 32
 GH_BLEND, GH_REP = 0, REP_COUNT * 256
 GH_TAB = GH_REP + 256
+GH_CHANGED = GH_TAB + 79  # (1 once GHOST_TAB is written anew: DSCLOG's GHOST_UNION draws the whole view)
 THINGS = 520
 FIRST, LAST = 16, 223  # (the colours the game doesn't animate: as DSCLOG's DARK)
 MADE_KEPT = 8  # (the tables kept, by KEY: the areas lately in)
@@ -195,5 +196,6 @@ class Ghosts:
         table = ghost_table(gd.effects())
         if table != self._table:
             guest.write(seg * 16 + GH_TAB, table)
+            guest.write(seg * 16 + GH_CHANGED, b"\x01")  # (drawn again in the enemies' turns too)
             self._table = table
             redraw()

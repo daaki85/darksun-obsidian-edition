@@ -1381,7 +1381,7 @@ run in the enemies' turns, so a thief whose turn had ended kept the see-through 
 party member's turn (about 1.4 s, seen 2026-11-06). So `PROBE_GHOST` notes each party member it
 draws see-through while hidden (`GH_SHOWN`), and `GHOST_UNION`, in `PROBE_REDRAW_ALL` (the game's
 drawing again of what moved, at each step of anyone's), has the whole view drawn once when one of
-them is hidden no longer: solid at the enemies' first step (test `test_solid_at_turn_end`). Seen in DOSBox, 2026-11-05: a figure marked drew
+them is hidden no longer: solid at the enemies' first step (test `test_solid_at_turn_end`). The same once the Loader writes GHOST_TAB anew (it sets `GH_CHANGED`, the room's last byte): an invisibility ending in the enemies' turns shows at once (test `test_whole_view_when_the_table_changes`). Seen in DOSBox, 2026-11-05: a figure marked drew
 half see-through over floor, wall and its shadow, facing either way and walking; in a fight, a real
 hide (solid again from the backstab on) and a real Invisibility, walking at the solid pace
 (`playtest/logs/2026-11-05-fight-test.md`).
