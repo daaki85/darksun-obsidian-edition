@@ -25,8 +25,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 ## In the Game's Screens
 
-- **[New]** A combat log in the game: **L** on the map shows every roll, in the game's own lettering and the Loader's colours, at one of three levels of detail, and **L** again hides it. It works in a fight or after one (a thief's roll, a new level's hit points).
-- **[New]** The combat log is a panel over the map's lower right that scrolls back (its scrollbar, or the mouse wheel on Windows), shrinks to one line or opens up with filters (All, Party, Damage, Saves).
+- **[New]** A combat log in the game: **L** on the map shows every roll, in the game's own lettering and the Loader's colours, at one of three levels of detail, and **L** again hides it. It works in a fight or after one (a thief's roll, a new level's hit points). It is a panel over the map's lower right that scrolls back (its scrollbar, or the mouse wheel on Windows), shrinks to one line or opens up with filters (All, Party, Damage, Saves).
 - **[New]** Names over figures: a spell's name floats over its caster as it is cast, "Miss" over anyone an attack misses, and "Armor: 7 left" when a spell that lasts a number of uses (Armor, Mirror Image, Reflected Image...) loses one, in the game's lettering (an Options switch, on).
 - **[New]** Out of a fight, the combat log panel's top line shows how long the game has run, `Day 47, 14:20`; in the arena, once the game has shown the count, how many arena fights the party has had instead (the game's own count, one a trip into the arena).
 - **[New]** The inventory screen shows THAC0, all five saving throws, the THAC0 with each weapon, DEX's reaction and defence adjustments, a thief's skills and, with ages on, the character's age, in the game's own lettering.
@@ -80,7 +79,8 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - **[Changed]** An air cleric can use daggers, as its sphere allows *(was none: no dagger in the game listed the air cleric)*.
 - **[New]** New characters start with fuller gear: a weapon in hand they can use, a sling, leather armour where they may wear it, a Stalker, Assassin or Shinobi a cloak, and some kits weapons of their own (a Battle Dancer two long swords, a Poisoner two of its weapon spec, daggers or short swords). A multiclass preserver starts with no armour, so it can cast.
 - **[Changed]** Class restrictions hold: a character may use an item only if every one of its classes allows it, and a multiclass preserver can't cast in armour *(was any one class allowing it)*. Thieves wear light armour only; a multiclass thief (or a human once a warrior or cleric) may wear heavier, losing its thief skills and backstab in it.
-- **[Changed]** Multiclass characters gain hit points as in AD&D: CON's bonus on every hit die (a warrior's if one class is a warrior), the total divided between the classes. Every hit die is rolled twice and the better kept.
+- **[Changed]** Multiclass characters gain hit points as in AD&D: CON's bonus on every hit die (a warrior's if one class is a warrior), the total divided between the classes.
+- **[Changed]** Every character's hit dice are rolled twice and the better kept, at character creation and at every level (a rule change, on unless unticked).
 - **[Changed]** Experience, priests' THAC0 and spell slots follow AD&D's tables: a gladiator needs 2,250 XP for 2nd level *(was 2,000)*, a preserver has 4 2 1 slots at 5th *(was 3 2 1)*, a cleric 3 3 1 *(was 3 2 1)*.
 - **[Changed]** A ranger's spells last and deal damage at its level minus 7, as AD&D has it *(was its full level)*.
 - **[New]** **Ages** (a rule change, on unless unticked): each character has an age from the Dark Sun rules' tables, shown on the inventory screen and the Loader's Characters tab. Middle, old and venerable age change the scores, and a character dies at the most its race lives; everyone is a year older each 365 days of game time (the dice log says so), and magic ages them faster. **Haste** now asks each creature it speeds for a system shock roll by CON, as in AD&D: one that fails dies, and a party member who survives is a year older. **Restore Youth** (a 6th-level priest spell: Magic and Psionics) takes magical years back.
@@ -132,9 +132,9 @@ A few of them:
 - **Ravager:** fights without a shield or missile weapons, with a natural AC that hardens from 7 to 3 as it levels.
 - **Battle Dancer:** dances as each fight starts, a roll against DEX at −4: +1 to hit, damage and AC for a few rounds, or −1 if it stumbles. Long swords and bows only, and no shield.
 - **Military Scout:** better at stealth, traps and climbing under the open sky, with +2 initiative and +1 to hit with bows and slings there, and its hiding isn't halved by the sun; worse under a roof, and it never backstabs.
-- **Spellarcher:** shoots every arrow as a magic one (1 better, at least +1), and weaves the touch spells it knows into arrows: a button on the USE screen for each, a spell slot for 5 arrows a preserver level in its empty quiver (or added to the same spell's arrows there), each casting its spell on what it hits at the archer's preserver level. They stay in the quiver until shot, as a Flame Blade stays in the hand.
+- **Spellarcher:** shoots every arrow as a magic one (1 better, at least +1), and weaves the touch spells it knows into arrows: a button on the USE screen for each, a spell slot for 5 arrows a preserver level in its empty quiver (or added to the same spell's arrows there), each casting its spell on what it hits at the archer's preserver level. They stay in the quiver until shot, as a Flame Blade stays in the hand. Making them plays the spell's own cast sound.
 - **Wild Fury:** Wild Fighting as each fight starts, a roll against CON at −4: one more attack a round in melee and +3 damage, or −3 to hit and AC 3 worse if it fails.
-- **[New]** The game's own party has features of its own: Gerakis fights wild (as a Wild Fury does), K'ratchek casts and uses psionics as a Wasteland Seer does and throws her chatkcha once more a round, Cilla hides as well in the sun as out of it, and Cermak is an Arcanist.
+- **[New]** The game's own party has features of its own: Gerakis fights wild (as a Wild Fury does), K'ratchek casts and uses psionics as a Wasteland Seer does and throws her chatkcha once more a round, Cilla hides as well in the sun as out of it (her feature, the Elven Shadow-walker), and Cermak is an Arcanist.
 
 > *Developers' Notes: Each kit is built into the game's own code, so it works everywhere the game checks: THAC0, spell slots, hit dice, PSP costs, attacks a round and what you may hold. The player's guide has all 37, with a short description of who takes each one on Athas.*
 
@@ -169,7 +169,7 @@ A few of them:
 
 ## Improved Thieving
 
-- **[New]** A soft breath as a thief or ranger hides in a fight, and a purse's jingle for a picked pocket (the three named weapons keep the quest's sound). A Spellarcher hears the spell's own cast sound as it makes arrows.
+- **[New]** A soft breath as a thief or ranger hides in a fight, and a purse's jingle for a picked pocket (lifting one of the three named weapons plays the game's quest sound).
 - **[Changed]** Thief skills follow AD&D's table by level, with Dark Sun's race and DEX adjustments, and none goes above 95 *(was a 3rd-level elf with move silently 66 and hide in shadows 61)*.
 - **[New]** Thieves **hide in shadows and move silently** in a fight to backstab, halved in daylight. Rangers do it to attack from behind, at full strength under the open sky *(was a backstab only on a target turned to face someone else)*.
 - **[Changed]** A **backstab** multiplies only the weapon's dice; STR and magic bonuses are added once after, as in AD&D, and only the round's first attack is a backstab *(was the whole damage multiplied, STR included, so a strong thief could hit for over 100, on the first two attacks of the round)*.
@@ -184,7 +184,7 @@ A few of them:
 
 | Weapon | What it is |
 |---|---|
-| **Flame Blade** | an obsidian long sword +1 whose blade burns what it hits (2d6 fire damage, a save for half); a fire or earth cleric can wield it |
+| **Flame Blade** | an obsidian long sword +1, an item (not the blade the spell makes), whose blade burns what it hits (2d6 fire damage, a save for half); a fire or earth cleric can wield it |
 | **Greenbright** | a metal short sword +2 |
 | **Shadowseeker** | a short sword +1 whose wielder sees the invisible |
 | **Mindshard** | an obsidian short sword +1 a psionicist can wield |
@@ -195,14 +195,16 @@ A few of them:
 | **Glasshewer** | an obsidian axe +2 a fire or earth cleric can wield |
 | **Drakejaw** | a bone axe +1 a water cleric can wield |
 | **Headsman** | a metal great axe +2 |
-| **Kreenfang** | a bone gythka +1, the champions' Tohr-kreen's ([the champions' bout](obsidian-edition/FEATURES.md#the-champions-bout)) |
+| **Kreenfang** | a bone gythka +1 |
 | **Linebreaker** | a metal polearm +2 |
-| **Thornwall** | a bone polearm +1, on the slave pens' weapon rack once Semyon has told of it |
+| **Thornwall** | a bone polearm +1 |
 | **Gutterknot** | a club +1, the game's first magic club |
 | **Deepbiter** | a stone pick +1, the game's first magic pick |
-| **Dunesong** | a bow +1, sold by the Bowyer, whose archery target counts it as it does the game's own bows |
-| **Windlash** | a staff sling +1, the game's first magic staff sling, sold by the Bowyer |
+| **Dunesong** | a bow +1, which the Bowyer's archery target counts as it does the game's own bows |
+| **Windlash** | a staff sling +1, the game's first magic staff sling |
 | **Skycutter** | a chatkcha +2 |
+
+Where each is found is in [ITEMS](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/ITEMS.md#every-magic-item).
 
 - **[Changed]** The Elven Leader's gift is a **Gythka +2** *(was +1)*.
 
@@ -241,14 +243,14 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** **Maces** in obsidian and metal.
 - **[New]** A **metal pick** and a **metal polearm**.
 - **[Changed]** The game's **bone scale armour** set is complete, with its arm and leg pieces and helm.
+- **[New]** The game's plain **leather helm**, which it never placed: Kurzak wears one in the slave pens.
 
 ## World
 
-- **[New]** Kalzith has a face of his own, painted in the game's portrait style.
-- **[New]** **Kalzith**, a defiler slave who scribes spell scrolls by night and sells them to anyone who treats him with respect.
-- **[New]** More of **Semyon**'s story, for players who help him in the arena.
+- **[New]** **Kalzith**, a defiler slave who scribes spell scrolls by night and sells them to anyone who treats him with respect, with a face of his own, painted in the game's portrait style.
+- **[New]** More of **Semyon**'s story, for players who help him in the arena. Once he has told of it (ask him "Seen anything useful?"), **Thornwall** comes onto the slave pens' weapon rack.
 - **[New]** **Pehtucl's chest**, locked and trapped with a poisoned needle: a thief disarms it and picks the lock, anyone else can try to bash it open and set the needle off. The Cloak of Protection +1 is inside.
-- **[New]** A last arena bout: once Scar dies in the arena, six champions from a distant arena come to test the new king, led by a Tohr-kreen carrying **Kreenfang** ([the champions' bout](obsidian-edition/FEATURES.md#the-champions-bout)).
+- **[New]** A last arena bout: once Scar dies in the arena, six champions from a distant arena come to test the new king, led by a Tohr-kreen carrying **Kreenfang** ([the champions' bout](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#the-champions-bout)).
 - **[New]** A use for the cooked vulture: share it with the pens' cook for a full rest and 100 XP each.
 - **[New]** Merchants give your party leader a discount for high Charisma, from 5% at CHA 18 to 40% at 25.
 - **[Changed]** Merchants pay 60% of an item's price *(was all of it)*.
@@ -298,15 +300,14 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** Each shot at the **Bowyer's archery target** in the dice log: the roll, what it needed, how far the archer is from the target and the Bowyer, and whether a centre shot earns his arrows.
 - **[New]** **How the game works** compares every cleric spell and psionic power with the manual: what the manual says, what the game's code does, and what the log shows.
 - **[New]** The Loader can run the game as **Dark Sun Recompiled**, the game translated into a program of its own, instead of in DOSBox, where it is installed.
-- **[New]** **Options:** nearly every rule change and addition in these notes has its own switch (not the keys and the game's fixed bugs), all on by default (the red ring's and the game speed's choices aside), and **Restore defaults** sets them all back.
+- **[New]** **Options:** nearly every rule change and addition in these notes has its own switch (not the keys and the game's fixed bugs), all on by default (the red ring's, the game speed's and the combat log's level aside), and **Restore defaults** sets them all back.
 - **[New]** **Accessibility:** text that can be enlarged up to 2.5 times (**A+**, **A-**, **Ctrl +** and **Ctrl -**), every control reachable from the keyboard, colours with at least 4.5:1 contrast, and the logs saved as text for screen readers.
 
 > *Developers' Notes: Shattered Lands rolls dice for everything and shows you almost none of it. Fireball victims kept saving and nobody knew why (the game doubles the d20 against fire). The Loader started as a way to see those numbers. Once we could see them, we started fixing them.*
 
 ## Bug Fixes
 
-- **[Fixed]** The game's **people put on their weapons and armour only at their first action in a fight**: until then they were AC 10, their armour unworn, so an opening blow, a backstab or a first-round hit met none, and their Look box showed no weapon. Now they wear and wield their gear from the moment they're on the map, as the game puts it on.
-- **[Changed]** The game's people also wear the cloaks, belts, boots, amulets and up to two rings they carry, which the game never put on: each counts by the same rules as the party's.
+- **[Fixed]** The game's **people put on their weapons and armour only at their first action in a fight**: until then they were AC 10, their armour unworn, so an opening blow, a backstab or a first-round hit met none, and their Look box showed no weapon. Now they wear and wield their gear from the moment they're on the map, as the game puts it on. They also wear the cloaks, belts, boots, amulets and up to two rings they carry, which the game never put on: each counts by the same rules as the party's.
 - **[Fixed]** **Mirror Image** stopped no weapon blow, and swallowed the caster's own spells (Armor cast on oneself was lost three times in four, an image with it). Now each hit, and each foe's spell aimed at one creature, has a 75% chance to strike an image instead (50% for Reflected Image); spells from your own side always get through.
 - **[Fixed]** **Armor** used up two charges for each hit, and one for any spell cast on its wearer, even a friend's Bless. Now one charge for each damaging hit, a weapon's or a spell's.
 - **[Fixed]** **Share Strength** left its strength on the one who got it after the power ended. Now it ends on them too.
@@ -356,20 +357,18 @@ Rules the game got wrong are put right too, each under its own heading above wit
 
 ## Your Saved Games
 
-**You don't need to start a new game for these fixes.** They're in the patched game and the Loader, not in your saves, so they work from the moment you load: images, Armor's charges, Share Strength, Dispel Magic and the rest follow the new rules from the next spell cast, even on effects already running. The fixes stop the old bugs from happening, but don't undo what they already did to a save:
+**You don't need to start a new game for these fixes.** They're in the patched game and the Loader, not in your saves, so they work from the moment you load. The fixes stop the old bugs from happening, but don't undo what they already did to a save. The README's [saved games](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/README.md#updating-backups-saved-games-and-the-loaders-files) has each of these in full:
 
-- A character who kept the strength from Share Strength after the power ended still has it (it shows on their Effects screen). Load a save from before the power was used to be rid of it.
-- A character silenced by the preserver's Dispel Magic ("No spell use" on their Effects screen) casts again once it wears off.
-- A new game whose arena fight never began (no announcer, and walking said NO PATH FROM HERE: a 2.4.0 bug) can't be mended: start a new one.
-- A character's most PSP may go up once, the next time the game works it out (a level up, or a game starting): the game's own bonuses for CON, INT and WIS are counted right now, and the most only ever rises.
-- Thieves' Tools from an earlier version of the mod (Mirlon's or Kel's) do nothing now: a thief picks pockets with the Pick Pockets button.
-- A Healer from an earlier version keeps its sphere and is given the cosmos spells when the game is loaded (the dice log says so).
-- With ages on, each character in a save, the game's own party too, is given a starting age the first time the Loader sees them (the dice log shows the roll).
-- **A save made with 2.13.0 or later is not for earlier versions, and one made with 2.13.2 or later not for 2.13.1 or earlier:** the weapon specs are kept packed with the age and each character's starting roll beside them, which an older Loader reads as other specs. Older saves load in newer versions as they are: a character keeps its age, and its roll is put on its sheet when the game is loaded.
-- A thri-kreen **druid/fighter** Wasteland Seer from an earlier version has no kit now: the Wasteland Seer is for a thri-kreen druid/fighter/psionicist.
-- In a save from 1.2.0 to 2.5.0 that has already been to the slave pens, the weapon rack is gone from the pens, so **Thornwall** never comes onto it after Semyon's tip (a new game has the rack). Fixing items that couldn't be swapped in a pack meant renumbering the rack, and the game drops an object it no longer finds.
-- **A save made with an earlier version while Kalzith was switched off** (or when the Loader couldn't make its copy of the game's objects): in the slave pens, talking to Semyon may start Kalzith's conversation instead. The Loader now numbers its conversations the same whatever the switches, so this follows such a save, with no undoing it there; one made with Kalzith on, the default, is unaffected.
-- In a save from 2.13.4 or earlier that has already been to the arena, **Kreenfang** is likely still on the dead body by the stone arch, and the champions' Tohr-kreen brings another; and **Thornwall** is already on the slave pens' rack (it now comes only after Semyon's tip).
-- **Pehtucl's locked chest** comes with a new game. In a save that has already been to the slave pens, Pehtucl still wears the Cloak of Protection and his chest is the plain one.
+- **A save made with 2.14.0 is not for earlier versions,** one made with 2.13.2 or later not for 2.13.1 or earlier, and one made with 2.13.0 or later not for anything before 2.13.0. Older saves load in newer versions as they are.
+- **Share Strength and Dispel Magic:** strength kept from Share Strength stays; a character silenced by Dispel Magic casts again once it wears off.
+- **Ages:** each character in a save is given a starting age the first time the Loader sees them.
+- **Kits from earlier versions:** a Healer is given the cosmos spells; a thri-kreen druid/fighter Wasteland Seer has no kit now.
+- **Thieves' Tools** from an earlier version do nothing: a thief picks pockets with the Pick Pockets button.
+- **Most PSP** may go up once, the next time the game works it out.
+- **Thornwall in an older save:** never comes in a save from 1.2.0 to 2.5.0 that has been to the slave pens; already on the rack in one from 2.13.4 or earlier that has been to the arena.
+- **Kreenfang:** likely still on the dead body by the stone arch in a save from 2.13.4 or earlier that has been to the arena.
+- **Pehtucl's locked chest** comes with a new game.
+- **A save made with an earlier version while Kalzith was switched off** may start Kalzith's conversation when you talk to Semyon.
+- **A new game whose arena fight never began** (a 2.4.0 bug) can't be mended: start a new one.
 
 **A new game is still the way to see all of the mod.** Kits, STORE and RECALL and fuller starting gear come with characters made with the mod, and much of the new content (Kalzith, Semyon, the vulture, the new items in the slave pens) is in the game's first areas. A save made with the original game loads and plays with every fix and rule change, but its characters have no kits, and what it has already been through stays as it was.

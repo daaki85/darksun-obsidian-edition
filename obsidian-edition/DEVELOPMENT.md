@@ -146,7 +146,7 @@ python tests/make_fake_party.py
 dosbox FAKEPTY.COM
 ```
 
-![The Loader on the practice program: All fields with Sadira and Rikus, and Memory tools with her record found and its bytes](docs/viewer.png)
+![The Loader on the practice program: All fields with Sadira and Rikus (the table scrolls sideways to slots 3 and 4), and Memory tools with her record found and its bytes, one decoded](docs/viewer.png)
 
 ### Mapping memory
 

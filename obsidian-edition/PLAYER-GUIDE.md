@@ -68,7 +68,7 @@ The [features page](FEATURES.md) has every rule in full detail, and the
    and every roll shows as it happens in the Loader's dice log, and in the
    game itself when you press **L**:
 
-   ![A fight in the arena with the combat log over the map](docs/combat-log.png)
+   ![The arena in round 7 of a fight: K'ratchek's turn, with the combat log over the map's lower right showing a Slig's hits on Cermak and his hit points after each](docs/combat-log.png)
 
 3. Make your own party (**CREATE CHARACTERS**): weapon specs and kits are
    chosen when a character is made. The game's own four, used when you make
@@ -1118,7 +1118,7 @@ A thief or ranger whose turn comes in a fight **with no enemy in the eight
 squares around** first tries to **hide in shadows**, then to **move
 silently**. With both, their next attack that turn is from behind: a thief's is
 a backstab with a light enough weapon (not a Military Scout's). Attacking, or
-ending the turn, gives them away. An enemy beside them when the turn comes
+ending the turn, gives them away. A soft breath sounds as one hides. An enemy beside them when the turn comes
 means no hiding: get clear first (a Shadowblade tries anyway).
 
 - Thieves' hiding is **halved in daylight** (under the open sky; not an
@@ -1182,9 +1182,10 @@ nothing from poison or draining, and mind-affecting spells don't work on them.
 
 A thief's skills come from the table by thief level, plus the race's and
 DEX's adjustments. A thief who isn't Okay, or is Blind, Afraid, Confused,
-Berserk or Paralyzed, can't use them. Nothing worn stands in the way, but
-for a thief with another class in armour heavier than leather, hide or silk
-(all 0). No skill goes above 95, whatever the table says.
+Berserk or Paralyzed, can't use them. Worn gear doesn't lower the skills.
+The one exception: a thief with another class, in armour heavier than leather,
+hide or silk, has all skills at 0. No skill goes above 95, whatever the table
+says (its 99s are 95 in play).
 
 | Thief level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -1241,8 +1242,8 @@ and the same race and DEX adjustments.
   click someone in sight with the talking pointer (not in a fight). Any thief
   can, party leader or not, so long as their backpack has room. The thief
   rolls **pick pockets**:
-  - **success:** one small thing from them goes into the thief's backpack:
-    something light that isn't worn on the body;
+  - **success:** one small thing from them goes into the thief's backpack
+    (with a purse's jingle): something light that isn't worn on the body;
   - **failure:** the thief rolls **move silently** to slip away. Made, they can
     try again; missed, they are caught, and that person keeps a hand on their
     pockets from then on.
@@ -1591,10 +1592,6 @@ stone and obsidian 5, metal 13, leather 10, cloth 12, less its plus (a weapon
 uses the game's own number where that's easier). *Without the mod:* plain
 armour is destroyed outright.
 
-**Item boxes** (right-click an item in the inventory) show a wand's or other
-charged item's charges left, and a cloak's, boots' or belt's bonus to thief
-skills.
-
 ### New items
 
 The mod adds items the game never had, or never placed: here is what each
@@ -1632,7 +1629,7 @@ chosen type, often one of these.
 | Glasshewer | obsidian axe +2 |
 | Drakejaw | bone axe +1 |
 | Headsman | metal great axe +2 |
-| Gythka +2, Kreenfang (+1) | gythkas, two-handed |
+| Kreenfang | bone gythka +1, two-handed |
 | Linebreaker | metal polearm +2 |
 | Thornwall | bone polearm +1 |
 | Gutterknot | club +1 (the game has no magic club) |
@@ -1640,6 +1637,8 @@ chosen type, often one of these.
 | Windlash | staff sling +1 |
 | Dunesong | bow +1 |
 | Skycutter | chatkcha +2 |
+
+The game's own Gythka +1, the Elven Leader's gift, is a Gythka +2 with the mod.
 
 **Other magic items:**
 
@@ -1787,7 +1786,7 @@ line](DICE-LOG.md) what each of its lines means.
 | Expanded features | the leader's CHA at shops; buying back magical items; improved thieving: thief skills from AD&D's table, hiding in shadows to backstab, the cloak, boots and belt, backstabs multiplying the weapon's dice only, picking pockets | all on |
 | New content | the new spells (six wizard spells and ten 6th-level priest spells, one switch); new people (Kalzith; Semyon); a small quest (the cooked vulture); defilers' scrolls; new items (and an arena bout that comes with them) | all on |
 | Graphics | elves' ears and half-elves' own figures; Cilla drawn as an elf; what the party wears; shadows; dust; a hidden thief or ranger and anyone invisible drawn see-through | all on |
-| Controls | Tab and Enter; scrolling with the mouse wheel; the view in fights moving only to a figure off the screen; the pointer in scenes, a click skipping one; the pointer starting in the middle and as fast up and down as across; the whole party in view after a start, load or fight; spells kept on a click on the Effects screen (M, U and I have no switch) | all on |
+| Controls | Tab and Enter; scrolling with the mouse wheel; the view in fights moving only to a figure off the screen; the pointer in scenes, a click skipping one; the pointer starting in the middle, moving as far up and down as across, and in a window as fast as the desktop's pointer; the whole party in view after a start, load or fight; spells kept on a click on the Effects screen (M, U and I have no switch) | all on |
 | | a red ring in a fight: none, or under the enemy chosen with Tab | under the enemy chosen |
 | Game speed | GOG's own, faster or fastest | faster |
 | | the party walking at full speed whatever is drawn (steady pace) | on |
