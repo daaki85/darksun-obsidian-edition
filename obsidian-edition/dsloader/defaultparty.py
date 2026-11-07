@@ -17,7 +17,7 @@ starts. Each is known by name, race and classes together.
   (the Arcanist's d3 counts from his next level). The other three get features of their own, which
   no character made on the creation screen can have (kits.own_race: the kit byte's OWN_BIT):
   Gerakis Wild Fighting, K'ratchek a Wasteland Seer's casting and PSP and a chatkcha that comes back as if
-  she had several, Cilla the Elven Wanderer's hiding, never halved in daylight.
+  she had several, Cilla the Elven Shadow-walker's hiding, never halved in daylight.
 - With class restrictions: Cilla (a preserver, druid and thief) can't wear armour (the druid's
   rule), so her leather armour is taken away and she knows Armor, the first wizard spell (0),
   the one Old One-Eye's scroll in the fields teaches.
@@ -147,14 +147,20 @@ def club_to_gythka(gd: GameData, member: int, name: str) -> List[str]:
 
 
 def take_armour(gd: GameData, member: int, name: str) -> List[str]:
-    """Plain armour (not a shield) taken from MEMBER, as many pieces as there are."""
+    """Plain armour (not a shield) taken from MEMBER, as many pieces as there are. ItemsBusy if
+    the game's lists moved under a piece (the step tried again, for what is left, next pass)."""
+    from . import itemgate
     it = ring.Items(gd)
-    taken = 0
+    taken = missed = 0
     for index, item, _ in list(gd._worn(member)):
         type_ = struct.unpack_from("<H", item, game.ITEM_TYPE)[0]
-        if item[game.ITEM_PLUS] == 0 and restrict.is_armour(_type_record(gd, type_)) \
-                and ring.unlink(gd, it, index, f"{name}'s armour, taken away", empty=True):
-            taken += 1
+        if item[game.ITEM_PLUS] == 0 and restrict.is_armour(_type_record(gd, type_)):
+            if ring.unlink(gd, it, index, f"{name}'s armour, taken away", empty=True):
+                taken += 1
+            else:
+                missed += 1
+    if missed:
+        raise itemgate.ItemsBusy(f"{name}'s armour: the game's item lists moved")
     return [f"{name} has no armour: a druid wears none."] if taken else []
 
 
@@ -194,7 +200,7 @@ def _add_slots(gd: GameData, member: int, before: Dict[str, List[int]]) -> None:
 
 OWN_LINES = {"Gerakis": "Gerakis fights wild: Wild Fighting, as a fight starts.",
              "K'ratchek": "K'ratchek is a Wasteland Seer, spells and psionics, and her chatkcha comes back as if she had several.",
-             "Cilla": "Cilla is an Elven Wanderer: her hiding is never halved in daylight."}
+             "Cilla": "Cilla is an Elven Shadow-walker: her hiding is never halved in daylight."}
 
 
 def set_own(gd: GameData, member: int, name: str) -> List[str]:

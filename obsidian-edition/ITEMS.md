@@ -20,7 +20,7 @@ scripts hand it out (a reward, a gift or a find).
 A weapon's spell (Dark Flame's Burning Hands, Balk's Staff's Slow...) goes on
 whoever it hits, every hit, with no charge used. The items that change a
 score (Draketooth, Dag's Dagger, the Helm and Belt of Might, El's Ring, the
-Steadfast Ring and the Ring of Insight) do it while their owner has them, the
+Steadfast Ring and the Ring of Insight) do it while worn, the
 Belt of Might making STR at least 24.
 
 **Weapons**, by material, then type:
@@ -33,17 +33,17 @@ Belt of Might making STR at least 24.
 | ![](docs/items/stillwater.png) | Bone | short sword | ***Stillwater*** | a bone short sword +1: a **psionicist** can wield it, alone or with a water cleric | in the chest **Chaya** gives as her apology |
 | ![](docs/items/gythka-plus3.png) | Bone | gythka | Gythka +3 | +3 | the arena's [1000th trip](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights), King Tectuktitlay's gift |
 | ![](docs/items/gythka-plus2.png) | Bone | gythka | ***Gythka +2*** | the game's Gythka +1, made +2 | the **Elven Leader**'s gift, after the fight with his men |
-| ![](docs/items/kreenfang.png) | Bone | gythka | ***Kreenfang*** | a gythka +1 (2d4+1) | the 2 handed Bone Gythka on the dead body by the arena's stone arch |
+| ![](docs/items/kreenfang.png) | Bone | gythka | ***Kreenfang*** | a gythka +1 (2d4+1) | carried by the **Tohr-kreen** leading the champions in the arena, after **Scar** is killed ([the champions' bout](FEATURES.md#the-champions-bout)) |
 | ![](docs/items/hayneedle.png) | Bone | dagger | ***Hayneedle*** | a bone dagger +1: a water cleric can wield it | hidden in **Merzol**'s haystack in the slave pens, with his sack of ceramic pieces |
 | ![](docs/items/drakejaw.png) | Bone | axe | ***Drakejaw*** | a bone axe +1 (1d8+1): a water cleric can wield it | carried by one of the **Magera** guarding the wagon's prisoners |
 | ![](docs/items/mace-plus2.png) | Bone | mace | Mace +2 | +2 | a chest |
 | ![](docs/items/polearm-plus1.png) | Bone | polearm | Polearm +1 | +1 | — |
-| ![](docs/items/thornwall.png) | Bone | polearm | ***Thornwall*** | a bone polearm +1 | on the slave pens' **weapon rack**, in place of one of its two plain bone polearms |
+| ![](docs/items/thornwall.png) | Bone | polearm | ***Thornwall*** | a bone polearm +1 | on the slave pens' **weapon rack**, once **Semyon**, in his pen, has told of the weapon shipment ("Seen anything useful?") |
 | ![](docs/items/cahulaks-plus1.png) | Bone | cahulaks | Cahulaks +1 | +1, Cause Light Wounds | the caravan's buried chest |
 | ![](docs/items/dragonsbane.png) | Metal | long sword | Dragonsbane | +4 | — |
 | ![](docs/items/els-drinker.png) | Metal | long sword | El's Drinker | +2, Vampiric Touch | the arena's [1000th trip](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights), King Tectuktitlay's gift |
 | ![](docs/items/greenbright.png) | Metal | short sword | ***Greenbright*** | a metal short sword +2 | carried by **Arant**, who holds the captured gladiators |
-| ![](docs/items/shadowseeker.png) | Metal | short sword | ***Shadowseeker*** | a short sword +1 (1d6+1): whoever wields it, in either hand, sees the invisible | in the pack of **Kurzak**, the pens' guard leader |
+| ![](docs/items/shadowseeker.png) | Metal | short sword | ***Shadowseeker*** | a short sword +1 (1d6+1): whoever wields it, in either hand, sees the invisible | wielded by **Kurzak**, the pens' guard leader; a thief can lift it (200 XP, once a game) |
 | ![](docs/items/dags-dagger.png) | Metal | dagger | Dag's Dagger | +3, extra damage, CHA +1 | Dagolar |
 | ![](docs/items/galefang.png) | Metal | dagger | ***Galefang*** | a metal dagger +2 an **air cleric** can wield | carried by the **Rogue Shaman**, with his Shaman Followers |
 | ![](docs/items/soulcrusher.png) | Metal | axe | Soulcrusher | +1 | Kel |
@@ -52,8 +52,8 @@ Belt of Might making STR at least 24.
 | ![](docs/items/linebreaker.png) | Metal | polearm | ***Linebreaker*** | a metal polearm +2 | carried by the **Troop Leader** |
 | ![](docs/items/dark-flame.png) | Obsidian | long sword | Dark Flame | +2, Burning Hands | the Lower Castle's chest |
 | ![](docs/items/bloodwrath.png) | Obsidian | long sword | Bloodwrath | +1 | Pehtucl, the pens' templar |
-| ![](docs/items/flame-blade.png) | Obsidian | long sword | ***Flame Blade*** | an obsidian long sword +1 (1d8+1) whose blade burns what it hits: the fire clerics' Focus Heat, 2d6 fire damage to the creature hit (a save for half), as the game's Dark Flame casts Burning Hands. Obsidian, so a fire (or earth) cleric can wield it | in the pack of the **Templar** of the Hot Springs (the one with the Drake Shield) |
-| ![](docs/items/mindshard.png) | Obsidian | short sword | ***Mindshard*** | an obsidian short sword +1: a **psionicist** can wield it, alone or with a fire or earth cleric | carried by **Maris**; a thief can lift it (200 XP) |
+| ![](docs/items/flame-blade.png) | Obsidian | long sword | ***Flame Blade*** | an obsidian long sword +1 (1d8+1) whose blade burns what it hits: the fire clerics' Focus Heat, 2d6 fire damage to the creature hit (a save for half), as the game's Dark Flame casts Burning Hands. Obsidian, so a fire (or earth) cleric can wield it | carried by the **Templar** of the Hot Springs (the one with the Drake Shield) |
+| ![](docs/items/mindshard.png) | Obsidian | short sword | ***Mindshard*** | an obsidian short sword +1: a **psionicist** can wield it, alone or with a fire or earth cleric | carried by **Maris**; a thief can lift it (200 XP, once a game) |
 | ![](docs/items/terror-blade.png) | Obsidian | dagger | Terror Blade | +2, poison | — |
 | ![](docs/items/nightsliver.png) | Obsidian | dagger | ***Nightsliver*** | an obsidian dagger +2: a fire or earth cleric can wield it | carried by the **Hermit** of the Lava Rift, in place of his stone dagger |
 | ![](docs/items/blackmace.png) | Obsidian | mace | Blackmace | +1, Shocking Grasp | the Shadow King |
@@ -61,7 +61,7 @@ Belt of Might making STR at least 24.
 | ![](docs/items/quarterstaff-plus2.png) | Wooden | quarterstaff | Quarterstaff +2 | +2 | Maris |
 | ![](docs/items/balks-staff.png) | Wooden | quarterstaff | Balk's Staff | +1, Slow | Balkazar |
 | ![](docs/items/parting-staff.png) | Wooden | quarterstaff | Parting Staff | +1 | — |
-| ![](docs/items/gutterknot.png) | Wooden | club | ***Gutterknot*** | a club +1 (the game has no magic club) | carried by **Churrr** in the warrens; a thief can lift it (200 XP) |
+| ![](docs/items/gutterknot.png) | Wooden | club | ***Gutterknot*** | a club +1 (the game has no magic club) | carried by **Churrr** in the warrens; a thief can lift it (200 XP, once a game) |
 | ![](docs/items/deepbiter.png) | Stone | pick | ***Deepbiter*** | a stone pick +1 (the game has no magic pick) | carried by one of the **Undermountain folk** (the miners) |
 | ![](docs/items/great-axe-plus3.png) | none | great axe | Great Axe +3 | +3 | the Army Commander |
 
@@ -160,7 +160,7 @@ Tanelyv's Armor also has a chest piece, with no plus.
 | ![](docs/items/serpent-boots.png) | Feet | Serpent Boots | Displacement | a chest |
 | ![](docs/items/boots-of-elvenkind.png) | Feet | ***Boots of Elvenkind*** | soft boots: [silent](FEATURES.md#hiding-in-shadows-to-backstab), with hiding to backstab on; thieves and rangers only | the buried chest of Kel's caravan, with the Cahulaks +1 |
 | ![](docs/items/living-cloak.png) | Cloak | Living Cloak | Inertial Barrier | Dagolar |
-| ![](docs/items/cloak-of-protection-plus1.png) | Cloak | ***Cloak of Protection +1*** | +1 AC and +1 on every saving throw, from the cloak slot | worn by Pehtucl |
+| ![](docs/items/cloak-of-protection-plus1.png) | Cloak | ***Cloak of Protection +1*** | +1 AC and +1 on every saving throw, from the cloak slot | in the chest beside Pehtucl, the slave pens' head templar: locked, with a poisoned needle in its lock (a thief can disarm it and pick the lock; anyone else can try to bash it open, which sets the needle off: 2d6 poison). The chest comes with a new game; in a game saved before this version that has been to the pens, he wears the cloak instead, and the chest is the plain one |
 | ![](docs/items/cloak-of-elvenkind.png) | Cloak | ***Cloak of Elvenkind*** | a grey cloak: [all but invisible](FEATURES.md#hiding-in-shadows-to-backstab) in a fight, with hiding to backstab on; thieves and rangers only | the **Elven Leader**'s gift with his Gythka +2, after the fight with his men: "And take this cloak, woven by my own tribe for our best runners..." (left on the ground by him when it can't be carried, as the Gythka is) |
 | ![](docs/items/silver-necklace.png) | Neck | Silver Necklace | Biofeedback | — |
 | ![](docs/items/amulet-of-magic-resistance.png) | Neck | ***Amulet of Magic Resistance*** | 15% magic resistance, added to the wearer's own (as from Mind Bar); it never shatters | sold by **Kel** |
@@ -173,7 +173,7 @@ Tanelyv's Armor also has a chest piece, with no plus.
 | ![](docs/items/els-ring.png) | Finger | El's Ring | DEX +3 | on the ground |
 | ![](docs/items/storm-ring.png) | Finger | Storm Ring | Ice Storm | a chest |
 | ![](docs/items/wind-ring.png) | Finger | Wind Ring | Protection from Normal Missiles | the Wyvern Master |
-| ![](docs/items/ring-of-protection-plus1.png) ![](docs/items/pehtucls-ring-of-protection-plus1.png) | Finger | ***Ring of Protection +1*** (two) | +1 AC and +1 on every saving throw | one on the arena's Tied-up Prisoner: free him, then look at his body (the game's script says there's nothing; the Loader finds a ring sewn into his loincloth, 50 XP to whoever searched); the other worn by **Pehtucl**, the slave pens' head templar (in the south-west corner, with the Obsidian Bloodwrath) |
+| ![](docs/items/ring-of-protection-plus1.png) ![](docs/items/pehtucls-ring-of-protection-plus1.png) | Finger | ***Ring of Protection +1*** (two) | +1 AC and +1 on every saving throw | one on the arena's Tied-up Prisoner: free him, then look at his body (the game's script says there's nothing; the Loader finds a ring sewn into his loincloth, 50 XP to whoever searched); the other worn by **Pehtucl**, the slave pens' head templar (in the south-west corner, with the Obsidian Bloodwrath); a thief can lift it from his finger |
 
 **Held, or used from the pack:**
 
@@ -248,14 +248,14 @@ off AC 10 (the game's own numbers; a character's AC adds up its pieces).
 | Arms | leather | Leather Arm Armor | 1 | Armor Merchant | Churrr, Krikor, Ranger, Kurzak, Chaero, Castle Guard, Guard, Arant's Guard, Scar, Arena Guard, Warrior, Dagolar Guard, Tobrian, Caravan Guard, Lt. Kwerin, Mayor of Gedron, Slaver Guard, Merzol, Messenger, Visitor, Notaku, Village Hero, Kalinin |  |
 | Arms | bone | Ring Arm Armor | 1 | Armor Merchant | Wyvern Master, Mikquetzl |  |
 | Arms | bone | Brigandine Arm Armor | 1 | Armor Merchant | Keldar, Templar, Chaya, Caravan Master, Chahl, Elven Leader, Gladiator, Uzoma |  |
-| Arms | bone | Scale Arm Armor | 1 | Jark | Uskuye, Elite Guard, a chest in the slave pens |  |
+| Arms | bone | Scale Arm Armor | 1 | Jark | Uskuye, Elite Guard, a chest in the slave pens | **new** placement |
 | Arms | metal | Chain Arm Armor | 2 | — | Templar, Army Commander, a chest in the Undermountain |  |
 | Legs | leather | Leather Leg Armor | 1 | Armor Merchant | Warren Chief, Churrr, Ranger, Skull Guardian, Worshipper, Mayor of Gedron, Council Member, Notaku, Village Hero, a chest in the Upper Castle |  |
 | Legs | bone | Ring Leg Armor | 1 | Jark, Armor Merchant | Mikquetzl |  |
 | Legs | bone | Brigandine Leg Armor | 1 | Jark, Armor Merchant | Keldar, Templar, Chaya, Caravan Master, Chahl, Elven Leader |  |
-| Legs | bone | Scale Leg Armor | 1 | Jark | Uskuye, Elite Guard, a chest in the slave pens |  |
+| Legs | bone | Scale Leg Armor | 1 | Jark | Uskuye, Elite Guard, a chest in the slave pens | **new** placement |
 | Legs | metal | Chain Leg Armor | 1 | Armor Merchant | Army Commander, a skeleton in the Upper Castle |  |
-| Head | leather | Helm | 0 (1 with [Helms give AC 1](FEATURES.md#helms)) | Armor Merchant | Kurzak, a chest in the Upper Castle, a chest in the slave pens, a bag in the slave pens |  |
+| Head | leather | Helm | 0 (1 with [Helms give AC 1](FEATURES.md#helms)) | Armor Merchant | Kurzak, a chest in the Upper Castle, a chest in the slave pens, a bag in the slave pens | **new** placement |
 | Head | bone | Bone Helm | 0 (1 with [Helms give AC 1](FEATURES.md#helms)) | — | a chest in the slave pens | **new**: the bone scale set's helm |
 | Hand | wood | Shield | 1 | — | Wyvern Master, Arant, Chaya, Elven Leader, Templar, a chest in the slave pens |  |
 | Hand | leather | Shield | 1 | — | Keldar, Templar, Caravan Master, Gladiator |  |
@@ -310,6 +310,7 @@ no magical power is lost at once in the game (0%); one with a power never is
 | The mod's plain obsidian weapons (Short Sword, Axe, Mace, Great Axe) | 65% | 80% (needs 5) |
 | The mod's plain metal weapons (Short Sword, Dagger, Mace, Great Axe, Pick, Polearm) | 65% | 65% (the game's: needs 8) |
 | Kreenfang, Drakejaw, Stillwater, Thornwall, Hayneedle (bone, +1) | 70% | 70% (the game's: needs 7) |
+| The Elven Leader's Gythka +2 (bone, +2) | 75% | 75% (the game's: needs 6) |
 | Mindshard (obsidian, +1) | 70% | 85% (needs 4) |
 | Flame Blade (obsidian, +1, a power) | 70% | 90% (needs 3) |
 | Glasshewer, Nightsliver, Skycutter (obsidian, +2) | 75% | 90% (needs 3) |

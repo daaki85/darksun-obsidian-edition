@@ -35,7 +35,7 @@ SEED = 5
 RAMP = ((58, 50, 46), (84, 74, 66), (110, 98, 88), (136, 124, 112), (160, 148, 134), (186, 176, 162),
         (212, 204, 192))
 MOST_SATURATED = 0.35
-CYCLED = set(range(240, 256)) | set(icons.WATER)  # (colours the game turns: fire's, water's)
+CYCLED = set(range(1, 16)) | set(range(240, 249))  # (colours the game turns: ghost.CYCLED)
 ANCHOR = 2  # (an object's two words, x and y: its picture's point that stands on its place)
 
 

@@ -125,6 +125,7 @@ VEC_EL_KNOW equ 0x9E       ; PROBE_EL_KNOW
 VEC_DUAL_BAN equ 0x9D      ; PROBE_DUAL_BAN
 VEC_DUAL_SPELLS equ 0x9C   ; PROBE_DUAL_SPELLS
 VEC_SOUND_42 equ 0x9B      ; PROBE_SOUND_42
+VEC_GHOST  equ 0x80        ; PROBE_GHOST (not 66h-6Fh: the game looks for drivers there; 70h-77h: IRQs)
 VEC_SOUND_44 equ 0x9A      ; PROBE_SOUND_44
 VEC_DUAL_KIT equ 0x99      ; PROBE_DUAL_KIT
 VEC_CR_SPELLS equ 0x98     ; PROBE_CR_SPELLS
@@ -175,8 +176,8 @@ section mz start=0
         dw 2                                    ; header size in paragraphs
         dw LOAD_EXTRA                           ; min extra paragraphs: the ring's end past the image
         dw LOAD_EXTRA                           ; max extra paragraphs (so the whole fits in upper memory)
-        dw 0                                    ; SS (relative to the image)
-        dw image_len + STACK                    ; SP
+        dw image_len / 16                       ; SS (relative to the image): just past it, so
+        dw STACK                                ; SP    the image may have all of its 64 KB
         dw 0                                    ; checksum
         dw install                              ; IP
         dw 0                                    ; CS (relative to the image)
@@ -402,6 +403,16 @@ lbl_slots  times LBL_SLOTS * LBL_SIZE db 0 ; +374 the Loader's: names floating o
 blast_hp   times 4 dw 0         ; +1814 the hit points Psionic Blast took
                                 ;      from each party member this fight (PROBE_WORN), for the Loader
                                 ;      to give back and clear as the fight ends (psiblast.py)
+sound_req  dw 0xFFFF            ; +1822 the Loader sets a sound to play from the map's main loop
+                                ;      (SOUND_TICK: a thief hidden, sounds.py's HIDE_SOUND); DSCLOG
+                                ;      sets it back to FFFFh (none) once played
+pick_sound dw 0xFFFF            ; +1824 ... and one to play with PICK_TEXT when no XP is given
+                                ;      (GIVE_XP: a pocket picked, PICK_SOUND), set back as well
+ghost_seg  dw 0                 ; +1826 GHOST's block in upper memory (KEEP; 0: none, no see-through
+                                ;      figures): the Loader writes BLEND, REP and GHOST_TAB into it
+ghost_on   dw 0                 ; +1828 the Loader sets 1 once BLEND and REP are made for the palette
+                                ;      as it is (0 while they're being made again: figures drawn as
+                                ;      ever)
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -1301,8 +1312,10 @@ pick_text times PICK_SIZE db 0
 XP_SEG    equ 0x4251            ; (DSUN.EXE segments, less the load segment) an overlay's entry:
 XP_OFF    equ 0x005C            ;   (who, how many)
 give_xp:
+        mov ax, 0xFFFF
+        xchg ax, [cs:pick_sound]        ; (PICK_SOUND: played in the XP's place, once)
         cmp word [cs:xp_who], 0xFFFF
-        je .ret
+        je play_sound
         mov ax, ds
         sub ax, DGROUP_SEG - XP_SEG
         mov [cs:xp_call + 2], ax
@@ -1310,13 +1323,105 @@ give_xp:
         push word [cs:xp_who]
         call far [cs:xp_call]
         add sp, 4
-        mov ax, ds
-        sub ax, DGROUP_SEG - DROP_SEG
-        mov [cs:sound_call + 2], ax
-        push word QUEST_SOUND
+        mov word [cs:xp_who], 0xFFFF
+        mov ax, QUEST_SOUND
+        ; (on into PLAY_SOUND)
+
+; PLAY_SOUND: the game's sound AX (FFFFh: none) by its own routine, which does nothing with the
+; sounds turned off; or one of the mod's (MOD_SOUND on: BVOC AX of the Loader's RESOURCE.GFF,
+; sounds.py). The game's table of sounds (SFX_SEG:SFX_TABLE, 6 bytes each: +1 the kind, 5 a digital
+; one, then a far pointer to its 12-byte descriptor, whose +7 is its BVOC) has digital ones for
+; 0-130 only (131-180 are another kind), so for the call an entry from SFX_SLOT on is made a
+; digital one with MOD_DESC (its BVOC AX), and then put back: one for each of the mod's sounds, as
+; the game keeps the last one it loaded by its number. DS the game's; AX, BX, CX, DX, ES changed.
+SFX_SEG    equ 0x3A98           ; (DSUN.EXE segments, less the load segment)
+SFX_TABLE  equ 0x08A2
+SFX_SLOT   equ 131              ; (the first entry past the digital ones: 131 and 132 lent)
+SFX_DIGITAL equ 5
+MOD_SOUND  equ 140              ; (sounds.HIDE_SOUND; PICK_SOUND the next)
+MOD_SOUNDS equ 2
+play_sound:
+        cmp ax, 0xFFFF
+        je .ret
+        mov bx, ds
+        sub bx, DGROUP_SEG - DROP_SEG
+        mov [cs:sound_call + 2], bx
+        sub ax, MOD_SOUND
+        cmp ax, MOD_SOUNDS
+        jb .mod
+        add ax, MOD_SOUND
+        push ax
         call far [cs:sound_call]
         add sp, 2
-        mov word [cs:xp_who], 0xFFFF
+.ret:   ret
+.mod:   push si
+        imul si, ax, 12
+        add si, mod_desc                ; (its descriptor)
+        imul bx, ax, 6
+        add bx, SFX_TABLE + SFX_SLOT * 6  ; (the entry it borrows)
+        add al, MOD_SOUND
+        mov [cs:si + 5], al             ; (its BVOC, and its number for another kind of card)
+        mov [cs:si + 7], al
+        mov dx, ds
+        sub dx, DGROUP_SEG - SFX_SEG
+        mov es, dx
+        push ax
+        push word [es:bx + 1]           ; (the entry as it was, +1 to +5: +6 is the next
+        push word [es:bx + 3]           ; entry's loaded flag, the game's to change)
+        push word [es:bx + 4]
+        mov byte [es:bx + 1], SFX_DIGITAL
+        mov [es:bx + 2], si
+        mov [es:bx + 4], cs
+        push es
+        push bx
+        sub al, MOD_SOUND - SFX_SLOT
+        push ax
+        call far [cs:sound_call]
+        add sp, 2
+        pop bx
+        pop es
+        pop word [es:bx + 4]
+        pop word [es:bx + 3]
+        pop word [es:bx + 1]
+        pop ax
+        pop si
+        ret
+mod_desc times MOD_SOUNDS db 1, 0, 0xFF, 0xFF, 0, 0, 1, 0, 0, 1, 0x6E, 0x40 ; (as the game's, BVOC +7)
+
+; OVR_BACK: the end of an interrupt handler that called the game's routines in a frame the overlay
+; manager can fix up (BP pushed last, the far way back below it, as a far call's): that way back,
+; as the manager has left it, put in the interrupt's frame, then the handler's ES and registers
+; (PUSHAD, PUSH ES at its start) back and the IRET. OVR_OUT: only the last three.
+ovr_back:
+        pop bp
+        pop ax                  ; the way back, as the overlay manager has left it
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], dx
+ovr_out:
+        pop es
+        popad
+        iret
+
+; SHEET_CLASSES: EAX the classes of the character sheet at ES:BX (its three class bytes, +21h).
+sheet_classes:
+        mov eax, [es:bx + 0x21]
+        and eax, 0x00FFFFFF
+        ret
+
+; SOUND_TICK: from the map's main loop (PROBE_SCROLL, DS the game's), the sound the Loader asked
+; for (SOUND_REQ), once. All registers kept.
+sound_tick:
+        cmp word [cs:sound_req], 0xFFFF
+        je .ret
+        pusha
+        push es
+        mov ax, 0xFFFF
+        xchg ax, [cs:sound_req]
+        call play_sound
+        pop es
+        popa
 .ret:   ret
 
 use_done dw 0                   ; (the way on when the Loader answered: the routine's end, less the INT's)
@@ -1388,8 +1493,10 @@ probe_use_item:
         jae .late_use_reply
         call rtc_waited         ; (the BIOS clock can stand still: the game's timer
         jnc .wait               ;   doesn't always pass its ticks on; at most 2 s by the real-time clock)
-.late_use_reply:
-        jmp .go                 ; no answer: the Loader isn't reading
+.late_use_reply:                        ; no answer: the Loader isn't reading, or the game's lists
+        mov ax, [cs:use_seq]            ;   held it up; the request marked answered, so a late
+        mov [cs:use_reply], ax          ;   answer isn't carried out unseen (dicelog's _answer_use)
+        jmp .go
 .ready: cmp word [cs:use_taken], 0
         je .go
         cmp word [cs:use_taken], 2
@@ -1423,13 +1530,7 @@ probe_use_item:
         call give_xp
         mov word [cs:show_text], pick_text
         call show_window
-        pop bp
-        pop ax                  ; the way back, as the overlay manager has left it
-        pop dx
-        mov bx, sp
-        mov [ss:bx + 34], ax
-        mov [ss:bx + 36], dx
-        jmp .out
+        jmp ovr_back            ; (the way back as the overlay manager left it)
 .go:    add [ss:bx + 34], dx
 .out:   pop es
         popad
@@ -2335,15 +2436,8 @@ probe_unlook:
         push bp                 ;   overlays over this routine's while it waits for Continue
         mov bp, sp
         call show_window
-        pop bp
-        pop ax                  ; the way back, as the overlay manager has left it
-        pop dx
-        mov bx, sp
-        mov [ss:bx + 34], ax
-        mov [ss:bx + 36], dx
-.out:   pop es
-        popad
-        iret
+        jmp ovr_back             ; (the way back as the overlay manager left it)
+.out:   jmp ovr_out
 
 ; STATS: STATS_SIZE bytes for each party member, kept by the Loader: +0 1 if in use, +1 THAC0
 ; with the main weapon (signed), +2 the five saves as the d20 needed now, +8 three words: the
@@ -4891,7 +4985,7 @@ probe_no_cast:
 nc_who  dw 0                            ; (the character the test was asked about)
 
 ;
-; PROBE_WORN: INT VEC_WORN at two places, told apart by where it returns to:
+; PROBE_WORN: INT VEC_WORN at five places, told apart by where it returns to:
 ; - the ability routine's "mov al,es:[bx+0Fh]" (80F5:2D0Bh, 7B8ABh; INT + 2 NOPs), ES:BX a
 ;   listed item: AL its ability byte (FAh-FFh: a score raised or lowered) only while it is worn
 ;   (a slot below the backpack's), else 0, so a ring or gauntlets in the pack change nothing;
@@ -4902,9 +4996,25 @@ nc_who  dw 0                            ; (the character the test was asked abou
 ;   (case 169) has taken a target that failed its save down to a fifth of its most hit points: it
 ;   does the OR, and adds the loss (the routine's [BP-18h]) to BLAST_HP for target DI if a party
 ;   member (0-3), for the Loader to give back as the fight ends (psiblast.py): the blast's wounds
-;   are imagined.
+;   are imagined;
+; - the damage routine's death test, "cmp ax,dx" (612E:194Bh, 5860Bh; the INT alone, its "jg"
+;   kept), AX the creature's hit points + 10, DX the damage, DI the thing: while a party member
+;   (0-3) has hit points of Psionic Blast's still to come back (BLAST_HP), a blow that would kill
+;   it (DX at AX or more) knocks it out instead (the flags of "greater": the jg goes to the Out
+;   Cold case), as the blast's wounds are imagined; Disintegrate's (DX 10000 and up) still kills;
+; - where the game makes a Dead Body for a creature that dies carrying something (612E:2752h,
+;   59412h: "push 0FFFF044Dh", object 1101; the INT, then "push 0FFFFh / push ax"): AX the body's
+;   object, 1101, or the champions' Tohr-kreen's own (champions.py) when the dying creature (its
+;   map object [BP+6], DS the game's) is that champion.
 WORN_AC_RET equ 0x22C8                  ; (the AC routine's INT's return address)
+BODY_RET    equ 0x2754                  ; (the dead body's)
+DEAD_BODY   equ 1101                    ; (the game's Dead Body)
+KREEN_CHAMPION equ 2660                 ; (champions.TOHR_KREEN)
+KREEN_BODY  equ 2666                    ; (champions.BODY)
+MAP_OBJECT  equ 0x66AE                  ; (a map object's object number: DS:66AEh + 32 each)
 BLAST_RET   equ 0x0B69                  ; (Psionic Blast's)
+KO_RET      equ 0x194D                  ; (the death test's)
+KO_UNMADE   equ 10000                   ; (the damage routine's Disintegrate: status 8)
 FIRST_PACK  equ 14                      ; the first backpack slot
 probe_worn:
         sti
@@ -4912,6 +5022,10 @@ probe_worn:
         mov bp, sp
         cmp word [bp+2], WORN_AC_RET
         je .ac_bp
+        cmp word [bp+2], KO_RET
+        je .ko_bp
+        cmp word [bp+2], BODY_RET
+        je .body
         cmp word [bp+2], BLAST_RET
         pop bp
         je .blast
@@ -4932,6 +5046,38 @@ probe_worn:
         pop ax
         pop bx
 .bout:  iret
+.ko_bp: pop bp
+        cmp di, 3
+        ja .ko_cmp
+        cmp dx, KO_UNMADE
+        jge .ko_cmp
+        push bx
+        mov bx, di
+        add bx, bx
+        cmp word [cs:bx + blast_hp], 0
+        pop bx
+        jle .ko_cmp
+        push ax
+        mov ax, 1
+        cmp ax, 0                       ; "greater": knocked out, not killed
+        pop ax
+        retf 2
+.ko_cmp: cmp ax, dx                     ; (the game's)
+        retf 2
+.body:  pop bp
+        push bx
+        mov bx, [bp+6]                  ; the dying creature's map object (the game's frame)
+        shl bx, 5
+        mov ax, [bx+MAP_OBJECT]
+        pop bx
+        cmp ax, KREEN_CHAMPION
+        je .kreen
+        cmp ax, -KREEN_CHAMPION
+        je .kreen
+        mov ax, DEAD_BODY
+        iret
+.kreen: mov ax, KREEN_BODY
+        iret
 .ac_bp: pop bp
 .ac:    test word [es:bx+0x12], 0x40
         jz .out                         ; not a gladiator (ZF set)
@@ -5180,8 +5326,7 @@ probe_wp_disc_win:
         mov byte [es:bx + KIT_BYTE], 0
         cmp byte [cs:ed_on], 0
         je .cleared
-        mov eax, [es:bx + 0x21]
-        and eax, 0x00FFFFFF
+        call sheet_classes
         cmp eax, [cs:ed_cr_classes]
         jne .cleared
         mov dl, [cs:ed_race]    ; (and the race: a multiclass kit's number is its group's)
@@ -5500,15 +5645,7 @@ probe_lv_pick:
         jne .scholar_done
         call lv_scholar
 .scholar_done:
-        pop bp
-        pop ax                  ; the way back, as the overlay manager has left it
-        pop dx
-        mov bx, sp
-        mov [ss:bx + 34], ax
-        mov [ss:bx + 36], dx
-        pop es
-        popad
-        iret
+        jmp ovr_back             ; (the way back as the overlay manager left it)
 
 ; Character SI (DS the game's) asked for weapon kinds while it has fewer than it is due
 lv_check:
@@ -8267,15 +8404,7 @@ probe_cr_spells:
         push bp
         mov bp, sp
         call pick_spells
-        pop bp
-        pop ax                  ; the way back, as the overlay manager has left it
-        pop dx
-        mov bx, sp
-        mov [ss:bx + 34], ax
-        mov [ss:bx + 36], dx
-        pop es
-        popad
-        iret
+        jmp ovr_back             ; (the way back as the overlay manager left it)
 
 ; Creation's scores and hit points as rolled (RULE_HI_ROLLED; game.RULE_ROLLED). The game lets
 ; a click raise any score to its most and set the hit points anywhere from the least to the most
@@ -8727,8 +8856,7 @@ cr_open:
         mov ax, bx
         les bx, [LV_SHEETS]
         add bx, ax
-        mov eax, [es:bx + 0x21]
-        and eax, 0x00FFFFFF
+        call sheet_classes
         mov [cs:ed_classes], eax
         mov eax, [es:bx + SPEC_SLOTS]
         mov [cs:ed_specs], eax
@@ -9194,15 +9322,7 @@ probe_ef_click:
         push dword [PK_WINDOW]
         call far [cs:ef_far]
         add sp, 4
-        pop bp
-        pop ax                  ; the way back, as the overlay manager has left it
-        pop dx
-        mov bx, sp
-        mov [ss:bx + 34], ax
-        mov [ss:bx + 36], dx
-        pop es
-        popad
-        iret
+        jmp ovr_back             ; (the way back as the overlay manager left it)
 
 ; PROBE_SOUND_42 / PROBE_SOUND_44: INT VEC_SOUND_42 replaces "mov dx,[es:bx+42h]" (4 bytes: INT + 2
 ; NOPs; DSUN.EXE 78FDAh) and INT VEC_SOUND_44 "mov ax,[es:bx+44h]" (81DE3h): two sound numbers on
@@ -10151,7 +10271,7 @@ kit_short    db KIT_CHAMPION, 'CHAMPION', 0, KIT_SWASHBUCKLER, 'SWASHBUCK', 0, K
 ef_more      db 'MORE: CLICK HERE', 0
 ; The game's own party's features on the Effects screen (OWN_RACE_B): the race, the line. 0 ends it.
 own_lines    db 5, 'WILD FIGHTING', 0, 8, 'OPEN SKY SPELLS/PSI', 0, 8, 'CHATKCHA 2/ROUND', 0
-             db 3, 'KIT: E-WANDERER', 0, 0
+             db 3, 'SHADOW-WALKER', 0, 0
 ef_drawing   db 0
 ef_index     dw 0
 ef_first     dw 0
@@ -10291,8 +10411,7 @@ probe_wp_class:
         push es                 ;   on the screen)
         push bx
         les bx, [WP_CREATION]
-        mov eax, [es:bx + 0x21]
-        and eax, 0x00FFFFFF
+        call sheet_classes
         cmp eax, [cs:wp_classes_seen]
         je .same
         mov [cs:wp_classes_seen], eax
@@ -10740,8 +10859,8 @@ kit_row:
         mov dl, ah
         inc dl
 .row:   push eax                ; (the classes the kit goes with, as PROBE_WP_CLASS keeps them: a
-        mov eax, [es:bx + 0x21] ;   new character's default class is never clicked, and a kit with
-        and eax, 0x00FFFFFF     ;   classes not seen is taken as stale, KIT_STALE, when the die
+        call sheet_classes      ;   new character's default class is never clicked, and a kit with
+                                ;   classes not seen is taken as stale, KIT_STALE, when the die
         mov [cs:wp_classes_seen], eax ; rolls the hit points again)
         pop eax
         mov dh, [es:bx + KIT_BYTE]
@@ -14981,8 +15100,7 @@ kit_stale:
         push bx
         push es
         les bx, [WP_CREATION]
-        mov eax, [es:bx + 0x21]
-        and eax, 0x00FFFFFF
+        call sheet_classes
         cmp eax, [cs:wp_classes_seen]
         je .out
         mov byte [es:bx + KIT_BYTE], 0
@@ -15010,8 +15128,7 @@ kit_made:
         jz .out
         les bx, [WP_CREATION]
         push eax
-        mov eax, [es:bx + 0x21]
-        and eax, 0x00FFFFFF
+        call sheet_classes
         cmp eax, [cs:wp_classes_seen]
         pop eax
         jne .none
@@ -17317,15 +17434,8 @@ ns_blow:
         push word [BLOW_TARGET]
         call far [cs:blow_charge]
         add sp, 4
-        pop bp
-        pop ax                  ; the way back, as the overlay manager has left it
-        pop dx
-        mov bx, sp
-        mov [ss:bx + 34], ax
-        mov [ss:bx + 36], dx
-.out:   pop es
-        popad
-        iret
+        jmp ovr_back             ; (the way back as the overlay manager left it)
+.out:   jmp ovr_out
 
 blow_chance dw 0
 
@@ -18179,14 +18289,7 @@ cr_weapons:
         call lv_check
         mov byte [cs:lv_creating], 0
 .done:  mov byte [cs:ed_on], 0
-        pop bp
-        pop ax                  ; the way back, as the overlay manager has left it
-        pop dx
-        mov bx, sp
-        mov [ss:bx + 34], ax
-        mov [ss:bx + 36], dx
-        pop es
-        popad
+        jmp ovr_back             ; (the way back as the overlay manager left it)
 .iret:  iret
 
 ; ED_ROLLED: CF set unless an EDIT's own roll is still shown (ED_AGE): it is until the creature
@@ -18223,8 +18326,7 @@ ed_same:
         mov al, [es:bx + 0x18]
         cmp al, [cs:ed_race]
         jne .pop
-        mov eax, [es:bx + 0x21]
-        and eax, 0x00FFFFFF
+        call sheet_classes
         cmp eax, [cs:ed_classes]
         jne .pop
         mov al, [es:bx + KIT_BYTE]
@@ -18476,6 +18578,7 @@ arrows_arm:
         mov bp, sp
         add word [bp + 2], ARM_OUT
         call pp_restore         ; (no spell readied: as before the screen was closed)
+        sti                     ; (the wait for the Loader counts the BIOS's ticks: as PP_HAND's)
         pushad
         push es
         push word [bp + 4]
@@ -18527,8 +18630,10 @@ arrows_ask:
         jae .late
         call rtc_waited
         jnc .wait
-.late:  pop es
-        ret                     ; (no answer: the Loader isn't reading)
+.late:  mov ax, [cs:use_seq]            ; (no answer: the Loader isn't reading; marked answered,
+        mov [cs:use_reply], ax          ;   so no arrows are made later unseen)
+        pop es
+        ret
 .ready: pop es
         cmp byte [cs:pick_text], 0
         je .done                ; (made: nothing to say)
@@ -19939,6 +20044,7 @@ probe_redraw_all:
         jle .dust
         mov word [bp-0x0E], 0xC7
 .dust:  call dust_union
+        call ghost_union
         push ax                         ; (over the combat log's panel: drawn in parts round it,
         push bx                         ;   the routine's own drawing left out: on at its end)
         push cx
@@ -20054,17 +20160,15 @@ floor_post:
 
 F_ARGS equ 38                   ; (FLOOR_POST's frame: ES, DS, PUSHAD, flags, then the arguments)
 
-shadow_pass:
-        cld
-        inc word [cs:shadow_passes]
+; PAGE_SETUP: page BX (DS the game's): where it is (its bounds, the clip: CLIP_X0...) and the page it
+; is part of (its memory: V_SEG, V_Y0, V_X0, V_ROW); GAME_DS and LOAD_SEG too. AX, BX, CX, ES changed.
+page_setup:
         mov [cs:game_ds], ds
         mov ax, ds
         sub ax, DGROUP_SEG
         mov [cs:load_seg], ax
-        ; the page: where it is (its bounds, the clip), and the page it is part of (its memory)
         add ax, PAGES_SEG
         mov es, ax
-        mov bx, [bp + F_ARGS]
         shl bx, 1
         mov ax, [es:bx + 0x404]
         mov [cs:clip_x0], ax
@@ -20091,6 +20195,13 @@ shadow_pass:
         sub cx, ax
         inc cx
         mov [cs:v_row], cx
+        ret
+
+shadow_pass:
+        cld
+        inc word [cs:shadow_passes]
+        mov bx, [bp + F_ARGS]           ; the page: where it is, and its memory
+        call page_setup
         ; the camera, and for a rectangle's floor the rectangle
         cmp byte [cs:floor_kind], 0
         jne .rect
@@ -20585,8 +20696,284 @@ spans_flush:                            ; the noted runs darkened, a plane at a 
 n_spans dw 0                    ; (the spans in the far block, FAR_SPANS: 6 bytes each, the row's
                                 ;   place in the page, first x, last x)
 
-; the VGA's registers the shadows change, kept and put back
+; SEE-THROUGH FIGURES (GHOST): a party member hidden in shadows and unheard (STEALTH's bit), and a
+; creature the Loader marks in GHOST_TAB (invisible: ghost.py), are drawn half see-through, each
+; pixel the colour halfway between the figure's and what is under it. GHOST's block (GHOST_SEG, in
+; upper memory) holds BLEND at 0: for each of the figure's REP_COUNT colours (REP maps each of the
+; palette's to one) a row of 256, the colour halfway between it and each of the palette's; the
+; Loader makes REP and BLEND from the palette as the area changes (GHOST_ON 0 meanwhile).
+GH_BLEND    equ 0                       ; (GHOST's block: BLEND, REP_COUNT x 256 bytes)
+REP_COUNT   equ 32
+GH_REP      equ REP_COUNT * 256         ; ... REP, 256 bytes
+GH_TAB      equ GH_REP + 256            ; ... GHOST_TAB, a bit for each of the game's things
+GH_CHANGED  equ GH_TAB + 79             ; ... 1 once the Loader has written GHOST_TAB anew (GHOST_UNION)
+GH_PIX      equ GH_TAB + 80             ; ... the figure's pixels, as REP numbers (GHOST_DRAW)
+GH_PIX_MOST equ 4096
+GH_SPANS    equ GH_PIX + GH_PIX_MOST    ; ... its runs on the screen, 8 bytes each: the row's place
+GH_SPANS_MOST equ 192                   ;   in the page, first x, last x, its first pixel
+GH_SPANS_ROOM equ 0              ; (pixels may fill GH_PIX up to GH_SPANS)
+GHOST_PARAS equ (GH_SPANS + GH_SPANS_MOST * 8 + 15) / 16
+PIC_DRAW_OFF equ 0x3180                 ; (the resident routine at DROP_SEG that draws a picture)
+
+; PROBE_GHOST: INT VEC_GHOST replaces "call far 1A0A:3180" (9Ah 80h 31h, then the segment) in the
+; routine drawing a thing on the map (25EBEh; DI the thing), the call's arguments on the stack:
+; the page, x, y, mirrored, the picture (far), the frame. A see-through figure DSCLOG draws itself
+; (GHOST_DRAW); anything else is drawn by the game's routine as it was. Back past the segment.
+probe_ghost:
+        pop word [cs:g_resume]
+        pop word [cs:g_resume + 2]
+        pop word [cs:g_resume_fl]
+        add word [cs:g_resume], 3
+        cmp word [cs:ghost_on], 0
+        je .game
+        cmp di, MAP_COUNT - 1
+        ja .game                        ; (a wall or a tile: -1)
+        cmp di, 3
+        ja .tab
+        bt [cs:stealth], di
+        jnc .tab
+        bts [cs:gh_shown], di           ; (drawn see-through while hidden: GHOST_UNION)
+        jmp .ghost
+.tab:   push es
+        mov es, [cs:ghost_seg]
+        bt [es:GH_TAB], di
+        pop es
+        jnc .game
+.ghost: call ghost_draw
+        jmp .back
+.game:  mov ax, ds
+        sub ax, DGROUP_SEG - DROP_SEG
+        mov [cs:draw_call + 2], ax
+        call far [cs:draw_call]
+.back:  push word [cs:g_resume_fl]
+        push word [cs:g_resume + 2]
+        push word [cs:g_resume]
+        iret
+g_resume    dd 0
+g_resume_fl dw 0
+gh_shown    dw 0                        ; (party members drawn see-through while hidden: a bit each)
+draw_call   dw PIC_DRAW_OFF, 0
+
+; GHOST_DRAW: the frame of PROBE_GHOST's call drawn see-through (its arguments at [BP+4] on). The
+; frame's runs decoded into GH_PIX as REP numbers, each run within the page noted (GH_SPANS: the
+; pixel at its first x; a mirrored frame's pixels are read from the other end), then a plane at a
+; time each pixel there made BLEND's of its REP number and the colour under it. DS, SI, DI kept.
+GD_SPANS equ -2                         ; (locals: the next span's place, the row on the screen,
+GD_W     equ -4                         ;   the frame's width, a run's first x on the screen and its
+GD_X     equ -6                         ;   pixels, the step from one pixel to the next on a plane)
+GD_N     equ -8
+GD_STEP  equ -10
+ghost_draw:
+        push bp
+        mov bp, sp                      ; [bp+4] page, +6 x, +8 y, +10 mirrored, +12 picture, +16 frame
+        push ds
+        push si
+        push di
+        push fs
+        sub sp, 12
+        mov ax, 4
+        test byte [bp + 10], 1
+        jz .step
+        neg ax
+.step:  mov [bp + GD_STEP - 10], ax
+        mov bx, [bp + 4]
+        call page_setup
+        les si, [bp + 12]               ; the picture: its frames' places from +6
+        mov ax, es
+        or ax, si                       ; (none yet: nothing drawn, as the game's routine)
+        jz .out
+        mov bx, [bp + 16]
+        cmp bx, [es:si + 4]
+        jae .out
+        shl bx, 2
+        movzx eax, word [cs:zero]
+        mov ax, es
+        shl eax, 4
+        movzx ecx, si
+        add eax, ecx
+        add eax, [es:si + bx + 6]
+        mov si, ax
+        and si, 0x0F
+        shr eax, 4
+        mov ds, ax                      ; DS:SI the frame: width, height, then its rows
+        cld
+        lodsw
+        mov [bp + GD_W - 10], ax
+        lodsw
+        mov es, [cs:ghost_seg]
+        mov di, GH_PIX
+        mov word [bp + GD_SPANS - 10], GH_SPANS
+.row:   lodsb
+        cmp al, 0xFF
+        je .flush
+        movzx dx, al
+        add dx, [bp + 8]                ; DX its row on the screen
+.run:   lodsw
+        push ax                         ; x (8000h: the row's last)
+        and ah, 0x7F
+        movzx cx, byte [si]             ; its pixels
+        mov [bp + GD_N - 10], cx
+        test byte [bp + 10], 1
+        jz .fwd
+        neg ax                          ; (mirrored: from the right)
+        sub ax, cx
+        add ax, [bp + GD_W - 10]
+.fwd:   add ax, [bp + 6]
+        mov [bp + GD_X - 10], ax
+        movzx ax, byte [si + 1]
+        add si, 2
+        add ax, si
+        push ax                         ; (past its data)
+        lea ax, [di + GH_SPANS_ROOM]
+        add ax, cx
+        jc .full
+        cmp ax, GH_SPANS
+        ja .full                        ; (no room: what is decoded drawn)
+        mov bx, di                      ; BX its first pixel
+.data:  jcxz .noted
+        push cx
+        lodsb                           ; a control byte: bit 0 clear, (b >> 1) + 1 bytes to copy;
+        movzx cx, al                    ;   set, one byte (b >> 1) + 1 times
+        shr cx, 1
+        inc cx
+        test al, 1
+        jz .copy
+        call .rep
+        rep stosb
+        jmp .took
+.copy:  call .rep
+        stosb
+        loop .copy
+.took:  pop cx
+        mov cx, [bp + GD_N - 10]        ; (pixels left)
+        mov ax, di
+        sub ax, bx
+        sub cx, ax
+        jg .data
+.noted: pop si
+        cmp dx, [cs:clip_y0]            ; the run within the page: noted
+        jl .next
+        cmp dx, [cs:clip_y1]
+        jg .next
+        mov ax, [bp + GD_X - 10]        ; AX its first x, CX its last, BX the pixel there
+        mov cx, ax
+        add cx, [bp + GD_N - 10]
+        dec cx
+        test byte [bp + 10], 1
+        jz .clip
+        add bx, [bp + GD_N - 10]
+        dec bx
+.clip:  push dx
+        mov dx, [cs:clip_x0]
+        sub dx, ax
+        jle .x1
+        add ax, dx
+        cmp word [bp + GD_STEP - 10], 0
+        jg .ahead
+        neg dx
+.ahead: add bx, dx
+.x1:    pop dx
+        cmp cx, [cs:clip_x1]
+        jle .span
+        mov cx, [cs:clip_x1]
+.span:  cmp ax, cx
+        jg .next
+        cmp word [bp + GD_SPANS - 10], GH_SPANS + GH_SPANS_MOST * 8
+        jae .spans_full                 ; (no room for its span: what is noted drawn)
+        push di
+        mov di, [bp + GD_SPANS - 10]
+        mov [es:di + 2], ax
+        mov [es:di + 4], cx
+        mov [es:di + 6], bx
+        mov ax, dx                      ; the row's place in the page
+        sub ax, [cs:v_y0]
+        push dx
+        mul word [cs:v_row]
+        pop dx
+        sub ax, [cs:v_x0]
+        stosw
+        add word [bp + GD_SPANS - 10], 8
+        pop di
+.next:  pop ax
+        test ah, 0x80
+        jz .run
+        jmp .row
+.rep:   lodsb                           ; (AL: the next pixel's REP number)
+        movzx ax, al
+        xchg ax, bx
+        mov bl, [es:GH_REP + bx]
+        xchg ax, bx
+        ret
+.full:  pop ax
+.spans_full:
+        pop ax
+.flush: push es
+        pop fs
+        call vga_save
+        mov es, [cs:v_seg]
+        xor cx, cx                      ; the plane
+.plane: mov dx, 0x3C4                   ; write to this plane, read from it
+        mov al, 2
+        mov ah, 1
+        shl ah, cl
+        out dx, ax
+        mov dx, 0x3CE
+        mov al, 4
+        mov ah, cl
+        out dx, ax
+        mov si, GH_SPANS
+.gspan: cmp si, [bp + GD_SPANS - 10]
+        jae .nplane
+        mov ax, cx
+        sub ax, [fs:si + 2]
+        and ax, 3                       ; how far on its first pixel on this plane is
+        mov bx, [fs:si + 6]
+        cmp word [bp + GD_STEP - 10], 0
+        jg .on
+        sub bx, ax
+        sub bx, ax
+.on:    add bx, ax
+        add ax, [fs:si + 2]
+        mov dx, [fs:si + 4]
+        sub dx, ax
+        jl .nspan
+        shr dx, 2
+        inc dx                          ; DX: how many
+        shr ax, 2
+        add ax, [fs:si]
+        mov di, ax
+        push si
+        mov si, bx
+.pix:   mov bl, [es:di]                 ; what is under it, and the figure's: BLEND's
+        mov bh, [fs:si]
+        mov al, [fs:bx]
+        stosb
+        add si, [bp + GD_STEP - 10]
+        dec dx
+        jnz .pix
+        pop si
+.nspan: add si, 8
+        jmp .gspan
+.nplane:
+        inc cx
+        cmp cx, 4
+        jb .plane
+        call vga_restore
+.out:   add sp, 12
+        pop fs
+        pop di
+        pop si
+        pop ds
+        pop bp
+        ret
+
+; the VGA's registers the shadows change, kept and put back. VGA_BUSY while they are kept: the
+; timer's LABEL_STAMP, which keeps them in the same slots, waits for its next strike then (it once
+; struck in a shadow pass, the panel's or a see-through figure's, and the game's registers were
+; put back as the pass had them: map mask 8, read map 3)
+vga_busy db 0
 vga_save:
+        mov byte [cs:vga_busy], 1
         mov dx, 0x3C4
         in al, dx
         mov [cs:sc_index], al
@@ -20637,6 +21024,7 @@ vga_restore:
         out dx, ax
         mov al, [cs:sc_index]
         out dx, al
+        mov byte [cs:vga_busy], 0
         ret
 
 ; DARK: for each colour of the palette as it is now, the nearest to it at 3/4 strength among the
@@ -20859,6 +21247,7 @@ probe_scroll:
         mov byte [cs:arc_hold], 0       ; (an Arcanist's cast is over: PROBE_END_TURN)
         call dust_tick
         call whirl_tick
+        call sound_tick
         call target_click
         cmp word [cs:view_redraw], 0
         je .panel
@@ -21368,6 +21757,8 @@ label_where:
         jge .y1
         mov bx, dx                      ; (under its feet)
         add bx, 2
+        or bx, bx                       ; (still above the page's top: its thing is off the
+        jl .off                         ; screen, the view dragged; no label, none above the page)
 .y1:    mov dx, 200
         sub dl, [cs:di + 2]
         sbb dh, 0
@@ -21377,6 +21768,8 @@ label_where:
 .y2:    pop dx
         clc
         ret
+.off:   pop dx
+        jmp .no
 
 ; LABEL_ERASE: where label SI (its LBL_STATE) was drawn again by the game's routine for a rectangle
 ; of the view (REDRAW_SEG:REDRAW_OFF; page 1 and a flip, as the game's own call at 28185h), through
@@ -21384,10 +21777,10 @@ label_where:
 ; whole bytes of the planes (4 pixels): the routine draws only those inside it, so a label starting
 ; mid-byte left its first columns behind. DS the game's; keeps all.
 label_erase:
-        mov byte [cs:si + LS_SHOWN], 0
+        mov byte [cs:lbl_busy], 1       ; (busy first: a strike between could stamp the label
+        mov byte [cs:si + LS_SHOWN], 0  ; anew, then be erased, the old place left)
         pusha
         push es
-        mov byte [cs:lbl_busy], 1
         mov ax, ds
         sub ax, DGROUP_SEG - REDRAW_SEG
         mov [cs:redraw_far + 2], ax
@@ -21452,6 +21845,8 @@ label_stamp:
         shr ax, 4
         add ax, 0xA000
         mov es, ax
+        cmp byte [cs:vga_busy], 0
+        jne .out                        ; (the main code's own kept in VGA_SAVE's slots: VGA_BUSY)
         call panel_live
         sete [cs:lp_clip]
         call vga_save
@@ -22146,6 +22541,36 @@ dust_union:
 .bx1:   cmp bx, [bp-0x0E]
         jle .ret
         mov [bp-0x0E], bx
+.ret:   ret
+
+; GHOST_UNION: in PROBE_REDRAW_ALL, after DUST_UNION (the same rectangle at [BP-8] to [BP-0Eh]):
+; a party member drawn see-through while hidden (GH_SHOWN) and hidden no longer (its STEALTH bit
+; cleared: the turn passed, or it attacked) has the whole view drawn, so it is solid at the next
+; step of anyone's: in the enemies' turns the main loop, and VIEW_REDRAW with it, doesn't run.
+; The same once the Loader has written GHOST_TAB anew (GH_CHANGED: an invisibility begun or ended,
+; Detect Invisibility readied or lost), so a figure turns solid or see-through in those turns too.
+ghost_union:
+        cmp word [cs:ghost_on], 0       ; (GHOST_TAB written anew, an invisibility begun or
+        je .hidden                      ; ended: the whole view drawn, the enemies' turns too)
+        push es
+        mov es, [cs:ghost_seg]
+        xor al, al
+        xchg al, [es:GH_CHANGED]        ; (read and cleared at once: a Loader write between kept)
+        pop es
+        test al, al
+        jnz .whole
+.hidden:
+        mov ax, [cs:stealth]
+        not ax
+        test ax, [cs:gh_shown]
+        jz .ret
+        not ax
+        and [cs:gh_shown], ax
+.whole: xor ax, ax
+        mov [bp-8], ax
+        mov [bp-0x0C], ax
+        mov word [bp-0x0A], 0x13F
+        mov word [bp-0x0E], 0xC7
 .ret:   ret
 
 ; DUST_PASS: in SHADOW_PASS (the VGA's registers kept; the clip, camera and page known), each puff
@@ -23683,6 +24108,11 @@ keep:   mov ax, [cs:psp]
         mov es, ax
         mov word [es:0], POOL_PARAS
 .no_pool:
+        mov bx, GHOST_PARAS             ; the see-through figures' tables (GHOST_DRAW), if there's room
+        call umb_alloc
+        jc .no_ghost
+        mov [cs:ghost_seg], ax
+.no_ghost:
         pop dx
         mov ax, 3100h
         int 21h
@@ -23721,6 +24151,12 @@ FAR_PARAS  equ (FAR_END - FAR_RING + 15) / 16
 UMB_ROOM equ 0xF000 - 0xD00A
 UMB_NEED equ (1 + 0x10 + (image_len + STACK + 15) / 16) + (1 + OVR_RESERVE)
         times -(UMB_NEED > UMB_ROOM) db 0   ; (a negative count: the helper no longer fits upper memory)
+; What KEEP leaves there after the install: the helper as it stays (to RESIDENT_END), the overlay
+; buffer, the music pool (POOL_PARAS) and the see-through figures' tables (GHOST_PARAS), each with
+; its MCB. The last two are taken only if there's room, quietly: the build fails rather than lose
+; them without UMBPLUS.COM.
+UMB_KEPT equ (1 + 0x10 + (resident_end - $$ + 15) / 16) + (1 + OVR_RESERVE) + (1 + POOL_PARAS) + (1 + GHOST_PARAS)
+        times -(UMB_KEPT > UMB_ROOM) db 0   ; (a negative count: the music pool or the see-through tables wouldn't fit)
 
 POINTER_FILE db "D:\POINTER.BIN", 0 ; (CP_DATA's file, read as the helper loads)
 install:                        ; DS = ES = PSP, CS = the image
@@ -23756,6 +24192,22 @@ install:                        ; DS = ES = PSP, CS = the image
         mov ah, 3Eh
         int 21h
 .no_pointer:
+
+        mov es, [cs:psp]
+        mov es, [es:0x2C]       ; free our copy of the environment
+        mov ah, 49h
+        int 21h
+        mov dx, msg
+        mov ah, 9
+        int 21h
+        call far_init                   ; the far block: the HMA, else a block of its own, before
+        jnc .far                        ;   any vector is ours (none to leave behind if there's none)
+        mov dx, no_far
+        mov ah, 9
+        int 21h
+        mov ax, 4C01h
+        int 21h
+.far:
 
         mov ax, 2500h + VEC_RAND
         mov dx, int_rand
@@ -23920,6 +24372,9 @@ install:                        ; DS = ES = PSP, CS = the image
 %endif
         mov ax, 2500h + VEC_SCROLL
         mov dx, probe_scroll
+        int 21h
+        mov ax, 2500h + VEC_GHOST
+        mov dx, probe_ghost
         int 21h
         mov ax, 2500h + VEC_HIT
         mov dx, probe_hit
@@ -24187,22 +24642,7 @@ install:                        ; DS = ES = PSP, CS = the image
         mov dx, probe_dos_open
         int 21h
         mov byte [hooked], 1
-
-        mov es, [cs:psp]
-        mov es, [es:0x2C]       ; free our copy of the environment
-        mov ah, 49h
-        int 21h
-        mov dx, msg
-        mov ah, 9
-        int 21h
-        call far_init                   ; the far block: the HMA, else a block of its own
-        jnc .far
-        mov dx, no_far
-        mov ah, 9
-        int 21h
-        mov ax, 4C01h
-        int 21h
-.far:   mov byte [cs:quit_saved], 0     ; (DOS_QUIT's from now on)
+        mov byte [cs:quit_saved], 0     ; (DOS_QUIT's from now on)
         mov ax, [cs:far_seg]
         mov [cs:ring_seg], ax
         mov [cs:panel_seg], ax
@@ -24282,17 +24722,17 @@ hma_given db 0
 no_far  db 'DSCLOG: no memory for its buffers (57 KB). Not loaded.', 13, 10, '$'
 
 
-msg     db 'Dark Sun companion dice log helper loaded.', 13, 10, '$'
+msg     db 'DSCLOG loaded.', 13, 10, '$'
 psp     dw 0
-busy    db 'DSCLOG: interrupts 60h-65h or 8Ch-FEh are in use (already loaded?). Not loaded.', 13, 10, '$'
+busy    db 'DSCLOG: interrupts 60h-65h or 80h-FFh in use (already loaded?). Not loaded.', 13, 10, '$'
 all_vectors db VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR, VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK, VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_MISSILE_LINE, VEC_USE_ITEM, VEC_TWO, VEC_DOUBLE, VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY, VEC_NAMES_SIZE, VEC_NAMES_FILL, VEC_STEALTH, VEC_TYPES_SIZE, VEC_TYPES_FILL, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED, VEC_SPELL_TEXT, VEC_CHUNK_ID, VEC_FLOOR_ALL, VEC_FLOOR_RECT, VEC_REDRAW, VEC_REDRAW_ALL, VEC_SCROLL, VEC_HIT, VEC_ITEM_BOX, VEC_BELT, VEC_SAVE_PAGE, VEC_SAVE_CLICK, VEC_ITEM_WEAPON, VEC_ITEM_SKIP, VEC_ITEM_ARMOUR, VEC_SCRIPT_RAND, VEC_XP_NEXT, VEC_ATTACKS, VEC_SPEC_DAMAGE, VEC_DAM_LINE, VEC_VIEW_DAM, VEC_CAN_USE, VEC_NO_CAST, VEC_MC_CON, VEC_MC_UNCON, VEC_WP_DISC_WIN, VEC_WP_SPHERE_WIN, VEC_WP_DISC_CLICK, VEC_WP_SPHERE_CLICK, VEC_WP_SHOWN, VEC_WP_CLASS, VEC_LV_PICK, VEC_PK_COUNT, VEC_PK_WIN, VEC_PK_LEFT, VEC_PK_TITLE, VEC_PK_FILL, VEC_PK_CLICK, VEC_EF_ROWS, VEC_HP_BEST, VEC_TOME, VEC_INIT, VEC_THAC0, VEC_SLOTS, VEC_SLOT_LEVEL
             db VEC_PSP_USE, VEC_PSP_TABLE, VEC_PSP_DEFENCE, VEC_CURE, VEC_PSP_KEEP, VEC_RANGER_CAST, VEC_PSP_KEEP_DX
-            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_POINTER, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC, VEC_TICK, VEC_POISON, VEC_ARROW, VEC_OVR_BUF, VEC_HEAP, VEC_FLIP, VEC_PACE_PASS, VEC_PACE_DRAW, VEC_WORN, VEC_TAKE, VEC_SPHERE
+            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_POINTER, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC, VEC_TICK, VEC_POISON, VEC_ARROW, VEC_OVR_BUF, VEC_HEAP, VEC_FLIP, VEC_PACE_PASS, VEC_PACE_DRAW, VEC_WORN, VEC_TAKE, VEC_SPHERE, VEC_GHOST
 all_vectors_end:
 
         align 16, db 0
 image_len equ $ - $$
 file_len  equ image_len + 32
-        times -(image_len + STACK > 0x10000) db 0   ; (a negative count: past the helper's 64 KB segment)
+        times -(image_len > 0x10000) db 0   ; (a negative count: past the helper's 64 KB segment)
 ; the memory past the image to load in: the install's stack
 LOAD_EXTRA equ (STACK + 15) / 16

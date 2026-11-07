@@ -225,8 +225,10 @@ def age_by(gd: "game.GameData", member: int, years: int, why: str) -> List[str]:
 
 
 # The years counted so far, in the game's own flags so a save keeps them: COUNTING set once the
-# count has begun, then COUNT_BITS flags holding the number (the Loader's flags: the game's run
-# to 755, the Loader's people 760-783, Alagorn's menus at most 784-797, a save keeps 808)
+# count has begun, then COUNT_BITS flags holding the number (the Loader's flags, as DEVELOPMENT.md's
+# "The Loader's game flags" lists them: the game's run to 755; the people 756-783, Alagorn's menus from 784 (794 at most),
+# Pehtucl's chest 795-796, Legcrusher's death 797 (kurzak.py), these 798-806, the champions 807;
+# a save keeps 808)
 COUNTING = 798
 COUNT_FIRST, COUNT_BITS = 799, 8
 
@@ -382,6 +384,8 @@ def restore(gd: "game.GameData", creature: int, level: int, rng: Optional[random
     if age <= true_age:
         return [f"Restore Youth: {name} has no magical years to take back ({age}, {name}'s true age)."]
     con = rec[game.CREATURE_ABILITIES + 2]
+    if not con:  # (no scores: nothing to roll against, as with Haste)
+        return []
     chance, roll = system_shock(con), rng.randint(1, 100)
     line = (f"{name}'s system shock (Restore Youth): d100 = {roll}, needs {chance} or less (CON {con}) -> "
             + ("survives" if roll <= chance else f"fails: {name} dies"))

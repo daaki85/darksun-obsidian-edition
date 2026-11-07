@@ -55,7 +55,7 @@ class StealthTests(unittest.TestCase):
         self.assertTrue(lines[1].startswith("  Dag moves silently: d100 = 16, needs 16 or less -> unheard"))
 
     def test_not_halved_by_the_sun(self):
-        """A Military Scout, and Cilla (the game's own party's elf, the Elven Wanderer: kits.own_race),
+        """A Military Scout, and Cilla (the game's own party's elf, the Elven Shadow-walker: kits.own_race),
         hide with their whole chance in daylight (the Scout with its +10 under the open sky)."""
         from unittest import mock
         from dsloader import kits
@@ -65,7 +65,7 @@ class StealthTests(unittest.TestCase):
                                    "not halved in daylight) -> hidden")
         with mock.patch.object(self.gd, "own_race", lambda creature: kits.ELF):
             lines, _ = stealth.turn(self.gd, 0, rolls(16, 99))
-        self.assertIn("(16, the Elven Wanderer: not halved in daylight) -> hidden", lines[0])
+        self.assertIn("(16, the Elven Shadow-walker: not halved in daylight) -> hidden", lines[0])
         with mock.patch.object(self.gd, "own_race", lambda creature: kits.THRI_KREEN):
             lines, _ = stealth.turn(self.gd, 0, rolls(16, 99))
         self.assertIn("halved in daylight) -> seen", lines[0])
@@ -247,9 +247,13 @@ class StealthTests(unittest.TestCase):
         self.assertEqual(lines[0], "Dag's turn")
         self.assertIn("-> hidden", lines[1])
         self.assertEqual(struct.unpack_from("<H", self.m, HDR + stealth.TSR_STEALTH)[0], 1)
+        from dsloader import dicelog, sounds
+        self.assertEqual(struct.unpack_from("<H", self.m, HDR + dicelog.TSR_SOUND_REQ)[0], sounds.HIDE_SOUND)
+        struct.pack_into("<H", self.m, HDR + dicelog.TSR_SOUND_REQ, 0xFFFF)  # (played, as DSCLOG does)
         struct.pack_into("<h", self.m, DS * 16 + game.WHOSE_TURN, 0x29)
         self.assertEqual(log.turn_lines(), ["Mountain Stalker's turn"])
         self.assertEqual(struct.unpack_from("<H", self.m, HDR + stealth.TSR_STEALTH)[0], 0)
+        self.assertEqual(struct.unpack_from("<H", self.m, HDR + dicelog.TSR_SOUND_REQ)[0], 0xFFFF)  # (no sound)
 
     def test_rule_off(self):
         log = self.log

@@ -7,6 +7,7 @@
 - [The game's script bugs](#the-games-script-bugs)
 - [Mirror Image](#mirror-image)
 - [The game's spells](#the-games-spells)
+- [Worn items, the gladiator's armour and Psionic Blast](#worn-items-the-gladiators-armour-and-psionic-blast)
 - [New spells (wizard and 6th-level priest)](#new-spells-wizard-and-6th-level-priest)
 - [New items](#new-items)
 - [Bracers of defense](#bracers-of-defense)
@@ -15,12 +16,17 @@
 - [Kalzith](#kalzith)
 - [Semyon](#semyon)
 - [What Dinos and the Trustee say about them](#what-dinos-and-the-trustee-say-about-them)
+- [The game's people's gear](#the-games-peoples-gear)
+- [Pehtucl's chest](#pehtucls-chest)
+- [The champions' bout](#the-champions-bout)
 - [The cooked vulture](#the-cooked-vulture)
 - [Defilers' scrolls](#defilers-scrolls)
 - [What the party wears](#what-the-party-wears)
 - [Elves and half-elves](#elves-and-half-elves)
 - [Shadows](#shadows)
 - [Dust](#dust)
+- [See-through figures](#see-through-figures)
+- [Sounds for hiding and picking pockets](#sounds-for-hiding-and-picking-pockets)
 
 ## The game's script bugs
 
@@ -277,6 +283,12 @@ after the `ns_list_` patches):
   the spells that make one Afraid (effect 17): Scare (21), Fear (43), Cause
   Fear (78; a Cloak of Fear's too) and Insect Plague (132); Spook (200) has it
   from DSCLOG's `NS_PATCHES`. The Loader's saves show the +4 (`FEAR_CATEGORY`).
+- **Scare's save** (spell 21, in the save modifiers' routine, 80F5:119Ch): a target of 6th
+  level or more always saves (+100); below, the usual save only for a priest (7C01Dh) whose race
+  (the sheet's +18h) is 3 and is 4: "cmp 3 / jne fail" (79FEAh), then "cmp 4 / je save"
+  (7A011h), so everyone below 6th failed (-100). `scare_elves` makes the first "je" to the save
+  (7A01Dh): an elf or half-elf priest saves as usual, as AD&D's elves, half-elves and priests
+  resist fear (found by yuan-ti).
 - **Negative Plane Protection** (effect 42): an undead's negative-energy touch
   (element 100h) on a creature under it (7A7C5h) uses a charge, then the
   target saves (79A71h) as against Vampiric Touch (27h), whose record allows
@@ -379,9 +391,22 @@ DSUN.EXE with yuan-ti's notes; Psionic Blast from yuan-ti's issue #129.) One hel
   each loss back once the fight flag has been down `FIGHT_OVER` (2 s), up to the member's most
   and only to one still Okay (one Out Cold or dead was put there by something real), says so
   ("Cilla shakes off Psionic Blast's imagined wounds as the fight ends: +23 HP, now 30/38"), and
-  clears the field; a game loaded (the clock gone back) clears it with nothing given. The three
-  places are told apart by the return address (`WORN_AC_RET` 22C8h, `BLAST_RET` 0B69h, else the
-  ability routine's), so the one vector serves them all.
+  clears the field; a game loaded (the clock gone back) clears it with nothing given.
+  **Knocked out, not killed:** the damage routine kills a creature when the
+  damage reaches its hit points + 10 (status 5; 8 for 10000 and up, Disintegrate's), else knocks
+  it out when the damage reaches its hit points (status 3, 0 HP). Its death test, `cmp ax,dx`
+  (5860Bh, 612E:194Bh, before a `jg` to the Out Cold case), is the interrupt too (`blast_knockout`): for a
+  party member with hit points still in `BLAST_HP` and damage under 10000, the flags of
+  "greater", so the blow knocks it out. At the fight's end one Out Cold gets the hit points back
+  too and is woken (status 1, as the game wakes a creature at 7C1F9h); one Dying or dead gets
+  none. Seen in DOSBox: Gerakis at -9 HP with 40 kept, a 1-point Psychic Crush (death by the
+  game's rule) left him at 0, and the fight's end gave him the 40.
+- **The champion's body** ([the champions' bout](#the-champions-bout)): where the game makes a
+  Dead Body for a creature dying with things on it, the object number is asked of the interrupt.
+
+The five places are told apart by the return address (`WORN_AC_RET` 22C8h, `BLAST_RET` 0B69h,
+`KO_RET` 194Dh, `BODY_RET` 2754h, else the ability routine's), so the one vector serves them
+all.
 
 ## New spells (wizard and 6th-level priest)
 
@@ -689,8 +714,10 @@ Kreenfang) are in the game's data (`dsloader/dataitems.py`, `worldgear.py`,
 or chest's object (its RDFF: the object's record, then its items, each a child
 or the next of the one before, with its type and name as attributes) has the new
 items after its own, so the game makes them where it makes the object. Kreenfang
-is the arena's dead body's (object 1204) own gythka made +1 and renamed, its
-name attribute with it. One Castle Guard, one Undermountain miner and one Magera
+(`arms.magic`: a gythka made +1 and renamed, its name attribute with it) is the
+champions' Tohr-kreen's ([the champions' bout](#the-champions-bout)); without
+the champions' objects it is the arena's dead body's (object 1204) own gythka,
+as before 2.13.5. One Castle Guard, one Undermountain miner and one Magera
 (Drakejaw's) have an object of their own (2560, 2561, 2562: copies of their
 kind's, their record renumbered), their entity in the Loader's copies of
 `RGN1C.GFF`, `RGN1E.GFF` and `RGN08.GFF` pointing to it; so does one skeleton of
@@ -699,8 +726,8 @@ kind's object, 2266, is the skeletons' of five regions), and one thri-kreen of
 the Gemfields (Skycutter's: 2598, entity 22 in the copy of `RGN06.GFF`; its
 kind's object, 215, is the whole pack's). So does the slave pens' weapon rack
 (2563: the Lower Castle's rack is the same object 1647; a thing's record has its
-number first, a person's at +6), with Thornwall in place of its first bone
-polearm, in Kalzith's copy of `RGN29.GFF` (one copy of the pens: with Kalzith
+number first, a person's at +6), with its own two bone polearms (Thornwall
+comes onto it later: [Semyon](#semyon)), in Kalzith's copy of `RGN29.GFF` (one copy of the pens: with Kalzith
 off, the rack's alone). The Elven Leader's Gythka +2 is his own Gythka +1 (in
 his pack, object 124, and the item object 2534 his script gives) made +2.
 (People of a kind share an object, so every Tari, Renegade and Wild Mul carries
@@ -877,9 +904,15 @@ originals:
   their spell) are renumbered wherever they are.
 - `RGN29.GFF`, the slave pens: an entry setting him in his pen.
 - `GPLDATA.GFF`: his conversation (script 218, after the game's 217), its entry
-  in the game's table of script entry points (which saves go by), the command
+  in the game's table of script entry points (which saves go by: the Loader's three
+  entries, his, Semyon's and Pehtucl's chest's, are always there in that order,
+  whatever the switches, so a save's numbers never point at another script;
+  `kalzith.ENTRY_SCRIPTS`; the Loader's script numbers are in
+  `kalzith.LOADER_SCRIPTS`, checked by `test_scriptnumbers`), the command
   in the pens' script that runs it when he's talked to, and his portrait
-  (portrait 101, a number the game leaves free).
+  (portrait 101, a number the game leaves free): his own face, painted for the
+  mod (`kalzithface.py`: 32 rows of 32 indexes of the portraits' palette, PAL 1,
+  only colours the game's own portraits use and none it animates).
 
 His state is in the game's own flags (760 to 763: met, friendly, cold, his
 scrolls given; the game uses flags up to 755), so a save keeps it. The first
@@ -946,6 +979,20 @@ party, and only guards near him join the fight; in a fight in the pens he isn't
 on the party's side. Like Kalzith's, his commands come after everything of the
 game's, which keeps its place.
 
+The weapon shipment: his answer to "Seen anything useful?"
+sets flag 756 (the game's flags run to 755; the Loader's 756-759 are Semyon's shipment and the champions'). Each pass in
+the pens with it set and flag 757 not, `semyon.ship` puts Thornwall on the
+pens' weapon rack: the rack found by its object (2599) among the map objects
+(the game makes a region's objects as the party comes near them, so nothing
+happens until it has made the rack; its item type, 6Ch, is a coffin's too), an
+item record from the game's free list, first in the rack's contents
+list (the object its +8 names), then flag 757. A Thornwall somewhere already
+(the rack's data had it from 1.2.0 to 2.13.4, so a save from then that has been
+to the pens) sets 757 with none made. Once on the rack it is the game's own,
+kept and saved as any item. Once a party member carries it (any of its three
+item lists, or a bag in one), `semyon.found` sets flag 758, and his menu has "We found what was
+in that crate." (shown with 756 and 758 set).
+
 ## What Dinos and the Trustee say about them
 
 ([In the features page](FEATURES.md#what-dinos-and-the-trustee-say-about-them).)
@@ -966,9 +1013,124 @@ bytes ran; one of 10,000 ended with "BAD GPL EXIT" (the game's own largest is
 it is allocated (`push dword 10000` at 6A692h becomes 2E00h), about 1.7 KB
 more of the game's memory.
 
+## The game's people's gear
+
+([In the bugs fixed](FEATURES.md#the-games-bugs-fixed); `people.py`.)
+
+The game makes a person's items in its backpack list (+0Ch) and puts them on only at its first
+action in a fight. Seen in DOSBox (2026-11-06, `playtest/logs/2026-11-06-npcs-equip.md`): at the
+alarm fight's start all 30 people's gear was in their packs; Kurzak, backstabbed before his turn,
+was AC 10; once Legcrusher and an Arena Guard had acted, the Guard wore his leather chest armour
+(slot 9), arm armour (0) and arrows (1) and held his obsidian long sword (3) and bow (2), and
+Legcrusher's AC from behind was 8 with his Leather Inixhide +1 on. Kurzak with two weapons fought
+"main hand" with Shadowseeker +1 and "off hand" with his obsidian sword. A blow from outside a
+fight is struck before the game starts it: Gerakis's sling shot at Legcrusher hit AC 9 with the
+game's fight still off, which came on only after his alarm call was read.
+
+`People.watch` (from the dice log's item watches, each pass) puts each person's gear on as it
+comes on the map, once each (by creature, name and object; forgotten with a new area or a game
+loaded), the champions left to `champions.Gear`, the party to the player: `plan` sorts the
+backpack by its type's kind (+00h: melee, missile, shield, thrown) and where it is worn (+09h:
+1 chest, 2 waist, 3 arm, 4 feet, 5 a hand, 6 head, 7 neck, 8 cloak, 9 a finger, 10 legs, 11
+ammunition, 12 a missile weapon: the game's item types, read in the running game), the best
+melee weapon (its plus) to the right hand, a shield to the left or else a second melee weapon,
+rings to the two fingers in turn, into slots nothing fills yet. The game itself wasn't seen to put
+on rings, cloaks, belts, boots or amulets; worn here, they count as the party's do (Pehtucl's
+Templar: his Ring of Protection +1 worn, AC 4 to the other Templar's 5 and +1 on saves; his Cloak
+of Protection +1 is in his chest now, as it gave nothing under AD&D's rule with his leather
+shield). Keys, food and scrolls stay packed.
+Each move is `pickpocket.place` (the list for its slot found or made first, a new one from the
+game's allocator; with none to be had nothing moves, and the person is tried again on a later
+pass), after `itemgate.hold`. Test: `test_people.py`. What it costs of the game's 200 things from
+its free list (`playtest/thingsfree.py`, 2026-11-07): each person with gear holds two or three
+lists, not one, about 21 more in the pens (143 free after loading, 131 in the alarm fight); the
+game frees an area's lists as the party leaves it (191 free on arriving in the arena), so nothing
+builds up.
+
+## Pehtucl's chest
+
+([In the new items](FEATURES.md#new-items); `pehtuclchest.py`, whose docstring has the detail.)
+
+A USE command in the pens' master script (MAS 41: 6Dh, (place, script, object), as each cell door
+has one running script 138) runs script 223 when the chest (object 1568) is used, from beside it
+(the safe's distance test, op 80h: "You must be next to the chest"). Its parts are the
+game's own: the thief test the safe in GPL 71 makes (the class flags' 400h), the scripts' skill
+check (22h action 3: who, skill, bonus), the safe's bash odds, and the trap action (22h action 7:
+object, square, the square from command 09h on the character). A trap object's item +0Fh is read
+by the trap routine (DSUN.EXE 80A11h) as dice, reach and damage kind, not as a spell; the needle
+(object 2667) is 02h, 2d6 poison on its square. The game opens a container as its USE script ends
+(the script can't stop it), so the chest is made with the safe's item type (67h), which it doesn't
+open, and `pehtuclchest.watch` makes it a chest (31h) once flag 796 is set, while the script waits
+for a click. Flags 795 and 796; script 223 has its entry in GPLI (saves keep commands by entry).
+
+## The champions' bout
+
+([In the features page](FEATURES.md#the-champions-bout).)
+
+How (`champions.py`, `bodyart.py`): six objects of the Loader's own, 2660-2665,
+copies of the arena's kinds (the Tohr-kreen 292, the Guard 293, a half-giant;
+the Wild Mul 290; the Renegade 289, a halfling; an elven caravan guard 103; the
+Defiler 296), their records renumbered, named "Champion", their own items left
+out and their gear in (as the new items, after the person), their sheets their
+kinds' (the armour counting on top of their AC) but for DEX (`champions.DEX`:
+18, the half-giant 15; the mul and the halfling have 18 already). Their pictures
+are their kinds'.
+
+The scripts: the arena's deaths (script 3) say "This makes ... king of the
+pens!" and set flag 19 only when a party member kills Scar (flag 19 is set at
+the end of Scar's visit too, whatever happened, and by the pens' script 144
+when he is killed there, so it doesn't tell); that handler (script 3 at 176h)
+is hooked on Scar only in the arena (MAS 42 and script 2, and script 154 calls
+it for region 2Ah alone), so a kill in the pens gives no bout. The command
+setting 19 there (3A7h) becomes a jump past the script's end, to the same
+command, then one setting flag 759 (KING), then a jump back. The arena's visits (script 2) count in the game's number 12; a visit past
+the fifth (12 at 5 or more) opens with the default speech ("Once again,
+expectant spectators...", 0AD4h), and its waves come from the random wave maker
+(called at 1581h, since the count is over 4). Both are jumps to parts of ours
+that, while the bout is due (12 at 5 or more, 759 set, 807 clear), say the
+speech, and put the six in (each a group of one: the wave's own subroutine at
+9301 with its locals 12 and 13, as the game's waves do) and set 807 (FOUGHT);
+else they do what the game did. What a jump leaves of a longer command is
+filled with one-byte commands (`gpl.put_jumps`, with `gpl.FILL`, 61h, as every module's jumps
+are now: eleven scripts once didn't decode after Semyon's and others' jumps), so the script still
+decodes (the Loader's other
+changes read it); and the longer script must still fit the game's script buffer
+(`pensasks.LONGEST`), as the Loader's other script changes must.
+
+Worn and wielded (how the game keeps a person's gear: [The game's people's
+gear](#the-games-peoples-gear)): the melee routine fights with what is in the held list
+(+0Ah) for anyone: seen, a Tohr-kreen given Headsman there attacked "with
+Headsman +2 (1d10+2)" in place of its first two natural attacks, its third
+kept; and the AC routine counts the worn list (+08h) for anyone (two Tohr-kreen
+given scale chest armour went from AC 3 to -2 against the party's attacks).
+`champions.Gear` (each pass of the dice log, in the arena) moves each living
+champion's items, by type, to its slot (`pickpocket.place`, as the inventory
+screen would), once; the defiler gets its scroll first (into its backpack, while
+it still has one), a random one of `SCROLL_SPELLS` (the game's wizard spells
+without the new ones).
+
+The body: the game makes a Dead Body (object 1101, a container) where a
+creature carrying something dies, and puts its things in it (DSUN.EXE 59412h,
+"push 0FFFF044Dh" before the call that makes an object at the dying one's
+place). The map's records hold a picture number too (+18h) but the game
+doesn't draw from it (changed in memory, nothing changed on screen), so the
+object itself is swapped: `gamepatch`'s `champion_body` makes the push INT
+81h (`PROBE_WORN`, told apart by its return address 2754h), "push 0FFFFh",
+"push ax", and DSCLOG answers 2666 (`champions.BODY`) when the dying map
+object ([BP+6], its object at DS:66AEh + 32 each) is the Tohr-kreen champion,
+else 1101. Object 2666 is a copy of 1101 (its record renumbered) with a picture
+of its own, 2666 (`bodyart.py`: the Tohr-kreen's frame 8 turned on its side,
+squashed to 0.75 of its height, darkened to 0.7, its gythka's pale pixels left
+out, over the red of the Dead Body's blood). Seen in DOSBox: the six came on
+(the bout forced due for the test: the arena's flags have no place in memory
+to be set from outside), each with its gear in place, the mul's two axes, the
+halfling's sling, the elf's bow and the half-giant's great axe each attacking,
+Kreenfang 2d4+1; the Tohr-kreen's body object 2666 with Kreenfang in it, the
+others' Dead Bodies with their gear.
+
 ## The cooked vulture
 
-([In the features page](FEATURES.md#the-cooked-vulture).)
+([In the features page](FEATURES.md#the-cooked-vulture); `vulture.py`.)
 
 How: in the Loader's copy of `GPLDATA.GFF`, Dinos's talk (script 139) has the
 question in its first menu (a copy of the game's with the question added, as
@@ -1125,7 +1287,7 @@ a figure moves are widened by the length of a shadow, so none is left behind.
 
 **Pictures out of memory.** The shadow is traced from the figure's picture in
 the game's picture cache, and in a big fight (the arena, ten monsters) the game
-lets go of most pictures between drawings: in the user's arena save every figure
+lets go of most pictures between drawings: in a save in the arena every figure
 but one had its picture out of memory as the floor was drawn, so no shadow.
 Loading one from here, in the middle of a drawing, could push out or move a
 picture the game is about to draw, so instead DSCLOG keeps each frame's shadow
@@ -1172,3 +1334,76 @@ fades, by a pattern fixed to the map, so a puff looks the same however much of
 it the game draws again. While anyone walks, the rectangle the game draws again
 round what moved is made to take the puffs in; once everyone stands, DSCLOG has
 the view drawn again a few times a second until the last puff is gone.
+
+## See-through figures
+
+([In the features page](FEATURES.md#see-through-figures).)
+
+How: the game draws each thing on the map through one call, `call far 1A0A:3180` in its routine
+at 25E0Ch (25EBEh; DI the thing, the call's arguments the page, x, y, mirrored, the picture and
+the frame). Gamepatch's `ghost` puts DSCLOG's `INT 80h` (`PROBE_GHOST`) over it. A thing that is
+neither a hidden party member (its `STEALTH` bit, which `PROBE_STEALTH` clears at the attack) nor
+marked in `GHOST_TAB` goes on to the game's routine as ever. A see-through one DSCLOG draws itself
+(`GHOST_DRAW`):
+- it decodes the frame's runs, each pixel mapped to one of 32 colours (`REP`), into a buffer, and
+  notes each run within the page (the page's bounds and memory found as the shadows find them,
+  `PAGE_SETUP`); a mirrored frame's pixels are read from the run's other end. Room for 4,096
+  pixels and 192 runs (`GH_PIX_MOST`, `GH_SPANS_MOST`): the party's figures have at most 78 runs a
+  frame, but some of the game's pictures up to 563, so past either it draws what it has (it once
+  wrote past its block instead: `test_ghost_draw_many_runs`);
+- then, a plane at a time (the VGA's map mask and read map), it reads the pixel under each and
+  writes `BLEND[rep][under]`, the colour nearest the halfway mix.
+Every pass that draws figures draws the floor first (the routines `PROBE_FLOOR` hooks), so the
+floor read is the fresh one, with the shadows and the figures behind already on it.
+
+The game draws an invisible creature as any other. Its rules for it are numbers only (7BD4Bh,
+"can't see": the attacker Blind, or the target Invisible, effect 23, or Invisible to Undead, 24,
+against the undead, unless the attacker has Detect Invisibility, 15; its two callers give -4 to
+hit, 7C6B8h, and +4 to the target's save against a spell, 79E99h). Among the game's foes only the
+psurlons turn invisible: their psionic list (37F0:001Ch, list 8) has Superior Invisibility, which
+puts on effect 23. No foe's spell list (3FB9:0110h) has an invisibility spell, and no script or
+item makes a creature invisible.
+
+`dsloader/ghost.py` keeps `GHOST_TAB` (520 bits) from the game's effects: a party member with
+effect 23 always, anyone else only while no party member has effect 15. It makes `REP` (the
+palette's colours 16-223, the ones the game doesn't animate, cut into 32 boxes by median cut) and
+`BLEND` (32 x 256) from DSCLOG's copy of the palette each time DSCLOG reads it again with `DARK`
+(0.2 s of Python, in a thread), keeps the last eight by the colours the game never cycles
+(`ghost.key`: every colour but the cycled 1-15 and 240-248, as 224-239 differ between areas; `MADE_KEPT`: the whole palette changes every 30 s where the game cycles
+fire's or water's colours, and each change once made them again, solid meanwhile), and writes them into DSCLOG's block, 885
+paragraphs of upper memory taken at `KEEP` (`GHOST_SEG`, header +1826; none, no see-through
+figures). `GHOST_ON` (+1828) is 0 until they are written. The view is drawn again when a figure
+turns see-through or solid (`TSR_VIEW_REDRAW`). That is done from the map's main loop, which doesn't
+run in the enemies' turns, so a thief whose turn had ended kept the see-through picture until a
+party member's turn (about 1.4 s, seen 2026-11-06). So `PROBE_GHOST` notes each party member it
+draws see-through while hidden (`GH_SHOWN`), and `GHOST_UNION`, in `PROBE_REDRAW_ALL` (the game's
+drawing again of what moved, at each step of anyone's), has the whole view drawn once when one of
+them is hidden no longer: solid at the enemies' first step (test `test_solid_at_turn_end`). The same once the Loader writes GHOST_TAB anew (it sets `GH_CHANGED`, the room's last byte): an invisibility ending in the enemies' turns shows at once (test `test_whole_view_when_the_table_changes`; seen in DOSBox, the byte cleared 0.06 s into an enemy's turn, `playtest/logs/2026-11-07-review-fixes.md`). Seen in DOSBox, 2026-11-05: a figure marked drew
+half see-through over floor, wall and its shadow, facing either way and walking; in a fight, a real
+hide (solid again from the backstab on) and a real Invisibility, walking at the solid pace
+(`playtest/logs/2026-11-05-fight-test.md`).
+
+## Sounds for hiding and picking pockets
+
+([In the features page](FEATURES.md#picking-pockets); `sounds.py`, whose docstring has the
+detail.)
+
+Two sounds of the mod's own, chosen by the user from eight made for them: a breath sinking away
+as a thief or ranger hides and moves silently in a fight (BVOC 140, `HIDE_SOUND`), and a purse's
+jingle for a picked pocket, a thing or the coins (BVOC 141, `PICK_SOUND`; a weapon worth the
+quest's XP keeps the quest's sound). Their samples are `dsloader/sound-data/*.wav` (8000 Hz,
+8-bit mono, the game's form; `make.py` made them), put in the Loader's copy of RESOURCE.GFF as
+Creative Voice Files like the game's.
+
+The game finds a sound through its table of 181 (3A98:08A2h, 6 bytes each: its kind, then a far
+pointer to a 12-byte descriptor naming the BVOC); only 0-130 are digital, so a BVOC numbered past
+them isn't played by its number. DSCLOG's `PLAY_SOUND` lends itself entry 131 or 132 for the
+call (one for each sound: the game keeps the last clip it loaded under an entry), as a digital
+one with a descriptor of its own, and puts the entry back. Two words at the header's end ask for
+them: `SOUND_REQ` (+1822: played from the map's main loop, `SOUND_TICK`) and `PICK_SOUND` (+1824:
+played with the pick's text, `GIVE_XP`). A Spellarcher making spell arrows hears the spell's own
+cast sound (its spell record's +0Fh, `spellarrows.cast_sound`), through `SOUND_REQ` too. Seen in
+DOSBox (2026-11-05, its output recorded with `PT_AUDIO` and matched with the clips: r 0.995 to
+0.997): both on request, in either order and after one of the game's, entries 131 and 132 as the
+game had them afterwards, and from a real pick and a real hide. Tests: `test_sounds.py`,
+`UseItemTests.test_sound_tick`, `test_pick_sound`.

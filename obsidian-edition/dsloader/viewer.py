@@ -66,6 +66,7 @@ class Viewer:
         self.next_try = 0.0  # when to retry connecting / attaching
         self.dosbox = None  # the game, when started from here (Start the game)
         self._game_dir, self._started, self._refused = None, 0.0, []  # (for a crash report)
+        self._learned_unsaved = False  # (names or pockets the settings file refused, last pass)
         # the game's portraits and font, from the player's own install (if it can be found)
         self.art = art.GameArt.of(launch.find_game_dir())
         # (Tk shows an image only while it's referenced: one for each portrait at each size, shared
@@ -367,7 +368,7 @@ class Viewer:
         # the Loader's own content: people, a quest and items in the game, and the new spells. Some
         # are written into the game's files when it is started; what a save already has stays
         new = section("new_content", "New content")
-        ttk.Label(new, text="People, a quest and items: from the next start, in places "
+        ttk.Label(new, text="People, a quest, an arena bout and items: from the next start, in places "
                   "not yet visited. What a saved game already has (people met, items given) stays in it. "
                   "The new spells: at once.",
                   wraplength=460).pack(anchor="w")
@@ -482,7 +483,7 @@ class Viewer:
                                     "preserver spell one time in 20, dropped where it dies"),
                 (launch.NEW_ITEMS, "New items, magical and mundane: weapons, armour and other gear the game "
                                    "lacks or never placed, on its people, in its shops and chests (the guide's "
-                                   "New items lists them)")):
+                                   "New items lists them), and the champions' arena bout after Scar's death")):
             self.content_vars[key] = tk.BooleanVar(value=settings.get(key, True) is not False)
             ttk.Checkbutton(new, text=text, variable=self.content_vars[key],
                             command=self._options_changed).pack(anchor="w", pady=(4, 0))
@@ -512,6 +513,10 @@ class Viewer:
         self.show_dust = tk.BooleanVar(value=bool(settings.get("dust", True)))
         ttk.Checkbutton(looks, text="Dust raised behind the feet of anyone walking on sand or dirt",
                         variable=self.show_dust, command=self._options_changed).pack(anchor="w", pady=(4, 0))
+        self.see_through = tk.BooleanVar(value=settings.get("see_through", True) is not False)
+        ttk.Checkbutton(looks, text="A thief or ranger hidden in shadows, and anyone invisible, drawn see-through (an "
+                        "invisible enemy solid while one of the party detects invisibility)",
+                        variable=self.see_through, command=self._options_changed).pack(anchor="w", pady=(4, 0))
 
         # the mouse and keys in the game
         controls = section("controls", "Controls")
@@ -563,7 +568,7 @@ class Viewer:
             ttk.Radiobutton(pace, text=text, value=value, variable=self.game_speed,
                             command=self._speed_chosen).pack(anchor="w")
         self.steady_pace = tk.BooleanVar(value=settings.get("steady_pace", True) is not False)
-        ttk.Checkbutton(pace, text="Walking at full speed on the map whatever is drawn: when a picture takes too "
+        ttk.Checkbutton(pace, text="Steady pace: walking at full speed on the map whatever is drawn: when a picture takes too "
                         "long, the next is skipped rather than the party slowing down", variable=self.steady_pace,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         # Wake of the Ravager, for the 6th-level priest spells' icons and pictures (wotrart.py)
@@ -639,7 +644,10 @@ class Viewer:
         game_dir = self._saves_game_dir()
         if game_dir is None:
             return
-        os.makedirs(namedsaves.NAMED, exist_ok=True)
+        try:
+            os.makedirs(namedsaves.NAMED, exist_ok=True)
+        except OSError:
+            pass  # (no Named saves folder: the dialog starts elsewhere)
         copy = filedialog.askopenfilename(parent=self.root, title="Which save?", initialdir=namedsaves.NAMED,
                                           filetypes=[("Saves", "*.SAV *.sav"), ("All files", "*")])
         if not copy:
@@ -677,7 +685,7 @@ class Viewer:
         for var in list(self.rule_vars.values()) + list(self.content_vars.values()):
             var.set(True)
         for var in (self.monster_info, self.floating_names, self.stealth_gear, self.pickpockets, self.roll_store, self.elf_looks, self.cilla_elf,
-                    self.starting_gear, self.show_gear, self.show_shadows, self.show_dust, self.use_targeting,
+                    self.starting_gear, self.show_gear, self.show_shadows, self.show_dust, self.see_through, self.use_targeting,
                     self.scroll_map, self.effects_kept, self.camera_still, self.scene_pointer, self.mouse_start,
                     self.steady_pace, self.party_spread):
             var.set(True)
@@ -748,8 +756,11 @@ class Viewer:
                                             initialfile=f"{what.replace(' ', '-')}.txt",
                                             filetypes=[("Text", "*.txt"), ("All files", "*.*")])
         if path:
-            with open(path, "w", encoding="utf-8") as f:
-                f.write(widget.get("1.0", "end-1c"))
+            try:
+                with open(path, "w", encoding="utf-8") as f:
+                    f.write(widget.get("1.0", "end-1c"))
+            except OSError as e:
+                messagebox.showerror(f"Save the {what}", f"It could not be saved there:\n{e}", parent=self.root)
 
     def freeze_report(self) -> None:
         """Save a freeze report (freeze.py) in crash-logs/ and say where; for when the game has
@@ -906,7 +917,7 @@ class Viewer:
 
     def assign_hit(self) -> None:
         sel = self.hit_list.curselection()
-        if not sel or sel[0] >= len(self.hits):
+        if not sel or sel[0] >= min(len(self.hits), MAX_HITS):  # (past the list: its "... more" line)
             messagebox.showinfo("Assign", "Select a search hit first.")
             return
         slot = int(self.assign_slot.get()) - 1
@@ -1058,7 +1069,8 @@ class Viewer:
         """An error a refresh loop didn't expect: written to the dice log once for each kind (with
         where it came from, for a report), and the loop goes on."""
         import traceback
-        key = (what, type(err).__name__, str(err))
+        from .dicelog import error_key
+        key = (what,) + error_key(err)  # (by where, not its text: dicelog.error_key)
         seen = self.__dict__.setdefault("_loop_errors", set())
         if key in seen:
             return
@@ -1080,6 +1092,7 @@ class Viewer:
             self.next_try = now + RETRY_SECONDS
             if self.dice is None:
                 self.dice = DiceLog(self.guest)
+                self.dice.use_settings(launch.load_settings())  # (the panel's size and state as saved; then the tab's own)
                 self.dice.answer_stats_in_background()
                 self.dice.speaker_names = launch.speaker_names()
                 self.dice.learned_speakers = launch.learned_speakers()
@@ -1094,6 +1107,7 @@ class Viewer:
                 self.dice.floating_names = self.floating_names.get()
                 self.dice.game_dir = launch.find_game_dir()
                 self.dice.show_dust = self.show_dust.get()
+                self.dice.see_through = self.see_through.get()
                 self.dice.elf_looks = self.elf_looks.get()
                 self.dice.cilla_elf = self.cilla_elf.get()
                 self.dice.ring_mode = self.ring_mode.get()
@@ -1121,14 +1135,14 @@ class Viewer:
         if self.dice.combat_log_level != self.combat_log_level.get():  # (the panel's level chip)
             self.combat_log_level.set(self.dice.combat_log_level)
         self.round_line.set(self._round_text())
-        picked = self.dice.take_picked()
-        if picked is not None:
-            launch.set_pickpocketed(picked)
-        learned = self.dice.take_speakers()
-        if learned:  # names worked out from conversations: keep them, and show them on earlier lines
-            launch.add_learned_speakers(learned)
-            for portrait in learned:
-                self._rename_portrait(portrait)
+        # (names worked out from conversations kept, and shown on earlier lines; the pockets tried
+        # kept; a save the file refused tried again next pass)
+        learned, failed = self.dice.save_learned(launch.add_learned_speakers, launch.set_pickpocketed)
+        for portrait in learned:
+            self._rename_portrait(portrait)
+        if failed and not self._learned_unsaved:
+            self.status.set("The Loader's settings could not be saved just now; it will try again.")
+        self._learned_unsaved = failed
         talk = self.dice.take_dialogue()
         if talk:
             self._append_dialogue(talk)
@@ -1190,6 +1204,7 @@ class Viewer:
                 settings["starting_gear"] = self.starting_gear.get()
                 settings["shadows"] = self.show_shadows.get()
                 settings["dust"] = self.show_dust.get()
+                settings["see_through"] = self.see_through.get()
                 settings["elf_looks"] = self.elf_looks.get()
                 settings["cilla_elf"] = self.cilla_elf.get()
                 settings["rings"] = self.ring_mode.get()
@@ -1212,6 +1227,7 @@ class Viewer:
             self.status.set(f"The options could not be saved just now ({e}); change one again to retry.")
             return
         if self.dice is not None:
+            self.dice._settings = settings  # (the item reports' switches, as now)
             self.dice.set_monster_info(self.monster_info.get())
             self.dice.arena_ring = self.content_vars[launch.NEW_ITEMS].get()
             self.dice.set_pickpockets(self.pickpockets.get())
@@ -1219,6 +1235,7 @@ class Viewer:
             self.dice.starting_gear = self.starting_gear.get()
             self.dice.show_shadows = self.show_shadows.get()
             self.dice.show_dust = self.show_dust.get()
+            self.dice.see_through = self.see_through.get()
             self.dice.combat_log = self.combat_log.get()
             self.dice.combat_log_level = self.combat_log_level.get()
             self.dice.floating_names = self.floating_names.get()
@@ -1275,7 +1292,11 @@ class Viewer:
         if name is None:
             return
         name = " ".join(name.split())
-        launch.set_speaker_name(portrait, name)
+        try:
+            launch.set_speaker_name(portrait, name)
+        except OSError as e:  # (settings.json held a moment: an antivirus, a backup)
+            self.status.set(f"The name could not be saved just now ({e}); name the speaker again to retry.")
+            return
         if name:
             self.dice.speaker_names[portrait] = name
         else:

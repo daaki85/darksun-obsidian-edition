@@ -44,6 +44,7 @@ VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED = 0xE7, 0xE6
 VEC_SPELL_TEXT, VEC_CHUNK_ID = 0xE2, 0xE1
 VEC_FLOOR_ALL, VEC_FLOOR_RECT, VEC_REDRAW, VEC_REDRAW_ALL = 0xE0, 0xDF, 0xDE, 0xDD
 VEC_SCROLL, VEC_HIT, VEC_ITEM_BOX = 0xDC, 0xDB, 0xDA
+VEC_GHOST = 0x80  # (a see-through figure: DSCLOG's PROBE_GHOST; 62h was VEC_AC's)
 VEC_BELT = 0xD9
 VEC_SAVE_PAGE, VEC_SAVE_CLICK = 0xD8, 0xD7
 VEC_ITEM_WEAPON, VEC_ITEM_SKIP, VEC_ITEM_ARMOUR = 0xD6, 0xD5, 0xD4  # (item saves)
@@ -277,6 +278,14 @@ PATCHES = (
     # a fifth of its most hit points: or byte [si],1 (DSCLOG does it, and keeps a party member's
     # loss for the Loader to give back as the fight ends: psiblast.py)
     Patch("psionic_blast", 0x79707, bytes.fromhex("800c01"), _interrupt(VEC_WORN, 3)),
+    # ... and the damage routine's death test (612E:194Bh: hit points + 10 against the damage):
+    # cmp ax,dx (DSCLOG does it, and a party member with Psionic Blast's hit points still to come
+    # back is knocked out, not killed: the jg after it kept)
+    Patch("blast_knockout", 0x5860B, bytes.fromhex("3bc2"), _interrupt(VEC_WORN, 2)),
+    # ... and where the game makes a Dead Body for a creature that dies carrying something:
+    # push 0FFFF044Dh, object 1101 (DSCLOG answers with the body's object in AX, the champions'
+    # Tohr-kreen's own for that champion: champions.py), then push 0FFFFh, push ax
+    Patch("champion_body", 0x59412, bytes.fromhex("66684d04ffff"), _interrupt(VEC_WORN, 2) + bytes.fromhex("6aff5090")),
     # the routine that lists a creature's weapons (the inventory screen, the Look box), straight
     # after drawing one: add sp,10h (DSCLOG does it, then adds that weapon's THAC0)
     Patch("weapon", 0x7276E, bytes.fromhex("83c410"), _interrupt(VEC_WEAPON, 3)),
@@ -423,6 +432,12 @@ PATCHES = (
     # creature but the region's first got another's level or a byte past the list. The SHL made two
     # NOPs: the creature's own level (found by CalvinRodo's yuan-ti, checked in DSUN.EXE)
     Patch("fight_music", 0x62FC0, bytes.fromhex("d1e3b848038ec0"), bytes.fromhex("9090b848038ec0")),
+    # Scare's save (the save modifiers' routine, 80F5:119Ch: spell 15h): a target of 6th level or
+    # more always saves, and one below may save as usual only if a priest whose race is elf (3)
+    # and half-elf (4) at once ("cmp race,3 / jne fail", then "cmp race,4 / je save"), so no one
+    # could. The first test's jne to the fail made "je" to the save: an elf or half-elf priest
+    # saves as usual (found by CalvinRodo's yuan-ti, checked in DSUN.EXE)
+    Patch("scare_elves", 0x79FEA, bytes.fromhex("752c"), bytes.fromhex("7431")),
     # ... and a berserk or confused party member kept the side its last turn rolled: "jmp 788BBh",
     # where an effect's end has no case of its own (DSCLOG's NS_SIDE: a charm's, the side put back)
     Patch("side_back", 0x78785, bytes.fromhex("e93301"), _site(NS_SIDE, 3)),
@@ -615,6 +630,9 @@ PATCHES = (
     # 3118:002E", its first 3 bytes (the segment after them is relocated as the game loads: A9h
     # makes the 5 a "test ax,<segment>", which DSCLOG returns past)
     Patch("scroll", 0x1CAAC, bytes.fromhex("9a2e00"), bytes((0xCD, VEC_SCROLL, 0xA9))),
+    # a thing on the map drawn ("call far 1A0A:3180" in its routine, 25E0Ch; DI the thing): a hidden
+    # or invisible one drawn see-through by DSCLOG (PROBE_GHOST), back past the call's segment
+    Patch("ghost", 0x25EBE, bytes.fromhex("9a8031"), bytes((0xCD, VEC_GHOST, 0x90))),
     # targeting (DSCLOG's TARGETING): the start, "push bp / mov bp,sp / sub sp,10h", of the routine
     # that finds the thing under the pointer
     Patch("hit", 0x25B52, bytes.fromhex("558bec83ec10"), _interrupt(VEC_HIT, 6)),

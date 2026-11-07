@@ -18,7 +18,7 @@ import threading
 import time
 from typing import Dict, Iterator, List, Optional, Tuple
 
-from . import gamepatch, gff, gpl, icons, kalzith, scenepointer, tome, worldgear
+from . import champions, gamepatch, gff, gpl, icons, kalzith, scenepointer, tome, worldgear
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOS_DIR = os.path.join(HERE, "dos")
@@ -175,9 +175,9 @@ def load_settings(strict: bool = False) -> dict:
             except FileNotFoundError:
                 return {}
             except OSError:
-                if not strict:
-                    return {}
-                if attempt == 4:
+                if attempt == 4:  # (tried again first either way: one held a moment read as
+                    if not strict:  # empty lost the picked pockets once the next pick saved)
+                        return {}
                     raise
                 time.sleep(0.05)
             except ValueError:
@@ -415,6 +415,8 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
             objects_ok, new_objects = icons.write_objects(objects, os.path.join(DOS_DIR, icons.OBJECTS_FILE), on)
     except (gff.GffError, OSError, KeyError, struct.error, ValueError, IndexError):
         pass  # no icons of our own: the game's plain ones
+    if not objects_ok:  # (an earlier start's copy taken away: DSCLOG would open it in place of the
+        _drop(os.path.join(DOS_DIR, icons.OBJECTS_FILE))  # game's, made with other switches)
     # the regions with a person given an object of their own for a new item (worldgear.py): only
     # with that object in the objects copy (a region naming an object that isn't there would stop
     # the game)
@@ -446,7 +448,8 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
         source, dest, with_kalzith, on["semyon"], on["vulture"], on["arena_ring"],
         on["magic_arms"] and objects_ok, on["world_magic"] and objects_ok,
         worldgear.ELVEN_CLOAK_OBJECT in new_objects, tome.TOME_OBJECT in new_objects,
-        on["pens_gear"] and objects_ok, worldgear.HAYNEEDLE_OBJECT in new_objects))]  # (Alagorn knows
+        on["pens_gear"] and objects_ok, worldgear.HAYNEEDLE_OBJECT in new_objects,
+        champions.TOHR_KREEN in new_objects))]  # (Alagorn knows
     # the weapons by their own pictures; the Elven Leader gives the cloak, Father Garyn the tome and
     # Merzol's hay stash Hayneedle, of its own object)
     if with_kalzith:
@@ -471,13 +474,25 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
     # the game's own arrow for the scenes' pointer (DSCLOG's, without it)
     scenepointer.write_pointer(_find_file(game_dir, icons.RESOURCE_FILE), _find_file(game_dir, "GPLDATA.GFF"),
                                os.path.join(DOS_DIR, scenepointer.POINTER_FILE))
+    resources_ok = False
     try:
         resources = _find_file(game_dir, icons.RESOURCE_FILE)
         if resources:
             icons.write_resources(resources, os.path.join(DOS_DIR, icons.RESOURCE_FILE), on["roll_store"])
+            resources_ok = True
     except (gff.GffError, OSError, KeyError, struct.error, ValueError, IndexError):
         pass  # no Cat's Grace icon: Flaming Sphere's
+    if not resources_ok:  # (as the objects' copy: no earlier start's in its place)
+        _drop(os.path.join(DOS_DIR, icons.RESOURCE_FILE))
     return None
+
+
+def _drop(path: str) -> None:
+    """PATH taken away if it is there (a copy the game must not open)."""
+    try:
+        os.remove(path)
+    except OSError:
+        pass
 
 
 # Windows' codes for a program that crashes (DOSBox itself, not the game in it)
@@ -596,7 +611,7 @@ def dosbox_output(game_dir: str, since: float) -> Dict[str, str]:
 
 # The Options tab's switches and their defaults (what a key missing from settings.json means)
 SWITCH_DEFAULTS = {"monster_info": True, "floating_names": True, "pickpockets": True,
-                   "show_gear": True, "starting_gear": True, "shadows": True, "dust": True, "rings": "chosen", "combat_log": True,
+                   "show_gear": True, "starting_gear": True, "shadows": True, "dust": True, "see_through": True, "rings": "chosen", "combat_log": True,
                    "targeting": True, "scroll_map": True, "cycles": DEFAULT_SPEED,
                    "combat_log_level": "short", "defiler_scrolls": True, NEW_ITEMS: True}  # (combatlog.SHORT, the panel's level unless chosen)
 
@@ -606,7 +621,11 @@ def effective_switches(settings: dict) -> Dict[str, object]:
     from . import game
     out: Dict[str, object] = {key: settings.get(key, default) for key, default in SWITCH_DEFAULTS.items()}
     out.update(content(settings))
-    out.update({key: bool(settings.get(key, True)) for key, _ in game.RULE_SETTINGS})
+    out.update({key: bool(settings.get(key, settings.get(game.OLD_SETTING_NAMES.get(key, key), True)))
+                for key, _ in game.RULE_SETTINGS})  # (as game.rules_from_settings reads them)
+    from . import dicelog, rings
+    out["rings"] = rings.mode(settings)  # (an older "all" is the chosen enemy's now)
+    out["combat_log_level"] = dicelog.combat_log_level(settings)
     return out
 
 

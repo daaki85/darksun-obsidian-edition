@@ -28,12 +28,13 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import aging, bowyer, buyback, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
+from .process import ProcessError
 from .itemwatch import ItemWatch
-from .textlog import KIND_MESSAGE, KIND_PORTRAIT, KIND_TEXT, Dialogue, DialogueEntry, TextBuffer
+from .textlog import KIND_MESSAGE, KIND_PORTRAIT, KIND_SHOW_REPLIES, KIND_TEXT, Dialogue, DialogueEntry, TextBuffer
 from .tracker import PartyTracker
 
 HDR_SIG = b"DSCLOGva"
@@ -53,6 +54,7 @@ BIOS_TIMER = 0x46C
 TSR_RULES = 170
 TSR_MAIN_TICKS = 260  # the map's main loop run (counted)
 TSR_XP_WHO, TSR_XP_AMOUNT = 262, 264  # a party member to be given XP with the pick's text (FFFFh: none)
+TSR_SOUND_REQ, TSR_PICK_SOUND = 1822, 1824  # a sound to play from the main loop, and one with the pick's text
 TSR_SKILLS_ON = 266  # bits: item boxes name a cloak's and boots' bonus to hiding and moving silently;
 SKILLS_STEALTH, SKILLS_BELT = 1, 2  # a worn belt adds to picking pockets and opening locks (and its box says)
 SKILLS_ELVEN = 4  # the Cloak and Boots of Elvenkind's boxes name their chances (the hiding rule on)
@@ -222,6 +224,8 @@ KIND_SWEPT = 11  # DSCLOG's SWEPT_MARK: Whirlwind's damage on a creature that fa
 KIND_WALL = 9  # DSCLOG's THORNS_DAMAGE: Wall of Thorns' damage on a creature in it, taken instead of
 # its record's dice: raw = the damage | the spell << 8, extra the creature
 THORNS_BASE = 8  # Wall of Thorns: 8 + the creature's AC (DSCLOG's THORNS_AC: it + 80h in the entry's extra's high byte)
+OWN_TEXT_KEPT = 16  # (the Loader's own texts in the game's window looked for in the dialogue)
+REFUSED_SAID = 3  # (refused writes told in one pass, with a count of the rest)
 KIND_AIM = 7  # DSCLOG's AIM_SITE: a spell cast with a click, refused: raw = the answer | spell << 8,
 # extra the caster. The aim check's (84C54h) answers:
 AIM_REASONS = {-1: "no creature there", -2: "not a creature that spell can be cast on",
@@ -263,6 +267,7 @@ RING_INTERVAL = 3.0  # seconds between looks for the arena's Ring +1
 STATS_ANSWER_STEP = 0.001  # seconds between the stats thread's looks at DSCLOG's requests
 STATS_ANSWER_IDLE = 0.5  # ... while the game isn't attached, or a look failed
 ITEMS_STILL_WAIT = 0.06  # seconds the game's free lists are watched for, before the Loader changes item lists
+NEAR_SPEAKER = 4 * 16  # map units: a speaker beside the party (a talk without replies: _follow_talk)
 LOAD_SETTLE = 3.0  # seconds after the party changes (a game was loaded) when effects are not news
 DRESSER_RETRY = 30.0  # seconds before the party's figures are tried again when the game's files couldn't be read
 NATURAL_JUMP = 2 * 24 * 60 * 60  # game seconds between looks past which the clock may be a load's: aging waits a look
@@ -295,6 +300,15 @@ def _fine_timer() -> None:
             atexit.register(ctypes.windll.winmm.timeEndPeriod, 1)
     except (AttributeError, OSError):
         pass
+
+
+def error_key(err: BaseException) -> Tuple[str, str, int]:
+    """What tells one unexpected error from another, to say each once: its kind and where it was
+    raised, not its text (one carrying an address or a count would be new on every pass)."""
+    import traceback
+    frames = traceback.extract_tb(err.__traceback__)
+    where = frames[-1] if frames else None
+    return (type(err).__name__, where.filename if where else "", where.lineno or 0 if where else 0)
 
 class DiceLogError(Exception):
     pass
@@ -433,6 +447,7 @@ class DiceLog:
         self.rand_addr: Optional[int] = None
         self.last_seq: Optional[int] = None
         self.missed = 0
+        self._refused_told = 0  # (the guest's refused writes told so far: its refused_total)
         self.game: Optional[GameData] = None
         self.last_ac: Dict[int, int] = {}  # creature index -> the AC the game last computed for it
         self._ac_whose: Dict[int, str] = {}  # ... and the name of the creature it was then
@@ -466,7 +481,7 @@ class DiceLog:
         self.starting_gear = True  # new characters' starting gear filled out (startgear.py)
         self.show_shadows = True  # shadows under the figures on the map (shadows.py)
         self._shadows = shadows.Shadows()
-        self.combat_log = False  # the combat log's panel in the game, in a fight (combatlog.py)
+        self.combat_log = True  # (on, as the Options tab has it) the combat log's panel in the game, in a fight (combatlog.py)
         self.floating_names = True  # spells' names over their casters, "Miss" over the missed (labels.py)
         self._panel = combatlog.Panel()
         self._labels = labels.Labels()  # names floating over figures: a spell's, a miss (labels.py)
@@ -479,6 +494,8 @@ class DiceLog:
         self.game_dir: Optional[str] = None  # the game's folder (its font)
         self._wheel: Optional[wheel.WheelHook] = None  # ... the mouse wheel over it (Windows)
         self.show_dust = True  # dust raised by walkers on sand and dirt (dust.py)
+        self.see_through = True  # the hidden and the invisible drawn see-through (ghost.py)
+        self._ghosts = ghost.Ghosts()
         self.elf_looks = True  # elves' ears and half-elves' own figures, as the copy was written (sprites.py)
         self.cilla_elf = True  # Cilla, an elf, given the elf woman's figure (defaultparty.py)
         self.vulture_on = True  # the cooked vulture quest (vulture.py)
@@ -497,7 +514,7 @@ class DiceLog:
         # forgotten when that save is loaded (the clock goes back past it)
         self.picked_at: Dict[str, Optional[int]] = {}
         self._picked_changed = False
-        self._clock: Optional[int] = None
+        self._clock: Optional[int] = None  # (the game's clock at _forget_undone_picks' last look)
         self._mended_in: Optional[int] = None  # the area Kalzith's scrolls were last mended in
         self._party_done: set = set()  # the game's own party's changes made (defaultparty.py)
         self._swap_seq = 0  # DSCLOG's text swaps seen (the arena ring's search, ring.py)
@@ -512,7 +529,9 @@ class DiceLog:
         self._stats_lock = threading.Lock()  # (the stats thread's and the main loop's writes of STATS)
         self._stats_thread: Optional[threading.Thread] = None
         self._stats_stop = threading.Event()  # (close: the stats thread ends)
-        self._own_text: set = set()  # summaries shown in the game's window, not to log as dialogue
+        # summaries shown in the game's window, not to log as dialogue (the last few: one never
+        # seen back, a Look box closed unread, isn't kept all session)
+        self._own_text: Deque[str] = deque(maxlen=OWN_TEXT_KEPT)
         self._skip_choice = False
         self._hits: Dict[int, dict] = {}  # creature -> weapon hits not yet seen in its HP: their
         # damage, in order ("hits"), when the last landed ("at"), its HP then ("hp")
@@ -535,7 +554,7 @@ class DiceLog:
         self._effects: Optional[Counter] = None
         self._party: Optional[bytes] = None
         self._party_changed_at = 0.0
-        self._clock: Optional[int] = None  # (the game's clock at the last look: back means a game loaded)
+        self._party_clock: Optional[int] = None  # (the game's clock at _party_check's last look: back means a game loaded)
         self._aging_at: Optional[Tuple[bytes, int, tuple]] = None  # (natural aging: the last look's party, clock, count and years)
         self._next_effect_check = 0.0
         self._initiative: List[Tuple[int, int]] = []  # this round's (0-9 roll, 0-199 roll) pairs
@@ -568,6 +587,8 @@ class DiceLog:
         self._cast: Tuple[Optional[int], Optional[int]] = (None, None)  # (the last spell cast: its caster, the spell)
         self.tracker: Optional[PartyTracker] = None
         self.defilers = defilerscrolls.DefilerScrolls()  # (a defiler in a fight may carry a scroll)
+        self.champions = champions.Gear()  # (the champions' bout: their gear worn and held)
+        self.people = people.People()  # (the game's people in their gear from the start: people.py)
         self.walkers = stuckwalk.StuckWalkers()  # (people a saved walk left standing)
         self.defiler_scrolls = True
         self.buyback = buyback.Buyback()  # (magical items sold, kept to buy back: the rule's DSCLOG part)
@@ -603,6 +624,8 @@ class DiceLog:
         self._arena_count = None
         self.tracker = PartyTracker(self.game)
         self.defilers = defilerscrolls.DefilerScrolls()
+        self.champions = champions.Gear()
+        self.people = people.People()
         self.walkers.forget()
         heapcheck.WATCH = heapcheck.Watch()  # (a new game, a new session's lowest)
         self.text = TextBuffer(self.guest.read, hdr)
@@ -684,7 +707,10 @@ class DiceLog:
         went_back = self._clock is not None and now < self._clock
         if went_back:
             self.defilers.reset()  # (a save loaded: its fights rolled for again)
+            self.champions.reset()  # (and its champions equipped again)
+            self.people.reset()  # (and its people)
             self._mended_in = None  # (a save loaded: its scrolls looked at again)
+            self._party_done.clear()  # (a new game: the game's own party made ready again; each step checks itself)
         # A try later than the game's clock is not this game's: one undone by loading an earlier
         # save, or another game's (a new game started with the same party, the Loader started
         # after it: seen the first time the clock is read)
@@ -707,8 +733,11 @@ class DiceLog:
 
     def _write_xp(self, result: Optional["pickpocket.Attempt"]) -> None:
         """The XP that came with what was lifted (Kurzak's Short Sword), for DSCLOG to give with
-        the game's own routine as it shows the text; none otherwise."""
+        the game's own routine as it shows the text (and the quest's sound); none otherwise. With
+        no XP, a thing or the coins lifted has the purse's sound (sounds.PICK_SOUND)."""
         who, xp = (result.xp_to, result.xp) if result is not None and result.xp_to is not None else (0xFFFF, 0)
+        sound = sounds.PICK_SOUND if result is not None and result.lifted and who == 0xFFFF else 0xFFFF
+        self.guest.write(self.tsr_hdr + TSR_PICK_SOUND, struct.pack("<H", sound))
         self.guest.write(self.tsr_hdr + TSR_XP_AMOUNT, struct.pack("<H", xp))
         self.guest.write(self.tsr_hdr + TSR_XP_WHO, struct.pack("<H", who))
 
@@ -733,6 +762,8 @@ class DiceLog:
                     result = pickpocket.Attempt(spellarrows.NOT_IN_A_FIGHT, [])
                 else:
                     result = self._arrows.make(self.game, item & 0xFF, thing)
+                    if result and not result.text:  # (made: the spell's own cast sound, as it is cast)
+                        self._play_game_sound(spellarrows.cast_sound(self.game, thing))
             elif PICKED_BY <= item < 0xFFFF and self.pickpockets:
                 taken = True
                 if self._fighting():
@@ -753,6 +784,8 @@ class DiceLog:
             return []
         if result.key:
             self._remember_pick(result.key)
+        if result.paid:
+            self._remember_pick(result.paid)
         return result.log or [result.text]
 
     def _arrows_pass(self) -> List[str]:
@@ -794,6 +827,7 @@ class DiceLog:
         self.game_dir = settings.get("game_dir") or self.game_dir
         self.scroll_map = bool(settings.get("scroll_map", True))
         self.show_dust = bool(settings.get("dust", True))
+        self.see_through = settings.get("see_through", True) is not False
         self.elf_looks = settings.get("elf_looks", True) is not False
         self.cilla_elf = settings.get("cilla_elf", True) is not False
         self.vulture_on = bool(settings.get("vulture", True))
@@ -862,7 +896,9 @@ class DiceLog:
         whole = " ".join(full).replace("%", " pct").encode("cp437", "replace")[:LOOK_FULL_SIZE - 1] \
             if len(full) > 1 else b""
         if whole:
-            self._own_text.add(whole.decode("cp437"))  # not dialogue
+            shown = whole.decode("cp437")  # not dialogue
+            if shown not in self._own_text:
+                self._own_text.append(shown)
         self.guest.write(base + struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_LOOK_OFF, 2))[0], text + b"\0")
         self.guest.write(base + struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_LOOK_FULL_OFF, 2))[0],
                          whole + b"\0")
@@ -1013,7 +1049,7 @@ class DiceLog:
             said = " ".join(entry.text.split())  # DSCLOG keeps the first 400 characters of a text
             own = next((t for t in self._own_text if said and " ".join(t.split()).startswith(said)), None)
             if own is not None:
-                self._own_text.discard(own)
+                self._own_text.remove(own)
                 self._skip_choice = True
             elif entry.chosen and self._skip_choice:
                 self._skip_choice = False
@@ -1148,7 +1184,10 @@ class DiceLog:
         entries = self.poll()
         if self.missed > missed:  # (rolls lost from the ring: none half seen may be finished by others)
             self._forget_partial_rolls()
-        self.count_charges(entries)
+        try:  # (the charges: a failure leaves the rolls' lines without them, not lost)
+            self.count_charges(entries)
+        except Exception as e:
+            out += self._error_once(e)
         for e in entries:
             out += self.describe(e, show_all, now)
         try:  # (what fails after this is said once; the rolls already read are never lost with it)
@@ -1161,28 +1200,88 @@ class DiceLog:
         """A line for an error the dice log's pass didn't expect, once for each kind (with where it
         came from, for a report); the pass's other lines are kept and the next pass goes on."""
         import traceback
-        key = (type(err).__name__, str(err))
+        where = traceback.extract_tb(err.__traceback__)[-1]
+        key = error_key(err)
         if key in self._errors_said:
             return []
         self._errors_said.add(key)
-        where = traceback.extract_tb(err.__traceback__)[-1]
         return [f"Loader error in the dice log: {type(err).__name__}: {err} "
                 f"({os.path.basename(where.filename)}:{where.lineno}); it carries on"]
 
+    def _step(self, fn: Callable[[], object], quiet: bool = False) -> List[str]:
+        """One step of a pass, on its own: its lines (none if it gives none). The game busy with
+        its item lists (ItemsBusy): none, the step tried again in a later pass. DOSBox gone
+        (ProcessError): passed on. Anything else: said once (_error_once), or with QUIET nothing
+        for memory read while the game has it half made (struct.error, IndexError, ValueError);
+        either way the pass's next steps go on (one failing step once stopped all after it)."""
+        try:
+            got = fn()
+        except itemgate.ItemsBusy:
+            return []
+        except ProcessError:
+            raise
+        except (struct.error, IndexError, ValueError) as e:
+            return [] if quiet else self._error_once(e)
+        except Exception as e:
+            return self._error_once(e)
+        return got if isinstance(got, list) else []
+
     def _after_rolls(self, show_all: bool, now: float) -> List[str]:
         """The pass's lines after the rolls: answers to the game, hit points and effects, the
-        party's items, initiative and turns, the creation screen."""
+        party's items, initiative and turns, the creation screen. Each step on its own (_step)."""
         out: List[str] = []
-        self._forget_undone_picks()
-        self._kit_tick(now)
-        self._answer_stats()
-        out += self._answer_use()
-        out += self._arrows_pass()
-        out += self._answer_look()
+        step = self._step
+        step(self._forget_undone_picks)
+        step(lambda: self._kit_tick(now))
+        step(self._answer_stats)
+        out += step(self._answer_use)
+        out += step(self._arrows_pass)
+        out += step(self._answer_look)
+        out += step(lambda: self._changes(now))
+        out += step(lambda: self._take_text(now))
+        if now >= self._next_effect_check:
+            self._next_effect_check = now + EFFECT_INTERVAL
+            out += step(lambda: self.effect_changes(now))
+            step(self._write_slots)
+            step(self._write_stats)
+            try:
+                loading = self._party_check(now)
+            except ProcessError:
+                raise
+            except Exception as e:  # (unknown: the party's watches wait for a pass that can tell)
+                out += self._error_once(e)
+                loading = True
+            if not loading:  # (not while a game is loading: its records are half-filled)
+                out += step(lambda: self.tracker.check(now))
+                out += step(self._item_watches)
+                out += step(lambda: self._arena_ring(now))
+                out += step(lambda: self._drawn(now))
+                step(self._kalzith_sold_out)
+                out += step(self._learn_lines)
+                step(lambda: self._dress_now(now))
+                out += step(lambda: self.itemwatch.check(self.game, now, self._settings))
+        step(self._scroll)
+        if self._initiative and now - self._initiative_at >= INITIATIVE_WAIT:
+            out += step(self.initiative_lines)
+        out += step(self.turn_lines)  # after the round's order and the last turn's XP
+        step(lambda: self._creation_tries_moved(now))
+        if (self._creation_hp or self._creation_abilities or self._tries_new) \
+                and now - self._creation_hp_at >= CREATION_HP_WAIT:
+            out += step(self.creation_lines)
+        out += step(lambda: self.flush(now))
+        return out
+
+    def _changes(self, now: float) -> List[str]:
+        """Hit points, PSP and abilities changed (always read, to keep up), said unless a game is
+        loading (its records half-filled); Psionic Blast's imagined wounds."""
         changes = self.hp_changes(now) + self.psp_changes() + self.ability_changes()
-        if not self._party_check(now):  # not while a game is loading: its records are half-filled
-            out += changes
-            out += self._blast.tick(self.game, self.tsr_hdr, now)
+        if self._party_check(now):
+            return []
+        return changes + self._blast.tick(self.game, self.tsr_hdr, now)
+
+    def _take_text(self, now: float) -> List[str]:
+        """The messages DSCLOG copied (lines), and the dialogue (kept for take_dialogue)."""
+        out: List[str] = []
         for rec in self.text.poll():
             if rec.kind == KIND_MESSAGE:
                 if rec.text.strip():
@@ -1192,46 +1291,41 @@ class DiceLog:
                 self._dialogue += self._not_ours(self.dialogue.add(rec, now))
         self._dialogue += self._not_ours(self.dialogue.idle(now))
         self._dialogue += self._not_ours(self._reply_choice(now))
-        if now >= self._next_effect_check:
-            self._next_effect_check = now + EFFECT_INTERVAL
-            out += self.effect_changes(now)
-            self._write_slots()
-            self._write_stats()
-            if not self._party_check(now):
-                out += self.tracker.check(now)
-                try:  # (each waits for a later pass while the game changes its item lists)
-                    if self.rules & game.RULE_BUYBACK:  # (a magical item sold: into its merchant's pack)
-                        out += self.buyback.watch(self.game, self.tsr_hdr)
-                    if self.defiler_scrolls:  # (a defiler in a fight may carry a scroll: defilerscrolls.py)
-                        out += self.defilers.watch(self.game, bool(self.rules & game.RULE_NEW_SPELLS))
-                except itemgate.ItemsBusy:
-                    pass
-                finally:
-                    itemgate.release(self.game)
-                out += self._arena_ring(now)
-                out += self._drawn(now)
-                self._kalzith_sold_out()
-                out += self._learn_lines()
-                self._dress_now(now)
-                out += self.itemwatch.check(self.game, now, self._settings)
-        self._scroll()
-        if self._initiative and now - self._initiative_at >= INITIATIVE_WAIT:
-            out += self.initiative_lines()
-        out += self.turn_lines()  # after the round's order and the last turn's XP
-        self._creation_tries_moved(now)
-        if (self._creation_hp or self._creation_abilities or self._tries_new) \
-                and now - self._creation_hp_at >= CREATION_HP_WAIT:
-            out += self.creation_lines()
-        out += self.flush(now)
+        return out
+
+    def _item_watches(self) -> List[str]:
+        """The watches that move items: each waits for a later pass while the game changes its
+        item lists; the game let go of after them."""
+        out: List[str] = []
+        new_spells = bool(self.rules & game.RULE_NEW_SPELLS)
+        try:
+            if self.rules & game.RULE_BUYBACK:  # (a magical item sold: into its merchant's pack)
+                out += self._step(lambda: self.buyback.watch(self.game, self.tsr_hdr))
+            if self.defiler_scrolls:  # (a defiler in a fight may carry a scroll: defilerscrolls.py)
+                out += self._step(lambda: self.defilers.watch(self.game, new_spells))
+            # (the champions' gear to where it is worn and held: champions.py)
+            out += self._step(lambda: self.champions.watch(self.game, new_spells))
+            # (the game's people wearing and wielding their gear as they come on the map: people.py)
+            out += self._step(lambda: self.people.watch(self.game))
+            # (Pehtucl's chest a chest again once its lock is picked: pehtuclchest.py)
+            out += self._step(lambda: pehtuclchest.watch(self.game))
+        finally:
+            itemgate.release(self.game)
         return out
 
     def _lines_end(self, out: List[str], now: float) -> List[str]:
         """The pass's last lines (writes refused, rolls missed), the panel told, and the lines."""
-        refused = getattr(self.guest, "refused", None)
-        if refused:
+        # (the refused writes not told yet: the record itself kept whole, for a crash report)
+        refused = getattr(self.guest, "refused", None) or ()
+        total = getattr(self.guest, "refused_total", 0)
+        new = total - self._refused_told  # (how many; the record holds only the last 200 of them)
+        if new > 0 and refused:
+            fresh = list(refused)[-min(new, len(refused)):]
             out += [f"(The Loader stopped one of its own writes over the game's memory: {r}. "
-                    "Please send this line.)" for r in refused[:3]]
-            refused.clear()
+                    "Please send this line.)" for r in fresh[:REFUSED_SAID]]
+            if new > REFUSED_SAID:
+                out.append(f"(... and {new - REFUSED_SAID} more like it: all in a crash report.)")
+        self._refused_told = total
         if self.missed:
             # (not while the creation die tumbles: DSCLOG keeps the rolls that count, RL_TRY)
             if now - self._tries_at > CREATION_TUMBLE:
@@ -1269,58 +1363,86 @@ class DiceLog:
             ring.name_items(self.game, self.rules)
             if not names.update(self.game, self.tsr_hdr):
                 return out  # no names for them yet: none given
-            still = self._items_still()
-            if still:  # (the item lists changed only while the game leaves them be: itemgate.py)
-                # A new character's gear waits while DSCLOG's weapon window is up after DONE: its weapon
-                # specs decide its weapon, and the steps after build on that weapon, in this order.
-                new_ok = not self._weapons_asked()
-                if self.rules & game.RULE_SPECIALIZE and new_ok:  # (new characters' weapon kinds and starting weapon:
-                    out += weaponchoice.finish_new(self.game)  #   the long sword made a club before a psionicist's classes leave it behind)
-                if self.rules & game.RULE_RESTRICT and new_ok:  # (new characters' gear their classes can't use: left behind)
-                    out += weaponchoice.class_gear(self.game)
-                if self.rules & game.RULE_KITS:  # (new characters' starting gear fitted to their kits; a
-                    if new_ok:  #   Healer's cosmos spells, one made by an earlier version)
-                        out += weaponchoice.kit_gear(self.game)
-                    for member in range(game.PARTY_SIZE):  # (and a Wilderness Avenger's healing spells)
-                        out += kits.cosmos_spells(self.game, member) + kits.avenger_heals(self.game, member)
-                if self.starting_gear and new_ok:  # (new characters' starting gear filled out)
-                    out += startgear.fill(self.game)
-                out += defaultparty.ready(self.game, self.rules, self._party_done, self.starting_gear)  # (the game's own party, once)
-                if self.rules & game.RULE_AGING and new_ok:  # (a starting age for each who has none)
-                    out += aging.give_ages(self.game)
-                if self.rules & game.RULE_AGING:  # (a year of the game's clock: each a year older)
-                    out += self._natural_aging()
-                if not self.game.in_combat():  # (items an earlier version put in the wrong list)
-                    out += pickpocket.mend_lists(self.game)
-                itemgate.release(self.game)
-            if self.cilla_elf:
-                out += defaultparty.elf_figure(self.game)  # (Cilla, an elf, drawn as one)
-            # (the slave pens' and the world's new items are in the game's data: worldgear.py)
-            if self.stealth_gear:
-                stealth.reprice(self.game)  # (cloaks and boots: they help a thief hide and move silently)
-            kalzith.stock(self.game, bool(self.rules & game.RULE_NEW_SPELLS))  # (once a game, by its flag)
-            semyon.watch(self.game)  # (killed: never put in the pens)
-            if self.vulture_on:
-                out += vulture.meal(self.game)  # (Dinos's script has set its flag: XP and a full rest)
-            if kalzith.watch(self.game):  # (killed: Dinos and the Trustee speak of him so)
-                left = kalzith.loot(self.game)  # (one of his scrolls, his Cloak and Quarterstaff)
-                if left:
-                    out.append("Kalzith leaves: " + ", ".join(left))
-            region = self.game.region()
-            if region != self._mended_in:  # (his scrolls of before the fix, once in each area)
-                kalzith.mend(self.game)
-                self._mended_in = region
-            tools.repaint(self.game)  # (sets of Thieves' Tools an earlier version gave: their name and picture)
-            out += [stuckwalk.stopped_line(name) for name in self.walkers.check(self.game)]
-            out += heapcheck.WATCH.take(self.guest.read, self.game.load_seg, self.game.ds, self.tsr_hdr)  # (the game's memory: a crash report's, and a word when it runs low)
-            out += self._ring_search()
-            icons.COPY_OPEN = icons.ready(self.game, self.tsr_hdr)
-            icons.repaint(self.game, icons.COPY_OPEN)  # the items' own icons
-        except (struct.error, IndexError, ValueError):  # (itemgate.ItemsBusy too: tried in a later pass)
+        except (struct.error, IndexError, ValueError):
             return out
+        quiet = lambda fn: self._step(fn, quiet=True)  # (each on its own: memory half made, the next pass)
+        try:
+            quiet(lambda: self._new_gear(out))
+            out += quiet(self._watches)
         finally:
             itemgate.release(self.game)
         return out
+
+    def _new_gear(self, out: List[str]) -> None:
+        """New characters' gear, the game's own party, ages and lists mended, in this order (each
+        builds on the last), only while the game leaves its item lists be (_items_still); their
+        lines into OUT as they come (a step failing keeps those before it)."""
+        still = self._items_still()
+        if still:  # (the item lists changed only while the game leaves them be: itemgate.py)
+            # A new character's gear waits while DSCLOG's weapon window is up after DONE: its weapon
+            # specs decide its weapon, and the steps after build on that weapon, in this order.
+            new_ok = not self._weapons_asked()
+            if self.rules & game.RULE_SPECIALIZE and new_ok:  # (new characters' weapon kinds and starting weapon:
+                out += weaponchoice.finish_new(self.game)  #   the long sword made a club before a psionicist's classes leave it behind)
+            if self.rules & game.RULE_RESTRICT and new_ok:  # (new characters' gear their classes can't use: left behind)
+                out += weaponchoice.class_gear(self.game)
+            if self.rules & game.RULE_KITS:  # (new characters' starting gear fitted to their kits; a
+                if new_ok:  #   Healer's cosmos spells, one made by an earlier version)
+                    out += weaponchoice.kit_gear(self.game)
+                for member in range(game.PARTY_SIZE):  # (and a Wilderness Avenger's healing spells)
+                    out += kits.cosmos_spells(self.game, member) + kits.avenger_heals(self.game, member)
+            if self.starting_gear and new_ok:  # (new characters' starting gear filled out)
+                out += startgear.fill(self.game)
+            out += defaultparty.ready(self.game, self.rules, self._party_done, self.starting_gear)  # (the game's own party, once)
+            if self.rules & game.RULE_AGING and new_ok:  # (a starting age for each who has none)
+                out += aging.give_ages(self.game)
+            if self.rules & game.RULE_AGING:  # (a year of the game's clock: each a year older)
+                out += self._natural_aging()
+            if not self.game.in_combat():  # (items an earlier version put in the wrong list)
+                out += pickpocket.mend_lists(self.game)
+            itemgate.release(self.game)
+
+    def _watches(self) -> List[str]:
+        """The Loader's people and items watched, each on its own (one failing leaves the rest)."""
+        out: List[str] = []
+        quiet = lambda fn: self._step(fn, quiet=True)
+        new_spells = bool(self.rules & game.RULE_NEW_SPELLS)
+        if self.cilla_elf:
+            out += quiet(lambda: defaultparty.elf_figure(self.game))  # (Cilla, an elf, drawn as one)
+        # (the slave pens' and the world's new items are in the game's data: worldgear.py)
+        if self.stealth_gear:
+            quiet(lambda: stealth.reprice(self.game))  # (cloaks and boots: they help a thief hide and move silently)
+        quiet(lambda: kalzith.stock(self.game, new_spells))  # (once a game, by its flag)
+        quiet(lambda: semyon.watch(self.game))  # (killed: never put in the pens)
+        quiet(lambda: kurzak.watch(self.game))  # (Legcrusher killed: Kurzak's lines about him missing)
+        quiet(lambda: semyon.ship(self.game))  # (Thornwall onto the pens' rack, once he has told of it)
+        quiet(lambda: semyon.found(self.game))  # (and his word on it, once the party has it)
+        if self.vulture_on:
+            out += quiet(lambda: vulture.meal(self.game))  # (Dinos's script has set its flag: XP and a full rest)
+        quiet(lambda: kalzith.watch(self.game))  # (killed: Dinos and the Trustee speak of him so)
+        # (one of his scrolls, his Cloak and Quarterstaff: each pass until done, as the game's
+        # lists can be busy the first time)
+        left = quiet(lambda: kalzith.loot(self.game))
+        if left:
+            out.append("Kalzith leaves: " + ", ".join(left))
+        quiet(self._mend_scrolls)
+        quiet(lambda: tools.repaint(self.game))  # (sets of Thieves' Tools an earlier version gave: their name and picture)
+        out += quiet(lambda: [stuckwalk.stopped_line(name) for name in self.walkers.check(self.game)])
+        # (the game's memory: a crash report's, and a word when it runs low)
+        out += quiet(lambda: heapcheck.WATCH.take(self.guest.read, self.game.load_seg, self.game.ds, self.tsr_hdr))
+        out += quiet(self._ring_search)
+        quiet(self._icons)
+        return out
+
+    def _mend_scrolls(self) -> None:
+        region = self.game.region()
+        if region != self._mended_in:  # (Kalzith's scrolls of before the fix, once in each area)
+            kalzith.mend(self.game)
+            self._mended_in = region
+
+    def _icons(self) -> None:
+        icons.COPY_OPEN = icons.ready(self.game, self.tsr_hdr)
+        icons.repaint(self.game, icons.COPY_OPEN)  # the items' own icons
 
     def _drawn(self, now: float) -> List[str]:
         """What DSCLOG draws and does for the Loader, kept up four times a second (not with the
@@ -1330,7 +1452,8 @@ class DiceLog:
             return []
         try:
             self._shadows.update(self.game, self.tsr_hdr, self.show_shadows, now,
-                                 needed=self.show_dust or self.ring_mode != rings.OFF or self.combat_log)
+                                 needed=self.show_dust or self.ring_mode != rings.OFF or self.combat_log
+                                 or self.see_through)
             self._update_panel(now)
             self._labels.on = self.floating_names
             self._labels.tick(self.game.guest, self.tsr_hdr, now)
@@ -1339,6 +1462,9 @@ class DiceLog:
             self._rings.update(self.game, self.tsr_hdr, self.ring_mode != rings.OFF, self._shadows.palettes,
                                self._targeting.chosen)
             self._dust.update(self.game, self.tsr_hdr, self.show_dust, self._shadows.palettes)
+            hdr = self.tsr_hdr
+            self._ghosts.update(self.game, hdr, self.see_through, self._shadows.palettes,
+                                lambda: shadows.redraw(self.game, hdr))
         except (struct.error, IndexError, ValueError):
             return []
         return out
@@ -1377,6 +1503,9 @@ class DiceLog:
             except (struct.error, IndexError, ValueError):
                 pass
             return
+        options = panel.level != self.combat_log_level  # (the Options tab's level, chosen since)
+        if options:
+            panel.level = self.combat_log_level
         before = (panel.first, panel.size, panel.level, panel.filter, panel.open)
         try:
             panel.mouse(self.game, self.tsr_hdr)
@@ -1386,7 +1515,7 @@ class DiceLog:
                 self.combat_log_level = panel.level  # (the panel's level chip: the Options tab's too)
                 _remember({"combat_log_level": panel.level, "combat_log_size": panel.size,
                            "combat_log_open": panel.open})
-            if (panel.first, panel.size, panel.level, panel.filter, panel.open) != before:
+            if options or (panel.first, panel.size, panel.level, panel.filter, panel.open) != before:
                 self._update_panel(now)
         except (struct.error, IndexError, ValueError):
             pass
@@ -1534,7 +1663,11 @@ class DiceLog:
         self._swap_seq = seq
         if needed and fired:
             icons.COPY_OPEN = icons.ready(self.game, self.tsr_hdr)  # (its own icon from the start: icons.fit)
-            given = ring.give_ring(self.game)
+            try:
+                given = ring.give_ring(self.game)
+            except Exception:
+                self._swap_seq = (seq - 1) & 0xFFFF  # (the search still to answer, a later pass: not lost)
+                raise
             itemgate.release(self.game)
             out.append(given or "No one in the party has room for the ring: make room and look at the body again.")
             needed = given is None
@@ -1769,19 +1902,27 @@ class DiceLog:
     def _follow_talk(self, rec) -> None:
         """Learn portraits' names: a conversation (the window opening to CLOSE) that shows a single
         face, started on a named creature, is that creature talking. With several faces (a scene
-        where others speak too) it can't be told who is who, so nothing is learned."""
+        where others speak too) it can't be told who is who, so nothing is learned. A speech with no
+        replies for the party may be a script's that isn't started on its speaker (Kurzak's call
+        to the arena, while the Trustee's rounds were the script running: "Portrait 5 is
+        Trustee", 2026-11-05): from one, a name is learned only when that creature stands beside
+        the party (NEAR_SPEAKER: Legcrusher fetching it); a talk with replies teaches its name in
+        any case (and puts a wrong one right)."""
         if rec.kind == KIND_PORTRAIT:
             if self._talk is None:
                 try:
-                    target = self.game.talk_target()
+                    target, far = self.game.talk_target(), self.game.talk_target_distance()
                 except (struct.error, IndexError, ValueError):
-                    target = None
-                self._talk = {"portraits": set(), "with": target}
+                    target, far = None, None
+                near = far is not None and far <= NEAR_SPEAKER
+                self._talk = {"portraits": set(), "with": target, "replies": False, "near": near}
             if rec.value:
                 self._talk["portraits"].add(rec.value)
+        elif rec.kind == KIND_SHOW_REPLIES and self._talk is not None:
+            self._talk["replies"] = True  # (a talk the party answers: one started on its speaker)
         elif rec.kind == KIND_TEXT and rec.text == "CLOSE" and self._talk is not None:
             talk, self._talk = self._talk, None
-            if len(talk["portraits"]) == 1 and talk["with"]:
+            if len(talk["portraits"]) == 1 and talk["with"] and (talk["replies"] or talk["near"]):
                 portrait = next(iter(talk["portraits"]))
                 if portrait in game.SPEAKERS:
                     pass  # known already (the Announcer calls out mid-fight, "started on" a fighter)
@@ -1793,6 +1934,27 @@ class DiceLog:
         """Portrait names learned since the last call."""
         out, self._new_speakers = self._new_speakers, {}
         return out
+
+    def save_learned(self, add_speakers, set_picked) -> Tuple[Dict[int, str], bool]:
+        """The portrait names learned and the pockets tried since the last call, saved with
+        ADD_SPEAKERS and SET_PICKED (launch's: settings.json). A save that fails (OSError: the file
+        held by an antivirus or a backup) is kept for the next call, not lost (a pocket forgotten
+        could be picked again). The names saved, and whether anything failed."""
+        failed = False
+        learned = self.take_speakers()
+        if learned:
+            try:
+                add_speakers(learned)
+            except OSError:
+                self._new_speakers = {**learned, **self._new_speakers}
+                learned, failed = {}, True
+        picked = self.take_picked()
+        if picked is not None:
+            try:
+                set_picked(picked)
+            except OSError:
+                self._picked_changed, failed = True, True
+        return learned, failed
 
     def _reply_choice(self, now: float) -> List[DialogueEntry]:
         """The player's answer, once, when they click a reply."""
@@ -1827,15 +1989,17 @@ class DiceLog:
     def _party_check(self, now: float) -> bool:
         """True for a while after the party changes (a game was loaded): what's there is not news."""
         party, clock = self.game.party_signature(), self.game.game_time()
-        back = clock is not None and self._clock is not None and clock < self._clock
-        if clock is not None:
-            self._clock = clock
+        back = clock is not None and self._party_clock is not None and clock < self._party_clock
+        if clock is not None:  # (its own: _forget_undone_picks has read the clock this pass already)
+            self._party_clock = clock
         if party != self._party or back:  # (the same party loaded again: its clock goes back)
             self._party, self._party_changed_at = party, now
         if now - self._party_changed_at < LOAD_SETTLE:
             if self.tracker:
                 self.tracker.reset()
             self.defilers.reset()
+            self.champions.reset()
+            self.people.reset()
             self.itemwatch.reset()
             return True
         return False
@@ -2004,10 +2168,22 @@ class DiceLog:
         except (struct.error, IndexError, ValueError):
             return False
 
+    def _play_game_sound(self, number: int) -> None:
+        """Have DSCLOG play the game's sound NUMBER from the map's main loop (SOUND_REQ), if any."""
+        if self.tsr_hdr is not None and 0 < number <= 130:
+            self.guest.write(self.tsr_hdr + TSR_SOUND_REQ, struct.pack("<H", number))
+
     def _set_stealth(self, hidden: bool, member: int = 0) -> None:
-        """Have DSCLOG make this party member's next attack one from behind (or no one's)."""
+        """Have DSCLOG make this party member's next attack one from behind (or no one's); hidden,
+        with the hiding's sound (sounds.HIDE_SOUND, played from the map's main loop)."""
         if self.tsr_hdr is not None:
-            self.guest.write(self.tsr_hdr + stealth.TSR_STEALTH, struct.pack("<H", 1 << member if hidden else 0))
+            was = self.guest.read(self.tsr_hdr + stealth.TSR_STEALTH, 2)
+            now = struct.pack("<H", 1 << member if hidden else 0)
+            self.guest.write(self.tsr_hdr + stealth.TSR_STEALTH, now)
+            if hidden:
+                self.guest.write(self.tsr_hdr + TSR_SOUND_REQ, struct.pack("<H", sounds.HIDE_SOUND))
+            if now != was and self.see_through:
+                shadows.redraw(self.game, self.tsr_hdr)  # (drawn see-through, or no longer)
 
     def round_status(self, acted_creatures: frozenset = frozenset()) -> Optional[dict]:
         """The round in progress, for keeping its order in view: {"round", "now": (name, score),
@@ -2292,7 +2468,7 @@ class DiceLog:
         """'THAC0 16, +6 STR, +1 Blessed, ... = 9', from the attack setup's locals and the game's rules
         (and SKILL, weapon specialization's (name, to-hit), which DSCLOG takes off after them)."""
         g = self.game
-        base = g.creature(attacker)[CREATURE_THAC0]
+        base = struct.unpack("b", g.creature(attacker)[CREATURE_THAC0:CREATURE_THAC0 + 1])[0]  # (signed)
         after_f1, hit_bonus = e.parent_local(-0x20), e.parent_local(-8)
         rear, backstab = e.parent_local(-0x1A), e.parent_local(-0x24)
         parts: List[Tuple[str, int]] = []
@@ -2332,7 +2508,7 @@ class DiceLog:
             parts.append(("Prayer", 1 if same else -1))
             situational -= 1 if same else -1
         if situational:
-            parts.append(("STR" if mode <= 1 else "DEX", situational))
+            parts.append(("STR" if mode is not None and mode <= 1 else "DEX", situational))
         rest = hit_bonus
         if weapon:
             if weapon.plus:
@@ -2351,7 +2527,7 @@ class DiceLog:
         # bonus at DEX 5 or less, nothing otherwise. The manual's off-hand penalty isn't there,
         # unless the Loader's rule puts AD&D's in (GameData.two_weapons).
         weapons_ready = e.parent_local(-0x16)
-        if mode <= 1 and weapons_ready is not None and weapons_ready >= 2:
+        if mode is not None and mode <= 1 and weapons_ready is not None and weapons_ready >= 2:
             item = e.arg(0x12)
             slot = None
             if item is not None and 0 <= item < game.NO_ITEM:
@@ -2862,9 +3038,7 @@ class DiceLog:
             return [f"    {who}{name} can't break"] if show_all and first else []
         if first:
             self._break_first = scaled(e.raw, 8)
-            if self._break_first == 0 or show_all:
-                return []  # wait for the second roll (there is one only if this was 0)
-            return []
+            return []  # (the second roll, if this was 0, says it)
         second, first_roll, self._break_first = scaled(e.raw, 20), self._break_first, None
         if second == 0:
             return [f"    {who}{name} BREAKS: 0 on 0-7 and 0 on 0-19 (1 in 160 after each hit)"]

@@ -1,11 +1,12 @@
 """Two plain weapons made magic (the MAGIC_ARMS switch, on unless turned off), in the game's data
 (dataitems.py: the Loader's copy of SEGOBJEX, written as the game is started).
 
-- The 2 handed Bone Gythka on the dead body lying by the stone arch in the arena, where every game
-  starts: Kreenfang, a gythka +1. The body is the game's object 1204, "Dead Body" (an item whose
-  contents are a list: its record has the gythka in it), used nowhere else; in the copy, that
-  gythka is Kreenfang. Every other gythka stays plain: the one the arena also has lying loose
-  (object 1011), and those in kreen hands.
+- Kreenfang, a gythka +1: the champions' Tohr-kreen carries it (champions.py). Only when the
+  champions can't be made (kreenfang_chunks, worldgear's fallback) is it, as before them, the
+  2 handed Bone Gythka on the dead body lying by the stone arch in the arena, where every game
+  starts: the game's object 1204, "Dead Body" (an item whose contents are a list: its record has
+  the gythka in it), used nowhere else. Every other gythka stays plain: the one the arena also has
+  lying loose (object 1011), and those in kreen hands.
 - Kurzak's Short Sword (npcitems.py): Shadowseeker, a short sword +1. Whoever wields it (in either
   hand) can see the invisible: the game's own way with a magic item's spell (its +0Fh, one past
   the spell's number), which it puts on the wearer when the item is readied and takes off when

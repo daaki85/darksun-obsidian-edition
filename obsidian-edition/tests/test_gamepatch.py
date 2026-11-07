@@ -28,6 +28,25 @@ class GamePatchTests(unittest.TestCase):
         for p in gamepatch.PATCHES:
             self.assertEqual(len(p.replacement), len(p.original))
 
+    def test_vectors_distinct(self):
+        """Each of DSCLOG's interrupt vectors used by one probe only (VEC_GHOST once took VEC_AC's
+        62h, so every attack's AC went to the see-through figures' probe), none among 66h-77h (the
+        game's drivers, the IRQs), and gamepatch's VEC_ names the same numbers as dsclog.asm's."""
+        import re
+        asm = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos", "dsclog.asm")
+        with open(asm, encoding="utf-8") as f:
+            found = re.findall(r"^(VEC_\w+)\s+equ\s+(0x[0-9A-Fa-f]+|\d+)", f.read(), re.M)
+        vectors = {name: int(value, 0) for name, value in found}
+        self.assertEqual(len(vectors), len(found))
+        by_number = {}
+        for name, number in vectors.items():
+            by_number.setdefault(number, []).append(name)
+        self.assertEqual({n: v for n, v in by_number.items() if len(v) > 1}, {})
+        self.assertFalse([n for n, v in vectors.items() if 0x66 <= v <= 0x77])
+        for name, number in vectors.items():
+            if hasattr(gamepatch, name):
+                self.assertEqual(getattr(gamepatch, name), number, name)
+
     def test_skipped_patches_keep_the_games_bytes(self):
         """A patch switched off (the Effects screen's click) is checked but left as the game's."""
         original = fake_dsun()
@@ -292,3 +311,13 @@ class PowerEndTests(unittest.TestCase):
         mu.emu_start(cs * 16 + 0x100, 0, count=2000)
         self.assertEqual(removed, [(1, 5, 30, 12, 7), (2, 5, 30, 12, 8), (0, 5, 30, 12, 11)])
         self.assertEqual(records, [(3, 6, 30, 12, 9), (4, 5, 31, 12, 10)])
+
+
+class ScareTests(unittest.TestCase):
+    def test_elf_or_half_elf_priest_saves(self):
+        """Scare's race tests (79FEAh, 7A011h): the first's jump now goes where the second's does
+        for its race (the usual save, 7A01Dh), so race 3 or 4 saves as usual; the rest still fail."""
+        patch = next(p for p in gamepatch.PATCHES if p.name == "scare_elves")
+        self.assertEqual(patch.replacement[0], 0x74)  # je
+        self.assertEqual(patch.offset + 2 + patch.replacement[1], 0x7A01D)  # the second test's je
+        self.assertEqual(patch.offset + 2 + patch.original[1], 0x7A018)  # was: the -100

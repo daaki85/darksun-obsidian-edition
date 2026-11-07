@@ -33,7 +33,7 @@ SEMYON = 280  # his object (RDFF 280, "Semyon"; the Tied-up Prisoner is 319)
 SCRIPT = 219  # his conversation in the pens (Kalzith's is 218; the game's run to 217)
 PORTRAIT = 118  # the game's portrait for him
 GONE = 7  # the game's flag: he has gone to the holding pens (any way he left)
-PLACED, MET = 764, 765  # (the Loader's flags: Kalzith's are 760-763; the game's run to 755)
+PLACED, MET = 764, 765  # (the Loader's flags: Kalzith's are 760-763; the game's run to 755, the Loader's from 756)
 LEFT, DIED = 770, 771  # (the Loader's) he left the arena after the fight he helped in; he died
 ARENA_TALK, EXIT = 5, 2400  # his arena script, and where in it he is taken off the map then
 REMOVE = 0x5E  # (object, region, x, y, ...): an object moved to a region (255: none)
@@ -52,6 +52,13 @@ GONE_AT = (255, 20, 20, 1)  # where the game puts the pens' people then (region 
 # and with their 12 (STEADY), once (SETTLED; also for one put in his pen before). Attacked, he is then as any of them is.
 SET_FIELD, SIDE, NEUTRAL, STEADY, SLAVES_STEADY = 0x40, 74, 4, 70, 12
 SETTLED = 779
+# The weapon shipment: asked "Seen anything useful?", he tells of a crate the guards fussed
+# over, its weapon racked (his script sets TOLD); then, in the pens, the Loader puts Thornwall
+# on the pens' weapon rack, once (SHIPPED), unless a Thornwall is somewhere already (a save from
+# when the rack's data had it). Once a party member carries it (FOUND, set by found()), he has a
+# word about it. (Three of the flags between the game's 755 and the Loader's 760.)
+TOLD, SHIPPED, FOUND = 756, 757, 758
+PENS = 0x29
 
 # Breaking out with Scar (the game's script 3, when the party reaches the arena's west exit after
 # Scar's plan is agreed: "Gladiators escaping! Guards! Sound the alarms!"): the game takes Scar
@@ -137,7 +144,7 @@ def with_exit(script: bytes, field_types: bytes = b"") -> bytes:
     s.op(op.code, *op.args)
     s.op(GOTO, ("n", ops[at + 1].at))
     out = bytearray(script) + s.bytes(base=len(script), end=False)
-    out[EXIT:EXIT + 3] = gpl.encode_op((GOTO, [("n", len(script))]))
+    gpl.put_jumps(out, script, field_types, [(EXIT, len(script))])
     return bytes(out)
 
 
@@ -174,7 +181,7 @@ def with_escape(script: bytes, field_types: bytes = b"") -> bytes:
     s.when(recruited, lambda: s.when(not_against, along))
     s.op(GOTO, ("n", ops[at + 1].at))
     out = bytearray(script) + s.bytes(base=len(script), end=False)
-    out[ESCAPE_AT:ESCAPE_AT + 3] = gpl.encode_op((GOTO, [("n", len(script))]))
+    gpl.put_jumps(out, script, field_types, [(ESCAPE_AT, len(script))])
     return bytes(out)
 
 
@@ -188,8 +195,9 @@ def watch(gd) -> bool:
     return True
 
 
-def conversation() -> bytes:
-    """Semyon's conversation in the pens (script SCRIPT)."""
+def conversation(thornwall: bool = True) -> bytes:
+    """Semyon's conversation in the pens (script SCRIPT); with THORNWALL (the world's magic items
+    on: the rack's Thornwall, worldgear.MAGIC), his tip about the crate and his word once it's found."""
     s = _Script()
     met = ("var", 0x8D, MET)
 
@@ -202,13 +210,24 @@ def conversation() -> bytes:
         s.leave()
 
     def menu():
+        tip = [
+            ("Seen anything useful?", lambda: (s.say(
+                "When they marched me in, I passed a weapon shipment coming the other way. "
+                "Guards were fussing over one crate like it held something special. I didn't "
+                "see where they took it, but it can't have gone far."),
+                s.flag(TOLD, 1)), ALWAYS),
+            ("We found what was in that crate.", reply(
+                "So that's what had the guards so nervous! A weapon like that is wasted on "
+                "Draj's templars. Put it to good use when we break out."),
+                ("expr", _flag(TOLD) + ["and"] + _flag(FOUND))),
+        ] if thornwall else []
         s.menu([("Why did they tie you up out there?", reply(
                     "I was asking around the pens about the Veiled Alliance. Someone told the "
                     "templars, so they tied me out in the arena under the sun to see if I'd talk. "
                     "I didn't. After the fight they threw me back in here."), ALWAYS),
                 ("Have you heard anything useful?", reply(
                     "Only the trustee, the head templar and Kurzak carry keys. The trustee keeps "
-                    "his on his belt. Do with that what you will."), ALWAYS),
+                    "his on his belt. Do with that what you will."), ALWAYS)] + tip + [
                 ("Where was that gem again?", reply(
                     "In one of the grain pots: the kitchen, the storage room, or near the "
                     "fountain. I can't remember which, so check them all."), ALWAYS),
@@ -235,3 +254,72 @@ def conversation() -> bytes:
     escaping = ("expr", _flag(ESCAPING) + ["and"] + _flag(ESCAPED, 0))
     s.when(escaping, breaking_out, at_home)
     return s.bytes()
+
+
+def found(gd) -> bool:
+    """FOUND set once, after his tip (TOLD), a party member carries Thornwall (worn, held or in
+    the pack, a bag in it too): he speaks of it then. True when it was set now."""
+    import struct
+    from . import game, ring, worldgear
+    if not gd.flag(TOLD) or gd.flag(FOUND):
+        return False
+
+    def thornwall(rec) -> bool:
+        return struct.unpack_from("<H", rec, game.ITEM_NAME)[0] == worldgear.THORNWALL
+
+    it = ring.Items(gd)
+    for member in range(game.PARTY_SIZE):
+        for _, item, _ in gd._worn(member):
+            contents, = struct.unpack_from("<H", item, ring.ITEM_CONTENTS)
+            if thornwall(item) or any(thornwall(rec) for _, rec in it.chain(contents)):
+                gd.set_flag(FOUND)
+                return True
+    return False
+
+
+def ship(gd) -> bool:
+    """In the pens, once Semyon has told of the shipment (TOLD), Thornwall onto the pens' weapon
+    rack (first among its contents), once (SHIPPED); none if a Thornwall is somewhere already. An
+    item record from the game's free list, as the Loader's other gifts. True when put there.
+    The game makes a region's map objects near the party only (walking on makes more and drops
+    far ones), so the rack is looked for by its own object (worldgear.PENS_RACK_OBJECT) among
+    the map objects, and nothing is done until it is there (a Thornwall on it, from a save of
+    before, seen then too). Its item type, 6Ch, is a coffin's as well."""
+    import struct
+    from . import game, icons, ring, worldgear
+    if gd.region() != PENS or not gd.flag(TOLD) or gd.flag(SHIPPED):
+        return False
+    it = ring.Items(gd)
+    rack = None
+    for thing in gd.things_of(worldgear.PENS_RACK_OBJECT):
+        kind, first = it.thing(thing)
+        if kind == game.THING_ITEM and 0 <= first < game.NO_ITEM:
+            rec = it.item(first)
+            if struct.unpack_from("<H", rec, game.ITEM_TYPE)[0] == worldgear.RACK_TYPE:
+                rack = rec
+                break
+    if rack is None:
+        return False  # (not made yet: the party is far from it)
+    for thing in range(ring.THING_COUNT):
+        for _, rec in it.chain(thing):
+            if struct.unpack_from("<H", rec, game.ITEM_NAME)[0] == worldgear.THORNWALL:
+                gd.set_flag(SHIPPED)
+                return False
+    rec = rack
+    contents, = struct.unpack_from("<H", rec, ring.ITEM_CONTENTS)
+    item = it.word(ring.FREE_ITEMS)
+    if not 0 <= contents < ring.THING_COUNT or item >= game.NO_ITEM:
+        return False
+    kind, first = it.thing(contents)
+    if kind != game.THING_ITEM:
+        return False
+    new = bytearray(worldgear.weapon(*worldgear.BONE_POLEARM_1))
+    gd.guest.write(gd.ds * 16 + ring.FREE_ITEMS, it.item(item)[game.ITEM_NEXT:game.ITEM_NEXT + 2])
+    ring.took(item, "Thornwall, for the pens' weapon rack")
+    struct.pack_into("<h", new, game.ITEM_NEXT, first)
+    new[game.ITEM_SLOT] = 0xFF
+    gd.guest.write(it.items + item * game.ITEM_SIZE, bytes(new))
+    gd.guest.write(it.things + contents * 3, struct.pack("<Bh", game.THING_ITEM, item))
+    icons.fit(gd, item)
+    gd.set_flag(SHIPPED)
+    return True

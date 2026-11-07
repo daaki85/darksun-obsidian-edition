@@ -205,8 +205,7 @@ def with_xp(script: bytes, field_types: bytes = b"", original: Optional[bytes] =
         s.op(SET, ("n", XP_REWARD), XP_AMOUNT), s.op(CALL, *XP_ROUTINE)))
     s.op(GOTO, ("n", ops[at + 3].at))
     out = bytearray(script) + s.bytes(base=len(script), end=False)
-    jump = gpl.encode_op((GOTO, [("n", len(script))]))
-    out[BODY_AT:BODY_AT + len(jump)] = jump
+    gpl.put_jumps(out, original, field_types, [(BODY_AT, len(script))])
     return bytes(out)
 
 

@@ -311,7 +311,7 @@ def _carried(name: str) -> tuple:
 
 # A menu with more items than the script's locals hold (the game's six weapons, the loop's own, and
 # the new ones) keeps the rest in the Loader's flags from FLAGS on (the game's run to 755, the
-# Loader's own 760-783, a save keeps 808), set afresh each time the part starts, as the locals are.
+# Loader's own 756-783, a save keeps 808), set afresh each time the part starts, as the locals are.
 # A slot: a local's number, or a flag's negated.
 FLAGS = 784
 FLAG_SET, FLAG_READ = 13, 141
@@ -450,9 +450,7 @@ def with_items(script: bytes, field_types: bytes, kinds=KINDS) -> bytes:
     out = bytearray(script) + added
     if len(out) > LONGEST:
         return script
-    for at, label in jumps:
-        jump = gpl.encode_op((GOTO, [("n", s.at[label])]))
-        out[at:at + len(jump)] = jump
+    gpl.put_jumps(out, script, field_types, [(at, s.at[label]) for at, label in jumps])
     return bytes(out)
 
 

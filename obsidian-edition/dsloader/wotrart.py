@@ -192,10 +192,14 @@ def _search(sl_dir: Optional[str], first: Optional[str]) -> Optional[str]:
 
 
 def stable_colours(gpl_data: bytes) -> List[Tuple[int, Tuple[int, int, int]]]:
-    """Shattered Lands' palette numbers no region changes (alike in every GPLDATA.GFF palette)."""
+    """Shattered Lands' palette numbers no region changes (alike in every GPLDATA.GFF palette) and
+    the game's colour cycler doesn't turn (ghost.CYCLED: 1-15 and 240-248; colour 5, a green
+    alike in every palette, pulsed in pictures drawn with it)."""
+    from .ghost import CYCLED
     palettes = [art.palette_colours(v) for k, v in sorted(gff.read_gff(gpl_data).items())
                 if k[0] == "PAL " and len(v) >= 768]
-    return [(i, palettes[0][i]) for i in range(256) if all(p[i] == palettes[0][i] for p in palettes)]
+    return [(i, palettes[0][i]) for i in range(256)
+            if all(p[i] == palettes[0][i] for p in palettes) and not any(i in r for r in CYCLED)]
 
 
 def to_shattered_lands(rows: Sequence[Sequence[int]], wotr_palette, stable) -> List[List[int]]:

@@ -63,6 +63,8 @@ class Attempt:
     key: Optional[str] = None  # the person's pockets, now out of reach (the thief was caught)
     xp_to: Optional[int] = None  # a party member given XP for what was lifted (the game's routine)
     xp: int = 0
+    lifted: bool = False  # something (or the coins) taken: the purse's sound (sounds.PICK_SOUND)
+    paid: Optional[str] = None  # SWORD_XP given for this weapon: remembered with the tries, once a game
 
 
 def _seen(data: bytes) -> Optional[str]:
@@ -92,9 +94,9 @@ def _chain(it: ring.Items, thing: int) -> List[Tuple[int, bytes]]:
 
 
 def _carried(gd: GameData, it: ring.Items, creature: int) -> List[Tuple[int, int, int]]:
-    """What a thief can lift from a creature: (list, item, the item before it or -1). People
-    outside the party keep everything in backpack cells, what they wear and wield too, so it
-    goes by the item's type: MAX_WEIGHT or less, nothing worn ON_THE_BODY, no keys (scripts
+    """What a thief can lift from a creature: (list, item, the item before it or -1), from any of
+    its lists (people outside the party carry their gear in the backpack's, worn and held once
+    put on: people.py), so it goes by the item's type: MAX_WEIGHT or less, nothing worn ON_THE_BODY, no keys (scripts
     may need them) and no scenery."""
     rec = gd.creature(creature)
     out = []
@@ -191,14 +193,20 @@ def _link(gd: GameData, it: ring.Items, member: int, item: int, slot: int) -> bo
 def place(gd: GameData, member: int, item: int, slot: int) -> bool:
     """One of the party member's items put in SLOT (a slot of the body or a backpack cell) and
     into the list that goes with it, as the inventory screen would: a weapon put away in the
-    backpack is no longer fought with, one taken from it is."""
+    backpack is no longer fought with, one taken from it is. Nothing moves (False) if there is no
+    list to be had for it: the list is found or made first, then the item taken out of its own
+    (taken out first, it was in no list when the game's things had none left, and lost)."""
     it = ring.Items(gd)
     rec = gd.creature(member)
     for list_no, offset in enumerate(game.CREATURE_ITEM_LISTS):
         thing, = struct.unpack_from("<h", rec, offset)
         before = -1
-        for index, _ in _chain(it, thing):
+        for index, data in _chain(it, thing):
             if index == item:
+                typ = gd.item_type_record(data) if struct.unpack_from("<H", data, game.ITEM_TYPE)[0] < game.NO_ITEM else b""
+                if party_list(gd, it, member, slot, typ) is None:
+                    return False
+                it = ring.Items(gd)  # (read again: the list may be new)
                 _take(gd, it, member, list_no, item, before)
                 return _link(gd, ring.Items(gd), member, item, slot)
             before = index
@@ -285,7 +293,7 @@ def attempt(gd: GameData, tried: set, roll: Callable[[], int] = lambda: random.r
             text = f"{thief} lifts {coins} ceramic pieces from {npc}'s purse, all there was to take."
             lines.append(f"  coins: {level}d4+{level} (2 to 5 for each of {level} thief levels) = {coins}")
             lines.append("  " + text)
-            return Attempt(text, lines, key)
+            return Attempt(text, lines, key, lifted=True)
         else:
             list_no, item, before = random.choice(loot)
             data = it.item(item)
@@ -297,14 +305,16 @@ def attempt(gd: GameData, tried: set, roll: Callable[[], int] = lambda: random.r
                 return Attempt(f"{thief} can't take anything now.", lines)
             text = f"{thief} lifts {name} from {npc} unnoticed."
             special = _seen(data)
-            if special is not None:  # Kurzak's sword, Churrr's club, Maris's Mindshard
+            # (paid once a game: a weapon sold and lifted back again is worth nothing more)
+            paid = f"{gd.creature_name(0)}|paid|{special}" if special is not None else None
+            if special is not None and paid not in tried:  # Kurzak's sword, Churrr's club, Maris's Mindshard
                 # (what it is, Shadowseeker, Gutterknot or Mindshard, is for the inventory screen to show: the log says)
                 seen = f"{thief} lifts {special} from {npc} unnoticed."
                 reward = f"{thief} receives {SWORD_XP} experience points!"
                 lines += ["  " + text, "  " + reward]
-                return Attempt(f"{seen} {reward}", lines, xp_to=leader, xp=SWORD_XP)
+                return Attempt(f"{seen} {reward}", lines, xp_to=leader, xp=SWORD_XP, lifted=True, paid=paid)
         lines.append("  " + text)
-        return Attempt(text, lines)  # free to try again
+        return Attempt(text, lines, lifted=True)  # free to try again
     quiet = _skill(gd, leader, "move silently") or 0
     d100 = roll()
     lines.append(f"  {thief} moves silently to get away: d100 = {d100}, needs {quiet} or less -> "

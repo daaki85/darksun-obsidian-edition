@@ -41,6 +41,31 @@ class BuybackTests(unittest.TestCase):
         self.gd.creature_name = lambda c: "Kel"
         struct.pack_into("<HHH", m, HDR + buyback.SOLD_SEQ, 0, 0, 0)
 
+    def test_busy_before_anything_moved(self):
+        """The game busy with its lists as a sale is kept (ItemsBusy): nothing moved yet, the
+        pointer's thing still holding the item, and the sale kept in a later pass. (Its emptying
+        came first and the gate opened only after, which left the item in no list.)"""
+        from unittest import mock
+        from dsloader import itemgate
+        b = buyback.Buyback()
+        b.watch(self.gd, HDR)
+        struct.pack_into("<HHH", self.m, HDR + buyback.SOLD_SEQ, 1, SOLD, MERCHANT)
+        before = bytes(self.m[THINGS + SOLD * 3:THINGS + SOLD * 3 + 3])
+        with mock.patch.object(itemgate, "hold", side_effect=itemgate.ItemsBusy("busy")):
+            with self.assertRaises(itemgate.ItemsBusy):
+                b.watch(self.gd, HDR)
+        self.assertEqual(bytes(self.m[THINGS + SOLD * 3:THINGS + SOLD * 3 + 3]), before)
+        self.assertEqual(self.chain(BAG), [41])
+        b.watch(self.gd, HDR)  # (a later pass)
+        self.assertEqual(self.chain(BAG), [40, 41])
+
+    def test_gate_covers_the_pointers_thing(self):
+        """A write to the pointer's thing (523, past the 520 objects) is one to the item lists."""
+        from dsloader import itemgate
+        gate = itemgate.ItemGate(self.gd)
+        self.assertTrue(gate.covers(THINGS + SOLD * 3, 3))
+        self.assertFalse(gate.covers(THINGS + (ring.THING_COUNT + itemgate.THINGS_PAST) * 3, 3))
+
     def chain(self, thing):
         return [index for index, _ in ring.Items(self.gd).chain(thing)]
 

@@ -17,7 +17,8 @@ wins where they differ.
 `PLAYTEST_WORK` to a scratch folder; the game is `$PLAYTEST_WORK/inst`, from `setup_game.sh`).
 `start.sh` starts Xvfb, the Loader's patched game in DOSBox and the dice log
 (`$PLAYTEST_WORK/dice.txt`). Check the build under test is in place before trusting anything
-(`GPLDATA=../obsidian-edition/dos/GPLDATA.GFF python3 dec.py SCRIPT LO HI`). Start the watchdog
+(`GPLDATA=../obsidian-edition/dos/GPLDATA.GFF python3 dec.py SCRIPT LO HI`; for DSCLOG, new code's
+bytes in memory and each hooked vector its own handler). Start the watchdog
 (`guard_start.sh`, a Monitor on `guard.log` for STUCK/GONE). Keep a test log the user can read and
 send it at each milestone; copy it to `playtest/logs/` and commit.
 
@@ -28,7 +29,7 @@ from this branch's helper (`tools/build_mod.sh` there) or `$WORK/dsun.log` shows
 What stalls on it and not in DOSBox is a program fault to report.
 
 **Start from a save.** `sh loadsave.sh pens-after-arena` loads the slave pens after the arena
-(region 29h). Save at every milestone (Escape, S, click a slot at 120,46, type a name, SAVE at
+(region 29h); `saves/README.md` lists the others (`pens-after-scar`: Scar killed, the champions due; `pens-thornwall-rack`: by the weapon rack; `pens-new-chest`: a new game's pens, run `shut.py` after). Save at every milestone (Escape, S, click a slot at 120,46, type a name, SAVE at
 253,46: the game then quits) and add it to `playtest/saves/` with a README line.
 
 **The window must be 320x240** (`xdotool getwindowgeometry`): start.sh sets the Loader's
@@ -39,35 +40,50 @@ What stalls on it and not in DOSBox is a program fault to report.
 **Reading the game.** `state.py [FLAGS]` (fight, whose turn, region, leader, camera; a flag reads
 0 whenever the flags have no place in memory, as in the arena). The dice log's tail after every
 action (dialogue, narration, menus, "NO PATH FROM HERE"). `itemlists.py` (each member's worn +08h, held +0Ah and backpack +0Ch lists: the game's AC
-counts +08h only). The dice log with `--all` gives each AC's parts. `shot.sh OUT.png` is the 320x200
+counts +08h only). The dice log with `--all` gives each AC's parts. Sounds: `PT_AUDIO=FILE` before start.sh
+records DOSBox's output; `playsound.py N` plays one, `soundmatch.py` checks a clip was the one played. `shot.sh OUT.png` is the 320x200
 capture; window grabs (`import -window`) are 320x240, so y x 1.2.
 
 **Controls.**
 - Clicks: `click.py X Y [left|right|none]` (game pixels). Right-click cycles the pointer: the
-  plain arrow walks.
+  plain arrow walks. `pointer.py walk|look|attack` sets it from memory (right-clicks on bare floor).
+  The look pointer pauses the game: put the arrow back after a look or a rest.
 - Walking: `walkto.py X Y` (map units; screen = map - camera at DS:1178h). The view doesn't
   follow the leader: drag it with the middle button, `scroll.py DX DY` (dragging down shows the
   north). The tool keeps the pointer off the screen's edges, since an edge scrolls the view the
   other way, and releases every button afterwards. Click past a wall and the party finds its own
   way round.
 - Doors open with the **look** pointer (right-click to cycle to it, then click the door); then
-  click on the far side of the open door with the walk arrow to go through.
+  click on the far side of the open door with the walk arrow to go through. A look click on an
+  open door closes it: check a shot first.
 - Message boxes block clicks, keys and drags: click ON the box (`boxclick.sh`, 160,20).
 - A YES/NO question needs the N or Y key, and only while the dice log's last line is `    2. No`.
   The arena gate's "Do you wish to continue?" is **Y**; the Announcer's question is N.
 - Talk menus: click the line (the list scrolls, down arrow at 311,187); number keys don't work.
 - The combat log panel covers the bottom right: `panel.sh hide`.
+- Inventory: the backpack's cells are 18 apart (195,26, 195,44...). A right-click opens an item's
+  box beside its row. Click a scroll's spell icon with a slow press (point, mousedown, 0.15 s, mouseup).
+  `scrolltest.py` makes a Shinobi in memory and gives the defilers' scrolls.
 - E opens the Effects screen. In an END <NAME>'S MOVE menu, E is END TURN, and clicks there
   don't register.
 - Escape with nothing open brings EXIT: SAVE GAME?; press Escape only with a screen or menu up.
+- The arena's flags and numbers have no place in memory to set from outside (even mid-script):
+  to test a branch there, force it in a test build of the scripts, then put the module back.
 
 **Fights.** `fightout.sh` does a story fight the game's way: foes to 1 HP (not prisoners), Tab +
 Return on party turns, E for a member out of movement, and messages and level-ups (CHOOSE A SPELL,
 `levelup.sh`) cleared. Never `killfoes.py` in a fight a script waits on: the scripts miss the
-kills.
+kills. To pass one member's turn: click its figure (`memberpos.py N`) for its END menu, then E (E with
+no menu opens Effects, and closing that leaves the view at the map's corner: `scroll.py` back).
+`walktime.py` times a walk; `healparty.py` heals in memory (never save after). Check the dice
+log's "target AC" against `counted_ac` when foes hit too often (a vector clash once made it 255).
+A fight with the guards on purpose: `toalarm.sh`, then `restalarm.sh` (the pointer the eye first).
 
-**Git.** Other sessions push to `obsidian-edition` too: fetch and rebase onto
-`origin/obsidian-edition` before every push.
+**Git.** The repository is `daaki85/darksun-obsidian-edition` (was `milenkovicdarko`: if `git remote -v`
+still shows that, `git remote set-url origin https://github.com/daaki85/darksun-obsidian-edition.git`).
+Other sessions push to `obsidian-edition` too: fetch and rebase onto
+`origin/obsidian-edition` before every push. GitHub deletes the branch when its pull request
+merges: then make it again from `origin/main` and put any unmerged commits on top.
 
 **Shell.** Never `pkill -f` or `pgrep -f | kill` a pattern your own command line contains: it
 kills your shell. Kill by pid, in a command of its own. Long runs go in the background with a
@@ -75,13 +91,16 @@ Monitor, and every step gets a `timeout`.
 
 **The route so far.**
 1. New game: `start.sh`, `topartyfight.sh` (the opening, then clicks south from the gate until
-   the game brings the party into the arena). On 2026-11-02 the first bout never started from
-   there (the bone wall stops the party at 488,264): restart and try again before digging.
+   the game brings the party into the arena). The first bout sometimes never starts from there
+   (2026-11-02; the bone wall stops the party at 488,264): restart and try again before digging.
 2. The arena: `(sh arenawaves.sh && sh leavearena.sh)` fights the waves, answers N, drags the view
    north, clicks inside the wall (488,232), then the gate strip (488,184), and answers Y.
    Staying sends more fights.
 3. The pens: the party arrives at (1816,440) and Kurzak greets it (choose Goodbye). The cluebook
    (`Cluebook.PDF`, `pdftotext -layout`) gives the rest. Kurzak's door is the entryway south of
    his stop (99,33-34) into the hall; the corridor gate (81,20-21) is locked, so the way west is
-   the door at (113,90), the bottom corridor and its door (93,94) (`doorpath.py`). Then: #11, break into the stalker pen, kill
+   the door at (113,90) (locked once, 2026-11-04: check its look box), the bottom corridor and its door (93,94) (`doorpath.py`). Then: #11, break into the stalker pen, kill
    the mountain stalker, push the button on the north wall; #12 is the sewer grate (46,86).
+4. Back to the arena: rest at the fire room's ring (door 1848,856, the look pointer) two or three
+   times, then answer Kurzak's call at once (`toarena.sh`; `toalarm.sh` + `restalarm.sh` for the
+   alarm fight instead). After Scar's death in the arena the next visit is the champions' bout.

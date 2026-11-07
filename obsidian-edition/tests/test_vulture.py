@@ -106,9 +106,27 @@ class VultureTests(unittest.TestCase):
         struct.pack_into("<H", self.m, HDR + dicelog.TSR_HDR_OFF, 0)
         struct.pack_into("<H", self.m, HDR + dicelog.TSR_PICK_OFF, 0x600)
         set_clock(log, 5000)
+        struct.pack_into("<H", self.m, HDR + dicelog.TSR_PICK_SOUND, 141)
         log._answer_use()
         self.assertEqual(struct.unpack_from("<H", self.m, HDR + dicelog.TSR_USE_TAKEN)[0], 0)
+        self.assertEqual(struct.unpack_from("<H", self.m, HDR + dicelog.TSR_PICK_SOUND)[0], 0xFFFF)  # (no purse's sound)
         self.assertEqual(bytes(self.m[HDR + 0x600:HDR + 0x700]), bytes(0x100))
+
+    def test_pick_sound(self):
+        """A thing or the coins lifted: the purse's sound with the text (PICK_SOUND); a weapon
+        worth the quest's XP: no purse's sound (DSCLOG plays the quest's with the XP); nothing
+        lifted: none."""
+        from dsloader import pickpocket, sounds
+        log = self.log
+        def sound(result):
+            log._write_xp(result)
+            return struct.unpack_from("<HH", self.m, HDR + dicelog.TSR_XP_WHO)[0], \
+                struct.unpack_from("<H", self.m, HDR + dicelog.TSR_PICK_SOUND)[0]
+        self.assertEqual(sound(pickpocket.Attempt("Dag lifts Bag.", [], lifted=True)), (0xFFFF, sounds.PICK_SOUND))
+        self.assertEqual(sound(pickpocket.Attempt("Dag lifts a sword.", [], xp_to=0, xp=200, lifted=True)),
+                         (0, 0xFFFF))  # (DSCLOG's GIVE_XP: the quest's sound, with the XP)
+        self.assertEqual(sound(pickpocket.Attempt("Dag fumbles.", [])), (0xFFFF, 0xFFFF))
+        self.assertEqual(sound(None), (0xFFFF, 0xFFFF))
 
     def ask(self, item, rec):
         """DSCLOG asks about ITEM (REC; None: not an item) used on object 0x30, Dinos: the lines,

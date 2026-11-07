@@ -240,7 +240,7 @@ def monster_lines(gd, tables: MonsterTables, creature: int, ac: Optional[int]) -
     hp = struct.unpack_from("<h", rec, 0)[0]
     kind = struct.unpack_from("<H", rec, CREATURE_KIND)[0]
     max_hp = struct.unpack_from("<h", sheet, 0x08)[0]
-    thac0 = rec[0x1F]
+    thac0 = struct.unpack_from("b", rec, 0x1F)[0]  # (signed, as game.py reads it)
     mr = sheet[0x29]
     attacks = sheet[0x2A]
     undead = sheet[0x18] == UNDEAD_RACE

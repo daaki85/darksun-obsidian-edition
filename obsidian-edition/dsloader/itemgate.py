@@ -16,6 +16,7 @@ next. A write outside a pass (a tool's) has the lists looked at over the wait fi
 """
 
 import atexit
+import struct
 import time
 from typing import Callable, Optional
 
@@ -24,6 +25,7 @@ from . import game
 WAIT = 0.06  # seconds the game's lists must stay the same before the Loader changes them
 ITEM_RECORDS = 400  # the game's item table: records 0-399
 THING_COUNT = 0x208  # (ring.THING_COUNT: objects 0-519, 3 bytes each)
+THINGS_PAST = 4  # (... and the few past them: the pointer's, 523, that a sale empties: buyback.py)
 FREE_THINGS, THINGS_USED, FREE_ITEMS = 0x4D72, 0x4C48, 0x4D76  # (ring.py's)
 REGION = 0x117C  # (ring.REGION)
 MAX_CREATURES = 512  # (buyback.MAX_CREATURES)
@@ -59,19 +61,33 @@ class ItemGate:
         if any(addr < heads + at + 2 and end > heads + at for at in (FREE_ITEMS, FREE_THINGS, THINGS_USED)):
             return True
         things = (self.gd.load_seg + game.COMBATANTS_SEG) * 16 + game.COMBATANTS_OFF
-        if addr < things + THING_COUNT * 3 and end > things:
+        if addr < things + (THING_COUNT + THINGS_PAST) * 3 and end > things:
             return True
-        items = game.far_pointer(guest, ds, game.ITEMS_PTR)
-        if items and addr < items + ITEM_RECORDS * game.ITEM_SIZE and end > items:
-            return True
-        creatures = game.far_pointer(guest, ds, game.CREATURES_PTR)
-        if creatures and creatures <= addr < creatures + MAX_CREATURES * game.CREATURE_SIZE:
-            first = (addr - creatures) // game.CREATURE_SIZE
-            for index in range(first, (end - 1 - creatures) // game.CREATURE_SIZE + 1):
-                at = creatures + index * game.CREATURE_SIZE
-                if any(addr < at + o + 2 and end > at + o for o in game.CREATURE_ITEM_LISTS):
-                    return True
+        # (the tables where they are now, and where they were as the pass began: a pointer read
+        # before the game moved them gives a place the tables have left, covered, so open() finds
+        # the heads changed; a write from a pointer gone null lands in low memory, which
+        # GuestMemory refuses itself)
+        items_now = game.far_pointer(guest, ds, game.ITEMS_PTR)
+        creatures_now = game.far_pointer(guest, ds, game.CREATURES_PTR)
+        items_then, creatures_then = self._pointers_then()
+        for items in {items_now, items_then}:
+            if items and addr < items + ITEM_RECORDS * game.ITEM_SIZE and end > items:
+                return True
+        for creatures in {creatures_now, creatures_then}:
+            if creatures and creatures <= addr < creatures + MAX_CREATURES * game.CREATURE_SIZE:
+                first = (addr - creatures) // game.CREATURE_SIZE
+                for index in range(first, (end - 1 - creatures) // game.CREATURE_SIZE + 1):
+                    at = creatures + index * game.CREATURE_SIZE
+                    if any(addr < at + o + 2 and end > at + o for o in game.CREATURE_ITEM_LISTS):
+                        return True
         return False
+
+    def _pointers_then(self):
+        """The item and creature tables' places as the pass began (0 for none, or no pass)."""
+        if not self._heads or len(self._heads) < 16:
+            return 0, 0
+        off, seg, coff, cseg = struct.unpack_from("<HHHH", self._heads, 8)
+        return seg * 16 + off, cseg * 16 + coff
 
     def begin(self) -> None:
         """A pass begins: the lists as they are now, before it reads anything of them."""

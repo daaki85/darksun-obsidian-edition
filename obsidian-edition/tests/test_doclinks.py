@@ -13,6 +13,7 @@ REPO = os.path.dirname(HERE)
 
 def slug(heading: str) -> str:
     """GitHub's anchor for a heading."""
+    heading = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", heading)  # (a link: its text, as GitHub's anchor has it)
     text = re.sub(r"[*`_]", "", heading).strip().lower()
     return re.sub(r"[^\w\- ]", "", text).replace(" ", "-")
 

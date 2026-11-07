@@ -6,10 +6,12 @@ kill Legcrusher when he comes, with no alarm; but Kurzak goes on calling for him
 after, greets them as if he were still about ("I had to send Legcrusher after you", script
 141), even "I'm glad you listened to Legcrusher" when Legcrusher found them before he died, and
 asked "Who is the half-giant?" says he's the monster trainer, good with monsters. Dinos too warns
-them that Kurzak will send out Legcrusher (script 139). In the Loader's copy of the scripts each of those lines asks first whether Legcrusher is
-on the map (80h: how far he is from Kurzak, 999 once he's dead or gone, as the game's own scripts
-ask it of others: Dinos of Gilal): if he is, the game's words; if not, Kurzak's own about his
-missing monster trainer. Only the words change: what the scripts do next is the game's.
+them that Kurzak will send out Legcrusher (script 139). In the Loader's copy of the scripts each of those lines asks first whether
+Legcrusher is dead (DEAD, a flag the dice log sets once it sees him dead: watch): if not, the
+game's words; if so, Kurzak's own about his missing monster trainer. Only the words change: what
+the scripts do next is the game's. (Not whether he is on the map, as the game's scripts ask it of
+others: script 136 makes him only as Kurzak calls, after the call's first line, and he is off the
+map again once he has fetched the party, so that asked "gone" of a living Legcrusher.)
 
 As pensasks.py does, nothing of the game's scripts moves: the first of the lines becomes a jump
 (64h) to code put after the script's end (the rest of that command filler never reached), which
@@ -23,7 +25,7 @@ from .kalzith import SPEAKS, _Script, _lines
 from .pensasks import FILLER, GOTO, LONGEST
 
 KURZAK, LEGCRUSHER = 29, 326  # their objects (npcitems.py's)
-WHERE, GONE = 0x80, 999  # (two objects: how far apart, 999 when one isn't on the map)
+DEAD = 797  # the Loader's flag: Legcrusher seen dead (past Alagorn's menus, 794 at most, and Pehtucl's chest's 795-796)
 SAY = 0x4F
 CALL_SCRIPT, TALK_SCRIPT, DINOS_SCRIPT = 136, 141, 139  # his call to the arena; his talk; Dinos's
 
@@ -46,8 +48,18 @@ LINES: Tuple[Tuple[int, str, str], ...] = (
      "Kurzak's looking for you. You'd better go fight before he comes down here himself."),
 )
 
-# (as the game asks whether someone has died or gone: 80h from one who is there, Kurzak calling)
-HERE = ("expr", ["(", ("op", (WHERE, [("n", -KURZAK), ("n", -LEGCRUSHER)])), ")", "<", ("n", GONE)])
+# (Legcrusher alive: DEAD clear, read as the game's scripts read a flag)
+HERE = ("expr", ["(", ("var", 0x8D, DEAD), "==", ("n", 0), ")"])
+
+
+def watch(gd) -> bool:
+    """DEAD set once a creature named Legcrusher is seen dead (wherever he fell). True when it
+    was set now."""
+    from . import kalzith
+    if not gd.flags_ready() or gd.flag(DEAD) or not kalzith.dead(gd, "Legcrusher"):
+        return False
+    gd.set_flag(DEAD)
+    return True
 
 
 def _run(ops: Sequence[gpl.Op], first: str) -> Optional[Tuple[int, int]]:

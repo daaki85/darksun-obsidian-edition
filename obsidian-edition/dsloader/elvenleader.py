@@ -72,9 +72,7 @@ def with_cloak(script: bytes, field_types: bytes) -> bytes:
     out = bytearray(script) + added
     if len(out) > LONGEST:
         return script
-    jump = gpl.encode_op((GOTO, [("n", s.at["cloak"])]))
-    at = ops[click].at
-    out[at:at + len(jump)] = jump
+    gpl.put_jumps(out, script, field_types, [(ops[click].at, s.at["cloak"])])
     return bytes(out)
 
 

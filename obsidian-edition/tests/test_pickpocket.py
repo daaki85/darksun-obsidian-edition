@@ -77,12 +77,14 @@ class PickTests(unittest.TestCase):
         self.assertEqual(self.dag_items()[0], (CLUB, 14))
         self.assertIn("d100 = 11, needs 11 or less -> success", result.log[0])
         self.assertIsNone(result.key)
+        self.assertTrue(result.lifted)  # (the purse's sound)
         money = self.log.game.money()
         again = self.attempt(1)  # (Dag a 4th level thief: 3 for each level, as rolled here)
         self.assertEqual(again.text, "Dag lifts 12 ceramic pieces from Guard's purse, all there was to take.")
         self.assertIn("  coins: 4d4+4 (2 to 5 for each of 4 thief levels) = 12", again.log)
         self.assertEqual(self.log.game.money(), money + 12)
         self.assertIsNotNone(again.key)
+        self.assertTrue(again.lifted)
 
     def test_kurzaks_sword(self):
         """Kurzak's short sword lifted (whatever its weight): SWORD_XP to the thief, in the text
@@ -100,6 +102,48 @@ class PickTests(unittest.TestCase):
         self.assertEqual((result.xp_to, result.xp), (0, pickpocket.SWORD_XP))
         self.assertEqual(self.guard_items(), [CLUB, KEY, BOOTS])
         self.assertEqual(self.attempt(11).xp_to, None)  # (the bag's too heavy: just coins now)
+
+    def test_kurzaks_sword_in_his_hand(self):
+        """Kurzak's sword lifted from his held list (+0Ah), where people.py puts it as he comes on
+        the map, as from his pack: the XP given, and it gone from the list."""
+        m = self.m
+        guard = CREATURES + GUARD * game.CREATURE_SIZE
+        struct.pack_into("<hhh", m, guard + 8, game.NO_ITEM, 450, game.NO_ITEM)  # (the held list)
+        struct.pack_into("<H", m, ITEMS + CLUB * game.ITEM_SIZE + game.ITEM_TYPE, 45)
+        struct.pack_into("<H", m, ITEMS + SWORD * game.ITEM_SIZE + game.ITEM_TYPE, game.SHORT_SWORD_TYPE)
+        m[ITEMS + SWORD * game.ITEM_SIZE + game.ITEM_SLOT] = 3  # (the right hand)
+        typ = ITEM_TYPES + game.SHORT_SWORD_TYPE * game.ITEM_TYPE_SIZE
+        struct.pack_into("<H", m, typ + pickpocket.TYPE_WEIGHT, 30)
+        m[typ + pickpocket.TYPE_WORN] = 5
+        result = self.attempt(11)
+        self.assertEqual((result.xp_to, result.xp), (0, pickpocket.SWORD_XP))
+        self.assertNotIn(SWORD, self.guard_items())
+
+    def test_sword_xp_once(self):
+        """The XP for a weapon worth it is paid once a game: lifted again (sold, and its buyer's
+        pocket picked) it is only a thing lifted."""
+        m = self.m
+        struct.pack_into("<H", m, ITEMS + CLUB * game.ITEM_SIZE + game.ITEM_TYPE, 45)
+        struct.pack_into("<H", m, ITEMS + SWORD * game.ITEM_SIZE + game.ITEM_TYPE, game.SHORT_SWORD_TYPE)
+        typ = ITEM_TYPES + game.SHORT_SWORD_TYPE * game.ITEM_TYPE_SIZE
+        struct.pack_into("<H", m, typ + pickpocket.TYPE_WEIGHT, 30)
+        m[typ + pickpocket.TYPE_WORN] = 5
+        first = self.attempt(11)
+        self.assertEqual(first.xp, pickpocket.SWORD_XP)
+        self.assertIsNotNone(first.paid)
+        self.tried.add(first.paid)  # (as DiceLog remembers it)
+        self.setUp()  # (a fresh game's memory: the sword on the Guard again)
+        self.tried.add(first.paid)
+        m = self.m
+        struct.pack_into("<H", m, ITEMS + CLUB * game.ITEM_SIZE + game.ITEM_TYPE, 45)
+        struct.pack_into("<H", m, ITEMS + SWORD * game.ITEM_SIZE + game.ITEM_TYPE, game.SHORT_SWORD_TYPE)
+        typ = ITEM_TYPES + game.SHORT_SWORD_TYPE * game.ITEM_TYPE_SIZE
+        struct.pack_into("<H", m, typ + pickpocket.TYPE_WEIGHT, 30)
+        m[typ + pickpocket.TYPE_WORN] = 5
+        again = self.attempt(11)
+        self.assertEqual((again.xp_to, again.xp, again.paid), (None, 0, None))
+        self.assertTrue(again.lifted)
+        self.assertNotIn("experience", again.text)
 
     def test_churrrs_club(self):
         """Churrr's Gutterknot lifted (whatever its weight), by its name: SWORD_XP to the thief."""
@@ -127,6 +171,7 @@ class PickTests(unittest.TestCase):
 
     def test_caught(self):
         result = self.attempt(12, 17)  # pick pockets 11, move silently 16
+        self.assertFalse(result.lifted)
         self.assertEqual(result.text, "Guard catches Dag's hand! Guard will be too wary for Dag to try again.")
         self.assertEqual(self.guard_items(), [CLUB, SWORD, KEY, BOOTS])
         self.assertIn("moves silently to get away: d100 = 17, needs 16 or less -> failed", result.log[1])
@@ -138,6 +183,7 @@ class PickTests(unittest.TestCase):
         result = self.attempt(50, 16)
         self.assertEqual(result.text, "Dag fumbles Guard's pockets, but slips away unnoticed.")
         self.assertIsNone(result.key)
+        self.assertFalse(result.lifted)  # (no sound)
         self.assertEqual(self.attempt(5).text, "Dag lifts Bag from Guard unnoticed.")
 
     def test_not_a_thief(self):
@@ -249,6 +295,14 @@ class ListTests(unittest.TestCase):
         self.assertEqual(self.items_in(pickpocket.PACK_LIST), [(5, 14)])
         self.assertEqual(self.items_in(pickpocket.HOLD_LIST), [(6, game.MISSILE_SLOT)])
         self.assertTrue(pickpocket.place(self.gd, 0, 5, game.WEAPON_HANDS[0]))
+        self.assertEqual(self.items_in(pickpocket.HOLD_LIST), [(5, game.WEAPON_HANDS[0]), (6, game.MISSILE_SLOT)])
+        self.assertEqual(self.items_in(pickpocket.PACK_LIST), [])
+
+    def test_no_list_to_be_had(self):
+        """With the game's things all in use, no new list for the backpack: the sword stays where
+        it was, in his held list (it was once taken out first, and was then in no list at all)."""
+        struct.pack_into("<H", self.m, DS * 16 + ring.FREE_THINGS, ring.THING_COUNT)
+        self.assertFalse(pickpocket.place(self.gd, 0, 5, 14))
         self.assertEqual(self.items_in(pickpocket.HOLD_LIST), [(5, game.WEAPON_HANDS[0]), (6, game.MISSILE_SLOT)])
         self.assertEqual(self.items_in(pickpocket.PACK_LIST), [])
 

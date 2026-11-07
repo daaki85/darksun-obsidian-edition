@@ -254,6 +254,49 @@ class SpriteTests(unittest.TestCase):
         dresser.items = chunks
         return dresser, path
 
+    def test_never_past_the_copys_room(self):
+        """Pictures reckoning more room than the copy kept (written with the other LOOKS, the
+        switch changed and the Loader connected again): what is written fits the copy's own room
+        (gff.rooms), the plain picture if the dressed one wouldn't, and the chunks after it are
+        untouched."""
+        outfits = [({"right": (SWORD, METAL), "cloak": (65, 5), "boots": (68, 5)}, (57,))]
+        worn, sprites.worn = sprites.worn, lambda gd, member, chunks=None: outfits[0]
+        self.addCleanup(setattr, sprites, "worn", worn)
+        with tempfile.TemporaryDirectory() as d:
+            dresser, path = self.dressed_copy(d)
+            before = read(path)
+            walk, fight = sprites.picture_ids(300)
+            rooms = gff.rooms(before, "BMP ")
+            places = gff.index_places(before, "BMP ")
+            dressed = dresser.pics.build(300, False, *outfits[0])
+            plain = dresser.pics.build(300, False, {}, ())
+            self.assertGreater(len(dressed), len(plain))
+            # (the copy's room for the walking picture: just the plain one's)
+            real_rooms = gff.rooms
+            gff.rooms = lambda data, ctype: {**real_rooms(data, ctype), walk: len(plain)}
+            self.addCleanup(setattr, gff, "rooms", real_rooms)
+            dresser.pics.room = lambda obj, combat: 1 << 20  # (Pictures overstating it)
+            dresser.gd.entry(0, walk, 7)
+            dresser.update(True, 1.0)
+            after = read(path)
+            _, offset, length = gff.index_places(after, "BMP ")[walk]
+            self.assertLessEqual(length, len(plain))
+            end = places[walk][1] + rooms[walk]
+            self.assertEqual(after[offset + len(plain):end], before[offset + len(plain):end])
+
+    def test_rooms(self):
+        """gff.rooms: from each chunk's start to the next chunk's, of any type, or the index."""
+        from test_core import build_gff
+        data = build_gff({("BMP ", 1): b"a" * 10, ("OJFF", 5): b"b" * 4, ("BMP ", 2): b"c" * 7})
+        places = gff.index_places(data, "BMP ")
+        out = gff.rooms(data, "BMP ")
+        for cid in (1, 2):
+            self.assertGreaterEqual(out[cid], places[cid][2])
+            starts = [o for _, o, _ in list(gff.index_places(data, "BMP ").values()) + list(gff.index_places(data, "OJFF").values())]
+            later = [s for s in starts if s > places[cid][1]]
+            if later:
+                self.assertEqual(out[cid], min(later) - places[cid][1])
+
     def test_items_from_the_copy(self):
         """The Loader's own items (a Hayneedle, object 2590) are only in its copy of SEGOBJEX: the
         glow looks their objects and icons up there, the game's file's for the rest."""

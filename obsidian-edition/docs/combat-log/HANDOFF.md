@@ -67,7 +67,7 @@ Reuse `POPUP_MINIMAL`, `POPUP_SHORT` (panel default), `POPUP_DETAIL`. Strings fr
 | `L` | expand / collapse (**unverified that the game doesn't use L**) |
 | click a name | centre the view on that creature (stretch goal) |
 
-No mouse wheel: GOG's DOSBox 0.74 never passes it to the game (`DEVELOPMENT.md`, "Scrolling the map").
+No mouse wheel: GOG's DOSBox 0.74 never passes it to the game (`DEVELOPMENT-SCREENS.md`, "Scrolling the map"; DEVELOPMENT.md has since been split in four).
 
 ## 2. What already exists
 - Text into the game: `INT F1h` (`probe_turn`), `DiceLog._answer_turn`, `TSR_*` header fields, `HDR_SIG`.

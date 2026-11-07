@@ -85,7 +85,7 @@ A natural 20 on an attack always hits, and a natural 1 always misses, but
 that is all the d20 does: the game has no critical hits or fumbles. Its attack
 routine uses the d20 only for those two checks and the comparison with THAC0,
 and never passes it to the damage routine, so a hit on a 20 rolls the same
-damage as any other. A backstab is the only thing that multiplies damage.
+damage as any other. A backstab is the only thing that multiplies a blow's damage by a whole number (Enlarge scales it by 10% a caster level).
 
 ## The game's two weapons
 
@@ -207,7 +207,9 @@ rangers) can; against Dismissal the target adds its level and takes away the
 caster's; and against Scare, 6th level and up always save and everyone below
 can't. The Scare code looks meant to let some elf or half-elf priests save
 (AD&D gives elves, half-elves and priests a bonus), but it asks for a
-creature that is both an elf and a half-elf, so no one qualifies.
+creature that is both an elf and a half-elf, so no one qualifies (the
+patched game lets an elf or half-elf priest save:
+[The game's bugs, fixed](FEATURES.md#the-games-bugs-fixed)).
 
 Rules in the code that never come into play: Cloak of Bravery's +4 against
 fear applies only to a kind of spell that no spell in the game is marked as
@@ -225,7 +227,7 @@ of it as `Ring of Protection`).
 
 ## Monsters' defences
 
-From the game's damage code (DSUN.EXE); none of this is in the manual:
+From the game's damage and fighting code (DSUN.EXE); none of this is in the manual:
 
 - Every creature has a monster kind, and each kind a resistance class and a
   set of properties, in a table the game fills when it starts.
@@ -257,6 +259,15 @@ From the game's damage code (DSUN.EXE); none of this is in the manual:
   against acid](FEATURES.md#items-saving-against-acid)).
 - Undead (race 9 on the character sheet) take nothing from poison and
   draining, and mind-affecting spells, charms and holds don't work on them.
+- The game makes the gear of the people the party fights (Kurzak's armour and
+  sword, the Arena Guards' bows) in their backpacks, and puts it on only at
+  each one's first action in a fight: weapons in hand, armour worn. Until then
+  each is AC 10 with its armour unworn, so an opening blow (the game starts the
+  fight after it), a backstab, or a first round's blow on one who hasn't acted
+  meets no armour. Once on, a weapon in hand is fought with (in place of the
+  first two natural attacks) and worn armour counts. The game never puts on
+  rings, cloaks, belts, boots or amulets. The Loader puts all of it on as they
+  come on the map ([the fix](FEATURES.md#the-games-bugs-fixed)).
 
 The dice log notes a weapon hit that takes less than its roll, or nothing at
 all, with what the monster's defences say about it
@@ -386,7 +397,7 @@ effect line also says what the effect does.
 | Cause Disease | saps STR and HP; save | Diseased on a failed save: nothing is lowered; a STR something else lowered stays down until it is cured | the save and the effect |
 | Conjure Lesser Elemental (four) | 1 turn + 1 round a level | summons one, 10 + 1 a level rounds | the summoning |
 | Cure Blindness or Deafness, Cure Disease | cure them | end Blind, Diseased | the effect ending |
-| Dispel Magic | removes spells | each effect separately, d100 under 50 + 5 x (caster level − the effect's caster level); can't touch Biofeedback, Diseased, Feeblemind, Synaptic Static, Mind Bar, Poisoned, Graft Weapon, No spell use, Stuck | each d100 |
+| Dispel Magic | removes spells | each effect separately, d100 at or under 50 + 5 x the dispeller's level − 5 x the effect's caster level (the levels of every effect of that kind on the target, usually one); can't touch Biofeedback, Diseased, Feeblemind, Synaptic Static, Mind Bar, Poisoned, Graft Weapon, No spell use, Stuck | each d100 |
 | Magical Vestments | AC 5, 1 better per 3 levels above 5; 5 rounds a level | the same | the effect |
 | Negative Plane Protection | stops one draining attack by undead | the game's own never worked; the patched game: a save against paralysis/poison/death stops one, and the undead takes 2d6 | the save and the effect |
 | Prayer | +1 to hit and saves for friends, −1 for foes; 1 round a level | the same | the effect, and each save's ±1 |
@@ -439,7 +450,7 @@ their own:
   (` K'ratchek spends 18 PSP (52 -> 34)`).
 - **The power check.** Each use rolls a d20 that must come up at or under the
   power's score: the ability the power uses (CON for most psychometabolism and
-  psychokinesis, WIS for telepathy and Disintegrate, INT for Superior
+  psychokinesis, WIS for telepathy, Disintegrate and Enhanced Strength, INT for Superior
   Invisibility, Mind Bar and Synaptic Static) plus the power's adjustment, from
   −1 (Lend Health) to −7 (Mind Blank). A 1 always works and a 20 always fails;
   a failure says "psionic power check fails" and costs half the PSP. The game
@@ -505,7 +516,7 @@ also logs the power check and the PSP spent; a power with a save logs the save.
 | Superior Invisibility | unseen; ends if it attacks | Invisible; attacking or casting at an enemy ends it | the effect |
 | Ego Whip | stunned 1d4 rounds | can't attack or cast harmful spells for 1d4 rounds; psionic defence, no save | the defence and the effect |
 | Id Insinuation | paralyzed 1d4 rounds; combat only | Paralyzed 1d4 rounds; psionic defence, no save; combat only | the defence and the effect |
-| Psionic Blast | believes it has lost 80% of its HP | loses real HP down to a fifth of its maximum on a failed save vs paralysis/poison/death; psionic defence first; the Edition gives a party member standing at the fight's end the HP back | the defence, save, HP lost and given back |
+| Psionic Blast | believes it has lost 80% of its HP | loses real HP down to a fifth of its maximum on a failed save vs paralysis/poison/death; psionic defence first; the Edition gives a party member the HP back at the fight's end (one knocked out wakes), and until then a blow that would kill it knocks it out | the defence, save, HP lost and given back |
 | Mind Bar | 75% resistance to mind spells | the same | the resistance roll |
 | Synaptic Static | no one nearby can use psionics | its keeper can't; anyone else must beat the static (above) | the contest |
 | Tower of Iron Will, Intellect Fortress, Mental Barrier, Mind Blank, Thought Shield | defences against psionic attacks | defence modes (above) | the defence rolls |
@@ -699,6 +710,10 @@ Checked in play: the count going up once a trip, Scar's challenge on the fifth,
 and, with the count set to 5000, the 5000th trip's speech, the party sent back
 with no fight, and the final battle marked won. The 1000th trip is as its
 script reads; it wasn't played.
+
+With the Loader's new items on, the first trip after a party member kills Scar
+in the arena (the count at 5 or more) brings a speech of its own and six
+champions instead ([the champions' bout](FEATURES.md#the-champions-bout)).
 
 ## How fast the party walks
 

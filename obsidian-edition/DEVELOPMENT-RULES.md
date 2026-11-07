@@ -286,8 +286,8 @@ the game time in seconds over `YEAR`), put in the stored age as it happens, so
 a save holds the age and the scores' changes together. The years counted so
 far are in the game's own flags, so a save keeps them too (`counted_years`,
 `set_counted`: flag 798 set once the count has begun, 799 to 806 the number;
-the game's flags run to 755, the Loader's people 760-783, Alagorn's menus at
-most 784-797, and a save keeps 808). The dice log's `_natural_aging`, after
+every flag the Loader uses is in [The Loader's game
+flags](DEVELOPMENT.md#the-loaders-game-flags)). The dice log's `_natural_aging`, after
 `give_ages`, looks only when the look is steady (the same party as the last,
 the clock on by no more than 2 days, `NATURAL_JUMP`, and the count and the
 clock's years as the last look found them: a game being loaded may have its
@@ -1355,7 +1355,15 @@ next click on someone with that pointer (`PP_HAND`, 5ECD8h, the start of the
 routine that opens the box to talk, trade or look) asks the Loader as
 `PROBE_USE_ITEM` (`INT FDh`) does for an item used on the map: `USE_ITEM`
 FF00h and the thief, `USE_WHO` the thing. The Loader rolls and moves the item,
-and the helper shows the result instead of the box. The pointer turned to
+and the helper shows the result instead of the box. With no answer within
+`PICK_WAIT` (the Loader held up, or the game busy with its lists) the helper
+goes on as the game would and marks the request answered (`USE_REPLY` =
+`USE_SEQ`), so a late Loader does nothing (the same for spell arrows); its
+wait counts the BIOS's ticks, so it runs with interrupts on. A known limit: the
+Loader looks at the request once, at the start of its answer, so a timeout
+that falls while it is already moving the item (half a second or more inside
+one pick) lets the game's own handling run alongside; a claim word the Loader
+set before acting, which DSCLOG waited on, would close it. Not seen in play. The pointer turned to
 another mode puts the try away (`PROBE_POINTER`). Checked in the game: Daaki
 (fighter/preserver/thief) lifted a scroll from Kalzith; Caron (fighter/cleric)
 keeps Turn Undead; a pick put away by a right click leaves the next talk a

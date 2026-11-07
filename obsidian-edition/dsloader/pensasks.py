@@ -214,9 +214,8 @@ def with_asks(script: bytes, field_types: bytes, first: str, asks: Sequence[Ask]
     out = bytearray(script) + added
     if len(out) > LONGEST:
         return script
-    for at, to in [(where, s.at[label]) for where, label in jumps] + [(menu_op.at, s.at["menu"])]:
-        jump = gpl.encode_op((GOTO, [("n", to)]))
-        out[at:at + len(jump)] = jump
+    gpl.put_jumps(out, script, field_types,
+                  [(where, s.at[label]) for where, label in jumps] + [(menu_op.at, s.at["menu"])])
     return bytes(out)
 
 
@@ -253,8 +252,7 @@ def busy_once(script: bytes, field_types: bytes, original: Optional[bytes] = Non
     out = bytearray(script) + added
     if len(out) > LONGEST:
         return script
-    jump = gpl.encode_op((GOTO, [("n", len(script))]))
-    out[line.at:line.at + len(jump)] = jump
+    gpl.put_jumps(out, original, field_types, [(line.at, len(script))])
     return bytes(out)
 
 

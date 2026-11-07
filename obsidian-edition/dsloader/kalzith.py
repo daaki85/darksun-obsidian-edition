@@ -16,8 +16,8 @@ folder is never changed; DSCLOG has the game open the copies):
   * GPLDATA.GFF: his conversation, script SCRIPT, and in the pens' master script (MAS 41) the
     command that runs it when the party talks to him (6Eh, as for Dinos and the rest), with its
     entry in the game's table of entry points (GPLI, which saves go by); and his
-    portrait, PORTRAIT: the game's PORTRAIT_FROM with an X branded on the brow, so that no one
-    else's face is his (the Loader's dialogue tab shows it too).
+    portrait, PORTRAIT: his own face, painted for him (kalzithface.py; the Loader's dialogue
+    tab shows it too).
 
 The game reads the pens' people from RGN29 only the first time the party goes there (a save keeps
 them as they were), so he is in new games: those started after the Loader has these copies.
@@ -40,13 +40,12 @@ REGION, ETAB_ID, MASTER = 0x29, 41, 41  # the slave pens, its entity table and m
 SCRIPT = 218  # his conversation (the game's run to 217)
 BEGIN, START = 0x19, 1  # the byte every game script opens with, and where talking starts: after it
                          # (the game takes a talk command for offset 0 as none: clicking did nothing)
-PORTRAIT = 101  # his own: the game's portrait 61 with a slave's brand (101 is free in the game's)
-PORTRAIT_FROM = 61  # a gaunt, bald man (shown also for another of the game's people)
+PORTRAIT = 101  # his own face (kalzithface.py; 101 is free in the game's)
 PEN = (1580, 880)  # by the straw in a free pen of the middle column (its door on the left)
 ENTITY_FLAGS = 14  # as the pens' other people have
 OJFF_PICTURE = 0x0C  # an object's picture
 RDFF_SELF, RDFF_NAME, RDFF_NAME_SIZE = 0x10, 0x32, 8  # the record's own object number; its name
-RDFF_CLASS, RDFF_LEVEL = 0x6F, 0x72  # (as the arena Defiler's: a defiler, of level 9)
+RDFF_CLASS, RDFF_LEVEL = 0x6F, 0x72  # (as the arena Defiler's: a defiler, of level 5)
 DEFILER_CLASS, LEVEL = 18, 5
 
 # his state, in four of the game's global flags (bits; it uses 1-755, a save keeps 808): met
@@ -136,33 +135,10 @@ def object_chunks(chunks) -> Dict[Tuple[str, int], bytes]:
 # ---------------------------------------------------------------------------------------------
 # His portrait
 
-BRAND = (  # an X burned into the brow: "#" the groove, "o" its raised rim (lit from the upper right)
-    "#...#",
-    "o#.#o",
-    ".o#o.",
-    ".#o#.",
-    "#o.o#",
-)
-BRAND_AT = (12, 3)  # its top left, on the left of the brow's highlight
-BRAND_GROOVE, BRAND_RIM = 133, 152  # (portrait palette: a dark red-brown, a pale skin highlight)
-
-
-def portrait(rows):
-    """Portrait PORTRAIT_FROM's pixels (rows of palette indexes) with the brand."""
-    out = [list(r) for r in rows]
-    x0, y0 = BRAND_AT
-    for dy, line in enumerate(BRAND):
-        for dx, c in enumerate(line):
-            if c != ".":
-                out[y0 + dy][x0 + dx] = BRAND_GROOVE if c == "#" else BRAND_RIM
-    return out
-
-
-def portrait_chunk(chunks) -> Optional[bytes]:
-    """His portrait as a PORT chunk, from the game's own (None without it)."""
-    from . import icons
-    source = chunks.get(("PORT", PORTRAIT_FROM))
-    return icons.encode(portrait(icons.decode(source))) if source else None
+def portrait_chunk(chunks=None) -> bytes:
+    """His portrait as a PORT chunk: his own face (kalzithface.py)."""
+    from . import icons, kalzithface
+    return icons.encode([list(row) for row in kalzithface.FACE])
 
 
 # ---------------------------------------------------------------------------------------------
@@ -565,6 +541,12 @@ def with_talk(master: bytes, field_types: bytes = b"") -> bytes:
 
 ENTRY = struct.Struct("<HHH")  # GPLI: (entry number, place in the script, script), numbered from 0
 ENTRIES = ("GPLI", 1)
+# The Loader's own scripts (the game's run to 217): Kalzith's talk, Semyon's (semyon.SCRIPT), Alagorn's
+# copies of 212 (alagorn.COPY_OF), Pehtucl's chest (pehtuclchest.SCRIPT): one number each
+# (test_scriptnumbers)
+LOADER_SCRIPTS = {218: "Kalzith", 219: "Semyon", 220: "Alagorn: clothes", 221: "Alagorn: rings and others",
+                  222: "Alagorn: weapons", 223: "Pehtucl's chest"}
+ENTRY_SCRIPTS = (218, 219, 223)  # (those with an entry point, in its order: Kalzith, Semyon, the chest)
 
 
 def with_entry(entries: bytes, script: int = SCRIPT) -> bytes:
@@ -580,7 +562,7 @@ def with_entry(entries: bytes, script: int = SCRIPT) -> bytes:
 def script_chunks(gpldata: bytes, kalzith: bool = True, semyon: bool = True,
                   vulture: bool = True, ring: bool = True, arms: bool = True,
                   magic: bool = True, cloak: bool = False, tome: bool = False,
-                  pens: bool = True, hay: bool = False) -> Dict[Tuple[str, int], bytes]:
+                  pens: bool = True, hay: bool = False, champions: bool = False) -> Dict[Tuple[str, int], bytes]:
     """For the Loader's copy of GPLDATA: his conversation, and the master script running it (and
     Semyon's, semyon.py; Dinos's and the Trustee's questions, pensasks.py; Alagorn on Kreenfang
     and Shadowseeker, alagorn.py), each part only if switched on (the Options tab's new content)."""
@@ -589,20 +571,26 @@ def script_chunks(gpldata: bytes, kalzith: bool = True, semyon: bool = True,
         return {}
     field_types = next((v for k, v in chunks.items() if k[0] == "GPLX"), b"")[gpl.FIELD_TYPES_AT:]
     out: Dict[Tuple[str, int], bytes] = {}
+    # The scripts the pens' commands run (Kalzith's and Semyon's talks, the chest's use) and their
+    # entry points: all of them, in this order, whatever the switches. A save keeps each command by
+    # its entry's number, so the numbers mustn't move as the switches change (with them added only
+    # when on, a save made with Kalzith had the chest's command naming Semyon's talk once he was off)
+    from . import semyon as sm, pehtuclchest
+    out[("GPL ", SCRIPT)] = conversation()
+    out[("GPL ", sm.SCRIPT)] = sm.conversation(thornwall=magic)
+    out[("GPL ", pehtuclchest.SCRIPT)] = pehtuclchest.script()
+    if ENTRIES in chunks:
+        entries = chunks[ENTRIES]
+        for script in ENTRY_SCRIPTS:
+            entries = with_entry(entries, script)
+        out[ENTRIES] = entries
     if kalzith:
-        out[("GPL ", SCRIPT)] = conversation()
         out[("MAS ", MASTER)] = with_talk(chunks[("MAS ", MASTER)], field_types)
-        if ENTRIES in chunks:
-            out[ENTRIES] = with_entry(chunks[ENTRIES])
         face = portrait_chunk(chunks)
         if face and ("PORT", PORTRAIT) not in chunks:
             out[("PORT", PORTRAIT)] = face
     if semyon:  # Semyon, in the pens as he promises (semyon.py): his part after Kalzith's
-        from . import semyon as sm
-        out[("GPL ", sm.SCRIPT)] = sm.conversation()
         out[("MAS ", MASTER)] = sm.with_semyon(out.get(("MAS ", MASTER), chunks[("MAS ", MASTER)]), field_types)
-        if ENTRIES in chunks:
-            out[ENTRIES] = with_entry(out.get(ENTRIES, chunks[ENTRIES]), sm.SCRIPT)
         arena = ("GPL ", sm.ARENA_TALK)
         if arena in chunks:  # (his leaving after the fight marked)
             out[arena] = sm.with_exit(chunks[arena], field_types)
@@ -633,6 +621,11 @@ def script_chunks(gpldata: bytes, kalzith: bool = True, semyon: bool = True,
     out.update(scriptfixes.script_chunks(chunks, out))
     from . import kurzak  # Kurzak noticing Legcrusher is gone (kurzak.py): always
     out.update(kurzak.script_chunks(chunks, field_types, out))
+    if champions:  # the champions' bout after Scar's death (champions.py; their objects in the objects' copy)
+        from . import champions as ch
+        out.update(ch.script_chunks(chunks, field_types, out))
+    if pens:  # Pehtucl's chest, locked and trapped (pehtuclchest.py; the cloak in it, npcitems.py)
+        out.update(pehtuclchest.script_chunks(chunks, field_types, out))
     if ring:  # the XP for finding the arena's ring (ring.py), in the same script as Semyon's exit
         from . import ring as rg
         body = ("GPL ", rg.BODY_SCRIPT)
@@ -665,11 +658,11 @@ DEAD_STATUS = (4, 5)  # a creature's status: dying, dead (as stealth.py)
 
 def dead(gd, name: str, seen: int = CREATURES_SEEN) -> bool:
     """Whether a creature named NAME is among the first SEEN, dead (no hit points, or dying or
-    dead)."""
+    dead): not a party member (one the player named so)."""
     table = gd.creatures(seen)
     want = name.encode("ascii") + b"\0"
     size = game.CREATURE_SIZE
-    for at in range(0, len(table) - size + 1, size):
+    for at in range(game.PARTY_SIZE * size, len(table) - size + 1, size):
         rec = table[at:at + size]
         if rec[game.CREATURE_NAME:game.CREATURE_NAME + len(want)] != want:
             continue
@@ -788,8 +781,8 @@ def stock(gd, new_spells: bool) -> List[str]:
     his gear, worn (DRESSED); the game's flag STOCKED marks it done (a save keeps it, a new game
     starts without it). What was given, by name."""
     from . import npcitems
-    if gd.region() != REGION or gd.flag(STOCKED):
-        return []
+    if gd.region() != REGION or not gd.flags_ready() or gd.flag(STOCKED):
+        return []  # (STOCKED reads clear while the flags have no place: not given again then)
     # (found by name among the region's creatures: not among the first 256 objects, where he
     # is not - the pens' last, past the 256th)
     table = gd.creatures(CREATURES_SEEN)
@@ -856,11 +849,11 @@ def _write(source: str, dest: str, added) -> None:
 
 def write_scripts(source: str, dest: str, kalzith: bool = True, semyon: bool = True, vulture: bool = True,
                   ring: bool = True, arms: bool = True, magic: bool = True, cloak: bool = False,
-                  tome: bool = False, pens: bool = True, hay: bool = False) -> None:
+                  tome: bool = False, pens: bool = True, hay: bool = False, champions: bool = False) -> None:
     """The game's GPLDATA.GFF (SOURCE, only read) with Kalzith's conversation (and the rest of
     the new content switched on), to DEST."""
     _write(source, dest, lambda data: script_chunks(data, kalzith, semyon, vulture, ring, arms, magic, cloak, tome, pens,
-                                                             hay))
+                                                             hay, champions))
 
 
 def write_region(source: str, dest: str, gifts=()) -> None:

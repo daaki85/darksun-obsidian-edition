@@ -34,7 +34,7 @@
   (made when no dagger was an air cleric's; now every one is), on the Rogue Shaman; Mindshard, an obsidian short sword +1, on Maris,
   and Stillwater, a bone short sword +1, in the chest Chaya gives as her apology (psionicists',
   alone or with a cleric's); Linebreaker, a metal polearm +2, on the Troop Leader; Thornwall, a
-  bone polearm +1, on the slave pens' weapon rack, in place of one of its two plain ones.
+  bone polearm +1, on the slave pens' weapon rack once Semyon has told of it (semyon.ship).
 - Magic shields, which the game has two of (the Drake Shield +1 and El's Shield +2, both
   leather): Gutterward, a wooden shield +1, on a skeleton in the warrens (one of the region's
   three, given an object of its own: the skeletons of five regions share theirs); Ironbulwark, a
@@ -338,14 +338,14 @@ MAGIC: Tuple[Gift, ...] = (
     # Galefang on the Rogue Shaman (with his Shaman Followers), Mindshard on Maris (carrying psionic
     # scrolls), Stillwater in the chest Chaya gives as her apology (its object made by her script,
     # with the Sling +2, the Grapes of Bless and the obelisk's gem), Linebreaker on the Troop
-    # Leader, Thornwall on the slave pens' weapon rack, in place of one of its two bone polearms
-    # (the Lower Castle's rack is the same object: the pens' one gets its own)
+    # Leader; the slave pens' weapon rack an object of its own (the Lower Castle's rack is the same
+    # object), with its two bone polearms: Thornwall comes onto it only once Semyon has told of the
+    # shipment (semyon.ship), so the data gives it nothing (a save from before 2.13.5 has it there)
     Gift("Rogue Shaman", (weapon(*AIR_DAGGER_2),), (77,), 0x0F),
     Gift("Maris", (weapon(*OBSIDIAN_SHORT_SWORD_1),), (228,), 0x22),
     Gift("Chaya's chest", (weapon(*BONE_SHORT_SWORD_1),), (CHAYAS_CHEST,)),
     Gift("Troop Leader", (weapon(*POLEARM_2), BACK_GIRDLE_ITEM), (TROOP_LEADER,), 0x21),
-    Gift("Weapon Rack", (weapon(*BONE_POLEARM_1),), (WEAPON_RACK,), PENS, clone=(PENS_RACK, PENS_RACK_OBJECT),
-         instead=(BONE_POLEARM, 0)),
+    Gift("Weapon Rack", (), (WEAPON_RACK,), PENS, clone=(PENS_RACK, PENS_RACK_OBJECT)),
     # the magic shields: Gutterward on a skeleton in the warrens (its own object), Ironbulwark on
     # the Guardian of Balkazar's fortress
     Gift("Skeleton", (WOODEN_SHIELD_1,), (SKELETON,), WARRENS, clone=(WARRENS_SKELETON, 2585)),
@@ -457,10 +457,17 @@ def data_chunks(chunks, on: Dict[str, bool]) -> Dict[Tuple[str, int], bytes]:
         extra += npcitems.pens(magic_arms)
     try:
         out = object_chunks(chunks, gifts, extra)
-        if magic_arms:
-            out.update(arms.kreenfang_chunks(chunks))
     except (ValueError, struct.error):
         return {}
+    if on.get("pens_gear", True) is not False:  # (the poison needle of Pehtucl's chest: pehtuclchest.py)
+        from . import pehtuclchest
+        out.update(pehtuclchest.object_chunks(chunks, out))
+    if magic_arms:  # (Kreenfang the champions' Tohr-kreen's: the arena's dead body keeps its plain one)
+        from . import champions
+        try:
+            out.update(champions.object_chunks(chunks))
+        except (KeyError, ValueError, IndexError, struct.error):
+            out.update(arms.kreenfang_chunks(chunks))  # (no champions: Kreenfang on the body, as before)
     if on.get("world_magic", True) is not False:
         out[("RDFF", ELVEN_CLOAK_OBJECT)] = dataitems.item_object(ELVEN_CLOAK, header_numbers(chunks).get(65, 0))
         out[("RDFF", HAYNEEDLE_OBJECT)] = dataitems.item_object(

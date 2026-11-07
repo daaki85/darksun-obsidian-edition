@@ -8,7 +8,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import game, pickpocket, ring
+from dsloader import dicelog, game, pickpocket, ring
 from test_dicelog import CREATURES, DS, ITEM_TYPES, ITEMS, LOAD_SEG, NAMES, make_game
 
 THINGS = (LOAD_SEG + game.COMBATANTS_SEG) * 16 + game.COMBATANTS_OFF
@@ -180,7 +180,9 @@ class XpTests(unittest.TestCase):
         script = self._body()
         out = ring.with_xp(script)
         self.assertEqual(out[:ring.BODY_AT], script[:ring.BODY_AT])
-        self.assertEqual(out[ring.BODY_AT + 3:len(script)], script[ring.BODY_AT + 3:])
+        end = next(op.at for op in gpl.decode(script, b"") if op.at > ring.BODY_AT)  # (the command's rest filled)
+        self.assertEqual(out[ring.BODY_AT + 3:end], bytes((gpl.FILL,)) * (end - ring.BODY_AT - 3))
+        self.assertEqual(out[end:len(script)], script[end:])
         r = gpl._Reader(out, b"")
         r.i = ring.BODY_AT
         jump = gpl._op(r)
@@ -234,6 +236,20 @@ class FlagsTests(unittest.TestCase):
         struct.pack_into("<I", m, DS * 16 + game.NUMBERS_PTR, 0)
         log._update_panel(0.0)
         self.assertEqual(seen, [(None, False), (3, True), (3, True)])
+
+    def test_search_kept_when_giving_fails(self):
+        """An error while the ring is given (memory half made): the search stays to answer at a
+        later pass, not marked answered with no ring."""
+        from unittest import mock
+        log = arena()
+        m = log.guest.mem
+        log.tsr_hdr, log.arena_ring = log.tsr_hdr or 0x100, True
+        struct.pack_into("<H", m, log.tsr_hdr + dicelog.TSR_SWAP_SEQ, 1)
+        with mock.patch.object(ring, "give_ring", side_effect=struct.error("half made")):
+            with self.assertRaises(struct.error):
+                log._ring_search()
+        out = log._ring_search()
+        self.assertTrue(out and "ring" in out[0].lower(), out)
 
     def test_no_flags_in_memory(self):
         """With the flags' pointer null (the arena outside a script's run): no flag, and nothing

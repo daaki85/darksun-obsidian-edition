@@ -443,13 +443,60 @@ class UseItemTests(unittest.TestCase):
         self.taken = 1
         self.run_use(300, self.DONE)
 
+    def test_vga_busy(self):
+        """VGA_SAVE sets VGA_BUSY and VGA_RESTORE clears it, and the timer's LABEL_STAMP, which
+        keeps the registers in the same slots, tests it before its own VGA_SAVE (a strike in a
+        shadow pass once left the game's registers as the pass had them)."""
+        mu = self.mu
+        image = load_image()
+        found = re.search(re.escape(bytes.fromhex("2ec606")) + b"(..)" + re.escape(bytes.fromhex("01bac403")), image, re.S)
+        self.assertIsNotNone(found)
+        busy, save = struct.unpack("<H", found.group(1))[0], found.start()
+        clear = bytes.fromhex("2ec606") + struct.pack("<H", busy) + b"\x00\xc3"
+        restore_end = image.find(clear)
+        self.assertGreater(restore_end, save)
+        self.assertEqual(image.count(bytes.fromhex("2e803e") + struct.pack("<H", busy) + b"\x00\x75"), 1)
+        back = 0xE000
+
+        def run(at):
+            for name, value in dict(cs=TSR, ds=GAME_DS, ss=SS, esp=0x7FE).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.mem_write(SS * 16 + 0x7FE, struct.pack("<H", back))
+            mu.emu_start(TSR * 16 + at, TSR * 16 + back, count=1000)
+        run(save)
+        self.assertEqual(mu.mem_read(TSR * 16 + busy, 1)[0], 1)
+        restore = image.rfind(bytes.fromhex("bace03"), save, restore_end)  # (VGA_RESTORE's "mov dx,3CEh")
+        run(restore)
+        self.assertEqual(mu.mem_read(TSR * 16 + busy, 1)[0], 0)
+
+    def test_unanswered_marked(self):
+        """No answer in time (the Loader not reading, or held up by the game's busy item lists):
+        on as the game would go, and the request marked answered (USE_REPLY = USE_SEQ), so the
+        Loader doesn't pick the pocket later with no one seeing it."""
+        from unicorn import UC_HOOK_MEM_READ
+        mu = Uc(UC_ARCH_X86, UC_MODE_16)  # (no companion: nothing answers)
+        mu.mem_map(0, 0x100000)
+        image = load_image()
+        mu.mem_write(TSR * 16, image)
+        mu.mem_write(VEC_USE_ITEM * 4, struct.pack("<HH", struct.unpack("<HH", self.mu.mem_read(VEC_USE_ITEM * 4, 4))[0], TSR))
+        mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
+
+        def tick(uc, access, address, size, value, _):  # (the BIOS clock moves on at each look)
+            uc.mem_write(0x46C, struct.pack("<H", (struct.unpack("<H", uc.mem_read(0x46C, 2))[0] + 4) & 0xFFFF))
+        mu.hook_add(UC_HOOK_MEM_READ, tick, begin=0x46C, end=0x46D)
+        self.mu = mu
+        self.run_use(300, self.SOME)  # (the game's own way: the JNE's target)
+        seq, reply = struct.unpack("<HH", mu.mem_read(self.hdr + 180, 4))
+        self.assertEqual((seq, reply), (1, 1))
+
     def test_xp(self):
         """What was lifted is worth XP (Kurzak's sword): before its text, DSCLOG's GIVE_XP calls
-        the game's routine for a quest's XP (who, amount) and plays the quest's sound, once."""
+        the game's routine for a quest's XP (who, amount) and plays the quest's sound, once; with
+        no XP, the sound the Loader asked for (PICK_SOUND: the purse's), once."""
         mu, calls = self.mu, []
         image = load_image()
-        xp_who = image.find(HDR_SIG) + 262
-        give_xp = image.find(bytes.fromhex("2e833e") + struct.pack("<H", xp_who) + bytes.fromhex("ff74"))
+        pick_sound = image.find(HDR_SIG) + 1824
+        give_xp = image.find(bytes.fromhex("b8ffff2e8706") + struct.pack("<H", pick_sound))  # (its start)
         self.assertGreater(give_xp, 0)
         to_game = GAME_DS - 0x4356  # (the game's segments, from its DS)
         xp, sound = (to_game + 0x4251) * 16 + 0x005C, (to_game + 0x1A0A) * 16 + 0x0663
@@ -476,6 +523,283 @@ class UseItemTests(unittest.TestCase):
         self.assertEqual(struct.unpack("<H", mu.mem_read(self.hdr + 262, 2))[0], 0xFFFF)
         run()
         self.assertEqual(len(calls), 2)  # (asked for once)
+        # no XP: the purse's sound the Loader asked for (PICK_SOUND, +1824), once, and the quest's
+        # sound never with it
+        mu.mem_write(self.hdr + 1824, struct.pack("<H", 141))
+        run()
+        self.assertEqual(calls[2:], [("sound", (132,))])  # (the mod's 141, as the lent entry 132)
+        self.assertEqual(struct.unpack("<H", mu.mem_read(self.hdr + 1824, 2))[0], 0xFFFF)
+        run()
+        self.assertEqual(len(calls), 3)
+        # XP and a purse's sound both asked for: the quest's sound only, and the other forgotten
+        mu.mem_write(self.hdr + 262, struct.pack("<HH", 3, 200))
+        mu.mem_write(self.hdr + 1824, struct.pack("<H", 141))
+        run()
+        self.assertEqual(calls[3:], [("xp", (3, 200)), ("sound", (53,))])
+        self.assertEqual(struct.unpack("<H", mu.mem_read(self.hdr + 1824, 2))[0], 0xFFFF)
+
+
+    def test_sound_tick(self):
+        """SOUND_TICK, from the map's main loop: the sound the Loader asked for (SOUND_REQ, +1822:
+        the hiding's), by the game's routine, once; nothing with none asked for; registers kept.
+        The mod's own (140, 141) through the game's entries 131 and 132, lent for the call as
+        digital ones whose descriptor names the BVOC, and put back."""
+        mu, calls = self.mu, []
+        image = load_image()
+        req = image.find(HDR_SIG) + 1822
+        tick = image.find(bytes.fromhex("2e833e") + struct.pack("<H", req) + bytes.fromhex("ff74"))
+        self.assertGreater(tick, 0)
+        sound = (GAME_DS - 0x4356 + 0x1A0A) * 16 + 0x0663
+        mu.mem_write(sound, b"\xcb")  # retf
+
+        table = (GAME_DS - 0x4356 + 0x3A98) * 16 + 0x08A2  # (the game's sounds: 6 bytes each)
+        game_entries = bytes(range(1, 13))
+        mu.mem_write(table + 131 * 6, game_entries)
+        seen = []
+
+        def called(uc, address, size, _):
+            sp = uc.reg_read(r.UC_X86_REG_SS) * 16 + uc.reg_read(r.UC_X86_REG_SP)
+            n = struct.unpack("<H", uc.mem_read(sp + 4, 2))[0]
+            calls.append(n)
+            if n in (131, 132):  # (the entry lent: a digital one, its descriptor naming the BVOC)
+                entry = uc.mem_read(table + n * 6, 6)
+                off, seg = struct.unpack_from("<HH", entry, 2)
+                seen.append((entry[1], uc.mem_read(seg * 16 + off + 7, 1)[0]))
+        mu.hook_add(UC_HOOK_CODE, called, begin=sound, end=sound)
+        back = 0xE000
+
+        def run():
+            for name, value in dict(cs=TSR, ds=GAME_DS, ss=SS, esp=0x7FE, ebp=BP, eax=0x1111, ebx=0x2222,
+                                    ecx=0x3333, edx=0x4444, es=0x5555).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.mem_write(SS * 16 + 0x7FE, struct.pack("<H", back))
+            mu.emu_start(TSR * 16 + tick, TSR * 16 + back, count=10000)
+            self.assertEqual([mu.reg_read(getattr(r, "UC_X86_REG_" + x)) for x in ("IP", "SP", "AX", "BX", "CX", "DX", "ES")],
+                             [back, 0x800, 0x1111, 0x2222, 0x3333, 0x4444, 0x5555])
+        run()
+        self.assertEqual(calls, [])
+        mu.mem_write(self.hdr + 1822, struct.pack("<H", 140))
+        run()
+        self.assertEqual(calls, [131])  # (the mod's 140, played as the lent entry 131)
+        self.assertEqual(seen, [(5, 140)])
+        self.assertEqual(struct.unpack("<H", mu.mem_read(self.hdr + 1822, 2))[0], 0xFFFF)
+        self.assertEqual(bytes(mu.mem_read(table + 131 * 6, 12)), game_entries)  # (put back)
+        run()
+        self.assertEqual(calls, [131])  # (once)
+        for n, slot in ((141, 132), (53, 53)):  # (the next of the mod's; one of the game's as it is)
+            mu.mem_write(self.hdr + 1822, struct.pack("<H", n))
+            run()
+            self.assertEqual(calls[-1], slot)
+        self.assertEqual(seen, [(5, 140), (5, 141)])
+        self.assertEqual(bytes(mu.mem_read(table + 131 * 6, 12)), game_entries)
+
+    def test_ghost_dispatch(self):
+        """PROBE_GHOST, over the game's "call far 1A0A:3180" drawing a thing (DI): with GHOST_ON 0,
+        or a thing neither hidden (STEALTH, for 0-3) nor marked in GHOST_TAB, the game's routine is
+        called with the call's arguments as they were, and the way on is past the call's segment;
+        a see-through one isn't given to the game's routine (DSCLOG draws it: here a frame the
+        picture doesn't have, so nothing)."""
+        from dsloader import ghost
+        from dsloader.gamepatch import VEC_GHOST
+        mu, calls = self.mu, []
+        image = load_image()
+        install = bytes((0xB8, VEC_GHOST, 0x25, 0xBA))  # (the install's mov ax,25xxh / mov dx: once,
+        at = image.find(install)                         #   its vector no other probe's)
+        self.assertGreater(at, 0)
+        self.assertEqual(image.find(install, at + 1), -1)
+        handler = struct.unpack_from("<H", image, at + 4)[0]
+        draw = (GAME_DS - 0x4356 + 0x1A0A) * 16 + 0x3180
+        mu.mem_write(draw, b"\xcb")  # retf
+        seg = 0x8800
+        mu.mem_write(self.hdr + ghost.TSR_GHOST_SEG, struct.pack("<H", seg))
+        mu.mem_write(seg * 16 + ghost.GH_TAB, bytes(65))
+        picture = 0x8000
+        mu.mem_write(picture * 16, bytes(16))  # (a picture of no frames)
+
+        def called(uc, address, size, _):
+            sp = uc.reg_read(r.UC_X86_REG_SS) * 16 + uc.reg_read(r.UC_X86_REG_SP)
+            calls.append(struct.unpack("<7H", uc.mem_read(sp + 4, 14)))
+        mu.hook_add(UC_HOOK_CODE, called, begin=draw, end=draw)
+        site = 0x0600
+        args = (3, 100, 80, 1, 0, picture, 2)  # page, x, y, mirrored, the picture (offset, segment), frame
+
+        def run(thing):
+            sp = 0x7F0 - 14
+            mu.mem_write(SS * 16 + sp, struct.pack("<7H", *args))
+            sp -= 6
+            mu.mem_write(SS * 16 + sp, struct.pack("<3H", site + 2, CALLER, 0x0202))  # (the INT's frame)
+            for name, value in dict(cs=TSR, ds=GAME_DS, ss=SS, esp=sp, ebp=BP, edi=thing, esi=0x4444).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(TSR * 16 + handler, CALLER * 16 + site + 5, count=20000)
+            self.assertEqual((mu.reg_read(r.UC_X86_REG_SP), mu.reg_read(r.UC_X86_REG_DI), mu.reg_read(r.UC_X86_REG_SI)),
+                             (0x7F0 - 14, thing, 0x4444))
+        mu.mem_write(self.hdr + ghost.TSR_GHOST_ON, struct.pack("<H", 0))
+        mu.mem_write(self.hdr + 204, struct.pack("<H", 1))  # (party member 0 hidden)
+        run(0)
+        self.assertEqual(calls, [args])  # (GHOST_ON 0: as ever)
+        mu.mem_write(self.hdr + ghost.TSR_GHOST_ON, struct.pack("<H", 1))
+        for thing in (0xFFFF, 1, 5):  # (a wall; a party member not hidden; a creature not marked)
+            run(thing)
+        self.assertEqual(calls, [args] * 4)
+        run(0)  # (hidden: DSCLOG's)
+        mu.mem_write(seg * 16 + ghost.GH_TAB, bytes((0x20,)))  # (thing 5 invisible)
+        run(5)
+        self.assertEqual(len(calls), 4)
+
+    def test_solid_at_turn_end(self):
+        """A party member drawn see-through while hidden (PROBE_GHOST) and hidden no longer has the
+        next redrawing of what moved (PROBE_REDRAW_ALL) take in the whole view, once: so it is drawn
+        solid within the enemies' turns, when the main loop (VIEW_REDRAW) doesn't run."""
+        from dsloader import ghost
+        from dsloader.gamepatch import VEC_GHOST, VEC_REDRAW_ALL
+        mu = self.mu
+        image = load_image()
+
+        def handler(vector):
+            install = bytes((0xB8, vector, 0x25, 0xBA))
+            at = image.find(install)
+            self.assertGreater(at, 0)
+            return struct.unpack_from("<H", image, at + 4)[0]
+        ghost_at, redraw_at = handler(VEC_GHOST), handler(VEC_REDRAW_ALL)
+        seg, picture, site = 0x8800, 0x8000, 0x0600
+        mu.mem_write(seg * 16 + ghost.GH_TAB, bytes(65))
+        mu.mem_write(picture * 16, bytes(16))  # (a picture of no frames: nothing drawn)
+        mu.mem_write(self.hdr + ghost.TSR_GHOST_SEG, struct.pack("<H", seg))
+        mu.mem_write(self.hdr + ghost.TSR_GHOST_ON, struct.pack("<H", 1))
+
+        def run(at, sp, bp=BP, thing=0):
+            sp -= 6
+            mu.mem_write(SS * 16 + sp, struct.pack("<3H", site + 2, CALLER, 0x0202))  # (the INT's frame)
+            for name, value in dict(cs=TSR, ds=GAME_DS, ss=SS, esp=sp, ebp=bp, edi=thing).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(TSR * 16 + at, CALLER * 16 + site + 2, count=20000)
+
+        def drawn(hidden):
+            mu.mem_write(self.hdr + 204, struct.pack("<H", hidden))
+            sp = 0x7F0 - 14
+            mu.mem_write(SS * 16 + sp, struct.pack("<7H", 3, 100, 80, 0, 0, picture, 2))
+            run(ghost_at, sp)
+
+        def redrawn(hidden):  # the rectangle round what moved: x0, x1, y0, y1 at [BP-8] down
+            mu.mem_write(self.hdr + 204, struct.pack("<H", hidden))
+            mu.mem_write(SS * 16 + BP - 0x0E, struct.pack("<4H", 120, 60, 151, 40))  # y1, y0, x1, x0
+            mu.mem_write(SS * 16 + BP + 6, struct.pack("<2H", 0, 0))
+            run(redraw_at, BP - 0x20)
+            y1, y0, x1, x0 = struct.unpack("<4H", mu.mem_read(SS * 16 + BP - 0x0E, 8))
+            return x0, x1, y0, y1
+        moved, whole = (40, 151, 60, 120), (0, 0x13F, 0, 0xC7)
+        self.assertEqual(redrawn(0), moved)  # (no one drawn see-through)
+        drawn(1)  # (party member 0 hidden: see-through)
+        self.assertEqual(redrawn(1), moved)  # (still hidden)
+        self.assertEqual(redrawn(0), whole)  # (the turn passed)
+        self.assertEqual(redrawn(0), moved)  # (once)
+        drawn(1)
+        self.assertEqual(redrawn(2), whole)  # (another hidden: still member 0's)
+
+    def test_whole_view_when_the_table_changes(self):
+        """The Loader having written GHOST_TAB anew (GH_CHANGED: an invisibility ended in the
+        enemies' turns), the next redrawing of what moved takes in the whole view, once, and
+        clears the mark; with see-through figures off, nothing."""
+        from dsloader import ghost
+        from dsloader.gamepatch import VEC_REDRAW_ALL
+        mu = self.mu
+        image = load_image()
+        at = image.find(bytes((0xB8, VEC_REDRAW_ALL, 0x25, 0xBA)))
+        self.assertGreater(at, 0)
+        redraw_at = struct.unpack_from("<H", image, at + 4)[0]
+        seg, site = 0x8800, 0x0600
+        mu.mem_write(seg * 16 + ghost.GH_TAB, bytes(80))
+        mu.mem_write(self.hdr + ghost.TSR_GHOST_SEG, struct.pack("<H", seg))
+        mu.mem_write(self.hdr + 204, struct.pack("<H", 0))  # (no one hidden)
+
+        def redrawn():
+            sp = BP - 0x20 - 6
+            mu.mem_write(SS * 16 + sp, struct.pack("<3H", site + 2, CALLER, 0x0202))
+            mu.mem_write(SS * 16 + BP - 0x0E, struct.pack("<4H", 120, 60, 151, 40))
+            mu.mem_write(SS * 16 + BP + 6, struct.pack("<2H", 0, 0))
+            for name, value in dict(cs=TSR, ds=GAME_DS, ss=SS, esp=sp, ebp=BP, edi=0).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(TSR * 16 + redraw_at, CALLER * 16 + site + 2, count=20000)
+            y1, y0, x1, x0 = struct.unpack("<4H", mu.mem_read(SS * 16 + BP - 0x0E, 8))
+            return x0, x1, y0, y1
+        moved, whole = (40, 151, 60, 120), (0, 0x13F, 0, 0xC7)
+        mu.mem_write(self.hdr + ghost.TSR_GHOST_ON, struct.pack("<H", 1))
+        self.assertEqual(redrawn(), moved)
+        mu.mem_write(seg * 16 + ghost.GH_CHANGED, b"\x01")
+        self.assertEqual(redrawn(), whole)
+        self.assertEqual(mu.mem_read(seg * 16 + ghost.GH_CHANGED, 1), b"\x00")
+        self.assertEqual(redrawn(), moved)  # (once)
+        mu.mem_write(self.hdr + ghost.TSR_GHOST_ON, struct.pack("<H", 0))
+        mu.mem_write(seg * 16 + ghost.GH_CHANGED, b"\x01")
+        self.assertEqual(redrawn(), moved)  # (see-through figures off)
+
+    def test_ghost_draw_many_runs(self):
+        """GHOST_DRAW over a frame of more runs than its spans hold (300: two one-pixel runs on each
+        of 150 rows; some of the game's pictures have up to 563): the figure drawn as far as they
+        go (BLEND's colour, 0 here, over the page), and nothing written past GHOST's block."""
+        from dsloader import ghost
+        from dsloader.gamepatch import VEC_GHOST
+        mu = self.mu
+        image = load_image()
+        at = image.find(bytes((0xB8, VEC_GHOST, 0x25, 0xBA)))
+        handler = struct.unpack_from("<H", image, at + 4)[0]
+        seg = 0x8800
+        end = ghost.GH_TAB + 80 + 4096 + 192 * 8  # (GH_SPANS past GH_PIX's 4096, then 192 spans)
+        mu.mem_write(seg * 16, bytes(end))  # (BLEND all 0)
+        mu.mem_write(seg * 16 + end, b"\xAA" * 4096)
+        mu.mem_write(self.hdr + ghost.TSR_GHOST_SEG, struct.pack("<H", seg))
+        mu.mem_write(self.hdr + ghost.TSR_GHOST_ON, struct.pack("<H", 1))
+        mu.mem_write(self.hdr + 204, struct.pack("<H", 1))  # (party member 0 hidden)
+        # page 3: the whole screen at A000h (the page table at the load segment + 980h)
+        pages = ((GAME_DS - 0x4356 + 0x0980) & 0xFFFF) * 16  # (segments wrap, as in real mode)
+        for field, value in ((4, 0xA000), (0x404, 0), (0x604, 0), (0x804, 319), (0xA04, 199), (0xC04, 0)):
+            mu.mem_write(pages + 6 + field, struct.pack("<H", value))
+        mu.mem_write(0xA0000, b"\x55" * 16000)
+        rows = b"".join(bytes((y, 10, 0, 1, 2, 0, 7, 30, 0x80, 1, 2, 0, 7)) for y in range(150))
+        frame = struct.pack("<HH", 40, 150) + rows + b"\xFF"
+        picture = 0x8000
+        mu.mem_write(picture * 16, struct.pack("<HHHI", 0, 0, 1, 10) + frame)
+        sp = 0x7F0 - 14
+        mu.mem_write(SS * 16 + sp, struct.pack("<7H", 3, 100, 10, 0, 0, picture, 0))
+        sp -= 6
+        mu.mem_write(SS * 16 + sp, struct.pack("<3H", 0x602, CALLER, 0x0202))
+        for name, value in dict(cs=TSR, ds=GAME_DS, ss=SS, esp=sp, ebp=BP, edi=0, esi=0x4444).items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+        mu.emu_start(TSR * 16 + handler, CALLER * 16 + 0x605, count=200000)
+        self.assertEqual((mu.reg_read(r.UC_X86_REG_SP), mu.reg_read(r.UC_X86_REG_SI)), (0x7F0 - 14, 0x4444))
+        self.assertEqual(bytes(mu.mem_read(seg * 16 + end, 4096)), b"\xAA" * 4096)
+        screen = bytes(mu.mem_read(0xA0000, 16000))
+        self.assertEqual(screen[10 * 80 + 110 // 4], 0)  # (the first row's first pixel: drawn)
+        self.assertEqual(screen[10 * 80 + 120 // 4], 0x55)  # (between its two runs: not)
+
+    def test_ghost_draw_no_picture(self):
+        """A see-through figure whose picture isn't loaded yet (its far pointer 0:0): nothing
+        drawn, as the game's own routine skips it (GHOST_DRAW read the interrupt table as one)."""
+        from dsloader import ghost
+        from dsloader.gamepatch import VEC_GHOST
+        mu = self.mu
+        image = load_image()
+        at = image.find(bytes((0xB8, VEC_GHOST, 0x25, 0xBA)))
+        handler = struct.unpack_from("<H", image, at + 4)[0]
+        seg = 0x8800
+        mu.mem_write(seg * 16, bytes(ghost.GH_TAB + 80))
+        mu.mem_write(self.hdr + ghost.TSR_GHOST_SEG, struct.pack("<H", seg))
+        mu.mem_write(self.hdr + ghost.TSR_GHOST_ON, struct.pack("<H", 1))
+        mu.mem_write(self.hdr + 204, struct.pack("<H", 1))  # (party member 0 hidden)
+        pages = ((GAME_DS - 0x4356 + 0x0980) & 0xFFFF) * 16
+        for field, value in ((4, 0xA000), (0x404, 0), (0x604, 0), (0x804, 319), (0xA04, 199), (0xC04, 0)):
+            mu.mem_write(pages + 6 + field, struct.pack("<H", value))
+        mu.mem_write(0xA0000, b"\x55" * 16000)
+        mu.mem_write(0, bytes(range(256)) * 4)  # (the interrupt table: what a 0:0 picture would read)
+        sp = 0x7F0 - 14
+        mu.mem_write(SS * 16 + sp, struct.pack("<5HIH", 3, 100, 10, 0, 0, 0, 0)[:14])
+        sp -= 6
+        mu.mem_write(SS * 16 + sp, struct.pack("<3H", 0x602, CALLER, 0x0202))
+        for name, value in dict(cs=TSR, ds=GAME_DS, ss=SS, esp=sp, ebp=BP, edi=0, esi=0x4444).items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+        mu.emu_start(TSR * 16 + handler, CALLER * 16 + 0x605, count=200000)
+        self.assertEqual((mu.reg_read(r.UC_X86_REG_SP), mu.reg_read(r.UC_X86_REG_SI)), (0x7F0 - 14, 0x4444))
+        self.assertEqual(bytes(mu.mem_read(0xA0000, 16000)), b"\x55" * 16000)
 
 
 @unittest.skipIf(Uc is None, "unicorn is not installed")
@@ -665,6 +989,39 @@ class WornTests(unittest.TestCase):
                 self.assertEqual(self.gladiator(0x40), (not want_bonus, False))
         self.item(6, 9)
         self.assertEqual(self.gladiator(0x01), (True, False))  # not a gladiator: no bonus, armour or not
+
+    def test_blast_knocks_out(self):
+        """The damage routine's death test (612E:194Bh, "cmp ax,dx" then jg): its own flags,
+        except for a party member (DI 0-3) with Psionic Blast's hit points still in BLAST_HP and
+        damage under 10000, whose flags say "greater" (knocked out, not killed)."""
+        mu, image = self.mu, load_image()
+        hdr = TSR * 16 + struct.unpack_from("<H", image, 20)[0]
+        def greater(di, ax, dx, kept):
+            mu.mem_write(hdr + 1814, struct.pack("<4h", 0, kept, 0, 0))
+            self.run_at(0x194B, edi=di, eax=ax, edx=dx, ebx=0x1234)
+            f = mu.reg_read(r.UC_X86_REG_EFLAGS)
+            zf, sf, of = bool(f & 0x40), bool(f & 0x80), bool(f & 0x800)
+            self.assertEqual((mu.reg_read(r.UC_X86_REG_AX), mu.reg_read(r.UC_X86_REG_DX), mu.reg_read(r.UC_X86_REG_BX)),
+                             (ax, dx, 0x1234))
+            return not zf and sf == of
+        self.assertFalse(greater(1, 20, 25, 0))   # (nothing kept: killed, as the game)
+        self.assertTrue(greater(1, 20, 25, 7))    # (kept: knocked out)
+        self.assertTrue(greater(1, 30, 25, 0))    # (not enough to kill: the game's own)
+        self.assertFalse(greater(1, 20, 10000, 7))  # (Disintegrate still kills)
+        self.assertFalse(greater(5, 20, 25, 7))   # (not a party member)
+
+    def test_champion_body(self):
+        """Where the game makes a Dead Body (612E:2752h, its INT returning to 2754h): AX the body's
+        object, 1101, or the champions' Tohr-kreen's own (2666) for the dying creature's map object
+        ([BP+6], its object at DS:66AEh + 32 each) when that is the Tohr-kreen champion (2660)."""
+        mu = self.mu
+        for thing, obj, want in ((7, 292, 1101), (7, 2660, 2666), (40, -2660, 2666), (40, 2661, 1101)):
+            with self.subTest(thing=thing, obj=obj):
+                mu.mem_write(SS * 16 + BP + 6, struct.pack("<H", thing))
+                mu.mem_write(GAME_DS * 16 + 0x66AE + thing * 32, struct.pack("<h", obj))
+                self.run_at(0x2752, eax=0x1234, ebx=0x5555, edx=0x6666)
+                self.assertEqual((mu.reg_read(r.UC_X86_REG_AX), mu.reg_read(r.UC_X86_REG_BX), mu.reg_read(r.UC_X86_REG_DX)),
+                                 (want, 0x5555, 0x6666))
 
     def test_psionic_blast_kept(self):
         """Psionic Blast's "or byte [si],1" (80F5:0B67h): the OR done, and the loss ([BP-18h]) added

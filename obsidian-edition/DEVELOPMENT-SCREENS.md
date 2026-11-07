@@ -33,6 +33,19 @@
 The game keeps the clicked reply's row at DS:1F0A while it flashes it; the log
 reads the reply's text from the game's own list.
 
+**Learned speakers' names.** The dialogue window gets only a portrait number.
+When the game runs a script on someone (clicked, or coming up to the party) it
+notes who; the log reads that as a conversation opens. A conversation showing
+one face, started on a named creature outside the party, is that creature
+talking, and the portrait takes its name (`settings.json`'s
+`speakers_learned`): portrait 5 became `Kurzak` ("Legcrusher! Get
+gladiators!"), portrait 100 `Legcrusher`. A speech with no replies teaches a
+name only when its speaker stands within 4 squares of the party
+(`GameData.talk_target_distance`: Kurzak's call to the arena is started on no
+one, and once taught "Trustee"). Several faces taking turns teach nothing.
+Portrait 119's `The Announcer` isn't replaced by a learned name (he calls out
+mid-fight, when the game's last script ran on a fighter).
+
 ## Searching junk, hay and wardrobes
 
 ([In How the game
@@ -72,7 +85,7 @@ compares the random command with a field of the character acting (fields 23 to
 28, STR to CHA), as Chahl's `random(19) <= CHA` when asked about his scars
 (script 181), the chains a strong character breaks (76) or a secret door an
 intelligent one spots (69, `INT - 10`). `dsloader/scriptchecks.py` finds every
-such condition in the Loader's copy of GPLDATA.GFF (13 of them) by the position
+such condition in the Loader's copy of GPLDATA.GFF (15 of them; 14 in the game's own) by the position
 DSCLOG records past its random command (as the searches are told apart; a
 position two scripts share is left out), and the dice log evaluates the
 condition with the roll and the score of whoever's turn it is (outside a fight
@@ -121,8 +134,7 @@ dice log running:
   frame where upper memory would be, and with the helper loaded `mem` shows 1
   KB of upper memory free. With `ems=false` (the launcher's own config, after
   GOG's) it shows 65 KB (largest block 64 KB), conventional memory unchanged
-  at 632 KB, and the panel has its room (see
-  [Room in the helper](DEVELOPMENT.md#room-in-the-helper)). The game's memory layer (VMEM)
+  at 632 KB ([Room in the helper](DEVELOPMENT.md#room-in-the-helper)). The game's memory layer (VMEM)
   takes EMS, XMS or extended memory, whichever there is: without EMS it loaded
   a save, walked the pens, opened a conversation and a shop, and played the
   arena's opening fight to the end without a fault (a check, not a whole
@@ -132,9 +144,9 @@ dice log running:
 
 - **Where it lives.** The Loader draws the panel's picture (`combatlog.py`:
   180 × 78 palette indices in the area's own colours, matched to the palette
-  DSCLOG last read) into an upper memory block DSCLOG takes for it at install
-  (`panel_seg`, header `+328`); the dice log's ring has a block of its own
-  there too. With EMS on there is no such block and no panel.
+  DSCLOG last read) into the helper's far block, beside the dice log's ring
+  (`FAR_PANEL`; its segment `panel_seg`, header `+328`: [Room in the
+  helper](DEVELOPMENT.md#room-in-the-helper)).
 - **Putting it on screen.** DSCLOG copies the picture into the screen on show,
   a plane at a time (`PANEL_BLIT`, its height kept on the screen; the Loader
   stores each row as its four planes' bytes in turn, `combatlog.planar`, so a
@@ -308,7 +320,8 @@ dice log running:
   game's timer: `PROBE_TICK` (about 120 strikes a second) calls `LABEL_STAMP`
   every other strike. It writes only (no reads of video memory, so the VGA's
   latches are left alone), keeps the VGA's registers as the shadows do
-  (`VGA_SAVE`), finds the screen on show from where the VGA starts it (CRTC
+  (`VGA_SAVE`; it waits for its next strike while another pass has them kept,
+  `VGA_BUSY`, as the slots are shared), finds the screen on show from where the VGA starts it (CRTC
   0Ch, the high byte the game's page flip sets: A000h or A400h), stays off the combat log's panel, and
   does nothing while the game's busy flag for it is up or off the map. It
   also places a new label (`LABEL_WHERE`: centred over the thing's feet, its
@@ -359,7 +372,7 @@ screen pages as it redraws, and its flip (14414h) waits for the next vertical
 retrace each time; `PROBE_FLIP` (INT 8Bh in place of the flip's call to the
 wait, 1445Fh) skips the wait while a full screen is up (`SCREEN_IS` 2: the
 inventory, View Character, USE, a talk) and waits as the game does on the map,
-whose pace may hang on it. Measured with the user's save (Zulak's inventory,
+whose pace may hang on it. Measured with a save (Zulak's inventory,
 20,000 cycles, where the game last drew the pointer, `DS:A137h`): 56-103 ms
 (85 on average) before, 42-45 putting an item down and 63-67 picking one up
 after; skipping every retrace wait saves no more, and the rest is the game's
@@ -675,6 +688,22 @@ A New character counts as Okay wherever the game tests for Okay: a jump each
 ## Game speed
 
 ([In the features page](FEATURES.md#game-speed).)
+
+Measured in the slave pens at 20,000 cycles with everything on, walking (the
+leader's speed in pixels a second of the game's time):
+
+| | The leader's speed |
+|---|---|
+| The whole party in view, steady pace off | 152 to 175 |
+| The whole party in view, steady pace on | 249 to 278 |
+| The leader alone | about 220 to 260 |
+
+Frames stop being skipped from about 30,000 cycles. With the whole party walking
+in the slave pens, steady pace shows about 27 pictures a second, where the game
+shows about 37 without it (70 when no frame is late; counted by the game's page
+flips). The Loader's two speeds run DOSBox's dynamic core (GOG's settings run
+this game on the slower normal core): the same cycles do more, at about a third
+less of the computer's time.
 
 **Steady pace** (`gamepatch.STEADY_PACE`, DSCLOG's STEADY PACE): the map's
 frame (DSUN.EXE 1E8E4h) calls the step for everything (`call far 1DF3:26DC`,

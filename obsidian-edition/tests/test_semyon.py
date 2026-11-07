@@ -32,8 +32,16 @@ class AskedOnceTests(unittest.TestCase):
         replies = menu_replies(semyon.conversation())
         self.assertEqual(replies["Why did they tie you up out there?"],
                          ("expr", ["(", ("var", 0x8E, 2), "==", ("n", 0), ")"]))
-        self.assertEqual(replies["Tell me about the Alliance."][1][1], ("var", 0x8E, 5))
+        self.assertEqual(replies["Tell me about the Alliance."][1][1], ("var", 0x8E, 7))
+        self.assertEqual(replies["Seen anything useful?"][1][1], ("var", 0x8E, 4))
         self.assertEqual(replies["Farewell."], ("n", 1))
+        plain = menu_replies(semyon.conversation(thornwall=False))  # (no Thornwall: no tip)
+        self.assertNotIn("Seen anything useful?", plain)
+        self.assertNotIn("We found what was in that crate.", plain)
+        self.assertIn("Where was that gem again?", plain)
+        found = replies["We found what was in that crate."][1]  # (only once told, and found)
+        self.assertEqual(found[:13], ["(", "(", ("var", 0x8D, semyon.TOLD), "==", ("n", 1), ")", "and",
+                                      "(", ("var", 0x8D, semyon.FOUND), "==", ("n", 1), ")", ")"])
 
     def test_kalzith(self):
         replies = menu_replies(kalzith.conversation())
@@ -122,7 +130,9 @@ class SemyonTests(unittest.TestCase):
         arena = self._arena()
         out = semyon.with_exit(arena)
         self.assertEqual(out[:semyon.EXIT], arena[:semyon.EXIT])
-        self.assertEqual(out[semyon.EXIT + 3:len(arena)], arena[semyon.EXIT + 3:])
+        end = next(op.at for op in gpl.decode(arena, b"") if op.at > semyon.EXIT)  # (the command's rest filled)
+        self.assertEqual(out[semyon.EXIT + 3:end], bytes((gpl.FILL,)) * (end - semyon.EXIT - 3))
+        self.assertEqual(out[end:len(arena)], arena[end:])
         r = gpl._Reader(out, b"")
         r.i = semyon.EXIT
         jump = gpl._op(r)
@@ -155,7 +165,9 @@ class SemyonTests(unittest.TestCase):
         out = semyon.with_escape(script)
         at = semyon.ESCAPE_AT
         self.assertEqual(out[:at], script[:at])
-        self.assertEqual(out[at + 3:len(script)], script[at + 3:])
+        end = next(op.at for op in gpl.decode(script, b"") if op.at > at)  # (the command's rest filled)
+        self.assertEqual(out[at + 3:end], bytes((gpl.FILL,)) * (end - at - 3))
+        self.assertEqual(out[end:len(script)], script[end:])
         r = gpl._Reader(out, b"")
         r.i = at
         jump = gpl._op(r)
@@ -192,7 +204,7 @@ class SemyonTests(unittest.TestCase):
                 rec = bytearray(size)
                 struct.pack_into("<h", rec, 0, hp)
                 rec[game.CREATURE_NAME:game.CREATURE_NAME + 7] = b"Semyon\0"
-                self.table, self.flags = bytes(size * 3) + bytes(rec), set()
+                self.table, self.flags = bytes(size * game.PARTY_SIZE) + bytes(rec), set()
 
             def creatures(self, count):
                 return self.table
@@ -253,3 +265,109 @@ class SemyonTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ShipmentTests(unittest.TestCase):
+    """Thornwall onto the pens' weapon rack once Semyon has told of the shipment (semyon.ship)."""
+
+    def setUp(self):
+        import os
+        import sys
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import test_ring
+        from dsloader import game, ring, worldgear
+        self.game_, self.ring, self.wg = game, ring, worldgear
+        self.log = test_ring.arena()
+        self.m, self.gd = self.log.guest.mem, self.log.game
+        struct.pack_into("<H", self.m, test_ring.DS * 16 + ring.REGION, semyon.PENS)
+        struct.pack_into("<HH", self.m, test_ring.DS * 16 + game.FLAGS_PTR, 0, 0xE000)  # (the flags at E000:0)
+        things, items = test_ring.THINGS, test_ring.ITEMS
+        self.things, self.items = things, items
+        # the rack: map object 300 (item 10, a rack, its contents object 301); in it item 11, a polearm
+        struct.pack_into("<Bh", self.m, things + 300 * 3, game.THING_ITEM, 10)
+        struct.pack_into("<Bh", self.m, things + 301 * 3, game.THING_ITEM, 11)
+        rack = bytearray(game.ITEM_SIZE)
+        struct.pack_into("<hHhH", rack, 2, 0, game.NO_ITEM, 0, 301)
+        struct.pack_into("<H", rack, game.ITEM_TYPE, worldgear.RACK_TYPE)
+        self.m[items + 10 * game.ITEM_SIZE:items + 11 * game.ITEM_SIZE] = rack
+        pole = bytearray.fromhex("5efb000000000700000013000000000004ff120000")  # (the game's bone polearm)
+        struct.pack_into("<h", pole, game.ITEM_NEXT, game.NO_ITEM)
+        self.m[items + 11 * game.ITEM_SIZE:items + 12 * game.ITEM_SIZE] = pole
+        self.place(300, worldgear.PENS_RACK_OBJECT)
+
+    def place(self, thing, obj):
+        """Map object THING made as object OBJ (the game's THING_OBJECT field)."""
+        from test_ring import DS
+        struct.pack_into("<h", self.m, DS * 16 + self.game_.THING_OBJECT + thing * 32, obj)
+
+    def rack_items(self):
+        return [i for i, _ in self.ring.Items(self.gd).chain(301)]
+
+    def test_after_he_tells(self):
+        self.assertFalse(semyon.ship(self.gd))  # (not told yet)
+        self.assertEqual(self.rack_items(), [11])
+        self.gd.set_flag(semyon.TOLD)
+        self.assertTrue(semyon.ship(self.gd))
+        self.assertEqual(self.rack_items(), [60, 11])
+        rec = self.ring.Items(self.gd).item(60)
+        self.assertEqual(struct.unpack_from("<H", rec, self.game_.ITEM_NAME)[0], self.wg.THORNWALL)
+        self.assertEqual(rec[self.game_.ITEM_PLUS], 1)
+        self.assertTrue(self.gd.flag(semyon.SHIPPED))
+        self.assertFalse(semyon.ship(self.gd))  # (once)
+        self.assertEqual(self.rack_items(), [60, 11])
+
+    def test_rack_not_made(self):
+        """The rack not among the map objects yet (the party far from it), and a coffin of the
+        racks' item type: nothing, till the rack is made."""
+        self.place(300, 1574)
+        self.gd.set_flag(semyon.TOLD)
+        self.assertFalse(semyon.ship(self.gd))
+        self.assertEqual(self.rack_items(), [11])
+        self.assertFalse(self.gd.flag(semyon.SHIPPED))
+        self.place(300, self.wg.PENS_RACK_OBJECT)
+        self.assertTrue(semyon.ship(self.gd))
+        self.assertEqual(self.rack_items(), [60, 11])
+
+    def test_found(self):
+        """FOUND once a party member carries Thornwall, after the tip; not before it."""
+        self.gd.set_flag(semyon.TOLD)
+        self.assertFalse(semyon.found(self.gd))
+        self.assertTrue(semyon.ship(self.gd))
+        self.assertFalse(semyon.found(self.gd))  # (on the rack: not found yet)
+        thorn = self.ring.Items(self.gd).item(60)
+        self.gd._worn = lambda member, lists=None: [(60, thorn, b"")] if member == 1 else []
+        self.assertTrue(semyon.found(self.gd))
+        self.assertTrue(self.gd.flag(semyon.FOUND))
+        self.assertFalse(semyon.found(self.gd))  # (once)
+
+    def test_found_in_a_bag(self):
+        """Thornwall inside something a party member carries counts (here the rack itself, as a
+        container holding it)."""
+        self.gd.set_flag(semyon.TOLD)
+        self.assertTrue(semyon.ship(self.gd))
+        rack = self.ring.Items(self.gd).item(10)
+        self.gd._worn = lambda member, lists=None: [(11, rack, b"")] if member == 2 else []
+        self.assertTrue(semyon.found(self.gd))
+
+    def test_found_needs_the_tip(self):
+        thorn = bytes(self.wg.weapon(*self.wg.BONE_POLEARM_1))
+        self.gd._worn = lambda member, lists=None: [(60, thorn, b"")]
+        self.assertFalse(semyon.found(self.gd))
+        self.assertFalse(self.gd.flag(semyon.FOUND))
+
+    def test_not_twice(self):
+        """A Thornwall somewhere already (a save from when the rack's data had it): none more."""
+        thorn = bytearray(self.wg.weapon(*self.wg.BONE_POLEARM_1))
+        self.m[self.items + 11 * self.game_.ITEM_SIZE:self.items + 12 * self.game_.ITEM_SIZE] = thorn
+        self.gd.set_flag(semyon.TOLD)
+        self.assertFalse(semyon.ship(self.gd))
+        self.assertEqual(self.rack_items(), [11])
+        self.assertTrue(self.gd.flag(semyon.SHIPPED))
+
+    def test_elsewhere(self):
+        """Out of the pens: nothing (the rack is the pens')."""
+        from test_ring import DS
+        struct.pack_into("<H", self.m, DS * 16 + self.ring.REGION, 0x2A)
+        self.gd.set_flag(semyon.TOLD)
+        self.assertFalse(semyon.ship(self.gd))
+        self.assertEqual(self.rack_items(), [11])

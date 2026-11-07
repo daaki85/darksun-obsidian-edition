@@ -34,6 +34,15 @@ class FakeGame:
             yield 9, bytes(rec), b""
 
 
+class CastSoundTests(unittest.TestCase):
+    def test_cast_sound_is_the_spells_own(self):
+        gd = mock.Mock()
+        gd.spell_record = lambda spell: bytes(range(32)) if spell == spellarrows.ARROWS[1].spell else b""
+        self.assertEqual(spellarrows.cast_sound(gd, 1), spellarrows.CAST_SOUND)  # (byte 0Fh of the record)
+        self.assertEqual(spellarrows.cast_sound(gd, 0), 0)  # (no record: none)
+        self.assertEqual(spellarrows.cast_sound(gd, 9), 0)  # (no such arrows)
+
+
 class SpellArrowsTests(unittest.TestCase):
     def test_arrows_item(self):
         """A stack of the game's Arrows (type 62) with the spell's name and picture, worth nothing."""

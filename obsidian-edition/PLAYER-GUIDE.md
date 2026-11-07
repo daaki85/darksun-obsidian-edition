@@ -4,8 +4,8 @@ How **Dark Sun: Shattered Lands** plays with the Obsidian Edition mod: making
 a party, the classes and kits, fighting, magic, psionics, equipment and
 levels, with the tables you need.
 
-It is **spoiler-free**: no places past the opening arena, no people, no
-quests, and no word of where any item is found (the mod's new items are listed
+It is **spoiler-free**: no places past the opening arena, no people (but the
+two the Options tab names), no quests, and no word of where any item is found (the mod's new items are listed
 by what they are).
 
 Everything here is the mod with its **default options**, which is how the
@@ -19,7 +19,6 @@ The [features page](FEATURES.md) has every rule in full detail, and the
 
 - [Getting started](#getting-started)
 - [Playing](#playing)
-- [Quality of life](#quality-of-life)
 - [Making a party](#making-a-party)
   - [Ability scores](#ability-scores)
   - [Races](#races)
@@ -55,6 +54,7 @@ The [features page](FEATURES.md) has every rule in full detail, and the
 - [Psionics](#psionics)
 - [Equipment](#equipment)
   - [New items](#new-items)
+- [Quality of life](#quality-of-life)
 - [Worth knowing](#worth-knowing)
 - [Glossary](#glossary)
 - [The Options tab at a glance](#the-options-tab-at-a-glance)
@@ -86,58 +86,8 @@ The pointer has three modes, changed with a right-click: **Walk**, **Attack**
 and **Look**; a left-click acts. Look at someone to **Talk**, at a thing to
 **Use** or **Pick Up** it, and at a monster in a fight to see its hit points,
 AC and defences. Resting at a fire ring fills hit points, PSP and spell slots.
-
-## Quality of life
-
-**On the game's screens:**
-
-| Change | What it does |
-|---|---|
-| **Combat log** | **L** on the map shows every roll in the game, at the least, in short or in detail, and **L** again hides it: in a fight, or after one to check a thief's roll or a new level's hit points. A panel at the map's lower right: its scrollbar reads back, **-** and **+** collapse it or open it up with filters. Out of a fight its top line says how long the game has run (`Day 47, 14:20`), and in the arena how many arena fights the party has had. |
-| **Names over figures** | A spell's name floats over its caster as it's cast, "Miss" over anyone an attack misses, and "Armor: 7 left" (or "Mirror Image: 2 left", "Armor ends") when a spell that lasts a number of uses loses one. |
-| **THAC0, saves and thief skills on screen** | The inventory screen shows THAC0, all five saves, THAC0 with each weapon, DEX's adjustments and a thief's skills; View Character shows the saves, each labelled, MOVE and THAC0, and for a character of several classes which class goes up next. |
-| **Spell slots on the USE screen** | Spells left of each level, and the most after resting. |
-| **The Look box** | In a fight, a monster's hit points, AC, THAC0, alignment, magic resistance and chief defence; closing the box tells the rest. |
-| **Item boxes** | A wand's or other charged item's charges left; a cloak's, boots' or belt's bonus to thief skills. |
-| **The Effects screen** | Names each kit (a Shinobi's with its chance to read a scroll) and weapon spec, a page at a time when there are many; with the pointer on the icon of a spell that lasts a number of uses, the uses left: IMPROVED AC (10 CHARGES), MIRROR IMAGES (3 CHARGES). A magic item's power (Shadowseeker's Detect Invisibility) lasts while the item is readied and shows no charges. |
-| **What a scroll says** | Reading a scroll on the inventory screen, the line under the paper doll gives the result: YOU LEARN THE SPELL, YOU CAN NOT READ THE SCROLL... *Without the mod:* nothing showed there. |
-| **New characters' thief skills** (a bug fixed) | A character not yet played shows its thief skills. *Without the mod:* they showed as 0. |
-
-**Controls:**
-
-| Change | What it does |
-|---|---|
-| **Tab and Enter** | On a party member's turn in a fight, **Tab** chooses the nearest enemy (Tab again for the next, **Shift+Tab** back) and **Enter** attacks it, walking up to it first if need be, even behind someone else: no aiming with the mouse. A red ring marks the enemy chosen. |
-| **Scrolling with the mouse** | Press the wheel and drag the map. |
-| **M, U and I** | **M** on the map opens the overhead map (the game's **O**), and **M** again closes it. **U** and **I** close the USE and inventory screens when pressed again (and still switch from one to the other). |
-| **The whole party in view** | A game starts and loads with every party member on the map, and they stay in view after a fight, as the game's **5** does. **6** still gathers them into the leader. *Without the mod:* often only the leader, until you press 5. |
-| **A steady view in fights** | The view no longer drifts after each figure walking near the screen's edge in a fight; it moves only to bring back one that has walked off the screen. *Without the mod:* it follows them. |
-| **The pointer in scenes** | The game's pointer shows in the intro, its logos and the game's other scenes, and a click skips a scene as a key does. *Without the mod:* no pointer there, and only a key skips. |
-| **The pointer's start and speed** | The pointer starts in the middle of the screen, stays where you leave it as screens change (the intro, menus, loading), moves as far up and down as across, and in a window as fast as your desktop's pointer. *Without the mod:* it starts at the right edge, moves half as far up and down, and in a window three times as fast as your desktop's pointer. |
-| **Spells on the Effects screen** (a bug fixed) | A stray click on a spell's icon no longer ends the spell. A psionic power's icon still ends the power, which is how you stop one. |
-
-**Saves and characters:**
-
-| Change | What it does |
-|---|---|
-| **40 saves** | Four pages of ten in the save and load window (**PAGE 1** to **PAGE 4**, or **PgUp** and **PgDn**). *Without the mod:* 10. |
-| **29 characters on disk** | The roster keeps 29 characters made with CREATE CHARACTERS. *Without the mod:* 19. |
-| **DELETE in the roster** (a bug fixed) | Deletes the character you chose. *Without the mod:* with the list scrolled, it deleted another one. |
-
-**Running the game.** On the map, figures show what they wear, cast shadows
-and raise dust, and elves have pointed ears. DOSBox runs the game faster than
-GOG's settings and skips a picture rather than slowing the party down. The game
-window can be two to four times its size, or full screen. The manual check
-never comes. If the game crashes or freezes, or an item vanishes for no
-ordinary reason, the Loader saves a report to send. The README has the details:
-[running it](README.md#running-it-windows) and [reports](README.md#crash-freeze-and-item-reports).
-
-**In the Loader's window**, the dice log shows every roll with what it needed
-and where each bonus came from. Other tabs show each character's sheet, the
-dialogue, and every spell's dice, saves and duration. Every save is also
-copied under the name you gave it in the game. The README has
-[the Loader's window](README.md#the-loaders-window) in full, and [the dice log, line by
-line](DICE-LOG.md) what each of its lines means.
+What the mod adds to the game's screens and controls is under [Quality of
+life](#quality-of-life).
 
 ## Making a party
 
@@ -256,8 +206,7 @@ once. Experience is split evenly between them, so each rises more slowly; hit
 points are shared out ([hit points](#hit-points)); and the strictest class
 decides what may be worn and wielded
 ([what each class may use](#what-each-class-may-use)). **Gladiators never
-multiclass.** Each class's section below lists its combinations and the races
-that can take them; in all:
+multiclass.** The combinations, by race:
 
 | Race | Two classes | Three classes |
 |---|---|---|
@@ -330,7 +279,7 @@ the strictest winning:
 | Psionicist, whatever its other classes | light only (leather, hide, silk) | none alone; leather with a fighter, gladiator, ranger or cleric class | daggers, bone and obsidian short swords, clubs, chatkchas, bows; with another class, also the maces, metal short sword and slings its lists allow |
 | Thief | light only; with a warrior or cleric class, as that class allows, but no thief skills in heavier armour | leather ones only; with another class, only if that class is fighter, gladiator, ranger or cleric | as its classes allow |
 | Preserver, one class | none | none | a preserver's |
-| Druid | none | none | any |
+| Druid | none | none | any but great axes |
 | Cleric | any | any | air: missile and thrown weapons, daggers; earth: stone, obsidian, metal, wood; fire: obsidian; water: bone, wood |
 
 - A preserver with another class may wear what that class allows, but casts
@@ -408,16 +357,7 @@ starting gear, also a sling.
 
 **More than one class.**
 
-- *Multiclass:* cleric/fighter (all but humans); druid/fighter (half-elf,
-  halfling, mul, thri-kreen); fighter/preserver (elf, half-elf);
-  fighter/psionicist (all but humans); fighter/thief (dwarf, elf, half-elf,
-  halfling, mul); cleric/fighter/preserver (elf, half-elf);
-  cleric/fighter/psionicist (dwarf, elf, half-elf, thri-kreen);
-  cleric/fighter/thief (elf, half-elf, mul); druid/fighter/preserver
-  (half-elf); druid/fighter/psionicist (half-elf, thri-kreen);
-  druid/fighter/thief (half-elf, mul); fighter/preserver/psionicist and
-  fighter/preserver/thief (elf, half-elf); fighter/psionicist/thief (dwarf,
-  elf, half-elf, halfling, mul).
+- *Multiclass:* the combinations and their races are in [More than one class](#more-than-one-class).
 - *Dual class:* with STR 15, a human fighter can become a cleric, druid,
   preserver, psionicist or thief, never a gladiator or ranger. Its weapon
   specs sleep with the class; once awake, its specialized weapon specs stay
@@ -540,12 +480,7 @@ Stalker a cloak too).
 
 **More than one class.**
 
-- *Multiclass:* cleric/ranger and psionicist/ranger (elf, half-elf,
-  half-giant, halfling, thri-kreen); preserver/ranger (elf, half-elf);
-  ranger/thief (elf, half-elf, halfling); cleric/preserver/ranger,
-  cleric/ranger/thief, preserver/psionicist/ranger, preserver/ranger/thief
-  (elf, half-elf); cleric/psionicist/ranger (elf, half-elf, thri-kreen);
-  psionicist/ranger/thief (elf, half-elf, halfling).
+- *Multiclass:* the combinations and their races are in [More than one class](#more-than-one-class).
 - *Dual class:* with WIS 15, a human ranger can become a cleric, preserver,
   psionicist or thief (a druid must be neutral, a ranger good). A human of
   another class with WIS 17 and a good alignment can become a ranger. Some kits rule out a change of class
@@ -616,16 +551,7 @@ too).
 
 **More than one class.**
 
-- *Multiclass:* cleric/thief (elf, half-elf, halfling, mul); druid/thief
-  (half-elf, halfling, mul); fighter/thief and psionicist/thief (dwarf, elf,
-  half-elf, halfling, mul); preserver/thief (elf, half-elf); ranger/thief
-  (elf, half-elf, halfling); cleric/fighter/thief (elf, half-elf, mul);
-  druid/fighter/thief (half-elf, mul); fighter/psionicist/thief (dwarf, elf,
-  half-elf, halfling, mul); psionicist/ranger/thief (elf, half-elf,
-  halfling); cleric/preserver/thief, cleric/psionicist/thief,
-  cleric/ranger/thief, fighter/preserver/thief, preserver/psionicist/thief,
-  preserver/ranger/thief (elf, half-elf); druid/preserver/thief,
-  druid/psionicist/thief (half-elf).
+- *Multiclass:* the combinations and their races are in [More than one class](#more-than-one-class).
 - *Dual class:* with DEX 15, a human thief can become a cleric, druid,
   fighter, gladiator, preserver, psionicist or ranger. Some kits rule out a change of class
   ([which](KITS.md#kits-that-rule-out-classes-and-each-other)).
@@ -687,14 +613,7 @@ Each kit's gains, costs and starting gear:
 
 **More than one class.**
 
-- *Multiclass:* with cleric, fighter, psionicist, ranger or thief (elf,
-  half-elf), with druid (half-elf); in threes cleric/fighter/preserver,
-  cleric/preserver/psionicist, cleric/preserver/ranger,
-  cleric/preserver/thief, fighter/preserver/psionicist,
-  fighter/preserver/thief, preserver/psionicist/ranger,
-  preserver/psionicist/thief, preserver/ranger/thief (elf, half-elf), and
-  druid/fighter/preserver, druid/preserver/psionicist, druid/preserver/thief
-  (half-elf).
+- *Multiclass:* the combinations and their races are in [More than one class](#more-than-one-class).
 - *Dual class:* with INT 15, a human preserver can become a cleric, druid,
   fighter, gladiator, psionicist, ranger or thief. A human who becomes a
   preserver chooses its first two spells. Some kits rule out a change of class
@@ -760,15 +679,7 @@ and fire a chatkcha; water none).
 
 **More than one class.**
 
-- *Multiclass:* cleric/fighter and cleric/psionicist (all but humans);
-  cleric/ranger (elf, half-elf, half-giant, halfling, thri-kreen);
-  cleric/thief (elf, half-elf, halfling, mul); cleric/preserver (elf,
-  half-elf); cleric/fighter/psionicist (dwarf, elf, half-elf, thri-kreen);
-  cleric/fighter/thief (elf, half-elf, mul); cleric/psionicist/ranger (elf,
-  half-elf, thri-kreen); cleric/fighter/preserver,
-  cleric/preserver/psionicist, cleric/preserver/ranger,
-  cleric/preserver/thief, cleric/psionicist/thief, cleric/ranger/thief (elf,
-  half-elf).
+- *Multiclass:* the combinations and their races are in [More than one class](#more-than-one-class).
 - *Dual class:* with WIS 15, a human cleric can become a fighter, gladiator,
   preserver, psionicist, ranger (if good) or thief; never a druid. Some kits rule out a change of class
   ([which](KITS.md#kits-that-rule-out-classes-and-each-other)).
@@ -832,12 +743,7 @@ Each kit's gains, costs and starting gear:
 
 **More than one class.**
 
-- *Multiclass:* druid/fighter and druid/psionicist (half-elf, halfling, mul,
-  thri-kreen); druid/thief (half-elf, halfling, mul); druid/preserver
-  (half-elf); druid/fighter/psionicist (half-elf, thri-kreen);
-  druid/fighter/thief (half-elf, mul); druid/fighter/preserver,
-  druid/preserver/psionicist, druid/preserver/thief, druid/psionicist/thief
-  (half-elf).
+- *Multiclass:* the combinations and their races are in [More than one class](#more-than-one-class).
 - *Dual class:* with WIS 15, a human druid can become a fighter, gladiator,
   preserver, psionicist or thief; never a cleric, nor a ranger (who must be
   good). A human of another class becomes a druid only if true neutral. Some kits rule out a change of class
@@ -892,18 +798,7 @@ starting gear, also leather arm and leg armour.
 
 **More than one class.**
 
-- *Multiclass:* cleric/psionicist and fighter/psionicist (all but humans);
-  druid/psionicist (half-elf, halfling, mul, thri-kreen); psionicist/ranger
-  (elf, half-elf, half-giant, halfling, thri-kreen); psionicist/thief (dwarf,
-  elf, half-elf, halfling, mul); preserver/psionicist (elf, half-elf);
-  cleric/fighter/psionicist (dwarf, elf, half-elf, thri-kreen);
-  fighter/psionicist/thief (dwarf, elf, half-elf, halfling, mul);
-  cleric/psionicist/ranger (elf, half-elf, thri-kreen);
-  psionicist/ranger/thief (elf, half-elf, halfling); druid/fighter/psionicist
-  (half-elf, thri-kreen); cleric/preserver/psionicist,
-  cleric/psionicist/thief, fighter/preserver/psionicist,
-  preserver/psionicist/ranger, preserver/psionicist/thief (elf, half-elf);
-  druid/preserver/psionicist, druid/psionicist/thief (half-elf).
+- *Multiclass:* the combinations and their races are in [More than one class](#more-than-one-class).
 - *Dual class:* with WIS 15, a human psionicist can become a cleric, druid,
   fighter, gladiator, preserver, ranger or thief. Some kits rule out a change of class
   ([which](KITS.md#kits-that-rule-out-classes-and-each-other)).
@@ -995,10 +890,12 @@ Each kit's gains, costs and starting gear:
 [Multiclass kits](KITS.md#multiclass-kits) on the Kits page.
 
 **The game's own party** (START GAME with no party made), with kits on: Cermak
-is an Arcanist, and the other three have something no character you make can
-have. Gerakis fights wild as a Wild Fury does; K'ratchek is a Wasteland Seer
-(her spells and psionics stronger under the open sky), and her chatkcha comes back as if she had several (one more throw a
-round); Cilla is an Elven Wanderer, whose hiding is never halved in daylight.
+is an Arcanist, and the other three are given a feature of their own, not a
+kit's. Gerakis fights wild, as a Wild Fury does; K'ratchek's spells and psionics
+are stronger under the open sky, as a Wasteland Seer's are, and her chatkcha
+comes back as if she had several (one more throw a round, which no kit gives);
+Cilla's hiding is never halved in daylight, as an Assassin's isn't (the dice
+log calls her an Elven Shadow-walker).
 
 ### Kits' spell slots
 
@@ -1239,7 +1136,8 @@ someone else, and no one hides in a fight.
 A save succeeds when **d20 + its modifiers reaches the save's number**; a 1
 always fails and a 20 always saves. Everyone has five: paralysis, poison and
 death (`PPD`), rod, staff and wand (`RSW`), petrification and polymorph
-(`PP`), breath weapon (`BW`) and spell (`SP`).
+(`PP`), breath weapon (`BW`) and spell (`SP`). Each character's five numbers,
+by class and level, are on the inventory screen's panel and on View Character.
 
 - **Spells are saved against with the spell save**, except poisons, death
   spells and psionic attacks (paralysis, poison and death).
@@ -1266,8 +1164,9 @@ Other modifiers:
 | +4 | against a spell at you alone, when its caster can't see you |
 
 Creatures of 6th level or less can't save against Cloudkill; only warriors
-save against Chaos; against Scare, 6th level and up always save and others
-can't.
+save against Chaos; against Scare, 6th level and up always save, an elf or
+half-elf priest below that saves as usual, and others can't. *Without the
+mod:* no one below 6th level could save against Scare.
 
 ### Monsters
 
@@ -1330,7 +1229,11 @@ and the same race and DEX adjustments.
 
 - **Open locks, find/remove traps, climb walls, hear noise** and the one
   pocket the game has to pick: when the game asks, at certain locks, traps
-  and walls.
+  and walls. A locked and trapped chest the mod adds asks a thief to check
+  it for traps first, then to pick the lock (as often as needed); anyone
+  else may try to bash it open, which sets off a trap still in it. A trap
+  that goes off may still be avoided by the party's best at find/remove
+  traps.
 - **Hide in shadows and move silently:** at the start of a thief's or ranger's
   turn in a fight ([hiding in shadows](#hiding-in-shadows)).
 - **Picking pockets** (the mod's): on the **USE** screen, press the thief's
@@ -1385,7 +1288,7 @@ no 6th-level spells.
 4 3 2 1; 4 3 2 2; 5 4 3 2 1; 5 4 3 2 2.
 
 **Rangers** have one 1st-level slot at 8th level, two at 9th, and a 2nd-level
-slot at 10th, as in AD&D. No preserver spell is above 5th level.
+slot at 10th, as in AD&D.
 
 **Clerics and druids** have more for WIS, the game's own rule (the bonus
 slots at 1st, 2nd, 3rd... spell level). They count only at spell levels the
@@ -1635,8 +1538,9 @@ raises the best defence mode it knows and can pay for, by itself.
 | Thought Shield (defence) | telepathy | 1 | |
 
 Psionic Blast leaves a victim that fails its save at a fifth of its hit
-points; the wounds are imagined, so a party member still standing gets them
-back as the fight ends. Mind Bar gives 75% magic resistance to mind-affecting spells. Body Weaponry
+points; the wounds are imagined, so a party member gets them back as the fight
+ends, and until then a blow that would kill it only knocks it out (it wakes
+with them). Mind Bar gives 75% magic resistance to mind-affecting spells. Body Weaponry
 makes unarmed blows 2d4, and Animal Affinity at least 1d10: a thri-kreen's
 claws, not its bite. The Mind Bender, Kineticist and Titan Mind
 [kits](#kits) change some costs.
@@ -1762,6 +1666,60 @@ chosen type, often one of these.
 The game's own Grey's Scale arm and leg armour is AC 3 each with the mod (2
 without).
 
+## Quality of life
+
+**On the game's screens:**
+
+| Change | What it does |
+|---|---|
+| **Combat log** | **L** on the map shows every roll in the game, at the least, in short or in detail, and **L** again hides it: in a fight, or after one to check a thief's roll or a new level's hit points. A panel at the map's lower right: its scrollbar reads back, **-** and **+** collapse it or open it up with filters. Out of a fight its top line says how long the game has run (`Day 47, 14:20`), and around the arena how many arena fights the party has had. |
+| **Names over figures** | A spell's name floats over its caster as it's cast, "Miss" over anyone an attack misses, and "Armor: 7 left" (or "Mirror Image: 2 left", "Armor ends") when a spell that lasts a number of uses loses one. |
+| **THAC0, saves and thief skills on screen** | The inventory screen shows THAC0, all five saves, THAC0 with each weapon, DEX's adjustments and a thief's skills; View Character shows the saves, each labelled, MOVE and THAC0, and for a character of several classes which class goes up next. |
+| **Spell slots on the USE screen** | Spells left of each level, and the most after resting. |
+| **The Look box** | In a fight, a monster's hit points, AC, THAC0, alignment, magic resistance and chief defence; closing the box tells the rest. |
+| **Item boxes** | A wand's or other charged item's charges left; a cloak's, boots' or belt's bonus to thief skills. |
+| **The Effects screen** | Names each kit (a Shinobi's with its chance to read a scroll) and weapon spec, a page at a time when there are many; with the pointer on the icon of a spell that lasts a number of uses, the uses left: IMPROVED AC (10 CHARGES), MIRROR IMAGES (3 CHARGES). A magic item's power (Shadowseeker's Detect Invisibility) lasts while the item is readied and shows no charges. |
+| **What a scroll says** | Reading a scroll on the inventory screen, the line under the paper doll gives the result: YOU LEARN THE SPELL, YOU CAN NOT READ THE SCROLL... *Without the mod:* nothing showed there. |
+| **New characters' thief skills** (a bug fixed) | A character not yet played shows its thief skills. *Without the mod:* they showed as 0. |
+
+**Controls:**
+
+| Change | What it does |
+|---|---|
+| **Tab and Enter** | On a party member's turn in a fight, **Tab** chooses the nearest enemy (Tab again for the next, **Shift+Tab** back) and **Enter** attacks it, walking up to it first if need be, even behind someone else: no aiming with the mouse. A red ring marks the enemy chosen. |
+| **Scrolling with the mouse** | Press the wheel and drag the map. |
+| **M, U and I** | **M** on the map opens the overhead map (the game's **O**), and **M** again closes it. **U** and **I** close the USE and inventory screens when pressed again (and still switch from one to the other). |
+| **The whole party in view** | A game starts and loads with every party member on the map, and they stay in view after a fight, as the game's **5** does. **6** still gathers them into the leader. *Without the mod:* often only the leader, until you press 5. |
+| **A steady view in fights** | The view no longer drifts after each figure walking near the screen's edge in a fight; it moves only to bring back one that has walked off the screen. *Without the mod:* it follows them. |
+| **The pointer in scenes** | The game's pointer shows in the intro, its logos and the game's other scenes, and a click skips a scene as a key does. *Without the mod:* no pointer there, and only a key skips. |
+| **The pointer's start and speed** | The pointer starts in the middle of the screen, stays where you leave it as screens change (the intro, menus, loading), moves as far up and down as across, and in a window as fast as your desktop's pointer. *Without the mod:* it starts at the right edge, moves half as far up and down, and in a window three times as fast as your desktop's pointer. |
+| **Spells on the Effects screen** (a bug fixed) | A stray click on a spell's icon no longer ends the spell. A psionic power's icon still ends the power, which is how you stop one. |
+
+**Saves and characters:**
+
+| Change | What it does |
+|---|---|
+| **40 saves** | Four pages of ten in the save and load window (**PAGE 1** to **PAGE 4**, or **PgUp** and **PgDn**). *Without the mod:* 10. |
+| **29 characters on disk** | The roster keeps 29 characters made with CREATE CHARACTERS. *Without the mod:* 19. |
+| **DELETE in the roster** (a bug fixed) | Deletes the character you chose. *Without the mod:* with the list scrolled, it deleted another one. |
+
+**Running the game.** On the map, figures show what they wear, cast shadows
+and raise dust, a thief or ranger hidden in shadows and anyone invisible are
+drawn see-through, and elves have pointed ears. DOSBox runs the game faster than
+GOG's settings and skips a picture rather than slowing the party down. The game
+window can be its own size, two, three (the default) or four times that, or full
+screen. The manual check
+never comes. If the game crashes or freezes, or an item vanishes for no
+ordinary reason, the Loader saves a report to send. The README has the details:
+[running it](README.md#running-it-windows) and [reports](README.md#crash-freeze-and-item-reports).
+
+**In the Loader's window**, the dice log shows every roll with what it needed
+and where each bonus came from. Other tabs show each character's sheet, the
+dialogue, and every spell's dice, saves and duration. Every save is also
+copied under the name you gave it in the game. The README has
+[the Loader's window](README.md#the-loaders-window) in full, and [the dice log, line by
+line](DICE-LOG.md) what each of its lines means.
+
 ## Worth knowing
 
 - **Cure poison before resting.** A character still Poisoned when time passes
@@ -1784,6 +1742,11 @@ without).
 - **Wait** puts a character later in the round.
 - **Ready a missile weapon and a melee weapon:** the game uses whichever fits
   the target's distance.
+- **The look pointer pauses the game.** While it is up, no time passes: no one
+  moves, and no one comes calling. Switch back to the walk arrow to let time run.
+- **The people you fight wear their armour from the start.** Without the mod
+  they put it on only when they first acted in a fight, so an opening blow or
+  a backstab before then met AC 10; now it meets their armour.
 
 ## Glossary
 
@@ -1822,8 +1785,8 @@ without).
 | Rule changes | *characters:* class restrictions; multiclass hit points; hit dice rolled twice; scores and hit points as rolled; AD&D's class tables; CON as in AD&D; ages and magical aging; the XP level cap. *Weapons and armour:* two weapons; half-giants' two-handed weapons; rings and cloaks of protection; helms AC 1; items saving against acid. *Magic:* rangers' casting level; preservers' INT; the spell save; DEX instead of a doubled d20; Enlarge multiplying the weapon's dice only | all on |
 | More character customization | weapon specialization; kits; STORE and RECALL on the creation screen; fuller starting gear | all on |
 | Expanded features | the leader's CHA at shops; buying back magical items; improved thieving: thief skills from AD&D's table, hiding in shadows to backstab, the cloak, boots and belt, backstabs multiplying the weapon's dice only, picking pockets | all on |
-| New content | the new spells (six wizard spells and ten 6th-level priest spells); new people; a small quest; new items; defilers' scrolls | all on |
-| Graphics | elves' ears and half-elves' own figures; Cilla drawn as an elf; what the party wears; shadows; dust | all on |
+| New content | the new spells (six wizard spells and ten 6th-level priest spells, one switch); new people (Kalzith; Semyon); a small quest (the cooked vulture); defilers' scrolls; new items | all on |
+| Graphics | elves' ears and half-elves' own figures; Cilla drawn as an elf; what the party wears; shadows; dust; a hidden thief or ranger and anyone invisible drawn see-through | all on |
 | Controls | Tab and Enter; scrolling with the mouse wheel; the view in fights moving only to a figure off the screen; the pointer in scenes, a click skipping one; the pointer starting in the middle and as fast up and down as across; the whole party in view after a start, load or fight; spells kept on a click on the Effects screen (M, U and I have no switch) | all on |
 | | a red ring in a fight: none, or under the enemy chosen with Tab | under the enemy chosen |
 | Game speed | GOG's own, faster or fastest | faster |
@@ -1831,10 +1794,9 @@ without).
 | Wake of the Ravager (optional) | where Wake of the Ravager is installed, for the new priest spells' icons and pictures (found by itself when it can be) | (a folder) |
 | Saves | open the Named saves folder; put a save back in a slot | (buttons) |
 
-Rule changes, customization, expanded features, the new spells and defilers'
-scrolls count at once in a game started from the Loader; the new people, quest,
-vulture and items, and
-any switch that says "from the next start", come the next time the game is
-started (a saved game keeps what it has). Kits, weapon specs and fuller starting
-gear go to characters made from then on. **Restore defaults**, at the bottom
+Rule changes, expanded features, the new spells and defilers' scrolls count at
+once in a game started from the Loader; the new people, quest and items,
+and any switch that says "from the next start" (STORE and RECALL among them),
+come the next time the game is started (a saved game keeps what it has). Kits,
+weapon specs and fuller starting gear go to characters made from then on. **Restore defaults**, at the bottom
 of the tab, sets every switch back.

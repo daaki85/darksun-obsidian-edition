@@ -31,7 +31,8 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   - [Every time you play](#every-time-you-play)
   - [Other ways to start](#other-ways-to-start)
   - [Updating, backups, saved games and the Loader's
-    files](#updating-backups-saved-games-and-the-loaders-files)
+    files](#updating-backups-saved-games-and-the-loaders-files) (uninstalling
+    too)
 - [The Loader's window](#the-loaders-window)
   - [The Characters tab](#the-characters-tab)
   - [The Spells tab](#the-spells-tab)
@@ -76,10 +77,12 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   Friends](FEATURES.md#new-wizard-spells)) and ten [6th-level priest
   spells](FEATURES.md#6th-level-priest-spells) (Heal, Blade Barrier,
   Whirlwind, Restore Youth...), Kalzith (a defiler who sells scrolls), defilers who drop
-  scrolls, more of Semyon's story, and a use for the cooked vulture ([New
+  scrolls, more of Semyon's story, a last arena bout against six champions,
+  and a use for the cooked vulture ([New
   content](FEATURES.md#new-content)). On the map, the party wears its weapons
   and armour (its magic gear glinting), figures cast shadows and kick up dust,
-  and elves and half-elves have a look of their own; and the game's magic items
+  a hidden thief or ranger and anyone invisible are drawn see-through, and
+  elves and half-elves have a look of their own; and the game's magic items
   whose icons stood still shine as the rest do ([Graphics](FEATURES.md#graphics)).
 - **Quality of life:** better [controls](FEATURES.md#controls) (Tab and Enter
   in fights, dragging the map with the mouse wheel held down), [more saves and
@@ -191,8 +194,8 @@ for the game in the usual GOG folders; if it can't find it, it asks you where
 the game is installed and remembers the answer.
 
 DOSBox opens in a window three times the game's size (960x720). **Game
-window** at the top of the Loader picks **Double**, **Triple**, **Quadruple**
-or **Full screen** from the next start, and Alt+Enter switches between window
+window** at the top of the Loader picks **Single**, **Double**, **Triple**,
+**Quadruple** or **Full screen** from the next start, and Alt+Enter switches between window
 and full screen while playing. Quadruple has DOSBox stretch its window with
 OpenGL; if your graphics driver doesn't take to that, pick Triple.
 
@@ -227,11 +230,12 @@ folder, and the Loader starts that program instead of DOSBox from then on,
 the dice log and the Loader's window attached as usual. As the game starts,
 the dice log says which one runs (`... in DOSBox` or `... as Dark Sun Recompiled`
 and where it is). The game's own `DSUN.EXE` is never taken for it, even with
-this folder in the game's. A program elsewhere is named once:
+this folder in the game's. A program elsewhere is named once, in a command
+prompt opened in this folder:
 
 ```
-dsloader launch --recompiled "C:\path\to\dsun.exe"
-dsloader launch --dosbox
+python -m dsloader launch --recompiled "C:\path\to\dsun.exe"
+python -m dsloader launch --dosbox
 ```
 
 The second line goes back to DOSBox (and stays there until `--recompiled`
@@ -281,7 +285,14 @@ save:
   (a level up, or a game starting): the game's own bonuses for CON, INT and WIS
   are counted right now, and the most only ever rises.
 - In a save from 1.2.0 to 2.5.0 that has already been to the slave pens, the
-  weapon rack holding Thornwall is gone (a new game has it).
+  weapon rack is gone, so Thornwall never comes (a new game has the rack).
+- A save made with an earlier version while Kalzith was switched off: in the
+  slave pens, talking to Semyon may start Kalzith's conversation instead (the
+  Loader now numbers its conversations the same whatever the switches). One
+  made with Kalzith on, the default, is unaffected.
+- Pehtucl's locked chest comes with a new game: in a save that has already
+  been to the slave pens he wears the Cloak of Protection, and the chest is
+  the plain one.
 - A new game whose arena fight never began (no announcer, and walking said NO
   PATH FROM HERE: a 2.4.0 bug) can't be mended: start a new one.
 - **A save made with 2.13.0 or later is not for earlier versions**, and one
@@ -308,6 +319,12 @@ has already been through stays as it was.
 | `dos` | the Loader's helpers, and the patched copy of the game (`DSUNLOG.EXE`) with copies of its data |
 | `layouts`, `.dsloader-search.json` | only from the Memory tools: a layout you save there, and a memory search's results |
 | the game folder | your saves (page 1 in the game's own `SAVE` files, pages 2 to 4 as `SAVB`, `SAVC` and `SAVD`) and characters in `CHARSAVE.GFF` |
+
+**Uninstalling.** Delete the Loader's folder. Nothing of the mod is left in
+the game folder but your saves and characters: page 1's saves (`SAVE*`) and
+`CHARSAVE.GFF` load in the original game as long as they hold none of the
+new items (see above); the extra pages (`SAVB*`, `SAVC*`, `SAVD*`) are read
+only by the mod's patched game.
 
 ## The Loader's window
 
@@ -438,26 +455,16 @@ such as "Answer Yes or No", above them), and then the one you picked:
 
 ![The Dialogue tab at the start of a new game: the Announcer, with his portrait, introducing the Defiler's show and calling the gladiators into the arena; the Characters tab beside it with Gerakis's and K'ratchek's ages](docs/dialogue.png)
 
-**Who's speaking.** The game's dialogue window gets only a portrait number,
-never a name. But when the game runs a script on someone (you click them, or
-they come up to you), it notes who; the log reads that when a conversation
-opens. A conversation that shows one face, started on a named creature outside
-the party, is that creature talking, and from then on the portrait carries its
-name: in the pens, portrait 5 became `Kurzak` ("Legcrusher! Get gladiators!")
-and portrait 100 `Legcrusher` ("Kurzak told me to bring you to the arena").
-When several faces take turns in one conversation, nothing is learned from it,
-as it can't be told who is who. Names learned are shown on the lines already
-there too, and kept in `settings.json` (`speakers_learned`). A speaker not
-named yet shows as `Portrait 57`. Portrait 119 is named `The Announcer`, as
-the game itself calls him ("Yell something back at the Announcer?"). That name
-isn't replaced by one learned (he calls out in the middle of fights, when the
-game's last script ran on a fighter). To name a speaker yourself (your name
-wins over a learned one), right-click the name line in the Dialogue tab, or
-press **Name speaker...** (it names the latest speaker). The name replaces the
-number on every line from that portrait, the ones already shown included, and
-is remembered in `settings.json` for next time (the command-line log uses it
-too). Leave the name empty to go back to the number. Text shown without a face
-(the emblem instead) is `Narration`.
+**Who's speaking.** The game's dialogue window has only a portrait, never a
+name, so a speaker shows as `Portrait 57` until the log learns its name from
+a conversation started on it (in the pens, portrait 5 becomes `Kurzak`) or
+you name it: right-click the name line in the Dialogue tab, or press **Name
+speaker...** (it names the latest speaker). Your name wins over a learned one
+and replaces the number on every line, the ones already shown included; leave
+it empty to go back to the number. Names are kept in `settings.json`, and the
+command-line log uses them too. Portrait 119 is `The Announcer`, as the game
+calls him. Text shown without a face (the emblem instead) is `Narration`.
+([How names are learned](DEVELOPMENT-SCREENS.md#the-dialogue-tab).)
 
 Each entry shows the speaker's portrait, as the game's own dialogue window
 does. Portraits and the title's lettering are read from your installed game at
@@ -469,7 +476,7 @@ How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#the-dialogue-tab).
 
 ## The dice log
 
-![The Loader during the arena's opening show: the Characters tab with the game's own party (K'ratchek's chatkcha 5/2 attacks a round, her own second throw counted, and her features, open sky spells and psionics; Gerakis's age), and the dice log with Find on the first of 124 lines naming the Rampager: the party's features and ages as the game begins, the first round's initiative, Gerakis's Wild Fighting roll (passed: one more attack a round and +3 damage), and the Rampager's first attacks on the Defiler](docs/dicelog.png)
+![The Loader during the arena's opening show: the Characters tab with the game's own party (K'ratchek's chatkcha 5/2 attacks a round, her own second throw counted, and her features, open sky spells and psionics; Gerakis's age), and the dice log with Find on the first of 27 lines naming the Rampager: the party's features and ages as the game begins (Cilla an Elven Shadow-walker), the first round's initiative, Gerakis's Wild Fighting roll (passed: one more attack a round and +3 damage), and the Defiler's Ice Storm](docs/dicelog.png)
 
 **Finding something.** Type a word in **Find** above the log (Ctrl+F puts
 you there) and press Enter: every match lights up, the log jumps to the first,
@@ -503,8 +510,9 @@ more. The Dialogue tab does the same.
 
 **Show unlabelled rolls**, beside it, also lists everything else the game
 randomises (creatures wandering, animations and so on), as raw numbers with
-where in the game's code they came from. It's noisy, but useful for finding
-more rolls worth labelling.
+where in the game's code they came from, and each AC the game works out for an
+attack with its parts (base, armour, DEX, the rest). It's noisy, but useful for
+finding more rolls worth labelling.
 
 ## Accessibility
 
@@ -593,7 +601,7 @@ it anywhere public.
 |---|---|---|
 | **Crash** (`crash-2026-10-04-213012.txt`) | the game stops with an error, or DOSBox closes while the game still runs | how DOSBox closed (its exit code), what the game left on the screen and the message it last wrote, with the calls that led to it; how long the game ran and the game speed; DOSBox's own `stdout.txt` and `stderr.txt`, if it wrote them; any writes into the game the Loader refused as unsafe; the game's memory at the last reading and at its lowest |
 | **Freeze** (`freeze-2026-10-16-213012.zip`) | you press **Freeze report** | where the game was running for the last few seconds (the helper notes it about 4 times a second), whether the game's timer and the map still move, the helper's own state, and a copy of the game's memory (about 1 MB: the party, the map and the fight, nothing outside DOSBox) |
-| **Item** (`item-2026-10-18-213012.txt`) | an item vanishes from the party | the item, who had it and where, what its record in the game's item table says now (freed, or reused for another item), the game's time, the region, whether a fight was on and whose turn, the item's record and its type's before and after, and the owner's and the party's items |
+| **Item** (`item-2026-10-18-213012.txt`) | an item vanishes from the party | the item, who had it and where, what its record in the game's item table says now (freed, or reused for another item), the game's time, the region, whether a fight was on and whose turn, the item's record when last seen and now, and its type's record, and the owner's and the party's items |
 
 **Memory running low.** The game has little memory to spare, and in a long
 session it can run out ("Out of memory in OEOpenGraph"). The Loader watches it,

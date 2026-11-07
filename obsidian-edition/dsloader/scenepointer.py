@@ -5,6 +5,7 @@ the arrow's colours is drawn as the scene's palette's nearest. Without the file 
 plain arrow of its own."""
 
 import os
+import struct
 from typing import List, Optional
 
 from . import art, gff
@@ -45,12 +46,12 @@ def write_pointer(resources: Optional[str], gpldata: Optional[str], dest: str) -
         with open(gpldata, "rb") as f:
             palette = gff.read_gff(f.read())[("PAL ", PALETTE)]
         data = pointer_data(icon, palette)
-    except (TypeError, OSError, KeyError, ValueError, IndexError, gff.GffError):
+        with open(dest, "wb") as f:  # (a file held or a folder read-only: DSCLOG's own, the game
+            f.write(data)                #   started all the same)
+    except (TypeError, OSError, KeyError, ValueError, IndexError, struct.error, gff.GffError):
         try:
             os.remove(dest)
         except OSError:
             pass
         return False
-    with open(dest, "wb") as f:
-        f.write(data)
     return True

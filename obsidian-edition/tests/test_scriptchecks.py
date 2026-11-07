@@ -7,7 +7,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import gpl, scriptchecks
+from dsloader import gff, gpl, scriptchecks
 
 FIELDS = bytes(256)
 CHA = ("field", scriptchecks.ACTING, [28])
@@ -68,6 +68,56 @@ class ScriptCheckTests(unittest.TestCase):
         self.assertEqual(scriptchecks.describe(guard, 3, 16, "Cilla"),
                          ["Cilla CHA check: 10-20 = 13, needs 16 or less (CHA 16) -> success"])
         self.assertTrue(scriptchecks.describe(guard, 9, 16, "Cilla")[0].endswith("failure"))
+
+
+
+class LoadTests(unittest.TestCase):
+    """scriptchecks.load reads the file again once it has changed (the Loader writes its copy of
+    GPLDATA.GFF at each start: a switch changed moves the scripts' code), and a failed read isn't
+    kept for the rest of the session."""
+
+    def test_read_again_when_changed(self):
+        import tempfile
+        from unittest import mock
+        with tempfile.TemporaryDirectory() as folder:
+            path = os.path.join(folder, "GPLDATA.GFF")
+            with open(path, "wb") as f:
+                f.write(b"first")
+            reads = []
+
+            def found(*_):
+                reads.append(1)
+                return {len(reads): "check"}
+            with mock.patch.object(gpl, "load_scripts", return_value=()), \
+                    mock.patch.object(scriptchecks, "find", side_effect=found):
+                self.assertEqual(scriptchecks.load(path), {1: "check"})
+                self.assertEqual(scriptchecks.load(path), {1: "check"})  # (unchanged: kept)
+                with open(path, "wb") as f:
+                    f.write(b"the second, longer")
+                self.assertEqual(scriptchecks.load(path), {2: "check"})
+            with mock.patch.object(gpl, "load_scripts", side_effect=gpl.ScriptError("bad")):
+                os.utime(path, ns=(1, 1))
+                self.assertEqual(scriptchecks.load(path), {})
+            with mock.patch.object(gpl, "load_scripts", side_effect=OSError("held")):
+                os.utime(path, ns=(2, 2))
+                self.assertEqual(scriptchecks.load(path), {})
+            with mock.patch.object(gpl, "load_scripts", return_value=()), \
+                    mock.patch.object(scriptchecks, "find", return_value={3: "check"}):
+                self.assertEqual(scriptchecks.load(path), {3: "check"})  # (a held file not kept)
+            with mock.patch.object(gpl, "load_scripts", side_effect=gff.GffError("cut short")):
+                os.utime(path, ns=(3, 3))
+                self.assertEqual(scriptchecks.load(path), {})
+                self.assertEqual(scriptchecks.load(path), {})  # (a bad file: no exception, kept)
+        with mock.patch.object(scriptchecks, "game_scripts", return_value=""):
+            self.assertEqual(scriptchecks.load(path), {})  # (gone, and no game folder known)
+        with tempfile.TemporaryDirectory() as folder:  # (gone: the game's own scripts read instead)
+            game = os.path.join(folder, "GAME.GFF")
+            with open(game, "wb") as f:
+                f.write(b"the game's")
+            with mock.patch.object(scriptchecks, "game_scripts", return_value=game), \
+                    mock.patch.object(gpl, "load_scripts", return_value=()), \
+                    mock.patch.object(scriptchecks, "find", return_value={4: "check"}):
+                self.assertEqual(scriptchecks.load(path), {4: "check"})
 
 
 if __name__ == "__main__":

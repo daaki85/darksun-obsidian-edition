@@ -212,6 +212,8 @@ def repaired(script: int, code: bytes) -> bytes:
     for r in REPAIRS:
         if r.script != script or out[r.at:r.at + len(r.was)] != r.was or len(r.now) < len(r.was):
             continue
+        if len(r.now) > len(r.was) and len(r.was) < 3:  # (no room there for the jump, 3 bytes)
+            continue
         if len(r.now) == len(r.was):
             out[r.at:r.at + len(r.was)] = r.now
             continue

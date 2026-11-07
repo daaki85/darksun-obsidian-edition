@@ -377,6 +377,33 @@ class SpeakerTests(unittest.TestCase):
         log.learned_speakers = {119: "Slig"}
         self.assertEqual(log.speaker(119), "The Announcer")
 
+    def _talk(self, log, target, replies, far=None):
+        from types import SimpleNamespace as R
+        from unittest import mock
+        from dsloader import textlog
+        with mock.patch.object(log.game, "talk_target", return_value=target), \
+                mock.patch.object(log.game, "talk_target_distance", return_value=far):
+            log._follow_talk(R(kind=textlog.KIND_PORTRAIT, value=5, text=""))
+            log._follow_talk(R(kind=textlog.KIND_TEXT, value=0, text="Gerakis! Get up here!"))
+            if replies:
+                log._follow_talk(R(kind=textlog.KIND_SHOW_REPLIES, value=0, text=""))
+            log._follow_talk(R(kind=textlog.KIND_TEXT, value=0, text="CLOSE"))
+
+    def test_a_scripts_speech_teaches_no_name(self):
+        """One face but no replies (Kurzak's call, while the Trustee's rounds script is the one
+        running, far from the party): not learned; beside the party (Legcrusher fetching it),
+        learned; a talk with replies teaches its speaker's name, and puts a wrong one right."""
+        log = dag()
+        self._talk(log, "Trustee", replies=False, far=400)
+        self.assertNotIn(5, log.learned_speakers)
+        self._talk(log, "Trustee", replies=False)  # (not on the map at all)
+        self.assertNotIn(5, log.learned_speakers)
+        self._talk(log, "Legcrusher", replies=False, far=32)
+        self.assertEqual(log.learned_speakers[5], "Legcrusher")
+        log.learned_speakers = {5: "Trustee"}  # (learned so by an earlier version)
+        self._talk(log, "Kurzak", replies=True)
+        self.assertEqual(log.learned_speakers[5], "Kurzak")
+
 
 class StatsTests(unittest.TestCase):
     def test_entry_for_dsclog(self):

@@ -3,10 +3,12 @@
 *Part of Obsidian Edition's documentation, from the [README](README.md). The
 [player's guide](PLAYER-GUIDE.md) tells the same without the detail.*
 
-Everything the mod changes and adds in the game, in the order of the Loader's
-Options tab, each with its switch there; the game's bugs fixed come last. A
-switch's name here in bold (**Rangers' casting level**) is the short form of the
-sentence the Options tab gives it, in the same section and order. How each is
+Everything the mod changes and adds in the game, in the sections of the
+Loader's Options tab, each with its switch there; the game's bugs fixed come
+last. A switch's name here in bold (**Rangers' casting level**) is the short
+form of the sentence the Options tab gives it, in the same section. (The tab's
+**Saves** section is under [More saves](#more-saves); where Wake of the Ravager is
+installed, in the README's [Requirements](README.md#requirements).) How each is
 done is in [DEVELOPMENT.md](DEVELOPMENT.md#how-each-part-works). Installing,
 running the game, the Loader's window and its dice log are in the
 [README](README.md).
@@ -74,6 +76,7 @@ running the game, the Loader's window and its dice log are in the
     - [Semyon](#semyon)
     - [What Dinos and the Trustee say about
       them](#what-dinos-and-the-trustee-say-about-them)
+  - [The champions' bout](#the-champions-bout)
   - [The cooked vulture](#the-cooked-vulture)
   - [Defilers' scrolls](#defilers-scrolls)
 - [Graphics](#graphics)
@@ -81,6 +84,7 @@ running the game, the Loader's window and its dice log are in the
   - [What the party wears](#what-the-party-wears)
   - [Shadows](#shadows)
   - [Dust](#dust)
+  - [See-through figures](#see-through-figures)
   - [Magic items' icons](#magic-items-icons)
   - [Spells on the ground](#spells-on-the-ground)
 - [Controls](#controls)
@@ -92,13 +96,13 @@ running the game, the Loader's window and its dice log are in the
   - [The view in fights](#the-view-in-fights)
   - [The pointer in scenes, and where it
     starts](#the-pointer-in-scenes-and-where-it-starts)
+  - [Spells on the Effects screen](#spells-on-the-effects-screen)
 - [More saves and characters](#more-saves-and-characters)
   - [More saves](#more-saves)
     - [Saves under their names](#saves-under-their-names)
   - [More characters](#more-characters)
 - [Game speed](#game-speed)
 - [The game's bugs, fixed](#the-games-bugs-fixed)
-  - [Spells on the Effects screen](#spells-on-the-effects-screen)
   - [Rules the game got wrong](#rules-the-game-got-wrong)
 
 ## In the game
@@ -132,6 +136,12 @@ a click.
 
 ![The combat log in the arena, in short, as a fight is played with Tab and Enter: Wild Fighting, attacks, a kill and its XP, and hiding in shadows, each line as it happens](docs/combat-log-live.gif)
 
+In detail, each attack names the weapon and its dice, the d20 against what it needed, the chance
+in percent, the AC it would hit and the target's AC, and the THAC0's parts follow (the panel
+here is expanded, as below):
+
+![The combat log in detail, expanded, in the slave pens' alarm fight: Kurzak, at the top beside K'ratchek, attacks K'ratchek with Shadowseeker +1 (1d6+1), d20 = 4, needs 15+ (30%), a miss, and under it his THAC0 14, +1 for the weapon, -2 for two weapons, in the main hand, = 15; above, the end of his off-hand blow with his obsidian long sword](docs/combat-log-detail.png)
+
 **The panel** sits over the map's lower right. A window the game opens over
 the map (a character's menu, a question) hides it until it closes. Expanded, it
 covers that part of the map, and the game's damage numbers over a creature
@@ -147,7 +157,7 @@ there; **-** makes it smaller.
   game has run, `Day 47, 14:20`: from day 1 at 00:00, the game's own clock (it
   has no time of day, so 14:20 is the hours into that day; a rest moves it on 8
   hours). Saves keep it.
-- **The arena's count of fights.** Between fights in the arena, the top line
+- **The arena's count of fights.** Between fights, in the slave pens and the arena, the top line
   says instead how many arena fights the party has had (`Arena fights: 4`; the
   time until the game has shown the count to the Loader): the game's
   own count, one a trip into the arena however many waves come (see [the
@@ -158,8 +168,8 @@ there; **-** makes it smaller.
 - **Its buttons**, on the right of its top line: **L**, which hides it as the
   key does; the level (**Least**, **Short**, **Detail**; a click goes to the
   next, and the Options tab follows); and **-** and **+** for a smaller or
-  bigger panel. Collapsed, it is one line, the newest; expanded, it is
-  taller (11 lines) and has filters along its top: **All**, **Party** (the
+  bigger panel. It starts at six lines; collapsed, it is one line, the
+  newest; expanded, it is taller (11 lines) and has filters along its top: **All**, **Party** (the
   party's lines), **Damage** (hits, damage and deaths) and **Saves** (saving
   throws and magic resistance). Its size is remembered.
 
@@ -331,7 +341,7 @@ spells) or `PRI` on the CLERIC list (clerics', druids' and rangers' priest
 spells), as `left/most` (`PRI 3/5`). The PSIONIC list shows none. Another level
 or list shows its own when the LEVEL or list button turns to it:
 
-![The USE screen with K'ratchek's spell slots: a 2nd-level druid, five first-level spells](docs/use-slots.png)
+![The USE screen with K'ratchek's spell slots: a 2nd-level druid, five first-level slots](docs/use-slots.png)
 
 The numbers go down as spells are cast (the screen shows the new count when it
 is next drawn) and back up after resting. A preserver in armour reads `NO
@@ -411,11 +421,10 @@ in its lower panel and under the pointer:
   better for each 3 levels above 5). DEX and the rest are still added
   to it, and armour already better is kept, so a spell showing a worse AC
   than the character's armour does nothing for them.
-- **A click on a spell's icon leaves it on** (the game ended it); a psionic
-  power's icon still ends the power, as that is how one is stopped ([Spells on
-  the Effects screen](#spells-on-the-effects-screen)).
+- **A click on a spell's icon** no longer ends it: [Spells on the Effects
+  screen](#spells-on-the-effects-screen).
 
-![The Effects screen for Cilla: the pointer on Armor's icon, and IMPROVED AC (4 CHARGES) at the foot](docs/effects-charges.png)
+![The Effects screen for Cilla: the pointer on Armor's icon, and IMPROVED AC (10 CHARGES) at the foot; her own feature, SHADOW-WALKER, beside it](docs/effects-charges.png)
 
 How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#the-games-spells).
 
@@ -477,7 +486,7 @@ own "Cannot use this item":
 | **Psionicist**, whatever its other classes | light only (leather, hide, silk: Drake, Shimmer and Silk Armor) | leather only, and only with a fighter, gladiator, ranger or cleric class (the game's lists give a psionicist none, and a psionicist/thief none either) | daggers, short swords, maces, clubs, chatkchas, bows and slings, of those its classes' lists allow: alone, daggers, bone and obsidian short swords, clubs, chatkchas and bows (the game's lists leave out maces, slings and the metal short sword, and the rule takes away the axes, picks, gythka and long swords they allow) |
 | **Thief** | light only; a multiclass thief, or a human thief once a warrior or cleric, as its other class allows, but no thief skills in armour that isn't light | leather ones; a multiclass thief only if another of its classes allows shields (a fighter, gladiator, ranger or cleric) | as its classes allow |
 | **Preserver**, one class | none (a human preserver once a warrior: as the warrior could, but no spells in armour) | none | as the game has it |
-| **Druid** | none | none | any |
+| **Druid** | none | none | as the game has it (any but great axes) |
 | **Cleric** | any | any | its sphere's: air missile and thrown weapons and daggers; earth stone, obsidian, metal and wood; fire obsidian; water bone and wood |
 
 A thief of any kind holds only leather shields, the rule or not: the game's own
@@ -828,7 +837,7 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#half-giants-two-handed
 #### Rings and cloaks of protection
 
 The game has no rings or cloaks of protection; the mod adds three (the
-arena's Ring +1, and Pehtucl's ring and cloak in the slave pens: see
+arena's Ring +1, Pehtucl's ring, and the cloak in the chest beside him in the slave pens: see
 [New items](#new-items)), each +1 to AC and +1 on every saving throw. With
 **Rings and cloaks of protection as in AD&D** ticked, they follow the AD&D
 rules for them:
@@ -1124,7 +1133,7 @@ thri-kreen's chatkcha, else the long sword (a gladiator's second the club), each
 only if it may be chosen, else the first that may. EXIT can't go back to the
 creation screen: DONE has made the character by then.
 
-![After DONE on the creation screen: the weapon window over it, a picture of each weapon spec, PICK A WEAPON SPECIALTY, the new character's name, and the picks left (1) beside EXIT; the hit points, PSP and age below it](docs/creation-weapons.png)
+![After DONE on the creation screen: the weapon window over it, a picture of each weapon spec, PICK A WEAPON SPECIALTY, the new character's name, and the picks left (1) beside EXIT; the hit points and age below it](docs/creation-weapons.png)
 
 A new character starts the game with a plain weapon of its first weapon spec in
 place of the bone long sword the game gives warriors, in a material it may use,
@@ -1302,10 +1311,10 @@ elf's figure, with its own switch: see
 | **Gerakis**, half-giant gladiator | specializes in the long sword and the gythka; with [half-giants' two-handed weapons](#half-giants-two-handed-weapons), his club is a bone gythka, a two-handed weapon beside his long sword | | **Wild Fighting**, as a [Wild Fury](KITS.md#multiclass-kits) has it, as each fight starts |
 | **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | | is a [Wasteland Seer](KITS.md#multiclass-kits) (druid spells 2 levels higher under the open sky, 1 lower under a roof; psionic powers 2 PSP less under the open sky, 1 more under a roof); her **chatkcha comes back as if she had several**: one more throw a round (2 instead of 1, or more with its weapon spec) |
 | **Cermak**, human preserver, once a gladiator | specializes in the long sword and the axe, which count once his gladiator levels do again (when his preserver level passes them) | | an **Arcanist**, the kit of his preserver class: two preserver spells a turn in a fight |
-| **Cilla**, elf preserver, druid and thief | | no leather armour (a druid wears none), and she knows the **Armor** spell in its place | an **Elven Wanderer**: with the [stealth rule](#hiding-in-shadows-to-backstab), her hiding in shadows is never halved in daylight |
+| **Cilla**, elf preserver, druid and thief | | no leather armour (a druid wears none), and she knows the **Armor** spell in its place | an **Elven Shadow-walker** (her own feature): with the [stealth rule](#hiding-in-shadows-to-backstab), her hiding in shadows is never halved in daylight |
 
-Gerakis's, K'ratchek's and Cilla's features are their own: no character made
-on the creation screen can have them. The Effects screen lists them (as it
+Gerakis's, K'ratchek's and Cilla's features are their own, not kits' (only
+K'ratchek's extra throw is something no kit gives). The Effects screen lists them (as it
 does kits), and the Characters tab beside the kit. Cermak's gear stays as it
 is (an Arcanist has none of its own), and so do the hit points the game gave
 him: the Arcanist's d3 counts from his next level.
@@ -1419,7 +1428,9 @@ comes in a fight with no enemy in any of the eight squares around them tries to
 hide in shadows; if they do, they try to move silently up to someone; and if
 both succeed, their next attack that turn counts as one from behind: +2 to hit,
 the target's DEX and shield don't count, and with a weapon that can backstab it
-is a backstab, the damage multiplied as usual. The attack gives the thief away,
+is a backstab, the damage multiplied as usual. Hidden and unheard, the thief
+makes a soft sound, a breath sinking away into the dark (the mod's own, played
+through the game's sound effects, so not with them turned off). The attack gives the thief away,
 and so does the turn ending without one. An enemy next to the thief when the
 turn comes means no hiding at all: get clear first (a
 [Shadowblade](KITS.md#multiclass-kits) tries anyway). A [Military
@@ -1445,7 +1456,7 @@ more, x3 to x6). Only the round's first attack is a backstab: the game multiplie
 swing (an off-hand one after a miss) was multiplied too.
 
 The chance to hide is **halved in daylight** (with [kits](#kits) on, not for an
-Assassin, a Military Scout or Cilla, the Elven Wanderer). Which maps are under
+Assassin, a Military Scout or Cilla, the Elven Shadow-walker). Which maps are under
 the open sky goes by the game's regions: open desert and rock, the villages'
 open ground and the arena are; the slave pens, the sewers, the lava caverns and
 the other underground or roofed places aren't. Three maps have both, buildings
@@ -1538,11 +1549,13 @@ a worn belt's 5 counted, as in the thief rows):
   cloak). A dagger, a ring, an amulet, a gem or food can be lifted, and so can
   three weapons whatever their weight: Kurzak's Shadowseeker, Churrr's
   Gutterknot and Maris's Mindshard (see [New items](#new-items)). Lifting one is
-  worth 200 XP to the thief, given as the game gives a quest's ("Cilla
+  worth 200 XP to the thief, once a game for each weapon (sold and lifted back, it is worth
+  nothing more), given as the game gives a quest's ("Cilla
   receives 200 experience points!", with the quest's sound; split among a
   multiclass thief's classes). Keys stay, as scripts may look for them.
-  People outside the party keep all they own in their pack, so this goes by
-  what each thing is.
+  Anything else lifted, or the coins, comes with a purse's jingle (the mod's
+  own sound; the three weapons keep the quest's).
+  This goes by what each thing is, wherever its owner keeps it.
 - **Failure:** a move silently roll. Made, the thief slips away unnoticed;
   missed, they're caught.
 
@@ -1581,10 +1594,10 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#picking-pockets).
 *Spoilers: this section says where the new items and people are, and what
 they say. [The player's guide](PLAYER-GUIDE.md) has the rules without them.*
 
-Spells, people, a quest and items the mod adds to the game, each with a box
-in the Options tab's **New content** section: the people, the quest and the
-items from the next time the game is started, the spells and the defilers'
-scrolls at once.
+Spells, people, a quest, an arena bout and items the mod adds to the game,
+each with a box in the Options tab's **New content** section (the bout with the
+items'): the people, the quest, the bout and the items from the next time the
+game is started, the spells and the defilers' scrolls at once.
 
 ### New wizard spells
 
@@ -1765,15 +1778,15 @@ How it works:
 
 ### New items
 
-Items the game never had, or never placed. All but the arena's ring (which the
-Loader hands over itself, while it runs) are written into the game's own data
+Items the game never had, or never placed. All but the arena's ring and
+Thornwall (which the Loader hands over itself, while it runs) are written into the game's own data
 each time the Loader starts the game, so the game makes them with their people
 and chests and then keeps and saves them like its own. A changed switch takes
 effect in regions the party hasn't visited yet; start a new game to have them
 all. The dice log doesn't say where they are; [Items](ITEMS.md) does, with spoilers.
 
 **New items, magical and mundane** on the Options tab places them all, the
-arena's ring too. A thief can [lift](#picking-pockets) Pehtucl's ring,
+arena's ring too, and brings [the champions' bout](#the-champions-bout). A thief can [lift](#picking-pockets) Pehtucl's ring,
 Shadowseeker, Gutterknot and Mindshard (200 XP for each weapon).
 
 **Where they are.** The mod's items are in the [item tables](ITEMS.md) with the
@@ -1782,12 +1795,22 @@ game's own: in ***bold italics*** in
 it does, and marked **new** in
 [Every mundane weapon](ITEMS.md#every-mundane-weapon). The game has no short
 sword at all, no bone or obsidian axe or great axe, no bone dagger, few plain
-metal weapons and no magic club, pick or staff sling. Two more, armour:
+metal weapons and no magic club, pick or staff sling. And armour the game has
+but never placed:
 
 | Icon | Item | Where | What it is |
 |---|---|---|---|
 | ![](docs/items/bone-scale-arm-armor.png) ![](docs/items/bone-scale-leg-armor.png) ![](docs/items/bone-helm.png) | **Bone Scale Arm Armor**, **Leg Armor** and **Bone Helm** | in the slave pens' chest with the Bone Scale Chest Armor and Arrows +3 (the game has the set but places only the chest piece) | the set; the helm AC 1 with [Helms give AC 1](#helms), worn by those who can wear the armour (not thieves) |
-| ![](docs/items/leather-helm.png) | **Helm** | in **Kurzak**'s pack, in the slave pens | the game's leather helm |
+| ![](docs/items/leather-helm.png) | **Helm** | worn by **Kurzak**, in the slave pens | the game's leather helm |
+
+**Pehtucl's chest**, beside the slave pens' head templar, holds the Cloak of Protection +1 and is
+locked, with a poisoned needle in the lock. Used by a thief, it is first searched for traps
+(find/remove traps: the needle drawn out, or set off) and then picked (open locks; a failed try
+can be tried again). Anyone else can try to bash it open (5% a try, more with STR 18 and up),
+which sets the needle off if it is still there. A needle set off is a trap as the game's are: the
+party's best at find/remove traps may still spot it in time (or Detect Traps), else it does 2d6
+poison damage to whoever opened it. Once open, it stays open. (In a new game; with **New items,
+magical and mundane** on.)
 
 The bone and obsidian weapons are also new characters' starting weapons with
 [weapon specialization](#weapon-specialization), each in a material the
@@ -1827,7 +1850,7 @@ wear the game's chain (no single-class thieves), and kept from more with
 [class restrictions](#class-restrictions). **Grey's Scale**'s arm and leg
 armour is AC 3 each (the game's is 2).
 
-![The inventory screen in the game: Arrowbane, a silver circlet, in a backpack cell; the Sunking Crown, a gold crown, in the head's slot](docs/head-items.png)
+![Two item icons from the inventory screen: Arrowbane, a silver circlet, and the Sunking Crown, a gold crown](docs/head-items.png)
 
 ![Dream's pack with the bone scale set: the chest, arm and leg pieces, and the Bone Helm under the pointer with its name](docs/bonescale.png)
 
@@ -1889,19 +1912,21 @@ How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#robes).
 
 ### New people
 
-Two new people in the slave pens. They are there when the party first enters
-the pens in a game started from the Loader; a save made after that keeps the
-pens as they were.
+Two new people in the slave pens: Kalzith, there when the party first enters
+the pens in a game started from the Loader, and Semyon, once he has left the
+arena. A save made after that keeps the pens as they were.
 
 #### Kalzith
 
 **Kalzith** is a defiler slave the templars put
 in the arena now and then (the crowd loves to watch a defiler burn), kept in a
 pen of his own in the middle column the rest of the time. He has the arena
-Defiler's figure and a face of his own: the game's portrait 61 with a slave's
-brand on the brow, so the Dialogue tab never mistakes him for anyone else.
+Defiler's figure and a face of his own, painted for him in the game's own
+portrait style: an old man, white of brow and beard, in the green-teal hood his
+figure wears. No one else has it, so the Dialogue tab never mistakes him for
+anyone else.
 
-![Kalzith: his talk, and his shop of six scrolls, 3,000 to 9,000 ceramic, here with the party leader's CHA discount](docs/kalzith.png)
+![Kalzith: his talk, and his shop of six scrolls, 3,000 to 9,000 ceramic](docs/kalzith.png)
 
 Talk to him as to anyone (click him with the look pointer, then the Look box's
 Talk button). His conversation is the game's kind, just him speaking:
@@ -1977,6 +2002,12 @@ isn't in the pens. Talk to him (Look, then Talk): he says why the templars tied
 him up in the arena (he was asking about the Veiled Alliance), passes on what he
 has heard (who carries keys), reminds the party where he hid his gem (the grain
 pots), and talks about the Alliance's plans, in his own voice from the arena.
+With the new items on, he also tells of a weapon shipment he passed ("Seen
+anything useful?": "Guards were fussing over one crate like it held something
+special. I didn't see where they took it, but it can't have gone far"). From
+then on the pens' weapon rack holds **Thornwall**, a bone polearm +1, and once
+the party carries it he has a word about it ("We found what was in that
+crate.").
 As with the game's own people, each question goes from the list once asked,
 and comes back the next time you talk to him.
 
@@ -2025,6 +2056,39 @@ Semyon is never put in his pen after it.
 
 How it works:
 [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#what-dinos-and-the-trustee-say-about-them).
+
+### The champions' bout
+
+Kill **Scar** in the arena, and the pens have a new king (killed in the pens,
+he makes no one king, and the champions don't come). On the party's next
+visit to the arena the Announcer has news:
+
+> Citizens of Draj! Scar is dead, and the pens have a new king. But word travels
+> fast across the sands. From a distant arena come champions who have never known
+> defeat, and they have come to see if the new king is worthy of the crown. Their
+> leader, a Tohr-kreen, carries a gythka that has drunk the blood of a hundred
+> gladiators.
+
+The first wave is six **champions** in place of the game's:
+
+| Champion | Weapons | Armour |
+|---|---|---|
+| Tohr-kreen | **Kreenfang** (a gythka +1) | none |
+| Half-giant | a metal great axe | full scale, a bone helm, a leather shield |
+| Mul gladiator | two bone axes | full scale, a bone helm |
+| Halfling | a sling, a bone short sword | full leather, a leather helm, a leather shield |
+| Elf | a bow and arrows, an obsidian long sword | full leather, a leather helm, a leather shield |
+| Defiler | a bone dagger, and a scroll of Fogbolt, Spook or Reflected Image (chosen as the bout starts; of the game's own spells with the new spells off) | none |
+
+They fight with their weapons, the two archers shooting, and their armour counts
+on top of their kinds' AC, as the party's does (and as the game's own people's
+do: [their gear is worn](#the-games-bugs-fixed) from the start too).
+What they carry is on their bodies afterwards; the Tohr-kreen falls as a dead
+Tohr-kreen of its own, Kreenfang in it. It comes once. A party that breaks out
+with Scar instead, or leaves the pens another way, doesn't meet them. (The dead
+body by the arena's stone arch has a plain gythka.)
+
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#the-champions-bout).
 
 ### The cooked vulture
 
@@ -2077,8 +2141,9 @@ How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#defilers-scrolls).
 ## Graphics
 
 What the mod draws on the game's map, and the magic items' icons. The elves'
-and half-elves' looks, the party's gear, shadows and dust each have a switch in
-the Options tab's **Graphics** section.
+and half-elves' looks, Cilla drawn as an elf, the party's gear, shadows, dust
+and see-through figures each have a switch in the Options tab's **Graphics**
+section.
 
 ### Elves and half-elves
 
@@ -2159,6 +2224,26 @@ stand in front of them, as with the shadows. Switch it off on the Options tab.
 ![The party walking across the arena's sand: puffs of dust behind them, spreading and fading](docs/dust.png)
 
 How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#dust).
+
+### See-through figures
+
+A thief or ranger hidden in shadows and unheard in a fight (see [Hiding in
+shadows to backstab](#hiding-in-shadows-to-backstab)), and anyone invisible (the
+Invisibility spells; among the game's foes only the psurlons, by their Superior
+Invisibility), is drawn half see-through: each pixel halfway between the
+figure's colour and what lies under it, so the floor, a wall or a shadow shows
+through. The hidden thief turns solid again with the attack that gives them
+away, or as the turn ends. A party member who is invisible is always drawn so;
+an invisible enemy is drawn solid while one of the party detects invisibility
+(the spell, or [Shadowseeker](ITEMS.md) readied), as the party sees it then. The
+game itself draws the invisible like anyone else: being unseen only makes them
+harder to hit (4 worse) and better at shrugging off a spell aimed at them (4
+better), for whoever can't detect invisibility. Switch it off on the Options
+tab. It needs a little memory the Loader's start sets aside for it.
+
+![Gerakis in the slave pens drawn as ever (left) and see-through (right): the floor, the wall below and his shadow show through him](docs/see-through.png)
+
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#see-through-figures).
 
 ### Magic items' icons
 
@@ -2289,6 +2374,19 @@ Each has its switch on the Options tab, on by default (from the next start).
 How it works:
 [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#the-pointer-in-scenes-and-where-it-starts).
 
+### Spells on the Effects screen
+
+On the Effects screen (a character's spells and powers in effect), a click on
+an effect's icon ends it in the game, so a stray click loses a spell. With the
+Loader a click leaves a spell on; a psionic power's effect still ends, as that
+is how a power is stopped. It has a switch in the Options tab's **Controls**
+section (**A click on a spell's icon on the Effects screen leaves it on**,
+from the next start).
+
+What else the Effects screen shows (a spell's charges left, Enlarge's damage,
+the armour spells' AC, kits and weapon specs): [the Effects
+screen](#the-effects-screen).
+
 ## More saves and characters
 
 ### More saves
@@ -2366,11 +2464,9 @@ walks](HOW-THE-GAME-WORKS.md#how-fast-the-party-walks)).
 from the next start): on the map the party walks at its full speed whatever is
 drawn. When a frame is late, the next one isn't drawn: the game still moves
 everyone a step, and the frame after shows all that moved in both. On a busy
-screen you see fewer pictures: with the whole party walking in the slave pens,
-about 27 a second, where the game shows about 37 without steady pace (and 70
-when no frame is late; counted by the game's page flips). So walkers move two
-or three steps between pictures rather than one, but no one slows down. Fights
-draw every frame, as the game does.
+screen you see fewer pictures, so walkers move two or three steps between
+pictures rather than one, but no one slows down. Fights draw every frame, as
+the game does.
 
 ![The whole party walking back and forth in the slave pens, the same clicks on both sides: with steady pace off on the left and on on the right, where the party gets to each spot sooner](docs/steady-pace.gif)
 
@@ -2382,20 +2478,9 @@ The Loader also gives DOSBox more of the computer's time: 20,000 cycles a
 millisecond by default, where GOG's settings give 7,000. On the Options tab
 **Game speed** is GOG's own (7,000), that (20,000), or 35,000: there nearly
 every frame is drawn in time even with the whole party in view, the smoothest,
-but it needs a faster computer (measured, frames stop being skipped from about
-30,000). It applies the next time the game is started. The
-Loader's two speeds run on DOSBox's dynamic core (GOG's settings run this game
-on the slower normal core): the same cycles do more, and cost the computer
-about a third less.
-
-Measured in the slave pens at 20,000 cycles with everything on, walking (the
-leader's speed in pixels a second of the game's time):
-
-| | The leader's speed |
-|---|---|
-| The whole party in view, steady pace off | 152 to 175 |
-| The whole party in view, steady pace on | 249 to 278 |
-| The leader alone | about 220 to 260 |
+but it needs a faster computer. It applies the next time the game is started.
+The Loader's two speeds also run DOSBox's faster way of running the game, which
+costs the computer less.
 
 What each setting asks of the computer:
 [Suggested system requirements](README.md#suggested-system-requirements).
@@ -2416,10 +2501,11 @@ got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
 | **Share Strength** (any maintained power on someone else) | Ended, it stayed on the one who got it, and could end another of the psionicist's own effects instead | It ends on everyone it was on |
 | **Dispel Magic** (the preserver's) | Also laid "No spell use" on everyone it caught, your own party too, which Dispel Magic can't remove | Only dispels, as the cleric's always did |
 | **Cause Serious and Critical Wounds** | 2d9 and 3d9 (the Cure spells heal AD&D's 2d8+1 and 3d8+3) | 2d8+1 and 3d8+3 |
-| **Absorb Disease** (the psionic power) | Also gave the psionicist 1d6 STR, as Strength does (its code ran on into Strength's), and the STR alone when there was no disease to take | Takes the disease only |
-| **Bless** and **Aid** | Left out those of the caster's side with an enemy beside them, but measured it from the wrong place (a slip in the code), so the wrong ones were left out | Measured from where each stands |
+| **Absorb Disease** (the psionic power) | Also gave the psionicist 1d6 STR, as Strength does, and the STR alone when there was no disease to take | Takes the disease only |
+| **Bless** and **Aid** | Left out those of the caster's side with an enemy beside them, but measured it from the wrong place, so the wrong ones were left out | Measured from where each stands |
 | **Negative Plane Protection** | Saved as against Vampiric Touch, which allows no save, so it never stopped anything | A save against paralysis, poison and death, as AD&D's against death magic: saved, the undead's touch is stopped and it takes 2d6 |
 | **Acid Arrow** | After the hit its acid never burned again: its time was a timer that only ended it, and nothing spent it a round at a time | 2d4 acid at the start of each round it lasts (a round for each started minute of its time: four for an 11th-level caster) |
+| **Scare**'s save | Everyone below 6th level failed: the save it meant for an elf or half-elf priest asked for both races at once | An elf or half-elf priest below 6th level saves as usual; others below 6th still fail, 6th and up still always save |
 | **Cloak of Bravery** | Its +4 on saves against fear asked for a mark no spell had, so it never applied | +4 against Scare, Fear, Cause Fear and Insect Plague (and a Cloak of Fear's), and the new [Spook](#new-wizard-spells) |
 | A **berserk** or **confused** party member | Could end it fighting for the monsters' side: their side is rolled each turn, and only a charm's end put it back | Back on their own side when it ends |
 | The **fire elementals** | The resistances the wrong way round: the fire elemental hurt by +1 weapons, the lesser one only by +2 and by fire | The fire elemental needs +2 weapons and the lesser one +1, as the clue book has them, and neither takes anything from fire |
@@ -2428,17 +2514,18 @@ got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
 | **Thief skills**' equipment penalty | Taken for anything in the hands, quiver or leg slot (a weapon held cost 5 to 10 points), never for the armour worn | None ([how the game works out thief skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)) |
 | Items that raise or lower an **ability score** | Changed the score wherever they were, the backpack too, so one carried did as much as one worn | Only while worn ([how](DEVELOPMENT-CONTENT.md#worn-items-the-gladiators-armour-and-psionic-blast)) |
 | The **gladiator's armour optimisation** (AC 1 better a 5 gladiator levels) | Given with no armour on, where Dark Sun gives it to armour worn | Only with armour on (arms, legs, head or chest; not a shield, bracers or a robe) |
-| **Psionic Blast** on a party member | Its imagined wounds (down to a fifth of its hit points) were real and stayed | Given back as the fight ends, to a member still standing (the dice log says so; [how](DEVELOPMENT-CONTENT.md#worn-items-the-gladiators-armour-and-psionic-blast)) |
+| **Psionic Blast** on a party member | Its imagined wounds (down to a fifth of its hit points) were real and stayed | Given back as the fight ends; until then a blow that would kill it knocks it out instead, and one knocked out wakes with them (the dice log says so; [how](DEVELOPMENT-CONTENT.md#worn-items-the-gladiators-armour-and-psionic-blast)) |
+| The game's **people's weapons and armour** | Carried in their packs until each one's first action in a fight: until then AC 10, armour unworn, no weapon in the Look box; anyone hit before acting (an opening blow, a backstab, the first round) met no armour | Worn and in hand as they come on the map, as the game puts them on: the best weapon in the main hand, a shield or a second weapon in the other, a bow and its arrows, armour and a helm. The mod also puts on a cloak, a belt, boots, an amulet and up to two rings, which the game never did. Each counts by the same rules as the party's |
 | **DELETE** in the roster | With the list scrolled, deleted another character | Deletes the one chosen ([more characters](#more-characters)) |
 | A **New** character's thief skills | Shown as 0 | Shown as they are ([more characters](#more-characters)) |
-| **The Trustee** in the slave pens | His rounds' two pauses took their corner from numbers other scripts in the pens change, so he could set off for a spot that doesn't exist and stay busy ("I'd love to talk more...") for good | The pauses keep a corner of their own, and his busy line starts his rounds again, so one already stuck walks on once talked to |
+| **The Trustee** in the slave pens | His rounds' two pauses took their corner from numbers other scripts in the pens change, so he could set off for a spot that doesn't exist and stay busy ("I'd love to talk more...") for good | The pauses keep a corner of their own, and his busy line starts his rounds again, so one already stuck walks on once talked to; and a save made while he (or anyone on rounds of their own) walked no longer leaves him standing when loaded |
 | A thief skill rolled **for the whole party** (a trap going off, hearing the men by the wagon) | Meant for the member with the best chance, but the pick compared the wrong way round, so the first party member always rolled | The member with the best chance rolls ([where the game rolls them](HOW-THE-GAME-WORKS.md#where-the-game-rolls-thief-skills)) |
 | **Random monsters** (a vanishing body, a survivor's warning) | How many came was worked out from the wrong monster's strength, and in seven regions the last monster on the list divided by 0, which ended the game ("Divide error") | Worked out from the monster that comes: 1 to 6, fewer of the strong ones |
 | A magic item's **glow in a shop** | Stood still: a shop runs its own loop, which never turned the colours that make it shine | Shines, as on the map and in the inventory |
 | The game's **Sling +1** | A blank icon (its picture is missing from the game's data) | The Sling's, with a glow |
 | **View Character's DAM line** with a wooden, bone, stone or obsidian weapon | One or two more than the attack does: it left out the weaker material's damage (2 for wood, 1 for the others, on a weapon with no plus), which the inventory's line and the attack take off | The same as the inventory's and the attack's |
 | The **DAM lines** of a **hasted** or **slowed** character (the inventory screen, View Character) | The attacks a round as if neither: a fight's attack doubles them for Haste and halves them for Slow, but the lines never did, and the inventory's showed half an attack a round (Slow's) as one | Twice, or half, as the attack has them (`3x1D8+13` hasted, `0.5x1D8+6` slowed), as on the Loader's Characters tab |
-| **Kurzak** calling for **Legcrusher** once the party has killed him (he sends him when they're slow to come to a fight; at the fountain they can kill him with no alarm) | Kurzak went on shouting "Legcrusher! Get gladiators!" at every call after, and greeted them with "I had to send Legcrusher after you", or "I'm glad you listened to Legcrusher", and called him good with monsters when asked who the half-giant is; Dinos warned that he'd send out Legcrusher | He notices: "Legcrusher! ... Legcrusher? Where has that lump got to? Gladiators! Get up here yourselves!", when they come, "I sent Legcrusher after you, and he never came back. You wouldn't know anything about that, would you?", after Legcrusher had found them, "So Legcrusher found you. Then where's he got to?", and asked who the half-giant is, "That was Legcrusher, the monster trainer. He's gone missing." Dinos no longer warns them that Kurzak will send out Legcrusher, but that he'll come down himself |
+| **Kurzak** calling for **Legcrusher** once the party has killed him (he sends him when they're slow to come to a fight) | Kurzak went on calling for him, greeting the party as if he'd brought them, and speaking of him as still about (Dinos too) | He notices: "Legcrusher? Where has that lump got to? Gladiators! Get up here yourselves!", "I sent Legcrusher after you, and he never came back. You wouldn't know anything about that, would you?", "That was Legcrusher, the monster trainer. He's gone missing."; Dinos says Kurzak will come down himself |
 | **Darkhold**'s scripts | Story events left some creatures' triggers pointing at an empty script: the wyvern scene's creature and two in the queen's chamber lost their look text, and the portcullis guard no longer fought back when attacked | Each keeps its own |
 | The **Lava Rifts** ranger | His sight trigger, set again, pointed at the hermit's script: endless hermit talk, and a second Iron Necklace | He keeps his own |
 | **Linara** in Gedron | Once the extract was delivered, her talk ended with no menu, so Jasmine's spellbook could never come up | Her talk goes on to her menu |
@@ -2453,44 +2540,29 @@ got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
 | Lines that depend on the **race or sex** of the one talking to someone | Read from the wrong record, so they always took the party's active member for a man of no race: a halfling was never greeted as a fellow halfling ("Oh, it is a relief to see a fellow halfling") nor named by race in the insult that follows, a woman was told "only a mad man would think of fighting Draj" and of "his purse", a thri-kreen never heard the bell the mastyrial hears near Demothi's camp, nor was told "your help" rather than "the help of any humanoid" | Each reads the active member's own race or sex |
 | **"Out of memory in OEOpenGraph"** in a long session | The map needs 60,000 bytes in one piece each time it comes back (after the USE screen, a talk, a menu), and with the map up the game had about 57 KB to spare, so it could stop | Part of the game's code and its music buffer kept in upper memory: about 97 KB to spare with the map up, and a warning in the dice log if it runs low ([crash, freeze and item reports](README.md#crash-freeze-and-item-reports)) |
 | **Slay Living**'s description | Said a creature that saves takes 3 to 17 | Says 2 to 16 (half of 4d8), what the game does |
-| A character's **most PSP** (worked out at each level-up check, for every party member) | The WIS bonus read from the creation screen's record, not the character's (in play, any byte that memory holds: 183 in one test), and the bonus tables 8 scores long, so INT 22 gave nothing, INT 23 to 25 20 to 24 too many, WIS 23 to 25 none at all, CON 23 to 25 0 to 2 | Each from the character's own score: CON and INT the score less 15, WIS twice it less 10, on to 25 (found by CalvinRodo's yuan-ti, checked in DSUN.EXE). The most only ever rises, so a character's may go up once, the next time it's worked out |
-| A fight's **music** | An attack that starts a fight asks for the music level the region gives its creature, but read it with the wrong step, so every creature but the region's first got another's level | The creature's own level (found by yuan-ti, checked in DSUN.EXE) |
+| A character's **most PSP** (worked out at each level-up check, for every party member) | The WIS bonus read from the creation screen's record, not the character's (in play, any byte that memory holds: 183 in one test), and the bonus tables 8 scores long, so INT 22 gave nothing, INT 23 to 25 20 to 24 too many, WIS 23 to 25 none at all, CON 23 to 25 0 to 2 | Each from the character's own score: CON and INT the score less 15, WIS twice it less 10, on to 25 (found by yuan-ti). The most only ever rises, so a character's may go up once, the next time it's worked out |
+| A fight's **music** | An attack that starts a fight asks for the music level the region gives its creature, but read it with the wrong step, so every creature but the region's first got another's level | The creature's own level (found by yuan-ti) |
 | An archer's **pointer** after a shot | Showed "can't shoot" once any shot of the round was made (one that killed its target, say), though the click still shot the shots left | Shows "can't" only once every shot of the round is made |
 
 Two more have a switch: Cilla's figure (the game gives the elf the half-elf
 woman's; see [Elves and half-elves](#elves-and-half-elves)), and a click on a
 spell's icon on the Effects screen ending it ([Spells on the Effects
-screen](#spells-on-the-effects-screen)). How the fixes work:
-[DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#the-games-spells). The script bugs
-(Darkhold, the Lava Rifts, Linara) were found by the OpenDS project and checked
-by yuan-ti, the ranger's tracking, the sewer grate, the Rebel Mindhome, region 9's messenger, the Draj serf and the halfling's lines by
-yuan-ti, and the other race and sex lines, the haystack, the cave guide and the slime book by
-the Loader's own search of the scripts; the Loader mends them in its copy of the game's scripts
-(`scriptfixes.py`).
+screen](#spells-on-the-effects-screen)). The script bugs are mended in the
+Loader's copy of the game's scripts; many were found by yuan-ti and the OpenDS
+project ([credits](https://github.com/daaki85/darksun-obsidian-edition#credits)). How the fixes work:
+[DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#the-games-spells).
 
 **Saved games.** There's no need to start a new game for these: they're in
 the patched game, not in a save, so they work from the moment a game is
 loaded. What a bug already did stays in the save: [your saved
 games](README.md#updating-backups-saved-games-and-the-loaders-files) says what.
 
-### Spells on the Effects screen
-
-On the Effects screen (a character's spells and powers in effect), a click on
-an effect's icon ends it in the game, so a stray click loses a spell. With the
-Loader a click leaves a spell on; a psionic power's effect still ends, as that
-is how a power is stopped. It has a switch in the Options tab's **Controls**
-section (**A click on a spell's icon on the Effects screen leaves it on**,
-from the next start).
-
-What else the Effects screen shows (a spell's charges left, Enlarge's damage,
-the armour spells' AC, kits and weapon specs): [the Effects
-screen](#the-effects-screen).
-
 ### Rules the game got wrong
 
 Where the game's own rules contradict its manual or AD&D, or each other, a
-[rule change](#rule-changes) puts them right. Each has a switch on the
-Options tab, on by default:
+change on the Options tab puts them right (most of them [rule
+changes](#rule-changes)), each with its switch, on by default. The ones the game
+got plainly wrong:
 
 | | The game | With the rule |
 |---|---|---|
@@ -2504,3 +2576,7 @@ Options tab, on by default:
 | **Acid on armour** | Any armour without a magical power destroyed outright, its plus ignored | A save by material, a plus helping ([items saving against acid](#items-saving-against-acid)) |
 | **Class tables** | Priests' THAC0 improving a level early (19 at 3rd), fewer priest and preserver spell slots (3 2 1 at 5th), and gladiators, rangers and thieves needing AD&D's XP less a little | AD&D's tables ([AD&D's class tables](#adds-class-tables)) |
 | **Thief skills** | A table of the game's own, high from the start (a 3rd-level elf: move silently 66, hide in shadows 61) | AD&D's table by level, with Dark Sun's race and DEX adjustments ([thief skills from AD&D's table](#thief-skills-from-adds-table)) |
+| **Helms** | AC 0 | AC 1 ([helms](#helms)) |
+| **Preservers learning from scrolls** | Any spell from any scroll learnt, and every spell known | AD&D's INT chance and most known ([preservers' INT](#preservers-int)) |
+| **CON** | A hit point back every 5 minutes at any CON from 20; dwarves and halflings adding CON's poison save to their racial bonus | AD&D's regeneration by CON, and the racial bonus alone ([CON as in AD&D](#con-as-in-add)) |
+| **Enlarge** | The whole melee damage multiplied, STR included | The weapon's dice only, rounded up ([Enlarge](#enlarge-multiplies-the-weapons-dice-only)) |

@@ -166,20 +166,14 @@ class KalzithTests(unittest.TestCase):
         self.assertEqual(kalzith.object_chunks({}), {})
 
     def test_portrait(self):
-        """His own face: the game's portrait 61, branded on the brow, at a number the game leaves
-        free; the rest of the picture the game's."""
-        from dsloader import icons
-        face = [[150] * 32 for _ in range(32)]
-        out = kalzith.portrait_chunk({("PORT", kalzith.PORTRAIT_FROM): icons.encode(face)})
-        rows = icons.decode(out)
-        changed = {(x, y) for y in range(32) for x in range(32) if rows[y][x] != 150}
-        x0, y0 = kalzith.BRAND_AT
-        self.assertEqual(changed, {(x0 + dx, y0 + dy) for dy, l in enumerate(kalzith.BRAND)
-                                   for dx, c in enumerate(l) if c != "."})
-        self.assertEqual(rows[y0][x0], kalzith.BRAND_GROOVE)
-        self.assertEqual(rows[y0 + 1][x0], kalzith.BRAND_RIM)
-        self.assertIsNone(kalzith.portrait_chunk({}))
-        self.assertNotEqual(kalzith.PORTRAIT, kalzith.PORTRAIT_FROM)
+        """His own face (kalzithface.py), 32 x 32, at a number the game leaves free, in colours the
+        game's portraits use without animating them or a region changing them."""
+        from dsloader import icons, kalzithface
+        rows = icons.decode(kalzith.portrait_chunk({}))
+        self.assertEqual(rows, [list(r) for r in kalzithface.FACE])
+        self.assertEqual((len(rows), {len(r) for r in rows}), (32, {32}))
+        self.assertTrue(all(16 <= v <= 79 or 128 <= v <= 223 for r in rows for v in r))
+        self.assertEqual(kalzith.PORTRAIT, 101)
 
     def test_scroll(self):
         """The game's own spell scroll, teaching the spell at the price (named one past the
@@ -203,6 +197,7 @@ class KalzithTests(unittest.TestCase):
             flags = set()
             def region(self): return kalzith.REGION
             def flag(self, n): return n in self.flags
+            def flags_ready(self): return True
             def set_flag(self, n, on=True): self.flags.add(n)
             def creatures(self, count):
                 t = bytearray(count * game.CREATURE_SIZE)
@@ -276,7 +271,7 @@ class DeathTests(unittest.TestCase):
         rec[game.CREATURE_NAME:game.CREATURE_NAME + len(name) + 1] = name.encode() + b"\0"
 
         class GD:
-            table, flags = bytes(size * 2) + bytes(rec), set()
+            table, flags = bytes(size * game.PARTY_SIZE) + bytes(rec), set()
 
             def creatures(self, count):
                 return self.table
@@ -293,6 +288,9 @@ class DeathTests(unittest.TestCase):
         self.assertTrue(kalzith.dead(self._gd("Kalzith", 0), "Kalzith"))
         self.assertTrue(kalzith.dead(self._gd("Kalzith", 3, status=5), "Kalzith"))
         self.assertFalse(kalzith.dead(self._gd("Kalzithx", 0), "Kalzith"))
+        party = self._gd("Kalzith", 0)  # (a party member the player named so: not him)
+        party.table = party.table[game.PARTY_SIZE * game.CREATURE_SIZE:]
+        self.assertFalse(kalzith.dead(party, "Kalzith"))
 
     def test_watch(self):
         gd = self._gd("Kalzith", -2)

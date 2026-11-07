@@ -87,6 +87,17 @@ def slots_left(gd: GameData, member: int, level: int) -> int:
     return gd.guest.read(gd.ds * 16 + game.SLOTS_LEFT["Wizard"] + member * game.SLOTS_STRIDE + level, 1)[0]
 
 
+CAST_SOUND = 0x0F  # a spell record's byte: the sound that goes with its cast glow
+
+
+def cast_sound(gd: GameData, row: int) -> int:
+    """The game's sound for ARROWS[ROW]'s spell as it is cast (0: none), played as the arrows are made."""
+    if not 0 <= row < len(ARROWS):
+        return 0
+    rec = gd.spell_record(ARROWS[row].spell)
+    return rec[CAST_SOUND] if len(rec) > CAST_SOUND else 0
+
+
 class SpellArrows:
     def make(self, gd: GameData, member: int, row: int) -> "pickpocket.Attempt":
         """Party member MEMBER's button for ARROWS[ROW]: a slot used and the arrows in its empty quiver

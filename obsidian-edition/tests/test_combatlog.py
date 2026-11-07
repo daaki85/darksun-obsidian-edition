@@ -127,6 +127,15 @@ class LinesTests(unittest.TestCase):
         self.assertEqual(c.shorten(line, c.SHORT), "Gerakis attacks Slig: 7 vs 2+ HIT")
         self.assertEqual(c.shorten(line, c.MINIMAL), "Gerakis hits Slig")
 
+    def test_save_with_modifiers(self):
+        """A save with its modifiers shown is shortened too, to its total against the need."""
+        line = ("Mountain Stalker's saving throw vs Fireball from Dag (spell): d20 = 9, doubled against fire = 18, "
+                "needs 16 (25% to save) -> failed: full damage, 12")
+        self.assertEqual(c.shorten(line, c.SHORT), "Mountain Stalker's save vs Fireball: 18 vs 16, failed")
+        line = "Dag's saving throw vs Web from Slig (spell): d20 = 13 +2 Blessed = 15, needs 14 (40% to save) -> saved"
+        self.assertEqual(c.shorten(line, c.SHORT), "Dag's save vs Web: 15 vs 14, saved")
+        self.assertEqual(c.shorten(line, c.MINIMAL), "Dag saves vs Web")
+
     def test_damage_without_its_attack_keeps_its_own_line(self):
         log = c.Log()
         log.add(["  Rampager hits Defiler for 4: 2d6 = [1 + 3]"])
