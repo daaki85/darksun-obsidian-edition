@@ -52,7 +52,10 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
    (or decode the whole script with `dsloader.gpl.load_scripts` and `decode`). Every script in
    the built copy should decode (2026-11-05: eleven didn't, and a later change gave up on one).
 5. **The watchdog**: `sh guard_start.sh`, then a Monitor on `$WORK/guard.log` (grep
-   `STUCK|GONE`) for the whole test. Stop it (`kill $(cat $WORK/guard.pid)`) before going idle.
+   `STUCK|GONE`, with `tail -n0 -F` so old lines don't fire) for the whole test. Stop it (`kill
+   $(cat $WORK/guard.pid)`) before going idle. The log keeps earlier runs' lines (2026-11-07: GONE
+   lines from a watchdog started without a display, two hours before): read the times before
+   believing one.
 6. **DOSBox dies when the session sits idle** (the container's processes are reclaimed). After
    any pause (waiting on the user), check `pgrep -x dosbox` before the next step; if it's gone,
    start again from `start.sh`. Don't leave a test half-done across a pause expecting it to be
@@ -417,7 +420,11 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   past 0 (133/30 two minutes in), so search `sadira`, pick the hit and Assign within about 15 s of
   starting it. Reconnect picks up a restarted DOSBox.
 - **Picking a pocket:** U, the thief's portrait (Cilla 108,108), the purse under the spell counts
-  (157,145, a slow press), then the talk pointer on the person.
+  (157,145, a slow press: the USE screen closes), then the talk pointer on the person. The result
+  is a narration box with a Continue line (click it, 30,157). From `pens-after-scar` (2026-11-07,
+  logs/2026-11-07-release-check.md): walkto (1816,408), (1704,408), (1592,440), `viewto.py 1592
+  470`, and Kurzak stands just south of the party (thing 47 at 1592,504; his figure at 190,118).
+  A failure the thief slips away from can be tried again at once.
 
 ## 4. Fights
 
