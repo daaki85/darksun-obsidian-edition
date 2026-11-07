@@ -316,6 +316,10 @@ palette copy changing (every 30 s where the game cycles colours). The arena gate
   (2026-11-01). E with no menu up opens the Effects screen (section 4 rule 11).
 - **Loose `xdotool` commands need `DISPLAY=:55`** (`export DISPLAY=:55` first): the kit's tools
   set it, a command typed on its own doesn't ("Can't open display").
+- **In the enemies' turns the view follows the one acting** (2026-11-07, `ghostturn.py`): a test that
+  needs a still view through an enemy turn (a figure redrawn or not) can't rely on it; the move
+  redraws the whole view by itself. `markmember.py THING|none CHANGED` writes GHOST_TAB and its
+  changed byte (GH_CHANGED) by hand.
 - **In a fight the view barely drags**: two drags of 150 moved the camera from (1728, 768) to
   (1712, 832); the party's figures stayed on the screen (2026-11-07). Drag out of a fight to put a
   figure off the view.

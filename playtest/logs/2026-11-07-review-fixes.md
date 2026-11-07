@@ -88,3 +88,18 @@ handlers), and the purse's jingle (`soundmatch.py`: pick.wav r 0.995, hide.wav 0
 **Learned:** `arenatrip.sh` (from the fire room to the arena) rested six times with no call: the
 call came later, as the party walked (as in `restalarm.sh`); `toarena.sh` then took it in, and the
 gate's question was answered Y.
+
+## See-through figures in the enemies' turns (GH_CHANGED): not shown in play
+
+The fix (the Loader sets GHOST_TAB's last byte when it writes the table; GHOST_UNION draws the whole
+view at the next step of anyone's) is checked by `test_whole_view_when_the_table_changes`, which
+fails with the old helper. In DOSBox:
+- **Out of a fight** (Legcrusher marked with `markmember.py`, the party standing): nothing moved, so
+  the game drew nothing again and the byte stayed set: as designed (the redrawing of what moved runs
+  only when something moves). A click to step brought the view back to the leader instead.
+- **In the alarm fight** (`ghostturn.py`: Cermak marked at an enemy turn's start, grabs every 0.1 s
+  through it): the view follows the acting enemy (from the party to the guards in the hall, 24 grabs),
+  and a moving view draws everything anyway, so the control can't tell the fix's drawing from the
+  scroll's. The test with the byte was cut short by a worker restart (DOSBox gone).
+A clean A/B needs an enemy turn whose view stays on a still, marked figure: not found. The worker
+restart killed DOSBox and Xvfb, as an idle pause does.
