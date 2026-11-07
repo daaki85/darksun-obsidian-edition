@@ -106,9 +106,28 @@ class CoversTests(unittest.TestCase):
         gate.begin()
         proc.write(DS * 16 + game.ITEMS_PTR, b"\0\0\0\0")
         self.assertTrue(gate.covers(old, 2))  # (where the table was)
-        self.assertFalse(gate.covers(DS * 16 + 0x2000, 2))  # (anything else)
+        self.assertTrue(gate.covers(77 * game.ITEM_SIZE, 2))  # (where a null pointer's write lands: past
+        with self.assertRaises(itemgate.ItemsBusy):           # low memory's guard, in DOS's own)
+            guest.write(77 * game.ITEM_SIZE + game.ITEM_NEXT, b"\x07")
+        self.assertEqual(proc.mem[77 * game.ITEM_SIZE + game.ITEM_NEXT], 0)
+        gate.end()
+        gate.begin()
+        self.assertFalse(gate.covers(DS * 16 + 0x2000, 2))  # (anything else, even with it null)
         gate.end()
         self.assertFalse(gate.covers(DS * 16 + 0x2000, 2))  # (no pass: nothing moved to see)
+
+
+class OwnWritesTests(unittest.TestCase):
+    def test_own_changes_not_refused_later(self):
+        """The Loader's own block (a list made: the free list's head moved) released: a later block
+        of the same pass compares with the heads as that block left them, not refused for them."""
+        proc, guest, _, gate, _ = setup()
+        gate.begin()
+        guest.write(DS * 16 + itemgate.FREE_THINGS, struct.pack("<H", 400))
+        gate.release()
+        guest.write(DS * 16 + itemgate.THINGS_USED, struct.pack("<H", 5))
+        self.assertEqual((gate.refusals, struct.unpack_from("<H", proc.mem, DS * 16 + itemgate.THINGS_USED)[0]), (0, 5))
+        gate.end()
 
 
 class PassTests(unittest.TestCase):

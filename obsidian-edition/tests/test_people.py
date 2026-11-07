@@ -92,6 +92,14 @@ class PlanTests(unittest.TestCase):
         axe[people.TYPE_HANDS] = people.TWO_HANDED
         self.assertEqual(people.plan([(1, item(1), SWORD), (2, item(), bytes(axe))], set()), [(1, people.RIGHT)])
 
+    def test_two_hander_not_beside_a_held_shield(self):
+        """The left hand filled already (a shield): a one-hander in the right, never the great axe;
+        with only the axe, nothing."""
+        axe = bytearray(typ(restrict.MELEE, people.HAND))
+        axe[people.TYPE_HANDS] = people.TWO_HANDED
+        self.assertEqual(people.plan([(1, item(1), bytes(axe)), (2, item(), SWORD)], {people.LEFT}), [(2, people.RIGHT)])
+        self.assertEqual(people.plan([(1, item(), bytes(axe))], {people.LEFT}), [])
+
     def test_only_one_of_each(self):
         """Two chest armours (one bought, one found): the first worn, the other kept."""
         self.assertEqual(people.plan([(1, item(), CHEST), (2, item(), CHEST)], set()), [(1, people.CHEST)])

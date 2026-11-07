@@ -64,17 +64,19 @@ class ItemGate:
         if addr < things + (THING_COUNT + THINGS_PAST) * 3 and end > things:
             return True
         # (the tables where they are now, and where they were as the pass began: a pointer read
-        # before the game moved them gives a place the tables have left, covered, so open() finds
-        # the heads changed; a write from a pointer gone null lands in low memory, which
-        # GuestMemory refuses itself)
+        # before the game moved them gives a place the tables have left; and a table whose
+        # pointer reads null now is covered from 0, where a write through it would land, in DOS's
+        # own memory well past the low-memory guard. Each is covered, so open() finds the heads
+        # changed or a table gone and refuses; anything else, DSCLOG's replies, the see-through
+        # tables, goes ahead)
         items_now = game.far_pointer(guest, ds, game.ITEMS_PTR)
         creatures_now = game.far_pointer(guest, ds, game.CREATURES_PTR)
         items_then, creatures_then = self._pointers_then()
-        for items in {items_now, items_then}:
-            if items and addr < items + ITEM_RECORDS * game.ITEM_SIZE and end > items:
+        for items in {items_now, items_then} - {0} | ({0} if not items_now else set()):
+            if addr < items + ITEM_RECORDS * game.ITEM_SIZE and end > items:
                 return True
-        for creatures in {creatures_now, creatures_then}:
-            if creatures and creatures <= addr < creatures + MAX_CREATURES * game.CREATURE_SIZE:
+        for creatures in {creatures_now, creatures_then} - {0} | ({0} if not creatures_now else set()):
+            if creatures <= addr < creatures + MAX_CREATURES * game.CREATURE_SIZE:
                 first = (addr - creatures) // game.CREATURE_SIZE
                 for index in range(first, (end - 1 - creatures) // game.CREATURE_SIZE + 1):
                     at = creatures + index * game.CREATURE_SIZE
@@ -86,7 +88,12 @@ class ItemGate:
         """The item and creature tables' places as the pass began (0 for none, or no pass)."""
         if not self._heads or len(self._heads) < 16:
             return 0, 0
-        off, seg, coff, cseg = struct.unpack_from("<HHHH", self._heads, 8)
+        return self._tables(self._heads)
+
+    @staticmethod
+    def _tables(heads: bytes):
+        """The item and creature tables' places in HEADS (_read_heads)."""
+        off, seg, coff, cseg = struct.unpack_from("<HHHH", heads, 8)
         return seg * 16 + off, cseg * 16 + coff
 
     def begin(self) -> None:
@@ -119,7 +126,7 @@ class ItemGate:
             if paused:
                 _resume(proc)
             raise
-        if heads != self._heads:
+        if heads != self._heads or 0 in self._tables(heads):  # (changed, or a table gone: being rebuilt)
             if paused:
                 _resume(proc)
             self._state = "refused"
@@ -134,7 +141,8 @@ class ItemGate:
         """A block of writes made: DOSBox runs on, the pass goes on (a later write looks again,
         against the lists as the pass began)."""
         if self._state == "held":
-            if self._paused:
+            self._heads = self._read_heads()  # (the Loader's own changes made: a later block of the
+            if self._paused:                   # pass compares with them, not refused for them)
                 _resume(getattr(self.gd.guest, "proc", None))
             self._state, self._paused = "watching", False
 

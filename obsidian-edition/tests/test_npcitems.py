@@ -20,8 +20,36 @@ def item_at(m, item):
     return bytes(m[ITEMS + item * game.ITEM_SIZE:ITEMS + (item + 1) * game.ITEM_SIZE])
 
 
+class ReserveTests(unittest.TestCase):
+    """What the Loader leaves the game (ring.RESERVE): no item record taken with that many free or
+    fewer, no list made with that many things free or fewer."""
+
+    def test_items_and_things_kept(self):
+        from unittest import mock
+        t = NpcItemTests()
+        t.setUp()
+        try:
+            it = ring.Items(t.gd)
+            with mock.patch.object(ring, "RESERVE", 20):
+                self.assertFalse(it.spare_items())  # (ten free: kept for the game)
+                self.assertFalse(npcitems.add_to(t.gd, 3, bytes(game.ITEM_SIZE)))
+            with mock.patch.object(ring, "RESERVE", 5):
+                self.assertTrue(it.spare_items())
+            used = it.word(ring.THINGS_USED)
+            with mock.patch.object(ring, "RESERVE", ring.DYNAMIC_THINGS - used):
+                self.assertFalse(it.spare_things())
+            with mock.patch.object(ring, "RESERVE", ring.DYNAMIC_THINGS - used - 1):
+                self.assertTrue(it.spare_things())
+        finally:
+            t.doCleanups()
+
+
 class NpcItemTests(unittest.TestCase):
     def setUp(self):
+        from unittest import mock
+        patch = mock.patch.object(ring, "RESERVE", 0)  # (a small fake game: ten free records; ReserveTests)
+        patch.start()
+        self.addCleanup(patch.stop)
         """In the pens: Kurzak (creature 3) with a key, Legcrusher (4) with a club, and a
         Templar (5), each one list (objects 401-403, items 80-82); items
         60-69 free; DSCLOG's types in."""

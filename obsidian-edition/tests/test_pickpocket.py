@@ -270,6 +270,10 @@ class ListTests(unittest.TestCase):
     """A party member's worn list and backpack list (pickpocket.place, mend_lists; npcitems.add_to)."""
 
     def setUp(self):
+        from unittest import mock
+        patch = mock.patch.object(ring, "RESERVE", 0)  # (a small fake game's few free records)
+        patch.start()
+        self.addCleanup(patch.stop)
         self.pick = PickTests()
         self.pick.setUp()
         self.gd, self.m = self.pick.log.game, self.pick.m
