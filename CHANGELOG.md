@@ -14,7 +14,7 @@ file's size as such; from #86 on, both are given.
 Releases before 2.12.2 give the release's line as a **Release** bullet; from 2.12.2 on it is the
 entry's first line.
 
-Releases, newest first: [2.14.0](#pull-request-87-open) (#86 and #87),
+Releases, newest first: [2.14.0](#pull-request-87-merged-2026-11-07) (#86 and #87),
 [2.13.4](#pull-request-85-merged-2026-11-02) (#85),
 [2.13.3](#pull-request-84-merged-2026-10-31) (#84), [2.13.2](#pull-request-83-merged-2026-10-30)
 (#83), [2.13.1](#pull-request-82-merged-2026-10-30) (#82),
@@ -37,7 +37,7 @@ Releases, newest first: [2.14.0](#pull-request-87-open) (#86 and #87),
 [1.1.0](#pull-request-18-merged-2026-10-06) (#18), [1.0.0](#pull-request-12-merged-2026-10-02)
 (#12).
 
-## Pull request #87 ([open](https://github.com/daaki85/darksun-obsidian-edition/pull/87))
+## Pull request #87 ([merged 2026-11-07](https://github.com/daaki85/darksun-obsidian-edition/pull/87))
 
 Obsidian Edition 2.14.0 ([release notes](release-notes/v2.14.0.md)), with #86.
 
