@@ -31,6 +31,7 @@
 8. **Not explained.** In one hidden walk that ended beside K'ratchek and Gerakis, her last two frames (of 15) were drawn solid. She was see-through again when she stopped.
    - DSCLOG's GHOST_ON, STEALTH and its palette copy did not change through a later walk, and the game's other callers of the picture routine draw screen panels only.
    - Not seen again: the frames were overwritten before they were looked at closely. Next: walk a hidden thief into a square beside a party member, with frames kept.
+   - Later (2026-11-06): not seen in 38 more hidden steps beside party members, closed as not reproducible after the vector fix (`2026-11-06-solid-frames-turn-end.md`).
 
 ## A bug found on the way: every attack on the party at AC 255
 

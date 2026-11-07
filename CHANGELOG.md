@@ -65,7 +65,9 @@ DSCLOG.EXE 65,472 bytes, unchanged (comments only).
 - The changelog's #86 heading, its fourth-review fixes and the releases list put right; the patch
   notes, README, FEATURES and the player guide given what #86 left out (Kalzith's face, the
   pickpocket sounds, the Kreenfang in a 2.13.4 save); DICE-LOG's picked pockets and the game's own
-  party's opening lines.
+  party's opening lines; the developer pages given the gate's cover, the reserve, the people's
+  gear's tries and the edge cases of names and shadows; #86's "Room for new code" filed under
+  Changed; the playtesting guide's repeated notes merged and its save list completed.
 
 ## Pull request #86 ([merged 2026-11-07](https://github.com/daaki85/darksun-obsidian-edition/pull/86))
 
@@ -120,6 +122,11 @@ DSCLOG.EXE 65,472 bytes (+880 since #85; its image 65,440, 96 bytes of its segme
   the "Elven Wanderer", which read like the druid kit Wanderer; SHADOW-WALKER on the Effects
   screen. (`kits.OWN_FEATURES`, DSCLOG's `own_lines`.)
 - **The freeze report samples every 32nd strike of the timer,** not every 16th (`freeze.py`).
+- **Room for new code:** the end shared by seven handlers that return through the overlay
+  manager's frame is written once (`OVR_BACK`), and a sheet's classes read by one routine
+  (`SHEET_CLASSES`): 112 bytes freed, 128 spare from 16 (96 after the fix to see-through figures in
+  the enemies' turns). The build also fails now if the music pool or the see-through tables
+  wouldn't fit upper memory (`UMB_KEPT`; they were left out quietly).
 
 **Fixed: the game**
 - **The game's people put on their weapons and armour only at their first action in a fight.**
@@ -167,11 +174,6 @@ DSCLOG.EXE 65,472 bytes (+880 since #85; its image 65,440, 96 bytes of its segme
 - **A floating name could be drawn above the page,** into other video memory, when the view was
   dragged so that its figure was off the top of the screen; it isn't drawn then. And a timer strike
   while a name was being erased could leave its old place on screen (the erase marked busy first).
-- **Room for new code:** the end shared by seven handlers that return through the overlay
-  manager's frame is written once (`OVR_BACK`), and a sheet's classes read by one routine
-  (`SHEET_CLASSES`): 112 bytes freed, 128 spare from 16 (96 after the fix to see-through figures in
-  the enemies' turns). The build also fails now if the music pool or the see-through tables
-  wouldn't fit upper memory (`UMB_KEPT`; they were left out quietly).
 
 **Fixed: the Loader** (an audit and four reviews)
 - **One write the Loader stopped ended the dice log for the session** (slicing a deque raised every

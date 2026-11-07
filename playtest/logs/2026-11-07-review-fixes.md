@@ -55,7 +55,9 @@ the view was dragged south as the "Miss" went up. No stray pixels, the game ran 
 **Not reached:** a label whose figure is above the view's top. In a fight the drags moved the
 camera only a little (from 1728,768 to 1712,832 after two drags of 150): every party figure stayed
 at row 20 or more. The case needs a label over a figure off the top, which the fight's view didn't
-allow; the fix is checked only by reading the code there.
+allow; the fix is checked only by reading the code there. (Later, 2026-11-07: the test moved from
+row 40 to row 0, 37fe556, since a figure "at row 20 or more" is the very case the row-40 rule hid;
+still not seen in play.)
 
 **Learned:**
 - `E` pressed without the END menu open (a click beside the figure) opened the Effects screen, and

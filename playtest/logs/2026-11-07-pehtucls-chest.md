@@ -4,7 +4,9 @@
 minutes, all in the background), Kurzak answered Goodbye, saved as `saves/pens-new-chest`. A save
 made before keeps the pens' commands and objects as they were: the chest's USE command and the
 cloak in it come only with a new game. To reach the chest: things 0-3 to (200, 1432) and the camera
-to (40, 1322) in memory, walkto (216, 1440), then walkto (120, 1470) so no one stands on it; the
+to (40, 1322) in memory, walkto (216, 1440), then walkto (120, 1470) so no one stands on it (later the same day the chest's script refuses
+that as too far, "You must be next to the chest": walk to (184, 1400), a square west of it, as in
+`2026-11-07-review-fixes.md`); the
 look pointer on it (161, 72), its look box's third button (236, 101) uses it. Its type set shut in
 memory for each try (the save's chest was made before the shut type: `shut.py` in the log's steps).
 

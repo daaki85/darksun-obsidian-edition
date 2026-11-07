@@ -326,7 +326,8 @@ dice log running:
   does nothing while the game's busy flag for it is up or off the map. It
   also places a new label (`LABEL_WHERE`: centred over the thing's feet, its
   bottom `UP` rows above them, under the feet if it would reach the game's
-  boxes at the top, row 40, and kept on the screen), as the main loop doesn't
+  boxes at the top, row 40, and kept on the screen; a figure whose feet are
+  above the page's top, the view dragged away, gets none), as the main loop doesn't
   run while the game shows an attack or a spell.
 - **The main loop** (`LABEL_TICK`, after `PANEL_TICK` in `PROBE_SCROLL`)
   places labels too, and has where one was drawn again when it goes, moves or

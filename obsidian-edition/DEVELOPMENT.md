@@ -600,7 +600,13 @@ So every write of the Loader's to the item lists goes through one gate
 touches them: the free lists' heads, the item table (400 records of 21 bytes
 from the far pointer at `DS:165Dh`), the things table with the few past its
 520 (`THINGS_PAST`: the pointer's thing, 523), or a creature's list heads
-(`CREATURE_ITEM_LISTS`). Each pass of the dice log (`DiceLog.lines`)
+(`CREATURE_ITEM_LISTS`), both where the tables are now and where they were at
+the pass's start: a write the Loader worked out from the old place is held up
+like any other. A table pointer that has gone null (an area loading) is covered
+from 0 to the table's reach (20D0h for the items, 7400h for 512 creatures),
+past the 600h the low-memory guard (`GuestMemory.LOW_MEMORY`) keeps, so a write
+through it never lands in DOS's own memory, and the gate refuses while one is
+null. Each pass of the dice log (`DiceLog.lines`)
 begins the gate first, noting the heads, the region (`DS:117Ch`) and the item
 and creature tables' pointers. The pass's first such write waits until
 `itemgate.WAIT` (60 ms) has gone by since then, pauses DOSBox
@@ -620,7 +626,14 @@ stays unanswered until a later pass), a defiler's scroll before its roll (the
 defiler isn't marked rolled for), Kalzith's loot before `LOOTED`, and the arena
 ring before the search counts as answered. An item moved (`pickpocket.place`)
 has its new list found or made before it leaves its old one: with the game's
-things all in use nothing moves. A sold item's place in the buyback
+things all in use nothing moves. The Loader leaves the game a reserve
+(`ring.RESERVE`, 20): no new list once fewer than 20 of the 200 dynamic things
+are free (`Items.spare_things`, from `DS:4C48h`), and no new item record once
+fewer than 20 are on its free list (`Items.spare_items`), so the game's own
+people, dressed in each area, and its scripts' items always find one. The
+Loader's own writes inside a pass (once the gate has looked) don't count as the
+game's changes: the gate notes the heads again as it lets the game go
+(`release`), so the pass's later steps go ahead. A sold item's place in the buyback
 queue moves on only once it is kept, and the game's own party's steps are marked
 done only once made.
 
@@ -681,6 +694,7 @@ Loader keeps its own state in the numbers past them, so a save keeps it too:
 | 807 | the champions fought |
 
 A save keeps 808 flags. A new flag goes past 807, and in this table.
+
 ## How each part works
 
 How each part of the [features page](FEATURES.md) and the [README](README.md) is done, on three pages of its own:
