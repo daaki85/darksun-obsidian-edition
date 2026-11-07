@@ -30,7 +30,7 @@ Releases, newest first: [2.13.4](#pull-request-85-merged-2026-11-02) (#85),
 
 ## Next pull request (not opened yet)
 
-DSCLOG.EXE 65,552 bytes (+960 since #85; its image 65,520, 16 bytes of its segment spare).
+DSCLOG.EXE 65,440 bytes (+848 since #85; its image 65,408, 128 bytes of its segment spare).
 
 **New**
 - **Kalzith's own portrait:** a face painted for him in the game's portrait style (an old man,
@@ -123,6 +123,11 @@ DSCLOG.EXE 65,552 bytes (+960 since #85; its image 65,520, 16 bytes of its segme
 - **A floating name could be drawn above the page,** into other video memory, when the view was
   dragged so that its figure was off the top of the screen; it isn't drawn then. And a timer strike
   while a name was being erased could leave its old place on screen (the erase marked busy first).
+- **The sound of the mod's own lent the game's table entry back one byte too far,** over the next
+  entry's "loaded" flag (latent: nothing changes it during a play).
+- **Room for new code:** the end shared by seven handlers that return through the overlay
+  manager's frame is written once (`OVR_BACK`), and a sheet's classes read by one routine
+  (`SHEET_CLASSES`): 128 bytes of the helper's segment spare, from 16.
 - **A see-through figure with no picture yet** was drawn from the interrupt table as if it were
   one; it is left undrawn, as the game's own routine does. (Test: `test_ghost_draw_no_picture`.)
 

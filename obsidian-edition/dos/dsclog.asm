@@ -1366,8 +1366,9 @@ play_sound:
         sub dx, DGROUP_SEG - SFX_SEG
         mov es, dx
         push ax
-        push word [es:bx + 1]           ; (the entry as it was; +6, the next entry's loaded flag,
-        push dword [es:bx + 3]          ; with it: nothing changes it during a play, so kept)
+        push word [es:bx + 1]           ; (the entry as it was, +1 to +5: +6 is the next
+        push word [es:bx + 3]           ; entry's loaded flag, the game's to change)
+        push word [es:bx + 4]
         mov byte [es:bx + 1], SFX_DIGITAL
         mov [es:bx + 2], si
         mov [es:bx + 4], cs
@@ -1379,12 +1380,35 @@ play_sound:
         add sp, 2
         pop bx
         pop es
-        pop dword [es:bx + 3]
+        pop word [es:bx + 4]
+        pop word [es:bx + 3]
         pop word [es:bx + 1]
         pop ax
         pop si
         ret
 mod_desc times MOD_SOUNDS db 1, 0, 0xFF, 0xFF, 0, 0, 1, 0, 0, 1, 0x6E, 0x40 ; (as the game's, BVOC +7)
+
+; OVR_BACK: the end of an interrupt handler that called the game's routines in a frame the overlay
+; manager can fix up (BP pushed last, the far way back below it, as a far call's): that way back,
+; as the manager has left it, put in the interrupt's frame, then the handler's ES and registers
+; (PUSHAD, PUSH ES at its start) back and the IRET. OVR_OUT: only the last three.
+ovr_back:
+        pop bp
+        pop ax                  ; the way back, as the overlay manager has left it
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], dx
+ovr_out:
+        pop es
+        popad
+        iret
+
+; SHEET_CLASSES: EAX the classes of the character sheet at ES:BX (its three class bytes, +21h).
+sheet_classes:
+        mov eax, [es:bx + 0x21]
+        and eax, 0x00FFFFFF
+        ret
 
 ; SOUND_TICK: from the map's main loop (PROBE_SCROLL, DS the game's), the sound the Loader asked
 ; for (SOUND_REQ), once. All registers kept.
@@ -1506,13 +1530,7 @@ probe_use_item:
         call give_xp
         mov word [cs:show_text], pick_text
         call show_window
-        pop bp
-        pop ax                  ; the way back, as the overlay manager has left it
-        pop dx
-        mov bx, sp
-        mov [ss:bx + 34], ax
-        mov [ss:bx + 36], dx
-        jmp .out
+        jmp ovr_back            ; (the way back as the overlay manager left it)
 .go:    add [ss:bx + 34], dx
 .out:   pop es
         popad
@@ -2418,15 +2436,8 @@ probe_unlook:
         push bp                 ;   overlays over this routine's while it waits for Continue
         mov bp, sp
         call show_window
-        pop bp
-        pop ax                  ; the way back, as the overlay manager has left it
-        pop dx
-        mov bx, sp
-        mov [ss:bx + 34], ax
-        mov [ss:bx + 36], dx
-.out:   pop es
-        popad
-        iret
+        jmp ovr_back             ; (the way back as the overlay manager left it)
+.out:   jmp ovr_out
 
 ; STATS: STATS_SIZE bytes for each party member, kept by the Loader: +0 1 if in use, +1 THAC0
 ; with the main weapon (signed), +2 the five saves as the d20 needed now, +8 three words: the
@@ -5315,8 +5326,7 @@ probe_wp_disc_win:
         mov byte [es:bx + KIT_BYTE], 0
         cmp byte [cs:ed_on], 0
         je .cleared
-        mov eax, [es:bx + 0x21]
-        and eax, 0x00FFFFFF
+        call sheet_classes
         cmp eax, [cs:ed_cr_classes]
         jne .cleared
         mov dl, [cs:ed_race]    ; (and the race: a multiclass kit's number is its group's)
@@ -5635,15 +5645,7 @@ probe_lv_pick:
         jne .scholar_done
         call lv_scholar
 .scholar_done:
-        pop bp
-        pop ax                  ; the way back, as the overlay manager has left it
-        pop dx
-        mov bx, sp
-        mov [ss:bx + 34], ax
-        mov [ss:bx + 36], dx
-        pop es
-        popad
-        iret
+        jmp ovr_back             ; (the way back as the overlay manager left it)
 
 ; Character SI (DS the game's) asked for weapon kinds while it has fewer than it is due
 lv_check:
@@ -8402,15 +8404,7 @@ probe_cr_spells:
         push bp
         mov bp, sp
         call pick_spells
-        pop bp
-        pop ax                  ; the way back, as the overlay manager has left it
-        pop dx
-        mov bx, sp
-        mov [ss:bx + 34], ax
-        mov [ss:bx + 36], dx
-        pop es
-        popad
-        iret
+        jmp ovr_back             ; (the way back as the overlay manager left it)
 
 ; Creation's scores and hit points as rolled (RULE_HI_ROLLED; game.RULE_ROLLED). The game lets
 ; a click raise any score to its most and set the hit points anywhere from the least to the most
@@ -8862,8 +8856,7 @@ cr_open:
         mov ax, bx
         les bx, [LV_SHEETS]
         add bx, ax
-        mov eax, [es:bx + 0x21]
-        and eax, 0x00FFFFFF
+        call sheet_classes
         mov [cs:ed_classes], eax
         mov eax, [es:bx + SPEC_SLOTS]
         mov [cs:ed_specs], eax
@@ -9329,15 +9322,7 @@ probe_ef_click:
         push dword [PK_WINDOW]
         call far [cs:ef_far]
         add sp, 4
-        pop bp
-        pop ax                  ; the way back, as the overlay manager has left it
-        pop dx
-        mov bx, sp
-        mov [ss:bx + 34], ax
-        mov [ss:bx + 36], dx
-        pop es
-        popad
-        iret
+        jmp ovr_back             ; (the way back as the overlay manager left it)
 
 ; PROBE_SOUND_42 / PROBE_SOUND_44: INT VEC_SOUND_42 replaces "mov dx,[es:bx+42h]" (4 bytes: INT + 2
 ; NOPs; DSUN.EXE 78FDAh) and INT VEC_SOUND_44 "mov ax,[es:bx+44h]" (81DE3h): two sound numbers on
@@ -10426,8 +10411,7 @@ probe_wp_class:
         push es                 ;   on the screen)
         push bx
         les bx, [WP_CREATION]
-        mov eax, [es:bx + 0x21]
-        and eax, 0x00FFFFFF
+        call sheet_classes
         cmp eax, [cs:wp_classes_seen]
         je .same
         mov [cs:wp_classes_seen], eax
@@ -10875,8 +10859,8 @@ kit_row:
         mov dl, ah
         inc dl
 .row:   push eax                ; (the classes the kit goes with, as PROBE_WP_CLASS keeps them: a
-        mov eax, [es:bx + 0x21] ;   new character's default class is never clicked, and a kit with
-        and eax, 0x00FFFFFF     ;   classes not seen is taken as stale, KIT_STALE, when the die
+        call sheet_classes      ;   new character's default class is never clicked, and a kit with
+                                ;   classes not seen is taken as stale, KIT_STALE, when the die
         mov [cs:wp_classes_seen], eax ; rolls the hit points again)
         pop eax
         mov dh, [es:bx + KIT_BYTE]
@@ -15116,8 +15100,7 @@ kit_stale:
         push bx
         push es
         les bx, [WP_CREATION]
-        mov eax, [es:bx + 0x21]
-        and eax, 0x00FFFFFF
+        call sheet_classes
         cmp eax, [cs:wp_classes_seen]
         je .out
         mov byte [es:bx + KIT_BYTE], 0
@@ -15145,8 +15128,7 @@ kit_made:
         jz .out
         les bx, [WP_CREATION]
         push eax
-        mov eax, [es:bx + 0x21]
-        and eax, 0x00FFFFFF
+        call sheet_classes
         cmp eax, [cs:wp_classes_seen]
         pop eax
         jne .none
@@ -17452,15 +17434,8 @@ ns_blow:
         push word [BLOW_TARGET]
         call far [cs:blow_charge]
         add sp, 4
-        pop bp
-        pop ax                  ; the way back, as the overlay manager has left it
-        pop dx
-        mov bx, sp
-        mov [ss:bx + 34], ax
-        mov [ss:bx + 36], dx
-.out:   pop es
-        popad
-        iret
+        jmp ovr_back             ; (the way back as the overlay manager left it)
+.out:   jmp ovr_out
 
 blow_chance dw 0
 
@@ -18314,14 +18289,7 @@ cr_weapons:
         call lv_check
         mov byte [cs:lv_creating], 0
 .done:  mov byte [cs:ed_on], 0
-        pop bp
-        pop ax                  ; the way back, as the overlay manager has left it
-        pop dx
-        mov bx, sp
-        mov [ss:bx + 34], ax
-        mov [ss:bx + 36], dx
-        pop es
-        popad
+        jmp ovr_back             ; (the way back as the overlay manager left it)
 .iret:  iret
 
 ; ED_ROLLED: CF set unless an EDIT's own roll is still shown (ED_AGE): it is until the creature
@@ -18358,8 +18326,7 @@ ed_same:
         mov al, [es:bx + 0x18]
         cmp al, [cs:ed_race]
         jne .pop
-        mov eax, [es:bx + 0x21]
-        and eax, 0x00FFFFFF
+        call sheet_classes
         cmp eax, [cs:ed_classes]
         jne .pop
         mov al, [es:bx + KIT_BYTE]
