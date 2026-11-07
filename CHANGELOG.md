@@ -109,7 +109,9 @@ DSCLOG.EXE 65,472 bytes (+880 since #85; its image 65,440, 96 bytes of its segme
 - **A save's talk and use commands could point at another script once a switch changed:** the
   Loader's script entries were numbered only for the parts switched on, so with Kalzith off his
   talk's entry was Semyon's. The three entries (Kalzith's, Semyon's, the chest's) and their scripts
-  are always there now, in that order. (`kalzith.ENTRY_SCRIPTS`. Test: `test_scriptnumbers`.)
+  are always there now, in that order. A save made with an earlier version and Kalzith off has
+  Semyon's talk run Kalzith's script (the patch notes' saved games say so). (`kalzith.ENTRY_SCRIPTS`.
+  Test: `test_scriptnumbers`.)
 
 **Fixed: DSCLOG**
 - **It hooked its interrupts before setting up its buffers,** so with no memory for them it

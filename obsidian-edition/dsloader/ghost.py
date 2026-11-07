@@ -176,11 +176,11 @@ class Ghosts:
                 if made is not None:
                     self._made.move_to_end(wanted)
                 start = made is None and self._making != wanted
-                if start:
-                    self._making = wanted
             if start:
                 guest.write(tsr_hdr + TSR_GHOST_ON, struct.pack("<H", 0))  # (till they are made)
                 self._off = True
+                with self._lock:  # (only once the write is made: marked first, a refused write
+                    self._making = wanted  # left them marked as being made, and never made)
                 threading.Thread(target=self._make, args=(self._dac,), daemon=True).start()
             if made is not None:
                 blend, rep = made

@@ -37,12 +37,14 @@ WORN_SLOTS = {1: CHEST, 2: WAIST, 3: ARM, 4: FOOT, 6: HEAD, 7: NECK, 8: CLOAK, 1
 # 6 helms and circlets, 7 the amulet, 8 cloaks, 9 rings, 12 bows and slings)
 FINGER_WORN = 9  # (a ring: the first finger free, then the other)
 MISSILE_WORN = 12  # (TYPE_WORN of a bow or a sling)
+TRIES = 3  # (passes a person is tried again when a move found no list: then left as it is)
 SEEN = 128  # (creature records looked at: as champions.SEEN)
 
 
-def plan(items: Sequence[Tuple[int, bytes, bytes]], taken: Set[int]) -> List[Tuple[int, int]]:
+def plan(items: Sequence[Tuple[int, bytes, bytes]], taken: Set[int], both_held: bool = False) -> List[Tuple[int, int]]:
     """(item, slot) for each of a person's backpack ITEMS ((item, record, its type's record)) that
-    goes on, into slots not in TAKEN, as the game would put them."""
+    goes on, into slots not in TAKEN, as the game would put them. BOTH_HELD: what is in the right
+    hand already takes both hands (nothing then goes in the left)."""
     free = lambda slot: slot not in taken and slot not in [s for _, s in out]
     out: List[Tuple[int, int]] = []
     melee, shields = [], []
@@ -66,17 +68,20 @@ def plan(items: Sequence[Tuple[int, bytes, bytes]], taken: Set[int]) -> List[Tup
         elif worn in WORN_SLOTS and free(WORN_SLOTS[worn]):
             out.append((item, WORN_SLOTS[worn]))
     melee.sort()
-    both = False  # (the right hand's weapon takes both hands: nothing in the left)
+    two = lambda item: bool(types[item][TYPE_HANDS] & TWO_HANDED)
+    both = both_held  # (the right hand's weapon takes both hands: nothing in the left)
     if melee and free(RIGHT):
         _, _, best = melee.pop(0)
         out.append((best, RIGHT))
-        both = bool(types[best][TYPE_HANDS] & TWO_HANDED)
+        both = two(best)
     if both:
         return out
     if shields and free(LEFT):
         out.append((shields[0], LEFT))
-    elif melee and free(LEFT) and RIGHT in taken | {s for _, s in out}:
-        out.append((melee[0][2], LEFT))
+    else:
+        second = next((item for _, _, item in melee if not two(item)), None)  # (no two-hander there)
+        if second is not None and free(LEFT) and RIGHT in taken | {s for _, s in out}:
+            out.append((second, LEFT))
     return out
 
 
@@ -85,17 +90,20 @@ class People:
 
     def __init__(self):
         self.done: Set[Tuple[int, bytes, int]] = set()  # (creature, name, object) seen to, this area
+        self.tries: Dict[Tuple[int, bytes, int], int] = {}  # (passes a person was left part-dressed)
         self._region: Optional[int] = None
 
     def reset(self) -> None:
         """Forget who was seen to (a game loaded: its people are made again)."""
         self.done.clear()
+        self.tries.clear()
 
     def watch(self, gd) -> List[str]:
         region = gd.region()
         if region != self._region:  # (another area: its people made anew)
             self._region = region
             self.done.clear()
+            self.tries.clear()
         from .champions import CREATURE_OBJECT, DEAD_STATUS, champion_of
         table = gd.creatures(SEEN)
         size = game.CREATURE_SIZE
@@ -114,7 +122,9 @@ class People:
             if moves:
                 itemgate.hold(gd)  # (before anything moves: the game busy with its lists, a later pass)
                 if not all([pickpocket.place(gd, index, item, slot) for item, slot in moves]):
-                    continue  # (no list to be had, the game's things all in use: the rest a later pass)
+                    tries = self.tries[key] = self.tries.get(key, 0) + 1
+                    if tries < TRIES:  # (no list to be had, the game's things all in use: the rest
+                        continue       # a later pass; not every pass for good, each one pausing DOSBox)
             self.done.add(key)
         return []
 
@@ -124,7 +134,11 @@ class People:
         it = ring.Items(gd)
         rec = gd.creature(index)
         lists = [struct.unpack_from("<h", rec, o)[0] for o in game.CREATURE_ITEM_LISTS]
-        taken = {data[game.ITEM_SLOT] for thing in lists[:2] for _, data in it.chain(thing, inside=False)}
+        on = [data for thing in lists[:2] for _, data in it.chain(thing, inside=False)]
+        taken = {data[game.ITEM_SLOT] for data in on}
+        right = [gd.item_type_record(data) for data in on if data[game.ITEM_SLOT] == RIGHT
+                 and struct.unpack_from("<H", data, game.ITEM_TYPE)[0] < game.NO_ITEM]
+        both_held = any(len(t) > TYPE_HANDS and t[TYPE_HANDS] & TWO_HANDED for t in right)
         pack = [(item, data, gd.item_type_record(data)) for item, data in it.chain(lists[2], inside=False)
                 if struct.unpack_from("<H", data, game.ITEM_TYPE)[0] < game.NO_ITEM]
-        return plan(pack, taken)
+        return plan(pack, taken, both_held)

@@ -10271,7 +10271,7 @@ kit_short    db KIT_CHAMPION, 'CHAMPION', 0, KIT_SWASHBUCKLER, 'SWASHBUCK', 0, K
 ef_more      db 'MORE: CLICK HERE', 0
 ; The game's own party's features on the Effects screen (OWN_RACE_B): the race, the line. 0 ends it.
 own_lines    db 5, 'WILD FIGHTING', 0, 8, 'OPEN SKY SPELLS/PSI', 0, 8, 'CHATKCHA 2/ROUND', 0
-             db 3, 'KIT: E-WANDERER', 0, 0
+             db 3, 'SHADOW-WALKER', 0, 0
 ef_drawing   db 0
 ef_index     dw 0
 ef_first     dw 0
@@ -21757,7 +21757,7 @@ label_where:
         jge .y1
         mov bx, dx                      ; (under its feet)
         add bx, 2
-        cmp bx, LBL_TOP                 ; (still above the view's top: its thing is off the
+        or bx, bx                       ; (still above the page's top: its thing is off the
         jl .off                         ; screen, the view dragged; no label, none above the page)
 .y1:    mov dx, 200
         sub dl, [cs:di + 2]
@@ -22554,10 +22554,11 @@ ghost_union:
         je .hidden                      ; ended: the whole view drawn, the enemies' turns too)
         push es
         mov es, [cs:ghost_seg]
-        cmp byte [es:GH_CHANGED], 0
-        mov byte [es:GH_CHANGED], 0
+        xor al, al
+        xchg al, [es:GH_CHANGED]        ; (read and cleared at once: a Loader write between kept)
         pop es
-        jne .whole
+        test al, al
+        jnz .whole
 .hidden:
         mov ax, [cs:stealth]
         not ax

@@ -64,13 +64,12 @@ class ItemGate:
         if addr < things + (THING_COUNT + THINGS_PAST) * 3 and end > things:
             return True
         # (the tables where they are now, and where they were as the pass began: a pointer read
-        # before the game moved them gives a place the tables have left, and one gone null while
-        # it rebuilds them gives none; either is covered, so open() finds the heads changed)
+        # before the game moved them gives a place the tables have left, covered, so open() finds
+        # the heads changed; a write from a pointer gone null lands in low memory, which
+        # GuestMemory refuses itself)
         items_now = game.far_pointer(guest, ds, game.ITEMS_PTR)
         creatures_now = game.far_pointer(guest, ds, game.CREATURES_PTR)
         items_then, creatures_then = self._pointers_then()
-        if (items_then and not items_now) or (creatures_then and not creatures_now):
-            return True
         for items in {items_now, items_then}:
             if items and addr < items + ITEM_RECORDS * game.ITEM_SIZE and end > items:
                 return True

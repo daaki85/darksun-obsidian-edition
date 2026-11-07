@@ -79,6 +79,19 @@ class PlanTests(unittest.TestCase):
         pack = [(1, item(), bytes(axe)), (2, item(), SHIELD), (3, item(), CLUB)]
         self.assertEqual(people.plan(pack, set()), [(1, people.RIGHT)])
 
+    def test_two_handed_already_held(self):
+        """A great axe already in the right hand (dressed at an earlier visit, or by the game): the
+        shield stays in the pack."""
+        self.assertEqual(people.plan([(2, item(), SHIELD)], {people.RIGHT}, both_held=True), [])
+        self.assertEqual(people.plan([(2, item(), SHIELD)], {people.RIGHT}), [(2, people.LEFT)])
+
+    def test_two_hander_never_second(self):
+        """A +1 one-hander and a two-hander: the one-hander in the right hand, the two-hander not in
+        the left."""
+        axe = bytearray(typ(restrict.MELEE, people.HAND))
+        axe[people.TYPE_HANDS] = people.TWO_HANDED
+        self.assertEqual(people.plan([(1, item(1), SWORD), (2, item(), bytes(axe))], set()), [(1, people.RIGHT)])
+
     def test_only_one_of_each(self):
         """Two chest armours (one bought, one found): the first worn, the other kept."""
         self.assertEqual(people.plan([(1, item(), CHEST), (2, item(), CHEST)], set()), [(1, people.CHEST)])

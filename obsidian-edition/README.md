@@ -284,6 +284,10 @@ save:
   are counted right now, and the most only ever rises.
 - In a save from 1.2.0 to 2.5.0 that has already been to the slave pens, the
   weapon rack is gone, so Thornwall never comes (a new game has the rack).
+- A save made with an earlier version while Kalzith was switched off: in the
+  slave pens, talking to Semyon may start Kalzith's conversation instead (the
+  Loader now numbers its conversations the same whatever the switches). One
+  made with Kalzith on, the default, is unaffected.
 - Pehtucl's locked chest comes with a new game: in a save that has already
   been to the slave pens he wears the Cloak of Protection, and the chest is
   the plain one.

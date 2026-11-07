@@ -90,8 +90,9 @@ class CoversTests(unittest.TestCase):
 
     def test_tables_moved_mid_pass(self):
         """The game moving its item table, or emptying the pointer as it rebuilds it, after the
-        pass began: a write to the old place is still covered (so refused, the heads changed),
-        and while the pointer is null any write is."""
+        pass began: a write to the old place is still covered (so refused, the heads changed);
+        a write elsewhere is not, the pointer null or not (a reply to DSCLOG, the see-through
+        tables: refused, they once left the see-through figures off for good)."""
         proc, guest, _, gate, _ = setup()
         gate.begin()
         old = ITEMS + 3 * game.ITEM_SIZE
@@ -104,7 +105,8 @@ class CoversTests(unittest.TestCase):
         proc.write(DS * 16 + game.ITEMS_PTR, far(ITEMS))
         gate.begin()
         proc.write(DS * 16 + game.ITEMS_PTR, b"\0\0\0\0")
-        self.assertTrue(gate.covers(0 + 77 * game.ITEM_SIZE, 2))
+        self.assertTrue(gate.covers(old, 2))  # (where the table was)
+        self.assertFalse(gate.covers(DS * 16 + 0x2000, 2))  # (anything else)
         gate.end()
         self.assertFalse(gate.covers(DS * 16 + 0x2000, 2))  # (no pass: nothing moved to see)
 

@@ -159,6 +159,25 @@ class UpdateTests(unittest.TestCase):
             self.wait_on(g, 20 + n)
         self.assertEqual(len(g._made), ghost.MADE_KEPT)
 
+    def test_made_after_a_refused_write(self):
+        """The first write refused (the game busy with its item lists: ItemsBusy, a ValueError):
+        the tables are still made at a later pass (marked as being made before the write, they
+        never were, and see-through figures stayed off in that area)."""
+        g = ghost.Ghosts()
+        real = self.gd.guest.write
+        refused = []
+
+        def write(addr, data):
+            if not refused:
+                refused.append(addr)
+                raise ValueError("ItemsBusy")
+            real(addr, data)
+        self.gd.guest.write = write
+        with self.assertRaises(ValueError):
+            g.update(self.gd, self.HDR, True, 1, self.redraw)
+        self.gd.guest.write = real
+        self.wait_on(g, 1)
+
     def test_area_colours_count(self):
         """Colours 224-239 differ from area to area (reds in one, magenta in another): a change
         there makes the tables anew."""

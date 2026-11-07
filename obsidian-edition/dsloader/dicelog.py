@@ -1318,9 +1318,9 @@ class DiceLog:
         # (the refused writes not told yet: the record itself kept whole, for a crash report)
         refused = getattr(self.guest, "refused", None) or ()
         total = getattr(self.guest, "refused_total", 0)
-        new = min(total - self._refused_told, len(refused))
-        if new > 0:
-            fresh = list(refused)[-new:]
+        new = total - self._refused_told  # (how many; the record holds only the last 200 of them)
+        if new > 0 and refused:
+            fresh = list(refused)[-min(new, len(refused)):]
             out += [f"(The Loader stopped one of its own writes over the game's memory: {r}. "
                     "Please send this line.)" for r in fresh[:REFUSED_SAID]]
             if new > REFUSED_SAID:
