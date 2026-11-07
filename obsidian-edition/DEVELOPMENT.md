@@ -505,14 +505,14 @@ the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
 each time it opens ("Out of memory in OEOpenGraph" when it can't). What it
 puts there (`UMB_NEED`, the header's +372) is checked against the room
 (`UMB_ROOM`, D00Ah to F000h): the build fails past it (a negative `times`),
-and so does `test_fits_upper_memory`. It needs 6,190 of the room's 8,182
-paragraphs, so 1,992 (31.1 KB) are spare. With `UMBPLUS.COM`, 50.2 KB were free in one piece
+and so does `test_fits_upper_memory`. It needs 6,191 of the room's 8,182
+paragraphs, so 1,991 (31.1 KB) are spare. With `UMBPLUS.COM`, 50.2 KB were free in one piece
 before the mod's sounds and see-through figures (DOS's memory blocks read in the running game,
 2026-11-05: the helper 3,946 paragraphs from C90Ah, the overlay buffer 2,062, the music buffer 751,
 3,211 free); their code took 49 paragraphs more and the see-through figures' block
 (`GHOST_PARAS`) 885, so about 35.5 KB (36,336 bytes, measured) are left. The helper's
-own segment is the limit for new code: its image with the install code is 65,504 bytes
-(`image_len`; `DSCLOG.EXE` is 32 bytes more, 65,536, with its header), so 32 bytes of its 64 KB
+own segment is the limit for new code: its image with the install code is 65,520 bytes
+(`image_len`; `DSCLOG.EXE` is 32 bytes more, 65,552, with its header), so 16 bytes of its 64 KB
 are spare. (The install's 256-byte stack is past the image, in its own segment, since the
 see-through figures: `SS` in the EXE's header is the paragraph after the image.) The build
 fails past 64 KB; what each change took is in the CHANGELOG. The HMA has 6,566 bytes

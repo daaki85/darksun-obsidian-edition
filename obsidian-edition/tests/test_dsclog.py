@@ -735,6 +735,36 @@ class UseItemTests(unittest.TestCase):
         self.assertEqual(screen[10 * 80 + 110 // 4], 0)  # (the first row's first pixel: drawn)
         self.assertEqual(screen[10 * 80 + 120 // 4], 0x55)  # (between its two runs: not)
 
+    def test_ghost_draw_no_picture(self):
+        """A see-through figure whose picture isn't loaded yet (its far pointer 0:0): nothing
+        drawn, as the game's own routine skips it (GHOST_DRAW read the interrupt table as one)."""
+        from dsloader import ghost
+        from dsloader.gamepatch import VEC_GHOST
+        mu = self.mu
+        image = load_image()
+        at = image.find(bytes((0xB8, VEC_GHOST, 0x25, 0xBA)))
+        handler = struct.unpack_from("<H", image, at + 4)[0]
+        seg = 0x8800
+        mu.mem_write(seg * 16, bytes(ghost.GH_TAB + 80))
+        mu.mem_write(self.hdr + ghost.TSR_GHOST_SEG, struct.pack("<H", seg))
+        mu.mem_write(self.hdr + ghost.TSR_GHOST_ON, struct.pack("<H", 1))
+        mu.mem_write(self.hdr + 204, struct.pack("<H", 1))  # (party member 0 hidden)
+        pages = ((GAME_DS - 0x4356 + 0x0980) & 0xFFFF) * 16
+        for field, value in ((4, 0xA000), (0x404, 0), (0x604, 0), (0x804, 319), (0xA04, 199), (0xC04, 0)):
+            mu.mem_write(pages + 6 + field, struct.pack("<H", value))
+        mu.mem_write(0xA0000, b"\x55" * 16000)
+        mu.mem_write(0, bytes(range(256)) * 4)  # (the interrupt table: what a 0:0 picture would read)
+        sp = 0x7F0 - 14
+        mu.mem_write(SS * 16 + sp, struct.pack("<5HIH", 3, 100, 10, 0, 0, 0, 0)[:14])
+        sp -= 6
+        mu.mem_write(SS * 16 + sp, struct.pack("<3H", 0x602, CALLER, 0x0202))
+        for name, value in dict(cs=TSR, ds=GAME_DS, ss=SS, esp=sp, ebp=BP, edi=0, esi=0x4444).items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+        mu.emu_start(TSR * 16 + handler, CALLER * 16 + 0x605, count=200000)
+        self.assertEqual((mu.reg_read(r.UC_X86_REG_SP), mu.reg_read(r.UC_X86_REG_SI)), (0x7F0 - 14, 0x4444))
+        self.assertEqual(bytes(mu.mem_read(0xA0000, 16000)), b"\x55" * 16000)
+
+
 @unittest.skipIf(Uc is None, "unicorn is not installed")
 class BeltTests(unittest.TestCase):
     """PROBE_BELT, at the end of the game's thief skill routine (where "mov ax,si" was): a thief

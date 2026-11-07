@@ -413,6 +413,10 @@ palette copy changing (every 30 s where the game cycles colours). The arena gate
    old movekeeper.py did; rebuild it when needed: the combat record's movement, see
    dsloader/game.py), and restore it after; never save the game while it's raised.
 6. **Spells**: open the USE button (24,17), page to the spell, click its icon, then the target;
+   out of a fight (U, the caster's portrait, e.g. Cermak 66,108) the target is a portrait on the
+   same screen: the icon (177,59 the first), then the target's portrait (Gerakis 66,62), and the
+   dice log says it ("Cermak gives Enlarged to Gerakis"); no name floats, the screen covers the
+   map (2026-11-07);
    check the dice log for the spell's line before going on. If none appears, look at the screen:
    usually a menu left open, the wrong spell page, or no Move or slots left. Try Tab + Return at
    the targeting step before clicking a figure.

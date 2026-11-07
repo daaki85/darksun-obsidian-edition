@@ -30,7 +30,7 @@ Releases, newest first: [2.13.4](#pull-request-85-merged-2026-11-02) (#85),
 
 ## Next pull request (not opened yet)
 
-DSCLOG.EXE 65,536 bytes (+944 since #85; its image 65,504, 32 bytes of its segment spare).
+DSCLOG.EXE 65,552 bytes (+960 since #85; its image 65,520, 16 bytes of its segment spare).
 
 **New**
 - **Kalzith's own portrait:** a face painted for him in the game's portrait style (an old man,
@@ -120,6 +120,11 @@ DSCLOG.EXE 65,536 bytes (+944 since #85; its image 65,504, 32 bytes of its segme
 - **It waited for the Loader with interrupts off for a Spellarcher's arrows,** so with the Loader
   slow the game's clock and music stopped for up to two seconds. (Seen in DOSBox: loads and runs.)
 - **Its message when its interrupts are taken** names them right (60h-65h and 80h-FFh).
+- **A floating name could be drawn above the page,** into other video memory, when the view was
+  dragged so that its figure was off the top of the screen; it isn't drawn then. And a timer strike
+  while a name was being erased could leave its old place on screen (the erase marked busy first).
+- **A see-through figure with no picture yet** was drawn from the interrupt table as if it were
+  one; it is left undrawn, as the game's own routine does. (Test: `test_ghost_draw_no_picture`.)
 
 **Fixed: the Loader** (an audit and three reviews)
 - **One write the Loader stopped ended the dice log for the session** (slicing a deque raised every
@@ -155,6 +160,25 @@ DSCLOG.EXE 65,536 bytes (+944 since #85; its image 65,504, 32 bytes of its segme
 - **A speaker's name was learned wrongly from a script's speech** (Kurzak's call taught "Trustee"):
   a speech with no replies teaches a name only when its speaker stands near the party. (Test:
   `SpeakerTests`.)
+- **Writes across an area's loading:** the item gate now also covers where the item and creature
+  tables were as the pass began, and every write while their pointer is null. (`itemgate.py`.
+  Test: `test_tables_moved_mid_pass`.)
+- **A failed copy of the objects or resources file left the last start's** for the game to open,
+  made with other switches. It is taken away now.
+- **Script checks dropped a roll's line** when the scripts' copy was damaged, and found none with no
+  copy (the game's own scripts are read then). (Test: `LoadTests`.)
+- **See-through tables were kept by too few colours** (224-239 differ between areas) and could
+  leave the figures solid after a quick change of palette and back. (Tests:
+  `test_area_colours_count`, `test_back_before_made`.)
+- **Wake of the Ravager's pictures could pulse:** a green was matched to a colour the game cycles.
+  (`wotrart.stable_colours`.)
+- **A two-handed weapon was given a shield** among the game's people. (Test:
+  `test_two_handed_alone`.)
+- **The window kept a second copy of the objects' file** (5.4 MB; now 0.46 MB, what differs).
+- Smaller: settings.json tried again before it counts as empty; the arena ring's search kept if
+  giving the ring fails; the chest's watcher no longer scans the item table each pass; a speaker's
+  name, a saved log and the Named saves folder say when a file fails; the Memory tools' "... more"
+  row can't be assigned.
 - Smaller: the panel shortened only plain saves; Kalzith's scrolls weren't trimmed when the lists
   were busy; Semyon's crate counts a Thornwall in a bag; a monster's or attacker's THAC0 below 0
   showed as 255; WIS's save adjustment read past its table; Restore Youth's system shock on a

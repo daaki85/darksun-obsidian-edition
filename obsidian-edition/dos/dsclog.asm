@@ -1366,8 +1366,8 @@ play_sound:
         sub dx, DGROUP_SEG - SFX_SEG
         mov es, dx
         push ax
-        push word [es:bx + 1]           ; (the entry as it was)
-        push dword [es:bx + 3]
+        push word [es:bx + 1]           ; (the entry as it was; +6, the next entry's loaded flag,
+        push dword [es:bx + 3]          ; with it: nothing changes it during a play, so kept)
         mov byte [es:bx + 1], SFX_DIGITAL
         mov [es:bx + 2], si
         mov [es:bx + 4], cs
@@ -20811,6 +20811,9 @@ ghost_draw:
         mov bx, [bp + 4]
         call page_setup
         les si, [bp + 12]               ; the picture: its frames' places from +6
+        mov ax, es
+        or ax, si                       ; (none yet: nothing drawn, as the game's routine)
+        jz .out
         mov bx, [bp + 16]
         cmp bx, [es:si + 4]
         jae .out
@@ -21786,6 +21789,8 @@ label_where:
         jge .y1
         mov bx, dx                      ; (under its feet)
         add bx, 2
+        cmp bx, LBL_TOP                 ; (still above the view's top: its thing is off the
+        jl .off                         ; screen, the view dragged; no label, none above the page)
 .y1:    mov dx, 200
         sub dl, [cs:di + 2]
         sbb dh, 0
@@ -21795,6 +21800,8 @@ label_where:
 .y2:    pop dx
         clc
         ret
+.off:   pop dx
+        jmp .no
 
 ; LABEL_ERASE: where label SI (its LBL_STATE) was drawn again by the game's routine for a rectangle
 ; of the view (REDRAW_SEG:REDRAW_OFF; page 1 and a flip, as the game's own call at 28185h), through
@@ -21802,10 +21809,10 @@ label_where:
 ; whole bytes of the planes (4 pixels): the routine draws only those inside it, so a label starting
 ; mid-byte left its first columns behind. DS the game's; keeps all.
 label_erase:
-        mov byte [cs:si + LS_SHOWN], 0
+        mov byte [cs:lbl_busy], 1       ; (busy first: a strike between could stamp the label
+        mov byte [cs:si + LS_SHOWN], 0  ; anew, then be erased, the old place left)
         pusha
         push es
-        mov byte [cs:lbl_busy], 1
         mov ax, ds
         sub ax, DGROUP_SEG - REDRAW_SEG
         mov [cs:redraw_far + 2], ax
