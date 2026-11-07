@@ -340,7 +340,7 @@ MAGIC: Tuple[Gift, ...] = (
     # with the Sling +2, the Grapes of Bless and the obelisk's gem), Linebreaker on the Troop
     # Leader; the slave pens' weapon rack an object of its own (the Lower Castle's rack is the same
     # object), with its two bone polearms: Thornwall comes onto it only once Semyon has told of the
-    # shipment (semyon.ship), so the data gives it nothing (a save from before 2.13.5 has it there)
+    # shipment (semyon.ship), so the data gives it nothing (a save from 2.13.4 or earlier has it there)
     Gift("Rogue Shaman", (weapon(*AIR_DAGGER_2),), (77,), 0x0F),
     Gift("Maris", (weapon(*OBSIDIAN_SHORT_SWORD_1),), (228,), 0x22),
     Gift("Chaya's chest", (weapon(*BONE_SHORT_SWORD_1),), (CHAYAS_CHEST,)),

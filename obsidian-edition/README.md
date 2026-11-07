@@ -1,8 +1,8 @@
 # Obsidian Edition
 
 Obsidian Edition is a mod for **Dark Sun: Shattered Lands** (the GOG release)
-in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
-(called Templar's Ledger up to 2.2.1), which loads the mod with your options.
+in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**,
+which loads the mod with your options.
 
 **Where to start**
 
@@ -78,6 +78,7 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   spells](FEATURES.md#6th-level-priest-spells) (Heal, Blade Barrier,
   Whirlwind, Restore Youth...), Kalzith (a defiler who sells scrolls), defilers who drop
   scrolls, more of Semyon's story, a last arena bout against six champions,
+  Pehtucl's locked, trapped chest, sounds for hiding and picking pockets,
   and a use for the cooked vulture ([New
   content](FEATURES.md#new-content)). On the map, the party wears its weapons
   and armour (its magic gear glinting), figures cast shadows and kick up dust,
@@ -93,7 +94,7 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   twice as fast, Share Strength never ending, Dispel Magic silencing the party,
   Negative Plane Protection never working, Cause Wounds' odd dice, Psionic
   Blast's imagined wounds kept for good, ability items working from the
-  backpack, the gladiator's armour bonus without armour, the game's
+  backpack, the game's people fighting unarmoured until their first action, the gladiator's armour bonus without armour, the game's
   scripts' broken checks (the sewer grate's hack, a ranger's tracking, a
   halfling's greeting), and more; and
   the rules it got wrong, from spell saves to warriors' attacks, put right ([The
@@ -267,38 +268,56 @@ start it the GOG way and load a save from before the mod.
 **Your saved games.** A save from the original game, or an earlier version
 of the mod, loads and plays with every fix and rule change from the moment it
 is loaded: they're in the patched game and the Loader, not in the save, so
-effects already running follow them too. What a bug already did stays in the
-save:
+effects already running follow them too (images, Armor's charges, Share
+Strength, Dispel Magic and the rest, from the next spell cast). The fixes stop
+the old bugs from happening, but what a bug already did stays in the save:
 
-- A character who kept Share Strength's strength after the power ended still
-  has it (it shows on their Effects screen): load a save from before the power
-  was used to be rid of it. One silenced by the preserver's Dispel Magic ("No
-  spell use") casts again once it wears off.
-- With ages on, each character is given a starting age the first time the
-  Loader sees them (the dice log shows the roll).
-- A Healer from an earlier version keeps its sphere and is given the cosmos
-  spells when the game is loaded. A thri-kreen druid/fighter Wasteland Seer
-  has no kit now: the kit is a druid/fighter/psionicist's.
-- Thieves' Tools from an earlier version (Mirlon's or Kel's) do nothing: a
+- **A save made with 2.14.0 is not for earlier versions,** one made with
+  2.13.2 or later not for 2.13.1 or earlier, and one made with 2.13.0 or later
+  not for anything before 2.13.0. 2.14.0's new chest and the Loader's
+  conversations use scripts an older Loader doesn't have; since 2.13.0 the
+  weapon specs are kept packed with the age, and since 2.13.2 each
+  character's starting roll beside them, which an older Loader reads as other
+  specs. Older saves load in newer versions as they are: a character keeps its
+  age, and its roll is put on its sheet when the game is loaded.
+- **Share Strength and Dispel Magic:** a character who kept Share Strength's
+  strength after the power ended still has it (it shows on their Effects
+  screen): load a save from before the power was used to be rid of it. One
+  silenced by the preserver's Dispel Magic ("No spell use") casts again once it
+  wears off.
+- **Ages:** with ages on, each character in a save, the game's own party too,
+  is given a starting age the first time the Loader sees them (the dice log
+  shows the roll).
+- **Kits from earlier versions:** a Healer keeps its sphere and is given the
+  cosmos spells when the game is loaded (the dice log says so). A thri-kreen
+  druid/fighter Wasteland Seer has no kit now: the kit is a
+  druid/fighter/psionicist's.
+- **Thieves' Tools** from an earlier version (Mirlon's or Kel's) do nothing: a
   thief picks pockets with the Pick Pockets button.
-- A character's most PSP may go up once, the next time the game works it out
-  (a level up, or a game starting): the game's own bonuses for CON, INT and WIS
-  are counted right now, and the most only ever rises.
-- In a save from 1.2.0 to 2.5.0 that has already been to the slave pens, the
-  weapon rack is gone, so Thornwall never comes (a new game has the rack).
-- A save made with an earlier version while Kalzith was switched off: in the
-  slave pens, talking to Semyon may start Kalzith's conversation instead (the
-  Loader now numbers its conversations the same whatever the switches). One
-  made with Kalzith on, the default, is unaffected.
-- Pehtucl's locked chest comes with a new game: in a save that has already
-  been to the slave pens he wears the Cloak of Protection, and the chest is
-  the plain one.
-- A new game whose arena fight never began (no announcer, and walking said NO
-  PATH FROM HERE: a 2.4.0 bug) can't be mended: start a new one.
-- **A save made with 2.13.0 or later is not for earlier versions**, and one
-  made with 2.13.2 or later not for 2.13.1 or earlier: the weapon specs are
-  kept packed with the age and the starting roll beside them, which an older
-  Loader reads as other specs. Older saves load in newer versions as they are.
+- **Most PSP:** a character's may go up once, the next time the game works it
+  out (a level up, or a game starting): the game's own bonuses for CON, INT and
+  WIS are counted right now, and the most only ever rises.
+- **Thornwall in an older save:** in a save from 1.2.0 to 2.5.0 that has
+  already been to the slave pens, the weapon rack is gone, so Thornwall never
+  comes onto it (a new game has the rack): fixing items that couldn't be
+  swapped in a pack meant renumbering the rack, and the game drops an object
+  it no longer finds. In a save from 2.13.4 or earlier that has already been to
+  the arena, Thornwall is already on the rack (it now comes only after
+  Semyon's tip).
+- **Kreenfang:** in a save from 2.13.4 or earlier that has already been to the
+  arena, it is likely still on the dead body by the stone arch, and the
+  champions' Tohr-kreen brings another.
+- **Pehtucl's locked chest** comes with a new game: in a save that has already
+  been to the slave pens he still wears the Cloak of Protection, and the chest
+  is the plain one.
+- **A save made with an earlier version while Kalzith was switched off** (or
+  when the Loader couldn't make its copy of the game's objects): in the slave
+  pens, talking to Semyon may start Kalzith's conversation instead (the Loader
+  now numbers its conversations the same whatever the switches). There's no
+  undoing it in that save. One made with Kalzith on, the default, is
+  unaffected.
+- **A new game whose arena fight never began** (no announcer, and walking said
+  NO PATH FROM HERE: a 2.4.0 bug) can't be mended: start a new one.
 
 A new game is still the way to see all of the mod: kits, STORE and RECALL and
 fuller starting gear come with characters made with it, and much of the new
@@ -329,8 +348,9 @@ only by the mod's patched game.
 ## The Loader's window
 
 The window has the party on one side and the logs and tools on the other, with
-**Start the game**, the game window's size, the text size and **Reconnect**
-(to find the game again) along the top. The party pane has two tabs:
+**Start the game**, the game window's size, the text size, **Freeze report**
+(see [reports](#crash-freeze-and-item-reports)) and **Reconnect** (to find the
+game again) along the top. The party pane has two tabs:
 
 - **Characters** (Alt+C): a card for each character, laid out like the game's
   View Character screen ([The Characters tab](#the-characters-tab)).
@@ -358,7 +378,7 @@ and **Saves** ([Saves under their names](FEATURES.md#saves-under-their-names)).
 the player's guide, lists every switch with its default and when it counts.
 
 All are on by default (the red ring under the chosen enemy, the game speed
-Faster) and are remembered for next time. **Restore defaults**, at the bottom
+Faster, the combat log in short) and are remembered for next time. **Restore defaults**, at the bottom
 of the tab, sets them all back (after asking). In a
 window too small to show the open sections, the tab scrolls (scrollbar, mouse
 wheel, or arrow and page keys once it has the focus).
@@ -381,7 +401,10 @@ and use the arrow and Page keys):
   beside it), THAC0 with each weapon ready (`THAC0: 15 with Wooden Club, 14
   with Wooden Bow (base 19)`), the saves as the d20 needed now (see
   [In the game](FEATURES.md#thac0-saves-and-thief-skills)), movement (`Move: 12 (14 in
-  a fight: Stalker)`) and attacks; with [ages](FEATURES.md#ages-and-magical-aging)
+  a fight: Stalker)`) and attacks, with each weapon where specialization changes
+  them (`Attacks: 5/2 a round with Obsidian Chatkcha`); the kits (`Kit: Wild
+  Fury`; for the game's own party, its features: `Features: Wild Fighting`), and the weapon specs with
+  their rank (`Weapons: long sword (specialized)`); with [ages](FEATURES.md#ages-and-magical-aging)
   on, their age, its category and the next to come (`Age: 45, middle-aged;
   old at 53`);
 - what they wear and hold, by the game's own slot names ("Right hand: Bone
@@ -441,7 +464,7 @@ gives and what that does, how long it lasts, and each party member's caster
 level for it. With the [new spells](FEATURES.md#new-content) on, the mod's
 spells are listed too; a 6th-level priest spell built on another spell's record
 (Harm on Cause Critical Wounds', say) has its lines written out, as the record
-would mislead. **Show** picks wizard, priest or psionic, and **Only spells the
+would mislead. **Show** picks wizard, priest, psionic or all, and **Only spells the
 party has a caster level for** leaves out the rest. **Save...** writes it to a
 text file. It's filled when you open the tab (or press **Refresh**) while the
 game is running.
@@ -453,7 +476,7 @@ text, with the replies offered numbered underneath (and the list's title,
 such as "Answer Yes or No", above them), and then the one you picked:
 `You chose: No`.
 
-![The Dialogue tab at the start of a new game: the Announcer, with his portrait, introducing the Defiler's show and calling the gladiators into the arena; the Characters tab beside it with Gerakis's and K'ratchek's ages](docs/dialogue.png)
+![The Dialogue tab at the start of a new game: the Announcer, with his portrait, introducing the Defiler's show and calling the gladiators into the arena; the Characters tab beside it with Gerakis's and K'ratchek's ages and their features](docs/dialogue.png)
 
 **Who's speaking.** The game's dialogue window has only a portrait, never a
 name, so a speaker shows as `Portrait 57` until the log learns its name from
@@ -472,11 +495,10 @@ run time (GPLDATA.GFF and RESOURCE.GFF in the install folder the Loader
 remembers); nothing from the game is copied into the Loader. Without the game
 installed the window uses its own lettering and no portraits.
 
-How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#the-dialogue-tab).
 
 ## The dice log
 
-![The Loader during the arena's opening show: the Characters tab with the game's own party (K'ratchek's chatkcha 5/2 attacks a round, her own second throw counted, and her features, open sky spells and psionics; Gerakis's age), and the dice log with Find on the first of 27 lines naming the Rampager: the party's features and ages as the game begins (Cilla an Elven Shadow-walker), the first round's initiative, Gerakis's Wild Fighting roll (passed: one more attack a round and +3 damage), and the Defiler's Ice Storm](docs/dicelog.png)
+![The Loader during the arena's opening show: the Characters tab with the game's own party (Gerakis's Features: Wild Fighting and his age; K'ratchek's chatkcha 5/2 attacks a round and her features, open sky spells and psionics and one more chatkcha throw), and the dice log with Find on the first of 8 lines naming the Rampager: the party's features and ages as the game begins (Cilla an Elven Shadow-walker), the first round's initiative, Gerakis's Wild Fighting roll (passed: one more attack a round and +3 damage), and the Defiler's Fireball](docs/dicelog.png)
 
 **Finding something.** Type a word in **Find** above the log (Ctrl+F puts
 you there) and press Enter: every match lights up, the log jumps to the first,
@@ -521,7 +543,7 @@ level AA:
 
 - **Contrast:** every colour used for text has at least 4.5:1 contrast with
   its background (the game's lighter stone is kept for bevels, not behind
-  text). `tests/test_theme.py` checks each pair.
+  text).
 - **Colour is never the only signal:** log lines say `HIT`, `miss`, `saves`
   and so on in words, and changed bytes in the record view are underlined as
   well as highlighted.

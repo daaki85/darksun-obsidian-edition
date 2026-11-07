@@ -24101,8 +24101,8 @@ keep:   mov ax, [cs:psp]
         jc .no_ovr
         mov [cs:ovr_seg], ax
 .no_ovr:
-        mov bx, POOL_PARAS              ; the music buffer's (PROBE_HEAP) and the shadows' cache
-        call umb_alloc                  ;   (SC_SEG), if upper memory has the room (UMBPLUS.COM)
+        mov bx, POOL_PARAS              ; the music buffer's (PROBE_HEAP), if upper memory has
+        call umb_alloc                  ;   the room (UMBPLUS.COM; the shadows' cache is the far block's)
         jc .no_pool
         mov [cs:pool_seg], ax
         mov es, ax
@@ -24154,7 +24154,8 @@ UMB_NEED equ (1 + 0x10 + (image_len + STACK + 15) / 16) + (1 + OVR_RESERVE)
 ; What KEEP leaves there after the install: the helper as it stays (to RESIDENT_END), the overlay
 ; buffer, the music pool (POOL_PARAS) and the see-through figures' tables (GHOST_PARAS), each with
 ; its MCB. The last two are taken only if there's room, quietly: the build fails rather than lose
-; them without UMBPLUS.COM.
+; them without UMBPLUS.COM (with the far block in the HMA, as DOSBox gives it; without the HMA,
+; FAR_INIT takes the far block from upper memory first, and they don't fit).
 UMB_KEPT equ (1 + 0x10 + (resident_end - $$ + 15) / 16) + (1 + OVR_RESERVE) + (1 + POOL_PARAS) + (1 + GHOST_PARAS)
         times -(UMB_KEPT > UMB_ROOM) db 0   ; (a negative count: the music pool or the see-through tables wouldn't fit)
 

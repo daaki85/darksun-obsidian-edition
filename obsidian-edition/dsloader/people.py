@@ -71,9 +71,12 @@ def plan(items: Sequence[Tuple[int, bytes, bytes]], taken: Set[int], both_held: 
     two = lambda item: bool(types[item][TYPE_HANDS] & TWO_HANDED)
     both = both_held  # (the right hand's weapon takes both hands: nothing in the left)
     if melee and free(RIGHT):
-        _, _, best = melee.pop(0)
-        out.append((best, RIGHT))
-        both = two(best)
+        # (with the left hand already filled, a shield or a weapon, a two-hander isn't taken up)
+        best = next((item for _, _, item in melee if not (LEFT in taken and two(item))), None)
+        if best is not None:
+            melee = [m for m in melee if m[2] != best]
+            out.append((best, RIGHT))
+            both = two(best)
     if both:
         return out
     if shields and free(LEFT):

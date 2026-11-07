@@ -149,7 +149,8 @@ class Ghosts:
             self._made[key(dac)] = made
             while len(self._made) > MADE_KEPT:
                 self._made.popitem(last=False)
-            self._making = None
+            if self._making == key(dac):  # (its own mark only: another palette's may be being made)
+                self._making = None
 
     def update(self, gd, tsr_hdr: int, on: bool, palettes: int, redraw) -> None:
         """ON: the see-through figures drawn (the stealth rule's or anyone's invisibility); PALETTES

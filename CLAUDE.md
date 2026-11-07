@@ -14,7 +14,8 @@ This summary is here so it survives a compacted chat; `playtest/PLAYTESTING.md` 
 wins where they differ.
 
 **Setup.** Tools are in `playtest/` (run from there, `export DISPLAY=:55`, and set
-`PLAYTEST_WORK` to a scratch folder; the game is `$PLAYTEST_WORK/inst`, from `setup_game.sh`).
+`PLAYTEST_WORK` to a scratch folder; the game is `$PLAYTEST_WORK/inst`, from `setup_game.sh`;
+the guide's `$WORK` is that folder, set only inside the tools, so type `$PLAYTEST_WORK`).
 `start.sh` starts Xvfb, the Loader's patched game in DOSBox and the dice log
 (`$PLAYTEST_WORK/dice.txt`). Check the build under test is in place before trusting anything
 (`GPLDATA=../obsidian-edition/dos/GPLDATA.GFF python3 dec.py SCRIPT LO HI`; for DSCLOG, new code's
@@ -29,7 +30,9 @@ from this branch's helper (`tools/build_mod.sh` there) or `$WORK/dsun.log` shows
 What stalls on it and not in DOSBox is a program fault to report.
 
 **Start from a save.** `sh loadsave.sh pens-after-arena` loads the slave pens after the arena
-(region 29h); `saves/README.md` lists the others (`pens-after-scar`: Scar killed, the champions due; `pens-thornwall-rack`: by the weapon rack; `pens-new-chest`: a new game's pens, run `shut.py` after). Save at every milestone (Escape, S, click a slot at 120,46, type a name, SAVE at
+(region 29h); `saves/README.md` lists the others (`pens-after-scar`: Scar killed, the champions
+due; `pens-thornwall-rack`: Thornwall on the weapon rack, the party in the east passage;
+`pens-new-chest`: a new game's pens, run `shut.py` after). Save at every milestone (Escape, S, click a slot at 120,46, type a name, SAVE at
 253,46: the game then quits) and add it to `playtest/saves/` with a README line.
 
 **The window must be 320x240** (`xdotool getwindowgeometry`): start.sh sets the Loader's
@@ -64,8 +67,8 @@ capture; window grabs (`import -window`) are 320x240, so y x 1.2.
 - Inventory: the backpack's cells are 18 apart (195,26, 195,44...). A right-click opens an item's
   box beside its row. Click a scroll's spell icon with a slow press (point, mousedown, 0.15 s, mouseup).
   `scrolltest.py` makes a Shinobi in memory and gives the defilers' scrolls.
-- E opens the Effects screen. In an END <NAME>'S MOVE menu, E is END TURN, and clicks there
-  don't register.
+- E opens the Effects screen. In an END <NAME>'S MOVE menu (a click on the member's figure
+  opens it), E is END TURN.
 - Escape with nothing open brings EXIT: SAVE GAME?; press Escape only with a screen or menu up.
 - The arena's flags and numbers have no place in memory to set from outside (even mid-script):
   to test a branch there, force it in a test build of the scripts, then put the module back.

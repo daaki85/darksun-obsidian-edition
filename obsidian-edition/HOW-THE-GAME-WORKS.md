@@ -116,10 +116,8 @@ From the game's code:
   sword's). It gets another +2 to hit (+4 in all), and on the thief's first
   two attacks of the round (an off-hand one too) the damage, STR bonus
   included, is multiplied: x2 at thief levels 1-4, x3 at 5-8, x4 at 9-12 and
-  x5 from 13 (AD&D's table). With **A backstab multiplies the weapon's dice
-  only** ticked, only the round's first attack is multiplied, and only its
-  dice: STR, the weapon's plus and any other bonus are added once, as in AD&D
-  (DSCLOG's `STAB_TIMES`).
+  x5 from 13 (AD&D's table). (With the Loader: [the first attack's dice
+  only](FEATURES.md#hiding-in-shadows-to-backstab).)
 
 Which weapons can backstab, the game's and the [Loader's](FEATURES.md#new-items)
 (magic ones included). Weight belongs to the weapon's type and material, in the
@@ -227,15 +225,15 @@ of it as `Ring of Protection`).
 
 ## Monsters' defences
 
-From the game's damage and fighting code (DSUN.EXE); none of this is in the manual:
+From the game's damage and fighting code; none of this is in the manual:
 
 - Every creature has a monster kind, and each kind a resistance class and a
   set of properties, in a table the game fills when it starts.
 - Every hit has damage kinds: fire, cold, electricity, acid, poison, draining,
   psionic, death, and for weapons crushing, edged or pointed, from the item's
   type; a natural (unarmed) attack's is crushing, fists and monsters' claws
-  alike (with Obsidian Edition, a thri-kreen of the party's claws and bite and Erdlu
-  Claw's talons are edged: see [Erdlu Claw](FEATURES.md#new-wizard-spells)).
+  alike (with the Loader, a party thri-kreen's claws and bite, and Erdlu
+  Claw's talons, are edged: [Erdlu Claw](FEATURES.md#new-wizard-spells)).
   A weapon's hit also carries its magic: one bit for +1 or better, one
   for +2 or better and one for +3 or better (the weapon's plus, or its
   ammunition's if that's higher). A monster's own attacks count as magical by
@@ -266,8 +264,8 @@ From the game's damage and fighting code (DSUN.EXE); none of this is in the manu
   fight after it), a backstab, or a first round's blow on one who hasn't acted
   meets no armour. Once on, a weapon in hand is fought with (in place of the
   first two natural attacks) and worn armour counts. The game never puts on
-  rings, cloaks, belts, boots or amulets. The Loader puts all of it on as they
-  come on the map ([the fix](FEATURES.md#the-games-bugs-fixed)).
+  rings, cloaks, belts, boots or amulets. (With the Loader: [worn from the
+  start](FEATURES.md#the-games-bugs-fixed).)
 
 The dice log notes a weapon hit that takes less than its roll, or nothing at
 all, with what the monster's defences say about it
@@ -297,11 +295,10 @@ A round is 60 game seconds. Some effects last a number of uses instead
 - Stoneskin: 1 a level + 1d4. Any damage uses a charge, even fire that gets
   through, but only blows are stopped.
 - Ironskin: 1d6 blows stopped.
-- Mirror Image: 1 a level + 1d4 images. With the Loader each hit, and each
-  foe's spell for one creature (not an area's, a cone's or a wall's), has a 75%
-  chance to strike an image instead, the image vanishing and the blow or spell
-  lost; the dice log shows each d100 (the game's own images worked otherwise:
-  see [The game's bugs, fixed](FEATURES.md#the-games-bugs-fixed)).
+- Mirror Image: 1 a level + 1d4 images. They stop no weapon blow, and take a
+  spell for one creature three times in four, whoever cast it, so Armor cast on
+  oneself is lost, and an image with it. (With the Loader: [each hit and each foe's
+  spell](FEATURES.md#the-games-bugs-fixed).)
 - Invisibility: one attack or hostile spell ends it. Improved Invisibility is
   timed instead, so attacking doesn't end it.
 - Minor Spell Turning: one spell turned back.
@@ -549,11 +546,8 @@ chance out as:
   the game's own check: it doesn't look at what the item is (leather or metal)
   and ignores chest and arm armour and helmets, so a thief holding any weapon
   pays it. (The manual's "anything other than leather-type armor" is AD&D's
-  rule, not what the code does.) In games started from the Loader there is
-  no equipment penalty at all: the slots are a list in the game's data (legs,
-  quiver, left hand, right hand), and the dice log's copy of the game empties
-  it. The Loader reads the list from the running game, so its numbers match
-  whichever game it is.
+  rule, not what the code does.) (With the Loader: [no equipment
+  penalty](FEATURES.md#the-games-bugs-fixed).)
 - plus the situation's bonus or penalty (a hard lock, say).
 
 With **Thief skills from AD&D's table** ticked (see
@@ -592,8 +586,7 @@ check its two lists the wrong way round, so it never applies.)
 
 There is no hide or sneak command, and nothing in the game's code rolls a thief
 skill on its own: every roll comes from the game's scripts (conversations,
-doors, walls...), which ask in two ways. Every script in GPLDATA.GFF decodes
-(see `dsloader/gpl.py`), so these are all of them:
+doors, walls...), which ask in two ways. These are all of them:
 - **13 skill checks**: find/remove traps 4 times (a hidden passage, a secret
   door, a loose rug, a cord on a lava-dome egg; bonuses −10 to +3), open locks
   4 times (a safe, a grate and cell doors; −4 to +8), climb walls 3 times, and
@@ -607,9 +600,9 @@ doors, walls...), which ask in two ways. Every script in GPLDATA.GFF decodes
   Detect Traps on the character who set it off, avoids it. This is the roll the
   arena prisoner makes.
 
-A party check goes to the member with the best chance. *Without the mod* it
-always went to the first party member: the game's pick meant to find the best
-but compared the wrong way round. (The game also has a script command that lets
+A party check is meant to go to the member with the best chance, but the
+game's pick compares the wrong way round, so the first party member always
+rolls (with the Loader: [the best](FEATURES.md#the-games-bugs-fixed)). (The game also has a script command that lets
 each member try in turn, but no script uses it.)
 
 **The game never rolls move silently, hide in shadows or read languages**, so on
@@ -623,14 +616,8 @@ make 3 ability checks (a d20 under the ability): CHA twice and STR once.
 `python -m dsloader checks` lists them all with the script's text around
 each (spoilers).
 
-The **Characters** tab shows each thief's chances as they stand, with the
-equipment penalty (none in games started from the Loader) and effects (but
-not the situation's bonus or penalty), for the five skills the game rolls
-(pick pockets, open locks, find/remove traps, hear noise, climb walls) and
-the two the Loader rolls: move silently (when a pocket isn't picked, see
-[Picking pockets](FEATURES.md#picking-pockets)) and hide in shadows (to
-[backstab](FEATURES.md#hiding-in-shadows-to-backstab)).
-**All fields** has them in a row (`PP/OL/FT/MS/HS/HN/CW`).
+(The Loader's [Characters tab](README.md#the-characters-tab) shows each
+thief's chances as they stand.)
 
 ## Resting
 
@@ -638,8 +625,8 @@ A rest (at a fire ring, or one a script gives) fills hit points, PSP and spell
 slots, and the party's priests tend everyone: if the best cleric among those
 Okay is 5th level or more, it casts Cure Disease, Remove Curse and Remove
 Paralysis on each party member, and so does the best druid; a druid of 7th
-level or more casts Neutralize Poison on each too (the game's rest, 8066Dh;
-found by CalvinRodo's yuan-ti, checked in DSUN.EXE).
+level or more casts Neutralize Poison on each too (found by CalvinRodo's
+yuan-ti).
 
 ## Searching junk, hay and wardrobes
 
@@ -687,9 +674,9 @@ How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#the-bowyers-archer
 
 ## The arena's count of fights
 
-The game counts the party's trips into Draj's arena (its global number 12; the
-combat log panel's top line shows it between fights in the slave pens and the
-arena). It goes up by one each time the party walks out of the arena's gate
+The game counts the party's trips into Draj's arena (the Loader's [combat
+log](FEATURES.md#the-combat-log-in-the-game) shows the count between fights in
+the slave pens and the arena). It goes up by one each time the party walks out of the arena's gate
 after being called, however many waves came that day; extra waves don't count.
 Being called needs the game's clock to run: Kurzak's call comes once a little
 over 8 hours of game time (8 h 05 min) have passed since the last trip, and the
@@ -703,13 +690,8 @@ The announcer greets each trip by the count:
 | 0-3 | A speech of its own for each of the first four trips ("Before you is a handful of gladiators...", "Behold these gladiators as they fight in melee...", "These slaves have proven their worth...", "...Let the games begin!"), then the fight. |
 | 4 | Scar's challenge: "The 'King of the Pens', Scar, has become so disgusted with the survival of these scum that he has offered to kill them himself", when a check the script makes on Scar passes; otherwise the everyday speech. |
 | 1000 | "This day is very special. Let's have a round of applause for the one thousandth fight of our gladiators. King Tectuktitlay himself has sent gifts for these brave souls." Two weapons appear at the party's feet, with a sound: **El's Drinker +2** (a metal sword that carries a spell) and a **Bone Gythka +3**, each worth 65,000. The script then goes on as on any other day. |
-| 5000 | "You win! Through fighting in the arena, you have completely depopulated Athas of all monsters." No monsters come: the announcer sends the party back to the pens to heal, the crowd throws money, and the script marks the war against Draj won (flag 10, and the final battle's state, global number 49, set to 3). Reaching the final battlefield afterwards plays the game's victory: 20,000 XP, the allies' farewells, Dragonsbane, the genie's prophecy, and "Congratulations! You have defeated the Drajian army and completed Shattered Lands. Feel free to continue playing the game." |
+| 5000 | "You win! Through fighting in the arena, you have completely depopulated Athas of all monsters." No monsters come: the announcer sends the party back to the pens to heal, the crowd throws money, and the script marks the war against Draj won. Reaching the final battlefield afterwards plays the game's victory: 20,000 XP, the allies' farewells, Dragonsbane, the genie's prophecy, and "Congratulations! You have defeated the Drajian army and completed Shattered Lands. Feel free to continue playing the game." |
 | Any other | "Once again, expectant spectators, you see trained warriors pitted against the hordes of creatures which dwell beyond our walls." |
-
-Checked in play: the count going up once a trip, Scar's challenge on the fifth,
-and, with the count set to 5000, the 5000th trip's speech, the party sent back
-with no fight, and the final battle marked won. The 1000th trip is as its
-script reads; it wasn't played.
 
 With the Loader's new items on, the first trip after a party member kills Scar
 in the arena (the count at 5 or more) brings a speech of its own and six

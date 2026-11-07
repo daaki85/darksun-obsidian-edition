@@ -4,45 +4,11 @@ Obsidian Edition is a mod for **Dark Sun: Shattered Lands** (the GOG release)
 in DOSBox: rules closer to AD&D, kits, new spells, items and people, the
 party's gear drawn on the map, and every roll shown as it happens. You start
 the game with the **Dark Sun Obsidian Edition Loader**, which loads the mod
-with your options and keeps the full dice log while you play.
+with your options and keeps the full dice log while you play. Nearly every
+rule change and addition has a switch on the Loader's Options tab; the full
+list is in [What it does](obsidian-edition/README.md#what-it-does).
 
 ![The arena in round 7 of a fight: K'ratchek's turn, with the combat log over the map's lower right showing a Slig's hits on Cermak and his hit points after each](obsidian-edition/docs/combat-log.png)
-
-## Documentation
-
-- [The player's guide](obsidian-edition/PLAYER-GUIDE.md): the rules, without
-  spoilers, a section for each class (also as a web page,
-  [`player-guide.html`](obsidian-edition/player-guide.html))
-- [The full documentation](obsidian-edition/README.md): installing, running, the
-  Loader's window and the dice log
-- [Features and rules](obsidian-edition/FEATURES.md): what the game shows
-  (the combat log, the Look box, THAC0 and saves), and every rule change and
-  addition in detail, with its switch
-- [Kits](obsidian-edition/KITS.md): every kit's gains, costs and starting gear
-- [The dice log, line by line](obsidian-edition/DICE-LOG.md): every kind of line
-  the Loader's dice log writes, and what it means
-- [Patch notes](PATCH-NOTES.md): every change from the original game, in one
-  page to share
-- [Items](obsidian-edition/ITEMS.md): every magic item, weapon and piece of armour,
-  with its icon and where it is (spoilers)
-- [How the game works](obsidian-edition/HOW-THE-GAME-WORKS.md): the original
-  game's own rules, from its code
-- [Changelog](CHANGELOG.md) and [development
-  notes](obsidian-edition/DEVELOPMENT.md): for developers and testers
-
-## What it does
-
-The full list is in [What it does](obsidian-edition/README.md#what-it-does),
-and every change from the original game in the [patch notes](PATCH-NOTES.md).
-Nearly every rule change and addition has a switch on the Loader's Options tab.
-
-The game's own files are never modified: the Loader runs a patched copy of the
-game from its own folder. It writes to the game folder only your saves (page 1
-in the game's own `SAVE` files, pages 2 to 4 as `SAVB`, `SAVC` and `SAVD`
-files) and your characters (in the game's own `CHARSAVE.GFF`, up to 29). A save
-made with the new items can hold items the original game doesn't have: load it
-with the Loader. To uninstall, delete the Loader's folder ([what stays
-behind](obsidian-edition/README.md#updating-backups-saved-games-and-the-loaders-files)).
 
 ## Getting started
 
@@ -66,17 +32,47 @@ behind](obsidian-edition/README.md#updating-backups-saved-games-and-the-loaders-
 (`Start Game with Dice Log.bat` starts the game and the Loader together in one
 double-click, with the options as last set.)
 
+## Documentation
+
+- [The player's guide](obsidian-edition/PLAYER-GUIDE.md): the rules, without
+  spoilers, a section for each class (also as a web page,
+  [`player-guide.html`](obsidian-edition/player-guide.html))
+- [The full documentation](obsidian-edition/README.md): installing, running, the
+  Loader's window and the dice log
+- [Features and rules](obsidian-edition/FEATURES.md): what the game shows
+  (the combat log, the Look box, THAC0 and saves), and every rule change and
+  addition in detail, with its switch
+- [Kits](obsidian-edition/KITS.md): every kit's gains, costs and starting gear
+- [The dice log, line by line](obsidian-edition/DICE-LOG.md): every kind of line
+  the Loader's dice log writes, and what it means
+- [Patch notes](PATCH-NOTES.md): every change from the original game, in one
+  page to share
+- [Items](obsidian-edition/ITEMS.md): every magic item, weapon and piece of armour,
+  with its icon and where it is (spoilers)
+- [How the game works](obsidian-edition/HOW-THE-GAME-WORKS.md): the original
+  game's own rules, from its code
+- [Changelog](CHANGELOG.md) and [development
+  notes](obsidian-edition/DEVELOPMENT.md): for developers and testers
+
+## What it changes on your computer
+
+The game's own files are never modified: the Loader runs a patched copy of the
+game from its own folder. It writes to the game folder only your saves (page 1
+in the game's own `SAVE` files, pages 2 to 4 as `SAVB`, `SAVC` and `SAVD`
+files) and your characters (in the game's own `CHARSAVE.GFF`, up to 29). A save
+made with the new items can hold items the original game doesn't have: load it
+with the Loader. To uninstall, delete the Loader's folder ([what stays
+behind](obsidian-edition/README.md#updating-backups-saved-games-and-the-loaders-files)).
+
 ## What's new
 
-**Obsidian Edition 2.13.4** is out ([release notes](release-notes/v2.13.4.md)):
-fuller starting gear's armour counts for AC, Psionic Blast's imagined wounds heal
-after the fight, ability items work only worn, the gladiator's armour bonus needs
-armour, and more of the game's script bugs are fixed (the slave pens' sewer
-grate, a ranger's tracking, region 9's messenger).
+**Obsidian Edition 2.14.0** is out ([release notes](release-notes/v2.14.0.md)):
+hidden thieves and invisible figures are drawn see-through, six champions come to
+the arena after Scar's death, Pehtucl's chest is locked and trapped, Thornwall
+comes after Semyon's tip, the game's people wear their gear from the start, and
+Kalzith has a face of his own.
 
-Every release has notes of its own, in [`release-notes`](release-notes); the
-[patch notes](PATCH-NOTES.md) have every change from the original game in one
-page, whatever the version.
+Every release has notes of its own, in [`release-notes`](release-notes).
 
 ## About
 

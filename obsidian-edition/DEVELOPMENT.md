@@ -5,10 +5,15 @@ the game with it, work inside: the patched game and its helper, what's known
 of the game's data, the tools for mapping it, and how each part of the
 [README](README.md) and the [features page](FEATURES.md) is done.
 
+DSCLOG's routines and variables are named in capitals on these pages
+(`SC_FIND`, `FAR_SEG`); in `dos/dsclog.asm` their labels are lower case
+(`sc_find`, `far_seg`). Its constants (`equ`) are in capitals in both.
+
 ## Contents
 
 - [Building and testing](#building-and-testing)
   - [The folders](#the-folders)
+  - [Build](#build)
   - [Tests](#tests)
   - [Making a release](#making-a-release)
   - [From a command prompt](#from-a-command-prompt)
@@ -35,43 +40,35 @@ of the game's data, the tools for mapping it, and how each part of the
 | Folder or file | What it holds |
 |---|---|
 | `dsloader/` | the Loader: its window (`viewer.py`), starting the game (`launch.py`), the dice log (`dicelog.py`), the patched game (`gamepatch.py`) and the data written into the game's files (one module for each feature) |
+| `dsloader/fonts/` | the Latin sets of the web pages' fonts, with their licences (`pagefonts.py`) |
+| `dsloader/sound-data/` | the samples of the sounds for hiding and picking pockets (`hide.wav`, `pick.wav`), and `make.py`, which made them (`sounds.py`) |
 | `dos/` | the helper DOSBox loads, `dsclog.asm` (built to `DSCLOG.EXE`), `umbplus.asm` (`UMBPLUS.COM`) and `gameend.asm` (`GAMEEND.COM`) |
 | `layouts/` | the game's memory layout (`shattered_lands.json`), for the Loader's window and Memory tools |
 | `tests/` | the unit tests, and `make_fake_party.py` for practising without the game |
 | `docs/` | the screenshots and the item icons the documentation shows |
 | `*.bat` | what players double-click: the Loader, the game with or without its window, a save file's party |
+| `README.md`, `FEATURES.md`, `ITEMS.md`, `KITS.md`, `HOW-THE-GAME-WORKS.md`, `DICE-LOG.md`, `PLAYER-GUIDE.md` | the player's pages (`player-guide.html` is made from the guide) |
 | `../PATCH-NOTES.md`, `../CHANGELOG.md`, `../release-notes/` | the repository's root: the patch notes, the record of every pull request, and each release's notes |
+| `../playtest/` | the in-game test kit: tools that drive the game in DOSBox, saves and logs, and [its guide](../playtest/PLAYTESTING.md). It is outside this folder, so it never goes in the release zip |
 
 Each module of `dsloader` opens with what it does. Those the sections below
-don't come back to: `gff.py` and `gpl.py` read the game's GFF files and its
-scripts; `guestmem.py` finds DOSBox's guest memory; `savefile.py` reads a
-save's party (`Show Save.bat`); `tracker.py` notes kills, XP and level-ups;
-`textlog.py` reads the dialogue and message boxes DSCLOG copies; `partyview.py`
-and `spellbook.py` draw the Characters and Spells tabs, `theme.py` the window's
-look; `bonescale.py` puts the bone scale set together in its chest;
+don't come back to: `__main__.py` is the command line (below); `gff.py` and
+`gpl.py` read the game's GFF files and its scripts; `guestmem.py` finds DOSBox's
+guest memory; `savefile.py` reads a save's party (`Show Save.bat`);
+`tracker.py` notes kills, XP and level-ups; `textlog.py` reads the dialogue and
+message boxes DSCLOG copies; `partyview.py` and `spellbook.py` draw the
+Characters and Spells tabs, `theme.py` the window's look, from `palette.py`'s
+colours (sampled from the game's screens, each text colour's contrast checked
+by `test_theme`); `bonescale.py` puts the bone scale set together in its chest;
 `stuckwalk.py` sets people walking again whose scripted walk stopped;
 `process.py` reads and writes another process's memory, `layout.py` the memory
-layout files and `search.py` the Memory tools' value search; `unblock.py` takes
+layout files, `values.py` the value types they and the searches use (u8 to s32,
+str), and `search.py` the Memory tools' value search; `unblock.py` takes
 Windows' "downloaded from the internet" mark off the Loader's files;
-`patchnotes.py` and `guidepage.py` make `patch-notes.html` and
-`player-guide.html` from the patch notes and the guide (run after editing
-either: `python -m dsloader.patchnotes`, `python -m dsloader.guidepage`).
+`patchnotes.py` and `guidepage.py` make the web pages (below).
 
-### Tests
+### Build
 
-```
-python -m unittest discover -s tests
-```
-
-Two web pages are made from Markdown, and a test fails when either falls behind:
-`player-guide.html` from `PLAYER-GUIDE.md` (`python -m dsloader.guidepage`) and
-`../patch-notes.html` from `../PATCH-NOTES.md` (`python -m
-dsloader.patchnotes`). Edit the Markdown, then run the module. Both use
-`dsloader/pagestyle.css`, and carry their fonts inside them (`pagefonts.py`: the Latin sets
-in `dsloader/fonts`, with their licences), so they load nothing from the internet.
-
-`tests/test_dsclog.py` runs the helper's interrupt handlers in a CPU emulator
-when `unicorn` is installed (`pip install unicorn`), and is skipped otherwise.
 After changing `dos/dsclog.asm`, rebuild the helper with
 [NASM](https://www.nasm.us/):
 
@@ -79,23 +76,72 @@ After changing `dos/dsclog.asm`, rebuild the helper with
 nasm -f bin -o dos/DSCLOG.EXE dos/dsclog.asm
 ```
 
-The header's signature (`DSCLOGva` now: after Z, lowercase) goes up whenever the
-helper and the Loader must change together (`HDR_SIG` in `dsloader/dicelog.py`),
-so a Loader never talks to an older helper.
+The build fails if the helper outgrows its 64 KB segment or the room it has in
+upper memory ([Room in the helper](#room-in-the-helper)). The header's
+signature (`DSCLOGva` now: after Z, lowercase) goes up whenever the helper and
+the Loader must change together (`HDR_SIG` in `dsloader/dicelog.py`), so a
+Loader never talks to an older helper.
 
 The post-game check that keeps an error on screen for the crash report, and
-the program that moves upper memory down before the helper loads (see [Room in
-the helper](#room-in-the-helper)), are built the same way:
+the program that moves upper memory down before the helper loads, are built the
+same way:
 
 ```
 nasm -f bin -o dos/GAMEEND.COM dos/gameend.asm
 nasm -f bin -o dos/UMBPLUS.COM dos/umbplus.asm
 ```
 
+Two web pages are made from Markdown: `player-guide.html` from
+`PLAYER-GUIDE.md` (`python -m dsloader.guidepage`) and `../patch-notes.html`
+from `../PATCH-NOTES.md` (`python -m dsloader.patchnotes`). Edit the Markdown,
+then run the module. Both use `dsloader/pagestyle.css`, and carry their fonts
+inside them (`pagefonts.py`, from `dsloader/fonts`), so they load nothing from
+the internet.
+
+### Tests
+
+```
+python -m unittest discover -s tests
+```
+
+Some tests need more, and are skipped without it:
+
+- **unicorn** (`pip install unicorn`; the Release workflow pins 2.1.4):
+  `test_dsclog`, `test_gamepatch` and `test_shadows` run the helper's
+  interrupt handlers in a CPU emulator.
+- **tkinter**: the window's tests (`test_theme`, `test_partyview`, `test_find`).
+  Linux's Python often lacks it; in the cloud container `/usr/bin/python3.12`
+  has it.
+- **The game's files**, named by environment variables: `DSUN_GPLDATA` (its
+  `GPLDATA.GFF`: `test_scriptnumbers`, `test_pehtuclchest`, `test_champions`,
+  and `test_sounds`, which reads the `RESOURCE.GFF` beside it), `DSUN_OBJECTS`
+  (its `SEGOBJEX.GFF`, with `GPLDATA.GFF` beside it: `test_figures`,
+  `test_pehtuclchest`) and `DSUN_RESOURCE` (its `RESOURCE.GFF`:
+  `test_kitpages`).
+
+Without tkinter or the game's files, 24 are skipped; with the files set, the 9
+that need tkinter.
+
+Tests that guard the whole project rather than one module:
+
+| Test | What it checks |
+|---|---|
+| `test_doclinks` | every relative link and anchor in the Markdown pages goes somewhere, and each README or features page section the DEVELOPMENT pages explain links to its explanation |
+| `test_compiles` | every module of the Loader compiles, the window's too |
+| `test_flagrange` | the Loader's game flags are in 756-807 and no two share one ([the table](#the-loaders-game-flags)) |
+| `test_scriptnumbers` | the Loader's scripts have a number each, their calls land inside them, and each fits the game's script buffer |
+| `test_dsclog`'s `test_fits_upper_memory` | what the helper puts in upper memory fits the room DOSBox gives it |
+| `test_version` | the version is the same in `__init__.py`, the patch notes and the front page, and its release notes exist |
+| `test_guidepage`, `test_patchnotes` | the web pages are up to date with their Markdown, and their links work |
+
+The unit tests don't play the game. For anything DSCLOG or a script touches,
+check it in the game too: [the playtesting guide](../playtest/PLAYTESTING.md)
+has the tools and how to use them.
+
 ### Making a release
 
 The **Release** workflow (`.github/workflows/release.yml`) runs the tests on
-Windows, zips the `obsidian-edition` folder as
+Windows (with unicorn 2.1.4), zips the `obsidian-edition` folder as
 `Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>.zip` (with `git archive`,
 so only what is committed goes in) and publishes it with
 `release-notes/v<version>.md` as its notes. Before it:
@@ -106,8 +152,16 @@ so only what is committed goes in) and publishes it with
    `tests/test_version.py` checks they agree and that the release notes exist.
 2. Finish `release-notes/v<version>.md` and the CHANGELOG's entry, and
    rebuild `DSCLOG.EXE` and the web pages if their sources changed.
-3. Merge to `main`, then push the tag `v<version>`, or run the workflow by hand
+3. Check in the game anything DSCLOG or a script touches ([the playtesting
+   guide](../playtest/PLAYTESTING.md)).
+4. Merge to `main`, then push the tag `v<version>`, or run the workflow by hand
    (Actions → Release → Run workflow), which makes the tag.
+5. Once the pull request is merged, rename the CHANGELOG's "## Next pull
+   request (not opened yet)" to "## Pull request #N (merged DATE)", with
+   "merged DATE" a link to the pull request, as the other headings have it,
+   and point the release's link in the list of releases at the top of the
+   CHANGELOG to the new heading's anchor (`#pull-request-N-merged-DATE`;
+   `test_doclinks` fails otherwise).
 
 The zip holds the `obsidian-edition` folder only: the root's patch notes,
 CHANGELOG and release notes stay on GitHub, so the folder's own pages link to
@@ -131,8 +185,12 @@ python -m dsloader processes                     # is DOSBox found?
 After `launch` or `play`, `--window-scale 1` to `4`, `--fullscreen` or
 `--windowed` choose the game's window as **Game window** does, and
 `--recompiled PROGRAM` runs Dark Sun Recompiled in place of DOSBox from then on (`--dosbox` goes
-back: [the README](README.md#other-ways-to-start)). If more than one DOSBox is running, add
-`--pid <number>` (from `processes`).
+back: [the README](README.md#other-ways-to-start)). `--game-dir` names the
+game's folder (for `launch`, `play` and `checks`; remembered after the first
+time). `dicelog --all` also shows the rolls the log can't label (as **Show
+unlabelled rolls**), and `dicelog --raw` records every `rand()` call, not just
+rolls. If more than one DOSBox is running, add `--pid <number>` (from
+`processes`).
 
 ### Practising without the game
 
@@ -146,7 +204,7 @@ python tests/make_fake_party.py
 dosbox FAKEPTY.COM
 ```
 
-![The Loader on the practice program: All fields with Sadira and Rikus, and Memory tools with her record found and its bytes](docs/viewer.png)
+![The Loader on the practice program: All fields with Sadira and Rikus (the table scrolls sideways to slots 3 and 4), and Memory tools with her record found and its bytes, one decoded](docs/viewer.png)
 
 ### Mapping memory
 
@@ -225,9 +283,15 @@ Every roll in the game goes through one function, Borland C++'s `rand()`.
    record the final saving throw total, the AC the game uses, and the text
    of dialogues and messages (in a second buffer); the rest draw the in-game
    additions and make the new items and the rule changes count.
-3. The Loader finds the buffer in DOSBox's memory and reads it every 50 ms.
+3. The Loader finds the buffer in DOSBox's memory and reads it every 20 ms
+   from the command line (`dicelog`, `play`) and every 50 ms in its window.
    It works out what each roll was for from the code that asked for it, and
    reads the rest (names, weapons, spells, effects) from the game's own data.
+   Some rolls come faster than that: the creation screen's die rolls a whole
+   character several times while it tumbles, so the helper keeps each
+   ability's last four 4d4 itself (`RL_TRIES`, the header's +282, counted at
+   +280), and the dice log checks each ability against the one the screen
+   shows.
 4. To keep bursts of unimportant randomness from crowding out the rolls that
    matter, the helper only records calls from code it knows how to label,
    unless **Show unlabelled rolls** is ticked.
@@ -350,10 +414,9 @@ lists swapped in memory, -2). So the Loader gives and moves the party's items
 through `pickpocket.list_for`, `party_list` and `place`, and `mend_lists`
 moves what an earlier version left in the held list: backpack items to the
 backpack's list, and worn things that aren't weapons (starting armour, a
-cloak) to the worn list. Worn items found in `+0x0c` are left alone (an
-earlier note had the game's own party start with its armour there; in a new
-game on 2026-11-02 Gerakis's own arm armour was in `+0x08`, where the screen
-puts it). Items are 21-byte records (`DS:0x165D`), item types 20-byte ones
+cloak) to the worn list. Worn items found in `+0x0c` are left alone (the
+game's own party starts with its armour in `+0x08`, where the screen puts it:
+Gerakis's arm armour in a new game, 2026-11-02). Items are 21-byte records (`DS:0x165D`), item types 20-byte ones
 (`DS:0x1669`, 115 of them, from GPLDATA.GFF):
 
 | Record | Offset | Field |
@@ -361,8 +424,8 @@ puts it). Items are 21-byte records (`DS:0x165D`), item types 20-byte ones
 | item | `+0x04` | the next item in the list (9999: the end) |
 | item | `+0x08` | a container's contents (an object number), as in a Dead Body |
 | item | `+0x0a` | its type |
-| item | `+0x11` | where it's worn: 0-13 the game's slots (arm, ammo, missile, right hand, finger, waist, legs, head, neck, chest, left hand, finger, cloak, foot), 14-25 a backpack cell |
 | item | `+0x0f` | a spell it carries, one past the spell's number (0: none): readied, the game casts a helpful one on the wearer, for good (DSUN.EXE 6F7F0h sets DS:5402h, so the cast routine at 78D00h makes the time -9999), and a cursed item's (plus below 0) spell against a creature too; C4h and up are the ability items; the acid's check reads it as the item's "magical power" |
+| item | `+0x11` | where it's worn: 0-13 the game's slots (arm, ammo, missile, right hand, finger, waist, legs, head, neck, chest, left hand, finger, cloak, foot), 14-25 a backpack cell |
 | item | `+0x12` | its name (an entry of the game's name table, 25 bytes each) |
 | item | `+0x14` | its plus |
 | type | `+0x04` | weight, in tenths of a pound |
@@ -387,6 +450,11 @@ when no party has been made (Cermak, Cilla, Gerakis and K'ratchek), is objects
 already Okay, with no items. The game gives them their gear as the game
 starts (see [the game's own party](DEVELOPMENT-RULES.md#the-games-own-party)).
 
+**Resting.** The rest is the routine at DSUN.EXE 8066Dh (REST, and a
+script's request 1): each member's slots are refilled in turn there
+(`REST_SITE`), and a priest's tending of the party is part of it (found by
+CalvinRodo's yuan-ti, checked in DSUN.EXE).
+
 **Spells.** They are numbered 0 to 137: 0 to 68 wizard spells (0 is Armor, the
 first of the 1st level; its scroll is Old One-Eye's), 69 to 137 priest
 spells, a 7-byte record each from 0 (its level first, its name's DS offset at
@@ -396,148 +464,145 @@ spell known, through the far pointer at `DS:0x132A` (in a save, `SAVE` chunk
 
 ## Room in the helper
 
-DSCLOG keeps its code and data in one 64 KB segment, all reached through CS.
-Its big buffers are kept apart, in its **far block** (`FAR_SEG`, the header's
-+142), at fixed offsets from `FAR_RING` (10h) to `FAR_END`: the dice log's ring
-(`NENT` 63 entries of `ESIZE` 192 bytes), the panel's picture, the shadows'
-cache, the text buffer, the shadows' spans and each thing's place as last seen
-(for the dust), the frames steady pace holds back, and the crash report's copy of the stack and
-the last text written to the screen (`DOS_QUIT`, `DOS_WRITE`), 58,954 bytes. `FAR_INIT` (install code) puts it in the **HMA**
-(FFFFh:0010h, A20 on): XMS gives it (function 01h), or, where XMS says there
-is none (DOSBox 0.74's answer, 90h: its XMS blocks start at 1 MB + 64 KB,
-`XMS_START`), it is used if all zero; A20 is turned on with XMS function 03h
-and checked (FFFFh:0010h no longer 0000h:0000h). The game never calls XMS's
-A20 or HMA functions (its XMS calls are 08h-0Dh), and no file DOSBox runs is
-EXEPACKed (the unpacker fails with A20 on below 64 KB). Without the HMA the
-block is a memory block of its own (upper memory, else conventional),
-`FAR_SEG` a paragraph below it so that its offsets are the same. The header
-gives the Loader each buffer's segment and offset: the ring's `ring_seg`
-(+268) and `ring_off` (+16), the text buffer's `tbuf_seg` (+138) and
-`tbuf_off` (+128), the panel's `panel_seg` (+328) and `panel_off` (+140). The
-helper reaches the internal ones through FS, pushed and set around each use
-(the game never sees it changed). The text buffer (`TSIZE`) is 2 KB; the
-Loader reads its size from the header and drains it every 20 ms from the command line and every 50 ms in the Loader's window (at most 251
-bytes came in between two reads in the opening show, the busiest stretch
-measured).
-
-The helper has to load into upper memory, or the game loses 62 KB of
-conventional memory (570 KB free rather than 632 KB).
+DSCLOG has to load into upper memory, or the game loses 62 KB of conventional
+memory (570 KB free rather than 632 KB). It keeps its code and data in one
+64 KB segment, all reached through CS, and its big buffers apart, in its far
+block. With the map open the game needs 60,000 bytes in one piece each time it
+opens the view ("Out of memory in OEOpenGraph" when it can't), so every block
+the helper takes out of the game's 640 KB counts.
 
 **Where DOSBox's memory is** (DOSBox 0.74, GOG's; its source comes with the
-game, `DOSBOX/dosbox-0.74-2.1.tar.gz`):
+game, `DOSBOX/dosbox-0.74-2.1.tar.gz`). This table is the one place for the
+sizes; the paragraphs after it say how each piece got there.
 
 | Memory | Size | What uses it |
 |---|---|---|
-| Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (it needs 60,000 bytes in one piece to open it again) |
+| Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (86 KB before the music buffer moved out, 53 KB before the overlay buffer did; the unmodded game's 57 KB) |
 | C000h-C7FFh | 32 KB | the video BIOS (ROM) |
 | C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
-| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 62.5 KB, the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, about 35.5 KB free in one piece (DOS's memory blocks read in the running game, 2026-11-05, and what the mod's sounds and see-through figures added since) |
+| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 62.5 KB, the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, about 35.5 KB (36,336 bytes, measured) free in one piece |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
-| 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's far block, 57.6 KB (the ring, the panel's picture, the shadows' cache, the text buffer, spans, the dust's places, the frames steady pace holds back, the crash report's buffers), 6.4 KB free |
+| 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's far block, 57.6 KB, 6.4 KB free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
 
-DOSBox makes its upper memory block at D000h, but C800h-CFFFh is RAM too, and
-DOSBox's tables use only its first 192 paragraphs (at most a few more later: a
-program asking for more than 20 file handles, INT 21h AH=67h, takes some each
-time; the game does once, at DSUN.EXE 54F3h). `UMBPLUS.COM`, run by the
-launcher's config just before `lh d:\dsclog.exe`, moves the block's start to
-C900h: the system MCB at 9FFFh (owner 8, "SC") is cut to end there and a free
-block's MCB goes at C900h, reaching F000h as before. It does so only if the
-chain is exactly DOSBox 0.74's (9FFFh 'M' to D000h, D000h 'Z' free to F000h)
-and C900h-CFFFh is all zero and keeps what is written to it; otherwise it
-changes nothing and the helper loads at D00Ah as before. 63 paragraphs stay
-between DOSBox's tables and the block. Measured with a save in the arena
-(walking, the arena's fight): the tables at C8C0h throughout, the helper at
-C90Ah, the overlay buffer in upper memory (the free piece then and now: the table above).
+**The budget.** Each limit fails the build when passed (a negative `times`):
 
-The helper still has to fit D000h-EFFFh (`UMB_ROOM`, below), so it works
-where the block can't be moved; the 28 KB more holds what it can do without:
-the game's music buffer.
+- The helper's segment: its image with the install code is 65,440 bytes
+  (`image_len`; `DSCLOG.EXE` is 32 bytes more, 65,472, with its header), so 96
+  bytes of its 64 KB are spare. This is the limit for new code. (The
+  install's 256-byte stack is past the image, in its own segment: `SS` in the
+  EXE's header is the paragraph after the image; the helper asks DOS for both,
+  `LOAD_EXTRA`.) Code shared by
+  many handlers is written once (`OVR_BACK`, the way back through the overlay
+  manager's frame; `SHEET_CLASSES`). Text the game reads from RESOURCE.GFF
+  belongs in the Loader's copy of it, not in the helper (`spelltexts.py`: the
+  descriptions moved there freed 1.6 KB), and so does data read from the
+  player's game (the pointer's picture, `POINTER.BIN`). What each change took
+  is in the CHANGELOG.
+- The far block: it ends at `FAR_END` (58,970), so the HMA has 6,566 bytes left
+  for more buffers.
+- Upper memory without `UMBPLUS.COM` (`UMB_ROOM`, D00Ah to F000h, 8,182
+  paragraphs): the helper as it loads and the overlay buffer (`UMB_NEED`, the
+  header's +372) need 6,186, and `test_fits_upper_memory` checks it too; what
+  stays once installed, with the music buffer and the see-through figures'
+  tables (`UMB_KEPT`: all four blocks and their MCBs), 7,698, so 484 (7.6 KB)
+  are spare.
+
+To check the sizes after a change, build to a scratch file (`nasm -f bin -o
+/tmp/x.exe dos/dsclog.asm`, from `obsidian-edition/`) and look at its size.
+
+**The far block** (`FAR_SEG`, the header's +142) holds, at fixed offsets from
+`FAR_RING` (10h) to `FAR_END`, 58,954 bytes: the dice log's ring (`NENT` 63
+entries of `ESIZE` 192 bytes), the panel's picture, the shadows' cache
+(`FAR_SC`), the text buffer, the shadows' spans and each thing's place as last
+seen (for the dust), the frames steady pace holds back, and the crash report's
+copy of the stack and the last text written to the screen (`DOS_QUIT`,
+`DOS_WRITE`). `FAR_INIT` (install code) puts it in the **HMA** (FFFFh:0010h,
+A20 on): XMS gives it (function 01h), or, where XMS says there is none (DOSBox
+0.74's answer, 90h: its XMS blocks start at 1 MB + 64 KB, `XMS_START`), it is
+used if all zero; A20 is turned on with XMS function 03h and checked
+(FFFFh:0010h no longer 0000h:0000h). The game never calls XMS's A20 or HMA
+functions (its XMS calls are 08h-0Dh), and no file DOSBox runs is EXEPACKed
+(the unpacker fails with A20 on below 64 KB). Without the HMA the block is a
+memory block of its own (upper memory, else conventional), `FAR_SEG` a
+paragraph below it so that its offsets are the same. The header gives the
+Loader each buffer's segment and offset: the ring's `ring_seg` (+268) and
+`ring_off` (+16), the text buffer's `tbuf_seg` (+138) and `tbuf_off` (+128),
+the panel's `panel_seg` (+328) and `panel_off` (+140). The helper reaches the
+internal ones through FS, pushed and set around each use (the game never sees
+it changed). The text buffer (`TSIZE`) is 2 KB; the Loader reads its size from
+the header and drains it every 20 ms from the command line and every 50 ms in
+its window (at most 251 bytes came in between two reads in the opening show,
+the busiest stretch measured). The most entries put in the ring in 2 seconds,
+measured, is 43 (the opening show), 16 in a fight.
+
+**Upper memory moved down.** DOSBox makes its upper memory block at D000h, but
+C800h-CFFFh is RAM too, and DOSBox's tables use only its first 192 paragraphs
+(at most a few more later: a program asking for more than 20 file handles,
+INT 21h AH=67h, takes some each time; the game does once, at DSUN.EXE 54F3h).
+`UMBPLUS.COM`, run by the launcher's config just before `lh d:\dsclog.exe`,
+moves the block's start to C900h: the system MCB at 9FFFh (owner 8, "SC") is
+cut to end there and a free block's MCB goes at C900h, reaching F000h as
+before. It does so only if the chain is exactly DOSBox 0.74's (9FFFh 'M' to
+D000h, D000h 'Z' free to F000h) and C900h-CFFFh is all zero and keeps what is
+written to it; otherwise it changes nothing and the helper loads at D00Ah. 63
+paragraphs stay between DOSBox's tables and the block (the tables measured at
+C8C0h throughout a save in the arena, walking and fighting, the helper at
+C90Ah). The helper still has to fit D000h-EFFFh (`UMB_ROOM`), so it works where
+the block can't be moved.
+
+**EMS off.** With GOG's settings there is one upper memory block of 63 KB,
+EMS's 64 KB page frame taking the rest, and the helper doesn't fit it (it loads
+in the 640 KB and the game won't start). The launcher's config turns EMS off
+(`launch.DOS_LINES`: the game's memory layer uses XMS instead), which leaves
+upper memory for the helper and the game's buffers.
+
+**The game's overlay buffer** (32,992 bytes: twice the largest overlay, the
+code the overlay manager loads as needed). The game asks farmalloc for it at
+startup (load+3653h:0D5Ch) and keeps it for good, so in the heap it was the
+largest block the 640 KB never got back. The patch `overlay_umb` makes that
+call `INT VEC_OVR_BUF` (`PROBE_OVR_BUF`), which hands over a block `KEEP`
+reserved: `KEEP` (resident code) first cuts the helper's own block down to what
+stays, then takes the buffer's block in the memory the install code had, so the
+room is in one piece: the helper, the buffer and what is left free. The
+header's `ovr_given` (+368) is the buffer's segment once the game has it.
+Without the room the probe calls the game's farmalloc, as the call was. If the
+buffer still ends up in the heap (another DOSBox, less upper memory), the
+Loader says so in the dice log once, and crash reports say where it is
+(`heapcheck.py`).
 
 **The game's blocks kept for good.** Of the game's far heap (Borland's,
 farmalloc at load:1231h, farfree 1127h, farrealloc 138Eh), 134 KB is taken
-before the main menu and kept in place through loading a save, walking, an area
-change and a fight, logged by a research build of the helper with those three
-functions hooked: the music buffer (12,001 bytes: an XMIDI file), the sound
-effects' (24,001: a Creative Voice File), both asked for by the sound driver's
-set-up in an overlay; tables of 10,724, 4,963 and 11,778 bytes; the font and
-other resources loaded as the menu comes up. Nearly every request goes through
-the game's wrapper at 34FA4h (farmalloc of the size + 1, a guard byte 77h at the
-block's end, which its farfree wrapper at 34F3Ch checks), and its callers are
-mostly overlays (running in upper memory, so not to be patched by address).
-So `PROBE_HEAP` (INT CBh in place of each function's "push bp / mov bp,sp")
-takes them by size: `farmalloc(12001)` is given `POOL_SEG`, a block KEEP took in
-upper memory, with a heap block's first word (its paragraphs, which the wrapper
-reads for the guard byte); farfree of it marks it free for the next such
-request; farrealloc of it keeps it if the size fits, else moves the contents to
-a block of the heap. Nothing else changes. The music buffer was chosen as it fits
-with the shadows' cache (the sound effects' 24 KB would leave the cache 6 KB):
-with the map open the game has 97 KB spare, not 85 KB. Measured with a save in
-the arena: the buffer in upper memory holding the XMIDI file, walking, the
-arena's area change and a fight as usual.
+before the main menu and kept in place through loading a save, walking, an
+area change and a fight, logged by a research build of the helper with those
+three functions hooked: the music buffer (12,001 bytes: an XMIDI file), the
+sound effects' (24,001: a Creative Voice File), both asked for by the sound
+driver's set-up in an overlay; tables of 10,724, 4,963 and 11,778 bytes; the
+font and other resources loaded as the menu comes up. Nearly every request goes
+through the game's wrapper at 34FA4h (farmalloc of the size + 1, a guard byte
+77h at the block's end, which its farfree wrapper at 34F3Ch checks), and its
+callers are mostly overlays (running in upper memory, so not to be patched by
+address). So `PROBE_HEAP` (INT CBh in place of each function's "push bp / mov
+bp,sp") takes them by size: `farmalloc(12001)` is given `POOL_SEG`, a block
+`KEEP` took in upper memory, with a heap block's first word (its paragraphs,
+which the wrapper reads for the guard byte); farfree of it marks it free for
+the next such request; farrealloc of it keeps it if the size fits, else moves
+the contents to a block of the heap. Nothing else changes. The music buffer was
+chosen as it fits in `UMB_ROOM` beside the rest (752 paragraphs with its MCB,
+of the 1,236 the helper, the overlay buffer and the see-through tables leave):
+the sound effects' 1,502 wouldn't, and the sound driver may play them by DMA,
+which can't cross a 64 KB page. Measured with a save in the arena: the buffer
+in upper memory holding the XMIDI file, walking, the arena's area change and a
+fight as usual.
 
-With GOG's settings there
-is one upper memory block of 63 KB, EMS's 64 KB page frame taking the rest; the
-launcher's config turns EMS off (`launch.DOS_LINES`: the game uses XMS instead),
-which leaves upper memory for the helper and the game's buffers (above). The
-helper's own segment is at most 64 KB (everything through CS); its big buffers
-are in the far block. The helper asks for its image and the install's stack
-(`LOAD_EXTRA`); with EMS on, `mem` in DOSBox showed 632 KB free and a few KB of
-upper memory left. A change that adds much code should check that again. The
-ring is 63 entries and the text buffer 2 KB (how they shrank: the CHANGELOG);
-the most entries put in the ring in 2 seconds, measured, is 43 (the opening
-show), 16 in a fight.
+**Low memory in play.** While the game runs, the Loader reads its memory every
+few seconds (`heapcheck.Watch`): with the map's view open (DS:1F82h set),
+below 24 KB spare (DOS's after the game and the heap's free blocks) the dice
+log says to save and restart soon, once until it has been back above 32 KB.
+Nothing can be given back to the game from outside: every block is its own.
 
-The second block also holds the game's overlay buffer (32,992 bytes: twice the
-largest overlay, the code the overlay manager loads as needed). The game asks
-farmalloc for it at startup (load+3653h:0D5Ch) and keeps it for good, so in
-the heap it was the largest block the 640 KB never got back. The patch
-`overlay_umb` makes that call `INT VEC_OVR_BUF` (`PROBE_OVR_BUF`), which hands
-over a block `KEEP` reserved: `KEEP` (resident code) first cuts the helper's
-own block down to what stays, then takes the buffer's block in the memory the
-install code had, so the room is in one piece: the helper, the buffer and what
-is left free.
-The header's `ovr_given` (+368) is the buffer's segment once the game has it.
-Without the room the probe calls the game's farmalloc, as the call was. With
-the map open this left 86 KB free in conventional memory (85 KB measured again
-with the 6th-level spells, the largest piece 87,744 bytes; 97 KB with the music
-buffer in upper memory too, below), against 53 KB (and
-the unmodded game's 57 KB): the map's view takes 60,000 bytes in one piece
-each time it opens ("Out of memory in OEOpenGraph" when it can't). What it
-puts there (`UMB_NEED`, the header's +372) is checked against the room
-(`UMB_ROOM`, D00Ah to F000h): the build fails past it (a negative `times`),
-and so does `test_fits_upper_memory`. It needs 6,186 of the room's 8,182
-paragraphs as it loads. Once installed it also keeps the music pool and the
-see-through figures' tables there (`UMB_KEPT`: 7,698 paragraphs with all four
-blocks and their MCBs), so 484 (7.6 KB) are spare without `UMBPLUS.COM`; the
-build fails past either. With `UMBPLUS.COM`, 50.2 KB were free in one piece
-before the mod's sounds and see-through figures (DOS's memory blocks read in the running game,
-2026-11-05: the helper 3,946 paragraphs from C90Ah, the overlay buffer 2,062, the music buffer 751,
-3,211 free); their code took 49 paragraphs more and the see-through figures' block
-(`GHOST_PARAS`) 885, so about 35.5 KB (36,336 bytes, measured) are left. The helper's
-own segment is the limit for new code: its image with the install code is 65,440 bytes
-(`image_len`; `DSCLOG.EXE` is 32 bytes more, 65,472, with its header), so 96 bytes of its 64 KB
-are spare. (The install's 256-byte stack is past the image, in its own segment, since the
-see-through figures: `SS` in the EXE's header is the paragraph after the image.) The build
-fails past 64 KB; what each change took is in the CHANGELOG. Code shared by many handlers is
-written once (`OVR_BACK`, the way back through the overlay manager's frame; `SHEET_CLASSES`). The HMA has 6,566 bytes
-left for more buffers (the far block ends at `FAR_END`, 58,970). The game's sound-effects buffer (24,001 bytes, kept
-for good like the music's) could go to upper memory next for the game's 640
-KB, but the sound driver may play it by DMA, which can't cross a 64 KB page. Text the game reads from RESOURCE.GFF belongs in the Loader's
-copy of it, not in the helper (`spelltexts.py`: the descriptions moved there
-freed 1.6 KB), and so does data read from the player's game (the pointer's
-picture, `POINTER.BIN`). If the buffer still ends up in the heap (another
-DOSBox, less upper memory), the Loader says so in the dice log once, and crash
-reports say where it is (`heapcheck.py`). With EMS on,
-GOG's own setting, the helper itself no longer fits upper memory (it loads in
-the 640 KB and the game won't start); it didn't before the buffer moved either,
-and the launcher's config turns EMS off.
-
-While the game runs, the Loader reads its memory every few seconds
-(`heapcheck.Watch`): with the map's view open (DS:1F82h set), below 24 KB
-spare (DOS's after the game and the heap's free blocks) the dice log says to
-save and restart soon, once until it has been back above 32 KB. Nothing can
-be given back to the game from outside: every block is its own.
+How the ring, the text buffer and the rest shrank or moved to get here is in
+the CHANGELOG.
 
 ## The crash report
 
@@ -583,6 +648,14 @@ program, so a `segment:offset` address is simply `segment × 16 + offset` in
 guest memory. If detection fails on an unusual DOSBox build, you can pass the
 block's host address with `--host-base`.
 
+The Loader never writes over the start of memory (`guestmem.LOW_MEMORY`, below
+600h: the interrupt vectors, the BIOS's and DOS's data) or the first 40h bytes
+of the game's data segment (`game.NULL_AREA`), which its C runtime checks at
+exit ("Null pointer assignment"). Such a write could only come from a pointer
+the game has left empty for a moment (`0:offset`). `GuestMemory.write` refuses
+it and notes it in `GuestMemory.refused` (the last 200, for a crash report),
+and the dice log tells it once.
+
 ### Changing the game's item lists
 
 The game rebuilds its item lists as an area loads (and at START GAME): it writes
@@ -600,7 +673,13 @@ So every write of the Loader's to the item lists goes through one gate
 touches them: the free lists' heads, the item table (400 records of 21 bytes
 from the far pointer at `DS:165Dh`), the things table with the few past its
 520 (`THINGS_PAST`: the pointer's thing, 523), or a creature's list heads
-(`CREATURE_ITEM_LISTS`). Each pass of the dice log (`DiceLog.lines`)
+(`CREATURE_ITEM_LISTS`), both where the tables are now and where they were at
+the pass's start: a write the Loader worked out from the old place is held up
+like any other. A table pointer that has gone null (an area loading) is covered
+from 0 to the table's reach (20D0h for the items, 7400h for 512 creatures),
+past the 600h the low-memory guard (`GuestMemory.LOW_MEMORY`) keeps, so a write
+through it never lands in DOS's own memory, and the gate refuses while one is
+null. Each pass of the dice log (`DiceLog.lines`)
 begins the gate first, noting the heads, the region (`DS:117Ch`) and the item
 and creature tables' pointers. The pass's first such write waits until
 `itemgate.WAIT` (60 ms) has gone by since then, pauses DOSBox
@@ -620,7 +699,14 @@ stays unanswered until a later pass), a defiler's scroll before its roll (the
 defiler isn't marked rolled for), Kalzith's loot before `LOOTED`, and the arena
 ring before the search counts as answered. An item moved (`pickpocket.place`)
 has its new list found or made before it leaves its old one: with the game's
-things all in use nothing moves. A sold item's place in the buyback
+things all in use nothing moves. The Loader leaves the game a reserve
+(`ring.RESERVE`, 20): no new list once fewer than 20 of the 200 dynamic things
+are free (`Items.spare_things`, from `DS:4C48h`), and no new item record once
+fewer than 20 are on its free list (`Items.spare_items`), so the game's own
+people, dressed in each area, and its scripts' items always find one. The
+Loader's own writes inside a pass (once the gate has looked) don't count as the
+game's changes: the gate notes the heads again as it lets the game go
+(`release`), so the pass's later steps go ahead. A sold item's place in the buyback
 queue moves on only once it is kept, and the game's own party's steps are marked
 done only once made.
 
@@ -662,7 +748,7 @@ Loader keeps its own state in the numbers past them, so a save keeps it too:
 
 | Flags | What |
 |---|---|
-| 756-758 | Semyon's shipment: told of, Thornwall put on the rack, a party member carrying it |
+| 756-758 | Semyon's shipment: told of, Thornwall put on the rack, a party member carrying it (`semyon.py`) |
 | 759 | a party member killed Scar in the arena (the champions' bout due) |
 | 760-763 | Kalzith: met, friendly, cold, his scrolls and gear given (`kalzith.py`) |
 | 764-765 | Semyon: placed in the pens, met (`semyon.py`) |
@@ -680,7 +766,12 @@ Loader keeps its own state in the numbers past them, so a save keeps it too:
 | 798-806 | the years of natural aging counted (798 once begun, 799-806 the number) |
 | 807 | the champions fought |
 
-A save keeps 808 flags. A new flag goes past 807, and in this table.
+A save keeps 808 flags (`game.FLAG_COUNT`: a bit each in `SAVE` chunk
+29, 101 bytes), and all of 0-807 are in use. A new flag needs room found first (a flag
+freed, or the save's flags made longer, if the game allows it); then it goes in
+this table and in `tests/test_flagrange.py` (`FLAGS`, or `_ranges` for a block of them), which checks every
+flag is in range and none is shared.
+
 ## How each part works
 
 How each part of the [features page](FEATURES.md) and the [README](README.md) is done, on three pages of its own:

@@ -717,7 +717,7 @@ items after its own, so the game makes them where it makes the object. Kreenfang
 (`arms.magic`: a gythka made +1 and renamed, its name attribute with it) is the
 champions' Tohr-kreen's ([the champions' bout](#the-champions-bout)); without
 the champions' objects it is the arena's dead body's (object 1204) own gythka,
-as before 2.13.5. One Castle Guard, one Undermountain miner and one Magera
+as up to 2.13.4. One Castle Guard, one Undermountain miner and one Magera
 (Drakejaw's) have an object of their own (2560, 2561, 2562: copies of their
 kind's, their record renumbered), their entity in the Loader's copies of
 `RGN1C.GFF`, `RGN1E.GFF` and `RGN08.GFF` pointing to it; so does one skeleton of
@@ -1027,25 +1027,26 @@ Legcrusher's AC from behind was 8 with his Leather Inixhide +1 on. Kurzak with t
 fight is struck before the game starts it: Gerakis's sling shot at Legcrusher hit AC 9 with the
 game's fight still off, which came on only after his alarm call was read.
 
-`People.watch` (from the dice log's item watches, each pass) puts each person's gear on as it
-comes on the map, once each (by creature, name and object; forgotten with a new area or a game
-loaded), the champions left to `champions.Gear`, the party to the player: `plan` sorts the
-backpack by its type's kind (+00h: melee, missile, shield, thrown) and where it is worn (+09h:
-1 chest, 2 waist, 3 arm, 4 feet, 5 a hand, 6 head, 7 neck, 8 cloak, 9 a finger, 10 legs, 11
-ammunition, 12 a missile weapon: the game's item types, read in the running game), the best
-melee weapon (its plus) to the right hand, a shield to the left or else a second melee weapon,
-rings to the two fingers in turn, into slots nothing fills yet. The game itself wasn't seen to put
-on rings, cloaks, belts, boots or amulets; worn here, they count as the party's do (Pehtucl's
-Templar: his Ring of Protection +1 worn, AC 4 to the other Templar's 5 and +1 on saves; his Cloak
-of Protection +1 is in his chest now, as it gave nothing under AD&D's rule with his leather
-shield). Keys, food and scrolls stay packed.
-Each move is `pickpocket.place` (the list for its slot found or made first, a new one from the
-game's allocator; with none to be had nothing moves, and the person is tried again on a later
-pass), after `itemgate.hold`. Test: `test_people.py`. What it costs of the game's 200 things from
-its free list (`playtest/thingsfree.py`, 2026-11-07): each person with gear holds two or three
-lists, not one, about 21 more in the pens (143 free after loading, 131 in the alarm fight); the
-game frees an area's lists as the party leaves it (191 free on arriving in the arena), so nothing
-builds up.
+`People.watch` (from the dice log's item watches, each pass) puts each person's gear on as it comes
+on the map, once each (by creature, name and object; forgotten with a new area or a game loaded),
+the champions left to `champions.Gear`, the party to the player: `plan` sorts the backpack by its
+type's kind (+00h: melee, missile, shield, thrown) and where it is worn (+09h: 1 chest, 2 waist, 3
+arm, 4 feet, 5 a hand, 6 head, 7 neck, 8 cloak, 9 a finger, 10 legs, 11 ammunition, 12 a missile
+weapon: the game's item types, read in the running game), the best melee weapon (its plus) to the
+right hand (not one that takes both hands when the left holds something already), a shield to the
+left or else a second melee weapon (neither beside a two-hander), rings to the two fingers in turn,
+into slots nothing fills yet. The game itself wasn't seen to put on rings, cloaks, belts, boots or
+amulets; worn here, they count as the party's do (Pehtucl's Templar: his Ring of Protection +1 worn,
+AC 4 to the other Templar's 5 and +1 on saves; his Cloak of Protection +1 is in his chest now, as it
+gave nothing under AD&D's rule with his leather shield). Keys, food and scrolls stay packed. Each
+move is `pickpocket.place` (the list for its slot found or made first, a new one from the game's
+allocator; with none to be had, or fewer than the 20 the Loader leaves the game (`ring.RESERVE`),
+nothing moves, and the person is tried again on the next passes, up to `TRIES` (3), then left as the
+game has it), after `itemgate.hold`. Test: `test_people.py`. What it costs of the game's 200 things
+from its free list (`playtest/thingsfree.py`, 2026-11-07): each person with gear holds two or three
+lists, not one, about 21 more in the pens (143 free after loading, 131 in the alarm fight); the game
+frees an area's lists as the party leaves it (191 free on arriving in the arena), so nothing builds
+up.
 
 ## Pehtucl's chest
 
@@ -1097,12 +1098,20 @@ decodes (the Loader's other
 changes read it); and the longer script must still fit the game's script buffer
 (`pensasks.LONGEST`), as the Loader's other script changes must.
 
-Worn and wielded (how the game keeps a person's gear: [The game's people's
-gear](#the-games-peoples-gear)): the melee routine fights with what is in the held list
-(+0Ah) for anyone: seen, a Tohr-kreen given Headsman there attacked "with
-Headsman +2 (1d10+2)" in place of its first two natural attacks, its third
-kept; and the AC routine counts the worn list (+08h) for anyone (two Tohr-kreen
-given scale chest armour went from AC 3 to -2 against the party's attacks).
+The game's own count of visits ([the arena's count of fights](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights)):
+script 2 marks the 5000th visit (number 12 at 5000, A58h) the war won, with
+flag 10 set and a call to script 62 (at FAAh), which sets the final battle's state,
+global number 49, to 3. Checked in play: the count going up once a trip,
+Scar's challenge on the fifth, and, with the count set to 5000, the 5000th
+trip's speech, the party sent back with no fight, and the final battle marked
+won. The 1000th trip is as its script reads; it wasn't played.
+
+Worn and wielded: the game's [item lists](DEVELOPMENT.md#what-is-known) work
+for anyone, not only the party (and see [The game's people's
+gear](#the-games-peoples-gear)): seen, a Tohr-kreen given Headsman in its held
+list attacked "with Headsman +2 (1d10+2)" in place of its first two natural
+attacks, its third kept; and two Tohr-kreen given scale chest armour in the
+worn list went from AC 3 to -2 against the party's attacks.
 `champions.Gear` (each pass of the dice log, in the arena) moves each living
 champion's items, by type, to its slot (`pickpocket.place`, as the inventory
 screen would), once; the defiler gets its scroll first (into its backpack, while
@@ -1285,32 +1294,29 @@ fade-in is over, and now and then; the colours the game cycles, for water and
 fire, are never picked as darker ones). The rectangles the game draws again when
 a figure moves are widened by the length of a shadow, so none is left behind.
 
-**Pictures out of memory.** The shadow is traced from the figure's picture in
-the game's picture cache, and in a big fight (the arena, ten monsters) the game
-lets go of most pictures between drawings: in a save in the arena every figure
-but one had its picture out of memory as the floor was drawn, so no shadow.
-Loading one from here, in the middle of a drawing, could push out or move a
-picture the game is about to draw, so instead DSCLOG keeps each frame's shadow
-as it draws it (`SC_START`, `SC_PUT`, `SC_END`: the runs that cast a shadow,
-three bytes each, at most 64, under the picture's number from the cache slot's
-`+6` and the frame) in 80 slots of 208 bytes in upper memory (`SC_SEG`, from
-KEEP, if `UMBPLUS.COM` made the room), the oldest given up first. A figure whose
-picture is out casts its frame's kept shadow, or another frame's of the same
-picture (`SC_FIND`). Measured in the arena: 74 slots filled in a few rounds, the
-party and the monsters seen in memory once casting shadows after; one whose
-picture was never in memory at a floor drawing still has none.
-Only pictures already in the game's cache cast one: until 2.6.0 DSCLOG had the
-game load a missing one from there (1DF3:2A3Ah), in the middle of drawing the
-floor, which can push out or move another picture while the game is drawing; a
-freeze report of 2026-10-21 has a figure's picture unpacked from garbage, the
-row decoder (0980:709Ch, into a 5,408-byte buffer at 0980:11BCh) never meeting
-its row's end and copying over the code after it, itself included, with the
-game's data segment then overwritten by its stack. A figure whose picture isn't
-loaded gets its shadow when the game has loaded it to draw the figure, a frame
-later. The Loader keeps DSCLOG's list of who casts one (`dsloader/shadows.py`)
-and has DSCLOG draw the view again when it changes (from the game's main loop,
-as centring the view does: marking the figures changed instead, as the game's
-own code does to draw one again, can set one in a fight walking again).
+**Pictures out of memory.** The shadow is traced from the figure's picture in the game's picture
+cache, and in a big fight (the arena, ten monsters) the game lets go of most pictures between
+drawings: in a save in the arena every figure but one had its picture out of memory as the floor was
+drawn, so no shadow. Loading one from here, in the middle of a drawing, could push out or move a
+picture the game is about to draw, so instead DSCLOG keeps each frame's shadow as it draws it
+(`SC_START`, `SC_PUT`, `SC_END`: the runs that cast a shadow, three bytes each, at most 64, under
+the picture's number from the cache slot's `+6` and the frame) in 80 slots of 208 bytes in the
+helper's far block (`SC_SEG`, at `FAR_SC`: see [Room in the helper](DEVELOPMENT.md#room-in-the-helper)),
+the oldest given up first. A figure
+whose picture is out casts its frame's kept shadow, or another frame's of the same picture
+(`SC_FIND`). Measured in the arena: 74 slots filled in a few rounds, the party and the monsters seen
+in memory once casting shadows after; one whose picture was never in memory at a floor drawing still
+has none. Only pictures already in the game's cache cast one: until 2.6.0 DSCLOG had the game load a
+missing one from there (1DF3:2A3Ah), in the middle of drawing the floor, which can push out or move
+another picture while the game is drawing; a freeze report of 2026-10-21 has a figure's picture
+unpacked from garbage, the row decoder (0980:709Ch, into a 5,408-byte buffer at 0980:11BCh) never
+meeting its row's end and copying over the code after it, itself included, with the game's data
+segment then overwritten by its stack. A figure whose picture isn't loaded gets its shadow when the
+game has loaded it to draw the figure, a frame later; one the game leaves undrawn (its map thing's
+80h bit) or with no picture at all (FFFFh in its cache place) casts none (`shadow_of`). The Loader
+keeps DSCLOG's list of who casts one (`dsloader/shadows.py`) and has DSCLOG draw the view again when
+it changes (from the game's main loop, as centring the view does: marking the figures changed
+instead, as the game's own code does to draw one again, can set one in a fight walking again).
 
 The list can be up to half a second old, so as it draws DSCLOG also checks
 the creature's status (`SHADOW_GONE`: the things table, then the creature's
@@ -1364,24 +1370,28 @@ psurlons turn invisible: their psionic list (37F0:001Ch, list 8) has Superior In
 puts on effect 23. No foe's spell list (3FB9:0110h) has an invisibility spell, and no script or
 item makes a creature invisible.
 
-`dsloader/ghost.py` keeps `GHOST_TAB` (520 bits) from the game's effects: a party member with
-effect 23 always, anyone else only while no party member has effect 15. It makes `REP` (the
-palette's colours 16-223, the ones the game doesn't animate, cut into 32 boxes by median cut) and
-`BLEND` (32 x 256) from DSCLOG's copy of the palette each time DSCLOG reads it again with `DARK`
-(0.2 s of Python, in a thread), keeps the last eight by the colours the game never cycles
-(`ghost.key`: every colour but the cycled 1-15 and 240-248, as 224-239 differ between areas; `MADE_KEPT`: the whole palette changes every 30 s where the game cycles
-fire's or water's colours, and each change once made them again, solid meanwhile), and writes them into DSCLOG's block, 885
-paragraphs of upper memory taken at `KEEP` (`GHOST_SEG`, header +1826; none, no see-through
-figures). `GHOST_ON` (+1828) is 0 until they are written. The view is drawn again when a figure
-turns see-through or solid (`TSR_VIEW_REDRAW`). That is done from the map's main loop, which doesn't
-run in the enemies' turns, so a thief whose turn had ended kept the see-through picture until a
-party member's turn (about 1.4 s, seen 2026-11-06). So `PROBE_GHOST` notes each party member it
-draws see-through while hidden (`GH_SHOWN`), and `GHOST_UNION`, in `PROBE_REDRAW_ALL` (the game's
-drawing again of what moved, at each step of anyone's), has the whole view drawn once when one of
-them is hidden no longer: solid at the enemies' first step (test `test_solid_at_turn_end`). The same once the Loader writes GHOST_TAB anew (it sets `GH_CHANGED`, the room's last byte): an invisibility ending in the enemies' turns shows at once (test `test_whole_view_when_the_table_changes`; seen in DOSBox, the byte cleared 0.06 s into an enemy's turn, `playtest/logs/2026-11-07-review-fixes.md`). Seen in DOSBox, 2026-11-05: a figure marked drew
-half see-through over floor, wall and its shadow, facing either way and walking; in a fight, a real
-hide (solid again from the backstab on) and a real Invisibility, walking at the solid pace
-(`playtest/logs/2026-11-05-fight-test.md`).
+`dsloader/ghost.py` keeps `GHOST_TAB` (520 bits) from the game's effects: a party member with effect
+23 always, anyone else only while no party member has effect 15. It makes `REP` (the palette's
+colours 16-223, the ones the game doesn't animate, cut into 32 boxes by median cut) and `BLEND` (32
+x 256) from DSCLOG's copy of the palette each time DSCLOG reads it again with `DARK` (0.2 s of
+Python, in a thread), keeps the last eight by the colours the game never cycles (`ghost.key`: every
+colour but the cycled 1-15 and 240-248, as 224-239 differ between areas; `MADE_KEPT`: the whole
+palette changes every 30 s where the game cycles fire's or water's colours, and each change once
+made them again, solid meanwhile), and writes them into DSCLOG's block, 885 paragraphs of upper
+memory taken at `KEEP` (`GHOST_SEG`, header +1826; none, no see-through figures). `GHOST_ON` (+1828)
+is 0 until they are written. The view is drawn again when a figure turns see-through or solid
+(`TSR_VIEW_REDRAW`). That is done from the map's main loop, which doesn't run in the enemies' turns,
+so a thief whose turn had ended kept the see-through picture until a party member's turn (about 1.4
+s, seen 2026-11-06). So `PROBE_GHOST` notes each party member it draws see-through while hidden
+(`GH_SHOWN`), and `GHOST_UNION`, in `PROBE_REDRAW_ALL` (the game's drawing again of what moved, at
+each step of anyone's), has the whole view drawn once when one of them is hidden no longer: solid at
+the enemies' first step (test `test_solid_at_turn_end`). The same once the Loader writes GHOST_TAB
+anew (it sets `GH_CHANGED`, the room's last byte): an invisibility ending in the enemies' turns
+shows at once (test `test_whole_view_when_the_table_changes`; seen in DOSBox, the byte cleared 0.06
+s into an enemy's turn, `playtest/logs/2026-11-07-review-fixes.md`). Seen in DOSBox, 2026-11-05: a
+figure marked drew half see-through over floor, wall and its shadow, facing either way and walking;
+in a fight, a real hide (solid again from the backstab on) and a real Invisibility, walking at the
+solid pace (`playtest/logs/2026-11-05-fight-test.md`).
 
 ## Sounds for hiding and picking pockets
 

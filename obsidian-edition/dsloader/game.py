@@ -395,6 +395,7 @@ MONEY_SEG, MONEY = 0x3781, 0x357
 # The game's global flags (its scripts' 13h/8Dh variables): bits, flag n bit n % 8 of byte n // 8,
 # at the far pointer here (a save keeps them: SAVE chunk 29)
 FLAGS_PTR = 0x1352
+FLAG_COUNT = 808  # (the flags a save keeps: DEVELOPMENT.md's The Loader's game flags, 756-807 the Loader's)
 # The game's global numbers (its scripts' 07h/87h variables): words, at the far pointer here
 NUMBERS_PTR = 0x1356
 ARENA_FIGHTS = 12  # the number counting the party's trips to the arena (scripts 2 and 3)
@@ -1060,6 +1061,8 @@ class GameData:
 
     def set_flag(self, n: int, on: bool = True) -> None:
         """Flag N set (or cleared); nothing while the flags have no place in memory (see flag)."""
+        if not 0 <= n < FLAG_COUNT:  # (past them: another of the game's numbers, and not saved)
+            raise ValueError(f"flag {n} is past the {FLAG_COUNT} a save keeps")
         flags = far_pointer(self.guest, self.ds, FLAGS_PTR)
         if not flags:
             return

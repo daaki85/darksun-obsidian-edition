@@ -29,9 +29,14 @@ SEARCH_TEXT = ("Searching the body, you find a ring sewn into his loincloth: a R
                "(+1 AC, +1 on saves).")
 POSITIONS, POSITION_SIZE = 0x669D, 32  # DS: each object's x, y first
 THING_COUNT = 0x208  # objects 0-519; 320-519 are handed out from a free list
+DYNAMIC_THINGS = 200  # (those 320-519)
 FREE_THINGS, THINGS_USED = 0x4D72, 0x4C48  # DS: that list's first, and how many are out
 FREE_ITEMS = 0x4D76  # DS: the first free item record (each names the next at +04h)
 ITEM_CONTENTS = 0x08
+# What the Loader leaves the game of its free lists: it makes an item list or takes an item record
+# only with more than this many free, so the game's own (a body's things as one dies, a spell's
+# items, a drop) never find them empty because of the Loader's (people.py dresses everyone)
+RESERVE = 20
 # The Loader's own takings from that list (and givings back), the last ones, for a report on an
 # item gone missing (bonescale.Watch): (time, item, what for)
 TAKEN: Deque[Tuple[float, int, str]] = deque(maxlen=30)
@@ -96,6 +101,18 @@ class Items:
     def word(self, offset: int) -> int:
         return struct.unpack("<H", self.guest.read(self.gd.ds * 16 + offset, 2))[0]
 
+    def spare_things(self) -> bool:
+        """More than RESERVE things on the game's free list (its count out, DS:4C48h, of the 200)."""
+        return DYNAMIC_THINGS - self.word(THINGS_USED) > RESERVE
+
+    def spare_items(self) -> bool:
+        """More than RESERVE item records on the game's free list (walked that far, no further)."""
+        at, seen = self.word(FREE_ITEMS), 0
+        while at < game.NO_ITEM and seen <= RESERVE:
+            seen += 1
+            at = struct.unpack_from("<H", self.item(at), game.ITEM_NEXT)[0]
+        return seen > RESERVE
+
     def chain(self, thing: int, inside: bool = True):
         """The item numbers and records in the list starting at object `thing`, and (`inside`)
         in any containers in it."""
@@ -159,7 +176,7 @@ def give_ring(gd: GameData) -> Optional[str]:
             continue
         cell = pickpocket.free_cell(gd, it, member)
         item = it.word(FREE_ITEMS)
-        if cell is None or item >= game.NO_ITEM:
+        if cell is None or item >= game.NO_ITEM or not it.spare_items():
             continue
         if pickpocket.party_list(gd, it, member, cell) is None:
             continue  # (no backpack list to be had: the record left free, not lost, as npcitems.add_to)

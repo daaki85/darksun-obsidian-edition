@@ -93,6 +93,12 @@ the leader, the character acting): `Daaki CHA check: 0-19 = 15, always made
 (CHA 20) -> success`. Which way the condition goes is the one the ability
 favours (the score 25 with the lowest roll). Tested in play with Chahl.
 
+The [thief skill checks and trap triggers](HOW-THE-GAME-WORKS.md#where-the-game-rolls-thief-skills)
+(13 skill checks, 50 trap triggers in 16 scripts) are all there are: every
+script in the game's GPLDATA.GFF decodes with `dsloader/gpl.py`, and
+`gpl.checks` finds them in every one (`python -m dsloader checks` lists them,
+with the 3 ability checks the ability check command makes).
+
 ## The combat log in the game
 
 ([In FEATURES](FEATURES.md#the-combat-log-in-the-game).)
@@ -326,7 +332,8 @@ dice log running:
   does nothing while the game's busy flag for it is up or off the map. It
   also places a new label (`LABEL_WHERE`: centred over the thing's feet, its
   bottom `UP` rows above them, under the feet if it would reach the game's
-  boxes at the top, row 40, and kept on the screen), as the main loop doesn't
+  boxes at the top, row 40, and kept on the screen; a figure whose feet are
+  above the page's top, the view dragged away, gets none), as the main loop doesn't
   run while the game shows an attack or a spell.
 - **The main loop** (`LABEL_TICK`, after `PANEL_TICK` in `PROBE_SCROLL`)
   places labels too, and has where one was drawn again when it goes, moves or
@@ -664,6 +671,10 @@ in the window under EXIT, with pictures made from EXIT's, its letters taken
 away and the page's put in with the game's text font
 (`dsloader/savepages.py`; the buttons' own carved letters have no P, G or
 digits).
+
+The other pages are `SAVB`, `SAVC` and `SAVD`, not `SAVE11` on, so the game's own
+window never sees them: it puts each save it finds in the row its number names,
+with room for ten, and a `SAVE11.SAV` would be written past the end.
 
 Saves under their names (`dsloader/namedsaves.py`): every few seconds the
 Loader looks at the 40 slots' files (`cloud_saves` before the game folder, as

@@ -22,4 +22,5 @@ closest untried case.
 far pointer; +0 is never written). PLAY_SOUND saves +1..+6 (`push word [es:bx+1]`, `push dword
 [es:bx+3]`) and restores the same, so byte +0 is never touched; the one stray byte is +6, the NEXT
 entry's byte 0, read and written back unchanged. Harmless unless the game changes that byte during
-the sound call. No change made; a DOSBox sound test would be needed to be sure.
+the sound call. No change made; a DOSBox sound test would be needed to be sure. (Later: fixed in ea55a33, the
+CHANGELOG's "the sound's ... one byte too far".)

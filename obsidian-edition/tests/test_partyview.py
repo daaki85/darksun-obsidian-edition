@@ -27,6 +27,13 @@ class CardTextTests(unittest.TestCase):
                   "Class 3": "0", "Level 3": "0"}
         self.assertEqual(partyview.classes_text(fields), "Fighter 2 / Druid 2")
 
+    def test_kit_label(self):
+        """"Features:" for the game's own party's features alone, "Kit:" when a kit is there."""
+        self.assertEqual(partyview.kit_label("Wild Fighting"), "Features")
+        self.assertEqual(partyview.kit_label("Open sky spells and psionics; One more chatkcha throw"), "Features")
+        self.assertEqual(partyview.kit_label("Arcanist"), "Kit")
+        self.assertEqual(partyview.kit_label("Wild Fury; Wild Fighting"), "Kit")
+
     def test_status_names(self):
         self.assertEqual(game.STATUS_NAMES[0], "New")
         self.assertEqual(game.STATUS_NAMES[1], "Okay")

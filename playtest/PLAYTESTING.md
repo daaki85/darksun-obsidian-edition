@@ -11,6 +11,8 @@ guide and its tools were lost that way.
 The tools are in this folder. Each finds its own paths (`env.sh`, `paths.py`): the repository,
 a work folder for screenshots and logs (`PLAYTEST_WORK`, default `/tmp/playtest`) and the
 extracted game (`DS_GAME`, default `$PLAYTEST_WORK/inst`). Nothing in the work folder is kept.
+In this guide `$WORK` is that work folder: `env.sh` sets `WORK` from `PLAYTEST_WORK` for the
+tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
 
 ## 0. Before anything
 
@@ -23,17 +25,16 @@ extracted game (`DS_GAME`, default `$PLAYTEST_WORK/inst`). Nothing in the work f
    assume a place is reachable from a new game: check what the story requires (the slave pens'
    sewer grate, for one, is behind the stalker pen's secret door).
 3. **Start from a saved game past the parts you don't need**: `sh loadsave.sh NAME` loads one of
-   `playtest/saves/` (see its README: `pens-after-arena`, the slave pens after the arena;
-   `pens-thornwall-rack`, the party by the weapon rack with Thornwall on it; `pens-after-scar`, Scar
-   killed and the champions due; `pens-new-chest`, a new game's pens). None
-   came with the game and none were on the Drive (2026-11-01). **Save at every milestone** (below)
-   and add the save to `playtest/saves/` with a line in its README, then commit: replaying the
-   arena took most of a day.
+   `playtest/saves/`; [its README](saves/README.md) lists them all (`pens-after-arena`, the slave
+   pens just after the arena, is the usual start). None came with the game and none were on the
+   Drive (2026-11-01). **Save at every milestone** (below) and add the save to `playtest/saves/`
+   with a line in its README, then commit: replaying the arena took most of a day.
 
 ## 1. Setting up
 
-1. Packages: `dosbox Xvfb xdotool imagemagick innoextract poppler-utils` (check with
-   `command -v`; they were installed in the 2026-11 container).
+1. Packages: `dosbox Xvfb xdotool imagemagick innoextract poppler-utils nasm python3-tk`, and
+   `pip install capstone unicorn` (check with `command -v`; the environment's setup script
+   installs most of them, below).
 2. The game: `sh setup_game.sh` (the GOG installer from the user's Google Drive, file id in the
    script, extracted with innoextract into `$DS_GAME`).
 3. `sh start.sh`: Xvfb `:55`, the Loader's patched game (`prepare_patched_game`, so a rebuild is a
@@ -51,36 +52,36 @@ extracted game (`DS_GAME`, default `$PLAYTEST_WORK/inst`). Nothing in the work f
    (or decode the whole script with `dsloader.gpl.load_scripts` and `decode`). Every script in
    the built copy should decode (2026-11-05: eleven didn't, and a later change gave up on one).
 5. **The watchdog**: `sh guard_start.sh`, then a Monitor on `$WORK/guard.log` (grep
-   `STUCK|GONE`) for the whole test. Stop it (`kill $(cat $WORK/guard.pid)`) before going idle.
+   `STUCK|GONE`, with `tail -n0 -F` so old lines don't fire) for the whole test. Stop it (`kill
+   $(cat $WORK/guard.pid)`) before going idle. The log keeps earlier runs' lines (2026-11-07: GONE
+   lines from a watchdog started without a display, two hours before): read the times before
+   believing one.
 6. **DOSBox dies when the session sits idle** (the container's processes are reclaimed). After
    any pause (waiting on the user), check `pgrep -x dosbox` before the next step; if it's gone,
    start again from `start.sh`. Don't leave a test half-done across a pause expecting it to be
    there.
-
 7. **After a worker restart Xvfb is gone too**, and start.sh in the background didn't restart it
-  (every xdotool call: "Can't open display"). `pgrep -a Xvfb`; else `setsid nohup Xvfb :55 -screen
-  0 1024x768x24 &` by hand.
-
-**Fresh container (2026-11-06):** `apt-get update` then install `dosbox xdotool innoextract nasm`
-(`Xvfb`, ImageMagick, poppler were there). The Drive installer download is blocked by the default
-network policy (403 on `drive.usercontent.google.com`): allow that host with update_environment, wait
-~20 s, then `setup_game.sh` works (22 MB). `start.sh` shows the window at 640x400 until a save is
-loaded; after `loadsave.sh` it is 320x240. `toalarm.sh` then `restalarm.sh` worked first time (the
-pointer: two right-clicks on bare floor; a red eye with a bar over floor is the eye). Cilla's
-hide lands often at 95 (d100 94 ok); her walk frames: `walktime.py 3 X Y DIR`, crops of
-`import` grabs (120,50 70x70) tiled with montage.
+   (every xdotool call: "Can't open display"). `pgrep -a Xvfb`; else `setsid nohup Xvfb :55 -screen
+   0 1024x768x24 &` by hand.
 
 **The environment's setup script (2026-11-06):** the user's "Google Drive" cloud environment now
 installs `innoextract nasm dosbox xdotool`, `pip install capstone unicorn`, and runs
 `setup_game.sh` into `/tmp/playtest/inst` when the container is built fresh, with
 `drive.usercontent.google.com` and `drive.google.com` already allowed. So a new session should
 only need `export PLAYTEST_WORK=/tmp/playtest`, then `loadsave.sh` (check `command -v dosbox` and
-`$PLAYTEST_WORK/inst/DSUN.EXE` first; if missing, run the steps above by hand). Checked by hand
+`$PLAYTEST_WORK/inst/DSUN.EXE` first; if missing, do it by hand, as below). Checked by hand
 that day: the download went through with no environment change, `loadsave.sh pens-after-scar`
 loaded (region 29h, leader 1816,440, window 320x240, dice log attached). A worker restart of
 the session killed DOSBox as an idle pause does. With the game's files the unit tests run
 more: `DSUN_GPLDATA=$G/GPLDATA.GFF DSUN_OBJECTS=$G/SEGOBJEX.GFF DSUN_RESOURCE=$G/RESOURCE.GFF`
-(`G=$PLAYTEST_WORK/inst`) left 8 skipped (tkinter's), not 15.
+(`G=$PLAYTEST_WORK/inst`). With them set, `python3` skips 9, all for want of tkinter; without
+them, 24 (2026-11-07). `/usr/bin/python3.12` has tkinter.
+
+**A fresh container by hand (2026-11-06)**, if the setup script didn't run: `apt-get update`, then
+install `dosbox xdotool innoextract nasm` (`Xvfb`, ImageMagick, poppler were there). The Drive
+installer download is blocked by the default network policy (403 on `drive.usercontent.google.com`):
+allow that host with update_environment, wait ~20 s, then `setup_game.sh` works (22 MB). `start.sh`
+shows the window at 640x400 until a save is loaded; after `loadsave.sh` it is 320x240.
 
 ## 1b. The recompiled program as the target (Dark Sun Recompiled)
 
@@ -116,6 +117,11 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   program fault to report, not a tool to work around. **The drag scrolls only with the Loader
   attached** (the dice log counts: it switches the helper's `scroll_on` on at attach); a program
   started with no Loader, as its own headless tests run, keeps the view still (2026-11-06).
+- **Doors at Kurzak's stop** (2026-11-01): the look pointer on the doorway's drawing (square
+  95,27, above the door square) opens the mod's Look box "Door" (INFO only); the arrow, the look
+  click and the sword on the door square do nothing and log nothing; the sword on Kurzak (object
+  29, then at square 99,31) does nothing either: no fight starts from a click on a friendly
+  figure.
 
 ## 2. Reading the game
 
@@ -162,20 +168,23 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   is fought with by anyone (a Tohr-kreen with Headsman: "attacks Cermak with Headsman +2
   (1d10+2)"); armour in the worn list counts for anyone's AC. A creature that dies carrying
   something leaves a Dead Body (object 1101) with its things.
+- **Setting the arena's visit count**: in the pens the game's numbers have a place in memory;
+  number 12 is the count (4: the next trip is Scar's; 5 and up the everyday speech, or the
+  champions' after Scar's death in the arena). Write it at the far pointer DS:1356h + 2 x 12.
 - **The arena's flags and numbers can't be set from outside** (2026-11-05): the pointers at
   DS:1352h and 1356h stay null in the arena even while a script waits on a message, so a poller
   never found them. To test a script's branch there, build a copy of the scripts with the test
   forced (edit the module, run `start.sh`, which writes `dos/GPLDATA.GFF`, then put the module
   back) and say so in the log.
-- **Moving the party in memory** (2026-11-04, for a check where the way is shut): write each of map
-  objects 0-3's x, y words at DS:669Dh + 32n (map units) and the camera at DS:1178h, then walk one
-  step with `walkto.py`: the game redraws and makes the objects near the new place. Only for
-  checks; the scripts see none of it.
+- **Moving the party in memory** (2026-11-04, for a check where the way is shut): `teleport.py X Y
+  CX CY` writes each of map objects 0-3's x, y words at DS:669Dh + 32n (map units) and the camera at
+  DS:1178h; then walk one step with `walkto.py`: the game redraws and makes the objects near the new
+  place. Only for checks; the scripts see none of it.
 - **AC in the inventory** (2026-11-02): the AC line is the game's own, worked out afresh from what
   is worn, but drawn one change behind: switch to another member's portrait and back (20,62 then
   20,20) before reading it. It follows a gladiator level raised in memory (`sheetedit.py`); the
   THAC0 line doesn't. Gerakis's armour: chest (173,70), arm (66,70), legs (173,128); the
-  backpack's cells start at (195,26), (213,26), then down 18 a row.
+  backpack's cells: section 3's inventory places.
 - **The party's item lists** (2026-11-02): worn things (armour, a shield, rings, a cloak,
   ammunition) at the creature record's +08h, held weapons at +0Ah, the backpack at +0Ch; the
   inventory screen files by the type's kind, and the game's AC counts +08h only. `itemlists.py`
@@ -222,17 +231,20 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   grass of 563 runs; put the old number back after), `ghostchk.py 0 1` marks things 0 and 1 (each
   call replaces the marks), and `pastblock.py save|cmp FILE` keeps and compares the 4 KB past
   GHOST's block. Past 192 runs only the frame's top is drawn see-through, by design.
+- **`ghostclear.py [TRIALS]`** (2026-11-07): at each enemy turn's start, Cermak marked see-through with
+  GH_CHANGED set, the byte and the turn read every 20 ms: whether GHOST_UNION cleared it within that
+  turn. **`rec.py [FIRST LAST]`**: creatures' combat records in hex, to find a field.
 - **The game's free things** (2026-11-07): `thingsfree.py LABEL` gives one line: the free list's
   length (of the 200, things 320-519), the count out (DS:4C48h), and the item lists the people on
   the map hold. The pens: 143 free after loading, 131 in the alarm fight; the arena on arrival 191
   (the pens' all freed). `arenatrip.sh` loads `pens-after-scar` (through `toalarm.sh`), rests in the
   fire room till Kurzak calls, and takes the party to the arena, counting the things on the way.
 - **Memory** (2026-11-06, logs/2026-11-06-memory-audit.md): `memaudit.py` lists every DOS block (the
-game's, DSCLOG's, the overlay buffer, the see-through tables, the music buffer, free) and the heap;
-`memsample.py LABEL` gives one line (free DOS memory after the game: 100,016 bytes on the map in the
-pens, 131-138 KB while the inventory or USE screen is open); `dacwatch.py SECONDS` shows DSCLOG's
-palette copy changing (every 30 s where the game cycles colours). The arena gate (the gap at
-1816,440) asks nothing before Kurzak's call. `ghostwatch.py SECONDS` counts samples with GHOST_ON 0.
+  game's, DSCLOG's, the overlay buffer, the see-through tables, the music buffer, free) and the
+  heap; `memsample.py LABEL` gives one line (free DOS memory after the game: 100,016 bytes on the
+  map in the pens, 131-138 KB while the inventory or USE screen is open); `dacwatch.py SECONDS`
+  shows DSCLOG's palette copy changing (every 30 s where the game cycles colours). `ghostwatch.py
+  SECONDS` counts samples with GHOST_ON 0.
 
 ## 3. Controls that work
 
@@ -257,17 +269,18 @@ palette copy changing (every 30 s where the game cycles colours). The arena gate
   leader at the top edge (screen y 24, under the top bar), so nothing north of it could be clicked;
   resting the pointer on the edge didn't scroll it, and writing DS:1178h (`camera.py X Y`) changed
   the number but not the picture (it's a copy, not what's drawn).
-- **Scrolling the view: drag with the middle mouse button** (`python3 scroll.py DX DY`; the
-  user's advice, 2026-11-01). It moves the map like grabbing it: dragging down shows more of the
-  north (60 pixels moved the camera 48 map units, in steps of 16). **Keep the pointer off the
-  screen's edges while dragging**: at an edge the view scrolls by itself the other way, so a long
-  drag from the centre ran the pointer off the bottom and sent the view south, and a loop that
-  sized each drag from the last ran it off to (0, 1368) (2026-11-01). scroll.py starts each drag
-  on the side it moves away from and caps it (270 x 150 pixels). Then click the spot and the
-  party walks there, finding its own way round walls. **After a drag, release every button**
-  (scroll.py does): the game took no clicks at all until they were. **A message box blocks drags
-  too**: drags made under one did nothing, and the view later jumped. Clear boxes first. A click on a wall or off the walkable area does nothing but log "NO PATH FROM
-  HERE"; walkto stops after two clicks that don't move the leader.
+- **Scrolling the view: drag with the middle mouse button** (`python3 scroll.py DX DY`; the user's
+  advice, 2026-11-01). It moves the map like grabbing it: dragging down shows more of the north (60
+  pixels moved the camera 48 map units, in steps of 16). **Keep the pointer off the screen's edges
+  while dragging**: at an edge the view scrolls by itself the other way, so a long drag from the
+  centre ran the pointer off the bottom and sent the view south, and a loop that sized each drag
+  from the last ran it off to (0, 1368) (2026-11-01). scroll.py starts each drag on the side it
+  moves away from and caps it (270 x 150 pixels). Then click the spot and the party walks there,
+  finding its own way round walls. **After a drag, release every button** (scroll.py does): the game
+  took no clicks at all until they were. **A message box blocks drags too**: drags made under one
+  did nothing, and the view later jumped. Clear boxes first. A click on a wall or off the walkable
+  area does nothing but log "NO PATH FROM HERE"; walkto stops after two clicks that don't move the
+  leader.
 - **The walkability grid**: each region has one, 128 x 98 squares of 16 map units (GMAP in
   RGNxx.GFF): 0 floor, 192 walls, 64 things (furniture, a button on a wall), 1-31 and 64-95 wall
   edges and doorways. The game's live copy (far pointer at **DS:0556h**, `live_map()` in live.py)
@@ -281,10 +294,13 @@ palette copy changing (every 30 s where the game cycles colours). The arena gate
   way: the region file's grid didn't show that.
 - **Long walks: hop.** A click a few hundred map units away walks the party there, round walls
   (1672,344 to 1400,344 in the pens), but a click across a whole region says NO PATH FROM HERE,
-  and the view snaps back to the party. Plan hops on a map picture (`mapshot.py`, below) and
+  and the view snaps back to the party. Plan hops on a map picture (`mapshot.py`, next) and
   use `viewto.py X Y` to bring each hop's spot on screen before clicking it; clicks on walls or
   on the edge of the screen (often a wall) do nothing. walkto.py drags the view back to the
   leader when it falls behind.
+- **Map pictures**: `python3 mapshot.py OUT.png [W H]` steps the view across the region and
+  pastes the captures at their cameras: one map unit a pixel, so a point's pixel is its map
+  position. Keep a region picture worth having in `playtest/maps/` (none is there yet).
 - **Message boxes** (a speech box with a portrait at the top, or the grey message window) take a
   click to go away, and while one is up Tab, Return, map clicks and drags do nothing. `msgbox.sh`
   tells whether one is up; **click ON the box** (`boxclick.sh`: 160, 20): a click wherever the
@@ -296,16 +312,12 @@ palette copy changing (every 30 s where the game cycles colours). The arena gate
   last few lines took an old, answered one for a new one (2026-11-01). `dismiss.sh` stops at one.
 - **Keys**: Tab picks the nearest enemy and Return attacks it (the mod's keys, in a fight); L shows
   or hides the combat log panel; **E opens the Effects screen** (not "end turn"); Escape closes a
-  screen or menu that is open, and **opens EXIT: SAVE GAME? when nothing is**: a click after that can quit
-  to DOS. Press Escape only with a menu or screen showing.
+  screen or menu that is open, and **opens EXIT: SAVE GAME? when nothing is**: a click after that
+  can quit to DOS. Press Escape only with a menu or screen showing.
 - **Ending a turn by hand**: section 4 rule 11 (a click ON the figure opens its END menu, E there
   is END TURN; E with no menu up opens the Effects screen).
 - **Loose `xdotool` commands need `DISPLAY=:55`** (`export DISPLAY=:55` first): the kit's tools
   set it, a command typed on its own doesn't ("Can't open display").
-- **`ghostclear.py [TRIALS]`** (2026-11-07): at each enemy turn's start, Cermak marked see-through with
-  GH_CHANGED set, the byte and the turn read every 20 ms: whether GHOST_UNION cleared it within that
-  turn. **`passmiss.sh`**: the party's turns passed until a foe misses, then the view dragged and shot.
-  **`rec.py [FIRST LAST]`**: creatures' combat records in hex, to find a field.
 - **In the enemies' turns the view follows the one acting** (2026-11-07, `ghostturn.py`): a test that
   needs a still view through an enemy turn (a figure redrawn or not) can't rely on it; the move
   redraws the whole view by itself. `markmember.py THING|none CHANGED` writes GHOST_TAB and its
@@ -314,8 +326,13 @@ palette copy changing (every 30 s where the game cycles colours). The arena gate
   (1712, 832); the party's figures stayed on the screen (2026-11-07). Drag out of a fight to put a
   figure off the view.
 - **The combat log panel covers the bottom right** (x 135+, y 120+): a click there lands on the
-  panel, not the map. Press L to hide it before walking near it (the party's first step into the
-  arena, for one, is right above it).
+  panel, not the map, and a party member's figure under it can't be clicked (its END menu). Hide it
+  before walking near it (the party's first step into the arena, for one, is right above it) with
+  `sh panel.sh hide|show`, which checks the panel's pixel before pressing L (L alone toggles, and
+  can leave it the wrong way round). `panel.sh` reads "hidden" when the panel is expanded (its check
+  is for the small panel, 2026-11-06): look at a shot, and press L yourself. The expanded panel's
+  filter chips are at y 87 (All 148, Party about 175); a filter chosen stays (Party leaves out the
+  foes' attacks).
 
 - **Level-up screens block everything**: CHOOSE A SPELL (a preserver's new level, mid-fight)
   waits for a spell's icon to be clicked; the watchdog reports it as STUCK. `levelup.sh` finds it
@@ -329,8 +346,7 @@ palette copy changing (every 30 s where the game cycles colours). The arena gate
 - **The save name field keeps the slot's old name**: typing goes in front of it (KURZAK DOORPENS),
   and Backspace from the start does nothing: press End, then Backspace enough times, then type.
 - **Look needs line of sight**: "NO LINE OF SIGHT" from a party round a wall corner, and still
-  from beside the pens' gold post at (1528, 456) (whatever part of it was clicked, 2026-11-01): that
-  post may not be a door at all.
+  from beside the pens' gold post at (1528, 456) (whatever part of it was clicked, 2026-11-01).
 - **Opening a door (the user, 2026-11-01): the look pointer.** Cycle the pointer with right-clicks
   to the look cursor and click the door; then, with the walk arrow, click on the far side of the
   open door to move past it. The walk arrow on a door, or on the floor beyond a closed one, does
@@ -350,10 +366,11 @@ palette copy changing (every 30 s where the game cycles colours). The arena gate
   every choice with a number, which helps find the one wanted.
 - **The inventory screen's places** (2026-11-02, from hovering: the name shows in the bar at the
   bottom; the ones used): ammo (66,26), missile (66,48), arm (66,70), right hand (66,92); chest
-  (173,70), left hand (173,92), legs (173,128); the backpack fills down its first column first: (195,26),
-  (195,44), (195,62), (195,80)... (rows 18 apart; 48 and 70 are between cells), then (213,26)... Click an item to pick it up, click a place to put it;
-  armour can't be put on in a fight ("CANNOT USE THIS ITEM"); a wrong place says "ILLEGAL
-  PLACEMENT" and keeps it on the pointer.
+  (173,70), left hand (173,92), legs (173,128); the backpack fills down its first column first:
+  (195,26), (195,44), (195,62), (195,80)... (rows 18 apart; 48 and 70 are between cells), then
+  (213,26)... Click an item to pick it up, click a place to put it; armour can't be put on in a
+  fight ("CANNOT USE THIS ITEM"); a wrong place says "ILLEGAL PLACEMENT" and keeps it on the
+  pointer.
 - **A spell's description box** (2026-11-02): U, a member's portrait (Cermak 66,108), then
   right-click a spell's icon (from 177,59, about 14 apart). Seven lines fill the box: an eighth
   spills over its edge, so check a lengthened text in the game. A new wizard spell is known by a
@@ -382,8 +399,6 @@ palette copy changing (every 30 s where the game cycles colours). The arena gate
   `shot.sh`'s x 230-319, y 0-199, scaled 2x (`convert -crop 90x200+230+0 +repage -scale 200%`).
   A class can be tried in memory: the sheet's class byte (`SHEET_CLASSES`, 13 a ranger) and its
   flags (0200h a ranger, 0040h a gladiator); never save after.
-- **The combat log panel**: `sh panel.sh hide|show` checks the panel's pixel before pressing L
-  (L alone toggles, and can leave it the wrong way round).
 - **The Loader's own window for a screenshot** (2026-11-07, `docs/dicelog.png`): the container's
   Python has no tkinter; `apt-get install -y python3-tk` gives it to `/usr/bin/python3.12`, which
   runs `python3.12 -m dsloader view` from `obsidian-edition/`. Stop start.sh's text dice log first
@@ -393,14 +408,23 @@ palette copy changing (every 30 s where the game cycles colours). The arena gate
   windows overlap there: `xdotool windowraise` the one to click. DOSBox keeps the mouse once it has
   it: Ctrl+F10 (`xdotool key --window DOSBOX ctrl+F10`) lets it go, then `xdotool windowfocus` the
   Loader before typing (keys typed with DOSBox focused reach the game: the letters toggled its
-  animations). `import -window` grabs the window at its size.
-- **The combat log panel in tests** (2026-11-06): `panel.sh` reads "hidden" when the panel is
-  expanded (its pixel check is for the small panel): look at a shot, and press L yourself. The
-  expanded panel's filter chips are at y 87 (All 148, Party about 175); a filter chosen stays
-  (Party leaves out the foes' attacks). A party member's figure under the panel can't be clicked
-  (its END menu): hide the panel first.
+  animations). `import -window` grabs the window at its size. The opening show was over within
+  about 15 s of the seal (2026-11-07): attach the window before START GAME to have the default
+  party's opening lines and the show's rounds in its log. For a picture of the default **Game
+  window** box (Triple), pick it in the box (the list opens below it; Triple is the third line):
+  that writes `window_scale` 3 to settings.json, so set it back to 1 afterwards (`launch.save_settings`)
+  or the next start.sh run's checks fail. The status line then says "from the next time you start
+  the game" in place of "Connected to DOSBox".
+- **The practice program** (`tests/make_fake_party.py`, for `docs/viewer.png`): run `dosbox
+  FAKEPTY.COM` in a scratch folder, then the window; Sadira loses 1 HP a second and her byte wraps
+  past 0 (133/30 two minutes in), so search `sadira`, pick the hit and Assign within about 15 s of
+  starting it. Reconnect picks up a restarted DOSBox.
 - **Picking a pocket:** U, the thief's portrait (Cilla 108,108), the purse under the spell counts
-  (157,145, a slow press), then the talk pointer on the person.
+  (157,145, a slow press: the USE screen closes), then the talk pointer on the person. The result
+  is a narration box with a Continue line (click it, 30,157). From `pens-after-scar` (2026-11-07,
+  logs/2026-11-07-release-check.md): walkto (1816,408), (1704,408), (1592,440), `viewto.py 1592
+  470`, and Kurzak stands just south of the party (thing 47 at 1592,504; his figure at 190,118).
+  A failure the thief slips away from can be tried again at once.
 
 ## 4. Fights
 
@@ -432,10 +456,12 @@ palette copy changing (every 30 s where the game cycles colours). The arena gate
    and fights hand to hand; with Move 0 the END menu opens; in Attack mode a far target showed the
    red "can't" pointer and the turn passed. A shot test needs a clear line, a target in range, and
    a readied missile weapon with ammunition in the missile slot.
-8. **Never `pkill -f` or `pgrep -f | kill` a pattern your own command line contains**: it kills
-   the shell running it (exit 144, twice on 2026-11-01, the second time with this rule already
-   written: run the kill as its own command, by pid, and nothing else in it). Kill by pid, found by a pattern your command line can't match (`pgrep -f "sh [l]eavearena.sh"`), then `kill PID` in a command of its own. And
-   stopping a background task can leave its children running: check with pgrep afterwards.
+8. **Never `pkill -f` or `pgrep -f | kill` a pattern your own command line contains**: it kills the
+   shell running it (exit 144, twice on 2026-11-01, the second time with this rule already written:
+   run the kill as its own command, by pid, and nothing else in it). Kill by pid, found by a pattern
+   your command line can't match (`pgrep -f "sh [l]eavearena.sh"`), then `kill PID` in a command of
+   its own. And stopping a background task can leave its children running: check with pgrep
+   afterwards.
 9. **Never cut steps out of a bigger script with sed**: its header may restart the whole game.
    Use the small tools.
 10. **Every step gets its own `timeout`**; long runs go in the background and are followed through
@@ -456,7 +482,8 @@ palette copy changing (every 30 s where the game cycles colours). The arena gate
   fight_on and the dice log every 10 ms).
 - **Seeing foes attack, without killing them** (2026-11-05, logs/2026-11-05-champions.md): not
   `fightout.sh` (it puts every foe at 1 HP); pass the party's turns instead (rule 11), stopping
-  once the dice log has N more "attacks NAME" lines (`passmiss.sh` does it for a miss). Between
+  once the dice log has N more "attacks NAME" lines (`passmiss.sh` does it for a miss, then drags
+  the view and takes a shot). Between
   waves click the messages and walk about in the arena (staying brings more fights). It can lose
   the whole party ("YOUR PARTY HAS BEEN DEFEATED"; a level-1 party loses to the champions): have
   a save to go back to.
@@ -472,21 +499,23 @@ palette copy changing (every 30 s where the game cycles colours). The arena gate
   real hide (Cilla, thief level raised to 12 in memory: hides at 95) and a real Invisibility. The
   pale bits behind a walking figure are the mod's dust (dust.py), not a smear: solid figures leave
   them too, and a full redraw clears them; an END menu left up keeps them on screen. Pace:
-  `walktime.py N X Y [DIR]` (about 0.07 s a step, see-through or not). Hidden, Tab + Return walks
-  the thief up and backstabs; it is drawn solid from the blow on.
-- **A hidden walk to Move 0, and the turn's end** (2026-11-06, logs/2026-11-06-solid-frames-turn-end.md):
-  `walkprobe.py N X Y DIR [SECS]` clicks, then keeps a window grab with N's position, whose turn and
-  DSCLOG's STEALTH word (header +204) as often as it can (about 50 a second). **Move running out
-  doesn't pass the turn**: the walk stops and END <NAME>'S MOVE opens and waits. After E, STEALTH
-  went to 0 within one Loader pass, but the figure kept its see-through picture through the
-  enemies' turns (about 1.4 s) and was drawn solid when a party member's turn began: the view is
-  drawn again from the map's main loop, which doesn't run in the enemies' turns. The 2026-11-05
-  "two solid frames" weren't seen in 38 more hidden steps (beside Gerakis and K'ratchek too):
-  closed as not reproducible after the vector fix. **Since GHOST_UNION** (logs/2026-11-06-solid-at-turn-end.md)
-  the figure is solid about 0.1 s after the hiding ends, in the next enemy's turn, if that enemy
-  steps or swings; one that does nothing redraws nothing, and the old wait applies. A turn passed
-  can come straight back (her END TURN was the round's last but one; round 2 opened with her and
-  a new hide roll): check the round order in the dice log.
+  `walktime.py N X Y [DIR]` (about 0.07 s a step, see-through or not; for frames, crops of
+  `import` grabs, 120,50 70x70, tiled with montage). Cilla's hide, with her thief level raised,
+  lands often at 95 (a d100 of 94 hid her; 2026-11-06). Hidden, Tab + Return walks the thief up
+  and backstabs; it is drawn solid from the blow on.
+- **A hidden walk to Move 0, and the turn's end** (2026-11-06,
+  logs/2026-11-06-solid-frames-turn-end.md): `walkprobe.py N X Y DIR [SECS]` clicks, then keeps a
+  window grab with N's position, whose turn and DSCLOG's STEALTH word (header +204) as often as it
+  can (about 50 a second). **Move running out doesn't pass the turn**: the walk stops and END
+  <NAME>'S MOVE opens and waits. After E, STEALTH went to 0 within one Loader pass, but the figure
+  kept its see-through picture through the enemies' turns (about 1.4 s) and was drawn solid when a
+  party member's turn began: the view is drawn again from the map's main loop, which doesn't run in
+  the enemies' turns. The 2026-11-05 "two solid frames" weren't seen in 38 more hidden steps (beside
+  Gerakis and K'ratchek too): closed as not reproducible after the vector fix. **Since GHOST_UNION**
+  (logs/2026-11-06-solid-at-turn-end.md) the figure is solid about 0.1 s after the hiding ends, in
+  the next enemy's turn, if that enemy steps or swings; one that does nothing redraws nothing, and
+  the old wait applies. A turn passed can come straight back (her END TURN was the round's last but
+  one; round 2 opened with her and a new hide roll): check the round order in the dice log.
 - **memberpos.py can miss** a figure in a crowd: about 12 pixels higher
   opened the END menu; check a shot first.
 
@@ -500,50 +529,46 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   into the arena (488, 424) and starts the fight on its own once some game time has passed:
   keep clicking south (each click passes time) until `fight_on 1`, about 8 clicks.
 - Then `sh arenawaves.sh`: every wave fought with fightout.sh, the messages between, and the
-  YES/NO question answered N; and at once `sh leavearena.sh`: the view dragged north until the
-  ground inside the wall (488, 232) shows, a click there (the party finds its own way in), then
-  the gate strip, until the region is the pens (29h). Run them together:
-  `(sh arenawaves.sh && sh leavearena.sh)`, in the background, followed with a Monitor.
+  YES/NO question answered N; and at once `sh leavearena.sh` (out of the arena: below). Run them
+  together: `(sh arenawaves.sh && sh leavearena.sh)`, in the background, followed with a Monitor.
 - **The first bout can fail to start**, now and then (2026-11-02: topartyfight.sh ended "NO
   FIGHT" at (488, 232), and 60-odd more clicks south and walks between (488, 232) and (488, 264)
   (the bone wall stops the party at 264) over several game minutes didn't start it; two later
   fresh games that day started at once). The bout is GPL 2's entry at 1 (case gnum 3 = 1, "Step
   forward" sets it), run by MAS 42's code-111 trigger on object 2059 at (498, 341), beyond the
   bone wall, and it waits on flag 5 (MAS 42 sets it on loading); the flags can't be read in the
-  arena. Why it sometimes doesn't is open. Next time: restart (`start.sh`) and try again before
-  digging.
-- **Resting** (the user, 2026-11-05): the fire room off the east passage, its door at square
-  (115, 53), map (1848, 856), opened with the look pointer; in it a small fire ring among
-  haystacks (map about 1931, 856): the **look pointer on the ring** rests ("THE PARTY RESTS",
-  hit points full). After two or three rests and a step, Kurzak calls ("Gerakis! Get up here!
-  It's your turn in the arena!"). **Answer the call quickly**: twice the party walked to Kurzak's
-  stop and on toward the gate (1816, 408) and he ran out of patience ("That's it! Time's run
-  out!"), then the alarm and a fight with every guard. **The alarm fight on purpose**:
-  `toalarm.sh` (loads `pens-after-scar`, records the sound, raises Cilla's thief level in memory,
-  walks to the fire room), then `restalarm.sh` (rests, then waits Kurzak out); about 15 minutes in
-  all, in the background with a Monitor. **toalarm.sh can stop short at (1832, 856)**, outside the
-fire room (2026-11-06: its last walkto said NO PATH FROM HERE with the door open). **A look click on
-an open door closes it** (the closed door is the gold pole; the user caught a close taken for an
-open): check a shot before clicking a door. With the door open, the walk arrow on the room's floor
-(screen 240,160, camera 1656,720) took the party in. **The pointer must be the eye before restalarm.sh**: on
-  2026-11-06 it was the sword, no rest came ("rests: 0") and the click on the ring fell on Cilla
-  (Gerakis attacked her out of a fight). `toarena.sh` answers the call instead (up to the arena).
+  arena. Why it sometimes doesn't is open. **When it doesn't start, restart (`start.sh`) and try
+  again before digging.**
+- **Resting** (the user, 2026-11-05): the fire room off the east passage, its door at square (115,
+  53), map (1848, 856), opened with the look pointer; in it a small fire ring among haystacks (map
+  about 1931, 856): the **look pointer on the ring** rests ("THE PARTY RESTS", hit points full; the
+  game's rest, 8066Dh; the east hall's object 2264 at 1908, 675 is a haystack, 137:F5h, not the
+  ring). After two or three rests and a step, Kurzak calls ("Gerakis! Get up here! It's your turn in
+  the arena!"). **Answer the call quickly**: twice the party walked to Kurzak's stop and on toward
+  the gate (1816, 408) and he ran out of patience ("That's it! Time's run out!"), then the alarm and
+  a fight with every guard. **The alarm fight on purpose**: `toalarm.sh` (loads `pens-after-scar`,
+  records the sound, raises Cilla's thief level in memory, walks to the fire room), then
+  `restalarm.sh` (rests, then waits Kurzak out); about 15 minutes in all, in the background with a
+  Monitor. **toalarm.sh can stop short at (1832, 856)**, outside the fire room (2026-11-06: its last
+  walkto said NO PATH FROM HERE with the door open). **A look click on an open door closes it** (the
+  closed door is the gold pole; the user caught a close taken for an open): check a shot before
+  clicking a door. With the door open, the walk arrow on the room's floor (screen 240,160, camera
+  1656,720) took the party in. **The pointer must be the eye before restalarm.sh**: on 2026-11-06 it
+  was the sword, no rest came ("rests: 0") and the click on the ring fell on Cilla (Gerakis attacked
+  her out of a fight). In a fresh container (2026-11-06) `toalarm.sh` then `restalarm.sh` worked
+first time, with the eye set by two right-clicks on bare floor (a red eye with a bar over floor
+is the eye). `toarena.sh` answers the call instead (up to the arena).
 - **Into the arena from the pens** (the user, 2026-11-05): after the call, Kurzak's entryway
   (`route.py 1592 584`), his stop (1592, 520), north to (1592, 440), east along the corridor at
   y 408 (walkto in two steps: further north, y 376, counts as escaping and sets off the alarm)
   to (1816, 408), then a click into the gap in the brick wall just south of it (1816, 440):
-  "Enter the arena?" **Y**. In the arena: south from the gate (488, 200) with clicks (each passes
-  time), through the bone wall's gap (504, 360), and on south onto the stone platform until the
-  bone gate closes behind the party (488, 408-424): then the Announcer and the bout.
-- **Staying in the arena after "Go back to the pens"** for a few minutes brings "If you don't want
-  to return to the pens, then you must want another fight!" and a wave.
-- **Setting the arena's visit count**: in the pens the game's numbers have a place in memory;
-  number 12 is the count (4: the next trip is Scar's; 5 and up the everyday speech, or the
-  champions' after Scar's death in the arena). Write it at the far pointer DS:1356h + 2 x 12.
+  "Enter the arena?" **Y** (before Kurzak's call the gap asks nothing). In the arena: south from
+  the gate (488, 200) with clicks (each passes time), through the bone wall's gap (504, 360), and
+  on south onto the stone platform until the bone gate closes behind the party (488, 408-424):
+  then the Announcer and the bout.
 - **The pens' main door** (objects 2145-2146 at 1571-1611, 559: the entryway Kurzak opens) has
   the "Take me to the Arena! I want a fight!" menu (137:14CEh), but open it answers nothing to
-  the look pointer. **Resting** is at a fire ring (the game's rest, 8066Dh); the east hall's
-  object 2264 (1908, 675) is a haystack (137:F5h), not the fire ring.
+  the look pointer.
 - **Kalzith** (2026-11-05): from `pens-after-scar`, walkto (1816,408), (1704,408), (1592,440), then
   clicks at screen (200,178) (camera 1392,384) take the party through Kurzak's entryway past him
   (route.py wouldn't: he stands in front of it); then `route.py 1560 880` reaches Kalzith's pen
@@ -555,52 +580,41 @@ open): check a shot before clicking a door. With the door open, the walk arrow o
 **The arena (region 2Ah)**, as of 2026-11-01:
 - Several waves (Sligs and a Screamer Beetle; Sand Howlers and a Tohr-kreen; ...), then "The
   crowd is awed...", the Announcer, and "Yell something back at the Announcer?" (N), then
-  "Attention gladiators: Go back to the pens to heal your wounds." The game clock barely moves
-  while the party stands; if it doesn't leave in time: "The patience of the citizens of Draj is
-  not infinite. Since you will not leave, you must fight!"
-- **The way out** (an open problem until the fourth run, below: `leavearena.sh`). MAS 42's move triggers: squares 5-7 at rows 30-32 run script 3
-  at 6B4h ("Gladiators escaping! Guards! Sound the alarms!": avoid); a strip at squares 28-32,
-  row 11 runs script 3 at 73Eh, which (with flag 11 set and local 32 at 0) teleports the party to
-  the pens (region 29h, 113, 27). Flag 11 is set by script 2 at BB8h (its handler at B61h is
-  called from script 4 at B23h). In the 2026-11-01 run the party walked straight north from
-  (488, 424) and stopped at the bone wall (488, 328: NO PATH FROM HERE), and the arena ran out of
-  patience before the way out was found. Next time, before the fight: note where the party
-  stands when the arena loads (it comes in by the gate, and the opening's "step forward" walks it
-  south from there), and find that strip on screen (squares are 16 map units: x 448-527,
-  y 176-191) before the "Go back to the pens" line starts the clock.
-- The cluebook (#13): "Follow Kurzak to and from the pens when fighting in the Arena."
-- **After a repeat fight the arena may only say "Go back to the pens"**, with no YES/NO question:
-  arenawaves.sh stops at either.
-- **Staying sends another fight** each time: "Excellent! These gladiators wish to fight again! We
-  shall see how they fare!" (Silt Runners, a Screamer Beetle...), then "Go back to the pens" again:
-  the arena repeats until the party leaves. Each fight can bring a level-up screen.
-- **The clock after "Go back to the pens" is short**: a few walking clicks, then "Since you will
-  not leave, you must fight!" and another fight (Silt Runners...). Leave at once, and don't walk
-  south or east first: the 2026-11-01 run lost its time getting the view to the wall.
-- **Out of the arena (done 2026-11-01, the fourth run):** after the last fight, drag the view
-  north (scroll.py) until the ground inside the wall (488, 232) shows, click it, and the party
-  walks round into it by itself; then click the gate strip (488, 184): "This corridor leads down
-  to the slavepens. Do you wish to continue? (Answer Yes or No)": **Y** (N, as for the Announcer,
+  "Attention gladiators: Go back to the pens to heal your wounds." After a repeat fight it may
+  say only that, with no YES/NO question (arenawaves.sh stops at either).
+- **Staying sends another fight, every time**: the clock after "Go back to the pens" is short (a
+  few walking clicks; it barely moves while the party stands), then "Since you will not leave, you
+  must fight!", "If you don't want to return to the pens, then you must want another fight!" or
+  "Excellent! These gladiators wish to fight again!" and a wave (Silt Runners, a Screamer
+  Beetle...), each able to bring a level-up screen, and "Go back to the pens" again, until the
+  party leaves. Leave at once, and don't walk south or east first (the 2026-11-01 run lost its
+  time getting the view to the wall).
+- **Out of the arena** (done 2026-11-01, the fourth run; `leavearena.sh` does all of it): after the
+  last fight, drag the view north (scroll.py) until the ground inside the wall (488, 232) shows,
+  click it, and the party walks round into it by itself (the user's advice, 2026-11-01: if the
+  party stops at the stone wall, click inside the wall's boundary; don't stay outside the walls,
+  as more monsters are sent); then click the gate strip (488, 184): "This corridor leads down to
+  the slavepens. Do you wish to continue? (Answer Yes or No)": **Y** (N, as for the Announcer,
   turns it down, and the question comes back only on stepping off the strip and on again). The
-  party comes out in the pens (region 29h) at (1816, 440). `leavearena.sh` does all of it.
-  (The user's advice, 2026-11-01: if the party stops at the stone wall, click inside the wall's
-  boundary; don't stay outside the walls, as more monsters are sent.)
-
-**Map pictures**: `python3 mapshot.py OUT.png [W H]` steps the view across the region and pastes
-the captures at their cameras: one map unit a pixel, so a point's pixel is its map position.
-Keep a region picture worth having in `playtest/maps/` (none is there yet).
+  party comes out in the pens (region 29h) at (1816, 440). In the scripts (MAS 42's move
+  triggers): the gate strip, squares 28-32 at row 11 (map x 448-527, y 176-191), runs script 3 at
+  73Eh, which (with flag 11 set, by script 2 at BB8h, and local 32 at 0) takes the party to the
+  pens (region 29h, 113, 27); squares 5-7 at rows 30-32 run script 3 at 6B4h ("Gladiators
+  escaping! Guards! Sound the alarms!": avoid them).
+- The cluebook (#13): "Follow Kurzak to and from the pens when fighting in the Arena."
 
 **The slave pens (region 29h)**: through the gate the party comes out at (1816, 440) and Kurzak
 meets it ("These are the slavepens. I'm Kurzak, leader of the guards. Follow me. I'm here to lead
 you to your cell."; his menu: help me escape or I'll kill you, about yourself, the half-giant,
-escaped slaves, the exits, Goodbye: "Get moving! I gotta get back to work."). Saved there:
-`pens-after-arena`. The way to the grate, from the scripts and the region file (2026-11-01):
+escaped slaves, the exits, Goodbye: "Get moving! I gotta get back to work."). `pens-after-arena`
+was saved a little further on, in the corridor at (1672, 344) with Kurzak beside the party
+(checked by loading it, 2026-11-07). The way to the grate, from the scripts and the region file (2026-11-01):
 - The stalker pen nearest the north: its door, objects 2163/2164 at (256, 864-896), is barred.
   Using it says "The door is locked. It appears quite sturdy."; attacking it (138:121h) rolls
   RAND(30) against the attacker's STR to bash it open, and the Mountain Stalker (151, at 187,856)
   then hunts the party. A second stalker pen is further south (door 2157/2158 at 255,1087-1119).
-- **From the save, follow Kurzak**: the party starts shut in the corridor where Kurzak met it
-  (1352-1400, 344): a gate at squares (81, 20-21), map (1304, 320-351), the gold post west of it,
+- **From the save, follow Kurzak**: the party starts in the corridor at (1672, 344), shut in on the
+  west (the corridor runs on to 1352-1400, 344): a gate at squares (81, 20-21), map (1304, 320-351), the gold post west of it,
   is closed (live grid 192/193), clicking it does nothing, and no script opens those squares.
   Kurzak (object 29) walks his route a waypoint at a time (141 at 0h: squares 99,25 then 99,31...),
   each waiting for the party within 4 squares: `python3 follow.py 29` keeps walking the party
@@ -621,13 +635,8 @@ escaped slaves, the exits, Goodbye: "Get moving! I gotta get back to work."). Sa
   corridor (rows 91-95) through the door at (93, 94), north up columns 34-35 to the south hall
   (rows 66-70), and north at columns 17-20 to the stalker pen's anteroom (its door 16, 54-56).
   On the way, two slaves whisper "Is it time to break out yet?" / "Shh, not yet!".
-- **Opening the stalker pen's door sets off the alarm** (the user, 2026-11-01): plan for it (the guards come)
-  or find another way to the button.
-- On the recompiled program (2026-11-01) the same: the look pointer on the doorway's drawing
-  (square 95,27, above the door square) opens the mod's Look box "Door" (INFO only); the arrow,
-  the look click and the sword on the door square do nothing and log nothing; the sword on
-  Kurzak (object 29, then at square 99,31) does nothing either: no fight starts from a click on a
-  friendly figure.
+- **Opening the stalker pen's door sets off the alarm** (the user, 2026-11-01): plan for it (the
+  guards come) or find another way to the button.
 - Button 1281 at (139, 748), the pen's north wall: used from within 4 squares (137:1AE8h, else
   "is too far away to press the button") it sets flag 518 and "hears a click as the secret door to
   the west opens". (Button 1280 at 1335,798 opens another door, 81-82,53-54, only once the monster
@@ -641,16 +650,17 @@ escaped slaves, the exits, Goodbye: "Get moving! I gotta get back to work."). Sa
 - The pens' cell doors (2141-2164) have USE (script 138) and ATTACK handlers ("This door is too
   strong to bash open" for the cells').
 
-- **Pehtucl's chest** (2026-11-07, logs/2026-11-07-pehtucls-chest.md, logs/2026-11-07-review-fixes.md):
-  `saves/pens-new-chest` is a new game with the chest's USE command (older saves lack it), but its
-  chest was made before the shut type: run `shut.py` after loading, or the game opens it whatever
-  the script says. To reach it: `teleport.py 200 1432 40 1322`, walkto (216, 1440), then (184, 1400),
-  a square west of it (from (120, 1464) the script says "You must be next to the chest"; standing on
-  it, a figure takes the click); `pointer.py look`, a slow press on it (163, 70), the look box's third
-  button (236, 101) (`chestuse.sh`). `thief.py N LEVEL` / `thief.py N off` makes a thief in memory. The chest's look box: first button closes,
-  second **moves the chest**, third uses it. The game's trap objects: +0Fh is the trap's
-  descriptor (d6, reach, damage kind), DSUN.EXE 80A11h. A new game to the pens in the background:
-  `start.sh`, `topartyfight.sh`, `arenawaves.sh`, `leavearena.sh` (about 30 minutes).
+- **Pehtucl's chest** (2026-11-07, logs/2026-11-07-pehtucls-chest.md,
+  logs/2026-11-07-review-fixes.md): `saves/pens-new-chest` is a new game with the chest's USE
+  command (older saves lack it), but its chest was made before the shut type: run `shut.py` after
+  loading, or the game opens it whatever the script says. To reach it: `teleport.py 200 1432 40
+  1322`, walkto (216, 1440), then (184, 1400), a square west of it (from (120, 1464) the script says
+  "You must be next to the chest"; standing on it, a figure takes the click); `pointer.py look`, a
+  slow press on it (163, 70), the look box's third button (236, 101) (`chestuse.sh`). `thief.py N
+  LEVEL` / `thief.py N off` makes a thief in memory. The chest's look box: first button closes,
+  second **moves the chest**, third uses it. The game's trap objects: +0Fh is the trap's descriptor
+  (d6, reach, damage kind), DSUN.EXE 80A11h. A new game to the pens in the background: `start.sh`,
+  `topartyfight.sh`, `arenawaves.sh`, `leavearena.sh` (about 30 minutes).
 
 From the cluebook's map: #11 the stalker pen (break the door,
 kill the mountain stalker, push the button on the north wall: a secret door to the northwest

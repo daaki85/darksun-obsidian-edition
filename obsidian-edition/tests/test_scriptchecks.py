@@ -96,16 +96,16 @@ class LoadTests(unittest.TestCase):
                     f.write(b"the second, longer")
                 self.assertEqual(scriptchecks.load(path), {2: "check"})
             with mock.patch.object(gpl, "load_scripts", side_effect=gpl.ScriptError("bad")):
-                os.utime(path, ns=(1, 1))
+                os.utime(path, (1_000_000, 1_000_000))  # (whole seconds: Windows keeps 100 ns steps)
                 self.assertEqual(scriptchecks.load(path), {})
             with mock.patch.object(gpl, "load_scripts", side_effect=OSError("held")):
-                os.utime(path, ns=(2, 2))
+                os.utime(path, (2_000_000, 2_000_000))
                 self.assertEqual(scriptchecks.load(path), {})
             with mock.patch.object(gpl, "load_scripts", return_value=()), \
                     mock.patch.object(scriptchecks, "find", return_value={3: "check"}):
                 self.assertEqual(scriptchecks.load(path), {3: "check"})  # (a held file not kept)
             with mock.patch.object(gpl, "load_scripts", side_effect=gff.GffError("cut short")):
-                os.utime(path, ns=(3, 3))
+                os.utime(path, (3_000_000, 3_000_000))
                 self.assertEqual(scriptchecks.load(path), {})
                 self.assertEqual(scriptchecks.load(path), {})  # (a bad file: no exception, kept)
         with mock.patch.object(scriptchecks, "game_scripts", return_value=""):

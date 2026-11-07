@@ -18,6 +18,7 @@ import sys
 import time
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk
+from tkinter import font as tkfont
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
 from . import __version__, art, combatlog, dicelog, freeze, game, kits, launch, namedsaves, partyview, rings, spellbook, theme, values
@@ -72,9 +73,11 @@ class Viewer:
         # (Tk shows an image only while it's referenced: one for each portrait at each size, shared
         # by every line it is shown on)
         self._images: Dict[Tuple[int, int], tk.PhotoImage] = {}
+        self._widest: Tuple[str, str] = ("", "")  # the All fields table's longest label and value
 
         root.title(f"{theme.NAME} {__version__} - {layout.game or 'party viewer'}")
         root.geometry("1320x780")
+        root.minsize(1080, 640)  # (smaller, the right-hand tabs and rows of buttons lose their ends)
         theme.apply(root)
         root.protocol("WM_DELETE_WINDOW", self.close)
         self._build()
@@ -253,7 +256,7 @@ class Viewer:
                   if tabs.select() == str(spells) and not self._spells_shown else None)
         self._spells_shown = False
 
-        tools = ttk.Frame(tabs, padding=6)
+        self.tools_tab = tools = ttk.Frame(tabs, padding=6)
         tabs.add(tools, text="Memory tools", underline=0)
 
         locate = ttk.LabelFrame(tools, text="Locate by name (or hex:14 16 12 for bytes)", padding=6)
@@ -296,8 +299,13 @@ class Viewer:
         # (a line of its own: the decoded values are long)
         self.inspect = tk.StringVar(value="Click a byte to decode it.")
         ttk.Label(hexframe, textvariable=self.inspect, font="TkFixedFont").pack(anchor="w", pady=(4, 0))
-        self.hex = tk.Text(hexframe, font="TkFixedFont", height=20, wrap="none")
+        self.hex = tk.Text(hexframe, font="TkFixedFont", height=20, width=60, wrap="none")
         theme.style_text(self.hex)
+        # (a line is 76 characters: in a narrow pane it scrolls sideways rather than losing its end; its
+        # width asked for is less, so the divider is placed by the rows of buttons above)
+        across = ttk.Scrollbar(hexframe, orient="horizontal", command=self.hex.xview)
+        self.hex.configure(xscrollcommand=across.set)
+        across.pack(side="bottom", fill="x")
         self.hex.pack(fill="both", expand=True, pady=(6, 0))
         # underlined as well as coloured, so a change doesn't depend on seeing the colour
         self.hex.tag_configure("changed", background=theme.AMBER, foreground=theme.SHADOW, underline=True)
@@ -326,7 +334,7 @@ class Viewer:
             self.sections[key] = part
             return part.body
 
-        note = ttk.Label(options, text="Everything here applies in games started from the Loader. A switch that "
+        note = ttk.Label(options, text="Everything here applies in games started from the Loader or its .bat files. A switch that "
                          "says \"from the next start\" waits until the game is started again.", wraplength=460)
         note.pack(anchor="w", pady=(0, 8))
         options.bind("<Configure>", lambda e: note.configure(wraplength=max(200, e.width - 60)), add="+")
@@ -346,11 +354,12 @@ class Viewer:
                             command=self._options_changed).pack(anchor="w", padx=(20, 0))
         # the game's Look box, on a monster in a fight: what hurts it, then all of it in a window
         self.monster_info = tk.BooleanVar(value=bool(settings.get("monster_info", True)))
-        ttk.Checkbutton(in_game, text="Describe monsters when you Look at them in a fight (defences, then a window)",
+        ttk.Checkbutton(in_game, text="Describe monsters when you Look at them in a fight (hit points, AC, THAC0 and defences, then a window)",
                         variable=self.monster_info, command=self._options_changed).pack(anchor="w", pady=(4, 0))
         # names floating over figures on the map for a moment (labels.py)
         self.floating_names = tk.BooleanVar(value=bool(settings.get("floating_names", True)))
-        ttk.Checkbutton(in_game, text="Float a spell's name over its caster, and \"Miss\" over whoever an attack missed",
+        ttk.Checkbutton(in_game, text="Float a spell's name over its caster, \"Miss\" over whoever an attack missed, "
+                        "and a used charge (\"Armor: 7 left\") over its owner",
                         variable=self.floating_names, command=self._options_changed).pack(anchor="w")
         rules = section("rules", "Rule changes")
         # in three groups, as FEATURES.md has them
@@ -508,7 +517,7 @@ class Viewer:
                         "cloaks, boots, belts)", variable=self.show_gear,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.show_shadows = tk.BooleanVar(value=bool(settings.get("shadows", True)))
-        ttk.Checkbutton(looks, text="Shadows under the figures (see-through, on the floor)",
+        ttk.Checkbutton(looks, text="Shadows under the figures (soft, on the floor)",
                         variable=self.show_shadows, command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.show_dust = tk.BooleanVar(value=bool(settings.get("dust", True)))
         ttk.Checkbutton(looks, text="Dust raised behind the feet of anyone walking on sand or dirt",
@@ -568,8 +577,8 @@ class Viewer:
             ttk.Radiobutton(pace, text=text, value=value, variable=self.game_speed,
                             command=self._speed_chosen).pack(anchor="w")
         self.steady_pace = tk.BooleanVar(value=settings.get("steady_pace", True) is not False)
-        ttk.Checkbutton(pace, text="Steady pace: walking at full speed on the map whatever is drawn: when a picture takes too "
-                        "long, the next is skipped rather than the party slowing down", variable=self.steady_pace,
+        ttk.Checkbutton(pace, text="Steady pace: walking at full speed on the map whatever is drawn (when a picture takes too "
+                        "long, the next is skipped rather than the party slowing down)", variable=self.steady_pace,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         # Wake of the Ravager, for the 6th-level priest spells' icons and pictures (wotrart.py)
         ravager = section("ravager", "Wake of the Ravager (optional)")
@@ -581,7 +590,7 @@ class Viewer:
         ttk.Button(ravager, text="Choose its folder...", command=self.choose_wotr).pack(anchor="w", pady=(4, 0))
         # the saves, a second time under their names in the game (namedsaves.py)
         kept = section("saves", "Saves")
-        about = ttk.Label(kept, text="Every save is copied, as the game writes it, into the Loader's \"Named "
+        about = ttk.Label(kept, text="While this window is open, every save is copied, as the game writes it, into the Loader's \"Named "
                           "saves\" folder under the name it has in the game (\"Page 2 slot 05 - Before Scar's "
                           "battle.SAV\").", style="Status.TLabel", wraplength=460, justify="left")
         about.pack(anchor="w")
@@ -695,7 +704,7 @@ class Viewer:
         self.game_speed.set(str(launch.DEFAULT_SPEED))
         self._options_changed()
         self._speed_chosen()
-        self.status.set("Options set back to their defaults (those that wait for the next start, from then).")
+        self.status.set("Options set back to their defaults (a switch marked \"from the next start\" applies when the game is next started).")
 
     def _sections_changed(self) -> None:
         """Remember which of the Options tab's sections are open."""
@@ -734,19 +743,25 @@ class Viewer:
         self.banner.redraw()
         self._fit_party()
 
-    def _fit_party(self) -> None:
-        """Columns wide enough for the text size, and the divider moved to fit them."""
-        field, slot = round(150 * theme.scale()), round(118 * theme.scale())
+    def _fit_party(self, divider: bool = True) -> None:
+        """Columns wide enough for the text size and the longest label and value, and (DIVIDER)
+        the divider moved to fit them, short of squeezing the right-hand tabs' buttons."""
+        font = tkfont.nametofont("TkDefaultFont")
+        field = max(round(150 * theme.scale()), font.measure(self._widest[0]) + 16)
+        slot = max(round(110 * theme.scale()), font.measure(self._widest[1]) + 16)
         self.table.column("field", width=field, minwidth=field, stretch=False)
         for i in range(self.layout.count):
             self.table.column(f"slot{i}", width=slot, minwidth=slot)
+        if not divider:  # (the columns widened as the table fills: the divider left where it is)
+            return
         # at large text sizes the table scrolls sideways rather than squeezing the logs
         wanted = field + slot * self.layout.count + 24
         width = self.panes.winfo_width()
         if width < 200:  # not laid out yet (a slow start): placing the divider now would hide the party
             self.root.after(200, self._fit_party)
             return
-        place = min(wanted, int(width * 0.55))
+        right = self.tools_tab.winfo_reqwidth() + 16  # (the widest rows of buttons, the memory tools')
+        place = min(wanted, int(width * 0.55), max(width - right, width // 3))
         if self.panes.sashpos(0, place) < place // 2:  # the panes weren't ready after all: again soon
             self.root.after(200, self._fit_party)
 
@@ -1600,6 +1615,12 @@ class Viewer:
             existing = [self.table.insert("", "end") for _ in rows]
         for item, (label, cells) in zip(existing, rows):
             self.table.item(item, values=[label] + cells)
+        # the columns widened to the longest label and value shown (never narrowed while it runs)
+        widest = (max([label for label, _ in rows] + [self._widest[0]], key=len),
+                  max([c for _, cells in rows for c in cells] + [self._widest[1]], key=len))
+        if widest != self._widest:
+            self._widest = widest
+            self._fit_party(divider=False)
 
     def _refresh_cards(self, slots) -> None:
         """The Characters tab: each slot's card, with its condition and current AC."""

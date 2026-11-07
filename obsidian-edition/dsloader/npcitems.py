@@ -146,7 +146,7 @@ def types_ready(gd: GameData, tsr_hdr) -> bool:
 def _new_list(gd: GameData, it, creature: int, lists) -> Optional[int]:
     """An empty item list for the creature, from the game's free objects, in its last list word."""
     free = it.word(ring.FREE_THINGS)
-    if free >= ring.THING_COUNT or game.NO_ITEM not in lists:
+    if free >= ring.THING_COUNT or game.NO_ITEM not in lists or not it.spare_things():  # (ring.RESERVE)
         return None
     ds = gd.ds * 16
     gd.guest.write(ds + ring.FREE_THINGS, struct.pack("<H", it.thing(free)[1] & 0xFFFF))
@@ -170,7 +170,7 @@ def add_to(gd: GameData, creature: int, rec: bytes, slot: Optional[int] = None) 
     used = {data[game.ITEM_SLOT] for t in lists for _, data in it.chain(t, inside=False)}
     cell = slot if slot is not None and slot not in used else pickpocket.free_cell(gd, it, creature)
     item = it.word(ring.FREE_ITEMS)
-    if cell is None or item >= game.NO_ITEM:
+    if cell is None or item >= game.NO_ITEM or not it.spare_items():  # (the game's own left some: ring.RESERVE)
         return False
     if creature < game.PARTY_SIZE:
         thing = pickpocket.party_list(gd, it, creature, cell, gd.item_type_record(rec)

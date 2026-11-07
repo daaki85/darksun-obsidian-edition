@@ -162,7 +162,7 @@ def party_list(gd: GameData, it: ring.Items, member: int, slot: int, typ: bytes 
     if thing != game.NO_ITEM:
         return None
     free = it.word(ring.FREE_THINGS)
-    if free >= ring.THING_COUNT:
+    if free >= ring.THING_COUNT or not it.spare_things():  # (the game's own left some: ring.RESERVE)
         return None
     ds = gd.ds * 16
     gd.guest.write(ds + ring.FREE_THINGS, struct.pack("<H", it.thing(free)[1] & 0xFFFF))
