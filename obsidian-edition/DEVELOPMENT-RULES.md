@@ -1361,7 +1361,11 @@ and the helper shows the result instead of the box. With no answer within
 `PICK_WAIT` (the Loader held up, or the game busy with its lists) the helper
 goes on as the game would and marks the request answered (`USE_REPLY` =
 `USE_SEQ`), so a late Loader does nothing (the same for spell arrows); its
-wait counts the BIOS's ticks, so it runs with interrupts on. The pointer turned to
+wait counts the BIOS's ticks, so it runs with interrupts on. A known limit: the
+Loader looks at the request once, at the start of its answer, so a timeout
+that falls while it is already moving the item (half a second or more inside
+one pick) lets the game's own handling run alongside; a claim word the Loader
+set before acting, which DSCLOG waited on, would close it. Not seen in play. The pointer turned to
 another mode puts the try away (`PROBE_POINTER`). Checked in the game: Daaki
 (fighter/preserver/thief) lifted a scroll from Kalzith; Caron (fighter/cleric)
 keeps Turn Undead; a pick put away by a right click leaves the next talk a
