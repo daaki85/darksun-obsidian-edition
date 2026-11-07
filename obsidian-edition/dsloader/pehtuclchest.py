@@ -172,12 +172,20 @@ def _chest(gd) -> Optional[int]:
     return None
 
 
+_seen: Optional[int] = None  # (where the chest's record was last found)
+
+
 def watch(gd) -> List[str]:
     """Each pass: once UNLOCKED is set (the script, as the lock gives), the chest a chest again
     (CHEST_TYPE), so the game opens it as the script ends and ever after. No lines."""
+    global _seen
     if gd.region() != REGION or not gd.flags_ready() or not gd.flag(UNLOCKED):
         return []
+    if _seen is not None and gd.guest.read(_seen, 2) == struct.pack("<h", -OBJECT) \
+            and struct.unpack("<H", gd.guest.read(_seen + game.ITEM_TYPE, 2))[0] == CHEST_TYPE:
+        return []  # (a chest already where it was last seen: the table not scanned each pass)
     at = _chest(gd)
+    _seen = at
     if at is None or struct.unpack("<H", gd.guest.read(at + game.ITEM_TYPE, 2))[0] != SHUT_TYPE:
         return []
     itemgate.hold(gd)  # (an item record: as the game leaves its lists)

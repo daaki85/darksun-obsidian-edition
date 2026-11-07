@@ -28,6 +28,7 @@ at once. The same puts right a save from before the copy, whose party still name
 pictures.
 """
 
+import collections
 import struct
 from typing import Callable, Dict, List, Optional, Tuple
 
@@ -310,7 +311,12 @@ class Dresser:
         if copy_file:  # the Loader's own items and icons are only in its copy (worldgear, icons)
             try:
                 with open(copy_file, "rb") as f:
-                    self.items = {**self.pics.chunks, **read_gff(f.read())}
+                    copy = read_gff(f.read())
+                # (only what differs from the game's kept: the copy is the game's file with the
+                # Loader's added, so a whole second set of its chunks held 6-8 MB more all session)
+                own = {k: v for k, v in copy.items() if self.pics.chunks.get(k) != v}
+                del copy
+                self.items = collections.ChainMap(own, self.pics.chunks)
             except (OSError, GffError, ValueError, struct.error):
                 pass
         self.places: Dict[int, Tuple[int, int, int]] = {}  # picture: (index entry, offset, length)

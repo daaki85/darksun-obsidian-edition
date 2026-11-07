@@ -16,6 +16,7 @@ next. A write outside a pass (a tool's) has the lists looked at over the wait fi
 """
 
 import atexit
+import struct
 import time
 from typing import Callable, Optional
 
@@ -62,17 +63,32 @@ class ItemGate:
         things = (self.gd.load_seg + game.COMBATANTS_SEG) * 16 + game.COMBATANTS_OFF
         if addr < things + (THING_COUNT + THINGS_PAST) * 3 and end > things:
             return True
-        items = game.far_pointer(guest, ds, game.ITEMS_PTR)
-        if items and addr < items + ITEM_RECORDS * game.ITEM_SIZE and end > items:
+        # (the tables where they are now, and where they were as the pass began: a pointer read
+        # before the game moved them gives a place the tables have left, and one gone null while
+        # it rebuilds them gives none; either is covered, so open() finds the heads changed)
+        items_now = game.far_pointer(guest, ds, game.ITEMS_PTR)
+        creatures_now = game.far_pointer(guest, ds, game.CREATURES_PTR)
+        items_then, creatures_then = self._pointers_then()
+        if (items_then and not items_now) or (creatures_then and not creatures_now):
             return True
-        creatures = game.far_pointer(guest, ds, game.CREATURES_PTR)
-        if creatures and creatures <= addr < creatures + MAX_CREATURES * game.CREATURE_SIZE:
-            first = (addr - creatures) // game.CREATURE_SIZE
-            for index in range(first, (end - 1 - creatures) // game.CREATURE_SIZE + 1):
-                at = creatures + index * game.CREATURE_SIZE
-                if any(addr < at + o + 2 and end > at + o for o in game.CREATURE_ITEM_LISTS):
-                    return True
+        for items in {items_now, items_then}:
+            if items and addr < items + ITEM_RECORDS * game.ITEM_SIZE and end > items:
+                return True
+        for creatures in {creatures_now, creatures_then}:
+            if creatures and creatures <= addr < creatures + MAX_CREATURES * game.CREATURE_SIZE:
+                first = (addr - creatures) // game.CREATURE_SIZE
+                for index in range(first, (end - 1 - creatures) // game.CREATURE_SIZE + 1):
+                    at = creatures + index * game.CREATURE_SIZE
+                    if any(addr < at + o + 2 and end > at + o for o in game.CREATURE_ITEM_LISTS):
+                        return True
         return False
+
+    def _pointers_then(self):
+        """The item and creature tables' places as the pass began (0 for none, or no pass)."""
+        if not self._heads or len(self._heads) < 16:
+            return 0, 0
+        off, seg, coff, cseg = struct.unpack_from("<HHHH", self._heads, 8)
+        return seg * 16 + off, cseg * 16 + coff
 
     def begin(self) -> None:
         """A pass begins: the lists as they are now, before it reads anything of them."""

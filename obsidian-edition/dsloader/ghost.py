@@ -42,9 +42,13 @@ FIRST, LAST = 16, 223  # (the colours the game doesn't animate: as DSCLOG's DARK
 MADE_KEPT = 8  # (the tables kept, by KEY: the areas lately in)
 
 
+CYCLED = (range(1, 16), range(240, 249))  # (the colours the game's cycler turns: fire, water)
+
+
 def key(dac: bytes) -> bytes:
-    """What the tables are kept by: the palette's colours FIRST-LAST, which the game never cycles."""
-    return dac[FIRST * 3:(LAST + 1) * 3]
+    """What the tables are kept by: every colour of the palette but those the game cycles (the
+    blend reads any colour under a figure, and 224-239 change from area to area)."""
+    return dac[:3] + dac[16 * 3:240 * 3] + dac[249 * 3:]
 INVISIBLE, DETECT_INVISIBILITY = 23, 15  # (the game's effect numbers)
 PARTY = range(game.PARTY_SIZE)
 
@@ -136,6 +140,7 @@ class Ghosts:
         self._written: Optional[bytes] = None
         self._table: Optional[bytes] = None
         self._on: Optional[bool] = None
+        self._off = False  # (GHOST_ON put to 0 while tables are made, not on again yet)
 
     def _make(self, dac: bytes) -> None:
         made = tables(dac)
@@ -174,14 +179,19 @@ class Ghosts:
                     self._making = wanted
             if start:
                 guest.write(tsr_hdr + TSR_GHOST_ON, struct.pack("<H", 0))  # (till they are made)
+                self._off = True
                 threading.Thread(target=self._make, args=(self._dac,), daemon=True).start()
             if made is not None:
                 blend, rep = made
                 guest.write(seg * 16 + GH_BLEND, blend)
                 guest.write(seg * 16 + GH_REP, rep)
                 guest.write(tsr_hdr + TSR_GHOST_ON, struct.pack("<H", 1))
-                self._written, self._on = wanted, True
+                self._written, self._on, self._off = wanted, True, False
                 redraw()
+        elif self._off and self._dac is not None:  # (the palette back to the written one before
+            guest.write(tsr_hdr + TSR_GHOST_ON, struct.pack("<H", 1))  # the other was made: on again)
+            self._off = False
+            redraw()
         table = ghost_table(gd.effects())
         if table != self._table:
             guest.write(seg * 16 + GH_TAB, table)

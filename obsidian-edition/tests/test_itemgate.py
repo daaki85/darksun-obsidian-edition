@@ -88,6 +88,27 @@ class CoversTests(unittest.TestCase):
         self.assertFalse(gate.covers(ds + 0x2000, 2))
 
 
+    def test_tables_moved_mid_pass(self):
+        """The game moving its item table, or emptying the pointer as it rebuilds it, after the
+        pass began: a write to the old place is still covered (so refused, the heads changed),
+        and while the pointer is null any write is."""
+        proc, guest, _, gate, _ = setup()
+        gate.begin()
+        old = ITEMS + 3 * game.ITEM_SIZE
+        proc.write(DS * 16 + game.ITEMS_PTR, far(ITEMS + 0x4000))
+        self.assertTrue(gate.covers(old, 2))
+        with self.assertRaises(itemgate.ItemsBusy):
+            guest.write(old, b"\x07")
+        self.assertEqual(proc.mem[old], 0)
+        gate.end()
+        proc.write(DS * 16 + game.ITEMS_PTR, far(ITEMS))
+        gate.begin()
+        proc.write(DS * 16 + game.ITEMS_PTR, b"\0\0\0\0")
+        self.assertTrue(gate.covers(0 + 77 * game.ITEM_SIZE, 2))
+        gate.end()
+        self.assertFalse(gate.covers(DS * 16 + 0x2000, 2))  # (no pass: nothing moved to see)
+
+
 class PassTests(unittest.TestCase):
     def test_writes_held_still(self):
         """A pass's item writes: made after the wait, with the game paused once until the pass

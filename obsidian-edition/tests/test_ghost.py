@@ -1,7 +1,9 @@
 """ghost.py: the see-through figures' tables (REP, BLEND) and who is drawn see-through (GHOST_TAB)."""
 
 import struct
+import threading
 import time
+from unittest import mock
 import unittest
 
 from dsloader import game, ghost
@@ -133,14 +135,15 @@ class UpdateTests(unittest.TestCase):
         self.fail("tables never made")
 
     def test_cycling_colours_keep_the_tables(self):
-        """DSCLOG's palette copy changing only in the colours the game cycles (fire, water: 11-15,
-        224-255, every 30 s): the tables kept, GHOST_ON left on, nothing made, the view not drawn
-        again. A change in colours 16-223 (another area) makes them anew. At most MADE_KEPT kept."""
+        """DSCLOG's palette copy changing only in the colours the game cycles (fire, water: 1-15,
+        240-248, every 30 s): the tables kept, GHOST_ON left on, nothing made, the view not drawn
+        again. A change in any other (another area, 224-239 too) makes them anew. At most
+        MADE_KEPT kept."""
         g = ghost.Ghosts()
         self.wait_on(g, 1)
         m = self.gd.guest.mem
         drawn = self.redraws
-        for n, colour in enumerate((12, 230, 250), start=2):
+        for n, colour in enumerate((12, 3, 245), start=2):
             m[self.DAC + colour * 3] = (m[self.DAC + colour * 3] + 7) % 64
             g.update(self.gd, self.HDR, True, n, self.redraw)
             self.assertEqual(self.on(), 1)
@@ -154,6 +157,33 @@ class UpdateTests(unittest.TestCase):
             m[self.DAC + 50 * 3] = n
             self.wait_on(g, 20 + n)
         self.assertEqual(len(g._made), ghost.MADE_KEPT)
+
+    def test_area_colours_count(self):
+        """Colours 224-239 differ from area to area (reds in one, magenta in another): a change
+        there makes the tables anew."""
+        g = ghost.Ghosts()
+        self.wait_on(g, 1)
+        m = self.gd.guest.mem
+        m[self.DAC + 233 * 3] = (m[self.DAC + 233 * 3] + 9) % 64
+        g.update(self.gd, self.HDR, True, 2, self.redraw)
+        self.assertEqual(self.on(), 0)
+        self.wait_on(g, 2)
+        self.assertEqual(len(g._made), 2)
+
+    def test_back_before_made(self):
+        """The palette changed and back before the other's tables were made: GHOST_ON on again
+        (it stayed 0, the figures solid, till the next change)."""
+        g = ghost.Ghosts()
+        self.wait_on(g, 1)
+        m = self.gd.guest.mem
+        before = m[self.DAC + 100 * 3]
+        with mock.patch.object(threading.Thread, "start"):  # (the other's tables never made)
+            m[self.DAC + 100 * 3] = (before + 9) % 64
+            g.update(self.gd, self.HDR, True, 2, self.redraw)
+            self.assertEqual(self.on(), 0)
+            m[self.DAC + 100 * 3] = before
+            g.update(self.gd, self.HDR, True, 3, self.redraw)
+        self.assertEqual(self.on(), 1)
 
     def test_no_block(self):
         struct.pack_into("<H", self.gd.guest.mem, self.HDR + ghost.TSR_GHOST_SEG, 0)

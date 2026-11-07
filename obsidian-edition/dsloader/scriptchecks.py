@@ -9,9 +9,10 @@ Loader's copy of GPLDATA.GFF), and the dice log says what the roll needed and wh
 """
 
 import os
+import struct
 from typing import Dict, List, NamedTuple, Optional, Tuple
 
-from . import gpl
+from . import gff, gpl
 
 ABILITIES = ("STR", "DEX", "CON", "INT", "WIS", "CHA")
 ABILITY_FIELDS = {23 + n: n for n in range(6)}  # an object's fields 23 to 28: STR to CHA
@@ -90,7 +91,10 @@ _cache: Dict[str, Tuple[Tuple[int, int], Dict[int, Check]]] = {}
 def load(path: str) -> Dict[int, Check]:
     """The checks in the GPLDATA.GFF at PATH, read again whenever the file has changed (the
     Loader writes its copy afresh at each start, with the switches' changes in or out, which
-    moves the scripts' code); none if it can't be read (tried again on the next call)."""
+    moves the scripts' code); with no copy there, the game's own. None if it can't be read
+    (read again at the next call) or isn't a scripts file (read again once it changes)."""
+    if not os.path.exists(path):  # (no copy: the game runs its own scripts, so read those)
+        path = game_scripts() or path
     try:
         st = os.stat(path)
         stamp = (st.st_mtime_ns, st.st_size)
@@ -102,8 +106,10 @@ def load(path: str) -> Dict[int, Check]:
     try:
         with open(path, "rb") as f:
             checks = find(*gpl.load_scripts(f.read()))
-    except (OSError, ValueError, KeyError, gpl.ScriptError):
-        return {}
+    except OSError:
+        return {}  # (held a moment: read again at the next roll)
+    except (ValueError, KeyError, struct.error, gpl.ScriptError, gff.GffError):
+        checks = {}  # (not what it should be: kept by its stamp, not read at every roll, until it changes)
     _cache[path] = (stamp, checks)
     return checks
 
@@ -224,3 +230,13 @@ def describe(check: Check, roll: int, ability: int, who: str) -> List[str]:
 def default_path() -> str:
     from . import launch
     return os.path.join(launch.DOS_DIR, "GPLDATA.GFF")
+
+
+def game_scripts() -> str:
+    """The game's own GPLDATA.GFF ("" if the game folder isn't known)."""
+    from . import launch
+    try:
+        folder = launch.find_game_dir()
+        return (launch._find_file(folder, "GPLDATA.GFF") or "") if folder else ""
+    except OSError:
+        return ""

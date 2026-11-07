@@ -644,7 +644,10 @@ class Viewer:
         game_dir = self._saves_game_dir()
         if game_dir is None:
             return
-        os.makedirs(namedsaves.NAMED, exist_ok=True)
+        try:
+            os.makedirs(namedsaves.NAMED, exist_ok=True)
+        except OSError:
+            pass  # (no Named saves folder: the dialog starts elsewhere)
         copy = filedialog.askopenfilename(parent=self.root, title="Which save?", initialdir=namedsaves.NAMED,
                                           filetypes=[("Saves", "*.SAV *.sav"), ("All files", "*")])
         if not copy:
@@ -753,8 +756,11 @@ class Viewer:
                                             initialfile=f"{what.replace(' ', '-')}.txt",
                                             filetypes=[("Text", "*.txt"), ("All files", "*.*")])
         if path:
-            with open(path, "w", encoding="utf-8") as f:
-                f.write(widget.get("1.0", "end-1c"))
+            try:
+                with open(path, "w", encoding="utf-8") as f:
+                    f.write(widget.get("1.0", "end-1c"))
+            except OSError as e:
+                messagebox.showerror(f"Save the {what}", f"It could not be saved there:\n{e}", parent=self.root)
 
     def freeze_report(self) -> None:
         """Save a freeze report (freeze.py) in crash-logs/ and say where; for when the game has
@@ -911,7 +917,7 @@ class Viewer:
 
     def assign_hit(self) -> None:
         sel = self.hit_list.curselection()
-        if not sel or sel[0] >= len(self.hits):
+        if not sel or sel[0] >= min(len(self.hits), MAX_HITS):  # (past the list: its "... more" line)
             messagebox.showinfo("Assign", "Select a search hit first.")
             return
         slot = int(self.assign_slot.get()) - 1
@@ -1286,7 +1292,11 @@ class Viewer:
         if name is None:
             return
         name = " ".join(name.split())
-        launch.set_speaker_name(portrait, name)
+        try:
+            launch.set_speaker_name(portrait, name)
+        except OSError as e:  # (settings.json held a moment: an antivirus, a backup)
+            self.status.set(f"The name could not be saved just now ({e}); name the speaker again to retry.")
+            return
         if name:
             self.dice.speaker_names[portrait] = name
         else:

@@ -224,6 +224,7 @@ KIND_SWEPT = 11  # DSCLOG's SWEPT_MARK: Whirlwind's damage on a creature that fa
 KIND_WALL = 9  # DSCLOG's THORNS_DAMAGE: Wall of Thorns' damage on a creature in it, taken instead of
 # its record's dice: raw = the damage | the spell << 8, extra the creature
 THORNS_BASE = 8  # Wall of Thorns: 8 + the creature's AC (DSCLOG's THORNS_AC: it + 80h in the entry's extra's high byte)
+OWN_TEXT_KEPT = 16  # (the Loader's own texts in the game's window looked for in the dialogue)
 REFUSED_SAID = 3  # (refused writes told in one pass, with a count of the rest)
 KIND_AIM = 7  # DSCLOG's AIM_SITE: a spell cast with a click, refused: raw = the answer | spell << 8,
 # extra the caster. The aim check's (84C54h) answers:
@@ -528,7 +529,9 @@ class DiceLog:
         self._stats_lock = threading.Lock()  # (the stats thread's and the main loop's writes of STATS)
         self._stats_thread: Optional[threading.Thread] = None
         self._stats_stop = threading.Event()  # (close: the stats thread ends)
-        self._own_text: set = set()  # summaries shown in the game's window, not to log as dialogue
+        # summaries shown in the game's window, not to log as dialogue (the last few: one never
+        # seen back, a Look box closed unread, isn't kept all session)
+        self._own_text: Deque[str] = deque(maxlen=OWN_TEXT_KEPT)
         self._skip_choice = False
         self._hits: Dict[int, dict] = {}  # creature -> weapon hits not yet seen in its HP: their
         # damage, in order ("hits"), when the last landed ("at"), its HP then ("hp")
@@ -893,7 +896,9 @@ class DiceLog:
         whole = " ".join(full).replace("%", " pct").encode("cp437", "replace")[:LOOK_FULL_SIZE - 1] \
             if len(full) > 1 else b""
         if whole:
-            self._own_text.add(whole.decode("cp437"))  # not dialogue
+            shown = whole.decode("cp437")  # not dialogue
+            if shown not in self._own_text:
+                self._own_text.append(shown)
         self.guest.write(base + struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_LOOK_OFF, 2))[0], text + b"\0")
         self.guest.write(base + struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_LOOK_FULL_OFF, 2))[0],
                          whole + b"\0")
@@ -1044,7 +1049,7 @@ class DiceLog:
             said = " ".join(entry.text.split())  # DSCLOG keeps the first 400 characters of a text
             own = next((t for t in self._own_text if said and " ".join(t.split()).startswith(said)), None)
             if own is not None:
-                self._own_text.discard(own)
+                self._own_text.remove(own)
                 self._skip_choice = True
             elif entry.chosen and self._skip_choice:
                 self._skip_choice = False
@@ -1658,7 +1663,11 @@ class DiceLog:
         self._swap_seq = seq
         if needed and fired:
             icons.COPY_OPEN = icons.ready(self.game, self.tsr_hdr)  # (its own icon from the start: icons.fit)
-            given = ring.give_ring(self.game)
+            try:
+                given = ring.give_ring(self.game)
+            except Exception:
+                self._swap_seq = (seq - 1) & 0xFFFF  # (the search still to answer, a later pass: not lost)
+                raise
             itemgate.release(self.game)
             out.append(given or "No one in the party has room for the ring: make room and look at the body again.")
             needed = given is None

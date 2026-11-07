@@ -16,7 +16,7 @@ So each person on the map (not the party; not the champions, put in place by cha
 its gear put where the game would put it, as soon as it is there (People.watch, from the dice
 log's pass): by its type's kind (TYPE_FLAGS) and where it is worn (TYPE_WORN), into a slot that
 is free: the best melee weapon (its plus) in the right hand, a shield in the left, or else a
-second melee weapon there; a missile weapon in the missile slot, its ammunition in the ammunition
+second melee weapon there (neither with a weapon that takes both hands); a missile weapon in the missile slot, its ammunition in the ammunition
 slot; chest, arm, leg armour and a helm in theirs, and a cloak, a belt, boots, an amulet and up to
 two rings (the game wasn't seen to put those on: they are worn as the party's are, and count by
 the same rules, a cloak of protection with a shield none under AD&D's). Keys, food, scrolls and
@@ -31,6 +31,7 @@ from . import game, itemgate, pickpocket, restrict, ring
 ARM, AMMO, MISSILE, RIGHT, FINGER, WAIST, LEGS, HEAD, NECK, CHEST, LEFT, FINGER2, CLOAK, FOOT = range(14)  # (the game's slots)
 TYPE_FLAGS, TYPE_WORN = restrict.TYPE_FLAGS, pickpocket.TYPE_WORN
 HAND = 5  # (TYPE_WORN: held in a hand, a weapon or a shield)
+TYPE_HANDS, TWO_HANDED = 0x0F, 0x40  # (a type's +0Fh: it takes both hands, the inventory screen's test)
 WORN_SLOTS = {1: CHEST, 2: WAIST, 3: ARM, 4: FOOT, 6: HEAD, 7: NECK, 8: CLOAK, 10: LEGS, 11: AMMO}  # (TYPE_WORN:
 # the slot; the game's item types read in the running game, 2026-11-06: 2 the girdles, 3 armour and bracers, 4 boots,
 # 6 helms and circlets, 7 the amulet, 8 cloaks, 9 rings, 12 bows and slings)
@@ -45,8 +46,9 @@ def plan(items: Sequence[Tuple[int, bytes, bytes]], taken: Set[int]) -> List[Tup
     free = lambda slot: slot not in taken and slot not in [s for _, s in out]
     out: List[Tuple[int, int]] = []
     melee, shields = [], []
+    types = {item: typ for item, _, typ in items}
     for item, data, typ in items:
-        if len(typ) <= max(TYPE_FLAGS, TYPE_WORN):
+        if len(typ) <= max(TYPE_FLAGS, TYPE_WORN, TYPE_HANDS):
             continue
         flags, worn = typ[TYPE_FLAGS], typ[TYPE_WORN]
         if flags & restrict.SHIELD:
@@ -64,8 +66,13 @@ def plan(items: Sequence[Tuple[int, bytes, bytes]], taken: Set[int]) -> List[Tup
         elif worn in WORN_SLOTS and free(WORN_SLOTS[worn]):
             out.append((item, WORN_SLOTS[worn]))
     melee.sort()
+    both = False  # (the right hand's weapon takes both hands: nothing in the left)
     if melee and free(RIGHT):
-        out.append((melee.pop(0)[2], RIGHT))
+        _, _, best = melee.pop(0)
+        out.append((best, RIGHT))
+        both = bool(types[best][TYPE_HANDS] & TWO_HANDED)
+    if both:
+        return out
     if shields and free(LEFT):
         out.append((shields[0], LEFT))
     elif melee and free(LEFT) and RIGHT in taken | {s for _, s in out}:

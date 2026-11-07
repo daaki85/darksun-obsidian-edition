@@ -175,9 +175,9 @@ def load_settings(strict: bool = False) -> dict:
             except FileNotFoundError:
                 return {}
             except OSError:
-                if not strict:
-                    return {}
-                if attempt == 4:
+                if attempt == 4:  # (tried again first either way: one held a moment read as
+                    if not strict:  # empty lost the picked pockets once the next pick saved)
+                        return {}
                     raise
                 time.sleep(0.05)
             except ValueError:
@@ -415,6 +415,8 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
             objects_ok, new_objects = icons.write_objects(objects, os.path.join(DOS_DIR, icons.OBJECTS_FILE), on)
     except (gff.GffError, OSError, KeyError, struct.error, ValueError, IndexError):
         pass  # no icons of our own: the game's plain ones
+    if not objects_ok:  # (an earlier start's copy taken away: DSCLOG would open it in place of the
+        _drop(os.path.join(DOS_DIR, icons.OBJECTS_FILE))  # game's, made with other switches)
     # the regions with a person given an object of their own for a new item (worldgear.py): only
     # with that object in the objects copy (a region naming an object that isn't there would stop
     # the game)
@@ -472,13 +474,25 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
     # the game's own arrow for the scenes' pointer (DSCLOG's, without it)
     scenepointer.write_pointer(_find_file(game_dir, icons.RESOURCE_FILE), _find_file(game_dir, "GPLDATA.GFF"),
                                os.path.join(DOS_DIR, scenepointer.POINTER_FILE))
+    resources_ok = False
     try:
         resources = _find_file(game_dir, icons.RESOURCE_FILE)
         if resources:
             icons.write_resources(resources, os.path.join(DOS_DIR, icons.RESOURCE_FILE), on["roll_store"])
+            resources_ok = True
     except (gff.GffError, OSError, KeyError, struct.error, ValueError, IndexError):
         pass  # no Cat's Grace icon: Flaming Sphere's
+    if not resources_ok:  # (as the objects' copy: no earlier start's in its place)
+        _drop(os.path.join(DOS_DIR, icons.RESOURCE_FILE))
     return None
+
+
+def _drop(path: str) -> None:
+    """PATH taken away if it is there (a copy the game must not open)."""
+    try:
+        os.remove(path)
+    except OSError:
+        pass
 
 
 # Windows' codes for a program that crashes (DOSBox itself, not the game in it)

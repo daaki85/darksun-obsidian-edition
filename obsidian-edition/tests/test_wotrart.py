@@ -91,13 +91,14 @@ class AreaTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.dir = self.tmp.name
-        sl_colours = {1: (255, 0, 0), 2: (255, 255, 0), 3: (200, 210, 235), 4: (120, 80, 35), 5: (0, 255, 0)}
+        sl_colours = {21: (255, 0, 0), 22: (255, 255, 0), 23: (200, 210, 235), 24: (120, 80, 35), 25: (0, 255, 0),
+                      5: (0, 250, 0)}  # (5 a green the game cycles: never used)
         self.gpldata = os.path.join(self.dir, "GPLDATA.GFF")
         with open(self.gpldata, "wb") as f:  # (two regions' palettes, alike: every colour stable)
             f.write(build_gff({("PAL ", 1): palette(sl_colours), ("PAL ", 2): palette(sl_colours)}))
         wall = struct.pack("<8H", 16, 12, 33, 176, 1104, 0, 100, 0)  # (the fire wall: picture 100)
         self.sl = {("OJFF", wotrart.FIRE_WALL_OBJECT): wall,
-                   ("BMP ", 100): sprites.encode_frames([[[1, 2], [2, None]]])}
+                   ("BMP ", 100): sprites.encode_frames([[[21, 22], [22, None]]])}
 
     def tearDown(self):
         self.tmp.cleanup()
@@ -115,7 +116,7 @@ class AreaTests(unittest.TestCase):
         record, rows = self.frame(out, "Blade Barrier")
         self.assertEqual(record[2:6], self.sl[("OJFF", wotrart.FIRE_WALL_OBJECT)][2:6])
         self.assertEqual(rows[1][1], None)
-        self.assertNotIn(1, sum(rows, []))  # (no red left)
+        self.assertNotIn(21, sum(rows, []))  # (no red left)
 
     def test_wake_of_the_ravager(self):
         """Its own pictures, in Shattered Lands' nearest colours, and their anchors."""
@@ -134,7 +135,7 @@ class AreaTests(unittest.TestCase):
         record, rows = self.frame(out, "Wall of Thorns")
         self.assertEqual(struct.unpack_from("<HH", record, 2), (18, 33))
         self.assertEqual(record[6:12], self.sl[("OJFF", wotrart.FIRE_WALL_OBJECT)][6:12])
-        self.assertEqual(rows, [[5, 2, None]])
+        self.assertEqual(rows, [[25, 22, None]])  # (not 5, nearer the green but cycled)
 
     def test_no_fire_wall(self):
         self.assertEqual(wotrart.area_chunks(None, {}, self.gpldata), {})

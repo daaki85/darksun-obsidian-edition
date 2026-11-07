@@ -128,7 +128,10 @@ def rooms(data: bytes, ctype: str) -> Dict[int, int]:
         except struct.error as e:
             raise GffError(f"Truncated GFF table of contents: {e}") from e
         kinds.append(kind.decode("latin1"))
-        pos += 8 + (12 + 8 * struct.unpack_from("<I", data, pos + 16)[0] if count & 0x80000000 else 12 * count)
+        try:
+            pos += 8 + (12 + 8 * struct.unpack_from("<I", data, pos + 16)[0] if count & 0x80000000 else 12 * count)
+        except struct.error as e:  # (a ranged type's run count cut short too)
+            raise GffError(f"Truncated GFF table of contents: {e}") from e
     starts = sorted({off for kind in kinds for _, off, _ in index_places(data, kind).values()}
                     | {toc_offset, len(data)})
     out: Dict[int, int] = {}
