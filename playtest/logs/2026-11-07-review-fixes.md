@@ -38,3 +38,27 @@ Spellarcher in the save).
   last test's scratch tools, now in the kit.
 - Walking beside the chest put Gerakis on it (his figure over it): walk a square west (184,1400)
   before the look click (163,70).
+
+## Later the same day: the helper's label and picture fixes (DSCLOG.EXE 65,552)
+
+**Setup:** `loadsave.sh pens-after-scar`. The new code was in memory at DSCLOG's image offsets
+C6DBh (GHOST_DRAW's null-picture test), D097h (LABEL_WHERE's off-the-top test) and D0B2h
+(LABEL_ERASE busy first). A spell cast out of a fight from the USE screen (Cermak's Enlarge on
+Gerakis): the dice log had it, and no name floated over the map, which the screen covers.
+
+**The alarm fight** (`toalarm.sh`, which stopped at (1832, 856) as before: a click on the room's
+floor at screen 240,160 went in; then `pointer.py look` and `restalarm.sh`: 5 rests, the call, the
+fight). The guards stayed out of reach at first (Tab + Return: "NO PATH FROM HERE"), so the party's
+turns were passed through the END menu until a foe missed (Kurzak on Cilla, then on K'ratchek), and
+the view was dragged south as the "Miss" went up. No stray pixels, the game ran on.
+
+**Not reached:** a label whose figure is above the view's top. In a fight the drags moved the
+camera only a little (from 1728,768 to 1712,832 after two drags of 150): every party figure stayed
+at row 20 or more. The case needs a label over a figure off the top, which the fight's view didn't
+allow; the fix is checked only by reading the code there.
+
+**Learned:**
+- `E` pressed without the END menu open (a click beside the figure) opened the Effects screen, and
+  Escape left the camera at (0, 0): the loop now checks for (0, 0), presses Escape and runs
+  `viewto.py` back to the party.
+- A miss in the dice log ends `-> miss` (a hit `-> HIT`).
