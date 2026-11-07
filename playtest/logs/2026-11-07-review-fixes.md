@@ -103,3 +103,14 @@ fails with the old helper. In DOSBox:
   scroll's. The test with the byte was cut short by a worker restart (DOSBox gone).
 A clean A/B needs an enemy turn whose view stays on a still, marked figure: not found. The worker
 restart killed DOSBox and Xvfb, as an idle pause does.
+
+### Seen after all (the rerun, the same day)
+
+Read from the byte itself, not the picture (`ghostturn.py`, `ghostclear.py`; the walk arrow kept up
+between rests: **the look pointer pauses the game**, the user's, so the first try's six rests had
+brought no call). In the alarm fight:
+- the control (Cermak marked without the byte, at an enemy turn's start): nothing cleared, 7 grabs,
+  the view still for the first 5;
+- with the byte set at an enemy turn's start (`ghostclear.py`): **cleared 0.06 s in, within that
+  enemy's 0.36 s turn**. Only GHOST_UNION clears it, as it has the whole view drawn: so the drawing
+  comes in the enemies' turns. (One trial: passing the party's turns between took the run's time.)
