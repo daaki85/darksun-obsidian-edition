@@ -39,9 +39,19 @@ while phases and time.time() - t0 < 600:
         pass_party(t); continue
     name, changed = phases.pop(0)
     mark(2, changed); print(name, 'marked at enemy turn', t, flush=True)
-    n = 0
+    cam0 = g.read(ds * 16 + CAMERA, 4)
+    n, cleared = 0, None
     while turn() is not None and turn() > 3 and n < 80:
-        n += 1; grab(os.path.join(WORK, '%s_%02d.png' % (name, n))); time.sleep(0.1)
+        n += 1
+        moved = g.read(ds * 16 + CAMERA, 4) != cam0
+        byte = g.read(TAB + 79, 1)[0]
+        if cleared is None and byte == 0 and changed:
+            cleared = n
+        grab(os.path.join(WORK, '%s_%02d%s.png' % (name, n, 'm' if moved else '')))
+        print(name, n, 'byte', byte, 'view moved' if moved else 'view still', 'turn', turn(), flush=True)
+        time.sleep(0.1)
+    if changed:
+        print(name, 'the byte cleared at grab', cleared, '(in the enemy turn)' if cleared else '(not in it)', flush=True)
     print(name, n, 'grabs; changed byte now', g.read(TAB + 79, 1).hex(), 'turn', turn(), flush=True)
     mark(None, 1)
     while turn() is not None and turn() > 3: time.sleep(0.05)
