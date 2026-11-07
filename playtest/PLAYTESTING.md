@@ -151,28 +151,22 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   more (1221, 1224, 1230...). Once made they stayed after the party walked off. To find an
   object's items, look it up by its object number when it is made, not by item type: type 6Ch is
   the weapon rack's and a coffin's (1574, at 75,43, holding a gem).
-- **People's gear** (2026-11-05; **since 2026-11-06 `people.py` puts it on** as each person comes
-  on the map, so `npcgear.py` shows it worn and held, as the game would after a first action): the
-  game makes a person's items in its backpack list (+0Ch): Kurzak's, the Arena Guards', Scar's
-  were all there, none worn or held, so none counted for AC or was fought with. Moved into the held list (`pickpocket.place(gd, creature, item, 3)`) a weapon is
-  fought with by anyone (a Tohr-kreen with Headsman: "attacks Cermak with Headsman +2 (1d10+2)");
-  armour in the worn list counts for anyone's AC. A creature that dies carrying something leaves
-  a Dead Body (object 1101) with its things. **Correction (2026-11-06, logs/2026-11-06-npcs-equip.md):
-  the game equips a person itself, on its first action in a fight**: Legcrusher then wore his
-  Leather Inixhide +1 and held both clubs, an Arena Guard wore his leather and arrows and held his
-  long sword and bow, and they attacked with them; Legcrusher's AC from behind was then 8, not 10.
-  Before its first action (out of a fight, or killed first, as Kurzak by a backstab: target AC 10)
-  everything is in the backpack list.
+- **People's gear** (logs/2026-11-06-npcs-equip.md): the game makes a person's items in its
+  backpack list (+0Ch) and puts them on itself at that person's first action in a fight (weapons
+  held, armour worn: Legcrusher's Leather Inixhide +1 and both clubs, an Arena Guard's leather,
+  arrows, long sword and bow, and his AC from behind 8, not 10). Before that, out of a fight or
+  killed first (Kurzak by a backstab: target AC 10), all of it was in the pack, and the game's
+  Look box, which lists held weapons, showed none. **Since 2026-11-06 `people.py` puts it on as
+  each person comes on the map**: `npcgear.py` lists every creature on the map with its worn, held
+  and backpack items. Moved into the held list (`pickpocket.place(gd, creature, item, 3)`) a weapon
+  is fought with by anyone (a Tohr-kreen with Headsman: "attacks Cermak with Headsman +2
+  (1d10+2)"); armour in the worn list counts for anyone's AC. A creature that dies carrying
+  something leaves a Dead Body (object 1101) with its things.
 - **The arena's flags and numbers can't be set from outside** (2026-11-05): the pointers at
   DS:1352h and 1356h stay null in the arena even while a script waits on a message, so a poller
   never found them. To test a script's branch there, build a copy of the scripts with the test
   forced (edit the module, run `start.sh`, which writes `dos/GPLDATA.GFF`, then put the module
   back) and say so in the log.
-- **Fighting a wave without killing it** (2026-11-05): `fightout.sh` puts every foe at 1 HP first;
-  to see foes attack, pass the party's turns instead (Tab, Return, and the END menu for a member
-  out of movement: section 4 rule 11), as in
-  `logs/2026-11-05-champions.md`. A
-  level-1 party loses to the champions.
 - **Moving the party in memory** (2026-11-04, for a check where the way is shut): write each of map
   objects 0-3's x, y words at DS:669Dh + 32n (map units) and the camera at DS:1178h, then walk one
   step with `walkto.py`: the game redraws and makes the objects near the new place. Only for
@@ -239,14 +233,6 @@ game's, DSCLOG's, the overlay buffer, the see-through tables, the music buffer, 
 pens, 131-138 KB while the inventory or USE screen is open); `dacwatch.py SECONDS` shows DSCLOG's
 palette copy changing (every 30 s where the game cycles colours). The arena gate (the gap at
 1816,440) asks nothing before Kurzak's call. `ghostwatch.py SECONDS` counts samples with GHOST_ON 0.
-- **Who holds weapons** (2026-11-06, before `people.py`; with it, everyone's gear is on as they come
-  on the map): `npcgear.py` lists every creature on the map with its worn, held
-  and backpack items. In the pens (`pens-after-scar`) all 25 creatures besides the party carried
-  everything in the backpack list, nothing worn or held: Kurzak (Shadowseeker, a long sword, his
-  armour), the guards, the templars, Merzol, Kalzith. So the game's Look box, which lists held
-  weapons, shows none for them; the champions (`champions.py` moves their gear to hand and body)
-  are the only people whose weapons it lists before they have acted (see the correction above:
-  the game equips everyone else on their first action in a fight).
 
 ## 3. Controls that work
 
@@ -256,18 +242,15 @@ palette copy changing (every 30 s where the game cycles colours). The arena gate
 - **The look pointer pauses the game** (the user, 2026-11-07): while the eye is the pointer, the
   game's time doesn't run (no Kurzak's call, no alarm, nobody moving). Put the walk arrow back
   (`pointer.py walk`) as soon as a look or a rest is done; a wait with the eye up waits for nothing.
-- **Pointer cycle, as checked 2026-11-01**: arrow, sword, eye, arrow. **`pointer.py walk|look|attack`**
-  reads the mode from memory (DS:11B8h: 1 the arrow, 4 the sword, 2 the eye) and right-clicks on bare
-  floor until it is the one wanted (2026-11-07: right-clicks guessed from shots left the sword up,
-  and one opened the USE screen on a party member). Over bare floor the sword and
-  the eye show red with a bar (nothing to act on); over a door the eye is plain. Check the mode on a
-  shot before walking (a walk tool clicking in eye mode looks at the floor and nothing moves).
-- **Pointer mode**: a right-click on the map cycles it: the plain arrow (Walk, and use/talk on a
-  thing), the sword (attack), the **eye (look: opens doors)**, back to the arrow. Over a wall a red
-  "no" sign is drawn on top. **Right-click only on empty floor**: on a party member it opens the
-  USE screen (Escape closes it). Only walkable ground takes a walking click (the user,
-  2026-11-01): a click on a wall does nothing. Check the pointer in a
-  screenshot before walking.
+- **The pointer**: a right-click on the map cycles it: the plain arrow (Walk, and use/talk on a
+  thing), the sword (attack), the **eye (look: opens doors)**, back to the arrow (checked
+  2026-11-01). **`pointer.py walk|look|attack`** reads the mode from memory (DS:11B8h: 1 the arrow,
+  4 the sword, 2 the eye) and right-clicks on bare floor until it is the one wanted (2026-11-07:
+  right-clicks guessed from shots left the sword up). **Right-click only on empty floor**: on a
+  party member it opens the USE screen (Escape closes it). Over bare floor the sword and the eye
+  show red with a bar (nothing to act on), over a wall a red "no" sign; over a door the eye is
+  plain. Only walkable ground takes a walking click (the user, 2026-11-01): a click on a wall does
+  nothing, and a walk tool clicking in eye mode looks at the floor and nothing moves.
 - **Walking**: `python3 walkto.py X Y` (map units). Screen = map - camera, 1 unit a pixel; the
   camera scrolls in steps and does NOT keep the leader centred, so work from the camera, never the
   screen centre. **The view can stop scrolling**: in the arena (2026-11-01) it stayed put with the
@@ -315,10 +298,8 @@ palette copy changing (every 30 s where the game cycles colours). The arena gate
   or hides the combat log panel; **E opens the Effects screen** (not "end turn"); Escape closes a
   screen or menu that is open, and **opens EXIT: SAVE GAME? when nothing is**: a click after that can quit
   to DOS. Press Escape only with a menu or screen showing.
-- **Ending a turn by hand**: a click exactly ON the active member's figure opens END <NAME>'S
-  MOVE (GUARD / WAIT / END TURN); a click beside it walks it a step instead. In that menu press
-  **E** for END TURN: when Return opened it (no Move left), clicks on its rows didn't register
-  (2026-11-01). E with no menu up opens the Effects screen (section 4 rule 11).
+- **Ending a turn by hand**: section 4 rule 11 (a click ON the figure opens its END menu, E there
+  is END TURN; E with no menu up opens the Effects screen).
 - **Loose `xdotool` commands need `DISPLAY=:55`** (`export DISPLAY=:55` first): the kit's tools
   set it, a command typed on its own doesn't ("Can't open display").
 - **`ghostclear.py [TRIALS]`** (2026-11-07): at each enemy turn's start, Cermak marked see-through with
@@ -353,16 +334,14 @@ palette copy changing (every 30 s where the game cycles colours). The arena gate
 - **Opening a door (the user, 2026-11-01): the look pointer.** Cycle the pointer with right-clicks
   to the look cursor and click the door; then, with the walk arrow, click on the far side of the
   open door to move past it. The walk arrow on a door, or on the floor beyond a closed one, does
-  nothing (that was the stall at Kurzak's last stop).
+  nothing (that was the stall at Kurzak's last stop, 95,28). `python3 doors.py` lists the closed
+  doors and gates on the edge of the area the party can reach (live grid 192+ where the file's
+  grid has a doorway), with their map positions.
 - **`doorpath.py TC TR`**: the shortest way to a square through closed doors too, listing the doors
   it crosses and its turns; `BLOCK="C,R C,R"` rules out squares (a locked door). **route.py** skips
   squares a figure stands on (96: a party member there takes the click and nobody walks), drops a
   square whose click moved nobody, and brings the view to the way ahead when nothing nearer the
   goal is on screen (the view on the leader can hide the way, as the hall south of Kurzak's stop).
-- **Doors**: `python3 doors.py` lists the closed doors and gates on the edge of the area the party
-  can reach (live grid 192+ where the file's grid has a doorway), with their map positions.
-  Clicking a door square, or the floor beyond it, did nothing for the pens' doors near Kurzak's
-  last stop (95,28; 2026-11-01).
 - **Loading**: the title (two clicks), then the main menu: START GAME, CREATE CHARACTERS, LOAD
   SAVED GAME (170, 109), EXIT TO DOS; the LOAD screen lists the slots (click one at 100, 46), then
   LOAD (253, 46). `loadsave.sh` does it.
@@ -409,10 +388,9 @@ palette copy changing (every 30 s where the game cycles colours). The arena gate
   expanded (its pixel check is for the small panel): look at a shot, and press L yourself. The
   expanded panel's filter chips are at y 87 (All 148, Party about 175); a filter chosen stays
   (Party leaves out the foes' attacks). A party member's figure under the panel can't be clicked
-  (its END menu): hide the panel first. **Picking a pocket:** U, the thief's portrait (Cilla
-  108,108), the purse under the spell counts (157,145, a slow press), then the talk pointer on the
-  person. `orderwatch.py`-style logging (fight_on and the dice log every 10 ms) showed a blow from
-  outside a fight is struck before the fight begins.
+  (its END menu): hide the panel first.
+- **Picking a pocket:** U, the thief's portrait (Cilla 108,108), the purse under the spell counts
+  (157,145, a slow press), then the talk pointer on the person.
 
 ## 4. Fights
 
@@ -464,16 +442,20 @@ palette copy changing (every 30 s where the game cycles colours). The arena gate
 
 **More on fights:**
 
+- **A blow from outside a fight is struck before the fight begins** (2026-11-06, `orderwatch.py`:
+  fight_on and the dice log every 10 ms).
+- **Seeing foes attack, without killing them** (2026-11-05, logs/2026-11-05-champions.md): not
+  `fightout.sh` (it puts every foe at 1 HP); pass the party's turns instead (rule 11), stopping
+  once the dice log has N more "attacks NAME" lines (`passmiss.sh` does it for a miss). Between
+  waves click the messages and walk about in the arena (staying brings more fights). It can lose
+  the whole party ("YOUR PARTY HAS BEEN DEFEATED"; a level-1 party loses to the champions): have
+  a save to go back to.
 - **Testing Psionic Blast without a blaster** (2026-11-04): find DSCLOG's header in memory
   (`b'DSCLOGva'`, 16-aligned; 0xC91B0 in that run), write a member's kept hit points at +1814
   (a word per combatant 0-3) and the member's HP (creature record +0) to -9, so any blow would
   kill by the game's rule (damage at HP + 10); pass turns until it's hit: it goes to 0 HP, not
   dead, and the fight's end gives the hit points back ("shakes off Psionic Blast's imagined
   wounds"). CON 20+ regeneration can wake it first (Gerakis did).
-- **Getting a party member attacked**: a scratch loop that passes the party's turns (Tab +
-  Return, then the END menu if the turn stays: section 4 rule 11) and stops once the dice log has N more "attacks NAME"
-  lines; between waves click the messages and walk about in the arena (staying brings more
-  fights). It can lose the whole party ("YOUR PARTY HAS BEEN DEFEATED"): have a save to go back to.
 - **Level-ups in fights**: PICK A PSIONIC POWER (a psionicist's level) isn't levelup.sh's: click a
   red power's icon (about 158, 62), then FINISHED (112, 139).
 - **The see-through figures in a fight** (2026-11-05/06, logs/2026-11-05-fight-test.md): seen from a
@@ -512,15 +494,14 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   ground inside the wall (488, 232) shows, a click there (the party finds its own way in), then
   the gate strip, until the region is the pens (29h). Run them together:
   `(sh arenawaves.sh && sh leavearena.sh)`, in the background, followed with a Monitor.
-- **The first bout can fail to start** (2026-11-02): topartyfight.sh ended "NO FIGHT" at
-  (488, 232), and 60-odd more clicks south and walks between (488, 232) and (488, 264) (the bone
-  wall stops the party at 264) over several game minutes didn't start it. The bout is GPL 2's
-  entry at 1 (case gnum 3 = 1, "Step forward" sets it), run by MAS 42's code-111 trigger on
-  object 2059 at (498, 341), beyond the bone wall, and it waits on flag 5 (MAS 42 sets it on
-  loading); the flags can't be read in the arena. Earlier runs got in from the same place; why
-  not this one is open. Next time: restart (`start.sh`) and try again before digging.
-- **The first bout started at once** in two later fresh games on 2026-11-02 (topartyfight.sh
-  "FIGHT"), so the failure below is intermittent.
+- **The first bout can fail to start**, now and then (2026-11-02: topartyfight.sh ended "NO
+  FIGHT" at (488, 232), and 60-odd more clicks south and walks between (488, 232) and (488, 264)
+  (the bone wall stops the party at 264) over several game minutes didn't start it; two later
+  fresh games that day started at once). The bout is GPL 2's entry at 1 (case gnum 3 = 1, "Step
+  forward" sets it), run by MAS 42's code-111 trigger on object 2059 at (498, 341), beyond the
+  bone wall, and it waits on flag 5 (MAS 42 sets it on loading); the flags can't be read in the
+  arena. Why it sometimes doesn't is open. Next time: restart (`start.sh`) and try again before
+  digging.
 - **Resting** (the user, 2026-11-05): the fire room off the east passage, its door at square
   (115, 53), map (1848, 856), opened with the look pointer; in it a small fire ring among
   haystacks (map about 1931, 856): the **look pointer on the ring** rests ("THE PARTY RESTS",
@@ -625,7 +606,8 @@ escaped slaves, the exits, Goodbye: "Get moving! I gotta get back to work."). Sa
   appears quite sturdy." The box message then has to be clicked away (boxclick.sh), and the
   pointer is left on the eye: right-click on to the arrow before walking.
 - **The other way west** (`doorpath.py`, with BLOCK="81,20 81,21"): down the east passage to the
-  door at (113, 90) (map 1816, 1448; `route.py 1816 1400` stands beside it), west along the bottom
+  door at (113, 90) (map 1816, 1448; `route.py 1816 1400` stands beside it; locked on 2026-11-04,
+  with the party straight from the arena and Kurzak followed: check its look box), west along the bottom
   corridor (rows 91-95) through the door at (93, 94), north up columns 34-35 to the south hall
   (rows 66-70), and north at columns 17-20 to the stalker pen's anteroom (its door 16, 54-56).
   On the way, two slaves whisper "Is it time to break out yet?" / "Shh, not yet!".
@@ -642,9 +624,6 @@ escaped slaves, the exits, Goodbye: "Get moving! I gotta get back to work."). Sa
   266 at 1264,848 is gone or flag 317 is set; otherwise "presses the button, but nothing happens".)
 - The grate, object 1234 at (46, 86), the far northwest; walking onto squares 3-4, 5-6 (map
   48-79, 80-111) runs its menu (137:29Bh): Pick the lock / Rip it open / Hack the lock off.
-- **The door at (113, 90) was locked** on 2026-11-04 (look box "Door", its third button: "The door
-  is locked. It appears quite sturdy."), with the party straight from the arena and Kurzak
-  followed to his stop: the way west by the bottom corridor isn't always open.
 - **The weapon rack** (Thornwall's, object 2599) is at square (48, 34), map (779, 550), in the room
   west of the door at (65, 38-39); from (52, 36) beside it the game has made it. Its contents (map
   object 478 on 2026-11-04): Polearm, Quarterstaff, Polearm, Axe, with Thornwall first once
@@ -659,8 +638,7 @@ escaped slaves, the exits, Goodbye: "Get moving! I gotta get back to work."). Sa
   a square west of it (from (120, 1464) the script says "You must be next to the chest"; standing on
   it, a figure takes the click); `pointer.py look`, a slow press on it (163, 70), the look box's third
   button (236, 101) (`chestuse.sh`). `thief.py N LEVEL` / `thief.py N off` makes a thief in memory. The chest's look box: first button closes,
-  second **moves the chest**, third uses it. A thief in memory needs the class byte and level and the
-  sheet's flags 400h (`sheetedit.py N flags|=0x400`). The game's trap objects: +0Fh is the trap's
+  second **moves the chest**, third uses it. The game's trap objects: +0Fh is the trap's
   descriptor (d6, reach, damage kind), DSUN.EXE 80A11h. A new game to the pens in the background:
   `start.sh`, `topartyfight.sh`, `arenawaves.sh`, `leavearena.sh` (about 30 minutes).
 

@@ -2239,8 +2239,7 @@ an invisible enemy is drawn solid while one of the party detects invisibility
 game itself draws the invisible like anyone else: being unseen only makes them
 harder to hit (4 worse) and better at shrugging off a spell aimed at them (4
 better), for whoever can't detect invisibility. Switch it off on the Options
-tab. It needs upper memory to spare (about 14 KB; with `UMBPLUS.COM`, as the
-Loader starts the game, there is plenty).
+tab. It needs a little memory the Loader's start sets aside for it.
 
 ![Gerakis in the slave pens drawn as ever (left) and see-through (right): the floor, the wall below and his shadow show through him](docs/see-through.png)
 
@@ -2465,11 +2464,9 @@ walks](HOW-THE-GAME-WORKS.md#how-fast-the-party-walks)).
 from the next start): on the map the party walks at its full speed whatever is
 drawn. When a frame is late, the next one isn't drawn: the game still moves
 everyone a step, and the frame after shows all that moved in both. On a busy
-screen you see fewer pictures: with the whole party walking in the slave pens,
-about 27 a second, where the game shows about 37 without steady pace (and 70
-when no frame is late; counted by the game's page flips). So walkers move two
-or three steps between pictures rather than one, but no one slows down. Fights
-draw every frame, as the game does.
+screen you see fewer pictures, so walkers move two or three steps between
+pictures rather than one, but no one slows down. Fights draw every frame, as
+the game does.
 
 ![The whole party walking back and forth in the slave pens, the same clicks on both sides: with steady pace off on the left and on on the right, where the party gets to each spot sooner](docs/steady-pace.gif)
 
@@ -2481,10 +2478,9 @@ The Loader also gives DOSBox more of the computer's time: 20,000 cycles a
 millisecond by default, where GOG's settings give 7,000. On the Options tab
 **Game speed** is GOG's own (7,000), that (20,000), or 35,000: there nearly
 every frame is drawn in time even with the whole party in view, the smoothest,
-but it needs a faster computer. It applies the next time the game is started. The
-Loader's two speeds run on DOSBox's dynamic core (GOG's settings run this game
-on the slower normal core): the same cycles do more, and cost the computer
-about a third less.
+but it needs a faster computer. It applies the next time the game is started.
+The Loader's two speeds also run DOSBox's faster way of running the game, which
+costs the computer less.
 
 What each setting asks of the computer:
 [Suggested system requirements](README.md#suggested-system-requirements).

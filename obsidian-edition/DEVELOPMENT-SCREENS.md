@@ -698,7 +698,12 @@ leader's speed in pixels a second of the game's time):
 | The whole party in view, steady pace on | 249 to 278 |
 | The leader alone | about 220 to 260 |
 
-Frames stop being skipped from about 30,000 cycles.
+Frames stop being skipped from about 30,000 cycles. With the whole party walking
+in the slave pens, steady pace shows about 27 pictures a second, where the game
+shows about 37 without it (70 when no frame is late; counted by the game's page
+flips). The Loader's two speeds run DOSBox's dynamic core (GOG's settings run
+this game on the slower normal core): the same cycles do more, at about a third
+less of the computer's time.
 
 **Steady pace** (`gamepatch.STEADY_PACE`, DSCLOG's STEADY PACE): the map's
 frame (DSUN.EXE 1E8E4h) calls the step for everything (`call far 1DF3:26DC`,

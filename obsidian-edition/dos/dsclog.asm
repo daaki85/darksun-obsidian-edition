@@ -24151,6 +24151,12 @@ FAR_PARAS  equ (FAR_END - FAR_RING + 15) / 16
 UMB_ROOM equ 0xF000 - 0xD00A
 UMB_NEED equ (1 + 0x10 + (image_len + STACK + 15) / 16) + (1 + OVR_RESERVE)
         times -(UMB_NEED > UMB_ROOM) db 0   ; (a negative count: the helper no longer fits upper memory)
+; What KEEP leaves there after the install: the helper as it stays (to RESIDENT_END), the overlay
+; buffer, the music pool (POOL_PARAS) and the see-through figures' tables (GHOST_PARAS), each with
+; its MCB. The last two are taken only if there's room, quietly: the build fails rather than lose
+; them without UMBPLUS.COM.
+UMB_KEPT equ (1 + 0x10 + (resident_end - $$ + 15) / 16) + (1 + OVR_RESERVE) + (1 + POOL_PARAS) + (1 + GHOST_PARAS)
+        times -(UMB_KEPT > UMB_ROOM) db 0   ; (a negative count: the music pool or the see-through tables wouldn't fit)
 
 POINTER_FILE db "D:\POINTER.BIN", 0 ; (CP_DATA's file, read as the helper loads)
 install:                        ; DS = ES = PSP, CS = the image

@@ -507,7 +507,10 @@ each time it opens ("Out of memory in OEOpenGraph" when it can't). What it
 puts there (`UMB_NEED`, the header's +372) is checked against the room
 (`UMB_ROOM`, D00Ah to F000h): the build fails past it (a negative `times`),
 and so does `test_fits_upper_memory`. It needs 6,186 of the room's 8,182
-paragraphs, so 1,996 (31.2 KB) are spare. With `UMBPLUS.COM`, 50.2 KB were free in one piece
+paragraphs as it loads. Once installed it also keeps the music pool and the
+see-through figures' tables there (`UMB_KEPT`: 7,698 paragraphs with all four
+blocks and their MCBs), so 484 (7.6 KB) are spare without `UMBPLUS.COM`; the
+build fails past either. With `UMBPLUS.COM`, 50.2 KB were free in one piece
 before the mod's sounds and see-through figures (DOS's memory blocks read in the running game,
 2026-11-05: the helper 3,946 paragraphs from C90Ah, the overlay buffer 2,062, the music buffer 751,
 3,211 free); their code took 49 paragraphs more and the see-through figures' block
