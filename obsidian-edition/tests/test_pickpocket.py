@@ -298,6 +298,14 @@ class ListTests(unittest.TestCase):
         self.assertEqual(self.items_in(pickpocket.HOLD_LIST), [(5, game.WEAPON_HANDS[0]), (6, game.MISSILE_SLOT)])
         self.assertEqual(self.items_in(pickpocket.PACK_LIST), [])
 
+    def test_no_list_to_be_had(self):
+        """With the game's things all in use, no new list for the backpack: the sword stays where
+        it was, in his held list (it was once taken out first, and was then in no list at all)."""
+        struct.pack_into("<H", self.m, DS * 16 + ring.FREE_THINGS, ring.THING_COUNT)
+        self.assertFalse(pickpocket.place(self.gd, 0, 5, 14))
+        self.assertEqual(self.items_in(pickpocket.HOLD_LIST), [(5, game.WEAPON_HANDS[0]), (6, game.MISSILE_SLOT)])
+        self.assertEqual(self.items_in(pickpocket.PACK_LIST), [])
+
     def test_mend(self):
         """A backpack item in the held list (as earlier versions gave it) is put in the backpack's
         list, once; what is held stays."""

@@ -903,7 +903,11 @@ originals:
   their spell) are renumbered wherever they are.
 - `RGN29.GFF`, the slave pens: an entry setting him in his pen.
 - `GPLDATA.GFF`: his conversation (script 218, after the game's 217), its entry
-  in the game's table of script entry points (which saves go by), the command
+  in the game's table of script entry points (which saves go by: the Loader's three
+  entries, his, Semyon's and Pehtucl's chest's, are always there in that order,
+  whatever the switches, so a save's numbers never point at another script;
+  `kalzith.ENTRY_SCRIPTS`; the Loader's script numbers are in
+  `kalzith.LOADER_SCRIPTS`, checked by `test_scriptnumbers`), the command
   in the pens' script that runs it when he's talked to, and his portrait
   (portrait 101, a number the game leaves free).
 
@@ -1040,7 +1044,8 @@ need be), after `itemgate.hold`. Test: `test_people.py`.
 ([In the new items](FEATURES.md#new-items); `pehtuclchest.py`, whose docstring has the detail.)
 
 A USE command in the pens' master script (MAS 41: 6Dh, (place, script, object), as each cell door
-has one running script 138) runs script 220 when the chest (object 1568) is used. Its parts are the
+has one running script 138) runs script 223 when the chest (object 1568) is used, from beside it
+(the safe's distance test, op 80h: "You must be next to the chest"). Its parts are the
 game's own: the thief test the safe in GPL 71 makes (the class flags' 400h), the scripts' skill
 check (22h action 3: who, skill, bonus), the safe's bash odds, and the trap action (22h action 7:
 object, square, the square from command 09h on the character). A trap object's item +0Fh is read
@@ -1048,7 +1053,7 @@ by the trap routine (DSUN.EXE 80A11h) as dice, reach and damage kind, not as a s
 (object 2667) is 02h, 2d6 poison on its square. The game opens a container as its USE script ends
 (the script can't stop it), so the chest is made with the safe's item type (67h), which it doesn't
 open, and `pehtuclchest.watch` makes it a chest (31h) once flag 796 is set, while the script waits
-for a click. Flags 795 and 796; script 220 has its entry in GPLI (saves keep commands by entry).
+for a click. Flags 795 and 796; script 223 has its entry in GPLI (saves keep commands by entry).
 
 ## The champions' bout
 

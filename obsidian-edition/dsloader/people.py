@@ -106,8 +106,8 @@ class People:
             moves = self.moves(gd, index)
             if moves:
                 itemgate.hold(gd)  # (before anything moves: the game busy with its lists, a later pass)
-                for item, slot in moves:
-                    pickpocket.place(gd, index, item, slot)
+                if not all([pickpocket.place(gd, index, item, slot) for item, slot in moves]):
+                    continue  # (no list to be had, the game's things all in use: the rest a later pass)
             self.done.add(key)
         return []
 

@@ -50,6 +50,7 @@ class GuestMemory:
         # come from a pointer read while the game has it empty (0:offset): refused and noted
         self.guarded = {"low memory": (0, LOW_MEMORY)}
         self.refused: Deque[str] = deque(maxlen=REFUSED_KEPT)
+        self.refused_total = 0  # (how many ever: the dice log tells those past the ones it has told)
         # the gate a write to the game's item lists goes through (itemgate.py; GameData sets it)
         self.item_gate = None
 
@@ -67,6 +68,7 @@ class GuestMemory:
         for name, (start, end) in self.guarded.items():
             if addr < end and addr + len(data) > start:
                 self.refused.append(f"{len(data)} bytes at {addr:#x} ({name}), from {_caller()}")
+                self.refused_total += 1
                 return
         if self.item_gate is not None and self.item_gate.covers(addr, len(data)):
             self.item_gate.open()  # (ItemsBusy: the game is changing them; nothing written)

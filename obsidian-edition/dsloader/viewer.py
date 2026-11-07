@@ -66,6 +66,7 @@ class Viewer:
         self.next_try = 0.0  # when to retry connecting / attaching
         self.dosbox = None  # the game, when started from here (Start the game)
         self._game_dir, self._started, self._refused = None, 0.0, []  # (for a crash report)
+        self._learned_unsaved = False  # (names or pockets the settings file refused, last pass)
         # the game's portraits and font, from the player's own install (if it can be found)
         self.art = art.GameArt.of(launch.find_game_dir())
         # (Tk shows an image only while it's referenced: one for each portrait at each size, shared
@@ -1128,14 +1129,14 @@ class Viewer:
         if self.dice.combat_log_level != self.combat_log_level.get():  # (the panel's level chip)
             self.combat_log_level.set(self.dice.combat_log_level)
         self.round_line.set(self._round_text())
-        picked = self.dice.take_picked()
-        if picked is not None:
-            launch.set_pickpocketed(picked)
-        learned = self.dice.take_speakers()
-        if learned:  # names worked out from conversations: keep them, and show them on earlier lines
-            launch.add_learned_speakers(learned)
-            for portrait in learned:
-                self._rename_portrait(portrait)
+        # (names worked out from conversations kept, and shown on earlier lines; the pockets tried
+        # kept; a save the file refused tried again next pass)
+        learned, failed = self.dice.save_learned(launch.add_learned_speakers, launch.set_pickpocketed)
+        for portrait in learned:
+            self._rename_portrait(portrait)
+        if failed and not self._learned_unsaved:
+            self.status.set("The Loader's settings could not be saved just now; it will try again.")
+        self._learned_unsaved = failed
         talk = self.dice.take_dialogue()
         if talk:
             self._append_dialogue(talk)

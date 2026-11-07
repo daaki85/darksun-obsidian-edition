@@ -541,6 +541,12 @@ def with_talk(master: bytes, field_types: bytes = b"") -> bytes:
 
 ENTRY = struct.Struct("<HHH")  # GPLI: (entry number, place in the script, script), numbered from 0
 ENTRIES = ("GPLI", 1)
+# The Loader's own scripts (the game's run to 217): Kalzith's talk, Semyon's (semyon.SCRIPT), Alagorn's
+# copies of 212 (alagorn.COPY_OF), Pehtucl's chest (pehtuclchest.SCRIPT): one number each
+# (test_scriptnumbers)
+LOADER_SCRIPTS = {218: "Kalzith", 219: "Semyon", 220: "Alagorn: clothes", 221: "Alagorn: rings and others",
+                  222: "Alagorn: weapons", 223: "Pehtucl's chest"}
+ENTRY_SCRIPTS = (218, 219, 223)  # (those with an entry point, in its order: Kalzith, Semyon, the chest)
 
 
 def with_entry(entries: bytes, script: int = SCRIPT) -> bytes:
@@ -565,20 +571,26 @@ def script_chunks(gpldata: bytes, kalzith: bool = True, semyon: bool = True,
         return {}
     field_types = next((v for k, v in chunks.items() if k[0] == "GPLX"), b"")[gpl.FIELD_TYPES_AT:]
     out: Dict[Tuple[str, int], bytes] = {}
+    # The scripts the pens' commands run (Kalzith's and Semyon's talks, the chest's use) and their
+    # entry points: all of them, in this order, whatever the switches. A save keeps each command by
+    # its entry's number, so the numbers mustn't move as the switches change (with them added only
+    # when on, a save made with Kalzith had the chest's command naming Semyon's talk once he was off)
+    from . import semyon as sm, pehtuclchest
+    out[("GPL ", SCRIPT)] = conversation()
+    out[("GPL ", sm.SCRIPT)] = sm.conversation(thornwall=magic)
+    out[("GPL ", pehtuclchest.SCRIPT)] = pehtuclchest.script()
+    if ENTRIES in chunks:
+        entries = chunks[ENTRIES]
+        for script in ENTRY_SCRIPTS:
+            entries = with_entry(entries, script)
+        out[ENTRIES] = entries
     if kalzith:
-        out[("GPL ", SCRIPT)] = conversation()
         out[("MAS ", MASTER)] = with_talk(chunks[("MAS ", MASTER)], field_types)
-        if ENTRIES in chunks:
-            out[ENTRIES] = with_entry(chunks[ENTRIES])
         face = portrait_chunk(chunks)
         if face and ("PORT", PORTRAIT) not in chunks:
             out[("PORT", PORTRAIT)] = face
     if semyon:  # Semyon, in the pens as he promises (semyon.py): his part after Kalzith's
-        from . import semyon as sm
-        out[("GPL ", sm.SCRIPT)] = sm.conversation(thornwall=magic)
         out[("MAS ", MASTER)] = sm.with_semyon(out.get(("MAS ", MASTER), chunks[("MAS ", MASTER)]), field_types)
-        if ENTRIES in chunks:
-            out[ENTRIES] = with_entry(out.get(ENTRIES, chunks[ENTRIES]), sm.SCRIPT)
         arena = ("GPL ", sm.ARENA_TALK)
         if arena in chunks:  # (his leaving after the fight marked)
             out[arena] = sm.with_exit(chunks[arena], field_types)
@@ -613,7 +625,6 @@ def script_chunks(gpldata: bytes, kalzith: bool = True, semyon: bool = True,
         from . import champions as ch
         out.update(ch.script_chunks(chunks, field_types, out))
     if pens:  # Pehtucl's chest, locked and trapped (pehtuclchest.py; the cloak in it, npcitems.py)
-        from . import pehtuclchest
         out.update(pehtuclchest.script_chunks(chunks, field_types, out))
     if ring:  # the XP for finding the arena's ring (ring.py), in the same script as Semyon's exit
         from . import ring as rg

@@ -18611,6 +18611,7 @@ arrows_arm:
         mov bp, sp
         add word [bp + 2], ARM_OUT
         call pp_restore         ; (no spell readied: as before the screen was closed)
+        sti                     ; (the wait for the Loader counts the BIOS's ticks: as PP_HAND's)
         pushad
         push es
         push word [bp + 4]

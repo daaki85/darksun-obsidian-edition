@@ -129,6 +129,34 @@ notes](PATCH-NOTES.md).
   first (then its polearms, quarterstaff and axe), still there after walking off and after a
   save and load. Tests: `test_semyon.ShipmentTests`, `test_worldgear`.
 
+**Fixed** (found in a third review, 2026-11-07)
+- **Alagorn's magic-clothes menu ran into the wrong script:** Pehtucl's chest had been given
+  script 220, already Alagorn's copy telling of clothes, and its script replaced his; his menu
+  then called 942 bytes into a 705-byte script. The chest is script 223, the Loader's numbers
+  are in one table (`kalzith.LOADER_SCRIPTS`), and `test_scriptnumbers` checks no two modules
+  make the same script, that every call lands inside its script and that every script fits the
+  game's buffer. Seen in DOSBox: the built copy's 220 is Alagorn's again, the chest works as 223.
+- **The chest could be worked on from across the room:** the game's safe first tests the
+  distance; the chest does too now ("You must be next to the chest in order to work on it").
+  Seen in DOSBox from five squares and from beside it, with a thief's disarm and pick.
+- **A save's talk and use commands could point at another script once a switch changed:** the
+  Loader's script entries were numbered only for the parts switched on, so with Kalzith off the
+  chest's command named Semyon's talk, and the chest stayed shut for good. The three entries
+  (Kalzith's, Semyon's, the chest's) and their scripts are always there, in that order.
+- **An item moved could be lost:** `pickpocket.place` took it out of its list before it knew
+  there was a list to put it in; with the game's things all in use it was in none, gone from the
+  game and the save. Since the game's people have their gear put on, this ran for everyone on
+  the map. The list is found or made first now, and a person left part-done is tried again.
+- **DSCLOG waited for the Loader with interrupts off** for a Spellarcher's arrows (the other two
+  waits turn them on): with the Loader slow the game's clock and music stopped for up to two
+  seconds. One `sti`; DSCLOG.EXE still 65,536 bytes.
+- **Refused writes never reached a crash report:** the record was emptied every pass, after at
+  most three were said. It is kept now; the dice log tells the new ones (three, and a count of
+  the rest).
+- **A pocket picked or a speaker's name learned was lost** if settings.json was held by an
+  antivirus or a backup at that moment: it was marked saved before the save. It is kept and
+  saved at the next pass (`DiceLog.save_learned`).
+
 **Fixed: the Loader** (found in a second review, 2026-11-06)
 - **One write the Loader stopped ended the dice log's lines for the session:** the line saying so
   sliced `GuestMemory.refused`, a deque, which raises TypeError, outside any guard, before the
@@ -181,7 +209,7 @@ notes](PATCH-NOTES.md).
 
 **New**
 - **Pehtucl's chest, locked and trapped** (`pehtuclchest.py`; with the pens' gear): a USE command
-  for it in the pens' master script (6Dh, as the cell doors have theirs) runs script 220. A thief
+  for it in the pens' master script (6Dh, as the cell doors have theirs) runs script 223. A thief
   (the class flags' 400h, as the game's safe tests it) checks for traps (find/remove traps: the
   needle drawn out, or sprung) and picks the lock (open locks, +0; tried again as often as wanted);
   anyone else may bash it (the safe's odds: 5%, +5% for each of STR 18, 20, 22, 24), springing the

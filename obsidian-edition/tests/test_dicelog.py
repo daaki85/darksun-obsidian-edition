@@ -1994,20 +1994,45 @@ class PassTests(unittest.TestCase):
             self.assertNotIn(dicelog.error_key(e), keys)
         self.assertEqual(dicelog.error_key(ValueError("never raised"))[0], "ValueError")
 
+    def test_learned_kept_when_not_saved(self):
+        """A pocket tried and a name learned that settings.json refused (held by an antivirus) are
+        saved at the next call, not lost (the pocket could have been picked again)."""
+        log = make_game()
+        log.picked, log._picked_changed = {"Kurzak"}, True
+        log._new_speakers = {5: "Kurzak"}
+
+        def held(_):
+            raise OSError("in use")
+        self.assertEqual(log.save_learned(held, held), ({}, True))
+        saved = {}
+        learned, failed = log.save_learned(lambda names: saved.update(names=names),
+                                           lambda picked: saved.update(picked=picked))
+        self.assertEqual((learned, failed), ({5: "Kurzak"}, False))
+        self.assertEqual(saved, {"names": {5: "Kurzak"}, "picked": ["Kurzak"]})
+        self.assertEqual(log.save_learned(held, held), ({}, False))  # (nothing new: nothing tried)
+
     def test_refused_write_said_once(self):
-        """A write the Loader stopped (GuestMemory.refused, a deque) is said in the pass's lines and
-        cleared: slicing the deque raised TypeError, every pass from then on."""
+        """A write the Loader stopped (GuestMemory.refused, a deque) is said in the pass's lines
+        once (slicing the deque raised TypeError, every pass from then on), and kept in the record
+        for a crash report (it was cleared, and the report's list always empty)."""
         from collections import deque
         from unittest import mock
         log = make_game()
         log.combat_log = False
         log.guest.refused = deque(["2 bytes at 0x10 (low memory), from test"], maxlen=200)
+        log.guest.refused_total = 1
         with mock.patch.object(log, "poll", return_value=[]), \
                 mock.patch.object(log, "_after_rolls", return_value=[]):
             first = log.lines(now=1.0)
             second = log.lines(now=2.0)
+            kept = len(log.guest.refused)
+            log.guest.refused.extend(f"{n} bytes at 0x20 (low memory), from test" for n in range(5))
+            log.guest.refused_total += 5
+            third = log.lines(now=3.0)
         self.assertTrue(any("2 bytes at 0x10" in line for line in first), first)
-        self.assertEqual((len(log.guest.refused), second), (0, []))
+        self.assertEqual((kept, second), (1, []))
+        self.assertEqual(sum("bytes at 0x20" in line for line in third), 3)
+        self.assertIn("(... and 2 more like it: all in a crash report.)", third)
 
     def test_half_seen_rolls_dropped_when_rolls_are_missed(self):
         """Dice of an NdS roll collected so far, and a save's natural d20, dropped when the ring

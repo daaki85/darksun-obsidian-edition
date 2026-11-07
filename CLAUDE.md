@@ -29,7 +29,7 @@ from this branch's helper (`tools/build_mod.sh` there) or `$WORK/dsun.log` shows
 What stalls on it and not in DOSBox is a program fault to report.
 
 **Start from a save.** `sh loadsave.sh pens-after-arena` loads the slave pens after the arena
-(region 29h); `saves/README.md` lists the others (`pens-thornwall-rack`: by the weapon rack). Save at every milestone (Escape, S, click a slot at 120,46, type a name, SAVE at
+(region 29h); `saves/README.md` lists the others (`pens-thornwall-rack`: by the weapon rack; `pens-new-chest`: a new game's pens, run `shut.py` after). Save at every milestone (Escape, S, click a slot at 120,46, type a name, SAVE at
 253,46: the game then quits) and add it to `playtest/saves/` with a README line.
 
 **The window must be 320x240** (`xdotool getwindowgeometry`): start.sh sets the Loader's
@@ -46,7 +46,7 @@ capture; window grabs (`import -window`) are 320x240, so y x 1.2.
 
 **Controls.**
 - Clicks: `click.py X Y [left|right|none]` (game pixels). Right-click cycles the pointer: the
-  plain arrow walks.
+  plain arrow walks. `pointer.py walk|look|attack` sets it from memory (right-clicks on bare floor).
 - Walking: `walkto.py X Y` (map units; screen = map - camera at DS:1178h). The view doesn't
   follow the leader: drag it with the middle button, `scroll.py DX DY` (dragging down shows the
   north). The tool keeps the pointer off the screen's edges, since an edge scrolls the view the

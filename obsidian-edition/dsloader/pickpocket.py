@@ -193,14 +193,20 @@ def _link(gd: GameData, it: ring.Items, member: int, item: int, slot: int) -> bo
 def place(gd: GameData, member: int, item: int, slot: int) -> bool:
     """One of the party member's items put in SLOT (a slot of the body or a backpack cell) and
     into the list that goes with it, as the inventory screen would: a weapon put away in the
-    backpack is no longer fought with, one taken from it is."""
+    backpack is no longer fought with, one taken from it is. Nothing moves (False) if there is no
+    list to be had for it: the list is found or made first, then the item taken out of its own
+    (taken out first, it was in no list when the game's things had none left, and lost)."""
     it = ring.Items(gd)
     rec = gd.creature(member)
     for list_no, offset in enumerate(game.CREATURE_ITEM_LISTS):
         thing, = struct.unpack_from("<h", rec, offset)
         before = -1
-        for index, _ in _chain(it, thing):
+        for index, data in _chain(it, thing):
             if index == item:
+                typ = gd.item_type_record(data) if struct.unpack_from("<H", data, game.ITEM_TYPE)[0] < game.NO_ITEM else b""
+                if party_list(gd, it, member, slot, typ) is None:
+                    return False
+                it = ring.Items(gd)  # (read again: the list may be new)
                 _take(gd, it, member, list_no, item, before)
                 return _link(gd, ring.Items(gd), member, item, slot)
             before = index

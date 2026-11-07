@@ -178,7 +178,10 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
 - **Clicks**: `python3 click.py X Y [left|right|none]` in game pixels (320x200). DOSBox captures
   the mouse, so the tool moves it relatively until the game's own pointer reads X,Y. Plain
   `xdotool mousedown/up` clicks where the pointer already is (fine for dismissing a message).
-- **Pointer cycle, as checked 2026-11-01**: arrow, sword, eye, arrow. Over bare floor the sword and
+- **Pointer cycle, as checked 2026-11-01**: arrow, sword, eye, arrow. **`pointer.py walk|look|attack`**
+  reads the mode from memory (DS:11B8h: 1 the arrow, 4 the sword, 2 the eye) and right-clicks on bare
+  floor until it is the one wanted (2026-11-07: right-clicks guessed from shots left the sword up,
+  and one opened the USE screen on a party member). Over bare floor the sword and
   the eye show red with a bar (nothing to act on); over a door the eye is plain. Check the mode on a
   shot before walking (a walk tool clicking in eye mode looks at the floor and nothing moves).
 - **Pointer mode**: a right-click on the map cycles it: the plain arrow (Walk, and use/talk on a
@@ -647,8 +650,13 @@ palette copy changing (every 30 s where the game cycles colours). The arena gate
   108,108), the purse under the spell counts (157,145, a slow press), then the talk pointer on the
   person. `orderwatch.py`-style logging (fight_on and the dice log every 10 ms) showed a blow from
   outside a fight is struck before the fight begins.
-- **Pehtucl's chest** (2026-11-07, logs/2026-11-07-pehtucls-chest.md): `saves/pens-new-chest` is a new
-  game with the chest's USE command (older saves lack it). The chest's look box: first button closes,
+- **Pehtucl's chest** (2026-11-07, logs/2026-11-07-pehtucls-chest.md, logs/2026-11-07-review-fixes.md):
+  `saves/pens-new-chest` is a new game with the chest's USE command (older saves lack it), but its
+  chest was made before the shut type: run `shut.py` after loading, or the game opens it whatever
+  the script says. To reach it: `teleport.py 200 1432 40 1322`, walkto (216, 1440), then (184, 1400),
+  a square west of it (from (120, 1464) the script says "You must be next to the chest"; standing on
+  it, a figure takes the click); `pointer.py look`, a slow press on it (163, 70), the look box's third
+  button (236, 101) (`chestuse.sh`). `thief.py N LEVEL` / `thief.py N off` makes a thief in memory. The chest's look box: first button closes,
   second **moves the chest**, third uses it. A thief in memory needs the class byte and level and the
   sheet's flags 400h (`sheetedit.py N flags|=0x400`). The game's trap objects: +0Fh is the trap's
   descriptor (d6, reach, damage kind), DSUN.EXE 80A11h. A new game to the pens in the background:

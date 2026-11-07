@@ -2,7 +2,7 @@
 the Cloak of Protection +1 in it), locked and trapped: a script of its own runs when it is used
 (SCRIPT, by a USE command in the pens' master script, as the game's cell doors have theirs).
 
-- A thief (the character using it) first looks for traps: find/remove traps (the scripts' skill
+- Only from beside it (as the game's safe: "You must be next to ..."). A thief (the character using it) first looks for traps: find/remove traps (the scripts' skill
   check) finds and disarms the poison needle in its lock; failing, the thief springs it. Either
   way the needle is gone (DISARMED). Then open locks: success unlocks it for good (UNLOCKED);
   failing, it holds, and the thief may try again.
@@ -36,7 +36,8 @@ from typing import Dict, List, Optional, Tuple
 
 from . import dataitems, game, gpl, itemgate, kalzith, npcitems
 
-SCRIPT = 220  # the chest's (Kalzith's is 218, Semyon's 219; the game's run to 217)
+SCRIPT = 223  # the chest's (the game's run to 217; the Loader's: Kalzith's 218, Semyon's 219,
+# Alagorn's copies 220-222: kalzith.LOADER_SCRIPTS, test_scriptnumbers)
 USE = 0x6D  # (place in a script, script, object): what using the object runs (the cell doors': script 138)
 OBJECT = npcitems.PEHTUCL_CHEST
 DISARMED, UNLOCKED = 795, 796  # the Loader's flags: the needle gone; the lock open
@@ -49,6 +50,8 @@ CHEST_TYPE, SHUT_TYPE = 0x31, 0x67  # the chest's item type, and the one it has 
 # game's safe's (GPL 71 hands that one's loot out itself), which the game doesn't open as a container
 # once the USE script has run (with the chest's own type it opened it whatever the script said)
 
+NEAR = 2  # (how far from it the one using it may stand: as the game's safe, op 80h, the distance)
+DISTANCE = 0x80
 NARRATION = 98  # (the dialogue window's lines as the game's safe has them)
 ACTING = ("var", 137, 37)  # the character using it
 NAME = ("field", 0x8025, [19])  # ... its name
@@ -124,10 +127,18 @@ def script() -> bytes:
     def locked():
         tell("The chest is locked. ")
         s.when(NOT_THIEF, not_thief, thief)
+
+    def at_hand():
+        far = ("op", gpl.Op(0, DISTANCE, [ACTING, ("n", -OBJECT)]))
+        s.when(("expr", ["(", far, ")", ">", ("n", NEAR)]),
+               lambda: tell("You must be next to the chest in order to work on it. "), locked)
+
+    def shut():
+        at_hand()
         s.op(0x4F, ("n", NARRATION), kalzith.MORE)  # (a click, and the window cleared: as the safe ends)
         s.op(0x4F, ("n", NARRATION), kalzith.CLEAR)
 
-    s.when(kalzith._is(_flag(UNLOCKED), 0), locked, lambda: open_it(s))
+    s.when(kalzith._is(_flag(UNLOCKED), 0), shut, lambda: open_it(s))
     return s.bytes()
 
 

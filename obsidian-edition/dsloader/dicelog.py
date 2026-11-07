@@ -224,6 +224,7 @@ KIND_SWEPT = 11  # DSCLOG's SWEPT_MARK: Whirlwind's damage on a creature that fa
 KIND_WALL = 9  # DSCLOG's THORNS_DAMAGE: Wall of Thorns' damage on a creature in it, taken instead of
 # its record's dice: raw = the damage | the spell << 8, extra the creature
 THORNS_BASE = 8  # Wall of Thorns: 8 + the creature's AC (DSCLOG's THORNS_AC: it + 80h in the entry's extra's high byte)
+REFUSED_SAID = 3  # (refused writes told in one pass, with a count of the rest)
 KIND_AIM = 7  # DSCLOG's AIM_SITE: a spell cast with a click, refused: raw = the answer | spell << 8,
 # extra the caster. The aim check's (84C54h) answers:
 AIM_REASONS = {-1: "no creature there", -2: "not a creature that spell can be cast on",
@@ -445,6 +446,7 @@ class DiceLog:
         self.rand_addr: Optional[int] = None
         self.last_seq: Optional[int] = None
         self.missed = 0
+        self._refused_told = 0  # (the guest's refused writes told so far: its refused_total)
         self.game: Optional[GameData] = None
         self.last_ac: Dict[int, int] = {}  # creature index -> the AC the game last computed for it
         self._ac_whose: Dict[int, str] = {}  # ... and the name of the creature it was then
@@ -1308,11 +1310,17 @@ class DiceLog:
 
     def _lines_end(self, out: List[str], now: float) -> List[str]:
         """The pass's last lines (writes refused, rolls missed), the panel told, and the lines."""
-        refused = getattr(self.guest, "refused", None)
-        if refused:
+        # (the refused writes not told yet: the record itself kept whole, for a crash report)
+        refused = getattr(self.guest, "refused", None) or ()
+        total = getattr(self.guest, "refused_total", 0)
+        new = min(total - self._refused_told, len(refused))
+        if new > 0:
+            fresh = list(refused)[-new:]
             out += [f"(The Loader stopped one of its own writes over the game's memory: {r}. "
-                    "Please send this line.)" for r in list(refused)[:3]]
-            refused.clear()
+                    "Please send this line.)" for r in fresh[:REFUSED_SAID]]
+            if new > REFUSED_SAID:
+                out.append(f"(... and {new - REFUSED_SAID} more like it: all in a crash report.)")
+        self._refused_told = total
         if self.missed:
             # (not while the creation die tumbles: DSCLOG keeps the rolls that count, RL_TRY)
             if now - self._tries_at > CREATION_TUMBLE:
@@ -1917,6 +1925,27 @@ class DiceLog:
         """Portrait names learned since the last call."""
         out, self._new_speakers = self._new_speakers, {}
         return out
+
+    def save_learned(self, add_speakers, set_picked) -> Tuple[Dict[int, str], bool]:
+        """The portrait names learned and the pockets tried since the last call, saved with
+        ADD_SPEAKERS and SET_PICKED (launch's: settings.json). A save that fails (OSError: the file
+        held by an antivirus or a backup) is kept for the next call, not lost (a pocket forgotten
+        could be picked again). The names saved, and whether anything failed."""
+        failed = False
+        learned = self.take_speakers()
+        if learned:
+            try:
+                add_speakers(learned)
+            except OSError:
+                self._new_speakers = {**learned, **self._new_speakers}
+                learned, failed = {}, True
+        picked = self.take_picked()
+        if picked is not None:
+            try:
+                set_picked(picked)
+            except OSError:
+                self._picked_changed, failed = True, True
+        return learned, failed
 
     def _reply_choice(self, now: float) -> List[DialogueEntry]:
         """The player's answer, once, when they click a reply."""

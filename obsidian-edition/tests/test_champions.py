@@ -151,10 +151,18 @@ class GearTests(unittest.TestCase):
     def test_again_after_a_load(self):
         """A game loaded where the champions were already equipped (the same creature, name and
         object): its gear, back in the backpack, is put on again."""
+        import test_ring
         kinds = [game.BONE_AXE_TYPE, champions.SCALE_CHEST]
         self.make(champions.MUL, kinds)
+        ds, things = test_ring.DS * 16, slice(test_ring.THINGS, test_ring.THINGS + self.ring.THING_COUNT * 3)
+        saved = (bytes(self.m[things]), bytes(self.m[ds + self.ring.FREE_THINGS:ds + self.ring.FREE_THINGS + 2]),
+                 bytes(self.m[ds + self.ring.THINGS_USED:ds + self.ring.THINGS_USED + 2]))
         gear = champions.Gear()
         gear.watch(self.gd)
+        # (the game loaded: its things made anew, as the save had them)
+        self.m[things] = saved[0]
+        self.m[ds + self.ring.FREE_THINGS:ds + self.ring.FREE_THINGS + 2] = saved[1]
+        self.m[ds + self.ring.THINGS_USED:ds + self.ring.THINGS_USED + 2] = saved[2]
         self.make(champions.MUL, kinds)  # (as the save had them: in the backpack)
         gear.watch(self.gd)
         worn, held, pack = self.lists()

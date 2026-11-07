@@ -186,14 +186,9 @@ def cmd_dicelog(args) -> None:
                 attach()
             for line in log.lines(show_all=args.all):
                 print(line, flush=True)
-            learned = log.take_speakers()
-            if learned:
-                add_learned_speakers(learned)
-                for portrait, name in learned.items():
-                    print(f"(Portrait {portrait} is {name})", flush=True)
-            picked = log.take_picked()
-            if picked is not None:
-                set_pickpocketed(picked)
+            learned, _ = log.save_learned(add_learned_speakers, set_pickpocketed)  # (one refused: next pass)
+            for portrait, name in learned.items():
+                print(f"(Portrait {portrait} is {name})", flush=True)
             for entry in log.take_dialogue():
                 if entry.chosen:
                     print(f"    > {entry.chosen}", flush=True)
@@ -327,12 +322,7 @@ def cmd_play(args) -> None:
                 said.extend(log.lines())
                 for entry in log.take_dialogue():
                     talk.extend(line for line in (entry.text, *entry.replies, entry.chosen and "You chose: " + entry.chosen) if line)
-                learned = log.take_speakers()
-                if learned:
-                    launch.add_learned_speakers(learned)
-                picked = log.take_picked()
-                if picked is not None:
-                    launch.set_pickpocketed(picked)
+                log.save_learned(launch.add_learned_speakers, launch.set_pickpocketed)  # (one refused: next pass)
             except ProcessError:
                 # (DOSBox closing, or gone: the loop's test says which; if it runs on, attached again)
                 attached = False
