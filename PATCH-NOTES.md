@@ -303,6 +303,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 ## Bug Fixes
 
 - **[Fixed]** The game's **people put on their weapons and armour only at their first action in a fight**: until then they were AC 10, their armour unworn, so an opening blow, a backstab or a first-round hit met none, and their Look box showed no weapon. Now they wear and wield their gear from the moment they're on the map, as the game puts it on.
+- **[Changed]** The game's people also wear the cloaks, belts, boots, amulets and up to two rings they carry, which the game never put on: each counts by the same rules as the party's.
 - **[Fixed]** **Mirror Image** stopped no weapon blow, and swallowed the caster's own spells (Armor cast on oneself was lost three times in four, an image with it). Now each hit, and each foe's spell aimed at one creature, has a 75% chance to strike an image instead (50% for Reflected Image); spells from your own side always get through.
 - **[Fixed]** **Armor** used up two charges for each hit, and one for any spell cast on its wearer, even a friend's Bless. Now one charge for each damaging hit, a weapon's or a spell's.
 - **[Fixed]** **Share Strength** left its strength on the one who got it after the power ended. Now it ends on them too.
@@ -364,5 +365,6 @@ Rules the game got wrong are put right too, each under its own heading above wit
 - **A save made with 2.13.0 or later is not for earlier versions, and one made with 2.13.2 or later not for 2.13.1 or earlier:** the weapon specs are kept packed with the age and each character's starting roll beside them, which an older Loader reads as other specs. Older saves load in newer versions as they are: a character keeps its age, and its roll is put on its sheet when the game is loaded.
 - A thri-kreen **druid/fighter** Wasteland Seer from an earlier version has no kit now: the Wasteland Seer is for a thri-kreen druid/fighter/psionicist.
 - In a save from 1.2.0 to 2.5.0 that has already been to the slave pens, the weapon rack is gone from the pens, so **Thornwall** never comes onto it after Semyon's tip (a new game has the rack). Fixing items that couldn't be swapped in a pack meant renumbering the rack, and the game drops an object it no longer finds.
+- **Pehtucl's locked chest** comes with a new game. In a save that has already been to the slave pens, Pehtucl still wears the Cloak of Protection and his chest is the plain one.
 
 **A new game is still the way to see all of the mod.** Kits, STORE and RECALL and fuller starting gear come with characters made with the mod, and much of the new content (Kalzith, Semyon, the vulture, the new items in the slave pens) is in the game's first areas. A save made with the original game loads and plays with every fix and rule change, but its characters have no kits, and what it has already been through stays as it was.

@@ -25,7 +25,7 @@ from .kalzith import SPEAKS, _Script, _lines
 from .pensasks import FILLER, GOTO, LONGEST
 
 KURZAK, LEGCRUSHER = 29, 326  # their objects (npcitems.py's)
-DEAD = 797  # the Loader's flag: Legcrusher seen dead (the top of 784-797, which Alagorn's menus keep and use none of)
+DEAD = 797  # the Loader's flag: Legcrusher seen dead (past Alagorn's menus, 794 at most, and Pehtucl's chest's 795-796)
 SAY = 0x4F
 CALL_SCRIPT, TALK_SCRIPT, DINOS_SCRIPT = 136, 141, 139  # his call to the arena; his talk; Dinos's
 

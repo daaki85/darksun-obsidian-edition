@@ -259,15 +259,15 @@ From the game's damage code (DSUN.EXE); none of this is in the manual:
   against acid](FEATURES.md#items-saving-against-acid)).
 - Undead (race 9 on the character sheet) take nothing from poison and
   draining, and mind-affecting spells, charms and holds don't work on them.
-- The people the party fights carry their gear (Kurzak's armour and sword, the
-  Arena Guards' bows) in their backpacks, where the game makes it, and the game
-  puts it on only at each one's first action in a fight: weapons in hand,
-  armour worn. Until then they are AC 10 with their armour unworn, so an
-  opening blow (the game starts the fight after it), a backstab or a first
-  round's blow on one who hasn't acted met no armour. Once on, a weapon in hand
-  is fought with (in place of the first two natural attacks) and worn armour
-  counts. The Loader puts it all on as they come on the map
-  ([the fix](FEATURES.md#the-games-bugs-fixed)).
+- The game makes the gear of the people the party fights (Kurzak's armour and
+  sword, the Arena Guards' bows) in their backpacks, and puts it on only at
+  each one's first action in a fight: weapons in hand, armour worn. Until then
+  each is AC 10 with its armour unworn, so an opening blow (the game starts the
+  fight after it), a backstab, or a first round's blow on one who hasn't acted
+  meets no armour. Once on, a weapon in hand is fought with (in place of the
+  first two natural attacks) and worn armour counts. The game never puts on
+  rings, cloaks, belts, boots or amulets. The Loader puts all of it on as they
+  come on the map ([the fix](FEATURES.md#the-games-bugs-fixed)).
 
 The dice log notes a weapon hit that takes less than its roll, or nothing at
 all, with what the monster's defences say about it

@@ -63,7 +63,7 @@ class PlanTests(unittest.TestCase):
         self.assertEqual(people.plan(pack, {people.RIGHT, people.CHEST}), [(1, people.LEFT)])
 
     def test_rings_cloaks_worn_keys_stay(self):
-        """Pehtucl's ring and cloak go on (a finger, the cloak slot); a second ring the other finger,
+        """A ring and a cloak go on (a finger, the cloak slot); a second ring the other finger,
         a third stays; boots, a belt and an amulet theirs; a key stays packed."""
         pack = [(1, item(1), RING), (2, item(1), CLOAK), (3, item(), KEY), (4, item(), RING), (5, item(), RING),
                 (6, item(), typ(0, 4)), (7, item(), typ(0, 2)), (8, item(), typ(0, 7))]

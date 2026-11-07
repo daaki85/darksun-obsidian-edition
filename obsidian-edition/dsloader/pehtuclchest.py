@@ -26,8 +26,8 @@ chest again (CHEST_TYPE) meanwhile, so the game opens it then and every time aft
 each time with that click and the window cleared, as the safe's does (without them, shut, the
 game waited on the window for good).
 
-The two flags are the Loader's (DISARMED, UNLOCKED: the top of 784-796, which Alagorn's menus
-keep for their overflow and don't reach: test_pehtuclchest). The chest, its cloak and its USE
+The two flags are the Loader's (DISARMED, UNLOCKED: past Alagorn's menus, which use 794 at most:
+test_pehtuclchest; Legcrusher's 797 after them). The chest, its cloak and its USE
 command come with a new game: a save keeps the pens' objects and commands as they were made.
 """
 

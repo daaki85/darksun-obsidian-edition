@@ -146,9 +146,10 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   more (1221, 1224, 1230...). Once made they stayed after the party walked off. To find an
   object's items, look it up by its object number when it is made, not by item type: type 6Ch is
   the weapon rack's and a coffin's (1574, at 75,43, holding a gem).
-- **People's gear** (2026-11-05): the game makes a person's items in its backpack list (+0Ch):
-  Kurzak's, the Arena Guards', Scar's are all there, none worn or held, so none counts for AC or
-  is fought with. Moved into the held list (`pickpocket.place(gd, creature, item, 3)`) a weapon is
+- **People's gear** (2026-11-05; **since 2026-11-06 `people.py` puts it on** as each person comes
+  on the map, so `npcgear.py` shows it worn and held, as the game would after a first action): the
+  game makes a person's items in its backpack list (+0Ch): Kurzak's, the Arena Guards', Scar's
+  were all there, none worn or held, so none counted for AC or was fought with. Moved into the held list (`pickpocket.place(gd, creature, item, 3)`) a weapon is
   fought with by anyone (a Tohr-kreen with Headsman: "attacks Cermak with Headsman +2 (1d10+2)");
   armour in the worn list counts for anyone's AC. A creature that dies carrying something leaves
   a Dead Body (object 1101) with its things. **Correction (2026-11-06, logs/2026-11-06-npcs-equip.md):
@@ -635,8 +636,9 @@ game's, DSCLOG's, the overlay buffer, the see-through tables, the music buffer, 
 pens, 131-138 KB while the inventory or USE screen is open); `dacwatch.py SECONDS` shows DSCLOG's
 palette copy changing (every 30 s where the game cycles colours). The arena gate (the gap at
 1816,440) asks nothing before Kurzak's call. `ghostwatch.py SECONDS` counts samples with GHOST_ON 0.
-- **Who holds weapons** (2026-11-06): `npcgear.py` lists every creature on the map with its worn, held
-  and backpack items. In the pens (`pens-after-scar`) all 25 creatures besides the party carry
+- **Who holds weapons** (2026-11-06, before `people.py`; with it, everyone's gear is on as they come
+  on the map): `npcgear.py` lists every creature on the map with its worn, held
+  and backpack items. In the pens (`pens-after-scar`) all 25 creatures besides the party carried
   everything in the backpack list, nothing worn or held: Kurzak (Shadowseeker, a long sword, his
   armour), the guards, the templars, Merzol, Kalzith. So the game's Look box, which lists held
   weapons, shows none for them; the champions (`champions.py` moves their gear to hand and body)

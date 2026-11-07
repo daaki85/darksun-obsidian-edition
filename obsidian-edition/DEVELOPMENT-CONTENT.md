@@ -26,6 +26,7 @@
 - [Shadows](#shadows)
 - [Dust](#dust)
 - [See-through figures](#see-through-figures)
+- [Sounds for hiding and picking pockets](#sounds-for-hiding-and-picking-pockets)
 
 ## The game's script bugs
 
@@ -1034,10 +1035,11 @@ melee weapon (its plus) to the right hand, a shield to the left or else a second
 rings to the two fingers in turn, into slots nothing fills yet. The game itself wasn't seen to put
 on rings, cloaks, belts, boots or amulets; worn here, they count as the party's do (Pehtucl's
 Templar: his Ring of Protection +1 worn, AC 4 to the other Templar's 5 and +1 on saves; his Cloak
-of Protection +1 worn but nothing under AD&D's rule, with his leather shield). Keys, food and
-scrolls stay packed.
-Each move is `pickpocket.place` (the list for its slot, a new one from the game's allocator if
-need be), after `itemgate.hold`. Test: `test_people.py`.
+of Protection +1 is in his chest now, as it gave nothing under AD&D's rule with his leather
+shield). Keys, food and scrolls stay packed.
+Each move is `pickpocket.place` (the list for its slot found or made first, a new one from the
+game's allocator; with none to be had nothing moves, and the person is tried again on a later
+pass), after `itemgate.hold`. Test: `test_people.py`.
 
 ## Pehtucl's chest
 
@@ -1083,14 +1085,16 @@ that, while the bout is due (12 at 5 or more, 759 set, 807 clear), say the
 speech, and put the six in (each a group of one: the wave's own subroutine at
 9301 with its locals 12 and 13, as the game's waves do) and set 807 (FOUGHT);
 else they do what the game did. What a jump leaves of a longer command is
-filled with one-byte commands, so the script still decodes (the Loader's other
+filled with one-byte commands (`gpl.put_jumps`, with `gpl.FILL`, 61h, as every module's jumps
+are now: eleven scripts once didn't decode after Semyon's and others' jumps), so the script still
+decodes (the Loader's other
 changes read it); and the longer script must still fit the game's script buffer
 (`pensasks.LONGEST`), as the Loader's other script changes must.
 
 Worn and wielded: the game makes a person's items in its backpack list
-(+0Ch), and the people of the game's pens and arena carry everything there
-(Kurzak's armour and sword, the Arena Guards' bows) until their first action in
-a fight, when the game puts it on (and the Loader's `people.py` as they come on
+(+0Ch), and the people of the game's pens and arena keep it there (Kurzak's
+armour and sword, the Arena Guards' bows) until their first action in a fight,
+when the game puts it on (and the Loader's `people.py` as they come on
 the map: [The game's people's gear](#the-games-peoples-gear)). The melee routine fights with what is in the held list
 (+0Ah) for anyone: seen, a Tohr-kreen given Headsman there attacked "with
 Headsman +2 (1d10+2)" in place of its first two natural attacks, its third
@@ -1361,7 +1365,9 @@ item makes a creature invisible.
 effect 23 always, anyone else only while no party member has effect 15. It makes `REP` (the
 palette's colours 16-223, the ones the game doesn't animate, cut into 32 boxes by median cut) and
 `BLEND` (32 x 256) from DSCLOG's copy of the palette each time DSCLOG reads it again with `DARK`
-(0.2 s of Python, in a thread, kept by palette), and writes them into DSCLOG's block, 885
+(0.2 s of Python, in a thread), keeps the last eight by the colours the game never cycles
+(`ghost.key`, 16-223, `MADE_KEPT`: the whole palette changes every 30 s where the game cycles
+fire's or water's colours, and each change once made them again, solid meanwhile), and writes them into DSCLOG's block, 885
 paragraphs of upper memory taken at `KEEP` (`GHOST_SEG`, header +1826; none, no see-through
 figures). `GHOST_ON` (+1828) is 0 until they are written. The view is drawn again when a figure
 turns see-through or solid (`TSR_VIEW_REDRAW`). That is done from the map's main loop, which doesn't
@@ -1373,3 +1379,28 @@ them is hidden no longer: solid at the enemies' first step (test `test_solid_at_
 half see-through over floor, wall and its shadow, facing either way and walking; in a fight, a real
 hide (solid again from the backstab on) and a real Invisibility, walking at the solid pace
 (`playtest/logs/2026-11-05-fight-test.md`).
+
+## Sounds for hiding and picking pockets
+
+([In the features page](FEATURES.md#picking-pockets); `sounds.py`, whose docstring has the
+detail.)
+
+Two sounds of the mod's own, chosen by the user from eight made for them: a breath sinking away
+as a thief or ranger hides and moves silently in a fight (BVOC 140, `HIDE_SOUND`), and a purse's
+jingle for a picked pocket, a thing or the coins (BVOC 141, `PICK_SOUND`; a weapon worth the
+quest's XP keeps the quest's sound). Their samples are `dsloader/sound-data/*.wav` (8000 Hz,
+8-bit mono, the game's form; `make.py` made them), put in the Loader's copy of RESOURCE.GFF as
+Creative Voice Files like the game's.
+
+The game finds a sound through its table of 181 (3A98:08A2h, 6 bytes each: its kind, then a far
+pointer to a 12-byte descriptor naming the BVOC); only 0-130 are digital, so a BVOC numbered past
+them isn't played by its number. DSCLOG's `PLAY_SOUND` lends itself entry 131 or 132 for the
+call (one for each sound: the game keeps the last clip it loaded under an entry), as a digital
+one with a descriptor of its own, and puts the entry back. Two words at the header's end ask for
+them: `SOUND_REQ` (+1822: played from the map's main loop, `SOUND_TICK`) and `PICK_SOUND` (+1824:
+played with the pick's text, `GIVE_XP`). A Spellarcher making spell arrows hears the spell's own
+cast sound (its spell record's +0Fh, `spellarrows.cast_sound`), through `SOUND_REQ` too. Seen in
+DOSBox (2026-11-05, its output recorded with `PT_AUDIO` and matched with the clips: r 0.995 to
+0.997): both on request, in either order and after one of the game's, entries 131 and 132 as the
+game had them afterwards, and from a real pick and a real hide. Tests: `test_sounds.py`,
+`UseItemTests.test_sound_tick`, `test_pick_sound`.

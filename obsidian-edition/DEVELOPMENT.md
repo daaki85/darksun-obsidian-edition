@@ -224,6 +224,17 @@ Every roll in the game goes through one function, Borland C++'s `rand()`.
 4. To keep bursts of unimportant randomness from crowding out the rolls that
    matter, the helper only records calls from code it knows how to label,
    unless **Show unlabelled rolls** is ticked.
+5. Each pass is a list of steps, each on its own (`DiceLog._step`): one that
+   fails doesn't stop those after it. The game busy with its item lists
+   (`ItemsBusy`) waits for a later pass; DOSBox gone (`ProcessError`) is
+   passed on; anything else is said once, keyed by its kind and where it was
+   raised (`dicelog.error_key`, not its text, which may carry an address), in
+   the dice log, the window and `play` mode alike. A write the Loader stops
+   (`GuestMemory.guarded`: low memory and the start of the game's data
+   segment) is noted in `GuestMemory.refused` (the last 200, for a crash
+   report) and told in the log once. What the Loader saves as it goes (picked
+   pockets, learned speakers' names) is kept for the next pass if
+   settings.json can't be written (`DiceLog.save_learned`).
 
 Because the replacement produces identical numbers, the game plays exactly as
 it would without it, apart from what you choose on the Options tab (picking
@@ -411,7 +422,7 @@ game, `DOSBOX/dosbox-0.74-2.1.tar.gz`):
 | Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (it needs 60,000 bytes in one piece to open it again) |
 | C000h-C7FFh | 32 KB | the video BIOS (ROM) |
 | C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
-| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 62.4 KB, the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, about 35.6 KB free in one piece (DOS's memory blocks read in the running game, 2026-11-05, and what the mod's sounds and see-through figures added since) |
+| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 62.5 KB, the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, about 35.5 KB free in one piece (DOS's memory blocks read in the running game, 2026-11-05, and what the mod's sounds and see-through figures added since) |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
 | 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's far block, 57.6 KB (the ring, the panel's picture, the shadows' cache, the text buffer, spans, the dust's places, the frames steady pace holds back, the crash report's buffers), 6.4 KB free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
@@ -491,12 +502,12 @@ paragraphs, so 1,992 (31.1 KB) are spare. With `UMBPLUS.COM`, 50.2 KB were free 
 before the mod's sounds and see-through figures (DOS's memory blocks read in the running game,
 2026-11-05: the helper 3,946 paragraphs from C90Ah, the overlay buffer 2,062, the music buffer 751,
 3,211 free); their code took 49 paragraphs more and the see-through figures' block
-(`GHOST_PARAS`) 885, so about 35.6 KB are left. The helper's
+(`GHOST_PARAS`) 885, so about 35.5 KB (36,336 bytes, measured) are left. The helper's
 own segment is the limit for new code: its image with the install code is 65,504 bytes
 (`image_len`; `DSCLOG.EXE` is 32 bytes more, 65,536, with its header), so 32 bytes of its 64 KB
 are spare. (The install's 256-byte stack is past the image, in its own segment, since the
-see-through figures: `SS` in the EXE's header is the paragraph after the image.)
-and the build fails past it (what each change took is in the CHANGELOG). The HMA has 6,566 bytes
+see-through figures: `SS` in the EXE's header is the paragraph after the image.) The build
+fails past 64 KB; what each change took is in the CHANGELOG. The HMA has 6,566 bytes
 left for more buffers (the far block ends at `FAR_END`, 58,970). The game's sound-effects buffer (24,001 bytes, kept
 for good like the music's) could go to upper memory next for the game's 640
 KB, but the sound driver may play it by DMA, which can't cross a 64 KB page. Text the game reads from RESOURCE.GFF belongs in the Loader's
@@ -574,8 +585,9 @@ that way is gone without a trace.
 So every write of the Loader's to the item lists goes through one gate
 (`itemgate.py`). `GuestMemory.write` asks `ItemGate.covers` whether a write
 touches them: the free lists' heads, the item table (400 records of 21 bytes
-from the far pointer at `DS:165Dh`), the things table, or a creature's list
-heads (`CREATURE_ITEM_LISTS`). Each pass of the dice log (`DiceLog.lines`)
+from the far pointer at `DS:165Dh`), the things table with the few past its
+520 (`THINGS_PAST`: the pointer's thing, 523), or a creature's list heads
+(`CREATURE_ITEM_LISTS`). Each pass of the dice log (`DiceLog.lines`)
 begins the gate first, noting the heads, the region (`DS:117Ch`) and the item
 and creature tables' pointers. The pass's first such write waits until
 `itemgate.WAIT` (60 ms) has gone by since then, pauses DOSBox
@@ -593,7 +605,9 @@ Whatever can't be done twice takes the gate before it starts (`itemgate.hold`),
 so a refusal leaves nothing half done: Pick Pockets before its d100 (the request
 stays unanswered until a later pass), a defiler's scroll before its roll (the
 defiler isn't marked rolled for), Kalzith's loot before `LOOTED`, and the arena
-ring before the search counts as answered. A sold item's place in the buyback
+ring before the search counts as answered. An item moved (`pickpocket.place`)
+has its new list found or made before it leaves its old one: with the game's
+things all in use nothing moves. A sold item's place in the buyback
 queue moves on only once it is kept, and the game's own party's steps are marked
 done only once made.
 

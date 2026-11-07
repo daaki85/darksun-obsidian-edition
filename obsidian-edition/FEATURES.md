@@ -835,7 +835,7 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#half-giants-two-handed
 #### Rings and cloaks of protection
 
 The game has no rings or cloaks of protection; the mod adds three (the
-arena's Ring +1, and Pehtucl's ring and cloak in the slave pens: see
+arena's Ring +1, Pehtucl's ring, and the cloak in the chest beside him in the slave pens: see
 [New items](#new-items)), each +1 to AC and +1 on every saving throw. With
 **Rings and cloaks of protection as in AD&D** ticked, they follow the AD&D
 rules for them:
@@ -1552,8 +1552,7 @@ a worn belt's 5 counted, as in the thief rows):
   multiclass thief's classes). Keys stay, as scripts may look for them.
   Anything else lifted, or the coins, comes with a purse's jingle (the mod's
   own sound; the three weapons keep the quest's).
-  People outside the party keep all they own in their pack, so this goes by
-  what each thing is.
+  This goes by what each thing is, wherever its owner keeps it.
 - **Failure:** a move silently roll. Made, the thief slips away unnoticed;
   missed, they're caught.
 
@@ -2526,7 +2525,7 @@ got wrong, each with a switch, are [below](#rules-the-game-got-wrong)):
 | Items that raise or lower an **ability score** | Changed the score wherever they were, the backpack too, so one carried did as much as one worn | Only while worn ([how](DEVELOPMENT-CONTENT.md#worn-items-the-gladiators-armour-and-psionic-blast)) |
 | The **gladiator's armour optimisation** (AC 1 better a 5 gladiator levels) | Given with no armour on, where Dark Sun gives it to armour worn | Only with armour on (arms, legs, head or chest; not a shield, bracers or a robe) |
 | **Psionic Blast** on a party member | Its imagined wounds (down to a fifth of its hit points) were real and stayed | Given back as the fight ends; until then a blow that would kill it knocks it out instead, and one knocked out wakes with them (the dice log says so; [how](DEVELOPMENT-CONTENT.md#worn-items-the-gladiators-armour-and-psionic-blast)) |
-| The game's **people's weapons and armour** | Carried in their packs until each one's first action in a fight: until then AC 10, armour unworn, no weapon in the Look box; anyone hit before acting (an opening blow, a backstab, the first round) met no armour | Worn and in hand as they come on the map, as the game puts them on: the best weapon in the main hand, a shield or a second weapon in the other, a bow and its arrows, armour and a helm, a cloak, a belt, boots, an amulet and up to two rings, each counting by the same rules as the party's |
+| The game's **people's weapons and armour** | Carried in their packs until each one's first action in a fight: until then AC 10, armour unworn, no weapon in the Look box; anyone hit before acting (an opening blow, a backstab, the first round) met no armour | Worn and in hand as they come on the map, as the game puts them on: the best weapon in the main hand, a shield or a second weapon in the other, a bow and its arrows, armour and a helm. The mod also puts on a cloak, a belt, boots, an amulet and up to two rings, which the game never did. Each counts by the same rules as the party's |
 | **DELETE** in the roster | With the list scrolled, deleted another character | Deletes the one chosen ([more characters](#more-characters)) |
 | A **New** character's thief skills | Shown as 0 | Shown as they are ([more characters](#more-characters)) |
 | **The Trustee** in the slave pens | His rounds' two pauses took their corner from numbers other scripts in the pens change, so he could set off for a spot that doesn't exist and stay busy ("I'd love to talk more...") for good | The pauses keep a corner of their own, and his busy line starts his rounds again, so one already stuck walks on once talked to; and a save made while he (or anyone on rounds of their own) walked no longer leaves him standing when loaded |

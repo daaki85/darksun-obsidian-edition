@@ -8,377 +8,158 @@ notes](PATCH-NOTES.md).
 
 ## Next pull request (not opened yet)
 
-**New**
-- **Kalzith's own portrait** (`kalzithface.py`): a face painted for him in the game's portrait
-  style and colours (an old man, white of brow and beard, in his figure's green-teal hood),
-  chosen by the user from three artists' attempts ("A", the frontal one), in place of the game's
-  portrait 61 with a brand. Seen in DOSBox in his talk and his shop; `docs/kalzith.png` retaken.
-- **See-through figures** (`ghost.py`; the Options tab's new "drawn see-through" switch, on): a
-  thief or ranger hidden and unheard in a fight, and anyone invisible (a party member always, an
-  enemy while no party member detects invisibility), drawn half see-through, the user's look E
-  of the mock-ups. DSCLOG's `PROBE_GHOST` (`INT 80h`, gamepatch's `ghost` over 25EBEh's "call far
-  1A0A:3180", the game's draw of a thing) draws such a figure itself (`GHOST_DRAW`): its frame's
-  pixels as 32 colours, blended plane by plane with what's under them through `BLEND` (32 x 256),
-  which the Loader makes from the palette. The block for the tables is 885 paragraphs of upper
-  memory taken at `KEEP` (`GHOST_SEG` +1826, `GHOST_ON` +1828). `PAGE_SETUP` is now shared with the
-  shadows. The image grew to 65,456 bytes, so the install's stack moved past it (the EXE's `SS`).
-  DSCLOG.EXE 65,488 bytes (+640; 80 of its segment spare). The game draws the invisible like
-  anyone (its only rules: -4 to hit and +4 to saves, 7BD4Bh); among foes only the psurlons turn
-  invisible (Superior Invisibility). Seen in DOSBox: a figure marked in GHOST_TAB drawn half
-  see-through over floor, wall and shadow, either way round and walking; in a fight, a real hide
-  (Cilla see-through, the hide sound with it, solid from her backstab on) and a real Invisibility
-  (cast by Cermak), walking at the same pace as a solid figure (about 0.07 s a step). Its vector
-  was first 62h, which is `PROBE_AC`'s: every attack's AC went to the see-through probe (the dice
-  log's "target AC 255" on each attack on the party, so foes hit on anything but a 1), and it was
-  found in that test before any release; now 80h, and `test_vectors_distinct` checks each of
-  DSCLOG's vectors is used once. `GHOST_DRAW` notes at most 192 runs (the party's figures have
-  up to 78 a frame; some of the game's pictures 563): past that it draws what it has, where it
-  had written on past its block. Tests: `test_ghost.py`, `UseItemTests.test_ghost_dispatch`,
-  `test_ghost_draw_many_runs`.
-- **Sounds for hiding and picking pockets** (`sounds.py`, the user's picks of eight made for it):
-  a thief or ranger hidden and unheard in a fight makes a soft breath sinking away (BVOC 140), and
-  a pocket picked, a thing or the coins, a purse's jingle (BVOC 141); the three weapons worth XP
-  keep the quest's sound, now with nothing else. The samples are `dsloader/sound-data/*.wav`
-  (8000 Hz, 8-bit mono, the game's form; `make.py` made them), put in the Loader's RESOURCE.GFF as
-  Creative Voice Files like the game's own. The game's table of sounds (3A98:08A2h, 181 entries)
-  has digital ones for 0-130 only, so DSCLOG's `PLAY_SOUND` lends itself entry 131 or 132 for the
-  call, as a digital one with a descriptor of its own naming the BVOC, and puts it back (one
-  entry each: the game keeps the last clip it loaded by its number). Two words at the header's
-  end: `SOUND_REQ` (+1822, played from the main loop: `SOUND_TICK`) and `PICK_SOUND` (+1824, with
-  the pick's text: `GIVE_XP`). DSCLOG.EXE 64,848 bytes (+160; 464 of its segment spare). Seen in
-  DOSBox: both played on request (DOSBox's output recorded, `PT_AUDIO`, and matched with the
-  clips, r 0.997 and 0.995), in either order and after one of the game's; entries 131 and 132 as
-  the game had them afterwards; and from their real triggers, a pocket picked (Cilla on Kalzith,
-  r 0.995) and a hide in a fight (r 0.997). Tests: `test_sounds.py`, `UseItemTests.test_sound_tick`, `test_xp`,
-  `test_pick_sound`, the stealth and pocket tests.
-- **The champions' bout** (`champions.py`, `bodyart.py`; with the magic weapons' switch): once a
-  party member has killed Scar (flag 759, set beside the game's 19 where script 3 says "This
-  makes ... king of the pens!"), the first wave of the next visit (the count, the game's number
-  12, at 5 or more) is six champions from a distant arena, after a speech of the Announcer's,
-  once (flag 807): a Tohr-kreen with Kreenfang, a half-giant (metal great axe, leather shield,
-  full scale and a bone helm), a mul (two bone axes, the same armour), a halfling (sling, bone
-  short sword, full leather, a leather helm and shield), an elf (bow and arrows, obsidian long
-  sword, the same leather and shield) and a defiler (bone dagger and a
-  scroll of Fogbolt, Spook or Reflected Image). Objects 2660-2665, copies of the arena's kinds
-  with gear of their own; script 2's default opening (0AD4h) and its call to the random wave maker
-  (1581h) go to parts of ours while the bout is due. Kreenfang moves off the dead body by the arch
-  (its gythka plain).
-- **Champions wear and wield their gear:** the game makes a person's items in its backpack list,
-  and its people carry all theirs there, fighting with their bare numbers. The melee routine
-  fights with the held list's weapon for anyone, and the AC routine counts the worn list for
-  anyone (both seen in DOSBox), so `champions.Gear` moves each champion's items to their slots as
-  it comes on (`pickpocket.place`); their sheets keep their kinds' AC, the armour on top. DEX:
-  the half-giant 15, the Tohr-kreen, the elf and the defiler 18 (the mul and the halfling keep
-  their kinds' 18). Only a
-  kill in the arena counts: the handler setting 759 is hooked on Scar only there (MAS 42, script
-  2, script 154 for region 2Ah); killed in the pens (script 144) he sets the game's flag 19 alone.
-- **The Tohr-kreen champion's own body:** where the game makes a Dead Body for a creature that
-  dies carrying something ("push 0FFFF044Dh", 59412h), `gamepatch`'s `champion_body` asks DSCLOG's
-  `PROBE_WORN` (return address 2754h), which answers object 2666 for that champion (a copy of the
-  Dead Body, its picture a Tohr-kreen fallen on its side, drawn from its own frames) and 1101 for
-  anyone else. DSCLOG.EXE 64,688 bytes (+48). Tests: `test_champions.py`,
-  `WornTests.test_champion_body`.
-- Seen in DOSBox (the bout forced due in a test build): the six came on with their gear in place;
-  the mul's two axes, the halfling's sling, the elf's bow, the half-giant's great axe (1d10 +8
-  STR) and Kreenfang (2d4+1, twice, then the bite) each attacked; the Tohr-kreen's body was object
-  2666 with Kreenfang in it. Not yet seen: the speech, the bout coming after Scar's death in a
-  real game, and the body's picture on screen (the level-1 test party was defeated first).
-
-**Fixed before release** (in the new work above)
-- **A hidden thief stayed see-through after its turn**, through the enemies' turns, until a party
-  member's (about 1.4 s, seen in DOSBox 2026-11-06): the Loader ends the hiding as the turn
-  passes and asks for the view to be drawn again, but that is done from the map's main loop, which
-  doesn't run in the enemies' turns. Now `PROBE_GHOST` notes each party member it draws
-  see-through while hidden (`GH_SHOWN`), and `GHOST_UNION`, in `PROBE_REDRAW_ALL` (the game's
-  redrawing of what moved, at each step), has the whole view drawn once when one of them is
-  hidden no longer. DSCLOG.EXE 65,536 bytes (+48; 32 of its segment spare). Test
-  `UseItemTests.test_solid_at_turn_end`. (The 2026-11-05 "two solid frames" in a hidden walk were
-  not seen again in 53 more hidden steps: running out of Move doesn't pass the turn, the game waits
-  on the END menu; closed as not reproducible after the vector fix.)
-- The champions' gear watcher forgot nothing on a load, so champions made
-  again from a save in the arena came on unequipped (now reset on a load, as the defilers' rolls,
-  and a champion with gear still in its backpack is equipped whatever was remembered; test
-  `test_again_after_a_load`).
-- DSCLOG hooked its interrupts before setting up its buffers, so when there
-  was no memory for them ("no memory for its buffers (57 KB). Not loaded.") it exited with its
-  vectors still pointing into freed memory. It now sets up the buffers first and hooks nothing
-  when that fails. Seen in DOSBox: loads and logs as before (DSCLOG.EXE still 64,688 bytes).
-- **The champions' bout never came with Semyon on** (the default). Semyon's
-  changes to scripts 3 and 5 put a jump over a longer command and left the rest of it as it was,
-  so the script no longer decoded; the champions' change to script 3, made after, reads it, and
-  left it alone (no flag 759 on Scar's death). Eleven scripts in all were left so (3, 5, the Elven
-  Leader's 46, Garyn's 174, Dinos's and the Trustee's 137, 139 and 146, Alagorn's 212, 213, 220
-  and 221). Each such jump is now `gpl.put_jumps`, which fills what is left of the command with a
-  one-byte command (`gpl.FILL`, 61h, as the champions' own jumps did), so every changed script
-  decodes: the dice log's explanations of the scripts' rolls read them too. Test:
-  `AllScriptsTests` (the whole copy, every switch on: each script decodes, script 3 has the hook).
-
-**Changed**
-- **Thornwall comes onto the slave pens' weapon rack once Semyon has told of it.** It had been
-  on the rack from the start (in place of its first bone polearm). Now the rack's data
-  (`worldgear`'s gift) keeps its two plain bone polearms, and Semyon, in his pen, has a new
-  question, "Seen anything useful?": a weapon shipment, one crate the guards fussed over "like
-  it held something special" (he didn't see where it went). His answer sets flag 756; once the game has
-  made the rack (it makes a region's objects as the party nears them: the rack is looked for by
-  its object, 2599, as a coffin shares its item type, 6Ch) `semyon.ship` puts a Thornwall (an item from the game's free list) first on the
-  rack's contents and sets 757. A Thornwall already in the game (a save from before) sets 757
-  with none made. Once a party member carries Thornwall (worn, held or in the pack: flag 758,
-  `semyon.found`), Semyon has "We found what was in that crate." Both questions only with the
-  world's magic items on (`semyon.conversation(thornwall=...)`: without them there is no
-  Thornwall to tell of). Seen in DOSBox: the rack made as the party came beside it, with Thornwall
-  first (then its polearms, quarterstaff and axe), still there after walking off and after a
-  save and load. Tests: `test_semyon.ShipmentTests`, `test_worldgear`.
-
-**Fixed** (found in a third review, 2026-11-07)
-- **Alagorn's magic-clothes menu ran into the wrong script:** Pehtucl's chest had been given
-  script 220, already Alagorn's copy telling of clothes, and its script replaced his; his menu
-  then called 942 bytes into a 705-byte script. The chest is script 223, the Loader's numbers
-  are in one table (`kalzith.LOADER_SCRIPTS`), and `test_scriptnumbers` checks no two modules
-  make the same script, that every call lands inside its script and that every script fits the
-  game's buffer. Seen in DOSBox: the built copy's 220 is Alagorn's again, the chest works as 223.
-- **The chest could be worked on from across the room:** the game's safe first tests the
-  distance; the chest does too now ("You must be next to the chest in order to work on it").
-  Seen in DOSBox from five squares and from beside it, with a thief's disarm and pick.
-- **A save's talk and use commands could point at another script once a switch changed:** the
-  Loader's script entries were numbered only for the parts switched on, so with Kalzith off the
-  chest's command named Semyon's talk, and the chest stayed shut for good. The three entries
-  (Kalzith's, Semyon's, the chest's) and their scripts are always there, in that order.
-- **An item moved could be lost:** `pickpocket.place` took it out of its list before it knew
-  there was a list to put it in; with the game's things all in use it was in none, gone from the
-  game and the save. Since the game's people have their gear put on, this ran for everyone on
-  the map. The list is found or made first now, and a person left part-done is tried again.
-- **DSCLOG waited for the Loader with interrupts off** for a Spellarcher's arrows (the other two
-  waits turn them on): with the Loader slow the game's clock and music stopped for up to two
-  seconds. One `sti`; DSCLOG.EXE still 65,536 bytes.
-- **Refused writes never reached a crash report:** the record was emptied every pass, after at
-  most three were said. It is kept now; the dice log tells the new ones (three, and a count of
-  the rest).
-- **A pocket picked or a speaker's name learned was lost** if settings.json was held by an
-  antivirus or a backup at that moment: it was marked saved before the save. It is kept and
-  saved at the next pass (`DiceLog.save_learned`).
-
-**Fixed: the Loader** (found in a second review, 2026-11-06)
-- **One write the Loader stopped ended the dice log's lines for the session:** the line saying so
-  sliced `GuestMemory.refused`, a deque, which raises TypeError, outside any guard, before the
-  deque was cleared; every pass then failed (the log, dialogue, speakers' names and picked
-  pockets no longer kept up). Test `test_refused_write_said_once`.
-- **Each step of the pass on its own** (`DiceLog._step`): a step that failed stopped every one
-  after it, every pass, said once or not at all (one `try` round thirty steps in `_after_rolls`,
-  a silent one round the people's watches in `_arena_ring`, where Kalzith's stock waiting on a
-  busy item list skipped Semyon's, Kurzak's and the vulture's). Now the game busy with its lists
-  waits for a later pass, DOSBox gone (`ProcessError`) is passed on, and anything else is said
-  once by where it happened (not by its text, which could carry an address: said each pass).
-  Tests `test_each_step_on_its_own`, `test_watches_go_on_past_a_failing_one`.
-- **A weapon's 200 XP for a picked pocket could be had again and again:** Shadowseeker, Gutterknot
-  or Mindshard sold, then lifted back from the buyer. Paid once a game now, remembered with the
-  pockets tried (`Attempt.paid`, kept and forgotten as they are). Test `test_sword_xp_once`.
-- **The game's own party wasn't made ready in a second new game** started without closing the
-  Loader (no specs, gythka, Cermak's kit or starting gear): what was done is forgotten with the
-  clock going back, as the picks are. Test `test_default_party_again_in_a_new_game`.
-- **A sold magical item could be lost** when the game was busy with its item lists: the pointer's
-  thing (523) was emptied before the gate was asked (it covered things 0-519 only), and the items
-  were then in no list. `Buyback.keep` asks first (`itemgate.hold`), and the gate covers the
-  things past 519 (`THINGS_PAST`). Tests `test_busy_before_anything_moved`,
-  `test_gate_covers_the_pointers_thing`.
-- **The dice log named the wrong script checks** after a switch changed and the game started
-  again from the same Loader: the checks were read from `dos/GPLDATA.GFF` once a session, and the
-  Loader writes it afresh at each start. Read again when the file changes, and a failed read is
-  not kept. Test `LoadTests`.
-- **See-through figures drawn solid for a moment every 30 s, and their tables kept for good:**
-  the tables were kept by DSCLOG's whole palette copy, which changes every 30 s where the game
-  cycles fire's or water's colours (four in 75 s in the pens' fire room, measured); each change
-  made them again (0.2 s, with GHOST_ON 0 meanwhile: a hidden thief or an invisible figure drawn
-  solid) and kept another 13 KB, all session. Now they are kept by the colours the game never
-  cycles (16-223, `ghost.key`), the last eight (`MADE_KEPT`). Seen in DOSBox: four palettes in 75
-  s in the fire room, GHOST_ON 1 in all 3,722 samples. Test
-  `test_cycling_colours_keep_the_tables`.
-- **An error with an address in its text was said on every pass** in the Loader's window and
-  written to play.log each time in `play` mode (they told errors apart by their text); now all
-  three places key them as the dice log does, by kind and where raised (`dicelog.error_key`).
-  Test `test_error_key_by_where`.
-- **A dressed figure could be written past its room in the Loader's copy of SEGOBJEX.GFF:** the
-  Dresser reckoned the room from the settings as they are now (Pictures' LOOKS), while the copy
-  was written at the game's start with them as they were; with "Elves have pointed ears" changed
-  and the Loader connected again, a half-elf's picture could run into the chunk after it. Now
-  each picture's room is read from the copy itself (`gff.rooms`: to the next chunk), nothing
-  longer is written, and a dressed picture that won't fit is drawn plain. Tests
-  `test_never_past_the_copys_room`, `test_rooms`.
-- **The scenes' pointer could stop the game from starting:** `POINTER.BIN` held by another
-  program, or the `dos` folder read-only, raised from `prepare_patched_game`. Now DSCLOG's own
-  pointer is used. Test `test_unwritable`.
+DSCLOG.EXE 65,536 bytes (+944 since #85; its image 65,504, 32 bytes of its segment spare).
 
 **New**
-- **Pehtucl's chest, locked and trapped** (`pehtuclchest.py`; with the pens' gear): a USE command
-  for it in the pens' master script (6Dh, as the cell doors have theirs) runs script 223. A thief
-  (the class flags' 400h, as the game's safe tests it) checks for traps (find/remove traps: the
-  needle drawn out, or sprung) and picks the lock (open locks, +0; tried again as often as wanted);
-  anyone else may bash it (the safe's odds: 5%, +5% for each of STR 18, 20, 22, 24), springing the
-  needle if it is still there. Flags 795 (the needle gone) and 796 (unlocked), above what Alagorn's
-  menus reach (tested). The needle is a trap object of the Loader's own (2667, a copy of the game's
-  2039), set off with the game's trap action; its descriptor byte (+0Fh, read by the trap routine
-  at DSUN.EXE 80A11h: bits 0-2 the d6, 3-4 its reach, 5-6 the damage kind of DS:251Ch's poison,
-  fire, edged, electricity, 7 Detect Traps no help) is 02h: 2d6 poison on its square (the game's
-  2039 is 4d6). The game opens a container as its USE script ends, whatever the script did, so the
-  chest is made with the safe's item type (67h), which it doesn't open, and the Loader makes it a
-  chest again (31h) while the unlocking script waits for its last click. Seen in DOSBox
-  (`saves/pens-new-chest`, a new game): no thief, No: nothing opens; bashes failing ("a lot of
-  noise"); a bash breaking it (the odds raised in a test build), the party's thief dodging the
-  needle (16, 37, 6, 27 against 45) and, with no thief, the needle's 2d6 = 6 on Gerakis alone; a
-  thief springing it (then dodging it), the lock failing again and again and then opening, the
-  chest opened after the click, and at once on every use after. Tests `test_pehtuclchest.py`.
+- **Kalzith's own portrait:** a face painted for him in the game's portrait style (an old man,
+  white of brow and beard, in his figure's green-teal hood), the user's choice of three, in
+  place of the game's portrait 61. (`kalzithface.py`, portrait 101. Seen in DOSBox in his talk
+  and shop; `docs/kalzith.png` retaken.)
+- **See-through figures:** a thief or ranger hidden in a fight, and anyone invisible (a party
+  member always, a foe while no party member detects invisibility), is drawn half see-through.
+  DSCLOG draws such a figure itself, blending its pixels with what is under it through tables the
+  Loader makes from the palette. (Options: "drawn see-through", on. `ghost.py`, DSCLOG's
+  `PROBE_GHOST` on `INT 80h`; DEVELOPMENT-CONTENT § See-through figures. Seen in DOSBox with a
+  real hide and a real Invisibility. Tests: `test_ghost.py`, `test_ghost_draw_many_runs`.)
+- **Sounds for hiding and picking pockets:** a soft breath as a thief or ranger hides in a fight,
+  and a purse's jingle for a picked pocket (the three weapons worth XP keep the quest's sound). A
+  Spellarcher making spell arrows hears the spell's own cast sound. (`sounds.py`,
+  `spellarrows.cast_sound`; DEVELOPMENT-CONTENT § Sounds for hiding and picking pockets. Seen in
+  DOSBox, DOSBox's output matched with the clips. Tests: `test_sounds.py`, `test_pick_sound`,
+  `test_spellarrows.py`.)
+- **The champions' bout:** once a party member has killed Scar in the arena, the next visit's
+  first wave is six champions from a distant arena, after a speech of the Announcer's, once: a
+  Tohr-kreen with Kreenfang, a half-giant, a mul, a halfling, an elf and a defiler, each armed and
+  armoured (a defiler with a scroll). The Tohr-kreen leaves a body of its own, with Kreenfang in
+  it. (New items. `champions.py`, `bodyart.py`; flags 759 and 807; DEVELOPMENT-CONTENT § The
+  champions' bout. Seen in DOSBox: the speech and the bout after Scar's death in a real game,
+  every champion's weapons in use, the body's picture. Tests: `test_champions.py`.)
+- **Pehtucl's chest, locked and trapped:** the slave pens' head templar's chest, beside him, holds
+  the Cloak of Protection +1. A thief checks it for traps (find/remove traps: a poisoned needle
+  drawn out, or sprung) and picks the lock (open locks), as often as wanted; anyone else may bash
+  it (the game's safe's odds: 5%, +5% for each of STR 18, 20, 22 and 24), which springs the needle
+  if it is still there. The needle is 2d6 poison; the party's best at find/remove traps may still
+  avoid it, as with every trap in the game. Worked on only from beside it. A new game only.
+  (New items. `pehtuclchest.py`, script 223, flags 795 and 796; DEVELOPMENT-CONTENT § Pehtucl's
+  chest. Seen in DOSBox: every branch, the disarm on 2026-11-07. Tests: `test_pehtuclchest.py`.)
 
 **Changed**
-- **The Cloak of Protection +1 is in the chest beside Pehtucl,** not on him (`npcitems.PEHTUCL_CHEST`,
-  object 1568, the only one of its kind: a sling and two trinkets of the game's in it). Worn by
-  him (people.py) it did nothing: under AD&D's rule a cloak counts for nothing with a shield, and he
-  carries one. He keeps his Ring of Protection +1. In a new game only: a save that has been to the
-  pens keeps the chest and Pehtucl as they were made.
+- **Thornwall comes onto the slave pens' weapon rack once Semyon has told of it,** in a new
+  question ("Seen anything useful?": a crate the guards fussed over); then "We found what was in
+  that crate" once a party member carries it. It had been on the rack from the start. (New items.
+  `semyon.ship`, flags 756-758. Seen in DOSBox, and after a save and load. Tests:
+  `test_semyon.ShipmentTests`.)
+- **The Cloak of Protection +1 is in Pehtucl's chest,** not on him: worn, it gave him nothing, as
+  a cloak counts for nothing with a shield under AD&D's rule. He keeps his ring. (`npcitems.py`. A
+  new game only.)
+- **The game's people wear the cloaks, belts, boots, amulets and up to two rings they carry,**
+  which the game never put on; each counts by the same rules as the party's. (`people.py`, with
+  the fix below.)
+- **The freeze report samples every 32nd strike of the timer,** not every 16th (`freeze.py`).
 
 **Fixed: the game**
-- **The game's people put their weapons and armour on only at their first action in a fight**
-  (seen in DOSBox, 2026-11-06): it makes a person's items in its backpack list and moves them to
-  the worn and held lists then. Until then a person was AC 10 with its armour unworn and its Look
-  box listed no weapon: a first round's blow on one who hadn't acted, a backstab, or an opening
-  blow from outside a fight (struck before the game starts the fight: a sling shot at Legcrusher
-  hit AC 9, the fight on only after his alarm call) met no armour. `people.py` puts each person's
-  gear on as it comes on the map, as the game would (the best weapon in the right hand, a shield
-  or a second weapon in the left, a bow and arrows, chest, arm and leg armour and a helm), and
-  what the game never put on as well (a cloak, a belt, boots, an amulet, two rings: counting by
-  the party's rules), into free slots only, after the item gate. Pehtucl's Templar: ring and
-  cloak of protection worn, AC 4 and +1 on saves (the cloak nothing, with his shield, under AD&D's
-  rule). Seen in DOSBox: loaded in
-  the pens, all 21 people with gear wearing and holding it (Kurzak Shadowseeker +1 and his sword,
-  helm and leather; the Templars their brigandine and shields), keys and fruit left packed. Tests
-  `test_people.py`. FEATURES' bug table, HOW-THE-GAME-WORKS' Monsters' defences, DEVELOPMENT-CONTENT
-  (a section of its own) and the patch notes say so; the "bare numbers" of earlier notes was wrong.
+- **The game's people put on their weapons and armour only at their first action in a fight.**
+  Until then each was AC 10 with its armour unworn and its Look box listed no weapon, so a first
+  round's blow on one who hadn't acted, a backstab, or an opening blow from outside a fight (which
+  is struck before the fight starts) met no armour. The Loader now puts each person's gear on as
+  it comes on the map, as the game would. (`people.py`; DEVELOPMENT-CONTENT § The game's people's
+  gear. Seen in DOSBox: all 21 people with gear in the pens wearing and holding it. Tests:
+  `test_people.py`.)
+- **Psionic Blast knocks out instead of killing** while a party member's imagined wounds are
+  still to come back; one knocked out wakes with them at the fight's end. This replaces #85's
+  "only to a member still Okay". Disintegrate still kills. (From yuan-ti's v0.1.55;
+  `gamepatch.blast_knockout`; DEVELOPMENT-CONTENT § Worn items. Seen in DOSBox. Tests:
+  `WornTests.test_blast_knocks_out`, `test_psiblast.py`.)
+- **Scare's save:** below 6th level an elf or half-elf priest got no save (the game tested for
+  both races at once). (From yuan-ti's v0.1.55; `gamepatch.scare_elves`. Tests: `ScareTests`.)
 
-**Fixed: DSCLOG** (found in the second review, 2026-11-06)
-- **The timer's labels and the shadows shared the VGA's kept registers:** LABEL_STAMP (the floating
-  names, from the timer) keeps the registers in VGA_SAVE's slots, and the shadow pass, the combat
-  log panel's and a see-through figure's keep theirs there too, with interrupts on. A strike in
-  such a pass wrote over the game's registers there, which were then put back as the pass had
-  them (map mask 8, read map 3, no set/reset): a likely cause of rare drawing gone wrong. Now
-  VGA_SAVE sets VGA_BUSY until VGA_RESTORE, and LABEL_STAMP waits for its next strike while it is
-  set. Test `test_vga_busy`.
-- **A pocket picked, or spell arrows made, after DSCLOG had stopped waiting:** with no answer
-  within PICK_WAIT (the Loader held up, the game busy with its item lists) DSCLOG went on as the
-  game would, and the Loader, answering in a later pass, still did it: the pocket picked with no
-  text, sound or XP shown, the arrows made unseen. DSCLOG now marks such a request answered
-  (USE_REPLY = USE_SEQ), which the Loader takes as nothing to do. Test `test_unanswered_marked`.
-- Its message when its interrupts are taken says 80h-FFh (VEC_GHOST is 80h); "Dark Sun companion
-  dice log helper loaded." is "DSCLOG loaded." (the room for the two above). DSCLOG.EXE still
-  65,536 bytes.
+**Fixed: the scripts**
+- **Eleven of the Loader's changed scripts no longer decoded** (3, 5, 46, 137, 139, 146, 174, 212,
+  213, 220, 221): a jump over a longer command left the rest of it in place. The dice log's
+  explanations of the scripts' rolls couldn't read them, and the champions' bout never came with
+  Semyon on. Each jump now fills what it leaves with a one-byte command. (`gpl.put_jumps`. Test:
+  `AllScriptsTests`.)
+- **Kurzak spoke of Legcrusher as gone while he lived:** his lines asked whether Legcrusher was on
+  the map, and he is made only as Kurzak calls. They ask the Loader's flag 797 now, set once the
+  dice log sees him dead. (`kurzak.py`. Test: `WatchTests`.)
+- **A save's talk and use commands could point at another script once a switch changed:** the
+  Loader's script entries were numbered only for the parts switched on, so with Kalzith off his
+  talk's entry was Semyon's. The three entries (Kalzith's, Semyon's, the chest's) and their scripts
+  are always there now, in that order. (`kalzith.ENTRY_SCRIPTS`. Test: `test_scriptnumbers`.)
 
-**Fixed: the Loader** (found in an audit)
-- **A save of the same party loaded wasn't seen as a load:** the check for it read the game's
-  clock after another step of the same pass had just noted it, so the clock never went back; the
-  dice log then gave the loaded save's differences as news (hit points, PSP, abilities, kills and
-  XP). It keeps its own note of the clock now (test `LoadSeenTests`).
-- **The Options tab's combat log level was undone** while the panel showed: the panel's own level
-  was put back (and saved) on the next pass. The panel takes the tab's level now (test
-  `PanelLevelTests`).
-- **The Loader's window forgot the combat log panel's size and whether it was open** (only the
-  logs without a window read them), and its item reports had no switches: it reads the saved
-  settings first now.
-- **Kalzith's scrolls weren't trimmed** if the game was busy with its item lists on the pass he was
-  seen dead: the trim is tried each pass until done.
-- Semyon's word on the crate counts a Thornwall in a bag too; Kalzith's stock waits while the
-  flags have no place in memory (it read as not given); a monster's THAC0 read signed (0 or less
-  showed as 255); WIS's save adjustment read only within its table; Restore Youth's system shock
-  skips a creature with no CON, as Haste's does; a palette from an earlier start isn't kept when
-  the game's can't be read; crash reports show the new spells' old setting name, the ring and the
-  panel's level as used; a failure counting effects' charges no longer loses the pass's lines.
-- DSCLOG's message when its interrupts are taken names them right (81h-FFh, not 8Ch-FEh).
-- **Kurzak spoke of Legcrusher as gone while he lived** (seen in the champions' run): his lines
-  asked whether Legcrusher was on the map, but script 136 makes him only as Kurzak calls (after
-  the call's first line), and he is off the map again once he has fetched the party, so "he never
-  came back" came with Legcrusher beside the party. They ask the Loader's flag 797 now, which the
-  dice log sets once it sees him dead (`kurzak.watch`; 797 is the top of 784-797, kept for
-  Alagorn's menus, which use none). A save where he was killed with an earlier version has the
-  game's lines until the flag is set (it can't be, as he's gone). Test `WatchTests`.
-- **The Look box's AC left out Helms give AC 1** before anyone wearing that kind of helm had been
-  attacked (the four champions with helms, one worse than in the fight): DSCLOG writes a helm's AC
-  into its type's record only when the game's AC routine first counts one, and the Loader read
-  the record's 0. `counted_ac` gives a helm the rule's AC itself (`game.HELM_TYPES`). Test
-  `test_helm_before_dsclog_sets_it`.
-- **The dice log learned a speaker's name wrongly from a script's speech:** it names a face after
-  the creature the script was started on (the game's talk target), when one face shows. Kurzak's
-  call to the arena isn't started on him, and the script running then was the Trustee's rounds,
-  so it learned "Portrait 5 is Trustee" and named Kurzak so from then on (kept in the settings). A
-  speech with no replies for the party now teaches a name only when its speaker stands within 4
-  squares of the party (`GameData.talk_target_distance`: Legcrusher fetching the party still
-  counts); a talk with replies teaches it as before, and puts a wrong one right. Seen in DOSBox:
-  the call shows as "[Portrait 5]" and nothing is learned. Test `SpeakerTests`.
-- **The combat log panel shortened only plain saves:** a save showing its modifiers or total
-  (`d20 = 13 +2 Blessed = 15`, a doubled d20 against fire) stayed at its whole length in short and
-  at the least; now it's shortened to its total against the need (test `test_save_with_modifiers`).
-  The item reports' switches follow the Options tab's changes in the Loader's window.
-- A party member the player names Kalzith or Semyon, dying, no longer counts as his death (the
-  check skips the party's places); a script repair too short for its jump is left out rather
-  than shifting the script (none is, today).
-- An attacker's THAC0 in the dice log read signed (one below 0 showed as 255); Cilla's armour,
-  when the game's lists moved under a piece, is taken on the next pass (the step was marked done).
+**Fixed: DSCLOG**
+- **It hooked its interrupts before setting up its buffers,** so with no memory for them it
+  exited with its vectors pointing into freed memory. The buffers come first now.
+- **The floating names and the shadows shared the VGA's kept registers,** so a timer strike in a
+  shadow, panel or see-through pass could put the game's registers back wrong (a likely cause of
+  rare drawing gone wrong). (`VGA_BUSY`. Test: `test_vga_busy`.)
+- **A pocket picked or spell arrows made after DSCLOG had stopped waiting** still happened, unseen.
+  Such a request is marked answered now. (`USE_REPLY`. Test: `test_unanswered_marked`.)
+- **It waited for the Loader with interrupts off for a Spellarcher's arrows,** so with the Loader
+  slow the game's clock and music stopped for up to two seconds. (Seen in DOSBox: loads and runs.)
+- **Its message when its interrupts are taken** names them right (60h-65h and 80h-FFh).
 
-**Fixed: the game's code**
-- **Psionic Blast knocks out, not kills:** while a party member has the blast's hit points still
-  to come back (`BLAST_HP`), a blow that would kill it (the damage routine's death test, damage
-  at hit points + 10, 5860Bh) knocks it out instead: `PROBE_WORN` takes the test's `cmp ax,dx`
-  (`gamepatch`'s `blast_knockout`; its return address 194Dh) and gives the flags of "greater",
-  so the routine's `jg` goes to Out Cold; Disintegrate (10000 and up) still kills. At the fight's
-  end one knocked out gets the hit points back and wakes (status 1, as the game wakes one,
-  7C1F9h); one Dying or dead gets none. As yuan-ti's v0.1.55 has it. Seen in DOSBox (Gerakis at
-  -9 HP with 40 kept: a 1-point Psychic Crush left him at 0, not dead, and the fight's end gave
-  the 40). Tests: `WornTests.test_blast_knocks_out`, `test_psiblast.py`. DSCLOG.EXE 64,640
-  bytes (+48).
-- **Scare's save** (from yuan-ti's v0.1.55, checked in DSUN.EXE): below 6th level only a priest
-  whose race is elf (3) and half-elf (4) at once got the usual save ("cmp 3 / jne fail" at 79FEAh,
-  then "cmp 4 / je save"), so no one did. `gamepatch`'s `scare_elves` makes the first test's
-  `jne` a `je` to the save (7A01Dh): an elf or half-elf priest saves as usual. Tests:
-  `ScareTests`. The rest of v0.1.55 (Cause Wounds' dice, a thri-kreen's claws cutting, random
-  monster groups' size, Psionic Blast, the gladiator, ability items, the damage lines, the
-  Sling's icon, Slay Living's text) the Edition already has; v0.1.56-58 add yuan-ti's own spells
-  as mods. OpenDS since 2026-11-01 (checked to 2026-11-03, c25a547): Wake of the Ravager's mine
-  elevator and its tools' docs only; its Shattered Lands patch and bug catalogue unchanged since
-  2026-10-07 (all four of its repairs considered: three taken, the stage gate left out).
+**Fixed: the Loader** (an audit and three reviews)
+- **One write the Loader stopped ended the dice log for the session** (slicing a deque raised every
+  pass). It is told once now, and kept for a crash report, which had always shown none. (Test:
+  `test_refused_write_said_once`.)
+- **One failing step of the dice log's pass stopped all those after it,** every pass. Each step
+  is on its own now, and an error is said once, by where it was raised (not its text, which could
+  carry an address and was said every pass), in the window and `play` mode too. (`DiceLog._step`,
+  `dicelog.error_key`. Tests: `test_each_step_on_its_own`, `test_error_key_by_where`.)
+- **An item moved could be lost:** with the game's things all in use it was taken out of its list
+  and put in none. The new list is found first now. (`pickpocket.place`. Test:
+  `test_no_list_to_be_had`.)
+- **A sold magical item could be lost** while the game was busy with its item lists: the gate is
+  asked first, and covers the pointer's thing. (`Buyback.keep`, `THINGS_PAST`.)
+- **A weapon's 200 XP for a picked pocket could be had again** by selling it and lifting it back.
+  Paid once a game now. (Test: `test_sword_xp_once`.)
+- **A pocket picked or a speaker's name learned was lost** if settings.json was held at that
+  moment (an antivirus, a backup). It is saved at the next pass. (`DiceLog.save_learned`.)
+- **A save of the same party loaded wasn't seen as a load,** and the game's own party wasn't made
+  ready in a second new game without closing the Loader. (Tests: `LoadSeenTests`,
+  `test_default_party_again_in_a_new_game`.)
+- **See-through figures were drawn solid for a moment every 30 s** where the game cycles colours,
+  and their tables were kept all session. They are kept by the colours the game never cycles, the
+  last eight. (Seen in DOSBox: GHOST_ON 1 in all 3,722 samples. Test:
+  `test_cycling_colours_keep_the_tables`.)
+- **A dressed figure could be written past its room** in the objects' copy after "Elves have pointed
+  ears" changed; each picture's room is read from the copy itself. (Test: `test_rooms`.)
+- **The dice log named the wrong script checks** after a switch changed and the game started again;
+  **the scenes' pointer file** could stop the game from starting; **the combat log level** chosen on
+  the Options tab was undone while the panel showed; **the window forgot the panel's size**.
+- **The Look box's AC left out Helms give AC 1** until someone wearing such a helm had been
+  attacked. (Test: `test_helm_before_dsclog_sets_it`.)
+- **A speaker's name was learned wrongly from a script's speech** (Kurzak's call taught "Trustee"):
+  a speech with no replies teaches a name only when its speaker stands near the party. (Test:
+  `SpeakerTests`.)
+- Smaller: the panel shortened only plain saves; Kalzith's scrolls weren't trimmed when the lists
+  were busy; Semyon's crate counts a Thornwall in a bag; a monster's or attacker's THAC0 below 0
+  showed as 255; WIS's save adjustment read past its table; Restore Youth's system shock on a
+  creature with no CON; a party member named Kalzith or Semyon counted as his death.
+
+**Fixed before release** (in the new work above)
+- See-through figures' first vector, 62h, was `PROBE_AC`'s, so every attack's AC went to the
+  see-through probe (it is 80h, and `test_vectors_distinct` checks each vector is used once).
+- A hidden thief stayed see-through through the enemies' turns after its own (about 1.4 s): the
+  whole view is drawn once as one stops hiding. (`GHOST_UNION`. Test: `test_solid_at_turn_end`.)
+- Champions made again from a save came on unequipped. (Test: `test_again_after_a_load`.)
+- Pehtucl's chest had taken script 220, Alagorn's copy telling of clothes, so his menu called past
+  the end of the chest's. The chest is 223, and `test_scriptnumbers` checks no two scripts share
+  a number, every call lands inside its script, and every script fits the game's buffer.
+- The chest could be worked on from across the room (the game's safe tests the distance first).
 
 **Docs**
-- The champions' bout in the patch notes' World list, the README's What it does and the Options
-  tab (New content's note and the New items switch; `options.png` retaken); FEATURES' champions
-  in a table (the elf's helm, left out, is leather), Semyon's shipment tip as needing the new
-  items. The 1.2.0-2.5.0 saves' known issue says Thornwall never comes (it was "the rack holding
-  Thornwall is gone"); `arms.py`'s docstring has Kreenfang on the champion.
-- DEVELOPMENT-CONTENT's contents list the worn items' section (it was missing) and put the
-  champions before the vulture, as FEATURES does; its champions' section has their DEX, the
-  flag-19 hook in plain words and the script buffer's limit. HOW-THE-GAME-WORKS: the champions
-  after the arena's count, and the game's people's unused gear under Monsters' defences.
-  FEATURES' New content intro counts the bout.
-- From an audit's reviews: DEVELOPMENT's room in the helper with the sizes read in the running
-  game (the helper 61.7 KB of upper memory, 50.2 KB free; its image 64,656 bytes, 624 spare: the
-  64,688 quoted was the file's), the release-by-release ledger left to this file, the helper's
-  interrupts 81h-FFh, the How each part works lists pointing at each page's own Contents, and
-  `--recompiled` among the command-line options; the panel's picture in the far block
-  (DEVELOPMENT-SCREENS); the worn-items section's fifth place, the champion's body. The README's
-  Game window has Single and its recompiled commands `python -m dsloader`; FEATURES says Thornwall
-  is handed over at run time, the panel's three sizes, the Trustee's second fix, Spells on the
-  Effects screen under Controls (its switch's section), and its bug table and Kurzak's row in
-  fewer words; ITEMS marks the bone scale arm and leg pieces and Kurzak's helm as placed by the
-  mod; Windlash is the Bowyer's in the patch notes. The guide: the druid's weapons in its
-  restrictions table, the Options table's New content and when each counts, where the saves are
-  shown. KITS: the Wilderness Avenger's stealth below a ranger's table, the Healer's 6th-level
-  cosmos spells, the Mind Warrior's PSP. The dispel chance in HOW-THE-GAME-WORKS and the dice log
-  page, and the dice log's kit lines.
-- A second round: `inventory-ranger.png` retaken (it had been Gerakis's gladiator panel since
-  2026-10-30, with no ranger skills); FEATURES' Rules the game got wrong has helms, preservers'
-  learning, CON and Enlarge (the patch notes' list the same, without Haste's aging, which is new);
-  the score items work while worn (ITEMS); Semyon comes to the pens once he has left the arena;
-  the defiler champion's scroll without the new spells; Kalzith's Cat's Grace with them; the
-  arena count shown in the pens too; the game window's sizes in the guide; Enhanced Strength's
-  power check by WIS; "nearly everything is switchable"; the PSP known issue in the patch notes;
-  the Elven Leader's Gythka +2 against acid; the DEVELOPMENT pages' leftover memory history, the
-  same-party load, the flags 756-783 and the scripts' 15 ability checks; the playtesting guide's
-  DARKSAVE.GFF, its kill-by-pid example and the alarm door; a few alt texts.
-- The player's guide lists the multiclass combinations once, in its race table (More than one
-  class): each class's section had its own copy, seven in all, and now points there.
+- The new work in the patch notes, README, FEATURES, ITEMS, the guide and the DEVELOPMENT pages:
+  the champions, the chest and its cloak, the game's people's gear (FEATURES' bug table,
+  HOW-THE-GAME-WORKS' Monsters' defences), see-through figures, the sounds.
+- FEATURES: Kurzak striking with Shadowseeker in the combat log's detail
+  (`docs/combat-log-detail.png`).
+- DEVELOPMENT: the room in the helper measured in the running game (`UMB_NEED` 6,190, put right
+  from 6,186), the dice log's pass, the flags' ledger in one place (DEVELOPMENT-RULES § Natural
+  aging), the sounds, `VGA_BUSY` and the unanswered requests.
+- From the reviews: `inventory-ranger.png` retaken (it showed a gladiator); the guide's multiclass
+  combinations once, in its race table; and many smaller corrections across the pages.
 
 ## Pull request #85 ([merged 2026-11-02](https://github.com/daaki85/darksun-obsidian-edition/pull/85))
 
@@ -2296,12 +2077,14 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
   for 48 frames, and moved across it, the pointer showed every time and no
   map came through.
 
-## Pull request #46 ([merged 2026-10-15](https://github.com/daaki85/darksun-obsidian-edition/pull/46))
+## Pull request #47 ([merged 2026-10-15](https://github.com/daaki85/darksun-obsidian-edition/pull/47))
 
 **Release**
 - **Obsidian Edition 2.3.0** (pull requests #44 to #46): the version is
   2.3.0, with its notes in `release-notes/v2.3.0.md`, listed on the front
-  page with the others.
+  page with the others (tag `v2.3.0`).
+
+## Pull request #46 ([merged 2026-10-15](https://github.com/daaki85/darksun-obsidian-edition/pull/46))
 
 **New**
 - **Fuller starting gear** (More character customization, on by default).
@@ -2672,6 +2455,10 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
 - **Patch notes** (`PATCH-NOTES.md`, and `patch-notes.html` as a page with a
   copy-as-Markdown button): every change from the original game, laid out as
   patch notes, to share online. Linked from the front page.
+
+## Pull request #34 ([merged 2026-10-09](https://github.com/daaki85/darksun-obsidian-edition/pull/34))
+
+- This changelog: pull request #33 marked as merged, with its date and link.
 
 ## Pull request #33 ([merged 2026-10-09](https://github.com/daaki85/darksun-obsidian-edition/pull/33))
 

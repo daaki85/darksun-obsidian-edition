@@ -307,7 +307,8 @@ dice log running:
   game's timer: `PROBE_TICK` (about 120 strikes a second) calls `LABEL_STAMP`
   every other strike. It writes only (no reads of video memory, so the VGA's
   latches are left alone), keeps the VGA's registers as the shadows do
-  (`VGA_SAVE`), finds the screen on show from where the VGA starts it (CRTC
+  (`VGA_SAVE`; it waits for its next strike while another pass has them kept,
+  `VGA_BUSY`, as the slots are shared), finds the screen on show from where the VGA starts it (CRTC
   0Ch, the high byte the game's page flip sets: A000h or A400h), stays off the combat log's panel, and
   does nothing while the game's busy flag for it is up or off the map. It
   also places a new label (`LABEL_WHERE`: centred over the thing's feet, its
