@@ -37,6 +37,14 @@ Releases, newest first: [2.14.0](#pull-request-87-merged-2026-11-07) (#86 and #8
 [1.1.0](#pull-request-18-merged-2026-10-06) (#18), [1.0.0](#pull-request-12-merged-2026-10-02)
 (#12).
 
+## Next pull request (not opened yet)
+
+**Fixed: the Loader's window**
+- **The new spells' switch said "New wizard spells"** and then listed the ten 6th-level priest spells
+  it also covers. It is "New spells" now, with the six wizard spells and the priest spells named
+  apart; FEATURES and the player guide call it that. (`viewer.py`; the setting is still
+  `new_spells`.)
+
 ## Pull request #87 ([merged 2026-11-07](https://github.com/daaki85/darksun-obsidian-edition/pull/87))
 
 Obsidian Edition 2.14.0 ([release notes](release-notes/v2.14.0.md)), with #86.

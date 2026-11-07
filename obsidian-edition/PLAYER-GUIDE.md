@@ -1450,7 +1450,7 @@ common 4th and 5th-level ones; and each has its own element's.
 An Elementalist has its second sphere's column too.
 
 **The 6th-level spells** are the mod's, for priests of 11th level and up (with
-AD&D's class tables and the **New wizard spells** switch on):
+AD&D's class tables and the **New spells** switch on):
 
 - **Heal** (touch): every wound healed, disease and blindness cured.
 - **Harm** (touch): the creature is left 1d4 hit points; no save.

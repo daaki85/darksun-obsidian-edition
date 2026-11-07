@@ -1659,7 +1659,7 @@ A Shinobi can learn Reflected Image, Spook and Friends, as well as Fogbolt.
 Each has sounds of its own: Cat's Grace lands with Haste's shimmer, Erdlu Claw
 with Shocking Grasp's snap, and Fogbolt is cast and lands with Fog Cloud's.
 
-With the **New wizard spells** box unticked the spells are gone from the lists
+With the **New spells** box unticked these spells are gone from the lists
 and the game is as it was.
 
 ![The descriptions on the USE screen (right-click a spell): Cat's Grace's paw, Erdlu Claw's scratches, Fogbolt's cloud](docs/new-spells.png)
@@ -1681,7 +1681,7 @@ one 6th-level slot at 11th and two at 12th. Under the XP cap a druid can reach
 12th, a cleric only 11th, so only a druid gets the second slot. Like the 4th and 5th-level common spells, the cosmos
 ones are for druids and a Healer cleric; each element's are for the clerics
 and druids of that sphere (an Elementalist's second sphere counts). They come
-with the **New wizard spells** switch (it covers these too), and with
+with the **New spells** switch, as the wizard spells do, and with
 **AD&D's class tables** for the slots.
 
 A Healer made before the kit had the cosmos (Obsidian Edition 2.5.0 and
