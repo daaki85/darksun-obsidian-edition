@@ -48,7 +48,13 @@ save's party (`Show Save.bat`); `tracker.py` notes kills, XP and level-ups;
 `textlog.py` reads the dialogue and message boxes DSCLOG copies; `partyview.py`
 and `spellbook.py` draw the Characters and Spells tabs, `theme.py` the window's
 look; `bonescale.py` puts the bone scale set together in its chest;
-`stuckwalk.py` sets people walking again whose scripted walk stopped.
+`stuckwalk.py` sets people walking again whose scripted walk stopped;
+`process.py` reads and writes another process's memory, `layout.py` the memory
+layout files and `search.py` the Memory tools' value search; `unblock.py` takes
+Windows' "downloaded from the internet" mark off the Loader's files;
+`patchnotes.py` and `guidepage.py` make `patch-notes.html` and
+`player-guide.html` from the patch notes and the guide (run after editing
+either: `python -m dsloader.patchnotes`, `python -m dsloader.guidepage`).
 
 ### Tests
 
@@ -240,13 +246,15 @@ Because the replacement produces identical numbers, the game plays exactly as
 it would without it, apart from what you choose on the Options tab (picking
 pockets, the [rule changes](FEATURES.md#rule-changes)), the Loader's other
 additions (the new items and the Ring +1, the cooked vulture, Kalzith, Semyon,
-what the party wears, shadows, dust, rings, Tab and Enter, scrolling) and the
-fixes always in the patched copy: no equipment penalty on thief skills (see
+what the party wears, shadows, dust, see-through figures, rings, Tab and Enter,
+scrolling) and the fixes always made: no equipment penalty on thief skills (see
 [Thief skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)), the
-roster's
-DELETE and New characters counting as Okay (see
-[More characters](FEATURES.md#more-characters)), and no manual check (see
-[No manual check](FEATURES.md#no-manual-check)).
+roster's DELETE and New characters counting as Okay (see
+[More characters](FEATURES.md#more-characters)), no manual check (see
+[No manual check](FEATURES.md#no-manual-check)), the game's people wearing their
+gear from the start, Psionic Blast knocking out instead of killing, Scare's
+save for elf and half-elf priests, and the rest of [the game's bugs
+fixed](FEATURES.md#the-games-bugs-fixed).
 
 Limitations:
 - Only the GOG release (`DSUN.EXE` of 611,408 bytes) is supported. With

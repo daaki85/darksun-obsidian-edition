@@ -33,6 +33,19 @@
 The game keeps the clicked reply's row at DS:1F0A while it flashes it; the log
 reads the reply's text from the game's own list.
 
+**Learned speakers' names.** The dialogue window gets only a portrait number.
+When the game runs a script on someone (clicked, or coming up to the party) it
+notes who; the log reads that as a conversation opens. A conversation showing
+one face, started on a named creature outside the party, is that creature
+talking, and the portrait takes its name (`settings.json`'s
+`speakers_learned`): portrait 5 became `Kurzak` ("Legcrusher! Get
+gladiators!"), portrait 100 `Legcrusher`. A speech with no replies teaches a
+name only when its speaker stands within 4 squares of the party
+(`GameData.talk_target_distance`: Kurzak's call to the arena is started on no
+one, and once taught "Trustee"). Several faces taking turns teach nothing.
+Portrait 119's `The Announcer` isn't replaced by a learned name (he calls out
+mid-fight, when the game's last script ran on a fighter).
+
 ## Searching junk, hay and wardrobes
 
 ([In How the game
@@ -675,6 +688,17 @@ A New character counts as Okay wherever the game tests for Okay: a jump each
 ## Game speed
 
 ([In the features page](FEATURES.md#game-speed).)
+
+Measured in the slave pens at 20,000 cycles with everything on, walking (the
+leader's speed in pixels a second of the game's time):
+
+| | The leader's speed |
+|---|---|
+| The whole party in view, steady pace off | 152 to 175 |
+| The whole party in view, steady pace on | 249 to 278 |
+| The leader alone | about 220 to 260 |
+
+Frames stop being skipped from about 30,000 cycles.
 
 **Steady pace** (`gamepatch.STEADY_PACE`, DSCLOG's STEADY PACE): the map's
 frame (DSUN.EXE 1E8E4h) calls the step for everything (`call far 1DF3:26DC`,

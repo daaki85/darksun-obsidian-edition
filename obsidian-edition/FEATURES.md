@@ -136,9 +136,11 @@ a click.
 
 ![The combat log in the arena, in short, as a fight is played with Tab and Enter: Wild Fighting, attacks, a kill and its XP, and hiding in shadows, each line as it happens](docs/combat-log-live.gif)
 
-In detail, each attack names the weapon and its dice, and the THAC0's parts follow:
+In detail, each attack names the weapon and its dice, the d20 against what it needed, the chance
+in percent, the AC it would hit and the target's AC, and the THAC0's parts follow (the panel
+here is expanded, as below):
 
-![The combat log in detail, expanded, in the slave pens' alarm fight: Kurzak, at the top beside K'ratchek, attacks K'ratchek with Shadowseeker +1 (1d6+1), d20 = 4 against 15+, a miss, and under it his THAC0 14, +1 for the weapon, -2 for two weapons, in the main hand, = 15; above, the end of his off-hand blow with his obsidian long sword](docs/combat-log-detail.png)
+![The combat log in detail, expanded, in the slave pens' alarm fight: Kurzak, at the top beside K'ratchek, attacks K'ratchek with Shadowseeker +1 (1d6+1), d20 = 4, needs 15+ (30%), a miss, and under it his THAC0 14, +1 for the weapon, -2 for two weapons, in the main hand, = 15; above, the end of his off-hand blow with his obsidian long sword](docs/combat-log-detail.png)
 
 **The panel** sits over the map's lower right. A window the game opens over
 the map (a character's menu, a question) hides it until it closes. Expanded, it
@@ -1309,7 +1311,7 @@ elf's figure, with its own switch: see
 | **Gerakis**, half-giant gladiator | specializes in the long sword and the gythka; with [half-giants' two-handed weapons](#half-giants-two-handed-weapons), his club is a bone gythka, a two-handed weapon beside his long sword | | **Wild Fighting**, as a [Wild Fury](KITS.md#multiclass-kits) has it, as each fight starts |
 | **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | | is a [Wasteland Seer](KITS.md#multiclass-kits) (druid spells 2 levels higher under the open sky, 1 lower under a roof; psionic powers 2 PSP less under the open sky, 1 more under a roof); her **chatkcha comes back as if she had several**: one more throw a round (2 instead of 1, or more with its weapon spec) |
 | **Cermak**, human preserver, once a gladiator | specializes in the long sword and the axe, which count once his gladiator levels do again (when his preserver level passes them) | | an **Arcanist**, the kit of his preserver class: two preserver spells a turn in a fight |
-| **Cilla**, elf preserver, druid and thief | | no leather armour (a druid wears none), and she knows the **Armor** spell in its place | an **Elven Wanderer**: with the [stealth rule](#hiding-in-shadows-to-backstab), her hiding in shadows is never halved in daylight |
+| **Cilla**, elf preserver, druid and thief | | no leather armour (a druid wears none), and she knows the **Armor** spell in its place | an **Elven Wanderer** (her own feature, not the druid kit Wanderer): with the [stealth rule](#hiding-in-shadows-to-backstab), her hiding in shadows is never halved in daylight |
 
 Gerakis's, K'ratchek's and Cilla's features are their own: no character made
 on the creation screen can have them. The Effects screen lists them (as it
@@ -1547,7 +1549,8 @@ a worn belt's 5 counted, as in the thief rows):
   cloak). A dagger, a ring, an amulet, a gem or food can be lifted, and so can
   three weapons whatever their weight: Kurzak's Shadowseeker, Churrr's
   Gutterknot and Maris's Mindshard (see [New items](#new-items)). Lifting one is
-  worth 200 XP to the thief, given as the game gives a quest's ("Cilla
+  worth 200 XP to the thief, once a game for each weapon (sold and lifted back, it is worth
+  nothing more), given as the game gives a quest's ("Cilla
   receives 200 experience points!", with the quest's sound; split among a
   multiclass thief's classes). Keys stay, as scripts may look for them.
   Anything else lifted, or the coins, comes with a purse's jingle (the mod's
@@ -1786,15 +1789,6 @@ all. The dice log doesn't say where they are; [Items](ITEMS.md) does, with spoil
 arena's ring too, and brings [the champions' bout](#the-champions-bout). A thief can [lift](#picking-pockets) Pehtucl's ring,
 Shadowseeker, Gutterknot and Mindshard (200 XP for each weapon).
 
-**Pehtucl's chest**, beside the slave pens' head templar, holds the Cloak of Protection +1 and is
-locked, with a poisoned needle in the lock. Used by a thief, it is first searched for traps
-(find/remove traps: the needle drawn out, or set off) and then picked (open locks; a failed try
-can be tried again). Anyone else can try to bash it open (5% a try, more with STR 18 and up),
-which sets the needle off if it is still there. A needle set off is a trap as the game's are: the
-party's best at find/remove traps may still spot it in time (or Detect Traps), else it does 2d6
-poison damage to whoever opened it. Once open, it stays open. (In a new game; with **New items,
-magical and mundane** on.)
-
 **Where they are.** The mod's items are in the [item tables](ITEMS.md) with the
 game's own: in ***bold italics*** in
 [Every magic item](ITEMS.md#every-magic-item), each with where it is and what
@@ -1807,7 +1801,16 @@ but never placed:
 | Icon | Item | Where | What it is |
 |---|---|---|---|
 | ![](docs/items/bone-scale-arm-armor.png) ![](docs/items/bone-scale-leg-armor.png) ![](docs/items/bone-helm.png) | **Bone Scale Arm Armor**, **Leg Armor** and **Bone Helm** | in the slave pens' chest with the Bone Scale Chest Armor and Arrows +3 (the game has the set but places only the chest piece) | the set; the helm AC 1 with [Helms give AC 1](#helms), worn by those who can wear the armour (not thieves) |
-| ![](docs/items/leather-helm.png) | **Helm** | in **Kurzak**'s pack, in the slave pens | the game's leather helm |
+| ![](docs/items/leather-helm.png) | **Helm** | worn by **Kurzak**, in the slave pens | the game's leather helm |
+
+**Pehtucl's chest**, beside the slave pens' head templar, holds the Cloak of Protection +1 and is
+locked, with a poisoned needle in the lock. Used by a thief, it is first searched for traps
+(find/remove traps: the needle drawn out, or set off) and then picked (open locks; a failed try
+can be tried again). Anyone else can try to bash it open (5% a try, more with STR 18 and up),
+which sets the needle off if it is still there. A needle set off is a trap as the game's are: the
+party's best at find/remove traps may still spot it in time (or Detect Traps), else it does 2d6
+poison damage to whoever opened it. Once open, it stays open. (In a new game; with **New items,
+magical and mundane** on.)
 
 The bone and obsidian weapons are also new characters' starting weapons with
 [weapon specialization](#weapon-specialization), each in a material the
@@ -2477,20 +2480,10 @@ The Loader also gives DOSBox more of the computer's time: 20,000 cycles a
 millisecond by default, where GOG's settings give 7,000. On the Options tab
 **Game speed** is GOG's own (7,000), that (20,000), or 35,000: there nearly
 every frame is drawn in time even with the whole party in view, the smoothest,
-but it needs a faster computer (measured, frames stop being skipped from about
-30,000). It applies the next time the game is started. The
+but it needs a faster computer. It applies the next time the game is started. The
 Loader's two speeds run on DOSBox's dynamic core (GOG's settings run this game
 on the slower normal core): the same cycles do more, and cost the computer
 about a third less.
-
-Measured in the slave pens at 20,000 cycles with everything on, walking (the
-leader's speed in pixels a second of the game's time):
-
-| | The leader's speed |
-|---|---|
-| The whole party in view, steady pace off | 152 to 175 |
-| The whole party in view, steady pace on | 249 to 278 |
-| The leader alone | about 220 to 260 |
 
 What each setting asks of the computer:
 [Suggested system requirements](README.md#suggested-system-requirements).

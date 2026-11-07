@@ -227,7 +227,7 @@ of it as `Ring of Protection`).
 
 ## Monsters' defences
 
-From the game's damage code (DSUN.EXE); none of this is in the manual:
+From the game's damage and fighting code (DSUN.EXE); none of this is in the manual:
 
 - Every creature has a monster kind, and each kind a resistance class and a
   set of properties, in a table the game fills when it starts.

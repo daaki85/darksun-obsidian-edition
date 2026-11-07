@@ -19,7 +19,6 @@ The [features page](FEATURES.md) has every rule in full detail, and the
 
 - [Getting started](#getting-started)
 - [Playing](#playing)
-- [Quality of life](#quality-of-life)
 - [Making a party](#making-a-party)
   - [Ability scores](#ability-scores)
   - [Races](#races)
@@ -55,6 +54,7 @@ The [features page](FEATURES.md) has every rule in full detail, and the
 - [Psionics](#psionics)
 - [Equipment](#equipment)
   - [New items](#new-items)
+- [Quality of life](#quality-of-life)
 - [Worth knowing](#worth-knowing)
 - [Glossary](#glossary)
 - [The Options tab at a glance](#the-options-tab-at-a-glance)
@@ -86,59 +86,8 @@ The pointer has three modes, changed with a right-click: **Walk**, **Attack**
 and **Look**; a left-click acts. Look at someone to **Talk**, at a thing to
 **Use** or **Pick Up** it, and at a monster in a fight to see its hit points,
 AC and defences. Resting at a fire ring fills hit points, PSP and spell slots.
-
-## Quality of life
-
-**On the game's screens:**
-
-| Change | What it does |
-|---|---|
-| **Combat log** | **L** on the map shows every roll in the game, at the least, in short or in detail, and **L** again hides it: in a fight, or after one to check a thief's roll or a new level's hit points. A panel at the map's lower right: its scrollbar reads back, **-** and **+** collapse it or open it up with filters. Out of a fight its top line says how long the game has run (`Day 47, 14:20`), and around the arena how many arena fights the party has had. |
-| **Names over figures** | A spell's name floats over its caster as it's cast, "Miss" over anyone an attack misses, and "Armor: 7 left" (or "Mirror Image: 2 left", "Armor ends") when a spell that lasts a number of uses loses one. |
-| **THAC0, saves and thief skills on screen** | The inventory screen shows THAC0, all five saves, THAC0 with each weapon, DEX's adjustments and a thief's skills; View Character shows the saves, each labelled, MOVE and THAC0, and for a character of several classes which class goes up next. |
-| **Spell slots on the USE screen** | Spells left of each level, and the most after resting. |
-| **The Look box** | In a fight, a monster's hit points, AC, THAC0, alignment, magic resistance and chief defence; closing the box tells the rest. |
-| **Item boxes** | A wand's or other charged item's charges left; a cloak's, boots' or belt's bonus to thief skills. |
-| **The Effects screen** | Names each kit (a Shinobi's with its chance to read a scroll) and weapon spec, a page at a time when there are many; with the pointer on the icon of a spell that lasts a number of uses, the uses left: IMPROVED AC (10 CHARGES), MIRROR IMAGES (3 CHARGES). A magic item's power (Shadowseeker's Detect Invisibility) lasts while the item is readied and shows no charges. |
-| **What a scroll says** | Reading a scroll on the inventory screen, the line under the paper doll gives the result: YOU LEARN THE SPELL, YOU CAN NOT READ THE SCROLL... *Without the mod:* nothing showed there. |
-| **New characters' thief skills** (a bug fixed) | A character not yet played shows its thief skills. *Without the mod:* they showed as 0. |
-
-**Controls:**
-
-| Change | What it does |
-|---|---|
-| **Tab and Enter** | On a party member's turn in a fight, **Tab** chooses the nearest enemy (Tab again for the next, **Shift+Tab** back) and **Enter** attacks it, walking up to it first if need be, even behind someone else: no aiming with the mouse. A red ring marks the enemy chosen. |
-| **Scrolling with the mouse** | Press the wheel and drag the map. |
-| **M, U and I** | **M** on the map opens the overhead map (the game's **O**), and **M** again closes it. **U** and **I** close the USE and inventory screens when pressed again (and still switch from one to the other). |
-| **The whole party in view** | A game starts and loads with every party member on the map, and they stay in view after a fight, as the game's **5** does. **6** still gathers them into the leader. *Without the mod:* often only the leader, until you press 5. |
-| **A steady view in fights** | The view no longer drifts after each figure walking near the screen's edge in a fight; it moves only to bring back one that has walked off the screen. *Without the mod:* it follows them. |
-| **The pointer in scenes** | The game's pointer shows in the intro, its logos and the game's other scenes, and a click skips a scene as a key does. *Without the mod:* no pointer there, and only a key skips. |
-| **The pointer's start and speed** | The pointer starts in the middle of the screen, stays where you leave it as screens change (the intro, menus, loading), moves as far up and down as across, and in a window as fast as your desktop's pointer. *Without the mod:* it starts at the right edge, moves half as far up and down, and in a window three times as fast as your desktop's pointer. |
-| **Spells on the Effects screen** (a bug fixed) | A stray click on a spell's icon no longer ends the spell. A psionic power's icon still ends the power, which is how you stop one. |
-
-**Saves and characters:**
-
-| Change | What it does |
-|---|---|
-| **40 saves** | Four pages of ten in the save and load window (**PAGE 1** to **PAGE 4**, or **PgUp** and **PgDn**). *Without the mod:* 10. |
-| **29 characters on disk** | The roster keeps 29 characters made with CREATE CHARACTERS. *Without the mod:* 19. |
-| **DELETE in the roster** (a bug fixed) | Deletes the character you chose. *Without the mod:* with the list scrolled, it deleted another one. |
-
-**Running the game.** On the map, figures show what they wear, cast shadows
-and raise dust, and elves have pointed ears. DOSBox runs the game faster than
-GOG's settings and skips a picture rather than slowing the party down. The game
-window can be its own size, two, three (the default) or four times that, or full
-screen. The manual check
-never comes. If the game crashes or freezes, or an item vanishes for no
-ordinary reason, the Loader saves a report to send. The README has the details:
-[running it](README.md#running-it-windows) and [reports](README.md#crash-freeze-and-item-reports).
-
-**In the Loader's window**, the dice log shows every roll with what it needed
-and where each bonus came from. Other tabs show each character's sheet, the
-dialogue, and every spell's dice, saves and duration. Every save is also
-copied under the name you gave it in the game. The README has
-[the Loader's window](README.md#the-loaders-window) in full, and [the dice log, line by
-line](DICE-LOG.md) what each of its lines means.
+What the mod adds to the game's screens and controls is under [Quality of
+life](#quality-of-life).
 
 ## Making a party
 
@@ -941,10 +890,12 @@ Each kit's gains, costs and starting gear:
 [Multiclass kits](KITS.md#multiclass-kits) on the Kits page.
 
 **The game's own party** (START GAME with no party made), with kits on: Cermak
-is an Arcanist, and the other three have something no character you make can
-have. Gerakis fights wild as a Wild Fury does; K'ratchek is a Wasteland Seer
-(her spells and psionics stronger under the open sky), and her chatkcha comes back as if she had several (one more throw a
-round); Cilla is an Elven Wanderer, whose hiding is never halved in daylight.
+is an Arcanist, and the other three are given a feature of their own, not a
+kit's. Gerakis fights wild, as a Wild Fury does; K'ratchek's spells and psionics
+are stronger under the open sky, as a Wasteland Seer's are, and her chatkcha
+comes back as if she had several (one more throw a round, which no kit gives);
+Cilla's hiding is never halved in daylight, as an Assassin's isn't (the dice
+log calls her an "Elven Wanderer": not the druid kit Wanderer).
 
 ### Kits' spell slots
 
@@ -1278,7 +1229,11 @@ and the same race and DEX adjustments.
 
 - **Open locks, find/remove traps, climb walls, hear noise** and the one
   pocket the game has to pick: when the game asks, at certain locks, traps
-  and walls.
+  and walls. A locked and trapped chest the mod adds asks a thief to check
+  it for traps first, then to pick the lock (as often as needed); anyone
+  else may try to bash it open, which sets off a trap still in it. A trap
+  that goes off may still be avoided by the party's best at find/remove
+  traps.
 - **Hide in shadows and move silently:** at the start of a thief's or ranger's
   turn in a fight ([hiding in shadows](#hiding-in-shadows)).
 - **Picking pockets** (the mod's): on the **USE** screen, press the thief's
@@ -1711,6 +1666,60 @@ chosen type, often one of these.
 The game's own Grey's Scale arm and leg armour is AC 3 each with the mod (2
 without).
 
+## Quality of life
+
+**On the game's screens:**
+
+| Change | What it does |
+|---|---|
+| **Combat log** | **L** on the map shows every roll in the game, at the least, in short or in detail, and **L** again hides it: in a fight, or after one to check a thief's roll or a new level's hit points. A panel at the map's lower right: its scrollbar reads back, **-** and **+** collapse it or open it up with filters. Out of a fight its top line says how long the game has run (`Day 47, 14:20`), and around the arena how many arena fights the party has had. |
+| **Names over figures** | A spell's name floats over its caster as it's cast, "Miss" over anyone an attack misses, and "Armor: 7 left" (or "Mirror Image: 2 left", "Armor ends") when a spell that lasts a number of uses loses one. |
+| **THAC0, saves and thief skills on screen** | The inventory screen shows THAC0, all five saves, THAC0 with each weapon, DEX's adjustments and a thief's skills; View Character shows the saves, each labelled, MOVE and THAC0, and for a character of several classes which class goes up next. |
+| **Spell slots on the USE screen** | Spells left of each level, and the most after resting. |
+| **The Look box** | In a fight, a monster's hit points, AC, THAC0, alignment, magic resistance and chief defence; closing the box tells the rest. |
+| **Item boxes** | A wand's or other charged item's charges left; a cloak's, boots' or belt's bonus to thief skills. |
+| **The Effects screen** | Names each kit (a Shinobi's with its chance to read a scroll) and weapon spec, a page at a time when there are many; with the pointer on the icon of a spell that lasts a number of uses, the uses left: IMPROVED AC (10 CHARGES), MIRROR IMAGES (3 CHARGES). A magic item's power (Shadowseeker's Detect Invisibility) lasts while the item is readied and shows no charges. |
+| **What a scroll says** | Reading a scroll on the inventory screen, the line under the paper doll gives the result: YOU LEARN THE SPELL, YOU CAN NOT READ THE SCROLL... *Without the mod:* nothing showed there. |
+| **New characters' thief skills** (a bug fixed) | A character not yet played shows its thief skills. *Without the mod:* they showed as 0. |
+
+**Controls:**
+
+| Change | What it does |
+|---|---|
+| **Tab and Enter** | On a party member's turn in a fight, **Tab** chooses the nearest enemy (Tab again for the next, **Shift+Tab** back) and **Enter** attacks it, walking up to it first if need be, even behind someone else: no aiming with the mouse. A red ring marks the enemy chosen. |
+| **Scrolling with the mouse** | Press the wheel and drag the map. |
+| **M, U and I** | **M** on the map opens the overhead map (the game's **O**), and **M** again closes it. **U** and **I** close the USE and inventory screens when pressed again (and still switch from one to the other). |
+| **The whole party in view** | A game starts and loads with every party member on the map, and they stay in view after a fight, as the game's **5** does. **6** still gathers them into the leader. *Without the mod:* often only the leader, until you press 5. |
+| **A steady view in fights** | The view no longer drifts after each figure walking near the screen's edge in a fight; it moves only to bring back one that has walked off the screen. *Without the mod:* it follows them. |
+| **The pointer in scenes** | The game's pointer shows in the intro, its logos and the game's other scenes, and a click skips a scene as a key does. *Without the mod:* no pointer there, and only a key skips. |
+| **The pointer's start and speed** | The pointer starts in the middle of the screen, stays where you leave it as screens change (the intro, menus, loading), moves as far up and down as across, and in a window as fast as your desktop's pointer. *Without the mod:* it starts at the right edge, moves half as far up and down, and in a window three times as fast as your desktop's pointer. |
+| **Spells on the Effects screen** (a bug fixed) | A stray click on a spell's icon no longer ends the spell. A psionic power's icon still ends the power, which is how you stop one. |
+
+**Saves and characters:**
+
+| Change | What it does |
+|---|---|
+| **40 saves** | Four pages of ten in the save and load window (**PAGE 1** to **PAGE 4**, or **PgUp** and **PgDn**). *Without the mod:* 10. |
+| **29 characters on disk** | The roster keeps 29 characters made with CREATE CHARACTERS. *Without the mod:* 19. |
+| **DELETE in the roster** (a bug fixed) | Deletes the character you chose. *Without the mod:* with the list scrolled, it deleted another one. |
+
+**Running the game.** On the map, figures show what they wear, cast shadows
+and raise dust, a thief hidden in shadows and anyone invisible are drawn
+see-through, and elves have pointed ears. DOSBox runs the game faster than
+GOG's settings and skips a picture rather than slowing the party down. The game
+window can be its own size, two, three (the default) or four times that, or full
+screen. The manual check
+never comes. If the game crashes or freezes, or an item vanishes for no
+ordinary reason, the Loader saves a report to send. The README has the details:
+[running it](README.md#running-it-windows) and [reports](README.md#crash-freeze-and-item-reports).
+
+**In the Loader's window**, the dice log shows every roll with what it needed
+and where each bonus came from. Other tabs show each character's sheet, the
+dialogue, and every spell's dice, saves and duration. Every save is also
+copied under the name you gave it in the game. The README has
+[the Loader's window](README.md#the-loaders-window) in full, and [the dice log, line by
+line](DICE-LOG.md) what each of its lines means.
+
 ## Worth knowing
 
 - **Cure poison before resting.** A character still Poisoned when time passes
@@ -1733,6 +1742,9 @@ without).
 - **Wait** puts a character later in the round.
 - **Ready a missile weapon and a melee weapon:** the game uses whichever fits
   the target's distance.
+- **The people you fight wear their armour from the start.** Without the mod
+  they put it on only when they first acted in a fight, so an opening blow or
+  a backstab before then met AC 10; now it meets their armour.
 
 ## Glossary
 
@@ -1771,8 +1783,8 @@ without).
 | Rule changes | *characters:* class restrictions; multiclass hit points; hit dice rolled twice; scores and hit points as rolled; AD&D's class tables; CON as in AD&D; ages and magical aging; the XP level cap. *Weapons and armour:* two weapons; half-giants' two-handed weapons; rings and cloaks of protection; helms AC 1; items saving against acid. *Magic:* rangers' casting level; preservers' INT; the spell save; DEX instead of a doubled d20; Enlarge multiplying the weapon's dice only | all on |
 | More character customization | weapon specialization; kits; STORE and RECALL on the creation screen; fuller starting gear | all on |
 | Expanded features | the leader's CHA at shops; buying back magical items; improved thieving: thief skills from AD&D's table, hiding in shadows to backstab, the cloak, boots and belt, backstabs multiplying the weapon's dice only, picking pockets | all on |
-| New content | the new spells (six wizard spells and ten 6th-level priest spells); new people; a small quest; defilers' scrolls; new items | all on |
-| Graphics | elves' ears and half-elves' own figures; Cilla drawn as an elf; what the party wears; shadows; dust | all on |
+| New content | the new spells (six wizard spells and ten 6th-level priest spells, one switch); new people (Kalzith; Semyon); a small quest (the cooked vulture); defilers' scrolls; new items | all on |
+| Graphics | elves' ears and half-elves' own figures; Cilla drawn as an elf; what the party wears; shadows; dust; a hidden thief and anyone invisible drawn see-through | all on |
 | Controls | Tab and Enter; scrolling with the mouse wheel; the view in fights moving only to a figure off the screen; the pointer in scenes, a click skipping one; the pointer starting in the middle and as fast up and down as across; the whole party in view after a start, load or fight; spells kept on a click on the Effects screen (M, U and I have no switch) | all on |
 | | a red ring in a fight: none, or under the enemy chosen with Tab | under the enemy chosen |
 | Game speed | GOG's own, faster or fastest | faster |

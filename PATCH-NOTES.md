@@ -134,7 +134,7 @@ A few of them:
 - **Military Scout:** better at stealth, traps and climbing under the open sky, with +2 initiative and +1 to hit with bows and slings there, and its hiding isn't halved by the sun; worse under a roof, and it never backstabs.
 - **Spellarcher:** shoots every arrow as a magic one (1 better, at least +1), and weaves the touch spells it knows into arrows: a button on the USE screen for each, a spell slot for 5 arrows a preserver level in its empty quiver (or added to the same spell's arrows there), each casting its spell on what it hits at the archer's preserver level. They stay in the quiver until shot, as a Flame Blade stays in the hand.
 - **Wild Fury:** Wild Fighting as each fight starts, a roll against CON at −4: one more attack a round in melee and +3 damage, or −3 to hit and AC 3 worse if it fails.
-- **[New]** The game's own party has features no one else can have: Gerakis fights wild, K'ratchek is a Wasteland Seer (spells and psionics) and throws her chatkcha twice a round, Cilla, an Elven Wanderer, hides as well in the sun as out of it, and Cermak is an Arcanist.
+- **[New]** The game's own party has features of its own: Gerakis fights wild (as a Wild Fury does), K'ratchek casts and uses psionics as a Wasteland Seer does and throws her chatkcha twice a round, Cilla hides as well in the sun as out of it, and Cermak is an Arcanist.
 
 > *Developers' Notes: Each kit is built into the game's own code, so it works everywhere the game checks: THAC0, spell slots, hit dice, PSP costs, attacks a round and what you may hold. The player's guide has all 37, with a short description of who takes each one on Athas.*
 
@@ -172,7 +172,7 @@ A few of them:
 - **[Changed]** Thief skills follow AD&D's table by level, with Dark Sun's race and DEX adjustments, and none goes above 95 *(was a 3rd-level elf with move silently 66 and hide in shadows 61)*.
 - **[New]** Thieves **hide in shadows and move silently** in a fight to backstab, halved in daylight. Rangers do it to attack from behind, at full strength under the open sky *(was a backstab only on a target turned to face someone else)*.
 - **[Changed]** A **backstab** multiplies only the weapon's dice; STR and magic bonuses are added once after, as in AD&D, and only the round's first attack is a backstab *(was the whole damage multiplied, STR included, so a strong thief could hit for over 100, on the first two attacks of the round)*.
-- **[New]** **Picking pockets** with a thief's **Pick Pockets** button on the USE screen (where a priest's Turn Undead is), then a click on anyone in sight: any thief can try, leader or not, and what's lifted goes in that thief's backpack. A cleric/thief has both buttons, the purse beside Turn Undead. Fail and you roll move silently to get away. A purse holds 2 to 5 ceramic pieces for each of the thief's levels, and a few named weapons can be lifted for 200 XP.
+- **[New]** **Picking pockets** with a thief's **Pick Pockets** button on the USE screen (where a priest's Turn Undead is), then a click on anyone in sight: any thief can try, leader or not, and what's lifted goes in that thief's backpack. A cleric/thief has both buttons, the purse beside Turn Undead. Fail and you roll move silently to get away. A purse holds 2 to 5 ceramic pieces for each of the thief's levels, and a few named weapons can be lifted for 200 XP (once a game each).
 - **[New]** A worn cloak adds 10 to hiding, boots 10 to moving silently, and a belt 5 to picking pockets and opening locks, for thieves and rangers alike; the inventory screen's thief skills count them.
 
 ## Items
@@ -212,7 +212,7 @@ A few of them:
 - **[New]** **Veiled Robe** (+2), a robe of the Veiled Alliance: AC 2 better, +1 on every save, and a wizard spell slot more at spell levels 1 to 3, for preservers, psionicists and druids.
 - **[New]** **The Warden's Plate**: plate armour +1 in four pieces, 12 points of AC as a set. The helm gives Cloak of Bravery and the chest Resist Fire while worn.
 - **[New]** **Inixhide**: leather chest armour +1.
-- **[New]** **Rings of Protection +1** (two) and a **Cloak of Protection +1**: +1 AC and +1 on every saving throw.
+- **[New]** **Rings of Protection +1** (two) and a **Cloak of Protection +1** (in Pehtucl's locked chest: see World): +1 AC and +1 on every saving throw.
 - **[New]** **Cloak of Elvenkind**: all but invisible when hiding in shadows. Thieves and rangers only.
 - **[New]** **Boots of Elvenkind**: silent when moving. Thieves and rangers only.
 - **[New]** **Arrowbane**: a silver circlet whose wearer can't be hurt by normal arrows, sling stones or chatkchas. Not armour: a preserver casts in it, and bracers and rings and cloaks of protection still work with it.
@@ -262,6 +262,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** With ages on, a party member's hair greys on the map as they age: streaks when middle-aged, grey when old, white when venerable (with what the party wears shown).
 - **[New]** Half-elves no longer look like humans: a half-elf man is built like the elf, a little broader, with short fair hair, a leather jerkin, green trousers and pointed ears; a half-elf woman is a little slimmer than the human woman, with golden hair in a bun, pointed ears, a purple cloak and red boots.
 - **[New]** Every figure casts a soft shadow, and walkers kick up dust on sand and dirt.
+- **[New]** A thief or ranger hidden in shadows in a fight, and anyone invisible, is drawn half see-through.
 - **[New]** The 6th-level priest spells that stay on the map have pictures of their own: Blade Barrier's circling blades, Wall of Thorns' tangle of thorns, Fire Seeds' fireball and Whirlwind's tall, turning funnel of dust. The blades and thorns are Wake of the Ravager's, read from your copy (GOG sells it with Shattered Lands); without it they are the fire wall, recoloured.
 
 ## Quality of Life
@@ -295,7 +296,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** Each shot at the **Bowyer's archery target** in the dice log: the roll, what it needed, how far the archer is from the target and the Bowyer, and whether a centre shot earns his arrows.
 - **[New]** **How the game works** compares every cleric spell and psionic power with the manual: what the manual says, what the game's code does, and what the log shows.
 - **[New]** The Loader can run the game as **Dark Sun Recompiled**, the game translated into a program of its own, instead of in DOSBox, where it is installed.
-- **[New]** **Options:** nearly every rule change and addition in these notes has its own switch (not the keys and the game's fixed bugs), nearly all on by default, and **Restore defaults** sets them all back.
+- **[New]** **Options:** nearly every rule change and addition in these notes has its own switch (not the keys and the game's fixed bugs), all on by default (the red ring's and the game speed's choices aside), and **Restore defaults** sets them all back.
 - **[New]** **Accessibility:** text that can be enlarged up to 2.5 times (**A+**, **A-**, **Ctrl +** and **Ctrl -**), every control reachable from the keyboard, colours with at least 4.5:1 contrast, and the logs saved as text for screen readers.
 
 > *Developers' Notes: Shattered Lands rolls dice for everything and shows you almost none of it. Fireball victims kept saving and nobody knew why (the game doubles the d20 against fire). The Loader started as a way to see those numbers. Once we could see them, we started fixing them.*

@@ -910,7 +910,9 @@ originals:
   `kalzith.ENTRY_SCRIPTS`; the Loader's script numbers are in
   `kalzith.LOADER_SCRIPTS`, checked by `test_scriptnumbers`), the command
   in the pens' script that runs it when he's talked to, and his portrait
-  (portrait 101, a number the game leaves free).
+  (portrait 101, a number the game leaves free): his own face, painted for the
+  mod (`kalzithface.py`: 32 rows of 32 indexes of the portraits' palette, PAL 1,
+  only colours the game's own portraits use and none it animates).
 
 His state is in the game's own flags (760 to 763: met, friendly, cold, his
 scrolls given; the game uses flags up to 755), so a save keeps it. The first
@@ -1127,7 +1129,7 @@ others' Dead Bodies with their gear.
 
 ## The cooked vulture
 
-([In the features page](FEATURES.md#the-cooked-vulture).)
+([In the features page](FEATURES.md#the-cooked-vulture); `vulture.py`.)
 
 How: in the Loader's copy of `GPLDATA.GFF`, Dinos's talk (script 139) has the
 question in its first menu (a copy of the game's with the question added, as

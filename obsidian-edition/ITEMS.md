@@ -53,7 +53,7 @@ Belt of Might making STR at least 24.
 | ![](docs/items/dark-flame.png) | Obsidian | long sword | Dark Flame | +2, Burning Hands | the Lower Castle's chest |
 | ![](docs/items/bloodwrath.png) | Obsidian | long sword | Bloodwrath | +1 | Pehtucl, the pens' templar |
 | ![](docs/items/flame-blade.png) | Obsidian | long sword | ***Flame Blade*** | an obsidian long sword +1 (1d8+1) whose blade burns what it hits: the fire clerics' Focus Heat, 2d6 fire damage to the creature hit (a save for half), as the game's Dark Flame casts Burning Hands. Obsidian, so a fire (or earth) cleric can wield it | carried by the **Templar** of the Hot Springs (the one with the Drake Shield) |
-| ![](docs/items/mindshard.png) | Obsidian | short sword | ***Mindshard*** | an obsidian short sword +1: a **psionicist** can wield it, alone or with a fire or earth cleric | carried by **Maris**; a thief can lift it (200 XP) |
+| ![](docs/items/mindshard.png) | Obsidian | short sword | ***Mindshard*** | an obsidian short sword +1: a **psionicist** can wield it, alone or with a fire or earth cleric | carried by **Maris**; a thief can lift it (200 XP, once a game) |
 | ![](docs/items/terror-blade.png) | Obsidian | dagger | Terror Blade | +2, poison | — |
 | ![](docs/items/nightsliver.png) | Obsidian | dagger | ***Nightsliver*** | an obsidian dagger +2: a fire or earth cleric can wield it | carried by the **Hermit** of the Lava Rift, in place of his stone dagger |
 | ![](docs/items/blackmace.png) | Obsidian | mace | Blackmace | +1, Shocking Grasp | the Shadow King |
@@ -61,7 +61,7 @@ Belt of Might making STR at least 24.
 | ![](docs/items/quarterstaff-plus2.png) | Wooden | quarterstaff | Quarterstaff +2 | +2 | Maris |
 | ![](docs/items/balks-staff.png) | Wooden | quarterstaff | Balk's Staff | +1, Slow | Balkazar |
 | ![](docs/items/parting-staff.png) | Wooden | quarterstaff | Parting Staff | +1 | — |
-| ![](docs/items/gutterknot.png) | Wooden | club | ***Gutterknot*** | a club +1 (the game has no magic club) | carried by **Churrr** in the warrens; a thief can lift it (200 XP) |
+| ![](docs/items/gutterknot.png) | Wooden | club | ***Gutterknot*** | a club +1 (the game has no magic club) | carried by **Churrr** in the warrens; a thief can lift it (200 XP, once a game) |
 | ![](docs/items/deepbiter.png) | Stone | pick | ***Deepbiter*** | a stone pick +1 (the game has no magic pick) | carried by one of the **Undermountain folk** (the miners) |
 | ![](docs/items/great-axe-plus3.png) | none | great axe | Great Axe +3 | +3 | the Army Commander |
 
@@ -160,7 +160,7 @@ Tanelyv's Armor also has a chest piece, with no plus.
 | ![](docs/items/serpent-boots.png) | Feet | Serpent Boots | Displacement | a chest |
 | ![](docs/items/boots-of-elvenkind.png) | Feet | ***Boots of Elvenkind*** | soft boots: [silent](FEATURES.md#hiding-in-shadows-to-backstab), with hiding to backstab on; thieves and rangers only | the buried chest of Kel's caravan, with the Cahulaks +1 |
 | ![](docs/items/living-cloak.png) | Cloak | Living Cloak | Inertial Barrier | Dagolar |
-| ![](docs/items/cloak-of-protection-plus1.png) | Cloak | ***Cloak of Protection +1*** | +1 AC and +1 on every saving throw, from the cloak slot | in the chest beside Pehtucl, the slave pens' head templar: locked, with a poisoned needle in its lock (a thief can disarm it and pick the lock; anyone else can try to bash it open). The chest comes with a new game; in a game saved before this version that has been to the pens, he wears the cloak instead, and the chest is the plain one |
+| ![](docs/items/cloak-of-protection-plus1.png) | Cloak | ***Cloak of Protection +1*** | +1 AC and +1 on every saving throw, from the cloak slot | in the chest beside Pehtucl, the slave pens' head templar: locked, with a poisoned needle in its lock (a thief can disarm it and pick the lock; anyone else can try to bash it open, which sets the needle off: 2d6 poison). The chest comes with a new game; in a game saved before this version that has been to the pens, he wears the cloak instead, and the chest is the plain one |
 | ![](docs/items/cloak-of-elvenkind.png) | Cloak | ***Cloak of Elvenkind*** | a grey cloak: [all but invisible](FEATURES.md#hiding-in-shadows-to-backstab) in a fight, with hiding to backstab on; thieves and rangers only | the **Elven Leader**'s gift with his Gythka +2, after the fight with his men: "And take this cloak, woven by my own tribe for our best runners..." (left on the ground by him when it can't be carried, as the Gythka is) |
 | ![](docs/items/silver-necklace.png) | Neck | Silver Necklace | Biofeedback | — |
 | ![](docs/items/amulet-of-magic-resistance.png) | Neck | ***Amulet of Magic Resistance*** | 15% magic resistance, added to the wearer's own (as from Mind Bar); it never shatters | sold by **Kel** |

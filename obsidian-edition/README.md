@@ -284,6 +284,9 @@ save:
   are counted right now, and the most only ever rises.
 - In a save from 1.2.0 to 2.5.0 that has already been to the slave pens, the
   weapon rack is gone, so Thornwall never comes (a new game has the rack).
+- Pehtucl's locked chest comes with a new game: in a save that has already
+  been to the slave pens he wears the Cloak of Protection, and the chest is
+  the plain one.
 - A new game whose arena fight never began (no announcer, and walking said NO
   PATH FROM HERE: a 2.4.0 bug) can't be mended: start a new one.
 - **A save made with 2.13.0 or later is not for earlier versions**, and one
@@ -310,6 +313,12 @@ has already been through stays as it was.
 | `dos` | the Loader's helpers, and the patched copy of the game (`DSUNLOG.EXE`) with copies of its data |
 | `layouts`, `.dsloader-search.json` | only from the Memory tools: a layout you save there, and a memory search's results |
 | the game folder | your saves (page 1 in the game's own `SAVE` files, pages 2 to 4 as `SAVB`, `SAVC` and `SAVD`) and characters in `CHARSAVE.GFF` |
+
+**Uninstalling.** Delete the Loader's folder. Nothing of the mod is left in
+the game folder but your saves and characters: page 1's saves (`SAVE*`) and
+`CHARSAVE.GFF` load in the original game as long as they hold none of the
+new items (see above); the extra pages (`SAVB*`, `SAVC*`, `SAVD*`) are read
+only by the mod's patched game.
 
 ## The Loader's window
 
@@ -440,26 +449,16 @@ such as "Answer Yes or No", above them), and then the one you picked:
 
 ![The Dialogue tab at the start of a new game: the Announcer, with his portrait, introducing the Defiler's show and calling the gladiators into the arena; the Characters tab beside it with Gerakis's and K'ratchek's ages](docs/dialogue.png)
 
-**Who's speaking.** The game's dialogue window gets only a portrait number,
-never a name. But when the game runs a script on someone (you click them, or
-they come up to you), it notes who; the log reads that when a conversation
-opens. A conversation that shows one face, started on a named creature outside
-the party, is that creature talking, and from then on the portrait carries its
-name: in the pens, portrait 5 became `Kurzak` ("Legcrusher! Get gladiators!")
-and portrait 100 `Legcrusher` ("Kurzak told me to bring you to the arena").
-When several faces take turns in one conversation, nothing is learned from it,
-as it can't be told who is who. Names learned are shown on the lines already
-there too, and kept in `settings.json` (`speakers_learned`). A speaker not
-named yet shows as `Portrait 57`. Portrait 119 is named `The Announcer`, as
-the game itself calls him ("Yell something back at the Announcer?"). That name
-isn't replaced by one learned (he calls out in the middle of fights, when the
-game's last script ran on a fighter). To name a speaker yourself (your name
-wins over a learned one), right-click the name line in the Dialogue tab, or
-press **Name speaker...** (it names the latest speaker). The name replaces the
-number on every line from that portrait, the ones already shown included, and
-is remembered in `settings.json` for next time (the command-line log uses it
-too). Leave the name empty to go back to the number. Text shown without a face
-(the emblem instead) is `Narration`.
+**Who's speaking.** The game's dialogue window has only a portrait, never a
+name, so a speaker shows as `Portrait 57` until the log learns its name from
+a conversation started on it (in the pens, portrait 5 becomes `Kurzak`) or
+you name it: right-click the name line in the Dialogue tab, or press **Name
+speaker...** (it names the latest speaker). Your name wins over a learned one
+and replaces the number on every line, the ones already shown included; leave
+it empty to go back to the number. Names are kept in `settings.json`, and the
+command-line log uses them too. Portrait 119 is `The Announcer`, as the game
+calls him. Text shown without a face (the emblem instead) is `Narration`.
+([How names are learned](DEVELOPMENT-SCREENS.md#the-dialogue-tab).)
 
 Each entry shows the speaker's portrait, as the game's own dialogue window
 does. Portraits and the title's lettering are read from your installed game at
