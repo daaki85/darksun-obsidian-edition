@@ -227,6 +227,10 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   grass of 563 runs; put the old number back after), `ghostchk.py 0 1` marks things 0 and 1 (each
   call replaces the marks), and `pastblock.py save|cmp FILE` keeps and compares the 4 KB past
   GHOST's block. Past 192 runs only the frame's top is drawn see-through, by design.
+- **The game's free things** (2026-11-07): `thingsfree.py LABEL` gives one line: the free list's
+  length (of the 200, things 320-519), the count out (DS:4C48h), and the item lists the people on
+  the map hold. The pens: 143 free after loading, 131 in the alarm fight; the arena on arrival 191
+  (the pens' all freed). `arenatrip.sh` takes the party from the fire room to the arena.
 - **Memory** (2026-11-06, logs/2026-11-06-memory-audit.md): `memaudit.py` lists every DOS block (the
 game's, DSCLOG's, the overlay buffer, the see-through tables, the music buffer, free) and the heap;
 `memsample.py LABEL` gives one line (free DOS memory after the game: 100,016 bytes on the map in the

@@ -1041,7 +1041,11 @@ of Protection +1 is in his chest now, as it gave nothing under AD&D's rule with 
 shield). Keys, food and scrolls stay packed.
 Each move is `pickpocket.place` (the list for its slot found or made first, a new one from the
 game's allocator; with none to be had nothing moves, and the person is tried again on a later
-pass), after `itemgate.hold`. Test: `test_people.py`.
+pass), after `itemgate.hold`. Test: `test_people.py`. What it costs of the game's 200 things from
+its free list (`playtest/thingsfree.py`, 2026-11-07): each person with gear holds two or three
+lists, not one, about 21 more in the pens (143 free after loading, 131 in the alarm fight); the
+game frees an area's lists as the party leaves it (191 free on arriving in the arena), so nothing
+builds up.
 
 ## Pehtucl's chest
 

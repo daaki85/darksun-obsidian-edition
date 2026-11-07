@@ -62,3 +62,29 @@ allow; the fix is checked only by reading the code there.
   Escape left the camera at (0, 0): the loop now checks for (0, 0), presses Escape and runs
   `viewto.py` back to the party.
 - A miss in the dice log ends `-> miss` (a hit `-> HIT`).
+
+## The game's lists used by the people's gear (people.py), and the helper with room freed
+
+**Lists** (`thingsfree.py`: the free list walked, the game's count out, the lists the people on
+the map hold). Of the 200 handed out from the free list (things 320-519):
+
+| When | Free | Out | People with items | Their lists (worn, held, pack) |
+|---|---|---|---|---|
+| `pens-after-scar` loaded | 143 | 57 | 21 | 18, 20, 4 |
+| In the fire room after the walk | 143 | 57 | 21 | 18, 20, 4 |
+| The alarm fight, every guard come | 131 | 69 | 26 | 22, 25, 4 |
+| Arriving in the arena | 191 | 9 | 0 | (only the party's) |
+
+Without people.py each would hold its backpack's list only: 21 lists, not 42, so the gear costs
+about 21 in the pens (25 in the fight). The game frees every list of the area it leaves: the
+arena's 9 out are the party's. So nothing builds up from area to area, and the pens keep over 130
+free: no guard needed.
+
+**The helper** (DSCLOG.EXE 65,440: OVR_BACK, SHEET_CLASSES, PLAY_SOUND's five bytes), after
+`loadsave.sh pens-after-scar`: OVR_BACK's bytes in memory; Cilla picked Legcrusher's pocket (d100
+3 vs 70, 9 ceramic pieces), the message window and Continue back to the map (one of OVR_BACK's
+handlers), and the purse's jingle (`soundmatch.py`: pick.wav r 0.995, hide.wav 0.042).
+
+**Learned:** `arenatrip.sh` (from the fire room to the arena) rested six times with no call: the
+call came later, as the party walked (as in `restalarm.sh`); `toarena.sh` then took it in, and the
+gate's question was answered Y.
