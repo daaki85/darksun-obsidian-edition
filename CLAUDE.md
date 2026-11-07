@@ -14,7 +14,8 @@ This summary is here so it survives a compacted chat; `playtest/PLAYTESTING.md` 
 wins where they differ.
 
 **Setup.** Tools are in `playtest/` (run from there, `export DISPLAY=:55`, and set
-`PLAYTEST_WORK` to a scratch folder; the game is `$PLAYTEST_WORK/inst`, from `setup_game.sh`).
+`PLAYTEST_WORK` to a scratch folder; the game is `$PLAYTEST_WORK/inst`, from `setup_game.sh`;
+the guide's `$WORK` is that folder, set only inside the tools, so type `$PLAYTEST_WORK`).
 `start.sh` starts Xvfb, the Loader's patched game in DOSBox and the dice log
 (`$PLAYTEST_WORK/dice.txt`). Check the build under test is in place before trusting anything
 (`GPLDATA=../obsidian-edition/dos/GPLDATA.GFF python3 dec.py SCRIPT LO HI`; for DSCLOG, new code's

@@ -12,7 +12,7 @@ from dsloader import game
 
 # (module, its flag constants: the table's)
 FLAGS = {
-    "semyon": ["PLACED", "MET", "LEFT", "DIED", "CLEARED", "SETTLED", "ESCAPING"],
+    "semyon": ["TOLD", "SHIPPED", "FOUND", "PLACED", "MET", "LEFT", "DIED", "CLEARED", "SETTLED", "ESCAPING"],
     "kalzith": ["MET", "FRIENDLY", "COLD", "STOCKED", "DIED", "LOOTED", "DRESSED", "SOLD_OUT"],
     "champions": ["KING", "FOUGHT"],
     "vulture": ["MEAL", "EATEN"],
@@ -22,19 +22,31 @@ FLAGS = {
     "aging": ["COUNTING"],
 }
 
+# Alagorn's menus' overflow runs from alagorn.FLAGS to this at most (test_pehtuclchest checks the
+# game's scripts reach no further, with GPLDATA.GFF)
+ALAGORN_LAST = 794
+
+
+def _ranges():
+    """The flags kept in ranges or tables rather than one constant each: (name, number)."""
+    from dsloader import aging, alagorn, pensasks
+    out = [(f"pensasks {ask.text.strip()!r}", ask.flag)
+           for ask in pensasks.DINOS_ASKS + pensasks.TRUSTEE_ASKS if ask.flag is not None]
+    out += [(f"alagorn.FLAGS+{n - alagorn.FLAGS}", n) for n in range(alagorn.FLAGS, ALAGORN_LAST + 1)]
+    out += [(f"aging.COUNT_FIRST+{n - aging.COUNT_FIRST}", n)
+            for n in range(aging.COUNT_FIRST, aging.COUNT_FIRST + aging.COUNT_BITS)]
+    return out
+
 
 class FlagRangeTests(unittest.TestCase):
     def test_in_range_and_unshared(self):
         seen = {}
-        for name, constants in FLAGS.items():
-            module = importlib.import_module("dsloader." + name)
-            for c in constants:
-                n = getattr(module, c)
-                self.assertTrue(756 <= n < game.FLAG_COUNT, f"{name}.{c} = {n}")
-                self.assertNotIn(n, seen, f"{name}.{c} = {n}, also {seen.get(n)}")
-                seen[n] = f"{name}.{c}"
-        aging = importlib.import_module("dsloader.aging")
-        self.assertLessEqual(aging.COUNT_FIRST + aging.COUNT_BITS, game.FLAG_COUNT)
+        named = [(f"{name}.{c}", getattr(importlib.import_module("dsloader." + name), c))
+                 for name, constants in FLAGS.items() for c in constants]
+        for label, n in named + _ranges():
+            self.assertTrue(756 <= n < game.FLAG_COUNT, f"{label} = {n}")
+            self.assertNotIn(n, seen, f"{label} = {n}, also {seen.get(n)}")
+            seen[n] = label
 
     def test_set_flag_refuses_past_them(self):
         gd = game.GameData.__new__(game.GameData)

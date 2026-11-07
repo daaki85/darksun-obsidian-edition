@@ -6,9 +6,13 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
-A note on DSCLOG's sizes: up to #85 the figure called its "image" may be the file's, DSCLOG.EXE
-(#85's 64,592 is the file's size; the image is the file less its 32-byte header). From #86 on,
-both are given.
+A note on DSCLOG's sizes: up to #84 the figure called its "image" may be the file's, DSCLOG.EXE
+(#83's 63,680 and #84's 64,320 are the files' sizes; the image is the file less its 32-byte
+header), and the spare room beside it, up to #85, is counted from that figure. #85 names the
+file's size as such; from #86 on, both are given.
+
+Releases before 2.12.2 give the release's line as a **Release** bullet; from 2.12.2 on it is the
+entry's first line.
 
 Releases, newest first: [2.14.0](#next-pull-request-not-opened-yet) (#86 and the next),
 [2.13.4](#pull-request-85-merged-2026-11-02) (#85),
@@ -63,6 +67,13 @@ DSCLOG.EXE 65,472 bytes, unchanged (comments only).
   before specialization. (Test: `test_kit_label`.)
 - Options: the floating names' switch names the charges used (`Armor: 7 left`) as well; the
   shadows' says `(soft, on the floor)`, not see-through, which is the hidden and invisible.
+- **The divider stops short of the Memory tools' buttons:** widened to fit the party's columns,
+  it could hide Stride's Apply and cut Reload layout. It now leaves room for the widest row of
+  buttons, the columns widening as the table fills no longer move it, and the byte view asks for
+  less width (it scrolls sideways). (`Viewer._fit_party`.)
+- Labels reworded: the saves are copied into Named saves only while the window is open; the
+  Options note names the .bat files; the Look switch says what it shows (hit points, AC, THAC0
+  and defences); Restore defaults says when a switch marked "from the next start" applies.
 
 **Docs**
 - The changelog's #86 heading, its fourth-review fixes and the releases list put right; the patch
@@ -71,6 +82,15 @@ DSCLOG.EXE 65,472 bytes, unchanged (comments only).
   party's opening lines; the developer pages given the gate's cover, the reserve, the people's
   gear's tries and the edge cases of names and shadows; #86's "Room for new code" filed under
   Changed; the playtesting guide's repeated notes merged and its save list completed.
+- A docs review: the player pages (the saves list in one place, the release notes in a player's
+  words, the patch notes refiled); the feature pages (FEATURES' always-on features apart from its
+  switches, item places moved to ITEMS, one summary of the rule changes, DICE-LOG's missing lines,
+  HOW-THE-GAME-WORKS kept to the game); the developer pages (Building and testing split into
+  Build, Tests and Release steps, with the game-file variables and the project-wide tests; Room in
+  the helper with one table of sizes; the kits' effects table cut to effect, kit and probe, each
+  mechanism below it; the shadows' cache placed in the far block; the developer detail taken off
+  the player pages placed here; every Loader flag in `test_flagrange`); the playtesting guide's
+  repeats merged; three Loader screenshots retaken.
 
 ## Pull request #86 ([merged 2026-11-07](https://github.com/daaki85/darksun-obsidian-edition/pull/86))
 
@@ -287,7 +307,7 @@ DSCLOG.EXE 65,472 bytes (+880 since #85; its image 65,440, 96 bytes of its segme
 
 Obsidian Edition 2.13.4 ([release notes](release-notes/v2.13.4.md)).
 
-DSCLOG's image 64,592 bytes (688 bytes of its segment spare).
+DSCLOG.EXE 64,592 bytes (688 bytes of its segment spare).
 
 **Changed**
 - **The dice log's `--all` line for each AC gives its parts:** base, armour, DEX and other.

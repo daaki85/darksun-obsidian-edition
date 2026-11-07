@@ -1098,12 +1098,20 @@ decodes (the Loader's other
 changes read it); and the longer script must still fit the game's script buffer
 (`pensasks.LONGEST`), as the Loader's other script changes must.
 
-Worn and wielded (how the game keeps a person's gear: [The game's people's
-gear](#the-games-peoples-gear)): the melee routine fights with what is in the held list
-(+0Ah) for anyone: seen, a Tohr-kreen given Headsman there attacked "with
-Headsman +2 (1d10+2)" in place of its first two natural attacks, its third
-kept; and the AC routine counts the worn list (+08h) for anyone (two Tohr-kreen
-given scale chest armour went from AC 3 to -2 against the party's attacks).
+The game's own count of visits ([the arena's count of fights](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights)):
+script 2 marks the 5000th visit (number 12 at 5000, A58h) the war won, with
+flag 10 set and a call to script 62 (at FAAh), which sets the final battle's state,
+global number 49, to 3. Checked in play: the count going up once a trip,
+Scar's challenge on the fifth, and, with the count set to 5000, the 5000th
+trip's speech, the party sent back with no fight, and the final battle marked
+won. The 1000th trip is as its script reads; it wasn't played.
+
+Worn and wielded: the game's [item lists](DEVELOPMENT.md#what-is-known) work
+for anyone, not only the party (and see [The game's people's
+gear](#the-games-peoples-gear)): seen, a Tohr-kreen given Headsman in its held
+list attacked "with Headsman +2 (1d10+2)" in place of its first two natural
+attacks, its third kept; and two Tohr-kreen given scale chest armour in the
+worn list went from AC 3 to -2 against the party's attacks.
 `champions.Gear` (each pass of the dice log, in the arena) moves each living
 champion's items, by type, to its slot (`pickpocket.place`, as the inventory
 screen would), once; the defiler gets its scroll first (into its backpack, while
@@ -1292,8 +1300,9 @@ drawings: in a save in the arena every figure but one had its picture out of mem
 drawn, so no shadow. Loading one from here, in the middle of a drawing, could push out or move a
 picture the game is about to draw, so instead DSCLOG keeps each frame's shadow as it draws it
 (`SC_START`, `SC_PUT`, `SC_END`: the runs that cast a shadow, three bytes each, at most 64, under
-the picture's number from the cache slot's `+6` and the frame) in 80 slots of 208 bytes in upper
-memory (`SC_SEG`, from KEEP, if `UMBPLUS.COM` made the room), the oldest given up first. A figure
+the picture's number from the cache slot's `+6` and the frame) in 80 slots of 208 bytes in the
+helper's far block (`SC_SEG`, at `FAR_SC`: see [Room in the helper](DEVELOPMENT.md#room-in-the-helper)),
+the oldest given up first. A figure
 whose picture is out casts its frame's kept shadow, or another frame's of the same picture
 (`SC_FIND`). Measured in the arena: 74 slots filled in a few rounds, the party and the monsters seen
 in memory once casting shadows after; one whose picture was never in memory at a floor drawing still
