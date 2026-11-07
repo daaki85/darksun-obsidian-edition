@@ -424,7 +424,7 @@ in its lower panel and under the pointer:
 - **A click on a spell's icon** no longer ends it: [Spells on the Effects
   screen](#spells-on-the-effects-screen).
 
-![The Effects screen for Cilla: the pointer on Armor's icon, and IMPROVED AC (4 CHARGES) at the foot](docs/effects-charges.png)
+![The Effects screen for Cilla: the pointer on Armor's icon, and IMPROVED AC (10 CHARGES) at the foot; her own feature, SHADOW-WALKER, beside it](docs/effects-charges.png)
 
 How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#the-games-spells).
 
