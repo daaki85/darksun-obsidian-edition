@@ -68,11 +68,11 @@ double-click, with the options as last set.)
 
 ## What's new
 
-**Obsidian Edition 2.13.4** is out ([release notes](release-notes/v2.13.4.md)):
-fuller starting gear's armour counts for AC, Psionic Blast's imagined wounds heal
-after the fight, ability items work only worn, the gladiator's armour bonus needs
-armour, and more of the game's script bugs are fixed (the slave pens' sewer
-grate, a ranger's tracking, region 9's messenger).
+**Obsidian Edition 2.14.0** is out ([release notes](release-notes/v2.14.0.md)):
+hidden thieves and invisible figures are drawn see-through, six champions come to
+the arena after Scar's death, Pehtucl's chest is locked and trapped, Thornwall
+comes after Semyon's tip, the game's people wear their gear from the start, and
+Kalzith has a face of his own.
 
 Every release has notes of its own, in [`release-notes`](release-notes); the
 [patch notes](PATCH-NOTES.md) have every change from the original game in one

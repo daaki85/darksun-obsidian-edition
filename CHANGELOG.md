@@ -10,7 +10,8 @@ A note on DSCLOG's sizes: up to #85 the figure called its "image" may be the fil
 (#85's 64,592 is the file's size; the image is the file less its 32-byte header). From #86 on,
 both are given.
 
-Releases, newest first: [2.13.4](#pull-request-85-merged-2026-11-02) (#85),
+Releases, newest first: [2.14.0](#next-pull-request-not-opened-yet) (#86 and the next),
+[2.13.4](#pull-request-85-merged-2026-11-02) (#85),
 [2.13.3](#pull-request-84-merged-2026-10-31) (#84), [2.13.2](#pull-request-83-merged-2026-10-30)
 (#83), [2.13.1](#pull-request-82-merged-2026-10-30) (#82),
 [2.13.0](#pull-request-81-merged-2026-10-30) (#81), [2.12.5](#pull-request-80-merged-2026-10-30)
@@ -30,9 +31,11 @@ Releases, newest first: [2.13.4](#pull-request-85-merged-2026-11-02) (#85),
 [2.1.0](#pull-request-36-merged-2026-10-09) (#36), [2.0.0](#pull-request-33-merged-2026-10-09)
 (#33), [1.2.0](#pull-request-30-merged-2026-10-08) (#30),
 [1.1.0](#pull-request-18-merged-2026-10-06) (#18), [1.0.0](#pull-request-12-merged-2026-10-02)
-(#12). #86 and after: in the next release.
+(#12).
 
 ## Next pull request (not opened yet)
+
+Obsidian Edition 2.14.0 ([release notes](release-notes/v2.14.0.md)), with #86.
 
 DSCLOG.EXE 65,472 bytes, unchanged (comments only).
 
