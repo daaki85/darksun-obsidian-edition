@@ -55,7 +55,7 @@ DSCLOG.EXE 65,472 bytes, unchanged (comments only).
 - Smaller: the Loader's own list writes made the pass's later item steps wait a pass (and counted
   as refusals in the freeze report); a two-hander went in the right hand beside a shield already
   held; a finished see-through palette's thread cleared another's mark; a flag past the 808 a
-  save keeps is refused (`game.FLAG_COUNT`, `test_flagrange`).
+  save keeps is refused (`game.FLAG_COUNT`, `test_flagrange`). `test_scriptchecks`' file times are whole seconds: at 1-3 ns they were all 0 on Windows (100 ns steps), and the test failed there.
 
 **Fixed: the Loader's window**
 - **All fields** widens its columns to the longest label and value shown; the **Memory tools**
