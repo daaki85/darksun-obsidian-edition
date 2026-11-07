@@ -47,6 +47,7 @@ capture; window grabs (`import -window`) are 320x240, so y x 1.2.
 **Controls.**
 - Clicks: `click.py X Y [left|right|none]` (game pixels). Right-click cycles the pointer: the
   plain arrow walks. `pointer.py walk|look|attack` sets it from memory (right-clicks on bare floor).
+  The look pointer pauses the game: put the arrow back after a look or a rest.
 - Walking: `walkto.py X Y` (map units; screen = map - camera at DS:1178h). The view doesn't
   follow the leader: drag it with the middle button, `scroll.py DX DY` (dragging down shows the
   north). The tool keeps the pointer off the screen's edges, since an edge scrolls the view the

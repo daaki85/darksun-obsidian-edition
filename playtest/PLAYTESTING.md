@@ -251,6 +251,9 @@ palette copy changing (every 30 s where the game cycles colours). The arena gate
 - **Clicks**: `python3 click.py X Y [left|right|none]` in game pixels (320x200). DOSBox captures
   the mouse, so the tool moves it relatively until the game's own pointer reads X,Y. Plain
   `xdotool mousedown/up` clicks where the pointer already is (fine for dismissing a message).
+- **The look pointer pauses the game** (the user, 2026-11-07): while the eye is the pointer, the
+  game's time doesn't run (no Kurzak's call, no alarm, nobody moving). Put the walk arrow back
+  (`pointer.py walk`) as soon as a look or a rest is done; a wait with the eye up waits for nothing.
 - **Pointer cycle, as checked 2026-11-01**: arrow, sword, eye, arrow. **`pointer.py walk|look|attack`**
   reads the mode from memory (DS:11B8h: 1 the arrow, 4 the sword, 2 the eye) and right-clicks on bare
   floor until it is the one wanted (2026-11-07: right-clicks guessed from shots left the sword up,
