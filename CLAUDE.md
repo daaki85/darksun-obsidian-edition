@@ -54,7 +54,8 @@ capture; window grabs (`import -window`) are 320x240, so y x 1.2.
   other way, and releases every button afterwards. Click past a wall and the party finds its own
   way round.
 - Doors open with the **look** pointer (right-click to cycle to it, then click the door); then
-  click on the far side of the open door with the walk arrow to go through.
+  click on the far side of the open door with the walk arrow to go through. A look click on an
+  open door closes it: check a shot first.
 - Message boxes block clicks, keys and drags: click ON the box (`boxclick.sh`, 160,20).
 - A YES/NO question needs the N or Y key, and only while the dice log's last line is `    2. No`.
   The arena gate's "Do you wish to continue?" is **Y**; the Announcer's question is N.
@@ -90,8 +91,8 @@ Monitor, and every step gets a `timeout`.
 
 **The route so far.**
 1. New game: `start.sh`, `topartyfight.sh` (the opening, then clicks south from the gate until
-   the game brings the party into the arena). On 2026-11-02 the first bout never started from
-   there (the bone wall stops the party at 488,264): restart and try again before digging.
+   the game brings the party into the arena). The first bout sometimes never starts from there
+   (2026-11-02; the bone wall stops the party at 488,264): restart and try again before digging.
 2. The arena: `(sh arenawaves.sh && sh leavearena.sh)` fights the waves, answers N, drags the view
    north, clicks inside the wall (488,232), then the gate strip (488,184), and answers Y.
    Staying sends more fights.

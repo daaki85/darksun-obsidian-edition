@@ -22,6 +22,7 @@ of the game's data, the tools for mapping it, and how each part of the
 - [The freeze report](#the-freeze-report)
 - [Reading the game's memory](#reading-the-games-memory)
   - [Changing the game's item lists](#changing-the-games-item-lists)
+  - [The Loader's game flags](#the-loaders-game-flags)
 - [How each part works](#how-each-part-works)
   - [What the game and the Loader show](DEVELOPMENT-SCREENS.md)
   - [The rules](DEVELOPMENT-RULES.md)
@@ -650,6 +651,33 @@ Every place the game deletes an item goes through A0:1CD6h. Its ten callers:
 | 67401h (675B4h), from creation and DUAL (86C80h) | a piece the new class can't use, pack full: the item held on the pointer is deleted unless the inventory is open (read from the code, not seen) | reported |
 | 7C7ACh, in the effects overlay | none found (no call reaches it) | — |
 
+
+### The Loader's game flags
+
+The game's script flags (read with var 141, set with var 13) run to 755; the
+Loader keeps its own state in the numbers past them, so a save keeps it too:
+
+| Flags | What |
+|---|---|
+| 756-758 | Semyon's shipment: told of, Thornwall put on the rack, a party member carrying it |
+| 759 | a party member killed Scar in the arena (the champions' bout due) |
+| 760-763 | Kalzith: met, friendly, cold, his scrolls and gear given (`kalzith.py`) |
+| 764-765 | Semyon: placed in the pens, met (`semyon.py`) |
+| 766-769, 773-774 | Dinos's and the Trustee's questions (`pensasks.py`) |
+| 770-771 | Semyon: left the arena after his fight, died |
+| 772 | Kalzith seen dead |
+| 775 | Kalzith and Semyon taken off the map after the escape |
+| 776-778 | Kalzith: dressed, looted, sold out |
+| 779, 782 | Semyon: settled in his pen; escaping with Scar |
+| 780-781 | the cooked vulture: the meal, the reward given (`vulture.py`) |
+| 783 | the arena ring's XP given (`ring.py`) |
+| 784-794 | Alagorn's menus' overflow (794 at most: `test_pehtuclchest`) |
+| 795-796 | Pehtucl's chest: the needle gone, the lock open |
+| 797 | Legcrusher seen dead (Kurzak's lines) |
+| 798-806 | the years of natural aging counted (798 once begun, 799-806 the number) |
+| 807 | the champions fought |
+
+A save keeps 808 flags. A new flag goes past 807, and in this table.
 ## How each part works
 
 How each part of the [features page](FEATURES.md) and the [README](README.md) is done, on three pages of its own:

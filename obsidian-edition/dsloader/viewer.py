@@ -514,7 +514,7 @@ class Viewer:
         ttk.Checkbutton(looks, text="Dust raised behind the feet of anyone walking on sand or dirt",
                         variable=self.show_dust, command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.see_through = tk.BooleanVar(value=settings.get("see_through", True) is not False)
-        ttk.Checkbutton(looks, text="A thief hidden in shadows, and anyone invisible, drawn see-through (an "
+        ttk.Checkbutton(looks, text="A thief or ranger hidden in shadows, and anyone invisible, drawn see-through (an "
                         "invisible enemy solid while one of the party detects invisibility)",
                         variable=self.see_through, command=self._options_changed).pack(anchor="w", pady=(4, 0))
 
@@ -568,7 +568,7 @@ class Viewer:
             ttk.Radiobutton(pace, text=text, value=value, variable=self.game_speed,
                             command=self._speed_chosen).pack(anchor="w")
         self.steady_pace = tk.BooleanVar(value=settings.get("steady_pace", True) is not False)
-        ttk.Checkbutton(pace, text="Walking at full speed on the map whatever is drawn: when a picture takes too "
+        ttk.Checkbutton(pace, text="Steady pace: walking at full speed on the map whatever is drawn: when a picture takes too "
                         "long, the next is skipped rather than the party slowing down", variable=self.steady_pace,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         # Wake of the Ravager, for the 6th-level priest spells' icons and pictures (wotrart.py)

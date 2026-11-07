@@ -24,7 +24,8 @@ extracted game (`DS_GAME`, default `$PLAYTEST_WORK/inst`). Nothing in the work f
    sewer grate, for one, is behind the stalker pen's secret door).
 3. **Start from a saved game past the parts you don't need**: `sh loadsave.sh NAME` loads one of
    `playtest/saves/` (see its README: `pens-after-arena`, the slave pens after the arena;
-   `pens-thornwall-rack`, the party by the weapon rack with Thornwall on it). None
+   `pens-thornwall-rack`, the party by the weapon rack with Thornwall on it; `pens-after-scar`, Scar
+   killed and the champions due; `pens-new-chest`, a new game's pens). None
    came with the game and none were on the Drive (2026-11-01). **Save at every milestone** (below)
    and add the save to `playtest/saves/` with a line in its README, then commit: replaying the
    arena took most of a day.
@@ -230,7 +231,8 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
 - **The game's free things** (2026-11-07): `thingsfree.py LABEL` gives one line: the free list's
   length (of the 200, things 320-519), the count out (DS:4C48h), and the item lists the people on
   the map hold. The pens: 143 free after loading, 131 in the alarm fight; the arena on arrival 191
-  (the pens' all freed). `arenatrip.sh` takes the party from the fire room to the arena.
+  (the pens' all freed). `arenatrip.sh` loads `pens-after-scar` (through `toalarm.sh`), rests in the
+  fire room till Kurzak calls, and takes the party to the arena, counting the things on the way.
 - **Memory** (2026-11-06, logs/2026-11-06-memory-audit.md): `memaudit.py` lists every DOS block (the
 game's, DSCLOG's, the overlay buffer, the see-through tables, the music buffer, free) and the heap;
 `memsample.py LABEL` gives one line (free DOS memory after the game: 100,016 bytes on the map in the
@@ -319,6 +321,10 @@ palette copy changing (every 30 s where the game cycles colours). The arena gate
   (2026-11-01). E with no menu up opens the Effects screen (section 4 rule 11).
 - **Loose `xdotool` commands need `DISPLAY=:55`** (`export DISPLAY=:55` first): the kit's tools
   set it, a command typed on its own doesn't ("Can't open display").
+- **`ghostclear.py [TRIALS]`** (2026-11-07): at each enemy turn's start, Cermak marked see-through with
+  GH_CHANGED set, the byte and the turn read every 20 ms: whether GHOST_UNION cleared it within that
+  turn. **`passmiss.sh`**: the party's turns passed until a foe misses, then the view dragged and shot.
+  **`rec.py [FIRST LAST]`**: creatures' combat records in hex, to find a field.
 - **In the enemies' turns the view follows the one acting** (2026-11-07, `ghostturn.py`): a test that
   needs a still view through an enemy turn (a figure redrawn or not) can't rely on it; the move
   redraws the whole view by itself. `markmember.py THING|none CHANGED` writes GHOST_TAB and its
@@ -591,7 +597,7 @@ open): check a shot before clicking a door. With the door open, the walk arrow o
 
 **Map pictures**: `python3 mapshot.py OUT.png [W H]` steps the view across the region and pastes
 the captures at their cameras: one map unit a pixel, so a point's pixel is its map position.
-Region pictures made so far are in `playtest/maps/`.
+Keep a region picture worth having in `playtest/maps/` (none is there yet).
 
 **The slave pens (region 29h)**: through the gate the party comes out at (1816, 440) and Kurzak
 meets it ("These are the slavepens. I'm Kurzak, leader of the guards. Follow me. I'm here to lead

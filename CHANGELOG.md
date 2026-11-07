@@ -6,6 +6,10 @@ For what a release brings, read its notes, in [`release-notes`](release-notes);
 for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
+A note on DSCLOG's sizes: up to #85 the figure called its "image" may be the file's, DSCLOG.EXE
+(#85's 64,592 is the file's size; the image is the file less its 32-byte header). From the next
+pull request on, both are given.
+
 Releases, newest first: [2.13.4](#pull-request-85-merged-2026-11-02) (#85),
 [2.13.3](#pull-request-84-merged-2026-10-31) (#84), [2.13.2](#pull-request-83-merged-2026-10-30)
 (#83), [2.13.1](#pull-request-82-merged-2026-10-30) (#82),
@@ -127,18 +131,10 @@ DSCLOG.EXE 65,472 bytes (+880 since #85; its image 65,440, 96 bytes of its segme
 - **A floating name could be drawn above the page,** into other video memory, when the view was
   dragged so that its figure was off the top of the screen; it isn't drawn then. And a timer strike
   while a name was being erased could leave its old place on screen (the erase marked busy first).
-- **A figure stayed see-through (or solid) through the enemies' turns** when an invisibility ended
-  or began then, until a party member's turn: the view is drawn again from the map's main loop,
-  which doesn't run in those turns. The Loader now marks the table changed (`GH_CHANGED`, the last
-  byte of GHOST_TAB's room), and `GHOST_UNION` draws the whole view once at the next step of
-  anyone's. (Test: `test_whole_view_when_the_table_changes`.)
-- **The sound of the mod's own lent the game's table entry back one byte too far,** over the next
-  entry's "loaded" flag (latent: nothing changes it during a play).
 - **Room for new code:** the end shared by seven handlers that return through the overlay
   manager's frame is written once (`OVR_BACK`), and a sheet's classes read by one routine
-  (`SHEET_CLASSES`): 128 bytes of the helper's segment spare, from 16.
-- **A see-through figure with no picture yet** was drawn from the interrupt table as if it were
-  one; it is left undrawn, as the game's own routine does. (Test: `test_ghost_draw_no_picture`.)
+  (`SHEET_CLASSES`): 128 bytes freed, from 16 spare (96 spare after the fix to see-through figures
+  in the enemies' turns).
 
 **Fixed: the Loader** (an audit and three reviews)
 - **One write the Loader stopped ended the dice log for the session** (slicing a deque raised every
@@ -160,10 +156,6 @@ DSCLOG.EXE 65,472 bytes (+880 since #85; its image 65,440, 96 bytes of its segme
 - **A save of the same party loaded wasn't seen as a load,** and the game's own party wasn't made
   ready in a second new game without closing the Loader. (Tests: `LoadSeenTests`,
   `test_default_party_again_in_a_new_game`.)
-- **See-through figures were drawn solid for a moment every 30 s** where the game cycles colours,
-  and their tables were kept all session. They are kept by the colours the game never cycles, the
-  last eight. (Seen in DOSBox: GHOST_ON 1 in all 3,722 samples. Test:
-  `test_cycling_colours_keep_the_tables`.)
 - **A dressed figure could be written past its room** in the objects' copy after "Elves have pointed
   ears" changed; each picture's room is read from the copy itself. (Test: `test_rooms`.)
 - **The dice log named the wrong script checks** after a switch changed and the game started again;
@@ -175,28 +167,25 @@ DSCLOG.EXE 65,472 bytes (+880 since #85; its image 65,440, 96 bytes of its segme
   a speech with no replies teaches a name only when its speaker stands near the party. (Test:
   `SpeakerTests`.)
 - **Writes across an area's loading:** the item gate now also covers where the item and creature
-  tables were as the pass began, and every write while their pointer is null. (`itemgate.py`.
-  Test: `test_tables_moved_mid_pass`.)
+  tables were as the pass began. (`itemgate.py`. Test: `test_tables_moved_mid_pass`.)
 - **A failed copy of the objects or resources file left the last start's** for the game to open,
   made with other switches. It is taken away now.
 - **Script checks dropped a roll's line** when the scripts' copy was damaged, and found none with no
   copy (the game's own scripts are read then). (Test: `LoadTests`.)
-- **See-through tables were kept by too few colours** (224-239 differ between areas) and could
-  leave the figures solid after a quick change of palette and back. (Tests:
-  `test_area_colours_count`, `test_back_before_made`.)
-- **Wake of the Ravager's pictures could pulse:** a green was matched to a colour the game cycles.
-  (`wotrart.stable_colours`.)
-- **A two-handed weapon was given a shield** among the game's people. (Test:
-  `test_two_handed_alone`.)
 - **The window kept a second copy of the objects' file** (5.4 MB; now 0.46 MB, what differs).
 - Smaller: settings.json tried again before it counts as empty; the arena ring's search kept if
-  giving the ring fails; the chest's watcher no longer scans the item table each pass; a speaker's
-  name, a saved log and the Named saves folder say when a file fails; the Memory tools' "... more"
-  row can't be assigned.
+  giving the ring fails; a speaker's name, a saved log and the Named saves folder say when a file
+  fails; the Memory tools' "... more" row can't be assigned; the Look texts searched for in the
+  dialogue are the last 16.
 - Smaller: the panel shortened only plain saves; Kalzith's scrolls weren't trimmed when the lists
-  were busy; Semyon's crate counts a Thornwall in a bag; a monster's or attacker's THAC0 below 0
-  showed as 255; WIS's save adjustment read past its table; Restore Youth's system shock on a
-  creature with no CON; a party member named Kalzith or Semyon counted as his death.
+  were busy, and his stock waits while the flags have no place in memory (it read as not given);
+  a monster's or attacker's THAC0 below 0 showed as 255; WIS's save adjustment read past its
+  table; Restore Youth's system shock on a creature with no CON; a party member named Kalzith or
+  Semyon counted as his death; Cilla's armour, when the game's lists moved under a piece, is taken
+  on the next pass; a palette from an earlier start isn't kept when the game's can't be read;
+  crash reports show the new spells' old setting name, the ring and the panel's level as used; a
+  failure counting effects' charges no longer loses the pass's lines; a script repair too short for
+  its jump is left out rather than shifting the script (none is, today).
 
 **Fixed before release** (in the new work above)
 - See-through figures' first vector, 62h, was `PROBE_AC`'s, so every attack's AC went to the
@@ -208,6 +197,30 @@ DSCLOG.EXE 65,472 bytes (+880 since #85; its image 65,440, 96 bytes of its segme
   the end of the chest's. The chest is 223, and `test_scriptnumbers` checks no two scripts share
   a number, every call lands inside its script, and every script fits the game's buffer.
 - The chest could be worked on from across the room (the game's safe tests the distance first).
+- **A figure stayed see-through (or solid) through the enemies' turns** when an invisibility ended
+  or began then, until a party member's turn: the view is drawn again from the map's main loop,
+  which doesn't run in those turns. The Loader now marks the table changed (`GH_CHANGED`, the last
+  byte of GHOST_TAB's room), and `GHOST_UNION` draws the whole view once at the next step of
+  anyone's. (Test: `test_whole_view_when_the_table_changes`. Seen in DOSBox: the
+  byte cleared 0.06 s into an enemy's 0.36 s turn; playtest/logs/2026-11-07-review-fixes.md.)
+- **The sound of the mod's own lent the game's table entry back one byte too far,** over the next
+  entry's "loaded" flag (latent: nothing changes it during a play).
+- **A see-through figure with no picture yet** was drawn from the interrupt table as if it were
+  one; it is left undrawn, as the game's own routine does. (Test: `test_ghost_draw_no_picture`.)
+- **See-through figures were drawn solid for a moment every 30 s** where the game cycles colours,
+  and their tables were kept all session. They are kept by the colours the game never cycles, the
+  last eight. (Seen in DOSBox: GHOST_ON 1 in all 3,722 samples. Test:
+  `test_cycling_colours_keep_the_tables`.)
+- **See-through tables were kept by too few colours** (224-239 differ between areas) and could
+  leave the figures solid after a quick change of palette and back. (Tests:
+  `test_area_colours_count`, `test_back_before_made`.)
+- **A two-handed weapon was given a shield or a second weapon** among the game's people, and a
+  shield went beside one already held at a later visit. (Tests: `test_two_handed_alone`,
+  `test_two_handed_already_held`, `test_two_hander_never_second`.)
+- **Wake of the Ravager's and the whirlwind's pictures could pulse:** a green was matched to a
+  colour the game cycles. (`wotrart.stable_colours`, `whirlart.CYCLED`.)
+- Smaller: the chest's watcher no longer scans the item table each pass; Semyon's crate counts a
+  Thornwall in a bag.
 
 **Docs**
 - The new work in the patch notes, README, FEATURES, ITEMS, the guide and the DEVELOPMENT pages:
@@ -215,9 +228,9 @@ DSCLOG.EXE 65,472 bytes (+880 since #85; its image 65,440, 96 bytes of its segme
   HOW-THE-GAME-WORKS' Monsters' defences), see-through figures, the sounds.
 - FEATURES: Kurzak striking with Shadowseeker in the combat log's detail
   (`docs/combat-log-detail.png`).
-- DEVELOPMENT: the room in the helper measured in the running game (`UMB_NEED` 6,190, put right
-  from 6,186), the dice log's pass, the flags' ledger in one place (DEVELOPMENT-RULES § Natural
-  aging), the sounds, `VGA_BUSY` and the unanswered requests.
+- DEVELOPMENT: the room in the helper measured in the running game (`UMB_NEED`, 6,186 at this
+  build), the dice log's pass, the flags' ledger in one place (DEVELOPMENT-RULES § Natural aging),
+  the sounds, `VGA_BUSY` and the unanswered requests.
 - From the reviews: `inventory-ranger.png` retaken (it showed a gladiator); the guide's multiclass
   combinations once, in its race table; and many smaller corrections across the pages.
 
@@ -246,7 +259,7 @@ DSCLOG's image 64,592 bytes (688 bytes of its segment spare).
 DSUN.EXE)
 - **A character's most PSP comes from its own CON, INT and WIS.** The level-up check (run for every
   member, and at a game's start) took the WIS bonus from the creation screen's record, in play a
-  stray byte, and its tables stopped at score 22 (INT 22 gave 0). DSCLOG puts the member's own
+  stray byte, and its tables were 8 scores long (INT 22 gave 0). DSCLOG puts the member's own
   scores in, to 25. The most only rises, so a character's may go up once (Cilla 30 to 43, as the
   game's rules give her). The psionicist's WIS bonus a level is left as it is. (`PSP_SCORES` in
   `PROBE_MAX_PSP`; DEVELOPMENT-RULES. Seen in DOSBox. Tests: `test_max_psp_scores`.)
@@ -368,8 +381,8 @@ Obsidian Edition 2.13.3 ([release notes](release-notes/v2.13.3.md)).
 DSCLOG's image 64,320 bytes (960 bytes of its segment spare).
 
 **New**
-- **The THAC0 on the creation screen:** `THAC0: M18 R19` right of the hit points, above the age, M
-  less STR's to-hit adjustment and R less DEX's missile adjustment, drawn again as the scores
+- **The THAC0 on the creation screen:** `THAC0: M18 R19` right of the hit points, above the age: M
+  the character's THAC0 less STR's to-hit adjustment, R less DEX's missile adjustment, drawn again as the scores
   change. (DSCLOG's `CR_THAC0_DRAW`; DEVELOPMENT-RULES. Seen in DOSBox. Tests: `test_thac0_line`.
   The README's inventory THAC0 now says all it counts.)
 
@@ -714,10 +727,12 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
   screen and are then flipped, and the panel was only on the first. DSCLOG now puts it on the
   screen about to be shown. (`FLIP_PANEL`, `FLIP_SITE`, `gamepatch` `panel_flip`;
   DEVELOPMENT-SCREENS § The combat log in the game. Seen in DOSBox: 40 seconds of an arena fight
-  at 43 frames a second, no frame without the panel. Test: `test_panel_flip`.)
+  at 43 frames a second, no frame without the panel but under a game window. Test:
+  `test_panel_flip`.)
 - **A fight runs as fast with the combat log up as without it:** a rectangle drawn over the panel
   was drawn in parts, each its own flip waiting for the monitor, so a monster's turn took a sixth
-  longer. It is drawn whole now. (Seen in DOSBox: 0.95 seconds against 0.83.)
+  longer (1.03 seconds against 0.89). It is drawn whole now. (Seen in DOSBox: 0.95 seconds with the
+  panel against 0.83 without, within how much turns vary.)
 
 **Fixed: the Loader**
 - **Shillelagh and Spiritual Hammer shimmer on the party's figures,** as the Flame Blade does,
@@ -733,6 +748,7 @@ Obsidian Edition 2.12.2 ([release notes](release-notes/v2.12.2.md)).
   grabbed at about 48 frames a second and scaled whole.
 - A review for 2.12.2: the patch notes' line on magic gear's glow, and the guide's attacks-a-round
   table gains a thri-kreen Mind Warrior's chatkcha. Links, anchors and pictures checked.
+
 ## Pull request #74 ([merged 2026-10-27](https://github.com/daaki85/darksun-obsidian-edition/pull/74))
 
 **Release**
@@ -1834,6 +1850,7 @@ and how each part works now in the [development notes](obsidian-edition/DEVELOPM
 as it
 was](https://github.com/daaki85/darksun-obsidian-edition/blob/7e18e937e583d95fc493d89cf157b7f8463ba85f/CHANGELOG.md),
 and how each part works now in the [development notes](obsidian-edition/DEVELOPMENT.md).*
+
 ## Pull request #50 ([merged 2026-10-16](https://github.com/daaki85/darksun-obsidian-edition/pull/50))
 
 **Release**
@@ -2718,6 +2735,7 @@ and how each part works now in the [development notes](obsidian-edition/DEVELOPM
 **Changed**
 - **Cermak, of the game's own party, specializes in the long sword and the axe** (was the club),
   which count once his gladiator levels do again.
+
 ## Pull request #21 ([merged 2026-10-07](https://github.com/daaki85/darksun-obsidian-edition/pull/21))
 
 **New**

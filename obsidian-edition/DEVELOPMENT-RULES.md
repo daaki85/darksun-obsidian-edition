@@ -286,10 +286,8 @@ the game time in seconds over `YEAR`), put in the stored age as it happens, so
 a save holds the age and the scores' changes together. The years counted so
 far are in the game's own flags, so a save keeps them too (`counted_years`,
 `set_counted`: flag 798 set once the count has begun, 799 to 806 the number;
-the game's flags run to 755, and the Loader's, all in one place: its people
-756-783, Alagorn's menus from 784 (794 at most, `test_pehtuclchest`),
-Pehtucl's chest 795-796, Legcrusher's death 797, this count 798-806, the
-champions' bout 807; a save keeps 808). The dice log's `_natural_aging`, after
+every flag the Loader uses is in [The Loader's game
+flags](DEVELOPMENT.md#the-loaders-game-flags)). The dice log's `_natural_aging`, after
 `give_ages`, looks only when the look is steady (the same party as the last,
 the clock on by no more than 2 days, `NATURAL_JUMP`, and the count and the
 clock's years as the last look found them: a game being loaded may have its

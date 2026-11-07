@@ -486,7 +486,7 @@ own "Cannot use this item":
 | **Psionicist**, whatever its other classes | light only (leather, hide, silk: Drake, Shimmer and Silk Armor) | leather only, and only with a fighter, gladiator, ranger or cleric class (the game's lists give a psionicist none, and a psionicist/thief none either) | daggers, short swords, maces, clubs, chatkchas, bows and slings, of those its classes' lists allow: alone, daggers, bone and obsidian short swords, clubs, chatkchas and bows (the game's lists leave out maces, slings and the metal short sword, and the rule takes away the axes, picks, gythka and long swords they allow) |
 | **Thief** | light only; a multiclass thief, or a human thief once a warrior or cleric, as its other class allows, but no thief skills in armour that isn't light | leather ones; a multiclass thief only if another of its classes allows shields (a fighter, gladiator, ranger or cleric) | as its classes allow |
 | **Preserver**, one class | none (a human preserver once a warrior: as the warrior could, but no spells in armour) | none | as the game has it |
-| **Druid** | none | none | any |
+| **Druid** | none | none | as the game has it (any but great axes) |
 | **Cleric** | any | any | its sphere's: air missile and thrown weapons and daggers; earth stone, obsidian, metal and wood; fire obsidian; water bone and wood |
 
 A thief of any kind holds only leather shields, the rule or not: the game's own
@@ -1313,8 +1313,8 @@ elf's figure, with its own switch: see
 | **Cermak**, human preserver, once a gladiator | specializes in the long sword and the axe, which count once his gladiator levels do again (when his preserver level passes them) | | an **Arcanist**, the kit of his preserver class: two preserver spells a turn in a fight |
 | **Cilla**, elf preserver, druid and thief | | no leather armour (a druid wears none), and she knows the **Armor** spell in its place | an **Elven Shadow-walker** (her own feature): with the [stealth rule](#hiding-in-shadows-to-backstab), her hiding in shadows is never halved in daylight |
 
-Gerakis's, K'ratchek's and Cilla's features are their own: no character made
-on the creation screen can have them. The Effects screen lists them (as it
+Gerakis's, K'ratchek's and Cilla's features are their own, not kits' (only
+K'ratchek's extra throw is something no kit gives). The Effects screen lists them (as it
 does kits), and the Characters tab beside the kit. Cermak's gear stays as it
 is (an Arcanist has none of its own), and so do the hit points the game gave
 him: the Arcanist's d3 counts from his next level.
@@ -2141,8 +2141,9 @@ How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#defilers-scrolls).
 ## Graphics
 
 What the mod draws on the game's map, and the magic items' icons. The elves'
-and half-elves' looks, the party's gear, shadows and dust each have a switch in
-the Options tab's **Graphics** section.
+and half-elves' looks, Cilla drawn as an elf, the party's gear, shadows, dust
+and see-through figures each have a switch in the Options tab's **Graphics**
+section.
 
 ### Elves and half-elves
 

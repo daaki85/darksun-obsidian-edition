@@ -151,8 +151,8 @@ def extra(kid: int, dance: int = 0) -> int:
     return int(kid == AVENGER)
 
 
-# The game's own party (defaultparty.py), three of them given features of their own, which no
-# character made on the creation screen can have: the kit byte's OWN_BIT (KIT_BYTE: bits 0-5 the
+# The game's own party (defaultparty.py), three of them given features of their own (not kits;
+# only K'ratchek's extra throw is something no kit gives): the kit byte's OWN_BIT (KIT_BYTE: bits 0-5 the
 # classes' kits, 7 Friends known), set by the Loader as a new game starts; which feature by the
 # race (DSCLOG's OWN_RACE_B). Gerakis (a half-giant) Wild Fighting (wild.py); K'ratchek (a
 # thri-kreen) a Wasteland Seer's casting and PSP (SKY_LEVEL, PSI_KIT) and one more chatkcha throw a round

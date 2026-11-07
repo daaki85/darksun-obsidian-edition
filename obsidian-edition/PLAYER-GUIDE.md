@@ -4,8 +4,8 @@ How **Dark Sun: Shattered Lands** plays with the Obsidian Edition mod: making
 a party, the classes and kits, fighting, magic, psionics, equipment and
 levels, with the tables you need.
 
-It is **spoiler-free**: no places past the opening arena, no people, no
-quests, and no word of where any item is found (the mod's new items are listed
+It is **spoiler-free**: no places past the opening arena, no people (but the
+two the Options tab names), no quests, and no word of where any item is found (the mod's new items are listed
 by what they are).
 
 Everything here is the mod with its **default options**, which is how the
@@ -1288,7 +1288,7 @@ no 6th-level spells.
 4 3 2 1; 4 3 2 2; 5 4 3 2 1; 5 4 3 2 2.
 
 **Rangers** have one 1st-level slot at 8th level, two at 9th, and a 2nd-level
-slot at 10th, as in AD&D. No preserver spell is above 5th level.
+slot at 10th, as in AD&D.
 
 **Clerics and druids** have more for WIS, the game's own rule (the bonus
 slots at 1st, 2nd, 3rd... spell level). They count only at spell levels the
@@ -1704,8 +1704,8 @@ without).
 | **DELETE in the roster** (a bug fixed) | Deletes the character you chose. *Without the mod:* with the list scrolled, it deleted another one. |
 
 **Running the game.** On the map, figures show what they wear, cast shadows
-and raise dust, a thief hidden in shadows and anyone invisible are drawn
-see-through, and elves have pointed ears. DOSBox runs the game faster than
+and raise dust, a thief or ranger hidden in shadows and anyone invisible are
+drawn see-through, and elves have pointed ears. DOSBox runs the game faster than
 GOG's settings and skips a picture rather than slowing the party down. The game
 window can be its own size, two, three (the default) or four times that, or full
 screen. The manual check
@@ -1742,6 +1742,8 @@ line](DICE-LOG.md) what each of its lines means.
 - **Wait** puts a character later in the round.
 - **Ready a missile weapon and a melee weapon:** the game uses whichever fits
   the target's distance.
+- **The look pointer pauses the game.** While it is up, no time passes: no one
+  moves, and no one comes calling. Switch back to the walk arrow to let time run.
 - **The people you fight wear their armour from the start.** Without the mod
   they put it on only when they first acted in a fight, so an opening blow or
   a backstab before then met AC 10; now it meets their armour.
@@ -1784,7 +1786,7 @@ line](DICE-LOG.md) what each of its lines means.
 | More character customization | weapon specialization; kits; STORE and RECALL on the creation screen; fuller starting gear | all on |
 | Expanded features | the leader's CHA at shops; buying back magical items; improved thieving: thief skills from AD&D's table, hiding in shadows to backstab, the cloak, boots and belt, backstabs multiplying the weapon's dice only, picking pockets | all on |
 | New content | the new spells (six wizard spells and ten 6th-level priest spells, one switch); new people (Kalzith; Semyon); a small quest (the cooked vulture); defilers' scrolls; new items | all on |
-| Graphics | elves' ears and half-elves' own figures; Cilla drawn as an elf; what the party wears; shadows; dust; a hidden thief and anyone invisible drawn see-through | all on |
+| Graphics | elves' ears and half-elves' own figures; Cilla drawn as an elf; what the party wears; shadows; dust; a hidden thief or ranger and anyone invisible drawn see-through | all on |
 | Controls | Tab and Enter; scrolling with the mouse wheel; the view in fights moving only to a figure off the screen; the pointer in scenes, a click skipping one; the pointer starting in the middle and as fast up and down as across; the whole party in view after a start, load or fight; spells kept on a click on the Effects screen (M, U and I have no switch) | all on |
 | | a red ring in a fight: none, or under the enemy chosen with Tab | under the enemy chosen |
 | Game speed | GOG's own, faster or fastest | faster |

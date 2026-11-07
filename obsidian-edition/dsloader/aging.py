@@ -225,8 +225,8 @@ def age_by(gd: "game.GameData", member: int, years: int, why: str) -> List[str]:
 
 
 # The years counted so far, in the game's own flags so a save keeps them: COUNTING set once the
-# count has begun, then COUNT_BITS flags holding the number (the Loader's flags, as DEVELOPMENT-RULES
-# lists them: the game's run to 755; the people 756-783, Alagorn's menus from 784 (794 at most),
+# count has begun, then COUNT_BITS flags holding the number (the Loader's flags, as DEVELOPMENT.md's
+# "The Loader's game flags" lists them: the game's run to 755; the people 756-783, Alagorn's menus from 784 (794 at most),
 # Pehtucl's chest 795-796, Legcrusher's death 797 (kurzak.py), these 798-806, the champions 807;
 # a save keeps 808)
 COUNTING = 798

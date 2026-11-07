@@ -41,7 +41,8 @@ game from its own folder. It writes to the game folder only your saves (page 1
 in the game's own `SAVE` files, pages 2 to 4 as `SAVB`, `SAVC` and `SAVD`
 files) and your characters (in the game's own `CHARSAVE.GFF`, up to 29). A save
 made with the new items can hold items the original game doesn't have: load it
-with the Loader.
+with the Loader. To uninstall, delete the Loader's folder ([what stays
+behind](obsidian-edition/README.md#updating-backups-saved-games-and-the-loaders-files)).
 
 ## Getting started
 

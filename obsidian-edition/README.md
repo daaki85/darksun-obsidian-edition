@@ -31,7 +31,8 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   - [Every time you play](#every-time-you-play)
   - [Other ways to start](#other-ways-to-start)
   - [Updating, backups, saved games and the Loader's
-    files](#updating-backups-saved-games-and-the-loaders-files)
+    files](#updating-backups-saved-games-and-the-loaders-files) (uninstalling
+    too)
 - [The Loader's window](#the-loaders-window)
   - [The Characters tab](#the-characters-tab)
   - [The Spells tab](#the-spells-tab)
@@ -80,7 +81,8 @@ in DOSBox. You start the game with the **Dark Sun Obsidian Edition Loader**
   and a use for the cooked vulture ([New
   content](FEATURES.md#new-content)). On the map, the party wears its weapons
   and armour (its magic gear glinting), figures cast shadows and kick up dust,
-  and elves and half-elves have a look of their own; and the game's magic items
+  a hidden thief or ranger and anyone invisible are drawn see-through, and
+  elves and half-elves have a look of their own; and the game's magic items
   whose icons stood still shine as the rest do ([Graphics](FEATURES.md#graphics)).
 - **Quality of life:** better [controls](FEATURES.md#controls) (Tab and Enter
   in fights, dragging the map with the mouse wheel held down), [more saves and
@@ -508,8 +510,9 @@ more. The Dialogue tab does the same.
 
 **Show unlabelled rolls**, beside it, also lists everything else the game
 randomises (creatures wandering, animations and so on), as raw numbers with
-where in the game's code they came from. It's noisy, but useful for finding
-more rolls worth labelling.
+where in the game's code they came from, and each AC the game works out for an
+attack with its parts (base, armour, DEX, the rest). It's noisy, but useful for
+finding more rolls worth labelling.
 
 ## Accessibility
 
