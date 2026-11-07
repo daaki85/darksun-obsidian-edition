@@ -12,7 +12,9 @@ for i in 1 2 3 4 5 6; do
   tail -n +$start $WORK/dice.txt | grep -q "Get up here" && break
   sh boxclick.sh >/dev/null 2>&1; sleep 1
   set -- $(cam)
+  timeout 20 python3 pointer.py look >/dev/null
   timeout 20 python3 click.py $((1931 - $1)) $((856 - $2)) none >/dev/null; sleep 0.3; xdotool mousedown 1; sleep 0.15; xdotool mouseup 1; sleep 6
+  timeout 20 python3 pointer.py walk >/dev/null   # (the eye pauses the game: no call while it is up)
   tail -n +$start $WORK/dice.txt | grep -q "Get up here" && break
   timeout 40 python3 walkto.py 1912 872 >/dev/null
 done
