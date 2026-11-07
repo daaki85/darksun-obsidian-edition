@@ -18,6 +18,7 @@ import sys
 import time
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk
+from tkinter import font as tkfont
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
 from . import __version__, art, combatlog, dicelog, freeze, game, kits, launch, namedsaves, partyview, rings, spellbook, theme, values
@@ -72,9 +73,11 @@ class Viewer:
         # (Tk shows an image only while it's referenced: one for each portrait at each size, shared
         # by every line it is shown on)
         self._images: Dict[Tuple[int, int], tk.PhotoImage] = {}
+        self._widest: Tuple[str, str] = ("", "")  # the All fields table's longest label and value
 
         root.title(f"{theme.NAME} {__version__} - {layout.game or 'party viewer'}")
         root.geometry("1320x780")
+        root.minsize(1080, 640)  # (smaller, the right-hand tabs and rows of buttons lose their ends)
         theme.apply(root)
         root.protocol("WM_DELETE_WINDOW", self.close)
         self._build()
@@ -296,8 +299,12 @@ class Viewer:
         # (a line of its own: the decoded values are long)
         self.inspect = tk.StringVar(value="Click a byte to decode it.")
         ttk.Label(hexframe, textvariable=self.inspect, font="TkFixedFont").pack(anchor="w", pady=(4, 0))
-        self.hex = tk.Text(hexframe, font="TkFixedFont", height=20, wrap="none")
+        self.hex = tk.Text(hexframe, font="TkFixedFont", height=20, width=76, wrap="none")
         theme.style_text(self.hex)
+        # (a line is 76 characters: in a narrow pane it scrolls sideways rather than losing its end)
+        across = ttk.Scrollbar(hexframe, orient="horizontal", command=self.hex.xview)
+        self.hex.configure(xscrollcommand=across.set)
+        across.pack(side="bottom", fill="x")
         self.hex.pack(fill="both", expand=True, pady=(6, 0))
         # underlined as well as coloured, so a change doesn't depend on seeing the colour
         self.hex.tag_configure("changed", background=theme.AMBER, foreground=theme.SHADOW, underline=True)
@@ -350,7 +357,8 @@ class Viewer:
                         variable=self.monster_info, command=self._options_changed).pack(anchor="w", pady=(4, 0))
         # names floating over figures on the map for a moment (labels.py)
         self.floating_names = tk.BooleanVar(value=bool(settings.get("floating_names", True)))
-        ttk.Checkbutton(in_game, text="Float a spell's name over its caster, and \"Miss\" over whoever an attack missed",
+        ttk.Checkbutton(in_game, text="Float a spell's name over its caster, \"Miss\" over whoever an attack missed, "
+                        "and a used charge (\"Armor: 7 left\") over its owner",
                         variable=self.floating_names, command=self._options_changed).pack(anchor="w")
         rules = section("rules", "Rule changes")
         # in three groups, as FEATURES.md has them
@@ -508,7 +516,7 @@ class Viewer:
                         "cloaks, boots, belts)", variable=self.show_gear,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.show_shadows = tk.BooleanVar(value=bool(settings.get("shadows", True)))
-        ttk.Checkbutton(looks, text="Shadows under the figures (see-through, on the floor)",
+        ttk.Checkbutton(looks, text="Shadows under the figures (soft, on the floor)",
                         variable=self.show_shadows, command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.show_dust = tk.BooleanVar(value=bool(settings.get("dust", True)))
         ttk.Checkbutton(looks, text="Dust raised behind the feet of anyone walking on sand or dirt",
@@ -736,7 +744,9 @@ class Viewer:
 
     def _fit_party(self) -> None:
         """Columns wide enough for the text size, and the divider moved to fit them."""
-        field, slot = round(150 * theme.scale()), round(118 * theme.scale())
+        font = tkfont.nametofont("TkDefaultFont")
+        field = max(round(150 * theme.scale()), font.measure(self._widest[0]) + 16)
+        slot = max(round(118 * theme.scale()), font.measure(self._widest[1]) + 16)
         self.table.column("field", width=field, minwidth=field, stretch=False)
         for i in range(self.layout.count):
             self.table.column(f"slot{i}", width=slot, minwidth=slot)
@@ -1600,6 +1610,12 @@ class Viewer:
             existing = [self.table.insert("", "end") for _ in rows]
         for item, (label, cells) in zip(existing, rows):
             self.table.item(item, values=[label] + cells)
+        # the columns widened to the longest label and value shown (never narrowed while it runs)
+        widest = (max([label for label, _ in rows] + [self._widest[0]], key=len),
+                  max([c for _, cells in rows for c in cells] + [self._widest[1]], key=len))
+        if widest != self._widest:
+            self._widest = widest
+            self._fit_party()
 
     def _refresh_cards(self, slots) -> None:
         """The Characters tab: each slot's card, with its condition and current AC."""

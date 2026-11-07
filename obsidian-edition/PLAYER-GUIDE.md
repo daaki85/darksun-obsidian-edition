@@ -4,8 +4,8 @@ How **Dark Sun: Shattered Lands** plays with the Obsidian Edition mod: making
 a party, the classes and kits, fighting, magic, psionics, equipment and
 levels, with the tables you need.
 
-It is **spoiler-free**: no places past the opening arena, no people (but the
-two the Options tab names), no quests, and no word of where any item is found (the mod's new items are listed
+It is **spoiler-free**: no places past the opening arena, no people but Kalzith
+and Semyon (the Options tab names them), no quests, and no word of where any item is found (the mod's new items are listed
 by what they are).
 
 Everything here is the mod with its **default options**, which is how the
@@ -1785,7 +1785,7 @@ line](DICE-LOG.md) what each of its lines means.
 | Rule changes | *characters:* class restrictions; multiclass hit points; hit dice rolled twice; scores and hit points as rolled; AD&D's class tables; CON as in AD&D; ages and magical aging; the XP level cap. *Weapons and armour:* two weapons; half-giants' two-handed weapons; rings and cloaks of protection; helms AC 1; items saving against acid. *Magic:* rangers' casting level; preservers' INT; the spell save; DEX instead of a doubled d20; Enlarge multiplying the weapon's dice only | all on |
 | More character customization | weapon specialization; kits; STORE and RECALL on the creation screen; fuller starting gear | all on |
 | Expanded features | the leader's CHA at shops; buying back magical items; improved thieving: thief skills from AD&D's table, hiding in shadows to backstab, the cloak, boots and belt, backstabs multiplying the weapon's dice only, picking pockets | all on |
-| New content | the new spells (six wizard spells and ten 6th-level priest spells, one switch); new people (Kalzith; Semyon); a small quest (the cooked vulture); defilers' scrolls; new items | all on |
+| New content | the new spells (six wizard spells and ten 6th-level priest spells, one switch); new people (Kalzith; Semyon); a small quest (the cooked vulture); defilers' scrolls; new items (and an arena bout that comes with them) | all on |
 | Graphics | elves' ears and half-elves' own figures; Cilla drawn as an elf; what the party wears; shadows; dust; a hidden thief or ranger and anyone invisible drawn see-through | all on |
 | Controls | Tab and Enter; scrolling with the mouse wheel; the view in fights moving only to a figure off the screen; the pointer in scenes, a click skipping one; the pointer starting in the middle and as fast up and down as across; the whole party in view after a start, load or fight; spells kept on a click on the Effects screen (M, U and I have no switch) | all on |
 | | a red ring in a fight: none, or under the enemy chosen with Tab | under the enemy chosen |

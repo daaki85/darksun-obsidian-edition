@@ -13,7 +13,7 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Dict, List, Optional, Tuple
 
-from . import art, game, theme
+from . import art, game, kits, theme
 
 SCORES = ("STR", "DEX", "CON", "INT", "WIS", "CHA")
 _NUMBER = re.compile(r"\s*\((-?\d+)\)$")
@@ -115,7 +115,7 @@ class Card(ttk.Frame):
         self.vars["alignment"].set(plain(get("Alignment", "")))
         self.vars["age"].set(f"Age: {age}" if age else "")
         self.vars["classes"].set(classes_text(fields))
-        self.vars["kit"].set(f"Kit: {kit}" if kit else "")
+        self.vars["kit"].set(f"{kit_label(kit)}: {kit}" if kit else "")
         self.vars["xp"].set(f"EXP: {get('XP', '')}")
         base = get("Base AC", "")
         self.vars["ac"].set(f"AC: {current_ac}" + (f" (base {base})" if base else "")
@@ -132,7 +132,7 @@ class Card(ttk.Frame):
         why = move_why or kit
         fight = number(move) + kit_move if kit_move and why and number(move) is not None else None
         self.vars["move"].set(f"Move: {move}" + (f" ({fight} in a fight: {why})" if fight else ""))
-        self.vars["attacks"].set(attacks_text(get("Attacks/round", ""), hits))
+        self.vars["attacks"].set(attacks_text(get("Attacks/round (base)", ""), hits))
         self.vars["weapons"].set(("Weapons: " + ", ".join(f"{kind} ({skill})" for kind, skill in weapons))
                                  if weapons else "")
         self.vars["equipment"].set("\n".join(f"{slot.capitalize() if slot else 'Carried'}: {item}"
@@ -154,6 +154,13 @@ class Card(ttk.Frame):
 
 def halves_text(halves: int) -> str:
     return str(halves // 2) if halves % 2 == 0 else f"{halves}/2"
+
+
+def kit_label(kit: str) -> str:
+    """"Features" when the line is only features of the game's own party (kits.OWN_FEATURES), else
+    "Kit"."""
+    own = {name for names in kits.OWN_FEATURES.values() for name in names}
+    return "Features" if all(part in own for part in kit.split("; ")) else "Kit"
 
 
 def attacks_text(shown: str, hits) -> str:

@@ -397,7 +397,8 @@ How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#charges-in-item-bo
 The Effects screen (Current Spell Effects) shows more
 in its lower panel and under the pointer:
 
-- **Kits and weapon specs:** each kit (`KIT: RAVAGER`), with a Shinobi's chance
+- **Kits and weapon specs:** each kit (`KIT: RAVAGER`; the game's own party's
+  features with no prefix, `SHADOW-WALKER`), with a Shinobi's chance
   to read a scroll under it (`READ LANG. 35%`), then the weapon specs, a page
   at a time when there are more than fit ([Changing
   class](KITS.md#changing-class) has pictures).
@@ -424,7 +425,7 @@ in its lower panel and under the pointer:
 - **A click on a spell's icon** no longer ends it: [Spells on the Effects
   screen](#spells-on-the-effects-screen).
 
-![The Effects screen for Cilla: the pointer on Armor's icon, and IMPROVED AC (10 CHARGES) at the foot; her own feature, SHADOW-WALKER, beside it](docs/effects-charges.png)
+![The Effects screen for Cilla: the pointer on Armor's icon, and IMPROVED AC (10 CHARGES) at the foot; her own feature, SHADOW-WALKER, below](docs/effects-charges.png)
 
 How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#the-games-spells).
 
@@ -1309,7 +1310,7 @@ elf's figure, with its own switch: see
 | Character | With weapon specialization | With class restrictions | With kits |
 |---|---|---|---|
 | **Gerakis**, half-giant gladiator | specializes in the long sword and the gythka; with [half-giants' two-handed weapons](#half-giants-two-handed-weapons), his club is a bone gythka, a two-handed weapon beside his long sword | | **Wild Fighting**, as a [Wild Fury](KITS.md#multiclass-kits) has it, as each fight starts |
-| **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | | is a [Wasteland Seer](KITS.md#multiclass-kits) (druid spells 2 levels higher under the open sky, 1 lower under a roof; psionic powers 2 PSP less under the open sky, 1 more under a roof); her **chatkcha comes back as if she had several**: one more throw a round (2 instead of 1, or more with its weapon spec) |
+| **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | | casts and uses psionics as a [Wasteland Seer](KITS.md#multiclass-kits) does (druid spells 2 levels higher under the open sky, 1 lower under a roof; psionic powers 2 PSP less under the open sky, 1 more under a roof); her **chatkcha comes back as if she had several**: one more throw a round (2 instead of 1, or more with its weapon spec) |
 | **Cermak**, human preserver, once a gladiator | specializes in the long sword and the axe, which count once his gladiator levels do again (when his preserver level passes them) | | an **Arcanist**, the kit of his preserver class: two preserver spells a turn in a fight |
 | **Cilla**, elf preserver, druid and thief | | no leather armour (a druid wears none), and she knows the **Armor** spell in its place | an **Elven Shadow-walker** (her own feature): with the [stealth rule](#hiding-in-shadows-to-backstab), her hiding in shadows is never halved in daylight |
 
@@ -2235,7 +2236,7 @@ figure's colour and what lies under it, so the floor, a wall or a shadow shows
 through. The hidden thief turns solid again with the attack that gives them
 away, or as the turn ends. A party member who is invisible is always drawn so;
 an invisible enemy is drawn solid while one of the party detects invisibility
-(the spell, or [Shadowseeker](ITEMS.md) readied), as the party sees it then. The
+(the spell, or [Shadowseeker](ITEMS.md#every-magic-item) readied), as the party sees it then. The
 game itself draws the invisible like anyone else: being unseen only makes them
 harder to hit (4 worse) and better at shrugging off a spell aimed at them (4
 better), for whoever can't detect invisibility. Switch it off on the Options

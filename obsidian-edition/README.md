@@ -286,10 +286,15 @@ save:
   are counted right now, and the most only ever rises.
 - In a save from 1.2.0 to 2.5.0 that has already been to the slave pens, the
   weapon rack is gone, so Thornwall never comes (a new game has the rack).
-- A save made with an earlier version while Kalzith was switched off: in the
-  slave pens, talking to Semyon may start Kalzith's conversation instead (the
-  Loader now numbers its conversations the same whatever the switches). One
-  made with Kalzith on, the default, is unaffected.
+- A save made with an earlier version while Kalzith was switched off (or when
+  the Loader couldn't make its copy of the game's objects): in the slave pens,
+  talking to Semyon may start Kalzith's conversation instead (the Loader now
+  numbers its conversations the same whatever the switches). There's no undoing
+  it in that save. One made with Kalzith on, the default, is unaffected.
+- In a save from 2.13.4 or earlier that has already been to the arena,
+  Kreenfang is likely still on the dead body by the stone arch, and the
+  champions' Tohr-kreen brings another; and Thornwall is already on the pens'
+  rack.
 - Pehtucl's locked chest comes with a new game: in a save that has already
   been to the slave pens he wears the Cloak of Protection, and the chest is
   the plain one.
@@ -329,8 +334,9 @@ only by the mod's patched game.
 ## The Loader's window
 
 The window has the party on one side and the logs and tools on the other, with
-**Start the game**, the game window's size, the text size and **Reconnect**
-(to find the game again) along the top. The party pane has two tabs:
+**Start the game**, the game window's size, the text size, **Freeze report**
+(see [reports](#crash-freeze-and-item-reports)) and **Reconnect** (to find the
+game again) along the top. The party pane has two tabs:
 
 - **Characters** (Alt+C): a card for each character, laid out like the game's
   View Character screen ([The Characters tab](#the-characters-tab)).
@@ -381,7 +387,10 @@ and use the arrow and Page keys):
   beside it), THAC0 with each weapon ready (`THAC0: 15 with Wooden Club, 14
   with Wooden Bow (base 19)`), the saves as the d20 needed now (see
   [In the game](FEATURES.md#thac0-saves-and-thief-skills)), movement (`Move: 12 (14 in
-  a fight: Stalker)`) and attacks; with [ages](FEATURES.md#ages-and-magical-aging)
+  a fight: Stalker)`) and attacks, with each weapon where specialization changes
+  them (`Attacks: 5/2 a round with Obsidian Chatkcha`); the kits (`Kit: Wild
+  Fury`; for the game's own party, its features: `Features: Wild Fighting`), and the weapon specs with
+  their rank (`Weapons: long sword (specialized)`); with [ages](FEATURES.md#ages-and-magical-aging)
   on, their age, its category and the next to come (`Age: 45, middle-aged;
   old at 53`);
 - what they wear and hold, by the game's own slot names ("Right hand: Bone
@@ -472,7 +481,6 @@ run time (GPLDATA.GFF and RESOURCE.GFF in the install folder the Loader
 remembers); nothing from the game is copied into the Loader. Without the game
 installed the window uses its own lettering and no portraits.
 
-How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#the-dialogue-tab).
 
 ## The dice log
 

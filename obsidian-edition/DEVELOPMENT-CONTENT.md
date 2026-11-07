@@ -717,7 +717,7 @@ items after its own, so the game makes them where it makes the object. Kreenfang
 (`arms.magic`: a gythka made +1 and renamed, its name attribute with it) is the
 champions' Tohr-kreen's ([the champions' bout](#the-champions-bout)); without
 the champions' objects it is the arena's dead body's (object 1204) own gythka,
-as before 2.13.5. One Castle Guard, one Undermountain miner and one Magera
+as up to 2.13.4. One Castle Guard, one Undermountain miner and one Magera
 (Drakejaw's) have an object of their own (2560, 2561, 2562: copies of their
 kind's, their record renumbered), their entity in the Loader's copies of
 `RGN1C.GFF`, `RGN1E.GFF` and `RGN08.GFF` pointing to it; so does one skeleton of

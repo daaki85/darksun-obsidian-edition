@@ -7,8 +7,8 @@ for every change from the original game in one page, [the patch
 notes](PATCH-NOTES.md).
 
 A note on DSCLOG's sizes: up to #85 the figure called its "image" may be the file's, DSCLOG.EXE
-(#85's 64,592 is the file's size; the image is the file less its 32-byte header). From the next
-pull request on, both are given.
+(#85's 64,592 is the file's size; the image is the file less its 32-byte header). From #86 on,
+both are given.
 
 Releases, newest first: [2.13.4](#pull-request-85-merged-2026-11-02) (#85),
 [2.13.3](#pull-request-84-merged-2026-10-31) (#84), [2.13.2](#pull-request-83-merged-2026-10-30)
@@ -30,9 +30,44 @@ Releases, newest first: [2.13.4](#pull-request-85-merged-2026-11-02) (#85),
 [2.1.0](#pull-request-36-merged-2026-10-09) (#36), [2.0.0](#pull-request-33-merged-2026-10-09)
 (#33), [1.2.0](#pull-request-30-merged-2026-10-08) (#30),
 [1.1.0](#pull-request-18-merged-2026-10-06) (#18), [1.0.0](#pull-request-12-merged-2026-10-02)
-(#12).
+(#12). #86 and after: in the next release.
 
 ## Next pull request (not opened yet)
+
+DSCLOG.EXE 65,472 bytes, unchanged (comments only).
+
+**Fixed: the Loader** (a fifth review)
+- **Writes through a table pointer gone null mid-pass could land in DOS's own memory:** the item
+  gate (since #86) covered only where the tables are and were, and the low-memory guard reaches
+  600h, where a null table's writes run to 20D0h (items) and 7400h (creatures). A null table is
+  covered from 0 now, and the gate refuses while one is gone. (`itemgate.py`. Test:
+  `test_tables_moved_mid_pass`.)
+- **The Loader could take the game's last free lists and item records** (the game's people
+  dressed in every area): 20 of each are left to the game now. (`ring.RESERVE`. Test:
+  `ReserveTests`.)
+- Smaller: the Loader's own list writes made the pass's later item steps wait a pass (and counted
+  as refusals in the freeze report); a two-hander went in the right hand beside a shield already
+  held; a finished see-through palette's thread cleared another's mark; a flag past the 808 a
+  save keeps is refused (`game.FLAG_COUNT`, `test_flagrange`).
+
+**Fixed: the Loader's window**
+- **All fields** widens its columns to the longest label and value shown; the **Memory tools**
+  byte view scrolls sideways in a narrow pane; the window keeps a smallest size (1080x640) at which
+  every tab and row of buttons fits.
+- The Characters card says `Features:` for the game's own party's features (`Features: Wild
+  Fighting`), `Kit:` when there is a kit; K'ratchek's `Chatkcha 2 a round` reads `One more
+  chatkcha throw`. All fields' `Attacks/round` is `Attacks/round (base)`, the game's number
+  before specialization. (Test: `test_kit_label`.)
+- Options: the floating names' switch names the charges used (`Armor: 7 left`) as well; the
+  shadows' says `(soft, on the floor)`, not see-through, which is the hidden and invisible.
+
+**Docs**
+- The changelog's #86 heading, its fourth-review fixes and the releases list put right; the patch
+  notes, README, FEATURES and the player guide given what #86 left out (Kalzith's face, the
+  pickpocket sounds, the Kreenfang in a 2.13.4 save); DICE-LOG's picked pockets and the game's own
+  party's opening lines.
+
+## Pull request #86 ([merged 2026-11-07](https://github.com/daaki85/darksun-obsidian-edition/pull/86))
 
 DSCLOG.EXE 65,472 bytes (+880 since #85; its image 65,440, 96 bytes of its segment spare).
 
@@ -82,7 +117,8 @@ DSCLOG.EXE 65,472 bytes (+880 since #85; its image 65,440, 96 bytes of its segme
   which the game never put on; each counts by the same rules as the party's. (`people.py`, with
   the fix below.)
 - **Cilla's own feature is the "Elven Shadow-walker"** (her hiding never halved in daylight), not
-  the "Elven Wanderer", which read like the druid kit Wanderer. (`kits.OWN_FEATURES`.)
+  the "Elven Wanderer", which read like the druid kit Wanderer; SHADOW-WALKER on the Effects
+  screen. (`kits.OWN_FEATURES`, DSCLOG's `own_lines`.)
 - **The freeze report samples every 32nd strike of the timer,** not every 16th (`freeze.py`).
 
 **Fixed: the game**
@@ -91,7 +127,7 @@ DSCLOG.EXE 65,472 bytes (+880 since #85; its image 65,440, 96 bytes of its segme
   round's blow on one who hadn't acted, a backstab, or an opening blow from outside a fight (which
   is struck before the fight starts) met no armour. The Loader now puts each person's gear on as
   it comes on the map, as the game would. (`people.py`; DEVELOPMENT-CONTENT § The game's people's
-  gear. Seen in DOSBox: all 21 people with gear in the pens wearing and holding it. Tests:
+  gear. Seen in DOSBox: every person with gear in the pens wearing and holding it. Tests:
   `test_people.py`.)
 - **Psionic Blast knocks out instead of killing** while a party member's imagined wounds are
   still to come back; one knocked out wakes with them at the fight's end. This replaces #85's
@@ -133,10 +169,11 @@ DSCLOG.EXE 65,472 bytes (+880 since #85; its image 65,440, 96 bytes of its segme
   while a name was being erased could leave its old place on screen (the erase marked busy first).
 - **Room for new code:** the end shared by seven handlers that return through the overlay
   manager's frame is written once (`OVR_BACK`), and a sheet's classes read by one routine
-  (`SHEET_CLASSES`): 128 bytes freed, from 16 spare (96 spare after the fix to see-through figures
-  in the enemies' turns).
+  (`SHEET_CLASSES`): 112 bytes freed, 128 spare from 16 (96 after the fix to see-through figures in
+  the enemies' turns). The build also fails now if the music pool or the see-through tables
+  wouldn't fit upper memory (`UMB_KEPT`; they were left out quietly).
 
-**Fixed: the Loader** (an audit and three reviews)
+**Fixed: the Loader** (an audit and four reviews)
 - **One write the Loader stopped ended the dice log for the session** (slicing a deque raised every
   pass). It is told once now, and kept for a crash report, which had always shown none. (Test:
   `test_refused_write_said_once`.)
@@ -172,6 +209,8 @@ DSCLOG.EXE 65,472 bytes (+880 since #85; its image 65,440, 96 bytes of its segme
   made with other switches. It is taken away now.
 - **Script checks dropped a roll's line** when the scripts' copy was damaged, and found none with no
   copy (the game's own scripts are read then). (Test: `LoadTests`.)
+- **Wake of the Ravager's and the whirlwind's pictures could pulse:** a green was matched to a
+  colour the game cycles. (`wotrart.stable_colours`, `whirlart.CYCLED`.)
 - **The window kept a second copy of the objects' file** (5.4 MB; now 0.46 MB, what differs).
 - Smaller: settings.json tried again before it counts as empty; the arena ring's search kept if
   giving the ring fails; a speaker's name, a saved log and the Named saves folder say when a file
@@ -217,10 +256,14 @@ DSCLOG.EXE 65,472 bytes (+880 since #85; its image 65,440, 96 bytes of its segme
 - **A two-handed weapon was given a shield or a second weapon** among the game's people, and a
   shield went beside one already held at a later visit. (Tests: `test_two_handed_alone`,
   `test_two_handed_already_held`, `test_two_hander_never_second`.)
-- **Wake of the Ravager's and the whirlwind's pictures could pulse:** a green was matched to a
-  colour the game cycles. (`wotrart.stable_colours`, `whirlart.CYCLED`.)
 - Smaller: the chest's watcher no longer scans the item table each pass; Semyon's crate counts a
   Thornwall in a bag.
+- The item gate's rule for a null table (in this work) refused every write while the game rebuilt
+  its tables, DSCLOG's replies and the see-through tables too, and a refused write could leave
+  the tables never made; `ghost.py` marks them only after its write. Floating names near the top
+  were hidden under row 40, not only above the page (row 0). A part-dressed person was tried every
+  pass for good, each pausing DOSBox (`people.TRIES`: three). The refused writes' "... and N
+  more" counts past 200; `GHOST_UNION` reads and clears `GH_CHANGED` in one `xchg`.
 
 **Docs**
 - The new work in the patch notes, README, FEATURES, ITEMS, the guide and the DEVELOPMENT pages:
@@ -229,9 +272,10 @@ DSCLOG.EXE 65,472 bytes (+880 since #85; its image 65,440, 96 bytes of its segme
 - FEATURES: Kurzak striking with Shadowseeker in the combat log's detail
   (`docs/combat-log-detail.png`).
 - DEVELOPMENT: the room in the helper measured in the running game (`UMB_NEED`, 6,186 at this
-  build), the dice log's pass, the flags' ledger in one place (DEVELOPMENT-RULES § Natural aging),
+  build), the dice log's pass, the flags' ledger in one place (DEVELOPMENT § The Loader's game flags),
   the sounds, `VGA_BUSY` and the unanswered requests.
-- From the reviews: `inventory-ranger.png` retaken (it showed a gladiator); the guide's multiclass
+- From the reviews: `inventory-ranger.png` (it showed a gladiator), `effects-charges.png` and
+  `dicelog.png` (Cilla's new name) retaken; the guide's multiclass
   combinations once, in its race table; and many smaller corrections across the pages.
 
 ## Pull request #85 ([merged 2026-11-02](https://github.com/daaki85/darksun-obsidian-edition/pull/85))
