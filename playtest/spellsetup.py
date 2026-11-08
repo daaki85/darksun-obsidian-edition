@@ -4,6 +4,9 @@
 # in the sheet's second place (+level index 1) to LEVEL. hp=N: every party member's HP and most.
 # Default spells: the ones the 2026-11-08 test of the manual's spells cast.
 # e.g. python3 spellsetup.py 0=9 2=9 hp=200
+# A spell outside all the caster's spheres (a fire cleric's Ironskin) is cast at level 0, counted
+# as 1, by the game (5E25Ch): durations and charges ignore the level set here. Each such spell is
+# named after the slots ("cast at level 0"): set a class whose sphere has it (2026-11-08).
 import os, sys, struct
 HERE = os.path.dirname(os.path.abspath(__file__))
 exec(open(os.path.join(HERE, 'live.py')).read())
@@ -27,3 +30,17 @@ for m in range(4):
         g.write(creatures + m * game.CREATURE_SIZE, struct.pack('<H', hp))
         g.write(sheets + sheet * game.SHEET_SIZE + game.SHEET_MAX_HP, struct.pack('<H', hp))
 for m in members: print(m, gd.spell_slots(m))
+def sphere_level(m, s):
+    """The level the game casts spell S at for member M (5E25Ch): its best class level whose class
+    mask shares a sphere bit with the spell's, bits 0-1 (any wizard, any priest) left out; 0 if none."""
+    if not 0 < s < game.PSIONIC_FIRST:
+        return None
+    mask = lambda seg, off: struct.unpack('<I', g.read((gd.load_seg + seg) * 16 + off, 4))[0]
+    spell = mask(game.SPELL_SPHERES_SEG, game.SPELL_SPHERES_OFF + s * game.SPELL_SPHERES_SIZE)
+    sh = gd.sheet(m)
+    return max([sh[game.SHEET_LEVELS + n] for n in range(3) if sh[game.SHEET_CLASSES + n]
+                and mask(game.CLASS_MAGIC_SEG, game.CLASS_MAGIC_OFF + 4 * sh[game.SHEET_CLASSES + n]) & spell & 0x1FFFFC]
+               or [0])
+for m in members:
+    off = [s for s in spells if sphere_level(m, s) == 0]
+    if off: print(m, 'cast at level 0 (not its spheres):', ', '.join(f'{s} {gd.spell_name(s)}' for s in off))

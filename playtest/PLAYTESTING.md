@@ -264,6 +264,12 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   the map hold. The pens: 143 free after loading, 131 in the alarm fight; the arena on arrival 191
   (the pens' all freed). `arenatrip.sh` loads `pens-after-scar` (through `toalarm.sh`), rests in the
   fire room till Kurzak calls, and takes the party to the arena, counting the things on the way.
+- **A creature's level / hit dice** (2026-11-08, logs/2026-11-08-touch-level-and-hd.md): every
+  creature has a 47h-byte sheet (`gd.sheet(creature)`; race +18h, classes +21h, levels +24h). The game's
+  level of a combatant (508h:2Ah, 5E85Fh) is +24h for a human, else the best level of a class that is
+  set, so a monster with no class (elementals, slaads, Sand Howler, Rampager...) counts as 0 though its
+  hit dice are at +24h. The game's own monster sheets are the RDFF chunks of SEGOBJEX.GFF (record type 4,
+  `dataitems.records`). The undead (race 9) all have a class.
 - **Memory after the 2026-11-08 memory pass** (logs/2026-11-08-memory-pass.md): `memaudit.py` on
   the map in the pens: the helper's block 62,208 bytes with its PSP, the overlay buffer 32,992,
   the see-through tables 14,160, the music buffer 12,016, 37,392 free in one piece. **View
@@ -687,6 +693,17 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
     (checked by its pixels, never E blind: E for a member with no menu, Jenna with Free Action, opened
     the Effects screen; its icon at 100,171 goes back to USE). passto.sh's clicks above a figure
     walked Lex off alone once.
+  - **A spell outside the caster's spheres is cast at level 0** (2026-11-08,
+    logs/2026-11-08-touch-level-and-hd.md): spellsetup.py teaches any spell, and the USE screen lets
+    it be cast, but the level its time and damage take (5E25Ch) counts only classes sharing a sphere
+    with it, so a fire cleric's Blood Flow or Ironskin got "caster level 0" (taken as 1). Touch or
+    aimed makes no difference (Free Action on a portrait: 600 s at druid 1, 5400 s at druid 9).
+    spellsetup.py now names such spells ("cast at level 0"): set a class of that sphere in memory.
+    In `pens-after-arena` Cilla is an earth druid (Ironskin, Free Action, Quicksand) and K'ratchek a
+    fire druid (his priest levels move with the sky: K'ratchek counts as a Wasteland Seer). Out of a
+    fight, U then Cilla (108,108), the CLERIC/MAGE button (150,171) switches the spell kind; an aimed
+    summon there did nothing (red no-sign). In a fight a summon keeps no effect timer (effects.py
+    shows none) and no "lasts" line.
   - **`effects.py`** lists the effects with time left (Stuck (11 rounds), Ironskin (6 charges));
     `effects.py OWNER 51 34 86` rewrites a Stuck into Paralyzed (47 Slowed) to test a cure.
   - The fight's Templar was creature 30 (the dice log's saves showed its WIS 17), not 11: check
