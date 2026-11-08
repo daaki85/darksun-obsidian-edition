@@ -14448,6 +14448,120 @@ chaos_site:
         pop es
         iret
 
+; HD_SAVE (gamepatch "classless_save_level", with the spells as the manual has them): the save
+; modifiers' "mov [bp-6],ax" (79D8Ch), AX the target's level from the game's level routine
+; (508h:2Ah, 5E85Fh), which has 0 for a creature with no class (its sheet's +21h..23h all 0: an
+; elemental, a slaad, Mastyrial, the Rampager): for saving throws such a creature's level is its
+; hit dice, its sheet's +24h (the sheet [BP-0Eh], far). What reads [BP-6] after: Dismissal's
+; level difference, Cloudkill's 6 or less, Scare's 6 or more, Color Spray's (SPRAY_SITE).
+hd_save:
+        or ax, ax
+        jnz .set
+        push es
+        push bx
+        les bx, [bp - 0x0E]
+        cmp byte [es:bx + 0x21], 0
+        jne .keep
+        cmp word [es:bx + 0x22], 0
+        jne .keep
+        mov al, [es:bx + 0x24]
+        cbw
+.keep:  pop bx
+        pop es
+.set:   mov [bp - 6], ax
+        iret
+
+; SPRAY_SITE (gamepatch "color_spray_level", with the spells as the manual has them): the save
+; modifiers' "cmp word [bp+14h],3Ch / jnz" (79F83h; 6 bytes, Dismissal's test): Color Spray
+; (spell 4) lets only creatures of more levels than its caster save (AD&D's): the target's level
+; [BP-6] at or under the caster's, byte [BP+16h], gets -100 (a natural 20 still saves, as against
+; Chaos and Cloudkill). Then the game's test: Dismissal (3Ch) on to its case (79F89h), any other
+; spell past it (79F95h). SI the save's modifier so far.
+COLOR_SPRAY equ 4
+DISMISSAL equ 0x3C
+SPRAY_ON equ 0x79F95 - (0x79F83 + 3)
+spray_site:
+        push ax
+        cmp word [bp + 0x14], COLOR_SPRAY
+        jne .test
+        mov al, [bp + 0x16]
+        mov ah, 0
+        cmp [bp - 6], ax
+        jg .test
+        sub si, 100
+.test:  mov ax, 3                       ; (past the site's NOPs: Dismissal's case)
+        cmp word [bp + 0x14], DISMISSAL
+        je .back
+        mov ax, SPRAY_ON
+.back:  push bp
+        mov bp, sp
+        add [bp + 4], ax                ; (the INT's return address)
+        pop bp
+        pop ax
+        iret
+
+; HOLD_HD (gamepatch "hold_undead_level", with the spells as the manual has them): in the checks
+; of what spell SI can't do to thing DI (7A1BFh), the undead's: "test word [bp+0Eh],100h" (7A345h;
+; 5 bytes, its "jz / jmp 7A1F0h" after). Hold Undead (31) holds only undead of no more levels (hit
+; dice) than its caster's level, the frame's [BP+14h] (the cast's: an item's 6): one of more is
+; immune (7A1F0h). Else the game's test: set, immune; clear, on to the next (7A34Fh). The level:
+; SHEET_LEVEL's.
+HOLD_NEXT equ 0x7A34F - (0x7A345 + 3)
+HOLD_HD_IMMUNE equ 0x7A1F0 - (0x7A345 + 3)
+hold_hd:
+        push es
+        push bx
+        push ax
+        mov bx, HOLD_HD_IMMUNE
+        test word [bp + 0x0E], 0x100
+        jnz .back
+        cmp si, HOLD_UNDEAD
+        jne .on
+        mov ax, di
+        call combatant_creature
+        jc .on
+        push bx
+        call creature_sheet
+        call sheet_level
+        pop bx
+        cmp al, [bp + 0x14]
+        ja .back                        ; (more levels than the caster's: immune)
+.on:    mov bx, HOLD_NEXT
+.back:  push bp
+        mov bp, sp
+        add [bp + 8], bx                ; (the INT's return address)
+        pop bp
+        pop ax
+        pop bx
+        pop es
+        iret
+
+; SHEET_LEVEL: AL the level of sheet ES:BX as the game's level routine (5E85Fh) has it, a human's
+; +24h, else the highest of the levels (+24h..26h) of its classes (+21h..23h), but a classless
+; creature's its hit dice (+24h). Others kept.
+sheet_level:
+        mov al, [es:bx + 0x24]
+        cmp byte [es:bx + 0x18], 1
+        je .out
+        cmp byte [es:bx + 0x21], 0
+        jne .classes
+        cmp word [es:bx + 0x22], 0
+        je .out
+.classes:
+        push si
+        xor ax, ax
+        xor si, si
+.next:  cmp byte [es:bx + si + 0x21], 0
+        je .skip
+        cmp [es:bx + si + 0x24], al
+        jl .skip
+        mov al, [es:bx + si + 0x24]
+.skip:  inc si
+        cmp si, 3
+        jb .next
+        pop si
+.out:   ret
+
 REQ_REST equ 0
 rest_site:
         push si
@@ -17085,6 +17199,9 @@ CR_OPEN_SITE equ NS_IMAGE + 67  ; 65C68h: the creation screen opening, for a new
 CR_HP_SITE equ NS_IMAGE + 68    ; 63AC3h, 63EDAh: the hit points drawn again, the THAC0 after them (CR_HP)
 STINK_SITE equ NS_IMAGE + 69    ; 76D73h: a spell's time worked out, before the unit (STINK_SITE)
 CHAOS_SITE equ NS_IMAGE + 70    ; 79F80h: Chaos's -100 on a save by anyone not a warrior (CHAOS_SITE)
+HD_SAVE_SITE equ NS_IMAGE + 71  ; 79D8Ch: the save modifiers' target level, a classless creature's its HD (HD_SAVE)
+SPRAY_SITE equ NS_IMAGE + 72    ; 79F83h: Color Spray unsaved by the caster's level or lower (SPRAY_SITE)
+HOLD_HD_SITE equ NS_IMAGE + 73  ; 7A345h: Hold Undead on undead of more levels than its caster: immune (HOLD_HD)
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -17184,6 +17301,12 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je stink_site
         cmp byte [cs:rl_site], CHAOS_SITE
         je chaos_site
+        cmp byte [cs:rl_site], HD_SAVE_SITE
+        je hd_save
+        cmp byte [cs:rl_site], SPRAY_SITE
+        je spray_site
+        cmp byte [cs:rl_site], HOLD_HD_SITE
+        je hold_hd
         cmp byte [cs:rl_site], CR_AGE_SITE
         je cr_age
         cmp byte [cs:rl_site], CR_AGE_CON_SITE

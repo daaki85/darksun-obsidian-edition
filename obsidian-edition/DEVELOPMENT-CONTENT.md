@@ -277,6 +277,24 @@ after the `ns_list_` patches):
   `NS_HOLD` site over the landing routine's `or al,al / je +22h` (7A333h) all
   the same, a second guard: a living target of spell 31 goes to the
   immunity's way out (7A1F0h).
+  The manual's limit, undead of no more hit dice than the caster's level, is
+  `hold_undead_level` (with "Spells as the manual describes them"): DSCLOG's
+  `HOLD_HD_SITE` over the undead's `test word [bp+0Eh],100h` (7A345h), which
+  makes that test and its jump itself, and for spell 31 sends an undead whose
+  level (its sheet's, as 5E85Fh has it: a human's +24h, else its classes'
+  highest; a classless one's +24h) is above the frame's [BP+14h], the cast's
+  level, to 7A1F0h too.
+- **The save modifiers** (79D3Ch: [BP+6] the target, [BP+14h] the spell,
+  [BP+16h] the caster's level, [BP-6] the target's level, SI the modifier):
+  the target's level comes from 508h:2Ah (5E85Fh), 0 for a creature with no
+  class (+21h..23h all 0), though its hit dice are at its sheet's +24h. With
+  "Spells as the manual describes them", `classless_save_level` puts DSCLOG's
+  `HD_SAVE_SITE` over its `mov [bp-6],ax` (79D8Ch): such a creature's 0 made
+  its hit dice (Dismissal, Cloudkill, Scare and Color Spray read it), and
+  `color_spray_level` DSCLOG's `SPRAY_SITE` over Dismissal's
+  `cmp word [bp+14h],3Ch / jnz` (79F83h): Color Spray (spell 4) on a target of
+  the caster's level or lower -100 (a natural 20 still saves), then
+  Dismissal's test made in the handler (on to 79F89h, or past to 79F95h).
 - **Cause Serious and Critical Wounds** (spells 113 and 128): their records'
   damage dice were 2d9 and 3d9, where the Cure spells (rolled by their own
   code) heal 2d8+1 and 3d8+3. The damage routine (76DA2h) rolls the base dice

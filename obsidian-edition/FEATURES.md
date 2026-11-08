@@ -942,7 +942,7 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#items-saving-against-a
 | [Spells saved against with the spell save](#spells-saved-against-with-the-spell-save) | almost every spell saved against with petrification/polymorph | the spell save rather than petrification/polymorph |
 | [Fire, cold and electricity: DEX instead of a doubled d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20) | the save's d20 doubled, so most creatures shrug off a Fireball (70% to save where 35% is due) | DEX's defensive adjustment on those saves rather than a doubled d20 |
 | [Enlarge multiplies the weapon's dice only](#enlarge-multiplies-the-weapons-dice-only) | the whole melee damage multiplied, STR included | 10% a caster level on the weapon's dice, rounded up, STR and the rest added after |
-| [Spells as the manual describes them](#spells-as-the-manual-describes-them) | ten spells' saves, times and damage the game's own way | as the manual has them (from the next start) |
+| [Spells as the manual describes them](#spells-as-the-manual-describes-them) | fourteen spells' saves, times, damage and effects the game's own way, a classless monster's level 0 for its saves | as the manual has them, the monster's level its hit dice (from the next start) |
 
 #### Rangers' casting level
 
@@ -1033,8 +1033,8 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#enlarges-dice).
 
 #### Spells as the manual describes them
 
-Twelve spells whose saves, times, damage or effects part from the manual
-(pp. 29-40), set as the manual has them. The box takes effect from the
+Fourteen spells whose saves, times, damage or effects part from the manual
+(pp. 29-40), set as the manual has them, and a monster's level for its saves. The box takes effect from the
 next start (it changes the game's spell records as the Loader writes the game's
 copy); unticked, they are the game's.
 
@@ -1052,6 +1052,14 @@ copy); unticked, they are the game's.
 | Stinking Cloud | 1d6 rounds | 1d4+1 rounds |
 | Chaos | only warriors may save | warriors, and creatures of INT 21 or more or 4 or less |
 | Free Action | ends Paralyzed and Slowed only | also frees the Stuck: Web, Solid Fog, Quicksand, Entangle, Grease (a Poisoned creature stays Paralyzed, as in the game) |
+| Color Spray | every creature saves | only creatures of more levels than the caster save (the rest at -100: a natural 20 still saves, as against Chaos and Cloudkill) |
+| Hold Undead | any undead | only undead of no more levels (hit dice) than the caster's level; the rest are immune |
+
+A monster with no class (an elemental, a slaad, Mastyrial, the Rampager) had
+level 0 for its saves, so Cloudkill slew it whatever its size, Scare frightened
+it, and Dismissal's and Color Spray's level checks took it for the weakest
+there is: with the box ticked its level for saving throws is its hit dice (the
+game's level everywhere else is left as it was).
 
 **Known differences left as they are.** The game has no way to do these as the
 manual says, or the change would make a different spell rather than fix one:
@@ -1061,9 +1069,7 @@ manual says, or the change would make a different spell rather than fix one:
 | Confusion, Chaos | a save each round | one save, as the spell lands |
 | Mirror Image | images last 3 rounds a level | images last until struck (an effect lasts either uses or a time) |
 | Shield | better saves against missiles | the game has no saves against missiles; Shield's AC 4 works, and it stops Magic Missile |
-| Color Spray | only creatures above the caster's level save | every creature saves |
 | Invisibility | ends when its creature casts any spell | ends on an attack, or a spell at an enemy |
-| Hold Undead | undead with no more hit dice than the caster's level | any undead: the game checks no level (traced in DSUN.EXE: its target test, the spell's landing and save code have no comparison) |
 | Protection from Normal Missiles, Deflection, Inertial Barrier | stop normal missiles (Inertial Barrier: halves breath, missiles, gas, acid) | one effect for all three: a missile weapon's hit does no damage, and breath weapons miss outright; no spell is stopped, Magic Missile included. They differ only in time (a turn a level; level + 5d3 rounds; while kept up), who can have them (anyone touched; the caster alone) and cost |
 | Control Body | the controlled creature fights at -6 | Charmed 5 rounds, no -6 |
 | Mass Domination | up to five creatures | one |

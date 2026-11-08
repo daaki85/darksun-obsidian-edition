@@ -394,7 +394,9 @@ class Viewer:
                         "and Minor Spell Turning for the manual's time; Turn Pebble to Boulder 11-26, Ironskin a blow a "
                         "level, Stinking Cloud "
                         "1d4+1 rounds; Chaos saved against by INT 21+ or 4-; Free "
-                        "Action frees the Stuck; from the next start", variable=self.spells_manual,
+                        "Action frees the Stuck; Color Spray saved against only by those of more levels than "
+                        "the caster, Hold Undead only on undead of no more; a classless monster's hit dice its "
+                        "level for saves; from the next start", variable=self.spells_manual,
                         command=self._options_changed).pack(anchor="w")
         custom = section("custom", "More character customization")
         features = section("features", "Expanded features")

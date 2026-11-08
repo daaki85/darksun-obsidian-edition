@@ -1,6 +1,8 @@
 """The spells as the manual has them (gamepatch.SPELLS_MANUAL): the record patches, Stinking Cloud's
 round more (DSCLOG's STINK_SITE, and the Loader's duration texts), Chaos's INT exception
-(CHAOS_SITE), Free Action's loop over the effects it removes."""
+(CHAOS_SITE), Free Action's loop over the effects it removes, a classless creature's hit dice as
+its level for saves (HD_SAVE_SITE), Color Spray and Hold Undead by level (SPRAY_SITE, HOLD_HD_SITE;
+their handlers' tests in test_dsclog's NewSpellTests)."""
 import os
 import struct
 import unittest
@@ -25,6 +27,29 @@ class DurationBonusTests(unittest.TestCase):
     def test_the_patches_are_the_switchs(self):
         names = {p.name for p in gamepatch.PATCHES}
         self.assertTrue(set(gamepatch.SPELLS_MANUAL) <= names)
+
+    def test_level_sites(self):
+        """The three level patches: the switch's, each its own site at the bytes the game has."""
+        by_name = {p.name: p for p in gamepatch.PATCHES}
+        for name, offset, original, site in (
+                ("classless_save_level", 0x79D8C, "8946fa", gamepatch.HD_SAVE_SITE),
+                ("color_spray_level", 0x79F83, "837e143c750c", gamepatch.SPRAY_SITE),
+                ("hold_undead_level", 0x7A345, "f7460e0001", gamepatch.HOLD_HD_SITE)):
+            p = by_name[name]
+            self.assertIn(name, gamepatch.SPELLS_MANUAL)
+            self.assertEqual((p.offset, p.original.hex()), (offset, original))
+            self.assertEqual(p.replacement, bytes((0xCD, gamepatch.VEC_CR_SPELLS, site)) + b"\x90" * (len(original) // 2 - 3))
+        self.assertEqual(len({gamepatch.HD_SAVE_SITE, gamepatch.SPRAY_SITE, gamepatch.HOLD_HD_SITE,
+                              gamepatch.CHAOS_SITE}), 4)
+
+    def test_dsclog_knows_the_sites(self):
+        """DSCLOG's numbers for the three sites are gamepatch's."""
+        asm = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos", "dsclog.asm")
+        with open(asm, encoding="latin-1") as f:
+            text = f.read()
+        for name, number in (("HD_SAVE_SITE", 71), ("SPRAY_SITE", 72), ("HOLD_HD_SITE", 73)):
+            self.assertIn(f"{name} equ NS_IMAGE + {number}", text)
+            self.assertEqual(getattr(gamepatch, name), gamepatch.NS_IMAGE + number)
 
 
 @unittest.skipIf(Uc is None, "unicorn is not installed")

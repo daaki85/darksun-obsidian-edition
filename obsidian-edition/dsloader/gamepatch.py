@@ -174,6 +174,10 @@ CR_AGE_CON_SITE = NS_IMAGE + 66  # (the same after a click on CON: the roll kept
 CR_OPEN_SITE = NS_IMAGE + 67  # (the creation screen opening, a new member or EDIT: DSCLOG's CR_OPEN)
 CR_HP_SITE = NS_IMAGE + 68  # (the hit points drawn again: the THAC0 after them, DSCLOG's CR_HP)
 STINK_SITE, CHAOS_SITE = NS_IMAGE + 69, NS_IMAGE + 70  # (Stinking Cloud's round more; Chaos's INT exception: DSCLOG's STINK_SITE, CHAOS_SITE)
+# (a classless creature's level for its saves its hit dice; Color Spray unsaved by the caster's
+# level or lower; Hold Undead only on undead of no more levels than its caster's: DSCLOG's
+# HD_SAVE, SPRAY_SITE, HOLD_HD)
+HD_SAVE_SITE, SPRAY_SITE, HOLD_HD_SITE = NS_IMAGE + 71, NS_IMAGE + 72, NS_IMAGE + 73
 CR_NAME_SITE, CR_NAME2_SITE, CR_NAME3_SITE, CR_NAME4_SITE = range(NS_IMAGE + 62, NS_IMAGE + 66)  # (a name the game gave copied to the creature: PSP and the age drawn again)
 ARROW_LEVEL = NS_IMAGE + 47  # (a spell arrow's spell at the archer's preserver level, not a weapon's 6)
 SCROLL_USE = NS_IMAGE + 49  # (an item's box: a Shinobi's scroll picture a button, so it can learn the spell)
@@ -482,6 +486,19 @@ PATCHES = (
     # Chaos (56): the save's -100 for anyone not a warrior (79F80h, "sub si,100") skipped for a
     # creature of INT 21 or more, or 4 or less, as the manual has it (DSCLOG's CHAOS_SITE)
     Patch("chaos_int", 0x79F80, bytes.fromhex("83ee64"), _site(CHAOS_SITE, 3)),
+    # A classless creature (its sheet's classes, +21h..23h, all 0: an elemental, a slaad, Mastyrial,
+    # the Rampager) has level 0 from the game's level routine (508h:2Ah, 5E85Fh), so Cloudkill,
+    # Dismissal, Scare and Color Spray took it for a 0-level one: the save modifiers' target level,
+    # "mov [bp-6],ax" (79D8Ch), made its hit dice (+24h) for it (DSCLOG's HD_SAVE)
+    Patch("classless_save_level", 0x79D8C, bytes.fromhex("8946fa"), _site(HD_SAVE_SITE, 3)),
+    # Color Spray (4): only creatures of more levels than the caster save, as in AD&D (-100 on
+    # the save, as Chaos's and Cloudkill's): at Dismissal's test, "cmp word [bp+14h],3Ch / jnz"
+    # (79F83h), which DSCLOG's SPRAY_SITE then makes itself
+    Patch("color_spray_level", 0x79F83, bytes.fromhex("837e143c750c"), _site(SPRAY_SITE, 6)),
+    # Hold Undead (31): only undead of no more levels (hit dice) than the caster's level, the
+    # rest immune, at the undead's "test word [bp+0Eh],100h" (7A345h; DSCLOG's HOLD_HD, which
+    # makes the test and its jump itself: the "hold_undead" patch above keeps it off the living)
+    Patch("hold_undead_level", 0x7A345, bytes.fromhex("f7460e0001"), _site(HOLD_HD_SITE, 5)),
     # Free Action (117), Remove Paralysis (105) and Protection from Paralysis (20) share one
     # handler (79406h, the spells' table at 79936h, their words at +4Ch): Slowed (47) removed, then
     # Paralyzed (34) unless the creature is Poisoned. Free Action frees the Stuck (51: Web, Solid
@@ -1074,6 +1091,7 @@ SPELLS_MANUAL = ("bestow_curse_save", "blood_flow_save", "flaming_sphere_negates
                  "solid_fog_rounds", "spell_turning_time", "spell_turning_rounds", "cause_fear_time",
                  "quicksand_no_save", "pebble_damage", "ironskin_charges", "ironskin_per_level",
                  "stinking_cloud_dice", "stinking_cloud_round", "chaos_int",
+                 "classless_save_level", "color_spray_level", "hold_undead_level",
                  "free_action_stuck", "free_action_loop", "free_action_word", "remove_paralysis_word",
                  "protection_paralysis_word")  # the spells as the manual has them (spells_manual)
 PARTY_SPREAD = ("party_spread", "party_gather")  # the whole party in view after a load and a fight

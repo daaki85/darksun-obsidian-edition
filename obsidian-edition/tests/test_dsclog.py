@@ -3633,6 +3633,116 @@ class NewSpellTests(RuleTests):
         self.assertEqual(hold(0, 31), (0x7A1F0 - 0x7A333) & 0xFFFF)
         self.assertEqual(hold(0, 40), 0x7A359 - 0x7A333)
 
+    def test_classless_save_level(self):
+        """HD_SAVE (79D8Ch, "mov [bp-6],ax", AX the level routine's answer, the target's sheet at
+        [BP-0Eh] far): the level stored; a 0 for a creature with no class (+21h..23h) its hit dice
+        (+24h) instead; a classed creature's 0 kept."""
+        from dsloader import gamepatch
+        patch = next(p for p in gamepatch.PATCHES if p.name == "classless_save_level")
+        self.assertEqual((patch.offset, patch.replacement[2]), (0x79D8C, gamepatch.HD_SAVE_SITE))
+        mu = self.mu
+        mu.mem_write(SS * 16 + BP - 0x0E, struct.pack("<HH", 0x100, 0xA000))
+        def level(ax, classes, hd):
+            mu.mem_write(0xA000 * 16 + 0x100 + 0x21, bytes(classes) + bytes((hd, 0, 0)))
+            mu.mem_write(SS * 16 + BP - 6, struct.pack("<H", 0x5555))
+            self.at += 0x20
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, patch.replacement)
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, eax=ax,
+                                    ebx=0x2222, es=0x4444).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(start, start + len(patch.replacement))
+            self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_BX, r.UC_X86_REG_ES, r.UC_X86_REG_SP)],
+                             [0x2222, 0x4444, 0x800])
+            return struct.unpack("<h", mu.mem_read(SS * 16 + BP - 6, 2))[0]
+        self.assertEqual(level(5, (1, 0, 0), 5), 5)  # (a classed creature: the routine's)
+        self.assertEqual(level(0, (0, 0, 0), 12), 12)  # (an elemental of 12 HD)
+        self.assertEqual(level(0, (0, 0, 3), 12), 0)  # (a class: its 0 kept)
+        self.assertEqual(level(0, (0, 2, 0), 12), 0)
+        self.assertEqual(level(7, (0, 0, 0), 12), 7)  # (a human's +24h, the routine's)
+
+    def test_color_spray_level(self):
+        """SPRAY_SITE (79F83h, Dismissal's "cmp word [bp+14h],3Ch / jnz", 6 bytes; SI the modifier,
+        [BP+14h] the spell, [BP+16h] the caster's level, [BP-6] the target's): Color Spray (4) on a
+        target of the caster's level or lower: -100; higher, or another spell: none. Then Dismissal
+        (3Ch) on to its case (79F89h), any other spell past it (79F95h)."""
+        from dsloader import gamepatch
+        patch = next(p for p in gamepatch.PATCHES if p.name == "color_spray_level")
+        self.assertEqual((patch.offset, patch.replacement[2]), (0x79F83, gamepatch.SPRAY_SITE))
+        mu = self.mu
+        def spray(spell, caster, target):
+            mu.mem_write(SS * 16 + BP + 0x14, struct.pack("<HH", spell, caster))
+            mu.mem_write(SS * 16 + BP - 6, struct.pack("<h", target))
+            self.at += 0x40
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, patch.replacement)
+            for back in (6, 0x79F95 - 0x79F83):  # (a HLT at each way out)
+                mu.mem_write(start + back, b"\xf4")
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, eax=0x1234,
+                                    esi=3).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(start, 0, count=200)
+            self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_SP, r.UC_X86_REG_BP)],
+                             [0x1234, 0x800, BP])
+            si = struct.unpack("<h", struct.pack("<H", mu.reg_read(r.UC_X86_REG_SI)))[0]
+            return si, mu.reg_read(r.UC_X86_REG_IP) - self.at - 1
+        past = 0x79F95 - 0x79F83
+        self.assertEqual(spray(4, 5, 5), (-97, past))
+        self.assertEqual(spray(4, 5, 0), (-97, past))
+        self.assertEqual(spray(4, 5, 6), (3, past))  # (more levels than the caster: saves as usual)
+        self.assertEqual(spray(4, 0x105, 6), (3, past))  # (the level a byte)
+        self.assertEqual(spray(5, 9, 1), (3, past))  # (another spell)
+        self.assertEqual(spray(0x3C, 9, 1), (3, 6))  # (Dismissal: on to its case)
+
+    def test_hold_undead_level(self):
+        """HOLD_HD (7A345h, the undead's "test word [bp+0Eh],100h", 5 bytes; SI the spell, DI the
+        target's thing, [BP+14h] the caster's level): Hold Undead (31) on an undead of more levels
+        than the caster's (its sheet's, SHEET_LEVEL's) immune (7A1F0h); else the game's test: the
+        bit set, immune; clear, on to the next (7A34Fh)."""
+        from dsloader import gamepatch
+        patch = next(p for p in gamepatch.PATCHES if p.name == "hold_undead_level")
+        self.assertEqual((patch.offset, patch.replacement[2]), (0x7A345, gamepatch.HOLD_HD_SITE))
+        mu = self.mu
+        things = (GAME_DS + 0x3972 - 0x4356) * 16 + 0xC36
+        mu.mem_write(things + 40 * 3, struct.pack("<BH", 2, 7))
+        mu.mem_write(things + 41 * 3, struct.pack("<BH", 1, 7))  # (not a creature)
+        mu.mem_write(GAME_DS * 16 + 0x1665, struct.pack("<HH", 0, 0x9000))
+        mu.mem_write(GAME_DS * 16 + 0x1661, struct.pack("<HH", 0, 0xA000))
+        mu.mem_write(0x9000 * 16 + 7 * 0x3A + 4, struct.pack("<H", 3))  # (creature 7: sheet 3)
+        immune, on = (0x7A1F0 - 0x7A345) & 0xFFFF, 0x7A34F - 0x7A345
+        def hold(spell, caster, sheet, flags=0, thing=40):
+            race, classes, levels = sheet
+            mu.mem_write(0xA000 * 16 + 3 * 0x47 + 0x18, bytes((race,)))
+            mu.mem_write(0xA000 * 16 + 3 * 0x47 + 0x21, bytes(classes) + bytes(levels))
+            mu.mem_write(SS * 16 + BP + 0x0E, struct.pack("<H", flags))
+            mu.mem_write(SS * 16 + BP + 0x14, struct.pack("<H", caster))
+            self.at += 0x80
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, patch.replacement)
+            for back in (on, immune):
+                mu.mem_write(CALLER * 16 + ((self.at + back) & 0xFFFF), b"\xf4")
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, eax=0x1234,
+                                    ebx=0x2222, es=0x4444, esi=spell, edi=thing).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(start, 0, count=500)
+            self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_BX, r.UC_X86_REG_ES,
+                                                       r.UC_X86_REG_SP, r.UC_X86_REG_SI, r.UC_X86_REG_DI)],
+                             [0x1234, 0x2222, 0x4444, 0x800, spell, thing])
+            return (mu.reg_read(r.UC_X86_REG_IP) - self.at - 1) & 0xFFFF
+        skeleton = (3, (4, 0, 0), (6, 0, 0))  # (a 6th-level undead fighter, its race not human)
+        self.assertEqual(hold(31, 6, skeleton), on)
+        self.assertEqual(hold(31, 9, skeleton), on)
+        self.assertEqual(hold(31, 5, skeleton), immune)
+        self.assertEqual(hold(31, 5, (3, (4, 1, 0), (2, 6, 0))), immune)  # (its highest class's)
+        self.assertEqual(hold(31, 5, (3, (4, 0, 0), (2, 6, 0))), on)  # (a level with no class: none)
+        self.assertEqual(hold(31, 5, (3, (0, 0, 0), (8, 0, 0))), immune)  # (classless: its hit dice)
+        self.assertEqual(hold(31, 5, (1, (0, 0, 0), (8, 0, 0))), immune)  # (a human's +24h)
+        self.assertEqual(hold(40, 1, skeleton), on)  # (another spell)
+        self.assertEqual(hold(40, 9, skeleton, flags=0x100), immune)  # (the game's test)
+        self.assertEqual(hold(31, 9, skeleton, flags=0x100), immune)
+        self.assertEqual(hold(31, 1, skeleton, flags=0x0FF), immune)
+        self.assertEqual(hold(31, 1, skeleton, thing=41), on)  # (no creature: as before)
+
     def test_npp_save(self):
         """NS_NPP (7A7E9h, "add sp,4 / push 6 / push 27h", the charge's two arguments still on the
         stack): they become the save's, 6 and the record: Vampiric Touch's (27h) until the records
