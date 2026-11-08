@@ -20,8 +20,6 @@ NO_SAVE_KIND = 6
 DAMAGE_KINDS = ((0x02, "fire"), (0x04, "cold"), (0x80, "electricity"), (0x40, "acid"), (0x01, "poison"),
                 (0x08, "crushing"), (0x10, "edged"), (0x20, "pointed"), (0x100, "draining"),
                 (0x400, "psionic"), (0x800, "death"))
-# rolled by code of their own rather than from the record (see the README's dice log table)
-OWN_DICE = {"Magic Missile", "Flame Arrow", "Minute Meteors"}
 ROUND = 60  # game seconds
 # The 6th-level priest spells whose records (the game's spells they are built on: Cure and Cause
 # Critical Wounds, Slay Living, Lend Health...) don't tell what DSCLOG makes them do: those lines
@@ -92,8 +90,6 @@ def damage_text(gd: GameData, spell: int, rec: bytes) -> str:
     names = [name for bit, name in DAMAGE_KINDS if kinds & bit]
     if names:
         text += f" [{', '.join(names)}]"
-    if gd.spell_name(spell) in OWN_DICE:
-        text += "; rolled by its own code, which leaves out the caster's level"
     return text
 
 

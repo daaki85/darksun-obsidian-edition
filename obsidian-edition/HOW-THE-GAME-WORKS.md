@@ -375,9 +375,9 @@ change](FEATURES.md#spells-saved-against-with-the-spell-save)); durations are in
 rounds (a turn is ten). The log column is what the dice log shows for it; every
 effect line also says what the effect does.
 
-(The rows below are the game's own spells. Ten of them, Bestow Curse, Blood Flow, Flaming Sphere,
-Solid Fog, Minor Spell Turning, Cause Fear, Quicksand, Turn Pebble to Boulder, Magical Stone and
-Ironskin, are set as the manual has them by the rule change [Spells as the manual describes
+(The rows below are the game's own spells. Eleven of them, Bestow Curse, Blood Flow, Flaming Sphere,
+Solid Fog, Minor Spell Turning, Cause Fear, Quicksand's save, Turn Pebble to Boulder, Stinking Cloud,
+Chaos and Free Action, are set as the manual has them by the rule change [Spells as the manual describes
 them](FEATURES.md#spells-as-the-manual-describes-them), on by default.)
 
 | Spell | The manual | The game | The log |
@@ -389,7 +389,7 @@ them](FEATURES.md#spells-as-the-manual-describes-them), on by default.)
 | Curse | −1 to hit; not next to the party; 6 rounds | −1 to hit, no save; cancels Bless; 6 rounds | the effect |
 | Entangle | moves very slowly; save for half; 1 turn a level | Stuck (can't move at all) on a failed save, for 1 round | the save and the effect |
 | Invisibility to Undead | undead ignore the warded creature; 6 rounds | until it attacks or casts at an enemy; +4 on saves against an undead caster's spells aimed at it | the effect |
-| Magical Stone | three stones, 1d4 each, 2d8 against undead | one 1d4 crushing, no save; its record has nothing more against undead | the roll and the HP lost |
+| Magical Stone | three stones, 1d4 each, 2d8 against undead | three stones, 1d4 crushing each (seen in DOSBox), no save; its record has nothing more against undead | the roll and the HP lost |
 | Protection from Evil | AC and saves +2 against evil; 3 rounds a level | AC −2, +2 on saves against an evil caster; 3 rounds a level | the effect |
 | Remove Fear | ends fear | ends Afraid | the effect ending |
 | Shillelagh | a magical club in hand | a Shillelagh in an empty hand (a weapon held: "Failed, weapon in hand"); 4 + 1 a level rounds | the effect |

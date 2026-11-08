@@ -58,9 +58,12 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 - **Spells as the manual describes them** (a new rule change, on by default, from the next start;
   `gamepatch.SPELLS_MANUAL`, the spell records): Bestow Curse and Blood Flow allow a save; a save
   negates Flaming Sphere; Solid Fog 1d3 rounds + 1 a level (was until removed); Minor Spell Turning
-  3 rounds a level (was one spell, never ending); Cause Fear 1d4 rounds (was 1 a level); Quicksand 1
-  round a level, no save (was 1 round, a save); Turn Pebble to Boulder 3d6+8 (was 6d6); Magical Stone
-  3d4 (was 1d4); Ironskin a blow a level (was 1d6). From reports/spells-against-the-manual.md's
+  3 rounds a level (was one spell, never ending); Cause Fear 1d4 rounds (was 1 a level); Quicksand no save; Turn Pebble to
+  Boulder 3d6+8 (was 6d6). Cast in DOSBox: each as described; Minor Spell Turning turns every 1st- to
+  3rd-level spell for its whole time. Left as they were after the DOSBox run: Magical Stone (the game
+  already throws three stones of 1d4: the report's "one" was wrong, and 3d4 made each 3d4), Ironskin
+  (its charges a level came to 0: the level of a spell cast by touch reads 0, and its record halves
+  it), Quicksand's time (its Stuck is a round at a time while the quicksand's own 5d3 rounds last). From reports/spells-against-the-manual.md's
   group 2. Then with the same switch: **Stinking Cloud** 1d4+1 rounds (was 1d6: the record's dice
   1d4, and DSCLOG's STINK_SITE adds the round, which the record can't); **Chaos** lets a creature of
   INT 21+ or 4 or less save as well as warriors (CHAOS_SITE, at the save modifiers' 79F80h);

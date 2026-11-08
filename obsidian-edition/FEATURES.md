@@ -1033,7 +1033,7 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#enlarges-dice).
 
 #### Spells as the manual describes them
 
-Thirteen spells whose saves, times, damage or effects part from the manual
+Eleven spells whose saves, times, damage or effects part from the manual
 (pp. 29-40), set as the manual has them. The box takes effect from the
 next start (it changes the game's spell records as the Loader writes the game's
 copy); unticked, they are the game's.
@@ -1046,10 +1046,8 @@ copy); unticked, they are the game's.
 | Solid Fog | Stuck until removed | Stuck 1d3 rounds + 1 a caster level |
 | Minor Spell Turning | turns one spell, then never ends | turns 1st- to 3rd-level spells for 3 rounds a caster level |
 | Cause Fear | Afraid 1 round a caster level | Afraid 1d4 rounds |
-| Quicksand | Stuck 1 round, a save allowed | Stuck 1 round a caster level, no save |
+| Quicksand | Stuck while in it, a save allowed | Stuck while in it, no save |
 | Turn Pebble to Boulder | 6d6 (6-36) | 3d6+8 (11-26) |
-| Magical Stone | one stone, 1d4 | three stones, 3d4 |
-| Ironskin | 1d6 blows stopped | a blow stopped a caster level |
 | Stinking Cloud | 1d6 rounds | 1d4+1 rounds |
 | Chaos | only warriors may save | warriors, and creatures of INT 21 or more or 4 or less |
 | Free Action | ends Paralyzed and Slowed only | also frees the Stuck: Web, Solid Fog, Quicksand, Entangle, Grease (a Poisoned creature stays Paralyzed, as in the game) |
@@ -1069,6 +1067,8 @@ manual says, or the change would make a different spell rather than fix one:
 | Control Body | the controlled creature fights at -6 | Charmed 5 rounds, no -6 |
 | Mass Domination | up to five creatures | one |
 | Detonate | 1d10 to everyone within 10' | the target only |
+| Quicksand | held 1 turn + 1 round a level | Stuck a round at a time, put on again each round while the quicksand lasts (5d3 rounds of its own); its record's time changes nothing (seen in DOSBox) |
+| Ironskin | immune to weapons | 1d6 blows stopped. Its charges can't be made a level each: its record halves the caster level, and the level the game passes for a spell cast by touch reads 0 (the dice log's "caster level 0"), so a level's share came to nothing (seen in DOSBox: 0 charges) |
 | Minute Meteors | five meteors of 1d4, +2 to hit | one roll of 1d4 a caster level (at most 10d4) on one target, no to-hit roll (no spell rolls to hit in the game; Acid Arrow, Turn Pebble to Boulder, Magical Stone and Condense always hit) |
 
 What else the manual and the game disagree on, and why the rest is left:

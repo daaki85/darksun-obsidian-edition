@@ -104,9 +104,14 @@ class TextTests(unittest.TestCase):
             self.assertEqual(spellbook.damage_text(StubGame(rule), 113, record()), want)
         self.assertFalse(SpellDamage(1, 0, 1, 2, 0, 4).flat())  # (Magic Missile's +1 a step: grows)
 
-    def test_own_dice_noted(self):
+    def test_missiles_count_the_level(self):
+        """Magic Missile, Flame Arrow and Minute Meteors are rolled by the common damage routine
+        with the caster's level (seen in DOSBox 2026-11-08: Minute Meteors 9d4 at level 9): no note
+        that they leave it out."""
         gd = StubGame(SpellDamage(1, 1, 1, 2, 0, 4), name="Magic Missile")
-        self.assertIn("its own code", spellbook.damage_text(gd, 3, record(kinds=0x200)))
+        text = spellbook.damage_text(gd, 3, record(kinds=0x200))
+        self.assertNotIn("its own code", text)
+        self.assertIn("for each 2 caster levels", text)
 
 
 class PowerNameTests(unittest.TestCase):

@@ -161,7 +161,7 @@ DSCLOG handler; **large** new game mechanics.
 | Blood Flow (4th) | stuns up to 4 rounds, save Neg. | Paralyzed 1d4 rounds, **no save** (A0h) | save bit A0h → A1h (small) |
 | Quicksand (5th) | held 1 turn + 1 round a level, no save | Stuck 1 round, a save allowed | 1 round a level, no save, in the record (small) |
 | Free Action (4th) | breaks slow, hold and web | ends Paralyzed and Slowed only, not Stuck | DSCLOG: also end Stuck (small) |
-| Magical Stone (1st) | three stones, 1d4 each, 2d8 against undead | one 1d4, never misses | 3d4 in the record (small); the undead part after checking its 1000h damage bit (medium) |
+| Magical Stone (1st) | three stones, 1d4 each, 2d8 against undead | three stones of 1d4 (seen in DOSBox 2026-11-08; "one" here was wrong), never misses | the undead part after checking its 1000h damage bit (medium) |
 | Cause Fear (1st) | 1d4 rounds | 1 round a level | 1d4 rounds in the record (small) |
 | Entangle (1st) | moves very slowly, 1 turn a level, save halves | Stuck 1 round, a save negates | leave, or 1 round a level (small) |
 | Cause Disease (3rd) | saps STR and HP | Diseased: lowers nothing by itself | DSCLOG: Weakened 1d4 on a failed save (medium) |

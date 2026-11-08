@@ -391,8 +391,8 @@ class Viewer:
         self.spells_manual = tk.BooleanVar(value=settings.get("spells_manual", True) is not False)
         ttk.Checkbutton(rule_groups["magic"], text="Spells as the manual describes them: saves against Bestow "
                         "Curse and Blood Flow; Flaming Sphere negated by a save; Solid Fog, Cause Fear, Quicksand "
-                        "and Minor Spell Turning for the manual's time; Turn Pebble to Boulder 11-26, Magical Stone "
-                        "3d4, Ironskin a blow a level, Stinking Cloud 1d4+1 rounds; Chaos saved against by INT 21+ or 4-; Free "
+                        "and Minor Spell Turning for the manual's time; Turn Pebble to Boulder 11-26, Stinking Cloud "
+                        "1d4+1 rounds; Chaos saved against by INT 21+ or 4-; Free "
                         "Action frees the Stuck; from the next start", variable=self.spells_manual,
                         command=self._options_changed).pack(anchor="w")
         custom = section("custom", "More character customization")

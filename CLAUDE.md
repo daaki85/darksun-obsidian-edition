@@ -69,6 +69,10 @@ capture; window grabs (`import -window`) are 320x240, so y x 1.2.
 - Inventory: the backpack's cells are 18 apart (195,26, 195,44...). A right-click opens an item's
   box beside its row. Click a scroll's spell icon with a slow press (point, mousedown, 0.15 s, mouseup).
   `scrolltest.py` makes a Shinobi in memory and gives the defilers' scrolls.
+- Casting for a test: `spellsetup.py` teaches spells, fills slots, sets caster level and HP in memory
+  (never save after). Aimed spells: USE, the level page (LEVEL button 196,171), the icon, then a
+  figure; touch spells (Free Action, Ironskin, Cure...) target a portrait on the USE screen.
+  `effects.py` lists effects with their time or charges; `passuntil.sh N` passes turns to member N.
 - E opens the Effects screen. In an END <NAME>'S MOVE menu (a click on the member's figure
   opens it), E is END TURN.
 - The creation screen: CREATE CHARACTERS (165,92), right-click an empty slot, NEW (110,57). A score's

@@ -575,7 +575,7 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
    does nothing ("Move : 0"). For a test that needs reach, raise its Move in memory first (the
    old movekeeper.py did; rebuild it when needed: the combat record's movement, see
    dsloader/game.py), and restore it after; never save the game while it's raised.
-6. **Spells**: open the USE button (24,17), page to the spell, click its icon, then the target
+6. **Spells** (more below, "Casting spells for a test"): open the USE button (24,17), page to the spell (LEVEL at 196,171), click its icon, then the target
    (2026-11-08: a plain click on the icon closes the screen and gives an aiming pointer with the
    spell's range drawn as a ring of beads; a click on a figure inside casts. The icons drawn
    **crossed out** can't be cast then: clicks on them do nothing, and RETURN TO GAME then a map
@@ -663,6 +663,37 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   panel for passto.sh, or use fightout.sh.
 - **memberpos.py can miss** a figure in a crowd: about 12 pixels higher
   opened the END menu; check a shot first.
+- **Casting spells for a test** (2026-11-08, logs/2026-11-08-manual-spells.md, from `fountain-user`
+  clicked into Pehtucl's ambush): `spellsetup.py 0=9 2=9 hp=200` teaches the spells, fills every
+  slot and sets the casters' second class to level 9 (Lex, #0, is the preserver there, Ester, #2,
+  the priest); `hp.py 150` keeps the foes up. Then:
+  - **The USE screen remembers the spell level page** each caster was last on: the LEVEL button is
+    at **(196,171)** (not y 187) and steps 1, 2, ... 5, 1; shoot the page before clicking an icon.
+    The arc at (266,171) is RETURN TO GAME. Icons are about 18 apart, five a row: x 176, 194, 212,
+    230, 248; y 59, 77, 97; in spell-number order of the spells known at that level (`gd.spell_level`).
+  - **Aimed spells** close the screen and give the aiming pointer (a ring of beads, or a box for an
+    area); a click on a foe's figure casts. Harmful aimed spells are refused on the party ("can't
+    cast X there: not a creature that spell can be cast on"), and "no creature there" means the
+    click missed the figure: click lower, on the body (zoom a shot). **Touch spells** (record
+    +0Ch 3 or 5: Free Action, Ironskin, Blood Flow, Cure Light Wounds, Remove Paralysis...) keep
+    the screen up and wait for a **portrait** (66,62 / 112,62 / 66,108 / 112,108): their icon
+    "does nothing" until one is clicked, and through a portrait even Blood Flow lands on the party.
+    Self spells (Minor Spell Turning) cast at the icon's click.
+  - **Crossed-out icons**: a caster hit just before its turn ("YOU WERE HIT" in the bar) has every
+    icon crossed for that turn; plain again the next round.
+  - **A right-click while aiming cancels, and passed the turn twice**; Escape on the USE screen is
+    safer. A Stuck or Paralyzed member's turn opens with its END menu up: E ends it, Escape closes it
+    to act (USE then opens). **`passuntil.sh N`** passes turns until member N's by the END menu
+    (checked by its pixels, never E blind: E for a member with no menu, Jenna with Free Action, opened
+    the Effects screen; its icon at 100,171 goes back to USE). passto.sh's clicks above a figure
+    walked Lex off alone once.
+  - **`effects.py`** lists the effects with time left (Stuck (11 rounds), Ironskin (6 charges));
+    `effects.py OWNER 51 34 86` rewrites a Stuck into Paralyzed (47 Slowed) to test a cure.
+  - The fight's Templar was creature 30 (the dice log's saves showed its WIS 17), not 11: check
+    which creature a combatant is before writing its scores.
+  - Magical Stone gives three throws a casting (the stone pointer comes back; the turn ends after
+    the third). Flaming Sphere cast at a foe two squares off struck the caster (twice); farther off
+    it took a slot and logged nothing.
 
 ## 5. The story so far: what's known of the route
 
