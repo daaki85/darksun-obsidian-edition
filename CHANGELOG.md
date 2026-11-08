@@ -41,6 +41,11 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 ## Next pull request (not opened yet)
 
 **Changed**
+- **The panel's Short level reads as the readable layout does:** what happened first, the roll in
+  brackets after it, the damage on the attack's line (`Seneca hits Slig for 11 (15 vs 4+, backstab)`,
+  `Guard misses Lex (6 vs 13+)`, `Slig fails vs Fireball (11 vs 16+)`, `Rampager fails to resist
+  Fireball (MR 25%: 28)`, `Cilla hides in shadows: seen (85 vs 25 or less)`); was `Rampager attacks
+  Defiler: 20 vs 16+ HIT, 4 damage (2d6)`. (`combatlog.shorten`, `Log.at`.)
 - **The helper has room again:** a memory pass freed 3,136 bytes of its 64 KB segment (448 spare
   -> 3,584) and 190 paragraphs of upper memory (the helper with its PSP 65,248 -> 62,208 bytes; the
   largest free piece 34,320 -> 37,392). The colour, ring and dust-walked tables moved to the far

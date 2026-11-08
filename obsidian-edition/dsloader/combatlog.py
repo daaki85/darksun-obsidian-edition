@@ -123,8 +123,9 @@ NOT_A_FIGHT_ROLL = ("Character creation",)  # (rolls out of the game: not the pa
 
 def shorten(line: str, level: str) -> Optional[str]:
     """A dice log line as the panel shows it at a level (None: not at that level). In detail,
-    the line itself; in short, the dice and what came of them ("Rampager attacks Defiler: 20 vs
-    16+ HIT"), no working; at the least, only what came of them ("Rampager hits Defiler")."""
+    the line itself; in short, what came of it first and its roll after ("Rampager hits Defiler
+    (20 vs 16+)", the readable layout's grammar, its damage put in by Log.at: "for 11"), no
+    working; at the least, only what came of it ("Rampager hits Defiler")."""
     text = line.strip()
     if level == DETAIL:
         return text
@@ -136,32 +137,38 @@ def shorten(line: str, level: str) -> Optional[str]:
     m = ATTACK.match(text)
     if m:
         need = m.group("need") or ("2" if m.group("any") else "20")
+        verb = 'hits' if m.group('result') == 'HIT' else 'misses'
+        target, how = m.group('target'), ""
+        for mark, said in ((" BACKSTAB", "backstab"), (" from behind", "from behind"), (" unseen", "unseen")):
+            if target.endswith(mark):
+                target, how = target[:-len(mark)], f", {said}"
         if level == MINIMAL:
-            return f"{m.group('who')} {'hits' if m.group('result') == 'HIT' else 'misses'} {m.group('target')}"
-        return f"{m.group('who')} attacks {m.group('target')}: {m.group('d20')} vs {need}+ {m.group('result')}"
+            return f"{m.group('who')} {verb} {target}"
+        return f"{m.group('who')} {verb} {target} ({m.group('d20')} vs {need}+{how})"
     m = HIT_FOR.match(text)
     if m:
-        return f"for {m.group('n')}" if level == MINIMAL else f"{m.group('n')} damage ({m.group('dice')})"
+        return f"for {m.group('n')}"
     m = SAVE.match(text)
     if m:
         saved = m.group("result") == "saved"
         if level == MINIMAL:
             return f"{m.group('who')} {'saves' if saved else 'fails to save'} vs {m.group('what')}"
-        need = f" vs {m.group('need')}" if m.group("need") else ""
-        return f"{m.group('who')}'s save vs {m.group('what')}: {m.group('total') or m.group('d20')}{need}, {m.group('result')}"
+        need = f" vs {m.group('need')}+" if m.group("need") else ""
+        return f"{m.group('who')} {'saves' if saved else 'fails'} vs {m.group('what')} " \
+               f"({m.group('total') or m.group('d20')}{need})"
     m = RESIST.match(text)
     if m:
         resisted = m.group("result").startswith("resisted")
         if level == MINIMAL:
             return f"{m.group('who')} resists {m.group('what')}" if resisted else None
-        return f"{m.group('who')} MR {m.group('pct')}% vs {m.group('what')}: {m.group('roll')}, " \
-               f"{'resisted' if resisted else 'not resisted'}"
+        return f"{m.group('who')} {'resists' if resisted else 'fails to resist'} {m.group('what')} " \
+               f"(MR {m.group('pct')}%: {m.group('roll')})"
     m = PERCENT.match(text)  # (a thief's skills, a scroll learnt)
     if m:
         result = m.group("result").split(":")[0]  # (what it means: the log has it)
         if level == MINIMAL:
             return f"{m.group('what')}: {result}"
-        return f"{m.group('what')}: {m.group('roll')} vs {m.group('need')} or less, {result}"
+        return f"{m.group('what')}: {result} ({m.group('roll')} vs {m.group('need')} or less)"
     m = DAMAGE_ROLL.match(text)
     if m:
         return None if level == MINIMAL else f"{m.group('what')} damage: {m.group('dice')} = {m.group('total')}"
@@ -205,11 +212,12 @@ class Log:
             depth = (len(line) - len(line.lstrip(" "))) // 2 if level == DETAIL else 0
             hit = HIT_FOR.match(line.strip()) if level != DETAIL else None
             if hit and out and out[-1].kind == "hit" and out[-1].text.startswith(hit.group("who")):
-                join = " " if level == MINIMAL else ", "
-                out[-1] = out[-1]._replace(text=out[-1].text + join + text)  # an attack's damage on its line
+                prev = out[-1].text  # an attack's damage on its line: "X hits Y for 11 (15 vs 4+)"
+                at = prev.rfind(" (") if level != MINIMAL and prev.endswith(")") else len(prev)
+                out[-1] = out[-1]._replace(text=f"{prev[:at]} {text}{prev[at:]}")
                 continue
             if hit:
-                text = f"{hit.group('who')} hits {hit.group('target')} " + (text if level == MINIMAL else f"for {text}")
+                text = f"{hit.group('who')} hits {hit.group('target')} {text}"
             if kind == "round":  # a rule, "ROUND 3", and in detail the order after it
                 m = ROUND.match(text)
                 if m is None:

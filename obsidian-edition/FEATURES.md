@@ -124,9 +124,9 @@ the hit points of a new level), so they can be checked after they happen.
 
 Below the switch, pick how much it says: **at the least**
 (`Rampager hits Defiler for 4`), **in short**, the default
-(`Rampager attacks Defiler: 20 vs 16+ HIT, 4 damage (2d6)`,
-`Slig's save vs Fireball: 11 vs 16, failed`), or **in detail**, every line of
-the log. `20 vs 16+ HIT` is the d20 and the roll it needed (THAC0 less the
+(`Rampager hits Defiler for 4 (20 vs 16+)`,
+`Slig fails vs Fireball (11 vs 16+)`), or **in detail**, every line of
+the log. `(20 vs 16+)` is the d20 and the roll it needed (THAC0 less the
 target's AC; a natural 20 always hits, a 1 always misses). It never waits for
 a click.
 

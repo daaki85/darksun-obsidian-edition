@@ -71,16 +71,16 @@ class LinesTests(unittest.TestCase):
             "ROUND 1",
             "Defiler's turn",
             "Fireball damage: 9d6 = 32",
-            "Slig's save vs Fireball: 11 vs 16, failed",
-            "Rampager MR 25% vs Fireball: 28, not resisted",
-            "Rampager's save vs Fireball: 14 vs 8, saved",
+            "Slig fails vs Fireball (11 vs 16+)",
+            "Rampager fails to resist Fireball (MR 25%: 28)",
+            "Rampager saves vs Fireball (14 vs 8+)",
             "Slig takes 18 from Fireball, now 0/18 HP",
             "Slig is killed",
             "Rampager's turn",
-            "Rampager attacks Defiler: 20 vs 16+ HIT, 4 damage (2d6)",  # the damage on the attack's line
+            "Rampager hits Defiler for 4 (20 vs 16+)",  # the damage on the attack's line, outcome first
             "Defiler now 14/18 HP (-4)",
-            "Defiler attacks Rampager: 11 vs 20+ miss",
-            "Defiler's save vs Fear: 20, saved",
+            "Defiler misses Rampager (11 vs 20+)",
+            "Defiler saves vs Fear (20)",
         ])
 
     def test_least(self):
@@ -115,31 +115,39 @@ class LinesTests(unittest.TestCase):
 
     def test_percent_rolls(self):
         line = "Cilla hides in shadows: d100 = 85, needs 25 or less (50, halved in daylight) -> seen"
-        self.assertEqual(c.shorten(line, c.SHORT), "Cilla hides in shadows: 85 vs 25 or less, seen")
+        self.assertEqual(c.shorten(line, c.SHORT), "Cilla hides in shadows: seen (85 vs 25 or less)")
         self.assertEqual(c.shorten(line, c.MINIMAL), "Cilla hides in shadows: seen")
         line = ("Cilla moves silently: d100 = 1, needs 57 or less -> unheard: their next attack this turn is "
                 "from behind (a backstab with a weapon that can)")
-        self.assertEqual(c.shorten(line, c.SHORT), "Cilla moves silently: 1 vs 57 or less, unheard")
+        self.assertEqual(c.shorten(line, c.SHORT), "Cilla moves silently: unheard (1 vs 57 or less)")
 
     def test_attack_that_hits_on_anything_but_a_1(self):
         line = ("Gerakis attacks Slig with Bone Axe (1d8): d20 = 7, hits on anything but a 1 (95%), hits AC -3, "
                 "target AC 7 -> HIT")
-        self.assertEqual(c.shorten(line, c.SHORT), "Gerakis attacks Slig: 7 vs 2+ HIT")
+        self.assertEqual(c.shorten(line, c.SHORT), "Gerakis hits Slig (7 vs 2+)")
         self.assertEqual(c.shorten(line, c.MINIMAL), "Gerakis hits Slig")
 
     def test_save_with_modifiers(self):
         """A save with its modifiers shown is shortened too, to its total against the need."""
         line = ("Mountain Stalker's saving throw vs Fireball from Dag (spell): d20 = 9, doubled against fire = 18, "
                 "needs 16 (25% to save) -> failed: full damage, 12")
-        self.assertEqual(c.shorten(line, c.SHORT), "Mountain Stalker's save vs Fireball: 18 vs 16, failed")
+        self.assertEqual(c.shorten(line, c.SHORT), "Mountain Stalker fails vs Fireball (18 vs 16+)")
         line = "Dag's saving throw vs Web from Slig (spell): d20 = 13 +2 Blessed = 15, needs 14 (40% to save) -> saved"
-        self.assertEqual(c.shorten(line, c.SHORT), "Dag's save vs Web: 15 vs 14, saved")
+        self.assertEqual(c.shorten(line, c.SHORT), "Dag saves vs Web (15 vs 14+)")
         self.assertEqual(c.shorten(line, c.MINIMAL), "Dag saves vs Web")
+
+    def test_backstab_in_the_brackets(self):
+        """How the attack came (a backstab, from behind, unseen) goes with its roll, after the damage."""
+        log = c.Log()
+        log.add(["Seneca attacks Slig BACKSTAB with Bone Hayneedle +1 (1d4+1): d20 = 15, needs 4+ (85%), "
+                 "hits AC -3, target AC 8 -> HIT", "  Seneca hits Slig for 11: 1d4 = [3]"])
+        self.assertEqual(log.at(c.SHORT, NAMES)[-1].text, "Seneca hits Slig for 11 (15 vs 4+, backstab)")
+        self.assertEqual(log.at(c.MINIMAL, NAMES)[-1].text, "Seneca hits Slig for 11")
 
     def test_damage_without_its_attack_keeps_its_own_line(self):
         log = c.Log()
         log.add(["  Rampager hits Defiler for 4: 2d6 = [1 + 3]"])
-        self.assertEqual(log.at(c.SHORT, NAMES)[0].text, "Rampager hits Defiler for 4 damage (2d6)")
+        self.assertEqual(log.at(c.SHORT, NAMES)[0].text, "Rampager hits Defiler for 4")
         self.assertEqual(log.at(c.MINIMAL, NAMES)[0].text, "Rampager hits Defiler for 4")
 
     def test_history_is_kept_to_its_length(self):
