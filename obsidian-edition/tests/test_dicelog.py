@@ -1674,6 +1674,12 @@ def set_clock(log, seconds):
     struct.pack_into("<i", m, CLOCK, seconds)
 
 
+
+def fight_on(log, on: bool = True) -> None:
+    """The game's own "a fight is on" (game.fight_on: FIGHT_STATE_ON), as its rest and USE screen read it."""
+    at = (log.game.ds - game.FIGHT_STATE_FROM_DS) * 16 + game.FIGHT_STATE_ON
+    struct.pack_into("<H", log.guest.mem, at, int(on))
+
 class RoundAndTurnTests(unittest.TestCase):
     def setUp(self):
         self.log = make_game()
@@ -1681,6 +1687,7 @@ class RoundAndTurnTests(unittest.TestCase):
 
     def round(self, seconds):
         set_clock(self.log, seconds)
+        fight_on(self.log)
         struct.pack_into("<hh", self.log.guest.mem, self.table, 25, 50)
         self.log.describe(entry(raw_for(6, 10), dicelog.INITIATIVE_ROLL), now=1.0)
         self.log.describe(entry(raw_for(51, 200), dicelog.INITIATIVE_TIE), now=1.0)
@@ -1712,6 +1719,18 @@ class RoundAndTurnTests(unittest.TestCase):
         self.assertEqual(self.log.turn_lines(), [])  # still Daaki's
         struct.pack_into("<h", m, DS * 16 + game.WHOSE_TURN, 0x29)
         self.assertEqual(self.log.turn_lines(), ["Mountain Stalker's turn"])
+
+    def test_no_turn_out_of_a_fight(self):
+        """Just after a fight (game time barely moves out of one) the leader changed: whose turn
+        changes, but the game's own test says no fight is on: no turn line, and so no thief's hiding
+        rolled."""
+        m = self.log.guest.mem
+        self.round(600)
+        struct.pack_into("<h", m, DS * 16 + game.WHOSE_TURN, 1)
+        self.assertEqual(self.log.turn_lines(), ["Daaki's turn"])
+        fight_on(self.log, False)  # (the fight over)
+        struct.pack_into("<h", m, DS * 16 + game.WHOSE_TURN, 0)
+        self.assertEqual(self.log.turn_lines(), [])
 
     def test_last_turn_then_first_turn(self):
         """Last in one round and first in the next: a new turn (a thief hides again); someone

@@ -2134,8 +2134,10 @@ class DiceLog:
         self._acted.add(turn)
         self._set_stealth(False)  # the last turn's hiding is over
         now = self.game.game_time()
-        if self._round_time is None or now is None or now - self._round_time > FIGHT_GAP:
-            return []  # not in a fight
+        if self._round_time is None or now is None or now - self._round_time > FIGHT_GAP \
+                or not self._fighting():
+            return []  # not in a fight (game time barely moves out of one: the leader changed
+            #             just after a fight looked like a new turn, and a thief rolled its hiding)
         name = self.game.combatant_name(turn)
         out = [f"{name}'s turn"] if name != "?" else []
         if self.rules & game.RULE_STEALTH and turn < game.PARTY_SIZE:

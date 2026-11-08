@@ -56,6 +56,13 @@ Releases, newest first: [2.14.0](#pull-request-87-merged-2026-11-07) (#86 and #8
   (`weaponchoice.bow_ahead`, `pickpocket.mend_lists`. Tests: `test_lists_apart`,
   `test_mend_bow_and_arrows`, both failing on the code before the fix.)
 
+- **Changing the leader just after a fight rolled a thief's hiding:** the dice log took a change
+  of whose turn within a minute of game time of the last round for a turn of the same fight, and
+  game time barely moves out of fights, so the new leader's "turn" printed ("Alura's turn") and,
+  with the stealth rule, rolled hide in shadows and move silently. A turn now also needs the
+  game's own test that a fight is on (`game.fight_on`, as its rest and USE screen read it).
+  (`DiceLog.turn_lines`. Test: `test_no_turn_out_of_a_fight`, which the code before the fix fails.)
+
 **Fixed: DSCLOG**
 - **A melee weapon's item box read "0.5x1D8-1",** whoever held it. With no creature the game's damage
   line takes the rate from the item type's +0Bh, a missile weapon's, which a melee weapon's type has
