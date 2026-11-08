@@ -1,8 +1,8 @@
-# passto.sh N: pass party turns until member N's: a click above the member's figure opens its END
+# passto.sh N (PASS_LIMIT tries, default 60): pass party turns until member N's: a click above the member's figure opens its END
 # menu (the screen's top-left block changes), then E (END TURN); never E without the menu
 cd "$(dirname "$0")"
 W=$(xdotool search --class dosbox | head -1)
-for i in $(seq 1 60); do
+for i in $(seq 1 ${PASS_LIMIT:-60}); do
   st=$(timeout 20 python3 state.py | head -1)
   echo "$st" | grep -q "fight_on 1" || { echo "NO FIGHT"; exit 1; }
   t=$(echo "$st" | sed 's/.*turn \([-0-9]*\).*/\1/')

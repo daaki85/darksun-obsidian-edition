@@ -40,3 +40,4 @@ cannot be loaded in a fresh install (2026-11-01).
   loading), through the arena's waves and out by the gate; in the pens at (1816, 440), Kurzak's
   greeting answered Goodbye. Nothing else done. Its `DARKSAVE.GFF` is the one in the game folder
   (not rewritten at this save).
+- `fountain-user`: the user's save "templar fountain" (2026-11-08): the slave pens, Pehtucl leading the party to the fountain, the ambush a moment away (its speech comes on loading). Only the user's SAVE01.SAV: CHARSAVE.GFF and DARKSAVE.GFF are pens-after-scar's (loads and plays). The ambush's fight: Pehtucl, 4 Arena Guards and a Guard; the script also sends every guard of those kinds in the region hunting (GPL 145 at 0xE99).
