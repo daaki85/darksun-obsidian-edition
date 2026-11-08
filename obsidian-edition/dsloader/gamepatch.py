@@ -173,6 +173,7 @@ CR_AGE_SITE = NS_IMAGE + 61  # (the creation panel's PSP drawn: the age above RE
 CR_AGE_CON_SITE = NS_IMAGE + 66  # (the same after a click on CON: the roll kept, DSCLOG's CR_AGE_CON)
 CR_OPEN_SITE = NS_IMAGE + 67  # (the creation screen opening, a new member or EDIT: DSCLOG's CR_OPEN)
 CR_HP_SITE = NS_IMAGE + 68  # (the hit points drawn again: the THAC0 after them, DSCLOG's CR_HP)
+STINK_SITE, CHAOS_SITE = NS_IMAGE + 69, NS_IMAGE + 70  # (Stinking Cloud's round more; Chaos's INT exception: DSCLOG's STINK_SITE, CHAOS_SITE)
 CR_NAME_SITE, CR_NAME2_SITE, CR_NAME3_SITE, CR_NAME4_SITE = range(NS_IMAGE + 62, NS_IMAGE + 66)  # (a name the game gave copied to the creature: PSP and the age drawn again)
 ARROW_LEVEL = NS_IMAGE + 47  # (a spell arrow's spell at the archer's preserver level, not a weapon's 6)
 SCROLL_USE = NS_IMAGE + 49  # (an item's box: a Shinobi's scroll picture a button, so it can learn the spell)
@@ -471,6 +472,26 @@ PATCHES = (
     Patch("magical_stone_damage", 0x428EC, bytes.fromhex("000904"), bytes.fromhex("001904")),
     # Ironskin (133): a blow stopped for each caster level, not 1d6
     Patch("ironskin_charges", 0x43014, bytes.fromhex("6100"), bytes.fromhex("1001")),
+    # Stinking Cloud (22): 1d4+1 rounds, not 1d6: the record's dice made 1d4, the round more by
+    # DSCLOG's STINK_SITE in the time's routine (its dice are rolled with a bonus of 0)
+    Patch("stinking_cloud_dice", 0x42234, bytes.fromhex("61"), bytes.fromhex("41")),
+    Patch("stinking_cloud_round", 0x76D73, bytes.fromhex("c45efc"), _site(STINK_SITE, 3)),
+    # Chaos (56): the save's -100 for anyone not a warrior (79F80h, "sub si,100") skipped for a
+    # creature of INT 21 or more, or 4 or less, as the manual has it (DSCLOG's CHAOS_SITE)
+    Patch("chaos_int", 0x79F80, bytes.fromhex("83ee64"), _site(CHAOS_SITE, 3)),
+    # Free Action (117), Remove Paralysis (105) and Protection from Paralysis (20) share one
+    # handler (79406h, the spells' table at 79936h, their words at +4Ch): Slowed (47) removed, then
+    # Paralyzed (34) unless the creature is Poisoned. Free Action frees the Stuck (51: Web, Solid
+    # Fog, Quicksand, Entangle, Grease) too: the handler made a loop over the effects pushed on the
+    # stack, through its two far calls (their segment words, which the overlay manager fixes up,
+    # kept where they were), and Free Action's word pointed at a start that takes Stuck off first
+    Patch("free_action_stuck", 0x79406, bytes.fromhex(
+        "6a2f57" "9a4d009805" "83c404c45e0a268a4704b400a90800740 3e90b046a2257".replace(" ", "")),
+        bytes.fromhex("579090" "9a4d009805" "5a583c22741cc45e0a26f6470408751 26a22ebe46a3357".replace(" ", ""))),
+    Patch("free_action_loop", 0x7942A, bytes.fromhex("83c404e9fd03"), bytes.fromhex("5a586a2febd6")),
+    Patch("free_action_word", 0x799A8, bytes.fromhex("6608"), bytes.fromhex("8208")),
+    Patch("remove_paralysis_word", 0x799A0, bytes.fromhex("6608"), bytes.fromhex("8c08")),
+    Patch("protection_paralysis_word", 0x79984, bytes.fromhex("6608"), bytes.fromhex("8c08")),
     # The least each score may be at creation (67399h, overlay code: for an ability, the highest
     # of the character's classes' least): the game raised each class's one prime requisite to 17
     # and every other score to one number a class (9 to 14), not the manual's requirements (a
@@ -1049,7 +1070,9 @@ STEADY_PACE = ("pace_pass", "pace_draw")  # walking at full speed on the map, a 
 SPELLS_MANUAL = ("bestow_curse_save", "blood_flow_save", "flaming_sphere_negates", "solid_fog_time",
                  "solid_fog_rounds", "spell_turning_time", "spell_turning_rounds", "cause_fear_time",
                  "quicksand_time", "quicksand_no_save", "pebble_damage", "magical_stone_damage",
-                 "ironskin_charges")  # the spells as the manual has them (spells_manual)
+                 "ironskin_charges", "stinking_cloud_dice", "stinking_cloud_round", "chaos_int",
+                 "free_action_stuck", "free_action_loop", "free_action_word", "remove_paralysis_word",
+                 "protection_paralysis_word")  # the spells as the manual has them (spells_manual)
 PARTY_SPREAD = ("party_spread", "party_gather")  # the whole party in view after a load and a fight
 
 

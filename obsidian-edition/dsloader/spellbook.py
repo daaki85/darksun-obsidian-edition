@@ -4,6 +4,7 @@
 import struct
 from typing import List, NamedTuple, Optional
 
+from . import game
 from .game import (CATEGORY_DODGE, KIND_TO_SAVE, EFFECT_NAMES, EFFECT_RULES, NEW_SPELL_LEVELS, NEW_SPELLS, PARTY_SIZE,
                    PRIEST6_LEVEL, PRIEST6_SPELLS, HEAL_SPELL, HARM_SPELL, THORNS_SPELL, SUNSTROKE_SPELL,
                    HEARTSEEKER_SPELL, WATER_LIFE_SPELL, WHIRLWIND_SPELL, RESTORE_YOUTH_SPELL,
@@ -142,6 +143,8 @@ def lasts_text(gd: GameData, spell: int, rec: bytes) -> str:
     each = "caster level" if per_levels == 1 else f"{per_levels} caster levels"
     each += f" (level {adjust:+d})" if adjust else ""
     dice = (f"{count}d{sides}" if sides > 1 else str(count)) if count else ""
+    more = game.duration_bonus(spell, rec)  # (Stinking Cloud's 1d4+1: DSCLOG's STINK_SITE)
+    dice += f"+{more}" if more and dice else ""
     if unit < 0:  # a number of uses: blows stopped, images, one attack...
         what, times = "charge", -unit
     elif unit % ROUND == 0:

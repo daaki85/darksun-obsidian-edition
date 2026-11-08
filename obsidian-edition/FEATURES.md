@@ -1033,8 +1033,8 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#enlarges-dice).
 
 #### Spells as the manual describes them
 
-Ten spells whose saves, times or damage in the game's records part from the
-manual (pp. 29-40), set as the manual has them. The box takes effect from the
+Thirteen spells whose saves, times, damage or effects part from the manual
+(pp. 29-40), set as the manual has them. The box takes effect from the
 next start (it changes the game's spell records as the Loader writes the game's
 copy); unticked, they are the game's.
 
@@ -1050,6 +1050,26 @@ copy); unticked, they are the game's.
 | Turn Pebble to Boulder | 6d6 (6-36) | 3d6+8 (11-26) |
 | Magical Stone | one stone, 1d4 | three stones, 3d4 |
 | Ironskin | 1d6 blows stopped | a blow stopped a caster level |
+| Stinking Cloud | 1d6 rounds | 1d4+1 rounds |
+| Chaos | only warriors may save | warriors, and creatures of INT 21 or more or 4 or less |
+| Free Action | ends Paralyzed and Slowed only | also frees the Stuck: Web, Solid Fog, Quicksand, Entangle, Grease (a Poisoned creature stays Paralyzed, as in the game) |
+
+**Known differences left as they are.** The game has no way to do these as the
+manual says, or the change would make a different spell rather than fix one:
+
+| Spell | The manual | The game |
+|---|---|---|
+| Confusion, Chaos | a save each round | one save, as the spell lands |
+| Mirror Image | images last 3 rounds a level | images last until struck (an effect lasts either uses or a time) |
+| Shield | better saves against missiles | the game has no saves against missiles; Shield's AC 4 works, and it stops Magic Missile |
+| Color Spray | only creatures above the caster's level save | every creature saves |
+| Invisibility | ends when its creature casts any spell | ends on an attack, or a spell at an enemy |
+| Hold Undead | undead with no more hit dice than the caster's level | any undead: the game checks no level (traced in DSUN.EXE: its target test, the spell's landing and save code have no comparison) |
+| Protection from Normal Missiles, Deflection, Inertial Barrier | stop normal missiles (Inertial Barrier: halves breath, missiles, gas, acid) | one effect for all three: a missile weapon's hit does no damage, and breath weapons miss outright; no spell is stopped, Magic Missile included. They differ only in time (a turn a level; level + 5d3 rounds; while kept up), who can have them (anyone touched; the caster alone) and cost |
+| Control Body | the controlled creature fights at -6 | Charmed 5 rounds, no -6 |
+| Mass Domination | up to five creatures | one |
+| Detonate | 1d10 to everyone within 10' | the target only |
+| Minute Meteors | five meteors of 1d4, +2 to hit | one roll of 1d4 a caster level (at most 10d4) on one target, no to-hit roll (no spell rolls to hit in the game; Acid Arrow, Turn Pebble to Boulder, Magical Stone and Condense always hit) |
 
 What else the manual and the game disagree on, and why the rest is left:
 [reports/spells-against-the-manual.md](../reports/spells-against-the-manual.md)

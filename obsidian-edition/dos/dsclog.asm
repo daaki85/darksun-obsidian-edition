@@ -14416,6 +14416,38 @@ con_save:
 .done:  pop es
         iret
 
+; STINK_SITE (gamepatch "stinking_cloud_round", with the spells as the manual has them): in the
+; routine working out a spell's time from its record (76CB3h), "les bx,[bp-4]" (the record) before
+; the rounds are multiplied by the unit, EAX the rounds (a caster level's share and the dice).
+; Stinking Cloud's (spell 22, its record's dice made 1d4) gets a round more: AD&D's 1d4+1, which
+; the record can't say (the dice routine's bonus is pushed as 0). [BP+6] the spell.
+stink_site:
+        les bx, [bp - 4]
+        cmp word [bp + 6], 22
+        jne .r
+        inc eax
+.r:     iret
+
+; CHAOS_SITE (gamepatch "chaos_int", with the spells as the manual has them): the save modifiers'
+; "sub si,100" (79F80h) for a creature with no warrior levels saving against Chaos: the manual lets
+; a creature of INT 21 or more, or 4 or less, save as well. The target's creature record [BP-0Ah]
+; (far), its INT at +25h; SI the save's modifier so far.
+chaos_site:
+        push es
+        push bx
+        push ax
+        les bx, [bp - 0x0A]
+        mov al, [es:bx + 0x25]
+        cmp al, 21
+        jge .save
+        cmp al, 4
+        jle .save
+        sub si, 100
+.save:  pop ax
+        pop bx
+        pop es
+        iret
+
 REQ_REST equ 0
 rest_site:
         push si
@@ -17051,6 +17083,8 @@ CR_NAME4_SITE equ NS_IMAGE + 65 ; 63B2Dh: none typed, the game's put back (CR_NA
 CR_AGE_CON_SITE equ NS_IMAGE + 66 ; 63A13h: PSP drawn after a click on CON, the roll kept (CR_AGE_CON)
 CR_OPEN_SITE equ NS_IMAGE + 67  ; 65C68h: the creation screen opening, for a new member or EDIT (CR_OPEN)
 CR_HP_SITE equ NS_IMAGE + 68    ; 63AC3h, 63EDAh: the hit points drawn again, the THAC0 after them (CR_HP)
+STINK_SITE equ NS_IMAGE + 69    ; 76D73h: a spell's time worked out, before the unit (STINK_SITE)
+CHAOS_SITE equ NS_IMAGE + 70    ; 79F80h: Chaos's -100 on a save by anyone not a warrior (CHAOS_SITE)
 ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
         cmp byte [cs:rl_site], NS_KNOWN
         je ns_known
@@ -17146,6 +17180,10 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je regen_site
         cmp byte [cs:rl_site], CON_SITE
         je con_save
+        cmp byte [cs:rl_site], STINK_SITE
+        je stink_site
+        cmp byte [cs:rl_site], CHAOS_SITE
+        je chaos_site
         cmp byte [cs:rl_site], CR_AGE_SITE
         je cr_age
         cmp byte [cs:rl_site], CR_AGE_CON_SITE

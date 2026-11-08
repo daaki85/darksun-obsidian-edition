@@ -356,6 +356,16 @@ DOUBLED_FLAGS = 0x86
 OLD_SETTING_NAMES = {"new_spells": "cats_grace"}
 
 
+STINKING_CLOUD = 22
+STINKING_CLOUD_MANUAL_DICE = 0x41  # (its record's +4 with the spells as the manual has them: 1d4)
+
+
+def duration_bonus(spell: int, rec: bytes) -> int:
+    """A spell's rounds beyond its record's (DSCLOG's STINK_SITE: Stinking Cloud's 1d4+1, with the
+    spells as the manual has them, told by the record's dice made 1d4)."""
+    return 1 if spell == STINKING_CLOUD and len(rec) > 4 and rec[4] == STINKING_CLOUD_MANUAL_DICE else 0
+
+
 def rules_from_settings(settings: dict) -> int:
     return sum(bit for key, bit in RULE_SETTINGS
                if settings.get(key, settings.get(OLD_SETTING_NAMES.get(key, key), True)))
@@ -1373,12 +1383,15 @@ class GameData:
         rule = self.spell_damage(spell)
         per_levels, adjust = (rule.per_levels, rule.adjust) if rule else (1, 0)
         levels = (max(level, 1) + adjust) * per_level // per_levels
-        total = min((levels + roll) * unit, 0x7FFF)
+        more = duration_bonus(spell, rec)
+        total = min((levels + roll + more) * unit, 0x7FFF)
         how = []
         if per_level:
             how.append(f"{per_level} for each " + ("caster level" if per_levels == 1 else f"{per_levels} caster levels")
                        + (f" ({signed_text(adjust)})" if adjust else "") + f" = {levels}")
         how.append(f"{roll} from the dice")
+        if more:
+            how.append(f"{more} more")
         return total, " + ".join(how)
 
     def damage_halved_by(self, target: int, spell: int) -> Optional[str]:

@@ -61,7 +61,15 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
   3 rounds a level (was one spell, never ending); Cause Fear 1d4 rounds (was 1 a level); Quicksand 1
   round a level, no save (was 1 round, a save); Turn Pebble to Boulder 3d6+8 (was 6d6); Magical Stone
   3d4 (was 1d4); Ironskin a blow a level (was 1d6). From reports/spells-against-the-manual.md's
-  group 2. (Free Action freeing the Stuck and Minute Meteors to follow.)
+  group 2. Then with the same switch: **Stinking Cloud** 1d4+1 rounds (was 1d6: the record's dice
+  1d4, and DSCLOG's STINK_SITE adds the round, which the record can't); **Chaos** lets a creature of
+  INT 21+ or 4 or less save as well as warriors (CHAOS_SITE, at the save modifiers' 79F80h);
+  **Free Action** also frees the Stuck (Web, Solid Fog, Quicksand, Entangle, Grease): its handler,
+  shared with Remove Paralysis and Protection from Paralysis, made a loop over the effects to remove
+  through its own two far calls (a Poisoned creature still stays Paralyzed, as the game has it).
+  FEATURES lists what is left as it is and why (Hold Undead's hit dice limit: not in the game's code
+  at all; Protection from Normal Missiles, Deflection and Inertial Barrier: one effect). Tests:
+  `test_manual_spells`.
 - **A fight's summary as it ends** (mock-up G's): `Fight over: 2 rounds, 1 kill; the party dealt 28
   damage and took 6`, then each member's attacks hit, damage dealt, kills and damage taken, written
   once the game's fight flag has been down 2 seconds (each arena wave gets its own). A kill goes to
