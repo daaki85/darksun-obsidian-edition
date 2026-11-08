@@ -34,6 +34,7 @@ FAR = 0xC000                    # (the far block, as the other tests put it)
 LIST_SEG, PIC_SEG = 0x2000, 0x7000
 CAM = (1000, 500)
 HDR_SHADOWS_ON, HDR_DUST_ON, HDR_RINGS_ON, HDR_FAR_SEG, HDR_GHOST_SEG, HDR_GHOST_ON = 220, 234, 244, 142, 1826, 1828
+HDR_RING_TAB, HDR_RED = 246, 248  # (their offsets in the far block)
 OBJ_LIST, OBJ_COUNT, MAP_THINGS, CACHE_LAST, CAM_X = 0x6690, 0x1F72, 0x6694, 0x1F84, 0x1178
 LOAD = (GAME_DS - 0x4356) & 0xFFFF
 CACHE = ((LOAD + 0x3E60) & 0xFFFF) * 16
@@ -168,6 +169,12 @@ class Scene:
     def put(self, name, data, extra=0):
         self.mu.mem_write(TSR * 16 + self.sym[name] + extra, data)
 
+    def put_far(self, field, data):
+        """DATA at the far block's offset the header's FIELD holds (RING_TAB's, RED's)."""
+        hdr = self.sym["hdr"]
+        off, = struct.unpack_from("<H", self.image, hdr + field)
+        self.mu.mem_write(FAR * 16 + off, data)
+
     def get(self, name, n, extra=0):
         return bytes(self.mu.mem_read(TSR * 16 + self.sym[name] + extra, n))
 
@@ -222,7 +229,7 @@ class Figures(Scene):
         self.put("dark_ready", b"\x01")
         self.word("sc_seg", FAR)
         self.put("light", bytes(0 if c % 13 == 0 else (c + 2) & 0xFF for c in range(256)))
-        self.put("red", bytes(0 if c % 17 == 0 else (c * 5 + 1) & 0xFF for c in range(256)))
+        self.put_far(HDR_RED, bytes(0 if c % 17 == 0 else (c * 5 + 1) & 0xFF for c in range(256)))
         things = rng.sample(range(520), 60)
         self.things = things
         self.ds(OBJ_LIST, struct.pack("<HH", 0, LIST_SEG))
@@ -257,7 +264,7 @@ class Figures(Scene):
         self.put("shadow_tab", bytes(tab))
         ring = bytearray(520)
         ring[things[2]], ring[things[6]] = 1, 2
-        self.put("ring_tab", bytes(ring))
+        self.put_far(HDR_RING_TAB, bytes(ring))
         puffs = bytearray()
         for n in range(10):
             sx, sy = spots[n]

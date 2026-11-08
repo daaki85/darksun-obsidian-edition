@@ -401,6 +401,7 @@ class StatesTests(unittest.TestCase):
         g.mem[HDR + c.TSR_PANEL_SEG:HDR + c.TSR_PANEL_SEG + 2] = c.struct.pack("<H", 0x800)
         g.mem[HDR + c.TSR_HDR_OFF:HDR + c.TSR_HDR_OFF + 2] = c.struct.pack("<H", 0)
         g.mem[HDR + c.TSR_DAC:HDR + c.TSR_DAC + 2] = c.struct.pack("<H", 0x2000)
+        g.mem[HDR + c.TSR_FAR_SEG:HDR + c.TSR_FAR_SEG + 2] = c.struct.pack("<H", HDR // 16)  # (DAC in the far block)
         self.panel.log.add(FIGHT)
         for size in (c.DOCKED, c.EXPANDED):
             self.panel.resize(size)
@@ -429,6 +430,7 @@ class StatesTests(unittest.TestCase):
         g.mem[HDR + c.TSR_PANEL_SEG:HDR + c.TSR_PANEL_SEG + 2] = c.struct.pack("<H", 0x800)
         g.mem[HDR + c.TSR_HDR_OFF:HDR + c.TSR_HDR_OFF + 2] = c.struct.pack("<H", 0)
         g.mem[HDR + c.TSR_DAC:HDR + c.TSR_DAC + 2] = c.struct.pack("<H", 0x2000)
+        g.mem[HDR + c.TSR_FAR_SEG:HDR + c.TSR_FAR_SEG + 2] = c.struct.pack("<H", HDR // 16)  # (DAC in the far block)
         self.panel.resize(c.COLLAPSED)
         self.panel.log.add(FIGHT)
         self.panel.update(self.game, HDR, True, 1, "Round 1", NAMES)

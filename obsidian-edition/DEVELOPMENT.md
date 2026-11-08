@@ -464,8 +464,8 @@ spell known, through the far pointer at `DS:0x132A` (in a save, `SAVE` chunk
 
 ## Room in the helper
 
-DSCLOG has to load into upper memory, or the game loses 62 KB of conventional
-memory (570 KB free rather than 632 KB). It keeps its code and data in one
+DSCLOG has to load into upper memory, or the game loses about 61 KB of conventional
+memory (570 KB free rather than 632 KB, measured with an older, larger helper). It keeps its code and data in one
 64 KB segment, all reached through CS, and its big buffers apart, in its far
 block. With the map open the game needs 60,000 bytes in one piece each time it
 opens the view ("Out of memory in OEOpenGraph" when it can't), so every block
@@ -480,52 +480,78 @@ sizes; the paragraphs after it say how each piece got there.
 | Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (86 KB before the music buffer moved out, 53 KB before the overlay buffer did; the unmodded game's 57 KB) |
 | C000h-C7FFh | 32 KB | the video BIOS (ROM) |
 | C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
-| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 62.5 KB (63,952 bytes with its PSP, measured), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, about 35.5 KB (36,336 bytes, measured) free in one piece |
+| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 60.75 KB (62,208 bytes with its PSP), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, 36.5 KB (37,392 bytes) free in one piece and 720 bytes between the helper and the overlay buffer (measured 2026-11-08, `memaudit.py`) |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
-| 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's far block, 57.6 KB, 6.4 KB free |
+| 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's far block, 63.3 KB (64,826 bytes), 694 bytes free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
 
 **The budget.** Each limit fails the build when passed (a negative `times`):
 
-- The helper's segment: its image with the install code is 63,792 bytes
-  (`image_len`; `DSCLOG.EXE` is 32 bytes more, 63,824, with its header), so
-  1,744 bytes of its 64 KB are spare. This is the limit for new code. Buffers
-  that start as zeros and aren't needed while installing can be laid over the
-  install code (1,760 bytes from `resident_end`), as `seg_space`, `area_space`
-  and `dark` are (`AFTER_INSTALL`, 1,664 bytes, declared with `resb` after the
-  image): `KEEP` zeroes them before its first DOS call and keeps memory to
-  `kept_end`, and the build fails if they outgrow the install code. Up to the
-  install code's size, each byte moved there is a byte of the segment freed
-  (`KeepTests`). Buffers the Loader finds at fixed header offsets stay where
-  they are. (The
-  install's 256-byte stack is past the image, in its own segment: `SS` in the
-  EXE's header is the paragraph after the image; the helper asks DOS for both,
-  `LOAD_EXTRA`.) Code shared by
-  many handlers is written once (`OVR_BACK`, the way back through the overlay
-  manager's frame; `SHEET_CLASSES`). Text the game reads from RESOURCE.GFF
-  belongs in the Loader's copy of it, not in the helper (`spelltexts.py`: the
-  descriptions moved there freed 1.6 KB), and so does data read from the
-  player's game (the pointer's picture, `POINTER.BIN`). What each change took
-  is in the CHANGELOG.
-- The far block: it ends at `FAR_END` (58,970), so the HMA has 6,566 bytes left
+- The helper's segment: what it reaches through CS is what stays (to
+  `resident_end`, 60,288 bytes) and the buffers laid over the install code
+  after it (`AFTER_INSTALL`, 1,664), together `kept_end`, 61,952 bytes, so
+  3,584 bytes of its 64 KB are spare. This is the limit for new code. The image
+  (`image_len`) is as long: `DSCLOG.EXE` is 32 bytes more, 61,984, with its
+  header. Buffers that start as zeros and aren't needed while installing are
+  laid over the install code, as `seg_space`, `area_space` and `dark` are
+  (declared with `resb` after the image): `KEEP` zeroes them before its first
+  DOS call and keeps memory to `kept_end` (`KeepTests`). The segment holds
+  whichever is longer, the install code or `AFTER_INSTALL`; the install code is
+  now the shorter (1,576 bytes: the vectors set from a table, `ALL_VECTORS`,
+  each vector's byte and its handler's offset), so the image is made up to
+  `AFTER_INSTALL`'s size with zeros (88 bytes at present), and those 88 bytes
+  are room for more of `FAR_DATA` (below) at no cost to the segment. Moving a
+  zeroed buffer into `AFTER_INSTALL` now frees nothing: it lengthens what it
+  leaves. The way to free the segment is to move a buffer to the far block
+  (FS, ES or DS set to `FAR_SEG` around its use; the drawing passes already
+  keep FS on it for their whole run) or, for data that starts with values, to
+  the far block's `FAR_DATA`, its bytes kept in the install code's room and
+  copied there by `FAR_INIT`. Buffers the Loader finds through the header keep
+  their header field, its value then an offset in the far block, which the
+  Loader reads at `far_seg` (+142) x 16 (DAC, RING_TAB, RED).
+  (The install's 256-byte stack is past the image, in its own segment: `SS` in
+  the EXE's header is the paragraph after the image; the helper asks DOS for
+  both, `LOAD_EXTRA`.) Code shared by many handlers is written once
+  (`OVR_BACK`, the way back through the overlay manager's frame;
+  `SHEET_CLASSES`). Text the game reads from RESOURCE.GFF belongs in the
+  Loader's copy of it, not in the helper (`spelltexts.py`: the descriptions
+  moved there freed 1.6 KB), and so does data read from the player's game (the
+  pointer's picture, `POINTER.BIN`). What each change took is in the CHANGELOG.
+- The far block: it ends at `FAR_END` (64,842), so the HMA has 694 bytes left
   for more buffers.
 - Upper memory without `UMBPLUS.COM` (`UMB_ROOM`, D00Ah to F000h, 8,182
   paragraphs): the helper as it loads and the overlay buffer (`UMB_NEED`, the
-  header's +372) need 6,083, and `test_fits_upper_memory` checks it too; what
+  header's +372) need 5,968, and `test_fits_upper_memory` checks it too; what
   stays once installed, with the music buffer and the see-through figures'
-  tables (`UMB_KEPT`: all four blocks and their MCBs), 7,699, so 483 (7.5 KB)
+  tables (`UMB_KEPT`: all four blocks and their MCBs), 7,590, so 592 (9.25 KB)
   are spare.
+
+**What moved where (2026-11-08)**, freeing 3,136 bytes of the segment (3,040 of
+what stays, 190 paragraphs of upper memory): DAC (768), RING_TAB (520) and RED
+(256), the Loader's tables for the rings and the palette copy, to the far block
+(`FAR_DAC`, `FAR_RING_TAB`, `FAR_RED`; the header's +238, +246, +248 are their
+offsets there); how far each thing has walked for the dust (520) to
+`FAR_WALKED`; the companion's item types (600) to `FAR_TYPES`, the first of
+`FAR_DATA` (its bytes at the header's +144 as built, copied to +172's offset,
++174 bytes; the tests do the same); the vectors set from a table (about 790
+bytes less install code); the AD&D XP table as words of 50 XP, the ranger's
+row the gladiator's (448 to 196 bytes); the companion's item names
+NUL-terminated (736 to 579 bytes, padded as they are copied).
 
 To check the sizes after a change, build to a scratch file (`nasm -f bin -o
 /tmp/x.exe dos/dsclog.asm`, from `obsidian-edition/`) and look at its size.
 
 **The far block** (`FAR_SEG`, the header's +142) holds, at fixed offsets from
-`FAR_RING` (10h) to `FAR_END`, 58,954 bytes: the dice log's ring (`NENT` 63
+`FAR_RING` (10h) to `FAR_END`, 64,826 bytes: the dice log's ring (`NENT` 63
 entries of `ESIZE` 192 bytes), the panel's picture, the shadows' cache
 (`FAR_SC`), the text buffer, the shadows' spans and each thing's place as last
-seen (for the dust), the frames steady pace holds back, and the crash report's
+seen (for the dust), the frames steady pace holds back, the crash report's
 copy of the stack and the last text written to the screen (`DOS_QUIT`,
-`DOS_WRITE`). `FAR_INIT` (install code) puts it in the **HMA** (FFFFh:0010h,
+`DOS_WRITE`), the dust's table, the palette as last read (`FAR_DAC`), the
+rings' tables (`FAR_RING_TAB`, `FAR_RED`), how far each thing has walked
+(`FAR_WALKED`), and `FAR_DATA`: bytes that start with values (the item types,
+`FAR_TYPES`), copied in from the image by `FAR_INIT` after it clears the
+block. `FAR_INIT` (install code) puts it in the **HMA** (FFFFh:0010h,
 A20 on): XMS gives it (function 01h), or, where XMS says there is none (DOSBox
 0.74's answer, 90h: its XMS blocks start at 1 MB + 64 KB, `XMS_START`), it is
 used if all zero; A20 is turned on with XMS function 03h and checked

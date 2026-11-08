@@ -32,7 +32,8 @@ from typing import Dict, List, Optional, Sequence, Tuple
 from . import game
 
 TSR_GHOST_SEG, TSR_GHOST_ON = 1826, 1828  # in DSCLOG's header
-TSR_DAC = 238  # (DSCLOG's copy of the palette: the offset of DAC, 768 values of 0-63)
+TSR_DAC = 238  # (DSCLOG's copy of the palette: the offset of DAC in its far block, 768 values of 0-63)
+TSR_FAR_SEG = 142  # (its far block's segment)
 TSR_HDR_OFF = 20
 REP_COUNT = 32
 GH_BLEND, GH_REP = 0, REP_COUNT * 256
@@ -166,9 +167,9 @@ class Ghosts:
             self._on, self._written, self._palettes = False, None, -1
             return
         if palettes != self._palettes and palettes:
-            base = tsr_hdr - struct.unpack("<H", guest.read(tsr_hdr + TSR_HDR_OFF, 2))[0]
+            far = struct.unpack("<H", guest.read(tsr_hdr + TSR_FAR_SEG, 2))[0] * 16
             dac_off, = struct.unpack("<H", guest.read(tsr_hdr + TSR_DAC, 2))
-            self._dac = guest.read(base + dac_off, 768)
+            self._dac = guest.read(far + dac_off, 768)
             self._palettes = palettes
         if self._dac is not None and key(self._dac) != self._written:
             wanted = key(self._dac)

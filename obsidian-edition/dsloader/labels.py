@@ -136,6 +136,4 @@ class Labels:
 
 
 def _dac(guest, tsr_hdr: int) -> bytes:
-    base = tsr_hdr - struct.unpack("<H", guest.read(tsr_hdr + combatlog.TSR_HDR_OFF, 2))[0]
-    dac_off, = struct.unpack("<H", guest.read(tsr_hdr + combatlog.TSR_DAC, 2))
-    return guest.read(base + dac_off, 768)
+    return combatlog.tsr_dac(guest, tsr_hdr)

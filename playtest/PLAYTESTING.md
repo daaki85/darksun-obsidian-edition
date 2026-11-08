@@ -56,6 +56,16 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
    `dos/DSCLOG.EXE` (less its 20h header, from DSCLOG's segment: C91B0h in the 2026-11 runs), and
    read the vectors it hooks in the table at segment 0 (each its own handler: two probes on one
    vector once made every attack's AC 255). `ghostchk.py` shows the see-through block is there.
+   Compare code, not the whole image: the variables in it differ once the game runs (1,235 bytes
+   did, 2026-11-08); take a routine's offset from a symbol map (`[map all FILE]` in a scratch copy
+   of the source, as framerate.py's `symbols()`) and compare 40 bytes there. Since 2026-11-08 the
+   vectors are set from a table in the install code (`all_vectors`: the vector byte, then its
+   handler's offset): read it from the EXE and check each vector in segment 0 against it. **The
+   far block** (`far_seg`, the header's +142: FFFFh, the HMA, so linear FFFF0h + offset) now holds
+   DAC (+238's offset), RING_TAB (+246), RED (+248), the dust's walked counts and the item types
+   (FAR_DATA: +172's offset, +174 bytes, which should equal the EXE's bytes at +144's offset as
+   built): a tool reading those at the helper's segment reads stale bytes (`dacwatch.py` and
+   `ghostwatch.py` were changed for it).
    `dec.py` stops with "unknown term" when LO falls inside a command: start it at a command
    (or decode the whole script with `dsloader.gpl.load_scripts` and `decode`). Every script in
    the built copy should decode (2026-11-05: eleven didn't, and a later change gave up on one).
@@ -248,6 +258,14 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   the map hold. The pens: 143 free after loading, 131 in the alarm fight; the arena on arrival 191
   (the pens' all freed). `arenatrip.sh` loads `pens-after-scar` (through `toalarm.sh`), rests in the
   fire room till Kurzak calls, and takes the party to the arena, counting the things on the way.
+- **Memory after the 2026-11-08 memory pass** (logs/2026-11-08-memory-pass.md): `memaudit.py` on
+  the map in the pens: the helper's block 62,208 bytes with its PSP, the overlay buffer 32,992,
+  the see-through tables 14,160, the music buffer 12,016, 37,392 free in one piece. **View
+  Character** (I, then the inventory's bottom icons; the Effects screen is the one at 243,187, View
+  Character at 52,171; the portraits there at 65/112, 55/110) shows each member's EXP and the next
+  level's need with its class letter ("EXP:4487 (5000 Pr)"): a quick check of the XP tables
+  (AD&D's when the header's rules_hi, +270, has bit 8). `framerate.py`'s walk clicks at y 104: from
+  `fountain-user` after its fight they land in the fountain and nobody walks (0 map units/s).
 - **Memory** (2026-11-06, logs/2026-11-06-memory-audit.md): `memaudit.py` lists every DOS block (the
   game's, DSCLOG's, the overlay buffer, the see-through tables, the music buffer, free) and the
   heap; `memsample.py LABEL` gives one line (free DOS memory after the game: 100,016 bytes on the

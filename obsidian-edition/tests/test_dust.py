@@ -4,6 +4,7 @@ import unittest
 from dsloader import dust
 
 HDR, BASE, LIGHT, DAC = 0x9000, 0x8000, 0x300, 0x400
+FAR = 0xA000  # (DSCLOG's far block, DAC's)
 SAND, SAND_LIGHT, GREY, BLUE = 20, 21, 30, 40
 
 
@@ -31,7 +32,8 @@ class Game:
         self.guest = Guest()
         self.guest.write(HDR + dust.TSR_HDR_OFF, struct.pack("<H", HDR - BASE))
         self.guest.write(HDR + dust.TSR_LIGHT, struct.pack("<HH", LIGHT, DAC))
-        self.guest.write(BASE + DAC, palette())
+        self.guest.write(HDR + dust.TSR_FAR_SEG, struct.pack("<H", FAR // 16))  # (DAC in the far block)
+        self.guest.write(FAR + DAC, palette())
 
 
 class DustTests(unittest.TestCase):

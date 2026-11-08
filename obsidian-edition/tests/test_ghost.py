@@ -92,6 +92,7 @@ class UpdateTests(unittest.TestCase):
         m = self.gd.guest.mem
         struct.pack_into("<H", m, self.HDR + ghost.TSR_HDR_OFF, 0)
         struct.pack_into("<H", m, self.HDR + ghost.TSR_DAC, self.DAC - self.HDR)
+        struct.pack_into("<H", m, self.HDR + ghost.TSR_FAR_SEG, self.HDR // 16)  # (DAC's: the far block)
         m[self.DAC:self.DAC + 768] = grey_palette()
         struct.pack_into("<H", m, self.HDR + ghost.TSR_GHOST_SEG, self.SEG)
         self.redraws = 0

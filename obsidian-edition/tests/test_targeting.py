@@ -82,6 +82,7 @@ class TargetingTests(unittest.TestCase):
         gd.guest.write(HDR + rings.TSR_RING_TAB, struct.pack("<H", 0x100))
         gd.guest.write(HDR + rings.TSR_RED, struct.pack("<H", 0x400))
         gd.guest.write(HDR + 238, struct.pack("<H", 0x500))
+        gd.guest.write(HDR + rings.TSR_FAR_SEG, struct.pack("<H", BASE // 16))  # (RING_TAB, RED, DAC: the far block)
         gd.creature = lambda i: b""
         r = rings.Rings()
         rings.enemies, saved = (lambda g: [42, 44]), rings.enemies

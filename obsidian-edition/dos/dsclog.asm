@@ -232,7 +232,9 @@ probe_char_off dw probe_char    ; +136 offset of PROBE_CHAR in this segment
 tbuf_seg  dw 0                  ; +138 the text buffer's segment: the far block's (FAR_SEG)
 panel_off dw FAR_PANEL          ; +140 the panel's picture's offset in PANEL_SEG's segment
 far_seg   dw 0                  ; +142 the far block's segment (FAR_INIT): its buffers from FAR_RING on
-          dw 0                  ; +144 (unused)
+far_data   dw far_data_src      ; +144 as built: where FAR_DATA's first bytes are in the image
+                                ;      (install code's room: FAR_INIT copies them, FAR_DATA_LEN, to
+                                ;      FAR_DATA; the tests do the same)
 ended     dw 0                  ; +146 the combatant whose turn just ended
 slots_off dw slots_text         ; +148 offset of SLOTS_TEXT: 4 x SLOTS_SIZE bytes, one per party
                                 ;      member, lines separated by "|", NUL-terminated (the Loader
@@ -252,7 +254,8 @@ stats_stamp dw 0                ; +164 the BIOS timer when the Loader last wrote
 stats_req  dw 0                 ; +166 counted up when a screen is about to show STATS ...
 stats_reply dw 0                ; +168 ... and set to it by the Loader once STATS are up to date
 rules      dw 0                 ; +170 rule changes the Loader turns on (RULE_HELMS, ...)
-           dw 0, 0              ; +172 (unused: once P in a conversation)
+far_data_to dw FAR_DATA         ; +172 FAR_DATA: those bytes' place in the far block ...
+far_data_len dw FAR_DATA_LEN    ; +174 ... and how many
 pick_off   dw pick_text         ; +176 offset of PICK_TEXT: what came of it, NUL-terminated (empty:
                                 ;      nothing to show)
 pick_on    dw 0                 ; +178 the Loader sets bit 0 to be asked about items used on the map
@@ -270,15 +273,15 @@ swap_on    dw 0                 ; +190 the Loader sets 1 to have the next dialog
 swap_seq   dw 0                 ; +192 counted up when it has been
 swap_off   dw swap_match        ; +194 offset of SWAP_MATCH (SWAP_SIZE bytes, NUL-terminated),
                                 ;      then SWAP_TEXT (TSIZE_SWAP bytes)
-names_off  dw extra_names       ; +196 offset of EXTRA_NAMES: the names past the game's own (NAMES_EXTRA
-                                ;      of NAME_KEPT bytes), copied into the game's table (NAME_SIZE each)
-                                ;      each time it loads
+names_off  dw extra_names       ; +196 offset of EXTRA_NAMES: the names past the game's own (NAMES_EXTRA,
+                                ;      each NUL-terminated), copied into the game's table (NAME_SIZE
+                                ;      each) each time it loads
 names_count dw NAMES_EXTRA      ; +198 how many
 names_ptr  dd 0                 ; +200 the game's name table, as last loaded with them (0: not yet)
 stealth    dw 0                 ; +204 the Loader sets bit N when party member N is hidden and
                                 ;      unheard (RULE_STEALTH): their next attack is from behind
 stealth_used dw 0               ; +206 counted up each time one is (the bit cleared)
-types_off  dw extra_types       ; +208 offset of EXTRA_TYPES: item types past the game's own
+types_off  dw FAR_TYPES         ; +208 offset of EXTRA_TYPES in the far block: item types past the game's own
                                 ;      (TYPES_EXTRA of TYPE_SIZE bytes), copied in as it loads them
 types_count dw TYPES_EXTRA      ; +210 how many
 types_first dw 0                ; +212 the number the first of them gets (the game's own count)
@@ -300,15 +303,18 @@ dust_on    dw 0                 ; +234 the Loader sets 1 once LIGHT is made, to 
                                 ;      dust (DUST)
 light_off  dw light             ; +236 offset of LIGHT: each colour's lighter one (0: none, not ground
                                 ;      dust shows on), the Loader makes it from DAC
-dac_off    dw dac               ; +238 offset of DAC: the palette as DARK was last made from it
+dac_off    dw FAR_DAC           ; +238 offset of DAC in the far block (FAR_SEG's segment): the
+                                ;      palette as DARK was last made from it
 dust_puffs dw 0                 ; +240 puffs of dust raised (counted)
 view_redraw dw 0                ; +242 the Loader sets 1 to have the view drawn again (all of it, from
                                 ;      the main loop: VIEW_AGAIN), as it is once it has been
 rings_on   dw 0                 ; +244 the Loader sets 1 to have rings drawn under the things RING_TAB
                                 ;      marks (RINGS), once RED is made
-ring_tab_off dw ring_tab        ; +246 offset of RING_TAB: a byte for each of the game's 520 things: 1 a
-                                ;      ring, 2 the chosen one's (brighter, thicker)
-red_off    dw red               ; +248 offset of RED: each colour's reddened one (0: none), as LIGHT
+ring_tab_off dw FAR_RING_TAB    ; +246 offset of RING_TAB in the far block (FAR_SEG's segment): a
+                                ;      byte for each of the game's 520 things: 1 a ring, 2 the
+                                ;      chosen one's (brighter, thicker)
+red_off    dw FAR_RED           ; +248 offset of RED in the far block: each colour's reddened one
+                                ;      (0: none), as LIGHT
 target_on  dw 0                 ; +250 the Loader sets 1 while Tab chooses an enemy (TARGETING)
 tab_seq    dw 0                 ; +252 Tab pressed (counted) ...
 back_seq   dw 0                 ; +254 ... and Shift+Tab
@@ -11905,26 +11911,34 @@ xp_need:
         cmp cx, ADND_XP_LEVELS - 1
         ja .game
         push bx
-        imul bx, si, ADND_XP_LEVELS * 4
+        mov bx, si                      ; (the ranger's row is the gladiator's, the thief's kept
+        cmp bx, 7                       ;   7th)
+        jb .row
+        mov bl, 4
+        je .row
+        mov bl, 7
+.row:   imul bx, bx, ADND_XP_LEVELS * 2
         add bx, cx
         add bx, cx
-        add bx, cx
-        add bx, cx
-        mov eax, [cs:bx + adnd_xp - ADND_XP_LEVELS * 4]
+        movzx eax, word [cs:bx + adnd_xp - ADND_XP_LEVELS * 2]
+        imul eax, eax, ADND_XP_UNIT
         pop bx
         ret
 .game:  imul eax, eax, 100
         ret
-; by class row (1-8), the XP needed at each level 0-13 (the next level's: AD&D's, levels 1-14)
+; by class row (1-8), the XP needed at each level 0-13 (the next level's: AD&D's, levels 1-14), in
+; ADND_XP_UNITs (every one a multiple of it, the most 36,000 of them); the ranger's row (7) is the
+; gladiator's, so not kept: the thief's is the 7th
 ADND_XP_LEVELS equ 14
-adnd_xp dd 0, 1500, 3000, 6000, 13000, 27500, 55000, 110000, 225000, 450000, 675000, 900000, 1125000, 1350000  ; cleric
-        dd 0, 2000, 4000, 7500, 12500, 20000, 35000, 60000, 90000, 125000, 200000, 300000, 750000, 1500000    ; druid
-        dd 0, 2000, 4000, 8000, 16000, 32000, 64000, 125000, 250000, 500000, 750000, 1000000, 1250000, 1500000 ; fighter
-        dd 0, 2250, 4500, 9000, 18000, 36000, 75000, 150000, 300000, 600000, 900000, 1200000, 1500000, 1800000 ; gladiator
-        dd 0, 2500, 5000, 10000, 20000, 40000, 60000, 90000, 135000, 250000, 375000, 750000, 1125000, 1500000 ; preserver
-        dd 0, 2200, 4400, 8800, 16500, 30000, 55000, 100000, 200000, 400000, 600000, 800000, 1000000, 1200000 ; psionicist
-        dd 0, 2250, 4500, 9000, 18000, 36000, 75000, 150000, 300000, 600000, 900000, 1200000, 1500000, 1800000 ; ranger
-        dd 0, 1250, 2500, 5000, 10000, 20000, 40000, 70000, 110000, 160000, 220000, 440000, 660000, 880000     ; thief
+ADND_XP_UNIT   equ 50
+adnd_xp dw 0, 30, 60, 120, 260, 550, 1100, 2200, 4500, 9000, 13500, 18000, 22500, 27000  ; cleric
+        dw 0, 40, 80, 150, 250, 400, 700, 1200, 1800, 2500, 4000, 6000, 15000, 30000  ; druid
+        dw 0, 40, 80, 160, 320, 640, 1280, 2500, 5000, 10000, 15000, 20000, 25000, 30000  ; fighter
+        dw 0, 45, 90, 180, 360, 720, 1500, 3000, 6000, 12000, 18000, 24000, 30000, 36000  ; gladiator
+        dw 0, 50, 100, 200, 400, 800, 1200, 1800, 2700, 5000, 7500, 15000, 22500, 30000  ; preserver
+        dw 0, 44, 88, 176, 330, 600, 1100, 2000, 4000, 8000, 12000, 16000, 20000, 24000  ; psionicist
+        ; (the ranger's, row 7: the gladiator's, row 4)
+        dw 0, 25, 50, 100, 200, 400, 800, 1400, 2200, 3200, 4400, 8800, 13200, 17600  ; thief
 
 ; PROBE_XP: INT VEC_XP replaces "imul eax,eax,64h" (4 bytes: INT + 2 NOPs) where the game takes the
 ; XP for the next level from its table, at a level up (DSUN.EXE 87BBBh) and on View Character
@@ -19307,7 +19321,7 @@ ns_fist:
 ; numbers to its own 322.
 NAMES_OWN    equ 0x142
 NAME_SIZE    equ 25
-NAME_KEPT    equ 16                 ; (EXTRA_NAMES' entries: 15 letters at most, as the game's own)
+NAME_KEPT    equ 16                 ; (EXTRA_NAMES' entries: 15 letters at most, as the game's own, and a NUL)
 NAMES_EXTRA  equ 46
 NAMES_PTR    equ 0x166D         ; DS: far pointer to the name table
 
@@ -19355,11 +19369,13 @@ probe_names_fill:
         mov si, extra_names
         mov dx, NAMES_EXTRA
         cld
-.name:  mov cx, NAME_KEPT
-        rep movsb
-        xor al, al
-        mov cx, NAME_SIZE - NAME_KEPT   ; (the rest of the game's 25, blank)
-        rep stosb
+.name:  mov cx, NAME_SIZE
+.char:  lodsb                           ; (EXTRA_NAMES' each up to its NUL ...
+        stosb
+        dec cx
+        or al, al
+        jnz .char
+        rep stosb                       ;   ... then the rest of the game's 25, blank)
         dec dx
         jnz .name
         pop es
@@ -19450,9 +19466,8 @@ probe_types_fill:
         mov cx, TYPE_SIZE
         div cx
         mov [cs:types_first], ax
-        push cs
-        pop ds
-        mov si, extra_types
+        mov ds, [cs:far_seg]
+        mov si, FAR_TYPES
         mov cx, TYPES_EXTRA * TYPE_SIZE
         cld
         rep movsb
@@ -19464,214 +19479,63 @@ probe_types_fill:
         pop cx
         pop ax
 .out:   iret
-; the types, numbered from the game's count (115): the Loader's (the same as TYPES in
-; dsloader/npcitems.py), the rest unused
-extra_types:
-        ; a metal short sword: the metal long sword's type (63), 1d6
-        db 0x01, 0x00, 0x30, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
-        db 0x06, 0x01, 0x00, 0x00, 0x72, 0x16, 0x00, 0x01
-        ; a cloak of protection: the Cloak's type (65), no material shown, its plus counting
-        ; for AC (bit 80h of +0Fh, as armour's) with an AC of its own of 0
-        db 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x0A, 0x00, 0x40, 0x08, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x80, 0xFF, 0x1F, 0x00, 0x01
-        ; a bone helm: the Helm's type (5), of bone (to go with the bone scale armour), and like
-        ; it for the classes that can wear it (+10h: no thieves, where the Helm allows them)
-        db 0x00, 0x00, 0x00, 0x00, 0x0F, 0x00, 0xFA, 0x00, 0x01, 0x06, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x00, 0x00
-        ; a bone short sword (a new warrior's, weaponchoice.py): the short sword's, of bone (+8),
-        ; half its weight (+4), for the classes of the bone long sword and psionicists (+10h)
-        db 0x01, 0x00, 0x30, 0x00, 0x0F, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01
-        db 0x06, 0x01, 0x00, 0x00, 0x78, 0x17, 0x00, 0x01
-        ; a bone axe: the Axe's (22), of bone, for the bone weapons' classes (a water cleric's,
-        ; not an earth cleric's); weighing 30 (+4), not HEAVY (over 30: the game's 70), as the
-        ; obsidian one: light enough for the off hand
-        db 0x01, 0x00, 0x10, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01
-        db 0x08, 0x01, 0x00, 0x00, 0x78, 0x17, 0x00, 0x01
-        ; an obsidian short sword: the short sword's, of obsidian, for the obsidian long sword's
-        ; classes and psionicists
-        db 0x01, 0x00, 0x30, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01
-        db 0x06, 0x01, 0x00, 0x00, 0x7E, 0x17, 0x00, 0x01
-        ; an obsidian axe: the Axe's, of obsidian, for the obsidian weapons' classes; weighing 30
-        db 0x01, 0x00, 0x10, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01
-        db 0x08, 0x01, 0x00, 0x00, 0x7E, 0x17, 0x00, 0x01
-        ; a plain metal short sword: the first's (Kurzak's, which is his alone: Shadowseeker)
-        db 0x01, 0x00, 0x30, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
-        db 0x06, 0x01, 0x00, 0x00, 0x72, 0x16, 0x00, 0x01
-        ; bracers of defense (BRACERS): the cloak of protection's, worn on the arms (+9: 3, the
-        ; arm armour's slot), their plus counting for AC; not armour to anything else here
-        db 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x0A, 0x00, 0x40, 0x03, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x80, 0xFF, 0x1F, 0x00, 0x01
-        ; metal versions of the game's plain weapons that have none (dsloader/worldgear.py):
-        ; each its type of metal (+8: 4), for the metal long sword's clerics (+10h's low nibble:
-        ; 2, earth's): the Dagger's (33), an air cleric's too (3), as every dagger
-        db 0x01, 0x00, 0x20, 0x00, 0x0A, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
-        db 0x04, 0x01, 0x00, 0x00, 0xF3, 0x1F, 0x00, 0x00
-        ; the Mace's (20)
-        db 0x01, 0x00, 0x08, 0x00, 0x64, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
-        db 0x06, 0x01, 0x01, 0x00, 0x72, 0x16, 0x00, 0x01
-        ; the Great Axe's (2)
-        db 0x01, 0x00, 0x10, 0x00, 0x46, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
-        db 0x0A, 0x01, 0x00, 0x40, 0x62, 0x16, 0x00, 0x02
-        ; the pick's (112)
-        db 0x01, 0x00, 0x20, 0x00, 0x28, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
-        db 0x04, 0x01, 0x01, 0x00, 0x72, 0x17, 0x00, 0x00
-        ; the Polearm's (19)
-        db 0x01, 0x00, 0x30, 0x00, 0x96, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
-        db 0x0A, 0x01, 0x00, 0x40, 0x72, 0x16, 0x00, 0x06
-        ; a circlet and a crown (dsloader/worldgear.py): worn on the head (+9: 6), as the
-        ; Necklace's (36) of no material, not armour (+0Fh: no 80h), for every class
-        db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0xFA, 0x00, 0x40, 0x06, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0x05, 0x00, 0xFA, 0x00, 0x40, 0x06, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
-        ; plate mail (the Warden's Plate, dsloader/worldgear.py): the Chain's chest, arm and
-        ; leg armour (57, 58, 59), heavier (+4: 250, 75, 75), AC 3, 2, 2 (+12h; chain's 2, 2, 1)
-        db 0x00, 0x00, 0x00, 0x00, 0xFA, 0x00, 0xFA, 0x00, 0x04, 0x01, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x03, 0x01
-        db 0x00, 0x00, 0x00, 0x00, 0x4B, 0x00, 0xFA, 0x00, 0x04, 0x03, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x02, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0x4B, 0x00, 0xFA, 0x00, 0x04, 0x0A, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x02, 0x00
-        ; the Cloak and Boots of Elvenkind (ELVEN_CLOAK, ELVEN_BOOTS: dsloader/worldgear.py,
-        ; their stealth stealth.py): the Cloak's (65) and the Boots' (68), for thieves and rangers
-        ; only (+10h: 600h, their class bits; a multiclass with either may wear them)
-        db 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x0A, 0x00, 0x05, 0x08, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x01
-        db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x0A, 0x00, 0x85, 0x04, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00
-        ; Galefang's (dsloader/worldgear.py): the metal Dagger's, air clerics' too (+10h: 1FF3h;
-        ; fire and water clerics not); the type its own, as it was made when no other dagger was
-        ; an air cleric's
-        db 0x01, 0x00, 0x20, 0x00, 0x0A, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
-        db 0x04, 0x01, 0x00, 0x00, 0xF3, 0x1F, 0x00, 0x00
-        ; bone and obsidian great axes (dsloader/weaponchoice.py, worldgear.py): the metal one's,
-        ; of bone (+8: 1; lighter, +4: 50, still too heavy to backstab with; water clerics, 1668h)
-        ; and of obsidian (+8: 3; earth, fire and water clerics, 166Eh)
-        db 0x01, 0x00, 0x10, 0x00, 0x32, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01
-        db 0x0A, 0x01, 0x00, 0x40, 0x68, 0x16, 0x00, 0x02
-        db 0x01, 0x00, 0x10, 0x00, 0x46, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01
-        db 0x0A, 0x01, 0x00, 0x40, 0x6E, 0x16, 0x00, 0x02
-        ; a bone dagger (dsloader/weaponchoice.py, worldgear.py): the obsidian Dagger's (17), of
-        ; bone (+8: 1), for water and air clerics and not fire ones (+10h: 1FFBh; the game's
-        ; obsidian daggers 1FF6h, an air cleric's bit added: PROBE_TYPES_FILL)
-        db 0x01, 0x00, 0x20, 0x00, 0x0A, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01
-        db 0x04, 0x01, 0x00, 0x00, 0xFB, 0x1F, 0x00, 0x00
-        ; a robe (ROBE: the Ashen Robe +1 and the Veiled Robe +2, dsloader/robes.py): the cloak
-        ; of protection's, worn on the chest (+9: 1, the chest armour's slot), its plus counting
-        ; for AC, not armour (as the bracers: BRACERS_AX), for preservers, psionicists and
-        ; druids (+10h: 190h)
-        db 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x0A, 0x00, 0x40, 0x01, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x80, 0x90, 0x01, 0x00, 0x01
-        ; a metal shield (Ironbulwark +3, dsloader/worldgear.py): the game's leather Shield's
-        ; (4), of metal (+8: 4), for the classes of its wooden one and its chain armour (+10h:
-        ; 126Fh, no thieves); the game has no metal shield
-        db 0x04, 0x00, 0x00, 0x00, 0x32, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x01, 0x00
-        ; the girdles (dsloader/worldgear.py): the game's Belt's (42), worn at the waist (+9: 2),
-        ; no material shown (+8: 40h), for every class
-        db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x14, 0x00, 0x40, 0x02, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x14, 0x00, 0x40, 0x02, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
-        ; the amulet (worldgear.py): the game's Necklace's (36), worn at the neck (+9: 7)
-        db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0xFA, 0x00, 0x40, 0x07, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
+; (EXTRA_TYPES' bytes: the far block's FAR_TYPES, put there from FAR_DATA_SRC as the helper loads)
 ; the names, numbered from NAMES_OWN (322): the Loader's items' (the same as the Loader's
-; NAMES in dsloader/names.py), the rest blank until it writes more
+; NAMES in dsloader/names.py), each NUL-terminated (PROBE_NAMES_FILL pads it to NAME_SIZE)
 extra_names:
-        db "Ring/Protection"
-        times NAME_KEPT - 15 db 0
-        db "Thieves' Tools"
-        times NAME_KEPT - 14 db 0
-        db "Short Sword"                ; (Kurzak's, of type TYPES' first)
-        times NAME_KEPT - 11 db 0
-        db "Cloak/Protectn"             ; (Pehtucl's, the game's way of shortening)
-        times NAME_KEPT - 14 db 0
-        db "Ring/Protection"            ; (Pehtucl's ring: the arena's is the first; their icons differ)
-        times NAME_KEPT - 15 db 0
-        db "Shadowseeker"               ; (Kurzak's Short Sword made +1: MAGIC_ARMS)
-        times NAME_KEPT - 12 db 0
-        db "Kreenfang"                  ; (the arena's Bone Gythka made +1)
-        times NAME_KEPT - 9 db 0
-        db "Bracers/Defns"              ; (bracers of defense, short enough for their plus: BRACERS,
-        times NAME_KEPT - 13 db 0       ;   dsloader/worldgear.py)
-        db "Gutterknot"                 ; (the magic weapons of dsloader/worldgear.py: a club +1,
-        times NAME_KEPT - 10 db 0
-        db "Deepbiter"                  ; a stone pick +1,
-        times NAME_KEPT - 9 db 0
-        db "Windlash"                   ; a staff sling +1,
-        times NAME_KEPT - 8 db 0
-        db "Greenbright"                ; a metal short sword +2)
-        times NAME_KEPT - 11 db 0
-        db "Arrowbane"                  ; (the circlet and the crown of dsloader/worldgear.py)
-        times NAME_KEPT - 9 db 0
-        db "Sunking Crown"
-        times NAME_KEPT - 13 db 0
-        db "Warden's Chest"             ; (the Warden's Plate of dsloader/worldgear.py)
-        times NAME_KEPT - 14 db 0
-        db "Warden's Arms"
-        times NAME_KEPT - 13 db 0
-        db "Warden's Legs"
-        times NAME_KEPT - 13 db 0
-        db "Warden's Helm"
-        times NAME_KEPT - 13 db 0
-        db "Cloak/Elvenkind"            ; (the Cloak and Boots of Elvenkind)
-        times NAME_KEPT - 15 db 0
-        db "Boots/Elvenkind"
-        times NAME_KEPT - 15 db 0
-        db "Flame Blade"                ; (an obsidian long sword +1, Focus Heat on what it hits)
-        times NAME_KEPT - 11 db 0
-        db "Tome/Understand"            ; (the Tome of Understanding: dsloader/tome.py)
-        times NAME_KEPT - 15 db 0
-        db "Inixhide"                   ; (Legcrusher's Leather Chest Armor +1: dsloader/npcitems.py)
-        times NAME_KEPT - 8 db 0
-        db "Drakejaw"                   ; (the magic axes of dsloader/worldgear.py: a bone axe +1,
-        times NAME_KEPT - 8 db 0
-        db "Glasshewer"                 ; an obsidian axe +2,
-        times NAME_KEPT - 10 db 0
-        db "Headsman"                   ; a metal great axe +2)
-        times NAME_KEPT - 8 db 0
-        db "Galefang"                   ; (more magic weapons of dsloader/worldgear.py: an air
-        times NAME_KEPT - 8 db 0        ; cleric's dagger +2,
-        db "Mindshard"                  ; an obsidian short sword +1,
-        times NAME_KEPT - 9 db 0
-        db "Stillwater"                 ; a bone short sword +1,
-        times NAME_KEPT - 10 db 0
-        db "Linebreaker"                ; a metal polearm +2,
-        times NAME_KEPT - 11 db 0
-        db "Thornwall"                  ; a bone polearm +1)
-        times NAME_KEPT - 9 db 0
-        db "Ashen Robe"                 ; (the robes: dsloader/robes.py)
-        times NAME_KEPT - 10 db 0
-        db "Veiled Robe"
-        times NAME_KEPT - 11 db 0
-        db "Gutterward"                 ; (the magic shields of dsloader/worldgear.py: a wooden
-        times NAME_KEPT - 10 db 0       ; shield +1,
-        db "Ironbulwark"                ; a metal shield +3)
-        times NAME_KEPT - 11 db 0
-        db "Hayneedle"                  ; (the weapons for the kits with too few, dsloader/
-        times NAME_KEPT - 9 db 0        ; worldgear.py: a bone dagger +1,
-        db "Nightsliver"                ; an obsidian dagger +2,
-        times NAME_KEPT - 11 db 0
-        db "Dunesong"                   ; a bow +1,
-        times NAME_KEPT - 8 db 0
-        db "Skycutter"                  ; a chatkcha +2)
-        times NAME_KEPT - 9 db 0
-        db "Girdle/Back Def"            ; (the girdles and the amulet of
-        times NAME_KEPT - 15 db 0       ; dsloader/worldgear.py: 15 letters at most, as the
-        db "Girdle of Urnst"            ; game's own)
-        times NAME_KEPT - 15 db 0
-        db "Amulet/MagicRes"
-        times NAME_KEPT - 15 db 0
-        db "Burning Arrows"             ; (the Spellarcher's spell arrows, dsloader/
-        times NAME_KEPT - 14 db 0       ; spellarrows.py: ARROW_NAME on)
-        db "Chill Arrows"
-        times NAME_KEPT - 12 db 0
-        db "Shocking Arrows"
-        times NAME_KEPT - 15 db 0
-        db "Vampiric Arrows"
-        times NAME_KEPT - 15 db 0
-        times (NAMES_EXTRA - 46) * NAME_SIZE db 0
+        db "Ring/Protection", 0
+        db "Thieves' Tools", 0
+        db "Short Sword", 0             ; (Kurzak's, of type TYPES' first)
+        db "Cloak/Protectn", 0          ; (Pehtucl's, the game's way of shortening)
+        db "Ring/Protection", 0         ; (Pehtucl's ring: the arena's is the first; their icons differ)
+        db "Shadowseeker", 0            ; (Kurzak's Short Sword made +1: MAGIC_ARMS)
+        db "Kreenfang", 0               ; (the arena's Bone Gythka made +1)
+        db "Bracers/Defns", 0           ; (bracers of defense, short enough for their plus: BRACERS,
+                                        ;   dsloader/worldgear.py)
+        db "Gutterknot", 0              ; (the magic weapons of dsloader/worldgear.py: a club +1,
+        db "Deepbiter", 0               ; a stone pick +1,
+        db "Windlash", 0                ; a staff sling +1,
+        db "Greenbright", 0             ; a metal short sword +2)
+        db "Arrowbane", 0               ; (the circlet and the crown of dsloader/worldgear.py)
+        db "Sunking Crown", 0
+        db "Warden's Chest", 0          ; (the Warden's Plate of dsloader/worldgear.py)
+        db "Warden's Arms", 0
+        db "Warden's Legs", 0
+        db "Warden's Helm", 0
+        db "Cloak/Elvenkind", 0         ; (the Cloak and Boots of Elvenkind)
+        db "Boots/Elvenkind", 0
+        db "Flame Blade", 0             ; (an obsidian long sword +1, Focus Heat on what it hits)
+        db "Tome/Understand", 0         ; (the Tome of Understanding: dsloader/tome.py)
+        db "Inixhide", 0                ; (Legcrusher's Leather Chest Armor +1: dsloader/npcitems.py)
+        db "Drakejaw", 0                ; (the magic axes of dsloader/worldgear.py: a bone axe +1,
+        db "Glasshewer", 0              ; an obsidian axe +2,
+        db "Headsman", 0                ; a metal great axe +2)
+        db "Galefang", 0                ; (more magic weapons of dsloader/worldgear.py: an air
+                                        ; cleric's dagger +2,
+        db "Mindshard", 0               ; an obsidian short sword +1,
+        db "Stillwater", 0              ; a bone short sword +1,
+        db "Linebreaker", 0             ; a metal polearm +2,
+        db "Thornwall", 0               ; a bone polearm +1)
+        db "Ashen Robe", 0              ; (the robes: dsloader/robes.py)
+        db "Veiled Robe", 0
+        db "Gutterward", 0              ; (the magic shields of dsloader/worldgear.py: a wooden
+                                        ; shield +1,
+        db "Ironbulwark", 0             ; a metal shield +3)
+        db "Hayneedle", 0               ; (the weapons for the kits with too few, dsloader/
+                                        ; worldgear.py: a bone dagger +1,
+        db "Nightsliver", 0             ; an obsidian dagger +2,
+        db "Dunesong", 0                ; a bow +1,
+        db "Skycutter", 0               ; a chatkcha +2)
+        db "Girdle/Back Def", 0         ; (the girdles and the amulet of
+                                        ; dsloader/worldgear.py: 15 letters at most, as the
+        db "Girdle of Urnst", 0         ; game's own)
+        db "Amulet/MagicRes", 0
+        db "Burning Arrows", 0          ; (the Spellarcher's spell arrows, dsloader/
+                                        ; spellarrows.py: ARROW_NAME on)
+        db "Chill Arrows", 0
+        db "Shocking Arrows", 0
+        db "Vampiric Arrows", 0
+        times NAMES_EXTRA - 46 db 0     ; (empty names, if any)
 
 ; STEALTH (RULE_STEALTH): a thief who starts a turn with no enemy next to them may hide in
 ; shadows and move silently up to someone; the Loader rolls both and, when both succeed,
@@ -20407,13 +20271,13 @@ shadow_pass:
         jc .dark                        ; (not yet: the screen is fading, or a dark area's)
         mov word [cs:dark_build], 0
 .dark:  call vga_save
-        cmp word [cs:shadows_on], 0
+        push fs
+        mov fs, [cs:far_seg]            ; (FS: the far block, for the whole pass: spans, SC_OF,
+        cmp word [cs:shadows_on], 0     ;   and the rings' RING_TAB and RED)
         je .dust
         cmp byte [cs:dark_ready], 0
         je .dust                        ; (no colours to darken with yet)
         mov ds, [cs:game_ds]
-        push fs
-        mov fs, [cs:far_seg]            ; (FS: the far block, for the whole pass: spans, SC_OF)
         les di, [OBJ_LIST]
         mov cx, [OBJ_COUNT]
         jcxz .none
@@ -20431,13 +20295,11 @@ shadow_pass:
         pop cx
 .tnext: add di, 8
         loop .thing
-        pop fs
 .dust:  call ring_pass
         call dust_pass
-.done:  call vga_restore
-        ret
 .none:  pop fs
-        jmp .done
+        call vga_restore
+        ret
 DARK_RETRY equ 9                ; (BIOS ticks: half a second)
 dark_failed db 0
 dark_tried dw 0
@@ -21307,23 +21169,26 @@ DARK_HUE   equ 4                ; (how much a change of hue counts against a col
 DARK_LIT   equ 4000             ; (the palette's 768 values, out of 63 each, add up to less in a fade)
 build_dark:
         push ds
+        push fs
         push cs
         pop ds
+        mov fs, [cs:far_seg]            ; (FS: the far block, DAC's: FAR_DAC)
         mov dx, 0x3C7
         xor al, al
         out dx, al
         mov dx, 0x3C9
-        mov di, dac
+        mov di, FAR_DAC
         mov cx, 768
         xor bx, bx                      ; (BX: how bright it is in all)
 .read:  in al, dx
-        mov [di], al
+        mov [fs:di], al
         xor ah, ah
         add bx, ax
         inc di
         loop .read
         cmp bx, DARK_LIT
         jae .lit
+        pop fs
         pop ds                          ; (nearly black: a fade, not the area's colours)
         stc
         ret
@@ -21332,9 +21197,9 @@ build_dark:
 .colour:
         mov si, bx
         imul si, si, 3
-        add si, dac
+        add si, FAR_DAC
         xor di, di                      ; its darker self
-.chan:  lodsb
+.chan:  fs lodsb
         mov ah, DARK_PARTS
         mul ah
         mov dl, DARK_WHOLE
@@ -21345,11 +21210,11 @@ build_dark:
         jb .chan
         mov si, bx                      ; (only clearly darker ones: brightness under 7/8 of its own)
         imul si, si, 3
-        add si, dac
+        add si, FAR_DAC
         xor ax, ax
         xor dx, dx
         mov di, 3
-.own:   lodsb
+.own:   fs lodsb
         add dx, ax
         dec di
         jnz .own
@@ -21362,9 +21227,9 @@ build_dark:
 .cand:  mov word [lit_sum], 0
         mov si, cx                      ; how far a colour is from the one wanted: the differences
         imul si, si, 3                  ;   squared, and those between them weighted (DARK_HUE),
-        add si, dac                     ;   so that it keeps its hue (sand stays sand, not pink)
+        add si, FAR_DAC                     ;   so that it keeps its hue (sand stays sand, not pink)
         xor di, di
-.diff:  lodsb
+.diff:  fs lodsb
         mov ah, 0
         add [lit_sum], ax
         sub al, [want + di]
@@ -21409,6 +21274,7 @@ build_dark:
         cmp bx, 256
         jb .colour
         mov byte [dark_ready], 1
+        pop fs
         pop ds
         clc
         ret
@@ -21708,7 +21574,6 @@ dust_tick:                      ; DS = the game's
         mov [fs:FAR_LAST_X + bx], ax
         mov ax, [cs:t_y]
         mov [fs:FAR_LAST_Y + bx], ax
-        pop fs
         mov ax, [cs:t_dx]               ; walked a little (not a jump: an area loaded, someone placed)
         call abs16
         cmp ax, JUMP_MOST
@@ -21735,16 +21600,17 @@ dust_tick:                      ; DS = the game's
         mov ax, [cs:d_now]
         mov [cs:d_walked_at], ax
         mov bx, [cs:t_thing]
-        add [cs:walked + bx], cl
-        cmp byte [cs:walked + bx], DUST_STEP
+        add [fs:FAR_WALKED + bx], cl    ; (FS still the far block)
+        cmp byte [fs:FAR_WALKED + bx], DUST_STEP
         jb .tpop
-        sub byte [cs:walked + bx], DUST_STEP
-        cmp byte [cs:walked + bx], DUST_STEP
+        sub byte [fs:FAR_WALKED + bx], DUST_STEP
+        cmp byte [fs:FAR_WALKED + bx], DUST_STEP
         jb .one
-        mov byte [cs:walked + bx], 0        ; (one puff a tick at most)
+        mov byte [fs:FAR_WALKED + bx], 0    ; (one puff a tick at most)
 .one:
         call puff_raise
-.tpop:  pop cx
+.tpop:  pop fs
+        pop cx
 .tnext: add di, 8
         dec cx
         jnz .thing
@@ -23307,8 +23173,7 @@ t_sx       dw 0
 t_sy       dw 0
 puffs      times PUFFS * PUFF_SIZE db 0
                                 ; (each thing's place as last seen: the far block's FAR_LAST_X and
-                                ;   FAR_LAST_Y, a word each)
-walked     times MAP_COUNT db 0
+                                ;   FAR_LAST_Y, a word each; how far it has walked, FAR_WALKED)
 light      times 256 db 0
 
 ; RINGS (RINGS_ON): a ring on the ground under each thing RING_TAB marks (the Loader marks the
@@ -23326,7 +23191,7 @@ ring_pass:
 .thing: mov bx, [es:di + 6]          ; (only those RING_TAB marks: most things aren't)
         cmp bx, MAP_COUNT - 1
         ja .tnext
-        mov al, [cs:ring_tab + bx]
+        mov al, [fs:FAR_RING_TAB + bx]  ; (FS: the far block, SHADOW_PASS's)
         or al, al
         jz .tnext
         push cx
@@ -23406,7 +23271,7 @@ ring_px:                                ; redden screen x BX on the row at ROW_A
         mov cl, [cs:r_kind]
         inc cl                          ; (reddened twice, the chosen one three times)
 .again: mov di, ax
-        mov ah, [cs:red + di]
+        mov ah, [fs:FAR_RED + di]
         or ah, ah
         jz .put
         mov al, ah
@@ -23425,8 +23290,7 @@ ring_extra db 14, 0, 14, 1, 14, 2, 13, 2, 13, 3, 12, 3, 12, 4, 11, 4, 11, 5, 10,
 r_kind     db 0
 r_fx       dw 0
 r_fy       dw 0
-ring_tab   times MAP_COUNT db 0
-red        times 256 db 0
+                                ; (RING_TAB and RED: the far block's FAR_RING_TAB and FAR_RED)
 
 ; TARGETING (TARGET_ON): Tab and Shift+Tab, counted for the Loader, choose an enemy in a fight
 ; (its ring brighter: RINGS); Enter attacks it, as a click on it does, even where another figure
@@ -24134,8 +23998,8 @@ lit_most   dw 0
 best_c     db 0
 want       times 3 db 0
 shadow_tab times (MAP_COUNT + 7) / 8 db 0
-                                ; (DARK, 256 bytes: over the install code, AFTER_INSTALL)
-dac        times 768 db 0
+                                ; (DARK, 256 bytes: over the install code, AFTER_INSTALL; DAC
+                                ;   the far block's, FAR_DAC)
 
 
 ; UMB_ALLOC: BX paragraphs in upper memory (the upper blocks linked in, high only, last fit: the
@@ -24598,9 +24462,16 @@ FAR_QM_LEN equ FAR_QM_STACK + STACK_BYTES       ; ... and the length of the text
 FAR_MSG    equ FAR_QM_LEN + 2                   ; the last text written to the screen (DOS_WRITE)
 FAR_SC_OF  equ FAR_MSG + MSG_BYTES              ; each thing's slot in the shadows' cache, last (SC_START)
 FAR_DUST   equ FAR_SC_OF + MAP_COUNT            ; the puffs' thickness, by age, row and column (DUST_BUILD)
-FAR_END    equ FAR_DUST + DUST_BYTES
+FAR_DAC    equ FAR_DUST + DUST_BYTES             ; the palette as DARK was made from it (BUILD_DARK)
+FAR_RING_TAB equ FAR_DAC + 768                  ; the things that get a ring (RING_PASS), the Loader's
+FAR_RED    equ FAR_RING_TAB + MAP_COUNT         ; each colour's reddened one (RING_PX), the Loader's
+FAR_WALKED equ FAR_RED + 256                    ; how far each thing has walked since its last puff (DUST_TICK)
+FAR_DATA   equ FAR_WALKED + MAP_COUNT           ; FROM HERE, FAR_DATA_LEN bytes that start as the image's
+FAR_TYPES  equ FAR_DATA                         ;   FAR_DATA_SRC (FAR_INIT): the item types (PROBE_TYPES_FILL)
+FAR_END    equ FAR_TYPES + TYPES_EXTRA * TYPE_SIZE
 FAR_PARAS  equ (FAR_END - FAR_RING + 15) / 16
         times -(FAR_END > 0x10000) db 0     ; (a negative count: past the HMA's 64 KB)
+        times -((FAR_END - FAR_RING) & 1) db 0  ; (FAR_INIT clears it a word at a time)
 
 ; UPPER MEMORY: DOSBox (umb=true, ems=false, as the launcher's config has it) gives one block,
 ; D000h-EFFFh, its first 10 paragraphs a free scrap ahead of the helper's MCB: UMB_ROOM paragraphs
@@ -24625,9 +24496,11 @@ install:                        ; DS = ES = PSP, CS = the image
         push cs
         pop ds
         mov si, all_vectors     ; the vectors must be free
-        mov cx, all_vectors_end - all_vectors
+        mov cx, VECTORS
 .check:
         lodsb
+        inc si                  ; (past its handler)
+        inc si
         mov ah, 35h
         int 21h                 ; ES:BX = the vector
         mov dx, es
@@ -24669,414 +24542,20 @@ install:                        ; DS = ES = PSP, CS = the image
         mov ax, 4C01h
         int 21h
 .far:
-
-        mov ax, 2500h + VEC_RAND
-        mov dx, int_rand
+        mov si, all_vectors             ; each vector ours (ALL_VECTORS: the vector, then its handler)
+        mov cx, VECTORS
+.vec:   lodsb
+        mov ah, 25h
+        mov dx, [si]
+        inc si
+        inc si
         int 21h
-        mov ax, 2500h + VEC_SAVE
-        mov dx, probe_save
-        int 21h
-        mov ax, 2500h + VEC_AC
-        mov dx, probe_ac
-        int 21h
-        mov ax, 2500h + VEC_TEXT
-        mov dx, probe_text
-        int 21h
-        mov ax, 2500h + VEC_MSG
-        mov dx, probe_msg
-        int 21h
-        mov ax, 2500h + VEC_CHAR
-        mov dx, probe_char
-        int 21h
-        mov ax, 2500h + VEC_USE
-        mov dx, probe_use
-        int 21h
-        mov ax, 2500h + VEC_VIEW
-        mov dx, probe_view
-        int 21h
-        mov ax, 2500h + VEC_WIN
-        mov dx, probe_win
-        int 21h
-        mov ax, 2500h + VEC_LOOK
-        mov dx, probe_look
-        int 21h
-        mov ax, 2500h + VEC_UNLOOK
-        mov dx, probe_unlook
-        int 21h
-        mov ax, 2500h + VEC_RING_AC
-        mov dx, probe_ring_ac
-        int 21h
-        mov ax, 2500h + VEC_RING_SAVE
-        mov dx, probe_ring_save
-        int 21h
-        mov ax, 2500h + VEC_WEAPON
-        mov dx, probe_weapon
-        int 21h
-        mov ax, 2500h + VEC_MOVE
-        mov dx, probe_move
-        int 21h
-        mov ax, 2500h + VEC_USE_ITEM
-        mov dx, probe_use_item
-        int 21h
-        mov ax, 2500h + VEC_MISSILE_LINE
-        mov dx, probe_missile_line
-        int 21h
-        mov ax, 2500h + VEC_RACE_PANEL
-        mov dx, probe_race_panel
-        int 21h
-        mov ax, 2500h + VEC_BOX_AC
-        mov dx, probe_box_ac
-        int 21h
-        mov ax, 2500h + VEC_TICK
-        mov dx, probe_tick
-        int 21h
-        mov ax, 2500h + VEC_POISON
-        mov dx, probe_poison
-        int 21h
-        mov ax, 2500h + VEC_TAKE
-        mov dx, probe_take
-        int 21h
-        mov ax, 2500h + VEC_SPHERE
-        mov dx, probe_sphere
-        int 21h
-        mov ax, 2500h + VEC_ARROW
-        mov dx, probe_arrow
-        int 21h
-        mov ax, 2500h + VEC_HEAP
-        mov dx, probe_heap
-        int 21h
-        mov ax, 2500h + VEC_FLIP
-        mov dx, probe_flip
-        int 21h
-        mov ax, 2500h + VEC_PACE_PASS
-        mov dx, probe_pace_pass
-        int 21h
-        mov ax, 2500h + VEC_WORN
-        mov dx, probe_worn
-        int 21h
-        mov ax, 2500h + VEC_PACE_DRAW
-        mov dx, probe_pace_draw
-        int 21h
-        mov ax, 2500h + VEC_OVR_BUF
-        mov dx, probe_ovr_buf
-        int 21h
-        mov ax, 2500h + VEC_TWO
-        mov dx, probe_two
-        int 21h
-        mov ax, 2500h + VEC_DOUBLE
-        mov dx, probe_double
-        int 21h
-        mov ax, 2500h + VEC_GRACE_CAST
-        mov dx, probe_grace_cast
-        int 21h
-        mov ax, 2500h + VEC_GRACE_EFFECT
-        mov dx, probe_grace_effect
-        int 21h
-        mov ax, 2500h + VEC_GRACE_ABILITY
-        mov dx, probe_grace_ability
-        int 21h
-        mov ax, 2500h + VEC_NAMES_SIZE
-        mov dx, probe_names_size
-        int 21h
-        mov ax, 2500h + VEC_NAMES_FILL
-        mov dx, probe_names_fill
-        int 21h
-        mov ax, 2500h + VEC_STEALTH
-        mov dx, probe_stealth
-        int 21h
-        mov ax, 2500h + VEC_TYPES_SIZE
-        mov dx, probe_types_size
-        int 21h
-        mov ax, 2500h + VEC_TYPES_FILL
-        mov dx, probe_types_fill
-        int 21h
-        mov ax, 2500h + VEC_LEVEL
-        mov dx, probe_level
-        int 21h
-        mov ax, 2500h + VEC_HD_ROLL
-        mov dx, probe_hd_roll
-        int 21h
-        mov ax, 2500h + VEC_HD_CON
-        mov dx, probe_hd_con
-        int 21h
-        mov ax, 2500h + VEC_THIEF_SKILL
-        mov dx, probe_thief_skill
-        int 21h
-        mov ax, 2500h + VEC_TWO_HANDED
-        mov dx, probe_two_handed
-        int 21h
-        mov ax, 2500h + VEC_SPELL_TEXT
-        mov dx, probe_spell_text
-        int 21h
-        mov ax, 2500h + VEC_CHUNK_ID
-        mov dx, probe_chunk_id
-        int 21h
-        mov ax, 2500h + VEC_FLOOR_ALL
-        mov dx, probe_floor_all
-        int 21h
-        mov ax, 2500h + VEC_FLOOR_RECT
-        mov dx, probe_floor_rect
-        int 21h
-        mov ax, 2500h + VEC_REDRAW
-        mov dx, probe_redraw
-        int 21h
-        mov ax, 2500h + VEC_REDRAW_ALL
-        mov dx, probe_redraw_all
-        int 21h
-        mov ax, 2500h + VEC_POINTER
-        mov dx, probe_pointer
-        int 21h
+        loop .vec
 %ifdef CAMTRACE
         mov ax, 2503h
         mov dx, cam_trace
         int 21h
 %endif
-        mov ax, 2500h + VEC_SCROLL
-        mov dx, probe_scroll
-        int 21h
-        mov ax, 2500h + VEC_GHOST
-        mov dx, probe_ghost
-        int 21h
-        mov ax, 2500h + VEC_HIT
-        mov dx, probe_hit
-        int 21h
-        mov ax, 2500h + VEC_ITEM_BOX
-        mov dx, probe_item_box
-        int 21h
-        mov ax, 2500h + VEC_BELT
-        mov dx, probe_belt
-        int 21h
-        mov ax, 2500h + VEC_SAVE_PAGE
-        mov dx, probe_save_page
-        int 21h
-        mov ax, 2500h + VEC_SAVE_CLICK
-        mov dx, probe_save_click
-        int 21h
-        mov ax, 2500h + VEC_ITEM_WEAPON
-        mov dx, probe_item_weapon
-        int 21h
-        mov ax, 2500h + VEC_ITEM_SKIP
-        mov dx, probe_item_skip
-        int 21h
-        mov ax, 2500h + VEC_ITEM_ARMOUR
-        mov dx, probe_item_armour
-        int 21h
-        mov ax, 2500h + VEC_SCRIPT_RAND
-        mov dx, probe_script_rand
-        int 21h
-        mov ax, 2500h + VEC_XP_NEXT
-        mov dx, probe_xp_next
-        int 21h
-        mov ax, 2500h + VEC_ATTACKS
-        mov dx, probe_attacks
-        int 21h
-        mov ax, 2500h + VEC_SPEC_DAMAGE
-        mov dx, probe_spec_damage
-        int 21h
-        mov ax, 2500h + VEC_DAM_LINE
-        mov dx, probe_dam_line
-        int 21h
-        mov ax, 2500h + VEC_VIEW_DAM
-        mov dx, probe_view_dam
-        int 21h
-        mov ax, 2500h + VEC_CAN_USE
-        mov dx, probe_can_use
-        int 21h
-        mov ax, 2500h + VEC_NO_CAST
-        mov dx, probe_no_cast
-        int 21h
-        mov ax, 2500h + VEC_MC_CON
-        mov dx, probe_mc_con
-        int 21h
-        mov ax, 2500h + VEC_MC_UNCON
-        mov dx, probe_mc_uncon
-        int 21h
-        mov ax, 2500h + VEC_WP_DISC_WIN
-        mov dx, probe_wp_disc_win
-        int 21h
-        mov ax, 2500h + VEC_WP_SPHERE_WIN
-        mov dx, probe_wp_sphere_win
-        int 21h
-        mov ax, 2500h + VEC_WP_DISC_CLICK
-        mov dx, probe_wp_disc_click
-        int 21h
-        mov ax, 2500h + VEC_WP_SPHERE_CLICK
-        mov dx, probe_wp_sphere_click
-        int 21h
-        mov ax, 2500h + VEC_WP_SHOWN
-        mov dx, probe_wp_shown
-        int 21h
-        mov ax, 2500h + VEC_WP_CLASS
-        mov dx, probe_wp_class
-        int 21h
-        mov ax, 2500h + VEC_LV_PICK
-        mov dx, probe_lv_pick
-        int 21h
-        mov ax, 2500h + VEC_PK_COUNT
-        mov dx, probe_pk_count
-        int 21h
-        mov ax, 2500h + VEC_PK_WIN
-        mov dx, probe_pk_win
-        int 21h
-        mov ax, 2500h + VEC_PK_LEFT
-        mov dx, probe_pk_left
-        int 21h
-        mov ax, 2500h + VEC_PK_TITLE
-        mov dx, probe_pk_title
-        int 21h
-        mov ax, 2500h + VEC_PK_FILL
-        mov dx, probe_pk_fill
-        int 21h
-        mov ax, 2500h + VEC_PK_CLICK
-        mov dx, probe_pk_click
-        int 21h
-        mov ax, 2500h + VEC_HP_BEST
-        mov dx, probe_hp_best
-        int 21h
-        mov ax, 2500h + VEC_TOME
-        mov dx, probe_tome
-        int 21h
-        mov ax, 2500h + VEC_EF_ROWS
-        mov dx, probe_ef_rows
-        int 21h
-        mov ax, 2500h + VEC_INIT
-        mov dx, probe_init
-        int 21h
-        mov ax, 2500h + VEC_THAC0
-        mov dx, probe_thac0
-        int 21h
-        mov ax, 2500h + VEC_SLOTS
-        mov dx, probe_slots
-        int 21h
-        mov ax, 2500h + VEC_SLOT_LEVEL
-        mov dx, probe_slot_level
-        int 21h
-        mov ax, 2500h + VEC_PSP_USE
-        mov dx, probe_psp_use
-        int 21h
-        mov ax, 2500h + VEC_PSP_TABLE
-        mov dx, probe_psp_table
-        int 21h
-        mov ax, 2500h + VEC_PSP_DEFENCE
-        mov dx, probe_psp_defence
-        int 21h
-        mov ax, 2500h + VEC_CURE
-        mov dx, probe_cure
-        int 21h
-        mov ax, 2500h + VEC_PSP_KEEP
-        mov dx, probe_psp_keep
-        int 21h
-        mov ax, 2500h + VEC_PSP_KEEP_DX
-        mov dx, probe_psp_keep_dx
-        int 21h
-        mov ax, 2500h + VEC_HIT_ROUND
-        mov dx, probe_hit_round
-        int 21h
-        mov ax, 2500h + VEC_CAST_LEVEL
-        mov dx, probe_cast_level
-        int 21h
-        mov ax, 2500h + VEC_SPELL_LEVEL
-        mov dx, probe_spell_level
-        int 21h
-        mov ax, 2500h + VEC_PICK_ANY
-        mov dx, probe_pick_any
-        int 21h
-        mov ax, 2500h + VEC_RANGER_LEVEL
-        mov dx, probe_ranger_level
-        int 21h
-        mov ax, 2500h + VEC_HIT_DIE
-        mov dx, probe_hit_die
-        int 21h
-        mov ax, 2500h + VEC_MAX_PSP
-        mov dx, probe_max_psp
-        int 21h
-        mov ax, 2500h + VEC_CR_DIE
-        mov dx, probe_cr_die
-        int 21h
-        mov ax, 2500h + VEC_CR_PSP
-        mov dx, probe_cr_psp
-        int 21h
-        mov ax, 2500h + VEC_EL_GRANT
-        mov dx, probe_el_grant
-        int 21h
-        mov ax, 2500h + VEC_EL_CAST
-        mov dx, probe_el_cast
-        int 21h
-        mov ax, 2500h + VEC_EL_LEVEL
-        mov dx, probe_el_level
-        int 21h
-        mov ax, 2500h + VEC_EL_KNOW
-        mov dx, probe_el_know
-        int 21h
-        mov ax, 2500h + VEC_DUAL_BAN
-        mov dx, probe_dual_ban
-        int 21h
-        mov ax, 2500h + VEC_DUAL_SPELLS
-        mov dx, probe_dual_spells
-        int 21h
-        mov ax, 2500h + VEC_SOUND_42
-        mov dx, probe_sound_42
-        int 21h
-        mov ax, 2500h + VEC_SOUND_44
-        mov dx, probe_sound_44
-        int 21h
-        mov ax, 2500h + VEC_DUAL_KIT
-        mov dx, probe_dual_kit
-        int 21h
-        mov ax, 2500h + VEC_CR_SPELLS
-        mov dx, probe_cr_spells
-        int 21h
-        mov ax, 2500h + VEC_EF_CLICK
-        mov dx, probe_ef_click
-        int 21h
-        mov ax, 2500h + VEC_CAST_MARK
-        mov dx, probe_cast_mark
-        int 21h
-        mov ax, 2500h + VEC_ROUND_MARK
-        mov dx, probe_round_mark
-        int 21h
-        mov ax, 2500h + VEC_CAST_DONE
-        mov dx, probe_cast_done
-        int 21h
-        mov ax, 2500h + VEC_END_TURN
-        mov dx, probe_end_turn
-        int 21h
-        mov ax, 2500h + VEC_LEARN_SAID
-        mov dx, probe_learn_said
-        int 21h
-        mov ax, 2500h + VEC_LEARN_REFUSED
-        mov dx, probe_learn_refused
-        int 21h
-        mov ax, 2500h + VEC_XP
-        mov dx, probe_xp
-        int 21h
-        mov ax, 2500h + VEC_PRIEST_THAC0
-        mov dx, probe_priest_thac0
-        int 21h
-        mov ax, 2500h + VEC_ADND_SLOTS
-        mov dx, probe_adnd_slots
-        int 21h
-        mov ax, 2500h + VEC_PRICE
-        mov dx, probe_price
-        int 21h
-        mov ax, 2500h + VEC_PRICE_EAX
-        mov dx, probe_price_eax
-        int 21h
-        mov ax, 2500h + VEC_RS_CLICK
-        mov dx, probe_rs_click
-        int 21h
-        mov ax, 2500h + VEC_PICK_LEVEL
-        mov dx, probe_pick_level
-        int 21h
-        mov ax, 2500h + VEC_PICK_LIST
-        mov dx, probe_pick_list
-        int 21h
-        mov ax, 2500h + VEC_SCROLL_LEARN
-        mov dx, probe_scroll_learn
-        int 21h
-        mov ax, 2500h + VEC_RANGER_CAST
-        mov dx, probe_ranger_cast
-        int 21h
         mov ax, 3516h           ; the keyboard's (TARGETING)
         int 21h
         mov [old16], bx
@@ -25176,21 +24655,286 @@ far_init:
         xor ax, ax
         cld
         rep stosw
+        mov si, far_data_src            ; FAR_DATA's first bytes, from the install code's room
+        mov di, FAR_DATA
+        mov cx, FAR_DATA_LEN
+        rep movsb
         clc
 .ret:   ret
 xms       dd 0
 hma_given db 0
-no_far  db 'DSCLOG: no memory for its buffers (61 KB). Not loaded.', 13, 10, '$'
+no_far  db 'DSCLOG: no memory for its buffers (63 KB). Not loaded.', 13, 10, '$'
 
 
 msg     db 'DSCLOG loaded.', 13, 10, '$'
 psp     dw 0
 busy    db 'DSCLOG: interrupts 60h-65h or 80h-FFh in use (already loaded?). Not loaded.', 13, 10, '$'
-all_vectors db VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR, VEC_USE, VEC_VIEW, VEC_WIN, VEC_LOOK, VEC_UNLOOK, VEC_RING_AC, VEC_RING_SAVE, VEC_WEAPON, VEC_MOVE, VEC_MISSILE_LINE, VEC_USE_ITEM, VEC_TWO, VEC_DOUBLE, VEC_GRACE_CAST, VEC_GRACE_EFFECT, VEC_GRACE_ABILITY, VEC_NAMES_SIZE, VEC_NAMES_FILL, VEC_STEALTH, VEC_TYPES_SIZE, VEC_TYPES_FILL, VEC_LEVEL, VEC_HD_ROLL, VEC_HD_CON, VEC_THIEF_SKILL, VEC_TWO_HANDED, VEC_SPELL_TEXT, VEC_CHUNK_ID, VEC_FLOOR_ALL, VEC_FLOOR_RECT, VEC_REDRAW, VEC_REDRAW_ALL, VEC_SCROLL, VEC_HIT, VEC_ITEM_BOX, VEC_BELT, VEC_SAVE_PAGE, VEC_SAVE_CLICK, VEC_ITEM_WEAPON, VEC_ITEM_SKIP, VEC_ITEM_ARMOUR, VEC_SCRIPT_RAND, VEC_XP_NEXT, VEC_ATTACKS, VEC_SPEC_DAMAGE, VEC_DAM_LINE, VEC_VIEW_DAM, VEC_CAN_USE, VEC_NO_CAST, VEC_MC_CON, VEC_MC_UNCON, VEC_WP_DISC_WIN, VEC_WP_SPHERE_WIN, VEC_WP_DISC_CLICK, VEC_WP_SPHERE_CLICK, VEC_WP_SHOWN, VEC_WP_CLASS, VEC_LV_PICK, VEC_PK_COUNT, VEC_PK_WIN, VEC_PK_LEFT, VEC_PK_TITLE, VEC_PK_FILL, VEC_PK_CLICK, VEC_EF_ROWS, VEC_HP_BEST, VEC_TOME, VEC_INIT, VEC_THAC0, VEC_SLOTS, VEC_SLOT_LEVEL
-            db VEC_PSP_USE, VEC_PSP_TABLE, VEC_PSP_DEFENCE, VEC_CURE, VEC_PSP_KEEP, VEC_RANGER_CAST, VEC_PSP_KEEP_DX
-            db VEC_HIT_ROUND, VEC_CAST_LEVEL, VEC_PICK_LEVEL, VEC_PICK_LIST, VEC_SCROLL_LEARN, VEC_SPELL_LEVEL, VEC_PICK_ANY, VEC_RANGER_LEVEL, VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP, VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW, VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT, VEC_CR_SPELLS, VEC_EF_CLICK, VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_LEARN_SAID, VEC_LEARN_REFUSED, VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS, VEC_POINTER, VEC_PRICE, VEC_PRICE_EAX, VEC_RS_CLICK, VEC_RACE_PANEL, VEC_BOX_AC, VEC_TICK, VEC_POISON, VEC_ARROW, VEC_OVR_BUF, VEC_HEAP, VEC_FLIP, VEC_PACE_PASS, VEC_PACE_DRAW, VEC_WORN, VEC_TAKE, VEC_SPHERE, VEC_GHOST
-all_vectors_end:
+; FAR_DATA_SRC: the far block's FAR_DATA as it starts, copied there by FAR_INIT (the install code's
+; room, let go of after)
+; the types, numbered from the game's count (115): the Loader's (the same as TYPES in
+; dsloader/npcitems.py), the rest unused
+far_data_src:                   ; (FAR_DATA's first bytes: FAR_TYPES)
+        ; a metal short sword: the metal long sword's type (63), 1d6
+        db 0x01, 0x00, 0x30, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
+        db 0x06, 0x01, 0x00, 0x00, 0x72, 0x16, 0x00, 0x01
+        ; a cloak of protection: the Cloak's type (65), no material shown, its plus counting
+        ; for AC (bit 80h of +0Fh, as armour's) with an AC of its own of 0
+        db 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x0A, 0x00, 0x40, 0x08, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x80, 0xFF, 0x1F, 0x00, 0x01
+        ; a bone helm: the Helm's type (5), of bone (to go with the bone scale armour), and like
+        ; it for the classes that can wear it (+10h: no thieves, where the Helm allows them)
+        db 0x00, 0x00, 0x00, 0x00, 0x0F, 0x00, 0xFA, 0x00, 0x01, 0x06, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x00, 0x00
+        ; a bone short sword (a new warrior's, weaponchoice.py): the short sword's, of bone (+8),
+        ; half its weight (+4), for the classes of the bone long sword and psionicists (+10h)
+        db 0x01, 0x00, 0x30, 0x00, 0x0F, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01
+        db 0x06, 0x01, 0x00, 0x00, 0x78, 0x17, 0x00, 0x01
+        ; a bone axe: the Axe's (22), of bone, for the bone weapons' classes (a water cleric's,
+        ; not an earth cleric's); weighing 30 (+4), not HEAVY (over 30: the game's 70), as the
+        ; obsidian one: light enough for the off hand
+        db 0x01, 0x00, 0x10, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01
+        db 0x08, 0x01, 0x00, 0x00, 0x78, 0x17, 0x00, 0x01
+        ; an obsidian short sword: the short sword's, of obsidian, for the obsidian long sword's
+        ; classes and psionicists
+        db 0x01, 0x00, 0x30, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01
+        db 0x06, 0x01, 0x00, 0x00, 0x7E, 0x17, 0x00, 0x01
+        ; an obsidian axe: the Axe's, of obsidian, for the obsidian weapons' classes; weighing 30
+        db 0x01, 0x00, 0x10, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01
+        db 0x08, 0x01, 0x00, 0x00, 0x7E, 0x17, 0x00, 0x01
+        ; a plain metal short sword: the first's (Kurzak's, which is his alone: Shadowseeker)
+        db 0x01, 0x00, 0x30, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
+        db 0x06, 0x01, 0x00, 0x00, 0x72, 0x16, 0x00, 0x01
+        ; bracers of defense (BRACERS): the cloak of protection's, worn on the arms (+9: 3, the
+        ; arm armour's slot), their plus counting for AC; not armour to anything else here
+        db 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x0A, 0x00, 0x40, 0x03, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x80, 0xFF, 0x1F, 0x00, 0x01
+        ; metal versions of the game's plain weapons that have none (dsloader/worldgear.py):
+        ; each its type of metal (+8: 4), for the metal long sword's clerics (+10h's low nibble:
+        ; 2, earth's): the Dagger's (33), an air cleric's too (3), as every dagger
+        db 0x01, 0x00, 0x20, 0x00, 0x0A, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
+        db 0x04, 0x01, 0x00, 0x00, 0xF3, 0x1F, 0x00, 0x00
+        ; the Mace's (20)
+        db 0x01, 0x00, 0x08, 0x00, 0x64, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
+        db 0x06, 0x01, 0x01, 0x00, 0x72, 0x16, 0x00, 0x01
+        ; the Great Axe's (2)
+        db 0x01, 0x00, 0x10, 0x00, 0x46, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
+        db 0x0A, 0x01, 0x00, 0x40, 0x62, 0x16, 0x00, 0x02
+        ; the pick's (112)
+        db 0x01, 0x00, 0x20, 0x00, 0x28, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
+        db 0x04, 0x01, 0x01, 0x00, 0x72, 0x17, 0x00, 0x00
+        ; the Polearm's (19)
+        db 0x01, 0x00, 0x30, 0x00, 0x96, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
+        db 0x0A, 0x01, 0x00, 0x40, 0x72, 0x16, 0x00, 0x06
+        ; a circlet and a crown (dsloader/worldgear.py): worn on the head (+9: 6), as the
+        ; Necklace's (36) of no material, not armour (+0Fh: no 80h), for every class
+        db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0xFA, 0x00, 0x40, 0x06, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x00, 0x05, 0x00, 0xFA, 0x00, 0x40, 0x06, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
+        ; plate mail (the Warden's Plate, dsloader/worldgear.py): the Chain's chest, arm and
+        ; leg armour (57, 58, 59), heavier (+4: 250, 75, 75), AC 3, 2, 2 (+12h; chain's 2, 2, 1)
+        db 0x00, 0x00, 0x00, 0x00, 0xFA, 0x00, 0xFA, 0x00, 0x04, 0x01, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x03, 0x01
+        db 0x00, 0x00, 0x00, 0x00, 0x4B, 0x00, 0xFA, 0x00, 0x04, 0x03, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x02, 0x00
+        db 0x00, 0x00, 0x00, 0x00, 0x4B, 0x00, 0xFA, 0x00, 0x04, 0x0A, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x02, 0x00
+        ; the Cloak and Boots of Elvenkind (ELVEN_CLOAK, ELVEN_BOOTS: dsloader/worldgear.py,
+        ; their stealth stealth.py): the Cloak's (65) and the Boots' (68), for thieves and rangers
+        ; only (+10h: 600h, their class bits; a multiclass with either may wear them)
+        db 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x0A, 0x00, 0x05, 0x08, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x01
+        db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x0A, 0x00, 0x85, 0x04, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00
+        ; Galefang's (dsloader/worldgear.py): the metal Dagger's, air clerics' too (+10h: 1FF3h;
+        ; fire and water clerics not); the type its own, as it was made when no other dagger was
+        ; an air cleric's
+        db 0x01, 0x00, 0x20, 0x00, 0x0A, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
+        db 0x04, 0x01, 0x00, 0x00, 0xF3, 0x1F, 0x00, 0x00
+        ; bone and obsidian great axes (dsloader/weaponchoice.py, worldgear.py): the metal one's,
+        ; of bone (+8: 1; lighter, +4: 50, still too heavy to backstab with; water clerics, 1668h)
+        ; and of obsidian (+8: 3; earth, fire and water clerics, 166Eh)
+        db 0x01, 0x00, 0x10, 0x00, 0x32, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01
+        db 0x0A, 0x01, 0x00, 0x40, 0x68, 0x16, 0x00, 0x02
+        db 0x01, 0x00, 0x10, 0x00, 0x46, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01
+        db 0x0A, 0x01, 0x00, 0x40, 0x6E, 0x16, 0x00, 0x02
+        ; a bone dagger (dsloader/weaponchoice.py, worldgear.py): the obsidian Dagger's (17), of
+        ; bone (+8: 1), for water and air clerics and not fire ones (+10h: 1FFBh; the game's
+        ; obsidian daggers 1FF6h, an air cleric's bit added: PROBE_TYPES_FILL)
+        db 0x01, 0x00, 0x20, 0x00, 0x0A, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01
+        db 0x04, 0x01, 0x00, 0x00, 0xFB, 0x1F, 0x00, 0x00
+        ; a robe (ROBE: the Ashen Robe +1 and the Veiled Robe +2, dsloader/robes.py): the cloak
+        ; of protection's, worn on the chest (+9: 1, the chest armour's slot), its plus counting
+        ; for AC, not armour (as the bracers: BRACERS_AX), for preservers, psionicists and
+        ; druids (+10h: 190h)
+        db 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x0A, 0x00, 0x40, 0x01, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x80, 0x90, 0x01, 0x00, 0x01
+        ; a metal shield (Ironbulwark +3, dsloader/worldgear.py): the game's leather Shield's
+        ; (4), of metal (+8: 4), for the classes of its wooden one and its chain armour (+10h:
+        ; 126Fh, no thieves); the game has no metal shield
+        db 0x04, 0x00, 0x00, 0x00, 0x32, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x01, 0x00
+        ; the girdles (dsloader/worldgear.py): the game's Belt's (42), worn at the waist (+9: 2),
+        ; no material shown (+8: 40h), for every class
+        db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x14, 0x00, 0x40, 0x02, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x14, 0x00, 0x40, 0x02, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
+        ; the amulet (worldgear.py): the game's Necklace's (36), worn at the neck (+9: 7)
+        db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0xFA, 0x00, 0x40, 0x07, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
+far_data_end:
+FAR_DATA_LEN equ far_data_end - far_data_src
+        times -(FAR_DATA_LEN != FAR_END - FAR_DATA) db 0 ; (a negative count: FAR_DATA's room and its bytes differ)
 
+; ALL_VECTORS: the interrupts the patched game uses (all free before installing), each with its
+; handler, in the order they are set
+%macro vector 2
+        db %1
+        dw %2
+%endmacro
+all_vectors:
+        vector VEC_RAND, int_rand
+        vector VEC_SAVE, probe_save
+        vector VEC_AC, probe_ac
+        vector VEC_TEXT, probe_text
+        vector VEC_MSG, probe_msg
+        vector VEC_CHAR, probe_char
+        vector VEC_USE, probe_use
+        vector VEC_VIEW, probe_view
+        vector VEC_WIN, probe_win
+        vector VEC_LOOK, probe_look
+        vector VEC_UNLOOK, probe_unlook
+        vector VEC_RING_AC, probe_ring_ac
+        vector VEC_RING_SAVE, probe_ring_save
+        vector VEC_WEAPON, probe_weapon
+        vector VEC_MOVE, probe_move
+        vector VEC_USE_ITEM, probe_use_item
+        vector VEC_MISSILE_LINE, probe_missile_line
+        vector VEC_RACE_PANEL, probe_race_panel
+        vector VEC_BOX_AC, probe_box_ac
+        vector VEC_TICK, probe_tick
+        vector VEC_POISON, probe_poison
+        vector VEC_TAKE, probe_take
+        vector VEC_SPHERE, probe_sphere
+        vector VEC_ARROW, probe_arrow
+        vector VEC_HEAP, probe_heap
+        vector VEC_FLIP, probe_flip
+        vector VEC_PACE_PASS, probe_pace_pass
+        vector VEC_WORN, probe_worn
+        vector VEC_PACE_DRAW, probe_pace_draw
+        vector VEC_OVR_BUF, probe_ovr_buf
+        vector VEC_TWO, probe_two
+        vector VEC_DOUBLE, probe_double
+        vector VEC_GRACE_CAST, probe_grace_cast
+        vector VEC_GRACE_EFFECT, probe_grace_effect
+        vector VEC_GRACE_ABILITY, probe_grace_ability
+        vector VEC_NAMES_SIZE, probe_names_size
+        vector VEC_NAMES_FILL, probe_names_fill
+        vector VEC_STEALTH, probe_stealth
+        vector VEC_TYPES_SIZE, probe_types_size
+        vector VEC_TYPES_FILL, probe_types_fill
+        vector VEC_LEVEL, probe_level
+        vector VEC_HD_ROLL, probe_hd_roll
+        vector VEC_HD_CON, probe_hd_con
+        vector VEC_THIEF_SKILL, probe_thief_skill
+        vector VEC_TWO_HANDED, probe_two_handed
+        vector VEC_SPELL_TEXT, probe_spell_text
+        vector VEC_CHUNK_ID, probe_chunk_id
+        vector VEC_FLOOR_ALL, probe_floor_all
+        vector VEC_FLOOR_RECT, probe_floor_rect
+        vector VEC_REDRAW, probe_redraw
+        vector VEC_REDRAW_ALL, probe_redraw_all
+        vector VEC_POINTER, probe_pointer
+        vector VEC_SCROLL, probe_scroll
+        vector VEC_GHOST, probe_ghost
+        vector VEC_HIT, probe_hit
+        vector VEC_ITEM_BOX, probe_item_box
+        vector VEC_BELT, probe_belt
+        vector VEC_SAVE_PAGE, probe_save_page
+        vector VEC_SAVE_CLICK, probe_save_click
+        vector VEC_ITEM_WEAPON, probe_item_weapon
+        vector VEC_ITEM_SKIP, probe_item_skip
+        vector VEC_ITEM_ARMOUR, probe_item_armour
+        vector VEC_SCRIPT_RAND, probe_script_rand
+        vector VEC_XP_NEXT, probe_xp_next
+        vector VEC_ATTACKS, probe_attacks
+        vector VEC_SPEC_DAMAGE, probe_spec_damage
+        vector VEC_DAM_LINE, probe_dam_line
+        vector VEC_VIEW_DAM, probe_view_dam
+        vector VEC_CAN_USE, probe_can_use
+        vector VEC_NO_CAST, probe_no_cast
+        vector VEC_MC_CON, probe_mc_con
+        vector VEC_MC_UNCON, probe_mc_uncon
+        vector VEC_WP_DISC_WIN, probe_wp_disc_win
+        vector VEC_WP_SPHERE_WIN, probe_wp_sphere_win
+        vector VEC_WP_DISC_CLICK, probe_wp_disc_click
+        vector VEC_WP_SPHERE_CLICK, probe_wp_sphere_click
+        vector VEC_WP_SHOWN, probe_wp_shown
+        vector VEC_WP_CLASS, probe_wp_class
+        vector VEC_LV_PICK, probe_lv_pick
+        vector VEC_PK_COUNT, probe_pk_count
+        vector VEC_PK_WIN, probe_pk_win
+        vector VEC_PK_LEFT, probe_pk_left
+        vector VEC_PK_TITLE, probe_pk_title
+        vector VEC_PK_FILL, probe_pk_fill
+        vector VEC_PK_CLICK, probe_pk_click
+        vector VEC_HP_BEST, probe_hp_best
+        vector VEC_TOME, probe_tome
+        vector VEC_EF_ROWS, probe_ef_rows
+        vector VEC_INIT, probe_init
+        vector VEC_THAC0, probe_thac0
+        vector VEC_SLOTS, probe_slots
+        vector VEC_SLOT_LEVEL, probe_slot_level
+        vector VEC_PSP_USE, probe_psp_use
+        vector VEC_PSP_TABLE, probe_psp_table
+        vector VEC_PSP_DEFENCE, probe_psp_defence
+        vector VEC_CURE, probe_cure
+        vector VEC_PSP_KEEP, probe_psp_keep
+        vector VEC_PSP_KEEP_DX, probe_psp_keep_dx
+        vector VEC_HIT_ROUND, probe_hit_round
+        vector VEC_CAST_LEVEL, probe_cast_level
+        vector VEC_SPELL_LEVEL, probe_spell_level
+        vector VEC_PICK_ANY, probe_pick_any
+        vector VEC_RANGER_LEVEL, probe_ranger_level
+        vector VEC_HIT_DIE, probe_hit_die
+        vector VEC_MAX_PSP, probe_max_psp
+        vector VEC_CR_DIE, probe_cr_die
+        vector VEC_CR_PSP, probe_cr_psp
+        vector VEC_EL_GRANT, probe_el_grant
+        vector VEC_EL_CAST, probe_el_cast
+        vector VEC_EL_LEVEL, probe_el_level
+        vector VEC_EL_KNOW, probe_el_know
+        vector VEC_DUAL_BAN, probe_dual_ban
+        vector VEC_DUAL_SPELLS, probe_dual_spells
+        vector VEC_SOUND_42, probe_sound_42
+        vector VEC_SOUND_44, probe_sound_44
+        vector VEC_DUAL_KIT, probe_dual_kit
+        vector VEC_CR_SPELLS, probe_cr_spells
+        vector VEC_EF_CLICK, probe_ef_click
+        vector VEC_CAST_MARK, probe_cast_mark
+        vector VEC_ROUND_MARK, probe_round_mark
+        vector VEC_CAST_DONE, probe_cast_done
+        vector VEC_END_TURN, probe_end_turn
+        vector VEC_LEARN_SAID, probe_learn_said
+        vector VEC_LEARN_REFUSED, probe_learn_refused
+        vector VEC_XP, probe_xp
+        vector VEC_PRIEST_THAC0, probe_priest_thac0
+        vector VEC_ADND_SLOTS, probe_adnd_slots
+        vector VEC_PRICE, probe_price
+        vector VEC_PRICE_EAX, probe_price_eax
+        vector VEC_RS_CLICK, probe_rs_click
+        vector VEC_PICK_LEVEL, probe_pick_level
+        vector VEC_PICK_LIST, probe_pick_list
+        vector VEC_SCROLL_LEARN, probe_scroll_learn
+        vector VEC_RANGER_CAST, probe_ranger_cast
+all_vectors_end:
+VECTORS equ (all_vectors_end - all_vectors) / 3
+
+; (the install code's room made up to AFTER_INSTALL's, if it is less: what's left is room for more
+; of FAR_DATA's bytes, which take none of the segment until then)
+AFTER_INSTALL_BYTES equ SEG_BYTES + ((AREA_BYTES + 15) & ~15) + 256
+        times (AFTER_INSTALL_BYTES - ($ - resident_end)) * (AFTER_INSTALL_BYTES > $ - resident_end) db 0
         align 16, db 0
 image_len equ $ - $$
 file_len  equ image_len + 32
@@ -25206,6 +24950,7 @@ seg_space  resb SEG_BYTES       ; (SEG_MOVE's: the stack's 60h bytes, then the m
 area_space resb (AREA_BYTES + 15) & ~15 ; (... and the pictures' table: both whole paragraphs)
 dark       resb 256             ; (the shadows' colours: DARK)
 after_install_end:
+        times -(after_install_end - resident_end != AFTER_INSTALL_BYTES) db 0 ; (AFTER_INSTALL_BYTES: these)
 kept_end   equ resident_end + ((after_install_end - resident_end + 15) & ~15)
 [section image]
         times -(after_install_end - hdr > image_len) db 0  ; (a negative count: past the install code)

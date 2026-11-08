@@ -60,6 +60,36 @@ def load_image():
     return bytes(image)
 
 
+def vector_table(image):
+    """DSCLOG's ALL_VECTORS, as its install sets them: {vector: (where its entry is, the handler)};
+    the table follows FAR_DATA's first bytes in the image (the header's +144 and +174)."""
+    hdr = struct.unpack_from("<H", image, 20)[0]
+    src, = struct.unpack_from("<H", image, hdr + 144)
+    n, = struct.unpack_from("<H", image, hdr + 174)
+    table, at = {}, src + n
+    while at + 3 <= len(image) and image[at]:
+        assert image[at] not in table, hex(image[at])  # (each vector once: its own probe's)
+        table[image[at]] = (at, struct.unpack_from("<H", image, at + 1)[0])
+        at += 3
+    return table
+
+
+def install_at(image, vector):
+    """Where VECTOR's handler is named in the install's table, less 4 (as "mov ax,25xxh / mov dx,"
+    named it before the table: the handler is the word at the result + 4); -1 if none."""
+    found = vector_table(image).get(vector)
+    return found[0] - 3 if found else -1
+
+
+def put_far_data(mu, image):
+    """FAR_DATA's first bytes put in the far block from the image, as DSCLOG's install (FAR_INIT)
+    does: from the header's +144 (in the image), +172 (in the far block), +174 bytes."""
+    hdr = struct.unpack_from("<H", image, 20)[0]
+    src, = struct.unpack_from("<H", image, hdr + 144)
+    to, n = struct.unpack_from("<HH", image, hdr + 172)
+    mu.mem_write(RING_SEG * 16 + to, bytes(image[src:src + n]))
+
+
 def fill_probes(image):
     """PROBE_NAMES_FILL and PROBE_TYPES_FILL, in that order: "add sp,0Ch", its three pushes back,
     then "or ax,ax" (other probes replace an "add sp,0Ch" the same way)."""
@@ -603,10 +633,8 @@ class UseItemTests(unittest.TestCase):
         from dsloader.gamepatch import VEC_GHOST
         mu, calls = self.mu, []
         image = load_image()
-        install = bytes((0xB8, VEC_GHOST, 0x25, 0xBA))  # (the install's mov ax,25xxh / mov dx: once,
-        at = image.find(install)                         #   its vector no other probe's)
-        self.assertGreater(at, 0)
-        self.assertEqual(image.find(install, at + 1), -1)
+        at = install_at(image, VEC_GHOST)  # (the install's table: once, its vector no other probe's,
+        self.assertGreater(at, 0)          #   as VECTOR_TABLE checks)
         handler = struct.unpack_from("<H", image, at + 4)[0]
         draw = (GAME_DS - 0x4356 + 0x1A0A) * 16 + 0x3180
         mu.mem_write(draw, b"\xcb")  # retf
@@ -656,8 +684,7 @@ class UseItemTests(unittest.TestCase):
         image = load_image()
 
         def handler(vector):
-            install = bytes((0xB8, vector, 0x25, 0xBA))
-            at = image.find(install)
+            at = install_at(image, vector)
             self.assertGreater(at, 0)
             return struct.unpack_from("<H", image, at + 4)[0]
         ghost_at, redraw_at = handler(VEC_GHOST), handler(VEC_REDRAW_ALL)
@@ -704,7 +731,7 @@ class UseItemTests(unittest.TestCase):
         from dsloader.gamepatch import VEC_REDRAW_ALL
         mu = self.mu
         image = load_image()
-        at = image.find(bytes((0xB8, VEC_REDRAW_ALL, 0x25, 0xBA)))
+        at = install_at(image, VEC_REDRAW_ALL)
         self.assertGreater(at, 0)
         redraw_at = struct.unpack_from("<H", image, at + 4)[0]
         seg, site = 0x8800, 0x0600
@@ -741,7 +768,7 @@ class UseItemTests(unittest.TestCase):
         from dsloader.gamepatch import VEC_GHOST
         mu = self.mu
         image = load_image()
-        at = image.find(bytes((0xB8, VEC_GHOST, 0x25, 0xBA)))
+        at = install_at(image, VEC_GHOST)
         handler = struct.unpack_from("<H", image, at + 4)[0]
         seg = 0x8800
         end = ghost.GH_TAB + 80 + 4096 + 192 * 8  # (GH_SPANS past GH_PIX's 4096, then 192 spans)
@@ -779,7 +806,7 @@ class UseItemTests(unittest.TestCase):
         from dsloader.gamepatch import VEC_GHOST
         mu = self.mu
         image = load_image()
-        at = image.find(bytes((0xB8, VEC_GHOST, 0x25, 0xBA)))
+        at = install_at(image, VEC_GHOST)
         handler = struct.unpack_from("<H", image, at + 4)[0]
         seg = 0x8800
         mu.mem_write(seg * 16, bytes(ghost.GH_TAB + 80))
@@ -2939,8 +2966,8 @@ class RuleTests(RingTests):
     def setUp(self):
         super().setUp()
         image = load_image()
-        def handler(vector):  # (the helper's install code: "mov ax,25xxh / mov dx,handler")
-            at = image.find(bytes((0xB8, vector, 0x25, 0xBA)))
+        def handler(vector):  # (the helper's install table: the vector, its handler)
+            at = install_at(image, vector)
             return struct.unpack_from("<H", image, at + 4)[0] if at > 0 else -1
         two, double = handler(VEC_TWO), handler(VEC_DOUBLE)
         self.assertGreater(min(two, double), 0)
@@ -3054,7 +3081,7 @@ class RuleTests(RingTests):
         image = load_image()
         from dsloader import gamepatch
         VEC_CR_SPELLS = gamepatch.VEC_CR_SPELLS
-        at = image.find(bytes((0xB8, VEC_CR_SPELLS, 0x25, 0xBA)))
+        at = install_at(image, VEC_CR_SPELLS)
         self.assertGreater(at, 0)
         self.mu.mem_write(VEC_CR_SPELLS * 4, struct.pack("<HH", struct.unpack_from("<H", image, at + 4)[0], TSR))
         self.hands()
@@ -3440,7 +3467,7 @@ class NewSpellTests(RuleTests):
     def setUp(self):
         super().setUp()
         image = load_image()
-        at = image.find(bytes((0xB8, 0x98, 0x25, 0xBA)))
+        at = install_at(image, 0x98)
         self.assertGreater(at, 0)
         self.mu.mem_write(0x98 * 4, struct.pack("<HH", struct.unpack_from("<H", image, at + 4)[0], TSR))
         # (NS_SETUP's tables: the game's spell levels, records and effects, all zero here)
@@ -4689,6 +4716,7 @@ class TypesTests(unittest.TestCase):
         self.assertGreater(min(size, fill - names_fill), 0)
         mu.mem_write(VEC_TYPES_SIZE * 4, struct.pack("<HH", size, TSR))
         mu.mem_write(VEC_TYPES_FILL * 4, struct.pack("<HH", fill, TSR))
+        put_far_data(mu, image)  # (EXTRA_TYPES: the far block's, from the image as installed)
         mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
         mu.mem_write(GAME_DS * 16 + 0x1669, struct.pack("<HH", 0, self.TYPES_SEG))
         self.hdr = TSR * 16 + image.find(HDR_SIG)
@@ -4740,7 +4768,7 @@ class QuiverTests(unittest.TestCase):
         self.mu = mu = Uc(UC_ARCH_X86, UC_MODE_16)
         mu.mem_map(0, 0x100000)
         mu.mem_write(TSR * 16, self.image)
-        at = self.image.find(bytes((0xB8, VEC_TAKE, 0x25, 0xBA)))
+        at = install_at(self.image, VEC_TAKE)
         self.assertGreater(at, 0)
         mu.mem_write(VEC_TAKE * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
         mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
@@ -5233,7 +5261,7 @@ class KitTests(unittest.TestCase):
         # AREA_SITE (the game's own reads): AX and ES the table's segment, AL entry BX's +2
         patch = next(p for p in gamepatch.PATCHES if p.name == "area_table_0")
         mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
-        at = self.image.find(bytes((0xB8, gamepatch.VEC_CR_SPELLS, 0x25, 0xBA)))
+        at = install_at(self.image, gamepatch.VEC_CR_SPELLS)
         mu.mem_write(gamepatch.VEC_CR_SPELLS * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
         def area_site():
             code = stub * 16 + 0x100
@@ -5794,7 +5822,7 @@ class KitTests(unittest.TestCase):
         the test's flags returned and DI left so (a spell all those kinds then does half)."""
         from dsloader import gamepatch
         image = load_image()
-        at = image.find(bytes((0xB8, gamepatch.VEC_CR_SPELLS, 0x25, 0xBA)))
+        at = install_at(image, gamepatch.VEC_CR_SPELLS)
         self.assertGreater(at, 0)
         self.mu.mem_write(gamepatch.VEC_CR_SPELLS * 4, struct.pack("<HH", struct.unpack_from("<H", image, at + 4)[0], TSR))
         self.mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
@@ -5823,7 +5851,7 @@ class KitTests(unittest.TestCase):
         them (CAST_WHO, CAST_SITE's)."""
         from dsloader import gamepatch, kits
         image = load_image()
-        at = image.find(bytes((0xB8, gamepatch.VEC_CR_SPELLS, 0x25, 0xBA)))
+        at = install_at(image, gamepatch.VEC_CR_SPELLS)
         self.mu.mem_write(gamepatch.VEC_CR_SPELLS * 4, struct.pack("<HH", struct.unpack_from("<H", image, at + 4)[0], TSR))
         if not getattr(self, "hooked", False):
             self.mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
@@ -5895,7 +5923,7 @@ class KitTests(unittest.TestCase):
         the test, whose flags come back; another neck item, or one in the backpack, doesn't."""
         from dsloader import gamepatch, worldgear
         image = load_image()
-        at = image.find(bytes((0xB8, gamepatch.VEC_CR_SPELLS, 0x25, 0xBA)))
+        at = install_at(image, gamepatch.VEC_CR_SPELLS)
         self.mu.mem_write(gamepatch.VEC_CR_SPELLS * 4, struct.pack("<HH", struct.unpack_from("<H", image, at + 4)[0], TSR))
         self.mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
         self.mu.mem_write(self.hdr + 212, struct.pack("<H", game.GAME_TYPES))
@@ -5929,7 +5957,7 @@ class KitTests(unittest.TestCase):
         from dsloader.gamepatch import VEC_ARROW
         image, mu = load_image(), self.mu
         mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
-        at = image.find(bytes((0xB8, gamepatch.VEC_CR_SPELLS, 0x25, 0xBA)))
+        at = install_at(image, gamepatch.VEC_CR_SPELLS)
         mu.mem_write(gamepatch.VEC_CR_SPELLS * 4, struct.pack("<HH", struct.unpack_from("<H", image, at + 4)[0], TSR))
         mu.mem_write(VEC_ARROW * 4, struct.pack("<HH", image.find(bytes.fromhex("53560650c41e5d16")), TSR))
         mu.mem_write(self.DS * 16 + 0x165D, struct.pack("<HH", 0, self.ITEMS))
@@ -6551,7 +6579,7 @@ class KitTests(unittest.TestCase):
     def run_vector(self, vector, code_len, **regs):
         """INT VECTOR as run_int, its handler where the helper's install sets it (the vectors read
         from the image's own install code: "mov ax,25xxh / mov dx,handler")."""
-        at = self.image.find(bytes((0xB8, vector, 0x25, 0xBA)))
+        at = install_at(self.image, vector)
         self.assertGreater(at, 0)
         handler = struct.unpack_from("<H", self.image, at + 4)[0]
         self.run_int(vector, self.image[handler:handler + 8].hex(), code_len, **regs)
@@ -6588,7 +6616,7 @@ class KitTests(unittest.TestCase):
             site = 0x640  # (past run_int's sites: the emulator keeps code it has seen)
             code = bytes((0xCD, VEC_END_TURN, 0x90, 0xEB, 0xFE)) + bytes(OUT - 2) + bytes((0xEB, 0xFE))
             self.mu.mem_write(CALLER * 16 + site, code)
-            install = self.image.find(bytes((0xB8, VEC_END_TURN, 0x25, 0xBA)))
+            install = install_at(self.image, VEC_END_TURN)
             self.mu.mem_write(VEC_END_TURN * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, install + 4)[0], TSR))
             self.mu.mem_write(SS * 16 + BP + 4, struct.pack("<HHH", caller, thing, actions))
             for name, value in dict(cs=CALLER, ds=self.DS, ss=SS, esp=0x7FC, ebp=BP, eflags=IF | 2, eax=0x1111,
@@ -6852,13 +6880,13 @@ class KitTests(unittest.TestCase):
         4, or 4 and two of 2nd level) and goes on past the game's grants (66F83h); another level:
         AX [BP-2], on as before."""
         from dsloader.gamepatch import VEC_CR_SPELLS, VEC_PICK_LEVEL
-        at = self.image.find(bytes((0xB8, VEC_PICK_LEVEL, 0x25, 0xBA)))
+        at = install_at(self.image, VEC_PICK_LEVEL)
         self.mu.mem_write(VEC_PICK_LEVEL * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
         self.rules(0)
         stub = (self.DS + 0x430A - 0x4356) * 16 + 0x5C
         # the stub as the window: count the calls, and the spell levels on offer at preserver level 9
         self.mu.mem_write(stub, bytes.fromhex(PICK_STUB % VEC_PICK_LEVEL))
-        at = self.image.find(bytes((0xB8, VEC_CR_SPELLS, 0x25, 0xBA)))
+        at = install_at(self.image, VEC_CR_SPELLS)
         self.mu.mem_write(VEC_CR_SPELLS * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
         if not getattr(self, "hooked", False):
             self.mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
@@ -6899,11 +6927,11 @@ class KitTests(unittest.TestCase):
         ones left are the game's own starting spells not yet known (PICK_FILL): 1st level Grease (7),
         Magic Missile (8), Shield (0Bh), Wall of Fog (9); 2nd level Fog Cloud (0Fh), Mirror Image (16h)."""
         from dsloader.gamepatch import VEC_CR_SPELLS, VEC_PICK_LEVEL
-        at = self.image.find(bytes((0xB8, VEC_PICK_LEVEL, 0x25, 0xBA)))
+        at = install_at(self.image, VEC_PICK_LEVEL)
         self.mu.mem_write(VEC_PICK_LEVEL * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
         self.rules(0)
         self.mu.mem_write((self.DS + 0x430A - 0x4356) * 16 + 0x5C, bytes.fromhex(PICK_STUB % VEC_PICK_LEVEL))
-        at = self.image.find(bytes((0xB8, VEC_CR_SPELLS, 0x25, 0xBA)))
+        at = install_at(self.image, VEC_CR_SPELLS)
         self.mu.mem_write(VEC_CR_SPELLS * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
         if not getattr(self, "hooked", False):
             self.mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
@@ -7045,7 +7073,7 @@ class KitTests(unittest.TestCase):
         its stub at DS less 4Ch), the spell levels on offer up to 1st meanwhile (PICK_CAP, as
         PROBE_PICK_LEVEL gives them), as it was after."""
         from dsloader.gamepatch import VEC_DUAL_SPELLS, VEC_PICK_LEVEL
-        at = self.image.find(bytes((0xB8, VEC_PICK_LEVEL, 0x25, 0xBA)))
+        at = install_at(self.image, VEC_PICK_LEVEL)
         self.mu.mem_write(VEC_PICK_LEVEL * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
         self.rules(0)
         self.picker_sheet(11, 0, 9)
@@ -7190,7 +7218,7 @@ class KitTests(unittest.TestCase):
         if not getattr(self, "hooked", False):
             mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
             self.hooked = True
-        at = self.image.find(bytes((0xB8, VEC_WP_CLASS, 0x25, 0xBA)))
+        at = install_at(self.image, VEC_WP_CLASS)
         mu.mem_write(VEC_WP_CLASS * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
         site = 0x600  # (a site of its own: run_vector's for VEC_CR_DIE shares the low bits)
         mu.mem_write(CALLER * 16 + site, bytes((0xCD, VEC_WP_CLASS, 0x90)))
@@ -7243,7 +7271,7 @@ class KitTests(unittest.TestCase):
         if not getattr(self, "hooked", False):
             mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
             self.hooked = True
-        at = self.image.find(bytes((0xB8, VEC_CR_PSP, 0x25, 0xBA)))
+        at = install_at(self.image, VEC_CR_PSP)
         mu.mem_write(VEC_CR_PSP * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
         site, back = 0x500, 0x520
         mu.mem_write(CALLER * 16 + site, bytes((0xCD, VEC_CR_PSP)))
@@ -7343,7 +7371,7 @@ class KitTests(unittest.TestCase):
         from dsloader import kits
         from dsloader.gamepatch import VEC_PICK_ANY
         who, site, open_at = 5, 0x700, 0x855CB - 0x85582
-        at = self.image.find(bytes((0xB8, VEC_PICK_ANY, 0x25, 0xBA)))
+        at = install_at(self.image, VEC_PICK_ANY)
         self.mu.mem_write(VEC_PICK_ANY * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
         if not getattr(self, "hooked", False):
             self.mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
@@ -7425,7 +7453,7 @@ class KitTests(unittest.TestCase):
 
     def said(self, vector, site):
         """INT VECTOR (a message probe) run from SITE: the far pointer it leaves pushed, the text."""
-        install = self.image.find(bytes((0xB8, vector, 0x25, 0xBA)))
+        install = install_at(self.image, vector)
         self.mu.mem_write(vector * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, install + 4)[0], TSR))
         if not getattr(self, "hooked", False):
             self.mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
@@ -7590,7 +7618,7 @@ class KitTests(unittest.TestCase):
                                                                 r.UC_X86_REG_SI, r.UC_X86_REG_ES)],
                                  [4, 0x2222, 0x3333, 0x4444, 0x6666])
         # PROBE_PICK_ANY: preserver level 1 (1st-level spells on offer), INT 9
-        at = self.image.find(bytes((0xB8, VEC_PICK_ANY, 0x25, 0xBA)))
+        at = install_at(self.image, VEC_PICK_ANY)
         self.mu.mem_write(VEC_PICK_ANY * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
         for rules, known, level, opens in ((game.RULE_INT_LEARN, first[:6], 1, False), (game.RULE_INT_LEARN, first[:5], 1, True),
                                            (game.RULE_INT_LEARN, first[:6], 3, True), (0, first[:6], 1, True)):
@@ -7683,7 +7711,7 @@ class AdndTablesTests(unittest.TestCase):
 
     def run_vector(self, vector, code_len, stack=b"", **regs):
         """INT VECTOR and its NOPs (CODE_LEN in all), STACK the words on the stack at the INT."""
-        at = self.image.find(bytes((0xB8, vector, 0x25, 0xBA)))
+        at = install_at(self.image, vector)
         self.assertGreater(at, 0)
         self.mu.mem_write(vector * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
         site = 0x400 + (vector & 0x1F) * 0x10  # (one for each vector: the emulator keeps code it has seen)
@@ -7835,7 +7863,7 @@ class RolledTests(AdndTablesTests):
         """INT VEC_CR_SPELLS, the site's number and NOPs (CODE_LEN in all); STACK the words on the
         stack at the INT, POPPED bytes of it gone after."""
         from dsloader.gamepatch import VEC_CR_SPELLS
-        at = self.image.find(bytes((0xB8, VEC_CR_SPELLS, 0x25, 0xBA)))
+        at = install_at(self.image, VEC_CR_SPELLS)
         self.mu.mem_write(VEC_CR_SPELLS * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
         ip = 0x600 + site * 0x10  # (one for each site: the emulator keeps code it has seen)
         self.mu.mem_write(CALLER * 16 + ip, bytes((0xCD, VEC_CR_SPELLS, site)) + b"\x90" * (code_len - 3))

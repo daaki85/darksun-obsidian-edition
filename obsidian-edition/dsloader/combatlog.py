@@ -29,7 +29,8 @@ from typing import Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 from . import palette, smallfont
 
 TSR_HDR_OFF = 20  # DSCLOG's header: where it is in DSCLOG's segment
-TSR_DAC = 238  # ... the offset of DAC, the palette as DSCLOG last read it (768 values, 0-63)
+TSR_DAC = 238  # ... the offset of DAC in its far block, the palette as DSCLOG last read it (768 values, 0-63)
+TSR_FAR_SEG = 142  # ... its far block's segment (FAR_SEG: FFFFh, the HMA, as DOSBox has it)
 TSR_PANEL_ON, TSR_PANEL_SEG, TSR_PANEL_NEW = 326, 328, 330  # ... the panel shown; its picture; a new one
 TSR_PANEL_OFF = 140  # the picture's offset in TSR_PANEL_SEG's segment (DSCLOG's far block)
 PANEL_W, PANEL_H = 180, 78  # (DSCLOG's PANEL_W, PANEL_H)
@@ -79,6 +80,18 @@ class Line(NamedTuple):
     text: str
     depth: int = 0  # a detail line's indent (the log's leading spaces, in twos)
 
+
+
+def far_block(guest, tsr_hdr: int) -> int:
+    """Where DSCLOG's far block is (its FAR_SEG, the header's +142, as a linear address): its
+    offsets from 10h on (DAC, RING_TAB, RED) are from here."""
+    return struct.unpack("<H", guest.read(tsr_hdr + TSR_FAR_SEG, 2))[0] * 16
+
+
+def tsr_dac(guest, tsr_hdr: int) -> bytes:
+    """DSCLOG's DAC: the palette as it last read it (768 values, 0-63), in its far block."""
+    off, = struct.unpack("<H", guest.read(tsr_hdr + TSR_DAC, 2))
+    return guest.read(far_block(guest, tsr_hdr) + off, 768)
 
 def line_kind(line: str) -> str:
     """A dice log line's kind, for its colour (as the Loader's log shows it)."""
@@ -803,9 +816,7 @@ class Panel:
             on = False
         names = names or {}
         if on and palettes and palettes != self._palettes:
-            base = tsr_hdr - struct.unpack("<H", guest.read(tsr_hdr + TSR_HDR_OFF, 2))[0]
-            dac_off, = struct.unpack("<H", guest.read(tsr_hdr + TSR_DAC, 2))
-            self._dac = guest.read(base + dac_off, 768)
+            self._dac = tsr_dac(guest, tsr_hdr)
             self._ink = inks(self._dac)
             self._backgrounds = {}
             self._palettes = palettes

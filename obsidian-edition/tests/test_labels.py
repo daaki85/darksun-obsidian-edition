@@ -22,6 +22,7 @@ class Guest:
         self.writes = []
         struct.pack_into("<H", self.mem, HDR + combatlog.TSR_HDR_OFF, HDR - BASE)
         struct.pack_into("<H", self.mem, HDR + combatlog.TSR_DAC, DAC - BASE)
+        struct.pack_into("<H", self.mem, HDR + combatlog.TSR_FAR_SEG, BASE // 16)  # (DAC's: the far block)
         for i in range(256):
             self.mem[DAC + i * 3:DAC + i * 3 + 3] = bytes((i // 4,) * 3)  # (a grey ramp)
 
