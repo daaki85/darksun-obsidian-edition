@@ -3655,11 +3655,17 @@ probe_dam_line:
 ; none), the damage bonus, the dice's sides and their count pushed as for PROBE_DAM_LINE. AL: the
 ; weapon's attacks a round (halves). With RULE_SPECIALIZE, the rate of fire as PROBE_ATTACKS gives
 ; it (MISSILE_RATE), and the bonus and sides as PROBE_SPEC_DAMAGE does; K'ratchek's chatkcha one
-; more a round, as OWN_THROWS (with the kits on, whatever the specialization rule).
+; more a round, as OWN_THROWS (with the kits on, whatever the specialization rule). With no
+; creature (an item box: this branch for a melee weapon too), at least one a round.
 probe_missile_line:
         mov al, [es:bx + 0x0B]
         cmp dword [bp - 6], 0
-        je .ret
+        jne .held
+        cmp al, 2               ; (no one's: an item box, a melee weapon's type its 1 there. At
+        jae .ret                ;  one a round, so the line shows no rate, as the game's did
+        mov al, 2               ;  before DAM_HALF let "0.5x" through for Slow)
+        iret
+.held:
         push di
         mov di, sp              ; DI+8 the count, +0Ah the sides, +0Ch the bonus
         push bx

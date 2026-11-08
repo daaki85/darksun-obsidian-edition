@@ -1952,6 +1952,29 @@ class SpecializeTests(unittest.TestCase):
         self.assertEqual(self.dam_line(3, self.LONG_SWORD, chosen=(0,), levels=(4, 0, 0)), (3, 6, 8, 1))
         self.assertEqual(self.dam_line(4, self.LONG_SWORD, chosen=(0,), levels=(9, 0, 0)), (6, 7, 10, 1))
 
+    def test_item_box_rate(self):
+        """An item box (the DAM line routine with no creature, [BP-6] 0) takes its rate from the item
+        type's +0Bh, 1 for a melee weapon: at least one a round (2 halves), so the line shows no rate,
+        not "0.5x" (PROBE_MISSILE_LINE); a missile weapon's own rate is kept."""
+        from dsloader.gamepatch import VEC_MISSILE_LINE
+        mu = self.mu
+        at = load_image().find(bytes.fromhex("268a470b66837efa00"))
+        self.assertGreater(at, 0)
+        mu.mem_write(VEC_MISSILE_LINE * 4, struct.pack("<HH", at, TSR))
+        for rate, want in ((1, 2), (2, 2), (4, 4)):
+            with self.subTest(rate=rate):
+                typ = bytearray(0x14)
+                typ[0x0B] = rate
+                mu.mem_write(self.SHEETS * 16, bytes(typ))
+                mu.mem_write(SS * 16 + BP - 6, bytes(4))  # (no creature)
+                mu.mem_write(CALLER * 16 + 0x600, bytes((0xCD, VEC_MISSILE_LINE, 0x90, 0x90)))
+                for name, value in dict(cs=CALLER, ds=self.DS, ss=SS, esp=0x7F6, ebp=BP, eflags=IF | 2, eax=0x1200,
+                                        ebx=0, es=self.SHEETS).items():
+                    mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+                mu.emu_start(CALLER * 16 + 0x600, CALLER * 16 + 0x604)
+                self.assertEqual(mu.reg_read(r.UC_X86_REG_SP), 0x7F6)
+                self.assertEqual(mu.reg_read(r.UC_X86_REG_AX) & 0xFF, want)
+
     def test_off_hand_attacks(self):
         """With the rule for two weapons (AD&D's), a weapon in the off hand (the item at [BP+12h], in
         slot 10: the helper's item 3) attacks once a round, the extra attacks the main hand's; a

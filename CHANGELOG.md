@@ -45,6 +45,15 @@ Releases, newest first: [2.14.0](#pull-request-87-merged-2026-11-07) (#86 and #8
   apart; FEATURES and the player guide call it that. (`viewer.py`; the setting is still
   `new_spells`.)
 
+**Fixed: DSCLOG**
+- **A melee weapon's item box read "0.5x1D8-1",** whoever held it. With no creature the game's damage
+  line takes the rate from the item type's +0Bh, a missile weapon's, which a melee weapon's type has
+  at 1 (half an attack); the game hid any rate of one attack or less, until #76's `dam_half` let
+  "0.5x" through for Slow. With no creature the rate is now at least one a round, so the box shows
+  none, as before #76; the inventory's and View Character's lines are as they were. (`PROBE_MISSILE_LINE`.
+  Seen in DOSBox: Gerakis's Bone Long Sword's box "1D8-1", his sling's "1D4". Test:
+  `test_item_box_rate`, which the helper before the fix fails.)
+
 **Fixed: the game**
 - **The game's Great Axe +3 had no material:** its type (2) carried the 40h of things with none,
   a ring's, so its name showed none, and under the class restrictions no sphere's cleric could
