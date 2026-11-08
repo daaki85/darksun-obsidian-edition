@@ -488,10 +488,10 @@ sizes; the paragraphs after it say how each piece got there.
 **The budget.** Each limit fails the build when passed (a negative `times`):
 
 - The helper's segment: what it reaches through CS is what stays (to
-  `resident_end`, 60,288 bytes) and the buffers laid over the install code
-  after it (`AFTER_INSTALL`, 1,664), together `kept_end`, 61,952 bytes, so
-  3,584 bytes of its 64 KB are spare. This is the limit for new code. The image
-  (`image_len`) is as long: `DSCLOG.EXE` is 32 bytes more, 61,984, with its
+  `resident_end`, 60,560 bytes) and the buffers laid over the install code
+  after it (`AFTER_INSTALL`, 1,664), together `kept_end`, 62,224 bytes, so
+  3,312 bytes of its 64 KB are spare. This is the limit for new code. The image
+  (`image_len`) is as long: `DSCLOG.EXE` is 32 bytes more, 62,256, with its
   header. Buffers that start as zeros and aren't needed while installing are
   laid over the install code, as `seg_space`, `area_space` and `dark` are
   (declared with `resb` after the image): `KEEP` zeroes them before its first

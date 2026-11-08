@@ -269,7 +269,9 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   level of a combatant (508h:2Ah, 5E85Fh) is +24h for a human, else the best level of a class that is
   set, so a monster with no class (elementals, slaads, Sand Howler, Rampager...) counts as 0 though its
   hit dice are at +24h. The game's own monster sheets are the RDFF chunks of SEGOBJEX.GFF (record type 4,
-  `dataitems.records`). The undead (race 9) all have a class.
+  `dataitems.records`). The undead (race 9) all have a class. With "Spells as the manual describes them" a classless
+  creature's saves count its hit dice as its level (DSCLOG's HD_SAVE_SITE in the save modifiers only;
+  checked 2026-11-08, logs/2026-11-08-hd-spells.md).
 - **Memory after the 2026-11-08 memory pass** (logs/2026-11-08-memory-pass.md): `memaudit.py` on
   the map in the pens: the helper's block 62,208 bytes with its PSP, the overlay buffer 32,992,
   the see-through tables 14,160, the music buffer 12,016, 37,392 free in one piece. **View
@@ -708,6 +710,19 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
     `effects.py OWNER 51 34 86` rewrites a Stuck into Paralyzed (47 Slowed) to test a cure.
   - The fight's Templar was creature 30 (the dice log's saves showed its WIS 17), not 11: check
     which creature a combatant is before writing its scores.
+  - **Level and class tests on a foe** (2026-11-08, logs/2026-11-08-hd-spells.md): write the
+    target's sheet in memory (race +18h, classes +21h..23h, levels +24h..26h; race 9 makes it
+    undead for Hold Undead). Creatures of one kind share a sheet (the ambush's three Guards, 8, 9
+    and 31, all sheet 15). The ambush's foes read map position -1,-1 at DS:669Dh + 32 x thing:
+    find them on a shot, not from that table. Archers hitting the caster before its turn cross out
+    its icons turn after turn: kill them in memory by name (`aging.kill`) when the story doesn't
+    matter (never save). A "cannot save" in the dice log is the save's -100 (a natural 20 is shown
+    first and saves); a natural 1 is shown before it too.
+  - **Color Spray** (preserver 1, its icon first on Lex's page in `fountain-user`) can catch a
+    member beside the figure clicked. **Hold Undead** (preserver 3) aims with the spell's icon as
+    the pointer, takes a second click for another target, and logs "lasts N rounds" for each
+    landing even on an immune target (then nothing more: no save, no effect).
+  - A cast that logs nothing but takes a slot was a click beside the figure: aim from a zoomed shot.
   - Magical Stone gives three throws a casting (the stone pointer comes back; the turn ends after
     the third). Flaming Sphere cast at a foe two squares off struck the caster (twice); farther off
     it took a slot and logged nothing.

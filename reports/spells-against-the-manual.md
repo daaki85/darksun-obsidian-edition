@@ -147,10 +147,10 @@ DSCLOG handler; **large** new game mechanics.
 - **Resolution:** per-round saves, medium to large: leave and say so. Chaos's INT exception, small.
 
 ### Smaller (leave; say so in the docs)
-- **Stinking Cloud (2nd):** 1d6 rounds, not 2-5 (same average).
-- **Color Spray (1st):** everyone saves, not only higher levels.
+- **Stinking Cloud (2nd):** 1d6 rounds, not 2-5 (same average). *(Since made 1d4+1.)*
+- **Color Spray (1st):** everyone saves, not only higher levels. *(Since fixed: creatures of the caster's level or lower can't save, under "Spells as the manual describes them".)*
 - **Invisibility (2nd):** ends only on an attack or a spell at an enemy (a buff on a friend keeps it).
-- **Hold Undead (3rd):** the manual's "HD no more than the caster's" isn't in the target test (unverified elsewhere).
+- **Hold Undead (3rd):** the manual's "HD no more than the caster's" isn't in the game at all. *(Since fixed: undead above the caster's level are immune.)*
 - **Protection from Normal Missiles (3rd):** stops breath weapons too (above), maybe magical missiles (unverified).
 
 ## Cleric spells (manual pp. 35-40)

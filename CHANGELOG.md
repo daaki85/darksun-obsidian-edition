@@ -74,6 +74,11 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
   run came from the test, not the game (a priest casting a spell outside its spheres casts it at
   level 0: the cast's level routine, 5E25Ch, takes only the classes whose spheres the spell has),
   and its record's level divisor (2) is now 1 too.
+  **Hold Undead** holds only undead of the caster's level or lower (HOLD_HD_SITE, 7A345h); **Color
+  Spray** gives no save to creatures of the caster's level or lower (SPRAY_SITE, 79F83h); and for
+  saving throws a monster with no class counts its hit dice as its level (HD_SAVE_SITE, 79D8Ch: the
+  game's level routine gives such a creature 0, so a 14-HD Rampager was Scared like a 1st-level one,
+  and Dismissal was easy on elementals and slaadi). Seen in DOSBox (playtest/logs/2026-11-08-hd-spells.md).
 - **A fight's summary as it ends** (mock-up G's): `Fight over: 2 rounds, 1 kill; the party dealt 28
   damage and took 6`, then each member's attacks hit, damage dealt, kills and damage taken, written
   once the game's fight flag has been down 2 seconds (each arena wave gets its own). A kill goes to
