@@ -41,6 +41,12 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 ## Next pull request (not opened yet)
 
 **Changed**
+- **A fight's summary as it ends** (mock-up G's): `Fight over: 2 rounds, 1 kill; the party dealt 28
+  damage and took 6`, then each member's attacks hit, damage dealt, kills and damage taken, written
+  once the game's fight flag has been down 2 seconds (each arena wave gets its own). A kill goes to
+  whoever hurt the creature last, a spell's damage to the caster its saving throws name (else to
+  the party). The readable layout shows it as the fight's close, its members' lines always shown.
+  (`fighttally.py`; tests: `test_fighttally`, `test_ledger`.)
 - **Fastest (35,000 cycles) is the default game speed** (was Faster, 20,000). With the cheaper
   drawing it shows about all the pictures the game draws while the whole party walks (18.9 a
   second) and walks fastest (141 map units a second, against 112 at 20,000), for about 30% of a

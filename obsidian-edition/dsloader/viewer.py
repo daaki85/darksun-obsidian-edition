@@ -201,6 +201,7 @@ class Viewer:
         self.dice_text.tag_configure("lg_turn", font="LedgerFixedSmall", spacing1=4)
         self.dice_text.tag_configure("lg_round", spacing1=8, spacing3=2)
         self.dice_text.tag_configure("lg_event", spacing1=2)
+        self.dice_text.tag_configure("lg_summary", spacing1=2, spacing3=6)
         self.dice_text.bind("<Configure>", lambda e: self._set_columns(e.width), add="+")
         self.dice_text.tag_configure("monster", foreground=theme.MONSTER_COLOUR, font="LedgerFixedBold")
         self._raw_dice: "deque[str]" = deque(maxlen=MAX_LOG_LINES)  # (the log's own lines, as written)
@@ -1541,7 +1542,7 @@ class Viewer:
             self.dice_text.see("end")
 
     _KIND_TAGS = {ledger.EVENT: ("lg_event",), ledger.DETAIL: ("detail", "lg_detail"), ledger.TURN: ("lg_turn",),
-                  ledger.ROUND: ("lg_round",)}
+                  ledger.ROUND: ("lg_round",), ledger.SUMMARY: ("lg_summary",)}
 
     def _row(self, row: "ledger.Row", line: str, names: List[Tuple[str, str]]) -> None:
         """A row of the readable layout at the log's end, its slots marked for their fills."""

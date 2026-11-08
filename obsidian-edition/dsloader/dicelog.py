@@ -28,7 +28,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import aging, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
@@ -549,6 +549,9 @@ class DiceLog:
         self._out_of_fight: Optional[float] = None  # (since when the game's fight flag is down)
         self._fight_seen = False  # (the flag seen up since the dances and Wild Fighting were rolled)
         self._kits_due = False  # (a fight is over: the next round rolls the dances and Wild Fighting)
+        self._tally = fighttally.FightTally(self._is_party)  # (the fight's summary, said at its end)
+        self._tally_seen = False  # (the fight flag seen up since the tally's fight began)
+        self._tally_out: Optional[float] = None  # (when the flag was first seen down after that)
         self._stale_turn: Optional[int] = None  # the last round's last turn, until the new one's first
         self._save_rolls: Dict[Tuple[int, int], int] = {}  # (SS, save frame BP) -> natural d20
         self._static_rolls: Dict[Tuple[int, int], int] = {}  # (SS, power check BP) -> the first d20 of a Static contest
@@ -1197,7 +1200,37 @@ class DiceLog:
             out += self._after_rolls(show_all, now)
         except Exception as e:
             out += self._error_once(e)
+        try:
+            self._tally.feed(out)
+        except Exception as e:
+            out += self._error_once(e)
+        out += self._step(lambda: self._tally_end(now))
         return self._lines_end(out, now)
+
+    def _is_party(self, name: str) -> bool:
+        g = self.game
+        return g is not None and any(g.creature_name(n) == name for n in range(game.PARTY_SIZE))
+
+    def _tally_end(self, now: float) -> List[str]:
+        """The fight's summary (fighttally.py) once it is over: the game's fight flag, seen up in
+        it, down FIGHT_OVER (as a fight ends and between the arena's waves), or the game's clock
+        FIGHT_GAP past the last round or gone back (a game loaded)."""
+        if not self._tally.started or self.game is None:
+            return []
+        if self.game.in_combat():
+            self._tally_seen, self._tally_out = True, None
+            return []
+        if self._tally_out is None:
+            self._tally_out = now
+        over = self._tally_seen and now - self._tally_out >= FIGHT_OVER
+        now_game = self.game.game_time()
+        if now_game is not None and self._round_time is not None \
+                and (now_game - self._round_time > FIGHT_GAP or now_game < self._round_time):
+            over = True
+        if not over:
+            return []
+        self._tally_seen, self._tally_out = False, None
+        return self._tally.end()
 
     def _error_once(self, err: Exception) -> List[str]:
         """A line for an error the dice log's pass didn't expect, once for each kind (with where it

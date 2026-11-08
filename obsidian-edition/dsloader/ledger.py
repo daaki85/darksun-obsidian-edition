@@ -22,7 +22,7 @@ from typing import Callable, Dict, List, NamedTuple, Optional, Tuple, Union
 # the pieces' roles (the window's colours: palette.LEDGER_COLOURS)
 BODY, GOOD, BAD, DIM, NOTE, RULE = "body", "good", "bad", "dim", "note", "rule"
 # the rows' kinds
-EVENT, DETAIL, ROUND, TURN, PLAIN = "event", "detail", "round", "turn", "plain"
+EVENT, DETAIL, ROUND, TURN, PLAIN, SUMMARY = "event", "detail", "round", "turn", "plain", "summary"
 TAB = "\t"  # (an event row's columns: its text, then the HP, then the roll)
 PARTY_PIP, MONSTER_PIP, NO_PIP = "● ", "○ ", "  "
 DASH = " — "
@@ -85,6 +85,7 @@ class Ledger:
         self._slots: Dict[Tuple[str, str], Tuple[str, int]] = {}  # (kind, name) -> (slot id, row made at)
         self._rows = 0
         self._next = 0
+        self._summary = False  # (in a fight's summary: its members' lines shown with it, not as working)
 
     # ---------------------------------------------------------------------------------------------
 
@@ -122,6 +123,13 @@ class Ledger:
 
     def _line(self, line: str) -> List[Op]:
         text = line.strip()
+        if line.startswith("Fight over: "):
+            self._summary = True
+            self._slots.clear()
+            return [Row(SUMMARY, (Piece("Fight over", NOTE), Piece(": " + line[len("Fight over: "):], BODY)))]
+        if self._summary and line.startswith("    "):
+            return [Row(SUMMARY, (Piece("  " + text, BODY),))]
+        self._summary = False
         if self._attack is not None and self._attack.get("thac0_due") and line.startswith("    THAC0 "):
             return [self._to_hit(text)]
         if self._attack is not None:

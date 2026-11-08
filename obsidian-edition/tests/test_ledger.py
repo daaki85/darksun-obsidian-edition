@@ -111,6 +111,14 @@ class LedgerTests(unittest.TestCase):
         self.assertEqual(text(ops[1]), "  Slig now 5/8 (−3)")
         self.assertEqual(text(ops[2]), "Message: hello")
 
+    def test_fight_summary(self):
+        """The fight's summary: its head, and its members' lines with it (not hidden as working)."""
+        ops = run(["Fight over: 2 rounds, 1 kill; the party dealt 28 damage and took 6",
+                   "    Seneca: 1 of 1 attacks hit, 21 dealt, 1 kill", "XP: Seneca +120", "    THAC0 19 = 12"])
+        self.assertEqual([o.kind for o in ops], [ledger.SUMMARY, ledger.SUMMARY, ledger.PLAIN, ledger.DETAIL])
+        self.assertEqual(ops[0].pieces[0].role, ledger.NOTE)
+        self.assertEqual(text(ops[1]), "  Seneca: 1 of 1 attacks hit, 21 dealt, 1 kill")
+
     def test_slots_given_up(self):
         """A slot no fill came for is given up after KEEP rows (its line then shown as written)."""
         ops = run([ATTACK] + ["Message: x"] * (ledger.KEEP + 1) + ["  Seneca hits Arena Guard for 11: 1d4 = [3]"])
