@@ -19908,6 +19908,8 @@ SHADOW_RIGHT equ 72             ; how far right a shadow reaches past its figure
                                 ;   and a step of 4: rectangles are kept to whole bytes)
 SHADOW_DOWN  equ 44             ; and how far down (SHADOW_ROWS / 2, and a figure's height off the
                                 ;   ground)
+RING_RIGHT   equ 16             ; (with rings only: a ring reaches 14 pixels either side of the feet,
+RING_DOWN    equ 8              ;   7 below them: RING_EXTRA's)
 PAGES_SEG    equ 0x0980         ; (DSUN.EXE segments, less the load segment) the page routines',
                                 ;   whose code segment holds the pages' table
 CACHE_SEG    equ 0x3E60         ; the picture cache's table: 16 bytes a slot
@@ -19939,6 +19941,9 @@ probe_redraw:
         jne .wide
         cmp word [cs:rings_on], 0
         je .wided
+        add word [bp+22], RING_RIGHT    ; (rings alone: they reach no further than this)
+        add word [bp+24], RING_DOWN
+        jmp .wided
 .wide:
         add word [bp+22], SHADOW_RIGHT  ; x1 (after BP, the interrupt's IP, CS and flags, and the
         add word [bp+24], SHADOW_DOWN   ;   caller's way back); y1 (the routine keeps both on screen)
@@ -20163,12 +20168,15 @@ probe_redraw_all:
         jne .wide
         cmp word [cs:rings_on], 0
         je .dust
+        add word [bp-0x0A], RING_RIGHT  ; (rings alone: they reach no further than this)
+        add word [bp-0x0E], RING_DOWN
+        jmp .keep
 .wide:  add word [bp-0x0A], SHADOW_RIGHT
-        cmp word [bp-0x0A], 0x13F       ; (the routine draws to x1 + 1: kept on screen)
+        add word [bp-0x0E], SHADOW_DOWN
+.keep:  cmp word [bp-0x0A], 0x13F       ; (the routine draws to x1 + 1: kept on screen)
         jle .x
         mov word [bp-0x0A], 0x13F
-.x:     add word [bp-0x0E], SHADOW_DOWN
-        cmp word [bp-0x0E], 0xC7
+.x:     cmp word [bp-0x0E], 0xC7
         jle .dust
         mov word [bp-0x0E], 0xC7
 .dust:  call dust_union
@@ -20240,9 +20248,31 @@ floor_enter:
         pop word [cs:resume]
         pop word [cs:resume + 2]
         popf
-        cmp word [cs:panel_on], 0       ; (the floor drawn over the panel, maybe: drawn again)
-        je .shade
-        mov byte [cs:panel_dirty], 1
+        cmp word [cs:panel_on], 0       ; (the floor drawn over the panel: the panel drawn again;
+        je .shade                       ;   not for a rectangle beside it, as REDRAW_PARTS draws
+        cmp byte [cs:floor_kind], 0     ;   round it: the game draws the figures within it too, on
+        je .dirty                       ;   a page of the rectangle's own)
+        push bp
+        mov bp, sp                      ; (the routine's way back at BP+2, then the page, x0, y0,
+        push ax                         ;   x1 + 1, y1)
+        cmp word [bp + 12], PANEL_X0
+        jle .beside
+        cmp word [bp + 8], PANEL_X0 + PANEL_W - 1
+        jg .beside
+        mov ax, [bp + 14]
+        cmp ax, [cs:panel_top]
+        jl .beside
+        mov ax, [cs:panel_top]
+        add ax, [cs:panel_rows]
+        cmp [bp + 10], ax
+        jge .beside
+        pop ax
+        pop bp
+.dirty: mov byte [cs:panel_dirty], 1
+        jmp .shade
+.beside:
+        pop ax
+        pop bp
 .shade:
         cmp word [cs:shadows_on], 0
         jne .on
@@ -21071,28 +21101,31 @@ ghost_draw:
         jc .full
         cmp ax, GH_SPANS
         ja .full                        ; (no room: what is decoded drawn)
-        mov bx, di                      ; BX its first pixel
-.data:  jcxz .noted
-        push cx
-        lodsb                           ; a control byte: bit 0 clear, (b >> 1) + 1 bytes to copy;
-        movzx cx, al                    ;   set, one byte (b >> 1) + 1 times
+        push di                         ; (its first pixel)
+        jcxz .noted
+        push dx
+        mov dx, cx                      ; DX: the pixels left
+        mov bx, GH_REP                  ; (ES:BX: REP, for XLAT)
+.data:  lodsb                           ; a control byte: bit 0 clear, (b >> 1) + 1 bytes to copy;
+        movzx cx, al                    ;   set, one byte (b >> 1) + 1 times (each a REP number)
         shr cx, 1
         inc cx
+        sub dx, cx
         test al, 1
         jz .copy
-        call .rep
+        lodsb
+        es xlatb
         rep stosb
         jmp .took
-.copy:  call .rep
+.copy:  lodsb
+        es xlatb
         stosb
         loop .copy
-.took:  pop cx
-        mov cx, [bp + GD_N - 10]        ; (pixels left)
-        mov ax, di
-        sub ax, bx
-        sub cx, ax
+.took:  or dx, dx
         jg .data
-.noted: pop si
+        pop dx
+.noted: pop bx                          ; BX its first pixel
+        pop si
         cmp dx, [cs:clip_y0]            ; the run within the page: noted
         jl .next
         cmp dx, [cs:clip_y1]
@@ -21140,12 +21173,6 @@ ghost_draw:
         test ah, 0x80
         jz .run
         jmp .row
-.rep:   lodsb                           ; (AL: the next pixel's REP number)
-        movzx ax, al
-        xchg ax, bx
-        mov bl, [es:GH_REP + bx]
-        xchg ax, bx
-        ret
 .full:  pop ax
 .spans_full:
         pop ax
@@ -21487,6 +21514,7 @@ probe_scroll:
         push di
         inc word [cs:main_ticks]
         mov byte [cs:arc_hold], 0       ; (an Arcanist's cast is over: PROBE_END_TURN)
+        mov byte [cs:va_done], 0        ; (the view not drawn again yet in this pass: VIEW_AGAIN)
         call dust_tick
         call whirl_tick
         call sound_tick
@@ -21497,6 +21525,7 @@ probe_scroll:
         call view_again
 .panel: call panel_tick
         call label_tick
+        mov byte [cs:va_done], 0
 .read:  mov ax, 3
         int 0x33                        ; BX = buttons, CX, DX = where
         cmp word [cs:scroll_on], 0
@@ -21623,6 +21652,7 @@ centre_on:                              ; the view's top left to (AX, SI), drawn
 DUST_LIFE  equ 18               ; ticks of the BIOS clock (18.2 a second) a puff lasts
 DUST_STEP  equ 6                ; pixels walked for each puff
 JUMP_MOST  equ 40               ; a move further than this (across or up and down) is a jump, not a walk
+DUST_EDGE  equ 16               ; (a walker further than this off the view raises none)
 PUFFS      equ 24               ; puffs at most at once
 PUFF_SIZE  equ 12               ; a puff: x, y (on the map), born (ticks), owner (thing), seed, live
 BIOS_TICKS equ 0x46C
@@ -21656,12 +21686,12 @@ dust_tick:                      ; DS = the game's
         mov cx, [OBJ_COUNT]
         or cx, cx
         jz .done
-.thing: push cx
-        mov bx, [es:di + 6]
+.thing: mov bx, [es:di + 6]
         cmp bx, MAP_COUNT - 1
         ja .tnext
         bt [cs:shadow_tab], bx
         jnc .tnext
+        push cx
         mov [cs:t_thing], bx
         mov ax, [es:di]
         mov [cs:t_x], ax
@@ -21682,28 +21712,40 @@ dust_tick:                      ; DS = the game's
         mov ax, [cs:t_dx]               ; walked a little (not a jump: an area loaded, someone placed)
         call abs16
         cmp ax, JUMP_MOST
-        jae .tnext
+        jae .tpop
         mov cx, ax
         mov ax, [cs:t_dy]
         call abs16
         cmp ax, JUMP_MOST
-        jae .tnext
-        add ax, cx
-        jz .tnext
+        jae .tpop
+        add cx, ax                      ; CX: how far
+        jz .tpop
+        mov ax, [cs:t_x]                ; (off the view: no dust, its place noted all the same)
+        sub ax, [CAM_X]
+        cmp ax, -DUST_EDGE
+        jl .tpop
+        cmp ax, 319 + DUST_EDGE
+        jg .tpop
+        mov ax, [cs:t_y]
+        sub ax, [CAM_Y]
+        cmp ax, -DUST_EDGE
+        jl .tpop
+        cmp ax, 199 + DUST_EDGE
+        jg .tpop
         mov ax, [cs:d_now]
         mov [cs:d_walked_at], ax
         mov bx, [cs:t_thing]
-        add [cs:walked + bx], al
+        add [cs:walked + bx], cl
         cmp byte [cs:walked + bx], DUST_STEP
-        jb .tnext
+        jb .tpop
         sub byte [cs:walked + bx], DUST_STEP
         cmp byte [cs:walked + bx], DUST_STEP
         jb .one
         mov byte [cs:walked + bx], 0        ; (one puff a tick at most)
 .one:
         call puff_raise
-.tnext: pop cx
-        add di, 8
+.tpop:  pop cx
+.tnext: add di, 8
         dec cx
         jnz .thing
 .done:  call dust_nudge
@@ -21807,8 +21849,8 @@ STILL_TICKS equ 3              ; how long no one has walked (nor the view moved)
 NUDGE_TICKS equ 4               ; ... and between its drawings of the view
 
 ; DUST_NUDGE: with puffs to draw again while no one walks and the view stands still (when the
-; game draws again round what moved anyway, DUST_UNION taking them in), the view drawn again
-; (VIEW_AGAIN) every NUDGE_TICKS, till they are gone
+; game draws again round what moved anyway, DUST_UNION taking them in), their ground drawn again
+; (D_X0 to D_Y1, as far as it is on screen: REDRAW_RECT) every NUDGE_TICKS, till they are gone
 dust_nudge:
         mov ax, [CAM_X]                 ; (the view: when it last moved)
         cmp ax, [cs:d_cam_x]
@@ -21836,13 +21878,47 @@ dust_nudge:
         mov ax, [cs:d_now]
         mov [cs:d_nudged], ax
         mov byte [cs:d_dirty], 0
-        call view_again
+        mov ax, [cs:d_x0]
+        sub ax, [CAM_X]
+        mov cx, [cs:d_x1]
+        sub cx, [CAM_X]
+        mov bx, [cs:d_y0]
+        sub bx, [CAM_Y]
+        mov dx, [cs:d_y1]
+        sub dx, [CAM_Y]
+        cmp cx, 0                       ; (off screen: nothing)
+        jl .ret
+        cmp ax, 0x13F
+        jg .ret
+        cmp dx, 0
+        jl .ret
+        cmp bx, 0xC7
+        jg .ret
+        or ax, ax
+        jge .x0
+        xor ax, ax
+.x0:    and ax, 0xFFFC                  ; (whole bytes of the planes, as LABEL_ERASE)
+        cmp cx, 0x13F
+        jle .x1
+        mov cx, 0x13F
+.x1:    or cx, 3
+        or bx, bx
+        jge .y1
+        xor bx, bx
+.y1:    cmp dx, 0xC7
+        jle .rect
+        mov dx, 0xC7
+.rect:  call redraw_rect
 .ret:   ret
 
 ; VIEW_AGAIN: the view drawn again, all of it, as the game does when the view is centred where it
 ; is (DS = the game's). The figures are never marked changed to have them drawn again: in a fight
-; that can set one walking again.
+; that can set one walking again. Once a pass of the main loop (VA_DONE, from PROBE_SCROLL): the
+; panel's and the labels' both asked for it when the view scrolled, and it was drawn twice.
 view_again:
+        cmp byte [cs:va_done], 0
+        jne .ret
+        mov byte [cs:va_done], 1
         push ax
         push bx
         push cx
@@ -21856,7 +21932,8 @@ view_again:
         pop cx
         pop bx
         pop ax
-        ret
+.ret:   ret
+va_done db 0
 
 ; LABELS: names floating over figures (a spell's over its caster, "Miss" over who an attack missed:
 ; labels.py), the Loader's LBL_SLOTS. The map is drawn straight into the screen on show, a rectangle
@@ -22022,33 +22099,46 @@ label_erase:
         mov byte [cs:lbl_busy], 1       ; (busy first: a strike between could stamp the label
         mov byte [cs:si + LS_SHOWN], 0  ; anew, then be erased, the old place left)
         pusha
+        movzx dx, byte [cs:si + LS_H]
+        add dx, [cs:si + LS_Y]
+        dec dx                          ; y1
+        movzx cx, byte [cs:si + LS_W]
+        add cx, [cs:si + LS_X]
+        dec cx
+        or cx, 3
+        cmp cx, 319
+        jbe .x1
+        mov cx, 319
+.x1:    mov bx, [cs:si + LS_Y]          ; y0
+        mov ax, [cs:si + LS_X]
+        and ax, ~3                      ; x0
+        call redraw_rect
+        mov byte [cs:lbl_busy], 0
+        popa
+        ret
+
+; REDRAW_RECT: the view's rectangle AX x0, BX y0, CX x1, DX y1 (on screen) drawn again by the
+; game's routine for a rectangle of the view (REDRAW_SEG:REDRAW_OFF; page 1 and a flip, as the
+; game's own call at 28185h), through PROBE_REDRAW (round the combat log's panel). DS the game's;
+; keeps all.
+redraw_rect:
+        pusha
         push es
+        push ax
         mov ax, ds
         sub ax, DGROUP_SEG - REDRAW_SEG
         mov [cs:redraw_far + 2], ax
+        pop ax
         push word 1                     ; (the flip)
-        movzx ax, byte [cs:si + LS_H]
-        add ax, [cs:si + LS_Y]
-        dec ax
-        push ax                         ; y1
-        movzx ax, byte [cs:si + LS_W]
-        add ax, [cs:si + LS_X]
-        dec ax
-        or ax, 3
-        cmp ax, 319
-        jbe .x1
-        mov ax, 319
-.x1:    push ax                         ; x1
-        push word [cs:si + LS_Y]
-        mov ax, [cs:si + LS_X]
-        and ax, ~3
-        push ax                         ; x0
+        push dx
+        push cx
+        push bx
+        push ax
         push word 1                     ; (the page)
         push word [CAM_Y]
         push word [CAM_X]
         call far [cs:redraw_far]
         add sp, 16
-        mov byte [cs:lbl_busy], 0
         pop es
         popa
         ret
@@ -22060,7 +22150,14 @@ label_erase:
 label_stamp:
         cmp byte [cs:lbl_busy], 0
         jne .ret
-        mov byte [cs:lbl_busy], 1
+%assign slot 0
+%rep LBL_SLOTS
+        cmp byte [cs:lbl_slots + slot * LBL_SIZE], 0
+        jne .some
+%assign slot slot + 1
+%endrep
+        ret                             ; (no label in any slot: nothing to put, nor to place)
+.some:  mov byte [cs:lbl_busy], 1
         pusha
         push ds
         push es
@@ -22825,7 +22922,10 @@ dust_pass:
         mov ax, [BIOS_TICKS]
         pop ds
         mov [cs:d_now], ax
-        mov si, puffs
+        cmp byte [cs:d_built], 0
+        jne .built
+        call dust_build
+.built: mov si, puffs
         mov cx, PUFFS
 .puff:  cmp byte [cs:si + 10], 0
         je .next
@@ -22845,6 +22945,10 @@ puff_draw:                              ; the puff at CS:SI
         jb .young
         ret
 .young: mov bx, ax                      ; BX: its age
+        shl bx, 1
+        push word [cs:d_blocks + bx]    ; (its rows' thickness, DUST_BUILD's)
+        pop word [cs:d_block]
+        shr bx, 1
         shl ax, 3                       ; across: 3, growing to 11
         xor dx, dx
         mov cx, DUST_LIFE
@@ -22855,11 +22959,6 @@ puff_draw:                              ; the puff at CS:SI
         add ax, 8
         shr ax, 4
         mov [cs:d_ry], ax
-        mov al, [cs:dust_dens + bx]
-        xor ah, ah
-        mov [cs:d_dens], ax
-        mov al, [cs:dust_core + bx]
-        mov [cs:d_core], ax
         imul ax, bx, 5                  ; rising, 5 pixels in all
         xor dx, dx
         div cx
@@ -22908,20 +23007,15 @@ puff_draw:                              ; the puff at CS:SI
         jle .to
         mov ax, [cs:d_rx]
 .to:    mov [cs:d_xto], ax
-        mov cx, [cs:d_rx]               ; how far out it is across, (x / rx)^2 of 256, by |x|
-        imul cx, cx
-        xor si, si
-.tab:   mov ax, si
-        imul ax, ax
-        shl ax, 8
-        xor dx, dx
-        div cx
-        mov bx, si
-        shl bx, 1
-        mov [cs:d_extab + bx], ax
-        inc si
-        cmp si, [cs:d_rx]
-        jbe .tab
+        mov ax, [cs:d_rx]
+        inc ax
+        shl ax, 2
+        mov [cs:d_stride], ax           ; (DUST_BUILD's rows: 2 RX + 2 words)
+        mov ax, 11                      ; (and D_THRSYM's x 0 at its +22 whatever RX)
+        sub ax, [cs:d_rx]
+        shl ax, 1
+        add ax, d_thrsym
+        mov [cs:d_symat], ax
         mov ax, [cs:d_ry]
         neg ax
         mov [cs:d_yy], ax
@@ -22944,38 +23038,27 @@ puff_draw:                              ; the puff at CS:SI
         mul word [cs:v_row]
         sub ax, [cs:v_x0]
         mov [cs:row_at], ax
-        mov ax, [cs:d_yy]               ; how far out it is, up and down: (y / ry)^2, of 256
-        imul ax, ax
-        shl ax, 8
-        mov cx, [cs:d_ry]
-        imul cx, cx
-        xor dx, dx
-        div cx
-        mov [cs:d_ey], ax
-        mov word [cs:d_xmax], -1        ; (the widest |x| inside, on this row)
-        xor si, si                      ; for each |x| on this row: how thick (0: outside), and
-.thr:   mov bx, si                      ;   whether in the core
-        shl bx, 1
-        mov ax, [cs:d_extab + bx]       ; and across
-        add ax, [cs:d_ey]
-        mov bx, si
-        shl bx, 1
-        mov word [cs:d_thrcore + bx], 0
-        cmp ax, 256
-        ja .nthr
-        mov [cs:d_xmax], si
-        cmp ax, [cs:d_core]
-        setb byte [cs:d_thrcore + bx + 1]
-        imul ax, ax, 154                ; thinner toward the edge
-        shr ax, 8
+        mov ax, [cs:d_yy]               ; for each |x| on this row: how thick (0: outside), and
+        or ax, ax                       ;   whether in the core, and the widest |x| inside: the
+        jns .absy                       ;   row of DUST_BUILD's table for its age and |y|
         neg ax
-        add ax, 256
-        mul word [cs:d_dens]
-        shr ax, 8
-        mov [cs:d_thrcore + bx], al
-.nthr:  inc si
-        cmp si, [cs:d_rx]
-        jbe .thr
+.absy:  imul ax, [cs:d_stride]
+        add ax, [cs:d_block]
+        push ds
+        push es
+        mov si, ax
+        mov ds, [cs:far_seg]
+        push cs
+        pop es
+        lodsw
+        mov [cs:d_xmax], ax
+        mov di, [cs:d_symat]
+        mov cx, [cs:d_rx]
+        shl cx, 1
+        inc cx
+        rep movsw
+        pop es
+        pop ds
         mov ax, [cs:d_xmax]             ; the row's columns: within the clip and the ellipse
         or ax, ax
         js .nrow
@@ -23023,11 +23106,8 @@ puff_draw:                              ; the puff at CS:SI
         shr bp, 2
         add bp, [cs:row_at]
 .px:    mov bx, si
-        or bx, bx
-        jns .abs
-        neg bx
-.abs:   shl bx, 1
-        mov cx, [cs:d_thrcore + bx]     ; CL: how thick, CH: whether in the core
+        shl bx, 1
+        mov cx, [cs:d_thrsym + 22 + bx] ; CL: how thick, CH: whether in the core
         mov ax, di
         xor ax, [cs:d_rowhash]
         add ax, [cs:d_seed]
@@ -23062,6 +23142,124 @@ puff_draw:                              ; the puff at CS:SI
         jb .plane
 .nrow:  inc word [cs:d_yy]
         jmp .row
+
+; DUST_BUILD: the far block's FAR_DUST, once: for each age of a puff, and each row of it from its
+; middle out (|y| from 0 to RY), the widest |x| inside and, for each |x| from 0 to RX, how thick the
+; dust is there (0: outside the ellipse) and (high byte) whether in its core, as PUFF_DRAW had them
+; worked out for each row it drew; D_BLOCKS: where each age's rows start
+dust_build:
+        pusha
+        push es
+        mov es, [cs:far_seg]
+        mov di, FAR_DUST
+        xor bx, bx                      ; BX: the age
+.age:   mov si, bx
+        shl si, 1
+        mov [cs:d_blocks + si], di
+        mov ax, bx                      ; across, and up and down (as PUFF_DRAW)
+        shl ax, 3
+        xor dx, dx
+        mov cx, DUST_LIFE
+        div cx
+        add ax, 3
+        mov [cs:d_rx], ax
+        imul ax, ax, 9
+        add ax, 8
+        shr ax, 4
+        mov [cs:d_ry], ax
+        mov al, [cs:dust_dens + bx]
+        xor ah, ah
+        mov [cs:d_dens], ax
+        mov al, [cs:dust_core + bx]
+        mov [cs:d_core], ax
+        push bx
+        mov cx, [cs:d_rx]               ; how far out it is across, (x / rx)^2 of 256, by |x|
+        imul cx, cx
+        xor si, si
+.tab:   mov ax, si
+        imul ax, ax
+        shl ax, 8
+        xor dx, dx
+        div cx
+        mov bx, si
+        shl bx, 1
+        mov [cs:d_extab + bx], ax
+        inc si
+        cmp si, [cs:d_rx]
+        jbe .tab
+        mov word [cs:d_yy], 0
+.row:   mov ax, [cs:d_yy]               ; how far out it is, up and down: (y / ry)^2, of 256
+        imul ax, ax
+        shl ax, 8
+        mov cx, [cs:d_ry]
+        imul cx, cx
+        xor dx, dx
+        div cx
+        mov [cs:d_ey], ax
+        mov word [cs:d_xmax], -1        ; (the widest |x| inside, on this row)
+        xor si, si
+.thr:   mov bx, si
+        shl bx, 1
+        mov ax, [cs:d_extab + bx]       ; and across
+        add ax, [cs:d_ey]
+        mov word [cs:d_thrcore + bx], 0
+        cmp ax, 256
+        ja .nthr
+        mov [cs:d_xmax], si
+        cmp ax, [cs:d_core]
+        setb byte [cs:d_thrcore + bx + 1]
+        imul ax, ax, 154                ; thinner toward the edge
+        shr ax, 8
+        neg ax
+        add ax, 256
+        mul word [cs:d_dens]
+        shr ax, 8
+        mov [cs:d_thrcore + bx], al
+.nthr:  inc si
+        cmp si, [cs:d_rx]
+        jbe .thr
+        mov ax, [cs:d_xmax]             ; the row: the widest |x|, then x from -RX to RX
+        stosw
+        mov si, [cs:d_rx]
+        neg si
+.put:   mov bx, si
+        or bx, bx
+        jns .abs
+        neg bx
+.abs:   shl bx, 1
+        mov ax, [cs:d_thrcore + bx]
+        stosw
+        inc si
+        cmp si, [cs:d_rx]
+        jle .put
+        inc word [cs:d_yy]
+        mov ax, [cs:d_yy]
+        cmp ax, [cs:d_ry]
+        jbe .row
+        pop bx
+        inc bx
+        cmp bx, DUST_LIFE
+        jb .age
+        mov byte [cs:d_built], 1
+        pop es
+        popa
+        ret
+; (the table's size: as DUST_BUILD fills it)
+%assign dbytes 0
+%assign age 0
+%rep DUST_LIFE
+%assign drx 3 + age * 8 / DUST_LIFE
+%assign dry (drx * 9 + 8) / 16
+%assign dbytes dbytes + (dry + 1) * (2 * drx + 2) * 2
+%assign age age + 1
+%endrep
+DUST_BYTES equ dbytes
+d_built    db 0
+d_blocks   times DUST_LIFE dw 0
+d_block    dw 0
+d_stride   dw 0
+d_symat    dw 0
+d_thrsym   times 23 dw 0        ; the row being drawn, by x from -11 to 11 (D_THRCORE's, both ways)
 
 dust_dens  db 255, 255, 255, 255, 247, 238, 229, 219, 209, 198, 187, 174, 161, 147, 132, 114, 93, 66   ; how thick, by age (of 256)
 dust_core  db 140, 132, 125, 117, 109, 101, 93, 86, 78, 70, 62, 54, 46, 39, 31, 23, 15, 7   ; the core (twice as light), by age
@@ -23125,15 +23323,15 @@ ring_pass:
         mov cx, [OBJ_COUNT]
         or cx, cx
         jz .ret
-.thing: push cx
-        push di
-        push es
-        mov bx, [es:di + 6]
+.thing: mov bx, [es:di + 6]          ; (only those RING_TAB marks: most things aren't)
         cmp bx, MAP_COUNT - 1
-        ja .next
+        ja .tnext
         mov al, [cs:ring_tab + bx]
         or al, al
-        jz .next
+        jz .tnext
+        push cx
+        push di
+        push es
         mov [cs:r_kind], al
         mov ax, [es:di]
         sub ax, [cs:cam_x]
@@ -23155,7 +23353,7 @@ ring_pass:
 .next:  pop es
         pop di
         pop cx
-        add di, 8
+.tnext: add di, 8
         loop .thing
 .ret:   ret
 
@@ -24399,7 +24597,8 @@ FAR_QM_STACK equ FAR_PACE + PACE_KEPT * 10      ; the crash report's copy of the
 FAR_QM_LEN equ FAR_QM_STACK + STACK_BYTES       ; ... and the length of the text kept, then
 FAR_MSG    equ FAR_QM_LEN + 2                   ; the last text written to the screen (DOS_WRITE)
 FAR_SC_OF  equ FAR_MSG + MSG_BYTES              ; each thing's slot in the shadows' cache, last (SC_START)
-FAR_END    equ FAR_SC_OF + MAP_COUNT
+FAR_DUST   equ FAR_SC_OF + MAP_COUNT            ; the puffs' thickness, by age, row and column (DUST_BUILD)
+FAR_END    equ FAR_DUST + DUST_BYTES
 FAR_PARAS  equ (FAR_END - FAR_RING + 15) / 16
         times -(FAR_END > 0x10000) db 0     ; (a negative count: past the HMA's 64 KB)
 

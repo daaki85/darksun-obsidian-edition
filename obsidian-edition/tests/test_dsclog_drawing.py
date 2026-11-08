@@ -48,12 +48,17 @@ def build(asm=ASM):
     if asm not in _built:
         with tempfile.TemporaryDirectory() as tmp:
             src, out, mp = (os.path.join(tmp, n) for n in ("m.asm", "m.exe", "m.map"))
+            with open(asm) as f:
+                text = f.read()
             with open(src, "w") as f:
-                f.write(f"[map symbols {mp}]\n" + open(asm).read())
+                f.write(f"[map symbols {mp}]\n" + text)
             subprocess.run(["nasm", "-f", "bin", "-I", os.path.dirname(asm) + "/", "-o", out, src], check=True)
-            exe = open(out, "rb").read()
+            with open(out, "rb") as f:
+                exe = f.read()
+            with open(mp) as f:
+                listing = f.read()
             sym = {}
-            for line in open(mp).read().split("Section image")[1].splitlines():
+            for line in listing.split("Section image")[1].splitlines():
                 parts = line.split()
                 if len(parts) == 3 and all(c in "0123456789ABCDEF" for c in parts[1]):
                     sym[parts[2]] = int(parts[1], 16)
@@ -182,6 +187,17 @@ class Scene:
         self.assertion(mu.reg_read(r.UC_X86_REG_CS) * 16 + mu.reg_read(r.UC_X86_REG_IP) == CALLER * 16 + until)
         return self.count
 
+    def call(self, name, **regs):
+        """The helper's routine NAME, a near call; the instructions run."""
+        sp = 0x7F0
+        self.mu.mem_write(SS * 16 + sp, struct.pack("<H", 0xFFF0))
+        for name_, value in dict(dict(cs=TSR, ds=GAME_DS, es=GAME_DS, ss=SS, esp=sp), **regs).items():
+            self.mu.reg_write(getattr(r, "UC_X86_REG_" + name_.upper()), value)
+        self.count = 0
+        self.mu.emu_start(TSR * 16 + self.sym[name], TSR * 16 + 0xFFF0, count=1_000_000)
+        self.assertion(self.mu.reg_read(r.UC_X86_REG_IP) == 0xFFF0)
+        return self.count
+
     @staticmethod
     def assertion(ok):
         if not ok:
@@ -272,6 +288,8 @@ CALLS = [(3, 0, 0, 320, 119) + CAM, (3, 0, 120, 136, 199) + CAM, (3, 316, 120, 3
 def floor_digests(asm=ASM, on=(1, 1, 1)):
     """Each call's screen and instructions; then the whole view again with one picture let go of."""
     scene = Figures(asm, on)
+    if on[1] and "dust_build" in scene.sym:  # (its table made once, as the first pass would: not counted)
+        scene.call("dust_build")
     out = []
     for args in CALLS:
         n = scene.floor(*args)
@@ -283,16 +301,239 @@ def floor_digests(asm=ASM, on=(1, 1, 1)):
     return out
 
 
-@unittest.skipIf(Uc is None or not shutil.which("nasm"), "needs unicorn and nasm")
-class FloorPassTests(unittest.TestCase):
-    def test_built(self):
-        """The helper as built from the source is DSCLOG.EXE (the symbols the tests use are its)."""
-        self.assertEqual(build()[0], open(EXE, "rb").read(), "DSCLOG.EXE not rebuilt from dsclog.asm")
+GHOST_SEG = 0x8800
+GH_REP, GH_TAB = 32 * 256, 32 * 256 + 256
 
-    def check(self, on, expected, most):
-        got = floor_digests(on=on)
-        for (digest, n), want, bound in zip(got, expected, most):
-            print(f"  {digest} {n}", file=sys.stderr)
-        self.assertEqual([d for d, _ in got], expected)
-        for (digest, n), bound in zip(got, most):
-            self.assertLessEqual(n, bound)
+
+class Ghosts(Scene):
+    """See-through figures (GHOST_DRAW): BLEND and REP made up, pictures of REP numbers."""
+
+    def __init__(self, asm=ASM):
+        super().__init__(asm)
+        rng = random.Random(11)
+        mu = self.mu
+        hdr = self.sym["hdr"]
+        mu.mem_write(TSR * 16 + hdr + HDR_GHOST_SEG, struct.pack("<H", GHOST_SEG))
+        mu.mem_write(TSR * 16 + hdr + HDR_GHOST_ON, struct.pack("<H", 1))
+        mu.mem_write(GHOST_SEG * 16, bytes((rep * 37 + under * 3 + 1) & 0xFF for rep in range(32) for under in range(256)))
+        mu.mem_write(GHOST_SEG * 16 + GH_REP, bytes(rng.randrange(32) for _ in range(256)))
+        self.pictures = []
+        pic = PIC_SEG
+        for n in range(4):
+            w, h = rng.randrange(24, 60), rng.randrange(40, 90)
+            frames = [frame_bytes(rng, w, h, ghost=True), frame_bytes(rng, w, h, ghost=True)]
+            body = struct.pack("<HHH", 0, 0, 2) + struct.pack("<II", 14, 14 + len(frames[0])) + frames[0] + frames[1]
+            mu.mem_write(pic * 16, body)
+            self.pictures.append(pic)
+            pic += (len(body) + 15) // 16
+
+    def draw(self, x, y, mirrored, picture, frame):
+        """GHOST_DRAW (a near call: page 3, X, Y, MIRRORED, the picture, FRAME)."""
+        sp = 0x800 - 16
+        self.mu.mem_write(SS * 16 + sp, struct.pack("<HHhhHHHH", 0xFFF0, 3, x, y, mirrored, 0, self.pictures[picture], frame))
+        mu = self.mu
+        for name, value in dict(cs=TSR, ds=GAME_DS, es=GAME_DS, ss=SS, esp=sp, ebp=0x1000).items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+        self.count = 0
+        mu.emu_start(TSR * 16 + self.sym["ghost_draw"], TSR * 16 + 0xFFF0, count=20_000_000)
+        self.assertion(mu.reg_read(r.UC_X86_REG_IP) == 0xFFF0 and mu.reg_read(r.UC_X86_REG_SP) == sp + 2)
+        return self.count
+
+
+GHOST_CALLS = [(100, 40, 0, 0, 0), (200, 60, 1, 1, 1), (-20, 150, 0, 2, 1), (290, -30, 1, 3, 0), (150, 120, 0, 1, 0)]
+
+
+def ghost_digests(asm=ASM):
+    scene = Ghosts(asm)
+    scene.fill()
+    out = []
+    for args in GHOST_CALLS:
+        n = scene.draw(*args)
+        out.append((scene.digest(), n))
+    return out
+
+
+# The screens as drawn before the drawing code was made faster (2026-11-08), and the instructions
+# that took then; for each of FLOOR_CALLS' calls (and the whole view again, two pictures let go
+# of), with shadows, dust and rings on, then each alone.
+BEFORE = {
+    (1, 1, 1): [("6aa66587bcd7f8c1", 149207), ("4fb5147fe7341df2", 52500), ("720c255ac21d0459", 44346),
+                ("aadbffb618ae5c5e", 58941), ("3385041c16e9bd1a", 47153), ("7a3c3f67e2365e15", 190508),
+                ("2436812d5be1b5dd", 184435)],
+    (1, 0, 0): [("b117771caf8c0526", 99563), ("2f7ed1a7a5520fe9", 44596), ("720c255ac21d0459", 38099),
+                ("a25593731c3651be", 33073), ("3385041c16e9bd1a", 40834), ("c9bf888a6d0af4e8", 126962),
+                ("f85be6ebe12a850c", 120889)],
+    (0, 1, 0): [("82ec5702100be2cc", 24832), ("63a3f73e36d4513d", 2378), ("8dae532d8049c840", 721),
+                ("05d08337bdc14edc", 7355), ("8dae532d8049c840", 792), ("4a2750adb53fd1b8", 38721),
+                ("4a2750adb53fd1b8", 38721)],
+    (0, 0, 1): [("1ed71773a3ac3e89", 25183), ("8dae532d8049c840", 5912), ("8dae532d8049c840", 5912),
+                ("e8aca136d6f189c3", 18902), ("8dae532d8049c840", 5911), ("1ed71773a3ac3e89", 25170),
+                ("1ed71773a3ac3e89", 25170)],
+}
+GHOST_BEFORE = [("fc41731b1d04863d", 44419), ("816d835642c05749", 34653), ("9416c1412df146d2", 15491),
+                ("a22720eab61cbd3c", 37258), ("225f0bf11bdf482e", 36336)]
+
+
+@unittest.skipIf(Uc is None or not shutil.which("nasm"), "needs unicorn and nasm")
+class DrawingTests(unittest.TestCase):
+    def test_built(self):
+        """The helper as built from the source is DSCLOG.EXE (the symbols these tests use are its)."""
+        with open(EXE, "rb") as f:
+            self.assertEqual(build()[0], f.read(), "DSCLOG.EXE not rebuilt from dsclog.asm")
+
+    def same_and_fewer(self, got, before, saved):
+        """The same screens as BEFORE; all the calls together at least SAVED (a fraction) cheaper."""
+        self.assertEqual([d for d, _ in got], [d for d, _ in before])
+        now, then = sum(n for _, n in got), sum(n for _, n in before)
+        print(f"  {then} -> {now} instructions ({100 * (then - now) / then:.0f}% fewer)", file=sys.stderr)
+        self.assertLessEqual(now, then * (1 - saved))
+
+    def test_floor_pass(self):
+        """SHADOW_PASS's screens as before, in fewer instructions: the shadows' (a figure's shadow
+        tested against the clip from its frame's size, rows outside it passed over, the slot it was
+        kept in remembered, the spans a plane at a time through XLAT), the dust's (its thickness
+        from DUST_BUILD's table), the rings' (the list's things not marked passed over sooner)."""
+        for on, saved in (((1, 1, 1), 0.25), ((1, 0, 0), 0.35), ((0, 1, 0), 0.15), ((0, 0, 1), 0.01)):
+            with self.subTest(on=on):
+                self.same_and_fewer(floor_digests(on=on), BEFORE[on], saved)
+
+    def test_ghost_draw(self):
+        """GHOST_DRAW's see-through figures as before (mirrored, clipped at the page's edges), each
+        pixel's REP number through XLAT in place of a call."""
+        self.same_and_fewer(ghost_digests(), GHOST_BEFORE, 0.08)
+
+    def test_dark_retried_twice_a_second(self):
+        """A palette too dark for DARK (a fade, or a dark area) is tried again every DARK_RETRY
+        ticks of the BIOS clock, not in every floor pass (768 port reads and the sums each time)."""
+        scene = Figures()
+        hdr = scene.sym["hdr"]
+        mu = scene.mu
+        tried = []
+        at = TSR * 16 + scene.sym["build_dark"]
+        mu.hook_add(UC_HOOK_CODE, lambda *a: tried.append(1), begin=at, end=at)
+        for tick, expected in ((TICK, 1), (TICK, 1), (TICK + 3, 1), (TICK + 9, 2), (TICK + 10, 2)):
+            mu.mem_write(TSR * 16 + hdr + 224, struct.pack("<H", 1))  # (the Loader's DARK_BUILD)
+            mu.mem_write(0x46C, struct.pack("<H", tick))
+            scene.floor(3, *CAM)
+            self.assertEqual(len(tried), expected)
+            self.assertEqual(struct.unpack("<H", mu.mem_read(TSR * 16 + hdr + 224, 2))[0], 1)  # (still asked)
+
+    def test_floor_rect_marks_the_panel(self):
+        """FLOOR_ENTER marks the combat log's panel to be put again only when the floor drawn
+        reaches it (or is the whole view): REDRAW_PARTS' rectangles round it don't."""
+        scene = Scene()
+        sym, mu = scene.sym, scene.mu
+        scene.word("panel_on", 1)
+        scene.word("panel_top", 120)
+        scene.word("panel_rows", 78)
+
+        def enter(probe, args):
+            scene.put("panel_dirty", b"\x00")
+            sp = 0x800 - 2 * len(args) - 4 - 6
+            mu.mem_write(SS * 16 + sp, struct.pack("<3H", 0x602, CALLER, 0x0202) + struct.pack("<2H", 0x700, CALLER)
+                         + struct.pack(f"<{len(args)}h", *args))
+            scene.run(sym[probe], 0x602, sp)
+            return scene.get("panel_dirty", 1)[0]
+        cam = CAM
+        self.assertEqual(enter("probe_floor_all", (3,) + cam), 1)
+        for rect, dirty in (((0, 0, 320, 119), 0), ((0, 120, 136, 199), 0), ((316, 120, 320, 199), 0),
+                            ((0, 0, 320, 120), 1), ((132, 150, 140, 160), 1), ((312, 190, 316, 199), 1),
+                            ((136, 198, 200, 199), 0)):
+            with self.subTest(rect=rect):
+                self.assertEqual(enter("probe_floor_rect", (3,) + rect + cam), dirty)
+
+    def test_rings_alone_widen_less(self):
+        """With rings on and shadows off, the rectangle the game draws again round what moved
+        reaches only as far as a ring does (RING_RIGHT, RING_DOWN), not as far as a shadow."""
+        scene = Scene()
+        mu, sym, hdr = scene.mu, scene.sym, scene.sym["hdr"]
+        bp = 0x1000
+
+        def widened(shadows, rings):
+            mu.mem_write(TSR * 16 + hdr + HDR_SHADOWS_ON, struct.pack("<H", shadows))
+            mu.mem_write(TSR * 16 + hdr + HDR_RINGS_ON, struct.pack("<H", rings))
+            mu.mem_write(SS * 16 + bp - 0x0E, struct.pack("<4H", 100, 60, 151, 40))  # y1, y0, x1, x0
+            mu.mem_write(SS * 16 + bp + 6, struct.pack("<5H", 0, 0, 0, 0, 0))
+            sp = bp - 0x20 - 6
+            mu.mem_write(SS * 16 + sp, struct.pack("<3H", 0x602, CALLER, 0x0202))
+            scene.run(sym["probe_redraw_all"], 0x602, sp, ebp=bp)
+            y1, y0, x1, x0 = struct.unpack("<4H", mu.mem_read(SS * 16 + bp - 0x0E, 8))
+            return x1 - 151, y1 - 100
+        self.assertEqual(widened(0, 0), (0, 0))
+        self.assertEqual(widened(1, 0), (72, 44))
+        self.assertEqual(widened(1, 1), (72, 44))
+        self.assertEqual(widened(0, 1), (16, 8))
+
+    def test_view_drawn_again_once_a_pass(self):
+        """VIEW_AGAIN draws the view again once in a pass of the main loop (the panel's and the
+        labels' both asked for it when the view scrolled), and again in the next pass."""
+        scene = Scene()
+        mu, sym = scene.mu, scene.sym
+        centre = ((GAME_DS - 0x4356 + 0x191F) & 0xFFFF) * 16 + 0x0281
+        mu.mem_write(centre, b"\xcb")  # retf
+        calls = []
+        mu.hook_add(UC_HOOK_CODE, lambda *a: calls.append(1), begin=centre, end=centre)
+        stop = CALLER * 16 + 0x700
+        mu.mem_write(stop - 3, b"\xe8" + struct.pack("<h", 0))
+
+        def again():
+            sp = 0x7F0
+            mu.mem_write(SS * 16 + sp, struct.pack("<H", 0xFFF0))
+            for name, value in dict(cs=TSR, ds=GAME_DS, ss=SS, esp=sp).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(TSR * 16 + sym["view_again"], TSR * 16 + 0xFFF0, count=1000)
+        scene.put("va_done", b"\x00")
+        again()
+        again()
+        self.assertEqual(len(calls), 1)
+        scene.put("va_done", b"\x00")  # (PROBE_SCROLL's next pass)
+        again()
+        self.assertEqual(len(calls), 2)
+
+    def test_dust_a_puff_every_six_pixels(self):
+        """DUST_TICK raises a puff behind a walker every DUST_STEP pixels it walks (it took the
+        BIOS clock's low byte for the distance, so a puff nearly every pass), and none behind one
+        walking off the view."""
+        scene = Scene()
+        mu, sym, hdr = scene.mu, scene.sym, scene.sym["hdr"]
+        mu.mem_write(TSR * 16 + hdr + HDR_DUST_ON, struct.pack("<H", 1))
+        tab = bytearray(65)
+        for thing in (5, 9):
+            tab[thing // 8] |= 1 << thing % 8
+        scene.put("shadow_tab", bytes(tab))
+        scene.ds(OBJ_LIST, struct.pack("<HH", 0, LIST_SEG))
+        scene.ds(OBJ_COUNT, struct.pack("<H", 2))
+        scene.ds(CAM_X, struct.pack("<HH", *CAM))
+
+        def puffs():
+            return struct.unpack("<H", mu.mem_read(TSR * 16 + hdr + 240, 2))[0]
+        for step in range(31):  # (thing 5 on the view, thing 9 far off it, each 2 pixels a pass)
+            x = CAM[0] + 100 + 2 * step
+            mu.mem_write(LIST_SEG * 16, struct.pack("<HHBBH", x, CAM[1] + 100, 0, 0x20, 5)
+                         + struct.pack("<HHBBH", x + 900, CAM[1] + 100, 0, 0x20, 9))
+            mu.mem_write(0x46C, struct.pack("<H", TICK + step))
+            sp = 0x7F0
+            mu.mem_write(SS * 16 + sp, struct.pack("<H", 0xFFF0))
+            for name, value in dict(cs=TSR, ds=GAME_DS, ss=SS, esp=sp).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(TSR * 16 + sym["dust_tick"], TSR * 16 + 0xFFF0, count=100000)
+            if step == 0:
+                self.assertEqual(puffs(), 0)  # (the first pass: where each is noted, a jump)
+        self.assertEqual(puffs(), 10)  # (60 pixels walked)
+        owners = {struct.unpack_from("<H", scene.get("puffs", 24 * 12), n * 12 + 6)[0] for n in range(10)}
+        self.assertEqual(owners, {5})
+
+    def test_no_labels_nothing_done(self):
+        """LABEL_STAMP (from the timer, about 60 times a second) does next to nothing when no slot
+        holds a label: no reads of the CRTC, no VGA registers kept and put back."""
+        scene = Scene()
+        mu, sym = scene.mu, scene.sym
+        scene.put("pointer_ds", struct.pack("<H", GAME_DS))
+        scene.ds(0x0BC9, struct.pack("<H", 1))  # (on the map)
+        sp = 0x7F0
+        mu.mem_write(SS * 16 + sp, struct.pack("<H", 0xFFF0))
+        for name, value in dict(cs=TSR, ds=GAME_DS, ss=SS, esp=sp).items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+        scene.count = 0
+        mu.emu_start(TSR * 16 + sym["label_stamp"], TSR * 16 + 0xFFF0, count=10000)
+        self.assertLess(scene.count, 15)
