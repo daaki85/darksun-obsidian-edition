@@ -22,6 +22,7 @@ the game, and checked here in the game's own code.
 - [Spells and effects](#spells-and-effects)
   - [Each cleric spell against the
     manual](#each-cleric-spell-against-the-manual)
+  - [Turn Undead](#turn-undead)
 - [Psionics](#psionics)
   - [Each power against the manual](#each-power-against-the-manual)
 - [How the game works out thief skills](#how-the-game-works-out-thief-skills)
@@ -293,6 +294,15 @@ Lightning Bolt do at most 10d6, and Burning Hands 1d3 + 2 a level. A save halves
 the damage, or stops it all for spells such as Chill Touch. A creature that is
 Out Cold gets no save and takes the most the dice can do.
 
+**No spell misses.** The game rolls no attack for a spell: Acid Arrow, Turn
+Pebble to Boulder, Magical Stone, Condense and the touch spells (Chill Touch,
+Shocking Grasp, Vampiric Touch, the Cause spells, Poison) always land, whatever
+the target's AC. Its code has a place for a to-hit test (the routine applying a
+spell to its target calls one for the missile spells, 78BA0h), but the routine
+there always answers "hit". With the Options tab's [Spells roll to
+hit](FEATURES.md#spells-roll-to-hit) ticked (the default) they roll against
+the target's AC as a weapon does.
+
 **Saves.** Almost every spell is saved against with petrification/polymorph,
 and against fire, cold and electricity the save's d20 counts double: see
 [The game's saving throws](#the-games-saving-throws).
@@ -443,6 +453,42 @@ them](FEATURES.md#spells-as-the-manual-describes-them), on by default.)
 | Raise Dead | by CON and how long dead; −1 CON; 1 HP | always works on someone dead who isn't an elf: −1 CON, 1 HP | the HP and the CON change |
 | Slay Living | dies on a failed save, 3–17 if saved | HP + 10 damage on a failed save against paralysis/poison/death; half of 4d8 (2–16) if saved, as the Loader's description now says | the save and the damage |
 | Wall of Fire | fire to those passing through | 4d4 + 1 a level fire, no save | the roll and the HP lost |
+
+### Turn Undead
+
+A cleric's Turn Undead is a button on the USE screen (the spell 190), not a spell: it takes no slot.
+The button shows for a character whose sheet has a cleric's element (air, earth, fire or water); druids
+have none, so they never get it. It works on one undead creature (race 9) at a time, in a fight or out
+of one (out of one, it starts a fight). The game rolls a d20 and needs 10 + 3 x (column - row) or more:
+
+- the column from the creature's hit dice: 1 to 4 as they are, 5 and more one further (5 HD is column
+  6), at most 13;
+- the row from the priest level (the best of the cleric classes): 1 to 10 as they are, 11 counts as
+  10, 12 as 11, 13 and more as 12;
+- a 22 is made 20; anything over that can't be rolled, and 1 or less always works.
+
+On the number or more the creature is **destroyed** (the game does it 1000 damage). Otherwise nothing
+happens: no "turned" (fleeing) result, nothing remembered. The same cleric can try again on its next
+turn, on the same creature too, in that fight and in later ones; the use ends the cleric's turn. Its
+description says "May be used once per creature": the game doesn't keep to that. Magic resistance is
+checked first; there is no saving throw.
+
+Against AD&D's turning table (2nd edition), the steps of 3 are the same, but:
+
+- AD&D has a row between 1 and 2 HD (zombies) and one between 5 and 6 HD (ghasts). The game's 2 HD uses
+  the zombie row and its 3 HD AD&D's 2 HD row (both one easier than AD&D's 2 and 3-4 HD rows), and its
+  5 HD the ghast row (one harder than AD&D's 5 HD row); 1, 4 and 6-11 HD are AD&D's rows.
+- AD&D's T (turned: the undead flee) and D (destroyed) are all destroyed in the game, and D* (2d4 more
+  of the kind destroyed) is one.
+- AD&D's levels 12-13 share a column; the game gives level 13 the 14+ one (one easier).
+
+The game's undead (their sheets in SEGOBJEX.GFF): Zombie, Convert and Tara's Follower 2 HD, Shadow 3 or
+6, Skull Elder 4, Shadow Guard, Shadow King, Shadow Prince, Shadow Worker, Aposs, Cragg, Tanelyv,
+Tristram and Tynan 6. A 3rd-level cleric needs 7 against a Zombie and a 20 against the 6 HD ones (a 1st or 2nd
+level cleric can't turn those at all).
+
+The dice log shows each try: `Seneca turns Zombie: d20 = 12, needs 7+ (priest level 3 vs 2 HD) ->
+destroyed` (code: DSUN.EXE 7ADB7h, the number at 7AE01h-7AE48h, the d20 at 7AE4Dh).
 
 ## Psionics
 

@@ -164,6 +164,38 @@ class GamePatchTests(unittest.TestCase):
         self.assertEqual(len({gamepatch.SPREAD_SITE, gamepatch.GATHER_SITE, gamepatch.MOUSE_SET, gamepatch.MOUSE_INIT,
                               gamepatch.CINE_STEP, gamepatch.CINE_END, gamepatch.DRAW_SITE, gamepatch.AREA_DMG}), 8)
 
+    def test_spell_to_hit(self):
+        """Spells that roll to hit: "mov [bp-6],si" (7A15Ah, past a spell's immunity checks) DSCLOG's
+        SPELL_HIT and the missile spells' always-hit stub's "mov ax,1" (78BA3h, in "push bp / mov bp,sp /
+        mov ax,1 / pop bp / retf") SPELL_STUB, one switch (SPELL_TO_HIT, the settings' "spell_to_hit"):
+        with it off the copy has the game's bytes there; dsclog.asm's site numbers gamepatch's."""
+        import re
+        from dsloader import launch
+        by = {p.name: p for p in gamepatch.PATCHES}
+        for name, offset, original, site in (("spell_hit", 0x7A15A, "8976fa", gamepatch.SPELL_HIT_SITE),
+                                             ("spell_hit_stub", 0x78BA3, "b80100", gamepatch.SPELL_STUB_SITE)):
+            p = by[name]
+            self.assertEqual((p.offset, p.original.hex()), (offset, original))
+            self.assertEqual(p.replacement, bytes((0xCD, gamepatch.VEC_CR_SPELLS, site)))
+        self.assertEqual(gamepatch.SPELL_TO_HIT, ("spell_hit", "spell_hit_stub"))
+        self.assertEqual((gamepatch.SPELL_HIT_SITE, gamepatch.SPELL_STUB_SITE),
+                         (gamepatch.NS_IMAGE + 74, gamepatch.NS_IMAGE + 75))
+        original = fake_dsun()
+        on, off = gamepatch.patched(bytes(original)), gamepatch.patched(bytes(original), gamepatch.SPELL_TO_HIT)
+        for at in (0x7A15A, 0x78BA3):
+            self.assertEqual(off[at:at + 3], original[at:at + 3])
+            self.assertNotEqual(on[at:at + 3], original[at:at + 3])
+        changed = [i for i in range(len(on)) if on[i] != off[i]]
+        self.assertEqual(changed, [0x78BA3, 0x78BA4, 0x78BA5, 0x7A15A, 0x7A15B, 0x7A15C])
+        self.assertIn("spell_to_hit", launch.CONTENT)
+        self.assertEqual(launch.content({})["spell_to_hit"], True)
+        self.assertEqual(launch.content({"spell_to_hit": False})["spell_to_hit"], False)
+        asm = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos", "dsclog.asm")
+        with open(asm, encoding="utf-8") as f:
+            text = f.read()
+        self.assertTrue(re.search(r"^SPELL_HIT_SITE equ NS_IMAGE \+ 74\b", text, re.M))
+        self.assertTrue(re.search(r"^SPELL_STUB_SITE equ NS_IMAGE \+ 75\b", text, re.M))
+
     def test_panel_flip(self):
         """The game's flip of its two screens: "mov ax,0A000h / cmp word [118Eh],0" (14444h, in the
         flip at 14414h, after the screen to show is set and before the VGA is told) DSCLOG's

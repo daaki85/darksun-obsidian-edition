@@ -398,6 +398,13 @@ class Viewer:
                         "the caster, Hold Undead only on undead of no more; a classless monster's hit dice its "
                         "level for saves; from the next start", variable=self.spells_manual,
                         command=self._options_changed).pack(anchor="w")
+        # missile and hostile touch spells roll to hit (gamepatch.SPELL_TO_HIT)
+        self.spell_to_hit = tk.BooleanVar(value=settings.get("spell_to_hit", True) is not False)
+        ttk.Checkbutton(rule_groups["magic"], text="Spells roll to hit: Acid Arrow, Turn Pebble to Boulder, "
+                        "Magical Stone, Condense and a monster's spines, and touch spells on a foe (Chill Touch, "
+                        "Shocking Grasp, Vampiric Touch, the Cause spells, Poison), against the target's AC; "
+                        "from the next start", variable=self.spell_to_hit,
+                        command=self._options_changed).pack(anchor="w")
         custom = section("custom", "More character customization")
         features = section("features", "Expanded features")
         # the thief's rules and picking pockets together, as the guide's Thieves section has them
@@ -725,7 +732,7 @@ class Viewer:
         for var in (self.monster_info, self.floating_names, self.stealth_gear, self.pickpockets, self.roll_store, self.elf_looks, self.cilla_elf,
                     self.starting_gear, self.show_gear, self.show_shadows, self.show_dust, self.see_through, self.use_targeting,
                     self.scroll_map, self.effects_kept, self.camera_still, self.scene_pointer, self.mouse_start,
-                    self.steady_pace, self.party_spread, self.spells_manual):
+                    self.steady_pace, self.party_spread, self.spells_manual, self.spell_to_hit):
             var.set(True)
         self.combat_log.set(True)
         self.combat_log_level.set(dicelog.combat_log_level({}))
@@ -1265,6 +1272,7 @@ class Viewer:
                 settings["steady_pace"] = self.steady_pace.get()
                 settings["party_spread"] = self.party_spread.get()
                 settings["spells_manual"] = self.spells_manual.get()
+                settings["spell_to_hit"] = self.spell_to_hit.get()
                 for key, var in self.rule_vars.items():
                     settings[key] = var.get()
                 launch.save_settings(settings)

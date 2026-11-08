@@ -356,6 +356,7 @@ DOUBLED_FLAGS = 0x86
 OLD_SETTING_NAMES = {"new_spells": "cats_grace"}
 
 
+TURN_UNDEAD = 0xBE  # the clerics' Turn Undead, a spell record of its own (190)
 STINKING_CLOUD = 22
 STINKING_CLOUD_MANUAL_DICE = 0x41  # (its record's +4 with the spells as the manual has them: 1d4)
 
@@ -1299,6 +1300,8 @@ class GameData:
             return ITEM_ATTACKS[spell].capitalize()
         if spell in POISON_POWERS:  # (a monster's poisoned hit, and a Poisoner's: kits.POISON_POWER)
             return POISON_POWERS[spell]
+        if spell == TURN_UNDEAD:  # (a cleric's button on the USE screen, cast as spell 190: the game names it nowhere)
+            return "Turn Undead"
         if spell == DETONATE_BLAST:
             return f"Detonate's blast{self._power_dice(spell)}"
         if spell > SPELL_COUNT:  # monsters' powers, such as a paralysing touch: the game names none

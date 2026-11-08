@@ -700,6 +700,73 @@ class SaveTests(unittest.TestCase):
         self.assertEqual(log.describe(e), ["    Abjure on Mountain Stalker: d20 = 4, needs 6 or more (11 - caster "
                                            "level 5 + its level 0) -> fails"])
 
+    def turn(self, log, roll, level, need, overlay=False):
+        """Turn Undead's d20 (7AE4Dh) from Jellybelly (combatant 2) on the stalker (0x29), the
+        routine's frame (target, caster, &flags, level) and [BP-6] the number needed."""
+        code = dicelog.OVERLAY_TRAP + bytes(8) if overlay else dicelog.TURN_ROLL_RETURN
+        return entry(raw_for(roll, 20), dicelog.DICE_SITE, words(0, 0, 1, 20), words(0, 0, 0x29, 2, 0x7F00, level),
+                     parent_locals=locals_at(0x28, m6=need), parent_code=code)
+
+    def make_undead(self, log, hd):
+        sheet = SHEETS + STALKER * game.SHEET_SIZE
+        log.guest.mem[sheet + game.SHEET_RACE], log.guest.mem[sheet + game.SHEET_LEVELS] = game.UNDEAD, hd
+
+    def test_turn_undead_needed(self):
+        """The game's number: 10 + 3 x (HD column - level row), the columns and rows as 7AE01h has them."""
+        need = dicelog.DiceLog.turn_needed
+        self.assertEqual([need(2, n) for n in range(1, 7)], [13, 10, 7, 4, 1, -2])
+        self.assertEqual([need(hd, 1) for hd in (1, 2, 3, 4, 5, 6)], [10, 13, 16, 19, 25, 28])  # (HD 5 is column 6)
+        self.assertEqual(need(5, 2), 20)  # (22 made 20)
+        self.assertEqual([need(6, n) for n in (3, 9, 10, 11, 12, 13, 14, 20)], [20, 4, 1, 1, -2, -5, -5, -5])
+        self.assertEqual(need(20, 1), need(12, 1))  # (the column stops at 13)
+
+    def test_turn_undead(self):
+        log = make_game()
+        m = log.guest.mem
+        self.make_undead(log, 2)
+        stalker = CREATURES + STALKER * game.CREATURE_SIZE
+        struct.pack_into("<h", m, stalker, 13)
+        self.assertEqual(log.hp_changes(0.5), [])  # the first look
+        self.assertEqual(log.describe(self.turn(log, 3, 4, 4), now=1.0),
+                         ["Jellybelly turns Mountain Stalker: d20 = 3, needs 4+ (priest level 4 vs 2 HD) -> not turned"])
+        self.assertEqual(log.describe(self.turn(log, 12, 4, 4), now=2.0),
+                         ["Jellybelly turns Mountain Stalker: d20 = 12, needs 4+ (priest level 4 vs 2 HD) -> destroyed"])
+        struct.pack_into("<h", m, stalker, 13 - 1000)  # (79A01h's 1000 damage)
+        self.assertEqual(log.hp_changes(2.5), ["  Mountain Stalker is destroyed by Turn Undead"])
+        struct.pack_into("<h", m, stalker, 5)  # (a later fall is said as ever)
+        log.hp_changes(30.0)
+        struct.pack_into("<h", m, stalker, 1)
+        self.assertEqual(log.hp_changes(31.0), ["  Mountain Stalker now 1 HP (-4)"])
+
+    def test_turn_undead_beyond_a_d20(self):
+        log = make_game()
+        self.make_undead(log, 6)
+        self.assertEqual(log.describe(self.turn(log, 20, 1, 28)),
+                         ["Jellybelly turns Mountain Stalker: d20 = 20, needs 28+, more than a d20 can roll "
+                          "(priest level 1 vs 6 HD) -> not turned"])
+        self.assertEqual(log.describe(self.turn(log, 1, 12, -2)),
+                         ["Jellybelly turns Mountain Stalker: d20 = 1, needs -2+, any roll (priest level 12 vs 6 HD) "
+                          "-> destroyed"])
+
+    def test_turn_undead_behind_the_overlay_stub(self):
+        """With the INT 3Fh stub in the way back: known by the last cast (190), the undead target and
+        [BP-6] matching the game's number for its HD and the level; else not Turn Undead's."""
+        log = make_game()
+        self.make_undead(log, 2)
+        with mock.patch.object(log, "_float") as floats:  # (the button's cast: named, not "special attack 190")
+            log.describe(entry(dicelog.TURN_UNDEAD_SPELL, frame=words(0, 0, 2, 0x29, dicelog.TURN_UNDEAD_SPELL),
+                               kind=dicelog.KIND_CAST))
+        self.assertEqual(floats.call_args[0][:2], (2, "Turn Undead"))
+        self.assertEqual(log._cast, (2, dicelog.TURN_UNDEAD_SPELL))
+        self.assertEqual(log.describe(self.turn(log, 9, 3, 7, overlay=True)),
+                         ["Jellybelly turns Mountain Stalker: d20 = 9, needs 7+ (priest level 3 vs 2 HD) -> destroyed"])
+        self.assertFalse(log._overlay_turn(self.turn(log, 9, 3, 8, overlay=True)))  # (not its number)
+        self.make_undead(log, 4)  # (level 0, a sheet with the button and no priest class: 22, made 20)
+        self.assertEqual(log.describe(self.turn(log, 4, 0, 20, overlay=True)),
+                         ["Jellybelly turns Mountain Stalker: d20 = 4, needs 20+ (priest level 0 vs 4 HD) -> not turned"])
+        log._cast = (2, HOLD_PERSON)
+        self.assertFalse(log._overlay_turn(self.turn(log, 9, 3, 7, overlay=True)))
+
     def test_psp(self):
         log = make_game()
         dag = CREATURES + game.CREATURE_PSP
@@ -744,6 +811,38 @@ class SaveTests(unittest.TestCase):
         line = log.describe(e)
         self.assertEqual(len(line), 1)
         self.assertIn("there: no line of sight", line[0])
+
+    def test_spell_to_hit(self):
+        """A missile or touch spell's attack roll (DSCLOG's SPELL_HIT, KIND_TOHIT: the d20, the frame's
+        caster, target, spell, THAC0, adjustments, their STR/DEX part, difficulty, AC, kind, hit): the
+        number needed and its parts; on a miss the damage rolled for it just before is lost, and
+        "Miss" floats over the target."""
+        log = make_game()
+        floated = []
+        log._float = lambda thing, text, colour, now: floated.append((thing, text))
+        frame = lambda *args: words(0, 0, *args)
+        e = entry(12, frame=frame(2, 40, 75, 16, 2, 1, 0, 4, 12, 2, 1), kind=dicelog.KIND_TOHIT)
+        line, = log.describe(e)
+        self.assertTrue(line.endswith(": attack d20 = 12, needs 10+ (55%) (THAC0 16, +1 DEX, +1 spells; "
+                                      "target AC 4) -> HIT"), line)
+        self.assertIn(f"'s {log.game.spell_name(75)} at ", line)
+        self.assertEqual(floated, [])
+        log._recent_damage.append((75, 7))
+        log._last_damage = (75, 7)
+        e = entry(1, frame=frame(2, 40, 75, 16, 2, 1, 0, 4, 1, 2, 0), kind=dicelog.KIND_TOHIT)
+        line, = log.describe(e)
+        self.assertTrue(line.endswith("attack d20 = 1 (natural 1), needs 10+ (55%) (THAC0 16, +1 DEX, +1 spells; "
+                                      "target AC 4) -> MISS: the spell does nothing, the 7 damage rolled lost"), line)
+        self.assertEqual((list(log._recent_damage), log._last_damage), ([], None))
+        self.assertEqual(floated, [(40, dicelog.labels.MISS)])
+        e = entry(9, frame=frame(40, 2, 3, 13, 3, 3, 2, -2, 9, 1, 0), kind=dicelog.KIND_TOHIT)
+        line, = log.describe(e)
+        self.assertIn(f"'s {log.game.spell_name(3)} at ", line)
+        self.assertTrue(line.endswith("touch attack d20 = 9, needs 10+ (55%) (THAC0 13, +3 STR, +2 difficulty; "
+                                      "target AC -2) -> MISS: the spell does nothing"), line)
+        e = entry(3, frame=frame(2, 40, dicelog.ACID_ARROW_SPELL, 14, 0, 0, 0, 12, 3, 2, 1), kind=dicelog.KIND_TOHIT)
+        self.assertIn("(THAC0 14 (a fighter's of the caster's level); target AC 12) -> HIT", log.describe(e)[0])
+        self.assertIn("hits on anything but a 1", log.describe(e)[0])
 
     def test_wall_instead(self):
         """Wall of Thorns' damage (DSCLOG's THORNS_DAMAGE: the damage | the spell << 8, the

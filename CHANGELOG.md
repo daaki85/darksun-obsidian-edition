@@ -41,6 +41,13 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 ## Next pull request (not opened yet)
 
 **Changed**
+- **Turn Undead in the dice log:** `Seneca turns Guard: d20 = 11, needs 7+ (priest level 3 vs 2 HD)
+  -> destroyed` / `-> not turned`, and `Zombie is destroyed by Turn Undead` in place of its HP line;
+  the floating name over the cleric says "Turn Undead" (was "special attack 190"). Turn Undead is
+  the clerics' button on the USE screen (spell 190, no slot): each undead in its area rolls a d20 of
+  its own against 10 + 3 x (its row - the level's), and a success destroys it (the game has no
+  fleeing: a failure calls an empty routine); seen in DOSBox: no limit of uses, the same undead
+  can be tried again (HOW-THE-GAME-WORKS's new Turn Undead section, against AD&D's table).
 - **The panel's Short level reads as the readable layout does:** what happened first, the roll in
   brackets after it, the damage on the attack's line (`Seneca hits Slig for 11 (15 vs 4+, backstab)`,
   `Guard misses Lex (6 vs 13+)`, `Slig fails vs Fireball (11 vs 16+)`, `Rampager fails to resist

@@ -724,7 +724,31 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
     landing even on an immune target (then nothing more: no save, no effect).
   - A cast that logs nothing but takes a slot was a click beside the figure: aim from a zoomed shot.
   - Magical Stone gives three throws a casting (the stone pointer comes back; the turn ends after
-    the third). Flaming Sphere cast at a foe two squares off struck the caster (twice); farther off
+    the third). The count is the spell record's byte +0, bits 2-7 (Magical Stone 3, Hold Person 4,
+    Hold Undead 2, the rest 1), counted at DS:942Ch by the cast's end (DSUN 7566Eh).
+  - **Turn Undead** (2026-11-08, logs/2026-11-08-turn-undead.md): U (in a fight it opens the USE
+    screen for the one whose turn it is; the click at 24,17 opened the inventory), the TURN UNDEAD
+    button at (158,146) with a slow press (out of a fight the thief's purse is beside it, at 176), then
+    the aiming box: a click on the undead's figure. The button shows for any sheet with a cleric
+    element in +12h bits 0-3 (1/2/4/8): to make a member a cleric in memory, set a class byte (+21h..)
+    to 1-4, its level (+24h..), and OR +12h with the element (a druid, 5-8, has 0 there: no button).
+    A target is undead by the sheet's race (+18h = 9), its HD the sheet's +24h; creatures of a kind
+    share a sheet. Each use ends the turn; out of a fight it starts one. The ambush's foes' places
+    did read right this time (`DS:669Dh + 32 x combatant`, map units): screen = map - camera.
+- **A read-only dice log** (`rolog.py`, 2026-11-08): to try changed dice-log code on a DOSBox whose
+  Loader isn't this session's (stopping another's Loader was refused), run `rolog.py` into a file of
+  your own: describe() and hp_changes() from this checkout, no writes to the game. Its pending rolls
+  ("Dice: ...") and the Loader's come seconds after the lines around them: read the order with care.
+  `--d20` shows each 1d20's caller code and frame (an overlay's INT 3Fh stub, `cd3f...`, in place of
+  the code after the call is common in the spells' overlay).
+- **The shared DOSBox lock** (2026-11-08): with another agent on the same DOSBox, every play step
+  ran under `flock /tmp/playtest/dosbox.lock`, held for the whole session by a background
+  `flock ... -c 'while [ -e HELDFILE ]; do sleep 2; done'` (each Bash call is a new shell, so `exec
+  9>` doesn't last); removing HELDFILE releases it. A DOSBox found running that this session didn't
+  start isn't restarted: play in it (`loadsave.sh` would kill it).
+- **Figures gone from the map** (2026-11-08, the ambush after a long run of clicks): the party, and at
+  times the foes, weren't drawn though their places were right; I then Escape (the inventory opened
+  and shut) drew them again, for a while. Clicks on a figure not drawn missed (passuntil.sh gave up). Flaming Sphere cast at a foe two squares off struck the caster (twice); farther off
     it took a slot and logged nothing.
 
 ## 5. The story so far: what's known of the route

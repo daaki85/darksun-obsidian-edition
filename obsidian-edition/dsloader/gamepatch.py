@@ -178,6 +178,9 @@ STINK_SITE, CHAOS_SITE = NS_IMAGE + 69, NS_IMAGE + 70  # (Stinking Cloud's round
 # level or lower; Hold Undead only on undead of no more levels than its caster's: DSCLOG's
 # HD_SAVE, SPRAY_SITE, HOLD_HD)
 HD_SAVE_SITE, SPRAY_SITE, HOLD_HD_SITE = NS_IMAGE + 71, NS_IMAGE + 72, NS_IMAGE + 73
+# (a missile spell or a hostile touch spell on its target: its attack roll, and the always-hit
+# stub of the missile spells answering it: DSCLOG's SPELL_HIT, SPELL_STUB)
+SPELL_HIT_SITE, SPELL_STUB_SITE = NS_IMAGE + 74, NS_IMAGE + 75
 CR_NAME_SITE, CR_NAME2_SITE, CR_NAME3_SITE, CR_NAME4_SITE = range(NS_IMAGE + 62, NS_IMAGE + 66)  # (a name the game gave copied to the creature: PSP and the age drawn again)
 ARROW_LEVEL = NS_IMAGE + 47  # (a spell arrow's spell at the archer's preserver level, not a weapon's 6)
 SCROLL_USE = NS_IMAGE + 49  # (an item's box: a Shinobi's scroll picture a button, so it can learn the spell)
@@ -499,6 +502,16 @@ PATCHES = (
     # rest immune, at the undead's "test word [bp+0Eh],100h" (7A345h; DSCLOG's HOLD_HD, which
     # makes the test and its jump itself: the "hold_undead" patch above keeps it off the living)
     Patch("hold_undead_level", 0x7A345, bytes.fromhex("f7460e0001"), _site(HOLD_HD_SITE, 5)),
+    # Spells that roll to hit (the Options tab's "Spells roll to hit", SPELL_TO_HIT: skipped with it
+    # off). In the routine of what a spell (SI) does to thing DI (7A085h), after every immunity
+    # check, "mov [bp-6],si" (7A15Ah), the spell kept for the dispatch on the table at 7A1A7h:
+    # DSCLOG's SPELL_HIT rolls the caster's attack on the target for Acid Arrow, Turn Pebble to
+    # Boulder, Magical Stone, Condense and the spines (180), and the touch spells on a creature of
+    # another side, and on a miss puts Acid Arrow (12h) there: the table's "always hits" stub
+    # (78BA0h, the overlay's first routine), its "mov ax,1" (78BA3h) DSCLOG's SPELL_STUB, then
+    # answers 0, and the spell does nothing (7A0BEh)
+    Patch("spell_hit", 0x7A15A, bytes.fromhex("8976fa"), _site(SPELL_HIT_SITE, 3)),
+    Patch("spell_hit_stub", 0x78BA3, bytes.fromhex("b80100"), _site(SPELL_STUB_SITE, 3)),
     # Free Action (117), Remove Paralysis (105) and Protection from Paralysis (20) share one
     # handler (79406h, the spells' table at 79936h, their words at +4Ch): Slowed (47) removed, then
     # Paralyzed (34) unless the creature is Poisoned. Free Action frees the Stuck (51: Web, Solid
@@ -1094,6 +1107,7 @@ SPELLS_MANUAL = ("bestow_curse_save", "blood_flow_save", "flaming_sphere_negates
                  "classless_save_level", "color_spray_level", "hold_undead_level",
                  "free_action_stuck", "free_action_loop", "free_action_word", "remove_paralysis_word",
                  "protection_paralysis_word")  # the spells as the manual has them (spells_manual)
+SPELL_TO_HIT = ("spell_hit", "spell_hit_stub")  # missile and hostile touch spells roll to hit (spell_to_hit)
 PARTY_SPREAD = ("party_spread", "party_gather")  # the whole party in view after a load and a fight
 
 

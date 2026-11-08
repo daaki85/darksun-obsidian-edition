@@ -26,6 +26,7 @@
 - [Spells saved against with the spell save](#spells-saved-against-with-the-spell-save)
 - [Fire, cold and electricity: DEX instead of a doubled d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20)
 - [Enlarge's dice](#enlarges-dice)
+- [Spells roll to hit](#spells-roll-to-hit)
 - [Weapon specialization](#weapon-specialization)
 - [Kits](#kits)
   - [The kits](#the-kits)
@@ -635,6 +636,53 @@ line does the same (`RULE_ENLARGE`), and the Effects screen's line says DICE
 rather than DAMAGE (`EF_CHARGES`, `ef_enlarge_dice`). Checked in DOSBox:
 Gerakis Enlarged at level 1 hitting a Screamer Beetle for 21, 22 and 25, its
 hit points down by the same (the game's way: 22, 23 and 26).
+
+## Spells roll to hit
+
+([In the features page](FEATURES.md#spells-roll-to-hit).) The Options tab's box
+is the settings key `spell_to_hit` (on unless `False`); off, `launch.py` leaves
+out `gamepatch.SPELL_TO_HIT`'s two patches and the game's copy has DSUN.EXE's
+bytes there.
+
+The routine applying a spell to one target (7A085h, called from the spell's
+damage and effect routine 78C19h at 78D38h) makes its immunity checks, then
+keeps the spell in `[bp-6]` (7A15Ah) and looks it up in a table of six (7A1A7h:
+8, 12h, 35h, 4Bh, 6Fh, B4h): Magic Missile goes to Shield's test, the other
+five call a stub at the spell overlay's start (78BA0h, `mov ax,1`), and a 0
+there would make the spell do nothing (7A0BEh: the routine answers 1, 78D42h
+skips the damage and the effect). The stub is the game's unfinished to-hit test.
+
+- `spell_hit` (7A15Ah, `mov [bp-6],si`): DSCLOG's `SPELL_HIT_SITE` (`th_hit`).
+  `CAST_SITE` (772AAh, every cast, 598:89h) arms one roll for its spell and
+  target (`th_cast`), unless `ARROW_LEVEL` (58BE6h, a weapon's spell on a hit:
+  spell arrows and magical weapons) came just before. The armed cast's spell at
+  its target rolls once, unless an Acid burn is under way (`acid_burning`: the
+  burn passes Acid Arrow's 12h through the same routine each round). Missile
+  spells (`th_missiles`: 18, 53, 75, 111, 180) roll as missiles (to-hit kind 2,
+  DEX), touch spells (`th_touches`: 3, 10, 39, 72, 97, 113, 119, 128) as melee
+  (kind 1, STR) and only at a creature of another side (creature +1Dh). THAC0:
+  the caster's creature +1Fh (Acid Arrow: 21 less the cast's level, 772A5h's
+  `[bp+0Ch]`); less 5B8:EDh (7C3E9h: target, attacker, no weapon, kind; effects,
+  STR or DEX) and, for a combatant of 4 or more, `[11AEh]` - 1 (as 5837Ch); the
+  AC is 4E0:7Fh (58DD3h: target, attacker, 0), the weapon attack's. The d20 is
+  the game's rand() (`blow_rand`); 20 hits, 1 misses. The calls are in a frame
+  the overlay manager can fix up (as `NS_BLOW`'s), and the way back never
+  changes: a miss sets `th_miss` and, for a touch spell (not in the table),
+  writes Acid Arrow's 12h into the game's `[bp-6]`, so the dispatch reaches the
+  stub.
+- `spell_hit_stub` (78BA3h, the stub's `mov ax,1`): `SPELL_STUB_SITE`
+  (`th_stub`): 0 once after a miss, else 1. The stub keeps its `push bp / mov
+  bp,sp`, so its own way back stays in the BP chain.
+- Each roll is recorded as `KIND_TOHIT` (12): the d20, and a frame of the
+  caster, target, spell, THAC0, adjustments, their STR/DEX part, difficulty,
+  AC, kind and hit (dicelog's `_spell_to_hit`, which drops the damage rolled
+  just before from its recent rolls on a miss and floats "Miss" over the
+  target). The rand() call itself matches no filter and isn't recorded.
+
+Tests: test_dsclog's `NewSpellTests.test_spell_to_hit` (the handlers in
+Unicorn, the game's routines as stand-ins), test_gamepatch's
+`test_spell_to_hit` (the switch off leaves DSUN.EXE's bytes), test_dicelog's
+`test_spell_to_hit`.
 
 ## Weapon specialization
 

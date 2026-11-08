@@ -139,9 +139,10 @@ class PowerNameTests(unittest.TestCase):
 
     def test_no_dice(self):
         gd = self.gd(None, 0)
-        self.assertEqual(gd.spell_name(190), "special attack 190")
+        self.assertEqual(gd.spell_name(191), "special attack 191")
         gd = self.gd(SpellDamage(1, 1, 0, 1, 0, 6), 0x02)  # grows with level: no fixed dice to show
-        self.assertEqual(gd.spell_name(190), "special attack 190")
+        self.assertEqual(gd.spell_name(191), "special attack 191")
+        self.assertEqual(gd.spell_name(190), "Turn Undead")  # (the clerics' button's spell)
 
 
 class DamageHalvedTests(unittest.TestCase):

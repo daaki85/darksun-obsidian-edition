@@ -3694,6 +3694,128 @@ class NewSpellTests(RuleTests):
         self.assertEqual(spray(5, 9, 1), (3, past))  # (another spell)
         self.assertEqual(spray(0x3C, 9, 1), (3, 6))  # (Dismissal: on to its case)
 
+    def test_spell_to_hit(self):
+        """SPELL_HIT (7A15Ah, "mov [bp-6],si" past a spell's immunity checks; SI the spell, DI the
+        target) and SPELL_STUB (the always-hit stub's "mov ax,1", 78BA3h): the cast CAST_SITE saw
+        (caster [BP+6], target [BP+8], spell [BP+0Ah], level [BP+0Ch]) of a missile spell, or a touch
+        spell at a creature of another side (+1Dh), rolls a d20 once with the game's rand(): THAC0
+        (+1Fh; Acid Arrow's 21 - the level) less the to-hit adjustments (5B8:EDh: target, caster,
+        no weapon, 2 a missile, 1 a touch) and a monster's difficulty ([11AEh] - 1), less the AC
+        (4E0:7Fh: target, caster, 0); a 20 hits, a 1 misses. Recorded (kind 12); a miss makes the
+        stub answer 0 once, a touch spell's [BP-6] Acid Arrow's (12h) so that the stub is called.
+        Nothing for another spell, a second roll of one cast, a weapon's spell, or one's own side."""
+        from dsloader import gamepatch
+        hit_patch = next(p for p in gamepatch.PATCHES if p.name == "spell_hit")
+        stub_patch = next(p for p in gamepatch.PATCHES if p.name == "spell_hit_stub")
+        self.assertEqual((hit_patch.offset, hit_patch.replacement[2]), (0x7A15A, gamepatch.SPELL_HIT_SITE))
+        self.assertEqual((stub_patch.offset, stub_patch.replacement[2]), (0x78BA3, gamepatch.SPELL_STUB_SITE))
+        self.assertEqual(gamepatch.SPELL_TO_HIT, ("spell_hit", "spell_hit_stub"))
+        mu = self.mu
+        image = load_image()
+        hdr_off, ring = struct.unpack_from("<H", image, 20)[0], struct.unpack_from("<H", image, 16)[0]
+        things = (GAME_DS + 0x3972 - 0x4356) * 16 + 0xC36
+        mu.mem_write(things + 2 * 3, struct.pack("<BH", 2, 5))  # (combatant 2: creature 5, a member)
+        mu.mem_write(things + 40 * 3, struct.pack("<BH", 2, 7))  # (combatant 40: creature 7, a monster)
+        mu.mem_write(things + 41 * 3, struct.pack("<BH", 2, 8))  # (41: creature 8, a monster on the party's side)
+        mu.mem_write(GAME_DS * 16 + 0x1665, struct.pack("<HH", 0, 0x9000))
+        for creature, side, thac0 in ((5, 1, 16), (7, 2, 13), (8, 1, 18)):
+            mu.mem_write(0x9000 * 16 + creature * 0x3A + 0x1D, bytes((side, 0, thac0)))
+        mu.mem_write(GAME_DS * 16 + 0x11AE, struct.pack("<H", 3))
+        stub = lambda seg, off: ((GAME_DS - (0x4356 - seg)) & 0xFFFF) * 16 + off
+        mu.mem_write(stub(0x42AB, 0xED), bytes.fromhex("558bec8b4606a300068b4608a302068b460ea30406"
+                                                     "8b460aa30606b802005dcb"))  # (+2, its arguments at DS:600h)
+        mu.mem_write(stub(0x41BE, 0x7F), bytes.fromhex("558bec8b4606a310068b4608a312068b460aa31406"
+                                                     "b804005dcb"))  # (AC 4, its arguments at DS:610h)
+        mu.mem_write(stub(0x41F1, 0x66), bytes.fromhex("b80100cb"))  # (DEX +1)
+        mu.mem_write(stub(0x41F1, 0x61), bytes.fromhex("b80300cb"))  # (STR +3)
+        load = (GAME_DS - 0x4356) & 0xFFFF
+        mu.mem_write(load * 16 + 0x822, bytes.fromhex("a10007cb"))  # (rand(): mov ax,[700h] / retf)
+        d20 = lambda n: ((n - 1) * 0x8000 + 19) // 20  # (a rand() giving that d20)
+
+        def run(code, **regs):
+            self.at += 0x40
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, code + b"\xf4")
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, **regs).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(start, 0, count=20000)
+            self.assertEqual(mu.reg_read(r.UC_X86_REG_IP) - self.at, len(code) + 1)
+
+        def seq():
+            return struct.unpack("<H", mu.mem_read(TSR * 16 + hdr_off + 8, 2))[0]
+
+        def cast(caster, target, spell, level=5, weapon=False):
+            if weapon:  # (ARROW_LEVEL first, as a weapon's spell on a hit: its frame left 4 bytes down)
+                run(bytes((0xCD, 0x98, gamepatch.ARROW_LEVEL)) + b"\x90" * 4, ecx=spell, edi=caster)
+            mu.mem_write(SS * 16 + BP + 6, struct.pack("<4H", caster, target, spell, level))
+            run(bytes((0xCD, 0x98, gamepatch.CAST_SITE)))
+
+        def lands(spell, target, raw):
+            """The site run (DI the target, SI the spell): [BP-6] after it, then the stub's AX twice,
+            and the entry recorded (None for none)."""
+            mu.mem_write(GAME_DS * 16 + 0x700, struct.pack("<H", raw))
+            mu.mem_write(SS * 16 + BP - 6, struct.pack("<H", 0x5555))
+            before = seq()
+            run(hit_patch.replacement, esi=spell, edi=target, eax=0x1111, ebx=0x2222)
+            self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_SP, r.UC_X86_REG_BP, r.UC_X86_REG_SI,
+                                                       r.UC_X86_REG_DI, r.UC_X86_REG_AX, r.UC_X86_REG_BX)],
+                             [0x800, BP, spell, target, 0x1111, 0x2222])
+            kept, = struct.unpack("<H", mu.mem_read(SS * 16 + BP - 6, 2))
+            answers = []
+            for _ in range(2):
+                run(stub_patch.replacement, eax=0x9999)
+                answers.append(mu.reg_read(r.UC_X86_REG_AX))
+            e = None
+            if seq() != before:
+                n = struct.unpack("<HHH", mu.mem_read(TSR * 16 + hdr_off + 8, 6))
+                e = Entry.parse(bytes(mu.mem_read(RING_SEG * 16 + ring + ((n[0] - 1) % n[2]) * Entry.SIZE,
+                                                  Entry.SIZE)))
+                e = (e.kind, e.raw) + tuple(e.arg(at) for at in range(6, 0x1C, 2))
+            return kept, answers, e
+
+        # Magical Stone (75) by member 2 at monster 40: THAC0 16, +2, AC 4: 10 or more hits
+        cast(2, 40, 75)
+        self.assertEqual(lands(75, 40, d20(10)), (75, [1, 1], (12, 10, 2, 40, 75, 16, 2, 1, 0, 4, 10, 2, 1)))
+        self.assertEqual(struct.unpack("<4H", mu.mem_read(GAME_DS * 16 + 0x600, 8)), (40, 2, 2, 0))
+        self.assertEqual(struct.unpack("<3H", mu.mem_read(GAME_DS * 16 + 0x610, 6)), (40, 2, 0))
+        self.assertEqual(lands(75, 40, d20(1)), (75, [1, 1], None))  # (one roll a cast)
+        cast(2, 40, 75)
+        self.assertEqual(lands(75, 40, d20(9)), (75, [0, 1], (12, 9, 2, 40, 75, 16, 2, 1, 0, 4, 9, 2, 0)))
+        cast(2, 40, 75)
+        self.assertEqual(lands(75, 40, d20(1))[1], [0, 1])  # (a natural 1)
+        mu.mem_write(0x9000 * 16 + 5 * 0x3A + 0x1F, bytes((30,)))
+        cast(2, 40, 75)
+        self.assertEqual(lands(75, 40, d20(20))[1], [1, 1])  # (a natural 20, though 28 is needed)
+        mu.mem_write(0x9000 * 16 + 5 * 0x3A + 0x1F, bytes((16,)))
+        # Acid Arrow (18) at level 7: THAC0 14 (a fighter's), so 8 or more
+        cast(2, 40, 18, level=7)
+        self.assertEqual(lands(18, 40, d20(8))[2][4:6], (18, 14))
+        cast(2, 40, 18, level=7)
+        self.assertEqual(lands(18, 40, d20(7))[:2], (18, [0, 1]))
+        # Chill Touch (3): a touch, STR's +3; a miss puts Acid Arrow's 12h for the dispatch
+        cast(2, 40, 3)
+        self.assertEqual(lands(3, 40, d20(9)), (0x12, [0, 1], (12, 9, 2, 40, 3, 16, 2, 3, 0, 4, 9, 1, 0)))
+        self.assertEqual(mu.mem_read(GAME_DS * 16 + 0x604, 2), struct.pack("<H", 1))  # (kind 1)
+        cast(2, 40, 3)
+        self.assertEqual(lands(3, 40, d20(10))[:2], (3, [1, 1]))
+        cast(2, 41, 3)
+        self.assertEqual(lands(3, 41, d20(1)), (3, [1, 1], None))  # (its own side: no roll)
+        # a monster (40) at member 2: THAC0 13, +2, difficulty 3 - 1, AC 4: 5 or more
+        cast(40, 2, 113)
+        self.assertEqual(lands(113, 2, d20(5))[2], (12, 5, 40, 2, 113, 13, 2, 3, 2, 4, 5, 1, 1))
+        cast(40, 2, 180)
+        self.assertEqual(lands(180, 2, d20(4))[:2], (180, [0, 1]))
+        # none for another spell, another target, a weapon's spell
+        cast(2, 40, 71)
+        self.assertEqual(lands(71, 40, d20(1)), (71, [1, 1], None))
+        cast(2, 40, 75)
+        self.assertEqual(lands(75, 41, d20(1)), (75, [1, 1], None))
+        self.assertEqual(lands(75, 40, d20(1))[1], [0, 1])  # (still the cast's, at its own target)
+        cast(2, 40, 3, weapon=True)
+        self.assertEqual(lands(3, 40, d20(1)), (3, [1, 1], None))
+        cast(2, 40, 3)  # (the next cast rolls again)
+        self.assertEqual(lands(3, 40, d20(1))[1], [0, 1])
+
     def test_hold_undead_level(self):
         """HOLD_HD (7A345h, the undead's "test word [bp+0Eh],100h", 5 bytes; SI the spell, DI the
         target's thing, [BP+14h] the caster's level): Hold Undead (31) on an undead of more levels

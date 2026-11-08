@@ -2431,6 +2431,7 @@ arrow_cast   db 0               ; (1 when the hit's spell is a spell arrow's: AR
 ; Both words go under the INT's frame, as the pushes would have left them; AX the spell, as
 ; theirs did.
 arrow_level:
+        mov byte [cs:th_weapon], 1      ; (the cast that follows a weapon's: no attack roll, SPELL_HIT)
         push bp
         mov bp, sp
         push ax
@@ -12716,6 +12717,7 @@ cast_site:
         call record
         mov byte [cs:acid_burning], 0   ; (a burn's damage that never put its effect: over)
         call heal_sight
+        call th_cast                    ; (SPELL_HIT's: armed for an attack roll)
         pop ax
         pop si
         mov cx, [bp + 6]
@@ -14561,6 +14563,221 @@ sheet_level:
         jb .next
         pop si
 .out:   ret
+
+; SPELL_HIT (gamepatch "spell_hit", with spells that roll to hit): in the routine of what spell SI
+; does to thing DI (7A085h), past every immunity check, "mov [bp-6],si" (7A15Ah; 3 bytes), the
+; spell kept for the dispatch on its table (7A1A7h). The cast CAST_SITE last saw (TH_CAST: armed,
+; not a weapon's spell on a hit, not an Acid's burn), of this spell at this target, rolls to hit
+; once: the missile spells (TH_MISSILES: Acid Arrow, Turn Pebble to Boulder, Magical Stone,
+; Condense, the spines) as missiles, the touch spells (TH_TOUCHES) on a creature of another side
+; (the creatures' +1Dh) as melee. The caster's THAC0 (its creature's +1Fh; Acid Arrow's 21 - the
+; cast's level, a fighter's of that level shooting), less the game's to-hit adjustments
+; (5B8:EDh, 7C3E9h: the effects, STR in melee, DEX for a missile, kind 1 or 2, no weapon) and a
+; monster's difficulty ([11AEh] - 1, as 5837Ch), against the target's AC (4E0:7Fh, 58DD3h, as a
+; weapon's: not from behind), a d20 from the game's rand(): a 20 hits, a 1 misses (as 5883Ah).
+; Recorded (KIND_TOHIT: the d20, the frame TH_FRAME's). A miss (TH_MISS) puts Acid Arrow (12h) in
+; [BP-6], so the dispatch calls the table's always-hit stub (78BA0h), where SPELL_STUB answers 0:
+; the spell does nothing (7A0BEh), its damage rolled before lost. The calls are overlay code (the
+; AC's in another overlay), in a frame the overlay manager can fix up, as NS_BLOW's; the way back
+; is always the site's.
+SPELL_HIT_SITE equ NS_IMAGE + 74 ; 7A15Ah: a spell on its target, past the immunities (SPELL_HIT)
+SPELL_STUB_SITE equ NS_IMAGE + 75 ; 78BA3h: the missile spells' always-hit stub, its answer (SPELL_STUB)
+KIND_TOHIT equ 12
+TH_ACID   equ 0x12                ; Acid Arrow (in the dispatch's table)
+TH_DIFFICULTY equ 0x11AE          ; DS: the game's difficulty (a monster's attacks: + it - 1)
+TH_STUB_5B8 equ 0x42AB            ; (DSUN.EXE) the stub segments: 5B8h (EDh the to-hit adjustments),
+TH_STUB_508 equ 0x41F1            ;   508h (61h STR's to-hit, 66h DEX's missile adjustment),
+TH_STUB_4E0 equ 0x41BE            ;   4E0h (7Fh the AC)
+%macro th_far 2                   ; a far call to the game's stub segment %1, offset %2
+        mov ax, ds
+        sub ax, DGROUP_SEG - %1
+        mov [cs:th_call + 2], ax
+        mov word [cs:th_call], %2
+        call far [cs:th_call]
+%endmacro
+th_hit:
+        mov [bp - 6], si                ; (the move replaced)
+        sti
+        pushad
+        push es
+        cmp byte [cs:th_armed], 0
+        je .out
+        cmp si, [cs:cast_spell]
+        jne .out
+        cmp di, [cs:th_target]
+        jne .out
+        mov byte [cs:th_armed], 0       ; (one roll a cast)
+        cmp byte [cs:acid_burning], 0
+        jne .out
+        cmp si, 0xFF
+        ja .out
+        mov ax, si
+        mov bx, th_missiles
+        mov cx, TH_SPELLS
+.find:  cmp al, [cs:bx]
+        je .found
+        inc bx
+        loop .find
+.out:   jmp ovr_out
+.found: mov word [cs:th_kind], 2        ; (a missile: DEX)
+        cmp bx, th_touches
+        jb .who
+        mov word [cs:th_kind], 1        ; (a touch: STR)
+.who:   mov ax, [cs:cast_who]
+        mov [cs:th_caster], ax
+        call combatant_creature
+        jc .out
+        imul cx, ax, 0x3A
+        mov ax, di
+        call combatant_creature
+        jc .out
+        imul ax, ax, 0x3A
+        les bx, [CREATURES]
+        add ax, bx
+        add bx, cx                      ; (ES:BX the caster's creature)
+        xchg ax, bx
+        mov dl, [es:bx + 0x1D]          ; (the target's side)
+        xchg ax, bx
+        cmp word [cs:th_kind], 1
+        jne .thac0
+        cmp dl, [es:bx + 0x1D]
+        je .out                         ; (a touch on one's own side: as the game has it)
+.thac0: movsx ax, byte [es:bx + 0x1F]
+        cmp si, TH_ACID
+        jne .own
+        mov ax, 21
+        movzx cx, byte [cs:th_level]
+        sub ax, cx                      ; (a fighter's of the cast's level)
+.own:   mov [cs:th_thac0], ax
+        xor ax, ax
+        cmp word [cs:th_caster], IMAGE_PARTY
+        jb .diff
+        mov ax, [TH_DIFFICULTY]
+        dec ax
+.diff:  mov [cs:th_diff], ax
+        mov bx, sp
+        push word [ss:bx + 36]          ; (the way back in a frame the overlay manager can fix up)
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        push word [cs:th_kind]
+        push dword 0
+        push word [cs:th_caster]
+        push di
+        th_far TH_STUB_5B8, 0xED        ; (target, attacker, no weapon, kind)
+        add sp, 10
+        mov [cs:th_bonus], ax
+        push word [cs:th_caster]
+        cmp word [cs:th_kind], 1
+        je .str
+        th_far TH_STUB_508, 0x66
+        jmp .part
+.str:   th_far TH_STUB_508, 0x61
+.part:  add sp, 2
+        mov [cs:th_part], ax
+        push word 0
+        push word [cs:th_caster]
+        push di
+        th_far TH_STUB_4E0, 0x7F        ; (target, attacker, not from behind)
+        add sp, 6
+        mov [cs:th_ac], ax
+        mov ax, ds
+        sub ax, DGROUP_SEG
+        mov [cs:blow_rand + 2], ax
+        call far [cs:blow_rand]
+        mov cx, 20
+        mul cx
+        shl ax, 1
+        rcl dx, 1                       ; (rand() x 20 / 32768: 0 to 19)
+        inc dx
+        mov [cs:th_d20], dx
+        mov ax, [cs:th_thac0]
+        sub ax, [cs:th_bonus]
+        sub ax, [cs:th_diff]
+        sub ax, [cs:th_ac]              ; (the d20 needed)
+        mov byte [cs:th_miss], 0
+        cmp dx, 20
+        je .rec
+        cmp dx, 1
+        je .miss
+        cmp dx, ax
+        jge .rec
+.miss:  mov byte [cs:th_miss], 1
+.rec:   mov [cs:th_frame + 2], di
+        mov [cs:th_frame + 4], si
+        movzx ax, byte [cs:th_miss]
+        xor al, 1
+        push ax                         ; TH_FRAME: +1Ah 1 a hit
+        mov si, th_frame_end
+.frame: sub si, 2
+        push word [cs:si]               ;   +18h kind, +16h the d20, +14h AC, +12h difficulty, +10h
+        cmp si, th_frame                ;   STR or DEX's, +0Eh the adjustments, +0Ch THAC0, +0Ah
+        ja .frame                       ;   the spell, +8 the target, +6 the caster
+        push dword 0
+        push bp
+        mov bp, sp
+        mov si, bp
+        sub si, 4                       ; (SS:SI+6: the frame's return address, none)
+        mov ax, [cs:th_d20]
+        mov word [cs:kind], KIND_TOHIT
+        call record
+        pop bp
+        add sp, 4 + 2 * 11
+        cmp byte [cs:th_miss], 0
+        je .back
+        cmp word [cs:th_kind], 1
+        jne .back                       ; (a missile spell: the stub already its dispatch's)
+        mov bx, [bp]
+        mov word [ss:bx - 6], TH_ACID
+.back:  jmp ovr_back                    ; (the way back as the overlay manager left it)
+
+; SPELL_STUB (gamepatch "spell_hit_stub"): the missile spells' always-hit stub's "mov ax,1"
+; (78BA3h; 3 bytes): 0 after SPELL_HIT's miss (once), else 1 as the game's.
+th_stub:
+        mov ax, 1
+        cmp byte [cs:th_miss], 0
+        je .out
+        mov byte [cs:th_miss], 0
+        xor ax, ax
+.out:   iret
+
+; TH_CAST: CAST_SITE's for SPELL_HIT: the cast's target ([BP+8]) and level ([BP+0Ch]) kept, the
+; cast armed for one roll unless it is a weapon's spell on a hit (ARROW_LEVEL's TH_WEAPON). All
+; registers kept.
+th_cast:
+        push ax
+        mov ax, [bp + 8]
+        mov [cs:th_target], ax
+        mov al, [bp + 0x0C]
+        mov [cs:th_level], al
+        xor al, al
+        xchg al, [cs:th_weapon]
+        xor al, 1
+        mov [cs:th_armed], al
+        pop ax
+        ret
+
+th_missiles db 18, 53, 75, 111, 180              ; Acid Arrow, Turn Pebble to Boulder, Magical Stone, Condense, spines
+th_touches  db 3, 10, 39, 72, 97, 113, 119, 128  ; Chill Touch, Shocking Grasp, Vampiric Touch, Cause
+TH_SPELLS equ $ - th_missiles                    ;   Light Wounds, Cause Disease, Cause Serious, Poison, Cause Critical
+th_call   dw 0, 0
+th_armed  db 0
+th_weapon db 0
+th_miss   db 0
+th_level  db 0
+th_target dw 0xFFFF
+th_frame:                       ; (pushed from the end: the first word the frame's +6)
+th_caster dw 0
+          dw 0                  ; (+8 the target, +0Ah the spell: put in by SPELL_HIT)
+          dw 0
+th_thac0  dw 0
+th_bonus  dw 0
+th_part   dw 0
+th_diff   dw 0
+th_ac     dw 0
+th_d20    dw 0
+th_kind   dw 0
+th_frame_end:
 
 REQ_REST equ 0
 rest_site:
@@ -17307,6 +17524,10 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je spray_site
         cmp byte [cs:rl_site], HOLD_HD_SITE
         je hold_hd
+        cmp byte [cs:rl_site], SPELL_HIT_SITE
+        je th_hit
+        cmp byte [cs:rl_site], SPELL_STUB_SITE
+        je th_stub
         cmp byte [cs:rl_site], CR_AGE_SITE
         je cr_age
         cmp byte [cs:rl_site], CR_AGE_CON_SITE

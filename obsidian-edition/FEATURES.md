@@ -50,6 +50,7 @@ running the game, the Loader's window and its dice log are in the
     - [Spells saved against with the spell save](#spells-saved-against-with-the-spell-save)
     - [Fire, cold and electricity: DEX instead of a doubled d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20)
     - [Enlarge multiplies the weapon's dice only](#enlarge-multiplies-the-weapons-dice-only)
+    - [Spells roll to hit](#spells-roll-to-hit)
 - [More character customization](#more-character-customization)
   - [Weapon specialization](#weapon-specialization)
   - [Kits](#kits) (a page of its own: [Kits](KITS.md))
@@ -456,7 +457,7 @@ How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#no-manual-check).
 
 ## Rule changes
 
-Nineteen changes that bring the game's own rules closer to AD&D, each with its
+Twenty changes that bring the game's own rules closer to AD&D, each with its
 own box in the Options tab's **Rule changes** section, grouped there as they
 are here: [characters](#characters), [weapons and armour](#weapons-and-armour)
 and [magic](#magic). All are on by default,
@@ -943,6 +944,7 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#items-saving-against-a
 | [Fire, cold and electricity: DEX instead of a doubled d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20) | the save's d20 doubled, so most creatures shrug off a Fireball (70% to save where 35% is due) | DEX's defensive adjustment on those saves rather than a doubled d20 |
 | [Enlarge multiplies the weapon's dice only](#enlarge-multiplies-the-weapons-dice-only) | the whole melee damage multiplied, STR included | 10% a caster level on the weapon's dice, rounded up, STR and the rest added after |
 | [Spells as the manual describes them](#spells-as-the-manual-describes-them) | fourteen spells' saves, times, damage and effects the game's own way, a classless monster's level 0 for its saves | as the manual has them, the monster's level its hit dice (from the next start) |
+| [Spells roll to hit](#spells-roll-to-hit) | Acid Arrow, Turn Pebble to Boulder, Magical Stone, Condense and the touch spells never miss | they roll to hit against the target's AC, a missile's with DEX, a touch's with STR; a miss does nothing (from the next start) |
 
 #### Rangers' casting level
 
@@ -1075,11 +1077,37 @@ manual says, or the change would make a different spell rather than fix one:
 | Mass Domination | up to five creatures | one |
 | Detonate | 1d10 to everyone within 10' | the target only |
 | Quicksand | held 1 turn + 1 round a level | Stuck a round at a time, put on again each round while the quicksand lasts (5d3 rounds of its own); its record's time changes nothing (seen in DOSBox) |
-| Minute Meteors | five meteors of 1d4, +2 to hit | one roll of 1d4 a caster level (at most 10d4) on one target, no to-hit roll (no spell rolls to hit in the game; Acid Arrow, Turn Pebble to Boulder, Magical Stone and Condense always hit) |
+| Minute Meteors | five meteors of 1d4, +2 to hit | one roll of 1d4 a caster level (at most 10d4) on one target, no to-hit roll (left so: [Spells roll to hit](#spells-roll-to-hit) leaves out Magic Missile, Flame Arrow and Minute Meteors) |
 
 What else the manual and the game disagree on, and why the rest is left:
 [reports/spells-against-the-manual.md](../reports/spells-against-the-manual.md)
 (in the repository).
+
+#### Spells roll to hit
+
+In AD&D a missile spell is aimed like a missile and a touch spell needs a touch
+attack, but the game lands them all, every time. With this box ticked (the
+default; it takes effect from the next start) they roll to hit, as a weapon
+does:
+
+| Spells | How they roll |
+|---|---|
+| Acid Arrow | as an arrow from a fighter of the caster's level: THAC0 21 less the caster level, with the caster's DEX missile adjustment (the manual's "as if fired by a fighter") |
+| Turn Pebble to Boulder, Magical Stone, Condense, and the spines some monsters shoot | the caster's own THAC0, with its DEX missile adjustment |
+| Chill Touch, Shocking Grasp, Vampiric Touch, Cause Light, Serious and Critical Wounds, Cause Disease, Poison | a touch attack with the caster's own THAC0 and STR adjustment, only at a creature of another side (a foe, or a friend turned against it): on one's own side they land as before |
+
+The roll is the game's own for an attack: a d20 against THAC0 less the
+target's AC as the game works it out for a blow (armour, DEX, spells such as
+Shield or Blur), with the game's other to-hit adjustments (Bless, Prayer, Curse
+and the rest) and, for a monster, the game's difficulty setting, as on its
+weapon attacks. A natural 20 always hits and a natural 1 always misses. A miss
+does nothing: no damage (the dice are rolled first, so the dice log shows the
+roll that was lost), no Acid burning on, no effect. A spell from a weapon's hit
+(a spell arrow, a magical weapon) doesn't roll again: the hit was the roll.
+Magic Missile, Flame Arrow, Minute Meteors, areas, cones and psionic powers
+are left as they are. Each roll has a line in the [dice log](DICE-LOG.md),
+and "Miss" floats over the target. Unticked, the spells always hit, as in the
+game. How it is done: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#spells-roll-to-hit).
 
 ## More character customization
 

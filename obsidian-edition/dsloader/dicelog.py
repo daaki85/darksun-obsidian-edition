@@ -152,6 +152,11 @@ IMAGE_VANISH = 0xBF  # (the game's own sight of an image vanishing: a "spell" a 
 # kind 14 (a summoned one) is then sent away (1000 damage)
 ABJURE_ROLL_RETURN = bytes.fromhex("83c4045a3bd07e03e968")
 ABJURE_KIND = 14
+# Turn Undead (spell 190, the priests' button): the turning routine (7ADB7h; target [BP+6], caster
+# [BP+8], the priest level [BP+0Ch], the number needed [BP-6]) rolls 1d20 at 7AE4Dh and destroys an
+# undead target (1000 damage, 79A01h) on that number or more; the code after the dice call
+TURN_ROLL_RETURN = bytes.fromhex("83c4043b46fa7c156668ffffe803")
+TURN_UNDEAD_SPELL = 0xBE
 # A summoning spell picking which of its three creatures comes
 SUMMON_ROLL_RETURN = bytes.fromhex("83c4043d0100740d3d02")
 # What a return address shows when the overlay manager has redirected it (INT 3Fh)
@@ -222,6 +227,13 @@ KIND_CAST = 8  # DSCLOG's CAST_SITE: a spell or power cast: raw = the spell, the
 KIND_HEAT = 10  # DSCLOG's HEAT_SITE: Sunstroke's heat on a creature: raw = the damage | the spell << 8,
 # the creature the extra (its 1d4 rolled just before, by a caller the overlay manager may hide)
 KIND_SWEPT = 11  # DSCLOG's SWEPT_MARK: Whirlwind's damage on a creature that failed its save: raw = it
+# DSCLOG's SPELL_HIT: a missile or hostile touch spell's attack roll (the rule "spells roll to hit"):
+# raw = the d20; its frame +6 the caster, +8 the target (combatants), +0Ah the spell, +0Ch the THAC0
+# (Acid Arrow's 21 - the cast's level), +0Eh the game's to-hit adjustments, +10h the STR or DEX part
+# of them, +12h a monster's difficulty, +14h the target's AC, +16h the d20, +18h 1 a touch, 2 a
+# missile, +1Ah 1 for a hit
+KIND_TOHIT = 12
+ACID_ARROW_SPELL = 18
 KIND_WALL = 9  # DSCLOG's THORNS_DAMAGE: Wall of Thorns' damage on a creature in it, taken instead of
 # its record's dice: raw = the damage | the spell << 8, extra the creature
 THORNS_BASE = 8  # Wall of Thorns: 8 + the creature's AC (DSCLOG's THORNS_AC: it + 80h in the entry's extra's high byte)
@@ -591,6 +603,7 @@ class DiceLog:
         self._spell_name = ""
         self._spell_id: Optional[int] = None
         self._cast: Tuple[Optional[int], Optional[int]] = (None, None)  # (the last spell cast: its caster, the spell)
+        self._destroyed: Dict[int, str] = {}  # creature index -> what destroyed it outright (its HP fall said so)
         self.tracker: Optional[PartyTracker] = None
         self.defilers = defilerscrolls.DefilerScrolls()  # (a defiler in a fight may carry a scroll)
         self.champions = champions.Gear()  # (the champions' bout: their gear worn and held)
@@ -1814,6 +1827,10 @@ class DiceLog:
             if before is None or before == hp or not -100 <= before <= 2000:
                 continue  # unchanged, or a record still being loaded
             who = g.creature_name(index)
+            gone = self._destroyed.pop(index, None)
+            if gone is not None and hp < before:  # (Turn Undead's 1000 damage: not a wound)
+                out.append(f"  {who} is destroyed by {gone}")
+                continue
             sheet = g.sheet(index)
             most = struct.unpack_from("<h", sheet, game.SHEET_MAX_HP)[0] if len(sheet) >= game.SHEET_SIZE else None
             left = f"now {hp}/{most} HP" if most and most > 0 else f"now {hp} HP"
@@ -2401,11 +2418,16 @@ class DiceLog:
             return self._wall(e, now)
         if e.kind == KIND_HEAT:
             return self._heat(e, now)
+        if e.kind == KIND_TOHIT:
+            return self.flush(now, force=True) + self._spell_to_hit(e, now)
         if e.kind == KIND_SWEPT:
             return [f"    {self._name(e.raw)} is swept off its feet: loses its next turn"]
         if e.kind == KIND_CAST:
             self._cast = (e.arg(6), e.raw)  # (who cast what, for a kit's damage: DSCLOG's CAST_WHO)
-            self._float(e.arg(6), self.game.spell_name(e.raw), labels.SPELL_INK, now)
+            # (Turn Undead, 190, has no name in the game's spell names: game.spell_name calls it a
+            # "special attack 190")
+            name = "Turn Undead" if e.raw == TURN_UNDEAD_SPELL else self.game.spell_name(e.raw)
+            self._float(e.arg(6), name, labels.SPELL_INK, now)
             if e.raw == game.RESTORE_YOUTH_SPELL and self.rules & game.RULE_AGING:  # (its years: aging.restore)
                 caster, target = self.game.combatant_creature(e.arg(6)), self.game.combatant_creature(e.arg(8))
                 if caster is not None and target is not None:
@@ -2443,6 +2465,40 @@ class DiceLog:
                 return [f"{generic[0]} = {generic[1]}  (at {where})"]
             return [f"rand() = {e.raw}  (at {where})"]
         return []
+
+    def _spell_to_hit(self, e: Entry, now: float) -> List[str]:
+        """A missile or hostile touch spell's attack roll (DSCLOG's SPELL_HIT, KIND_TOHIT): the d20
+        against the caster's THAC0, less the game's to-hit adjustments (its STR or DEX part named) and
+        a monster's difficulty, less the target's AC. A 20 hits, a 1 misses. On a miss the spell does
+        nothing: the damage rolled for it just before is lost (taken off the recent rolls)."""
+        g = self.game
+        caster, target, spell, thac0, bonus, part, difficulty, ac, kind, hit = (
+            e.arg(at) for at in (6, 8, 0x0A, 0x0C, 0x0E, 0x10, 0x12, 0x14, 0x18, 0x1A))
+        if None in (caster, target, spell, thac0, bonus, part, difficulty, ac, kind, hit):
+            return []
+        d20 = e.raw
+        need = thac0 - bonus - difficulty - ac
+        name = g.spell_name(spell)
+        note = " (natural 20)" if d20 == 20 else " (natural 1)" if d20 == 1 else ""
+        needs = ("hits on anything but a 1" if need <= 2 else "only a 20 hits" if need > 20 else f"needs {need}+")
+        base = f"THAC0 {thac0}" + (" (a fighter's of the caster's level)" if spell == ACID_ARROW_SPELL else "")
+        parts = [(("STR" if kind == 1 else "DEX"), part), ("spells", bonus - part), ("difficulty", difficulty)]
+        how = base + "".join(f", {signed(v)} {what}" for what, v in parts if v)
+        touch = "touch " if kind == 1 else ""
+        head = (f"{g.combatant_name(caster)}'s {name} at {g.combatant_name(target)}: {touch}attack d20 = {d20}{note}, "
+                f"{needs} ({hit_chance(need)}%) ({how}; target AC {ac})")
+        if hit:
+            return [f"{head} -> HIT"]
+        lost = ""
+        for i in range(len(self._recent_damage) - 1, -1, -1):  # (its damage, rolled just before: never taken)
+            if self._recent_damage[i][0] == spell:
+                lost = f", the {self._recent_damage[i][1]} damage rolled lost"
+                del self._recent_damage[i]
+                break
+        if self._last_damage is not None and self._last_damage[0] == spell:
+            self._last_damage = None
+        self._float(target, labels.MISS, labels.MISS_INK, now)
+        return [f"{head} -> MISS: the spell does nothing{lost}"]
 
     def _image_line(self, target: int, roll: int, chance: int, spell: bool) -> str:
         """Mirror Images' d100 against a hit or a spell on TARGET: an image takes it on CHANCE or
@@ -2657,6 +2713,8 @@ class DiceLog:
         del self._dice[key]
         faces_text = "[" + " + ".join(map(str, faces)) + "]"
         if not weapon:
+            if count == 1 and sides == 20 and (e.parent_code.startswith(TURN_ROLL_RETURN) or self._overlay_turn(e)):
+                return self._turn_undead(e, faces[0], now)
             if count == 1 and sides == 20 and self._is_save_roll(e):
                 return self._save_roll(e, now)
             if count == 1 and sides == 10 and e.parent_code.startswith(SPECIAL_EFFECT_RETURN):
@@ -3539,6 +3597,70 @@ class DiceLog:
             if works else "fails"
         return [f"    Abjure on {self._name(target)}: d20 = {roll}, needs {need} or more (11 - caster level {level} "
                 f"+ its level {their}) -> {result}"]
+
+    @staticmethod
+    def turn_needed(hd: int, level: int) -> int:
+        """The d20 Turn Undead needs (7AE01h-7AE48h): a column from the target's hit dice (1-4 as
+        they are, 5 and more one further, at most 13), a row from the priest's level (at most 14;
+        11 counts as 10, 12 as 11, 13 and more as 12), 10 + 3 x (column - row), 22 made 20."""
+        column = hd if hd <= 4 else min(hd + 1, 13)
+        row = min(level, 14)
+        if row > 10:
+            row -= 1
+            if row > 12:
+                row -= 1
+        need = 10 + 3 * (column - row)
+        return 20 if need == 22 else need
+
+    def _turn_target(self, target: Optional[int]) -> Optional[int]:
+        """The hit dice (sheet +24h) of an undead (race 9) combatant, else None."""
+        creature = self.game.combatant_creature(target) if target is not None else None
+        sheet = self.game.sheet(creature) if creature is not None else b""
+        if len(sheet) < game.SHEET_SIZE or sheet[game.SHEET_RACE] != game.UNDEAD:
+            return None
+        return sheet[game.SHEET_LEVELS]
+
+    def _overlay_turn(self, e: Entry) -> bool:
+        """Turn Undead's d20 when the overlay manager has swapped its return address for an INT 3Fh
+        stub (TURN_ROLL_RETURN can't be matched): the routine's frame is still (target, caster,
+        &flags, level), the target undead, and [BP-6] the number the game worked out for them."""
+        if not e.parent_code.startswith(OVERLAY_TRAP) or self._cast[1] != TURN_UNDEAD_SPELL:
+            return False
+        level, need = e.parent_arg(0x0C), e.parent_local(-6)
+        hd = self._turn_target(e.parent_arg(6))
+        if hd is None or level is None or need is None or not 0 <= level & 0xFF <= 40:  # (0: no priest class)
+            return False
+        return need == self.turn_needed(hd, level & 0xFF)
+
+    def _turn_undead(self, e: Entry, roll: int, now: float) -> List[str]:
+        """A priest's Turn Undead on one undead: the d20 against the number needed (the game's
+        own, from the frame), and what came of it: destroyed (the game does 1000 damage, said by
+        hp_changes as the destruction) or nothing at all."""
+        target, caster, level = e.parent_arg(6), e.parent_arg(8), (e.parent_arg(0x0C) or 0) & 0xFF
+        hd = self._turn_target(target)
+        need = e.parent_local(-6)
+        if need is None and hd is not None:
+            need = self.turn_needed(hd, level)
+        who = self._name(caster) if caster is not None else "?"
+        what = self._name(target) if target is not None else "?"
+        if need is None:
+            return [f"{who} turns {what}: d20 = {roll}"]
+        works = roll >= need
+        if need > 20:
+            needs = f"needs {need}+, more than a d20 can roll"
+        elif need <= 1:
+            needs = f"needs {need}+, any roll"
+        else:
+            needs = f"needs {need}+"
+        dice = f"{hd} HD" if hd is not None else "its HD"
+        if works:
+            creature = self.game.combatant_creature(target)
+            if creature is not None:
+                self._destroyed[creature] = "Turn Undead"
+        self._spell_until = 0.0  # (no spell's HP lines: the destruction is said as such)
+        return self.flush(now, force=True) + [
+            f"{who} turns {what}: d20 = {roll}, {needs} (priest level {level} vs {dice}) -> "
+            f"{'destroyed' if works else 'not turned'}"]
 
     def _magic_resistance(self, target: int, spell: int, roll: int) -> List[str]:
         """The d100 the game rolls against a target's magic resistance before its saving throw."""
