@@ -46,16 +46,17 @@ Releases, newest first: [2.14.0](#pull-request-87-merged-2026-11-07) (#86 and #8
   `new_spells`.)
 
 **Fixed: the Loader**
-- **A new Battle Dancer's or Spellarcher's bow couldn't shoot** until it was taken off and put on
-  again. Fuller starting gear gives the bow to the held list and its arrows to the worn one, as
-  the inventory screen keeps them (since #85, 2.13.4), and `bow_ahead`, which put a bow ahead of its arrows
-  when both were in one list, then swapped the two records across the lists: the bow in the worn
-  list, where the game doesn't look for a missile weapon. It swaps only within one list now, and a
-  weapon found in the worn list (or arrows in the held one) is moved back as the dice log runs,
-  out of a fight: "Yilballa's Bow is now held, ready to use (it had been counted as worn)".
-  (`weaponchoice.bow_ahead`, `pickpocket.mend_lists`. Tests: `test_lists_apart`,
+- **A bow the Loader gave couldn't shoot** until it was taken off and put on again: a new character's
+  whose weapon spec is the bow (whatever its class), a Myrmidon's second spec's, fuller starting
+  gear's for a Battle Dancer or Spellarcher, and any Spellarcher's once it made spell arrows in an
+  empty quiver. Each gives the bow to the held list and its arrows to the worn one, as the
+  inventory screen keeps them (since #85, 2.13.4), and then `bow_ahead`, which put a bow ahead of
+  its arrows when both were in one list, swapped the two records across the lists: the bow in the
+  worn list, where the game doesn't look for a missile weapon. It swaps only within one list now,
+  and a weapon found in any party member's worn list (or arrows in the held one) is moved back as
+  the dice log runs, out of a fight: "Yilballa's Bow is now held, ready to use (it had been counted
+  as worn)". (`weaponchoice.bow_ahead`, `pickpocket.mend_lists`. Tests: `test_lists_apart`,
   `test_mend_bow_and_arrows`, both failing on the code before the fix.)
-
 - **Changing the leader just after a fight rolled a thief's hiding:** the dice log took a change
   of whose turn within a minute of game time of the last round for a turn of the same fight, and
   game time barely moves out of fights, so the new leader's "turn" printed ("Alura's turn") and,

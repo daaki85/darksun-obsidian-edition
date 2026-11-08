@@ -428,6 +428,20 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   FAKEPTY.COM` in a scratch folder, then the window; Sadira loses 1 HP a second and her byte wraps
   past 0 (133/30 two minutes in), so search `sadira`, pick the hit and Assign within about 15 s of
   starting it. Reconnect picks up a restarted DOSBox.
+- **The leader**: the inventory screen's small face button left of each portrait (the first of the
+  two; the lit one is the leader's): Cilla's at (7, 152), the others' 44 higher each (2026-11-08,
+  from the manual's "Leader" button).
+- **Talking to someone who walks** (the Trustee, 2026-11-08): wait where his rounds pass
+  (`$WORK`-free scripts: his thing from `gd.combatants()`, his place at DS:669Dh + 32n), and when he
+  is on screen and near, `pointer.py look`: the eye pauses the game, so he stops. A slow press on his
+  figure (about 12 pixels above his feet; a red eye means bare floor) opens the Look box; its first
+  button (left, about 188,158 when the box is low) talks. A YES/NO question first: Y or N.
+- **The Trustee's pocket** (his talk's "(PICK THE TRUSTEE'S POCKETS)"): offered only if the one
+  talking is a thief, within 4 squares of him as the talk opens, and the key isn't stolen (flag 55;
+  script 146 at 884h-8ABh): a talk opened from the Look box across a room has no such line. "You
+  find a key!", then Goodbye hands it over (GIVE at 0ABh, to the one talking; at his feet if that
+  fails) with 250 XP. The key's icon (picture 2161, 12 x 5) is a faint grey key on the grey cell,
+  near invisible at the game's size: hover the cell for "SLAVEPEN KEY" (logs/2026-11-08-trustee-key.md).
 - **Picking a pocket:** U, the thief's portrait (Cilla 108,108), the purse under the spell counts
   (157,145, a slow press: the USE screen closes), then the talk pointer on the person. The result
   is a narration box with a Continue line (click it, 30,157). From `pens-after-scar` (2026-11-07,
@@ -557,7 +571,8 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   the gate (1816, 408) and he ran out of patience ("That's it! Time's run out!"), then the alarm and
   a fight with every guard. **The alarm fight on purpose**: `toalarm.sh` (loads `pens-after-scar`,
   records the sound, raises Cilla's thief level in memory, walks to the fire room), then
-  `restalarm.sh` (rests, then waits Kurzak out); about 15 minutes in all, in the background with a
+  `restalarm.sh` (rests, then waits Kurzak out); the alarm then sends wave after wave, with
+  `fight_on` 0 only a moment between them (fightout.sh stops "DONE" there: run it again); about 15 minutes in all, in the background with a
   Monitor. **toalarm.sh can stop short at (1832, 856)**, outside the fire room (2026-11-06: its last
   walkto said NO PATH FROM HERE with the door open). **A look click on an open door closes it** (the
   closed door is the gold pole; the user caught a close taken for an open): check a shot before
