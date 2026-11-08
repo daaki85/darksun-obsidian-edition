@@ -433,6 +433,7 @@ def _new_fight(log) -> None:
     rounds counted from 0 again, and the game hands its creature records to new monsters, so an AC
     worked out for one in an earlier fight isn't this one's (the party's stay theirs)."""
     log._round = 0
+    log._recent_damage.clear()  # (an earlier fight's rolls named this one's damage: "from Shocking Grasp")
     for remembered in (log.last_ac, log.ac_detail):
         for index in [i for i in remembered if i >= game.PARTY_SIZE]:
             del remembered[index]
@@ -1875,7 +1876,10 @@ class DiceLog:
 
     def _damage_source(self, lost: int) -> Tuple[Optional[int], str]:
         """The spell an HP loss of LOST came from: the latest recent roll it matches, whole or
-        halved (taken off the list), else the spell being cast."""
+        halved (taken off the list), else the spell being cast. A poison's fixed damage (a monster's
+        poisoned hit, a Poisoner's) is its own, its save the latest: no roll to match."""
+        if self._spell_id in game.POISON_DAMAGE and lost == game.POISON_DAMAGE[self._spell_id]:
+            return self._spell_id, self._spell_name
         for i in range(len(self._recent_damage) - 1, -1, -1):
             spell, rolled = self._recent_damage[i]
             if lost in (rolled, rolled // 2):

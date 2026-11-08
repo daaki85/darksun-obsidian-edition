@@ -4555,6 +4555,26 @@ class StealthTests(unittest.TestCase):
         self.mu.mem_write(TSR * 16 + 170, struct.pack("<H", 0))
         self.assertEqual(self.attack(), (0, 0, 15, 0, 0b0100, 0))
 
+    def test_backstab_first_attack_only(self):
+        """STAB_FIRST (RULE_HI_BACKSTAB): a party member's later attacks in the same round (the
+        game's clock unchanged) are no backstab, the +2 taken back, whatever the game said; from
+        behind stays. Another member's first is one; the next round's first is one again; a
+        creature not in the party is left to the game. (A thief with two weapons and a weapon
+        spec's extra attack had the third, the off-hand one, multiplied after a first that missed.)"""
+        mu, clock = self.mu, 0xC000
+        mu.mem_write(self.hdr + 270, struct.pack("<H", 128))
+        mu.mem_write(GAME_DS * 16 + 0x9B72, struct.pack("<HH", 0, clock))
+        mu.mem_write(clock * 16, struct.pack("<I", 600))
+        self.assertEqual(self.attack()[:3], (1, 1, 11))  # hidden: the round's first, a backstab
+        game_stab = dict(behind=1, stab=1, thac0=11, hidden=0)
+        self.assertEqual(self.attack(**game_stab)[:3], (1, 0, 13))  # its second: from behind only
+        self.assertEqual(self.attack(**game_stab)[:3], (1, 0, 13))  # (and its third, the off-hand)
+        self.assertEqual(self.attack(attacker=1, **game_stab)[:3], (1, 1, 11))  # another's first
+        self.assertEqual(self.attack(attacker=0x29, **game_stab)[:3], (1, 1, 11))  # not the party's
+        self.assertEqual(self.attack(attacker=0x29, **game_stab)[:3], (1, 1, 11))
+        mu.mem_write(clock * 16, struct.pack("<I", 660))  # the next round
+        self.assertEqual(self.attack(**game_stab)[:3], (1, 1, 11))
+
     def girdle(self, item_type, weapon_type=7):
         """Creature 6 (the target) wearing an item of ITEM_TYPE at the waist (none: 0), the
         Loader's types from 115 (the header's TYPES_FIRST), the attacker's weapon of WEAPON_TYPE."""

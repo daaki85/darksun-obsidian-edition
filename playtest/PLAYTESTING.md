@@ -388,7 +388,10 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
 - **Loading**: the title (two clicks), then the main menu: START GAME, CREATE CHARACTERS, LOAD
   SAVED GAME (170, 109), EXIT TO DOS; the LOAD screen lists the slots (click one at 100, 46), then
   LOAD (253, 46). `loadsave.sh` does it.
-- **Talk menus** (WHAT DO YOU SAY?): number keys don't choose; click the line. The list scrolls:
+- **Talk menus** (WHAT DO YOU SAY?): click the line, or press a number key: 1-5 choose the line at
+  once, as the manual says (2026-11-08: `xdotool key --window $W 2` chose Kurzak's second line, 5 his
+  Goodbye; the game's talk key table, DSUN.EXE 7DDB0h: 1-5, Y, N, Up, PgUp, Down, PgDn; the Loader takes
+  none of them. An earlier note said they did nothing: the key had gone to another window). The list scrolls:
   its down arrow is at (311, 187), and the last visible line is about y 189. The dice log lists
   every choice with a number, which helps find the one wanted.
 - **The inventory screen's places** (2026-11-02, from hovering: the name shows in the bar at the

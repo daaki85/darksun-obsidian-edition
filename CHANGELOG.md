@@ -38,6 +38,26 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 [1.1.0](#pull-request-18-merged-2026-10-06) (#18), [1.0.0](#pull-request-12-merged-2026-10-02)
 (#12).
 
+## Next pull request (not opened yet)
+
+**Fixed: DSCLOG**
+- **A thief's later attacks in a round could still backstab:** with **A backstab multiplies the
+  weapon's dice only**, only the round's first attack is meant to be a backstab, but the count it
+  read (`[BP-14h]`) leaves the off-hand swing out, so a thief with two weapons and a weapon spec's
+  extra attack whose first swing missed had the third, the off-hand one, multiplied (a player's
+  log: "Seneca hits Merzol ... +3 backstab (the dice 3 x2 = 6)"), and every swing after the first
+  had the backstab's +2 to hit. Each party member's attack now keeps the game's clock (it moves a
+  round at a time in a fight); a later attack in the same round is no backstab, its +2 taken back,
+  from behind as the game has it. (`STAB_FIRST`, in `PROBE_STEALTH`. Test:
+  `test_backstab_first_attack_only`.)
+
+**Fixed: the Loader**
+- **A Poisoner's poison was put down to another spell** ("Merzol takes 10 from Shocking Grasp"):
+  a loss is named after a recent damage roll it matches, whole or halved, and the list kept an
+  earlier fight's rolls. A new fight forgets them, and a poison's fixed damage (10 or 30) is its
+  own when its save is the latest. (`DiceLog._damage_source`, `_new_fight`. Test:
+  `test_poison_damage_named`.)
+
 ## Pull request #88 ([merged 2026-11-08](https://github.com/daaki85/darksun-obsidian-edition/pull/88))
 
 Obsidian Edition 2.14.1 ([release notes](release-notes/v2.14.1.md)).

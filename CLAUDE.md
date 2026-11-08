@@ -63,7 +63,8 @@ capture; window grabs (`import -window`) are 320x240, so y x 1.2.
 - Message boxes block clicks, keys and drags: click ON the box (`boxclick.sh`, 160,20).
 - A YES/NO question needs the N or Y key, and only while the dice log's last line is `    2. No`.
   The arena gate's "Do you wish to continue?" is **Y**; the Announcer's question is N.
-- Talk menus: click the line (the list scrolls, down arrow at 311,187); number keys don't work.
+- Talk menus: click the line (the list scrolls, down arrow at 311,187), or press 1-5 with
+  `xdotool key --window <DOSBox's window>` (the line chosen at once).
 - The combat log panel covers the bottom right: `panel.sh hide`.
 - Inventory: the backpack's cells are 18 apart (195,26, 195,44...). A right-click opens an item's
   box beside its row. Click a scroll's spell icon with a slow press (point, mousedown, 0.15 s, mouseup).

@@ -235,6 +235,7 @@ ITEM_ATTACKS = {ACID: "acid", TOUCH_ARMOUR: "corroding touch", TOUCH_WEAPON: "co
 # the powers a monster's hit casts for its poison properties (monsters.SPECIAL_ATTACKS: bits 13 and
 # 14, the routine giving a hit's special effects, DSUN.EXE 7A776h)
 POISON_POWERS = {176: "Poison (10 damage)", 177: "Poison (30 damage)"}
+POISON_DAMAGE = {176: 10, 177: 30}  # (theirs: no dice)
 # a monster's power the game has no name for, named by the effect its record puts on (+19h)
 POWER_EFFECT_NAMES = {34: "Paralysing attack", 13: "Disease attack", 51: "Entangling attack",
                       35: "Poison attack"}

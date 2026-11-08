@@ -1414,6 +1414,19 @@ class NewLinesTests(unittest.TestCase):
         self.assertEqual(tracker.check(2.2), [])  # waits for the others' XP
         self.assertEqual(tracker.check(3.0), ["XP: Dag +125 (for Mountain Stalker 500)"])
 
+    def test_poison_damage_named(self):
+        """A poison's fixed 10 (a Poisoner's hit, a monster's) is the poison's, not an earlier
+        spell's roll of the same: once "takes 10 from Shocking Grasp". A new fight forgets the
+        last one's rolls."""
+        log = make_game()
+        log._recent_damage.append((10, 10))  # (spell 10's roll of 10, earlier)
+        log._spell_cast(176, 1.0)  # (the poison's save)
+        self.assertEqual(log._damage_source(10)[0], 176)
+        self.assertEqual(log._damage_source(10)[0], 176)
+        self.assertEqual(list(log._recent_damage), [(10, 10)])  # (left for its own damage)
+        dicelog._new_fight(log)
+        self.assertEqual(list(log._recent_damage), [])
+
     def test_prime_requisite_bonus(self):
         """10% more XP for a class whose prime requisites are all 16 or more (the manual's; the
         game gives none), added to the sheet, on the XP line, and not counted as a gain again."""

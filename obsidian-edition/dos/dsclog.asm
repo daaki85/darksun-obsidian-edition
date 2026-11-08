@@ -19668,6 +19668,7 @@ probe_stealth:
 .push:  call item_rear
         call thief_rear
         call kit_rear
+        call stab_first
         push word [bp-0x1A]
         push word [cs:s_fl]
         push word [cs:s_cs]
@@ -19676,6 +19677,39 @@ probe_stealth:
 s_ip    dw 0
 s_cs    dw 0
 s_fl    dw 0
+
+; STAB_FIRST: in PROBE_STEALTH (SI the attacker, a creature; DS the game's), with RULE_HI_BACKSTAB:
+; only a party member's first attack of a round is a backstab, as in AD&D. The game's own test
+; (58A71h) lets two through and the round's count STAB_TIMES read ([BP-14h]) leaves the off-hand
+; swing out, so a thief with three attacks (two weapons and a weapon spec's extra) had the third
+; multiplied after a first that missed. Each party member's attack keeps the game's clock (the
+; dword at DS:9B72h's far pointer: in a fight it moves a round at a time); a later attack at the
+; same clock has its backstab taken back ([BP-24h] cleared, its +2 to hit off THAC0 [BP-20h]);
+; from behind stays as it is. All registers kept.
+stab_first:
+        test word [cs:rules_hi], RULE_HI_BACKSTAB
+        jz .ret
+        cmp si, 3
+        ja .ret
+        push eax
+        push bx
+        push es
+        les bx, [0x9B72]
+        mov eax, [es:bx]
+        mov bx, si
+        shl bx, 2
+        cmp eax, [cs:bx + stab_clock]
+        mov [cs:bx + stab_clock], eax
+        jne .done                       ; (the round's first)
+        cmp word [bp-0x24], 0
+        je .done
+        mov word [bp-0x24], 0
+        add word [bp-0x20], 2
+.done:  pop es
+        pop bx
+        pop eax
+.ret:   ret
+stab_clock dd -1, -1, -1, -1    ; (each party member's last attack, by the game's clock)
 
 ; KIT_REAR: in PROBE_STEALTH (SI the attacker, a creature; DS the game's), with kits on, after the
 ; game's (and the stealth rule's) from behind and backstab: a Military Scout's backstab taken back
