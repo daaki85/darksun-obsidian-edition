@@ -416,6 +416,8 @@ ghost_on   dw 0                 ; +1828 the Loader sets 1 once BLEND and REP are
 gear_due   db 0                 ; +1830 1 from a new member's DONE until the Loader has given new
                                 ;      characters their gear (GEAR_WAIT); the Loader clears it ...
 gear_given db 0                 ; +1831 ... and sets bit N first if it changed member N's items
+flip_count dw 0                 ; +1832 the game's page flips, counted (PROBE_FLIP): frames shown, for
+                                ;      a frame rate (playtest/framerate.py)
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -23915,6 +23917,7 @@ ovr_far   dd 0
 ; of it). On the map, and wherever else, the wait as the game's (its pace may hang on it), with
 ; interrupts on if the game had them on. All registers kept.
 probe_flip:
+        inc word [cs:flip_count]
         push bp
         mov bp, sp
         test byte [bp + 7], 2           ; (the caller's flags' IF)

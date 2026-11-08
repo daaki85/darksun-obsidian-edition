@@ -86,6 +86,9 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
   stub 431Fh:3Eh; header +1830, +1831; `DiceLog._gear_due`. Tests: `test_gear_due`. Seen in
   DOSBox: a new fighter given a bow for its weapon spec showed the bow and "DAM 1x1D6+0" at once.)
 
+- The helper counts the game's page flips (`flip_count`, header +1832), for a frame rate:
+  `playtest/framerate.py` reads it beside steady pace's frames left undrawn.
+
 **Fixed: the Loader**
 - **An item report said a new character's bone long sword "vanished"** ("the game freed it and
   reused the number") when the Loader had made it the bow its weapon spec asks for, in the same
