@@ -719,6 +719,12 @@ was saved a little further on, in the corridor at (1672, 344) with Kurzak beside
   second **moves the chest**, third uses it. The game's trap objects: +0Fh is the trap's descriptor
   (d6, reach, damage kind), DSUN.EXE 80A11h. A new game to the pens in the background: `start.sh`,
   `topartyfight.sh`, `arenawaves.sh`, `leavearena.sh` (about 30 minutes).
+  **In a game from before 2.14.0** (`saves/trap-user`, 2026-11-08) the chest was the game's plain
+  one and opened after any use; the Loader shuts it now (`pehtuclchest.watch`, a few seconds after
+  loading). There, from beside it (walkto 184,1400; the eye on it at 204,90, the look box's third
+  button 141,125), a non-thief gets "Bash it open?" (Y); `bashloop.sh N` repeats the use and Y until
+  "breaking it open" (Lex's 15% came in a few tries), clicking messages only while `msgbox.sh` sees
+  one (a click on the map walks the party off) and cancelling an EXIT menu an Escape brings up.
 
 From the cluebook's map: #11 the stalker pen (break the door,
 kill the mountain stalker, push the button on the north wall: a secret door to the northwest
