@@ -234,7 +234,9 @@ with **DUAL** on a portrait's right-click menu when:
 
 - it is **2nd level or more** and has changed class at most once before;
 - its **current class's prime requisite is 15 or more**, and the **new
-  class's 17 or more**;
+  class's 17 or more** (here the game's one score a class: STR for fighters
+  and gladiators, WIS for clerics, druids, psionicists and rangers, INT for
+  preservers, DEX for thieves);
 - the new class is of **another group** than every class it has had: priests
   (cleric, druid), warriors (fighter, gladiator, ranger), preserver,
   psionicist, thief;
@@ -248,16 +250,16 @@ classes a human could change to ([kits](#kits)).
 
 ## The classes
 
-| Class | Hit die | Prime requisite | Races | Armour | Weapons | Kits |
+| Class | Hit die | Prime requisites | Races | Armour | Weapons | Kits |
 |---|---|---|---|---|---|---|
 | [Fighter](#fighter) | d10 | STR | all | any | any | Myrmidon, Sentinel, Ravager |
 | [Gladiator](#gladiator) | d10 | STR | all | any | any | Arena Champion, Twin-blade, Brute |
-| [Ranger](#ranger) | d10 | WIS | not dwarf, mul | any (two weapons without penalty in light only) | any | Stalker, Seeker, Justifier |
+| [Ranger](#ranger) | d10 | STR, DEX, WIS | not dwarf, mul | any (two weapons without penalty in light only) | any | Stalker, Seeker, Justifier |
 | [Thief](#thief) | d6 | DEX | not half-giant, thri-kreen | light (with another class: heavier, without thief skills) | any | Assassin, Swashbuckler, Shinobi |
 | [Preserver](#preserver) | d4 | INT | elf, half-elf, human | none | daggers, staves, slings | Arcanist, Scholar, Battle Mage |
 | [Cleric](#cleric) | d8 | WIS | all | any | its sphere's | Healer, Crusader, Elementalist |
-| [Druid](#druid) | d8 | WIS | half-elf, halfling, human, mul, thri-kreen | none | any but great axes | Grove Warden, Wanderer, Lifebinder |
-| [Psionicist](#psionicist) | d6 | WIS | all | light | small weapons | Mind Warrior, Mind Bender, Kineticist |
+| [Druid](#druid) | d8 | WIS, CHA | half-elf, halfling, human, mul, thri-kreen | none | any but great axes | Grove Warden, Wanderer, Lifebinder |
+| [Psionicist](#psionicist) | d6 | CON, WIS | all | light | small weapons | Mind Warrior, Mind Bender, Kineticist |
 
 The [THAC0](#thac0-by-level) and [experience](#experience-and-levels) tables
 cover every class; [new items](#new-items) lists what the mod adds to find.

@@ -88,8 +88,8 @@ Releases, newest first: [2.14.0](#pull-request-87-merged-2026-11-07) (#86 and #8
 - **The game's Great Axe +3 had no material:** its type (2) carried the 40h of things with none,
   a ring's, so its name showed none, and under the class restrictions no sphere's cleric could
   wield it. DSCLOG makes it metal as the game loads its types, as its icon (the game's metal axe's
-  grey and teal head) and its weight (70, the metal great axe's) have it. (`PROBE_TYPES_FILL`;
-  DSCLOG's image 65,440 bytes, unchanged: the 5 bytes fit its last paragraph's padding. Seen in
+  grey and teal head) and its weight (70, the metal great axe's) have it. (`PROBE_TYPES_FILL`:
+  5 bytes, which fit the image's last paragraph's padding. Seen in
   DOSBox: type 2's +8 read 04h, and the game's inventory named it "METAL GREAT AXE".)
 - **The creation screen's least scores weren't the manual's:** the die raised the class's prime
   requisite to 17 and every other score to the class's one least (9 to 14), so a fighter's STR was
