@@ -23,7 +23,7 @@ score (Draketooth, Dag's Dagger, the Helm and Belt of Might, El's Ring, the
 Steadfast Ring and the Ring of Insight) do it while worn, the
 Belt of Might making STR at least 24.
 
-**Weapons**, by material, then type:
+**Weapons**, by material, then type. A material of "none" is the game's own: its type for the item has no material, as a ring's hasn't, so the name in the game has none either ("Great Axe +3", where a long sword is "Metal Long Sword +1"). The same goes for Silk Armor and the Quicksilver Gauntlets below.
 
 | Icon | Material | Type | Item | Bonus / power | Where |
 |---|---|---|---|---|---|

@@ -45,6 +45,11 @@ Releases, newest first: [2.14.0](#pull-request-87-merged-2026-11-07) (#86 and #8
   apart; FEATURES and the player guide call it that. (`viewer.py`; the setting is still
   `new_spells`.)
 
+**Docs**
+- ITEMS says what a material of "none" means: the game's own type has none (the Great Axe +3,
+  checked in the running game: type 2, its material byte 40h, as a ring's), so its name has no
+  material either.
+
 ## Pull request #87 ([merged 2026-11-07](https://github.com/daaki85/darksun-obsidian-edition/pull/87))
 
 Obsidian Edition 2.14.0 ([release notes](release-notes/v2.14.0.md)), with #86.
