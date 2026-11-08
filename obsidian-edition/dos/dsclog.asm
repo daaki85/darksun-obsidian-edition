@@ -23706,7 +23706,7 @@ lit_most   dw 0
 best_c     db 0
 want       times 3 db 0
 shadow_tab times (MAP_COUNT + 7) / 8 db 0
-dark       times 256 db 0
+                                ; (DARK, 256 bytes: over the install code, AFTER_INSTALL)
 dac        times 768 db 0
 
 
@@ -24102,6 +24102,13 @@ pool_used db 0
 keep:   mov ax, [cs:psp]
         mov ss, ax
         mov sp, 0x100
+        push cs                         ; AFTER_INSTALL's buffers zeroed, over the install code
+        pop es                          ;   (before any DOS call: its hook may read them)
+        mov di, resident_end
+        mov cx, (after_install_end - resident_end) / 2
+        xor ax, ax
+        cld
+        rep stosw
         push dx                         ; our block cut down to what stays, the install code's
         mov es, [cs:psp]                ;  memory given back: then the overlay buffer's block
         mov bx, dx                      ;  (OVR_RESERVE) where it was, in upper memory, the rest
@@ -24128,9 +24135,7 @@ keep:   mov ax, [cs:psp]
         mov ax, 3100h
         int 21h
 
-align 16
-seg_space times SEG_BYTES db 0   ; (SEG_MOVE's: the stack's 60h bytes, then the monster kinds')
-area_space times (AREA_BYTES + 15) & ~15 db 0 ; (... and the pictures' table)
+align 16                        ; (SEG_SPACE and AREA_SPACE, AFTER_INSTALL's, paragraphs)
 resident_end:                   ; (the ring and the other big buffers: the far block, FAR_INIT)
 RING_BYTES equ NENT * ESIZE
 
@@ -24167,8 +24172,7 @@ UMB_NEED equ (1 + 0x10 + (image_len + STACK + 15) / 16) + (1 + OVR_RESERVE)
 ; its MCB. The last two are taken only if there's room, quietly: the build fails rather than lose
 ; them without UMBPLUS.COM (with the far block in the HMA, as DOSBox gives it; without the HMA,
 ; FAR_INIT takes the far block from upper memory first, and they don't fit).
-UMB_KEPT equ (1 + 0x10 + (resident_end - $$ + 15) / 16) + (1 + OVR_RESERVE) + (1 + POOL_PARAS) + (1 + GHOST_PARAS)
-        times -(UMB_KEPT > UMB_ROOM) db 0   ; (a negative count: the music pool or the see-through tables wouldn't fit)
+UMB_KEPT equ (1 + 0x10 + (kept_end - $$ + 15) / 16) + (1 + OVR_RESERVE) + (1 + POOL_PARAS) + (1 + GHOST_PARAS)
 
 POINTER_FILE db "D:\POINTER.BIN", 0 ; (CP_DATA's file, read as the helper loads)
 install:                        ; DS = ES = PSP, CS = the image
@@ -24660,7 +24664,7 @@ install:                        ; DS = ES = PSP, CS = the image
         mov [cs:panel_seg], ax
         mov [cs:sc_seg], ax
         mov [cs:tbuf_seg], ax
-        mov dx, 0x10 + (resident_end - hdr) / 16    ; PSP and image, in paragraphs
+        mov dx, 0x10 + (kept_end - hdr) / 16        ; PSP and image, in paragraphs
         jmp keep
 
 ; FAR_INIT: FAR_SEG set, its FAR_RING to FAR_END cleared; CF if there was no room. The HMA
@@ -24748,3 +24752,16 @@ file_len  equ image_len + 32
         times -(image_len > 0x10000) db 0   ; (a negative count: past the helper's 64 KB segment)
 ; the memory past the image to load in: the install's stack
 LOAD_EXTRA equ (STACK + 15) / 16
+
+; AFTER_INSTALL: buffers that start as zeros, laid over the install code (from RESIDENT_END), which
+; is done with by then: KEEP zeroes them and keeps memory to KEPT_END. They take none of the
+; segment's room past the install code's, so long as they fit within it (the build fails if not).
+[absolute resident_end]
+seg_space  resb SEG_BYTES       ; (SEG_MOVE's: the stack's 60h bytes, then the monster kinds')
+area_space resb (AREA_BYTES + 15) & ~15 ; (... and the pictures' table: both whole paragraphs)
+dark       resb 256             ; (the shadows' colours: DARK)
+after_install_end:
+kept_end   equ resident_end + ((after_install_end - resident_end + 15) & ~15)
+[section image]
+        times -(after_install_end - hdr > image_len) db 0  ; (a negative count: past the install code)
+        times -(UMB_KEPT > UMB_ROOM) db 0   ; (a negative count: the music pool or the see-through tables wouldn't fit)

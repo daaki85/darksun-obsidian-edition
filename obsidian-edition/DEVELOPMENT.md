@@ -480,16 +480,24 @@ sizes; the paragraphs after it say how each piece got there.
 | Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (86 KB before the music buffer moved out, 53 KB before the overlay buffer did; the unmodded game's 57 KB) |
 | C000h-C7FFh | 32 KB | the video BIOS (ROM) |
 | C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
-| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 62.5 KB, the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, about 35.5 KB (36,336 bytes, measured) free in one piece |
+| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 62.5 KB (63,952 bytes with its PSP, measured), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, about 35.5 KB (36,336 bytes, measured) free in one piece |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
 | 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's far block, 57.6 KB, 6.4 KB free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
 
 **The budget.** Each limit fails the build when passed (a negative `times`):
 
-- The helper's segment: its image with the install code is 65,440 bytes
-  (`image_len`; `DSCLOG.EXE` is 32 bytes more, 65,472, with its header), so 96
-  bytes of its 64 KB are spare. This is the limit for new code. (The
+- The helper's segment: its image with the install code is 63,792 bytes
+  (`image_len`; `DSCLOG.EXE` is 32 bytes more, 63,824, with its header), so
+  1,744 bytes of its 64 KB are spare. This is the limit for new code. Buffers
+  that start as zeros and aren't needed while installing can be laid over the
+  install code (1,760 bytes from `resident_end`), as `seg_space`, `area_space`
+  and `dark` are (`AFTER_INSTALL`, 1,664 bytes, declared with `resb` after the
+  image): `KEEP` zeroes them before its first DOS call and keeps memory to
+  `kept_end`, and the build fails if they outgrow the install code. Up to the
+  install code's size, each byte moved there is a byte of the segment freed
+  (`KeepTests`). Buffers the Loader finds at fixed header offsets stay where
+  they are. (The
   install's 256-byte stack is past the image, in its own segment: `SS` in the
   EXE's header is the paragraph after the image; the helper asks DOS for both,
   `LOAD_EXTRA`.) Code shared by
@@ -503,9 +511,9 @@ sizes; the paragraphs after it say how each piece got there.
   for more buffers.
 - Upper memory without `UMBPLUS.COM` (`UMB_ROOM`, D00Ah to F000h, 8,182
   paragraphs): the helper as it loads and the overlay buffer (`UMB_NEED`, the
-  header's +372) need 6,186, and `test_fits_upper_memory` checks it too; what
+  header's +372) need 6,083, and `test_fits_upper_memory` checks it too; what
   stays once installed, with the music buffer and the see-through figures'
-  tables (`UMB_KEPT`: all four blocks and their MCBs), 7,698, so 484 (7.6 KB)
+  tables (`UMB_KEPT`: all four blocks and their MCBs), 7,699, so 483 (7.5 KB)
   are spare.
 
 To check the sizes after a change, build to a scratch file (`nasm -f bin -o

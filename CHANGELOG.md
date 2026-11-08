@@ -73,6 +73,17 @@ Releases, newest first: [2.14.0](#pull-request-87-merged-2026-11-07) (#86 and #8
   Seen in DOSBox: Gerakis's Bone Long Sword's box "1D8-1", his sling's "1D4". Test:
   `test_item_box_rate`, which the helper before the fix fails.)
 
+**Changed: DSCLOG's room**
+- **1.7 KB of the helper's 64 KB segment freed** (96 bytes were left): three buffers that start as
+  zeros, the new spells' room (`seg_space`, 512 bytes), their areas' pictures' table (`area_space`,
+  896) and the shadows' colours (`dark`, 256), no longer take bytes in the image: they lie over the
+  install code, which is done with by the time they're used, and `KEEP` zeroes them before its first
+  DOS call. DSCLOG.EXE 63,824 bytes (was 65,472), 1,744 of the segment spare; what stays resident
+  one paragraph more (`KEEP`'s zeroing), upper memory 7.5 KB spare. (`AFTER_INSTALL`. Test:
+  `KeepTests`, `keep` run with the install code's bytes where the buffers go. Seen in DOSBox: the
+  helper in upper memory at C90Ah, 63,952 bytes, the game 97 KB free with the map open, as before;
+  the three buffers filled in play, the new spells' room made, and the party's shadows drawn.)
+
 **Fixed: the game**
 - **The game's Great Axe +3 had no material:** its type (2) carried the 40h of things with none,
   a ring's, so its name showed none, and under the class restrictions no sphere's cleric could

@@ -8053,3 +8053,59 @@ class RolledTests(AdndTablesTests):
         tries = bytes(self.mu.mem_read(self.hdr + 282, 24))
         self.assertEqual((tries[0], tries[3], tries[22]), (7, 11, 16))
         self.assertEqual(struct.unpack("<H", self.mu.mem_read(self.hdr + 280, 2))[0], seq0 + 3)  # (not the two out of range)
+
+
+@unittest.skipIf(Uc is None, "needs unicorn")
+class KeepTests(unittest.TestCase):
+    """KEEP, the last of installing: the buffers laid over the install code (AFTER_INSTALL) zeroed
+    before its first DOS call, and the memory it keeps reaching past them."""
+
+    def test_buffers_over_the_install_code(self):
+        image = bytearray(load_image())
+        zero = re.search(re.escape(bytes.fromhex("0e07bf")) + b"(..)" + re.escape(b"\xb9") + b"(..)" +
+                         re.escape(bytes.fromhex("31c0fcf3ab")), image, re.S)
+        self.assertIsNotNone(zero)
+        keep = zero.start() - 9
+        self.assertEqual(image[keep:keep + 2], bytes.fromhex("2ea1"))  # mov ax,[cs:psp]
+        psp_at, = struct.unpack_from("<H", image, keep + 2)
+        first, = struct.unpack_from("<H", zero.group(1))
+        count, = struct.unpack_from("<H", zero.group(2))
+        end = first + 2 * count
+        self.assertGreaterEqual(count * 2, 1600)
+        self.assertLessEqual(end, len(image))  # (within the image loaded: over the install code)
+        # the install's own "mov dx, paragraphs / jmp keep": the memory kept
+        asked = [struct.unpack_from("<H", image, m.start() + 1)[0]
+                 for m in re.finditer(re.escape(b"\xba"), image)
+                 if image[m.start() + 3] == 0xE9
+                 and m.start() + 6 + struct.unpack_from("<h", image, m.start() + 4)[0] == keep]
+        self.assertEqual(len(asked), 1)
+        self.assertGreaterEqual(asked[0] * 16, 0x100 + end)
+        image[first:end] = b"\xcc" * (end - first)  # (the install code there)
+        image[psp_at:psp_at + 2] = struct.pack("<H", TSR - 0x10)
+        mu = Uc(UC_ARCH_X86, UC_MODE_16)
+        mu.mem_map(0, 0x100000)
+        mu.mem_write(TSR * 16, bytes(image))
+        calls = []
+
+        def dos(mu, intno, _):
+            if intno != 0x21:
+                return
+            ah, dx = mu.reg_read(r.UC_X86_REG_AH), mu.reg_read(r.UC_X86_REG_DX)
+            calls.append((ah, dx, bytes(mu.mem_read(TSR * 16 + first, end - first))))
+            flags = mu.reg_read(r.UC_X86_REG_EFLAGS)
+            if ah == 0x31:
+                mu.emu_stop()
+            elif ah == 0x4A:
+                mu.reg_write(r.UC_X86_REG_EFLAGS, flags & ~1)
+            else:  # (no upper memory to give)
+                mu.reg_write(r.UC_X86_REG_EFLAGS, flags | 1)
+                mu.reg_write(r.UC_X86_REG_AX, 8)
+        mu.hook_add(UC_HOOK_INTR, dos)
+        mu.reg_write(r.UC_X86_REG_CS, TSR)
+        mu.reg_write(r.UC_X86_REG_SS, SS)
+        mu.reg_write(r.UC_X86_REG_SP, 0x1000)
+        mu.reg_write(r.UC_X86_REG_DX, asked[0])
+        mu.emu_start(TSR * 16 + keep, 0, count=100000)
+        self.assertTrue(calls and calls[-1][0] == 0x31)
+        self.assertEqual(calls[0][2], bytes(end - first))  # zeroed before the first DOS call
+        self.assertEqual(calls[-1][1], asked[0])  # (and that kept)
