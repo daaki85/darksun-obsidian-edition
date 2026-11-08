@@ -20362,8 +20362,19 @@ shadow_pass:
 .clipped:
         cmp word [cs:dark_build], 0
         je .dark
+        xor ax, ax
+        mov es, ax
+        mov ax, [es:BIOS_TICKS]
+        cmp byte [cs:dark_failed], 0    ; (it failed: tried again only every DARK_RETRY ticks, not
+        je .build                       ;   every pass, so long as the palette is that dark)
+        mov dx, ax
+        sub dx, [cs:dark_tried]
+        cmp dx, DARK_RETRY
+        jb .dark
+.build: mov [cs:dark_tried], ax
         call build_dark
-        jc .dark                        ; (not yet: the screen is fading)
+        setc byte [cs:dark_failed]
+        jc .dark                        ; (not yet: the screen is fading, or a dark area's)
         mov word [cs:dark_build], 0
 .dark:  call vga_save
         cmp word [cs:shadows_on], 0
@@ -20371,22 +20382,35 @@ shadow_pass:
         cmp byte [cs:dark_ready], 0
         je .dust                        ; (no colours to darken with yet)
         mov ds, [cs:game_ds]
+        push fs
+        mov fs, [cs:far_seg]            ; (FS: the far block, for the whole pass: spans, SC_OF)
         les di, [OBJ_LIST]
         mov cx, [OBJ_COUNT]
-        jcxz .done
-.thing: push cx
+        jcxz .none
+.thing: mov bx, [es:di + 6]             ; (only those SHADOW_TAB marks: most things aren't)
+        cmp bx, MAP_COUNT - 1
+        ja .tnext
+        bt [cs:shadow_tab], bx
+        jnc .tnext
+        push cx
         push di
         push es
         call shadow_of
         pop es
         pop di
         pop cx
-        add di, 8
+.tnext: add di, 8
         loop .thing
+        pop fs
 .dust:  call ring_pass
         call dust_pass
 .done:  call vga_restore
         ret
+.none:  pop fs
+        jmp .done
+DARK_RETRY equ 9                ; (BIOS ticks: half a second)
+dark_failed db 0
+dark_tried dw 0
 
 ; SHADOW_GONE: CF set if thing BX (DS the game's) is a creature dying or dead (its +1Ch, 4 or 5): the
 ; companion's SHADOW_TAB is made afresh only every half second, and a creature's death changes its
@@ -20421,13 +20445,10 @@ shadow_gone:
         pop ax
         ret
 
-; the shadow of the thing at ES:DI (DS = the game's), if it casts one
+; the shadow of the thing at ES:DI (DS = the game's; FS the far block), BX its number, which
+; SHADOW_TAB marks
 shadow_of:
-        mov bx, [es:di + 6]
-        cmp bx, MAP_COUNT - 1
-        ja .no                          ; (none)
-        bt [cs:shadow_tab], bx
-        jnc .no
+        mov [cs:fig_thing], bx
         call shadow_gone                ; (a creature dying or dead since SHADOW_TAB was made: none,
         jc .no                          ;   nor its new pictures loaded in the middle of a drawing)
         shl bx, 5
@@ -20512,30 +20533,57 @@ shadow_of:
         mov ax, [es:si + 2]
         dec ax
         mov [cs:f_bottom], ax
+        call shadow_box
+        setnc byte [cs:sh_cast]
         call sc_start
-        add si, 4
-.row:   mov al, [es:si]
+        cmp byte [cs:sh_cast], 0        ; (none of it where the floor was drawn: its runs only kept,
+        jne .rows                       ;   if not kept already)
+        cmp word [cs:sc_rec], 0xFFFF
+        je .no
+.rows:  add si, 4
+.row:   mov al, [es:si]                 ; a row: its number (FFh: none left), then its runs
         inc si
         cmp al, 0xFF
         je .drawn
         xor ah, ah
-        mov [cs:f_y], ax
+        mov dx, [cs:f_bottom]
+        sub dx, ax                      ; DX: how far up from the feet
+        jl .skip
+        cmp dx, SHADOW_ROWS
+        jg .skip
+        test dl, 1
+        jnz .skip                       ; (every other row: the shadow is half as tall)
+        mov [cs:r_up], dx
+        shr dx, 1                       ; the screen row it falls on: cast if within the clip's rows
+        add dx, [cs:fig_feet]           ;   (DARKEN's test, before the work), and the shadow's in
+        mov [cs:r_row], dx              ;   the clip at all
+        xor al, al
+        cmp byte [cs:sh_cast], 0
+        je .cast
+        cmp dx, [cs:clip_y0]
+        jl .cast
+        cmp dx, [cs:clip_y1]
+        jg .cast
+        inc ax
+.cast:  mov [cs:r_cast], al
+        or al, al
+        jnz .run
+        cmp word [cs:sc_rec], 0xFFFF
+        je .skip                        ; (nor kept: its runs passed over)
 .run:   mov ax, [es:si]                 ; a run: x (8000h: the row's last), its pixels, its data
         mov [cs:r_x], ax
         mov cl, [es:si + 2]
         mov [cs:r_n], cl
-        mov dl, [es:si + 3]
-        xor dh, dh
+        movzx dx, byte [es:si + 3]
         add si, 4
         add si, dx
-        mov ax, [cs:f_bottom]
-        sub ax, [cs:f_y]                ; how far up from the feet
-        jl .next
-        cmp ax, SHADOW_ROWS
-        jg .next
-        test al, 1
-        jnz .next                       ; (every other row: the shadow is half as tall)
+        mov ax, [cs:r_up]
+        cmp word [cs:sc_rec], 0xFFFF
+        je .put
         call sc_put
+.put:   cmp byte [cs:r_cast], 0
+        je .next
+        mov bx, [cs:r_row]
         push es
         push si
         call cast_run
@@ -20543,6 +20591,13 @@ shadow_of:
         pop es
 .next:  test byte [cs:r_x + 1], 0x80
         jz .run
+        jmp .row
+.skip:  mov al, [es:si + 1]             ; (a row with no shadow: past its runs)
+        movzx dx, byte [es:si + 3]
+        add si, 4
+        add si, dx
+        test al, 0x80
+        jz .skip
         jmp .row
 .drawn: call sc_end
         push es                         ; (its runs: drawn)
@@ -20557,23 +20612,64 @@ shadow_of:
         mov [cs:f_w], ax
         movzx ax, byte [es:di + 6]
         mov [cs:f_bottom], ax
+        call shadow_box
+        jc .no
         movzx cx, byte [es:di + 7]
         lea si, [di + 8]
 .crun:  push cx
-        movzx ax, byte [es:si + 1]
-        mov [cs:r_x], ax
-        mov al, [es:si + 2]
-        mov [cs:r_n], al
         movzx ax, byte [es:si]
+        mov bx, ax                      ; (the screen row, as above)
+        shr bx, 1
+        add bx, [cs:fig_feet]
+        cmp bx, [cs:clip_y0]
+        jl .cnext
+        cmp bx, [cs:clip_y1]
+        jg .cnext
+        movzx dx, byte [es:si + 1]
+        mov [cs:r_x], dx
+        mov dl, [es:si + 2]
+        mov [cs:r_n], dl
         push es
         push si
         call cast_run
         pop si
         pop es
-        add si, 3
+.cnext: add si, 3
         pop cx
         loop .crun
         jmp .drawn
+
+; SHADOW_BOX: CF set if none of the shadow of the frame (F_W, F_BOTTOM) at FIG_X, FIG_Y can be
+; where the floor was drawn (the clip): its rows from the feet down SHADOW_ROWS / 2, its columns
+; from the picture's left to its right and as far again as the shadow leans (SHADOW_ROWS * 1.05).
+; FIG_FEET: the feet's row on the screen. Registers kept but AX.
+LEAN_MOST equ SHADOW_ROWS + (SHADOW_ROWS + 10) / 20
+shadow_box:
+        mov ax, [cs:fig_y]
+        add ax, [cs:f_bottom]
+        mov [cs:fig_feet], ax
+        cmp ax, [cs:clip_y1]
+        jg .out
+        add ax, SHADOW_ROWS / 2
+        cmp ax, [cs:clip_y0]
+        jl .out
+        mov ax, [cs:fig_x]
+        cmp ax, [cs:clip_x1]
+        jg .out
+        add ax, [cs:f_w]
+        add ax, LEAN_MOST - 1
+        cmp ax, [cs:clip_x0]
+        jl .out
+        clc
+        ret
+.out:   stc
+        ret
+fig_thing dw 0
+fig_feet  dw 0
+r_up      dw 0
+r_row     dw 0
+sh_cast   db 0
+r_cast    db 0
 
 ; SHADOW CACHE (SC_SEG, the far block's, at FAR_SC): in a big
 ; fight the game lets go of pictures it isn't drawing just then, so a figure's could be out of its
@@ -20628,13 +20724,35 @@ sc_start:
         je .ret
         pushad
         push es
+        mov es, [cs:sc_seg]             ; the slot this thing's frame was last kept in (SC_OF), if
+        mov bx, [cs:fig_thing]          ;   that frame's still: no need to look through them all
+        movzx cx, byte [es:FAR_SC_OF + bx]
+        imul di, cx, SC_SLOT
+        add di, FAR_SC
+        mov eax, [cs:sc_key]
+        cmp [es:di], eax
+        jne .find
         mov al, [cs:frame]
+        cmp [es:di + 4], al
+        jne .find
+        cmp byte [es:di + 7], 0
+        jne .out                        ; (kept)
+.find:  mov al, [cs:frame]
         call sc_find
         jc .take
         cmp al, [es:di + 4]
-        je .out                         ; (kept)
+        jne .take
+        mov ax, di                      ; (kept: noted for this thing)
+        sub ax, FAR_SC
+        mov cl, SC_SLOT
+        div cl
+        mov bx, [cs:fig_thing]
+        mov [es:FAR_SC_OF + bx], al
+        jmp .out
 .take:  mov es, [cs:sc_seg]
         mov ax, [cs:sc_next]
+        mov bx, [cs:fig_thing]
+        mov [es:FAR_SC_OF + bx], al
         mov bx, SC_SLOT
         mul bx
         add ax, FAR_SC
@@ -20697,12 +20815,8 @@ sc_end: cmp word [cs:sc_rec], 0xFFFF
         pop es
 .ret:   ret
 
-; the shadow of the current run, AX rows up from the feet
+; the shadow of the current run, AX rows up from the feet, on screen row BX
 cast_run:
-        mov bx, ax
-        shr bx, 1
-        add bx, [cs:f_bottom]
-        add bx, [cs:fig_y]              ; BX: the screen row it falls on
         mov dx, [cs:r_x]
         and dx, 0x7FFF
         xor ch, ch
@@ -20714,22 +20828,22 @@ cast_run:
         sub di, cx
         mov dx, di
 .lean:  add dx, [cs:fig_x]
-        mov di, ax                      ; leaning right by 1.05 times as far as it is up
-        add ax, 10
-        push dx
-        xor dx, dx
-        push bx
-        mov bx, 20
-        div bx
-        pop bx
-        pop dx
-        add di, ax
-        add dx, di                      ; DX: its first x
+        add dx, ax                      ; leaning right by 1.05 times as far as it is up
+        mov di, ax
+        shr di, 1
+        movzx ax, byte [cs:lean_twentieth + di]
+        add dx, ax                      ; DX: its first x
         mov di, dx
         add di, cx
         dec di                          ; DI: its last
-        call darken
-        ret
+        jmp darken
+
+lean_twentieth:                         ; (AX + 10) / 20 for AX = 0, 2, ... SHADOW_ROWS, by AX / 2
+%assign up 0
+%rep SHADOW_ROWS / 2 + 1
+        db (up + 10) / 20
+%assign up up + 2
+%endrep
 
 ; darken DX..DI on row BX (screen), within the clip: noted (SPANS), and drawn with the figure's
 ; others a plane at a time (SPANS_FLUSH: the VGA's registers set once a plane, not once a run; a
@@ -20756,20 +20870,15 @@ darken: cmp bx, [cs:clip_y0]
         pop bx
         pop di
         pop dx
-.room:  push dx
+.room:  mov cx, dx
         mov ax, bx                      ; the row's place in the page
         sub ax, [cs:v_y0]
         mul word [cs:v_row]
         sub ax, [cs:v_x0]
-        pop dx
-        mov bx, [cs:n_spans]
-        imul bx, bx, 6
-        push fs
-        mov fs, [cs:far_seg]
+        imul bx, [cs:n_spans], 6        ; (FS: the far block, SHADOW_PASS's)
         mov [fs:FAR_SPANS + bx], ax
-        mov [fs:FAR_SPANS + bx + 2], dx
+        mov [fs:FAR_SPANS + bx + 2], cx
         mov [fs:FAR_SPANS + bx + 4], di
-        pop fs
         inc word [cs:n_spans]
 .out:   ret
 
@@ -20777,47 +20886,52 @@ spans_flush:                            ; the noted runs darkened, a plane at a 
         cmp word [cs:n_spans], 0
         je .ret
         push fs
+        push ds
+        push bp
         mov fs, [cs:far_seg]
         mov es, [cs:v_seg]
-        xor cx, cx                      ; the plane
-.plane: mov dx, 0x3C4                   ; write to this plane, read from it
-        mov al, 2
-        mov ah, 1
+        imul bp, [cs:n_spans], 6        ; (BP: past the last span)
+        add bp, FAR_SPANS
+        push cs
+        pop ds
+        mov bx, dark                    ; (DS:BX: DARK, for XLAT)
+        xor ah, ah                      ; AH: the plane
+.plane: push ax
+        mov cl, ah
+        mov ax, 0x0102                  ; write to this plane, read from it
         shl ah, cl
+        mov dx, 0x3C4
         out dx, ax
-        mov dx, 0x3CE
+        pop ax
         mov al, 4
-        mov ah, cl
+        mov dx, 0x3CE
         out dx, ax
-        xor si, si
-.span:  mov ax, cx
-        sub ax, [fs:FAR_SPANS + si + 2]
-        and ax, 3
-        add ax, [fs:FAR_SPANS + si + 2] ; the first x on this plane
-        mov dx, [fs:FAR_SPANS + si + 4]
-        sub dx, ax
+        mov si, FAR_SPANS
+.span:  mov dl, ah
+        sub dl, [fs:si + 2]
+        and dx, 3
+        add dx, [fs:si + 2]             ; the first x on this plane
+        mov cx, [fs:si + 4]
+        sub cx, dx
         jl .nspan
+        shr cx, 2
+        inc cx                          ; CX: how many
         shr dx, 2
-        inc dx                          ; DX: how many
-        shr ax, 2
-        add ax, [fs:FAR_SPANS + si]
-        mov di, ax
-        xor bh, bh
-.pix:   mov bl, [es:di]
-        mov bl, [cs:dark + bx]
-        mov [es:di], bl
-        inc di
-        dec dx
-        jnz .pix
+        add dx, [fs:si]
+        mov di, dx
+.pix:   mov al, [es:di]
+        xlatb
+        stosb
+        loop .pix
 .nspan: add si, 6
-        mov ax, [cs:n_spans]
-        imul ax, ax, 6
-        cmp si, ax
+        cmp si, bp
         jb .span
-        inc cx
-        cmp cx, 4
+        inc ah
+        cmp ah, 4
         jb .plane
         mov word [cs:n_spans], 0
+        pop bp
+        pop ds
         pop fs
 .ret:   ret
 
@@ -23813,7 +23927,6 @@ fig_y      dw 0
 frame      dw 0
 f_w        dw 0
 f_bottom   dw 0
-f_y        dw 0
 r_x        dw 0
 row_at     dw 0
 best_d     dd 0
@@ -24285,7 +24398,8 @@ FAR_PACE   equ FAR_LAST_Y + MAP_COUNT * 2       ; what moved in frames left undr
 FAR_QM_STACK equ FAR_PACE + PACE_KEPT * 10      ; the crash report's copy of the stack (DOS_QUIT)
 FAR_QM_LEN equ FAR_QM_STACK + STACK_BYTES       ; ... and the length of the text kept, then
 FAR_MSG    equ FAR_QM_LEN + 2                   ; the last text written to the screen (DOS_WRITE)
-FAR_END    equ FAR_MSG + MSG_BYTES
+FAR_SC_OF  equ FAR_MSG + MSG_BYTES              ; each thing's slot in the shadows' cache, last (SC_START)
+FAR_END    equ FAR_SC_OF + MAP_COUNT
 FAR_PARAS  equ (FAR_END - FAR_RING + 15) / 16
         times -(FAR_END > 0x10000) db 0     ; (a negative count: past the HMA's 64 KB)
 
