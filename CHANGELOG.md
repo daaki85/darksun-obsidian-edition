@@ -41,6 +41,15 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 ## Next pull request (not opened yet)
 
 **Changed**
+- **The helper has room again:** a memory pass freed 3,136 bytes of its 64 KB segment (448 spare
+  -> 3,584) and 190 paragraphs of upper memory (the helper with its PSP 65,248 -> 62,208 bytes; the
+  largest free piece 34,320 -> 37,392). The colour, ring and dust-walked tables moved to the far
+  block (FAR_DAC, FAR_RING_TAB, FAR_RED, FAR_WALKED: the header fields now offsets there, the
+  Loader reading them at far_seg); the AD&D XP table stored in fiftieths; the 134 vector installs
+  made a table and a loop, the room freed holding the extra item types (FAR_DATA, copied out by
+  FAR_INIT); the extra names packed. The far block is now 694 bytes from full. DEVELOPMENT.md's
+  budget corrected. Checked in DOSBox: shadows, dust, see-through, the ring, the panel's colours,
+  next-level XP, item names and types.
 - **Spells as the manual describes them** (a new rule change, on by default, from the next start;
   `gamepatch.SPELLS_MANUAL`, the spell records): Bestow Curse and Blood Flow allow a save; a save
   negates Flaming Sphere; Solid Fog 1d3 rounds + 1 a level (was until removed); Minor Spell Turning

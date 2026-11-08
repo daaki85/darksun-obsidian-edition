@@ -66,6 +66,12 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
    (FAR_DATA: +172's offset, +174 bytes, which should equal the EXE's bytes at +144's offset as
    built): a tool reading those at the helper's segment reads stale bytes (`dacwatch.py` and
    `ghostwatch.py` were changed for it).
+   **Comparing two builds' memory**: put the old `DSCLOG.EXE` in `obsidian-edition/dos/` for one
+   `loadsave.sh`, run `memaudit.py`, then put the new one back and `cmp` it with a fresh build;
+   don't do it while the unit tests run (they read `dos/DSCLOG.EXE`). A failing
+   tests/test_dsclog.py is slow (each failing emulation runs to its count): 323 tests took 7 s
+   passing and over 20 minutes failing (2026-11-08), so a test run that drags means failures, not
+   a slow machine.
    `dec.py` stops with "unknown term" when LO falls inside a command: start it at a command
    (or decode the whole script with `dsloader.gpl.load_scripts` and `decode`). Every script in
    the built copy should decode (2026-11-05: eleven didn't, and a later change gave up on one).

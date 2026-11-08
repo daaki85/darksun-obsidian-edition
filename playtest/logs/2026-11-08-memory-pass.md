@@ -66,3 +66,17 @@ paragraphs then, 45 now): not new.
 
 `dacwatch.py` and `ghostwatch.py` read DAC at `far_seg` x 16 + its offset (the far block); checked
 `dacwatch.py 3`: one palette, read.
+
+## Unit tests
+
+The vectors now come from a table (`all_vectors`: the vector byte, then the handler's word), so
+26 places in tests/test_dsclog.py that found a handler by the install's old bytes
+`B8 vec 25 BA` failed (thousands of subtests: slow, about 25 minutes before a timeout). They now go
+through `vector_table` / `install_at` (the table read after FAR_DATA's bytes, the header's +144 and
++174). After that: test_dsclog 323 tests OK in 7 s; the whole suite OK with python3 (1523, 26
+skipped) and python3.12 (357 skipped); the drawing tests' screens identical to before.
+
+## Last
+
+Reloaded `pens-after-arena` with the new build (the old one had been put in for the comparison):
+all 134 vectors at their handlers in the table. DOSBox left running, idle.
