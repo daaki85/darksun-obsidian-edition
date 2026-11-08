@@ -463,11 +463,15 @@ WARRIOR_GROUP = 1  # (the hit point group of the warrior classes)
 # Character creation. DS:119Ch is a far pointer to the character being made, a sheet whose
 # classes (+21h) are numbered as in the creation screen's list (CREATION_CLASS_NAMES).
 CREATION_SHEET_PTR = 0x119C
-# Its tables (segment relative to the load segment): +14Dh + race * 6 + ability = the race's
-# adjustment (signed); +180h + class * 3 = the class's prime requisite (a word: its ability
-# index), then the least any other ability may be
-CREATION_SEG, CREATION_RACE_OFF, CREATION_CLASS_OFF = 0x38D4, 0x14D, 0x180
-CREATION_PRIME_MINIMUM = 17
+# Its table (segment relative to the load segment): +14Dh + race * 6 + ability = the race's
+# adjustment (signed)
+CREATION_SEG, CREATION_RACE_OFF = 0x38D4, 0x14D
+# The least each ability (0 STR to 5 CHA) may be for each creation class, the manual's (the
+# game's own made the prime requisite 17 and every other score 9 to 14; gamepatch's
+# least_scores puts these in, from dos/least_scores_table.inc). A character's least is the
+# highest of their classes'.
+CREATION_MINIMUMS = {1: {4: 9}, 2: {4: 12, 5: 15}, 3: {0: 9}, 4: {0: 13, 1: 12, 2: 15}, 5: {3: 9},
+                     6: {2: 11, 3: 12, 4: 15}, 7: {0: 13, 1: 13, 2: 14, 4: 14}, 8: {1: 9}}
 ITEM_NAME_SIZE = 25
 BROKEN_ITEM_TYPE = 0x6B  # what a broken weapon becomes
 DETONATE_BLAST = 195  # the effect Detonate puts on its target besides the power: 1d10, no save
@@ -2464,14 +2468,6 @@ class GameData:
             return 0
         addr = (self.load_seg + CREATION_SEG) * 16 + CREATION_RACE_OFF + race * 6 + ability
         return struct.unpack("b", self.guest.read(addr, 1))[0]
-
-    def class_minimum(self, cls: int, ability: int) -> int:
-        """The least an ability may be for a class on the creation screen (17 for its prime requisite)."""
-        if not 0 < cls < 16:
-            return 0
-        prime, least = struct.unpack("<hB", self.guest.read(
-            (self.load_seg + CREATION_SEG) * 16 + CREATION_CLASS_OFF + cls * 3, 3))
-        return CREATION_PRIME_MINIMUM if prime == ability else least
 
     def item_breaks(self, item: int, item_type: int) -> bool:
         """Whether a weapon can break: the game's rule for non-magical wood, bone, stone and obsidian."""

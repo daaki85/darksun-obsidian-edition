@@ -119,12 +119,20 @@ Each click of the die rolls a whole character:
   the die again, and recall it if nothing better comes. Changing the race,
   sex, classes or kit forgets the stored roll.
 
-| Class | Prime requisite |
-|---|---|
-| Fighter, gladiator | STR |
-| Cleric, druid, psionicist, ranger | WIS |
-| Preserver | INT |
-| Thief | DEX |
+| Class | Prime requisites | Least at creation |
+|---|---|---|
+| Cleric | WIS | WIS 9 |
+| Druid | WIS, CHA | WIS 12, CHA 15 |
+| Fighter | STR | STR 9 |
+| Gladiator | STR | STR 13, DEX 12, CON 15 |
+| Preserver | INT | INT 9 |
+| Psionicist | CON, WIS | CON 11, INT 12, WIS 15 |
+| Ranger | STR, DEX, WIS | STR 13, DEX 13, CON 14, WIS 14 |
+| Thief | DEX | DEX 9 |
+
+The die raises a score to the least the classes need (a multiclass character,
+the highest of their classes'). *Without the mod:* it raised the prime
+requisite to 17, and every other score to 9 to 14.
 
 What the scores do:
 
@@ -1760,7 +1768,7 @@ line](DICE-LOG.md) what each of its lines means.
 | **Saving throw** (save) | A d20 to escape or lessen a spell or attack, needing the number of one of five kinds: **PPD** paralysis, poison and death; **RSW** rod, staff and wand; **PP** petrification and polymorph; **BW** breath weapon; **SP** spell. |
 | **MR** | Magic resistance: a monster's percentage chance to shrug off a spell outright. |
 | **REAC**, **DEF** | DEX's reaction adjustment (initiative, two weapons) and defensive adjustment (AC, dodging fire, cold and electricity). |
-| **Prime requisite** | The score a class depends on (a fighter's STR); at creation it is raised to 17 if the die gave less. |
+| **Prime requisite** | The score a class depends on (a fighter's STR; a ranger has three). At creation a score is raised to the class's minimum if the die gave less. |
 | **Multiclass, dual class** | Two or three classes at once (any race but human); a human's change from one class to another. |
 | **Kit** | A class's speciality, chosen at creation: something gained, something given up ([Kits](#kits)). |
 | **Weapon spec** | A kind of weapon a warrior trains in, whatever its material: **specialized**, **mastery** and **grand mastery** for fighters, **expertise** for rangers ([weapon specialization](#weapon-specialization-and-attacks)). |

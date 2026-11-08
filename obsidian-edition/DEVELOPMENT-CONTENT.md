@@ -289,6 +289,16 @@ after the `ns_list_` patches):
   (7A011h), so everyone below 6th failed (-100). `scare_elves` makes the first "je" to the save
   (7A01Dh): an elf or half-elf priest saves as usual, as AD&D's elves, half-elves and priests
   resist fear (found by yuan-ti).
+- **The creation screen's minimums** (67399h, far, `[bp+6]` the class count and `[bp+8]` the
+  ability; its answer goes to `DS:4994h`): the game's own looked each creation class (the sheet's
+  +21h, 1-8) up in the table at `338:180h` (a word, the prime requisite, then a byte) and gave 17
+  for the prime requisite, the byte (9 to 14) for any other score. `least_scores` replaces its 104
+  bytes with `dos/least_scores.asm`: a nibble a score for each class
+  (`dos/least_scores_table.inc`, the manual's minimums, 0 none), the highest of the classes', 3 if
+  none. It keeps the two `mov dx,338h` at +1Eh and +42h where they were: the overlay manager fixes
+  up their segment. The table at `338:180h` is left as it was, as the dual-class check (86E94h)
+  reads its prime requisite. `game.CREATION_MINIMUMS` is the same table for the dice log;
+  tests/test_least_scores.py runs the routine and checks both.
 - **Negative Plane Protection** (effect 42): an undead's negative-energy touch
   (element 100h) on a creature under it (7A7C5h) uses a charge, then the
   target saves (79A71h) as against Vampiric Touch (27h), whose record allows

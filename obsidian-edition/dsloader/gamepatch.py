@@ -438,6 +438,20 @@ PATCHES = (
     # could. The first test's jne to the fail made "je" to the save: an elf or half-elf priest
     # saves as usual (found by CalvinRodo's yuan-ti, checked in DSUN.EXE)
     Patch("scare_elves", 0x79FEA, bytes.fromhex("752c"), bytes.fromhex("7431")),
+    # The least each score may be at creation (67399h, overlay code: for an ability, the highest
+    # of the character's classes' least): the game raised each class's one prime requisite to 17
+    # and every other score to one number a class (9 to 14), not the manual's requirements (a
+    # gladiator's STR 13, DEX 12 and CON 15, nothing else; a druid's WIS 12 and CHA 15...). The
+    # routine rewritten with the manual's table, 3 for none: dos/least_scores.asm (built with nasm
+    # into these bytes, test_least_scores). Its two "mov dx,338h" stay at +1Eh and +42h, where the
+    # overlay manager fixes up the segment as it loads the code.
+    Patch("least_scores", 0x67399, bytes.fromhex(
+        "558bec56578b7e0633f633c93bcf7d52c41e9c1103d9268a4721986bc003ba38038bd88ec2268b8780013b4608"
+        "7505ba1100eb23c41e9c1103d9268a4721986bc003ba3803bb800183c30203c38bd88ec2268a07988bd03bd67e"
+        "028bf2413bcf7cae8bc65f5e5dcb"), bytes.fromhex(
+        "5589e5568a4e08c0e102b5038b6e06e800005e4d7825c41e9c1101eb9090ba3803268a4721986bd8032e668b40"
+        "3066d3e8240f38e876dc88c5ebd888e8985e5dcb90ba38030000090000fc090000cd0f0000900000cb0fdd0e0e"
+        "9000009090909090909090909090")),
     # ... and a berserk or confused party member kept the side its last turn rolled: "jmp 788BBh",
     # where an effect's end has no case of its own (DSCLOG's NS_SIDE: a charm's, the side put back)
     Patch("side_back", 0x78785, bytes.fromhex("e93301"), _site(NS_SIDE, 3)),

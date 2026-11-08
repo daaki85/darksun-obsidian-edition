@@ -1795,8 +1795,6 @@ def make_creation():
     tables = (LOAD_SEG + game.CREATION_SEG) * 16
     m[tables + game.CREATION_RACE_OFF + 2 * 6:tables + game.CREATION_RACE_OFF + 3 * 6] = \
         struct.pack("6b", 1, -1, 2, 0, 0, -2)
-    for cls, prime, least in ((3, 0, 9), (8, 1, 9)):
-        struct.pack_into("<hB", m, tables + game.CREATION_CLASS_OFF + cls * 3, prime, least)
     sheet = SHEETS + 1 * game.SHEET_SIZE
     m[sheet + game.SHEET_RACE], m[sheet + game.SHEET_ABILITIES + 2] = 2, 10
     m[sheet + game.SHEET_CLASSES:sheet + game.SHEET_CLASSES + 2] = bytes((9, 17))
@@ -1820,19 +1818,21 @@ def ability_rolls(log, ability, tries):
 class CreationTests(unittest.TestCase):
     def test_abilities(self):
         log = make_creation()
-        # best of 7, 11, 9, 10 = 11, +4, +1 dwarf = 16: a Fighter's STR is at least 17
+        # best of 7, 11, 9, 10 = 11, +4, +1 dwarf = 16: above a Fighter's STR 9
         self.assertEqual(ability_rolls(log, 0, [(1, 2, 2, 2), (4, 4, 2, 1), (3, 3, 2, 1), (4, 3, 2, 1)]), [])
-        # CON: +2 dwarf, above the classes' least of 9
+        # DEX: 4 + 4 - 1 dwarf = 7, raised to the Thief's 9
+        ability_rolls(log, 1, [(1, 1, 1, 1)] * 4)
+        # CON: +2 dwarf
         ability_rolls(log, 2, [(4, 4, 4, 1), (1, 1, 1, 1), (2, 2, 2, 2), (3, 3, 3, 3)])
-        # CHA: 4 + 4 - 2 dwarf = 6, raised to the least the Fighter and Thief allow
+        # CHA: 4 + 4 - 2 dwarf = 6, kept: neither class asks for CHA
         ability_rolls(log, 5, [(1, 1, 1, 1)] * 4)
         # (the lines come when the die stops)
         self.assertEqual(log.creation_lines(),
-                         ["Character creation, STR 17: best of four 4d4 (7, 11, 9, 10) = 11, +4, +1 dwarf = 16, "
-                          "raised to 17 (the Fighter's prime requisite)",
+                         ["Character creation, STR 16: best of four 4d4 (7, 11, 9, 10) = 11, +4, +1 dwarf = 16",
+                          "Character creation, DEX 9: best of four 4d4 (4, 4, 4, 4) = 4, +4, -1 dwarf = 7, "
+                          "raised to 9 (the Thief's minimum)",
                           "Character creation, CON 19: best of four 4d4 (13, 4, 8, 12) = 13, +4, +2 dwarf = 19",
-                          "Character creation, CHA 9: best of four 4d4 (4, 4, 4, 4) = 4, +4, -2 dwarf = 6, "
-                          "raised to 9 (the Thief's least)"])
+                          "Character creation, CHA 6: best of four 4d4 (4, 4, 4, 4) = 4, +4, -2 dwarf = 6"])
 
     def test_only_the_character_the_die_stops_on(self):
         """The die rolls whole characters while it tumbles: only the last is logged, each ability
@@ -1840,16 +1840,15 @@ class CreationTests(unittest.TestCase):
         log = make_creation()
         ability_rolls(log, 0, [(4, 4, 4, 4)] * 4)  # a first character's STR 21...
         ability_rolls(log, 2, [(4, 4, 4, 4)] * 4)  # ... and CON 22
-        ability_rolls(log, 0, [(1, 2, 2, 2), (4, 4, 2, 1), (3, 3, 2, 1), (4, 3, 2, 1)])  # the next: STR 17
+        ability_rolls(log, 0, [(1, 2, 2, 2), (4, 4, 2, 1), (3, 3, 2, 1), (4, 3, 2, 1)])  # the next: STR 16
         shown = CREATION + game.SHEET_SIZE + game.CREATURE_ABILITIES
-        log.guest.mem[shown:shown + 6] = bytes((17, 12, 18, 10, 11, 9))  # its CON's rolls missed
+        log.guest.mem[shown:shown + 6] = bytes((16, 12, 18, 10, 11, 6))  # its CON's rolls missed
         lines = log.creation_lines()
         self.assertEqual(lines[:3],
-                         ["Character creation, STR 17: best of four 4d4 (7, 11, 9, 10) = 11, +4, +1 dwarf = 16, "
-                          "raised to 17 (the Fighter's prime requisite)",
+                         ["Character creation, STR 16: best of four 4d4 (7, 11, 9, 10) = 11, +4, +1 dwarf = 16",
                           "Character creation, DEX 12 (its rolls came too fast to record)",
                           "Character creation, CON 18 (its rolls came too fast to record)"])
-        self.assertIn("Character creation: the six scores add up to 77", lines)  # (as the game shows them)
+        self.assertIn("Character creation: the six scores add up to 73", lines)  # (as the game shows them)
 
     def test_rolls_too_fast_for_the_ring(self):
         """The die tumbles faster than the ring is read: DSCLOG's own count and copy of each
@@ -1859,7 +1858,7 @@ class CreationTests(unittest.TestCase):
         m = log.guest.mem
         log.lines(now=1.0)  # (the count as it was)
         shown = CREATION + game.SHEET_SIZE + game.CREATURE_ABILITIES
-        m[shown:shown + 6] = bytes((17, 12, 18, 10, 11, 9))
+        m[shown:shown + 6] = bytes((16, 12, 18, 10, 11, 6))
         m[HDR + dicelog.TSR_TRIES:HDR + dicelog.TSR_TRIES + 24] = bytes(
             (7, 11, 9, 10, 8, 4, 5, 6, 12, 4, 4, 4, 6, 5, 5, 4, 7, 7, 6, 5, 4, 4, 4, 4))
         struct.pack_into("<H", m, HDR + dicelog.TSR_TRIES_SEQ, 24)
@@ -1868,15 +1867,13 @@ class CreationTests(unittest.TestCase):
         self.assertNotIn("(40 rolls came too fast to record)", out)
         out = log.lines(now=2.5)
         self.assertEqual(out[:7], [
-            "Character creation, STR 17: best of four 4d4 (7, 11, 9, 10) = 11, +4, +1 dwarf = 16, "
-            "raised to 17 (the Fighter's prime requisite)",
-            "Character creation, DEX 12 (its rolls came too fast to record)",  # (not the 17 they'd give)
+            "Character creation, STR 16: best of four 4d4 (7, 11, 9, 10) = 11, +4, +1 dwarf = 16",
+            "Character creation, DEX 12 (its rolls came too fast to record)",  # (not the 11 they'd give)
             "Character creation, CON 18: best of four 4d4 (12, 4, 4, 4) = 12, +4, +2 dwarf = 18",
             "Character creation, INT 10: best of four 4d4 (6, 5, 5, 4) = 6, +4 = 10",
             "Character creation, WIS 11: best of four 4d4 (7, 7, 6, 5) = 7, +4 = 11",
-            "Character creation, CHA 9: best of four 4d4 (4, 4, 4, 4) = 4, +4, -2 dwarf = 6, "
-            "raised to 9 (the Thief's least)",
-            "Character creation: the six scores add up to 77"])
+            "Character creation, CHA 6: best of four 4d4 (4, 4, 4, 4) = 4, +4, -2 dwarf = 6",
+            "Character creation: the six scores add up to 73"])
         self.assertEqual(log.lines(now=3.0), [])  # (once)
 
     def test_hit_points(self):

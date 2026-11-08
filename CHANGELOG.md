@@ -80,6 +80,16 @@ Releases, newest first: [2.14.0](#pull-request-87-merged-2026-11-07) (#86 and #8
   grey and teal head) and its weight (70, the metal great axe's) have it. (`PROBE_TYPES_FILL`;
   DSCLOG's image 65,440 bytes, unchanged: the 5 bytes fit its last paragraph's padding. Seen in
   DOSBox: type 2's +8 read 04h, and the game's inventory named it "METAL GREAT AXE".)
+- **The creation screen's least scores weren't the manual's:** the die raised the class's prime
+  requisite to 17 and every other score to the class's one least (9 to 14), so a fighter's STR was
+  never below 17 and a thief's CHA never below 9, while a druid's CHA 15, a ranger's STR 13 and
+  DEX 13 and a psionicist's CON 11 went unasked. The least for each score is now the manual's (cleric
+  WIS 9; druid WIS 12, CHA 15; fighter STR 9; gladiator STR 13, DEX 12, CON 15; preserver INT 9;
+  psionicist CON 11, INT 12, WIS 15; ranger STR 13, DEX 13, CON 14, WIS 14; thief DEX 9), the
+  highest of a multiclass character's classes, and the dice log says "raised to 9 (the Thief's
+  minimum)". (`gamepatch` `least_scores`: 67399h's 104 bytes replaced by `dos/least_scores.asm`,
+  the overlay manager's two segment fixups kept in place; `game.CREATION_MINIMUMS`. Tests:
+  `test_least_scores`, run in the emulator.)
 
 ## Pull request #87 ([merged 2026-11-07](https://github.com/daaki85/darksun-obsidian-edition/pull/87))
 

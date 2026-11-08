@@ -39,12 +39,14 @@ rolls a new character. From the game's code, and checked against the screen:
 
 * **Abilities.** Each score is rolled four times as 4d4 + 4 (8 to 20), the
   best of the four kept, and the race's adjustment added. The score is then
-  raised, if need be, to the least that the
-  classes allow: 17 in the class's prime requisite (STR for fighters and
-  gladiators, WIS for clerics, druids, psionicists and rangers, INT for
-  preservers, DEX for thieves), and otherwise 9 (clerics, fighters, preservers,
-  thieves), 12 (druids, psionicists), 13 (gladiators) or 14 (rangers). A
-  multiclass character takes the highest of their classes' minimums.
+  raised, if need be, to the class's minimum in the manual: cleric WIS 9;
+  druid WIS 12, CHA 15; fighter STR 9; gladiator STR 13, DEX 12, CON 15;
+  preserver INT 9; psionicist CON 11, INT 12, WIS 15; ranger STR 13, DEX 13,
+  CON 14, WIS 14; thief DEX 9. A multiclass character takes the highest of
+  their classes' minimums. *Without the mod:* the game raised the class's
+  prime requisite to 17 and every other score to 9 (clerics, fighters,
+  preservers, thieves), 12 (druids, psionicists), 13 (gladiators) or 14
+  (rangers), CHA included.
 * **Race adjustments** (STR, DEX, CON, INT, WIS, CHA): dwarf +1 −1 +2 0 0 −2;
   elf 0 +2 −2 +1 −1 0; half-elf 0 +1 −1 0 0 0; half-giant +4 −5 +2 −5 −3 −3;
   halfling −2 +2 −1 0 +2 −1; mul +2 0 +1 −1 0 −2; thri-kreen 0 +2 0 −1 +1 −2.
@@ -58,7 +60,7 @@ rolls a new character. From the game's code, and checked against the screen:
   most +2 for levels in the other classes. There is no automatic maximum at
   first level: the first level rolls like the rest.
 * **Choices without dice.** Raising a score to a new class's minimum (adding
-  Thief raises DEX to 17) and PSP aren't rolled, so they don't appear in the
+  Thief raises DEX to 9) and PSP aren't rolled, so they don't appear in the
   log. The creation screen's other random numbers only choose pictures.
 * **The total.** After the six scores comes what they add up to, the most they
   may add up to with [Scores and hit points as

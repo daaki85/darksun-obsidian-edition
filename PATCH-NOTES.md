@@ -338,6 +338,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** Magic items didn't shine in a **shop** (Kalzith's, for one): their glow stood still. Now it moves as it does everywhere else.
 - **[Fixed]** The game's Sling +1 had no icon.
 - **[Fixed]** The game's **Great Axe +3** had no material at all. It is metal now, as its icon shows: "Metal Great Axe +3".
+- **[Fixed]** On the **creation screen** the die raised the class's prime requisite to 17 and every other score to 9 or more, where the manual asks less (a fighter needs only STR 9) and, for some classes, more of other scores (a druid CHA 15, a ranger STR and DEX 13). Each class's least is now the manual's, and a multiclass character's the highest of their classes'.
 - **[Fixed]** A character's **most PSP** took the WIS bonus from whatever the creation screen last held (in play, a stray byte), and its bonus tables ran out at 22: INT 22 gave nothing, INT 23 and up 20 too many, WIS 23 and up none. Now each comes from the character's own score, on to 25. (Found by yuan-ti.)
 - **[Fixed]** A fight's **music** took its level from the wrong creature for every one but the region's first. (Found by yuan-ti.)
 - **[Fixed]** **View Character** showed one or two more damage than a non-magical wooden, bone, stone or obsidian weapon does: it left out the weaker material (2 for wood, 1 for the others). It now matches the inventory and the fight.

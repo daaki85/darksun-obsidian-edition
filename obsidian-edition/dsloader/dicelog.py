@@ -3141,13 +3141,12 @@ class DiceLog:
         if adjustment:
             steps += f", {signed(adjustment)} {game.RACE_NAMES.get(race, f'race {race}')}"
         steps += f" = {value}"
-        minimums = [(g.class_minimum(c, ability), c) for c in classes if c]
+        minimums = [(game.CREATION_MINIMUMS.get(c, {}).get(ability, 0), c) for c in classes if c]
         if minimums:
             least, cls = max(minimums)
             if value < least:
                 name = game.CREATION_CLASS_NAMES.get(cls, f"class {cls}")
-                why = "prime requisite" if least == game.CREATION_PRIME_MINIMUM else "least"
-                steps += f", raised to {least} (the {name}'s {why})"
+                steps += f", raised to {least} (the {name}'s minimum)"
                 value = least
         return value, f"Character creation, {ABILITIES[ability]} {value}: {steps}"
 
