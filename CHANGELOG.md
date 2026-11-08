@@ -45,10 +45,13 @@ Releases, newest first: [2.14.0](#pull-request-87-merged-2026-11-07) (#86 and #8
   apart; FEATURES and the player guide call it that. (`viewer.py`; the setting is still
   `new_spells`.)
 
-**Docs**
-- ITEMS says what a material of "none" means: the game's own type has none (the Great Axe +3,
-  checked in the running game: type 2, its material byte 40h, as a ring's), so its name has no
-  material either.
+**Fixed: the game**
+- **The game's Great Axe +3 had no material:** its type (2) carried the 40h of things with none,
+  a ring's, so its name showed none, and under the class restrictions no sphere's cleric could
+  wield it. DSCLOG makes it metal as the game loads its types, as its icon (the game's metal axe's
+  grey and teal head) and its weight (70, the metal great axe's) have it. (`PROBE_TYPES_FILL`;
+  DSCLOG's image 65,440 bytes, unchanged: the 5 bytes fit its last paragraph's padding. Seen in
+  DOSBox: type 2's +8 read 04h, and the game's inventory named it "METAL GREAT AXE".)
 
 ## Pull request #87 ([merged 2026-11-07](https://github.com/daaki85/darksun-obsidian-edition/pull/87))
 

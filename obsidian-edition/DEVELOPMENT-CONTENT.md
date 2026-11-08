@@ -771,7 +771,8 @@ girdles' and the amulet's) are item types the helper adds after the game's 115
 each time the game reads its table in (`TYPES_EXTRA`; its weapon types by item
 type, `kind_of_type`, cover them too). As it copies them in (`PROBE_TYPES_FILL`)
 it also sets the air cleric's class bit (+10h, 1) on the game's dagger types
-(17, 33, 84, 94), as its own daggers have it, so an air cleric of one class may
+(17, 33, 84, 94), makes the Great Axe +3's type (2) metal (+8, from the 40h of no material, a
+ring's: the icon's head is the metal axe's grey and teal, the weight 70 the metal great axe's), as its own daggers have it, so an air cleric of one class may
 use any dagger, as its sphere allows; the Loader's item names
 (`dsloader/names.py`) are entries it adds after the game's 322 (the game puts
 the item type's material before the name when it shows one); and the icons are

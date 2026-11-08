@@ -19321,6 +19321,8 @@ ELVEN_CLOAK equ 19              ; (the Cloak and Boots of Elvenkind)
 ELVEN_BOOTS equ 20
 GREYS_ARMS  equ 54              ; Grey's Scale's arm and leg armour: the game's AC 2 each, made 3
 GREYS_LEGS  equ 24              ; (PROBE_TYPES_FILL)
+GREAT_AXE   equ 2               ; the game's Great Axe +3's type: no material (40h, a ring's), made metal
+METAL_MAT   equ 4               ; a type's +8 for metal (the material's low nibble, as the metal short sword's)
 AIR_CLERIC  equ 1               ; a type's +10h (the classes that may use it): the air cleric's bit
 
 ; PROBE_TYPES_SIZE: INT VEC_TYPES_SIZE replaces "push dword 1" (3 bytes: INT + NOP) before the
@@ -19340,7 +19342,9 @@ probe_types_size:
 ; PROBE_TYPES_FILL: INT VEC_TYPES_FILL replaces "add sp,0Ch" (3 bytes: INT + NOP) after the
 ; call that reads the chunk in (AX 0: read). Does the add, then, if it was read, copies
 ; EXTRA_TYPES after the game's own (the room made, [BP-4], less theirs) and notes where;
-; raises Grey's Scale's AC (its arm and leg armour, the game's own types) to 3; and lets air
+; raises Grey's Scale's AC (its arm and leg armour, the game's own types) to 3; makes the Great
+; Axe +3's type metal (the game gave it none, so its name showed none; its icon's head is the
+; metal axe's grey and teal, its weight the metal great axe's 70); and lets air
 ; clerics use the game's daggers (17, 33, 84, 94: none had their bit; their sphere's weapons
 ; are daggers and missile and thrown ones).
 probe_types_fill:
@@ -19365,6 +19369,7 @@ probe_types_fill:
         mov [cs:types_ptr+2], es
         mov byte [es:di+GREYS_ARMS*TYPE_SIZE+0x12], 3
         mov byte [es:di+GREYS_LEGS*TYPE_SIZE+0x12], 3
+        mov byte [es:di+GREAT_AXE*TYPE_SIZE+8], METAL_MAT
         or byte [es:di+17*TYPE_SIZE+0x10], AIR_CLERIC
         or byte [es:di+33*TYPE_SIZE+0x10], AIR_CLERIC
         or byte [es:di+84*TYPE_SIZE+0x10], AIR_CLERIC

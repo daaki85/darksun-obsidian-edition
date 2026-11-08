@@ -23,7 +23,7 @@ score (Draketooth, Dag's Dagger, the Helm and Belt of Might, El's Ring, the
 Steadfast Ring and the Ring of Insight) do it while worn, the
 Belt of Might making STR at least 24.
 
-**Weapons**, by material, then type. A material of "none" is the game's own: its type for the item has no material, as a ring's hasn't, so the name in the game has none either ("Great Axe +3", where a long sword is "Metal Long Sword +1"). The same goes for Silk Armor and the Quicksilver Gauntlets below.
+**Weapons**, by material, then type:
 
 | Icon | Material | Type | Item | Bonus / power | Where |
 |---|---|---|---|---|---|
@@ -48,6 +48,7 @@ Belt of Might making STR at least 24.
 | ![](docs/items/shadowseeker.png) | Metal | short sword | ***Shadowseeker*** | a short sword +1 (1d6+1): whoever wields it, in either hand, sees the invisible | wielded by **Kurzak**, the pens' guard leader; a thief can lift it (200 XP, once a game) |
 | ![](docs/items/soulcrusher.png) | Metal | axe | Soulcrusher | +1 | Kel |
 | ![](docs/items/axe-plus1.png) | Metal | axe | Axe +1 | +1 | — |
+| ![](docs/items/great-axe-plus3.png) | Metal | great axe | Great Axe +3 | +3 (the game gave its type no material: metal with the Loader) | the Army Commander |
 | ![](docs/items/headsman.png) | Metal | great axe | ***Headsman*** | a metal great axe +2 | in the arena **Announcer**'s stash, with his Stoneskin scroll, rings and gems |
 | ![](docs/items/linebreaker.png) | Metal | polearm | ***Linebreaker*** | a metal polearm +2 | carried by the **Troop Leader** |
 | ![](docs/items/dark-flame.png) | Obsidian | long sword | Dark Flame | +2, Burning Hands | the Lower Castle's chest |
@@ -63,7 +64,6 @@ Belt of Might making STR at least 24.
 | ![](docs/items/quarterstaff-plus2.png) | Wooden | quarterstaff | Quarterstaff +2 | +2 | Maris |
 | ![](docs/items/balks-staff.png) | Wooden | quarterstaff | Balk's Staff | +1, Slow | Balkazar |
 | ![](docs/items/parting-staff.png) | Wooden | quarterstaff | Parting Staff | +1 | — |
-| ![](docs/items/great-axe-plus3.png) | none | great axe | Great Axe +3 | +3 | the Army Commander |
 
 **Missile weapons and ammunition:**
 
@@ -332,7 +332,7 @@ mod's. A weapon's spell (Dark Flame's Burning Hands) is a magical power:
 | Bone +3: Gythka +3 | 80% | 80% (the game's: needs 5) |
 | Metal +1: Soulcrusher, Axe +1, ***Shadowseeker*** | 70% | 70% (the game's: needs 7) |
 | Metal +2: El's Drinker, ***Greenbright***, ***Galefang***, ***Headsman***, ***Linebreaker*** | 75% | 75% (the game's: needs 6) |
-| Metal +3: Dag's Dagger | 80% | 80% (the game's: needs 5) |
+| Metal +3: Dag's Dagger, Great Axe +3 | 80% | 80% (the game's: needs 5) |
 | Metal +4: Dragonsbane | 85% | 85% (the game's: needs 4) |
 | Obsidian +1: Bloodwrath, ***Mindshard*** | 70% | 85% (needs 4) |
 | Obsidian +1 with a power: Blackmace, Chatkcha +1, ***Flame Blade*** | 70% | 90% (needs 3) |
@@ -342,4 +342,3 @@ mod's. A weapon's spell (Dark Flame's Burning Hands) is a magical power:
 | Wooden +1: Parting Staff, ***Gutterknot*** | 70% | 70% (needs 7) |
 | Wooden +1 with a power: Balk's Staff | 70% | 75% (needs 6) |
 | Wooden +2: Quarterstaff +2 | 75% | 75% (needs 6) |
-| No material +3: Great Axe +3 | 80% | 80% (the game's: needs 5; cloth's 9) |
