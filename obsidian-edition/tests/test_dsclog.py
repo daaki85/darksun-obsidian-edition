@@ -1393,10 +1393,12 @@ class OverlayBufferTests(unittest.TestCase):
 @unittest.skipIf(Uc is None, "unicorn is not installed")
 class SteadyPaceTests(unittest.TestCase):
     """STEADY PACE (PROBE_PACE_PASS, PROBE_PACE_DRAW) in place of the map's frame's two far calls:
-    a frame a frame or more behind the schedule (70 a second on the game's clock) left undrawn, its
-    list of what moved kept for the next frame drawn; a fight's frames all drawn."""
+    the steps lost since the last frame (the clock's ticks less the steps run, a step running when
+    the timer's flag DS:1F7Eh is set) counted against an allowance of 1.5 ticks a frame; while more
+    are lost, a frame left undrawn, its list of what moved kept for the next frame drawn; a fight's
+    frames all drawn."""
     GAME = 0x6000  # (the game's code segment, as relocated: the routines' stand-ins at 26DCh and 15EAh)
-    CLOCK, LIST = 0x11D6, 0x57D0
+    CLOCK, LIST, DUE = 0x11D6, 0x57D0, 0x1F7E
     FIGHT = (GAME_DS - (0x4356 - 0x377E)) * 16 + 0x19  # (the fight's state's +19h: not 0 in a fight)
 
     def setUp(self):
@@ -1449,10 +1451,12 @@ class SteadyPaceTests(unittest.TestCase):
         return [struct.unpack_from("<5H", self.mu.mem_read(GAME_DS * 16 + self.LIST, n * 10), i * 10)
                 for i in range(n)]
 
-    def step(self, clock, moved=0):
-        """The step called at CLOCK, "something moved" MOVED before it: what it is after."""
+    def step(self, clock, moved=0, due=0):
+        """The step called at CLOCK, "something moved" MOVED before it and the timer's flag DUE:
+        what "something moved" is after."""
         mu = self.mu
         mu.mem_write(GAME_DS * 16 + self.CLOCK, struct.pack("<I", clock))
+        mu.mem_write(GAME_DS * 16 + self.DUE, struct.pack("<H", due))
         mu.mem_write(GAME_DS * 16 + 0xF010, struct.pack("<HH", moved, 7))
         self.run_at(0x100, (100, 50, 0, 0x0E00, 0))
         self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 7)
@@ -1461,23 +1465,33 @@ class SteadyPaceTests(unittest.TestCase):
     A, B, C = (10, 20, 16, 30, 1), (40, 20, 16, 30, 2), (80, 90, 16, 30, 3)
 
     def test_on_schedule(self):
-        """A frame each tick (sooner than the schedule's 70 a second): every one drawn, as the game's."""
+        """A step every tick, a frame after each: no step lost, every frame drawn, as the game's."""
         for t in range(1000, 1020):
+            self.step(t, due=1)
             self.assertEqual(self.frame(t, [self.A, self.B]), (2, 1))
 
+    def test_within_the_allowance(self):
+        """A frame that loses a step (1 tick: less than the allowance of 1.5) is always drawn."""
+        for t in range(1000, 1040, 2):
+            self.step(t, due=1)
+            self.assertEqual(self.frame(t, [self.A]), (1, 1))
+
     def test_behind(self):
-        """A frame behind: left undrawn (AX 1, as drawn), its list kept; the next drawn with its own
-        list and the kept one after it."""
+        """A frame that lost more than the allowance: the next left undrawn (AX 1, as drawn), its list
+        kept; the next drawn with its own list and the kept one after it."""
         self.assertEqual(self.frame(1000, [self.A]), (1, 1))  # (the first: the schedule starts)
-        self.assertEqual(self.frame(1003, [self.A, self.B]), (None, 1))  # (3 ticks: 114 of 96 behind)
-        self.assertEqual(self.frame(1003, [self.C]), (3, 1))  # (18 behind: drawn)
+        self.step(1003, due=1)
+        self.assertEqual(self.frame(1003, [self.A, self.B]), (None, 1))  # (2 of 3 ticks lost)
+        self.assertEqual(self.frame(1003, [self.C]), (3, 1))  # (none lost since: drawn)
         self.assertEqual(self.listed(3), [self.C, self.A, self.B])
+        self.step(1004, due=1)
         self.assertEqual(self.frame(1004, [self.C]), (1, 1))  # (nothing kept now)
 
     def test_fight(self):
         """In a fight (the fight's state's +19h, the game's own test) every frame drawn."""
         self.frame(1000, [self.A])
         self.assertEqual(self.frame(1003, [self.A, self.B], combat=1), (2, 1))
+        self.assertEqual(self.frame(1006, [self.A, self.B], combat=1), (2, 1))
 
     def test_kept_drawn_alone(self):
         """With a list kept, the step sets "something moved" once it has waited PACE_HOLD ticks (2), so
@@ -1492,14 +1506,14 @@ class SteadyPaceTests(unittest.TestCase):
         self.assertEqual(self.step(1010, moved=1), 1)
 
     def test_pause(self):
-        """After a pause (8 ticks or more: a load, a talk) the schedule starts afresh (the kept list
+        """After a pause (24 ticks or more: a load, a talk) the schedule starts afresh (the kept list
         drawn with the next frame); nothing to draw at all: the drawing not called (AX 1)."""
         self.frame(1000, [self.A])
         self.assertEqual(self.frame(1003, [self.B]), (None, 1))
-        self.assertEqual(self.frame(1020, []), (1, 1))
+        self.assertEqual(self.frame(1030, []), (1, 1))
         self.assertEqual(self.listed(1), [self.B])
-        self.assertEqual(self.frame(1021, []), (None, 1))
-        self.assertEqual(self.frame(1022, [self.C]), (1, 1))
+        self.assertEqual(self.frame(1031, []), (None, 1))
+        self.assertEqual(self.frame(1032, [self.C]), (1, 1))
 
     def test_kept_most(self):
         """At most 64 entries kept: a frame that would keep more is drawn."""

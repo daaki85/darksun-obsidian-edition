@@ -1,0 +1,5 @@
+cycles 20000, all on, new steady pace: 20.1 s: frames shown 10.5/s, undrawn (steady pace) 7.3/s, main loop 266/s; BIOS clock 18.2/s (18.2 = real time); game clock 96/s, steps run 69/s, lost while drawing 26/s (steady pace on only); walking 114 map units/s; DOSBox CPU 21%
+cycles 20000, all on, steady pace off: 20.0 s: frames shown 16.6/s, undrawn (steady pace) 0.0/s, main loop 119/s; BIOS clock 18.2/s (18.2 = real time); game clock 96/s, steps run 0/s, lost while drawing 0/s (steady pace on only); walking 80 map units/s; DOSBox CPU 23%
+cycles 35000, all on, new steady pace: 20.2 s: frames shown 15.7/s, undrawn (steady pace) 1.9/s, main loop 393/s; BIOS clock 18.2/s (18.2 = real time); game clock 96/s, steps run 72/s, lost while drawing 24/s (steady pace on only); walking 112 map units/s; DOSBox CPU 30%
+cycles 20000, mod drawing off, new steady pace: 20.1 s: frames shown 16.4/s, undrawn (steady pace) 1.2/s, main loop 372/s; BIOS clock 18.2/s (18.2 = real time); game clock 96/s, steps run 74/s, lost while drawing 22/s (steady pace on only); walking 121 map units/s; DOSBox CPU 21%
+MATRIX5-DONE

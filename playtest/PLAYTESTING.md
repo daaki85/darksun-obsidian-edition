@@ -257,14 +257,22 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
 
 ### Frame rate and cycles (framerate.py)
 
-`python3 framerate.py 20` walks the party back and forth (screen 40,104 to 280,104) for 20 s, out
-of a fight, and prints the frames shown a second (DSCLOG's flip_count), those steady pace left
-undrawn (pace_skipped, found from a symbol map of the helper as built), the main loop's passes,
-the BIOS clock against real time, map units walked a second and DOSBox's CPU. `PT_CYCLES=N sh
-start.sh` (or before loadsave.sh) sets DOSBox's cycles. Toggle a feature in the Loader's settings
-and reload to compare.
+`python3 framerate.py 20` walks the party back and forth (screen 40,104 to 280,104, a click every
+3 s) for 20 s, out of a fight, and prints: the frames shown a second (DSCLOG's flip_count); those
+steady pace left undrawn (pace_skipped); the steps run and lost (pace_ran, pace_lost: steady pace on
+only); these found from a symbol map of the helper as built; the main loop's passes; the BIOS
+clock and the game's clock (96 a second) against real time; the leader's map units a second
+**while walking** (the waits at a target left out: before 2026-11-08 the tool averaged over the
+whole run, so every setting read 64 to 66); and DOSBox's CPU. `PT_CYCLES=N sh start.sh` (or before
+loadsave.sh) sets DOSBox's cycles; settings are changed with `launch.save_settings` before loading
+(the scripts were /tmp/playtest/matrix*.sh: see the log of 2026-11-08).
 
-Results, pens-after-arena, the party walking (2026-11-08):
+How the game paces walking: its timer (DSUN.EXE seg 1DF3:29E8h) sets DS:1F7Eh at each tick of
+the game's clock (DS:11D6h, 96 a second); the step (1DF3:26DCh) runs only with it set and clears
+it. A tick passed while a frame draws is a step lost.
+
+Results, pens-after-arena, the whole party walking, 2026-11-08. The old steady pace (schedule of
+70 frames a second), walking speed not measured right:
 
 | Cycles, settings | Shown/s | Undrawn/s | DOSBox CPU |
 |---|---|---|---|
@@ -274,15 +282,16 @@ Results, pens-after-arena, the party walking (2026-11-08):
 | 65000, all on | 16.6 | 1.3 | 48% |
 | 80000, all on | 17.4 | 0.3 | 57% |
 | 100000, all on | 17.7 | 0 | 69% |
-| 20000, shadows off | 8.8 | 11.1 | |
-| 20000, dust off | 7.8 | 13.1 | |
 | 20000, steady pace off, the rest on | 17.0 | 0 | 21% |
-| 20000, mod drawing off, steady pace on | 9.3 | 10.4 | 21% |
 
-Walking was 64 to 66 map units a second in every run: steady pace doesn't change the speed here,
-it only leaves pictures out. The game shows about 17.5 frames a second while walking; steady
-pace's schedule (PACE_TICK 70 / PACE_FRAME 96 on the 96-a-second clock) expects 70, so below
-about 65,000 cycles it skips frames the game could have shown. That is the choppiness.
+The new steady pace (steps lost against an allowance of 1.5 ticks a frame):
+
+| Cycles, settings | Shown/s | Undrawn/s | Steps run / lost a second | Walking, map units/s |
+|---|---|---|---|---|
+| 20000, all on | 10.5 | 7.3 | 69 / 26 | 114 |
+| 20000, all on, steady pace off | 16.6 | 0 | (not counted) | 80 |
+| 35000, all on | 15.7 | 1.9 | 72 / 24 | 112 |
+| 20000, the mod's drawing off | 16.4 | 1.2 | 74 / 22 | 121 |
 
 ## 3. Controls that work
 

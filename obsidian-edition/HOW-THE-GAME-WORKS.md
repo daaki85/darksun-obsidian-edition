@@ -707,19 +707,21 @@ champions instead ([the champions' bout](FEATURES.md#the-champions-bout)).
 
 ## How fast the party walks
 
-Walking has no speed of its own in the game's code: a walking figure takes one
-step for each picture the game draws of the map. The game draws the view, then
-shows it at the screen's next refresh, 70 times a second, and waits for that
-refresh. A picture that takes a moment longer to draw than a refresh misses it
-and waits for the next one, so it shows twice as late, and every walker moves
-at half speed until the pictures are quick again. Everything on the screen
-adds to the drawing: four figures rather than the leader alone (the manual's
-advice to collapse the party "speeds up the game" is this), the mod's gear,
-shadows and dust, and how fast the computer runs DOSBox.
+Everything on the map moves a step at each tick of the game's own clock, 96 a
+second: the game's timer sets a flag at each tick, and the map's main loop
+moves everything a step when it finds the flag set, then draws what moved and
+shows it at the screen's next refresh (70 a second), waiting for it. A tick
+that passes while a picture is still being drawn and shown sets the flag that
+is already set, so that step is lost, for every walker at once. Everything on
+the screen adds to the drawing: four figures rather than the leader alone (the
+manual's advice to collapse the party "speeds up the game" is this), the mod's
+gear, shadows and dust, and how fast the computer runs DOSBox. Even the
+unmodded game loses a step or so for each picture it shows.
 
-Measured in the slave pens at 20,000 cycles, with the mod's gear, shadows and
-dust on: the leader alone walked about 220 to 260 pixels a second of the
-game's time, the whole party in view 152 to 175, and the game showed about 37
-pictures a second while they walked, not 70. [Steady
-pace](FEATURES.md#game-speed) keeps everyone at full speed by leaving out the
-pictures that would be late, rather than waiting for them.
+Measured in the slave pens with the whole party walking, everything on
+(2026-11-08, `playtest/framerate.py`): at 20,000 cycles, with steady pace off,
+the game showed 16.6 pictures a second and the leader walked 80 map units a
+second; with [steady pace](FEATURES.md#game-speed) on, 10.5 pictures and 114
+(with none of the mod's drawing, 16.4 pictures and 121). Steady pace keeps the
+walk near the game's own by leaving out the pictures that would lose too many
+steps, rather than waiting for them.

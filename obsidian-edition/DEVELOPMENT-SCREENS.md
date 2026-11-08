@@ -269,7 +269,10 @@ dice log running:
   `+346`, before `PANEL_NEW`; the picture's block is PANEL_W x 130, the most);
   its foot stays at row 198. Smaller than it was, DSCLOG draws the view again
   under it first. Collapsed is 15 rows (the newest line in the header), docked
-  78, expanded 130 (11 lines and the filters' row). The header's level chip
+  78, expanded 130 (14 lines and the filters' row). The lines are in a font of
+  the Loader's (`smallfont.py`: the X11 misc-fixed 4x6 glyphs, public domain,
+  with the game's shadow, 7 pixels a line); the header, the buttons and the
+  filters stay in the game's. The header's level chip
   and - / + buttons, and the filters, are pressed through `PANEL_MOUSE` as the
   scrollbar is. **L** (`INT 16h`, `our_key`, while the panel is on screen:
   `PANEL_LIVE`) is counted at `+348` and kept from the game; the keyboard hook
@@ -700,19 +703,21 @@ A New character counts as Okay wherever the game tests for Okay: a jump each
 
 ([In the features page](FEATURES.md#game-speed).)
 
-Measured in the slave pens at 20,000 cycles with everything on, walking (the
-leader's speed in pixels a second of the game's time):
+Measured in the slave pens with the whole party walking and everything on
+(`playtest/framerate.py`, which counts DSCLOG's page flips, the steps run and
+lost, and the leader's map units while walking):
 
-| | The leader's speed |
-|---|---|
-| The whole party in view, steady pace off | 152 to 175 |
-| The whole party in view, steady pace on | 249 to 278 |
-| The leader alone | about 220 to 260 |
+| | Pictures a second | Steps lost a second (of 96) | Walking, map units a second |
+|---|---|---|---|
+| 20,000 cycles, steady pace off | 16.6 | | 80 |
+| 20,000 cycles, steady pace on | 10.5 | 26 | 114 |
+| 35,000 cycles, steady pace on | 15.7 | 24 | 112 |
+| 20,000 cycles, the mod's drawing off, steady pace on | 16.4 | 22 | 121 |
 
-Frames stop being skipped from about 30,000 cycles. With the whole party walking
-in the slave pens, steady pace shows about 27 pictures a second, where the game
-shows about 37 without it (70 when no frame is late; counted by the game's page
-flips). The Loader's two speeds run DOSBox's dynamic core (GOG's settings run
+Until this change the schedule was 70 frames a second on the clock (a tick 70
+units, a frame 96): the map draws only when something moved, about 17 times a
+second, so every frame looked late, and at 20,000 cycles it showed 6 pictures a
+second and left out 17. The Loader's two speeds run DOSBox's dynamic core (GOG's settings run
 this game on the slower normal core): the same cycles do more, at about a third
 less of the computer's time.
 
@@ -721,25 +726,30 @@ frame (DSUN.EXE 1E8E4h) calls the step for everything (`call far 1DF3:26DC`,
 which also builds the list of what moved at DS:57D0h, 10 bytes each: where
 the thing was drawn, its size, the thing) and then the drawing of that list
 with the page flip (`call far 1DF3:15EA`), the flip waiting for the vertical
-retrace. The game has no other clock for walking: a step is a frame, and the
-"think" that starts a figure on its next square runs once a frame, for one
-creature at a time, so catching up a figure's animation steps alone (tried
-before) only made it wait at the end of its square. PROBE_PACE_DRAW keeps a
-schedule of 70 frames a second on the game's clock (DS:11D6h, 96 ticks a
-second: a tick 70 units, a frame 96): at a frame or more behind, on the map (a
+retrace; the frame is drawn only when something moved. The step runs only when
+DS:1F7Eh is set, which the game's timer (1DF3:29E8h, with the game's clock
+DS:11D6h, 96 ticks a second) does at each tick, and clears it: a step a tick
+at most, and a tick passed while drawing is a step lost. The "think" that
+starts a figure on its next square runs once a step, for one creature at a
+time, so catching up a figure's animation steps alone (tried before) only made
+it wait at the end of its square. PROBE_PACE_PASS counts the steps run (the
+flag set as the step is called); PROBE_PACE_DRAW, at each frame, adds the
+steps lost since the last (the clock's ticks less the steps run) to a debt in
+quarter ticks and takes off an allowance (`PACE_ALLOW`, 1.5 ticks: about what
+the unmodded game's own frames lose, 22 steps a second at 16.4 frames). While
+the debt is above 0, on the map (a
 fight, the fight state's +19h, draws every frame), the drawing and its flip are
 left out and the list is kept in the far block (FAR_PACE, 64 entries); the
 next frame drawn has it added after its own, so the old places of what moved
 in the skipped frame are drawn over too. PROBE_PACE_PASS sets "something
 moved" after the step when a kept list has waited 2 ticks, so a frame is drawn
-for it though nothing has moved since. A pause of 8 ticks (a load, a talk)
-starts the schedule afresh; at most 4 frames are owed.
+for it though nothing has moved since. A pause of 24 ticks (a load, a talk)
+starts the schedule afresh; the debt is held between -1.5 and 16 ticks.
 
-To count the pictures the game shows, watch the word at offset 118Eh of the
-flip routine's own code segment (the routine at DSUN.EXE 14414h toggles it at
-each flip): with the whole party walking in the slave pens it changed about 37
-times a second without steady pace and 27 with it, the step a picture going
-from one to two or three.
+To count the pictures the game shows, read DSCLOG's `flip_count` (header
++1832, counted at each flip); `pace_ran`, `pace_lost` and `pace_skipped` count
+the steps run, the steps lost and the frames left undrawn (`playtest/framerate.py`
+finds them by a symbol map of the helper as built).
 
 The Loader's drawing is as cheap as it can be without looking any different:
 a shadow is darkened a plane of the video memory at a time (the graphics

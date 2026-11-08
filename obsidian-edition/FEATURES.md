@@ -164,8 +164,8 @@ there; **-** makes it smaller.
 - **Its buttons**, on the right of its top line: **L**, which hides it as the
   key does; the level (**Least**, **Short**, **Detail**; a click goes to the
   next, and the Options tab follows); and **-** and **+** for a smaller or
-  bigger panel. It starts at six lines; collapsed, it is one line, the
-  newest; expanded, it is taller (11 lines) and has filters along its top: **All**, **Party** (the
+  bigger panel. It starts at eight lines; collapsed, it is one line, the
+  newest; expanded, it is taller (14 lines) and has filters along its top: **All**, **Party** (the
   party's lines), **Damage** (hits, damage and deaths) and **Saves** (saving
   throws and magic resistance). Its size is remembered.
 
@@ -2402,19 +2402,26 @@ screen](#the-effects-screen).
 
 ## Game speed
 
-In the game a walking figure takes a step for each frame drawn, and a frame
-drawn a moment too late waits for the screen's next refresh (70 a second), so
-with the whole party in view, shadows and dust on, everyone walked at about
-half speed ([how fast the party
-walks](HOW-THE-GAME-WORKS.md#how-fast-the-party-walks)).
+In the game everything on the map moves a step at each tick of its clock (96
+a second), but a tick that passes while a picture is still being drawn is a
+step lost, for every walker. The more there is to draw (the whole party in
+view, shadows and dust), the more steps are lost and the slower everyone walks
+([how fast the party walks](HOW-THE-GAME-WORKS.md#how-fast-the-party-walks)).
 
 **Steady pace** (under Game speed on the Options tab, on unless switched off;
-from the next start): on the map the party walks at its full speed whatever is
-drawn. When a frame is late, the next one isn't drawn: the game still moves
-everyone a step, and the frame after shows all that moved in both. On a busy
-screen you see fewer pictures, so walkers move two or three steps between
-pictures rather than one, but no one slows down. Fights draw every frame, as
-the game does.
+from the next start): on the map it counts the steps lost while drawing. A
+picture that loses no more than the unmodded game's pictures do (a tick and a
+half) is always shown; while more are lost, the next picture isn't drawn: the
+game still moves everyone, and the picture after shows all that moved. So a
+quick computer sees every picture, and a busy screen shows fewer pictures
+rather than a slower walk. Fights draw every frame, as the game does.
+
+| Slave pens, whole party walking, everything on | Pictures a second | Walking (map units a second) |
+|---|---|---|
+| 20,000 cycles, steady pace off | 16.6 | 80 |
+| 20,000 cycles, steady pace on | 10.5 | 114 |
+| 35,000 cycles, steady pace on | 15.7 | 112 |
+| 20,000 cycles, none of the mod's drawing, steady pace on | 16.4 | 121 |
 
 ![The whole party walking back and forth in the slave pens, the same clicks on both sides: with steady pace off on the left and on on the right, where the party gets to each spot sooner](docs/steady-pace.gif)
 

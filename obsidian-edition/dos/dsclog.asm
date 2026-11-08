@@ -23949,22 +23949,24 @@ probe_flip:
         iret
 
 ; STEADY PACE: the map's frame (DSUN.EXE 1E8E4h) moves everything a step (call far 1DF3:26DCh),
-; then draws what moved and flips the page (call far 1DF3:15EAh), the flip waiting for the screen's
-; next refresh (70 a second). A walker takes a step a frame, so a frame drawn a moment late (four
-; figures in view, their shadows and dust) misses a refresh and the party walks at half speed.
-; Here the frames keep a schedule of 70 a second on the game's clock (DS:11D6h, 96 ticks a
-; second): while they are a frame or more behind, a frame's drawing and flip are left out (on the
-; map only: a fight draws each), and the list of what moved (DS:57D0h, 10 bytes each: where it was
-; drawn and its size, then the thing: the drawing takes in where each is now) is kept, in the far
-; block (FAR_PACE), for the next frame drawn. The game's logic still runs every frame, so walking
-; keeps its pace; only fewer pictures are shown.
+; then, if something moved, draws what moved and flips the page (call far 1DF3:15EAh), the flip
+; waiting for the screen's next refresh. The step runs only when the game's timer (1DF3:29E8h) has
+; set DS:1F7Eh, which it does at each tick of the game's clock (DS:11D6h, 96 ticks a second), and
+; clears it: one step a tick at most. A tick that passes while a frame is drawn sets the flag that
+; is already set, so its step is lost, and every walker slows. Here the steps lost are counted (the
+; clock's ticks between frames, less the steps run) against an allowance for each frame
+; (PACE_ALLOW: about what the unmodded game's own frames lose); while more are lost than allowed,
+; a frame's drawing and flip are left out (on the map only: a fight draws each), and the list of
+; what moved (DS:57D0h, 10 bytes each: where it was drawn and its size, then the thing: the drawing
+; takes in where each is now) is kept, in the far block (FAR_PACE), for the next frame drawn.
+; Frames that lose no more than the allowance are all drawn, so a quick computer sees them all.
 PACE_LIST  equ 0x57D0                   ; the game's list of what moved ...
 PACE_LMAX  equ 320                      ; ... and the most it holds (one for each thing)
 PACE_CLOCK equ 0x11D6                   ; the game's clock: 96 ticks a second
-PACE_TICK  equ 70                       ; (a tick in the schedule's units ...
-PACE_FRAME equ 96                       ;  ... and a frame: 70 frames a second)
-PACE_AHEAD equ 4 * PACE_FRAME           ; (behind by no more than this: a burst, then as the game)
-PACE_GAP   equ 8                        ; ticks since the last frame: a pause (a load, a talk), the
+PACE_STEP  equ 0x1F7E                   ; set by the game's timer each tick: the step is due
+PACE_ALLOW equ 6                        ; steps a frame may lose, in quarter ticks (1.5 ticks)
+PACE_AHEAD equ 4 * 4 * 4                ; (the most owed: 4 frames of 4 ticks, then as the game)
+PACE_GAP   equ 24                       ; ticks since the last frame: a pause (a load, a talk), the
                                         ;   schedule starts afresh
 PACE_HOLD  equ 2                        ; ticks what moved is kept before a frame is drawn for it alone
 PACE_KEPT  equ 64                       ; entries kept at most (more: the frame is drawn)
@@ -23987,7 +23989,11 @@ probe_pace_pass:
         pop es
         mov word [cs:pace_call], 0x26DC
         add word [cs:pace_back], 3
-        call far [cs:pace_call]
+        cmp word [PACE_STEP], 0
+        je .call
+        inc word [cs:pace_steps]        ; (a step due: it runs)
+        inc word [cs:pace_ran]
+.call:  call far [cs:pace_call]
         cmp word [cs:pace_kept], 0
         je .back
         push eax
@@ -24005,10 +24011,9 @@ probe_pace_pass:
 
 ; PROBE_PACE_DRAW: INT VEC_PACE_DRAW replaces the start of "call far 1DF3:15EA" as PROBE_PACE_PASS
 ; its call: the drawing of what moved, and the flip (its arguments: the view's x and y, 1, how
-; many moved, 1; AX nonzero back if drawn). Each frame here is one on the schedule: PACE_DEBT
-; gains PACE_TICK a tick of the clock and loses PACE_FRAME a frame. At a frame or more behind, the
-; frame isn't drawn (AX 1 back, as drawn) and the list is kept; the next frame drawn gets the list
-; kept added after its own.
+; many moved, 1; AX nonzero back if drawn). At each frame here PACE_DEBT gains the steps lost since
+; the last (in quarter ticks) and loses PACE_ALLOW. While it is above 0 the frame isn't drawn (AX 1
+; back, as drawn) and the list is kept; the next frame drawn gets the list kept added after its own.
 probe_pace_draw:
         pop word [cs:pace_back]
         pop word [cs:pace_back + 2]
@@ -24029,16 +24034,22 @@ probe_pace_draw:
         mov edx, eax
         sub eax, [cs:pace_clock]
         mov [cs:pace_clock], edx
+        xor dx, dx
+        xchg dx, [cs:pace_steps]        ; (the steps run since the last frame)
         cmp eax, PACE_GAP
         jb .owed
         mov word [cs:pace_debt], 0      ; (a pause: afresh)
         jmp short .judge
-.owed:  imul ax, ax, PACE_TICK
+.owed:  sub ax, dx                      ; the steps lost
+        jge .lost
+        xor ax, ax
+.lost:  add [cs:pace_lost], ax
+        shl ax, 2
+        sub ax, PACE_ALLOW
         add ax, [cs:pace_debt]
-        sub ax, PACE_FRAME
-        cmp ax, -PACE_FRAME
+        cmp ax, -PACE_ALLOW
         jge .low
-        mov ax, -PACE_FRAME             ; (ahead: the refresh waits, as the game's)
+        mov ax, -PACE_ALLOW             ; (a frame's allowance in hand at most)
 .low:   cmp ax, PACE_AHEAD
         jle .high
         mov ax, PACE_AHEAD
@@ -24047,8 +24058,8 @@ probe_pace_draw:
         jcxz .draw                      ; (nothing new: drawn for what was kept)
         call pp_fighting
         jnz .draw
-        cmp word [cs:pace_debt], PACE_FRAME
-        jl .draw
+        cmp word [cs:pace_debt], 0
+        jle .draw
         mov ax, [cs:pace_kept]
         add ax, cx
         cmp ax, PACE_KEPT
@@ -24104,7 +24115,10 @@ pace_back    dd 0                       ; (where the INT returns, past the call'
 pace_call    dd 0                       ; (the game's routine, its segment as relocated)
 pace_clock   dd 0                       ; (the clock at the last frame)
 pace_kept_at dd 0                       ; (the clock when the list was first kept)
-pace_debt    dw 0                       ; frames behind the schedule, in PACE_FRAMEs (signed)
+pace_debt    dw 0                       ; steps lost past the allowance, in quarter ticks (signed)
+pace_steps   dw 0                       ; steps run since the last frame
+pace_ran     dw 0                       ; steps run (counted, for measuring)
+pace_lost    dw 0                       ; steps lost (counted, for measuring)
 pace_kept    dw 0                       ; entries kept (FAR_PACE)
 pace_skipped dw 0                       ; frames left undrawn (counted)
 

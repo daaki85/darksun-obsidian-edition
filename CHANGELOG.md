@@ -40,6 +40,24 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 
 ## Next pull request (not opened yet)
 
+**Changed**
+- **Steady pace keeps the game's real schedule,** and the choppy walking is gone. The game moves
+  everything on the map a step at each tick of its clock (96 a second: its timer sets DS:1F7Eh,
+  and the step runs only with it set), so a tick that passes while a picture is drawn is a step
+  lost. Steady pace assumed 70 pictures a second instead, while the map draws only when something
+  moved (about 17 a second), so it found every picture late and left most of them out: 6 shown a
+  second at 20,000 cycles. Now it counts the steps lost (the clock's ticks less the steps run)
+  against an allowance of 1.5 ticks a picture, about what the unmodded game's own pictures lose,
+  and leaves a picture out only while more are lost. Measured in the slave pens, the whole party
+  walking, everything on, 20,000 cycles: 10.5 pictures a second and 114 map units a second walking
+  (steady pace off: 16.6 and 80; the mod's drawing off: 16.4 and 121); at 35,000 cycles, 15.7 and
+  112. (DSCLOG's STEADY PACE; tests: `SteadyPaceTests`. `playtest/framerate.py` reports the steps
+  run and lost and the walking speed while walking: its speed had counted the waits between clicks.)
+- **The combat log panel's lines are in a smaller font,** 7 pixels a line where the game's is 9: 8
+  lines docked (was 6), 14 expanded (was 11). The glyphs are the X11 misc-fixed 4x6 font's (public
+  domain) with the game's drop shadow (`smallfont.py`); the header, buttons and filters keep the
+  game's font.
+
 **Fixed: the game**
 - **Scare allowed no saving throw at all,** so the 2.14.0 fix (`scare_elves`: an elf or half-elf
   priest's save) never ran, nor the game's own rule that 6th level and up always save: its record's

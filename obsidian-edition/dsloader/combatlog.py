@@ -14,7 +14,8 @@ mottled like the game's dialogue window, in darker shades.
 
 The lines are the dice log's own (DiceLog.lines), from the fight (Log): in detail all of them, in
 short a line for each attack, saving throw and spell's damage with its dice, at the least what came
-of them. They are in the game's font (art.Font), in the Loader's colours for their kind
+of them. They are in a small font (smallfont: 7 pixels a line, 8 lines docked), the header and
+buttons in the game's (art.Font), in the Loader's colours for their kind
 (palette.LOG_COLOURS) with the names in the party's and the monsters' colours, a filled pip before
 a party member's line and a hollow one before a monster's, long lines wrapped with a hanging
 indent. Above them the round, who is acting and who is next. See docs/combat-log/HANDOFF.md.
@@ -25,7 +26,7 @@ import struct
 from collections import deque
 from typing import Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import palette
+from . import palette, smallfont
 
 TSR_HDR_OFF = 20  # DSCLOG's header: where it is in DSCLOG's segment
 TSR_DAC = 238  # ... the offset of DAC, the palette as DSCLOG last read it (768 values, 0-63)
@@ -55,8 +56,10 @@ COLOURS = {
 }
 WELL = (4, 15, PANEL_W - 5, PANEL_H - 5)  # x0, y0, x1, y1 (inclusive), in the picture
 GRAIN_HI_N, GRAIN_LO_N = 32, 32  # (of 256: the stone's pixels speckled lighter, darker)
-LINE_H = 9  # the font's height, its shadow in it
-ROWS = 6  # lines in the well
+LINES_FONT = smallfont.SmallFont()  # the lines' font (the header's and the buttons' are the game's)
+LINE_H = LINES_FONT.height  # a line's height, its shadow in it
+FILTER_H = 9  # the filters' row: its chips in the game's font
+ROWS = 8  # lines in the well
 TEXT_X = WELL[0] + 7  # where the lines start (after the pip)
 INDENT = 8  # a wrapped line's rows after its first, and each level of a detail line
 HEADER_X, HEADER_Y = 4, 2
@@ -320,11 +323,11 @@ class Geometry(NamedTuple):
 
     @property
     def text_y(self) -> int:
-        return self.well[1] + 2 + (LINE_H if self.filters else 0)
+        return self.well[1] + 2 + (FILTER_H if self.filters else 0)
 
 
 COLLAPSED, DOCKED, EXPANDED = "collapsed", "docked", "expanded"
-SIZES = {COLLAPSED: Geometry(15, 0), DOCKED: Geometry(PANEL_H, ROWS), EXPANDED: Geometry(130, 11, True)}
+SIZES = {COLLAPSED: Geometry(15, 0), DOCKED: Geometry(PANEL_H, ROWS), EXPANDED: Geometry(130, 14, True)}
 SIZE_ORDER = (COLLAPSED, DOCKED, EXPANDED)
 LEVEL_ORDER = (MINIMAL, SHORT, DETAIL)
 LEVEL_NAMES = {MINIMAL: "Least", SHORT: "Short", DETAIL: "Detail"}
@@ -500,7 +503,7 @@ def rows_of(font, lines: List[Line], names: Dict[str, str],
         if line.kind == "round":  # a rule across, the round in the middle
             out.append((line, TEXT_X, [(line.text, "log round")]))
             continue
-        rows = wrap(font, coloured(line.text, f"log {line.kind}", names), width - indent, width - indent - INDENT)
+        rows = wrap(LINES_FONT, coloured(line.text, f"log {line.kind}", names), width - indent, width - indent - INDENT)
         for n, row in enumerate(rows):
             out.append((line if n == 0 else None, TEXT_X + indent + (INDENT if n else 0), row))
     return out
@@ -578,7 +581,7 @@ def filter_rects(font, g: Geometry) -> List[Tuple[str, Tuple[int, int, int, int]
     y = g.well[1] + 1
     for key, label in FILTERS:
         x1 = x + _width(font, label) + 5
-        out.append((key, (x, y, x1, y + LINE_H - 1)))
+        out.append((key, (x, y, x1, y + FILTER_H - 1)))
         x = x1 + 3
     return out
 
@@ -646,18 +649,18 @@ def draw(background: bytes, font, ink: Dict[str, int], top: str, lines: List[Lin
         _button(picture, font, rect, dict(FILTERS)[key], ink, on=key == filt)
     for (line, x, runs), y, right in shown:
         if line is not None and line.kind == "round":
-            label = _width(font, line.text)
+            label = _width(LINES_FONT, line.text)
             mid = (TEXT_X + right) // 2
             for rx in list(range(TEXT_X, mid - label // 2 - 3)) + list(range(mid + label // 2 + 3, right)):
-                picture[(y + 4) * w + rx] = ink["log round"]
-            _text(picture, font, mid - label // 2, y, runs, ink, right)
+                picture[(y + 3) * w + rx] = ink["log round"]
+            _text(picture, LINES_FONT, mid - label // 2, y, runs, ink, right)
         else:
             if line is not None and line.side is not None:
-                _pip(picture, g.well[0] + 2, y + 3, line.side == "party",
+                _pip(picture, g.well[0] + 2, y + 2, line.side == "party",
                      ink["member0"] if line.side == "party" else ink["monster"])
-            _text(picture, font, x, y, runs, ink, right)
+            _text(picture, LINES_FONT, x, y, runs, ink, right)
     if first_row is not None and g.rows:  # the chip: "Latest" and the rows since
-        _button(picture, font, chip_rect(g), chip, ink)
+        _button(picture, LINES_FONT, chip_rect(g), chip, ink)
     return bytes(picture)
 
 
