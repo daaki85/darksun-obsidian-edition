@@ -84,6 +84,31 @@ one can't run it twice. The Draj serf (GPL 60 at CD8h): region 38's way to regio
 10 takes the following serf along within 14; left further behind he stayed,
 without his orders, and talking to him again ran the deal and gave a second
 obelisk gem (-1352). Now within 127.
+
+Pehtucl's ambush at the slave pens' fountain (GPL 145, the Loader's own find): having
+led the party to 60,94 (AFCh), he makes his guards at his square (E7Dh: command 25h,
+4 of object 90, the Arena Guard; E8Bh: 1 of 293, the Guard), then gives hunt orders
+(08h at E99h, E9Dh, EA1h), a no-orders handler (6Fh: GPL 74 at 100) and a sight trigger
+(1Bh: GPL 74 at 89, range 5) to -90, -293 and -37: a negative number is a kind, every
+creature of it in the region, so the pens' eight Arena Guards and two Guards from the
+region file (those still alive) came from across the map too. 25h makes a number by
+calling one routine (4251:0043h) for each in turn, with the same values; the game's
+other scripts give a creature just made its orders as local big number 40 (`89 28`:
+GPL 10 at 10Ch, 52 at F0Bh, 57 at A9Dh), so the repair (E7Dh to EDBh, a detour) makes
+each of the five alone and gives that one the hunt, the handler and the trigger; Pehtucl
+keeps his by his kind (-37: the pens' region file holds one, him). His one other
+kind-wide hunt, at 169h (the party back after escaping, flag 503), is left as it is:
+there the whole pens are meant to be roused; his refusals (898h, D43h) make guards
+and leave the rest to the alarm. The fight's alarm (GPL 137, called at the ambush and
+by every guard's attack trigger in the pens): FB5h lets a yell go unheard ("the roar of
+the fountain masks his voice", flag 511 once) when the one yelling (local 44, located)
+is in the fountain's room, x 54-80 and y over 73; the party, a step behind Pehtucl,
+stands in the passage west of the room's wall (x 53-55, y 92-95), so a guard drawn
+there raised the alarm. The test is now `room or (x 42-80 and y over 90)`, that
+passage up to the wall at x 40-41 (the room west of the fountain's, with the sewer
+grate, is shut off from it at y 89-90 and stays out); its IF, to the alarm at 1081h,
+goes along. Tests: `test_scriptfixes`. Not yet seen in play (the save
+`fountain-user` loads with the ambush about to fire).
 The same sweep checked every RAND comparison and every bit test of a class or
 level: only the tracking's were wrong. A second went through every check on a
 class or its bits, race, sex, item, weapon, thief skill or ability: script 44 at

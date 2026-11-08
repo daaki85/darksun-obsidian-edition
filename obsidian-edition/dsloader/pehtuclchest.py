@@ -41,6 +41,7 @@ SCRIPT = 223  # the chest's (the game's run to 217; the Loader's: Kalzith's 218,
 USE = 0x6D  # (place in a script, script, object): what using the object runs (the cell doors': script 138)
 OBJECT = npcitems.PEHTUCL_CHEST
 DISARMED, UNLOCKED = 795, 796  # the Loader's flags: the needle gone; the lock open
+NEEDLE_SPRUNG = "poisoned needle"  # (in both lines that spring it: the dice log finds them by it)
 TRAP_OBJECT, GAME_TRAP = 2667, 2039  # the poison needle (past the champions' 2660-2666), and its model
 NEEDLE_DICE, NEEDLE_REACH, POISON_KIND = 2, 0, 0  # 2d6, on its square only, poison (DS:251Ch's first)
 TRAP_BYTE = 0x0F  # (the trap object's descriptor, where an item has its spell)
@@ -86,6 +87,11 @@ def script() -> bytes:
     def needle():
         s.op(LOCATE, ACTING)
         s.op(gpl.DO_ACTION, ("n", gpl.ACTION_TRAP), ("n", -TRAP_OBJECT), *WHERE)
+        # the game shows nothing when the party's best at traps avoids it: the Loader, seeing that
+        # roll, sets DISARMED (clear until now: the needle is sprung only while it is) before the
+        # click, and it is told
+        s.op(0x4F, ("n", NARRATION), kalzith.MORE)
+        s.when(kalzith._is(_flag(DISARMED), 1), lambda: tell("The needle is seen in time, and it hurts no one. "))
         s.flag(DISARMED, 1)
 
     def opened():

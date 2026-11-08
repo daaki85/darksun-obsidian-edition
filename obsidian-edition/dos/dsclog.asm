@@ -19687,6 +19687,7 @@ probe_stealth:
         pop word [cs:s_ip]
         pop word [cs:s_cs]
         pop word [cs:s_fl]
+        mov byte [cs:st_now], 0
         test byte [cs:rules], RULE_STEALTH
         jz .push
         cmp si, 3
@@ -19694,6 +19695,7 @@ probe_stealth:
         btr word [cs:stealth], si
         jnc .push
         inc word [cs:stealth_used]
+        mov byte [cs:st_now], 1         ; (this attack the hidden one's: MISSILE_REAR)
         cmp word [bp-0x1C], 0
         jne .push
         push ax
@@ -19726,7 +19728,8 @@ probe_stealth:
 .done:  pop es
         pop bx
         pop ax
-.push:  call item_rear
+.push:  call missile_rear
+        call item_rear
         call thief_rear
         call kit_rear
         call stab_first
@@ -19738,6 +19741,23 @@ probe_stealth:
 s_ip    dw 0
 s_cs    dw 0
 s_fl    dw 0
+st_now  db 0                    ; (1 while PROBE_STEALTH runs for a hidden one's attack)
+
+; MISSILE_REAR: in PROBE_STEALTH, first after the stealth rule: a missile ([BP+0Eh] not 1, melee) is
+; from behind only as a hidden archer's shot (the stealth rule's: unseen, the target's DEX and
+; shield not counting); the game also made one from behind by the target's facing, whatever the
+; distance (a ranger's three arrows from across a room each +2, the target's DEX and shield
+; gone), which is melee's rule: taken back, the +2 off THAC0 [BP-20h]. All registers kept.
+missile_rear:
+        cmp word [bp + 0x0E], 1
+        je .ret
+        cmp byte [cs:st_now], 0
+        jne .ret
+        cmp word [bp - 0x1A], 0
+        je .ret
+        mov word [bp - 0x1A], 0
+        add word [bp - 0x20], 2
+.ret:   ret
 
 ; STAB_FIRST: in PROBE_STEALTH (SI the attacker, a creature; DS the game's), with RULE_HI_BACKSTAB:
 ; only a party member's first attack of a round is a backstab, as in AD&D. The game's own test

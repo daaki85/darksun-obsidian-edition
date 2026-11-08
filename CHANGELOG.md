@@ -48,7 +48,23 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
   for either (the caster, inside the area, Scared too). The bit set (`scare_save`, 4222Fh A0h ->
   A1h). (Found in the manual's review: reports/spells-against-the-manual.md.)
 
+- **Pehtucl's ambush brought every guard in the pens:** his script (GPL 145) made its five guards
+  at the fountain, then sent the whole kind, -90 and -293, hunting: up to ten more Arena Guards and
+  Guards from across the map (a player's save). Now each of the five is made alone and given the
+  hunt, the no-orders handler and the sight trigger itself (local big number 40, as the game's own
+  scripts give a creature just made its orders), Pehtucl his by kind (he is the only -37). And the
+  fountain's yell-masking zone (GPL 137 at FB5h, the fountain's room) takes in the passage before it,
+  where the party stands as he turns (x 42-80, y over 90): a fight there set off the alarm.
+  (`scriptfixes.py`, two repairs. Tests: `test_scriptfixes`. Seen in DOSBox with the player's save:
+  the five made on squares of their own, the fight theirs and Pehtucl's; with the game's script a
+  guard 55 squares off set out at once, with the fix none.)
+
 **Fixed: DSCLOG**
+- **An arrow or sling stone was from behind by the target's facing, at any distance** (+2, the
+  target's DEX and shield lost: a ranger's three arrows from across a room, a player's log), melee's
+  rule. A missile is now from behind only as a hidden archer's shot (the stealth rule), and the
+  dice log says "unseen" for it. (`MISSILE_REAR`, first in `PROBE_STEALTH`; `st_now`. Tests:
+  `test_missile_from_behind_only_unseen`, `test_unseen_shot`.)
 - **A thief's later attacks in a round could still backstab:** with **A backstab multiplies the
   weapon's dice only**, only the round's first attack is meant to be a backstab, but the count it
   read (`[BP-14h]`) leaves the off-hand swing out, so a thief with two weapons and a weapon spec's
@@ -75,6 +91,12 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
   reused the number") when the Loader had made it the bow its weapon spec asks for, in the same
   record. An item made into another where it was (its number still the same member's, the record
   not freed) is no loss. (`itemwatch.changed_in_place`. Test: `test_changed_in_place`.)
+- **A needle avoided said nothing:** Pehtucl's chest's needle sprung and the party's best at traps
+  rolling clear of it, the game showed nothing, and it read as no trap. The Loader sees that roll
+  beside the needle's narration and sets the needle's flag (DISARMED, clear until then); the
+  script, after a click, says "The needle is seen in time, and it hurts no one." (No flag of the
+  game's 808 was free.) (`DiceLog._needle_check`, `pehtuclchest.script`. Test:
+  `test_needle_avoided`. Seen in DOSBox: Seneca's 22 against 52, the line, then the chest opened.)
 - **Pehtucl's chest opened anyway in a game from before 2.14.0** ("You must be next to the chest
   ...", then its window): such a game made the game's plain chest as it came to the pens, but gets
   the chest's USE command all the same, and the game opens a plain chest as a USE script ends,

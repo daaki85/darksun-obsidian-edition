@@ -33,6 +33,10 @@ as it is).
 - Region 9's messenger (the slaves' rising from the sand) came only if the party left the region
   and came back after the elves had gone; now he comes. The Draj serf left behind on the way to
   region 10 gave a second obelisk gem; now he comes along.
+- The slave pens: Pehtucl's ambush at the fountain sent every Arena Guard and Guard in the pens
+  after the party, not only the five it makes; now those five (and Pehtucl). And a guard attacked
+  in the passage before the fountain, where the party stands, raised the alarm the fountain's
+  roar masks in its room; now there too.
 
 (The OpenDS fix that starts the final battle's stages without their pause is left out: with the
 game's clock running, the stage gate waits its window out as it should.)
@@ -90,6 +94,62 @@ def _grate_hack_fails() -> Tuple[bytes, Tuple[int, ...]]:
 
 
 _FAILS, _FAILS_RELOCATE = _grate_hack_fails()
+
+# Pehtucl's ambush at the fountain (GPL 145 at E7Dh, the slave pens): his guards, made at his
+# square (command 25h: kind, how many, x, y, ...; the game's makes each of a number in turn, the
+# same routine for each), then hunt orders (08h), a no-orders handler (6Fh: GPL 74 at 100) and a
+# sight trigger (1Bh: GPL 74 at 89, range 5), each given to a kind (-90 Arena Guard, -293 Guard,
+# -37 Pehtucl): every creature of that kind in the region, so the pens' other guards came from
+# across the map. Now each guard is made alone and the orders go to the one just made (local big
+# number 40, as the game's other scripts give a new creature its orders: GPL 10, 52, 57); Pehtucl's
+# by his kind as before (the pens hold one -37, him)
+CREATE, HUNT, NO_ORDERS, SIGHT = 0x25, 0x08, 0x6F, 0x1B
+MADE = ("var", 137, 40)  # (the creature command 25h made last)
+AMBUSH = ((-90, 4), (-293, 1))  # (kind, how many: the game's)
+AMBUSH_HANDLERS = (100, 74), (89, 74)  # (place, script) of the no-orders handler and the sight trigger
+
+
+def _orders(who) -> bytes:
+    (idle_at, idle), (sight_at, sight) = AMBUSH_HANDLERS
+    return (gpl.encode_op((HUNT, [who])) + gpl.encode_op((NO_ORDERS, [("n", idle_at), ("n", idle), who]))
+            + gpl.encode_op((SIGHT, [("n", sight_at), ("n", sight), who, ("n", 5)])))
+
+
+def _ambush() -> Tuple[bytes, bytes]:
+    """(the game's bytes at GPL 145's E7Dh, to EDBh; the ambush's guards hunting alone)."""
+    where = (("var", 137, 33), ("var", 137, 34))  # (Pehtucl's square: command 09h on him, at E7Ah)
+
+    def create(kind: int, count: int) -> bytes:
+        return gpl.encode_op((CREATE, [("n", kind), ("n", count), *where, ("n", 6), ("n", 1)]))
+    was = bytes.fromhex("259100" "5a8f04892189228f068f01" "259101258f01892189228f068f01"
+                        "0891005a" "08910125" "08910025"
+                        "6f0064004a91005a" "6f0064004a910125" "6f0064004a910025"
+                        "1b0059004a91005a8f05" "1b0059004a9101258f05" "1b0059004a9100258f05")
+    now = b"".join(create(kind, 1) + _orders(MADE) for kind, count in AMBUSH for _ in range(count))
+    return was, now + _orders(("n", -37))
+
+
+_AMBUSH_WAS, _AMBUSH_NOW = _ambush()
+
+# GPL 137 at FB5h: a guard (or Pehtucl) attacked within the fountain's room (x 54-80, y over 73)
+# doesn't raise the alarm, "the roar of the fountain masks his voice"; the ambush is at its south
+# edge (Pehtucl stops at 60,94), and the party, following him, stands in the passage west of the
+# room's wall (x 53-55, y 92-95), so a fight there raised it. Now the passage too, from the wall
+# at x 40-41 (y over 90)
+X, Y = ("var", 137, 33), ("var", 137, 34)
+FOUNTAIN_ROOM = (53, 81, 73)  # (x over, x under, y over: the game's)
+FOUNTAIN_PASSAGE = (41, 81, 90)
+
+
+def _zone(x_over: int, x_under: int, y_over: int) -> list:
+    return ["(", X, ">", ("n", x_over), ")", "and", "(", X, "<", ("n", x_under), ")", "and",
+            "(", Y, ">", ("n", y_over), ")"]
+
+
+_FOUNTAIN_WAS = bytes.fromhex("18e28921d98f35e1d5e28921da8f51e1d5e28922d98f49e1" "3e1081")
+_FOUNTAIN_NOW = (gpl.encode_op((TEST, [("expr", ["(", *_zone(*FOUNTAIN_ROOM), ")", "or",
+                                                  "(", *_zone(*FOUNTAIN_PASSAGE), ")"])]))
+                 + _FOUNTAIN_WAS[-3:])  # (its IF, to the alarm, kept)
 
 REPAIRS = (
     Repair(41, 0x1D, bytes.fromhex("66090900c8"), bytes.fromhex("6600010029"),
@@ -201,6 +261,12 @@ REPAIRS = (
     # deal and gave a second obelisk gem (-1352). Now within 127 (yuan-ti's, off by default there)
     Repair(60, 0xCD8, bytes.fromhex("18e28c808925910103e1da8f0e"), bytes.fromhex("18e28c808925910103e1da8f7f"),
            "the Draj serf comes along to region 10 however far behind"),
+    # The slave pens: Pehtucl's ambush at the fountain hunts the party with its own guards only, and
+    # a fight in the passage before the fountain doesn't raise the alarm (above)
+    Repair(145, 0xE7D, _AMBUSH_WAS, _AMBUSH_NOW,
+           "Pehtucl's ambush: only the guards he calls hunt the party, not every guard in the pens"),
+    Repair(137, 0xFB5, _FOUNTAIN_WAS, _FOUNTAIN_NOW,
+           "the fountain's roar masks a guard's yell in the passage before it too"),
 )
 
 

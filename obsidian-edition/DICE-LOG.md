@@ -32,7 +32,7 @@ README.*
 **Attack rolls, in more detail.** `hits on anything but a 1` or `only a 20 hits`
 replace `needs 12+` when the roll is out of the ordinary range. `X attacks Y
 from behind ...` and `X attacks Y BACKSTAB ...` mark attacks from behind and
-backstabs (see [Attacks from behind and
+backstabs, and `X attacks Y unseen ...` a hidden archer's shot (see [Attacks from behind and
 backstabs](HOW-THE-GAME-WORKS.md#attacks-from-behind-and-backstabs)). A
 thri-kreen of the party with nothing in hand attacks `with a claw (1d4)`, four
 times a round, then `with its bite (1d4+1)`, whose damage line shows its

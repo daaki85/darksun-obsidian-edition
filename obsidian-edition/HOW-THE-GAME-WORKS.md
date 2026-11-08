@@ -112,7 +112,11 @@ From the game's code:
   to face that attacker (one of eight directions), and it keeps facing that
   way for the rest of the round. So a second attacker on the far side, later
   in the same round, attacks from behind. (Its own attacks don't turn it.)
-  It gets +2 to hit, and the target loses its DEX bonus and its shield.
+  It gets +2 to hit, and the target loses its DEX bonus and its shield. The
+  game counted a missile from behind the same way, at any distance (an archer
+  across the room); with the Loader a missile is never from behind by the
+  target's facing, only as a hidden archer's shot, "unseen" (the stealth rule:
+  [Hiding in shadows to backstab](FEATURES.md#hiding-in-shadows-to-backstab)).
 - A **backstab** is an attack from behind by a thief, in melee, with a weapon
   that isn't too heavy (the game's weight value at most 40, a metal long
   sword's). It gets another +2 to hit (+4 in all), and on the thief's first

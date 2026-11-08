@@ -163,10 +163,10 @@ def two_hands(m):
 
 
 class AttackTests(unittest.TestCase):
-    def attack(self, d20, thac0, ac, item, item_type, after_f1, hit_bonus, attacker=0, combatant=0, **flags):
+    def attack(self, d20, thac0, ac, item, item_type, after_f1, hit_bonus, attacker=0, combatant=0, mode=1, **flags):
         # attack(): [BP+6] dword, THAC0, AC, attacker, sheet, item, item type, mode 1, attacker combatant,
         # two more, backstab, from behind
-        frame = words(0, 0, 0, 0, thac0, ac, attacker, 0, item, item_type, 1, combatant, 0, 0,
+        frame = words(0, 0, 0, 0, thac0, ac, attacker, 0, item, item_type, mode, combatant, 0, 0,
                       1 if flags.get("m24") else 0, 1 if flags.get("m1a") else 0)
         parent_locals = locals_at(0x28, m20=after_f1, m8=hit_bonus, **flags)
         return entry(raw_for(d20, 20), dicelog.ATTACK_SITE, frame, glob=(0x29, 0, 0, 0), parent_locals=parent_locals)
@@ -187,6 +187,14 @@ class AttackTests(unittest.TestCase):
         self.assertEqual(lines, [
             "Dag attacks Mountain Stalker from behind with Wooden Long Sword (1d8): d20 = 5, needs 9+ (60%), hits AC 6, target AC 2 -> miss",
             "    THAC0 16, +2 from behind, +6 STR, -3 wooden = 11"])
+
+    def test_unseen_shot(self):
+        """A missile from behind is a hidden archer's shot (DSCLOG's MISSILE_REAR takes the game's
+        from behind back for missiles): "unseen", not "from behind"."""
+        log = make_game()
+        lines = log.describe(self.attack(5, 11, 2, 6, 10, after_f1=8, hit_bonus=-3, m1a=1, mode=2))
+        self.assertIn(" unseen with ", lines[0])
+        self.assertIn("+2 unseen", lines[1])
 
     def test_miss_floats_over_the_target(self):
         """A miss floats "Miss" over its target (labels.py); a hit floats nothing."""
@@ -1436,6 +1444,32 @@ class NewLinesTests(unittest.TestCase):
                 mock.patch.object(log, "_new_gear", return_value=False):
             log._gear_due()
         self.assertEqual((m[HDR + dicelog.TSR_GEAR_DUE], m[HDR + dicelog.TSR_GEAR_GIVEN]), (1, 0))
+
+    def test_needle_avoided(self):
+        """Pehtucl's chest's needle sprung (its narration) and a find/remove traps success within
+        NEEDLE_WINDOW, either first: its flag set (DISARMED), for the chest's script to tell after
+        its click; the narration alone, or a roll alone, sets nothing."""
+        from unittest import mock
+        from dsloader.textlog import DialogueEntry
+        from dsloader import pehtuclchest
+        log = make_game()
+        sprung = DialogueEntry(0, text="Lex smashes at the lock, breaking it open, and a poisoned needle springs from it!")
+        with mock.patch.object(log.game, "flags_ready", return_value=True), \
+                mock.patch.object(log.game, "set_flag") as set_flag, mock.patch.object(dicelog.time, "monotonic") as clock:
+            clock.return_value = 100.0
+            log._dialogue = [sprung]
+            log.take_dialogue()
+            set_flag.assert_not_called()
+            clock.return_value = 101.0
+            log._avoided_at = 101.0  # (as _thief_skill notes a find/remove traps success)
+            log._needle_check()
+            set_flag.assert_called_once_with(pehtuclchest.DISARMED)
+            set_flag.reset_mock()
+            clock.return_value = 200.0  # (the roll first, a needle long after: nothing)
+            log._avoided_at = 150.0
+            log._dialogue = [sprung]
+            log.take_dialogue()
+            set_flag.assert_not_called()
 
     def test_poison_damage_named(self):
         """A poison's fixed 10 (a Poisoner's hit, a monster's) is the poison's, not an earlier

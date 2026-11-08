@@ -273,6 +273,7 @@ LOAD_SETTLE = 3.0  # seconds after the party changes (a game was loaded) when ef
 DRESSER_RETRY = 30.0  # seconds before the party's figures are tried again when the game's files couldn't be read
 NATURAL_JUMP = 2 * 24 * 60 * 60  # game seconds between looks past which the clock may be a load's: aging waits a look
 PENDING_SECONDS = 1.0  # how long dice wait to learn which spell they belong to
+NEEDLE_WINDOW = 5.0  # seconds between a trap's narration and the roll avoiding it (_needle_check)
 SPELL_WINDOW = 15.0  # seconds after a spell's roll in which HP changes are put down to the spell
 RECENT_DAMAGE = 8  # spell damages kept to tell an HP loss's spell by its amount (two walls at once)
 HITS_MATCHED = 8  # weapon hits waiting on one target at most, for matching an HP fall to them
@@ -2003,7 +2004,25 @@ class DiceLog:
         """Dialogue that has come in since the last call (lines() collects it)."""
         out, self._dialogue = self._dialogue, []
         self.itemwatch.remember_talk(out)
+        if any(e.text and pehtuclchest.NEEDLE_SPRUNG in e.text for e in out):
+            self._needle_at = time.monotonic()
+            self._needle_check()
         return out
+
+    def _needle_check(self) -> None:
+        """Pehtucl's chest's needle sprung (its narration) and the party's best at find/remove traps
+        rolling a success to avoid it (the game's trap roll, the same moment, either first): the
+        needle's flag (pehtuclchest.DISARMED) set, which the chest's script then tells after its click. The game shows nothing when a
+        trap is avoided, and a needle that sprang and hurt no one read as no trap at all."""
+        needle, avoided = getattr(self, "_needle_at", None), getattr(self, "_avoided_at", None)
+        if needle is None or avoided is None or abs(needle - avoided) > NEEDLE_WINDOW:
+            return
+        self._needle_at = self._avoided_at = None
+        try:
+            if self.game.flags_ready():
+                self.game.set_flag(pehtuclchest.DISARMED)  # (clear while the needle springs: the script tells it)
+        except (OSError, struct.error, IndexError, ValueError):
+            pass
 
     def _natural_aging(self) -> List[str]:
         """Each party member a year older for each year of the game's clock (aging.YEAR) not yet
@@ -2416,6 +2435,9 @@ class DiceLog:
         if chance <= -500:  # the game takes 1000 off when an effect makes it impossible
             return [f"{head} -> failure (an effect stops it)"]
         head += f", needs {chance} or less -> {'success' if roll <= chance else 'failure'}"
+        if name == "find/remove traps" and roll <= chance:  # (perhaps avoiding a trap: _needle_check)
+            self._avoided_at = time.monotonic()
+            self._needle_check()
         creature = self.game.combatant_creature(who)
         parts = self.game.thief_skill_parts(creature, skill) if creature is not None else None
         if parts is None:
@@ -2478,8 +2500,10 @@ class DiceLog:
         with_what = f" with {g.weapon_name(weapon)} ({weapon.dice()})" if weapon else \
             f" with {'its' if natural[0] == 'bite' else 'a'} {natural[0]} ({natural[1]})" if natural else ""
         target = g.combatant_name(target_combatant)
-        # the attack's own arguments: [BP+1Eh] a backstab, [BP+20h] from behind
-        how = " BACKSTAB" if e.arg(0x1E) and e.arg(0x20) else " from behind" if e.arg(0x20) else ""
+        # the attack's own arguments: [BP+1Eh] a backstab, [BP+20h] from behind (a missile only as a
+        # hidden archer's shot, DSCLOG's MISSILE_REAR: unseen)
+        rear = "unseen" if mode is not None and mode > 1 else "from behind"
+        how = " BACKSTAB" if e.arg(0x1E) and e.arg(0x20) else f" {rear}" if e.arg(0x20) else ""
         chance = hit_chance(need)
         needs = ("hits on anything but a 1" if need <= 2 else "only a 20 hits" if need > 20 else f"needs {need}+")
         head = (f"{g.creature_name(attacker)} attacks {target}{how}{with_what}: d20 = {d20}{note}, "
@@ -2514,7 +2538,8 @@ class DiceLog:
         rear_hit = min((kits.rear_to_hit(k) for k in g.kit_ids(attacker)), default=kits.REAR) \
             if attacker < game.PARTY_SIZE else kits.REAR  # (DSCLOG's KIT_REAR)
         if rear:
-            parts.append(("from behind" + (" (Rescuer)" if rear_hit != kits.REAR else ""), rear_hit))
+            what = "unseen" if mode is not None and mode > 1 else "from behind"  # (a missile: a hidden archer's)
+            parts.append((what + (" (Rescuer)" if rear_hit != kits.REAR else ""), rear_hit))
         if backstab:
             parts.append(("backstab", 2))
         situational = base - after_f1 - rear_hit * bool(rear) - 2 * bool(backstab)

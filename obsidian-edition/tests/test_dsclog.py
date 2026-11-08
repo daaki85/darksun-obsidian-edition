@@ -4495,7 +4495,7 @@ class StealthTests(unittest.TestCase):
         self.hdr = TSR * 16 + image.find(HDR_SIG)
         at = image.find(bytes.fromhex("2ef606") + struct.pack("<H", 170) + bytes([64]))
         self.assertGreater(at, 0)
-        mu.mem_write(VEC_STEALTH * 4, struct.pack("<HH", at - 15, TSR))  # (after its three pops)
+        mu.mem_write(VEC_STEALTH * 4, struct.pack("<HH", at - 21, TSR))  # (its three pops and "mov byte [cs:st_now],0" before it)
         mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
         mu.mem_write(GAME_DS * 16 + 0x1661, struct.pack("<HH", 0, self.SHEETS))
         mu.mem_write(GAME_DS * 16 + 0x1669, struct.pack("<HH", 0, self.TYPES))
@@ -4554,6 +4554,16 @@ class StealthTests(unittest.TestCase):
     def test_rule_off(self):
         self.mu.mem_write(TSR * 16 + 170, struct.pack("<H", 0))
         self.assertEqual(self.attack(), (0, 0, 15, 0, 0b0100, 0))
+
+    def test_missile_from_behind_only_unseen(self):
+        """MISSILE_REAR: a missile is from behind only as a hidden archer's shot (unseen: +2, the
+        target's DEX and shield not counting); the game's from behind by the target's facing is
+        taken back for a missile (its +2 too), whatever the rule; melee keeps it."""
+        self.assertEqual(self.attack(melee=2, behind=1, thac0=13, hidden=0)[:3], (0, 0, 15))
+        self.assertEqual(self.attack(melee=2)[:3], (1, 0, 13))  # (hidden: unseen)
+        self.assertEqual(self.attack(melee=1, behind=1, thac0=13, hidden=0)[:3], (1, 0, 13))
+        self.mu.mem_write(TSR * 16 + 170, struct.pack("<H", 0))  # (the stealth rule off)
+        self.assertEqual(self.attack(melee=2, behind=1, thac0=13, hidden=0)[:3], (0, 0, 15))
 
     def test_backstab_first_attack_only(self):
         """STAB_FIRST (RULE_HI_BACKSTAB): a party member's later attacks in the same round (the

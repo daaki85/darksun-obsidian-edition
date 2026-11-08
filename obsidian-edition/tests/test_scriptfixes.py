@@ -6,7 +6,9 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import scriptfixes as sf
+from dsloader import gpl, scriptfixes as sf
+
+GPLDATA = os.environ.get("DSUN_GPLDATA")
 
 
 def script_with(script: int, size: int = 0x800) -> bytes:
@@ -17,6 +19,29 @@ def script_with(script: int, size: int = 0x800) -> bytes:
         if r.script == script:
             code[r.at:r.at + len(r.was)] = r.was
     return bytes(code)
+
+
+def _value(parts, values, at=0):
+    """An expression's value (its parts as gpl.decode gives them, VALUES for its variables), read
+    as the game does: left to right, brackets first. With AT, (value, where it stopped)."""
+    ops = {">": lambda a, b: a > b, "<": lambda a, b: a < b, "and": lambda a, b: bool(a and b),
+           "or": lambda a, b: bool(a or b)}
+    value, op, i = None, None, at
+    while i < len(parts):
+        p = parts[i]
+        if p == ")":
+            break
+        if p == "(":
+            term, i = _value(parts, values, i + 1)
+        elif isinstance(p, str):
+            op = p
+            i += 1
+            continue
+        else:
+            term = values.get(p, p[1] if p[0] == "n" else None)
+        value = term if op is None else ops[op](value, term)
+        i += 1
+    return (value, i) if at else value
 
 
 class RepairTests(unittest.TestCase):
@@ -82,6 +107,37 @@ class RepairTests(unittest.TestCase):
         serf = next(r for r in sf.REPAIRS if r.script == 60)
         self.assertEqual((serf.was[-1], serf.now[-1], serf.now[:-1]), (14, 127, serf.was[:-1]))
 
+    def test_ambush_orders_its_own_guards(self):
+        # each guard made alone, then the orders to the one made (local big number 40); no kind of
+        # guard ordered as a whole; Pehtucl's by his kind
+        ambush = next(r for r in sf.REPAIRS if (r.script, r.at) == (145, 0xE7D))
+        ops = gpl.decode(ambush.now, b"")
+        made = [o.args[:2] for o in ops if o.code == sf.CREATE]
+        self.assertEqual(made, [[("n", -90), ("n", 1)]] * 4 + [[("n", -293), ("n", 1)]])
+        ordered = [o.args[-1] if o.code == sf.HUNT else o.args[2] for o in ops if o.code in (sf.HUNT, sf.NO_ORDERS, sf.SIGHT)]
+        self.assertEqual(ordered, [sf.MADE] * 15 + [("n", -37)] * 3)
+        for kind in (-90, -293):
+            self.assertNotIn(("n", kind), [a for o in ops if o.code != sf.CREATE for a in o.args])
+        was = gpl.decode(ambush.was, b"")
+        self.assertEqual([o.args[2] for o in was if o.code == sf.SIGHT], [("n", -90), ("n", -293), ("n", -37)])
+        self.assertEqual(sorted({tuple(o.args[2:]) for o in ops if o.code == sf.CREATE}),
+                         sorted({tuple(o.args[2:]) for o in was if o.code == sf.CREATE}))  # (where, as the game's)
+
+    def test_fountain_masks_the_passage_too(self):
+        fountain = next(r for r in sf.REPAIRS if (r.script, r.at) == (137, 0xFB5))
+        test, = [o for o in gpl.decode(fountain.now, b"") if o.code == sf.TEST]
+        self.assertEqual(fountain.now[-3:], bytes.fromhex("3e1081"))  # (its IF, to the alarm, kept)
+        masked = lambda x, y: _value(test.args[0][1], {sf.X: x, sf.Y: y})
+        for x, y in ((54, 74), (80, 95), (60, 94), (55, 93), (53, 93), (42, 95), (42, 91)):
+            self.assertTrue(masked(x, y), (x, y))  # the room, as the game's, and the passage west of it
+        for x, y in ((41, 94), (35, 94), (53, 80), (46, 86), (81, 94), (60, 73), (50, 90)):
+            self.assertFalse(masked(x, y), (x, y))  # the alarm, as the game's
+        game, = [o for o in gpl.decode(fountain.was, b"") if o.code == sf.TEST]
+        for x in range(30, 90):
+            for y in range(60, 97):
+                if _value(game.args[0][1], {sf.X: x, sf.Y: y}):
+                    self.assertTrue(masked(x, y))
+
     def test_too_long_a_script_left_alone(self):
         code = script_with(31, sf._longest())
         self.assertEqual(sf.repaired(31, code), code)
@@ -98,6 +154,54 @@ class RepairTests(unittest.TestCase):
         changed = sf.script_chunks(game, out)
         self.assertEqual(set(changed), {("GPL ", 68), ("GPL ", 100)})
         self.assertEqual(sf.script_chunks({}, {}), {})
+
+
+@unittest.skipUnless(GPLDATA and os.path.isfile(GPLDATA), "needs the game's GPLDATA.GFF (DSUN_GPLDATA)")
+class FountainTests(unittest.TestCase):
+    """In the Loader's copy of the game's scripts: Pehtucl's ambush (GPL 145) orders only the
+    guards it makes, and the fountain (GPL 137) masks a yell in the passage before it."""
+
+    @classmethod
+    def setUpClass(cls):
+        from dsloader import kalzith
+        with open(GPLDATA, "rb") as f:
+            data = f.read()
+        cls.game, cls.types = gpl.load_scripts(data)
+        cls.out = kalzith.script_chunks(data)
+
+    def ops(self, script):
+        return gpl.decode(self.out[("GPL ", script)], self.types)
+
+    def test_ambush(self):
+        game = gpl.decode(self.game[("GPL ", 145)], self.types)
+        ops = self.ops(145)
+        at = {o.at: o for o in ops}
+        self.assertEqual((at[0xE7D].code, at[0xEDB].args), (sf.JUMP, [("n", 0), ("var", 13, 555)]))
+        detour = [o for o in ops if o.at >= at[0xE7D].args[0][1]]
+        self.assertEqual(detour[-1].code, sf.JUMP)
+        self.assertEqual(detour[-1].args, [("n", 0xEDB)])
+        ordered = lambda o: o.code in (sf.HUNT, sf.NO_ORDERS, sf.SIGHT)
+        self.assertEqual(sum(1 for o in detour if o.code == sf.CREATE), 5)
+        self.assertEqual({(o.args[-1] if o.code == sf.HUNT else o.args[2]) for o in detour if ordered(o)},
+                         {sf.MADE, ("n", -37)})
+        # the kinds ordered as a whole now only where the alarm is up (Pehtucl's other cases)
+        kinds = lambda ops: sorted(o.at for o in ops if o.code == sf.HUNT and o.args[0] in (("n", -90), ("n", -293)))
+        self.assertEqual(kinds(game), [0x169, 0x16D, 0xE99, 0xE9D])
+        self.assertEqual(kinds(ops), [0x169, 0x16D])
+
+    def test_fountain(self):
+        ops = self.ops(137)
+        at = {o.at: o for o in ops}
+        self.assertEqual(at[0xFB2].code, 0x09)  # (the one yelling located)
+        self.assertEqual(at[0xFB5].code, sf.JUMP)
+        start = at[0xFB5].args[0][1]
+        test = at[start]
+        self.assertEqual(test.code, sf.TEST)
+        self.assertTrue(_value(test.args[0][1], {sf.X: 53, sf.Y: 94}))
+        self.assertFalse(_value(test.args[0][1], {sf.X: 35, sf.Y: 94}))
+        after = [o for o in ops if o.at > start]
+        self.assertEqual((after[0].code, after[0].args), (sf.IF, [("n", 0x1081)]))
+        self.assertEqual((after[1].code, after[1].args), (sf.JUMP, [("n", 0xFD0)]))
 
 
 if __name__ == "__main__":
