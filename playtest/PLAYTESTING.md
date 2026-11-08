@@ -37,6 +37,14 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
    installs most of them, below).
 2. The game: `sh setup_game.sh` (the GOG installer from the user's Google Drive, file id in the
    script, extracted with innoextract into `$DS_GAME`).
+   Wake of the Ravager, the sequel, for comparing (its code, data and README; nothing in the kit
+   plays it): `sh setup_ravager.sh`, the GOG installer from the same Drive folder, into
+   `$WORK/rav`. Its DSUN.EXE is laid out otherwise: the creature/sheet records 42h bytes at the far
+   pointer DS:19C5h, a class's level at +1Eh, its class at +1Bh; the XP table is RESOURCE.GFF's
+   DATA 1000 (8 rows of 20 words, in hundreds, looked up by `lcall 5C8:20` with 3E8h); much of the
+   code is in overlays, so a far call's segment isn't a place in the file. Its level-up (95860h on)
+   caps XP at the table's entry 3 levels past each class's own, then raises a class under 15
+   (2026-11-08: no race limits, whatever its README says).
 3. `sh start.sh`: Xvfb `:55`, the Loader's patched game (`prepare_patched_game`, so a rebuild is a
    restart), DOSBox, and the Loader's dice log (`$WORK/dice.txt`). Kills any old ones.
 4. **Check the build under test is in place** (every restart): the game runs
