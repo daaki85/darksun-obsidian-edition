@@ -2134,8 +2134,10 @@ class DiceLog:
         self._acted.add(turn)
         self._set_stealth(False)  # the last turn's hiding is over
         now = self.game.game_time()
-        if self._round_time is None or now is None or now - self._round_time > FIGHT_GAP:
-            return []  # not in a fight
+        if self._round_time is None or now is None or now - self._round_time > FIGHT_GAP \
+                or not self._fighting():
+            return []  # not in a fight (game time barely moves out of one: the leader changed
+            #             just after a fight looked like a new turn, and a thief rolled its hiding)
         name = self.game.combatant_name(turn)
         out = [f"{name}'s turn"] if name != "?" else []
         if self.rules & game.RULE_STEALTH and turn < game.PARTY_SIZE:
@@ -3139,13 +3141,12 @@ class DiceLog:
         if adjustment:
             steps += f", {signed(adjustment)} {game.RACE_NAMES.get(race, f'race {race}')}"
         steps += f" = {value}"
-        minimums = [(g.class_minimum(c, ability), c) for c in classes if c]
+        minimums = [(game.CREATION_MINIMUMS.get(c, {}).get(ability, 0), c) for c in classes if c]
         if minimums:
             least, cls = max(minimums)
             if value < least:
                 name = game.CREATION_CLASS_NAMES.get(cls, f"class {cls}")
-                why = "prime requisite" if least == game.CREATION_PRIME_MINIMUM else "least"
-                steps += f", raised to {least} (the {name}'s {why})"
+                steps += f", raised to {least} (the {name}'s minimum)"
                 value = least
         return value, f"Character creation, {ABILITIES[ability]} {value}: {steps}"
 

@@ -66,11 +66,12 @@ behind](obsidian-edition/README.md#updating-backups-saved-games-and-the-loaders-
 
 ## What's new
 
-**Obsidian Edition 2.14.0** is out ([release notes](release-notes/v2.14.0.md)):
-hidden thieves and invisible figures are drawn see-through, six champions come to
-the arena after Scar's death, Pehtucl's chest is locked and trapped, Thornwall
-comes after Semyon's tip, the game's people wear their gear from the start, and
-Kalzith has a face of his own.
+**Obsidian Edition 2.14.1** is out ([release notes](release-notes/v2.14.1.md)):
+each class's least scores at creation are the manual's, a class whose prime
+requisites are all 16 or more earns 10% more XP, the game's Great Axe +3 is
+metal, and bows the Loader gave shoot again. 2.14.0 brought see-through hidden
+and invisible figures, the champions' bout after Scar's death, Pehtucl's locked
+and trapped chest, and the game's people wearing their gear from the start.
 
 Every release has notes of its own, in [`release-notes`](release-notes).
 

@@ -14,18 +14,22 @@ ITEMS = 0x2000
 
 class FakeGd:
     """Items 5, 6, 7 in that list order (the links at +4): the arrows (ammo slot), the bow
-    (missile slot), a sword."""
+    (missile slot), a sword; in one list, or each in its own (LISTS)."""
 
-    def __init__(self, slots):
+    def __init__(self, slots, lists=None):
+        """LISTS: each item's list (game.CREATURE_ITEM_LISTS), all the held one by default."""
         self.mem = bytearray(0x10000)
         self.ds = 0x100
         struct.pack_into("<HH", self.mem, self.ds * 16 + game.ITEMS_PTR, 0, ITEMS // 16)
-        self.order = (5, 6, 7)
-        for n, (index, slot) in enumerate(zip(self.order, slots)):
-            rec = bytearray(game.ITEM_SIZE)
-            struct.pack_into("<H", rec, game.ITEM_NEXT, self.order[n + 1] if n + 1 < len(self.order) else game.NO_ITEM)
-            rec[game.ITEM_SLOT], rec[0] = slot, index  # (+0: a mark of which item it was)
-            self.mem[ITEMS + index * game.ITEM_SIZE:ITEMS + (index + 1) * game.ITEM_SIZE] = rec
+        lists = lists or (game.CREATURE_ITEM_LISTS[1],) * 3
+        self.orders = {f: [i for i, l in zip((5, 6, 7), lists) if l == f] for f in game.CREATURE_ITEM_LISTS}
+        for field, order in self.orders.items():
+            for n, index in enumerate(order):
+                slot = slots[(5, 6, 7).index(index)]
+                rec = bytearray(game.ITEM_SIZE)
+                struct.pack_into("<H", rec, game.ITEM_NEXT, order[n + 1] if n + 1 < len(order) else game.NO_ITEM)
+                rec[game.ITEM_SLOT], rec[0] = slot, index  # (+0: a mark of which item it was)
+                self.mem[ITEMS + index * game.ITEM_SIZE:ITEMS + (index + 1) * game.ITEM_SIZE] = rec
         gd = self
 
         class Guest:
@@ -40,12 +44,13 @@ class FakeGd:
     def rec(self, index):
         return bytes(self.mem[ITEMS + index * game.ITEM_SIZE:ITEMS + (index + 1) * game.ITEM_SIZE])
 
-    def _worn(self, member):
-        index = self.order[0]
-        while index != game.NO_ITEM:
-            rec = self.rec(index)
-            yield index, rec, b""
-            index = struct.unpack_from("<H", rec, game.ITEM_NEXT)[0]
+    def _worn(self, member, lists=game.CREATURE_ITEM_LISTS):
+        for field in lists:
+            index = self.orders[field][0] if self.orders[field] else game.NO_ITEM
+            while index != game.NO_ITEM:
+                rec = self.rec(index)
+                yield index, rec, b""
+                index = struct.unpack_from("<H", rec, game.ITEM_NEXT)[0]
 
 
 class BowAheadTests(unittest.TestCase):
@@ -64,6 +69,16 @@ class BowAheadTests(unittest.TestCase):
             before = bytes(gd.mem)
             weaponchoice.bow_ahead(gd, 0)
             self.assertEqual(bytes(gd.mem), before)
+
+    def test_lists_apart(self):
+        """The arrows in the worn list and the bow in the held one, as a party member keeps them
+        (pickpocket.list_for): as it is. A swap put the bow in the worn list, where the game doesn't
+        look for a missile weapon: it couldn't shoot until it was put on again."""
+        worn, held, _ = game.CREATURE_ITEM_LISTS
+        gd = FakeGd((weaponchoice.AMMO_SLOT, weaponchoice.MISSILE_SLOT, 3), (worn, held, held))
+        before = bytes(gd.mem)
+        weaponchoice.bow_ahead(gd, 0)
+        self.assertEqual(bytes(gd.mem), before)
 
 
 if __name__ == "__main__":

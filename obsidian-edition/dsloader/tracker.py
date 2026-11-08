@@ -4,12 +4,16 @@ The log notes each kill and, when the party's XP goes up (right after a kill the
 lists what each character gained and for which kills, with each one's XP value from its
 character sheet. A kill alone shows no XP: not every one gives the party any (the opening
 fight in the arena gives none, whoever dies).
+
+The game gives no bonus for high prime requisites, which the manual promises: 10% more XP for a
+class whose prime requisites are all 16 or more. The tracker adds it to each gain it sees
+(prime_bonus), whatever it came from.
 """
 
 import struct
 from typing import Dict, List, NamedTuple, Optional, Tuple
 
-from . import game
+from . import aging, game
 from .game import CLASS_NAMES, GameData, ordinal
 
 XP_SETTLE = 0.5  # seconds to wait for every party member's XP to change
@@ -23,6 +27,40 @@ LOSS_WAIT = 60.0
 # the arena, "is killed", on leaving the pens). A creature gone from the table counts as
 # killed only in the same area, its record still its own, and not when all of many go at once.
 MASS_VANISH = 3
+# The manual's prime requisites (0 STR to 5 CHA) of each class on a character sheet (CLASS_NAMES):
+# a class whose prime requisites are all PRIME_BONUS_SCORE or more gains PRIME_BONUS_PERCENT more XP.
+PRIME_REQUISITES = {**{c: (4,) for c in (1, 2, 3, 4)}, **{c: (4, 5) for c in (5, 6, 7, 8)},
+                    9: (0,), 10: (0,), 11: (3,), 12: (2, 4), **{c: (0, 1, 4) for c in (13, 14, 15, 16)},
+                    17: (1,)}
+PRIME_BONUS_SCORE, PRIME_BONUS_PERCENT = 16, 10
+ABILITY_NAMES = ("STR", "DEX", "CON", "INT", "WIS", "CHA")
+XP_MOST = 2_000_000_000  # (the game's own cap, in its XP routine 6B817h)
+
+
+def prime_bonus(sheet: bytes, gain: int) -> Tuple[int, List[str]]:
+    """The XP a gain of GAIN on a sheet brings besides for high prime requisites: 10% for a class
+    whose prime requisites on the sheet (the character's own scores, not an item's or a spell's)
+    are all 16 or more. A sheet has one XP for all its classes (the game divides an award between
+    them and adds one share, each class's), so a character of several classes gets 10% of the
+    gain for each class that has it, divided by the classes: a fighter/thief with both 10%, with
+    one 5%. A human counts only the class followed now (slot 0). (The bonus, and each such
+    class's reason, "Fighter, STR 17".)"""
+    if gain <= 0 or len(sheet) < game.SHEET_SIZE:
+        return 0, []
+    classes = list(sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3])
+    if sheet[game.SHEET_RACE] == game.HUMAN:
+        classes = classes[:1]
+    classes = [c for c in classes if c]
+    scores = sheet[game.SHEET_ABILITIES:game.SHEET_ABILITIES + 6]
+    why = []
+    for cls in classes:
+        primes = PRIME_REQUISITES.get(cls)
+        if primes and all(scores[a] >= PRIME_BONUS_SCORE for a in primes):
+            name = CLASS_NAMES[cls].split(" (")[0]
+            why.append(f"{name}, " + " ".join(f"{ABILITY_NAMES[a]} {scores[a]}" for a in primes))
+    if not why:
+        return 0, []
+    return gain * len(why) * PRIME_BONUS_PERCENT // (100 * len(classes)), why
 
 
 class Member(NamedTuple):
@@ -72,6 +110,9 @@ class PartyTracker:
                       tuple(sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3]), sheet[game.SHEET_RACE])
 
     def check(self, now: float) -> List[str]:
+        if self.game.creating():  # (its stand-in sheet's XP is no award: start afresh after)
+            self.reset()
+            return []
         out = self._check_monsters(now)
         members = [self._member(i) for i in range(game.PARTY_SIZE)]
         if self.members is None:
@@ -93,11 +134,33 @@ class PartyTracker:
             elif self._only_losses(before, members):
                 self.loss = (before, now)  # held: it may be an area change's
                 return out
-            out += self._xp_line(before, members)
+            out += self._xp_line(before, members, bonuses=self._prime_bonuses(before, members))
         elif self.loss is not None and self.xp_before is None and now - self.loss[1] >= LOSS_WAIT:
             before, self.loss = self.loss[0], None
             out += self._xp_line(before, members)
         return out
+
+    def _prime_bonuses(self, before: List[Optional[Member]], after: List[Optional[Member]]) -> Dict[int, str]:
+        """Give each member who gained XP the bonus for their prime requisites (prime_bonus), on
+        their sheet, and remember their XP with it, so that it isn't taken for a gain of its own.
+        A level the bonus alone reaches comes with the game's next award or level check. (Each
+        member's note for the XP line.)"""
+        notes = {}
+        for i, (old, new) in enumerate(zip(before, after)):
+            if not (old and new and old.name == new.name and new.xp > old.xp):
+                continue
+            bonus, why = prime_bonus(self.game.sheet(i), new.xp - old.xp)
+            if not bonus:
+                continue
+            at = aging.sheet_address(self.game, i)
+            xp = struct.unpack("<I", self.game.guest.read(at + game.SHEET_XP, 4))[0]  # (as it is now)
+            given = min(xp + bonus, max(xp, XP_MOST)) - xp
+            if not given:
+                continue
+            self.game.guest.write(at + game.SHEET_XP, struct.pack("<I", xp + given))
+            after[i] = new._replace(xp=new.xp + given)
+            notes[i] = f"{given:+d} for {'; '.join(why)}"
+        return notes
 
     @staticmethod
     def _only_losses(before: List[Optional[Member]], after: List[Optional[Member]]) -> bool:
@@ -158,8 +221,11 @@ class PartyTracker:
                        "level's roll left a fraction, which counts at a later level")
         return out
 
-    def _xp_line(self, before: List[Optional[Member]], after: List[Optional[Member]]) -> List[str]:
-        gains = [f"{new.name} {new.xp - old.xp:+d}" for old, new in zip(before, after)
+    def _xp_line(self, before: List[Optional[Member]], after: List[Optional[Member]],
+                 bonuses: Optional[Dict[int, str]] = None) -> List[str]:
+        bonuses = bonuses or {}
+        gains = [f"{new.name} {new.xp - old.xp:+d}" + (f" ({bonuses[i]})" if i in bonuses else "")
+                 for i, (old, new) in enumerate(zip(before, after))
                  if old and new and old.name == new.name and new.xp != old.xp]
         if not gains:
             return []

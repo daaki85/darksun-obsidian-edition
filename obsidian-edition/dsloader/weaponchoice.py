@@ -157,10 +157,16 @@ def bow_ahead(gd, member: int) -> None:
     ammunition came first (given after it: an item is added at the list's head): the game's weapon
     lines (the inventory screen) show the first of the two it meets, so the bow was listed as its
     arrows ("Arrows 1D6") until it was taken off and put on again. The two records' contents are
-    swapped, each keeping its place in the list."""
-    worn = [(index, item) for index, item, _ in gd._worn(member)]
-    order = [item[game.ITEM_SLOT] for _, item in worn]
-    if AMMO_SLOT not in order or MISSILE_SLOT not in order or order.index(AMMO_SLOT) > order.index(MISSILE_SLOT):
+    swapped, each keeping its place in the list. Only where both are in one list: a party member
+    keeps the bow in its held list and the arrows in its worn one (pickpocket.list_for), and a
+    swap across the two put the bow where the game doesn't look for a missile weapon (it couldn't
+    shoot until the bow was taken off and put on again)."""
+    for field in game.CREATURE_ITEM_LISTS:
+        worn = [(index, item) for index, item, _ in gd._worn(member, (field,))]
+        order = [item[game.ITEM_SLOT] for _, item in worn]
+        if AMMO_SLOT in order and MISSILE_SLOT in order and order.index(AMMO_SLOT) < order.index(MISSILE_SLOT):
+            break
+    else:
         return
     (ammo, ammo_rec), (bow, bow_rec) = worn[order.index(AMMO_SLOT)], worn[order.index(MISSILE_SLOT)]
     items = game.far_pointer(gd.guest, gd.ds, game.ITEMS_PTR)

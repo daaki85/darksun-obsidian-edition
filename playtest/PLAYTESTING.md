@@ -37,6 +37,14 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
    installs most of them, below).
 2. The game: `sh setup_game.sh` (the GOG installer from the user's Google Drive, file id in the
    script, extracted with innoextract into `$DS_GAME`).
+   Wake of the Ravager, the sequel, for comparing (its code, data and README; nothing in the kit
+   plays it): `sh setup_ravager.sh`, the GOG installer from the same Drive folder, into
+   `$WORK/rav`. Its DSUN.EXE is laid out otherwise: the creature/sheet records 42h bytes at the far
+   pointer DS:19C5h, a class's level at +1Eh, its class at +1Bh; the XP table is RESOURCE.GFF's
+   DATA 1000 (8 rows of 20 words, in hundreds, looked up by `lcall 5C8:20` with 3E8h); much of the
+   code is in overlays, so a far call's segment isn't a place in the file. Its level-up (95860h on)
+   caps XP at the table's entry 3 levels past each class's own, then raises a class under 15
+   (2026-11-08: no race limits, whatever its README says).
 3. `sh start.sh`: Xvfb `:55`, the Loader's patched game (`prepare_patched_game`, so a rebuild is a
    restart), DOSBox, and the Loader's dice log (`$WORK/dice.txt`). Kills any old ones.
 4. **Check the build under test is in place** (every restart): the game runs
@@ -66,7 +74,8 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
 
 **The environment's setup script (2026-11-06):** the user's "Google Drive" cloud environment now
 installs `innoextract nasm dosbox xdotool`, `pip install capstone unicorn`, and runs
-`setup_game.sh` into `/tmp/playtest/inst` when the container is built fresh, with
+`setup_game.sh` into `/tmp/playtest/inst` (and, from 2026-11-08, `setup_ravager.sh` into
+`/tmp/playtest/rav`, about 12 s) when the container is built fresh, with
 `drive.usercontent.google.com` and `drive.google.com` already allowed. So a new session should
 only need `export PLAYTEST_WORK=/tmp/playtest`, then `loadsave.sh` (check `command -v dosbox` and
 `$PLAYTEST_WORK/inst/DSUN.EXE` first; if missing, do it by hand, as below). Checked by hand
@@ -358,6 +367,24 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   squares a figure stands on (96: a party member there takes the click and nobody walks), drops a
   square whose click moved nobody, and brings the view to the way ahead when nothing nearer the
   goal is on screen (the view on the leader can hide the way, as the hall south of Kurzak's stop).
+- **The creation screen** (2026-11-08, logs/2026-11-08-creation-least.md): the main menu's CREATE
+  CHARACTERS (165,92) opens VIEW CHARACTER (its bottom icons: view character, inventory, cast,
+  effects at x 52, 76, 100, 122, y 171; RETURN TO GAME 266,172 goes back to the menu); right-click
+  an empty slot (64,52) for NEW / ADD / CANCEL, and NEW (110,57) opens the creation screen with a
+  human fighter. A score's **small square** (x 6; STR y 140, DEX 146, CON 154, INT 161, WIS 167,
+  CHA 174) takes the clicks, not the number: right-click lowers by 1, left-click raises, kept
+  between the least (DS:4994h, just worked out for that score by 67399h) and the most (DS:4992h),
+  going round past either (with the as-rolled rule a round trip upward is cut to what's spare).
+  A class: click its name (x 250; cleric 13, druid 21, fighter 29, gladiator 37, preserver 45,
+  psionicist 53, ranger 61, thief 69); a human's class must be clicked off before another is
+  chosen (a click on a second class does nothing). The race text and the small figure at the top
+  don't change the race (the figure rolled a new character); a race and classes can be set in
+  memory for a check (the creation sheet at the far pointer DS:119Ch: race +18h, classes +21h,
+  1-8 as the list). EXIT (278,160) leaves without keeping the character. **The pointers stay
+  set afterwards**: DS:119Ch then points at the party's first sheet and DS:11A0h at the creature
+  table, in play too (null only in a game loaded first); on the screen the record is straight after
+  the sheet (`gd.creating()`). While the screen is up the party's first slot carries the
+  character's name on a stand-in sheet (XP 4,000, scores 10) whose XP moves with the class.
 - **Loading**: the title (two clicks), then the main menu: START GAME, CREATE CHARACTERS, LOAD
   SAVED GAME (170, 109), EXIT TO DOS; the LOAD screen lists the slots (click one at 100, 46), then
   LOAD (253, 46). `loadsave.sh` does it.
@@ -419,6 +446,26 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   FAKEPTY.COM` in a scratch folder, then the window; Sadira loses 1 HP a second and her byte wraps
   past 0 (133/30 two minutes in), so search `sadira`, pick the hit and Assign within about 15 s of
   starting it. Reconnect picks up a restarted DOSBox.
+- **The leader**: the inventory screen's small face button left of each portrait (the first of the
+  two; the lit one is the leader's): Cilla's at (7, 152), the others' 44 higher each (2026-11-08,
+  from the manual's "Leader" button).
+- **Talking to someone who walks** (the Trustee, 2026-11-08): wait where his rounds pass
+  (`$WORK`-free scripts: his thing from `gd.combatants()`, his place at DS:669Dh + 32n), and when he
+  is on screen and near, `pointer.py look`: the eye pauses the game, so he stops. A slow press on his
+  figure (about 12 pixels above his feet; a red eye means bare floor) opens the Look box; its first
+  button (left, about 188,158 when the box is low) talks. A YES/NO question first: Y or N.
+- **The Trustee's pocket** (his talk's "(PICK THE TRUSTEE'S POCKETS)"): offered only if the one
+  talking is a thief, within 4 squares of him as the talk opens, and the key isn't stolen (flag 55;
+  script 146 at 884h-8ABh): a talk opened from the Look box across a room has no such line. "You
+  find a key!", then Goodbye hands it over (GIVE at 0ABh, to the one talking; at his feet if that
+  fails) with 250 XP. The key's icon (picture 2161, 12 x 5) is a faint grey key on the grey cell,
+  near invisible at the game's size: hover the cell for "SLAVEPEN KEY" (logs/2026-11-08-trustee-key.md).
+- **An XP award by hand** (2026-11-08): the dice log's tracker sees an award only as each sheet's
+  XP going up, so `award.py N` (each member's sheet XP += N / its classes, a human's N;
+  the sheet from `aging.sheet_address`) stand in for a kill's to check what follows an award (the
+  prime requisite bonus); on the creation screen `leasts.sh` reads each score's least (`creationscores.py`). Restart the dice log (kill its pid; `python3 -u -m dsloader dicelog >>
+  $PLAYTEST_WORK/dice.txt` from obsidian-edition, setsid nohup) to run changed Loader code. QUIT on
+  the EXIT menu ends DOSBox.
 - **Picking a pocket:** U, the thief's portrait (Cilla 108,108), the purse under the spell counts
   (157,145, a slow press: the USE screen closes), then the talk pointer on the person. The result
   is a narration box with a Continue line (click it, 30,157). From `pens-after-scar` (2026-11-07,
@@ -548,7 +595,8 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   the gate (1816, 408) and he ran out of patience ("That's it! Time's run out!"), then the alarm and
   a fight with every guard. **The alarm fight on purpose**: `toalarm.sh` (loads `pens-after-scar`,
   records the sound, raises Cilla's thief level in memory, walks to the fire room), then
-  `restalarm.sh` (rests, then waits Kurzak out); about 15 minutes in all, in the background with a
+  `restalarm.sh` (rests, then waits Kurzak out); the alarm then sends wave after wave, with
+  `fight_on` 0 only a moment between them (fightout.sh stops "DONE" there: run it again); about 15 minutes in all, in the background with a
   Monitor. **toalarm.sh can stop short at (1832, 856)**, outside the fire room (2026-11-06: its last
   walkto said NO PATH FROM HERE with the door open). **A look click on an open door closes it** (the
   closed door is the gold pole; the user caught a close taken for an open): check a shot before

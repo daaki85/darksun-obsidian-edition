@@ -119,12 +119,20 @@ Each click of the die rolls a whole character:
   the die again, and recall it if nothing better comes. Changing the race,
   sex, classes or kit forgets the stored roll.
 
-| Class | Prime requisite |
-|---|---|
-| Fighter, gladiator | STR |
-| Cleric, druid, psionicist, ranger | WIS |
-| Preserver | INT |
-| Thief | DEX |
+| Class | Prime requisites | Least at creation |
+|---|---|---|
+| Cleric | WIS | WIS 9 |
+| Druid | WIS, CHA | WIS 12, CHA 15 |
+| Fighter | STR | STR 9 |
+| Gladiator | STR | STR 13, DEX 12, CON 15 |
+| Preserver | INT | INT 9 |
+| Psionicist | CON, WIS | CON 11, INT 12, WIS 15 |
+| Ranger | STR, DEX, WIS | STR 13, DEX 13, CON 14, WIS 14 |
+| Thief | DEX | DEX 9 |
+
+The die raises a score to the least the classes need (a multiclass character,
+the highest of their classes'). *Without the mod:* it raised the prime
+requisite to 17, and every other score to 9 to 14.
 
 What the scores do:
 
@@ -226,7 +234,9 @@ with **DUAL** on a portrait's right-click menu when:
 
 - it is **2nd level or more** and has changed class at most once before;
 - its **current class's prime requisite is 15 or more**, and the **new
-  class's 17 or more**;
+  class's 17 or more** (here the game's one score a class: STR for fighters
+  and gladiators, WIS for clerics, druids, psionicists and rangers, INT for
+  preservers, DEX for thieves);
 - the new class is of **another group** than every class it has had: priests
   (cleric, druid), warriors (fighter, gladiator, ranger), preserver,
   psionicist, thief;
@@ -240,16 +250,16 @@ classes a human could change to ([kits](#kits)).
 
 ## The classes
 
-| Class | Hit die | Prime requisite | Races | Armour | Weapons | Kits |
+| Class | Hit die | Prime requisites | Races | Armour | Weapons | Kits |
 |---|---|---|---|---|---|---|
 | [Fighter](#fighter) | d10 | STR | all | any | any | Myrmidon, Sentinel, Ravager |
 | [Gladiator](#gladiator) | d10 | STR | all | any | any | Arena Champion, Twin-blade, Brute |
-| [Ranger](#ranger) | d10 | WIS | not dwarf, mul | any (two weapons without penalty in light only) | any | Stalker, Seeker, Justifier |
+| [Ranger](#ranger) | d10 | STR, DEX, WIS | not dwarf, mul | any (two weapons without penalty in light only) | any | Stalker, Seeker, Justifier |
 | [Thief](#thief) | d6 | DEX | not half-giant, thri-kreen | light (with another class: heavier, without thief skills) | any | Assassin, Swashbuckler, Shinobi |
 | [Preserver](#preserver) | d4 | INT | elf, half-elf, human | none | daggers, staves, slings | Arcanist, Scholar, Battle Mage |
 | [Cleric](#cleric) | d8 | WIS | all | any | its sphere's | Healer, Crusader, Elementalist |
-| [Druid](#druid) | d8 | WIS | half-elf, halfling, human, mul, thri-kreen | none | any but great axes | Grove Warden, Wanderer, Lifebinder |
-| [Psionicist](#psionicist) | d6 | WIS | all | light | small weapons | Mind Warrior, Mind Bender, Kineticist |
+| [Druid](#druid) | d8 | WIS, CHA | half-elf, halfling, human, mul, thri-kreen | none | any but great axes | Grove Warden, Wanderer, Lifebinder |
+| [Psionicist](#psionicist) | d6 | CON, WIS | all | light | small weapons | Mind Warrior, Mind Bender, Kineticist |
 
 The [THAC0](#thac0-by-level) and [experience](#experience-and-levels) tables
 cover every class; [new items](#new-items) lists what the mod adds to find.
@@ -956,6 +966,17 @@ between a character's classes) and from deeds along the way. A level up comes
 by itself, with hit points, a better THAC0 and saves, spell slots, a new
 preserver spell or psionic power, and any weapon spec due.
 
+A class whose **prime requisites are all 16 or more** ([the
+table](#ability-scores)) gains **10% more XP** from everything, as the manual
+has it: a fighter with STR 16, a ranger with STR, DEX and WIS 16. The
+character's own scores count, not what an item or a spell gives. A character
+of several classes has one XP for them all, so each class with the bonus adds
+10% divided by the classes: a fighter/thief with both 10%, with one 5%. A
+human counts the class it follows now. The Loader adds the bonus as each
+award comes (the dice log shows it: `+12 for Fighter, STR 17`), so it needs the
+Loader following the game; a level that the bonus alone reaches comes with the
+next award. *Without the mod:* no bonus.
+
 Levels stop at a cap of **749,999 XP**, shared out: a character of one class
 goes up while its next level needs no more; two classes share it evenly
 (374,999 each), three too (249,999); and a human who changed class has the
@@ -1450,7 +1471,7 @@ common 4th and 5th-level ones; and each has its own element's.
 An Elementalist has its second sphere's column too.
 
 **The 6th-level spells** are the mod's, for priests of 11th level and up (with
-AD&D's class tables and the **New wizard spells** switch on):
+AD&D's class tables and the **New spells** switch on):
 
 - **Heal** (touch): every wound healed, disease and blindness cured.
 - **Harm** (touch): the creature is left 1d4 hit points; no save.
@@ -1760,7 +1781,7 @@ line](DICE-LOG.md) what each of its lines means.
 | **Saving throw** (save) | A d20 to escape or lessen a spell or attack, needing the number of one of five kinds: **PPD** paralysis, poison and death; **RSW** rod, staff and wand; **PP** petrification and polymorph; **BW** breath weapon; **SP** spell. |
 | **MR** | Magic resistance: a monster's percentage chance to shrug off a spell outright. |
 | **REAC**, **DEF** | DEX's reaction adjustment (initiative, two weapons) and defensive adjustment (AC, dodging fire, cold and electricity). |
-| **Prime requisite** | The score a class depends on (a fighter's STR); at creation it is raised to 17 if the die gave less. |
+| **Prime requisite** | The score a class depends on (a fighter's STR; a ranger has three). At creation a score is raised to the class's minimum if the die gave less. |
 | **Multiclass, dual class** | Two or three classes at once (any race but human); a human's change from one class to another. |
 | **Kit** | A class's speciality, chosen at creation: something gained, something given up ([Kits](#kits)). |
 | **Weapon spec** | A kind of weapon a warrior trains in, whatever its material: **specialized**, **mastery** and **grand mastery** for fighters, **expertise** for rangers ([weapon specialization](#weapon-specialization-and-attacks)). |

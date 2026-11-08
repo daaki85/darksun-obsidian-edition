@@ -218,27 +218,39 @@ def mend_lists(gd: GameData) -> List[str]:
     lines for the log. A backpack item goes to the backpack's list (they gave the backpack's
     dagger, Thieves' Tools and such to the held list, where a weapon is fought with); something
     worn that isn't a weapon to the worn list (they gave starting armour, a cloak, a shield, a
-    ring to the held list, where it counted for no AC). Nothing else: a worn item in the
+    ring to the held list, where it counted for no AC; arrows given with a bow, swapped into the
+    held list by an earlier bow_ahead); a weapon in the worn list to the held one (that swap's bow,
+    which the game didn't shoot with until it was put on again). Nothing else: a worn item in the
     backpack's list is left as the game has it."""
     out: List[str] = []
     for member in range(game.PARTY_SIZE):
         rec = gd.creature(member)
         if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME]:
             continue
-        thing, = struct.unpack_from("<h", rec, HOLD_LIST)
         wrong = []
-        for item, data in _chain(ring.Items(gd), thing):
-            slot = data[game.ITEM_SLOT]
-            typ = gd.item_type_record(data) if struct.unpack_from("<H", data, game.ITEM_TYPE)[0] < game.NO_ITEM else b""
-            if slot in BACKPACK or (len(typ) == game.ITEM_TYPE_SIZE and list_for(slot, typ) == WEAR_LIST):
-                wrong.append((item, data))
-        for item, data in wrong:
+        for offset in (HOLD_LIST, WEAR_LIST):
+            thing, = struct.unpack_from("<h", rec, offset)
+            for item, data in _chain(ring.Items(gd), thing):
+                slot = data[game.ITEM_SLOT]
+                typ = gd.item_type_record(data) if struct.unpack_from("<H", data, game.ITEM_TYPE)[0] < game.NO_ITEM else b""
+                if offset == HOLD_LIST and (slot in BACKPACK or (len(typ) == game.ITEM_TYPE_SIZE
+                                                                 and list_for(slot, typ) == WEAR_LIST)):
+                    wrong.append((item, data, typ))
+                elif offset == WEAR_LIST and slot not in BACKPACK and len(typ) == game.ITEM_TYPE_SIZE \
+                        and list_for(slot, typ) == HOLD_LIST:
+                    wrong.append((item, data, typ))
+        for item, data, typ in wrong:
             if place(gd, member, item, data[game.ITEM_SLOT]):
                 name = gd.item_name(struct.unpack_from("<H", data, game.ITEM_NAME)[0])
                 who = gd.creature_name(member)
-                out.append(f"{who}'s {name} is put away in the backpack (it had been counted as held)"
-                           if data[game.ITEM_SLOT] in BACKPACK else
-                           f"{who}'s {name} is now counted as worn (it had been counted as held, and gave no AC)")
+                if data[game.ITEM_SLOT] in BACKPACK:
+                    out.append(f"{who}'s {name} is put away in the backpack (it had been counted as held)")
+                elif list_for(data[game.ITEM_SLOT], typ) == HOLD_LIST:
+                    out.append(f"{who}'s {name} is now held, ready to use (it had been counted as worn)")
+                elif restrict.is_armour(typ) or restrict.is_shield(typ):
+                    out.append(f"{who}'s {name} is now counted as worn (it had been counted as held, and gave no AC)")
+                else:
+                    out.append(f"{who}'s {name} is now counted as worn (it had been counted as held)")
     return out
 
 

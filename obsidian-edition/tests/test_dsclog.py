@@ -1952,6 +1952,29 @@ class SpecializeTests(unittest.TestCase):
         self.assertEqual(self.dam_line(3, self.LONG_SWORD, chosen=(0,), levels=(4, 0, 0)), (3, 6, 8, 1))
         self.assertEqual(self.dam_line(4, self.LONG_SWORD, chosen=(0,), levels=(9, 0, 0)), (6, 7, 10, 1))
 
+    def test_item_box_rate(self):
+        """An item box (the DAM line routine with no creature, [BP-6] 0) takes its rate from the item
+        type's +0Bh, 1 for a melee weapon: at least one a round (2 halves), so the line shows no rate,
+        not "0.5x" (PROBE_MISSILE_LINE); a missile weapon's own rate is kept."""
+        from dsloader.gamepatch import VEC_MISSILE_LINE
+        mu = self.mu
+        at = load_image().find(bytes.fromhex("268a470b66837efa00"))
+        self.assertGreater(at, 0)
+        mu.mem_write(VEC_MISSILE_LINE * 4, struct.pack("<HH", at, TSR))
+        for rate, want in ((1, 2), (2, 2), (4, 4)):
+            with self.subTest(rate=rate):
+                typ = bytearray(0x14)
+                typ[0x0B] = rate
+                mu.mem_write(self.SHEETS * 16, bytes(typ))
+                mu.mem_write(SS * 16 + BP - 6, bytes(4))  # (no creature)
+                mu.mem_write(CALLER * 16 + 0x600, bytes((0xCD, VEC_MISSILE_LINE, 0x90, 0x90)))
+                for name, value in dict(cs=CALLER, ds=self.DS, ss=SS, esp=0x7F6, ebp=BP, eflags=IF | 2, eax=0x1200,
+                                        ebx=0, es=self.SHEETS).items():
+                    mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+                mu.emu_start(CALLER * 16 + 0x600, CALLER * 16 + 0x604)
+                self.assertEqual(mu.reg_read(r.UC_X86_REG_SP), 0x7F6)
+                self.assertEqual(mu.reg_read(r.UC_X86_REG_AX) & 0xFF, want)
+
     def test_off_hand_attacks(self):
         """With the rule for two weapons (AD&D's), a weapon in the off hand (the item at [BP+12h], in
         slot 10: the helper's item 3) attacks once a round, the extra attacks the main hand's; a
@@ -8030,3 +8053,59 @@ class RolledTests(AdndTablesTests):
         tries = bytes(self.mu.mem_read(self.hdr + 282, 24))
         self.assertEqual((tries[0], tries[3], tries[22]), (7, 11, 16))
         self.assertEqual(struct.unpack("<H", self.mu.mem_read(self.hdr + 280, 2))[0], seq0 + 3)  # (not the two out of range)
+
+
+@unittest.skipIf(Uc is None, "needs unicorn")
+class KeepTests(unittest.TestCase):
+    """KEEP, the last of installing: the buffers laid over the install code (AFTER_INSTALL) zeroed
+    before its first DOS call, and the memory it keeps reaching past them."""
+
+    def test_buffers_over_the_install_code(self):
+        image = bytearray(load_image())
+        zero = re.search(re.escape(bytes.fromhex("0e07bf")) + b"(..)" + re.escape(b"\xb9") + b"(..)" +
+                         re.escape(bytes.fromhex("31c0fcf3ab")), image, re.S)
+        self.assertIsNotNone(zero)
+        keep = zero.start() - 9
+        self.assertEqual(image[keep:keep + 2], bytes.fromhex("2ea1"))  # mov ax,[cs:psp]
+        psp_at, = struct.unpack_from("<H", image, keep + 2)
+        first, = struct.unpack_from("<H", zero.group(1))
+        count, = struct.unpack_from("<H", zero.group(2))
+        end = first + 2 * count
+        self.assertGreaterEqual(count * 2, 1600)
+        self.assertLessEqual(end, len(image))  # (within the image loaded: over the install code)
+        # the install's own "mov dx, paragraphs / jmp keep": the memory kept
+        asked = [struct.unpack_from("<H", image, m.start() + 1)[0]
+                 for m in re.finditer(re.escape(b"\xba"), image)
+                 if image[m.start() + 3] == 0xE9
+                 and m.start() + 6 + struct.unpack_from("<h", image, m.start() + 4)[0] == keep]
+        self.assertEqual(len(asked), 1)
+        self.assertGreaterEqual(asked[0] * 16, 0x100 + end)
+        image[first:end] = b"\xcc" * (end - first)  # (the install code there)
+        image[psp_at:psp_at + 2] = struct.pack("<H", TSR - 0x10)
+        mu = Uc(UC_ARCH_X86, UC_MODE_16)
+        mu.mem_map(0, 0x100000)
+        mu.mem_write(TSR * 16, bytes(image))
+        calls = []
+
+        def dos(mu, intno, _):
+            if intno != 0x21:
+                return
+            ah, dx = mu.reg_read(r.UC_X86_REG_AH), mu.reg_read(r.UC_X86_REG_DX)
+            calls.append((ah, dx, bytes(mu.mem_read(TSR * 16 + first, end - first))))
+            flags = mu.reg_read(r.UC_X86_REG_EFLAGS)
+            if ah == 0x31:
+                mu.emu_stop()
+            elif ah == 0x4A:
+                mu.reg_write(r.UC_X86_REG_EFLAGS, flags & ~1)
+            else:  # (no upper memory to give)
+                mu.reg_write(r.UC_X86_REG_EFLAGS, flags | 1)
+                mu.reg_write(r.UC_X86_REG_AX, 8)
+        mu.hook_add(UC_HOOK_INTR, dos)
+        mu.reg_write(r.UC_X86_REG_CS, TSR)
+        mu.reg_write(r.UC_X86_REG_SS, SS)
+        mu.reg_write(r.UC_X86_REG_SP, 0x1000)
+        mu.reg_write(r.UC_X86_REG_DX, asked[0])
+        mu.emu_start(TSR * 16 + keep, 0, count=100000)
+        self.assertTrue(calls and calls[-1][0] == 0x31)
+        self.assertEqual(calls[0][2], bytes(end - first))  # zeroed before the first DOS call
+        self.assertEqual(calls[-1][1], asked[0])  # (and that kept)

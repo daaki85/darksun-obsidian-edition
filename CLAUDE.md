@@ -16,6 +16,7 @@ wins where they differ.
 **Setup.** Tools are in `playtest/` (run from there, `export DISPLAY=:55`, and set
 `PLAYTEST_WORK` to a scratch folder; the game is `$PLAYTEST_WORK/inst`, from `setup_game.sh`;
 the guide's `$WORK` is that folder, set only inside the tools, so type `$PLAYTEST_WORK`).
+Wake of the Ravager, for comparing only: `setup_ravager.sh` (into `$PLAYTEST_WORK/rav`).
 `start.sh` starts Xvfb, the Loader's patched game in DOSBox and the dice log
 (`$PLAYTEST_WORK/dice.txt`). Check the build under test is in place before trusting anything
 (`GPLDATA=../obsidian-edition/dos/GPLDATA.GFF python3 dec.py SCRIPT LO HI`; for DSCLOG, new code's
@@ -69,6 +70,8 @@ capture; window grabs (`import -window`) are 320x240, so y x 1.2.
   `scrolltest.py` makes a Shinobi in memory and gives the defilers' scrolls.
 - E opens the Effects screen. In an END <NAME>'S MOVE menu (a click on the member's figure
   opens it), E is END TURN.
+- The creation screen: CREATE CHARACTERS (165,92), right-click an empty slot, NEW (110,57). A score's
+  small square (x 6, STR y 140 to CHA 174, 7 apart) takes the clicks: right lowers, left raises.
 - Escape with nothing open brings EXIT: SAVE GAME?; press Escape only with a screen or menu up.
 - The arena's flags and numbers have no place in memory to set from outside (even mid-script):
   to test a branch there, force it in a test build of the scripts, then put the module back.

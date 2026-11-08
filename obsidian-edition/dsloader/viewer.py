@@ -459,9 +459,9 @@ class Viewer:
                 ("backstab_dice", None, "A backstab multiplies the weapon's dice only, STR and magic added after, as in "
                                         "AD&D, on the round's first attack only (the game multiplies the whole damage, STR "
                                         "included, on the first two)"),
-                ("new_spells", None, "New wizard spells: Cat's Grace (2nd level: DEX + 1d6), and at 1st level Erdlu Claw "
-                                     "(unarmed 1d6+1), Fogbolt (-3 to hit, AC 2 worse), Reflected Image, Spook and Friends; "
-                                     "and ten 6th-level priest spells from 11th level (Heal, Harm, Blade Barrier...)")):
+                ("new_spells", None, "New spells: six for wizards (Cat's Grace at 2nd level: DEX + 1d6; at 1st, Erdlu "
+                                     "Claw (unarmed 1d6+1), Fogbolt (-3 to hit, AC 2 worse), Reflected Image, Spook and "
+                                     "Friends) and ten 6th-level priest spells from 11th level (Heal, Harm, Blade Barrier...)")):
             self.rule_vars[key] = tk.BooleanVar(
                 value=bool(settings.get(key, settings.get(game.OLD_SETTING_NAMES.get(key, key), True))))
             parent = rule_groups[group] if group else where.get(key, rules)

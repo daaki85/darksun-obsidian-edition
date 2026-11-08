@@ -1414,6 +1414,81 @@ class NewLinesTests(unittest.TestCase):
         self.assertEqual(tracker.check(2.2), [])  # waits for the others' XP
         self.assertEqual(tracker.check(3.0), ["XP: Dag +125 (for Mountain Stalker 500)"])
 
+    def test_prime_requisite_bonus(self):
+        """10% more XP for a class whose prime requisites are all 16 or more (the manual's; the
+        game gives none), added to the sheet, on the XP line, and not counted as a gain again."""
+        log = make_game()
+        tracker, m = log.tracker, log.guest.mem
+        m[SHEETS + game.SHEET_CLASSES] = 9  # a Fighter
+        m[SHEETS + game.SHEET_ABILITIES:SHEETS + game.SHEET_ABILITIES + 6] = bytes((17, 10, 21, 8, 9, 6))
+        struct.pack_into("<h", m, CREATURES + STALKER * game.CREATURE_SIZE, 20)
+        tracker.check(1.0)
+        struct.pack_into("<h", m, CREATURES + STALKER * game.CREATURE_SIZE, -3)
+        tracker.check(2.0)
+        struct.pack_into("<I", m, SHEETS, 125)
+        self.assertEqual(tracker.check(2.2), [])
+        self.assertEqual(tracker.check(3.0), ["XP: Dag +137 (+12 for Fighter, STR 17) (for Mountain Stalker 500)"])
+        self.assertEqual(struct.unpack_from("<I", m, SHEETS)[0], 137)
+        self.assertEqual(tracker.check(4.0) + tracker.check(5.0), [])  # (the bonus is no gain of its own)
+        # STR 15: none
+        m[SHEETS + game.SHEET_ABILITIES] = 15
+        struct.pack_into("<I", m, SHEETS, 237)
+        self.assertEqual(tracker.check(6.0) + tracker.check(7.0), ["XP: Dag +100"])
+
+    def test_no_xp_on_the_creation_screen(self):
+        """On the creation screen the party's first slot carries the character being made, on a
+        stand-in sheet whose XP moves with the class chosen: no XP line and no bonus there, and
+        afresh once it is gone."""
+        log = make_game()
+        tracker, m = log.tracker, log.guest.mem
+        m[SHEETS + game.SHEET_CLASSES] = 9
+        m[SHEETS + game.SHEET_ABILITIES] = 17
+        tracker.check(1.0)
+        def pointers(sheet, creature):
+            m[DS * 16 + game.CREATION_SHEET_PTR:DS * 16 + game.CREATION_SHEET_PTR + 4] = far(sheet)
+            m[DS * 16 + game.CREATION_CREATURE_PTR:DS * 16 + game.CREATION_CREATURE_PTR + 4] = far(creature)
+        pointers(CREATION, CREATION + game.SHEET_SIZE)
+        struct.pack_into("<I", m, SHEETS, 4000)  # (a fighter's 3rd level, as the screen sets it)
+        self.assertEqual(tracker.check(2.0) + tracker.check(3.0), [])
+        self.assertEqual(struct.unpack_from("<I", m, SHEETS)[0], 4000)
+        pointers(SHEETS, CREATURES)  # (left: the party's first sheet, the creature table)
+        self.assertEqual(tracker.check(4.0) + tracker.check(5.0), [])  # (what's there then is no gain)
+        struct.pack_into("<I", m, SHEETS, 5000)
+        self.assertEqual(tracker.check(6.0) + tracker.check(7.0), ["XP: Dag +1100 (+100 for Fighter, STR 17)"])
+
+    def test_prime_bonus_classes(self):
+        """A sheet's one XP for all its classes: 10% of the gain for each class whose prime
+        requisites are all 16 or more, divided by the classes; a human counts only the class
+        followed now (slot 0); every prime requisite counts (a ranger's STR, DEX and WIS)."""
+        def sheet(race, classes, scores):
+            out = bytearray(game.SHEET_SIZE)
+            out[game.SHEET_RACE] = race
+            out[game.SHEET_CLASSES:game.SHEET_CLASSES + 3] = bytes(classes + [0] * (3 - len(classes)))
+            out[game.SHEET_ABILITIES:game.SHEET_ABILITIES + 6] = bytes(scores)
+            return bytes(out)
+        bonus = tracker_module.prime_bonus
+        dwarf, elf = 2, 3
+        # a fighter/thief, both prime requisites 16 or more: 10%
+        self.assertEqual(bonus(sheet(dwarf, [9, 17], [16, 16, 10, 10, 10, 10]), 1000),
+                         (100, ["Fighter, STR 16", "Thief, DEX 16"]))
+        # only the fighter's: half of that
+        self.assertEqual(bonus(sheet(dwarf, [9, 17], [16, 15, 10, 10, 10, 10]), 1000), (50, ["Fighter, STR 16"]))
+        # a fighter/preserver/thief with the preserver's alone: a third
+        self.assertEqual(bonus(sheet(elf, [9, 11, 17], [10, 10, 10, 18, 10, 10]), 900), (30, ["Preserver, INT 18"]))
+        # a ranger needs STR, DEX and WIS
+        self.assertEqual(bonus(sheet(elf, [13], [16, 16, 10, 10, 15, 10]), 1000), (0, []))
+        self.assertEqual(bonus(sheet(elf, [14], [16, 17, 10, 10, 16, 10]), 1000),
+                         (100, ["Ranger, STR 16 DEX 17 WIS 16"]))
+        # a druid WIS and CHA; a psionicist CON and WIS
+        self.assertEqual(bonus(sheet(elf, [6], [10, 10, 10, 10, 16, 15]), 1000), (0, []))
+        self.assertEqual(bonus(sheet(elf, [12], [10, 10, 16, 10, 16, 10]), 1000),
+                         (100, ["Psionicist, CON 16 WIS 16"]))
+        # a human once a fighter, now a thief: the thief's DEX only
+        self.assertEqual(bonus(sheet(game.HUMAN, [17, 9], [18, 12, 10, 10, 10, 10]), 1000), (0, []))
+        self.assertEqual(bonus(sheet(game.HUMAN, [17, 9], [12, 16, 10, 10, 10, 10]), 1000), (100, ["Thief, DEX 16"]))
+        # no gain, no bonus
+        self.assertEqual(bonus(sheet(dwarf, [9], [18, 10, 10, 10, 10, 10]), -50), (0, []))
+
     def test_leaving_an_area_kills_no_one(self):
         """Going to another area the game drops the old area's people and clears or reuses their
         records: no deaths logged (once every guard of the arena was "killed" on leaving the pens).
@@ -1674,6 +1749,12 @@ def set_clock(log, seconds):
     struct.pack_into("<i", m, CLOCK, seconds)
 
 
+
+def fight_on(log, on: bool = True) -> None:
+    """The game's own "a fight is on" (game.fight_on: FIGHT_STATE_ON), as its rest and USE screen read it."""
+    at = (log.game.ds - game.FIGHT_STATE_FROM_DS) * 16 + game.FIGHT_STATE_ON
+    struct.pack_into("<H", log.guest.mem, at, int(on))
+
 class RoundAndTurnTests(unittest.TestCase):
     def setUp(self):
         self.log = make_game()
@@ -1681,6 +1762,7 @@ class RoundAndTurnTests(unittest.TestCase):
 
     def round(self, seconds):
         set_clock(self.log, seconds)
+        fight_on(self.log)
         struct.pack_into("<hh", self.log.guest.mem, self.table, 25, 50)
         self.log.describe(entry(raw_for(6, 10), dicelog.INITIATIVE_ROLL), now=1.0)
         self.log.describe(entry(raw_for(51, 200), dicelog.INITIATIVE_TIE), now=1.0)
@@ -1712,6 +1794,18 @@ class RoundAndTurnTests(unittest.TestCase):
         self.assertEqual(self.log.turn_lines(), [])  # still Daaki's
         struct.pack_into("<h", m, DS * 16 + game.WHOSE_TURN, 0x29)
         self.assertEqual(self.log.turn_lines(), ["Mountain Stalker's turn"])
+
+    def test_no_turn_out_of_a_fight(self):
+        """Just after a fight (game time barely moves out of one) the leader changed: whose turn
+        changes, but the game's own test says no fight is on: no turn line, and so no thief's hiding
+        rolled."""
+        m = self.log.guest.mem
+        self.round(600)
+        struct.pack_into("<h", m, DS * 16 + game.WHOSE_TURN, 1)
+        self.assertEqual(self.log.turn_lines(), ["Daaki's turn"])
+        fight_on(self.log, False)  # (the fight over)
+        struct.pack_into("<h", m, DS * 16 + game.WHOSE_TURN, 0)
+        self.assertEqual(self.log.turn_lines(), [])
 
     def test_last_turn_then_first_turn(self):
         """Last in one round and first in the next: a new turn (a thief hides again); someone
@@ -1776,8 +1870,6 @@ def make_creation():
     tables = (LOAD_SEG + game.CREATION_SEG) * 16
     m[tables + game.CREATION_RACE_OFF + 2 * 6:tables + game.CREATION_RACE_OFF + 3 * 6] = \
         struct.pack("6b", 1, -1, 2, 0, 0, -2)
-    for cls, prime, least in ((3, 0, 9), (8, 1, 9)):
-        struct.pack_into("<hB", m, tables + game.CREATION_CLASS_OFF + cls * 3, prime, least)
     sheet = SHEETS + 1 * game.SHEET_SIZE
     m[sheet + game.SHEET_RACE], m[sheet + game.SHEET_ABILITIES + 2] = 2, 10
     m[sheet + game.SHEET_CLASSES:sheet + game.SHEET_CLASSES + 2] = bytes((9, 17))
@@ -1801,19 +1893,21 @@ def ability_rolls(log, ability, tries):
 class CreationTests(unittest.TestCase):
     def test_abilities(self):
         log = make_creation()
-        # best of 7, 11, 9, 10 = 11, +4, +1 dwarf = 16: a Fighter's STR is at least 17
+        # best of 7, 11, 9, 10 = 11, +4, +1 dwarf = 16: above a Fighter's STR 9
         self.assertEqual(ability_rolls(log, 0, [(1, 2, 2, 2), (4, 4, 2, 1), (3, 3, 2, 1), (4, 3, 2, 1)]), [])
-        # CON: +2 dwarf, above the classes' least of 9
+        # DEX: 4 + 4 - 1 dwarf = 7, raised to the Thief's 9
+        ability_rolls(log, 1, [(1, 1, 1, 1)] * 4)
+        # CON: +2 dwarf
         ability_rolls(log, 2, [(4, 4, 4, 1), (1, 1, 1, 1), (2, 2, 2, 2), (3, 3, 3, 3)])
-        # CHA: 4 + 4 - 2 dwarf = 6, raised to the least the Fighter and Thief allow
+        # CHA: 4 + 4 - 2 dwarf = 6, kept: neither class asks for CHA
         ability_rolls(log, 5, [(1, 1, 1, 1)] * 4)
         # (the lines come when the die stops)
         self.assertEqual(log.creation_lines(),
-                         ["Character creation, STR 17: best of four 4d4 (7, 11, 9, 10) = 11, +4, +1 dwarf = 16, "
-                          "raised to 17 (the Fighter's prime requisite)",
+                         ["Character creation, STR 16: best of four 4d4 (7, 11, 9, 10) = 11, +4, +1 dwarf = 16",
+                          "Character creation, DEX 9: best of four 4d4 (4, 4, 4, 4) = 4, +4, -1 dwarf = 7, "
+                          "raised to 9 (the Thief's minimum)",
                           "Character creation, CON 19: best of four 4d4 (13, 4, 8, 12) = 13, +4, +2 dwarf = 19",
-                          "Character creation, CHA 9: best of four 4d4 (4, 4, 4, 4) = 4, +4, -2 dwarf = 6, "
-                          "raised to 9 (the Thief's least)"])
+                          "Character creation, CHA 6: best of four 4d4 (4, 4, 4, 4) = 4, +4, -2 dwarf = 6"])
 
     def test_only_the_character_the_die_stops_on(self):
         """The die rolls whole characters while it tumbles: only the last is logged, each ability
@@ -1821,16 +1915,15 @@ class CreationTests(unittest.TestCase):
         log = make_creation()
         ability_rolls(log, 0, [(4, 4, 4, 4)] * 4)  # a first character's STR 21...
         ability_rolls(log, 2, [(4, 4, 4, 4)] * 4)  # ... and CON 22
-        ability_rolls(log, 0, [(1, 2, 2, 2), (4, 4, 2, 1), (3, 3, 2, 1), (4, 3, 2, 1)])  # the next: STR 17
+        ability_rolls(log, 0, [(1, 2, 2, 2), (4, 4, 2, 1), (3, 3, 2, 1), (4, 3, 2, 1)])  # the next: STR 16
         shown = CREATION + game.SHEET_SIZE + game.CREATURE_ABILITIES
-        log.guest.mem[shown:shown + 6] = bytes((17, 12, 18, 10, 11, 9))  # its CON's rolls missed
+        log.guest.mem[shown:shown + 6] = bytes((16, 12, 18, 10, 11, 6))  # its CON's rolls missed
         lines = log.creation_lines()
         self.assertEqual(lines[:3],
-                         ["Character creation, STR 17: best of four 4d4 (7, 11, 9, 10) = 11, +4, +1 dwarf = 16, "
-                          "raised to 17 (the Fighter's prime requisite)",
+                         ["Character creation, STR 16: best of four 4d4 (7, 11, 9, 10) = 11, +4, +1 dwarf = 16",
                           "Character creation, DEX 12 (its rolls came too fast to record)",
                           "Character creation, CON 18 (its rolls came too fast to record)"])
-        self.assertIn("Character creation: the six scores add up to 77", lines)  # (as the game shows them)
+        self.assertIn("Character creation: the six scores add up to 73", lines)  # (as the game shows them)
 
     def test_rolls_too_fast_for_the_ring(self):
         """The die tumbles faster than the ring is read: DSCLOG's own count and copy of each
@@ -1840,7 +1933,7 @@ class CreationTests(unittest.TestCase):
         m = log.guest.mem
         log.lines(now=1.0)  # (the count as it was)
         shown = CREATION + game.SHEET_SIZE + game.CREATURE_ABILITIES
-        m[shown:shown + 6] = bytes((17, 12, 18, 10, 11, 9))
+        m[shown:shown + 6] = bytes((16, 12, 18, 10, 11, 6))
         m[HDR + dicelog.TSR_TRIES:HDR + dicelog.TSR_TRIES + 24] = bytes(
             (7, 11, 9, 10, 8, 4, 5, 6, 12, 4, 4, 4, 6, 5, 5, 4, 7, 7, 6, 5, 4, 4, 4, 4))
         struct.pack_into("<H", m, HDR + dicelog.TSR_TRIES_SEQ, 24)
@@ -1849,15 +1942,13 @@ class CreationTests(unittest.TestCase):
         self.assertNotIn("(40 rolls came too fast to record)", out)
         out = log.lines(now=2.5)
         self.assertEqual(out[:7], [
-            "Character creation, STR 17: best of four 4d4 (7, 11, 9, 10) = 11, +4, +1 dwarf = 16, "
-            "raised to 17 (the Fighter's prime requisite)",
-            "Character creation, DEX 12 (its rolls came too fast to record)",  # (not the 17 they'd give)
+            "Character creation, STR 16: best of four 4d4 (7, 11, 9, 10) = 11, +4, +1 dwarf = 16",
+            "Character creation, DEX 12 (its rolls came too fast to record)",  # (not the 11 they'd give)
             "Character creation, CON 18: best of four 4d4 (12, 4, 4, 4) = 12, +4, +2 dwarf = 18",
             "Character creation, INT 10: best of four 4d4 (6, 5, 5, 4) = 6, +4 = 10",
             "Character creation, WIS 11: best of four 4d4 (7, 7, 6, 5) = 7, +4 = 11",
-            "Character creation, CHA 9: best of four 4d4 (4, 4, 4, 4) = 4, +4, -2 dwarf = 6, "
-            "raised to 9 (the Thief's least)",
-            "Character creation: the six scores add up to 77"])
+            "Character creation, CHA 6: best of four 4d4 (4, 4, 4, 4) = 4, +4, -2 dwarf = 6",
+            "Character creation: the six scores add up to 73"])
         self.assertEqual(log.lines(now=3.0), [])  # (once)
 
     def test_hit_points(self):

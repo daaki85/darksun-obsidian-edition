@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from dsloader import game, stealth
-from test_dicelog import CREATURES, DS, HDR, SHEETS, STALKER, far, set_clock
+from test_dicelog import CREATURES, DS, HDR, SHEETS, STALKER, far, fight_on, set_clock
 
 
 def game_sheet():
@@ -242,6 +242,7 @@ class StealthTests(unittest.TestCase):
         log.stealth_roll = rolls(2, 5)
         set_clock(log, 600)
         log._round_time = 600
+        fight_on(log)
         struct.pack_into("<h", self.m, DS * 16 + game.WHOSE_TURN, 0)
         lines = log.turn_lines()
         self.assertEqual(lines[0], "Dag's turn")
@@ -260,6 +261,7 @@ class StealthTests(unittest.TestCase):
         log.rules = 0
         set_clock(log, 600)
         log._round_time = 600
+        fight_on(log)
         struct.pack_into("<h", self.m, DS * 16 + game.WHOSE_TURN, 0)
         self.assertEqual(log.turn_lines(), ["Dag's turn"])
 

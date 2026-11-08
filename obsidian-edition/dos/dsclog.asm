@@ -3655,11 +3655,17 @@ probe_dam_line:
 ; none), the damage bonus, the dice's sides and their count pushed as for PROBE_DAM_LINE. AL: the
 ; weapon's attacks a round (halves). With RULE_SPECIALIZE, the rate of fire as PROBE_ATTACKS gives
 ; it (MISSILE_RATE), and the bonus and sides as PROBE_SPEC_DAMAGE does; K'ratchek's chatkcha one
-; more a round, as OWN_THROWS (with the kits on, whatever the specialization rule).
+; more a round, as OWN_THROWS (with the kits on, whatever the specialization rule). With no
+; creature (an item box: this branch for a melee weapon too), at least one a round.
 probe_missile_line:
         mov al, [es:bx + 0x0B]
         cmp dword [bp - 6], 0
-        je .ret
+        jne .held
+        cmp al, 2               ; (no one's: an item box, a melee weapon's type its 1 there. At
+        jae .ret                ;  one a round, so the line shows no rate, as the game's did
+        mov al, 2               ;  before DAM_HALF let "0.5x" through for Slow)
+        iret
+.held:
         push di
         mov di, sp              ; DI+8 the count, +0Ah the sides, +0Ch the bonus
         push bx
@@ -19321,6 +19327,8 @@ ELVEN_CLOAK equ 19              ; (the Cloak and Boots of Elvenkind)
 ELVEN_BOOTS equ 20
 GREYS_ARMS  equ 54              ; Grey's Scale's arm and leg armour: the game's AC 2 each, made 3
 GREYS_LEGS  equ 24              ; (PROBE_TYPES_FILL)
+GREAT_AXE   equ 2               ; the game's Great Axe +3's type: no material (40h, a ring's), made metal
+METAL_MAT   equ 4               ; a type's +8 for metal (the material's low nibble, as the metal short sword's)
 AIR_CLERIC  equ 1               ; a type's +10h (the classes that may use it): the air cleric's bit
 
 ; PROBE_TYPES_SIZE: INT VEC_TYPES_SIZE replaces "push dword 1" (3 bytes: INT + NOP) before the
@@ -19340,7 +19348,9 @@ probe_types_size:
 ; PROBE_TYPES_FILL: INT VEC_TYPES_FILL replaces "add sp,0Ch" (3 bytes: INT + NOP) after the
 ; call that reads the chunk in (AX 0: read). Does the add, then, if it was read, copies
 ; EXTRA_TYPES after the game's own (the room made, [BP-4], less theirs) and notes where;
-; raises Grey's Scale's AC (its arm and leg armour, the game's own types) to 3; and lets air
+; raises Grey's Scale's AC (its arm and leg armour, the game's own types) to 3; makes the Great
+; Axe +3's type metal (the game gave it none, so its name showed none; its icon's head is the
+; metal axe's grey and teal, its weight the metal great axe's 70); and lets air
 ; clerics use the game's daggers (17, 33, 84, 94: none had their bit; their sphere's weapons
 ; are daggers and missile and thrown ones).
 probe_types_fill:
@@ -19365,6 +19375,7 @@ probe_types_fill:
         mov [cs:types_ptr+2], es
         mov byte [es:di+GREYS_ARMS*TYPE_SIZE+0x12], 3
         mov byte [es:di+GREYS_LEGS*TYPE_SIZE+0x12], 3
+        mov byte [es:di+GREAT_AXE*TYPE_SIZE+8], METAL_MAT
         or byte [es:di+17*TYPE_SIZE+0x10], AIR_CLERIC
         or byte [es:di+33*TYPE_SIZE+0x10], AIR_CLERIC
         or byte [es:di+84*TYPE_SIZE+0x10], AIR_CLERIC
@@ -23695,7 +23706,7 @@ lit_most   dw 0
 best_c     db 0
 want       times 3 db 0
 shadow_tab times (MAP_COUNT + 7) / 8 db 0
-dark       times 256 db 0
+                                ; (DARK, 256 bytes: over the install code, AFTER_INSTALL)
 dac        times 768 db 0
 
 
@@ -24091,6 +24102,13 @@ pool_used db 0
 keep:   mov ax, [cs:psp]
         mov ss, ax
         mov sp, 0x100
+        push cs                         ; AFTER_INSTALL's buffers zeroed, over the install code
+        pop es                          ;   (before any DOS call: its hook may read them)
+        mov di, resident_end
+        mov cx, (after_install_end - resident_end) / 2
+        xor ax, ax
+        cld
+        rep stosw
         push dx                         ; our block cut down to what stays, the install code's
         mov es, [cs:psp]                ;  memory given back: then the overlay buffer's block
         mov bx, dx                      ;  (OVR_RESERVE) where it was, in upper memory, the rest
@@ -24117,9 +24135,7 @@ keep:   mov ax, [cs:psp]
         mov ax, 3100h
         int 21h
 
-align 16
-seg_space times SEG_BYTES db 0   ; (SEG_MOVE's: the stack's 60h bytes, then the monster kinds')
-area_space times (AREA_BYTES + 15) & ~15 db 0 ; (... and the pictures' table)
+align 16                        ; (SEG_SPACE and AREA_SPACE, AFTER_INSTALL's, paragraphs)
 resident_end:                   ; (the ring and the other big buffers: the far block, FAR_INIT)
 RING_BYTES equ NENT * ESIZE
 
@@ -24156,8 +24172,7 @@ UMB_NEED equ (1 + 0x10 + (image_len + STACK + 15) / 16) + (1 + OVR_RESERVE)
 ; its MCB. The last two are taken only if there's room, quietly: the build fails rather than lose
 ; them without UMBPLUS.COM (with the far block in the HMA, as DOSBox gives it; without the HMA,
 ; FAR_INIT takes the far block from upper memory first, and they don't fit).
-UMB_KEPT equ (1 + 0x10 + (resident_end - $$ + 15) / 16) + (1 + OVR_RESERVE) + (1 + POOL_PARAS) + (1 + GHOST_PARAS)
-        times -(UMB_KEPT > UMB_ROOM) db 0   ; (a negative count: the music pool or the see-through tables wouldn't fit)
+UMB_KEPT equ (1 + 0x10 + (kept_end - $$ + 15) / 16) + (1 + OVR_RESERVE) + (1 + POOL_PARAS) + (1 + GHOST_PARAS)
 
 POINTER_FILE db "D:\POINTER.BIN", 0 ; (CP_DATA's file, read as the helper loads)
 install:                        ; DS = ES = PSP, CS = the image
@@ -24649,7 +24664,7 @@ install:                        ; DS = ES = PSP, CS = the image
         mov [cs:panel_seg], ax
         mov [cs:sc_seg], ax
         mov [cs:tbuf_seg], ax
-        mov dx, 0x10 + (resident_end - hdr) / 16    ; PSP and image, in paragraphs
+        mov dx, 0x10 + (kept_end - hdr) / 16        ; PSP and image, in paragraphs
         jmp keep
 
 ; FAR_INIT: FAR_SEG set, its FAR_RING to FAR_END cleared; CF if there was no room. The HMA
@@ -24737,3 +24752,16 @@ file_len  equ image_len + 32
         times -(image_len > 0x10000) db 0   ; (a negative count: past the helper's 64 KB segment)
 ; the memory past the image to load in: the install's stack
 LOAD_EXTRA equ (STACK + 15) / 16
+
+; AFTER_INSTALL: buffers that start as zeros, laid over the install code (from RESIDENT_END), which
+; is done with by then: KEEP zeroes them and keeps memory to KEPT_END. They take none of the
+; segment's room past the install code's, so long as they fit within it (the build fails if not).
+[absolute resident_end]
+seg_space  resb SEG_BYTES       ; (SEG_MOVE's: the stack's 60h bytes, then the monster kinds')
+area_space resb (AREA_BYTES + 15) & ~15 ; (... and the pictures' table: both whole paragraphs)
+dark       resb 256             ; (the shadows' colours: DARK)
+after_install_end:
+kept_end   equ resident_end + ((after_install_end - resident_end + 15) & ~15)
+[section image]
+        times -(after_install_end - hdr > image_len) db 0  ; (a negative count: past the install code)
+        times -(UMB_KEPT > UMB_ROOM) db 0   ; (a negative count: the music pool or the see-through tables wouldn't fit)

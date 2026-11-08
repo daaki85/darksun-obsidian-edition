@@ -334,6 +334,30 @@ class ListTests(unittest.TestCase):
         self.assertEqual(self.items_in(pickpocket.HOLD_LIST), [(5, game.WEAPON_HANDS[0])])
         self.assertEqual(pickpocket.mend_lists(self.gd), [])
 
+    def test_mend_bow_and_arrows(self):
+        """A bow in the worn list and its arrows in the held one (an earlier bow_ahead's swap across
+        the two: the game didn't shoot with the bow until it was put on again): the bow to the held
+        list, the arrows to the worn one, once, with lines that say so (no AC for the arrows)."""
+        ammo = game.EQUIP_SLOTS.index("ammo") if "ammo" in game.EQUIP_SLOTS else 1
+        self.m[ITEMS + 5 * game.ITEM_SIZE + game.ITEM_SLOT] = ammo  # (the sword made the arrows)
+        typ, = struct.unpack_from("<H", self.m, ITEMS + 5 * game.ITEM_SIZE + game.ITEM_TYPE)
+        self.m[ITEM_TYPES + typ * game.ITEM_TYPE_SIZE] = 0
+        # the bow (item 6) alone in the worn list, the arrows (item 5) alone in the held one
+        held, = struct.unpack_from("<h", self.m, CREATURES + pickpocket.HOLD_LIST)
+        struct.pack_into("<h", self.m, ITEMS + 5 * game.ITEM_SIZE + game.ITEM_NEXT, game.NO_ITEM)
+        struct.pack_into("<Bh", self.m, THINGS + held * 3, game.THING_ITEM, 5)
+        struct.pack_into("<Bh", self.m, THINGS + 505 * 3, game.THING_ITEM, 6)
+        struct.pack_into("<H", self.m, DS * 16 + ring.FREE_THINGS, 506)
+        struct.pack_into("<h", self.m, CREATURES + pickpocket.WEAR_LIST, 505)
+        out = pickpocket.mend_lists(self.gd)
+        self.assertEqual(len(out), 2, out)
+        self.assertTrue(any("now held, ready to use" in line for line in out), out)
+        self.assertTrue(any("now counted as worn (it had been counted as held)" in line and "AC" not in line
+                            for line in out), out)
+        self.assertEqual(self.items_in(pickpocket.HOLD_LIST), [(6, game.MISSILE_SLOT)])
+        self.assertEqual(self.items_in(pickpocket.WEAR_LIST), [(5, ammo)])
+        self.assertEqual(pickpocket.mend_lists(self.gd), [])
+
     def test_list_for(self):
         """The inventory screen's lists: a backpack cell's, else the held one for a melee, missile
         or thrown weapon, the worn one for the rest (a shield in the hand too)."""

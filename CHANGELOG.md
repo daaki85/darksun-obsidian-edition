@@ -14,7 +14,8 @@ file's size as such; from #86 on, both are given.
 Releases before 2.12.2 give the release's line as a **Release** bullet; from 2.12.2 on it is the
 entry's first line.
 
-Releases, newest first: [2.14.0](#pull-request-87-merged-2026-11-07) (#86 and #87),
+Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
+[2.14.0](#pull-request-87-merged-2026-11-07) (#86 and #87),
 [2.13.4](#pull-request-85-merged-2026-11-02) (#85),
 [2.13.3](#pull-request-84-merged-2026-10-31) (#84), [2.13.2](#pull-request-83-merged-2026-10-30)
 (#83), [2.13.1](#pull-request-82-merged-2026-10-30) (#82),
@@ -36,6 +37,94 @@ Releases, newest first: [2.14.0](#pull-request-87-merged-2026-11-07) (#86 and #8
 (#33), [1.2.0](#pull-request-30-merged-2026-10-08) (#30),
 [1.1.0](#pull-request-18-merged-2026-10-06) (#18), [1.0.0](#pull-request-12-merged-2026-10-02)
 (#12).
+
+## Pull request #88 ([merged 2026-11-08](https://github.com/daaki85/darksun-obsidian-edition/pull/88))
+
+Obsidian Edition 2.14.1 ([release notes](release-notes/v2.14.1.md)).
+
+DSCLOG.EXE 63,824 bytes (image 63,792), 1,744 of its segment spare.
+
+**Fixed: the Loader's window**
+- **The new spells' switch said "New wizard spells"** and then listed the ten 6th-level priest spells
+  it also covers. It is "New spells" now, with the six wizard spells and the priest spells named
+  apart; FEATURES and the player guide call it that. (`viewer.py`; the setting is still
+  `new_spells`.)
+
+**Fixed: the Loader**
+- **A bow the Loader gave couldn't shoot** until it was taken off and put on again: a new character's
+  whose weapon spec is the bow (whatever its class), a Myrmidon's second spec's, fuller starting
+  gear's for a Battle Dancer or Spellarcher, and any Spellarcher's once it made spell arrows in an
+  empty quiver. Each gives the bow to the held list and its arrows to the worn one, as the
+  inventory screen keeps them (since #85, 2.13.4), and then `bow_ahead`, which put a bow ahead of
+  its arrows when both were in one list, swapped the two records across the lists: the bow in the
+  worn list, where the game doesn't look for a missile weapon. It swaps only within one list now,
+  and a weapon found in any party member's worn list (or arrows in the held one) is moved back as
+  the dice log runs, out of a fight: "Yilballa's Bow is now held, ready to use (it had been counted
+  as worn)". (`weaponchoice.bow_ahead`, `pickpocket.mend_lists`. Tests: `test_lists_apart`,
+  `test_mend_bow_and_arrows`, both failing on the code before the fix.)
+- **Changing the leader just after a fight rolled a thief's hiding:** the dice log took a change
+  of whose turn within a minute of game time of the last round for a turn of the same fight, and
+  game time barely moves out of fights, so the new leader's "turn" printed ("Alura's turn") and,
+  with the stealth rule, rolled hide in shadows and move silently. A turn now also needs the
+  game's own test that a fight is on (`game.fight_on`, as its rest and USE screen read it).
+  (`DiceLog.turn_lines`. Test: `test_no_turn_out_of_a_fight`, which the code before the fix fails.)
+
+**Fixed: DSCLOG**
+- **A melee weapon's item box read "0.5x1D8-1",** whoever held it. With no creature the game's damage
+  line takes the rate from the item type's +0Bh, a missile weapon's, which a melee weapon's type has
+  at 1 (half an attack); the game hid any rate of one attack or less, until #76's `dam_half` let
+  "0.5x" through for Slow. With no creature the rate is now at least one a round, so the box shows
+  none, as before #76; the inventory's and View Character's lines are as they were. (`PROBE_MISSILE_LINE`.
+  Seen in DOSBox: Gerakis's Bone Long Sword's box "1D8-1", his sling's "1D4". Test:
+  `test_item_box_rate`, which the helper before the fix fails.)
+
+**Changed: DSCLOG's room**
+- **1.7 KB of the helper's 64 KB segment freed** (96 bytes were left): three buffers that start as
+  zeros, the new spells' room (`seg_space`, 512 bytes), their areas' pictures' table (`area_space`,
+  896) and the shadows' colours (`dark`, 256), no longer take bytes in the image: they lie over the
+  install code, which is done with by the time they're used, and `KEEP` zeroes them before its first
+  DOS call. DSCLOG.EXE 63,824 bytes (was 65,472), 1,744 of the segment spare; what stays resident
+  one paragraph more (`KEEP`'s zeroing), upper memory 7.5 KB spare. (`AFTER_INSTALL`. Test:
+  `KeepTests`, `keep` run with the install code's bytes where the buffers go. Seen in DOSBox: the
+  helper in upper memory at C90Ah, 63,952 bytes, the game 97 KB free with the map open, as before;
+  the three buffers filled in play, the new spells' room made, and the party's shadows drawn.)
+
+**Fixed: the game**
+- **The game's Great Axe +3 had no material:** its type (2) carried the 40h of things with none,
+  a ring's, so its name showed none, and under the class restrictions no sphere's cleric could
+  wield it. DSCLOG makes it metal as the game loads its types, as its icon (the game's metal axe's
+  grey and teal head) and its weight (70, the metal great axe's) have it. (`PROBE_TYPES_FILL`:
+  5 bytes, which fit the image's last paragraph's padding. Seen in
+  DOSBox: type 2's +8 read 04h, and the game's inventory named it "METAL GREAT AXE".)
+- **The creation screen's least scores weren't the manual's:** the die raised the class's prime
+  requisite to 17 and every other score to the class's one least (9 to 14), so a fighter's STR was
+  never below 17 and a thief's CHA never below 9, while a druid's CHA 15, a ranger's STR 13 and
+  DEX 13 and a psionicist's CON 11 went unasked. The least for each score is now the manual's (cleric
+  WIS 9; druid WIS 12, CHA 15; fighter STR 9; gladiator STR 13, DEX 12, CON 15; preserver INT 9;
+  psionicist CON 11, INT 12, WIS 15; ranger STR 13, DEX 13, CON 14, WIS 14; thief DEX 9), the
+  highest of a multiclass character's classes, and the dice log says "raised to 9 (the Thief's
+  minimum)". (`gamepatch` `least_scores`: 67399h's 104 bytes replaced by `dos/least_scores.asm`,
+  the overlay manager's two segment fixups kept in place; `game.CREATION_MINIMUMS`. Tests:
+  `test_least_scores`, run in the emulator. Seen in DOSBox: each class's least for each score,
+  read after a lowering click, the manual's, and three multiclass sets the highest of theirs; a
+  fighter's STR clicked down 17 to 9.)
+- **No XP bonus for high prime requisites:** the manual gives a class whose prime requisites are all
+  16 or more 10% more XP (Fighter and Gladiator STR; Ranger STR, DEX and WIS; Preserver INT; Cleric
+  WIS; Druid WIS and CHA; Thief DEX; Psionicist CON and WIS); the game's award routine (6B817h)
+  has none. The dice log's tracker now adds it to each gain it sees, whatever it came from: 10% for
+  each such class, divided by the classes, since a sheet has one XP for all of them (the game adds
+  one class's share); a human counts only the class it follows now (slot 0). The character's own
+  scores count (the sheet's), not an item's or a spell's. It writes the sheet, remembers the XP
+  with the bonus so it isn't seen as a gain again, and shows it: "XP: Dag +137 (+12 for Fighter,
+  STR 17)". A level the bonus alone reaches comes with the next award. The game's area change,
+  which takes the XP away and gives it back, brings none. The tracker also stands aside while the
+  creation screen is up (`game.creating`: DS:119Ch's sheet with DS:11A0h's record straight after
+  it): there the party's first slot carries the character being made on a stand-in sheet whose XP
+  moves with the class chosen, which the log had shown as "XP: SeanBoy +1500". (`tracker.prime_bonus`.
+  Tests: `test_prime_requisite_bonus`, `test_prime_bonus_classes`, `test_no_xp_on_the_creation_screen`.
+  Seen in DOSBox: an award of 600 gave Gerakis +660 "(+60 for Gladiator, STR 24)", K'ratchek +213
+  (his druid's CHA 15 short), Cermak +660 and Cilla +220, written once, in a game loaded after
+  the creation screen too.)
 
 ## Pull request #87 ([merged 2026-11-07](https://github.com/daaki85/darksun-obsidian-edition/pull/87))
 
