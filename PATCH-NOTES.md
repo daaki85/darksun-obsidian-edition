@@ -140,7 +140,7 @@ A few of them:
 
 ## Magic and Psionics
 
-- **[Changed]** Eleven spells as the manual describes them (a rule change, on by default): saves against Bestow Curse and Blood Flow, Flaming Sphere negated by a save, Solid Fog, Cause Fear and Minor Spell Turning for the manual's time, no save against Quicksand, Turn Pebble to Boulder 11-26, Stinking Cloud 1d4+1 rounds, Chaos saved against by creatures of very high or very low INT, Free Action freeing creatures held by Web, Solid Fog or Quicksand.
+- **[Changed]** Twelve spells as the manual describes them (a rule change, on by default): saves against Bestow Curse and Blood Flow, Flaming Sphere negated by a save, Solid Fog, Cause Fear and Minor Spell Turning for the manual's time, no save against Quicksand, Turn Pebble to Boulder 11-26, Ironskin a blow a level, Stinking Cloud 1d4+1 rounds, Chaos saved against by creatures of very high or very low INT, Free Action freeing creatures held by Web, Solid Fog or Quicksand.
 - **[Changed]** **Enlarge** makes only the weapon's dice bigger, 10% a caster level, rounded up, with STR and magic added after, as in AD&D (a rule change, on unless unticked) *(was the whole melee damage made bigger, STR included)*.
 - **[New]** Six new wizard spells, each with its own icon and description:
 

@@ -467,6 +467,10 @@ PATCHES = (
     # Quicksand (134): no save (its Stuck lasts a round and is put on again each round while the
     # quicksand lasts, a 5d3 of its own: the record's time changes nothing, seen in DOSBox)
     Patch("quicksand_no_save", 0x4304F, bytes.fromhex("a1"), bytes.fromhex("a0")),
+    # Ironskin (133): a blow stopped a caster level, not 1d6 (its level divisor, +1Dh's low bits,
+    # shared with the damage formula, made 1: it was 2; its damage stays none)
+    Patch("ironskin_charges", 0x43014, bytes.fromhex("6100"), bytes.fromhex("1001")),
+    Patch("ironskin_per_level", 0x4302D, bytes.fromhex("02"), bytes.fromhex("01")),
     # Turn Pebble to Boulder (53): 3d6+8 (11-26), not 6d6
     Patch("pebble_damage", 0x4262C, bytes.fromhex("003106"), bytes.fromhex("081f06")),
 
@@ -1068,7 +1072,8 @@ MOUSE_START = ("mouse_set", "mouse_init")  # the pointer starting in the middle,
 STEADY_PACE = ("pace_pass", "pace_draw")  # walking at full speed on the map, a late frame's next left undrawn
 SPELLS_MANUAL = ("bestow_curse_save", "blood_flow_save", "flaming_sphere_negates", "solid_fog_time",
                  "solid_fog_rounds", "spell_turning_time", "spell_turning_rounds", "cause_fear_time",
-                 "quicksand_no_save", "pebble_damage", "stinking_cloud_dice", "stinking_cloud_round", "chaos_int",
+                 "quicksand_no_save", "pebble_damage", "ironskin_charges", "ironskin_per_level",
+                 "stinking_cloud_dice", "stinking_cloud_round", "chaos_int",
                  "free_action_stuck", "free_action_loop", "free_action_word", "remove_paralysis_word",
                  "protection_paralysis_word")  # the spells as the manual has them (spells_manual)
 PARTY_SPREAD = ("party_spread", "party_gather")  # the whole party in view after a load and a fight

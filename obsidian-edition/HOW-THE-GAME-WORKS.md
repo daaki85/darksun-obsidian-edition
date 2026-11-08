@@ -375,8 +375,8 @@ change](FEATURES.md#spells-saved-against-with-the-spell-save)); durations are in
 rounds (a turn is ten). The log column is what the dice log shows for it; every
 effect line also says what the effect does.
 
-(The rows below are the game's own spells. Eleven of them, Bestow Curse, Blood Flow, Flaming Sphere,
-Solid Fog, Minor Spell Turning, Cause Fear, Quicksand's save, Turn Pebble to Boulder, Stinking Cloud,
+(The rows below are the game's own spells. Twelve of them, Bestow Curse, Blood Flow, Flaming Sphere,
+Solid Fog, Minor Spell Turning, Cause Fear, Quicksand's save, Turn Pebble to Boulder, Ironskin, Stinking Cloud,
 Chaos and Free Action, are set as the manual has them by the rule change [Spells as the manual describes
 them](FEATURES.md#spells-as-the-manual-describes-them), on by default.)
 

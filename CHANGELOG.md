@@ -61,9 +61,7 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
   3 rounds a level (was one spell, never ending); Cause Fear 1d4 rounds (was 1 a level); Quicksand no save; Turn Pebble to
   Boulder 3d6+8 (was 6d6). Cast in DOSBox: each as described; Minor Spell Turning turns every 1st- to
   3rd-level spell for its whole time. Left as they were after the DOSBox run: Magical Stone (the game
-  already throws three stones of 1d4: the report's "one" was wrong, and 3d4 made each 3d4), Ironskin
-  (its charges a level came to 0: the level of a spell cast by touch reads 0, and its record halves
-  it), Quicksand's time (its Stuck is a round at a time while the quicksand's own 5d3 rounds last). From reports/spells-against-the-manual.md's
+  already throws three stones of 1d4: the report's "one" was wrong, and 3d4 made each 3d4), Quicksand's time (its Stuck is a round at a time while the quicksand's own 5d3 rounds last). From reports/spells-against-the-manual.md's
   group 2. Then with the same switch: **Stinking Cloud** 1d4+1 rounds (was 1d6: the record's dice
   1d4, and DSCLOG's STINK_SITE adds the round, which the record can't); **Chaos** lets a creature of
   INT 21+ or 4 or less save as well as warriors (CHAOS_SITE, at the save modifiers' 79F80h);
@@ -72,7 +70,10 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
   through its own two far calls (a Poisoned creature still stays Paralyzed, as the game has it).
   FEATURES lists what is left as it is and why (Hold Undead's hit dice limit: not in the game's code
   at all; Protection from Normal Missiles, Deflection and Inertial Barrier: one effect). Tests:
-  `test_manual_spells`.
+  `test_manual_spells`. **Ironskin** a blow a caster level after all: its 0 charges in the DOSBox
+  run came from the test, not the game (a priest casting a spell outside its spheres casts it at
+  level 0: the cast's level routine, 5E25Ch, takes only the classes whose spheres the spell has),
+  and its record's level divisor (2) is now 1 too.
 - **A fight's summary as it ends** (mock-up G's): `Fight over: 2 rounds, 1 kill; the party dealt 28
   damage and took 6`, then each member's attacks hit, damage dealt, kills and damage taken, written
   once the game's fight flag has been down 2 seconds (each arena wave gets its own). A kill goes to
