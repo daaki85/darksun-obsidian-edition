@@ -413,6 +413,9 @@ ghost_seg  dw 0                 ; +1826 GHOST's block in upper memory (KEEP; 0: 
 ghost_on   dw 0                 ; +1828 the Loader sets 1 once BLEND and REP are made for the palette
                                 ;      as it is (0 while they're being made again: figures drawn as
                                 ;      ever)
+gear_due   db 0                 ; +1830 1 from a new member's DONE until the Loader has given new
+                                ;      characters their gear (GEAR_WAIT); the Loader clears it ...
+gear_given db 0                 ; +1831 ... and sets bit N first if it changed member N's items
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -971,6 +974,62 @@ probe_char:
 ; The routine's code holds, at fixed distances before the patch, the (relocated) far address
 ; of the text routine, the segment of the panel's window handle and the segment of the
 ; selected character's number: they are read from there.
+; GEAR_WAIT: (PROBE_VIEW, first) a new member just made (GEAR_DUE, set at DONE): the Loader gives
+; new characters their gear only after the game has made the character (weaponchoice.py,
+; startgear.py), and VIEW CHARACTER, drawn once, kept showing the game's (a Poisoner's bone long
+; sword, its bow and daggers only once another member was chosen and this one again). With the
+; Loader there (STATS fresh), its pass is waited for (GEAR_DUE cleared), at most GEAR_TICKS; if it
+; changed a member's items (GEAR_GIVEN), the screen is drawn again by the game's own routine, the
+; one this probe is in (CH_START, at the start of its overlay's segment, loaded and running), with
+; the new gear, before it is shown. Not again from within that (VIEW_NESTED). Registers: the
+; caller's PUSHAD keeps them.
+GEAR_TICKS equ 18               ; (about a second)
+CH_START  equ 0x89E70           ; DSUN.EXE: the routine (no arguments, RETF): its overlay stub 431Fh:3Eh
+gear_wait:
+        cmp byte [cs:gear_due], 0
+        je .ret
+        cmp byte [cs:view_nested], 0
+        jne .ret
+        push es
+        xor ax, ax
+        mov es, ax
+        mov bx, [es:0x46C]              ; (the BIOS timer: the wait's start)
+        mov ax, bx
+        sub ax, [cs:stats_stamp]
+        cmp ax, STATS_FRESH
+        jae .none                       ; (no Loader: the game's gear, as ever)
+.wait:  cmp byte [cs:gear_due], 0
+        je .waited
+        mov ax, [es:0x46C]
+        sub ax, bx
+        cmp ax, GEAR_TICKS
+        jb .wait
+.none:  mov byte [cs:gear_due], 0
+        pop es
+.ret:   ret
+.waited:
+        pop es
+        cmp byte [cs:gear_given], 0
+        je .ret
+        mov byte [cs:gear_given], 0
+        push word [cs:t_ip]             ; (the nested PROBE_VIEW's frame takes these over)
+        push word [cs:t_cs]
+        push word [cs:t_fl]
+        mov ax, [cs:t_ip]
+        sub ax, 2 + CH_PATCH - CH_START
+        mov [cs:gear_call], ax
+        mov ax, [cs:t_cs]
+        mov [cs:gear_call + 2], ax
+        mov byte [cs:view_nested], 1
+        call far [cs:gear_call]
+        mov byte [cs:view_nested], 0
+        pop word [cs:t_fl]
+        pop word [cs:t_cs]
+        pop word [cs:t_ip]
+        ret
+gear_call   dd 0
+view_nested db 0
+
 CH_PATCH  equ 0x8A471           ; DSUN.EXE offsets
 CH_DRAW   equ 0x8A2C8           ; "lcall 0150h:016Dh" operand: the text routine
 CH_WIN    equ 0x8A2BD           ; "mov ax,0430h" operand: segment of the window's far pointer
@@ -983,6 +1042,7 @@ probe_view:
         pushad
         push es
         push fs
+        call gear_wait
         mov es, [cs:t_cs]
         mov di, [cs:t_ip]
         sub di, 2               ; ES:DI = the patch
@@ -18294,6 +18354,7 @@ cr_weapons:
         mov byte [cs:lv_creating], 1
         call lv_check
         mov byte [cs:lv_creating], 0
+        mov byte [cs:gear_due], 1       ; (the Loader's gear for it, before VIEW CHARACTER shows it: GEAR_WAIT)
 .done:  mov byte [cs:ed_on], 0
         jmp ovr_back             ; (the way back as the overlay manager left it)
 .iret:  iret

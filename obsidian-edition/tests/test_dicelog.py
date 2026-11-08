@@ -1414,6 +1414,29 @@ class NewLinesTests(unittest.TestCase):
         self.assertEqual(tracker.check(2.2), [])  # waits for the others' XP
         self.assertEqual(tracker.check(3.0), ["XP: Dag +125 (for Mountain Stalker 500)"])
 
+    def test_gear_due(self):
+        """DSCLOG's GEAR_DUE (a new member's DONE): the gear pass at once, the members whose items it
+        changed in GEAR_GIVEN, then GEAR_DUE cleared, for VIEW CHARACTER to be drawn again with them;
+        the game's item lists moving, both left for the next pass."""
+        from unittest import mock
+        from dsloader.game import ItemSeen
+        log = make_game()
+        m = log.guest.mem
+        seen = lambda typ: [ItemSeen(5, 0, "Dag", "right hand", "x", typ, bytes([typ]) * game.ITEM_SIZE, b"")]
+        lists = iter([seen(1), seen(2)])
+        m[HDR + dicelog.TSR_GEAR_DUE] = 1
+        with mock.patch.object(dicelog.names, "update", return_value=True), \
+                mock.patch.object(log.game, "party_items", side_effect=lambda: next(lists)), \
+                mock.patch.object(log, "_new_gear", return_value=True):
+            log._gear_due()
+        self.assertEqual((m[HDR + dicelog.TSR_GEAR_DUE], m[HDR + dicelog.TSR_GEAR_GIVEN]), (0, 1))
+        m[HDR + dicelog.TSR_GEAR_DUE], m[HDR + dicelog.TSR_GEAR_GIVEN] = 1, 0
+        with mock.patch.object(dicelog.names, "update", return_value=True), \
+                mock.patch.object(log.game, "party_items", return_value=seen(1)), \
+                mock.patch.object(log, "_new_gear", return_value=False):
+            log._gear_due()
+        self.assertEqual((m[HDR + dicelog.TSR_GEAR_DUE], m[HDR + dicelog.TSR_GEAR_GIVEN]), (1, 0))
+
     def test_poison_damage_named(self):
         """A poison's fixed 10 (a Poisoner's hit, a monster's) is the poison's, not an earlier
         spell's roll of the same: once "takes 10 from Shocking Grasp". A new fight forgets the

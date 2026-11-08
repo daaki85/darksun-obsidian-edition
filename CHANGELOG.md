@@ -51,7 +51,24 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
   from behind as the game has it. (`STAB_FIRST`, in `PROBE_STEALTH`. Test:
   `test_backstab_first_attack_only`.)
 
+- **VIEW CHARACTER showed a new character's gear from before the Loader's** (a Poisoner's bone long
+  sword where it had a bow and daggers, its DAM line the sword's) until another member was chosen
+  and this one again: the Loader gives new characters their gear after the game has made the
+  character, and the screen, drawn once, never knew. At DONE the helper raises `gear_due`; the
+  Loader's next pass (tens of milliseconds, not the 3 seconds of its usual round) gives the gear
+  and says whose items it changed (`gear_given`); VIEW CHARACTER's probe waits for it (at most a
+  second, and only with the Loader there) and has the game's own routine draw the screen again
+  before it is shown. (`GEAR_WAIT` in `PROBE_VIEW`, the routine at 89E70h, its overlay's start:
+  stub 431Fh:3Eh; header +1830, +1831; `DiceLog._gear_due`. Tests: `test_gear_due`. Seen in
+  DOSBox: a new fighter given a bow for its weapon spec showed the bow and "DAM 1x1D6+0" at once.)
+
 **Fixed: the Loader**
+- **An item report said a new character's bone long sword "vanished"** ("the game freed it and
+  reused the number") when the Loader had made it the bow its weapon spec asks for, in the same
+  record. An item made into another where it was (its number still the same member's, the record
+  not freed) is no loss. (`itemwatch.changed_in_place`. Test: `test_changed_in_place`.)
+- The dice log's notes called the "special effect: d10" roll a thri-kreen's bite: it is the
+  disease roll (a Blue Slaad's); a thri-kreen's bite from 5th level paralyses with no d10.
 - **A Poisoner's poison was put down to another spell** ("Merzol takes 10 from Shocking Grasp"):
   a loss is named after a recent damage roll it matches, whole or halved, and the list kept an
   earlier fight's rolls. A new fight forgets them, and a poison's fixed damage (10 or 30) is its

@@ -59,6 +59,7 @@ TSR_SKILLS_ON = 266  # bits: item boxes name a cloak's and boots' bonus to hidin
 SKILLS_STEALTH, SKILLS_BELT = 1, 2  # a worn belt adds to picking pockets and opening locks (and its box says)
 SKILLS_ELVEN = 4  # the Cloak and Boots of Elvenkind's boxes name their chances (the hiding rule on)
 TSR_RING_SEG = 268  # the ring's segment (past the image, so it takes none of DSCLOG's 64 KB)
+TSR_GEAR_DUE, TSR_GEAR_GIVEN = 1830, 1831  # (DSCLOG's GEAR_WAIT: a new member's gear due; whose was given)
 TSR_CREATING = 361  # 1 while DSCLOG's weapon window asks a character being made for its weapon specs (CR_WEAPONS)
 TSR_READ_LANG = 362  # each party member's chance to read languages, kept with STATS (DSCLOG's SHINOBI_READ)
 TSR_LEARN_READ = 366  # a Shinobi's try at a scroll: the d100 to read it and the chance (intlearn.py)
@@ -94,8 +95,8 @@ BREAK_ROLL_1 = bytes.fromhex("660fbfc066c1e00366bb00800000669966f7fb3bc77d")
 BREAK_ROLL_2 = bytes.fromhex("660fbfc0666bc01466bb00800000669966f7fb3bc77d")
 # Code right after the attack function's call to the dice function
 WEAPON_DAMAGE_RETURN = bytes.fromhex("83c4068946fc0bc07f05")
-# ... and after the 1d10 for a creature's 1-in-10 special effect on a hit (the thri-kreen
-# bite, for one); the caller's arguments are (target, attacker)
+# ... and after the 1d10 for a creature's 1-in-10 special effect on a hit (a Blue Slaad's disease: kind bit 25; not the
+# thri-kreen's bite, which rolls none); the caller's arguments are (target, attacker)
 SPECIAL_EFFECT_RETURN = bytes.fromhex("83c4043d01007510")
 # The code after rand() in the game's random(low, high) (1A0A:2FA9h): low + rand() * (high - low + 1) / 8000h
 RANGE_SITE = bytes.fromhex("660fbfc08bd72bd642660fbfd2660fafc2")
@@ -1236,6 +1237,7 @@ class DiceLog:
         step(lambda: self._kit_tick(now))
         step(self._answer_stats)
         out += step(self._answer_use)
+        out += step(self._gear_due)
         out += step(self._arrows_pass)
         out += step(self._answer_look)
         out += step(lambda: self._changes(now))
@@ -1374,10 +1376,38 @@ class DiceLog:
             itemgate.release(self.game)
         return out
 
-    def _new_gear(self, out: List[str]) -> None:
+    def _gear_due(self) -> List[str]:
+        """A new member just made (DSCLOG's GEAR_DUE, at DONE): new characters' gear given now, not
+        at the next RING_INTERVAL, while VIEW CHARACTER waits to be shown (GEAR_WAIT); then the
+        members whose items changed (GEAR_GIVEN, for it to draw the screen again) and the flag
+        cleared. The game's item lists moving: the next pass."""
+        if self.tsr_hdr is None or not self.guest.read(self.tsr_hdr + TSR_GEAR_DUE, 1)[0]:
+            return []
+        out: List[str] = []
+        if not names.update(self.game, self.tsr_hdr):
+            return out
+        def items() -> Dict[int, frozenset]:
+            mine: Dict[int, set] = {}
+            for i in self.game.party_items():
+                mine.setdefault(i.member, set()).add((i.index, i.record))
+            return {m: frozenset(v) for m, v in mine.items()}
+        before = items()
+        try:
+            still = self._new_gear(out)
+        finally:
+            itemgate.release(self.game)
+        if not still:
+            return out
+        after = items()
+        given = sum(1 << m for m in range(game.PARTY_SIZE) if before.get(m) != after.get(m))
+        self.guest.write(self.tsr_hdr + TSR_GEAR_GIVEN, bytes((given,)))
+        self.guest.write(self.tsr_hdr + TSR_GEAR_DUE, b"\0")
+        return out
+
+    def _new_gear(self, out: List[str]) -> bool:
         """New characters' gear, the game's own party, ages and lists mended, in this order (each
         builds on the last), only while the game leaves its item lists be (_items_still); their
-        lines into OUT as they come (a step failing keeps those before it)."""
+        lines into OUT as they come (a step failing keeps those before it). Whether it ran."""
         still = self._items_still()
         if still:  # (the item lists changed only while the game leaves them be: itemgate.py)
             # A new character's gear waits while DSCLOG's weapon window is up after DONE: its weapon
@@ -1402,6 +1432,7 @@ class DiceLog:
             if not self.game.in_combat():  # (items an earlier version put in the wrong list)
                 out += pickpocket.mend_lists(self.game)
             itemgate.release(self.game)
+        return still
 
     def _watches(self) -> List[str]:
         """The Loader's people and items watched, each on its own (one failing leaves the rest)."""
