@@ -720,8 +720,8 @@ unmodded game loses a step or so for each picture it shows.
 
 Measured in the slave pens with the whole party walking, everything on
 (2026-11-08, `playtest/framerate.py`): at 20,000 cycles, with steady pace off,
-the game showed 16.6 pictures a second and the leader walked 80 map units a
-second; with [steady pace](FEATURES.md#game-speed) on, 10.5 pictures and 114
-(with none of the mod's drawing, 16.4 pictures and 121). Steady pace keeps the
+the game showed 18.9 pictures a second and the leader walked 103 map units a
+second; with [steady pace](FEATURES.md#game-speed) on, 15.5 pictures and 112;
+at 35,000 cycles with steady pace on, 18.9 and 141. Steady pace keeps the
 walk near the game's own by leaving out the pictures that would lose too many
 steps, rather than waiting for them.

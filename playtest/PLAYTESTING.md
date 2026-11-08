@@ -293,6 +293,25 @@ The new steady pace (steps lost against an allowance of 1.5 ticks a frame):
 | 35000, all on | 15.7 | 1.9 | 72 / 24 | 112 |
 | 20000, the mod's drawing off | 16.4 | 1.2 | 74 / 22 | 121 |
 
+The faster drawing (2026-11-08, DSCLOG's shadows, dust and see-through figures redone with the same
+picture; `obsidian-edition/tests/test_dsclog_drawing.py` counts their instructions). Each line is
+two runs, before and after in turn in one session, the old build being `DSCLOG.EXE` and source kept
+aside (`DSCLOG_ASM=` that source for framerate.py's symbols):
+
+| Cycles, settings | Shown/s before → after | Undrawn/s | Steps lost/s | Walking, map units/s |
+|---|---|---|---|---|
+| 20000, all on | 10.2 → 15.5 | 7.5 → 3.5 | 26 → 25 | 113 → 112 |
+| 20000, all on, steady pace off | 16.8 → 18.9 | 0 → 0 | (not counted) | 80 → 103 |
+| 35000, all on | 16.0 → 18.9 | 1.6 → 0.2 | 25 → 14 | 113 → 141 |
+
+How to compare two builds fairly: run them **alternately in the same session** (before, after,
+before, after) rather than against an older table: runs of one build agreed within 0.3 frames a
+second, so a difference of 1 is real. A loaded game's first framerate.py run is as good as later
+ones. `framerate.py` takes the symbols from `obsidian-edition/dos/dsclog.asm`; for another build's
+EXE in `dos/`, set `DSCLOG_ASM` to that build's source, or it reads the wrong counters. The script
+is logs/2026-11-08-drawing-savings-runs.sh (results in logs/2026-11-08-drawing-savings.md); put the EXE back and `cmp` it afterwards. Out of a fight the combat log
+panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look at a shot).
+
 ## 3. Controls that work
 
 - **Clicks**: `python3 click.py X Y [left|right|none]` in game pixels (320x200). DOSBox captures

@@ -41,6 +41,24 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 ## Next pull request (not opened yet)
 
 **Changed**
+- **The helper draws shadows, dust and see-through figures for less.** Shadows are worked out only
+  for figures whose shadow can reach the part of the view being drawn, rows outside it stepped over;
+  the shadow cache remembers each figure's slot; spans and see-through pixels are looked up with
+  XLAT; the lean comes from a table, not a division; the dust's thickness table is built once (in
+  the far block); the combat log panel is put back only when the redrawn rectangle overlaps it; dust
+  settling after a walk redraws only its rectangle; the floating names' timer code returns at once
+  with none shown. A floor pass takes 32% fewer instructions with everything on (39% with shadows
+  only), see-through figures 12% fewer, every screen byte-identical (`tests/test_dsclog_drawing.py`,
+  9 tests, against the old build's screens). In DOSBox, the whole party walking in the slave pens:
+  20,000 cycles with steady pace on, 15.5 pictures a second (was 10.2); off, 18.9 (was 16.8) and
+  walking 103 map units a second (was 80); 35,000 cycles, 18.9 pictures and 141 (was 16.0 and 113).
+  The helper is 944 bytes bigger (65,120: 448 bytes are left in its segment) and its far block 2 KB
+  (about 60.7 KB of the HMA's 64).
+- **Fixed in the helper's drawing:** a walker raised a dust puff on nearly every pass, not one per 6
+  pixels walked (AX overwritten before the add), so there is less dust now, as designed; walkers off
+  the view raised dust and widened the redrawn area; the whole view could be drawn twice in one pass
+  (the panel's tick, then the labels'); a dark area retried its shadow tables on every pass (now
+  every 9 BIOS ticks); rings alone widened the redrawn rectangles by the shadows' 72/44 (now 16/8).
 - **The dice log window has a readable layout** (mock-up G of the combat log research, on by
   default, **Readable layout** to switch back; `dsloader/ledger.py`). Each event is a line with its
   outcome first (`● Seneca hits Arena Guard for 11 — backstab, Bone Hayneedle +1`), the HP it left

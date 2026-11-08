@@ -2418,10 +2418,12 @@ rather than a slower walk. Fights draw every frame, as the game does.
 
 | Slave pens, whole party walking, everything on | Pictures a second | Walking (map units a second) |
 |---|---|---|
-| 20,000 cycles, steady pace off | 16.6 | 80 |
-| 20,000 cycles, steady pace on | 10.5 | 114 |
-| 35,000 cycles, steady pace on | 15.7 | 112 |
-| 20,000 cycles, none of the mod's drawing, steady pace on | 16.4 | 121 |
+| 20,000 cycles, steady pace off | 18.9 | 103 |
+| 20,000 cycles, steady pace on | 15.5 | 112 |
+| 35,000 cycles, steady pace on | 18.9 | 141 |
+
+(Measured after the helper's drawing was made cheaper; before it, 16.8 and 80, 10.2 and 113, and
+16.0 and 113.)
 
 ![The whole party walking back and forth in the slave pens, the same clicks on both sides: with steady pace off on the left and on on the right, where the party gets to each spot sooner](docs/steady-pace.gif)
 

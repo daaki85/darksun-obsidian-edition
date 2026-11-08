@@ -25180,7 +25180,7 @@ far_init:
 .ret:   ret
 xms       dd 0
 hma_given db 0
-no_far  db 'DSCLOG: no memory for its buffers (57 KB). Not loaded.', 13, 10, '$'
+no_far  db 'DSCLOG: no memory for its buffers (61 KB). Not loaded.', 13, 10, '$'
 
 
 msg     db 'DSCLOG loaded.', 13, 10, '$'
