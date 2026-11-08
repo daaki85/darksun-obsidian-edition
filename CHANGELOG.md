@@ -75,6 +75,13 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
   reused the number") when the Loader had made it the bow its weapon spec asks for, in the same
   record. An item made into another where it was (its number still the same member's, the record
   not freed) is no loss. (`itemwatch.changed_in_place`. Test: `test_changed_in_place`.)
+- **Pehtucl's chest opened anyway in a game from before 2.14.0** ("You must be next to the chest
+  ...", then its window): such a game made the game's plain chest as it came to the pens, but gets
+  the chest's USE command all the same, and the game opens a plain chest as a USE script ends,
+  whatever it said. The Loader now shuts a chest that isn't unlocked, as it makes a shut one a
+  chest once it is: locked and trapped as in a new game. (`pehtuclchest.watch`. Test:
+  `test_an_older_games_chest_shut`. Seen in DOSBox with a player's save: reproduced, then shut
+  within seconds of loading, and it stayed shut.)
 - The dice log's notes called the "special effect: d10" roll a thri-kreen's bite: it is the
   disease roll (a Blue Slaad's); a thri-kreen's bite from 5th level paralyses with no d10.
 - **A Poisoner's poison was put down to another spell** ("Merzol takes 10 from Shocking Grasp"):

@@ -115,6 +115,19 @@ class WatchTests(unittest.TestCase):
         self.assertEqual(self.kind(), chest.CHEST_TYPE)
 
 
+    def test_an_older_games_chest_shut(self):
+        """A game that came to the pens before 2.14.0 has the game's plain chest: shut until
+        unlocked, as in a new game (it said "You must be next to the chest" and opened anyway)."""
+        self.struct.pack_into("<H", self.mem, self.at + self.game.ITEM_TYPE, chest.CHEST_TYPE)
+        chest._seen = None
+        chest.watch(self.gd)
+        self.assertEqual(self.kind(), chest.SHUT_TYPE)
+        self.flags.add(chest.UNLOCKED)
+        chest.watch(self.gd)
+        self.assertEqual(self.kind(), chest.CHEST_TYPE)
+        chest.watch(self.gd)
+        self.assertEqual(self.kind(), chest.CHEST_TYPE)  # (and stays one)
+
 @unittest.skipUnless(OBJECTS and os.path.isfile(OBJECTS), "needs the game's SEGOBJEX.GFF (DSUN_OBJECTS)")
 class NeedleTests(unittest.TestCase):
     def test_poison_needle(self):

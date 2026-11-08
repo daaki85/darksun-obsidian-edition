@@ -177,19 +177,24 @@ _seen: Optional[int] = None  # (where the chest's record was last found)
 
 def watch(gd) -> List[str]:
     """Each pass: once UNLOCKED is set (the script, as the lock gives), the chest a chest again
-    (CHEST_TYPE), so the game opens it as the script ends and ever after. No lines."""
+    (CHEST_TYPE), so the game opens it as the script ends and ever after; until then, shut
+    (SHUT_TYPE). A game that came to the pens before 2.14.0 has the game's plain chest, made
+    then, with the USE command all the same (the pens' master script is read anew): its script
+    said "You must be next to the chest" and the game opened it anyway (seen in DOSBox, a
+    player's save). Shut, it is locked and trapped as in a new game. No lines."""
     global _seen
-    if gd.region() != REGION or not gd.flags_ready() or not gd.flag(UNLOCKED):
+    if gd.region() != REGION or not gd.flags_ready():
         return []
+    want, other = (CHEST_TYPE, SHUT_TYPE) if gd.flag(UNLOCKED) else (SHUT_TYPE, CHEST_TYPE)
     if _seen is not None and gd.guest.read(_seen, 2) == struct.pack("<h", -OBJECT) \
-            and struct.unpack("<H", gd.guest.read(_seen + game.ITEM_TYPE, 2))[0] == CHEST_TYPE:
-        return []  # (a chest already where it was last seen: the table not scanned each pass)
+            and struct.unpack("<H", gd.guest.read(_seen + game.ITEM_TYPE, 2))[0] == want:
+        return []  # (as it should be, where it was last seen: the table not scanned each pass)
     at = _chest(gd)
     _seen = at
-    if at is None or struct.unpack("<H", gd.guest.read(at + game.ITEM_TYPE, 2))[0] != SHUT_TYPE:
+    if at is None or struct.unpack("<H", gd.guest.read(at + game.ITEM_TYPE, 2))[0] != other:
         return []
     itemgate.hold(gd)  # (an item record: as the game leaves its lists)
-    gd.guest.write(at + game.ITEM_TYPE, struct.pack("<H", CHEST_TYPE))
+    gd.guest.write(at + game.ITEM_TYPE, struct.pack("<H", want))
     return []
 
 
