@@ -438,6 +438,12 @@ PATCHES = (
     # could. The first test's jne to the fail made "je" to the save: an elf or half-elf priest
     # saves as usual (found by CalvinRodo's yuan-ti, checked in DSUN.EXE)
     Patch("scare_elves", 0x79FEA, bytes.fromhex("752c"), bytes.fromhex("7431")),
+    # ... which never ran, nor the level rule before it: Scare's record (spell 21, its +1Fh, the
+    # save's byte) had bit 0, "a save allowed", clear (A0h; Charm and Hold Person's A1h), and the
+    # saving throw's routine (79A71h) answers "not saved" at its first test without it, so every
+    # creature but the undead was Scared, a 7th-level fighter too (seen in DOSBox, 2026-11-08: no
+    # save rolled). The bit set: the game's own rules above come into play
+    Patch("scare_save", 0x4222F, bytes.fromhex("a0"), bytes.fromhex("a1")),
     # The least each score may be at creation (67399h, overlay code: for an ability, the highest
     # of the character's classes' least): the game raised each class's one prime requisite to 17
     # and every other score to one number a class (9 to 14), not the manual's requirements (a

@@ -40,6 +40,14 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 
 ## Next pull request (not opened yet)
 
+**Fixed: the game**
+- **Scare allowed no saving throw at all,** so the 2.14.0 fix (`scare_elves`: an elf or half-elf
+  priest's save) never ran, nor the game's own rule that 6th level and up always save: its record's
+  save byte (+1Fh) had "a save allowed" clear, and the saving throw (79A71h) stops at that test.
+  Seen in DOSBox: Scare on Merzol, a 7th-level fighter, and a 3rd-level gladiator, no save rolled
+  for either (the caster, inside the area, Scared too). The bit set (`scare_save`, 4222Fh A0h ->
+  A1h). (Found in the manual's review: reports/spells-against-the-manual.md.)
+
 **Fixed: DSCLOG**
 - **A thief's later attacks in a round could still backstab:** with **A backstab multiplies the
   weapon's dice only**, only the round's first attack is meant to be a backstab, but the count it

@@ -204,12 +204,14 @@ Class, race and abilities:
 Spells with rules of their own: creatures of 6th level or lower can't save
 against Cloudkill; against Chaos only warriors (fighters, gladiators and
 rangers) can; against Dismissal the target adds its level and takes away the
-caster's; and against Scare, 6th level and up always save and everyone below
-can't. The Scare code looks meant to let some elf or half-elf priests save
-(AD&D gives elves, half-elves and priests a bonus), but it asks for a
-creature that is both an elf and a half-elf, so no one qualifies (the
-patched game lets an elf or half-elf priest save:
-[The game's bugs, fixed](FEATURES.md#the-games-bugs-fixed)).
+caster's. Against Scare no one saves at all: its record allows no save, so the
+saving throw ends at its first test and the rules the save code has for Scare
+never run. Those rules: 6th level and up always save and everyone below can't,
+but for some elf or half-elf priests (AD&D gives elves, half-elves and priests
+a bonus), which it asks for as a creature that is both an elf and a half-elf,
+so no one qualifies. The patched game allows the save, so the rules run, and
+lets an elf or half-elf priest save:
+[The game's bugs, fixed](FEATURES.md#the-games-bugs-fixed).
 
 Rules in the code that never come into play: Cloak of Bravery's +4 against
 fear applies only to a kind of spell that no spell in the game is marked as

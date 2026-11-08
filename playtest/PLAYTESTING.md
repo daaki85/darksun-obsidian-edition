@@ -494,7 +494,14 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
    does nothing ("Move : 0"). For a test that needs reach, raise its Move in memory first (the
    old movekeeper.py did; rebuild it when needed: the combat record's movement, see
    dsloader/game.py), and restore it after; never save the game while it's raised.
-6. **Spells**: open the USE button (24,17), page to the spell, click its icon, then the target;
+6. **Spells**: open the USE button (24,17), page to the spell, click its icon, then the target
+   (2026-11-08: a plain click on the icon closes the screen and gives an aiming pointer with the
+   spell's range drawn as a ring of beads; a click on a figure inside casts. The icons drawn
+   **crossed out** can't be cast then: clicks on them do nothing, and RETURN TO GAME then a map
+   click walks the caster instead. They were crossed at a turn's start and plain the next round;
+   why is open. A spell taught in memory (the known byte at segment DS-B56h, 168h + member x 8Ah
+   + spell) shows and casts as any other. `passto.sh N` passes the party's turns to member N's,
+   opening each END menu by a click above the figure, checked by the screen changing, before E);
    out of a fight (U, the caster's portrait, e.g. Cermak 66,108) the target is a portrait on the
    same screen: the icon (177,59 the first), then the target's portrait (Gerakis 66,62), and the
    dice log says it ("Cermak gives Enlarged to Gerakis"); no name floats, the screen covers the

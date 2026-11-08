@@ -29,7 +29,7 @@ DSCLOG handler; **large** new game mechanics.
 
 ## Preserver spells (manual pp. 29-34)
 
-### Scare (2nd): no save for anyone
+### Scare (2nd): no save for anyone (seen in DOSBox 2026-11-08; the save bit set since: `scare_save`)
 - **Manual (p. 31):** creatures below six HD or levels tremble; "Saving throw: Neg."
 - **Game:** no save at all (above); Afraid 1d4 + 1 round a level, undead immune.
 - **Impact:** far stronger than the manual: it works on 6th-level foes and the arena's champions.

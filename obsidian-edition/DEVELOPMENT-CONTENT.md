@@ -288,7 +288,11 @@ after the `ns_list_` patches):
   (the sheet's +18h) is 3 and is 4: "cmp 3 / jne fail" (79FEAh), then "cmp 4 / je save"
   (7A011h), so everyone below 6th failed (-100). `scare_elves` makes the first "je" to the save
   (7A01Dh): an elf or half-elf priest saves as usual, as AD&D's elves, half-elves and priests
-  resist fear (found by yuan-ti).
+  resist fear (found by yuan-ti). None of this ran before `scare_save`: Scare's record's save byte
+  (+1Fh, 4222Fh) was A0h, bit 0 ("a save allowed") clear, and the saving throw (79A71h) answers
+  "not saved" at its first test (79A89h) without it, before the modifiers. `scare_save` sets it
+  (A1h, as Charm and Hold Person's). Seen in DOSBox before it: Scare on a 7th-level fighter, no
+  save rolled (playtest/logs/2026-11-08-scare-no-save.md).
 - **The creation screen's minimums** (67399h, far, `[bp+6]` the class count and `[bp+8]` the
   ability; its answer goes to `DS:4994h`): the game's own looked each creation class (the sheet's
   +21h, 1-8) up in the table at `338:180h` (a word, the prime requisite, then a byte) and gave 17
