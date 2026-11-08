@@ -74,7 +74,8 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
 
 **The environment's setup script (2026-11-06):** the user's "Google Drive" cloud environment now
 installs `innoextract nasm dosbox xdotool`, `pip install capstone unicorn`, and runs
-`setup_game.sh` into `/tmp/playtest/inst` when the container is built fresh, with
+`setup_game.sh` into `/tmp/playtest/inst` (and, from 2026-11-08, `setup_ravager.sh` into
+`/tmp/playtest/rav`, about 12 s) when the container is built fresh, with
 `drive.usercontent.google.com` and `drive.google.com` already allowed. So a new session should
 only need `export PLAYTEST_WORK=/tmp/playtest`, then `loadsave.sh` (check `command -v dosbox` and
 `$PLAYTEST_WORK/inst/DSUN.EXE` first; if missing, do it by hand, as below). Checked by hand
