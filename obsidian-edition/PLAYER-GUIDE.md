@@ -964,6 +964,17 @@ between a character's classes) and from deeds along the way. A level up comes
 by itself, with hit points, a better THAC0 and saves, spell slots, a new
 preserver spell or psionic power, and any weapon spec due.
 
+A class whose **prime requisites are all 16 or more** ([the
+table](#ability-scores)) gains **10% more XP** from everything, as the manual
+has it: a fighter with STR 16, a ranger with STR, DEX and WIS 16. The
+character's own scores count, not what an item or a spell gives. A character
+of several classes has one XP for them all, so each class with the bonus adds
+10% divided by the classes: a fighter/thief with both 10%, with one 5%. A
+human counts the class it follows now. The Loader adds the bonus as each
+award comes (the dice log shows it: `+12 for Fighter, STR 17`), so it needs the
+Loader following the game; a level that the bonus alone reaches comes with the
+next award. *Without the mod:* no bonus.
+
 Levels stop at a cap of **749,999 XP**, shared out: a character of one class
 goes up while its next level needs no more; two classes share it evenly
 (374,999 each), three too (249,999); and a human who changed class has the

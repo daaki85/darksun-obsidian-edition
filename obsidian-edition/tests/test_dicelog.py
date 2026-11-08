@@ -1414,6 +1414,60 @@ class NewLinesTests(unittest.TestCase):
         self.assertEqual(tracker.check(2.2), [])  # waits for the others' XP
         self.assertEqual(tracker.check(3.0), ["XP: Dag +125 (for Mountain Stalker 500)"])
 
+    def test_prime_requisite_bonus(self):
+        """10% more XP for a class whose prime requisites are all 16 or more (the manual's; the
+        game gives none), added to the sheet, on the XP line, and not counted as a gain again."""
+        log = make_game()
+        tracker, m = log.tracker, log.guest.mem
+        m[SHEETS + game.SHEET_CLASSES] = 9  # a Fighter
+        m[SHEETS + game.SHEET_ABILITIES:SHEETS + game.SHEET_ABILITIES + 6] = bytes((17, 10, 21, 8, 9, 6))
+        struct.pack_into("<h", m, CREATURES + STALKER * game.CREATURE_SIZE, 20)
+        tracker.check(1.0)
+        struct.pack_into("<h", m, CREATURES + STALKER * game.CREATURE_SIZE, -3)
+        tracker.check(2.0)
+        struct.pack_into("<I", m, SHEETS, 125)
+        self.assertEqual(tracker.check(2.2), [])
+        self.assertEqual(tracker.check(3.0), ["XP: Dag +137 (+12 for Fighter, STR 17) (for Mountain Stalker 500)"])
+        self.assertEqual(struct.unpack_from("<I", m, SHEETS)[0], 137)
+        self.assertEqual(tracker.check(4.0) + tracker.check(5.0), [])  # (the bonus is no gain of its own)
+        # STR 15: none
+        m[SHEETS + game.SHEET_ABILITIES] = 15
+        struct.pack_into("<I", m, SHEETS, 237)
+        self.assertEqual(tracker.check(6.0) + tracker.check(7.0), ["XP: Dag +100"])
+
+    def test_prime_bonus_classes(self):
+        """A sheet's one XP for all its classes: 10% of the gain for each class whose prime
+        requisites are all 16 or more, divided by the classes; a human counts only the class
+        followed now (slot 0); every prime requisite counts (a ranger's STR, DEX and WIS)."""
+        def sheet(race, classes, scores):
+            out = bytearray(game.SHEET_SIZE)
+            out[game.SHEET_RACE] = race
+            out[game.SHEET_CLASSES:game.SHEET_CLASSES + 3] = bytes(classes + [0] * (3 - len(classes)))
+            out[game.SHEET_ABILITIES:game.SHEET_ABILITIES + 6] = bytes(scores)
+            return bytes(out)
+        bonus = tracker_module.prime_bonus
+        dwarf, elf = 2, 3
+        # a fighter/thief, both prime requisites 16 or more: 10%
+        self.assertEqual(bonus(sheet(dwarf, [9, 17], [16, 16, 10, 10, 10, 10]), 1000),
+                         (100, ["Fighter, STR 16", "Thief, DEX 16"]))
+        # only the fighter's: half of that
+        self.assertEqual(bonus(sheet(dwarf, [9, 17], [16, 15, 10, 10, 10, 10]), 1000), (50, ["Fighter, STR 16"]))
+        # a fighter/preserver/thief with the preserver's alone: a third
+        self.assertEqual(bonus(sheet(elf, [9, 11, 17], [10, 10, 10, 18, 10, 10]), 900), (30, ["Preserver, INT 18"]))
+        # a ranger needs STR, DEX and WIS
+        self.assertEqual(bonus(sheet(elf, [13], [16, 16, 10, 10, 15, 10]), 1000), (0, []))
+        self.assertEqual(bonus(sheet(elf, [14], [16, 17, 10, 10, 16, 10]), 1000),
+                         (100, ["Ranger, STR 16 DEX 17 WIS 16"]))
+        # a druid WIS and CHA; a psionicist CON and WIS
+        self.assertEqual(bonus(sheet(elf, [6], [10, 10, 10, 10, 16, 15]), 1000), (0, []))
+        self.assertEqual(bonus(sheet(elf, [12], [10, 10, 16, 10, 16, 10]), 1000),
+                         (100, ["Psionicist, CON 16 WIS 16"]))
+        # a human once a fighter, now a thief: the thief's DEX only
+        self.assertEqual(bonus(sheet(game.HUMAN, [17, 9], [18, 12, 10, 10, 10, 10]), 1000), (0, []))
+        self.assertEqual(bonus(sheet(game.HUMAN, [17, 9], [12, 16, 10, 10, 10, 10]), 1000), (100, ["Thief, DEX 16"]))
+        # no gain, no bonus
+        self.assertEqual(bonus(sheet(dwarf, [9], [18, 10, 10, 10, 10, 10]), -50), (0, []))
+
     def test_leaving_an_area_kills_no_one(self):
         """Going to another area the game drops the old area's people and clears or reuses their
         records: no deaths logged (once every guard of the arena was "killed" on leaving the pens).

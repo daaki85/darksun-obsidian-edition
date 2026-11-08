@@ -90,6 +90,17 @@ Releases, newest first: [2.14.0](#pull-request-87-merged-2026-11-07) (#86 and #8
   minimum)". (`gamepatch` `least_scores`: 67399h's 104 bytes replaced by `dos/least_scores.asm`,
   the overlay manager's two segment fixups kept in place; `game.CREATION_MINIMUMS`. Tests:
   `test_least_scores`, run in the emulator.)
+- **No XP bonus for high prime requisites:** the manual gives a class whose prime requisites are all
+  16 or more 10% more XP (Fighter and Gladiator STR; Ranger STR, DEX and WIS; Preserver INT; Cleric
+  WIS; Druid WIS and CHA; Thief DEX; Psionicist CON and WIS); the game's award routine (6B817h)
+  has none. The dice log's tracker now adds it to each gain it sees, whatever it came from: 10% for
+  each such class, divided by the classes, since a sheet has one XP for all of them (the game adds
+  one class's share); a human counts only the class it follows now (slot 0). The character's own
+  scores count (the sheet's), not an item's or a spell's. It writes the sheet, remembers the XP
+  with the bonus so it isn't seen as a gain again, and shows it: "XP: Dag +137 (+12 for Fighter,
+  STR 17)". A level the bonus alone reaches comes with the next award. The game's area change,
+  which takes the XP away and gives it back, brings none. (`tracker.prime_bonus`. Tests:
+  `test_prime_requisite_bonus`, `test_prime_bonus_classes`.)
 
 ## Pull request #87 ([merged 2026-11-07](https://github.com/daaki85/darksun-obsidian-edition/pull/87))
 
