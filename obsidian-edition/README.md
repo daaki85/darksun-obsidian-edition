@@ -508,7 +508,25 @@ way; Escape clears it. Case doesn't matter, and hidden details aren't searched
 (tick **Show details** to include them). While you're looking at a match the
 log stays put as new lines come in. The Dialogue tab has the same box.
 
-**Reading it at a glance.** Lines at the left edge are the events: a round
+**The readable layout** (on unless **Readable layout**, above the log, is
+unticked; remembered): each event on a line of its own with what came of it
+first, `● Seneca hits Arena Guard for 11 — backstab, Bone Hayneedle +1`, then
+in columns at the right the HP it left (`19/30 (−11)`, marked `!` and coral
+when a party member is down to a third) and the roll (`d20 15 vs 4+ (85%) · AC
+8`). Under it, smaller and dim, the working: the to-hit sum against the
+target's AC with the lowest AC the roll would have hit, the damage dice, a
+save's line in full, each initiative score. A party member's line has a filled
+pip, a monster's a hollow one; a round starts with a rule and its order, a turn
+with `▸` and the name. The outcome's colour is the party's view of it: sky
+blue for good (the party hits, a monster fails its save), coral for bad (a
+monster hits, a party member fails), dim for a miss or a monster's save, gold
+for a kill. **Show details** hides the working as before. The log's own lines
+are kept as written: unticking the layout shows them again, and **Save...**
+and the crash and freeze reports use them.
+
+![The readable layout: the same fight with the working shown and hidden](docs/dicelog-readable.png)
+
+**Reading the lines as written.** Lines at the left edge are the events: a round
 starting, whose turn it is, attack rolls, saves, spells, kills. Lines indented
 two spaces are their results (damage, HP left); lines indented four spaces are
 the details: the sums behind a THAC0, a save's modifiers, the initiative

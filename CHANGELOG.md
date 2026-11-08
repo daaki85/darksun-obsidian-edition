@@ -41,6 +41,16 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 ## Next pull request (not opened yet)
 
 **Changed**
+- **The dice log window has a readable layout** (mock-up G of the combat log research, on by
+  default, **Readable layout** to switch back; `dsloader/ledger.py`). Each event is a line with its
+  outcome first (`● Seneca hits Arena Guard for 11 — backstab, Bone Hayneedle +1`), the HP it left
+  and the roll in columns at the right, and the working under it, smaller and dim: the to-hit sum
+  with the AC it would have hit, the damage dice, the save's line in full, each initiative score.
+  Pips for whose line it is, a rule for each round, `▸` for each turn; the outcome coloured by the
+  party's view of it (sky blue good, coral bad, dim for misses and monsters' saves, gold for kills;
+  each at 4.5:1 or more on the log). A hit's damage and the HP left are filled into its line as their
+  own lines arrive. The log's own lines are kept: Save..., the crash and freeze reports and the
+  layout switched off use them. (Tests: `test_ledger`.)
 - **Steady pace keeps the game's real schedule,** and the choppy walking is gone. The game moves
   everything on the map a step at each tick of its clock (96 a second: its timer sets DS:1F7Eh,
   and the step runs only with it set), so a tick that passes while a picture is drawn is a step

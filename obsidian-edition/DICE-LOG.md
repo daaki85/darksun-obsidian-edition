@@ -4,6 +4,11 @@
 of line the Loader's dice log writes, and what it means. How to read and search the log is in the
 README.*
 
+The lines below are the log as it is written: what **Save...** writes, and what the window shows
+with **Readable layout** unticked. With it ticked (the default) the window lays the same lines out
+outcome first, the roll and HP in columns, the working dimmed under each ([the readable
+layout](README.md#the-dice-log)).
+
 ## Contents
 
 - [Fights](#fights)

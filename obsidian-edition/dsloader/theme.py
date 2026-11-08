@@ -14,13 +14,14 @@ from tkinter import font as tkfont
 from tkinter import ttk
 from typing import Tuple
 
-from .palette import (AMBER, BUTTON, BUTTON_LIT, DARK, DEEP, EDGE_LIT, FOCUS, GREEN, LOG_COLOURS,  # noqa: F401
+from .palette import (LEDGER_COLOURS, AMBER, BUTTON, BUTTON_LIT, DARK, DEEP, EDGE_LIT, FOCUS, GREEN, LOG_COLOURS,  # noqa: F401
                       MONSTER_COLOUR, NAME, PALE, PARTY_COLOURS, PANEL, PSI_BLUE, ROCK, SAND, SHADOW, STONE,
                       SUBTITLE, YELLOW)  # (GREEN and the colours for the logs: the viewer's, from here)
 
 # Named fonts, so Ctrl + / Ctrl - can enlarge all text at once
 BASE_SIZES = {"TkDefaultFont": 10, "TkTextFont": 10, "TkFixedFont": 10, "TkHeadingFont": 10,
-              "TkMenuFont": 10, "LedgerHeading": 10, "LedgerTitle": 20, "LedgerSmall": 9, "LedgerFixedBold": 10}
+              "TkMenuFont": 10, "LedgerHeading": 10, "LedgerTitle": 20, "LedgerSmall": 9, "LedgerFixedBold": 10,
+              "LedgerFixedSmall": 9}
 _scale = 1.0
 _fonts = {}  # tkinter deletes a named font when its Font object goes, so keep them
 
@@ -35,7 +36,8 @@ def make_fonts(root: tk.Misc) -> None:
     for name, family, weight, slant in (("LedgerHeading", serif, "bold", "roman"),
                                         ("LedgerTitle", serif, "bold", "roman"),
                                         ("LedgerSmall", "TkDefaultFont", "normal", "italic"),
-                                        ("LedgerFixedBold", "TkFixedFont", "bold", "roman")):  # the log's names
+                                        ("LedgerFixedBold", "TkFixedFont", "bold", "roman"),  # the log's names
+                                        ("LedgerFixedSmall", "TkFixedFont", "normal", "roman")):  # its working
         if name not in _fonts:
             if family in ("TkDefaultFont", "TkFixedFont"):
                 family = tkfont.nametofont(family).actual("family")

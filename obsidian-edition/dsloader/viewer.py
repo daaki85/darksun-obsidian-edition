@@ -17,11 +17,12 @@ import subprocess
 import sys
 import time
 import tkinter as tk
+from collections import deque
 from tkinter import filedialog, messagebox, simpledialog, ttk
 from tkinter import font as tkfont
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
-from . import __version__, art, combatlog, dicelog, freeze, game, kits, launch, namedsaves, partyview, rings, spellbook, theme, values
+from . import __version__, art, combatlog, dicelog, ledger, freeze, game, kits, launch, namedsaves, partyview, rings, spellbook, theme, values
 from .dicelog import DiceLog, DiceLogError
 from .guestmem import GuestMemory
 from .layout import Layout
@@ -147,9 +148,8 @@ class Viewer:
         tabs.add(dice, text="Dice log", underline=5)
         row = ttk.Frame(dice)
         row.pack(fill="x")
-        ttk.Button(row, text="Clear", command=lambda: self.dice_text.delete("1.0", "end")).pack(side="right")
-        ttk.Button(row, text="Save...", command=lambda: self.save_text(self.dice_text, "dice log")).pack(
-            side="right", padx=4)
+        ttk.Button(row, text="Clear", command=self.clear_dice).pack(side="right")
+        ttk.Button(row, text="Save...", command=self.save_dice).pack(side="right", padx=4)
         self.dice_status = tk.StringVar(value="Waiting for the game...")
         ttk.Label(row, textvariable=self.dice_status).pack(side="left", fill="x")
         dice_find = ttk.Frame(dice)
@@ -165,6 +165,11 @@ class Viewer:
                         ).pack(side="left")
         self.show_all = tk.BooleanVar(value=False)
         ttk.Checkbutton(row, text="Show unlabelled rolls", variable=self.show_all).pack(side="left", padx=(12, 0))
+        # the readable layout (ledger.py): the outcome first, the roll and HP in columns, the working
+        # under it; off, the log's own lines as they are written
+        self.readable = tk.BooleanVar(value=launch.load_settings().get("dice_layout", "readable") == "readable")
+        ttk.Checkbutton(row, text="Readable layout", variable=self.readable, command=self._layout_changed
+                        ).pack(side="left", padx=(12, 0))
         # the round's order stays here while the log scrolls on: who acts now, who is still to come
         self.round_line = tk.StringVar(value="")
         self.round_label = ttk.Label(dice, textvariable=self.round_line, style="Status.TLabel", wraplength=900,
@@ -188,7 +193,19 @@ class Viewer:
         # so they show over the line's own colour)
         for n, colour in enumerate(theme.PARTY_COLOURS):
             self.dice_text.tag_configure(f"member{n}", foreground=colour, font="LedgerFixedBold")
+        # the readable layout's: its roles' colours, the working smaller, the turn's marker, the
+        # event rows' columns (tabs set to the widget's width: _set_columns)
+        for role, colour in theme.LEDGER_COLOURS.items():
+            self.dice_text.tag_configure(f"lg_{role}", foreground=colour)
+        self.dice_text.tag_configure("lg_detail", font="LedgerFixedSmall", lmargin1=0, lmargin2=0)
+        self.dice_text.tag_configure("lg_turn", font="LedgerFixedSmall", spacing1=4)
+        self.dice_text.tag_configure("lg_round", spacing1=8, spacing3=2)
+        self.dice_text.tag_configure("lg_event", spacing1=2)
+        self.dice_text.bind("<Configure>", lambda e: self._set_columns(e.width), add="+")
         self.dice_text.tag_configure("monster", foreground=theme.MONSTER_COLOUR, font="LedgerFixedBold")
+        self._raw_dice: "deque[str]" = deque(maxlen=MAX_LOG_LINES)  # (the log's own lines, as written)
+        self._ledger = ledger.Ledger(lambda name: False)
+        self._slots: Set[str] = set()  # (the readable layout's slots waiting for their fills)
         self._monster_names: Set[str] = set()  # every monster seen in a fight this session
         self._finds: Dict[ttk.Frame, ttk.Entry] = {}  # each tab's find box, for Ctrl+F
         self._find_bar(dice_find, self.dice_text, dice)
@@ -792,7 +809,7 @@ class Viewer:
         try:
             path = freeze.freeze_report(self.guest.read, hdr, ds, __version__,
                                         launch.effective_switches(launch.load_settings()),
-                                        self.dice_text.get("1.0", "end-1c"), self.talk_text.get("1.0", "end-1c"),
+                                        "\n".join(self._raw_dice), self.talk_text.get("1.0", "end-1c"),
                                         launch.CRASH_DIR)
         except Exception as e:  # (DOSBox gone, say): said, not raised
             self.status.set(f"No freeze report: {e}")
@@ -878,7 +895,7 @@ class Viewer:
         crash-logs (launch.crash_report), and say where in the log."""
         now = time.time()
         refused = list(self.guest.refused) if self.guest is not None else self._refused
-        text = launch.crash_report(code, note, launch.load_settings(), self.dice_text.get("1.0", "end"),
+        text = launch.crash_report(code, note, launch.load_settings(), "\n".join(self._raw_dice) + "\n",
                                    self.talk_text.get("1.0", "end"), refused,
                                    launch.dosbox_output(self._game_dir, self._started), self._started, now)
         try:
@@ -1495,17 +1512,114 @@ class Viewer:
                 taken.append((start, end))
                 self.dice_text.tag_add(tag, f"{row}.{start}", f"{row}.{end}")
 
-    def _append_dice(self, lines: List[str]) -> None:
+    def _append_dice(self, lines: List[str], keep: bool = True) -> None:
         names = self._log_names() if lines else []
+        if keep:
+            self._raw_dice.extend(lines)
+        readable = self.readable.get()
+        if readable:
+            party = {name for name, tag in names if tag.startswith("member")}
+            self._ledger.is_party = party.__contains__
         for line in lines:
-            tag = combatlog.line_kind(line)
-            self.dice_text.insert("end", line + "\n", tag)
-            self._colour_names(line, names)
+            if not readable:
+                tag = combatlog.line_kind(line)
+                self.dice_text.insert("end", line + "\n", tag)
+                self._colour_names(line, names)
+                continue
+            for op in self._ledger.feed(line):
+                if isinstance(op, ledger.Fill):
+                    self._fill(op, names)
+                else:
+                    self._row(op, line, names)
         excess = int(self.dice_text.index("end-1c").split(".")[0]) - MAX_LOG_LINES
         if excess > 0:
             self.dice_text.delete("1.0", f"{excess + 1}.0")
+            for sid in [sid for sid in self._slots if self.dice_text.index(sid) == "1.0"]:
+                self.dice_text.mark_unset(sid)  # (its row gone: never filled)
+                self._slots.discard(sid)
         if self._following.get(self.dice_text, True):
             self.dice_text.see("end")
+
+    _KIND_TAGS = {ledger.EVENT: ("lg_event",), ledger.DETAIL: ("detail", "lg_detail"), ledger.TURN: ("lg_turn",),
+                  ledger.ROUND: ("lg_round",)}
+
+    def _row(self, row: "ledger.Row", line: str, names: List[Tuple[str, str]]) -> None:
+        """A row of the readable layout at the log's end, its slots marked for their fills."""
+        start = self.dice_text.index("end-1c")
+        kind_tags = self._KIND_TAGS.get(row.kind) or (row.plain_kind or combatlog.line_kind(line),)
+        for piece in row.pieces:
+            if piece.slot:
+                self.dice_text.mark_set(piece.slot, "end-1c")
+                self.dice_text.mark_gravity(piece.slot, "left")  # (the rows after it come after it)
+                self._slots.add(piece.slot)
+                continue
+            tags = kind_tags if row.kind == ledger.PLAIN else kind_tags + (f"lg_{piece.role}",)
+            self.dice_text.insert("end", piece.text, tags)
+        self.dice_text.insert("end", "\n", kind_tags)
+        if row.kind != ledger.DETAIL:  # (the working stays dim: the names stand out above it)
+            self._colour_range(start, self.dice_text.index("end-1c"), names)
+
+    def _fill(self, fill: "ledger.Fill", names: List[Tuple[str, str]]) -> None:
+        """A slot an earlier row left, filled (a hit's damage, the HP left)."""
+        if fill.slot not in self._slots:
+            return
+        self._slots.discard(fill.slot)
+        at = self.dice_text.index(fill.slot)
+        line_tags = tuple(t for t in self.dice_text.tag_names(f"{at} linestart") if t.startswith("lg_event"))
+        for piece in reversed(fill.pieces):
+            self.dice_text.insert(fill.slot, piece.text, line_tags + (f"lg_{piece.role}",))
+        end = self.dice_text.index(f"{at}+{sum(len(p.text) for p in fill.pieces)}c")
+        self.dice_text.mark_unset(fill.slot)
+        self._colour_range(at, end, names)
+
+    def _colour_range(self, start: str, end: str, names: List[Tuple[str, str]]) -> None:
+        """Tag each name between START and END (a row or a fill just added)."""
+        text = self.dice_text.get(start, end)
+        taken: List[Tuple[int, int]] = []
+        for name, tag in names:
+            for found in re.finditer(r"(?<!\w)" + re.escape(name) + r"(?!\w)", text):
+                a, b = found.span()
+                if any(a < y and x < b for x, y in taken):
+                    continue
+                taken.append((a, b))
+                self.dice_text.tag_add(tag, f"{start}+{a}c", f"{start}+{b}c")
+
+    def _set_columns(self, width: int) -> None:
+        """The event rows' columns: the HP right-aligned, then the roll, both at the window's right."""
+        char = tkfont.nametofont("TkFixedFont").measure("0")
+        roll_at = max(char * 40, width - 16 - char * 30)
+        self.dice_text.tag_configure("lg_event", tabs=(roll_at - char * 2, "right", roll_at, "left"),
+                                     lmargin2=char * 4)
+        small = tkfont.nametofont("LedgerFixedSmall").measure("0")
+        self.dice_text.tag_configure("lg_detail", lmargin2=small * 8)  # (a long working's next lines, under it)
+
+    def _layout_changed(self) -> None:
+        """The readable layout on or off: the log shown again from its own lines."""
+        self._save_settings({"dice_layout": "readable" if self.readable.get() else "classic"})
+        self.dice_text.delete("1.0", "end")
+        for sid in self._slots:
+            self.dice_text.mark_unset(sid)
+        self._slots.clear()
+        self._ledger = ledger.Ledger(lambda name: False)
+        self._append_dice(list(self._raw_dice), keep=False)
+
+    def clear_dice(self) -> None:
+        self.dice_text.delete("1.0", "end")
+        self._raw_dice.clear()
+        self._slots.clear()
+        self._ledger = ledger.Ledger(lambda name: False)
+
+    def save_dice(self) -> None:
+        """Save the log's own lines (as written, whichever layout shows them)."""
+        path = filedialog.asksaveasfilename(title="Save the dice log", defaultextension=".txt",
+                                            filetypes=[("Text", "*.txt"), ("All files", "*.*")])
+        if not path:
+            return
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                f.write("\n".join(self._raw_dice) + "\n")
+        except OSError as e:
+            messagebox.showerror("Save", f"Couldn't save the dice log: {e}")
 
     def _ac_rows(self, slots) -> List[Tuple[str, List[str]]]:
         """The AC the game last worked out for each character in a fight, and what it was made

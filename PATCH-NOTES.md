@@ -289,6 +289,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 
 ## The Loader
 
+- **[New]** The dice log reads at a glance: each event on one line, what came of it first (`● Seneca hits Arena Guard for 11 — backstab`), the HP left and the roll in columns at the right, the sums under it dimmed, coloured by whether it went well or badly for the party. **Readable layout** above the log switches back to the lines as written.
 - **[New]** The Loader: it starts the game with the mod and your options, and stays open while you play, laid out in the game's own colours.
 - **[New]** **The dice log:** every attack, damage roll, saving throw, thief skill, initiative score and character creation roll as it happens, with the number it needed, the chance of success, and where every bonus came from.
 - **[New]** **Characters:** each party member's sheet as View Character lays it out, plus THAC0 with each weapon, saves as the d20 needed right now, attacks a round, current AC and what it's made of, spell slots and thief skills.
