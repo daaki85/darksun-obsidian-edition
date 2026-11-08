@@ -16,7 +16,8 @@ def symbols(*names):  # (their offsets from the header, from a symbol map of the
     dos = os.path.join(os.path.dirname(PLAYTEST), "obsidian-edition", "dos")
     with tempfile.TemporaryDirectory() as tmp:
         src, out, mp = (os.path.join(tmp, n) for n in ("m.asm", "m.bin", "m.map"))
-        open(src, "w").write(f"[map symbols {mp}]\n" + open(os.path.join(dos, "dsclog.asm")).read())
+        asm = os.environ.get("DSCLOG_ASM", os.path.join(dos, "dsclog.asm"))  # (another build's source, for its EXE)
+        open(src, "w").write(f"[map symbols {mp}]\n" + open(asm).read())
         subprocess.run(["nasm", "-f", "bin", "-I", dos + "/", "-o", out, src], check=True)
         found = {}
         for line in open(mp).read().split("Section image")[1].splitlines():

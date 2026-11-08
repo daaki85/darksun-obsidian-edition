@@ -760,3 +760,34 @@ Loader draws the party's gear on are each exactly as long as their outfit,
 with only the room gear needs round the figure while walking (6 pixels at the
 sides, 2 above; 10 in a fight), since the game draws a walking figure's whole
 picture at every step.
+
+The drawing was made cheaper again on 2026-11-08, with the same picture
+(`tests/test_dsclog_drawing.py` runs it over a scene of figures against an
+emulated VGA, checks every screen against the one drawn before the change, and
+counts the instructions; DOSBox charges about a cycle each). A figure's shadow
+is tested against the part of the view being drawn again using its frame's
+real width and height, so a figure whose shadow can't reach that part costs
+nothing (the strip right of the combat log's panel and the rows under it are
+drawn as parts of their own). A frame row outside that part is passed over
+before any of its runs is worked out. Each thing remembers which slot of the
+shadows' cache holds its frame, so the 80 slots are searched only for a frame
+not seen before. The spans are darkened through `XLAT`, and the slant of a
+run comes from a table in place of a division. A dust puff's thickness by age,
+row and column is worked out once (DUST_BUILD, in the far block) in place of
+for every row of every puff, every pass. A see-through figure's pixels go
+through `XLAT` in place of a call. The four floor calls of a frame drawn round
+the panel now take 32% fewer instructions with everything on, 39% fewer with
+shadows alone, and 28% fewer with dust alone. A see-through figure takes 12% fewer.
+Some other passes are skipped. The panel is put again only when the floor drawn
+reaches it: the game draws the figures of a rectangle on a page of the
+rectangle's own, so the rectangles REDRAW_PARTS draws round the panel can't
+cover it. The view is drawn whole at most once in a pass of the main loop
+(the panel and the labels each asked for it after a scroll). When no slot
+holds a label, LABEL_STAMP returns at once. After walking stops, the dust's
+leftovers are cleared with a rectangle round them, not the whole view. A
+palette too dark for DARK (a fade, or a dark area) is tried again twice a
+second, not in every floor pass. Rings alone widen the rectangles by 16 and 8
+pixels, not by a shadow's 72 and 44.
+A walker now raises a puff every 6 pixels, as meant. Before, the clock's tick
+was added in place of the distance, so it raised one nearly every pass. A
+walker off the view raises none.
