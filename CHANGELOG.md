@@ -89,7 +89,9 @@ Releases, newest first: [2.14.0](#pull-request-87-merged-2026-11-07) (#86 and #8
   highest of a multiclass character's classes, and the dice log says "raised to 9 (the Thief's
   minimum)". (`gamepatch` `least_scores`: 67399h's 104 bytes replaced by `dos/least_scores.asm`,
   the overlay manager's two segment fixups kept in place; `game.CREATION_MINIMUMS`. Tests:
-  `test_least_scores`, run in the emulator.)
+  `test_least_scores`, run in the emulator. Seen in DOSBox: each class's least for each score,
+  read after a lowering click, the manual's, and three multiclass sets the highest of theirs; a
+  fighter's STR clicked down 17 to 9.)
 - **No XP bonus for high prime requisites:** the manual gives a class whose prime requisites are all
   16 or more 10% more XP (Fighter and Gladiator STR; Ranger STR, DEX and WIS; Preserver INT; Cleric
   WIS; Druid WIS and CHA; Thief DEX; Psionicist CON and WIS); the game's award routine (6B817h)
@@ -99,8 +101,14 @@ Releases, newest first: [2.14.0](#pull-request-87-merged-2026-11-07) (#86 and #8
   scores count (the sheet's), not an item's or a spell's. It writes the sheet, remembers the XP
   with the bonus so it isn't seen as a gain again, and shows it: "XP: Dag +137 (+12 for Fighter,
   STR 17)". A level the bonus alone reaches comes with the next award. The game's area change,
-  which takes the XP away and gives it back, brings none. (`tracker.prime_bonus`. Tests:
-  `test_prime_requisite_bonus`, `test_prime_bonus_classes`.)
+  which takes the XP away and gives it back, brings none. The tracker also stands aside while the
+  creation screen is up (`game.creating`: DS:119Ch's sheet with DS:11A0h's record straight after
+  it): there the party's first slot carries the character being made on a stand-in sheet whose XP
+  moves with the class chosen, which the log had shown as "XP: SeanBoy +1500". (`tracker.prime_bonus`.
+  Tests: `test_prime_requisite_bonus`, `test_prime_bonus_classes`, `test_no_xp_on_the_creation_screen`.
+  Seen in DOSBox: an award of 600 gave Gerakis +660 "(+60 for Gladiator, STR 24)", K'ratchek +213
+  (his druid's CHA 15 short), Cermak +660 and Cilla +220, written once, in a game loaded after
+  the creation screen too.)
 
 ## Pull request #87 ([merged 2026-11-07](https://github.com/daaki85/darksun-obsidian-edition/pull/87))
 

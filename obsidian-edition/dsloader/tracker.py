@@ -110,6 +110,9 @@ class PartyTracker:
                       tuple(sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3]), sheet[game.SHEET_RACE])
 
     def check(self, now: float) -> List[str]:
+        if self.game.creating():  # (its stand-in sheet's XP is no award: start afresh after)
+            self.reset()
+            return []
         out = self._check_monsters(now)
         members = [self._member(i) for i in range(game.PARTY_SIZE)]
         if self.members is None:

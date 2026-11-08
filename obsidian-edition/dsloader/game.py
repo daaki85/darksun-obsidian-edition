@@ -463,6 +463,7 @@ WARRIOR_GROUP = 1  # (the hit point group of the warrior classes)
 # Character creation. DS:119Ch is a far pointer to the character being made, a sheet whose
 # classes (+21h) are numbered as in the creation screen's list (CREATION_CLASS_NAMES).
 CREATION_SHEET_PTR = 0x119C
+CREATION_CREATURE_PTR = 0x11A0  # (and its creature record, on the screen straight after the sheet)
 # Its table (segment relative to the load segment): +14Dh + race * 6 + ability = the race's
 # adjustment (signed)
 CREATION_SEG, CREATION_RACE_OFF = 0x38D4, 0x14D
@@ -2426,6 +2427,17 @@ class GameData:
     def sheet_at(self, index: int) -> bytes:
         """Character sheet number `index`."""
         return self.guest.read(far_pointer(self.guest, self.ds, SHEETS_PTR) + index * SHEET_SIZE, SHEET_SIZE)
+
+    def creating(self) -> bool:
+        """Whether the creation screen is up: the sheet it makes (DS:119Ch) with the creature
+        record straight after it (DS:11A0h). Once the screen is left both stay set, the sheet on
+        the party's first and the creature at the creature table's start, so that the record no
+        longer follows the sheet (DOSBox, 2026-11-08: 3A7A8h and 3A7EFh on the screen, 66964h and
+        66E24h after it, in play too; null in a game loaded first). While it is up, the party's
+        first slot carries the character being made, on a stand-in sheet whose XP moves with the
+        class chosen."""
+        sheet = far_pointer(self.guest, self.ds, CREATION_SHEET_PTR)
+        return sheet != 0 and far_pointer(self.guest, self.ds, CREATION_CREATURE_PTR) == sheet + SHEET_SIZE
 
     def creation_sheet(self) -> bytes:
         """The character being made on the creation screen."""

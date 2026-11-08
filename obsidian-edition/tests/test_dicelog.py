@@ -1435,6 +1435,27 @@ class NewLinesTests(unittest.TestCase):
         struct.pack_into("<I", m, SHEETS, 237)
         self.assertEqual(tracker.check(6.0) + tracker.check(7.0), ["XP: Dag +100"])
 
+    def test_no_xp_on_the_creation_screen(self):
+        """On the creation screen the party's first slot carries the character being made, on a
+        stand-in sheet whose XP moves with the class chosen: no XP line and no bonus there, and
+        afresh once it is gone."""
+        log = make_game()
+        tracker, m = log.tracker, log.guest.mem
+        m[SHEETS + game.SHEET_CLASSES] = 9
+        m[SHEETS + game.SHEET_ABILITIES] = 17
+        tracker.check(1.0)
+        def pointers(sheet, creature):
+            m[DS * 16 + game.CREATION_SHEET_PTR:DS * 16 + game.CREATION_SHEET_PTR + 4] = far(sheet)
+            m[DS * 16 + game.CREATION_CREATURE_PTR:DS * 16 + game.CREATION_CREATURE_PTR + 4] = far(creature)
+        pointers(CREATION, CREATION + game.SHEET_SIZE)
+        struct.pack_into("<I", m, SHEETS, 4000)  # (a fighter's 3rd level, as the screen sets it)
+        self.assertEqual(tracker.check(2.0) + tracker.check(3.0), [])
+        self.assertEqual(struct.unpack_from("<I", m, SHEETS)[0], 4000)
+        pointers(SHEETS, CREATURES)  # (left: the party's first sheet, the creature table)
+        self.assertEqual(tracker.check(4.0) + tracker.check(5.0), [])  # (what's there then is no gain)
+        struct.pack_into("<I", m, SHEETS, 5000)
+        self.assertEqual(tracker.check(6.0) + tracker.check(7.0), ["XP: Dag +1100 (+100 for Fighter, STR 17)"])
+
     def test_prime_bonus_classes(self):
         """A sheet's one XP for all its classes: 10% of the gain for each class whose prime
         requisites are all 16 or more, divided by the classes; a human counts only the class

@@ -367,6 +367,24 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   squares a figure stands on (96: a party member there takes the click and nobody walks), drops a
   square whose click moved nobody, and brings the view to the way ahead when nothing nearer the
   goal is on screen (the view on the leader can hide the way, as the hall south of Kurzak's stop).
+- **The creation screen** (2026-11-08, logs/2026-11-08-creation-least.md): the main menu's CREATE
+  CHARACTERS (165,92) opens VIEW CHARACTER (its bottom icons: view character, inventory, cast,
+  effects at x 52, 76, 100, 122, y 171; RETURN TO GAME 266,172 goes back to the menu); right-click
+  an empty slot (64,52) for NEW / ADD / CANCEL, and NEW (110,57) opens the creation screen with a
+  human fighter. A score's **small square** (x 6; STR y 140, DEX 146, CON 154, INT 161, WIS 167,
+  CHA 174) takes the clicks, not the number: right-click lowers by 1, left-click raises, kept
+  between the least (DS:4994h, just worked out for that score by 67399h) and the most (DS:4992h),
+  going round past either (with the as-rolled rule a round trip upward is cut to what's spare).
+  A class: click its name (x 250; cleric 13, druid 21, fighter 29, gladiator 37, preserver 45,
+  psionicist 53, ranger 61, thief 69); a human's class must be clicked off before another is
+  chosen (a click on a second class does nothing). The race text and the small figure at the top
+  don't change the race (the figure rolled a new character); a race and classes can be set in
+  memory for a check (the creation sheet at the far pointer DS:119Ch: race +18h, classes +21h,
+  1-8 as the list). EXIT (278,160) leaves without keeping the character. **The pointers stay
+  set afterwards**: DS:119Ch then points at the party's first sheet and DS:11A0h at the creature
+  table, in play too (null only in a game loaded first); on the screen the record is straight after
+  the sheet (`gd.creating()`). While the screen is up the party's first slot carries the
+  character's name on a stand-in sheet (XP 4,000, scores 10) whose XP moves with the class.
 - **Loading**: the title (two clicks), then the main menu: START GAME, CREATE CHARACTERS, LOAD
   SAVED GAME (170, 109), EXIT TO DOS; the LOAD screen lists the slots (click one at 100, 46), then
   LOAD (253, 46). `loadsave.sh` does it.
@@ -442,6 +460,12 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   find a key!", then Goodbye hands it over (GIVE at 0ABh, to the one talking; at his feet if that
   fails) with 250 XP. The key's icon (picture 2161, 12 x 5) is a faint grey key on the grey cell,
   near invisible at the game's size: hover the cell for "SLAVEPEN KEY" (logs/2026-11-08-trustee-key.md).
+- **An XP award by hand** (2026-11-08): the dice log's tracker sees an award only as each sheet's
+  XP going up, so `award.py N` (each member's sheet XP += N / its classes, a human's N;
+  the sheet from `aging.sheet_address`) stand in for a kill's to check what follows an award (the
+  prime requisite bonus); on the creation screen `leasts.sh` reads each score's least (`creationscores.py`). Restart the dice log (kill its pid; `python3 -u -m dsloader dicelog >>
+  $PLAYTEST_WORK/dice.txt` from obsidian-edition, setsid nohup) to run changed Loader code. QUIT on
+  the EXIT menu ends DOSBox.
 - **Picking a pocket:** U, the thief's portrait (Cilla 108,108), the purse under the spell counts
   (157,145, a slow press: the USE screen closes), then the talk pointer on the person. The result
   is a narration box with a Continue line (click it, 30,157). From `pens-after-scar` (2026-11-07,
