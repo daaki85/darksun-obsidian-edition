@@ -630,6 +630,13 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   the next enemy's turn, if that enemy steps or swings; one that does nothing redraws nothing, and
   the old wait applies. A turn passed can come straight back (her END TURN was the round's last but
   one; round 2 opened with her and a new hide roll): check the round order in the dice log.
+- **The combat log panel and the turn tools** (2026-11-08, logs/2026-11-08-panel-fight.md):
+  expanded, the panel covers the screen's right half from y 68 (docked from y 120), and a figure
+  under it can't be clicked: drag the view (`scroll.py -96 0`) first. `panel.sh` reads a docked
+  panel's frame pixel (140,150): for an expanded one it says "hidden" while it's up; check with a
+  shot. passto.sh's "END menu opened" test counts changed pixels, and the panel's new lines can
+  pass it: with the panel up it pressed E with no menu and opened the Effects screen. Hide the
+  panel for passto.sh, or use fightout.sh.
 - **memberpos.py can miss** a figure in a crowd: about 12 pixels higher
   opened the END menu; check a shot first.
 
