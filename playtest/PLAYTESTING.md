@@ -255,6 +255,35 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   shows DSCLOG's palette copy changing (every 30 s where the game cycles colours). `ghostwatch.py
   SECONDS` counts samples with GHOST_ON 0.
 
+### Frame rate and cycles (framerate.py)
+
+`python3 framerate.py 20` walks the party back and forth (screen 40,104 to 280,104) for 20 s, out
+of a fight, and prints the frames shown a second (DSCLOG's flip_count), those steady pace left
+undrawn (pace_skipped, found from a symbol map of the helper as built), the main loop's passes,
+the BIOS clock against real time, map units walked a second and DOSBox's CPU. `PT_CYCLES=N sh
+start.sh` (or before loadsave.sh) sets DOSBox's cycles. Toggle a feature in the Loader's settings
+and reload to compare.
+
+Results, pens-after-arena, the party walking (2026-11-08):
+
+| Cycles, settings | Shown/s | Undrawn/s | DOSBox CPU |
+|---|---|---|---|
+| 20000, all on | 6.1 | 16.9 | 21% |
+| 35000, all on | 8.3 | 11.9 | 30% |
+| 50000, all on | 10.6 | 8.0 | 45% |
+| 65000, all on | 16.6 | 1.3 | 48% |
+| 80000, all on | 17.4 | 0.3 | 57% |
+| 100000, all on | 17.7 | 0 | 69% |
+| 20000, shadows off | 8.8 | 11.1 | |
+| 20000, dust off | 7.8 | 13.1 | |
+| 20000, steady pace off, the rest on | 17.0 | 0 | 21% |
+| 20000, mod drawing off, steady pace on | 9.3 | 10.4 | 21% |
+
+Walking was 64 to 66 map units a second in every run: steady pace doesn't change the speed here,
+it only leaves pictures out. The game shows about 17.5 frames a second while walking; steady
+pace's schedule (PACE_TICK 70 / PACE_FRAME 96 on the 96-a-second clock) expects 70, so below
+about 65,000 cycles it skips frames the game could have shown. That is the choppiness.
+
 ## 3. Controls that work
 
 - **Clicks**: `python3 click.py X Y [left|right|none]` in game pixels (320x200). DOSBox captures
