@@ -2431,11 +2431,11 @@ rather than a slower walk. Fights draw every frame, as the game does.
 second and played here at half speed (a GIF can't show 70 a second), every
 frame kept. On the right the party reaches each spot sooner, in bigger steps.*
 
-The Loader also gives DOSBox more of the computer's time: 20,000 cycles a
+The Loader also gives DOSBox more of the computer's time: 35,000 cycles a
 millisecond by default, where GOG's settings give 7,000. On the Options tab
-**Game speed** is GOG's own (7,000), that (20,000), or 35,000: there nearly
-every frame is drawn in time even with the whole party in view, the smoothest,
-but it needs a faster computer. It applies the next time the game is started.
+**Game speed** is GOG's own (7,000), Faster (20,000, for an older computer), or
+Fastest (35,000, the default): there nearly every frame is drawn in time even
+with the whole party in view, and the party walks fastest. It applies the next time the game is started.
 The Loader's two speeds also run DOSBox's faster way of running the game, which
 costs the computer less.
 

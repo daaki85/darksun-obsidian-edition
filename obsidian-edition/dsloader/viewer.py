@@ -588,9 +588,9 @@ class Viewer:
         self.game_speed = tk.StringVar(value=str(speed if speed in launch.SPEEDS or speed == launch.GOG_SPEED
                                                  else launch.DEFAULT_SPEED))
         for value, text in ((launch.GOG_SPEED, "GOG's own (walking can be choppy with shadows and dust)"),
-                            ("20000", "Faster: smooth walking with shadows and dust (the default)"),
-                            ("35000", "Fastest: the whole party in view walks smoothly, nearly every picture "
-                                      "shown (needs a faster PC)")):
+                            ("20000", "Faster: for an older PC (fewer pictures a second with the whole party in view)"),
+                            ("35000", "Fastest: the whole party walks at full speed, nearly every picture "
+                                      "shown (the default)")):
             ttk.Radiobutton(pace, text=text, value=value, variable=self.game_speed,
                             command=self._speed_chosen).pack(anchor="w")
         self.steady_pace = tk.BooleanVar(value=settings.get("steady_pace", True) is not False)

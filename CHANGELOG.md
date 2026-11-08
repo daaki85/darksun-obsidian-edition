@@ -41,6 +41,10 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 ## Next pull request (not opened yet)
 
 **Changed**
+- **Fastest (35,000 cycles) is the default game speed** (was Faster, 20,000). With the cheaper
+  drawing it shows about all the pictures the game draws while the whole party walks (18.9 a
+  second) and walks fastest (141 map units a second, against 112 at 20,000), for about 30% of a
+  core in DOSBox. A speed already chosen is kept; Faster stays for older computers.
 - **The helper draws shadows, dust and see-through figures for less.** Shadows are worked out only
   for figures whose shadow can reach the part of the view being drawn, rows outside it stepped over;
   the shadow cache remembers each figure's slot; spans and see-through pixels are looked up with

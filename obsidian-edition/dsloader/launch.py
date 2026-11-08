@@ -321,20 +321,19 @@ def display_lines(settings: dict) -> List[str]:
 
 
 # The game's speed: DOSBox's emulated CPU (fixed cycles: instructions a millisecond). The game
-# draws a frame, shows it at the screen's next refresh (70 a second), and a walking figure takes a
-# step a frame (a walk of one square: four frames): a frame that takes a moment longer than a
-# refresh waits for the next, and the party walks at half speed. With the whole party in view and
-# the Loader's shadows and dust a frame needs about 35000 to fit: there the four walk as fast as the
-# leader alone; at 20000 about half as fast, at GOG's 7000 slower still. Both with the dynamic core
+# moves everything a step at each tick of its clock (96 a second), and a tick passed while a frame
+# is drawn is a step lost. Measured in the slave pens, the whole party walking, everything on and
+# steady pace on: at 35000, 18.9 frames a second (about all the game draws) and 141 map units a
+# second walking; at 20000, 15.5 and 112; GOG's 7000 slower still. 35000 is the default. Both with the dynamic core
 # (GOG's "auto" runs this game, a real-mode one, on the normal core): the same cycles do more and
 # cost the computer about a third less. (30000, the fastest of before, is taken as the fastest now.)
-GOG_SPEED, SPEEDS, DEFAULT_SPEED = "gog", (20000, 35000), 20000
+GOG_SPEED, SPEEDS, DEFAULT_SPEED = "gog", (20000, 35000), 35000
 FASTEST_BEFORE = 30000
 CORE = "dynamic"
 
 
 def cpu_lines(settings: dict) -> List[str]:
-    """DOSBox's CPU speed, over GOG's settings: `cycles` 20000 (the default) or 35000, on the
+    """DOSBox's CPU speed, over GOG's settings: `cycles` 20000 or 35000 (the default), on the
     dynamic core; "gog" keeps GOG's own."""
     speed = settings.get("cycles", DEFAULT_SPEED)
     if speed == GOG_SPEED:

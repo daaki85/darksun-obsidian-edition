@@ -1809,7 +1809,7 @@ line](DICE-LOG.md) what each of its lines means.
 | Graphics | elves' ears and half-elves' own figures; Cilla drawn as an elf; what the party wears; shadows; dust; a hidden thief or ranger and anyone invisible drawn see-through | all on |
 | Controls | Tab and Enter; scrolling with the mouse wheel; the view in fights moving only to a figure off the screen; the pointer in scenes, a click skipping one; the pointer starting in the middle, moving as far up and down as across, and in a window as fast as the desktop's pointer; the whole party in view after a start, load or fight; spells kept on a click on the Effects screen (M, U and I have no switch) | all on |
 | | a red ring in a fight: none, or under the enemy chosen with Tab | under the enemy chosen |
-| Game speed | GOG's own, faster or fastest | faster |
+| Game speed | GOG's own, faster or fastest | fastest |
 | | the party walking at full speed whatever is drawn (steady pace) | on |
 | Wake of the Ravager (optional) | where Wake of the Ravager is installed, for the new priest spells' icons and pictures (found by itself when it can be) | (a folder) |
 | Saves | open the Named saves folder; put a save back in a slot | (buttons) |

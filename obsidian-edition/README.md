@@ -135,8 +135,8 @@ setting (suggestions, not tested limits):
 | Game speed | Processor (one core's speed) | Memory |
 |---|---|---|
 | GOG's own (7,000 cycles) | anything that runs GOG's release | 2 GB |
-| Faster (20,000 cycles, the default) | a dual-core from about 2010 on, 2 GHz or more (Intel Core i3 or AMD Phenom II) | 4 GB |
-| Fastest (35,000 cycles: nearly every frame drawn in time, the smoothest) | a processor from about 2015 on, 3 GHz or more (Intel Core i5 or AMD Ryzen) | 4 GB |
+| Faster (20,000 cycles) | a dual-core from about 2010 on, 2 GHz or more (Intel Core i3 or AMD Phenom II) | 4 GB |
+| Fastest (35,000 cycles, the default: nearly every frame drawn in time, the smoothest) | a processor from about 2015 on, 3 GHz or more (Intel Core i5 or AMD Ryzen) | 4 GB |
 
 The Loader itself (Python and its window) needs about 100 MB of memory and
 little processor time. A screen of 1920×1080 or more shows the game's window
@@ -378,7 +378,7 @@ and **Saves** ([Saves under their names](FEATURES.md#saves-under-their-names)).
 the player's guide, lists every switch with its default and when it counts.
 
 All are on by default (the red ring under the chosen enemy, the game speed
-Faster, the combat log in short) and are remembered for next time. **Restore defaults**, at the bottom
+Fastest, the combat log in short) and are remembered for next time. **Restore defaults**, at the bottom
 of the tab, sets them all back (after asking). In a
 window too small to show the open sections, the tab scrolls (scrollbar, mouse
 wheel, or arrow and page keys once it has the focus).
