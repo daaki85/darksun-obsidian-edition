@@ -387,6 +387,13 @@ class Viewer:
             ttk.Label(frame, text=title, style="Status.TLabel").pack(anchor="w")
             frame.pack(anchor="w", fill="x", pady=(8 if rule_groups else 0, 0))
             rule_groups[group] = frame
+        # the spells' records as the manual has them (gamepatch.SPELLS_MANUAL)
+        self.spells_manual = tk.BooleanVar(value=settings.get("spells_manual", True) is not False)
+        ttk.Checkbutton(rule_groups["magic"], text="Spells as the manual describes them: saves against Bestow "
+                        "Curse and Blood Flow; Flaming Sphere negated by a save; Solid Fog, Cause Fear, Quicksand "
+                        "and Minor Spell Turning for the manual's time; Turn Pebble to Boulder 11-26, Magical Stone "
+                        "3d4, Ironskin a blow a level; from the next start", variable=self.spells_manual,
+                        command=self._options_changed).pack(anchor="w")
         custom = section("custom", "More character customization")
         features = section("features", "Expanded features")
         # the thief's rules and picking pockets together, as the guide's Thieves section has them
@@ -714,7 +721,7 @@ class Viewer:
         for var in (self.monster_info, self.floating_names, self.stealth_gear, self.pickpockets, self.roll_store, self.elf_looks, self.cilla_elf,
                     self.starting_gear, self.show_gear, self.show_shadows, self.show_dust, self.see_through, self.use_targeting,
                     self.scroll_map, self.effects_kept, self.camera_still, self.scene_pointer, self.mouse_start,
-                    self.steady_pace, self.party_spread):
+                    self.steady_pace, self.party_spread, self.spells_manual):
             var.set(True)
         self.combat_log.set(True)
         self.combat_log_level.set(dicelog.combat_log_level({}))
@@ -1253,6 +1260,7 @@ class Viewer:
                 settings["mouse_start"] = self.mouse_start.get()
                 settings["steady_pace"] = self.steady_pace.get()
                 settings["party_spread"] = self.party_spread.get()
+                settings["spells_manual"] = self.spells_manual.get()
                 for key, var in self.rule_vars.items():
                     settings[key] = var.get()
                 launch.save_settings(settings)

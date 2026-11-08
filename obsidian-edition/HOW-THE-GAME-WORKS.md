@@ -375,6 +375,11 @@ change](FEATURES.md#spells-saved-against-with-the-spell-save)); durations are in
 rounds (a turn is ten). The log column is what the dice log shows for it; every
 effect line also says what the effect does.
 
+(The rows below are the game's own spells. Ten of them, Bestow Curse, Blood Flow, Flaming Sphere,
+Solid Fog, Minor Spell Turning, Cause Fear, Quicksand, Turn Pebble to Boulder, Magical Stone and
+Ironskin, are set as the manual has them by the rule change [Spells as the manual describes
+them](FEATURES.md#spells-as-the-manual-describes-them), on by default.)
+
 | Spell | The manual | The game | The log |
 |---|---|---|---|
 | Bless | +1 to hit; not on anyone next to a monster; 6 rounds | +1 to hit and +1 on saves; not on anyone next to an enemy (the patched game measures that from where each stands); cancels Curse; 6 rounds | the effect |

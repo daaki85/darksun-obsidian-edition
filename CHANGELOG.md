@@ -41,6 +41,13 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 ## Next pull request (not opened yet)
 
 **Changed**
+- **Spells as the manual describes them** (a new rule change, on by default, from the next start;
+  `gamepatch.SPELLS_MANUAL`, the spell records): Bestow Curse and Blood Flow allow a save; a save
+  negates Flaming Sphere; Solid Fog 1d3 rounds + 1 a level (was until removed); Minor Spell Turning
+  3 rounds a level (was one spell, never ending); Cause Fear 1d4 rounds (was 1 a level); Quicksand 1
+  round a level, no save (was 1 round, a save); Turn Pebble to Boulder 3d6+8 (was 6d6); Magical Stone
+  3d4 (was 1d4); Ironskin a blow a level (was 1d6). From reports/spells-against-the-manual.md's
+  group 2. (Free Action freeing the Stuck and Minute Meteors to follow.)
 - **A fight's summary as it ends** (mock-up G's): `Fight over: 2 rounds, 1 kill; the party dealt 28
   damage and took 6`, then each member's attacks hit, damage dealt, kills and damage taken, written
   once the game's fight flag has been down 2 seconds (each arena wave gets its own). A kill goes to

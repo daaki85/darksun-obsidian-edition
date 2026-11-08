@@ -140,6 +140,7 @@ A few of them:
 
 ## Magic and Psionics
 
+- **[Changed]** Ten spells as the manual describes them (a rule change, on by default): saves against Bestow Curse and Blood Flow, Flaming Sphere negated by a save, Solid Fog, Cause Fear, Quicksand and Minor Spell Turning for the manual's time, Turn Pebble to Boulder 11-26, Magical Stone 3d4, Ironskin a blow a level.
 - **[Changed]** **Enlarge** makes only the weapon's dice bigger, 10% a caster level, rounded up, with STR and magic added after, as in AD&D (a rule change, on unless unticked) *(was the whole melee damage made bigger, STR included)*.
 - **[New]** Six new wizard spells, each with its own icon and description:
 

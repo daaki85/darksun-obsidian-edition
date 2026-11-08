@@ -383,7 +383,7 @@ of the tab, sets them all back (after asking). In a
 window too small to show the open sections, the tab scrolls (scrollbar, mouse
 wheel, or arrow and page keys once it has the focus).
 
-![The Options tab with Rule changes (all eighteen, in three groups: Characters, Weapons and armour, Magic) and New content open, the other sections closed](docs/options.png)
+![The Options tab with Rule changes (eighteen of the nineteen, in three groups: Characters, Weapons and armour, Magic) and New content open, the other sections closed](docs/options.png)
 
 ### The Characters tab
 

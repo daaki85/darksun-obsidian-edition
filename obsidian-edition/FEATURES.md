@@ -456,7 +456,7 @@ How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#no-manual-check).
 
 ## Rule changes
 
-Eighteen changes that bring the game's own rules closer to AD&D, each with its
+Nineteen changes that bring the game's own rules closer to AD&D, each with its
 own box in the Options tab's **Rule changes** section, grouped there as they
 are here: [characters](#characters), [weapons and armour](#weapons-and-armour)
 and [magic](#magic). All are on by default,
@@ -942,6 +942,7 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#items-saving-against-a
 | [Spells saved against with the spell save](#spells-saved-against-with-the-spell-save) | almost every spell saved against with petrification/polymorph | the spell save rather than petrification/polymorph |
 | [Fire, cold and electricity: DEX instead of a doubled d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20) | the save's d20 doubled, so most creatures shrug off a Fireball (70% to save where 35% is due) | DEX's defensive adjustment on those saves rather than a doubled d20 |
 | [Enlarge multiplies the weapon's dice only](#enlarge-multiplies-the-weapons-dice-only) | the whole melee damage multiplied, STR included | 10% a caster level on the weapon's dice, rounded up, STR and the rest added after |
+| [Spells as the manual describes them](#spells-as-the-manual-describes-them) | ten spells' saves, times and damage the game's own way | as the manual has them (from the next start) |
 
 #### Rangers' casting level
 
@@ -1029,6 +1030,30 @@ enlarged dice. The Effects screen names it ENLARGED (+90% DICE), not
 (+90% DAMAGE).
 
 How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#enlarges-dice).
+
+#### Spells as the manual describes them
+
+Ten spells whose saves, times or damage in the game's records part from the
+manual (pp. 29-40), set as the manual has them. The box takes effect from the
+next start (it changes the game's spell records as the Loader writes the game's
+copy); unticked, they are the game's.
+
+| Spell | The game | As the manual |
+|---|---|---|
+| Bestow Curse | no saving throw | a save negates it |
+| Blood Flow | Paralyzed 1d4 rounds, no save | a save negates it |
+| Flaming Sphere | 2d4 fire, a save halves it | a save negates it |
+| Solid Fog | Stuck until removed | Stuck 1d3 rounds + 1 a caster level |
+| Minor Spell Turning | turns one spell, then never ends | turns 1st- to 3rd-level spells for 3 rounds a caster level |
+| Cause Fear | Afraid 1 round a caster level | Afraid 1d4 rounds |
+| Quicksand | Stuck 1 round, a save allowed | Stuck 1 round a caster level, no save |
+| Turn Pebble to Boulder | 6d6 (6-36) | 3d6+8 (11-26) |
+| Magical Stone | one stone, 1d4 | three stones, 3d4 |
+| Ironskin | 1d6 blows stopped | a blow stopped a caster level |
+
+What else the manual and the game disagree on, and why the rest is left:
+[reports/spells-against-the-manual.md](../reports/spells-against-the-manual.md)
+(in the repository).
 
 ## More character customization
 

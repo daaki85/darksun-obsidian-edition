@@ -444,6 +444,33 @@ PATCHES = (
     # creature but the undead was Scared, a 7th-level fighter too (seen in DOSBox, 2026-11-08: no
     # save rolled). The bit set: the game's own rules above come into play
     Patch("scare_save", 0x4222F, bytes.fromhex("a0"), bytes.fromhex("a1")),
+    # Spells as the manual has them (the Options tab's "Spells as the manual describes them",
+    # SPELLS_MANUAL: skipped with it off). The spell records (spell s at 41F70h + 20h x s: +4 the
+    # duration's dice, count low and sides high, +5 that a caster level, +7 the unit, 60 a round or
+    # -1 charges or -9999 until removed; +12h's 80h a save negating the damage; +1Ch..+1Eh the
+    # damage's dice; +1Fh the save, bit 0 one allowed). reports/spells-against-the-manual.md
+    # Bestow Curse (104) and Blood Flow (108): "save negates", but no save was allowed
+    Patch("bestow_curse_save", 0x42C8F, bytes.fromhex("a0"), bytes.fromhex("a1")),
+    Patch("blood_flow_save", 0x42D0F, bytes.fromhex("a0"), bytes.fromhex("a1")),
+    # Flaming Sphere (14): a save negates its 2d4, not halves it
+    Patch("flaming_sphere_negates", 0x42142, bytes.fromhex("40"), bytes.fromhex("c0")),
+    # Solid Fog (51): 1d3 rounds + 1 a caster level, not stuck until removed
+    Patch("solid_fog_time", 0x425D4, bytes.fromhex("1000"), bytes.fromhex("3101")),
+    Patch("solid_fog_rounds", 0x425D7, bytes.fromhex("f1d8"), bytes.fromhex("3c00")),
+    # Minor Spell Turning (48): 3 rounds a caster level, not one spell turned and then none
+    Patch("spell_turning_time", 0x42574, bytes.fromhex("1100"), bytes.fromhex("1003")),
+    Patch("spell_turning_rounds", 0x42577, bytes.fromhex("ffff"), bytes.fromhex("3c00")),
+    # Cause Fear (78): 1d4 rounds, not 1 a caster level
+    Patch("cause_fear_time", 0x42934, bytes.fromhex("0001"), bytes.fromhex("4100")),
+    # Quicksand (134): 1 round a caster level and no save, not 1 round with a save
+    Patch("quicksand_time", 0x43034, bytes.fromhex("1100"), bytes.fromhex("1001")),
+    Patch("quicksand_no_save", 0x4304F, bytes.fromhex("a1"), bytes.fromhex("a0")),
+    # Turn Pebble to Boulder (53): 3d6+8 (11-26), not 6d6
+    Patch("pebble_damage", 0x4262C, bytes.fromhex("003106"), bytes.fromhex("081f06")),
+    # Magical Stone (75): three stones, 3d4, not one 1d4
+    Patch("magical_stone_damage", 0x428EC, bytes.fromhex("000904"), bytes.fromhex("001904")),
+    # Ironskin (133): a blow stopped for each caster level, not 1d6
+    Patch("ironskin_charges", 0x43014, bytes.fromhex("6100"), bytes.fromhex("1001")),
     # The least each score may be at creation (67399h, overlay code: for an ability, the highest
     # of the character's classes' least): the game raised each class's one prime requisite to 17
     # and every other score to one number a class (9 to 14), not the manual's requirements (a
@@ -1019,6 +1046,10 @@ CAMERA = ("camera_still",)  # the view in a fight following a figure only off th
 SCENE_POINTER = ("cine_step", "cine_end")  # a pointer in the scenes, a click ending one
 MOUSE_START = ("mouse_set", "mouse_init")  # the pointer starting in the middle, as fast up and down as across
 STEADY_PACE = ("pace_pass", "pace_draw")  # walking at full speed on the map, a late frame's next left undrawn
+SPELLS_MANUAL = ("bestow_curse_save", "blood_flow_save", "flaming_sphere_negates", "solid_fog_time",
+                 "solid_fog_rounds", "spell_turning_time", "spell_turning_rounds", "cause_fear_time",
+                 "quicksand_time", "quicksand_no_save", "pebble_damage", "magical_stone_damage",
+                 "ironskin_charges")  # the spells as the manual has them (spells_manual)
 PARTY_SPREAD = ("party_spread", "party_gather")  # the whole party in view after a load and a fight
 
 
