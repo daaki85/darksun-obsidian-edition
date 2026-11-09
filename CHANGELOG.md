@@ -40,7 +40,7 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 
 ## Next pull request (not opened yet)
 
-DSCLOG.EXE 65,232 bytes (image 65,200), 3,216 of its segment spare.
+DSCLOG.EXE 65,344 bytes (image 65,312), 3,104 of its segment spare.
 
 **Changed**
 - **Spells and psionics as the manual describes them** (a new rule change, on by default, from the
@@ -209,8 +209,8 @@ DSCLOG.EXE 65,232 bytes (image 65,200), 3,216 of its segment spare.
   see-through, the ring, the panel's colours, labels, to-hit, Turn Undead, item names and types,
   next-level XP, the Effects screen, Look, creation, a shop). With the manual's spells, the
   monsters, resting and dual-classing, and the audit's fixes (their per-fight tables moved to the
-  far block), the helper ends the pull request with 3,216 bytes of its segment spare, 102 bytes
-  free in the far block (the HMA) and 389 paragraphs of upper memory spare.
+  far block), the helper ends the pull request with 3,104 bytes of its segment spare, 102 bytes
+  free in the far block (the HMA) and 382 paragraphs of upper memory spare.
 - The helper counts the game's page flips (`flip_count`, header +1832), for a frame rate:
   `playtest/framerate.py` reads it beside steady pace's frames left undrawn.
 
@@ -227,7 +227,10 @@ DSCLOG.EXE 65,232 bytes (image 65,200), 3,216 of its segment spare.
   every -100 (Chaos, Cloudkill, Scare under 6th level, Color Spray with the manual's spells) wrapped
   round and the creature saved (seen in DOSBox: Arena Guards "unable to save" took half Cloudkill's
   damage, a Guard against Scare was never Afraid). The compare made signed (`save_signed`, 79BBDh
-  `jae` -> `jge`), always on whatever the Options: -100 fails, a natural 20 still saves.
+  `jae` -> `jge`), always on whatever the Options: -100 fails, even on a natural 20 (the game took
+  a natural 20 as saved before adding the modifiers, 79B5Fh: `save_natural` goes on with them, and
+  DSCLOG's SAVE_SUM makes a natural 20 a save unless the total is the -100's; the sum is also kept
+  in its byte, so a doubled 19 or 20 with Scare's +100 no longer wraps round to a failure).
 - **Resting while poisoned killed a member just cured:** the rest read each member's effects
   before casting its free cures and never again, so a 7th-level druid's Neutralize Poison was cast
   and the member died of the poison anyway (seen in DOSBox: playtest/logs/2026-11-09-rest-poison.md).

@@ -3658,15 +3658,16 @@ class DiceLog:
                 f"(and at least {first}) -> {'disrupted by the static' if disrupted else 'not disrupted: the power check follows'}"]
 
     def _save_roll(self, e: Entry, now: float = 0.0) -> List[str]:
-        """The d20 of a saving throw. A natural 1 or 20 ends the save here; otherwise the
-        save probe reports the total."""
+        """The d20 of a saving throw. A natural 1 ends the save here; otherwise the save probe
+        reports the total (a natural 20's too: it saves unless the save can't be made, gamepatch's
+        save_natural)."""
         natural = scaled(e.raw, 20) + 1
         spell, target, caster = e.parent_arg(0x0A), e.parent_arg(6), e.parent_arg(8)
         self._spell_cast(spell, now)
         needed = e.parent_locals[0x28 - 1]
         index = e.parent_local(-6)
         pending = self._flush_spell(spell)
-        if natural in (1, 20):
+        if natural == 1:
             return pending + [self._save_line(target, caster, spell, index, natural, None, needed)]
         self._save_rolls[(e.ss, e.parent_bp)] = natural
         return pending
@@ -3914,7 +3915,10 @@ class DiceLog:
         if total >= 0x80:  # the game adds -100 / +100 for "can't save" / "always saves"
             total -= 0x100
         if total < -50:  # (gamepatch's save_signed, always applied: the game's compare made signed)
-            return f"{who}: none allowed (cannot save) -> failed"
+            note = ", even on a natural 20" if natural == 20 else ""
+            return f"{who}: none allowed (cannot save{note}) -> failed"
+        if natural == 20:  # (DSCLOG's SAVE_SUM: made at least the number needed)
+            return f"{who}: d20 = 20 (natural 20) -> {self._save_result(spell, True)}"
         if total > 100:
             return f"{who}: not needed (saves automatically) -> saved"
         rules = g.spell_rules(spell)

@@ -14532,7 +14532,7 @@ hd_save:
 ; SPRAY_SITE (gamepatch "color_spray_level", with the spells as the manual has them): the save
 ; modifiers' "cmp word [bp+14h],3Ch / jnz" (79F83h; 6 bytes, Dismissal's test): Color Spray
 ; (spell 4) lets only creatures of more levels than its caster save (AD&D's): the target's level
-; [BP-6] at or under the caster's, byte [BP+16h], gets -100 (a natural 20 still saves, as against
+; [BP-6] at or under the caster's, byte [BP+16h], gets -100 (no save, a natural 20's neither: SAVE_SUM; as against
 ; Chaos and Cloudkill). Then the game's test: Dismissal (3Ch) on to its case (79F89h), any other
 ; spell past it (79F95h). SI the save's modifier so far.
 COLOR_SPRAY equ 4
@@ -14898,6 +14898,8 @@ TARI_SITE equ NS_IMAGE + 92      ; 7A747h: the disease's 1 in 10, a Tari's 1 in 
 NOP_SITE equ NS_IMAGE + 93       ; (90h: PROBE_CR_SPELLS takes a NOP after the INT for no site, so none has it)
 REST_PRE_SITE equ NS_IMAGE + 94  ; 80675h: the rest's start, the priests' and psionicists' cures first (REST_PRE)
 REST_HP_SITE equ NS_IMAGE + 95   ; 808AFh: the rest's hit points, natural healing (REST_HP)
+SAVE_SUM_SITE equ NS_IMAGE + 96  ; 79B97h: a save's d20 and modifiers added, kept in a byte (SAVE_SUM)
+SAVE_NAT_SITE equ NS_IMAGE + 97  ; 79BB4h: a natural 20 saves unless the save can't be made (SAVE_SUM)
 KIND_TURN  equ 13
 TU_DESTROY equ 0x7AE60 - 0x7AE04 ; (the ways on, less the address after the site's number)
 TU_FAIL    equ 0x7AE75 - 0x7AE04
@@ -16342,6 +16344,62 @@ rest_con:
 ; the sheet's most, SI the member), for an Okay member. With the rule and mode 0: natural healing,
 ; REST_NATURAL and CON's part (REST_HEAL_OF), at most the most, never less than it had nor 1;
 ; recorded (RS_HEAL). CON 20 and up regenerates for the 8 hours as the clock jumps (REGEN_SITE).
+;
+; SAVE_SUM (gamepatch "save_natural", always applied): a natural 20 on a saving throw saves, but not
+; when the save can't be made (the save modifiers' -100: Chaos's, Cloudkill's, Scare's below 6th
+; level, Color Spray's). The game's routine (79A71h) took a natural 20 as saved before it added the
+; modifiers (79B5Fh: made "jmp 79B6Ah", so it goes on with them). SAVE_SUM_SITE, at "mov dl,[bp-2] /
+; add dl,al / mov [bp-2],dl" (79B97h; 8 bytes: [BP-2] the d20, doubled for some spells, AL the
+; modifiers, 79D3Ch's): the sum, kept between -110 and 110 so that it stays in its byte (a doubled
+; 20 and +100 made 140, read as -116: failed) with the bonus that follows (79BB4h: -8 to +7); and
+; SV_NAT whether the d20 was a natural 20 (20 not doubled: [BP-20h]'s 86h clear; or 40). SAVE_NAT_SITE,
+; at that bonus's "add [bp-2],al" (79BB4h; 3 bytes): after it, a natural 20 makes the total at least
+; the number needed ([BP-1]), unless the total is under -50 (the -100's). The compare that follows
+; is the dice log's save probe (VEC_SAVE) and the signed "jge" (save_signed).
+SAVE_MOST equ 110
+SAVE_CANT equ -50
+save_sum:
+        push ax
+        push cx
+        cbw
+        mov cx, ax
+        movsx ax, byte [bp - 2]
+        mov byte [cs:sv_nat], 1
+        cmp ax, 40
+        je .sum
+        cmp ax, 20
+        jne .not
+        test word [bp - 0x20], 0x86
+        jz .sum
+.not:   mov byte [cs:sv_nat], 0
+.sum:   add ax, cx
+        cmp ax, SAVE_MOST
+        jle .low
+        mov ax, SAVE_MOST
+.low:   cmp ax, -SAVE_MOST
+        jge .set
+        mov ax, -SAVE_MOST
+.set:   mov [bp - 2], al
+        pop cx
+        pop ax
+        iret
+save_nat:
+        add [bp - 2], al
+        cmp byte [cs:sv_nat], 0
+        je .out
+        mov byte [cs:sv_nat], 0
+        push ax
+        mov al, [bp - 2]
+        cmp al, SAVE_CANT
+        jl .keep                        ; (can't save: a natural 20 doesn't either)
+        cmp al, [bp - 1]
+        jge .keep
+        mov al, [bp - 1]
+        mov [bp - 2], al
+.keep:  pop ax
+.out:   iret
+sv_nat  db 0
+
 rest_hp:
         test word [cs:rules_hi], RULE_HI_REST
         jz .game
@@ -19175,6 +19233,8 @@ site_tab:
         site NOP_SITE, ..@site_iret     ; (never reached: 90h is no site's, NOP_SITE; an IRET if it were)
         site REST_PRE_SITE, rest_pre
         site REST_HP_SITE, rest_hp
+        site SAVE_SUM_SITE, save_sum
+        site SAVE_NAT_SITE, save_nat
 SITE_COUNT equ ($ - site_tab) / 2
 
 ; NS_CMP: the compare of site RL_SITE (of NS_CMP_SITES), its flags into the INT's frame.

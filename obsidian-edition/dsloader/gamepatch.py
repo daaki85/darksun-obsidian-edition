@@ -202,6 +202,8 @@ DRAIN_SITE, TARI_SITE = NS_IMAGE + 91, NS_IMAGE + 92
 # REST_PRE, REST_HP)
 # (NS_IMAGE + 93 is 90h, a NOP: DSCLOG takes the byte after its INT for no site then, so no site has it)
 REST_PRE_SITE, REST_HP_SITE = NS_IMAGE + 94, NS_IMAGE + 95
+# (a saving throw's natural 20, saving unless the save can't be made: DSCLOG's SAVE_SUM)
+SAVE_SUM_SITE, SAVE_NAT_SITE = NS_IMAGE + 96, NS_IMAGE + 97
 # the monster kinds' table (DSUN.EXE, the load segment's 3E45h: monsters.MONSTER_KINDS_SEG): a kind's
 # properties (a dword), its resistance class (a byte), a class's damage kinds (four words) and percents
 KINDS_FILE = 0x5400 + 0x3E45 * 16
@@ -548,10 +550,16 @@ PATCHES = (
     # jae", 79BBAh), so the save modifiers' -100 for "can't save" (Chaos's, Cloudkill's, Scare's below
     # 6th level, Color Spray's) made a negative total, read as 156 and up: always saved (seen in
     # DOSBox 2026-11-09: Arena Guards "unable to save" against Cloudkill took half its damage, a Guard
-    # against Scare was never Afraid). The compare made signed ("jge"): -100 fails (a natural 20 still
-    # saves, 79B5Fh), +100 saves (Scare from 6th level: a d20 + 100 stays under 128). Always applied (a
-    # fix of the game's, in no switch; the user's decision, 2026-11-09)
+    # against Scare was never Afraid). The compare made signed ("jge"): -100 fails, +100 saves (Scare
+    # from 6th level). Always applied (a fix of the game's, in no switch; the user's decision, 2026-11-09)
     Patch("save_signed", 0x79BBD, bytes.fromhex("73a6"), bytes.fromhex("7da6")),
+    # ... and a natural 20, which the game took as saved before adding the modifiers (79B5Fh), saves
+    # unless the save can't be made ("never save should be never save": the user, 2026-11-09): the
+    # natural 20's test jumped over, so it goes on with the modifiers (DSCLOG's SAVE_SUM: the sum kept
+    # in its byte, and the natural 20 made a save there, under the -100's). Always applied, as above.
+    Patch("save_natural", 0x79B5F, bytes.fromhex("807e"), bytes.fromhex("eb09")),
+    Patch("save_sum", 0x79B97, bytes.fromhex("8a56fe02d08856fe"), _site(SAVE_SUM_SITE, 8)),
+    Patch("save_natural_saves", 0x79BB4, bytes.fromhex("0046fe"), _site(SAVE_NAT_SITE, 3)),
     # The monsters as the manual describes them (in the same switch; reports/group 4's research,
     # playtest/logs/2026-11-09-group-4-research.md). The kinds' properties: bit 15 a hit (the last
     # natural attack's) casting the priests' Poison (119), bit 24 the corroding touch, bit 25 disease

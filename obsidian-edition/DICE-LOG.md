@@ -87,8 +87,8 @@ changes](FEATURES.md#rule-changes) off, the game uses petrification/polymorph
 for almost every spell and doubles the d20 against fire, cold and electricity
 spells, as in the example above, so Fireball's victims usually save; with them
 on (the default), the line names the spell save and DEX's adjustment instead
-(`+5 DEX 21 dodging`). A natural 1 always fails and a natural 20 always saves.
-`none allowed (cannot save) -> failed` is a save the game gives −100 (Chaos for
+(`+5 DEX 21 dodging`). A natural 1 always fails and a natural 20 saves, unless no save is allowed:
+`none allowed (cannot save) -> failed` (`cannot save, even on a natural 20` when the d20 was a 20) is a save the game gives −100 (Chaos for
 all but warriors, Cloudkill, Scare below 6th level, Color Spray with the manual's
 spells): it fails (the game's own compare read the total as a big number and
 the creature saved; the patched game's compare is signed, [a bug

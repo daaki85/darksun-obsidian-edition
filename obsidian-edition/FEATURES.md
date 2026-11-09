@@ -1101,7 +1101,7 @@ unticked, they are the game's.
 | Stinking Cloud | 1d6 rounds | 1d4+1 rounds |
 | Chaos | only warriors may save | warriors, and creatures of INT 21 or more or 4 or less |
 | Free Action | ends Paralyzed and Slowed only | also frees the Stuck: Web, Solid Fog, Quicksand, Entangle, Grease (a Poisoned creature stays Paralyzed, as in the game) |
-| Color Spray | every creature saves | only creatures of more levels than the caster save (the rest at -100: a natural 20 still saves, as against Chaos and Cloudkill) |
+| Color Spray | every creature saves | only creatures of more levels than the caster save (the rest at -100: they can't, even on a natural 20, as against Chaos and Cloudkill) |
 | Hold Undead | any undead | only undead of no more levels (hit dice) than the caster's level; the rest are immune |
 | Minute Meteors | one blast of 1d4 a caster level (at most 10d4) | five globes of 1d4, each aimed and landing on its own (with [Spells roll to hit](#spells-roll-to-hit), each rolls with +2) |
 | Flame Arrow | one blast of 5d6 for every five caster levels (10d6 at level 10) | a bolt of 1d6 + 4d6 fire (5d6) for every five caster levels, at least one, each aimed and landing on its own (AD&D's bolts; no attack roll, no save, as the manual) |
@@ -1164,8 +1164,10 @@ creatures of 6th level or lower, Scare below 6th level, and the mod's Color
 Spray rule) makes a total such as −85, read as 171: always a save. Seen in
 DOSBox: Arena Guards "unable to save" took half Cloudkill's damage, and a Guard
 "unable to save" against Scare was never Afraid. The compare is now signed,
-whether the box is ticked or not (a bug fix, always on): "can't save" fails (a
-natural 20 still saves, as the game checks it first).
+whether the box is ticked or not (a bug fix, always on): "can't save" fails, even
+on a natural 20 (the game took a natural 20 as a save before adding anything;
+the patched game adds the modifiers first, and a natural 20 saves unless the
+save can't be made).
 
 **In more detail:**
 
@@ -2839,7 +2841,7 @@ got wrong, each with a switch, are the [rule changes](#rule-changes)):
 | **Negative Plane Protection** | Saved as against Vampiric Touch, which allows no save, so it never stopped anything | A save against paralysis, poison and death, as AD&D's against death magic: saved, the undead's touch is stopped and it takes 2d6 |
 | **Acid Arrow** | After the hit its acid never burned again: its time was a timer that only ended it, and nothing spent it a round at a time | 2d4 acid at the start of each round it lasts (a round for each started minute of its time: four for an 11th-level caster) |
 | **Scare**'s save | No one saved, of any level (a 7th-level fighter was Scared): its record allowed no save, so the save code's rules for it never ran; and those asked for an elf or half-elf priest as one creature of both races | 6th level and up always save, as the game's code means; below 6th level creatures can't save (whatever the Options: the fix below makes "can't save" fail), but an elf or half-elf priest saves as usual |
-| **"Can't save"** (Chaos for all but warriors, Cloudkill on the weak, Scare below 6th level, Color Spray with the manual's spells) | The saving throw compared its total with the number needed unsigned, so the −100 for "can't save" made a total such as −85, read as 171: the creature always saved | "Can't save" fails; a natural 20 still saves ([more](#spells-and-psionics-as-the-manual-describes-them)) |
+| **"Can't save"** (Chaos for all but warriors, Cloudkill on the weak, Scare below 6th level, Color Spray with the manual's spells) | The saving throw compared its total with the number needed unsigned, so the −100 for "can't save" made a total such as −85, read as 171: the creature always saved | "Can't save" fails, even on a natural 20 ([more](#spells-and-psionics-as-the-manual-describes-them)) |
 | **Cloak of Bravery** | Its +4 on saves against fear asked for a mark no spell had, so it never applied | +4 against Scare, Fear, Cause Fear and Insect Plague (and a Cloak of Fear's), and the new [Spook](#new-wizard-spells) |
 | A **berserk** or **confused** party member | Could end it fighting for the monsters' side: their side is rolled each turn, and only a charm's end put it back | Back on their own side when it ends |
 | The **fire elementals** | The resistances the wrong way round: the fire elemental hurt by +1 weapons, the lesser one only by +2 and by fire | The fire elemental needs +2 weapons and the lesser one +1, as the clue book has them, and neither takes anything from fire |

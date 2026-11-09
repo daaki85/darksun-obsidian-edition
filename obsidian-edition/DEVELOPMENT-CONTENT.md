@@ -293,7 +293,7 @@ after the `ns_list_` patches):
   its hit dice (Dismissal, Cloudkill, Scare and Color Spray read it), and
   `color_spray_level` DSCLOG's `SPRAY_SITE` over Dismissal's
   `cmp word [bp+14h],3Ch / jnz` (79F83h): Color Spray (spell 4) on a target of
-  the caster's level or lower -100 (a natural 20 still saves), then
+  the caster's level or lower -100 (no save, even on a natural 20: `save_natural`), then
   Dismissal's test made in the handler (on to 79F89h, or past to 79F95h).
 - **Cause Serious and Critical Wounds** (spells 113 and 128): their records'
   damage dice were 2d9 and 3d9, where the Cure spells (rolled by their own

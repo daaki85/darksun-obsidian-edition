@@ -155,7 +155,7 @@ theirs in its data (monsters' own, made by scripts, or unused).
 
 From the game's saving throw routine. The spell names which of the character
 sheet's five saves to use; a natural 1 always fails and a natural 20 always
-saves; otherwise the d20 and the modifiers below must reach the save's number.
+saves (in the patched game, unless the save can't be made: below); otherwise the d20 and the modifiers below must reach the save's number.
 
 **Petrification/polymorph for almost every spell.** The game's code maps the
 spell's save kind 5 to the sheet's third save; kind 1 is
@@ -213,7 +213,8 @@ caster's. But "can't save" is −100 on the save, and the game compares the tota
 with the number needed unsigned (79BBAh), so a total such as −85 reads as 171
 and the creature **always saves** (seen in DOSBox: Arena Guards "unable to
 save" took half Cloudkill's damage). The patched game's compare is signed, so
-"can't save" fails, whatever the Options ([The game's bugs,
+"can't save" fails, even on a natural 20 (which the game took as a save before
+adding the −100), whatever the Options ([The game's bugs,
 fixed](FEATURES.md#the-games-bugs-fixed)). Against Scare no one saves at all: its record allows no save, so the
 saving throw ends at its first test and the rules the save code has for Scare
 never run. Those rules: 6th level and up always save and everyone below can't,

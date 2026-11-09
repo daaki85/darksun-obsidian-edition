@@ -1383,10 +1383,17 @@ class SaveTests(unittest.TestCase):
         self.assertEqual(log.game.save_modifiers(0x29, 0, HOLD_PERSON, game.PPD_SAVE),
                          [(1, "Blessed"), (5, "dwarf CON 19")])
 
-    def test_natural_20_needs_no_probe(self):
+    def test_natural_20(self):
+        """A natural 20 goes on to the probe (gamepatch's save_natural): it saves (DSCLOG's SAVE_SUM made
+        the total the number needed), unless the save can't be made (the -100's)."""
         log = make_game()
-        self.assertEqual(log.describe(self.save_roll(log, 20)),
+        self.assertEqual(log.describe(self.save_roll(log, 20)), [])
+        self.assertEqual(log.describe(self.probe(14)),
                          ["Mountain Stalker's saving throw vs Hold Person from Dag (spell): d20 = 20 (natural 20) -> saved"])
+        self.assertEqual(log.describe(self.save_roll(log, 20)), [])
+        self.assertEqual(log.describe(self.probe(-79 & 0xFF)),
+                         ["Mountain Stalker's saving throw vs Hold Person from Dag (spell): none allowed (cannot "
+                          "save, even on a natural 20) -> failed"])
 
     def test_magic_resistance(self):
         log = make_game()
