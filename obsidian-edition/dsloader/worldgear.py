@@ -447,6 +447,43 @@ def object_chunks(chunks, gifts: Sequence[Gift], extra: Sequence[Tuple[int, Sequ
     return out
 
 
+# People the party fights whom the game gave nothing to fight with (they struck with their fists),
+# 2026-11-09: each given what the armed of their kind carry (a copy of that object's own items) or,
+# with none of their kind armed, the game's plain items of the types named (the first of each type
+# in its data, as champions.game_item). Their scripts make them from these objects (a create copies
+# the object, items and all).
+#  - the Drajian Guards escorting Seref on the road (213; script 171) and the slave village's
+#    soldiers (195; script 152, "Slay them before..."): the armed Drajian Guard's (214);
+#  - the Lower Castle's unarmed Guard (281; "Guards! Guards! I caught them!"): the other Guards' (108);
+#  - Arant's Lazy guard (267), among his armed guards at the camp: theirs (82);
+#  - the White Sand Outlaws who burst from the sand (Slave Hunters 199, 201; script 133, "swords
+#    readied"), and their chiefs Hototo (200) and Dagger (202): a bone long sword and leather chest
+#    armour, the chiefs leather arm armour too;
+#  - the Psionicist of the final battle (257; script 62): a stone dagger;
+#  - the Tohr-kreen of the arena's waves (292), whose picture holds a gythka in every frame: one.
+# (Jake and Mow are Dagolar's guises: script 48 puts Dagolar, armed, in their place; Egrus is dead.)
+ARMED_LIKE = ((213, 214), (195, 214), (281, 108), (267, 82))
+LONG_SWORD_BONE, LEATHER_CHEST, LEATHER_ARMS, STONE_DAGGER_TYPE, GYTHKA_BONE = 0x51, 6, 7, 0x21, 0x2C
+KITS = {199: (LONG_SWORD_BONE, LEATHER_CHEST), 201: (LONG_SWORD_BONE, LEATHER_CHEST),
+        200: (LONG_SWORD_BONE, LEATHER_CHEST, LEATHER_ARMS), 202: (LONG_SWORD_BONE, LEATHER_CHEST, LEATHER_ARMS),
+        257: (STONE_DAGGER_TYPE,), 292: (GYTHKA_BONE,)}
+
+
+def fighters(chunks) -> List[Tuple[int, Sequence[bytes]]]:
+    """(object, items) for ARMED_LIKE and KITS, each only if it has no items of its own yet."""
+    from .champions import game_item
+    out: List[Tuple[int, Sequence[bytes]]] = []
+    for obj, like in ARMED_LIKE:
+        if ("RDFF", obj) in chunks and ("RDFF", like) in chunks and not dataitems.items_of(chunks[("RDFF", obj)]):
+            out.append((obj, dataitems.items_of(chunks[("RDFF", like)])))
+    for obj, kinds in KITS.items():
+        if ("RDFF", obj) in chunks and not dataitems.items_of(chunks[("RDFF", obj)]):
+            items = [game_item(chunks, kind) for kind in kinds]
+            if all(items):
+                out.append((obj, items))
+    return out
+
+
 def data_chunks(chunks, on: Dict[str, bool]) -> Dict[Tuple[str, int], bytes]:
     """The objects with the new items of the content switched ON (on unless False): the plain
     weapons (world_gear), the magic ones and the rest (world_magic: with the cloak's own object,
@@ -457,6 +494,7 @@ def data_chunks(chunks, on: Dict[str, bool]) -> Dict[Tuple[str, int], bytes]:
     extra: List[Tuple[int, Sequence[bytes]]] = []
     if on.get("world_gear", True) is not False:
         gifts += GIFTS
+        extra += fighters(chunks)  # (those the party fights with nothing to fight with)
     if on.get("world_magic", True) is not False:
         gifts += MAGIC
     magic_arms = on.get("magic_arms", True) is not False

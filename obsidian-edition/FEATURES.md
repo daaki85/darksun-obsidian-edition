@@ -2113,6 +2113,15 @@ which it defines but never places or gives (the cluebook puts it in the Elven
 Caravan): **Seref**, the Draj agent there, carries it, and so does the Seref
 the party meets on the road with his guards and daggorans.
 
+**People who fought with their fists.** The game gave some of the people the
+party fights nothing at all, so they struck bare-handed: Seref's Drajian Guards
+and the slave village's, the White Sand Outlaws who burst from the sand
+("swords readied"), the Lower Castle's one unarmed Guard, Arant's lazy guard,
+the final battle's Psionicist and the arena's Tohr-kreen (whose picture holds a
+gythka). Each now carries what the armed of their kind carry, or plain gear to
+match: the outlaws bone long swords and leather, the Psionicist a stone dagger,
+the Tohr-kreen a gythka. Where, in [Every mundane weapon](ITEMS.md#every-mundane-weapon).
+
 **Pehtucl's chest**, with the Cloak of Protection +1 in it, is locked and
 trapped: a thief can disarm and pick it, anyone else bash it open, which sets
 off its poisoned needle (2d6 poison). How, in

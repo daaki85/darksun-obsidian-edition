@@ -43,6 +43,14 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 DSCLOG.EXE 65,520 bytes (image 65,488), 2,928 of its segment spare.
 
 **Changed**
+- **People the party fights who had nothing to fight with** (they struck with their fists), with
+  the new mundane items on (`worldgear.fighters`): Seref's Drajian Guards (213) and the slave
+  village's (195) the armed Drajian Guard's kit; the Lower Castle's unarmed Guard (281) the other
+  Guards'; Arant's lazy guard (267) his guards'; the White Sand Outlaws (Slave Hunters 199 and 201,
+  Hototo and Dagger, script 133: "swords readied") a bone long sword and leather, the chiefs leather
+  arm armour too; the final battle's Psionicist (257) a stone dagger; the arena's Tohr-kreen (292),
+  whose picture holds a gythka in every frame, a bone gythka. (Thri-kreen fight with their claws, as
+  their pictures show; Jake and Mow are Dagolar's guises; Egrus is dead.)
 - **The game's Polearm +1 in play:** the game defines it (object 1577) but never places or gives it
   (no script names it, not even by the negative number a create takes, and nothing holds one).
   Seref, the Draj agent at the Elven Caravan, where the cluebook puts it, carries it, with the new

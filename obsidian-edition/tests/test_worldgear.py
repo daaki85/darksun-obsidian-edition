@@ -470,3 +470,23 @@ class SerefTests(unittest.TestCase):
         self.assertEqual((struct.unpack_from("<H", rec, 0)[0], struct.unpack_from("<H", rec, game.ITEM_TYPE)[0],
                           struct.unpack_from("<H", rec, game.ITEM_NAME)[0], rec[game.ITEM_PLUS]),
                          (0x10000 - 1577, 19, 0x12, 1))
+
+
+class FightersTests(unittest.TestCase):
+    def test_kits_named(self):
+        """The unarmed people the party fights: each copies an armed kind's items or gets the game's
+        plain items of the types named (worldgear.fighters, with the game's data: test below)."""
+        self.assertEqual(dict(worldgear.ARMED_LIKE), {213: 214, 195: 214, 281: 108, 267: 82})
+        self.assertEqual(worldgear.KITS[292], (worldgear.GYTHKA_BONE,))
+        self.assertEqual(worldgear.KITS[257], (worldgear.STONE_DAGGER_TYPE,))
+
+    @unittest.skipUnless(os.environ.get("DSUN_OBJECTS"), "needs the game's SEGOBJEX.GFF (DSUN_OBJECTS)")
+    def test_from_the_games_data(self):
+        from dsloader import dataitems, gff
+        with open(os.environ["DSUN_OBJECTS"], "rb") as f:
+            chunks = gff.read_gff(f.read())
+        got = {obj: [struct.unpack_from("<H", r, game.ITEM_TYPE)[0] for r in items] for obj, items in worldgear.fighters(chunks)}
+        self.assertEqual(sorted(got), [195, 199, 200, 201, 202, 213, 257, 267, 281, 292])
+        self.assertEqual(got[292], [0x2C])
+        self.assertEqual(sorted(got[213]), sorted(struct.unpack_from("<H", r, game.ITEM_TYPE)[0]
+                                                   for r in dataitems.items_of(chunks[("RDFF", 214)])))
