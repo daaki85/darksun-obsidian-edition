@@ -8,7 +8,7 @@ with your options and keeps the full dice log while you play. Nearly every
 rule change and addition has a switch on the Loader's Options tab; the full
 list is in [What it does](obsidian-edition/README.md#what-it-does).
 
-![The arena in round 7 of a fight: K'ratchek's turn, with the combat log over the map's lower right showing a Slig's hits on Cermak and his hit points after each](obsidian-edition/docs/combat-log.png)
+![Round 3 of a fight in the slave pens: Lex's turn, with the combat log over the map's lower right, in short and its small font, eight lines: Ester's swings at a Guard, the Guard's hit on Jenna for 10 and a miss, and her hit points after](obsidian-edition/docs/combat-log.png)
 
 ## Getting started
 

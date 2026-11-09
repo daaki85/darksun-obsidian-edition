@@ -154,7 +154,8 @@ DSCLOG.EXE 65,184 bytes (image 65,152), 3,264 of its segment spare.
 - **The combat log panel's lines are in a smaller font,** 7 pixels a line where the game's is 9: 8
   lines docked (was 6), 14 expanded (was 11). The glyphs are the X11 misc-fixed 4x6 font's (public
   domain) with the game's drop shadow (`smallfont.py`); the header, buttons and filters keep the
-  game's font. FEATURES' pictures of the panel retaken.
+  game's font. The panel's pictures retaken in DOSBox with the final build (`docs/combat-log.png`,
+  `combat-log-expanded.png` and `combat-log-live.gif`, in Pehtucl's ambush, at Short).
 - **The panel's Short level reads as the readable layout does:** what happened first, the roll in
   brackets after it, the damage on the attack's line (`Seneca hits Slig for 11 (15 vs 4+, backstab)`,
   `Guard misses Lex (6 vs 13+)`, `Slig fails vs Fireball (11 vs 16+)`, `Rampager fails to resist
@@ -207,7 +208,7 @@ DSCLOG.EXE 65,184 bytes (image 65,152), 3,264 of its segment spare.
   next-level XP, the Effects screen, Look, creation, a shop). With the manual's spells, the
   monsters, resting and dual-classing, and the audit's fixes (their per-fight tables moved to the
   far block), the helper ends the pull request with 3,264 bytes of its segment spare, 102 bytes
-  free in the far block (the HMA) and 393 paragraphs of upper memory spare.
+  free in the far block (the HMA) and 392 paragraphs of upper memory spare.
 - The helper counts the game's page flips (`flip_count`, header +1832), for a frame rate:
   `playtest/framerate.py` reads it beside steady pace's frames left undrawn.
 
@@ -274,7 +275,6 @@ DSCLOG.EXE 65,184 bytes (image 65,152), 3,264 of its segment spare.
   DJ_DONE) had a bit for each of 64 combatants; they now cover every one up to MAP_COUNT (520), in
   the far block (FAR_TU, FAR_SWEPT, FAR_DJ). (Tests: Turn Undead, Whirlwind and the Djinn at
   combatants 64, 300, 519 and 520; seen in DOSBox: playtest/logs/2026-11-09-audit-fixes.md.)
-<!-- audit code fixes -->
 
 **Fixed: the Loader**
 - **Figures vanished from the map after many gear changes in one area:** each time a member's
@@ -345,7 +345,6 @@ DSCLOG.EXE 65,184 bytes (image 65,152), 3,264 of its segment spare.
   furthest in the store since slots are reused; it is now measured from the furthest. And writing
   the store no longer pauses DOSBox a second time while it is already paused (`sprites`; tests in
   `test_sprites`).
-<!-- audit code fixes -->
 
 ## Pull request #88 ([merged 2026-11-08](https://github.com/daaki85/darksun-obsidian-edition/pull/88))
 

@@ -512,7 +512,8 @@ class Viewer:
                 ("backstab_dice", None, "A backstab multiplies the weapon's dice only, STR and magic added after, as in "
                                         "AD&D, on the round's first attack only (the game multiplies the whole damage, STR "
                                         "included, on the first two)"),
-                ("new_spells", None, "New spells: six for wizards (Cat's Grace at 2nd level: DEX + 1d6; at 1st, Erdlu "
+                ("new_spells", None, "New spells: six for wizards (Cat's Grace at 2nd level: DEX + 1d6, or by class with the "
+                                     "manual's spells; at 1st, Erdlu "
                                      "Claw (unarmed 1d6+1), Fogbolt (-3 to hit, AC 2 worse), Reflected Image, Spook and "
                                      "Friends) and ten 6th-level priest spells from 11th level (Heal, Harm, Blade Barrier...)")):
             self.rule_vars[key] = tk.BooleanVar(

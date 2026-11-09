@@ -538,8 +538,8 @@ sizes; the paragraphs after it say how each piece got there.
   buffer (`UMB_NEED`, the header's +372) need 6,168 (6,171 after group 4, 6,057 before it), and
   `test_fits_upper_memory` checks it too; what stays once installed, with the
   music buffer and the see-through figures' tables (`UMB_KEPT`: all four
-  blocks and their MCBs), 7,789 (measured from the build, 2026-11-09, after the
-  audit's fixes; 7,792 before them), so 393 (6.1 KB) are spare.
+  blocks and their MCBs), 7,790 (measured from the build, 2026-11-09, after the
+  audit's fixes; 7,792 before them), so 392 (6.1 KB) are spare.
 
 **What moved where (2026-11-08)**, freeing 3,136 bytes of the segment (3,040 of
 what stays, 190 paragraphs of upper memory): DAC (768), RING_TAB (520) and RED

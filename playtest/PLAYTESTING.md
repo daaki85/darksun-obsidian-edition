@@ -929,6 +929,11 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   to its own `PLAYTEST_WORK`, and the tools run from `DIR/playtest` (start.sh takes the Loader from
   the kit's parent folder); restart only the dice log (`python3 -u -m dsloader dicelog` from
   `DIR/obsidian-edition`) to run changed Loader code in a running game.
+- **The combat log's doc pictures** (2026-11-09, logs/2026-11-09-combat-log-shots.md): from
+  `fountain-user`'s ambush, `scroll.py -60 -80` in the fight brings the party left of the panel; the
+  docked panel's **+** is at (311,129), the expanded one's **-** at (296,74) (not 311). Pictures are
+  `shot.sh`'s scaled 200%; a GIF is `import -window` grabs in a loop (about 32 a second), picked 40
+  ms apart and `convert -delay 4 -scale 200% -layers Optimize`.
 - **Outfits and the store since the fix** (2026-11-09, logs/2026-11-09-picture-store-fix.md): the
   Loader puts a re-dressed picture into a slot the game already has (`sprites.Dresser._in_store`), so
   `cachelist.py`'s slot count no longer climbs one a gear change: a toggle reuses the slot holding

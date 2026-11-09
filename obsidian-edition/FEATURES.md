@@ -138,7 +138,7 @@ and misses' colours, as is Turn Undead's outcome (turned or destroyed a hit, not
 turned a miss); the hit points a rest or Cell Adjustment gives back are in the
 damage colour, as in the Loader's log. It never waits for a click.
 
-![The combat log in the arena, in short, as a fight is played with Tab and Enter: Wild Fighting, attacks, a kill and its XP, and hiding in shadows, each line as it happens](docs/combat-log-live.gif)
+![The combat log in short as a fight in the slave pens is played with Tab and Enter: Lex's hit on an Arena Guard and the guard's misses, Seneca hiding in shadows and moving silently, her backstab missing and her off-hand blow hitting, the poison, the kill and its XP, each line as it happens](docs/combat-log-live.gif)
 
 In detail, each attack names the weapon and its dice, the d20 against what it needed, the chance
 in percent, the AC it would hit and the target's AC, and the THAC0's parts follow (the panel
@@ -177,7 +177,7 @@ there; **-** makes it smaller.
   party's lines), **Damage** (hits, damage and deaths) and **Saves** (saving
   throws and magic resistance). Its size is remembered.
 
-![The combat log expanded in the arena, in short, with the All, Party, Damage and Saves filters](docs/combat-log-expanded.png)
+![The combat log expanded in a fight in the slave pens, in short: fourteen lines in its small font, under the All, Party, Damage and Saves filters](docs/combat-log-expanded.png)
 
 How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#the-combat-log-in-the-game).
 
