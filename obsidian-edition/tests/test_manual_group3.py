@@ -379,14 +379,16 @@ class Group3Tests(unittest.TestCase):
         """SAVE_SUM_SITE (79B97h: [BP-2] the d20, doubled when [BP-20h]'s 86h is set; AL the modifiers)
         and SAVE_NAT_SITE (79BB4h: AL the bonus after; [BP-1] the number needed): the total kept between
         -110 and 110, and a natural 20 at least the number needed unless under -50 (can't save)."""
-        for d20, flags, mods, bonus, want in (
-                (20, 0, -98, 0, -78),     # (a natural 20 against a -100: fails)
-                (20, 0, 3, 0, 23),        # (saves as it is)
-                (20, 0, -10, -2, 14),     # (raised to the 14 needed)
-                (40, 0x80, 100, 5, 115),  # (a doubled natural 20 and +100: 110, then the bonus)
-                (38, 0x80, 100, 0, 110),  # (a doubled 19 and +100: kept, not read as -118)
-                (10, 0, -100, 0, -90),    # (no natural 20)
-                (20, 0x80, -10, 0, 10)):  # (a doubled 10: no natural 20)
+        for d20, flags, mods, bonus, want, rules in (
+                (20, 0, -98, 0, -78, 0),     # (a natural 20 against a -100: fails)
+                (20, 0, 3, 0, 23, 0),        # (saves as it is)
+                (20, 0, -10, -2, 14, 0),     # (raised to the 14 needed)
+                (40, 0x80, 100, 5, 115, 0),  # (a doubled natural 20 and +100: 110, then the bonus)
+                (38, 0x80, 100, 0, 110, 0),  # (a doubled 19 and +100: kept, not read as -118)
+                (10, 0, -100, 0, -90, 0),    # (no natural 20)
+                (20, 0x80, -10, 0, 10, 0),   # (a doubled 10: no natural 20)
+                (20, 0x80, -10, 0, 14, 16)):  # (... but with RULE_NO_DOUBLE, 16, a natural 20 not doubled)
+            self.mu.mem_write(TSR * 16 + self.hdr_off + 170, struct.pack("<H", rules))
             self.frame(m2=(d20 & 0xFF) | 14 << 8, m20=flags)
             self.assertEqual(self.run_site("save_sum", eax=mods & 0xFF), 8)
             self.assertEqual(self.run_site("save_natural_saves", eax=bonus & 0xFF), 3)

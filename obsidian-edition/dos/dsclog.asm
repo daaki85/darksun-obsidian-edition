@@ -16352,7 +16352,7 @@ rest_con:
 ; add dl,al / mov [bp-2],dl" (79B97h; 8 bytes: [BP-2] the d20, doubled for some spells, AL the
 ; modifiers, 79D3Ch's): the sum, kept between -110 and 110 so that it stays in its byte (a doubled
 ; 20 and +100 made 140, read as -116: failed) with the bonus that follows (79BB4h: -8 to +7); and
-; SV_NAT whether the d20 was a natural 20 (20 not doubled: [BP-20h]'s 86h clear; or 40). SAVE_NAT_SITE,
+; SV_NAT whether the d20 was a natural 20 (20 not doubled: [BP-20h]'s 86h clear, or RULE_NO_DOUBLE; or 40). SAVE_NAT_SITE,
 ; at that bonus's "add [bp-2],al" (79BB4h; 3 bytes): after it, a natural 20 makes the total at least
 ; the number needed ([BP-1]), unless the total is under -50 (the -100's). The compare that follows
 ; is the dice log's save probe (VEC_SAVE) and the signed "jge" (save_signed).
@@ -16371,6 +16371,8 @@ save_sum:
         jne .not
         test word [bp - 0x20], 0x86
         jz .sum
+        test byte [cs:rules], RULE_NO_DOUBLE ; (no doubling: PROBE_DOUBLE)
+        jnz .sum
 .not:   mov byte [cs:sv_nat], 0
 .sum:   add ax, cx
         cmp ax, SAVE_MOST
