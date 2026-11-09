@@ -2177,6 +2177,14 @@ game's own, one story for each kind: the four pairs of bracers share one, and
 so do both rings of protection. The Warden's Plate's pieces each tell a part
 of Haldren's, the last of the Wardens.
 
+Two of the game's own stories now say what the item does (always, a fix of the
+game's text): the **Quicksilver Glove** (his menus called it "Quicksilver
+Gauntlets", grafting a weapon to the hand) "holds a psionic charge. Whatever it
+strikes is blasted from within, and the blast can shatter what the foe wears":
+it casts Detonate on every hit; the **Helm of Contemplation** (a "shield of
+thought against all psionic attacks") "turns a creature's gaze back on itself":
+Gaze Reflection.
+
 How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#new-items).
 
 #### Bracers of defense

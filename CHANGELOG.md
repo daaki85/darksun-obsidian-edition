@@ -225,6 +225,11 @@ DSCLOG.EXE 65,520 bytes (image 65,488), 2,928 of its segment spare.
   `playtest/framerate.py` reads it beside steady pace's frames left undrawn.
 
 **Fixed: the game**
+- **Alagorn told two items wrong** (script 212 and the Loader's copies of it): the Quicksilver Glove
+  as "Quicksilver Gauntlets" that graft a weapon to the hand (it casts Detonate on every hit), the
+  Helm of Contemplation as a shield against psionic attacks (it is Gaze Reflection). His menus name
+  the glove as the game does, and the two stories say what they do (`alagorn.retold`: the old lines
+  jumped over, the new run from after the script's end; always).
 - **The Quicksilver Glove fought as a wooden weapon** (-3 to hit, -2 damage): its type has no
   material (40h, a ring's), and the game's to-hit and damage (DSUN.EXE 5EB49h, 5EBC1h) read only the
   low nibble, 0, wood. Its type made leather, as the Chameleon Gloves' (DSCLOG's PROBE_TYPES_FILL,

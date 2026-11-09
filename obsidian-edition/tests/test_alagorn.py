@@ -308,3 +308,43 @@ class AlagornTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RetoldTests(unittest.TestCase):
+    """What Alagorn says of the Quicksilver Glove and the Helm of Contemplation (alagorn.retold): each
+    story's lines and the menu replies naming the glove run from after the script's end, the old
+    jumped over (and made exits), every goto as it was."""
+
+    def script(self):
+        s = _Script()
+        s.op(MENU, {"before": [], "title": ("str", "What item do you show him?"), "replies": [
+            {"text": ("str", text), "goto": ("label", label), "if": ("var", 0x8E, i), "before": [], "after": []}
+            for i, (text, label) in enumerate((("  Helm of Contemplation", "helm"), ("  Quicksilver Gauntlets", "glove")))]})
+        s.op(RETURN)
+        for label, lines in (("helm", alagorn.STORIES["Wearing a Helm of Contemplation creates a shield of thought around you, "][0]),
+                             ("glove", alagorn.STORIES["Quicksilver Gauntlets allow you to graft any one-handed melee weapon to "][0])):
+            s.label(label)
+            for line in lines:
+                s.op(0x4F, ("n", 115), ("str", line))
+            s.op(SET, ("n", 0), ("var", 14, 1))
+            s.op(RETURN)
+        return s.bytes(end=False)
+
+    def test_retold(self):
+        script = self.script()
+        out = alagorn.retold(script, FIELDS)
+        said = list(gpl.strings(gpl.decode(out, FIELDS)))
+        self.assertEqual([t for t in said if "graft" in t or "shield of thought" in t or "Gauntlets" in t], [])
+        self.assertIn("  Quicksilver Glove", said)
+        self.assertIn("Wearing a Helm of Contemplation turns a creature's gaze back on itself.", said)
+        self.assertIn("The Quicksilver Glove holds a psionic charge. Whatever it strikes is ", said)
+        old_ops, new_ops = gpl.decode(script, FIELDS), gpl.decode(out, FIELDS)
+        menus = [o for o in new_ops if o.code == MENU]
+        self.assertEqual([r["goto"] for r in menus[-1].args[0]["replies"]],
+                         [r["goto"] for r in old_ops[0].args[0]["replies"]])  # (the stories where they were)
+        self.assertEqual(out[old_ops[0].at], GOTO)
+        jumps_back = [o.args[0][1] for o in new_ops if o.code == GOTO and o.at >= len(script)]
+        sets = [o.at for o in old_ops if o.code == SET]
+        self.assertEqual(jumps_back, [old_ops[1].at] + sets)  # (after the menu; after each story's lines)
+        self.assertEqual(alagorn.retold(out, FIELDS), out)  # (once only)
+        self.assertEqual(alagorn.retold(alagorns(), FIELDS), alagorns())  # (a script without them: as it is)

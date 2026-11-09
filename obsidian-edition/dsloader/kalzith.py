@@ -619,6 +619,8 @@ def script_chunks(gpldata: bytes, kalzith: bool = True, semyon: bool = True,
     out.update(manualcheck.script_chunks(chunks, field_types))
     from . import scriptfixes  # the game's own script bugs mended (scriptfixes.py): always
     out.update(scriptfixes.script_chunks(chunks, out))
+    from . import alagorn as ag  # what Alagorn says of the Quicksilver Glove and the Helm of Contemplation: always
+    out.update(ag.retold_chunks(chunks, field_types, out))
     from . import kurzak  # Kurzak noticing Legcrusher is gone (kurzak.py): always
     out.update(kurzak.script_chunks(chunks, field_types, out))
     if champions:  # the champions' bout after Scar's death (champions.py; their objects in the objects' copy)

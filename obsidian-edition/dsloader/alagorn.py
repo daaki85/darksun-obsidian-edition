@@ -505,3 +505,75 @@ def script_chunks(chunks, field_types: bytes, arms: bool = True, magic: bool = T
                 out[("GPL ", TALK)] = talk
             out[("GPL ", target)] = changed
     return out
+
+
+# What Alagorn says of two of the game's items, as they are (the user's decision, 2026-11-09): his
+# story of the Quicksilver Glove (the game's name; his menus said "Quicksilver Gauntlets") had it
+# graft a weapon to the hand, which nothing does: it casts Detonate on whoever it hits (its +0Fh,
+# 139); the Helm of Contemplation's, a shield of thought against psionic attacks: it is Gaze
+# Reflection (+0Fh 7). Each story's lines (SAY 4Fh, one a screen line) and each menu reply naming
+# the glove are run from after the script's end, the old ones jumped over: script 212 and the
+# copies of it Alagorn's parts run from (COPY_OF), the old bytes after the jump made exits (as
+# scriptfixes' repairs, so the script still reads as commands). Always, as the Loader's other repairs of the
+# game's scripts (scriptfixes.py).
+MENU_OP, JUMP_OP, EXIT_OP = 0x48, 0x64, 0x31
+STORIES = {
+    "Wearing a Helm of Contemplation creates a shield of thought around you, ": (
+        ("Wearing a Helm of Contemplation creates a shield of thought around you, ",
+         "protecting you against all psionic attacks."),
+        ("Wearing a Helm of Contemplation turns a creature's gaze back on itself.",)),
+    "Quicksilver Gauntlets allow you to graft any one-handed melee weapon to ": (
+        ("Quicksilver Gauntlets allow you to graft any one-handed melee weapon to ",
+         "your body. The weapon becomes easier to use and does more damage ",
+         "than normal."),
+        ("The Quicksilver Glove holds a psionic charge. Whatever it strikes is ",
+         "blasted from within, and the blast can shatter what the foe wears.")),
+}
+REPLIES = {"  Quicksilver Gauntlets": "  Quicksilver Glove"}
+
+
+def retold(script: bytes, field_types: bytes) -> bytes:
+    """SCRIPT with STORIES' lines and REPLIES' menu replies as they should read (as it is if it has
+    none of them, or would be too long)."""
+    import copy
+    ops = gpl.decode(script, field_types)
+    out, added = bytearray(script), bytearray()
+    for i, o in enumerate(ops):
+        detour, end = None, None
+        if o.code == SAY and len(o.args) == 2 and o.args[1][0] == "str" and o.args[1][1] in STORIES:
+            old, new = STORIES[o.args[1][1]]
+            said = [ops[i + k] for k in range(len(old))] if i + len(old) < len(ops) else []
+            if [p.code for p in said] != [SAY] * len(old) or [p.args[1] for p in said] != [("str", t) for t in old]:
+                continue
+            end = ops[i + len(old)].at
+            detour = b"".join(gpl.encode_op((SAY, [o.args[0], ("str", t)])) for t in new)
+        elif o.code == MENU_OP and any(r["text"] in (("str", t) for t in REPLIES) for r in o.args[0]["replies"]):
+            menu = copy.deepcopy(o.args[0])
+            for r in menu["replies"]:
+                if r["text"][0] == "str" and r["text"][1] in REPLIES:
+                    r["text"] = ("str", REPLIES[r["text"][1]])
+            end = ops[i + 1].at if i + 1 < len(ops) else len(script)
+            detour = gpl.encode_op((MENU_OP, [menu]))
+        if detour is None or end - o.at < 3:
+            continue
+        if not added:
+            added.append(EXIT_OP)  # (a script that ran off its end still stops there)
+        start = len(script) + len(added)
+        added += detour + bytes((JUMP_OP,)) + end.to_bytes(2, "big")
+        out[o.at:end] = (bytes((JUMP_OP,)) + start.to_bytes(2, "big")).ljust(end - o.at, bytes((EXIT_OP,)))
+    if not added or len(out) + len(added) > LONGEST:
+        return script
+    return bytes(out + added)
+
+
+def retold_chunks(chunks, field_types: bytes, out: Dict[Tuple[str, int], bytes]) -> Dict[Tuple[str, int], bytes]:
+    """Script 212 and its copies (from OUT, the Loader's changes so far, or else CHUNKS) retold."""
+    changed: Dict[Tuple[str, int], bytes] = {}
+    for number in sorted({OTHER_SCRIPT, *COPY_OF.values()}):
+        key = ("GPL ", number)
+        code = out.get(key, chunks.get(key))
+        if code is not None:
+            new = retold(code, field_types)
+            if new != code:
+                changed[key] = new
+    return changed

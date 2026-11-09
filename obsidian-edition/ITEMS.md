@@ -19,10 +19,11 @@ power, and who carries it), and the mod's, in ***bold italics***. In
 A weapon's spell (Dark Flame's Burning Hands, Balk's Staff's Slow...) goes on
 whoever it hits, every hit, with no charge used; one the game counts as helpful
 (Shadowseeker's Detect Invisibility) is on its wielder instead while it is
-readied. The powers here are the item's own, from the data: what Alagorn says of
-an item when shown it (the Quicksilver Glove's "graft any one-handed melee
-weapon", the Helm of Contemplation's "shield of thought") isn't always what it
-does. The items that change a
+readied. The powers here are the item's own, from the data. What Alagorn says of
+an item when shown it isn't always what it does: the Golden Torque has no power;
+his stories of the Quicksilver Glove (grafting a weapon) and the Helm of
+Contemplation (a shield against psionic attacks) say what they do with the
+Loader ([Alagorn](FEATURES.md#new-items)). The items that change a
 score (Draketooth, Dag's Dagger, the Helm and Belt of Might, El's Ring, the
 Steadfast Ring and the Ring of Insight) do it while worn, the
 Belt of Might making STR at least 24.
@@ -135,7 +136,7 @@ Tanelyv's Armor also has a chest piece, metal, with no plus (AC 4 better: the ch
 |---|---|---|---|---|
 | ![](docs/items/helm-of-might.png) | Leather | Helm of Might | STR +1 | a reward in the party's hut in Teaquetzl, once Cedrilte joins the alliance (with Arrows +3, a bracelet and a pear) |
 | ![](docs/items/leather-helm.png) | Leather | Leather helm +1 | | a chest |
-| ![](docs/items/helm-of-contemplation.png) | Metal | Helm of Contemplation | Gaze Reflection (Alagorn calls it a shield of thought against psionic attacks: it is not) | the Warren Chief |
+| ![](docs/items/helm-of-contemplation.png) | Metal | Helm of Contemplation | Gaze Reflection | the Warren Chief |
 | ![](docs/items/wardens-helm.png) | Metal | ***Warden's Helm*** | the game's metal helm +1: Cloak of Bravery on its wearer while worn | on **Dagolar**'s body (the one carrying Dag's Dagger) |
 | ![](docs/items/arrowbane.png) | none (not armour) | ***Arrowbane*** | a silver circlet: Protection from Normal Missiles on its wearer while worn (normal arrows, sling stones and chatkchas can't hurt them); worn on the head, not armour | sold by **Kel** |
 | ![](docs/items/sunking-crown.png) | none (not armour) | ***Sunking Crown*** | a gold crown: Protection from Evil on its wearer while worn; worn on the head, not armour | worn by **Keldar**, the templar of Dagolar's tunnels |
