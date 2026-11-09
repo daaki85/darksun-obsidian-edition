@@ -967,6 +967,10 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   docked panel's **+** is at (311,129), the expanded one's **-** at (296,74) (not 311). Pictures are
   `shot.sh`'s scaled 200%; a GIF is `import -window` grabs in a loop (about 32 a second), picked 40
   ms apart and `convert -delay 4 -scale 200% -layers Optimize`.
+- **Picture slots while exploring** (2026-11-09, logs/2026-11-09-picture-slots-explore.md): the
+  pens load 203 of the 300 slots on arrival and walking about adds none (`slotcount.py` at each
+  stop); fights add a few (bodies, dropped items, spells). Wake of the Ravager's "graphics disappear"
+  note is this same limit; leaving the region clears it.
 - **Outfits and the store since the fix** (2026-11-09, logs/2026-11-09-picture-store-fix.md): the
   Loader puts a re-dressed picture into a slot the game already has (`sprites.Dresser._in_store`), so
   `cachelist.py`'s slot count no longer climbs one a gear change: a toggle reuses the slot holding
