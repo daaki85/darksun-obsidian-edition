@@ -806,10 +806,10 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   the memory it took, until no figure can be loaded (all gone; I then Escape frees that memory, so
   they come back for a while). **A long test in one area with many gear changes runs into it**:
   check `cachelist.py` (slots taken) and `cachelist.py all` (the last slot's place + length against
-  741,376), and reload the save or change area to start afresh. Proposed fix: the Loader leaves a
-  figure undressed when the store has no room (sprites.py `_room_for`, not yet in the code as of
-  this note). Flaming Sphere cast at a foe two squares off struck the caster (twice); farther off
-    it took a slot and logged nothing.
+  741,376), and reload the save or change area to start afresh. Fixed: the Loader leaves a figure
+  undressed when the store has no room (`_room_for`), and reuses the game's slots (the picture-store
+  fix, below), so the store hardly grows. Flaming Sphere cast at a foe two squares off struck the
+  caster (twice); farther off it took a slot and logged nothing.
 - **Watching figures and pictures** (2026-11-09): `figwatch.py SECONDS [EVERY] [TAG]` (passive, no
   writes: each member's screen place, its map record's +0 (80h: not drawn), its picture slot (+0Fh)
   with that slot's number and flags (2: in memory), the draw list's order and the member's place in
@@ -834,6 +834,17 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   to its own `PLAYTEST_WORK`, and the tools run from `DIR/playtest` (start.sh takes the Loader from
   the kit's parent folder); restart only the dice log (`python3 -u -m dsloader dicelog` from
   `DIR/obsidian-edition`) to run changed Loader code in a running game.
+- **Outfits and the store since the fix** (2026-11-09, logs/2026-11-09-picture-store-fix.md): the
+  Loader puts a re-dressed picture into a slot the game already has (`sprites.Dresser._in_store`), so
+  `cachelist.py`'s slot count no longer climbs one a gear change: a toggle reuses the slot holding
+  that outfit, the inventory open writes each picture's own slot, other outfits take a free STALE
+  slot; a new slot only when the outfit is bigger than any free one (a few in the first dozens of
+  changes, then none). `fillcache.py` waits for the count to grow, so it now stalls (4 s a change):
+  use `outfitcycle.py` or `randout.py N [SEED]` (random items of member 0 on and off). A test that
+  needs the store full (the old vanishing figures) now needs a picture loaded anew some other way.
+  Before a DOSBox run with the repository's Loader while another session edits the helper, assemble
+  `dos/dsclog.asm` to a scratch file and `cmp` it with `dos/DSCLOG.EXE`: the same, and the tree's
+  build is fine to run.
 
 ## 5. The story so far: what's known of the route
 

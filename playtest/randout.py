@@ -1,11 +1,17 @@
+# randout.py N [SEED]: N random outfit changes for member 0: each time one of its worn items (slot
+# under 12) taken off (slot byte +11h set to 50) or put back, waiting for the Loader's copy of
+# SEGOBJEX.GFF to be written; every 10th change (and any with the figure not drawn) a line: the
+# dressings so far, the picture slots taken, the STALE ones, the store's end, drawn or not. Puts
+# every item back at the end. Memory edit: never save after (logs/2026-11-09-picture-store-fix.md).
 import os,sys,struct,time,random
-PT='/home/user/darksun-obsidian-edition/playtest'; sys.path.insert(0,PT); __file__=PT+'/live.py'; exec(open(PT+'/live.py').read())
+PT = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, PT)
+exec(open(os.path.join(PT, 'live.py')).read())
 from dsloader import game, sprites
 random.seed(int(sys.argv[2]) if len(sys.argv)>2 else 1)
 items = game.far_pointer(g, ds, game.ITEMS_PTR)
 orig = {i: item[game.ITEM_SLOT] for i, item, t in gd._worn(0) if item[game.ITEM_SLOT] < 12}
 orig = dict(list(orig.items())[:5])
-copy='/home/user/darksun-obsidian-edition/obsidian-edition/dos/SEGOBJEX.GFF'
+copy=os.path.join(PT, '..', 'obsidian-edition', 'dos', 'SEGOBJEX.GFF')
 state={i:True for i in orig}; nd=0
 def stat():
     n=struct.unpack('<H',g.read(ds*16+0x1F84,2))[0]; tab=g.read((gd.load_seg+0x3E60)*16,n*16)

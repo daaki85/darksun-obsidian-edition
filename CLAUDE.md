@@ -77,7 +77,8 @@ capture; window grabs (`import -window`) are 320x240, so y x 1.2.
   without restarting the game). Share DOSBox between agents with `flock /tmp/playtest/dosbox.lock`.
   `turnsetup.py` makes a priest and undead foes in memory for a Turn Undead test.
 - Figures gone from the map: the game's picture store full (`cachelist.py`, `poolfree.py`,
-  `figwatch.py`; `fillcache.py` fills it for a test).
+  `figwatch.py`; since the Loader reuses the store's cells, `outfitcycle.py` / `randout.py`
+  change outfits for a test; `fillcache.py` now stalls).
 - E opens the Effects screen. In an END <NAME>'S MOVE menu (a click on the member's figure
   opens it), E is END TURN.
 - The creation screen: CREATE CHARACTERS (165,92), right-click an empty slot, NEW (110,57). A score's

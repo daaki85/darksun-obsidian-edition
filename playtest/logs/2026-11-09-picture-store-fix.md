@@ -46,14 +46,15 @@ STUCK or GONE).
 |---|---|
 | `fountain-user`, the box clicked: the ambush, 202 slots | |
 | `outfitcycle.py 0 10 120` (Lex's shield, HEAD's `_room_for` would stop after about 72) | the first change one new slot (the old picture in memory, no cell yet); then **203 slots, store end 296,682 for the other 119**; drawn every time; `picstore.py check` 21 of 21 |
-| 100 random outfits from four items (`randout.py`, scratchpad), in the fight | 84 dressings: 3 new slots in the first 40 (outfits bigger than any free cell), none in the last 60 (206 slots); every party picture equal to the Loader's copy in store and memory |
+| 100 random outfits from four items (`randout.py`), in the fight | 84 dressings: 3 new slots in the first 40 (outfits bigger than any free cell), none in the last 60 (206 slots); every party picture equal to the Loader's copy in store and memory |
 | `fightout.sh` | over in 10 turns; all four drawn after it; 25 of 25 match |
 | I (all pictures out of memory), five changes in memory, Escape | 212 slots throughout (own cells written); Lex drawn without, then with the shield (img/2026-11-09-picture-store-fix-inventory.png) |
 | `arenatrip.sh` (`pens-after-scar`, two rests, the call, into the arena: **an area change**) | 66 slots on arriving, 14 of 14 match |
 | 80 random outfits in the arena | 5 new slots in the first 50, none in the last 30; 17 of 17 match; drawn throughout |
 
-In all, 288 dressings in the ambush's area and the arena took 14 new slots where HEAD's code takes
-one each.
+In all, about 290 dressings in the two areas took 9 new slots of the Loader's (1 + 3 in the
+ambush's area, 5 in the arena; the 6 slots taken during `fightout.sh` were the game's own: bodies,
+the walking figures after the fight) where HEAD's code takes one a dressing.
 
 ## Dark Sun Recompiled
 

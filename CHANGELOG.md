@@ -51,7 +51,14 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
   anew only while the store and the table keep room for it and for the game's own pictures (64 KB
   and 24 slots); else it stays as it was until the next area. (`sprites._room_for`; test:
   `test_no_room_in_the_games_store`; reproduced and checked in DOSBox:
-  playtest/logs/2026-11-09-missing-figures.md.)
+  playtest/logs/2026-11-09-missing-figures.md.) And a figure dressed anew now takes no new slot at
+  all: the Loader puts its pictures into cells the game's store already has (one holding the very
+  picture, an outfit changed back; the figure's own, out of memory; else the smallest unused cell
+  with room), writing the store (the game's XMS block, found and checked against pictures in
+  memory) while DOSBox is paused and never a picture in memory, and falls back to the old way
+  where the store can't be found (as on Dark Sun Recompiled). In DOSBox about 290 outfit changes
+  across two areas, a fight and the inventory took 9 new slots (was one each), every figure drawn
+  (`sprites.Store`, `Dresser._in_store`; 6 new tests; playtest/logs/2026-11-09-picture-store-fix.md).
 
 **Changed**
 - **The helper has room again (second memory pass):** its code space 2,032 -> 6,032 bytes free.
