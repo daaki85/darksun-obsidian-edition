@@ -507,6 +507,13 @@ PATCHES = (
     # turned (Afraid, 3d4 rounds), destroyed, D* (2d4 more of the kind) or nothing, and a priest
     # who fails can't try that undead again that fight
     Patch("turn_undead_manual", 0x7AE01, bytes.fromhex("268a4724"), _site(TURN_SITE, 4)),
+    # The saving throw (79A71h) compared its total with the number needed unsigned ("cmp al,[bp-1] /
+    # jae", 79BBAh), so the save modifiers' -100 for "can't save" (Chaos's, Cloudkill's, Scare's below
+    # 6th level, Color Spray's) made a negative total, read as 156 and up: always saved (seen in
+    # DOSBox 2026-11-09: Arena Guards "unable to save" against Cloudkill took half its damage, a Guard
+    # against Scare was never Afraid). The compare made signed ("jge"): -100 fails (a natural 20 still
+    # saves, 79B5Fh), +100 saves (Scare from 6th level: a d20 + 100 stays under 128)
+    Patch("save_signed", 0x79BBD, bytes.fromhex("73a6"), bytes.fromhex("7da6")),
     # Blur (12): +1 on saves against magic, as Barkskin's, in the save modifiers (79D46h) at Barkskin's
     # test (79DC0h, "les bx,[bp+0Ah] / test byte [es:bx+7],2 / jz / inc si": DSCLOG's BLUR_SITE)
     Patch("blur_save", 0x79DC0, bytes.fromhex("c45e0a26f6470702740146"), _site(BLUR_SITE, 11)),
@@ -1172,7 +1179,7 @@ SPELLS_MANUAL = ("bestow_curse_save", "blood_flow_save", "flaming_sphere_negates
                  "classless_save_level", "color_spray_level", "hold_undead_level",
                  "free_action_stuck", "free_action_loop", "free_action_word", "remove_paralysis_word",
                  "protection_paralysis_word", "meteors_count", "meteors_damage", "flame_arrow_damage",
-                 "flame_arrow_count", "turn_undead_manual", "blur_save", "fire_shield_save", "cloudkill_save",
+                 "flame_arrow_count", "turn_undead_manual", "save_signed", "blur_save", "fire_shield_save", "cloudkill_save",
                  "cloudkill_kills", "lower_resistance_manual", "strength_dice", "rainbow_pattern_time",
                  "rainbow_pattern_damage", "feeblemind_psionics", "biofeedback_least",
                  "cell_adjustment_heal")  # the spells and psionics as the manual has them (spells_manual)
