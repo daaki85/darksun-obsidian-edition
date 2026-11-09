@@ -176,6 +176,9 @@ class Group3Tests(unittest.TestCase):
             self.assertIn(name, gamepatch.SPELLS_MANUAL)
             self.assertEqual((p.offset, p.original.hex()), (offset, original))
             self.assertEqual(p.replacement, bytes((0xCD, gamepatch.VEC_CR_SPELLS, site)) + b"\x90" * (len(original) // 2 - 3))
+        signed = patch("save_signed")  # (the saving throw's compare: "jae" made "jge")
+        self.assertEqual((signed.offset, signed.original.hex(), signed.replacement.hex()), (0x79BBD, "73a6", "7da6"))
+        self.assertIn("save_signed", gamepatch.SPELLS_MANUAL)
         rainbow = patch("rainbow_pattern_time")
         self.assertEqual((rainbow.offset, rainbow.original.hex(), rainbow.replacement.hex()),
                          (0x41F70 + 50 * 32 + 4, "3100", "1001"))

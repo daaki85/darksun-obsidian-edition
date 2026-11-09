@@ -1615,6 +1615,17 @@ class ManualGroup3Tests(unittest.TestCase):
                       parent_code=dicelog.WEAPON_DAMAGE_RETURN)
             self.assertEqual(log.describe(e), [f"  Dag hits Mountain Stalker {want}"])
 
+    def test_cannot_save(self):
+        """The save modifiers' -100: with the compare made signed (save_signed) none is allowed; the
+        game's own unsigned compare reads the total as 156 and up, a save."""
+        for manual, want in ((True, "none allowed (cannot save) -> failed"),
+                             (False, "-100 meant \"cannot save\", but the game compares unsigned and reads it as "
+                                     "168 -> saved")):
+            log = self.make(manual)
+            e = entry((14 << 8) | 0xA8, frame=words(0, 0, 0x29, 0, HOLD_PERSON), locals_=locals_at(0x10, m6=5),
+                      kind=KIND_SAVE, bp=0xFD00)
+            self.assertEqual(log.describe(e)[-1].split(": ", 1)[1], want)
+
     def test_save_modifiers(self):
         """Fire Shield's +2 against fire or cold and Blur's +1 (FSHIELD_SITE, BLUR_SITE)."""
         for manual in (True, False):
