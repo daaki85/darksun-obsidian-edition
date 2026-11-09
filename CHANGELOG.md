@@ -61,6 +61,21 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
   (`sprites.Store`, `Dresser._in_store`; 6 new tests; playtest/logs/2026-11-09-picture-store-fix.md).
 
 **Changed**
+- **Group 3: spells and psionics as the manual describes them** (the switch, renamed "Spells and
+  psionics as the manual describes them"; each seen in DOSBox: playtest/logs/2026-11-09-group-3.md):
+  Fire Shield +2 on saves vs fire and cold (its description says so); Blur +1 on saves; Chill Touch's
+  Weakened lasts (an hour: its record gave it 0 rounds) and undead touched take no damage and flee
+  1d4 rounds; Cloudkill kills under 4 HD with no save and those of 4-5 HD that fail, 6+ HD take its
+  damage; Feeblemind (INT and WIS 3, as the game already did) stops psionics and Heal cures it;
+  Lower Resistance takes 30% + 1% a caster level off magic resistance (was halving it); Strength's
+  die by class (warriors 1d8, priests, rogues and psionicists 1d6, wizards 1d4) and the mod's Cat's
+  Grace's (rogues 1d8, wizards, warriors and psionicists 1d6, priests 1d4), the best die for a
+  multiclass character, at most 24, neither stacking with Adrenalin Control; Rainbow Pattern a round
+  a caster level, ended by damage on the creature it holds; Cell Adjustment heals 1d4 (and cures
+  disease, as before); Biofeedback's -2 leaves a blow at least 1. And **"can't save" now fails**:
+  the game compared a save's total with the number needed unsigned, so every -100 (Chaos, Cloudkill,
+  Scare under 6th level, Color Spray) wrapped round and the creature saved (`save_signed`, 79BBDh).
+  The helper's code space: 5,040 bytes spare.
 - **The helper has room again (second memory pass):** its code space 2,032 -> 6,032 bytes free.
   The sites' dispatch is a jump table (688 bytes); the rings' outlines are kept as one quarter and
   mirrored (336); a new tail section after the image, kept with the helper and found through header
