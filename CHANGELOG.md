@@ -394,9 +394,10 @@ DSCLOG.EXE 65,520 bytes (image 65,488), 2,928 of its segment spare.
 - **ITEMS.md, FEATURES and the guide: the chatkchas and the Polearm +1.** The acid and corroding
   touch take only a held weapon of reach 1 (the type's +0Ah; the item list routine, DSUN.EXE
   5900Ah, called with 1): chatkchas (reach 9), slings and bows are never taken, so the Chatkcha +1
-  and Skycutter are out of the acid table. The Polearm +1 is only among the objects the game's
-  scripts can make (RGNFF.GFF), and no script makes it: nothing in play gives it (the cluebook's
-  "Elven Caravan" is not in the data).
+  and Skycutter are out of the acid table. The Polearm +1 is defined (a stand-alone object in
+  RGNFF.GFF, where the objects with no place on a map are, which scripts create into play), but no
+  script creates or gives it (by its number, negative as a create takes it, or through a variable),
+  and nothing holds one: nothing in play gives it (the cluebook's "Elven Caravan" is not in the data).
 - The player guide's **XP left over at the top**: each class's highest level under the 749,999 cap
   and the XP left over (one, two or three classes), and for dual-classing humans the room a new
   class has by the level the old class changed at (dual-classing starts the new class at 0 XP and
