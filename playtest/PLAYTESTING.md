@@ -240,6 +240,10 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   `playsound.py N` has DSCLOG play sound N (its SOUND_REQ). The game plays nothing much on its
   own while the party stands about: a recording of minutes was silence but for a second at the
   start. The game's own 53 and 96 recorded at peaks near 2,800.
+  **Comparing loudness** (2026-11-09, logs/2026-11-09-sounds-louder.md): `playsound.py N` for each sound
+  with 3 s between, the raw file's size noted round each, then the peak and the loudest 400 ms RMS of
+  each stretch (numpy over the memmap): the game's fight sounds peak about 2,960, RMS -27 to -31 dBFS.
+  A sound's descriptor +6 is its priority: the game skips one lower than the sound playing.
 - **The game's table of sounds** (2026-11-05): at load segment + 3A98h, offset 08A2h, 6 bytes each:
   +1 the kind (5 a digital clip), +2 a far pointer to a 12-byte descriptor (+7 its BVOC). 0-130
   are digital, 131-180 another kind (4), past 180 other data: a BVOC numbered past 130 isn't

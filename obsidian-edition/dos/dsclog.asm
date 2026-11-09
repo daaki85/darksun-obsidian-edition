@@ -1464,7 +1464,9 @@ play_sound:
         pop ax
         pop si
         ret
-mod_desc times MOD_SOUNDS db 1, 0, 0xFF, 0xFF, 0, 0, 1, 0, 0, 1, 0x6E, 0x40 ; (as the game's, BVOC +7)
+; (+6 the priority: the game plays a sound only if its priority is at least the one playing's
+; (3172:073Ah); its fight sounds have 9 and 10, so 10, not to be skipped for one: 1 till 2026-11-09)
+mod_desc times MOD_SOUNDS db 1, 0, 0xFF, 0xFF, 0, 0, 10, 0, 0, 1, 0x6E, 0x40 ; (as the game's, BVOC +7)
 
 ; OVR_BACK: the end of an interrupt handler that called the game's routines in a frame the overlay
 ; manager can fix up (BP pushed last, the far way back below it, as a far call's): that way back,

@@ -280,6 +280,11 @@ DSCLOG.EXE 65,344 bytes (image 65,312), 3,104 of its segment spare.
   DJ_DONE) had a bit for each of 64 combatants; they now cover every one up to MAP_COUNT (520), in
   the far block (FAR_TU, FAR_SWEPT, FAR_DJ). (Tests: Turn Undead, Whirlwind and the Djinn at
   combatants 64, 300, 519 and 520; seen in DOSBox: playtest/logs/2026-11-09-audit-fixes.md.)
+- **The mod's two sounds were hard to hear** (hiding in a fight, a picked pocket): saved at 55%
+  and 70% of full scale, and at the lowest priority, so a hide during a fight sound was skipped.
+  Now as loud as the game's typical clip (`sound-data/make.py`: full scale, the hide sound 3 dB more
+  through a soft limiter) and at priority 10, the game's fight sounds' highest (DSCLOG's
+  `mod_desc`). Heard in DOSBox: peaks as the game's (playtest/logs/2026-11-09-sounds-louder.md).
 
 **Fixed: the Loader**
 - **Figures vanished from the map after many gear changes in one area:** each time a member's
