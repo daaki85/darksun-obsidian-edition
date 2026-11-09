@@ -78,6 +78,10 @@ DSCLOG.EXE 66,832 bytes (image 66,800), 1,680 of its segment spare.
   2670/2671 the bone one's heads in the metal polearm's colours, BOX_TALL too), counted as cahulaks
   by every rule (the cahulaks' rule's sites, the half-giants' hands, the kits, restrict.py, the dice
   log, specialization, the figure's drawing).
+- **Creature sizes** (`dsloader/sizes.py`, for rules to go by; the game keeps none): AD&D's T to G,
+  people by race (half-giants L, halflings S, thri-kreen M, a guess at 7 feet), the rest by name
+  from AD&D's and Dark Sun's monster books, 27 the mod's guesses (UNSURE, marked "?"); a Size column
+  in CREATURES.md, tested against sizes.py.
 - **The creatures' table** (obsidian-edition/CREATURES.md, made by `dsloader.doccreatures` from the
   game's data): every creature the game defines (189, one a name and race, the default party left
   out), its figure as the game draws it standing (docs/creatures/; the fighting picture's where that

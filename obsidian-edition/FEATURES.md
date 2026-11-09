@@ -920,7 +920,7 @@ rules have them** ticked (on unless unticked):
 
 The game keeps no size for its creatures, so the list is the mod's, from
 AD&D's sizes. **[The creatures' table](CREATURES.md)** shows every creature
-of the game with its figure and whether the cahulaks can tangle it.
+of the game with its figure, its size and whether the cahulaks can tangle it.
 
 ```
 Lex attacks Templar with Bone Cahulaks (1d6): d20 = 16, needs 16+ (25%), hits AC 4, target AC 4 -> HIT

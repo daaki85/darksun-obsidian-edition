@@ -11,7 +11,7 @@ import struct
 import sys
 from typing import Dict, List, NamedTuple, Optional, Tuple
 
-from . import art, cahulaks, docicons, game, gff, monsters
+from . import art, cahulaks, docicons, game, gff, monsters, sizes
 
 PICTURE = 0x0C          # an object's picture (OJFF +0Ch, as sprites.OJFF_PICTURE)
 PARTY = frozenset(("Gerakis", "Cermak", "Cilla", "K'ratchek"))  # (the default party: not foes)
@@ -78,6 +78,12 @@ def race_name(race: int) -> str:
     return RACES.get(race, "monster")
 
 
+def size_text(c: Creature) -> str:
+    letter = sizes.size(c.name, c.race)
+    unsure = c.race in sizes.UNSURE_RACES if 1 <= c.race <= 8 else c.name in sizes.UNSURE
+    return f"{letter} ({sizes.SIZE_NAMES[letter]}){' ?' if unsure else ''}"
+
+
 def tangle(c: Creature) -> str:
     why = cahulaks.why_not(c.name, c.race)
     return f"no: {why}" if why else "yes"
@@ -93,6 +99,11 @@ from AD&D's sizes: half-giants, the Large and bigger, those with nothing a rope 
 few the mod keeps from being tangled (the spiders among them). The people the party meets in
 towns are here too: any of them can be fought.
 
+**Size** is AD&D's (T tiny, S small, M man-sized, L large, H huge, G gargantuan), which the game
+doesn't keep either: people by race (a half-giant large, a halfling small), the
+rest by name, from AD&D's and Dark Sun's monster books; a **?** marks the mod's guess, for the
+game's own creatures no book describes (`dsloader/sizes.py`). It is meant for rules to go by.
+
 Made with `python -m dsloader.doccreatures GAME_FOLDER`, from the game's own data.
 """
 
@@ -100,10 +111,11 @@ Made with `python -m dsloader.doccreatures GAME_FOLDER`, from the game's own dat
 def table(rows: List[Creature]) -> str:
     out = [INTRO]
     for title, keep in (("People", lambda c: 1 <= c.race <= 8), ("Monsters", lambda c: not 1 <= c.race <= 8)):
-        out += ["", f"## {title}", "", "| | Creature | Race | Cahulaks can tangle it |", "|---|---|---|---|"]
+        out += ["", f"## {title}", "", "| | Creature | Race | Size | Cahulaks can tangle it |", "|---|---|---|---|---|"]
         for c in rows:
             if keep(c):
-                out.append(f"| ![](docs/creatures/{slug(c)}.png) | {c.name} | {race_name(c.race)} | {tangle(c)} |")
+                out.append(f"| ![](docs/creatures/{slug(c)}.png) | {c.name} | {race_name(c.race)} | {size_text(c)} "
+                           f"| {tangle(c)} |")
     return "\n".join(out) + "\n"
 
 
