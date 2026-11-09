@@ -481,6 +481,28 @@ class FightersTests(unittest.TestCase):
         self.assertEqual(worldgear.KITS[257], (worldgear.STONE_DAGGER_TYPE,))
 
     @unittest.skipUnless(os.environ.get("DSUN_OBJECTS"), "needs the game's SEGOBJEX.GFF (DSUN_OBJECTS)")
+    def test_cahulaks_placed(self):
+        """Legcrusher's two clubs a Cahulaks +1 (the game's, object 30003), the caravan chest's Cahulaks
+        +2 (32,400), the arena body's plain gythka plain bone cahulaks (with the champions on), and the
+        champions' mul with metal cahulaks (type 146, object 2670) in place of two bone axes."""
+        from dsloader import arms, champions, dataitems, gff, npcitems
+        with open(os.environ["DSUN_OBJECTS"], "rb") as f:
+            chunks = gff.read_gff(f.read())
+        out = worldgear.data_chunks(chunks, {})
+        def items(obj):
+            return [(struct.unpack_from("<H", r, game.ITEM_TYPE)[0], -struct.unpack_from("<h", r, 0)[0],
+                     r[game.ITEM_PLUS], struct.unpack_from("<H", r, 6)[0])
+                    for r in dataitems.items_of(out.get(("RDFF", obj)) or chunks[("RDFF", obj)])]
+        legcrusher = items(npcitems.LEGCRUSHER)
+        self.assertNotIn(18, [t for t, _, _, _ in legcrusher])
+        self.assertIn((21, 30003, 1, 11600), legcrusher)
+        self.assertIn((21, 30003, 2, 32400), items(worldgear.CARAVAN_CHEST))
+        self.assertEqual([(t, p) for t, _, p, _ in items(arms.BODY)], [(21, 0)])
+        mul = items(champions.MUL)
+        self.assertEqual(mul[0][:3], (game.METAL_CAHULAKS_TYPE, 2670, 0))
+        self.assertNotIn(game.BONE_AXE_TYPE, [t for t, _, _, _ in mul])
+
+    @unittest.skipUnless(os.environ.get("DSUN_OBJECTS"), "needs the game's SEGOBJEX.GFF (DSUN_OBJECTS)")
     def test_from_the_games_data(self):
         from dsloader import dataitems, gff
         with open(os.environ["DSUN_OBJECTS"], "rb") as f:

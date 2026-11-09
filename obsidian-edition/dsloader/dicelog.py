@@ -2737,7 +2737,7 @@ class DiceLog:
         # the cahulaks' rule (DSCLOG's CAHULAKS): each swing the main head's penalty, in the setup's
         # bonus; the off head's swing (the round's last) its more added to [BP+0Ah] after it
         heads = None
-        if mode is not None and mode <= 1 and item_type == game.CAHULAKS_TYPE and g.rules & game.RULE_CAHULAKS:
+        if mode is not None and mode <= 1 and item_type in game.CAHULAKS_TYPES and g.rules & game.RULE_CAHULAKS:
             heads = (g.two_weapons(attacker, 0, "main"), g.two_weapons(attacker, 0, "off"))
         expected = None if None in (after_f1, hit_bonus) else after_f1 - hit_bonus - skill[1] - sum(v for _, v in kit)
         off_head = bool(heads) and expected is not None and heads[0][1] != heads[1][1] \

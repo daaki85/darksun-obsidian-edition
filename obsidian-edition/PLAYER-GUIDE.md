@@ -395,7 +395,7 @@ Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Hayneedle\* +1;
 Glasshewer\* +2, Drakejaw\* +1, Soulcrusher +1, Axe +1; Great Axe +3, Headsman\*
 +2; Gythka +3, Gythka +2\*, Kreenfang\* +1; Linebreaker\* +2, Polearm +1,
 Thornwall\* +1; Mace +2, Blackmace +1; Quarterstaff +2, Balk's Staff +1, Parting
-Staff +1; Gutterknot\* +1; Deepbiter\* +1; Cahulaks +1; Bow +2, Phrain's Bow +1,
+Staff +1; Gutterknot\* +1; Deepbiter\* +1; Cahulaks +2\*, Cahulaks +1\*; Bow +2, Phrain's Bow +1,
 Dunesong\* +1; Sling +2, Sling +1; Windlash\* +1; Skycutter\* +2, Chatkcha +1. A
 **Ravager** none of the bows, slings, Windlash, chatkchas or Dag's Dagger
 (thrown).
@@ -450,7 +450,7 @@ leg armour and a sling.
 **Magic weapons.** Every one ([the fighter's list](#fighter)). A
 **Twin-blade** none of the two-handed ones (great axes, gythkas, polearms,
 quarterstaffs, cahulaks, bows, staff sling); a **Brute** only Great Axe +3,
-Headsman\*, the gythkas, the polearms, the quarterstaffs and Cahulaks +1 in
+Headsman\*, the gythkas, the polearms, the quarterstaffs and the cahulaks in
 melee, and any missile weapon.
 
 ### Ranger
@@ -723,7 +723,7 @@ and fire a chatkcha; water none).
   Nightsliver\* +2, Glasshewer\* +2, Blackmace +1, Skycutter\* +2, Chatkcha +1.
 - **Water:** Stillwater\* +1, Hayneedle\* +1, Drakejaw\* +1, Gythka +3,
   Gythka +2\*, Kreenfang\* +1, Polearm +1, Thornwall\* +1, Mace +2, the three
-  quarterstaffs, Gutterknot\* +1, Cahulaks +1, Bow +2, Phrain's Bow +1,
+  quarterstaffs, Gutterknot\* +1, the two magic cahulaks, Bow +2, Phrain's Bow +1,
   Dunesong\* +1.
 
 An Elementalist adds its second sphere's.

@@ -44,7 +44,8 @@ Belt of Might making STR at least 24.
 | ![](docs/items/gythka-plus3.png) | Bone | gythka | Gythka +3 | +3 | carried by **Hototo**, chief of the White Sand Outlaws who burst from the sand (fought if the talk goes wrong; the mod's); and the arena's [1000th trip](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights), King Tectuktitlay's gift |
 | ![](docs/items/gythka-plus2.png) | Bone | gythka | ***Gythka +2*** | the game's Gythka +1, made +2 | the **Elven Leader**'s gift, after the fight with his men (he carries it too) |
 | ![](docs/items/kreenfang.png) | Bone | gythka | ***Kreenfang*** | a gythka +1 (2d4+1) | carried by the **Tohr-kreen** leading the champions in the arena, after **Scar** is killed ([the champions' bout](FEATURES.md#the-champions-bout)) |
-| ![](docs/items/cahulaks-plus1.png) | Bone | cahulaks | Cahulaks +1 | +1, Cause Light Wounds | the caravan's buried chest |
+| ![](docs/items/cahulaks-plus2.png) | Bone | cahulaks | ***Cahulaks +2*** | the game's Cahulaks +1, made +2; Cause Light Wounds | the caravan's buried chest |
+| ![](docs/items/cahulaks-plus1.png) | Bone | cahulaks | ***Cahulaks +1*** | +1, Cause Light Wounds (a copy of the game's) | carried by **Legcrusher**, the pens' half-giant monster trainer, in place of his two clubs (the mod's) |
 | ![](docs/items/dragonsbane.png) | Metal | long sword | Dragonsbane | +4 | Kraxis' sword, taken from his body after the final battle against Draj's army |
 | ![](docs/items/els-drinker.png) | Metal | long sword | El's Drinker | +2, Vampiric Touch | the safe in Gedron, with 2,000 ceramic pieces; and the arena's [1000th trip](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights), King Tectuktitlay's gift |
 | ![](docs/items/dags-dagger.png) | Metal | dagger | Dag's Dagger | +3, CHA +1 | Dagolar |
@@ -103,7 +104,7 @@ specialization](FEATURES.md#weapon-specialization):
 | Mace | Mace +2, Blackmace +1 |
 | Quarterstaff | Quarterstaff +2, Balk's Staff +1, Parting Staff +1 |
 | Sling | Sling +2, Sling +1 |
-| Club, pick, cahulaks | ***Gutterknot*** +1, ***Deepbiter*** +1, Cahulaks +1 |
+| Club, pick, cahulaks | ***Gutterknot*** +1, ***Deepbiter*** +1, ***Cahulaks +2***, ***Cahulaks +1*** |
 | Bow | Bow +2, Phrain's Bow +1, ***Dunesong*** +1 |
 | Staff sling, chatkcha | ***Windlash*** +1, ***Skycutter*** +2, Chatkcha +1 |
 
@@ -163,7 +164,7 @@ Tanelyv's Armor also has a chest piece, metal, with no plus (AC 4 better: the ch
 | ![](docs/items/girdle-of-back-defense.png) | Waist | ***Girdle of Back Defense*** | no enemy gets the +2 to hit for attacking its wearer from behind, nor a thief's backstab | carried by the **Troop Leader**, with Linebreaker |
 | ![](docs/items/golden-girdle-of-urnst.png) | Waist | ***Golden Girdle of Urnst*** | AC 3 better against swords (long and short), in melee | carried by **Wyrmias**, with his bracers |
 | ![](docs/items/serpent-boots.png) | Feet | Serpent Boots | Displacement | a ceramic pot (the cluebook's broken jar) in the Lower Castle |
-| ![](docs/items/boots-of-elvenkind.png) | Feet | ***Boots of Elvenkind*** | soft boots: [silent](FEATURES.md#hiding-in-shadows-to-backstab), with hiding to backstab on; thieves and rangers only | the buried chest of Kel's caravan, with the Cahulaks +1 |
+| ![](docs/items/boots-of-elvenkind.png) | Feet | ***Boots of Elvenkind*** | soft boots: [silent](FEATURES.md#hiding-in-shadows-to-backstab), with hiding to backstab on; thieves and rangers only | the buried chest of Kel's caravan, with the Cahulaks +2 |
 | ![](docs/items/boots-of-speed.png) | Feet | ***Boots of Speed*** | in a fight, the wearer's movement doubled (the speed of a fast horse: Move 24 to a human's 12) and AC 2 better while it can move (not Stuck, Paralyzed or Slowed); anyone may wear them; not out of a fight | carried by **Dagger**, chief of the White Sand Outlaws, whose band comes for the blank-eyed slave (fought if the party keeps the slave from him) |
 | ![](docs/items/living-cloak.png) | Cloak | Living Cloak | Inertial Barrier | Dagolar |
 | ![](docs/items/cloak-of-protection-plus1.png) | Cloak | ***Cloak of Protection +1*** | +1 AC and +1 on every saving throw, from the cloak slot | in [Pehtucl's chest](#pehtucls-chest), beside the slave pens' head templar: locked and trapped. In a game saved before 2.14.0 that has been to the pens, he wears the cloak instead, and the chest is the plain one |
@@ -223,7 +224,7 @@ Springs; Deepbiter is its magic one.
 | ![](docs/items/bone-long-sword.png) | long sword | bone | Jark, Weapon Merchant | Ranger, Templar, Chaero, Castle Guard, Arant's Guard, Warrior, Dagolar Guard, Caravan Guard, Guard, Lt. Kwerin, Slaver Guard, Messenger, Visitor, Renegade, Silt Runner, the White Sand Outlaws (Slave Hunters, Hototo, Dagger) and Arant's lazy guard (the mod's) |  |
 | ![](docs/items/metal-long-sword.png) | long sword | metal | Weapon Merchant | Uskuye, Elven Leader, Elite Guard, Village Hero, a chest in the warrens |  |
 | ![](docs/items/obsidian-long-sword.png) | long sword | obsidian | Jark, Weapon Merchant | Wyvern Master, Arant, Keldar, Kurzak, Guard, Chaya, Uskuye, Scar, Arena Guard, Caravan Master, Chahl, Mayor of Gedron, Merzol, Drajian Guard, Council Member, Templar, the arena's champions (the elf) |  |
-| ![](docs/items/club.png) | club | wood | Weapon Merchant | Warren Chief, Churrr, Tari, Skull Guardian, Worshipper, Low Warren Thug, Gladiator, Wild Mul, Guard, Legcrusher, a dead body in the arena, a chest, a weapon rack; "Striker", a plain club, on the ground in the Lower Castle |  |
+| ![](docs/items/club.png) | club | wood | Weapon Merchant | Warren Chief, Churrr, Tari, Skull Guardian, Worshipper, Low Warren Thug, Gladiator, Wild Mul, Guard, a dead body in the arena, a chest, a weapon rack; "Striker", a plain club, on the ground in the Lower Castle |  |
 | ![](docs/items/bone-dagger.png) | dagger | bone | Jark, Weapon Merchant | Defiler, the arena's champions (the defiler) | **new**: 1d4: the only dagger a water cleric can use; a water cleric's starting dagger |
 | ![](docs/items/metal-dagger.png) | dagger | metal | — | Tobrian | **new**: the game's dagger, in metal |
 | ![](docs/items/obsidian-dagger.png) | dagger | obsidian | — | Defiler, Notaku |  |
@@ -234,7 +235,7 @@ Springs; Deepbiter is its magic one.
 | ![](docs/items/bone-mace.png) | mace | bone | Jark, Weapon Merchant | Wyvern Master, Krikor, Templar, a chest, a chest in Dagolar's tunnels |  |
 | ![](docs/items/metal-mace.png) | mace | metal | — | Templar | **new**: the game's mace, in metal |
 | ![](docs/items/obsidian-mace.png) | mace | obsidian | Jark, Weapon Merchant | Tari | **new**: the game's Mace (1d6+1), in obsidian (its only obsidian mace is Blackmace) |
-| ![](docs/items/bone-axe.png) | axe | bone | Jark, Weapon Merchant | Wild Mul, Scar's henchman, the arena's champions (the mul, two) | **new**: 1d8; weighs 30, so not HEAVY: it goes in either hand with another weapon, and [backstabs](HOW-THE-GAME-WORKS.md#attacks-from-behind-and-backstabs) |
+| ![](docs/items/bone-axe.png) | axe | bone | Jark, Weapon Merchant | Wild Mul, Scar's henchman | **new**: 1d8; weighs 30, so not HEAVY: it goes in either hand with another weapon, and [backstabs](HOW-THE-GAME-WORKS.md#attacks-from-behind-and-backstabs) |
 | ![](docs/items/metal-axe.png) | axe | metal | — | Slaver Guard, Uzoma, a weapon rack in the Lower Castle, a weapon rack, a weapon rack in the slave pens |  |
 | ![](docs/items/obsidian-axe.png) | axe | obsidian | Weapon Merchant | Merzol | **new**: 1d8; 30, as the bone axe |
 | ![](docs/items/bone-great-axe.png) | great axe | bone | Jark, Weapon Merchant | Wild Mul | **new**: 1d10, two-handed; lighter than metal (and breaks as bone does); a warrior's starting great axe |
@@ -245,8 +246,9 @@ Springs; Deepbiter is its magic one.
 | ![](docs/items/quarterstaff.png) | quarterstaff | wood | Jark, Weapon Merchant | Mikquetzl, Troop Leader, Dakaren, Dagolar, Wyrmias, Hermit, Father Garyn, Notaku, a weapon rack in the Lower Castle, a skeleton in the Undermountain, a chest, a weapon rack in the slave pens |  |
 | ![](docs/items/bone-polearm.png) | polearm | bone | Weapon Merchant | a weapon rack in the Lower Castle, a weapon rack in the slave pens |  |
 | ![](docs/items/metal-polearm.png) | polearm | metal | — | Castle Guard | **new**: the game's polearm, in metal; an earth cleric's starting polearm |
-| ![](docs/items/gythka.png) | gythka | bone | Jark, Weapon Merchant | Guardian, a dead body in the arena, the arena's Tohr-kreen (the mod's: its picture holds one) |  |
-| ![](docs/items/cahulaks.png) | cahulaks | bone | Weapon Merchant | — |  |
+| ![](docs/items/gythka.png) | gythka | bone | Jark, Weapon Merchant | Guardian, the arena's Tohr-kreen (the mod's: its picture holds one) |  |
+| ![](docs/items/cahulaks.png) | cahulaks | bone | Weapon Merchant | the dead body by the arena's stone arch, where Kreenfang was (the mod's, with the champions' bout) |  |
+| ![](docs/items/metal-cahulaks.png) | cahulaks | metal | — | the arena's champions (the mul) | **new**: the game's cahulaks, in metal |
 | ![](docs/items/chatkcha.png) | chatkcha | obsidian | Jark, Bowyer | — |  |
 | ![](docs/items/bow.png) | bow | wood | Jark, Kel, Bowyer | Wyvern Master, Ranger, Arant, Castle Guard, Guard, Arant's Guard, Arena Guard, Caravan Guard, Slaver Guard, Elven Leader, Uzoma, Drajian Guard, Army Commander, Elite Guard, Village Hero, a chest in the Upper Castle, a chest, a chest in Dagolar's tunnels, the arena's champions (the elf), Arant's lazy guard (the mod's) |  |
 | ![](docs/items/sling.png) | sling | leather | Bowyer | Mehtar, Renegade, Silt Runner, a chest in the slave pens, a bag in the slave pens, the arena's champions (the halfling) |  |
@@ -339,7 +341,7 @@ slings and bows never are:
 | Plain wooden weapons | 65% | 65% (needs 8) |
 | Plain stone or obsidian weapons | 65% | 80% (needs 5) |
 | Bone +1: Hornblade, Draketooth, Polearm +1, Cahulaks +1, ***Stillwater***, ***Hayneedle***, ***Drakejaw***, ***Thornwall***, ***Kreenfang*** | 70% | 70% (the game's: needs 7) |
-| Bone +2: Swiftbite, Mace +2, ***Gythka +2*** | 75% | 75% (the game's: needs 6) |
+| Bone +2: Swiftbite, Mace +2, ***Gythka +2***, ***Cahulaks +2*** | 75% | 75% (the game's: needs 6) |
 | Bone +3: Gythka +3 | 80% | 80% (the game's: needs 5) |
 | Metal +1: Soulcrusher, Axe +1, ***Shadowseeker*** | 70% | 70% (the game's: needs 7) |
 | Metal +2: El's Drinker, ***Greenbright***, ***Galefang***, ***Headsman***, ***Linebreaker*** | 75% | 75% (the game's: needs 6) |

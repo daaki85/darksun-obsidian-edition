@@ -76,6 +76,8 @@ OBSIDIAN_GREAT_AXE = weaponchoice.OTHERS[KIND("great axe")][0]
 METAL_GREAT_AXE = weaponchoice.OTHERS[KIND("great axe")][1]  # (300)
 METAL_PICK = (game.METAL_PICK_TYPE, 0xAD, 0x10000 - 2510, 150)
 METAL_POLEARM = weaponchoice.OTHERS[KIND("polearm")][0]  # (250)
+CAHULAKS_NAME = 0x14  # (the game's "Cahulaks")
+METAL_CAHULAKS = (game.METAL_CAHULAKS_TYPE, CAHULAKS_NAME, 0x10000 - 2670, 200)  # (the champions' mul's)
 # (type, name entry, picture, price) and plus, priced as the game prices its own: a melee weapon as
 # the Obsidian Bloodwrath +1 (20,800, as its Hornblade +1 and Gythka +1), 20,800 a plus; a missile
 # weapon far less, as its Sling +1 (2,800; the Chatkcha +1 1,800, the Sling +2 3,500)
@@ -409,7 +411,52 @@ BASE_TYPES = {game.SHORT_SWORD_TYPE: 63, game.CLOAK_TYPE: 65, game.BONE_HELM_TYP
               game.METAL_POLEARM_TYPE: 19, game.CIRCLET_TYPE: 36, game.CROWN_TYPE: 36, game.PLATE_CHEST_TYPE: 57,
               game.PLATE_ARMS_TYPE: 58, game.PLATE_LEGS_TYPE: 59, game.ELVEN_CLOAK_TYPE: 65, game.ELVEN_BOOTS_TYPE: 68,
               game.AIR_DAGGER_TYPE: 33, game.BONE_GREAT_AXE_TYPE: 2, game.OBSIDIAN_GREAT_AXE_TYPE: 2,
-              game.BONE_DAGGER_TYPE: 17, game.ROBE_TYPE: 65, game.METAL_SHIELD_TYPE: 4}
+              game.BONE_DAGGER_TYPE: 17, game.ROBE_TYPE: 65, game.METAL_SHIELD_TYPE: 4,
+              game.METAL_CAHULAKS_TYPE: 21}
+
+
+# The cahulaks (with the new magic weapons): Legcrusher's two clubs a Cahulaks +1 (a copy of the
+# game's, its Cause Light Wounds and its shining icon with it); the elven caravan's buried Cahulaks
+# +1 made +2; the arena's dead body, which kept a plain bone gythka once Kreenfang went to the
+# champions, plain bone cahulaks.
+CAHULAKS_PLUS_OBJECT = 30003  # (the game's Cahulaks +1: its object, its icon's)
+LEGCRUSHER_CLUB = 18
+CAHULAKS_PLUS2_VALUE = 11600 + PLUS_VALUE
+
+
+def _is_object(obj: int):
+    return lambda rec: -struct.unpack_from("<h", rec, 0)[0] == obj
+
+
+def cahulaks_chunks(chunks, out: Dict[Tuple[str, int], bytes], champions_on: bool) -> Dict[Tuple[str, int], bytes]:
+    from . import arms, champions, dataitems, npcitems
+    new: Dict[Tuple[str, int], bytes] = {}
+    chest = ("RDFF", CARAVAN_CHEST)
+    plus1 = next((r for r in dataitems.items_of(out.get(chest, chunks.get(chest, b"")))
+                  if _is_object(CAHULAKS_PLUS_OBJECT)(r)), None) if chest in chunks else None
+    if plus1 is None:
+        return new
+    numbers = header_numbers(chunks)
+
+    def plus2(rec: bytes) -> bytes:
+        rec = bytearray(rec)
+        rec[game.ITEM_PLUS] = 2
+        struct.pack_into("<H", rec, arms.ITEM_VALUE, CAHULAKS_PLUS2_VALUE)
+        return bytes(rec)
+    new[chest] = dataitems.with_item_changed(out.get(chest, chunks[chest]), _is_object(CAHULAKS_PLUS_OBJECT), plus2)
+    key = ("RDFF", npcitems.LEGCRUSHER)
+    if key in chunks:
+        rdff = out.get(key, chunks[key])
+        rdff = dataitems.with_items_removed(
+            rdff, lambda rec: struct.unpack_from("<H", rec, game.ITEM_TYPE)[0] == LEGCRUSHER_CLUB)
+        new[key] = dataitems.with_items(rdff, [plus1], numbers)
+    body = ("RDFF", arms.BODY)
+    plain = champions.game_item(chunks, game.CAHULAKS_TYPE)
+    if champions_on and body in chunks and plain is not None:
+        gythka = lambda rec: struct.unpack_from("<H", rec, game.ITEM_TYPE)[0] == game.GYTHKA_TYPE \
+            and rec[game.ITEM_PLUS] == 0
+        new[body] = dataitems.with_item_replaced(out.get(body, chunks[body]), gythka, plain, numbers)
+    return new
 
 
 def header_numbers(chunks) -> Dict[int, int]:
@@ -537,8 +584,14 @@ def data_chunks(chunks, on: Dict[str, bool]) -> Dict[Tuple[str, int], bytes]:
         from . import champions
         try:
             out.update(champions.object_chunks(chunks))
+            champions_on = True
         except (KeyError, ValueError, IndexError, struct.error):
             out.update(arms.kreenfang_chunks(chunks))  # (no champions: Kreenfang on the body, as before)
+            champions_on = False
+        try:
+            out.update(cahulaks_chunks(chunks, out, champions_on))
+        except (ValueError, struct.error):
+            pass  # (an object's record not as expected: the cahulaks where the game has them)
     if on.get("world_magic", True) is not False:
         out[("RDFF", ELVEN_CLOAK_OBJECT)] = dataitems.item_object(ELVEN_CLOAK, header_numbers(chunks).get(65, 0))
         out[("RDFF", HAYNEEDLE_OBJECT)] = dataitems.item_object(

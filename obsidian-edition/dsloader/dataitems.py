@@ -137,6 +137,29 @@ def with_item_replaced(rdff: bytes, test, item: bytes, numbers: Optional[Dict[in
     return chunk(recs, end)
 
 
+def with_items_removed(rdff: bytes, test) -> bytes:
+    """The object's record without each of its own items for which TEST(record) holds (and their
+    attributes), the rest chained again (the first a child of the object, each next after the one
+    before); unchanged if none. ValueError for an object whose items hold others (a container's)."""
+    recs, end = records(rdff)
+    tops = top_items(recs)
+    keep = [i for i in tops if not test(recs[i].data)]
+    if len(keep) == len(tops):
+        return rdff
+    attrs = {i: [r for r in recs if r.level == ATTRIBUTE and r.of == i] for i in tops}
+    head = recs[:tops[0]]
+    if len(head) + len(tops) + sum(len(a) for a in attrs.values()) != len(recs):
+        raise ValueError("an object's items holding others")
+    out, before = list(head), None
+    for i in keep:
+        at = len(out)
+        out.append(recs[i]._replace(level=FIRST if before is None else NEXT, of=0 if before is None else before,
+                                    flags=FIRST_FLAGS if before is None else NEXT_FLAGS))
+        out += [a._replace(of=at) for a in attrs[i]]
+        before = at
+    return chunk(out, end)
+
+
 def items_of(rdff: bytes) -> List[bytes]:
     """The item records of the object's own items."""
     recs, _ = records(rdff)

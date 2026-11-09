@@ -2453,7 +2453,7 @@ The first wave is six **champions** in place of the game's:
 |---|---|---|
 | Tohr-kreen | **Kreenfang** (a gythka +1) | none |
 | Half-giant | a metal great axe | full scale, a bone helm, a leather shield |
-| Mul gladiator | two bone axes | full scale, a bone helm |
+| Mul gladiator | metal cahulaks | full scale, a bone helm |
 | Halfling | a sling, a bone short sword | full leather, a leather helm, a leather shield |
 | Elf | a bow and arrows, an obsidian long sword | full leather, a leather helm, a leather shield |
 | Defiler | a bone dagger, and a scroll of Fogbolt, Spook or Reflected Image (chosen as the bout starts; of the game's own spells with the new spells off) | none |

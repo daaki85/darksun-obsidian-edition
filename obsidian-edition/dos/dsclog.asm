@@ -4361,6 +4361,8 @@ kit_forbids_one:                ; (AL the kit, KIT_WHERE its class's place)
         jz .type
         cmp dx, TH_CAHULAKS
         je .type                ; (a blade in each hand: both hands, a half-giant's too)
+        cmp dx, 115 + 31        ; (the metal ones: METAL_CAHULAKS)
+        je .type
         inc ch
 .type:  call kit_class_of_sheet     ; (a ranger's sphere, for a Seeker: its class less 13)
         sub al, 13
@@ -11987,13 +11989,14 @@ conjured_kinds db 2, 1, 5       ; (kind + 1: club, long sword, mace)
 
 ; By item type (the game's 115, then the Loader's own: 115 its short sword), the weapon kind
 ; + 1 (dsloader/specialize.py's KIND_OF_TYPE; 0 none)
-KIND_TYPES equ 140
+KIND_TYPES equ 147
 kind_of_type  db 16, 14, 7, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 2, 10, 5, 12, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0
               db 0, 3, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 11, 1, 5, 1, 13, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
               db 15, 0, 0, 0, 0, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 1, 0, 0, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0
               db 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 8, 0, 0, 4, 0, 0, 4, 6, 4, 6, 4, 0, 3, 5, 7, 8
               db 10, 0, 0, 0, 0, 0, 0, 0, 3   ; (136: the air clerics' metal dagger, Galefang's)
               db 7, 7, 3                      ; (137, 138: the bone and obsidian great axes; 139 the bone dagger)
+              db 0, 0, 0, 0, 0, 0, 12         ; (146: the metal cahulaks, METAL_CAHULAKS)
 
 ; AD&D's class tables (RULE_HI_TABLES): the XP each class needs, priests' THAC0, and clerics',
 ; druids' and preservers' spell slots by level, as AD&D's Player's Handbook and Dark Sun have them
@@ -16540,7 +16543,7 @@ box_pic:
         pop si
         iret
 box_tall dw 2383, 2311, 2157, 2143, 2287, 2254, 2384, 1494, 2392, 2255, 2334, 1199  ; (the game's)
-         dw 2653, 2447, 2513, 2571, 2573        ; (the Loader's own: icons.BOX_TALL)
+         dw 2653, 2447, 2513, 2571, 2573, 2671  ; (the Loader's own: icons.BOX_TALL)
 BOX_TALL_COUNT equ ($ - box_tall) / 2
 
 ; PIC_REUSE: the game's picture cache (DSUN.EXE 25FA6h, a WALL or BMP chunk's slot) has 300 slots,
@@ -16771,6 +16774,7 @@ pf_reuse   db 0
 ;   +39h, a d20): it loses its next turn, as Whirlwind's sweep (SWEPT_NOW, FAR_SWEPT). Recorded
 ;   (MN_TANGLE). A Twin-blade or Battle Dancer in light armour, and a ranger, take no penalty (PROBE_TWO's).
 CAHULAKS     equ TH_CAHULAKS
+METAL_CAHULAKS equ 115 + 31         ; (EXTRA_TYPES' 32nd: the metal ones, the champions' mul's)
 CT_SKIP      equ 0x5963E - 0x5962A  ; (595ECh's "no two weapons" way, from after the site's number)
 MN_TANGLE    equ 10
 TARGET       equ 0x494A             ; DS: the attack's target (a combatant)
@@ -16795,7 +16799,9 @@ item_is_cahulaks:                   ; ZF if item AX (its number) is of the cahul
         add bx, ax
         pop ax
         cmp word [es:bx + 0x0A], CAHULAKS
-        pop bx
+        je .kind
+        cmp word [es:bx + 0x0A], METAL_CAHULAKS
+.kind:  pop bx
         pop es
         ret
 .no:    or sp, sp                   ; (ZF clear)
@@ -16852,8 +16858,10 @@ cah_swing:
         cmp word [bp + 0x16], 1
         jg .out
         cmp word [bp + 0x14], CAHULAKS
+        je .cah
+        cmp word [bp + 0x14], METAL_CAHULAKS
         jne .out
-        push ax
+.cah:   push ax
         mov ax, [bp + 0x18]
         cmp ax, [cs:cah_who]
         jne .pop
@@ -16878,8 +16886,10 @@ cah_hit:
         cmp word [bp + 0x16], 1
         jg .out
         cmp word [bp + 0x14], CAHULAKS
+        je .cah
+        cmp word [bp + 0x14], METAL_CAHULAKS
         jne .out
-        sti
+.cah:   sti
         pushad
         push es
         mov bx, [TARGET]
@@ -18243,7 +18253,10 @@ th_cahulaks:                    ; ZF if ES:BX is the cahulaks' type (by address:
         pop eax
         add edx, TH_CAHULAKS * 20
         cmp eax, edx
-        pop edx
+        je .out
+        add edx, (115 + 31 - TH_CAHULAKS) * 20   ; (the metal ones: METAL_CAHULAKS)
+        cmp eax, edx
+.out:   pop edx
         pop eax
         ret
 
@@ -22024,7 +22037,7 @@ n_fl    dw 0
 ; companion's own items that no type of the game's fits (a metal short sword, a cloak of
 ; protection). Nothing in the game limits the numbers to its own.
 TYPE_SIZE   equ 20
-TYPES_EXTRA equ 31
+TYPES_EXTRA equ 32
 TYPES_PTR   equ 0x1669          ; DS: far pointer to the item types
 BRACERS     equ 8               ; (the bracers of defense: the ninth of them)
 ROBE        equ 25              ; (the robes: dsloader/robes.py)
@@ -27608,6 +27621,10 @@ extra_types:
         ; the Boots of Speed (SPEED_BOOTS: dsloader/worldgear.py): the game's Boots' (68), anyone's
         db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x0A, 0x00, 0x85, 0x04, 0x00, 0x00
         db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
+        ; metal cahulaks (METAL_CAHULAKS: dsloader/champions.py's mul): the game's Cahulaks' (21), of
+        ; metal (+8: 4)
+        db 0x01, 0x00, 0x28, 0x00, 0x78, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
+        db 0x06, 0x01, 0x00, 0x40, 0x7B, 0x16, 0x00, 0x01
 extra_types_end:
         times -(extra_types_end - extra_types != TYPES_EXTRA * TYPE_SIZE) db 0 ; (a negative count: not TYPES_EXTRA)
 lbl_slots  times LBL_SLOTS * LBL_SIZE db 0 ; (the Loader's: LABELS, the header's +1838)

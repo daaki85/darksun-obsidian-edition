@@ -134,7 +134,7 @@ def shorter_blade(rows: Rows, steps: int = 4) -> Rows:
 # the Metal Polearm's (2513), Linebreaker's (2571) and Thornwall's (2573), ICONS'.
 BOX_PICTURE = 16
 BOX_TALL = (2383, 2311, 2157, 2143, 2287, 2254, 2384, 1494, 2392, 2255, 2334, 1199,
-            2653, 2447, 2513, 2571, 2573)
+            2653, 2447, 2513, 2571, 2573, 2671)
 BOX_SMALL = 2900  # (BOX_TALL[i]'s copy is BOX_SMALL + i: numbers no picture of the game's has)
 
 
@@ -403,6 +403,7 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Metal Great Axe", 0xFC06, 2508, 2509, lambda r: recolour(r, {1: 58, 2: 59, **TEAL_TO_METAL})),
     ("Metal Pick", 0xFB46, 2510, 2511, lambda r: recolour(r, STONE_TO_METAL)),
     ("Metal Polearm", 0xFB5E, 2512, 2513, lambda r: recolour(r, LIGHT_TO_METAL)),
+    ("Metal Cahulaks", 0xFB5C, 2670, 2671, lambda r: recolour(r, LIGHT_TO_METAL)),  # (the champions' mul's)
     # the circlet and the crown (worldgear.py), drawn; on the map, the Ring's
     ("Arrowbane", 0xFA1C, 2514, 2515, circlet_icon),
     ("Sunking Crown", 0xFA1C, 2516, 2517, crown_icon),
@@ -1080,7 +1081,7 @@ def _metal_types() -> Dict[int, str]:
     from . import game
     return {game.METAL_DAGGER_TYPE: "Metal Dagger", game.METAL_MACE_TYPE: "Metal Mace",
             game.METAL_GREAT_AXE_TYPE: "Metal Great Axe", game.METAL_PICK_TYPE: "Metal Pick",
-            game.METAL_POLEARM_TYPE: "Metal Polearm"}
+            game.METAL_POLEARM_TYPE: "Metal Polearm", game.METAL_CAHULAKS_TYPE: "Metal Cahulaks"}
 
 
 METAL_TYPES = _metal_types()

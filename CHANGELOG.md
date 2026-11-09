@@ -40,7 +40,7 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 
 ## Next pull request (not opened yet)
 
-DSCLOG.EXE 66,752 bytes (image 66,720), 1,728 of its segment spare.
+DSCLOG.EXE 66,832 bytes (image 66,800), 1,680 of its segment spare.
 
 **Fixed**
 - **Graphics disappearing in a busy area** (SSI's technical note 2712 for Wake of the Ravager, the
@@ -69,6 +69,15 @@ DSCLOG.EXE 66,752 bytes (image 66,720), 1,728 of its segment spare.
   tangle's save (KIND_MANUAL 10). Seen in DOSBox: two swings a round at 14+ and 16+ for Lex at DEX
   10, the tangle's saves made and failed, a tangled Templar's next turn gone
   (playtest/logs/2026-11-09-cahulaks.md).
+- **More cahulaks in the world** (with the new magic weapons, `worldgear.cahulaks_chunks`): Legcrusher's
+  two clubs a Cahulaks +1 (a copy of the game's, its Cause Light Wounds and shining icon with it;
+  `dataitems.with_items_removed`, new); the elven caravan's buried Cahulaks +1 made +2 (32,400); the
+  arena's dead body by the stone arch, which kept a plain bone gythka once Kreenfang went to the
+  champions, plain bone cahulaks; and the champions' mul **metal cahulaks** for his two bone axes: a
+  new item type (146, DSCLOG's 32nd extra type METAL_CAHULAKS: the game's Cahulaks, of metal; its icon
+  2670/2671 the bone one's heads in the metal polearm's colours, BOX_TALL too), counted as cahulaks
+  by every rule (the cahulaks' rule's sites, the half-giants' hands, the kits, restrict.py, the dice
+  log, specialization, the figure's drawing).
 - **The creatures' table** (obsidian-edition/CREATURES.md, made by `dsloader.doccreatures` from the
   game's data): every creature the game defines (189, one a name and race, the default party left
   out), its figure as the game draws it standing (docs/creatures/; the fighting picture's where that
