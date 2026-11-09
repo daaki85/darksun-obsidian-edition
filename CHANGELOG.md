@@ -41,6 +41,18 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 ## Next pull request (not opened yet)
 
 **Changed**
+- **Spells roll to hit** (a new rule change, on by default, from the next start: `spell_to_hit`,
+  `gamepatch.SPELL_TO_HIT`): the missile spells (Acid Arrow, Turn Pebble to Boulder, Magical Stone,
+  Condense; the Strine's spines) roll a d20 against the target's AC with the caster's THAC0 (Acid
+  Arrow a fighter's of the caster's level) and the game's own to-hit adjustments (DEX), and the
+  hostile touch spells (Chill Touch, Shocking Grasp, Vampiric Touch, Cause Light, Serious and
+  Critical Wounds, Cause Disease, Poison) with STR, at a creature of another side; 20 always hits,
+  1 always misses. A miss does nothing (no damage, no burn, no effect): "Miss" floats over the
+  target and the dice log says `-> MISS: the spell does nothing, the 2 damage rolled lost`. Each of
+  Magical Stone's three throws rolls on its own. Spells carried by a weapon's hit (spell arrows)
+  don't roll again; Magic Missile and the areas are untouched. DSCLOG's SPELL_HIT_SITE (7A15Ah, armed
+  by CAST_SITE) and SPELL_STUB_SITE (the always-hit stub, 78BA3h). Seen in DOSBox
+  (playtest/logs/2026-11-08-spell-to-hit.md). Tests: `test_spell_to_hit` (dsclog, gamepatch, dicelog).
 - **Turn Undead in the dice log:** `Seneca turns Guard: d20 = 11, needs 7+ (priest level 3 vs 2 HD)
   -> destroyed` / `-> not turned`, and `Zombie is destroyed by Turn Undead` in place of its HP line;
   the floating name over the cleric says "Turn Undead" (was "special attack 190"). Turn Undead is

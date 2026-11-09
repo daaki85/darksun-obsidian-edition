@@ -140,6 +140,7 @@ A few of them:
 
 ## Magic and Psionics
 
+- **[New]** Spells roll to hit (a rule change, on by default): Acid Arrow, Turn Pebble to Boulder, Magical Stone and Condense, and the touch spells cast at an enemy (Chill Touch, Shocking Grasp, Vampiric Touch, the Cause Wounds spells, Cause Disease, Poison), against the target's AC; a miss does nothing.
 - **[Changed]** Fourteen spells as the manual describes them (a rule change, on by default): saves against Bestow Curse and Blood Flow, Flaming Sphere negated by a save, Solid Fog, Cause Fear and Minor Spell Turning for the manual's time, no save against Quicksand, Turn Pebble to Boulder 11-26, Ironskin a blow a level, Stinking Cloud 1d4+1 rounds, Chaos saved against by creatures of very high or very low INT, Hold Undead only on undead of the caster's level or lower, no save against Color Spray for creatures of the caster's level or lower, monsters' hit dice counted as their level for saving throws, Free Action freeing creatures held by Web, Solid Fog or Quicksand.
 - **[Changed]** **Enlarge** makes only the weapon's dice bigger, 10% a caster level, rounded up, with STR and magic added after, as in AD&D (a rule change, on unless unticked) *(was the whole melee damage made bigger, STR included)*.
 - **[New]** Six new wizard spells, each with its own icon and description:

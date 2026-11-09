@@ -726,6 +726,14 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   - Magical Stone gives three throws a casting (the stone pointer comes back; the turn ends after
     the third). The count is the spell record's byte +0, bits 2-7 (Magical Stone 3, Hold Person 4,
     Hold Undead 2, the rest 1), counted at DS:942Ch by the cast's end (DSUN 7566Eh).
+  - **Spells rolling to hit** (2026-11-08, logs/2026-11-08-spell-to-hit.md): with `spell_to_hit` on
+    each missile or hostile touch spell has a line `X's SPELL at Y: [touch ]attack d20 = ...` after
+    its damage roll; each of Magical Stone's three throws rolls. **Touch spells need the caster
+    beside the target** ("too far away" from two squares): walk it up on its turn first, cast the
+    next. Moving a combatant in memory (DS:669Dh + 32n) moves neither its figure nor what a click
+    finds. **Escape while aiming** cancels the aim but opens EXIT GAME? (CANCEL 125,116). For hits
+    on demand, raise the target's sheet base AC (+27h) in memory; a weapon's spell on a hit can be
+    tried by writing a held weapon's item +0Fh (the spell + 1). Put both back, never save.
   - **Turn Undead** (2026-11-08, logs/2026-11-08-turn-undead.md): U (in a fight it opens the USE
     screen for the one whose turn it is; the click at 24,17 opened the inventory), the TURN UNDEAD
     button at (158,146) with a slow press (out of a fight the thief's purse is beside it, at 176), then

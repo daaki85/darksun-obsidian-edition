@@ -683,6 +683,11 @@ Tests: test_dsclog's `NewSpellTests.test_spell_to_hit` (the handlers in
 Unicorn, the game's routines as stand-ins), test_gamepatch's
 `test_spell_to_hit` (the switch off leaves DSUN.EXE's bytes), test_dicelog's
 `test_spell_to_hit`.
+Checked in DOSBox (playtest/logs/2026-11-08-spell-to-hit.md): Acid Arrow,
+Magical Stone (each of its three throws), Condense, Turn Pebble to Boulder,
+Chill Touch, Shocking Grasp, Vampiric Touch and Cause Light Wounds hit and
+missed as rolled, a miss taking no HP; Magic Missile, a weapon's spell on a hit
+and Acid's burn rolled nothing.
 
 ## Weapon specialization
 
