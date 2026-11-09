@@ -340,7 +340,11 @@ DSCLOG.EXE 65,184 bytes (image 65,152), 3,264 of its segment spare.
   configuration; the Loader now stops at start-up with a clear message saying what to move
   (`launch.conf_encoding`; README's troubleshooting).
 - The freeze report's dump of the helper's header runs to +373 (UMB_NEED, the overlay buffer's
-  place), not stopping short of it (`freeze.HEADER_BYTES`).
+  place; was to +361, so the fields after it were left out) (`freeze.HEADER_BYTES`).
+- **The picture store's room** was measured from the table's last slot, which need not be the one
+  furthest in the store since slots are reused; it is now measured from the furthest. And writing
+  the store no longer pauses DOSBox a second time while it is already paused (`sprites`; tests in
+  `test_sprites`).
 <!-- audit code fixes -->
 
 ## Pull request #88 ([merged 2026-11-08](https://github.com/daaki85/darksun-obsidian-edition/pull/88))
