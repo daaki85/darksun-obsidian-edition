@@ -798,8 +798,11 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
     things keep their numbers (`pens-after-scar`: Kalzith 220, guards 256-290, Mirlon 317; every
     combatant of `fountain-user` is under 64), but **a fight renumbers them**: at its Round 1 the things
     past the party moved to 21-47 (Kalzith 42). So a combatant past 64 in a fight is rare; the unit
-    tests cover them. A Turn Undead out of a fight starts one, and its line can name the target "?"
-    (the number had changed by the time the dice log read it). DSCLOG's per-fight tables are in the
+    tests cover them. A Turn Undead out of a fight starts one, and its line named the target "?"
+    (the number had changed by the time the dice log read it); since 2026-11-09 the record carries
+    the creatures and the line names them (logs/2026-11-09-turn-undead-name.md: Cermak on Kalzith).
+    **party.py's classes don't tell a human**: a human who dual-classed lists two; read the race
+    (sheet +18h, 1 human) before making a priest with turnsetup.py (a human's added class is level 0). DSCLOG's per-fight tables are in the
     far block since then: TU_FAILED at FFFF0h + FD10h (a byte a combatant, bit N priest N), SWEPT
     (FF18h) and DJ_DONE (FF59h), a bit a combatant. Kalzith's pen (`route.py 1592 584`, then
     `route.py 1560 860`) puts the party beside him for a turning, and the aiming box reaches him there
