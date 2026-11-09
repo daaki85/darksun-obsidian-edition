@@ -256,8 +256,11 @@ def _shape(shape: str) -> List[Tuple[int, List[Tuple[int, int]]]]:
     if shape == GYTHKA:
         return [(s, [(0, 1)]) for s in range(-5, 6)] + [(6, [(0, 2), (1, 0)]), (7, [(0, 0)]),
                                                         (-6, [(0, 2), (-1, 0)]), (-7, [(0, 0)])]
-    if shape == CAHULAKS:
-        return [(0, [(0, 1)]), (1, [(0, 2), (1, 0)]), (2, [(0, 2), (1, 0)]), (3, [(0, 0)])]
+    if shape == CAHULAKS:  # (a short haft, then a head of four blades, their tips hooked one way)
+        return [(0, [(0, 1)]), (1, [(0, 1)]), (2, [(0, 1)]),
+                (3, [(-2, 0), (0, 1), (2, 2)]),
+                (4, [(-2, 2), (-1, 2), (0, 1), (1, 2), (2, 2)]),
+                (5, [(-2, 2), (0, 2), (2, 0)]), (6, [(0, 0)])]
     if shape == STAFF:
         return [(s, [(0, 1)]) for s in range(-6, 9)] + [(9, [(0, 0)]), (-7, [(0, 0)])]
     return []
@@ -935,6 +938,8 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
             hands["left"] = points[1]
     if combat and frame in sp.BOW_FRAMES:
         return out  # (the game draws the bow in the hands)
+    if "left" not in weapons and WEAPON_SHAPES.get(weapons.get("right", (None,))[0]) == CAHULAKS:
+        weapons = dict(weapons, left=weapons["right"])  # (a pair, one in each hand: one item)
     for hand in ("left", "right"):  # (the right drawn last, over the left)
         if hand not in weapons:
             continue

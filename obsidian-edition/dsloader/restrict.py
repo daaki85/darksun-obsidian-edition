@@ -156,7 +156,8 @@ def kit_forbids(sheet: bytes, item_type: int, typ: bytes, spec: bool = False, of
     kind = specialize.kind_of(item_type) if is_weapon(typ) else None
     chosen = not spec and kind is not None and kind + 1 in game.spec_kinds(sheet) \
         and specs_awake(sheet)
-    half_giant = sheet[game.SHEET_RACE] == game.RACE_HALF_GIANT and bool(game.RULES_IN_FORCE & game.RULE_HALF_GIANT)
+    half_giant = sheet[game.SHEET_RACE] == game.RACE_HALF_GIANT and bool(game.RULES_IN_FORCE & game.RULE_HALF_GIANT) \
+        and item_type != CAHULAKS  # (a blade in each hand: both hands, a half-giant's too)
     for kid in kitpages.kit_ids(sheet):
         if chosen:  # (a kind it specialized in, its specs counting: none, but for the off hand's rules)
             if off_hand and kits.forbids_off_hand(kid, typ):
@@ -166,6 +167,9 @@ def kit_forbids(sheet: bytes, item_type: int, typ: bytes, spec: bool = False, of
         if kits.forbids(kid, typ, kind, half_giant, spec, off_hand, sphere):
             return True
     return False
+
+
+CAHULAKS = 21  # the cahulaks' item type (a pair, one in each hand: DSCLOG's TH_CAHULAKS)
 
 
 def forbidding_kit(sheet: bytes, item_type: int, typ: bytes) -> Optional[int]:
@@ -178,7 +182,8 @@ def forbidding_kit(sheet: bytes, item_type: int, typ: bytes) -> Optional[int]:
         if kits.light_only(kid, typ):
             return kid
     kind = specialize.kind_of(item_type) if is_weapon(typ) else None
-    half_giant = sheet[game.SHEET_RACE] == game.RACE_HALF_GIANT and bool(game.RULES_IN_FORCE & game.RULE_HALF_GIANT)
+    half_giant = sheet[game.SHEET_RACE] == game.RACE_HALF_GIANT and bool(game.RULES_IN_FORCE & game.RULE_HALF_GIANT) \
+        and item_type != CAHULAKS  # (a blade in each hand: both hands, a half-giant's too)
     for kid in kitpages.kit_ids(sheet):
         sphere = (kitpages.kit_class_of(sheet, kid) - 1) % 4
         if kits.forbids(kid, typ, kind, half_giant, False, False, sphere):

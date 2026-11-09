@@ -4356,6 +4356,8 @@ kit_forbids_one:                ; (AL the kit, KIT_WHERE its class's place)
         jne .type
         test word [cs:rules], RULE_HALF_GIANT
         jz .type
+        cmp dx, TH_CAHULAKS
+        je .type                ; (a blade in each hand: both hands, a half-giant's too)
         inc ch
 .type:  call kit_class_of_sheet     ; (a ranger's sphere, for a Seeker: its class less 13)
         sub al, 13
@@ -16589,10 +16591,15 @@ pic_full:
         mov ax, ds
         sub ax, CACHE_GAP
         mov es, ax
-        xor bx, bx
+        mov si, [cs:pf_next]            ; (round from the one after the last reused: the oldest
+        cmp si, CACHE_MOST              ;   reuse goes first, not the one just filled, which an
+        jb .from                        ;   inventory's icons, each let go once drawn, took in turn)
         xor si, si
+.from:  mov cx, CACHE_MOST
         mov di, 0xFFFF                  ; (the first free one with a number)
-.scan:  test byte [es:bx + 0x0E], 2
+.scan:  mov bx, si
+        shl bx, 4
+        test byte [es:bx + 0x0E], 2
         jnz .next                       ; (in memory)
         bt word [cs:pf_used], si
         jc .next                        ; (named by a wall or a thing)
@@ -16601,10 +16608,11 @@ pic_full:
         cmp di, 0xFFFF
         jne .next
         mov di, si
-.next:  add bx, 16
-        inc si
+.next:  inc si
         cmp si, CACHE_MOST
-        jb .scan
+        jb .round
+        xor si, si
+.round: loop .scan
         mov si, di
         cmp si, 0xFFFF
         je .none
@@ -16612,6 +16620,8 @@ pic_full:
         shl bx, 4
 .take:  mov word [es:bx], CACHE_STALE   ; (found by no number until its picture is in)
         mov [cs:pf_slot], si
+        lea ax, [si + 1]
+        mov [cs:pf_next], ax
         mov byte [cs:pf_reuse], 1
         mov ax, si
         pop bx
@@ -16740,6 +16750,7 @@ pf_place   dd 0
 pf_slot    dw 0                         ; the slot reused
 pf_cand    dw 0
 pf_count   dw 0                         ; slots reused, all told (for the tests and playtest)
+pf_next    dw 0                         ; where the next search for a slot starts
 pf_reuse   db 0
 
 rest_hp:
@@ -18014,10 +18025,33 @@ probe_two_handed:
         pop es
         pop ax
         jne .test
+        call th_cahulaks
+        je .test                ; (cahulaks: a blade in each hand, for a half-giant too)
         cmp ax, ax              ; ZF: not two-handed, for a half-giant
         retf 2
 .test:  test byte [es:bx + 0x0F], 0x40
         retf 2
+TH_CAHULAKS  equ 21             ; the cahulaks' item type
+ITEM_TYPES_PTR equ 0x1669       ; DS: far pointer to the item types, 20 bytes each
+th_cahulaks:                    ; ZF if ES:BX is the cahulaks' type (by address: the table's
+        push eax                ;   segment may be another's for the same place)
+        push edx
+        mov ax, es
+        movzx eax, ax
+        shl eax, 4
+        movzx edx, bx
+        add eax, edx
+        movzx edx, word [ITEM_TYPES_PTR + 2]
+        shl edx, 4
+        push eax
+        movzx eax, word [ITEM_TYPES_PTR]
+        add edx, eax
+        pop eax
+        add edx, TH_CAHULAKS * 20
+        cmp eax, edx
+        pop edx
+        pop eax
+        ret
 
 ; PROBE_SPELL_TEXT: INT VEC_SPELL_TEXT replaces "add sp,0Ch" (3 bytes: INT + NOP) after the game
 ; reads a spell's description (RESOURCE.GFF's SPIN chunk DI, the spell's number + 1) for its box.

@@ -3328,6 +3328,18 @@ class RuleTests(RingTests):
         self.assertEqual([self.two_handed(r) for r in (5, 1)], [True, False])
         self.assertEqual([self.two_handed(r, flags=0) for r in (5, 1)], [True, True])
 
+    def test_half_giants_cahulaks_take_both_hands(self):
+        """The cahulaks (type 21: a blade in each hand) take both hands, a half-giant's too; the
+        type found by its place in the table (DS:1669h), whichever segment names it."""
+        self.rules(512)
+        base = 0x300 - 21 * 20  # (the table's start, so that ES:BX is type 21)
+        self.mu.mem_write(GAME_DS * 16 + 0x1669, struct.pack("<HH", base, self.TYPES))
+        self.assertEqual([self.two_handed(r) for r in (5, 1)], [False, False])
+        self.mu.mem_write(GAME_DS * 16 + 0x1669, struct.pack("<HH", base + 0x10, self.TYPES - 1))  # (same place)
+        self.assertEqual(self.two_handed(5), False)
+        self.mu.mem_write(GAME_DS * 16 + 0x1669, struct.pack("<HH", base + 20, self.TYPES))  # (type 20 there)
+        self.assertEqual(self.two_handed(5), True)
+
     def tu_info_at(self, image):
         """The helper's TU_INFO (TSR's segment), from PROBE_SPELL_TEXT: three pops, "add sp,0Ch",
         three pushes, then "mov byte [cs:tu_info],0" and IRET; and the probe's offset."""
@@ -8710,6 +8722,22 @@ class PictureSlotTests(RuleTests):
         self.assertEqual(self.entry(250)[2], 3000)
         self.jump(gamepatch.PIC_COUNT_SITE, (0,))
         self.assertEqual((self.mu.reg_read(r.UC_X86_REG_SI), self.count()), (250, 300))
+
+    def test_round_from_the_last_reused(self):
+        """The search goes round from after the last reused slot: two pictures loaded and let go in
+        turn (an inventory's icons) take two slots, not one after the other in the same."""
+        from dsloader import gamepatch
+        self.full()
+        for k in (12, 40):
+            self.slot(k, 1000 + k, 100, k * 100, 1)
+        self.jump(gamepatch.PIC_FULL_SITE, (0, self.FAIL))
+        self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 12)
+        self.slot(12, 2000, 100, 1200, 1)  # (its picture in, then let go: free again)
+        self.jump(gamepatch.PIC_FULL_SITE, (0, self.FAIL))
+        self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 40)
+        self.slot(40, 2001, 100, 4000, 1)
+        self.jump(gamepatch.PIC_FULL_SITE, (0, self.FAIL))  # (round past the end, back to 12)
+        self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 12)
 
     def test_gap_between_slots(self):
         """A gap left where slots' places don't meet: the first one long enough."""
