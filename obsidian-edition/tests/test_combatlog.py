@@ -150,6 +150,69 @@ class LinesTests(unittest.TestCase):
         self.assertEqual(log.at(c.SHORT, NAMES)[0].text, "Rampager hits Defiler for 4")
         self.assertEqual(log.at(c.MINIMAL, NAMES)[0].text, "Rampager hits Defiler for 4")
 
+    def test_spell_attack(self):
+        """A spell's attack roll (dicelog's _spell_to_hit): a hit or a miss; in short what came of it and
+        its roll ("Lex's Magic Missile misses Guard (9 vs 10+)"), its "takes" line joined to a hit as a
+        weapon's damage, the HP after it its own line; at the least only what came of it."""
+        miss = ("Lex's Magic Missile at Guard: attack d20 = 9, needs 10+ (55%) (THAC0 13, +3 DEX; target AC 4) "
+                "-> MISS: the spell does nothing, the 2 damage rolled lost")
+        hit = ("Lex's Acid Arrow at Templar: attack d20 = 12, needs 4+ (85%) (THAC0 12 (a fighter's of the "
+               "caster's level), +4 DEX; target AC 4) -> HIT")
+        touch = ("Guard's Chill Touch at Lex: touch attack d20 = 20 (natural 20), only a 20 hits (5%) (THAC0 18, "
+                 "+3 STR; target AC -9) -> HIT")
+        self.assertEqual([c.line_kind(x) for x in (miss, hit, touch)], ["miss", "hit", "hit"])
+        self.assertEqual(c.shorten(miss, c.SHORT), "Lex's Magic Missile misses Guard (9 vs 10+)")
+        self.assertEqual(c.shorten(miss, c.MINIMAL), "Lex's Magic Missile misses Guard")
+        self.assertEqual(c.shorten(touch, c.SHORT), "Guard's Chill Touch hits Lex (20 vs 20+)")
+        self.assertEqual(c.shorten(miss, c.DETAIL), miss)
+        log = c.Log()
+        log.add([miss, hit, "  Templar takes 3 from Acid Arrow, now 7/10 HP", touch,
+                 "  Guard takes 2 from Magic Missile, now 1/10 HP"])
+        names = {"Lex": "member0", "Guard": "monster", "Templar": "monster"}
+        self.assertEqual([(x.kind, x.side, x.text) for x in log.at(c.SHORT, names)], [
+            ("miss", "party", "Lex's Magic Missile misses Guard (9 vs 10+)"),
+            ("hit", "party", "Lex's Acid Arrow hits Templar for 3 (12 vs 4+)"),
+            ("damage", "monster", "Templar now 7/10 HP"),
+            ("hit", "monster", "Guard's Chill Touch hits Lex (20 vs 20+)"),
+            ("damage", "monster", "Guard takes 2 from Magic Missile, now 1/10 HP")])  # (not that hit's: its own)
+        self.assertEqual([x.text for x in log.at(c.MINIMAL, names)][:3], [
+            "Lex's Magic Missile misses Guard", "Lex's Acid Arrow hits Templar for 3", "Guard's Chill Touch hits Lex"])
+        self.assertEqual(len(log.at(c.DETAIL, names)), 5)
+
+    def test_turn_undead_rest_and_manual_kinds(self):
+        """Turn Undead's lines a hit when it works and a miss when not; HP back at a rest damage's
+        colour, a cast at a rest other; the manual's monsters' and spells' lines each a kind."""
+        for line, kind in (
+                ("Ester turns Skeleton: d20 = 9, needs 10+ (priest level 3 vs 2 HD, AD&D's table) -> not turned: "
+                 "can't try again on it this fight", "miss"),
+                ("Ester turns Skeleton: d20 = 12, needs 10+ (priest level 3 vs 2 HD, AD&D's table) -> turned: flees "
+                 "3d4 = 7 rounds (Afraid)", "hit"),
+                ("Ester can't turn Skeleton again: failed against it this fight", "miss"),
+                ("Ester turns Skeleton: destroyed automatically (D) (priest level 6 vs 1 HD, AD&D's table)", "hit"),
+                ("Ester turns Skeleton: destroyed, one of the D*'s more of its kind (2 left)", "hit"),
+                ("Ester turns Skeleton: turned: flees 3d4 = 6 rounds (Afraid), automatically (T) (priest level 4 vs "
+                 "1 HD, AD&D's table)", "hit"),
+                ("Ester turns Skeleton: no chance (priest level 2 vs 6 HD, AD&D's table)", "miss"),
+                ("Ester turns Zombie: d20 = 5, needs 10+ (priest level 3 vs 2 HD) -> not turned", "miss"),
+                ("Ester turns Zombie: d20 = 15, needs 10+ (priest level 3 vs 2 HD) -> destroyed", "hit"),
+                ("At rest: Ester casts Cure Light Wounds on Lex (1st-level slots: 2 left)", "other"),
+                ("Lex rests 8 hours: +3, +2 (CON 16) = +5, now 25/40 HP", "damage"),
+                ("Cell Adjustment: 1d4 = 3 -> Lex healed 3 HP, and Lex is cured of disease", "damage"),
+                ("Cloudkill: Guard dies (under 4 HD: no save; its level for saves 3)", "damage"),
+                ("Shadow drains 1 STR from Lex: Weakened for 2d4 = 5 turns (no save)", "damage"),
+                ("    Guard takes 4 damage: Rainbow Pattern's hold on it ends", "detail"),
+                ("Djinni turns invisible (14 rounds) and makes 5 mirror images of itself", "other"),
+                ("Chill Touch on Skeleton, undead: no damage, no STR lost; Afraid 1d4 = 3 rounds instead", "other")):
+            self.assertEqual(c.line_kind(line), kind, line)
+
+    def test_save_against_a_spell_named_from(self):
+        """A save against "Protection from Evil" (a caster named or not): the spell's name whole."""
+        for line in ("Guard's saving throw vs Protection from Evil from Lex (spell): d20 = 7, needs 13 -> failed",
+                     "Guard's saving throw vs Protection from Evil (spell): d20 = 7, needs 13 -> failed"):
+            self.assertEqual(c.shorten(line, c.MINIMAL), "Guard fails to save vs Protection from Evil")
+        line = "Guard's saving throw vs Fireball from Lex (petrification/polymorph): d20 = 7, needs 13 -> saved"
+        self.assertEqual(c.shorten(line, c.SHORT), "Guard saves vs Fireball (7 vs 13+)")
+
     def test_history_is_kept_to_its_length(self):
         log = c.Log()
         log.add([f"Slig is killed {n}" for n in range(c.HISTORY + 10)])

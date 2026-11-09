@@ -88,6 +88,48 @@ class LedgerTests(unittest.TestCase):
         self.assertEqual(text(save), "  Lex saves vs Fireball — half damage, 19 of 38\t[hp]\td20 6 = 13 vs 11+ (80%)")
         self.assertEqual(roles(save)["saves"], ledger.GOOD)
 
+    def test_spell_named_from(self):
+        """A spell named "... from ...": the caster is the last " from "'s, the spell's own kept."""
+        self.assertEqual(ledger.save_source("Protection from Evil from Lex (spell)"),
+                         ("Protection from Evil", "Lex", "spell"))
+        self.assertEqual(ledger.save_source("Protection from Evil (spell)"), ("Protection from Evil", None, "spell"))
+        self.assertEqual(ledger.save_source("Poison (10 damage) from Seneca (paralysis/poison/death)"),
+                         ("Poison (10 damage)", "Seneca", "paralysis/poison/death"))
+        self.assertEqual(ledger.save_source("Fireball"), ("Fireball", None, None))
+        save = run(["Guard's saving throw vs Protection from Evil from Lex (paralysis/poison/death): d20 = 7, "
+                    "needs 13 (40% to save) -> failed"])[0]
+        self.assertEqual(text(save), "  Guard fails vs Protection from Evil\t[hp]\td20 7 vs 13+ (40%)")
+
+    def test_spell_attack(self):
+        """A spell's attack roll: an attack's event row ("Lex's Acid Arrow hits Templar"), its working
+        under it; its "takes" line fills the damage and the HP and gives its working; a miss dim, what
+        it lost after a dash."""
+        ops = run(["Lex's Acid Arrow at Templar: attack d20 = 12, needs 4+ (85%) (THAC0 12 (a fighter's of the "
+                   "caster's level), +4 DEX; target AC 4) -> HIT",
+                   "  Templar takes 3 from Acid Arrow, now 7/10 HP"])
+        hit, to_hit, dmg_fill, hp_fill, detail = ops
+        self.assertEqual(hit.kind, ledger.EVENT)
+        self.assertEqual(text(hit), "● Lex's Acid Arrow hits Templar[spell]\t[hp]\td20 12 vs 4+ (85%) · AC 4")
+        self.assertEqual(roles(hit)["hits"], ledger.GOOD)
+        self.assertEqual(text(to_hit), "    to hit: THAC0 12 (a fighter's of the caster's level), +4 DEX; vs AC 4 "
+                                       "needs 4+; d20 12 → HIT")
+        self.assertEqual((dmg_fill.slot, "".join(p.text for p in dmg_fill.pieces)), (slot(hit, "spell"), " for 3"))
+        self.assertEqual((hp_fill.slot, "".join(p.text for p in hp_fill.pieces)), (slot(hit, "hp"), "7/10 (−3)"))
+        self.assertEqual(text(detail), "    Templar takes 3 from Acid Arrow, now 7/10 HP")
+        ops = run(["Lex's Magic Missile at Guard: attack d20 = 9, needs 10+ (55%) (THAC0 13, +3 DEX; target AC 4) "
+                   "-> MISS: the spell does nothing, the 2 damage rolled lost"])
+        self.assertEqual(text(ops[0]), "● Lex's Magic Missile misses Guard — the 2 damage rolled lost\t\t"
+                                       "d20 9 vs 10+ (55%) · AC 4")
+        self.assertEqual(roles(ops[0])["misses"], ledger.DIM)
+        self.assertIn("d20 9 → MISS", text(ops[1]))
+        ops = run(["Guard's Chill Touch at Lex: touch attack d20 = 20 (natural 20), only a 20 hits (5%) (THAC0 18, "
+                   "+3 STR; target AC -9) -> HIT", "  Lex takes 4 from Chill Touch, now 6/30 HP"])
+        self.assertEqual(roles(ops[0])["hits"], ledger.BAD)
+        self.assertTrue(text(ops[1]).startswith("    touch to hit: "))
+        self.assertEqual(ops[3].pieces[0].text, "! 6/30 (−4)")
+        # a "takes" line with no attack before it: as it is
+        self.assertEqual(run(["  Guard takes 7 from Magic Missile, now 3/10 HP"])[0].kind, ledger.PLAIN)
+
     def test_round_turn_and_checks(self):
         ops = run(["Round 2: Jenna 32, Seneca 30", "Seneca's turn",
                    "Seneca hides in shadows: d100 = 56, needs 67 or less (57 +10 cloak) -> hidden",

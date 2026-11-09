@@ -237,7 +237,7 @@ neutral, a ranger good), or fighter and ranger.
 with **DUAL** on a portrait's right-click menu when:
 
 - it is **3rd level or more** (as the manual says; 2nd with the rule change
-  [dual-classing as the manual has it](FEATURES.md#rule-changes) off) and has
+  [dual-classing as the manual has it](FEATURES.md#dual-classing-as-the-manual-has-it) off) and has
   changed class at most once before;
 - **every prime requisite of its current class is 15 or more**, and **every
   one of the new class's 17 or more** (the table below: a ranger's STR, DEX
@@ -1394,6 +1394,30 @@ limits:
   damage and duration alike. An elemental spell works only for a priest of
   that element.
 - **Area spells catch the caster** and the party.
+- **Spells roll to hit** (a rule change, on by default). The missile spells,
+  Acid Arrow, Turn Pebble to Boulder, Magical Stone, Condense and each of Minute
+  Meteors' five globes (at +2), roll a d20 against the target's AC as a weapon
+  would (Acid Arrow with a fighter's THAC0 of the caster's level, the rest with
+  the caster's own, and DEX's missile adjustment), and so does a touch spell
+  cast at an enemy (Chill Touch, Shocking Grasp, Vampiric Touch, the Cause
+  Wounds spells, Cause Disease, Poison), with STR's. A 20 always hits, a 1
+  always misses, and a miss does nothing: "Miss" floats over the target.
+  Monsters' spines roll too. *Without the mod:* they always landed.
+- **Spells and psionics as the manual describes them** (a rule change, on by
+  default): some thirty spells and powers, and seven monsters, as the manual
+  has them (Solid Fog for a few rounds, not the whole fight; Hold Undead only
+  on undead of the caster's level or lower; Strength by class; shadows that
+  drain STR; the list is in [the features
+  page](FEATURES.md#spells-and-psionics-as-the-manual-describes-them)).
+- **Turn Undead**, the cleric's button on the USE screen, follows AD&D's
+  turning table (with the manual's spells): it tries each undead in its area,
+  one at a time; by the undead's hit dice and the cleric's level, a d20 turns it
+  (it flees for 3d4 rounds), or it is turned or destroyed with no roll, or
+  can't be turned at all. A cleric who fails against an undead can't try it
+  again that fight. *Without the mod:* each success destroyed, and a failure
+  could be tried again and again.
+- **Resting** heals by the priests' spells left and a night's rest, not to
+  full: [Resting](#resting).
 - **Mirror Image**'s images take each hit, and each foe's spell aimed at one
   creature, three times in four (Reflected Image's half the time), the image
   vanishing and the blow or spell lost; your own side's spells always get
@@ -1421,9 +1445,11 @@ limits:
   specialization on, a spec counts with them as with a club, a long sword and a
   mace.
 - Six **new wizard spells**, learnt like any other:
-  - **Cat's Grace** (2nd level, on a party member): DEX + 1d6 (at most 24) for
-    an hour of game time a caster level, which betters AC, initiative, thief
-    skills and dodging.
+  - **Cat's Grace** (2nd level, on a party member): DEX up by a die that
+    depends on the class (a rogue 1d8; a wizard, warrior or psionicist 1d6; a
+    priest 1d4; a multiclass character's best; at most 24) for an hour of game
+    time a caster level, which betters AC, initiative, thief skills and
+    dodging. *Without the manual's spells:* DEX + 1d6 for anyone.
   - **Erdlu Claw** (1st level, on a party member): talons for 5 rounds a
     caster level. Unarmed attacks, a thri-kreen's claws but not its bite, do
     1d6+1 where that's better, are +1 to hit and count as a +1 magical edged
@@ -1842,7 +1868,7 @@ line](DICE-LOG.md) what each of its lines means.
 | | how much it says: at the least, in short or in detail | in short |
 | | describe monsters when you Look at them in a fight | on |
 | | float a spell's name over its caster, "Miss" over whoever an attack missed, and a spell's use lost ("Armor: 7 left") | on |
-| Rule changes | *characters:* class restrictions; multiclass hit points; hit dice rolled twice; scores and hit points as rolled; AD&D's class tables; CON as in AD&D; ages and magical aging; dual-classing as the manual has it; the XP level cap. *Weapons and armour:* two weapons; half-giants' two-handed weapons; rings and cloaks of protection; helms AC 1; items saving against acid. *Magic:* rangers' casting level; preservers' INT; the spell save; DEX instead of a doubled d20; Enlarge multiplying the weapon's dice only; spells and monsters as the manual describes them; resting as in AD&D | all on |
+| Rule changes | *characters:* class restrictions; multiclass hit points; hit dice rolled twice; scores and hit points as rolled; AD&D's class tables; CON as in AD&D; ages and magical aging; dual-classing as the manual has it; the XP level cap. *Weapons and armour:* two weapons; half-giants' two-handed weapons; rings and cloaks of protection; helms AC 1; items saving against acid. *Magic:* rangers' casting level; preservers' INT; the spell save; DEX instead of a doubled d20; Enlarge multiplying the weapon's dice only; spells and monsters as the manual describes them (Turn Undead by AD&D's table among them); spells roll to hit; resting as in AD&D | all on |
 | More character customization | weapon specialization; kits; STORE and RECALL on the creation screen; fuller starting gear | all on |
 | Expanded features | the leader's CHA at shops; buying back magical items; improved thieving: thief skills from AD&D's table, hiding in shadows to backstab, the cloak, boots and belt, backstabs multiplying the weapon's dice only, picking pockets | all on |
 | New content | the new spells (six wizard spells and ten 6th-level priest spells, one switch); new people (Kalzith; Semyon); a small quest (the cooked vulture); defilers' scrolls; new items (and an arena bout that comes with them) | all on |
@@ -1856,7 +1882,8 @@ line](DICE-LOG.md) what each of its lines means.
 
 Rule changes, expanded features, the new spells and defilers' scrolls count at
 once in a game started from the Loader; the new people, quest and items,
-and any switch that says "from the next start" (STORE and RECALL among them),
+and any switch that says "from the next start" (STORE and RECALL, spells and
+monsters as the manual describes them and spells roll to hit among them),
 come the next time the game is started (a saved game keeps what it has). Kits,
 weapon specs and fuller starting gear go to characters made from then on. **Restore defaults**, at the bottom
 of the tab, sets every switch back.

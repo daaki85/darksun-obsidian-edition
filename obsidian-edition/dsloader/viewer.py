@@ -390,8 +390,8 @@ class Viewer:
         # the spells' records as the manual has them (gamepatch.SPELLS_MANUAL)
         self.spells_manual = tk.BooleanVar(value=settings.get("spells_manual", True) is not False)
         ttk.Checkbutton(rule_groups["magic"], text="Spells and psionics as the manual describes them: saves against Bestow "
-                        "Curse and Blood Flow; Flaming Sphere negated by a save; Solid Fog, Cause Fear, Quicksand "
-                        "and Minor Spell Turning for the manual's time; Turn Pebble to Boulder 11-26, Ironskin a blow a "
+                        "Curse and Blood Flow; Flaming Sphere negated by a save; Solid Fog, Cause Fear "
+                        "and Minor Spell Turning for the manual's time; no save against Quicksand; Turn Pebble to Boulder 11-26, Ironskin a blow a "
                         "level, Stinking Cloud "
                         "1d4+1 rounds; Chaos saved against by INT 21+ or 4-; Free "
                         "Action frees the Stuck; Color Spray saved against only by those of more levels than "

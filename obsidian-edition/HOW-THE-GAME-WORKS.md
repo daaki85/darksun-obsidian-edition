@@ -211,17 +211,17 @@ against Cloudkill; against Chaos only warriors (fighters, gladiators and
 rangers) can; against Dismissal the target adds its level and takes away the
 caster's. But "can't save" is −100 on the save, and the game compares the total
 with the number needed unsigned (79BBAh), so a total such as −85 reads as 171
-and the creature **always saves** (seen 2026-11-09: Arena Guards "unable to
-save" took half Cloudkill's damage). With [Spells and psionics as the manual
-describes them](FEATURES.md#spells-and-psionics-as-the-manual-describes-them)
-the compare is signed and "can't save" fails; unticked, the log says
-`-100 meant "cannot save", but the game compares unsigned ... -> saved`. Against Scare no one saves at all: its record allows no save, so the
+and the creature **always saves** (seen in DOSBox: Arena Guards "unable to
+save" took half Cloudkill's damage). The patched game's compare is signed, so
+"can't save" fails, whatever the Options ([The game's bugs,
+fixed](FEATURES.md#the-games-bugs-fixed)). Against Scare no one saves at all: its record allows no save, so the
 saving throw ends at its first test and the rules the save code has for Scare
 never run. Those rules: 6th level and up always save and everyone below can't,
 but for some elf or half-elf priests (AD&D gives elves, half-elves and priests
 a bonus), which it asks for as a creature that is both an elf and a half-elf,
-so no one qualifies. The patched game allows the save, so the rules run, and
-lets an elf or half-elf priest save:
+so no one qualifies. The patched game allows the save, so the rules run (6th
+level and up always save; below 6th, no save, the signed compare making the −100
+fail), and lets an elf or half-elf priest save:
 [The game's bugs, fixed](FEATURES.md#the-games-bugs-fixed).
 
 Rules in the code that never come into play: Cloak of Bravery's +4 against
@@ -400,10 +400,10 @@ change](FEATURES.md#spells-saved-against-with-the-spell-save)); durations are in
 rounds (a turn is ten). The log column is what the dice log shows for it; every
 effect line also says what the effect does.
 
-(The rows below are the game's own spells. Twelve of them, Bestow Curse, Blood Flow, Flaming Sphere,
-Solid Fog, Minor Spell Turning, Cause Fear, Quicksand's save, Turn Pebble to Boulder, Ironskin, Stinking Cloud,
-Chaos and Free Action, are set as the manual has them by the rule change [Spells and psionics as the
-manual describes them](FEATURES.md#spells-and-psionics-as-the-manual-describes-them), on by default.)
+(The rows below are the game's own spells. Six of them, Bestow Curse, Blood Flow, Cause Fear,
+Quicksand's save, Ironskin and Free Action, are set as the manual has them by the rule change [Spells
+and psionics as the manual describes them](FEATURES.md#spells-and-psionics-as-the-manual-describes-them),
+on by default, which changes wizard spells and psionic powers too: its table lists them all.)
 
 | Spell | The manual | The game | The log |
 |---|---|---|---|
@@ -473,8 +473,9 @@ manual describes them](FEATURES.md#spells-and-psionics-as-the-manual-describes-t
 
 A cleric's Turn Undead is a button on the USE screen (the spell 190), not a spell: it takes no slot.
 The button shows for a character whose sheet has a cleric's element (air, earth, fire or water); druids
-have none, so they never get it. It works on one undead creature (race 9) at a time, in a fight or out
-of one (out of one, it starts a fight). The game rolls a d20 and needs 10 + 3 x (column - row) or more:
+have none, so they never get it. It tries each undead creature (race 9) in its area, one at a time, in
+a fight or out of one (out of one, it starts a fight). For each the game rolls a d20 and needs
+10 + 3 x (column - row) or more:
 
 - the column from the creature's hit dice: 1 to 4 as they are, 5 and more one further (5 HD is column
   6), at most 13;
@@ -807,7 +808,7 @@ gear, shadows and dust, and how fast the computer runs DOSBox. Even the
 unmodded game loses a step or so for each picture it shows.
 
 Measured in the slave pens with the whole party walking, everything on
-(2026-11-08, `playtest/framerate.py`): at 20,000 cycles, with steady pace off,
+(`playtest/framerate.py`): at 20,000 cycles, with steady pace off,
 the game showed 18.9 pictures a second and the leader walked 103 map units a
 second; with [steady pace](FEATURES.md#game-speed) on, 15.5 pictures and 112;
 at 35,000 cycles with steady pace on, 18.9 and 141. Steady pace keeps the

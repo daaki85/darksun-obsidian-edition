@@ -130,8 +130,13 @@ Below the switch, pick how much it says: **at the least**
 (`Rampager hits Defiler for 4 (20 vs 16+)`,
 `Slig fails vs Fireball (11 vs 16+)`), or **in detail**, every line of
 the log. `(20 vs 16+)` is the d20 and the roll it needed (THAC0 less the
-target's AC; a natural 20 always hits, a 1 always misses). It never waits for
-a click.
+target's AC; a natural 20 always hits, a 1 always misses). A spell that
+[rolls to hit](#spells-roll-to-hit) reads the same way
+(`Cermak's Minute Meteors hits Kalzith for 2 (8 vs 7+)`, `... misses Kalzith
+(4 vs 7+)`; at the least `Cermak's Minute Meteors misses Kalzith`), in the hits'
+and misses' colours, as is Turn Undead's outcome (turned or destroyed a hit, not
+turned a miss); the hit points a rest or Cell Adjustment gives back are in the
+damage colour, as in the Loader's log. It never waits for a click.
 
 ![The combat log in the arena, in short, as a fight is played with Tab and Enter: Wild Fighting, attacks, a kill and its XP, and hiding in shadows, each line as it happens](docs/combat-log-live.gif)
 
@@ -979,7 +984,7 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#items-saving-against-a
 | [Spells saved against with the spell save](#spells-saved-against-with-the-spell-save) | almost every spell saved against with petrification/polymorph | the spell save rather than petrification/polymorph |
 | [Fire, cold and electricity: DEX instead of a doubled d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20) | the save's d20 doubled, so most creatures shrug off a Fireball (70% to save where 35% is due) | DEX's defensive adjustment on those saves rather than a doubled d20 |
 | [Enlarge multiplies the weapon's dice only](#enlarge-multiplies-the-weapons-dice-only) | the whole melee damage multiplied, STR included | 10% a caster level on the weapon's dice, rounded up, STR and the rest added after |
-| [Spells and psionics as the manual describes them](#spells-and-psionics-as-the-manual-describes-them) | twenty-five spells' and two powers' saves, times, damage and effects the game's own way, Turn Undead destroying or doing nothing, a classless monster's level 0 for its saves, a "can't save" that saves, seven monsters' powers not the manual's | as the manual has them, Turn Undead by AD&D's table (turned undead flee), the monster's level its hit dice, "can't save" failing, the shadows' STR drain, the Babau's and Blue Slaad's deadly poison, the Tari's disease, the Styr's breath, the Djinn's invisibility (from the next start) |
+| [Spells and psionics as the manual describes them](#spells-and-psionics-as-the-manual-describes-them) | twenty-five spells' and two powers' saves, times, damage and effects the game's own way, Turn Undead destroying or doing nothing, a classless monster's level 0 for its saves, seven monsters' powers not the manual's | as the manual has them, Turn Undead by AD&D's table (turned undead flee), the monster's level its hit dice, the shadows' STR drain, the Babau's and Blue Slaad's deadly poison, the Tari's disease, the Styr's breath, the Djinn's invisibility (from the next start) |
 | [Resting as in AD&D](#resting-as-in-add) | a rest fills every member's hit points; priests' slots left unspent; the free cures only from a cleric or druid of 5th level | the priests spend their slots left on the party before the rest (poison, blindness, disease, then the most wounded) and psionicists their Cell Adjustment; then each heals 3 + CON's bonus a night |
 | [Spells roll to hit](#spells-roll-to-hit) | Acid Arrow, Turn Pebble to Boulder, Magical Stone, Condense, Minute Meteors and the touch spells never miss | they roll to hit against the target's AC, a missile's with DEX, a touch's with STR; a miss does nothing (from the next start) |
 
@@ -1075,10 +1080,9 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#enlarges-dice).
 Twenty-four of the manual's spells and two psionic powers whose saves, times,
 damage or effects part from the manual (pp. 29-44), set as the manual has them
 (and the mod's Cat's Grace by the Tome of Magic's dice; the mod's Heal cures
-Feeblemind), a priest's Turn
-Undead by AD&D's turning table, a monster's level for its saves, and the saving
-throw's "can't save" made to work, and seven monsters' powers as the manual
-describes them (below). The box takes effect from the next start (it
+Feeblemind), a priest's Turn Undead by AD&D's turning table, a monster's level
+for its saves, and seven monsters' powers as the manual describes them
+(below). The box takes effect from the next start (it
 changes the game's spell records and code as the Loader writes the game's copy,
 and the descriptions of Fire Shield and Cat's Grace in its copy of RESOURCE.GFF);
 unticked, they are the game's.
@@ -1112,7 +1116,6 @@ unticked, they are the game's.
 | Rainbow Pattern | Paralyzed 1d3 rounds, whatever happens to it | Paralyzed 1 round a caster level, ended by any damage to the creature |
 | Cell Adjustment (psionic) | heals 2 HP, cures disease | heals 1d4 HP, cures disease |
 | Biofeedback (psionic) | AC −1, and 2 off each blow (and other crushing, edged or pointed damage), leaving 0 of a blow of 2 or less | the same, but at least 1 left |
-| Saving throws with "can't save" | the save's −100 makes a negative total that the game reads as a big one (156 and up): the creature saves (Chaos for all but warriors, Cloudkill, Scare below 6th level, Color Spray) | the creature fails (a natural 20 still saves) |
 | Turn Undead | a d20 against its own number: destroyed or nothing, as often as the priest likes | AD&D's turning table (below): turned undead flee, D destroys, D\* destroys more of the kind, and a priest who fails can't try that undead again in the fight |
 
 **Turn Undead** (the priests' button on the USE screen, not a spell). With the
@@ -1145,8 +1148,8 @@ undead's hit dice and the priest's level:
   creature"); another priest still can. Forgotten when the next fight starts.
 - The game has no kinds of undead, so its hit dice pick the row (AD&D's
   zombie, ghast and special rows aren't used: the game's 2 HD Zombie uses the
-  2 HD row). Each use ends the priest's turn, as before; the game tries each
-  undead the turning reaches.
+  2 HD row). Each use ends the priest's turn, as before; it tries each undead
+  in its area, one at a time.
 
 A monster with no class (an elemental, a slaad, Mastyrial, the Rampager) had
 level 0 for its saves, so Cloudkill slew it whatever its size, Scare frightened
@@ -1256,12 +1259,12 @@ manual says, or the change would make a different spell rather than fix one:
 | Quicksand | held 1 turn + 1 round a level | Stuck a round at a time, put on again each round while the quicksand lasts (5d3 rounds of its own); its record's time changes nothing (seen in DOSBox) |
 | Feeblemind | INT and WIS drop "dramatically" | to 3 (the game's own choice, an idiot's in AD&D) |
 | Chill Touch | Strength back a point an hour, repeated touches | each touch's point back after an hour |
-| Rainbow Pattern | held until attacked | the pattern on the ground (2d3 rounds) makes everyone in it, the caster too, save again each turn; damage frees one held |
+| Rainbow Pattern | one save, as it is cast (a time of its own: "special") | the pattern stays on the ground for 2d3 rounds of its own and makes everyone in it, the caster too, save again each turn (a round a level and damage ending a hold are the manual's: above) |
 | Biofeedback | damage −2 | −2 from blows and any crushing, edged or pointed damage, not from fire or other spells |
 
 What else the manual and the game disagree on, and why the rest is left:
-[reports/spells-against-the-manual.md](../reports/spells-against-the-manual.md)
-(in the repository).
+[spells against the manual](https://github.com/daaki85/darksun-obsidian-edition/blob/obsidian-edition/reports/spells-against-the-manual.md)
+(a report in the repository).
 
 #### Spells roll to hit
 
@@ -2510,6 +2513,13 @@ only weapons and shields (all it can use). Two party members of the same race
 and sex each show their own equipment: the game gives them one figure, so the
 second is moved to pictures of their own.
 
+A new outfit's pictures go into room the game's own picture store already has
+(an outfit changed back takes its old pictures again), so gear can be changed as
+often as you like in one area (on Dark Sun Recompiled, where the store can't be
+reached, a figure near a full store keeps its outfit until the next area). Before this fix some 30 to 60 changes in one area
+filled the store, and figures, the party's and the monsters', vanished from the
+map until the next area.
+
 ![The party in the arena as the game draws them (left) and with gear and shadows on (right): Gerakis with his bone long sword and gythka, Cermak with his staff and sling, Cilla (an elf) with her bone long sword and sling, each casting a shadow toward the lower right](docs/gear.png)
 
 ![Gerakis standing in the arena in magic gear: sparks shimmer over his armour, and the edge of the weapon at his hip glints](docs/magic-glint.gif)
@@ -2728,7 +2738,10 @@ rather than a slower walk. Fights draw every frame, as the game does.
 
 *The same save and the same clicks, recorded from the game at 70 frames a
 second and played here at half speed (a GIF can't show 70 a second), every
-frame kept. On the right the party reaches each spot sooner, in bigger steps.*
+frame kept. On the right the party reaches each spot sooner, in bigger steps.
+Recorded before steady pace kept the game's own schedule and before the
+cheaper drawing: it left more pictures out then, so the steps on the right
+are bigger than they are now (the table above has today's figures).*
 
 The Loader also gives DOSBox more of the computer's time: 35,000 cycles a
 millisecond by default, where GOG's settings give 7,000. On the Options tab
@@ -2825,7 +2838,8 @@ got wrong, each with a switch, are the [rule changes](#rule-changes)):
 | **Bless** and **Aid** | Left out those of the caster's side with an enemy beside them, but measured it from the wrong place, so the wrong ones were left out | Measured from where each stands |
 | **Negative Plane Protection** | Saved as against Vampiric Touch, which allows no save, so it never stopped anything | A save against paralysis, poison and death, as AD&D's against death magic: saved, the undead's touch is stopped and it takes 2d6 |
 | **Acid Arrow** | After the hit its acid never burned again: its time was a timer that only ended it, and nothing spent it a round at a time | 2d4 acid at the start of each round it lasts (a round for each started minute of its time: four for an 11th-level caster) |
-| **Scare**'s save | No one saved, of any level (a 7th-level fighter was Scared): its record allowed no save, so the save code's rules for it never ran; and those asked for an elf or half-elf priest as one creature of both races | 6th level and up always save, as the game's code means; below 6th, an elf or half-elf priest saves as usual, the rest fail |
+| **Scare**'s save | No one saved, of any level (a 7th-level fighter was Scared): its record allowed no save, so the save code's rules for it never ran; and those asked for an elf or half-elf priest as one creature of both races | 6th level and up always save, as the game's code means; below 6th level creatures can't save (whatever the Options: the fix below makes "can't save" fail), but an elf or half-elf priest saves as usual |
+| **"Can't save"** (Chaos for all but warriors, Cloudkill on the weak, Scare below 6th level, Color Spray with the manual's spells) | The saving throw compared its total with the number needed unsigned, so the −100 for "can't save" made a total such as −85, read as 171: the creature always saved | "Can't save" fails; a natural 20 still saves ([more](#spells-and-psionics-as-the-manual-describes-them)) |
 | **Cloak of Bravery** | Its +4 on saves against fear asked for a mark no spell had, so it never applied | +4 against Scare, Fear, Cause Fear and Insect Plague (and a Cloak of Fear's), and the new [Spook](#new-wizard-spells) |
 | A **berserk** or **confused** party member | Could end it fighting for the monsters' side: their side is rolled each turn, and only a charm's end put it back | Back on their own side when it ends |
 | The **fire elementals** | The resistances the wrong way round: the fire elemental hurt by +1 weapons, the lesser one only by +2 and by fire | The fire elemental needs +2 weapons and the lesser one +1, as the clue book has them, and neither takes anything from fire |

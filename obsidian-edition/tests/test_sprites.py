@@ -479,6 +479,52 @@ class SpriteTests(unittest.TestCase):
             self.assertEqual(struct.unpack("<I", gd.guest.read(base + sprites.SLOT_LENGTH, 4))[0], 20000)
             self.assertEqual(dresser.reused, 1)
 
+    def test_store_written_under_the_item_gates_hold(self):
+        """DOSBox paused while the store is written, and let go after; when the item gate already
+        holds it (a block of item writes open) neither paused nor let go here: still the gate's."""
+        from dsloader import itemgate
+
+        class Proc:
+            def __init__(self):
+                self.calls = []
+
+            def suspend(self):
+                self.calls.append("suspend")
+                return True
+
+            def resume(self):
+                self.calls.append("resume")
+        for held in (False, True):
+            outfits = [self.A]
+            with tempfile.TemporaryDirectory() as d:
+                dresser, gd, walk, fight, chunks = self.store_dresser(d, outfits)
+                proc = gd.guest.proc = Proc()
+                if held:
+                    itemgate._HELD.add(proc)
+                    self.addCleanup(itemgate._HELD.discard, proc)
+                gd.slot(1, walk, chunks[repr(self.A)], in_memory=False)
+                outfits[0] = self.B
+                self.assertEqual(dresser.update(True, 2.0), [300])
+                self.assertEqual(dresser.reused, 1)
+                self.assertEqual(proc.calls, [] if held else ["suspend", "resume"], held)
+                self.assertEqual(proc in itemgate._HELD, held)
+
+    def test_room_for_counts_the_furthest_slot(self):
+        """The room left in the game's store: past the furthest slot's end, not the last slot's (the
+        game may have put the last in a hole); a slot with no place (-1) not counted."""
+        gd = FakeGame(figures=[0])
+        dresser = sprites.Dresser.__new__(sprites.Dresser)
+        dresser.gd = gd
+        gd.loaded([1, 2, 3, 4])
+        base = (gd.load_seg + sprites.PICTURE_TABLE_SEG) * 16
+        for k, (length, place) in enumerate(((1000, 0), (5000, sprites.STORE_SIZE - 6000), (100, -1), (100, 1000))):
+            gd.guest.write(base + k * sprites.PICTURE_ENTRY + sprites.SLOT_LENGTH, struct.pack("<Ii", length, place))
+        self.assertFalse(dresser._room_for(2000))
+        gd.guest.write(base + sprites.PICTURE_ENTRY + sprites.SLOT_LENGTH, struct.pack("<Ii", 5000, 2000))
+        self.assertTrue(dresser._room_for(2000))
+        gd.loaded([])
+        self.assertTrue(dresser._room_for(2000))
+
     def test_smallest_stale_cell_with_room(self):
         """A new picture whose own slot is in memory: written into the smallest STALE slot out of
         memory with room for it, given its number; the old slot made STALE. A picture in memory

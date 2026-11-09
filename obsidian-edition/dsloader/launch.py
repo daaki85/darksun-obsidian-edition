@@ -367,9 +367,24 @@ def write_conf(game_dir: str, path: str = CONF, dice_log: bool = True) -> str:
     # message on screen until a key is pressed, rather than DOSBox closing over it, and saved for
     # the crash report (GAMEEND.COM: the screen's text, or a return code other than 0)
     lines += ["d:\\" + GAME_END_COM.lower(), "exit", ""]
-    with open(path, "w", newline="\r\n") as f:
-        f.write("\n".join(lines))
+    encoding = conf_encoding()
+    try:
+        data = "\n".join(lines).replace("\n", "\r\n").encode(encoding)
+    except UnicodeEncodeError as e:
+        line = e.object[e.object.rfind("\n", 0, e.start) + 1:].split("\r", 1)[0]  # (the mount naming it)
+        raise LaunchError(f"DOSBox can't be given a folder whose path has {e.object[e.start:e.end]!r} in it "
+                          f"({line}): its configuration is read in Windows' code page ({encoding}), which "
+                          "hasn't those letters. Move the game, or the Obsidian Edition folder, to a folder "
+                          "whose path has only letters of that code page.") from None
+    with open(path, "wb") as f:
+        f.write(data)
     return path
+
+
+def conf_encoding() -> str:
+    """The encoding DOSBox reads its configuration in: Windows' ANSI code page there ("mbcs"), else
+    UTF-8."""
+    return "mbcs" if os.name == "nt" else "utf-8"
 
 
 # The Options tab's new content and game changes (settings keys), each on unless switched off;

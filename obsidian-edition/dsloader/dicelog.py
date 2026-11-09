@@ -3901,13 +3901,8 @@ class DiceLog:
             return f"{who}: d20 = {natural} (natural {natural}) -> {self._save_result(spell, natural == 20)}"
         if total >= 0x80:  # the game adds -100 / +100 for "can't save" / "always saves"
             total -= 0x100
-        if total < -50:
-            if g.spells_manual():  # (gamepatch's save_signed: the game's compare made signed)
-                return f"{who}: none allowed (cannot save) -> failed"
-            # the game's own compare is unsigned (79BBAh): its -100 for "can't save" reads as a total
-            # of 156 and up, which always saves
-            return (f"{who}: -100 meant \"cannot save\", but the game compares unsigned and reads it as "
-                    f"{total + 256} -> {self._save_result(spell, True)}")
+        if total < -50:  # (gamepatch's save_signed, always applied: the game's compare made signed)
+            return f"{who}: none allowed (cannot save) -> failed"
         if total > 100:
             return f"{who}: not needed (saves automatically) -> saved"
         rules = g.spell_rules(spell)

@@ -59,8 +59,10 @@ which loads the mod with your options.
   saving throws and multiclass hit points as the books have them, scores and
   hit points kept as rolled, ages (a year each 365 days of game time, and Haste's cost), levels
   past 9th up to a cap by XP (10th to 13th for one class, lower for two or
-  three), Enlarge's weapon dice and CON's regeneration ([Rule
-  changes](FEATURES.md#rule-changes)).
+  three), Enlarge's weapon dice, CON's regeneration, spells and monsters as
+  the manual describes them, spells rolling to hit, Turn Undead by AD&D's
+  table, resting that heals by the priests' spells and a night's rest, and
+  dual-classing from 3rd level ([Rule changes](FEATURES.md#rule-changes)).
 - **More ways to build a character:** weapon specialization and mastery, kits
   (three for each class, and thirteen for races' classes taken together:
   pairs, and one set of three), STORE and RECALL for a
@@ -524,6 +526,14 @@ for a kill. **Show details** hides the working as before. The log's own lines
 are kept as written: unticking the layout shows them again, and **Save...**
 and the crash and freeze reports use them.
 
+**A fight's summary.** As a fight ends (the game's fight flag down for 2
+seconds; each arena wave gets its own) the log sums it up: `Fight over: 3
+rounds, 4 kills; the party dealt 61 damage and took 19`, then a line for each
+member, `Seneca: 2 of 2 attacks hit, 30 dealt, 1 kill`. A kill goes to whoever
+hurt the creature last, a spell's damage to the caster its saving throws or
+attack roll name (only the party's own spells count). The readable layout shows it as the fight's
+close, every member's line shown.
+
 ![The readable layout: the same fight with the working shown and hidden](docs/dicelog-readable.png)
 
 **Reading the lines as written.** Lines at the left edge are the events: a round
@@ -606,6 +616,11 @@ level AA:
 - **The mouse is stuck in the game's window.** DOSBox, as GOG sets it up,
   takes the mouse at the first click in its window (that click does nothing
   in the game). **Ctrl+F10** lets it go; a click in the window takes it again.
+- **"DOSBox can't be given a folder whose path has ... in it"** as the game
+  starts: DOSBox reads its configuration in Windows' code page, and the game's
+  folder or the Obsidian Edition folder has a letter that code page hasn't
+  (from another alphabet, say). Move the game, or the Obsidian Edition folder,
+  to a folder whose path has only ordinary letters for your Windows.
 - **The Loader shows no party or rolls:** check that Python is the 64-bit one
   ([Requirements](#requirements)) and that the game was started from the
   Loader or one of its `.bat` files.
@@ -619,9 +634,11 @@ doing help (see [Reporting a problem](#reporting-a-problem)):
   writes a crash report; load the last save to go on. (Listed since 2.5.0;
   its cause isn't known yet.)
 - **In a long session, figures can vanish from the screen and the game then
-  freeze.** A likely cause is fixed, but it isn't proven to be the only one: if
-  it happens, press **Freeze report** on the Loader before closing DOSBox.
-  (Reported in 2.6.0; not seen since the fix in 2.7.0.)
+  freeze.** Two causes are fixed: one in 2.7.0, and the Loader's new outfits
+  filling the game's picture store after many changes of gear in one area
+  (the Loader now reuses the store's room: [what the party
+  wears](FEATURES.md#what-the-party-wears)). If it still happens, press
+  **Freeze report** on the Loader before closing DOSBox. (Reported in 2.6.0.)
 
 ### Crash, freeze and item reports
 

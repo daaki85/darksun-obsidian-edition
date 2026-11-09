@@ -178,7 +178,10 @@ class Group3Tests(unittest.TestCase):
             self.assertEqual(p.replacement, bytes((0xCD, gamepatch.VEC_CR_SPELLS, site)) + b"\x90" * (len(original) // 2 - 3))
         signed = patch("save_signed")  # (the saving throw's compare: "jae" made "jge")
         self.assertEqual((signed.offset, signed.original.hex(), signed.replacement.hex()), (0x79BBD, "73a6", "7da6"))
-        self.assertIn("save_signed", gamepatch.SPELLS_MANUAL)
+        self.assertNotIn("save_signed", gamepatch.SPELLS_MANUAL)  # (always applied: in no switch)
+        for name in dir(gamepatch):
+            if name.isupper() and isinstance(getattr(gamepatch, name), tuple):
+                self.assertNotIn("save_signed", getattr(gamepatch, name), name)
         chill = patch("chill_touch_time")  # (Weakened for an hour: 1d1 x 3600 seconds)
         self.assertEqual((chill.offset, chill.original.hex(), chill.replacement.hex()),
                          (0x41F70 + 3 * 32 + 4, "1000003c00", "110000100e"))

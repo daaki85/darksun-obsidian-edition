@@ -691,7 +691,8 @@ skips the damage and the effect). The stub is the game's unfinished to-hit test.
   burn passes Acid Arrow's 12h through the same routine each round). Missile
   spells (`th_missiles`: 18, 53, 75, 111, 180, 33) roll as missiles (to-hit kind 2,
   DEX), touch spells (`th_touches`: 3, 10, 39, 72, 97, 113, 119, 128) as melee
-  (kind 1, STR) and only at a creature of another side (creature +1Dh). THAC0:
+  (kind 1, STR) and only at a creature of another side (creature +1Dh's low 3 bits,
+  the side as 809A2h passes it to the cast). THAC0:
   the caster's creature +1Fh (Acid Arrow: 21 less the cast's level, 772A5h's
   `[bp+0Ch]`); less 5B8:EDh (7C3E9h: target, attacker, no weapon, kind; effects,
   STR or DEX) and, for a combatant of 4 or more, `[11AEh]` - 1 (as 5837Ch); the
@@ -766,7 +767,7 @@ game's copy, each the game's own instruction with the rule off or in mode 1:
   most, no less than it had (Extra Hitpoints) nor 1. CON 20 and up regenerates the 8 hours as the
   clock jumps (`REGEN_SITE`, the game's 227E5h, once 300 seconds have passed: after the rest).
 - Recorded: `KIND_REST` (`RS_REC`): `RS_CAST` (caster, target, spell, slot level or 0, left: slots or
-  PSP), `RS_HEAL` (member, before, CON's part, after, most, CON).
+  PSP; the sixth word 0), `RS_HEAL` (member, before, CON's part, after, most, CON).
 
 Kept: slots and PSP refilled, STR, the free cures, Acid, the poison kill (for one no cure reached),
 the 8 hours, mode 1. Not cast: a ranger's priest spells (5B8:B1h and B6h count clerics and druids);
@@ -797,10 +798,12 @@ interrupt's way back to one of those three places, or the routine's end
   190, 17, dword rounds x 60, 0), in a frame the overlay manager can fix up (as
   `NS_BLOW`'s), out through `ovr_back`;
 - under the number: the failure's way, and the priest's bit (combatants 0-7) set
-  in `tu_failed` (a byte a target, combatants under `TU_MAX`, 64), which a later
-  try by the same priest finds first: the routine's end, no roll. `tu_failed`
-  lies after `swept` and is cleared with it at a fight's first round
-  (`acid_round`, DS:55Ah set), and by a turning out of a fight (`pp_fighting`);
+  in TU_FAILED (the far block's `FAR_TU`: a byte a target, every combatant up
+  to `MAP_COUNT`, 520, since people the Loader adds are numbered past 256; 64
+  before 2026-11-09), which a later try by the same priest finds first: the
+  routine's end, no roll. `FAR_TU` lies before SWEPT and DJ_DONE (`FAR_SWEPT`,
+  `FAR_DJ`, a bit a combatant) and is cleared with them at a fight's first round
+  (`acid_round`, DS:55Ah set), and alone by a turning out of a fight (`pp_fighting`);
 - D: the destroy; D\*: the destroy, `tu_more` = 2d4 and `tu_kind` the sheet: the
   next undead of that sheet this cast (`th_cast` clears `tu_more`) is destroyed
   with no roll, counting down; "---": the end, no roll.
@@ -857,7 +860,9 @@ creature and three words; dicelog's `_manual`).
   (79F80h Chaos, 79FA1h Cloudkill, 7A018h Scare, `SPRAY_SITE`) came out as a
   save (seen in DOSBox). Signed, −100 fails; +100 (Scare from 6th level: 7A01Fh)
   still saves (a d20 + 100 stays under 128; the doubled d20 is only for fire,
-  cold and electricity, which get no +100).
+  cold and electricity, which get no +100). The one patch here in no switch:
+  always applied (a fix of the game's, the user's decision 2026-11-09), so the
+  dice log reads −100 as `none allowed (cannot save) -> failed` either way.
 - `blur_save` (79DC0h, 11 bytes: Barkskin's test, `blur_save`): Barkskin's +1
   and Blur's (55: the effects' bits at `[bp+0Ah]`, byte 6 bit 7).
 - `fire_shield_save` (79E03h, 20 bytes: Protection from Cold's test,
@@ -956,7 +961,8 @@ record's +16h (0 people: no hit powers, 7A6BAh, and no special actions, 5A954h/5
 - `TARI_BITE` (`tari_bite`, 7A747h, `cmp ax,1` after the d10 of 538:89h): a Tari's (`[bp-0Eh]` the
   attacker's creature, kind 40) 1 needs a d2 of 1 too (`GAME_DIE`): 1 in 20.
 - `DJINN_TURN`: `PROBE_MOVE`'s end (57566h, the turn's movement: DI the combatant, SI its creature),
-  with `MANUAL_ON`: a kind 39's first turn in a fight (`DJ_DONE`, a bit a combatant, cleared with
+  with `MANUAL_ON`: a kind 39's first turn in a fight (`DJ_DONE`, the far block's `FAR_DJ`: a bit a
+  combatant, every one up to `MAP_COUNT` (`MAP_BIT`), cleared with
   `SWEPT` and `TU_FAILED` at a fight's first round, `ACID_ROUND`) adds Invisible (23, spell 46, 14
   rounds: 4 + its 10 levels) and Mirror Images (25, spell 19, 1d4 + 3 charges: 76442h's negative
   time) to itself.

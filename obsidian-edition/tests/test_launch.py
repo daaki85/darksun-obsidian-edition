@@ -168,6 +168,64 @@ class LaunchTests(unittest.TestCase):
         self.assertLess(lines.index("ems=false"), lines.index("[autoexec]"))
         self.assertEqual(lines[lines.index("ems=false") - 1], "[dos]")
 
+    def test_every_patch_switch_skipped_when_off(self):
+        """Each of gamepatch's switches (a tuple of patch names) is left out of the patched game when
+        its Options key is off (prepare_patched_game's skip), and none is with every key on."""
+        from dsloader import gamepatch
+        names = {p.name for p in gamepatch.PATCHES}
+        switches = {key: value for key, value in vars(gamepatch).items()
+                    if key.isupper() and isinstance(value, tuple) and value and set(value) <= names}
+        self.assertIn("SPELLS_MANUAL", switches)
+        skips = []
+        saved = gamepatch.write_patched
+
+        def write_patched(source, target, skip=frozenset()):
+            skips.append(frozenset(skip))
+            raise gamepatch.PatchError("not in a test")
+        gamepatch.write_patched = write_patched
+        try:
+            def skip(settings):
+                self.assertEqual(launch.prepare_patched_game("nowhere", settings), "not in a test")
+                return skips[-1]
+            self.assertEqual(skip({}), frozenset())
+            off = {key: skip({key: False}) for key in launch.CONTENT}
+        finally:
+            gamepatch.write_patched = saved
+        for name, patches in switches.items():
+            keys = [key for key, skipped in off.items() if set(patches) <= skipped]
+            self.assertTrue(keys, f"gamepatch.{name}: no Options key leaves it out")
+        for key, skipped in off.items():  # (nothing else left out: only whole switches)
+            self.assertTrue(all(set(patches) <= skipped or not set(patches) & skipped
+                                for patches in switches.values()), key)
+            self.assertEqual(skipped, frozenset().union(*(p for p in switches.values() if set(p) <= skipped)), key)
+        self.assertNotIn("save_signed", frozenset().union(*off.values()))  # (always applied)
+
+    def test_conf_in_the_code_page(self):
+        """The conf in the encoding DOSBox reads it in (Windows' ANSI code page there, else UTF-8); a
+        folder whose name the code page can't hold is a LaunchError that says so."""
+        self.assertEqual(launch.conf_encoding(), "mbcs" if os.name == "nt" else "utf-8")
+        saved = launch.conf_encoding, launch.DOS_DIR
+        try:
+            with tempfile.TemporaryDirectory() as d:
+                game = make_game(d, cloud_saves=False)
+                launch.conf_encoding = lambda: "cp1252"
+                launch.DOS_DIR = os.path.join(d, "Café", "dos")
+                with open(launch.write_conf(game, os.path.join(d, "test.conf")), "rb") as f:
+                    self.assertIn(b'mount d "' + launch.DOS_DIR.encode("cp1252") + b'"\r\n', f.read())
+                launch.DOS_DIR = os.path.join(d, "ゲーム", "dos")
+                with self.assertRaises(launch.LaunchError) as raised:
+                    launch.write_conf(game, os.path.join(d, "test2.conf"))
+                self.assertIn("'ゲーム'", str(raised.exception))
+                self.assertIn('(mount d "', str(raised.exception))
+                self.assertIn("cp1252", str(raised.exception))
+                self.assertFalse(os.path.exists(os.path.join(d, "test2.conf")))
+                launch.conf_encoding = saved[0]
+                if os.name != "nt":
+                    with open(launch.write_conf(game, os.path.join(d, "test3.conf")), "rb") as f:
+                        self.assertIn(launch.DOS_DIR.encode("utf-8"), f.read())
+        finally:
+            launch.conf_encoding, launch.DOS_DIR = saved
+
     def test_conf_without_the_helper_leaves_ems_alone(self):
         with tempfile.TemporaryDirectory() as d:
             game = make_game(d, cloud_saves=False)

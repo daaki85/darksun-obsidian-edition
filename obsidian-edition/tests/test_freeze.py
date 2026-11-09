@@ -86,6 +86,15 @@ class FreezeTests(unittest.TestCase):
         self.assertIn("load segment 01A2 (from its memory block", text)
         self.assertIn("game 0980:70AB", text)
 
+    def test_header_to_the_overlay_buffer(self):
+        """The header in the report reaches the overlay buffer's segments and UMB_NEED (+368 to +373)."""
+        mem, hdr = memory([(0x2000, 0x10)])
+        struct.pack_into("<3H", mem, hdr + 368, 0xC9AB, 0xCDEF, 0x1234)
+        text = freeze.report_text(lambda a, n: bytes(mem[a:a + n]), hdr, None, "now", "9.9", {}, "", "", None)
+        self.assertIn(f"DSCLOG's header ({freeze.HEADER_BYTES} bytes):", text)
+        row = next(line for line in text.splitlines() if line.startswith("  +360 "))
+        self.assertTrue(row.endswith("ab c9 ef cd 34 12"), row)
+
     def test_zip(self):
         mem, hdr = memory([(0x2000, 0x10)])
         with tempfile.TemporaryDirectory() as folder:

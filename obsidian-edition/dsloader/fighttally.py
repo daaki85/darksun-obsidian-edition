@@ -10,11 +10,14 @@ fight is over (the game's fight flag down a moment after it was up), and writes 
         Jenna: 3 of 3 attacks hit, 22 dealt, took 6
 
 A kill is put to whoever hurt the creature last (a weapon's hit, or the caster of the spell that
-hurt it, when a saving throw against it named the caster); a spell's damage without one counts
-for the party but no one member."""
+hurt it, when a saving throw against it or the spell's attack roll named the caster). A spell's
+damage counts as the party's only when its caster is known to be a party member (a monster's spells
+on its own side, and a spell whose caster no line named, are not the party's)."""
 
 import re
 from typing import Callable, Dict, List, Optional
+
+from .ledger import save_source
 
 ROUND = re.compile(r"Round (?P<n>\d+)\b")
 ATTACK = re.compile(r"(?P<who>.+?) attacks (?P<target>.+?)(?: from behind| BACKSTAB| unseen)?(?: with .+?)?: d20 = .*"
@@ -22,7 +25,8 @@ ATTACK = re.compile(r"(?P<who>.+?) attacks (?P<target>.+?)(?: from behind| BACKS
 HIT_FOR = re.compile(r"  (?P<who>.+?) hits (?P<target>.+?) for (?P<n>\d+): ")
 TAKES = re.compile(r"  (?P<who>.+?) takes (?P<n>\d+) from (?P<what>.+?)(?:,| \(|$)")
 KILLED = re.compile(r"(?P<who>.+) is killed$")
-SAVE_FROM = re.compile(r".+?'s saving throw vs (?P<what>.+?) from (?P<who>.+?)(?: \(|: )")
+SAVE_VS = re.compile(r".+?'s saving throw vs (?P<what>.+?): ")
+SPELL_ATTACK = re.compile(r"(?P<who>.+?)'s (?P<what>.+?) at .+?: (?:touch )?attack d20 = ")
 
 
 class Member:
@@ -42,7 +46,7 @@ class FightTally:
         self.took = 0
         self.members: Dict[str, Member] = {}
         self._last_hurt: Dict[str, str] = {}  # creature -> the party member who hurt it last
-        self._caster: Dict[str, str] = {}  # spell -> the party member who cast it last
+        self._caster: Dict[str, str] = {}  # spell -> who cast it last (a party member or not)
 
     def _member(self, name: str) -> Member:
         return self.members.setdefault(name, Member())
@@ -89,19 +93,26 @@ class FightTally:
                 if by:
                     self._member(by).kills += 1
             return
-        m = SAVE_FROM.match(line)  # (a spell's caster: named only on its targets' saving throws)
-        if m and self.is_party(m.group("who")):
-            self._caster[re.sub(r" \(.*\)$", "", m.group("what"))] = m.group("who")
+        m = SAVE_VS.match(line)  # (a spell's caster: named on its targets' saving throws ...)
+        if m:
+            spell, who, _ = save_source(m.group("what"))
+            if who:
+                self._caster[re.sub(r" \(.*\)$", "", spell)] = who
+            return
+        m = SPELL_ATTACK.match(line)  # (... and on its attack roll)
+        if m:
+            self._caster[m.group("what")] = m.group("who")
 
     def _hurt(self, by: Optional[str], target: str, n: int) -> None:
         if self.is_party(target):
             self.took += n
             self._member(target).took += n
-        elif by is None or self.is_party(by):
+        elif by is not None and self.is_party(by):
             self.dealt += n
-            if by:
-                self._member(by).dealt += n
-                self._last_hurt[target] = by
+            self._member(by).dealt += n
+            self._last_hurt[target] = by
+        elif by is not None:
+            self._last_hurt.pop(target, None)  # (a monster hurt it last: its kill no member's)
 
     def end(self) -> List[str]:
         """The tally's lines, and the tally started afresh (nothing if no round was seen)."""

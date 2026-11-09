@@ -1636,11 +1636,10 @@ class ManualGroup3Tests(unittest.TestCase):
             self.assertEqual(log.describe(e), [f"  Dag hits Mountain Stalker {want}"])
 
     def test_cannot_save(self):
-        """The save modifiers' -100: with the compare made signed (save_signed) none is allowed; the
-        game's own unsigned compare reads the total as 156 and up, a save."""
-        for manual, want in ((True, "none allowed (cannot save) -> failed"),
-                             (False, "-100 meant \"cannot save\", but the game compares unsigned and reads it as "
-                                     "168 -> saved")):
+        """The save modifiers' -100: with the compare made signed (save_signed, always applied) none is
+        allowed, with the manual's spells or without."""
+        for manual in (True, False):
+            want = "none allowed (cannot save) -> failed"
             log = self.make(manual)
             e = entry((14 << 8) | 0xA8, frame=words(0, 0, 0x29, 0, HOLD_PERSON), locals_=locals_at(0x10, m6=5),
                       kind=KIND_SAVE, bp=0xFD00)
@@ -2430,6 +2429,18 @@ class PassTests(unittest.TestCase):
             log._watches()
         semyon.assert_called_once()
         kurzak.assert_called_once()
+
+    def test_monsters_mended_either_way(self):
+        """Each pass mends the running game's manual monsters to the game's copy: the manual's with
+        the spells as the manual has them (the copy's Stinking Cloud), the game's own without (the
+        switch turned off after a game was saved with it on: monsters.mend's way back)."""
+        from unittest import mock
+        log = make_game()
+        for manual in (True, False):
+            with mock.patch.object(log.game, "spells_manual", return_value=manual), \
+                    mock.patch.object(dicelog.monsters, "mend", return_value=[]) as mend:
+                log._watches()
+            mend.assert_called_once_with(log.game, manual)
 
     def test_error_key_by_where(self):
         """Errors told apart by kind and where they were raised, not their text: the same failure

@@ -56,12 +56,18 @@ ATTACK = re.compile(r"(?P<who>.+?) attacks (?P<target>.+?)(?P<how> from behind| 
                     r"(?: with (?P<weapon>.+?))?: d20 = (?P<d20>\d+)(?P<natural> \(natural \d+\))?, "
                     r"(?P<needs>needs -?\d+\+|only a 20 hits|hits on anything but a 1)(?: \((?P<pct>\d+)%\))?"
                     r"(?:, hits AC (?P<hit_ac>-?\d+))?(?:, target AC (?P<ac>-?\d+))? -> (?P<result>HIT|miss)$")
+# a spell's attack roll (dicelog's _spell_to_hit): its working in brackets (nested ones in it), the AC last
+SPELL_ATTACK = re.compile(r"(?P<who>.+?)'s (?P<spell>.+?) at (?P<target>.+?): (?P<touch>touch )?attack "
+                          r"d20 = (?P<d20>\d+)(?P<natural> \(natural \d+\))?, "
+                          r"(?P<needs>needs -?\d+\+|only a 20 hits|hits on anything but a 1)(?: \((?P<pct>\d+)%\))?"
+                          r"(?: \((?P<how>.*); target AC (?P<ac>-?\d+)\))? -> (?P<result>HIT|MISS)(?:: (?P<tail>.*))?$")
+TAKES = re.compile(r"  (?P<who>.+?) takes (?P<n>\d+) from (?P<what>.+?)(?: \(.*?\))?(?: and \d+ from the hit)?"
+                   r"(?:, now (?P<hp>-?\d+)(?:/(?P<most>\d+))? HP)?$")
 WEAPON = re.compile(r"(?P<name>.+?)(?: \((?P<dice>[^()]*)\))?$")
 HIT_FOR = re.compile(r"  (?P<who>.+?) hits (?P<target>.+?) for (?P<n>\d+): (?P<rest>.*)$")
 NOW_HP = re.compile(r"  (?P<who>.+?) now (?P<hp>-?\d+)/(?P<most>\d+) HP \((?P<delta>[+-]\d+)(?::\s*(?P<why>.*))?\)$")
 SAVE = re.compile(r"(?P<who>.+?)'s saving throw vs (?P<what>.+?): d20 = (?P<d20>\d+)(?P<natural> \(natural \d+\))?"
                   r"(?P<mods>.*?), needs (?P<need>-?\d+)(?: \((?P<pct>\d+)% to save\))? -> (?P<result>.+)$")
-SAVE_KIND = re.compile(r"^(?P<what>.+?)(?: \((?P<kind>[a-z/ ]+)\))?$")
 CHECK = re.compile(r"(?P<ind>\s*)(?P<what>[^:]+?): (?P<die>d\d+|\d+-\d+) = (?P<roll>-?\d+), "
                    r"needs (?P<need>-?\d+)(?P<why_in> \([^)]*\))? or less(?P<why> \(.*?\))?(?P<more>[^>]*?) -> (?P<result>.+)$")
 ROUND_LINE = re.compile(r"Round (?P<n>\d+)(?::\s*(?P<order>.*))?$")
@@ -69,6 +75,26 @@ TURN_LINE = re.compile(r"(?P<who>.+)'s turn$")
 KILLED = re.compile(r"(?P<who>.+) is killed$")
 GOOD_WORDS = ("success", "hidden", "unheard", "resisted", "saved", "sent away", "dispelled", "it works")
 BAD_WORDS = ("fail", "stumbles", "caught", "not resisted", "seen", "heard", "BREAKS", "DESTROYED")
+
+
+SAVE_KIND_TAIL = re.compile(r" \((?P<kind>[a-z/ ]+)\)$")
+
+
+def save_source(what: str) -> Tuple[str, Optional[str], Optional[str]]:
+    """A saving throw's "vs" part (dicelog's _save_line: "SPELL[ from CASTER][ (KIND)]"): the spell,
+    who cast it (None when unnamed: its target's own, a cloud on the ground) and the kind of save.
+    The caster is after the last " from " that isn't a spell's own ("Protection from Evil")."""
+    kind = None
+    m = SAVE_KIND_TAIL.search(what)
+    if m:
+        kind, what = m.group("kind"), what[:m.start()]
+    at = len(what)
+    while True:
+        at = what.rfind(" from ", 0, at)
+        if at < 0:
+            return what, None, kind
+        if not what[:at].endswith("Protection"):
+            return what[:at], what[at + len(" from "):], kind
 
 
 def _signed(text: str) -> str:
@@ -150,6 +176,12 @@ class Ledger:
         m = ATTACK.match(line)
         if m:
             return [self._attack_row(m)]
+        m = SPELL_ATTACK.match(line)
+        if m:
+            return self._spell_row(m)
+        m = TAKES.match(line)
+        if m and ("spell", f"{m.group('what')}>{m.group('who')}") in self._slots:
+            return self._spell_damage(m, line)
         m = HIT_FOR.match(line)
         if m:
             return self._damage(m, line)
@@ -201,6 +233,54 @@ class Ledger:
         pieces += [Piece(TAB), Piece(roll, DIM)]
         return Row(EVENT, tuple(pieces))
 
+    def _spell_row(self, m: "re.Match") -> List[Op]:
+        """A spell's attack roll as an attack's event row ("Lex's Acid Arrow hits Templar [for 3] ...
+        d20 12 vs 4+ (85%) · AC 4"), its working under it; its damage and the HP after it filled by
+        its "takes" line."""
+        who, spell, target, hit = m.group("who"), m.group("spell"), m.group("target"), m.group("result") == "HIT"
+        self._attack = None  # (no weapon's THAC0 line follows a spell's)
+        role = (GOOD if self.is_party(who) else BAD) if hit else DIM
+        pieces = [self._pip(who), Piece(who, BODY if hit else DIM), Piece(f"'s {spell} ", BODY if hit else DIM),
+                  Piece("hits" if hit else "misses", role), Piece(" "), Piece(target, BODY if hit else DIM)]
+        if hit:
+            pieces.append(self._slot("spell", f"{spell}>{target}"))
+        elif m.group("tail"):
+            pieces.append(Piece(DASH + m.group("tail").replace("the spell does nothing, ", ""), DIM))
+        pieces.append(Piece(TAB))
+        pieces.append(self._slot("hp", target) if hit else Piece(""))
+        needs = m.group("needs")
+        need = needs[len("needs "):] if needs.startswith("needs ") else "2+" if "anything" in needs else "20"
+        roll = f"d20 {m.group('d20')}{' (natural)' if m.group('natural') else ''} vs {_signed(need)}"
+        if m.group("pct"):
+            roll += f" ({m.group('pct')}%)"
+        if m.group("ac") is not None:
+            roll += f"{DOT}AC {_signed(m.group('ac'))}"
+        pieces += [Piece(TAB), Piece(roll, DIM)]
+        rows: List[Op] = [Row(EVENT, tuple(pieces))]
+        if m.group("how"):
+            detail = f"    {m.group('touch') or ''}to hit: {m.group('how')}"
+            if m.group("ac") is not None:
+                detail += f"; vs AC {_signed(m.group('ac'))} {needs}"
+            detail += f"; d20 {m.group('d20')} {ARROW} {m.group('result')}"
+            rows.append(Row(DETAIL, (Piece(detail, DIM),)))
+        return rows
+
+    def _spell_damage(self, m: "re.Match", line: str) -> List[Op]:
+        """A spell's damage after its attack roll hit: into the attack's row (and the HP left)."""
+        who, n = m.group("who"), m.group("n")
+        sid = self._take("spell", f"{m.group('what')}>{who}")
+        party = self.is_party(who)
+        ops: List[Op] = [Fill(sid, (Piece(" for ", BODY), Piece(n, BAD if party else GOOD)))]
+        hp_sid = self._take("hp", who)
+        if hp_sid is not None and m.group("hp") is not None:
+            hp = int(m.group("hp"))
+            most = int(m.group("most")) if m.group("most") else None
+            low = party and most is not None and hp * 3 <= most
+            text = f"{'! ' if low else ''}{hp}{f'/{most}' if most is not None else ''} ({MINUS}{n})"
+            ops.append(Fill(hp_sid, (Piece(text, BAD if party else BODY),)))
+        ops.append(Row(DETAIL, (Piece("    " + line.strip(), DIM),)))
+        return ops
+
     def _to_hit(self, thac0: str) -> Row:
         a = self._attack
         a["thac0_due"] = False
@@ -242,11 +322,8 @@ class Ledger:
         who, result = m.group("who"), m.group("result")
         party = self.is_party(who)
         saved = result.startswith("saved")
-        what = m.group("what")
-        what = re.sub(r" from .+?(?= \(|$)", "", what)  # (who cast it: in the detail line)
-        kind = SAVE_KIND.match(what)
-        if kind and kind.group("kind") and "/" in kind.group("kind"):
-            what = kind.group("what")
+        spell, _, kind = save_source(m.group("what"))  # (who cast it: in the detail line)
+        what = spell if not kind or "/" in kind else f"{spell} ({kind})"
         tail = result.split(":", 1)[1].strip() if ":" in result else ""
         role = (GOOD if saved else BAD) if party else (DIM if saved else GOOD)
         pieces = [Piece(NO_PIP), Piece(who, BODY), Piece(" "), Piece("saves" if saved else "fails", role),

@@ -4,6 +4,15 @@ What *Dark Sun: Shattered Lands* does with each spell and power, set against its
 (`Manual.pdf`, page numbers are the PDF's), where the two part ways, with a suggested resolution
 for each. Spells that match, or that the mod has already put right, are listed at the end.
 
+**Where it stands.** The mod has since acted on the report in three groups, each checked in
+DOSBox (playtest/logs/2026-11-08-manual-spells.md, 2026-11-08-hd-spells.md,
+2026-11-08-spell-to-hit.md, 2026-11-09-turn-undead-meteors.md, 2026-11-09-group-3.md,
+2026-11-09-group-4.md): the record changes and small fixes (group 2), the DSCLOG handlers (group 3)
+and the monsters (group 4), under the Options tab's "Spells and psionics as the manual describes
+them", with the missile and touch spells' attack rolls under "Spells roll to hit". Each entry
+below says what was done, in italics; where the done thing differs from the suggested
+resolution, the entry says why. The Scare and "can't save" fixes are bug fixes, always on.
+
 **How this was found (2026-11-08).** The 32-byte spell records were read from the unpatched
 `DSUN.EXE` (spell *s* at file offset `41F70h + 20h × s`) and decoded with the Loader's own
 `spellbook.spell_info`; the code was disassembled from the file. Addresses are `DSUN.EXE` file
@@ -23,39 +32,51 @@ DSCLOG handler; **large** new game mechanics.
 
 | | What the code shows |
 |---|---|
-| **Scare: no one ever saves** | Its record's save byte is A0h: bit 0, "a save allowed", is clear (Charm Person's and Hold Person's are A1h). The saving-throw routine (79A71h) tests that bit first (79A89h) and goes straight to "not saved" without it. So every creature but the undead is Scared, 6th level and up included. The level rule and the elf/half-elf priest rule live in the save modifiers (79FA4h-7A01Dh), behind that test, so they never run: **2.14.0's `scare_elves` fix has no effect**, and HOW-THE-GAME-WORKS and FEATURES describe Scare wrongly. (Checked in the code; to be seen in play.) |
-| **Missile spells never miss** | Acid Arrow, Turn Pebble to Boulder, Magical Stone and Condense are sent to a to-hit check (78BA0h) that is `mov ax,1 / retf`: always a hit. |
-| **"Can't save" saves** (found 2026-11-09) | The saving throw compares its byte total with the number needed unsigned (79BBAh, `jae`), so the −100 the save modifiers give for "can't save" (Chaos, Cloudkill, Scare below 6th level, the mod's Color Spray) makes a total read as 156 and up: the creature always saves. Seen in DOSBox (Arena Guards "unable to save" took half Cloudkill's damage; a Guard "unable to save" against Scare was never Afraid). *Fixed with the manual's spells: `save_signed` (jge).* |
+| **Scare: no one ever saves** | Its record's save byte is A0h: bit 0, "a save allowed", is clear (Charm Person's and Hold Person's are A1h). The saving-throw routine (79A71h) tests that bit first (79A89h) and goes straight to "not saved" without it. So every creature but the undead is Scared, 6th level and up included. The level rule and the elf/half-elf priest rule live in the save modifiers (79FA4h-7A01Dh), behind that test, so they never run: **2.14.0's `scare_elves` fix has no effect**, and HOW-THE-GAME-WORKS and FEATURES describe Scare wrongly. (Checked in the code; to be seen in play.) *Fixed (always on): `scare_save` sets the bit; with `save_signed` (below) 6th level and up always save, those below can't, but an elf or half-elf priest saves as usual.* |
+| **Missile spells never miss** | Acid Arrow, Turn Pebble to Boulder, Magical Stone and Condense are sent to a to-hit check (78BA0h) that is `mov ax,1 / retf`: always a hit. *Done: "Spells roll to hit" (below).* |
+| **"Can't save" saves** (found 2026-11-09) | The saving throw compares its byte total with the number needed unsigned (79BBAh, `jae`), so the −100 the save modifiers give for "can't save" (Chaos, Cloudkill, Scare below 6th level, the mod's Color Spray) makes a total read as 156 and up: the creature always saves. Seen in DOSBox (Arena Guards "unable to save" took half Cloudkill's damage; a Guard "unable to save" against Scare was never Afraid). *Fixed: `save_signed` (jge), a bug fix, always on.* |
 | **Protection from Normal Missiles stops breath weapons** | Any spell or power whose save kind is breath (the Fire Eel's, the Red Slaad's, the Animated Statue's) misses a target with effect 28 entirely (7A142h). Inertial Barrier and Deflection use the same effect. |
 
 ## Preserver spells (manual pp. 29-34)
 
-### Scare (2nd): no save for anyone (seen in DOSBox 2026-11-08; the save bit set since: `scare_save`)
+### Scare (2nd): no save for anyone (seen in DOSBox 2026-11-08; fixed: `scare_save`)
 - **Manual (p. 31):** creatures below six HD or levels tremble; "Saving throw: Neg."
 - **Game:** no save at all (above); Afraid 1d4 + 1 round a level, undead immune.
 - **Impact:** far stronger than the manual: it works on 6th-level foes and the arena's champions.
 - **Resolution (small):** set the record's save bit (4222Fh A0h → A1h), which brings the
   game's own rules into play (6th level and up always save; the elf/half-elf fix works). To match
   "Neg." for everyone below 6th, also let them save normally (79FBEh's `jle` to the −100 made a
-  jump past it). Correct HOW-THE-GAME-WORKS and FEATURES.
+  jump past it). Correct HOW-THE-GAME-WORKS and FEATURES. *Done: the bit set (always on), with the
+  game's own rules: 6th level and up always save; below 6th no save (the −100 failing since
+  `save_signed`), but an elf or half-elf priest saves as usual. The manual's "Neg." below 6th is
+  left: the game's rule is kept. The docs corrected.*
 
 ### Turn Pebble to Boulder (4th): 6d6, never misses
 - **Manual (p. 33):** 11-26 damage "if it strikes the target".
 - **Game:** 6d6 crushing (6-36, average 21 against 18.5), no save, always hits.
 - **Resolution (small):** 3d6+8 in the record (+1Ch..+1Eh `08 1F 06`); the to-hit as below.
+  *Done: `pebble_damage`, 3d6+8; it rolls to hit with "Spells roll to hit".*
 
 ### Missile spells always hit (Acid Arrow, Turn Pebble to Boulder; priests' Magical Stone, Condense)
 - **Manual:** Acid Arrow "as if fired from the bow of a fighter the same level" (p. 31); Turn
   Pebble "if it strikes"; Condense "if it hits" (p. 38).
 - **Resolution (medium):** a DSCLOG attack roll in place of 78BA0h's stub (the caster's THAC0,
   a fighter's for Acid Arrow, against the target's AC, through the to-hit routine at 7C3E9h). Or
-  leave it as the designers' simplification and say so in HOW-THE-GAME-WORKS.
+  leave it as the designers' simplification and say so in HOW-THE-GAME-WORKS. *Done, as its own
+  Options switch, "Spells roll to hit" (`spell_hit` at 7A15Ah, `spell_hit_stub` at 78BA3h): the
+  four, each of Minute Meteors' globes (at +2) and the Strine's spines roll with the caster's THAC0
+  (Acid Arrow a fighter's of the caster's level) and DEX, and the hostile touch spells (Chill
+  Touch, Shocking Grasp, Vampiric Touch, the Cause Wounds spells, Cause Disease, Poison) with STR,
+  at a creature of another side; a miss does nothing.*
 
 ### Minute Meteors (3rd): 1d4 a level, no to-hit
 - **Manual (p. 32):** five globes of 1d4, +2 to hit.
 - **Game:** 1d4 for each caster level (to 10), fire, no save, no attack roll (unverified).
 - **Impact:** the manual's 5d4 at 5th level; 3d4 at 3rd, 9d4 at 9th.
 - **Resolution (small, then check):** a flat 5d4 in the record (`00 2F 04`), checked in DOSBox.
+  *Done otherwise: five globes of 1d4, the record's repeat count made 5 (Magical Stone's is 3),
+  each landing on its own and, with "Spells roll to hit", rolling at +2 (`meteors_count`,
+  `meteors_damage`). A flat 5d4 would have been one blast, not the manual's five globes.*
 
 ### Lower Resistance (5th): halves magic resistance
 - **Manual (p. 34):** resistance drops by 30% + 1% a caster level.
@@ -70,7 +91,7 @@ DSCLOG handler; **large** new game mechanics.
 ### Flaming Sphere (2nd): a save halves it
 - **Manual (p. 30):** 2-8 damage, "Saving throw: Neg.", 1 round.
 - **Game:** 2d4 fire, a save halves it, instant.
-- **Resolution (small):** a save negates: 42142h 40h → C0h.
+- **Resolution (small):** a save negates: 42142h 40h → C0h. *Done: `flaming_sphere_negates`.*
 
 ### Strength (2nd): 1d6 for every class
 - **Manual (p. 31):** +1 to 8 by the target's class (AD&D: warriors 1d8, priests and rogues 1d6,
@@ -89,7 +110,9 @@ DSCLOG handler; **large** new game mechanics.
 - **Impact:** Solid Fog much stronger (stuck for the fight); Web about the same.
 - **Resolution (small):** give Solid Fog the manual's time (1d3 + 1 round a level: +4 31h, +5 1,
   +7 60); Web 2 turns a level if wanted. "Slowed to a tenth" isn't something the game's movement
-  can do: leave. Let Free Action end Stuck too (small, DSCLOG).
+  can do: leave. Let Free Action end Stuck too (small, DSCLOG). *Done: Solid Fog 1d3 rounds + 1 a
+  level (`solid_fog_time`); Free Action frees the Stuck (Web, Solid Fog, Quicksand, Entangle,
+  Grease: `free_action_stuck`, its handler made a loop). Web left as it was.*
 
 ### Rainbow Pattern (4th): 1d3 rounds, attacks don't break it
 - **Manual (p. 33):** holds until the creatures are attacked.
@@ -104,6 +127,8 @@ DSCLOG handler; **large** new game mechanics.
   before a fight). The level and single-target limits are right (7BD9Ch, 7A634h).
 - **Resolution (small):** timed in the record (+4 10h, +5 3, +7 60). That turns every such spell
   for its time; AD&D caps it at 1d4+6 spell levels, which would need a DSCLOG counter (medium).
+  *Done: 3 rounds a level (`spell_turning_time`), turning every 1st- to 3rd-level spell for its
+  whole time (seen in DOSBox); no cap.*
 
 ### Mirror Image (2nd): images last until struck
 - **Manual (p. 31):** 3 rounds a level.
@@ -156,28 +181,33 @@ DSCLOG handler; **large** new game mechanics.
 - **Game:** one save at the cast, then confused for the whole time; Chaos lets warriors save, with
   no INT exception (medium confidence).
 - **Resolution:** per-round saves, medium to large: leave and say so. Chaos's INT exception, small.
+  *Done: Chaos's INT exception (`chaos_int`); the one save left, and said so in FEATURES.*
 
 ### Smaller (leave; say so in the docs)
-- **Stinking Cloud (2nd):** 1d6 rounds, not 2-5 (same average). *(Since made 1d4+1.)*
-- **Color Spray (1st):** everyone saves, not only higher levels. *(Since fixed: creatures of the caster's level or lower can't save, under "Spells and psionics as the manual describes them".)*
+- **Stinking Cloud (2nd):** 1d6 rounds, not 2-5 (same average). *Done: 1d4+1 (the record's
+  1d4, DSCLOG's STINK_SITE adding the round).*
+- **Color Spray (1st):** everyone saves, not only higher levels. *Done: creatures of the caster's
+  level or lower can't save (`color_spray_level`), and a monster with no class counts its hit dice
+  as its level for saves (`classless_save_level`).*
 - **Invisibility (2nd):** ends only on an attack or a spell at an enemy (a buff on a friend keeps it).
-- **Hold Undead (3rd):** the manual's "HD no more than the caster's" isn't in the game at all. *(Since fixed: undead above the caster's level are immune.)*
+- **Hold Undead (3rd):** the manual's "HD no more than the caster's" isn't in the game at all.
+  *Done: undead of more levels (hit dice) than the caster's level are immune (`hold_undead_level`).*
 - **Protection from Normal Missiles (3rd):** stops breath weapons too (above), maybe magical missiles (unverified).
 
 ## Cleric spells (manual pp. 35-40)
 
 | Spell | Manual | Game | Resolution (size) |
 |---|---|---|---|
-| Bestow Curse (3rd) | −4 to attacks and saves; save Neg.; removed by Remove Curse or Dispel | Cursed: −1 to hit only; **no save** (A0h); Remove Curse doesn't end it | save bit A0h → A1h (small); −4 to hit and saves (medium); Remove Curse to end it (small) |
-| Blood Flow (4th) | stuns up to 4 rounds, save Neg. | Paralyzed 1d4 rounds, **no save** (A0h) | save bit A0h → A1h (small) |
-| Quicksand (5th) | held 1 turn + 1 round a level, no save | Stuck 1 round, a save allowed | 1 round a level, no save, in the record (small) |
-| Free Action (4th) | breaks slow, hold and web | ends Paralyzed and Slowed only, not Stuck | DSCLOG: also end Stuck (small) |
-| Magical Stone (1st) | three stones, 1d4 each, 2d8 against undead | three stones of 1d4 (seen in DOSBox 2026-11-08; "one" here was wrong), never misses | the undead part after checking its 1000h damage bit (medium) |
-| Cause Fear (1st) | 1d4 rounds | 1 round a level | 1d4 rounds in the record (small) |
+| Bestow Curse (3rd) | −4 to attacks and saves; save Neg.; removed by Remove Curse or Dispel | Cursed: −1 to hit only; **no save** (A0h); Remove Curse doesn't end it | save bit A0h → A1h (small); −4 to hit and saves (medium); Remove Curse to end it (small). *Done: the save (`bestow_curse_save`); the −4 and Remove Curse left* |
+| Blood Flow (4th) | stuns up to 4 rounds, save Neg. | Paralyzed 1d4 rounds, **no save** (A0h) | save bit A0h → A1h (small). *Done: `blood_flow_save`* |
+| Quicksand (5th) | held 1 turn + 1 round a level, no save | Stuck 1 round, a save allowed | 1 round a level, no save, in the record (small). *Done: no save only (`quicksand_no_save`). Its time is left: its Stuck lasts a round and is put on again each round while the quicksand's own 5d3 rounds last, so the record's time changes nothing (seen in DOSBox)* |
+| Free Action (4th) | breaks slow, hold and web | ends Paralyzed and Slowed only, not Stuck | DSCLOG: also end Stuck (small). *Done: `free_action_stuck` (a Poisoned creature stays Paralyzed, as the game has it)* |
+| Magical Stone (1st) | three stones, 1d4 each, 2d8 against undead | three stones of 1d4 (seen in DOSBox 2026-11-08; "one" here was wrong), never misses | the undead part after checking its 1000h damage bit (medium). *Left as it is: the game already throws three stones of 1d4 (a record of 3d4 made each stone 3d4); each stone rolls to hit with "Spells roll to hit"* |
+| Cause Fear (1st) | 1d4 rounds | 1 round a level | 1d4 rounds in the record (small). *Done: `cause_fear_time`* |
 | Entangle (1st) | moves very slowly, 1 turn a level, save halves | Stuck 1 round, a save negates | leave, or 1 round a level (small) |
 | Cause Disease (3rd) | saps STR and HP | Diseased: lowers nothing by itself | DSCLOG: Weakened 1d4 on a failed save (medium) |
 | Remove Curse (4th) | ends Bestow Curse | puts a lowered STR back, ends no curse | with Bestow Curse (small) |
-| Ironskin (5th) | immune to weapons, "special" | 1d6 blows stopped | more charges, 1 a level (small) |
+| Ironskin (5th) | immune to weapons, "special" | 1d6 blows stopped | more charges, 1 a level (small). *Done: a blow stopped a caster level (`ironskin_charges`, its level divisor 1)* |
 | Dispel Evil (5th) | AC −7 against summoned evil; it saves or is dispelled | AC −7 only | leave, or DSCLOG (medium) |
 | Insect Plague (5th) | blocks vision and spells, 1 HP a round | Afraid 2 rounds a level and no spells a round; its record has 1d1 damage (unverified in play; the docs say none) | leave; check the 1 HP and correct the docs (small) |
 | Summon Insects (4th) | a cloud: AC +2, −2 to hit | summons a creature | leave |
@@ -203,8 +233,7 @@ DSCLOG handler; **large** new game mechanics.
 
 **Match:** Burning Hands, Charm Person (persons only, races 1-7: 7AFE7h), Gaze Reflection, Grease,
 Magic Missile, Shocking Grasp, Wall of Fog, Detect Invisibility, Fog Cloud, Invisibility (attackers
-−4: 7BD4Bh, 7C6C2h), Protection from Paralysis, Blink (7A112h), Fireball, Flame Arrow, Hold Person,
-Hold Undead, Lightning Bolt, Minor Malison, Monster Summoning I-III, Slow, Spirit Armor, Vampiric
+−4: 7BD4Bh, 7C6C2h), Protection from Paralysis, Blink (7A112h), Fireball, Hold Person, Lightning Bolt, Minor Malison, Monster Summoning I-III, Slow, Spirit Armor, Vampiric
 Touch (its cap never reached), Charm Monster, Black Tentacles, Fear, Ice Storm, Improved
 Invisibility, Minor Globe, Stoneskin, Wall of Fire, Wall of Ice, Cone of Cold, Conjure Elemental,
 Dismissal, Domination, Hold Monster, Summon Shadow, Wall of Force, Wall of Stone, **Glitterdust**
@@ -214,7 +243,13 @@ Dismissal, Domination, Hold Monster, Summon Shadow, Wall of Force, Wall of Stone
 Magic, Acid Arrow's burning, Cause Serious and Critical Wounds' dice, Negative Plane Protection,
 the Cloak of Bravery, Absorb Disease, Share Strength, Bless and Aid's targets, Hold Undead's guard,
 Psionic Blast, Slay Living's description; as rules, Enlarge's dice and the saves (the spell save,
-DEX for the doubled d20). **Not fixed after all:** Scare (above).
+DEX for the doubled d20). Since the report: Scare's save and "can't save" (bug fixes); with "Spells
+and psionics as the manual describes them" every *Done* above, and **Flame Arrow** (taken out of
+"Match": the game made one blast of 5d6 for every five levels, 10d6 at 10th; now a bolt of 5d6 for
+every five levels, each landing on its own, as AD&D's), **Hold Undead** (taken out of "Match": its
+hit dice limit, above), **Turn Undead** by AD&D's turning table (turned undead flee 3d4 rounds; a
+priest who fails can't try that undead again that fight), and a classless monster's hit dice as
+its level for saves; with "Spells roll to hit" the missile and touch spells.
 
 ## Monsters: powers the manual promises
 
@@ -232,13 +267,15 @@ bit 17: 3 HP a turn).
 | Red Slaad | healing | **Present:** 3 HP a turn; also paralyses 2d4 rounds (182) |
 | Mastyrial | regeneration, poison sting | **Present:** 3 HP a turn; the sting 30 poison |
 | Dark Spider | type F poison | 10 poison on the bite, a save stops it (one record, 54, has none but regenerates) |
-| Shadow, Greater Shadow | strength drain | **Absent:** Greater Shadows' hits paralyse 2d6 rounds; the level-3 Shadows' do 2d6 cold |
-| Babau | poison | **Absent:** a corroding touch instead |
-| Blue Slaad | deadly poison | **Absent:** disease on 1 hit in 10 |
-| Tari | disease | **Absent:** a 2nd-level human fighter |
-| Djinn | invisibility, illusions, magic resistance | **Absent:** none, MR 0 |
-| Styr | fire breath | **Absent** |
+| Shadow, Greater Shadow | strength drain | **Absent:** Greater Shadows' hits paralyse 2d6 rounds; the level-3 Shadows' do 2d6 cold. *Done as the manual describes them: 1 STR drained a hit (no save, Weakened 2d4 turns, adding up) in place of the cold and the paralysis; both unaffected by cold (`shadow_drain`, `shadow_cold`)* |
+| Babau | poison | **Absent:** a corroding touch instead. *Done: deadly poison in place of the corroding touch (`babau_poison`)* |
+| Blue Slaad | deadly poison | **Absent:** disease on 1 hit in 10. *Done: deadly poison in place of the disease (`blue_slaad_poison`)* |
+| Tari | disease | **Absent:** a 2nd-level human fighter. *Done: a 3-HD bite of 1d3, disease 1 in 20 (`tari_kind`, `tari_bite`)* |
+| Djinn | invisibility, illusions (the manual promises no magic resistance: the earlier "magic resistance" here was wrong) | **Absent:** none (MR 0, as the manual and AD&D). *Done: invisible (Improved Invisibility) with mirror images at its first turn of a fight (`djinn_kind`, DSCLOG's DJINN_TURN)* |
+| Styr | fire breath | **Absent**. *Done: 3d6 fire breath one turn in four, +1 weapons to hurt it, HD 14, THAC0 7 (`styr_kind`)* |
 
-The dice log's note on its "special effect: d10, works on a 1" line calls that the thri-kreen
-bite; it is the disease roll (kind bit 25). Its stat differences from the manual (lower hit dice
+The dice log's note on its "special effect: d10, works on a 1" line called that the thri-kreen
+bite; it is the disease roll (kind bit 25): the game's Blue Slaad's, and with the manual's monsters
+(the Blue Slaad's disease taken off) the Tari's, made 1 in 20 by a d2 more. A thri-kreen's bite
+rolls no d10. *Corrected in DICE-LOG.md.* Its stat differences from the manual (lower hit dice
 for several monsters, other attacks) look like the designers' balance and are left as they are.

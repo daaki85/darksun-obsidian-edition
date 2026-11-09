@@ -40,172 +40,107 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 
 ## Next pull request (not opened yet)
 
-**Fixed: the Loader**
-- **Figures vanished from the map after many gear changes in one area:** each time a member's
-  outfit changed, the Loader took the old pictures out of the game's picture table, but the game
-  takes neither a slot nor its room in its picture store (a fixed 741,376 bytes) back until an area
-  loads, and a new outfit takes a new slot at the end. After some 30 to 60 changes in one area a
-  picture went past the store's end: the game's write fails unseen, the picture can't be read
-  back, and its failed reads keep taking memory, until the party's and the monsters' figures
-  weren't drawn (opening the inventory brought them back for a while). Now a figure is dressed
-  anew only while the store and the table keep room for it and for the game's own pictures (64 KB
-  and 24 slots); else it stays as it was until the next area. (`sprites._room_for`; test:
-  `test_no_room_in_the_games_store`; reproduced and checked in DOSBox:
-  playtest/logs/2026-11-09-missing-figures.md.) And a figure dressed anew now takes no new slot at
-  all: the Loader puts its pictures into cells the game's store already has (one holding the very
-  picture, an outfit changed back; the figure's own, out of memory; else the smallest unused cell
-  with room), writing the store (the game's XMS block, found and checked against pictures in
-  memory) while DOSBox is paused and never a picture in memory, and falls back to the old way
-  where the store can't be found (as on Dark Sun Recompiled). In DOSBox about 290 outfit changes
-  across two areas, a fight and the inventory took 9 new slots (was one each), every figure drawn
-  (`sprites.Store`, `Dresser._in_store`; 6 new tests; playtest/logs/2026-11-09-picture-store-fix.md).
+DSCLOG.EXE 65,184 bytes (image 65,152), 3,264 of its segment spare.
 
 **Changed**
-- **Group 4.** **Resting heals by spells and natural healing** (a new rule change, `rest_heal`, on by
-  default): before the rest each priest spends the slots left on Neutralize Poison for the
-  Poisoned, Cure Blindness, Cure Disease (when no cleric or druid of 5th+ casts it free), and the
-  Cure Wounds spells or Heal on the most wounded, and psionicists use Cell Adjustment, each through
-  the game's own cast (`At rest: Cilla casts Cure Critical Wounds on Gerakis (5th-level slots: 8
-  left)`); then each heals 3 HP and CON's hit-point bonus (`Gerakis rests 8 hours: +3, +6 (CON 22) =
-  +9`) instead of all of them, CON 20+ regeneration coming on top for the 8 hours. **Dual-classing
-  as the manual has it** (`dual_class`, on): at 3rd level of the old class, and every prime
-  requisite checked (the old class's at 15+, the new one's at 17+; the game checked one, WIS for
-  rangers, druids and psionicists). **Monsters as the manual describes them** (with "Spells and
-  psionics as the manual describes them"): Shadows and Greater Shadows drain 1 STR a hit (no save,
-  for 2d4 turns, stacking) in place of their cold damage and paralysis, and Greater Shadows are
-  unaffected by cold; the Babau's and Blue Slaad's deadly poison (save or die) in place of the
-  corroding touch and disease; the Tari a 3-HD bite of 1d3 with a 1-in-20 chance of disease; the
-  Styr a 3d6 fire breath, HD 14 and THAC0 7; the Djinn turns invisible and makes mirror images at
-  its first turn. Seen in DOSBox: playtest/logs/2026-11-09-group-4.md.
-
-**Fixed: the game**
-- **Resting while poisoned killed a member just cured:** the rest read each member's effects
-  before casting its free cures and never again, so a 7th-level druid's Neutralize Poison was cast
-  and the member died of the poison anyway (seen in DOSBox). The cures now come before the read
-  (`rest_cures_first`, `rest_cures_loop`: the game's own bytes reordered; always on).
-- **Group 3: spells and psionics as the manual describes them** (the switch, renamed "Spells and
-  psionics as the manual describes them"; each seen in DOSBox: playtest/logs/2026-11-09-group-3.md):
-  Fire Shield +2 on saves vs fire and cold (its description says so); Blur +1 on saves; Chill Touch's
-  Weakened lasts (an hour: its record gave it 0 rounds) and undead touched take no damage and flee
-  1d4 rounds; Cloudkill kills under 4 HD with no save and those of 4-5 HD that fail, 6+ HD take its
-  damage; Feeblemind (INT and WIS 3, as the game already did) stops psionics and Heal cures it;
-  Lower Resistance takes 30% + 1% a caster level off magic resistance (was halving it); Strength's
-  die by class (warriors 1d8, priests, rogues and psionicists 1d6, wizards 1d4) and the mod's Cat's
-  Grace's (rogues 1d8, wizards, warriors and psionicists 1d6, priests 1d4), the best die for a
-  multiclass character, at most 24, neither stacking with Adrenalin Control; Rainbow Pattern a round
-  a caster level, ended by damage on the creature it holds; Cell Adjustment heals 1d4 (and cures
-  disease, as before); Biofeedback's -2 leaves a blow at least 1. And **"can't save" now fails**:
-  the game compared a save's total with the number needed unsigned, so every -100 (Chaos, Cloudkill,
-  Scare under 6th level, Color Spray) wrapped round and the creature saved (`save_signed`, 79BBDh).
-  The helper's code space: 5,040 bytes spare.
-- **The helper has room again (second memory pass):** its code space 2,032 -> 6,032 bytes free.
-  The sites' dispatch is a jump table (688 bytes); the rings' outlines are kept as one quarter and
-  mirrored (336); a new tail section after the image, kept with the helper and found through header
-  +1834 (`tail_seg`), holds the floating names' slots, the extra item names and types and the timer
-  notes (the Loader's labels.py and freeze.py read them there); the dust's LIGHT, puffs and DARK
-  moved to the far block; the crash report writes the stack straight from SS. Upper memory: 565
-  paragraphs spare (was 495), the largest free piece 37,392 bytes. Checked in DOSBox (shadows,
-  dust, the ring, labels, to-hit, Turn Undead, item names, the Effects screen, Look, creation, a
-  shop; playtest/logs/2026-11-09-memory-pass-2.md). DEVELOPMENT.md's budget corrected.
-- **Turn Undead the AD&D way** (with "Spells as the manual describes them"; DSCLOG's TURN_SITE at
-  7AE01h): AD&D 2e's turning table by the undead's hit dice (rows: 1, 2, 3-4, 5, 6 ... 11+) and the
-  priest's level (columns 1-9, 10-11, 12-13, 14+), where the game's formula put 2- and 3-HD undead a
-  row easier and 5 HD a row harder; a turn (the number made, or T) makes the undead flee, Afraid for
-  3d4 rounds (the game had no fleeing: every success destroyed); D destroys, D* destroys and up to
-  2d4 more of its kind reached by the same turning; "---" no chance. A priest who fails against an
-  undead can't try it again that fight (another priest can). The dice log says which
-  (`turned: flees 3d4 = 9 rounds`, `destroyed automatically (D*)`, `can't try again`).
-- **Minute Meteors: five globes of 1d4, each rolling to hit at +2** (the record's repeat count 5, as
-  Magical Stone's 3; was one roll of 1d4 a caster level). **Flame Arrow: a bolt for every 5 caster
-  levels, 5d6 each** (DSCLOG's FLAME_SITE on the cast's repeat count; was one sum of 5d6, 10d6 at
-  10th); no attack roll, as the manual and AD&D. Only the party's casts repeat: a monster's Magical
-  Stone, Minute Meteors or Flame Arrow lands once (the game's other casting routes ignore the count).
-  Seen in DOSBox: playtest/logs/2026-11-09-turn-undead-meteors.md.
+- **Spells and psionics as the manual describes them** (a new rule change, on by default, from the
+  next start: `spells_manual`, `gamepatch.SPELLS_MANUAL`; the spell records and DSCLOG sites; from
+  reports/spells-against-the-manual.md, which now says what was done with each of its points):
+  - *The records:* Bestow Curse and Blood Flow allow a save; a save negates Flaming Sphere; Solid
+    Fog 1d3 rounds + 1 a level (was until removed); Minor Spell Turning 3 rounds a level (was one
+    spell, never ending), turning every 1st- to 3rd-level spell for its whole time; Cause Fear 1d4
+    rounds (was 1 a level); Quicksand no save; Turn Pebble to Boulder 3d6+8 (was 6d6); Ironskin a
+    blow a caster level (its charges and its level divisor 1; was 1d6). Left as they were, after a
+    DOSBox run: Magical Stone (the game already throws three stones of 1d4: the report's "one" was
+    wrong, and a record of 3d4 made each stone 3d4) and Quicksand's time (its Stuck is a round at a
+    time, put on again while the quicksand's own 5d3 rounds last, so the record's time changes
+    nothing). Seen in DOSBox: playtest/logs/2026-11-08-manual-spells.md.
+  - **Stinking Cloud** 1d4+1 rounds (was 1d6: the record's dice 1d4, and DSCLOG's STINK_SITE adds
+    the round, which the record can't); **Chaos** lets a creature of INT 21+ or 4 or less save as
+    well as warriors (CHAOS_SITE, at the save modifiers' 79F80h); **Free Action** also frees the
+    Stuck (Web, Solid Fog, Quicksand, Entangle, Grease): its handler, shared with Remove Paralysis
+    and Protection from Paralysis, made a loop over the effects to remove through its own two far
+    calls (a Poisoned creature still stays Paralyzed, as the game has it). FEATURES lists what is
+    left as it is and why (Protection from Normal Missiles, Deflection and Inertial Barrier: one
+    effect; Confusion's and Chaos's one save; Mirror Image's images until struck). Tests:
+    `test_manual_spells`.
+  - **Hold Undead** holds only undead of the caster's level or lower (HOLD_HD_SITE, 7A345h);
+    **Color Spray** gives no save to creatures of the caster's level or lower (SPRAY_SITE, 79F83h);
+    and for saving throws a monster with no class counts its hit dice as its level (HD_SAVE_SITE,
+    79D8Ch: the game's level routine gives such a creature 0, so a 14-HD Rampager was Scared like a
+    1st-level one, and Dismissal was easy on elementals and slaadi). Seen in DOSBox
+    (playtest/logs/2026-11-08-hd-spells.md).
+  - **Minute Meteors: five globes of 1d4, each rolling to hit at +2** with spells that roll to hit
+    (the record's repeat count 5, as Magical Stone's 3; was one roll of 1d4 a caster level).
+    **Flame Arrow: a bolt for every 5 caster levels, 5d6 each** (DSCLOG's FLAME_SITE on the cast's
+    repeat count; was one sum of 5d6, 10d6 at 10th); no attack roll, as the manual and AD&D. Only
+    the party's casts repeat: a monster's Magical Stone, Minute Meteors or Flame Arrow lands once
+    (the game's other casting routes ignore the count).
+  - **Turn Undead the AD&D way** (DSCLOG's TURN_SITE at 7AE01h): AD&D 2e's turning table by the
+    undead's hit dice (rows: 1, 2, 3-4, 5, 6 ... 11+) and the priest's level (columns 1-9, 10-11,
+    12-13, 14+), where the game's formula put 2- and 3-HD undead a row easier and 5 HD a row harder;
+    a turn (the number made, or T) makes the undead flee, Afraid for 3d4 rounds (the game had no
+    fleeing: every success destroyed); D destroys, D* destroys and up to 2d4 more of its kind
+    reached by the same turning; "---" no chance. A priest who fails against an undead can't try it
+    again that fight (another priest can). The dice log says which (`turned: flees 3d4 = 9
+    rounds`, `destroyed automatically (D*)`, `can't try again`). Seen in DOSBox with Minute
+    Meteors and Flame Arrow: playtest/logs/2026-11-09-turn-undead-meteors.md.
+  - Fire Shield +2 on saves vs fire and cold (its description says so); Blur +1 on saves; Chill
+    Touch's Weakened lasts (an hour: its record gave it 0 rounds) and undead touched take no damage
+    and flee 1d4 rounds; Cloudkill kills under 4 HD with no save and those of 4-5 HD that fail, 6+
+    HD take its damage; Feeblemind (INT and WIS 3, as the game already did) stops psionics and Heal
+    cures it; Lower Resistance takes 30% + 1% a caster level off magic resistance (was halving it);
+    Strength's die by class (warriors 1d8, priests, rogues and psionicists 1d6, wizards 1d4) and the
+    mod's Cat's Grace's (rogues 1d8, wizards, warriors and psionicists 1d6, priests 1d4), the best
+    die for a multiclass character, at most 24, neither stacking with Adrenalin Control; Rainbow
+    Pattern a round a caster level, ended by damage on the creature it holds; Cell Adjustment heals
+    1d4 (and cures disease, as before); Biofeedback's -2 leaves a blow at least 1. Each seen in
+    DOSBox: playtest/logs/2026-11-09-group-3.md.
+  - **Monsters as the manual describes them:** Shadows and Greater Shadows drain 1 STR a hit (no
+    save, for 2d4 turns, stacking) in place of their cold damage and paralysis, and both are
+    unaffected by cold; the Babau's and Blue Slaad's deadly poison (save or die) in place of the
+    corroding touch and disease; the Tari a 3-HD bite of 1d3 with a 1-in-20 chance of disease; the
+    Styr a 3d6 fire breath, +1 weapons to hurt it, HD 14 and THAC0 7; the Djinn turns invisible and
+    makes mirror images at its first turn (the manual promises it no magic resistance). Seen in
+    DOSBox: playtest/logs/2026-11-09-group-4.md.
 - **Spells roll to hit** (a new rule change, on by default, from the next start: `spell_to_hit`,
   `gamepatch.SPELL_TO_HIT`): the missile spells (Acid Arrow, Turn Pebble to Boulder, Magical Stone,
-  Condense; the Strine's spines) roll a d20 against the target's AC with the caster's THAC0 (Acid
-  Arrow a fighter's of the caster's level) and the game's own to-hit adjustments (DEX), and the
-  hostile touch spells (Chill Touch, Shocking Grasp, Vampiric Touch, Cause Light, Serious and
-  Critical Wounds, Cause Disease, Poison) with STR, at a creature of another side; 20 always hits,
-  1 always misses. A miss does nothing (no damage, no burn, no effect): "Miss" floats over the
-  target and the dice log says `-> MISS: the spell does nothing, the 2 damage rolled lost`. Each of
-  Magical Stone's three throws rolls on its own. Spells carried by a weapon's hit (spell arrows)
-  don't roll again; Magic Missile and the areas are untouched. DSCLOG's SPELL_HIT_SITE (7A15Ah, armed
-  by CAST_SITE) and SPELL_STUB_SITE (the always-hit stub, 78BA3h). Seen in DOSBox
-  (playtest/logs/2026-11-08-spell-to-hit.md). Tests: `test_spell_to_hit` (dsclog, gamepatch, dicelog).
+  Condense, each of Minute Meteors' globes at +2; the Strine's spines) roll a d20 against the
+  target's AC with the caster's THAC0 (Acid Arrow a fighter's of the caster's level) and the game's
+  own to-hit adjustments (DEX), and the hostile touch spells (Chill Touch, Shocking Grasp, Vampiric
+  Touch, Cause Light, Serious and Critical Wounds, Cause Disease, Poison) with STR, at a creature of
+  another side; 20 always hits, 1 always misses. A miss does nothing (no damage, no burn, no
+  effect): "Miss" floats over the target and the dice log says `-> MISS: the spell does nothing,
+  the 2 damage rolled lost`. Each of Magical Stone's three throws rolls on its own. Spells carried
+  by a weapon's hit (spell arrows) don't roll again; Magic Missile and the areas are untouched.
+  DSCLOG's SPELL_HIT_SITE (7A15Ah, armed by CAST_SITE) and SPELL_STUB_SITE (the always-hit stub,
+  78BA3h). Seen in DOSBox (playtest/logs/2026-11-08-spell-to-hit.md). Tests: `test_spell_to_hit`
+  (dsclog, gamepatch, dicelog).
+- **Resting heals by spells and natural healing** (a new rule change, `rest_heal`, on by default):
+  before the rest each priest spends the slots left on Neutralize Poison for the Poisoned, Cure
+  Blindness, Cure Disease (when no cleric or druid of 5th+ casts it free), and the Cure Wounds
+  spells or Heal on the most wounded, and psionicists use Cell Adjustment, each through the game's
+  own cast (`At rest: Cilla casts Cure Critical Wounds on Gerakis (5th-level slots: 8 left)`); then
+  each heals 3 HP and CON's hit-point bonus (`Gerakis rests 8 hours: +3, +6 (CON 22) = +9`) instead
+  of all of them, CON 20+ regeneration coming on top for the 8 hours.
+- **Dual-classing as the manual has it** (a new rule change, `dual_class`, on by default): at 3rd
+  level of the old class, and every prime requisite checked (the old class's at 15+, the new one's
+  at 17+; the game checked one, WIS for rangers, druids and psionicists). Seen in DOSBox with
+  resting and the monsters: playtest/logs/2026-11-09-group-4.md.
 - **Turn Undead in the dice log:** `Seneca turns Guard: d20 = 11, needs 7+ (priest level 3 vs 2 HD)
   -> destroyed` / `-> not turned`, and `Zombie is destroyed by Turn Undead` in place of its HP line;
   the floating name over the cleric says "Turn Undead" (was "special attack 190"). Turn Undead is
-  the clerics' button on the USE screen (spell 190, no slot): each undead in its area rolls a d20 of
-  its own against 10 + 3 x (its row - the level's), and a success destroys it (the game has no
-  fleeing: a failure calls an empty routine); seen in DOSBox: no limit of uses, the same undead
-  can be tried again (HOW-THE-GAME-WORKS's new Turn Undead section, against AD&D's table).
-- **The panel's Short level reads as the readable layout does:** what happened first, the roll in
-  brackets after it, the damage on the attack's line (`Seneca hits Slig for 11 (15 vs 4+, backstab)`,
-  `Guard misses Lex (6 vs 13+)`, `Slig fails vs Fireball (11 vs 16+)`, `Rampager fails to resist
-  Fireball (MR 25%: 28)`, `Cilla hides in shadows: seen (85 vs 25 or less)`); was `Rampager attacks
-  Defiler: 20 vs 16+ HIT, 4 damage (2d6)`. (`combatlog.shorten`, `Log.at`.)
-- **The helper has room again:** a memory pass freed 3,136 bytes of its 64 KB segment (448 spare
-  -> 3,584) and 190 paragraphs of upper memory (the helper with its PSP 65,248 -> 62,208 bytes; the
-  largest free piece 34,320 -> 37,392). The colour, ring and dust-walked tables moved to the far
-  block (FAR_DAC, FAR_RING_TAB, FAR_RED, FAR_WALKED: the header fields now offsets there, the
-  Loader reading them at far_seg); the AD&D XP table stored in fiftieths; the 134 vector installs
-  made a table and a loop, the room freed holding the extra item types (FAR_DATA, copied out by
-  FAR_INIT); the extra names packed. The far block is now 694 bytes from full. DEVELOPMENT.md's
-  budget corrected. Checked in DOSBox: shadows, dust, see-through, the ring, the panel's colours,
-  next-level XP, item names and types.
-- **Spells as the manual describes them** (a new rule change, on by default, from the next start;
-  `gamepatch.SPELLS_MANUAL`, the spell records): Bestow Curse and Blood Flow allow a save; a save
-  negates Flaming Sphere; Solid Fog 1d3 rounds + 1 a level (was until removed); Minor Spell Turning
-  3 rounds a level (was one spell, never ending); Cause Fear 1d4 rounds (was 1 a level); Quicksand no save; Turn Pebble to
-  Boulder 3d6+8 (was 6d6). Cast in DOSBox: each as described; Minor Spell Turning turns every 1st- to
-  3rd-level spell for its whole time. Left as they were after the DOSBox run: Magical Stone (the game
-  already throws three stones of 1d4: the report's "one" was wrong, and 3d4 made each 3d4), Quicksand's time (its Stuck is a round at a time while the quicksand's own 5d3 rounds last). From reports/spells-against-the-manual.md's
-  group 2. Then with the same switch: **Stinking Cloud** 1d4+1 rounds (was 1d6: the record's dice
-  1d4, and DSCLOG's STINK_SITE adds the round, which the record can't); **Chaos** lets a creature of
-  INT 21+ or 4 or less save as well as warriors (CHAOS_SITE, at the save modifiers' 79F80h);
-  **Free Action** also frees the Stuck (Web, Solid Fog, Quicksand, Entangle, Grease): its handler,
-  shared with Remove Paralysis and Protection from Paralysis, made a loop over the effects to remove
-  through its own two far calls (a Poisoned creature still stays Paralyzed, as the game has it).
-  FEATURES lists what is left as it is and why (Hold Undead's hit dice limit: not in the game's code
-  at all; Protection from Normal Missiles, Deflection and Inertial Barrier: one effect). Tests:
-  `test_manual_spells`. **Ironskin** a blow a caster level after all: its 0 charges in the DOSBox
-  run came from the test, not the game (a priest casting a spell outside its spheres casts it at
-  level 0: the cast's level routine, 5E25Ch, takes only the classes whose spheres the spell has),
-  and its record's level divisor (2) is now 1 too.
-  **Hold Undead** holds only undead of the caster's level or lower (HOLD_HD_SITE, 7A345h); **Color
-  Spray** gives no save to creatures of the caster's level or lower (SPRAY_SITE, 79F83h); and for
-  saving throws a monster with no class counts its hit dice as its level (HD_SAVE_SITE, 79D8Ch: the
-  game's level routine gives such a creature 0, so a 14-HD Rampager was Scared like a 1st-level one,
-  and Dismissal was easy on elementals and slaadi). Seen in DOSBox (playtest/logs/2026-11-08-hd-spells.md).
+  the clerics' button on the USE screen (spell 190, no slot): it tries each undead in its area, one
+  at a time, each with a d20 of its own against 10 + 3 x (its row - the level's), and a success
+  destroys it (the game has no fleeing: a failure calls an empty routine); seen in DOSBox: no limit
+  of uses, the same undead can be tried again (HOW-THE-GAME-WORKS's new Turn Undead section,
+  against AD&D's table; playtest/logs/2026-11-08-turn-undead.md).
 - **A fight's summary as it ends** (mock-up G's): `Fight over: 2 rounds, 1 kill; the party dealt 28
   damage and took 6`, then each member's attacks hit, damage dealt, kills and damage taken, written
   once the game's fight flag has been down 2 seconds (each arena wave gets its own). A kill goes to
-  whoever hurt the creature last, a spell's damage to the caster its saving throws name (else to
-  the party). The readable layout shows it as the fight's close, its members' lines always shown.
+  whoever hurt the creature last, a spell's damage to the caster its saving throws or attack roll
+  name (only a party member's spells count for the party). The readable layout shows it as the fight's close, its members' lines always shown.
   (`fighttally.py`; tests: `test_fighttally`, `test_ledger`.)
-- **Fastest (35,000 cycles) is the default game speed** (was Faster, 20,000). With the cheaper
-  drawing it shows about all the pictures the game draws while the whole party walks (18.9 a
-  second) and walks fastest (141 map units a second, against 112 at 20,000), for about 30% of a
-  core in DOSBox. A speed already chosen is kept; Faster stays for older computers.
-- **The helper draws shadows, dust and see-through figures for less.** Shadows are worked out only
-  for figures whose shadow can reach the part of the view being drawn, rows outside it stepped over;
-  the shadow cache remembers each figure's slot; spans and see-through pixels are looked up with
-  XLAT; the lean comes from a table, not a division; the dust's thickness table is built once (in
-  the far block); the combat log panel is put back only when the redrawn rectangle overlaps it; dust
-  settling after a walk redraws only its rectangle; the floating names' timer code returns at once
-  with none shown. A floor pass takes 32% fewer instructions with everything on (39% with shadows
-  only), see-through figures 12% fewer, every screen byte-identical (`tests/test_dsclog_drawing.py`,
-  9 tests, against the old build's screens). In DOSBox, the whole party walking in the slave pens:
-  20,000 cycles with steady pace on, 15.5 pictures a second (was 10.2); off, 18.9 (was 16.8) and
-  walking 103 map units a second (was 80); 35,000 cycles, 18.9 pictures and 141 (was 16.0 and 113).
-  The helper is 944 bytes bigger (65,120: 448 bytes are left in its segment) and its far block 2 KB
-  (about 60.7 KB of the HMA's 64).
-- **Fixed in the helper's drawing:** a walker raised a dust puff on nearly every pass, not one per 6
-  pixels walked (AX overwritten before the add), so there is less dust now, as designed; walkers off
-  the view raised dust and widened the redrawn area; the whole view could be drawn twice in one pass
-  (the panel's tick, then the labels'); a dark area retried its shadow tables on every pass (now
-  every 9 BIOS ticks); rings alone widened the redrawn rectangles by the shadows' 72/44 (now 16/8).
 - **The dice log window has a readable layout** (mock-up G of the combat log research, on by
   default, **Readable layout** to switch back; `dsloader/ledger.py`). Each event is a line with its
   outcome first (`● Seneca hits Arena Guard for 11 — backstab, Bone Hayneedle +1`), the HP it left
@@ -216,6 +151,15 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
   each at 4.5:1 or more on the log). A hit's damage and the HP left are filled into its line as their
   own lines arrive. The log's own lines are kept: Save..., the crash and freeze reports and the
   layout switched off use them. (Tests: `test_ledger`.)
+- **The combat log panel's lines are in a smaller font,** 7 pixels a line where the game's is 9: 8
+  lines docked (was 6), 14 expanded (was 11). The glyphs are the X11 misc-fixed 4x6 font's (public
+  domain) with the game's drop shadow (`smallfont.py`); the header, buttons and filters keep the
+  game's font. FEATURES' pictures of the panel retaken.
+- **The panel's Short level reads as the readable layout does:** what happened first, the roll in
+  brackets after it, the damage on the attack's line (`Seneca hits Slig for 11 (15 vs 4+, backstab)`,
+  `Guard misses Lex (6 vs 13+)`, `Slig fails vs Fireball (11 vs 16+)`, `Rampager fails to resist
+  Fireball (MR 25%: 28)`, `Cilla hides in shadows: seen (85 vs 25 or less)`); was `Rampager attacks
+  Defiler: 20 vs 16+ HIT, 4 damage (2d6)`. (`combatlog.shorten`, `Log.at`.)
 - **Steady pace keeps the game's real schedule,** and the choppy walking is gone. The game moves
   everything on the map a step at each tick of its clock (96 a second: its timer sets DS:1F7Eh,
   and the step runs only with it set), so a tick that passes while a picture is drawn is a step
@@ -223,15 +167,49 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
   moved (about 17 a second), so it found every picture late and left most of them out: 6 shown a
   second at 20,000 cycles. Now it counts the steps lost (the clock's ticks less the steps run)
   against an allowance of 1.5 ticks a picture, about what the unmodded game's own pictures lose,
-  and leaves a picture out only while more are lost. Measured in the slave pens, the whole party
-  walking, everything on, 20,000 cycles: 10.5 pictures a second and 114 map units a second walking
-  (steady pace off: 16.6 and 80; the mod's drawing off: 16.4 and 121); at 35,000 cycles, 15.7 and
-  112. (DSCLOG's STEADY PACE; tests: `SteadyPaceTests`. `playtest/framerate.py` reports the steps
-  run and lost and the walking speed while walking: its speed had counted the waits between clicks.)
-- **The combat log panel's lines are in a smaller font,** 7 pixels a line where the game's is 9: 8
-  lines docked (was 6), 14 expanded (was 11). The glyphs are the X11 misc-fixed 4x6 font's (public
-  domain) with the game's drop shadow (`smallfont.py`); the header, buttons and filters keep the
-  game's font.
+  and leaves a picture out only while more are lost. (DSCLOG's STEADY PACE; tests:
+  `SteadyPaceTests`. `playtest/framerate.py` reports the steps run and lost and the walking speed
+  while walking: its speed had counted the waits between clicks.) The figures, with the cheaper
+  drawing below, are under it.
+- **The helper draws shadows, dust and see-through figures for less.** Shadows are worked out only
+  for figures whose shadow can reach the part of the view being drawn, rows outside it stepped over;
+  the shadow cache remembers each figure's slot; spans and see-through pixels are looked up with
+  XLAT; the lean comes from a table, not a division; the dust's thickness table is built once (in
+  the far block); the combat log panel is put back only when the redrawn rectangle overlaps it; dust
+  settling after a walk redraws only its rectangle; the floating names' timer code returns at once
+  with none shown. A floor pass takes 32% fewer instructions with everything on (39% with shadows
+  only), see-through figures 12% fewer, every screen byte-identical (`tests/test_dsclog_drawing.py`,
+  9 tests, against the old build's screens). In DOSBox, the whole party walking in the slave pens,
+  everything on, with the new steady pace: 20,000 cycles with steady pace on, 15.5 pictures a second
+  and walking 112 map units a second (was 10.2); off, 18.9 pictures (was 16.8) and 103 map units
+  (was 80); 35,000 cycles, steady pace on, 18.9 pictures and 141 (was 16.0 and 113)
+  (playtest/logs/2026-11-08-drawing-savings.md).
+- **Fastest (35,000 cycles) is the default game speed** (was Faster, 20,000). With the cheaper
+  drawing it shows about all the pictures the game draws while the whole party walks (18.9 a
+  second) and walks fastest (141 map units a second, against 112 at 20,000), for about 30% of a
+  core in DOSBox. A speed already chosen is kept; Faster stays for older computers.
+- **The helper's room** (DEVELOPMENT.md's budget, corrected with each step): the cheaper drawing
+  made the helper 944 bytes bigger (448 bytes left in its 64 KB segment) and its far block 2 KB. A
+  first memory pass freed 3,136 bytes of the segment (448 -> 3,584 spare) and 190 paragraphs of
+  upper memory (the helper with its PSP 65,248 -> 62,208 bytes; the largest free piece 34,320 ->
+  37,392): the colour, ring and dust-walked tables moved to the far block (FAR_DAC, FAR_RING_TAB,
+  FAR_RED, FAR_WALKED: the header fields now offsets there, the Loader reading them at far_seg);
+  the AD&D XP table stored in fiftieths; the 134 vector installs made a table and a loop; the extra
+  names packed (playtest/logs/2026-11-08-memory-pass.md). The new rules then took it to 2,032
+  spare, and a second pass freed 4,000 (6,032 spare; upper memory 565 paragraphs spare, was 495):
+  the sites' dispatch a jump table (688 bytes); the rings' outlines kept as one quarter and
+  mirrored (336); a new tail section after the image, kept with the helper and found through header
+  +1834 (`tail_seg`), holding the floating names' slots, the extra item names and types and the
+  timer notes (the Loader's labels.py and freeze.py read them there); the dust's LIGHT, puffs and
+  DARK in the far block; the crash report writing the stack straight from SS
+  (playtest/logs/2026-11-09-memory-pass-2.md). Each pass checked in DOSBox (shadows, dust,
+  see-through, the ring, the panel's colours, labels, to-hit, Turn Undead, item names and types,
+  next-level XP, the Effects screen, Look, creation, a shop). With the manual's spells, the
+  monsters, resting and dual-classing, and the audit's fixes (their per-fight tables moved to the
+  far block), the helper ends the pull request with 3,264 bytes of its segment spare, 102 bytes
+  free in the far block (the HMA) and 393 paragraphs of upper memory spare.
+- The helper counts the game's page flips (`flip_count`, header +1832), for a frame rate:
+  `playtest/framerate.py` reads it beside steady pace's frames left undrawn.
 
 **Fixed: the game**
 - **Scare allowed no saving throw at all,** so the 2.14.0 fix (`scare_elves`: an elf or half-elf
@@ -239,8 +217,19 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
   save byte (+1Fh) had "a save allowed" clear, and the saving throw (79A71h) stops at that test.
   Seen in DOSBox: Scare on Merzol, a 7th-level fighter, and a 3rd-level gladiator, no save rolled
   for either (the caster, inside the area, Scared too). The bit set (`scare_save`, 4222Fh A0h ->
-  A1h). (Found in the manual's review: reports/spells-against-the-manual.md.)
-
+  A1h): 6th level and up save, below 6th no one can, but an elf or half-elf priest
+  (playtest/logs/2026-11-08-scare-no-save.md; found in the manual's review:
+  reports/spells-against-the-manual.md).
+- **"Can't save" saved:** the game compared a save's total with the number needed unsigned, so
+  every -100 (Chaos, Cloudkill, Scare under 6th level, Color Spray with the manual's spells) wrapped
+  round and the creature saved (seen in DOSBox: Arena Guards "unable to save" took half Cloudkill's
+  damage, a Guard against Scare was never Afraid). The compare made signed (`save_signed`, 79BBDh
+  `jae` -> `jge`), always on whatever the Options: -100 fails, a natural 20 still saves.
+- **Resting while poisoned killed a member just cured:** the rest read each member's effects
+  before casting its free cures and never again, so a 7th-level druid's Neutralize Poison was cast
+  and the member died of the poison anyway (seen in DOSBox: playtest/logs/2026-11-09-rest-poison.md).
+  The cures now come before the read (`rest_cures_first`, `rest_cures_loop`: the game's own bytes
+  reordered; always on).
 - **Pehtucl's ambush brought every guard in the pens:** his script (GPL 145) made its five guards
   at the fountain, then sent the whole kind, -90 and -293, hunting: up to ten more Arena Guards and
   Guards from across the map (a player's save). Now each of the five is made alone and given the
@@ -250,14 +239,12 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
   where the party stands as he turns (x 42-80, y over 90): a fight there set off the alarm.
   (`scriptfixes.py`, two repairs. Tests: `test_scriptfixes`. Seen in DOSBox with the player's save:
   the five made on squares of their own, the fight theirs and Pehtucl's; with the game's script a
-  guard 55 squares off set out at once, with the fix none.)
-
-**Fixed: DSCLOG**
+  guard 55 squares off set out at once, with the fix none: playtest/logs/2026-11-08-fountain-needle.md.)
 - **An arrow or sling stone was from behind by the target's facing, at any distance** (+2, the
   target's DEX and shield lost: a ranger's three arrows from across a room, a player's log), melee's
   rule. A missile is now from behind only as a hidden archer's shot (the stealth rule), and the
-  dice log says "unseen" for it. (`MISSILE_REAR`, first in `PROBE_STEALTH`; `st_now`. Tests:
-  `test_missile_from_behind_only_unseen`, `test_unseen_shot`.)
+  dice log says "unseen" for it. (DSCLOG's `MISSILE_REAR`, first in `PROBE_STEALTH`; `st_now`.
+  Tests: `test_missile_from_behind_only_unseen`, `test_unseen_shot`.)
 - **A thief's later attacks in a round could still backstab:** with **A backstab multiplies the
   weapon's dice only**, only the round's first attack is meant to be a backstab, but the count it
   read (`[BP-14h]`) leaves the off-hand swing out, so a thief with two weapons and a weapon spec's
@@ -265,9 +252,8 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
   log: "Seneca hits Merzol ... +3 backstab (the dice 3 x2 = 6)"), and every swing after the first
   had the backstab's +2 to hit. Each party member's attack now keeps the game's clock (it moves a
   round at a time in a fight); a later attack in the same round is no backstab, its +2 taken back,
-  from behind as the game has it. (`STAB_FIRST`, in `PROBE_STEALTH`. Test:
+  from behind as the game has it. (DSCLOG's `STAB_FIRST`, in `PROBE_STEALTH`. Test:
   `test_backstab_first_attack_only`.)
-
 - **VIEW CHARACTER showed a new character's gear from before the Loader's** (a Poisoner's bone long
   sword where it had a bow and daggers, its DAM line the sword's) until another member was chosen
   and this one again: the Loader gives new characters their gear after the game has made the
@@ -278,11 +264,38 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
   before it is shown. (`GEAR_WAIT` in `PROBE_VIEW`, the routine at 89E70h, its overlay's start:
   stub 431Fh:3Eh; header +1830, +1831; `DiceLog._gear_due`. Tests: `test_gear_due`. Seen in
   DOSBox: a new fighter given a bow for its weapon spec showed the bow and "DAM 1x1D6+0" at once.)
-
-- The helper counts the game's page flips (`flip_count`, header +1832), for a frame rate:
-  `playtest/framerate.py` reads it beside steady pace's frames left undrawn.
+- **In the helper's drawing:** a walker raised a dust puff on nearly every pass, not one per 6
+  pixels walked (AX overwritten before the add), so there is less dust now, as designed; walkers off
+  the view raised dust and widened the redrawn area; the whole view could be drawn twice in one pass
+  (the panel's tick, then the labels'); a dark area retried its shadow tables on every pass (now
+  every 9 BIOS ticks); rings alone widened the redrawn rectangles by the shadows' 72/44 (now 16/8).
+- **Turn Undead's once a creature, Whirlwind's lost turn and the Djinn's first-turn tricks
+  worked only for the first 64 creatures on the map:** their per-fight tables (TU_FAILED, SWEPT,
+  DJ_DONE) had a bit for each of 64 combatants; they now cover every one up to MAP_COUNT (520), in
+  the far block (FAR_TU, FAR_SWEPT, FAR_DJ). (Tests: Turn Undead, Whirlwind and the Djinn at
+  combatants 64, 300, 519 and 520; seen in DOSBox: playtest/logs/2026-11-09-audit-fixes.md.)
+<!-- audit code fixes -->
 
 **Fixed: the Loader**
+- **Figures vanished from the map after many gear changes in one area:** each time a member's
+  outfit changed, the Loader took the old pictures out of the game's picture table, but the game
+  takes neither a slot nor its room in its picture store (a fixed 741,376 bytes) back until an area
+  loads, and a new outfit takes a new slot at the end. After some 30 to 60 changes in one area a
+  picture went past the store's end: the game's write fails unseen, the picture can't be read
+  back, and its failed reads keep taking memory, until the party's and the monsters' figures
+  weren't drawn (opening the inventory brought them back for a while). Now a figure dressed anew
+  takes no new slot at all: the Loader puts its pictures into cells the game's store already has
+  (one holding the very picture, an outfit changed back; the figure's own, out of memory; else the
+  smallest unused cell with room), writing the store (the game's XMS block, found and checked
+  against pictures in memory) while DOSBox is paused and never a picture in memory. A picture the
+  store has no cell for (and every picture where the store can't be found, as on Dark Sun
+  Recompiled) takes a new slot as before, but only while the store and the table keep room for it
+  and for the game's own pictures (64 KB and 24 slots); else the figure stays as it was until the
+  next area. In DOSBox about 290 outfit changes
+  across two areas, a fight and the inventory took 9 new slots (was one each), every figure drawn.
+  (`sprites.Store`, `Dresser._in_store`, `sprites._room_for`; tests:
+  `test_no_room_in_the_games_store` and 6 more; reproduced and checked in DOSBox:
+  playtest/logs/2026-11-09-missing-figures.md, playtest/logs/2026-11-09-picture-store-fix.md.)
 - **An item report said a new character's bone long sword "vanished"** ("the game freed it and
   reused the number") when the Loader had made it the bow its weapon spec asks for, in the same
   record. An item made into another where it was (its number still the same member's, the record
@@ -300,13 +313,35 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
   chest once it is: locked and trapped as in a new game. (`pehtuclchest.watch`. Test:
   `test_an_older_games_chest_shut`. Seen in DOSBox with a player's save: reproduced, then shut
   within seconds of loading, and it stayed shut.)
-- The dice log's notes called the "special effect: d10" roll a thri-kreen's bite: it is the
-  disease roll (a Blue Slaad's); a thri-kreen's bite from 5th level paralyses with no d10.
 - **A Poisoner's poison was put down to another spell** ("Merzol takes 10 from Shocking Grasp"):
   a loss is named after a recent damage roll it matches, whole or halved, and the list kept an
   earlier fight's rolls. A new fight forgets them, and a poison's fixed damage (10 or 30) is its
   own when its save is the latest. (`DiceLog._damage_source`, `_new_fight`. Test:
   `test_poison_damage_named`.)
+- The dice log's notes called the "special effect: d10" roll a thri-kreen's bite: it is the
+  disease roll, the game's Blue Slaad's (with the manual's monsters the Blue Slaad has deadly
+  poison instead, and the roll is the Tari's, made 1 in 20); a thri-kreen's bite from 5th level
+  paralyses with no d10.
+- **"Can't save" said it saved** with the manual's spells off: the dice log's line for a -100
+  ("the game compares unsigned ... -> saved") is gone with `save_signed` always applied; it says
+  `none allowed (cannot save) -> failed`.
+- **The combat log panel read a spell's attack roll as a plain line:** at Short it is now `Cermak's
+  Minute Meteors hits Kalzith for 2 (8 vs 7+)` / `... misses Kalzith (4 vs 7+)`, the damage joined
+  to a hit, and at Least `Cermak's Minute Meteors misses Kalzith`, in the hits' and misses' colours;
+  Turn Undead's lines are coloured as a hit (turned, destroyed) or a miss (not turned, no chance,
+  can't try again), and the hit points a rest or Cell Adjustment gives back in the damage colour,
+  in the Loader's log too (`combatlog`). In the readable layout a spell's attack roll is an event
+  row, as a weapon's attack is (`ledger`). Seen in DOSBox: playtest/logs/2026-11-09-audit-fixes.md.
+- **The fight summary counted a monster's spells as the party's damage,** and any spell whose
+  caster it couldn't tell (Magic Missile's, with no save or attack roll naming the caster). A spell's
+  damage now counts for the party only when a saving throw against it or its attack roll names a
+  party member as its caster (`fighttally`).
+- **A game or mod folder whose path has letters outside Windows' code page** gave DOSBox a broken
+  configuration; the Loader now stops at start-up with a clear message saying what to move
+  (`launch.conf_encoding`; README's troubleshooting).
+- The freeze report's dump of the helper's header runs to +373 (UMB_NEED, the overlay buffer's
+  place), not stopping short of it (`freeze.HEADER_BYTES`).
+<!-- audit code fixes -->
 
 ## Pull request #88 ([merged 2026-11-08](https://github.com/daaki85/darksun-obsidian-edition/pull/88))
 

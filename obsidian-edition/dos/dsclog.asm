@@ -238,7 +238,7 @@ panel_off dw FAR_PANEL          ; +140 the panel's picture's offset in PANEL_SEG
 far_seg   dw 0                  ; +142 the far block's segment (FAR_INIT): its buffers from FAR_RING on
 vec_table  dw all_vectors       ; +144 as built: where ALL_VECTORS (the install's table of the
                                 ;      vectors and their handlers) is in the image (the tests read it)
-ended     dw 0                  ; +146 the combatant whose turn just ended
+ended     dw 0                  ; +146 unused (was the combatant whose turn just ended: nothing sets or reads it)
 slots_off dw slots_text         ; +148 offset of SLOTS_TEXT: 4 x SLOTS_SIZE bytes, one per party
                                 ;      member, lines separated by "|", NUL-terminated (the Loader
                                 ;      keeps them up to date); PROBE_USE draws them
@@ -13910,22 +13910,27 @@ whirl_pick:
 ; turn taken. One yet to act this round (SWEPT_NOW) loses this round's at once; else it is marked
 ; (SWEPT) for PROBE_MOVE to take next round's (WW_PASS's sweeps, before the round's initiative,
 ; are this round's). Recorded (KIND_SWEPT: the combatant). All kept.
+; The per-fight tables, in the far block (FAR_TU, FAR_SWEPT, FAR_DJ, one run that ACID_ROUND clears
+; at a fight's first round), over every combatant a fight can have (a map thing: MAP_COUNT; people
+; the Loader adds are numbered past 256): SWEPT (Whirlwind's: bit N % 8 of byte N / 8, combatant N
+; loses its next turn), TU_FAILED (TURN_SITE's: a byte per target, bit N priest N failed to turn it
+; this fight), DJ_DONE (DJINN_TURN's: bit N % 8 of byte N / 8, combatant N has had its first turn).
 KIND_SWEPT  equ 11
-SWEPT_MAX   equ 64
-swept   times SWEPT_MAX db 0
-TU_MAX      equ 64              ; (TURN_SITE's: after SWEPT, cleared with it at a fight's start)
-tu_failed times TU_MAX db 0     ; (bit N: priest N failed to turn this combatant this fight)
-DJ_MAX      equ 64              ; (DJINN_TURN's: after TU_FAILED, cleared with it)
-dj_done times DJ_MAX / 8 db 0   ; (bit N % 8 of byte N / 8: combatant N has had its first turn)
+MAP_BITS    equ (MAP_COUNT + 7) / 8     ; (a bitmap over the map things: MAP_BIT)
 swept_mark:
         pushad
         push es
         mov bx, [bp + 6]
-        cmp bx, SWEPT_MAX
+        cmp bx, MAP_COUNT
         jae .out
         call swept_now
         jc .rec
-        mov byte [cs:swept + bx], 1
+        push fs
+        mov fs, [cs:far_seg]
+        mov si, bx
+        call map_bit
+        or [fs:FAR_SWEPT + si], al
+        pop fs
 .rec:   mov ax, bx
         mov si, sp
         add si, 28 + 2 + 4              ; (SS:SI+6: the INT's return address, past this call and
@@ -13933,6 +13938,18 @@ swept_mark:
         call record
 .out:   pop es
         popad
+        ret
+
+; MAP_BIT: SI a map thing (under MAP_COUNT): SI its byte in a bitmap of them (MAP_BITS bytes), AL
+; its bit. Others kept.
+map_bit:
+        push cx
+        mov cx, si
+        and cl, 7
+        mov al, 1
+        shl al, cl
+        shr si, 3
+        pop cx
         ret
 
 ; SWEPT_NOW: CF set when combatant BX, swept in a fight outside WW_PASS, has yet to act this round:
@@ -14181,11 +14198,11 @@ acid_round:
         push cx                         ; (a fight's first round: no SWEPT left from another)
         push di
         push es
-        push cs
-        pop es
-        mov di, swept
-        mov cx, SWEPT_MAX + TU_MAX + DJ_MAX / 8 ; (and TURN_SITE's TU_FAILED, DJINN_TURN's DJ_DONE)
+        mov es, [cs:far_seg]
+        mov di, FAR_TU                  ; (TURN_SITE's TU_FAILED, then SWEPT and DJINN_TURN's DJ_DONE)
+        mov cx, FAR_DJ + MAP_BITS - FAR_TU
         xor al, al
+        cld
         rep stosb
         pop es
         pop di
@@ -14611,7 +14628,7 @@ sheet_level:
 ; not a weapon's spell on a hit, not an Acid's burn), of this spell at this target, rolls to hit
 ; once: the missile spells (TH_MISSILES: Acid Arrow, Turn Pebble to Boulder, Magical Stone,
 ; Condense, the spines, Minute Meteors with its own +2) as missiles, the touch spells (TH_TOUCHES) on a creature of another side
-; (the creatures' +1Dh) as melee. The caster's THAC0 (its creature's +1Fh; Acid Arrow's 21 - the
+; (the creatures' +1Dh, its low 3 bits) as melee. The caster's THAC0 (its creature's +1Fh; Acid Arrow's 21 - the
 ; cast's level, a fighter's of that level shooting), less the game's to-hit adjustments
 ; (5B8:EDh, 7C3E9h: the effects, STR in melee, DEX for a missile, kind 1 or 2, no weapon) and a
 ; monster's difficulty ([11AEh] - 1, as 5837Ch), against the target's AC (4E0:7Fh, 58DD3h, as a
@@ -14683,8 +14700,9 @@ th_hit:
         xchg ax, bx
         cmp word [cs:th_kind], 1
         jne .thac0
-        cmp dl, [es:bx + 0x1D]
-        je .out                         ; (a touch on one's own side: as the game has it)
+        xor dl, [es:bx + 0x1D]
+        test dl, 7                      ; (the side: +1Dh's low 3 bits, as 809A2h passes the game's cast)
+        jz .out                         ; (a touch on one's own side: as the game has it)
 .thac0: movsx ax, byte [es:bx + 0x1F]
         cmp si, TH_ACID
         jne .own
@@ -14853,7 +14871,7 @@ rand_die:
 ;   Fear's) for 3d4 rounds, added through 598:3Eh (76442h: the add without 5A8:43h's immunities,
 ;   which keep the undead from fear), in a frame the overlay manager can fix up, the way back set
 ;   first to the routine's end (7AE7Eh); under it, not turned (the game's failure, 7AE75h), and
-;   this priest (a combatant under 8) can't try again on this target (a combatant under TU_MAX)
+;   this priest (a combatant under 8) can't try again on this target (a combatant under MAP_COUNT)
 ;   this fight (TU_FAILED, cleared at a fight's first round, ACID_ROUND, and by a turning out of
 ;   a fight, which starts a new one): a later try ends at once, no roll;
 ; - T: turned, no roll; D: destroyed, no roll (the game's 1000 damage, 7AE60h); D*: destroyed, and
@@ -14914,10 +14932,11 @@ tu_site:
         mov [cs:tu_need], ax
         call pp_fighting
         jnz .fight
-        push cs                         ; (out of a fight: a new one, nothing failed yet)
-        pop es
-        mov di, tu_failed
-        mov cx, TU_MAX
+        mov es, [cs:far_seg]            ; (out of a fight: a new one, nothing failed yet)
+        mov di, FAR_TU
+        mov cx, MAP_COUNT
+        xor al, al
+        cld
         rep stosb
 .fight: mov word [cs:tu_outcome], TU_MORE_ONE
         mov dx, TU_DESTROY
@@ -14932,7 +14951,10 @@ tu_site:
         mov dx, TU_END
         call tu_bit
         jz .cell
-        test [cs:tu_failed + si], al
+        push fs
+        mov fs, [cs:far_seg]
+        test [fs:FAR_TU + si], al
+        pop fs
         jnz .done
 .cell:  mov al, [cs:tu_hd]
         mov cl, [cs:tu_level]
@@ -14957,7 +14979,10 @@ tu_site:
         mov dx, TU_FAIL
         call tu_bit
         jz .done
-        or [cs:tu_failed + si], al
+        push fs
+        mov fs, [cs:far_seg]
+        or [fs:FAR_TU + si], al
+        pop fs
         jmp .done
 .dstar: mov word [cs:tu_outcome], TU_DSTARRED
         mov ax, [bp - 4]
@@ -15011,7 +15036,7 @@ tu_bit:
         mov si, [cs:tu_target]
         mov cx, [cs:tu_caster]
         xor al, al
-        cmp si, TU_MAX
+        cmp si, MAP_COUNT
         jae .out
         cmp cx, 8
         jae .out
@@ -15752,22 +15777,22 @@ djinn_turn:
         push es
         call manual_on
         jne .out
-        cmp di, DJ_MAX
+        cmp di, MAP_COUNT
         jae .out
         imul ax, si, 0x3A
         les bx, [CREATURES]
         add bx, ax
         cmp word [es:bx + 0x16], DJINN_KIND
         jne .out
-        mov cx, di
-        and cl, 7
-        mov al, 1
-        shl al, cl
-        mov bx, di
-        shr bx, 3
-        test [cs:dj_done + bx], al
+        push fs
+        mov fs, [cs:far_seg]
+        mov si, di
+        call map_bit
+        mov ah, [fs:FAR_DJ + si]
+        or [fs:FAR_DJ + si], al
+        pop fs
+        test ah, al
         jnz .out
-        or [cs:dj_done + bx], al
         mov [cs:mn_frame], di
         mov ax, 4
         call game_die
@@ -16106,6 +16131,7 @@ rp_cast_at:
         mov [cs:rs_frame + 4], ax
         movzx ax, byte [cs:rp_slot]
         mov [cs:rs_frame + 6], ax
+        mov word [cs:rs_frame + 10], 0  ; (no word of a cast's: not RS_HEAL's CON left over)
         mov ax, RS_CAST
         call rs_rec
         pop di
@@ -16650,16 +16676,22 @@ THINGS_SEG equ 0x3972 - 0x4356  ; the things table's segment, relative to DS
 probe_move:
         call kit_move
 .store: mov [es:bx+0x22B], ax
-        cmp di, SWEPT_MAX               ; (DI the combatant, BX its creature x 2: Whirlwind's
+        cmp di, MAP_COUNT               ; (DI the combatant, BX its creature x 2: Whirlwind's
         jae .out                        ;   SWEPT, its turn lost: no movement, and the
-        cmp byte [cs:swept + di], 0     ;   initiative of one that doesn't act, -1)
-        je .out
-        mov byte [cs:swept + di], 0
+        push fs                         ;   initiative of one that doesn't act, -1)
+        pusha
+        mov fs, [cs:far_seg]
+        mov si, di
+        call map_bit
+        test [fs:FAR_SWEPT + si], al
+        jz .kept
+        not al
+        and [fs:FAR_SWEPT + si], al
         mov word [es:bx+0x22B], 0
-        push bx
         shl bx, 1                       ; (the initiative's a creature x 4)
         mov word [es:bx+0xD9], -1
-        pop bx
+.kept:  popa
+        pop fs
 .out:   jmp djinn_turn
 
 ; PROBE_TWO: INT VEC_TWO replaces "neg ax / mov dx,ax / or dx,dx / jge +2 / xor dx,dx" (10
@@ -19007,6 +19039,7 @@ rl_sites:
 .cmp:   pop bx
         jmp ns_cmp
 .none:  pop bx
+..@site_iret:                           ; (a site with nothing to do: NOP_SITE's)
         iret
 %macro site 2                           ; site %1's code %2, in order (the build fails if not)
         times -((($ - site_tab) / 2 + 1 + NS_CMP_COUNT * (($ - site_tab) / 2 + 1 >= NS_CMP)) != %1) db 0
@@ -19121,7 +19154,7 @@ site_tab:
         site DUAL_NEW_SITE, dual_new
         site DRAIN_SITE, shadow_drain
         site TARI_SITE, tari_bite
-        site NOP_SITE, rl_sites         ; (never reached: 90h is no site's, NOP_SITE)
+        site NOP_SITE, ..@site_iret     ; (never reached: 90h is no site's, NOP_SITE; an IRET if it were)
         site REST_PRE_SITE, rest_pre
         site REST_HP_SITE, rest_hp
 SITE_COUNT equ ($ - site_tab) / 2
@@ -26377,7 +26410,10 @@ FAR_WALKED equ FAR_RED + 256                    ; how far each thing has walked 
 FAR_LIGHT  equ FAR_WALKED + MAP_COUNT           ; each colour's lighter one (PUFF_DRAW), the Loader's
 FAR_PUFFS  equ FAR_LIGHT + 256                  ; the puffs of dust (DUST_TICK, PUFF_RAISE, DUST_PASS)
 FAR_DARK   equ FAR_PUFFS + PUFFS * PUFF_SIZE    ; the shadows' colours (BUILD_DARK, SPANS_FLUSH: XLAT)
-FAR_END    equ FAR_DARK + 256
+FAR_TU     equ FAR_DARK + 256                   ; TURN_SITE's TU_FAILED: a byte per target (SWEPT_MARK's note)
+FAR_SWEPT  equ FAR_TU + MAP_COUNT               ; Whirlwind's SWEPT: a bit per combatant
+FAR_DJ     equ FAR_SWEPT + MAP_BITS             ; DJINN_TURN's DJ_DONE: a bit per combatant
+FAR_END    equ FAR_DJ + MAP_BITS
 FAR_PARAS  equ (FAR_END - FAR_RING + 15) / 16
         times -(FAR_END > 0x10000) db 0     ; (a negative count: past the HMA's 64 KB)
         times -((FAR_END - FAR_RING) & 1) db 0  ; (FAR_INIT clears it a word at a time)

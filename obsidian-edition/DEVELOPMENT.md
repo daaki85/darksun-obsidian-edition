@@ -482,16 +482,17 @@ sizes; the paragraphs after it say how each piece got there.
 | C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
 | C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 61.2 KB (62,640 bytes with its PSP and its tail; 63,760 before the 2026-11-09 pass), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, 36.5 KB (37,392 bytes; 35,856 before) free in one piece and 288 bytes between the helper and the overlay buffer (measured 2026-11-09, `memaudit.py`; group 4, later that day, made the helper 1,824 bytes longer, not measured since) |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
-| 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's far block, 63.25 KB (64,768 bytes), 752 bytes free |
+| 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's far block, 63.9 KB (65,418 bytes; 64,768 before the per-fight tables moved there, 2026-11-09), 102 bytes free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
 
 **The budget.** Each limit fails the build when passed (a negative `times`):
 
 - The helper's segment: what it reaches through CS is what stays (to
-  `resident_end`, 60,912 bytes since group 4 (the manual's monsters, dual-classing
-  and resting), 2026-11-09: 59,088 before it, 58,096 before group 3) and the
+  `resident_end`, 60,864 bytes since the audit's fixes (2026-11-09: the per-fight
+  tables SWEPT, TU_FAILED and DJ_DONE moved to the far block, 48 bytes freed;
+  60,912 after group 4, 59,088 before it, 58,096 before group 3) and the
   buffers laid over the install code after it (`AFTER_INSTALL`, 1,408), together
-  `kept_end`, 62,320 bytes, so 3,216 bytes of its 64 KB are spare. This is the limit for new code. The image
+  `kept_end`, 62,272 bytes, so 3,264 bytes of its 64 KB are spare. This is the limit for new code. The image
   (`image_len`) is as long. Buffers that start as zeros and aren't needed while
   installing are laid over the install code, as `seg_space` and `area_space`
   are (declared with `resb` after the image): `KEEP` zeroes them before its
@@ -529,15 +530,16 @@ sizes; the paragraphs after it say how each piece got there.
   copy of it, not in the helper (`spelltexts.py`: the descriptions moved there
   freed 1.6 KB), and so does data read from the player's game (the pointer's
   picture, `POINTER.BIN`). What each change took is in the CHANGELOG.
-- The far block: it ends at `FAR_END` (64,784), so the HMA has 752 bytes left
-  for more buffers.
+- The far block: it ends at `FAR_END` (65,434), so the HMA has 102 bytes left
+  for more buffers (650 of the 752 it had went to the per-fight tables over
+  every combatant, `FAR_TU`, `FAR_SWEPT`, `FAR_DJ`, 2026-11-09).
 - Upper memory without `UMBPLUS.COM` (`UMB_ROOM`, D00Ah to F000h, 8,182
   paragraphs): the helper as it loads (its tail and stack too) and the overlay
-  buffer (`UMB_NEED`, the header's +372) need 6,171 (6,057 before group 4), and
+  buffer (`UMB_NEED`, the header's +372) need 6,168 (6,171 after group 4, 6,057 before it), and
   `test_fits_upper_memory` checks it too; what stays once installed, with the
   music buffer and the see-through figures' tables (`UMB_KEPT`: all four
-  blocks and their MCBs), 7,731 (114 more since group 4), so 451 (7.0 KB) are
-  spare.
+  blocks and their MCBs), 7,789 (measured from the build, 2026-11-09, after the
+  audit's fixes; 7,792 before them), so 393 (6.1 KB) are spare.
 
 **What moved where (2026-11-08)**, freeing 3,136 bytes of the segment (3,040 of
 what stays, 190 paragraphs of upper memory): DAC (768), RING_TAB (520) and RED

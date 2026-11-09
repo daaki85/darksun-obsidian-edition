@@ -794,6 +794,20 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
     that level: the least for Flame Arrow is 5). **The first click after U opens the screen was lost
     twice**: shoot the page after each LEVEL click. A caster shot ("YOU WERE HIT" in the bar) before
     his turn couldn't cast though his icons weren't crossed: the next round's cast worked.
+  - **Combatants past 64** (2026-11-09, logs/2026-11-09-audit-fixes.md): out of a fight the map's
+    things keep their numbers (`pens-after-scar`: Kalzith 220, guards 256-290, Mirlon 317; every
+    combatant of `fountain-user` is under 64), but **a fight renumbers them**: at its Round 1 the things
+    past the party moved to 21-47 (Kalzith 42). So a combatant past 64 in a fight is rare; the unit
+    tests cover them. A Turn Undead out of a fight starts one, and its line can name the target "?"
+    (the number had changed by the time the dice log read it). DSCLOG's per-fight tables are in the
+    far block since then: TU_FAILED at FFFF0h + FD10h (a byte a combatant, bit N priest N), SWEPT
+    (FF18h) and DJ_DONE (FF59h), a bit a combatant. Kalzith's pen (`route.py 1592 584`, then
+    `route.py 1560 860`) puts the party beside him for a turning, and the aiming box reaches him there
+    (the guards west of Kurzak's stop are behind a wall: "no line of sight").
+  - **The panel's level chip** (2026-11-09): a click on the expanded panel's chip (292,74) docks the
+    panel instead; the docked panel's chip (268,129) cycles Detail -> Least -> Short. The mouse wheel
+    doesn't reach it under DOSBox; a click on the scrollbar's track above the handle (309,140) pages up.
+    The cycle was used to see the spell to-hit lines at Short.
   - **Minute Meteors and Flame Arrow** (same log): with the manual's spells, Minute Meteors gives five
     casts a slot (the pointer comes back after each, as Magical Stone's), each with its attack line
     (`+2 Minute Meteors`), and Flame Arrow one cast for every five levels (2 at preserver 10, 3 at 15,
@@ -810,7 +824,8 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
       changes them, an effect's end): an effect put on in memory shows in them after the next
       Strength cast on that creature, for one.
     - **"cannot save" used to mean a save**: the game's save compare is unsigned (79BBAh), so every
-      −100 saved. Since `save_signed` (with the manual's spells) it fails; without, the log says so.
+      −100 saved. Since `save_signed` it fails (with the manual's spells only at first; always applied,
+      in no switch, from 2026-11-09).
       Look at the effect or the HP, not only the save line.
     - **Archers crossing out the caster's icons every turn** (hit before its turn): `foeset.py C
       eff=34` (Paralyzed) on each foe that shoots; then the turns come clean. Paralyzed foes also

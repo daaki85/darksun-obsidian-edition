@@ -3801,6 +3801,10 @@ class NewSpellTests(RuleTests):
         self.assertEqual(lands(3, 40, d20(10))[:2], (3, [1, 1]))
         cast(2, 41, 3)
         self.assertEqual(lands(3, 41, d20(1)), (3, [1, 1], None))  # (its own side: no roll)
+        mu.mem_write(0x9000 * 16 + 8 * 0x3A + 0x1D, bytes((0x09,)))  # (side 1, a bit above the side's 3)
+        cast(2, 41, 3)
+        self.assertEqual(lands(3, 41, d20(1)), (3, [1, 1], None))  # (its own side still: the low 3 bits)
+        mu.mem_write(0x9000 * 16 + 8 * 0x3A + 0x1D, bytes((0x01,)))
         # a monster (40) at member 2: THAC0 13, +2, difficulty 3 - 1, AC 4: 5 or more
         cast(40, 2, 113)
         self.assertEqual(lands(113, 2, d20(5))[2], (12, 5, 40, 2, 113, 13, 2, 3, 2, 4, 5, 1, 1))
@@ -3903,6 +3907,16 @@ class NewSpellTests(RuleTests):
         self.assertEqual(turn(2, 3, (die(10, 20), 0, 0, 0), target=41)[1][6], 1)  # (another target)
         self.assertEqual(turn(2, 3, (), fighting=1)[1][6], 5)
         self.assertEqual(turn(2, 3, (die(10, 20), 0, 0, 0), fighting=0)[1][6], 1)  # (out of a fight: forgotten)
+        # combatants past 64 (map things up to 520: the people the Loader adds are past 256), each its own
+        self.assertEqual(turn(2, 3, (die(9, 20),), target=300)[0], fail)
+        self.assertEqual(turn(2, 3, (), target=300)[1][6], 5)
+        self.assertEqual(turn(2, 3, (die(10, 20), 0, 0, 0), target=44)[1][6], 1)  # (not 300's)
+        self.assertEqual(turn(2, 3, (die(9, 20),), target=519)[0], fail)
+        self.assertEqual(turn(2, 3, (die(10, 20), 0, 0, 0), target=519, caster=3)[1][6], 1)  # (another priest)
+        self.assertEqual(turn(2, 3, (), target=519)[1][6], 5)
+        self.assertEqual(turn(2, 3, (die(9, 20),), target=520)[0], fail)  # (past the map things: no memory)
+        self.assertEqual(turn(2, 3, (die(9, 20),), target=520)[1][6], 0)
+        self.assertEqual(turn(2, 3, (die(10, 20), 0, 0, 0), fighting=0, target=300)[1][6], 1)  # (forgotten)
         # T, D: no roll
         self.assertEqual(turn(1, 4, (0, 0, 0)), (end, (0, 2, 40, 21, 4, 1, 1, 3, 0), (40, 2, 190, 17, 180, 0, 0)))
         self.assertEqual(turn(1, 6), (destroy, (0, 2, 40, 22, 6, 1, 2, 0, 0), None))

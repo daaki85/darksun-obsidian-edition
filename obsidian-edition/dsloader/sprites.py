@@ -604,9 +604,11 @@ class Dresser:
                 used.add(cell[0])
         if dry:  # (one not loaded takes a new slot when the game draws it: not counted here)
             return set(plan)
-        from .itemgate import _pause, _resume
+        from .itemgate import _HELD, _pause, _resume
         proc = getattr(self.gd.guest, "proc", None)
-        paused = _pause(proc)
+        # (DOSBox already held by the item gate, a block of item writes open: left to the gate to
+        # let go, never resumed here under it)
+        paused = proc not in _HELD and _pause(proc)
         try:
             now = self._slots()
             base = (self.gd.load_seg + PICTURE_TABLE_SEG) * 16
@@ -632,11 +634,10 @@ class Dresser:
         count, = struct.unpack("<H", self.gd.guest.read(self.gd.ds * 16 + PICTURE_COUNT, 2))
         if count > PICTURES_MOST or count + slots + SLOTS_SPARE > PICTURES_MOST:
             return False
-        if not count:
-            return True
-        base = (self.gd.load_seg + PICTURE_TABLE_SEG) * 16 + (count - 1) * PICTURE_ENTRY
-        length, place = struct.unpack("<Ii", self.gd.guest.read(base + SLOT_LENGTH, 8))
-        return max(place, 0) + length + size + STORE_SPARE <= STORE_SIZE
+        # (the store's end in use: the furthest slot's, not the last's, which the game may have put
+        # back in a hole an earlier picture left)
+        end = max((place + length for _, length, place, _, _ in self._slots() if place >= 0), default=0)
+        return end + size + STORE_SPARE <= STORE_SIZE
 
     def objects(self) -> Dict[int, Tuple[int, int]]:
         """{object: (party member, their figure's object)}: the first member with a figure has its

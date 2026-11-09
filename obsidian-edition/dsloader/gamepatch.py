@@ -549,7 +549,8 @@ PATCHES = (
     # 6th level, Color Spray's) made a negative total, read as 156 and up: always saved (seen in
     # DOSBox 2026-11-09: Arena Guards "unable to save" against Cloudkill took half its damage, a Guard
     # against Scare was never Afraid). The compare made signed ("jge"): -100 fails (a natural 20 still
-    # saves, 79B5Fh), +100 saves (Scare from 6th level: a d20 + 100 stays under 128)
+    # saves, 79B5Fh), +100 saves (Scare from 6th level: a d20 + 100 stays under 128). Always applied (a
+    # fix of the game's, in no switch; the user's decision, 2026-11-09)
     Patch("save_signed", 0x79BBD, bytes.fromhex("73a6"), bytes.fromhex("7da6")),
     # The monsters as the manual describes them (in the same switch; reports/group 4's research,
     # playtest/logs/2026-11-09-group-4-research.md). The kinds' properties: bit 15 a hit (the last
@@ -1256,7 +1257,7 @@ SPELLS_MANUAL = ("bestow_curse_save", "blood_flow_save", "flaming_sphere_negates
                  "classless_save_level", "color_spray_level", "hold_undead_level",
                  "free_action_stuck", "free_action_loop", "free_action_word", "remove_paralysis_word",
                  "protection_paralysis_word", "meteors_count", "meteors_damage", "flame_arrow_damage",
-                 "flame_arrow_count", "turn_undead_manual", "save_signed", "chill_touch_time", "blur_save", "fire_shield_save", "cloudkill_save",
+                 "flame_arrow_count", "turn_undead_manual", "chill_touch_time", "blur_save", "fire_shield_save", "cloudkill_save",
                  "cloudkill_kills", "lower_resistance_manual", "strength_dice", "rainbow_pattern_time",
                  "rainbow_pattern_damage", "feeblemind_psionics", "biofeedback_least",
                  "cell_adjustment_heal", "babau_poison", "blue_slaad_poison", "styr_kind", "djinn_kind",

@@ -639,7 +639,9 @@ is Whirlwind's (the active effects' segment +0Ah, 3 bytes each: the combatant
 and its area's entry, DS:1E26h of them; the game keeps the list as it applies
 the areas, so the creatures stay listed while the hits are sent back), at the
 first Whirlwind thing's level. A save failed there marks the creature
-(`SWEPT_MARK`), and `PROBE_MOVE` takes that round's turn. A save failed as it is
+(`SWEPT_MARK`: SWEPT, the far block's `FAR_SWEPT`, a bit a combatant up to
+`MAP_COUNT`, 520; 64 combatants before 2026-11-09), and `PROBE_MOVE` takes that
+round's turn. A save failed as it is
 cast takes the creature's turn at once if it has yet to act (`SWEPT_NOW`: not
 the one whose turn it is, its initiative not the -1 the game gives one that has
 acted; its initiative -1 and movement 0, as `PROBE_MOVE` does), else marks it

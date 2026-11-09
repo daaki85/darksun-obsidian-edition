@@ -325,6 +325,53 @@ class SiteTests(unittest.TestCase):
         self.assertEqual(turn(12, 9), [])  # (without the switch)
         self.manual(True)
         self.assertEqual(len(turn(12, 9)), 2)  # (a new fight)
+        # combatants past 64 (map things up to 520: the people the Loader adds are past 256), each its own
+        self.assertEqual(len(turn(300, 9)), 2)
+        self.assertEqual(turn(300, 9), [])
+        self.assertEqual(len(turn(44, 9)), 2)  # (not 300's bit)
+        self.assertEqual(len(turn(519, 9)), 2)
+        self.assertEqual(turn(519, 9), [])
+        self.assertEqual(len(turn(520, 9)), 0)  # (past the map things: none)
+
+    def test_whirlwind_swept(self):
+        """Whirlwind's damage after a failed save (ACID_ONCE, 78DEFh: [BP+0Ah] the spell, [BP+6] the
+        combatant) out of the combatant's turn marks it SWEPT (a bit per map thing, up to 520): its next
+        turn's start (PROBE_MOVE: DI the combatant, BX its creature x 2, AX its movement) has no movement
+        and initiative -1, once; others' turns as ever."""
+        image = self.image
+        at = td.install_at(image, 0xFB)
+        self.mu.mem_write(0xFB * 4, struct.pack("<HH", struct.unpack_from("<H", image, at + 4)[0], TSR))
+        self.manual(False)
+        def swept(thing):
+            self.mu.mem_write(td.SS * 16 + BP + 6, struct.pack("<H", thing))
+            self.mu.mem_write(td.SS * 16 + BP + 0x0A, struct.pack("<H", game.WHIRLWIND_SPELL))
+            self.site("acid_once")
+        def turn(thing, creature=9):
+            self.mu.mem_write(0x8800 * 16 + creature * 2 + 0x22B, bytes(2))
+            self.mu.mem_write(0x8800 * 16 + creature * 4 + 0xD9, struct.pack("<H", 5))
+            self.at += 0x40
+            start = CALLER * 16 + self.at
+            self.mu.mem_write(start, bytes.fromhex("cdfb90909090f4"))
+            for reg, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, es=0x8800,
+                                   ebx=creature * 2, esi=creature, edi=thing, eax=90).items():
+                self.mu.reg_write(getattr(r, "UC_X86_REG_" + reg.upper()), value)
+            self.mu.emu_start(start, 0, count=50000)
+            self.assertEqual((self.reg("sp"), self.reg("bx"), self.reg("si"), self.reg("di"), self.reg("ax")),
+                             (0x800, creature * 2, creature, thing, 90))
+            return struct.unpack("<Hh", self.mu.mem_read(0x8800 * 16 + creature * 2 + 0x22B, 2)
+                                 + self.mu.mem_read(0x8800 * 16 + creature * 4 + 0xD9, 2))
+        for thing in (12, 64, 300, 519):
+            self.assertEqual(turn(thing), (90, 5))
+            swept(thing)
+            self.assertEqual(self.entry()[:2], (11, thing))
+            self.assertEqual(turn(thing - 8 if thing > 12 else 13), (90, 5), thing)  # (another's: as ever)
+            self.assertEqual(turn(thing), (0, -1), thing)
+            self.assertEqual(turn(thing), (90, 5), thing)  # (once)
+        swept(300)
+        self.assertEqual(turn(44), (90, 5))  # (not 300's bit)
+        self.assertEqual(turn(300), (0, -1))
+        swept(520)  # (past the map things: not marked)
+        self.assertEqual(turn(520), (90, 5))
 
     # ---- resting ------------------------------------------------------------------------------------
 
@@ -416,6 +463,10 @@ class SiteTests(unittest.TestCase):
             self.assertEqual(self.logged(0x600, 0x5FE, 3), [])
         self.rules_hi(4096)
         self.mu.mem_write(SS * 16 + BP + 6, struct.pack("<H", 0))
+        kept = bytes(self.mu.mem_read(CREATURES * 16 + 3 * 0x3A, 0x3A))
+        self.mu.mem_write(CREATURES * 16 + 3 * 0x3A + 0x24, bytes((17,)))
+        self.site("rest_hp", es=CREATURES, ebx=3 * 0x3A, eax=40, esi=3)  # (a heal first: its CON, 17, recorded)
+        self.mu.mem_write(CREATURES * 16 + 3 * 0x3A, kept)
         self.site("rest_spells", count=2000000, esi=0x1111, edi=0x2222)
         self.assertEqual((self.reg("si"), self.reg("di")), (0x1111, 0x2222))
         casts = self.logged(0x600, 0x5FE, 13)
@@ -428,6 +479,11 @@ class SiteTests(unittest.TestCase):
         self.assertEqual(bytes(self.mu.mem_read(GAME_DS * 16 + 0x4B11, 7)), bytes(7))  # (every slot spent)
         self.assertEqual(struct.unpack("<H", self.mu.mem_read(CREATURES * 16 + 2 * 0x3A + 2, 2))[0], 2)  # (PSP 12 - 10)
         self.assertEqual(self.entry()[:2], (15, 1))
+        hdr_off, ring = struct.unpack_from("<H", self.image, 20)[0], struct.unpack_from("<H", self.image, 16)[0]
+        n = struct.unpack("<HHH", self.mu.mem_read(TSR * 16 + hdr_off + 8, 6))
+        e = td.Entry.parse(bytes(self.mu.mem_read(td.RING_SEG * 16 + ring + ((n[0] - 1) % n[2]) * td.Entry.SIZE,
+                                                  td.Entry.SIZE)))
+        self.assertEqual(e.arg(0x10), 0)  # (a cast's last word 0, not the heal's CON left over)
 
     def test_rest_hp(self):
         """REST_HP (808AFh, "mov [es:bx],ax": ES:BX the creature, AX the most, SI the member): the most
@@ -549,7 +605,9 @@ class ManualMonsterTests(unittest.TestCase):
         self.assertEqual(struct.unpack_from("<H", gd.guest.mem, 0x20000 + 6 * game.CREATURE_SIZE + 0x16)[0], 0)
         self.assertEqual(monsters.mend(gd, True), [])
         self.assertEqual(monsters.mend(gd, False), ["(Tari: as the game has it)"])
-        self.assertEqual((struct.unpack_from("<H", gd.guest.mem, at + 0x16)[0], gd.guest.mem[at + 0x1F]), (0, 18))
+        self.assertEqual((struct.unpack_from("<H", gd.guest.mem, at + 0x16)[0], gd.guest.mem[at + 0x1F],
+                          gd.guest.mem[s + 0x24], gd.guest.mem[s + 0x27], gd.guest.mem[s + 0x31]), (0, 18, 2, 10, 2))
+        self.assertEqual(monsters.mend(gd, False), [])  # (the game's already: nothing more)
 
 
 if __name__ == "__main__":

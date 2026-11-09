@@ -26,7 +26,7 @@ import struct
 from collections import deque
 from typing import Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import palette, smallfont
+from . import ledger, palette, smallfont
 
 TSR_HDR_OFF = 20  # DSCLOG's header: where it is in DSCLOG's segment
 TSR_DAC = 238  # ... the offset of DAC in its far block, the palette as DSCLOG last read it (768 values, 0-63)
@@ -94,21 +94,35 @@ def tsr_dac(guest, tsr_hdr: int) -> bytes:
     return guest.read(far_block(guest, tsr_hdr) + off, 768)
 
 def line_kind(line: str) -> str:
-    """A dice log line's kind, for its colour (as the Loader's log shows it)."""
+    """A dice log line's kind, for its colour (as the Loader's log shows it): a weapon's or a
+    spell's attack roll a hit or a miss ("-> HIT", "-> miss", a spell's "-> MISS: ..."), Turn
+    Undead's a hit when it works (TURN_WORKS) and a miss when not (TURN_FAILS); HP back at a rest,
+    Cell Adjustment's and a shadow's drain damage; a cast at a rest and the rest of the manual's
+    monsters' and spells' lines other."""
     return ("round" if line.startswith(("Round ", "Initiative: ")) else
             "turn" if line.endswith("'s turn") else
             "save" if "'s saving throw vs " in line or " magic resistance " in line else
             "hit" if "-> HIT" in line else
-            "miss" if "-> miss" in line else
+            "miss" if "-> miss" in line or "-> MISS" in line else
             "detail" if line.startswith("    ") else
-            "damage" if line.startswith("  ") or " damage: " in line else "other")
+            "damage" if line.startswith("  ") or " damage: " in line else
+            "hit" if TURN_WORKS.match(line) else
+            "miss" if TURN_FAILS.match(line) else
+            "damage" if REST_HP.match(line) or HP_MANUAL.match(line) else "other")
+
+
+# Turn Undead's lines (dicelog's _turn_manual, _turn_undead): what came of it
+TURN_WORKS = re.compile(r".+? turns .+?: (?:.*-> (?:turned|destroyed)|destroyed(?: automatically|,)|turned: flees)")
+TURN_FAILS = re.compile(r".+? (?:turns .+?: (?:.*-> not turned|no chance)|can't turn .+ again: )")
+REST_HP = re.compile(r".+? rests 8 hours: .*now -?\d+/\d+ HP$")  # (natural healing at a rest: dicelog's _rest)
+HP_MANUAL = re.compile(r"(?:Cell Adjustment: .+ healed \d+ HP|.+ drains \d+ STR from |Cloudkill: .+ dies )")
 
 
 # The dice log's lines, as they are
 ATTACK = re.compile(r"(?P<who>.+?) attacks (?P<target>.+?)(?: with .+?)?: d20 = (?P<d20>\d+)(?: \(natural \d+\))?, "
                     r"(?:needs (?P<need>-?\d+)\+|only a 20 hits|(?P<any>hits on anything but a 1))(?: \([^)]*\))?.*-> (?P<result>HIT|miss)$")
 HIT_FOR = re.compile(r"(?P<who>.+?) hits (?P<target>.+?) for (?P<n>\d+): (?P<dice>[0-9d+\-]+)")
-SAVE = re.compile(r"(?P<who>.+?)'s saving throw vs (?P<what>.+?)(?: from .+?)?: d20 = (?P<d20>\d+)"
+SAVE = re.compile(r"(?P<who>.+?)'s saving throw vs (?P<what>.+?): d20 = (?P<d20>\d+)"
                   r"(?: \(natural \d+\))?(?:,? [^>]*? = (?P<total>-?\d+))?"  # (its modifiers, then the total)
                   r"(?:, needs (?P<need>-?\d+))?(?: \([^)]*\))? -> (?P<result>\w+)")
 RESIST = re.compile(r"(?P<who>.+?) magic resistance (?P<pct>\d+)% vs (?P<what>.+?): d100 = (?P<roll>\d+) -> "
@@ -116,6 +130,11 @@ RESIST = re.compile(r"(?P<who>.+?) magic resistance (?P<pct>\d+)% vs (?P<what>.+
 DAMAGE_ROLL = re.compile(r"(?P<what>.+?) damage: (?P<dice>\S+) = (?:\[[^\]]*\](?: [+-]\s?\d+)? = )?(?P<total>\d+)")
 PERCENT = re.compile(r"(?P<what>.+?): d100 = (?P<roll>\d+), needs (?P<need>-?\d+) or less.*-> (?P<result>.+)")
 ROUND = re.compile(r"Round (?P<n>\d+)")
+# a spell's attack roll (dicelog's _spell_to_hit: SPELL_HIT's missile and hostile touch spells)
+SPELL_ATTACK = re.compile(r"(?P<who>.+?)'s (?P<spell>.+?) at (?P<target>.+?): (?:touch )?attack d20 = (?P<d20>\d+)"
+                          r"(?: \(natural \d+\))?, (?:needs (?P<need>-?\d+)\+|only a 20 hits|"
+                          r"(?P<any>hits on anything but a 1))(?: \(\d+%\))?.* -> (?P<result>HIT|MISS)(?::.*)?$")
+TAKES = re.compile(r"(?P<who>.+?) takes (?P<n>\d+) from (?P<what>.+?)(?P<rest>(?: \(.*?\))?(?:,.*)?)$")
 NOT_THE_FIGHT = ("Message: ", "Dice: ", "Look: ", "Chosen with Tab", "(")
 A_ROLL = re.compile(r"\bd\d+ = |\b\d+d\d+\b")  # (a line with a die cast in it)
 NOT_A_FIGHT_ROLL = ("Character creation",)  # (rolls out of the game: not the panel's)
@@ -145,16 +164,23 @@ def shorten(line: str, level: str) -> Optional[str]:
         if level == MINIMAL:
             return f"{m.group('who')} {verb} {target}"
         return f"{m.group('who')} {verb} {target} ({m.group('d20')} vs {need}+{how})"
+    m = SPELL_ATTACK.match(text)
+    if m:
+        need = m.group("need") or ("2" if m.group("any") else "20")
+        head = f"{m.group('who')}'s {m.group('spell')} {'hits' if m.group('result') == 'HIT' else 'misses'} " \
+               f"{m.group('target')}"
+        return head if level == MINIMAL else f"{head} ({m.group('d20')} vs {need}+)"
     m = HIT_FOR.match(text)
     if m:
         return f"for {m.group('n')}"
     m = SAVE.match(text)
     if m:
         saved = m.group("result") == "saved"
+        what = ledger.save_source(m.group("what"))[0]  # (its caster and kind dropped; "Protection from Evil" kept)
         if level == MINIMAL:
-            return f"{m.group('who')} {'saves' if saved else 'fails to save'} vs {m.group('what')}"
+            return f"{m.group('who')} {'saves' if saved else 'fails to save'} vs {what}"
         need = f" vs {m.group('need')}+" if m.group("need") else ""
-        return f"{m.group('who')} {'saves' if saved else 'fails'} vs {m.group('what')} " \
+        return f"{m.group('who')} {'saves' if saved else 'fails'} vs {what} " \
                f"({m.group('total') or m.group('d20')}{need})"
     m = RESIST.match(text)
     if m:
@@ -218,6 +244,18 @@ class Log:
                 continue
             if hit:
                 text = f"{hit.group('who')} hits {hit.group('target')} {text}"
+            takes = TAKES.match(line.strip()) if level != DETAIL and line.startswith("  ") else None
+            if takes and out and out[-1].kind == "hit":
+                # a spell's damage on its attack's line: "Lex's Acid Arrow hits Templar for 3 (12 vs 4+)"
+                head = f"'s {takes.group('what')} hits {takes.group('who')}"
+                prev = out[-1].text
+                at = prev.rfind(" (") if level != MINIMAL and prev.endswith(")") else len(prev)
+                if prev[:at].endswith(head):
+                    out[-1] = out[-1]._replace(text=f"{prev[:at]} for {takes.group('n')}{prev[at:]}")
+                    rest = takes.group("rest").lstrip(", ")
+                    if rest and level != MINIMAL:  # (the HP it is left with, as a weapon's "now" line)
+                        out.append(Line("damage", _side(takes.group("who"), names), f"{takes.group('who')} {rest}"))
+                    continue
             if kind == "round":  # a rule, "ROUND 3", and in detail the order after it
                 m = ROUND.match(text)
                 if m is None:
