@@ -882,8 +882,10 @@ two-handed weapons in one hand** ticked, a half-giant can hold a two-handed
 weapon (a two-handed sword, a halberd, a bow) in one hand, with a shield or a
 light weapon in the other. The game's own rule that the two hands can't both
 hold heavy weapons (over 30 in weight each) still stands, so no half-giant
-holds two two-handed weapons. With two weapons ready, the two-weapon penalties
-apply as for anyone. The inventory screen still writes "2 handed" in the
+holds two two-handed weapons. **Cahulaks** are the exception: a pair of
+four-bladed heads on a rope, one in each hand, they take both of a half-giant's
+hands too (and a half-giant Twin-blade can't pair them with another weapon).
+With two weapons ready, the two-weapon penalties apply as for anyone. The inventory screen still writes "2 handed" in the
 weapon's line: that is its weapon type, not a limit.
 
 How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#half-giants-two-handed-weapons).
@@ -2870,6 +2872,7 @@ got wrong, each with a switch, are the [rule changes](#rule-changes)):
 
 | | The game | With the Loader |
 |---|---|---|
+| **Graphics disappearing in a busy area** (SSI's note 2712 for Wake of the Ravager, the same engine) | The game keeps 300 picture slots for walls, doors, figures and items lying about, and gives none back until the next area: once a visit had used 300 (items of many kinds dropped, bodies, spells, new monsters), a new picture got no slot and wasn't drawn: an item on the ground, a body, a figure, a doorway | Once all 300 are taken, a slot holding a picture nothing uses now (out of memory, named by no wall or thing on the map) is reused, its picture put where it fits in the store; checked in DOSBox with 145 items of different kinds dropped in one area: every one drawn, 18 slots reused |
 | **Mirror Image** (and Reflected Image) | The images stopped no weapon blow, and took a spell for one creature three times in four whoever cast it: Armor cast on oneself was lost, an image with it | Each hit, and each foe's spell for one creature, strikes an image three times in four (Reflected Image's half the time); your own side's spells always get through ([how long it lasts](HOW-THE-GAME-WORKS.md#spells-and-effects)) |
 | **Armor** | A charge used each time any spell or blow landed on the wearer, as well as for the damage: two for each hit, and one for a friend's Bless | One charge for each damaging hit |
 | **Share Strength** (any maintained power on someone else) | Ended, it stayed on the one who got it, and could end another of the psionicist's own effects instead | It ends on everyone it was on |

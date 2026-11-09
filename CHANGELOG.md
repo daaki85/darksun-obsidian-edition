@@ -40,9 +40,28 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 
 ## Next pull request (not opened yet)
 
-DSCLOG.EXE 65,744 bytes (image 65,712), 2,736 of its segment spare.
+DSCLOG.EXE 66,320 bytes (image 66,288), 2,160 of its segment spare.
+
+**Fixed**
+- **Graphics disappearing in a busy area** (SSI's technical note 2712 for Wake of the Ravager, the
+  same engine): the game's picture cache (DSUN.EXE 25FA6h) has 300 slots for every wall, door,
+  figure and item picture drawn and gives none back until an area loads, so past 300 a new picture
+  had no slot and wasn't drawn. DSCLOG's PIC_REUSE (sites 26009h, 260CCh, 2612Bh; always on): with
+  all taken, a slot out of memory that no wall (DS:574Eh) and no map thing (+0Fh) names is reused,
+  the Loader's STALE ones first, searching round from after the last reused (the inventory's icons,
+  let go once drawn, took one slot in turn otherwise: 3,590 reuses in a cycle); its picture goes in
+  the first gap of the store it fits, else past the furthest end. The pens hold 203 slots on
+  arrival and walking adds none. Seen in DOSBox: 145 items of different kinds dropped in the pens,
+  300 slots at the 9th dozen, then 18 reused, the store's end unchanged, every thing with its own
+  picture, the inventory, a walk away and back all as before
+  (playtest/logs/2026-11-09-picture-slot-reuse.md).
 
 **Changed**
+- **Cahulaks drawn as a pair**: a short haft and a hooked four-bladed head in each hand (both at
+  the hips walking), not one hook in one hand (spritegear's CAHULAKS shape; the left hand given the
+  right's). And with half-giants' two-handed weapons in one hand, the cahulaks still take both
+  hands (DSCLOG's PROBE_TWO_HANDED by the type's place in the table, TH_CAHULAKS; KIT_FORBIDS and
+  restrict.py: a half-giant Twin-blade can't pair them).
 - **The move-silently labels say "Silent"**: the inventory screen's thief row reads `SLNT` (it read
   `MOVE`, beside View Character's MOVE, the character's movement), and the item boxes' stealth lines
   `Silent +10` (boots) and `Silent 95%` (the Boots of Elvenkind) for `Move +10` and `Move 95%`: the

@@ -971,6 +971,22 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   pens load 203 of the 300 slots on arrival and walking about adds none (`slotcount.py` at each
   stop); fights add a few (bodies, dropped items, spells). Wake of the Ravager's "graphics disappear"
   note is this same limit; leaving the region clears it.
+- **Lots of items on the ground** (2026-11-09, logs/2026-11-09-picture-slot-reuse.md): `giveitems.py
+  MEMBER N [FIRST]` gives items of different objects (each its own picture) into free backpack cells
+  in memory (12 cells: then "no room"); `groundfill.sh CYCLES [FIRST]` gives Gerakis 12 and DROPs
+  each (I, his portrait 20,20, a cell then DROP at 213,134; cells x 195/213, y 26-116), cycle after
+  cycle, printing `slotcount.py` (slots, store end, in memory, STALE, and PIC_REUSE's reuse count
+  `pf_count`, read through a symbol map). Dropped items pile on the party's square: walk off to see
+  them. **An item record copied from the objects file needs +08h set to 270Fh** (no contents; the
+  file has 0, which in memory names item 0, and then the inventory drew no icons at all, whatever
+  the build). `slotcheck.py`: every map thing with a slot finds its own picture there, every wall's
+  slot taken; six entries of the thing table naming slot 0 with nonsense pictures are the table's
+  unused ones (the same on a fresh load). From `pens-thornwall-rack` 145 items took the table from
+  203 to 300 in nine dozen (about 40 s a dozen).
+- **The inventory and the picture cache**: opening it puts every picture out of memory, and its
+  icons are loaded through the same cache and let go once drawn, so at 300 slots they are free for
+  reuse: a search that always began at slot 0 had the icons take one slot in turn (3,590 reuses in
+  a cycle). PIC_REUSE now searches round from after the last slot it reused.
 - **Outfits and the store since the fix** (2026-11-09, logs/2026-11-09-picture-store-fix.md): the
   Loader puts a re-dressed picture into a slot the game already has (`sprites.Dresser._in_store`), so
   `cachelist.py`'s slot count no longer climbs one a gear change: a toggle reuses the slot holding

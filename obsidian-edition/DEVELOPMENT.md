@@ -488,13 +488,13 @@ sizes; the paragraphs after it say how each piece got there.
 **The budget.** Each limit fails the build when passed (a negative `times`):
 
 - The helper's segment: what it reaches through CS is what stays (to
-  `resident_end`, 61,392 bytes since the Boots of Speed (2026-11-09, BOOTS_MOVE,
-  BOOTS_AC; 61,200 after the item box's own pictures, BOX_PICS; 61,104 after its `Hit -N`, IB_MATERIAL; 61,024 when a natural 20 stopped saving against "can't save", SAVE_SUM; 60,912 when Turn Undead's record carried its creatures,
+  `resident_end`, 61,968 bytes since the picture slots' reuse and the cahulaks' hands (2026-11-09,
+  PIC_REUSE, TH_CAHULAKS; 61,392 after the Boots of Speed, BOOTS_MOVE, BOOTS_AC; 61,200 after the item box's own pictures, BOX_PICS; 61,104 after its `Hit -N`, IB_MATERIAL; 61,024 when a natural 20 stopped saving against "can't save", SAVE_SUM; 60,912 when Turn Undead's record carried its creatures,
   60,864 after the audit's fixes: the per-fight
   tables SWEPT, TU_FAILED and DJ_DONE moved to the far block, 48 bytes freed;
   60,912 after group 4, 59,088 before it, 58,096 before group 3) and the
   buffers laid over the install code after it (`AFTER_INSTALL`, 1,408), together
-  `kept_end`, 62,800 bytes, so 2,736 bytes of its 64 KB are spare. This is the limit for new code. The image
+  `kept_end`, 63,376 bytes, so 2,160 bytes of its 64 KB are spare. This is the limit for new code. The image
   (`image_len`) is as long. Buffers that start as zeros and aren't needed while
   installing are laid over the install code, as `seg_space` and `area_space`
   are (declared with `resb` after the image): `KEEP` zeroes them before its
@@ -537,11 +537,11 @@ sizes; the paragraphs after it say how each piece got there.
   every combatant, `FAR_TU`, `FAR_SWEPT`, `FAR_DJ`, 2026-11-09).
 - Upper memory without `UMBPLUS.COM` (`UMB_ROOM`, D00Ah to F000h, 8,182
   paragraphs): the helper as it loads (its tail and stack too) and the overlay
-  buffer (`UMB_NEED`, the header's +372) need 6,168 (6,171 after group 4, 6,057 before it), and
+  buffer (`UMB_NEED`, the header's +372) need 6,239 (6,168 before PIC_REUSE, 6,171 after group 4, 6,057 before it), and
   `test_fits_upper_memory` checks it too; what stays once installed, with the
   music buffer and the see-through figures' tables (`UMB_KEPT`: all four
-  blocks and their MCBs), 7,825 (measured from the build, 2026-11-09, after
-  the Boots of Speed; 7,811 after BOX_PICS, 7,805 after IB_MATERIAL, 7,800 after SAVE_SUM, 7,793 after Turn Undead's creatures, 7,790 after the audit's fixes, 7,792 before them), so 357 (5.6 KB) are spare.
+  blocks and their MCBs), 7,861 (measured from the build, 2026-11-09, after
+  PIC_REUSE; 7,825 after the Boots of Speed; 7,811 after BOX_PICS, 7,805 after IB_MATERIAL, 7,800 after SAVE_SUM, 7,793 after Turn Undead's creatures, 7,790 after the audit's fixes, 7,792 before them), so 321 (5.0 KB) are spare.
 
 **What moved where (2026-11-08)**, freeing 3,136 bytes of the segment (3,040 of
 what stays, 190 paragraphs of upper memory): DAC (768), RING_TAB (520) and RED

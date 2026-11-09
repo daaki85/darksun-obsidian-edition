@@ -80,6 +80,8 @@ capture; window grabs (`import -window`) are 320x240, so y x 1.2.
   `turnsetup.py` makes a priest and undead foes in memory for a Turn Undead test. `foeset.py` sets a
   foe's level, class, race or HP in memory. `ringrest.sh` rests at the fire ring; `kinds.py` reads
   monster kinds.
+- Lots of items on the ground: `groundfill.sh` (`giveitems.py` + DROP); `slotcount.py`, `slotcheck.py`
+  for the 300 picture slots (DSCLOG's PIC_REUSE reuses free ones past 300).
 - Figures gone from the map: the game's picture store full (`cachelist.py`, `poolfree.py`,
   `figwatch.py`; since the Loader reuses the store's cells, `outfitcycle.py` / `randout.py`
   change outfits for a test; `fillcache.py` now stalls).
