@@ -439,6 +439,8 @@ lbl_off    dw lbl_slots         ; +1838 offset of LBL_SLOTS in the tail: the Loa
                                 ;      height, +3 how far above the feet, +4 ink, +5 edge (palette
                                 ;      indices), +6 the map thing, +8 the ink's mask, then the edge's
                                 ;      (LBL_ROW bytes a row, bit 0 of the first the leftmost)
+big_off    dw FAR_BIG           ; +1840 offset of BIG in the far block: the Loader's: a bit per
+                                ;      combatant too big for the cahulaks to tangle (cahulaks.py)
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -3544,6 +3546,7 @@ expert_halves:
 ; whoever wields it; the extra attacks are the main hand's. DS the game's; others kept.
 OFF_HAND_SLOT equ 10
 off_hand_halves:
+        call cah_more           ; (the cahulaks: the off head's one more a round)
         test byte [cs:rules], RULE_TWO_WEAPONS
         jz .ret
         cmp ax, 2
@@ -15003,6 +15006,9 @@ BOX_PIC_OBJECT_SITE equ NS_IMAGE + 99 ; 8C384h: ... or its object's icon (BOX_PI
 PIC_FULL_SITE equ NS_IMAGE + 100      ; 26009h: the picture cache's 300 slots taken: one reused (PIC_REUSE)
 PIC_PLACE_SITE equ NS_IMAGE + 101     ; 260CCh: a reused slot's picture's place in the store (PIC_REUSE)
 PIC_COUNT_SITE equ NS_IMAGE + 102     ; 2612Bh: the slot's number, the count raised only for a new one (PIC_REUSE)
+CAH_TWO_SITE equ NS_IMAGE + 103       ; 59627h: two weapons ready, or the cahulaks (CAHULAKS)
+CAH_SWING_SITE equ NS_IMAGE + 104     ; 589B6h: a swing's start: the off head's (CAHULAKS)
+CAH_HIT_SITE equ NS_IMAGE + 105       ; 58B54h: a weapon's hit that did damage: the tangle (CAHULAKS)
 KIND_TURN  equ 13
 TU_DESTROY equ 0x7AE60 - 0x7AE04 ; (the ways on, less the address after the site's number)
 TU_FAIL    equ 0x7AE75 - 0x7AE04
@@ -16753,6 +16759,187 @@ pf_count   dw 0                         ; slots reused, all told (for the tests 
 pf_next    dw 0                         ; where the next search for a slot starts
 pf_reuse   db 0
 
+; CAHULAKS (RULE_HI_CAHULAKS, the Loader's rule "cahulaks"): a pair of four-bladed heads on a rope,
+; one in each hand (Dark Sun's rules: the two-weapon rule, though one item). With the rule:
+; - the off head's one more attack a round (CAH_MORE, in OFF_HAND_HALVES: the attack, the DAM lines);
+; - the game's two-weapon adjustment (595ECh) asked for them as for two weapons ready (CAH_TWO), and
+;   PROBE_TWO gives AD&D's: the main head's -2 plus DEX's reaction adjustment, no better than 0, for
+;   every swing (CAH_ADJUST), and the off head's -4 plus it for the round's last swing, the one more
+;   (CAH_SWING: the difference added to the attack's [BP+0Ah], before its d20, which the dice log reads);
+; - a hit that does damage tangles a man-sized or smaller target (not a half-giant, nor a combatant
+;   the Loader marks in BIG: cahulaks.py's list) that fails a save against petrification (its sheet's
+;   +39h, a d20): it loses its next turn, as Whirlwind's sweep (SWEPT_NOW, FAR_SWEPT). Recorded
+;   (MN_TANGLE). A Twin-blade or Battle Dancer in light armour, and a ranger, take no penalty (PROBE_TWO's).
+CAHULAKS     equ TH_CAHULAKS
+CT_SKIP      equ 0x5963E - 0x5962A  ; (595ECh's "no two weapons" way, from after the site's number)
+MN_TANGLE    equ 10
+TARGET       equ 0x494A             ; DS: the attack's target (a combatant)
+cah_more:                           ; AX the attacks a round (halves) with item BX: 2 more for
+        test word [cs:rules_hi], RULE_HI_CAHULAKS ;   the cahulaks with the rule. Others kept.
+        jz .ret
+        push ax
+        mov ax, bx
+        call item_is_cahulaks
+        pop ax
+        jne .ret
+        add ax, 2
+.ret:   ret
+item_is_cahulaks:                   ; ZF if item AX (its number) is of the cahulaks' type. DS the
+        cmp ax, 0x270F              ;   game's; all kept.
+        jae .no
+        push es
+        push bx
+        imul bx, ax, 0x15
+        push ax
+        les ax, [0x165D]
+        add bx, ax
+        pop ax
+        cmp word [es:bx + 0x0A], CAHULAKS
+        pop bx
+        pop es
+        ret
+.no:    or sp, sp                   ; (ZF clear)
+        ret
+two_cahulaks:                       ; ZF with the rule if item [BP+0Ah] (595ECh's) is the cahulaks
+        push ax
+        test word [cs:rules_hi], RULE_HI_CAHULAKS
+        jz .no
+        mov ax, [bp + 0x0A]
+        call item_is_cahulaks
+        pop ax
+        ret
+.no:    or sp, sp
+        pop ax
+        ret
+cah_adjust:                         ; (PROBE_TWO's, the hand's base and DEX's set) DX the main
+        push ax                     ;   head's adjustment, no better than 0; CAH_EXTRA how much
+        mov dx, [cs:t_base]         ;   worse the off head's is, for attacker CX (CAH_WHO)
+        add dx, [cs:t_adjust]
+        jle .main
+        xor dx, dx
+.main:  mov ax, [cs:t_base]
+        sub ax, 2
+        add ax, [cs:t_adjust]
+        jle .off
+        xor ax, ax
+.off:   neg ax
+        add ax, dx
+        mov [cs:cah_extra], ax
+        mov [cs:cah_who], cx
+        pop ax
+        ret
+
+; CAH_TWO (595ECh's "cmp word [bp+6],1 / jle", 59627h; 6 bytes): on as two weapons ready when
+; they are, or (the rule) the attack's item [BP+0Ah] is the cahulaks; else its "none" way.
+cah_two:
+        cmp word [bp + 6], 1
+        jg .two
+        call two_cahulaks
+        je .two
+        push bp
+        mov bp, sp
+        add word [bp + 2], CT_SKIP
+        pop bp
+.two:   iret
+
+; CAH_SWING (the attack's swing, "mov word [bp-4],0", 589B6h; 5 bytes; [BP-14h] the swing, [BP-8]
+; the round's, [BP+14h] the item's type, [BP+16h] melee 1 or less, [BP+18h] the attacker): the
+; round's last swing with the cahulaks (the off head's, one of 2 or more) pays CAH_EXTRA more.
+cah_swing:
+        mov word [bp - 4], 0
+        test word [cs:rules_hi], RULE_HI_CAHULAKS
+        jz .out
+        cmp word [bp + 0x16], 1
+        jg .out
+        cmp word [bp + 0x14], CAHULAKS
+        jne .out
+        push ax
+        mov ax, [bp + 0x18]
+        cmp ax, [cs:cah_who]
+        jne .pop
+        mov ax, [bp - 8]
+        cmp ax, 2
+        jl .pop
+        dec ax
+        cmp ax, [bp - 0x14]
+        jne .pop
+        mov ax, [cs:cah_extra]
+        add [bp + 0x0A], ax
+        mov word [cs:cah_who], -1   ; (once)
+.pop:   pop ax
+.out:   iret
+
+; CAH_HIT ("mov byte [bp-15h],0", 58B54h; 4 bytes: a weapon's hit has done damage): the cahulaks'
+; tangle (see CAHULAKS).
+cah_hit:
+        mov byte [bp - 0x15], 0
+        test word [cs:rules_hi], RULE_HI_CAHULAKS
+        jz .out
+        cmp word [bp + 0x16], 1
+        jg .out
+        cmp word [bp + 0x14], CAHULAKS
+        jne .out
+        sti
+        pushad
+        push es
+        mov bx, [TARGET]
+        cmp bx, MAP_COUNT
+        jae .done
+        mov ax, bx
+        call combatant_creature
+        jc .done
+        push ax
+        imul ax, ax, 0x3A
+        les bx, [0x1665]
+        add bx, ax
+        pop ax
+        cmp word [es:bx], 0
+        jle .done                   ; (felled by the blow)
+        call creature_sheet
+        cmp byte [es:bx + 0x18], HALF_GIANT
+        je .done                    ; (too big to tangle)
+        movzx cx, byte [es:bx + 0x39]   ; (its save against petrification)
+        mov si, [TARGET]
+        call map_bit
+        push fs
+        mov fs, [cs:far_seg]
+        add si, FAR_BIG             ; (added first: FF9Ah as a displacement wraps to a byte's)
+        test [fs:si], al
+        pop fs
+        jnz .done                   ; (the Loader's: too big, or nothing to tangle)
+        mov ax, 20
+        call game_die
+        mov dx, [TARGET]
+        mov [cs:mn_frame], dx
+        mov dx, [bp + 0x18]
+        mov [cs:mn_frame + 2], dx
+        mov [cs:mn_frame + 4], ax
+        mov [cs:mn_frame + 6], cx
+        push ax
+        push cx
+        mov ax, MN_TANGLE
+        call mn_rec
+        pop cx
+        pop ax
+        cmp ax, 20
+        je .done                    ; (a natural 20 saves)
+        cmp ax, cx
+        jge .done                   ; (saved)
+        mov bx, [TARGET]
+        call swept_now              ; (yet to act this round: this round's turn lost at once)
+        jc .done
+        mov si, bx
+        call map_bit
+        push fs
+        mov fs, [cs:far_seg]
+        or [fs:FAR_SWEPT + si], al  ; (else next round's: PROBE_MOVE)
+        pop fs
+.done:  pop es
+        popad
+.out:   iret
+cah_extra  dw 0                     ; how much worse the off head's swing is than the main head's
+cah_who    dw -1                    ; ... for this attacker (a combatant; -1 none)
+
 rest_hp:
         test word [cs:rules_hi], RULE_HI_REST
         jz .game
@@ -17097,6 +17284,7 @@ RULE_HI_ENLARGE equ 512         ; (RULES_HI) Enlarge multiplies the weapon's dic
 RULE_HI_CON equ 1024            ; (RULES_HI) CON as in AD&D: regeneration's rates, dwarves' poison saves (REGEN_SITE, CON_SAVE)
 RULE_HI_DUAL equ 2048           ; (RULES_HI) dual-classing at 3rd level, every prime requisite checked (DUAL_LEVEL, DUAL_PRIMES)
 RULE_HI_REST equ 4096           ; (RULES_HI) rest heals by spells and natural healing (REST_PRE, REST_HP)
+RULE_HI_CAHULAKS equ 8192       ; (RULES_HI) cahulaks: a head in each hand, a tangle on a hit (CAHULAKS)
 THINGS_SEG equ 0x3972 - 0x4356  ; the things table's segment, relative to DS
 
 ; PROBE_MOVE: INT VEC_MOVE replaces "mov es:[bx+22Bh],ax" (5 bytes: INT + 3 NOPs) where a
@@ -17137,6 +17325,8 @@ LEFT_HAND  equ 10
 probe_two:
         test byte [cs:rules], RULE_TWO_WEAPONS
         jnz .rule
+        call two_cahulaks       ; (the cahulaks' rule: AD&D's numbers for them, whatever this one)
+        je .rule
         neg ax
         mov dx, ax
         or dx, dx
@@ -17197,7 +17387,11 @@ probe_two:
         call heavy_worn
         pop dx
         jnc .out
-.scan:  call worn_scan
+.scan:  call two_cahulaks
+        jne .worn
+        call cah_adjust         ; (the cahulaks: the main head's here, the off head's more kept)
+        jmp .out
+.worn:  call worn_scan
         xor dx, dx
         cmp word [cs:ws_count], 0
         je .out                 ; nothing to fight with in the other hand
@@ -19617,6 +19811,9 @@ site_tab:
         site PIC_FULL_SITE, pic_full
         site PIC_PLACE_SITE, pic_place
         site PIC_COUNT_SITE, pic_count
+        site CAH_TWO_SITE, cah_two
+        site CAH_SWING_SITE, cah_swing
+        site CAH_HIT_SITE, cah_hit
 SITE_COUNT equ ($ - site_tab) / 2
 
 ; NS_CMP: the compare of site RL_SITE (of NS_CMP_SITES), its flags into the INT's frame.
@@ -26919,7 +27116,8 @@ FAR_DARK   equ FAR_PUFFS + PUFFS * PUFF_SIZE    ; the shadows' colours (BUILD_DA
 FAR_TU     equ FAR_DARK + 256                   ; TURN_SITE's TU_FAILED: a byte per target (SWEPT_MARK's note)
 FAR_SWEPT  equ FAR_TU + MAP_COUNT               ; Whirlwind's SWEPT: a bit per combatant
 FAR_DJ     equ FAR_SWEPT + MAP_BITS             ; DJINN_TURN's DJ_DONE: a bit per combatant
-FAR_END    equ FAR_DJ + MAP_BITS
+FAR_BIG    equ FAR_DJ + MAP_BITS                ; the Loader's: a bit per combatant too big to tangle (CAHULAKS)
+FAR_END    equ FAR_BIG + MAP_BITS + 1           ; (+1: the block an even length)
 FAR_PARAS  equ (FAR_END - FAR_RING + 15) / 16
         times -(FAR_END > 0x10000) db 0     ; (a negative count: past the HMA's 64 KB)
         times -((FAR_END - FAR_RING) & 1) db 0  ; (FAR_INIT clears it a word at a time)

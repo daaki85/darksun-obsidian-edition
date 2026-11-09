@@ -177,6 +177,12 @@ DUAL_LEVEL_GAME, DUAL_LEVEL_RULE, DUAL_OLD_LEAST, DUAL_NEW_LEAST = 2, 3, 15, 17
 # wounded); then each member gets REST_NATURAL hit points plus CON's bonus (a warrior's, else at most
 # +2), not all of them (DSCLOG's RULE_HI_REST, REST_PRE, REST_HP)
 RULE_REST = 268435456
+# Cahulaks as Dark Sun's rules have them: a pair of heads, one in each hand, under the two-weapon
+# rule (the off head's one more attack a round; -2 the main head's, -4 the off head's, DEX's
+# reaction adjustment added, no better than 0), and a hit that tangles a man-sized or smaller
+# target failing a save against petrification (it loses its next turn; cahulaks.py's list of the
+# too big). DSCLOG's RULE_HI_CAHULAKS, CAHULAKS
+RULE_CAHULAKS = 536870912
 REST_NATURAL = 3
 SPEC_SLOTS, SPEC_COUNT = 0x14, 4
 # The sheet's +14h to +17h (the game never reads or writes them): the four weapon specs, kind + 1
@@ -270,7 +276,7 @@ RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("two_weapons", RULE_TWO_WEAPONS),
                  ("rolled_scores", RULE_ROLLED), ("buyback", RULE_BUYBACK),
                  ("backstab_dice", RULE_BACKSTAB), ("aging", RULE_AGING),
                  ("enlarge_dice", RULE_ENLARGE), ("con_adnd", RULE_CON),
-                 ("dual_class", RULE_DUAL_CLASS), ("rest_heal", RULE_REST))
+                 ("dual_class", RULE_DUAL_CLASS), ("rest_heal", RULE_REST), ("cahulaks", RULE_CAHULAKS))
 # The new spells (RULE_NEW_SPELLS; DSCLOG's NEW SPELLS): six wizard spells numbered after the game's
 # 196 (0-195), in records past its own (the 200h bytes after them, two small tables, moved into
 # DSCLOG at the game's start: its SEG_MOVE, SEGMENT_TABLE here); DSCLOG fills their records and rows

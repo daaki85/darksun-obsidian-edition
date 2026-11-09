@@ -208,6 +208,8 @@ SAVE_SUM_SITE, SAVE_NAT_SITE = NS_IMAGE + 96, NS_IMAGE + 97
 BOX_PIC_ITEM_SITE, BOX_PIC_OBJECT_SITE = NS_IMAGE + 98, NS_IMAGE + 99
 # (the picture cache's 300 slots: one reused once all are taken, DSCLOG's PIC_REUSE)
 PIC_FULL_SITE, PIC_PLACE_SITE, PIC_COUNT_SITE = NS_IMAGE + 100, NS_IMAGE + 101, NS_IMAGE + 102
+# (the cahulaks' rule, RULE_CAHULAKS: two weapons ready, the off head's swing, the tangle: DSCLOG's CAHULAKS)
+CAH_TWO_SITE, CAH_SWING_SITE, CAH_HIT_SITE = NS_IMAGE + 103, NS_IMAGE + 104, NS_IMAGE + 105
 # the monster kinds' table (DSUN.EXE, the load segment's 3E45h: monsters.MONSTER_KINDS_SEG): a kind's
 # properties (a dword), its resistance class (a byte), a class's damage kinds (four words) and percents
 KINDS_FILE = 0x5400 + 0x3E45 * 16
@@ -580,6 +582,13 @@ PATCHES = (
     Patch("pic_full", 0x26009, bytes.fromhex("813e841f2c0173bfa1841f"), _site(PIC_FULL_SITE, 11)),
     Patch("pic_place", 0x260CC, bytes.fromhex("c45efc"), _site(PIC_PLACE_SITE, 3)),
     Patch("pic_count", 0x2612B, bytes.fromhex("8b36841fff06841f"), _site(PIC_COUNT_SITE, 8)),
+    # Cahulaks as Dark Sun's rules have them (the Loader's rule "cahulaks", RULE_CAHULAKS; each site the
+    # game's with it off): the two-weapon adjustment's "two weapons ready?" (595ECh: "cmp word [bp+6],1 /
+    # jle") on for them too; the attack's swing (589B6h, "mov word [bp-4],0": the off head's, the round's
+    # last, its penalty); a weapon's hit that did damage (58B54h, "mov byte [bp-15h],0": the tangle).
+    Patch("cahulaks_two", 0x59627, bytes.fromhex("837e06017e11"), _site(CAH_TWO_SITE, 6)),
+    Patch("cahulaks_swing", 0x589B6, bytes.fromhex("c746fc0000"), _site(CAH_SWING_SITE, 5)),
+    Patch("cahulaks_hit", 0x58B54, bytes.fromhex("c646eb00"), _site(CAH_HIT_SITE, 4)),
     # The monsters as the manual describes them (in the same switch; reports/group 4's research,
     # playtest/logs/2026-11-09-group-4-research.md). The kinds' properties: bit 15 a hit (the last
     # natural attack's) casting the priests' Poison (119), bit 24 the corroding touch, bit 25 disease

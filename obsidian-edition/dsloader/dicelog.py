@@ -28,7 +28,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import aging, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, cahulaks, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
@@ -256,6 +256,7 @@ MANUAL_CHILL, MANUAL_CLOUD, MANUAL_CELL, MANUAL_RAINBOW, MANUAL_FEEBLE, MANUAL_P
 # +0Ah the turns, +0Ch the power it replaces; a Tari's bite +8 the Tari, +0Ah the d2 (1: the disease and
 # its save follow); a djinn's first turn (+6 the djinn) +8 its images, +0Ah the rounds invisible
 MANUAL_DRAIN, MANUAL_TARI, MANUAL_DJINN = range(7, 10)
+MANUAL_TANGLE = 10  # (DSCLOG's CAHULAKS: +6 the target, +8 the attacker, +0Ah the d20, +0Ch the save needed)
 # DSCLOG's rest (game.RULE_REST: REST_PRE, REST_HP, RS_REC): raw = what; a cast at rest (REST_CAST): its
 # frame +6 the caster, +8 the target, +0Ah the spell, +0Ch its slot's level (0 a psionic power), +0Eh the
 # slots of that level left (a power: the PSP left); a night's natural healing (REST_HEAL): +6 the member,
@@ -546,6 +547,7 @@ class DiceLog:
         self._dust = dust.Dust()
         self.ring_mode = rings.ONLY_CHOSEN  # a ring in a fight: off, or the chosen enemy's (rings.py)
         self._rings = rings.Rings()
+        self._big = cahulaks.Big()
         self.use_targeting = True  # Tab chooses an enemy in a fight, Enter attacks it (targeting.py)
         self._targeting = targeting.Targeting()
         self.scroll_map = True  # the map scrolled by dragging with the wheel pressed (scrolling.py)
@@ -667,6 +669,7 @@ class DiceLog:
         self._scrolling.forget()  # (a DSCLOG of its own: told again)
         self._dust = dust.Dust()
         self._rings = rings.Rings()
+        self._big = cahulaks.Big()
         self._targeting.forget()
         self._arena_count = None
         self.tracker = PartyTracker(self.game)
@@ -1570,6 +1573,7 @@ class DiceLog:
             out = self._targeting.update(self.game, self.tsr_hdr, self.use_targeting, foes)
             self._rings.update(self.game, self.tsr_hdr, self.ring_mode != rings.OFF, self._shadows.palettes,
                                self._targeting.chosen)
+            self._big.update(self.game, self.tsr_hdr)  # (the cahulaks' tangle: who is too big)
             self._dust.update(self.game, self.tsr_hdr, self.show_dust, self._shadows.palettes)
             hdr = self.tsr_hdr
             self._ghosts.update(self.game, hdr, self.see_through, self._shadows.palettes,
@@ -2574,6 +2578,11 @@ class DiceLog:
             return [f"{self._name(a)}'s bite on {name}: 1 in 10, and a d2 for the manual's 1 in 20: {b} -> {then}"]
         if e.raw == MANUAL_DJINN:
             return [f"{name} turns invisible ({b} rounds) and makes {a} mirror images of itself"]
+        if e.raw == MANUAL_TANGLE:
+            saved = b == 20 or b >= (c or 0)
+            then = "saved" if saved else "tangled: loses its next turn"
+            return [f"    {self._name(a)}'s cahulaks tangle {name}? Save against petrification: "
+                    f"d20 = {b}, needs {c}+ -> {then}"]
         return []
 
     def _rest(self, e: Entry) -> List[str]:

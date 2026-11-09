@@ -3044,6 +3044,32 @@ class RuleTests(RingTests):
         self.assertEqual([self.two(adj, 4) for adj in (-3, 0, 1, 2, 5)], [-5, -2, -1, 0, 0])
         self.assertEqual([self.two(adj, 7) for adj in (-3, 0, 2, 3, 4, 5)], [-7, -4, -2, -1, 0, 0])
 
+    def test_cahulaks(self):
+        """The cahulaks' rule (RULES_HI 8192): the cahulaks (type 21) in the right hand alone are two
+        weapons, AD&D's numbers whatever the two-weapon rule: the main head's -2 plus the DEX adjustment, no
+        better than 0, and CAH_EXTRA how much worse the off head's (-4 plus it) is, for attacker CX
+        (CAH_WHO); without the rule as the game's."""
+        import test_dsclog_drawing as tdd
+        _, sym = tdd.build()
+        self.hands(right=(21, 3), left=(90, 99))
+        rules_hi = TSR * 16 + self.RULES + 100
+        def extra():
+            return struct.unpack("<hh", self.mu.mem_read(TSR * 16 + sym["cah_extra"], 4))
+        try:
+            for rules in (0, 4):
+                self.rules(rules)
+                self.mu.mem_write(rules_hi, struct.pack("<H", 8192))
+                for adj, main, off in ((-3, -5, -7), (0, -2, -4), (1, -1, -3), (2, 0, -2), (3, 0, -1), (5, 0, 0)):
+                    self.assertEqual(self.two(adj, 4), main, (rules, adj))
+                    self.assertEqual(extra(), (main - off, 3), (rules, adj))
+            self.mu.mem_write(rules_hi, struct.pack("<H", 0))
+            self.rules(4)
+            self.assertEqual(self.two(0, 4), 0)  # (nothing in the other hand: none, as ever)
+            self.rules(0)
+            self.assertEqual(self.two(-6, 4), 6)  # (the game's)
+        finally:
+            self.mu.mem_write(rules_hi, struct.pack("<H", 0))
+
     def test_twin_blade(self):
         """A Twin-blade (kits on): no AD&D two-weapon penalty, as kits.py's; the game's own bonus
         without the rule kept."""
