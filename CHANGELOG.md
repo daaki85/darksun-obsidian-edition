@@ -351,6 +351,12 @@ DSCLOG.EXE 65,344 bytes (image 65,312), 3,104 of its segment spare.
   the store no longer pauses DOSBox a second time while it is already paused (`sprites`; tests in
   `test_sprites`).
 
+**Docs**
+- The player guide's **XP left over at the top**: each class's highest level under the 749,999 cap
+  and the XP left over (one, two or three classes), and for dual-classing humans the room a new
+  class has by the level the old class changed at (dual-classing starts the new class at 0 XP and
+  loses any XP past the old level's need: DSUN.EXE 86D38h); FEATURES links to it.
+
 ## Pull request #88 ([merged 2026-11-08](https://github.com/daaki85/darksun-obsidian-edition/pull/88))
 
 Obsidian Edition 2.14.1 ([release notes](release-notes/v2.14.1.md)).

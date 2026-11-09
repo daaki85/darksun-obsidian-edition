@@ -256,6 +256,10 @@ new class's level passes the old one's**; then both count. The new class can
 take a kit of its own, so a human may end up with three. Some kits rule out
 classes a human could change to ([kits](#kits)).
 
+The change starts the new class at 0 XP, and any XP past the old level's need
+is lost: change as soon as the level you want comes. How far the new class can
+then rise: [XP left over at the top](#xp-left-over-at-the-top).
+
 ## The classes
 
 | Class | Hit die | Prime requisites | Races | Armour | Weapons | Kits |
@@ -1023,6 +1027,68 @@ AD&D's tables:
 
 *Without the mod:* a gladiator needs what a fighter does, a ranger 2,200 for
 2nd level and a thief 1,200.
+
+### XP left over at the top
+
+The cap stops levels, not XP: past a class's highest level the XP keeps
+counting (to the game's own limit, 2,000,000,000), but no level comes of it.
+What is left over is the cap less the XP the highest level needed. For a human
+it is also the room a new class has: dual-classing starts the new class at 0
+XP, and the new class may rise only as far as the cap less the old class's
+level's XP allows.
+
+One class, with AD&D's tables:
+
+| Class | Highest level | XP it needs | Next level needs | Left over |
+|---|---|---|---|---|
+| Fighter | 10 | 500,000 | 750,000 | 249,999 |
+| Gladiator | 10 | 600,000 | 900,000 | 149,999 |
+| Ranger | 10 | 600,000 | 900,000 | 149,999 |
+| Cleric | 11 | 675,000 | 900,000 | 74,999 |
+| Druid | 12 | 300,000 | 750,000 | 449,999 |
+| Preserver | 11 | 375,000 | 750,000 | 374,999 |
+| Psionicist | 11 | 600,000 | 800,000 | 149,999 |
+| Thief | 13 | 660,000 | 880,000 | 89,999 |
+
+A human can change class before the top. The room left for the new class, by
+the level the old class had when it changed:
+
+| Old class's level | Fighter | Gladiator, ranger | Cleric | Druid | Preserver | Psionicist | Thief |
+|---|---|---|---|---|---|---|---|
+| 3 | 745,999 | 745,499 | 746,999 | 745,999 | 744,999 | 745,599 | 747,499 |
+| 4 | 741,999 | 740,999 | 743,999 | 742,499 | 739,999 | 741,199 | 744,999 |
+| 5 | 733,999 | 731,999 | 736,999 | 737,499 | 729,999 | 733,499 | 739,999 |
+| 6 | 717,999 | 713,999 | 722,499 | 729,999 | 709,999 | 719,999 | 729,999 |
+| 7 | 685,999 | 674,999 | 694,999 | 714,999 | 689,999 | 694,999 | 709,999 |
+| 8 | 624,999 | 599,999 | 639,999 | 689,999 | 659,999 | 649,999 | 679,999 |
+| 9 | 499,999 | 449,999 | 524,999 | 659,999 | 614,999 | 549,999 | 639,999 |
+| 10 | 249,999 | 149,999 | 299,999 | 624,999 | 499,999 | 349,999 | 589,999 |
+| 11 | – | – | 74,999 | 549,999 | 374,999 | 149,999 | 529,999 |
+| 12 | – | – | – | 449,999 | – | – | 309,999 |
+| 13 | – | – | – | – | – | – | 89,999 |
+
+Look the room up in the XP table above: a fighter who changes at 9th has
+499,999, enough for a 10th-level cleric (450,000); one who changes at 10th has
+249,999, enough for a 9th. A human who changes class twice has the cap less
+both old levels' XP.
+
+Two or three classes share the cap (374,999 or 249,999 each):
+
+| Class | Two classes: highest level | Left over | Three classes: highest level | Left over |
+|---|---|---|---|---|
+| Fighter | 9 | 124,999 | 8 | 124,999 |
+| Ranger | 9 | 74,999 | 8 | 99,999 |
+| Cleric | 9 | 149,999 | 9 | 24,999 |
+| Druid | 12 | 74,999 | 11 | 49,999 |
+| Preserver | 10 | 124,999 | 9 | 114,999 |
+| Psionicist | 9 | 174,999 | 9 | 49,999 |
+| Thief | 11 | 154,999 | 11 | 29,999 |
+
+With the game's own XP tables (AD&D's off), a gladiator has the fighter's
+numbers (249,999 left over), and a druid needs 675,000 for 11th and 900,000
+for 12th, so stops at 11th with 74,999 left over (10th with two or three
+classes: 249,999 or 124,999). *Without the mod:* every class stops at 9th, all
+XP past 9th's need is left over, and a human who changes class loses it.
 
 ### Hit points
 

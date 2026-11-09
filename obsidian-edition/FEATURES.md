@@ -777,7 +777,9 @@ count against the new one: a fighter who changed to cleric at 9th (250,000 XP)
 can take the cleric to 10th, at 7th (64,000) to 11th. XP keeps counting past
 the cap; only the levels stop. With [AD&D's class tables](#adds-class-tables),
 the highest levels are in the player's guide's [Experience and
-levels](PLAYER-GUIDE.md#experience-and-levels), with AD&D's XP table.
+levels](PLAYER-GUIDE.md#experience-and-levels), with AD&D's XP table, and the
+XP each class has left over at the top and the room a human's new class has
+([XP left over at the top](PLAYER-GUIDE.md#xp-left-over-at-the-top)).
 
 749,999 is the most XP that keeps a druid from 13th and a preserver from 12th
 (both need 750,000), where a preserver would cast 6th-level spells. Without
