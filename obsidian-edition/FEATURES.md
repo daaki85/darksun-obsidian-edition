@@ -927,8 +927,8 @@ Two monsters' hits can destroy an item: the **Rampager's acid** a worn piece
 of armour, and the **Babau's corroding touch** (the game's; with [the
 manual's monsters](#spells-and-psionics-as-the-manual-describes-them) the Babau has its deadly
 poison instead) a worn piece of armour and the
-melee weapon held (the first one in the character's list of held items; bows
-and slings never). The game makes the check on every such hit, whether or not
+melee weapon held (the first one in the character's list of held items whose
+reach, its type's +0Ah, is 1: bows, slings and chatkchas never). The game makes the check on every such hit, whether or not
 the target's saving throw against the attack succeeds, and shows its own
 message when the item goes ("Armor is corroded", "Weapon is corroded"). Only
 pieces worn on the arms, legs or chest count (bracers and robes among them),

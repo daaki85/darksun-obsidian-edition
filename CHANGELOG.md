@@ -391,6 +391,12 @@ DSCLOG.EXE 65,520 bytes (image 65,488), 2,928 of its segment spare.
   Blade made in the Wyrm School's bowl, Notaku's payments, Tanelyv's gifts, Laussa's ring and others;
   "—" now only where nothing gives the item (the Polearm +1, the Golden Torque). The champions' gear
   in the mundane tables; the polearms' doc icons at the game's own 36 pixels.
+- **ITEMS.md, FEATURES and the guide: the chatkchas and the Polearm +1.** The acid and corroding
+  touch take only a held weapon of reach 1 (the type's +0Ah; the item list routine, DSUN.EXE
+  5900Ah, called with 1): chatkchas (reach 9), slings and bows are never taken, so the Chatkcha +1
+  and Skycutter are out of the acid table. The Polearm +1 is only among the objects the game's
+  scripts can make (RGNFF.GFF), and no script makes it: nothing in play gives it (the cluebook's
+  "Elven Caravan" is not in the data).
 - The player guide's **XP left over at the top**: each class's highest level under the 749,999 cap
   and the XP left over (one, two or three classes), and for dual-classing humans the room a new
   class has by the level the old class changed at (dual-classing starts the new class at 0 XP and

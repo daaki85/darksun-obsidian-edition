@@ -39,7 +39,7 @@ Belt of Might making STR at least 24.
 | ![](docs/items/stillwater.png) | Bone | short sword | ***Stillwater*** | a bone short sword +1: a **psionicist** can wield it, alone or with a water cleric | in the chest **Chaya** gives as her apology |
 | ![](docs/items/mace-plus2.png) | Bone | mace | Mace +2 | +2 | a weapon rack in the Subterranean Temple, with the Storm Ring |
 | ![](docs/items/drakejaw.png) | Bone | axe | ***Drakejaw*** | a bone axe +1 (1d8+1): a water cleric can wield it | carried by one of the **Magera** guarding the wagon's prisoners |
-| ![](docs/items/polearm-plus1.png) | Bone | polearm | Polearm +1 | +1 | — (the cluebook says the Elven Caravan; nothing in the data or the scripts places or gives it) |
+| ![](docs/items/polearm-plus1.png) | Bone | polearm | Polearm +1 | +1 | nowhere in play: the game has it only among the objects its scripts can make (RGNFF.GFF), and no script makes it, nor does any creature, chest or map hold it (the cluebook says the Elven Caravan, whose buried chest has a Graft Weapon bracelet instead) |
 | ![](docs/items/thornwall.png) | Bone | polearm | ***Thornwall*** | a bone polearm +1 | on the slave pens' **weapon rack**, once **Semyon**, in his pen, has told of the weapon shipment ("Seen anything useful?") |
 | ![](docs/items/gythka-plus3.png) | Bone | gythka | Gythka +3 | +3 | the arena's [1000th trip](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights), King Tectuktitlay's gift |
 | ![](docs/items/gythka-plus2.png) | Bone | gythka | ***Gythka +2*** | the game's Gythka +1, made +2 | the **Elven Leader**'s gift, after the fight with his men (he carries it too) |
@@ -327,7 +327,10 @@ no magical power is lost at once in the game (0%); one with a power never is
 | ***Bracers of Defense*** AC 2 (+8) | 0% | 85% (needs 4) |
 
 **Weapons** (the first melee weapon held), by material, the game's and the
-mod's. A weapon's spell (Dark Flame's Burning Hands) is a magical power:
+mod's. A weapon's spell (Dark Flame's Burning Hands) is a magical power. Only a
+weapon of reach 1 is ever taken (the type's +0Ah; DSUN.EXE 5900Ah, which the
+attack calls with 1): chatkchas (the Chatkcha +1, ***Skycutter***: reach 9),
+slings and bows never are:
 
 | Item | Saved in the game | Saved with the rule |
 |---|---|---|
@@ -342,8 +345,8 @@ mod's. A weapon's spell (Dark Flame's Burning Hands) is a magical power:
 | Metal +3: Dag's Dagger, Great Axe +3 | 80% | 80% (the game's: needs 5) |
 | Metal +4: Dragonsbane | 85% | 85% (the game's: needs 4) |
 | Obsidian +1: Bloodwrath, ***Mindshard*** | 70% | 85% (needs 4) |
-| Obsidian +1 with a power: Blackmace, Chatkcha +1, ***Flame Blade*** | 70% | 90% (needs 3) |
-| Obsidian +2: ***Nightsliver***, ***Glasshewer***, ***Skycutter*** | 75% | 90% (needs 3) |
+| Obsidian +1 with a power: Blackmace, ***Flame Blade*** | 70% | 90% (needs 3) |
+| Obsidian +2: ***Nightsliver***, ***Glasshewer*** | 75% | 90% (needs 3) |
 | Obsidian +2 with a power: Dark Flame, Terror Blade (Poison) | 75% | 95% (needs 2) |
 | Stone +1: ***Deepbiter*** | 70% | 85% (needs 4) |
 | Wooden +1: Parting Staff, ***Gutterknot*** | 70% | 70% (needs 7) |
