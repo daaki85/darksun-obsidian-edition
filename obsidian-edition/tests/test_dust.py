@@ -51,7 +51,7 @@ class DustTests(unittest.TestCase):
         self.assertEqual(gd.guest.read(HDR + dust.TSR_DUST_ON, 2), b"\0\0")
         d.update(gd, HDR, True, 1)
         self.assertEqual(gd.guest.read(HDR + dust.TSR_DUST_ON, 2), b"\1\0")
-        self.assertEqual(gd.guest.read(BASE + LIGHT + SAND, 1), bytes([SAND_LIGHT]))
+        self.assertEqual(gd.guest.read(FAR + LIGHT + SAND, 1), bytes([SAND_LIGHT]))  # (LIGHT: the far block's)
         d.update(gd, HDR, False, 1)
         self.assertEqual(gd.guest.read(HDR + dust.TSR_DUST_ON, 2), b"\0\0")
 

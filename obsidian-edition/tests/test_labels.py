@@ -5,7 +5,7 @@ import unittest
 
 from dsloader import combatlog, labels
 
-HDR, BASE, DAC = 0x2000, 0x1F00, 0x3000
+HDR, BASE, DAC, TAIL, SLOTS_OFF = 0x2000, 0x1F00, 0x3000, 0x350, 0x20
 
 
 class Font:
@@ -23,6 +23,8 @@ class Guest:
         struct.pack_into("<H", self.mem, HDR + combatlog.TSR_HDR_OFF, HDR - BASE)
         struct.pack_into("<H", self.mem, HDR + combatlog.TSR_DAC, DAC - BASE)
         struct.pack_into("<H", self.mem, HDR + combatlog.TSR_FAR_SEG, BASE // 16)  # (DAC's: the far block)
+        struct.pack_into("<H", self.mem, HDR + labels.TSR_TAIL_SEG, TAIL)  # (the slots': the tail)
+        struct.pack_into("<H", self.mem, HDR + labels.TSR_LABELS, SLOTS_OFF)
         for i in range(256):
             self.mem[DAC + i * 3:DAC + i * 3 + 3] = bytes((i // 4,) * 3)  # (a grey ramp)
 
@@ -35,7 +37,7 @@ class Guest:
 
 
 def slot(guest, n):
-    return guest.read(HDR + labels.TSR_LABELS + n * labels.SIZE, labels.SIZE)
+    return guest.read(TAIL * 16 + SLOTS_OFF + n * labels.SIZE, labels.SIZE)
 
 
 class LabelTests(unittest.TestCase):
@@ -65,8 +67,8 @@ class LabelTests(unittest.TestCase):
         self.assertEqual((number, w, h, up, thing), (1, 14, 11, labels.UP, 0x25))
         self.assertEqual((ink, edge), (combatlog.nearest(guest.read(DAC, 768), labels.MISS_INK),
                                        combatlog.nearest(guest.read(DAC, 768), labels.EDGE)))
-        self.assertEqual(guest.writes[0], (HDR + labels.TSR_LABELS, b"\0"))
-        self.assertEqual(guest.writes[-1], (HDR + labels.TSR_LABELS, b"\1"))
+        self.assertEqual(guest.writes[0], (TAIL * 16 + SLOTS_OFF, b"\0"))
+        self.assertEqual(guest.writes[-1], (TAIL * 16 + SLOTS_OFF, b"\1"))
         lab.show(guest, HDR, 0x25, "Miss", labels.MISS_INK, 11.0)  # (kept longer, not written again)
         self.assertEqual(slot(guest, 0)[0], 1)
         lab.show(guest, HDR, 2, "Enlarge", labels.SPELL_INK, 11.2)

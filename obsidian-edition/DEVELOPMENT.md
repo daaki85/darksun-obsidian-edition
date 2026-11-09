@@ -482,76 +482,97 @@ sizes; the paragraphs after it say how each piece got there.
 | C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
 | C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 60.75 KB (62,208 bytes with its PSP), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, 36.5 KB (37,392 bytes) free in one piece and 720 bytes between the helper and the overlay buffer (measured 2026-11-08, `memaudit.py`) |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
-| 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's far block, 63.3 KB (64,826 bytes), 694 bytes free |
+| 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's far block, 63.25 KB (64,768 bytes), 752 bytes free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
 
 **The budget.** Each limit fails the build when passed (a negative `times`):
 
 - The helper's segment: what it reaches through CS is what stays (to
-  `resident_end`, 60,560 bytes) and the buffers laid over the install code
-  after it (`AFTER_INSTALL`, 1,664), together `kept_end`, 62,224 bytes, so
-  3,312 bytes of its 64 KB are spare. This is the limit for new code. The image
-  (`image_len`) is as long: `DSCLOG.EXE` is 32 bytes more, 62,256, with its
-  header. Buffers that start as zeros and aren't needed while installing are
-  laid over the install code, as `seg_space`, `area_space` and `dark` are
-  (declared with `resb` after the image): `KEEP` zeroes them before its first
-  DOS call and keeps memory to `kept_end` (`KeepTests`). The segment holds
-  whichever is longer, the install code or `AFTER_INSTALL`; the install code is
-  now the shorter (1,576 bytes: the vectors set from a table, `ALL_VECTORS`,
+  `resident_end`, 58,096 bytes) and the buffers laid over the install code
+  after it (`AFTER_INSTALL`, 1,408), together `kept_end`, 59,504 bytes, so
+  6,032 bytes of its 64 KB are spare. This is the limit for new code. The image
+  (`image_len`) is as long. Buffers that start as zeros and aren't needed while
+  installing are laid over the install code, as `seg_space` and `area_space`
+  are (declared with `resb` after the image): `KEEP` zeroes them before its
+  first DOS call and keeps memory to the tail's end (`KeepTests`). The segment
+  holds whichever is longer, the install code or `AFTER_INSTALL`; the install
+  code is the shorter (974 bytes: the vectors set from a table, `ALL_VECTORS`,
   each vector's byte and its handler's offset), so the image is made up to
-  `AFTER_INSTALL`'s size with zeros (88 bytes at present), and those 88 bytes
-  are room for more of `FAR_DATA` (below) at no cost to the segment. Moving a
-  zeroed buffer into `AFTER_INSTALL` now frees nothing: it lengthens what it
-  leaves. The way to free the segment is to move a buffer to the far block
-  (FS, ES or DS set to `FAR_SEG` around its use; the drawing passes already
-  keep FS on it for their whole run) or, for data that starts with values, to
-  the far block's `FAR_DATA`, its bytes kept in the install code's room and
-  copied there by `FAR_INIT`. Buffers the Loader finds through the header keep
-  their header field, its value then an offset in the far block, which the
-  Loader reads at `far_seg` (+142) x 16 (DAC, RING_TAB, RED).
-  (The install's 256-byte stack is past the image, in its own segment: `SS` in
-  the EXE's header is the paragraph after the image; the helper asks DOS for
-  both, `LOAD_EXTRA`.) Code shared by many handlers is written once
-  (`OVR_BACK`, the way back through the overlay manager's frame;
-  `SHEET_CLASSES`). Text the game reads from RESOURCE.GFF belongs in the
-  Loader's copy of it, not in the helper (`spelltexts.py`: the descriptions
-  moved there freed 1.6 KB), and so does data read from the player's game (the
-  pointer's picture, `POINTER.BIN`). What each change took is in the CHANGELOG.
-- The far block: it ends at `FAR_END` (64,842), so the HMA has 694 bytes left
+  `AFTER_INSTALL`'s size with zeros (434 bytes at present), which is room for
+  more install code at no cost. Moving a zeroed buffer into `AFTER_INSTALL`
+  frees nothing: it lengthens what it leaves. The ways to free the segment:
+  - **the tail** (`TAIL_SEG`, the header's +1834): the paragraphs after the
+    image, in the EXE (`section tail`, its labels offsets from its own start),
+    loaded with it and kept with it by `KEEP` (`KEPT_PARAS`), outside the
+    segment. It costs upper memory as the segment did (the same block), but
+    none of the segment's room and none of the HMA's; data that starts with
+    values (the item types, the names) stays there as loaded, with no copy.
+    Its segment is the image's + `TAIL_PARAS` (+1836, set by the install at
+    +1834); the helper reaches it through a segment register set to
+    `[cs:tail_seg]` around each use, and a buffer the Loader keeps there has
+    its offset in its header field (the Loader reads it at `tail_seg` x 16:
+    LBL_SLOTS, +1838; TICKS, +356). It is real-mode memory, so the game can
+    be handed a far pointer into it (the HMA is less safe for that);
+  - **the far block** (the HMA): FS, ES or DS set to `FAR_SEG` around a
+    buffer's use; the drawing passes keep FS on it for their whole run, so a
+    table they read costs nothing to move there (`cs:` becomes `fs:`). Buffers
+    the Loader finds through the header keep their field, its value then an
+    offset in the far block, which the Loader reads at `far_seg` (+142) x 16
+    (DAC, RING_TAB, RED, LIGHT).
+  (The install's 256-byte stack is past the image and the tail, in its own
+  segment: `SS` in the EXE's header is the paragraph after the tail; the
+  helper asks DOS for both, `LOAD_EXTRA`.) Code shared by many handlers is
+  written once (`OVR_BACK`, the way back through the overlay manager's frame;
+  `SHEET_CLASSES`; the sites after `VEC_CR_SPELLS`'s INT through one table,
+  `SITE_TAB`). Text the game reads from RESOURCE.GFF belongs in the Loader's
+  copy of it, not in the helper (`spelltexts.py`: the descriptions moved there
+  freed 1.6 KB), and so does data read from the player's game (the pointer's
+  picture, `POINTER.BIN`). What each change took is in the CHANGELOG.
+- The far block: it ends at `FAR_END` (64,784), so the HMA has 752 bytes left
   for more buffers.
 - Upper memory without `UMBPLUS.COM` (`UMB_ROOM`, D00Ah to F000h, 8,182
-  paragraphs): the helper as it loads and the overlay buffer (`UMB_NEED`, the
-  header's +372) need 5,968, and `test_fits_upper_memory` checks it too; what
-  stays once installed, with the music buffer and the see-through figures'
-  tables (`UMB_KEPT`: all four blocks and their MCBs), 7,590, so 592 (9.25 KB)
-  are spare.
+  paragraphs): the helper as it loads (its tail and stack too) and the overlay
+  buffer (`UMB_NEED`, the header's +372) need 5,995, and
+  `test_fits_upper_memory` checks it too; what stays once installed, with the
+  music buffer and the see-through figures' tables (`UMB_KEPT`: all four
+  blocks and their MCBs), 7,617, so 565 (8.8 KB) are spare.
 
 **What moved where (2026-11-08)**, freeing 3,136 bytes of the segment (3,040 of
 what stays, 190 paragraphs of upper memory): DAC (768), RING_TAB (520) and RED
 (256), the Loader's tables for the rings and the palette copy, to the far block
 (`FAR_DAC`, `FAR_RING_TAB`, `FAR_RED`; the header's +238, +246, +248 are their
 offsets there); how far each thing has walked for the dust (520) to
-`FAR_WALKED`; the companion's item types (600) to `FAR_TYPES`, the first of
-`FAR_DATA` (its bytes at the header's +144 as built, copied to +172's offset,
-+174 bytes; the tests do the same); the vectors set from a table (about 790
-bytes less install code); the AD&D XP table as words of 50 XP, the ranger's
-row the gladiator's (448 to 196 bytes); the companion's item names
-NUL-terminated (736 to 579 bytes, padded as they are copied).
+`FAR_WALKED`; the companion's item types (600) to the far block, copied there
+from the install code's room (the tail's since 2026-11-09); the vectors set
+from a table (about 790 bytes less install code); the AD&D XP table as words
+of 50 XP, the ranger's row the gladiator's (448 to 196 bytes); the companion's
+item names NUL-terminated (736 to 579 bytes, padded as they are copied).
+
+**What moved where (2026-11-09)**, freeing 4,000 bytes of the segment (2,032 to
+6,032 spare; logs/2026-11-09-memory-pass-2.md has each step in the game):
+
+| Step | Segment spare after |
+|---|---|
+| before | 2,032 |
+| the sites after `VEC_CR_SPELLS`'s INT (`RL_SITES`: 94 compares and jumps) through a table of a word a site, `SITE_TAB` (688) | 2,720 |
+| the rings' outlines kept as a quarter each, a byte a point, `RING_POINTS` mirroring them (456 to 60 bytes, 336 with the code) | 3,056 |
+| the tail (above); `LBL_SLOTS` (1,440, the Loader's labels) in it, its offset at the header's +1838; the header's +374 to +1813 hold other buffers of the helper's (SWAP_MATCH and SWAP_TEXT, PICK_TEXT, STATS, LOOK_FULL), so the fields after keep their offsets | 4,400 |
+| `EXTRA_NAMES` (579) and `TICKS` (256, the header's +356 its offset in the tail) to the tail | 5,248 |
+| the item types (600) kept in the tail as loaded (`FAR_DATA` and its copy gone: the header's +144 is `ALL_VECTORS`' place, +172 and +174 are 0); LIGHT (256, +236 its offset in the far block), the dust's puffs (288) and DARK (256, out of `AFTER_INSTALL`) to the far block; the crash report's stack written from where it is, not copied to the far block first (256 bytes of the HMA) | 6,032 |
 
 To check the sizes after a change, build to a scratch file (`nasm -f bin -o
 /tmp/x.exe dos/dsclog.asm`, from `obsidian-edition/`) and look at its size.
 
 **The far block** (`FAR_SEG`, the header's +142) holds, at fixed offsets from
-`FAR_RING` (10h) to `FAR_END`, 64,826 bytes: the dice log's ring (`NENT` 63
+`FAR_RING` (10h) to `FAR_END`, 64,768 bytes: the dice log's ring (`NENT` 63
 entries of `ESIZE` 192 bytes), the panel's picture, the shadows' cache
 (`FAR_SC`), the text buffer, the shadows' spans and each thing's place as last
-seen (for the dust), the frames steady pace holds back, the crash report's
-copy of the stack and the last text written to the screen (`DOS_QUIT`,
-`DOS_WRITE`), the dust's table, the palette as last read (`FAR_DAC`), the
-rings' tables (`FAR_RING_TAB`, `FAR_RED`), how far each thing has walked
-(`FAR_WALKED`), and `FAR_DATA`: bytes that start with values (the item types,
-`FAR_TYPES`), copied in from the image by `FAR_INIT` after it clears the
-block. `FAR_INIT` (install code) puts it in the **HMA** (FFFFh:0010h,
+seen (for the dust), the frames steady pace holds back, the last text written
+to the screen (`DOS_WRITE`, for `DOS_QUIT`'s crash report), the dust's table,
+the palette as last read (`FAR_DAC`), the rings' tables (`FAR_RING_TAB`,
+`FAR_RED`), how far each thing has walked (`FAR_WALKED`), each colour's lighter
+one for the dust (`FAR_LIGHT`), the puffs (`FAR_PUFFS`) and the shadows'
+colours (`FAR_DARK`), all cleared by `FAR_INIT`. `FAR_INIT` (install code) puts it in the **HMA** (FFFFh:0010h,
 A20 on): XMS gives it (function 01h), or, where XMS says there is none (DOSBox
 0.74's answer, 90h: its XMS blocks start at 1 MB + 64 KB, `XMS_START`), it is
 used if all zero; A20 is turned on with XMS function 03h and checked
@@ -661,8 +682,8 @@ The game's timer handler (IRQ 0, DSUN.EXE 3925Ch, the game's own from its
 start; its timers run from it, 120 strikes a second) begins with `INT VEC_TICK`
 (`PROBE_TICK`). Every 32nd strike (about 4 a second) DSCLOG notes what the
 timer interrupted: CS:IP, flags, SS:SP before the interrupt, BP, DS and ES, in
-`TICKS` (16 records of 16 bytes, the last 4 seconds; the header's +356 its
-offset, +358 the records taken). The Loader's
+`TICKS` (16 records of 16 bytes, the last 4 seconds; in the tail, the header's
++356 its offset there, +358 the records taken). The Loader's
 **Freeze report** (`freeze.py`) reads them newest first, names each place
 (DSCLOG's, the BIOS's, or the game's segment and DSUN.EXE offset, which overlaid
 code doesn't keep), shows the code there now and the newest stack, counts the

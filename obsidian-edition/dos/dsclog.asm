@@ -166,6 +166,10 @@ LBL_H_MOST equ 11       ; its rows at most
 LBL_MASK   equ LBL_ROW * LBL_H_MOST
 LBL_SIZE   equ 8 + 2 * LBL_MASK
 STACK   equ 256         ; bytes of stack while installing
+SWAP_SIZE  equ 64       ; (the buffers in the header's room from +374: SWAP_MATCH's,
+PICK_SIZE  equ 240      ;   PICK_TEXT's,
+STATS_SIZE equ 34       ;   each member's STATS',
+LOOK_FULL_SIZE equ 700  ;   LOOK_FULL's)
 
 ; ---- MZ header: no relocations, and only as much memory as the image needs ----
 section mz start=0
@@ -176,8 +180,8 @@ section mz start=0
         dw 2                                    ; header size in paragraphs
         dw LOAD_EXTRA                           ; min extra paragraphs: the ring's end past the image
         dw LOAD_EXTRA                           ; max extra paragraphs (so the whole fits in upper memory)
-        dw image_len / 16                       ; SS (relative to the image): just past it, so
-        dw STACK                                ; SP    the image may have all of its 64 KB
+        dw (image_len + TAIL_BYTES) / 16        ; SS (relative to the image): just past it and the
+        dw STACK                                ; SP    tail, so the image may have all of its 64 KB
         dw 0                                    ; checksum
         dw install                              ; IP
         dw 0                                    ; CS (relative to the image)
@@ -232,9 +236,8 @@ probe_char_off dw probe_char    ; +136 offset of PROBE_CHAR in this segment
 tbuf_seg  dw 0                  ; +138 the text buffer's segment: the far block's (FAR_SEG)
 panel_off dw FAR_PANEL          ; +140 the panel's picture's offset in PANEL_SEG's segment
 far_seg   dw 0                  ; +142 the far block's segment (FAR_INIT): its buffers from FAR_RING on
-far_data   dw far_data_src      ; +144 as built: where FAR_DATA's first bytes are in the image
-                                ;      (install code's room: FAR_INIT copies them, FAR_DATA_LEN, to
-                                ;      FAR_DATA; the tests do the same)
+vec_table  dw all_vectors       ; +144 as built: where ALL_VECTORS (the install's table of the
+                                ;      vectors and their handlers) is in the image (the tests read it)
 ended     dw 0                  ; +146 the combatant whose turn just ended
 slots_off dw slots_text         ; +148 offset of SLOTS_TEXT: 4 x SLOTS_SIZE bytes, one per party
                                 ;      member, lines separated by "|", NUL-terminated (the Loader
@@ -254,8 +257,8 @@ stats_stamp dw 0                ; +164 the BIOS timer when the Loader last wrote
 stats_req  dw 0                 ; +166 counted up when a screen is about to show STATS ...
 stats_reply dw 0                ; +168 ... and set to it by the Loader once STATS are up to date
 rules      dw 0                 ; +170 rule changes the Loader turns on (RULE_HELMS, ...)
-far_data_to dw FAR_DATA         ; +172 FAR_DATA: those bytes' place in the far block ...
-far_data_len dw FAR_DATA_LEN    ; +174 ... and how many
+           dw 0, 0              ; +172, +174 (unused, 0: FAR_DATA's, the item types copied to the
+                                ;      far block, which are the tail's now)
 pick_off   dw pick_text         ; +176 offset of PICK_TEXT: what came of it, NUL-terminated (empty:
                                 ;      nothing to show)
 pick_on    dw 0                 ; +178 the Loader sets bit 0 to be asked about items used on the map
@@ -273,15 +276,15 @@ swap_on    dw 0                 ; +190 the Loader sets 1 to have the next dialog
 swap_seq   dw 0                 ; +192 counted up when it has been
 swap_off   dw swap_match        ; +194 offset of SWAP_MATCH (SWAP_SIZE bytes, NUL-terminated),
                                 ;      then SWAP_TEXT (TSIZE_SWAP bytes)
-names_off  dw extra_names       ; +196 offset of EXTRA_NAMES: the names past the game's own (NAMES_EXTRA,
-                                ;      each NUL-terminated), copied into the game's table (NAME_SIZE
-                                ;      each) each time it loads
+names_off  dw extra_names       ; +196 offset of EXTRA_NAMES in the tail (TAIL_SEG): the names past
+                                ;      the game's own (NAMES_EXTRA, each NUL-terminated), copied into
+                                ;      the game's table (NAME_SIZE each) each time it loads
 names_count dw NAMES_EXTRA      ; +198 how many
 names_ptr  dd 0                 ; +200 the game's name table, as last loaded with them (0: not yet)
 stealth    dw 0                 ; +204 the Loader sets bit N when party member N is hidden and
                                 ;      unheard (RULE_STEALTH): their next attack is from behind
 stealth_used dw 0               ; +206 counted up each time one is (the bit cleared)
-types_off  dw FAR_TYPES         ; +208 offset of EXTRA_TYPES in the far block: item types past the game's own
+types_off  dw extra_types       ; +208 offset of EXTRA_TYPES in the tail: item types past the game's own
                                 ;      (TYPES_EXTRA of TYPE_SIZE bytes), copied in as it loads them
 types_count dw TYPES_EXTRA      ; +210 how many
 types_first dw 0                ; +212 the number the first of them gets (the game's own count)
@@ -301,8 +304,8 @@ pan_x      dw 0                 ; +230 the Loader adds to these (wrapping) to sc
 pan_y      dw 0                 ; +232   as many pixels (to a chosen enemy: TARGETING)
 dust_on    dw 0                 ; +234 the Loader sets 1 once LIGHT is made, to have walkers raise
                                 ;      dust (DUST)
-light_off  dw light             ; +236 offset of LIGHT: each colour's lighter one (0: none, not ground
-                                ;      dust shows on), the Loader makes it from DAC
+light_off  dw FAR_LIGHT         ; +236 offset of LIGHT in the far block: each colour's lighter one (0:
+                                ;      none, not ground dust shows on), the Loader makes it from DAC
 dac_off    dw FAR_DAC           ; +238 offset of DAC in the far block (FAR_SEG's segment): the
                                 ;      palette as DARK was last made from it
 dust_puffs dw 0                 ; +240 puffs of dust raised (counted)
@@ -381,9 +384,9 @@ kit_wild   db 0                 ; +355 Wild Fighting, the Loader's (wild.py: it 
                                 ;      check as a fight starts, clears it as the fight ends): bit N
                                 ;      party member N's check failed (3 worse to hit, AC 3 worse), bit
                                 ;      N + 4 it passed (1 more attack a round in melee, 3 more damage)
-tick_off   dw ticks             ; +356 offset of TICKS: where the game was as its timer struck
-                                ;      (PROBE_TICK), TICK_SLOTS records of TICK_SIZE bytes, for the
-                                ;      Loader's freeze report
+tick_off   dw ticks             ; +356 offset of TICKS in the tail (TAIL_SEG): where the game was as
+                                ;      its timer struck (PROBE_TICK), TICK_SLOTS records of TICK_SIZE
+                                ;      bytes, for the Loader's freeze report
 tick_seq   dw 0                 ; +358 records taken, counted: the newest in slot (TICK_SEQ - 1)
                                 ;      mod TICK_SLOTS
 kit_shot   db 0                 ; +360 bit N: party member N's last weapon attack a shot or a throw
@@ -400,12 +403,15 @@ ovr_given  dw 0                 ; +368 the overlay buffer's segment in upper mem
 ovr_seg    dw 0                 ; +370 the block KEEP reserved for it, 0 once given (or none)
 umb_need   dw UMB_NEED          ; +372 paragraphs the helper puts in upper memory, its MCBs counted
                                 ;      (UMB_ROOM is what DOSBox gives it; the build fails past it)
-lbl_slots  times LBL_SLOTS * LBL_SIZE db 0 ; +374 the Loader's: names floating over figures (LABELS;
-                                ;      labels.py), LBL_SIZE bytes each: +0 0 none, else the label's
-                                ;      number (a new one for each label), +1 width, +2 height, +3 how
-                                ;      far above the feet, +4 ink, +5 edge (palette indices), +6 the
-                                ;      map thing, +8 the ink's mask, then the edge's (LBL_ROW bytes a
-                                ;      row, bit 0 of the first the leftmost)
+                                ; +374 to +1813: buffers of the helper's own, here so that the
+                                ;      fields after keep their offsets (LBL_SLOTS was here: the
+                                ;      tail's now, the header's +1838)
+swap_match times SWAP_SIZE db 0 ;      (SWAP_OFF's: SWAP_MATCH, then SWAP_TEXT)
+swap_text  times 240 db 0
+pick_text  times PICK_SIZE db 0 ;      (PICK_OFF's)
+stats      times 4 * STATS_SIZE db 0 ; (STATS_OFF's)
+look_full  times LOOK_FULL_SIZE db 0 ; (LOOK_FULL_OFF's)
+        times 1814 - ($ - hdr) db 0
 blast_hp   times 4 dw 0         ; +1814 the hit points Psionic Blast took
                                 ;      from each party member this fight (PROBE_WORN), for the Loader
                                 ;      to give back and clear as the fight ends (psiblast.py)
@@ -424,6 +430,15 @@ gear_due   db 0                 ; +1830 1 from a new member's DONE until the Loa
 gear_given db 0                 ; +1831 ... and sets bit N first if it changed member N's items
 flip_count dw 0                 ; +1832 the game's page flips, counted (PROBE_FLIP): frames shown, for
                                 ;      a frame rate (playtest/framerate.py)
+tail_seg   dw 0                 ; +1834 the tail's segment (TAIL: the paragraphs after the image,
+                                ;      kept with it), set as the helper loads
+tail_paras dw image_len / 16    ; +1836 ... the paragraphs from this segment's start to it, as built
+lbl_off    dw lbl_slots         ; +1838 offset of LBL_SLOTS in the tail: the Loader's: names floating over
+                                ;      figures (LABELS; labels.py), LBL_SIZE bytes each: +0 0 none, else
+                                ;      the label's number (a new one for each label), +1 width, +2
+                                ;      height, +3 how far above the feet, +4 ink, +5 edge (palette
+                                ;      indices), +6 the map thing, +8 the ink's mask, then the edge's
+                                ;      (LBL_ROW bytes a row, bit 0 of the first the leftmost)
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -753,9 +768,6 @@ probe_text:
         mov dx, [bp+22]
         jmp text_leave
 
-SWAP_SIZE equ 64
-swap_match times SWAP_SIZE db 0
-swap_text  times 240 db 0
 
 ; PROBE_MSG: the same for the game's message box routine (far pointer to the
 ; message), recorded as kind 16.
@@ -1370,8 +1382,6 @@ S_CLOSE   equ 0x1F11            ; DS: "CLOSE"
 TURN_WAIT equ 7                 ; timer ticks (55 ms each) the Loader has to answer
 
 PICK_WAIT equ 9                 ; timer ticks the Loader has to answer (PROBE_USE_ITEM)
-PICK_SIZE equ 240
-pick_text times PICK_SIZE db 0
 
 ; GIVE_XP: the XP the Loader asked for with PICK_TEXT (XP_WHO, XP_AMOUNT), given by the routine
 ; the game's scripts give one person XP with (GPL 21h; it sees to a level gained), and the sound
@@ -2246,20 +2256,21 @@ probe_tick:
         and bx, TICK_SLOTS - 1
         shl bx, 4               ; (TICK_SIZE)
         add bx, ticks
+        mov ds, [cs:tail_seg]   ; (TICKS: the tail's)
         mov ax, [bp + 8]
-        mov [cs:bx], ax         ; +0 IP
+        mov [bx], ax            ; +0 IP
         mov ax, [bp + 10]
-        mov [cs:bx + 2], ax     ; +2 CS
+        mov [bx + 2], ax        ; +2 CS
         mov ax, [bp + 12]
-        mov [cs:bx + 4], ax     ; +4 flags
-        mov [cs:bx + 6], ss     ; +6 SS
+        mov [bx + 4], ax        ; +4 flags
+        mov [bx + 6], ss        ; +6 SS
         lea ax, [bp + 14]
-        mov [cs:bx + 8], ax     ; +8 SP
+        mov [bx + 8], ax        ; +8 SP
         mov ax, [bp]
-        mov [cs:bx + 10], ax    ; +10 BP
+        mov [bx + 10], ax       ; +10 BP
         mov ax, [bp - 2]
-        mov [cs:bx + 12], ax    ; +12 DS
-        mov [cs:bx + 14], es    ; +14 ES
+        mov [bx + 12], ax       ; +12 DS
+        mov [bx + 14], es       ; +14 ES
         inc word [cs:tick_seq]
 .out:   pop bx
         pop ax
@@ -2267,7 +2278,7 @@ probe_tick:
         pop bp
         iret
 tick_count dw 0
-ticks   times TICK_SLOTS * TICK_SIZE db 0
+; (TICKS: the tail's)
 
 ; PROBE_POISON: INT VEC_POISON replaces "jmp 7A7C5h" (3 bytes: INT + NOP; DSUN.EXE 7A6DDh) in the
 ; routine giving a hit's special effects (DI the attacker's combatant, SI the target's; the
@@ -2518,7 +2529,6 @@ probe_unlook:
 ; a word: their age (0 none: the rule off, or none given yet; AGE_TEXT, the inventory panel's),
 ; +30 its category (0 young, 1 middle-aged, 2 old, 3 venerable), +31 the next one (0 none) and +32
 ; a word, the age it comes at (the Loader's; nothing here reads +30 to +33 now; dsloader/aging.py)
-STATS_SIZE  equ 34
 STATS_AGE   equ 28
 STATS_ENLARGE equ 24
 STATS_ARMOUR equ 25
@@ -2526,7 +2536,6 @@ STATS_NONE  equ -128
 STATS_RANGER equ 2
 STATS_FRESH equ 91              ; timer ticks (5 seconds)
 STATS_WAIT  equ 9               ; ... (half a second): the longest a screen waits for fresh STATS
-stats   times 4 * STATS_SIZE db 0
 
 ; A screen is being drawn: while the Loader is keeping STATS, have it bring them up to date
 ; (an item just put on, say) and wait for that, once for all the screen's lines (not again
@@ -8502,26 +8511,6 @@ RL_HP_MAX equ 0x4996            ; DS: the most hit points the classes could roll
 RL_BOX   equ 0x0F62             ; DS: the screen's boxes (x1, y1, x2, y2), the scores' first
 RL_LABEL_X equ 23               ; "SUM:" this far left of the scores' x
 RL_ROW_Y equ 6 * 7 - 2          ; the line under CHR: 7 apart, from 2 above the box's top
-rl_sites:
-        cmp byte [cs:rl_site], RL_SCORE
-        je rl_score
-        cmp byte [cs:rl_site], RL_HP
-        je rl_hp
-        cmp byte [cs:rl_site], RL_ROLL
-        je rl_roll
-        cmp byte [cs:rl_site], RL_SUM
-        je rl_sum
-        cmp byte [cs:rl_site], RL_CON
-        je rl_con
-        cmp byte [cs:rl_site], RL_TRY
-        je rl_try
-        cmp byte [cs:rl_site], PK_HOVER
-        je pk_hover
-        cmp byte [cs:rl_site], RG_TWO
-        je rg_two
-        cmp byte [cs:rl_site], NS_SITE
-        jae ns_sites
-        iret
 
 ; RG_TWO: "test word es:[bx+12h],200h" (5961Fh; 6 bytes: the site's number and 3 NOPs after the
 ; INT), where the routine giving an attack's to-hit adjustment for two weapons ready (595ECh)
@@ -16495,8 +16484,8 @@ dos_write:
 ; game: GAMEEND.COM, after it, also ends with 1), saves D:\GAMEMSG.BIN for the Loader's crash
 ; report (launch.game_message): "GMSG", the code, the game's load segment, SS, SP, the stack's
 ; first STACK_BYTES there (the ways back of the calls that led to the exit), the length of the
-; text kept and the text (DOS_WRITE): the header from here, the rest from the far block (FAR_QM_STACK
-; on). Not before FAR_INIT (QUIT_SAVED starts at 1). Then on to DOS.
+; text kept and the text (DOS_WRITE): the header from here, the stack from where it is, the text
+; from the far block (FAR_MSG). Not before FAR_INIT (QUIT_SAVED starts at 1). Then on to DOS.
 STACK_BYTES equ 256
 dos_quit:
         or al, al
@@ -16516,16 +16505,6 @@ dos_quit:
         call far [cs:old21]
         add bx, 10h
         mov [cs:qm_load], bx
-        push ss                         ; the stack, copied
-        pop ds
-        mov si, [cs:qm_sp]
-        mov es, [cs:far_seg]
-        mov di, FAR_QM_STACK
-        mov cx, STACK_BYTES / 2
-        cld
-        rep movsw
-        mov ax, [cs:msg_len]
-        stosw                           ; (FAR_QM_LEN)
         push cs
         pop ds
         mov ah, 3Ch
@@ -16540,12 +16519,21 @@ dos_quit:
         mov dx, qm_head
         pushf
         call far [cs:old21]
-        mov ds, [cs:far_seg]
+        push ss                         ; the stack, from where it is (above SP: DOS's own calls
+        pop ds                          ;   push below it)
         mov ah, 40h
-        mov cx, STACK_BYTES + 2
-        mov dx, FAR_QM_STACK
+        mov cx, STACK_BYTES
+        mov dx, [cs:qm_sp]
         pushf
         call far [cs:old21]
+        push cs
+        pop ds
+        mov ah, 40h                     ; the length of the text kept
+        mov cx, 2
+        mov dx, msg_len
+        pushf
+        call far [cs:old21]
+        mov ds, [cs:far_seg]
         mov si, [cs:msg_at]             ; the text, oldest first: from its start to the ring's
         sub si, [cs:msg_len]            ;   end, then from the ring's start
         and si, MSG_BYTES - 1
@@ -17683,177 +17671,129 @@ CHAOS_SITE equ NS_IMAGE + 70    ; 79F80h: Chaos's -100 on a save by anyone not a
 HD_SAVE_SITE equ NS_IMAGE + 71  ; 79D8Ch: the save modifiers' target level, a classless creature's its HD (HD_SAVE)
 SPRAY_SITE equ NS_IMAGE + 72    ; 79F83h: Color Spray unsaved by the caster's level or lower (SPRAY_SITE)
 HOLD_HD_SITE equ NS_IMAGE + 73  ; 7A345h: Hold Undead on undead of more levels than its caster: immune (HOLD_HD)
-ns_sites:                       ; (the game's registers kept for each: NS_CMP takes its site from RL_SITE)
-        cmp byte [cs:rl_site], NS_KNOWN
-        je ns_known
-        cmp byte [cs:rl_site], NS_LEARN
-        je ns_learn
-        cmp byte [cs:rl_site], NS_NAME
-        je ns_name
-        cmp byte [cs:rl_site], NS_CLAW
-        je ns_claw
-        cmp byte [cs:rl_site], NS_HIT
-        je ns_hit
-        cmp byte [cs:rl_site], NS_FIST
-        je ns_fist
-        cmp byte [cs:rl_site], NS_IMAGE
-        je ns_image
-        cmp byte [cs:rl_site], NS_BLOW
-        je ns_blow
-        cmp byte [cs:rl_site], NS_HOLD
-        je ns_hold
-        cmp byte [cs:rl_site], PP_SHOW
-        je pp_show
-        cmp byte [cs:rl_site], PP_CLICK
-        je pp_click
-        cmp byte [cs:rl_site], PP_ARM
-        je pp_arm
-        cmp byte [cs:rl_site], PP_HAND
-        je pp_hand
-        cmp byte [cs:rl_site], PP_LIT
-        je pp_lit
-        cmp byte [cs:rl_site], PP_TEXT
-        je pp_text
-        cmp byte [cs:rl_site], PP_INFO
-        je pp_info
-        cmp byte [cs:rl_site], PP_CLOSE
-        je pp_close
-        cmp byte [cs:rl_site], CR_LABELS
-        je cr_labels
-        cmp byte [cs:rl_site], CR_WEAPONS
-        je cr_weapons
-        cmp byte [cs:rl_site], SELL_KEEP
-        je sell_keep
-        cmp byte [cs:rl_site], SELL_PRICE
-        je sell_price
-        cmp byte [cs:rl_site], NS_NPP
-        je ns_npp
-        cmp byte [cs:rl_site], NS_SIDE
-        je ns_side
-        cmp byte [cs:rl_site], NS_WALL
-        je ns_wall
-        cmp byte [cs:rl_site], SHOP_SHINE
-        je shop_shine
-        cmp byte [cs:rl_site], SHOP_LOOP
-        je shop_loop
-        cmp byte [cs:rl_site], DET_ITEM
-        je det_item
-        cmp byte [cs:rl_site], WANDER_DMG
-        je wander_dmg
-        cmp byte [cs:rl_site], AV_GRANT
-        je av_grant
-        cmp byte [cs:rl_site], AREA_DMG
-        je area_dmg
-        cmp byte [cs:rl_site], REQ_SITE
-        je req_site
-        cmp byte [cs:rl_site], AIM_SITE
-        je aim_site
-        cmp byte [cs:rl_site], AMULET_SITE
-        je amulet_mr
-        cmp byte [cs:rl_site], ARROW_HIT_SITE
-        je arrow_hit
-        cmp byte [cs:rl_site], ARROW_SPELL_SITE
-        je arrow_spell
-        cmp byte [cs:rl_site], ARROW_LEVEL
-        je arrow_level
-        cmp byte [cs:rl_site], SCROLL_USE
-        je scroll_use
-        cmp byte [cs:rl_site], BOX_SAID
-        je box_said
-        cmp byte [cs:rl_site], LINE_SAID
-        je line_said
-        cmp byte [cs:rl_site], LINE_CLEARED
-        je line_cleared
-        cmp byte [cs:rl_site], CAST_SITE
-        je cast_site
-        cmp byte [cs:rl_site], REST_SITE
-        je rest_site
-        cmp byte [cs:rl_site], HARM_SITE
-        je harm_site
-        cmp byte [cs:rl_site], WW_SITE
-        je ww_gate
-        cmp byte [cs:rl_site], ENL_SITE
-        je enl_site
-        cmp byte [cs:rl_site], REGEN_SITE
-        je regen_site
-        cmp byte [cs:rl_site], CON_SITE
-        je con_save
-        cmp byte [cs:rl_site], STINK_SITE
-        je stink_site
-        cmp byte [cs:rl_site], CHAOS_SITE
-        je chaos_site
-        cmp byte [cs:rl_site], HD_SAVE_SITE
-        je hd_save
-        cmp byte [cs:rl_site], SPRAY_SITE
-        je spray_site
-        cmp byte [cs:rl_site], HOLD_HD_SITE
-        je hold_hd
-        cmp byte [cs:rl_site], SPELL_HIT_SITE
-        je th_hit
-        cmp byte [cs:rl_site], SPELL_STUB_SITE
-        je th_stub
-        cmp byte [cs:rl_site], TURN_SITE
-        je tu_site
-        cmp byte [cs:rl_site], FLAME_SITE
-        je flame_site
-        cmp byte [cs:rl_site], CR_AGE_SITE
-        je cr_age
-        cmp byte [cs:rl_site], CR_AGE_CON_SITE
-        je cr_age_con
-        cmp byte [cs:rl_site], CR_OPEN_SITE
-        je cr_open
-        cmp byte [cs:rl_site], CR_HP_SITE
-        je cr_hp
-        cmp byte [cs:rl_site], CR_NAME_SITE
-        je cr_name
-        cmp byte [cs:rl_site], CR_NAME2_SITE
-        je cr_name2
-        cmp byte [cs:rl_site], CR_NAME3_SITE
-        je cr_name3
-        cmp byte [cs:rl_site], CR_NAME4_SITE
-        je cr_name4
-        cmp byte [cs:rl_site], AREA_SITE
-        je area_site
-        cmp byte [cs:rl_site], ACID_SITE
-        je acid_rounds
-        cmp byte [cs:rl_site], BURN_SITE
-        je acid_burn
-        cmp byte [cs:rl_site], ONCE_SITE
-        je acid_once
-        cmp byte [cs:rl_site], USE_SITE
-        je acid_use
-        cmp byte [cs:rl_site], ROUND_SITE
-        je acid_round
-        cmp byte [cs:rl_site], STAB_SITE
-        je stab_roll
-        cmp byte [cs:rl_site], TIMES_SITE
-        je stab_times
-        cmp byte [cs:rl_site], HEAT_SITE
-        je heat_site
-        cmp byte [cs:rl_site], DRAW_SITE
-        je draw_site
-        cmp byte [cs:rl_site], CINE_STEP
-        je cine_step
-        cmp byte [cs:rl_site], CINE_END
-        je cine_end
-        cmp byte [cs:rl_site], MOUSE_SET
-        je mouse_set
-        cmp byte [cs:rl_site], MOUSE_INIT
-        je mouse_init
-        cmp byte [cs:rl_site], SPREAD_SITE
-        je spread_load
-        cmp byte [cs:rl_site], GATHER_SITE
-        je spread_gather
-        cmp byte [cs:rl_site], FLIP_SITE
-        je flip_site
-        cmp byte [cs:rl_site], NS_ENTRY_EF
+; RL_SITES: the site RL_SITE (the byte after VEC_CR_SPELLS's INT) to its code, all registers the
+; game's: through SITE_TAB, a word for each site from RL_SCORE (1) on, but NS_CMP's (NS_CMP_COUNT of
+; them, all NS_CMP), past the last none (IRET).
+rl_sites:
+        push bx
+        movzx bx, byte [cs:rl_site]
+        sub bx, NS_CMP
+        cmp bx, NS_CMP_COUNT
         jb .cmp
-        cmp byte [cs:rl_site], NS_ENTRY_STATUS
-        jbe ns_entry
-.cmp:
-        cmp byte [cs:rl_site], NS_CMP + NS_CMP_COUNT
-        jb ns_cmp
+        jl .low                         ; (under NS_CMP)
+        sub bx, NS_CMP_COUNT            ; (past NS_CMP's: they have no word)
+.low:   add bx, NS_CMP - 1
+        cmp bx, SITE_COUNT
+        jae .none
+        add bx, bx
+        push word [cs:site_tab + bx]    ; (its code, taken by the RET with the game's BX back)
+        push bp
+        mov bp, sp
+        mov bx, [bp + 4]
+        pop bp
+        ret 2
+.cmp:   pop bx
+        jmp ns_cmp
+.none:  pop bx
         iret
+%macro site 2                           ; site %1's code %2, in order (the build fails if not)
+        times -((($ - site_tab) / 2 + 1 + NS_CMP_COUNT * (($ - site_tab) / 2 + 1 >= NS_CMP)) != %1) db 0
+        dw %2
+%endmacro
+site_tab:
+        site RL_SCORE, rl_score
+        site RL_HP, rl_hp
+        site RL_ROLL, rl_roll
+        site RL_SUM, rl_sum
+        site RL_CON, rl_con
+        site RL_TRY, rl_try
+        site PK_HOVER, pk_hover
+        site RG_TWO, rg_two
+        site NS_KNOWN, ns_known
+        site NS_LEARN, ns_learn
+        site NS_NAME, ns_name
+        site NS_CLAW, ns_claw
+        site NS_HIT, ns_hit
+        site NS_FIST, ns_fist
+        site NS_IMAGE, ns_image
+        site NS_ENTRY_EF, ns_entry
+        site NS_ENTRY_LOOK, ns_entry
+        site NS_ENTRY_STATUS, ns_entry
+        site SELL_KEEP, sell_keep
+        site SELL_PRICE, sell_price
+        site NS_BLOW, ns_blow
+        site NS_HOLD, ns_hold
+        site PP_SHOW, pp_show
+        site PP_CLICK, pp_click
+        site PP_ARM, pp_arm
+        site PP_HAND, pp_hand
+        site PP_LIT, pp_lit
+        site PP_TEXT, pp_text
+        site PP_INFO, pp_info
+        site PP_CLOSE, pp_close
+        site CR_LABELS, cr_labels
+        site CR_WEAPONS, cr_weapons
+        site NS_NPP, ns_npp
+        site NS_SIDE, ns_side
+        site NS_WALL, ns_wall
+        site SHOP_SHINE, shop_shine
+        site SHOP_LOOP, shop_loop
+        site DET_ITEM, det_item
+        site WANDER_DMG, wander_dmg
+        site REQ_SITE, req_site
+        site AIM_SITE, aim_site
+        site AMULET_SITE, amulet_mr
+        site ARROW_HIT_SITE, arrow_hit
+        site ARROW_SPELL_SITE, arrow_spell
+        site CAST_SITE, cast_site
+        site REST_SITE, rest_site
+        site HARM_SITE, harm_site
+        site AREA_SITE, area_site
+        site ACID_SITE, acid_rounds
+        site BURN_SITE, acid_burn
+        site ONCE_SITE, acid_once
+        site USE_SITE, acid_use
+        site ROUND_SITE, acid_round
+        site STAB_SITE, stab_roll
+        site TIMES_SITE, stab_times
+        site HEAT_SITE, heat_site
+        site DRAW_SITE, draw_site
+        site CINE_STEP, cine_step
+        site CINE_END, cine_end
+        site MOUSE_SET, mouse_set
+        site MOUSE_INIT, mouse_init
+        site ARROW_LEVEL, arrow_level
+        site SPREAD_SITE, spread_load
+        site SCROLL_USE, scroll_use
+        site BOX_SAID, box_said
+        site LINE_SAID, line_said
+        site LINE_CLEARED, line_cleared
+        site AV_GRANT, av_grant
+        site AREA_DMG, area_dmg
+        site GATHER_SITE, spread_gather
+        site FLIP_SITE, flip_site
+        site WW_SITE, ww_gate
+        site ENL_SITE, enl_site
+        site REGEN_SITE, regen_site
+        site CON_SITE, con_save
+        site CR_AGE_SITE, cr_age
+        site CR_NAME_SITE, cr_name
+        site CR_NAME2_SITE, cr_name2
+        site CR_NAME3_SITE, cr_name3
+        site CR_NAME4_SITE, cr_name4
+        site CR_AGE_CON_SITE, cr_age_con
+        site CR_OPEN_SITE, cr_open
+        site CR_HP_SITE, cr_hp
+        site STINK_SITE, stink_site
+        site CHAOS_SITE, chaos_site
+        site HD_SAVE_SITE, hd_save
+        site SPRAY_SITE, spray_site
+        site HOLD_HD_SITE, hold_hd
+        site SPELL_HIT_SITE, th_hit
+        site SPELL_STUB_SITE, th_stub
+        site TURN_SITE, tu_site
+        site FLAME_SITE, flame_site
+SITE_COUNT equ ($ - site_tab) / 2
 
 ; NS_CMP: the compare of site RL_SITE (of NS_CMP_SITES), its flags into the INT's frame.
 ns_cmp:
@@ -20014,8 +19954,7 @@ probe_names_fill:
         mov [cs:names_ptr], di
         mov [cs:names_ptr+2], es
         add di, NAMES_OWN * NAME_SIZE
-        push cs
-        pop ds
+        mov ds, [cs:tail_seg]           ; (EXTRA_NAMES: the tail's)
         mov si, extra_names
         mov dx, NAMES_EXTRA
         cld
@@ -20116,8 +20055,8 @@ probe_types_fill:
         mov cx, TYPE_SIZE
         div cx
         mov [cs:types_first], ax
-        mov ds, [cs:far_seg]
-        mov si, FAR_TYPES
+        mov ds, [cs:tail_seg]           ; (EXTRA_TYPES: the tail's)
+        mov si, extra_types
         mov cx, TYPES_EXTRA * TYPE_SIZE
         cld
         rep movsb
@@ -20129,63 +20068,8 @@ probe_types_fill:
         pop cx
         pop ax
 .out:   iret
-; (EXTRA_TYPES' bytes: the far block's FAR_TYPES, put there from FAR_DATA_SRC as the helper loads)
-; the names, numbered from NAMES_OWN (322): the Loader's items' (the same as the Loader's
-; NAMES in dsloader/names.py), each NUL-terminated (PROBE_NAMES_FILL pads it to NAME_SIZE)
-extra_names:
-        db "Ring/Protection", 0
-        db "Thieves' Tools", 0
-        db "Short Sword", 0             ; (Kurzak's, of type TYPES' first)
-        db "Cloak/Protectn", 0          ; (Pehtucl's, the game's way of shortening)
-        db "Ring/Protection", 0         ; (Pehtucl's ring: the arena's is the first; their icons differ)
-        db "Shadowseeker", 0            ; (Kurzak's Short Sword made +1: MAGIC_ARMS)
-        db "Kreenfang", 0               ; (the arena's Bone Gythka made +1)
-        db "Bracers/Defns", 0           ; (bracers of defense, short enough for their plus: BRACERS,
-                                        ;   dsloader/worldgear.py)
-        db "Gutterknot", 0              ; (the magic weapons of dsloader/worldgear.py: a club +1,
-        db "Deepbiter", 0               ; a stone pick +1,
-        db "Windlash", 0                ; a staff sling +1,
-        db "Greenbright", 0             ; a metal short sword +2)
-        db "Arrowbane", 0               ; (the circlet and the crown of dsloader/worldgear.py)
-        db "Sunking Crown", 0
-        db "Warden's Chest", 0          ; (the Warden's Plate of dsloader/worldgear.py)
-        db "Warden's Arms", 0
-        db "Warden's Legs", 0
-        db "Warden's Helm", 0
-        db "Cloak/Elvenkind", 0         ; (the Cloak and Boots of Elvenkind)
-        db "Boots/Elvenkind", 0
-        db "Flame Blade", 0             ; (an obsidian long sword +1, Focus Heat on what it hits)
-        db "Tome/Understand", 0         ; (the Tome of Understanding: dsloader/tome.py)
-        db "Inixhide", 0                ; (Legcrusher's Leather Chest Armor +1: dsloader/npcitems.py)
-        db "Drakejaw", 0                ; (the magic axes of dsloader/worldgear.py: a bone axe +1,
-        db "Glasshewer", 0              ; an obsidian axe +2,
-        db "Headsman", 0                ; a metal great axe +2)
-        db "Galefang", 0                ; (more magic weapons of dsloader/worldgear.py: an air
-                                        ; cleric's dagger +2,
-        db "Mindshard", 0               ; an obsidian short sword +1,
-        db "Stillwater", 0              ; a bone short sword +1,
-        db "Linebreaker", 0             ; a metal polearm +2,
-        db "Thornwall", 0               ; a bone polearm +1)
-        db "Ashen Robe", 0              ; (the robes: dsloader/robes.py)
-        db "Veiled Robe", 0
-        db "Gutterward", 0              ; (the magic shields of dsloader/worldgear.py: a wooden
-                                        ; shield +1,
-        db "Ironbulwark", 0             ; a metal shield +3)
-        db "Hayneedle", 0               ; (the weapons for the kits with too few, dsloader/
-                                        ; worldgear.py: a bone dagger +1,
-        db "Nightsliver", 0             ; an obsidian dagger +2,
-        db "Dunesong", 0                ; a bow +1,
-        db "Skycutter", 0               ; a chatkcha +2)
-        db "Girdle/Back Def", 0         ; (the girdles and the amulet of
-                                        ; dsloader/worldgear.py: 15 letters at most, as the
-        db "Girdle of Urnst", 0         ; game's own)
-        db "Amulet/MagicRes", 0
-        db "Burning Arrows", 0          ; (the Spellarcher's spell arrows, dsloader/
-                                        ; spellarrows.py: ARROW_NAME on)
-        db "Chill Arrows", 0
-        db "Shocking Arrows", 0
-        db "Vampiric Arrows", 0
-        times NAMES_EXTRA - 46 db 0     ; (empty names, if any)
+; (EXTRA_TYPES' bytes: the tail's)
+; (EXTRA_NAMES: the tail's)
 
 ; STEALTH (RULE_STEALTH): a thief who starts a turn with no enemy next to them may hide in
 ; shadows and move silently up to someone; the Loader rolls both and, when both succeed,
@@ -20354,7 +20238,6 @@ thief_rear:
 
 L_LINE_SIZE equ 24
 LOOK_SIZE   equ 80
-LOOK_FULL_SIZE equ 700
 l_row   dw 0
 l_draw  dd 0
 l_win   dd 0
@@ -20362,7 +20245,6 @@ l_line  times L_LINE_SIZE db 0
 l_side  db 0                    ; the line being drawn goes beside LEVEL (LOOK_SIDE)
 look_pending db 0
 look_text times LOOK_SIZE db 0
-look_full times LOOK_FULL_SIZE db 0
 
 USE_X      equ 0x96             ; the panel under the spells (window coordinates): its top,
 USE_FIRST_Y equ 0x6C            ; three lines above where the icons of usable items (fruit,
@@ -21434,9 +21316,9 @@ spans_flush:                            ; the noted runs darkened, a plane at a 
         mov es, [cs:v_seg]
         imul bp, [cs:n_spans], 6        ; (BP: past the last span)
         add bp, FAR_SPANS
-        push cs
+        push fs
         pop ds
-        mov bx, dark                    ; (DS:BX: DARK, for XLAT)
+        mov bx, FAR_DARK                ; (DS:BX: DARK, the far block's, for XLAT)
         xor ah, ah                      ; AH: the plane
 .plane: push ax
         mov cl, ah
@@ -21919,7 +21801,7 @@ build_dark:
         cmp cx, DARK_LAST
         jbe .cand
         mov al, [best_c]
-        mov [dark + bx], al
+        mov [fs:FAR_DARK + bx], al      ; (FS: the far block)
         inc bx
         cmp bx, 256
         jb .colour
@@ -22179,6 +22061,8 @@ dust_tick:                      ; DS = the game's
         ret
 .on:    push es
         push bp
+        push fs
+        mov fs, [cs:far_seg]            ; (FS: the far block, the puffs')
         xor ax, ax
         mov es, ax
         mov ax, [es:BIOS_TICKS]
@@ -22186,16 +22070,16 @@ dust_tick:                      ; DS = the game's
         cmp ax, [cs:d_last]
         je .walk
         mov [cs:d_last], ax
-        mov si, puffs                   ; a tick on: each puff looks different, or is gone
+        mov si, FAR_PUFFS                   ; a tick on: each puff looks different, or is gone
         mov cx, PUFFS
-.age:   cmp byte [cs:si + 10], 0
+.age:   cmp byte [fs:si + 10], 0
         je .anext
         call puff_dirty
         mov ax, [cs:d_now]
-        sub ax, [cs:si + 4]
+        sub ax, [fs:si + 4]
         cmp ax, DUST_LIFE
         jbe .anext
-        mov byte [cs:si + 10], 0        ; (drawn once more, gone: now free)
+        mov byte [fs:si + 10], 0        ; (drawn once more, gone: now free)
 .anext: add si, PUFF_SIZE
         loop .age
 .walk:  les di, [OBJ_LIST]
@@ -22265,6 +22149,7 @@ dust_tick:                      ; DS = the game's
         dec cx
         jnz .thing
 .done:  call dust_nudge
+        pop fs
         pop bp
         pop es
         ret
@@ -22288,8 +22173,8 @@ puff_raise:                             ; behind T_THING's feet at (T_X, T_Y), w
         jb .slot
         mov word [cs:d_next], 0
 .slot:  imul si, ax, PUFF_SIZE
-        add si, puffs
-        cmp byte [cs:si + 10], 0
+        add si, FAR_PUFFS
+        cmp byte [fs:si + 10], 0
         je .free
         call puff_dirty                 ; (its ground drawn again without it)
 .free:  xor byte [cs:d_side], 1         ; (the feet in turn: a little to one side, then the other)
@@ -22308,7 +22193,7 @@ puff_raise:                             ; behind T_THING's feet at (T_X, T_Y), w
         je .x
         neg dx
 .x:     add ax, dx
-        mov [cs:si], ax
+        mov [fs:si], ax
         mov ax, [cs:t_sy]               ; y: behind, and to the side
         imul ax, ax, -2
         add ax, [cs:t_y]
@@ -22317,22 +22202,22 @@ puff_raise:                             ; behind T_THING's feet at (T_X, T_Y), w
         jne .y
         neg dx
 .y:     add ax, dx
-        mov [cs:si + 2], ax
+        mov [fs:si + 2], ax
         mov ax, [cs:d_now]
-        mov [cs:si + 4], ax
+        mov [fs:si + 4], ax
         mov ax, [cs:t_thing]
-        mov [cs:si + 6], ax
+        mov [fs:si + 6], ax
         inc word [cs:dust_puffs]
         imul ax, [cs:dust_puffs], 0x3D7
-        mov [cs:si + 8], ax
-        mov byte [cs:si + 10], 1
+        mov [fs:si + 8], ax
+        mov byte [fs:si + 10], 1
         call puff_dirty
         ret
 
-puff_dirty:                             ; the puff at CS:SI: its ground to be drawn again (DS = the game's)
-        mov ax, [cs:si]
+puff_dirty:                             ; the puff at FS:SI: its ground to be drawn again (DS = the game's)
+        mov ax, [fs:si]
         sub ax, 12
-        mov dx, [cs:si + 2]
+        mov dx, [fs:si + 2]
         sub dx, 12
         cmp byte [cs:d_dirty], 0
         je .first
@@ -22357,7 +22242,7 @@ puff_dirty:                             ; the puff at CS:SI: its ground to be dr
         jle .mark
 .fy1:   mov [cs:d_y1], dx
 .mark:  mov byte [cs:d_dirty], 1
-        mov ax, [cs:si + 6]
+        mov ax, [fs:si + 6]
         mov [cs:d_owner], ax
         ret
 
@@ -22500,11 +22385,13 @@ label_tick:
         mov byte [cs:lbl_busy], 1
         call view_again
         mov byte [cs:lbl_busy], 0
-.slots: mov si, lbl_state
+.slots: push fs
+        mov fs, [cs:tail_seg]           ; (FS: the tail, LBL_SLOTS')
+        mov si, lbl_state
         mov di, lbl_slots
 .slot:  call label_where
         jc .off
-        mov dl, [cs:di]
+        mov dl, [fs:di]
         cmp byte [cs:si + LS_SHOWN], 0
         je .new
         cmp dl, [cs:si + LS_SEEN]
@@ -22523,15 +22410,16 @@ label_tick:
         add si, 8
         cmp si, lbl_state + LBL_SLOTS * 8
         jb .slot
+        pop fs
         jmp label_stamp
 .ret:   ret
 
-; LABEL_ADOPT: label DI (the Loader's slot, DL its number) shown from now at AX, BX (SI its state)
+; LABEL_ADOPT: label FS:DI (the Loader's slot, DL its number) shown from now at AX, BX (SI its state)
 label_adopt:
         mov [cs:si + LS_SEEN], dl
         mov [cs:si + LS_X], ax
         mov [cs:si + LS_Y], bx
-        mov ax, [cs:di + 1]
+        mov ax, [fs:di + 1]
         mov [cs:si + LS_W], ax          ; (and LS_H)
         mov byte [cs:si + LS_SHOWN], 1
         ret
@@ -22539,11 +22427,11 @@ label_adopt:
 ; LABEL_WHERE: CF clear and AX, BX the top left on screen of label DI (the Loader's slot) if it is
 ; to be shown: one, its size in bounds, on the map, its thing in OBJ_LIST; DS the game's; CX kept
 label_where:
-        cmp byte [cs:di], 0
+        cmp byte [fs:di], 0
         je .no
-        cmp byte [cs:di + 1], LBL_ROW * 8
+        cmp byte [fs:di + 1], LBL_ROW * 8
         ja .no
-        cmp byte [cs:di + 2], LBL_H_MOST
+        cmp byte [fs:di + 2], LBL_H_MOST
         ja .no
         call on_map
         jne .no
@@ -22551,7 +22439,7 @@ label_where:
         push es
         les bx, [OBJ_LIST]
         mov cx, [OBJ_COUNT]
-        mov ax, [cs:di + 6]
+        mov ax, [fs:di + 6]
         jcxz .none
 .find:  cmp [es:bx + 6], ax
         je .got
@@ -22567,7 +22455,7 @@ label_where:
         jae .no
         mov bx, ax
         shl bx, 5
-        movzx ax, byte [cs:di + 1]
+        movzx ax, byte [fs:di + 1]
         shr ax, 1
         neg ax
         add ax, [bx + MAP_THINGS + 9]   ; (its feet, on the map)
@@ -22576,7 +22464,7 @@ label_where:
         xor ax, ax
 .x0:    push dx
         mov dx, 320
-        sub dl, [cs:di + 1]
+        sub dl, [fs:di + 1]
         sbb dh, 0
         cmp ax, dx
         jle .x1
@@ -22584,9 +22472,9 @@ label_where:
 .x1:    mov bx, [bx + MAP_THINGS + 11]
         sub bx, [CAM_Y]
         mov dx, bx                      ; (its feet, on screen)
-        sub bl, [cs:di + 3]
+        sub bl, [fs:di + 3]
         sbb bh, 0
-        sub bl, [cs:di + 2]
+        sub bl, [fs:di + 2]
         sbb bh, 0
         cmp bx, LBL_TOP
         jge .y1
@@ -22595,7 +22483,7 @@ label_where:
         or bx, bx                       ; (still above the page's top: its thing is off the
         jl .off                         ; screen, the view dragged; no label, none above the page)
 .y1:    mov dx, 200
-        sub dl, [cs:di + 2]
+        sub dl, [fs:di + 2]
         sbb dh, 0
         cmp bx, dx
         jle .y2
@@ -22629,6 +22517,7 @@ label_erase:
         mov ax, [cs:si + LS_X]
         and ax, ~3                      ; x0
         call redraw_rect
+        mov fs, [cs:tail_seg]           ; (LABEL_TICK's FS: the tail, whatever the game did)
         mov byte [cs:lbl_busy], 0
         popa
         ret
@@ -22666,12 +22555,15 @@ redraw_rect:
 label_stamp:
         cmp byte [cs:lbl_busy], 0
         jne .ret
+        push fs
+        mov fs, [cs:tail_seg]           ; (FS: the tail, LBL_SLOTS')
 %assign slot 0
 %rep LBL_SLOTS
-        cmp byte [cs:lbl_slots + slot * LBL_SIZE], 0
+        cmp byte [fs:lbl_slots + slot * LBL_SIZE], 0
         jne .some
 %assign slot slot + 1
 %endrep
+        pop fs
         ret                             ; (no label in any slot: nothing to put, nor to place)
 .some:  mov byte [cs:lbl_busy], 1
         pusha
@@ -22707,7 +22599,7 @@ label_stamp:
         call vga_save
         mov si, lbl_state
         mov di, lbl_slots
-.slot:  mov dl, [cs:di]
+.slot:  mov dl, [fs:di]
         cmp byte [cs:si + LS_SHOWN], 0
         jne .shown
         push es
@@ -22727,6 +22619,7 @@ label_stamp:
         pop ds
         popa
         mov byte [cs:lbl_busy], 0
+        pop fs
 .ret:   ret
 
 ; LABEL_PUT: label DI (the Loader's slot; SI its state) into ES, the screen, a plane at a time;
@@ -22734,7 +22627,7 @@ label_stamp:
 label_put:
         push bp
         push di
-        mov ax, [cs:di + 4]
+        mov ax, [fs:di + 4]
         mov [cs:lp_ink], ax             ; (and LP_EDGE)
         add di, 8                       ; (DI: the ink's mask, a row of it)
         xor bp, bp                      ; (BP: the plane)
@@ -22758,10 +22651,10 @@ label_put:
         add di, [cs:lp_line]
 .px:    cmp cl, [cs:si + LS_W]
         jae .nrow
-        bt word [cs:bx], cx
+        bt word [fs:bx], cx
         mov al, [cs:lp_ink]
         jc .put
-        bt word [cs:bx + LBL_MASK], cx
+        bt word [fs:bx + LBL_MASK], cx
         jnc .npx
         mov al, [cs:lp_edge]
 .put:   cmp byte [cs:lp_clip], 0
@@ -23441,9 +23334,9 @@ dust_pass:
         cmp byte [cs:d_built], 0
         jne .built
         call dust_build
-.built: mov si, puffs
+.built: mov si, FAR_PUFFS
         mov cx, PUFFS
-.puff:  cmp byte [cs:si + 10], 0
+.puff:  cmp byte [fs:si + 10], 0
         je .next
         push cx
         push si
@@ -23454,9 +23347,9 @@ dust_pass:
         loop .puff
 .ret:   ret
 
-puff_draw:                              ; the puff at CS:SI
+puff_draw:                              ; the puff at FS:SI (the far block)
         mov ax, [cs:d_now]
-        sub ax, [cs:si + 4]
+        sub ax, [fs:si + 4]
         cmp ax, DUST_LIFE
         jb .young
         ret
@@ -23478,12 +23371,12 @@ puff_draw:                              ; the puff at CS:SI
         imul ax, bx, 5                  ; rising, 5 pixels in all
         xor dx, dx
         div cx
-        mov dx, [cs:si + 2]
+        mov dx, [fs:si + 2]
         sub dx, ax
         mov [cs:d_wy], dx
-        mov ax, [cs:si]
+        mov ax, [fs:si]
         mov [cs:d_wx], ax
-        mov ax, [cs:si + 8]
+        mov ax, [fs:si + 8]
         mov [cs:d_seed], ax
         ; (none of it where the floor was drawn: nothing to do)
         mov ax, [cs:d_wx]
@@ -23636,13 +23529,13 @@ puff_draw:                              ; the puff at CS:SI
         jae .npx
         xor bh, bh                      ; lightened (twice in the core)
         mov bl, [es:bp]
-        mov al, [cs:light + bx]
+        mov al, [fs:FAR_LIGHT + bx]     ; (FS: the far block, SHADOW_PASS's)
         or al, al
         jz .npx
         or ch, ch
         jz .put
         mov bl, al
-        mov ah, [cs:light + bx]
+        mov ah, [fs:FAR_LIGHT + bx]
         or ah, ah
         jz .put
         mov al, ah
@@ -23821,10 +23714,9 @@ t_dx       dw 0
 t_dy       dw 0
 t_sx       dw 0
 t_sy       dw 0
-puffs      times PUFFS * PUFF_SIZE db 0
                                 ; (each thing's place as last seen: the far block's FAR_LAST_X and
                                 ;   FAR_LAST_Y, a word each; how far it has walked, FAR_WALKED)
-light      times 256 db 0
+                                ; (LIGHT and the puffs: the far block's FAR_LIGHT and FAR_PUFFS)
 
 ; RINGS (RINGS_ON): a ring on the ground under each thing RING_TAB marks (the Loader marks the
 ; enemy chosen with Tab in a fight, kind 2), drawn in the floor pass as the shadows are, so the
@@ -23872,16 +23764,34 @@ ring_pass:
         loop .thing
 .ret:   ret
 
-ring_points:                            ; CX points (dx, dy bytes) at CS:SI, round (R_FX, R_FY)
-.pt:    push cx
-        mov al, [cs:si]
-        cbw
-        add ax, [cs:r_fx]
-        mov bx, ax
-        mov al, [cs:si + 1]
-        cbw
+ring_points:                            ; CX points at CS:SI round (R_FX, R_FY): each a quarter's
+.pt:    push cx                         ;   (x << 3 | y, x and y not negative), with its mirror
+        mov al, [cs:si]                 ;   images (x and y each negated, if not 0)
+        inc si
+        movzx bx, al
+        shr bx, 3
+        and ax, 7
+        mov [cs:r_qx], bx
+        mov [cs:r_qy], ax
+        call ring_dot                   ; (x, y)
+        neg word [cs:r_qx]
+        jz .neg_y
+        call ring_dot                   ; (-x, y)
+.neg_y: neg word [cs:r_qy]
+        jz .next
+        call ring_dot                   ; (-x, -y), or (0, -y)
+        neg word [cs:r_qx]
+        jz .next
+        call ring_dot                   ; (x, -y)
+.next:  pop cx
+        loop .pt
+        ret
+
+ring_dot:                               ; the point (R_QX, R_QY) round (R_FX, R_FY) reddened, if in
+        mov bx, [cs:r_qx]               ;   the clip; SI kept
+        add bx, [cs:r_fx]
+        mov ax, [cs:r_qy]
         add ax, [cs:r_fy]
-        add si, 2
         cmp ax, [cs:clip_y0]
         jl .skip
         cmp ax, [cs:clip_y1]
@@ -23897,9 +23807,7 @@ ring_points:                            ; CX points (dx, dy bytes) at CS:SI, rou
         push si
         call ring_px
         pop si
-.skip:  pop cx
-        loop .pt
-        ret
+.skip:  ret
 
 ring_px:                                ; redden screen x BX on the row at ROW_AT (twice for the chosen)
         mov cx, bx
@@ -23931,15 +23839,17 @@ ring_px:                                ; redden screen x BX on the row at ROW_A
 .put:   mov [es:bx], al
         ret
 
-RING_OUTER equ 76
-RING_INNER equ 68
-RING_EXTRA equ 84
-ring_outer db 13, 0, 13, 1, 13, 2, 12, 2, 12, 3, 11, 3, 11, 4, 10, 4, 9, 4, 9, 5, 8, 5, 7, 5, 6, 5, 5, 5, 5, 6, 4, 6, 3, 6, 2, 6, 1, 6, 0, 6, 255, 6, 254, 6, 253, 6, 252, 6, 251, 6, 251, 5, 250, 5, 249, 5, 248, 5, 247, 5, 247, 4, 246, 4, 245, 4, 245, 3, 244, 3, 244, 2, 243, 2, 243, 1, 243, 0, 243, 255, 243, 254, 244, 254, 244, 253, 245, 253, 245, 252, 246, 252, 247, 252, 247, 251, 248, 251, 249, 251, 250, 251, 251, 251, 251, 250, 252, 250, 253, 250, 254, 250, 255, 250, 0, 250, 1, 250, 2, 250, 3, 250, 4, 250, 5, 250, 5, 251, 6, 251, 7, 251, 8, 251, 9, 251, 9, 252, 10, 252, 11, 252, 11, 253, 12, 253, 12, 254, 13, 254, 13, 255
-ring_inner db 12, 0, 12, 1, 11, 1, 11, 2, 10, 2, 10, 3, 9, 3, 9, 4, 8, 4, 7, 4, 6, 4, 5, 4, 5, 5, 4, 5, 3, 5, 2, 5, 1, 5, 0, 5, 255, 5, 254, 5, 253, 5, 252, 5, 251, 5, 251, 4, 250, 4, 249, 4, 248, 4, 247, 4, 247, 3, 246, 3, 246, 2, 245, 2, 245, 1, 244, 1, 244, 0, 244, 255, 245, 255, 245, 254, 246, 254, 246, 253, 247, 253, 247, 252, 248, 252, 249, 252, 250, 252, 251, 252, 251, 251, 252, 251, 253, 251, 254, 251, 255, 251, 0, 251, 1, 251, 2, 251, 3, 251, 4, 251, 5, 251, 5, 252, 6, 252, 7, 252, 8, 252, 9, 252, 9, 253, 10, 253, 10, 254, 11, 254, 11, 255, 12, 255
-ring_extra db 14, 0, 14, 1, 14, 2, 13, 2, 13, 3, 12, 3, 12, 4, 11, 4, 11, 5, 10, 5, 9, 5, 9, 6, 8, 6, 7, 6, 6, 6, 5, 6, 5, 7, 4, 7, 3, 7, 2, 7, 1, 7, 0, 7, 255, 7, 254, 7, 253, 7, 252, 7, 251, 7, 251, 6, 250, 6, 249, 6, 248, 6, 247, 6, 247, 5, 246, 5, 245, 5, 245, 4, 244, 4, 244, 3, 243, 3, 243, 2, 242, 2, 242, 1, 242, 0, 242, 255, 242, 254, 243, 254, 243, 253, 244, 253, 244, 252, 245, 252, 245, 251, 246, 251, 247, 251, 247, 250, 248, 250, 249, 250, 250, 250, 251, 250, 251, 249, 252, 249, 253, 249, 254, 249, 255, 249, 0, 249, 1, 249, 2, 249, 3, 249, 4, 249, 5, 249, 5, 250, 6, 250, 7, 250, 8, 250, 9, 250, 9, 251, 10, 251, 11, 251, 11, 252, 12, 252, 12, 253, 13, 253, 13, 254, 14, 254, 14, 255
+RING_OUTER equ 20                ; (a quarter of each ring: RING_POINTS mirrors them)
+RING_INNER equ 18
+RING_EXTRA equ 22
+ring_outer db 0 << 3 | 6, 1 << 3 | 6, 2 << 3 | 6, 3 << 3 | 6, 4 << 3 | 6, 5 << 3 | 5, 5 << 3 | 6, 6 << 3 | 5, 7 << 3 | 5, 8 << 3 | 5, 9 << 3 | 4, 9 << 3 | 5, 10 << 3 | 4, 11 << 3 | 3, 11 << 3 | 4, 12 << 3 | 2, 12 << 3 | 3, 13 << 3 | 0, 13 << 3 | 1, 13 << 3 | 2
+ring_inner db 0 << 3 | 5, 1 << 3 | 5, 2 << 3 | 5, 3 << 3 | 5, 4 << 3 | 5, 5 << 3 | 4, 5 << 3 | 5, 6 << 3 | 4, 7 << 3 | 4, 8 << 3 | 4, 9 << 3 | 3, 9 << 3 | 4, 10 << 3 | 2, 10 << 3 | 3, 11 << 3 | 1, 11 << 3 | 2, 12 << 3 | 0, 12 << 3 | 1
+ring_extra db 0 << 3 | 7, 1 << 3 | 7, 2 << 3 | 7, 3 << 3 | 7, 4 << 3 | 7, 5 << 3 | 6, 5 << 3 | 7, 6 << 3 | 6, 7 << 3 | 6, 8 << 3 | 6, 9 << 3 | 5, 9 << 3 | 6, 10 << 3 | 5, 11 << 3 | 4, 11 << 3 | 5, 12 << 3 | 3, 12 << 3 | 4, 13 << 3 | 2, 13 << 3 | 3, 14 << 3 | 0, 14 << 3 | 1, 14 << 3 | 2
 r_kind     db 0
 r_fx       dw 0
 r_fy       dw 0
+r_qx       dw 0
+r_qy       dw 0
                                 ; (RING_TAB and RED: the far block's FAR_RING_TAB and FAR_RED)
 
 ; TARGETING (TARGET_ON): Tab and Shift+Tab, counted for the Loader, choose an enemy in a fight
@@ -25107,18 +25017,17 @@ FAR_SPANS  equ FAR_TBUF + TSIZE                 ; the shadows' spans (SPANS_FLUS
 FAR_LAST_X equ FAR_SPANS + SPANS_MOST * 6       ; each thing's place as last seen (dust)
 FAR_LAST_Y equ FAR_LAST_X + MAP_COUNT * 2
 FAR_PACE   equ FAR_LAST_Y + MAP_COUNT * 2       ; what moved in frames left undrawn (STEADY PACE)
-FAR_QM_STACK equ FAR_PACE + PACE_KEPT * 10      ; the crash report's copy of the stack (DOS_QUIT)
-FAR_QM_LEN equ FAR_QM_STACK + STACK_BYTES       ; ... and the length of the text kept, then
-FAR_MSG    equ FAR_QM_LEN + 2                   ; the last text written to the screen (DOS_WRITE)
+FAR_MSG    equ FAR_PACE + PACE_KEPT * 10        ; the last text written to the screen (DOS_WRITE)
 FAR_SC_OF  equ FAR_MSG + MSG_BYTES              ; each thing's slot in the shadows' cache, last (SC_START)
 FAR_DUST   equ FAR_SC_OF + MAP_COUNT            ; the puffs' thickness, by age, row and column (DUST_BUILD)
 FAR_DAC    equ FAR_DUST + DUST_BYTES             ; the palette as DARK was made from it (BUILD_DARK)
 FAR_RING_TAB equ FAR_DAC + 768                  ; the things that get a ring (RING_PASS), the Loader's
 FAR_RED    equ FAR_RING_TAB + MAP_COUNT         ; each colour's reddened one (RING_PX), the Loader's
 FAR_WALKED equ FAR_RED + 256                    ; how far each thing has walked since its last puff (DUST_TICK)
-FAR_DATA   equ FAR_WALKED + MAP_COUNT           ; FROM HERE, FAR_DATA_LEN bytes that start as the image's
-FAR_TYPES  equ FAR_DATA                         ;   FAR_DATA_SRC (FAR_INIT): the item types (PROBE_TYPES_FILL)
-FAR_END    equ FAR_TYPES + TYPES_EXTRA * TYPE_SIZE
+FAR_LIGHT  equ FAR_WALKED + MAP_COUNT           ; each colour's lighter one (PUFF_DRAW), the Loader's
+FAR_PUFFS  equ FAR_LIGHT + 256                  ; the puffs of dust (DUST_TICK, PUFF_RAISE, DUST_PASS)
+FAR_DARK   equ FAR_PUFFS + PUFFS * PUFF_SIZE    ; the shadows' colours (BUILD_DARK, SPANS_FLUSH: XLAT)
+FAR_END    equ FAR_DARK + 256
 FAR_PARAS  equ (FAR_END - FAR_RING + 15) / 16
         times -(FAR_END > 0x10000) db 0     ; (a negative count: past the HMA's 64 KB)
         times -((FAR_END - FAR_RING) & 1) db 0  ; (FAR_INIT clears it a word at a time)
@@ -25131,14 +25040,14 @@ FAR_PARAS  equ (FAR_END - FAR_RING + 15) / 16
 ; (UMBPLUS.COM, run first, moves the block's start down to C900h where it can, 28 KB more; the
 ; helper still has to fit without it.)
 UMB_ROOM equ 0xF000 - 0xD00A
-UMB_NEED equ (1 + 0x10 + (image_len + STACK + 15) / 16) + (1 + OVR_RESERVE)
+UMB_NEED equ (1 + 0x10 + (image_len + TAIL_BYTES + STACK + 15) / 16) + (1 + OVR_RESERVE)
         times -(UMB_NEED > UMB_ROOM) db 0   ; (a negative count: the helper no longer fits upper memory)
 ; What KEEP leaves there after the install: the helper as it stays (to RESIDENT_END), the overlay
 ; buffer, the music pool (POOL_PARAS) and the see-through figures' tables (GHOST_PARAS), each with
 ; its MCB. The last two are taken only if there's room, quietly: the build fails rather than lose
 ; them without UMBPLUS.COM (with the far block in the HMA, as DOSBox gives it; without the HMA,
 ; FAR_INIT takes the far block from upper memory first, and they don't fit).
-UMB_KEPT equ (1 + 0x10 + (kept_end - $$ + 15) / 16) + (1 + OVR_RESERVE) + (1 + POOL_PARAS) + (1 + GHOST_PARAS)
+UMB_KEPT equ (1 + 0x10 + KEPT_PARAS) + (1 + OVR_RESERVE) + (1 + POOL_PARAS) + (1 + GHOST_PARAS)
 
 POINTER_FILE db "D:\POINTER.BIN", 0 ; (CP_DATA's file, read as the helper loads)
 install:                        ; DS = ES = PSP, CS = the image
@@ -25233,12 +25142,15 @@ install:                        ; DS = ES = PSP, CS = the image
         int 21h
         mov byte [hooked], 1
         mov byte [cs:quit_saved], 0     ; (DOS_QUIT's from now on)
+        mov ax, cs                      ; the tail, after the image
+        add ax, image_len / 16
+        mov [cs:tail_seg], ax
         mov ax, [cs:far_seg]
         mov [cs:ring_seg], ax
         mov [cs:panel_seg], ax
         mov [cs:sc_seg], ax
         mov [cs:tbuf_seg], ax
-        mov dx, 0x10 + (kept_end - hdr) / 16        ; PSP and image, in paragraphs
+        mov dx, 0x10 + KEPT_PARAS        ; PSP, image and tail, in paragraphs
         jmp keep
 
 ; FAR_INIT: FAR_SEG set, its FAR_RING to FAR_END cleared; CF if there was no room. The HMA
@@ -25305,10 +25217,6 @@ far_init:
         xor ax, ax
         cld
         rep stosw
-        mov si, far_data_src            ; FAR_DATA's first bytes, from the install code's room
-        mov di, FAR_DATA
-        mov cx, FAR_DATA_LEN
-        rep movsb
         clc
 .ret:   ret
 xms       dd 0
@@ -25319,123 +25227,6 @@ no_far  db 'DSCLOG: no memory for its buffers (63 KB). Not loaded.', 13, 10, '$'
 msg     db 'DSCLOG loaded.', 13, 10, '$'
 psp     dw 0
 busy    db 'DSCLOG: interrupts 60h-65h or 80h-FFh in use (already loaded?). Not loaded.', 13, 10, '$'
-; FAR_DATA_SRC: the far block's FAR_DATA as it starts, copied there by FAR_INIT (the install code's
-; room, let go of after)
-; the types, numbered from the game's count (115): the Loader's (the same as TYPES in
-; dsloader/npcitems.py), the rest unused
-far_data_src:                   ; (FAR_DATA's first bytes: FAR_TYPES)
-        ; a metal short sword: the metal long sword's type (63), 1d6
-        db 0x01, 0x00, 0x30, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
-        db 0x06, 0x01, 0x00, 0x00, 0x72, 0x16, 0x00, 0x01
-        ; a cloak of protection: the Cloak's type (65), no material shown, its plus counting
-        ; for AC (bit 80h of +0Fh, as armour's) with an AC of its own of 0
-        db 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x0A, 0x00, 0x40, 0x08, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x80, 0xFF, 0x1F, 0x00, 0x01
-        ; a bone helm: the Helm's type (5), of bone (to go with the bone scale armour), and like
-        ; it for the classes that can wear it (+10h: no thieves, where the Helm allows them)
-        db 0x00, 0x00, 0x00, 0x00, 0x0F, 0x00, 0xFA, 0x00, 0x01, 0x06, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x00, 0x00
-        ; a bone short sword (a new warrior's, weaponchoice.py): the short sword's, of bone (+8),
-        ; half its weight (+4), for the classes of the bone long sword and psionicists (+10h)
-        db 0x01, 0x00, 0x30, 0x00, 0x0F, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01
-        db 0x06, 0x01, 0x00, 0x00, 0x78, 0x17, 0x00, 0x01
-        ; a bone axe: the Axe's (22), of bone, for the bone weapons' classes (a water cleric's,
-        ; not an earth cleric's); weighing 30 (+4), not HEAVY (over 30: the game's 70), as the
-        ; obsidian one: light enough for the off hand
-        db 0x01, 0x00, 0x10, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01
-        db 0x08, 0x01, 0x00, 0x00, 0x78, 0x17, 0x00, 0x01
-        ; an obsidian short sword: the short sword's, of obsidian, for the obsidian long sword's
-        ; classes and psionicists
-        db 0x01, 0x00, 0x30, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01
-        db 0x06, 0x01, 0x00, 0x00, 0x7E, 0x17, 0x00, 0x01
-        ; an obsidian axe: the Axe's, of obsidian, for the obsidian weapons' classes; weighing 30
-        db 0x01, 0x00, 0x10, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01
-        db 0x08, 0x01, 0x00, 0x00, 0x7E, 0x17, 0x00, 0x01
-        ; a plain metal short sword: the first's (Kurzak's, which is his alone: Shadowseeker)
-        db 0x01, 0x00, 0x30, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
-        db 0x06, 0x01, 0x00, 0x00, 0x72, 0x16, 0x00, 0x01
-        ; bracers of defense (BRACERS): the cloak of protection's, worn on the arms (+9: 3, the
-        ; arm armour's slot), their plus counting for AC; not armour to anything else here
-        db 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x0A, 0x00, 0x40, 0x03, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x80, 0xFF, 0x1F, 0x00, 0x01
-        ; metal versions of the game's plain weapons that have none (dsloader/worldgear.py):
-        ; each its type of metal (+8: 4), for the metal long sword's clerics (+10h's low nibble:
-        ; 2, earth's): the Dagger's (33), an air cleric's too (3), as every dagger
-        db 0x01, 0x00, 0x20, 0x00, 0x0A, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
-        db 0x04, 0x01, 0x00, 0x00, 0xF3, 0x1F, 0x00, 0x00
-        ; the Mace's (20)
-        db 0x01, 0x00, 0x08, 0x00, 0x64, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
-        db 0x06, 0x01, 0x01, 0x00, 0x72, 0x16, 0x00, 0x01
-        ; the Great Axe's (2)
-        db 0x01, 0x00, 0x10, 0x00, 0x46, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
-        db 0x0A, 0x01, 0x00, 0x40, 0x62, 0x16, 0x00, 0x02
-        ; the pick's (112)
-        db 0x01, 0x00, 0x20, 0x00, 0x28, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
-        db 0x04, 0x01, 0x01, 0x00, 0x72, 0x17, 0x00, 0x00
-        ; the Polearm's (19)
-        db 0x01, 0x00, 0x30, 0x00, 0x96, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
-        db 0x0A, 0x01, 0x00, 0x40, 0x72, 0x16, 0x00, 0x06
-        ; a circlet and a crown (dsloader/worldgear.py): worn on the head (+9: 6), as the
-        ; Necklace's (36) of no material, not armour (+0Fh: no 80h), for every class
-        db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0xFA, 0x00, 0x40, 0x06, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0x05, 0x00, 0xFA, 0x00, 0x40, 0x06, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
-        ; plate mail (the Warden's Plate, dsloader/worldgear.py): the Chain's chest, arm and
-        ; leg armour (57, 58, 59), heavier (+4: 250, 75, 75), AC 3, 2, 2 (+12h; chain's 2, 2, 1)
-        db 0x00, 0x00, 0x00, 0x00, 0xFA, 0x00, 0xFA, 0x00, 0x04, 0x01, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x03, 0x01
-        db 0x00, 0x00, 0x00, 0x00, 0x4B, 0x00, 0xFA, 0x00, 0x04, 0x03, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x02, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0x4B, 0x00, 0xFA, 0x00, 0x04, 0x0A, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x02, 0x00
-        ; the Cloak and Boots of Elvenkind (ELVEN_CLOAK, ELVEN_BOOTS: dsloader/worldgear.py,
-        ; their stealth stealth.py): the Cloak's (65) and the Boots' (68), for thieves and rangers
-        ; only (+10h: 600h, their class bits; a multiclass with either may wear them)
-        db 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x0A, 0x00, 0x05, 0x08, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x01
-        db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x0A, 0x00, 0x85, 0x04, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00
-        ; Galefang's (dsloader/worldgear.py): the metal Dagger's, air clerics' too (+10h: 1FF3h;
-        ; fire and water clerics not); the type its own, as it was made when no other dagger was
-        ; an air cleric's
-        db 0x01, 0x00, 0x20, 0x00, 0x0A, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
-        db 0x04, 0x01, 0x00, 0x00, 0xF3, 0x1F, 0x00, 0x00
-        ; bone and obsidian great axes (dsloader/weaponchoice.py, worldgear.py): the metal one's,
-        ; of bone (+8: 1; lighter, +4: 50, still too heavy to backstab with; water clerics, 1668h)
-        ; and of obsidian (+8: 3; earth, fire and water clerics, 166Eh)
-        db 0x01, 0x00, 0x10, 0x00, 0x32, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01
-        db 0x0A, 0x01, 0x00, 0x40, 0x68, 0x16, 0x00, 0x02
-        db 0x01, 0x00, 0x10, 0x00, 0x46, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01
-        db 0x0A, 0x01, 0x00, 0x40, 0x6E, 0x16, 0x00, 0x02
-        ; a bone dagger (dsloader/weaponchoice.py, worldgear.py): the obsidian Dagger's (17), of
-        ; bone (+8: 1), for water and air clerics and not fire ones (+10h: 1FFBh; the game's
-        ; obsidian daggers 1FF6h, an air cleric's bit added: PROBE_TYPES_FILL)
-        db 0x01, 0x00, 0x20, 0x00, 0x0A, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01
-        db 0x04, 0x01, 0x00, 0x00, 0xFB, 0x1F, 0x00, 0x00
-        ; a robe (ROBE: the Ashen Robe +1 and the Veiled Robe +2, dsloader/robes.py): the cloak
-        ; of protection's, worn on the chest (+9: 1, the chest armour's slot), its plus counting
-        ; for AC, not armour (as the bracers: BRACERS_AX), for preservers, psionicists and
-        ; druids (+10h: 190h)
-        db 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x0A, 0x00, 0x40, 0x01, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x80, 0x90, 0x01, 0x00, 0x01
-        ; a metal shield (Ironbulwark +3, dsloader/worldgear.py): the game's leather Shield's
-        ; (4), of metal (+8: 4), for the classes of its wooden one and its chain armour (+10h:
-        ; 126Fh, no thieves); the game has no metal shield
-        db 0x04, 0x00, 0x00, 0x00, 0x32, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x01, 0x00
-        ; the girdles (dsloader/worldgear.py): the game's Belt's (42), worn at the waist (+9: 2),
-        ; no material shown (+8: 40h), for every class
-        db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x14, 0x00, 0x40, 0x02, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x14, 0x00, 0x40, 0x02, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
-        ; the amulet (worldgear.py): the game's Necklace's (36), worn at the neck (+9: 7)
-        db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0xFA, 0x00, 0x40, 0x07, 0x00, 0x00
-        db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
-far_data_end:
-FAR_DATA_LEN equ far_data_end - far_data_src
-        times -(FAR_DATA_LEN != FAR_END - FAR_DATA) db 0 ; (a negative count: FAR_DATA's room and its bytes differ)
 
 ; ALL_VECTORS: the interrupts the patched game uses (all free before installing), each with its
 ; handler, in the order they are set
@@ -25582,12 +25373,12 @@ all_vectors_end:
 VECTORS equ (all_vectors_end - all_vectors) / 3
 
 ; (the install code's room made up to AFTER_INSTALL's, if it is less: what's left is room for more
-; of FAR_DATA's bytes, which take none of the segment until then)
-AFTER_INSTALL_BYTES equ SEG_BYTES + ((AREA_BYTES + 15) & ~15) + 256
+; install code, which takes none of the segment until then)
+AFTER_INSTALL_BYTES equ SEG_BYTES + ((AREA_BYTES + 15) & ~15)
         times (AFTER_INSTALL_BYTES - ($ - resident_end)) * (AFTER_INSTALL_BYTES > $ - resident_end) db 0
         align 16, db 0
 image_len equ $ - $$
-file_len  equ image_len + 32
+file_len  equ image_len + TAIL_BYTES + 32
         times -(image_len > 0x10000) db 0   ; (a negative count: past the helper's 64 KB segment)
 ; the memory past the image to load in: the install's stack
 LOAD_EXTRA equ (STACK + 15) / 16
@@ -25598,10 +25389,195 @@ LOAD_EXTRA equ (STACK + 15) / 16
 [absolute resident_end]
 seg_space  resb SEG_BYTES       ; (SEG_MOVE's: the stack's 60h bytes, then the monster kinds')
 area_space resb (AREA_BYTES + 15) & ~15 ; (... and the pictures' table: both whole paragraphs)
-dark       resb 256             ; (the shadows' colours: DARK)
 after_install_end:
         times -(after_install_end - resident_end != AFTER_INSTALL_BYTES) db 0 ; (AFTER_INSTALL_BYTES: these)
 kept_end   equ resident_end + ((after_install_end - resident_end + 15) & ~15)
 [section image]
         times -(after_install_end - hdr > image_len) db 0  ; (a negative count: past the install code)
         times -(UMB_KEPT > UMB_ROOM) db 0   ; (a negative count: the music pool or the see-through tables wouldn't fit)
+
+; THE TAIL (TAIL_SEG, the header's +1834): the paragraphs after the image, loaded and kept with it
+; (KEEP keeps the helper's memory to its end), outside the helper's 64 KB segment: the room the
+; segment has is for code. Its segment is the image's + TAIL_PARAS (+1836); the helper reaches it
+; through a segment register set to TAIL_SEG around each use. Buffers the Loader keeps give their
+; offset here in their header field.
+section tail follows=image vstart=0 align=16
+tail_start:
+; the types, numbered from the game's count (115): the Loader's (the same as TYPES in
+; dsloader/npcitems.py), the rest unused
+extra_types:
+        ; a metal short sword: the metal long sword's type (63), 1d6
+        db 0x01, 0x00, 0x30, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
+        db 0x06, 0x01, 0x00, 0x00, 0x72, 0x16, 0x00, 0x01
+        ; a cloak of protection: the Cloak's type (65), no material shown, its plus counting
+        ; for AC (bit 80h of +0Fh, as armour's) with an AC of its own of 0
+        db 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x0A, 0x00, 0x40, 0x08, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x80, 0xFF, 0x1F, 0x00, 0x01
+        ; a bone helm: the Helm's type (5), of bone (to go with the bone scale armour), and like
+        ; it for the classes that can wear it (+10h: no thieves, where the Helm allows them)
+        db 0x00, 0x00, 0x00, 0x00, 0x0F, 0x00, 0xFA, 0x00, 0x01, 0x06, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x00, 0x00
+        ; a bone short sword (a new warrior's, weaponchoice.py): the short sword's, of bone (+8),
+        ; half its weight (+4), for the classes of the bone long sword and psionicists (+10h)
+        db 0x01, 0x00, 0x30, 0x00, 0x0F, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01
+        db 0x06, 0x01, 0x00, 0x00, 0x78, 0x17, 0x00, 0x01
+        ; a bone axe: the Axe's (22), of bone, for the bone weapons' classes (a water cleric's,
+        ; not an earth cleric's); weighing 30 (+4), not HEAVY (over 30: the game's 70), as the
+        ; obsidian one: light enough for the off hand
+        db 0x01, 0x00, 0x10, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01
+        db 0x08, 0x01, 0x00, 0x00, 0x78, 0x17, 0x00, 0x01
+        ; an obsidian short sword: the short sword's, of obsidian, for the obsidian long sword's
+        ; classes and psionicists
+        db 0x01, 0x00, 0x30, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01
+        db 0x06, 0x01, 0x00, 0x00, 0x7E, 0x17, 0x00, 0x01
+        ; an obsidian axe: the Axe's, of obsidian, for the obsidian weapons' classes; weighing 30
+        db 0x01, 0x00, 0x10, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01
+        db 0x08, 0x01, 0x00, 0x00, 0x7E, 0x17, 0x00, 0x01
+        ; a plain metal short sword: the first's (Kurzak's, which is his alone: Shadowseeker)
+        db 0x01, 0x00, 0x30, 0x00, 0x1E, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
+        db 0x06, 0x01, 0x00, 0x00, 0x72, 0x16, 0x00, 0x01
+        ; bracers of defense (BRACERS): the cloak of protection's, worn on the arms (+9: 3, the
+        ; arm armour's slot), their plus counting for AC; not armour to anything else here
+        db 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x0A, 0x00, 0x40, 0x03, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x80, 0xFF, 0x1F, 0x00, 0x01
+        ; metal versions of the game's plain weapons that have none (dsloader/worldgear.py):
+        ; each its type of metal (+8: 4), for the metal long sword's clerics (+10h's low nibble:
+        ; 2, earth's): the Dagger's (33), an air cleric's too (3), as every dagger
+        db 0x01, 0x00, 0x20, 0x00, 0x0A, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
+        db 0x04, 0x01, 0x00, 0x00, 0xF3, 0x1F, 0x00, 0x00
+        ; the Mace's (20)
+        db 0x01, 0x00, 0x08, 0x00, 0x64, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
+        db 0x06, 0x01, 0x01, 0x00, 0x72, 0x16, 0x00, 0x01
+        ; the Great Axe's (2)
+        db 0x01, 0x00, 0x10, 0x00, 0x46, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
+        db 0x0A, 0x01, 0x00, 0x40, 0x62, 0x16, 0x00, 0x02
+        ; the pick's (112)
+        db 0x01, 0x00, 0x20, 0x00, 0x28, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
+        db 0x04, 0x01, 0x01, 0x00, 0x72, 0x17, 0x00, 0x00
+        ; the Polearm's (19)
+        db 0x01, 0x00, 0x30, 0x00, 0x96, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
+        db 0x0A, 0x01, 0x00, 0x40, 0x72, 0x16, 0x00, 0x06
+        ; a circlet and a crown (dsloader/worldgear.py): worn on the head (+9: 6), as the
+        ; Necklace's (36) of no material, not armour (+0Fh: no 80h), for every class
+        db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0xFA, 0x00, 0x40, 0x06, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x00, 0x05, 0x00, 0xFA, 0x00, 0x40, 0x06, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
+        ; plate mail (the Warden's Plate, dsloader/worldgear.py): the Chain's chest, arm and
+        ; leg armour (57, 58, 59), heavier (+4: 250, 75, 75), AC 3, 2, 2 (+12h; chain's 2, 2, 1)
+        db 0x00, 0x00, 0x00, 0x00, 0xFA, 0x00, 0xFA, 0x00, 0x04, 0x01, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x03, 0x01
+        db 0x00, 0x00, 0x00, 0x00, 0x4B, 0x00, 0xFA, 0x00, 0x04, 0x03, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x02, 0x00
+        db 0x00, 0x00, 0x00, 0x00, 0x4B, 0x00, 0xFA, 0x00, 0x04, 0x0A, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x02, 0x00
+        ; the Cloak and Boots of Elvenkind (ELVEN_CLOAK, ELVEN_BOOTS: dsloader/worldgear.py,
+        ; their stealth stealth.py): the Cloak's (65) and the Boots' (68), for thieves and rangers
+        ; only (+10h: 600h, their class bits; a multiclass with either may wear them)
+        db 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x0A, 0x00, 0x05, 0x08, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x01
+        db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x0A, 0x00, 0x85, 0x04, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00
+        ; Galefang's (dsloader/worldgear.py): the metal Dagger's, air clerics' too (+10h: 1FF3h;
+        ; fire and water clerics not); the type its own, as it was made when no other dagger was
+        ; an air cleric's
+        db 0x01, 0x00, 0x20, 0x00, 0x0A, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
+        db 0x04, 0x01, 0x00, 0x00, 0xF3, 0x1F, 0x00, 0x00
+        ; bone and obsidian great axes (dsloader/weaponchoice.py, worldgear.py): the metal one's,
+        ; of bone (+8: 1; lighter, +4: 50, still too heavy to backstab with; water clerics, 1668h)
+        ; and of obsidian (+8: 3; earth, fire and water clerics, 166Eh)
+        db 0x01, 0x00, 0x10, 0x00, 0x32, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01
+        db 0x0A, 0x01, 0x00, 0x40, 0x68, 0x16, 0x00, 0x02
+        db 0x01, 0x00, 0x10, 0x00, 0x46, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01
+        db 0x0A, 0x01, 0x00, 0x40, 0x6E, 0x16, 0x00, 0x02
+        ; a bone dagger (dsloader/weaponchoice.py, worldgear.py): the obsidian Dagger's (17), of
+        ; bone (+8: 1), for water and air clerics and not fire ones (+10h: 1FFBh; the game's
+        ; obsidian daggers 1FF6h, an air cleric's bit added: PROBE_TYPES_FILL)
+        db 0x01, 0x00, 0x20, 0x00, 0x0A, 0x00, 0xFA, 0x00, 0x01, 0x05, 0x01, 0x01
+        db 0x04, 0x01, 0x00, 0x00, 0xFB, 0x1F, 0x00, 0x00
+        ; a robe (ROBE: the Ashen Robe +1 and the Veiled Robe +2, dsloader/robes.py): the cloak
+        ; of protection's, worn on the chest (+9: 1, the chest armour's slot), its plus counting
+        ; for AC, not armour (as the bracers: BRACERS_AX), for preservers, psionicists and
+        ; druids (+10h: 190h)
+        db 0x00, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x0A, 0x00, 0x40, 0x01, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x80, 0x90, 0x01, 0x00, 0x01
+        ; a metal shield (Ironbulwark +3, dsloader/worldgear.py): the game's leather Shield's
+        ; (4), of metal (+8: 4), for the classes of its wooden one and its chain armour (+10h:
+        ; 126Fh, no thieves); the game has no metal shield
+        db 0x04, 0x00, 0x00, 0x00, 0x32, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x80, 0x6F, 0x12, 0x01, 0x00
+        ; the girdles (dsloader/worldgear.py): the game's Belt's (42), worn at the waist (+9: 2),
+        ; no material shown (+8: 40h), for every class
+        db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x14, 0x00, 0x40, 0x02, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x14, 0x00, 0x40, 0x02, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
+        ; the amulet (worldgear.py): the game's Necklace's (36), worn at the neck (+9: 7)
+        db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0xFA, 0x00, 0x40, 0x07, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
+extra_types_end:
+        times -(extra_types_end - extra_types != TYPES_EXTRA * TYPE_SIZE) db 0 ; (a negative count: not TYPES_EXTRA)
+lbl_slots  times LBL_SLOTS * LBL_SIZE db 0 ; (the Loader's: LABELS, the header's +1838)
+ticks      times TICK_SLOTS * TICK_SIZE db 0 ; (PROBE_TICK's, the Loader's to read: the header's +356)
+; the names, numbered from NAMES_OWN (322): the Loader's items' (the same as the Loader's
+; NAMES in dsloader/names.py), each NUL-terminated (PROBE_NAMES_FILL pads it to NAME_SIZE)
+extra_names:
+        db "Ring/Protection", 0
+        db "Thieves' Tools", 0
+        db "Short Sword", 0             ; (Kurzak's, of type TYPES' first)
+        db "Cloak/Protectn", 0          ; (Pehtucl's, the game's way of shortening)
+        db "Ring/Protection", 0         ; (Pehtucl's ring: the arena's is the first; their icons differ)
+        db "Shadowseeker", 0            ; (Kurzak's Short Sword made +1: MAGIC_ARMS)
+        db "Kreenfang", 0               ; (the arena's Bone Gythka made +1)
+        db "Bracers/Defns", 0           ; (bracers of defense, short enough for their plus: BRACERS,
+                                        ;   dsloader/worldgear.py)
+        db "Gutterknot", 0              ; (the magic weapons of dsloader/worldgear.py: a club +1,
+        db "Deepbiter", 0               ; a stone pick +1,
+        db "Windlash", 0                ; a staff sling +1,
+        db "Greenbright", 0             ; a metal short sword +2)
+        db "Arrowbane", 0               ; (the circlet and the crown of dsloader/worldgear.py)
+        db "Sunking Crown", 0
+        db "Warden's Chest", 0          ; (the Warden's Plate of dsloader/worldgear.py)
+        db "Warden's Arms", 0
+        db "Warden's Legs", 0
+        db "Warden's Helm", 0
+        db "Cloak/Elvenkind", 0         ; (the Cloak and Boots of Elvenkind)
+        db "Boots/Elvenkind", 0
+        db "Flame Blade", 0             ; (an obsidian long sword +1, Focus Heat on what it hits)
+        db "Tome/Understand", 0         ; (the Tome of Understanding: dsloader/tome.py)
+        db "Inixhide", 0                ; (Legcrusher's Leather Chest Armor +1: dsloader/npcitems.py)
+        db "Drakejaw", 0                ; (the magic axes of dsloader/worldgear.py: a bone axe +1,
+        db "Glasshewer", 0              ; an obsidian axe +2,
+        db "Headsman", 0                ; a metal great axe +2)
+        db "Galefang", 0                ; (more magic weapons of dsloader/worldgear.py: an air
+                                        ; cleric's dagger +2,
+        db "Mindshard", 0               ; an obsidian short sword +1,
+        db "Stillwater", 0              ; a bone short sword +1,
+        db "Linebreaker", 0             ; a metal polearm +2,
+        db "Thornwall", 0               ; a bone polearm +1)
+        db "Ashen Robe", 0              ; (the robes: dsloader/robes.py)
+        db "Veiled Robe", 0
+        db "Gutterward", 0              ; (the magic shields of dsloader/worldgear.py: a wooden
+                                        ; shield +1,
+        db "Ironbulwark", 0             ; a metal shield +3)
+        db "Hayneedle", 0               ; (the weapons for the kits with too few, dsloader/
+                                        ; worldgear.py: a bone dagger +1,
+        db "Nightsliver", 0             ; an obsidian dagger +2,
+        db "Dunesong", 0                ; a bow +1,
+        db "Skycutter", 0               ; a chatkcha +2)
+        db "Girdle/Back Def", 0         ; (the girdles and the amulet of
+                                        ; dsloader/worldgear.py: 15 letters at most, as the
+        db "Girdle of Urnst", 0         ; game's own)
+        db "Amulet/MagicRes", 0
+        db "Burning Arrows", 0          ; (the Spellarcher's spell arrows, dsloader/
+                                        ; spellarrows.py: ARROW_NAME on)
+        db "Chill Arrows", 0
+        db "Shocking Arrows", 0
+        db "Vampiric Arrows", 0
+        times NAMES_EXTRA - 46 db 0     ; (empty names, if any)
+        align 16, db 0
+tail_end:
+TAIL_BYTES equ tail_end - tail_start
+KEPT_PARAS equ (image_len + TAIL_BYTES) / 16    ; (what KEEP keeps after the PSP: the image to the
+                                                ;   install code's end, AFTER_INSTALL's buffers
+                                                ;   within it, then the tail)

@@ -87,6 +87,7 @@ class HelperTests(unittest.TestCase):
         image = load_image()
         hdr = image.find(HDR_SIG)
         off, count = struct.unpack_from("<HH", image, hdr + names.TSR_NAMES_OFF)
+        off += struct.unpack_from("<H", image, hdr + 1836)[0] * 16  # (in the tail: TAIL_PARAS on)
         self.assertEqual(count, names.EXTRA)
         listed = []
         for _ in range(count):  # (each NUL-terminated, KEPT - 1 letters at most)

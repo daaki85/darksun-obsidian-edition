@@ -34,7 +34,7 @@ FAR = 0xC000                    # (the far block, as the other tests put it)
 LIST_SEG, PIC_SEG = 0x2000, 0x7000
 CAM = (1000, 500)
 HDR_SHADOWS_ON, HDR_DUST_ON, HDR_RINGS_ON, HDR_FAR_SEG, HDR_GHOST_SEG, HDR_GHOST_ON = 220, 234, 244, 142, 1826, 1828
-HDR_RING_TAB, HDR_RED = 246, 248  # (their offsets in the far block)
+HDR_RING_TAB, HDR_RED, HDR_LIGHT = 246, 248, 236  # (their offsets in the far block)
 OBJ_LIST, OBJ_COUNT, MAP_THINGS, CACHE_LAST, CAM_X = 0x6690, 0x1F72, 0x6694, 0x1F84, 0x1178
 LOAD = (GAME_DS - 0x4356) & 0xFFFF
 CACHE = ((LOAD + 0x3E60) & 0xFFFF) * 16
@@ -59,10 +59,14 @@ def build(asm=ASM):
             with open(mp) as f:
                 listing = f.read()
             sym = {}
-            for line in listing.split("Section image")[1].splitlines():
+            for line in listing.split("Section image")[1].split("---- Section")[0].splitlines():
                 parts = line.split()
                 if len(parts) == 3 and all(c in "0123456789ABCDEF" for c in parts[1]):
                     sym[parts[2]] = int(parts[1], 16)
+            for line in listing.split("No Section")[1].split("---- Section")[0].splitlines():
+                parts = line.split()  # (the EQUs: the far block's offsets, FAR_*)
+                if len(parts) == 2 and parts[1].startswith("FAR_") and all(c in "0123456789ABCDEF" for c in parts[0]):
+                    sym[parts[1]] = int(parts[0], 16)
         _built[asm] = (exe, sym)
     return _built[asm]
 
@@ -109,6 +113,7 @@ class Scene:
         image = bytearray(exe[struct.unpack_from("<H", exe, 8)[0] * 16:])
         for at in (HDR_FAR_SEG, 138, 268):
             image[at:at + 2] = struct.pack("<H", FAR)
+        image[1834:1836] = struct.pack("<H", TSR + struct.unpack_from("<H", image, 1836)[0])  # (TAIL_SEG)
         self.image = image
         self.mu = mu = Uc(UC_ARCH_X86, UC_MODE_16)
         mu.mem_map(0, 0x100000)
@@ -175,6 +180,13 @@ class Scene:
         off, = struct.unpack_from("<H", self.image, hdr + field)
         self.mu.mem_write(FAR * 16 + off, data)
 
+    def put_at_far(self, name, data):
+        """DATA at the far block's NAME (an offset there: FAR_DARK, FAR_PUFFS...)."""
+        self.mu.mem_write(FAR * 16 + self.sym[name], data)
+
+    def get_at_far(self, name, n):
+        return bytes(self.mu.mem_read(FAR * 16 + self.sym[name], n))
+
     def get(self, name, n, extra=0):
         return bytes(self.mu.mem_read(TSR * 16 + self.sym[name] + extra, n))
 
@@ -225,10 +237,10 @@ class Figures(Scene):
         mu.mem_write(TSR * 16 + hdr + HDR_SHADOWS_ON, struct.pack("<H", shadows))
         mu.mem_write(TSR * 16 + hdr + HDR_DUST_ON, struct.pack("<H", dust))
         mu.mem_write(TSR * 16 + hdr + HDR_RINGS_ON, struct.pack("<H", rings))
-        self.put("dark", bytes((c * 3 + 5) & 0xFF for c in range(256)))
+        self.put_at_far("FAR_DARK", bytes((c * 3 + 5) & 0xFF for c in range(256)))
         self.put("dark_ready", b"\x01")
         self.word("sc_seg", FAR)
-        self.put("light", bytes(0 if c % 13 == 0 else (c + 2) & 0xFF for c in range(256)))
+        self.put_far(HDR_LIGHT, bytes(0 if c % 13 == 0 else (c + 2) & 0xFF for c in range(256)))
         self.put_far(HDR_RED, bytes(0 if c % 17 == 0 else (c * 5 + 1) & 0xFF for c in range(256)))
         things = rng.sample(range(520), 60)
         self.things = things
@@ -269,7 +281,7 @@ class Figures(Scene):
         for n in range(10):
             sx, sy = spots[n]
             puffs += struct.pack("<HHHHHBx", CAM[0] + sx + 3, CAM[1] + sy + 2, TICK - (n * 2) % 19, things[n], (n * 0x3D7) & 0xFFFF, 1)
-        self.put("puffs", bytes(puffs))
+        self.put_at_far("FAR_PUFFS", bytes(puffs))
 
     def out_of_memory(self, n):
         """Thing N's picture let go of by the cache (its shadow from the shadows' cache, SC_SEG)."""
@@ -527,7 +539,7 @@ class DrawingTests(unittest.TestCase):
             if step == 0:
                 self.assertEqual(puffs(), 0)  # (the first pass: where each is noted, a jump)
         self.assertEqual(puffs(), 10)  # (60 pixels walked)
-        owners = {struct.unpack_from("<H", scene.get("puffs", 24 * 12), n * 12 + 6)[0] for n in range(10)}
+        owners = {struct.unpack_from("<H", scene.get_at_far("FAR_PUFFS", 24 * 12), n * 12 + 6)[0] for n in range(10)}
         self.assertEqual(owners, {5})
 
     def test_no_labels_nothing_done(self):

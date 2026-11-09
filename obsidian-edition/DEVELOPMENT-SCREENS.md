@@ -315,8 +315,9 @@ dice log running:
   its ink with a dark edge a pixel round it (the colours nearest gold or
   light grey and near black in the palette DSCLOG last read), as two one-bit
   masks of 16 bytes a row (128 pixels; longer names shortened word by word,
-  then cut) and 11 rows. They go into one of four slots in the header (`+374`,
-  `LBL_SIZE` 360 bytes each: the label's number, width, height, how far above
+  then cut) and 11 rows. They go into one of four slots in the helper's tail
+  (the header's `+1834` its segment, `+1838` their offset; `LBL_SIZE` 360
+  bytes each: the label's number, width, height, how far above
   the feet, the two colours, the map thing, the masks), the number written
   0 first and last of all, so DSCLOG never takes a half-written one. A label
   stays 1.5 seconds, a charge used 3 (`CHARGE_FOR`); a new one takes the slot

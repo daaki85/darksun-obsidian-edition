@@ -57,12 +57,13 @@ def load_image():
     image[268:270] = struct.pack("<H", RING_SEG)  # (the ring's segment, as DSCLOG's install sets it,
     image[138:140] = struct.pack("<H", RING_SEG)  # and the far block's: the text buffer's and the
     image[142:144] = struct.pack("<H", RING_SEG)  # other buffers', FAR_SEG)
-    return bytes(image)
+    image[1834:1836] = struct.pack("<H", TSR + struct.unpack_from("<H", image, 1836)[0])  # (the tail's
+    return bytes(image)                           #   segment, TAIL_SEG: past the image, as loaded)
 
 
 def vector_table(image):
     """DSCLOG's ALL_VECTORS, as its install sets them: {vector: (where its entry is, the handler)};
-    the table follows FAR_DATA's first bytes in the image (the header's +144 and +174)."""
+    the table is at the header's +144 in the image (+174 0: no FAR_DATA before it now)."""
     hdr = struct.unpack_from("<H", image, 20)[0]
     src, = struct.unpack_from("<H", image, hdr + 144)
     n, = struct.unpack_from("<H", image, hdr + 174)
@@ -79,15 +80,6 @@ def install_at(image, vector):
     named it before the table: the handler is the word at the result + 4); -1 if none."""
     found = vector_table(image).get(vector)
     return found[0] - 3 if found else -1
-
-
-def put_far_data(mu, image):
-    """FAR_DATA's first bytes put in the far block from the image, as DSCLOG's install (FAR_INIT)
-    does: from the header's +144 (in the image), +172 (in the far block), +174 bytes."""
-    hdr = struct.unpack_from("<H", image, 20)[0]
-    src, = struct.unpack_from("<H", image, hdr + 144)
-    to, n = struct.unpack_from("<HH", image, hdr + 172)
-    mu.mem_write(RING_SEG * 16 + to, bytes(image[src:src + n]))
 
 
 def fill_probes(image):
@@ -146,6 +138,10 @@ class HeaderTests(unittest.TestCase):
         need, = struct.unpack_from("<H", image, hdr + heapcheck.TSR_UMB_NEED)
         self.assertGreater(need, heapcheck.OVR_PARAS)
         self.assertLessEqual(need, heapcheck.UMB_ROOM)
+        # (the helper as loaded is the whole image, its tail too, past the header's +1836 paragraphs)
+        tail_paras, = struct.unpack_from("<H", image, hdr + 1836)
+        self.assertGreater(len(image), tail_paras * 16)
+        self.assertGreaterEqual((need - heapcheck.OVR_PARAS - 2 - 0x10) * 16, len(image) + 256)
 
 
 @unittest.skipIf(Uc is None, "unicorn is not installed")
@@ -4846,7 +4842,7 @@ def kits_to_level():
 @unittest.skipIf(Uc is None, "unicorn not installed")
 class TickTests(unittest.TestCase):
     """PROBE_TICK: the game's timer handler's first instruction done, and every TICK_EVERY
-    strikes where the game was noted in TICKS (the header's +356, counted at +358)."""
+    strikes where the game was noted in TICKS (in the tail at the header's +356, counted at +358)."""
     VEC_TICK, EVERY, SLOTS = 0x87, 32, 16
 
     def setUp(self):
@@ -4880,7 +4876,8 @@ class TickTests(unittest.TestCase):
             self.strike(0x1000 + n)
         self.assertEqual(struct.unpack("<H", mu.mem_read(CALLER * 16 + 4, 2))[0], self.EVERY * (self.SLOTS + 2))
         self.assertEqual(struct.unpack("<H", mu.mem_read(self.hdr + 358, 2))[0], self.SLOTS + 2)
-        slots = [struct.unpack("<8H", mu.mem_read(TSR * 16 + ticks + 16 * k, 16)) for k in range(self.SLOTS)]
+        tail, = struct.unpack("<H", mu.mem_read(self.hdr + 1834, 2))  # (TICKS: the tail's)
+        slots = [struct.unpack("<8H", mu.mem_read(tail * 16 + ticks + 16 * k, 16)) for k in range(self.SLOTS)]
         # the newest (the 18th) in slot 1, the 17th in slot 0, the 3rd in slot 2
         want = lambda k: (0x1000 + self.EVERY * k - 1, 0x5678, 0x0246, SS, 0x800, BP, GAME_DS, 0x4321)
         self.assertEqual(slots[1], want(self.SLOTS + 2))
@@ -5081,7 +5078,7 @@ class TypesTests(unittest.TestCase):
         self.assertGreater(min(size, fill - names_fill), 0)
         mu.mem_write(VEC_TYPES_SIZE * 4, struct.pack("<HH", size, TSR))
         mu.mem_write(VEC_TYPES_FILL * 4, struct.pack("<HH", fill, TSR))
-        put_far_data(mu, image)  # (EXTRA_TYPES: the far block's, from the image as installed)
+        # (EXTRA_TYPES: the tail's, loaded with the image; load_image sets TAIL_SEG)
         mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
         mu.mem_write(GAME_DS * 16 + 0x1669, struct.pack("<HH", 0, self.TYPES_SEG))
         self.hdr = TSR * 16 + image.find(HDR_SIG)
@@ -8508,7 +8505,7 @@ class KeepTests(unittest.TestCase):
         first, = struct.unpack_from("<H", zero.group(1))
         count, = struct.unpack_from("<H", zero.group(2))
         end = first + 2 * count
-        self.assertGreaterEqual(count * 2, 1600)
+        self.assertGreaterEqual(count * 2, 1400)
         self.assertLessEqual(end, len(image))  # (within the image loaded: over the install code)
         # the install's own "mov dx, paragraphs / jmp keep": the memory kept
         asked = [struct.unpack_from("<H", image, m.start() + 1)[0]

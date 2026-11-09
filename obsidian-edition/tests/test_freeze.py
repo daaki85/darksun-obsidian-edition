@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from dsloader import freeze, game  # noqa: E402
 
 TSR_SEG, HDR_AT, TICKS_AT = 0xC000, 0x40, 0x900  # DSCLOG's segment, its header's and TICKS's offsets
+TAIL_SEG = 0xCF00  # (its tail's: TICKS')
 DS = 0x4356 + 0x1A2
 
 
@@ -23,9 +24,10 @@ def memory(notes, seq=None):
     struct.pack_into("<H", mem, hdr + freeze.TSR_HDR_OFF, HDR_AT)
     seq = len(notes) if seq is None else seq
     struct.pack_into("<HH", mem, hdr + freeze.TSR_TICK_OFF, TICKS_AT, seq)
+    struct.pack_into("<H", mem, hdr + freeze.TSR_TAIL_SEG, TAIL_SEG)
     for k, (cs, ip) in enumerate(notes):
         slot = (seq - len(notes) + k) % freeze.TICK_SLOTS
-        struct.pack_into("<8H", mem, TSR_SEG * 16 + TICKS_AT + slot * freeze.TICK_SIZE,
+        struct.pack_into("<8H", mem, TAIL_SEG * 16 + TICKS_AT + slot * freeze.TICK_SIZE,
                          ip, cs, 0x0246, 0x4000, 0x0F00 + k, 0x0F10, DS, 0xA000)
     return mem, hdr
 
