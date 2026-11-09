@@ -40,9 +40,15 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 
 ## Next pull request (not opened yet)
 
-DSCLOG.EXE 65,520 bytes (image 65,488), 2,928 of its segment spare.
+DSCLOG.EXE 65,744 bytes (image 65,712), 2,736 of its segment spare.
 
 **Changed**
+- **New: the Boots of Speed** (the DMG's; the user's item), worn on the feet by anyone: in a fight the
+  wearer's movement doubled and AC 2 better while it can move (not Stuck, Paralyzed or Slowed);
+  nothing out of a fight. DSCLOG's type SPEED_BOOTS (the 31st extra type, the game's Boots'), name
+  170h, BOOTS_MOVE (PROBE_MOVE) and BOOTS_AC (PROBE_AC); a red icon. Dagger, chief of the White Sand
+  Outlaws, wears them; Hototo, their other chief, carries the Gythka +3 (its 1000th-trip gift kept).
+  Seen in DOSBox: movement 240 for 120, foes' shots at AC 0 for her 2 (playtest/logs/2026-11-09-boots-of-speed.md).
 - **People the party fights who had nothing to fight with** (they struck with their fists), with
   the new mundane items on (`worldgear.fighters`): Seref's Drajian Guards (213) and the slave
   village's (195) the armed Drajian Guard's kit; the Lower Castle's unarmed Guard (281) the other
@@ -231,8 +237,8 @@ DSCLOG.EXE 65,520 bytes (image 65,488), 2,928 of its segment spare.
   see-through, the ring, the panel's colours, labels, to-hit, Turn Undead, item names and types,
   next-level XP, the Effects screen, Look, creation, a shop). With the manual's spells, the
   monsters, resting and dual-classing, and the audit's fixes (their per-fight tables moved to the
-  far block), the helper ends the pull request with 2,928 bytes of its segment spare, 102 bytes
-  free in the far block (the HMA) and 371 paragraphs of upper memory spare.
+  far block), the helper ends the pull request with 2,736 bytes of its segment spare, 102 bytes
+  free in the far block (the HMA) and 357 paragraphs of upper memory spare.
 - The helper counts the game's page flips (`flip_count`, header +1832), for a frame rate:
   `playtest/framerate.py` reads it beside steady pace's frames left undrawn.
 

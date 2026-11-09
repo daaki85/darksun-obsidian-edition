@@ -223,6 +223,7 @@ Where each is found is in [ITEMS](https://github.com/daaki85/darksun-obsidian-ed
 - **[New]** **Rings of Protection +1** (two) and a **Cloak of Protection +1** (in Pehtucl's locked chest: see World): +1 AC and +1 on every saving throw.
 - **[New]** **Cloak of Elvenkind**: all but invisible when hiding in shadows. Thieves and rangers only.
 - **[New]** **Boots of Elvenkind**: silent when moving. Thieves and rangers only.
+- **[New]** **Boots of Speed**: in a fight, double movement and AC 2 better while the wearer can move. Anyone can wear them.
 - **[New]** **Arrowbane**: a silver circlet whose wearer can't be hurt by normal arrows, sling stones or chatkchas. Not armour: a preserver casts in it, and bracers and rings and cloaks of protection still work with it.
 - **[New]** **Sunking Crown**: a gold crown that protects its wearer from evil. Not armour, as Arrowbane isn't.
 - **[New]** **Girdle of Back Defense**: no enemy gets the bonus for attacking its wearer from behind, nor a backstab.

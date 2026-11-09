@@ -738,7 +738,8 @@ def draw_cloak(rows: Rows, body: Rows, model: int, parts: sp.Parts, item_type: i
 # Boots and belts, recoloured like armour (the artist's pixels kept): boots the feet and lower
 # shins, a belt a band at the waist across the body. Item type: shades, dark to light.
 BOOTS = {68: (204, 207, 205, 194, 206),  # Boots: faded leather
-         game.ELVEN_BOOTS_TYPE: (210, 53, 54, 55, 56)}  # Boots of Elvenkind: soft forest green
+         game.ELVEN_BOOTS_TYPE: (210, 53, 54, 55, 56),  # Boots of Elvenkind: soft forest green
+         game.SPEED_BOOTS_TYPE: (202, 163, 76, 32, 77)}  # Boots of Speed: red
 BELTS = {42: (204, 207, 205, 206), 35: (204, 207, 205, 206)}  # Belt, Belt of Might
 MIGHT_BELT, BUCKLE = 35, 168
 

@@ -214,6 +214,13 @@ NAMES.update({CLOAK_OF_ELVENKIND: b"Cloak/Elvenkind", BOOTS_OF_ELVENKIND: b"Boot
 # priced as the game's magic clothes: its Serpent Boots 20,000, Chameleon Gloves 30,000
 ELVEN_CLOAK = armour(game.ELVEN_CLOAK_TYPE, CLOAK_OF_ELVENKIND, 0x10000 - 2546, 25000, plus=0)
 ELVEN_BOOTS = armour(game.ELVEN_BOOTS_TYPE, BOOTS_OF_ELVENKIND, 0x10000 - 2548, 20000, plus=0)
+# the Boots of Speed (the DMG's: the user's, 2026-11-09): DSCLOG's type (the game's Boots', anyone's),
+# in a fight its wearer's movement doubled and AC 2 better (BOOTS_MOVE, BOOTS_AC); 20,000, as the
+# Encyclopedia Magica prices them and as the game's Serpent Boots. Carried by Dagger, the White Sand
+# Outlaws' chief (202; script 133's second band: met whatever came of Hototo's, and fought for the slave)
+BOOTS_OF_SPEED, DAGGER = 0x170, 202
+NAMES[BOOTS_OF_SPEED] = b"Boots of Speed"
+SPEED_BOOTS = armour(game.SPEED_BOOTS_TYPE, BOOTS_OF_SPEED, 0x10000 - 2668, 20000, plus=0)
 FLAME_BLADE_NAME, OBSIDIAN_LONG_SWORD, FOCUS_HEAT = 0x156, 45, 116
 from . import robes  # noqa: E402 (the robes: the Veiled Robe sold by Kel)
 VEILED_ROBE = armour(game.ROBE_TYPE, robes.VEILED, robes.PICTURE_VEILED, robes.VEILED_VALUE, plus=robes.VEILED_PLUS)
@@ -323,6 +330,7 @@ MAGIC: Tuple[Gift, ...] = (
     # (with the Veiled Robe, robes.py: the Ashen Robe is Kalzith's, kalzith.py)
     Gift("Kel", (ARROWBANE_ITEM, VEILED_ROBE, MR_AMULET_ITEM), (107,), 0x1A),
     Gift("Seref", (weapon(*GAME_POLEARM_1),), (SEREF,), 0x1A),
+    Gift("Dagger", (SPEED_BOOTS,), (DAGGER,)),
     Gift("Keldar", (CROWN_ITEM,), (28,), 0x27),
     # the Warden's Plate, scattered: the helm on Dagolar (a boss's body, early on), the arms in the
     # Lower Castle's treasure chest (object 1360, with Dark Flame: behind the barrier the Serpent
@@ -469,6 +477,20 @@ KITS = {199: (LONG_SWORD_BONE, LEATHER_CHEST), 201: (LONG_SWORD_BONE, LEATHER_CH
         257: (STONE_DAGGER_TYPE,), 292: (GYTHKA_BONE,)}
 
 
+# The game's Gythka +3 (its object 2271) is given only as King Tectuktitlay's gift on the arena's
+# 1000th trip: Hototo, chief of the White Sand Outlaws (200; script 133's ambush), carries one too
+# (the user's decision, 2026-11-09), the gift kept. With the magic items.
+HOTOTO, GYTHKA_3_OBJECT = 200, 2271
+
+
+def game_object_item(chunks, obj: int) -> Optional[bytes]:
+    """The item record of the game's stand-alone item object OBJ (its first record), or None."""
+    if ("RDFF", obj) not in chunks:
+        return None
+    recs, _ = dataitems.records(chunks[("RDFF", obj)])
+    return recs[0].data if recs and len(recs[0].data) == game.ITEM_SIZE else None
+
+
 def fighters(chunks) -> List[Tuple[int, Sequence[bytes]]]:
     """(object, items) for ARMED_LIKE and KITS, each only if it has no items of its own yet."""
     from .champions import game_item
@@ -497,6 +519,9 @@ def data_chunks(chunks, on: Dict[str, bool]) -> Dict[Tuple[str, int], bytes]:
         extra += fighters(chunks)  # (those the party fights with nothing to fight with)
     if on.get("world_magic", True) is not False:
         gifts += MAGIC
+        gythka = game_object_item(chunks, GYTHKA_3_OBJECT)
+        if gythka is not None:
+            extra.append((HOTOTO, [gythka]))
     magic_arms = on.get("magic_arms", True) is not False
     if on.get("pens_gear", True) is not False:
         extra.append((bonescale.CHEST_OBJECT, bonescale.PIECES))

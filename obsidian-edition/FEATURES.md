@@ -2122,6 +2122,15 @@ gythka). Each now carries what the armed of their kind carry, or plain gear to
 match: the outlaws bone long swords and leather, the Psionicist a stone dagger,
 the Tohr-kreen a gythka. Where, in [Every mundane weapon](ITEMS.md#every-mundane-weapon).
 
+**The Boots of Speed** (the DMG's) are new: worn on the feet by anyone, in a
+fight they double the wearer's movement (Move 24 for a human's 12, "the speed
+of a fast horse") and make its AC 2 better while it can move (not Stuck,
+Paralyzed or Slowed). Out of a fight they do nothing: the party walks as ever.
+The DMG's slowing for weight and rest after hours of running are left out. Like
+any boots they also give the stealth rule's +10 to moving silently. Dagger, chief
+of the White Sand Outlaws, wears them, and Hototo, their other chief, carries
+the Gythka +3 (still also the arena's 1000th-trip gift).
+
 **Pehtucl's chest**, with the Cloak of Protection +1 in it, is locked and
 trapped: a thief can disarm and pick it, anyone else bash it open, which sets
 off its poisoned needle (2d6 poison). How, in
@@ -2181,7 +2190,7 @@ first: **Leather Inixhide**, **Metal +1 Shadowseeker** in the item box.
 
 **Alagorn**, the wizard of the Painted Badlands who identifies magic items,
 tells the story of every one of the mod's magic items in [Every magic
-item](ITEMS.md#every-magic-item) but the plain Gythka +2, the
+item](ITEMS.md#every-magic-item) but the plain Gythka +2, the Boots of Speed, the
 two girdles and the Amulet of Magic Resistance when
 the party carries it, in the menu the game would put it in (swords, weapons,
 rings, armor, shields, clothes or other items), before "Nothing". As with the

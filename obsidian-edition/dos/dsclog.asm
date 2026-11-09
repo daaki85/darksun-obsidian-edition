@@ -705,6 +705,7 @@ probe_ac:
         mov ax, [bp-6]
         add ax, si
         call kit_ac
+        call boots_ac           ; (the Boots of Speed's 2 better, in a fight)
         mov si, [bp + 6]        ; (the combatant: a party member's AC kept, AC_SEEN)
         cmp si, 3
         ja .rec
@@ -3940,6 +3941,99 @@ view_material:
 .out:   pop es
         pop bx
         pop ax
+.ret:   ret
+
+; BOOTS OF SPEED (dsloader/worldgear.py's, on Dagger, the White Sand Outlaws' chief; the user's
+; item, 2026-11-09): worn on the feet (FOOT_SLOT), the EXTRA_TYPES' SPEED_BOOTS (the game's
+; Boots' type, its own number). As the DMG's: the speed of a fast horse, 24 to a human's 12 (the
+; movement for a turn in a fight doubled: BOOTS_MOVE, from PROBE_MOVE), and AC 2 better in a fight
+; in which that movement is possible (BOOTS_AC, from PROBE_AC: not while Stuck, Paralyzed or
+; Slowed). Not out of a fight: the party walks as ever. (The DMG's slowing for weight and its
+; rest after hours of running are left out: the game has neither.)
+SPEED_BOOTS equ 30              ; (EXTRA_TYPES' 31st: the type's number less the game's types)
+FOOT_SLOT equ 13                ; (an item's slot on the feet, its +11h)
+SPEED_AC equ 2
+STUCK_FX equ 51                 ; (the effects that keep it from moving: Stuck, Paralyzed, Slowed)
+PARALYZED_FX equ 34
+SLOWED_FX equ 47
+
+; SPEED_WORN: CF clear if creature AX wears the Boots of Speed. DS the game's; all registers kept.
+speed_worn:
+        pusha
+        push es
+        push word [cs:ws_slot]
+        push word [cs:ws_type]
+        push word [cs:r_things]
+        mov dx, ds
+        add dx, THINGS_SEG
+        mov [cs:r_things], dx
+        mov word [cs:ws_slot], FOOT_SLOT
+        mov dx, [cs:types_first]
+        add dx, SPEED_BOOTS
+        mov [cs:ws_type], dx
+        call worn_scan
+        cmp word [cs:ws_count], 1       ; (CF set: none)
+        pop word [cs:r_things]
+        pop word [cs:ws_type]
+        pop word [cs:ws_slot]
+        pop es
+        popa
+        ret
+
+; BOOTS_MOVE: AX (a creature's movement for its turn in a fight; SI the creature) doubled if it
+; wears the Boots of Speed. Others kept.
+boots_move:
+        cmp word [cs:types_first], 0
+        je .ret                         ; (the types not read in yet)
+        push ax
+        mov ax, si
+        call speed_worn
+        pop ax
+        jc .ret
+        shl ax, 1
+.ret:   ret
+
+; BOOTS_AC: AX (the AC an attack is made against; [BP+6] the combatant attacked) SPEED_AC better
+; if its creature wears the Boots of Speed, in a fight, and it isn't Stuck, Paralyzed or Slowed.
+; DS the game's; others kept.
+boots_ac:
+        cmp word [cs:types_first], 0
+        je .ret
+        call pp_fighting
+        jz .ret
+        push bx
+        push cx
+        push es
+        mov cx, ax
+        mov ax, ds
+        add ax, THINGS_SEG
+        mov es, ax
+        mov bx, [bp + 6]
+        cmp bx, MAP_COUNT
+        jae .keep
+        imul bx, bx, 3
+        cmp byte [es:bx + THINGS], 2
+        jne .keep                       ; (not a creature)
+        mov ax, [es:bx + THINGS + 1]
+        call speed_worn
+        jc .keep
+        mov ax, [bp + 6]
+        push cx
+        mov cl, STUCK_FX
+        call ns_has
+        je .held
+        mov cl, PARALYZED_FX
+        call ns_has
+        je .held
+        mov cl, SLOWED_FX
+        call ns_has
+.held:  pop cx
+        je .keep
+        sub cx, SPEED_AC
+.keep:  mov ax, cx
+        pop es
+        pop cx
+        pop bx
 .ret:   ret
 
 ; SPEED_HALVES: AX the attacks a round (halves) of creature DX as its attack has them for its speed:
@@ -16789,6 +16883,7 @@ THINGS_SEG equ 0x3972 - 0x4356  ; the things table's segment, relative to DS
 ; creature. Does the move, with a kit's more (KIT_MOVE: the Stalker's).
 probe_move:
         call kit_move
+        call boots_move         ; (the Boots of Speed's movement doubled)
 .store: mov [es:bx+0x22B], ax
         cmp di, MAP_COUNT               ; (DI the combatant, BX its creature x 2: Whirlwind's
         jae .out                        ;   SWEPT, its turn lost: no movement, and the
@@ -21413,7 +21508,7 @@ ns_fist:
 NAMES_OWN    equ 0x142
 NAME_SIZE    equ 25
 NAME_KEPT    equ 16                 ; (EXTRA_NAMES' entries: 15 letters at most, as the game's own, and a NUL)
-NAMES_EXTRA  equ 46
+NAMES_EXTRA  equ 47
 NAMES_PTR    equ 0x166D         ; DS: far pointer to the name table
 
 ; PROBE_NAMES_SIZE: INT VEC_NAMES_SIZE replaces "push dword 1" (3 bytes: INT + NOP) just before
@@ -21485,7 +21580,7 @@ n_fl    dw 0
 ; companion's own items that no type of the game's fits (a metal short sword, a cloak of
 ; protection). Nothing in the game limits the numbers to its own.
 TYPE_SIZE   equ 20
-TYPES_EXTRA equ 30
+TYPES_EXTRA equ 31
 TYPES_PTR   equ 0x1669          ; DS: far pointer to the item types
 BRACERS     equ 8               ; (the bracers of defense: the ninth of them)
 ROBE        equ 25              ; (the robes: dsloader/robes.py)
@@ -27064,6 +27159,9 @@ extra_types:
         ; the amulet (worldgear.py): the game's Necklace's (36), worn at the neck (+9: 7)
         db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0xFA, 0x00, 0x40, 0x07, 0x00, 0x00
         db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
+        ; the Boots of Speed (SPEED_BOOTS: dsloader/worldgear.py): the game's Boots' (68), anyone's
+        db 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x0A, 0x00, 0x85, 0x04, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x00, 0xFF, 0x1F, 0x00, 0x00
 extra_types_end:
         times -(extra_types_end - extra_types != TYPES_EXTRA * TYPE_SIZE) db 0 ; (a negative count: not TYPES_EXTRA)
 lbl_slots  times LBL_SLOTS * LBL_SIZE db 0 ; (the Loader's: LABELS, the header's +1838)
@@ -27123,7 +27221,8 @@ extra_names:
         db "Chill Arrows", 0
         db "Shocking Arrows", 0
         db "Vampiric Arrows", 0
-        times NAMES_EXTRA - 46 db 0     ; (empty names, if any)
+        db "Boots of Speed", 0          ; (the Boots of Speed: dsloader/worldgear.py, BOOTS_SPEED)
+        times NAMES_EXTRA - 47 db 0     ; (empty names, if any)
         align 16, db 0
 tail_end:
 TAIL_BYTES equ tail_end - tail_start

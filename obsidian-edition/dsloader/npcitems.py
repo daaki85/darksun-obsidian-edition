@@ -86,6 +86,8 @@ TYPES = (  # as DSCLOG's EXTRA_TYPES has them
     bytes.fromhex("000000000100140040020000000000" "00ff1f0000"),
     # the Amulet of Magic Resistance (worldgear.py): the game's Necklace's (36), worn at the neck
     bytes.fromhex("000000000100fa0040070000000000" "00ff1f0000"),
+    # the Boots of Speed (worldgear.py; DSCLOG's SPEED_BOOTS): the game's Boots' (68), anyone's
+    bytes.fromhex("0000000001000a0085040000000000" "00ff1f0000"),
 )
 TSR_TYPES_OFF, TSR_TYPES_COUNT, TSR_TYPES_FIRST, TSR_TYPES_PTR = 208, 210, 212, 214
 

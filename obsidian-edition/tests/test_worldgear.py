@@ -490,3 +490,18 @@ class FightersTests(unittest.TestCase):
         self.assertEqual(got[292], [0x2C])
         self.assertEqual(sorted(got[213]), sorted(struct.unpack_from("<H", r, game.ITEM_TYPE)[0]
                                                    for r in dataitems.items_of(chunks[("RDFF", 214)])))
+
+
+class SpeedBootsTests(unittest.TestCase):
+    def test_boots_of_speed(self):
+        """The Boots of Speed: DSCLOG's type (the game's Boots' copy, anyone's), its name entry, 20,000,
+        carried by Dagger (202); the Gythka +3 on Hototo too (worldgear.HOTOTO)."""
+        rec = worldgear.SPEED_BOOTS
+        self.assertEqual((struct.unpack_from("<H", rec, game.ITEM_TYPE)[0], struct.unpack_from("<H", rec, game.ITEM_NAME)[0],
+                          struct.unpack_from("<H", rec, 0)[0]), (game.SPEED_BOOTS_TYPE, 0x170, 0x10000 - 2668))
+        self.assertEqual(npcitems.TYPES[game.SPEED_BOOTS_TYPE - game.GAME_TYPES],
+                         bytes.fromhex("0000000001000a0085040000000000" "00ff1f0000"))  # (the game's Boots', type 68)
+        gift = next(g for g in worldgear.MAGIC if g.name == "Dagger")
+        self.assertEqual((gift.items, gift.objects), ((rec,), (202,)))
+        self.assertEqual(worldgear.NAMES[0x170], b"Boots of Speed")
+        self.assertEqual((worldgear.HOTOTO, worldgear.GYTHKA_3_OBJECT), (200, 2271))

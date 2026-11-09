@@ -107,6 +107,9 @@ ROBE_TYPE = GAME_TYPES + 25  # the robes (robes.py): worn on the chest, not armo
 METAL_SHIELD_TYPE = GAME_TYPES + 26  # a metal shield (worldgear.py's Ironbulwark): the game has none
 # the Girdle of Back Defense, the Golden Girdle of Urnst and the Amulet of Magic Resistance (worldgear.py)
 BACK_GIRDLE_TYPE, URNST_GIRDLE_TYPE, MR_AMULET_TYPE = GAME_TYPES + 27, GAME_TYPES + 28, GAME_TYPES + 29
+# the Boots of Speed (worldgear.py): in a fight, movement doubled and AC 2 better (DSCLOG's BOOTS_MOVE, BOOTS_AC)
+SPEED_BOOTS_TYPE = GAME_TYPES + 30
+SPEED_AC = 2
 GYTHKA_TYPE = 0x2C  # the game's gythka ("2 handed Bone Gythka")
 # The Loader's rule changes (DSCLOG's RULES): helms count AC 1; AD&D's two-weapon penalties;
 # spells saved against with the spell save; no doubled d20 (2, once boots' movement, is unused)

@@ -260,6 +260,9 @@ def plate_icon(colours: Dict[int, int], bright: Tuple[int, ...]) -> Callable[[Ro
 LEATHER_TO_GREY = {128: 208, 129: 209, 134: 210, 135: 211, 136: 212, 137: 213, 138: 214, 139: 215, 140: 216}
 BOOTS_TO_ELVEN = {128: 209, 129: 210, 134: 211, 135: 212, 179: 53, 180: 54, 181: 55, 182: 56}
 LEAF = (54, 55, 56, 55)
+# the Boots of Speed (worldgear.py): the Boots' browns, by brightness, in reds no region changes,
+# every other pixel of their lightest in the fire colours the game cycles (they run like a flame)
+BOOTS_TO_SPEED = {129: 202, 128: 163, 134: 76, 135: 32, 179: 222, 180: 77, 181: 221, 182: 78}
 
 
 # the robes (robes.py), drawn: a hooded robe to the feet, wide sleeves with trimmed cuffs, a
@@ -412,6 +415,8 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Cloak of Elvenkind", 0xFBE3, 2546, 2547, elven_cloak_icon),
     ("Boots of Elvenkind", 0xFBE5, 2548, 2549,
      lambda r: shining(recolour(r, BOOTS_TO_ELVEN), lambda p, x, y: 53 <= p <= 56, LEAF)),
+    ("Boots of Speed", 0xFBE5, 2668, 2669,
+     lambda r: glow(recolour(r, BOOTS_TO_SPEED), lambda p, x, y: p in (221, 78) and (x + y) % 2 == 0, FIRE)),
     # the Flame Blade (worldgear.py): the obsidian long sword's, its blade in the fire colours
     ("Flame Blade", 0xFC0B, 2550, 2551, lambda r: glow(r, lambda p, x, y: p in BLADE or p in (208, 209, 210), FIRE)),
     # the magic axes (worldgear.py): the bone and obsidian Axes and the metal Great Axe, every other
@@ -1161,6 +1166,8 @@ def which(rec: bytes) -> Optional[str]:
         return "Cloak of Elvenkind"
     if kind == game.ELVEN_BOOTS_TYPE:
         return "Boots of Elvenkind"
+    if kind == game.SPEED_BOOTS_TYPE:
+        return "Boots of Speed"
     if kind in PLATE_TYPES:
         return PLATE_TYPES[kind]
     if kind == METAL_HELM_TYPE and struct.unpack_from("<H", rec, game.ITEM_NAME)[0] == WARDENS_HELM:

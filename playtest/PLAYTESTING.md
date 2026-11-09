@@ -604,6 +604,13 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
    does nothing ("Move : 0"). For a test that needs reach, raise its Move in memory first (the
    old movekeeper.py did; rebuild it when needed: the combat record's movement, see
    dsloader/game.py), and restore it after; never save the game while it's raised.
+   **Where the turn's movement is** (2026-11-09, logs/2026-11-09-boots-of-speed.md): a word a creature
+   at segment DS - (4356h - 37BDh), +22Bh + creature x 2 (Move x 10, set as its turn starts: 57566h,
+   DSCLOG's PROBE_MOVE); the END menu shows what is left ("Move : 12"). **boxclick.sh once a fight is
+   on clicks the map**: on a member's turn its clicks at 160,20 walk it (one walked Seneca 100).
+   A DSCLOG routine can be tried on the live state: snapshot `g.read(0, 0x110000)` into Unicorn, CS the
+   helper's segment (the header DSCLOGva less its offset in the image), DS the game's, a HLT for the
+   return.
 6. **Spells** (more below, "Casting spells for a test"): open the USE button (24,17), page to the spell (LEVEL at 196,171), click its icon, then the target
    (2026-11-08: a plain click on the icon closes the screen and gives an aiming pointer with the
    spell's range drawn as a ring of beads; a click on a figure inside casts. The icons drawn
