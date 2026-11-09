@@ -17,6 +17,8 @@ wins where they differ.
 `PLAYTEST_WORK` to a scratch folder; the game is `$PLAYTEST_WORK/inst`, from `setup_game.sh`;
 the guide's `$WORK` is that folder, set only inside the tools, so type `$PLAYTEST_WORK`).
 Wake of the Ravager, for comparing only: `setup_ravager.sh` (into `$PLAYTEST_WORK/rav`).
+A walkthrough (kibbitz's, GameFAQs): `setup_guide.sh` (from the Drive; text in
+`$PLAYTEST_WORK/guide/kibbitz.txt`); never commit it.
 `start.sh` starts Xvfb, the Loader's patched game in DOSBox and the dice log
 (`$PLAYTEST_WORK/dice.txt`). Check the build under test is in place before trusting anything
 (`GPLDATA=../obsidian-edition/dos/GPLDATA.GFF python3 dec.py SCRIPT LO HI`; for DSCLOG, new code's

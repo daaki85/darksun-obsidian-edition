@@ -37,6 +37,11 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
    installs most of them, below).
 2. The game: `sh setup_game.sh` (the GOG installer from the user's Google Drive, file id in the
    script, extracted with innoextract into `$DS_GAME`).
+   **A walkthrough** (2026-11-09, the user's): `sh setup_guide.sh` fetches kibbitz's GameFAQs guide
+   from the same Drive folder into `$WORK/guide/kibbitz.html` and its text, `kibbitz.txt`, to
+   search (`grep -n -i caravan`): where things are, who sells what, quest steps and talk choices
+   ("2-4-2"), region by region. Someone else's work: never commit it (the repository is public).
+   Weigh it with the game's data: it is one player's account.
    Wake of the Ravager, the sequel, for comparing (its code, data and README; nothing in the kit
    plays it): `sh setup_ravager.sh`, the GOG installer from the same Drive folder, into
    `$WORK/rav`. Its DSUN.EXE is laid out otherwise: the creature/sheet records 42h bytes at the far
