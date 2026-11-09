@@ -490,6 +490,23 @@ level cleric can't turn those at all).
 The dice log shows each try: `Seneca turns Zombie: d20 = 12, needs 7+ (priest level 3 vs 2 HD) ->
 destroyed` (code: DSUN.EXE 7ADB7h, the number at 7AE01h-7AE48h, the d20 at 7AE4Dh).
 
+**With "Spells as the manual describes them"** (the default) all of the above is the game's rule
+only with the box unticked. Ticked, the mod takes over where the game works out its number
+(7AE01h) and uses AD&D's turning table instead ([the table](FEATURES.md#spells-as-the-manual-describes-them)):
+its rows by hit dice (1 or less, 2, 3-4, 5, then 6 to 11 or more; the zombie, ghast and special
+rows unused, as the game has no kinds of undead), its columns by level (1-9, 10-11, 12-13, 14 and
+more). A number is the d20 needed to **turn**: the undead is made Afraid (the effect Cause Fear
+gives; the game's own way of adding it would refuse it to the undead, who are immune to fear spells)
+for 3d4 rounds, and flees; T turns with no roll, D destroys with no roll (the game's 1000 damage),
+D\* destroys and makes the next undead of the same monster that turning reaches (up to 2d4 rolled)
+destroyed with no roll; --- is no chance, nothing rolled. A priest who rolls under the number can't
+try that undead again in the fight (another priest can): the try ends at once, the turn spent, with
+no roll. The failures are forgotten when the next fight's first round starts, and by a turning out
+of a fight, which starts a new one (so a failure from out of a fight is forgotten as that fight's
+first round starts). Magic resistance is still checked first, by the game. The dice log says the
+number, the roll and the outcome (`... needs 10+ (priest level 3 vs 2 HD, AD&D's table) -> turned:
+flees 3d4 = 7 rounds (Afraid)`).
+
 ## Psionics
 
 Psionic powers are numbered after the spells (Detonate 138 to Thought Shield

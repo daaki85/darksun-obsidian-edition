@@ -943,8 +943,8 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#items-saving-against-a
 | [Spells saved against with the spell save](#spells-saved-against-with-the-spell-save) | almost every spell saved against with petrification/polymorph | the spell save rather than petrification/polymorph |
 | [Fire, cold and electricity: DEX instead of a doubled d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20) | the save's d20 doubled, so most creatures shrug off a Fireball (70% to save where 35% is due) | DEX's defensive adjustment on those saves rather than a doubled d20 |
 | [Enlarge multiplies the weapon's dice only](#enlarge-multiplies-the-weapons-dice-only) | the whole melee damage multiplied, STR included | 10% a caster level on the weapon's dice, rounded up, STR and the rest added after |
-| [Spells as the manual describes them](#spells-as-the-manual-describes-them) | fourteen spells' saves, times, damage and effects the game's own way, a classless monster's level 0 for its saves | as the manual has them, the monster's level its hit dice (from the next start) |
-| [Spells roll to hit](#spells-roll-to-hit) | Acid Arrow, Turn Pebble to Boulder, Magical Stone, Condense and the touch spells never miss | they roll to hit against the target's AC, a missile's with DEX, a touch's with STR; a miss does nothing (from the next start) |
+| [Spells as the manual describes them](#spells-as-the-manual-describes-them) | sixteen spells' saves, times, damage and effects the game's own way, Turn Undead destroying or doing nothing, a classless monster's level 0 for its saves | as the manual has them, Turn Undead by AD&D's table (turned undead flee), the monster's level its hit dice (from the next start) |
+| [Spells roll to hit](#spells-roll-to-hit) | Acid Arrow, Turn Pebble to Boulder, Magical Stone, Condense, Minute Meteors and the touch spells never miss | they roll to hit against the target's AC, a missile's with DEX, a touch's with STR; a miss does nothing (from the next start) |
 
 #### Rangers' casting level
 
@@ -1035,8 +1035,9 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#enlarges-dice).
 
 #### Spells as the manual describes them
 
-Fourteen spells whose saves, times, damage or effects part from the manual
-(pp. 29-40), set as the manual has them, and a monster's level for its saves. The box takes effect from the
+Sixteen spells whose saves, times, damage or effects part from the manual
+(pp. 29-40), set as the manual has them, a priest's Turn Undead by AD&D's
+turning table, and a monster's level for its saves. The box takes effect from the
 next start (it changes the game's spell records as the Loader writes the game's
 copy); unticked, they are the game's.
 
@@ -1056,6 +1057,42 @@ copy); unticked, they are the game's.
 | Free Action | ends Paralyzed and Slowed only | also frees the Stuck: Web, Solid Fog, Quicksand, Entangle, Grease (a Poisoned creature stays Paralyzed, as in the game) |
 | Color Spray | every creature saves | only creatures of more levels than the caster save (the rest at -100: a natural 20 still saves, as against Chaos and Cloudkill) |
 | Hold Undead | any undead | only undead of no more levels (hit dice) than the caster's level; the rest are immune |
+| Minute Meteors | one blast of 1d4 a caster level (at most 10d4) | five globes of 1d4, each aimed and landing on its own (with [Spells roll to hit](#spells-roll-to-hit), each rolls with +2) |
+| Flame Arrow | one blast of 5d6 for every five caster levels (10d6 at level 10) | a bolt of 1d6 + 4d6 fire (5d6) for every five caster levels, at least one, each aimed and landing on its own (AD&D's bolts; no attack roll, no save, as the manual) |
+| Turn Undead | a d20 against its own number: destroyed or nothing, as often as the priest likes | AD&D's turning table (below): turned undead flee, D destroys, D\* destroys more of the kind, and a priest who fails can't try that undead again in the fight |
+
+**Turn Undead** (the priests' button on the USE screen, not a spell). With the
+box ticked the game's routine looks up AD&D's table (2nd edition) by the
+undead's hit dice and the priest's level:
+
+| Hit dice \ priest level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10-11 | 12-13 | 14+ |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 or less | 10 | 7 | 4 | T | T | D | D | D\* | D\* | D\* | D\* | D\* |
+| 2 | 16 | 13 | 10 | 7 | 4 | T | T | D | D | D\* | D\* | D\* |
+| 3-4 | 19 | 16 | 13 | 10 | 7 | 4 | T | T | D | D | D\* | D\* |
+| 5 | 20 | 19 | 16 | 13 | 10 | 7 | 4 | T | T | D | D | D\* |
+| 6 | --- | --- | 20 | 19 | 16 | 13 | 10 | 7 | 4 | T | T | D |
+| 7 | --- | --- | --- | 20 | 19 | 16 | 13 | 10 | 7 | 4 | T | T |
+| 8 | --- | --- | --- | --- | 20 | 19 | 16 | 13 | 10 | 7 | 4 | T |
+| 9 | --- | --- | --- | --- | --- | 20 | 19 | 16 | 13 | 10 | 7 | 4 |
+| 10 | --- | --- | --- | --- | --- | --- | 20 | 19 | 16 | 13 | 10 | 7 |
+| 11 or more | --- | --- | --- | --- | --- | --- | --- | 20 | 19 | 16 | 13 | 10 |
+
+- A number: a d20 of it or more **turns** the undead: it is Afraid (as Cause
+  Fear makes a creature) and flees for 3d4 rounds. The Player's Handbook says
+  turned undead flee or are kept at bay but gives no time; 3d4 rounds is the
+  first edition's, used by the 2nd-edition-compatible rules too.
+- **T** turns it with no roll; **D** destroys it with no roll (the game's own
+  destruction); **D\*** destroys it, and up to 2d4 more of its kind (the same
+  monster: one sheet) caught by the same turning are destroyed with no roll.
+- **---**: no chance; nothing is rolled.
+- A d20 under the number: not turned, and **that priest can't try again on that
+  undead in this fight** (the button's own text: "May be used once per
+  creature"); another priest still can. Forgotten when the next fight starts.
+- The game has no kinds of undead, so its hit dice pick the row (AD&D's
+  zombie, ghast and special rows aren't used: the game's 2 HD Zombie uses the
+  2 HD row). Each use ends the priest's turn, as before; the game tries each
+  undead the turning reaches.
 
 A monster with no class (an elemental, a slaad, Mastyrial, the Rampager) had
 level 0 for its saves, so Cloudkill slew it whatever its size, Scare frightened
@@ -1077,7 +1114,6 @@ manual says, or the change would make a different spell rather than fix one:
 | Mass Domination | up to five creatures | one |
 | Detonate | 1d10 to everyone within 10' | the target only |
 | Quicksand | held 1 turn + 1 round a level | Stuck a round at a time, put on again each round while the quicksand lasts (5d3 rounds of its own); its record's time changes nothing (seen in DOSBox) |
-| Minute Meteors | five meteors of 1d4, +2 to hit | one roll of 1d4 a caster level (at most 10d4) on one target, no to-hit roll (left so: [Spells roll to hit](#spells-roll-to-hit) leaves out Magic Missile, Flame Arrow and Minute Meteors) |
 
 What else the manual and the game disagree on, and why the rest is left:
 [reports/spells-against-the-manual.md](../reports/spells-against-the-manual.md)
@@ -1094,6 +1130,7 @@ does:
 |---|---|
 | Acid Arrow | as an arrow from a fighter of the caster's level: THAC0 21 less the caster level, with the caster's DEX missile adjustment (the manual's "as if fired by a fighter") |
 | Turn Pebble to Boulder, Magical Stone, Condense, and the spines some monsters shoot | the caster's own THAC0, with its DEX missile adjustment |
+| Minute Meteors | the caster's own THAC0, with its DEX missile adjustment and the spell's own +2 (the manual's), each globe its own roll (five globes with [Spells as the manual describes them](#spells-as-the-manual-describes-them)) |
 | Chill Touch, Shocking Grasp, Vampiric Touch, Cause Light, Serious and Critical Wounds, Cause Disease, Poison | a touch attack with the caster's own THAC0 and STR adjustment, only at a creature of another side (a foe, or a friend turned against it): on one's own side they land as before |
 
 The roll is the game's own for an attack: a d20 against THAC0 less the
@@ -1104,8 +1141,8 @@ weapon attacks. A natural 20 always hits and a natural 1 always misses. A miss
 does nothing: no damage (the dice are rolled first, so the dice log shows the
 roll that was lost), no Acid burning on, no effect. A spell from a weapon's hit
 (a spell arrow, a magical weapon) doesn't roll again: the hit was the roll.
-Magic Missile, Flame Arrow, Minute Meteors, areas, cones and psionic powers
-are left as they are. Each roll has a line in the [dice log](DICE-LOG.md),
+Magic Missile, Flame Arrow (neither the manual nor AD&D gives its bolts an
+attack roll), areas, cones and psionic powers are left as they are. Each roll has a line in the [dice log](DICE-LOG.md),
 and "Miss" floats over the target. Unticked, the spells always hit, as in the
 game. How it is done: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#spells-roll-to-hit).
 

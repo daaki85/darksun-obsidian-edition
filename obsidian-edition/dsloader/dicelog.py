@@ -234,6 +234,15 @@ KIND_SWEPT = 11  # DSCLOG's SWEPT_MARK: Whirlwind's damage on a creature that fa
 # missile, +1Ah 1 for a hit
 KIND_TOHIT = 12
 ACID_ARROW_SPELL = 18
+MINUTE_METEORS_SPELL, METEORS_TO_HIT = 33, 2  # (its own +2 to hit, in the frame's adjustments: DSCLOG's TH_METEORS)
+# DSCLOG's TURN_SITE: Turn Undead by AD&D's table (the spells as the manual has them): raw = the d20
+# (0: none rolled); its frame +6 the priest, +8 the undead (combatants), +0Ah the table's cell (0
+# "---", 1-20 the number, TURN_T, TURN_D, TURN_DSTAR), +0Ch the priest level, +0Eh the undead's hit
+# dice, +10h the outcome (TURN_*), +12h the rounds a turned one flees, +14h D*'s more of its kind left
+KIND_TURN = 13
+TURN_T, TURN_D, TURN_DSTAR = 21, 22, 23
+TURN_NOT, TURN_TURNED, TURN_DESTROYED, TURN_DSTARRED, TURN_MORE_ONE, TURN_AGAIN, TURN_NONE = range(7)
+TURN_CELLS = (20, 19, 16, 13, 10, 7, 4, TURN_T, TURN_T, TURN_D, TURN_D)  # (AD&D's run, a row a column on)
 KIND_WALL = 9  # DSCLOG's THORNS_DAMAGE: Wall of Thorns' damage on a creature in it, taken instead of
 # its record's dice: raw = the damage | the spell << 8, extra the creature
 THORNS_BASE = 8  # Wall of Thorns: 8 + the creature's AC (DSCLOG's THORNS_AC: it + 80h in the entry's extra's high byte)
@@ -2420,6 +2429,8 @@ class DiceLog:
             return self._heat(e, now)
         if e.kind == KIND_TOHIT:
             return self.flush(now, force=True) + self._spell_to_hit(e, now)
+        if e.kind == KIND_TURN:
+            return self.flush(now, force=True) + self._turn_manual(e)
         if e.kind == KIND_SWEPT:
             return [f"    {self._name(e.raw)} is swept off its feet: loses its next turn"]
         if e.kind == KIND_CAST:
@@ -2482,7 +2493,9 @@ class DiceLog:
         note = " (natural 20)" if d20 == 20 else " (natural 1)" if d20 == 1 else ""
         needs = ("hits on anything but a 1" if need <= 2 else "only a 20 hits" if need > 20 else f"needs {need}+")
         base = f"THAC0 {thac0}" + (" (a fighter's of the caster's level)" if spell == ACID_ARROW_SPELL else "")
-        parts = [(("STR" if kind == 1 else "DEX"), part), ("spells", bonus - part), ("difficulty", difficulty)]
+        own = METEORS_TO_HIT if spell == MINUTE_METEORS_SPELL else 0
+        parts = [(("STR" if kind == 1 else "DEX"), part), (name, own), ("spells", bonus - part - own),
+                 ("difficulty", difficulty)]
         how = base + "".join(f", {signed(v)} {what}" for what, v in parts if v)
         touch = "touch " if kind == 1 else ""
         head = (f"{g.combatant_name(caster)}'s {name} at {g.combatant_name(target)}: {touch}attack d20 = {d20}{note}, "
@@ -3611,6 +3624,55 @@ class DiceLog:
                 row -= 1
         need = 10 + 3 * (column - row)
         return 20 if need == 22 else need
+
+    @staticmethod
+    def turn_cell(hd: int, level: int) -> int:
+        """AD&D's turning table's cell (DSCLOG's TU_CELL, the spells as the manual has them): 0 "---"
+        (no chance), 1-20 the d20 needed to turn, TURN_T turned, TURN_D destroyed, TURN_DSTAR
+        destroyed and 2d4 more of the kind. The rows run 20 19 16 13 10 7 4 T T D D then D*, each a
+        column on: from 1 HD or less (10 at level 1), 2 HD, 3-4, 5, then 6 to 11 or more HD; the
+        columns levels 1-9, 10-11, 12-13 and 14 or more (level 0 a column before 1)."""
+        start = 4 if hd <= 1 else 2 if hd == 2 else 1 if hd <= 4 else 0 if hd == 5 else 4 - min(hd, 11)
+        column = level if level < 10 else 10 + min((level - 10) // 2, 2)
+        at = column + start
+        if at <= 0:
+            return 0
+        return TURN_CELLS[at - 1] if at < 12 else TURN_DSTAR
+
+    def _turn_manual(self, e: Entry) -> List[str]:
+        """A priest's Turn Undead the AD&D way (DSCLOG's TURN_SITE, KIND_TURN): the table's cell, the
+        d20 against a number, and what came of it: turned (Afraid, fleeing 3d4 rounds), destroyed
+        (the game's 1000 damage, said by hp_changes), D* (2d4 more of its kind destroyed this cast),
+        not turned (and not to be tried again on it this fight), or refused for an earlier failure."""
+        caster, target, cell, level, hd, outcome, rounds, more = (
+            e.arg(at) for at in (6, 8, 0x0A, 0x0C, 0x0E, 0x10, 0x12, 0x14))
+        if None in (caster, target, cell, level, hd, outcome):
+            return []
+        who, what = self._name(caster), self._name(target)
+        about = f"(priest level {level} vs {hd} HD, AD&D's table)"
+        if outcome in (TURN_DESTROYED, TURN_DSTARRED, TURN_MORE_ONE):
+            creature = self.game.combatant_creature(target)
+            if creature is not None:
+                self._destroyed[creature] = "Turn Undead"
+            self._spell_until = 0.0  # (no spell's HP lines: the destruction is said as such)
+        if outcome == TURN_AGAIN:
+            return [f"{who} can't turn {what} again: failed against it this fight"]
+        if outcome == TURN_MORE_ONE:
+            return [f"{who} turns {what}: destroyed, one of the D*'s more of its kind ({more} left)"]
+        if outcome == TURN_NONE:
+            return [f"{who} turns {what}: no chance {about}"]
+        if outcome == TURN_DSTARRED:
+            return [f"{who} turns {what}: destroyed automatically (D*), and up to 2d4 = {more} more of its "
+                    f"kind this turning {about}"]
+        if outcome == TURN_DESTROYED:
+            return [f"{who} turns {what}: destroyed automatically (D) {about}"]
+        flees = f"turned: flees 3d4 = {rounds} rounds (Afraid)"
+        if cell == TURN_T:
+            return [f"{who} turns {what}: {flees}, automatically (T) {about}"]
+        if outcome == TURN_TURNED:
+            return [f"{who} turns {what}: d20 = {e.raw}, needs {cell}+ {about} -> {flees}"]
+        return [f"{who} turns {what}: d20 = {e.raw}, needs {cell}+ {about} -> not turned: can't try "
+                f"again on it this fight"]
 
     def _turn_target(self, target: Optional[int]) -> Optional[int]:
         """The hit dice (sheet +24h) of an undead (race 9) combatant, else None."""

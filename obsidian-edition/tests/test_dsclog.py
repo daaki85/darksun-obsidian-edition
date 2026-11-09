@@ -3701,9 +3701,9 @@ class NewSpellTests(RuleTests):
         spell at a creature of another side (+1Dh), rolls a d20 once with the game's rand(): THAC0
         (+1Fh; Acid Arrow's 21 - the level) less the to-hit adjustments (5B8:EDh: target, caster,
         no weapon, 2 a missile, 1 a touch) and a monster's difficulty ([11AEh] - 1), less the AC
-        (4E0:7Fh: target, caster, 0); a 20 hits, a 1 misses. Recorded (kind 12); a miss makes the
-        stub answer 0 once, a touch spell's [BP-6] Acid Arrow's (12h) so that the stub is called.
-        Nothing for another spell, a second roll of one cast, a weapon's spell, or one's own side."""
+        (4E0:7Fh: target, caster, 0); a 20 hits, a 1 misses; Minute Meteors (33) +2 more. Recorded (kind 12); a miss makes the
+        stub answer 0 once, and [BP-6] Acid Arrow's (12h), so that the stub is called (the same for
+        the table's missiles; touch spells and Minute Meteors aren't in it). Nothing for another spell, a second roll of one cast, a weapon's spell, or one's own side."""
         from dsloader import gamepatch
         hit_patch = next(p for p in gamepatch.PATCHES if p.name == "spell_hit")
         stub_patch = next(p for p in gamepatch.PATCHES if p.name == "spell_hit_stub")
@@ -3780,7 +3780,7 @@ class NewSpellTests(RuleTests):
         self.assertEqual(struct.unpack("<3H", mu.mem_read(GAME_DS * 16 + 0x610, 6)), (40, 2, 0))
         self.assertEqual(lands(75, 40, d20(1)), (75, [1, 1], None))  # (one roll a cast)
         cast(2, 40, 75)
-        self.assertEqual(lands(75, 40, d20(9)), (75, [0, 1], (12, 9, 2, 40, 75, 16, 2, 1, 0, 4, 9, 2, 0)))
+        self.assertEqual(lands(75, 40, d20(9)), (0x12, [0, 1], (12, 9, 2, 40, 75, 16, 2, 1, 0, 4, 9, 2, 0)))
         cast(2, 40, 75)
         self.assertEqual(lands(75, 40, d20(1))[1], [0, 1])  # (a natural 1)
         mu.mem_write(0x9000 * 16 + 5 * 0x3A + 0x1F, bytes((30,)))
@@ -3791,7 +3791,12 @@ class NewSpellTests(RuleTests):
         cast(2, 40, 18, level=7)
         self.assertEqual(lands(18, 40, d20(8))[2][4:6], (18, 14))
         cast(2, 40, 18, level=7)
-        self.assertEqual(lands(18, 40, d20(7))[:2], (18, [0, 1]))
+        self.assertEqual(lands(18, 40, d20(7))[:2], (0x12, [0, 1]))
+        # Minute Meteors (33): a missile with its own +2 (in the adjustments): 8 or more
+        cast(2, 40, 33)
+        self.assertEqual(lands(33, 40, d20(8)), (33, [1, 1], (12, 8, 2, 40, 33, 16, 4, 1, 0, 4, 8, 2, 1)))
+        cast(2, 40, 33)
+        self.assertEqual(lands(33, 40, d20(7))[:2], (0x12, [0, 1]))  # (not in the table: Acid Arrow's)
         # Chill Touch (3): a touch, STR's +3; a miss puts Acid Arrow's 12h for the dispatch
         cast(2, 40, 3)
         self.assertEqual(lands(3, 40, d20(9)), (0x12, [0, 1], (12, 9, 2, 40, 3, 16, 2, 3, 0, 4, 9, 1, 0)))
@@ -3804,7 +3809,7 @@ class NewSpellTests(RuleTests):
         cast(40, 2, 113)
         self.assertEqual(lands(113, 2, d20(5))[2], (12, 5, 40, 2, 113, 13, 2, 3, 2, 4, 5, 1, 1))
         cast(40, 2, 180)
-        self.assertEqual(lands(180, 2, d20(4))[:2], (180, [0, 1]))
+        self.assertEqual(lands(180, 2, d20(4))[:2], (0x12, [0, 1]))
         # none for another spell, another target, a weapon's spell
         cast(2, 40, 71)
         self.assertEqual(lands(71, 40, d20(1)), (71, [1, 1], None))
@@ -3815,6 +3820,134 @@ class NewSpellTests(RuleTests):
         self.assertEqual(lands(3, 40, d20(1)), (3, [1, 1], None))
         cast(2, 40, 3)  # (the next cast rolls again)
         self.assertEqual(lands(3, 40, d20(1))[1], [0, 1])
+
+    def test_turn_undead_manual(self):
+        """TURN_SITE (7AE01h, Turn Undead's "mov al,[es:bx+24h]", 4 bytes; ES:BX the undead's sheet,
+        [BP+6] the target, [BP+8] the priest, [BP+0Ch] its level, [BP-4] the sheet's number): AD&D's
+        table's cell (dicelog's turn_cell) for the hit dice and level. A number: a d20 (rand()) of it
+        or more turns (598:3Eh adds Afraid, 17, for 3d4 x 60, then the routine's end, 7AE7Eh); less,
+        the failure (7AE75h), and this priest's next try on it this fight ends at once (7AE7Eh), no
+        roll; a turning out of a fight forgets the failures. T turns and D destroys (7AE60h), no roll;
+        D* destroys and the next 2d4 of its sheet this cast are destroyed with no roll; "---" none.
+        Recorded (kind 13: the d20, then caster, target, cell (0 when not looked up), level, HD,
+        outcome, rounds, more)."""
+        from dsloader import gamepatch
+        from dsloader.dicelog import DiceLog
+        patch = next(p for p in gamepatch.PATCHES if p.name == "turn_undead_manual")
+        self.assertEqual((patch.offset, patch.original.hex(), patch.replacement[2]),
+                         (0x7AE01, "268a4724", gamepatch.TURN_SITE))
+        self.assertIn("turn_undead_manual", gamepatch.SPELLS_MANUAL)
+        mu = self.mu
+        image = load_image()
+        hdr_off, ring = struct.unpack_from("<H", image, 20)[0], struct.unpack_from("<H", image, 16)[0]
+        load = (GAME_DS - 0x4356) & 0xFFFF
+        mu.mem_write(load * 16 + 0x822, bytes.fromhex("8b1e02078b8704078306020702cb"))  # (rand(): DS:704h on)
+        stub = ((GAME_DS - (0x4356 - 0x428F)) & 0xFFFF) * 16 + 0x3E
+        mu.mem_write(stub, bytes.fromhex("5589e5565751061e078d7606bf2006b90700f336a5ff061e0607595f5e5dcb"))
+        fight = ((GAME_DS - (0x4356 - 0x377E)) & 0xFFFF) * 16 + 0x19
+        die = lambda n, sides: ((n - 1) * 0x8000 + sides - 1) // sides  # (a rand() giving that roll)
+        destroy, fail, end = 0x7AE60 - 0x7AE04, 0x7AE75 - 0x7AE04, 0x7AE7E - 0x7AE04
+
+        def seq():
+            return struct.unpack("<H", mu.mem_read(TSR * 16 + hdr_off + 8, 2))[0]
+
+        def cast():
+            mu.mem_write(SS * 16 + BP + 6, struct.pack("<4H", 2, 40, 190, 3))
+            self.at += 0x40
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, bytes((0xCD, 0x98, gamepatch.CAST_SITE, 0xF4)))
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(start, 0, count=20000)
+
+        def turn(hd, level, rolls=(), caster=2, target=40, sheet=7, fighting=1):
+            mu.mem_write(GAME_DS * 16 + 0x702, struct.pack("<H", 0) + b"".join(struct.pack("<H", x) for x in rolls))
+            mu.mem_write(GAME_DS * 16 + 0x61E, bytes(16))
+            mu.mem_write(fight, struct.pack("<H", fighting))
+            mu.mem_write(0x9000 * 16 + 0x24, bytes((hd,)))
+            mu.mem_write(SS * 16 + BP - 4, struct.pack("<H", sheet))
+            mu.mem_write(SS * 16 + BP + 6, struct.pack("<HHHH", target, caster, 0x0777, level))
+            self.at += 0x100
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, patch.replacement)
+            for back in (destroy, fail, end):
+                mu.mem_write(CALLER * 16 + ((self.at + 3 + back) & 0xFFFF), b"\xf4")
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, es=0x9000,
+                                    ebx=0, esi=target, edi=0x0777).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            before = seq()
+            mu.emu_start(start, 0, count=50000)
+            self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_SP, r.UC_X86_REG_BP, r.UC_X86_REG_SI,
+                                                       r.UC_X86_REG_DI, r.UC_X86_REG_BX, r.UC_X86_REG_ES)],
+                             [0x800, BP, target, 0x0777, 0, 0x9000])
+            way = (mu.reg_read(r.UC_X86_REG_IP) - self.at - 4) & 0xFFFF
+            self.assertEqual(seq(), before + 1)
+            n = struct.unpack("<HHH", mu.mem_read(TSR * 16 + hdr_off + 8, 6))
+            e = Entry.parse(bytes(mu.mem_read(RING_SEG * 16 + ring + ((n[0] - 1) % n[2]) * Entry.SIZE, Entry.SIZE)))
+            self.assertEqual(e.kind, 13)
+            added = None
+            if struct.unpack("<H", mu.mem_read(GAME_DS * 16 + 0x61E, 2))[0]:
+                added = struct.unpack("<7H", mu.mem_read(GAME_DS * 16 + 0x620, 14))
+            return way, (e.raw,) + tuple(e.arg(at) for at in range(6, 0x16, 2)), added
+
+        # the table's cells, against dicelog's
+        cell = lambda hd, level: DiceLog.turn_cell(hd, level)
+        self.assertEqual([cell(1, lv) for lv in (1, 2, 3, 4, 6, 8, 14)], [10, 7, 4, 21, 22, 23, 23])
+        self.assertEqual([cell(11, lv) for lv in (7, 8, 9, 11, 13, 14, 20)], [0, 20, 19, 16, 13, 10, 10])
+        self.assertEqual([cell(5, lv) for lv in (1, 7, 8, 10, 12, 14)], [20, 4, 21, 22, 22, 23])
+        self.assertEqual([cell(2, 1), cell(3, 1), cell(4, 3), cell(6, 3), cell(6, 2)], [16, 19, 13, 20, 0])
+        # a number: 2 HD at level 3, 10 needed; a 10 turns, Afraid 3d4 (2 + 3 + 4) rounds
+        cast()
+        self.assertEqual(turn(2, 3, (die(10, 20), die(2, 4), die(3, 4), die(4, 4))),
+                         (end, (10, 2, 40, 10, 3, 2, 1, 9, 0), (40, 2, 190, 17, 540, 0, 0)))
+        # a 9 fails; the same priest's next try on it ends at once; another priest rolls
+        self.assertEqual(turn(2, 3, (die(9, 20),)), (fail, (9, 2, 40, 10, 3, 2, 0, 0, 0), None))
+        self.assertEqual(turn(2, 3, (die(20, 20),)), (end, (0, 2, 40, 0, 3, 2, 5, 0, 0), None))
+        self.assertEqual(turn(2, 3, (die(10, 20), 0, 0, 0), caster=1)[0], end)
+        self.assertEqual(turn(2, 3, (die(10, 20), 0, 0, 0), target=41)[1][6], 1)  # (another target)
+        self.assertEqual(turn(2, 3, (), fighting=1)[1][6], 5)
+        self.assertEqual(turn(2, 3, (die(10, 20), 0, 0, 0), fighting=0)[1][6], 1)  # (out of a fight: forgotten)
+        # T, D: no roll
+        self.assertEqual(turn(1, 4, (0, 0, 0)), (end, (0, 2, 40, 21, 4, 1, 1, 3, 0), (40, 2, 190, 17, 180, 0, 0)))
+        self.assertEqual(turn(1, 6), (destroy, (0, 2, 40, 22, 6, 1, 2, 0, 0), None))
+        # "---": nothing
+        self.assertEqual(turn(6, 2), (end, (0, 2, 40, 0, 2, 6, 6, 0, 0), None))
+        # D*: 2d4 (1 + 2) more of sheet 7 this cast, with no roll; then its own D* again
+        self.assertEqual(turn(1, 9, (die(1, 4), die(2, 4)), target=41), (destroy, (0, 2, 41, 23, 9, 1, 3, 0, 3), None))
+        self.assertEqual(turn(2, 3, target=42), (destroy, (0, 2, 42, 0, 3, 2, 4, 0, 2), None))
+        self.assertEqual(turn(2, 3, (die(9, 20),), target=43, sheet=8)[0], fail)  # (another kind)
+        self.assertEqual(turn(2, 3, target=44)[1][6:], (4, 0, 1))
+        self.assertEqual(turn(2, 3, target=45)[1][6:], (4, 0, 0))
+        self.assertEqual(turn(2, 3, (die(9, 20),), target=46)[1][6], 0)
+        self.assertEqual(turn(1, 9, (die(4, 4), die(4, 4)), target=47)[1][6:], (3, 0, 8))
+        cast()  # (a new cast: none more)
+        self.assertEqual(turn(2, 3, (die(9, 20),), target=48)[1][6], 0)
+
+    def test_flame_arrow_count(self):
+        """FLAME_SITE (7567Fh, the cast's tail's "mov dl,[es:bx]", the record's +0, its bits 2-7 the
+        casts): Flame Arrow (28, [BP+0Ah]) one for every five of the cast's levels ([BP+0Ch]), at
+        least one; any other spell its record's byte."""
+        from dsloader import gamepatch
+        patch = next(p for p in gamepatch.PATCHES if p.name == "flame_arrow_count")
+        self.assertEqual((patch.offset, patch.original.hex(), patch.replacement[2]),
+                         (0x7567F, "268a17", gamepatch.FLAME_SITE))
+        self.assertIn("flame_arrow_count", gamepatch.SPELLS_MANUAL)
+        mu = self.mu
+        mu.mem_write(0x9000 * 16 + 0x30, bytes((0x0E,)))
+        def count(spell, level):
+            mu.mem_write(SS * 16 + BP + 0x0A, struct.pack("<HH", spell, level))
+            self.at += 0x20
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, patch.replacement + b"\xf4")
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, es=0x9000,
+                                    ebx=0x30, eax=0x1234, edx=0xAB00).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(start, 0, count=200)
+            self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_SP, r.UC_X86_REG_AX, r.UC_X86_REG_DH,
+                                                       r.UC_X86_REG_IP)], [0x800, 0x1234, 0xAB, self.at + 4])
+            return mu.reg_read(r.UC_X86_REG_DL)
+        self.assertEqual([count(28, lv) >> 2 for lv in (1, 4, 5, 9, 10, 15, 22)], [1, 1, 1, 1, 2, 3, 4])
+        self.assertEqual(count(75, 10), 0x0E)
 
     def test_hold_undead_level(self):
         """HOLD_HD (7A345h, the undead's "test word [bp+0Eh],100h", 5 bytes; SI the spell, DI the

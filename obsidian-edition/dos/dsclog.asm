@@ -13886,6 +13886,8 @@ whirl_pick:
 KIND_SWEPT  equ 11
 SWEPT_MAX   equ 64
 swept   times SWEPT_MAX db 0
+TU_MAX      equ 64              ; (TURN_SITE's: after SWEPT, cleared with it at a fight's start)
+tu_failed times TU_MAX db 0     ; (bit N: priest N failed to turn this combatant this fight)
 swept_mark:
         pushad
         push es
@@ -14145,7 +14147,7 @@ acid_round:
         push cs
         pop es
         mov di, swept
-        mov cx, SWEPT_MAX
+        mov cx, SWEPT_MAX + TU_MAX      ; (and TURN_SITE's TU_FAILED)
         xor al, al
         rep stosb
         pop es
@@ -14569,14 +14571,15 @@ sheet_level:
 ; spell kept for the dispatch on its table (7A1A7h). The cast CAST_SITE last saw (TH_CAST: armed,
 ; not a weapon's spell on a hit, not an Acid's burn), of this spell at this target, rolls to hit
 ; once: the missile spells (TH_MISSILES: Acid Arrow, Turn Pebble to Boulder, Magical Stone,
-; Condense, the spines) as missiles, the touch spells (TH_TOUCHES) on a creature of another side
+; Condense, the spines, Minute Meteors with its own +2) as missiles, the touch spells (TH_TOUCHES) on a creature of another side
 ; (the creatures' +1Dh) as melee. The caster's THAC0 (its creature's +1Fh; Acid Arrow's 21 - the
 ; cast's level, a fighter's of that level shooting), less the game's to-hit adjustments
 ; (5B8:EDh, 7C3E9h: the effects, STR in melee, DEX for a missile, kind 1 or 2, no weapon) and a
 ; monster's difficulty ([11AEh] - 1, as 5837Ch), against the target's AC (4E0:7Fh, 58DD3h, as a
 ; weapon's: not from behind), a d20 from the game's rand(): a 20 hits, a 1 misses (as 5883Ah).
 ; Recorded (KIND_TOHIT: the d20, the frame TH_FRAME's). A miss (TH_MISS) puts Acid Arrow (12h) in
-; [BP-6], so the dispatch calls the table's always-hit stub (78BA0h), where SPELL_STUB answers 0:
+; [BP-6] (the table's spells but Magic Missile all go to the stub: the same for them; a touch spell
+; and Minute Meteors aren't in it), so the dispatch calls the table's always-hit stub (78BA0h), where SPELL_STUB answers 0:
 ; the spell does nothing (7A0BEh), its damage rolled before lost. The calls are overlay code (the
 ; AC's in another overlay), in a frame the overlay manager can fix up, as NS_BLOW's; the way back
 ; is always the site's.
@@ -14584,6 +14587,7 @@ SPELL_HIT_SITE equ NS_IMAGE + 74 ; 7A15Ah: a spell on its target, past the immun
 SPELL_STUB_SITE equ NS_IMAGE + 75 ; 78BA3h: the missile spells' always-hit stub, its answer (SPELL_STUB)
 KIND_TOHIT equ 12
 TH_ACID   equ 0x12                ; Acid Arrow (in the dispatch's table)
+TH_METEORS equ 33                 ; Minute Meteors: +2 to hit (the manual's), not in the table
 TH_DIFFICULTY equ 0x11AE          ; DS: the game's difficulty (a monster's attacks: + it - 1)
 TH_STUB_5B8 equ 0x42AB            ; (DSUN.EXE) the stub segments: 5B8h (EDh the to-hit adjustments),
 TH_STUB_508 equ 0x41F1            ;   508h (61h STR's to-hit, 66h DEX's missile adjustment),
@@ -14666,7 +14670,10 @@ th_hit:
         push di
         th_far TH_STUB_5B8, 0xED        ; (target, attacker, no weapon, kind)
         add sp, 10
-        mov [cs:th_bonus], ax
+        cmp si, TH_METEORS
+        jne .bonus
+        add ax, 2                       ; (Minute Meteors' own +2, as the manual's)
+.bonus: mov [cs:th_bonus], ax
         push word [cs:th_caster]
         cmp word [cs:th_kind], 1
         je .str
@@ -14681,15 +14688,8 @@ th_hit:
         th_far TH_STUB_4E0, 0x7F        ; (target, attacker, not from behind)
         add sp, 6
         mov [cs:th_ac], ax
-        mov ax, ds
-        sub ax, DGROUP_SEG
-        mov [cs:blow_rand + 2], ax
-        call far [cs:blow_rand]
         mov cx, 20
-        mul cx
-        shl ax, 1
-        rcl dx, 1                       ; (rand() x 20 / 32768: 0 to 19)
-        inc dx
+        call rand_die
         mov [cs:th_d20], dx
         mov ax, [cs:th_thac0]
         sub ax, [cs:th_bonus]
@@ -14707,28 +14707,16 @@ th_hit:
         mov [cs:th_frame + 4], si
         movzx ax, byte [cs:th_miss]
         xor al, 1
-        push ax                         ; TH_FRAME: +1Ah 1 a hit
-        mov si, th_frame_end
-.frame: sub si, 2
-        push word [cs:si]               ;   +18h kind, +16h the d20, +14h AC, +12h difficulty, +10h
-        cmp si, th_frame                ;   STR or DEX's, +0Eh the adjustments, +0Ch THAC0, +0Ah
-        ja .frame                       ;   the spell, +8 the target, +6 the caster
-        push dword 0
-        push bp
-        mov bp, sp
-        mov si, bp
-        sub si, 4                       ; (SS:SI+6: the frame's return address, none)
+        mov [cs:th_hitw], ax
+        mov si, th_frame
+        mov cx, (th_frame_end - th_frame) / 2
         mov ax, [cs:th_d20]
         mov word [cs:kind], KIND_TOHIT
-        call record
-        pop bp
-        add sp, 4 + 2 * 11
+        call rec_frame
         cmp byte [cs:th_miss], 0
         je .back
-        cmp word [cs:th_kind], 1
-        jne .back                       ; (a missile spell: the stub already its dispatch's)
-        mov bx, [bp]
-        mov word [ss:bx - 6], TH_ACID
+        mov bx, [bp]                    ; (a miss: Acid Arrow's 12h for the dispatch, its stub: a
+        mov word [ss:bx - 6], TH_ACID   ;   touch spell's or Minute Meteors', not in its table)
 .back:  jmp ovr_back                    ; (the way back as the overlay manager left it)
 
 ; SPELL_STUB (gamepatch "spell_hit_stub"): the missile spells' always-hit stub's "mov ax,1"
@@ -14754,10 +14742,12 @@ th_cast:
         xchg al, [cs:th_weapon]
         xor al, 1
         mov [cs:th_armed], al
+        mov word [cs:tu_more], 0        ; (TURN_SITE's D*: the cast's own)
         pop ax
         ret
 
-th_missiles db 18, 53, 75, 111, 180              ; Acid Arrow, Turn Pebble to Boulder, Magical Stone, Condense, spines
+th_missiles db 18, 53, 75, 111, 180, 33          ; Acid Arrow, Turn Pebble to Boulder, Magical Stone, Condense, spines,
+                                                 ;   Minute Meteors
 th_touches  db 3, 10, 39, 72, 97, 113, 119, 128  ; Chill Touch, Shocking Grasp, Vampiric Touch, Cause
 TH_SPELLS equ $ - th_missiles                    ;   Light Wounds, Cause Disease, Cause Serious, Poison, Cause Critical
 th_call   dw 0, 0
@@ -14777,7 +14767,281 @@ th_diff   dw 0
 th_ac     dw 0
 th_d20    dw 0
 th_kind   dw 0
+th_hitw   dw 0                  ; (+1Ah 1 a hit)
 th_frame_end:
+
+; REC_FRAME: an entry recorded (kind [CS:KIND], value AX) whose frame's +6 on are the CX words
+; from CS:SI, as a far call's arguments (no return address: 0). CX, DX, SI, DI changed.
+rec_frame:
+        pop dx                          ; (the way back)
+        mov di, sp
+        add si, cx
+        add si, cx
+.push:  sub si, 2
+        push word [cs:si]
+        loop .push
+        push dword 0
+        push bp
+        mov bp, sp
+        mov si, bp
+        sub si, 4                       ; (SS:SI+6: the frame's return address, none)
+        call record
+        pop bp
+        mov sp, di
+        jmp dx
+
+; RAND_DIE: DX a roll of 1 to CX from the game's rand() (BLOW_RAND: rand() x CX / 32768, + 1). DS
+; the game's; AX and BX changed.
+rand_die:
+        push cx
+        mov ax, ds
+        sub ax, DGROUP_SEG
+        mov [cs:blow_rand + 2], ax
+        call far [cs:blow_rand]
+        pop cx
+        mul cx
+        shl ax, 1
+        rcl dx, 1
+        inc dx
+        ret
+
+; TURN_SITE (gamepatch "turn_undead_manual", with the spells as the manual has them): Turn Undead
+; AD&D's way. In the game's turning of one undead (7ADB7h: [BP+6] the target, [BP+8] the priest,
+; [BP+0Ch] its priest level, [BP-4] the target's sheet's number, ES:BX that sheet), where the game
+; works out the d20 it needs, "mov al,[es:bx+24h]" (7AE01h; 4 bytes, never back): AD&D's turning
+; table (TU_CELL, by the hit dice +24h and the level) instead, and what it says done:
+; - a number: a d20 (the game's rand()) of it or more turns the undead: Afraid (17, as Cause
+;   Fear's) for 3d4 rounds, added through 598:3Eh (76442h: the add without 5A8:43h's immunities,
+;   which keep the undead from fear), in a frame the overlay manager can fix up, the way back set
+;   first to the routine's end (7AE7Eh); under it, not turned (the game's failure, 7AE75h), and
+;   this priest (a combatant under 8) can't try again on this target (a combatant under TU_MAX)
+;   this fight (TU_FAILED, cleared at a fight's first round, ACID_ROUND, and by a turning out of
+;   a fight, which starts a new one): a later try ends at once, no roll;
+; - T: turned, no roll; D: destroyed, no roll (the game's 1000 damage, 7AE60h); D*: destroyed, and
+;   up to 2d4 more of its kind (its sheet) this cast are destroyed with no roll (TU_MORE, cleared
+;   by each cast, TH_CAST); "---": nothing, no roll.
+; Recorded (KIND_TURN: the d20, 0 for none; the frame TU_FRAME's). DS the game's.
+TURN_SITE equ NS_IMAGE + 76      ; 7AE01h: Turn Undead's number, AD&D's table instead (TURN_SITE)
+FLAME_SITE equ NS_IMAGE + 77     ; 7567Fh: a cast's repeats, Flame Arrow's by level (FLAME_SITE)
+KIND_TURN  equ 13
+TU_DESTROY equ 0x7AE60 - 0x7AE04 ; (the ways on, less the address after the site's number)
+TU_FAIL    equ 0x7AE75 - 0x7AE04
+TU_END     equ 0x7AE7E - 0x7AE04
+TU_SPELL   equ 190
+TU_AFRAID  equ 17
+TU_STUB    equ 0x428F            ; (DSUN.EXE) 598h's stub segment: 3Eh adds an effect (76442h)
+TU_T       equ 21                ; (TU_CELL's: 1-20 the number, 0 none)
+TU_D       equ 22
+TU_DSTAR   equ 23
+TU_NOT     equ 0                 ; (the outcomes, TU_OUTCOME)
+TU_TURNED  equ 1
+TU_DESTROYED equ 2
+TU_DSTARRED equ 3                ; (destroyed by a D*: 2d4 more of its kind)
+TU_MORE_ONE equ 4                ; (one of those more)
+TU_AGAIN   equ 5                 ; (this priest failed against it this fight)
+TU_NONE    equ 6                 ; ("---")
+tu_site:
+        sti
+        pushad
+        push es
+        movzx ax, byte [es:bx + 0x24]
+        mov [cs:tu_hd], ax
+        mov [cs:tu_target], si
+        mov cx, [bp + 8]
+        mov [cs:tu_caster], cx
+        movzx ax, byte [bp + 0x0C]
+        mov [cs:tu_level], ax
+        xor ax, ax
+        mov [cs:tu_d20], ax
+        mov [cs:tu_rounds], ax
+        mov [cs:tu_need], ax
+        call pp_fighting
+        jnz .fight
+        push cs                         ; (out of a fight: a new one, nothing failed yet)
+        pop es
+        mov di, tu_failed
+        mov cx, TU_MAX
+        rep stosb
+.fight: mov word [cs:tu_outcome], TU_MORE_ONE
+        mov dx, TU_DESTROY
+        cmp word [cs:tu_more], 0
+        je .again
+        mov ax, [bp - 4]
+        cmp ax, [cs:tu_kind]
+        jne .again
+        dec word [cs:tu_more]
+        jmp .done
+.again: mov word [cs:tu_outcome], TU_AGAIN
+        mov dx, TU_END
+        call tu_bit
+        jz .cell
+        test [cs:tu_failed + si], al
+        jnz .done
+.cell:  mov al, [cs:tu_hd]
+        mov cl, [cs:tu_level]
+        call tu_cell
+        mov [cs:tu_need], ax
+        mov word [cs:tu_outcome], TU_NONE
+        test al, al
+        jz .done
+        mov word [cs:tu_outcome], TU_DESTROYED
+        mov dx, TU_DESTROY
+        cmp al, TU_D
+        je .done
+        ja .dstar
+        cmp al, TU_T
+        je .turned
+        mov cx, 20
+        call rand_die
+        mov [cs:tu_d20], dx
+        cmp dx, [cs:tu_need]
+        jge .turned
+        mov word [cs:tu_outcome], TU_NOT
+        mov dx, TU_FAIL
+        call tu_bit
+        jz .done
+        or [cs:tu_failed + si], al
+        jmp .done
+.dstar: mov word [cs:tu_outcome], TU_DSTARRED
+        mov ax, [bp - 4]
+        mov [cs:tu_kind], ax
+        mov cx, 4
+        call rand_die
+        mov [cs:tu_more], dx
+        call rand_die
+        add [cs:tu_more], dx
+        mov dx, TU_DESTROY
+        jmp .done
+.turned:
+        mov word [cs:tu_outcome], TU_TURNED
+        mov si, 3
+.fear:  mov cx, 4
+        call rand_die
+        add [cs:tu_rounds], dx
+        dec si
+        jnz .fear
+        mov dx, TU_END
+.done:  mov bx, sp
+        add [ss:bx + 34], dx            ; (the way on, before any call)
+        mov si, tu_frame
+        mov cx, (tu_frame_end - tu_frame) / 2
+        mov ax, [cs:tu_d20]
+        mov word [cs:kind], KIND_TURN
+        call rec_frame
+        cmp word [cs:tu_outcome], TU_TURNED
+        jne .out
+        mov bx, sp
+        push word [ss:bx + 36]          ; (the way on, in a frame the overlay manager can fix up)
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        push word 0
+        push word 0
+        imul ax, [cs:tu_rounds], 60     ; (a round's 60)
+        push ax
+        push word TU_AFRAID
+        push word TU_SPELL
+        push word [cs:tu_caster]
+        push word [cs:tu_target]
+        th_far TU_STUB, 0x3E            ; (target, caster, spell, effect, time, 0)
+        add sp, 14
+        jmp ovr_back
+.out:   jmp ovr_out
+
+; TU_BIT: for TURN_SITE, AL the priest's bit (TU_CASTER, 0-7) and SI the target (TU_TARGET) in
+; TU_FAILED; ZF set when there is none (a combatant past them). CL changed.
+tu_bit:
+        mov si, [cs:tu_target]
+        mov cx, [cs:tu_caster]
+        xor al, al
+        cmp si, TU_MAX
+        jae .out
+        cmp cx, 8
+        jae .out
+        mov al, 1
+        shl al, cl
+.out:   test al, al
+        ret
+
+; TU_CELL: AX AD&D's turning table's cell (0 "---", 1-20 the d20 needed, TU_T, TU_D, TU_DSTAR) for
+; undead of AL hit dice and a priest of level CL. Its rows are one run, 20 19 16 13 10 7 4 T T D D
+; then D*, shifted a column a row: the row's start (AH) from the hit dice (1 or less, 2, 3-4, 5,
+; 6 to 11 or more: AD&D's rows of hit dice; its zombies', ghasts' and specials' unused), the
+; column from the level (1-9, 10-11, 12-13, 14 or more). BX changed.
+tu_cell:
+        mov ah, 4
+        cmp al, 1
+        jbe .row
+        mov ah, 2
+        cmp al, 2
+        je .row
+        dec ah
+        cmp al, 4
+        jbe .row
+        dec ah
+        cmp al, 5
+        je .row
+        cmp al, 11
+        jb .many
+        mov al, 11
+.many:  mov ah, 4
+        sub ah, al                      ; (6 to 11 hit dice: -2 to -7)
+.row:   mov al, cl
+        cmp al, 10
+        jb .col
+        sub al, 10
+        shr al, 1
+        cmp al, 2
+        jbe .high
+        mov al, 2
+.high:  add al, 10
+.col:   add al, ah                      ; (the run's place, from 1)
+        jle .none
+        cmp al, 12
+        jb .run
+        mov ax, TU_DSTAR
+        ret
+.run:   movzx bx, al
+        mov al, [cs:bx + tu_cells - 1]
+        mov ah, 0
+        ret
+.none:  xor ax, ax
+        ret
+tu_cells  db 20, 19, 16, 13, 10, 7, 4, TU_T, TU_T, TU_D, TU_D
+tu_kind   dw 0                  ; (TU_MORE's kind: a sheet's number)
+tu_d20    dw 0                  ; (the d20, 0 none: the entry's value)
+tu_frame:                       ; KIND_TURN's frame, from +6:
+tu_caster dw 0                  ;   the priest
+tu_target dw 0                  ;   +8 the undead
+tu_need   dw 0                  ;   +0Ah the cell (TU_CELL's)
+tu_level  dw 0                  ;   +0Ch the priest level
+tu_hd     dw 0                  ;   +0Eh its hit dice
+tu_outcome dw 0                 ;   +10h TU_NOT ... TU_NONE
+tu_rounds dw 0                  ;   +12h turned: the rounds it flees
+tu_more   dw 0                  ;   +14h D*: how many more of its kind this cast (counted down)
+tu_frame_end:
+
+; FLAME_SITE (gamepatch "flame_arrow_count", with the spells as the manual has them): in a cast's
+; tail (7566Eh, the routine 7511Bh: [BP+0Ah] the spell, [BP+0Ch] the cast's level), "mov dl,[es:bx]"
+; (7567Fh; 3 bytes), the spell record's +0, whose bits 2-7 are how many times the spell is cast
+; (Magical Stone's three throws): Flame Arrow's (28) one for every five levels, at least one, as
+; AD&D's bolts. (Only a member's cast from the USE screen, 84621h, casts again: the others, a
+; monster's, an item's or a scroll's, a weapon's spell on a hit, cast once whatever the count.)
+FLAME_ARROW equ 28
+flame_site:
+        mov dl, [es:bx]
+        cmp word [bp + 0x0A], FLAME_ARROW
+        jne .out
+        push ax
+        movzx ax, byte [bp + 0x0C]
+        mov dl, 5
+        div dl
+        cmp al, 1
+        adc al, 0                       ; (at least one)
+        shl al, 2
+        mov dl, al
+        pop ax
+.out:   iret
 
 REQ_REST equ 0
 rest_site:
@@ -17528,6 +17792,10 @@ ns_sites:                       ; (the game's registers kept for each: NS_CMP ta
         je th_hit
         cmp byte [cs:rl_site], SPELL_STUB_SITE
         je th_stub
+        cmp byte [cs:rl_site], TURN_SITE
+        je tu_site
+        cmp byte [cs:rl_site], FLAME_SITE
+        je flame_site
         cmp byte [cs:rl_site], CR_AGE_SITE
         je cr_age
         cmp byte [cs:rl_site], CR_AGE_CON_SITE

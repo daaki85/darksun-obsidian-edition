@@ -767,6 +767,61 @@ class SaveTests(unittest.TestCase):
         log._cast = (2, HOLD_PERSON)
         self.assertFalse(log._overlay_turn(self.turn(log, 9, 3, 7, overlay=True)))
 
+    def test_turn_undead_manual(self):
+        """Turn Undead the AD&D way (DSCLOG's TURN_SITE, KIND_TURN: the d20, then the priest, target,
+        the table's cell, level, HD, outcome, rounds, D*'s more): each outcome's line, a destruction
+        said by hp_changes as Turn Undead's."""
+        log = make_game()
+        m = log.guest.mem
+        self.make_undead(log, 2)
+        stalker = CREATURES + STALKER * game.CREATURE_SIZE
+        struct.pack_into("<h", m, stalker, 13)
+        self.assertEqual(log.hp_changes(0.5), [])
+        turn = lambda d20, *frame: log.describe(entry(d20, frame=words(0, 0, 2, 0x29, *frame), kind=dicelog.KIND_TURN))
+        about = "(priest level 3 vs 2 HD, AD&D's table)"
+        self.assertEqual(turn(14, 16, 3, 2, dicelog.TURN_TURNED, 7, 0),
+                         [f"Jellybelly turns Mountain Stalker: d20 = 14, needs 16+ {about} -> turned: flees 3d4 = 7 "
+                          "rounds (Afraid)"])
+        self.assertEqual(turn(5, 16, 3, 2, dicelog.TURN_NOT, 0, 0),
+                         [f"Jellybelly turns Mountain Stalker: d20 = 5, needs 16+ {about} -> not turned: can't try "
+                          "again on it this fight"])
+        self.assertEqual(turn(0, 0, 3, 2, dicelog.TURN_AGAIN, 0, 0),
+                         ["Jellybelly can't turn Mountain Stalker again: failed against it this fight"])
+        self.assertEqual(turn(0, dicelog.TURN_T, 3, 2, dicelog.TURN_TURNED, 9, 0),
+                         [f"Jellybelly turns Mountain Stalker: turned: flees 3d4 = 9 rounds (Afraid), automatically "
+                          f"(T) {about}"])
+        self.assertEqual(turn(0, 0, 3, 2, dicelog.TURN_NONE, 0, 0),
+                         [f"Jellybelly turns Mountain Stalker: no chance {about}"])
+        self.assertEqual(turn(0, dicelog.TURN_DSTAR, 3, 2, dicelog.TURN_DSTARRED, 0, 5),
+                         [f"Jellybelly turns Mountain Stalker: destroyed automatically (D*), and up to 2d4 = 5 more "
+                          f"of its kind this turning {about}"])
+        self.assertEqual(turn(0, 0, 3, 2, dicelog.TURN_MORE_ONE, 0, 4),
+                         ["Jellybelly turns Mountain Stalker: destroyed, one of the D*'s more of its kind (4 left)"])
+        self.assertEqual(turn(0, dicelog.TURN_D, 3, 2, dicelog.TURN_DESTROYED, 0, 0),
+                         [f"Jellybelly turns Mountain Stalker: destroyed automatically (D) {about}"])
+        struct.pack_into("<h", m, stalker, 13 - 1000)
+        self.assertEqual(log.hp_changes(2.5), ["  Mountain Stalker is destroyed by Turn Undead"])
+
+    def test_turn_cells(self):
+        """AD&D's turning table (the cells DSCLOG's TU_CELL gives): rows by HD, columns by level."""
+        cell = dicelog.DiceLog.turn_cell
+        T, D, DS = dicelog.TURN_T, dicelog.TURN_D, dicelog.TURN_DSTAR
+        levels = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14)
+        rows = {1: (10, 7, 4, T, T, D, D, DS, DS, DS, DS, DS), 2: (16, 13, 10, 7, 4, T, T, D, D, DS, DS, DS),
+                3: (19, 16, 13, 10, 7, 4, T, T, D, D, DS, DS), 5: (20, 19, 16, 13, 10, 7, 4, T, T, D, D, DS),
+                6: (0, 0, 20, 19, 16, 13, 10, 7, 4, T, T, D), 9: (0, 0, 0, 0, 0, 20, 19, 16, 13, 10, 7, 4),
+                11: (0, 0, 0, 0, 0, 0, 0, 20, 19, 16, 13, 10)}
+        for hd, row in rows.items():
+            self.assertEqual(tuple(cell(hd, lv) for lv in levels), row, hd)
+        self.assertEqual((cell(4, 1), cell(0, 1), cell(30, 14), cell(2, 11), cell(2, 13), cell(2, 40)), (19, 10, 10, DS, DS, DS))
+
+    def test_meteors_to_hit(self):
+        """Minute Meteors' own +2 named apart from the game's adjustments."""
+        log = make_game()
+        e = entry(8, frame=words(0, 0, 2, 40, dicelog.MINUTE_METEORS_SPELL, 16, 4, 1, 0, 4, 8, 2, 1), kind=dicelog.KIND_TOHIT)
+        line, = log.describe(e)
+        self.assertIn(f"needs 8+ (65%) (THAC0 16, +1 DEX, +2 {log.game.spell_name(33)}, +1 spells; target AC 4) -> HIT", line)
+
     def test_psp(self):
         log = make_game()
         dag = CREATURES + game.CREATURE_PSP

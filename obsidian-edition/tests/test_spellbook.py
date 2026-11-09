@@ -114,6 +114,23 @@ class TextTests(unittest.TestCase):
         self.assertIn("for each 2 caster levels", text)
 
 
+    def test_casts_a_cast(self):
+        """The record's +0 count (bits 2-7) said when more than one; Flame Arrow's manual 5d6 a bolt
+        for every five levels (DSCLOG's FLAME_SITE), the game's own (5d6 a step) said as before."""
+        from dsloader import gamepatch
+        meteors = next(p for p in gamepatch.PATCHES if p.name == "meteors_count").replacement[0]
+        b0, b1, b2 = next(p for p in gamepatch.PATCHES if p.name == "meteors_damage").replacement
+        rule = SpellDamage(b1 >> 3, b0 >> 5, b0 & 0x1F, (b1 & 7) or 1, b2 >> 4, b2 & 0x0F)
+        rec = bytes((meteors,)) + record()[1:]
+        self.assertEqual(spellbook.damage_text(StubGame(rule), 33, rec), "1d4, 5 times a cast, each aimed and rolled")
+        b0, b1, b2 = next(p for p in gamepatch.PATCHES if p.name == "flame_arrow_damage").replacement
+        rule = SpellDamage(b1 >> 3, b0 >> 5, b0 & 0x1F, (b1 & 7) or 1, b2 >> 4, b2 & 0x0F)
+        self.assertEqual(spellbook.damage_text(StubGame(rule), 28, bytes((6,)) + record()[1:]),
+                         "5d6, a bolt for every 5 caster levels (at least one), each aimed and rolled")
+        game_rule = SpellDamage(0, 5, 0, 5, 0, 6)  # (the game's: 5d6 for each 5 levels, one cast)
+        self.assertNotIn("bolt", spellbook.damage_text(StubGame(game_rule), 28, bytes((6,)) + record()[1:]))
+
+
 class PowerNameTests(unittest.TestCase):
     """A monster's power has no name in the game: the log names it by the effect it puts on, else
     its damage dice and kinds."""

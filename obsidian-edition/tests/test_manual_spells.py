@@ -42,12 +42,25 @@ class DurationBonusTests(unittest.TestCase):
         self.assertEqual(len({gamepatch.HD_SAVE_SITE, gamepatch.SPRAY_SITE, gamepatch.HOLD_HD_SITE,
                               gamepatch.CHAOS_SITE}), 4)
 
+    def test_records(self):
+        """Minute Meteors' five globes of 1d4 and Flame Arrow's 5d6 a bolt: the switch's record bytes."""
+        by_name = {p.name: p for p in gamepatch.PATCHES}
+        for name, offset, original, replacement in (
+                ("meteors_count", 0x41F70 + 33 * 32, "06", "16"),
+                ("meteors_damage", 0x41F70 + 33 * 32 + 0x1C, "200104", "000904"),
+                ("flame_arrow_damage", 0x41F70 + 28 * 32 + 0x1C, "a00506", "002906")):
+            p = by_name[name]
+            self.assertIn(name, gamepatch.SPELLS_MANUAL)
+            self.assertEqual((p.offset, p.original.hex(), p.replacement.hex()), (offset, original, replacement))
+        self.assertEqual(by_name["meteors_count"].replacement[0] >> 2, 5)
+
     def test_dsclog_knows_the_sites(self):
         """DSCLOG's numbers for the three sites are gamepatch's."""
         asm = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos", "dsclog.asm")
         with open(asm, encoding="latin-1") as f:
             text = f.read()
-        for name, number in (("HD_SAVE_SITE", 71), ("SPRAY_SITE", 72), ("HOLD_HD_SITE", 73)):
+        for name, number in (("HD_SAVE_SITE", 71), ("SPRAY_SITE", 72), ("HOLD_HD_SITE", 73), ("TURN_SITE", 76),
+                             ("FLAME_SITE", 77)):
             self.assertIn(f"{name} equ NS_IMAGE + {number}", text)
             self.assertEqual(getattr(gamepatch, name), gamepatch.NS_IMAGE + number)
 

@@ -181,6 +181,9 @@ HD_SAVE_SITE, SPRAY_SITE, HOLD_HD_SITE = NS_IMAGE + 71, NS_IMAGE + 72, NS_IMAGE 
 # (a missile spell or a hostile touch spell on its target: its attack roll, and the always-hit
 # stub of the missile spells answering it: DSCLOG's SPELL_HIT, SPELL_STUB)
 SPELL_HIT_SITE, SPELL_STUB_SITE = NS_IMAGE + 74, NS_IMAGE + 75
+# (Turn Undead by AD&D's table, its outcomes turned, destroyed and D*, once a priest a creature a
+# fight; a cast's repeats, Flame Arrow's one for every five levels: DSCLOG's TURN_SITE, FLAME_SITE)
+TURN_SITE, FLAME_SITE = NS_IMAGE + 76, NS_IMAGE + 77
 CR_NAME_SITE, CR_NAME2_SITE, CR_NAME3_SITE, CR_NAME4_SITE = range(NS_IMAGE + 62, NS_IMAGE + 66)  # (a name the game gave copied to the creature: PSP and the age drawn again)
 ARROW_LEVEL = NS_IMAGE + 47  # (a spell arrow's spell at the archer's preserver level, not a weapon's 6)
 SCROLL_USE = NS_IMAGE + 49  # (an item's box: a Shinobi's scroll picture a button, so it can learn the spell)
@@ -480,6 +483,22 @@ PATCHES = (
     Patch("ironskin_per_level", 0x4302D, bytes.fromhex("02"), bytes.fromhex("01")),
     # Turn Pebble to Boulder (53): 3d6+8 (11-26), not 6d6
     Patch("pebble_damage", 0x4262C, bytes.fromhex("003106"), bytes.fromhex("081f06")),
+    # Melf's Minute Meteors (33): five globes of 1d4, each its own cast and landing (each rolling
+    # to hit, +2, with spells that roll to hit: DSCLOG's TH_METEORS), not one of 1d4 a caster
+    # level: +0's count (bits 2-7, Magical Stone's 3) made 5, the damage 1d4 whatever the level
+    Patch("meteors_count", 0x42390, bytes.fromhex("06"), bytes.fromhex("16")),
+    Patch("meteors_damage", 0x423AC, bytes.fromhex("200104"), bytes.fromhex("000904")),
+    # Flame Arrow (28): a bolt of 1d6 + 4d6 fire (5d6) for every five caster levels, each its own
+    # cast and landing (AD&D's), not one of 5d6 for every five levels: the damage 5d6 whatever the
+    # level, the count the cast's tail reads (7567Fh, "mov dl,[es:bx]", the record's +0) one for
+    # every five levels, at least one (DSCLOG's FLAME_SITE)
+    Patch("flame_arrow_damage", 0x4230C, bytes.fromhex("a00506"), bytes.fromhex("002906")),
+    Patch("flame_arrow_count", 0x7567F, bytes.fromhex("268a17"), _site(FLAME_SITE, 3)),
+    # Turn Undead (190, the priests' button) by AD&D's turning table (DSCLOG's TURN_SITE): in the
+    # game's routine (7ADB7h), where it works out its own number, "mov al,[es:bx+24h]" (7AE01h):
+    # turned (Afraid, 3d4 rounds), destroyed, D* (2d4 more of the kind) or nothing, and a priest
+    # who fails can't try that undead again that fight
+    Patch("turn_undead_manual", 0x7AE01, bytes.fromhex("268a4724"), _site(TURN_SITE, 4)),
 
 
     # Stinking Cloud (22): 1d4+1 rounds, not 1d6: the record's dice made 1d4, the round more by
@@ -1106,7 +1125,8 @@ SPELLS_MANUAL = ("bestow_curse_save", "blood_flow_save", "flaming_sphere_negates
                  "stinking_cloud_dice", "stinking_cloud_round", "chaos_int",
                  "classless_save_level", "color_spray_level", "hold_undead_level",
                  "free_action_stuck", "free_action_loop", "free_action_word", "remove_paralysis_word",
-                 "protection_paralysis_word")  # the spells as the manual has them (spells_manual)
+                 "protection_paralysis_word", "meteors_count", "meteors_damage", "flame_arrow_damage",
+                 "flame_arrow_count", "turn_undead_manual")  # the spells as the manual has them (spells_manual)
 SPELL_TO_HIT = ("spell_hit", "spell_hit_stub")  # missile and hostile touch spells roll to hit (spell_to_hit)
 PARTY_SPREAD = ("party_spread", "party_gather")  # the whole party in view after a load and a fight
 

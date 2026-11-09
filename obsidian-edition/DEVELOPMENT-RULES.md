@@ -27,6 +27,7 @@
 - [Fire, cold and electricity: DEX instead of a doubled d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20)
 - [Enlarge's dice](#enlarges-dice)
 - [Spells roll to hit](#spells-roll-to-hit)
+- [Turn Undead, Minute Meteors and Flame Arrow as the manual](#turn-undead-minute-meteors-and-flame-arrow-as-the-manual)
 - [Weapon specialization](#weapon-specialization)
 - [Kits](#kits)
   - [The kits](#the-kits)
@@ -658,7 +659,7 @@ skips the damage and the effect). The stub is the game's unfinished to-hit test.
   spell arrows and magical weapons) came just before. The armed cast's spell at
   its target rolls once, unless an Acid burn is under way (`acid_burning`: the
   burn passes Acid Arrow's 12h through the same routine each round). Missile
-  spells (`th_missiles`: 18, 53, 75, 111, 180) roll as missiles (to-hit kind 2,
+  spells (`th_missiles`: 18, 53, 75, 111, 180, 33) roll as missiles (to-hit kind 2,
   DEX), touch spells (`th_touches`: 3, 10, 39, 72, 97, 113, 119, 128) as melee
   (kind 1, STR) and only at a creature of another side (creature +1Dh). THAC0:
   the caster's creature +1Fh (Acid Arrow: 21 less the cast's level, 772A5h's
@@ -667,9 +668,11 @@ skips the damage and the effect). The stub is the game's unfinished to-hit test.
   AC is 4E0:7Fh (58DD3h: target, attacker, 0), the weapon attack's. The d20 is
   the game's rand() (`blow_rand`); 20 hits, 1 misses. The calls are in a frame
   the overlay manager can fix up (as `NS_BLOW`'s), and the way back never
-  changes: a miss sets `th_miss` and, for a touch spell (not in the table),
-  writes Acid Arrow's 12h into the game's `[bp-6]`, so the dispatch reaches the
-  stub.
+  changes: a miss sets `th_miss` and writes Acid Arrow's 12h into the game's
+  `[bp-6]`, so the dispatch reaches the stub (for the table's missiles the
+  same handler; touch spells and Minute Meteors aren't in the table). Minute
+  Meteors (33, `TH_METEORS`) adds its own +2 to the adjustments (the frame's
+  +0Eh; the dice log names it apart).
 - `spell_hit_stub` (78BA3h, the stub's `mov ax,1`): `SPELL_STUB_SITE`
   (`th_stub`): 0 once after a miss, else 1. The stub keeps its `push bp / mov
   bp,sp`, so its own way back stays in the BP chain.
@@ -688,6 +691,75 @@ Magical Stone (each of its three throws), Condense, Turn Pebble to Boulder,
 Chill Touch, Shocking Grasp, Vampiric Touch and Cause Light Wounds hit and
 missed as rolled, a miss taking no HP; Magic Missile, a weapon's spell on a hit
 and Acid's burn rolled nothing.
+
+## Turn Undead, Minute Meteors and Flame Arrow as the manual
+
+([In the features page](FEATURES.md#spells-as-the-manual-describes-them).) Part
+of "Spells as the manual describes them" (`gamepatch.SPELLS_MANUAL`): off, the
+five patches below are left out and the game's copy has DSUN.EXE's bytes.
+
+**Turn Undead** (`turn_undead_manual`, 7AE01h, `mov al,[es:bx+24h]`, 4 bytes:
+DSCLOG's `TURN_SITE`, `tu_site`). The game's turning of one undead (7ADB7h:
+`[bp+6]` the target, `[bp+8]` the priest, `[bp+0Ch]` the priest level, `[bp-4]`
+the undead's sheet number, ES:BX its sheet) works out its number from 7AE01h,
+rolls a d20 at 7AE4Dh, destroys at 7AE60h (79A01h, 1000 damage) and calls an
+empty routine on a failure (7AE75h). The site never comes back: it sets the
+interrupt's way back to one of those three places, or the routine's end
+(7AE7Eh), before any far call, then:
+- `tu_cell` gives AD&D's cell from the hit dice and level (one run, `tu_cells`
+  20 19 16 13 10 7 4 T T D D then D\*, a row starting a column later each:
+  dicelog's `turn_cell` is the same);
+- a number: a d20 from the game's rand() (`rand_die`, as `th_hit`'s), at or
+  over it turned; turned (a number made, or T): 3d4 rounds, and Afraid (17)
+  added through 598:3Eh (76442h, the add below 598:39h's immunity check
+  5A8:43h, which refuses fear to race 9: 7BE20h), arguments (target, priest,
+  190, 17, dword rounds x 60, 0), in a frame the overlay manager can fix up (as
+  `NS_BLOW`'s), out through `ovr_back`;
+- under the number: the failure's way, and the priest's bit (combatants 0-7) set
+  in `tu_failed` (a byte a target, combatants under `TU_MAX`, 64), which a later
+  try by the same priest finds first: the routine's end, no roll. `tu_failed`
+  lies after `swept` and is cleared with it at a fight's first round
+  (`acid_round`, DS:55Ah set), and by a turning out of a fight (`pp_fighting`);
+- D: the destroy; D\*: the destroy, `tu_more` = 2d4 and `tu_kind` the sheet: the
+  next undead of that sheet this cast (`th_cast` clears `tu_more`) is destroyed
+  with no roll, counting down; "---": the end, no roll.
+- Recorded as `KIND_TURN` (13): the d20 (0 none), and a frame of the priest,
+  target, cell (0 when not looked up), level, hit dice, outcome (0 not turned,
+  1 turned, 2 destroyed, 3 D\*, 4 one of a D\*'s more, 5 refused, 6 no chance),
+  rounds and the D\*'s count left (dicelog's `_turn_manual`; `rec_frame`, which
+  `th_hit` uses too, pushes such a frame and records it).
+
+The game's d20 at 7AE4Dh is never reached with the switch on, so the old dice
+log line (`TURN_ROLL_RETURN`, `_overlay_turn`) is only the switch-off one.
+
+**Minute Meteors** (33): `meteors_count` makes its record's +0 06h 16h (bits
+2-7 the casts a cast makes, as Magical Stone's 0Eh is three: five), and
+`meteors_damage` its damage +1Ch..1Eh 20 01 04 (1d4 a level) 00 09 04 (1d4).
+Each globe is then its own cast (CAST_SITE, so each rolls to hit with Spells roll
+to hit) and landing.
+
+**Flame Arrow** (28): `flame_arrow_damage` makes its damage a0 05 06 (5d6 a 5
+levels) 00 29 06 (5d6), and `flame_arrow_count` puts DSCLOG's `FLAME_SITE`
+(`flame_site`) over `mov dl,[es:bx]` (7567Fh, 3 bytes) in the cast's tail
+(7566Eh-756A2h, in 7511Bh: `[bp+0Ah]` the spell, `[bp+0Ch]` the cast's level,
+`[bp-10h]` the record, `[bp+16h]` the caller's counter), which compares the
+counter with the count less 1 and answers 1 for one more: for spell 28 the byte
+is made (level / 5, at least 1) << 2. No attack roll (neither the manual nor
+AD&D gives one), no save (the manual's None).
+
+**Who casts again.** Only the party's cast from the USE screen (84621h,
+counter DS:942Ch) looks at the answer (another aim, 8463Fh). The other callers
+of 598:89h pass a counter of their own and ignore it: a monster's (5A3BAh,
+5AA39h, and its wizard spells go through 500:4Dh, not this tail at all), an
+item's (6C901h, 6F8A7h), a scroll's (8B954h), a weapon's spell on a hit
+(58BF2h), 55CA5h, 88677h and 893E2h. So a monster's Magical Stone, Minute
+Meteors or Flame Arrow lands once.
+
+Tests: test_dsclog's `test_turn_undead_manual` (the cells, each outcome and
+way, the refusal, D\*'s count, the Afraid call's arguments), `test_flame_arrow_count`,
+`test_spell_to_hit` (Minute Meteors' +2); test_dicelog's `test_turn_undead_manual`,
+`test_turn_cells`, `test_meteors_to_hit`; test_manual_spells' `test_records`;
+test_spellbook's `test_casts_a_cast`.
 
 ## Weapon specialization
 

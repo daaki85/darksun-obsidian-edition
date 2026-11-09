@@ -395,13 +395,15 @@ class Viewer:
                         "level, Stinking Cloud "
                         "1d4+1 rounds; Chaos saved against by INT 21+ or 4-; Free "
                         "Action frees the Stuck; Color Spray saved against only by those of more levels than "
-                        "the caster, Hold Undead only on undead of no more; a classless monster's hit dice its "
+                        "the caster, Hold Undead only on undead of no more; Minute Meteors five globes of 1d4, "
+                        "Flame Arrow a 5d6 bolt for every five levels; Turn Undead by AD&D's table (turned undead "
+                        "flee, a failed priest can't try again that fight); a classless monster's hit dice its "
                         "level for saves; from the next start", variable=self.spells_manual,
                         command=self._options_changed).pack(anchor="w")
         # missile and hostile touch spells roll to hit (gamepatch.SPELL_TO_HIT)
         self.spell_to_hit = tk.BooleanVar(value=settings.get("spell_to_hit", True) is not False)
         ttk.Checkbutton(rule_groups["magic"], text="Spells roll to hit: Acid Arrow, Turn Pebble to Boulder, "
-                        "Magical Stone, Condense and a monster's spines, and touch spells on a foe (Chill Touch, "
+                        "Magical Stone, Condense, Minute Meteors (+2) and a monster's spines, and touch spells on a foe (Chill Touch, "
                         "Shocking Grasp, Vampiric Touch, the Cause spells, Poison), against the target's AC; "
                         "from the next start", variable=self.spell_to_hit,
                         command=self._options_changed).pack(anchor="w")

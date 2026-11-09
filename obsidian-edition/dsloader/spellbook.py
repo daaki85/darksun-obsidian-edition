@@ -67,6 +67,19 @@ class SpellInfo(NamedTuple):
         return out
 
 
+FLAME_ARROW_SPELL = 28  # (with the spells as the manual has them: a bolt of 5d6 for every five levels)
+
+
+def casts_text(spell: int, rec: bytes, rule) -> str:
+    """How many times a cast lands, from the record's +0 (bits 2-7: Magical Stone's three throws,
+    Minute Meteors' five globes as the manual has them), each its own aim and damage; Flame Arrow's
+    one for every five caster levels with its manual's fixed 5d6 (DSCLOG's FLAME_SITE)."""
+    if spell == FLAME_ARROW_SPELL and not rule.step_dice and rule.base_dice:
+        return ", a bolt for every 5 caster levels (at least one), each aimed and rolled"
+    count = (rec[0] >> 2) & 0x3F if rec else 1
+    return f", {count} times a cast, each aimed and rolled" if count > 1 else ""
+
+
 def damage_text(gd: GameData, spell: int, rec: bytes) -> str:
     rule = gd.spell_damage(spell)
     if rule is None or (rule.sides <= 1 and not rule.step_bonus):
@@ -86,6 +99,7 @@ def damage_text(gd: GameData, spell: int, rec: bytes) -> str:
     text = " + ".join(parts)
     if step:
         text += f", counting at most level {SPELL_LEVEL_CAP}"
+    text += casts_text(spell, rec, rule)
     kinds = struct.unpack_from("<H", rec, 0x1A)[0]
     names = [name for bit, name in DAMAGE_KINDS if kinds & bit]
     if names:
