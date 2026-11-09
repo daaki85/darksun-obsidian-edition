@@ -15,11 +15,15 @@ Steps, from `loadsave.sh pens-after-arena` (nobody wears boots there):
 - Cilla's portrait (member 3, 22,160): the thief rows read PICK 70, LOCK 55, TRAP 45, **SLNT 57**,
   HIDE 50, CLMB 87 (logs/img/2026-11-09-silent-slnt.png).
 - **The glow**: `sprites.worn(gd, 0)` gave `'boots': (145, 5, 'magic', 0)` (before the fix it had no
-  'magic'). Gerakis's figure showed no boots at all, in any colour, so no glint either: his figure's
-  feet aren't where `draw_boots` looks (not looked into further; his plain gear isn't drawn on the
-  feet either). Moved through the inventory (click the item, the other portrait, the feet place),
-  the boots went to Cilla: her feet are drawn red and a few pixels at them change from frame to
-  frame, the glint (logs/img/2026-11-09-silent-glint.png, eight grabs 0.2 s apart).
+  'magic'). **Gerakis's boots are drawn** (corrected the same day): the first shots misread him (a
+  red patch at his feet taken for the pointer), and after a later memory change his picture hadn't
+  been reloaded yet. Checked: his dressed pictures fit their room (12,303 of 22,826 bytes walking);
+  the Loader's copy, the game's store (slot 61) and, after a walk, the game's memory all held the
+  new outfit; with the pointer moved off, eight grabs show red boots and a glint changing at his
+  feet (logs/img/2026-11-09-silent-gerakis.png). His back foot, raised above the lowest third of
+  the legs that `draw_boots` colours, stays plain in some frames. Cilla's boots too
+  (logs/img/2026-11-09-silent-glint.png): moved to her through the inventory (click the item, the
+  other portrait, the feet place).
 - Doc pictures retaken: plain Leather Boots (the game's first plain type-68 record) and the Boots
   of Elvenkind (worldgear.ELVEN_BOOTS) put on item 25 in memory, each box shot and cropped
   112x66 at +183,+95, scaled 200%, into docs/gear-boxes.png's middle panel and

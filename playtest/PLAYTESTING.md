@@ -518,8 +518,12 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
 - **Checking a figure's glow** (2026-11-09): `sprites.worn(gd, MEMBER)` (through live.py) gives what
   the Loader dresses it in, `'magic'` on a magic piece; then eight `import -window` grabs 0.2 s apart,
   cropped round the piece and montaged: a glint is a few pixels changing between grabs (the pointer's
-  animation changes pixels too: keep it away). Gerakis's figure (pens-after-arena) showed no boots
-  at all, plain or magic; Cilla's showed them. `memberpos.py N` out of a fight gave the leader's
+  animation changes pixels too: move it off with `click.py 280 180 none` first: a red patch at
+  Gerakis's feet was taken for the pointer and his boots for missing). **An outfit changed in memory
+  on the map shows only once the game draws the figure again**: the Loader writes the store in place
+  when the slot's picture isn't in memory (flags 1: stored; 3: stored and in memory), and the game
+  reads it back at its next draw (a walk). Compare the slot's memory (its far pointer) with the
+  Loader's copy (`dos/SEGOBJEX.GFF`) before calling a figure undressed. `memberpos.py N` out of a fight gave the leader's
   place for every member: find the figure on a shot.
 - **A spell's description box** (2026-11-02): U, a member's portrait (Cermak 66,108), then
   right-click a spell's icon (from 177,59, about 14 apart). Seven lines fill the box: an eighth
