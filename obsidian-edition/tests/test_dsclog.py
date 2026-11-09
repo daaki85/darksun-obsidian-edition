@@ -2012,6 +2012,41 @@ class SpecializeTests(unittest.TestCase):
                 self.assertEqual(mu.reg_read(r.UC_X86_REG_SP), 0x7F6)
                 self.assertEqual(mu.reg_read(r.UC_X86_REG_AX) & 0xFF, want)
 
+    def test_item_box_material(self):
+        """An item box's "Hit -N" (PROBE_ITEM_BOX's IB_MATERIAL: ES:BX the type, [BP+6] the item): a
+        weapon (dice at +0Dh) with no plus (the item's +14h), its type not marked 80h (clubs, staves)
+        nor 40h (no material), of wood -3, bone -1, stone or obsidian -2; else none (DX 0)."""
+        mu = self.mu
+        image = load_image()
+        at = image.find(bytes.fromhex("31d226807f0d00"))  # (xor dx,dx / cmp byte [es:bx+0Dh],0)
+        self.assertGreater(at, 0)
+        items = 0x3000  # (DS:165Dh's far pointer to the items, 15h bytes each)
+        mu.mem_write(self.DS * 16 + 0x165D, struct.pack("<HH", 0, items))
+        mu.mem_write(TSR * 16 + 0xFFF0, b"\xf4")  # (the way back: a HLT)
+        for material, dice, plus, want in ((1, 1, 0, "Hit -1"), (0, 1, 0, "Hit -3"), (2, 2, 0, "Hit -2"),
+                                           (3, 1, 0, "Hit -2"), (4, 1, 0, None), (5, 1, 0, None),
+                                           (0x81, 1, 0, None), (0x40, 1, 0, None), (1, 0, 0, None),
+                                           (1, 1, 1, None)):
+            with self.subTest(material=material, dice=dice, plus=plus):
+                typ = bytearray(0x14)
+                typ[8], typ[0x0D] = material, dice
+                mu.mem_write(self.SHEETS * 16, bytes(typ))
+                item = bytearray(0x15)
+                item[0x14] = plus
+                mu.mem_write(items * 16 + 2 * 0x15, bytes(item))
+                mu.mem_write(SS * 16 + BP + 6, struct.pack("<H", 2))
+                mu.mem_write(SS * 16 + 0x7F4, struct.pack("<H", 0xFFF0))
+                for name, value in dict(cs=TSR, ds=self.DS, ss=SS, esp=0x7F4, ebp=BP, eflags=IF | 2, eax=0x1234,
+                                        ebx=0, es=self.SHEETS).items():
+                    mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+                mu.emu_start(TSR * 16 + at, 0, count=200)
+                self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_IP, r.UC_X86_REG_SP, r.UC_X86_REG_AX,
+                                                           r.UC_X86_REG_BX, r.UC_X86_REG_ES)],
+                                 [0xFFF1, 0x7F6, 0x1234, 0, self.SHEETS])
+                dx = mu.reg_read(r.UC_X86_REG_DX)
+                got = bytes(mu.mem_read(TSR * 16 + dx, 8)).split(b"\0")[0].decode() if dx else None
+                self.assertEqual(got, want)
+
     def test_off_hand_attacks(self):
         """With the rule for two weapons (AD&D's), a weapon in the off hand (the item at [BP+12h], in
         slot 10: the helper's item 3) attacks once a round, the extra attacks the main hand's; a

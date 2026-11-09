@@ -40,9 +40,14 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 
 ## Next pull request (not opened yet)
 
-DSCLOG.EXE 65,344 bytes (image 65,312), 3,104 of its segment spare.
+DSCLOG.EXE 65,424 bytes (image 65,392), 3,024 of its segment spare.
 
 **Changed**
+- **Item boxes show a weaker material's to-hit** under a plain weapon's damage: `Hit -3` wood,
+  `Hit -1` bone, `Hit -2` stone and obsidian, as the game's attack takes it (the damage line already
+  had the material's damage off). Not with a plus, nor for the game's exempt weapons (clubs, staves,
+  the chatkcha: type +08h 80h), nor metal (DSCLOG's IB_MATERIAL, always on). Seen in DOSBox:
+  playtest/logs/2026-11-09-hit-line.md.
 - **Spells and psionics as the manual describes them** (a new rule change, on by default, from the
   next start: `spells_manual`, `gamepatch.SPELLS_MANUAL`; the spell records and DSCLOG sites; from
   reports/spells-against-the-manual.md, which now says what was done with each of its points):
@@ -209,8 +214,8 @@ DSCLOG.EXE 65,344 bytes (image 65,312), 3,104 of its segment spare.
   see-through, the ring, the panel's colours, labels, to-hit, Turn Undead, item names and types,
   next-level XP, the Effects screen, Look, creation, a shop). With the manual's spells, the
   monsters, resting and dual-classing, and the audit's fixes (their per-fight tables moved to the
-  far block), the helper ends the pull request with 3,104 bytes of its segment spare, 102 bytes
-  free in the far block (the HMA) and 382 paragraphs of upper memory spare.
+  far block), the helper ends the pull request with 3,024 bytes of its segment spare, 102 bytes
+  free in the far block (the HMA) and 377 paragraphs of upper memory spare.
 - The helper counts the game's page flips (`flip_count`, header +1832), for a frame rate:
   `playtest/framerate.py` reads it beside steady pace's frames left undrawn.
 

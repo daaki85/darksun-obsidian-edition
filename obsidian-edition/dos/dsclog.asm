@@ -25629,7 +25629,8 @@ probe_hit:
 ; next row, with the routine's own text routine, as it draws AC BONUS; an item that casts a spell
 ; with charges (a wand, a ring, a necklace: its spell byte, +0Fh, a spell's + 1 below ITEM_SPECIAL;
 ; its charges, +0Eh, not 0; not fruit, eaten whole; not scenery, a door) its charges left there
-; ("Charges: 50"; the item [BP+6]); then the push, as the code would have.
+; ("Charges: 50"; the item [BP+6]); else a plain weapon's weaker material, its to-hit ("Hit -2" for
+; obsidian: IB_MATERIAL, always); then the push, as the code would have.
 IB_DRAW   equ 0x8C19A - 0x8C1A3 ; (DSUN.EXE) the text routine's far address in the call before,
                                 ;   less the way back
 TYPES_PTR equ 0x1669            ; DS: far pointer to the item types, 20 bytes each
@@ -25652,6 +25653,9 @@ probe_item_box:
         imul ax, si, 20
         add bx, ax
         call ib_charges                 ; (DX the line, or 0)
+        or dx, dx
+        jnz .draw
+        call ib_material                ; (a weaker material's to-hit: DX the line, or 0)
         or dx, dx
         jnz .draw
         cmp word [cs:skills_on], 0
@@ -25770,6 +25774,42 @@ ib_charges:
         pop ax
 .ret:   ret
 
+; IB_MATERIAL: DX IB_HIT_TEXT with the to-hit penalty of PROBE_ITEM_BOX's item ([BP+6]; ES:BX its
+; type's record) if it is a weapon (its type's dice, +0Dh, not 0) of a weaker material with no plus
+; (the item's +14h): the type not marked 80h (clubs, staves) nor 40h (no material), its material (+8, low nibble) wood -3,
+; bone -1, stone or obsidian -2, as the game's attack has it (Dark Sun's; game.MATERIAL_TO_HIT). The
+; damage line above already counts the material's damage. Else 0. DS the game's; others kept.
+ib_material:
+        xor dx, dx
+        cmp byte [es:bx + 0x0D], 0
+        je .ret
+        push ax
+        push bx
+        push es
+        mov al, [es:bx + 8]
+        test al, 0x80 | 0x40
+        jnz .out                        ; (a club's, a staff's; 40h: no material)
+        and al, 0x0F
+        cmp al, 3
+        ja .out                         ; (metal, leather)
+        les bx, [0x165D]                ; (the items, 15h bytes each)
+        imul dx, [bp + 6], 0x15
+        add bx, dx
+        xor dx, dx
+        cmp byte [es:bx + 0x14], 0
+        jne .out                        ; (a plus: none)
+        movzx bx, al
+        mov al, [cs:ib_hit_by + bx]
+        mov [cs:ib_hit_num], al
+        mov dx, ib_hit_text
+.out:   pop es
+        pop bx
+        pop ax
+.ret:   ret
+
+ib_hit_by  db '3', '1', '2', '2'      ; (wood, bone, stone, obsidian)
+ib_hit_text db 'Hit -'
+ib_hit_num  db '0', 0
 ib_draw    dd 0
 ib_charges_text db 'Charges: '
 ib_charges_num  db '000', 0

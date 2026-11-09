@@ -331,7 +331,9 @@ sword" and the like.
 weapon of anything else worse: wood −3 to hit and −2 damage, bone −1 and −1,
 stone and obsidian −2 and −1. A weapon with a plus has no penalty, nor do clubs
 and staves, which are meant to be wooden. The inventory, View Character and the
-dice log all count it.
+dice log all count it, and the weapon's item box (right-click it) shows the
+to-hit under its damage: "Hit -1" for bone, the damage line already less the
+material's.
 
 ### Fighter
 

@@ -402,6 +402,14 @@ boots' or belt's box shows what it adds to thief skills (with
 
 ![The Wand of Missiles' item box in the game: 65000 coins, "Wand of Missiles", "Charges: 50"](docs/wand-charges.png)
 
+A plain weapon of a weaker material shows its to-hit penalty there: "Hit -3"
+for wood, "Hit -1" for bone, "Hit -2" for stone and obsidian (Dark Sun's, as the
+game's attack takes it; the damage line above already has the material's
+damage off). Not for a weapon with a plus, nor for those the game spares
+(clubs, staves, the chatkcha), nor for metal.
+
+![A Bone Long Sword's item box in the game: 45 coins, "Bone Long Sword", "1D8-1", "Hit -1"](docs/hit-line-box.png)
+
 How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#charges-in-item-boxes).
 
 ### The Effects screen

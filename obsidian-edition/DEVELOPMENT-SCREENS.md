@@ -467,6 +467,12 @@ spell byte is below F9h (from there the game's own effects: a belt's STR, a
 ring's AC...) and the charges aren't 0, but not for fruit (type 60, eaten
 whole) nor scenery (a type whose `+08h` has both 20h and 40h: a door, a
 mirror, a crank), where those bytes hold something else (`TYPE_SCENERY`).
+With no charges to show, `IB_MATERIAL` (always on) draws `Hit -N` there for a
+weapon (its type's dice count, `+0Dh`, not 0) with no plus (the item's `+14h`)
+whose type's `+08h` has neither 80h (the game's own exemption: clubs, staves,
+the chatkcha) nor 40h (no material), of wood (`-3`), bone (`-1`), stone or
+obsidian (`-2`): `game.MATERIAL_TO_HIT`, the attack's own (the box's damage line
+already has the material's damage off).
 
 ## No manual check
 
