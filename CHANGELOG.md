@@ -69,6 +69,13 @@ DSCLOG.EXE 66,752 bytes (image 66,720), 1,728 of its segment spare.
   tangle's save (KIND_MANUAL 10). Seen in DOSBox: two swings a round at 14+ and 16+ for Lex at DEX
   10, the tangle's saves made and failed, a tangled Templar's next turn gone
   (playtest/logs/2026-11-09-cahulaks.md).
+- **The creatures' table** (obsidian-edition/CREATURES.md, made by `dsloader.doccreatures` from the
+  game's data): every creature the game defines (189, one a name and race, the default party left
+  out), its figure as the game draws it standing (docs/creatures/; the fighting picture's where that
+  shows much more: the Bulette and the Silt Horror come up from the ground to fight) and whether the
+  cahulaks can tangle it (`cahulaks.why_not`). Also kept from being tangled, the user's call: the
+  spiders (Dark Spider, Spider Mage, the "-tunk!" princes), the Sand Howler, Screamer Beetle, Xorn,
+  Strine, Daggoran, Magera and Alita (`cahulaks.UNTANGLED`).
 - **Cahulaks drawn as a pair**: a short haft and a hooked four-bladed head in each hand (both at
   the hips walking), not one hook in one hand (spritegear's CAHULAKS shape; the left hand given the
   right's). And with half-giants' two-handed weapons in one hand, the cahulaks still take both

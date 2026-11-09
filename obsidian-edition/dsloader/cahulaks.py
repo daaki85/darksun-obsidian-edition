@@ -25,7 +25,26 @@ SHAPELESS = frozenset((
     "Lesser Water Ele", "Lsr Earth Elem", "Lsr Fire Elem", "Dust Devil", "Insect Swarm",
     "Evard's Tentacle", "Dagolar Slime", "Tyrian Slime", "Shadow",
 ))
-BIG_NAMES = LARGE | SHAPELESS
+# ... and those the mod keeps from being tangled whatever their size: the spiders (the Dark Spider,
+# the Spider Mage and the "-tunk!" princes of their kind) and other beasts of Athas
+UNTANGLED = frozenset((
+    "Sand Howler", "Screamer Beetle", "Xorn", "Strine", "Daggoran", "Magera", "Alita", "Dark Spider",
+    "Spider Mage", "Cheee-smak-tunk!", "Churr-te-tunk!", "Click-tunk!",
+))
+BIG_NAMES = LARGE | SHAPELESS | UNTANGLED
+
+
+def why_not(name: str, race: int = 0) -> str:
+    """Why a creature (NAME, its sheet's RACE) can't be tangled, or "" if it can."""
+    if race == 5:  # (game.RACE_HALF_GIANT: DSCLOG's own test)
+        return "too big (a half-giant)"
+    if name in LARGE:
+        return "too big"
+    if name in SHAPELESS:
+        return "nothing to tangle"
+    if name in UNTANGLED:
+        return "can't be tangled"
+    return ""
 
 
 def big_table(gd) -> bytes:

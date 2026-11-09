@@ -913,10 +913,14 @@ rules have them** ticked (on unless unticked):
   Mountain Stalker, the Otyugh, the Wyvern, the Djinn, the slaads, the Vrock,
   the Dune Reaper, the Animated Statue, the mastyrials, the Styr and the Fire
   Eel), nor anything with no body a rope could hold (elementals, the Dust
-  Devil, the Insect Swarm, Evard's Tentacle, the slimes and the Shadow).
+  Devil, the Insect Swarm, Evard's Tentacle, the slimes and the Shadow), nor
+  the spiders (the Dark Spider, the Spider Mage and the "-tunk!" princes), the
+  Sand Howler, the Screamer Beetle, the Xorn, the Strine, the Daggoran, the
+  Magera and Alita.
 
 The game keeps no size for its creatures, so the list is the mod's, from
-AD&D's sizes.
+AD&D's sizes. **[The creatures' table](CREATURES.md)** shows every creature
+of the game with its figure and whether the cahulaks can tangle it.
 
 ```
 Lex attacks Templar with Bone Cahulaks (1d6): d20 = 16, needs 16+ (25%), hits AC 4, target AC 4 -> HIT

@@ -15,7 +15,7 @@ which loads the mod with your options.
   wrong](#when-something-goes-wrong).
 - **Everything in detail:** the contents below, the [features and
   rules](FEATURES.md) (what the game shows, every rule and addition), the [kits](KITS.md), the [dice log's lines](DICE-LOG.md), the
-  [items](ITEMS.md) (spoilers),
+  [items](ITEMS.md) (spoilers), the [creatures](CREATURES.md) (every one, and whether cahulaks can tangle it),
   [how the original game works](HOW-THE-GAME-WORKS.md), from its code, the
   [patch
   notes](https://github.com/daaki85/darksun-obsidian-edition/blob/main/PATCH-NOTES.md)
