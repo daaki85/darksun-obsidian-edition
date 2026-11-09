@@ -114,8 +114,10 @@ With **A combat log in the game** ticked on the Options tab (the default),
 **L** on the map shows the [dice log](README.md#the-dice-log)'s lines in the game
 itself, and **L** again hides them: in a fight or out of one, whenever you
 want to read back. It doesn't open by itself, and stays as you left it (from
-one game to the next too). The lines are in the game's own font, in the
-Loader's colours for each kind of line (hits green, misses grey, damage
+one game to the next too). The lines are in a small font of the Loader's, 7
+pixels a line (the game's own is 9, so 8 lines fit where 6 did), with the
+game's drop shadow; the header, buttons and filters are in the game's font. The
+lines are in the Loader's colours for each kind of line (hits green, misses grey, damage
 amber, saving throws blue), the party's names in their colours and the
 monsters' in red, a filled pip before a party member's line and a hollow one
 before a monster's. In a fight its top line says the round, who is acting
@@ -463,7 +465,10 @@ are here: [characters](#characters), [weapons and armour](#weapons-and-armour)
 and [magic](#magic). All are on by default,
 and they take effect in games started from the Loader or its `.bat` files
 (**Play Dark Sun (in-game rolls)** uses the Options as last set). Untick one
-and the game's own rule is back at once.
+and the game's own rule is back at once, but for two that change the game's
+own copy as the Loader writes it, and so count from the next start: [spells and
+psionics as the manual describes them](#spells-and-psionics-as-the-manual-describes-them)
+and [spells roll to hit](#spells-roll-to-hit).
 [How the game works](HOW-THE-GAME-WORKS.md) has what the game does without them.
 
 ### Characters
@@ -1067,8 +1072,10 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#enlarges-dice).
 
 #### Spells and psionics as the manual describes them
 
-Twenty-five spells and two psionic powers whose saves, times, damage or effects
-part from the manual (pp. 29-44), set as the manual has them, a priest's Turn
+Twenty-four of the manual's spells and two psionic powers whose saves, times,
+damage or effects part from the manual (pp. 29-44), set as the manual has them
+(and the mod's Cat's Grace by the Tome of Magic's dice; the mod's Heal cures
+Feeblemind), a priest's Turn
 Undead by AD&D's turning table, a monster's level for its saves, and the saving
 throw's "can't save" made to work, and seven monsters' powers as the manual
 describes them (below). The box takes effect from the next start (it
@@ -1152,13 +1159,12 @@ compares its total with the number needed as unsigned bytes, so the −100 its
 save modifiers give for "can't save" (Chaos for all but warriors, Cloudkill on
 creatures of 6th level or lower, Scare below 6th level, and the mod's Color
 Spray rule) makes a total such as −85, read as 171: always a save. Seen in
-DOSBox (2026-11-09): Arena Guards "unable to save" took half Cloudkill's damage,
-and a Guard "unable to save" against Scare was never Afraid. With the box ticked
-the compare is signed: "can't save" fails (a natural 20 still saves, as the game
-checks it first). Unticked, the dice log says what the game does:
-`-100 meant "cannot save", but the game compares unsigned and reads it as 171 -> saved`.
+DOSBox: Arena Guards "unable to save" took half Cloudkill's damage, and a Guard
+"unable to save" against Scare was never Afraid. The compare is now signed,
+whether the box is ticked or not (a bug fix, always on): "can't save" fails (a
+natural 20 still saves, as the game checks it first).
 
-**Group 3 in detail** (2026-11-09):
+**In more detail:**
 
 - **Fire Shield**: +2 on its caster's saves against spells of fire or cold
   (`+2 Fire Shield` in the log's save line); the half damage from them and the
@@ -1211,7 +1217,7 @@ checks it first). Unticked, the dice log says what the game does:
 
 How it is done: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#spells-and-psionics-as-the-manual-group-3).
 
-**The monsters as the manual describes them** (the same box, 2026-11-09). Where
+**The monsters as the manual describes them** (the same box). Where
 the manual (pp. 33-52) gives a monster a power its record hasn't, or the record
 a power the manual hasn't:
 
