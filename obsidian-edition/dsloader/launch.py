@@ -479,7 +479,8 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
     try:
         resources = _find_file(game_dir, icons.RESOURCE_FILE)
         if resources:
-            icons.write_resources(resources, os.path.join(DOS_DIR, icons.RESOURCE_FILE), on["roll_store"])
+            icons.write_resources(resources, os.path.join(DOS_DIR, icons.RESOURCE_FILE), on["roll_store"],
+                                  on["spells_manual"])
             resources_ok = True
     except (gff.GffError, OSError, KeyError, struct.error, ValueError, IndexError):
         pass  # no Cat's Grace icon: Flaming Sphere's

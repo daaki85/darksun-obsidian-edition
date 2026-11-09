@@ -367,6 +367,35 @@ def duration_bonus(spell: int, rec: bytes) -> int:
     return 1 if spell == STINKING_CLOUD and len(rec) > 4 and rec[4] == STINKING_CLOUD_MANUAL_DICE else 0
 
 
+# With the spells as the manual has them (gamepatch.SPELLS_MANUAL), group 3 (DSCLOG's BLUR_SITE ...
+# CELL_SITE): Fire Shield's +2 on saves against fire and cold, Blur's +1; Strength's and Cat's
+# Grace's dice by class (MANUAL_DICE: each class's sides for Strength, then Cat's Grace; a
+# multiclass character's best; none, 1d6); Lower Resistance's 30 + its level; Biofeedback's 2 off a
+# blow; Cloudkill's bands; Cell Adjustment's 1d4
+FIRE_SHIELD_EFFECT, BLUR_EFFECT, BIOFEEDBACK_EFFECT, LOW_RESISTANCE_EFFECT = 20, 55, 4, 31
+FIRE_SHIELD_SAVE, BLUR_SAVE, BIOFEEDBACK_LESS, LOWER_RESISTANCE_BASE = 2, 1, 2, 30
+CLOUD_DIES, CLOUD_SAVES = 4, 5  # (under 4 levels no save; to 5 a failed save kills)
+MANUAL_DICE = {**{c: (6, 4) for c in range(1, 9)}, 9: (8, 6), 10: (8, 6), 11: (4, 6), 12: (6, 6),
+               **{c: (8, 6) for c in range(13, 17)}, 17: (6, 8)}
+MANUAL_CLASS_WORDS = {**{c: "cleric" for c in range(1, 5)}, **{c: "druid" for c in range(5, 9)}, 9: "fighter",
+                      10: "gladiator", 11: "preserver", 12: "psionicist", **{c: "ranger" for c in range(13, 17)},
+                      17: "thief"}
+
+
+def manual_die(spell: int, sheet: bytes) -> Tuple[int, str]:
+    """The die Strength (STRENGTH_SPELL) or Cat's Grace (GRACE_SPELL) rolls on the creature of SHEET
+    with the spells as the manual has them (DSCLOG's STRENGTH_SITE), and the class it is for: a
+    multiclass character's best die (its first class with it), 6 and "" for a creature with no class
+    (or any other spell: Adrenalin Control's)."""
+    which = {STRENGTH_SPELL: 0, GRACE_SPELL: 1}.get(spell)
+    best, why = 0, ""
+    if which is not None and len(sheet) > SHEET_CLASSES + 2:
+        for cls in sheet[SHEET_CLASSES:SHEET_CLASSES + 3]:
+            if cls in MANUAL_DICE and MANUAL_DICE[cls][which] > best:
+                best, why = MANUAL_DICE[cls][which], MANUAL_CLASS_WORDS[cls]
+    return (best, why) if best else (6, "")
+
+
 def rules_from_settings(settings: dict) -> int:
     return sum(bit for key, bit in RULE_SETTINGS
                if settings.get(key, settings.get(OLD_SETTING_NAMES.get(key, key), True)))
@@ -523,7 +552,7 @@ EFFECT_NAMES = {
 
 # What effects do, where the game's own code shows it (to-hit, AC and saving throws)
 EFFECT_RULES = {
-    2: "armour AC at most 6", 4: "AC -1", 7: "+1 to hit, +1 on saves", 8: "AC 4 worse",
+    2: "armour AC at most 6", 4: "AC -1, and 2 less damage from each blow and other crushing, edged or pointed damage", 7: "+1 to hit, +1 on saves", 8: "AC 4 worse",
     12: "-1 to hit", 16: "+10% melee damage per level of the spell",
     36: "+3 on saves against cold spells, half damage from them",
     38: "AC -2 and +2 on saves against evil",
@@ -550,7 +579,7 @@ EFFECT_RULES = {
     11: "each turn a d10: 1 runs off, 2-6 does nothing, 7-9 fights for a random side, 10 acts normally",
     17: "the computer controls it; can't attack or cast spells (undead are immune; Bravery stops it)",
     18: "whoever hits the wearer has Cause Fear cast on them (once)",
-    19: "can't cast spells",
+    19: "INT and WIS 3 while it lasts; can't cast spells",
     21: "can't be Paralyzed, Slowed or Stuck",
     # attacking uses a charge, and only effects with charges end that way: Invisibility has
     # one, Improved Invisibility (timed) has none
@@ -585,6 +614,26 @@ EFFECT_RULES[8] += "; can't cast spells that need sight"
 EFFECT_RULES[47] += ", half movement and attacks, loses every other turn; ends Haste (Free Action and " \
                     "Protection from Paralysis prevent it)"
 EFFECT_RULES[22] = "double movement and attacks; ends Slow"
+# ... and as they are with the spells and psionics as the manual has them (gamepatch.SPELLS_MANUAL,
+# group 3: DSCLOG's BLUR_SITE ... CELL_SITE, GR_SHADOWED, PSI_SITE)
+MANUAL_EFFECT_RULES = {
+    4: "AC -1, and 2 less damage from each blow and other crushing, edged or pointed damage (at least 1)",
+    19: "INT and WIS 3 while it lasts; can't cast spells or use psionic powers; Heal cures it",
+    20: EFFECT_RULES[20] + ", +2 on saves against fire and cold",
+    31: "magic resistance 30% + 1% a level of the casting lower",
+    55: "attackers -2 to hit, +1 on saves",
+    66: "STR + 1d6, at most 24; only the bigger of it and Strength counts",
+    67: "STR + 1d8 (warriors), 1d6 (priests, rogues, psionicists) or 1d4 (wizards), at most 24; only the "
+        "biggest of Strength and Adrenalin Control counts",
+    GRACE_EFFECT: "DEX + 1d8 (rogues), 1d6 (warriors, wizards, psionicists) or 1d4 (priests), at most 24; only "
+                  "the biggest counts",
+}
+
+
+def effect_rule(effect: int, manual: bool) -> str:
+    """What effect EFFECT does (EFFECT_RULES; MANUAL: with the spells as the manual has them,
+    MANUAL_EFFECT_RULES'), "" for one not listed."""
+    return (MANUAL_EFFECT_RULES.get(effect) if manual else None) or EFFECT_RULES.get(effect, "")
 # The strength damage adjustments the game adds after rolling melee damage: its own table
 # (STR_DAMAGE_TABLE), which gives STR 18 +4 (AD&D's 18/76-90; Dark Sun has no exceptional
 # strength); these if it can't be read. Seen in play for STR 17, 18, 19, 20, 22 and 24.
@@ -1440,6 +1489,26 @@ class GameData:
         rec = self.spell_record(spell)
         return len(rec) >= SPELL_SIZE and bool(struct.unpack_from("<H", rec, 0x11)[0] & MIND_AFFECTING)
 
+    def spells_manual(self) -> bool:
+        """Whether the game's copy has the spells as the manual describes them (gamepatch.SPELLS_MANUAL),
+        told by Stinking Cloud's record's dice made 1d4 (as DSCLOG's MANUAL_ON tells it)."""
+        try:
+            return duration_bonus(STINKING_CLOUD, self.spell_record(STINKING_CLOUD)) == 1
+        except (struct.error, IndexError, ValueError, OSError):
+            return False
+
+    def effect_amount(self, owner: int, effect: int) -> Optional[int]:
+        """The amount (+9 of its entry: Strength's roll, Lower Resistance's cast level with the
+        spells as the manual has them) of combatant OWNER's first EFFECT, None if it has none."""
+        count = self._word(EFFECT_COUNT)
+        if not 0 <= count <= 400:
+            return None
+        data = self.guest.read((self.load_seg + EFFECTS_SEG) * 16 + EFFECTS_OFF, count * 10)
+        for i in range(count):
+            if struct.unpack_from("<h", data, i * 10)[0] == owner and data[i * 10 + 6] == effect:
+                return struct.unpack_from("b", data, i * 10 + 9)[0]
+        return None
+
     def save_modifiers(self, target: int, caster: int, spell: int, save: int) -> List[Tuple[int, str]]:
         """What the game adds to a saving throw's d20 (besides the spell's own modifier), as
         [(amount, why), ...]: the target's rings (with the patched game), effects, class, race
@@ -1483,6 +1552,9 @@ class GameData:
             out.append((3, EFFECT_NAMES[EFFECT_SPIRIT_ARMOR]))
         if EFFECT_BARKSKIN in mine:
             out.append((1, EFFECT_NAMES[EFFECT_BARKSKIN]))
+        manual = (BLUR_EFFECT in mine or FIRE_SHIELD_EFFECT in mine) and self.spells_manual()
+        if manual and BLUR_EFFECT in mine:  # (DSCLOG's BLUR_SITE)
+            out.append((BLUR_SAVE, EFFECT_NAMES[BLUR_EFFECT]))
         if EFFECT_BLESSED in mine:
             out.append((1, EFFECT_NAMES[EFFECT_BLESSED]))
         if category & FEAR_CATEGORY and EFFECT_BRAVE in mine:
@@ -1493,6 +1565,8 @@ class GameData:
                                  (0x02, EFFECT_PROT_FIRE, 3)):
             if kinds & bit and eff in mine:
                 out.append((amount, EFFECT_NAMES[eff]))
+        if manual and kinds & 0x06 and FIRE_SHIELD_EFFECT in mine:  # (fire or cold: DSCLOG's FSHIELD_SITE)
+            out.append((FIRE_SHIELD_SAVE, EFFECT_NAMES[FIRE_SHIELD_EFFECT]))
         prayer = next((x for x in effects if x.id == EFFECT_PRAYER and x.owner == target), None)
         if prayer is not None:
             source = self.combatant_creature(prayer.caster)

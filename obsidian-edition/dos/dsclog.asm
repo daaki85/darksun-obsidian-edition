@@ -7475,6 +7475,19 @@ probe_cure:
         cmp ax, HEAL_SPELL      ; Heal (NEW SPELLS: Cure Critical Wounds' handler): every wound
         jne .cures              ;   (the routine that heals stops at the most)
         mov word [bp + 0x0C], 0x7FFF
+        call manual_on          ; ... and, with the spells as the manual has them, Feeblemind (19,
+        jnz .out                ;   no timer: until removed) taken off, the abilities worked out
+        mov dx, [bp + 0x0A]     ;   again after the handler (its flags' 1, 79896h): INT and WIS back
+        mov al, FEEBLE_EFFECT
+        call drop_effect
+        or ah, ah
+        jz .out
+        or byte [ss:di - 0x15], 1
+        mov [cs:mn_frame], dx
+        mov ax, [ss:di + 8]
+        mov [cs:mn_frame + 2], ax
+        mov ax, MN_FEEBLE
+        call mn_rec
         jmp .out
 .cures: mov bx, CURE_SPELLS
 .find:  cmp [cs:bx], al
@@ -12722,20 +12735,36 @@ heal_sight:
         jne .ret
         test byte [cs:rules], RULE_NEW_SPELLS
         jz .ret
-        pusha
-        push ds
-        push es
+        push ax
+        push dx
         mov dx, [bp + 8]
-        mov ax, ds
-        sub ax, EFFECTS_FROM_DS
-        mov es, ax
+        mov al, BLIND_EFFECT
+        call drop_effect
+        pop dx
+        pop ax
+.ret:   ret
+
+; DROP_EFFECT: thing DX's entries of effect AL taken out of the game's table of active effects (the
+; ones after moved down), AH how many: for an effect with no timer to end (Blind as Heal cures it,
+; Feeblemind), as the game's own end (765E2h) would. DS the game's; others kept.
+drop_effect:
+        push bx
+        push cx
+        push si
+        push di
+        push es
+        mov ah, 0
+        mov bx, ds
+        sub bx, EFFECTS_FROM_DS
+        mov es, bx
         mov bx, EFFECTS_OFF
         mov cx, [EFFECTS_COUNT]
 .each:  jcxz .done
         cmp [es:bx], dx
         jne .next
-        cmp byte [es:bx + 6], BLIND_EFFECT
+        cmp [es:bx + 6], al
         jne .next
+        inc ah
         push cx                 ; (the entries after it, CX - 1 of them, moved down one)
         push ds
         dec cx
@@ -12755,9 +12784,11 @@ heal_sight:
         dec cx
         jmp .each
 .done:  pop es
-        pop ds
-        popa
-.ret:   ret
+        pop di
+        pop si
+        pop cx
+        pop bx
+        ret
 
 ; REST_SITE: "mov ax,si / imul ax,ax,3Ah" (806C3h; 5 bytes: the INT, the site's number and two
 ; NOPs) in the game's rest (8066Dh: its REST and a script's request 1, past its "NO RESTING DURING
@@ -13043,8 +13074,9 @@ KIND_HEAT   equ 10
 
 ; ACID_ROUNDS: "cmp dword [bp+0Eh],-9999" (76525h; 8 bytes: the INT, the site's number, 5 NOPs) in
 ; the routine adding an effect (76442h: [BP+0Ch] the effect, [BP+0Eh] its time, a dword; less than
-; 0 charges, kept in the entry's +8): an Acid's time in seconds made rounds as charges (at least
-; 1); then the compare made, its flags returned.
+; 0 charges, kept in the entry's +8; ES:BX the entry less EFFECTS_OFF): an Acid's time in seconds made
+; rounds as charges (at least 1), Low Resistance's (31) amount (+9, the game's 0) Lower Resistance's
+; cast's level (TH_LEVEL, CAST_SITE's: LOWRES_SITE's); then the compare made, its flags returned.
 acid_burning db 0                ; (1 from ACID_BURN until its damage's effect is passed: ACID_ONCE)
 acid_mine    db 0                ; (1 while ACID_ROUND's call spends Acid: ACID_USE)
 acid_far     dd 0
@@ -13052,7 +13084,13 @@ acid_rounds:
         pushad
         push es
         mov di, sp
-        cmp byte [bp + 0x0C], ACID_EFFECT
+        cmp byte [bp + 0x0C], LOWRES_EFFECT
+        jne .acid
+        cmp word [bp + 0x0A], LOWRES_SPELL
+        jne .acid
+        mov al, [cs:th_level]           ; (Lower Resistance's: the cast's level in its amount, +9,
+        mov [es:bx + 0x10F], al         ;   LOWRES_SITE's)
+.acid:  cmp byte [bp + 0x0C], ACID_EFFECT
         jne .test
         mov eax, [bp + 0x0E]
         or eax, eax
@@ -14076,7 +14114,7 @@ ww_pass:
 ; ACID_ONCE: "cmp word [bp-1Eh],0" (78DEFh; 4 bytes: the INT, the site's number and a NOP) where a
 ; spell's damage (78C19h) puts the record's effect ([BP-1Eh]) on the target it hurt: during an Acid
 ; burn (ACID_BURNING, then cleared) none, as if the record had none; else the compare made, its
-; flags returned.
+; flags returned. For Cell Adjustment (DI the target) whether it is Diseased noted (CELL_CURED).
 acid_once:
         push di
         push ax
@@ -14090,7 +14128,15 @@ acid_once:
         mov byte [cs:acid_burning], 0
         xor ax, ax                      ; (ZF set: "none")
         jmp .flags
-.test:  cmp word [bp - 0x1E], 0
+.test:  cmp word [bp + 0x0A], CELL_ADJUST
+        jne .cmp
+        push cx
+        mov ax, di
+        mov cl, DISEASED
+        call ns_has
+        sete [cs:cell_cured]            ; (CELL_SITE's line: a disease the record's effect cures)
+        pop cx
+.cmp:   cmp word [bp - 0x1E], 0
 .flags: pushf
         pop ax
         mov di, sp
@@ -14498,10 +14544,12 @@ spray_site:
 ; 5 bytes, its "jz / jmp 7A1F0h" after). Hold Undead (31) holds only undead of no more levels (hit
 ; dice) than its caster's level, the frame's [BP+14h] (the cast's: an item's 6): one of more is
 ; immune (7A1F0h). Else the game's test: set, immune; clear, on to the next (7A34Fh). The level:
-; SHEET_LEVEL's.
+; SHEET_LEVEL's. Chill Touch (3) on an undead: CHILL_UNDEAD's.
 HOLD_NEXT equ 0x7A34F - (0x7A345 + 3)
 HOLD_HD_IMMUNE equ 0x7A1F0 - (0x7A345 + 3)
 hold_hd:
+        cmp si, CHILL_TOUCH
+        je chill_undead
         push es
         push bx
         push ax
@@ -14812,6 +14860,16 @@ rand_die:
 ; Recorded (KIND_TURN: the d20, 0 for none; the frame TU_FRAME's). DS the game's.
 TURN_SITE equ NS_IMAGE + 76      ; 7AE01h: Turn Undead's number, AD&D's table instead (TURN_SITE)
 FLAME_SITE equ NS_IMAGE + 77     ; 7567Fh: a cast's repeats, Flame Arrow's by level (FLAME_SITE)
+BLUR_SITE equ NS_IMAGE + 78      ; 79DC0h: Barkskin's +1 on saves, and Blur's (BLUR_SITE)
+FSHIELD_SITE equ NS_IMAGE + 79   ; 79E03h: Protection from Cold's +3 on saves, and Fire Shield's +2 (FSHIELD_SITE)
+CLOUD_SAVE_SITE equ NS_IMAGE + 80 ; 79F95h: Cloudkill's save by level (CLOUD_SAVE_SITE)
+CLOUD_KILL_SITE equ NS_IMAGE + 81 ; 79830h: the handler's tail, Cloudkill's kill (CLOUD_KILL_SITE)
+LOWRES_SITE equ NS_IMAGE + 82    ; 7A507h: Lower Resistance's 30 + its level off (LOWRES_SITE)
+STRENGTH_SITE equ NS_IMAGE + 83  ; 79483h: Strength's and Cat's Grace's dice by class (STRENGTH_SITE)
+RAINBOW_SITE equ NS_IMAGE + 84   ; 585A2h: damage ends Rainbow Pattern's hold (RAINBOW_SITE)
+PSI_SITE equ NS_IMAGE + 85       ; 5D5B4h: no psionics while feebleminded (PSI_SITE)
+BIO_SITE equ NS_IMAGE + 86       ; 79C83h: Biofeedback's 2 off a blow, at least 1 left (BIO_SITE)
+CELL_SITE equ NS_IMAGE + 87      ; 795A2h: Cell Adjustment's 1d4 (CELL_SITE)
 KIND_TURN  equ 13
 TU_DESTROY equ 0x7AE60 - 0x7AE04 ; (the ways on, less the address after the site's number)
 TU_FAIL    equ 0x7AE75 - 0x7AE04
@@ -15031,6 +15089,455 @@ flame_site:
         mov dl, al
         pop ax
 .out:   iret
+
+; THE SPELLS AND PSIONICS AS THE MANUAL DESCRIBES THEM, GROUP 3 (gamepatch.SPELLS_MANUAL; each site
+; only in the game's copy with the switch on, so the code needs no test of it, but MANUAL_ON's
+; places in code that runs either way). The dice log's lines: KIND_MANUAL (MN_REC).
+KIND_MANUAL equ 14
+MN_CHILL   equ 1                ; (MN_FRAME: +6 the creature, then) Chill Touch on an undead: +8 the
+                                ;   caster, +0Ah the rounds Afraid
+MN_CLOUD   equ 2                ; Cloudkill kills: +8 the level its saves count (hit dice)
+MN_CELL    equ 3                ; Cell Adjustment: +8 the user, +0Ah the HP, +0Ch 1 a disease cured
+MN_RAINBOW equ 4                ; Rainbow Pattern's hold ended by damage: +8 the damage
+MN_FEEBLE  equ 5                ; Heal cures Feeblemind: +8 the caster
+MN_PSIONIC equ 6                ; a feebleminded creature tries a psionic power: +8 the power
+CHILL_TOUCH equ 3
+STRENGTH_EFFECT equ 67           ; (Strength's; Adrenalin Control's 66)
+BLUR_EFFECT equ 55
+FIRE_SHIELD_EFFECT equ 20
+CLOUDKILL  equ 57
+CLOUD_DIES equ 4                ; (under it: no save; to CLOUD_SAVES, a failed save kills)
+CLOUD_SAVES equ 5
+SLAY_DAMAGE equ 1000            ; (Slay Living's, 79881h)
+LOWRES_SPELL equ 64             ; Lower Resistance, its effect Low Resistance (31)
+LOWRES_EFFECT equ 31
+LOWRES_BASE equ 30
+RAINBOW_SPELL equ 50
+FEEBLE_EFFECT equ 19
+BIO_LESS   equ 2                ; Biofeedback's 2 off a blow (the game's)
+DISEASED   equ 13
+CELL_ADJUST equ 151
+mn_frame   dw 0, 0, 0, 0
+cell_cured db 0                 ; (ACID_ONCE: Cell Adjustment's target Diseased as the record's cure
+                                ;   comes, for CELL_SITE's line)
+
+; MN_REC: a KIND_MANUAL entry, AX what (MN_*), the frame MN_FRAME's four words. CX, DX, SI, DI changed.
+mn_rec:
+        mov si, mn_frame
+        mov cx, 4
+        mov word [cs:kind], KIND_MANUAL
+        jmp rec_frame
+
+; MANUAL_ON: ZF set when the game's copy has the spells as the manual describes them, told as the
+; dice log tells it (game.spells_manual) by Stinking Cloud's record's dice made 1d4 (41h, gamepatch's
+; "stinking_cloud_dice"), for code that runs either way. DS the game's; all registers kept.
+manual_on:
+        push es
+        push ax
+        mov ax, ds
+        sub ax, SPELLS_FROM_DS
+        mov es, ax
+        cmp byte [es:SPELL_RECS + STINKING_CLOUD * 0x20 + 4], 0x41
+        pop ax
+        pop es
+        ret
+
+; BLUR_SITE (gamepatch "blur_save"): the save modifiers' Barkskin test, "les bx,[bp+0Ah] / test
+; byte [es:bx+7],2 / jz / inc si" (79DC0h; 11 bytes; [BP+0Ah] the target's effects' bits, far; SI the
+; modifier): Barkskin's +1, the game's, and Blur's (55) +1 on saves against magic, as the manual's.
+blur_save:
+        les bx, [bp + 0x0A]
+        test byte [es:bx + 7], 2
+        jz .blur
+        inc si
+.blur:  test byte [es:bx + BLUR_EFFECT / 8], 1 << (BLUR_EFFECT % 8)
+        jz .out
+        inc si
+.out:   iret
+
+; FSHIELD_SITE (gamepatch "fire_shield_save"): the save modifiers' Protection from Cold test, "test
+; word [bp-4],4 / jz / les bx,[bp+0Ah] / test byte [es:bx+4],10h / jz / add si,3" (79E03h; 20 bytes;
+; [BP-4] the spell's damage kinds, 2 fire, 4 cold): its +3 against cold, the game's, and Fire
+; Shield's (20) +2 against fire and cold, as the manual's.
+fshield_save:
+        les bx, [bp + 0x0A]
+        test word [bp - 4], 4
+        jz .shield
+        test byte [es:bx + 4], 0x10
+        jz .shield
+        add si, 3
+.shield:
+        test word [bp - 4], 6
+        jz .out
+        test byte [es:bx + FIRE_SHIELD_EFFECT / 8], 1 << (FIRE_SHIELD_EFFECT % 8)
+        jz .out
+        add si, 2
+.out:   iret
+
+; CLOUD_SAVE_SITE (gamepatch "cloudkill_save"): the save modifiers' Cloudkill rule, "cmp word
+; [bp+14h],39h / jnz / cmp word [bp-6],6 / jg / sub si,100" (79F95h; 15 bytes; [BP-6] the target's
+; level, HD_SAVE's): AD&D's bands, a creature of under 4 levels (hit dice) can't save (-100: a natural
+; 20 still does); from 4 it saves as the record has it (CLOUD_KILL: under 6 a failed one kills).
+cloud_save:
+        cmp word [bp + 0x14], CLOUDKILL
+        jne .out
+        cmp word [bp - 6], CLOUD_DIES
+        jge .out
+        sub si, 100
+.out:   iret
+
+; CLOUD_KILL_SITE (gamepatch "cloudkill_kills"): the tail of the handler for spells with rules of
+; their own (79186h: DI the target, [BP+0Eh] the spell, [BP+10h] saved, SI the flags), "cmp byte
+; [bp+10h],0 / jnz 79896h" (79830h; 6 bytes): a Cloudkill (57) not saved against by a creature of
+; 5 levels (hit dice: SHEET_LEVEL's, as its saves count) or fewer, still alive, dies: 1000 damage
+; through 4E0:61h, as Slay Living's (79881h), the flags' 1 set as its; its 1d10 came before. Then
+; the game's way: saved, past the tail's table (79896h), else on to it (79836h). Recorded (MN_CLOUD).
+CLOUD_ON   equ 0x79836 - (0x79830 + 3)
+CLOUD_PAST equ 0x79896 - (0x79830 + 3)
+cloud_kill:
+        sti
+        pushad
+        push es
+        mov dx, CLOUD_PAST
+        cmp byte [bp + 0x10], 0
+        jne .way
+        mov dx, CLOUD_ON
+        cmp word [bp + 0x0E], CLOUDKILL
+        jne .way
+        mov ax, di
+        call combatant_creature
+        jc .way
+        les bx, [CREATURES]
+        imul cx, ax, 0x3A
+        add bx, cx
+        cmp word [es:bx], 0             ; (its hit points: dead already, of the 1d10)
+        jle .way
+        call creature_sheet
+        call sheet_level
+        cmp al, CLOUD_SAVES
+        jbe .kill
+.way:   mov bx, sp
+        add [ss:bx + 34], dx
+        jmp ovr_out
+.kill:  mov bx, sp
+        add [ss:bx + 34], dx            ; (the way on, before any call)
+        or byte [si], 1
+        mov [cs:mn_frame], di
+        mov ah, 0
+        mov [cs:mn_frame + 2], ax
+        mov ax, MN_CLOUD
+        call mn_rec
+        mov bx, sp
+        push word [ss:bx + 36]          ; (the way on, in a frame the overlay manager can fix up)
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        push word SLAY_DAMAGE
+        push word [cs:mn_frame]
+        th_far TH_STUB_4E0, 0x61        ; (target, damage)
+        add sp, 4
+        jmp ovr_back
+
+; LOWRES_SITE (gamepatch "lower_resistance_manual"): in the routine of a creature's magic resistance
+; against a spell (7A4A1h: [BP+6] the creature, SI the spell, [BP+0Ah] the cast's level, [BP-0Ch] the
+; resistance, [BP-7]'s 80h Low Resistance on it), its halving under Low Resistance and Lower
+; Resistance's own 30 + the level at its cast (7A507h-7A527h; 33 bytes): the resistance less 30 + the
+; level of the Lower Resistance on it (its amount, +9: ACID_ROUNDS keeps the cast's level there) or,
+; for a Lower Resistance being cast, of that cast, the bigger (they don't add up); at least 0, as
+; the game's next test (7A528h) makes it.
+lowres_site:
+        push ax
+        push cx
+        push dx
+        xor dx, dx
+        test byte [bp - 7], 0x80
+        jz .cast
+        mov ax, [bp + 6]
+        mov cl, LOWRES_EFFECT
+        call ns_amount
+        movzx dx, al
+        add dx, LOWRES_BASE
+.cast:  cmp si, LOWRES_SPELL
+        jne .take
+        movzx ax, byte [bp + 0x0A]
+        add ax, LOWRES_BASE
+        cmp ax, dx
+        jbe .take
+        mov dx, ax
+.take:  sub [bp - 0x0C], dx
+        pop dx
+        pop cx
+        pop ax
+        iret
+
+; STRENGTH_SITE (gamepatch "strength_dice"): Strength's handler's dice, "push dword 60001h" (79483h;
+; 6 bytes: 1d6; DI the target, [BP+0Eh] the spell; Adrenalin Control's and Cat's Grace's too, not
+; Friends', PROBE_GRACE_EFFECT's): Strength's by the target's classes, AD&D's (warriors 1d8, priests,
+; rogues and psionicists 1d6, wizards 1d4), Cat's Grace's by the Tome of Magic's (rogues 1d8,
+; wizards, warriors and psionicists 1d6, priests 1d4), a multiclass character's best; Adrenalin
+; Control's, and a creature with no class's, 1d6. Pushed under the INT's frame.
+STR_SIDES:              ; classes 1-17: Strength's sides, low; Cat's Grace's, high
+        db 0x46, 0x46, 0x46, 0x46, 0x46, 0x46, 0x46, 0x46 ; (clerics, druids)
+        db 0x68, 0x68, 0x64, 0x66, 0x68, 0x68, 0x68, 0x68 ; (fighter, gladiator, preserver, psionicist, rangers)
+        db 0x86                                         ; (thief)
+strength_dice:
+        sub sp, 4                       ; (room for the dice)
+        push bp
+        mov bp, sp                      ; ([BP+2] the room, [BP+6] the INT's IP, CS and flags)
+        pusha
+        push es
+        mov cx, 6
+        mov si, [bp]                    ; (the game's BP)
+        mov ax, [ss:si + 0x0E]
+        mov dl, 0
+        cmp ax, STRENGTH_SPELL
+        je .classes
+        mov dl, 4
+        cmp ax, GRACE_SPELL
+        jne .put
+.classes:
+        mov ax, di
+        call combatant_creature
+        jc .put
+        call creature_sheet
+        xor ch, ch
+        xor si, si
+.each:  movzx di, byte [es:bx + si + 0x21]
+        dec di
+        cmp di, 17 - 1
+        ja .skip
+        mov al, [cs:STR_SIDES + di]
+        mov cl, dl
+        shr al, cl
+        and al, 0x0F
+        cmp al, ch
+        jbe .skip
+        mov ch, al
+.skip:  inc si
+        cmp si, 3
+        jb .each
+        movzx cx, ch
+        or cx, cx
+        jnz .put
+        mov cx, 6
+.put:   mov ax, [bp + 6]
+        mov [bp + 2], ax
+        mov ax, [bp + 8]
+        mov [bp + 4], ax
+        mov ax, [bp + 10]
+        mov [bp + 6], ax
+        mov word [bp + 8], 1            ; (the count, then the sides)
+        mov [bp + 10], cx
+        pop es
+        popa
+        pop bp
+        iret
+
+; GR_SHADOWED: CF set when effect entry ES:BX (the game's table of active effects: BX its index x 10,
+; AL its number) counts for nothing, as the manual has it: a Strength (67) or an Adrenalin Control
+; (66) where its creature has a bigger one of either, a Cat's Grace (54) where it has a bigger Cat's
+; Grace (as big: the first counts). With the spells as the manual has them (MANUAL_ON) only. DS the
+; game's; all registers kept.
+gr_shadowed:
+        pusha
+        call manual_on
+        jnz .no
+        mov ah, GRACE_EFFECT
+        cmp al, ah
+        je .group
+        mov ah, 66
+        cmp al, ah
+        je .group
+        cmp al, STRENGTH_EFFECT
+        jne .no
+.group: lea di, [bx + EFFECTS_OFF]      ; (this one)
+        mov dx, [es:di]                 ; (its creature)
+        mov cl, [es:di + 9]             ; (its amount)
+        mov si, EFFECTS_OFF
+        mov bx, [EFFECTS_COUNT]
+.each:  dec bx
+        js .no
+        cmp si, di
+        je .next
+        cmp [es:si], dx
+        jne .next
+        mov al, [es:si + 6]
+        cmp al, ah
+        je .same
+        cmp ah, 66
+        jne .next
+        cmp al, STRENGTH_EFFECT
+        jne .next
+.same:  mov al, [es:si + 9]
+        cmp al, cl
+        jg .yes
+        jl .next
+        cmp si, di
+        jb .yes
+.next:  add si, 10
+        jmp .each
+.yes:   popa
+        stc
+        ret
+.no:    popa
+        clc
+        ret
+
+; RAINBOW_SITE (gamepatch "rainbow_pattern_damage"): the start of the routine taking hit points off
+; a creature (5859Ah, 4E0:61h: every blow's and spell's damage), "mov di,[bp+6] / mov dx,[bp+8]"
+; (585A2h; 6 bytes: the creature, the damage): any damage to a creature Paralyzed (34) by Rainbow
+; Pattern (50: the entry's spell, not Hold Person's or another's) ends that hold, through 598:48h
+; (765E2h, as the game ends an effect: its abilities worked out again), in a frame the overlay
+; manager can fix up. Recorded (MN_RAINBOW). Then the moves made.
+rainbow_hurt:
+        mov di, [bp + 6]
+        mov dx, [bp + 8]
+        sti
+        pushad
+        push es
+        or dx, dx
+        jle .out
+        mov ax, ds
+        sub ax, EFFECTS_FROM_DS
+        mov es, ax
+        mov bx, EFFECTS_OFF
+        mov cx, [EFFECTS_COUNT]
+.each:  jcxz .out
+        cmp [es:bx], di
+        jne .next
+        cmp byte [es:bx + 6], HELD_EFFECT
+        jne .next
+        cmp word [es:bx + 4], RAINBOW_SPELL
+        je .free
+.next:  add bx, 10
+        loop .each
+.out:   jmp ovr_out
+.free:  movzx ax, byte [es:bx + 7]      ; (its handle)
+        mov [cs:mn_frame], di
+        mov [cs:mn_frame + 2], dx
+        push ax
+        mov ax, MN_RAINBOW
+        call mn_rec
+        pop ax
+        mov bx, sp
+        push word [ss:bx + 36]          ; (the way on, in a frame the overlay manager can fix up)
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        push ax
+        push word [cs:mn_frame]
+        th_far TU_STUB, 0x48            ; (the creature, the handle)
+        add sp, 4
+        jmp ovr_back
+
+; PSI_SITE (gamepatch "feeblemind_psionics"): the psionic power check (5D59Dh: SI the user, DI the
+; power), "or ax,ax / jnz 5D5BDh / mov al,0" (5D5B4h; 6 bytes) after the test that the user has the
+; power: a feebleminded user (19) can use none, as the manual has it (0: the check fails, 5D5BAh).
+; Recorded (MN_PSIONIC).
+PSI_ON     equ 0x5D5BD - (0x5D5B4 + 3)
+PSI_NO     equ 0x5D5BA - (0x5D5B4 + 3)
+psi_feeble:
+        push bx
+        push cx
+        mov bx, PSI_NO
+        or ax, ax
+        jz .way
+        mov ax, si
+        mov cl, FEEBLE_EFFECT
+        call ns_has
+        mov bx, PSI_ON
+        jnz .way
+        mov [cs:mn_frame], si
+        mov [cs:mn_frame + 2], di
+        pusha
+        mov ax, MN_PSIONIC
+        call mn_rec
+        popa
+        mov bx, PSI_NO
+        xor ax, ax
+.way:   push bp
+        mov bp, sp
+        add [bp + 6], bx                ; (the INT's return address)
+        pop bp
+        pop cx
+        pop bx
+        iret
+
+; BIO_SITE (gamepatch "biofeedback_least"): the game's own Biofeedback (4) in its damage adjustments
+; (79BF9h: SI the damage, a blow's and any damage of crushing, edged or pointed kinds), "sub si,2"
+; (79C83h; 3 bytes), which left none of a blow of 2 or less: at least 1 of it, as the manual has it
+; (none stays none). The flags are the game's next test's (79C86h).
+bio_site:
+        cmp si, BIO_LESS + 1
+        jl .least
+        sub si, BIO_LESS
+        iret
+.least: cmp si, 1
+        jl .out
+        mov si, 1
+.out:   iret
+
+; CELL_SITE (gamepatch "cell_adjustment_heal"): Cell Adjustment's case in the handler for spells with
+; rules of their own (DI the target, [BP+8] the user), "push 2 / jmp 79618h" (795A2h; 4 bytes: 2 HP):
+; 1d4 HP, AX for the game's "push ax" (79617h) and the healing after it; its record's removal of
+; Diseased (effect F3h, -13) came before (CELL_CURED, ACID_ONCE's). Recorded (MN_CELL).
+CELL_HEAL  equ 0x79617 - (0x795A2 + 3)
+cell_heal:
+        pusha
+        mov ax, 4
+        call game_die
+        mov [cs:mn_frame], di
+        mov bx, [bp + 8]
+        mov [cs:mn_frame + 2], bx
+        mov [cs:mn_frame + 4], ax
+        movzx bx, byte [cs:cell_cured]
+        mov [cs:mn_frame + 6], bx
+        mov byte [cs:cell_cured], 0
+        mov bx, sp
+        mov [ss:bx + 14], ax            ; (POPA's AX)
+        mov ax, MN_CELL
+        call mn_rec
+        popa
+        push bp
+        mov bp, sp
+        add word [bp + 2], CELL_HEAL
+        pop bp
+        iret
+
+; CHILL_UNDEAD: HOLD_HD's for Chill Touch (3) on an undead (7A1BFh's undead tests, DI the target):
+; immune (7A1F0h: no damage, no STR lost), and Afraid (17) for 1d4 rounds instead, added through
+; 598:3Eh (76442h, below the fear immunity undead have), in a frame the overlay manager can fix up,
+; by the last caster CAST_SITE saw. Recorded (MN_CHILL). The INT's frame as HOLD_HD found it.
+chill_undead:
+        sti
+        pushad
+        push es
+        mov bx, sp
+        add word [ss:bx + 34], HOLD_HD_IMMUNE ; (the way on, before any call)
+        mov ax, 4
+        call game_die
+        mov [cs:mn_frame], di
+        mov cx, [cs:cast_who]
+        mov [cs:mn_frame + 2], cx
+        mov [cs:mn_frame + 4], ax
+        mov ax, MN_CHILL
+        call mn_rec
+        mov bx, sp
+        push word [ss:bx + 36]
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        push word 0
+        push word 0
+        imul ax, [cs:mn_frame + 4], ROUND_SECONDS
+        push ax
+        push word TU_AFRAID
+        push word CHILL_TOUCH
+        push word [cs:mn_frame + 2]
+        push word [cs:mn_frame]
+        th_far TU_STUB, 0x3E            ; (target, caster, spell, effect, time, 0)
+        add sp, 14
+        jmp ovr_back
 
 REQ_REST equ 0
 rest_site:
@@ -16887,10 +17394,17 @@ probe_grace_effect:
 ; INT + 4 NOPs) in the routine that works out a creature's abilities, as it looks at one of its
 ; effects (AX its number; ES:BX the effect, its amount at +10Fh): Cat's Grace adds the amount
 ; to DEX in its sums (words from [BP-342h], STR first), as Strength's adds to STR; Friends adds
-; its amount (2d4) to CHA, up to FRIENDS_MOST.
+; its amount (2d4) to CHA, up to FRIENDS_MOST. With the spells as the manual has them, a Strength or
+; Adrenalin Control under a bigger one, or a Cat's Grace under a bigger one, counts for nothing
+; (GR_SHADOWED: [BP-0Ah] made 0, which the game's table of cases hasn't).
 probe_grace_ability:
         mov [bp-0x0A], ax
         mov cx, 7
+        call gr_shadowed
+        jnc .counts
+        mov word [bp-0x0A], 0   ; (shadowed: no case in the game's table)
+        iret
+.counts:
         cmp ax, FRIENDS_EFFECT
         jne .grace
         push ax
@@ -17793,6 +18307,16 @@ site_tab:
         site SPELL_STUB_SITE, th_stub
         site TURN_SITE, tu_site
         site FLAME_SITE, flame_site
+        site BLUR_SITE, blur_save
+        site FSHIELD_SITE, fshield_save
+        site CLOUD_SAVE_SITE, cloud_save
+        site CLOUD_KILL_SITE, cloud_kill
+        site LOWRES_SITE, lowres_site
+        site STRENGTH_SITE, strength_dice
+        site RAINBOW_SITE, rainbow_hurt
+        site PSI_SITE, psi_feeble
+        site BIO_SITE, bio_site
+        site CELL_SITE, cell_heal
 SITE_COUNT equ ($ - site_tab) / 2
 
 ; NS_CMP: the compare of site RL_SITE (of NS_CMP_SITES), its flags into the INT's frame.
@@ -19801,8 +20325,29 @@ ns_effect_spell:
 ; registers kept.
 ns_has:
         push bx
-        push dx
         push es
+        call ns_find
+        pop es
+        pop bx
+        ret
+
+; NS_AMOUNT: AL the amount (+9) on effect CL of thing AX (the game's table of active effects), 0 if
+; none. DS the game's; others kept.
+ns_amount:
+        push bx
+        push es
+        call ns_find
+        mov al, 0
+        jnz .out
+        mov al, [es:bx + 9]
+.out:   pop es
+        pop bx
+        ret
+
+; NS_FIND: ES:BX thing AX's entry of effect CL in the game's table of active effects, ZF set; ZF clear
+; if it has none. DS the game's; others kept.
+ns_find:
+        push dx
         mov dx, ds
         sub dx, EFFECTS_FROM_DS
         mov es, dx
@@ -19818,9 +20363,7 @@ ns_has:
         dec dx
         jmp .each
 .none:  or dx, 1
-.out:   pop es
-        pop dx
-        pop bx
+.out:   pop dx
         ret
 
 ; NS_HIT: "test byte [bp-8],80h" (7C430h; 4 bytes: the site's number and a NOP after the INT) in the

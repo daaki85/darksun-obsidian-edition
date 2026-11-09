@@ -135,6 +135,7 @@ CONFUSION_RESULTS = ((1, "runs off"), (6, "does nothing"), (9, "fights for a sid
 STRENGTH_ROLL_RETURN = bytes.fromhex("83c40450660fbf4618")
 STR_MOST = 24
 MIND_BAR, LOW_RESISTANCE, MIND_BAR_RESISTANCE = 32, 31, 75
+LOWER_RESISTANCE_SPELL = 64
 WAIST_SLOT, NECK_SLOT = (game.EQUIP_SLOTS.index(s) for s in ("waist", "neck"))
 # The magic resistance roll made straight from the spell code (arguments: target, spell, level)
 RESISTANCE_ROLL_RETURN = bytes.fromhex("83c404508a460a50ff76")
@@ -244,6 +245,13 @@ AFRAID_EFFECT = 17  # (TURN_SITE puts it on a turned undead, past the game's fea
 TURN_T, TURN_D, TURN_DSTAR = 21, 22, 23
 TURN_NOT, TURN_TURNED, TURN_DESTROYED, TURN_DSTARRED, TURN_MORE_ONE, TURN_AGAIN, TURN_NONE = range(7)
 TURN_CELLS = (20, 19, 16, 13, 10, 7, 4, TURN_T, TURN_T, TURN_D, TURN_D)  # (AD&D's run, a row a column on)
+# DSCLOG's group 3 of the spells as the manual has them (BLUR_SITE ... CELL_SITE, MN_REC): raw = what
+# (MANUAL_*), its frame +6 the creature, then: Chill Touch on an undead +8 the caster, +0Ah the rounds
+# it is Afraid; Cloudkill's kill +8 the level its saves count; Cell Adjustment +8 the user, +0Ah the
+# HP, +0Ch 1 if it cured a disease; Rainbow Pattern's hold ended +8 the damage; Heal's cure of
+# Feeblemind +8 the caster; a feebleminded creature's psionic power +8 the power
+KIND_MANUAL = 14
+MANUAL_CHILL, MANUAL_CLOUD, MANUAL_CELL, MANUAL_RAINBOW, MANUAL_FEEBLE, MANUAL_PSIONIC = range(1, 7)
 KIND_WALL = 9  # DSCLOG's THORNS_DAMAGE: Wall of Thorns' damage on a creature in it, taken instead of
 # its record's dice: raw = the damage | the spell << 8, extra the creature
 THORNS_BASE = 8  # Wall of Thorns: 8 + the creature's AC (DSCLOG's THORNS_AC: it + 80h in the entry's extra's high byte)
@@ -1838,8 +1846,8 @@ class DiceLog:
                 continue  # unchanged, or a record still being loaded
             who = g.creature_name(index)
             gone = self._destroyed.pop(index, None)
-            if gone is not None and hp < before:  # (Turn Undead's 1000 damage: not a wound)
-                out.append(f"  {who} is destroyed by {gone}")
+            if gone is not None and hp < before:  # (Turn Undead's 1000 damage, Cloudkill's: not a wound)
+                out.append(f"  {who} is {gone}")
                 continue
             sheet = g.sheet(index)
             most = struct.unpack_from("<h", sheet, game.SHEET_MAX_HP)[0] if len(sheet) >= game.SHEET_SIZE else None
@@ -2183,7 +2191,8 @@ class DiceLog:
         for (caster, eid), owners in by_cast.items():
             name = EFFECT_NAMES.get(eid, f"effect {eid}")
             targets = ", ".join(self._name(o) for o in owners)
-            rule = f": {EFFECT_RULES[eid]}" if eid in EFFECT_RULES else ""
+            rule = game.effect_rule(eid, self.game.spells_manual())
+            rule = f": {rule}" if rule else ""
             if eid == AFRAID_EFFECT and all(self._turn_target(o) is not None for o in owners):
                 rule = ": turned, it flees (the computer controls it; can't attack or cast spells)"  # (TURN_SITE's)
             if owners == [caster] * len(owners):  # on itself (or from a spell on the ground)
@@ -2436,6 +2445,8 @@ class DiceLog:
             return self.flush(now, force=True) + self._turn_manual(e)
         if e.kind == KIND_SWEPT:
             return [f"    {self._name(e.raw)} is swept off its feet: loses its next turn"]
+        if e.kind == KIND_MANUAL:
+            return self.flush(now, force=True) + self._manual(e)
         if e.kind == KIND_CAST:
             self._cast = (e.arg(6), e.raw)  # (who cast what, for a kit's damage: DSCLOG's CAST_WHO)
             # (Turn Undead, 190, has no name in the game's spell names: game.spell_name calls it a
@@ -2515,6 +2526,33 @@ class DiceLog:
             self._last_damage = None
         self._float(target, labels.MISS, labels.MISS_INK, now)
         return [f"{head} -> MISS: the spell does nothing{lost}"]
+
+    def _manual(self, e: Entry) -> List[str]:
+        """What DSCLOG's group 3 of the spells as the manual has them did (KIND_MANUAL)."""
+        who, a, b, c = (e.arg(at) for at in (6, 8, 0x0A, 0x0C))
+        if who is None:
+            return []
+        name = self._name(who)
+        if e.raw == MANUAL_CHILL:
+            return [f"Chill Touch on {name}, undead: no damage, no STR lost; Afraid 1d4 = {b} rounds instead"]
+        if e.raw == MANUAL_CLOUD:
+            band = (f"under {game.CLOUD_DIES} HD: no save" if (a or 0) < game.CLOUD_DIES
+                    else f"{game.CLOUD_DIES} to {game.CLOUD_SAVES} HD: the save failed")
+            creature = self.game.combatant_creature(who)
+            if creature is not None:
+                self._destroyed[creature] = "slain by Cloudkill"
+            return [f"Cloudkill: {name} dies ({band}; its level for saves {a})"]
+        if e.raw == MANUAL_CELL:
+            cured = f", and {name} is cured of disease" if c else ""
+            return [f"Cell Adjustment: 1d4 = {b} -> {name} healed {b} HP{cured}"]
+        if e.raw == MANUAL_RAINBOW:
+            return [f"    {name} takes {a} damage: Rainbow Pattern's hold on it ends"]
+        if e.raw == MANUAL_FEEBLE:
+            return [f"Heal cures {name}'s Feeblemind: INT and WIS as they were"]
+        if e.raw == MANUAL_PSIONIC:
+            power = self.game.spell_name(game.PSIONIC_FIRST + a) if a is not None else "a power"
+            return [f"{name} is feebleminded: {power} can't be used (no psionics)"]
+        return []
 
     def _image_line(self, target: int, roll: int, chance: int, spell: bool) -> str:
         """Mirror Images' d100 against a hit or a spell on TARGET: an image takes it on CHANCE or
@@ -2764,11 +2802,16 @@ class DiceLog:
                         f"while it lasts (at most {game.FRIENDS_MOST})"]
                 # (Cat's Grace, a new spell, uses Strength's code for DEX)
                 ability = "DEX" if spell == game.GRACE_SPELL else "STR"
+                why = ""
+                if spell in (game.STRENGTH_SPELL, game.GRACE_SPELL) and self.game.spells_manual():
+                    creature = self.game.combatant_creature(target) if target is not None else None
+                    die, cls = game.manual_die(spell, self.game.sheet(creature) if creature is not None else b"")
+                    why = f" ({cls})" if cls and die == sides else ""  # (DSCLOG's STRENGTH_SITE: by class)
                 return self.flush(now, force=True) + [
-                    f"{self.game.spell_name(spell)}: 1d{sides} = {faces[0]} -> {self._name(target)}'s {ability} "
+                    f"{self.game.spell_name(spell)}: 1d{sides} = {faces[0]}{why} -> {self._name(target)}'s {ability} "
                     f"+{faces[0]} while it lasts (at most {STR_MOST})"]
             if count == 1 and sides == 100 and e.parent_code.startswith(RESISTANCE_ROLL_RETURN):
-                return self._magic_resistance(e.parent_arg(6), e.parent_arg(8), faces[0])
+                return self._magic_resistance(e.parent_arg(6), e.parent_arg(8), faces[0], e.parent_arg(0x0A))
             if count == 1 and sides == 100 and (e.parent_code.startswith(IMAGE_SPELL_RETURN) or self._overlay_image(e)):
                 target, caster = e.parent_arg(6), e.parent_arg(8)
                 if target is None or caster is None or e.parent_arg(0x12) == IMAGE_VANISH:
@@ -2836,7 +2879,7 @@ class DiceLog:
                 target, spell = e.parent_arg(6), e.parent_arg(8)
                 if count == 1 and sides == 100 and target is not None and game.cast_spell(spell) \
                         and self.game.combatant_creature(target) is not None:
-                    pending.resistance = (target, spell, faces[0])
+                    pending.resistance = (target, spell, faces[0], e.parent_arg(0x0A))
                 self._pending.append(pending)
             return []
         g = self.game
@@ -2901,6 +2944,13 @@ class DiceLog:
             else:
                 total *= times
                 steps = f"({steps}) x{times} backstab"
+        if total > 0 and any(x.owner == e.glob[0] and x.id == game.BIOFEEDBACK_EFFECT for x in g.effects()):
+            # (the game's own 2 off a blow, 79BF9h, leaving none of 2 or less; at least 1 with the
+            # spells as the manual has them: DSCLOG's BIO_SITE)
+            less = min(game.BIOFEEDBACK_LESS, total - (1 if g.spells_manual() else 0))
+            if less:
+                total -= less
+                steps += f" -{less} Biofeedback"
         target = g.combatant_creature(e.glob[0])
         if target is not None:  # so the HP it takes isn't put down to a spell being cast
             self._hit(target, total, now)
@@ -3656,7 +3706,7 @@ class DiceLog:
         if outcome in (TURN_DESTROYED, TURN_DSTARRED, TURN_MORE_ONE):
             creature = self.game.combatant_creature(target)
             if creature is not None:
-                self._destroyed[creature] = "Turn Undead"
+                self._destroyed[creature] = "destroyed by Turn Undead"
             self._spell_until = 0.0  # (no spell's HP lines: the destruction is said as such)
         if outcome == TURN_AGAIN:
             return [f"{who} can't turn {what} again: failed against it this fight"]
@@ -3721,14 +3771,15 @@ class DiceLog:
         if works:
             creature = self.game.combatant_creature(target)
             if creature is not None:
-                self._destroyed[creature] = "Turn Undead"
+                self._destroyed[creature] = "destroyed by Turn Undead"
         self._spell_until = 0.0  # (no spell's HP lines: the destruction is said as such)
         return self.flush(now, force=True) + [
             f"{who} turns {what}: d20 = {roll}, {needs} (priest level {level} vs {dice}) -> "
             f"{'destroyed' if works else 'not turned'}"]
 
-    def _magic_resistance(self, target: int, spell: int, roll: int) -> List[str]:
-        """The d100 the game rolls against a target's magic resistance before its saving throw."""
+    def _magic_resistance(self, target: int, spell: int, roll: int, level: Optional[int] = None) -> List[str]:
+        """The d100 the game rolls against a target's magic resistance before its saving throw (LEVEL
+        the cast's)."""
         g = self.game
         resistance = g.magic_resistance(target) or 0
         how = []
@@ -3741,9 +3792,25 @@ class DiceLog:
         if MIND_BAR in on and g.mind_affecting(spell):
             resistance += MIND_BAR_RESISTANCE
             how.append(f"+{MIND_BAR_RESISTANCE} Mind Bar")
-        if LOW_RESISTANCE in on and resistance:
-            resistance //= 2
-            how.append("halved by Lower Resistance")
+        cast = (level or 0) & 0xFF
+        if g.spells_manual():  # (DSCLOG's LOWRES_SITE: 30 + the level off, the effect's or this cast's)
+            taken = []
+            if LOW_RESISTANCE in on and resistance:
+                amount = g.effect_amount(target, LOW_RESISTANCE) or 0
+                taken.append((game.LOWER_RESISTANCE_BASE + amount, f"Lower Resistance on it, level {amount}"))
+            if spell == LOWER_RESISTANCE_SPELL and resistance:
+                taken.append((game.LOWER_RESISTANCE_BASE + cast, f"this Lower Resistance, level {cast}"))
+            if taken:
+                most, why = max(taken)
+                resistance = max(resistance - most, 0)
+                how.append(f"-{most} {why}")
+        else:
+            if LOW_RESISTANCE in on and resistance:
+                resistance //= 2
+                how.append("halved by Lower Resistance")
+            if spell == LOWER_RESISTANCE_SPELL and resistance:  # (the game's own, 7A518h)
+                resistance = max(resistance - game.LOWER_RESISTANCE_BASE - cast, 0)
+                how.append(f"-{game.LOWER_RESISTANCE_BASE + cast} this Lower Resistance, level {cast}")
         if not resistance:  # the roll can't matter
             return []
         detail = f" ({', '.join(how)})" if how else ""

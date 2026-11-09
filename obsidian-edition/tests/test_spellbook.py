@@ -12,9 +12,13 @@ from dsloader.game import SpellDamage, SpellRules
 
 
 class StubGame:
-    def __init__(self, damage=None, rules=None, negates=False, name="Spell", game_rules=0):
+    def __init__(self, damage=None, rules=None, negates=False, name="Spell", game_rules=0, manual=False):
         self.damage, self.spell, self.negates, self.name = damage, rules, negates, name
         self.rules = game_rules  # the Loader's rule changes (game.RULE_*)
+        self.manual = manual  # (the spells as the manual has them: game.spells_manual)
+
+    def spells_manual(self):
+        return self.manual
 
     def spell_damage(self, spell):
         return self.damage

@@ -68,6 +68,17 @@ class SpellInfo(NamedTuple):
 
 
 FLAME_ARROW_SPELL = 28  # (with the spells as the manual has them: a bolt of 5d6 for every five levels)
+# The spells and powers whose lines DSCLOG's group 3 changes, with the spells as the manual has them
+# (gamepatch.SPELLS_MANUAL; their effects' rules game.MANUAL_EFFECT_RULES'), as FEATURES.md has them
+CHILL_TOUCH_SPELL, RAINBOW_SPELL, CLOUDKILL_SPELL, CELL_ADJUSTMENT_SPELL = 3, 50, 57, 151
+MANUAL_LINES = {
+    CHILL_TOUCH_SPELL: {"effect": "Weakened: STR 1 lower unless saved against (the game's); an undead takes no "
+                                  "damage and is Afraid 1d4 rounds instead"},
+    RAINBOW_SPELL: {"effect": "Paralyzed until it takes damage (any blow or spell)"},
+    CLOUDKILL_SPELL: {"effect": "a creature of under 4 levels (hit dice) dies with no save, one of 4 or 5 dies if it "
+                                "fails its save, one of 6 or more takes the damage"},
+    CELL_ADJUSTMENT_SPELL: {"effect": "heals 1d4 hit points and cures disease"},
+}
 
 
 def casts_text(spell: int, rec: bytes, rule) -> str:
@@ -129,11 +140,12 @@ def save_text(gd: GameData, spell: int, rec: bytes, damages: bool) -> str:
 OWN_EFFECTS = {"Strength": 67, "Cat's Grace": 54}
 
 
-def effect_text(rec: bytes, name: str = "") -> str:
+def effect_text(rec: bytes, name: str = "", manual: bool = False) -> str:
     eff = struct.unpack_from("b", rec, 0x19)[0] or OWN_EFFECTS.get(name, 0)
     if eff > 0:
         name = EFFECT_NAMES.get(eff, f"effect {eff}")
-        return name + (f": {EFFECT_RULES[eff]}" if eff in EFFECT_RULES else "")
+        rule = game.effect_rule(eff, manual)
+        return name + (f": {rule}" if rule else "")
     if eff < 0:
         return "removes " + EFFECT_NAMES.get(-eff, f"effect {-eff}")
     return ""
@@ -199,9 +211,12 @@ def spell_info(gd: GameData, spell: int, party: List[int]) -> Optional[SpellInfo
             if level:
                 casters.append(f"{gd.creature_name(creature)} {ordinal(level)}")
     name = gd.spell_name(spell)
-    lines = {"damage": damage, "save": save_text(gd, spell, rec, bool(damage)), "effect": effect_text(rec, name),
-             "lasts": lasts_text(gd, spell, rec)}
+    manual = gd.spells_manual()
+    lines = {"damage": damage, "save": save_text(gd, spell, rec, bool(damage)),
+             "effect": effect_text(rec, name, manual), "lasts": lasts_text(gd, spell, rec)}
     lines.update(OWN_LINES.get(spell, {}))
+    if manual:
+        lines.update(MANUAL_LINES.get(spell, {}))
     return SpellInfo(spell, name, magic, spell_level(gd, spell), lines["damage"], lines["save"], lines["effect"],
                      lines["lasts"], casters)
 

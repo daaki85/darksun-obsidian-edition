@@ -1533,6 +1533,101 @@ class OtherTests(unittest.TestCase):
         self.assertEqual(log.poll(), [])
 
 
+class ManualGroup3Tests(unittest.TestCase):
+    """Group 3 of the spells and psionics as the manual describes them (gamepatch.SPELLS_MANUAL; told
+    by Stinking Cloud's record's dice, game.spells_manual): the dice log's lines."""
+
+    def make(self, manual=True):
+        log = make_game()
+        record = lambda spell: (LOAD_SEG + game.SPELLS_SEG) * 16 + game.SPELLS_OFF - 0x10 + spell * game.SPELL_SIZE
+        log.guest.mem[record(game.STINKING_CLOUD) + 4] = 0x41 if manual else 0x61
+        self.record = record
+        return log
+
+    def amount(self, log, index, value):
+        base = (LOAD_SEG + game.EFFECTS_SEG) * 16 + game.EFFECTS_OFF
+        struct.pack_into("<b", log.guest.mem, base + index * 10 + 9, value)
+
+    def test_strength_by_class(self):
+        """STRENGTH_SITE's dice: the class named when the die is the one it gives (Dag a fighter: 1d8)."""
+        for manual, sides, want in ((True, 8, " (fighter)"), (True, 6, ""), (False, 8, "")):
+            log = self.make(manual)
+            e = entry(raw_for(6, sides), dicelog.DICE_SITE, words(0, 0, 1, sides), words(0, 0, 0, 0, 0, 0, 23),
+                      parent_code=dicelog.STRENGTH_ROLL_RETURN)
+            self.assertEqual(log.describe(e)[0].split(": ", 1)[1],
+                             f"1d{sides} = 6{want} -> Dag's STR +6 while it lasts (at most 24)")
+
+    def test_lower_resistance(self):
+        """Low Resistance on the target: 30 + its amount (the cast's level) off, not halved; a Lower
+        Resistance being cast: 30 + its level, the bigger of the two; without the switch, halved, and
+        the cast's own 30 + level (the game's 7A518h)."""
+        sheet = SHEETS + 3 * game.SHEET_SIZE
+        def line(manual, effect, spell, level=9):
+            log = self.make(manual)
+            struct.pack_into("<H", log.guest.mem, CREATURES + STALKER * game.CREATURE_SIZE + game.CREATURE_SHEET_INDEX, 3)
+            log.guest.mem[sheet + game.SHEET_MAGIC_RESISTANCE] = 80
+            set_effects(log, [(0x29, 0, dicelog.LOW_RESISTANCE)] if effect else [])
+            self.amount(log, 0, 12)
+            e = entry(raw_for(20, 100), dicelog.DICE_SITE, words(0, 0, 1, 100), words(0, 0, 0x29, spell, level),
+                      parent_code=dicelog.RESISTANCE_ROLL_RETURN)
+            return log.describe(e)[0].split(" vs ")[0]
+        self.assertEqual(line(True, True, FIREBALL), "Mountain Stalker magic resistance 38% (-42 Lower Resistance on it, level 12)")
+        self.assertEqual(line(True, True, 64, 15), "Mountain Stalker magic resistance 35% (-45 this Lower Resistance, level 15)")
+        self.assertEqual(line(True, False, FIREBALL), "Mountain Stalker magic resistance 80%")
+        self.assertEqual(line(False, True, FIREBALL), "Mountain Stalker magic resistance 40% (halved by Lower Resistance)")
+        self.assertEqual(line(False, False, 64), "Mountain Stalker magic resistance 41% (-39 this Lower Resistance, level 9)")
+
+    def test_manual_lines(self):
+        """KIND_MANUAL's lines: raw what, the frame the creature and three words."""
+        log = self.make()
+        say = lambda what, *frame: log.describe(entry(what, frame=words(0, 0, 0x29, *frame), kind=dicelog.KIND_MANUAL))
+        self.assertEqual(say(dicelog.MANUAL_CHILL, 2, 3, 0),
+                         ["Chill Touch on Mountain Stalker, undead: no damage, no STR lost; Afraid 1d4 = 3 rounds instead"])
+        self.assertEqual(say(dicelog.MANUAL_CLOUD, 3, 0, 0),
+                         ["Cloudkill: Mountain Stalker dies (under 4 HD: no save; its level for saves 3)"])
+        self.assertEqual(say(dicelog.MANUAL_CLOUD, 5, 0, 0),
+                         ["Cloudkill: Mountain Stalker dies (4 to 5 HD: the save failed; its level for saves 5)"])
+        self.assertEqual(say(dicelog.MANUAL_CELL, 2, 3, 1),
+                         ["Cell Adjustment: 1d4 = 3 -> Mountain Stalker healed 3 HP, and Mountain Stalker is cured of disease"])
+        self.assertEqual(say(dicelog.MANUAL_CELL, 2, 4, 0), ["Cell Adjustment: 1d4 = 4 -> Mountain Stalker healed 4 HP"])
+        self.assertEqual(say(dicelog.MANUAL_RAINBOW, 6, 0, 0),
+                         ["    Mountain Stalker takes 6 damage: Rainbow Pattern's hold on it ends"])
+        self.assertEqual(say(dicelog.MANUAL_FEEBLE, 2, 0, 0),
+                         ["Heal cures Mountain Stalker's Feeblemind: INT and WIS as they were"])
+        self.assertIn("is feebleminded", say(dicelog.MANUAL_PSIONIC, 11, 0, 0)[0])
+        # Cloudkill's death said as such by hp_changes, not as a wound
+        stalker = CREATURES + STALKER * game.CREATURE_SIZE
+        struct.pack_into("<h", log.guest.mem, stalker, 13)
+        log.hp_changes(0.5)
+        say(dicelog.MANUAL_CLOUD, 3, 0, 0)
+        struct.pack_into("<h", log.guest.mem, stalker, 13 - 1004)
+        self.assertEqual(log.hp_changes(2.5), ["  Mountain Stalker is slain by Cloudkill"])
+
+    def test_biofeedback_hit(self):
+        """The game's 2 less from a blow on a creature with Biofeedback (79BF9h; at least 1 with BIO_SITE)."""
+        for manual, effect, want in ((True, True, "for 16: 1d8 = [5] +1 weapon +12 STR 24 -2 Biofeedback"),
+                                     (True, False, "for 18: 1d8 = [5] +1 weapon +12 STR 24"),
+                                     (False, True, "for 16: 1d8 = [5] +1 weapon +12 STR 24 -2 Biofeedback")):
+            log = self.make(manual)
+            set_effects(log, [(0x29, 0x29, game.BIOFEEDBACK_EFFECT)] if effect else [])
+            parent = words(0, 0, 0, 0, 10, 4, 0, 0, 5, 7, 1)
+            e = entry(raw_for(5, 8), dicelog.DICE_SITE, words(0, 0, 1, 8, 1), parent, (0x29, 0, 0, 0),
+                      parent_code=dicelog.WEAPON_DAMAGE_RETURN)
+            self.assertEqual(log.describe(e), [f"  Dag hits Mountain Stalker {want}"])
+
+    def test_save_modifiers(self):
+        """Fire Shield's +2 against fire or cold and Blur's +1 (FSHIELD_SITE, BLUR_SITE)."""
+        for manual in (True, False):
+            log = self.make(manual)
+            struct.pack_into("<H", log.guest.mem, self.record(FIREBALL) + 0x1A, 0x02)
+            set_effects(log, [(0x29, 0x29, game.FIRE_SHIELD_EFFECT), (0x29, 0x29, game.BLUR_EFFECT)])
+            got = [why for _, why in log.game.save_modifiers(0x29, 0, FIREBALL, 4)]
+            self.assertEqual(("Fire Shield" in got, "Blur" in got), (manual, manual))
+            struct.pack_into("<H", log.guest.mem, self.record(FIREBALL) + 0x1A, 0x80)
+            got = dict((why, amount) for amount, why in log.game.save_modifiers(0x29, 0, FIREBALL, 4))
+            self.assertNotIn("Fire Shield", got)
+
+
 class NewLinesTests(unittest.TestCase):
     def test_weapon_break_check(self):
         log = make_game()

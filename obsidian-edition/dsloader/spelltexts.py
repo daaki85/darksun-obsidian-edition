@@ -2,7 +2,8 @@
 spells' (SPIN the spell's number + 1, as the game's own: 197-202 the wizard spells', 203-212 the
 6th-level priest spells') and, in Turn Undead's box (SPIN 1000),
 the purse's and the spell arrows' (1001-1005: DSCLOG's PROBE_CHUNK_ID asks for 999 + TU_INFO in
-1000's place), and Slay Living's (137) put right. They were DSCLOG's own text once; in the Loader's copy of RESOURCE.GFF they take
+1000's place), and Slay Living's (137) put right; with the spells as the manual has them
+(MANUAL_TEXTS), Fire Shield's (45) and Cat's Grace's as they then work. They were DSCLOG's own text once; in the Loader's copy of RESOURCE.GFF they take
 no room in the helper. Each is under 195 bytes (the box reads it into 200, from its 5th byte)."""
 
 from typing import Dict, Tuple
@@ -59,6 +60,19 @@ TEXTS: Dict[int, str] = {
 }
 
 
-def chunks() -> Dict[Tuple[str, int], bytes]:
-    """The SPIN chunks, in the game's form: the text and CR LF."""
-    return {("SPIN", n): text.encode("ascii") + b"\r\n" for n, text in TEXTS.items()}
+# With "Spells and psionics as the manual describes them" (gamepatch.SPELLS_MANUAL): Fire Shield's +2 on
+# saves (DSCLOG's FSHIELD_SITE; the half damage and the returned blow are the game's), Cat's Grace's
+# dice by class (STRENGTH_SITE)
+MANUAL_TEXTS: Dict[int, str] = {
+    45: "FIRE SHIELD:  Opponents who hit caster in melee take the same damage in return. The "
+        "caster takes half damage from fire and cold spells and saves at +2 against them.",
+    197: "CAT'S GRACE:  Raises the target's dexterity: rogues 1 to 8 pts, warriors, wizards and "
+         "psionicists 1 to 6, priests 1 to 4. Maximum dexterity is 24.",
+}
+
+
+def chunks(manual: bool = False) -> Dict[Tuple[str, int], bytes]:
+    """The SPIN chunks, in the game's form: the text and CR LF (MANUAL: with the spells as the manual
+    has them, MANUAL_TEXTS' in their places)."""
+    texts = {**TEXTS, **(MANUAL_TEXTS if manual else {})}
+    return {("SPIN", n): text.encode("ascii") + b"\r\n" for n, text in texts.items()}

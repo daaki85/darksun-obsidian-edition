@@ -184,6 +184,14 @@ SPELL_HIT_SITE, SPELL_STUB_SITE = NS_IMAGE + 74, NS_IMAGE + 75
 # (Turn Undead by AD&D's table, its outcomes turned, destroyed and D*, once a priest a creature a
 # fight; a cast's repeats, Flame Arrow's one for every five levels: DSCLOG's TURN_SITE, FLAME_SITE)
 TURN_SITE, FLAME_SITE = NS_IMAGE + 76, NS_IMAGE + 77
+# (the spells and psionics as the manual describes them, group 3: Barkskin's and Blur's +1 on saves;
+# Protection from Cold's +3 and Fire Shield's +2; Cloudkill's save by level and its kill; Lower
+# Resistance's 30 + its level off; Strength's and Cat's Grace's dice by class; damage ending Rainbow
+# Pattern's hold; no psionics while feebleminded; Biofeedback's 2 off a blow leaving at least 1; Cell
+# Adjustment's 1d4:
+# DSCLOG's BLUR_SITE ... CELL_SITE)
+BLUR_SITE, FSHIELD_SITE, CLOUD_SAVE_SITE, CLOUD_KILL_SITE, LOWRES_SITE = range(NS_IMAGE + 78, NS_IMAGE + 83)
+STRENGTH_SITE, RAINBOW_SITE, PSI_SITE, BIO_SITE, CELL_SITE = range(NS_IMAGE + 83, NS_IMAGE + 88)
 CR_NAME_SITE, CR_NAME2_SITE, CR_NAME3_SITE, CR_NAME4_SITE = range(NS_IMAGE + 62, NS_IMAGE + 66)  # (a name the game gave copied to the creature: PSP and the age drawn again)
 ARROW_LEVEL = NS_IMAGE + 47  # (a spell arrow's spell at the archer's preserver level, not a weapon's 6)
 SCROLL_USE = NS_IMAGE + 49  # (an item's box: a Shinobi's scroll picture a button, so it can learn the spell)
@@ -455,7 +463,7 @@ PATCHES = (
     # creature but the undead was Scared, a 7th-level fighter too (seen in DOSBox, 2026-11-08: no
     # save rolled). The bit set: the game's own rules above come into play
     Patch("scare_save", 0x4222F, bytes.fromhex("a0"), bytes.fromhex("a1")),
-    # Spells as the manual has them (the Options tab's "Spells as the manual describes them",
+    # Spells as the manual has them (the Options tab's "Spells and psionics as the manual describes them",
     # SPELLS_MANUAL: skipped with it off). The spell records (spell s at 41F70h + 20h x s: +4 the
     # duration's dice, count low and sides high, +5 that a caster level, +7 the unit, 60 a round or
     # -1 charges or -9999 until removed; +12h's 80h a save negating the damage; +1Ch..+1Eh the
@@ -499,6 +507,44 @@ PATCHES = (
     # turned (Afraid, 3d4 rounds), destroyed, D* (2d4 more of the kind) or nothing, and a priest
     # who fails can't try that undead again that fight
     Patch("turn_undead_manual", 0x7AE01, bytes.fromhex("268a4724"), _site(TURN_SITE, 4)),
+    # Blur (12): +1 on saves against magic, as Barkskin's, in the save modifiers (79D46h) at Barkskin's
+    # test (79DC0h, "les bx,[bp+0Ah] / test byte [es:bx+7],2 / jz / inc si": DSCLOG's BLUR_SITE)
+    Patch("blur_save", 0x79DC0, bytes.fromhex("c45e0a26f6470702740146"), _site(BLUR_SITE, 11)),
+    # Fire Shield (44): +2 on saves against fire and cold (the caster already takes half from them,
+    # 7B565h), at Protection from Cold's test (79E03h; DSCLOG's FSHIELD_SITE)
+    Patch("fire_shield_save", 0x79E03, bytes.fromhex("f746fc0400740dc45e0a26f64704107403 83c603".replace(" ", "")),
+          _site(FSHIELD_SITE, 20)),
+    # Cloudkill (57): AD&D's bands by the level its saves count (HD_SAVE's: a classless creature's hit
+    # dice): under 4 no save (the game's "6 or less", 79F95h: DSCLOG's CLOUD_SAVE_SITE), 4 or 5 a failed
+    # save kills, 1000 damage as Slay Living's, at the tail of the handler for spells with rules of
+    # their own (79830h: CLOUD_KILL_SITE); 6 and up the damage as before
+    Patch("cloudkill_save", 0x79F95, bytes.fromhex("837e143975 09837efa067f0383ee64".replace(" ", "")),
+          _site(CLOUD_SAVE_SITE, 15)),
+    Patch("cloudkill_kills", 0x79830, bytes.fromhex("807e10007560"), _site(CLOUD_KILL_SITE, 6)),
+    # Lower Resistance (64): magic resistance 30% + 1% a caster level less (at least 0), the cast's
+    # level kept in the effect (DSCLOG's ACID_ROUNDS), not halved; the cast's own check the same, the
+    # two not added up (7A507h-7A527h: LOWRES_SITE)
+    Patch("lower_resistance_manual", 0x7A507, bytes.fromhex(
+        "f646f980740b8b46f4992bc2d1f88946f483fe40750b8a460ab400051e002946f4"), _site(LOWRES_SITE, 33)),
+    # Strength (23) by the target's classes, AD&D's: warriors 1d8, priests, rogues and psionicists 1d6,
+    # wizards 1d4; Cat's Grace (196) by the Tome of Magic's; a multiclass character's best die;
+    # Adrenalin Control (the same code) 1d6: its "push dword 60001h" (79483h: DSCLOG's STRENGTH_SITE)
+    Patch("strength_dice", 0x79483, bytes.fromhex("666801000600"), _site(STRENGTH_SITE, 6)),
+    # Rainbow Pattern (50): 1 round a caster level (its record's +4 and +5: 1d3 rounds was), and
+    # any damage to a creature it holds (its Paralyzed, told from Hold Person's by the effect's spell)
+    # ends the hold: the start of the routine taking hit points off (585A2h: DSCLOG's RAINBOW_SITE)
+    Patch("rainbow_pattern_time", 0x41F70 + 50 * 32 + 4, bytes.fromhex("3100"), bytes.fromhex("1001")),
+    Patch("rainbow_pattern_damage", 0x585A2, bytes.fromhex("8b7e068b5608"), _site(RAINBOW_SITE, 6)),
+    # Feeblemind (62): no psionic power works (it stopped spells only): the power check (5D59Dh), after
+    # its test that the user has the power (5D5B4h: DSCLOG's PSI_SITE); Heal cures it (PROBE_CURE)
+    Patch("feeblemind_psionics", 0x5D5B4, bytes.fromhex("0bc07505b000"), _site(PSI_SITE, 6)),
+    # Biofeedback (psionic, effect 4): the game takes 2 off each blow (and any crushing, edged or
+    # pointed damage) already, in its damage adjustments (79BF9h), but left none of a blow of 2 or
+    # less: at least 1, as the manual's, at its "sub si,2" (79C83h: DSCLOG's BIO_SITE)
+    Patch("biofeedback_least", 0x79C83, bytes.fromhex("83ee02"), _site(BIO_SITE, 3)),
+    # Cell Adjustment (psionic 151): 1d4 HP, not 2 ("push 2 / jmp", 795A2h: DSCLOG's CELL_SITE); its
+    # record already cures disease (effect -13)
+    Patch("cell_adjustment_heal", 0x795A2, bytes.fromhex("6a02eb72"), _site(CELL_SITE, 4)),
 
 
     # Stinking Cloud (22): 1d4+1 rounds, not 1d6: the record's dice made 1d4, the round more by
@@ -1126,7 +1172,10 @@ SPELLS_MANUAL = ("bestow_curse_save", "blood_flow_save", "flaming_sphere_negates
                  "classless_save_level", "color_spray_level", "hold_undead_level",
                  "free_action_stuck", "free_action_loop", "free_action_word", "remove_paralysis_word",
                  "protection_paralysis_word", "meteors_count", "meteors_damage", "flame_arrow_damage",
-                 "flame_arrow_count", "turn_undead_manual")  # the spells as the manual has them (spells_manual)
+                 "flame_arrow_count", "turn_undead_manual", "blur_save", "fire_shield_save", "cloudkill_save",
+                 "cloudkill_kills", "lower_resistance_manual", "strength_dice", "rainbow_pattern_time",
+                 "rainbow_pattern_damage", "feeblemind_psionics", "biofeedback_least",
+                 "cell_adjustment_heal")  # the spells and psionics as the manual has them (spells_manual)
 SPELL_TO_HIT = ("spell_hit", "spell_hit_stub")  # missile and hostile touch spells roll to hit (spell_to_hit)
 PARTY_SPREAD = ("party_spread", "party_gather")  # the whole party in view after a load and a fight
 

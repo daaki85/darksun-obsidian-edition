@@ -389,7 +389,7 @@ class Viewer:
             rule_groups[group] = frame
         # the spells' records as the manual has them (gamepatch.SPELLS_MANUAL)
         self.spells_manual = tk.BooleanVar(value=settings.get("spells_manual", True) is not False)
-        ttk.Checkbutton(rule_groups["magic"], text="Spells as the manual describes them: saves against Bestow "
+        ttk.Checkbutton(rule_groups["magic"], text="Spells and psionics as the manual describes them: saves against Bestow "
                         "Curse and Blood Flow; Flaming Sphere negated by a save; Solid Fog, Cause Fear, Quicksand "
                         "and Minor Spell Turning for the manual's time; Turn Pebble to Boulder 11-26, Ironskin a blow a "
                         "level, Stinking Cloud "
@@ -398,7 +398,11 @@ class Viewer:
                         "the caster, Hold Undead only on undead of no more; Minute Meteors five globes of 1d4, "
                         "Flame Arrow a 5d6 bolt for every five levels; Turn Undead by AD&D's table (turned undead "
                         "flee, a failed priest can't try again that fight); a classless monster's hit dice its "
-                        "level for saves; from the next start", variable=self.spells_manual,
+                        "level for saves; Fire Shield +2 and Blur +1 on saves; Chill Touch frightens undead; "
+                        "Cloudkill slays by hit dice; Lower Resistance 30% + 1% a level; Strength and Cat's Grace "
+                        "by class, not added to each other's kind; Rainbow Pattern a round a level, ended by "
+                        "damage; Feeblemind stops psionics and Heal cures it; Cell Adjustment 1d4; Biofeedback leaves "
+                        "at least 1 of a blow; from the next start", variable=self.spells_manual,
                         command=self._options_changed).pack(anchor="w")
         # missile and hostile touch spells roll to hit (gamepatch.SPELL_TO_HIT)
         self.spell_to_hit = tk.BooleanVar(value=settings.get("spell_to_hit", True) is not False)
