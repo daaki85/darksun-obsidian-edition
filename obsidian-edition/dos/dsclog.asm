@@ -14924,6 +14924,15 @@ tu_site:
         mov [cs:tu_target], si
         mov cx, [bp + 8]
         mov [cs:tu_caster], cx
+        mov ax, ds                      ; (and their creatures: a turning out of a fight starts one,
+        add ax, THINGS_SEG              ; which numbers the things afresh before the Loader reads
+        mov es, ax                      ; the record)
+        imul bx, si, 3
+        call tu_creature
+        mov [cs:tu_target_c], ax
+        imul bx, cx, 3
+        call tu_creature
+        mov [cs:tu_caster_c], ax
         movzx ax, byte [bp + 0x0C]
         mov [cs:tu_level], ax
         xor ax, ax
@@ -15101,7 +15110,16 @@ tu_hd     dw 0                  ;   +0Eh its hit dice
 tu_outcome dw 0                 ;   +10h TU_NOT ... TU_NONE
 tu_rounds dw 0                  ;   +12h turned: the rounds it flees
 tu_more   dw 0                  ;   +14h D*: how many more of its kind this cast (counted down)
+tu_caster_c dw 0                ;   +16h the priest's creature (FFFFh: not a creature)
+tu_target_c dw 0                ;   +18h the undead's
 tu_frame_end:
+
+tu_creature:                    ; AX the creature of the thing at ES:BX (the things table's), FFFFh none
+        mov ax, 0xFFFF
+        cmp byte [es:bx + THINGS], 2
+        jne .ret
+        mov ax, [es:bx + THINGS + 1]
+.ret:   ret
 
 ; FLAME_SITE (gamepatch "flame_arrow_count", with the spells as the manual has them): in a cast's
 ; tail (7566Eh, the routine 7511Bh: [BP+0Ah] the spell, [BP+0Ch] the cast's level), "mov dl,[es:bx]"

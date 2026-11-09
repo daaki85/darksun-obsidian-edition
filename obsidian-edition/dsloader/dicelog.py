@@ -2467,6 +2467,7 @@ class DiceLog:
             # "special attack 190")
             name = "Turn Undead" if e.raw == TURN_UNDEAD_SPELL else self.game.spell_name(e.raw)
             self._float(e.arg(6), name, labels.SPELL_INK, now)
+            self._tally.cast(self._name(e.arg(6)), name)  # (its damage the caster's: Magic Missile's)
             if e.raw == game.RESTORE_YOUTH_SPELL and self.rules & game.RULE_AGING:  # (its years: aging.restore)
                 caster, target = self.game.combatant_creature(e.arg(6)), self.game.combatant_creature(e.arg(8))
                 if caster is not None and target is not None:
@@ -3749,10 +3750,15 @@ class DiceLog:
             e.arg(at) for at in (6, 8, 0x0A, 0x0C, 0x0E, 0x10, 0x12, 0x14))
         if None in (caster, target, cell, level, hd, outcome):
             return []
-        who, what = self._name(caster), self._name(target)
+        # (their creatures, as they were when the turning was made: one out of a fight starts a fight,
+        # which numbers the combatants afresh before this is read)
+        caster_c, creature = e.arg(0x16), e.arg(0x18)
+        who = self._turn_name(caster, caster_c)
+        what = self._turn_name(target, creature)
         about = f"(priest level {level} vs {hd} HD, AD&D's table)"
         if outcome in (TURN_DESTROYED, TURN_DSTARRED, TURN_MORE_ONE):
-            creature = self.game.combatant_creature(target)
+            if creature is None or not 0 <= creature < 512:
+                creature = self.game.combatant_creature(target)
             if creature is not None:
                 self._destroyed[creature] = "destroyed by Turn Undead"
             self._spell_until = 0.0  # (no spell's HP lines: the destruction is said as such)
@@ -3774,6 +3780,12 @@ class DiceLog:
             return [f"{who} turns {what}: d20 = {e.raw}, needs {cell}+ {about} -> {flees}"]
         return [f"{who} turns {what}: d20 = {e.raw}, needs {cell}+ {about} -> not turned: can't try "
                 f"again on it this fight"]
+
+    def _turn_name(self, combatant: int, creature: Optional[int]) -> str:
+        """A combatant's name by the creature recorded with it, if any (else by its number)."""
+        if creature is not None and 0 <= creature < 512:
+            return self.game.creature_name(creature)
+        return self._name(combatant)
 
     def _turn_target(self, target: Optional[int]) -> Optional[int]:
         """The hit dice (sheet +24h) of an undead (race 9) combatant, else None."""

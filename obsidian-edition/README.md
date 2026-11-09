@@ -530,8 +530,8 @@ and the crash and freeze reports use them.
 seconds; each arena wave gets its own) the log sums it up: `Fight over: 3
 rounds, 4 kills; the party dealt 61 damage and took 19`, then a line for each
 member, `Seneca: 2 of 2 attacks hit, 30 dealt, 1 kill`. A kill goes to whoever
-hurt the creature last, a spell's damage to the caster its saving throws or
-attack roll name (only the party's own spells count). The readable layout shows it as the fight's
+hurt the creature last, a spell's damage to its caster, Magic Missile's too
+(only the party's own spells count). The readable layout shows it as the fight's
 close, every member's line shown.
 
 ![The readable layout: the same fight with the working shown and hidden](docs/dicelog-readable.png)

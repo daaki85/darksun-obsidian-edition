@@ -21,7 +21,7 @@ class FightTallyTests(unittest.TestCase):
             "Guard attacks Jenna with Bone Spear (1d8): d20 = 15, needs 13+ (40%), hits AC 1, target AC 3 -> HIT",
             "  Guard hits Jenna for 6: 1d8 = [6]",
             "Jenna attacks Guard: d20 = 3, needs 9+ (60%), hits AC 15, target AC 5 -> miss",
-            "  Guard takes 7 from Magic Missile, now 3/10 HP",  # (no line named its caster: no one's)
+            "  Guard takes 7 from Magic Missile, now 3/10 HP",  # (no cast or line named its caster: no one's)
         ])
         self.assertEqual(t.end(), [
             "Fight over: 2 rounds, 1 kill; the party dealt 21 damage and took 6",
@@ -64,6 +64,20 @@ class FightTallyTests(unittest.TestCase):
         ])
         self.assertEqual(t.end()[:2], ["Fight over: 1 round, 0 kills; the party dealt 3 damage and took 0",
                                        "    Lex: 3 dealt"])
+
+    def test_cast_names_its_caster(self):
+        """A cast's record names its caster (cast()): a spell with no save or attack roll, Magic
+        Missile, is its caster's; a monster's cast of it is not the party's."""
+        t = FightTally(PARTY.__contains__)
+        t.feed(["Round 1: Lex 20, Mage 18"])
+        t.cast("Lex", "Magic Missile")
+        t.feed(["  Guard takes 7 from Magic Missile, now 3/10 HP"])
+        t.cast("Mage", "Magic Missile")
+        t.feed(["  Templar takes 5 from Magic Missile, now 5/10 HP"])
+        t.cast("?", "Magic Missile")  # (a caster with no name now: the last one kept)
+        t.feed(["  Jenna takes 4 from Magic Missile, now 21/25 HP"])
+        self.assertEqual(t.end(), ["Fight over: 1 round, 0 kills; the party dealt 7 damage and took 4",
+                                   "    Lex: 7 dealt", "    Jenna: took 4"])
 
     def test_spell_named_from(self):
         """A spell whose name has " from " in it: its caster after the last one, or none."""

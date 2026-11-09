@@ -10,9 +10,9 @@ fight is over (the game's fight flag down a moment after it was up), and writes 
         Jenna: 3 of 3 attacks hit, 22 dealt, took 6
 
 A kill is put to whoever hurt the creature last (a weapon's hit, or the caster of the spell that
-hurt it, when a saving throw against it or the spell's attack roll named the caster). A spell's
-damage counts as the party's only when its caster is known to be a party member (a monster's spells
-on its own side, and a spell whose caster no line named, are not the party's)."""
+hurt it: the cast's record names the caster, cast(), as do a saving throw against the spell and its
+attack roll). A spell's damage counts as the party's only when its caster is a party member (a
+monster's spells on its own side are not the party's)."""
 
 import re
 from typing import Callable, Dict, List, Optional
@@ -102,6 +102,11 @@ class FightTally:
         m = SPELL_ATTACK.match(line)  # (... and on its attack roll)
         if m:
             self._caster[m.group("what")] = m.group("who")
+
+    def cast(self, who: str, spell: str) -> None:
+        """A spell cast (the dice log's cast record): its damage, said later, is its caster's."""
+        if who and who != "?":
+            self._caster[spell] = who
 
     def _hurt(self, by: Optional[str], target: str, n: int) -> None:
         if self.is_party(target):

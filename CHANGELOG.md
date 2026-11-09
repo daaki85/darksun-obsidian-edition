@@ -40,7 +40,7 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 
 ## Next pull request (not opened yet)
 
-DSCLOG.EXE 65,184 bytes (image 65,152), 3,264 of its segment spare.
+DSCLOG.EXE 65,232 bytes (image 65,200), 3,216 of its segment spare.
 
 **Changed**
 - **Spells and psionics as the manual describes them** (a new rule change, on by default, from the
@@ -134,12 +134,14 @@ DSCLOG.EXE 65,184 bytes (image 65,152), 3,264 of its segment spare.
   at a time, each with a d20 of its own against 10 + 3 x (its row - the level's), and a success
   destroys it (the game has no fleeing: a failure calls an empty routine); seen in DOSBox: no limit
   of uses, the same undead can be tried again (HOW-THE-GAME-WORKS's new Turn Undead section,
-  against AD&D's table; playtest/logs/2026-11-08-turn-undead.md).
+  against AD&D's table; playtest/logs/2026-11-08-turn-undead.md). With the manual's spells, the
+  record carries the priest's and the undead's creatures, so a turning out of a fight, which starts
+  one and numbers the combatants afresh before the Loader reads it, names them (it said "?").
 - **A fight's summary as it ends** (mock-up G's): `Fight over: 2 rounds, 1 kill; the party dealt 28
   damage and took 6`, then each member's attacks hit, damage dealt, kills and damage taken, written
   once the game's fight flag has been down 2 seconds (each arena wave gets its own). A kill goes to
-  whoever hurt the creature last, a spell's damage to the caster its saving throws or attack roll
-  name (only a party member's spells count for the party). The readable layout shows it as the fight's close, its members' lines always shown.
+  whoever hurt the creature last, a spell's damage to its caster (named by the cast's record, so
+  Magic Missile's too; only a party member's spells count for the party). The readable layout shows it as the fight's close, its members' lines always shown.
   (`fighttally.py`; tests: `test_fighttally`, `test_ledger`.)
 - **The dice log window has a readable layout** (mock-up G of the combat log research, on by
   default, **Readable layout** to switch back; `dsloader/ledger.py`). Each event is a line with its
@@ -207,8 +209,8 @@ DSCLOG.EXE 65,184 bytes (image 65,152), 3,264 of its segment spare.
   see-through, the ring, the panel's colours, labels, to-hit, Turn Undead, item names and types,
   next-level XP, the Effects screen, Look, creation, a shop). With the manual's spells, the
   monsters, resting and dual-classing, and the audit's fixes (their per-fight tables moved to the
-  far block), the helper ends the pull request with 3,264 bytes of its segment spare, 102 bytes
-  free in the far block (the HMA) and 392 paragraphs of upper memory spare.
+  far block), the helper ends the pull request with 3,216 bytes of its segment spare, 102 bytes
+  free in the far block (the HMA) and 389 paragraphs of upper memory spare.
 - The helper counts the game's page flips (`flip_count`, header +1832), for a frame rate:
   `playtest/framerate.py` reads it beside steady pace's frames left undrawn.
 

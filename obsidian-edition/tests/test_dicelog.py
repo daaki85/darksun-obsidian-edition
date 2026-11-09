@@ -777,7 +777,8 @@ class SaveTests(unittest.TestCase):
         stalker = CREATURES + STALKER * game.CREATURE_SIZE
         struct.pack_into("<h", m, stalker, 13)
         self.assertEqual(log.hp_changes(0.5), [])
-        turn = lambda d20, *frame: log.describe(entry(d20, frame=words(0, 0, 2, 0x29, *frame), kind=dicelog.KIND_TURN))
+        who = (log.game.combatant_creature(2), log.game.combatant_creature(0x29))
+        turn = lambda d20, *frame: log.describe(entry(d20, frame=words(0, 0, 2, 0x29, *frame, *who), kind=dicelog.KIND_TURN))
         about = "(priest level 3 vs 2 HD, AD&D's table)"
         self.assertEqual(turn(14, 16, 3, 2, dicelog.TURN_TURNED, 7, 0),
                          [f"Jellybelly turns Mountain Stalker: d20 = 14, needs 16+ {about} -> turned: flees 3d4 = 7 "
@@ -800,6 +801,23 @@ class SaveTests(unittest.TestCase):
         self.assertEqual(turn(0, dicelog.TURN_D, 3, 2, dicelog.TURN_DESTROYED, 0, 0),
                          [f"Jellybelly turns Mountain Stalker: destroyed automatically (D) {about}"])
         struct.pack_into("<h", m, stalker, 13 - 1000)
+        self.assertEqual(log.hp_changes(2.5), ["  Mountain Stalker is destroyed by Turn Undead"])
+
+    def test_turn_undead_renumbered(self):
+        """A turning out of a fight starts one, which numbers the combatants afresh before the record
+        is read: the names (and the destruction) come from the creatures recorded with it."""
+        log = make_game()
+        self.make_undead(log, 2)
+        who = (log.game.combatant_creature(2), log.game.combatant_creature(0x29))
+        stalker = CREATURES + STALKER * game.CREATURE_SIZE
+        struct.pack_into("<h", log.guest.mem, stalker, 13)
+        self.assertEqual(log.hp_changes(0.5), [])
+        # (the old numbers name nothing now: 0x30 and 0x31 are no creatures')
+        rec = entry(0, frame=words(0, 0, 0x30, 0x31, dicelog.TURN_D, 3, 2, dicelog.TURN_DESTROYED, 0, 0, *who),
+                    kind=dicelog.KIND_TURN)
+        self.assertEqual(log.describe(rec), ["Jellybelly turns Mountain Stalker: destroyed automatically (D) "
+                                             "(priest level 3 vs 2 HD, AD&D's table)"])
+        struct.pack_into("<h", log.guest.mem, stalker, 13 - 1000)
         self.assertEqual(log.hp_changes(2.5), ["  Mountain Stalker is destroyed by Turn Undead"])
 
     def test_turned_undead_flee(self):
@@ -871,6 +889,16 @@ class SaveTests(unittest.TestCase):
         e = entry(game.FRIENDS_SPELL, frame=words(0, 0, 2, 0x29, game.FRIENDS_SPELL), kind=dicelog.KIND_CAST)
         self.assertEqual(log.describe(e), [])
         self.assertEqual(floated, [(2, log.game.spell_name(game.FRIENDS_SPELL))])
+
+    def test_spell_cast_names_its_caster_to_the_tally(self):
+        """A cast's record tells the fight's tally who cast the spell: its damage, said later, theirs."""
+        log = make_game()
+        log._float = lambda *a: None
+        spell = log.game.spell_name(game.FRIENDS_SPELL)
+        log._tally.feed(["Round 1: Jellybelly 20"])
+        log.describe(entry(game.FRIENDS_SPELL, frame=words(0, 0, 2, 0x29, game.FRIENDS_SPELL), kind=dicelog.KIND_CAST))
+        log._tally.feed([f"  Guard takes 6 from {spell}, now 4/10 HP"])
+        self.assertEqual(log._tally.members["Jellybelly"].dealt, 6)  # (a party member's)
 
     def test_aim_refused(self):
         """A spell cast with a click that the game refused (DSCLOG's AIM_SITE), with the reason."""
