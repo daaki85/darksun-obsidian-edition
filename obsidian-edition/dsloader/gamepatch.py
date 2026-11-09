@@ -206,6 +206,8 @@ REST_PRE_SITE, REST_HP_SITE = NS_IMAGE + 94, NS_IMAGE + 95
 SAVE_SUM_SITE, SAVE_NAT_SITE = NS_IMAGE + 96, NS_IMAGE + 97
 # (the item box's picture: a tall weapon's small copy, icons.BOX_TALL: DSCLOG's BOX_PICS)
 BOX_PIC_ITEM_SITE, BOX_PIC_OBJECT_SITE = NS_IMAGE + 98, NS_IMAGE + 99
+# (the picture cache's 300 slots: one reused once all are taken, DSCLOG's PIC_REUSE)
+PIC_FULL_SITE, PIC_PLACE_SITE, PIC_COUNT_SITE = NS_IMAGE + 100, NS_IMAGE + 101, NS_IMAGE + 102
 # the monster kinds' table (DSUN.EXE, the load segment's 3E45h: monsters.MONSTER_KINDS_SEG): a kind's
 # properties (a dword), its resistance class (a byte), a class's damage kinds (four words) and percents
 KINDS_FILE = 0x5400 + 0x3E45 * 16
@@ -570,6 +572,14 @@ PATCHES = (
     # keep the picture. Always applied (the copies are in the Loader's SEGOBJEX.GFF whatever the Options)
     Patch("box_picture_item", 0x8C344, bytes.fromhex("66260fbf470c"), _site(BOX_PIC_ITEM_SITE, 6)),
     Patch("box_picture_object", 0x8C384, bytes.fromhex("660fb746f2"), _site(BOX_PIC_OBJECT_SITE, 5)),
+    # The picture cache (DSUN.EXE 25FA6h: each WALL or BMP picture drawn has a slot of 300, given
+    # back only when a region loads): with all taken a new picture had none and wasn't drawn (Wake of
+    # the Ravager's "graphics disappear during play", the same engine's). DSCLOG's PIC_REUSE reuses a
+    # slot out of memory that no wall or map thing names, the picture's store place the first gap it
+    # fits. Always applied (a fix): below 300 slots the game's own way.
+    Patch("pic_full", 0x26009, bytes.fromhex("813e841f2c0173bfa1841f"), _site(PIC_FULL_SITE, 11)),
+    Patch("pic_place", 0x260CC, bytes.fromhex("c45efc"), _site(PIC_PLACE_SITE, 3)),
+    Patch("pic_count", 0x2612B, bytes.fromhex("8b36841fff06841f"), _site(PIC_COUNT_SITE, 8)),
     # The monsters as the manual describes them (in the same switch; reports/group 4's research,
     # playtest/logs/2026-11-09-group-4-research.md). The kinds' properties: bit 15 a hit (the last
     # natural attack's) casting the priests' Poison (119), bit 24 the corroding touch, bit 25 disease

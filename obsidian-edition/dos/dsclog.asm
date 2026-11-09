@@ -14998,6 +14998,9 @@ SAVE_SUM_SITE equ NS_IMAGE + 96  ; 79B97h: a save's d20 and modifiers added, kep
 SAVE_NAT_SITE equ NS_IMAGE + 97  ; 79BB4h: a natural 20 saves unless the save can't be made (SAVE_SUM)
 BOX_PIC_ITEM_SITE equ NS_IMAGE + 98   ; 8C344h: the item box's picture, an item's own number (BOX_PICS)
 BOX_PIC_OBJECT_SITE equ NS_IMAGE + 99 ; 8C384h: ... or its object's icon (BOX_PICS)
+PIC_FULL_SITE equ NS_IMAGE + 100      ; 26009h: the picture cache's 300 slots taken: one reused (PIC_REUSE)
+PIC_PLACE_SITE equ NS_IMAGE + 101     ; 260CCh: a reused slot's picture's place in the store (PIC_REUSE)
+PIC_COUNT_SITE equ NS_IMAGE + 102     ; 2612Bh: the slot's number, the count raised only for a new one (PIC_REUSE)
 KIND_TURN  equ 13
 TU_DESTROY equ 0x7AE60 - 0x7AE04 ; (the ways on, less the address after the site's number)
 TU_FAIL    equ 0x7AE75 - 0x7AE04
@@ -16531,6 +16534,213 @@ box_pic:
 box_tall dw 2383, 2311, 2157, 2143, 2287, 2254, 2384, 1494, 2392, 2255, 2334, 1199  ; (the game's)
          dw 2653, 2447, 2513, 2571, 2573        ; (the Loader's own: icons.BOX_TALL)
 BOX_TALL_COUNT equ ($ - box_tall) / 2
+
+; PIC_REUSE: the game's picture cache (DSUN.EXE 25FA6h, a WALL or BMP chunk's slot) has 300 slots,
+; each a picture's number, length, place in the store, memory and flags (CACHE_SEG, 16 bytes), and
+; gives none back until a region loads (2368Eh): at 300 a new picture got no slot and wasn't drawn
+; (Wake of the Ravager's "graphics disappear", SSI's note 2712; the same engine). The slots that
+; hold a number are the walls' (WALL_SLOTS) and the map things' (+0Fh); every other use takes one
+; from those, a loop over the count, or the loader itself. So with all 300 taken a slot is reused:
+; one out of memory (flag 2) that no wall and no thing names, one the Loader let go (FFFEh, STALE)
+; first. Its picture goes in the first gap in the store it fits (the slots' places and lengths, the
+; one reused and the STALE ones left out), else past the furthest end. Below 300 the game's own way.
+CACHE_MOST   equ 300            ; the game's slots
+CACHE_GAP    equ 0x4356 - CACHE_SEG ; (the table's segment, below the game's DS)
+CACHE_STORE  equ 0xB5000        ; the store's bytes (60D9Bh)
+CACHE_STALE  equ 0xFFFE         ; a slot the Loader let go (sprites.STALE)
+WALL_SLOTS   equ 0x574E         ; DS: the walls' pictures' slots, a word every 4 bytes (24643h)
+WALL_COUNT   equ 31
+PF_FAIL      equ 0x25FD0 - 0x2600C ; (from after the site's number: the loader's "no slot")
+PF_PLACED    equ 0x2610D - 0x260CF ; (... past the game's place: the store written)
+
+; PIC_FULL (26009h, "cmp word [1F84h],12Ch / jae no slot / mov ax,[1F84h]"): the slot for a new
+; picture in AX: the next, or with all taken one reused (PF_SLOT; none: no slot, as the game).
+pic_full:
+        mov byte [cs:pf_reuse], 0
+        mov ax, [CACHE_LAST]
+        cmp ax, CACHE_MOST
+        jae .full
+        iret
+.full:  sti
+        push es
+        push di
+        push si
+        push cx
+        push bx
+        push cs
+        pop es
+        mov di, pf_used
+        mov cx, PF_USED_WORDS
+        cld                             ; (before the XOR: KEEP's own zeroing is found by its order)
+        xor ax, ax
+        rep stosw
+        mov si, WALL_SLOTS
+        mov cx, WALL_COUNT
+.wall:  mov bx, [si]
+        call pf_mark
+        add si, 4
+        loop .wall
+        mov si, MAP_THINGS + 0x0F
+        mov cx, MAP_COUNT
+.thing: mov bx, [si]
+        call pf_mark
+        add si, 32
+        loop .thing
+        mov ax, ds
+        sub ax, CACHE_GAP
+        mov es, ax
+        xor bx, bx
+        xor si, si
+        mov di, 0xFFFF                  ; (the first free one with a number)
+.scan:  test byte [es:bx + 0x0E], 2
+        jnz .next                       ; (in memory)
+        bt word [cs:pf_used], si
+        jc .next                        ; (named by a wall or a thing)
+        cmp word [es:bx], CACHE_STALE
+        je .take
+        cmp di, 0xFFFF
+        jne .next
+        mov di, si
+.next:  add bx, 16
+        inc si
+        cmp si, CACHE_MOST
+        jb .scan
+        mov si, di
+        cmp si, 0xFFFF
+        je .none
+        mov bx, si
+        shl bx, 4
+.take:  mov word [es:bx], CACHE_STALE   ; (found by no number until its picture is in)
+        mov [cs:pf_slot], si
+        mov byte [cs:pf_reuse], 1
+        mov ax, si
+        pop bx
+        pop cx
+        pop si
+        pop di
+        pop es
+        iret
+.none:  pop bx
+        pop cx
+        pop si
+        pop di
+        pop es
+        push bp
+        mov bp, sp
+        add word [bp + 2], PF_FAIL
+        pop bp
+        iret
+pf_mark:                                ; BX a slot (any word): its bit in PF_USED
+        cmp bx, CACHE_MOST
+        jae .out
+        bts word [cs:pf_used], bx
+.out:   ret
+
+; PIC_PLACE (260CCh, "les bx,[bp-4]" before the place is worked out): a reused slot's place, the
+; first gap of its length (ES:BX the slot, +2 the length) in the store, else the furthest end.
+pic_place:
+        les bx, [bp - 4]
+        cmp byte [cs:pf_reuse], 0
+        jne .reused
+        iret
+.reused:
+        sti
+        pushad
+        mov edx, [es:bx + 2]            ; its length
+        mov ax, ds
+        sub ax, CACHE_GAP
+        mov es, ax
+        xor ecx, ecx                    ; a place to try: the store's start, then each slot's end
+        mov word [cs:pf_cand], 0
+.try:   mov eax, ecx
+        add eax, edx
+        cmp eax, CACHE_STORE
+        ja .another
+        xor bx, bx
+        xor si, si
+.check: call pf_slot_end                ; (EDI its place, EBP its end; CF: none to count)
+        jc .clear
+        cmp edi, eax
+        jge .clear                      ; (starts past the place's end)
+        cmp ecx, ebp
+        jl .another                     ; (overlaps)
+.clear: add bx, 16
+        inc si
+        cmp si, CACHE_MOST
+        jb .check
+        jmp .found
+.another:
+        mov si, [cs:pf_cand]
+        cmp si, CACHE_MOST
+        jae .last
+        inc word [cs:pf_cand]
+        mov bx, si
+        shl bx, 4
+        call pf_slot_end
+        jc .another
+        mov ecx, ebp
+        jmp .try
+.last:  xor ecx, ecx                    ; (no gap: the furthest end, the game's own end of things)
+        xor bx, bx
+        xor si, si
+.end:   call pf_slot_end
+        jc .past
+        cmp ebp, ecx
+        jbe .past
+        mov ecx, ebp
+.past:  add bx, 16
+        inc si
+        cmp si, CACHE_MOST
+        jb .end
+.found: mov [cs:pf_place], ecx
+        popad
+        les bx, [bp - 4]
+        push eax
+        mov eax, [cs:pf_place]
+        mov [es:bx + 6], eax
+        pop eax
+        push bp
+        mov bp, sp
+        add word [bp + 2], PF_PLACED
+        pop bp
+        iret
+pf_slot_end:                            ; slot SI at ES:BX: EDI its place, EBP its end; CF if it
+        cmp si, [cs:pf_slot]            ;   holds no place (the one reused, a STALE one, none)
+        je .none
+        cmp word [es:bx], CACHE_STALE
+        je .none
+        mov edi, [es:bx + 6]
+        or edi, edi
+        js .none
+        mov ebp, [es:bx + 2]
+        or ebp, ebp
+        jz .none
+        add ebp, edi
+        clc
+        ret
+.none:  stc
+        ret
+
+; PIC_COUNT (2612Bh, "mov si,[1F84h] / inc word [1F84h]"): the slot's number in SI; the count
+; raised for a new slot, not a reused one.
+pic_count:
+        cmp byte [cs:pf_reuse], 0
+        jne .reused
+        mov si, [CACHE_LAST]
+        inc word [CACHE_LAST]
+        iret
+.reused:
+        mov si, [cs:pf_slot]
+        mov byte [cs:pf_reuse], 0
+        inc word [cs:pf_count]
+        iret
+PF_USED_WORDS equ (CACHE_MOST + 15) / 16
+pf_used    times PF_USED_WORDS dw 0     ; the slots a wall or a thing names
+pf_place   dd 0
+pf_slot    dw 0                         ; the slot reused
+pf_cand    dw 0
+pf_count   dw 0                         ; slots reused, all told (for the tests and playtest)
+pf_reuse   db 0
 
 rest_hp:
         test word [cs:rules_hi], RULE_HI_REST
@@ -19370,6 +19580,9 @@ site_tab:
         site SAVE_NAT_SITE, save_nat
         site BOX_PIC_ITEM_SITE, box_pic_item
         site BOX_PIC_OBJECT_SITE, box_pic_object
+        site PIC_FULL_SITE, pic_full
+        site PIC_PLACE_SITE, pic_place
+        site PIC_COUNT_SITE, pic_count
 SITE_COUNT equ ($ - site_tab) / 2
 
 ; NS_CMP: the compare of site RL_SITE (of NS_CMP_SITES), its flags into the INT's frame.

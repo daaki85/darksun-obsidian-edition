@@ -8594,3 +8594,134 @@ class KeepTests(unittest.TestCase):
         self.assertTrue(calls and calls[-1][0] == 0x31)
         self.assertEqual(calls[0][2], bytes(end - first))  # zeroed before the first DOS call
         self.assertEqual(calls[-1][1], asked[0])  # (and that kept)
+
+
+@unittest.skipIf(Uc is None, "unicorn not installed")
+class PictureSlotTests(RuleTests):
+    """PIC_REUSE: the picture cache's 300 slots (DSUN.EXE 25FA6h). Below 300 the game's own way; with
+    all taken a slot out of memory that no wall or map thing names is reused (a STALE one first), its
+    picture placed in the first gap of the store it fits, and the count left at 300."""
+    TABLE = GAME_DS - (0x4356 - 0x3E60)  # (the table's segment, below the game's DS)
+
+    def slot(self, k, number, length=0, place=-1, flags=0):
+        self.mu.mem_write(self.TABLE * 16 + k * 16, struct.pack("<HIiIBB", number, length, place, 0, flags, 0))
+
+    def entry(self, k):
+        return struct.unpack("<HIiIBB", bytes(self.mu.mem_read(self.TABLE * 16 + k * 16, 16)))
+
+    def count(self, value=None):
+        if value is not None:
+            self.mu.mem_write(GAME_DS * 16 + 0x1F84, struct.pack("<H", value))
+        return struct.unpack("<H", self.mu.mem_read(GAME_DS * 16 + 0x1F84, 2))[0]
+
+    def jump(self, number, stops, **regs):
+        """INT 98h and site NUMBER; run until IP reaches one of STOPS (offsets after the site's
+        number): which."""
+        mu = self.mu
+        self.at += 0x20
+        base = CALLER * 16 + self.at
+        mu.mem_write(base, bytes((0xCD, 0x98, number)))
+        ends = {base + 3 + s: s for s in stops}
+        hit = []
+        def hook(uc, address, size, _):
+            if address in ends:
+                hit.append(ends[address])
+                uc.emu_stop()
+        h = mu.hook_add(UC_HOOK_CODE, hook)
+        for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, **regs).items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+        try:
+            mu.emu_start(base, 0xFFFFF, count=5_000_000)
+        finally:
+            mu.hook_del(h)
+        self.assertEqual(len(hit), 1, "never came back")
+        self.assertEqual(mu.reg_read(r.UC_X86_REG_SP), 0x800)
+        return hit[0]
+
+    def setUp(self):
+        super().setUp()
+        image = load_image()
+        at = install_at(image, 0x98)
+        self.mu.mem_write(0x98 * 4, struct.pack("<HH", struct.unpack_from("<H", image, at + 4)[0], TSR))
+        self.mu.mem_write(self.TABLE * 16, bytes(300 * 16))
+        self.mu.mem_write(GAME_DS * 16 + 0x6694, b"\xff" * (520 * 32))  # (no thing names a slot)
+        self.mu.mem_write(GAME_DS * 16 + 0x574C, b"\xff" * (31 * 4))   # (nor a wall)
+
+    FAIL, PLACED = 0x25FD0 - 0x2600C, 0x2610D - 0x260CF
+
+    def full(self):
+        """All 300 taken, in memory, one after another in the store, 100 bytes each."""
+        for k in range(300):
+            self.slot(k, 1000 + k, 100, k * 100, 3)
+        self.count(300)
+
+    def test_sites(self):
+        from dsloader import gamepatch
+        for name, offset, site in (("pic_full", 0x26009, gamepatch.PIC_FULL_SITE),
+                                   ("pic_place", 0x260CC, gamepatch.PIC_PLACE_SITE),
+                                   ("pic_count", 0x2612B, gamepatch.PIC_COUNT_SITE)):
+            p = next(p for p in gamepatch.PATCHES if p.name == name)
+            self.assertEqual((p.offset, p.replacement[2]), (offset, site))
+            self.assertEqual(len(p.original), len(p.replacement))
+
+    def test_below_300_the_games_way(self):
+        from dsloader import gamepatch
+        self.count(203)
+        self.assertEqual(self.jump(gamepatch.PIC_FULL_SITE, (0, self.FAIL)), 0)
+        self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 203)
+        self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<HH", 0x40, 0x2345))
+        self.assertEqual(self.jump(gamepatch.PIC_PLACE_SITE, (0, self.PLACED)), 0)  # (the game's place)
+        self.assertEqual((self.mu.reg_read(r.UC_X86_REG_ES), self.mu.reg_read(r.UC_X86_REG_BX)), (0x2345, 0x40))
+        self.jump(gamepatch.PIC_COUNT_SITE, (0,))
+        self.assertEqual((self.mu.reg_read(r.UC_X86_REG_SI), self.count()), (203, 204))
+
+    def test_full_nothing_free(self):
+        """Every slot in memory: no slot, as the game (its "no slot" way on)."""
+        from dsloader import gamepatch
+        self.full()
+        self.assertEqual(self.jump(gamepatch.PIC_FULL_SITE, (0, self.FAIL)), self.FAIL)
+        self.assertEqual(self.count(), 300)
+
+    def test_full_reuses_a_free_slot(self):
+        """Out of memory and named by nothing: reused; a wall's, a thing's and one in memory not; a
+        STALE one first; then the place: the first gap it fits; the count stays 300."""
+        from dsloader import gamepatch
+        self.full()
+        for k in (10, 20, 30, 40, 250):
+            self.slot(k, 1000 + k, 100, k * 100, 1)  # (stored, out of memory)
+        self.mu.mem_write(GAME_DS * 16 + 0x574E + 4 * 3, struct.pack("<H", 10))  # a wall's
+        self.mu.mem_write(GAME_DS * 16 + 0x6694 + 32 * 400 + 0x0F, struct.pack("<H", 20))  # a thing's
+        self.assertEqual(self.jump(gamepatch.PIC_FULL_SITE, (0, self.FAIL)), 0)
+        self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 30)
+        self.assertEqual(self.entry(30)[0], 0xFFFE)  # (no number until its picture is in)
+        self.slot(30, 1030, 100, 3000, 3)      # (its picture in: in memory)
+        self.slot(250, 0xFFFE, 100, 25000, 1)  # a STALE one is taken before 40
+        self.jump(gamepatch.PIC_FULL_SITE, (0, self.FAIL))
+        self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 250)
+        # its picture of 150 bytes: its own old 100 too short, every other place held: past the end
+        self.slot(30, 0xFFFE, 100, 3000, 1)    # (30 let go again: its 100 free)
+        self.slot(250, 0xFFFE, 150, 25000, 1)
+        self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<HH", 250 * 16, self.TABLE))
+        self.assertEqual(self.jump(gamepatch.PIC_PLACE_SITE, (0, self.PLACED)), self.PLACED)
+        self.assertEqual(self.entry(250)[2], 30000)
+        # 80 bytes: the first gap, slot 30's old place (STALE) at 3000
+        self.slot(250, 0xFFFE, 80, 25000, 1)
+        self.jump(gamepatch.PIC_PLACE_SITE, (0, self.PLACED))
+        self.assertEqual(self.entry(250)[2], 3000)
+        self.jump(gamepatch.PIC_COUNT_SITE, (0,))
+        self.assertEqual((self.mu.reg_read(r.UC_X86_REG_SI), self.count()), (250, 300))
+
+    def test_gap_between_slots(self):
+        """A gap left where slots' places don't meet: the first one long enough."""
+        from dsloader import gamepatch
+        self.full()
+        self.slot(5, 1005, 40, 500, 3)    # (60 free after it)
+        self.slot(7, 1007, 10, 700, 3)    # (90 free after it)
+        self.slot(9, 0xFFFE, 0, 900, 1)   # the one reused
+        self.jump(gamepatch.PIC_FULL_SITE, (0, self.FAIL))
+        self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 9)
+        for length, place in ((50, 540), (90, 710), (95, 900), (101, 30000)):
+            self.slot(9, 0xFFFE, length, 900, 1)
+            self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<HH", 9 * 16, self.TABLE))
+            self.jump(gamepatch.PIC_PLACE_SITE, (0, self.PLACED))
+            self.assertEqual(self.entry(9)[2], place, length)
