@@ -62,10 +62,14 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
    vectors are set from a table in the install code (`all_vectors`: the vector byte, then its
    handler's offset): read it from the EXE and check each vector in segment 0 against it. **The
    far block** (`far_seg`, the header's +142: FFFFh, the HMA, so linear FFFF0h + offset) now holds
-   DAC (+238's offset), RING_TAB (+246), RED (+248), the dust's walked counts and the item types
-   (FAR_DATA: +172's offset, +174 bytes, which should equal the EXE's bytes at +144's offset as
-   built): a tool reading those at the helper's segment reads stale bytes (`dacwatch.py` and
-   `ghostwatch.py` were changed for it).
+   DAC (+238's offset), RING_TAB (+246), RED (+248), LIGHT (+236), the dust's walked counts, its
+   puffs and DARK: a tool reading those at the helper's segment reads stale bytes (`dacwatch.py`
+   and `ghostwatch.py` were changed for it). **The tail** (2026-11-09: `tail_seg`, the header's
+   +1834, the paragraph after the image, +1836 paragraphs on from the helper's segment) holds the
+   labels' slots (+1838's offset), TICKS (+356's), the item types and the companion's names; the
+   header's +144 is now where ALL_VECTORS is in the image. **`buildcheck.py`** does the whole
+   check (routines' bytes against the EXE, every vector at its handler, the tail's segment and
+   its data) in one go; it takes routine names to compare others.
    **Comparing two builds' memory**: put the old `DSCLOG.EXE` in `obsidian-edition/dos/` for one
    `loadsave.sh`, run `memaudit.py`, then put the new one back and `cmp` it with a fresh build;
    don't do it while the unit tests run (they read `dos/DSCLOG.EXE`). A failing
@@ -805,6 +809,18 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   DSCLOG's VIEW_REDRAW, header +242, and the pixels changed round each member: a figure missing then
   drawn shows hundreds). An inventory move in a test: `click.py` the item, then the place; an item
   left on the pointer isn't in a shot (it was dropped by the next click on DROP, 213,134).
+- **The picture store itself** (2026-11-09, logs/2026-11-09-picture-store.md): an XMS block behind
+  the game's paged memory manager (handle DS:4C33h, pages through the directory at DS:42D2h); in
+  DOSBox it was guest RAM at 110000h, XMS pages 2-2Fh in one run. `picstore.py` finds it and checks
+  every in-memory picture against its store bytes (`check`; all should match), lists the STALE cells
+  (`stale`) or dumps a slot. The picture pool is 60,000 bytes; opening the inventory (I) puts every
+  picture out of memory (`cachelist.py`: 0 in memory). `outfitcycle.py MEMBER SLOT N` changes an
+  outfit N times (as fillcache.py, but waiting for the Loader's copy to be written, not for the
+  slots to grow) and prints slots, STALE, the store's end and whether the figure is drawn each time.
+  A scratch copy of the mod for a Loader change: `git archive HEAD | tar -x -C DIR`, the game copied
+  to its own `PLAYTEST_WORK`, and the tools run from `DIR/playtest` (start.sh takes the Loader from
+  the kit's parent folder); restart only the dice log (`python3 -u -m dsloader dicelog` from
+  `DIR/obsidian-edition`) to run changed Loader code in a running game.
 
 ## 5. The story so far: what's known of the route
 
