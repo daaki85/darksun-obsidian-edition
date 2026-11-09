@@ -1267,11 +1267,34 @@ runs, when someone's worn items change, the Loader draws their pictures anew
 (`dsloader/spritegear.py`, from where `dsloader/spriteparts.py` finds the
 head, hair, hands and the rest in each frame), writes them into its copy of
 the file with their new lengths in the file's index (the game reads a
-picture's place and length there each time it loads one), takes the old ones
-out of the game's table of loaded pictures (the game frees them itself, as any
-it no longer uses), and empties the figure's slot on the map: the game loads
-the new pictures and draws them at once, in a few thousandths of a second
-(`dsloader/sprites.py`). It then has the helper draw the view again (see
+picture's place and length there each time it loads one), and empties the
+figure's slot on the map: the game draws the new pictures at once, in a few
+thousandths of a second (`dsloader/sprites.py`).
+
+The game keeps every picture it loads in a table of 300 slots and a store of
+a fixed 741,376 bytes, appends a slot (and the room after the last) for each
+picture number it hasn't got, and gives neither back until an area loads. So
+the Loader puts each new picture where the game already keeps one
+(`Dresser._in_store`), finding a picture by its number as the game does: a
+slot it took out earlier that holds exactly this picture (an outfit changed
+back) is given the number back; else the picture's own slot, when it isn't in
+memory (the inventory open lets every picture go), has the new picture
+written into the store at its place; else the smallest slot taken out earlier,
+not in memory, with room for it, gets the picture and the number. The old
+slot is taken out of the table (its number changed: the game frees its
+memory itself, as any it no longer draws). Only with no such slot does the
+game load the new picture into a new slot, and then only while the store and
+the table keep room for it and the game's own (64 KB and 24 slots,
+`_room_for`); else the figure stays as it was until the next area. The store
+is a handle of the game's paged memory manager whose pages are in XMS
+(`sprites.Store`: the handle at DS:4C33h, the handle table at DS:47FAh, the
+page directory at DS:42D2h, backend 0's XMS move at 1187:04B0h); in DOSBox the
+XMS block is ordinary memory above 1 MB, found by an in-memory picture's
+bytes. Nothing in memory is written (the game moves its pictures' memory when
+it makes room), nor a slot's length (the memory the game frees with it), and
+DOSBox is held still for the writes. Where the store isn't found (another
+memory backend, Dark Sun Recompiled), each new outfit takes a new slot as
+before, under the same room check. It then has the helper draw the view again (see
 [Shadows](FEATURES.md#shadows)), so the shadows show the new outfit too. A
 picture the game loads later (in a fight, in another area) comes dressed, from
 the file. The copy also has a spare pair of pictures for each party place.

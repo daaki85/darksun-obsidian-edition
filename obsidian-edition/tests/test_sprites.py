@@ -252,6 +252,7 @@ class SpriteTests(unittest.TestCase):
         dresser.copy_file, dresser.places, dresser._stamp = path, {}, None
         dresser.shown, dresser.request_redraw, dresser._redraw_at = {}, None, None
         dresser.items = chunks
+        dresser.store, dresser._built, dresser.reused = sprites.Store(dresser.gd), {}, 0
         return dresser, path
 
     def test_never_past_the_copys_room(self):
@@ -376,6 +377,166 @@ class SpriteTests(unittest.TestCase):
             outfits[0] = ({"right": (SWORD, METAL)}, ())
             self.assertEqual(dresser.update(True, 4.0), [])  # (the table nearly full)
 
+    # The game's picture store reused (sprites.Store, Dresser._in_store): FakeGame.xms
+    NOISE = bytes((i * 37 + 11) & 0xFF for i in range(256))  # (a picture of the game's, in memory)
+    A, B = ({"right": (SWORD, METAL)}, ()), ({}, ())
+
+    def store_dresser(self, d, outfits, backend_write=None):
+        """A Dresser (dressed_copy) whose game has the XMS store and a picture of its own in
+        memory (slot 0); the member dressed once in OUTFITS[0] with nothing loaded. (dresser, its
+        game, walk, fight, {outfit: its walking chunk})."""
+        worn, sprites.worn = sprites.worn, lambda gd, member, chunks=None: outfits[0]
+        self.addCleanup(setattr, sprites, "worn", worn)
+        dresser, path = self.dressed_copy(d)
+        gd = dresser.gd
+        gd.xms(backend_write)
+        walk, fight = sprites.picture_ids(300)
+        gd.entry(0, walk, 7)
+        self.assertEqual(dresser.update(True, 1.0), [300])  # (the first dressing: nothing loaded)
+        chunks = {}
+        for outfit in (self.A, self.B):
+            outfits[0] = outfit
+            dresser.shown.clear()
+            dresser.update(True, 1.0)
+            chunks[repr(outfit)] = dresser._built[300][1][walk]
+        outfits[0] = self.A
+        dresser.shown.clear()
+        dresser.update(True, 1.0)
+        self.assertNotEqual(chunks[repr(self.A)], chunks[repr(self.B)])
+        gd.slot(0, 1234, self.NOISE, in_memory=True)
+        return dresser, gd, walk, fight, chunks
+
+    def test_store_found(self):
+        """The store found where DOSBox has it (the handle, the page directory, the XMS backend,
+        an in-memory picture's bytes), and refused when anything is otherwise: another backend, no
+        picture in memory to find it by, bytes that don't match, a page not in the directory, the
+        handle's id not the table's, another picture in memory not where the pages put it (the
+        block not in one piece); once found, refused again if its bytes are no longer there."""
+        def found(gd):
+            dresser = sprites.Dresser.__new__(sprites.Dresser)
+            dresser.gd = gd
+            store = sprites.Store(gd)
+            return store.locate(dresser._slots()), store, dresser
+        gd = FakeGame(figures=[0])
+        gd.xms()
+        self.assertFalse(found(gd)[0])  # (nothing in memory)
+        gd.slot(0, 1234, self.NOISE, in_memory=True)
+        ok, store, dresser = found(gd)
+        self.assertTrue(ok)
+        self.assertEqual(store.base, FakeGame.XMS_BASE)
+        self.assertEqual(store.read(0x4000 - 8, 16), gd.guest.read(gd.store_at(0x4000 - 8), 16))  # (across a page)
+        gd.guest.write(gd.store_at(0), b"\0" * 64)  # (moved, or not the store's: refused)
+        self.assertFalse(store.locate(dresser._slots()))
+        for spoil in ("backend", "match", "directory", "handle", "scattered"):
+            gd = FakeGame(figures=[0])
+            gd.xms(0x12340000 if spoil == "backend" else None)
+            gd.slot(0, 1234, self.NOISE, in_memory=True)
+            if spoil == "match":
+                gd.guest.write(gd.store_at(0), bytes(len(self.NOISE)))
+            elif spoil == "directory":
+                gd.guest.write(gd.ds * 16 + sprites.DIR_BLOCKS + 2, struct.pack("<HH", 2, 0))
+            elif spoil == "handle":
+                gd.guest.write(gd.ds * 16 + sprites.HANDLES + 2, struct.pack("<H", 0x1111))
+            elif spoil == "scattered":
+                gd.slot(3, 999, self.NOISE[::-1] * 4, length=1024, in_memory=True)
+                gd.guest.write(gd.store_at(3 * 0x5000 + 1024 - 16), bytes(16))  # (its end elsewhere)
+            self.assertFalse(found(gd)[0], spoil)
+
+    def test_same_chunk_given_its_number_back(self):
+        """An outfit changed back: the STALE slot holding just that picture given its number back
+        (nothing written, no new slot), the other made STALE. With no cell to be had (the old
+        picture in memory), the old way: STALE, a new slot for the game."""
+        outfits = [self.A]
+        with tempfile.TemporaryDirectory() as d:
+            dresser, gd, walk, fight, chunks = self.store_dresser(d, outfits)
+            a, b = chunks[repr(self.A)], chunks[repr(self.B)]
+            gd.slot(1, walk, a, in_memory=True)
+            outfits[0] = self.B
+            self.assertEqual(dresser.update(True, 2.0), [300])
+            self.assertEqual(gd.loaded_numbers(), [1234, sprites.STALE])  # (the old way)
+            self.assertEqual(dresser.reused, 0)
+            gd.slot(2, walk, b, in_memory=True)  # (the game loads it into a new slot)
+            outfits[0] = self.A
+            self.assertEqual(dresser.update(True, 3.0), [300])
+            self.assertEqual(gd.loaded_numbers(), [1234, walk, sprites.STALE])
+            self.assertEqual(dresser.reused, 1)
+            self.assertEqual((gd.stored(1, len(a)), gd.in_memory(1, len(a))), (a, a))
+            self.assertEqual(gd.entry_fields(0), (walk, sprites.NO_SLOT))  # (drawn from it at once)
+
+    def test_own_slot_written_where_it_is(self):
+        """The picture's own slot out of memory with room (the inventory open): the new picture
+        written into the store at its place, its number and length kept, no new slot."""
+        outfits = [self.A]
+        with tempfile.TemporaryDirectory() as d:
+            dresser, gd, walk, fight, chunks = self.store_dresser(d, outfits)
+            b = chunks[repr(self.B)]
+            gd.slot(1, walk, chunks[repr(self.A)], in_memory=False)
+            outfits[0] = self.B
+            self.assertEqual(dresser.update(True, 2.0), [300])
+            self.assertEqual(gd.loaded_numbers(), [1234, walk])
+            self.assertEqual(gd.stored(1, len(b)), b)
+            base = (gd.load_seg + sprites.PICTURE_TABLE_SEG) * 16 + sprites.PICTURE_ENTRY
+            self.assertEqual(struct.unpack("<I", gd.guest.read(base + sprites.SLOT_LENGTH, 4))[0], 20000)
+            self.assertEqual(dresser.reused, 1)
+
+    def test_smallest_stale_cell_with_room(self):
+        """A new picture whose own slot is in memory: written into the smallest STALE slot out of
+        memory with room for it, given its number; the old slot made STALE. A picture in memory
+        (the old one, a STALE one) never written; one too small never used."""
+        outfits = [self.A]
+        with tempfile.TemporaryDirectory() as d:
+            dresser, gd, walk, fight, chunks = self.store_dresser(d, outfits)
+            a, b = chunks[repr(self.A)], chunks[repr(self.B)]
+            x, y = bytes([7]) * 20000, bytes([9]) * 20000
+            gd.slot(1, walk, a, in_memory=True)
+            gd.slot(2, sprites.STALE, x, length=len(b), in_memory=True)  # (the best fit, but in memory)
+            gd.slot(3, sprites.STALE, y, length=len(b) - 1)
+            gd.slot(4, sprites.STALE, y, length=19000)
+            gd.slot(5, sprites.STALE, y, length=15000)
+            outfits[0] = self.B
+            self.assertEqual(dresser.update(True, 2.0), [300])
+            self.assertEqual(gd.loaded_numbers(), [1234, sprites.STALE, sprites.STALE, sprites.STALE, sprites.STALE, walk])
+            self.assertEqual(gd.stored(5, len(b)), b)
+            self.assertEqual((gd.stored(1, len(a)), gd.in_memory(1, len(a))), (a, a))
+            self.assertEqual((gd.stored(2, 20000), gd.in_memory(2, 20000)), (x, x))
+            self.assertEqual((gd.stored(3, len(b)), gd.stored(4, len(b))), (y[:len(b)], y[:len(b)]))
+
+    def test_a_cell_needs_no_room(self):
+        """With the table nearly full a dressing that finds cells for both its pictures goes ahead
+        (no new slot); one that would need a new slot is left as it was (_room_for)."""
+        outfits = [self.A]
+        with tempfile.TemporaryDirectory() as d:
+            dresser, gd, walk, fight, chunks = self.store_dresser(d, outfits)
+            gd.loaded(list(range(sprites.PICTURES_MOST - sprites.SLOTS_SPARE)))
+            gd.slot(0, 1234, self.NOISE, in_memory=True)
+            gd.slot(1, walk, chunks[repr(self.A)])
+            gd.slot(2, fight, bytes(100))
+            outfits[0] = self.B
+            self.assertEqual(dresser.update(True, 2.0), [300])
+            self.assertEqual(gd.loaded_numbers()[:3], [1234, walk, fight])
+            self.assertEqual(dresser.reused, 2)
+            gd.slot(1, walk, chunks[repr(self.B)], in_memory=True)  # (no cell for it now)
+            outfits[0] = self.A
+            self.assertEqual(dresser.update(True, 3.0), [])
+            self.assertEqual(gd.loaded_numbers()[:3], [1234, walk, fight])
+
+    def test_no_store_the_old_way(self):
+        """The store not as DOSBox has it (another backend, or its bytes not found: the
+        recompiled program's): the old way, the old pictures STALE for the game to load anew."""
+        for spoil in ("backend", "match"):
+            outfits = [self.A]
+            with tempfile.TemporaryDirectory() as d:
+                dresser, gd, walk, fight, chunks = self.store_dresser(
+                    d, outfits, 0x12340000 if spoil == "backend" else None)
+                if spoil == "match":
+                    gd.guest.write(gd.store_at(0), bytes(len(self.NOISE)))
+                a = chunks[repr(self.A)]
+                gd.slot(1, walk, a)
+                outfits[0] = self.B
+                self.assertEqual(dresser.update(True, 2.0), [300], spoil)
+                self.assertEqual(gd.loaded_numbers(), [1234, sprites.STALE], spoil)
+                self.assertEqual((gd.stored(1, len(a)), dresser.reused), (a, 0), spoil)
+
     def test_view_redrawn_after(self):
         """Shortly after pictures are loaded anew the view is drawn again (their shadows: the floor
         is drawn before the figures, while the new picture was still loading)."""
@@ -431,7 +592,7 @@ class SpriteTests(unittest.TestCase):
 
 class FakeGuest:
     def __init__(self):
-        self.mem = bytearray(0x100000)
+        self.mem = bytearray(0x200000)  # (1 MB and the XMS block past it: FakeGame.xms)
         self.size = len(self.mem)
 
     def read(self, at, n):
@@ -474,6 +635,47 @@ class FakeGame:
         count, = struct.unpack("<H", self.guest.read(self.ds * 16 + sprites.PICTURE_COUNT, 2))
         base = (self.load_seg + sprites.PICTURE_TABLE_SEG) * 16
         return [struct.unpack("<H", self.guest.read(base + k * sprites.PICTURE_ENTRY, 2))[0] for k in range(count)]
+
+    XMS_BASE, FIRST_PAGE, MEMORY = 0x110000, 2, 0x60000
+
+    def xms(self, backend_write=None):
+        """The game's store as DOSBox has it: handle 0 (id 48EFh) of STORE_SIZE bytes, its pages a
+        chain in the first page directory block, on backend 0 (the XMS write, or BACKEND_WRITE),
+        XMS pages FIRST_PAGE on at XMS_BASE."""
+        d = self.ds * 16
+        self.guest.write(d + sprites.STORE_HANDLE, struct.pack("<I", 0x48EF0000))
+        self.guest.write(d + sprites.HANDLES, struct.pack("<HHI", self.FIRST_PAGE, 0x48EF, sprites.STORE_SIZE))
+        block = d + sprites.DIR_BLOCKS
+        self.guest.write(block + 2, struct.pack("<HH", 1, 0))
+        pages = (sprites.STORE_SIZE + sprites.STORE_PAGE - 1) // sprites.STORE_PAGE
+        for n in range(pages):
+            link = self.FIRST_PAGE + n
+            self.guest.write(block + sprites.DIR_ENTRIES + link * 4, struct.pack("<HH", link, link + 1))
+        write = backend_write if backend_write is not None else \
+            (self.load_seg + sprites.XMS_WRITE[0]) << 16 | sprites.XMS_WRITE[1]
+        self.guest.write(d + sprites.BACKEND_WRITE, struct.pack("<I", write))
+
+    def store_at(self, place):
+        return self.XMS_BASE + self.FIRST_PAGE * sprites.STORE_PAGE + place
+
+    def slot(self, k, number, data, length=20000, in_memory=False):
+        """Slot K of the picture table: NUMBER, its LENGTH, its place k * 5000h in the store holding
+        DATA; IN_MEMORY, also at its far pointer (MEMORY + k * 5000h)."""
+        base = (self.load_seg + sprites.PICTURE_TABLE_SEG) * 16 + k * sprites.PICTURE_ENTRY
+        far = self.MEMORY + k * 0x5000
+        self.guest.write(base, struct.pack("<HIiHHBB", number, length, k * 0x5000, far & 0xF, far >> 4,
+                                           1 | (sprites.IN_MEMORY if in_memory else 0), 255))
+        self.guest.write(self.store_at(k * 0x5000), data)
+        if in_memory:
+            self.guest.write(far, data)
+        count, = struct.unpack("<H", self.guest.read(self.ds * 16 + sprites.PICTURE_COUNT, 2))
+        self.guest.write(self.ds * 16 + sprites.PICTURE_COUNT, struct.pack("<H", max(count, k + 1)))
+
+    def stored(self, k, n):
+        return self.guest.read(self.store_at(k * 0x5000), n)
+
+    def in_memory(self, k, n):
+        return self.guest.read(self.MEMORY + k * 0x5000, n)
 
     def entry_fields(self, combatant):
         at = self.ds * 16 + sprites.MAP_ENTRIES + combatant * sprites.MAP_ENTRY_SIZE
