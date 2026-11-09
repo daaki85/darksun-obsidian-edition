@@ -43,6 +43,10 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 DSCLOG.EXE 65,520 bytes (image 65,488), 2,928 of its segment spare.
 
 **Changed**
+- **The game's Polearm +1 in play:** the game defines it (object 1577) but never places or gives it
+  (no script names it, not even by the negative number a create takes, and nothing holds one).
+  Seref, the Draj agent at the Elven Caravan, where the cluebook puts it, carries it, with the new
+  items on (`worldgear.MAGIC`): his object (203), which his encounter on the road copies too.
 - **Item boxes show a weaker material's to-hit** under a plain weapon's damage: `Hit -3` wood,
   `Hit -1` bone, `Hit -2` stone and obsidian, as the game's attack takes it (the damage line already
   had the material's damage off). Not with a plus, nor for the game's exempt weapons (clubs, staves,
