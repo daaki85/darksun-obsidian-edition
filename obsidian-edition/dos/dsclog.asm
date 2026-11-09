@@ -1351,7 +1351,7 @@ l_sp    db 'SP', 0
 l_pick  db 'PICK', 0
 l_lock  db 'LOCK', 0
 l_trap  db 'TRAP', 0
-l_move  db 'MOVE', 0
+l_move  db 'SLNT', 0             ; (move silently: SLNT, not MOVE, which View Character's MOVE: is)
 l_hide  db 'HIDE', 0
 l_clmb  db 'CLMB', 0
 l_react db 'REAC', 0
@@ -25950,10 +25950,11 @@ ib_draw    dd 0
 ib_charges_text db 'Charges: '
 ib_charges_num  db '000', 0
 ib_hide    db 'Hide +10', 0     ; (the skills' short names, as the inventory screen's thief rows
-ib_quiet   db 'Move +10', 0     ;   have them: HIDE, MOVE, PICK, LOCK; mixed case, as item names)
+ib_quiet   db 'Silent +10', 0   ;   have them: HIDE, SLNT, PICK, LOCK; mixed case, as item names;
+                                ;   "Silent", not "Move": the Boots of Speed's box read as movement)
 ib_belt    db 'Pick +5, Lock +5', 0
 ib_elf_hide  db 'Hide 90-95%', 0    ; (the Cloak of Elvenkind's chance: stealth.py)
-ib_elf_quiet db 'Move 95%', 0
+ib_elf_quiet db 'Silent 95%', 0
 
 ; PROBE_BELT: INT VEC_BELT replaces "mov ax,si" (2 bytes) at the end of the game's thief skill
 ; routine (DSUN.EXE 803B2h: SI the chance, armour and effects counted; DI the thief's object; the

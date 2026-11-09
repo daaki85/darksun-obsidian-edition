@@ -43,6 +43,16 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 DSCLOG.EXE 65,744 bytes (image 65,712), 2,736 of its segment spare.
 
 **Changed**
+- **The move-silently labels say "Silent"**: the inventory screen's thief row reads `SLNT` (it read
+  `MOVE`, beside View Character's MOVE, the character's movement), and the item boxes' stealth lines
+  `Silent +10` (boots) and `Silent 95%` (the Boots of Elvenkind) for `Move +10` and `Move 95%`: the
+  Boots of Speed's box read as if every pair of boots added movement (the user's catch). DSCLOG's
+  L_MOVE, IB_QUIET and IB_ELF_QUIET; its sizes unchanged. docs/gear-boxes.png and docs/elvenkind.png
+  retaken. Seen in DOSBox: playtest/logs/2026-11-09-silent-labels.md.
+- **The mod's magic gear with no plus or power glows on the figures**: the Boots of Speed, the
+  Cloak and Boots of Elvenkind, the Girdles of Back Defense and of Urnst (and the Amulet of Magic
+  Resistance, should a figure ever show the neck), by type (`sprites.MAGIC_TYPES`): the glow had
+  gone by a plus or a power only.
 - **New: the Boots of Speed** (the DMG's; the user's item), worn on the feet by anyone: in a fight the
   wearer's movement doubled and AC 2 better while it can move (not Stuck, Paralyzed or Slowed);
   nothing out of a fight. DSCLOG's type SPEED_BOOTS (the 31st extra type, the game's Boots'), name

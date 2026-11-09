@@ -386,9 +386,16 @@ def new_room(chunks, new: Dict[Tuple[str, int], bytes], looks: bool = True) -> D
     return out
 
 
+# The mod's magic items whose magic is the helper's or the Loader's, not a plus or a spell power: by
+# their types (the Boots of Speed, the Cloak and Boots of Elvenkind, the girdles, the amulet)
+MAGIC_TYPES = frozenset((game.SPEED_BOOTS_TYPE, game.ELVEN_CLOAK_TYPE, game.ELVEN_BOOTS_TYPE,
+                         game.BACK_GIRDLE_TYPE, game.URNST_GIRDLE_TYPE, game.MR_AMULET_TYPE))
+
+
 def _magic(item) -> bool:
-    """A plus or a power."""
-    return struct.unpack("b", item[game.ITEM_PLUS:game.ITEM_PLUS + 1])[0] > 0 or bool(item[game.ITEM_POWER])
+    """A plus or a power, or one of MAGIC_TYPES."""
+    return struct.unpack("b", item[game.ITEM_PLUS:game.ITEM_PLUS + 1])[0] > 0 or bool(item[game.ITEM_POWER]) \
+        or struct.unpack_from("<H", item, game.ITEM_TYPE)[0] in MAGIC_TYPES
 
 
 def item_glow(chunks, item) -> int:

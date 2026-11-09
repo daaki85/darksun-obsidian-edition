@@ -255,15 +255,15 @@ right-hand panel, drawn by the game's text routine so they look like the rest:
   (`T14`);
 - right of the abilities, level with STR to CHA, for a character with thief
   levels, six **thief skills**: `PICK` pockets, open `LOCK`s, find/remove
-  `TRAP`s, `MOVE` silently, `HIDE` in shadows and `CLMB` walls. Move silently
+  `TRAP`s, `SLNT` (move silently), `HIDE` in shadows and `CLMB` walls. Move silently
   and hide in shadows are the ones the Loader rolls (for [picking
   pockets](#picking-pockets) and [hiding to
   backstab](#hiding-in-shadows-to-backstab)). A worn belt's 5 is in
   `PICK` and `LOCK`, and with hiding to backstab a worn cloak's 10 in `HIDE` and
-  boots' 10 in `MOVE` (95 for the Cloak and Boots of Elvenkind). Hear noise (one
+  boots' 10 in `SLNT` (95 for the Cloak and Boots of Elvenkind). Hear noise (one
   script check) and read languages (a Shinobi's, for a scroll: on its
   [Effects screen](#the-effects-screen)) are left out for want of room. A
-  ranger, with hiding to backstab on, gets their `MOVE` and `HIDE` in the same
+  ranger, with hiding to backstab on, gets their `SLNT` and `HIDE` in the same
   places, the cloak and boots counted (the other four left out);
 - right of SP in the saves (where RSW and BW sit on the rows above), the DEX
   **reaction adjustment** (`REAC +4`): −6 at DEX 1 to +5 at DEX 24-25, the
@@ -1792,7 +1792,7 @@ under the open sky, half indoors** (the same maps and floors as for thieves).
 Their attack from behind gets +2 to hit, and the target's DEX and shield don't
 count, but it is never a backstab. Armour doesn't matter, nor does what they
 hold. The Characters tab shows a ranger's two chances (**Ranger skills now**),
-and the game's inventory screen shows them where a thief's `MOVE` and `HIDE`
+and the game's inventory screen shows them where a thief's `SLNT` and `HIDE`
 go. Someone with thief levels hides as a thief.
 
 ```
@@ -1806,10 +1806,10 @@ adds 10 to hiding in shadows (before daylight halves it) and worn boots add 10
 to moving silently, for rangers too, up to 95:
 `needs 18 or less (26 +10 cloak = 36, halved in daylight)`. A cloak's or
 boots' item box (right-click it on the inventory screen) says so under its
-name, `Hide +10` or `Move +10` (the skills' short names, as the
-inventory screen's thief rows have them).
+name, `Hide +10` or `Silent +10` ("Silent", not "Move", so a box
+can't read as walking speed; the inventory screen's thief row is `SLNT`).
 
-![Item boxes in the game: a Leather Belt's "Pick +5, Lock +5", Leather Boots' "Move +10" and a Leather Cloak's "Hide +10", each at 24](docs/gear-boxes.png)
+![Item boxes in the game: a Leather Belt's "Pick +5, Lock +5", Leather Boots' "Silent +10" and a Leather Cloak's "Hide +10", each at 24](docs/gear-boxes.png)
 
 The [Cloak and Boots of Elvenkind](#new-items) do more (whatever the plain
 gear's switch). Only thieves and rangers can wear them (multiclasses too; for
@@ -1817,9 +1817,9 @@ anyone else, the game's "Cannot use this item"). In the cloak, hiding in
 shadows needs 95 or less under the open sky and 90 under a roof, not halved by
 the light (AD&D's: all but invisible in the wild, 90% among buildings), unless
 their own chance is better; in the boots, moving silently needs 95 or less.
-Their boxes say `Hide 90-95%` and `Move 95%`.
+Their boxes say `Hide 90-95%` and `Silent 95%`.
 
-![Item boxes in the game: the Cloak of Elvenkind's "Hide 90-95%", 25,000; the Boots of Elvenkind's "Move 95%", 20,000](docs/elvenkind.png)
+![Item boxes in the game: the Cloak of Elvenkind's "Hide 90-95%", 25,000; the Boots of Elvenkind's "Silent 95%", 20,000](docs/elvenkind.png)
 
 The same switch has a worn **belt** add 5 to a thief's **picking pockets and
 opening locks**, whether hiding is on or not: the game's own lock picking

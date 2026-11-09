@@ -510,7 +510,17 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   (195,26), (195,44), (195,62), (195,80)... (rows 18 apart; 48 and 70 are between cells), then
   (213,26)... Click an item to pick it up, click a place to put it; armour can't be put on in a
   fight ("CANNOT USE THIS ITEM"); a wrong place says "ILLEGAL PLACEMENT" and keeps it on the
-  pointer.
+  pointer. **The feet** are at (174,147) (2026-11-09, logs/2026-11-09-silent-labels.md); a
+  right-click there opens the boots' box. **To give an item to another member**: click it, click
+  the other's portrait (22,160 for the fourth), click the place. An item turned into another in
+  memory (a whole record but its link +4, flags +10h and slot +11h, so the price comes with it)
+  shows in its box once the portrait is switched away and back.
+- **Checking a figure's glow** (2026-11-09): `sprites.worn(gd, MEMBER)` (through live.py) gives what
+  the Loader dresses it in, `'magic'` on a magic piece; then eight `import -window` grabs 0.2 s apart,
+  cropped round the piece and montaged: a glint is a few pixels changing between grabs (the pointer's
+  animation changes pixels too: keep it away). Gerakis's figure (pens-after-arena) showed no boots
+  at all, plain or magic; Cilla's showed them. `memberpos.py N` out of a fight gave the leader's
+  place for every member: find the figure on a shot.
 - **A spell's description box** (2026-11-02): U, a member's portrait (Cermak 66,108), then
   right-click a spell's icon (from 177,59, about 14 apart). Seven lines fill the box: an eighth
   spills over its edge, so check a lengthened text in the game. A new wizard spell is known by a
