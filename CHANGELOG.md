@@ -70,7 +70,7 @@ DSCLOG.EXE 66,832 bytes (image 66,800), 1,680 of its segment spare.
   10, the tangle's saves made and failed, a tangled Templar's next turn gone
   (playtest/logs/2026-11-09-cahulaks.md).
 - **More cahulaks in the world** (with the new magic weapons, `worldgear.cahulaks_chunks`): Legcrusher's
-  two clubs a Cahulaks +1 (a copy of the game's, its Cause Light Wounds and shining icon with it;
+  two clubs a Cahulaks +1 (a copy of the game's with its shining icon, its Cause Light Wounds taken off: a plain +1;
   `dataitems.with_items_removed`, new); the elven caravan's buried Cahulaks +1 made +2 (32,400); the
   arena's dead body by the stone arch, which kept a plain bone gythka once Kreenfang went to the
   champions, plain bone cahulaks; and the champions' mul **metal cahulaks** for his two bone axes: a

@@ -482,7 +482,7 @@ class FightersTests(unittest.TestCase):
 
     @unittest.skipUnless(os.environ.get("DSUN_OBJECTS"), "needs the game's SEGOBJEX.GFF (DSUN_OBJECTS)")
     def test_cahulaks_placed(self):
-        """Legcrusher's two clubs a Cahulaks +1 (the game's, object 30003), the caravan chest's Cahulaks
+        """Legcrusher's two clubs a plain Cahulaks +1 (the game's, object 30003, its spell taken off), the caravan chest's Cahulaks
         +2 (32,400), the arena body's plain gythka plain bone cahulaks (with the champions on), and the
         champions' mul with metal cahulaks (type 146, object 2670) in place of two bone axes."""
         from dsloader import arms, champions, dataitems, gff, npcitems
@@ -496,11 +496,18 @@ class FightersTests(unittest.TestCase):
         legcrusher = items(npcitems.LEGCRUSHER)
         self.assertNotIn(18, [t for t, _, _, _ in legcrusher])
         self.assertIn((21, 30003, 1, 11600), legcrusher)
+        cah = next(r for r in dataitems.items_of(out[("RDFF", npcitems.LEGCRUSHER)])
+                   if struct.unpack_from("<H", r, game.ITEM_TYPE)[0] == 21)
+        self.assertEqual((cah[0x0F], struct.unpack_from("<H", cah, 2)[0]), (0, 0))  # (no Cause Light Wounds)
         self.assertIn((21, 30003, 2, 32400), items(worldgear.CARAVAN_CHEST))
         self.assertEqual([(t, p) for t, _, p, _ in items(arms.BODY)], [(21, 0)])
         mul = items(champions.MUL)
         self.assertEqual(mul[0][:3], (game.METAL_CAHULAKS_TYPE, 2670, 0))
         self.assertNotIn(game.BONE_AXE_TYPE, [t for t, _, _, _ in mul])
+        for obj in (champions.MUL, arms.BODY):  # (both plain: no spell, no plus)
+            cah = next(r for r in dataitems.items_of(out[("RDFF", obj)])
+                       if struct.unpack_from("<H", r, game.ITEM_TYPE)[0] in game.CAHULAKS_TYPES)
+            self.assertEqual((cah[0x0F], struct.unpack_from("<H", cah, 2)[0], cah[game.ITEM_PLUS]), (0, 0, 0), obj)
 
     @unittest.skipUnless(os.environ.get("DSUN_OBJECTS"), "needs the game's SEGOBJEX.GFF (DSUN_OBJECTS)")
     def test_from_the_games_data(self):

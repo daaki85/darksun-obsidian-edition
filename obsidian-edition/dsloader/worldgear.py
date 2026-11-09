@@ -416,7 +416,7 @@ BASE_TYPES = {game.SHORT_SWORD_TYPE: 63, game.CLOAK_TYPE: 65, game.BONE_HELM_TYP
 
 
 # The cahulaks (with the new magic weapons): Legcrusher's two clubs a Cahulaks +1 (a copy of the
-# game's, its Cause Light Wounds and its shining icon with it); the elven caravan's buried Cahulaks
+# game's, its shining icon with it, without its Cause Light Wounds: a plain +1); the elven caravan's buried Cahulaks
 # +1 made +2; the arena's dead body, which kept a plain bone gythka once Kreenfang went to the
 # champions, plain bone cahulaks.
 CAHULAKS_PLUS_OBJECT = 30003  # (the game's Cahulaks +1: its object, its icon's)
@@ -449,7 +449,10 @@ def cahulaks_chunks(chunks, out: Dict[Tuple[str, int], bytes], champions_on: boo
         rdff = out.get(key, chunks[key])
         rdff = dataitems.with_items_removed(
             rdff, lambda rec: struct.unpack_from("<H", rec, game.ITEM_TYPE)[0] == LEGCRUSHER_CLUB)
-        new[key] = dataitems.with_items(rdff, [plus1], numbers)
+        plain1 = bytearray(plus1)
+        plain1[ITEM_SPELL] = 0  # (no Cause Light Wounds: a plain +1)
+        struct.pack_into("<H", plain1, ITEM_SPELL_SHOWN, 0)
+        new[key] = dataitems.with_items(rdff, [bytes(plain1)], numbers)
     body = ("RDFF", arms.BODY)
     plain = champions.game_item(chunks, game.CAHULAKS_TYPE)
     if champions_on and body in chunks and plain is not None:
