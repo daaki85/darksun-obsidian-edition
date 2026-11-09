@@ -14863,7 +14863,7 @@ FLAME_SITE equ NS_IMAGE + 77     ; 7567Fh: a cast's repeats, Flame Arrow's by le
 BLUR_SITE equ NS_IMAGE + 78      ; 79DC0h: Barkskin's +1 on saves, and Blur's (BLUR_SITE)
 FSHIELD_SITE equ NS_IMAGE + 79   ; 79E03h: Protection from Cold's +3 on saves, and Fire Shield's +2 (FSHIELD_SITE)
 CLOUD_SAVE_SITE equ NS_IMAGE + 80 ; 79F95h: Cloudkill's save by level (CLOUD_SAVE_SITE)
-CLOUD_KILL_SITE equ NS_IMAGE + 81 ; 79830h: the handler's tail, Cloudkill's kill (CLOUD_KILL_SITE)
+CLOUD_KILL_SITE equ NS_IMAGE + 81 ; 78DB6h: a save's answer kept, Cloudkill's kill (CLOUD_KILL_SITE)
 LOWRES_SITE equ NS_IMAGE + 82    ; 7A507h: Lower Resistance's 30 + its level off (LOWRES_SITE)
 STRENGTH_SITE equ NS_IMAGE + 83  ; 79483h: Strength's and Cat's Grace's dice by class (STRENGTH_SITE)
 RAINBOW_SITE equ NS_IMAGE + 84   ; 585A2h: damage ends Rainbow Pattern's hold (RAINBOW_SITE)
@@ -15108,7 +15108,6 @@ FIRE_SHIELD_EFFECT equ 20
 CLOUDKILL  equ 57
 CLOUD_DIES equ 4                ; (under it: no save; to CLOUD_SAVES, a failed save kills)
 CLOUD_SAVES equ 5
-SLAY_DAMAGE equ 1000            ; (Slay Living's, 79881h)
 LOWRES_SPELL equ 64             ; Lower Resistance, its effect Low Resistance (31)
 LOWRES_EFFECT equ 31
 LOWRES_BASE equ 30
@@ -15186,57 +15185,39 @@ cloud_save:
         sub si, 100
 .out:   iret
 
-; CLOUD_KILL_SITE (gamepatch "cloudkill_kills"): the tail of the handler for spells with rules of
-; their own (79186h: DI the target, [BP+0Eh] the spell, [BP+10h] saved, SI the flags), "cmp byte
-; [bp+10h],0 / jnz 79896h" (79830h; 6 bytes): a Cloudkill (57) not saved against by a creature of
-; 5 levels (hit dice: SHEET_LEVEL's, as its saves count) or fewer, still alive, dies: 1000 damage
-; through 4E0:61h, as Slay Living's (79881h), the flags' 1 set as its; its 1d10 came before. Then
-; the game's way: saved, past the tail's table (79896h), else on to it (79836h). Recorded (MN_CLOUD).
-CLOUD_ON   equ 0x79836 - (0x79830 + 3)
-CLOUD_PAST equ 0x79896 - (0x79830 + 3)
+; CLOUD_KILL_SITE (gamepatch "cloudkill_kills"): where a spell's damage and effect on one creature
+; (78C19h: DI the target, SI the spell, [BP-6] a dword, the percent of the damage it takes, its
+; resistances' and a save's) keeps the saving throw's answer, "mov [bp-1],al" (78DB6h; 3 bytes, AL
+; 0 not saved): a Cloudkill (57) not saved against by a creature of 5 levels or fewer (hit dice:
+; SHEET_LEVEL's, as its saves count) takes its damage a thousand times over, at least 1000, as Slay
+; Living's 1000 (79881h): the game's own damage kills it, the cast's or the lasting cloud's alike
+; (2026-11-09: a kill by a far call of 4E0:61h of its own, from inside the cloud's round, hung the
+; game). Recorded (MN_CLOUD). Then the move made.
+CLOUD_PERCENT equ 100000
 cloud_kill:
-        sti
+        mov [bp - 1], al
+        or al, al
+        jnz .out
+        cmp si, CLOUDKILL
+        jne .out
         pushad
         push es
-        mov dx, CLOUD_PAST
-        cmp byte [bp + 0x10], 0
-        jne .way
-        mov dx, CLOUD_ON
-        cmp word [bp + 0x0E], CLOUDKILL
-        jne .way
         mov ax, di
         call combatant_creature
-        jc .way
-        les bx, [CREATURES]
-        imul cx, ax, 0x3A
-        add bx, cx
-        cmp word [es:bx], 0             ; (its hit points: dead already, of the 1d10)
-        jle .way
+        jc .done
         call creature_sheet
         call sheet_level
         cmp al, CLOUD_SAVES
-        jbe .kill
-.way:   mov bx, sp
-        add [ss:bx + 34], dx
-        jmp ovr_out
-.kill:  mov bx, sp
-        add [ss:bx + 34], dx            ; (the way on, before any call)
-        or byte [si], 1
+        ja .done
+        mov dword [bp - 6], CLOUD_PERCENT
         mov [cs:mn_frame], di
         mov ah, 0
         mov [cs:mn_frame + 2], ax
         mov ax, MN_CLOUD
         call mn_rec
-        mov bx, sp
-        push word [ss:bx + 36]          ; (the way on, in a frame the overlay manager can fix up)
-        push word [ss:bx + 34]
-        push bp
-        mov bp, sp
-        push word SLAY_DAMAGE
-        push word [cs:mn_frame]
-        th_far TH_STUB_4E0, 0x61        ; (target, damage)
-        add sp, 4
-        jmp ovr_back
+.done:  pop es
+        popad
+.out:   iret
 
 ; LOWRES_SITE (gamepatch "lower_resistance_manual"): in the routine of a creature's magic resistance
 ; against a spell (7A4A1h: [BP+6] the creature, SI the spell, [BP+0Ah] the cast's level, [BP-0Ch] the

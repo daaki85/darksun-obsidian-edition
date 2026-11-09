@@ -164,7 +164,7 @@ class Group3Tests(unittest.TestCase):
                 ("blur_save", 0x79DC0, "c45e0a26f6470702740146", gamepatch.BLUR_SITE),
                 ("fire_shield_save", 0x79E03, "f746fc0400740dc45e0a26f6470410740383c603", gamepatch.FSHIELD_SITE),
                 ("cloudkill_save", 0x79F95, "837e14397509837efa067f0383ee64", gamepatch.CLOUD_SAVE_SITE),
-                ("cloudkill_kills", 0x79830, "807e10007560", gamepatch.CLOUD_KILL_SITE),
+                ("cloudkill_kills", 0x78DB6, "8846ff", gamepatch.CLOUD_KILL_SITE),
                 ("lower_resistance_manual", 0x7A507,
                  "f646f980740b8b46f4992bc2d1f88946f483fe40750b8a460ab400051e002946f4", gamepatch.LOWRES_SITE),
                 ("strength_dice", 0x79483, "666801000600", gamepatch.STRENGTH_SITE),
@@ -179,6 +179,10 @@ class Group3Tests(unittest.TestCase):
         signed = patch("save_signed")  # (the saving throw's compare: "jae" made "jge")
         self.assertEqual((signed.offset, signed.original.hex(), signed.replacement.hex()), (0x79BBD, "73a6", "7da6"))
         self.assertIn("save_signed", gamepatch.SPELLS_MANUAL)
+        chill = patch("chill_touch_time")  # (Weakened for an hour: 1d1 x 3600 seconds)
+        self.assertEqual((chill.offset, chill.original.hex(), chill.replacement.hex()),
+                         (0x41F70 + 3 * 32 + 4, "1000003c00", "110000100e"))
+        self.assertIn("chill_touch_time", gamepatch.SPELLS_MANUAL)
         rainbow = patch("rainbow_pattern_time")
         self.assertEqual((rainbow.offset, rainbow.original.hex(), rainbow.replacement.hex()),
                          (0x41F70 + 50 * 32 + 4, "3100", "1001"))
@@ -226,32 +230,26 @@ class Group3Tests(unittest.TestCase):
             self.assertEqual(self.reg("si"), want)
 
     def test_cloudkill_kills(self):
-        """CLOUD_KILL_SITE (79830h, the handler's tail: [BP+10h] saved, [BP+0Eh] the spell, DI the
-        target, SI its flags): an unsaved Cloudkill on a living creature of 5 levels or fewer (hit dice
-        for one with no class): 4E0:61h (target, 1000), the flags' 1, recorded (kind 14, 2); then the
-        way on to the tail's table (79836h); saved, past it (79896h)."""
-        on, past = 0x79836 - 0x79830, 0x79896 - 0x79830
-        self.stub(0x41BE, 0x61, 2)
-        flags = 0x7100
-        def kill(saved=0, spell=57, sheet=((9, 0, 0), (5, 0, 0)), hp=10):
+        """CLOUD_KILL_SITE (78DB6h, "mov [bp-1],al" after the save; AL 0 not saved, SI the spell, DI the
+        target, [BP-6] the damage's percent, a dword): an unsaved Cloudkill (57) on a creature of 5 levels
+        or fewer (hit dice for one with no class) makes it 100000 (the damage x 1000), recorded (kind
+        14, 2); [BP-1] the answer either way."""
+        def kill(saved=0, spell=57, sheet=((9, 0, 0), (5, 0, 0))):
             self.sheet(7, *sheet)
-            self.mu.mem_write(CREATURES * 16 + 7 * 0x3A, struct.pack("<h", hp))
-            self.mu.mem_write(GAME_DS * 16 + flags, bytes(1))  # (DS-relative, as the game's [si]: its DS is SS)
-            self.frame(p10=saved, p0E=spell)
+            self.mu.mem_write(SS * 16 + BP - 6, struct.pack("<I", 100))
+            self.mu.mem_write(SS * 16 + BP - 1, b"\x55")
             before = self.seq()
-            way = self.run_site("cloudkill_kills", (on, past), edi=40, esi=flags)
-            self.assertEqual((self.reg("di"), self.reg("si")), (40, flags))
+            self.assertEqual(self.run_site("cloudkill_kills", esi=spell, edi=40, eax=saved), 3)
+            self.assertEqual((self.reg("di"), self.reg("si"), self.reg("ax")), (40, spell, saved))
+            self.assertEqual(self.mu.mem_read(SS * 16 + BP - 1, 1)[0], saved)
             entry = self.entry() if self.seq() != before else None
-            return way, self.called(2), self.mu.mem_read(GAME_DS * 16 + flags, 1)[0], entry
-        self.assertEqual(kill(), (on, (40, 1000), 1, (14, 2, 40, 5, 0, 0)))
-        self.stub(0x41BE, 0x61, 2)
-        self.assertEqual(kill(saved=1), (past, None, 0, None))
-        self.assertEqual(kill(spell=56)[:2], (on, None))
-        self.assertEqual(kill(sheet=((9, 0, 0), (6, 0, 0)))[:2], (on, None))  # (6th level: the damage only)
-        self.assertEqual(kill(sheet=((0, 0, 0), (3, 0, 0)))[1], (40, 1000))  # (no class: its 3 HD)
-        self.stub(0x41BE, 0x61, 2)
-        self.assertEqual(kill(hp=0)[1], None)  # (the 1d10 killed it already)
-        self.assertEqual(kill(sheet=((9, 12, 0), (2, 6, 0)))[1], None)  # (its best class's level, 6)
+            return struct.unpack("<I", self.mu.mem_read(SS * 16 + BP - 6, 4))[0], entry
+        self.assertEqual(kill(), (100000, (14, 2, 40, 5, 0, 0)))
+        self.assertEqual(kill(saved=1), (100, None))
+        self.assertEqual(kill(spell=56), (100, None))
+        self.assertEqual(kill(sheet=((9, 0, 0), (6, 0, 0))), (100, None))  # (6th level: the damage only)
+        self.assertEqual(kill(sheet=((0, 0, 0), (3, 0, 0)))[0], 100000)  # (no class: its 3 HD)
+        self.assertEqual(kill(sheet=((9, 12, 0), (2, 6, 0)))[0], 100)  # (its best class's level, 6)
 
     def test_lower_resistance(self):
         """LOWRES_SITE (7A507h-7A527h; [BP+6] the target, SI the spell, [BP+0Ah] the cast's level, [BP-0Ch]

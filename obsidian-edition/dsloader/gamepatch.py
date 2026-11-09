@@ -514,6 +514,10 @@ PATCHES = (
     # against Scare was never Afraid). The compare made signed ("jge"): -100 fails (a natural 20 still
     # saves, 79B5Fh), +100 saves (Scare from 6th level: a d20 + 100 stays under 128)
     Patch("save_signed", 0x79BBD, bytes.fromhex("73a6"), bytes.fromhex("7da6")),
+    # Chill Touch (3): the game takes 1 STR off a creature that fails its save (Weakened, its handler's
+    # tail, 79855h), but its record gave the effect no time (0 rounds), so it ended at once: an hour
+    # (60 rounds; AD&D's lost Strength comes back a point an hour): +4..+8 "10 00 00 3C 00" made 1 x 3600
+    Patch("chill_touch_time", 0x41F70 + 3 * 32 + 4, bytes.fromhex("1000003c00"), bytes.fromhex("110000100e")),
     # Blur (12): +1 on saves against magic, as Barkskin's, in the save modifiers (79D46h) at Barkskin's
     # test (79DC0h, "les bx,[bp+0Ah] / test byte [es:bx+7],2 / jz / inc si": DSCLOG's BLUR_SITE)
     Patch("blur_save", 0x79DC0, bytes.fromhex("c45e0a26f6470702740146"), _site(BLUR_SITE, 11)),
@@ -523,11 +527,11 @@ PATCHES = (
           _site(FSHIELD_SITE, 20)),
     # Cloudkill (57): AD&D's bands by the level its saves count (HD_SAVE's: a classless creature's hit
     # dice): under 4 no save (the game's "6 or less", 79F95h: DSCLOG's CLOUD_SAVE_SITE), 4 or 5 a failed
-    # save kills, 1000 damage as Slay Living's, at the tail of the handler for spells with rules of
-    # their own (79830h: CLOUD_KILL_SITE); 6 and up the damage as before
+    # save kills: the damage a thousand times over, at least 1000 as Slay Living's, where the spell's
+    # damage keeps the save's answer (78DB6h: CLOUD_KILL_SITE); 6 and up the damage as before
     Patch("cloudkill_save", 0x79F95, bytes.fromhex("837e143975 09837efa067f0383ee64".replace(" ", "")),
           _site(CLOUD_SAVE_SITE, 15)),
-    Patch("cloudkill_kills", 0x79830, bytes.fromhex("807e10007560"), _site(CLOUD_KILL_SITE, 6)),
+    Patch("cloudkill_kills", 0x78DB6, bytes.fromhex("8846ff"), _site(CLOUD_KILL_SITE, 3)),
     # Lower Resistance (64): magic resistance 30% + 1% a caster level less (at least 0), the cast's
     # level kept in the effect (DSCLOG's ACID_ROUNDS), not halved; the cast's own check the same, the
     # two not added up (7A507h-7A527h: LOWRES_SITE)
@@ -1179,7 +1183,7 @@ SPELLS_MANUAL = ("bestow_curse_save", "blood_flow_save", "flaming_sphere_negates
                  "classless_save_level", "color_spray_level", "hold_undead_level",
                  "free_action_stuck", "free_action_loop", "free_action_word", "remove_paralysis_word",
                  "protection_paralysis_word", "meteors_count", "meteors_damage", "flame_arrow_damage",
-                 "flame_arrow_count", "turn_undead_manual", "save_signed", "blur_save", "fire_shield_save", "cloudkill_save",
+                 "flame_arrow_count", "turn_undead_manual", "save_signed", "chill_touch_time", "blur_save", "fire_shield_save", "cloudkill_save",
                  "cloudkill_kills", "lower_resistance_manual", "strength_dice", "rainbow_pattern_time",
                  "rainbow_pattern_damage", "feeblemind_psionics", "biofeedback_least",
                  "cell_adjustment_heal")  # the spells and psionics as the manual has them (spells_manual)
