@@ -20,7 +20,7 @@ Wake of the Ravager, for comparing only: `setup_ravager.sh` (into `$PLAYTEST_WOR
 `start.sh` starts Xvfb, the Loader's patched game in DOSBox and the dice log
 (`$PLAYTEST_WORK/dice.txt`). Check the build under test is in place before trusting anything
 (`GPLDATA=../obsidian-edition/dos/GPLDATA.GFF python3 dec.py SCRIPT LO HI`; for DSCLOG, new code's
-bytes in memory and each hooked vector its own handler). Start the watchdog
+bytes in memory and each hooked vector its own handler: `buildcheck.py` does both, and the tail). Start the watchdog
 (`guard_start.sh`, a Monitor on `guard.log` for STUCK/GONE). Keep a test log the user can read and
 send it at each milestone; copy it to `playtest/logs/` and commit.
 

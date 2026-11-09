@@ -54,6 +54,15 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
   playtest/logs/2026-11-09-missing-figures.md.)
 
 **Changed**
+- **The helper has room again (second memory pass):** its code space 2,032 -> 6,032 bytes free.
+  The sites' dispatch is a jump table (688 bytes); the rings' outlines are kept as one quarter and
+  mirrored (336); a new tail section after the image, kept with the helper and found through header
+  +1834 (`tail_seg`), holds the floating names' slots, the extra item names and types and the timer
+  notes (the Loader's labels.py and freeze.py read them there); the dust's LIGHT, puffs and DARK
+  moved to the far block; the crash report writes the stack straight from SS. Upper memory: 565
+  paragraphs spare (was 495), the largest free piece 37,392 bytes. Checked in DOSBox (shadows,
+  dust, the ring, labels, to-hit, Turn Undead, item names, the Effects screen, Look, creation, a
+  shop; playtest/logs/2026-11-09-memory-pass-2.md). DEVELOPMENT.md's budget corrected.
 - **Turn Undead the AD&D way** (with "Spells as the manual describes them"; DSCLOG's TURN_SITE at
   7AE01h): AD&D 2e's turning table by the undead's hit dice (rows: 1, 2, 3-4, 5, 6 ... 11+) and the
   priest's level (columns 1-9, 10-11, 12-13, 14+), where the game's formula put 2- and 3-HD undead a

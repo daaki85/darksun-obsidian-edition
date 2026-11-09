@@ -480,7 +480,7 @@ sizes; the paragraphs after it say how each piece got there.
 | Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (86 KB before the music buffer moved out, 53 KB before the overlay buffer did; the unmodded game's 57 KB) |
 | C000h-C7FFh | 32 KB | the video BIOS (ROM) |
 | C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
-| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 60.75 KB (62,208 bytes with its PSP), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, 36.5 KB (37,392 bytes) free in one piece and 720 bytes between the helper and the overlay buffer (measured 2026-11-08, `memaudit.py`) |
+| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 61.2 KB (62,640 bytes with its PSP and its tail; 63,760 before the 2026-11-09 pass), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, 36.5 KB (37,392 bytes; 35,856 before) free in one piece and 288 bytes between the helper and the overlay buffer (measured 2026-11-09, `memaudit.py`) |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
 | 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's far block, 63.25 KB (64,768 bytes), 752 bytes free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |

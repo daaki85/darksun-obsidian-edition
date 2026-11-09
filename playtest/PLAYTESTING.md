@@ -284,6 +284,14 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   level's need with its class letter ("EXP:4487 (5000 Pr)"): a quick check of the XP tables
   (AD&D's when the header's rules_hi, +270, has bit 8). `framerate.py`'s walk clicks at y 104: from
   `fountain-user` after its fight they land in the fountain and nobody walks (0 map units/s).
+- **Memory after the second memory pass** (2026-11-09, logs/2026-11-09-memory-pass-2.md): the
+  helper's block 62,640 bytes with its PSP and tail (the build before: 63,760), 288 bytes free
+  between it and the overlay buffer (704), 37,392 free in one piece (35,856); DOS memory free after
+  the game 97 KB, as before. The old build for a comparison: `git show HEAD:obsidian-edition/dos/
+  DSCLOG.EXE` into a scratch file, copied into `dos/` for one `loadsave.sh`, then the new one put
+  back (`cmp` it with a fresh build). A quick look at the far block and the tail in a running game:
+  LIGHT at the header's +236 (an offset in the far block), the puffs 256 after it and DARK 288 after
+  those; TICKS at `tail_seg` x 16 + the +356 offset, the labels' slots at +1838's.
 - **Memory** (2026-11-06, logs/2026-11-06-memory-audit.md): `memaudit.py` lists every DOS block (the
   game's, DSCLOG's, the overlay buffer, the see-through tables, the music buffer, free) and the
   heap; `memsample.py LABEL` gives one line (free DOS memory after the game: 100,016 bytes on the
@@ -760,6 +768,11 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
     Guard ran north off the screen). A human with a cleric class added in memory is priest level 0
     to the game (Jenna). The party's places (DS:669Dh + 32n) were right; most Arena Guards read far
     off the map.
+  - **The LEVEL button didn't move from LEVEL 1** (2026-11-09, `fountain-user`, Lex after
+    `spellsetup.py 0=10 33 28`), with the build of that day and the one before alike (clicks at
+    186-205,171, plain and slow): not a helper fault; cast a level-1 spell instead (Ester's Magical
+    Stone, `spellsetup.py 2=9`, the priest page's second row, second icon: hover an icon for its name
+    in the bar at the bottom, y 182-194). An Arena Guard off the right edge was in reach.
   - **The USE screen's LEVEL button skips levels with nothing castable**: Lex at preserver 10 with
     only 3rd-level spells known went 1 to 3; at preserver 4 it stayed on 1 (no 3rd-level spells at
     that level: the least for Flame Arrow is 5). **The first click after U opens the screen was lost
