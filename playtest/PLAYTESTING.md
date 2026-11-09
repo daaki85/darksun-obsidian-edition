@@ -273,7 +273,7 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   level of a combatant (508h:2Ah, 5E85Fh) is +24h for a human, else the best level of a class that is
   set, so a monster with no class (elementals, slaads, Sand Howler, Rampager...) counts as 0 though its
   hit dice are at +24h. The game's own monster sheets are the RDFF chunks of SEGOBJEX.GFF (record type 4,
-  `dataitems.records`). The undead (race 9) all have a class. With "Spells as the manual describes them" a classless
+  `dataitems.records`). The undead (race 9) all have a class. With "Spells and psionics as the manual describes them" a classless
   creature's saves count its hit dice as its level (DSCLOG's HD_SAVE_SITE in the save modifiers only;
   checked 2026-11-08, logs/2026-11-08-hd-spells.md).
 - **Memory after the 2026-11-08 memory pass** (logs/2026-11-08-memory-pass.md): `memaudit.py` on
@@ -719,6 +719,12 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
     fight, U then Cilla (108,108), the CLERIC/MAGE button (150,171) switches the spell kind; an aimed
     summon there did nothing (red no-sign). In a fight a summon keeps no effect timer (effects.py
     shows none) and no "lasts" line.
+  - **Giving an effect in memory** (2026-11-09, logs/2026-11-09-rest-poison.md): `addeffect.py OWNER
+    EFFECT [SPELL]` inserts a record in the effect table in owner order (35 Poisoned, 13 Diseased);
+    `addeffect.py del OWNER EFFECT` takes it out. A rest at the fire ring then shows what the rest does
+    with it (a Poisoned member dies: status 5, creature +1Ch). `restfixmem.py check|fix|undo` swaps the
+    rest's pass 2 in the overlay buffer for the proposed "cures first" order (rest once first, so the
+    overlay is loaded). Death does not take effects off a member.
   - **`effects.py`** lists the effects with time left (Stuck (11 rounds), Ironskin (6 charges));
     `effects.py OWNER 51 34 86` rewrites a Stuck into Paralyzed (47 Slowed) to test a cure.
   - The fight's Templar was creature 30 (the dice log's saves showed its WIS 17), not 11: check
@@ -792,6 +798,44 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
     casts a slot (the pointer comes back after each, as Magical Stone's), each with its attack line
     (`+2 Minute Meteors`), and Flame Arrow one cast for every five levels (2 at preserver 10, 3 at 15,
     1 at 9), each 5d6 with no attack roll. Click the target once per cast, 4 s apart.
+  - **Group 3 of the manual's spells** (2026-11-09, logs/2026-11-09-group-3.md, `fountain-user`):
+    - **`foeset.py`** lists every combatant (creature, HP, sheet, race, classes, levels, magic
+      resistance, the creature record's six scores) and the table of active effects (owner, caster,
+      spell, effect, handle, charges, amount); `foeset.py C race= cls=a,b,c lv=a,b,c mr= hp= int=
+      eff=ID[:SPELL[:AMOUNT]]` writes them (the sheet is shared by a kind; effects go in owner order,
+      handles from 200, no timer). Used for Fire Shield (20), Blur (55), Biofeedback (4), Feeblemind
+      (19), Diseased (13) and Paralyzed (34) on a creature. (`addeffect.py`, another session's, adds
+      effects too.)
+    - **A creature's scores (+22h) are worked out only when something asks** (a spell's handler that
+      changes them, an effect's end): an effect put on in memory shows in them after the next
+      Strength cast on that creature, for one.
+    - **"cannot save" used to mean a save**: the game's save compare is unsigned (79BBAh), so every
+      −100 saved. Since `save_signed` (with the manual's spells) it fails; without, the log says so.
+      Look at the effect or the HP, not only the save line.
+    - **Archers crossing out the caster's icons every turn** (hit before its turn): `foeset.py C
+      eff=34` (Paralyzed) on each foe that shoots; then the turns come clean. Paralyzed foes also
+      fail every save (handy for a failed save on demand).
+    - **Touch spells: adjacent only** ("too far away" at two squares diagonally): click a floor square
+      beside the target with the walk arrow, then cast in the same turn (it worked with Move left).
+      A miss with icons already up: `foeset`-free trick, the sheet's base AC (+27h) 30. **Escape while
+      aiming** opens EXIT GAME?; its CANCEL leaves the aim up (the next map click casts at it); a
+      right-click cancels and passes the turn.
+    - **Range**: Cloudkill at about 230 map units said "too far away"; at 80 it cast. Rainbow Pattern
+      and Cloudkill are areas that stay: Rainbow Pattern (2d3 rounds) made Lex, Jenna and Seneca save
+      each turn and paralysed some, so aim them away from the party; Cloudkill near the party: raise
+      the party's levels in memory first (6 and up only take damage).
+    - **Psionic powers in memory**: a member knows power P (0-33, numbered from 138) when its byte at
+      the segment of selector 2F0h (`game.SEGMENT_TABLE` + `POWER_OWN_SELECTOR`), +77h + member x 22h
+      + P, has bits 3-7 set (write 8). The four members of `fountain-user` already know Life
+      Draining, Biofeedback, Flesh Armor, Graft Weapon and Mind Blank. U on the member's turn opens the
+      PSIONIC page; icons in power order; Adrenalin Control and Cell Adjustment then take a portrait.
+    - **A spell's description in a fight**: on the USE screen a right-click on its icon opens the box
+      (Fire Shield's and Cat's Grace's, logs/img/2026-11-09-group-3-*.png); a known bit or
+      `spellsetup.py 0=10 44` first.
+    - **A hang** (fixed): a kill made by DSCLOG's own far call of 4E0:61h inside a lasting cloud's
+      round left the screen still and the pointer stuck at DS:A133h while the game's clock (DS:11D6h)
+      ran on: `compare -metric AE` of two shots 5 s apart gave 0, and clicks did nothing. Restart.
+    - Two natural 20s in a row came up on one Guard's saves; nothing wrong found.
 - **A read-only dice log** (`rolog.py`, 2026-11-08): to try changed dice-log code on a DOSBox whose
   Loader isn't this session's (stopping another's Loader was refused), run `rolog.py` into a file of
   your own: describe() and hp_changes() from this checkout, no writes to the game. Its pending rolls
