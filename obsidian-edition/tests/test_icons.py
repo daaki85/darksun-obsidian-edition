@@ -83,9 +83,10 @@ class PictureTests(unittest.TestCase):
         small = [[1, None], [None, 2]]
         self.assertIs(icons.fit_box(small), small)
 
-    def test_tall_weapons_fitted(self):
-        """The game's weapon pictures taller than 16 (BOX_TALL: the gythka's 22...) drawn 16 at most, so
-        an item box's last row (DSCLOG's "Hit -1") stays inside it; a narrow one keeps its shape."""
+    def test_tall_weapons_box_copies(self):
+        """Each weapon picture taller than 16 (BOX_TALL) gets a copy for the item box, BOX_SMALL + its
+        place, drawn 16 at most (a narrow one keeping its shape); the picture itself is kept, for the
+        inventory and the ground. One the Loader changes (ICONS', SHINE's) is copied as it ends up."""
         gythka = icons.encode([[0x3A if x == y else None for x in range(22)] for y in range(22)])
         staff = icons.encode([[0x3A if x == 3 else None for x in range(7)] for y in range(27)])
         plain = icons.encode([[0x3A if x == y else None for x in range(16)] for y in range(16)])
@@ -93,8 +94,23 @@ class PictureTests(unittest.TestCase):
         for _, number, _, _, _ in icons.ICONS:
             chunks[("OJFF", 0x10000 - number)] = bytes(12) + struct.pack("<H", 40) + b"rest"
         new = icons.new_chunks(chunks)
-        self.assertEqual([len(icons.decode(new[("BMP ", 2384)])), len(icons.decode(new[("BMP ", 2157)]))], [16, 16])
-        self.assertEqual(max(len(r) for r in icons.decode(new[("BMP ", 2157)])), 4)
+        self.assertNotIn(("BMP ", 2384), new)  # (the game's own kept)
+        small = lambda n: icons.decode(new[("BMP ", icons.BOX_SMALL + icons.BOX_TALL.index(n))])
+        self.assertEqual([len(small(2384)), len(small(2157)), max(len(r) for r in small(2157))], [16, 16, 4])
+        for n in (2447, 2513):  # (Kreenfang's and the Metal Polearm's, ICONS': made from the plain 16)
+            self.assertEqual(new[("BMP ", icons.BOX_SMALL + icons.BOX_TALL.index(n))], icons.encode(icons.fit_box(icons.decode(new[("BMP ", n)]))))
+        self.assertEqual(len(icons.BOX_TALL), len(set(icons.BOX_TALL)))
+
+    def test_box_table_in_dsclog(self):
+        """DSCLOG's BOX_PICS table and BOX_SMALL are icons'."""
+        import re
+        with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos", "dsclog.asm"),
+                  encoding="latin-1") as f:
+            text = f.read()
+        block = text[text.index("box_tall dw"):text.index("BOX_TALL_COUNT equ")]
+        numbers = [int(n) for line in block.splitlines() for n in re.findall(r"\b\d+\b", line.split(";")[0])]
+        self.assertEqual(tuple(numbers), icons.BOX_TALL)
+        self.assertIn(f"BOX_SMALL equ {icons.BOX_SMALL}", text)
 
     def test_glow(self):
         rows = [[1, 2, None]]
@@ -141,8 +157,9 @@ class CopyTests(unittest.TestCase):
             chunks[("BMP ", base)] = b"map " + bytes([base & 0xFF])
         chunks[("BMP ", 40)] = plain
         new = icons.new_chunks(chunks)
-        self.assertEqual(len(new), 3 * len(icons.ICONS) + 1)  # (and the Polearm's picture, fitted)
-        self.assertEqual(new[("BMP ", 40)], plain)  # (16 pixels: it fits as it is)
+        copies = sum(1 for k in new if k[0] == "BMP " and k[1] >= icons.BOX_SMALL and k[1] < icons.BOX_SMALL + len(icons.BOX_TALL))
+        self.assertEqual(len(new), 3 * len(icons.ICONS) + copies)  # (and the item box's copies of the tall ones)
+        self.assertNotIn(("BMP ", 40), new)  # (the plain picture kept)
         for name, number, obj, icon, _ in icons.ICONS:
             self.assertEqual(struct.unpack_from("<H", new[("OJFF", obj)], icons.OJFF_ICON)[0], icon)
             self.assertEqual(new.get(("BMP ", obj)), chunks.get(("BMP ", 0x10000 - number)))

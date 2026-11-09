@@ -395,6 +395,28 @@ class Group3Tests(unittest.TestCase):
             got = self.word(-2) & 0xFF
             self.assertEqual(got - 256 if got >= 128 else got, want, (d20, flags, mods, bonus))
 
+    def test_box_pictures(self):
+        """BOX_PIC_ITEM_SITE (8C344h: EAX the item's +0Ch, ES:BX the item) and BOX_PIC_OBJECT_SITE
+        (8C384h: EAX [BP-0Eh], the object's icon): a tall weapon picture (icons.BOX_TALL) made its
+        small copy (BOX_SMALL + its place); any other number kept, the item's own unchanged."""
+        from dsloader import icons
+        item = 0x5000
+        for number in (2384, 2573, 2395, 0, 0x7FFF):
+            want = icons.BOX_SMALL + icons.BOX_TALL.index(number) if number in icons.BOX_TALL else number
+            self.mu.mem_write(item * 16 + 0x10 + 0x0C, struct.pack("<H", number))
+            self.assertEqual(self.run_site("box_picture_item", es=item, ebx=0x10, ecx=0x3333, esi=0x4444), 6)
+            self.assertEqual((self.mu.reg_read(r.UC_X86_REG_EAX), self.mu.reg_read(r.UC_X86_REG_CX),
+                              self.mu.reg_read(r.UC_X86_REG_SI)), (want, 0x3333, 0x4444))
+            self.assertEqual(struct.unpack("<H", self.mu.mem_read(item * 16 + 0x1C, 2))[0], number)
+            self.frame(mE=number)
+            self.assertEqual(self.run_site("box_picture_object", eax=0xFFFFFFFF), 5)
+            self.assertEqual(self.mu.reg_read(r.UC_X86_REG_EAX), want)
+            self.assertEqual(self.word(-0x0E) & 0xFFFF, number)
+        for name, offset, original, site in (("box_picture_item", 0x8C344, "66260fbf470c", gamepatch.BOX_PIC_ITEM_SITE),
+                                             ("box_picture_object", 0x8C384, "660fb746f2", gamepatch.BOX_PIC_OBJECT_SITE)):
+            p = patch(name)
+            self.assertEqual((p.offset, p.original.hex(), p.replacement[:3]), (offset, original, bytes((0xCD, gamepatch.VEC_CR_SPELLS, site))))
+
     def test_save_natural_patches(self):
         """The natural 20's test jumped over (79B5Fh: "jmp short 79B6Ah"); the sites always applied, as
         save_signed."""

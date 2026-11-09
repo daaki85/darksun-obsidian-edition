@@ -120,17 +120,22 @@ def shorter_blade(rows: Rows, steps: int = 4) -> Rows:
     return out
 
 
-# The item box (right-click an item) puts its text below the picture: the taller the picture, the
-# lower the text. The Polearm's (36) ran its text out of the box; the gythka's (22) put a weapon's
-# last row (DSCLOG's "Hit -1", a wand's charges) at the box's bottom edge. So every weapon picture
-# taller than 16 (the Long Sword's is 15, the Arrows' 16) is drawn smaller, everywhere the game
-# shows it (the inventory, the map too). The game's own (SEGOBJEX.GFF: each weapon item's object's
-# icon, 2026-11-09): the Bone Polearm's (2383) and Polearm +1's (2311), 36; the Parting Staff's (2157)
-# 27; Balk's Staff's (2143) 24; the Gythkas' (2287, 2254: 23; 2384: 22); a Stone pick's (1494) 19; the
-# Quarterstaffs' (2392, 2255), the Cahulaks' (2334) and the Striker's (1199) 18.
+# The item box (right-click an item) draws a picture 16 pixels or less in a frame, its text from 28
+# down; a bigger one bare, its text from its height + 12 down (DSUN.EXE 8BBE4h): the Polearm's (36)
+# ran its text out of the box, the gythka's (22) put a weapon's last row (DSCLOG's "Hit -1", a wand's
+# charges) at the box's bottom edge. So the box alone is given a copy of each weapon picture taller
+# than 16 drawn 16 at most (BOX_SMALL on: DSCLOG's BOX_PICS, the box's two loads of the picture,
+# 8C344h and 8C384h, made to load the copy); the inventory and the ground keep the picture as it is
+# (the ground draws a dropped item with its icon). The game's (SEGOBJEX.GFF: each weapon item's
+# object's icon, 2026-11-09): the Bone Polearm's (2383) and Polearm +1's (2311), 36; the Parting
+# Staff's (2157) 27; Balk's Staff's (2143) 24; the Gythkas' (2287, 2254: 23; 2384: 22); a Stone pick's
+# (1494) 19; the Quarterstaffs' (2392, 2255), the Cahulaks' (2334) and the Striker's (1199) 18. The
+# Loader's own made from them: the Cahulaks +1's shining copy (2653, SHINE's) and Kreenfang's (2447),
+# the Metal Polearm's (2513), Linebreaker's (2571) and Thornwall's (2573), ICONS'.
 BOX_PICTURE = 16
-BOX_TALL = (2383, 2311, 2157, 2143, 2287, 2254, 2384, 1494, 2392, 2255, 2334, 1199)
-POLEARM_OBJECT = 0x10000 - 0xFB5E
+BOX_TALL = (2383, 2311, 2157, 2143, 2287, 2254, 2384, 1494, 2392, 2255, 2334, 1199,
+            2653, 2447, 2513, 2571, 2573)
+BOX_SMALL = 2900  # (BOX_TALL[i]'s copy is BOX_SMALL + i: numbers no picture of the game's has)
 
 
 def fit_box(rows: Rows, size: int = BOX_PICTURE) -> Rows:
@@ -508,14 +513,6 @@ SHINE: Tuple[Tuple[str, int, Callable[[Rows], Rows], Optional[int]], ...] = (
 def new_chunks(chunks: gff.Chunks) -> gff.Chunks:
     """The objects and pictures to add to the game's SEGOBJEX.GFF."""
     out: gff.Chunks = {}
-    smaller: Dict[int, Rows] = {}
-    tall = set(BOX_TALL)
-    if ("OJFF", POLEARM_OBJECT) in chunks:  # (the Polearm's picture, small enough for the item box)
-        tall.add(struct.unpack_from("<H", chunks[("OJFF", POLEARM_OBJECT)], OJFF_ICON)[0])
-    for icon in sorted(tall):
-        if ("BMP ", icon) in chunks:
-            smaller[icon] = fit_box(decode(chunks[("BMP ", icon)]))
-            out[("BMP ", icon)] = encode(smaller[icon])
     for _, plain, number, icon, make in ICONS:
         base = 0x10000 - plain
         record = bytearray(chunks[("OJFF", base)])
@@ -524,7 +521,7 @@ def new_chunks(chunks: gff.Chunks) -> gff.Chunks:
         out[("OJFF", number)] = bytes(record)
         if ("BMP ", base) in chunks:  # (the plain item's BMP of its own number, as the game's objects
             out[("BMP ", number)] = chunks[("BMP ", base)]  # have one; a necklace has none: kept so)
-        rows = smaller.get(old_icon) or decode(chunks[("BMP ", old_icon)])
+        rows = decode(chunks[("BMP ", old_icon)])
         out[("BMP ", icon)] = encode(make(rows))
     for _, obj, make, own in SHINE:
         if ("OJFF", obj) in chunks:
@@ -535,6 +532,10 @@ def new_chunks(chunks: gff.Chunks) -> gff.Chunks:
                     record = bytearray(chunks[("OJFF", obj)])
                     struct.pack_into("<H", record, OJFF_ICON, own)
                     out[("OJFF", obj)] = bytes(record)
+    for i, icon in enumerate(BOX_TALL):  # (the item box's copies, from each picture as it ends up)
+        picture = out.get(("BMP ", icon)) or chunks.get(("BMP ", icon))
+        if picture is not None:
+            out[("BMP ", BOX_SMALL + i)] = encode(fit_box(decode(picture)))
     return out
 
 

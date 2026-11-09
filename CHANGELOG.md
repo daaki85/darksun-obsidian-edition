@@ -40,17 +40,19 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 
 ## Next pull request (not opened yet)
 
-DSCLOG.EXE 65,424 bytes (image 65,392), 3,024 of its segment spare.
+DSCLOG.EXE 65,520 bytes (image 65,488), 2,928 of its segment spare.
 
 **Changed**
 - **Item boxes show a weaker material's to-hit** under a plain weapon's damage: `Hit -3` wood,
   `Hit -1` bone, `Hit -2` stone and obsidian, as the game's attack takes it (the damage line already
   had the material's damage off). Not with a plus, nor for the game's exempt weapons (clubs, staves,
   the chatkcha: type +08h 80h), nor metal (DSCLOG's IB_MATERIAL, always on). Seen in DOSBox:
-  playtest/logs/2026-11-09-hit-line.md. The box puts its text below the picture, so the weapons'
-  pictures taller than 16 pixels (the polearms', staves', gythkas', a stone pick's, the cahulaks',
-  the striker's: up to 36; the Long Sword's is 15) are drawn smaller everywhere (`icons.BOX_TALL`,
-  BOX_PICTURE 16, was 22 for the Polearm alone): the gythka's last row sat at the box's edge.
+  playtest/logs/2026-11-09-hit-line.md. The box puts its text below the picture, so a weapon
+  picture taller than 16 pixels (the polearms', staves', gythkas', a stone pick's, the cahulaks',
+  the striker's, up to 36; the Long Sword's is 15) put the last row at the box's edge: the box alone
+  now draws a copy 16 at most (`icons.BOX_TALL`, `BOX_SMALL`; DSCLOG's BOX_PICS, always on), the
+  inventory and the ground keeping the game's own picture (the Polearm's too, which the Loader had
+  drawn 22 everywhere; the weapon specs' picker keeps its 22).
 - **Spells and psionics as the manual describes them** (a new rule change, on by default, from the
   next start: `spells_manual`, `gamepatch.SPELLS_MANUAL`; the spell records and DSCLOG sites; from
   reports/spells-against-the-manual.md, which now says what was done with each of its points):
@@ -217,8 +219,8 @@ DSCLOG.EXE 65,424 bytes (image 65,392), 3,024 of its segment spare.
   see-through, the ring, the panel's colours, labels, to-hit, Turn Undead, item names and types,
   next-level XP, the Effects screen, Look, creation, a shop). With the manual's spells, the
   monsters, resting and dual-classing, and the audit's fixes (their per-fight tables moved to the
-  far block), the helper ends the pull request with 3,024 bytes of its segment spare, 102 bytes
-  free in the far block (the HMA) and 377 paragraphs of upper memory spare.
+  far block), the helper ends the pull request with 2,928 bytes of its segment spare, 102 bytes
+  free in the far block (the HMA) and 371 paragraphs of upper memory spare.
 - The helper counts the game's page flips (`flip_count`, header +1832), for a frame rate:
   `playtest/framerate.py` reads it beside steady pace's frames left undrawn.
 

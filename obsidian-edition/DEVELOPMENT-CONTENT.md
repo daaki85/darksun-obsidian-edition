@@ -854,8 +854,18 @@ use any dagger, as its sphere allows; the Loader's item names
 the item type's material before the name when it shows one); and the icons are
 objects in the Loader's copy of `SEGOBJEX.GFF` (`dsloader/icons.py`), which the
 helper has the game open instead of its own (its `INT 21h` hook). The copy also
-has the game's Polearm picture made 22 pixels tall (`icons.fit_box`): at its own
-36, the item box's lines, which start below the picture, ran out of the box. Its icons of the game's
+has, for the item box alone, a copy of each weapon picture taller than 16 drawn
+16 at most (`icons.BOX_TALL`, `BOX_SMALL` on, 2900-2916; `icons.fit_box`): the box
+draws a picture of 16 or less in a frame with its text from 28 down, a bigger one
+bare with its text from its height + 12 down (8BBE4h), so at the Polearm's own 36
+its lines ran out of the box and at the gythka's 22 its last row (`Hit -1`, a
+wand's charges) sat at the edge. DSCLOG's `BOX_PICS` (gamepatch `box_picture_item`,
+`box_picture_object`, always applied) has the box's picture routine (8C2F1h, the
+box's alone) load the copy (8C344h: an item's own picture number, +0Ch; 8C384h: its
+object's icon, which it then keeps in the item as it is). The inventory and the
+ground draw the game's own (a dropped item lies there with its icon; the Loader
+drew the Polearm 22 pixels everywhere till 2026-11-09, and the weapon specs'
+picker still draws it so, `weaponpages.POLEARM_FIT`). Its icons of the game's
 own magic items that stood still (`icons.SHINE`: the Parting Staff, the
 Chameleon Gloves, the Hornblade... 19 of them) have every other pixel of their
 metal, gems or leather in the colours the game cycles in the inventory (water

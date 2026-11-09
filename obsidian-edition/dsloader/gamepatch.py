@@ -204,6 +204,8 @@ DRAIN_SITE, TARI_SITE = NS_IMAGE + 91, NS_IMAGE + 92
 REST_PRE_SITE, REST_HP_SITE = NS_IMAGE + 94, NS_IMAGE + 95
 # (a saving throw's natural 20, saving unless the save can't be made: DSCLOG's SAVE_SUM)
 SAVE_SUM_SITE, SAVE_NAT_SITE = NS_IMAGE + 96, NS_IMAGE + 97
+# (the item box's picture: a tall weapon's small copy, icons.BOX_TALL: DSCLOG's BOX_PICS)
+BOX_PIC_ITEM_SITE, BOX_PIC_OBJECT_SITE = NS_IMAGE + 98, NS_IMAGE + 99
 # the monster kinds' table (DSUN.EXE, the load segment's 3E45h: monsters.MONSTER_KINDS_SEG): a kind's
 # properties (a dword), its resistance class (a byte), a class's damage kinds (four words) and percents
 KINDS_FILE = 0x5400 + 0x3E45 * 16
@@ -560,6 +562,14 @@ PATCHES = (
     Patch("save_natural", 0x79B5F, bytes.fromhex("807e"), bytes.fromhex("eb09")),
     Patch("save_sum", 0x79B97, bytes.fromhex("8a56fe02d08856fe"), _site(SAVE_SUM_SITE, 8)),
     Patch("save_natural_saves", 0x79BB4, bytes.fromhex("0046fe"), _site(SAVE_NAT_SITE, 3)),
+    # The item box's picture (DSUN.EXE 8C2F1h, called by the box alone): the number an item keeps
+    # ("movsx eax,word [es:bx+0Ch]", 8C344h) or its object's icon ("movzx eax,word [bp-0Eh]", 8C384h,
+    # then kept in the item) pushed for the load; DSCLOG's BOX_PICS pushes a tall weapon picture's
+    # small copy instead (icons.BOX_TALL, BOX_SMALL), the item keeping its own number, so the box's
+    # text starts as a 16-pixel picture's and its last row is inside it; the inventory and the ground
+    # keep the picture. Always applied (the copies are in the Loader's SEGOBJEX.GFF whatever the Options)
+    Patch("box_picture_item", 0x8C344, bytes.fromhex("66260fbf470c"), _site(BOX_PIC_ITEM_SITE, 6)),
+    Patch("box_picture_object", 0x8C384, bytes.fromhex("660fb746f2"), _site(BOX_PIC_OBJECT_SITE, 5)),
     # The monsters as the manual describes them (in the same switch; reports/group 4's research,
     # playtest/logs/2026-11-09-group-4-research.md). The kinds' properties: bit 15 a hit (the last
     # natural attack's) casting the priests' Poison (119), bit 24 the corroding touch, bit 25 disease

@@ -14902,6 +14902,8 @@ REST_PRE_SITE equ NS_IMAGE + 94  ; 80675h: the rest's start, the priests' and ps
 REST_HP_SITE equ NS_IMAGE + 95   ; 808AFh: the rest's hit points, natural healing (REST_HP)
 SAVE_SUM_SITE equ NS_IMAGE + 96  ; 79B97h: a save's d20 and modifiers added, kept in a byte (SAVE_SUM)
 SAVE_NAT_SITE equ NS_IMAGE + 97  ; 79BB4h: a natural 20 saves unless the save can't be made (SAVE_SUM)
+BOX_PIC_ITEM_SITE equ NS_IMAGE + 98   ; 8C344h: the item box's picture, an item's own number (BOX_PICS)
+BOX_PIC_OBJECT_SITE equ NS_IMAGE + 99 ; 8C384h: ... or its object's icon (BOX_PICS)
 KIND_TURN  equ 13
 TU_DESTROY equ 0x7AE60 - 0x7AE04 ; (the ways on, less the address after the site's number)
 TU_FAIL    equ 0x7AE75 - 0x7AE04
@@ -16403,6 +16405,38 @@ save_nat:
 .keep:  pop ax
 .out:   iret
 sv_nat  db 0
+;
+; BOX_PICS (gamepatch "box_picture_item", "box_picture_object", always applied): in the routine the
+; item box loads its picture with (DSUN.EXE 8C2F1h; the box's alone), the picture number pushed for
+; the load: the item's own (+0Ch, "movsx eax,word [es:bx+0Ch]", 8C344h; 6 bytes) or its object's
+; icon ("movzx eax,word [bp-0Eh]", 8C384h; 5 bytes, then kept in the item as it is). A weapon
+; picture taller than 16 (BOX_TALL: the box would draw its text lower, the last row at its edge)
+; becomes its copy drawn 16 at most, which the Loader adds to its SEGOBJEX.GFF (icons.BOX_TALL,
+; BOX_SMALL: the copy of the Nth is BOX_SMALL + N). EAX the number; the rest kept.
+BOX_SMALL equ 2900
+box_pic_item:
+        movsx eax, word [es:bx + 0x0C]
+        jmp box_pic
+box_pic_object:
+        movzx eax, word [bp - 0x0E]
+box_pic:
+        push si
+        push cx
+        xor si, si
+        mov cx, BOX_TALL_COUNT
+.next:  cmp ax, [cs:box_tall + si]
+        je .small
+        add si, 2
+        loop .next
+        jmp .out
+.small: shr si, 1
+        lea ax, [si + BOX_SMALL]
+.out:   pop cx
+        pop si
+        iret
+box_tall dw 2383, 2311, 2157, 2143, 2287, 2254, 2384, 1494, 2392, 2255, 2334, 1199  ; (the game's)
+         dw 2653, 2447, 2513, 2571, 2573        ; (the Loader's own: icons.BOX_TALL)
+BOX_TALL_COUNT equ ($ - box_tall) / 2
 
 rest_hp:
         test word [cs:rules_hi], RULE_HI_REST
@@ -19239,6 +19273,8 @@ site_tab:
         site REST_HP_SITE, rest_hp
         site SAVE_SUM_SITE, save_sum
         site SAVE_NAT_SITE, save_nat
+        site BOX_PIC_ITEM_SITE, box_pic_item
+        site BOX_PIC_OBJECT_SITE, box_pic_object
 SITE_COUNT equ ($ - site_tab) / 2
 
 ; NS_CMP: the compare of site RL_SITE (of NS_CMP_SITES), its flags into the INT's frame.
