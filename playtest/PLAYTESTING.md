@@ -971,6 +971,11 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   pens load 203 of the 300 slots on arrival and walking about adds none (`slotcount.py` at each
   stop); fights add a few (bodies, dropped items, spells). Wake of the Ravager's "graphics disappear"
   note is this same limit; leaving the region clears it.
+- **A person's new gear and old saves** (2026-11-09): the Loader's changes to a person's items (its
+  object's record in SEGOBJEX, as worldgear's) reach only creatures the game makes after them: in
+  `fountain-user` Legcrusher still held his two Wooden Clubs (`npcgear.py`), not the Cahulaks +1, since
+  the save holds him as he was made. Test such a change in a new game, or an area not yet visited.
+  Type 146 (the metal cahulaks) read from the game's type table as built (`gd.item_type_record`).
 - **A weapon's rule in a fight** (2026-11-09, logs/2026-11-09-cahulaks.md): from `fountain-user`, a
   weapon put on a member in memory (a whole record from SEGOBJEX: `champions.game_item(chunks, TYPE)`,
   its link +4, flags and slot kept, +08h 270Fh) before the speech box is clicked; Tab + Return on the
