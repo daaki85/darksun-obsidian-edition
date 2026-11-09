@@ -685,8 +685,9 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   opened the END menu; check a shot first.
 - **Casting spells for a test** (2026-11-08, logs/2026-11-08-manual-spells.md, from `fountain-user`
   clicked into Pehtucl's ambush): `spellsetup.py 0=9 2=9 hp=200` teaches the spells, fills every
-  slot and sets the casters' second class to level 9 (Lex, #0, is the preserver there, Ester, #2,
-  the priest); `hp.py 150` keeps the foes up. Then:
+  slot and sets each of the member's casting classes (any place) to level 9 (Lex, #0, is the preserver there, Ester, #2,
+  the priest), and prints the pages the LEVEL button will offer (`0 Wizard: LEVEL pages [1, 3]`);
+  `hp.py 150` keeps the foes up. Then:
   - **The USE screen remembers the spell level page** each caster was last on: the LEVEL button is
     at **(196,171)** (not y 187) and steps 1, 2, ... 5, 1; shoot the page before clicking an icon.
     The arc at (266,171) is RETURN TO GAME. Icons are about 18 apart, five a row: x 176, 194, 212,
@@ -768,12 +769,21 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
     Guard ran north off the screen). A human with a cleric class added in memory is priest level 0
     to the game (Jenna). The party's places (DS:669Dh + 32n) were right; most Arena Guards read far
     off the map.
-  - **The LEVEL button didn't move from LEVEL 1** (2026-11-09, `fountain-user`, Lex after
-    `spellsetup.py 0=10 33 28`), with the build of that day and the one before alike (clicks at
-    186-205,171, plain and slow): not a helper fault; cast a level-1 spell instead (Ester's Magical
-    Stone, `spellsetup.py 2=9`, the priest page's second row, second icon: hover an icon for its name
-    in the bar at the bottom, y 182-194). An Arena Guard off the right edge was in reach.
-  - **The USE screen's LEVEL button skips levels with nothing castable**: Lex at preserver 10 with
+  - **The LEVEL button didn't move from LEVEL 1** once (2026-11-09, `fountain-user`, Lex after
+    `spellsetup.py 0=10 33 28`, clicks at 186-205,171). It **did not come back** in a later check
+    (logs/2026-11-09-level-button.md: three loads with the same arguments, in and out of the fight,
+    the rules off too: 1, 3, 1, 3 each time). No fault in the game or the mod. The game's rule (88A94h ->
+    81664h): a level is offered when a spell of it is known, the classes give a slot there on
+    resting (not slots left: a 0/1 page is offered) and it is at most (caster level + 1) / 2 (81B16h
+    for spell 0 or 69); a **human's casting class in place 2 or 3 counts 0 unless below the first
+    class's level** (5E7CFh, and no slots, 5E130h: the MAGE page went away entirely). spellsetup.py
+    prints the pages and warns of that. A stuck button means a caster level of 0 or 1: check what
+    else was written to the sheet. For a level-1 test spell: Ester's Magical Stone, `spellsetup.py
+    2=9`, the priest page's second row, second icon (hover an icon for its name in the bar at the
+    bottom, y 182-194). An Arena Guard off the right edge was in reach.
+  - **The USE screen's LEVEL button skips levels with nothing known** (or no class slot, or past
+    the caster level's cap); the USE screen opens on the kind with slots (PSIONIC when a member has no
+    wizard or priest slots), the kind button at 150,171: Lex at preserver 10 with
     only 3rd-level spells known went 1 to 3; at preserver 4 it stayed on 1 (no 3rd-level spells at
     that level: the least for Flame Arrow is 5). **The first click after U opens the screen was lost
     twice**: shoot the page after each LEVEL click. A caster shot ("YOU WERE HIT" in the bar) before
