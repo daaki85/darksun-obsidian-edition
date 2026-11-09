@@ -5158,6 +5158,8 @@ class TypesTests(unittest.TestCase):
         for dagger in (17, 33, 84, 94):  # (the game's daggers: the air cleric's bit set, the rest kept)
             self.assertEqual(self.mu.mem_read(self.TYPES_SEG * 16 + dagger * 20 + 0x10, 2), b"\x01\x00")
         self.assertEqual(self.mu.mem_read(self.TYPES_SEG * 16 + 18 * 20 + 0x10, 2), b"\x00\x00")  # (a club: not)
+        self.assertEqual([self.mu.mem_read(self.TYPES_SEG * 16 + t * 20 + 8, 1)[0] for t in (2, 113)], [4, 5])
+        # (the Great Axe +3's type metal, the Quicksilver Glove's leather: both no material in the game)
         self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_DS)], [0, GAME_DS])
 
     def test_not_read(self):

@@ -316,6 +316,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 
 ## Bug Fixes
 
+- **[Fixed]** The **Quicksilver Glove** fought as if it were wooden (−3 to hit, −2 damage): it had no material, which the game read as wood. It is leather now, as the Chameleon Gloves are.
 - **[Fixed]** A party member cured of poison at a rest (a druid's free Neutralize Poison) still died of the poison: the rest checked for poison before its cures. The cures now come first.
 - **[Fixed]** After many changes of gear in one area, the figures on the map could vanish (the party's and the monsters'), coming back for a moment when the inventory was opened: the Loader's dressing of the figures filled the game's store of pictures. The Loader now reuses the store's room for the new outfits, so they always show.
 - **[Fixed]** The game's **people put on their weapons and armour only at their first action in a fight**: until then they were AC 10, their armour unworn, so an opening blow, a backstab or a first-round hit met none, and their Look box showed no weapon. Now they wear and wield their gear from the moment they're on the map, as the game puts it on. They also wear the cloaks, belts, boots, amulets and up to two rings they carry, which the game never put on: each counts by the same rules as the party's.

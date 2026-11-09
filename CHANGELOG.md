@@ -223,6 +223,10 @@ DSCLOG.EXE 65,424 bytes (image 65,392), 3,024 of its segment spare.
   `playtest/framerate.py` reads it beside steady pace's frames left undrawn.
 
 **Fixed: the game**
+- **The Quicksilver Glove fought as a wooden weapon** (-3 to hit, -2 damage): its type has no
+  material (40h, a ring's), and the game's to-hit and damage (DSUN.EXE 5EB49h, 5EBC1h) read only the
+  low nibble, 0, wood. Its type made leather, as the Chameleon Gloves' (DSCLOG's PROBE_TYPES_FILL,
+  as the Great Axe +3's metal): "Leather Quicksilver Glove", 1D6+2 (playtest/logs/2026-11-09-hit-line.md).
 - **Scare allowed no saving throw at all,** so the 2.14.0 fix (`scare_elves`: an elf or half-elf
   priest's save) never ran, nor the game's own rule that 6th level and up always save: its record's
   save byte (+1Fh) had "a save allowed" clear, and the saving throw (79A71h) stops at that test.
