@@ -943,7 +943,7 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#items-saving-against-a
 | [Spells saved against with the spell save](#spells-saved-against-with-the-spell-save) | almost every spell saved against with petrification/polymorph | the spell save rather than petrification/polymorph |
 | [Fire, cold and electricity: DEX instead of a doubled d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20) | the save's d20 doubled, so most creatures shrug off a Fireball (70% to save where 35% is due) | DEX's defensive adjustment on those saves rather than a doubled d20 |
 | [Enlarge multiplies the weapon's dice only](#enlarge-multiplies-the-weapons-dice-only) | the whole melee damage multiplied, STR included | 10% a caster level on the weapon's dice, rounded up, STR and the rest added after |
-| [Spells as the manual describes them](#spells-as-the-manual-describes-them) | sixteen spells' saves, times, damage and effects the game's own way, Turn Undead destroying or doing nothing, a classless monster's level 0 for its saves | as the manual has them, Turn Undead by AD&D's table (turned undead flee), the monster's level its hit dice (from the next start) |
+| [Spells and psionics as the manual describes them](#spells-and-psionics-as-the-manual-describes-them) | twenty-five spells' and two powers' saves, times, damage and effects the game's own way, Turn Undead destroying or doing nothing, a classless monster's level 0 for its saves, a "can't save" that saves | as the manual has them, Turn Undead by AD&D's table (turned undead flee), the monster's level its hit dice, "can't save" failing (from the next start) |
 | [Spells roll to hit](#spells-roll-to-hit) | Acid Arrow, Turn Pebble to Boulder, Magical Stone, Condense, Minute Meteors and the touch spells never miss | they roll to hit against the target's AC, a missile's with DEX, a touch's with STR; a miss does nothing (from the next start) |
 
 #### Rangers' casting level
@@ -1033,13 +1033,15 @@ enlarged dice. The Effects screen names it ENLARGED (+90% DICE), not
 
 How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#enlarges-dice).
 
-#### Spells as the manual describes them
+#### Spells and psionics as the manual describes them
 
-Sixteen spells whose saves, times, damage or effects part from the manual
-(pp. 29-40), set as the manual has them, a priest's Turn Undead by AD&D's
-turning table, and a monster's level for its saves. The box takes effect from the
-next start (it changes the game's spell records as the Loader writes the game's
-copy); unticked, they are the game's.
+Twenty-five spells and two psionic powers whose saves, times, damage or effects
+part from the manual (pp. 29-44), set as the manual has them, a priest's Turn
+Undead by AD&D's turning table, a monster's level for its saves, and the saving
+throw's "can't save" made to work. The box takes effect from the next start (it
+changes the game's spell records and code as the Loader writes the game's copy,
+and the descriptions of Fire Shield and Cat's Grace in its copy of RESOURCE.GFF);
+unticked, they are the game's.
 
 | Spell | The game | As the manual |
 |---|---|---|
@@ -1059,6 +1061,18 @@ copy); unticked, they are the game's.
 | Hold Undead | any undead | only undead of no more levels (hit dice) than the caster's level; the rest are immune |
 | Minute Meteors | one blast of 1d4 a caster level (at most 10d4) | five globes of 1d4, each aimed and landing on its own (with [Spells roll to hit](#spells-roll-to-hit), each rolls with +2) |
 | Flame Arrow | one blast of 5d6 for every five caster levels (10d6 at level 10) | a bolt of 1d6 + 4d6 fire (5d6) for every five caster levels, at least one, each aimed and landing on its own (AD&D's bolts; no attack roll, no save, as the manual) |
+| Fire Shield | the caster takes half damage from fire and cold spells | and saves at +2 against them (its description says so) |
+| Blur | attackers −2 to hit | and +1 on its creature's saves against spells |
+| Chill Touch | 1 STR off on a failed save, gone at once (the spell gives the effect no time); an undead takes the damage | 1 STR off (Weakened) for an hour; an undead takes no damage and is Afraid 1d4 rounds instead |
+| Cloudkill | 1d10 poison, a save at −2 halves it; creatures of 6th level or lower "can't save" (and so saved: below) | under 4 levels (hit dice): dies, no save; 4 or 5: a failed save kills; 6 and up: the damage, a save halving it |
+| Feeblemind | INT and WIS 3, no spells; nothing cures it | no psionic powers either; Heal cures it, INT and WIS as they were |
+| Lower Resistance | magic resistance halved while it lasts | 30% + 1% a caster level off (at least 0); the cast's own check the same, the two not added up |
+| Strength | STR + 1d6 for anyone | 1d8 for a warrior (fighter, gladiator, ranger), 1d6 a priest, rogue or psionicist, 1d4 a wizard; a multiclass character's best; not added to Adrenalin Control's (the bigger counts) |
+| Cat's Grace (the mod's) | DEX + 1d6 for anyone | 1d8 a rogue, 1d6 a wizard, warrior or psionicist, 1d4 a priest (the Tome of Magic's); the best; two not added up |
+| Rainbow Pattern | Paralyzed 1d3 rounds, whatever happens to it | Paralyzed 1 round a caster level, ended by any damage to the creature |
+| Cell Adjustment (psionic) | heals 2 HP, cures disease | heals 1d4 HP, cures disease |
+| Biofeedback (psionic) | AC −1, and 2 off each blow (and other crushing, edged or pointed damage), leaving 0 of a blow of 2 or less | the same, but at least 1 left |
+| Saving throws with "can't save" | the save's −100 makes a negative total that the game reads as a big one (156 and up): the creature saves (Chaos for all but warriors, Cloudkill, Scare below 6th level, Color Spray) | the creature fails (a natural 20 still saves) |
 | Turn Undead | a d20 against its own number: destroyed or nothing, as often as the priest likes | AD&D's turning table (below): turned undead flee, D destroys, D\* destroys more of the kind, and a priest who fails can't try that undead again in the fight |
 
 **Turn Undead** (the priests' button on the USE screen, not a spell). With the
@@ -1100,6 +1114,70 @@ it, and Dismissal's and Color Spray's level checks took it for the weakest
 there is: with the box ticked its level for saving throws is its hit dice (the
 game's level everywhere else is left as it was).
 
+**The saves that couldn't fail.** The game's saving throw (DSUN.EXE 79A71h)
+compares its total with the number needed as unsigned bytes, so the −100 its
+save modifiers give for "can't save" (Chaos for all but warriors, Cloudkill on
+creatures of 6th level or lower, Scare below 6th level, and the mod's Color
+Spray rule) makes a total such as −85, read as 171: always a save. Seen in
+DOSBox (2026-11-09): Arena Guards "unable to save" took half Cloudkill's damage,
+and a Guard "unable to save" against Scare was never Afraid. With the box ticked
+the compare is signed: "can't save" fails (a natural 20 still saves, as the game
+checks it first). Unticked, the dice log says what the game does:
+`-100 meant "cannot save", but the game compares unsigned and reads it as 171 -> saved`.
+
+**Group 3 in detail** (2026-11-09):
+
+- **Fire Shield**: +2 on its caster's saves against spells of fire or cold
+  (`+2 Fire Shield` in the log's save line); the half damage from them and the
+  damage a melee attacker takes back are the game's own.
+- **Blur**: +1 on its creature's saves against spells (`+1 Blur`), beside the
+  game's −2 to attackers.
+- **Chill Touch**: the game already takes 1 STR off a creature that fails its
+  save (Weakened), but gave the effect no time, so it ended at once; it now
+  lasts an hour (60 rounds), the STR coming back after (AD&D's lost Strength
+  comes back a point an hour). Each touch takes 1 more. On an undead (which, in
+  AD&D, takes no damage or STR loss and flees) it does nothing but make the
+  undead Afraid for 1d4 rounds, no save:
+  `Chill Touch on Zombie, undead: no damage, no STR lost; Afraid 1d4 = 3 rounds instead`.
+  With [Spells roll to hit](#spells-roll-to-hit) the touch rolls first.
+- **Cloudkill** by the target's level for saves (a monster with no class: its
+  hit dice): under 4, it dies with no saving throw; 4 or 5, it saves against
+  poison (at the record's −2) or dies; 6 and up, the damage as before, a save
+  halving it. The death is the cloud's own damage a thousand times over, each
+  time the cloud strikes (as cast and at each round in it):
+  `Cloudkill: Guard dies (under 4 HD: no save; its level for saves 3)`.
+  AD&D's bands are by hit dice (4+1, 6); the game's levels are whole numbers.
+- **Feeblemind**: the game already makes INT and WIS 3 while it lasts (its
+  ability routine, 7B848h), and they come back as they were when it ends; it
+  stops spells. With the box it stops psionic powers too (each fails its power
+  check, costing half the PSP as any failed check does:
+  `Seneca is feebleminded: Biofeedback can't be used (no psionics)`), and the
+  mod's Heal (with [the new spells](#6th-level-priest-spells)) cures it: `Heal cures Seneca's Feeblemind: INT and WIS as they were`.
+  Dispel Magic still can't (the game's rule). The scores are worked out afresh
+  from the character sheet's, which Feeblemind never changes.
+- **Lower Resistance**: the creature's magic resistance 30% + 1% a level of the
+  caster lower, at least 0 (`-40 Lower Resistance on it, level 10`), where the
+  game halved it; the level is the cast's, kept with the effect. Cast at a
+  creature already under one, the bigger of the two counts.
+- **Strength** and **Cat's Grace** roll by the target's classes, the best die of
+  a multiclass character's: `Strength: 1d8 = 6 (fighter) -> Ester's STR +6`.
+  Adrenalin Control stays 1d6. Strength and Adrenalin Control on one creature
+  don't add up: the bigger counts (Strength 1 and Adrenalin Control 4 make STR +4).
+  A second Strength or Cat's Grace replaces the first (the game's own).
+- **Rainbow Pattern** holds 1 round a caster level (its record's time), and a
+  creature it holds is freed by any damage, a blow or a spell
+  (`Guard takes 20 damage: Rainbow Pattern's hold on it ends`); Hold Person's
+  and the others' Paralyzed aren't touched. The pattern itself stays on the
+  ground for a few rounds (2d3, the game's), and anyone in it (the caster too)
+  saves again each turn.
+- **Cell Adjustment** heals 1d4 hit points (the game's 2), and its record already
+  cures disease: `Cell Adjustment: 1d4 = 3 -> Seneca healed 3 HP, and Seneca is cured of disease`.
+- **Biofeedback**: the game already takes 2 off each blow (melee or missile) and
+  any other crushing, edged or pointed damage, but a blow of 2 or less did none;
+  now at least 1. The log's hit line shows it (`-2 Biofeedback`).
+
+How it is done: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#spells-and-psionics-as-the-manual-group-3).
+
 **Known differences left as they are.** The game has no way to do these as the
 manual says, or the change would make a different spell rather than fix one:
 
@@ -1114,6 +1192,10 @@ manual says, or the change would make a different spell rather than fix one:
 | Mass Domination | up to five creatures | one |
 | Detonate | 1d10 to everyone within 10' | the target only |
 | Quicksand | held 1 turn + 1 round a level | Stuck a round at a time, put on again each round while the quicksand lasts (5d3 rounds of its own); its record's time changes nothing (seen in DOSBox) |
+| Feeblemind | INT and WIS drop "dramatically" | to 3 (the game's own choice, an idiot's in AD&D) |
+| Chill Touch | Strength back a point an hour, repeated touches | each touch's point back after an hour |
+| Rainbow Pattern | held until attacked | the pattern on the ground (2d3 rounds) makes everyone in it, the caster too, save again each turn; damage frees one held |
+| Biofeedback | damage −2 | −2 from blows and any crushing, edged or pointed damage, not from fire or other spells |
 
 What else the manual and the game disagree on, and why the rest is left:
 [reports/spells-against-the-manual.md](../reports/spells-against-the-manual.md)
@@ -1130,7 +1212,7 @@ does:
 |---|---|
 | Acid Arrow | as an arrow from a fighter of the caster's level: THAC0 21 less the caster level, with the caster's DEX missile adjustment (the manual's "as if fired by a fighter") |
 | Turn Pebble to Boulder, Magical Stone, Condense, and the spines some monsters shoot | the caster's own THAC0, with its DEX missile adjustment |
-| Minute Meteors | the caster's own THAC0, with its DEX missile adjustment and the spell's own +2 (the manual's), each globe its own roll (five globes with [Spells as the manual describes them](#spells-as-the-manual-describes-them)) |
+| Minute Meteors | the caster's own THAC0, with its DEX missile adjustment and the spell's own +2 (the manual's), each globe its own roll (five globes with [Spells and psionics as the manual describes them](#spells-and-psionics-as-the-manual-describes-them)) |
 | Chill Touch, Shocking Grasp, Vampiric Touch, Cause Light, Serious and Critical Wounds, Cause Disease, Poison | a touch attack with the caster's own THAC0 and STR adjustment, only at a creature of another side (a foe, or a friend turned against it): on one's own side they land as before |
 
 The roll is the game's own for an attack: a d20 against THAC0 less the
@@ -1721,7 +1803,7 @@ sheet, so it saves with the game and the character.
 
 | Spell | Level | Cast on | Lasts | Does |
 |---|---|---|---|---|
-| **Cat's Grace** | 2 | a party member (its portrait on the USE screen) | 60 rounds a caster level | DEX + 1d6 (at most 24), as Strength does for STR |
+| **Cat's Grace** | 2 | a party member (its portrait on the USE screen) | 60 rounds a caster level | DEX + 1d6 (at most 24), as Strength does for STR; by class with [the manual's spells](#spells-and-psionics-as-the-manual-describes-them) |
 | **Erdlu Claw** | 1 | a party member (its portrait on the USE screen) | 5 rounds a caster level | each unarmed attack (a thri-kreen's claws, not its bite) does 1d6+1 where that's better than its own, is +1 to hit, counts as a +1 magical weapon, and cuts (edged, not crushing) |
 | **Fogbolt** | 1 | one creature in sight | 2d4 rounds (a save negates) | −3 to its attacks, and +2 to attacks on it (its AC 2 worse) |
 | **Reflected Image** | 1 | the caster | until the image is struck or dispelled | one image of the caster: a hit, or a foe's spell for one creature, has a 50% chance of striking the image instead, which vanishes |
@@ -1732,7 +1814,12 @@ sheet, so it saves with the game and the character.
   DEX. Everything that reads DEX follows it while it lasts: AC, initiative,
   REAC and DEF, thief skills, the two-weapon penalties and the saves against
   fire, cold and electricity. The log says what it rolled:
-  `Cat's Grace: 1d6 = 4 -> Gerakis's DEX +4 while it lasts (at most 24)`.
+  `Cat's Grace: 1d6 = 4 -> Gerakis's DEX +4 while it lasts (at most 24)`. With
+  [Spells and psionics as the manual describes them](#spells-and-psionics-as-the-manual-describes-them)
+  (the default) the die is the Tome of Magic's by class: 1d8 for a rogue, 1d6
+  for a wizard, warrior or psionicist, 1d4 for a priest, a multiclass
+  character's best (`Cat's Grace: 1d8 = 3 (thief) -> Seneca's DEX +3`), and its
+  description says so.
 - **Erdlu Claw** grows talons like an erdlu's. A character with a weapon in hand
   is unchanged; one fighting unarmed hits for 1d6+1 instead. A thri-kreen's four
   claws become 1d6+1 each; its bite, no talon, stays 1d4+1, with nothing from

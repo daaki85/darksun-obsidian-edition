@@ -28,6 +28,7 @@
 - [Enlarge's dice](#enlarges-dice)
 - [Spells roll to hit](#spells-roll-to-hit)
 - [Turn Undead, Minute Meteors and Flame Arrow as the manual](#turn-undead-minute-meteors-and-flame-arrow-as-the-manual)
+- [Spells and psionics as the manual, group 3](#spells-and-psionics-as-the-manual-group-3)
 - [Weapon specialization](#weapon-specialization)
 - [Kits](#kits)
   - [The kits](#the-kits)
@@ -694,8 +695,8 @@ and Acid's burn rolled nothing.
 
 ## Turn Undead, Minute Meteors and Flame Arrow as the manual
 
-([In the features page](FEATURES.md#spells-as-the-manual-describes-them).) Part
-of "Spells as the manual describes them" (`gamepatch.SPELLS_MANUAL`): off, the
+([In the features page](FEATURES.md#spells-and-psionics-as-the-manual-describes-them).) Part
+of "Spells and psionics as the manual describes them" (`gamepatch.SPELLS_MANUAL`): off, the
 five patches below are left out and the game's copy has DSUN.EXE's bytes.
 
 **Turn Undead** (`turn_undead_manual`, 7AE01h, `mov al,[es:bx+24h]`, 4 bytes:
@@ -760,6 +761,92 @@ way, the refusal, D\*'s count, the Afraid call's arguments), `test_flame_arrow_c
 `test_spell_to_hit` (Minute Meteors' +2); test_dicelog's `test_turn_undead_manual`,
 `test_turn_cells`, `test_meteors_to_hit`; test_manual_spells' `test_records`;
 test_spellbook's `test_casts_a_cast`.
+
+## Spells and psionics as the manual, group 3
+
+([In the features page](FEATURES.md#spells-and-psionics-as-the-manual-describes-them).)
+All in `gamepatch.SPELLS_MANUAL` (off: DSUN.EXE's bytes). DSCLOG's sites are
+`BLUR_SITE` ... `CELL_SITE` (`NS_IMAGE` + 78 to 87, in `SITE_TAB`'s order);
+code that runs either way tells the switch by `MANUAL_ON` (Stinking Cloud's
+record's dice made 41h, as the Loader's `GameData.spells_manual`). The dice
+log's lines are `KIND_MANUAL` (14) entries (`MN_REC`: what, then a frame of the
+creature and three words; dicelog's `_manual`).
+
+- `save_signed` (79BBDh, `jae` made `jge`): the saving throw (79A71h) compared
+  its byte total with the number needed unsigned, so the save modifiers' −100
+  (79F80h Chaos, 79FA1h Cloudkill, 7A018h Scare, `SPRAY_SITE`) came out as a
+  save (seen in DOSBox). Signed, −100 fails; +100 (Scare from 6th level: 7A01Fh)
+  still saves (a d20 + 100 stays under 128; the doubled d20 is only for fire,
+  cold and electricity, which get no +100).
+- `blur_save` (79DC0h, 11 bytes: Barkskin's test, `blur_save`): Barkskin's +1
+  and Blur's (55: the effects' bits at `[bp+0Ah]`, byte 6 bit 7).
+- `fire_shield_save` (79E03h, 20 bytes: Protection from Cold's test,
+  `fshield_save`): its +3 and Fire Shield's (20) +2 when the spell's damage kinds
+  (`[bp-4]`, the record's +1Ah) have fire (2) or cold (4).
+- `cloudkill_save` (79F95h, 15 bytes, `cloud_save`): Cloudkill's −100 for a target
+  level (`[bp-6]`, `HD_SAVE`'s) under 4, not 6 or less. `cloudkill_kills`
+  (78DB6h, `mov [bp-1],al`, the save's answer in 78C19h, `cloud_kill`): unsaved
+  by a creature of 5 levels or fewer (`SHEET_LEVEL`), the damage's percent
+  (`[bp-6]`, a dword: 100, 50 saved...) made 100000, so the game's own damage
+  (78E5Bh, then 79A01h) kills. A first version called 4E0:61h itself (1000, as
+  Slay Living's) from the handlers' tail (79830h): it killed, but a kill made at
+  a round's start by the lasting cloud hung the game (seen 2026-11-09).
+- `lower_resistance_manual` (7A507h-7A527h, 33 bytes, `lowres_site`): the
+  resistance (`[bp-0Ch]`) less 30 + the Low Resistance effect's amount (`NS_AMOUNT`,
+  its +9) when on (`[bp-7]` 80h), or less 30 + the cast's level (`[bp+0Ah]`) for
+  Lower Resistance (64) itself, the bigger; the game's next test makes it 0 at
+  least. `ACID_ROUNDS` (always on) puts the cast's level (`TH_LEVEL`,
+  `CAST_SITE`'s) into Low Resistance's amount (the game's 0) as the effect is
+  added.
+- `strength_dice` (79483h, `push dword 60001h`, `strength_dice`): the dice pushed
+  under the INT's frame, `STR_SIDES` by class (a byte a class 1-17: Strength's
+  sides low, Cat's Grace's high), the best of the sheet's three; 1d6 for
+  Adrenalin Control (148), a classless creature or a combatant that isn't one.
+  Friends never gets there (`PROBE_GRACE_EFFECT` jumps past it). Not adding up:
+  `PROBE_GRACE_ABILITY` (7B7D7h, each of a creature's effects as its abilities
+  are worked out) calls `GR_SHADOWED`, which with `MANUAL_ON` finds a bigger one
+  of the same group on that creature (66 and 67; 54 alone; as big, the earlier
+  entry wins) and puts 0 in `[bp-0Ah]`, which the game's table of cases hasn't.
+  A second Strength already replaces the first in the game's add.
+- `rainbow_pattern_time` (425B4h, its record's +4/+5: 1d3 made 1 a level) and
+  `rainbow_pattern_damage` (585A2h, the start of 4E0:61h, the routine taking hit
+  points off for every blow and spell, `rainbow_hurt`): damage over 0 to a
+  creature with a Paralyzed (34) entry whose spell (+4) is 50 ends that entry
+  through 598:48h (765E2h, the creature and the entry's handle +7: the game's own
+  end of an effect, its abilities worked out again), in a frame the overlay
+  manager can fix up (`ovr_back`).
+- `feeblemind_psionics` (5D5B4h, `or ax,ax / jnz / mov al,0`, `psi_feeble`): in
+  the power check (5D59Dh), a user with Feeblemind (19) gets 0 (the check fails:
+  the game's message and half the PSP). The INT and WIS of 3 are the game's
+  (7B848h, `[bp-4]` set by effect 19, 7B9D8h). Heal's cure: `PROBE_CURE` for
+  Heal (202) with `MANUAL_ON` takes the target's Feeblemind entries out
+  (`DROP_EFFECT`, `HEAL_SIGHT`'s loop made a routine: Feeblemind has no timer)
+  and sets the handler's `[bp-15h]` bit 1, so 79896h works the abilities out
+  again.
+- `chill_touch_time` (41FD4h, the record's +4..+8: 1 x 3600 seconds): the game's
+  own Weakened 1 (79855h, the handler's tail on a failed save) had the spell's
+  time, 0. `HOLD_HD` (7A345h, already the switch's) sends Chill Touch (3) on an
+  undead to `CHILL_UNDEAD`: immune (7A1F0h: no damage, no STR), Afraid (17) for
+  1d4 x 60 through 598:3Eh (as `TURN_SITE`'s), the caster `CAST_WHO`.
+- `cell_adjustment_heal` (795A2h, `push 2 / jmp 79618h`, `cell_heal`): AX 1d4
+  (`GAME_DIE`) and back at 79617h's `push ax`. The record's effect −13 (F3h) already
+  removes Diseased (78E26h, 763E1h's negative effect); `ACID_ONCE` notes whether
+  the target had it (`CELL_CURED`) for the line.
+- `biofeedback_least` (79C83h, `sub si,2` in the damage adjustments 79BF9h,
+  `bio_site`): 2 off, at least 1 of a blow that did any. The game's own −2 (for
+  damage of crushing, edged or pointed kinds, `[bp+12h]` & 38h) was there all
+  along; a first BIO_SITE in the hit (58AB7h) took 2 more (seen: 4 off).
+- Descriptions: `spelltexts.MANUAL_TEXTS` (Fire Shield 45, Cat's Grace 197) go
+  into the Loader's copy of RESOURCE.GFF with the switch (`icons.write_resources`'
+  `spells_manual`). The Loader's spell info: `spellbook.MANUAL_LINES` and
+  `game.MANUAL_EFFECT_RULES` (`game.effect_rule`); the dice log's: `game.manual_die`,
+  the save modifiers (`+2 Fire Shield`, `+1 Blur`), Lower Resistance's figure, the
+  hit line's `-2 Biofeedback` (the game's, either way).
+
+Tests: tests/test_manual_group3.py (each site in Unicorn at the game's bytes,
+the patches, `ACID_ROUNDS`, `ACID_ONCE`, `GR_SHADOWED`, Heal's cure,
+`CHILL_UNDEAD`), test_dicelog's `ManualGroup3Tests`. Checked in DOSBox:
+playtest/logs/2026-11-09-group-3.md.
 
 ## Weapon specialization
 

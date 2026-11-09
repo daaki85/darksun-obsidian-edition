@@ -64,8 +64,9 @@ TEXTS: Dict[int, str] = {
 # saves (DSCLOG's FSHIELD_SITE; the half damage and the returned blow are the game's), Cat's Grace's
 # dice by class (STRENGTH_SITE)
 MANUAL_TEXTS: Dict[int, str] = {
-    45: "FIRE SHIELD:  Opponents who hit caster in melee take the same damage in return. The "
-        "caster takes half damage from fire and cold spells and saves at +2 against them.",
+    # (seven lines fill the box: seen in the game, 2026-11-09)
+    45: "FIRE SHIELD:  Attackers who hit the caster in melee take the same damage. The caster takes "
+        "half damage from fire and cold spells and saves against them at +2.",
     197: "CAT'S GRACE:  Raises the target's dexterity: rogues 1 to 8 pts, warriors, wizards and "
          "psionicists 1 to 6, priests 1 to 4. Maximum dexterity is 24.",
 }

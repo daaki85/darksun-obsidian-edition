@@ -803,7 +803,7 @@ class SaveTests(unittest.TestCase):
         self.assertEqual(log.hp_changes(2.5), ["  Mountain Stalker is destroyed by Turn Undead"])
 
     def test_turned_undead_flee(self):
-        """Afraid on an undead (TURN_SITE's turning) is said as turned, not with fear's immunity."""
+        """Afraid on an undead (TURN_SITE's turning, Chill Touch's) is said as fleeing, not with fear's immunity."""
         log = make_game()
         set_effects(log, [])
         log.effect_changes(10.0)
@@ -813,7 +813,7 @@ class SaveTests(unittest.TestCase):
         log.effect_changes(21.0)
         self.make_undead(log, 2)
         set_effects(log, [(0x29, 2, dicelog.AFRAID_EFFECT)])
-        self.assertEqual(log.effect_changes(30.0), ["Jellybelly gives Afraid to Mountain Stalker: turned, it flees "
+        self.assertEqual(log.effect_changes(30.0), ["Jellybelly gives Afraid to Mountain Stalker: it flees "
                                                     "(the computer controls it; can't attack or cast spells)"])
 
     def test_turn_cells(self):

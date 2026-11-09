@@ -488,9 +488,10 @@ sizes; the paragraphs after it say how each piece got there.
 **The budget.** Each limit fails the build when passed (a negative `times`):
 
 - The helper's segment: what it reaches through CS is what stays (to
-  `resident_end`, 58,096 bytes) and the buffers laid over the install code
-  after it (`AFTER_INSTALL`, 1,408), together `kept_end`, 59,504 bytes, so
-  6,032 bytes of its 64 KB are spare. This is the limit for new code. The image
+  `resident_end`, 59,088 bytes since group 3 of the manual's spells, 2026-11-09:
+  58,096 before) and the buffers laid over the install code after it
+  (`AFTER_INSTALL`, 1,408), together `kept_end`, 60,496 bytes, so 5,040 bytes of
+  its 64 KB are spare. This is the limit for new code. The image
   (`image_len`) is as long. Buffers that start as zeros and aren't needed while
   installing are laid over the install code, as `seg_space` and `area_space`
   are (declared with `resb` after the image): `KEEP` zeroes them before its

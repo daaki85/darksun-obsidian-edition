@@ -2194,7 +2194,7 @@ class DiceLog:
             rule = game.effect_rule(eid, self.game.spells_manual())
             rule = f": {rule}" if rule else ""
             if eid == AFRAID_EFFECT and all(self._turn_target(o) is not None for o in owners):
-                rule = ": turned, it flees (the computer controls it; can't attack or cast spells)"  # (TURN_SITE's)
+                rule = ": it flees (the computer controls it; can't attack or cast spells)"  # (TURN_SITE's turning, CHILL_UNDEAD's Chill Touch)
             if owners == [caster] * len(owners):  # on itself (or from a spell on the ground)
                 out.append(f"{name} on {targets}{rule}")
             else:

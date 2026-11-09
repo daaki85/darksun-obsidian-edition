@@ -209,7 +209,13 @@ Class, race and abilities:
 Spells with rules of their own: creatures of 6th level or lower can't save
 against Cloudkill; against Chaos only warriors (fighters, gladiators and
 rangers) can; against Dismissal the target adds its level and takes away the
-caster's. Against Scare no one saves at all: its record allows no save, so the
+caster's. But "can't save" is −100 on the save, and the game compares the total
+with the number needed unsigned (79BBAh), so a total such as −85 reads as 171
+and the creature **always saves** (seen 2026-11-09: Arena Guards "unable to
+save" took half Cloudkill's damage). With [Spells and psionics as the manual
+describes them](FEATURES.md#spells-and-psionics-as-the-manual-describes-them)
+the compare is signed and "can't save" fails; unticked, the log says
+`-100 meant "cannot save", but the game compares unsigned ... -> saved`. Against Scare no one saves at all: its record allows no save, so the
 saving throw ends at its first test and the rules the save code has for Scare
 never run. Those rules: 6th level and up always save and everyone below can't,
 but for some elf or half-elf priests (AD&D gives elves, half-elves and priests
@@ -338,16 +344,21 @@ Charm, Feeblemind, Web and a few others last until removed.
 | Confused | Each turn a d10: 1 runs off, 2–6 does nothing, 7–9 fights for a side picked with a d2, 10 acts normally (the log shows the rolls) |
 | Berserk | Fights for a side picked at random each turn; can't cast. In the game a party member could be left on the monsters' side when this or Confused ended; the patched game puts it back ([bugs fixed](FEATURES.md#the-games-bugs-fixed)) |
 | Can't Attack (Stinking Cloud) | Can't attack or cast harmful spells |
-| No spell use, Feeblemind | Can't cast spells |
+| No spell use, Feeblemind | Can't cast spells. Feeblemind also makes INT and WIS 3 while it lasts (as they were after) and nothing ends it; with the manual's spells it stops psionic powers too, and the mod's Heal cures it |
 | Blind | AC 4 worse, −2 initiative, can't cast spells that need sight |
 | Acid (Acid Arrow) | 2d4 acid damage at the start of each round it lasts, a round for each started minute of its time. In the game it never burned after the hit; the patched game burns it ([bugs fixed](FEATURES.md#the-games-bugs-fixed)) |
 | Poisoned | Fatal (1000 damage) if time passes out of combat, for instance resting, before it wears off or is cured |
 | Cloak of Fear | Whoever hits the wearer has Cause Fear cast on them, once |
 
 Other things the game does its own way:
-- Strength adds 1d6 to STR while it lasts, up to 24. The same goes for the
-  psionic Adrenalin Control, and Weakened or lending strength takes it away
-  (never below 3).
+- Strength adds 1d6 to STR while it lasts, up to 24 (with the manual's spells
+  1d8, 1d6 or 1d4 by class, and not added to Adrenalin Control's: the bigger
+  counts). The same goes for the psionic Adrenalin Control, and Weakened or
+  lending strength takes it away (never below 3). A second Strength replaces
+  the first.
+- Chill Touch takes 1 STR (Weakened) from a creature that fails its save, but
+  the spell's time is 0, so the effect ends at once (with the manual's spells,
+  an hour).
 - CON 20 or more gives a hit point back every 5 minutes of game time, at any
   such CON (AD&D: one an hour at 20 to one every 10 minutes at 25; with the
   Loader: [CON as in AD&D](FEATURES.md#con-as-in-add)). Every party member
@@ -387,8 +398,8 @@ effect line also says what the effect does.
 
 (The rows below are the game's own spells. Twelve of them, Bestow Curse, Blood Flow, Flaming Sphere,
 Solid Fog, Minor Spell Turning, Cause Fear, Quicksand's save, Turn Pebble to Boulder, Ironskin, Stinking Cloud,
-Chaos and Free Action, are set as the manual has them by the rule change [Spells as the manual describes
-them](FEATURES.md#spells-as-the-manual-describes-them), on by default.)
+Chaos and Free Action, are set as the manual has them by the rule change [Spells and psionics as the
+manual describes them](FEATURES.md#spells-and-psionics-as-the-manual-describes-them), on by default.)
 
 | Spell | The manual | The game | The log |
 |---|---|---|---|
@@ -490,9 +501,9 @@ level cleric can't turn those at all).
 The dice log shows each try: `Seneca turns Zombie: d20 = 12, needs 7+ (priest level 3 vs 2 HD) ->
 destroyed` (code: DSUN.EXE 7ADB7h, the number at 7AE01h-7AE48h, the d20 at 7AE4Dh).
 
-**With "Spells as the manual describes them"** (the default) all of the above is the game's rule
+**With "Spells and psionics as the manual describes them"** (the default) all of the above is the game's rule
 only with the box unticked. Ticked, the mod takes over where the game works out its number
-(7AE01h) and uses AD&D's turning table instead ([the table](FEATURES.md#spells-as-the-manual-describes-them)):
+(7AE01h) and uses AD&D's turning table instead ([the table](FEATURES.md#spells-and-psionics-as-the-manual-describes-them)):
 its rows by hit dice (1 or less, 2, 3-4, 5, then 6 to 11 or more; the zombie, ghast and special
 rows unused, as the game has no kinds of undead), its columns by level (1-9, 10-11, 12-13, 14 and
 more). A number is the d20 needed to **turn**: the undead is made Afraid (the effect Cause Fear
@@ -549,7 +560,8 @@ their own:
   roll for the power, resist it.
 - **Mind Bar** adds 75% magic resistance against mind-affecting spells:
   charms, holds, Scare, Confusion, Chaos, Feeblemind, Minor Malison. The log's
-  magic resistance line counts it, and Lower Resistance halving the result.
+  magic resistance line counts it, and Lower Resistance halving the result
+  (with the manual's spells: 30% + 1% a caster level off instead).
 - **Body Weaponry** makes unarmed attacks 2d4; **Animal Affinity** at least
   1d10. Only the first of a creature's natural attacks: a thri-kreen's four
   claws, not its bite.
@@ -573,10 +585,10 @@ also logs the power check and the PSP spent; a power with a save logs the save.
 | Energy Containment | no damage from electricity, cold, fire, heat, sound | no damage that is only fire, cold, electricity or magic | the effect |
 | Life Draining | drains up to 6 HP as extra HP for an hour | 1d6 damage, the same as extra HP for the user | the drain roll and the HP |
 | Absorb Disease | takes the target's disease to cure it | takes the disease (the mod's fix: the game also gave 1d6 STR) | the effect |
-| Adrenalin Control | STR + 1 to 6 | STR + 1d6, at most 24 | the 1d6 and the STR |
-| Biofeedback | damage −2 and AC −1 | AC −1 only; no damage is taken off | "AC −1" |
+| Adrenalin Control | STR + 1 to 6 | STR + 1d6, at most 24 (with the manual's spells not added to Strength's: the bigger counts) | the 1d6 and the STR |
+| Biofeedback | damage −2 and AC −1 | AC −1, and 2 off each blow and any other crushing, edged or pointed damage (79BF9h), leaving 0 of a blow of 2 or less (with the manual's spells at least 1) | "AC −1", and `-2 Biofeedback` on a hit's line |
 | Body Weaponry | the arm as a wood or steel weapon | unarmed attacks 2d4 | the effect |
-| Cell Adjustment | heals wounds, cures diseases | heals 2 HP; cures nothing | the HP regained |
+| Cell Adjustment | heals wounds, cures diseases | heals 2 HP (with the manual's spells 1d4); its record cures disease (Diseased removed) | the HP regained; with the manual's spells the 1d4 and the cure |
 | Displacement | attacks miss the image; AC −2 | AC −2 | the effect |
 | Enhanced Strength | STR up to 24, cost twice the points | STR 24 (a higher one kept), cost (24 − STR) × 2 | the effect and the PSP |
 | Flesh Armor | armour by level, no penalties | AC 10 − level at best | the effect |

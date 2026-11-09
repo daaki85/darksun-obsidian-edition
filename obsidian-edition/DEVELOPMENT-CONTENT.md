@@ -278,7 +278,7 @@ after the `ns_list_` patches):
   the same, a second guard: a living target of spell 31 goes to the
   immunity's way out (7A1F0h).
   The manual's limit, undead of no more hit dice than the caster's level, is
-  `hold_undead_level` (with "Spells as the manual describes them"): DSCLOG's
+  `hold_undead_level` (with "Spells and psionics as the manual describes them"): DSCLOG's
   `HOLD_HD_SITE` over the undead's `test word [bp+0Eh],100h` (7A345h), which
   makes that test and its jump itself, and for spell 31 sends an undead whose
   level (its sheet's, as 5E85Fh has it: a human's +24h, else its classes'
@@ -288,7 +288,7 @@ after the `ns_list_` patches):
   [BP+16h] the caster's level, [BP-6] the target's level, SI the modifier):
   the target's level comes from 508h:2Ah (5E85Fh), 0 for a creature with no
   class (+21h..23h all 0), though its hit dice are at its sheet's +24h. With
-  "Spells as the manual describes them", `classless_save_level` puts DSCLOG's
+  "Spells and psionics as the manual describes them", `classless_save_level` puts DSCLOG's
   `HD_SAVE_SITE` over its `mov [bp-6],ax` (79D8Ch): such a creature's 0 made
   its hit dice (Dismissal, Cloudkill, Scare and Color Spray read it), and
   `color_spray_level` DSCLOG's `SPRAY_SITE` over Dismissal's
@@ -666,7 +666,11 @@ count DS:1E24h), moving the rest down.
 - Cat's Grace: Strength's code rolls the 1d6 (`INT EDh`), into an effect of
   its own (`INT EEh`: 54, a number the game leaves unused); the routine that
   works out a creature's abilities from its scores and effects adds it to DEX
-  as Strength's adds to STR (`INT EFh`).
+  as Strength's adds to STR (`INT EFh`). With the spells as the manual has them
+  the dice are by class (`STRENGTH_SITE` at 79483h, Strength's too), and a
+  smaller Cat's Grace beside a bigger one adds nothing (`GR_SHADOWED`): see
+  [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#spells-and-psionics-as-the-manual-group-3).
+  Heal's (`PROBE_CURE`) also takes Feeblemind off there.
 - Erdlu Claw puts effect 6 (unused) on its target. In the routine giving a
   natural attack's dice (7B66Ch, `NS_CLAW` at 7B70Ah; DX the set of natural
   attacks, 0-2, as the sheet holds them from +2Bh: `game.SHEET_NATURAL_*`), the

@@ -25,6 +25,7 @@ DSCLOG handler; **large** new game mechanics.
 |---|---|
 | **Scare: no one ever saves** | Its record's save byte is A0h: bit 0, "a save allowed", is clear (Charm Person's and Hold Person's are A1h). The saving-throw routine (79A71h) tests that bit first (79A89h) and goes straight to "not saved" without it. So every creature but the undead is Scared, 6th level and up included. The level rule and the elf/half-elf priest rule live in the save modifiers (79FA4h-7A01Dh), behind that test, so they never run: **2.14.0's `scare_elves` fix has no effect**, and HOW-THE-GAME-WORKS and FEATURES describe Scare wrongly. (Checked in the code; to be seen in play.) |
 | **Missile spells never miss** | Acid Arrow, Turn Pebble to Boulder, Magical Stone and Condense are sent to a to-hit check (78BA0h) that is `mov ax,1 / retf`: always a hit. |
+| **"Can't save" saves** (found 2026-11-09) | The saving throw compares its byte total with the number needed unsigned (79BBAh, `jae`), so the −100 the save modifiers give for "can't save" (Chaos, Cloudkill, Scare below 6th level, the mod's Color Spray) makes a total read as 156 and up: the creature always saves. Seen in DOSBox (Arena Guards "unable to save" took half Cloudkill's damage; a Guard "unable to save" against Scare was never Afraid). *Fixed with the manual's spells: `save_signed` (jge).* |
 | **Protection from Normal Missiles stops breath weapons** | Any spell or power whose save kind is breath (the Fire Eel's, the Red Slaad's, the Animated Statue's) misses a target with effect 28 entirely (7A142h). Inertial Barrier and Deflection use the same effect. |
 
 ## Preserver spells (manual pp. 29-34)
@@ -63,7 +64,8 @@ DSCLOG handler; **large** new game mechanics.
 - **Impact:** weaker against low resistance (30% → 15%, the manual's 0%), a little stronger
   against very high.
 - **Resolution (medium):** DSCLOG: subtract 30 + the effect's caster level instead of halving;
-  the dice log's line for the cast (small).
+  the dice log's line for the cast (small). *(Done 2026-11-09: `lower_resistance_manual`, the
+  cast's level kept in the effect's amount; seen in DOSBox.)*
 
 ### Flaming Sphere (2nd): a save halves it
 - **Manual (p. 30):** 2-8 damage, "Saving throw: Neg.", 1 round.
@@ -75,7 +77,9 @@ DSCLOG handler; **large** new game mechanics.
   wizards 1d4), at most 24.
 - **Game:** a flat 1d6 (79483h).
 - **Resolution (small to medium):** a DSCLOG site on the dice at 79483h choosing the sides by the
-  target's classes. (Adrenalin Control shares the code: leave it at 1d6.)
+  target's classes. (Adrenalin Control shares the code: leave it at 1d6.) *(Done 2026-11-09:
+  `strength_dice`, Cat's Grace by the Tome of Magic's too; Strength and Adrenalin Control no
+  longer add up. A second Strength already replaced the first.)*
 
 ### Solid Fog (4th) and Web (2nd): held until removed
 - **Manual:** Solid Fog slows to a tenth for 2-4 rounds + 1 a level, fire dispels it (p. 33);
@@ -91,7 +95,8 @@ DSCLOG handler; **large** new game mechanics.
 - **Manual (p. 33):** holds until the creatures are attacked.
 - **Game:** Paralyzed for 1d3 rounds; a hit doesn't end it, and Paralyzed fails every save.
 - **Resolution (medium):** DSCLOG: a creature it holds that takes damage is freed; a longer time
-  (1 round a level) for "special".
+  (1 round a level) for "special". *(Done 2026-11-09. Seen: the pattern is an area of its own
+  (2d3 rounds) where everyone, the caster too, saves again each turn.)*
 
 ### Minor Spell Turning (4th): one spell, not 3 rounds a level
 - **Manual (p. 33):** turns 1st- to 3rd-level spells for 3 rounds a level.
@@ -111,33 +116,39 @@ DSCLOG handler; **large** new game mechanics.
 - **Game:** the damage does go back to a melee attacker as fire (58B32h-58B4Ah), and the caster
   takes half from spells all of fire or cold (7B565h), but there is no +2.
 - **Resolution (small):** a DSCLOG +2 against fire and cold beside Protection from Fire's
-  (79E03h); the Loader's description of the effect to mention the returned damage.
+  (79E03h); the Loader's description of the effect to mention the returned damage. *(Done
+  2026-11-09: `fire_shield_save` at Protection from Cold's test; its description says so.)*
 
 ### Blur (2nd) and Shield (1st): no save bonuses
 - **Manual:** Blur +1 on saves against magic (p. 30); Shield better saves against missiles (p. 30).
 - **Game:** Blur −2 to attackers only; Shield AC 4 except from behind, and it stops Magic Missile
   under a condition not traced (7A181h). The game has no saves against missiles.
-- **Resolution:** Blur's +1, small (DSCLOG, as Barkskin's at 79DC3h). Shield: leave.
+- **Resolution:** Blur's +1, small (DSCLOG, as Barkskin's at 79DC3h). Shield: leave. *(Blur's
+  +1 done 2026-11-09: `blur_save`.)*
 
 ### Chill Touch (1st): no STR loss, no fear
 - **Manual (p. 29):** 1d4 and −1 STR a hit; undead may flee.
-- **Game:** 1d4 cold, a save stops it; no STR loss, no fear, one touch.
+- **Game:** 1d4 cold, a save stops it; no fear, one touch. *Corrected 2026-11-09:* the handler's
+  tail (79855h) does put Weakened 1 on a creature that fails its save, but with the record's time,
+  0 rounds, so it ends at once (seen in DOSBox).
 - **Resolution (medium):** DSCLOG: Weakened 1 STR on a failed save; undead Afraid 1d4 rounds.
-  Repeated touches: leave.
+  Repeated touches: leave. *(Done 2026-11-09: `chill_touch_time`, an hour; `CHILL_UNDEAD`.)*
 
 ### Feeblemind (5th): no INT or WIS loss, and nothing cures it
 - **Manual (p. 34):** INT and WIS drop, no spells or psionics; Heal cures it.
-- **Game:** "can't cast spells" until removed; Dispel can't touch it, and no spell removes it
-  (unverified: whether it stops psionics).
+- **Game:** "can't cast spells" until removed; Dispel can't touch it, and no spell removes it;
+  psionics work. *Corrected 2026-11-09:* INT and WIS are 3 while it lasts (7B848h; seen in DOSBox).
 - **Resolution:** the mod's Heal to remove it (small, DSCLOG); psionics, check then small;
-  INT and WIS, medium to large.
+  INT and WIS, medium to large. *(Done 2026-11-09: Heal cures it, `feeblemind_psionics`.)*
 
 ### Cloudkill (5th): never kills
 - **Manual (p. 34):** kills weak monsters; stronger ones take damage.
 - **Game:** 1d10 poison, a save at −2 halves it; creatures of 6th level or lower can't save. No
   death.
 - **Resolution (medium):** DSCLOG: a failed save by a creature of 4th level or lower (AD&D's 4+1
-  HD) kills, as Slay Living does.
+  HD) kills, as Slay Living does. *(Done 2026-11-09: under 4 no save, 4-5 a failed save kills,
+  6+ the damage. The game's "6 or less can't save" in fact always saved: the unsigned compare
+  above.)*
 
 ### Confusion (4th) and Chaos (5th): one save, at the cast
 - **Manual (pp. 32, 34):** a save each round; Chaos lets only fighters, and creatures of INT 21+
@@ -148,7 +159,7 @@ DSCLOG handler; **large** new game mechanics.
 
 ### Smaller (leave; say so in the docs)
 - **Stinking Cloud (2nd):** 1d6 rounds, not 2-5 (same average). *(Since made 1d4+1.)*
-- **Color Spray (1st):** everyone saves, not only higher levels. *(Since fixed: creatures of the caster's level or lower can't save, under "Spells as the manual describes them".)*
+- **Color Spray (1st):** everyone saves, not only higher levels. *(Since fixed: creatures of the caster's level or lower can't save, under "Spells and psionics as the manual describes them".)*
 - **Invisibility (2nd):** ends only on an attack or a spell at an enemy (a buff on a friend keeps it).
 - **Hold Undead (3rd):** the manual's "HD no more than the caster's" isn't in the game at all. *(Since fixed: undead above the caster's level are immune.)*
 - **Protection from Normal Missiles (3rd):** stops breath weapons too (above), maybe magical missiles (unverified).
@@ -178,8 +189,8 @@ DSCLOG handler; **large** new game mechanics.
 
 | Power | Manual | Game | Resolution (size) |
 |---|---|---|---|
-| Cell Adjustment | heals wounds, cures disease | heals exactly 2 HP (795A2h), cures nothing | 1d6 a level or so, and remove Diseased (small to medium) |
-| Biofeedback | damage −2 and AC −1 | AC −1 only | DSCLOG −2 a blow (small to medium) |
+| Cell Adjustment | heals wounds, cures disease | heals exactly 2 HP (795A2h); *its record does cure disease* (effect −13; corrected 2026-11-09) | *done 2026-11-09: 1d4* |
+| Biofeedback | damage −2 and AC −1 | AC −1, *and 2 off blows and crushing, edged or pointed damage (79BF9h), to 0* (corrected 2026-11-09) | *done 2026-11-09: at least 1 left* |
 | Control Body | fights for you at −6 to hit | Charmed 5 rounds, no −6 | DSCLOG (medium) |
 | Mass Domination | up to five creatures | one | an area in the record (medium, check) |
 | Detonate | 1d10 to everyone within 10' | the target only | leave, or an area (medium) |
