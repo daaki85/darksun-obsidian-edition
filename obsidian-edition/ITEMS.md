@@ -145,7 +145,7 @@ Tanelyv's Armor also has a chest piece, with no plus.
 | ![](docs/items/gutterward.png) | Wooden | ***Gutterward*** | the game's wooden shield +1: AC 2 better in a hand | on a **skeleton** in the Tari's warrens (the sewers): one of the three there |
 | ![](docs/items/ironbulwark.png) | Metal | ***Ironbulwark*** | a metal shield +3, the game's first: AC 4 better in a hand | carried by the **Guardian** of Balkazar's fortress (the one with the Chatkcha +1) |
 | ![](docs/items/chameleon-gloves.png) | Leather | Chameleon Gloves | blind whoever they touch | Mikquetzl |
-| ![](docs/items/quicksilver-gauntlets.png) | none | Quicksilver Gauntlets | graft a one-handed weapon to the hand | — |
+| ![](docs/items/quicksilver-gauntlets.png) | Leather | Quicksilver Glove | a weapon (1d6+2): every hit casts Detonate on the target, 1d10 with no save, and may destroy its most fragile worn item | the Palace Ruins: the Genie's gift, if Cragg lives and you wish for help against Draj |
 
 **Other worn items:**
 
