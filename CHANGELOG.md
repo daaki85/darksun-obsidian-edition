@@ -371,6 +371,15 @@ DSCLOG.EXE 65,520 bytes (image 65,488), 2,928 of its segment spare.
   `test_sprites`).
 
 **Docs**
+- **ITEMS.md checked against the game's data** (every item record, item type, region placement and
+  script that hands an item out, with the cluebook): the Helm of Contemplation's power is Gaze
+  Reflection, and the Quicksilver Glove's Detonate (both rows had been taken from what Alagorn says
+  of them, script 212); where the Draketooth, the Belt of Might and the Orb of Knowledge lie (they
+  had "—"), the Mace +2 (a weapon rack), the Bow +2 (a skeleton), the Serpent Boots (a ceramic pot)
+  and El's Drinker (Gedron's safe too) are; the Sling +2's chest that isn't; Dag's Dagger's "extra
+  damage" that isn't; the Terror Blade's acid chance (its Poison is a power: 95%); 15 kinds of magic
+  fruit and 19 spell scrolls; Grey's Scale's arm and leg icons swapped back; and added the Wand of
+  Metal Detection, the plain stone pick, the gloves against acid and the missing finds.
 - The player guide's **XP left over at the top**: each class's highest level under the 749,999 cap
   and the XP left over (one, two or three classes), and for dual-classing humans the room a new
   class has by the level the old class changed at (dual-classing starts the new class at 0 XP and
