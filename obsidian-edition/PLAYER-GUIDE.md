@@ -51,6 +51,7 @@ The [features page](FEATURES.md) has every rule in full detail, and the
   - [How spells work](#how-spells-work)
   - [Spell lists](#spell-lists)
   - [Status effects](#status-effects)
+  - [Resting](#resting)
 - [Psionics](#psionics)
 - [Equipment](#equipment)
   - [New items](#new-items)
@@ -85,7 +86,10 @@ games](README.md#updating-backups-saved-games-and-the-loaders-files)).
 The pointer has three modes, changed with a right-click: **Walk**, **Attack**
 and **Look**; a left-click acts. Look at someone to **Talk**, at a thing to
 **Use** or **Pick Up** it, and at a monster in a fight to see its hit points,
-AC and defences. Resting at a fire ring fills hit points, PSP and spell slots.
+AC and defences. Resting at a fire ring fills PSP and spell slots; with the
+mod's [Resting as in AD&D](#resting) the party's priests first cure the party with the
+spells they have left, and each member heals 3 hit points plus CON's bonus a
+night, not all of them.
 What the mod adds to the game's screens and controls is under [Quality of
 life](#quality-of-life).
 
@@ -232,11 +236,15 @@ neutral, a ranger good), or fighter and ranger.
 **Dual class (humans only).** A human has one class, and can change to another
 with **DUAL** on a portrait's right-click menu when:
 
-- it is **2nd level or more** and has changed class at most once before;
-- its **current class's prime requisite is 15 or more**, and the **new
-  class's 17 or more** (here the game's one score a class: STR for fighters
-  and gladiators, WIS for clerics, druids, psionicists and rangers, INT for
-  preservers, DEX for thieves);
+- it is **3rd level or more** (as the manual says; 2nd with the rule change
+  [dual-classing as the manual has it](FEATURES.md#rule-changes) off) and has
+  changed class at most once before;
+- **every prime requisite of its current class is 15 or more**, and **every
+  one of the new class's 17 or more** (the table below: a ranger's STR, DEX
+  and WIS, a druid's WIS and CHA, a psionicist's CON and WIS); with the rule
+  off, the game's one score a class (STR for fighters and gladiators, WIS for
+  clerics, druids, psionicists and rangers, INT for preservers, DEX for
+  thieves);
 - the new class is of **another group** than every class it has had: priests
   (cleric, druid), warriors (fighter, gladiator, ranger), preserver,
   psionicist, thief;
@@ -491,9 +499,9 @@ Stalker a cloak too).
 **More than one class.**
 
 - *Multiclass:* the combinations and their races are in [More than one class](#more-than-one-class).
-- *Dual class:* with WIS 15, a human ranger can become a cleric, preserver,
+- *Dual class:* with STR, DEX and WIS 15, a human ranger can become a cleric, preserver,
   psionicist or thief (a druid must be neutral, a ranger good). A human of
-  another class with WIS 17 and a good alignment can become a ranger. Some kits rule out a change of class
+  another class with STR, DEX and WIS 17 and a good alignment can become a ranger. Some kits rule out a change of class
   ([which](KITS.md#kits-that-rule-out-classes-and-each-other)).
 
 **Magic weapons.** Every one ([the fighter's list](#fighter)). A **Seeker**
@@ -754,7 +762,7 @@ Each kit's gains, costs and starting gear:
 **More than one class.**
 
 - *Multiclass:* the combinations and their races are in [More than one class](#more-than-one-class).
-- *Dual class:* with WIS 15, a human druid can become a fighter, gladiator,
+- *Dual class:* with WIS and CHA 15, a human druid can become a fighter, gladiator,
   preserver, psionicist or thief; never a cleric, nor a ranger (who must be
   good). A human of another class becomes a druid only if true neutral. Some kits rule out a change of class
   ([which](KITS.md#kits-that-rule-out-classes-and-each-other)).
@@ -809,7 +817,7 @@ starting gear, also leather arm and leg armour.
 **More than one class.**
 
 - *Multiclass:* the combinations and their races are in [More than one class](#more-than-one-class).
-- *Dual class:* with WIS 15, a human psionicist can become a cleric, druid,
+- *Dual class:* with CON and WIS 15, a human psionicist can become a cleric, druid,
   fighter, gladiator, preserver, ranger or thief. Some kits rule out a change of class
   ([which](KITS.md#kits-that-rule-out-classes-and-each-other)).
 
@@ -1516,6 +1524,37 @@ AD&D's class tables and the **New spells** switch on):
 | Stoneskin, Mirror Image | each blow stopped, or image struck, uses a charge (an image takes a hit, or a foe's spell for one creature, three times in four) |
 | Invisible | ends with an attack or a harmful spell (Improved Invisibility doesn't) |
 
+### Resting
+
+Use a **fire ring** (the Look pointer on it, out of a fight) to rest 8 hours.
+The game then fills every member's spell slots and PSP, brings STR back (but
+a diseased member's), and a cleric or druid of 5th level or more among those
+Okay casts Cure Disease, Remove Curse and Remove Paralysis on everyone, a
+druid of 7th or more Neutralize Poison too. Anyone still **Poisoned** when the
+rest ends dies.
+
+With **Resting as in AD&D** (a rule change, on by default), the rest heals as
+AD&D's does:
+
+1. **The priests' spells first.** Before the slots fill again, each priest who
+   can cast spends the priest spells it has left on the party: Neutralize
+   Poison on the Poisoned, Cure Blindness on the Blind, Cure Disease on the
+   Diseased (when no cleric or druid of 5th level would cure it free), then
+   Cure Light, Serious and Critical Wounds and Heal on the most wounded, the
+   cure that fits what the night won't heal. So a 4th-level slot kept back
+   keeps a poisoned friend alive.
+2. **Then psionicists' Cell Adjustment** (5 PSP each: 1d4 HP and a disease
+   cured), on the Diseased, then the wounded, while their PSP last.
+3. **A night's natural healing:** each member heals **3 hit points plus CON's
+   hit point bonus** (its bonus a level, [hit points](#hit-points): a warrior's
+   in full, +1 at CON 15 up to +7, anyone else's at most +2), up to its most. CON 20 or more also regenerates through the
+   8 hours.
+
+So rest more than once to heal a badly hurt party with no priest, or keep cure
+spells back for the night. The dice log shows each: `At rest: Seneca casts Cure
+Light Wounds on Gerakis (1st-level slots: 1 left)` and `Gerakis rests 8 hours:
++3, +2 (CON 16) = +5, now 35/40 HP`. Untick the box for the game's rest.
+
 ## Psionics
 
 A power costs PSP to use, and one kept up costs more at the start of each
@@ -1743,7 +1782,8 @@ line](DICE-LOG.md) what each of its lines means.
 ## Worth knowing
 
 - **Cure poison before resting.** A character still Poisoned when time passes
-  out of a fight dies.
+  out of a fight dies (with Resting as in AD&D, a priest's Neutralize Poison left
+  unspent is cast at the rest: [resting](#resting)).
 - **Area spells catch the caster and the party.** Aim fireballs and clouds
   away from your own.
 - **Act before you are hit if you mean to cast** ([why](#initiative)).
@@ -1802,7 +1842,7 @@ line](DICE-LOG.md) what each of its lines means.
 | | how much it says: at the least, in short or in detail | in short |
 | | describe monsters when you Look at them in a fight | on |
 | | float a spell's name over its caster, "Miss" over whoever an attack missed, and a spell's use lost ("Armor: 7 left") | on |
-| Rule changes | *characters:* class restrictions; multiclass hit points; hit dice rolled twice; scores and hit points as rolled; AD&D's class tables; CON as in AD&D; ages and magical aging; the XP level cap. *Weapons and armour:* two weapons; half-giants' two-handed weapons; rings and cloaks of protection; helms AC 1; items saving against acid. *Magic:* rangers' casting level; preservers' INT; the spell save; DEX instead of a doubled d20; Enlarge multiplying the weapon's dice only; spells as the manual describes them | all on |
+| Rule changes | *characters:* class restrictions; multiclass hit points; hit dice rolled twice; scores and hit points as rolled; AD&D's class tables; CON as in AD&D; ages and magical aging; dual-classing as the manual has it; the XP level cap. *Weapons and armour:* two weapons; half-giants' two-handed weapons; rings and cloaks of protection; helms AC 1; items saving against acid. *Magic:* rangers' casting level; preservers' INT; the spell save; DEX instead of a doubled d20; Enlarge multiplying the weapon's dice only; spells and monsters as the manual describes them; resting as in AD&D | all on |
 | More character customization | weapon specialization; kits; STORE and RECALL on the creation screen; fuller starting gear | all on |
 | Expanded features | the leader's CHA at shops; buying back magical items; improved thieving: thief skills from AD&D's table, hiding in shadows to backstab, the cloak, boots and belt, backstabs multiplying the weapon's dice only, picking pockets | all on |
 | New content | the new spells (six wizard spells and ten 6th-level priest spells, one switch); new people (Kalzith; Semyon); a small quest (the cooked vulture); defilers' scrolls; new items (and an arena bout that comes with them) | all on |

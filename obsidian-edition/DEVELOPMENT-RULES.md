@@ -10,6 +10,7 @@
 - [Scores and hit points as rolled](#scores-and-hit-points-as-rolled)
 - [AD&D's class tables](#adds-class-tables)
 - [CON as in AD&D](#con-as-in-add)
+- [Dual-classing as the manual has it](#dual-classing-as-the-manual-has-it)
 - [Ages](#ages)
   - [Haste's aging](#hastes-aging)
   - [Restore Youth](#restore-youth)
@@ -27,8 +28,10 @@
 - [Fire, cold and electricity: DEX instead of a doubled d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20)
 - [Enlarge's dice](#enlarges-dice)
 - [Spells roll to hit](#spells-roll-to-hit)
+- [Resting as in AD&D](#resting-as-in-add)
 - [Turn Undead, Minute Meteors and Flame Arrow as the manual](#turn-undead-minute-meteors-and-flame-arrow-as-the-manual)
 - [Spells and psionics as the manual, group 3](#spells-and-psionics-as-the-manual-group-3)
+- [The monsters as the manual describes them](#the-monsters-as-the-manual-describes-them)
 - [Weapon specialization](#weapon-specialization)
 - [Kits](#kits)
   - [The kits](#the-kits)
@@ -233,6 +236,32 @@ same. Checked in DOSBox: Gerakis at CON 22 an hour on, 1 hit point (the game's
 way 12), and the 1330 seconds left over counted towards the next. The saves
 are checked by the emulator (`test_dwarves_poison_saves`): the party has no
 dwarf or halfling.
+
+## Dual-classing as the manual has it
+
+([In the features page](FEATURES.md#dual-classing-as-the-manual-has-it).)
+
+DUAL is on the two portrait menus (70CE4h and 70F03h) for a human (+18h 1) whose
+sheet's first level (+24h) is 2 or more, and the DUAL window (866C7h) greys each
+class 1-17 by 86E94h(member SI, class DI): human; the current class's (the
+sheet's +21h) one prime requisite on the creature (+22h + the ability the
+game's table gives: 338:0180h + row x 3, the row from 338:00CAh + class x 2) 15
+or more (86EFCh); the new class's 17 or more (86F31h); the third class slot
+(+23h) empty; the level 2 or more again (86F58h); no group the character
+already has; a ranger good, a druid true neutral. The game's table has one
+ability a class (a ranger's, druid's and psionicist's WIS).
+
+`RULE_HI_DUAL` (`game.RULE_DUAL_CLASS`) is DSCLOG's, so the five compares are
+sites in every game's copy, each doing the game's own compare with the rule
+off: `DUAL_LEVEL` (`dual_level_menu`, `dual_level_view`, `dual_level_window`:
+`cmp byte [es:bx+24h],2`, 3 with the rule) and `DUAL_PRIMES` (`dual_old_prime`,
+`dual_new_prime`: with the rule every prime requisite of the class,
+`DUAL_PRIMES_OF`'s bits, the manual's as `tracker.PRIME_REQUISITES` has them,
+the old class at 15 or more, the new at 17 or more, on the creature's scores
+as the game reads them). Each sets the flags for the game's own jump after it.
+The old class is the sheet's first, as the game's (a second change checks the
+first class's level and primes, the game's way). Checked by the emulator
+(`test_group4`'s `test_dual_level`, `test_dual_primes`).
 
 ## Ages
 
@@ -693,6 +722,57 @@ Chill Touch, Shocking Grasp, Vampiric Touch and Cause Light Wounds hit and
 missed as rolled, a miss taking no HP; Magic Missile, a weapon's spell on a hit
 and Acid's burn rolled nothing.
 
+## Resting as in AD&D
+
+([In the features page](FEATURES.md#resting-as-in-add).)
+
+The game's rest, 8066Dh(mode [BP+6], hours [BP+8]) (overlay 5E8h; its one caller 62C2Ch, a fire
+ring, mode 0; mode 1, a full restore, is the scripts' request 1 elsewhere): "NO RESTING DURING
+COMBAT" (the fight's word, 2B8h:19h); pass 1 (806BCh) refills each member's slots (530:93h) and
+keeps the best Okay cleric's and druid's levels (5B8:B1h, 5B8:B6h); pass 2 (80758h) takes the
+effects' bitset (76944h), casts the free cures (809A2h -> 5B8:20h, 78BA8h, the game's cast: Cure
+Disease, Remove Curse, Remove Paralysis from 5th level, Neutralize Poison a druid's from 7th; now
+before the bitset: `rest_cures_first`, [the fix](DEVELOPMENT-CONTENT.md#the-games-spells)), takes
+Acid off, then for an Okay member HP = the sheet's most (808AFh), PSP = the most (808F3h), STR from
+the sheet unless Diseased, and kills the Poisoned (1000 damage, 80963h); then 8 x 3600 seconds on
+the clock (5A8:57h).
+
+`RULE_HI_REST` (`game.RULE_REST`, the Loader's `rest_heal`) is DSCLOG's, so both sites are in every
+game's copy, each the game's own instruction with the rule off or in mode 1:
+
+- `REST_PRE` (`rest_spells`, 80675h, `mov word [bp-10h],0`: the rest's first move, before any slot
+  fills; not 806A0h's far call, whose segment word the overlay manager writes): with the rule, mode 0
+  and no fight (`PP_FIGHTING`; the rest's own test comes after), `RP_PASS` in a frame the overlay
+  manager can fix up (as `TURN_SITE`'s: the casts load the spells' overlay over the rest's): each
+  member's priest level, the better of 5B8:B1h and B6h, for those who can cast (`RP_ABLE`: status Okay
+  or New, none of Feeblemind, No spell use, Paralyzed, Charmed); then Neutralize Poison (118) on the
+  Poisoned (35), Cure Blindness (94) on the Blind (8), Cure Disease (96) on the Diseased (13) only
+  with no cleric or druid of `FREE_CURES` (5th) or more, Cell Adjustment (151) on the Diseased, then
+  `RP_WOUNDS`: the member (Okay to Out Cold) with the most hit points missing after the night's
+  natural healing (`RP_WORST`), the biggest cure of `RP_CURES` (Cure Light 71, Serious 112,
+  Critical 127, Heal 202: for 4, 10, 16 and 30 or more missing) of no more than that someone can cast
+  (`RP_CHOOSE`), else the smallest, else Cell Adjustment; at most `RP_MOST_CASTS` (24). A priest
+  casts what it knows (the game's known byte, 3800h:0168h + 8Ah a member; Heal by `NS_PRIEST_KNOWS`
+  with the new spells on) with a slot of the spell's level left (DS:4B11h + 1Eh a member + the level,
+  taken: pass 1 fills them again); a psionicist Cell Adjustment if its power byte (37F0h:0077h + 22h
+  a member + 13) has bits 3-7 and it has 5 PSP (taken off: pass 2 fills them again). Each cast is the
+  game's 5B8:20h with 809A2h's arguments (target, caster, spell, 0, far &[BP-2], 0, 0, 0, 8, 63h, the
+  level, the caster's side), as the free cures: the spells' own dice and kits, the dice log's spell
+  lines.
+- `REST_HP` (`rest_hp`, 808AFh, `mov [es:bx],ax`: ES:BX the creature, AX the sheet's most): with the
+  rule and mode 0, HP + `REST_NATURAL` (3) + CON's hit point bonus (`REST_CON`: the game's table,
+  40B1h:0052h + CON, at most 25, as `CON_SHARE` reads it; a warrior's if one of the classes' groups,
+  40B1h:0010h + class, is the warriors', else at most +2), at least 1 of healing, no more than the
+  most, no less than it had (Extra Hitpoints) nor 1. CON 20 and up regenerates the 8 hours as the
+  clock jumps (`REGEN_SITE`, the game's 227E5h, once 300 seconds have passed: after the rest).
+- Recorded: `KIND_REST` (`RS_REC`): `RS_CAST` (caster, target, spell, slot level or 0, left: slots or
+  PSP), `RS_HEAL` (member, before, CON's part, after, most, CON).
+
+Kept: slots and PSP refilled, STR, the free cures, Acid, the poison kill (for one no cure reached),
+the 8 hours, mode 1. Not cast: a ranger's priest spells (5B8:B1h and B6h count clerics and druids);
+a Dying member isn't healed (pass 2 leaves it). Tests: tests/test_group4.py (`test_rest_spells`,
+`test_rest_hp`), test_dicelog's `test_group4_lines`.
+
 ## Turn Undead, Minute Meteors and Flame Arrow as the manual
 
 ([In the features page](FEATURES.md#spells-and-psionics-as-the-manual-describes-them).) Part
@@ -847,6 +927,53 @@ Tests: tests/test_manual_group3.py (each site in Unicorn at the game's bytes,
 the patches, `ACID_ROUNDS`, `ACID_ONCE`, `GR_SHADOWED`, Heal's cure,
 `CHILL_UNDEAD`), test_dicelog's `ManualGroup3Tests`. Checked in DOSBox:
 playtest/logs/2026-11-09-group-3.md.
+
+## The monsters as the manual describes them
+
+([In the features page](FEATURES.md#spells-and-psionics-as-the-manual-describes-them); the same
+switch, `gamepatch.SPELLS_MANUAL`; the research: playtest/logs/2026-11-09-group-4-research.md.)
+
+The monster kinds' table (load segment 3E45h, file 43850h, `gamepatch.KINDS_FILE`: a dword of
+properties a kind, its resistance class at +A8h, a class's four masks at +D2h and percents at +DAh,
+12 bytes a class; `monsters.MonsterTables` reads the running game's). A creature's kind is its
+record's +16h (0 people: no hit powers, 7A6BAh, and no special actions, 5A954h/57BACh).
+
+- Data: `babau_poison` (kind 3: bit 24, the corroding touch 186/187, for bit 15: the last natural
+  attack set casts 119, the priests' Poison), `blue_slaad_poison` (17: bit 25, disease, for 15);
+  `styr_kind` (38, unused: bit 31, 185 one turn in four, and bit 10; class 11 already), `djinn_kind`
+  (39: nothing), `tari_kind` (40: bit 25); `shadow_cold` (class 4's first mask 0139h to 013Dh: cold
+  0%) and `greater_shadow_class` (kind 13 class 11, whose 100% rule held the spells' MAGIC bit, to 4).
+- `SHADOW_DRAIN` (`shadow_drain`, 7A9ABh in 7A9A7h(target, attacker, bit dword, power), `mov
+  si,[bp+8] / mov al,[bp+0Ah]`): for power 172 of kind 15 or 173 of kind 13, 598:3Eh (76442h:
+  owner, caster, spell, effect, time dword, amount) adds Weakened (68) of -1 (the ability routine
+  adds a Weakened's amount, 7B80Eh: Chill Touch's is -1, 79855h; a 1 raised STR, seen in DOSBox) for
+  2d4 x 600 seconds
+  with the power as its spell, and 5B8:7Fh (7B758h) works the target's abilities out again; AL made
+  8 (no kind's bit) so 5C0:20h says no. 76442h always adds an entry (sorted by owner, a new handle),
+  so hits add up; the ability routine takes each Weakened's amount off STR, at least 3. An effect of
+  a spell 138 or more is a psionic power's upkeep only for a party caster (76883h), so the power as
+  the spell is safe on a monster's.
+- `TARI_BITE` (`tari_bite`, 7A747h, `cmp ax,1` after the d10 of 538:89h): a Tari's (`[bp-0Eh]` the
+  attacker's creature, kind 40) 1 needs a d2 of 1 too (`GAME_DIE`): 1 in 20.
+- `DJINN_TURN`: `PROBE_MOVE`'s end (57566h, the turn's movement: DI the combatant, SI its creature),
+  with `MANUAL_ON`: a kind 39's first turn in a fight (`DJ_DONE`, a bit a combatant, cleared with
+  `SWEPT` and `TU_FAILED` at a fight's first round, `ACID_ROUND`) adds Invisible (23, spell 46, 14
+  rounds: 4 + its 10 levels) and Mirror Images (25, spell 19, 1d4 + 3 charges: 76442h's negative
+  time) to itself.
+- The objects (`monsters.MANUAL_MONSTERS`, by name and race, each field only from the game's value):
+  the Styr (99) kind 38, THAC0 11 to 7, level 10 to 14; the Djinn (122) kind 39; the Tari (60, 65,
+  243) kind 40, THAC0 18 to 17, level 2 to 3, AC 10 to 6, bite sides (sheet +31h) 2 to 3. An RDFF
+  record holds the creature at +0Ah and the sheet at +4Eh (`RDFF_CREATURE`, `RDFF_SHEET`).
+  `monsters.object_chunks` for the Loader's copy of SEGOBJEX (`icons.write_objects`, with the switch),
+  `monsters.mend` for a running game (the dice log's watches, the switch as `spells_manual` reads it:
+  each such creature on the map made one way or the other).
+- The Look box (`monsters.defences`' `kind` and `manual`): `MANUAL_SPECIAL` for the drain and the
+  Tari's disease, `DJINN_NOTE`, and the breath (bit 31, the Animated Statue's too).
+- The dice log: `KIND_MANUAL`'s `MN_DRAIN`, `MN_TARI`, `MN_DJINN`.
+
+Not changed: the shadows' "light damage" (the shadow's own 1d4+1), the greater shadow's numbers (the
+manual's already), the Djinn's magic resistance (the manual promises none). Tests:
+tests/test_group4.py.
 
 ## Weapon specialization
 
@@ -1441,7 +1568,7 @@ How each of these is done:
   si,si`, 5E489h) adds them to its mask.
 - **A kit asleep after dual-classing.** Every kit. Where: the routine that changes a human's class
   (86C80h, DUAL on a portrait's menu: 70EF1h opens its window, 86B3Fh, for a human of 2nd level or
-  more) moves the classes down and puts the new one first. The kit byte (`+43h`) has two bits for
+  more, 3rd with `RULE_HI_DUAL`) moves the classes down and puts the new one first. The kit byte (`+43h`) has two bits for
   each class (0 none, 1-3), the first class's lowest and each class taken after it the next two, so
   a kit stays with its class however the classes move: `KIT_PLACE` gives the oldest class's place (0
   for one class; 1 or 2 for a human; 0 for a multiclass group's, none for another multiclass),

@@ -192,6 +192,21 @@ TURN_SITE, FLAME_SITE = NS_IMAGE + 76, NS_IMAGE + 77
 # DSCLOG's BLUR_SITE ... CELL_SITE)
 BLUR_SITE, FSHIELD_SITE, CLOUD_SAVE_SITE, CLOUD_KILL_SITE, LOWRES_SITE = range(NS_IMAGE + 78, NS_IMAGE + 83)
 STRENGTH_SITE, RAINBOW_SITE, PSI_SITE, BIO_SITE, CELL_SITE = range(NS_IMAGE + 83, NS_IMAGE + 88)
+# (dual-classing as the manual has it, RULE_DUAL_CLASS: the level DUAL needs, the old and the new class's
+# prime requisites: DSCLOG's DUAL_LEVEL, DUAL_PRIMES)
+DUAL_LEVEL_SITE, DUAL_OLD_SITE, DUAL_NEW_SITE = range(NS_IMAGE + 88, NS_IMAGE + 91)
+# (the monsters as the manual describes them: a shadow's STR drain; a Tari's 1 in 20: DSCLOG's
+# SHADOW_DRAIN, TARI_BITE)
+DRAIN_SITE, TARI_SITE = NS_IMAGE + 91, NS_IMAGE + 92
+# (resting, RULE_REST: the priests' and psionicists' cures before it, natural healing in it: DSCLOG's
+# REST_PRE, REST_HP)
+# (NS_IMAGE + 93 is 90h, a NOP: DSCLOG takes the byte after its INT for no site then, so no site has it)
+REST_PRE_SITE, REST_HP_SITE = NS_IMAGE + 94, NS_IMAGE + 95
+# the monster kinds' table (DSUN.EXE, the load segment's 3E45h: monsters.MONSTER_KINDS_SEG): a kind's
+# properties (a dword), its resistance class (a byte), a class's damage kinds (four words) and percents
+KINDS_FILE = 0x5400 + 0x3E45 * 16
+def _kind(kind: int) -> int:
+    return KINDS_FILE + 4 * kind
 CR_NAME_SITE, CR_NAME2_SITE, CR_NAME3_SITE, CR_NAME4_SITE = range(NS_IMAGE + 62, NS_IMAGE + 66)  # (a name the game gave copied to the creature: PSP and the age drawn again)
 ARROW_LEVEL = NS_IMAGE + 47  # (a spell arrow's spell at the archer's preserver level, not a weapon's 6)
 SCROLL_USE = NS_IMAGE + 49  # (an item's box: a Shinobi's scroll picture a button, so it can learn the spell)
@@ -445,6 +460,28 @@ PATCHES = (
     # slot after the last in regions 6, 13, 14, 27, 39, 40, 44 and 255) divided by 0 ("Divide error",
     # back to DOS). "idiv word es:[bx+4]" made [bx+0]: the slot found's own
     Patch("monster_count", 0x80CD8, bytes.fromhex("26f77f04"), bytes.fromhex("26f77f00")),
+    # ... and the rest (8066Dh) killed the Poisoned even after the free Neutralize Poison of a druid of
+    # 7th level or more: its pass 2 took each member's effects as a bitset (598:25h, 76944h, at
+    # 8075Dh) before the free cures (809A2h: Cure Disease, Remove Curse, Remove Paralysis, Neutralize
+    # Poison) and killed (1000 damage, 80963h) from that copy (seen in DOSBox 2026-11-09). The 7 casts
+    # (near calls, no fixups) moved ahead of the read, their nops dropped: the loop's jump (80984h)
+    # goes to the casts (80768h), which end with a jump to the read (80758h), which goes on past
+    # them (80765h: "jmp 807EDh"). A disease cured at a rest gives STR back that rest too
+    # (playtest/logs/2026-11-09-rest-order.asm)
+    Patch("rest_cures_first", 0x80765, bytes.fromhex(
+        "837ef0057c368a46f050ff76ea566a60900ee8280283c4088a46f050ff76ea566a67900ee8160283c4088a46f050ff76ea"
+        "566a69900ee8040283c408837eee057c308a46ee5057566a60900ee8ee0183c4088a46ee5057566a67900ee8de0183c408"
+        "8a46ee5057566a69900ee8ce0183c408837eee077c108a46ee5057566a76900ee8b80183c408"), bytes.fromhex(
+        "e98500837ef0057c338a46f050ff76ea566a600ee8260283c4088a46f050ff76ea566a670ee8150283c4088a46f050ff76"
+        "ea566a690ee8040283c408837eee057c2d8a46ee5057566a600ee8ef0183c4088a46ee5057566a670ee8e00183c4088a46"
+        "ee5057566a690ee8d10183c408837eee077c0f8a46ee5057566a760ee8bc0183c408e96cff90")),
+    Patch("rest_cures_loop", 0x80984, bytes.fromhex("e9d1fd"), bytes.fromhex("e9e1fd")),
+    # ... and resting by the Loader's rule "rest_heal" (RULE_REST; each site the game's with it off): the
+    # rest's first move, "mov word [bp-10h],0" (80675h), before any slot is refilled: the party's priests
+    # and psionicists spend what they have left on the party (DSCLOG's REST_PRE); pass 2's hit points,
+    # "mov [es:bx],ax" (808AFh): natural healing, not the most (REST_HP)
+    Patch("rest_spells", 0x80675, bytes.fromhex("c746f00000"), _site(REST_PRE_SITE, 5)),
+    Patch("rest_hp", 0x808AF, bytes.fromhex("268907"), _site(REST_HP_SITE, 3)),
     # ... and a fight's music: an attack that starts a fight asks for the music level the region
     # record gives its creature (62F75h, REQUEST 16): the creatures are words at +263h, their levels
     # bytes at +277h, but the level was read with the word's index ("mov bx,dx / shl bx,1"), so any
@@ -514,6 +551,30 @@ PATCHES = (
     # against Scare was never Afraid). The compare made signed ("jge"): -100 fails (a natural 20 still
     # saves, 79B5Fh), +100 saves (Scare from 6th level: a d20 + 100 stays under 128)
     Patch("save_signed", 0x79BBD, bytes.fromhex("73a6"), bytes.fromhex("7da6")),
+    # The monsters as the manual describes them (in the same switch; reports/group 4's research,
+    # playtest/logs/2026-11-09-group-4-research.md). The kinds' properties: bit 15 a hit (the last
+    # natural attack's) casting the priests' Poison (119), bit 24 the corroding touch, bit 25 disease
+    # (184, 1 in 10), bit 31 a fire breath one turn in four (185, 3d6, a save halves). The Babau's and
+    # the Blue Slaad's "deadly poison" in place of the corroding touch and the disease, which the
+    # manual hasn't ...
+    Patch("babau_poison", _kind(3), struct.pack("<I", 0x01400400), struct.pack("<I", 0x00408400)),
+    Patch("blue_slaad_poison", _kind(17), struct.pack("<I", 0x12000400), struct.pack("<I", 0x10008400)),
+    # ... kinds no creature of the game's has, for the Loader's copy of SEGOBJEX
+    # (monsters.MANUAL_MONSTERS): the Styr's (38: its 3d6 fire breath; class 11 already, +1 weapons),
+    # the Djinn's (39: nothing of its own; DSCLOG's DJINN_TURN its invisibility and images) and the
+    # Tari's (40: disease, DSCLOG's TARI_BITE making it 1 in 20) ...
+    Patch("styr_kind", _kind(38), struct.pack("<I", 0x00000601), struct.pack("<I", 0x80000400)),
+    Patch("djinn_kind", _kind(39), struct.pack("<I", 0x00800020), struct.pack("<I", 0)),
+    Patch("tari_kind", _kind(40), struct.pack("<I", 0x00000020), struct.pack("<I", 0x02000000)),
+    Patch("tari_bite", 0x7A747, bytes.fromhex("3d0100"), _site(TARI_SITE, 3)),
+    # ... the shadows "unaffected by cold-based attacks" (the greater shadow's, the manual's; the
+    # shadow too, as AD&D's): class 4's first rule (0%) gets cold (4), and the greater shadow (kind 13)
+    # class 4 for 11, whose 100% rule had any spell's damage hurt it in full (both: +1 weapons only)
+    Patch("shadow_cold", KINDS_FILE + 0xD2 + 12 * 4, struct.pack("<H", 0x0139), struct.pack("<H", 0x013D)),
+    Patch("greater_shadow_class", KINDS_FILE + 0xA8 + 13, bytes((11,)), bytes((4,))),
+    # ... and their STR drain for the shadow's 2d6 cold and the greater shadow's paralysis (DSCLOG's
+    # SHADOW_DRAIN), in the routine giving a hit's power (7A9A7h): "mov si,[bp+8] / mov al,[bp+0Ah]"
+    Patch("shadow_drain", 0x7A9AB, bytes.fromhex("8b76088a460a"), _site(DRAIN_SITE, 6)),
     # Chill Touch (3): the game takes 1 STR off a creature that fails its save (Weakened, its handler's
     # tail, 79855h), but its record gave the effect no time (0 rounds), so it ended at once: an hour
     # (60 rounds; AD&D's lost Strength comes back a point an hour): +4..+8 "10 00 00 3C 00" made 1 x 3600
@@ -634,6 +695,18 @@ PATCHES = (
     # ... and the kinds of a spell's damage a creature is guarded from, which halves a spell all of
     # those kinds (DSCLOG's WANDER_DMG: a Wanderer's fire and cold, as Resist Fire and Resist Cold)
     Patch("wanderer_damage", 0x7B56F, bytes.fromhex("857e0c"), _site(WANDER_DMG, 3)),
+    # Dual-classing (the Loader's rule "dual_class", RULE_DUAL_CLASS; each site does the game's compare
+    # with it off: DSCLOG's DUAL_LEVEL, DUAL_PRIMES): the level DUAL needs, "cmp byte [es:bx+24h],2" in
+    # the two portrait menus (70CE4h, 70F03h) and the DUAL window's class test (86F58h), 3 with the
+    # rule (the manual's third level) ...
+    Patch("dual_level_menu", 0x70CE4, bytes.fromhex("26807f2402"), _site(DUAL_LEVEL_SITE, 5)),
+    Patch("dual_level_view", 0x70F03, bytes.fromhex("26807f2402"), _site(DUAL_LEVEL_SITE, 5)),
+    Patch("dual_level_window", 0x86F58, bytes.fromhex("26807f2402"), _site(DUAL_LEVEL_SITE, 5)),
+    # ... and the class test's prime requisites (86E94h), "cmp byte [es:bx+22h],0Fh" for the old class's
+    # one (86EFCh) and "...,11h" for the new class's (86F31h): with the rule every prime requisite the
+    # manual gives the class, 15 or more for the old, 17 or more for the new
+    Patch("dual_old_prime", 0x86EFC, bytes.fromhex("26807f220f"), _site(DUAL_OLD_SITE, 5)),
+    Patch("dual_new_prime", 0x86F31, bytes.fromhex("26807f2211"), _site(DUAL_NEW_SITE, 5)),
     # a script's REQUEST (command 22h), its number read: recorded for the dice log (DSCLOG's REQ_SITE)
     Patch("script_request", 0x7FF42, bytes.fromhex("8b5e064b"), _site(REQ_SITE, 4)),
     # a click taking a readied spell's target, the aim check's answer: a refusal recorded (DSCLOG's AIM_SITE)
@@ -1186,7 +1259,9 @@ SPELLS_MANUAL = ("bestow_curse_save", "blood_flow_save", "flaming_sphere_negates
                  "flame_arrow_count", "turn_undead_manual", "save_signed", "chill_touch_time", "blur_save", "fire_shield_save", "cloudkill_save",
                  "cloudkill_kills", "lower_resistance_manual", "strength_dice", "rainbow_pattern_time",
                  "rainbow_pattern_damage", "feeblemind_psionics", "biofeedback_least",
-                 "cell_adjustment_heal")  # the spells and psionics as the manual has them (spells_manual)
+                 "cell_adjustment_heal", "babau_poison", "blue_slaad_poison", "styr_kind", "djinn_kind",
+                 "tari_kind", "tari_bite", "shadow_cold", "greater_shadow_class",
+                 "shadow_drain")  # the spells and psionics as the manual has them (spells_manual)
 SPELL_TO_HIT = ("spell_hit", "spell_hit_stub")  # missile and hostile touch spells roll to hit (spell_to_hit)
 PARTY_SPREAD = ("party_spread", "party_gather")  # the whole party in view after a load and a fight
 

@@ -1036,6 +1036,9 @@ def write_objects(source: str, dest: str, on: Optional[Dict[str, bool]] = None) 
     from . import defaultparty
     if (on or {}).get("cilla_elf", True) is not False:  # (Cilla, an elf, drawn as one)
         added.update(defaultparty.figure_chunks(chunks, {**chunks, **added}))
+    from . import monsters  # (the Styr, the Djinn and the Tari as the manual describes them)
+    if (on or {}).get("spells_manual", True) is not False:
+        added.update(monsters.object_chunks({**chunks, **added}))
     out = with_chunks(data, added, room)
     tmp = dest + ".tmp"
     with open(tmp, "wb") as f:

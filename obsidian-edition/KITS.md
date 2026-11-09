@@ -280,8 +280,8 @@ changes its slots; it is here, as the cleric is, to set the kits beside:
 ## Changing class
 
 A kit belongs to the class it was chosen with. A human who changes class
-(**DUAL** on the menu a right-click on a portrait opens, for a human of 2nd
-level or more) keeps it, but it sleeps as that class does: gifts and costs
+(**DUAL** on the menu a right-click on a portrait opens, for a human of 3rd
+level or more; 2nd with [the manual's dual-classing](FEATURES.md#rule-changes) off) keeps it, but it sleeps as that class does: gifts and costs
 alike count again once the new class's level passes the old one's. The Effects
 screen shows `KIT: BATTLMAGE (ASLEEP)` until then, and the Loader's Characters
 tab says so too. Once

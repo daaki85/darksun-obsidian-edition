@@ -836,6 +836,32 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
       round left the screen still and the pointer stuck at DS:A133h while the game's clock (DS:11D6h)
       ran on: `compare -metric AE` of two shots 5 s apart gave 0, and clicks did nothing. Restart.
     - Two natural 20s in a row came up on one Guard's saves; nothing wrong found.
+  - **Group 4: the manual's monsters, dual-classing, resting** (2026-11-09, logs/2026-11-09-group-4.md):
+    - **Monster powers on demand**: `kinds.py CREATURE=KIND` writes a creature record's kind (+16h);
+      a kind's properties and resistance class then apply to it (15/13 the shadows' STR drain, 3 the
+      babau's deadly poison, 38 the Styr's breath, 39 the Djinn's first-turn invisibility and images,
+      40 the Tari's disease). **The hit powers come with melee hits only** (7A6BAh): the ambush's Arena
+      Guards (bows) never brought one; the Guards (two clubs) did, and only from the first attack set
+      (the off hand's hits brought none). A kind set on a creature not in the fight does nothing: set
+      every guard of the kind. **The priests' Poison a hit casts (bit 15) kills at once on a failed save**,
+      in a fight too ("Jenna takes 263 from Poison, now 0/300 HP", status 5): put the member back in
+      memory (`addeffect.py del N 35`, `setmem.py status=N:1 hp=N:300`).
+    - **`passn.sh N`** passes N party turns as passuntil.sh does, dragging the view to each member
+      first (the ambush's party stood 200 map units apart; passuntil.sh stopped "off screen").
+    - **A Weakened's amount is added to STR** (the ability routine, 7B80Eh): -1 takes a point off, 1 adds
+      one (a first drain raised STR, seen); Chill Touch's is -1 (79855h). Each Weakened is its own entry.
+    - **The DUAL window** (dual-classing): the inventory screen (I), a right-click on a portrait (Cermak
+      20,104 in pens-fire-count4) opens EDIT NAME / DROP / DUAL (CANCEL in DUAL's place when it isn't
+      offered); DUAL at 90,145; the classes greyed or white (zoom a shot: `convert -crop 120x110+150+30
+      -scale 300%`); EXIT 213,145. `sheetscore.py M lv=N con=N ...` sets the first level and the creature's
+      scores (what the window reads). `setmem.py ruleshi=-2048` turns the rule off in DSCLOG's header
+      for a comparison (the Loader writes the rules only when they change).
+    - **Rests for a test**: `pens-fire-count4`, `ringrest.sh`; each rest test from a fresh load (two rests
+      bring Kurzak's call, and his patience runs out). `setmem.py` sets HP (negative too, with status 3
+      for Out Cold), PSP, a power known (`power=1:13`, K'ratchek's Cell Adjustment) and DSCLOG's rules;
+      K'ratchek (a druid there) knows Neutralize Poison and has a 4th-level slot. The rest's dice-log
+      lines: `At rest: ... casts ...`, `X rests 8 hours: +3, +6 (CON 22) = +9, now 19/54 HP`; CON 20+
+      regeneration's +12 for the 8 hours then follows as an HP line.
 - **A read-only dice log** (`rolog.py`, 2026-11-08): to try changed dice-log code on a DOSBox whose
   Loader isn't this session's (stopping another's Loader was refused), run `rolog.py` into a file of
   your own: describe() and hp_changes() from this checkout, no writes to the game. Its pending rolls

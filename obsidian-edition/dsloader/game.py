@@ -161,6 +161,20 @@ RULE_ENLARGE = 33554432
 # every 10 minutes at 25; the game's every 5 minutes at any), and no CON adjustment to a dwarf's or
 # a halfling's paralysis/poison/death save, only its racial bonus (DSCLOG's RULE_HI_CON)
 RULE_CON = 67108864
+# Dual-classing as the manual has it: DUAL from 3rd level in the current class (the game's 2nd), and
+# every prime requisite the manual gives a class checked (tracker.PRIME_REQUISITES), the old class's at
+# 15 or more, the new one's at 17 or more (the game checks one a class: a ranger, druid or psionicist
+# on WIS alone); DSCLOG's RULE_HI_DUAL, DUAL_LEVEL, DUAL_PRIMES
+RULE_DUAL_CLASS = 134217728
+DUAL_LEVEL_GAME, DUAL_LEVEL_RULE, DUAL_OLD_LEAST, DUAL_NEW_LEAST = 2, 3, 15, 17
+# Resting heals by spells and natural healing: before a rest (mode 0, a fire ring's) each priest who can
+# cast spends its slots left on the party (Neutralize Poison on the Poisoned, Cure Blindness on the
+# Blind, Cure Disease without a cleric or druid of 5th level, then Cure Light, Serious and Critical
+# Wounds and Heal on the most wounded), and psionicists their Cell Adjustment (the Diseased, then the
+# wounded); then each member gets REST_NATURAL hit points plus CON's bonus (a warrior's, else at most
+# +2), not all of them (DSCLOG's RULE_HI_REST, REST_PRE, REST_HP)
+RULE_REST = 268435456
+REST_NATURAL = 3
 SPEC_SLOTS, SPEC_COUNT = 0x14, 4
 # The sheet's +14h to +17h (the game never reads or writes them): the four weapon specs, kind + 1
 # each (0 none). Up to 2.12, a byte each; in 2.13 packed (SPEC_PACKED, +16h's top bit), 5 bits each
@@ -252,7 +266,8 @@ RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("two_weapons", RULE_TWO_WEAPONS),
                  ("adnd_tables", RULE_ADND_TABLES), ("cha_prices", RULE_CHA_PRICES),
                  ("rolled_scores", RULE_ROLLED), ("buyback", RULE_BUYBACK),
                  ("backstab_dice", RULE_BACKSTAB), ("aging", RULE_AGING),
-                 ("enlarge_dice", RULE_ENLARGE), ("con_adnd", RULE_CON))
+                 ("enlarge_dice", RULE_ENLARGE), ("con_adnd", RULE_CON),
+                 ("dual_class", RULE_DUAL_CLASS), ("rest_heal", RULE_REST))
 # The new spells (RULE_NEW_SPELLS; DSCLOG's NEW SPELLS): six wizard spells numbered after the game's
 # 196 (0-195), in records past its own (the 200h bytes after them, two small tables, moved into
 # DSCLOG at the game's start: its SEG_MOVE, SEGMENT_TABLE here); DSCLOG fills their records and rows

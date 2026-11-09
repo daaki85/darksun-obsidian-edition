@@ -79,6 +79,34 @@ class GamePatchTests(unittest.TestCase):
         self.assertEqual(by["shots_left"].replacement[-3:], bytes.fromhex("637d05"))  # can't only once all are made
         self.assertEqual(by["monster_count"].replacement[-1], 0)
 
+    def test_rest_cures_first(self):
+        """The rest's pass 2 (8066Dh) casts the free cures before it reads the effects' bitset: the loop's
+        jump (80984h) goes to the casts (80768h), the casts end with a jump to the read (80758h), the read
+        goes on past them (80765h: to 807EDh); the same 7 near calls of 809A2h (Cure Disease, Remove
+        Curse, Remove Paralysis by the best cleric, then the druid, then the druid's Neutralize Poison),
+        each "jl" to the next group's compare; always on (no switch has it)."""
+        by = {p.name: p for p in gamepatch.PATCHES}
+        loop, first = by["rest_cures_loop"], by["rest_cures_first"]
+        self.assertEqual((loop.offset, first.offset), (0x80984, 0x80765))
+        self.assertEqual(0x80984 + 3 + int.from_bytes(loop.replacement[1:3], "little", signed=True), 0x80768)
+        r = first.replacement
+        self.assertEqual(r[0], 0xE9)
+        self.assertEqual(0x80765 + 3 + int.from_bytes(r[1:3], "little", signed=True), 0x807ED)
+        self.assertEqual(r[-4], 0xE9)
+        self.assertEqual(0x80765 + len(r) - 1 + int.from_bytes(r[-3:-1], "little", signed=True), 0x80758)
+        calls, spells = [], []
+        for at in range(len(r) - 3):
+            if r[at:at + 2] == bytes.fromhex("0ee8"):
+                calls.append(0x80765 + at + 4 + int.from_bytes(r[at + 2:at + 4], "little", signed=True))
+                self.assertEqual(r[at - 2], 0x6A)
+                spells.append(r[at - 1])
+        self.assertEqual(calls, [0x809A2] * 7)
+        self.assertEqual(spells, [0x60, 0x67, 0x69, 0x60, 0x67, 0x69, 0x76])
+        jls = [0x80765 + at + 2 + r[at + 1] for at in range(len(r) - 1) if r[at] == 0x7C and r[at - 1] in (5, 7)]
+        self.assertEqual([r[j - 0x80765:j - 0x80765 + 3].hex() for j in jls], ["837eee", "837eee", "e96cff"])
+        for names in (gamepatch.SPELLS_MANUAL, gamepatch.SPELL_TO_HIT, gamepatch.EFFECTS_KEPT):
+            self.assertNotIn("rest_cures_first", names)
+
     def test_shop_shine_sites(self):
         """A shop turns the colour cycles: the event wait's test (4 bytes) and the shop's loop's
         (5), each DSCLOG's numbered site, its own number."""

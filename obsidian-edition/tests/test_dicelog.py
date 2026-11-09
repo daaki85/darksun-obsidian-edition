@@ -1603,6 +1603,26 @@ class ManualGroup3Tests(unittest.TestCase):
         struct.pack_into("<h", log.guest.mem, stalker, 13 - 1004)
         self.assertEqual(log.hp_changes(2.5), ["  Mountain Stalker is slain by Cloudkill"])
 
+    def test_group4_lines(self):
+        """Group 4's lines: the monsters (KIND_MANUAL 7-9) and the rest (KIND_REST 1-2)."""
+        log = self.make()
+        say = lambda what, *frame: log.describe(entry(what, frame=words(0, 0, *frame), kind=dicelog.KIND_MANUAL))
+        self.assertEqual(say(dicelog.MANUAL_DRAIN, 0, 0x29, 5, 172),
+                         ["Mountain Stalker drains 1 STR from Dag: Weakened for 2d4 = 5 turns (no save)"])
+        self.assertEqual(say(dicelog.MANUAL_TARI, 1, 0x29, 2, 0),
+                         ["Mountain Stalker's bite on Daaki: 1 in 10, and a d2 for the manual's 1 in 20: 2 -> no disease"])
+        self.assertIn("-> the disease comes, if a save against poison fails", say(dicelog.MANUAL_TARI, 1, 0x29, 1, 0)[0])
+        self.assertEqual(say(dicelog.MANUAL_DJINN, 0x29, 6, 14, 0),
+                         ["Mountain Stalker turns invisible (14 rounds) and makes 6 mirror images of itself"])
+        rest = lambda what, *frame: log.describe(entry(what, frame=words(0, 0, *frame), kind=dicelog.KIND_REST))
+        self.assertEqual(rest(dicelog.REST_CAST, 0, 1, 71, 1, 2, 0),
+                         [f"At rest: Dag casts {log.game.spell_name(71)} on Daaki (1st-level slots: 2 left)"])
+        self.assertTrue(rest(dicelog.REST_CAST, 2, 1, 151, 0, 7, 0)[0].endswith(" on Daaki (7 PSP left)"))
+        self.assertEqual(rest(dicelog.REST_HEAL, 0, 30, 2, 35, 40, 16),
+                         ["Dag rests 8 hours: +3, +2 (CON 16) = +5, now 35/40 HP"])
+        self.assertEqual(rest(dicelog.REST_HEAL, 0, 38, 2, 40, 40, 16),
+                         ["Dag rests 8 hours: +3, +2 (CON 16) = +5 (+2: no more than the most), now 40/40 HP"])
+
     def test_biofeedback_hit(self):
         """The game's 2 less from a blow on a creature with Biofeedback (79BF9h; at least 1 with BIO_SITE)."""
         for manual, effect, want in ((True, True, "for 16: 1d8 = [5] +1 weapon +12 STR 24 -2 Biofeedback"),

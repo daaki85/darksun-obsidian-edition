@@ -61,6 +61,28 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
   (`sprites.Store`, `Dresser._in_store`; 6 new tests; playtest/logs/2026-11-09-picture-store-fix.md).
 
 **Changed**
+- **Group 4.** **Resting heals by spells and natural healing** (a new rule change, `rest_heal`, on by
+  default): before the rest each priest spends the slots left on Neutralize Poison for the
+  Poisoned, Cure Blindness, Cure Disease (when no cleric or druid of 5th+ casts it free), and the
+  Cure Wounds spells or Heal on the most wounded, and psionicists use Cell Adjustment, each through
+  the game's own cast (`At rest: Cilla casts Cure Critical Wounds on Gerakis (5th-level slots: 8
+  left)`); then each heals 3 HP and CON's hit-point bonus (`Gerakis rests 8 hours: +3, +6 (CON 22) =
+  +9`) instead of all of them, CON 20+ regeneration coming on top for the 8 hours. **Dual-classing
+  as the manual has it** (`dual_class`, on): at 3rd level of the old class, and every prime
+  requisite checked (the old class's at 15+, the new one's at 17+; the game checked one, WIS for
+  rangers, druids and psionicists). **Monsters as the manual describes them** (with "Spells and
+  psionics as the manual describes them"): Shadows and Greater Shadows drain 1 STR a hit (no save,
+  for 2d4 turns, stacking) in place of their cold damage and paralysis, and Greater Shadows are
+  unaffected by cold; the Babau's and Blue Slaad's deadly poison (save or die) in place of the
+  corroding touch and disease; the Tari a 3-HD bite of 1d3 with a 1-in-20 chance of disease; the
+  Styr a 3d6 fire breath, HD 14 and THAC0 7; the Djinn turns invisible and makes mirror images at
+  its first turn. Seen in DOSBox: playtest/logs/2026-11-09-group-4.md.
+
+**Fixed: the game**
+- **Resting while poisoned killed a member just cured:** the rest read each member's effects
+  before casting its free cures and never again, so a 7th-level druid's Neutralize Poison was cast
+  and the member died of the poison anyway (seen in DOSBox). The cures now come before the read
+  (`rest_cures_first`, `rest_cures_loop`: the game's own bytes reordered; always on).
 - **Group 3: spells and psionics as the manual describes them** (the switch, renamed "Spells and
   psionics as the manual describes them"; each seen in DOSBox: playtest/logs/2026-11-09-group-3.md):
   Fire Shield +2 on saves vs fire and cold (its description says so); Blur +1 on saves; Chill Touch's

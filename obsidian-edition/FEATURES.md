@@ -457,7 +457,7 @@ How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#no-manual-check).
 
 ## Rule changes
 
-Twenty changes that bring the game's own rules closer to AD&D, each with its
+Twenty-two changes that bring the game's own rules closer to AD&D, each with its
 own box in the Options tab's **Rule changes** section, grouped there as they
 are here: [characters](#characters), [weapons and armour](#weapons-and-armour)
 and [magic](#magic). All are on by default,
@@ -477,6 +477,7 @@ and the game's own rule is back at once.
 | [AD&D's class tables](#adds-class-tables) | priests' THAC0 improving a level early (19 at 3rd), fewer priest and preserver spell slots (3 2 1 at 5th), gladiators, rangers and thieves needing a little less XP for 2nd level | the XP for each level, priests' THAC0, and clerics', druids' and preservers' spell slots from AD&D's tables |
 | [CON as in AD&D](#con-as-in-add) | a hit point back every 5 minutes at any CON from 20; dwarves and halflings add CON's poison adjustment to their racial bonus | regeneration from CON 20 at AD&D's rates (an hour a hit point at 20 to 10 minutes at 25); dwarves and halflings add only their racial bonus to poison saves |
 | [Ages and magical aging](#ages-and-magical-aging) | no ages; Haste costs nothing | each character has an age from Dark Sun's tables: its scores change at middle, old and venerable age, and it dies at the most its race lives; a year older each 365 days of game time; Haste ages its target a year, after a system shock roll to survive |
+| [Dual-classing as the manual has it](#dual-classing-as-the-manual-has-it) | DUAL from 2nd level, one prime requisite checked a class (a ranger, druid or psionicist on WIS alone) | DUAL from 3rd level, as the manual says, and every prime requisite of the old class 15 or more, every one of the new class's 17 or more |
 | [Level cap by XP](#level-cap-by-xp) | every class stops at 9th level | a class goes up past 9th while its next level needs no more than 749,999 XP, shared out between a character's classes |
 
 #### Class restrictions
@@ -719,6 +720,34 @@ have no hair, so they keep their looks.
 
 How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#ages).
 
+#### Dual-classing as the manual has it
+
+A human changes class with **DUAL** on a portrait's right-click menu
+([the Player's Guide](PLAYER-GUIDE.md#more-than-one-class) has every condition).
+The game offers it from 2nd level and checks one prime requisite a class: the
+old class's at 15 or more, the new one's at 17 or more, with WIS alone for a
+ranger, druid or psionicist. The manual says "You must be at least third level
+in your current class before you can dual class" (p. 12), and gives those three
+classes more than one prime requisite (pp. 22-26). With **Dual-classing as the
+manual has it** ticked, DUAL comes at **3rd level**, and **every** prime
+requisite counts:
+
+| Class | Prime requisites (the manual's) |
+|---|---|
+| Fighter, gladiator | STR |
+| Ranger | STR, DEX, WIS |
+| Preserver | INT |
+| Cleric | WIS |
+| Druid | WIS, CHA |
+| Thief | DEX |
+| Psionicist | CON, WIS |
+
+A ranger who wants to become a thief needs STR, DEX and WIS 15 and DEX 17; a
+fighter who wants to become a psionicist needs STR 15, CON 17 and WIS 17. A
+class the window can't offer is greyed out, as the game's own refusals are.
+
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#dual-classing-as-the-manual-has-it).
+
 #### Level cap by XP
 
 The game stops every class at level 9 (its manual's tables end there too).
@@ -875,7 +904,9 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#helms).
 #### Items saving against acid
 
 Two monsters' hits can destroy an item: the **Rampager's acid** a worn piece
-of armour, and the **Babau's corroding touch** a worn piece of armour and the
+of armour, and the **Babau's corroding touch** (the game's; with [the
+manual's monsters](#spells-and-psionics-as-the-manual-describes-them) the Babau has its deadly
+poison instead) a worn piece of armour and the
 melee weapon held (the first one in the character's list of held items; bows
 and slings never). The game makes the check on every such hit, whether or not
 the target's saving throw against the attack succeeds, and shows its own
@@ -943,7 +974,8 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#items-saving-against-a
 | [Spells saved against with the spell save](#spells-saved-against-with-the-spell-save) | almost every spell saved against with petrification/polymorph | the spell save rather than petrification/polymorph |
 | [Fire, cold and electricity: DEX instead of a doubled d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20) | the save's d20 doubled, so most creatures shrug off a Fireball (70% to save where 35% is due) | DEX's defensive adjustment on those saves rather than a doubled d20 |
 | [Enlarge multiplies the weapon's dice only](#enlarge-multiplies-the-weapons-dice-only) | the whole melee damage multiplied, STR included | 10% a caster level on the weapon's dice, rounded up, STR and the rest added after |
-| [Spells and psionics as the manual describes them](#spells-and-psionics-as-the-manual-describes-them) | twenty-five spells' and two powers' saves, times, damage and effects the game's own way, Turn Undead destroying or doing nothing, a classless monster's level 0 for its saves, a "can't save" that saves | as the manual has them, Turn Undead by AD&D's table (turned undead flee), the monster's level its hit dice, "can't save" failing (from the next start) |
+| [Spells and psionics as the manual describes them](#spells-and-psionics-as-the-manual-describes-them) | twenty-five spells' and two powers' saves, times, damage and effects the game's own way, Turn Undead destroying or doing nothing, a classless monster's level 0 for its saves, a "can't save" that saves, seven monsters' powers not the manual's | as the manual has them, Turn Undead by AD&D's table (turned undead flee), the monster's level its hit dice, "can't save" failing, the shadows' STR drain, the Babau's and Blue Slaad's deadly poison, the Tari's disease, the Styr's breath, the Djinn's invisibility (from the next start) |
+| [Resting as in AD&D](#resting-as-in-add) | a rest fills every member's hit points; priests' slots left unspent; the free cures only from a cleric or druid of 5th level | the priests spend their slots left on the party before the rest (poison, blindness, disease, then the most wounded) and psionicists their Cell Adjustment; then each heals 3 + CON's bonus a night |
 | [Spells roll to hit](#spells-roll-to-hit) | Acid Arrow, Turn Pebble to Boulder, Magical Stone, Condense, Minute Meteors and the touch spells never miss | they roll to hit against the target's AC, a missile's with DEX, a touch's with STR; a miss does nothing (from the next start) |
 
 #### Rangers' casting level
@@ -1038,7 +1070,8 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#enlarges-dice).
 Twenty-five spells and two psionic powers whose saves, times, damage or effects
 part from the manual (pp. 29-44), set as the manual has them, a priest's Turn
 Undead by AD&D's turning table, a monster's level for its saves, and the saving
-throw's "can't save" made to work. The box takes effect from the next start (it
+throw's "can't save" made to work, and seven monsters' powers as the manual
+describes them (below). The box takes effect from the next start (it
 changes the game's spell records and code as the Loader writes the game's copy,
 and the descriptions of Fire Shield and Cat's Grace in its copy of RESOURCE.GFF);
 unticked, they are the game's.
@@ -1178,6 +1211,29 @@ checks it first). Unticked, the dice log says what the game does:
 
 How it is done: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#spells-and-psionics-as-the-manual-group-3).
 
+**The monsters as the manual describes them** (the same box, 2026-11-09). Where
+the manual (pp. 33-52) gives a monster a power its record hasn't, or the record
+a power the manual hasn't:
+
+| Monster | The game | As the manual |
+|---|---|---|
+| Shadow | 1d4+1, and 2d6 cold, each hit; cold hurts it | its chilling grasp's light 1d4+1, and **1 STR drained** each hit, no save (Weakened for 2d4 turns; each hit its own, so they add up, STR never below 3); unaffected by cold, +1 weapons to hurt it (as before) |
+| Greater Shadow (the 6-HD Shadow, Shadow Guard, King, Prince and Worker, Cragg, Tanelyv, Tristram) | 2 attacks of 2d6, each paralysing for 2d6 rounds (a save); any spell hurts it in full | 2 attacks of 2d6 and **1 STR drained** each hit, as the shadow's; "unaffected by cold-based attacks"; +1 weapons, AC 4, HD 6 and THAC0 15 as before |
+| Babau | its claws a corroding touch (worn armour and the weapon held may be eaten) | its horn's **deadly poison** (the priests' Poison, AD&D's: a save against poison, else death, in a fight too) |
+| Blue Slaad | disease, 1 rake in 10 | its bite's **deadly poison**, as the babau's |
+| Tari | no disease; HD 2, THAC0 18, AC 10, a 1d2 bite | a bite of **1d3** that brings **disease 1 in 20** (a save against poison), HD 3, THAC0 17, AC 6 (better with the leather some wear) |
+| Styr | no breath; any weapon hurts it; HD 10, THAC0 11 | **breathes fire for 3d6** one turn in four (a save halves), **+1 weapons** to hurt it, HD 14, THAC0 7; MR 30%, AC 0, 4 attacks of 2d10 as before |
+| Djinn | a fighter | at its first turn of a fight it **turns invisible** (Improved Invisibility, 14 rounds) and makes **1d4+3 mirror images** of itself ("their ability to use illusions and become invisible") |
+
+The Look box and its description say so (`1 STR drained (Weakened, 2d4 turns;
+no save)`, `Breathes fire for 3d6 one turn in four`), and the dice log names
+each: `Shadow drains 1 STR from Gerakis: Weakened for 2d4 = 5 turns (no save)`,
+`Tari's bite on Seneca: 1 in 10, and a d2 for the manual's 1 in 20: 2 -> no
+disease`, `Djinn turns invisible (14 rounds) and makes 6 mirror images of
+itself`. The Styr, the Djinn and the Tari are made so in the Loader's copy of
+the game's objects, and in a saved game too, as they come on the map with the
+Loader running (and back as the game's with the box unticked).
+
 **Known differences left as they are.** The game has no way to do these as the
 manual says, or the change would make a different spell rather than fix one:
 
@@ -1227,6 +1283,40 @@ Magic Missile, Flame Arrow (neither the manual nor AD&D gives its bolts an
 attack roll), areas, cones and psionic powers are left as they are. Each roll has a line in the [dice log](DICE-LOG.md),
 and "Miss" floats over the target. Unticked, the spells always hit, as in the
 game. How it is done: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#spells-roll-to-hit).
+
+#### Resting as in AD&D
+
+The game's rest at a fire ring fills every member's hit points, PSP and spell
+slots, and casts its free cures ([how the game rests](HOW-THE-GAME-WORKS.md#resting)).
+In AD&D a night's rest heals a hit point (the Dark Sun manual says nothing of
+it), and priests heal the party with the spells they have left. With **Resting
+as in AD&D** ticked, before the slots fill again:
+
+1. Each priest who can cast (Okay, not feebleminded, paralysed, charmed or
+   barred from spells) spends the priest spells it has left, a slot at a time:
+   **Neutralize Poison** on the Poisoned (who would otherwise die as the rest
+   ends), **Cure Blindness** on the Blind, **Cure Disease** on the Diseased (only
+   with no cleric or druid of 5th level or more: the rest's own free cures see to
+   them then), then the **Cure Wounds** spells and **Heal** on the most wounded,
+   the cure that fits what the night's healing leaves (Cure Light for a wound
+   of 4 or more, Serious 10, Critical 16, Heal 30), else the smallest left.
+2. Each psionicist who knows **Cell Adjustment** uses it (5 PSP, 1d4 HP and a
+   disease cured) on the Diseased, then on the wounded the priests couldn't
+   reach, while its PSP last.
+3. The rest itself: each member heals **3 hit points plus CON's hit point bonus**
+   (the game's bonus a level: a warrior's in full, +1 at CON 15 up to +7 at 24;
+   anyone else's at most +2),
+   up to its most, rather than all of them. A member with CON 20 or more also
+   regenerates for the 8 hours, as it would ([CON as in AD&D](#con-as-in-add)'s rates
+   with that box, else the game's).
+
+Slots and PSP still fill to the most, STR still comes back, the 8 hours pass
+and a script's full rest (a vulture's meal, Kurzak's healers) is as it was. The
+dice log names each: `At rest: Seneca casts Cure Serious Wounds on Gerakis
+(4th-level slots: 1 left)`, then the healing itself, and `Gerakis rests 8 hours:
++3, +2 (CON 16) = +5, now 35/40 HP`.
+
+How it is done: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#resting-as-in-add).
 
 ## More character customization
 
@@ -2747,6 +2837,7 @@ got wrong, each with a switch, are the [rule changes](#rule-changes)):
 | **The Trustee** in the slave pens | His rounds' two pauses took their corner from numbers other scripts in the pens change, so he could set off for a spot that doesn't exist and stay busy ("I'd love to talk more...") for good. And his key, picked in his talk by a thief with no room for it, fell at his feet: after each step of his rounds he went back for it ("There it is!") without picking it up, and stalled the same way | The pauses keep a corner of their own, and his busy line starts his rounds again, so one already stuck walks on once talked to; the key stays where it lies, for the party to pick up, and he says the busy line once and walks on; and a save made while he (or anyone on rounds of their own) walked no longer leaves him standing when loaded |
 | A thief skill rolled **for the whole party** (a trap going off, hearing the men by the wagon) | Meant for the member with the best chance, but the pick compared the wrong way round, so the first party member always rolled | The member with the best chance rolls ([where the game rolls them](HOW-THE-GAME-WORKS.md#where-the-game-rolls-thief-skills)) |
 | **Random monsters** (a vanishing body, a survivor's warning) | How many came was worked out from the wrong monster's strength, and in seven regions the last monster on the list divided by 0, which ended the game ("Divide error") | Worked out from the monster that comes: 1 to 6, fewer of the strong ones |
+| **Resting while poisoned** with a druid of 7th level or more | The druid's free Neutralize Poison at the rest was cast after the rest had already looked at who was poisoned, so the poisoned member died anyway (and a disease cured at a rest gave STR back only at the next) | The free cures come first: a 7th-level druid's cure saves the poisoned member, and STR comes back the rest a disease is cured ([resting](HOW-THE-GAME-WORKS.md#resting)) |
 | A magic item's **glow in a shop** | Stood still: a shop runs its own loop, which never turned the colours that make it shine | Shines, as on the map and in the inventory |
 | The game's **Sling +1** | A blank icon (its picture is missing from the game's data) | The Sling's, with a glow |
 | The game's **Great Axe +3** (the Army Commander's) | Its type had no material, as a ring's: its name showed none, and no sphere's cleric could wield it | Metal, as its icon's grey and teal head and its weight have it: "Metal Great Axe +3" |

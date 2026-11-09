@@ -252,6 +252,16 @@ TURN_CELLS = (20, 19, 16, 13, 10, 7, 4, TURN_T, TURN_T, TURN_D, TURN_D)  # (AD&D
 # Feeblemind +8 the caster; a feebleminded creature's psionic power +8 the power
 KIND_MANUAL = 14
 MANUAL_CHILL, MANUAL_CLOUD, MANUAL_CELL, MANUAL_RAINBOW, MANUAL_FEEBLE, MANUAL_PSIONIC = range(1, 7)
+# ... and group 4's, the monsters (SHADOW_DRAIN, TARI_BITE, DJINN_TURN): a shadow's drain +8 the shadow,
+# +0Ah the turns, +0Ch the power it replaces; a Tari's bite +8 the Tari, +0Ah the d2 (1: the disease and
+# its save follow); a djinn's first turn (+6 the djinn) +8 its images, +0Ah the rounds invisible
+MANUAL_DRAIN, MANUAL_TARI, MANUAL_DJINN = range(7, 10)
+# DSCLOG's rest (game.RULE_REST: REST_PRE, REST_HP, RS_REC): raw = what; a cast at rest (REST_CAST): its
+# frame +6 the caster, +8 the target, +0Ah the spell, +0Ch its slot's level (0 a psionic power), +0Eh the
+# slots of that level left (a power: the PSP left); a night's natural healing (REST_HEAL): +6 the member,
+# +8 its HP before, +0Ah CON's part, +0Ch its HP after, +0Eh the most, +10h its CON
+KIND_REST = 15
+REST_CAST, REST_HEAL = 1, 2
 KIND_WALL = 9  # DSCLOG's THORNS_DAMAGE: Wall of Thorns' damage on a creature in it, taken instead of
 # its record's dice: raw = the damage | the spell << 8, extra the creature
 THORNS_BASE = 8  # Wall of Thorns: 8 + the creature's AC (DSCLOG's THORNS_AC: it + 80h in the entry's extra's high byte)
@@ -1506,6 +1516,8 @@ class DiceLog:
         new_spells = bool(self.rules & game.RULE_NEW_SPELLS)
         if self.cilla_elf:
             out += quiet(lambda: defaultparty.elf_figure(self.game))  # (Cilla, an elf, drawn as one)
+        # (the Styr, the Djinn and the Tari of a saved game as the game's copy has them: monsters.mend)
+        quiet(lambda: monsters.mend(self.game, self.game.spells_manual()))
         # (the slave pens' and the world's new items are in the game's data: worldgear.py)
         if self.stealth_gear:
             quiet(lambda: stealth.reprice(self.game))  # (cloaks and boots: they help a thief hide and move silently)
@@ -2447,6 +2459,8 @@ class DiceLog:
             return [f"    {self._name(e.raw)} is swept off its feet: loses its next turn"]
         if e.kind == KIND_MANUAL:
             return self.flush(now, force=True) + self._manual(e)
+        if e.kind == KIND_REST:
+            return self.flush(now, force=True) + self._rest(e)
         if e.kind == KIND_CAST:
             self._cast = (e.arg(6), e.raw)  # (who cast what, for a kit's damage: DSCLOG's CAST_WHO)
             # (Turn Undead, 190, has no name in the game's spell names: game.spell_name calls it a
@@ -2552,6 +2566,40 @@ class DiceLog:
         if e.raw == MANUAL_PSIONIC:
             power = self.game.spell_name(game.PSIONIC_FIRST + a) if a is not None else "a power"
             return [f"{name} is feebleminded: {power} can't be used (no psionics)"]
+        if e.raw == MANUAL_DRAIN:
+            return [f"{self._name(a)} drains 1 STR from {name}: Weakened for 2d4 = {b} turns (no save)"]
+        if e.raw == MANUAL_TARI:
+            then = ("the disease comes, if a save against poison fails" if b == 1 else "no disease")
+            return [f"{self._name(a)}'s bite on {name}: 1 in 10, and a d2 for the manual's 1 in 20: {b} -> {then}"]
+        if e.raw == MANUAL_DJINN:
+            return [f"{name} turns invisible ({b} rounds) and makes {a} mirror images of itself"]
+        return []
+
+    def _rest(self, e: Entry) -> List[str]:
+        """What DSCLOG's rest did (KIND_REST): a priest's or psionicist's cast before it, a member's
+        natural healing in it."""
+        args = [e.arg(at) for at in (6, 8, 0x0A, 0x0C, 0x0E, 0x10)]
+        if None in args[:5]:
+            return []
+        if e.raw == REST_CAST:
+            caster, target, spell, level, left = args[:5]
+            name = self.game.spell_name(spell)
+            if level:
+                what = f"{game.ordinal(level)}-level slots: {left} left"
+            else:
+                what = f"{left} PSP left"
+            return [f"At rest: {self._name(caster)} casts {name} on {self._name(target)} ({what})"]
+        if e.raw == REST_HEAL:
+            member, before, con_part, after, most, con = args
+            natural = max(1, game.REST_NATURAL + con_part)
+            creature = self.game.combatant_creature(member)
+            if creature is not None:  # (said here: not again as a change of HP, nor put down to a cure)
+                self._hp[creature] = after
+            self._spell_until = 0.0
+            got = after - before
+            note = "" if got == natural else f" (+{got}: no more than the most)" if got < natural else ""
+            return [f"{self._name(member)} rests 8 hours: +{game.REST_NATURAL}, {con_part:+d} (CON {con}) = "
+                    f"+{natural}{note}, now {after}/{most} HP"]
         return []
 
     def _image_line(self, target: int, roll: int, chance: int, spell: bool) -> str:

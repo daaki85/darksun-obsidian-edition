@@ -13915,6 +13915,8 @@ SWEPT_MAX   equ 64
 swept   times SWEPT_MAX db 0
 TU_MAX      equ 64              ; (TURN_SITE's: after SWEPT, cleared with it at a fight's start)
 tu_failed times TU_MAX db 0     ; (bit N: priest N failed to turn this combatant this fight)
+DJ_MAX      equ 64              ; (DJINN_TURN's: after TU_FAILED, cleared with it)
+dj_done times DJ_MAX / 8 db 0   ; (bit N % 8 of byte N / 8: combatant N has had its first turn)
 swept_mark:
         pushad
         push es
@@ -14182,7 +14184,7 @@ acid_round:
         push cs
         pop es
         mov di, swept
-        mov cx, SWEPT_MAX + TU_MAX      ; (and TURN_SITE's TU_FAILED)
+        mov cx, SWEPT_MAX + TU_MAX + DJ_MAX / 8 ; (and TURN_SITE's TU_FAILED, DJINN_TURN's DJ_DONE)
         xor al, al
         rep stosb
         pop es
@@ -14870,6 +14872,14 @@ RAINBOW_SITE equ NS_IMAGE + 84   ; 585A2h: damage ends Rainbow Pattern's hold (R
 PSI_SITE equ NS_IMAGE + 85       ; 5D5B4h: no psionics while feebleminded (PSI_SITE)
 BIO_SITE equ NS_IMAGE + 86       ; 79C83h: Biofeedback's 2 off a blow, at least 1 left (BIO_SITE)
 CELL_SITE equ NS_IMAGE + 87      ; 795A2h: Cell Adjustment's 1d4 (CELL_SITE)
+DUAL_LEVEL_SITE equ NS_IMAGE + 88 ; 70CE4h, 70F03h, 86F58h: the level DUAL needs (DUAL_LEVEL)
+DUAL_OLD_SITE equ NS_IMAGE + 89  ; 86EFCh: the old class's prime requisite, 15+ (DUAL_PRIMES)
+DUAL_NEW_SITE equ NS_IMAGE + 90  ; 86F31h: the new class's prime requisite, 17+ (DUAL_PRIMES)
+DRAIN_SITE equ NS_IMAGE + 91     ; 7A9ABh: a hit's power, a shadow's STR drain instead (SHADOW_DRAIN)
+TARI_SITE equ NS_IMAGE + 92      ; 7A747h: the disease's 1 in 10, a Tari's 1 in 20 (TARI_BITE)
+NOP_SITE equ NS_IMAGE + 93       ; (90h: PROBE_CR_SPELLS takes a NOP after the INT for no site, so none has it)
+REST_PRE_SITE equ NS_IMAGE + 94  ; 80675h: the rest's start, the priests' and psionicists' cures first (REST_PRE)
+REST_HP_SITE equ NS_IMAGE + 95   ; 808AFh: the rest's hit points, natural healing (REST_HP)
 KIND_TURN  equ 13
 TU_DESTROY equ 0x7AE60 - 0x7AE04 ; (the ways on, less the address after the site's number)
 TU_FAIL    equ 0x7AE75 - 0x7AE04
@@ -15101,6 +15111,12 @@ MN_CELL    equ 3                ; Cell Adjustment: +8 the user, +0Ah the HP, +0C
 MN_RAINBOW equ 4                ; Rainbow Pattern's hold ended by damage: +8 the damage
 MN_FEEBLE  equ 5                ; Heal cures Feeblemind: +8 the caster
 MN_PSIONIC equ 6                ; a feebleminded creature tries a psionic power: +8 the power
+MN_DRAIN   equ 7                ; (group 4, the monsters) a shadow drains 1 STR: +8 the shadow, +0Ah
+                                ;   the turns, +0Ch the power it takes the place of
+MN_TARI    equ 8                ; a Tari's bite that would bring disease 1 in 10: +8 the Tari, +0Ah the
+                                ;   d2 that makes it 1 in 20 (1: the disease, its save, follows)
+MN_DJINN   equ 9                ; a djinn's first turn of a fight: +8 its mirror images, +0Ah the
+                                ;   rounds it is invisible
 CHILL_TOUCH equ 3
 STRENGTH_EFFECT equ 67           ; (Strength's; Adrenalin Control's 66)
 BLUR_EFFECT equ 55
@@ -15520,6 +15536,805 @@ chill_undead:
         add sp, 14
         jmp ovr_back
 
+;-------------------------------------------------------------------------------------------------
+; DUAL-CLASSING AS THE MANUAL HAS IT (RULE_HI_DUAL, the Loader's "dual_class"; the sites always in
+; the game's copy, each doing the game's compare with the rule off).
+;
+; DUAL_LEVEL (gamepatch "dual_level_menu", "dual_level_view", "dual_level_window"): the two portrait
+; menus' test for DUAL (70CE4h, 70F03h) and the DUAL window's (86F58h, in 86E94h), "cmp byte
+; [es:bx+24h],2" (5 bytes; ES:BX the sheet, +24h its first class's level): 3 with the rule ("You
+; must be at least third level in your current class before you can dual class", the manual p. 12).
+; The flags are the game's next jump's.
+DUAL_LEAST_LEVEL equ 2          ; (the game's)
+dual_level:
+        pushad
+        push es
+        mov di, sp
+        mov al, DUAL_LEAST_LEVEL
+        test word [cs:rules_hi], RULE_HI_DUAL
+        jz .cmp
+        inc ax
+.cmp:   cmp [es:bx + 0x24], al
+dual_flags:
+        pushf
+        pop ax
+        call ns_flags
+        pop es
+        popad
+        iret
+
+; DUAL_PRIMES (gamepatch "dual_old_prime", "dual_new_prime"): the DUAL window's class test (86E94h:
+; SI the member, DI the class offered), "cmp byte [es:bx+22h],0Fh" (86EFCh; ES:BX the creature plus
+; the old class's one prime requisite from the game's table) and "cmp byte [es:bx+22h],11h"
+; (86F31h, the new class's), each with a "jl" (no) after: with the rule every prime requisite of the
+; class (the manual's, pp. 22-26: DUAL_PRIMES_OF), the old class's (the sheet's +21h, as the game's)
+; at 15 or more, the new one's at 17 or more, on the creature's scores as the game reads them.
+DUAL_OLD_LEAST equ 15
+DUAL_NEW_LEAST equ 17
+dual_old:
+        pushad
+        push es
+        mov dl, DUAL_OLD_LEAST
+        xor cx, cx                      ; (the class from the sheet)
+        jmp dual_primes
+dual_new:
+        pushad
+        push es
+        mov dl, DUAL_NEW_LEAST
+        mov cx, di
+dual_primes:
+        mov di, sp
+        test word [cs:rules_hi], RULE_HI_DUAL
+        jnz .rule
+        cmp [es:bx + 0x22], dl          ; (the game's)
+        jmp dual_flags
+.rule:  test cx, cx
+        jnz .class
+        les bx, [0x1661]
+        imul ax, si, 0x47
+        add bx, ax
+        mov cl, [es:bx + 0x21]
+.class: les bx, [CREATURES]
+        imul ax, si, 0x3A
+        lea si, [bx + 0x22]
+        add si, ax                      ; (ES:SI the creature's STR)
+        xor ax, ax
+        cmp cx, DUAL_CLASSES
+        jae .ok
+        mov bx, cx
+        mov al, [cs:dual_primes_of + bx]
+.ok:    mov ah, dl                      ; (AH DL while every one passes, 0 once one doesn't)
+.each:  shr al, 1
+        jnc .next
+        cmp [es:si], dl
+        jge .next
+        xor ah, ah
+.next:  inc si
+        test al, al
+        jnz .each
+        cmp ah, dl
+        jmp dual_flags
+; each class's prime requisites (bit 0 STR ... bit 5 CHA; tracker.PRIME_REQUISITES): clerics WIS,
+; druids WIS and CHA, fighter and gladiator STR, preserver INT, psionicist CON and WIS, rangers STR,
+; DEX and WIS, thief DEX
+dual_primes_of db 0, 16, 16, 16, 16, 48, 48, 48, 48, 1, 1, 8, 20, 19, 19, 19, 19, 2
+DUAL_CLASSES equ $ - dual_primes_of
+
+;-------------------------------------------------------------------------------------------------
+; THE MONSTERS AS THE MANUAL DESCRIBES THEM (gamepatch.SPELLS_MANUAL, group 4: each site only in the
+; game's copy with the switch on; DJINN_TURN, in code that runs either way, asks MANUAL_ON). The kinds'
+; properties and classes are the patches' data; kinds 38-40 (no creature of the game's had them) the
+; Styr's, the Djinn's and the Tari's (the Loader's copy of SEGOBJEX, monsters.MANUAL_MONSTERS).
+;
+; SHADOW_DRAIN (gamepatch "shadow_drain"): the routine giving a hit's power (7A9A7h: [BP+6] the target,
+; [BP+8] the attacker, [BP+0Ah] the kind's property bit, [BP+0Eh] the power), "mov si,[bp+8] / mov
+; al,[bp+0Ah]" (7A9ABh; 6 bytes): a shadow's (kind 15) 2d6 cold (172) and a greater shadow's (kind 13)
+; paralysis (173), which the manual hasn't, are its STR drain instead, AD&D's: Weakened (68) by 1 (an
+; amount of -1: the ability routine adds it, 7B80Eh, as Chill Touch's -1 at 79855h), no
+; save, for 2d4 turns (each hit its own: they add up, the game's STR at least 3), added through 598:3Eh
+; (76442h) with the power as its spell, the creature's abilities worked out again (5B8:7Fh, 7B758h);
+; AL a bit neither kind has (DRAIN_NONE), so the game gives no power. In a frame the overlay manager
+; can fix up. Recorded (MN_DRAIN).
+SHADOW_KIND equ 15
+GREATER_SHADOW_KIND equ 13
+SHADOW_COLD equ 172
+SHADOW_HOLD equ 173
+WEAKENED_EFFECT equ 68
+DRAIN_NONE equ 8
+TURN_SECONDS equ 600
+shadow_drain:
+        mov si, [bp + 8]                ; (the moves replaced)
+        mov al, [bp + 0x0A]
+        sti
+        pushad
+        push es
+        mov ax, si
+        call combatant_creature
+        jc .out
+        imul ax, ax, 0x3A
+        les bx, [CREATURES]
+        add bx, ax
+        mov ax, [es:bx + 0x16]
+        mov cx, [bp + 0x0E]
+        cmp ax, SHADOW_KIND
+        jne .greater
+        cmp cx, SHADOW_COLD
+        je .drain
+.greater:
+        cmp ax, GREATER_SHADOW_KIND
+        jne .out
+        cmp cx, SHADOW_HOLD
+        jne .out
+.drain: mov bx, sp
+        mov byte [ss:bx + NS_AX], DRAIN_NONE ; (POPAD's AL: no power of the game's)
+        mov ax, 4
+        call game_die
+        mov dx, ax
+        mov ax, 4
+        call game_die
+        add ax, dx
+        mov [cs:mn_frame + 4], ax
+        mov ax, [bp + 6]
+        mov [cs:mn_frame], ax
+        mov [cs:mn_frame + 2], si
+        mov [cs:mn_frame + 6], cx
+        mov ax, MN_DRAIN
+        call mn_rec
+        mov bx, sp
+        push word [ss:bx + 36]          ; (the way back, in a frame the overlay manager can fix up)
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        push word -1                    ; (1 STR off: the ability routine, 7B80Eh, adds a Weakened's
+        push word 0                     ;   amount, as Chill Touch's -1, 79855h)
+        imul ax, [cs:mn_frame + 4], TURN_SECONDS
+        push ax
+        push word WEAKENED_EFFECT
+        push word [cs:mn_frame + 6]
+        push word [cs:mn_frame + 2]
+        push word [cs:mn_frame]
+        th_far TU_STUB, 0x3E            ; (target, caster, spell, effect, time, -1)
+        add sp, 14
+        push word [cs:mn_frame]
+        th_far TH_STUB_5B8, 0x7F        ; (its abilities)
+        add sp, 2
+        jmp ovr_back
+.out:   jmp ovr_out
+
+; TARI_BITE (gamepatch "tari_disease"): the hit's powers (7A6BAh: SI the target, DI the attacker,
+; [BP-0Eh] its creature, far), "cmp ax,1" (7A747h; 3 bytes) after the d10 (538:89h) that gives the
+; disease (bit 25: 184) on a 1: a Tari's (kind 40) 1 in 20, the manual's 5%, a d2 more (GAME_DIE) of 1
+; (its save against poison is the power's, as the game's). Recorded (MN_TARI). The flags of the compare
+; for the game's "jnz".
+TARI_KIND equ 40
+tari_bite:
+        pushad
+        push es
+        cmp ax, 1
+        jne .flags
+        les bx, [bp - 0x0E]
+        cmp word [es:bx + 0x16], TARI_KIND
+        jne .flags
+        mov [cs:mn_frame], si
+        mov [cs:mn_frame + 2], di
+        mov ax, 2
+        call game_die
+        mov [cs:mn_frame + 4], ax
+        push ax
+        mov ax, MN_TARI
+        call mn_rec
+        pop ax
+.flags: mov di, sp
+        cmp ax, 1
+        pushf
+        pop ax
+        call ns_flags
+        pop es
+        popad
+        iret
+
+; DJINN_TURN: PROBE_MOVE's end, at the start of a creature's turn in a fight (57566h: DI the combatant,
+; SI its creature): a djinn (kind 39) with the monsters as the manual describes them (MANUAL_ON), at its
+; first turn of a fight (DJ_DONE), "uses illusions and becomes invisible": Improved Invisibility's
+; Invisible (23, spell 46) for 4 rounds + its 10 levels, and Mirror Image's Mirror Images (25, spell 19)
+; 1d4 + 3 (a level in three), on itself through 598:3Eh (76442h), in a frame the overlay manager can fix
+; up. Recorded (MN_DJINN). Others: the IRET.
+DJINN_KIND equ 39
+DJINN_ROUNDS equ 14
+DJINN_IMAGES equ 3
+INVISIBLE_EFFECT equ 23
+MIRROR_EFFECT equ 25
+IMPROVED_INVISIBILITY equ 46
+MIRROR_IMAGE equ 19
+djinn_turn:
+        sti
+        pushad
+        push es
+        call manual_on
+        jne .out
+        cmp di, DJ_MAX
+        jae .out
+        imul ax, si, 0x3A
+        les bx, [CREATURES]
+        add bx, ax
+        cmp word [es:bx + 0x16], DJINN_KIND
+        jne .out
+        mov cx, di
+        and cl, 7
+        mov al, 1
+        shl al, cl
+        mov bx, di
+        shr bx, 3
+        test [cs:dj_done + bx], al
+        jnz .out
+        or [cs:dj_done + bx], al
+        mov [cs:mn_frame], di
+        mov ax, 4
+        call game_die
+        add ax, DJINN_IMAGES
+        mov [cs:mn_frame + 2], ax
+        mov word [cs:mn_frame + 4], DJINN_ROUNDS
+        mov ax, MN_DJINN
+        call mn_rec
+        mov bx, sp
+        push word [ss:bx + 36]          ; (the way back, in a frame the overlay manager can fix up)
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        push word 0
+        push word 0
+        push word DJINN_ROUNDS * ROUND_SECONDS
+        push word INVISIBLE_EFFECT
+        push word IMPROVED_INVISIBILITY
+        push word [cs:mn_frame]
+        push word [cs:mn_frame]
+        th_far TU_STUB, 0x3E            ; (itself, itself, spell, effect, time, 0)
+        add sp, 14
+        push word 0
+        push word 0xFFFF
+        mov ax, [cs:mn_frame + 2]
+        neg ax
+        push ax                         ; (a time below 0: its charges, the images)
+        push word MIRROR_EFFECT
+        push word MIRROR_IMAGE
+        push word [cs:mn_frame]
+        push word [cs:mn_frame]
+        th_far TU_STUB, 0x3E
+        add sp, 14
+        jmp ovr_back
+.out:   jmp ovr_out
+
+;-------------------------------------------------------------------------------------------------
+; RESTING (RULE_HI_REST, the Loader's "rest_heal"; the sites in every game's copy). The game's rest
+; (8066Dh(mode [BP+6], hours [BP+8]), its one caller 62C2Ch, a fire ring, mode 0) fills each member's
+; slots (pass 1), casts its free cures and sets HP and PSP to the most (pass 2). With the rule, mode 0
+; and no fight: the party's priests and psionicists first spend what they have left on the party
+; (REST_PRE), and the hit points come back by natural healing (REST_HP). Recorded (KIND_REST).
+KIND_REST  equ 15
+RS_CAST    equ 1                ; (RS_FRAME: +6 the caster, +8 the target, +0Ah the spell, +0Ch its slot's
+                                ;   level (0: a psionic power), +0Eh the slots of that level left (PSP))
+RS_HEAL    equ 2                ; (+6 the member, +8 its HP before, +0Ah CON's part, +0Ch HP after, +0Eh
+                                ;   the most, +10h its CON)
+REST_NATURAL equ 3              ; (a night's natural healing, CON's bonus added: REST_CON)
+RP_MEMBERS equ 4
+RP_MOST_CASTS equ 24
+FREE_CURES equ 5                ; (the best cleric's or druid's level from which the rest's own pass casts
+                                ;   Cure Disease free)
+NEUTRALIZE_POISON equ 118
+CURE_BLINDNESS equ 94
+CURE_DISEASE equ 96
+POISONED_EFFECT equ 35
+BLIND_EFFECT equ 8
+CHARMED_EFFECT equ 10
+NO_SPELLS_EFFECT equ 50
+PRIEST_SLOTS equ 0x4B11         ; DS: the priest slots left, a byte a spell level, 1Eh a member
+SLOTS_STRIDE equ 0x1E
+POWERS_KNOWN_FROM_DS equ 0x4356 - 0x37F0 ; (selector 2F0h) the powers each knows: 22h a member, +77h
+CELL_KNOWN equ 0x77 + CELL_ADJUST - 138  ;   + the power's number from 138
+CELL_PSP   equ 5                ; (Cell Adjustment's PSP: the powers' table, 3FB9h:0000h + 13 x 8 + 1)
+rs_frame   dw 0, 0, 0, 0, 0, 0
+rp_level   times RP_MEMBERS db 0 ; (each member's priest level, cleric's or druid's, 0 if it can't cast)
+rp_best    db 0
+rp_tmp     db 0
+rp_slot    db 0
+rp_cast_level db 0
+rp_effect_n db 0
+rp_spell   dw 0
+rp_wound   dw 0
+rp_stops   db FEEBLE_EFFECT, NO_SPELLS_EFFECT, HELD_EFFECT, CHARMED_EFFECT, 0
+rp_cures   dw 71, 4, 112, 10, 127, 16, HEAL_SPELL, 30 ; (Cure Light, Serious and Critical Wounds, Heal:
+RP_CURES_END equ $                ;   each for a wound of this much or more, after natural healing)
+
+; RS_REC: a KIND_REST entry, AX what (RS_*), the frame RS_FRAME's six words. CX, DX, SI, DI changed.
+rs_rec:
+        mov si, rs_frame
+        mov cx, 6
+        mov word [cs:kind], KIND_REST
+        jmp rec_frame
+
+; REST_PRE (gamepatch "rest_spells"): the rest's first move, "mov word [bp-10h],0" (80675h; 5 bytes),
+; before any slot is refilled. With the rule, mode 0 and no fight (the rest's own test is after it),
+; RP_PASS, in a frame the overlay manager can fix up (the casts load the spells' overlay).
+rest_pre:
+        mov word [bp - 0x10], 0         ; (the move replaced)
+        test word [cs:rules_hi], RULE_HI_REST
+        jz .iret
+        cmp word [bp + 6], 0
+        jne .iret
+        call pp_fighting
+        jnz .iret
+        sti
+        pushad
+        push es
+        mov bx, sp
+        push word [ss:bx + 36]          ; (the way back, in a frame the overlay manager can fix up)
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        push word 0                     ; ([BP-2]: a cast's answer, as 809A2h's local)
+        call rp_pass
+        mov sp, bp
+        jmp ovr_back
+.iret:  iret
+
+; RP_PASS: each member's priest level (5B8:B1h, 5B8:B6h: the rest's own), for those who can cast
+; (RP_ABLE); then Neutralize Poison on the Poisoned, Cure Blindness on the Blind, Cure Disease on the
+; Diseased (only with no cleric or druid of FREE_CURES or more: the rest's own pass cures them), Cell
+; Adjustment on the Diseased, then the wounded (RP_WOUNDS). BP the frame REST_PRE made.
+rp_pass:
+        mov byte [cs:rp_best], 0
+        xor si, si
+.level: mov byte [cs:rp_level + si], 0
+        mov ax, si
+        call rp_able
+        jnz .next
+        push si
+        th_far TH_STUB_5B8, 0xB1        ; (its cleric level)
+        mov [cs:rp_tmp], al
+        th_far TH_STUB_5B8, 0xB6        ; (its druid level)
+        add sp, 2
+        cmp al, [cs:rp_tmp]
+        jge .most
+        mov al, [cs:rp_tmp]
+.most:  mov [cs:rp_level + si], al
+        cmp al, [cs:rp_best]
+        jle .next
+        mov [cs:rp_best], al
+.next:  inc si
+        cmp si, RP_MEMBERS
+        jb .level
+        mov ax, NEUTRALIZE_POISON
+        mov cl, POISONED_EFFECT
+        call rp_effect
+        mov ax, CURE_BLINDNESS
+        mov cl, BLIND_EFFECT
+        call rp_effect
+        cmp byte [cs:rp_best], FREE_CURES
+        jge .cell
+        mov ax, CURE_DISEASE
+        mov cl, DISEASED
+        call rp_effect
+.cell:  xor si, si
+.ill:   call rp_alive
+        jnz .well
+        mov ax, si
+        mov cl, DISEASED
+        call ns_has
+        jnz .well
+        call rp_psi_cast
+.well:  inc si
+        cmp si, RP_MEMBERS
+        jb .ill
+; RP_WOUNDS: the most wounded (after the night's natural healing, RP_WORST), at most RP_MOST_CASTS
+; times: the cure that fits (RP_CHOOSE), else a psionicist's Cell Adjustment (RP_PSI_CAST); until
+; none is wounded or nothing is left.
+        mov cx, RP_MOST_CASTS
+.again: push cx
+        call rp_worst
+        jc .done
+        call rp_choose
+        jc .psi
+        call rp_cast
+        jmp .on
+.psi:   call rp_psi_cast
+        jc .done
+.on:    pop cx
+        loop .again
+        ret
+.done:  pop cx
+        ret
+
+; RP_ABLE: ZF set if member AX can cast: Okay (or New), not feebleminded, of no spell use, paralysed
+; or charmed. All registers kept.
+rp_able:
+        push ax
+        push bx
+        push cx
+        push es
+        mov cx, ax
+        call combatant_creature
+        jc .no
+        imul ax, ax, 0x3A
+        les bx, [CREATURES]
+        add bx, ax
+        cmp byte [es:bx + 0x1C], 1
+        ja .no
+        mov bx, rp_stops
+.each:  mov al, [cs:bx]
+        or al, al
+        jz .yes
+        push cx
+        xchg ax, cx                     ; (CL the effect, AX the member)
+        call ns_has
+        pop cx
+        jz .no
+        inc bx
+        jmp .each
+.yes:   xor ax, ax
+        jmp .out
+.no:    or sp, sp
+.out:   pop es
+        pop cx
+        pop bx
+        pop ax
+        ret
+
+; RP_ALIVE: ZF set if member SI is Okay, New, Stunned or Out Cold (pass 1 makes the last two Okay);
+; ES:BX its creature. Others kept.
+rp_alive:
+        push ax
+        mov ax, si
+        call combatant_creature
+        jc .no
+        imul ax, ax, 0x3A
+        les bx, [CREATURES]
+        add bx, ax
+        cmp byte [es:bx + 0x1C], 3
+        ja .no
+        xor ax, ax
+        pop ax
+        ret
+.no:    or sp, sp
+        pop ax
+        ret
+
+; RP_EFFECT: spell AX on each member with effect CL (RP_ALIVE), by the first who has it (RP_FIND).
+rp_effect:
+        mov [cs:rp_spell], ax
+        mov [cs:rp_effect_n], cl
+        xor si, si
+.each:  call rp_alive
+        jnz .next
+        mov ax, si
+        mov cl, [cs:rp_effect_n]
+        call ns_has
+        jnz .next
+        call rp_find
+        jc .next
+        call rp_cast
+.next:  inc si
+        cmp si, RP_MEMBERS
+        jb .each
+        ret
+
+; RP_FIND: DI a member with a priest level (RP_LEVEL) who knows RP_SPELL (RP_KNOWS) and has a slot of
+; its level left, RP_SLOT that level; CF set if none. Others kept.
+rp_find:
+        push ax
+        push bx
+        mov ax, [cs:rp_spell]
+        mov cl, PRIEST6
+        cmp ax, NS_FIRST
+        jae .lvl
+        call spell_level_of
+.lvl:   mov [cs:rp_slot], cl
+        xor di, di
+.each:  cmp byte [cs:rp_level + di], 0
+        je .next
+        imul bx, di, SLOTS_STRIDE
+        movzx ax, byte [cs:rp_slot]
+        add bx, ax
+        cmp byte [bx + PRIEST_SLOTS], 0
+        je .next
+        call rp_knows
+        jc .found
+.next:  inc di
+        cmp di, RP_MEMBERS
+        jb .each
+        stc
+        jmp .out
+.found: clc
+.out:   pop bx
+        pop ax
+        ret
+
+; RP_KNOWS: CF set if member DI knows RP_SPELL: the game's own known byte (KNOWN_OFF), or for Heal
+; (the new spells on) NS_PRIEST_KNOWS. All registers kept.
+rp_knows:
+        push ax
+        push bx
+        push cx
+        push es
+        mov ax, [cs:rp_spell]
+        cmp ax, NS_FIRST
+        jae .new
+        mov bx, ds
+        sub bx, KNOWN_FROM_DS
+        mov es, bx
+        imul bx, di, 0x8A
+        add bx, ax
+        test byte [es:bx + KNOWN_OFF], 0x0F
+        jz .no
+        stc
+        jmp .out
+.new:   test byte [cs:rules], RULE_NEW_SPELLS
+        jz .no
+        mov cl, al
+        sub cl, NS_FIRST
+        mov ax, di
+        call thing_sheet
+        call ns_priest_knows
+        jmp .out
+.no:    clc
+.out:   pop es
+        pop cx
+        pop bx
+        pop ax
+        ret
+
+; RP_CAST: member DI casts RP_SPELL on member SI with a slot of RP_SLOT's level (taken: pass 1 fills
+; them all again) at its priest level, recorded (RS_CAST); RP_CAST_AT: at RP_CAST_LEVEL, RP_SLOT 0
+; (no slot: a psionic power). Through 5B8:20h (78BA8h, the game's cast) with 809A2h's arguments, as
+; the rest's own free cures: (target, caster, spell, 0, far &[BP-2], 0, 0, 0, 8, 63h, level, the caster's
+; side). SI and DI kept.
+rp_cast:
+        mov al, [cs:rp_level + di]
+        mov [cs:rp_cast_level], al
+        imul bx, di, SLOTS_STRIDE
+        movzx ax, byte [cs:rp_slot]
+        add bx, ax
+        dec byte [bx + PRIEST_SLOTS]
+        mov al, [bx + PRIEST_SLOTS]
+rp_cast_at:
+        push si
+        push di
+        mov [cs:rs_frame], di
+        mov [cs:rs_frame + 2], si
+        movzx ax, al
+        mov [cs:rs_frame + 8], ax
+        mov ax, [cs:rp_spell]
+        mov [cs:rs_frame + 4], ax
+        movzx ax, byte [cs:rp_slot]
+        mov [cs:rs_frame + 6], ax
+        mov ax, RS_CAST
+        call rs_rec
+        pop di
+        pop si
+        mov ax, di
+        call combatant_creature
+        imul ax, ax, 0x3A
+        les bx, [CREATURES]
+        add bx, ax
+        movzx ax, byte [es:bx + 0x1D]
+        and al, 7
+        push ax                         ; (the caster's side)
+        movzx ax, byte [cs:rp_cast_level]
+        push ax
+        push word 0x63
+        push word 8
+        push word 0
+        push word 0
+        push word 0
+        push ss
+        lea ax, [bp - 2]
+        push ax
+        push word 0
+        push word [cs:rp_spell]
+        push di
+        push si
+        th_far TH_STUB_5B8, 0x20        ; (target, caster, spell, ...: the game's cast)
+        add sp, 0x1A
+        ret
+
+; RP_PSI_CAST: Cell Adjustment on member SI by the first member who can (RP_ABLE), knows it (its power
+; byte's bits 3-7) and has its PSP, taken off; CF set if none. SI kept.
+rp_psi_cast:
+        mov word [cs:rp_spell], CELL_ADJUST
+        mov byte [cs:rp_slot], 0
+        mov byte [cs:rp_cast_level], 1
+        xor di, di
+.each:  mov ax, di
+        call rp_able
+        jnz .next
+        mov bx, ds
+        sub bx, POWERS_KNOWN_FROM_DS
+        mov es, bx
+        imul bx, di, 0x22
+        test byte [es:bx + CELL_KNOWN], 0xF8
+        jz .next
+        mov ax, di
+        call combatant_creature
+        imul ax, ax, 0x3A
+        les bx, [CREATURES]
+        add bx, ax
+        mov ax, [es:bx + 2]
+        sub ax, CELL_PSP
+        jl .next
+        mov [es:bx + 2], ax
+        call rp_cast_at                 ; (AL the PSP left: below 256 for the line, at most)
+        clc
+        ret
+.next:  inc di
+        cmp di, RP_MEMBERS
+        jb .each
+        stc
+        ret
+
+; RP_WORST: SI the member (RP_ALIVE) with the most hit points missing after the night's natural healing
+; (REST_NATURAL and CON's part, REST_CON), AX how many; CF set if none is wounded.
+rp_worst:
+        xor ax, ax
+        mov [cs:rp_wound], ax
+        mov di, -1
+        xor si, si
+.each:  call rp_alive
+        jnz .next
+        call rest_heal_of               ; (AX the natural healing)
+        add ax, [es:bx]
+        push bx
+        push es
+        mov bx, [es:bx + 4]
+        imul bx, bx, 0x47
+        les dx, [0x1661]
+        add bx, dx
+        mov dx, [es:bx + 8]             ; (the most)
+        pop es
+        pop bx
+        sub dx, ax
+        cmp dx, [cs:rp_wound]
+        jle .next
+        mov [cs:rp_wound], dx
+        mov di, si
+.next:  inc si
+        cmp si, RP_MEMBERS
+        jb .each
+        mov si, di
+        mov ax, [cs:rp_wound]
+        cmp di, -1
+        je .none
+        clc
+        ret
+.none:  stc
+        ret
+
+; RP_CHOOSE: for a wound of AX, RP_SPELL the biggest cure (RP_CURES) of no more than it that someone
+; can cast (RP_FIND: DI, RP_SLOT), else the smallest that someone can; CF set if none. SI kept.
+rp_choose:
+        mov [cs:rp_wound], ax
+        mov bx, RP_CURES_END - 4
+.down:  mov ax, [cs:bx + 2]
+        cmp ax, [cs:rp_wound]
+        jg .lower
+        mov ax, [cs:bx]
+        mov [cs:rp_spell], ax
+        call rp_find
+        jnc .ok
+.lower: sub bx, 4
+        cmp bx, rp_cures
+        jae .down
+        mov bx, rp_cures
+.up:    mov ax, [cs:bx]
+        mov [cs:rp_spell], ax
+        call rp_find
+        jnc .ok
+        add bx, 4
+        cmp bx, RP_CURES_END
+        jb .up
+        stc
+.ok:    ret
+
+; REST_HEAL_OF: AX the night's natural healing of creature ES:BX: REST_NATURAL and CON's part
+; (REST_CON), at least 1. Others kept.
+rest_heal_of:
+        call rest_con
+        add ax, REST_NATURAL
+        cmp ax, 1
+        jge .ret
+        mov ax, 1
+.ret:   ret
+
+; REST_CON: AX CON's hit point bonus of creature ES:BX (its +24h, at most 25), the game's table
+; (LEVEL_HP_CON), a warrior's in full if one of its classes is a warrior's (WARRIOR_GROUP), else at most
+; +2. Others kept.
+rest_con:
+        push bx
+        push cx
+        push dx
+        push si
+        push es
+        push fs
+        movzx cx, byte [es:bx + 0x24]
+        cmp cx, 25
+        jbe .con
+        mov cx, 25
+.con:   mov ax, [es:bx + 4]
+        imul ax, ax, 0x47
+        les bx, [0x1661]
+        add bx, ax
+        mov ax, ds
+        sub ax, LEVEL_HP_FROM_DS
+        mov fs, ax
+        xor dx, dx
+        xor si, si
+.class: push bx
+        movzx bx, byte [es:bx + si + 0x21]
+        or bx, bx
+        jz .other
+        cmp bx, 32
+        jae .other
+        cmp byte [fs:bx + 0x10], WARRIOR_GROUP
+        jne .other
+        mov dl, 1
+.other: pop bx
+        inc si
+        cmp si, 3
+        jb .class
+        mov bx, cx
+        movsx ax, byte [fs:bx + LEVEL_HP_CON]
+        or dl, dl
+        jnz .out
+        cmp ax, 2
+        jle .out
+        mov ax, 2
+.out:   pop fs
+        pop es
+        pop si
+        pop dx
+        pop cx
+        pop bx
+        ret
+
+; REST_HP (gamepatch "rest_hp"): pass 2's "mov [es:bx],ax" (808AFh; 3 bytes: ES:BX the creature, AX
+; the sheet's most, SI the member), for an Okay member. With the rule and mode 0: natural healing,
+; REST_NATURAL and CON's part (REST_HEAL_OF), at most the most, never less than it had nor 1;
+; recorded (RS_HEAL). CON 20 and up regenerates for the 8 hours as the clock jumps (REGEN_SITE).
+rest_hp:
+        test word [cs:rules_hi], RULE_HI_REST
+        jz .game
+        cmp word [bp + 6], 0
+        je .rule
+.game:  mov [es:bx], ax
+        iret
+.rule:  pushad
+        push es
+        mov cx, ax
+        mov di, [es:bx]
+        mov [cs:rs_frame], si
+        mov [cs:rs_frame + 2], di
+        mov [cs:rs_frame + 8], cx
+        call rest_con
+        mov [cs:rs_frame + 4], ax
+        call rest_heal_of
+        add ax, di
+        cmp ax, cx
+        jle .most
+        mov ax, cx
+.most:  cmp ax, di
+        jge .least
+        mov ax, di
+.least: cmp ax, 1
+        jge .set
+        mov ax, 1
+.set:   mov [es:bx], ax
+        mov [cs:rs_frame + 6], ax
+        movzx ax, byte [es:bx + 0x24]
+        mov [cs:rs_frame + 10], ax
+        mov ax, RS_HEAL
+        call rs_rec
+        pop es
+        popad
+        iret
+
 REQ_REST equ 0
 rest_site:
         push si
@@ -15825,6 +16640,8 @@ RULE_HI_AGING equ 256           ; (RULES_HI) ages, and Haste's magical aging: th
                                 ;   STATS age without it, so AGE_TEXT needs no test of its own)
 RULE_HI_ENLARGE equ 512         ; (RULES_HI) Enlarge multiplies the weapon's dice only (ENL_SITE)
 RULE_HI_CON equ 1024            ; (RULES_HI) CON as in AD&D: regeneration's rates, dwarves' poison saves (REGEN_SITE, CON_SAVE)
+RULE_HI_DUAL equ 2048           ; (RULES_HI) dual-classing at 3rd level, every prime requisite checked (DUAL_LEVEL, DUAL_PRIMES)
+RULE_HI_REST equ 4096           ; (RULES_HI) rest heals by spells and natural healing (REST_PRE, REST_HP)
 THINGS_SEG equ 0x3972 - 0x4356  ; the things table's segment, relative to DS
 
 ; PROBE_MOVE: INT VEC_MOVE replaces "mov es:[bx+22Bh],ax" (5 bytes: INT + 3 NOPs) where a
@@ -15843,7 +16660,7 @@ probe_move:
         shl bx, 1                       ; (the initiative's a creature x 4)
         mov word [es:bx+0xD9], -1
         pop bx
-.out:   iret
+.out:   jmp djinn_turn
 
 ; PROBE_TWO: INT VEC_TWO replaces "neg ax / mov dx,ax / or dx,dx / jge +2 / xor dx,dx" (10
 ; bytes: INT + 8 NOPs) in the routine that gives an attack's to-hit adjustment for two weapons
@@ -18193,6 +19010,7 @@ rl_sites:
         iret
 %macro site 2                           ; site %1's code %2, in order (the build fails if not)
         times -((($ - site_tab) / 2 + 1 + NS_CMP_COUNT * (($ - site_tab) / 2 + 1 >= NS_CMP)) != %1) db 0
+        times -(%1 > 0xFF) db 0         ; (a site's number is a byte)
         dw %2
 %endmacro
 site_tab:
@@ -18298,6 +19116,14 @@ site_tab:
         site PSI_SITE, psi_feeble
         site BIO_SITE, bio_site
         site CELL_SITE, cell_heal
+        site DUAL_LEVEL_SITE, dual_level
+        site DUAL_OLD_SITE, dual_old
+        site DUAL_NEW_SITE, dual_new
+        site DRAIN_SITE, shadow_drain
+        site TARI_SITE, tari_bite
+        site NOP_SITE, rl_sites         ; (never reached: 90h is no site's, NOP_SITE)
+        site REST_PRE_SITE, rest_pre
+        site REST_HP_SITE, rest_hp
 SITE_COUNT equ ($ - site_tab) / 2
 
 ; NS_CMP: the compare of site RL_SITE (of NS_CMP_SITES), its flags into the INT's frame.

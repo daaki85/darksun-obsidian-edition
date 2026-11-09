@@ -269,7 +269,11 @@ From the game's damage and fighting code; none of this is in the manual:
   target: 2d6 cold, 2d6 or 20 acid, paralysis, poison of 10 or 30 damage, a
   deadly Poison, disease on 1 hit in 10. The 20 acid (the Rampager's) and a
   corroding touch (the Babau's) can also destroy a worn item (see [Items saving
-  against acid](FEATURES.md#items-saving-against-acid)).
+  against acid](FEATURES.md#items-saving-against-acid)). With the mod's monsters as the
+  manual describes them, some of these differ ([which](FEATURES.md#spells-and-psionics-as-the-manual-describes-them)):
+  the shadows drain STR in place of cold and paralysis, the Babau and the Blue Slaad
+  carry the deadly Poison (which kills on a failed save, in a fight too) in place of the
+  corroding touch and the disease.
 - Undead (race 9 on the character sheet) take nothing from poison and
   draining, and mind-affecting spells, charms and holds don't work on them.
 - The game makes the gear of the people the party fights (Kurzak's armour and
@@ -709,12 +713,16 @@ thief's chances as they stand.)
 
 ## Resting
 
-A rest (at a fire ring, or one a script gives) fills hit points, PSP and spell
-slots, and the party's priests tend everyone: if the best cleric among those
+A rest (at a fire ring, or one a script gives) passes 8 hours and fills hit
+points, PSP and spell slots (the mod's [Resting as in AD&D](FEATURES.md#resting-as-in-add)
+heals by the priests' spells and a night's natural healing instead), and the
+party's priests tend everyone: if the best cleric among those
 Okay is 5th level or more, it casts Cure Disease, Remove Curse and Remove
 Paralysis on each party member, and so does the best druid; a druid of 7th
 level or more casts Neutralize Poison on each too (found by CalvinRodo's
-yuan-ti).
+yuan-ti). Anyone still poisoned when the rest ends dies. The game looked at who
+was poisoned before those cures, so a 7th-level druid's cure saved no one; the
+mod casts the cures first ([the fix](DEVELOPMENT-CONTENT.md#the-games-spells)).
 
 ## Searching junk, hay and wardrobes
 

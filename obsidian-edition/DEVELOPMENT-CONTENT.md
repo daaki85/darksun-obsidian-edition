@@ -411,6 +411,19 @@ after the `ns_list_` patches):
   after the last in the records with nine or seven (regions 6, 13, 14, 27, 39,
   40, 44 and 255), a "Divide error" that ends the game. `monster_count` makes
   it [bx+0], the match's own.
+- **Resting kills the Poisoned after the cure** (the rest, 8066Dh, overlay 5E8h; its one caller
+  62C2Ch, a fire ring, mode 0). Pass 2 takes each member's effects as a bitset (598:25h = 76944h,
+  at 8075Dh, into [BP-0Ah]), then casts the free cures (809A2h -> 5B8:20h: Cure Disease, Remove
+  Curse and Remove Paralysis for the best Okay cleric and druid of 5th level or more, Neutralize
+  Poison for a druid of 7th or more), then kills the Poisoned (bit 35, `test byte [bp-6],8`,
+  80963h: 1000 damage) from the bitset read before the cure, so the druid's cure saved no one
+  (seen in DOSBox: playtest/logs/2026-11-09-rest-poison.md). `rest_cures_first` (80765h, 136
+  bytes) and `rest_cures_loop` (80984h) move the seven casts (near calls, no overlay fixups in
+  them) ahead of the read, their `nop`s paying for two jumps: the loop's jump goes to the casts
+  (80768h), which end with `jmp 80758h` (the read), which goes on past them (`jmp 807EDh`). The
+  STR test (80929h, Diseased) reads the same bitset, so a disease cured at a rest gives STR back
+  that rest. Mode 1 (the scripts' rest; never called in DSUN.EXE) still kills the Poisoned
+  (its removal, 80808h, comes after the read).
 - **A shop's magic items shine.** The colour cycler (22F8h; its table at
   CS:6, 16 x 8 bytes, set up by the region's load at 1CECFh: colours 1-5,
   6-10, 11-15 and 240-248) turns only from the map's main loop (1A935h:

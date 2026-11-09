@@ -402,7 +402,9 @@ class Viewer:
                         "Cloudkill slays by hit dice; Lower Resistance 30% + 1% a level; Strength and Cat's Grace "
                         "by class, not added to each other's kind; Rainbow Pattern a round a level, ended by "
                         "damage; Feeblemind stops psionics and Heal cures it; Cell Adjustment 1d4; Biofeedback leaves "
-                        "at least 1 of a blow; from the next start", variable=self.spells_manual,
+                        "at least 1 of a blow; and the monsters: shadows drain STR and shrug off cold, the Babau's and "
+                        "Blue Slaad's deadly poison, the Tari's disease, the Styr's fire breath, the Djinn's "
+                        "invisibility and images; from the next start", variable=self.spells_manual,
                         command=self._options_changed).pack(anchor="w")
         # missile and hostile touch spells roll to hit (gamepatch.SPELL_TO_HIT)
         self.spell_to_hit = tk.BooleanVar(value=settings.get("spell_to_hit", True) is not False)
@@ -455,6 +457,10 @@ class Viewer:
                                         "scores changing at middle, old and venerable age, and dies at the most its race "
                                         "lives; a year older each 365 days of game time; Haste ages each it speeds a year, "
                                         "and each must survive a system shock roll (by CON), as in AD&D"),
+                ("dual_class", "characters", "Dual-classing as the manual has it: a human may change class from "
+                                             "3rd level (the game's 2nd), with every prime requisite of the old "
+                                             "class at 15 or more and every one of the new class at 17 or more "
+                                             "(the game checks only one: a ranger, druid or psionicist on WIS alone)"),
                 ("two_weapons", "arms", "Two weapons: -2 main hand, -4 off hand, DEX reaction adjustment added "
                                         "(no better than 0; rangers and Twin-blades none in light armour); the off hand attacks once a round"),
                 ("half_giant_hands", "arms", "Half-giants wield two-handed weapons in one hand (a shield or a light "
@@ -477,6 +483,11 @@ class Viewer:
                                              "instead of a doubled d20"),
                 ("enlarge_dice", "magic", "Enlarge multiplies the weapon's dice only, rounded up, STR and magic added after, "
                                           "as in AD&D (the game multiplies the whole melee damage, STR included)"),
+                ("rest_heal", "magic", "Resting as in AD&D: before a rest the party's priests spend the spells "
+                                       "they have left on the party (Neutralize Poison, Cure Blindness, Cure "
+                                       "Disease, the Cure Wounds spells and Heal on the most wounded) and "
+                                       "psionicists their Cell Adjustment; then each heals 3 hit points plus "
+                                       "CON's bonus (the game fills them all)"),
                 ("weapon_specialization", None, "Weapon specialization: fighters and gladiators specialize (+1 to hit, +2 "
                                                 "damage), fighters on to mastery at 5th level and grand mastery at 9th; "
                                                 "rangers have expertise, every ranger with the bow; specialists and "
