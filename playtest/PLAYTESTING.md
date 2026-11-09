@@ -971,6 +971,15 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   pens load 203 of the 300 slots on arrival and walking about adds none (`slotcount.py` at each
   stop); fights add a few (bodies, dropped items, spells). Wake of the Ravager's "graphics disappear"
   note is this same limit; leaving the region clears it.
+- **A weapon's rule in a fight** (2026-11-09, logs/2026-11-09-cahulaks.md): from `fountain-user`, a
+  weapon put on a member in memory (a whole record from SEGOBJEX: `champions.game_item(chunks, TYPE)`,
+  its link +4, flags and slot kept, +08h 270Fh) before the speech box is clicked; Tab + Return on the
+  member's turn (`passuntil.sh N`). **The ambush defeats the party when turns are only passed** (twice:
+  a Templar's Hold Person, the archers): paralyze every foe first (`foeset.py C eff=34` on each, 17 to 47
+  there, more coming as the guards are sent), free one with `addeffect.py del C 34` to watch its turns.
+  A foe's save numbers are its sheet's +37h-+3Bh (PPD, RSW, PP, BW, SP), shared by its kind. The dice log
+  can be restarted on a running game to try changed Loader code (kill its pid, `python3 -u -m dsloader
+  dicelog --pid ... >> $PLAYTEST_WORK/dice.txt` from obsidian-edition).
 - **Lots of items on the ground** (2026-11-09, logs/2026-11-09-picture-slot-reuse.md): `giveitems.py
   MEMBER N [FIRST]` gives items of different objects (each its own picture) into free backpack cells
   in memory (12 cells: then "no room"); `groundfill.sh CYCLES [FIRST]` gives Gerakis 12 and DROPs

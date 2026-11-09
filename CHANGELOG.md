@@ -40,7 +40,7 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 
 ## Next pull request (not opened yet)
 
-DSCLOG.EXE 66,320 bytes (image 66,288), 2,160 of its segment spare.
+DSCLOG.EXE 66,752 bytes (image 66,720), 1,728 of its segment spare.
 
 **Fixed**
 - **Graphics disappearing in a busy area** (SSI's technical note 2712 for Wake of the Ravager, the
@@ -57,6 +57,18 @@ DSCLOG.EXE 66,320 bytes (image 66,288), 2,160 of its segment spare.
   (playtest/logs/2026-11-09-picture-slot-reuse.md).
 
 **Changed**
+- **New rule: cahulaks as Dark Sun's rules have them** (Options, Weapons and armour; on by default;
+  `RULE_CAHULAKS`, DSCLOG's RULE_HI_CAHULAKS and CAHULAKS): a head in each hand, the off head's one
+  attack more a round (CAH_MORE in OFF_HAND_HALVES: the attack and the DAM lines) under AD&D's
+  two-weapon penalties whatever that rule (CAH_TWO at 59627h, PROBE_TWO's CAH_ADJUST: -2 the main
+  head's swings, CAH_SWING at 589B6h: -4 the off head's, the round's last; DEX's reaction adjustment
+  added, no better than 0); a hit that does damage tangles a man-sized or smaller target failing a
+  save against petrification (its sheet's +39h, a d20): it loses its next turn, as Whirlwind's sweep
+  (CAH_HIT at 58B54h). Not half-giants, nor the Large and shapeless by name (cahulaks.py's BIG, a bit
+  a combatant in the far block, the header's +1840). The dice log names each head's penalty and the
+  tangle's save (KIND_MANUAL 10). Seen in DOSBox: two swings a round at 14+ and 16+ for Lex at DEX
+  10, the tangle's saves made and failed, a tangled Templar's next turn gone
+  (playtest/logs/2026-11-09-cahulaks.md).
 - **Cahulaks drawn as a pair**: a short haft and a hooked four-bladed head in each hand (both at
   the hips walking), not one hook in one hand (spritegear's CAHULAKS shape; the left hand given the
   right's). And with half-giants' two-handed weapons in one hand, the cahulaks still take both

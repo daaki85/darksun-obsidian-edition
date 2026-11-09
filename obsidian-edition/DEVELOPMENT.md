@@ -482,19 +482,19 @@ sizes; the paragraphs after it say how each piece got there.
 | C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
 | C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 61.2 KB (62,640 bytes with its PSP and its tail; 63,760 before the 2026-11-09 pass), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, 36.5 KB (37,392 bytes; 35,856 before) free in one piece and 288 bytes between the helper and the overlay buffer (measured 2026-11-09, `memaudit.py`; group 4, later that day, made the helper 1,824 bytes longer, not measured since) |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
-| 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's far block, 63.9 KB (65,418 bytes; 64,768 before the per-fight tables moved there, 2026-11-09), 102 bytes free |
+| 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's far block, 64.0 KB (65,484 bytes since the cahulaks' BIG, 2026-11-09; 65,418 before it; 64,768 before the per-fight tables moved there), 36 bytes free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
 
 **The budget.** Each limit fails the build when passed (a negative `times`):
 
 - The helper's segment: what it reaches through CS is what stays (to
-  `resident_end`, 61,968 bytes since the picture slots' reuse and the cahulaks' hands (2026-11-09,
-  PIC_REUSE, TH_CAHULAKS; 61,392 after the Boots of Speed, BOOTS_MOVE, BOOTS_AC; 61,200 after the item box's own pictures, BOX_PICS; 61,104 after its `Hit -N`, IB_MATERIAL; 61,024 when a natural 20 stopped saving against "can't save", SAVE_SUM; 60,912 when Turn Undead's record carried its creatures,
+  `resident_end`, 62,400 bytes since the cahulaks' rule (2026-11-09, CAHULAKS; 61,968 after the
+  picture slots' reuse and the cahulaks' hands, PIC_REUSE, TH_CAHULAKS; 61,392 after the Boots of Speed, BOOTS_MOVE, BOOTS_AC; 61,200 after the item box's own pictures, BOX_PICS; 61,104 after its `Hit -N`, IB_MATERIAL; 61,024 when a natural 20 stopped saving against "can't save", SAVE_SUM; 60,912 when Turn Undead's record carried its creatures,
   60,864 after the audit's fixes: the per-fight
   tables SWEPT, TU_FAILED and DJ_DONE moved to the far block, 48 bytes freed;
   60,912 after group 4, 59,088 before it, 58,096 before group 3) and the
   buffers laid over the install code after it (`AFTER_INSTALL`, 1,408), together
-  `kept_end`, 63,376 bytes, so 2,160 bytes of its 64 KB are spare. This is the limit for new code. The image
+  `kept_end`, 63,808 bytes, so 1,728 bytes of its 64 KB are spare. This is the limit for new code. The image
   (`image_len`) is as long. Buffers that start as zeros and aren't needed while
   installing are laid over the install code, as `seg_space` and `area_space`
   are (declared with `resb` after the image): `KEEP` zeroes them before its
@@ -537,11 +537,11 @@ sizes; the paragraphs after it say how each piece got there.
   every combatant, `FAR_TU`, `FAR_SWEPT`, `FAR_DJ`, 2026-11-09).
 - Upper memory without `UMBPLUS.COM` (`UMB_ROOM`, D00Ah to F000h, 8,182
   paragraphs): the helper as it loads (its tail and stack too) and the overlay
-  buffer (`UMB_NEED`, the header's +372) need 6,239 (6,168 before PIC_REUSE, 6,171 after group 4, 6,057 before it), and
+  buffer (`UMB_NEED`, the header's +372) need 6,266 (6,239 before CAHULAKS, 6,168 before PIC_REUSE, 6,171 after group 4, 6,057 before it), and
   `test_fits_upper_memory` checks it too; what stays once installed, with the
   music buffer and the see-through figures' tables (`UMB_KEPT`: all four
-  blocks and their MCBs), 7,861 (measured from the build, 2026-11-09, after
-  PIC_REUSE; 7,825 after the Boots of Speed; 7,811 after BOX_PICS, 7,805 after IB_MATERIAL, 7,800 after SAVE_SUM, 7,793 after Turn Undead's creatures, 7,790 after the audit's fixes, 7,792 before them), so 321 (5.0 KB) are spare.
+  blocks and their MCBs), 7,888 (measured from the build, 2026-11-09, after
+  CAHULAKS; 7,861 after PIC_REUSE; 7,825 after the Boots of Speed; 7,811 after BOX_PICS, 7,805 after IB_MATERIAL, 7,800 after SAVE_SUM, 7,793 after Turn Undead's creatures, 7,790 after the audit's fixes, 7,792 before them), so 294 (4.6 KB) are spare.
 
 **What moved where (2026-11-08)**, freeing 3,136 bytes of the segment (3,040 of
 what stays, 190 paragraphs of upper memory): DAC (768), RING_TAB (520) and RED

@@ -41,6 +41,7 @@ running the game, the Loader's window and its dice log are in the
   - [Weapons and armour](#weapons-and-armour)
     - [Two weapons](#two-weapons)
     - [Half-giants' two-handed weapons](#half-giants-two-handed-weapons)
+    - [Cahulaks](#cahulaks)
     - [Rings and cloaks of protection](#rings-and-cloaks-of-protection)
     - [Helms](#helms)
     - [Items saving against acid](#items-saving-against-acid)
@@ -842,6 +843,7 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#level-cap-by-xp).
 |---|---|---|
 | [Two weapons](#two-weapons) | no penalty (a small bonus at DEX 5 or less), and each hand attacks at the whole rate | −2 main hand, −4 off hand, DEX's reaction adjustment added; rangers, Twin-blades and Battle Dancers none in light armour, a Justifier none in any, a Ghetto Fighter 0 and −2; the off hand attacks once a round |
 | [Half-giants' two-handed weapons](#half-giants-two-handed-weapons) | two hands for a two-handed weapon, as for anyone | a half-giant wields a two-handed weapon in one hand |
+| [Cahulaks](#cahulaks) | a plain two-handed 1d6 weapon | a head in each hand: one attack more a round at −2 and −4 (DEX added); a hit tangles a man-sized foe that fails a save against petrification: it loses its next turn |
 | [Rings and cloaks of protection](#rings-and-cloaks-of-protection) | no rings or cloaks of protection of its own; the mod's count in full, whatever else is worn | two rings don't add up, a ring gives no AC with magical armour, a cloak does nothing with magical or metal armour or a shield |
 | [Helms give AC 1](#helms) | AC 0 | the game's helms give AC 1 rather than 0 |
 | [Items saving against acid](#items-saving-against-acid) | armour without a magical power destroyed outright, its plus ignored; a weapon on a d20 under 8 less its plus | an item the acid or corroding touch could destroy needs the easier of the game's number and AD&D's save by material, a plus helping |
@@ -889,6 +891,41 @@ With two weapons ready, the two-weapon penalties apply as for anyone. The invent
 weapon's line: that is its weapon type, not a limit.
 
 How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#half-giants-two-handed-weapons).
+
+#### Cahulaks
+
+Cahulaks are a pair of four-bladed heads tied to the ends of a rope, as Dark Sun's
+rules describe them: one head in each hand. With **Cahulaks as Dark Sun's
+rules have them** ticked (on unless unticked):
+
+- **A head in each hand.** The wielder attacks one more time a round, with the
+  off head, under the [two-weapon](#two-weapons) penalties whether that box is
+  ticked or not: −2 for the main head's swings, −4 for the off head's (the
+  round's last swing), DEX's reaction adjustment added and never better than 0.
+  Rangers, Twin-blades and Battle Dancers in light armour take none, and a
+  Ghetto Fighter 0 and −2, as with two weapons. The inventory's damage line
+  counts the extra attack.
+- **The tangle.** A hit that does damage tangles the target unless it saves
+  against petrification (its own number, a d20): a tangled foe loses its next
+  turn, no movement and no attack (this round's, if it has yet to act). Only a
+  man-sized or smaller foe can be tangled: not a half-giant, nor the game's
+  Large or bigger creatures (the Bulette, the Rampager, the Silt Horror, the
+  Mountain Stalker, the Otyugh, the Wyvern, the Djinn, the slaads, the Vrock,
+  the Dune Reaper, the Animated Statue, the mastyrials, the Styr and the Fire
+  Eel), nor anything with no body a rope could hold (elementals, the Dust
+  Devil, the Insect Swarm, Evard's Tentacle, the slimes and the Shadow).
+
+The game keeps no size for its creatures, so the list is the mod's, from
+AD&D's sizes.
+
+```
+Lex attacks Templar with Bone Cahulaks (1d6): d20 = 16, needs 16+ (25%), hits AC 4, target AC 4 -> HIT
+    THAC0 18, +3 STR, -1 bone, -4 cahulaks, off head at DEX 10 = 20
+  Lex hits Templar for 12: 1d6 = [5] -1 bone +8 STR 20
+    Lex's cahulaks tangle Templar? Save against petrification: d20 = 2, needs 19+ -> tangled: loses its next turn
+```
+
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#cahulaks).
 
 #### Rings and cloaks of protection
 

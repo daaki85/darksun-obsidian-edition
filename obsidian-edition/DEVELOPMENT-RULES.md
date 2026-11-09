@@ -19,6 +19,7 @@
   - [Grey hair on the map](#grey-hair-on-the-map)
 - [Two weapons](#two-weapons)
 - [Half-giants' two-handed weapons](#half-giants-two-handed-weapons)
+- [Cahulaks](#cahulaks)
 - [Rings and cloaks of protection](#rings-and-cloaks-of-protection)
 - [Helms](#helms)
 - [Items saving against acid](#items-saving-against-acid)
@@ -503,6 +504,39 @@ How: the inventory screen checks a weapon type's two-handed bit (+0Fh, 40h)
 twice when something goes into a hand: the other hand's ("Two handed weapon in
 use") and the one going in ("Need two free hands"). The helper (`INT E3h`)
 answers both for the character on show, "not two-handed" for a half-giant.
+
+## Cahulaks
+
+([In the features page](FEATURES.md#cahulaks).)
+
+How: one item, the right hand's, two heads. The game's attack set (58019h) makes
+one call of the attack routine (5883Ah) a weapon; that call swings until a hit,
+[BP-8] the round's swings, [BP-14h] the swing (the combat record's +181h the
+swings made this round), [BP+0Ah] - [BP+0Ch] the d20 needed. With the rule
+(`RULE_HI_CAHULAKS`):
+
+- `CAH_MORE`, first in `OFF_HAND_HALVES` (the attack's `PROBE_ATTACKS`, the
+  inventory's DAM line, View Character's): 2 more halves for an item of type 21,
+  one attack more a round.
+- `CAH_TWO` (59627h, the two-weapon adjustment's "cmp word [bp+6],1 / jle"):
+  595ECh asks for its adjustment only with two weapons ready (5900Ah's count);
+  for the cahulaks it goes on, and `PROBE_TWO` gives AD&D's numbers whatever
+  `RULE_TWO_WEAPONS`, with nothing needed in the other hand (`CAH_ADJUST`): the
+  main head's (-2, the kits' changes, DEX's adjustment, no better than 0) for
+  every swing, and `CAH_EXTRA`, how much worse the off head's is, for that
+  attacker (`CAH_WHO`).
+- `CAH_SWING` (589B6h, the swing's start, before its d20): the round's last swing
+  of two or more, the off head's, adds `CAH_EXTRA` to [BP+0Ah], once. The dice log
+  reads the attack's arguments at the d20, so its "needs" counts it, and its
+  breakdown names each head (`GameData.two_weapons(..., head)`).
+- `CAH_HIT` (58B54h, a weapon's hit that did damage): the target ([494Ah]) not
+  felled (the creature's +0 HP), not a half-giant (the sheet's race), not marked in
+  `BIG` (the far block, its offset the header's +1840: the Loader's,
+  `cahulaks.py`: a bit a combatant whose creature's name is on its list, written
+  when it changes), saves against petrification with a d20 (`GAME_DIE`) against
+  its sheet's +39h, a 20 always saving; recorded (`KIND_MANUAL`, `MN_TANGLE`). A
+  failure marks it as Whirlwind's sweep does (`SWEPT_NOW`: yet to act this round,
+  its turn taken at once; else `FAR_SWEPT`, `PROBE_MOVE` takes the next).
 
 ## Rings and cloaks of protection
 

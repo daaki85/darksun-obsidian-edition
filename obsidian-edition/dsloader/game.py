@@ -183,6 +183,7 @@ RULE_REST = 268435456
 # target failing a save against petrification (it loses its next turn; cahulaks.py's list of the
 # too big). DSCLOG's RULE_HI_CAHULAKS, CAHULAKS
 RULE_CAHULAKS = 536870912
+CAHULAKS_TYPE = 21
 REST_NATURAL = 3
 SPEC_SLOTS, SPEC_COUNT = 0x14, 4
 # The sheet's +14h to +17h (the game never reads or writes them): the four weapon specs, kind + 1
@@ -2223,19 +2224,20 @@ class GameData:
             out.append(WeaponHit(-1, -1, "unarmed", base - sum(n for _, n in parts), parts))
         return out
 
-    def two_weapons(self, creature: int, slot: int) -> Tuple[str, int]:
+    def two_weapons(self, creature: int, slot: int, head: Optional[str] = None) -> Tuple[str, int]:
         """The to-hit adjustment for an attack with the weapon in SLOT while two are ready (in
         melee), and what it's called. The game's: its DEX table for initiative, sign flipped and
         never below 0 (a bonus at DEX 5 or less). With RULE_TWO_WEAPONS, AD&D's: -2 main hand,
         -4 off hand, plus the DEX reaction adjustment, never above 0. Rangers: none, but with the
         rule only in light armour (DSCLOG's RG_TWO), a Justifier in any; a Twin-blade (kits.py) none with the rule, in
-        light armour too."""
+        light armour too. HEAD ("main" or "off"): the cahulaks' head of that name with RULE_CAHULAKS,
+        AD&D's whatever RULE_TWO_WEAPONS, with nothing in the other hand (DSCLOG's CAH_ADJUST)."""
         dex = self.creature(creature)[CREATURE_ABILITIES + 1]
         sheet = self.sheet(creature)
         ranger = len(sheet) >= SHEET_FLAGS + 2 and struct.unpack_from("<H", sheet, SHEET_FLAGS)[0] & SHEET_FLAG_RANGER
-        if not self.rules & RULE_TWO_WEAPONS:
+        if not self.rules & RULE_TWO_WEAPONS and not head:
             return f"two weapons at DEX {dex}", 0 if ranger else max(0, -self.dex_initiative(dex))
-        hand = "off hand" if slot == WEAPON_HANDS[1] else "main hand"
+        hand = f"cahulaks, {head} head" if head else "off hand" if slot == WEAPON_HANDS[1] else "main hand"
         from . import kits
         if ranger and kits.JUSTIFIER in self.kit_ids(creature):
             return f"two weapons, {hand} (Justifier)", 0  # (in any armour)
@@ -2246,13 +2248,17 @@ class GameData:
         for kid in (kits.TWIN_BLADE, kits.BATTLE_DANCER):
             if light and kid in kids:
                 return f"two weapons, {hand} ({kits.name(kid)})", 0
-        if slot not in WEAPON_HANDS or not self.melee_weapon_in(creature, sum(WEAPON_HANDS) - slot):
+        if head:
+            base = -4 if head == "off" else -2
+        elif slot not in WEAPON_HANDS or not self.melee_weapon_in(creature, sum(WEAPON_HANDS) - slot):
             return "two weapons", 0  # not a hand's weapon, or nothing to fight with in the other hand
-        base = TWO_WEAPON_PENALTY.get(slot, -2)
+        else:
+            base = TWO_WEAPON_PENALTY.get(slot, -2)
         for kid in kids:  # (a Ghetto Fighter's: none in the main hand, -2 in the off hand)
             if kits.two_weapon_base(kid, base) != base:
                 base, hand = kits.two_weapon_base(kid, base), f"{hand}, {kits.name(kid)}"
-        return (f"two weapons, {hand} at DEX {dex}", min(0, base + self.dex_initiative(dex)))
+        return (f"{hand} at DEX {dex}" if head else f"two weapons, {hand} at DEX {dex}",
+                min(0, base + self.dex_initiative(dex)))
 
     def armour_worn(self, creature: int) -> bool:
         """Armour worn (DSCLOG's ARMOUR_WORN), a helm too: an armour piece (not a shield, nor

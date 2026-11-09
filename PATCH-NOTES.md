@@ -68,6 +68,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 **Races**
 
 - **[Changed]** Half-giants can hold a two-handed weapon in one hand.
+- **[New]** **Cahulaks** fight as Dark Sun's rules describe them: a bladed head in each hand, so one more attack a round (at −2 and −4, as with two weapons, DEX helping), and a hit can tangle a man-sized foe, which then loses its next turn unless it saves against petrification. Half-giants, big monsters and shapeless things can't be tangled.
 
 ## Classes and Kits
 

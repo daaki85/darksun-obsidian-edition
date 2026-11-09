@@ -2734,7 +2734,15 @@ class DiceLog:
         after_f1, hit_bonus = e.parent_local(-0x20), e.parent_local(-8)
         rear, backstab = e.parent_local(-0x1A), e.parent_local(-0x24)
         parts: List[Tuple[str, int]] = []
-        if None in (after_f1, hit_bonus) or after_f1 - hit_bonus != thac0 + skill[1] + sum(v for _, v in kit):
+        # the cahulaks' rule (DSCLOG's CAHULAKS): each swing the main head's penalty, in the setup's
+        # bonus; the off head's swing (the round's last) its more added to [BP+0Ah] after it
+        heads = None
+        if mode is not None and mode <= 1 and item_type == game.CAHULAKS_TYPE and g.rules & game.RULE_CAHULAKS:
+            heads = (g.two_weapons(attacker, 0, "main"), g.two_weapons(attacker, 0, "off"))
+        expected = None if None in (after_f1, hit_bonus) else after_f1 - hit_bonus - skill[1] - sum(v for _, v in kit)
+        off_head = bool(heads) and expected is not None and heads[0][1] != heads[1][1] \
+            and thac0 == expected + heads[0][1] - heads[1][1]
+        if expected is None or thac0 != expected and not off_head:
             return f"THAC0 {base} base, {signed(base - thac0)} in bonuses = {thac0}"
         rear_hit = min((kits.rear_to_hit(k) for k in g.kit_ids(attacker)), default=kits.REAR) \
             if attacker < game.PARTY_SIZE else kits.REAR  # (DSCLOG's KIT_REAR)
@@ -2790,7 +2798,12 @@ class DiceLog:
         # bonus at DEX 5 or less, nothing otherwise. The manual's off-hand penalty isn't there,
         # unless the Loader's rule puts AD&D's in (GameData.two_weapons).
         weapons_ready = e.parent_local(-0x16)
-        if mode is not None and mode <= 1 and weapons_ready is not None and weapons_ready >= 2:
+        if heads:
+            why, value = heads[1] if off_head else heads[0]
+            if value:
+                parts.append((why, value))
+            rest -= heads[0][1]  # (the main head's in the setup's bonus; the off head's more in THAC0)
+        elif mode is not None and mode <= 1 and weapons_ready is not None and weapons_ready >= 2:
             item = e.arg(0x12)
             slot = None
             if item is not None and 0 <= item < game.NO_ITEM:
