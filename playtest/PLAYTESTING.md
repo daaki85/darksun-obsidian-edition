@@ -743,6 +743,28 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
     A target is undead by the sheet's race (+18h = 9), its HD the sheet's +24h; creatures of a kind
     share a sheet. Each use ends the turn; out of a fight it starts one. The ambush's foes' places
     did read right this time (`DS:669Dh + 32 x combatant`, map units): screen = map - camera.
+  - **Turn Undead the AD&D way** (2026-11-09, logs/2026-11-09-turn-undead-meteors.md; "Spells as the
+    manual describes them"): `turnsetup.py MEMBER LEVEL [COMBATANT=HD ...]` makes a member a fire
+    cleric of LEVEL in its **second** class place (+22h; a preserver whose class is there, Lex in
+    `fountain-user`, loses it: give him a cleric third class by hand, +23h 3, +26h the level) and each
+    combatant's sheet undead of HD hit dice (every creature of that sheet), and lists the combatants
+    with sheet, race, HD and HP. Each outcome by the table: level 4 vs 1 HD is T, 6 D, 8 D\*, 3 a 4
+    needed, 1 vs 5 HD a 20. The turning's box takes every undead it reaches (the Templar beside a
+    Guard was tried too); four Arena Guards stood together off the right edge of `fountain-user`'s
+    view: `scroll.py -150 0` in the fight brought them on, the aim then showed a ring of beads (the
+    range), and a click inside it took all four. A turned undead walks off and doesn't attack (the
+    Guard ran north off the screen). A human with a cleric class added in memory is priest level 0
+    to the game (Jenna). The party's places (DS:669Dh + 32n) were right; most Arena Guards read far
+    off the map.
+  - **The USE screen's LEVEL button skips levels with nothing castable**: Lex at preserver 10 with
+    only 3rd-level spells known went 1 to 3; at preserver 4 it stayed on 1 (no 3rd-level spells at
+    that level: the least for Flame Arrow is 5). **The first click after U opens the screen was lost
+    twice**: shoot the page after each LEVEL click. A caster shot ("YOU WERE HIT" in the bar) before
+    his turn couldn't cast though his icons weren't crossed: the next round's cast worked.
+  - **Minute Meteors and Flame Arrow** (same log): with the manual's spells, Minute Meteors gives five
+    casts a slot (the pointer comes back after each, as Magical Stone's), each with its attack line
+    (`+2 Minute Meteors`), and Flame Arrow one cast for every five levels (2 at preserver 10, 3 at 15,
+    1 at 9), each 5d6 with no attack roll. Click the target once per cast, 4 s apart.
 - **A read-only dice log** (`rolog.py`, 2026-11-08): to try changed dice-log code on a DOSBox whose
   Loader isn't this session's (stopping another's Loader was refused), run `rolog.py` into a file of
   your own: describe() and hp_changes() from this checkout, no writes to the game. Its pending rolls

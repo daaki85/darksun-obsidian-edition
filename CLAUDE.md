@@ -75,6 +75,7 @@ capture; window grabs (`import -window`) are 320x240, so y x 1.2.
   `effects.py` lists effects with their time or charges; `passuntil.sh N` passes turns to member N.
   A second, read-only dice log beside a running Loader: `rolog.py` (to see new dice-log code
   without restarting the game). Share DOSBox between agents with `flock /tmp/playtest/dosbox.lock`.
+  `turnsetup.py` makes a priest and undead foes in memory for a Turn Undead test.
 - Figures gone from the map: the game's picture store full (`cachelist.py`, `poolfree.py`,
   `figwatch.py`; `fillcache.py` fills it for a test).
 - E opens the Effects screen. In an END <NAME>'S MOVE menu (a click on the member's figure

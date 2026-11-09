@@ -240,6 +240,7 @@ MINUTE_METEORS_SPELL, METEORS_TO_HIT = 33, 2  # (its own +2 to hit, in the frame
 # "---", 1-20 the number, TURN_T, TURN_D, TURN_DSTAR), +0Ch the priest level, +0Eh the undead's hit
 # dice, +10h the outcome (TURN_*), +12h the rounds a turned one flees, +14h D*'s more of its kind left
 KIND_TURN = 13
+AFRAID_EFFECT = 17  # (TURN_SITE puts it on a turned undead, past the game's fear immunity)
 TURN_T, TURN_D, TURN_DSTAR = 21, 22, 23
 TURN_NOT, TURN_TURNED, TURN_DESTROYED, TURN_DSTARRED, TURN_MORE_ONE, TURN_AGAIN, TURN_NONE = range(7)
 TURN_CELLS = (20, 19, 16, 13, 10, 7, 4, TURN_T, TURN_T, TURN_D, TURN_D)  # (AD&D's run, a row a column on)
@@ -2183,6 +2184,8 @@ class DiceLog:
             name = EFFECT_NAMES.get(eid, f"effect {eid}")
             targets = ", ".join(self._name(o) for o in owners)
             rule = f": {EFFECT_RULES[eid]}" if eid in EFFECT_RULES else ""
+            if eid == AFRAID_EFFECT and all(self._turn_target(o) is not None for o in owners):
+                rule = ": turned, it flees (the computer controls it; can't attack or cast spells)"  # (TURN_SITE's)
             if owners == [caster] * len(owners):  # on itself (or from a spell on the ground)
                 out.append(f"{name} on {targets}{rule}")
             else:

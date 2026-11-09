@@ -54,6 +54,20 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
   playtest/logs/2026-11-09-missing-figures.md.)
 
 **Changed**
+- **Turn Undead the AD&D way** (with "Spells as the manual describes them"; DSCLOG's TURN_SITE at
+  7AE01h): AD&D 2e's turning table by the undead's hit dice (rows: 1, 2, 3-4, 5, 6 ... 11+) and the
+  priest's level (columns 1-9, 10-11, 12-13, 14+), where the game's formula put 2- and 3-HD undead a
+  row easier and 5 HD a row harder; a turn (the number made, or T) makes the undead flee, Afraid for
+  3d4 rounds (the game had no fleeing: every success destroyed); D destroys, D* destroys and up to
+  2d4 more of its kind reached by the same turning; "---" no chance. A priest who fails against an
+  undead can't try it again that fight (another priest can). The dice log says which
+  (`turned: flees 3d4 = 9 rounds`, `destroyed automatically (D*)`, `can't try again`).
+- **Minute Meteors: five globes of 1d4, each rolling to hit at +2** (the record's repeat count 5, as
+  Magical Stone's 3; was one roll of 1d4 a caster level). **Flame Arrow: a bolt for every 5 caster
+  levels, 5d6 each** (DSCLOG's FLAME_SITE on the cast's repeat count; was one sum of 5d6, 10d6 at
+  10th); no attack roll, as the manual and AD&D. Only the party's casts repeat: a monster's Magical
+  Stone, Minute Meteors or Flame Arrow lands once (the game's other casting routes ignore the count).
+  Seen in DOSBox: playtest/logs/2026-11-09-turn-undead-meteors.md.
 - **Spells roll to hit** (a new rule change, on by default, from the next start: `spell_to_hit`,
   `gamepatch.SPELL_TO_HIT`): the missile spells (Acid Arrow, Turn Pebble to Boulder, Magical Stone,
   Condense; the Strine's spines) roll a d20 against the target's AC with the caster's THAC0 (Acid
