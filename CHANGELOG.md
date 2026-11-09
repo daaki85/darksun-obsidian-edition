@@ -40,6 +40,19 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 
 ## Next pull request (not opened yet)
 
+**Fixed: the Loader**
+- **Figures vanished from the map after many gear changes in one area:** each time a member's
+  outfit changed, the Loader took the old pictures out of the game's picture table, but the game
+  takes neither a slot nor its room in its picture store (a fixed 741,376 bytes) back until an area
+  loads, and a new outfit takes a new slot at the end. After some 30 to 60 changes in one area a
+  picture went past the store's end: the game's write fails unseen, the picture can't be read
+  back, and its failed reads keep taking memory, until the party's and the monsters' figures
+  weren't drawn (opening the inventory brought them back for a while). Now a figure is dressed
+  anew only while the store and the table keep room for it and for the game's own pictures (64 KB
+  and 24 slots); else it stays as it was until the next area. (`sprites._room_for`; test:
+  `test_no_room_in_the_games_store`; reproduced and checked in DOSBox:
+  playtest/logs/2026-11-09-missing-figures.md.)
+
 **Changed**
 - **Spells roll to hit** (a new rule change, on by default, from the next start: `spell_to_hit`,
   `gamepatch.SPELL_TO_HIT`): the missile spells (Acid Arrow, Turn Pebble to Boulder, Magical Stone,

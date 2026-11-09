@@ -347,6 +347,35 @@ class SpriteTests(unittest.TestCase):
             data = read(path)
             self.assertEqual(gff.read_gff(data)[("BMP ", walk)], dresser.pics.build(300, False, {}, ()))
 
+    def test_no_room_in_the_games_store(self):
+        """An outfit changed while the game's store of pictures (or its table) has no room for it
+        loaded anew: left as it was, nothing taken out of the game's table, tried again once there
+        is room (an area loaded)."""
+        outfits = [({"right": (SWORD, METAL)}, ())]
+        worn, sprites.worn = sprites.worn, lambda gd, member, chunks=None: outfits[0]
+        self.addCleanup(setattr, sprites, "worn", worn)
+        with tempfile.TemporaryDirectory() as d:
+            dresser, path = self.dressed_copy(d)
+            gd = dresser.gd
+            walk, fight = sprites.picture_ids(300)
+            gd.entry(0, walk, 7)
+            gd.loaded([1234, walk, fight, 99])
+            self.assertEqual(dresser.update(True, 1.0), [300])  # (the first dressing: always)
+            gd.entry(0, walk, 8)
+            gd.loaded([1234, walk, fight, 99])
+            base = (gd.load_seg + sprites.PICTURE_TABLE_SEG) * 16 + 3 * sprites.PICTURE_ENTRY
+            gd.guest.write(base + sprites.SLOT_LENGTH, struct.pack("<Ii", 5000, sprites.STORE_SIZE - 6000))
+            outfits[0] = ({}, ())
+            self.assertEqual(dresser.update(True, 2.0), [])
+            self.assertEqual(gd.loaded_numbers(), [1234, walk, fight, 99])
+            self.assertEqual(gd.entry_fields(0), (walk, 8))
+            gd.guest.write(base + sprites.SLOT_LENGTH, struct.pack("<Ii", 5000, 100000))
+            self.assertEqual(dresser.update(True, 3.0), [300])
+            self.assertEqual(gd.loaded_numbers(), [1234, sprites.STALE, sprites.STALE, 99])
+            gd.loaded(list(range(sprites.PICTURES_MOST - sprites.SLOTS_SPARE - 1)))
+            outfits[0] = ({"right": (SWORD, METAL)}, ())
+            self.assertEqual(dresser.update(True, 4.0), [])  # (the table nearly full)
+
     def test_view_redrawn_after(self):
         """Shortly after pictures are loaded anew the view is drawn again (their shadows: the floor
         is drawn before the figures, while the new picture was still loading)."""

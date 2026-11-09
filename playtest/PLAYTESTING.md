@@ -756,8 +756,33 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   start isn't restarted: play in it (`loadsave.sh` would kill it).
 - **Figures gone from the map** (2026-11-08, the ambush after a long run of clicks): the party, and at
   times the foes, weren't drawn though their places were right; I then Escape (the inventory opened
-  and shut) drew them again, for a while. Clicks on a figure not drawn missed (passuntil.sh gave up). Flaming Sphere cast at a foe two squares off struck the caster (twice); farther off
+  and shut) drew them again, for a while. Clicks on a figure not drawn missed (passuntil.sh gave up).
+  **Found 2026-11-09** (logs/2026-11-09-missing-figures.md): the game's **picture store** (741,376
+  bytes, fixed, DSUN.EXE 60D9Bh) and its table of 300 picture slots (load segment + 3E60h; DS:1F84h
+  the slots taken) are given back only at an area load. Each time the Loader dresses a member anew
+  (any change to what its figure wears: inventory moves, a weapon's +0Fh written in memory) it marks
+  the old pictures FFFEh and the game takes a new slot and about 7 KB of store for each. The pens
+  take 200 slots and 275 KB on arrival, so after some 30-60 gear changes there a picture lies past
+  the store's end: drawn while in memory, never read back once let go, and every failed read keeps
+  the memory it took, until no figure can be loaded (all gone; I then Escape frees that memory, so
+  they come back for a while). **A long test in one area with many gear changes runs into it**:
+  check `cachelist.py` (slots taken) and `cachelist.py all` (the last slot's place + length against
+  741,376), and reload the save or change area to start afresh. Proposed fix: the Loader leaves a
+  figure undressed when the store has no room (sprites.py `_room_for`, not yet in the code as of
+  this note). Flaming Sphere cast at a foe two squares off struck the caster (twice); farther off
     it took a slot and logged nothing.
+- **Watching figures and pictures** (2026-11-09): `figwatch.py SECONDS [EVERY] [TAG]` (passive, no
+  writes: each member's screen place, its map record's +0 (80h: not drawn), its picture slot (+0Fh)
+  with that slot's number and flags (2: in memory), the draw list's order and the member's place in
+  it, and a strip of grabs round each figure); `drawlist.py [all]` (the draw list at DS:6690h, kept
+  in rising y: the drawing finds its window DS:57CAh-57C8h by a scan that stops at the first y past
+  the view, so an entry out of order would hide all after it; never seen out of order);
+  `cachelist.py [all]`; `poolfree.py [SECONDS]` (the picture memory's free bytes, DS:8E94h);
+  `fillcache.py MEMBER SLOT UNTIL` (fills the slots fast by toggling a worn item's slot byte, the
+  Loader dressing each time; memory edit, never save); `figcheck.py LABEL` (a grab before and after
+  DSCLOG's VIEW_REDRAW, header +242, and the pixels changed round each member: a figure missing then
+  drawn shows hundreds). An inventory move in a test: `click.py` the item, then the place; an item
+  left on the pointer isn't in a shot (it was dropped by the next click on DROP, 213,134).
 
 ## 5. The story so far: what's known of the route
 

@@ -61,6 +61,20 @@ ROOM = 2  # the room in the file for a picture, of its plain size (the bulkiest 
 # it has (DS:1F84h, at most 300), and the number a picture is given to take it out of the table
 PICTURE_TABLE_SEG, PICTURE_COUNT, PICTURE_ENTRY, PICTURES_MOST = 0x3E60, 0x1F84, 16, 300
 STALE = 0xFFFE
+# A picture's place in the game's store (+6, signed: none if negative) and its length (+2). The
+# game keeps every picture it loads in a store of fixed size (STORE_SIZE: DSUN.EXE 60D9Bh, the
+# memory handle at DS:4C33h), each new slot's place right after the last one's, and takes neither
+# a slot nor its room back but when an area is loaded (1DBD:06BEh): a picture taken out (STALE)
+# keeps both, and its outfit loaded anew takes another slot at the end. Past the store's end the
+# game's write fails unseen (25FA6h doesn't look at it): the picture is drawn while it stays in
+# memory, and once let go can't be read back (25D6Ah), which keeps the memory it took to read it
+# into each time the figure is drawn, till the others can't be loaded either: the party's and
+# the monsters' figures not drawn, an opened screen (the inventory) bringing them back for a while
+# (playtest/logs/2026-11-09-missing-figures.md). So a dressing is left till the next area (the
+# figure as it was) unless the store and the table keep room for it and for the game's own.
+SLOT_LENGTH, SLOT_PLACE = 0x02, 0x06
+STORE_SIZE = 0xB5000
+STORE_SPARE, SLOTS_SPARE = 0x10000, 24  # (left for the game's own new pictures: a monster's, a spell's)
 # Seconds after a picture is loaded anew to have the view drawn again: the shadows are drawn on the
 # floor before the figures, and while the game loads the new picture its figure casts none
 REDRAW_AFTER = 0.3
@@ -404,6 +418,18 @@ class Dresser:
             if number in pictures:
                 self.gd.guest.write(base + k * PICTURE_ENTRY, struct.pack("<H", STALE))
 
+    def _room_for(self, size: int, slots: int = 2) -> bool:
+        """Whether the game's store and table of pictures have room for SLOTS more pictures of
+        SIZE bytes in all, with STORE_SPARE and SLOTS_SPARE left over (STORE_SIZE)."""
+        count, = struct.unpack("<H", self.gd.guest.read(self.gd.ds * 16 + PICTURE_COUNT, 2))
+        if count > PICTURES_MOST or count + slots + SLOTS_SPARE > PICTURES_MOST:
+            return False
+        if not count:
+            return True
+        base = (self.gd.load_seg + PICTURE_TABLE_SEG) * 16 + (count - 1) * PICTURE_ENTRY
+        length, place = struct.unpack("<Ii", self.gd.guest.read(base + SLOT_LENGTH, 8))
+        return max(place, 0) + length + size + STORE_SPARE <= STORE_SIZE
+
     def objects(self) -> Dict[int, Tuple[int, int]]:
         """{object: (party member, their figure's object)}: the first member with a figure has its
         object, any other with the same figure the spare of their place."""
@@ -480,6 +506,9 @@ class Dresser:
             stage = greyhair.stage_of(self.gd, member) if on else 0
             key = (model, figure, repr(sorted(outfit[0].items())), outfit[1], stage)
             fresh = self.shown.get(obj) != key
+            if fresh and obj in self.shown and not self._room_for(
+                    sum(self.rooms.get(p, 0) for p in picture_ids(obj))):
+                continue  # (no room to load it anew: left as it is, tried again: STORE_SIZE)
             if fresh:
                 pictures = {}
                 for combat, picture in zip((False, True), picture_ids(obj)):

@@ -75,6 +75,8 @@ capture; window grabs (`import -window`) are 320x240, so y x 1.2.
   `effects.py` lists effects with their time or charges; `passuntil.sh N` passes turns to member N.
   A second, read-only dice log beside a running Loader: `rolog.py` (to see new dice-log code
   without restarting the game). Share DOSBox between agents with `flock /tmp/playtest/dosbox.lock`.
+- Figures gone from the map: the game's picture store full (`cachelist.py`, `poolfree.py`,
+  `figwatch.py`; `fillcache.py` fills it for a test).
 - E opens the Effects screen. In an END <NAME>'S MOVE menu (a click on the member's figure
   opens it), E is END TURN.
 - The creation screen: CREATE CHARACTERS (165,92), right-click an empty slot, NEW (110,57). A score's
