@@ -74,14 +74,27 @@ class PictureTests(unittest.TestCase):
         self.assertEqual(points, [(i, i) for i in range(4, 12)])
 
     def test_fit_box(self):
-        """The Polearm's 36x36 diagonal drawn 22x22, unbroken; a picture that fits, as it is."""
+        """The Polearm's 36x36 diagonal drawn 16x16, unbroken; a picture that fits, as it is."""
         rows = [[7 if x == y else None for x in range(36)] for y in range(36)]
         out = icons.fit_box(rows)
         self.assertEqual((len(out), len(out[0])), (icons.BOX_PICTURE, icons.BOX_PICTURE))
         self.assertEqual([(x, y) for y, r in enumerate(out) for x, p in enumerate(r) if p is not None],
-                         [(i, i) for i in range(22)])
+                         [(i, i) for i in range(16)])
         small = [[1, None], [None, 2]]
         self.assertIs(icons.fit_box(small), small)
+
+    def test_tall_weapons_fitted(self):
+        """The game's weapon pictures taller than 16 (BOX_TALL: the gythka's 22...) drawn 16 at most, so
+        an item box's last row (DSCLOG's "Hit -1") stays inside it; a narrow one keeps its shape."""
+        gythka = icons.encode([[0x3A if x == y else None for x in range(22)] for y in range(22)])
+        staff = icons.encode([[0x3A if x == 3 else None for x in range(7)] for y in range(27)])
+        plain = icons.encode([[0x3A if x == y else None for x in range(16)] for y in range(16)])
+        chunks = {("BMP ", 40): plain, ("BMP ", 2384): gythka, ("BMP ", 2157): staff}
+        for _, number, _, _, _ in icons.ICONS:
+            chunks[("OJFF", 0x10000 - number)] = bytes(12) + struct.pack("<H", 40) + b"rest"
+        new = icons.new_chunks(chunks)
+        self.assertEqual([len(icons.decode(new[("BMP ", 2384)])), len(icons.decode(new[("BMP ", 2157)]))], [16, 16])
+        self.assertEqual(max(len(r) for r in icons.decode(new[("BMP ", 2157)])), 4)
 
     def test_glow(self):
         rows = [[1, 2, None]]

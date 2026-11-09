@@ -120,9 +120,16 @@ def shorter_blade(rows: Rows, steps: int = 4) -> Rows:
     return out
 
 
-# The item box (right-click an item) puts its text below the picture, in room for one 22 pixels
-# tall (the gythka's, the tallest but one). The Polearm's is 36: its text ran out of the box.
-BOX_PICTURE = 22
+# The item box (right-click an item) puts its text below the picture: the taller the picture, the
+# lower the text. The Polearm's (36) ran its text out of the box; the gythka's (22) put a weapon's
+# last row (DSCLOG's "Hit -1", a wand's charges) at the box's bottom edge. So every weapon picture
+# taller than 16 (the Long Sword's is 15, the Arrows' 16) is drawn smaller, everywhere the game
+# shows it (the inventory, the map too). The game's own (SEGOBJEX.GFF: each weapon item's object's
+# icon, 2026-11-09): the Bone Polearm's (2383) and Polearm +1's (2311), 36; the Parting Staff's (2157)
+# 27; Balk's Staff's (2143) 24; the Gythkas' (2287, 2254: 23; 2384: 22); a Stone pick's (1494) 19; the
+# Quarterstaffs' (2392, 2255), the Cahulaks' (2334) and the Striker's (1199) 18.
+BOX_PICTURE = 16
+BOX_TALL = (2383, 2311, 2157, 2143, 2287, 2254, 2384, 1494, 2392, 2255, 2334, 1199)
 POLEARM_OBJECT = 0x10000 - 0xFB5E
 
 
@@ -502,11 +509,13 @@ def new_chunks(chunks: gff.Chunks) -> gff.Chunks:
     """The objects and pictures to add to the game's SEGOBJEX.GFF."""
     out: gff.Chunks = {}
     smaller: Dict[int, Rows] = {}
+    tall = set(BOX_TALL)
     if ("OJFF", POLEARM_OBJECT) in chunks:  # (the Polearm's picture, small enough for the item box)
-        pole, = struct.unpack_from("<H", chunks[("OJFF", POLEARM_OBJECT)], OJFF_ICON)
-        if ("BMP ", pole) in chunks:
-            smaller[pole] = fit_box(decode(chunks[("BMP ", pole)]))
-            out[("BMP ", pole)] = encode(smaller[pole])
+        tall.add(struct.unpack_from("<H", chunks[("OJFF", POLEARM_OBJECT)], OJFF_ICON)[0])
+    for icon in sorted(tall):
+        if ("BMP ", icon) in chunks:
+            smaller[icon] = fit_box(decode(chunks[("BMP ", icon)]))
+            out[("BMP ", icon)] = encode(smaller[icon])
     for _, plain, number, icon, make in ICONS:
         base = 0x10000 - plain
         record = bytearray(chunks[("OJFF", base)])

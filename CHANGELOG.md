@@ -47,7 +47,10 @@ DSCLOG.EXE 65,424 bytes (image 65,392), 3,024 of its segment spare.
   `Hit -1` bone, `Hit -2` stone and obsidian, as the game's attack takes it (the damage line already
   had the material's damage off). Not with a plus, nor for the game's exempt weapons (clubs, staves,
   the chatkcha: type +08h 80h), nor metal (DSCLOG's IB_MATERIAL, always on). Seen in DOSBox:
-  playtest/logs/2026-11-09-hit-line.md.
+  playtest/logs/2026-11-09-hit-line.md. The box puts its text below the picture, so the weapons'
+  pictures taller than 16 pixels (the polearms', staves', gythkas', a stone pick's, the cahulaks',
+  the striker's: up to 36; the Long Sword's is 15) are drawn smaller everywhere (`icons.BOX_TALL`,
+  BOX_PICTURE 16, was 22 for the Polearm alone): the gythka's last row sat at the box's edge.
 - **Spells and psionics as the manual describes them** (a new rule change, on by default, from the
   next start: `spells_manual`, `gamepatch.SPELLS_MANUAL`; the spell records and DSCLOG sites; from
   reports/spells-against-the-manual.md, which now says what was done with each of its points):
