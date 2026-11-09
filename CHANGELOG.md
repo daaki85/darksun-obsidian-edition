@@ -380,6 +380,12 @@ DSCLOG.EXE 65,520 bytes (image 65,488), 2,928 of its segment spare.
   damage" that isn't; the Terror Blade's acid chance (its Poison is a power: 95%); 15 kinds of magic
   fruit and 19 spell scrolls; Grey's Scale's arm and leg icons swapped back; and added the Wand of
   Metal Detection, the plain stone pick, the gloves against acid and the missing finds.
+- **ITEMS.md: where the script-given items come from** (each from the script that gives it, with the
+  cluebook): Dragonsbane from Kraxis' body after the final battle, the Teaquetzl rewards (Swiftbite,
+  the Helm of Might, Phrain's Bow), the warrens' sewer holes (Axe +1, the Parting Staff), the Terror
+  Blade made in the Wyrm School's bowl, Notaku's payments, Tanelyv's gifts, Laussa's ring and others;
+  "—" now only where nothing gives the item (the Polearm +1, the Golden Torque). The champions' gear
+  in the mundane tables; the polearms' doc icons at the game's own 36 pixels.
 - The player guide's **XP left over at the top**: each class's highest level under the 749,999 cap
   and the XP left over (one, two or three classes), and for dual-classing humans the room a new
   class has by the level the old class changed at (dual-classing starts the new class at 0 XP and
