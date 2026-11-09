@@ -2108,7 +2108,10 @@ armour the game has but never placed: the rest of the bone scale set (the game
 places only its chest piece), with a **Bone Helm** of the mod's (AC 1 with
 [Helms give AC 1](#helms), worn by those who can wear the armour, not
 thieves), and the game's leather **Helm**: where, in [Every mundane armour
-piece](ITEMS.md#every-mundane-armour-piece).
+piece](ITEMS.md#every-mundane-armour-piece). And the game's own **Polearm +1**,
+which it defines but never places or gives (the cluebook puts it in the Elven
+Caravan): **Seref**, the Draj agent there, carries it, and so does the Seref
+the party meets on the road with his guards and daggorans.
 
 **Pehtucl's chest**, with the Cloak of Protection +1 in it, is locked and
 trapped: a thief can disarm and pick it, anyone else bash it open, which sets

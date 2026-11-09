@@ -458,3 +458,15 @@ class DataTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SerefTests(unittest.TestCase):
+    def test_seref_carries_the_games_polearm(self):
+        """Seref (object 203, in the Elven Caravan and made anew for his encounter) carries the game's
+        own Polearm +1 (its object 1577, type 19, name 12h, +1, 20,000), which the game never placed."""
+        gift = next(g for g in worldgear.MAGIC if g.name == "Seref")  # (with the magic items)
+        self.assertEqual((gift.objects, gift.region, gift.clone, gift.instead), ((203,), 0x1A, None, None))
+        rec, = gift.items
+        self.assertEqual((struct.unpack_from("<H", rec, 0)[0], struct.unpack_from("<H", rec, game.ITEM_TYPE)[0],
+                          struct.unpack_from("<H", rec, game.ITEM_NAME)[0], rec[game.ITEM_PLUS]),
+                         (0x10000 - 1577, 19, 0x12, 1))

@@ -33,7 +33,9 @@
 - Weapons for those who had too few magic ones: Galefang, a metal dagger +2 of DSCLOG's own type
   (made when no dagger was an air cleric's; now every one is), on the Rogue Shaman; Mindshard, an obsidian short sword +1, on Maris,
   and Stillwater, a bone short sword +1, in the chest Chaya gives as her apology (psionicists',
-  alone or with a cleric's); Linebreaker, a metal polearm +2, on the Troop Leader; Thornwall, a
+  alone or with a cleric's); the game's own Polearm +1, which it defines but never places or gives,
+  on Seref, the Draj agent at the Elven Caravan (where the cluebook puts it); Linebreaker, a metal
+  polearm +2, on the Troop Leader; Thornwall, a
   bone polearm +1, on the slave pens' weapon rack once Semyon has told of it (semyon.ship).
 - Magic shields, which the game has two of (the Drake Shield +1 and El's Shield +2, both
   leather): Gutterward, a wooden shield +1, on a skeleton in the warrens (one of the region's
@@ -105,6 +107,11 @@ BONE_SHORT_SWORD_1 = ((game.BONE_SHORT_SWORD_TYPE, STILLWATER, 0x10000 - 2568, P
 POLEARM_2 = ((game.METAL_POLEARM_TYPE, LINEBREAKER, 0x10000 - 2570, 2 * PLUS_VALUE), 2)
 BONE_POLEARM = 19  # (the game's Polearm, of bone)
 BONE_POLEARM_1 = ((BONE_POLEARM, THORNWALL, 0x10000 - 2572, PLUS_VALUE), 1)
+# (the game's own Polearm +1, its object 1577: the game defines it but never places or gives it; the
+# cluebook has it in the Elven Caravan. Carried by Seref, the Draj agent there, and so by the Seref
+# its scripts make for his encounter on the road (171's 25h makes a copy of his object, 203))
+GAME_POLEARM_1 = ((BONE_POLEARM, 0x12, 0x10000 - 1577, 20000), 1)
+SEREF = 203
 # the weapons for the kits with too few (the dagger fighters, the archers, the thri-kreen): a bone
 # dagger +1 in Merzol's hay stash (his script's: haystash.py), an obsidian dagger +2 on the Lava
 # Rift's Hermit (in place of his stone one), a bow +1 the Bowyer sells (priced as a melee weapon:
@@ -315,6 +322,7 @@ MAGIC: Tuple[Gift, ...] = (
     # the circlet sold by Kel (the game's magic items' merchant), the crown worn by Keldar
     # (with the Veiled Robe, robes.py: the Ashen Robe is Kalzith's, kalzith.py)
     Gift("Kel", (ARROWBANE_ITEM, VEILED_ROBE, MR_AMULET_ITEM), (107,), 0x1A),
+    Gift("Seref", (weapon(*GAME_POLEARM_1),), (SEREF,), 0x1A),
     Gift("Keldar", (CROWN_ITEM,), (28,), 0x27),
     # the Warden's Plate, scattered: the helm on Dagolar (a boss's body, early on), the arms in the
     # Lower Castle's treasure chest (object 1360, with Dark Flame: behind the barrier the Serpent
