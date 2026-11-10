@@ -111,6 +111,17 @@ more: `DSUN_GPLDATA=$G/GPLDATA.GFF DSUN_OBJECTS=$G/SEGOBJEX.GFF DSUN_RESOURCE=$G
 (`G=$PLAYTEST_WORK/inst`). With them set, only the tests that need tkinter (or a display) are
 skipped ([the list](../obsidian-edition/DEVELOPMENT.md#tests)). `/usr/bin/python3.12` has tkinter.
 
+**A clean install and the release zip** (2026-11-10, logs/2026-11-10-pre-merge-checks.md): the zip
+as the Release workflow makes it (`git archive --format=zip ... HEAD:obsidian-edition`), unpacked as
+`obsidian-edition/` beside a copy of the kit (`git archive HEAD playtest | tar -x`), with a game of
+its own (`innoextract` into its `PLAYTEST_WORK/inst`): `start.sh` and `topartyfight.sh` from that
+kit run the zip's Loader. **A bare `innoextract` has no `DARKSAVE.GFF` in the game folder** (GOG's
+install puts `__support/save` in `cloud_saves`, which its DOSBox overlays on C:; Linux's DOSBox 0.74-3
+has no overlay mount), and the game quits at START GAME with "DARKSAVE.GFF to DARKRUN.GFF failed"
+in `dos/GAMEEND.TXT` (and leaves DARKRUN.GFF empty): `setup_game.sh` now copies `__support/save/*`
+into the game folder. Don't make a `cloud_saves` folder here: the Loader then writes the overlay
+mount, which this DOSBox refuses.
+
 **A fresh container by hand (2026-11-06)**, if the setup script didn't run: `apt-get update`, then
 install `dosbox xdotool innoextract nasm` (`Xvfb`, ImageMagick, poppler were there). The Drive
 installer download is blocked by the default network policy (403 on `drive.usercontent.google.com`):
@@ -499,6 +510,15 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   table, in play too (null only in a game loaded first); on the screen the record is straight after
   the sheet (`gd.creating()`). While the screen is up the party's first slot carries the
   character's name on a stand-in sheet (XP 4,000, scores 10) whose XP moves with the class.
+- **A multiclass character on the creation screen** (2026-11-10): a click on the big portrait
+  (40,60) steps through the portraits, and with them the race and sex (one click went from a human
+  to a dwarf: read the sheet's +18h). Then click the classes (CLERIC 250,13). The **CLERICAL SPHERE**
+  list is in the lower window (AIR 235,105, EARTH 113, FIRE 121, WATER 129): while one sphere is chosen
+  the others are greyed and take no click, so click the chosen one off first. DONE (279,183) opens the
+  weapon window (PICK A WEAPON SPECIALTY): icons 33 apart from (72,46), three rows; the cahulaks are
+  the second row's last (245,78). A click there closes it and the dice log gives the start weapon
+  ("starts with a plain obsidian cahulaks ... in place of the bone long sword"). The inventory is the
+  second bottom icon (76,172).
 - **Loading**: the title (two clicks), then the main menu: START GAME, CREATE CHARACTERS, LOAD
   SAVED GAME (170, 109), EXIT TO DOS; the LOAD screen lists the slots (click one at 100, 46), then
   LOAD (253, 46). `loadsave.sh` does it.

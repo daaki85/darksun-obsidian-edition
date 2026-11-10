@@ -16,6 +16,9 @@ wins where they differ.
 **Setup.** Tools are in `playtest/` (run from there, `export DISPLAY=:55`, and set
 `PLAYTEST_WORK` to a scratch folder; the game is `$PLAYTEST_WORK/inst`, from `setup_game.sh`;
 the guide's `$WORK` is that folder, set only inside the tools, so type `$PLAYTEST_WORK`).
+A bare `innoextract` lacks the game folder's `DARKSAVE.GFF` (GOG keeps it in `__support/save`;
+`setup_game.sh` copies it): without it START GAME quits. The release zip on a clean install: the
+guide's "A clean install and the release zip".
 Wake of the Ravager, for comparing only: `setup_ravager.sh` (into `$PLAYTEST_WORK/rav`).
 A walkthrough (kibbitz's, GameFAQs): `setup_guide.sh` (from the Drive; text in
 `$PLAYTEST_WORK/guide/kibbitz.txt`); never commit it.
