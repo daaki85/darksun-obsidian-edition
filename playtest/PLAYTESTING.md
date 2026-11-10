@@ -546,6 +546,15 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   doesn't repeat a `Message:` line the same as the last one, so look for the "reads the scroll" line.
   The screen can draw the backpack one change behind: close the inventory and open it again (Escape, I)
   before believing a cell is empty.
+- **A held item changed in memory** (2026-11-10, logs/2026-11-10-outstanding-checks.md): write it
+  with the inventory **closed** (closing it writes the screen's copy back over the record), clear its
+  +0Ch (the game keeps there the icon it last drew, and draws that again), and give it the item's own
+  type (+0Ah): the Loader sets +0, the object, from the type, so a type 127 always comes back as the
+  Metal Pick (Deepbiter is type 112).
+- **A spell box's text** (same day): `spelltexts`' tables are keyed by the SPIN chunk, the spell + 1
+  (its 24 is Strength; spell 24 is Web): teach `spellsetup.py` the spell number. The box holds 7 lines
+  of 128 pixels of the game's font, the first less the icon; `tests/test_spelltexts_fit.py` wraps every
+  text the Loader writes that way, so a new or changed text is checked there first.
 - **route.py won't walk through a figure** (2026-11-05): with someone standing at (99, 31), in
   front of Kurzak's entryway (99, 33-34, open), it found no way south from his stop and gave up;
   the live grid showed the doorway clear. Walk round with clicks, or wait for him to move.
@@ -1121,6 +1130,15 @@ is the eye). `toarena.sh` answers the call instead (up to the arena).
   the look pointer (two right-clicks on bare floor) on him opens the Look box (KALZITH, LEVEL 5),
   and its first button (163,150) talks. Replies are lines from y 162, 8 apart; "We mean no harm",
   then click the box twice, then "Show us what you have" opens his shop.
+- **Someone else's talk through Kalzith** (2026-11-10, logs/2026-11-10-outstanding-checks.md), for a
+  talk whose speaker isn't in the pens (Alagorn's): a test build with Kalzith's entry (1139) pointed at
+  the other talk's script and place (Alagorn's 211 at 1h) in `kalzith.script_chunks`, `loadsave.sh`
+  (which writes `dos/GPLDATA.GFF`), then `git checkout dsloader/kalzith.py`. From `pens-after-scar`:
+  walkto (1816,408), (1704,408), (1592,440), a click at screen (152,165) (camera 1440,416) past the
+  guard in the entryway, `route.py 1560 880`, the eye and a slow press on Kalzith (the old man in
+  green, about 257,120), Talk (163,150). Alagorn's way to his stories: 1, 1, Y, 1 (Weapons or Armor),
+  then the kind (2 Magic melee weapons); he lists only items the party holds. The next `start.sh` or
+  `loadsave.sh` writes the scripts afresh.
 
 **The arena (region 2Ah)**, as of 2026-11-01:
 - Several waves (Sligs and a Screamer Beetle; Sand Howlers and a Tohr-kreen; ...), then "The

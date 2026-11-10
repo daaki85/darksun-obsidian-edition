@@ -90,6 +90,9 @@ capture; window grabs (`import -window`) are 320x240, so y x 1.2.
 - The creation screen: CREATE CHARACTERS (165,92), right-click an empty slot, NEW (110,57). A score's
   small square (x 6, STR y 140 to CHA 174, 7 apart) takes the clicks: right lowers, left raises.
 - Escape with nothing open brings EXIT: SAVE GAME?; press Escape only with a screen or menu up.
+- A held item changed in memory: inventory closed, its +0Ch cleared, its own type (the Loader sets
+  the picture from the type). A talk not in the pens (Alagorn's): a test build pointing Kalzith's
+  entry at it (the guide's Kalzith notes).
 - The arena's flags and numbers have no place in memory to set from outside (even mid-script):
   to test a branch there, force it in a test build of the scripts, then put the module back.
 
