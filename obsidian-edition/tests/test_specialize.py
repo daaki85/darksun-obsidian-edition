@@ -792,7 +792,7 @@ class GrandMasteryTableTests(unittest.TestCase):
     def test_kits_table(self):
         """KITS.md's grand mastery table: a row for each weapon spec, in specialize.KINDS' order; its
         large dice sizes.LARGE_DICE's (the small ones where it has none), and both grand mastery
-        columns those a die larger (specialize.next_die)."""
+        columns those a die larger (specialize.next_die); the staff sling's the stinkpot's 1d3."""
         import re
         from dsloader import sizes, specialize as sp
         with open(os.path.join(os.path.dirname(__file__), "..", "KITS.md"), encoding="utf-8") as f:
@@ -812,6 +812,10 @@ class GrandMasteryTableTests(unittest.TestCase):
             self.assertEqual(dice(large), (lc, ls, lb), name)
             self.assertEqual(dice(grand), (c, sp.next_die(s), b), name)
             self.assertEqual(dice(grand_large), (lc, sp.next_die(ls), lb), name)
+        # (the staff sling's row its stinkpot's, game.RULE_STINKPOTS: the 1d3 DSCLOG's STINK_SIDES makes it)
+        staff = rows[sp.KINDS.index("staff sling")]
+        self.assertEqual(dice(staff[1])[:2], game.STINK_DICE)
+        self.assertEqual(dice(staff[3])[:2], (1, 4))
 
 
 if __name__ == "__main__":

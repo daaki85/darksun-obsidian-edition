@@ -484,6 +484,9 @@ class Viewer:
                 ("held_hit", "arms", "Held targets as in AD&D: a blow on a Paralyzed or Out Cold foe (or friend) "
                                      "hits automatically and does normal damage (the game rolls to hit and "
                                      "doubles the damage)"),
+                ("stinkpots", "arms", "Staff sling stinkpots: the staff sling throws clay pots of burning sulphur, "
+                                      "1d3 damage (the game's 1d4), and a target hit, unless undead or immune to "
+                                      "poison, saves against poison or is nauseated for 1d3+1 rounds: -2 to hit"),
                 ("protection_rules", "arms", "Rings and cloaks of protection as in AD&D: only the better of two rings "
                                              "counts, a ring gives no AC with magical armour, and a cloak does nothing "
                                              "with magical or metal armour or a shield"),

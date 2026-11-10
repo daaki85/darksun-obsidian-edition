@@ -259,6 +259,12 @@ MANUAL_CHILL, MANUAL_CLOUD, MANUAL_CELL, MANUAL_RAINBOW, MANUAL_FEEBLE, MANUAL_P
 # its save follow); a djinn's first turn (+6 the djinn) +8 its images, +0Ah the rounds invisible
 MANUAL_DRAIN, MANUAL_TARI, MANUAL_DJINN = range(7, 10)
 MANUAL_TANGLE = 10  # (DSCLOG's CAHULAKS: +6 the target, +8 the attacker, +0Ah the d20, +0Ch the save needed)
+# ... and the staff sling's stinkpot (DSCLOG's STINKPOTS, game.RULE_STINKPOTS): before its save +6 the
+# target, +8 the thrower, +0Ah what (STINK_SAVES a save follows, the game's against power 176, named for
+# the stinkpot here; STINK_UNDEAD, STINK_IMMUNE none); after it +6, +8, +0Ah the d3 and +0Ch the rounds
+# Nauseated (0 and 0: saved)
+MANUAL_STINK, MANUAL_NAUSEA = 11, 12
+STINK_SAVES, STINK_UNDEAD, STINK_IMMUNE = 0, 1, 2
 # DSCLOG's rest (game.RULE_REST: REST_PRE, REST_HP, RS_REC): raw = what; a cast at rest (REST_CAST): its
 # frame +6 the caster, +8 the target, +0Ah the spell, +0Ch its slot's level (0 a psionic power), +0Eh the
 # slots of that level left (a power: the PSP left); a night's natural healing (REST_HEAL): +6 the member,
@@ -618,6 +624,7 @@ class DiceLog:
         self._tally_out: Optional[float] = None  # (when the flag was first seen down after that)
         self._stale_turn: Optional[int] = None  # the last round's last turn, until the new one's first
         self._save_rolls: Dict[Tuple[int, int], int] = {}  # (SS, save frame BP) -> natural d20
+        self._stink: Optional[Tuple[int, int, bool]] = None  # (a stinkpot's target, thrower, its save line seen)
         self._static_rolls: Dict[Tuple[int, int], int] = {}  # (SS, power check BP) -> the first d20 of a Static contest
         self._defence_rolls: Dict[Tuple[int, int], int] = {}  # (SS, defence BP) -> a psionic defence's first roll
         self._errors_said: set = set()  # (the kinds of error a pass has written once: _error_once)
@@ -2759,7 +2766,30 @@ class DiceLog:
             then = "saved" if saved else "tangled: loses its next turn"
             return [f"    {self._name(a)}'s cahulaks tangle {name}? Save against petrification: "
                     f"d20 = {b}, needs {c}+ -> {then}"]
+        if e.raw == MANUAL_STINK:
+            if b == STINK_SAVES:  # (the game's save line next, named for it: _save_line)
+                self._stink = (who, a, False)
+                return []
+            self._stink = None
+            why = "undead" if b == STINK_UNDEAD else "immune to poison"
+            return [f"    {self._name(a)}'s stinkpot bursts on {name}: {why}, unaffected"]
+        if e.raw == MANUAL_NAUSEA:
+            seen = self._stink is not None and self._stink[:2] == (who, a) and self._stink[2]
+            self._stink = None
+            if not c:
+                return []  # (saved: its save line said so)
+            how = "" if seen else ", no saving throw (helpless)"
+            return [f"    {self._name(a)}'s stinkpot: {name} is nauseated{how}, -2 to hit for "
+                    f"1d3+1 = {b} + 1 = {c} rounds"]
         return []
+
+    def _stink_save(self, target, spell) -> bool:
+        """The save at hand is a stinkpot's (MANUAL_STINK just before it, the game's save against
+        power 176 on its target): noted as seen."""
+        if self._stink is None or spell != game.STINK_SAVE_POWER or self._stink[0] != target:
+            return False
+        self._stink = self._stink[:2] + (True,)
+        return True
 
     def _rest(self, e: Entry) -> List[str]:
         """What DSCLOG's rest did (KIND_REST): a priest's or psionicist's cast before it, a member's
@@ -2961,6 +2991,9 @@ class DiceLog:
         if on(target_combatant, game.FOG_EFFECT):
             parts.append(("target's Fogbolt", 2))
             situational -= 2
+        if on(attacker_combatant, game.STINK_EFFECT):  # (a stinkpot's Nauseated: DSCLOG's NS_HIT)
+            parts.append((EFFECT_NAMES[game.STINK_EFFECT], game.STINK_TO_HIT))
+            situational -= game.STINK_TO_HIT
         prayer = next((x for x in effects if x.owner == attacker_combatant and x.id == 73), None)
         if prayer:
             caster = g.combatant_creature(prayer.caster)
@@ -3900,7 +3933,8 @@ class DiceLog:
         save_natural)."""
         natural = scaled(e.raw, 20) + 1
         spell, target, caster = e.parent_arg(0x0A), e.parent_arg(6), e.parent_arg(8)
-        self._spell_cast(spell, now)
+        if not self._stink_save(target, spell):  # (a stinkpot's: no spell's damage to follow)
+            self._spell_cast(spell, now)
         needed = e.parent_locals[0x28 - 1]
         index = e.parent_local(-6)
         pending = self._flush_spell(spell)
@@ -4146,16 +4180,19 @@ class DiceLog:
         kind = SAVE_NAMES.get(index, "?")
         # a spell left on the ground (Grease, a cloud) makes its victims save with themselves as the caster
         source = f" from {g.combatant_name(caster)}" if caster != target else ""
-        who = f"{g.combatant_name(target)}'s saving throw vs {g.spell_name(spell)}{source} ({kind})"
+        stink = self._stink_save(target, spell)
+        what = "a stinkpot" if stink else g.spell_name(spell)
+        who = f"{g.combatant_name(target)}'s saving throw vs {what}{source} ({kind})"
+        result = (lambda _, saved: "saved" if saved else "failed: nauseated") if stink else self._save_result
         if total is None:
-            return f"{who}: d20 = {natural} (natural {natural}) -> {self._save_result(spell, natural == 20)}"
+            return f"{who}: d20 = {natural} (natural {natural}) -> {result(spell, natural == 20)}"
         if total >= 0x80:  # the game adds -100 / +100 for "can't save" / "always saves"
             total -= 0x100
         if total < -50:  # (gamepatch's save_signed, always applied: the game's compare made signed)
             note = ", even on a natural 20" if natural == 20 else ""
             return f"{who}: none allowed (cannot save{note}) -> failed"
         if natural == 20:  # (DSCLOG's SAVE_SUM: made at least the number needed)
-            return f"{who}: d20 = 20 (natural 20) -> {self._save_result(spell, True)}"
+            return f"{who}: d20 = 20 (natural 20) -> {result(spell, True)}"
         if total > 100:
             if g.rules & game.RULE_SIZE and sizes.spared(g, spell, target):
                 return f"{who}: {g.combatant_name(target)} is too big for {g.spell_name(spell)} -> unaffected"
@@ -4188,7 +4225,7 @@ class DiceLog:
         if natural is not None:
             doubled = bool(rules and rules.doubles_roll)
             chance = f" ({save_chance(needed - (total - (rolled or 0)), doubled)}% to save)"
-        return f"{who}: {steps}, needs {needed}{chance} -> {self._save_result(spell, total >= needed)}"
+        return f"{who}: {steps}, needs {needed}{chance} -> {result(spell, total >= needed)}"
 
     def _save_result(self, spell: int, saved: bool) -> str:
         """'saved' or 'failed', and what that does to the spell's damage: the amount from the

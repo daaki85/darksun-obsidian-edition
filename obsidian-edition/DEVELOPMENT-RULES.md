@@ -22,6 +22,7 @@
 - [Cahulaks](#cahulaks)
 - [Creature size](#creature-size)
 - [Held targets](#held-targets)
+- [Staff sling stinkpots](#staff-sling-stinkpots)
 - [Rings and cloaks of protection](#rings-and-cloaks-of-protection)
 - [Helms give AC 1](#helms-give-ac-1)
 - [Items saving against acid](#items-saving-against-acid)
@@ -582,6 +583,48 @@ target's state at the roll at +188 (8000h, plus 1 Paralyzed or 2 Out Cold), read
 line is written still reads right (an older helper's entries fall back to `GameData.helpless`).
 The attack's line says HIT, with `Paralyzed: hit
 automatically, for normal damage (AD&D's held target)` under it, and the damage line has no x2.
+
+## Staff sling stinkpots
+
+([In the features page](FEATURES.md#staff-sling-stinkpots).)
+
+The rule (`RULE_STINKPOTS`, bit 2 of the rules' low word: boots' movement once, unused since; the
+Loader's `stinkpots`) is DSCLOG's `STINKPOTS`; no new patch in the game:
+
+- **The dice.** The staff sling is item type 0 (IT1R's first record, `020008001400fa00...`: missile
+  only, crushing, 1d4 at +0Ch/+0Dh). `STINK_SIDES` writes its sides, 3 with the rule and 4 without, in
+  the table the game read (`TYPES_FILL`, which notes it in `types_ptr`) and again at each pass of the
+  main loop (`PROBE_SCROLL`), so a switch takes at once; only over a 3 or a 4, only while DS:1669h
+  still points there. The game's attack, the item box, the inventory and View Character all read that
+  record, and grand mastery's `NEXT_DIE` steps the 3 to a 4.
+- **The hit.** `CAH_HIT` (58B54h, the cahulaks' site: a weapon hit that did damage, `[BP+14h]` the
+  type, `[BP+18h]` the thrower, DS:494Ah the target) goes on to `STINK_HIT` for type 0. A target
+  still standing (its creature's HP above 0) is spared if undead (5B8:A2h, 7BE20h, the game's own
+  test) or if it takes none of the poison damage kind (5B8:66h, 7B492h: the share of damage kind 1 by
+  its kind's resistance rules; its effects' bits, which only fire, cold and electricity read, given
+  as zeros, `stink_none`). Otherwise the game's saving throw (5B8:2Fh, 79A71h: target, thrower,
+  power 176, level 0) as against a monster's poisoned hit: record 176's +1Fh is 21h,
+  paralysis/poison/death, and its damage kinds (100h) don't double the d20; every modifier the game
+  gives that save counts, and a held or Out Cold target fails before rolling. A failure adds
+  Nauseated (75) through 598:3Eh (76442h: target, thrower, spell 22, effect 75, (1d3 + 1) x 60
+  seconds, 0). The spell is Stinking Cloud's: an effect filed under a spell of 8Ah or more with a
+  party member as its caster clears a bit in the psionic powers' table as it ends (76883h), and no
+  compare of an effect's spell with 22 turns up in the game's code. The calls are made in a frame the overlay
+  manager can fix up (`OVR_BACK`), as `SHADOW_DRAIN`'s.
+- **Nauseated (75).** The effects' bits (598:25h, 76944h) are 10 bytes, effects 0-79. `NS_HIT`
+  (7C430h) takes 2 off a nauseated attacker's to-hit sum whatever the rules (only the rule puts the
+  effect on). The game's table of effects' names and icons (selector 3E0h, 1BCh bytes) ends at 74,
+  so `NS_ENTRY` gives 75 an entry of its own, `STINK_ENTRY`, after Reflected Image's past the spell
+  rows (segment 4010h at 1FEh, zeros in the game): NAUSEATED and Stinking Cloud's icon (21022). Those
+  five sites are the game's only readers of the table.
+- **The dice log.** `KIND_MANUAL` entries: `MN_STINK` (11) before the save (target, thrower; 0 a save
+  follows, 1 undead, 2 immune), `MN_NAUSEA` (12) after it (target, thrower, the d3 and the rounds; 0 and
+  0 saved). Between them the game's save line is named for the stinkpot (`DiceLog._stink_save`, and no
+  spell's damage window opened), `-> failed: nauseated`. The to-hit breakdown names `Nauseated -2`
+  (`game.HIT_EFFECTS`).
+
+Tests: tests/test_stinkpots.py (`StinkHitTests` runs the site in Unicorn with the game's routines
+stubbed, `StinkSidesTests`, `StinkEffectTests`, the dice log's lines).
 
 ## Rings and cloaks of protection
 

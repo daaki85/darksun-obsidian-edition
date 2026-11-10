@@ -118,8 +118,16 @@ OBSIDIAN_CAHULAKS_TYPE = GAME_TYPES + 32
 SPEED_AC = 2
 GYTHKA_TYPE = 0x2C  # the game's gythka ("2 handed Bone Gythka")
 # The Loader's rule changes (DSCLOG's RULES): helms count AC 1; AD&D's two-weapon penalties;
-# spells saved against with the spell save; no doubled d20 (2, once boots' movement, is unused)
+# spells saved against with the spell save; no doubled d20
 RULE_HELMS, RULE_TWO_WEAPONS, RULE_SPELL_SAVE, RULE_NO_DOUBLE = 1, 4, 8, 16
+# The staff sling's shot a stinkpot (AD&D's Arms and Equipment Guide): 1d3 crushing against any size
+# (the game's 1d4: DSCLOG's STINK_SIDES keeps type 0's dice), and a hit makes the target, unless
+# undead or immune to poison, save against poison (the game's save, as against a monster's poisoned
+# hit) or be Nauseated (STINK_EFFECT: -2 to hit) for 1d3+1 rounds (DSCLOG's RULES bit 2, once boots'
+# movement and unused from then; STINKPOTS)
+RULE_STINKPOTS = 2
+STAFF_SLING_TYPE, STINK_DICE, SLING_DICE = 0, (1, 3), (1, 4)
+STINK_EFFECT, STINK_TO_HIT, STINK_SAVE_POWER = 75, -2, 176
 RULE_NEW_SPELLS = 32  # the new wizard spells (NEW_SPELLS)
 RULE_STEALTH = 64  # a thief hiding in shadows and moving silently backstabs (stealth.py)
 RULE_LEVEL_10 = 128  # an XP cap (XP_CAP, shared out) in place of the game's level cap of 9
@@ -293,7 +301,7 @@ RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("two_weapons", RULE_TWO_WEAPONS),
                  ("backstab_dice", RULE_BACKSTAB), ("aging", RULE_AGING),
                  ("enlarge_dice", RULE_ENLARGE), ("con_adnd", RULE_CON),
                  ("dual_class", RULE_DUAL_CLASS), ("rest_heal", RULE_REST), ("cahulaks", RULE_CAHULAKS),
-                 ("creature_size", RULE_SIZE), ("held_hit", RULE_HELD))
+                 ("creature_size", RULE_SIZE), ("held_hit", RULE_HELD), ("stinkpots", RULE_STINKPOTS))
 # The new spells (RULE_NEW_SPELLS; DSCLOG's NEW SPELLS): six wizard spells numbered after the game's
 # 196 (0-195), in records past its own (the 200h bytes after them, two small tables, moved into
 # DSCLOG at the game's start: its SEG_MOVE, SEGMENT_TABLE here); DSCLOG fills their records and rows
@@ -591,7 +599,7 @@ EFFECT_NAMES = {
     64: "Strength Borrowed", 65: "Strength Lent", 66: "Adrenalin Control", 67: "Strength",
     68: "Weakened", 69: "Extra Hitpoints", 70: "Flame Blade", 71: "Spirit. Hammer", 72: "Shillelagh",
     73: "Prayer", GRACE_EFFECT: "Cat's Grace", CLAW_EFFECT: "Erdlu Claw", FOG_EFFECT: "Fogbolt",
-    FRIENDS_EFFECT: "Friends",
+    FRIENDS_EFFECT: "Friends", STINK_EFFECT: "Nauseated",
 }
 
 # What effects do, where the game's own code shows it (to-hit, AC and saving throws)
@@ -612,6 +620,7 @@ EFFECT_RULES = {
     CLAW_EFFECT: "unarmed attacks (a thri-kreen's claws, not its bite) do 1d6+1 where that is better, +1 to hit, as a +1 magical edged weapon (talons)",
     FOG_EFFECT: "-3 to hit, and +2 to hit it (as AC 2 worse)",
     FRIENDS_EFFECT: f"CHA + 2d4, at most {FRIENDS_MOST}",
+    STINK_EFFECT: "-2 to hit (a staff sling's stinkpot)",
     73: "+1 to hit and saves for the caster's side, -1 for the other",
     # what the game's turn, movement, casting and damage code does with the rest
     28: "missile attacks miss it", 37: "no damage from fire, cold, electricity or magic alone",
@@ -803,7 +812,8 @@ SAVE_SHORT = ("PPD", "RSW", "PP", "BW", "SP")  # as the game's inventory screen 
 # the attacker's effects, the weapon's plus or its material's penalty
 STR_TO_HIT, DEX_MISSILE = 0x7C2, 0x7DC  # DS: a byte per ability score
 STR_DAMAGE_TABLE = 0x7A8  # DS: the same, for melee damage (just before STR_TO_HIT)
-HIT_EFFECTS = ((7, 1), (12, -1), (47, -4), (49, 1), (FOG_EFFECT, -3))  # Blessed, Cursed, Slowed, Graft Weapon, Fogbolt
+HIT_EFFECTS = ((7, 1), (12, -1), (47, -4), (49, 1), (FOG_EFFECT, -3),  # Blessed, Cursed, Slowed, Graft Weapon, Fogbolt
+               (STINK_EFFECT, STINK_TO_HIT))  # ... and the stinkpot's Nauseated (DSCLOG's NS_HIT)
 WEAPON_HANDS = (EQUIP_SLOTS.index("right hand"), EQUIP_SLOTS.index("left hand"))
 MISSILE_SLOT = EQUIP_SLOTS.index("missile")
 

@@ -16951,10 +16951,14 @@ cah_swing:
 .out:   iret
 
 ; CAH_HIT ("mov byte [bp-15h],0", 58B54h; 4 bytes: a weapon's hit has done damage): the cahulaks'
-; tangle (see CAHULAKS).
+; tangle (see CAHULAKS), and the staff sling's stinkpot (STINKPOTS).
 cah_hit:
         mov byte [bp - 0x15], 0
-        test word [cs:rules_hi], RULE_HI_CAHULAKS
+        test byte [cs:rules], RULE_STINKPOTS
+        jz .rule
+        cmp word [bp + 0x14], STAFF_SLING
+        je stink_hit
+.rule:  test word [cs:rules_hi], RULE_HI_CAHULAKS
         jz .out
         cmp word [bp + 0x16], 1
         jg .out
@@ -17023,6 +17027,139 @@ cah_hit:
 .done:  pop es
         popad
 .out:   iret
+
+; STINKPOTS (RULE_STINKPOTS, the Loader's rule "stinkpots"): the staff sling's shot is a stinkpot, a
+; clay pot of burning sulphur (AD&D's Arms and Equipment Guide). Its damage is 1d3 crushing against
+; any size (type 0's dice, STINK_SIDES). A hit (STINK_HIT, from CAH_HIT: [BP+14h] the type, [BP+18h]
+; the thrower, TARGET the target) on a target still standing, not undead (5B8:A2h, 7BE20h) and not
+; immune to poison (5B8:66h, 7B492h: the share it takes of the poison damage kind, 1, 0 none), makes
+; it save against poison: the game's saving throw (5B8:2Fh, 79A71h) as against a monster's poisoned
+; hit (power 176: paralysis/poison/death, with every modifier the game gives it; a held target fails).
+; A failure: Nauseated (STINK_EFFECT, 75, past the game's 74: -2 to hit, NS_HIT; its name and icon
+; NS_ENTRY's) for 1d3+1 rounds, added through 598:3Eh (76442h) under Stinking Cloud (22): an effect
+; filed under a power past 137 with a party member as its thrower is taken for a psionic power's upkeep
+; as it ends (76883h). In a frame the overlay manager can fix up. Recorded: MN_STINK before the save
+; (target, thrower, 0 a save follows, 1 undead, 2 immune to poison), MN_NAUSEA after it (target,
+; thrower, the d3, the rounds; 0 and 0 saved).
+STAFF_SLING  equ 0              ; the staff sling's item type
+STINK_SIDES  equ 3              ; (its dice's sides with the rule: 1d3; the game's 4)
+SLING_SIDES  equ 4
+STINK_EFFECT equ 75
+STINK_SPELL  equ 22             ; (Stinking Cloud: the effect's spell)
+STINK_SAVE   equ 176            ; (a monster's poisoned hit: the save's record)
+STINK_POISON equ 1              ; (the poison damage kind)
+STINK_TO_HIT equ 2
+STINK_UNDEAD equ 1              ; (MN_STINK's +0Ah)
+STINK_IMMUNE equ 2
+MN_STINK     equ 11
+MN_NAUSEA    equ 12
+stink_hit:
+        sti
+        pushad
+        push es
+        mov ax, [TARGET]
+        cmp ax, MAP_COUNT
+        jae .out
+        call combatant_creature
+        jc .out
+        imul ax, ax, 0x3A
+        les bx, [CREATURES]
+        add bx, ax
+        cmp word [es:bx], 0
+        jle .out                    ; (felled by the blow)
+        mov ax, [TARGET]
+        mov [cs:mn_frame], ax
+        mov ax, [bp + 0x18]
+        mov [cs:mn_frame + 2], ax
+        xor eax, eax
+        mov [cs:mn_frame + 4], eax
+        mov bx, sp
+        push word [ss:bx + 36]      ; (the way back, in a frame the overlay manager can fix up)
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        push word [cs:mn_frame]
+        th_far TH_STUB_5B8, 0xA2    ; (undead: AL)
+        add sp, 2
+        mov dx, STINK_UNDEAD
+        or al, al
+        jnz .spared
+        push word STINK_POISON
+        push cs
+        push word stink_none        ; (its effects' bits: none count against poison)
+        push word [cs:mn_frame]
+        th_far TH_STUB_5B8, 0x66    ; (the share of poison it takes)
+        add sp, 8
+        mov dx, STINK_IMMUNE
+        or ax, ax
+        jz .spared
+        mov ax, MN_STINK
+        call mn_rec
+        push word 0                 ; (the level)
+        push word STINK_SAVE
+        push word [cs:mn_frame + 2]
+        push word [cs:mn_frame]
+        th_far TH_STUB_5B8, 0x2F    ; (the save: AX 1 saved)
+        add sp, 8
+        or ax, ax
+        jnz .saved
+        mov ax, 3
+        call game_die
+        mov [cs:mn_frame + 4], ax
+        inc ax
+        mov [cs:mn_frame + 6], ax
+        push word 0
+        push word 0
+        imul ax, ax, ROUND_SECONDS
+        push ax
+        push word STINK_EFFECT
+        push word STINK_SPELL
+        push word [cs:mn_frame + 2]
+        push word [cs:mn_frame]
+        th_far TU_STUB, 0x3E        ; (target, thrower, spell, effect, time, 0)
+        add sp, 14
+.saved: mov ax, MN_NAUSEA
+        call mn_rec
+        jmp ovr_back
+.spared:
+        mov [cs:mn_frame + 4], dx
+        mov ax, MN_STINK
+        call mn_rec
+        jmp ovr_back
+.out:   pop es
+        popad
+        iret
+stink_none times 10 db 0
+
+; STINK_SIDES: the staff sling's type's (0) damage dice's sides (+0Ch) as the rule has them: the
+; stinkpot's 3 with it, the game's 4 without; only in the table TYPES_FILL last saw read in (TYPES_PTR
+; still it), and only over a 3 or a 4. DS the game's; all registers kept.
+stink_sides:
+        push es
+        push bx
+        push ax
+        les bx, [TYPES_PTR]
+        cmp bx, [cs:types_ptr]
+        jne .out
+        mov ax, es
+        or ax, ax
+        jz .out
+        cmp ax, [cs:types_ptr + 2]
+        jne .out
+        mov al, STINK_SIDES
+        test byte [cs:rules], RULE_STINKPOTS
+        jnz .set
+        mov al, SLING_SIDES
+.set:   mov ah, [es:bx + STAFF_SLING * TYPE_SIZE + 0x0C]
+        cmp ah, STINK_SIDES
+        je .put
+        cmp ah, SLING_SIDES
+        jne .out
+.put:   mov [es:bx + STAFF_SLING * TYPE_SIZE + 0x0C], al
+.out:   pop ax
+        pop bx
+        pop es
+        ret
 ; SIZE (RULE_HI_SIZE, the Loader's rule "creature_size"): AD&D's creature sizes, which the game keeps
 ; none of. A combatant is large (IS_LARGE) when Enlarged (effect 16), a half-giant (its sheet's race),
 ; or marked in LARGE_BITS (the Loader's, from dsloader/sizes.py: large, huge or gargantuan). Then:
@@ -17777,8 +17914,9 @@ amulet_mr:
         iret
 
 ; RULES (set by the Loader, from its Options): a helm counts AC 1, ... (2, once boots'
-; movement in a fight, is unused)
+; movement in a fight, unused from then until the staff sling's stinkpots)
 RULE_HELMS equ 1
+RULE_STINKPOTS equ 2            ; the staff sling's shot a stinkpot: 1d3, and a save against poison or -2 to hit (STINKPOTS)
 RULE_TWO_WEAPONS equ 4
 RULE_SPELL_SAVE equ 8           ; (the Loader writes the game's save table for this one)
 RULE_NO_DOUBLE equ 16
@@ -21918,12 +22056,17 @@ pp_kept_icon dw 0
 ; status under a portrait (BX, on party member DI) find an effect's entry in the effects' table
 ; (6 bytes each from effect 1: the name, far, then the icon) by its number times 6: Mirror Images
 ; put there by Reflected Image (NS_EFFECT_SPELL) is REFLECT_ENTRY's instead, its name and icon,
-; which NS_SETUP keeps past the spell rows (as an entry of the table's segment).
+; which NS_SETUP keeps past the spell rows (as an entry of the table's segment); the stinkpot's
+; Nauseated (STINK_EFFECT, past the table's 74 entries: selector 3E0h is 1BCh bytes) STINK_ENTRY's,
+; after it, its name NAUSEATED and Stinking Cloud's icon, put there each time.
 NS_DI equ 2
 NS_BX equ 18
 EF_SHOWN_FROM_DS equ 0x4356 - 0x3931 ; the character on show on the Effects screen (348h:25Bh)
 EF_SHOWN     equ 0x25B
 REFLECT_ENTRY equ (SPELL_LEVELS_SEG + 0x4356 - 0x3F8D) * 16 + SPELL_LEVELS + (NS_FIRST + 16) * 7
+STINK_ENTRY  equ REFLECT_ENTRY + 6
+STINK_ICON   equ NS_ICON + STINKING_CLOUD ; (Stinking Cloud's, as the game's Can't Attack has it)
+ns_name_stink db "NAUSEATED", 0
 ns_entry:
         pushad
         push es
@@ -21947,6 +22090,8 @@ ns_entry:
         mov word [ss:di + bx], REFLECT_ENTRY + 6
         jmp .out
 .thing: mov dx, [ss:di + bx]    ; (DX the effect)
+        cmp dx, STINK_EFFECT
+        je .stink
         cmp dx, MIRROR_EFFECT
         jne .times
         call ns_setup           ; (its entry as the rule has it now)
@@ -21971,6 +22116,14 @@ ns_entry:
 .out:   pop es
         popad
         iret
+.stink: mov ax, ds
+        sub ax, EFFECT_TABLE_FROM_DS
+        mov es, ax
+        mov word [es:STINK_ENTRY], ns_name_stink
+        mov [es:STINK_ENTRY + 2], cs
+        mov word [es:STINK_ENTRY + 4], STINK_ICON
+        mov word [ss:di + bx], STINK_ENTRY + 6
+        jmp .out
 
 ; SELL_PRICE: "mov si,es:[bx+6]" (83CCAh; 4 bytes: the site's number and a NOP after the INT) where
 ; a shop takes the price it pays for the item the party sells (ES:BX the item; shown in its offer,
@@ -22382,13 +22535,18 @@ ns_find:
 
 ; NS_HIT: "test byte [bp-8],80h" (7C430h; 4 bytes: the site's number and a NOP after the INT) in the
 ; routine adding up an attack's to-hit adjustments from effects (7C3E9h: SI the sum; the attacker's
-; bits at [BP-18h], the target's at [BP-0Eh]), where the target's Blur takes 2: Fogbolt's 3 off for
-; a fogged attacker and 2 on against a fogged target (its AC 2 worse), then that test.
+; bits at [BP-18h], the target's at [BP-0Eh], 10 bytes: effects 0-79), where the target's Blur takes 2:
+; a nauseated attacker's 2 off (the stinkpot's STINK_EFFECT, whatever the rules: only its rule puts it
+; on), Fogbolt's 3 off for a fogged attacker and 2 on against a fogged target (its AC 2 worse), then
+; that test.
 ns_hit:
         pushad
         push es
         mov di, sp
-        test byte [cs:rules], RULE_NEW_SPELLS
+        test byte [bp - 0x18 + STINK_EFFECT / 8], 1 << (STINK_EFFECT % 8)
+        jz .fog
+        sub word [ss:di + NS_SI], STINK_TO_HIT
+.fog:   test byte [cs:rules], RULE_NEW_SPELLS
         jz .test
         test byte [bp - 0x18 + FOG_EFFECT / 8], 1 << (FOG_EFFECT % 8)
         jz .target
@@ -22581,7 +22739,8 @@ probe_types_size:
 ; metal axe's grey and teal, its weight the metal great axe's 70); makes the Quicksilver Glove's
 ; type leather (no material, which the game's to-hit and damage took for wood); and lets air
 ; clerics use the game's daggers (17, 33, 84, 94: none had their bit; their sphere's weapons
-; are daggers and missile and thrown ones).
+; are daggers and missile and thrown ones); and the staff sling's dice as the stinkpots' rule has
+; them (STINK_SIDES, again at each pass of the main loop, the rule switched or not).
 probe_types_fill:
         pop word [cs:n_ip]
         pop word [cs:n_cs]
@@ -22602,6 +22761,7 @@ probe_types_fill:
         les di, [TYPES_PTR]
         mov [cs:types_ptr], di
         mov [cs:types_ptr+2], es
+        call stink_sides                ; (the staff sling's dice as the stinkpots' rule has them)
         mov byte [es:di+GREYS_ARMS*TYPE_SIZE+0x12], 3
         mov byte [es:di+GREYS_LEGS*TYPE_SIZE+0x12], 3
         mov byte [es:di+GREAT_AXE*TYPE_SIZE+8], METAL_MAT
@@ -24486,6 +24646,7 @@ probe_scroll:
         call dust_tick
         call whirl_tick
         call sound_tick
+        call stink_sides                ; (the rule switched since: the staff sling's dice)
         call target_click
         cmp word [cs:view_redraw], 0
         je .panel

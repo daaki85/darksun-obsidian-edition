@@ -43,8 +43,23 @@ Releases, newest first: [2.15.0](#pull-request-89-merged-2026-11-10) (#89),
 
 ## Next pull request (not opened yet)
 
-DSCLOG.EXE 68,128 bytes (image 68,096: 62,576 in its segment, 5,520 in the tail), 2,960 of its
-segment spare; `UMB_NEED` 6,352 paragraphs (1,830 spare), `UMB_KEPT` 7,974 (208 spare).
+DSCLOG.EXE 68,576 bytes (image 68,544: 63,024 in its segment, 5,520 in the tail), 2,512 of its
+segment spare; `UMB_NEED` 6,380 paragraphs (1,802 spare), `UMB_KEPT` 8,002 (180 spare).
+
+**New**
+- **Staff sling stinkpots** (AD&D's Arms and Equipment Guide), a rule on the Options tab's weapons and
+  armour, on by default (`stinkpots`, `RULE_STINKPOTS`: bit 2 of the rules, boots' movement once and
+  unused since). The staff sling's shot is a clay pot of burning sulphur: 1d3 crushing against any
+  size (DSCLOG's `STINK_SIDES` makes item type 0's sides 3 in the game's type table, at its read and
+  at each pass of the main loop; 4 again with the rule off), and a hit that did damage (`STINK_HIT`,
+  from the cahulaks' `CAH_HIT` site) makes a target that is neither undead (the game's test, 7BE20h)
+  nor immune to poison (7B492h's share of the poison damage kind) make the game's own save against
+  power 176 (paralysis/poison/death, every modifier counted). A failure is Nauseated, a new effect
+  (75), for 1d3+1 rounds, added through 76442h under Stinking Cloud's number: `NS_HIT` takes 2 off the
+  nauseated creature's attacks, and `NS_ENTRY` names it NAUSEATED with Stinking Cloud's icon (the
+  game's table of effect names ends at 74; its entry is kept past Reflected Image's). The dice log
+  names the save for the stinkpot and gives the rounds (`MN_STINK`, `MN_NAUSEA`), and the to-hit
+  breakdown `-2 Nauseated`. (Tests: tests/test_stinkpots.py; `test_to_hit_effects`.)
 
 **Changed**
 - **Grand mastery's die is the next greater die size, against every target** (Player's Option:
@@ -58,7 +73,10 @@ segment spare; `UMB_NEED` 6,352 paragraphs (1,830 spare), `UMB_KEPT` 7,974 (208 
 **Docs**
 - KITS: a table of every weapon spec's dice, man-sized and large, with and without grand mastery
   ([Grand mastery's damage](obsidian-edition/KITS.md#grand-masterys-damage); `GrandMasteryTableTests`
-  keeps it in step with `sizes.LARGE_DICE` and `specialize.next_die`).
+  keeps it in step with `sizes.LARGE_DICE` and `specialize.next_die`). The staff sling's row is its
+  stinkpot's: 1d3, 1d4 under grand mastery.
+- The stinkpots in FEATURES ([Staff sling stinkpots](obsidian-edition/FEATURES.md#staff-sling-stinkpots)),
+  DEVELOPMENT-RULES, ITEMS, DICE-LOG, the player's guide and the patch notes; DEVELOPMENT's sizes.
 - The player's guide's magic items: "Six scrolls" named as Kalzith's, and the defilers' scrolls listed
   (any preserver spell; the champions' bout's defiler always has one); ITEMS likewise.
 

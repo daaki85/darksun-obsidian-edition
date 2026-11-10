@@ -45,6 +45,7 @@ running the game, the Loader's window and its dice log are in the
     - [Cahulaks](#cahulaks)
     - [Creature size](#creature-size)
     - [Held targets](#held-targets)
+    - [Staff sling stinkpots](#staff-sling-stinkpots)
     - [Rings and cloaks of protection](#rings-and-cloaks-of-protection)
     - [Helms give AC 1](#helms-give-ac-1)
     - [Items saving against acid](#items-saving-against-acid)
@@ -856,6 +857,7 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#level-cap-by-xp).
 | [Cahulaks](#cahulaks) | a plain two-handed 1d6 weapon | a head in each hand: one attack more a round at −2 and −4 (DEX added); a hit tangles a man-sized or smaller foe (not anyone Enlarged) that fails a save against petrification: it loses its next turn |
 | [Creature size](#creature-size) | no sizes: a weapon does the same to a halfling and a Bulette; Hold Person and Charm Person take on a half-giant | a large target (a half-giant, a large monster, anyone Enlarged) takes AD&D's large weapon dice (a long sword 1d12); Hold Person, Charm Person and Charm Person or Mammal (on a person) don't take on it |
 | [Held targets](#held-targets) | a blow on a held or Out Cold creature rolls to hit as ever and does double damage | it hits automatically and does normal damage, as AD&D's held target |
+| [Staff sling stinkpots](#staff-sling-stinkpots) | the staff sling shoots for 1d4 | it throws stinkpots: 1d3, and a target hit, unless undead or immune to poison, saves against poison or is nauseated, −2 to hit for 1d3+1 rounds |
 | [Rings and cloaks of protection](#rings-and-cloaks-of-protection) | no rings or cloaks of protection of its own; the mod's count in full, whatever else is worn | two rings don't add up, a ring gives no AC with magical armour, a cloak does nothing with magical or metal armour or a shield |
 | [Helms give AC 1](#helms-give-ac-1) | AC 0 | the game's helms give AC 1 rather than 0 |
 | [Items saving against acid](#items-saving-against-acid) | armour without a magical power destroyed outright, its plus ignored; a weapon on a d20 under 8 less its plus | an item the acid or corroding touch could destroy needs the easier of the game's number and AD&D's save by material, a plus helping |
@@ -1017,6 +1019,33 @@ leaves that out. A helpless creature still makes no saving throw (the game's, an
 Paralyzed), and a spell's damage on it is still the most its dice can do (the game's).
 
 How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#held-targets).
+
+#### Staff sling stinkpots
+
+AD&D's *Arms and Equipment Guide* gives the staff sling a stinkpot to throw: a clay pot of burning
+sulphur. With **Staff sling stinkpots** ticked (on unless unticked), the staff sling's standard shot
+is one:
+
+- **Damage 1d3** crushing, against any size (the game's staff sling 1d4). The inventory's and the
+  item box's damage lines say 1D3; a grand master's die is the next size, 1d4
+  ([Grand mastery's damage](KITS.md#grand-masterys-damage)).
+- **The fumes.** A hit that does damage makes the target save against poison (paralysis, poison or
+  death: the game's own saving throw, as against a monster's poisoned hit, with every bonus the game
+  gives it; a held or sleeping target fails). On a failure it is **Nauseated** for 1d3+1 rounds:
+  −2 on its attack rolls. The Effects screen, the Look box and the portrait's status name it
+  NAUSEATED. Undead, and anything immune to poison, are unaffected. A second stinkpot on a
+  nauseated creature brings its own rounds, which run beside the first's: the −2 lasts until the
+  last of them ends, and never doubles.
+
+Untick it and the staff sling is the game's: 1d4, no fumes (a creature already nauseated stays so
+until its rounds run out). The dice log names the save and what came of it:
+
+```
+Templar's saving throw vs a stinkpot from Lex (paralysis/poison/death): d20 = 7, needs 14 (40% to save) -> failed: nauseated
+    Lex's stinkpot: Templar is nauseated, -2 to hit for 1d3+1 = 2 + 1 = 3 rounds
+```
+
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#staff-sling-stinkpots).
 
 #### Rings and cloaks of protection
 

@@ -78,6 +78,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 - **[New]** **Creature size**: a large target (a half-giant, a large monster, anyone Enlarged) takes AD&D's damage for large targets from a weapon (a long sword 1d12, a great axe 2d8, a gythka 1d10; a dagger 1d3, a chatkcha 1d4+2), and Hold Person and Charm Person don't work on it at all. A weapon's item box shows both damages (`1D8-1/1D12-1`), and Shillelagh's damage reads 1D6+1 (2D4 against a large foe). *(the game keeps no sizes)*
 - **[New]** **Cahulaks** fight as Dark Sun's rules describe them: a bladed head in each hand, so one more attack a round (at −2 and −4, as with two weapons, DEX helping), and a hit can tangle a man-sized or smaller foe, which then loses its next turn unless it saves against petrification. Half-giants, large monsters, anyone Enlarged, the bodiless (elementals, slimes, swarms, shadows) and a few other beasts can't be tangled ([the creatures' table](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/CREATURES.md) (spoilers) marks each). Twin-blades and Battle Dancers can't use cahulaks.
+- **[New]** **Staff sling stinkpots** (AD&D's *Arms and Equipment Guide*): the staff sling throws clay pots of burning sulphur, 1d3 damage against any size, and a target hit saves against poison or is nauseated for 1d3+1 rounds, −2 on its attack rolls (NAUSEATED on the Effects screen). Undead, and anything immune to poison, are unaffected. *(was a plain 1d4 shot)*
 
 ## Classes and Kits
 

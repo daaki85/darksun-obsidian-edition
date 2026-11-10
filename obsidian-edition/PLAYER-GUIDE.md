@@ -1619,6 +1619,7 @@ AD&D's class tables and the **New spells** switch on):
 | Paralyzed | no turns; fails every save; every blow hits it |
 | Stuck (Grease, Web, Entangle and the like) | can't move; Free Action stops it |
 | Tangled ([cahulaks](#equipment)) | loses its next turn: no movement, no attack |
+| Nauseated ([a stinkpot](#equipment)) | −2 to hit |
 | Afraid | runs; can't attack or cast |
 | Charmed | fights for the caster |
 | Confused | each turn: runs off, does nothing, fights for a side picked at random, or acts normally |
@@ -1734,7 +1735,8 @@ materials, the short sword among them.
 | Gythka (two-handed) | 2d4 | 1d10 | no |
 | Polearm (two-handed) | 1d10 | 2d6 | no |
 | Chatkcha | 1d6+2 | 1d4+2 | no: missiles never backstab |
-| Bow, sling, staff sling (bow and staff sling two-handed) | by the missile | the same | no |
+| Bow, sling (bow two-handed) | by the missile | the same | no |
+| Staff sling (two-handed) | 1d3: a stinkpot | the same | no |
 
 A half-giant holds a two-handed weapon in one hand, with a shield or a light
 weapon in the other.
@@ -1759,6 +1761,12 @@ anyone Enlarged, the bodiless (elementals, slimes, swarms, shadows) and a few
 other beasts can't be tangled ([the creatures' table](CREATURES.md) (spoilers)
 marks each). Twin-blades and Battle Dancers can't use cahulaks.
 *Without the mod:* a plain two-handed 1d6 weapon.
+
+**Stinkpots.** The staff sling throws clay pots of burning sulphur: 1d3 damage
+against any size, and a target hit saves against poison or is **nauseated**
+for 1d3+1 rounds, −2 on its attack rolls. Undead, and anything immune to
+poison, shrug it off. *Without the mod:* the staff sling shot for 1d4, nothing
+more.
 
 **Armour** is worn in pieces (chest, arms, legs, a helm), each lowering AC by
 its own amount, and a shield and DEX lower it more (but not against an attack
@@ -1981,7 +1989,7 @@ line](DICE-LOG.md) what each of its lines means.
 | | how much it says: at the least, in short or in detail | in short |
 | | what hurts a monster (the Look box): describes a monster you Look at in a fight | on |
 | | names over figures: a spell's name over its caster, "Miss" over whoever an attack missed, and a used charge ("Armor: 7 left") | on |
-| Rule changes | *characters:* class restrictions; multiclass hit points; hit dice: the better of two; scores and hit points as rolled; AD&D's class tables; CON as in AD&D; ages and magical aging; dual-classing as the manual has it; level cap by XP. *Weapons and armour:* two weapons; half-giants' two-handed weapons; cahulaks as Dark Sun's rules have them; creature size as in AD&D; held targets as in AD&D; rings and cloaks of protection; helms AC 1; items saving against acid. *Magic:* rangers' casting level; preservers' INT; the spell save; DEX instead of a doubled d20; Enlarge multiplying the weapon's dice only; spells and psionics as the manual describes them (monsters' powers and Turn Undead by AD&D's table among them); spells roll to hit; resting as in AD&D | all on |
+| Rule changes | *characters:* class restrictions; multiclass hit points; hit dice: the better of two; scores and hit points as rolled; AD&D's class tables; CON as in AD&D; ages and magical aging; dual-classing as the manual has it; level cap by XP. *Weapons and armour:* two weapons; half-giants' two-handed weapons; cahulaks as Dark Sun's rules have them; creature size as in AD&D; held targets as in AD&D; staff sling stinkpots; rings and cloaks of protection; helms AC 1; items saving against acid. *Magic:* rangers' casting level; preservers' INT; the spell save; DEX instead of a doubled d20; Enlarge multiplying the weapon's dice only; spells and psionics as the manual describes them (monsters' powers and Turn Undead by AD&D's table among them); spells roll to hit; resting as in AD&D | all on |
 | More character customization | weapon specialization; kits; STORE and RECALL on the creation screen; fuller starting gear | all on |
 | Expanded features | the leader's CHA at shops; buying back magical items; improved thieving: thief skills from AD&D's table, hiding in shadows to backstab, the cloak, boots and belt, backstabs multiplying the weapon's dice only, picking pockets | all on |
 | New content | the new spells (six wizard spells and ten 6th-level priest spells, one switch); new people (Kalzith; Semyon); a small quest (the cooked vulture); defilers' scrolls; new items (and an arena bout that comes with them) | all on |

@@ -80,6 +80,7 @@ class HitTests(unittest.TestCase):
                 ([(0, 0, game.SLOWED_EFFECT)], 13, ("Slowed", -4)),
                 ([(0, 0, 49)], 8, ("Graft Weapon", 1)),
                 ([(0, 0, game.FOG_EFFECT)], 12, ("Fogbolt", -3)),
+                ([(0, 0, game.STINK_EFFECT)], 11, ("Nauseated", -2)),  # (a stinkpot's)
                 ([(0, 0, game.EFFECT_PRAYER)], 8, ("Prayer", 1)),  # (his own side's)
                 ([(0, 0x29, game.EFFECT_PRAYER)], 10, ("Prayer", -1)),  # (the Mountain Stalker's)
                 ([(1, 1, 7), (1, 1, 12)], 9, None)):  # (on someone else)
@@ -369,7 +370,7 @@ class SettingsTests(unittest.TestCase):
                           | game.RULE_ROLLED | game.RULE_BUYBACK | game.RULE_BACKSTAB | game.RULE_AGING
                           | game.RULE_ENLARGE | game.RULE_CON | game.RULE_DUAL_CLASS
                           | game.RULE_REST | game.RULE_CAHULAKS | game.RULE_SIZE
-                          | game.RULE_HELD, False, True))
+                          | game.RULE_HELD | game.RULE_STINKPOTS, False, True))
 
 
 class SpeakerTests(unittest.TestCase):
