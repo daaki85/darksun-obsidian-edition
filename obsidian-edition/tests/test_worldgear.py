@@ -626,3 +626,25 @@ class SpeedBootsTests(unittest.TestCase):
         self.assertEqual((gift.items, gift.objects), ((rec,), (202,)))
         self.assertEqual(worldgear.NAMES[0x170], b"Boots of Speed")
         self.assertEqual((worldgear.HOTOTO, worldgear.GYTHKA_3_OBJECT), (200, 2271))
+
+
+@unittest.skipUnless(os.environ.get("DSUN_OBJECTS"), "DSUN_OBJECTS (the game's SEGOBJEX.GFF) not given")
+class ScarTests(unittest.TestCase):
+    def test_obsidian_cahulaks_for_his_long_sword(self):
+        """Scar (object 87) gets plain obsidian cahulaks in place of his obsidian long sword (type 45),
+        his armour kept."""
+        import struct
+        from dsloader import dataitems, game, gff
+        with open(os.environ["DSUN_OBJECTS"], "rb") as f:
+            chunks = gff.read_gff(f.read())
+        gift = next(g for g in worldgear.GIFTS if g.name == "Scar")
+        self.assertEqual((gift.objects, gift.instead), ((worldgear.SCAR,), (45, 0)))
+        def types(data):
+            return [struct.unpack_from("<H", r, game.ITEM_TYPE)[0] for r in dataitems.items_of(data)
+                    if len(r) == game.ITEM_SIZE]
+        before = types(chunks[("RDFF", worldgear.SCAR)])
+        after = types(worldgear.object_chunks(chunks, [gift])[("RDFF", worldgear.SCAR)])
+        self.assertIn(45, before)
+        self.assertNotIn(45, after)
+        self.assertIn(game.OBSIDIAN_CAHULAKS_TYPE, after)
+        self.assertEqual(sorted(t for t in before if t != 45), sorted(t for t in after if t != game.OBSIDIAN_CAHULAKS_TYPE))

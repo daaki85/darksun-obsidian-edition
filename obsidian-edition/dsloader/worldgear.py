@@ -83,6 +83,7 @@ METAL_POLEARM = weaponchoice.OTHERS[KIND("polearm")][0]  # (250)
 CAHULAKS_NAME = 0x14  # (the game's "Cahulaks")
 METAL_CAHULAKS = (game.METAL_CAHULAKS_TYPE, CAHULAKS_NAME, 0x10000 - 2670, 200)  # (the champions' mul's)
 OBSIDIAN_CAHULAKS = weaponchoice.OTHERS[KIND("cahulaks")][0]  # (15: an earth or fire cleric-warrior's start)
+SCAR = 87  # (Scar's object: his obsidian long sword made obsidian cahulaks)
 # (type, name entry, picture, price) and plus, priced as the game prices its own: a melee weapon as
 # the Obsidian Bloodwrath +1 (20,800, as its Hornblade +1 and Gythka +1), 20,800 a plus; a missile
 # weapon far less, as its Sling +1 (2,800; the Chatkcha +1 1,800, the Sling +2 3,500)
@@ -316,6 +317,9 @@ GIFTS: Tuple[Gift, ...] = (
     Gift("Renegade", (weapon(BONE_SHORT_SWORD),), (289,)),  # (every one)
     Gift("Wild Mul", (weapon(BONE_AXE), weapon(BONE_GREAT_AXE)), (290,)),
     Gift("Scar's henchman", (weapon(BONE_AXE),), (229,)),  # (every one; they carried nothing)
+    # Scar (object 87, the arena's and the break-out's): a pair of plain obsidian cahulaks in place of
+    # his obsidian long sword (the user's choice)
+    Gift("Scar", (weapon(OBSIDIAN_CAHULAKS),), (SCAR,), instead=(45, 0)),
     # the defilers (both kinds, made by scripts) carried nothing, so left no body: a dagger each,
     # one kind obsidian (the game's plain one), the other bone
     Gift("Defiler", (weapon(weaponchoice.PLAIN[KIND("dagger")]),), (258,)),

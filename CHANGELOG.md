@@ -74,6 +74,9 @@ segment spare.
   of FEATURES into pages of their own; ITEMS checked against the game's data; screenshots retaken.
 
 **New**
+- **Scar fights with a pair of obsidian cahulaks** in place of his obsidian long sword (the user's
+  choice), in the arena and when breaking out with him (`worldgear`'s gift, object 87). A save that
+  has already met him keeps his sword.
 - **New rule: held targets as in AD&D** (Options, Weapons and armour; on by default; `RULE_HELD`,
   the Loader's `held_hit`, DSCLOG's `RULE_HI_HELD` 8000h and HELD: `HELD_HIT` at 589E9h,
   `HELD_DAMAGE` at 58B0Dh): a blow on a Paralyzed or Out Cold creature hits automatically and does
