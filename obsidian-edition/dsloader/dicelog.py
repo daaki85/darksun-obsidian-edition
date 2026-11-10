@@ -861,7 +861,7 @@ class DiceLog:
         seq = self.guest.read(self.tsr_hdr + TSR_USE_SEQ, 2)
         if seq == self.guest.read(self.tsr_hdr + TSR_USE_REPLY, 2):
             return []
-        result, taken = None, False
+        result, taken, cast = None, False, 0
         try:
             item, thing = struct.unpack("<HH", self.guest.read(self.tsr_hdr + TSR_USE_ITEM, 2) +
                                         self.guest.read(self.tsr_hdr + TSR_USE_WHO, 2))
@@ -881,8 +881,8 @@ class DiceLog:
                     result = pickpocket.Attempt(spellarrows.NOT_IN_A_FIGHT, [])
                 else:
                     result = self._arrows.make(self.game, item & 0xFF, thing)
-                    if result and not result.text:  # (made: the spell's own cast sound, as it is cast)
-                        self._play_game_sound(spellarrows.cast_sound(self.game, thing))
+                    if result and not result.text:  # (made: the spell's own cast sound, as it is cast,
+                        cast = spellarrows.cast_sound(self.game, thing)  # by DSCLOG with the answer)
             elif PICKED_BY <= item < 0xFFFF and self.pickpockets:
                 taken = True
                 if self._fighting():
@@ -897,6 +897,8 @@ class DiceLog:
             result, taken = None, False
         self._write_pick_text(result.text if result else "")
         self._write_xp(result)
+        if 0 < cast <= 130:  # (the USE screen's button: the map's main loop, SOUND_REQ's, waits for it to close)
+            self.guest.write(self.tsr_hdr + TSR_PICK_SOUND, struct.pack("<H", cast))
         self.guest.write(self.tsr_hdr + TSR_USE_TAKEN, struct.pack("<H", int(taken)))
         self.guest.write(self.tsr_hdr + TSR_USE_REPLY, seq)
         if not result:

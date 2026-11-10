@@ -419,7 +419,8 @@ sound_req  dw 0xFFFF            ; +1822 the Loader sets a sound to play from the
                                 ;      (SOUND_TICK: a thief hidden, sounds.py's HIDE_SOUND); DSCLOG
                                 ;      sets it back to FFFFh (none) once played
 pick_sound dw 0xFFFF            ; +1824 ... and one to play with PICK_TEXT when no XP is given
-                                ;      (GIVE_XP: a pocket picked, PICK_SOUND), set back as well
+                                ;      (GIVE_XP: a pocket picked, PICK_SOUND), or as spell arrows
+                                ;      are made (ARROWS_ASK: the spell's cast sound), set back as well
 ghost_seg  dw 0                 ; +1826 GHOST's block in upper memory (KEEP; 0: none, no see-through
                                 ;      figures): the Loader writes BLEND, REP and GHOST_TAB into it
 ghost_on   dw 0                 ; +1828 the Loader sets 1 once BLEND and REP are made for the palette
@@ -22131,7 +22132,8 @@ arrows_arm:
 ; ARROWS_ASK: the Spellarcher on show asks for the arrows of ARROWS_WHICH's touch spell: to the
 ; Loader as an item used on the map is (USE_ITEM ARROWS_BY and the member, USE_WHO the spell's place
 ; in ARROW_SPELLS: dsloader/spellarrows.py), which uses up a slot, makes them and says what came of
-; it (PICK_TEXT, shown). DS the game's; registers changed.
+; it (PICK_TEXT, shown), or, made, has the spell's cast sound played (PICK_SOUND). DS the game's;
+; registers changed.
 ARROWS_BY  equ 0xFE00
 arrows_ask:
         mov ax, ds
@@ -22167,8 +22169,11 @@ arrows_ask:
         ret
 .ready: pop es
         cmp byte [cs:pick_text], 0
-        je .done                ; (made: nothing to say)
-        mov word [cs:show_text], pick_text
+        jne .say
+        mov ax, 0xFFFF          ; (made: nothing to say, and the spell's cast sound, PICK_SOUND,
+        xchg ax, [cs:pick_sound] ;  now: the map's main loop, SOUND_REQ's, waits for the screen)
+        jmp play_sound
+.say:   mov word [cs:show_text], pick_text
         call show_window
 .done:  ret
 

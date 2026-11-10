@@ -80,6 +80,12 @@ reach took 384 bytes of the segment (68,592 bytes before it).
   squares with no movement left, the bow in the missile slot left alone, playtest/logs/2026-11-10-polearm-reach.md.)
 
 **Fixed**
+- **The Spellarcher's arrows play their spell's cast sound as they are made** (the user's report: no
+  sound). The Loader asked for it from the map's main loop (`SOUND_REQ`), which doesn't run while the
+  USE screen, where the arrows' button is, is open. Now it hands the sound over with its answer
+  (`PICK_SOUND`, as a picked pocket's), and DSCLOG's `ARROWS_ASK` plays it at once (Burning Hands'
+  and Shocking Grasp's 81, Chill Touch's 78, Vampiric Touch's 82). DSCLOG's size unchanged (the 8
+  bytes in the segment's padding).
 - **The stealth rule's "enemy beside" counts a big creature's every square** (the user's report: a
   thief hid in shadows next to an otyugh). The test measured from each foe's own square; a creature
   bigger than one square (the sheet's byte +3Dh: & 7 its squares to each side, / 8 its squares north,
