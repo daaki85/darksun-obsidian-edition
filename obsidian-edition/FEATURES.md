@@ -923,7 +923,8 @@ rules have them** ticked (on unless unticked):
   turn, no movement and no attack (this round's, if it has yet to act). Only a
   man-sized or smaller foe can be tangled: not a half-giant, nor anything large
   or bigger in [the creatures' table](CREATURES.md) (whether or not
-  [Creature size](#creature-size) is ticked), nor anything with no body a
+  [Creature size](#creature-size) is ticked), nor anyone Enlarged (large while
+  the spell lasts), nor anything with no body a
   rope could hold (elementals, the Dust Devil, the Insect Swarm, Evard's
   Tentacle, the slimes and the Shadow), nor two the mod keeps from it by name
   (the Sand Howler and the Strine).

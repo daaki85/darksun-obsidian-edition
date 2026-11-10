@@ -4,7 +4,8 @@ Every creature Shattered Lands defines, each with its figure as the game draws i
 whether [cahulaks](FEATURES.md#cahulaks) can tangle it (with the rule on: a hit that does damage
 tangles a man-sized or smaller creature that fails a save against petrification, and it loses
 its next turn). The game keeps no size for its creatures, so who is too big is the mod's call,
-from AD&D's sizes: half-giants and anything large or bigger can't be tangled, nor anything with
+from AD&D's sizes: half-giants and anything large or bigger can't be tangled (nor anyone Enlarged,
+while the spell lasts), nor anything with
 nothing a rope could hold, nor two the mod keeps from being tangled by name (the Sand Howler and
 the Strine). The people the party meets in towns are here too: any of them can be fought. Names
 are the game's own, cut short as the game has them ("Lsr Fire Elem").

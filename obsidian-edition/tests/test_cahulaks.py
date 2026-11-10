@@ -175,7 +175,8 @@ class CahulaksTests(tg.SiteTests):
         """CAH_HIT: a hit with the cahulaks that did damage: the target saves against petrification (its
         sheet's +39h, a d20; a 20 saves), recorded (kind 14, 10: target, attacker, d20, needed), and a
         failure marks it SWEPT (its next turn lost); not a half-giant, one the Loader marks BIG, one the
-        blow felled, nor without the rule, another weapon or a missile."""
+        blow felled, nor an Enlarged one (large, as the size rule has it), nor without the rule, another
+        weapon or a missile."""
         self.manual(False)
         self.target(pp=12)
         self.assertTrue(self.hit(11))
@@ -192,6 +193,11 @@ class CahulaksTests(tg.SiteTests):
             self.target(thing=thing, pp=12, **setup)
             self.assertFalse(self.hit(2, **change), (change, setup))
             self.assertFalse(self.swept(thing))
+        self.target(thing=29, pp=12, creature=10)
+        self.effects((29, 16))  # (Enlarged: large, as the size rule has it)
+        self.assertFalse(self.hit(2))
+        self.assertFalse(self.swept(29))
+        self.effects()
         self.target(thing=28, pp=12)
         self.big(28)
         self.assertFalse(self.hit(2))

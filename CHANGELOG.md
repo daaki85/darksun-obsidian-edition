@@ -442,6 +442,15 @@ segment spare.
   through a soft limiter) and at priority 10, the game's fight sounds' highest (DSCLOG's
   `mod_desc`). Heard in DOSBox: peaks as the game's (playtest/logs/2026-11-09-sounds-louder.md).
 
+- **A Spellarcher's spell arrows could be swapped out of the quiver** (found by the code audit,
+  2026-11-10): QUIVER_KEPT (PROBE_CAN_USE) read the character on show's segment 2 bytes off
+  (`CU_MEMBER_SEG` counted from 6EF38h; the INT's way back is 6EF36h), so it took a junk word for
+  the character and putting other arrows in the quiver wasn't refused. The equip test now runs
+  QUIVER_KEPT with the segment where the game keeps it (`QuiverTests.test_quiver_kept`).
+- **An Enlarged creature could be tangled by the cahulaks** though the size rule counts it as
+  large: CAH_HIT now asks IS_LARGE (a half-giant, the Loader's LARGE_BITS, or Enlarged) where it
+  asked for a half-giant only. The Options text, FEATURES, the guide and CREATURES.md say so.
+
 **Fixed: the Loader**
 - **Figures vanished from the map after many gear changes in one area:** each time a member's
   outfit changed, the Loader took the old pictures out of the game's picture table, but the game

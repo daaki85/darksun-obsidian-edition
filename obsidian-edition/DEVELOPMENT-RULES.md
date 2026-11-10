@@ -511,7 +511,8 @@ swings made this round), [BP+0Ah] - [BP+0Ch] the d20 needed. With the rule
   reads the attack's arguments at the d20, so its "needs" counts it, and its
   breakdown names each head (`GameData.two_weapons(..., head)`).
 - `CAH_HIT` (58B54h, a weapon's hit that did damage): the target ([494Ah]) not
-  felled (the creature's +0 HP), not a half-giant (the sheet's race), not marked in
+  felled (the creature's +0 HP), not large by `IS_LARGE` (a half-giant by the sheet's
+  race, the size rule's `LARGE_BITS`, or Enlarged: as the size rule has it), not marked in
   `BIG` (the far block, its offset the header's +1840: the Loader's,
   `cahulaks.py`: a bit a combatant whose creature's name is on its list, written
   when it changes), saves against petrification with a d20 (`GAME_DIE`) against

@@ -4128,7 +4128,7 @@ probe_can_use:
 ; that holds a Spellarcher's spell arrows (QUIVER_LOCKED): they stay until shot or faded, as a Flame
 ; Blade stays in the hand. The equip routine's "mov ax,348h" (6EF6Ch) gives the character on show's
 ; segment. All registers kept.
-CU_MEMBER_SEG equ 0x6EF6D - 0x6EF38     ; (from the INT's way back)
+CU_MEMBER_SEG equ 0x6EF6D - 0x6EF36     ; (from the INT's way back: its patch at 6EF34h)
 INV_QUIVER    equ 5                     ; (the inventory's slots: the item's +11h slot + 4)
 quiver_kept:
         push si
@@ -16914,8 +16914,9 @@ cah_hit:
         cmp word [es:bx], 0
         jle .done                   ; (felled by the blow)
         call creature_sheet
-        cmp byte [es:bx + 0x18], HALF_GIANT
-        je .done                    ; (too big to tangle)
+        mov ax, [TARGET]
+        call is_large               ; (too big to tangle: a half-giant, large by the Loader's table,
+        jc .done                    ;   or Enlarged, as the size rule has it; all kept)
         movzx cx, byte [es:bx + 0x39]   ; (its save against petrification)
         mov si, [TARGET]
         call map_bit

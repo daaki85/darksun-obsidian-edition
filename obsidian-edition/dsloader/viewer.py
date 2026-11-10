@@ -471,8 +471,8 @@ class Viewer:
                                           "and Charm Person don't take on one"),
                 ("cahulaks", "arms", "Cahulaks as Dark Sun's rules have them: a head in each hand, the off head's "
                                      "attack one more a round at the two-weapon penalties (-2 and -4, DEX added); a hit "
-                                     "tangles a man-sized or smaller foe that fails a save against petrification: it loses "
-                                     "its next turn"),
+                                     "tangles a man-sized or smaller foe (not a half-giant, a large creature or anyone "
+                                     "Enlarged) that fails a save against petrification: it loses its next turn"),
                 ("half_giant_hands", "arms", "Half-giants wield two-handed weapons in one hand (a shield or a light "
                                              "weapon in the other; two heavy weapons still can't be held)"),
                 ("protection_rules", "arms", "Rings and cloaks of protection as in AD&D: only the better of two rings "

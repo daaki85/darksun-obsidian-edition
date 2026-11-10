@@ -1749,8 +1749,8 @@ penalties: −2 for the main head and −4 for the off, DEX's adjustment added b
 never making it a bonus (a ranger in light armour has none, a Ghetto Fighter 0
 and −2). A hit that does damage **tangles** a man-sized or smaller foe unless
 it saves against petrification: it loses its next turn. Half-giants, the large
-monsters and things with no body a rope could hold (elementals, slimes...)
-can't be tangled. Twin-blades and Battle Dancers can't use cahulaks.
+monsters, anyone Enlarged and things with no body a rope could hold
+(elementals, slimes...) can't be tangled. Twin-blades and Battle Dancers can't use cahulaks.
 *Without the mod:* a plain two-handed 1d6 weapon.
 
 **Armour** is worn in pieces (chest, arms, legs, a helm), each lowering AC by

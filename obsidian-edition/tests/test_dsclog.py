@@ -5261,6 +5261,44 @@ class QuiverTests(unittest.TestCase):
                                                    r.UC_X86_REG_BP)], [0x800, slot, 0x1111, BP])
         return self.seen[0]
 
+    def kept(self, slot, item_name):
+        """QUIVER_KEPT (PROBE_CAN_USE's: an item put in inventory slot SLOT, the equip routine's [BP+8])
+        with the quiver holding ITEM_NAME: carry. The character's segment is read from the equip
+        routine's code, as the game has it after the INT (6EF36h: its "mov ax,348h" operand at 6EF6Dh)."""
+        from dsloader import gamepatch
+        mu = self.mu
+        mu.mem_write(self.LISTS * 16, struct.pack("<16h", *[-1] * 16))
+        if item_name is not None:
+            mu.mem_write(self.LISTS * 16 + 5 * 2, struct.pack("<h", 3))
+            mu.mem_write(self.ENTRIES * 16 + 3 * 10 + 4, struct.pack("<H", 7))
+            mu.mem_write(self.ITEMS * 16 + 7 * 0x15 + 0x12, struct.pack("<H", item_name))
+        patch = next(p for p in gamepatch.PATCHES if p.name == "can_use")
+        back = 0x2000 + 2  # (the INT's way back: the patch's INT is its first two bytes)
+        mu.mem_write(CALLER * 16 + back - 2, patch.replacement)
+        mu.mem_write(CALLER * 16 + back + (0x6EF6D - (patch.offset + 2)), struct.pack("<H", self.MEMBER_SEG))
+        mu.mem_write(SS * 16 + BP, struct.pack("<H", PARENT_BP))  # (the equip routine's frame, its [BP+8] the slot)
+        mu.mem_write(SS * 16 + PARENT_BP + 8, struct.pack("<H", slot))
+        stub = 0xFF00  # (a near call into the helper's segment, then a HLT)
+        sym = __import__("test_dsclog_drawing").build()[1]["quiver_kept"]
+        mu.mem_write(TSR * 16 + stub, b"\xe8" + struct.pack("<H", (sym - (stub + 3)) & 0xFFFF) + b"\xf4")
+        mu.mem_write(SS * 16 + 0x7FA, struct.pack("<HHH", back, CALLER, IF | 2))  # (the INT's frame)
+        for name, value in dict(cs=TSR, ds=self.DS, ss=SS, esp=0x7FA, ebp=BP, eflags=IF | 2).items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+        mu.emu_start(TSR * 16 + stub, TSR * 16 + stub + 3)
+        self.assertEqual(mu.reg_read(r.UC_X86_REG_SP), 0x7FA)
+        return bool(mu.reg_read(r.UC_X86_REG_EFLAGS) & 1)
+
+    def test_quiver_kept(self):
+        """QUIVER_KEPT (PROBE_CAN_USE): nothing goes into a quiver holding spell arrows; other arrows,
+        an empty quiver or another slot as the game has it. (Its segment's place was 2 bytes off once:
+        the character's number came from junk, so spell arrows could be swapped out.)"""
+        from dsloader import spellarrows
+        arrow = min(spellarrows.ARROW_NAMES)
+        self.assertTrue(self.kept(5, arrow))
+        self.assertFalse(self.kept(5, arrow - 1))
+        self.assertFalse(self.kept(5, None))
+        self.assertFalse(self.kept(7, arrow))
+
     def test_quiver(self):
         from dsloader import spellarrows
         arrow = min(spellarrows.ARROW_NAMES)
