@@ -59,6 +59,10 @@ segment spare.
   quotes the Player's Handbook (p. 173). The air cleric's daggers go in GAME-BUGS's Items table.
 - The Quicksilver Glove's missing material (wood's -3 and -2) and Alagorn's two wrong stories join
   GAME-BUGS's Items table; the stories get a `[Fixed]` bullet in PATCH-NOTES (the glove's had one).
+- An audit of the changelog's fixes against GAME-BUGS added two original-game bugs it lacked, each
+  with a `[Fixed]` bullet in PATCH-NOTES: Alagorn's clothes when none are carried, and the Effects
+  screen's "(15 CHARGES)" on an item's power. The rest of the changelog's fixes are bugs in the
+  mod's own code or content (its new spells, items and quests, the Loader, DSCLOG), so they stay out.
 
 **New**
 - **New rule: held targets as in AD&D** (Options, Weapons and armour; on by default; `RULE_HELD`,
