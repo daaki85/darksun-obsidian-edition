@@ -79,7 +79,18 @@ reach took 384 bytes of the segment (68,592 bytes before it).
   already two away. (Tests: tests/test_reach.py. Seen in the game 2026-11-10: a polearm swung from two
   squares with no movement left, the bow in the missile slot left alone, playtest/logs/2026-11-10-polearm-reach.md.)
 
+**Fixed**
+- **The stealth rule's "enemy beside" counts a big creature's every square** (the user's report: a
+  thief hid in shadows next to an otyugh). The test measured from each foe's own square; a creature
+  bigger than one square (the sheet's byte +3Dh: & 7 its squares to each side, / 8 its squares north,
+  as the game's distance routine, 1A0A:2BA5h through 1A0A:2AB4h, has them) could stand beside the
+  thief with its square two away. `stealth.footprint`, `stealth.touching`. (Tests:
+  `test_big_enemy_beside`, `test_big_enemy_north`.)
+
 **Changed**
+- **The combat log panel's font a pixel bigger** (the user's ask): the X11 misc-fixed 5x7 glyphs (public
+  domain, as the 4x6 were) in a cell 5 wide and 8 high with the shadow, so 7 lines docked (was 8) and
+  12 expanded (was 14). `smallfont.py` keeps each glyph's 7 rows as two hex digits.
 - **Six switches merged into three** (the user's choice), freeing three of DSCLOG's rule bits with bit 2
   already freed (the Weapon traits merge): four free now, room for the rules to come. Each keeps one
   setting's name, so a saved choice carries over: **Saving throws against spells** (`spell_save`:

@@ -179,8 +179,8 @@ there; **-** makes it smaller.
 - **Its buttons**, on the right of its top line: **L**, which hides it as the
   key does; the level (**Least**, **Short**, **Detail**; a click goes to the
   next, and the Options tab follows); and **-** and **+** for a smaller or
-  bigger panel. It starts at eight lines; collapsed, it is one line, the
-  newest; expanded, it is taller (14 lines) and has filters along its top: **All**, **Party** (the
+  bigger panel. It starts at seven lines; collapsed, it is one line, the
+  newest; expanded, it is taller (12 lines) and has filters along its top: **All**, **Party** (the
   party's lines), **Damage** (hits, damage and deaths) and **Saves** (saving
   throws and magic resistance). Its size is remembered.
 

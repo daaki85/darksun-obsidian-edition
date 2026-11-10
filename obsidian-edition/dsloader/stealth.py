@@ -79,13 +79,14 @@ def daylight(gd: GameData, combatant: int) -> bool:
 
 
 def enemy_beside(gd: GameData, combatant: int) -> Optional[str]:
-    """The name of an enemy standing next to the combatant (any of the eight squares around),
-    if one is: someone up and about on another side."""
+    """The name of an enemy standing next to the combatant (any of the eight squares around its
+    footprint, a big creature's every square counted), if one is: someone up and about on another
+    side."""
     me = gd.combatant_creature(combatant)
     if me is None:
         return None
     side = gd.creature(me)[game.CREATURE_SIDE]
-    x, y = square(gd, combatant)
+    mine = footprint(gd, combatant, me)
     for other, index in gd.combatants().items():
         if other == combatant:
             continue
@@ -94,10 +95,28 @@ def enemy_beside(gd: GameData, combatant: int) -> Optional[str]:
             continue
         if struct.unpack_from("<h", rec, 0)[0] <= 0 or rec[game.CREATURE_STATUS] in STATUS_GONE:
             continue
-        ox, oy = square(gd, other)
-        if max(abs(ox - x), abs(oy - y)) <= 1:
+        if touching(mine, footprint(gd, other, index)):
             return gd.creature_name(index)
     return None
+
+
+SHEET_FOOTPRINT = 0x3D  # a sheet's byte: the squares a creature covers past its own (FOOTPRINT)
+
+
+def footprint(gd: GameData, combatant: int, creature: int) -> Tuple[int, int, int, int]:
+    """The squares a combatant covers, x0, y0, x1, y1 (inclusive), as the game's distance routine
+    (1A0A:2BA5h, through 1A0A:2AB4h) has them: from its square, the sheet's +3Dh & 7 squares to each
+    side and +3Dh / 8 squares north (an otyugh, a big beast: more than the one square)."""
+    x, y = square(gd, combatant)
+    sheet = gd.sheet(creature)
+    size = sheet[SHEET_FOOTPRINT] if len(sheet) > SHEET_FOOTPRINT else 0
+    side, depth = size & 7, (size >> 3) & 0x1F
+    return x - side, y - depth, x + side, y
+
+
+def touching(a: Tuple[int, int, int, int], b: Tuple[int, int, int, int]) -> bool:
+    """Two footprints share a square or touch, diagonals too: the game's distance of 1 or less."""
+    return a[0] - 1 <= b[2] and b[0] <= a[2] + 1 and a[1] - 1 <= b[3] and b[1] <= a[3] + 1
 
 
 def chance(gd: GameData, creature: int, skill: int) -> Optional[int]:

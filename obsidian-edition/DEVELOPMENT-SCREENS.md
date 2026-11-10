@@ -276,9 +276,9 @@ dice log running:
   `+346`, before `PANEL_NEW`; the picture's block is PANEL_W x 130, the most);
   its foot stays at row 198. Smaller than it was, DSCLOG draws the view again
   under it first. Collapsed is 15 rows (the newest line in the header), docked
-  78, expanded 130 (14 lines and the filters' row). The lines are in a font of
-  the Loader's (`smallfont.py`: the X11 misc-fixed 4x6 glyphs, public domain,
-  with the game's shadow, 7 pixels a line); the header, the buttons and the
+  78 (7 lines), expanded 130 (12 lines and the filters' row). The lines are in a font of
+  the Loader's (`smallfont.py`: the X11 misc-fixed 5x7 glyphs, public domain,
+  with the game's shadow, 8 pixels a line; the 4x6 until 2.15.0); the header, the buttons and the
   filters stay in the game's. The header's level chip
   and - / + buttons, and the filters, are pressed through `PANEL_MOUSE` as the
   scrollbar is. **L** (`INT 16h`, `our_key`, while the panel is on screen:

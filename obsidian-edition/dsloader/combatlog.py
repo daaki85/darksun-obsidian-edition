@@ -14,7 +14,7 @@ mottled like the game's dialogue window, in darker shades.
 
 The lines are the dice log's own (DiceLog.lines), from the fight (Log): in detail all of them, in
 short a line for each attack, saving throw and spell's damage with its dice, at the least what came
-of them. They are in a small font (smallfont: 7 pixels a line, 8 lines docked), the header and
+of them. They are in a small font (smallfont: 8 pixels a line, 7 lines docked), the header and
 buttons in the game's (art.Font), in the Loader's colours for their kind
 (palette.LOG_COLOURS) with the names in the party's and the monsters' colours, a filled pip before
 a party member's line and a hollow one before a monster's, long lines wrapped with a hanging
@@ -60,7 +60,7 @@ GRAIN_HI_N, GRAIN_LO_N = 32, 32  # (of 256: the stone's pixels speckled lighter,
 LINES_FONT = smallfont.SmallFont()  # the lines' font (the header's and the buttons' are the game's)
 LINE_H = LINES_FONT.height  # a line's height, its shadow in it
 FILTER_H = 9  # the filters' row: its chips in the game's font
-ROWS = 8  # lines in the well
+ROWS = 7  # lines in the well
 TEXT_X = WELL[0] + 7  # where the lines start (after the pip)
 INDENT = 8  # a wrapped line's rows after its first, and each level of a detail line
 HEADER_X, HEADER_Y = 4, 2
@@ -387,7 +387,7 @@ class Geometry(NamedTuple):
 
 
 COLLAPSED, DOCKED, EXPANDED = "collapsed", "docked", "expanded"
-SIZES = {COLLAPSED: Geometry(15, 0), DOCKED: Geometry(PANEL_H, ROWS), EXPANDED: Geometry(130, 14, True)}
+SIZES = {COLLAPSED: Geometry(15, 0), DOCKED: Geometry(PANEL_H, ROWS), EXPANDED: Geometry(130, 12, True)}
 SIZE_ORDER = (COLLAPSED, DOCKED, EXPANDED)
 LEVEL_ORDER = (MINIMAL, SHORT, DETAIL)
 LEVEL_NAMES = {MINIMAL: "Least", SHORT: "Short", DETAIL: "Detail"}
