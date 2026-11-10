@@ -91,7 +91,8 @@ TYPES = (  # as DSCLOG's EXTRA_TYPES has them
     # metal cahulaks (champions.py's mul; DSCLOG's METAL_CAHULAKS): the game's Cahulaks' (21), of metal
     bytes.fromhex("010028007800fa0004050101060100" "407b160001"),
     # obsidian cahulaks (weaponchoice.py; DSCLOG's OBSIDIAN_CAHULAKS): the game's Cahulaks' (21), of
-    # obsidian, the fire cleric's bit added (+10h: 4): earth and fire clerics' (restrict.py)
+    # obsidian, the fire cleric's bit added (+10h: 4): earth and fire clerics' (restrict.py; air clerics
+    # may use any cahulaks)
     bytes.fromhex("010028007800fa0003050101060100" "407f160001"),
 )
 TSR_TYPES_OFF, TSR_TYPES_COUNT, TSR_TYPES_FIRST, TSR_TYPES_PTR = 208, 210, 212, 214

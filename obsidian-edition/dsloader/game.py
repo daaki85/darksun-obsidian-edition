@@ -111,7 +111,8 @@ BACK_GIRDLE_TYPE, URNST_GIRDLE_TYPE, MR_AMULET_TYPE = GAME_TYPES + 27, GAME_TYPE
 SPEED_BOOTS_TYPE = GAME_TYPES + 30
 # metal cahulaks (the champions' mul's): the game's Cahulaks (21), of metal (DSCLOG's METAL_CAHULAKS)
 METAL_CAHULAKS_TYPE = GAME_TYPES + 31
-# obsidian cahulaks (an earth or fire cleric-warrior's start, weaponchoice.py): the game's Cahulaks (21),
+# obsidian cahulaks (an earth or fire cleric-warrior's start, weaponchoice.py; air clerics may use any
+# cahulaks): the game's Cahulaks (21),
 # of obsidian, the fire cleric's bit added (DSCLOG's OBSIDIAN_CAHULAKS)
 OBSIDIAN_CAHULAKS_TYPE = GAME_TYPES + 32
 SPEED_AC = 2

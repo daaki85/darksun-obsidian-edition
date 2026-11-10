@@ -11668,7 +11668,7 @@ kit_bans:
 ; (kits.DUAL_BANS): slot tables of its own that would take the new class's place (a Seeker's or
 ; Justifier's priest slots, a Shinobi's wizard ones); a warrior's THAC0 (a warrior class instead);
 ; a shield it needs (a class with none: druid, preserver); a two-handed melee weapon it needs (a
-; class with none: psionicist, air cleric); a Stalker's hiding on a thief's own (the thief); a
+; class with none: psionicist); a Stalker's hiding on a thief's own (the thief); a
 ; Grove Warden's AC on a gladiator's own (the gladiator); a Healer's water sphere only (the rangers
 ; of air, earth and fire). The game keeps a priest from the other priest class and a ranger from the
 ; druid (good, true neutral), so the priests in DB_PRIEST and DB_NOT_WATER only stand guard. 0 ends it.
@@ -16807,7 +16807,7 @@ pf_reuse   db 0
 ;   (MN_TANGLE). A Twin-blade or Battle Dancer in light armour, and a ranger, take no penalty (PROBE_TWO's).
 CAHULAKS     equ TH_CAHULAKS
 METAL_CAHULAKS equ 115 + 31         ; (EXTRA_TYPES' 32nd: the metal ones, the champions' mul's)
-OBSIDIAN_CAHULAKS equ 115 + 32      ; (... 33rd: the obsidian ones, an earth or fire cleric-warrior's)
+OBSIDIAN_CAHULAKS equ 115 + 32      ; (... 33rd: the obsidian ones, an earth or fire cleric-warrior's start; air clerics may use them too)
 CT_SKIP      equ 0x5963E - 0x5962A  ; (595ECh's "no two weapons" way, from after the site's number)
 MN_TANGLE    equ 10
 TARGET       equ 0x494A             ; DS: the attack's target (a combatant)
@@ -27135,8 +27135,7 @@ lit_most   dw 0
 best_c     db 0
 want       times 3 db 0
 ; (SHADOW_TAB: AFTER_INSTALL's, over the install code)
-                                ; (DARK, 256 bytes: over the install code, AFTER_INSTALL; DAC
-                                ;   the far block's, FAR_DAC)
+                                ; (DARK and DAC: the far block's, FAR_DARK and FAR_DAC)
 
 
 ; UMB_ALLOC: BX paragraphs in upper memory (the upper blocks linked in, high only, last fit: the
@@ -28113,7 +28112,8 @@ extra_types:
         ; metal (+8: 4)
         db 0x01, 0x00, 0x28, 0x00, 0x78, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
         db 0x06, 0x01, 0x00, 0x40, 0x7B, 0x16, 0x00, 0x01
-        ; obsidian cahulaks (OBSIDIAN_CAHULAKS: an earth or fire cleric-warrior's start, weaponchoice.py):
+        ; obsidian cahulaks (OBSIDIAN_CAHULAKS: an earth or fire cleric-warrior's start, weaponchoice.py;
+        ; air clerics may use them as any cahulaks, restrict.py):
         ; the game's Cahulaks' (21), of obsidian (+8: 3), the fire cleric's bit added (+10h: 4)
         db 0x01, 0x00, 0x28, 0x00, 0x78, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01
         db 0x06, 0x01, 0x00, 0x40, 0x7F, 0x16, 0x00, 0x01
