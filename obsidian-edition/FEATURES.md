@@ -42,6 +42,7 @@ running the game, the Loader's window and its dice log are in the
     - [Two weapons](#two-weapons)
     - [Half-giants' two-handed weapons](#half-giants-two-handed-weapons)
     - [Cahulaks](#cahulaks)
+    - [Creature size](#creature-size)
     - [Rings and cloaks of protection](#rings-and-cloaks-of-protection)
     - [Helms](#helms)
     - [Items saving against acid](#items-saving-against-acid)
@@ -844,6 +845,7 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#level-cap-by-xp).
 | [Two weapons](#two-weapons) | no penalty (a small bonus at DEX 5 or less), and each hand attacks at the whole rate | −2 main hand, −4 off hand, DEX's reaction adjustment added; rangers, Twin-blades and Battle Dancers none in light armour, a Justifier none in any, a Ghetto Fighter 0 and −2; the off hand attacks once a round |
 | [Half-giants' two-handed weapons](#half-giants-two-handed-weapons) | two hands for a two-handed weapon, as for anyone | a half-giant wields a two-handed weapon in one hand |
 | [Cahulaks](#cahulaks) | a plain two-handed 1d6 weapon | a head in each hand: one attack more a round at −2 and −4 (DEX added); a hit tangles a man-sized foe that fails a save against petrification: it loses its next turn |
+| [Creature size](#creature-size) | no sizes: a weapon does the same to a halfling and a Bulette; Hold Person and Charm Person take on a half-giant | a large target (a half-giant, a large monster, anyone Enlarged) takes AD&D's large weapon dice (a long sword 1d12); Hold Person and Charm Person don't take on it |
 | [Rings and cloaks of protection](#rings-and-cloaks-of-protection) | no rings or cloaks of protection of its own; the mod's count in full, whatever else is worn | two rings don't add up, a ring gives no AC with magical armour, a cloak does nothing with magical or metal armour or a shield |
 | [Helms give AC 1](#helms) | AC 0 | the game's helms give AC 1 rather than 0 |
 | [Items saving against acid](#items-saving-against-acid) | armour without a magical power destroyed outright, its plus ignored; a weapon on a d20 under 8 less its plus | an item the acid or corroding touch could destroy needs the easier of the game's number and AD&D's save by material, a plus helping |
@@ -931,6 +933,48 @@ Lex attacks Templar with Bone Cahulaks (1d6): d20 = 16, needs 16+ (25%), hits AC
 ```
 
 How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#cahulaks).
+
+#### Creature size
+
+AD&D gives every creature a size, and some of its rules go by it; the game keeps
+none. With **Creature size as in AD&D** ticked (on unless unticked), the mod
+gives every creature of the game the size [the creatures' table](CREATURES.md)
+lists (people by race, monsters by name), and two rules use it. **Large** means
+large or bigger: a half-giant, the large monsters of the table (the Bulette, the
+Rampager, the Mountain Stalker, the Djinn, the great tusked Magera and Guards of
+their kind...), and **anyone Enlarged**, whatever their size.
+
+- **Weapon damage.** A weapon hitting a large target rolls AD&D's dice against
+  large creatures; the game's dice are AD&D's against small and man-sized ones.
+
+  | Weapon | Small and man-sized (the game) | Large |
+  |---|---|---|
+  | Long sword | 1d8 | 1d12 |
+  | Short sword | 1d6 | 1d8 |
+  | Dagger | 1d4 | 1d3 |
+  | Club | 1d6 | 1d3 |
+  | Mace | 1d6+1 | 1d6 |
+  | Pick | 1d4+1 | 1d4 |
+  | Chatkcha | 1d6+2 | 1d4+1 |
+  | Great axe | 1d10 | 2d8 |
+  | Polearm | 1d10 | 2d6 |
+  | Gythka | 2d4 | 2d6 |
+  | Axe, quarterstaff, cahulaks, bow, sling, staff sling | as the game | the same |
+  | Shillelagh | 1d6+1 | 2d4 |
+  | Spiritual Hammer | 1d4+1 | 1d4 |
+
+  Shillelagh's 2d4 is AD&D's against large creatures, so with the rule it rolls
+  1d6+1 against smaller ones. A weapon's plus, STR, specialization and the rest
+  are added as before; only the dice change. The dice log says so:
+  `1d12 = [11] ... (1d12 for 1d8: a large target)`.
+- **Hold Person, Charm Person, Charm Person or Mammal.** These take only on
+  "persons", man-sized or smaller: a large target is unaffected, with no save
+  (`Guard is too big for Hold Person -> unaffected`). Charm Person or Mammal
+  still charms a large beast (its "mammal" half); it fails only on a large
+  person, such as a half-giant. Hold Monster and Charm Monster take on anyone,
+  as before.
+
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#creature-size).
 
 #### Rings and cloaks of protection
 

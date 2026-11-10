@@ -20,6 +20,7 @@
 - [Two weapons](#two-weapons)
 - [Half-giants' two-handed weapons](#half-giants-two-handed-weapons)
 - [Cahulaks](#cahulaks)
+- [Creature size](#creature-size)
 - [Rings and cloaks of protection](#rings-and-cloaks-of-protection)
 - [Helms](#helms)
 - [Items saving against acid](#items-saving-against-acid)
@@ -537,6 +538,31 @@ swings made this round), [BP+0Ah] - [BP+0Ch] the d20 needed. With the rule
   its sheet's +39h, a 20 always saving; recorded (`KIND_MANUAL`, `MN_TANGLE`). A
   failure marks it as Whirlwind's sweep does (`SWEPT_NOW`: yet to act this round,
   its turn taken at once; else `FAR_SWEPT`, `PROBE_MOVE` takes the next).
+
+## Creature size
+
+([In the features page](FEATURES.md#creature-size).)
+
+How: the game keeps no size. The Loader's `sizes.py` gives each creature one
+(people by the sheet's race, the rest by name: `CREATURES.md`), and `sizes.Large`
+writes `LARGE_BITS`, a bit a combatant large or bigger, into the helper's tail (its
+offset the header's +1842), when it changes. With the rule (`RULE_HI_SIZE`, the
+Loader's `RULE_SIZE`), `IS_LARGE` counts a combatant large when it is Enlarged
+(effect 16, `NS_HAS`), marked in `LARGE_BITS`, or a half-giant (the sheet's race 5):
+
+- `SIZE_DICE`, from `CAH_SWING` (589B6h): at the attack routine's (5883Ah) first
+  swing of a call ([BP-14h] = [BP-0Ah]) with an item ([BP+12h] not negative),
+  the dice it rolls at its hits ([BP-0Eh] count, [BP-10h] sides, [BP-12h] bonus)
+  become AD&D's against a large target ([494Ah]): `LARGE_DICE` by the type's weapon
+  kind (`KIND_OF_TYPE`; count, sides and a change to the bonus; zeros where the
+  large dice are the small), the Spiritual Hammer (type 30) 1 off its bonus;
+  against a smaller one, Shillelagh (type 28) 1d6+1 for its 2d4. The dice log
+  reads the dice from its roll and notes the change (`sizes.dice_change`).
+- `SIZE_SPARED`, from `SAVE_SUM` (79B97h, the save routine 79A71h: [BP+6] the
+  target, [BP+0Ah] the spell): Charm Person (2), Hold Person (30, 86) and Charm
+  Person or Mammal (82, only on a person: race 1-8) on a large target give the sum
+  `SAVE_MOST` (110), a save made whatever the roll; the dice log says "too big for"
+  the spell (`sizes.spared`).
 
 ## Rings and cloaks of protection
 

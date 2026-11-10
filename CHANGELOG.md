@@ -40,7 +40,7 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 
 ## Next pull request (not opened yet)
 
-DSCLOG.EXE 66,832 bytes (image 66,800), 1,680 of its segment spare.
+DSCLOG.EXE 67,216 bytes (image 67,184), 1,360 of its segment spare.
 
 **Fixed**
 - **Graphics disappearing in a busy area** (SSI's technical note 2712 for Wake of the Ravager, the
@@ -57,6 +57,15 @@ DSCLOG.EXE 66,832 bytes (image 66,800), 1,680 of its segment spare.
   (playtest/logs/2026-11-09-picture-slot-reuse.md).
 
 **Changed**
+- **New rule: creature size as in AD&D** (Options, Weapons and armour; on by default; `RULE_SIZE`,
+  DSCLOG's RULE_HI_SIZE and SIZE): a large target (the Loader's LARGE_BITS from sizes.py, in the
+  tail, the header's +1842; a half-giant; anyone Enlarged) takes AD&D's large weapon dice by kind
+  (SIZE_DICE from CAH_SWING: a long sword 1d12, a great axe 2d8, a dagger 1d3...; the Spiritual
+  Hammer 1d4), Shillelagh 1d6+1 against smaller ones; Hold Person, Charm Person and Charm Person
+  or Mammal (a person) are saved against at once by a large target (SIZE_SPARED from SAVE_SUM). The
+  dice log notes both. Seen in DOSBox: "1d12 for 1d8: a large target", "1d3 for 1d4", "Guard is too
+  big for Hold Person -> unaffected", a man-sized foe's save as before
+  (playtest/logs/2026-11-10-creature-size.md). +320 bytes of the segment, +66 of the tail
 - **New rule: cahulaks as Dark Sun's rules have them** (Options, Weapons and armour; on by default;
   `RULE_CAHULAKS`, DSCLOG's RULE_HI_CAHULAKS and CAHULAKS): a head in each hand, the off head's one
   attack more a round (CAH_MORE in OFF_HAND_HALVES: the attack and the DAM lines) under AD&D's

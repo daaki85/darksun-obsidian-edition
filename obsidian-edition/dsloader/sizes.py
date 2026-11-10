@@ -1,7 +1,7 @@
 """Creature sizes (AD&D's: T tiny, S small, M man-sized, L large, H huge, G gargantuan), which
 Shattered Lands doesn't keep: people by race, monsters by name (as the game names them), from AD&D's
 and Dark Sun's monster books where they give one. CREATURES.md shows them (doccreatures.py); UNSURE
-are the mod's guesses, for checking. Meant for the rules that will go by size."""
+are the mod's guesses, for checking. The creature size rule goes by them (below)."""
 
 from typing import Dict, Optional
 

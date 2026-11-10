@@ -985,6 +985,16 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   A foe's save numbers are its sheet's +37h-+3Bh (PPD, RSW, PP, BW, SP), shared by its kind. The dice log
   can be restarted on a running game to try changed Loader code (kill its pid, `python3 -u -m dsloader
   dicelog --pid ... >> $PLAYTEST_WORK/dice.txt` from obsidian-edition).
+- **A rule by size in a fight** (2026-11-10, logs/2026-11-10-creature-size.md): from `fountain-user`,
+  every foe Paralyzed (`foeset.py C eff=34`) and its sheet made a half-giant (`foeset.py C race=5`:
+  large by race; the Guards there, Legcrusher's kind, are half-giants already), then Tab + Return on
+  party turns: the dice log's damage line says "(1d12 for 1d8: a large target)". **A Paralyzed
+  target gets no save line from Hold Person** (it fails every save; the game logs only "gives
+  Paralyzed"): free it first (`addeffect.py del C 34`). Hold Person's pointer stays up for its next
+  target after a cast. `setmem.py ruleshi=-16384` / `=16384` turns the size rule off and on.
+  **Held foes lose more HP than the log shows** (an open finding, not the size rule: a hit for 8 took
+  16 and a miss after it 10, read from memory): don't check damage numbers on Paralyzed foes.
+  `passuntil.sh` stops with "member N off screen"; `passn.sh N` drags the view first.
 - **Lots of items on the ground** (2026-11-09, logs/2026-11-09-picture-slot-reuse.md): `giveitems.py
   MEMBER N [FIRST]` gives items of different objects (each its own picture) into free backpack cells
   in memory (12 cells: then "no room"); `groundfill.sh CYCLES [FIRST]` gives Gerakis 12 and DROPs

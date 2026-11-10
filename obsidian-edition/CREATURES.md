@@ -11,7 +11,9 @@ towns are here too: any of them can be fought.
 **Size** is AD&D's (T tiny, S small, M man-sized, L large, H huge, G gargantuan), which the game
 doesn't keep either: people by race (a half-giant large, a halfling small), the
 rest by name, from AD&D's and Dark Sun's monster books; a **?** marks the mod's guess, for the
-game's own creatures no book describes (`dsloader/sizes.py`). It is meant for rules to go by.
+game's own creatures no book describes (`dsloader/sizes.py`). [Creature
+size](FEATURES.md#creature-size) goes by it: a large one (or bigger) takes AD&D's large weapon dice and
+isn't held or charmed by Hold Person or Charm Person.
 
 Made with `python -m dsloader.doccreatures GAME_FOLDER`, from the game's own data.
 
