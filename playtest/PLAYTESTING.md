@@ -806,6 +806,11 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   Cahulaks +2's) and +0Ah (its type) through live.py (the items at the far pointer DS:165Dh, 15h
   bytes each; Lex's 43 the right hand, 36 the missile slot in `fountain-user`), then I and the
   member's portrait: the slot draws the object's icon (the box's text stays the old item's).
+- **A shot with a weapon put in memory** (2026-11-10, logs/2026-11-10-stinkpots.md): a missile-slot
+  weapon replaced by another type (the scratch `setitem.py ITEM TYPE` in that log: a SEGOBJEX record,
+  link, flags and slot kept) shoots on the member's turn with `pointer.py attack` and a click on the
+  foe's figure, about 10 pixels above its feet (DS:669Dh + 32 x combatant, less the camera); beside the
+  figure the pointer shows the red "can't" sign and nothing happens.
 - **A weapon spec's grand master for a test** (2026-11-10, logs/2026-11-10-grand-mastery-large.md): write
   the member's sheet (the far pointer DS:1661h + (creature +4) x 47h) classes (9,0,0), levels (9,0,0) and
   +14h-+17h `01 00 00 00` (the long sword, unpacked; a sheet's +16h top bit marks them packed), then

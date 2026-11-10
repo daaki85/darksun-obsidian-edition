@@ -59,7 +59,9 @@ segment spare; `UMB_NEED` 6,380 paragraphs (1,802 spare), `UMB_KEPT` 8,002 (180 
   nauseated creature's attacks, and `NS_ENTRY` names it NAUSEATED with Stinking Cloud's icon (the
   game's table of effect names ends at 74; its entry is kept past Reflected Image's). The dice log
   names the save for the stinkpot and gives the rounds (`MN_STINK`, `MN_NAUSEA`), and the to-hit
-  breakdown `-2 Nauseated`. (Tests: tests/test_stinkpots.py; `test_to_hit_effects`.)
+  breakdown `-2 Nauseated`. (Tests: tests/test_stinkpots.py; `test_to_hit_effects`. Seen in the game
+  2026-11-10: a held target nauseated, a free one's save, a nauseated attacker's -2,
+  playtest/logs/2026-11-10-stinkpots.md.)
 
 **Changed**
 - **Grand mastery's die is the next greater die size, against every target** (Player's Option:
