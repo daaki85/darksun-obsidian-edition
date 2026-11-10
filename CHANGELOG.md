@@ -40,7 +40,7 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 
 ## Next pull request (not opened yet)
 
-DSCLOG.EXE 67,648 bytes (image 67,616), 928 of its segment spare.
+DSCLOG.EXE 67,680 bytes (image 67,648), 896 of its segment spare.
 
 **Fixed**
 - **Graphics disappearing in a busy area** (SSI's technical note 2712 for Wake of the Ravager, the
@@ -66,12 +66,12 @@ DSCLOG.EXE 67,648 bytes (image 67,616), 928 of its segment spare.
   dice log notes both. Seen in DOSBox: "1d12 for 1d8: a large target", "1d3 for 1d4", "Guard is too
   big for Hold Person -> unaffected", a man-sized foe's save as before
   (playtest/logs/2026-11-10-creature-size.md). +320 bytes of the segment, +66 of the tail
-- **The large dice on the weapon lines** (the creature size rule; DSCLOG's SIZE_LINE at 72AA7h, after
-  7286Fh draws a weapon's damage line): an item box's damage line `1D8-1/1D12-1`; the inventory
-  screen a `Large 1D12+7` line under each weapon's whose large dice differ, the next weapons moved
-  down and the THAC0 kept on the damage line (PROBE_WEAPON, SL_EXTRA). Not the Look box's list nor
-  View Character's DAM line (no room). Seen in DOSBox: Ester's box and her bow and two long swords,
-  clear of the icon bar. +432 bytes of the segment
+- **The large dice in the item box** (the creature size rule; DSCLOG's SIZE_LINE at 72AA7h, after
+  7286Fh draws a weapon's damage line, and SIZE_PRE at 72A8Ah, before it): an item box's damage line
+  `1D8-1/1D12-1`; Shillelagh's line `1D6+1` (AD&D's against smaller foes; the game's 2D4 its large),
+  its box `1D6+1/2D4`. The inventory and View Character keep the game's lines (full rows: a first try
+  put a `Large` line under each weapon and ran off the inventory's panel; a click to switch them was
+  tried and set aside). Seen in DOSBox. +464 bytes of the segment
 - **New rule: cahulaks as Dark Sun's rules have them** (Options, Weapons and armour; on by default;
   `RULE_CAHULAKS`, DSCLOG's RULE_HI_CAHULAKS and CAHULAKS): a head in each hand, the off head's one
   attack more a round (CAH_MORE in OFF_HAND_HALVES: the attack and the DAM lines) under AD&D's

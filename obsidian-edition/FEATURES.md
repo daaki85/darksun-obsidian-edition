@@ -966,12 +966,13 @@ their kind...), and **anyone Enlarged**, whatever their size.
   Shillelagh's 2d4 is AD&D's against large creatures, so with the rule it rolls
   1d6+1 against smaller ones. A weapon's plus, STR, specialization and the rest
   are added as before; only the dice change. The dice log says so:
-  `1d12 = [11] ... (1d12 for 1d8: a large target)`. A weapon's item box shows
-  both, small and man-sized first (`1D8-1/1D12-1`), and the inventory screen a
-  `Large 1D12+7` line under the weapon's damage line (the game's DAM line in View
-  Character has no room, and stays as it was).
+  `1d12 = [11] ... (1d12 for 1d8: a large target)`. A weapon's item box
+  (right-click it) shows both, small and man-sized first: `1D8-1/1D12-1`; a
+  Shillelagh's `1D6+1/2D4`, and its line elsewhere `1D6+1`. The inventory screen
+  and View Character keep the game's lines, against small and man-sized foes:
+  they have no room for more.
 
-  ![A Bone Long Sword's item box, "1D8-1/1D12-1", and the inventory's weapons: "Long Sword", "1D8+9 T15", "Large 1D12+9"](docs/large-dice.png)
+  ![A Bone Long Sword's item box: "Bone", "Long Sword", "1D8-1/1D12-1", "Hit -1"](docs/large-dice.png)
 - **Hold Person, Charm Person, Charm Person or Mammal.** These take only on
   "persons", man-sized or smaller: a large target is unaffected, with no save
   (`Guard is too big for Hold Person -> unaffected`). Charm Person or Mammal

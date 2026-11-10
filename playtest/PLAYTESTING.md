@@ -995,12 +995,21 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   **Held foes lose more HP than the log shows** (an open finding, not the size rule: a hit for 8 took
   16 and a miss after it 10, read from memory): don't check damage numbers on Paralyzed foes.
   `passuntil.sh` stops with "member N off screen"; `passn.sh N` drags the view first.
-  **The large dice on the weapon lines** (same day): I on the fight's first turn opens the member
-  whose turn it is (Ester: bow and two long swords, the inventory's worst case: the three weapons'
-  lines then end at y 175, the icon bar at 180); a right-click on the right hand (66,92) opens its
-  item box. Crops for the docs: the box `-crop 110x80+70+60`, the panel's weapons `-crop
-  90x80+230+110`, each scaled 200%. The THAC0 (`T15`) is DSCLOG's PROBE_WEAPON's, drawn on a
-  weapon's last line: a line added under the damage line has to keep it there (SL_EXTRA).
+  **The large dice in the item box** (same day): I on the fight's first turn opens the member whose
+  turn it is; a portrait (20,104 the third) shows another; a right-click on the right hand (66,92)
+  opens its item box (crop `-crop 110x80+70+60`, scaled 200%). The inventory's weapon block (Ester's
+  bow and two long swords, its worst case) ends at y 162 and the panel's stone at about 176: no room
+  for more lines. **No weapon name is wider than "+1 Shadowseeker"** (82 pixels, the panel's whole
+  82; "+3 Dag's Dagger" the same; measured in the game's font, `art.GameArt(GAME).font`).
+  **The inventory's input** (for anyone trying a click there again): the stats panel is no cell;
+  the game takes clicks from its queue of events (the mouse handler at GAME_HANDLER posts (2, 0Eh,
+  0, x, y, -, events) through 3164:023Ah; its keyboard reader, 31C48h, posts (1, 0Ah, 0, key,
+  shift) from the BIOS buffer through the same call), and never polled INT 33h's functions 3, 5 or 6
+  there. Clicks with x and y changed to a portrait didn't reach the portrait's handler (70352h);
+  **Space** (3920h) in the inventory gives the shown member's portrait event 8: drawn again, and its
+  EDIT NAME menu opened (it then blocks every click; Escape posted after it didn't close it in step);
+  **1-4** (the table at 6FDD0h + 1E3Bh) give event 7, which doesn't draw the shown member again.
+  `symread.py NAME...` reads DSCLOG's variables in the running game by name.
 - **Lots of items on the ground** (2026-11-09, logs/2026-11-09-picture-slot-reuse.md): `giveitems.py
   MEMBER N [FIRST]` gives items of different objects (each its own picture) into free backpack cells
   in memory (12 cells: then "no room"); `groundfill.sh CYCLES [FIRST]` gives Gerakis 12 and DROPs

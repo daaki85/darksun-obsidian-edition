@@ -180,29 +180,59 @@ class SizeTests(tc.CahulaksTests):
         self.frame(m2=1, m6=0 if box else 0x30, m4=0 if box else 0x1000, pE=50, pC=x)
         self.assertEqual(self.where("size_line", (), esi=kind), "end")
         got = bytes(self.mu.mem_read(SS * 16 + BP - 0x2E, 40)).split(b"\0")[0].decode()
-        own = bytes(self.mu.mem_read(td.TSR * 16 + self.sym["sl_text"], 20)).split(b"\0")[0].decode()
         calls, y = struct.unpack("<HH", self.mu.mem_read(stub * 16 + 0x100, 4))
-        return got, own, struct.unpack("<h", self.mu.mem_read(SS * 16 + BP - 2, 2))[0], calls, y
+        return got, struct.unpack("<h", self.mu.mem_read(SS * 16 + BP - 2, 2))[0], calls, y
 
     def test_damage_lines(self):
-        """SIZE_LINE: the item box's damage line drawn again with the large dice after a slash; the
-        inventory's a "Large ..." line on the next row (y + 7), counted; the rate left out; nothing
-        for a weapon whose large dice are its own, Shillelagh, or with the rule off."""
-        self.assertEqual(self.line("1D8-1", LONG_SWORD), ("1D8-1/1D12-1", "Large ", 2, 1, 50))
-        self.assertEqual(self.line("1.5x1D8+7", LONG_SWORD, box=False)[1:], ("Large 1D12+7", 3, 1, 57))
-        self.assertEqual(self.word("sl_extra"), 1)  # (PROBE_WEAPON's THAC0: on the damage line)
-        self.word("sl_extra", 0)
-        self.assertEqual(self.line("1D8+7", LONG_SWORD, box=False, x=0x50)[1:], ("Large 1D12+7", 2, 0, 0))  # (Look box)
+        """SIZE_LINE: an item box's damage line drawn again with the large dice after a slash
+        (Shillelagh's 2D4 after the 1D6+1 SIZE_PRE made); nothing on the inventory screen or in the
+        Look box, for a weapon whose large dice are its own, or with the rule off."""
+        self.assertEqual(self.line("1D8-1", LONG_SWORD), ("1D8-1/1D12-1", 2, 1, 50))
         self.assertEqual(self.line("1D6+1", MACE)[0], "1D6+1/1D6")
         self.assertEqual(self.line("1D4+1", sizes.HAMMER_TYPE)[0], "1D4+1/1D4")
         self.assertEqual(self.line("1D6+12", MACE)[0], "1D6+12/1D6+11")
-        for text, kind, rules in (("1D6", AXE, RULE), ("2D4", sizes.SHILLELAGH_TYPE, RULE), ("1D8", LONG_SWORD, 0)):
-            self.assertEqual(self.line(text, kind, rules=rules)[0::2], (text, 2, 0), (text, kind))
+        self.assertEqual(self.line("1D6+1", sizes.SHILLELAGH_TYPE)[0], "1D6+1/2D4")
+        self.assertEqual(self.line("1D8+7", LONG_SWORD, box=False)[:3], ("1D8+7", 2, 0))
+        for text, kind, rules in (("1D6", AXE, RULE), ("1D8", LONG_SWORD, 0)):
+            self.assertEqual(self.line(text, kind, rules=rules)[:3], (text, 2, 0), (text, kind))
+
+    def pre(self, text, kind, box=False, rules=RULE, x=0xEC):
+        """SIZE_PRE on a damage line TEXT about to be drawn: (the line, [BP+10h] its colour, the word
+        it pushed, SP after)."""
+        self.rules_hi(rules)
+        self.mu.mem_write(SS * 16 + BP - 0x2E, text.encode() + bytes(40 - len(text)))
+        self.frame(m6=0 if box else 0x30, m4=0 if box else 0x1000, pC=x, p10=0x2F, p12=0x1234)
+        p = tc.tg.patch("size_pre")
+        mu = self.mu
+        self.at += 0x100
+        start = td.CALLER * 16 + self.at
+        mu.mem_write(start, p.replacement + b"\xf4")
+        for reg, value in dict(cs=td.CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=td.IF | 2, esi=kind).items():
+            mu.reg_write(getattr(tc.r, "UC_X86_REG_" + reg.upper()), value)
+        mu.emu_start(start, 0, count=200000)
+        self.assertEqual(mu.reg_read(tc.r.UC_X86_REG_IP), self.at + len(p.replacement) + 1)
+        self.assertEqual((mu.reg_read(tc.r.UC_X86_REG_BP), mu.reg_read(tc.r.UC_X86_REG_SI)), (BP, kind))
+        got = bytes(mu.mem_read(SS * 16 + BP - 0x2E, 40)).split(b"\0")[0].decode()
+        ink, = struct.unpack("<H", mu.mem_read(SS * 16 + BP + 0x10, 2))
+        pushed, = struct.unpack("<H", mu.mem_read(SS * 16 + mu.reg_read(tc.r.UC_X86_REG_SP), 2))
+        return got, ink, pushed, mu.reg_read(tc.r.UC_X86_REG_SP)
+
+    def test_line_before(self):
+        """SIZE_PRE: the push made ([BP+12h]); Shillelagh's 2D4 made 1D6+1 (the rate kept) in the
+        box, the inventory and the Look box; another weapon's line as it was; nothing with the rule
+        off."""
+        self.assertEqual(self.pre("1D8+7", LONG_SWORD), ("1D8+7", 0x2F, 0x1234, 0x7FE))
+        self.assertEqual(self.pre("2D4", sizes.SHILLELAGH_TYPE, box=True)[:2], ("1D6+1", 0x2F))
+        self.assertEqual(self.pre("1.5x2D4+2", sizes.SHILLELAGH_TYPE)[:2], ("1.5x1D6+3", 0x2F))
+        self.assertEqual(self.pre("2D4", sizes.SHILLELAGH_TYPE, x=0x50)[0], "1D6+1")
+        self.assertEqual(self.pre("2D4", sizes.SHILLELAGH_TYPE, rules=0)[:2], ("2D4", 0x2F))
 
     def test_line_patch(self):
-        p = tc.tg.patch("size_line")
-        self.assertEqual((p.offset, p.original.hex()), (0x72AA7, "ff46fe"))
-        self.assertEqual(p.replacement[:3], bytes((0xCD, 0x98, gamepatch.SIZE_LINE_SITE)))
+        for name, offset, original, site in (("size_line", 0x72AA7, "ff46fe", gamepatch.SIZE_LINE_SITE),
+                                             ("size_pre", 0x72A8A, "ff7612", gamepatch.SIZE_PRE_SITE)):
+            p = tc.tg.patch(name)
+            self.assertEqual((p.offset, p.original.hex()), (offset, original))
+            self.assertEqual(p.replacement[:3], bytes((0xCD, 0x98, site)))
 
 
 if __name__ == "__main__":

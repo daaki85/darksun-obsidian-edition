@@ -564,14 +564,17 @@ Loader's `RULE_SIZE`), `IS_LARGE` counts a combatant large when it is Enlarged
   `SAVE_MOST` (110), a save made whatever the roll; the dice log says "too big for"
   the spell (`sizes.spared`).
 - `SIZE_LINE` (72AA7h, the "inc word [bp-2]" after 7286Fh, the routine writing a
-  weapon's lines for the item box and the inventory, has drawn its damage line from
-  SS:[BP-2Eh]): the line read back ("1.5x1D8+7"), the large dice worked out from it
-  as `SIZE_DICE` does, and drawn with the game's own text call (its far address read
-  from the call before): the box's line again with `/1D12+7` after it (its spare row
-  is the "Hit -1"/charges one); the inventory's `Large 1D12+7` a row under, counted in
-  [BP-2] so the caller moves the next weapon down, `SL_EXTRA` keeping `PROBE_WEAPON`'s
-  THAC0 on the damage line. Not the Look box's list (another x: no row to spare),
-  nor Shillelagh (its line the game's 2D4).
+  weapon's lines for the item box, the inventory and the Look box, has drawn its
+  damage line from SS:[BP-2Eh]): for the item box ([BP-6], its creature, 0) the
+  line read back ("1D8-1"), the large dice worked out from it as `SIZE_DICE` does
+  (`SL_CHANGE`), and drawn again with `/1D12-1` after it by the game's own text call
+  (its far address read from the call before; the box's spare row is the "Hit -1"
+  or charges one). `SIZE_PRE` (72A8Ah, its "push word [bp+12h]", the push made in
+  the handler, the interrupt's frame moved down a word) makes Shillelagh's line, the
+  game's 2D4, 1D6+1 before it is drawn, everywhere (the box's then gets `/2D4`). The
+  inventory and View Character keep the game's lines: their rows are full, and a
+  click to switch them (tried 2026-11-10) found no way to have the game redraw the
+  panel cleanly (playtest/logs/2026-11-10-creature-size.md).
 
 ## Rings and cloaks of protection
 

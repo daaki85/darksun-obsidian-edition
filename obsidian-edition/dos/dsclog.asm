@@ -2732,7 +2732,6 @@ probe_weapon:
         mov [cs:w_draw], eax
         mov ax, [cs:w_lines]
         dec ax
-        sub ax, [cs:sl_extra]   ; (not SIZE_LINE's "Large" line: the damage line's)
         imul ax, ax, 7
         add ax, [bp + 0x0E]     ; the weapon's last line
         push word [bp + 0x12]   ; the colours, as the routine draws its lines
@@ -2746,7 +2745,6 @@ probe_weapon:
         add sp, 0x10
 .done:  pop es
         popad
-        mov word [cs:sl_extra], 0
         push word [cs:w_fl]
         push word [cs:w_cs]
         push word [cs:w_ip]
@@ -15017,6 +15015,7 @@ CAH_TWO_SITE equ NS_IMAGE + 103       ; 59627h: two weapons ready, or the cahula
 CAH_SWING_SITE equ NS_IMAGE + 104     ; 589B6h: a swing's start: the off head's (CAHULAKS)
 CAH_HIT_SITE equ NS_IMAGE + 105       ; 58B54h: a weapon's hit that did damage: the tangle (CAHULAKS)
 SIZE_LINE_SITE equ NS_IMAGE + 106     ; 72AA7h: a weapon's damage line drawn: its large dice (SIZE_LINE)
+SIZE_PRE_SITE equ NS_IMAGE + 107      ; 72A8Ah: a weapon's damage line about to be drawn: Shillelagh's (SIZE_PRE)
 KIND_TURN  equ 13
 TU_DESTROY equ 0x7AE60 - 0x7AE04 ; (the ways on, less the address after the site's number)
 TU_FAIL    equ 0x7AE75 - 0x7AE04
@@ -17085,45 +17084,99 @@ size_spared:                        ; (SAVE_SUM's: AX the save's sum) SAVE_MOST 
 .out:   pop bx
 .ret:   ret
 ; SIZE_LINE ("inc word [bp-2]", 72AA7h; 3 bytes) in the routine writing a weapon's lines (7286Fh: an
-; item box's, [BP-6] its creature 0; the inventory screen's, its creature's), its damage line just
-; drawn from SS:[BP-2Eh] ("1.5x1D8+7"; SI the item type), [BP-2] the lines drawn, each 7 rows on. With
-; the size rule, a weapon whose dice against a large target differ (LARGE_DICE by kind; the Spiritual
-; Hammer 1 off its bonus; not Shillelagh, its line the game's 2D4): the box's line drawn again with
-; "/1D12+7" after it (the box has no row to spare), the inventory's "Large 1D12+7" on the row under it,
-; counted, so the lines after it move down (PROBE_WEAPON's THAC0 stays on the damage line; not in
-; the Look box's list, which has no row). The text routine's address is the game's call's before.
+; item box's, [BP-6] its creature 0; the inventory screen's and the Look box's, its creature's), its
+; damage line just drawn from SS:[BP-2Eh] ("1D8-1"; SI the item type). With the size rule, an item
+; box's line drawn again with the dice against a large target after it ("1D8-1/1D12-1": the box has
+; no row to spare), when they differ (SL_CHANGE; Shillelagh's 2D4, its line 1D6+1 by SIZE_PRE). The
+; text routine's far address is the game's call's, before the site.
 SL_DRAW  equ 0x72AA0 - 0x72AAA      ; (the text routine's far address in that call, less the way back)
 SL_TEXT  equ 0x2E                   ; ([BP-2Eh]: the line)
 size_line:
         inc word [bp - 2]
         test word [cs:rules_hi], RULE_HI_SIZE
         jz .ret
+        cmp dword [bp - 6], 0
+        jne .ret                    ; (an item box's only)
         pushad
         push es
-        xor ax, ax                  ; AL the count, AH the sides (0: the line's), DL the bonus's change
+        mov ax, 0x0402              ; (Shillelagh: 2D4, its line 1D6+1)
+        mov dl, -1
+        cmp si, SHILLELAGH_TYPE
+        je .parse
+        call sl_change
+        jc .out
+.parse: call sl_parse
+        jc .out
+        mov si, sp
+        les bx, [ss:si + 34]        ; the way back (after ES and the PUSHAD)
+        mov ecx, [es:bx + SL_DRAW]
+        mov [cs:sl_draw], ecx
+        push ss                     ; "/1D12+7" after the line
+        pop es
+        lea di, [bp - SL_TEXT]
+.end:   cmp byte [es:di], 0
+        je .slash
+        inc di
+        jmp .end
+.slash: mov byte [es:di], '/'
+        inc di
+        call sl_write
+        push word [bp + 0x12]
+        push word [bp + 0x10]
+        push word [bp + 0x0E]
+        push word [bp + 0x0C]
+        push ss
+        lea cx, [bp - SL_TEXT]
+        push cx
+        push dword [bp + 6]         ; the window
+        call far [cs:sl_draw]
+        add sp, 16
+.out:   pop es
+        popad
+.ret:   iret
+
+; SL_CHANGE: for item type SI, AL the count and AH the sides of its dice against a large target (0:
+; its own) and DL its bonus's change (signed); CF if they are its own (LARGE_DICE by its weapon kind;
+; the Spiritual Hammer 1 off its bonus; not Shillelagh: its callers'). Others kept.
+sl_change:
+        push bx
+        xor ax, ax
         mov dl, -1
         cmp si, HAMMER_TYPE
-        je .parse
+        je .ok
         cmp si, KIND_TYPES
-        jae .out
+        jae .none
         movzx bx, byte [cs:si + kind_of_type]
         or bx, bx
-        jz .out
+        jz .none
         dec bx
         imul bx, bx, 3
         mov ax, [cs:bx + large_dice]
         or al, al
-        jz .out
+        jz .none
         mov dl, [cs:bx + large_dice + 2]
-.parse: lea bx, [bp - SL_TEXT]
+.ok:    pop bx
+        clc
+        ret
+.none:  pop bx
+        stc
+        ret
+
+; SL_PARSE: SL_DICE and SL_BONUS from the line at SS:[BP-2Eh] ("1.5x1D8+7"): AL the count and AH
+; the sides for its (0: the line's), its bonus DL (signed) more; DI the count's first digit. CF if
+; the line has no D. BX, CX, DX lost.
+sl_parse:
+        lea bx, [bp - SL_TEXT]
         mov di, bx
 .d:     mov cl, [ss:di]             ; the D
         or cl, cl
-        jz .out
+        jz .none
         cmp cl, 'D'
         je .back
         inc di
         jmp .d
+.none:  stc
+        ret
 .back:  cmp di, bx                  ; the count's digits before it
         je .count
         mov cl, [ss:di - 1]
@@ -17133,12 +17186,16 @@ size_line:
         dec di
         jmp .back
 .count: mov bx, di
+        push ax
         call sl_number
+        pop ax
         or al, al
         jnz .c
         mov al, cl
 .c:     inc bx                      ; (past the D)
+        push ax
         call sl_number
+        pop ax
         or ah, ah
         jnz .s
         mov ah, cl
@@ -17156,52 +17213,47 @@ size_line:
         add dx, cx
 .sum:   mov [cs:sl_dice], ax
         mov [cs:sl_bonus], dx
-        mov si, sp
-        les bx, [ss:si + 34]        ; the way back (after ES and the PUSHAD)
-        mov ecx, [es:bx + SL_DRAW]
-        mov [cs:sl_draw], ecx
-        mov ax, [bp + 0x0E]         ; y
-        cmp dword [bp - 6], 0
-        je .box
-        cmp word [bp + 0x0C], W_LINES_X
-        jne .out                    ; (the Look box's list: no row to spare)
-        mov word [cs:sl_extra], 1
-        push cs                     ; the inventory: "Large 1D12+7" on the next row
-        pop es
-        mov di, sl_text + 6
-        call sl_write
-        push cs
-        push word sl_text
-        add ax, 7
-        inc word [bp - 2]
-        jmp .draw
-.box:   push ss                     ; the box: "/1D12+7" after its line
-        pop es
-        lea di, [bp - SL_TEXT]
-.end:   cmp byte [es:di], 0
-        je .slash
-        inc di
-        jmp .end
-.slash: mov byte [es:di], '/'
-        inc di
-        call sl_write
+        clc
+        ret
+
+; SIZE_PRE ("push word [bp+12h]", 72A8Ah; 3 bytes) in the same routine, its damage line made at
+; SS:[BP-2Eh] and about to be drawn (SI the item type): with the size rule, Shillelagh's (the game's
+; 2D4, AD&D's against a large target) made 1D6+1, AD&D's against a smaller one (SIZE_DICE's), the
+; rate kept, in the item box, the inventory and the Look box; the box's then gets its "/2D4"
+; (SIZE_LINE). Then the push, the interrupt's frame moved down a word for it.
+size_pre:
+        pushad
+        push es
+        test word [cs:rules_hi], RULE_HI_SIZE
+        jz .push
+        cmp si, SHILLELAGH_TYPE
+        jne .push
+        mov ax, 0x0601              ; 1D6, its bonus 1 more
+        mov dl, 1
+        call sl_parse
+        jc .push
         push ss
-        lea cx, [bp - SL_TEXT]
-        push cx
-.draw:  pop cx                      ; (the string's far address, CX:its offset under it)
-        pop si
-        push word [bp + 0x12]
-        push word [bp + 0x10]
-        push ax
-        push word [bp + 0x0C]
-        push si
-        push cx
-        push dword [bp + 6]         ; the window
-        call far [cs:sl_draw]
-        add sp, 16
-.out:   pop es
+        pop es
+        call sl_write               ; (over the count on: "1.5x1D6+1")
+.push:  pop es
         popad
-.ret:   iret
+        sub sp, 2
+        push bp
+        push ax
+        mov bp, sp
+        mov ax, [bp + 6]
+        mov [bp + 4], ax            ; IP
+        mov ax, [bp + 8]
+        mov [bp + 6], ax            ; CS
+        mov ax, [bp + 10]
+        mov [bp + 8], ax            ; flags
+        mov bp, [bp + 2]            ; (the game's BP)
+        mov ax, [bp + 0x12]
+        mov bp, sp
+        mov [bp + 10], ax           ; the word pushed
+        pop ax
+        pop bp
+        iret
 
 ; SL_NUMBER: CX the number at SS:BX (its digits; 0 if none), BX past them. Others kept.
 sl_number:
@@ -17260,9 +17312,6 @@ sl_digits:
 sl_draw   dd 0
 sl_dice   dw 0                      ; (the large dice: the count, then the sides)
 sl_bonus  dw 0
-sl_extra  dw 0                      ; (1: the "Large" line drawn, for PROBE_WEAPON's THAC0)
-W_LINES_X equ 0xEC                  ; (the inventory's lines' x, as PROBE_WEAPON's W_X)
-sl_text   db 'Large ', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
 cah_extra  dw 0                     ; how much worse the off head's swing is than the main head's
 cah_who    dw -1                    ; ... for this attacker (a combatant; -1 none)
@@ -20146,6 +20195,7 @@ site_tab:
         site CAH_SWING_SITE, cah_swing
         site CAH_HIT_SITE, cah_hit
         site SIZE_LINE_SITE, size_line
+        site SIZE_PRE_SITE, size_pre
 SITE_COUNT equ ($ - site_tab) / 2
 
 ; NS_CMP: the compare of site RL_SITE (of NS_CMP_SITES), its flags into the INT's frame.

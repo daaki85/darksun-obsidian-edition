@@ -46,3 +46,14 @@ From `fountain-user`, the speech box clicked, the foes Paralyzed, I (Ester's tur
   line (PROBE_WEAPON puts it on the weapon's last line); fixed with SL_EXTRA.
 - The Bone Long Sword's item box (right-click on the right hand, 66,92): `Bone / Long Sword /
   1D8-1/1D12-1 / Hit -1`, the Hit line where it was.
+
+### Changed after the user's look: no inventory lines; the click tried and set aside
+
+The user saw the inventory's `Large` lines run off the panel (the second one at y 171-176, on the
+panel's border). They suggested a click to switch the view, as the Effects screen's kit pages do.
+Tried in DOSBox: the large view itself drew right (orange, ink 2Ch, `1D12+9` and `1.5x1D12+9`), but
+no way was found to have the game draw the panel again cleanly: x and y of the click changed to the
+shown member's portrait never reached the portrait's handler; a posted Space did redraw but opened
+the portrait's EDIT NAME menu too; the keys 1-4 don't redraw the shown member. The build kept: the
+item box's `1D8-1/1D12-1` (seen again) and Shillelagh's `1D6+1` (unit tests; no Shillelagh to hand
+in the save). The click's code is kept aside in the session's scratch folder, not committed.
