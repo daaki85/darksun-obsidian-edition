@@ -41,6 +41,24 @@ Releases, newest first: [2.15.0](#pull-request-89-merged-2026-11-10) (#89),
 [1.1.0](#pull-request-18-merged-2026-10-06) (#18), [1.0.0](#pull-request-12-merged-2026-10-02)
 (#12).
 
+## Next pull request (not opened yet)
+
+DSCLOG.EXE 68,128 bytes (image 68,096: 62,576 in its segment, 5,520 in the tail), 2,960 of its
+segment spare; `UMB_NEED` 6,352 paragraphs (1,830 spare), `UMB_KEPT` 7,974 (208 spare).
+
+**Changed**
+- **Grand mastery's die is the next greater die size, against every target** (Player's Option:
+  Combat & Tactics). It was 2 more sides (a d12 became a d14) and was lost against a large target:
+  the creature size rule's large dice (SIZE_DICE, at the swing) replaced the step PROBE_SPEC_DAMAGE
+  had made. Now DSCLOG's NEXT_DIE (d2, d3, d4, d6, d8, d10, d12, d20) steps the die at the attack,
+  the View Character and inventory lines, and a grand master's large dice: a long sword 1d10, and
+  1d20 against a large target. The dice log says `(1d20 for 1d8: a large target, grand mastery)`.
+  (Tests: `test_grand_mastery_next_die`, `SizeTests.test_grand_master_on_large`, `NextDieTests`.)
+
+**Docs**
+- The player's guide's magic items: "Six scrolls" named as Kalzith's, and the defilers' scrolls listed
+  (any preserver spell; the champions' bout's defiler always has one); ITEMS likewise.
+
 ## Pull request #89 ([merged 2026-11-10](https://github.com/daaki85/darksun-obsidian-edition/pull/89))
 
 Obsidian Edition 2.15.0 ([release notes](release-notes/v2.15.0.md)).

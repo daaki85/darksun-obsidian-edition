@@ -3159,13 +3159,17 @@ class DiceLog:
             + (f" {signed(material)} {MATERIALS[weapon.material].lower()}" if material else "") \
             + (f" {signed(extra)} {specialize.SKILL_NAMES[skill]}" if extra else "") \
             + (f" {signed(kit)} {kit_name}" if kit else "")
-        if skill == specialize.GRAND:
-            steps += f" (d{sides} for d{sides - 2}: grand mastery)"
-        elif weapon and weapon.sides and self.rules & game.RULE_SIZE \
-                and (count, sides) != (weapon.count, weapon.sides):  # (DSCLOG's SIZE_DICE)
+        grand = skill == specialize.GRAND
+        own_dice = (weapon.count, weapon.sides) if weapon and weapon.sides else None
+        if own_dice and grand and (count, sides) == (own_dice[0], specialize.next_die(own_dice[1])):
+            steps += f" (d{sides} for d{own_dice[1]}: grand mastery)"
+        elif own_dice and self.rules & game.RULE_SIZE and (count, sides) != own_dice:  # (DSCLOG's SIZE_DICE)
             large = e.parent_arg(0x14) != sizes.SHILLELAGH_TYPE
-            steps += f" ({count}d{sides} for {weapon.count}d{weapon.sides}: " \
-                + ("a large target)" if large else "a target smaller than large)")
+            steps += f" ({count}d{sides} for {own_dice[0]}d{own_dice[1]}: " \
+                + (("a large target, grand mastery)" if grand else "a large target)") if large
+                   else "a target smaller than large)")
+        elif grand:
+            steps += " (grand mastery)"
         if sum(faces) + bonus < 1:
             steps += " (raised to the minimum of 1)"
         dice = sum(faces)  # (the weapon's dice: Enlarge's and a backstab's with their rules)

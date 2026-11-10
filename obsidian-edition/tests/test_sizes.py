@@ -130,6 +130,30 @@ class SizeTests(tc.CahulaksTests):
         self.assertEqual(self.dice(sizes.SHILLELAGH_TYPE), (1, 6, 1))
         self.assertEqual(self.dice(sizes.HAMMER_TYPE, count=1, sides=4, bonus=1), (1, 4, 1))
 
+    def test_grand_master_on_large(self):
+        """A grand master's large dice a die larger too (Player's Option: Combat & Tactics: a long
+        sword 1d20 against a large target): the attacker's sheet ([BP+10h]) a 9th-level fighter of
+        the long sword, the rule RULE_SPECIALIZE on; a master's (5th) and with the rule off as ever."""
+        from dsloader import game as g
+        self.target(thing=20, race=1)
+        self.large(20)
+        attacker = tc.tg.SHEETS * 16 + 3 * 0x47
+        sheet = bytearray(0x47)
+        sheet[0x14] = 1  # (the long sword, kind 0, chosen)
+        sheet[0x21:0x24], sheet[0x24:0x27] = bytes((9, 0, 0)), bytes((9, 0, 0))
+        self.mu.mem_write(attacker, bytes(sheet))
+        self.mu.mem_write(self.hdr + 170, struct.pack("<H", g.RULE_SPECIALIZE))
+        self.frame(p10=3)
+        self.assertEqual(self.dice(LONG_SWORD, count=1, sides=10), (1, 20, 0))
+        self.assertEqual(self.dice(MACE, count=1, sides=8, bonus=1), (1, 6, 0))  # (not its weapon spec)
+        sheet[0x24] = 5
+        self.mu.mem_write(attacker, bytes(sheet))
+        self.assertEqual(self.dice(LONG_SWORD, count=1, sides=8), (1, 12, 0))
+        sheet[0x24] = 9
+        self.mu.mem_write(attacker, bytes(sheet))
+        self.mu.mem_write(self.hdr + 170, struct.pack("<H", 0))
+        self.assertEqual(self.dice(LONG_SWORD, count=1, sides=8), (1, 12, 0))
+
     def test_what_is_large(self):
         """IS_LARGE: the Loader's bit, a half-giant (its race), or Enlarged (the game's effect 16)."""
         self.target(thing=21, race=game.RACE_HALF_GIANT, creature=8)

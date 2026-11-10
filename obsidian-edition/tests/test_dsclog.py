@@ -1598,7 +1598,7 @@ class SpecializeTests(unittest.TestCase):
             mu.mem_write(self.ITEM_TYPES * 16 + typ * 0x14, bytes(rec))
 
     def attack(self, halves, weapon, chosen=(), classes=(9, 0, 0), levels=(5, 0, 0), rules=4096, missile=False, race=0,
-               kit=0, shield=False, me=5, target_race=None, packed=False):
+               kit=0, shield=False, me=5, target_race=None, packed=False, sides=8):
         """(attacks in halves, THAC0, damage bonus, sides) after both probes, with THAC0 15, a
         damage bonus of 1 before the STR bonus of 2 is added, 1d8; the attacker (thing 7,
         creature 5) with a shield in its left hand or none (SHIELD)."""
@@ -1638,7 +1638,7 @@ class SpecializeTests(unittest.TestCase):
         mu.mem_write(SS * 16 + BP + 0x0A, struct.pack("<H", 15))
         mu.mem_write(SS * 16 + BP + 0x10, struct.pack("<H", 3))
         mu.mem_write(SS * 16 + BP + 0x14, struct.pack("<HHH", weapon, 2 if missile else 0, 7))
-        mu.mem_write(SS * 16 + BP - 0x12, struct.pack("<HHH", 1, 8, 1))  # damage bonus, sides, count
+        mu.mem_write(SS * 16 + BP - 0x12, struct.pack("<HHH", 1, sides, 1))  # damage bonus, sides, count
         mu.mem_write(CALLER * 16 + 0x600, bytes((0xCD, VEC_ATTACKS, 0x90, 0x90, 0xB8, 2, 0, 0xCD, VEC_SPEC_DAMAGE, 0x90)))
         for name, value in dict(cs=CALLER, ds=self.DS, ss=SS, esp=0x7FC, ebp=BP, eflags=IF | 2, eax=halves,
                                 ebx=0x2222, ecx=0x3333, edx=0x4444, esi=0x5555, es=0x6666).items():
@@ -1777,6 +1777,12 @@ class SpecializeTests(unittest.TestCase):
 
     def test_grand_mastery(self):
         self.assertEqual(self.attack(4, self.LONG_SWORD, chosen=(0,), levels=(9, 0, 0)), (6, 12, 6, 10))
+
+    def test_grand_mastery_next_die(self):
+        """Grand mastery's die is the next greater die size (NEXT_DIE, Player's Option: Combat &
+        Tactics): d12 to d20, d3 to d4, d6 to d8; a d20 kept."""
+        for sides, want in ((12, 20), (3, 4), (6, 8), (10, 12), (20, 20)):
+            self.assertEqual(self.attack(4, self.LONG_SWORD, chosen=(0,), levels=(9, 0, 0), sides=sides)[3], want, sides)
 
     def test_arena_champion(self):
         """An Arena Champion in melee: with a shield in a hand +1 to hit and damage, without one -1

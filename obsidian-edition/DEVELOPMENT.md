@@ -534,15 +534,15 @@ the one place for the sizes; the sections after them name the symbols only.
 ### The limits
 
 Each fails the build when passed (a negative `times`). From the build of
-2026-11-10 (DSCLOG.EXE 68,032 bytes: the 32-byte header, the segment's image
-of 62,480 and the tail's 5,520, `TAIL_BYTES`):
+2026-11-10, after 2.15.0 (DSCLOG.EXE 68,128 bytes: the 32-byte header, the segment's image
+of 62,576 and the tail's 5,520, `TAIL_BYTES`):
 
 | Limit | Used | Room | Spare |
 |---|---|---|---|
-| [the helper's segment](#the-helpers-segment): `kept_end` (`resident_end` 61,488 + `AFTER_INSTALL` 992) | 62,480 bytes | 65,536 | 3,056 bytes |
+| [the helper's segment](#the-helpers-segment): `kept_end` (`resident_end` 61,584 + `AFTER_INSTALL` 992) | 62,576 bytes | 65,536 | 2,960 bytes |
 | [the far block](#the-far-block): `FAR_END` (its buffers from `FAR_RING`, 10h: 65,484 bytes) | 65,500 | 65,536 | 36 bytes |
-| upper memory as the helper loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,346 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,836 |
-| upper memory once installed: `UMB_KEPT` (the helper, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 7,968 paragraphs | 8,182 (`UMB_ROOM`) | 214 (3.4 KB) |
+| upper memory as the helper loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,352 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,830 |
+| upper memory once installed: `UMB_KEPT` (the helper, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 7,974 paragraphs | 8,182 (`UMB_ROOM`) | 208 (3.3 KB) |
 
 To check them after a change, build a scratch copy with `[map all FILE]` as its
 first line (`nasm -f bin -I dos/ -o /tmp/x.exe COPY`, from `obsidian-edition/`)

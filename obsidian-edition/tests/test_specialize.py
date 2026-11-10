@@ -779,5 +779,13 @@ class ConjuredTests(unittest.TestCase):
         self.assertEqual(specialize.spec_kind_of(45), specialize.kind_of(45))
 
 
+
+class NextDieTests(unittest.TestCase):
+    def test_next_die(self):
+        """Grand mastery's next greater die (Player's Option: Combat & Tactics), as DSCLOG's NEXT_DIE."""
+        from dsloader import specialize as sp
+        self.assertEqual([sp.next_die(d) for d in (2, 3, 4, 6, 8, 10, 12, 20)], [3, 4, 6, 8, 10, 12, 20, 20])
+
+
 if __name__ == "__main__":
     unittest.main()

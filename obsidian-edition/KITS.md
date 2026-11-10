@@ -51,7 +51,7 @@ armour.
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
-| **Myrmidon** | with weapon specialization, a second weapon spec at 1st level (+1 to hit, +2 damage, 3/2 attacks a round); both weapon specs go on to **mastery at 5th level** (+3 to hit, +3 damage) and **grand mastery at 9th** (+3, +3, the damage die a size larger and one more attack a round) | −4 on saves against charms (Charm Person, Charm Monster, Charm Person or Mammal, Domination, Mass Domination); initiative 2 worse | the fighter's gear, and a plain weapon of its second weapon spec in the left hand in place of the shield (a bow in the missile slot, with arrows; a two-handed weapon in the backpack) | the second weapon spec is picked on the weapon window after DONE (EXIT after one leaves it with one) |
+| **Myrmidon** | with weapon specialization, a second weapon spec at 1st level (+1 to hit, +2 damage, 3/2 attacks a round); both weapon specs go on to **mastery at 5th level** (+3 to hit, +3 damage) and **grand mastery at 9th** (+3, +3, the damage die the next greater die size, against large targets too, and one more attack a round) | −4 on saves against charms (Charm Person, Charm Monster, Charm Person or Mammal, Domination, Mass Domination); initiative 2 worse | the fighter's gear, and a plain weapon of its second weapon spec in the left hand in place of the shield (a bow in the missile slot, with arrows; a two-handed weapon in the backpack) | the second weapon spec is picked on the weapon window after DONE (EXIT after one leaves it with one) |
 | **Sentinel** | AC 2 better with a shield in a hand; +2 initiative, from 1st level | −1 on saves against wizards' and priests' spells | the fighter's gear | can't dual to druid or preserver; can't go with the Shinobi |
 | **Ravager** | +1 to hit and damage in melee; a base AC by level: **7 at 1st-2nd, 6 at 3rd-4th, 5 at 5th-6th, 4 at 7th-8th, 3 at 9th-10th**, armour bettering it as usual | no missile or thrown weapons (cahulaks are allowed: the game doesn't throw them); no shield; leather armour or none | the fighter's gear, with a second of its weapon in place of the shield (none if the weapon takes both hands) | the dice log shows its bonus as `+1 Ravager`; can't go with the Grove Warden |
 
@@ -377,7 +377,7 @@ with expertise in the bow**, on top of the weapon spec it chooses.
 
 | Who | Chooses | With a weapon of a chosen weapon spec |
 |---|---|---|
-| **Fighter** (one class or more) | 1 weapon spec | specialized: +1 to hit, +2 damage; **mastery** from 5th fighter level (+3 to hit, +3 damage); **grand mastery** from 9th (the same, the damage die a size larger, d8 to d10, and one more attack a round) |
+| **Fighter** (one class or more) | 1 weapon spec | specialized: +1 to hit, +2 damage; **mastery** from 5th fighter level (+3 to hit, +3 damage); **grand mastery** from 9th (the same, the damage die the next greater die size against every target, as Player's Option: Combat & Tactics has it: a long sword 1d10, and 1d20 for its 1d12 against a large target; and one more attack a round) |
 | **Gladiator** | 2 weapon specs at creation, a 3rd at 6th level and a 4th at 9th | specialized in each: +1 to hit, +2 damage |
 | **Ranger** (one class or more) | **the bow from the start**, and 1 weapon spec (any but the bow) | expertise: the game's attacks a round in melee, a specialist's rate of fire with a missile weapon, no other bonus |
 
@@ -522,7 +522,7 @@ lists them (**Weapons: long sword (grand mastery)**) and gives the attacks a
 round with each weapon ready, a missile weapon's its own (**Attacks: 3/2 a
 round with Long Sword, 1 with Axe, 3 with Bow**); and the dice log names it on
 each attack (`+1 specialized`, `+3 grand mastery`,
-`(d10 for d8: grand mastery)`). Both lists end with a ranger's bow, which
+`(d10 for d8: grand mastery)`; against a large target `(1d20 for 1d8: a large target, grand mastery)`). Both lists end with a ranger's bow, which
 every ranger is an expert with, chosen or not; and View Character, as the game
 has it, gives a character's melee rate whatever weapon is ready.
 

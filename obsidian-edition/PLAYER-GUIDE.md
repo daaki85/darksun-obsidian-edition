@@ -346,7 +346,8 @@ it is the fighter's weapon for the whole game.
 
 - [Weapon specialization](#weapon-specialization-and-attacks): one weapon
   type, +1 to hit and +2 damage with 3/2 attacks a round; **mastery** at 5th
-  level (+3 and +3), **grand mastery** at 9th (the damage die a size larger
+  level (+3 and +3), **grand mastery** at 9th (the damage die the next size
+  up, against large targets too: a long sword 1d10, 1d20 against a large one;
   and one more attack). Other weapons attack once a round until 7th level.
   *Without the mod:* 3/2 attacks with any weapon, no other bonus.
 - Hit dice rolled twice; levels up to the [XP cap](#experience-and-levels).
@@ -940,7 +941,7 @@ club).
 
 | Who | Chooses | With a chosen weapon spec |
 |---|---|---|
-| Fighter | 1 weapon spec | specialized: +1 to hit, +2 damage; **mastery** from 5th level: +3 to hit, +3 damage; **grand mastery** from 9th: the same, the damage die a size larger and one more attack a round |
+| Fighter | 1 weapon spec | specialized: +1 to hit, +2 damage; **mastery** from 5th level: +3 to hit, +3 damage; **grand mastery** from 9th: the same, the damage die the next size up (against large targets too) and one more attack a round |
 | Gladiator | 2 weapon specs, a 3rd at 6th level, a 4th at 9th | specialized in each: +1 to hit, +2 damage |
 | Ranger | the bow, and 1 weapon spec | expertise: a specialist's attacks, no other bonus |
 

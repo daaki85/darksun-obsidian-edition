@@ -212,3 +212,13 @@ def to_hit(level: int) -> int:
 def damage(level: int) -> int:
     """What the skill adds to the damage."""
     return 3 if level >= MASTER else 2 if level == SPECIAL else 0
+
+
+DIE_SIZES = (2, 3, 4, 6, 8, 10, 12, 20)
+
+
+def next_die(sides: int) -> int:
+    """Grand mastery's die: the next greater die size (Player's Option: Combat & Tactics: a long
+    sword 1d10 for 1d8, 1d20 for its 1d12 against a large target); one past d20 kept (DSCLOG's
+    NEXT_DIE)."""
+    return next((d for d in DIE_SIZES if d > sides), sides)

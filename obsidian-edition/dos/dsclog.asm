@@ -3151,7 +3151,8 @@ prot_scan:
 ; (WAR_KIT_OF), whatever RULE_SPECIALIZE. Specialization +1 to hit, mastery +3 (the THAC0 less).
 ; PROBE_SPEC_DAMAGE: INT VEC_SPEC_DAMAGE replaces "add [bp-12h],ax" (3 bytes: INT + NOP; 588F2h),
 ; the strength bonus added to the damage bonus: specialization +2, mastery +3, and grand mastery
-; the damage dice one size larger (2 more sides: d8 to d10, 2d4 to 2d6).
+; the damage dice the next greater die size (NEXT_DIE: d8 to d10, 2d4 to 2d6, d12 to d20), against
+; a large target too (SIZE_DICE): Player's Option: Combat & Tactics' "against all opponents".
 SPEC_SLOTS equ 0x14
 SPEC_COUNT equ 4
 SPEC_PACKED equ 0x80            ; (+16h's top bit: the specs packed, +17h the age)
@@ -3678,7 +3679,11 @@ probe_spec_damage:
 .three: add word [bp - 0x12], 3
         cmp dl, SPEC_GRAND
         jne .out
-        add word [bp - 0x10], 2
+        push ax
+        mov ax, [bp - 0x10]
+        call next_die
+        mov [bp - 0x10], ax
+        pop ax
 .out:   pop dx
 .done:  iret
 
@@ -3728,7 +3733,11 @@ probe_dam_line:
 .three: add word [bp + 0x0C], 3
         cmp dl, SPEC_GRAND
         jne .out
-        add word [bp + 0x0A], 2
+        push ax
+        mov ax, [bp + 0x0A]
+        call next_die
+        mov [bp + 0x0A], ax
+        pop ax
 .out:   pop dx
         pop bp
 .done:  push cx                 ; (a Crusader's or Mind Warrior's extra attacks; the off hand's
@@ -3788,7 +3797,11 @@ probe_missile_line:
 .three: add word [ss:di + 0x0C], 3
         cmp dl, SPEC_GRAND
         jne .own
-        add word [ss:di + 0x0A], 2
+        push ax
+        mov ax, [ss:di + 0x0A]
+        call next_die
+        mov [ss:di + 0x0A], ax
+        pop ax
 .own:   cmp byte [es:bx + 0x18], THRI_KREEN_RACE ; (a thri-kreen's chatkcha: one more a round,
         jne .out                ;   as OWN_THROWS)
         cmp si, KIND_TYPES
@@ -3876,7 +3889,11 @@ probe_view_dam:
 .three: add word [bp - 0x0E], 3
         cmp dl, SPEC_GRAND
         jne .out
-        add word [bp - 4], 2
+        push ax
+        mov ax, [bp - 4]
+        call next_die
+        mov [bp - 4], ax
+        pop ax
 .out:   mov ax, si              ; (a Crusader's or Mind Warrior's extra attacks, not a missile
         imul ax, ax, 0x14       ; weapon's)
         push es
@@ -11831,6 +11848,24 @@ spec_of:
         pop bx
         ret
 
+; NEXT_DIE: AX a die's sides; AX the next greater die size (grand mastery's, Player's Option: Combat
+; & Tactics: d2, d3, d4, d6, d8, d10, d12, d20; a die past d20 kept). Others kept.
+next_die:
+        push si
+        mov si, die_sizes
+.next:  cmp ax, [cs:si]
+        jb .got
+        add si, 2
+        cmp si, die_sizes_end
+        jb .next
+        pop si
+        ret
+.got:   mov ax, [cs:si]
+        pop si
+        ret
+die_sizes dw 2, 3, 4, 6, 8, 10, 12, 20
+die_sizes_end:
+
 ; SPEC_OF_SHEET: DL the skill with item type SI of the character whose sheet is at ES:BX:
 ; SPEC_NONE (it has chosen no kinds), SPEC_PLAIN (not this kind), SPEC_EXPERT (a ranger's: no
 ; fighter or gladiator class; and every ranger's with the bow, chosen or not), SPEC_SPECIAL,
@@ -17079,6 +17114,14 @@ size_dice:                          ; (CAH_SWING's: the call's first swing with 
         mov [bp - 0x10], ax
         movsx ax, byte [cs:si + large_dice + 2]
         add [bp - 0x12], ax
+        test word [cs:rules], RULE_SPECIALIZE ; (a grand master's: the next greater die, as its
+        jz .done                    ;   own dice's at PROBE_SPEC_DAMAGE, which these replace)
+        call spec_of
+        cmp dl, SPEC_GRAND
+        jne .done
+        mov ax, [bp - 0x10]
+        call next_die
+        mov [bp - 0x10], ax
 .done:  popa
 .ret:   ret
 size_spared:                        ; (SAVE_SUM's: AX the save's sum) SAVE_MOST for Hold or Charm
