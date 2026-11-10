@@ -490,6 +490,11 @@ psionics as the manual describes them](#spells-and-psionics-as-the-manual-descri
 and [spells roll to hit](#spells-roll-to-hit).
 [How the game works](HOW-THE-GAME-WORKS.md) has what the game does without them.
 
+Most of these put right a rule the game gets wrong (it departs from its own manual, from itself or from
+the Player's Handbook), and count among [the game's bugs](GAME-BUGS.md#rules-it-got-wrong-with-a-switch),
+with the switch to go back. The rest are the mod's own choices: helms' AC, resting, the XP level cap, hit dice,
+creation scores, half-giants' weapons, creature size, cahulaks and ages.
+
 ### Characters
 
 | Rule | The game | With the rule |
@@ -1197,8 +1202,12 @@ How it works:
 The game's Enlarge adds 10% a level of its caster to the whole of a melee
 hit's damage: STR's bonus, the weapon's plus and a specialist's bonus grow
 with it, rounded down. AD&D's Enlarge makes the creature and what it carries
-bigger, so with **Enlarge multiplies the weapon's dice only** ticked only the
-weapon's dice grow, rounded up, and the rest is added after. The dice log
+bigger, and the Player's Handbook (p. 173) says what that does to a blow: "damage rolls
+increase proportionately with size" (its example: 6 x 1.6 = 9.6, rounded up to 10), and
+"bonuses due to Strength, class, and magic are not altered". The game gets all three wrong, so
+it is one of the [game's bugs](GAME-BUGS.md#rules-it-got-wrong-with-a-switch). With **Enlarge
+multiplies the weapon's dice only** ticked only the weapon's dice grow, rounded up, and the rest
+is added after. The dice log
 shows it:
 
 ```

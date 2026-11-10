@@ -567,6 +567,17 @@ failed before)
   while it is already paused.
 
 **Docs**
+- **Rules the game got wrong counted as fixes:** twenty-one PATCH-NOTES bullets move from `[Changed]`
+  to `[Fixed]` (saves against spells, the doubled d20, the manual's spells, psionics and monsters,
+  spells rolling to hit, Enlarge, rangers' casting level, preservers' INT, dual-classing, class
+  restrictions, multiclass hit points, the class tables, CON 20 and up, two weapons, warriors' attacks,
+  held targets, acid, thief skills and backstabs, the air cleric's daggers, Turn Undead): each a rule
+  the game gets wrong against its manual, itself or the Player's Handbook. The mod's own choices
+  (helms' AC, resting, the level cap, hit dice, creation scores, half-giants, creature size,
+  cahulaks, ages, the bone scale set) stay changes. GAME-BUGS gets a table of them (the game's rule,
+  the rulebook's, the switch) and two original-game bugs it lacked (Alagorn's clothes when none are
+  carried; the Effects screen's "(15 CHARGES)" on an item's power); FEATURES' Rule changes says
+  most are bugs, and Enlarge quotes the Player's Handbook (p. 173).
 - **FEATURES.md split:** the game's bugs fixed are a page of their own, `GAME-BUGS.md`, grouped by
   kind (spells and psionics, fights, characters and items, screens and memory, people and quests),
   each topic in tables by kind of bug; the detail of the manual's spells (each spell, AD&D's turning
