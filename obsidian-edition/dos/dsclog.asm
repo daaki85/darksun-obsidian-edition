@@ -16954,8 +16954,8 @@ cah_swing:
 ; tangle (see CAHULAKS), and the staff sling's stinkpot (STINKPOTS).
 cah_hit:
         mov byte [bp - 0x15], 0
-        test byte [cs:rules], RULE_STINKPOTS
-        jz .rule
+        test word [cs:rules_hi], RULE_HI_CAHULAKS ; (Weapon traits: the cahulaks', the stinkpot, the hook)
+        jz .out
         cmp word [bp + 0x14], STAFF_SLING
         je stink_hit
 .rule:  test word [cs:rules_hi], RULE_HI_CAHULAKS
@@ -17028,7 +17028,7 @@ cah_hit:
         popad
 .out:   iret
 
-; STINKPOTS (RULE_STINKPOTS, the Loader's rule "stinkpots"): the staff sling's shot is a stinkpot, a
+; STINKPOTS (RULE_HI_CAHULAKS, the Loader's rule "cahulaks", Weapon traits): the staff sling's shot is a stinkpot, a
 ; clay pot of burning sulphur (AD&D's Arms and Equipment Guide). Its damage is 1d3 crushing against
 ; any size (type 0's dice, STINK_SIDES). A hit (STINK_HIT, from CAH_HIT: [BP+14h] the type, [BP+18h]
 ; the thrower, TARGET the target) on a target still standing, not undead (5B8:A2h, 7BE20h) and not
@@ -17147,7 +17147,7 @@ stink_sides:
         cmp ax, [cs:types_ptr + 2]
         jne .out
         mov al, STINK_SIDES
-        test byte [cs:rules], RULE_STINKPOTS
+        test word [cs:rules_hi], RULE_HI_CAHULAKS
         jnz .set
         mov al, SLING_SIDES
 .set:   mov ah, [es:bx + STAFF_SLING * TYPE_SIZE + 0x0C]
@@ -17914,9 +17914,8 @@ amulet_mr:
         iret
 
 ; RULES (set by the Loader, from its Options): a helm counts AC 1, ... (2, once boots'
-; movement in a fight, unused from then until the staff sling's stinkpots)
+; movement in a fight: unused, free for a rule)
 RULE_HELMS equ 1
-RULE_STINKPOTS equ 2            ; the staff sling's shot a stinkpot: 1d3, and a save against poison or -2 to hit (STINKPOTS)
 RULE_TWO_WEAPONS equ 4
 RULE_SPELL_SAVE equ 8           ; (the Loader writes the game's save table for this one)
 RULE_NO_DOUBLE equ 16
@@ -17945,7 +17944,8 @@ RULE_HI_ENLARGE equ 512         ; (RULES_HI) Enlarge multiplies the weapon's dic
 RULE_HI_CON equ 1024            ; (RULES_HI) CON as in AD&D: regeneration's rates, dwarves' poison saves (REGEN_SITE, CON_SAVE)
 RULE_HI_DUAL equ 2048           ; (RULES_HI) dual-classing at 3rd level, every prime requisite checked (DUAL_LEVEL, DUAL_PRIMES)
 RULE_HI_REST equ 4096           ; (RULES_HI) rest heals by spells and natural healing (REST_PRE, REST_HP)
-RULE_HI_CAHULAKS equ 8192       ; (RULES_HI) cahulaks: a head in each hand, a tangle on a hit (CAHULAKS)
+RULE_HI_CAHULAKS equ 8192       ; (RULES_HI) Weapon traits: the cahulaks' heads and tangle (CAHULAKS), the staff
+                                ;   sling's stinkpots (STINKPOTS), the polearm's hook
 RULE_HI_SIZE equ 16384          ; (RULES_HI) creature size: large dice, Hold and Charm Person (SIZE)
 RULE_HI_HELD equ 32768          ; (RULES_HI) a held or Out Cold target hit automatically, normal damage (HELD)
 THINGS_SEG equ 0x3972 - 0x4356  ; the things table's segment, relative to DS

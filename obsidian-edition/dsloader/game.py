@@ -124,8 +124,7 @@ RULE_HELMS, RULE_TWO_WEAPONS, RULE_SPELL_SAVE, RULE_NO_DOUBLE = 1, 4, 8, 16
 # (the game's 1d4: DSCLOG's STINK_SIDES keeps type 0's dice), and a hit makes the target, unless
 # undead or immune to poison, save against poison (the game's save, as against a monster's poisoned
 # hit) or be Nauseated (STINK_EFFECT: -2 to hit) for 1d3+1 rounds (DSCLOG's RULES bit 2, once boots'
-# movement and unused from then; STINKPOTS)
-RULE_STINKPOTS = 2
+# movement, unused and free again: the stinkpots are the Weapon traits switch's, RULE_CAHULAKS: STINKPOTS)
 STAFF_SLING_TYPE, STINK_DICE, SLING_DICE = 0, (1, 3), (1, 4)
 STINK_EFFECT, STINK_TO_HIT, STINK_SAVE_POWER = 75, -2, 176
 RULE_NEW_SPELLS = 32  # the new wizard spells (NEW_SPELLS)
@@ -197,6 +196,7 @@ RULE_REST = 268435456
 # target failing a save against petrification (it loses its next turn; cahulaks.py's list of the
 # too big). DSCLOG's RULE_HI_CAHULAKS, CAHULAKS
 RULE_CAHULAKS = 536870912
+RULE_STINKPOTS = RULE_WEAPON_TRAITS = RULE_CAHULAKS  # (one switch, "Weapon traits": the cahulaks', the stinkpots, the hook)
 CAHULAKS_TYPE = 21
 # Creature size as in AD&D (sizes.py): a large target takes AD&D's large weapon dice, and Hold Person,
 # Charm Person and Charm Person or Mammal (a person) don't take on it; an Enlarged creature counts as
@@ -301,7 +301,7 @@ RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("two_weapons", RULE_TWO_WEAPONS),
                  ("backstab_dice", RULE_BACKSTAB), ("aging", RULE_AGING),
                  ("enlarge_dice", RULE_ENLARGE), ("con_adnd", RULE_CON),
                  ("dual_class", RULE_DUAL_CLASS), ("rest_heal", RULE_REST), ("cahulaks", RULE_CAHULAKS),
-                 ("creature_size", RULE_SIZE), ("held_hit", RULE_HELD), ("stinkpots", RULE_STINKPOTS))
+                 ("creature_size", RULE_SIZE), ("held_hit", RULE_HELD))
 # The new spells (RULE_NEW_SPELLS; DSCLOG's NEW SPELLS): six wizard spells numbered after the game's
 # 196 (0-195), in records past its own (the 200h bytes after them, two small tables, moved into
 # DSCLOG at the game's start: its SEG_MOVE, SEGMENT_TABLE here); DSCLOG fills their records and rows

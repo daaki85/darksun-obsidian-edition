@@ -588,8 +588,8 @@ automatically, for normal damage (AD&D's held target)` under it, and the damage 
 
 ([In the features page](FEATURES.md#staff-sling-stinkpots).)
 
-The rule (`RULE_STINKPOTS`, bit 2 of the rules' low word: boots' movement once, unused since; the
-Loader's `stinkpots`) is DSCLOG's `STINKPOTS`; no new patch in the game:
+The rule is **Weapon traits**, the cahulaks' switch (`RULE_CAHULAKS`, `RULE_HI_CAHULAKS`, the Loader's
+`cahulaks`; `game.RULE_STINKPOTS` names it too); DSCLOG's `STINKPOTS`; no new patch in the game:
 
 - **The dice.** The staff sling is item type 0 (IT1R's first record, `020008001400fa00...`: missile
   only, crushing, 1d4 at +0Ch/+0Dh). `STINK_SIDES` writes its sides, 3 with the rule and 4 without, in

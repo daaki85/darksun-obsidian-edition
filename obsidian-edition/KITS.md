@@ -468,7 +468,7 @@ weak material's penalty, STR and mastery's +3 damage add as ever.
 
 A bow's, sling's or staff sling's dice are the weapon's own, as the game rolls them for a shot (a
 bow 1d8 with the game's arrows); missile weapons have no large dice of their own. The staff sling's
-are its stinkpot's, 1d3, with [Staff sling stinkpots](FEATURES.md#staff-sling-stinkpots) ticked;
+are its stinkpot's, 1d3, with [Weapon traits](FEATURES.md#weapon-traits) ticked;
 unticked, the game's 1d4 (1d6 under grand mastery). The dice log shows
 the step on each hit: `(d10 for d8: grand mastery)`, and against a large target `(1d20 for 1d8: a
 large target, grand mastery)`.

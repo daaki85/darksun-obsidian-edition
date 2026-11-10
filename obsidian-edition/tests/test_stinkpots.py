@@ -23,7 +23,7 @@ except ImportError:  # pragma: no cover
     r = None
 
 GAME_DS, SS, CALLER, TSR, BP, IF = td.GAME_DS, td.SS, td.CALLER, td.TSR, td.BP, td.IF
-RULE = 2                    # RULES' RULE_STINKPOTS (the low word)
+RULE = 8192                 # RULES_HI's RULE_HI_CAHULAKS: Weapon traits, the stinkpots' switch too
 NAUSEATED = 75
 SAVE_LOG, SAVE_COUNT = 0x400, 0x5FE     # (the stubs' logs: DS offsets, a call's words each 20h)
 ADD_LOG, ADD_COUNT = 0x480, 0x5FC
@@ -41,13 +41,15 @@ def load_tests(loader, tests, pattern):  # (only this file's: not the classes', 
 
 class LoaderTests(unittest.TestCase):
     def test_rule(self):
-        """Bit 2 of the rules (unused since boots' movement), on unless unticked, no other rule's."""
-        self.assertEqual(game.RULE_STINKPOTS, RULE)
-        self.assertIn(("stinkpots", game.RULE_STINKPOTS), game.RULE_SETTINGS)
+        """The Weapon traits switch (the setting "cahulaks", as in 2.15.0): the stinkpots with the
+        cahulaks' traits, on unless unticked; bit 2 of the rules (boots' movement once) free again."""
+        self.assertEqual(game.RULE_STINKPOTS, game.RULE_CAHULAKS)
+        self.assertEqual(game.RULE_CAHULAKS >> 16, RULE)
+        self.assertIn(("cahulaks", game.RULE_CAHULAKS), game.RULE_SETTINGS)
+        self.assertNotIn("stinkpots", dict(game.RULE_SETTINGS))
         self.assertTrue(game.rules_from_settings({}) & game.RULE_STINKPOTS)
-        self.assertFalse(game.rules_from_settings({"stinkpots": False}) & game.RULE_STINKPOTS)
-        others = [bit for key, bit in game.RULE_SETTINGS if key != "stinkpots"]
-        self.assertFalse(any(bit & RULE for bit in others))
+        self.assertFalse(game.rules_from_settings({"cahulaks": False}) & game.RULE_STINKPOTS)
+        self.assertFalse(any(bit & 2 for _, bit in game.RULE_SETTINGS))
 
     def test_effect(self):
         """Nauseated: 75, past the game's 74 (its bits reach 79: 10 bytes), -2 to hit in the attack's sum."""
@@ -62,7 +64,7 @@ class LoaderTests(unittest.TestCase):
         asm = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos", "dsclog.asm")
         with open(asm, encoding="latin-1") as f:
             text = f.read()
-        for line in ("RULE_STINKPOTS equ 2 ", "STINK_EFFECT equ 75", "STINK_SAVE   equ 176", "STAFF_SLING  equ 0 ",
+        for line in ("RULE_HI_CAHULAKS equ 8192 ", "STINK_EFFECT equ 75", "STINK_SAVE   equ 176", "STAFF_SLING  equ 0 ",
                      "STINK_SIDES  equ 3 ", "MN_STINK     equ 11", "MN_NAUSEA    equ 12"):
             self.assertIn(line, text)
         self.assertEqual(game.STINK_SAVE_POWER, 176)
@@ -203,8 +205,8 @@ class StinkHitTests(tc.CahulaksTests):
         """CAH_HIT after a hit with item type KIND: the game's routines stubbed (UNDEAD the undead test's
         AL, SHARE the poison's share, SAVED the save's AX); (the save's calls, the effects added, the
         records made)."""
-        self.mu.mem_write(self.hdr + 170, struct.pack("<H", rules))
-        self.rules_hi(0)
+        self.mu.mem_write(self.hdr + 170, struct.pack("<H", 0))
+        self.rules_hi(rules)
         self.mu.mem_write(GAME_DS * 16 + 0x5F0, struct.pack("<HHH", undead, share, saved))
         for (seg, off, count, base, counter, ax) in ((SAVE_STUB, 0xA2, 1, 0x500, 0x5FA, 0x5F0),
                                                      (SAVE_STUB, 0x66, 4, 0x520, 0x5F8, 0x5F2),
@@ -269,7 +271,7 @@ class StinkSidesTests(td.TypesTests):
     whenever it runs (the main loop's pass), only in the table read and only over a 3 or 4."""
 
     def rules(self, value):
-        self.mu.mem_write(self.hdr + 170, struct.pack("<H", value))
+        self.mu.mem_write(self.hdr + 270, struct.pack("<H", value))  # (RULES_HI: Weapon traits)
 
     def sides(self):
         return self.mu.mem_read(self.TYPES_SEG * 16 + 0x0C, 1)[0]

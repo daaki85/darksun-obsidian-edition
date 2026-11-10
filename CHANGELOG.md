@@ -47,9 +47,10 @@ DSCLOG.EXE 68,576 bytes (image 68,544: 63,024 in its segment, 5,520 in the tail)
 segment spare; `UMB_NEED` 6,380 paragraphs (1,802 spare), `UMB_KEPT` 8,002 (180 spare).
 
 **New**
-- **Staff sling stinkpots** (AD&D's Arms and Equipment Guide), a rule on the Options tab's weapons and
-  armour, on by default (`stinkpots`, `RULE_STINKPOTS`: bit 2 of the rules, boots' movement once and
-  unused since). The staff sling's shot is a clay pot of burning sulphur: 1d3 crushing against any
+- **Staff sling stinkpots** (AD&D's Arms and Equipment Guide), under the cahulaks' switch, now
+  **Weapon traits** (the setting `cahulaks` as before, so a 2.15.0 settings file keeps its choice;
+  `RULE_HI_CAHULAKS`; `game.RULE_STINKPOTS` names it). It had a switch of its own on bit 2 of the
+  rules for a while; merged at the user's choice, bit 2 is free again. The staff sling's shot is a clay pot of burning sulphur: 1d3 crushing against any
   size (DSCLOG's `STINK_SIDES` makes item type 0's sides 3 in the game's type table, at its read and
   at each pass of the main loop; 4 again with the rule off), and a hit that did damage (`STINK_HIT`,
   from the cahulaks' `CAH_HIT` site) makes a target that is neither undead (the game's test, 7BE20h)
