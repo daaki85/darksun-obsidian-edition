@@ -215,7 +215,14 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   Type 146 (the metal cahulaks) read from the game's type table as built (`gd.item_type_record`).
 - **Setting the arena's visit count**: in the pens the game's numbers have a place in memory;
   number 12 is the count (4: the next trip is Scar's; 5 and up the everyday speech, or the
-  champions' after Scar's death in the arena). Write it at the far pointer DS:1356h + 2 x 12.
+  champions' after Scar's death in the arena). Write it at the far pointer DS:1356h + 2 x 12:
+  **`setcount.py [N]`** (2026-11-10) reads it and, with N, writes it.
+- **The arena's people are made at its first visit** (2026-11-10, logs/2026-11-10-scar-bout-gear.md):
+  a save made past the first bout (every kept save but `pens-new-chest`) holds Scar and his henchmen
+  as they were made then, so a change to their gear (worldgear's gifts for objects 87 and 229) shows
+  only in a new game: `pens-fire-count4`'s Scar still swung his old long sword. The route for it: a
+  new game through the arena (about 25 minutes, below), Goodbye to Kurzak, `follow.py 29`,
+  `setcount.py 4`, the fire room and its rests, `toarena.sh`.
 - **The arena's flags and numbers can't be set from outside** (2026-11-05): the pointers at
   DS:1352h and 1356h stay null in the arena even while a script waits on a message, so a poller
   never found them. To test a script's branch there, build a copy of the scripts with the test
@@ -496,7 +503,8 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   SAVED GAME (170, 109), EXIT TO DOS; the LOAD screen lists the slots (click one at 100, 46), then
   LOAD (253, 46). `loadsave.sh` does it.
 - **Talk menus** (WHAT DO YOU SAY?): click the line, or press a number key: 1-5 choose the line at
-  once, as the manual says (2026-11-08: `xdotool key --window $W 2` chose Kurzak's second line, 5 his
+  once, as the manual says (**6 does nothing**: Kurzak's Goodbye, his sixth line, takes the down arrow
+  at 311,187 and then a click on it at 30,189, 2026-11-10) (2026-11-08: `xdotool key --window $W 2` chose Kurzak's second line, 5 his
   Goodbye; the game's talk key table, DSUN.EXE 7DDB0h: 1-5, Y, N, Up, PgUp, Down, PgDn; the Loader takes
   none of them. An earlier note said they did nothing: the key had gone to another window). The list scrolls:
   its down arrow is at (311, 187), and the last visible line is about y 189. The dice log lists
@@ -1219,7 +1227,15 @@ is the eye). `toarena.sh` answers the call instead (up to the arena).
   "Enter the arena?" **Y** (before Kurzak's call the gap asks nothing). In the arena: south from
   the gate (488, 200) with clicks (each passes time), through the bone wall's gap (504, 360), and
   on south onto the stone platform until the bone gate closes behind the party (488, 408-424):
-  then the Announcer and the bout.
+  then the Announcer and the bout. **walkto.py can't take the gap** (2026-11-10, twice: it stops at
+  (488, 216-264), NO PATH, and its view snaps back): `scroll.py 0 -100` twice (camera about 328,
+  232-256), a click on the gap's floor (screen 176-180, 106-130), then clicks at map (488, 420) until
+  `fight_on 1` (two). Scar's bout opens with his talk: 5 ("No more talk. I'm committed.") fights.
+- **The fire room in a new game** (2026-11-10): its door is shut. From `route.py 1832 856` (camera
+  1656, 720) the eye on the gold pole at screen (198, 112) opens it, the walk arrow at (240, 160)
+  goes in, and the ring is at screen (276, 134) (ringrest.sh's 203, 88 is for camera 1728, 768).
+- **A Tab + Return loop stalls on a member with no Move left** (Tab keeps choosing, nothing
+  attacks): use fightout.sh, which presses E for it.
 - **The pens' main door** (objects 2145-2146 at 1571-1611, 559: the entryway Kurzak opens) has
   the "Take me to the Arena! I want a fight!" menu (137:14CEh), but open it answers nothing to
   the look pointer.

@@ -132,7 +132,8 @@ Monitor, and every step gets a `timeout`.
    his stop (squares 99,33-34) into the hall; the corridor gate (squares 81,20-21) is locked, so the
    way west is the door at square (113,90) (locked once, 2026-11-04: check its look box), the bottom corridor and its door (square 93,94) (`doorpath.py`). Then: #11, break into the stalker pen, kill
    the mountain stalker, push the button on the north wall; #12 is the sewer grate (map 46,86, square 2,5).
-4. Back to the arena: rest at the fire room's ring (door 1848,856, the look pointer) two or three
+4. Back to the arena (the arena's people are made on its first visit: a gear change for Scar shows
+   only in a new game; `setcount.py 4` sets Scar's trip): rest at the fire room's ring (door 1848,856, the look pointer) two or three
    times, then answer Kurzak's call at once (`toarena.sh`; `toalarm.sh` + `restalarm.sh` for the
    alarm fight instead). After Scar's death in the arena the next visit is the champions' bout.
 5. Water: whenever a play reaches a new area, note in the test log and in PLAYTESTING.md where
