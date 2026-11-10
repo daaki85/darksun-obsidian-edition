@@ -619,7 +619,8 @@ segment spare.
 
 **Docs**
 - **Where the large dice come from:** FEATURES' creature size table names its sources, the Player's
-  Handbook's weapons table (the pick as the horseman's pick) and the Dark Sun weapons guide the
+  Handbook's weapons table (the pick as the horseman's pick), the *Complete Book of Dwarves* for the
+  great axe (its two-handed battle axe, 1d10/2d8) and the Dark Sun weapons guide the
   chatkcha, gythka and cahulaks numbers came from.
 - **Screenshots retaken** (2026-11-10): `inventory.png` and `inventory-ranger.png` (SLNT, not MOVE),
   `hit-line-box.png` and `shadowseeker-box.png` (the large dice, at the other boxes' 2x),

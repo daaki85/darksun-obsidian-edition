@@ -970,7 +970,8 @@ their kind...), and **anyone Enlarged**, whatever their size.
 
   Where the dice come from: AD&D 2nd Edition's *Player's Handbook* weapons table, each weapon by
   the entry whose small and man-sized dice are the game's (its pick is the horseman's pick,
-  1d4+1/1d4, 4 lb as the game's 40); the chatkcha, the gythka and the cahulaks from
+  1d4+1/1d4, 4 lb as the game's 40); the great axe the *Complete Book of Dwarves*' two-handed
+  battle axe (1d10/2d8); the chatkcha, the gythka and the cahulaks from
   [a Dark Sun weapons guide](https://www.geocities.ws/danach.geo/guide_1.html), which also gives a
   thri-kreen's chatkcha its 2/1.
 
