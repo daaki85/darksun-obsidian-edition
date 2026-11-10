@@ -323,8 +323,9 @@ GIFTS: Tuple[Gift, ...] = (
     Gift("Tari", (weapon(OBSIDIAN_MACE),), (60, 243), 0x28),  # the warrens' Tari, every one
     Gift("Renegade", (weapon(BONE_SHORT_SWORD),), (289,)),  # (every one)
     Gift("Wild Mul", (weapon(BONE_AXE), weapon(BONE_GREAT_AXE)), (290,)),
-    # (every one; they carried nothing: a bone axe, and leather chest and arm armour, as Merzol wears)
-    Gift("Scar's henchman", (weapon(BONE_AXE), LEATHER_CHEST_ITEM, LEATHER_ARM_ITEM), (229,)),
+    # (every one; they carried nothing: a bone great axe (the user's choice, 2026-11-10; a bone axe
+    # before), and leather chest and arm armour, as Merzol wears)
+    Gift("Scar's henchman", (weapon(BONE_GREAT_AXE), LEATHER_CHEST_ITEM, LEATHER_ARM_ITEM), (229,)),
     # Scar (object 87, the arena's and the break-out's): a pair of plain obsidian cahulaks in place of
     # his obsidian long sword (the user's choice)
     Gift("Scar", (weapon(OBSIDIAN_CAHULAKS),), (SCAR,), instead=(45, 0)),

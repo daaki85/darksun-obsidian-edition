@@ -48,7 +48,7 @@ class WorldGearTests(unittest.TestCase):
                                 "Metal Cahulaks"])
         self.assertEqual([icons.which(r) for r in gift("Wild Mul").items], ["Bone Axe", "Bone Great Axe"])
         self.assertEqual(([icons.which(r) for r in gift("Scar's henchman").items[:1]], gift("Scar's henchman").objects),
-                         (["Bone Axe"], (229,)))
+                         (["Bone Great Axe"], (229,)))
         defilers = [(g.objects, [icons.which(r) or struct.unpack_from("<H", r, game.ITEM_TYPE)[0] for r in g.items])
                     for g in worldgear.GIFTS if g.name == "Defiler"]  # (a body to leave: a dagger each)
         self.assertEqual(defilers, [((258,), [17]), ((296,), ["Bone Dagger"])])
@@ -652,7 +652,7 @@ class ScarTests(unittest.TestCase):
     def test_armour(self):
         """Scar's leather chest and arm armour (types 6, 7) made a full suit with leggings and a helm
         (8, 5), above Merzol's (object 180: chest and arm); his henchmen (229), who carried nothing,
-        get a bone axe and Merzol's leather chest and arm armour."""
+        get a bone great axe and Merzol's leather chest and arm armour."""
         import struct
         from dsloader import dataitems, game, gff
         with open(os.environ["DSUN_OBJECTS"], "rb") as f:
