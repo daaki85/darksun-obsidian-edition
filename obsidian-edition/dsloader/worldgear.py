@@ -84,6 +84,13 @@ CAHULAKS_NAME = 0x14  # (the game's "Cahulaks")
 METAL_CAHULAKS = (game.METAL_CAHULAKS_TYPE, CAHULAKS_NAME, 0x10000 - 2670, 200)  # (the champions' mul's)
 OBSIDIAN_CAHULAKS = weaponchoice.OTHERS[KIND("cahulaks")][0]  # (15: an earth or fire cleric-warrior's start)
 SCAR = 87  # (Scar's object: his obsidian long sword made obsidian cahulaks)
+# the game's plain leather armour (its own records: SEGOBJEX's first of types 6, 7 and 8) and the
+# champions' helm (champions.HELM),
+# for Scar and his henchmen, who wore less than Merzol's gladiators and the champions after them
+LEATHER_CHEST_ITEM = npcitems._item("02fc000000000a00000006000000000004ff070000")
+LEATHER_ARM_ITEM = npcitems._item("01fc000000001400000007000000000004ff080000")
+LEATHER_LEGS_ITEM = npcitems._item("fefb000000001400000008000000000004ff090000")
+LEATHER_HELM_ITEM = npcitems._item("03fc000000000500000005000000000004ff060000")
 # (type, name entry, picture, price) and plus, priced as the game prices its own: a melee weapon as
 # the Obsidian Bloodwrath +1 (20,800, as its Hornblade +1 and Gythka +1), 20,800 a plus; a missile
 # weapon far less, as its Sling +1 (2,800; the Chatkcha +1 1,800, the Sling +2 3,500)
@@ -316,10 +323,14 @@ GIFTS: Tuple[Gift, ...] = (
     Gift("Tari", (weapon(OBSIDIAN_MACE),), (60, 243), 0x28),  # the warrens' Tari, every one
     Gift("Renegade", (weapon(BONE_SHORT_SWORD),), (289,)),  # (every one)
     Gift("Wild Mul", (weapon(BONE_AXE), weapon(BONE_GREAT_AXE)), (290,)),
-    Gift("Scar's henchman", (weapon(BONE_AXE),), (229,)),  # (every one; they carried nothing)
+    # (every one; they carried nothing: a bone axe, and leather chest and arm armour, as Merzol wears)
+    Gift("Scar's henchman", (weapon(BONE_AXE), LEATHER_CHEST_ITEM, LEATHER_ARM_ITEM), (229,)),
     # Scar (object 87, the arena's and the break-out's): a pair of plain obsidian cahulaks in place of
     # his obsidian long sword (the user's choice)
     Gift("Scar", (weapon(OBSIDIAN_CAHULAKS),), (SCAR,), instead=(45, 0)),
+    # ... and his leather chest and arm armour made a full leather suit with a helm: a step above
+    # Merzol (chest and arm), below the champions after him (scale, or leather with a shield)
+    Gift("Scar", (LEATHER_LEGS_ITEM, LEATHER_HELM_ITEM), (SCAR,)),
     # the defilers (both kinds, made by scripts) carried nothing, so left no body: a dagger each,
     # one kind obsidian (the game's plain one), the other bone
     Gift("Defiler", (weapon(weaponchoice.PLAIN[KIND("dagger")]),), (258,)),
@@ -532,9 +543,9 @@ def object_chunks(chunks, gifts: Sequence[Gift], extra: Sequence[Tuple[int, Sequ
                 wanted.setdefault(obj, []).extend(gift.items)
     for obj, items in extra:
         wanted.setdefault(obj, []).extend(items)
-    for obj, items in wanted.items():
+    for obj, items in wanted.items():  # (after any swap of the same object's: INSTEAD's)
         if ("RDFF", obj) in chunks:
-            out[("RDFF", obj)] = dataitems.with_items(chunks[("RDFF", obj)], items, numbers)
+            out[("RDFF", obj)] = dataitems.with_items(out.get(("RDFF", obj), chunks[("RDFF", obj)]), items, numbers)
     return out
 
 

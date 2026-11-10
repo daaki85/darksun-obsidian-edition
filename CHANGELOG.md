@@ -76,7 +76,11 @@ segment spare.
 **New**
 - **Scar fights with a pair of obsidian cahulaks** in place of his obsidian long sword (the user's
   choice), in the arena and when breaking out with him (`worldgear`'s gift, object 87). A save that
-  has already met him keeps his sword.
+  has already met him keeps his old gear. He also wears a full leather suit with a helm (leggings and
+  a helm added to his chest and arm armour: AC 3 with the Helms give AC 1 rule, 4 without, from 5), a
+  step above Merzol (chest and arm) and below the champions after him; his henchmen, who wore
+  nothing, get Merzol's leather chest and arm armour (AC 8, from 10). Their gladiator peers in
+  Merzol's gang wear one brigandine arm piece and a shield.
 - **New rule: held targets as in AD&D** (Options, Weapons and armour; on by default; `RULE_HELD`,
   the Loader's `held_hit`, DSCLOG's `RULE_HI_HELD` 8000h and HELD: `HELD_HIT` at 589E9h,
   `HELD_DAMAGE` at 58B0Dh): a blow on a Paralyzed or Out Cold creature hits automatically and does

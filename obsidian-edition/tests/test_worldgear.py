@@ -47,7 +47,7 @@ class WorldGearTests(unittest.TestCase):
                                 "Short Sword", "Bone Great Axe", "Obsidian Great Axe", "Metal Great Axe", "Metal Pick", "Bone Dagger",
                                 "Metal Cahulaks"])
         self.assertEqual([icons.which(r) for r in gift("Wild Mul").items], ["Bone Axe", "Bone Great Axe"])
-        self.assertEqual(([icons.which(r) for r in gift("Scar's henchman").items], gift("Scar's henchman").objects),
+        self.assertEqual(([icons.which(r) for r in gift("Scar's henchman").items[:1]], gift("Scar's henchman").objects),
                          (["Bone Axe"], (229,)))
         defilers = [(g.objects, [icons.which(r) or struct.unpack_from("<H", r, game.ITEM_TYPE)[0] for r in g.items])
                     for g in worldgear.GIFTS if g.name == "Defiler"]  # (a body to leave: a dagger each)
@@ -648,3 +648,29 @@ class ScarTests(unittest.TestCase):
         self.assertNotIn(45, after)
         self.assertIn(game.OBSIDIAN_CAHULAKS_TYPE, after)
         self.assertEqual(sorted(t for t in before if t != 45), sorted(t for t in after if t != game.OBSIDIAN_CAHULAKS_TYPE))
+
+    def test_armour(self):
+        """Scar's leather chest and arm armour (types 6, 7) made a full suit with leggings and a helm
+        (8, 5), above Merzol's (object 180: chest and arm); his henchmen (229), who carried nothing,
+        get a bone axe and Merzol's leather chest and arm armour."""
+        import struct
+        from dsloader import dataitems, game, gff
+        with open(os.environ["DSUN_OBJECTS"], "rb") as f:
+            chunks = gff.read_gff(f.read())
+        def types(data):
+            return sorted(struct.unpack_from("<H", r, game.ITEM_TYPE)[0] for r in dataitems.items_of(data)
+                          if len(r) == game.ITEM_SIZE)
+        out = worldgear.object_chunks(chunks, worldgear.GIFTS)
+        merzol = types(chunks[("RDFF", 180)])
+        scar = types(out[("RDFF", worldgear.SCAR)])
+        self.assertTrue({6, 7} <= set(merzol))
+        self.assertEqual(sorted(t for t in scar if t in (5, 6, 7, 8)), [5, 6, 7, 8])
+        self.assertIn(game.OBSIDIAN_CAHULAKS_TYPE, scar)
+        self.assertNotIn(45, scar)
+        self.assertEqual(types(chunks[("RDFF", 229)]), [])
+        self.assertEqual(sorted(t for t in types(out[("RDFF", 229)]) if t in (6, 7)), [6, 7])
+        from dsloader import champions
+        for item, game_type in ((worldgear.LEATHER_CHEST_ITEM, 6), (worldgear.LEATHER_ARM_ITEM, 7),
+                                (worldgear.LEATHER_LEGS_ITEM, 8)):
+            self.assertEqual(dataitems.placed(item), dataitems.placed(champions.game_item(chunks, game_type)))
+        self.assertEqual(worldgear.LEATHER_HELM_ITEM, champions.HELM)  # (the champions' helm)
