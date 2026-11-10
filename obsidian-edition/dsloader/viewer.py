@@ -722,8 +722,9 @@ class Viewer:
             opened = webbrowser.open(Path(GUIDE).as_uri())
         except webbrowser.Error:
             opened = False
-        if not opened:
-            self.status.set(f"The player's guide is {GUIDE}")
+        # (said either way: an opener can report success and still find no browser, as gio did)
+        self.status.set(f"The player's guide, opening in your browser: {GUIDE}" if opened
+                        else f"The player's guide is {GUIDE}")
 
     def open_named_saves(self) -> None:
         game_dir = self._saves_game_dir()

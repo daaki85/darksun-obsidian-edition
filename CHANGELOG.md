@@ -499,6 +499,8 @@ segment spare.
   asked for a half-giant only. The Options text, FEATURES, the guide and CREATURES.md say so.
 
 **Fixed: the Loader** (found by the code audit, 2026-11-10; each with a test that failed before)
+- **Help said nothing when no browser opened:** an opener can report success and find no browser
+  (`gio` did, 2026-11-10); the status line now names the guide whenever Help is clicked.
 - **Two Loaders on one game:** `game.lock` (an OS lock, by pid where none can be had) is taken by
   `launch`, the window and `dicelog`; a second refuses, naming who has the game.
 - **settings.json:** a temporary file of its own per write; a file that can't be read is never

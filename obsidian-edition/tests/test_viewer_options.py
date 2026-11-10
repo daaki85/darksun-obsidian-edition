@@ -106,6 +106,7 @@ class OptionsTests(unittest.TestCase):
         help_[0].invoke()
         self.assertEqual(len(opened), 1)
         self.assertTrue(opened[0].startswith("file:") and opened[0].endswith("/player-guide.html"), opened)
+        self.assertIn("player-guide.html", self.viewer.status.get())  # (said even when it opened)
         viewer.webbrowser.open = lambda url: False
         self.viewer.open_guide()
         self.assertIn("player-guide.html", self.viewer.status.get())

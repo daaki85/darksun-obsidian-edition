@@ -556,6 +556,14 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   (0 wood, 1 bone, 2 stone, 3 obsidian, 4 metal, 5 leather) with 80h marking a type the weak
   materials' penalties skip (the bow, club, quarterstaff 3, sling, arrows 62, chatkcha 48), +0Ch the
   damage die's sides, +0Dh how many, +0Eh the bonus (the pick's 4, 1, 1: 1d4+1).
+- **A class in memory** (2026-11-10, logs/2026-11-10-air-cleric-gythka-shadows.md): a member's sheet
+  at the far pointer DS:1661h + (creature +4) x 47h; classes +21h (1-4 the clerics, air to water),
+  levels +24h, flags +12h (a bit a class: 1 the air cleric, 4 the fire cleric). Then take a held item
+  out and put it back (two clicks on its place in the inventory) to run the game's can-use check:
+  "CANNOT USE THIS ITEM" when refused. **A creature's name** for a test: its record's +28h (16 bytes);
+  the Loader's lists that go by name (`cahulaks.big_table`) follow within a pass.
+- **The Loader window's Help** (same day): in this container `gio` takes the URL and finds no browser,
+  so nothing opens; the status line names the guide either way.
 - **A spell box's text** (same day): `spelltexts`' tables are keyed by the SPIN chunk, the spell + 1
   (its 24 is Strength; spell 24 is Web): teach `spellsetup.py` the spell number. The box holds 7 lines
   of 128 pixels of the game's font, the first less the icon; `tests/test_spelltexts_fit.py` wraps every
