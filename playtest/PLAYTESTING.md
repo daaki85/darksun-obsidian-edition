@@ -551,6 +551,11 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   +0Ch (the game keeps there the icon it last drew, and draws that again), and give it the item's own
   type (+0Ah): the Loader sets +0, the object, from the type, so a type 127 always comes back as the
   Metal Pick (Deepbiter is type 112).
+- **An item type's record** (2026-11-10, 20 bytes at the far pointer `game.ITEM_TYPES_PTR` + type x
+  14h, read through live.py): +04h the weight (tenths of a pound), +08h the material in the low nibble
+  (0 wood, 1 bone, 2 stone, 3 obsidian, 4 metal, 5 leather) with 80h marking a type the weak
+  materials' penalties skip (the bow, club, quarterstaff 3, sling, arrows 62, chatkcha 48), +0Ch the
+  damage die's sides, +0Dh how many, +0Eh the bonus (the pick's 4, 1, 1: 1d4+1).
 - **A spell box's text** (same day): `spelltexts`' tables are keyed by the SPIN chunk, the spell + 1
   (its 24 is Strength; spell 24 is Web): teach `spellsetup.py` the spell number. The box holds 7 lines
   of 128 pixels of the game's font, the first less the icon; `tests/test_spelltexts_fit.py` wraps every
