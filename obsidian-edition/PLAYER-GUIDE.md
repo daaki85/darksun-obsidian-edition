@@ -1730,7 +1730,8 @@ weapon in the other.
 Bulette or the Mountain Stalker, anyone Enlarged) a weapon rolls AD&D's dice for
 large targets: a long sword 1d12, a short sword 1d8, a great axe 2d8, a polearm
 or gythka 2d6, a dagger or club 1d3; an axe, quarterstaff, cahulaks or missile
-as above. Hold Person and Charm Person don't take on a large foe at all (Charm
+as above (a weapon's item box shows both, `1D8-1/1D12-1`, and the inventory a
+`Large` line under its damage). Hold Person and Charm Person don't take on a large foe at all (Charm
 Person or Mammal still charms a large beast). [The creatures' table](CREATURES.md)
 gives every creature's size. *Without the mod:* the game keeps no sizes.
 

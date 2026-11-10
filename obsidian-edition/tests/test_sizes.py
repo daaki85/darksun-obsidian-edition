@@ -10,7 +10,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import game, sizes, specialize  # noqa: E402
+from dsloader import game, gamepatch, sizes, specialize  # noqa: E402
 
 import test_cahulaks as tc  # noqa: E402
 import test_dsclog as td  # noqa: E402
@@ -165,6 +165,44 @@ class SizeTests(tc.CahulaksTests):
         self.assertEqual(self.save(82, 32), 12)
         self.assertEqual(self.save(63, 30), 12)
         self.assertEqual(self.save(30, 30, rules=0), 12)
+
+    def line(self, text, kind, box=True, rules=RULE, x=0xEC):
+        """SIZE_LINE after a damage line TEXT for a weapon of type KIND (the box's: no creature; else
+        the inventory's): (the line in SS:[BP-2Eh] after, the inventory's own line, [BP-2], the text
+        routine's calls, the y it was given)."""
+        self.rules_hi(rules)
+        stub = 0x7000
+        self.mu.mem_write(stub * 16, bytes.fromhex("55 89e5 8b4610 2ea30201 2eff060001 5d cb".replace(" ", "")))
+        self.mu.mem_write(stub * 16 + 0x100, bytes(4))
+        p = tc.tg.patch("size_line")
+        self.mu.mem_write(td.CALLER * 16 + self.at + 0x100 + 3 - 10, struct.pack("<HH", 0, stub))
+        self.mu.mem_write(SS * 16 + BP - 0x2E, text.encode() + bytes(40 - len(text)))
+        self.frame(m2=1, m6=0 if box else 0x30, m4=0 if box else 0x1000, pE=50, pC=x)
+        self.assertEqual(self.where("size_line", (), esi=kind), "end")
+        got = bytes(self.mu.mem_read(SS * 16 + BP - 0x2E, 40)).split(b"\0")[0].decode()
+        own = bytes(self.mu.mem_read(td.TSR * 16 + self.sym["sl_text"], 20)).split(b"\0")[0].decode()
+        calls, y = struct.unpack("<HH", self.mu.mem_read(stub * 16 + 0x100, 4))
+        return got, own, struct.unpack("<h", self.mu.mem_read(SS * 16 + BP - 2, 2))[0], calls, y
+
+    def test_damage_lines(self):
+        """SIZE_LINE: the item box's damage line drawn again with the large dice after a slash; the
+        inventory's a "Large ..." line on the next row (y + 7), counted; the rate left out; nothing
+        for a weapon whose large dice are its own, Shillelagh, or with the rule off."""
+        self.assertEqual(self.line("1D8-1", LONG_SWORD), ("1D8-1/1D12-1", "Large ", 2, 1, 50))
+        self.assertEqual(self.line("1.5x1D8+7", LONG_SWORD, box=False)[1:], ("Large 1D12+7", 3, 1, 57))
+        self.assertEqual(self.word("sl_extra"), 1)  # (PROBE_WEAPON's THAC0: on the damage line)
+        self.word("sl_extra", 0)
+        self.assertEqual(self.line("1D8+7", LONG_SWORD, box=False, x=0x50)[1:], ("Large 1D12+7", 2, 0, 0))  # (Look box)
+        self.assertEqual(self.line("1D6+1", MACE)[0], "1D6+1/1D6")
+        self.assertEqual(self.line("1D4+1", sizes.HAMMER_TYPE)[0], "1D4+1/1D4")
+        self.assertEqual(self.line("1D6+12", MACE)[0], "1D6+12/1D6+11")
+        for text, kind, rules in (("1D6", AXE, RULE), ("2D4", sizes.SHILLELAGH_TYPE, RULE), ("1D8", LONG_SWORD, 0)):
+            self.assertEqual(self.line(text, kind, rules=rules)[0::2], (text, 2, 0), (text, kind))
+
+    def test_line_patch(self):
+        p = tc.tg.patch("size_line")
+        self.assertEqual((p.offset, p.original.hex()), (0x72AA7, "ff46fe"))
+        self.assertEqual(p.replacement[:3], bytes((0xCD, 0x98, gamepatch.SIZE_LINE_SITE)))
 
 
 if __name__ == "__main__":

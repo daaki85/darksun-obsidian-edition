@@ -37,3 +37,12 @@ rule off Jenna's hits of 10 and 12 killed a 30-HP guard. So it comes with the ta
 with the size rule. Not followed further here.
 
 Memory edits only; the game was not saved.
+
+## The large dice on the weapon lines (SIZE_LINE)
+
+From `fountain-user`, the speech box clicked, the foes Paralyzed, I (Ester's turn):
+- The inventory: `Bow / 2x1D8 T14 / Long Sword / 1D8+9 T15 / Large 1D12+9 / Long Sword /
+  1.5x1D8+9 T15 / Large 1D12+9`, clear of the icon bar. A first build drew the THAC0 on the `Large`
+  line (PROBE_WEAPON puts it on the weapon's last line); fixed with SL_EXTRA.
+- The Bone Long Sword's item box (right-click on the right hand, 66,92): `Bone / Long Sword /
+  1D8-1/1D12-1 / Hit -1`, the Hit line where it was.

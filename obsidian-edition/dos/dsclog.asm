@@ -2732,6 +2732,7 @@ probe_weapon:
         mov [cs:w_draw], eax
         mov ax, [cs:w_lines]
         dec ax
+        sub ax, [cs:sl_extra]   ; (not SIZE_LINE's "Large" line: the damage line's)
         imul ax, ax, 7
         add ax, [bp + 0x0E]     ; the weapon's last line
         push word [bp + 0x12]   ; the colours, as the routine draws its lines
@@ -2745,6 +2746,7 @@ probe_weapon:
         add sp, 0x10
 .done:  pop es
         popad
+        mov word [cs:sl_extra], 0
         push word [cs:w_fl]
         push word [cs:w_cs]
         push word [cs:w_ip]
@@ -15014,6 +15016,7 @@ PIC_COUNT_SITE equ NS_IMAGE + 102     ; 2612Bh: the slot's number, the count rai
 CAH_TWO_SITE equ NS_IMAGE + 103       ; 59627h: two weapons ready, or the cahulaks (CAHULAKS)
 CAH_SWING_SITE equ NS_IMAGE + 104     ; 589B6h: a swing's start: the off head's (CAHULAKS)
 CAH_HIT_SITE equ NS_IMAGE + 105       ; 58B54h: a weapon's hit that did damage: the tangle (CAHULAKS)
+SIZE_LINE_SITE equ NS_IMAGE + 106     ; 72AA7h: a weapon's damage line drawn: its large dice (SIZE_LINE)
 KIND_TURN  equ 13
 TU_DESTROY equ 0x7AE60 - 0x7AE04 ; (the ways on, less the address after the site's number)
 TU_FAIL    equ 0x7AE75 - 0x7AE04
@@ -17081,6 +17084,186 @@ size_spared:                        ; (SAVE_SUM's: AX the save's sum) SAVE_MOST 
         mov ax, SAVE_MOST
 .out:   pop bx
 .ret:   ret
+; SIZE_LINE ("inc word [bp-2]", 72AA7h; 3 bytes) in the routine writing a weapon's lines (7286Fh: an
+; item box's, [BP-6] its creature 0; the inventory screen's, its creature's), its damage line just
+; drawn from SS:[BP-2Eh] ("1.5x1D8+7"; SI the item type), [BP-2] the lines drawn, each 7 rows on. With
+; the size rule, a weapon whose dice against a large target differ (LARGE_DICE by kind; the Spiritual
+; Hammer 1 off its bonus; not Shillelagh, its line the game's 2D4): the box's line drawn again with
+; "/1D12+7" after it (the box has no row to spare), the inventory's "Large 1D12+7" on the row under it,
+; counted, so the lines after it move down (PROBE_WEAPON's THAC0 stays on the damage line; not in
+; the Look box's list, which has no row). The text routine's address is the game's call's before.
+SL_DRAW  equ 0x72AA0 - 0x72AAA      ; (the text routine's far address in that call, less the way back)
+SL_TEXT  equ 0x2E                   ; ([BP-2Eh]: the line)
+size_line:
+        inc word [bp - 2]
+        test word [cs:rules_hi], RULE_HI_SIZE
+        jz .ret
+        pushad
+        push es
+        xor ax, ax                  ; AL the count, AH the sides (0: the line's), DL the bonus's change
+        mov dl, -1
+        cmp si, HAMMER_TYPE
+        je .parse
+        cmp si, KIND_TYPES
+        jae .out
+        movzx bx, byte [cs:si + kind_of_type]
+        or bx, bx
+        jz .out
+        dec bx
+        imul bx, bx, 3
+        mov ax, [cs:bx + large_dice]
+        or al, al
+        jz .out
+        mov dl, [cs:bx + large_dice + 2]
+.parse: lea bx, [bp - SL_TEXT]
+        mov di, bx
+.d:     mov cl, [ss:di]             ; the D
+        or cl, cl
+        jz .out
+        cmp cl, 'D'
+        je .back
+        inc di
+        jmp .d
+.back:  cmp di, bx                  ; the count's digits before it
+        je .count
+        mov cl, [ss:di - 1]
+        sub cl, '0'
+        cmp cl, 9
+        ja .count
+        dec di
+        jmp .back
+.count: mov bx, di
+        call sl_number
+        or al, al
+        jnz .c
+        mov al, cl
+.c:     inc bx                      ; (past the D)
+        call sl_number
+        or ah, ah
+        jnz .s
+        mov ah, cl
+.s:     movsx dx, dl
+        mov cl, [ss:bx]
+        inc bx
+        cmp cl, '+'
+        je .plus
+        cmp cl, '-'
+        jne .sum
+        call sl_number
+        sub dx, cx
+        jmp .sum
+.plus:  call sl_number
+        add dx, cx
+.sum:   mov [cs:sl_dice], ax
+        mov [cs:sl_bonus], dx
+        mov si, sp
+        les bx, [ss:si + 34]        ; the way back (after ES and the PUSHAD)
+        mov ecx, [es:bx + SL_DRAW]
+        mov [cs:sl_draw], ecx
+        mov ax, [bp + 0x0E]         ; y
+        cmp dword [bp - 6], 0
+        je .box
+        cmp word [bp + 0x0C], W_LINES_X
+        jne .out                    ; (the Look box's list: no row to spare)
+        mov word [cs:sl_extra], 1
+        push cs                     ; the inventory: "Large 1D12+7" on the next row
+        pop es
+        mov di, sl_text + 6
+        call sl_write
+        push cs
+        push word sl_text
+        add ax, 7
+        inc word [bp - 2]
+        jmp .draw
+.box:   push ss                     ; the box: "/1D12+7" after its line
+        pop es
+        lea di, [bp - SL_TEXT]
+.end:   cmp byte [es:di], 0
+        je .slash
+        inc di
+        jmp .end
+.slash: mov byte [es:di], '/'
+        inc di
+        call sl_write
+        push ss
+        lea cx, [bp - SL_TEXT]
+        push cx
+.draw:  pop cx                      ; (the string's far address, CX:its offset under it)
+        pop si
+        push word [bp + 0x12]
+        push word [bp + 0x10]
+        push ax
+        push word [bp + 0x0C]
+        push si
+        push cx
+        push dword [bp + 6]         ; the window
+        call far [cs:sl_draw]
+        add sp, 16
+.out:   pop es
+        popad
+.ret:   iret
+
+; SL_NUMBER: CX the number at SS:BX (its digits; 0 if none), BX past them. Others kept.
+sl_number:
+        push ax
+        xor cx, cx
+.next:  mov al, [ss:bx]
+        sub al, '0'
+        cmp al, 9
+        ja .out
+        imul cx, cx, 10
+        movzx ax, al
+        add cx, ax
+        inc bx
+        jmp .next
+.out:   pop ax
+        ret
+
+; SL_WRITE: SL_DICE and SL_BONUS ("1D12+7"; no bonus at 0) at ES:DI, a NUL after. Others kept.
+sl_write:
+        pusha
+        movzx ax, byte [cs:sl_dice]
+        call sl_digits
+        mov byte [es:di], 'D'
+        inc di
+        movzx ax, byte [cs:sl_dice + 1]
+        call sl_digits
+        mov ax, [cs:sl_bonus]
+        or ax, ax
+        jz .end
+        mov byte [es:di], '+'
+        jg .sign
+        mov byte [es:di], '-'
+        neg ax
+.sign:  inc di
+        call sl_digits
+.end:   mov byte [es:di], 0
+        popa
+        ret
+
+; SL_DIGITS: AX (0-999) in decimal at ES:DI, DI past it. AX, BX, CX, DX lost.
+sl_digits:
+        mov bx, 10
+        xor cx, cx
+.div:   xor dx, dx
+        div bx
+        push dx
+        inc cx
+        or ax, ax
+        jnz .div
+.put:   pop dx
+        add dl, '0'
+        mov [es:di], dl
+        inc di
+        loop .put
+        ret
+sl_draw   dd 0
+sl_dice   dw 0                      ; (the large dice: the count, then the sides)
+sl_bonus  dw 0
+sl_extra  dw 0                      ; (1: the "Large" line drawn, for PROBE_WEAPON's THAC0)
+W_LINES_X equ 0xEC                  ; (the inventory's lines' x, as PROBE_WEAPON's W_X)
+sl_text   db 'Large ', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+
 cah_extra  dw 0                     ; how much worse the off head's swing is than the main head's
 cah_who    dw -1                    ; ... for this attacker (a combatant; -1 none)
 
@@ -19962,6 +20145,7 @@ site_tab:
         site CAH_TWO_SITE, cah_two
         site CAH_SWING_SITE, cah_swing
         site CAH_HIT_SITE, cah_hit
+        site SIZE_LINE_SITE, size_line
 SITE_COUNT equ ($ - site_tab) / 2
 
 ; NS_CMP: the compare of site RL_SITE (of NS_CMP_SITES), its flags into the INT's frame.
