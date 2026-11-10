@@ -111,8 +111,8 @@ reach took 384 bytes of the segment (68,592 bytes before it).
   playtest/logs/2026-11-10-grand-mastery-large.md.)
 
 **Docs**
-- docs/options.png still shows 2.15.0's switches (the two save switches, the cahulaks' own, the separate
-  shop and thief boxes): to be retaken before the release.
+- docs/options.png retaken: the Options tab with the merged switches (Weapon traits, Saving throws
+  against spells, Shops and Thieves as in AD&D), Rule changes and New content open; 706 x 2473.
 - KITS: a table of every weapon spec's dice, man-sized and large, with and without grand mastery
   ([Grand mastery's damage](obsidian-edition/KITS.md#grand-masterys-damage); `GrandMasteryTableTests`
   keeps it in step with `sizes.LARGE_DICE` and `specialize.next_die`). The staff sling's row is its

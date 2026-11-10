@@ -32,3 +32,12 @@
 - **K'ratchek:** OPEN SKY SPELLS/PSI, specialized in chatkcha. No chatkcha rate line.
 - The picture is `img/2026-11-10-kratchek-effects.png`.
 - `buildcheck.py`: OK.
+
+## The Options picture again (after the switch merges)
+
+The same recipe:
+- Xvfb `:57` at 1400x3400; `python3.12 -m dsloader view`; the window found with `xdotool search --onlyvisible --name .` (the window title is "Dark Sun Obsidian Edition Loader ..."), resized to 1320x3300 and moved to 0,0.
+- The Options tab (1061,132).
+- The window had kept Graphics and Controls open. Clicking the headers at x 700, bottom-up so the ones above stay put: Controls closed, then New content and Rule changes opened. The header rows were found by scanning x 640 for the headers' borders.
+- The crop: x 608, y 116, 706 wide, to 12 rows under the last dark row of Restore defaults (y 2577). That gives 706 x 2473, taller than before with fewer switches, since the merged ones' texts are longer.
+- The Loader window was closed by its pid.
