@@ -42,8 +42,8 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 
 ## Next pull request (not opened yet)
 
-DSCLOG.EXE 68,016 bytes (image 67,984: [TO CONFIRM] in its segment, [TO CONFIRM] in the tail),
-3,104 of its segment spare [TO CONFIRM].
+DSCLOG.EXE 68,032 bytes (image 68,000: 62,480 in its segment, 5,520 in the tail), 3,056 of its
+segment spare.
 
 **In short**
 - **Three new rules**, each a switch on by default: **held targets** as in AD&D (a blow on a held or
@@ -157,7 +157,12 @@ DSCLOG.EXE 68,016 bytes (image 67,984: [TO CONFIRM] in its segment, [TO CONFIRM]
   hands, the kits, restrict.py, the dice log, specialization, the figure). Earth clerics may use
   the metal ones, earth and fire clerics the obsidian ones; an earth or fire cleric-warrior who picks
   the cahulaks as its weapon spec starts with obsidian ones (`weaponchoice`).
-- (magic metal and obsidian cahulaks: to be filled in)
+- **Two magic cahulaks of the new materials**, each named and with its own glow, and a story Alagorn
+  tells: **Emberlash**, obsidian cahulaks +1 (earth, fire and air clerics may wield it), carried by
+  Uzoma, who leads the Drajian patrol west of the Hot Springs; **Ironwhirl**, metal cahulaks +2
+  (earth and air clerics), on the Subterranean Temple's weapon rack. Their names take two more of
+  DSCLOG's extra names (49 now). Plain obsidian cahulaks are sold by Jark (15), metal ones by the
+  Weapon Merchant (200).
 - **The Boots of Speed** (the DMG's; the user's item), worn on the feet by anyone: in a fight the
   wearer's movement doubled and AC 2 better while it can move (not Stuck, Paralyzed or Slowed);
   nothing out of a fight. DSCLOG's type SPEED_BOOTS (the 31st extra type, the game's Boots'), name
@@ -384,8 +389,8 @@ DSCLOG.EXE 68,016 bytes (image 67,984: [TO CONFIRM] in its segment, [TO CONFIRM]
     over the install code.
   - Each pass checked in DOSBox (shadows, dust, see-through, the ring, the panel's colours, labels,
     to-hit, Turn Undead, item names and types, next-level XP, the Effects screen, Look, creation, a
-    shop). Now: `kept_end` 62,432, 3,104 of the segment spare; `UMB_KEPT` 7,963 paragraphs, 219
-    spare [TO CONFIRM].
+    shop). Now: `kept_end` 62,480, 3,056 of the segment spare; `UMB_KEPT` 7,968 paragraphs, 214
+    spare.
 - The helper counts the game's page flips (`flip_count`, header +1832), for a frame rate:
   `playtest/framerate.py` reads it beside steady pace's frames left undrawn.
 

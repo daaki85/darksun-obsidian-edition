@@ -1712,8 +1712,8 @@ How each of these is done:
   `kit_at`, `kit_awake`, `kits_of`, `kit_ids`, `kit_level`, `kit_class_of` are the Loader's.
 - **Classes barred to a dual-classing human.** Seeker, Justifier (cleric); Shinobi (preserver);
   Swashbuckler, Crusader, Battle Mage, Mind Warrior (fighter, gladiator, ranger); Arena Champion,
-  Sentinel (druid, preserver: no shield); Brute (psionicist, air cleric: no two-handed melee
-  weapon); Stalker (thief: its hiding on a thief's own); Grove Warden (gladiator: its AC on a
+  Sentinel (druid, preserver: no shield); Brute (psionicist: no two-handed melee
+  weapon; an air cleric has the cahulaks); Stalker (thief: its hiding on a thief's own); Grove Warden (gladiator: its AC on a
   gladiator's own); Healer (the rangers of air, earth and fire: water's sphere only; the game
   already keeps a priest from the other priest class, and a ranger, who must be good, from the
   druid, who must be neutral, so `DUAL_BANS`' clerics and druids there and the Seeker's and

@@ -394,7 +394,8 @@ Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Hayneedle\* +1;
 Glasshewer\* +2, Drakejaw\* +1, Soulcrusher +1, Axe +1; Great Axe +3, Headsman\*
 +2; Gythka +3, Gythka +2\*, Kreenfang\* +1; Linebreaker\* +2, Polearm +1,
 Thornwall\* +1; Mace +2, Blackmace +1; Quarterstaff +2, Balk's Staff +1, Parting
-Staff +1; Gutterknot\* +1; Deepbiter\* +1; Cahulaks +2\*, Cahulaks +1\*; Bow +2, Phrain's Bow +1,
+Staff +1; Gutterknot\* +1; Deepbiter\* +1; Ironwhirl\* +2, Cahulaks +2\*, Emberlash\* +1,
+Cahulaks +1\*; Bow +2, Phrain's Bow +1,
 Dunesong\* +1; Sling +2, Sling +1; Windlash\* +1; Skycutter\* +2, Chatkcha +1. A
 **Ravager** none of the bows, slings, Windlash, chatkchas or Dag's Dagger
 (thrown).
@@ -671,8 +672,8 @@ has the most, air and fire the fewest.
 | Sphere | May wield | Plain weapons |
 |---|---|---|
 | Air | missile and thrown weapons, daggers, cahulaks | daggers (any material), cahulaks, chatkcha, bow, sling, staff sling |
-| Earth | stone, obsidian, metal, wood | obsidian and metal long swords, daggers and short swords; metal and obsidian maces, axes and great axes; club; stone and metal picks; quarterstaff; metal polearm; metal cahulaks; chatkcha; bow |
-| Fire | obsidian | obsidian long sword, dagger, short sword, mace, axe and great axe; chatkcha |
+| Earth | stone, obsidian, metal, wood | obsidian and metal long swords, daggers and short swords; metal and obsidian maces, axes and great axes; club; stone and metal picks; quarterstaff; metal polearm; metal and obsidian cahulaks; chatkcha; bow |
+| Fire | obsidian | obsidian long sword, dagger, short sword, mace, axe, great axe and cahulaks; chatkcha |
 | Water | bone, wood | bone long sword, dagger, short sword, mace, axe, great axe and polearm; club; quarterstaff; gythka; cahulaks; bow |
 
 **Kits.**
@@ -711,16 +712,17 @@ and fire a chatkcha; water none).
 
 - **Air:** every dagger (Dag's Dagger +3, Terror Blade +2, Galefang\* +2,
   Nightsliver\* +2, Hayneedle\* +1), Bow +2, Phrain's Bow +1, Dunesong\* +1,
-  Sling +2, Sling +1, Windlash\* +1, Skycutter\* +2, Chatkcha +1, Cahulaks +2\*,
-  Cahulaks +1\*.
+  Sling +2, Sling +1, Windlash\* +1, Skycutter\* +2, Chatkcha +1, Ironwhirl\* +2,
+  Cahulaks +2\*, Emberlash\* +1, Cahulaks +1\*.
 - **Earth:** Dragonsbane +4, El's Drinker +2, Dark Flame +2, Bloodwrath +1,
   Flame Blade\* +1, Greenbright\* +2, Shadowseeker\* +1, Mindshard\* +1, Dag's
   Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Glasshewer\* +2,
   Soulcrusher +1, Axe +1, Headsman\* +2, Linebreaker\* +2, Blackmace +1, the
-  three quarterstaffs, Gutterknot\* +1, Deepbiter\* +1, Bow +2, Phrain's Bow +1,
-  Dunesong\* +1, Skycutter\* +2, Chatkcha +1.
+  three quarterstaffs, Gutterknot\* +1, Deepbiter\* +1, Ironwhirl\* +2, Emberlash\* +1,
+  Bow +2, Phrain's Bow +1, Dunesong\* +1, Skycutter\* +2, Chatkcha +1.
 - **Fire:** Dark Flame +2, Bloodwrath +1, Flame Blade\* +1, Mindshard\* +1,
-  Nightsliver\* +2, Glasshewer\* +2, Blackmace +1, Skycutter\* +2, Chatkcha +1.
+  Nightsliver\* +2, Glasshewer\* +2, Blackmace +1, Emberlash\* +1, Skycutter\* +2,
+  Chatkcha +1.
 - **Water:** Stillwater\* +1, Hayneedle\* +1, Drakejaw\* +1, Gythka +3,
   Gythka +2\*, Kreenfang\* +1, Polearm +1, Thornwall\* +1, Mace +2, the three
   quarterstaffs, Gutterknot\* +1, the two magic cahulaks, Bow +2, Phrain's Bow +1,
@@ -775,7 +777,7 @@ Each kit's gains, costs and starting gear:
 
 **Magic weapons.** Every one but Great Axe +3 and Headsman\*. A **Grove
 Warden** none of the metal ones (Dragonsbane, El's Drinker, Greenbright\*,
-Shadowseeker\*, Dag's Dagger, Galefang\*, Soulcrusher, Axe +1, Linebreaker\*);
+Shadowseeker\*, Dag's Dagger, Galefang\*, Soulcrusher, Axe +1, Linebreaker\*, Ironwhirl\*);
 a **Lifebinder** only Mace +2, Blackmace +1, the three quarterstaffs,
 Gutterknot\* +1, the slings and Windlash\*.
 
@@ -1794,6 +1796,7 @@ class's list.
 | Bone and metal daggers | 1d4; the bone one is the only dagger a water cleric can use |
 | Obsidian and metal maces | 1d6+1 |
 | Metal pick, metal polearm, metal cahulaks | the game's, in metal |
+| Obsidian cahulaks | the game's cahulaks, in obsidian: earth and fire clerics may use them |
 | Bone Scale Arm Armor, Leg Armor and Bone Helm | the rest of the bone scale set whose chest piece the game has |
 | Helm | a leather helm |
 
@@ -1821,6 +1824,8 @@ chosen type, often one of these.
 | Gutterknot | club +1 (the game has no magic club) |
 | Deepbiter | stone pick +1 |
 | Cahulaks +1 | bone cahulaks +1 |
+| Emberlash | obsidian cahulaks +1 |
+| Ironwhirl | metal cahulaks +2 |
 | Windlash | staff sling +1 |
 | Dunesong | bow +1 |
 | Skycutter | chatkcha +2 |

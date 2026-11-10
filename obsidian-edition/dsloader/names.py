@@ -18,7 +18,7 @@ from . import arms, game, npcitems, ring, robes, spellarrows, tome, tools, world
 from .game import GameData
 
 OWN = 0x142  # the game's own names: 0-321
-EXTRA = 47  # how many DSCLOG adds (its NAMES_EXTRA)
+EXTRA = 49  # how many DSCLOG adds (its NAMES_EXTRA)
 KEPT = 16  # (DSCLOG's NAME_KEPT: a name's letters at most, and its NUL, in EXTRA_NAMES; padded to 25 in the game's table)
 RING, TOOLS = ring.NAME_ENTRY, tools.NAME_ENTRY  # 0x142, 0x143
 NAMES = {RING: ring.NAME, TOOLS: tools.NAME, **npcitems.NAMES, **arms.NAMES,

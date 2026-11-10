@@ -1985,8 +1985,8 @@ game's own: in ***bold italics*** in
 [Every magic item](ITEMS.md#every-magic-item), each with where it is and what
 it does, and marked **new** in
 [Every mundane weapon](ITEMS.md#every-mundane-weapon). The game has no short
-sword at all, no bone or obsidian axe or great axe, no bone dagger, few plain
-metal weapons and no magic club, pick or staff sling. The mod also places
+sword at all, no bone or obsidian axe or great axe, no bone dagger, no metal or
+obsidian cahulaks, few plain metal weapons and no magic club, pick or staff sling. The mod also places
 armour and a weapon the game has but never placed: the rest of the bone scale
 set, with a **Bone Helm** of the mod's (AC 1 with [Helms give AC
 1](#helms-give-ac-1), worn by those who can wear the armour, not thieves), the game's leather **Helm** and its own **Polearm +1**.
@@ -2004,7 +2004,12 @@ Each now carries what the armed of their kind carry, or plain gear to match
 monster trainer, fights with a **Cahulaks +1**; the game's own Cahulaks +1 is
 made the **Cahulaks +2**; the champions' mul fights with **metal cahulaks**
 (the game has only bone ones); and the dead body by the arena's stone arch
-holds plain bone ones ([Items](ITEMS.md#every-magic-item)).
+holds plain bone ones. Metal and obsidian cahulaks are sold too, the metal by
+Teaquetzl's Weapon Merchant and the obsidian by Jark (earth and fire clerics may
+use obsidian ones, earth clerics metal ones too), and two have names of their own:
+**Emberlash**, an obsidian cahulaks +1 wielded by Uzoma of the Drajian patrol near
+the Hot Springs, and **Ironwhirl**, a metal cahulaks +2 on the Subterranean
+Temple's weapon rack ([Items](ITEMS.md#every-magic-item)).
 
 **The Boots of Speed** (the DMG's) are new: in a fight they double the
 wearer's movement and better its AC by 2 ([Items](ITEMS.md#every-magic-item)).

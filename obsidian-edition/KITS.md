@@ -64,7 +64,7 @@ armour.
 |---|---|---|---|---|
 | **Arena Champion** | with a shield in a hand: +1 to hit and damage in melee, and AC 1 better, from 1st level | −1 to hit in melee with no shield | a shield in place of the off-hand club | can't dual to druid or preserver; can't go with the Shinobi |
 | **Twin-blade** | with the two-weapons rule, no penalty for two weapons in light armour, leather or none (others: −2 main hand, −4 off hand) | no shield; no two-handed weapon, bows and the staff sling among them (a half-giant may hold one in one hand, with the half-giants' rule); never cahulaks, a half-giant's too | the gladiator's gear: its long sword and club are its two weapons | in heavier armour, the usual penalty; can't go with the Healer |
-| **Brute** | +2 to hit and damage with a two-handed melee weapon | two-handed melee weapons only (a half-giant may add a shield); missile weapons, but not as a weapon spec | a two-handed weapon (a bone great axe without weapon specialization); the club is left behind | a bow or staff sling, two-handed as it is, doesn't get the +2; can't dual to psionicist or air cleric; can't go with the Shinobi or Lifebinder |
+| **Brute** | +2 to hit and damage with a two-handed melee weapon | two-handed melee weapons only (a half-giant may add a shield); missile weapons, but not as a weapon spec | a two-handed weapon (a bone great axe without weapon specialization); the club is left behind | a bow or staff sling, two-handed as it is, doesn't get the +2; can't dual to psionicist (an air cleric can: the cahulaks are two-handed); can't go with the Shinobi or Lifebinder |
 
 ## Ranger kits
 
@@ -350,7 +350,7 @@ become the other, and a druid must be true neutral, a ranger good.
 | Shinobi | preserver | its own wizard slot table would take the new class's slots' place |
 | Swashbuckler, Crusader, Battle Mage, Mind Warrior | fighter, gladiator, ranger | a warrior's THAC0 is already their kit's |
 | Arena Champion, Sentinel | druid, preserver | their gift needs a shield, which those classes can't hold |
-| Brute | psionicist, air cleric | it needs a two-handed melee weapon: a psionicist can use none, and an air cleric's cahulaks are a one-handed pair, a head in each hand |
+| Brute | psionicist | it needs a two-handed melee weapon, and a psionicist can use none (an air cleric can: the game holds the cahulaks in both hands, and a Brute gets its +2 with them) |
 | Stalker | thief | its +15 to hiding would add to a thief's own skills |
 | Grove Warden | gladiator | its AC would add to a gladiator's own, which betters with level too |
 | Healer | ranger of air, earth or fire | its sphere is water's only (after DUAL to a ranger, the sphere menu offers WATER ONLY) |
@@ -453,8 +453,8 @@ use, in any material. The rest are greyed:
 | …of one class, or with thief, preserver or druid | all sixteen (a ranger all but the bow) | the game's bone long sword |
 | …with psionicist (small weapons) | club, dagger, short sword, mace, chatkcha, bow, sling | a wooden club |
 | …with air cleric (missile and thrown weapons, daggers, cahulaks) | dagger, cahulaks, chatkcha, bow, sling, staff sling | an obsidian dagger |
-| …with earth cleric (stone, obsidian, metal, wood) | long sword, club, dagger, short sword, mace, axe, great axe, pick, quarterstaff, polearm, cahulaks, chatkcha, bow (the polearm and the cahulaks in the mod's metal) | an obsidian long sword |
-| …with fire cleric (obsidian) | long sword, dagger, short sword, mace, axe, great axe, chatkcha | an obsidian long sword |
+| …with earth cleric (stone, obsidian, metal, wood) | long sword, club, dagger, short sword, mace, axe, great axe, pick, quarterstaff, polearm, cahulaks, chatkcha, bow (the polearm in the mod's metal, the cahulaks in its obsidian or metal) | an obsidian long sword |
+| …with fire cleric (obsidian) | long sword, dagger, short sword, mace, axe, great axe, cahulaks (the mod's obsidian), chatkcha | an obsidian long sword |
 | …with water cleric (bone, wood) | long sword, club, dagger, short sword, mace, axe, great axe, quarterstaff, polearm, gythka, cahulaks, bow | the game's bone long sword |
 
 (The starting weapon is for the weapon spec picked first; [Starting weapons](#starting-weapons) has the
@@ -483,7 +483,7 @@ weapon specialization chosen, in place of the bone long sword`):
 | club, quarterstaff, bow | wooden (a bow with 20 arrows) | |
 | dagger, chatkcha | obsidian | a dagger: bone, the mod's (water) |
 | short sword | bone, the mod's | obsidian (fire, earth) |
-| mace, polearm, gythka, cahulaks | bone | a mace: obsidian, the game's plain Mace type with a picture of the mod's; a polearm: metal, the mod's (earth) |
+| mace, polearm, gythka, cahulaks | bone | a mace: obsidian, the game's plain Mace type with a picture of the mod's; a polearm: metal, the mod's (earth); cahulaks: obsidian, the mod's (earth, fire) |
 | axe | bone, the mod's | obsidian (fire, earth) |
 | great axe | bone, the mod's | obsidian (fire, earth) |
 | pick | stone | |

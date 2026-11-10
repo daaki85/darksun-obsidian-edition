@@ -502,7 +502,7 @@ code's selectors from that table each time it loads an overlay (3BD7Ch), and
 the table's own entries are the only relocations to the two segments. So at
 the first file open (`INT 21h AH=3Dh`) while DSUNLOG runs, the helper (its PSP
 from `AH=62h`, the load segment 10h past it) checks both entries, copies the
-200h bytes from 3E3Fh to `seg_space` in its own resident image and points the
+200h bytes from 3E3Fh to `seg_space` in its tail (`tail_seg`) and points the
 two selectors there (`seg_moved`, the header's +306). The records then run to
 212, the room's last whole record (it ends at 3E5E0h, the room at 3E5E2h),
 which Negative Plane Protection's save record (`NPP_SAVE`) fills; another new
@@ -812,13 +812,21 @@ the first time the pith is delivered (flag 625), and Merzol's haystack (script
 137: `haystash.py`) leaves Hayneedle (object 2590, an item object of its own)
 beside his sack of ceramic pieces (25h at the searcher's place, as the sack's),
 the first search only (flag 502). The Lava Rift's Hermit (object 81) has
-Nightsliver in place of his stone dagger. An object can only have so many
+Nightsliver in place of his stone dagger. The magic cahulaks (of the helper's
+metal and obsidian cahulaks types, 146 and 147; names 0x171 and 0x172, icons
+2676-2679) are on objects of one entity each: Emberlash (an obsidian cahulaks
++1) on Uzoma (196, entity 433 of `RGNFF.GFF`: the Drajian patrol near the Hot
+Springs, made once its templar is gone), in his pack with his metal axe (the
+Loader's people readying puts the cahulaks, the better weapon, in his hands:
+`people.py`); Ironwhirl (a metal cahulaks +2) on the Subterranean Temple's
+weapon rack (2252, entity 62 of `RGN2D.GFF`), with the game's Mace +2 and metal
+axe. An object can only have so many
 records: the routine that reads them (DSUN.EXE 68000h) keeps a 6-byte entry for
 each in a table on its stack, 80 of them, and gives up on an object with 80 or
 more; the code that makes a region's people (244D3h) then frees the person's
 map entry, and the person is never made. The game's largest has 74 (Jark's); an
 item adds 3 (the item, its type and its name), so the Weapon Merchant's 11 new
-weapons made 89, and Jark's 7 made 95. `records_*` in `dsloader/gamepatch.py`
+weapons made 89, and Jark's 7 made 95 (with the cahulaks, 12 and 8: 92 and 98). `records_*` in `dsloader/gamepatch.py`
 make the table room for 120 (the routine's stack frame 0F0h bytes larger: the
 game's stack has some 20 KB it never reaches), and `test_records_fit` keeps the
 Loader's gifts under it. The tome (`dsloader/tome.py`) is a
@@ -850,7 +858,7 @@ the item type's material before the name when it shows one); and the icons are
 objects in the Loader's copy of `SEGOBJEX.GFF` (`dsloader/icons.py`), which the
 helper has the game open instead of its own (its `INT 21h` hook). The copy also
 has, for the item box alone, a copy of each weapon picture taller than 16 drawn
-16 at most (`icons.BOX_TALL`, `BOX_SMALL` on, 2900-2916; `icons.fit_box`): the box
+16 at most (`icons.BOX_TALL`, `BOX_SMALL` on, 2900-2923; `icons.fit_box`): the box
 draws a picture of 16 or less in a frame with its text from 28 down, a bigger one
 bare with its text from its height + 12 down (8BBE4h), so at the Polearm's own 36
 its lines ran out of the box and at the gythka's 22 its last row (`Hit -1`, a
@@ -894,13 +902,15 @@ Alagorn's new menu lines are in the Loader's copy of his scripts
   items by another (221), and 213's weapons by a copy of 213 (222). His talk
   (script 211) calls each part by its offset in its script, so only the
   called script's number changes.
-- With every switch on, the weapons copy with its fourteen stories would still
-  be too long (12,405 bytes, the limit `pensasks.LONGEST` 11,376), so their
+- With every switch on, the weapons copy with its fourteen stories (sixteen
+  now) would still be too long (12,405 bytes, the limit `pensasks.LONGEST` 11,376), so their
   lines are in a script of their own (224, `alagorn.TOLD_IN`): a 19h, then
   each story's lines and a 19h. Each story subroutine in 222 calls its part
   (14h, place and script, as his talk calls 212's and 213's parts; the 19h
   ending a part returns), then clears its value and runs the "none left" test
-  as before. 222 is now 8,444 bytes, 224 4,047. A kind whose copy is still too
+  as before. 222 is now 8,684 bytes, 224 4,698 (with Emberlash's and
+  Ironwhirl's stories; their menu lines, with Skycutter's, keep their flags in
+  `alagorn.FLAGS` on, 784-786, past the script's locals). A kind whose copy is still too
   long (or not as expected) is left out with its reason in `alagorn.LEFT_OUT`
   and the log, not silently.
 - The added "none carried" check replays the game's own tests with their own

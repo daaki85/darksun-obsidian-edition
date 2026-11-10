@@ -195,7 +195,7 @@ A few of them:
 
 **Magic weapons**
 
-- **[New]** Twenty new magic weapons, each with its own icon and a story from the game's own item sage:
+- **[New]** Twenty-two new magic weapons, each with its own icon and a story from the game's own item sage:
 
 | Weapon | What it is |
 |---|---|
@@ -216,6 +216,8 @@ A few of them:
 | **Gutterknot** | a club +1, the game's first magic club |
 | **Deepbiter** | a stone pick +1, the game's first magic pick |
 | **Cahulaks +1** | bone cahulaks +1, their blades glowing in fire colours: Legcrusher fights with them (no more clubs) |
+| **Emberlash** | obsidian cahulaks +1 an earth, fire or air cleric can wield |
+| **Ironwhirl** | metal cahulaks +2 an earth or air cleric can wield |
 | **Dunesong** | a bow +1, which the Bowyer's archery target counts as it does the game's own bows |
 | **Windlash** | a staff sling +1, the game's first magic staff sling |
 | **Skycutter** | a chatkcha +2 |
@@ -261,7 +263,8 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** **Daggers** in metal, and in bone: the only dagger a water cleric can use.
 - **[New]** **Maces** in obsidian and metal.
 - **[New]** A **metal pick** and a **metal polearm**.
-- **[New]** **Metal cahulaks**: the champions' mul wields them. The arena's dead body by the stone arch holds plain bone cahulaks.
+- **[New]** **Metal cahulaks**: the champions' mul wields them, and the Weapon Merchant sells them. The arena's dead body by the stone arch holds plain bone cahulaks.
+- **[New]** **Obsidian cahulaks**, which earth and fire clerics may use: Jark sells them, and an earth or fire cleric-warrior who picks the cahulaks starts with them.
 - **[Changed]** The game's **bone scale armour** set is complete, with its arm and leg pieces and helm.
 - **[New]** The game's plain **leather helm**, which it never placed: Kurzak wears one in the slave pens.
 

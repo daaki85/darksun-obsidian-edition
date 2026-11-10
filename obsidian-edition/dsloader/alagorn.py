@@ -1,6 +1,6 @@
 """Alagorn tells of the Loader's magic items: Kreenfang and Shadowseeker (arms.py), Gutterknot,
-Deepbiter, Windlash, Greenbright and the Flame Blade, the axes, daggers, polearms, bow and
-chatkcha, the Warden's Plate, Gutterward and Ironbulwark, the Cloak and Boots of
+Deepbiter, Windlash, Greenbright and the Flame Blade, the axes, daggers, polearms, bow,
+chatkcha and cahulaks, the Warden's Plate, Gutterward and Ironbulwark, the Cloak and Boots of
 Elvenkind, the Bracers of Defense, Arrowbane and the Sunking Crown (worldgear.py), and the Tome of
 Understanding (tome.py), Inixhide (npcitems.py), and the Rings and Cloak of Protection (ring.py,
 npcitems.py): one story for each kind, whichever of it the party carries, as the game's own.
@@ -29,7 +29,7 @@ which jumps back:
 - each of the kind's stories' test for none left: the new items counted too.
 
 The new stories are subroutines, as the game's replies are. The weapons' copy (222) would be
-longer than the scripts' buffer with its fourteen stories in it, so their lines are in a script of
+longer than the scripts' buffer with its sixteen stories in it, so their lines are in a script of
 their own (TOLD_IN: 224), one part each after a 19h, and each story subroutine calls its part
 (14h, as his talk calls each of 212's and 213's parts; the 19h ending the part returns).
 """
@@ -73,7 +73,7 @@ SCRIPT_OF = {SWORDS: SCRIPT, WEAPONS: SCRIPT, RINGS: OTHER_SCRIPT, ARMOUR: OTHER
 TALK = 211
 COPY_OF = {CLOTHES: 220, RINGS: 221, OTHER: 221, WEAPONS: 222}
 CALL, START = 0x14, 0x19
-# ... and the weapons' copy with all fourteen of its stories in it would still be (12,405 bytes, the
+# ... and the weapons' copy with all its stories in it would still be (12,405 bytes, the
 # buffer's LONGEST 11,376): their lines are in a script of their own, each story calling its part
 TOLD_IN = {222: 224}
 EXIT = 0x31
@@ -197,7 +197,17 @@ MAGIC = {
                "Skycutter! A thri-kreen's chatkcha, its blades of obsidian set in a crystal no kreen "
                "will name, and blessed by the clerics of the air. It flies truer and cuts deeper "
                "than any common chatkcha. The packs of the Gemfields pass it to their best hunter; "
-               "take it, and they will remember you."),),
+               "take it, and they will remember you."),
+              ("Emberlash",
+               "Emberlash! Its two blades were knapped from glass a fire-mountain spat out still "
+               "glowing, and a cleric of fire bound them to a cord of braided giant's hair while they "
+               "cooled. Swung, they hiss like embers. The templars of Draj gave it to the patrol "
+               "captain who kept their mines; it strikes truer than any common cahulaks."),
+              ("Ironwhirl",
+               "Ironwhirl! True iron, two hooked blades on a chain, forged in the Green Age for the "
+               "temple guards of a city now under the sand. Whirled, it is a wall no blade gets "
+               "through. The shadows of the temple below Teaquetzl kept it on their rack for a "
+               "thousand years. It strikes truer and harder than any other cahulaks."),),
     # the Warden's Plate, a piece of its story each
     ARMOUR: (("Warden's Helm",
               "The Warden's Helm! In the Green Age the Wardens kept the iron roads between the "

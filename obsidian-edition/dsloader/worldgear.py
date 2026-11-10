@@ -30,6 +30,10 @@
 - The magic axes: Drakejaw, a bone axe +1, on one of the Magera guarding the wagon's prisoners;
   Glasshewer, an obsidian axe +2, on the elven slavers' Templar; Headsman, a metal great axe +2,
   in the arena Announcer's stash. And the Elven Leader's Gythka +1 made +2.
+- The magic cahulaks (of the Loader's materials: the game's are bone): Emberlash, an obsidian
+  cahulaks +1, on Uzoma, the leader of the Drajian patrol at the Hot Springs; Ironwhirl, a metal
+  cahulaks +2, on the Subterranean Temple's weapon rack. And the plain ones in the shops: metal at
+  the Weapon Merchant's, obsidian at Jark's.
 - Weapons for those who had too few magic ones: Galefang, a metal dagger +2 of DSCLOG's own type
   (made when no dagger was an air cleric's; now every one is), on the Rogue Shaman; Mindshard, an obsidian short sword +1, on Maris,
   and Stillwater, a bone short sword +1, in the chest Chaya gives as her apology (psionicists',
@@ -78,6 +82,7 @@ METAL_PICK = (game.METAL_PICK_TYPE, 0xAD, 0x10000 - 2510, 150)
 METAL_POLEARM = weaponchoice.OTHERS[KIND("polearm")][0]  # (250)
 CAHULAKS_NAME = 0x14  # (the game's "Cahulaks")
 METAL_CAHULAKS = (game.METAL_CAHULAKS_TYPE, CAHULAKS_NAME, 0x10000 - 2670, 200)  # (the champions' mul's)
+OBSIDIAN_CAHULAKS = weaponchoice.OTHERS[KIND("cahulaks")][0]  # (15: an earth or fire cleric-warrior's start)
 # (type, name entry, picture, price) and plus, priced as the game prices its own: a melee weapon as
 # the Obsidian Bloodwrath +1 (20,800, as its Hornblade +1 and Gythka +1), 20,800 a plus; a missile
 # weapon far less, as its Sling +1 (2,800; the Chatkcha +1 1,800, the Sling +2 3,500)
@@ -223,6 +228,16 @@ ELVEN_BOOTS = armour(game.ELVEN_BOOTS_TYPE, BOOTS_OF_ELVENKIND, 0x10000 - 2548, 
 BOOTS_OF_SPEED, DAGGER = 0x170, 202
 NAMES[BOOTS_OF_SPEED] = b"Boots of Speed"
 SPEED_BOOTS = armour(game.SPEED_BOOTS_TYPE, BOOTS_OF_SPEED, 0x10000 - 2668, 20000, plus=0)
+# the magic cahulaks of the Loader's types (the game has only bone ones): Emberlash, an obsidian
+# cahulaks +1 (an earth or fire cleric's), on Uzoma, the leader of the Drajian patrol that comes to the
+# Hot Springs once its templar is gone (196: RGNFF's, his alone); Ironwhirl, a metal cahulaks +2, on
+# the weapon rack of the Subterranean Temple beneath Teaquetzl (2252: that rack's alone), with the
+# game's Mace +2. Priced as the other named weapons, 20,800 a plus
+EMBERLASH, IRONWHIRL = 0x171, 0x172
+NAMES.update({EMBERLASH: b"Emberlash", IRONWHIRL: b"Ironwhirl"})
+OBSIDIAN_CAHULAKS_1 = ((game.OBSIDIAN_CAHULAKS_TYPE, EMBERLASH, 0x10000 - 2676, PLUS_VALUE), 1)
+METAL_CAHULAKS_2 = ((game.METAL_CAHULAKS_TYPE, IRONWHIRL, 0x10000 - 2678, 2 * PLUS_VALUE), 2)
+UZOMA, TEMPLE_RACK, TEMPLE = 196, 2252, 0x2D
 FLAME_BLADE_NAME, OBSIDIAN_LONG_SWORD, FOCUS_HEAT = 0x156, 45, 116
 from . import robes  # noqa: E402 (the robes: the Veiled Robe sold by Kel)
 VEILED_ROBE = armour(game.ROBE_TYPE, robes.VEILED, robes.PICTURE_VEILED, robes.VEILED_VALUE, plus=robes.VEILED_PLUS)
@@ -286,12 +301,15 @@ PLAIN = (BONE_SHORT_SWORD, OBSIDIAN_SHORT_SWORD, BONE_AXE, OBSIDIAN_AXE, OBSIDIA
 # (the objects: the people of each name in the region, as SEGOBJEX and the region's ETAB have them)
 GIFTS: Tuple[Gift, ...] = (
     # (the great axes in every material, a warrior's starting one being bone, and bone breaks:
-    # bone ones on every Wild Mul too. The game's shop shows a seller's first 34 items: Kalzith,
-    # given 42, showed 34 and none of the 8 oldest; these sellers have 29, 31 and 20)
+    # bone ones on every Wild Mul too; the cahulaks of the Loader's materials, metal at the Weapon
+    # Merchant's, obsidian at Jark's. The game's shop shows a seller's first 34 items: Kalzith,
+    # given 42, showed 34 and none of the 8 oldest; these sellers have 30, 32 and 20)
     Gift("Weapon Merchant", tuple(weapon(w) for w in PLAIN + (METAL_SHORT_SWORD, BONE_GREAT_AXE, OBSIDIAN_GREAT_AXE,
-                                                              METAL_GREAT_AXE, METAL_PICK, BONE_DAGGER)), (285,), 0x0B),
+                                                              METAL_GREAT_AXE, METAL_PICK, BONE_DAGGER,
+                                                              METAL_CAHULAKS)), (285,), 0x0B),
     Gift("Jark", tuple(weapon(w) for w in (BONE_SHORT_SWORD, OBSIDIAN_SHORT_SWORD, BONE_AXE, OBSIDIAN_MACE,
-                                           BONE_GREAT_AXE, OBSIDIAN_GREAT_AXE, BONE_DAGGER)), (106,), 0x1A),
+                                           BONE_GREAT_AXE, OBSIDIAN_GREAT_AXE, BONE_DAGGER, OBSIDIAN_CAHULAKS)),
+         (106,), 0x1A),
     Gift("Merzol", (weapon(OBSIDIAN_AXE),), (180,), 0x29),  # the slave pens' gladiator
     Gift("Chaero", (weapon(OBSIDIAN_SHORT_SWORD),), (41,), 0x1D),
     Gift("Tari", (weapon(OBSIDIAN_MACE),), (60, 243), 0x28),  # the warrens' Tari, every one
@@ -372,6 +390,11 @@ MAGIC: Tuple[Gift, ...] = (
     # hunting the Gemfields (its own object); Dunesong with Windlash at the Bowyer's (above)
     Gift("Hermit", (weapon(*OBSIDIAN_DAGGER_2),), (HERMIT,), LAVA_RIFT, instead=(STONE_DAGGER, 0)),
     Gift("Thrikreen", (weapon(*CHATKCHA_2),), (THRIKREEN,), GEMFIELDS, clone=(GEMFIELDS_KREEN, 2598)),
+    # the magic cahulaks: Emberlash on Uzoma (the Hot Springs' Drajian patrol; his metal axe kept, the
+    # cahulaks in his hands: people.py readies the best melee weapon), Ironwhirl on the Subterranean
+    # Temple's weapon rack (with the game's Mace +2 and metal axe)
+    Gift("Uzoma", (weapon(*OBSIDIAN_CAHULAKS_1),), (UZOMA,)),
+    Gift("Weapon rack", (weapon(*METAL_CAHULAKS_2),), (TEMPLE_RACK,), TEMPLE),
 )
 HAYNEEDLE_ITEM = weapon(*BONE_DAGGER_1)  # (Merzol's hay stash's: haystash.py)
 

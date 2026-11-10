@@ -16547,8 +16547,9 @@ box_pic:
         pop si
         iret
 box_tall dw 2383, 2311, 2157, 2143, 2287, 2254, 2384, 1494, 2392, 2255, 2334, 1199  ; (the game's)
-         dw 2653, 2447, 2513, 2571, 2573, 2671, 2673, 2497, 2511, 2675  ; (the Loader's own: icons.BOX_TALL;
-                                        ;   the last two the picks', 19 rows: icons.PICK_PICTURE_FROM)
+         dw 2653, 2447, 2513, 2571, 2573, 2671, 2673, 2497, 2511, 2675, 2677, 2679 ; (the Loader's own: icons.BOX_TALL;
+                                        ;   2497 and 2511 the picks', 19 rows: icons.PICK_PICTURE_FROM;
+                                        ;   the last three the obsidian and magic cahulaks')
 BOX_TALL_COUNT equ ($ - box_tall) / 2
 
 ; PIC_REUSE: the game's picture cache (DSUN.EXE 25FA6h, a WALL or BMP chunk's slot) has 300 slots,
@@ -22425,7 +22426,7 @@ ns_fist:
 NAMES_OWN    equ 0x142
 NAME_SIZE    equ 25
 NAME_KEPT    equ 16                 ; (EXTRA_NAMES' entries: 15 letters at most, as the game's own, and a NUL)
-NAMES_EXTRA  equ 47
+NAMES_EXTRA  equ 49
 NAMES_PTR    equ 0x166D         ; DS: far pointer to the name table
 
 ; PROBE_NAMES_SIZE: INT VEC_NAMES_SIZE replaces "push dword 1" (3 bytes: INT + NOP) just before
@@ -28177,7 +28178,10 @@ extra_names:
         db "Shocking Arrows", 0
         db "Vampiric Arrows", 0
         db "Boots of Speed", 0          ; (the Boots of Speed: dsloader/worldgear.py, BOOTS_SPEED)
-        times NAMES_EXTRA - 47 db 0     ; (empty names, if any)
+        db "Emberlash", 0               ; (the magic cahulaks of dsloader/worldgear.py: an obsidian
+                                        ; cahulaks +1,
+        db "Ironwhirl", 0               ; a metal cahulaks +2)
+        times NAMES_EXTRA - 49 db 0     ; (empty names, if any)
 ; SEG_MOVE's two tables of the game's: the stack's 60h bytes then the monster kinds', and the pictures'
 ; table with its new entries; whole paragraphs, zeros till the game's are copied in
         align 16, db 0

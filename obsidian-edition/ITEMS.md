@@ -36,7 +36,8 @@ dearest, the Wand of Missiles, is 65,000):
 | Magic melee weapons, and Dunesong | 20,800 a plus (41,600 for a +2; a +1 with a spell 22,000; the game's Bow +2 is 50,800) |
 | Legcrusher's Cahulaks +1; the Cahulaks +2 | 11,600 (the game's Cahulaks +1's); 32,400 (that, +20,800 for the plus more) |
 | Windlash; Skycutter | 2,800 (as the game's Sling +1); 3,500 (as its Sling +2) |
-| Plain metal weapons | 50 to 300 |
+| Plain metal weapons | 50 to 300 (metal cahulaks 200) |
+| Plain obsidian cahulaks | 15 (bone 10, as the other obsidian weapons dearer than bone) |
 | Bracers of defense | 5,000 a point of AC |
 | Rings and Cloak of Protection | 15,000 |
 | Inixhide; the Ashen Robe | 6,000 |
@@ -196,6 +197,7 @@ Belt of Might making STR at least 24.
 | ![](docs/items/great-axe-plus3.png) | Metal | great axe | Great Axe +3 | +3 (the game gave its type no material: metal with the Loader) | the Army Commander |
 | ![](docs/items/headsman.png) | Metal | great axe | ***Headsman*** | a metal great axe +2 | in the arena **Announcer**'s stash, with his Stoneskin scroll, rings and gems |
 | ![](docs/items/linebreaker.png) | Metal | polearm | ***Linebreaker*** | a metal polearm +2 | carried by the **Troop Leader** |
+| ![](docs/items/ironwhirl.png) | Metal | cahulaks | ***Ironwhirl*** | a metal cahulaks +2 (two-handed); its blades' greys all burn in fire colours | on the **weapon rack** of the Subterranean Temple beneath Teaquetzl, with the Mace +2 and a metal axe |
 | ![](docs/items/dark-flame.png) | Obsidian | long sword | Dark Flame | +2, Burning Hands | the Lower Castle's chest |
 | ![](docs/items/bloodwrath.png) | Obsidian | long sword | Bloodwrath | +1 | Pehtucl, the pens' templar |
 | ![](docs/items/flame-blade.png) | Obsidian | long sword | ***Flame Blade*** | an obsidian long sword +1 (1d8+1) whose blade burns what it hits: the fire clerics' Focus Heat, 2d6 fire damage to the creature hit (a save for half), as the game's Dark Flame casts Burning Hands. Obsidian, so a fire (or earth) cleric can wield it | carried by the **Templar** of the Hot Springs (the one with the Drake Shield) |
@@ -204,6 +206,7 @@ Belt of Might making STR at least 24.
 | ![](docs/items/mindshard.png) | Obsidian | short sword | ***Mindshard*** | an obsidian short sword +1: a **psionicist** can wield it, alone or with a fire or earth cleric | carried by **Maris**; a thief can lift it (200 XP, once a game) |
 | ![](docs/items/blackmace.png) | Obsidian | mace | Blackmace | +1, Shocking Grasp | the Shadow King |
 | ![](docs/items/glasshewer.png) | Obsidian | axe | ***Glasshewer*** | an obsidian axe +2 (1d8+2): a fire or earth cleric can wield it | carried by the **Templar** of the elven slavers' camp (the one with the Chain Arm Armor) |
+| ![](docs/items/emberlash.png) | Obsidian | cahulaks | ***Emberlash*** | an obsidian cahulaks +1 (two-handed): a fire or earth cleric can wield it | wielded by **Uzoma**, leader of the Drajian patrol met west of the Hot Springs once its templar is gone (fought if the party turns on his patrol) |
 | ![](docs/items/deepbiter.png) | Stone | pick | ***Deepbiter*** | a stone pick +1 (the game has no magic pick) | carried by one of the **Undermountain folk** (the miners) |
 | ![](docs/items/gutterknot.png) | Wooden | club | ***Gutterknot*** | a club +1 (the game has no magic club) | carried by **Churrr** in the warrens; a thief can lift it (200 XP, once a game) |
 | ![](docs/items/quarterstaff-plus2.png) | Wooden | quarterstaff | Quarterstaff +2 | +2 | Maris |
@@ -244,7 +247,7 @@ specialization](KITS.md#weapon-specialization), in the weapon window's order:
 | Quarterstaff | Quarterstaff +2, Balk's Staff +1, Parting Staff +1 |
 | Polearm | ***Linebreaker*** +2, Polearm +1, ***Thornwall*** +1 |
 | Gythka | Gythka +3, ***Gythka +2***, ***Kreenfang*** +1 |
-| Cahulaks | ***Cahulaks +2***, ***Cahulaks +1*** |
+| Cahulaks | ***Ironwhirl*** +2, ***Cahulaks +2***, ***Emberlash*** +1, ***Cahulaks +1*** |
 | Chatkcha | ***Skycutter*** +2, Chatkcha +1 |
 | Bow | Bow +2, Phrain's Bow +1, ***Dunesong*** +1 |
 | Sling | Sling +2, Sling +1 |
@@ -377,7 +380,8 @@ Springs; Deepbiter is its magic one.
 | ![](docs/items/metal-polearm.png) | polearm | metal | — | Castle Guard | **new**: the game's polearm, in metal; an earth cleric's starting polearm |
 | ![](docs/items/gythka.png) | gythka | bone | Jark, Weapon Merchant | Guardian, the arena's Tohr-kreen (the mod's: its picture holds one) |  |
 | ![](docs/items/cahulaks.png) | cahulaks | bone | Weapon Merchant | the dead body by the arena's stone arch, in place of the game's plain gythka (the mod's, with the champions' bout) |  |
-| ![](docs/items/metal-cahulaks.png) | cahulaks | metal | — | the arena's champions (the mul) | **new**: the game's cahulaks, in metal |
+| ![](docs/items/metal-cahulaks.png) | cahulaks | metal | Weapon Merchant | the arena's champions (the mul) | **new**: the game's cahulaks, in metal; an earth cleric may use them |
+| ![](docs/items/obsidian-cahulaks.png) | cahulaks | obsidian | Jark | — | **new**: the game's cahulaks, in obsidian: earth and fire clerics may use them; an earth or fire cleric-warrior's starting cahulaks |
 | ![](docs/items/chatkcha.png) | chatkcha | obsidian | Jark, Bowyer | — |  |
 | ![](docs/items/bow.png) | bow | wood | Jark, Kel, Bowyer | Wyvern Master, Ranger, Arant, Castle Guard, Guard, Arant's Guard, Arena Guard, Caravan Guard, Slaver Guard, Elven Leader, Uzoma, Drajian Guard, Army Commander, Elite Guard, Village Hero, a chest in the Upper Castle, a chest, a chest in Dagolar's tunnels, the arena's champions (the elf), Arant's lazy guard (the mod's) |  |
 | ![](docs/items/sling.png) | sling | leather | Bowyer | Mehtar, Renegade, Silt Runner, a chest in the slave pens, a bag in the slave pens, the arena's champions (the halfling) |  |
@@ -473,10 +477,10 @@ slings and bows never are:
 | Bone +2 with a power: ***Cahulaks +2*** (Cause Light Wounds) | 75% | 75% (the game's: needs 6) |
 | Bone +3: Gythka +3 | 80% | 80% (the game's: needs 5) |
 | Metal +1: Soulcrusher, Axe +1, ***Shadowseeker*** | 70% | 70% (the game's: needs 7) |
-| Metal +2: El's Drinker, ***Greenbright***, ***Galefang***, ***Headsman***, ***Linebreaker*** | 75% | 75% (the game's: needs 6) |
+| Metal +2: El's Drinker, ***Greenbright***, ***Galefang***, ***Headsman***, ***Linebreaker***, ***Ironwhirl*** | 75% | 75% (the game's: needs 6) |
 | Metal +3: Dag's Dagger, Great Axe +3 | 80% | 80% (the game's: needs 5) |
 | Metal +4: Dragonsbane | 85% | 85% (the game's: needs 4) |
-| Obsidian +1: Bloodwrath, ***Mindshard*** | 70% | 85% (needs 4) |
+| Obsidian +1: Bloodwrath, ***Mindshard***, ***Emberlash*** | 70% | 85% (needs 4) |
 | Obsidian +1 with a power: Blackmace, ***Flame Blade*** | 70% | 90% (needs 3) |
 | Obsidian +2: ***Nightsliver***, ***Glasshewer*** | 75% | 90% (needs 3) |
 | Obsidian +2 with a power: Dark Flame, Terror Blade (Poison) | 75% | 95% (needs 2) |

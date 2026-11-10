@@ -133,10 +133,11 @@ def shorter_blade(rows: Rows, steps: int = 4) -> Rows:
 # Loader's own made from them: the Cahulaks +1's shining copy (2653, SHINE's) and Kreenfang's (2447),
 # the Metal Polearm's (2513), Linebreaker's (2571) and Thornwall's (2573), the Metal Cahulaks' (2671),
 # the Cahulaks +2's (2673), and Deepbiter's (2497) and the Metal Pick's (2511), made from the Stone
-# pick's 19 (PICK_PICTURE_FROM), ICONS'.
+# pick's 19 (PICK_PICTURE_FROM), the Obsidian Cahulaks' (2675), Emberlash's (2677) and Ironwhirl's
+# (2679), ICONS'.
 BOX_PICTURE = 16
 BOX_TALL = (2383, 2311, 2157, 2143, 2287, 2254, 2384, 1494, 2392, 2255, 2334, 1199,
-            2653, 2447, 2513, 2571, 2573, 2671, 2673, 2497, 2511, 2675)
+            2653, 2447, 2513, 2571, 2573, 2671, 2673, 2497, 2511, 2675, 2677, 2679)
 BOX_SMALL = 2900  # (BOX_TALL[i]'s copy is BOX_SMALL + i: numbers no picture of the game's has)
 
 
@@ -377,6 +378,14 @@ def crown_icon(_rows: Rows = None) -> Rows:
 
 # (name, the plain item's picture, the new object's number, its icon's number, the icon made from
 # the plain one's)
+
+
+def ironwhirl_icon(rows: Rows) -> Rows:
+    """Ironwhirl (worldgear.py): the metal cahulaks', every pixel of its blades' greys in the fire
+    colours, their blue edges kept (Emberlash and the Cahulaks +1 burn every other pixel)."""
+    return glow(recolour(rows, LIGHT_TO_METAL), lambda p, x, y: p in (209, 210, 213, 215), FIRE)
+
+
 ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Short Sword", 0xFC0A, 2427, 2432, shorter_blade),
     ("Inixhide", 0xFC02, 2428, 2433,
@@ -417,6 +426,12 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     # in the water's colours, where Legcrusher's Cahulaks +1 (the game's object) shines every other in
     # the fire's
     ("Cahulaks +2", 0xFB5C, 2672, 2673, lambda r: glow(r, lambda p, x, y: 210 <= p <= 213, WATER)),
+    # the magic cahulaks (worldgear.py): Emberlash, the obsidian cahulaks' with every other pixel of its
+    # blades in the fire colours (as Glasshewer's head); Ironwhirl, the metal cahulaks' with its greys
+    # all burning (ironwhirl_icon)
+    ("Emberlash", 0xFB5C, 2676, 2677,
+     lambda r: glow(recolour(r, AXE_OBSIDIAN), lambda p, x, y: 208 <= p <= 212 and (x + y) % 2 == 0, FIRE)),
+    ("Ironwhirl", 0xFB5C, 2678, 2679, ironwhirl_icon),
     # the circlet and the crown (worldgear.py), drawn; on the map, the Ring's
     ("Arrowbane", 0xFA1C, 2514, 2515, circlet_icon),
     ("Sunking Crown", 0xFA1C, 2516, 2517, crown_icon),
@@ -1194,6 +1209,10 @@ def which(rec: bytes) -> Optional[str]:
         return "Linebreaker"
     if kind == 19 and plus == 1 and struct.unpack_from("<H", rec, game.ITEM_NAME)[0] == 0x160:
         return "Thornwall"
+    if kind == game.OBSIDIAN_CAHULAKS_TYPE and plus == 1:
+        return "Emberlash"
+    if kind == game.METAL_CAHULAKS_TYPE and plus == 2:
+        return "Ironwhirl"
     if kind in METAL_TYPES and plus == 0:
         return METAL_TYPES[kind]
     if plus == 1 and kind in MAGIC_KINDS:
