@@ -226,6 +226,11 @@ segment spare.
   K'ratchek's alone (her own feature, with the kits on). `GameData.weapon_hits` the same.
   Her Effects line `CHATKCHA 2/ROUND` and the Characters tab's "One more chatkcha throw" are gone,
   as the rate is no longer hers alone (the Attacks line shows it for any thri-kreen).
+- **The metal pick's and Deepbiter's icons** are drawn from the Hot Springs' stone pick (object
+  1381: a whole head, slate grey, gold fittings), not the pick's own object (1210), whose near-black
+  head is in two pieces: the metal one in the metal long sword's greys, Deepbiter's head in the
+  game's fire (`icons.PICK_PICTURE_FROM`). The item pictures in `docs/items` were drawn again: several
+  glows had changed since they last were.
 - **The chatkcha against a large target is 1d4+2** (AD&D's 1d6+2/1d4+2): it was 1d4+1 (`LARGE_DICE`
   and DSCLOG's `large_dice`; the docs' tables).
 - **Spell descriptions that said something else:** with the manual's spells, Strength, Ironskin,

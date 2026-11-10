@@ -216,6 +216,11 @@ STEEL = (22, 23, 24, 25, 26, 27, 28, 29, 30)  # dark to light
 # Dark stone greys raised to them (the dagger's and pick's), light bone-white heads given the blues
 # in their middle shades (the mace's, polearm's), the great axe's teal head too
 STONE_TO_METAL = {208: 211, 209: 212, 210: 213, 211: 161, 212: 214, 213: 215, 214: 216, 215: 217}
+# The picks' icons are drawn from the Hot Springs' stone pick (object 1381: a whole head, slate
+# blue-grey, gold fittings), not the pick's own object (1210: a near-black head in two pieces)
+PICK_PICTURE_FROM = {"Deepbiter": 1381, "Metal Pick": 1381}
+PICK_HEAD = (48, 49, 50, 51, 24)
+PICK_TO_METAL = {48: 211, 49: 212, 24: 213, 50: 214, 51: 216}
 LIGHT_TO_METAL = {210: 209, 211: 210, 212: 160, 213: 161, 214: 213, 215: 215}
 TEAL_TO_METAL = {70: 160, 71: 161, 72: 215}
 TEAL_TO_BONE = {70: 206, 71: 61, 72: 152}
@@ -393,7 +398,7 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Obsidian Mace", 0xFB5D, 2486, 2487, lambda r: recolour(r, MACE_OBSIDIAN)),
     # magic weapons of kinds the game has none of (worldgear.py): the game's magic look, its fire
     ("Gutterknot", 0xFB5F, 2494, 2495, lambda r: glow(r, lambda p, x, y: p >= 140 and p <= 143, FIRE)),
-    ("Deepbiter", 0xFB46, 2496, 2497, lambda r: glow(r, lambda p, x, y: p in (209, 210) and (x + y) % 2 == 0, FIRE)),
+    ("Deepbiter", 0xFB46, 2496, 2497, lambda r: glow(r, lambda p, x, y: p in PICK_HEAD and (x + y) % 2 == 0, FIRE)),
     ("Windlash", 0xFC08, 2498, 2499, lambda r: glow(r, lambda p, x, y: p in (59, 60, 61), FIRE)),
     ("Greenbright", 0xFC0A, 2500, 2501, lambda r: glow(shorter_blade(r), lambda p, x, y: p in BLADE, FIRE)),
     ("Bracers of Defense", 0xFC01, 2502, 2503, bracers_icon),  # (on the map: the leather Arm Armor)
@@ -402,7 +407,7 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Metal Dagger", 0xFB5A, 2504, 2505, lambda r: recolour(r, STONE_TO_METAL)),
     ("Metal Mace", 0xFB5D, 2506, 2507, lambda r: recolour(r, LIGHT_TO_METAL)),
     ("Metal Great Axe", 0xFC06, 2508, 2509, lambda r: recolour(r, {1: 58, 2: 59, **TEAL_TO_METAL})),
-    ("Metal Pick", 0xFB46, 2510, 2511, lambda r: recolour(r, STONE_TO_METAL)),
+    ("Metal Pick", 0xFB46, 2510, 2511, lambda r: recolour(r, PICK_TO_METAL)),
     ("Metal Polearm", 0xFB5E, 2512, 2513, lambda r: recolour(r, LIGHT_TO_METAL)),
     ("Metal Cahulaks", 0xFB5C, 2670, 2671, lambda r: recolour(r, LIGHT_TO_METAL)),  # (the champions' mul's)
     # the caravan's Cahulaks +2 (worldgear.cahulaks_chunks): its own picture, every pixel of its blades
@@ -524,7 +529,7 @@ SHINE: Tuple[Tuple[str, int, Callable[[Rows], Rows], Optional[int]], ...] = (
 def new_chunks(chunks: gff.Chunks) -> gff.Chunks:
     """The objects and pictures to add to the game's SEGOBJEX.GFF."""
     out: gff.Chunks = {}
-    for _, plain, number, icon, make in ICONS:
+    for _, plain, number, icon, make in ICONS:  # (_: the name)
         base = 0x10000 - plain
         record = bytearray(chunks[("OJFF", base)])
         old_icon, = struct.unpack_from("<H", record, OJFF_ICON)
@@ -532,6 +537,9 @@ def new_chunks(chunks: gff.Chunks) -> gff.Chunks:
         out[("OJFF", number)] = bytes(record)
         if ("BMP ", base) in chunks:  # (the plain item's BMP of its own number, as the game's objects
             out[("BMP ", number)] = chunks[("BMP ", base)]  # have one; a necklace has none: kept so)
+        source = PICK_PICTURE_FROM.get(_)
+        if source is not None and ("OJFF", source) in chunks:
+            old_icon, = struct.unpack_from("<H", chunks[("OJFF", source)], OJFF_ICON)
         rows = decode(chunks[("BMP ", old_icon)])
         out[("BMP ", icon)] = encode(make(rows))
     for _, obj, make, own in SHINE:
