@@ -85,7 +85,9 @@ cahulaks can't tangle ([the cahulaks](DEVELOPMENT-RULES.md#cahulaks)).
 ### Build
 
 After changing `dos/dsclog.asm`, rebuild the helper with
-[NASM](https://www.nasm.us/):
+[NASM](https://www.nasm.us/) **2.16.01**, the version the committed files are built with and
+the one the GitHub workflows install (nasm 3 encodes the helper otherwise, so its rebuild checks
+fail and the emulated tests read the wrong symbols):
 
 ```
 nasm -f bin -o dos/DSCLOG.EXE dos/dsclog.asm
