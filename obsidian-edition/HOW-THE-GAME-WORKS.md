@@ -810,7 +810,7 @@ chance out as:
   penalty](GAME-BUGS.md#thief-skills).)
 - plus the situation's bonus or penalty (a hard lock, say).
 
-With **Thief skills from AD&D's table** ticked (see
+With **Thieves as in AD&D** ticked (see
 [Thief skills from AD&D's table](FEATURES.md#thief-skills-from-adds-table)),
 the first two and the DEX part are AD&D's instead.
 

@@ -14434,7 +14434,7 @@ burn_pass:
         jmp .next
 .done:  ret
 
-; BACKSTAB DICE (RULE_HI_BACKSTAB): the game's backstab multiplies the whole of a hit's damage,
+; BACKSTAB DICE (RULE_THIEF_TABLE, Thieves as in AD&D): the game's backstab multiplies the whole of a hit's damage,
 ; STR's bonus and the weapon's included (x2 to x5 by thief level: 595C4h); AD&D's multiplies the
 ; weapon's dice only, the rest added once. STAB_ROLL: "cmp word [bp+16h],1" (58A29h; 4 bytes) in the
 ; attack (AX the damage just rolled, [BP-12h] what it added to the dice): the dice's sum kept, then
@@ -14472,7 +14472,7 @@ stab_times:
         pop ax
         jne .rule
         inc ax                          ; (an Assassin: one more)
-.rule:  test word [cs:rules_hi], RULE_HI_BACKSTAB
+.rule:  test word [cs:rules], RULE_THIEF_TABLE ; (Thieves as in AD&D: the backstab's dice too)
         jz .whole
         cmp word [bp - 0x14], 0
         je .first
@@ -17917,12 +17917,14 @@ amulet_mr:
 ; movement in a fight: unused, free for a rule)
 RULE_HELMS equ 1
 RULE_TWO_WEAPONS equ 4
-RULE_SPELL_SAVE equ 8           ; (the Loader writes the game's save table for this one)
+; (8: once the spell save's own, which the Loader alone acts on: free, the spell save now Saving throws
+;   against spells with RULE_NO_DOUBLE)
 RULE_NO_DOUBLE equ 16
 RULE_NEW_SPELLS equ 32          ; three new wizard spells: Cat's Grace, Erdlu Claw, Fogbolt (NEW SPELLS)
 RULE_STEALTH equ 64             ; (the Loader rolls the hiding and moving silently, and sets STEALTH)
 RULE_LEVEL_10 equ 128          ; class levels go up to 10, not 9
-RULE_THIEF_TABLE equ 256        ; thief skills from AD&D's table and Dark Sun's DEX adjustments
+RULE_THIEF_TABLE equ 256        ; Thieves as in AD&D: thief skills from AD&D's table and Dark Sun's DEX adjustments,
+                                ;   and a backstab multiplying the weapon's dice only (STAB_TIMES)
 RULE_HALF_GIANT equ 512         ; half-giants wield two-handed weapons in one hand
 RULE_PROTECTION equ 1024        ; AD&D's rings and cloaks of protection (PROBE_RING_AC, RING_PLUS)
 RULE_ITEM_SAVES equ 2048        ; items save against acid as in AD&D where better (PROBE_ITEM_*)
@@ -17931,13 +17933,14 @@ RULE_RESTRICT equ 8192          ; class restrictions on armour, shields and weap
 RULE_MULTI_HP equ 16384         ; multiclass hit points as in AD&D (PROBE_MC_*)
 RULE_HP_BEST equ 32768          ; a hit die rolled twice, the better kept (PROBE_HP_BEST)
 RULE_HI_KITS equ 1              ; (RULES_HI) kits, chosen on the creation panel's KIT page (KIT_*)
-RULE_HI_CHA_PRICES equ 16      ; (RULES_HI) the leader's CHA lowers what shops ask (CHA_PRICE)
+RULE_HI_CHA_PRICES equ 16      ; (RULES_HI) Shops as in AD&D: the leader's CHA lowers what shops ask (CHA_PRICE),
+                                ;   and magical items sold to a merchant kept to buy back (SELL_KEEP)
 RULE_HI_ROLLED equ 32           ; (RULES_HI) creation's scores and hit points as rolled (RL_SCORE, RL_HP)
 RULE_HI_TABLES equ 8            ; (RULES_HI) AD&D's class tables: XP, priests' THAC0, spell slots (XP_NEED, PROBE_*)
 RULE_HI_INT    equ 4            ; (RULES_HI) INT's chance to learn a scroll's spell and most spells a level (INT_LEARN)
 RULE_HI_RANGER equ 2            ; (RULES_HI) a ranger's spells' durations and damage at its level less 7 (PROBE_RANGER_LEVEL)
-RULE_HI_BUYBACK equ 64          ; (RULES_HI) magical items sold to a merchant kept to buy back (SELL_KEEP)
-RULE_HI_BACKSTAB equ 128        ; (RULES_HI) a backstab multiplies the weapon's dice only (STAB_TIMES)
+; (RULES_HI 64: once the buyback's own, now Shops as in AD&D with RULE_HI_CHA_PRICES: free)
+; (RULES_HI 128: once the backstab dice's own, now Thieves as in AD&D with RULE_THIEF_TABLE: free)
 RULE_HI_AGING equ 256           ; (RULES_HI) ages, and Haste's magical aging: the Loader's (aging.py; no
                                 ;   STATS age without it, so AGE_TEXT needs no test of its own)
 RULE_HI_ENLARGE equ 512         ; (RULES_HI) Enlarge multiplies the weapon's dice only (ENL_SITE)
@@ -22156,7 +22159,7 @@ sell_price:
 
 ; SELL_KEEP: "push word [179Eh]" (83D9Eh; 4 bytes: the site's number and a NOP after the INT) where
 ; a shop has paid for the item the party sold and empties the item list of the thing holding it,
-; the pointer's (0A0h:1C94h, which does nothing for 270Fh). With RULE_HI_BUYBACK and a magical item (a plus, +14h, or a power,
+; the pointer's (0A0h:1C94h, which does nothing for 270Fh). With RULE_HI_CHA_PRICES (Shops as in AD&D) and a magical item (a plus, +14h, or a power,
 ; +0Fh: rings, wands, scrolls...), 270Fh is pushed in its place and the thing and the merchant
 ; (DS:179Ch) queued (SOLD_Q, SOLD_SEQ) for the Loader, which puts the item in the merchant's pack,
 ; where the shop lists it; any other item is pushed and freed as the game does. The push: the
@@ -22172,7 +22175,7 @@ sell_keep:
         push cx
         push es
         mov cx, [SOLD_THING]
-        test word [cs:rules_hi], RULE_HI_BUYBACK
+        test word [cs:rules_hi], RULE_HI_CHA_PRICES ; (Shops as in AD&D: the buyback too)
         jz .push
         cmp cx, NO_THING
         jae .push
@@ -22883,7 +22886,7 @@ missile_rear:
         add word [bp - 0x20], 2
 .ret:   ret
 
-; STAB_FIRST: in PROBE_STEALTH (SI the attacker, a creature; DS the game's), with RULE_HI_BACKSTAB:
+; STAB_FIRST: in PROBE_STEALTH (SI the attacker, a creature; DS the game's), with RULE_THIEF_TABLE (Thieves as in AD&D):
 ; only a party member's first attack of a round is a backstab, as in AD&D. The game's own test
 ; (58A71h) lets two through and the round's count STAB_TIMES read ([BP-14h]) leaves the off-hand
 ; swing out, so a thief with three attacks (two weapons and a weapon spec's extra) had the third
@@ -22892,7 +22895,7 @@ missile_rear:
 ; same clock has its backstab taken back ([BP-24h] cleared, its +2 to hit off THAC0 [BP-20h]);
 ; from behind stays as it is. All registers kept.
 stab_first:
-        test word [cs:rules_hi], RULE_HI_BACKSTAB
+        test word [cs:rules], RULE_THIEF_TABLE ; (Thieves as in AD&D: the backstab's dice too)
         jz .ret
         cmp si, 3
         ja .ret

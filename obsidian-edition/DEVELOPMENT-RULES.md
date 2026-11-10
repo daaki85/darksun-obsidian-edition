@@ -2081,8 +2081,8 @@ thing holding it (`push word [179Eh]` / `call 0A0h:1C94h` at 83D9Eh; the routine
 does nothing for 270Fh), its items back on the free list. That thing is the
 pointer's (`DS:179Eh`, 523: one of the few past the 520 objects), never freed:
 with nothing held the game has it all zeros (kind 0). `SELL_KEEP` (an `INT 98h`
-site over the push, `RULE_HI_BUYBACK`, the second rules word's 64:
-`game.RULE_BUYBACK`) looks at the thing's first item (things table, kind 1) and,
+site over the push, with Shops as in AD&D, `RULE_HI_CHA_PRICES`, the second rules word's 16:
+`game.RULE_BUYBACK` names it) looks at the thing's first item (things table, kind 1) and,
 for one with a plus (`+14h` above 0) or a power (`+0Fh`), pushes 270Fh in its
 place (the registers kept, the interrupt's frame moved down a word, the word
 under it) and queues the thing and the shop's merchant (`DS:179Ch`, the object
@@ -2147,8 +2147,8 @@ the first is a backstab.
 
 ### A backstab multiplies the weapon's dice only
 
-The switch `backstab_dice` (`game.RULE_BACKSTAB`; DSCLOG's `RULE_HI_BACKSTAB`
-in `rules_hi`; on unless unticked). The game's backstab multiplies the whole of a
+Part of the switch Thieves as in AD&D (`thief_table`; `game.RULE_BACKSTAB` names it,
+`RULE_THIEF_TABLE`; DSCLOG's `RULE_THIEF_TABLE` in `rules`; on unless unticked). The game's backstab multiplies the whole of a
 hit's damage, STR's bonus and the weapon's plus included (x2 to x5 by thief
 level, 595C4h); AD&D's multiplies the weapon's dice only, the rest added once,
 and only the round's first attack is one. Two `NS_IMAGE` sites in the attack

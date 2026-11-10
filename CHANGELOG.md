@@ -66,6 +66,15 @@ segment spare; `UMB_NEED` 6,380 paragraphs (1,802 spare), `UMB_KEPT` 8,002 (180 
   Dispel Magic doesn't end Nauseated: the game's weighs only effects 0 to 73 (its loop, 7936Ch).
 
 **Changed**
+- **Six switches merged into three** (the user's choice), freeing three of DSCLOG's rule bits with bit 2
+  already freed (the Weapon traits merge): four free now, room for the rules to come. Each keeps one
+  setting's name, so a saved choice carries over: **Saving throws against spells** (`spell_save`:
+  the spell save and DEX instead of a doubled d20; bit 8, the spell save's, which only the Loader
+  acted on, free), **Shops as in AD&D** (`cha_prices`: the leader's CHA and buying back magical
+  items; RULES_HI 64 free), **Thieves as in AD&D** (`thief_table`: AD&D's thief skills and the
+  backstab's dice; RULES_HI 128 free). `game.RULE_SPELL_SAVE`, `RULE_BUYBACK` and `RULE_BACKSTAB`
+  name their switches' bits; the Options texts, FEATURES, the guide and DEVELOPMENT-RULES name the
+  switches. A settings file's `no_doubled_save`, `buyback` and `backstab_dice` are ignored now.
 - **The pick is the footman's pick and the axe the battle axe** (*Player's Option: Skills & Powers*,
   the user's choice): every pick (the game's type 112, Deepbiter's and the stone picks', and the
   Loader's Metal Pick, 127) 1d6+1, was 1d4+1 (the horseman's); against a large target 2d4 (was 1d4),

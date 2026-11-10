@@ -4294,7 +4294,7 @@ class NewSpellTests(RuleTests):
             mu.emu_start(start, start + len(code))
             return mu.reg_read(r.UC_X86_REG_EFLAGS)
         def stab(rules_hi, rolled, bonus, damage, times, mode=1, made=0):
-            self.rules_hi(rules_hi)
+            self.rules_merged(rules_hi)
             mu.mem_write(SS * 16 + BP - 0x14, struct.pack("<h", made))  # (the round's attacks so far)
             mu.mem_write(SS * 16 + BP - 0x12, struct.pack("<h", bonus))
             mu.mem_write(SS * 16 + BP + 0x16, struct.pack("<H", mode))
@@ -4329,7 +4329,7 @@ class NewSpellTests(RuleTests):
                 mu.reg_write(getattr(r, "UC_X86_REG_" + reg.upper()), value)
             mu.emu_start(start, start + len(code))
         def enlarge(rules_hi, levels, damage, rolled=None, bonus=-1, times=3):
-            self.rules_hi(rules_hi)
+            self.rules_merged(rules_hi)
             if rolled is not None:  # (the hit's roll: STAB_ROLL keeps its dice)
                 mu.mem_write(SS * 16 + BP - 0x12, struct.pack("<h", bonus))
                 mu.mem_write(SS * 16 + BP + 0x16, struct.pack("<H", 1))
@@ -4621,6 +4621,20 @@ class NewSpellTests(RuleTests):
     def rules_hi(self, value):
         self.mu.mem_write(TSR * 16 + load_image().find(HDR_SIG) + 270, struct.pack("<H", value))
 
+    def rules_merged(self, rules_hi):
+        """RULES_HI as the tests give it, the merged switches' old bits (the backstab dice's 128, the
+        buyback's 64) moved to the switches they are now part of: Thieves as in AD&D (RULES 256) and
+        Shops as in AD&D (RULES_HI 16)."""
+        hdr = TSR * 16 + load_image().find(HDR_SIG)
+        lo = struct.unpack("<H", self.mu.mem_read(hdr + 170, 2))[0] & ~256
+        if rules_hi & 128:
+            lo |= 256
+        self.mu.mem_write(hdr + 170, struct.pack("<H", lo))
+        hi = rules_hi & ~(128 | 64)
+        if rules_hi & 64:
+            hi |= 16
+        self.rules_hi(hi)
+
     def test_sell_price(self):
         """What a shop pays (SELL_PRICE, "mov si,es:[bx+6]", ES:BX the item): with the CHA
         prices rule (RULE_HI 16) 60%, rounded down, never below 1; all of it without; 9999 (not for
@@ -4649,7 +4663,7 @@ class NewSpellTests(RuleTests):
         self.mu.mem_write(GAME_DS * 16 + 0x179E, struct.pack("<HH", 330, 77)[:2])
         self.mu.mem_write(GAME_DS * 16 + 0x179C, struct.pack("<H", 77))
         def sell(plus, power, rules_hi):
-            self.rules_hi(rules_hi)
+            self.rules_merged(rules_hi)
             rec = bytearray(0x15)
             rec[0x14], rec[0x0F] = plus & 0xFF, power
             self.mu.mem_write(0x9800 * 16 + 5 * 0x15, bytes(rec))
@@ -5074,7 +5088,7 @@ class StealthTests(unittest.TestCase):
         creature not in the party is left to the game. (A thief with two weapons and a weapon
         spec's extra attack had the third, the off-hand one, multiplied after a first that missed.)"""
         mu, clock = self.mu, 0xC000
-        mu.mem_write(self.hdr + 270, struct.pack("<H", 128))
+        mu.mem_write(self.hdr + 170, struct.pack("<H", struct.unpack("<H", mu.mem_read(self.hdr + 170, 2))[0] | 256))  # (Thieves as in AD&D: the backstab rule)
         mu.mem_write(GAME_DS * 16 + 0x9B72, struct.pack("<HH", 0, clock))
         mu.mem_write(clock * 16, struct.pack("<I", 600))
         self.assertEqual(self.attack()[:3], (1, 1, 11))  # hidden: the round's first, a backstab

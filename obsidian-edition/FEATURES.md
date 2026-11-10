@@ -1212,6 +1212,9 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#preservers-int).
 
 #### Spells saved against with the spell save
 
+One switch, **Saving throws against spells**, gives this and [DEX instead of a doubled
+d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20) together.
+
 Almost every spell is marked for a save the game treats as
 petrification/polymorph; with this rule it is the spell save. The spells
 marked for paralysis/poison/death (the poison clouds, Poison, Slay Living, the
@@ -1225,7 +1228,7 @@ How it works:
 #### Fire, cold and electricity: DEX instead of a doubled d20
 
 The game doubles the save's d20 against those spells (and nine monsters'
-attacks of those kinds). With this rule the d20 isn't doubled and AD&D's DEX
+attacks of those kinds). With **Saving throws against spells** ticked the d20 isn't doubled and AD&D's DEX
 defensive adjustment is added instead, as AD&D does for attacks that can be
 dodged: −5 at DEX 1, −4 at 3, −3 at 4, ... none for 7-14, +1 at 15, +2 at 16,
 +3 at 17, +4 at 18-20, +5 at 21-23 and +6 at 24-25. Fireball stays dangerous
@@ -1594,8 +1597,8 @@ effect at once; untick one and the game is as it was.
 
 ### The leader's CHA at shops
 
-The game's shops ask an item's price whoever buys. With **The leader's CHA at
-shops** ticked, the party leader's CHA lowers it, 5% from CHA 18 and 5% more
+The game's shops ask an item's price whoever buys. With **Shops as in AD&D**
+ticked (one switch with [buying back magical items](#buying-back-magical-items)), the party leader's CHA lowers it, 5% from CHA 18 and 5% more
 for each point after, to 40% at 25 (the highest a CHA can be):
 
 | Leader's CHA | 17 or less | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 |
@@ -1613,8 +1616,8 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#the-leaders-cha-at-sho
 
 ### Buying back magical items
 
-The game destroys whatever the party sells. With **Buying back magical
-items** ticked, a magical item sold (one with a plus, or a power:
+The game destroys whatever the party sells. With **Shops as in AD&D** ticked
+(one switch with [the leader's CHA](#the-leaders-cha-at-shops)), a magical item sold (one with a plus, or a power:
 a ring, a wand, a scroll...) goes into the merchant's pack instead, and the
 shop offers it for sale at its price, less the leader's CHA discount, so it
 can be bought back. Anything else sold is gone, as in the game. With the CHA
@@ -1637,7 +1640,7 @@ The game's thief skills come out high: a 3rd-level elf thief with DEX 22 has
 move silently 66 and hide in shadows 61. AD&D gives 27 and 20 at 3rd level
 before race and DEX. The game adds 4 a level to a base of its own, and its DEX
 formula gives move silently and hide in shadows less than Dark Sun's table at
-high DEX, and some other skills more. With **Thief skills from AD&D's table**
+high DEX, and some other skills more. With **Thieves as in AD&D**
 ticked, a skill is:
 
 - AD&D's average for the thief level (the Player's Handbook's table, carried on
@@ -1689,8 +1692,8 @@ Tezral attacks Slig BACKSTAB with Bone Long Sword (1d8): d20 = 11, needs 10+ (55
   Tezral hits Slig for 9: 1d8 = [1] -1 bone (raised to the minimum of 1) +7 STR 19 +1 backstab (the dice 1 x2 = 2)
 ```
 
-With **A backstab multiplies the weapon's dice only** (on unless unticked, in
-the same Options group) a backstab multiplies the weapon's dice and adds STR,
+With **Thieves as in AD&D** (on unless unticked; one switch with [AD&D's thief
+skills](#thief-skills-from-adds-table)) a backstab multiplies the weapon's dice and adds STR,
 the weapon's plus and the rest once, as AD&D has it: `1d8 = [5] +12 STR 24 +10
 backstab (the dice 5 x3 = 15)` is 27 (the 5 rolled and the 10 more that x3
 adds) where the game made it 51. The multiplier is x2 at thief levels 1-4, x3

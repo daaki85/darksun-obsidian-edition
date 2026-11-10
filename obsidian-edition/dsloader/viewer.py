@@ -427,8 +427,8 @@ class Viewer:
                   wraplength=460).pack(anchor="w")
         options.bind("<Configure>", lambda e, label=new.winfo_children()[-1]: label.configure(
             wraplength=max(200, e.width - 60)), add="+")
-        where = {"weapon_specialization": custom, "kits": custom, "cha_prices": features, "buyback": features,
-                 "thief_table": thieves, "stealth": thieves, "backstab_dice": thieves, "new_spells": new}
+        where = {"weapon_specialization": custom, "kits": custom, "cha_prices": features,
+                 "thief_table": thieves, "stealth": thieves, "new_spells": new}
         # one switch for each of game.RULE_SETTINGS
         self.rule_vars: Dict[str, tk.BooleanVar] = {}
         self.stealth_gear = tk.BooleanVar(value=settings.get("stealth_gear", True) is not False)
@@ -498,10 +498,10 @@ class Viewer:
                 ("int_learning", "magic", "Preservers' INT: a chance to learn a spell from a scroll (35% at INT 9 "
                                           "to 100% at 24; a failed try uses the scroll up) and the most spells of "
                                           "each spell level they may know (6 at INT 9, all from 19)"),
-                ("spell_save", "magic", "Spells saved against with the spell save (the game uses "
-                                        "petrification/polymorph)"),
-                ("no_doubled_save", "magic", "Fire, cold and electricity: DEX instead of a doubled d20 (DEX's "
-                                             "defensive adjustment on those saves; the game doubles the save's d20)"),
+                ("spell_save", "magic", "Saving throws against spells: spells saved against with the spell save "
+                                        "(the game uses petrification/polymorph), and against fire, cold and "
+                                        "electricity DEX's defensive adjustment in place of a doubled d20 (the "
+                                        "game doubles the save's d20)"),
                 ("enlarge_dice", "magic", "Enlarge multiplies the weapon's dice only, rounded up, STR and magic added after, "
                                           "as in AD&D (the game multiplies the whole melee damage, STR included)"),
                 ("spells_manual", "magic", "Spells and psionics as the manual describes them: some two dozen spells' and "
@@ -527,18 +527,18 @@ class Viewer:
                                "multiclass characters (pairs of classes, and one trio) have kits of their own, each "
                                "giving something and costing something (chosen on the creation panel's KIT page); the "
                                "game's own party gets features of its own"),
-                ("cha_prices", None, "The leader's CHA at shops: 5% off what shops ask at CHA 18 and 5% more for each "
-                                     "point after, to 40% at 25; shops pay 60% of an item's price"),
-                ("buyback", None, "Buying back magical items: merchants keep the magical items the party sells them, "
-                                  "to buy back at their price (the game destroys whatever is sold; other items still are)"),
-                ("thief_table", None, "Thief skills from AD&D's table by level, with Dark Sun's race and DEX adjustments "
-                                      "(the game adds 4 a level to a base of its own, and DEX by a formula)"),
+                ("cha_prices", None, "Shops as in AD&D: the leader's CHA at shops, 5% off what shops ask at CHA 18 "
+                                     "and 5% more for each point after, to 40% at 25, shops paying 60% of an item's "
+                                     "price; and merchants keep the magical items the party sells them, to buy back "
+                                     "at their price (the game destroys whatever is sold; other items still are)"),
+                ("thief_table", None, "Thieves as in AD&D: thief skills from AD&D's table by level, with Dark Sun's "
+                                      "race and DEX adjustments (the game adds 4 a level to a base of its own, and DEX "
+                                      "by a formula); and a backstab multiplies the weapon's dice only, STR and magic "
+                                      "added after, on the round's first attack only (the game multiplies the whole "
+                                      "damage, STR included, on the first two)"),
                 ("stealth", None, "Hiding in shadows to backstab: thieves hide in shadows and move silently to backstab, "
                                   "rangers to attack from behind (with no enemy beside them; a thief's chance halved in "
                                   "daylight, a ranger's indoors; a few kits differ)"),
-                ("backstab_dice", None, "A backstab multiplies the weapon's dice only, STR and magic added after, as in "
-                                        "AD&D, on the round's first attack only (the game multiplies the whole damage, STR "
-                                        "included, on the first two)"),
                 ("new_spells", None, "New spells: six for wizards (Cat's Grace at 2nd level: DEX + 1d6, by class with "
                                      "Spells and psionics as the manual describes them; at 1st, Erdlu "
                                      "Claw (unarmed 1d6+1), Fogbolt (-3 to hit, AC 2 worse), Reflected Image, Spook and "

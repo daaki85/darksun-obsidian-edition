@@ -119,7 +119,10 @@ SPEED_AC = 2
 GYTHKA_TYPE = 0x2C  # the game's gythka ("2 handed Bone Gythka")
 # The Loader's rule changes (DSCLOG's RULES): helms count AC 1; AD&D's two-weapon penalties;
 # spells saved against with the spell save; no doubled d20
-RULE_HELMS, RULE_TWO_WEAPONS, RULE_SPELL_SAVE, RULE_NO_DOUBLE = 1, 4, 8, 16
+RULE_HELMS, RULE_TWO_WEAPONS, RULE_NO_DOUBLE = 1, 4, 16
+# one switch, Saving throws against spells (the setting "spell_save"): the spell save and no doubled d20
+# (bit 8, the spell save's own once, which only the Loader acts on, free)
+RULE_SPELL_SAVE = RULE_NO_DOUBLE
 # The staff sling's shot a stinkpot (AD&D's Arms and Equipment Guide): 1d3 crushing against any size
 # (the game's 1d4: DSCLOG's STINK_SIDES keeps type 0's dice), and a hit makes the target, unless
 # undead or immune to poison, save against poison (the game's save, as against a monster's poisoned
@@ -162,10 +165,10 @@ RULE_CHA_PRICES = 1048576
 # the six add up to no more than the die gave, the hit points not changed by a click
 RULE_ROLLED = 2097152
 # magical items sold to a merchant kept in its pack, to buy back (buyback.py; DSCLOG's RULE_HI_BUYBACK)
-RULE_BUYBACK = 4194304
+RULE_BUYBACK = RULE_CHA_PRICES  # (one switch, Shops as in AD&D: the setting "cha_prices"; 4194304 free)
 # a backstab multiplies the weapon's dice only, STR and the rest added after (the PHB; DSCLOG's
 # RULE_HI_BACKSTAB, STAB_TIMES); else the game's, the whole damage multiplied
-RULE_BACKSTAB = 8388608
+RULE_BACKSTAB = RULE_THIEF_TABLE  # (one switch, Thieves as in AD&D: the setting "thief_table"; 8388608 free)
 # ages from Dark Sun's tables, their categories' changes to the scores and death at the most a race
 # lives (aging.py), and Haste's magical aging: a system shock roll and a year (DSCLOG's RULE_HI_AGING)
 RULE_AGING = 16777216
@@ -289,7 +292,7 @@ POWER_EFFECT_NAMES = {34: "Paralysing attack", 13: "Disease attack", 51: "Entang
 POWER_KIND_NAMES = {"pointed": "piercing", "edged": "slashing"}  # (else the damage kind's own name)
 # the Options' setting for each, all on unless unticked
 RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("two_weapons", RULE_TWO_WEAPONS),
-                 ("spell_save", RULE_SPELL_SAVE), ("no_doubled_save", RULE_NO_DOUBLE),
+                 ("spell_save", RULE_SPELL_SAVE),
                  ("new_spells", RULE_NEW_SPELLS), ("stealth", RULE_STEALTH), ("level_10", RULE_LEVEL_10),
                  ("thief_table", RULE_THIEF_TABLE), ("half_giant_hands", RULE_HALF_GIANT),
                  ("protection_rules", RULE_PROTECTION), ("item_saves", RULE_ITEM_SAVES),
@@ -297,8 +300,8 @@ RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("two_weapons", RULE_TWO_WEAPONS),
                  ("multiclass_hp", RULE_MULTI_HP), ("best_hit_die", RULE_HP_BEST), ("kits", RULE_KITS),
                  ("ranger_casting_level", RULE_RANGER_CAST), ("int_learning", RULE_INT_LEARN),
                  ("adnd_tables", RULE_ADND_TABLES), ("cha_prices", RULE_CHA_PRICES),
-                 ("rolled_scores", RULE_ROLLED), ("buyback", RULE_BUYBACK),
-                 ("backstab_dice", RULE_BACKSTAB), ("aging", RULE_AGING),
+                 ("rolled_scores", RULE_ROLLED),
+                 ("aging", RULE_AGING),
                  ("enlarge_dice", RULE_ENLARGE), ("con_adnd", RULE_CON),
                  ("dual_class", RULE_DUAL_CLASS), ("rest_heal", RULE_REST), ("cahulaks", RULE_CAHULAKS),
                  ("creature_size", RULE_SIZE), ("held_hit", RULE_HELD))
