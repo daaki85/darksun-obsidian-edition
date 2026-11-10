@@ -56,6 +56,9 @@ segment spare; `UMB_NEED` 6,352 paragraphs (1,830 spare), `UMB_KEPT` 7,974 (208 
   (Tests: `test_grand_mastery_next_die`, `SizeTests.test_grand_master_on_large`, `NextDieTests`.)
 
 **Docs**
+- KITS: a table of every weapon spec's dice, man-sized and large, with and without grand mastery
+  ([Grand mastery's damage](obsidian-edition/KITS.md#grand-masterys-damage); `GrandMasteryTableTests`
+  keeps it in step with `sizes.LARGE_DICE` and `specialize.next_die`).
 - The player's guide's magic items: "Six scrolls" named as Kalzith's, and the defilers' scrolls listed
   (any preserver spell; the champions' bout's defiler always has one); ITEMS likewise.
 

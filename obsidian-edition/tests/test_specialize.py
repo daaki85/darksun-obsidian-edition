@@ -787,5 +787,32 @@ class NextDieTests(unittest.TestCase):
         self.assertEqual([sp.next_die(d) for d in (2, 3, 4, 6, 8, 10, 12, 20)], [3, 4, 6, 8, 10, 12, 20, 20])
 
 
+
+class GrandMasteryTableTests(unittest.TestCase):
+    def test_kits_table(self):
+        """KITS.md's grand mastery table: a row for each weapon spec, in specialize.KINDS' order; its
+        large dice sizes.LARGE_DICE's (the small ones where it has none), and both grand mastery
+        columns those a die larger (specialize.next_die)."""
+        import re
+        from dsloader import sizes, specialize as sp
+        with open(os.path.join(os.path.dirname(__file__), "..", "KITS.md"), encoding="utf-8") as f:
+            text = f.read()
+        block = text[text.index("### Grand mastery's damage"):text.index("### Choosing at creation")]
+        rows = [[c.strip() for c in line.strip("|").split("|")] for line in block.splitlines()
+                if line.startswith("| ") and not line.startswith("| Weapon spec")]
+        self.assertEqual([r[0] for r in rows], list(sp.KINDS))
+
+        def dice(t):
+            c, s, b = re.fullmatch(r"(\d+)d(\d+)([+-]\d+)?", t).groups()
+            return int(c), int(s), int(b or 0)
+        for kind, (name, small, large, grand, grand_large) in enumerate(rows):
+            c, s, b = dice(small)
+            want = sizes.LARGE_DICE[kind]
+            lc, ls, lb = (want[0], want[1], b + want[2]) if want else (c, s, b)
+            self.assertEqual(dice(large), (lc, ls, lb), name)
+            self.assertEqual(dice(grand), (c, sp.next_die(s), b), name)
+            self.assertEqual(dice(grand_large), (lc, sp.next_die(ls), lb), name)
+
+
 if __name__ == "__main__":
     unittest.main()
