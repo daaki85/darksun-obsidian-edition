@@ -17,7 +17,7 @@ NAMES: Dict[str, str] = {
     "Air Elemental": "L", "Earth Elemental": "L", "Water Elemental": "L", "Fire Elemental": "L",
     "Lesser Air Eleme": "M", "Lesser Water Ele": "M", "Lsr Earth Elem": "M", "Lsr Fire Elem": "M",
     "Djinn": "L", "Red Slaad": "L", "Blue Slaad": "L", "Vrock": "L", "Babau": "M", "Psurlon": "L",
-    "Psurlon Adept": "M", "Slig": "M", "Dust Devil": "M", "Insect Swarm": "L", "Evard's Tentacle": "L",
+    "Psurlon Adept": "L", "Slig": "M", "Dust Devil": "M", "Insect Swarm": "L", "Evard's Tentacle": "L",
     "Animated Statue": "L",
     # the undead
     "Aposs": "M", "Convert": "M", "Cragg": "M", "Shadow": "M", "Shadow Guard": "M", "Shadow King": "M",

@@ -180,7 +180,7 @@ Made with `python -m dsloader.doccreatures GAME_FOLDER`, from the game's own dat
 | ![](docs/creatures/otyugh-monster.png) | Otyugh | monster | L (large) | no: too big |
 | ![](docs/creatures/outcast-monster.png) | Outcast | monster | M (man-sized) | yes |
 | ![](docs/creatures/psurlon-monster.png) | Psurlon | monster | L (large) | no: too big |
-| ![](docs/creatures/psurlon-adept-monster.png) | Psurlon Adept | monster | M (man-sized) | yes |
+| ![](docs/creatures/psurlon-adept-monster.png) | Psurlon Adept | monster | L (large) | no: too big |
 | ![](docs/creatures/rampager-monster.png) | Rampager | monster | L (large) ? | no: too big |
 | ![](docs/creatures/red-slaad-monster.png) | Red Slaad | monster | L (large) | no: too big |
 | ![](docs/creatures/sand-howler-monster.png) | Sand Howler | monster | M (man-sized) ? | no: can't be tangled |

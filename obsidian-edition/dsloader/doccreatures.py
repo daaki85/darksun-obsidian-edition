@@ -17,6 +17,10 @@ PICTURE = 0x0C          # an object's picture (OJFF +0Ch, as sprites.OJFF_PICTUR
 PARTY = frozenset(("Gerakis", "Cermak", "Cilla", "K'ratchek"))  # (the default party: not foes)
 RACES = {**game.RACE_NAMES, 0: "elemental", 9: "undead"}  # (the rest: "monster")
 BIG = 64                # (a figure wider than this drawn at its own size, not doubled)
+# the creatures that walk under the ground or the silt and come up to fight: drawn with their
+# fighting picture (the next number), not the mound or ripple they walk as. Only these: for anyone
+# else the next number is another object's picture (Gilal's coffin, an elf on a box)
+BURROWERS = frozenset(("Bulette", "Fire Eel", "Silt Horror"))
 
 
 class Creature(NamedTuple):
@@ -55,16 +59,16 @@ def _size(rows) -> int:
     return sum(p is not None for row in rows for p in row) if rows else 0
 
 
-def rows_of(chunks, obj: int) -> Optional[List[List[Optional[int]]]]:
-    """Object OBJ's figure as rows of palette numbers: its picture's first frame (standing), or its
-    fighting picture's (the next number) where that shows half as much again (the Bulette and the
-    Silt Horror walk under the ground and the silt, and come up to fight)."""
+def rows_of(chunks, obj: int, name: str = "") -> Optional[List[List[Optional[int]]]]:
+    """Object OBJ's figure as rows of palette numbers: its picture's first frame (standing), or, for
+    one of BURROWERS (NAME), its fighting picture's (the next number) where that shows half as much
+    again."""
     rec = chunks.get(("OJFF", obj))
     if rec is None or len(rec) < PICTURE + 2:
         return None
     number, = struct.unpack_from("<H", rec, PICTURE)
     walking, fighting = _first(chunks, number), _first(chunks, number + 1)
-    if fighting is not None and _size(fighting) * 2 > _size(walking) * 3:
+    if name in BURROWERS and fighting is not None and _size(fighting) * 2 > _size(walking) * 3:
         return fighting
     return walking
 
@@ -131,7 +135,7 @@ def write(game_dir: str, root: str) -> int:
     out_dir = os.path.join(root, "docs", "creatures")
     os.makedirs(out_dir, exist_ok=True)
     for c in rows:
-        figure = rows_of(chunks, c.obj)
+        figure = rows_of(chunks, c.obj, c.name)
         zoom = 1 if max((len(r) for r in figure), default=0) > BIG else docicons.ZOOM
         with open(os.path.join(out_dir, slug(c) + ".png"), "wb") as f:
             f.write(docicons.png(figure, palette, zoom))
