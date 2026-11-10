@@ -1362,6 +1362,9 @@ class ScriptRandTests(unittest.TestCase):
         self.assertEqual((e.kind, e.raw & 0xFF, e.raw >> 8 & 0xFF, e.extra), (5, 0x7000 * 11 >> 15, 10, 2116))
         self.assertEqual((e.arg(2), e.arg(4), e.arg(6)), (4, 3, 2))
         self.assertEqual((e.ip, e.cs), (0x602, CALLER))  # (the code after the INT)
+        # the attack's target as the entry was made (HELPLESS_OF; HELD's tests cover its Paralyzed and
+        # Out Cold): here no combatant, so the mark alone
+        self.assertEqual(e.target_state, Entry.HELD_MARK)
 
 
 @unittest.skipIf(Uc is None, "needs unicorn")
@@ -8774,7 +8777,8 @@ class PictureSlotTests(RuleTests):
         from dsloader import gamepatch
         for name, offset, site in (("pic_full", 0x26009, gamepatch.PIC_FULL_SITE),
                                    ("pic_place", 0x260CC, gamepatch.PIC_PLACE_SITE),
-                                   ("pic_count", 0x2612B, gamepatch.PIC_COUNT_SITE)):
+                                   ("pic_count", 0x2612B, gamepatch.PIC_COUNT_SITE),
+                                   ("pic_fail", 0x25FD0, gamepatch.PIC_FAIL_SITE)):
             p = next(p for p in gamepatch.PATCHES if p.name == name)
             self.assertEqual((p.offset, p.replacement[2]), (offset, site))
             self.assertEqual(len(p.original), len(p.replacement))
@@ -8825,6 +8829,33 @@ class PictureSlotTests(RuleTests):
         self.assertEqual(self.entry(250)[2], 3000)
         self.jump(gamepatch.PIC_COUNT_SITE, (0,))
         self.assertEqual((self.mu.reg_read(r.UC_X86_REG_SI), self.count()), (250, 300))
+
+    def test_failed_read_lets_the_reused_slot_go(self):
+        """A reused slot whose picture then failed to load (the game's write of the new number and
+        length, its read failing, its way out at 25FD0h): let go again, STALE and out of memory, so
+        no later lookup by that number reads the old picture's place; the game's AX FFFFh as ever.
+        Without a reuse (below 300, or no slot) the failure changes nothing."""
+        from dsloader import gamepatch
+        self.full()
+        self.slot(30, 1030, 100, 3000, 1)
+        self.jump(gamepatch.PIC_FULL_SITE, (0, self.FAIL))
+        self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 30)
+        self.slot(30, 2222, 180, 3000, 1)  # (the game's write: the new number and length, the old place)
+        self.assertEqual(self.jump(gamepatch.PIC_FAIL_SITE, (0,)), 0)
+        self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX) & 0xFFFF, 0xFFFF)
+        number, _, _, _, flags, _ = self.entry(30)
+        self.assertEqual((number, flags & 2), (0xFFFE, 0))
+        # the next picture: slot 30 again, and counted as a reuse only once it is in
+        self.jump(gamepatch.PIC_FULL_SITE, (0, self.FAIL))
+        self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 30)
+        self.jump(gamepatch.PIC_COUNT_SITE, (0,))
+        self.assertEqual((self.mu.reg_read(r.UC_X86_REG_SI), self.count()), (30, 300))
+        # a failure with no reuse pending: nothing written
+        self.slot(40, 1040, 100, 4000, 3)
+        before = self.entry(40)
+        self.jump(gamepatch.PIC_FAIL_SITE, (0,))
+        self.assertEqual(self.entry(40), before)
+        self.assertEqual(self.entry(30)[0], 0xFFFE)  # (as left: the count's site doesn't write it)
 
     def test_round_from_the_last_reused(self):
         """The search goes round from after the last reused slot: two pictures loaded and let go in

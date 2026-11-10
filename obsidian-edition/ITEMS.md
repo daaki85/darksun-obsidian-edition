@@ -4,13 +4,15 @@
 every item is. The [player's guide](PLAYER-GUIDE.md#new-items) lists what the
 mod adds and who can use it, without saying where.*
 
-Every magic item, mundane weapon and mundane armour piece in a game with the
-mod's [new items](FEATURES.md#new-items), the game's and the mod's, with their icons
-and where each is; then each item's chance
-[against acid](#items-against-acid).
+What the mod's own items cost, and more on its armour, robes, icons and names; then every magic
+item, mundane weapon and mundane armour piece in a game with the mod's [new
+items](FEATURES.md#new-items), the game's and the mod's, with their icons and where each is; then
+each item's chance [against acid](#items-against-acid).
 
 ## Contents
 
+- [The mod's new items](#the-mods-new-items): prices, the Warden's Plate, bracers of defense, robes,
+  icons and names, Alagorn's stories
 - [Every magic item](#every-magic-item): weapons, missile weapons, by weapon
   spec, body armour, arm and leg armour, head, shields and gloves, other worn
   items, held items
@@ -18,6 +20,121 @@ and where each is; then each item's chance
 - [Every mundane weapon](#every-mundane-weapon)
 - [Every mundane armour piece](#every-mundane-armour-piece)
 - [Items against acid](#items-against-acid): chest, arms and legs, weapons
+
+## The mod's new items
+
+What the mod's [new items](FEATURES.md#new-items) cost, the armour that needs saying more of,
+their icons and names, and what Alagorn tells of them. Where each is, and what it does, is in the
+tables below.
+
+### Prices
+
+Prices follow the game's own (a price can't go past 65,535; the game's
+dearest, the Wand of Missiles, is 65,000):
+
+| Items | Price |
+|---|---|
+| Magic melee weapons, and Dunesong | 20,800 a plus (41,600 for a +2; a +1 with a spell 22,000; the game's Bow +2 is 50,800) |
+| Legcrusher's Cahulaks +1; the Cahulaks +2 | 11,600 (the game's Cahulaks +1's); 32,400 (that, +20,800 for the plus more) |
+| Windlash; Skycutter | 2,800 (as the game's Sling +1); 3,500 (as its Sling +2) |
+| Plain metal weapons | 50 to 300 |
+| Bracers of defense | 5,000 a point of AC |
+| Rings and Cloak of Protection | 15,000 |
+| Inixhide; the Ashen Robe | 6,000 |
+| Veiled Robe | 40,000 |
+| Cloak and Boots of Elvenkind | 25,000 and 20,000 |
+| Boots of Speed | 20,000 (as the game's Serpent Boots) |
+| Warden's Arms and Legs; Chest; Helm | 27,000 each; 36,000; 30,000 |
+| Arrowbane; Sunking Crown | 30,000; 40,000 |
+| Girdle of Back Defense; Golden Girdle of Urnst; Amulet of Magic Resistance | 25,000; 20,000; 35,000 |
+| Gutterward; Ironbulwark | 25,000; 65,000 (the game's Drake Shield +1 is 25,400, El's Shield +2 50,200) |
+| Tome of Understanding | 43,500 (AD&D's) |
+
+![The Tome of Understanding's box in the game: a night-steel book with a fiery emblem, 43500, Tome/Understand, and the icon to click](docs/tome.png)
+
+### The Warden's Plate
+
+The **Warden's Plate** is plate mail +1 in four pieces: the chest 4 better
+than no armour (its AC 3, +1), the arms and legs 3 each (AC 2, +1), the helm 2
+(a helm's AC 1 with [helms giving AC 1](FEATURES.md#helms), +1): 12 better as a set, so a
+wearer with no other help goes from AC 10 to AC −2. (With that rule off the
+helm gives only its +1: 11 better, AC −1.) The game adds up its pieces' AC
+this way for all armour, so a full set does better than AD&D's plate mail +1
+(one suit, AC 2: 8 better). It is metal armour, worn by the classes that can
+wear the game's chain (no single-class thieves), and kept from more with
+[class restrictions](FEATURES.md#class-restrictions). **Grey's Scale**'s arm and leg
+armour is AC 3 each (the game's is 2).
+
+### Bracers of defense
+
+A preserver can't cast in armour (with [class
+restrictions](FEATURES.md#class-restrictions)), so the mod adds AD&D's bracers of defense
+([where](#every-magic-item)). They are worn on the arms, in the arm armour's place, and
+give the AC their name says: AC 6 is 4 better than no armour, AC 2 is 8 better.
+As in AD&D they give nothing while armour is worn: on the arms, legs or chest,
+or a helm (bone, leather or metal, magical or not). A shield, rings and cloaks
+of protection, and the mod's circlet and crown (worn on the head, but not
+armour) go with them. They aren't armour to anything else: a preserver casts in
+them, a thief wears them, and a ring or cloak of protection still counts. In the
+game they are **BRACERS/DEFNS** with their plus (Bracers/Defns+4 is AC 6),
+priced 5,000 a point of AC.
+
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#bracers-of-defense).
+
+### Robes
+
+Two magic robes for those who go without armour: preservers, psionicists and
+druids alone may wear them. A robe is worn on the chest, in the chest armour's
+place; like the bracers its plus betters AC only while no armour is worn on
+the arms, legs or head, and it isn't armour to anything else: a preserver
+casts in it, and a ring or cloak of protection still counts. Bracers go with
+it.
+
+| Icon | Robe | What it does | Price |
+|---|---|---|---|
+| ![](docs/items/ashen-robe.png) | **Ashen Robe** (+1) | AC 1 better; +1 on saves against wizards' and priests' spells | 6,000 |
+| ![](docs/items/veiled-robe.png) | **Veiled Robe** (+2), a robe of the Veiled Alliance | AC 2 better; +1 on every save; a wizard spell slot more at spell levels 1, 2 and 3 where the wearer has any | 40,000 |
+
+Where they are: [Every magic item](#every-magic-item).
+
+The dice log and the Loader name a robe among a save's modifiers, and the
+Spells tab counts the Veiled Robe's slots. Alagorn tells both their stories.
+
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#robes).
+
+### Icons and names
+
+Each of the mod's magic items has an icon of its own (in the [tables below](#every-magic-item)), made
+from the plain item's the way the game makes its magic items' (a few pixels in
+the colours it cycles like fire); dropped on the map they look like the plain
+item. The game's names are at most 15 letters, so the rings are
+**RING/PROTECTION** and the cloak **Cloak/Protectn**; the Loader's screens and
+the log give them in full. As with its own items, the game puts the material
+first: **Leather Inixhide**, **Metal +1 Shadowseeker** in the item box.
+
+![Two item icons from the inventory screen: Arrowbane, a silver circlet, and the Sunking Crown, a gold crown](docs/head-items.png)
+
+![Shadowseeker's item box in the game: 22000, Detect Invisibility's icon, "Metal +1 Shadowseeker", 1D6+1/1D8+1](docs/shadowseeker-box.png)
+
+### Alagorn's stories
+
+**Alagorn**, the wizard of the Painted Badlands who identifies magic items,
+tells the story of every one of the mod's magic items in [Every magic
+item](#every-magic-item) but the plain Gythka +2, the two cahulaks, the
+Boots of Speed, the two girdles and the Amulet of Magic Resistance when
+the party carries it, in the menu the game would put it in (swords, weapons,
+rings, armor, shields, clothes or other items), before "Nothing". As with the
+game's own, one story for each kind: the four pairs of bracers share one, and
+so do both rings of protection. The Warden's Plate's pieces each tell a part
+of Haldren's, the last of the Wardens.
+
+Two of the game's own stories now say what the item does (always, a fix of the
+game's text): the **Quicksilver Glove** (his menus called it "Quicksilver
+Gauntlets", grafting a weapon to the hand) "holds a psionic charge. Whatever it
+strikes is blasted from within, and the blast can shatter what the foe wears":
+it casts Detonate on every hit; the **Helm of Contemplation** (a "shield of
+thought against all psionic attacks") "turns a creature's gaze back on itself":
+Gaze Reflection.
 
 ## Every magic item
 
@@ -33,7 +150,7 @@ readied. The powers here are the item's own, from the data. What Alagorn says of
 an item when shown it isn't always what it does: the Golden Torque has no power;
 his stories of the Quicksilver Glove (grafting a weapon) and the Helm of
 Contemplation (a shield against psionic attacks) say what they do with the
-Loader ([Alagorn](FEATURES.md#new-items)). The items that change a
+Loader ([Alagorn's stories](#alagorns-stories)). The items that change a
 score (Draketooth, Dag's Dagger, the Helm and Belt of Might, El's Ring, the
 Steadfast Ring and the Ring of Insight) do it while worn, the
 Belt of Might making STR at least 24.
@@ -170,9 +287,9 @@ Tanelyv's Armor also has a chest piece, metal, with no plus (AC 4 better: the ch
 
 | Icon | Slot | Item | Bonus / power | Where |
 |---|---|---|---|---|
-| ![](docs/items/bracers-of-defense.png) | Arms | ***Bracers of Defense*** | AC for those wearing no armour: [bracers of defense](FEATURES.md#bracers-of-defense) | **Mikquetzl** (AC 6, in his pack), **Wyrmias** (AC 5), **Balkazar** (AC 4), **Dagolar** (AC 2, the one carrying Dag's Dagger) |
-| ![](docs/items/ashen-robe.png) | Chest | ***Ashen Robe*** | +1 AC; +1 on saves against spells | worn by **Kalzith**, who sells it with his scrolls, and left with his body if he's killed ([Robes](FEATURES.md#robes)) |
-| ![](docs/items/veiled-robe.png) | Chest | ***Veiled Robe*** | +2 AC; +1 on every save; a wizard slot more at spell levels 1-3 | sold by **Kel** ([Robes](FEATURES.md#robes)) |
+| ![](docs/items/bracers-of-defense.png) | Arms | ***Bracers of Defense*** | AC for those wearing no armour: [bracers of defense](#bracers-of-defense) | **Mikquetzl** (AC 6, in his pack), **Wyrmias** (AC 5), **Balkazar** (AC 4), **Dagolar** (AC 2, the one carrying Dag's Dagger) |
+| ![](docs/items/ashen-robe.png) | Chest | ***Ashen Robe*** | +1 AC; +1 on saves against spells | worn by **Kalzith**, who sells it with his scrolls, and left with his body if he's killed ([Robes](#robes)) |
+| ![](docs/items/veiled-robe.png) | Chest | ***Veiled Robe*** | +2 AC; +1 on every save; a wizard slot more at spell levels 1-3 | sold by **Kel** ([Robes](#robes)) |
 | ![](docs/items/belt-of-might.png) | Waist | Belt of Might | STR at least 24 | on the ground in the Wyrm School |
 | ![](docs/items/girdle-of-back-defense.png) | Waist | ***Girdle of Back Defense*** | no enemy gets the +2 to hit for attacking its wearer from behind, nor a thief's backstab | carried by the **Troop Leader**, with Linebreaker |
 | ![](docs/items/golden-girdle-of-urnst.png) | Waist | ***Golden Girdle of Urnst*** | AC 3 better against swords (long and short), in melee | carried by **Wyrmias**, with his bracers |
@@ -221,6 +338,8 @@ needle off if it is still there. A needle set off is a trap as the game's are:
 the party's best at find/remove traps may still spot it in time (or Detect
 Traps), else it does 2d6 poison damage to the one who sprang it. Once open, it stays open. It comes with a new game, with
 **New items, magical and mundane** on.
+
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#pehtucls-chest).
 
 ## Every mundane weapon
 

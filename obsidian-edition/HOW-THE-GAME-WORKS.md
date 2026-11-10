@@ -8,7 +8,9 @@ play. The dice log shows each as it happens, and the [rule
 changes](FEATURES.md#rule-changes) change some of it. Several findings were
 first pointed out by the notes of
 [yuan-ti](https://github.com/CalvinRodo/yuan-ti), CalvinRodo's new engine for
-the game, and checked here in the game's own code.
+the game, and checked here in the game's own code. One section is the mod's own: the detail of
+[Spells and psionics as the manual describes
+them](#spells-and-psionics-as-the-manual-describes-them), beside the game's spells and powers.
 
 ## Contents
 
@@ -24,8 +26,14 @@ the game, and checked here in the game's own code.
   - [Each cleric spell against the
     manual](#each-cleric-spell-against-the-manual)
   - [Turn Undead](#turn-undead)
+    - [AD&D's turning table](#adds-turning-table)
 - [Psionics](#psionics)
   - [Each power against the manual](#each-power-against-the-manual)
+- [Spells and psionics as the manual describes them](#spells-and-psionics-as-the-manual-describes-them)
+  (the mod's rule change)
+  - [Each spell in more detail](#each-spell-in-more-detail)
+  - [The monsters as the manual describes them](#the-monsters-as-the-manual-describes-them)
+  - [Known differences left as they are](#known-differences-left-as-they-are)
 - [How the game works out thief skills](#how-the-game-works-out-thief-skills)
 - [Where the game rolls thief skills](#where-the-game-rolls-thief-skills)
 - [Resting](#resting)
@@ -235,7 +243,7 @@ and the creature **always saves** (seen in DOSBox: Arena Guards "unable to
 save" took half Cloudkill's damage). The patched game's compare is signed, so
 "can't save" fails, even on a natural 20 (which the game took as a save before
 adding the −100), whatever the Options ([The game's bugs,
-fixed](FEATURES.md#the-games-bugs-fixed)). Against Scare no one saves at all: its record allows no save, so the
+fixed](GAME-BUGS.md#spells-and-psionics)). Against Scare no one saves at all: its record allows no save, so the
 saving throw ends at its first test and the rules the save code has for Scare
 never run. Those rules: 6th level and up always save and everyone below can't,
 but for some elf or half-elf priests (AD&D gives elves, half-elves and priests
@@ -243,12 +251,12 @@ a bonus), which it asks for as a creature that is both an elf and a half-elf,
 so no one qualifies. The patched game allows the save, so the rules run (6th
 level and up always save; below 6th, no save, the signed compare making the −100
 fail), and lets an elf or half-elf priest save:
-[The game's bugs, fixed](FEATURES.md#the-games-bugs-fixed).
+[The game's bugs, fixed](GAME-BUGS.md#spells-and-psionics).
 
 Rules in the code that never come into play: Cloak of Bravery's +4 against
 fear applies only to a kind of spell that no spell in the game is marked as
 (the patched game marks the fear spells: see
-[The game's bugs, fixed](FEATURES.md#the-games-bugs-fixed)), and so does
+[The game's bugs, fixed](GAME-BUGS.md#spells-and-psionics)), and so does
 AD&D's DEX defensive adjustment for attacks that can be dodged (+5 at DEX 1 to
 −6 at DEX 25 on AC, so −5 to +6 on the save), unless the
 [rule change](FEATURES.md#rule-changes) puts it on the fire, cold and
@@ -291,7 +299,7 @@ From the game's damage and fighting code; none of this is in the manual:
   deadly Poison, disease on 1 hit in 10. The 20 acid (the Rampager's) and a
   corroding touch (the Babau's) can also destroy a worn item (see [Items saving
   against acid](FEATURES.md#items-saving-against-acid)). With the mod's monsters as the
-  manual describes them, some of these differ ([which](FEATURES.md#spells-and-psionics-as-the-manual-describes-them)):
+  manual describes them, some of these differ ([which](#the-monsters-as-the-manual-describes-them)):
   the shadows drain STR in place of cold and paralysis, the Babau and the Blue Slaad
   carry the deadly Poison (which kills on a failed save, in a fight too) in place of the
   corroding touch and the disease.
@@ -305,7 +313,7 @@ From the game's damage and fighting code; none of this is in the manual:
   meets no armour. Once on, a weapon in hand is fought with (in place of the
   first two natural attacks) and worn armour counts. The game never puts on
   rings, cloaks, belts, boots or amulets. (With the Loader: [worn from the
-  start](FEATURES.md#the-games-bugs-fixed).)
+  start](GAME-BUGS.md#fights).)
 
 The dice log notes a weapon hit that takes less than its roll, or nothing at
 all, with what the monster's defences say about it
@@ -347,12 +355,12 @@ A round is 60 game seconds. Some effects last a number of uses instead
 - Mirror Image: 1 a level + 1d4 images. They stop no weapon blow, and take a
   spell for one creature three times in four, whoever cast it, so Armor cast on
   oneself is lost, and an image with it. (With the Loader: [each hit and each foe's
-  spell](FEATURES.md#the-games-bugs-fixed).)
+  spell](GAME-BUGS.md#spells-and-psionics).)
 - Invisibility: one attack or hostile spell ends it. Improved Invisibility is
   timed instead, so attacking doesn't end it.
 - Minor Spell Turning: one spell turned back.
 - Armor: a number of damaging hits, one charge each (with the Loader: see
-  [The game's bugs, fixed](FEATURES.md#the-games-bugs-fixed)).
+  [The game's bugs, fixed](GAME-BUGS.md#spells-and-psionics)).
 
 Charm, Feeblemind, Web and a few others last until removed.
 
@@ -367,11 +375,11 @@ Charm, Feeblemind, Web and a few others last until removed.
 | Afraid | The computer runs it; it can't attack or cast. Undead are immune, and Cloak of Bravery stops the next fear (and ends) |
 | Charmed | Joins the caster's side, run by the computer |
 | Confused | Each turn a d10: 1 runs off, 2–6 does nothing, 7–9 fights for a side picked with a d2, 10 acts normally (the log shows the rolls) |
-| Berserk | Fights for a side picked at random each turn; can't cast. In the game a party member could be left on the monsters' side when this or Confused ended; the patched game puts it back ([bugs fixed](FEATURES.md#the-games-bugs-fixed)) |
+| Berserk | Fights for a side picked at random each turn; can't cast. In the game a party member could be left on the monsters' side when this or Confused ended; the patched game puts it back ([bugs fixed](GAME-BUGS.md#fights)) |
 | Can't Attack (Stinking Cloud) | Can't attack or cast harmful spells |
 | No spell use, Feeblemind | Can't cast spells. Feeblemind also makes INT and WIS 3 while it lasts (as they were after) and nothing ends it; with the manual's spells it stops psionic powers too, and the mod's Heal cures it |
 | Blind | AC 4 worse, −2 initiative, can't cast spells that need sight |
-| Acid (Acid Arrow) | 2d4 acid damage at the start of each round it lasts, a round for each started minute of its time. In the game it never burned after the hit; the patched game burns it ([bugs fixed](FEATURES.md#the-games-bugs-fixed)) |
+| Acid (Acid Arrow) | 2d4 acid damage at the start of each round it lasts, a round for each started minute of its time. In the game it never burned after the hit; the patched game burns it ([bugs fixed](GAME-BUGS.md#spells-and-psionics)) |
 | Poisoned | Fatal (1000 damage) if time passes out of combat, for instance resting, before it wears off or is cured |
 | Cloak of Fear | Whoever hits the wearer has Cause Fear cast on them, once |
 
@@ -529,8 +537,7 @@ destroyed` (code: DSUN.EXE 7ADB7h, the number at 7AE01h-7AE48h, the d20 at 7AE4D
 
 **With "Spells and psionics as the manual describes them"** (the default) all of the above is the game's rule
 only with the box unticked. Ticked, the mod takes over where the game works out its number
-(7AE01h) and uses AD&D's turning table instead: [the table and what each result
-does](FEATURES.md#spells-and-psionics-as-the-manual-describes-them). How it fits the game: a
+(7AE01h) and uses AD&D's turning table instead ([below](#adds-turning-table)). How it fits the game: a
 turned undead is made Afraid with the effect Cause Fear gives (the game's own way of adding it
 would refuse it to the undead, who are immune to fear spells); a priest who failed against an
 undead and tries it again ends the try at once, the turn spent, with no roll; the failures are forgotten when the next fight's first
@@ -538,6 +545,40 @@ round starts, and by a turning out of a fight, which starts a new one (so a fail
 fight is forgotten as that fight's first round starts). Magic resistance is still checked first, by
 the game. The dice log says the number, the roll and the outcome (`... needs 10+ (priest level 3
 vs 2 HD, AD&D's table) -> turned: flees 3d4 = 7 rounds (Afraid)`).
+
+#### AD&D's turning table
+
+With the box ticked (the default) the game's routine looks up AD&D's table (2nd edition) by the
+undead's hit dice and the priest's level:
+
+| Hit dice \ priest level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10-11 | 12-13 | 14+ |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 or less | 10 | 7 | 4 | T | T | D | D | D\* | D\* | D\* | D\* | D\* |
+| 2 | 16 | 13 | 10 | 7 | 4 | T | T | D | D | D\* | D\* | D\* |
+| 3-4 | 19 | 16 | 13 | 10 | 7 | 4 | T | T | D | D | D\* | D\* |
+| 5 | 20 | 19 | 16 | 13 | 10 | 7 | 4 | T | T | D | D | D\* |
+| 6 | --- | --- | 20 | 19 | 16 | 13 | 10 | 7 | 4 | T | T | D |
+| 7 | --- | --- | --- | 20 | 19 | 16 | 13 | 10 | 7 | 4 | T | T |
+| 8 | --- | --- | --- | --- | 20 | 19 | 16 | 13 | 10 | 7 | 4 | T |
+| 9 | --- | --- | --- | --- | --- | 20 | 19 | 16 | 13 | 10 | 7 | 4 |
+| 10 | --- | --- | --- | --- | --- | --- | 20 | 19 | 16 | 13 | 10 | 7 |
+| 11 or more | --- | --- | --- | --- | --- | --- | --- | 20 | 19 | 16 | 13 | 10 |
+
+- A number: a d20 of it or more **turns** the undead: it is Afraid (as Cause
+  Fear makes a creature) and flees for 3d4 rounds. The Player's Handbook says
+  turned undead flee or are kept at bay but gives no time; 3d4 rounds is the
+  first edition's, used by the 2nd-edition-compatible rules too.
+- **T** turns it with no roll; **D** destroys it with no roll (the game's own
+  destruction); **D\*** destroys it, and up to 2d4 more of its kind (the same
+  monster: one sheet) caught by the same turning are destroyed with no roll.
+- **---**: no chance; nothing is rolled.
+- A d20 under the number: not turned, and **that priest can't try again on that
+  undead in this fight** (the button's own text: "May be used once per
+  creature"); another priest still can. Forgotten when the next fight starts.
+- The game has no kinds of undead, so its hit dice pick the row (AD&D's
+  zombie, ghast and special rows aren't used: the game's 2 HD Zombie uses the
+  2 HD row). Each use ends the priest's turn, as before; it tries each undead
+  in its area, one at a time.
 
 ## Psionics
 
@@ -633,6 +674,113 @@ as they're used: Enhanced Strength (24 less the target's STR) × 2, and
 Domination and Mass Domination 3, 8, 13 or 18 by the target's level (below 6,
 below 11, below 16, and up). Defence modes cost nothing to keep up.
 
+## Spells and psionics as the manual describes them
+
+This section is the mod's, not the game's: the detail of the rule change [Spells and psionics as the manual describes
+them](FEATURES.md#spells-and-psionics-as-the-manual-describes-them), on by default, whose table there
+lists each spell and power it changes. Its Turn Undead is [above](#adds-turning-table).
+How it is done: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#spells-and-psionics-as-the-manual-describes-them).
+
+### Each spell in more detail
+
+- **Fire Shield**: +2 on its caster's saves against spells of fire or cold
+  (`+2 Fire Shield` in the log's save line); the half damage from them and the
+  damage a melee attacker takes back are the game's own.
+- **Blur**: +1 on its creature's saves against spells (`+1 Blur`), beside the
+  game's −2 to attackers.
+- **Chill Touch**: the game already takes 1 STR off a creature that fails its
+  save (Weakened), but gave the effect no time, so it ended at once; it now
+  lasts an hour (60 rounds), the STR coming back after (AD&D's lost Strength
+  comes back a point an hour). Each touch takes 1 more. On an undead (which, in
+  AD&D, takes no damage or STR loss and flees) it does nothing but make the
+  undead Afraid for 1d4 rounds, no save:
+  `Chill Touch on Zombie, undead: no damage, no STR lost; Afraid 1d4 = 3 rounds instead`.
+  With [Spells roll to hit](FEATURES.md#spells-roll-to-hit) the touch rolls first.
+- **Cloudkill** by the target's level for saves (a monster with no class: its
+  hit dice): under 4, it dies with no saving throw; 4 or 5, it saves against
+  poison (at the record's −2) or dies; 6 and up, the damage as before, a save
+  halving it. The death is the cloud's own damage a thousand times over, each
+  time the cloud strikes (as cast and at each round in it):
+  `Cloudkill: Guard dies (under 4 HD: no save; its level for saves 3)`.
+  AD&D's bands are by hit dice (4+1, 6); the game's levels are whole numbers.
+- **Feeblemind**: the game already makes INT and WIS 3 while it lasts, and
+  they come back as they were when it ends; it stops spells. With the box it
+  stops psionic powers too (each fails its power
+  check, costing half the PSP as any failed check does:
+  `Seneca is feebleminded: Biofeedback can't be used (no psionics)`), and the
+  mod's Heal (with [the new spells](FEATURES.md#6th-level-priest-spells)) cures it: `Heal cures Seneca's Feeblemind: INT and WIS as they were`.
+  Dispel Magic still can't (the game's rule). The scores are worked out afresh
+  from the character sheet's, which Feeblemind never changes.
+- **Lower Resistance**: the creature's magic resistance 30% + 1% a level of the
+  caster lower, at least 0 (`-40 Lower Resistance on it, level 10`), where the
+  game halved it; the level is the cast's, kept with the effect. Cast at a
+  creature already under one, the bigger of the two counts.
+- **Strength** and **Cat's Grace** roll by the target's classes, the best die of
+  a multiclass character's: `Strength: 1d8 = 6 (fighter) -> Ester's STR +6`.
+  Adrenalin Control stays 1d6. Strength and Adrenalin Control on one creature
+  don't add up: the bigger counts (Strength 1 and Adrenalin Control 4 make STR +4).
+  A second Strength or Cat's Grace replaces the first (the game's own).
+- **Rainbow Pattern** holds 1 round a caster level (its record's time), and a
+  creature it holds is freed by any damage, a blow or a spell
+  (`Guard takes 20 damage: Rainbow Pattern's hold on it ends`); Hold Person's
+  and the others' Paralyzed aren't touched. The pattern itself stays on the
+  ground for a few rounds (2d3, the game's), and anyone in it (the caster too)
+  saves again each turn.
+- **Cell Adjustment** heals 1d4 hit points (the game's 2), and its record already
+  cures disease: `Cell Adjustment: 1d4 = 3 -> Seneca healed 3 HP, and Seneca is cured of disease`.
+- **Biofeedback**: the game already takes 2 off each blow (melee or missile) and
+  any other crushing, edged or pointed damage, but a blow of 2 or less did none;
+  now at least 1. The log's hit line shows it (`-2 Biofeedback`).
+
+### The monsters as the manual describes them
+
+Where the manual (pp. 33-52) gives a monster a power its record hasn't, or the record
+a power the manual hasn't:
+
+| Monster | The game | As the manual |
+|---|---|---|
+| Shadow | 1d4+1, and 2d6 cold, each hit; cold hurts it | its chilling grasp's light 1d4+1, and **1 STR drained** each hit, no save (Weakened for 2d4 turns; each hit its own, so they add up, STR never below 3); unaffected by cold, +1 weapons to hurt it (as before) |
+| Greater Shadow (the 6-HD Shadow, Shadow Guard, King, Prince and Worker, Cragg, Tanelyv, Tristram) | 2 attacks of 2d6, each paralysing for 2d6 rounds (a save); any spell hurts it in full | 2 attacks of 2d6 and **1 STR drained** each hit, as the shadow's; "unaffected by cold-based attacks"; +1 weapons, AC 4, HD 6 and THAC0 15 as before |
+| Babau | its claws a corroding touch (worn armour and the weapon held may be eaten) | its horn's **deadly poison** (the priests' Poison, AD&D's: a save against poison, else death, in a fight too) |
+| Blue Slaad | disease, 1 rake in 10 | its bite's **deadly poison**, as the babau's |
+| Tari | no disease; HD 2, THAC0 18, AC 10, a 1d2 bite | a bite of **1d3** that brings **disease 1 in 20** (a save against poison), HD 3, THAC0 17, AC 6 (better with the leather some wear) |
+| Styr | no breath; any weapon hurts it; HD 10, THAC0 11 | **breathes fire for 3d6** one turn in four (a save halves), **+1 weapons** to hurt it, HD 14, THAC0 7; MR 30%, AC 0, 4 attacks of 2d10 as before |
+| Djinn | a fighter | at its first turn of a fight it **turns invisible** (Improved Invisibility, 14 rounds) and makes **1d4+3 mirror images** of itself ("their ability to use illusions and become invisible") |
+
+The Look box and its description say so (`1 STR drained (Weakened, 2d4 turns;
+no save)`, `Breathes fire for 3d6 one turn in four`), and the dice log names
+each: `Shadow drains 1 STR from Gerakis: Weakened for 2d4 = 5 turns (no save)`,
+`Tari's bite on Seneca: 1 in 10, and a d2 for the manual's 1 in 20: 2 -> no
+disease`, `Djinn turns invisible (14 rounds) and makes 6 mirror images of
+itself`. The Styr, the Djinn and the Tari are made so in the Loader's copy of
+the game's objects, and in a saved game too, as they come on the map with the
+Loader running (and back as the game's with the box unticked).
+
+### Known differences left as they are
+
+The game has no way to do these as the
+manual says, or the change would make a different spell rather than fix one:
+
+| Spell | The manual | The game |
+|---|---|---|
+| Confusion, Chaos | a save each round | one save, as the spell lands |
+| Mirror Image | images last 3 rounds a level | images last until struck (an effect lasts either uses or a time) |
+| Shield | better saves against missiles | the game has no saves against missiles; Shield's AC 4 works, and it stops Magic Missile |
+| Invisibility | ends when its creature casts any spell | ends on an attack, or a spell at an enemy |
+| Protection from Normal Missiles, Deflection, Inertial Barrier | stop normal missiles (Inertial Barrier: halves breath, missiles, gas, acid) | one effect for all three: a missile weapon's hit does no damage, and breath weapons miss outright; no spell is stopped, Magic Missile included. They differ only in time (a turn a level; level + 5d3 rounds; while kept up), who can have them (anyone touched; the caster alone) and cost |
+| Control Body | the controlled creature fights at -6 | Charmed 5 rounds, no -6 |
+| Mass Domination | up to five creatures | one |
+| Detonate | 1d10 to everyone within 10' | the target only |
+| Quicksand | held 1 turn + 1 round a level | Stuck a round at a time, put on again each round while the quicksand lasts (5d3 rounds of its own); its record's time changes nothing |
+| Feeblemind | INT and WIS drop "dramatically" | to 3 (the game's own choice, an idiot's in AD&D) |
+| Chill Touch | Strength back a point an hour, repeated touches | each touch's point back after an hour |
+| Rainbow Pattern | one save, as it is cast (a time of its own: "special") | the pattern stays on the ground for 2d3 rounds of its own and makes everyone in it, the caster too, save again each turn (a round a level and damage ending a hold are the manual's: above) |
+| Biofeedback | damage −2 | −2 from blows and any crushing, edged or pointed damage, not from fire or other spells |
+
+What else the manual and the game disagree on, and why the rest is left:
+[spells against the manual](https://github.com/daaki85/darksun-obsidian-edition/blob/obsidian-edition/reports/spells-against-the-manual.md)
+(a report in the repository).
+
 ## How the game works out thief skills
 
 The game never shows thief skills, but it rolls them: for traps, and for the
@@ -656,7 +804,7 @@ chance out as:
   and ignores chest and arm armour and helmets, so a thief holding any weapon
   pays it. (The manual's "anything other than leather-type armor" is AD&D's
   rule, not what the code does.) (With the Loader: [no equipment
-  penalty](FEATURES.md#the-games-bugs-fixed).)
+  penalty](GAME-BUGS.md#fights).)
 - plus the situation's bonus or penalty (a hard lock, say).
 
 With **Thief skills from AD&D's table** ticked (see
@@ -711,7 +859,7 @@ doors, walls...), which ask in two ways. These are all of them:
 
 A party check is meant to go to the member with the best chance, but the
 game's pick compares the wrong way round, so the first party member always
-rolls (with the Loader: [the best](FEATURES.md#the-games-bugs-fixed)). (The game also has a script command that lets
+rolls (with the Loader: [the best](GAME-BUGS.md#fights)). (The game also has a script command that lets
 each member try in turn, but no script uses it.)
 
 **The game never rolls move silently, hide in shadows or read languages**, so on

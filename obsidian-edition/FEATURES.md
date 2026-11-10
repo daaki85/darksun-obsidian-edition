@@ -75,8 +75,6 @@ running the game, the Loader's window and its dice log are in the
   - [New wizard spells](#new-wizard-spells)
   - [6th-level priest spells](#6th-level-priest-spells)
   - [New items](#new-items)
-    - [Bracers of defense](#bracers-of-defense)
-    - [Robes](#robes)
   - [New people](#new-people)
     - [Kalzith](#kalzith)
     - [Semyon](#semyon)
@@ -818,7 +816,7 @@ and thief skills are worked out from the level. So past 9th:
   better for every 5 gladiator levels, so −2 at 10th where it was −1. (The
   Loader counts it in **AC: spells, rings, other**.) In armour only, as Dark
   Sun has it: the game gave it with none ([the game's bugs,
-  fixed](#the-games-bugs-fixed)).
+  fixed](GAME-BUGS.md#fights)).
 - **THAC0 and saves** improve as the game's formulas give: 11 for a 10th-level
   gladiator, 14 for a 10th-level druid, as for AD&D's warriors and priests.
 - **Spell slots** grow at the levels casters already have, up to 5th. With
@@ -1046,7 +1044,7 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#helms).
 
 Two monsters' hits can destroy an item: the **Rampager's acid** a worn piece
 of armour, and the **Babau's corroding touch** (the game's; with [the
-manual's monsters](#spells-and-psionics-as-the-manual-describes-them) the Babau has its deadly
+manual's monsters](HOW-THE-GAME-WORKS.md#the-monsters-as-the-manual-describes-them) the Babau has its deadly
 poison instead) a worn piece of armour and the
 melee weapon held (the first one in the character's list of held items with a
 melee reach: bows, slings and chatkchas never). The game makes the check on every such hit, whether or not
@@ -1252,40 +1250,13 @@ unticked, they are the game's.
 | Rainbow Pattern | Paralyzed 1d3 rounds, whatever happens to it | Paralyzed 1 round a caster level, ended by any damage to the creature |
 | Cell Adjustment (psionic) | heals 2 HP, cures disease | heals 1d4 HP, cures disease |
 | Biofeedback (psionic) | AC −1, and 2 off each blow (and other crushing, edged or pointed damage), leaving 0 of a blow of 2 or less | the same, but at least 1 left |
-| Turn Undead | a d20 against its own number: destroyed or nothing, as often as the priest likes | AD&D's turning table (below): turned undead flee, D destroys, D\* destroys more of the kind, and a priest who fails can't try that undead again in the fight |
+| Turn Undead | a d20 against its own number: destroyed or nothing, as often as the priest likes | AD&D's turning table ([the table](HOW-THE-GAME-WORKS.md#adds-turning-table)): turned undead flee, D destroys, D\* destroys more of the kind, and a priest who fails can't try that undead again in the fight |
 
-**Turn Undead** (the priests' button on the USE screen, not a spell). With the
-box ticked the game's routine looks up AD&D's table (2nd edition) by the
-undead's hit dice and the priest's level:
-
-| Hit dice \ priest level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10-11 | 12-13 | 14+ |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 or less | 10 | 7 | 4 | T | T | D | D | D\* | D\* | D\* | D\* | D\* |
-| 2 | 16 | 13 | 10 | 7 | 4 | T | T | D | D | D\* | D\* | D\* |
-| 3-4 | 19 | 16 | 13 | 10 | 7 | 4 | T | T | D | D | D\* | D\* |
-| 5 | 20 | 19 | 16 | 13 | 10 | 7 | 4 | T | T | D | D | D\* |
-| 6 | --- | --- | 20 | 19 | 16 | 13 | 10 | 7 | 4 | T | T | D |
-| 7 | --- | --- | --- | 20 | 19 | 16 | 13 | 10 | 7 | 4 | T | T |
-| 8 | --- | --- | --- | --- | 20 | 19 | 16 | 13 | 10 | 7 | 4 | T |
-| 9 | --- | --- | --- | --- | --- | 20 | 19 | 16 | 13 | 10 | 7 | 4 |
-| 10 | --- | --- | --- | --- | --- | --- | 20 | 19 | 16 | 13 | 10 | 7 |
-| 11 or more | --- | --- | --- | --- | --- | --- | --- | 20 | 19 | 16 | 13 | 10 |
-
-- A number: a d20 of it or more **turns** the undead: it is Afraid (as Cause
-  Fear makes a creature) and flees for 3d4 rounds. The Player's Handbook says
-  turned undead flee or are kept at bay but gives no time; 3d4 rounds is the
-  first edition's, used by the 2nd-edition-compatible rules too.
-- **T** turns it with no roll; **D** destroys it with no roll (the game's own
-  destruction); **D\*** destroys it, and up to 2d4 more of its kind (the same
-  monster: one sheet) caught by the same turning are destroyed with no roll.
-- **---**: no chance; nothing is rolled.
-- A d20 under the number: not turned, and **that priest can't try again on that
-  undead in this fight** (the button's own text: "May be used once per
-  creature"); another priest still can. Forgotten when the next fight starts.
-- The game has no kinds of undead, so its hit dice pick the row (AD&D's
-  zombie, ghast and special rows aren't used: the game's 2 HD Zombie uses the
-  2 HD row). Each use ends the priest's turn, as before; it tries each undead
-  in its area, one at a time.
+**Turn Undead** (the priests' button on the USE screen, not a spell) goes by AD&D's turning
+table: by the undead's hit dice and the priest's level, a d20 turns it (it flees for 3d4 rounds),
+or it is turned or destroyed with no roll, or it can't be turned at all; a priest who fails can't
+try that undead again in the fight. The table and each result: [AD&D's turning
+table](HOW-THE-GAME-WORKS.md#adds-turning-table).
 
 A monster with no class (an elemental, a slaad, Mastyrial, the Rampager) had
 level 0 for its saves, so Cloudkill slew it whatever its size, Scare frightened
@@ -1295,108 +1266,24 @@ game's level everywhere else is left as it was).
 
 **The saves that couldn't fail.** In the game a creature that "can't save"
 (Chaos for all but warriors, Cloudkill on the weak, Scare below 6th level, and
-this box's Color Spray) always saved. That is [a bug fixed](#the-games-bugs-fixed),
+this box's Color Spray) always saved. That is [a bug fixed](GAME-BUGS.md#spells-and-psionics),
 whether the box is ticked or not: "can't save" fails, even on a natural 20
 ([what the game did](HOW-THE-GAME-WORKS.md#the-games-saving-throws)).
 
-**In more detail:**
+Each spell in more detail, with the dice log's lines: [Spells and psionics as the manual
+describes them](HOW-THE-GAME-WORKS.md#spells-and-psionics-as-the-manual-describes-them), in How the
+game works.
 
-- **Fire Shield**: +2 on its caster's saves against spells of fire or cold
-  (`+2 Fire Shield` in the log's save line); the half damage from them and the
-  damage a melee attacker takes back are the game's own.
-- **Blur**: +1 on its creature's saves against spells (`+1 Blur`), beside the
-  game's −2 to attackers.
-- **Chill Touch**: the game already takes 1 STR off a creature that fails its
-  save (Weakened), but gave the effect no time, so it ended at once; it now
-  lasts an hour (60 rounds), the STR coming back after (AD&D's lost Strength
-  comes back a point an hour). Each touch takes 1 more. On an undead (which, in
-  AD&D, takes no damage or STR loss and flees) it does nothing but make the
-  undead Afraid for 1d4 rounds, no save:
-  `Chill Touch on Zombie, undead: no damage, no STR lost; Afraid 1d4 = 3 rounds instead`.
-  With [Spells roll to hit](#spells-roll-to-hit) the touch rolls first.
-- **Cloudkill** by the target's level for saves (a monster with no class: its
-  hit dice): under 4, it dies with no saving throw; 4 or 5, it saves against
-  poison (at the record's −2) or dies; 6 and up, the damage as before, a save
-  halving it. The death is the cloud's own damage a thousand times over, each
-  time the cloud strikes (as cast and at each round in it):
-  `Cloudkill: Guard dies (under 4 HD: no save; its level for saves 3)`.
-  AD&D's bands are by hit dice (4+1, 6); the game's levels are whole numbers.
-- **Feeblemind**: the game already makes INT and WIS 3 while it lasts, and
-  they come back as they were when it ends; it stops spells. With the box it
-  stops psionic powers too (each fails its power
-  check, costing half the PSP as any failed check does:
-  `Seneca is feebleminded: Biofeedback can't be used (no psionics)`), and the
-  mod's Heal (with [the new spells](#6th-level-priest-spells)) cures it: `Heal cures Seneca's Feeblemind: INT and WIS as they were`.
-  Dispel Magic still can't (the game's rule). The scores are worked out afresh
-  from the character sheet's, which Feeblemind never changes.
-- **Lower Resistance**: the creature's magic resistance 30% + 1% a level of the
-  caster lower, at least 0 (`-40 Lower Resistance on it, level 10`), where the
-  game halved it; the level is the cast's, kept with the effect. Cast at a
-  creature already under one, the bigger of the two counts.
-- **Strength** and **Cat's Grace** roll by the target's classes, the best die of
-  a multiclass character's: `Strength: 1d8 = 6 (fighter) -> Ester's STR +6`.
-  Adrenalin Control stays 1d6. Strength and Adrenalin Control on one creature
-  don't add up: the bigger counts (Strength 1 and Adrenalin Control 4 make STR +4).
-  A second Strength or Cat's Grace replaces the first (the game's own).
-- **Rainbow Pattern** holds 1 round a caster level (its record's time), and a
-  creature it holds is freed by any damage, a blow or a spell
-  (`Guard takes 20 damage: Rainbow Pattern's hold on it ends`); Hold Person's
-  and the others' Paralyzed aren't touched. The pattern itself stays on the
-  ground for a few rounds (2d3, the game's), and anyone in it (the caster too)
-  saves again each turn.
-- **Cell Adjustment** heals 1d4 hit points (the game's 2), and its record already
-  cures disease: `Cell Adjustment: 1d4 = 3 -> Seneca healed 3 HP, and Seneca is cured of disease`.
-- **Biofeedback**: the game already takes 2 off each blow (melee or missile) and
-  any other crushing, edged or pointed damage, but a blow of 2 or less did none;
-  now at least 1. The log's hit line shows it (`-2 Biofeedback`).
+**The monsters as the manual describes them** (the same box). Seven monsters get a power the
+manual gives them, or lose one it doesn't: the Shadow and the Greater Shadows drain STR (and cold
+doesn't hurt them), the Babau's and the Blue Slaad's poison is deadly, the Tari's bite brings
+disease, the Styr breathes fire, and the Djinn turns invisible and makes mirror images of itself:
+[the monsters, in detail](HOW-THE-GAME-WORKS.md#the-monsters-as-the-manual-describes-them).
+
+Some spells are left as the game has them, where it has no way to do what the manual says:
+[known differences](HOW-THE-GAME-WORKS.md#known-differences-left-as-they-are).
 
 How it is done: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#spells-and-psionics-as-the-manual-describes-them).
-
-**The monsters as the manual describes them** (the same box). Where
-the manual (pp. 33-52) gives a monster a power its record hasn't, or the record
-a power the manual hasn't:
-
-| Monster | The game | As the manual |
-|---|---|---|
-| Shadow | 1d4+1, and 2d6 cold, each hit; cold hurts it | its chilling grasp's light 1d4+1, and **1 STR drained** each hit, no save (Weakened for 2d4 turns; each hit its own, so they add up, STR never below 3); unaffected by cold, +1 weapons to hurt it (as before) |
-| Greater Shadow (the 6-HD Shadow, Shadow Guard, King, Prince and Worker, Cragg, Tanelyv, Tristram) | 2 attacks of 2d6, each paralysing for 2d6 rounds (a save); any spell hurts it in full | 2 attacks of 2d6 and **1 STR drained** each hit, as the shadow's; "unaffected by cold-based attacks"; +1 weapons, AC 4, HD 6 and THAC0 15 as before |
-| Babau | its claws a corroding touch (worn armour and the weapon held may be eaten) | its horn's **deadly poison** (the priests' Poison, AD&D's: a save against poison, else death, in a fight too) |
-| Blue Slaad | disease, 1 rake in 10 | its bite's **deadly poison**, as the babau's |
-| Tari | no disease; HD 2, THAC0 18, AC 10, a 1d2 bite | a bite of **1d3** that brings **disease 1 in 20** (a save against poison), HD 3, THAC0 17, AC 6 (better with the leather some wear) |
-| Styr | no breath; any weapon hurts it; HD 10, THAC0 11 | **breathes fire for 3d6** one turn in four (a save halves), **+1 weapons** to hurt it, HD 14, THAC0 7; MR 30%, AC 0, 4 attacks of 2d10 as before |
-| Djinn | a fighter | at its first turn of a fight it **turns invisible** (Improved Invisibility, 14 rounds) and makes **1d4+3 mirror images** of itself ("their ability to use illusions and become invisible") |
-
-The Look box and its description say so (`1 STR drained (Weakened, 2d4 turns;
-no save)`, `Breathes fire for 3d6 one turn in four`), and the dice log names
-each: `Shadow drains 1 STR from Gerakis: Weakened for 2d4 = 5 turns (no save)`,
-`Tari's bite on Seneca: 1 in 10, and a d2 for the manual's 1 in 20: 2 -> no
-disease`, `Djinn turns invisible (14 rounds) and makes 6 mirror images of
-itself`. The Styr, the Djinn and the Tari are made so in the Loader's copy of
-the game's objects, and in a saved game too, as they come on the map with the
-Loader running (and back as the game's with the box unticked).
-
-**Known differences left as they are.** The game has no way to do these as the
-manual says, or the change would make a different spell rather than fix one:
-
-| Spell | The manual | The game |
-|---|---|---|
-| Confusion, Chaos | a save each round | one save, as the spell lands |
-| Mirror Image | images last 3 rounds a level | images last until struck (an effect lasts either uses or a time) |
-| Shield | better saves against missiles | the game has no saves against missiles; Shield's AC 4 works, and it stops Magic Missile |
-| Invisibility | ends when its creature casts any spell | ends on an attack, or a spell at an enemy |
-| Protection from Normal Missiles, Deflection, Inertial Barrier | stop normal missiles (Inertial Barrier: halves breath, missiles, gas, acid) | one effect for all three: a missile weapon's hit does no damage, and breath weapons miss outright; no spell is stopped, Magic Missile included. They differ only in time (a turn a level; level + 5d3 rounds; while kept up), who can have them (anyone touched; the caster alone) and cost |
-| Control Body | the controlled creature fights at -6 | Charmed 5 rounds, no -6 |
-| Mass Domination | up to five creatures | one |
-| Detonate | 1d10 to everyone within 10' | the target only |
-| Quicksand | held 1 turn + 1 round a level | Stuck a round at a time, put on again each round while the quicksand lasts (5d3 rounds of its own); its record's time changes nothing |
-| Feeblemind | INT and WIS drop "dramatically" | to 3 (the game's own choice, an idiot's in AD&D) |
-| Chill Touch | Strength back a point an hour, repeated touches | each touch's point back after an hour |
-| Rainbow Pattern | one save, as it is cast (a time of its own: "special") | the pattern stays on the ground for 2d3 rounds of its own and makes everyone in it, the caster too, save again each turn (a round a level and damage ending a hold are the manual's: above) |
-| Biofeedback | damage −2 | −2 from blows and any crushing, edged or pointed damage, not from fire or other spells |
-
-What else the manual and the game disagree on, and why the rest is left:
-[spells against the manual](https://github.com/daaki85/darksun-obsidian-edition/blob/obsidian-edition/reports/spells-against-the-manual.md)
-(a report in the repository).
 
 #### Spells roll to hit
 
@@ -2236,6 +2123,8 @@ which it defines but never places or gives (the cluebook puts it in the Elven
 Caravan): **Seref**, the Draj agent there, carries it, and so does the Seref
 the party meets on the road with his guards and daggorans.
 
+![Dream's pack with the bone scale set: the chest, arm and leg pieces, and the Bone Helm under the pointer with its name](docs/bonescale.png)
+
 **People who fought with their fists.** The game gave some of the people the
 party fights nothing at all, so they struck bare-handed: Seref's Drajian Guards
 and the slave village's, the White Sand Outlaws who burst from the sand
@@ -2274,110 +2163,12 @@ character can use. Dunesong, the bow +1 the Bowyer sells, counts at his
 archery target as the game's own bows do ([the target's
 rules](HOW-THE-GAME-WORKS.md#the-bowyers-archery-target)).
 
-**Prices** follow the game's own (a price can't go past 65,535; the game's
-dearest, the Wand of Missiles, is 65,000):
-
-| Items | Price |
-|---|---|
-| Magic melee weapons, and Dunesong | 20,800 a plus (41,600 for a +2; a +1 with a spell 22,000; the game's Bow +2 is 50,800) |
-| Legcrusher's Cahulaks +1; the Cahulaks +2 | 11,600 (the game's Cahulaks +1's); 32,400 (that, +20,800 for the plus more) |
-| Windlash; Skycutter | 2,800 (as the game's Sling +1); 3,500 (as its Sling +2) |
-| Plain metal weapons | 50 to 300 |
-| Bracers of defense | 5,000 a point of AC |
-| Rings and Cloak of Protection | 15,000 |
-| Inixhide; the Ashen Robe | 6,000 |
-| Veiled Robe | 40,000 |
-| Cloak and Boots of Elvenkind | 25,000 and 20,000 |
-| Boots of Speed | 20,000 (as the game's Serpent Boots) |
-| Warden's Arms and Legs; Chest; Helm | 27,000 each; 36,000; 30,000 |
-| Arrowbane; Sunking Crown | 30,000; 40,000 |
-| Girdle of Back Defense; Golden Girdle of Urnst; Amulet of Magic Resistance | 25,000; 20,000; 35,000 |
-| Gutterward; Ironbulwark | 25,000; 65,000 (the game's Drake Shield +1 is 25,400, El's Shield +2 50,200) |
-| Tome of Understanding | 43,500 (AD&D's) |
-
-![The Tome of Understanding's box in the game: a night-steel book with a fiery emblem, 43500, Tome/Understand, and the icon to click](docs/tome.png)
-
-**The Warden's Plate** is plate mail +1 in four pieces: the chest 4 better
-than no armour (its AC 3, +1), the arms and legs 3 each (AC 2, +1), the helm 2
-(a helm's AC 1 with [helms giving AC 1](#helms), +1): 12 better as a set, so a
-wearer with no other help goes from AC 10 to AC −2. (With that rule off the
-helm gives only its +1: 11 better, AC −1.) The game adds up its pieces' AC
-this way for all armour, so a full set does better than AD&D's plate mail +1
-(one suit, AC 2: 8 better). It is metal armour, worn by the classes that can
-wear the game's chain (no single-class thieves), and kept from more with
-[class restrictions](#class-restrictions). **Grey's Scale**'s arm and leg
-armour is AC 3 each (the game's is 2).
-
-![Two item icons from the inventory screen: Arrowbane, a silver circlet, and the Sunking Crown, a gold crown](docs/head-items.png)
-
-![Dream's pack with the bone scale set: the chest, arm and leg pieces, and the Bone Helm under the pointer with its name](docs/bonescale.png)
-
-**Icons and names.** Each has an icon of its own (in [Items](ITEMS.md)), made
-from the plain item's the way the game makes its magic items' (a few pixels in
-the colours it cycles like fire); dropped on the map they look like the plain
-item. The game's names are at most 15 letters, so the rings are
-**RING/PROTECTION** and the cloak **Cloak/Protectn**; the Loader's screens and
-the log give them in full. As with its own items, the game puts the material
-first: **Leather Inixhide**, **Metal +1 Shadowseeker** in the item box.
-
-![Shadowseeker's item box in the game: 22000, Detect Invisibility's icon, "Metal +1 Shadowseeker", 1D6+1/1D8+1](docs/shadowseeker-box.png)
-
-**Alagorn**, the wizard of the Painted Badlands who identifies magic items,
-tells the story of every one of the mod's magic items in [Every magic
-item](ITEMS.md#every-magic-item) but the plain Gythka +2, the two cahulaks, the
-Boots of Speed, the two girdles and the Amulet of Magic Resistance when
-the party carries it, in the menu the game would put it in (swords, weapons,
-rings, armor, shields, clothes or other items), before "Nothing". As with the
-game's own, one story for each kind: the four pairs of bracers share one, and
-so do both rings of protection. The Warden's Plate's pieces each tell a part
-of Haldren's, the last of the Wardens.
-
-Two of the game's own stories now say what the item does (always, a fix of the
-game's text): the **Quicksilver Glove** (his menus called it "Quicksilver
-Gauntlets", grafting a weapon to the hand) "holds a psionic charge. Whatever it
-strikes is blasted from within, and the blast can shatter what the foe wears":
-it casts Detonate on every hit; the **Helm of Contemplation** (a "shield of
-thought against all psionic attacks") "turns a creature's gaze back on itself":
-Gaze Reflection.
+For those who wear no armour the mod adds AD&D's bracers of defense and two magic robes; for those
+who wear the most, the Warden's Plate, plate mail +1 in four pieces. What they do, what every new
+item costs, the new icons and names, and what Alagorn tells of the new items are in Items: [the
+mod's new items](ITEMS.md#the-mods-new-items).
 
 How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#new-items).
-
-#### Bracers of defense
-
-A preserver can't cast in armour (with [class
-restrictions](#class-restrictions)), so the mod adds AD&D's bracers of defense
-([where](ITEMS.md#every-magic-item)). They are worn on the arms, in the arm armour's place, and
-give the AC their name says: AC 6 is 4 better than no armour, AC 2 is 8 better.
-As in AD&D they give nothing while armour is worn: on the arms, legs or chest,
-or a helm (bone, leather or metal, magical or not). A shield, rings and cloaks
-of protection, and the mod's circlet and crown (worn on the head, but not
-armour) go with them. They aren't armour to anything else: a preserver casts in
-them, a thief wears them, and a ring or cloak of protection still counts. In the
-game they are **BRACERS/DEFNS** with their plus (Bracers/Defns+4 is AC 6),
-priced 5,000 a point of AC.
-
-How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#bracers-of-defense).
-
-#### Robes
-
-Two magic robes for those who go without armour: preservers, psionicists and
-druids alone may wear them. A robe is worn on the chest, in the chest armour's
-place; like the bracers its plus betters AC only while no armour is worn on
-the arms, legs or head, and it isn't armour to anything else: a preserver
-casts in it, and a ring or cloak of protection still counts. Bracers go with
-it.
-
-| Icon | Robe | What it does | Price |
-|---|---|---|---|
-| ![](docs/items/ashen-robe.png) | **Ashen Robe** (+1) | AC 1 better; +1 on saves against wizards' and priests' spells | 6,000 |
-| ![](docs/items/veiled-robe.png) | **Veiled Robe** (+2), a robe of the Veiled Alliance | AC 2 better; +1 on every save; a wizard spell slot more at spell levels 1, 2 and 3 where the wearer has any | 40,000 |
-
-Where they are: [Every magic item](ITEMS.md#every-magic-item).
-
-The dice log and the Loader name a robe among a save's modifiers, and the
-Spells tab counts the Veiled Robe's slots. Alagorn tells both their stories.
-
-How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#robes).
 
 ### New people
 
@@ -2551,7 +2342,7 @@ The first wave is six **champions** in place of the game's:
 
 They fight with their weapons, the two archers shooting, and their armour counts
 on top of their kinds' AC, as the party's does (and as the game's own people's
-do: [their gear is worn](#the-games-bugs-fixed) from the start too).
+do: [their gear is worn](GAME-BUGS.md#fights) from the start too).
 What they carry is on their bodies afterwards; the Tohr-kreen falls as a dead
 Tohr-kreen of its own, Kreenfang in it. It comes once. A party that breaks out
 with Scar instead, or leaves the pens another way, doesn't meet them. (The dead
@@ -2695,7 +2486,7 @@ reached, a figure near a full store keeps its outfit until the next area).
 Without this, some 30 to 60 changes in one area filled the store, and figures,
 the party's and the monsters', vanished from the map until the next area. (The
 store is a different limit from the game's 300 picture slots, which [the bugs
-fixed](#the-games-bugs-fixed) also see to: "Graphics disappearing in a busy
+fixed](GAME-BUGS.md#screens-and-memory) also see to: "Graphics disappearing in a busy
 area".)
 
 ![The party in the arena as the game draws them (left) and with gear and shadows on (right): Gerakis with his bone long sword and gythka, Cermak with his staff and sling, Cilla (an elf) with her bone long sword and sling, each casting a shadow toward the lower right](docs/gear.png)
@@ -3002,78 +2793,7 @@ How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#more-characters).
 
 ## The game's bugs, fixed
 
-*Spoilers: some of these name places and people from later in the game.*
-
-The patched game mends these whatever the Options tab says (the rules the game
-got wrong, each with a switch, are the [rule changes](#rule-changes)):
-
-| | The game | With the Loader |
-|---|---|---|
-| **Graphics disappearing in a busy area** (SSI's note 2712 for Wake of the Ravager, the same engine) | The game keeps 300 picture slots for walls, doors, figures and items lying about, and gives none back until the next area: once a visit had used 300 (items of many kinds dropped, bodies, spells, new monsters), a new picture got no slot and wasn't drawn: an item on the ground, a body, a figure, a doorway | Once all 300 are taken, a slot holding a picture nothing uses now (out of memory, named by no wall or thing on the map) is reused, its picture put where it fits in the store (a different limit from the picture store [the party's outfits](#what-the-party-wears) fill) |
-| **Mirror Image** (and Reflected Image) | The images stopped no weapon blow, and took a spell for one creature three times in four whoever cast it: Armor cast on oneself was lost, an image with it | Each hit, and each foe's spell for one creature, strikes an image three times in four (Reflected Image's half the time); your own side's spells always get through ([how long it lasts](HOW-THE-GAME-WORKS.md#spells-and-effects)) |
-| **Armor** | A charge used each time any spell or blow landed on the wearer, as well as for the damage: two for each hit, and one for a friend's Bless | One charge for each damaging hit |
-| **Share Strength** (any maintained power on someone else) | Ended, it stayed on the one who got it, and could end another of the psionicist's own effects instead | It ends on everyone it was on |
-| **Dispel Magic** (the preserver's) | Also laid "No spell use" on everyone it caught, your own party too, which Dispel Magic can't remove | Only dispels, as the cleric's always did |
-| **Cause Serious and Critical Wounds** | 2d9 and 3d9 (the Cure spells heal AD&D's 2d8+1 and 3d8+3) | 2d8+1 and 3d8+3 |
-| **Absorb Disease** (the psionic power) | Also gave the psionicist 1d6 STR, as Strength does, and the STR alone when there was no disease to take | Takes the disease only |
-| **Bless** and **Aid** | Left out those of the caster's side with an enemy beside them, but measured it from the wrong place, so the wrong ones were left out | Measured from where each stands |
-| **Negative Plane Protection** | Saved as against Vampiric Touch, which allows no save, so it never stopped anything | A save against paralysis, poison and death, as AD&D's against death magic: saved, the undead's touch is stopped and it takes 2d6 |
-| **Acid Arrow** | After the hit its acid never burned again: its time was a timer that only ended it, and nothing spent it a round at a time | 2d4 acid at the start of each round it lasts (a round for each started minute of its time: four for an 11th-level caster) |
-| **Scare**'s save | No one saved, of any level (a 7th-level fighter was Scared): its record allowed no save, so the save code's rules for it never ran; and those asked for an elf or half-elf priest as one creature of both races | 6th level and up always save, as the game's code means; below 6th level creatures can't save (whatever the Options: the fix below makes "can't save" fail), but an elf or half-elf priest saves as usual |
-| **"Can't save"** (Chaos for all but warriors, Cloudkill on the weak, Scare below 6th level, Color Spray with the manual's spells) | The saving throw compared its total with the number needed unsigned, so the −100 for "can't save" made a total such as −85, read as 171: the creature always saved | "Can't save" fails, even on a natural 20 (the game took a natural 20 as a save before adding anything; the patched game adds the modifiers first: [the game's saving throws](HOW-THE-GAME-WORKS.md#the-games-saving-throws)) |
-| **Cloak of Bravery** | Its +4 on saves against fear asked for a mark no spell had, so it never applied | +4 against Scare, Fear, Cause Fear and Insect Plague (and a Cloak of Fear's), and the new [Spook](#new-wizard-spells) |
-| A **berserk** or **confused** party member | Could end it fighting for the monsters' side: their side is rolled each turn, and only a charm's end put it back | Back on their own side when it ends |
-| The **fire elementals** | The resistances the wrong way round: the fire elemental hurt by +1 weapons, the lesser one only by +2 and by fire | The fire elemental needs +2 weapons and the lesser one +1, as the clue book has them, and neither takes anything from fire |
-| **Walls** cast by monsters | The computer aimed both ends of a wall at the same spot, so its walls were a single point | Across the line of fire, four cells long |
-| A **thri-kreen's claws and bite** | Crushing, as the game makes every unarmed attack, so a creature crushing weapons can't hurt (a mastyrial) was safe from them | Edged: they cut, for a thri-kreen in the party ([Erdlu Claw](#new-wizard-spells)'s talons too) |
-| **Thief skills**' equipment penalty | Taken for anything in the hands, quiver or leg slot (a weapon held cost 5 to 10 points), never for the armour worn | None ([how the game works out thief skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)) |
-| Items that raise or lower an **ability score** | Changed the score wherever they were, the backpack too, so one carried did as much as one worn | Only while worn ([how](DEVELOPMENT-CONTENT.md#worn-items-the-gladiators-armour-and-psionic-blast)) |
-| The **gladiator's armour optimisation** (AC 1 better a 5 gladiator levels) | Given with no armour on, where Dark Sun gives it to armour worn | Only with armour on (arms, legs, head or chest; not a shield, bracers or a robe) |
-| **Psionic Blast** on a party member | Its imagined wounds (down to a fifth of its hit points) were real and stayed | Given back as the fight ends; until then a blow that would kill it knocks it out instead, and one knocked out wakes with them (the dice log says so; [how](DEVELOPMENT-CONTENT.md#worn-items-the-gladiators-armour-and-psionic-blast)) |
-| The game's **people's weapons and armour** | Carried in their packs until each one's first action in a fight: until then AC 10, armour unworn, no weapon in the Look box; anyone hit before acting (an opening blow, a backstab, the first round) met no armour | Worn and in hand as they come on the map, as the game puts them on: the best weapon in the main hand, a shield or a second weapon in the other, a bow and its arrows, armour and a helm. The mod also puts on a cloak, a belt, boots, an amulet and up to two rings, which the game never did. Each counts by the same rules as the party's |
-| **DELETE** in the roster | With the list scrolled, deleted another character | Deletes the one chosen ([more characters](#more-characters)) |
-| A **New** character's thief skills | Shown as 0 | Shown as they are ([more characters](#more-characters)) |
-| The **creation screen's least scores** | The class's prime requisite raised to 17 and every other score to 9 to 14, against the manual: a fighter's STR never below 17, a thief's CHA never below 9, while a druid's CHA, a ranger's STR and DEX and a psionicist's CON had no minimum of their own | The manual's: cleric WIS 9; druid WIS 12, CHA 15; fighter STR 9; gladiator STR 13, DEX 12, CON 15; preserver INT 9; psionicist CON 11, INT 12, WIS 15; ranger STR 13, DEX 13, CON 14, WIS 14; thief DEX 9; a multiclass character the highest of their classes' ([character creation](HOW-THE-GAME-WORKS.md#character-creation)) |
-| **XP for high prime requisites** | None, though the manual promises 10% more XP to a class whose prime requisites are all 16 or more | 10% more of every award for each such class, divided by a multiclass character's classes (one XP for them all); a human's class followed now. The Loader adds it as each award comes, so it needs the Loader following the game ([Experience and levels](PLAYER-GUIDE.md#experience-and-levels)) |
-| **The Trustee** in the slave pens | His rounds' two pauses took their corner from numbers other scripts in the pens change, so he could set off for a spot that doesn't exist and stay busy ("I'd love to talk more...") for good. And his key, picked in his talk by a thief with no room for it, fell at his feet: after each step of his rounds he went back for it ("There it is!") without picking it up, and stalled the same way | The pauses keep a corner of their own, and his busy line starts his rounds again, so one already stuck walks on once talked to; the key stays where it lies, for the party to pick up, and he says the busy line once and walks on; and a save made while he (or anyone on rounds of their own) walked no longer leaves him standing when loaded |
-| A thief skill rolled **for the whole party** (a trap going off, hearing the men by the wagon) | Meant for the member with the best chance, but the pick compared the wrong way round, so the first party member always rolled | The member with the best chance rolls ([where the game rolls them](HOW-THE-GAME-WORKS.md#where-the-game-rolls-thief-skills)) |
-| **Random monsters** (a vanishing body, a survivor's warning) | How many came was worked out from the wrong monster's strength, and in seven regions the last monster on the list divided by 0, which ended the game ("Divide error") | Worked out from the monster that comes: 1 to 6, fewer of the strong ones |
-| **Resting while poisoned** with a druid of 7th level or more | The druid's free Neutralize Poison at the rest was cast after the rest had already looked at who was poisoned, so the poisoned member died anyway (and a disease cured at a rest gave STR back only at the next) | The free cures come first: a 7th-level druid's cure saves the poisoned member, and STR comes back the rest a disease is cured ([resting](HOW-THE-GAME-WORKS.md#resting)) |
-| A magic item's **glow in a shop** | Stood still: a shop runs its own loop, which never turned the colours that make it shine | Shines, as on the map and in the inventory |
-| The game's **Sling +1** | A blank icon (its picture is missing from the game's data) | The Sling's, with a glow |
-| The game's **Great Axe +3** (the Army Commander's) | Its type had no material, as a ring's: its name showed none, and no sphere's cleric could wield it | Metal, as its icon's grey and teal head and its weight have it: "Metal Great Axe +3" |
-| **View Character's DAM line** with a wooden, bone, stone or obsidian weapon | One or two more than the attack does: it left out the weaker material's damage (2 for wood, 1 for the others, on a weapon with no plus), which the inventory's line and the attack take off | The same as the inventory's and the attack's |
-| The **DAM lines** of a **hasted** or **slowed** character (the inventory screen, View Character) | The attacks a round as if neither: a fight's attack doubles them for Haste and halves them for Slow, but the lines never did, and the inventory's showed half an attack a round (Slow's) as one | Twice, or half, as the attack has them (`3x1D8+13` hasted, `0.5x1D8+6` slowed), as on the Loader's Characters tab |
-| **Kurzak** calling for **Legcrusher** once the party has killed him (he sends him when they're slow to come to a fight) | Kurzak went on calling for him, greeting the party as if he'd brought them, and speaking of him as still about (Dinos too) | He notices: "Legcrusher? Where has that lump got to? Gladiators! Get up here yourselves!", "I sent Legcrusher after you, and he never came back. You wouldn't know anything about that, would you?", "That was Legcrusher, the monster trainer. He's gone missing."; Dinos says Kurzak will come down himself |
-| **Darkhold**'s scripts | Story events left some creatures' triggers pointing at an empty script: the wyvern scene's creature and two in the queen's chamber lost their look text, and the portcullis guard no longer fought back when attacked | Each keeps its own |
-| The **Lava Rifts** ranger | His sight trigger, set again, pointed at the hermit's script: endless hermit talk, and a second Iron Necklace | He keeps his own |
-| **Linara** in Gedron | Once the extract was delivered, her talk ended with no menu, so Jasmine's spellbook could never come up | Her talk goes on to her menu |
-| A **ranger tracking** at the Wagon Train's bodies | The check looked for the ranger's flag where the character's record isn't, so found no ranger; it tested a ranger's level as a bit of its class; and the d20 had to beat the score, not come under it: "You cannot interpret the tracks surrounding the body" | A ranger reads the tracks on a d20 under its score (WIS, more at higher ranger levels), for XP |
-| The slave pens' **sewer grate** | The search for a weapon in hand stopped at once, so "hack the lock off" was never offered; and a hack that worked left the grate shut; one that failed said the weapon broke, and kept it; an attack on the grate always broke its lock | Offered to a member with a weapon in their right hand. A hack works half the time, always with Bloodwrath, and opens the grate, saying "his" or "her" as picking the lock does (one that fails breaks a weapon that can break in a fight, a plain wooden, bone, stone or obsidian one, which is lost; a metal or magic one "rings off the grate, unharmed"). An attack breaks the lock on a Strength roll, as ripping the grate open does, or "fails to damage the lock" |
-| **Missiles from behind** | An arrow or a sling stone counted as from behind by the target's facing, at any distance: +2 to hit, and the target's DEX and shield lost, for a whole room's width (a ranger's three arrows each) | Only melee is from behind by the target's facing; a missile counts so only as a hidden archer's shot, "unseen" ([hiding in shadows](#hiding-in-shadows-to-backstab)) |
-| **Pehtucl's ambush** at the slave pens' fountain | Besides the five guards he calls, every other Arena Guard and Guard in the pens (up to ten) was sent after the party from wherever it stood, and a guard attacked in the passage before the fountain, where the party stands as he turns on them, raised the alarm (every guard in the pens hunting), though the fight was meant to be fought there unheard ("the roar of the fountain masks his voice") | Only Pehtucl and the five guards he calls hunt the party; the fountain masks a yell in that passage too, as in the fountain's room |
-| The **Rebel Mindhome** in Undermountain | Once the party had killed the four spiders, every talk to the Mindhome's leader gave the thanks and its 5000 XP again | The 5000 XP comes once |
-| The **messenger in region 9** (the men who burst from the sand, after the elves leave) | Came only if the party left the region and came back after the elves had gone, so a party that stayed never met him | He comes once the elves have left |
-| The **Draj serf** led to region 10 | One left more than 14 squares behind stayed in region 38 without his orders, and talking to him again ran the whole deal and gave a second obelisk gem | He comes along however far behind |
-| A **multi-class preserver or psionicist** talking about the haystack | The talk tested the class as the whole class word, so only a single-class one could answer "Being a powerful magician, I scried it" or "I can read your very thoughts" | Any preserver or psionicist |
-| **Dagolar's slime book**, in his laboratory | "Magical training" to read it took a psionicist, a preserver, a fighter or an air cleric, not an earth, fire or water cleric or a druid | A cleric, druid, preserver or psionicist (any one of the character's classes); a fighter has no magical training |
-| The cave guide's "Why don't you go bother someone **your own size**" | Asked "not a dwarf, or not a halfling?", true of everyone, so a dwarf or halfling heard it too | A dwarf or halfling is told to bother "someone else" |
-| Lines that depend on the **race or sex** of the one talking to someone | Read from the wrong record, so they always took the party's active member for a man of no race: a halfling was never greeted as a fellow halfling ("Oh, it is a relief to see a fellow halfling") nor named by race in the insult that follows, a woman was told "only a mad man would think of fighting Draj" and of "his purse", a thri-kreen never heard the bell the mastyrial hears near Demothi's camp, nor was told "your help" rather than "the help of any humanoid" | Each reads the active member's own race or sex |
-| **"Out of memory in OEOpenGraph"** in a long session | The map needs a large block of memory each time it comes back (after the USE screen, a talk, a menu), and with the map up the game had little more than that to spare, so it could stop | Part of the game's code and its music buffer kept in upper memory, so there is much more to spare, and a warning in the dice log if it runs low (`Memory is running low: ...`) ([crash, freeze and item reports](README.md#crash-freeze-and-item-reports)) |
-| **Slay Living**'s description | Said a creature that saves takes 3 to 17 | Says 2 to 16 (half of 4d8), what the game does |
-| A character's **most PSP** (worked out at each level-up check, for every party member) | The WIS bonus read from the creation screen's record, not the character's (in play, any number at all), and the bonus tables too short, so INT 22 gave nothing, INT 23 to 25 20 to 24 too many, WIS 23 to 25 none at all, CON 23 to 25 0 to 2 | Each from the character's own score: CON and INT the score less 15, WIS twice it less 10, on to 25 (found by yuan-ti). The most only ever rises, so a character's may go up once, the next time it's worked out |
-| A fight's **music** | An attack that starts a fight asks for the music level the region gives its creature, but read it with the wrong step, so every creature but the region's first got another's level | The creature's own level (found by yuan-ti) |
-| An archer's **pointer** after a shot | Showed "can't shoot" once any shot of the round was made (one that killed its target, say), though the click still shot the shots left | Shows "can't" only once every shot of the round is made |
-
-Two more have a switch: Cilla's figure (the game gives the elf the half-elf
-woman's; see [Elves and half-elves](#elves-and-half-elves)), and a click on a
-spell's icon on the Effects screen ending it ([Spells on the Effects
-screen](#spells-on-the-effects-screen)). The script bugs are mended in the
-Loader's copy of the game's scripts; many were found by yuan-ti and the OpenDS
-project ([credits](https://github.com/daaki85/darksun-obsidian-edition#credits)). How the fixes work:
-[DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#the-games-spells).
-
-**Saved games.** There's no need to start a new game for these: they're in
-the patched game, not in a save, so they work from the moment a game is
-loaded. What a bug already did stays in the save: [your saved
-games](README.md#updating-backups-saved-games-and-the-loaders-files) says what.
+The patched game also mends some fifty of the game's own bugs, whatever the Options tab says:
+spells that never did what they say, fights, screens, and people and quests that could stall.
+They have a page of their own, grouped by kind: [The game's bugs, fixed](GAME-BUGS.md) (some
+spoilers).

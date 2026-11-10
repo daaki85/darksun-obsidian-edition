@@ -143,6 +143,7 @@ class Ghosts:
         self._table: Optional[bytes] = None
         self._on: Optional[bool] = None
         self._off = False  # (GHOST_ON put to 0 while tables are made, not on again yet)
+        self._worker: Optional[threading.Thread] = None  # (the last thread started to make tables: the tests join it)
 
     def _make(self, dac: bytes) -> None:
         made = tables(dac)
@@ -183,7 +184,8 @@ class Ghosts:
                 self._off = True
                 with self._lock:  # (only once the write is made: marked first, a refused write
                     self._making = wanted  # left them marked as being made, and never made)
-                threading.Thread(target=self._make, args=(self._dac,), daemon=True).start()
+                self._worker = threading.Thread(target=self._make, args=(self._dac,), daemon=True)
+                self._worker.start()
             if made is not None:
                 blend, rep = made
                 guest.write(seg * 16 + GH_BLEND, blend)

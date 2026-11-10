@@ -56,7 +56,7 @@ DSCLOG's routines and variables are named in capitals on these pages
 | `tests/` | the unit tests, and `make_fake_party.py` for practising without the game |
 | `docs/` | the screenshots the documentation shows; `docs/items/`, the item icons (`docicons.py`), and `docs/creatures/`, the creatures' figures (`doccreatures.py`), both drawn from the game's data ([Generated pages](#generated-pages)) |
 | `*.bat` | what players double-click: the Loader, the game with or without its window, a save file's party |
-| `README.md`, `FEATURES.md`, `ITEMS.md`, `KITS.md`, `HOW-THE-GAME-WORKS.md`, `DICE-LOG.md`, `PLAYER-GUIDE.md`, `CREATURES.md` | the player's pages (`player-guide.html` is made from the guide, `CREATURES.md` by `doccreatures.py`) |
+| `README.md`, `FEATURES.md`, `ITEMS.md`, `KITS.md`, `GAME-BUGS.md`, `HOW-THE-GAME-WORKS.md`, `DICE-LOG.md`, `PLAYER-GUIDE.md`, `CREATURES.md` | the player's pages (`player-guide.html` is made from the guide, `CREATURES.md` by `doccreatures.py`) |
 | `../PATCH-NOTES.md`, `../CHANGELOG.md`, `../release-notes/` | the repository's root: the patch notes, the record of every pull request, and each release's notes |
 | `../playtest/` | the in-game test kit: tools that drive the game in DOSBox, saves and logs, and [its guide](../playtest/PLAYTESTING.md). It is outside this folder, so it never goes in the release zip |
 
@@ -356,7 +356,7 @@ Because the replacement produces identical numbers, the game plays exactly as
 it would without it, apart from what you choose on the Options tab (picking
 pockets, the [rule changes](FEATURES.md#rule-changes)), the Loader's other
 additions ([the features page](FEATURES.md) lists them) and [the game's bugs
-fixed](FEATURES.md#the-games-bugs-fixed).
+fixed](GAME-BUGS.md).
 
 Limitations:
 - Only the GOG release (`DSUN.EXE` of 611,408 bytes) is supported. With
@@ -519,7 +519,7 @@ the one place for the sizes; the sections after them name the symbols only.
 | Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (the unmodded game's 57 KB) |
 | C000h-C7FFh | 32 KB | the video BIOS (ROM) |
 | C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
-| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 66.4 KB as built (68,016 bytes with its PSP and its tail, (10h + `KEPT_PARAS`) paragraphs, 2026-11-10), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, and the rest free. **Last measured 2026-11-09** (`playtest/memaudit.py`, with a helper of 62,640 bytes): 37,392 bytes free in one piece and 288 bytes between the helper and the overlay buffer. The helper has grown 5,376 bytes since, so the free piece should be about 32 KB; not measured since |
+| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 66.5 KB (68,080 bytes with its PSP and its tail, (10h + `KEPT_PARAS`) paragraphs), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, and the rest free. **Measured 2026-11-10** (`playtest/memaudit.py`, in Pehtucl's ambush): 32,256 bytes free in one piece, and nothing between the helper and the overlay buffer (KEEP's resize, fixed that day; 288 bytes were left there before) |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
 | 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's [far block](#the-far-block), 65,484 bytes, 36 free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
@@ -527,15 +527,15 @@ the one place for the sizes; the sections after them name the symbols only.
 ### The limits
 
 Each fails the build when passed (a negative `times`). From the build of
-2026-11-10 (DSCLOG.EXE 67,776 bytes: the 32-byte header, the segment's image
-of 64,736 and the tail's 3,008, `TAIL_BYTES`):
+2026-11-10 (DSCLOG.EXE 67,856 bytes: the 32-byte header, the segment's image
+of 64,816 and the tail's 3,008, `TAIL_BYTES`):
 
 | Limit | Used | Room | Spare |
 |---|---|---|---|
-| [the helper's segment](#the-helpers-segment): `kept_end` (`resident_end` 63,344 + `AFTER_INSTALL` 1,408) | 64,752 bytes | 65,536 | 784 bytes |
+| [the helper's segment](#the-helpers-segment): `kept_end` (`resident_end` 63,408 + `AFTER_INSTALL` 1,408) | 64,816 bytes | 65,536 | 720 bytes |
 | [the far block](#the-far-block): `FAR_END` (its buffers from `FAR_RING`, 10h: 65,484 bytes) | 65,500 | 65,536 | 36 bytes |
-| upper memory as the helper loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,331 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,851 |
-| upper memory once installed: `UMB_KEPT` (the helper, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 7,953 paragraphs | 8,182 (`UMB_ROOM`) | 229 (3.6 KB) |
+| upper memory as the helper loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,335 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,847 |
+| upper memory once installed: `UMB_KEPT` (the helper, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 7,957 paragraphs | 8,182 (`UMB_ROOM`) | 225 (3.5 KB) |
 
 To check them after a change, build a scratch copy with `[map all FILE]` as its
 first line (`nasm -f bin -I dos/ -o /tmp/x.exe COPY`, from `obsidian-edition/`)

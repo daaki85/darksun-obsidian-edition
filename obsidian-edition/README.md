@@ -18,6 +18,7 @@ which loads the mod with your options.
   - [kits](KITS.md): every kit's gains, costs and starting gear;
   - [items](ITEMS.md) (spoilers): every item and where it is;
   - [creatures](CREATURES.md) (spoilers): every one, its size, and whether cahulaks can tangle it;
+  - [the game's bugs, fixed](GAME-BUGS.md) (some spoilers): every bug of the original game the mod mends;
   - [the dice log, line by line](DICE-LOG.md);
   - [how the original game works](HOW-THE-GAME-WORKS.md), from its code;
   - [the patch notes](https://github.com/daaki85/darksun-obsidian-edition/blob/main/PATCH-NOTES.md):
@@ -107,7 +108,7 @@ which loads the mod with your options.
   scripts' broken checks (the sewer grate's hack, a ranger's tracking, a
   halfling's greeting), and more; and
   the rules it got wrong, from spell saves to warriors' attacks, put right ([The
-  game's bugs, fixed](FEATURES.md#the-games-bugs-fixed)).
+  game's bugs, fixed](GAME-BUGS.md)).
 
 **What it changes on your computer.** The game's own files are never modified:
 the Loader runs a patched copy of the game from its own folder, and writes to
@@ -359,8 +360,8 @@ only by the mod's patched game.
 
 The window has the party on one side and the logs and tools on the other, with
 **Start the game**, the game window's size, the text size, **Freeze report**
-(see [reports](#crash-freeze-and-item-reports)) and **Reconnect** (to find the
-game again) along the top. The party pane has two tabs:
+(see [reports](#crash-freeze-and-item-reports)), **Reconnect** (to find the
+game again) and **Help** (the [player's guide](PLAYER-GUIDE.md) in your browser) along the top. The party pane has two tabs:
 
 - **Characters** (Alt+C): a card for each character, laid out like the game's
   View Character screen ([The Characters tab](#the-characters-tab)).
@@ -648,7 +649,7 @@ doing help (see [Reporting a problem](#reporting-a-problem)):
   wears](FEATURES.md#what-the-party-wears)); and the game's own 300 picture
   slots running out in a busy area, so that items, bodies, figures and
   doorways stopped being drawn (a slot nothing uses is now reused: [the
-  game's bugs](FEATURES.md#the-games-bugs-fixed)). If it still happens, press
+  game's bugs](GAME-BUGS.md#screens-and-memory)). If it still happens, press
   **Freeze report** on the Loader before closing DOSBox. (Reported in 2.6.0.)
 
 ### Crash, freeze and item reports

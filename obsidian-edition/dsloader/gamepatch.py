@@ -214,6 +214,8 @@ CAH_TWO_SITE, CAH_SWING_SITE, CAH_HIT_SITE = NS_IMAGE + 103, NS_IMAGE + 104, NS_
 SIZE_LINE_SITE, SIZE_PRE_SITE = NS_IMAGE + 106, NS_IMAGE + 107
 # (AD&D's held target, RULE_HELD: hit automatically, normal damage: DSCLOG's HELD)
 HELD_HIT_SITE, HELD_DAMAGE_SITE = NS_IMAGE + 108, NS_IMAGE + 109
+# (the picture loader's failure: a reused slot let go again, DSCLOG's PIC_FAIL)
+PIC_FAIL_SITE = NS_IMAGE + 110
 # the monster kinds' table (DSUN.EXE, the load segment's 3E45h: monsters.MONSTER_KINDS_SEG): a kind's
 # properties (a dword), its resistance class (a byte), a class's damage kinds (four words) and percents
 KINDS_FILE = 0x5400 + 0x3E45 * 16
@@ -586,6 +588,7 @@ PATCHES = (
     Patch("pic_full", 0x26009, bytes.fromhex("813e841f2c0173bfa1841f"), _site(PIC_FULL_SITE, 11)),
     Patch("pic_place", 0x260CC, bytes.fromhex("c45efc"), _site(PIC_PLACE_SITE, 3)),
     Patch("pic_count", 0x2612B, bytes.fromhex("8b36841fff06841f"), _site(PIC_COUNT_SITE, 8)),
+    Patch("pic_fail", 0x25FD0, bytes.fromhex("b8ffff"), _site(PIC_FAIL_SITE, 3)),
     # Cahulaks as Dark Sun's rules have them (the Loader's rule "cahulaks", RULE_CAHULAKS; each site the
     # game's with it off): the two-weapon adjustment's "two weapons ready?" (595ECh: "cmp word [bp+6],1 /
     # jle") on for them too; the attack's swing (589B6h, "mov word [bp-4],0": the off head's, the round's

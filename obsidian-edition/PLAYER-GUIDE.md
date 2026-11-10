@@ -13,7 +13,8 @@ Loader starts. Every rule change has a switch on the Loader's **Options** tab
 ([at a glance](#the-options-tab-at-a-glance)); where it helps to know what a
 switch changes, a **Without the mod** note says what the game does with it off.
 The [features page](FEATURES.md) has every rule in full detail, and the
-[Kits](KITS.md) page each kit's numbers: the guide links to their tables.
+[Kits](KITS.md) page each kit's numbers: the guide links to their tables. The Loader's **Help**
+button opens this guide as a web page.
 
 ## Contents
 

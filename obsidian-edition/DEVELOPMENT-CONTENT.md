@@ -30,7 +30,7 @@
 
 ## The game's script bugs
 
-([In the features page](FEATURES.md#the-games-bugs-fixed).)
+([In the bugs fixed](GAME-BUGS.md#people-and-quests).)
 
 How: `dsloader/scriptfixes.py` changes a few bytes in the Loader's copy of the
 game's scripts (GPLDATA.GFF), each re-pointing one trigger or call: in Darkhold
@@ -183,7 +183,7 @@ the fountain and the party late for a fight.
 
 ## Mirror Image
 
-([In the features page](FEATURES.md#the-games-bugs-fixed).)
+([In the bugs fixed](GAME-BUGS.md#spells-and-psionics).)
 
 The game's only use of the images is a d100 in the routine that lands a spell
 on its target (7A539h, from 78C19h; 7A5BFh, `cmp ax,4Bh` at 7A5CDh), for a
@@ -216,7 +216,7 @@ four, an image with it, and weapon blows come to that routine with no spell
 
 ## The game's spells
 
-([In the features page](FEATURES.md#the-games-bugs-fixed).) More bugs mended
+([In the bugs fixed](GAME-BUGS.md#spells-and-psionics).) More bugs mended
 whatever the rules, besides [Mirror Image](#mirror-image)'s (`gamepatch.py`,
 after the `ns_list_` patches):
 
@@ -438,7 +438,7 @@ after the `ns_list_` patches):
 
 ## Worn items, the gladiator's armour and Psionic Blast
 
-([In the features page](FEATURES.md#the-games-bugs-fixed); found by OpenDS, checked in
+([In the bugs fixed](GAME-BUGS.md); found by OpenDS, checked in
 DSUN.EXE with yuan-ti's notes; Psionic Blast from yuan-ti's issue #129.) One helper interrupt
 (`INT 81h`, `PROBE_WORN`), told where it was called from by its return address:
 
@@ -920,7 +920,7 @@ the game's palette: each picture twice its size, the rest transparent.
 
 ## Bracers of defense
 
-([In the features page](FEATURES.md#bracers-of-defense).)
+([In the items page](ITEMS.md#bracers-of-defense).)
 
 How: where the game's AC routine asks the helper about each worn item
 (`INT F8h`) and where it starts a saving throw's modifiers (`INT F9h`), the
@@ -928,7 +928,7 @@ helper looks at what else the character wears.
 
 ## Robes
 
-([In the features page](FEATURES.md#robes); `robes.py`.)
+([In the items page](ITEMS.md#robes); `robes.py`.)
 
 The robes are one new item type (`ROBE`, the 26th of the helper's types,
 `game.ROBE_TYPE`): the cloak of protection's record worn on the chest (+9: 1),
@@ -1103,7 +1103,7 @@ more of the game's memory.
 
 ## The game's people's gear
 
-([In the bugs fixed](FEATURES.md#the-games-bugs-fixed); `people.py`.)
+([In the bugs fixed](GAME-BUGS.md#fights); `people.py`.)
 
 The game makes a person's items in its backpack list (+0Ch) and puts them on only at its first
 action in a fight. Seen in DOSBox (2026-11-06, `playtest/logs/2026-11-06-npcs-equip.md`): at the
@@ -1288,7 +1288,7 @@ no line: it would tell the player what the body holds before the fight is won.
 
 How: the party's figures are objects 300 to 313 in `SEGOBJEX.GFF` (300 and the
 figure picked at character creation). The launcher's copy of the file (see
-[Item icons](FEATURES.md#new-items)) gives each its own walking and fighting
+[Icons and names](ITEMS.md#icons-and-names)) gives each its own walking and fighting
 pictures, the game's with room round them for gear (walking, 6 pixels at the
 sides and 2 above, as much as anything worn reaches; in a fight, 10), and free
 space after each in the file. The game draws a figure's whole picture at every

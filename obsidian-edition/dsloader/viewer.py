@@ -17,7 +17,9 @@ import subprocess
 import sys
 import time
 import tkinter as tk
+import webbrowser
 from collections import deque
+from pathlib import Path
 from tkinter import filedialog, messagebox, simpledialog, ttk
 from tkinter import font as tkfont
 from typing import Callable, Dict, List, Optional, Set, Tuple
@@ -36,6 +38,8 @@ MAX_LOG_LINES = 3000
 HIGHLIGHT_SECONDS = 3.0
 HEX_PREFIX = 17  # width of "+0040  0012a3f0  "
 MAX_HITS = 500
+# the player's guide as a web page (dsloader.guidepage), beside the Loader in obsidian-edition/
+GUIDE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "player-guide.html")
 
 
 def _printable(data: bytes) -> str:
@@ -105,6 +109,8 @@ class Viewer:
         self.status = tk.StringVar(value="Not connected")
         # on a line of its own, below the buttons, so it never pushes them off at larger text sizes
         ttk.Label(self.root, textvariable=self.status, style="Status.TLabel", padding=(8, 2)).pack(fill="x")
+        # the player's guide (player-guide.html, beside the Loader) in the browser
+        ttk.Button(top, text="Help", command=self.open_guide).pack(side="right", padx=(4, 0))
         ttk.Button(top, text="Reconnect", command=self.reconnect).pack(side="right")
         # the game stopped but DOSBox runs on: where it was, its memory and the logs, in a zip
         ttk.Button(top, text="Freeze report", command=self.freeze_report).pack(side="right", padx=(0, 4))
@@ -706,6 +712,18 @@ class Viewer:
             messagebox.showinfo("Saves", "The Loader hasn't found the game yet: start it once from the Loader.",
                                 parent=self.root)
         return game_dir
+
+    def open_guide(self) -> None:
+        """The player's guide, made from PLAYER-GUIDE.md and shipped beside the Loader, in the browser."""
+        if not os.path.exists(GUIDE):
+            self.status.set(f"The player's guide isn't there: {GUIDE}")
+            return
+        try:
+            opened = webbrowser.open(Path(GUIDE).as_uri())
+        except webbrowser.Error:
+            opened = False
+        if not opened:
+            self.status.set(f"The player's guide is {GUIDE}")
 
     def open_named_saves(self) -> None:
         game_dir = self._saves_game_dir()

@@ -2,7 +2,6 @@
 
 import struct
 import threading
-import time
 from unittest import mock
 import unittest
 
@@ -107,11 +106,8 @@ class UpdateTests(unittest.TestCase):
         g = ghost.Ghosts()
         g.update(self.gd, self.HDR, True, 1, self.redraw)
         self.assertEqual(self.on(), 0)  # (being made)
-        for _ in range(100):
-            time.sleep(0.05)
-            g.update(self.gd, self.HDR, True, 1, self.redraw)
-            if self.on():
-                break
+        self.join_worker(g)
+        g.update(self.gd, self.HDR, True, 1, self.redraw)
         self.assertEqual(self.on(), 1)
         blend, rep = ghost.tables(grey_palette())
         m = self.gd.guest.mem
@@ -128,13 +124,21 @@ class UpdateTests(unittest.TestCase):
         g.update(self.gd, self.HDR, False, 1, self.redraw)
         self.assertEqual(self.on(), 0)
 
+    def join_worker(self, g):
+        """Wait for the thread making the tables to finish (the timeout only a guard against a
+        hang: the test doesn't depend on how fast the machine is)."""
+        self.assertIsNotNone(g._worker)
+        g._worker.join(30)
+        self.assertFalse(g._worker.is_alive(), "tables never made")
+
     def wait_on(self, g, palettes):
-        for _ in range(100):
+        """A pass; if it started making the tables, the thread joined and a pass more, which
+        writes them: GHOST_ON on."""
+        g.update(self.gd, self.HDR, True, palettes, self.redraw)
+        if not self.on():
+            self.join_worker(g)
             g.update(self.gd, self.HDR, True, palettes, self.redraw)
-            if self.on():
-                return
-            time.sleep(0.05)
-        self.fail("tables never made")
+        self.assertEqual(self.on(), 1)
 
     def test_cycling_colours_keep_the_tables(self):
         """DSCLOG's palette copy changing only in the colours the game cycles (fire, water: 1-15,

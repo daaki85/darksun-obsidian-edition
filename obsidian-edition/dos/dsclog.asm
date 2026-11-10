@@ -469,6 +469,9 @@ large_off  dw large_bits        ; +1842 offset of LARGE_BITS in the tail: the Lo
 ;   +184 kind: 0 = a rand() call, 1 = PROBE_SAVE (+6 = total, save value),
 ;        2 = PROBE_AC (+6 = the AC)
 ;   +186 PROBE_SAVE: the segment of the game's spell table (0 otherwise)
+;   +188 the attack's target (TARGET) as the entry is made: 8000h, plus 1 Paralyzed or 2 Out Cold
+;        (HELPLESS_OF; what the game's save and damage routines test then, read here so that the
+;        Loader doesn't ask later, after the blow has killed or freed the target)
 ;
 ; An entry is complete once the header's seq has counted it: the entry's own
 ; seq is written before the header's.
@@ -584,6 +587,12 @@ record:
         mov cx, [cs:extra]
         mov [es:di+186], cx
         mov word [cs:extra], 0
+        push ax
+        mov ax, [TARGET]
+        call helpless_of
+        mov ah, 0x80
+        mov [es:di+188], ax
+        pop ax
         mov cx, [ss:si+6]
         mov [es:di+2], cx
         mov cx, [ss:si+8]
@@ -15011,6 +15020,7 @@ CAH_HIT_SITE equ NS_IMAGE + 105       ; 58B54h: a weapon's hit that did damage: 
 SIZE_LINE_SITE equ NS_IMAGE + 106     ; 72AA7h: a weapon's damage line drawn: its large dice (SIZE_LINE)
 SIZE_PRE_SITE equ NS_IMAGE + 107      ; 72A8Ah: a weapon's damage line about to be drawn: Shillelagh's (SIZE_PRE)
 HELD_HIT_SITE equ NS_IMAGE + 108      ; 589E9h: the natural 20's test: a held target hit automatically (HELD)
+PIC_FAIL_SITE equ NS_IMAGE + 110      ; 25FD0h: no picture loaded (no slot, or its read failed): a reused slot let go (PIC_REUSE)
 HELD_DAMAGE_SITE equ NS_IMAGE + 109   ; 58B0Dh: what a helpless target takes: x2 only without HELD
 KIND_TURN  equ 13
 TU_DESTROY equ 0x7AE60 - 0x7AE04 ; (the ways on, less the address after the site's number)
@@ -16754,6 +16764,31 @@ pic_count:
         mov byte [cs:pf_reuse], 0
         inc word [cs:pf_count]
         iret
+
+; PIC_FAIL (25FD0h, "mov ax,0FFFFh": the loader's "no picture", every failure's way out). A slot
+; reused by PIC_FULL whose picture then failed to load (its read, 260BBh) already holds the new
+; picture's number and length but the old one's place: found by that number later, it would be
+; read from the wrong place (a garbled figure). So it is let go again (STALE, not in memory), as
+; the game's own failure leaves an uncounted slot.
+pic_fail:
+        cmp byte [cs:pf_reuse], 0
+        je .out
+        push es
+        push bx
+        mov bx, ds
+        sub bx, CACHE_GAP
+        mov es, bx
+        mov bx, [cs:pf_slot]
+        shl bx, 4
+        mov word [es:bx], CACHE_STALE
+        and byte [es:bx + 0x0E], ~2
+        mov byte [cs:pf_reuse], 0
+        inc word [cs:pf_failed]
+        pop bx
+        pop es
+.out:   mov ax, 0xFFFF
+        iret
+pf_failed  dw 0                         ; reused slots let go after a failed read (for the tests)
 PF_USED_WORDS equ (CACHE_MOST + 15) / 16
 pf_used    times PF_USED_WORDS dw 0     ; the slots a wall or a thing names
 pf_place   dd 0
@@ -17345,31 +17380,40 @@ held_damage:
 held_now:                           ; CF with the rule on and the attack's target (TARGET) helpless:
         test byte [cs:rules_hi + 1], RULE_HI_HELD >> 8 ; Paralyzed or Out Cold. DS the game's; all kept.
         jz .ret                     ; (TEST clears CF)
-        pusha
-        push es
+        push ax
         mov ax, [TARGET]
+        call helpless_of
+        cmp al, 1                   ; (CF: none)
+        cmc
+        pop ax
+.ret:   ret
+helpless_of:                        ; AL: combatant AX helpless to the game, 1 Paralyzed, 2 Out Cold, else
+        push bx                     ;   0 (79B0Ch's and 79C46h's test). DS the game's; others kept.
+        push cx
+        push dx
+        push es
         cmp ax, MAP_COUNT
         jae .no
         mov dx, ax
         mov cl, HELD_EFFECT
         call ns_has
-        je .yes
+        mov al, 1
+        je .out
         mov ax, dx
         call combatant_creature
         jc .no
         les bx, [CREATURES]
         imul ax, ax, 0x3A
         add bx, ax
+        mov al, 2
         cmp byte [es:bx + 0x1C], HELD_OUT_COLD
-        je .yes
-.no:    pop es
-        popa
-        clc
+        je .out
+.no:    mov al, 0
+.out:   pop es
+        pop dx
+        pop cx
+        pop bx
         ret
-.yes:   pop es
-        popa
-        stc
-.ret:   ret
 cah_extra  dw 0                     ; how much worse the off head's swing is than the main head's
 cah_who    dw -1                    ; ... for this attacker (a combatant; -1 none)
 
@@ -20256,6 +20300,7 @@ site_tab:
         site SIZE_PRE_SITE, size_pre
         site HELD_HIT_SITE, held_hit
         site HELD_DAMAGE_SITE, held_damage
+        site PIC_FAIL_SITE, pic_fail
 SITE_COUNT equ ($ - site_tab) / 2
 
 ; NS_CMP: the compare of site RL_SITE (of NS_CMP_SITES), its flags into the INT's frame.

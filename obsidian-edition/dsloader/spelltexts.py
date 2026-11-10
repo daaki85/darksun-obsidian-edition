@@ -50,13 +50,13 @@ TEXTS: Dict[int, str] = {
                "If it fails, the thief tries to slip away unseen. Not in a fight.",
     # (the arrows' too: seven lines fill the box)
     PICK_SPIN + 1: "BURNING ARROWS:  Weaves Burning Hands into 5 arrows a level in the empty quiver, for a 1st-level slot; each "
-                   "casts it on what it hits. Gone at a rest. Not in a fight.",
+                   "casts it on a hit. Gone at a rest. Not in a fight.",
     PICK_SPIN + 2: "CHILL ARROWS:  Weaves Chill Touch into 5 arrows a level in the empty quiver, for a 1st-level slot; each "
-                   "casts it on what it hits. Gone at a rest. Not in a fight.",
+                   "casts it on a hit. Gone at a rest. Not in a fight.",
     PICK_SPIN + 3: "SHOCKING ARROWS:  Weaves Shocking Grasp into 5 arrows a level in the empty quiver, for a 1st-level slot; each "
-                   "casts it on what it hits. Gone at a rest. Not in a fight.",
+                   "casts it on a hit. Gone at a rest. Not in a fight.",
     PICK_SPIN + 4: "VAMPIRIC ARROWS:  Weaves Vampiric Touch into 5 arrows a level in the empty quiver, for a 3rd-level slot; each "
-                   "casts it on what it hits. Gone at a rest. Not in a fight.",
+                   "casts it on a hit. Gone at a rest. Not in a fight.",
 }
 
 
@@ -86,7 +86,7 @@ MANUAL_TEXTS: Dict[int, str] = {
     109: "BLOOD FLOW:  Heals 2 to 12 pts of damage. If used to injure, the target is stunned for "
          "up to 4 rounds unless it saves.",
     57: "CHAOS:  Affects 1 to 4 creatures plus 1 per caster level: only warriors and the very "
-        "clever or very dull may save. They may stand confused, go berserk, or flee.",
+        "clever or dull may save. They stand confused, go berserk or flee.",
     29: "FLAME ARROW:  One arrow for every 5 levels of caster, each aimed on its own: 1 to 6 pts "
         "of damage plus 4 to 24 pts of fire damage.",
     152: "CELL ADJUSTMENT:  Heals 1 to 4 pts of damage and cures diseases.",
@@ -99,7 +99,7 @@ SIZE_TEXTS: Dict[int, str] = {
     87: "HOLD PERSON:  Holds human, demi-human or humanoid creatures no bigger than man-sized "
         "(not half-giants) unable to move. Lasts longer as the caster rises in level.",
     3: "CHARM PERSON:  Changes the target's allegiance in combat. Affects only character types "
-       "(human, dwarf, etc.) no bigger than man-sized: not half-giants.",
+       "(human, dwarf, etc.) up to man-sized: not half-giants.",
     83: "CHARM PERSON OR MAMMAL:  Changes target's allegiance in combat. A person must be no "
         "bigger than man-sized (not a half-giant); any mammal may be charmed.",
 }

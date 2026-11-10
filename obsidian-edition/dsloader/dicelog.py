@@ -381,14 +381,25 @@ class Entry:
     parent_locals: bytes  # from SS:parentBP-28h
     kind: int  # KIND_ROLL, KIND_SAVE or KIND_AC
     extra: int = 0  # KIND_SAVE: the segment of the game's spell table
+    target_state: int = 0  # the attack's target as the entry was made (DSCLOG's HELPLESS_OF): HELD_MARK
+    #                        plus 1 Paralyzed or 2 Out Cold; 0 from a helper that doesn't write it
 
     SIZE = 192
+    HELD_MARK = 0x8000
+    HELD_STATES = {1: "Paralyzed", 2: "Out Cold"}
+
+    def helpless(self) -> Optional[str]:
+        """Why the attack's target was helpless as the dice were rolled (Paralyzed, Out Cold), or
+        None; Ellipsis when the entry doesn't say (an older helper): then ask the game now."""
+        if not self.target_state & self.HELD_MARK:
+            return ...
+        return self.HELD_STATES.get(self.target_state & 0xFF)
 
     @classmethod
     def parse(cls, data: bytes) -> "Entry":
         head = struct.unpack_from("<8H", data, 0)
         return cls(*head, data[16:48], data[48:80], struct.unpack_from("<4H", data, 80), data[88:104],
-                   data[104:128], data[128:144], data[144:184], *struct.unpack_from("<2H", data, 184))
+                   data[104:128], data[128:144], data[144:184], *struct.unpack_from("<3H", data, 184))
 
     @staticmethod
     def _word(data: bytes, index: int) -> Optional[int]:
@@ -2793,6 +2804,13 @@ class DiceLog:
 
     # attacks ---------------------------------------------------------------------
 
+    def _helpless(self, e: Entry) -> Optional[str]:
+        """The attack's target's helplessness as DSCLOG saw it at the roll (the game's own test then:
+        a blow that kills an Out Cold target, or a Hold ending, changes it before the entry is read),
+        else as the game has it now."""
+        said = e.helpless()
+        return self.game.helpless(e.glob[0]) if said is ... else said
+
     def _attack(self, e: Entry) -> List[str]:
         g = self.game
         d20 = scaled(e.raw, 20) + 1
@@ -2802,7 +2820,7 @@ class DiceLog:
         need = thac0 - ac
         hit = d20 == 20 or (d20 != 1 and d20 >= need)
         # AD&D's held target (RULE_HELD, DSCLOG's HELD_HIT): a Paralyzed or Out Cold one is hit whatever the d20
-        held = g.helpless(e.glob[0]) if self.rules & game.RULE_HELD else None
+        held = self._helpless(e) if self.rules & game.RULE_HELD else None
         hit = hit or bool(held)
         note = " (natural 20)" if d20 == 20 else " (natural 1)" if d20 == 1 else ""
 
@@ -3146,7 +3164,7 @@ class DiceLog:
         # a held (Paralyzed) or Out Cold target takes double: the attack routine hands the game's
         # damage call its damage x2 too (58B0Dh, "shl ax,1"), which 79BF9h takes for a helpless target;
         # with RULE_HELD (DSCLOG's HELD_DAMAGE) the damage as it is, AD&D's
-        helpless = g.helpless(e.glob[0])
+        helpless = self._helpless(e)
         if helpless and total > 0 and not self.rules & game.RULE_HELD:
             total *= game.HELPLESS_TIMES
             steps = f"({steps}) x{game.HELPLESS_TIMES} {helpless}: a helpless target takes double"

@@ -47,6 +47,8 @@ double-click, with the options as last set.)
   with its icon and where it is (spoilers)
 - [Creatures](obsidian-edition/CREATURES.md): every creature, its size and
   whether cahulaks can tangle it (spoilers)
+- [The game's bugs, fixed](obsidian-edition/GAME-BUGS.md): every bug of the
+  original game the mod mends, by kind (some spoilers)
 - [The dice log, line by line](obsidian-edition/DICE-LOG.md): every kind of line
   the Loader's dice log writes, and what it means
 - [How the game works](obsidian-edition/HOW-THE-GAME-WORKS.md): the original

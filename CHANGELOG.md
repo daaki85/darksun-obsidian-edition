@@ -42,7 +42,7 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 
 ## Next pull request (not opened yet)
 
-DSCLOG.EXE 67,792 bytes (image 67,760: 64,752 in its segment, 3,008 in the tail), 784 of its
+DSCLOG.EXE 67,856 bytes (image 67,824: 64,816 in its segment, 3,008 in the tail), 720 of its
 segment spare.
 
 **New**
@@ -219,6 +219,9 @@ segment spare.
   each at 4.5:1 or more on the log). A hit's damage and the HP left are filled into its line as their
   own lines arrive. The log's own lines are kept: Save..., the crash and freeze reports and the
   layout switched off use them. (Tests: `test_ledger`.)
+- **Help in the Loader's window:** a **Help** button at the top opens the player's guide
+  (`player-guide.html`, beside the Loader) in the browser (`viewer.open_guide`; the status line
+  says where the page is when no browser opens it). Tested in `test_viewer_options`.
 
 **Changed**
 - **Every thri-kreen throws a chatkcha twice a round** (AD&D's 2/1, the user's source): DSCLOG's
@@ -582,6 +585,27 @@ segment spare.
   furthest in the store since slots are reused; it is now measured from the furthest. And writing
   the store no longer pauses DOSBox a second time while it is already paused (`sprites`; tests in
   `test_sprites`).
+- **A picture that failed to load into a reused slot** (the audit's last two decisions, 2026-11-10):
+  with all 300 picture slots taken, a slot reused for a picture whose read then failed kept the new
+  picture's number with the old one's place, and the next request for it read the wrong bytes (a
+  garbled figure). DSCLOG's PIC_FAIL, a new site at the loader's way out (25FD0h, `gamepatch`'s
+  `pic_fail`), lets the slot go again (STALE). Not reproduced in play; `test_dsclog`'s
+  `test_failed_read_lets_the_reused_slot_go`. Dark Sun Recompiled needs `tools/build_mod.sh` again
+  for the new site.
+- **A helpless target as it was at the roll:** the dice log asked whether a target was Paralyzed or
+  Out Cold when it wrote the line, a pass or more later, so a blow that killed an Out Cold target or
+  a Hold that ended in between showed undoubled damage (or "hit automatically" was missed). DSCLOG
+  now writes the target's state into each ring entry as the dice are rolled (+188, `HELPLESS_OF`,
+  which HELD's own test uses too), and the dice log reads it there (`Entry.helpless`; an older
+  helper's entries: the game's state, as before).
+- **Two spell boxes ran past their edge** (seen in the game, 2026-11-10): Chaos's text (the manual's)
+  took eight lines and Charm Person's (the size rule's) and Vampiric Arrows' would have; all three
+  are shorter, and the four spell arrows' texts end "casts it on a hit". `test_spelltexts_fit`
+  wraps every text the Loader writes in the game's font (a seven-line box of 128 pixels, measured
+  from the game's boxes).
+- **Two tests hung on the clock:** the stats thread's and the see-through tables' tests polled
+  against real time (flaky on a slow runner); they now join the worker thread (`ghost.Ghosts`
+  keeps it, `_worker`).
 
 **Docs**
 - **Screenshots retaken** (2026-11-10): `inventory.png` and `inventory-ranger.png` (SLNT, not MOVE),
@@ -618,6 +642,14 @@ segment spare.
   and the XP left over (one, two or three classes), and for dual-classing humans the room a new
   class has by the level the old class changed at (dual-classing starts the new class at 0 XP and
   loses any XP past the old level's need: DSUN.EXE 86D38h); FEATURES links to it.
+- **FEATURES.md split** (3,079 lines to about 2,800): the game's bugs fixed are a page of their
+  own, `GAME-BUGS.md`, grouped by kind (spells and psionics, fights, characters and items, screens
+  and memory, people and quests); the detail of Spells and psionics as the manual describes them
+  (each spell, AD&D's turning table, the monsters, the known differences) is in
+  HOW-THE-GAME-WORKS beside the game's own spells and Turn Undead; the new items' prices, the
+  Warden's Plate, bracers of defense, robes, icons and names and Alagorn's stories are in ITEMS.md.
+  FEATURES keeps each switch's summary and a link where each block was; every link to the moved
+  sections follows it, and `test_doclinks` checks the new pages' "How it works" links too.
 
 ## Pull request #88 ([merged 2026-11-08](https://github.com/daaki85/darksun-obsidian-edition/pull/88))
 

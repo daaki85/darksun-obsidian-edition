@@ -3,6 +3,7 @@
 import os
 import struct
 import sys
+import threading
 import time
 import unittest
 from unittest import mock
@@ -123,7 +124,7 @@ def words(*values):
 
 
 def entry(raw=0, code=b"", frame=b"", parent=b"", glob=(0, 0, 0, 0), locals_=b"", parent_code=b"",
-          parent_locals=b"", kind=KIND_ROLL, bp=0xFE00, parent_bp=0xFE40):
+          parent_locals=b"", kind=KIND_ROLL, bp=0xFE00, parent_bp=0xFE40, target_state=0):
     data = bytearray(Entry.SIZE)
     struct.pack_into("<8H", data, 0, 1, 0x10, 0x5000, raw & 0xFFFF, bp, DS, DS, parent_bp)
     data[16:16 + len(frame)] = frame
@@ -134,6 +135,7 @@ def entry(raw=0, code=b"", frame=b"", parent=b"", glob=(0, 0, 0, 0), locals_=b""
     data[128:128 + len(parent_code)] = parent_code
     data[144:144 + len(parent_locals)] = parent_locals
     struct.pack_into("<H", data, 184, kind)
+    struct.pack_into("<H", data, 188, target_state)
     return Entry.parse(bytes(data))
 
 
@@ -557,14 +559,27 @@ class HelplessTests(unittest.TestCase):
     damage call its damage x2 (58B0Dh), which 79BF9h takes for a helpless target (the effects'
     bitset's bit 34, or the creature's +1Ch 3). Seen 2026-11-10: a hit for 13 took 26."""
 
-    def hit(self, log, stab=False, now=0.0):
+    def hit(self, log, stab=False, now=0.0, state=0):
         if stab:
             sheet = SHEETS + 0 * game.SHEET_SIZE  # (Dag a 6th-level thief: x3)
             log.guest.mem[sheet + game.SHEET_CLASSES + 1], log.guest.mem[sheet + game.SHEET_LEVELS + 1] = 17, 6
         parent = words(0, 0, 0, 0, 10, 4, 0, 0, 5, 7, 1, 0, 0, 0, int(stab), int(stab))
         e = entry(raw_for(5, 8), dicelog.DICE_SITE, words(0, 0, 1, 8, 1), parent, (0x29, 0, 0, 0),
-                  parent_code=dicelog.WEAPON_DAMAGE_RETURN, parent_locals=locals_at(0x28, m14=0))
+                  parent_code=dicelog.WEAPON_DAMAGE_RETURN, parent_locals=locals_at(0x28, m14=0), target_state=state)
         return log.describe(e, now=now)
+
+    def test_as_it_was_at_the_roll(self):
+        """DSCLOG writes the target's state into the entry as the dice are rolled (+188, HELPLESS_OF):
+        that is what counts, not the game's state when the entry is read (a blow that killed an Out Cold
+        target, a Hold ended, or one begun since: the audit). An entry without it (an older helper):
+        the game's state now."""
+        mark = dicelog.Entry.HELD_MARK
+        log = make_game()  # (nothing on the target now)
+        self.assertIn("for 36: (1d8 = [5] +1 weapon +12 STR 24) x2 Paralyzed", self.hit(log, state=mark | 1)[0])
+        self.assertIn("for 36: (1d8 = [5] +1 weapon +12 STR 24) x2 Out Cold", self.hit(log, state=mark | 2)[0])
+        set_effects(log, [(0x29, 2, game.PARALYZED_EFFECT)])  # (held only after the roll)
+        self.assertEqual(self.hit(log, state=mark)[0], "  Dag hits Mountain Stalker for 18: 1d8 = [5] +1 weapon +12 STR 24")
+        self.assertIn("x2 Paralyzed", self.hit(log, state=0)[0])  # (no word from the helper: as now)
 
     def test_paralyzed_takes_double(self):
         log = make_game()
@@ -1628,14 +1643,20 @@ class OtherTests(unittest.TestCase):
         log = make_game()
         m = log.guest.mem
         struct.pack_into("<HH", m, HDR + dicelog.TSR_STATS_REQ, 5, 4)
+        answered = threading.Event()
+        answer = log._answer_stats
+
+        def answer_and_tell():  # (the thread looks the method up on each pass: this one tells the test)
+            answer()
+            if struct.unpack_from("<H", m, HDR + dicelog.TSR_STATS_REPLY)[0] == 5:
+                answered.set()
+        log._answer_stats = answer_and_tell
         log.answer_stats_in_background()
         self.addCleanup(log.close)
-        deadline = time.monotonic() + 2
-        while struct.unpack_from("<H", m, HDR + dicelog.TSR_STATS_REPLY)[0] != 5 and time.monotonic() < deadline:
-            time.sleep(0.001)
+        self.assertTrue(answered.wait(30))  # (30 s only a guard against a hang)
         self.assertEqual(struct.unpack_from("<H", m, HDR + dicelog.TSR_STATS_REPLY)[0], 5)
         log.close()
-        log._stats_thread.join(1)
+        log._stats_thread.join(30)
         self.assertFalse(log._stats_thread.is_alive())
 
     def test_attach_needs_the_patched_game(self):
