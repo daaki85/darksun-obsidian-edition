@@ -463,6 +463,9 @@ class Viewer:
                                              "(the game checks only one: a ranger, druid or psionicist on WIS alone)"),
                 ("two_weapons", "arms", "Two weapons: -2 main hand, -4 off hand, DEX reaction adjustment added "
                                         "(no better than 0; rangers and Twin-blades none in light armour); the off hand attacks once a round"),
+                ("creature_size", "arms", "Creature size as in AD&D: a large foe (a half-giant, a Bulette, an Enlarged "
+                                          "fighter...) takes AD&D's large weapon dice (a long sword 1d12); Hold Person "
+                                          "and Charm Person don't take on one"),
                 ("cahulaks", "arms", "Cahulaks as Dark Sun's rules have them: a head in each hand, the off head's "
                                      "attack one more a round at the two-weapon penalties (-2 and -4, DEX added); a hit "
                                      "tangles a man-sized or smaller foe that fails a save against petrification: it loses "

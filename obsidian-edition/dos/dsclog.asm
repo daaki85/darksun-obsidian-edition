@@ -441,6 +441,8 @@ lbl_off    dw lbl_slots         ; +1838 offset of LBL_SLOTS in the tail: the Loa
                                 ;      (LBL_ROW bytes a row, bit 0 of the first the leftmost)
 big_off    dw FAR_BIG           ; +1840 offset of BIG in the far block: the Loader's: a bit per
                                 ;      combatant too big for the cahulaks to tangle (cahulaks.py)
+large_off  dw large_bits        ; +1842 offset of LARGE_BITS in the tail: the Loader's: a bit per
+                                ;      combatant large or bigger (sizes.py; SIZE)
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -16487,6 +16489,7 @@ save_sum:
         jnz .sum
 .not:   mov byte [cs:sv_nat], 0
 .sum:   add ax, cx
+        call size_spared        ; (the creature size rule: Hold and Charm Person, a large target)
         cmp ax, SAVE_MOST
         jle .low
         mov ax, SAVE_MOST
@@ -16853,6 +16856,7 @@ cah_two:
 ; round's last swing with the cahulaks (the off head's, one of 2 or more) pays CAH_EXTRA more.
 cah_swing:
         mov word [bp - 4], 0
+        call size_dice          ; (the creature size rule: a large target's dice, the call's first swing)
         test word [cs:rules_hi], RULE_HI_CAHULAKS
         jz .out
         cmp word [bp + 0x16], 1
@@ -16947,6 +16951,136 @@ cah_hit:
 .done:  pop es
         popad
 .out:   iret
+; SIZE (RULE_HI_SIZE, the Loader's rule "creature_size"): AD&D's creature sizes, which the game keeps
+; none of. A combatant is large (IS_LARGE) when Enlarged (effect 16), a half-giant (its sheet's race),
+; or marked in LARGE_BITS (the Loader's, from dsloader/sizes.py: large, huge or gargantuan). Then:
+; - a weapon's hit on it rolls AD&D's dice for large targets (SIZE_DICE, at the swing site: the
+;   attack call's dice, set once a call, [BP-0Eh] the count, [BP-10h] the sides, [BP-12h] the bonus):
+;   by the weapon's kind (LARGE_DICE: the game's dice are AD&D's small and man-sized ones), Spiritual
+;   Hammer's 1d4+1 1d4; and Shillelagh's 2d4 (the game's, AD&D's large) 1d6+1 on a smaller one;
+; - Hold Person (30, the priests' 86), Charm Person (2) and Charm Person or Mammal (82) on a person
+;   don't take: its save made (SIZE_SPARED, in SAVE_SUM). The dice log says why (sizes.py).
+SHILLELAGH_TYPE equ 28
+HAMMER_TYPE  equ 30
+large_dice   db 1, 12, 0            ; long sword: 1d12
+             db 1, 3, 0             ; club: 1d3
+             db 1, 3, 0             ; dagger: 1d3
+             db 1, 8, 0             ; short sword: 1d8
+             db 1, 6, -1            ; mace: 1d6 (1d6+1)
+             db 0, 0, 0             ; axe: as small (1d8)
+             db 2, 8, 0             ; great axe: 2d8
+             db 1, 4, -1            ; pick: 1d4 (1d4+1)
+             db 0, 0, 0             ; quarterstaff: 1d6
+             db 2, 6, 0             ; polearm: 2d6
+             db 2, 6, 0             ; gythka: 2d6
+             db 0, 0, 0             ; cahulaks: 1d6
+             db 1, 4, -1            ; chatkcha: 1d4+1 (1d6+2)
+             db 0, 0, 0, 0, 0, 0, 0, 0, 0 ; bow, sling, staff sling: as small
+is_large:                           ; CF if combatant AX is large (see SIZE). DS the game's; all kept.
+        pusha
+        push es
+        cmp ax, MAP_COUNT
+        jae .no
+        mov dx, ax
+        mov cl, ENLARGE_EFFECT
+        call ns_has
+        je .yes
+        mov si, dx
+        call map_bit
+        mov es, [cs:tail_seg]
+        test [es:si + large_bits], al
+        jnz .yes
+        mov ax, dx
+        call combatant_creature
+        jc .no
+        call creature_sheet
+        cmp byte [es:bx + 0x18], HALF_GIANT
+        je .yes
+.no:    pop es
+        popa
+        clc
+        ret
+.yes:   pop es
+        popa
+        stc
+        ret
+size_dice:                          ; (CAH_SWING's: the call's first swing with an item, the rule on)
+        test word [cs:rules_hi], RULE_HI_SIZE
+        jz .ret
+        pusha
+        mov ax, [bp - 0x14]
+        cmp ax, [bp - 0x0A]
+        jne .done                   ; (the call's first swing only: the dice set once a call)
+        cmp word [bp + 0x12], 0
+        jl .done                    ; (a natural attack: its own damage)
+        mov bx, [bp + 0x14]
+        mov ax, [TARGET]
+        call is_large
+        jc .large
+        cmp bx, SHILLELAGH_TYPE     ; (smaller: Shillelagh's 1d6+1 for the game's 2d4)
+        jne .done
+        mov word [bp - 0x0E], 1
+        mov word [bp - 0x10], 6
+        inc word [bp - 0x12]
+        jmp .done
+.large: cmp bx, HAMMER_TYPE
+        jne .kind
+        dec word [bp - 0x12]        ; (Spiritual Hammer: 1d4)
+        jmp .done
+.kind:  cmp bx, KIND_TYPES
+        jae .done
+        movzx si, byte [cs:bx + kind_of_type]
+        or si, si
+        jz .done
+        dec si
+        imul si, si, 3
+        movzx ax, byte [cs:si + large_dice]
+        or ax, ax
+        jz .done
+        mov [bp - 0x0E], ax
+        movzx ax, byte [cs:si + large_dice + 1]
+        mov [bp - 0x10], ax
+        movsx ax, byte [cs:si + large_dice + 2]
+        add [bp - 0x12], ax
+.done:  popa
+.ret:   ret
+size_spared:                        ; (SAVE_SUM's: AX the save's sum) SAVE_MOST for Hold or Charm
+        test word [cs:rules_hi], RULE_HI_SIZE ;   Person on a large target ([BP+6]; spell [BP+0Ah])
+        jz .ret
+        push bx
+        mov bx, [bp + 0x0A]
+        cmp bx, 2
+        je .spell
+        cmp bx, 30
+        je .spell
+        cmp bx, 86
+        je .spell
+        cmp bx, 82                  ; (Charm Person or Mammal: its person half only)
+        jne .out
+        push es
+        push ax
+        mov ax, [bp + 6]
+        call combatant_creature
+        jc .none
+        call creature_sheet
+        mov al, [es:bx + 0x18]
+        dec al
+        cmp al, 8                   ; (races 1 to 8: a person)
+        pop ax
+        pop es
+        jae .out
+        jmp .spell
+.none:  pop ax                      ; (no creature: nothing to spare)
+        pop es
+        jmp .out
+.spell: push ax
+        mov ax, [bp + 6]
+        call is_large
+        pop ax
+        jnc .out
+        mov ax, SAVE_MOST
+.out:   pop bx
+.ret:   ret
 cah_extra  dw 0                     ; how much worse the off head's swing is than the main head's
 cah_who    dw -1                    ; ... for this attacker (a combatant; -1 none)
 
@@ -17295,6 +17429,7 @@ RULE_HI_CON equ 1024            ; (RULES_HI) CON as in AD&D: regeneration's rate
 RULE_HI_DUAL equ 2048           ; (RULES_HI) dual-classing at 3rd level, every prime requisite checked (DUAL_LEVEL, DUAL_PRIMES)
 RULE_HI_REST equ 4096           ; (RULES_HI) rest heals by spells and natural healing (REST_PRE, REST_HP)
 RULE_HI_CAHULAKS equ 8192       ; (RULES_HI) cahulaks: a head in each hand, a tangle on a hit (CAHULAKS)
+RULE_HI_SIZE equ 16384          ; (RULES_HI) creature size: large dice, Hold and Charm Person (SIZE)
 THINGS_SEG equ 0x3972 - 0x4356  ; the things table's segment, relative to DS
 
 ; PROBE_MOVE: INT VEC_MOVE replaces "mov es:[bx+22Bh],ax" (5 bytes: INT + 3 NOPs) where a
@@ -27628,6 +27763,7 @@ extra_types:
 extra_types_end:
         times -(extra_types_end - extra_types != TYPES_EXTRA * TYPE_SIZE) db 0 ; (a negative count: not TYPES_EXTRA)
 lbl_slots  times LBL_SLOTS * LBL_SIZE db 0 ; (the Loader's: LABELS, the header's +1838)
+large_bits times MAP_BITS + 1 db 0      ; (the Loader's: a bit a combatant large or bigger, SIZE, +1842)
 ticks      times TICK_SLOTS * TICK_SIZE db 0 ; (PROBE_TICK's, the Loader's to read: the header's +356)
 ; the names, numbered from NAMES_OWN (322): the Loader's items' (the same as the Loader's
 ; NAMES in dsloader/names.py), each NUL-terminated (PROBE_NAMES_FILL pads it to NAME_SIZE)

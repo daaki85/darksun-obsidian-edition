@@ -28,7 +28,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import aging, cahulaks, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
@@ -548,6 +548,7 @@ class DiceLog:
         self.ring_mode = rings.ONLY_CHOSEN  # a ring in a fight: off, or the chosen enemy's (rings.py)
         self._rings = rings.Rings()
         self._big = cahulaks.Big()
+        self._large = sizes.Large()
         self.use_targeting = True  # Tab chooses an enemy in a fight, Enter attacks it (targeting.py)
         self._targeting = targeting.Targeting()
         self.scroll_map = True  # the map scrolled by dragging with the wheel pressed (scrolling.py)
@@ -670,6 +671,7 @@ class DiceLog:
         self._dust = dust.Dust()
         self._rings = rings.Rings()
         self._big = cahulaks.Big()
+        self._large = sizes.Large()
         self._targeting.forget()
         self._arena_count = None
         self.tracker = PartyTracker(self.game)
@@ -1574,6 +1576,7 @@ class DiceLog:
             self._rings.update(self.game, self.tsr_hdr, self.ring_mode != rings.OFF, self._shadows.palettes,
                                self._targeting.chosen)
             self._big.update(self.game, self.tsr_hdr)  # (the cahulaks' tangle: who is too big)
+            self._large.update(self.game, self.tsr_hdr)  # (the size rule: who is large)
             self._dust.update(self.game, self.tsr_hdr, self.show_dust, self._shadows.palettes)
             hdr = self.tsr_hdr
             self._ghosts.update(self.game, hdr, self.see_through, self._shadows.palettes,
@@ -2972,6 +2975,11 @@ class DiceLog:
             + (f" {signed(kit)} {kit_name}" if kit else "")
         if skill == specialize.GRAND:
             steps += f" (d{sides} for d{sides - 2}: grand mastery)"
+        elif weapon and weapon.sides and self.rules & game.RULE_SIZE \
+                and (count, sides) != (weapon.count, weapon.sides):  # (DSCLOG's SIZE_DICE)
+            large = e.parent_arg(0x14) != sizes.SHILLELAGH_TYPE
+            steps += f" ({count}d{sides} for {weapon.count}d{weapon.sides}: " \
+                + ("a large target)" if large else "a target smaller than large)")
         if sum(faces) + bonus < 1:
             steps += " (raised to the minimum of 1)"
         dice = sum(faces)  # (the weapon's dice: Enlarge's and a backstab's with their rules)
@@ -3942,6 +3950,8 @@ class DiceLog:
         if natural == 20:  # (DSCLOG's SAVE_SUM: made at least the number needed)
             return f"{who}: d20 = 20 (natural 20) -> {self._save_result(spell, True)}"
         if total > 100:
+            if g.rules & game.RULE_SIZE and sizes.spared(g, spell, target):
+                return f"{who}: {g.combatant_name(target)} is too big for {g.spell_name(spell)} -> unaffected"
             return f"{who}: not needed (saves automatically) -> saved"
         rules = g.spell_rules(spell)
         steps, rolled = "d20", None

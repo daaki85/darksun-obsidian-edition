@@ -186,6 +186,10 @@ RULE_REST = 268435456
 # too big). DSCLOG's RULE_HI_CAHULAKS, CAHULAKS
 RULE_CAHULAKS = 536870912
 CAHULAKS_TYPE = 21
+# Creature size as in AD&D (sizes.py): a large target takes AD&D's large weapon dice, and Hold Person,
+# Charm Person and Charm Person or Mammal (a person) don't take on it; an Enlarged creature counts as
+# large (DSCLOG's RULE_HI_SIZE, SIZE)
+RULE_SIZE = 1073741824
 CAHULAKS_TYPES = frozenset((CAHULAKS_TYPE, GAME_TYPES + 31))  # (the bone and the metal: METAL_CAHULAKS_TYPE)
 REST_NATURAL = 3
 SPEC_SLOTS, SPEC_COUNT = 0x14, 4
@@ -280,7 +284,8 @@ RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("two_weapons", RULE_TWO_WEAPONS),
                  ("rolled_scores", RULE_ROLLED), ("buyback", RULE_BUYBACK),
                  ("backstab_dice", RULE_BACKSTAB), ("aging", RULE_AGING),
                  ("enlarge_dice", RULE_ENLARGE), ("con_adnd", RULE_CON),
-                 ("dual_class", RULE_DUAL_CLASS), ("rest_heal", RULE_REST), ("cahulaks", RULE_CAHULAKS))
+                 ("dual_class", RULE_DUAL_CLASS), ("rest_heal", RULE_REST), ("cahulaks", RULE_CAHULAKS),
+                 ("creature_size", RULE_SIZE))
 # The new spells (RULE_NEW_SPELLS; DSCLOG's NEW SPELLS): six wizard spells numbered after the game's
 # 196 (0-195), in records past its own (the 200h bytes after them, two small tables, moved into
 # DSCLOG at the game's start: its SEG_MOVE, SEGMENT_TABLE here); DSCLOG fills their records and rows
