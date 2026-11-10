@@ -12,10 +12,11 @@ length), and draws a figure's whole picture each time: so a picture's length is 
 costs, and the Loader's are exactly as long as they need be. When a party member's worn items
 change, the Loader writes their object's two pictures, dressed, over the old in its copy of the
 file, with their new lengths in the file's index (where the game reads them each time it loads
-one), takes the old ones out of the game's table (their number changed to STALE: the game frees
-them itself, as any it no longer draws), and empties the member's slots on the map, so the game
-loads the new ones and draws them at once (in a few milliseconds, as fast as writing them into
-its memory).
+one), puts each where the game already keeps the old one, or in a cell of its picture store it no
+longer uses (Dresser._in_store: no new slot taken), else takes the old one out of the game's table
+(its number changed to STALE: the game frees it itself, as any it no longer draws) for the game to
+load the new one into a new slot, and empties the member's slots on the map, so the game draws the
+new ones at once (in a few milliseconds, as fast as writing them into its memory).
 
 Two party members of the same race and sex share an object, and the game loads a picture once and
 draws everyone with it. So the copy also has a spare pair for each party place (SPARES, after the
@@ -61,6 +62,150 @@ ROOM = 2  # the room in the file for a picture, of its plain size (the bulkiest 
 # it has (DS:1F84h, at most 300), and the number a picture is given to take it out of the table
 PICTURE_TABLE_SEG, PICTURE_COUNT, PICTURE_ENTRY, PICTURES_MOST = 0x3E60, 0x1F84, 16, 300
 STALE = 0xFFFE
+# A picture's place in the game's store (+6, signed: none if negative) and its length (+2). The
+# game keeps every picture it loads in a store of fixed size (STORE_SIZE: DSUN.EXE 60D9Bh, the
+# memory handle at DS:4C33h), each new slot's place right after the last one's, and takes neither
+# a slot nor its room back but when an area is loaded (1DBD:06BEh): a picture taken out (STALE)
+# keeps both, and its outfit loaded anew takes another slot at the end. Past the store's end the
+# game's write fails unseen (25FA6h doesn't look at it): the picture is drawn while it stays in
+# memory, and once let go can't be read back (25D6Ah), which keeps the memory it took to read it
+# into each time the figure is drawn, till the others can't be loaded either: the party's and
+# the monsters' figures not drawn, an opened screen (the inventory) bringing them back for a while.
+# So the Loader reuses the store's cells (Store, Dresser._in_store), and where it can't, a dressing
+# is left till the next area (the figure as it was) unless the store and the table keep room for
+# it and for the game's own (_room_for).
+SLOT_LENGTH, SLOT_PLACE = 0x02, 0x06
+STORE_SIZE = 0xB5000
+STORE_SPARE, SLOTS_SPARE = 0x10000, 24  # (left for the game's own new pictures: a monster's, a spell's)
+# The store is a handle of the game's paged memory manager (handle table DS:47FAh, 14 bytes: +0 the
+# first page link, +2 its id, the handle's high word, +4 its size; the page directory cached in
+# DIR_COUNT blocks at DS:42D2h, each +2 key A+1, +4 key B, +8 64 entries of (descriptor, next
+# link), a link A<<12 | B<<6 | entry (17342h); a descriptor backend<<12 | page). Its 16 KB pages are
+# on backend 0, an XMS block (the backend's write 1187:04B0h moves with the XMS driver's function
+# 0Bh), which in DOSBox is guest RAM above 1 MB in one piece (at 110000h). The game finds a picture
+# by its number (25FA6h) and appends a slot only for a number it hasn't, so a slot can be given
+# another picture by writing the store's bytes at its place (+6, its room +2) and its number. Never
+# a slot's length (+2: the memory the game frees, 26701h) nor a picture in memory (the game moves
+# its pictures' memory, 262C3h) is written.
+STORE_HANDLE, HANDLES, HANDLE_SIZE = 0x4C33, 0x47FA, 14
+DIR_BLOCKS, DIR_BLOCK, DIR_COUNT, DIR_ENTRIES = 0x42D2, 0x108, 5, 8
+BACKEND_WRITE, XMS_WRITE = 0x4854, (0x1187, 0x04B0)
+STORE_PAGE, HIGH_MEMORY = 0x4000, 0x100000
+SLOT_FAR, SLOT_FLAGS, IN_MEMORY = 0x0A, 0x0E, 2
+CHECKED_MOST = 32  # (in-memory pictures the store's place is checked against when found)
+
+
+class Store:
+    """The game's picture store, read and written where it is (DOSBox's XMS block). Anything not
+    as DOSBox has it (another backend, a page not in the cached directory, no picture in memory
+    whose bytes are found there: the recompiled program's XMS kept elsewhere) and it is not used:
+    the Dresser takes the old way (STALE, a new slot)."""
+
+    def __init__(self, gd: GameData):
+        self.gd = gd
+        self._key = None  # (the handle, the pages) the base was found for
+        self.base: Optional[int] = None
+        self.pages: List[int] = []
+
+    def _pages(self) -> Optional[List[int]]:
+        g, d = self.gd.guest, self.gd.ds * 16
+        handle, = struct.unpack("<I", g.read(d + STORE_HANDLE, 4))
+        first, hid, size = struct.unpack("<HHI", g.read(d + HANDLES + (handle & 0xFFFF) * HANDLE_SIZE, 8))
+        if hid != handle >> 16 or size != STORE_SIZE:
+            return None
+        write, = struct.unpack("<I", g.read(d + BACKEND_WRITE, 4))
+        if (write >> 16, write & 0xFFFF) != (self.gd.load_seg + XMS_WRITE[0], XMS_WRITE[1]):
+            return None  # (not the XMS backend)
+        blocks = {}
+        for b in range(DIR_COUNT):
+            at = d + DIR_BLOCKS + b * DIR_BLOCK
+            blocks[struct.unpack("<HH", g.read(at + 2, 4))] = at + DIR_ENTRIES
+        pages, link = [], first
+        for _ in range((size + STORE_PAGE - 1) // STORE_PAGE):
+            at = blocks.get(((link >> 12) + 1, (link & 0xFFF) >> 6))
+            if at is None:
+                return None
+            desc, link = struct.unpack("<HH", g.read(at + (link & 0x3F) * 4, 4))
+            if desc >> 12:
+                return None
+            pages.append(desc & 0xFFF)
+        return pages
+
+    def locate(self, slots) -> bool:
+        """The store's pages and the XMS block's place (found again when the handle or its pages
+        change): from SLOTS (Dresser._slots) in memory, whose bytes are the store's."""
+        pages = self._pages()
+        if pages is None:
+            self.base = None
+            return False
+        key = (self.gd.guest.read(self.gd.ds * 16 + STORE_HANDLE, 4), tuple(pages))
+        if key == self._key and self.base is not None:
+            self.pages = pages
+            return self._still(slots)
+        self.pages, self.base, self._key = pages, None, key
+        mem = None
+        cands = None
+        for num, length, place, far, flags in slots:
+            if not flags & IN_MEMORY or place < 0 or length < 64 or num in (STALE, NO_SLOT):
+                continue
+            n = min(64, STORE_PAGE - place % STORE_PAGE)
+            if n < 32:
+                continue
+            if mem is None:
+                mem = self.gd.guest.read(HIGH_MEMORY, self.gd.guest.size - HIGH_MEMORY)
+            probe = self.gd.guest.read(far, n)
+            x = self._offset(place)
+            hits, i = set(), mem.find(probe)
+            while i >= 0:
+                hits.add(HIGH_MEMORY + i - x)
+                i = mem.find(probe, i + 1)
+            cands = hits if cands is None else cands & hits
+            if len(cands) == 1:
+                self.base = cands.pop()
+                if self._still(slots, CHECKED_MOST):  # (every page where its pages say: one piece)
+                    return True
+                self.base = None
+                return False
+            if not cands:
+                return False
+        return False
+
+    def _still(self, slots, most: int = 1) -> bool:
+        """The base found still the store's: the first bytes of MOST in-memory pictures there, each
+        at both ends (all if MOST is 0)."""
+        checked = 0
+        for num, length, place, far, flags in slots:
+            if flags & IN_MEMORY and place >= 0 and length >= 16 and num not in (STALE, NO_SLOT):
+                g = self.gd.guest
+                if self.read(place, 16) != g.read(far, 16) or \
+                        self.read(place + length - 16, 16) != g.read(far + length - 16, 16):
+                    return False
+                checked += 1
+                if checked == most:
+                    break
+        return True  # (none in memory: the inventory open; the handle and pages are as they were)
+
+    def _offset(self, place: int) -> int:
+        return self.pages[place // STORE_PAGE] * STORE_PAGE + place % STORE_PAGE
+
+    @staticmethod
+    def _pieces(place: int, n: int):
+        while n > 0:
+            take = min(n, STORE_PAGE - place % STORE_PAGE)
+            yield place, take
+            place += take
+            n -= take
+
+    def read(self, place: int, n: int) -> bytes:
+        return b"".join(self.gd.guest.read(self.base + self._offset(p), k) for p, k in self._pieces(place, n))
+
+    def write(self, place: int, data: bytes) -> None:
+        done = 0
+        for p, k in self._pieces(place, len(data)):
+            self.gd.guest.write(self.base + self._offset(p), data[done:done + k])
+            done += k
+
+
 # Seconds after a picture is loaded anew to have the view drawn again: the shadows are drawn on the
 # floor before the figures, and while the game loads the new picture its figure casts none
 REDRAW_AFTER = 0.3
@@ -241,9 +386,16 @@ def new_room(chunks, new: Dict[Tuple[str, int], bytes], looks: bool = True) -> D
     return out
 
 
+# The mod's magic items whose magic is the helper's or the Loader's, not a plus or a spell power: by
+# their types (the Boots of Speed, the Cloak and Boots of Elvenkind, the girdles, the amulet)
+MAGIC_TYPES = frozenset((game.SPEED_BOOTS_TYPE, game.ELVEN_CLOAK_TYPE, game.ELVEN_BOOTS_TYPE,
+                         game.BACK_GIRDLE_TYPE, game.URNST_GIRDLE_TYPE, game.MR_AMULET_TYPE))
+
+
 def _magic(item) -> bool:
-    """A plus or a power."""
-    return struct.unpack("b", item[game.ITEM_PLUS:game.ITEM_PLUS + 1])[0] > 0 or bool(item[game.ITEM_POWER])
+    """A plus or a power, or one of MAGIC_TYPES."""
+    return struct.unpack("b", item[game.ITEM_PLUS:game.ITEM_PLUS + 1])[0] > 0 or bool(item[game.ITEM_POWER]) \
+        or struct.unpack_from("<H", item, game.ITEM_TYPE)[0] in MAGIC_TYPES
 
 
 def item_glow(chunks, item) -> int:
@@ -325,6 +477,9 @@ class Dresser:
         self.shown: Dict[int, tuple] = {}  # object: the outfit its pictures in the copy show
         self.request_redraw: Optional[Callable[[], None]] = None  # has the view drawn again (DSCLOG)
         self._redraw_at: Optional[float] = None  # (once pictures loaded anew are in)
+        self.store = Store(gd)
+        self._built: Dict[int, tuple] = {}  # object: (its outfit, its pictures built for it)
+        self.reused = 0  # (pictures put in a cell of the store: for tests and the freeze report)
 
     @classmethod
     def for_game(cls, gd: GameData, game_dir: Optional[str], copy_file: Optional[str] = None,
@@ -392,6 +547,21 @@ class Dresser:
             return False  # (tried again at the next update)
         return True
 
+    def _same_in_copy(self, pictures: Dict[int, bytes]) -> bool:
+        """Whether the copy already holds each of PICTURES ({number: chunk}) as it is."""
+        try:
+            with open(self.copy_file, "rb") as f:
+                for picture, chunk in pictures.items():
+                    place = self.places.get(picture)
+                    if place is None or place[2] != len(chunk):
+                        return False
+                    f.seek(place[1])
+                    if f.read(len(chunk)) != chunk:
+                        return False
+        except (OSError, TypeError):
+            return False
+        return bool(pictures)
+
     def _unload(self, pictures) -> None:
         """PICTURES taken out of the game's table of those it has loaded: it loads them anew."""
         count, = struct.unpack("<H", self.gd.guest.read(self.gd.ds * 16 + PICTURE_COUNT, 2))
@@ -403,6 +573,93 @@ class Dresser:
             number, = struct.unpack_from("<H", table, k * PICTURE_ENTRY)
             if number in pictures:
                 self.gd.guest.write(base + k * PICTURE_ENTRY, struct.pack("<H", STALE))
+
+    def _slots(self) -> List[Tuple[int, int, int, int, int]]:
+        """The game's picture slots: (number, length, place, its memory's address, flags)."""
+        count, = struct.unpack("<H", self.gd.guest.read(self.gd.ds * 16 + PICTURE_COUNT, 2))
+        if count > PICTURES_MOST:
+            return []
+        table = self.gd.guest.read((self.gd.load_seg + PICTURE_TABLE_SEG) * 16, count * PICTURE_ENTRY)
+        out = []
+        for k in range(count):
+            number, length, place, off, seg, flags = struct.unpack_from("<HIiHHB", table, k * PICTURE_ENTRY)
+            out.append((number, length, place, seg * 16 + off, flags))
+        return out
+
+    def _in_store(self, pictures: Dict[int, bytes], dry: bool = False) -> set:
+        """Of PICTURES ({number: chunk}, written in the copy), those the game will draw as they are
+        now without a new slot: not loaded (the game loads the copy's), or put in a cell of its
+        store (Store): a STALE slot holding just this chunk (an outfit changed back: only its number
+        given back), else the picture's own slot if it is out of memory and has room (the inventory
+        open: written where it is), else the smallest STALE slot out of memory with room (the chunk
+        written there, the number given). The old slot, if another, is made STALE.
+        Never a picture in memory written: the game's own copy of it may be moving (262C3h). DRY:
+        only which could be. DOSBox is held still while the table and the store are written."""
+        slots = self._slots()
+        loaded: Dict[int, int] = {}
+        for k in reversed(range(len(slots))):
+            loaded[slots[k][0]] = k  # (the first slot with that number: the one the game finds)
+        done = {p for p in pictures if p not in loaded}
+        need = [p for p in pictures if p in loaded]
+        store = self.store
+        if not need or not store.locate(slots):
+            return set() if dry else done
+        plan, used = {}, set()
+        for p in need:
+            chunk, k = pictures[p], loaded[p]
+            cell = None
+            for j, (num, length, place, far, flags) in enumerate(slots):
+                if num == STALE and j not in used and place >= 0 and length >= len(chunk) \
+                        and store.read(place, len(chunk)) == chunk:
+                    cell = (j, False)
+                    break
+            if cell is None and not slots[k][4] & IN_MEMORY and slots[k][2] >= 0 and slots[k][1] >= len(chunk):
+                cell = (k, True)
+            if cell is None:
+                fits = [(length, j) for j, (num, length, place, far, flags) in enumerate(slots)
+                        if num == STALE and j not in used and not flags & IN_MEMORY and place >= 0
+                        and length >= len(chunk)]
+                if fits:
+                    cell = (min(fits)[1], True)
+            if cell is not None:
+                plan[p] = (k,) + cell
+                used.add(cell[0])
+        if dry:  # (one not loaded takes a new slot when the game draws it: not counted here)
+            return set(plan)
+        from .itemgate import _HELD, _pause, _resume
+        proc = getattr(self.gd.guest, "proc", None)
+        # (DOSBox already held by the item gate, a block of item writes open: left to the gate to
+        # let go, never resumed here under it)
+        paused = proc not in _HELD and _pause(proc)
+        try:
+            now = self._slots()
+            base = (self.gd.load_seg + PICTURE_TABLE_SEG) * 16
+            for p, (k, j, write) in plan.items():
+                if len(now) != len(slots) or now[k][0] != p or (j != k and now[j][0] != STALE) \
+                        or (write and now[j][4] & IN_MEMORY):
+                    continue  # (the game changed it meanwhile: the old way, a new slot)
+                if write:
+                    store.write(now[j][2], pictures[p])
+                if j != k:
+                    self.gd.guest.write(base + j * PICTURE_ENTRY, struct.pack("<H", p))
+                    self.gd.guest.write(base + k * PICTURE_ENTRY, struct.pack("<H", STALE))
+                done.add(p)
+                self.reused += 1
+        finally:
+            if paused:
+                _resume(proc)
+        return done
+
+    def _room_for(self, size: int, slots: int = 2) -> bool:
+        """Whether the game's store and table of pictures have room for SLOTS more pictures of
+        SIZE bytes in all, with STORE_SPARE and SLOTS_SPARE left over (STORE_SIZE)."""
+        count, = struct.unpack("<H", self.gd.guest.read(self.gd.ds * 16 + PICTURE_COUNT, 2))
+        if count > PICTURES_MOST or count + slots + SLOTS_SPARE > PICTURES_MOST:
+            return False
+        # (the store's end in use: the furthest slot's, not the last's, which the game may have put
+        # back in a hole an earlier picture left)
+        end = max((place + length for _, length, place, _, _ in self._slots() if place >= 0), default=0)
+        return end + size + STORE_SPARE <= STORE_SIZE
 
     def objects(self) -> Dict[int, Tuple[int, int]]:
         """{object: (party member, their figure's object)}: the first member with a figure has its
@@ -481,19 +738,37 @@ class Dresser:
             key = (model, figure, repr(sorted(outfit[0].items())), outfit[1], stage)
             fresh = self.shown.get(obj) != key
             if fresh:
-                pictures = {}
-                for combat, picture in zip((False, True), picture_ids(obj)):
-                    # (the room the copy has, which Pictures' reckoning may overstate: _write)
-                    room = min(self.pics.room(obj, combat), self.rooms.get(picture, 0))
-                    chunk = self.pics.build(obj, combat, outfit[0], outfit[1], model, figure, stage)
-                    if len(chunk) > room:  # (more than there is room for: plain)
-                        chunk = self.pics.build(obj, combat, {}, (), model, figure, stage)
-                    if len(chunk) > room:
-                        chunk = self.pics.build(obj, combat, {}, (), model, figure)
-                    pictures[picture] = chunk
+                built = self._built.get(obj)
+                if built is not None and built[0] == key:
+                    pictures = built[1]
+                else:
+                    pictures = {}
+                    for combat, picture in zip((False, True), picture_ids(obj)):
+                        # (the room the copy has, which Pictures' reckoning may overstate: _write)
+                        room = min(self.pics.room(obj, combat), self.rooms.get(picture, 0))
+                        chunk = self.pics.build(obj, combat, outfit[0], outfit[1], model, figure, stage)
+                        if len(chunk) > room:  # (more than there is room for: plain)
+                            chunk = self.pics.build(obj, combat, {}, (), model, figure, stage)
+                        if len(chunk) > room:
+                            chunk = self.pics.build(obj, combat, {}, (), model, figure)
+                        pictures[picture] = chunk
+                    self._built[obj] = (key, pictures)
+                if obj not in self.shown and self._same_in_copy(pictures):
+                    # (dressed so before: the copy holds these already, written by the Dresser before
+                    # a reconnect, and the game has loaded them or will: nothing to load anew)
+                    self.shown[obj] = key
+                    if self._point(member, figure, obj, reload=False):
+                        changed.append(obj)
+                    continue
+                # (a new slot for any the store has no cell for: room for it? On the first dressing
+                # too: after a reconnect it took up to 8 new slots each time, unchecked)
+                left = [p for p in pictures if p not in self._in_store(pictures, dry=True)]
+                if left and not self._room_for(sum(self.rooms.get(p, 0) for p in left), len(left)):
+                    continue  # (no room to load it anew: left as it is, tried again: STORE_SIZE)
                 if not self._write(pictures):
                     continue
-                self._unload(pictures)
+                placed = self._in_store(pictures)
+                self._unload({p: c for p, c in pictures.items() if p not in placed})
                 self.shown[obj] = key
                 self._redraw_at = now + REDRAW_AFTER
             if self._point(member, figure, obj, reload=fresh) or fresh:

@@ -28,7 +28,7 @@ does the slave-pen items (npcitems); the game's shop screen (24h) sells what he 
 import struct
 from typing import Callable, Dict, List, Optional, Tuple
 
-from . import game, gpl, itemgate
+from . import game, gff, gpl, itemgate
 from .gff import read_gff
 
 OBJECT = 1000  # (no object of the game's has it. Past the game's object table, 520 long: the
@@ -542,10 +542,10 @@ def with_talk(master: bytes, field_types: bytes = b"") -> bytes:
 ENTRY = struct.Struct("<HHH")  # GPLI: (entry number, place in the script, script), numbered from 0
 ENTRIES = ("GPLI", 1)
 # The Loader's own scripts (the game's run to 217): Kalzith's talk, Semyon's (semyon.SCRIPT), Alagorn's
-# copies of 212 (alagorn.COPY_OF), Pehtucl's chest (pehtuclchest.SCRIPT): one number each
-# (test_scriptnumbers)
+# copies of 212 (alagorn.COPY_OF), Pehtucl's chest (pehtuclchest.SCRIPT), the weapons' stories Alagorn's
+# 222 calls (alagorn.TOLD_IN): one number each (test_scriptnumbers)
 LOADER_SCRIPTS = {218: "Kalzith", 219: "Semyon", 220: "Alagorn: clothes", 221: "Alagorn: rings and others",
-                  222: "Alagorn: weapons", 223: "Pehtucl's chest"}
+                  222: "Alagorn: weapons", 223: "Pehtucl's chest", 224: "Alagorn: the weapons' stories"}
 ENTRY_SCRIPTS = (218, 219, 223)  # (those with an entry point, in its order: Kalzith, Semyon, the chest)
 
 
@@ -619,6 +619,8 @@ def script_chunks(gpldata: bytes, kalzith: bool = True, semyon: bool = True,
     out.update(manualcheck.script_chunks(chunks, field_types))
     from . import scriptfixes  # the game's own script bugs mended (scriptfixes.py): always
     out.update(scriptfixes.script_chunks(chunks, out))
+    from . import alagorn as ag  # what Alagorn says of the Quicksilver Glove and the Helm of Contemplation: always
+    out.update(ag.retold_chunks(chunks, field_types, out))
     from . import kurzak  # Kurzak noticing Legcrusher is gone (kurzak.py): always
     out.update(kurzak.script_chunks(chunks, field_types, out))
     if champions:  # the champions' bout after Scar's death (champions.py; their objects in the objects' copy)
@@ -841,10 +843,7 @@ def _write(source: str, dest: str, added) -> None:
     with open(source, "rb") as f:
         data = f.read()
     out = with_chunks(data, added(data))
-    tmp = dest + ".tmp"
-    with open(tmp, "wb") as f:
-        f.write(out)
-    os.replace(tmp, dest)
+    gff.write_atomic(dest, out)  # (no .tmp left by a failed write)
 
 
 def write_scripts(source: str, dest: str, kalzith: bool = True, semyon: bool = True, vulture: bool = True,

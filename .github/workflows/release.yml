@@ -14,6 +14,8 @@ permissions:
 
 jobs:
   release:
+    # (run by hand: only on main, as the note above says)
+    if: github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,8 +25,18 @@ jobs:
           architecture: x64
       - name: The emulator for DSCLOG's tests
         run: python -m pip install unicorn==2.1.4
+      - name: nasm, for the DOS programs' rebuild checks (DSCLOG.EXE, GAMEEND.COM, UMBPLUS.COM)
+        # (2.16.01, the version DSCLOG.EXE is built with: nasm 3 encodes it otherwise, so the rebuild
+        # checks failed and the tests read the wrong symbols, 2026-11-10)
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri "https://www.nasm.us/pub/nasm/releasebuilds/2.16.01/win64/nasm-2.16.01-win64.zip" -OutFile "$env:RUNNER_TEMP\nasm.zip"
+          Expand-Archive -Path "$env:RUNNER_TEMP\nasm.zip" -DestinationPath "$env:RUNNER_TEMP"
+          Add-Content -Path $env:GITHUB_PATH -Value "$env:RUNNER_TEMP\nasm-2.16.01"
       - name: Tests
         working-directory: obsidian-edition
+        env:
+          DSUN_REQUIRE_NASM: "1"
         run: python -m unittest discover -s tests
       - name: The version (and the tag, when one was pushed)
         shell: bash

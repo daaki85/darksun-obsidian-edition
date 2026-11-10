@@ -30,6 +30,8 @@ import os
 import struct
 from typing import NamedTuple
 
+from . import gff
+
 GOG_SIZE = 611408  # DSUN.EXE of the GOG release (1.1)
 
 VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR = range(0x60, 0x66)  # as in dsclog.asm
@@ -173,6 +175,54 @@ CR_AGE_SITE = NS_IMAGE + 61  # (the creation panel's PSP drawn: the age above RE
 CR_AGE_CON_SITE = NS_IMAGE + 66  # (the same after a click on CON: the roll kept, DSCLOG's CR_AGE_CON)
 CR_OPEN_SITE = NS_IMAGE + 67  # (the creation screen opening, a new member or EDIT: DSCLOG's CR_OPEN)
 CR_HP_SITE = NS_IMAGE + 68  # (the hit points drawn again: the THAC0 after them, DSCLOG's CR_HP)
+STINK_SITE, CHAOS_SITE = NS_IMAGE + 69, NS_IMAGE + 70  # (Stinking Cloud's round more; Chaos's INT exception: DSCLOG's STINK_SITE, CHAOS_SITE)
+# (a classless creature's level for its saves its hit dice; Color Spray unsaved by the caster's
+# level or lower; Hold Undead only on undead of no more levels than its caster's: DSCLOG's
+# HD_SAVE, SPRAY_SITE, HOLD_HD)
+HD_SAVE_SITE, SPRAY_SITE, HOLD_HD_SITE = NS_IMAGE + 71, NS_IMAGE + 72, NS_IMAGE + 73
+# (a missile spell or a hostile touch spell on its target: its attack roll, and the always-hit
+# stub of the missile spells answering it: DSCLOG's SPELL_HIT, SPELL_STUB)
+SPELL_HIT_SITE, SPELL_STUB_SITE = NS_IMAGE + 74, NS_IMAGE + 75
+# (Turn Undead by AD&D's table, its outcomes turned, destroyed and D*, once a priest a creature a
+# fight; a cast's repeats, Flame Arrow's one for every five levels: DSCLOG's TURN_SITE, FLAME_SITE)
+TURN_SITE, FLAME_SITE = NS_IMAGE + 76, NS_IMAGE + 77
+# (the spells and psionics as the manual describes them, group 3: Barkskin's and Blur's +1 on saves;
+# Protection from Cold's +3 and Fire Shield's +2; Cloudkill's save by level and its kill; Lower
+# Resistance's 30 + its level off; Strength's and Cat's Grace's dice by class; damage ending Rainbow
+# Pattern's hold; no psionics while feebleminded; Biofeedback's 2 off a blow leaving at least 1; Cell
+# Adjustment's 1d4:
+# DSCLOG's BLUR_SITE ... CELL_SITE)
+BLUR_SITE, FSHIELD_SITE, CLOUD_SAVE_SITE, CLOUD_KILL_SITE, LOWRES_SITE = range(NS_IMAGE + 78, NS_IMAGE + 83)
+STRENGTH_SITE, RAINBOW_SITE, PSI_SITE, BIO_SITE, CELL_SITE = range(NS_IMAGE + 83, NS_IMAGE + 88)
+# (dual-classing as the manual has it, RULE_DUAL_CLASS: the level DUAL needs, the old and the new class's
+# prime requisites: DSCLOG's DUAL_LEVEL, DUAL_PRIMES)
+DUAL_LEVEL_SITE, DUAL_OLD_SITE, DUAL_NEW_SITE = range(NS_IMAGE + 88, NS_IMAGE + 91)
+# (the monsters as the manual describes them: a shadow's STR drain; a Tari's 1 in 20: DSCLOG's
+# SHADOW_DRAIN, TARI_BITE)
+DRAIN_SITE, TARI_SITE = NS_IMAGE + 91, NS_IMAGE + 92
+# (resting, RULE_REST: the priests' and psionicists' cures before it, natural healing in it: DSCLOG's
+# REST_PRE, REST_HP)
+# (NS_IMAGE + 93 is 90h, a NOP: DSCLOG takes the byte after its INT for no site then, so no site has it)
+REST_PRE_SITE, REST_HP_SITE = NS_IMAGE + 94, NS_IMAGE + 95
+# (a saving throw's natural 20, saving unless the save can't be made: DSCLOG's SAVE_SUM)
+SAVE_SUM_SITE, SAVE_NAT_SITE = NS_IMAGE + 96, NS_IMAGE + 97
+# (the item box's picture: a tall weapon's small copy, icons.BOX_TALL: DSCLOG's BOX_PICS)
+BOX_PIC_ITEM_SITE, BOX_PIC_OBJECT_SITE = NS_IMAGE + 98, NS_IMAGE + 99
+# (the picture cache's 300 slots: one reused once all are taken, DSCLOG's PIC_REUSE)
+PIC_FULL_SITE, PIC_PLACE_SITE, PIC_COUNT_SITE = NS_IMAGE + 100, NS_IMAGE + 101, NS_IMAGE + 102
+# (the cahulaks' rule, RULE_CAHULAKS: two weapons ready, the off head's swing, the tangle: DSCLOG's CAHULAKS)
+CAH_TWO_SITE, CAH_SWING_SITE, CAH_HIT_SITE = NS_IMAGE + 103, NS_IMAGE + 104, NS_IMAGE + 105
+# (a weapon's damage line drawn, the item box's and the inventory's: its large dice, DSCLOG's SIZE_LINE)
+SIZE_LINE_SITE, SIZE_PRE_SITE = NS_IMAGE + 106, NS_IMAGE + 107
+# (AD&D's held target, RULE_HELD: hit automatically, normal damage: DSCLOG's HELD)
+HELD_HIT_SITE, HELD_DAMAGE_SITE = NS_IMAGE + 108, NS_IMAGE + 109
+# (the picture loader's failure: a reused slot let go again, DSCLOG's PIC_FAIL)
+PIC_FAIL_SITE = NS_IMAGE + 110
+# the monster kinds' table (DSUN.EXE, the load segment's 3E45h: monsters.MONSTER_KINDS_SEG): a kind's
+# properties (a dword), its resistance class (a byte), a class's damage kinds (four words) and percents
+KINDS_FILE = 0x5400 + 0x3E45 * 16
+def _kind(kind: int) -> int:
+    return KINDS_FILE + 4 * kind
 CR_NAME_SITE, CR_NAME2_SITE, CR_NAME3_SITE, CR_NAME4_SITE = range(NS_IMAGE + 62, NS_IMAGE + 66)  # (a name the game gave copied to the creature: PSP and the age drawn again)
 ARROW_LEVEL = NS_IMAGE + 47  # (a spell arrow's spell at the archer's preserver level, not a weapon's 6)
 SCROLL_USE = NS_IMAGE + 49  # (an item's box: a Shinobi's scroll picture a button, so it can learn the spell)
@@ -426,6 +476,28 @@ PATCHES = (
     # slot after the last in regions 6, 13, 14, 27, 39, 40, 44 and 255) divided by 0 ("Divide error",
     # back to DOS). "idiv word es:[bx+4]" made [bx+0]: the slot found's own
     Patch("monster_count", 0x80CD8, bytes.fromhex("26f77f04"), bytes.fromhex("26f77f00")),
+    # ... and the rest (8066Dh) killed the Poisoned even after the free Neutralize Poison of a druid of
+    # 7th level or more: its pass 2 took each member's effects as a bitset (598:25h, 76944h, at
+    # 8075Dh) before the free cures (809A2h: Cure Disease, Remove Curse, Remove Paralysis, Neutralize
+    # Poison) and killed (1000 damage, 80963h) from that copy (seen in DOSBox 2026-11-09). The 7 casts
+    # (near calls, no fixups) moved ahead of the read, their nops dropped: the loop's jump (80984h)
+    # goes to the casts (80768h), which end with a jump to the read (80758h), which goes on past
+    # them (80765h: "jmp 807EDh"). A disease cured at a rest gives STR back that rest too
+    # (playtest/logs/2026-11-09-rest-order.asm)
+    Patch("rest_cures_first", 0x80765, bytes.fromhex(
+        "837ef0057c368a46f050ff76ea566a60900ee8280283c4088a46f050ff76ea566a67900ee8160283c4088a46f050ff76ea"
+        "566a69900ee8040283c408837eee057c308a46ee5057566a60900ee8ee0183c4088a46ee5057566a67900ee8de0183c408"
+        "8a46ee5057566a69900ee8ce0183c408837eee077c108a46ee5057566a76900ee8b80183c408"), bytes.fromhex(
+        "e98500837ef0057c338a46f050ff76ea566a600ee8260283c4088a46f050ff76ea566a670ee8150283c4088a46f050ff76"
+        "ea566a690ee8040283c408837eee057c2d8a46ee5057566a600ee8ef0183c4088a46ee5057566a670ee8e00183c4088a46"
+        "ee5057566a690ee8d10183c408837eee077c0f8a46ee5057566a760ee8bc0183c408e96cff90")),
+    Patch("rest_cures_loop", 0x80984, bytes.fromhex("e9d1fd"), bytes.fromhex("e9e1fd")),
+    # ... and resting by the Loader's rule "rest_heal" (RULE_REST; each site the game's with it off): the
+    # rest's first move, "mov word [bp-10h],0" (80675h), before any slot is refilled: the party's priests
+    # and psionicists spend what they have left on the party (DSCLOG's REST_PRE); pass 2's hit points,
+    # "mov [es:bx],ax" (808AFh): natural healing, not the most (REST_HP)
+    Patch("rest_spells", 0x80675, bytes.fromhex("c746f00000"), _site(REST_PRE_SITE, 5)),
+    Patch("rest_hp", 0x808AF, bytes.fromhex("268907"), _site(REST_HP_SITE, 3)),
     # ... and a fight's music: an attack that starts a fight asks for the music level the region
     # record gives its creature (62F75h, REQUEST 16): the creatures are words at +263h, their levels
     # bytes at +277h, but the level was read with the word's index ("mov bx,dx / shl bx,1"), so any
@@ -438,6 +510,216 @@ PATCHES = (
     # could. The first test's jne to the fail made "je" to the save: an elf or half-elf priest
     # saves as usual (found by CalvinRodo's yuan-ti, checked in DSUN.EXE)
     Patch("scare_elves", 0x79FEA, bytes.fromhex("752c"), bytes.fromhex("7431")),
+    # ... which never ran, nor the level rule before it: Scare's record (spell 21, its +1Fh, the
+    # save's byte) had bit 0, "a save allowed", clear (A0h; Charm and Hold Person's A1h), and the
+    # saving throw's routine (79A71h) answers "not saved" at its first test without it, so every
+    # creature but the undead was Scared, a 7th-level fighter too (seen in DOSBox, 2026-11-08: no
+    # save rolled). The bit set: the game's own rules above come into play
+    Patch("scare_save", 0x4222F, bytes.fromhex("a0"), bytes.fromhex("a1")),
+    # Spells as the manual has them (the Options tab's "Spells and psionics as the manual describes them",
+    # SPELLS_MANUAL: skipped with it off). The spell records (spell s at 41F70h + 20h x s: +4 the
+    # duration's dice, count low and sides high, +5 that a caster level, +7 the unit, 60 a round or
+    # -1 charges or -9999 until removed; +12h's 80h a save negating the damage; +1Ch..+1Eh the
+    # damage's dice; +1Fh the save, bit 0 one allowed). reports/spells-against-the-manual.md
+    # Bestow Curse (104) and Blood Flow (108): "save negates", but no save was allowed
+    Patch("bestow_curse_save", 0x42C8F, bytes.fromhex("a0"), bytes.fromhex("a1")),
+    Patch("blood_flow_save", 0x42D0F, bytes.fromhex("a0"), bytes.fromhex("a1")),
+    # Flaming Sphere (14): a save negates its 2d4, not halves it
+    Patch("flaming_sphere_negates", 0x42142, bytes.fromhex("40"), bytes.fromhex("c0")),
+    # Solid Fog (51): 1d3 rounds + 1 a caster level, not stuck until removed
+    Patch("solid_fog_time", 0x425D4, bytes.fromhex("1000"), bytes.fromhex("3101")),
+    Patch("solid_fog_rounds", 0x425D7, bytes.fromhex("f1d8"), bytes.fromhex("3c00")),
+    # Minor Spell Turning (48): 3 rounds a caster level, not one spell turned and then none
+    Patch("spell_turning_time", 0x42574, bytes.fromhex("1100"), bytes.fromhex("1003")),
+    Patch("spell_turning_rounds", 0x42577, bytes.fromhex("ffff"), bytes.fromhex("3c00")),
+    # Cause Fear (78): 1d4 rounds, not 1 a caster level
+    Patch("cause_fear_time", 0x42934, bytes.fromhex("0001"), bytes.fromhex("4100")),
+
+    # Quicksand (134): no save (its Stuck lasts a round and is put on again each round while the
+    # quicksand lasts, a 5d3 of its own: the record's time changes nothing, seen in DOSBox)
+    Patch("quicksand_no_save", 0x4304F, bytes.fromhex("a1"), bytes.fromhex("a0")),
+    # Ironskin (133): a blow stopped a caster level, not 1d6 (its level divisor, +1Dh's low bits,
+    # shared with the damage formula, made 1: it was 2; its damage stays none)
+    Patch("ironskin_charges", 0x43014, bytes.fromhex("6100"), bytes.fromhex("1001")),
+    Patch("ironskin_per_level", 0x4302D, bytes.fromhex("02"), bytes.fromhex("01")),
+    # Turn Pebble to Boulder (53): 3d6+8 (11-26), not 6d6
+    Patch("pebble_damage", 0x4262C, bytes.fromhex("003106"), bytes.fromhex("081f06")),
+    # Melf's Minute Meteors (33): five globes of 1d4, each its own cast and landing (each rolling
+    # to hit, +2, with spells that roll to hit: DSCLOG's TH_METEORS), not one of 1d4 a caster
+    # level: +0's count (bits 2-7, Magical Stone's 3) made 5, the damage 1d4 whatever the level
+    Patch("meteors_count", 0x42390, bytes.fromhex("06"), bytes.fromhex("16")),
+    Patch("meteors_damage", 0x423AC, bytes.fromhex("200104"), bytes.fromhex("000904")),
+    # Flame Arrow (28): a bolt of 1d6 + 4d6 fire (5d6) for every five caster levels, each its own
+    # cast and landing (AD&D's), not one of 5d6 for every five levels: the damage 5d6 whatever the
+    # level, the count the cast's tail reads (7567Fh, "mov dl,[es:bx]", the record's +0) one for
+    # every five levels, at least one (DSCLOG's FLAME_SITE)
+    Patch("flame_arrow_damage", 0x4230C, bytes.fromhex("a00506"), bytes.fromhex("002906")),
+    Patch("flame_arrow_count", 0x7567F, bytes.fromhex("268a17"), _site(FLAME_SITE, 3)),
+    # Turn Undead (190, the priests' button) by AD&D's turning table (DSCLOG's TURN_SITE): in the
+    # game's routine (7ADB7h), where it works out its own number, "mov al,[es:bx+24h]" (7AE01h):
+    # turned (Afraid, 3d4 rounds), destroyed, D* (2d4 more of the kind) or nothing, and a priest
+    # who fails can't try that undead again that fight
+    Patch("turn_undead_manual", 0x7AE01, bytes.fromhex("268a4724"), _site(TURN_SITE, 4)),
+    # The saving throw (79A71h) compared its total with the number needed unsigned ("cmp al,[bp-1] /
+    # jae", 79BBAh), so the save modifiers' -100 for "can't save" (Chaos's, Cloudkill's, Scare's below
+    # 6th level, Color Spray's) made a negative total, read as 156 and up: always saved (seen in
+    # DOSBox 2026-11-09: Arena Guards "unable to save" against Cloudkill took half its damage, a Guard
+    # against Scare was never Afraid). The compare made signed ("jge"): -100 fails, +100 saves (Scare
+    # from 6th level). Always applied (a fix of the game's, in no switch; the user's decision, 2026-11-09)
+    Patch("save_signed", 0x79BBD, bytes.fromhex("73a6"), bytes.fromhex("7da6")),
+    # ... and a natural 20, which the game took as saved before adding the modifiers (79B5Fh), saves
+    # unless the save can't be made ("never save should be never save": the user, 2026-11-09): the
+    # natural 20's test jumped over, so it goes on with the modifiers (DSCLOG's SAVE_SUM: the sum kept
+    # in its byte, and the natural 20 made a save there, under the -100's). Always applied, as above.
+    Patch("save_natural", 0x79B5F, bytes.fromhex("807e"), bytes.fromhex("eb09")),
+    Patch("save_sum", 0x79B97, bytes.fromhex("8a56fe02d08856fe"), _site(SAVE_SUM_SITE, 8)),
+    Patch("save_natural_saves", 0x79BB4, bytes.fromhex("0046fe"), _site(SAVE_NAT_SITE, 3)),
+    # The item box's picture (DSUN.EXE 8C2F1h, called by the box alone): the number an item keeps
+    # ("movsx eax,word [es:bx+0Ch]", 8C344h) or its object's icon ("movzx eax,word [bp-0Eh]", 8C384h,
+    # then kept in the item) pushed for the load; DSCLOG's BOX_PICS pushes a tall weapon picture's
+    # small copy instead (icons.BOX_TALL, BOX_SMALL), the item keeping its own number, so the box's
+    # text starts as a 16-pixel picture's and its last row is inside it; the inventory and the ground
+    # keep the picture. Always applied (the copies are in the Loader's SEGOBJEX.GFF whatever the Options)
+    Patch("box_picture_item", 0x8C344, bytes.fromhex("66260fbf470c"), _site(BOX_PIC_ITEM_SITE, 6)),
+    Patch("box_picture_object", 0x8C384, bytes.fromhex("660fb746f2"), _site(BOX_PIC_OBJECT_SITE, 5)),
+    # The picture cache (DSUN.EXE 25FA6h: each WALL or BMP picture drawn has a slot of 300, given
+    # back only when a region loads): with all taken a new picture had none and wasn't drawn (Wake of
+    # the Ravager's "graphics disappear during play", the same engine's). DSCLOG's PIC_REUSE reuses a
+    # slot out of memory that no wall or map thing names, the picture's store place the first gap it
+    # fits. Always applied (a fix): below 300 slots the game's own way.
+    Patch("pic_full", 0x26009, bytes.fromhex("813e841f2c0173bfa1841f"), _site(PIC_FULL_SITE, 11)),
+    Patch("pic_place", 0x260CC, bytes.fromhex("c45efc"), _site(PIC_PLACE_SITE, 3)),
+    Patch("pic_count", 0x2612B, bytes.fromhex("8b36841fff06841f"), _site(PIC_COUNT_SITE, 8)),
+    Patch("pic_fail", 0x25FD0, bytes.fromhex("b8ffff"), _site(PIC_FAIL_SITE, 3)),
+    # Cahulaks as Dark Sun's rules have them (the Loader's rule "cahulaks", RULE_CAHULAKS; each site the
+    # game's with it off): the two-weapon adjustment's "two weapons ready?" (595ECh: "cmp word [bp+6],1 /
+    # jle") on for them too; the attack's swing (589B6h, "mov word [bp-4],0": the off head's, the round's
+    # last, its penalty); a weapon's hit that did damage (58B54h, "mov byte [bp-15h],0": the tangle).
+    Patch("cahulaks_two", 0x59627, bytes.fromhex("837e06017e11"), _site(CAH_TWO_SITE, 6)),
+    Patch("cahulaks_swing", 0x589B6, bytes.fromhex("c746fc0000"), _site(CAH_SWING_SITE, 5)),
+    Patch("cahulaks_hit", 0x58B54, bytes.fromhex("c646eb00"), _site(CAH_HIT_SITE, 4)),
+    # The creature size rule (RULE_SIZE): a weapon's damage line just drawn (7286Fh's "inc word [bp-2]"
+    # at 72AA7h, the item box's and the inventory's): its dice against a large target with it.
+    Patch("size_line", 0x72AA7, bytes.fromhex("ff46fe"), _site(SIZE_LINE_SITE, 3)),
+    # ... and Shillelagh's line, about to be drawn ("push word [bp+12h]" at 72A8Ah): 1D6+1, AD&D's
+    # against a smaller target, its 2D4 the large one.
+    Patch("size_pre", 0x72A8A, bytes.fromhex("ff7612"), _site(SIZE_PRE_SITE, 3)),
+    # AD&D's held target (RULE_HELD; each site the game's with it off): the attack's natural 20 test
+    # (589E9h, "cmp word [bp-6],14h", before its JE to the hit), the hit on a helpless target too; and
+    # what a helpless target takes (58B0Dh, "mov ax,[bp-4] / shl ax,1"), the damage, not x2.
+    Patch("held_hit", 0x589E9, bytes.fromhex("837efa14"), _site(HELD_HIT_SITE, 4)),
+    Patch("held_damage", 0x58B0D, bytes.fromhex("8b46fcd1e0"), _site(HELD_DAMAGE_SITE, 5)),
+    # The monsters as the manual describes them (in the same switch; reports/group 4's research,
+    # playtest/logs/2026-11-09-group-4-research.md). The kinds' properties: bit 15 a hit (the last
+    # natural attack's) casting the priests' Poison (119), bit 24 the corroding touch, bit 25 disease
+    # (184, 1 in 10), bit 31 a fire breath one turn in four (185, 3d6, a save halves). The Babau's and
+    # the Blue Slaad's "deadly poison" in place of the corroding touch and the disease, which the
+    # manual hasn't ...
+    Patch("babau_poison", _kind(3), struct.pack("<I", 0x01400400), struct.pack("<I", 0x00408400)),
+    Patch("blue_slaad_poison", _kind(17), struct.pack("<I", 0x12000400), struct.pack("<I", 0x10008400)),
+    # ... kinds no creature of the game's has, for the Loader's copy of SEGOBJEX
+    # (monsters.MANUAL_MONSTERS): the Styr's (38: its 3d6 fire breath; class 11 already, +1 weapons),
+    # the Djinn's (39: nothing of its own; DSCLOG's DJINN_TURN its invisibility and images) and the
+    # Tari's (40: disease, DSCLOG's TARI_BITE making it 1 in 20) ...
+    Patch("styr_kind", _kind(38), struct.pack("<I", 0x00000601), struct.pack("<I", 0x80000400)),
+    Patch("djinn_kind", _kind(39), struct.pack("<I", 0x00800020), struct.pack("<I", 0)),
+    Patch("tari_kind", _kind(40), struct.pack("<I", 0x00000020), struct.pack("<I", 0x02000000)),
+    Patch("tari_bite", 0x7A747, bytes.fromhex("3d0100"), _site(TARI_SITE, 3)),
+    # ... the shadows "unaffected by cold-based attacks" (the greater shadow's, the manual's; the
+    # shadow too, as AD&D's): class 4's first rule (0%) gets cold (4), and the greater shadow (kind 13)
+    # class 4 for 11, whose 100% rule had any spell's damage hurt it in full (both: +1 weapons only)
+    Patch("shadow_cold", KINDS_FILE + 0xD2 + 12 * 4, struct.pack("<H", 0x0139), struct.pack("<H", 0x013D)),
+    Patch("greater_shadow_class", KINDS_FILE + 0xA8 + 13, bytes((11,)), bytes((4,))),
+    # ... and their STR drain for the shadow's 2d6 cold and the greater shadow's paralysis (DSCLOG's
+    # SHADOW_DRAIN), in the routine giving a hit's power (7A9A7h): "mov si,[bp+8] / mov al,[bp+0Ah]"
+    Patch("shadow_drain", 0x7A9AB, bytes.fromhex("8b76088a460a"), _site(DRAIN_SITE, 6)),
+    # Chill Touch (3): the game takes 1 STR off a creature that fails its save (Weakened, its handler's
+    # tail, 79855h), but its record gave the effect no time (0 rounds), so it ended at once: an hour
+    # (60 rounds; AD&D's lost Strength comes back a point an hour): +4..+8 "10 00 00 3C 00" made 1 x 3600
+    Patch("chill_touch_time", 0x41F70 + 3 * 32 + 4, bytes.fromhex("1000003c00"), bytes.fromhex("110000100e")),
+    # Blur (12): +1 on saves against magic, as Barkskin's, in the save modifiers (79D46h) at Barkskin's
+    # test (79DC0h, "les bx,[bp+0Ah] / test byte [es:bx+7],2 / jz / inc si": DSCLOG's BLUR_SITE)
+    Patch("blur_save", 0x79DC0, bytes.fromhex("c45e0a26f6470702740146"), _site(BLUR_SITE, 11)),
+    # Fire Shield (44): +2 on saves against fire and cold (the caster already takes half from them,
+    # 7B565h), at Protection from Cold's test (79E03h; DSCLOG's FSHIELD_SITE)
+    Patch("fire_shield_save", 0x79E03, bytes.fromhex("f746fc0400740dc45e0a26f64704107403 83c603".replace(" ", "")),
+          _site(FSHIELD_SITE, 20)),
+    # Cloudkill (57): AD&D's bands by the level its saves count (HD_SAVE's: a classless creature's hit
+    # dice): under 4 no save (the game's "6 or less", 79F95h: DSCLOG's CLOUD_SAVE_SITE), 4 or 5 a failed
+    # save kills: the damage a thousand times over, at least 1000 as Slay Living's, where the spell's
+    # damage keeps the save's answer (78DB6h: CLOUD_KILL_SITE); 6 and up the damage as before
+    Patch("cloudkill_save", 0x79F95, bytes.fromhex("837e143975 09837efa067f0383ee64".replace(" ", "")),
+          _site(CLOUD_SAVE_SITE, 15)),
+    Patch("cloudkill_kills", 0x78DB6, bytes.fromhex("8846ff"), _site(CLOUD_KILL_SITE, 3)),
+    # Lower Resistance (64): magic resistance 30% + 1% a caster level less (at least 0), the cast's
+    # level kept in the effect (DSCLOG's ACID_ROUNDS), not halved; the cast's own check the same, the
+    # two not added up (7A507h-7A527h: LOWRES_SITE)
+    Patch("lower_resistance_manual", 0x7A507, bytes.fromhex(
+        "f646f980740b8b46f4992bc2d1f88946f483fe40750b8a460ab400051e002946f4"), _site(LOWRES_SITE, 33)),
+    # Strength (23) by the target's classes, AD&D's: warriors 1d8, priests, rogues and psionicists 1d6,
+    # wizards 1d4; Cat's Grace (196) by the Tome of Magic's; a multiclass character's best die;
+    # Adrenalin Control (the same code) 1d6: its "push dword 60001h" (79483h: DSCLOG's STRENGTH_SITE)
+    Patch("strength_dice", 0x79483, bytes.fromhex("666801000600"), _site(STRENGTH_SITE, 6)),
+    # Rainbow Pattern (50): 1 round a caster level (its record's +4 and +5: 1d3 rounds was), and
+    # any damage to a creature it holds (its Paralyzed, told from Hold Person's by the effect's spell)
+    # ends the hold: the start of the routine taking hit points off (585A2h: DSCLOG's RAINBOW_SITE)
+    Patch("rainbow_pattern_time", 0x41F70 + 50 * 32 + 4, bytes.fromhex("3100"), bytes.fromhex("1001")),
+    Patch("rainbow_pattern_damage", 0x585A2, bytes.fromhex("8b7e068b5608"), _site(RAINBOW_SITE, 6)),
+    # Feeblemind (62): no psionic power works (it stopped spells only): the power check (5D59Dh), after
+    # its test that the user has the power (5D5B4h: DSCLOG's PSI_SITE); Heal cures it (PROBE_CURE)
+    Patch("feeblemind_psionics", 0x5D5B4, bytes.fromhex("0bc07505b000"), _site(PSI_SITE, 6)),
+    # Biofeedback (psionic, effect 4): the game takes 2 off each blow (and any crushing, edged or
+    # pointed damage) already, in its damage adjustments (79BF9h), but left none of a blow of 2 or
+    # less: at least 1, as the manual's, at its "sub si,2" (79C83h: DSCLOG's BIO_SITE)
+    Patch("biofeedback_least", 0x79C83, bytes.fromhex("83ee02"), _site(BIO_SITE, 3)),
+    # Cell Adjustment (psionic 151): 1d4 HP, not 2 ("push 2 / jmp", 795A2h: DSCLOG's CELL_SITE); its
+    # record already cures disease (effect -13)
+    Patch("cell_adjustment_heal", 0x795A2, bytes.fromhex("6a02eb72"), _site(CELL_SITE, 4)),
+
+
+    # Stinking Cloud (22): 1d4+1 rounds, not 1d6: the record's dice made 1d4, the round more by
+    # DSCLOG's STINK_SITE in the time's routine (its dice are rolled with a bonus of 0)
+    Patch("stinking_cloud_dice", 0x42234, bytes.fromhex("61"), bytes.fromhex("41")),
+    Patch("stinking_cloud_round", 0x76D73, bytes.fromhex("c45efc"), _site(STINK_SITE, 3)),
+    # Chaos (56): the save's -100 for anyone not a warrior (79F80h, "sub si,100") skipped for a
+    # creature of INT 21 or more, or 4 or less, as the manual has it (DSCLOG's CHAOS_SITE)
+    Patch("chaos_int", 0x79F80, bytes.fromhex("83ee64"), _site(CHAOS_SITE, 3)),
+    # A classless creature (its sheet's classes, +21h..23h, all 0: an elemental, a slaad, Mastyrial,
+    # the Rampager) has level 0 from the game's level routine (508h:2Ah, 5E85Fh), so Cloudkill,
+    # Dismissal, Scare and Color Spray took it for a 0-level one: the save modifiers' target level,
+    # "mov [bp-6],ax" (79D8Ch), made its hit dice (+24h) for it (DSCLOG's HD_SAVE)
+    Patch("classless_save_level", 0x79D8C, bytes.fromhex("8946fa"), _site(HD_SAVE_SITE, 3)),
+    # Color Spray (4): only creatures of more levels than the caster save, as in AD&D (-100 on
+    # the save, as Chaos's and Cloudkill's): at Dismissal's test, "cmp word [bp+14h],3Ch / jnz"
+    # (79F83h), which DSCLOG's SPRAY_SITE then makes itself
+    Patch("color_spray_level", 0x79F83, bytes.fromhex("837e143c750c"), _site(SPRAY_SITE, 6)),
+    # Hold Undead (31): only undead of no more levels (hit dice) than the caster's level, the
+    # rest immune, at the undead's "test word [bp+0Eh],100h" (7A345h; DSCLOG's HOLD_HD, which
+    # makes the test and its jump itself: the "hold_undead" patch above keeps it off the living)
+    Patch("hold_undead_level", 0x7A345, bytes.fromhex("f7460e0001"), _site(HOLD_HD_SITE, 5)),
+    # Spells that roll to hit (the Options tab's "Spells roll to hit", SPELL_TO_HIT: skipped with it
+    # off). In the routine of what a spell (SI) does to thing DI (7A085h), after every immunity
+    # check, "mov [bp-6],si" (7A15Ah), the spell kept for the dispatch on the table at 7A1A7h:
+    # DSCLOG's SPELL_HIT rolls the caster's attack on the target for Acid Arrow, Turn Pebble to
+    # Boulder, Magical Stone, Condense and the spines (180), and the touch spells on a creature of
+    # another side, and on a miss puts Acid Arrow (12h) there: the table's "always hits" stub
+    # (78BA0h, the overlay's first routine), its "mov ax,1" (78BA3h) DSCLOG's SPELL_STUB, then
+    # answers 0, and the spell does nothing (7A0BEh)
+    Patch("spell_hit", 0x7A15A, bytes.fromhex("8976fa"), _site(SPELL_HIT_SITE, 3)),
+    Patch("spell_hit_stub", 0x78BA3, bytes.fromhex("b80100"), _site(SPELL_STUB_SITE, 3)),
+    # Free Action (117), Remove Paralysis (105) and Protection from Paralysis (20) share one
+    # handler (79406h, the spells' table at 79936h, their words at +4Ch): Slowed (47) removed, then
+    # Paralyzed (34) unless the creature is Poisoned. Free Action frees the Stuck (51: Web, Solid
+    # Fog, Quicksand, Entangle, Grease) too: the handler made a loop over the effects pushed on the
+    # stack, through its two far calls (their segment words, which the overlay manager fixes up,
+    # kept where they were), and Free Action's word pointed at a start that takes Stuck off first
+    Patch("free_action_stuck", 0x79406, bytes.fromhex(
+        "6a2f57" "9a4d009805" "83c404c45e0a268a4704b400a90800740 3e90b046a2257".replace(" ", "")),
+        bytes.fromhex("579090" "9a4d009805" "5a583c22741cc45e0a26f6470408751 26a22ebe46a3357".replace(" ", ""))),
+    Patch("free_action_loop", 0x7942A, bytes.fromhex("83c404e9fd03"), bytes.fromhex("5a586a2febd6")),
+    Patch("free_action_word", 0x799A8, bytes.fromhex("6608"), bytes.fromhex("8208")),
+    Patch("remove_paralysis_word", 0x799A0, bytes.fromhex("6608"), bytes.fromhex("8c08")),
+    Patch("protection_paralysis_word", 0x79984, bytes.fromhex("6608"), bytes.fromhex("8c08")),
     # The least each score may be at creation (67399h, overlay code: for an ability, the highest
     # of the character's classes' least): the game raised each class's one prime requisite to 17
     # and every other score to one number a class (9 to 14), not the manual's requirements (a
@@ -471,6 +753,18 @@ PATCHES = (
     # ... and the kinds of a spell's damage a creature is guarded from, which halves a spell all of
     # those kinds (DSCLOG's WANDER_DMG: a Wanderer's fire and cold, as Resist Fire and Resist Cold)
     Patch("wanderer_damage", 0x7B56F, bytes.fromhex("857e0c"), _site(WANDER_DMG, 3)),
+    # Dual-classing (the Loader's rule "dual_class", RULE_DUAL_CLASS; each site does the game's compare
+    # with it off: DSCLOG's DUAL_LEVEL, DUAL_PRIMES): the level DUAL needs, "cmp byte [es:bx+24h],2" in
+    # the two portrait menus (70CE4h, 70F03h) and the DUAL window's class test (86F58h), 3 with the
+    # rule (the manual's third level) ...
+    Patch("dual_level_menu", 0x70CE4, bytes.fromhex("26807f2402"), _site(DUAL_LEVEL_SITE, 5)),
+    Patch("dual_level_view", 0x70F03, bytes.fromhex("26807f2402"), _site(DUAL_LEVEL_SITE, 5)),
+    Patch("dual_level_window", 0x86F58, bytes.fromhex("26807f2402"), _site(DUAL_LEVEL_SITE, 5)),
+    # ... and the class test's prime requisites (86E94h), "cmp byte [es:bx+22h],0Fh" for the old class's
+    # one (86EFCh) and "...,11h" for the new class's (86F31h): with the rule every prime requisite the
+    # manual gives the class, 15 or more for the old, 17 or more for the new
+    Patch("dual_old_prime", 0x86EFC, bytes.fromhex("26807f220f"), _site(DUAL_OLD_SITE, 5)),
+    Patch("dual_new_prime", 0x86F31, bytes.fromhex("26807f2211"), _site(DUAL_NEW_SITE, 5)),
     # a script's REQUEST (command 22h), its number read: recorded for the dice log (DSCLOG's REQ_SITE)
     Patch("script_request", 0x7FF42, bytes.fromhex("8b5e064b"), _site(REQ_SITE, 4)),
     # a click taking a readied spell's target, the aim check's answer: a refusal recorded (DSCLOG's AIM_SITE)
@@ -1013,6 +1307,20 @@ CAMERA = ("camera_still",)  # the view in a fight following a figure only off th
 SCENE_POINTER = ("cine_step", "cine_end")  # a pointer in the scenes, a click ending one
 MOUSE_START = ("mouse_set", "mouse_init")  # the pointer starting in the middle, as fast up and down as across
 STEADY_PACE = ("pace_pass", "pace_draw")  # walking at full speed on the map, a late frame's next left undrawn
+SPELLS_MANUAL = ("bestow_curse_save", "blood_flow_save", "flaming_sphere_negates", "solid_fog_time",
+                 "solid_fog_rounds", "spell_turning_time", "spell_turning_rounds", "cause_fear_time",
+                 "quicksand_no_save", "pebble_damage", "ironskin_charges", "ironskin_per_level",
+                 "stinking_cloud_dice", "stinking_cloud_round", "chaos_int",
+                 "classless_save_level", "color_spray_level", "hold_undead_level",
+                 "free_action_stuck", "free_action_loop", "free_action_word", "remove_paralysis_word",
+                 "protection_paralysis_word", "meteors_count", "meteors_damage", "flame_arrow_damage",
+                 "flame_arrow_count", "turn_undead_manual", "chill_touch_time", "blur_save", "fire_shield_save", "cloudkill_save",
+                 "cloudkill_kills", "lower_resistance_manual", "strength_dice", "rainbow_pattern_time",
+                 "rainbow_pattern_damage", "feeblemind_psionics", "biofeedback_least",
+                 "cell_adjustment_heal", "babau_poison", "blue_slaad_poison", "styr_kind", "djinn_kind",
+                 "tari_kind", "tari_bite", "shadow_cold", "greater_shadow_class",
+                 "shadow_drain")  # the spells and psionics as the manual has them (spells_manual)
+SPELL_TO_HIT = ("spell_hit", "spell_hit_stub")  # missile and hostile touch spells roll to hit (spell_to_hit)
 PARTY_SPREAD = ("party_spread", "party_gather")  # the whole party in view after a load and a fight
 
 
@@ -1064,7 +1372,4 @@ def write_patched(source: str, dest: str, skip=frozenset()) -> None:
                 return
     except OSError:
         pass
-    tmp = dest + ".tmp"
-    with open(tmp, "wb") as f:
-        f.write(data)
-    os.replace(tmp, dest)
+    gff.write_atomic(dest, data)  # (no .tmp left by a failed write)

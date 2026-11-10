@@ -1,6 +1,6 @@
 # Development: spells, items, people, graphics and the game's bugs
 
-*Part of the [development notes](DEVELOPMENT.md). How the game's script and spell bugs are mended, and how the new spells, items and people and the graphics are done. Each heading names the section of the [features page](FEATURES.md) or the [README](README.md) it explains.*
+*Part of the [development notes](DEVELOPMENT.md). How the game's script and spell bugs are mended, and how the new spells, items and people and the graphics are done. Most headings name the section of a player's page they explain (the [features page](FEATURES.md), the [README](README.md), [items](ITEMS.md), [kits](KITS.md), [bugs fixed](GAME-BUGS.md), [how the game works](HOW-THE-GAME-WORKS.md), [the dice log](DICE-LOG.md)); the rest, a part of one or a note of their own, say which at their start.*
 
 ## Contents
 
@@ -22,6 +22,7 @@
 - [The cooked vulture](#the-cooked-vulture)
 - [Defilers' scrolls](#defilers-scrolls)
 - [What the party wears](#what-the-party-wears)
+- [Graphics disappearing in a busy area](#graphics-disappearing-in-a-busy-area)
 - [Elves and half-elves](#elves-and-half-elves)
 - [Shadows](#shadows)
 - [Dust](#dust)
@@ -30,7 +31,7 @@
 
 ## The game's script bugs
 
-([In the features page](FEATURES.md#the-games-bugs-fixed).)
+([In the bugs fixed](GAME-BUGS.md#people-and-quests).)
 
 How: `dsloader/scriptfixes.py` changes a few bytes in the Loader's copy of the
 game's scripts (GPLDATA.GFF), each re-pointing one trigger or call: in Darkhold
@@ -84,6 +85,31 @@ one can't run it twice. The Draj serf (GPL 60 at CD8h): region 38's way to regio
 10 takes the following serf along within 14; left further behind he stayed,
 without his orders, and talking to him again ran the deal and gave a second
 obelisk gem (-1352). Now within 127.
+
+Pehtucl's ambush at the slave pens' fountain (GPL 145, the Loader's own find): having
+led the party to 60,94 (AFCh), he makes his guards at his square (E7Dh: command 25h,
+4 of object 90, the Arena Guard; E8Bh: 1 of 293, the Guard), then gives hunt orders
+(08h at E99h, E9Dh, EA1h), a no-orders handler (6Fh: GPL 74 at 100) and a sight trigger
+(1Bh: GPL 74 at 89, range 5) to -90, -293 and -37: a negative number is a kind, every
+creature of it in the region, so the pens' eight Arena Guards and two Guards from the
+region file (those still alive) came from across the map too. 25h makes a number by
+calling one routine (4251:0043h) for each in turn, with the same values; the game's
+other scripts give a creature just made its orders as local big number 40 (`89 28`:
+GPL 10 at 10Ch, 52 at F0Bh, 57 at A9Dh), so the repair (E7Dh to EDBh, a detour) makes
+each of the five alone and gives that one the hunt, the handler and the trigger; Pehtucl
+keeps his by his kind (-37: the pens' region file holds one, him). His one other
+kind-wide hunt, at 169h (the party back after escaping, flag 503), is left as it is:
+there the whole pens are meant to be roused; his refusals (898h, D43h) make guards
+and leave the rest to the alarm. The fight's alarm (GPL 137, called at the ambush and
+by every guard's attack trigger in the pens): FB5h lets a yell go unheard ("the roar of
+the fountain masks his voice", flag 511 once) when the one yelling (local 44, located)
+is in the fountain's room, x 54-80 and y over 73; the party, a step behind Pehtucl,
+stands in the passage west of the room's wall (x 53-55, y 92-95), so a guard drawn
+there raised the alarm. The test is now `room or (x 42-80 and y over 90)`, that
+passage up to the wall at x 40-41 (the room west of the fountain's, with the sewer
+grate, is shut off from it at y 89-90 and stays out); its IF, to the alarm at 1081h,
+goes along. Tests: `test_scriptfixes`. Not yet seen in play (the save
+`fountain-user` loads with the ambush about to fire).
 The same sweep checked every RAND comparison and every bit test of a class or
 level: only the tracking's were wrong. A second went through every check on a
 class or its bits, race, sex, item, weapon, thief skill or ability: script 44 at
@@ -158,7 +184,7 @@ the fountain and the party late for a fight.
 
 ## Mirror Image
 
-([In the features page](FEATURES.md#the-games-bugs-fixed).)
+([In the bugs fixed](GAME-BUGS.md#spells-and-psionics).)
 
 The game's only use of the images is a d100 in the routine that lands a spell
 on its target (7A539h, from 78C19h; 7A5BFh, `cmp ax,4Bh` at 7A5CDh), for a
@@ -191,7 +217,7 @@ four, an image with it, and weapon blows come to that routine with no spell
 
 ## The game's spells
 
-([In the features page](FEATURES.md#the-games-bugs-fixed).) More bugs mended
+([In the bugs fixed](GAME-BUGS.md#spells-and-psionics).) More bugs mended
 whatever the rules, besides [Mirror Image](#mirror-image)'s (`gamepatch.py`,
 after the `ns_list_` patches):
 
@@ -252,6 +278,24 @@ after the `ns_list_` patches):
   `NS_HOLD` site over the landing routine's `or al,al / je +22h` (7A333h) all
   the same, a second guard: a living target of spell 31 goes to the
   immunity's way out (7A1F0h).
+  The manual's limit, undead of no more hit dice than the caster's level, is
+  `hold_undead_level` (with "Spells and psionics as the manual describes them"): DSCLOG's
+  `HOLD_HD_SITE` over the undead's `test word [bp+0Eh],100h` (7A345h), which
+  makes that test and its jump itself, and for spell 31 sends an undead whose
+  level (its sheet's, as 5E85Fh has it: a human's +24h, else its classes'
+  highest; a classless one's +24h) is above the frame's [BP+14h], the cast's
+  level, to 7A1F0h too.
+- **The save modifiers** (79D3Ch: [BP+6] the target, [BP+14h] the spell,
+  [BP+16h] the caster's level, [BP-6] the target's level, SI the modifier):
+  the target's level comes from 508h:2Ah (5E85Fh), 0 for a creature with no
+  class (+21h..23h all 0), though its hit dice are at its sheet's +24h. With
+  "Spells and psionics as the manual describes them", `classless_save_level` puts DSCLOG's
+  `HD_SAVE_SITE` over its `mov [bp-6],ax` (79D8Ch): such a creature's 0 made
+  its hit dice (Dismissal, Cloudkill, Scare and Color Spray read it), and
+  `color_spray_level` DSCLOG's `SPRAY_SITE` over Dismissal's
+  `cmp word [bp+14h],3Ch / jnz` (79F83h): Color Spray (spell 4) on a target of
+  the caster's level or lower -100 (no save, even on a natural 20: `save_natural`), then
+  Dismissal's test made in the handler (on to 79F89h, or past to 79F95h).
 - **Cause Serious and Critical Wounds** (spells 113 and 128): their records'
   damage dice were 2d9 and 3d9, where the Cure spells (rolled by their own
   code) heal 2d8+1 and 3d8+3. The damage routine (76DA2h) rolls the base dice
@@ -288,7 +332,11 @@ after the `ns_list_` patches):
   (the sheet's +18h) is 3 and is 4: "cmp 3 / jne fail" (79FEAh), then "cmp 4 / je save"
   (7A011h), so everyone below 6th failed (-100). `scare_elves` makes the first "je" to the save
   (7A01Dh): an elf or half-elf priest saves as usual, as AD&D's elves, half-elves and priests
-  resist fear (found by yuan-ti).
+  resist fear (found by yuan-ti). None of this ran before `scare_save`: Scare's record's save byte
+  (+1Fh, 4222Fh) was A0h, bit 0 ("a save allowed") clear, and the saving throw (79A71h) answers
+  "not saved" at its first test (79A89h) without it, before the modifiers. `scare_save` sets it
+  (A1h, as Charm and Hold Person's). Seen in DOSBox before it: Scare on a 7th-level fighter, no
+  save rolled (playtest/logs/2026-11-08-scare-no-save.md).
 - **The creation screen's minimums** (67399h, far, `[bp+6]` the class count and `[bp+8]` the
   ability; its answer goes to `DS:4994h`): the game's own looked each creation class (the sheet's
   +21h, 1-8) up in the table at `338:180h` (a word, the prime requisite, then a byte) and gave 17
@@ -364,6 +412,19 @@ after the `ns_list_` patches):
   after the last in the records with nine or seven (regions 6, 13, 14, 27, 39,
   40, 44 and 255), a "Divide error" that ends the game. `monster_count` makes
   it [bx+0], the match's own.
+- **Resting kills the Poisoned after the cure** (the rest, 8066Dh, overlay 5E8h; its one caller
+  62C2Ch, a fire ring, mode 0). Pass 2 takes each member's effects as a bitset (598:25h = 76944h,
+  at 8075Dh, into [BP-0Ah]), then casts the free cures (809A2h -> 5B8:20h: Cure Disease, Remove
+  Curse and Remove Paralysis for the best Okay cleric and druid of 5th level or more, Neutralize
+  Poison for a druid of 7th or more), then kills the Poisoned (bit 35, `test byte [bp-6],8`,
+  80963h: 1000 damage) from the bitset read before the cure, so the druid's cure saved no one
+  (seen in DOSBox: playtest/logs/2026-11-09-rest-poison.md). `rest_cures_first` (80765h, 136
+  bytes) and `rest_cures_loop` (80984h) move the seven casts (near calls, no overlay fixups in
+  them) ahead of the read, their `nop`s paying for two jumps: the loop's jump goes to the casts
+  (80768h), which end with `jmp 80758h` (the read), which goes on past them (`jmp 807EDh`). The
+  STR test (80929h, Diseased) reads the same bitset, so a disease cured at a rest gives STR back
+  that rest. Mode 1 (the scripts' rest; never called in DSUN.EXE) still kills the Poisoned
+  (its removal, 80808h, comes after the read).
 - **A shop's magic items shine.** The colour cycler (22F8h; its table at
   CS:6, 16 x 8 bytes, set up by the region's load at 1CECFh: colours 1-5,
   6-10, 11-15 and 240-248) turns only from the map's main loop (1A935h:
@@ -378,7 +439,7 @@ after the `ns_list_` patches):
 
 ## Worn items, the gladiator's armour and Psionic Blast
 
-([In the features page](FEATURES.md#the-games-bugs-fixed); found by OpenDS, checked in
+([In the bugs fixed](GAME-BUGS.md); found by OpenDS, checked in
 DSUN.EXE with yuan-ti's notes; Psionic Blast from yuan-ti's issue #129.) One helper interrupt
 (`INT 81h`, `PROBE_WORN`), told where it was called from by its return address:
 
@@ -441,7 +502,7 @@ code's selectors from that table each time it loads an overlay (3BD7Ch), and
 the table's own entries are the only relocations to the two segments. So at
 the first file open (`INT 21h AH=3Dh`) while DSUNLOG runs, the helper (its PSP
 from `AH=62h`, the load segment 10h past it) checks both entries, copies the
-200h bytes from 3E3Fh to `seg_space` in its own resident image and points the
+200h bytes from 3E3Fh to `seg_space` in its tail (`tail_seg`) and points the
 two selectors there (`seg_moved`, the header's +306). The records then run to
 212, the room's last whole record (it ends at 3E5E0h, the room at 3E5E2h),
 which Negative Plane Protection's save record (`NPP_SAVE`) fills; another new
@@ -481,9 +542,11 @@ the spell + 1 as the game's own) and icons (21196-21201) are chunks of the
 launcher's copy of RESOURCE.GFF (`spelltexts.py`, `icons.py`), so they take no
 room in the helper. A description follows the game's own: the name in capitals,
 two spaces, then a terse line with damage as a range ("Inflicts 8 to 64 pts of
-damage"), and no level or sphere. Its box shows about 7 lines of about 24
-characters and cuts off the rest, so check a changed one on the USE screen
-(right-click the icon).
+damage"), and no level or sphere. Its box shows 7 lines of 128 pixels of the
+game's font, the first less the icon, and cuts off the rest:
+`tests/test_spelltexts_fit.py` wraps every text the Loader writes that way, so a
+new or changed text is checked there first. `spelltexts`' tables are keyed by the
+SPIN chunk, the spell + 1 (its 24 is Strength; spell 24 is Web).
 
 Wake of the Ravager's spell icons (`wotrart.py`, for the 6th-level priest
 spells) are read from the player's own copy of that game, and never kept in the
@@ -579,7 +642,9 @@ is Whirlwind's (the active effects' segment +0Ah, 3 bytes each: the combatant
 and its area's entry, DS:1E26h of them; the game keeps the list as it applies
 the areas, so the creatures stay listed while the hits are sent back), at the
 first Whirlwind thing's level. A save failed there marks the creature
-(`SWEPT_MARK`), and `PROBE_MOVE` takes that round's turn. A save failed as it is
+(`SWEPT_MARK`: SWEPT, the far block's `FAR_SWEPT`, a bit a combatant up to
+`MAP_COUNT`, 520; 64 combatants before 2026-11-09), and `PROBE_MOVE` takes that
+round's turn. A save failed as it is
 cast takes the creature's turn at once if it has yet to act (`SWEPT_NOW`: not
 the one whose turn it is, its initiative not the -1 the game gives one that has
 acted; its initiative -1 and movement 0, as `PROBE_MOVE` does), else marks it
@@ -619,7 +684,11 @@ count DS:1E24h), moving the rest down.
 - Cat's Grace: Strength's code rolls the 1d6 (`INT EDh`), into an effect of
   its own (`INT EEh`: 54, a number the game leaves unused); the routine that
   works out a creature's abilities from its scores and effects adds it to DEX
-  as Strength's adds to STR (`INT EFh`).
+  as Strength's adds to STR (`INT EFh`). With the spells as the manual has them
+  the dice are by class (`STRENGTH_SITE` at 79483h, Strength's too), and a
+  smaller Cat's Grace beside a bigger one adds nothing (`GR_SHADOWED`): see
+  [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#the-saves-and-the-other-spells-and-psionics).
+  Heal's (`PROBE_CURE`) also takes Feeblemind off there.
 - Erdlu Claw puts effect 6 (unused) on its target. In the routine giving a
   natural attack's dice (7B66Ch, `NS_CLAW` at 7B70Ah; DX the set of natural
   attacks, 0-2, as the sheet holds them from +2Bh: `game.SHEET_NATURAL_*`), the
@@ -706,14 +775,6 @@ A site's handler must leave the game's registers as they were: an early
 version took the site number in AL before saving them, which handed the name
 routine spell 0 and showed ARMOR as every spell's name on the USE screen.
 
-A click on an effect's icon on the Effects screen ([In the features
-page](FEATURES.md#spells-on-the-effects-screen)) ends it in the game; with the
-switch on, a spell's effect is left on: two jumps in the screen's click handler
-(DSUN.EXE 7F226h and 7F236h, `effects_click_low` and `effects_click_high` in
-`dsloader/gamepatch.py`) go to its way out instead of to the routine ending an
-effect. A psionic power's (spells 8Ah-ABh) still ends, as stopping it there is
-how a power is dropped.
-
 ## New items
 
 ([In the features page](FEATURES.md#new-items).)
@@ -751,13 +812,21 @@ the first time the pith is delivered (flag 625), and Merzol's haystack (script
 137: `haystash.py`) leaves Hayneedle (object 2590, an item object of its own)
 beside his sack of ceramic pieces (25h at the searcher's place, as the sack's),
 the first search only (flag 502). The Lava Rift's Hermit (object 81) has
-Nightsliver in place of his stone dagger. An object can only have so many
+Nightsliver in place of his stone dagger. The magic cahulaks (of the helper's
+metal and obsidian cahulaks types, 146 and 147; names 0x171 and 0x172, icons
+2676-2679) are on objects of one entity each: Emberlash (an obsidian cahulaks
++1) on Uzoma (196, entity 433 of `RGNFF.GFF`: the Drajian patrol near the Hot
+Springs, made once its templar is gone), in his pack with his metal axe (the
+Loader's people readying puts the cahulaks, the better weapon, in his hands:
+`people.py`); Ironwhirl (a metal cahulaks +2) on the Subterranean Temple's
+weapon rack (2252, entity 62 of `RGN2D.GFF`), with the game's Mace +2 and metal
+axe. An object can only have so many
 records: the routine that reads them (DSUN.EXE 68000h) keeps a 6-byte entry for
 each in a table on its stack, 80 of them, and gives up on an object with 80 or
 more; the code that makes a region's people (244D3h) then frees the person's
 map entry, and the person is never made. The game's largest has 74 (Jark's); an
 item adds 3 (the item, its type and its name), so the Weapon Merchant's 11 new
-weapons made 89, and Jark's 7 made 95. `records_*` in `dsloader/gamepatch.py`
+weapons made 89, and Jark's 7 made 95 (with the cahulaks, 12 and 8: 92 and 98). `records_*` in `dsloader/gamepatch.py`
 make the table room for 120 (the routine's stack frame 0F0h bytes larger: the
 game's stack has some 20 KB it never reaches), and `test_records_fit` keeps the
 Loader's gifts under it. The tome (`dsloader/tome.py`) is a
@@ -788,8 +857,18 @@ use any dagger, as its sphere allows; the Loader's item names
 the item type's material before the name when it shows one); and the icons are
 objects in the Loader's copy of `SEGOBJEX.GFF` (`dsloader/icons.py`), which the
 helper has the game open instead of its own (its `INT 21h` hook). The copy also
-has the game's Polearm picture made 22 pixels tall (`icons.fit_box`): at its own
-36, the item box's lines, which start below the picture, ran out of the box. Its icons of the game's
+has, for the item box alone, a copy of each weapon picture taller than 16 drawn
+16 at most (`icons.BOX_TALL`, `BOX_SMALL` on, 2900-2923; `icons.fit_box`): the box
+draws a picture of 16 or less in a frame with its text from 28 down, a bigger one
+bare with its text from its height + 12 down (8BBE4h), so at the Polearm's own 36
+its lines ran out of the box and at the gythka's 22 its last row (`Hit -1`, a
+wand's charges) sat at the edge. DSCLOG's `BOX_PICS` (gamepatch `box_picture_item`,
+`box_picture_object`, always applied) has the box's picture routine (8C2F1h, the
+box's alone) load the copy (8C344h: an item's own picture number, +0Ch; 8C384h: its
+object's icon, which it then keeps in the item as it is). The inventory and the
+ground draw the game's own (a dropped item lies there with its icon; the Loader
+drew the Polearm 22 pixels everywhere till 2026-11-09, and the weapon specs'
+picker still draws it so, `weaponpages.POLEARM_FIT`). Its icons of the game's
 own magic items that stood still (`icons.SHINE`: the Parting Staff, the
 Chameleon Gloves, the Hornblade... 19 of them) have every other pixel of their
 metal, gems or leather in the colours the game cycles in the inventory (water
@@ -823,6 +902,17 @@ Alagorn's new menu lines are in the Loader's copy of his scripts
   items by another (221), and 213's weapons by a copy of 213 (222). His talk
   (script 211) calls each part by its offset in its script, so only the
   called script's number changes.
+- With every switch on, the weapons copy with its fourteen stories (sixteen
+  now) would still be too long (12,405 bytes, the limit `pensasks.LONGEST` 11,376), so their
+  lines are in a script of their own (224, `alagorn.TOLD_IN`): a 19h, then
+  each story's lines and a 19h. Each story subroutine in 222 calls its part
+  (14h, place and script, as his talk calls 212's and 213's parts; the 19h
+  ending a part returns), then clears its value and runs the "none left" test
+  as before. 222 is now 8,684 bytes, 224 4,698 (with Emberlash's and
+  Ironwhirl's stories; their menu lines, with Skycutter's, keep their flags in
+  `alagorn.FLAGS` on, 784-786, past the script's locals). A kind whose copy is still too
+  long (or not as expected) is left out with its reason in `alagorn.LEFT_OUT`
+  and the log, not silently.
 - The added "none carried" check replays the game's own tests with their own
   jump targets: skipping one leaves the game's if/else nesting one level
   short.
@@ -843,7 +933,7 @@ the game's palette: each picture twice its size, the rest transparent.
 
 ## Bracers of defense
 
-([In the features page](FEATURES.md#bracers-of-defense).)
+([In the items page](ITEMS.md#bracers-of-defense).)
 
 How: where the game's AC routine asks the helper about each worn item
 (`INT F8h`) and where it starts a saving throw's modifiers (`INT F9h`), the
@@ -851,7 +941,7 @@ helper looks at what else the character wears.
 
 ## Robes
 
-([In the features page](FEATURES.md#robes); `robes.py`.)
+([In the items page](ITEMS.md#robes); `robes.py`.)
 
 The robes are one new item type (`ROBE`, the 26th of the helper's types,
 `game.ROBE_TYPE`): the cloak of protection's record worn on the chest (+9: 1),
@@ -1026,7 +1116,7 @@ more of the game's memory.
 
 ## The game's people's gear
 
-([In the bugs fixed](FEATURES.md#the-games-bugs-fixed); `people.py`.)
+([In the bugs fixed](GAME-BUGS.md#who-turns-up-and-how); `people.py`.)
 
 The game makes a person's items in its backpack list (+0Ch) and puts them on only at its first
 action in a fight. Seen in DOSBox (2026-11-06, `playtest/logs/2026-11-06-npcs-equip.md`): at the
@@ -1061,7 +1151,7 @@ up.
 
 ## Pehtucl's chest
 
-([In the new items](FEATURES.md#new-items); `pehtuclchest.py`, whose docstring has the detail.)
+([In the items page](ITEMS.md#pehtucls-chest); `pehtuclchest.py`, whose docstring has the detail.)
 
 A USE command in the pens' master script (MAS 41: 6Dh, (place, script, object), as each cell door
 has one running script 138) runs script 223 when the chest (object 1568) is used, from beside it
@@ -1211,7 +1301,7 @@ no line: it would tell the player what the body holds before the fight is won.
 
 How: the party's figures are objects 300 to 313 in `SEGOBJEX.GFF` (300 and the
 figure picked at character creation). The launcher's copy of the file (see
-[Item icons](FEATURES.md#new-items)) gives each its own walking and fighting
+[Icons and names](ITEMS.md#icons-and-names)) gives each its own walking and fighting
 pictures, the game's with room round them for gear (walking, 6 pixels at the
 sides and 2 above, as much as anything worn reaches; in a fight, 10), and free
 space after each in the file. The game draws a figure's whole picture at every
@@ -1220,11 +1310,34 @@ runs, when someone's worn items change, the Loader draws their pictures anew
 (`dsloader/spritegear.py`, from where `dsloader/spriteparts.py` finds the
 head, hair, hands and the rest in each frame), writes them into its copy of
 the file with their new lengths in the file's index (the game reads a
-picture's place and length there each time it loads one), takes the old ones
-out of the game's table of loaded pictures (the game frees them itself, as any
-it no longer uses), and empties the figure's slot on the map: the game loads
-the new pictures and draws them at once, in a few thousandths of a second
-(`dsloader/sprites.py`). It then has the helper draw the view again (see
+picture's place and length there each time it loads one), and empties the
+figure's slot on the map: the game draws the new pictures at once, in a few
+thousandths of a second (`dsloader/sprites.py`).
+
+The game keeps every picture it loads in a table of 300 slots and a store of
+a fixed 741,376 bytes, appends a slot (and the room after the last) for each
+picture number it hasn't got, and gives neither back until an area loads. So
+the Loader puts each new picture where the game already keeps one
+(`Dresser._in_store`), finding a picture by its number as the game does: a
+slot it took out earlier that holds exactly this picture (an outfit changed
+back) is given the number back; else the picture's own slot, when it isn't in
+memory (the inventory open lets every picture go), has the new picture
+written into the store at its place; else the smallest slot taken out earlier,
+not in memory, with room for it, gets the picture and the number. The old
+slot is taken out of the table (its number changed: the game frees its
+memory itself, as any it no longer draws). Only with no such slot does the
+game load the new picture into a new slot, and then only while the store and
+the table keep room for it and the game's own (64 KB and 24 slots,
+`_room_for`); else the figure stays as it was until the next area. The store
+is a handle of the game's paged memory manager whose pages are in XMS
+(`sprites.Store`: the handle at DS:4C33h, the handle table at DS:47FAh, the
+page directory at DS:42D2h, backend 0's XMS move at 1187:04B0h); in DOSBox the
+XMS block is ordinary memory above 1 MB, found by an in-memory picture's
+bytes. Nothing in memory is written (the game moves its pictures' memory when
+it makes room), nor a slot's length (the memory the game frees with it), and
+DOSBox is held still for the writes. Where the store isn't found (another
+memory backend, Dark Sun Recompiled), each new outfit takes a new slot as
+before, under the same room check. It then has the helper draw the view again (see
 [Shadows](FEATURES.md#shadows)), so the shadows show the new outfit too. A
 picture the game loads later (in a fight, in another area) comes dressed, from
 the file. The copy also has a spare pair of pictures for each party place.
@@ -1232,6 +1345,32 @@ Each thing on the map names the picture it is drawn with and the slot in the
 game's picture table it is drawn from; for a second member of the same figure
 the Loader names their spare there and empties the slot, and the game loads
 the picture and fills it.
+
+## Graphics disappearing in a busy area
+
+([In the bugs fixed](GAME-BUGS.md#pictures-and-memory).)
+
+How: the game's picture cache (`DSUN.EXE` 25FA6h, the slot for a WALL or BMP chunk) has 300
+slots, each 16 bytes: a picture's number, length, place in the store, memory and flags. The count
+is at DS:1F84h, and no slot is given back until a region loads, so at 300 a new picture got no
+slot and wasn't drawn. DSCLOG's `PIC_REUSE` changes nothing below 300 slots, and is always on (a
+fix). With all 300 taken, four sites (`gamepatch` "pic_full", "pic_place", "pic_count" and
+"pic_fail") do this:
+- `PIC_FULL` (26009h) picks a slot to reuse. It must be out of memory (flag 2 clear) and named by
+  no wall (the walls' slots at DS:574Eh) and no map thing (+0Fh). A slot the Loader let go
+  (`CACHE_STALE`, FFFEh) is taken first; else the first free one, the search going round from the
+  slot after the last reused, so the oldest reuse goes first. With none free, no slot, as the game.
+- `PIC_PLACE` (260CCh) puts the reused slot's picture in the first gap in the store it fits (the
+  other slots' places and lengths, the STALE ones left out), else past the furthest end.
+- `PIC_COUNT` (2612Bh) gives the reused slot's number and leaves the count at 300.
+- `PIC_FAIL` (25FD0h, the loader's "no picture") lets a reused slot go again (STALE, not in memory)
+  when its picture's read failed: it holds the new number but the old place, and would otherwise be
+  read from the wrong place later.
+
+`pf_count` counts the slots reused and `pf_failed` those let go after a failed read, for the tests
+(`test_dsclog`'s `PictureSlotTests`) and playtests (`playtest/slotcount.py`; the log is
+`playtest/logs/2026-11-09-picture-slot-reuse.md`). The picture store the
+[party's outfits](#what-the-party-wears) fill is a different limit.
 
 ## Elves and half-elves
 
@@ -1312,7 +1451,7 @@ drawn, so no shadow. Loading one from here, in the middle of a drawing, could pu
 picture the game is about to draw, so instead DSCLOG keeps each frame's shadow as it draws it
 (`SC_START`, `SC_PUT`, `SC_END`: the runs that cast a shadow, three bytes each, at most 64, under
 the picture's number from the cache slot's `+6` and the frame) in 80 slots of 208 bytes in the
-helper's far block (`SC_SEG`, at `FAR_SC`: see [Room in the helper](DEVELOPMENT.md#room-in-the-helper)),
+helper's far block (`SC_SEG`, at `FAR_SC`: see [the far block](DEVELOPMENT.md#the-far-block)),
 the oldest given up first. A figure
 whose picture is out casts its frame's kept shadow, or another frame's of the same picture
 (`SC_FIND`). Measured in the arena: 74 slots filled in a few rounds, the party and the monsters seen

@@ -329,6 +329,20 @@ class AreaChangeTest(ItemWatchTest):
         out, _ = self.run_for(5, start=3)
         self.assertEqual(out, [])
 
+    def test_changed_in_place(self):
+        """The Loader's starting gear makes a new character's bone long sword the bow its weapon
+        spec asks for, in the same record: no report (once "the game freed it and reused the
+        number"). Freed and empty, it would be."""
+        def live(i):  # (an item in use: its +0 word set)
+            rec = bytearray(i.record)
+            struct.pack_into("<H", rec, 0, 0x8001)
+            return i._replace(record=bytes(rec))
+        self.data.items = [self.armour, live(self.sword)]
+        self.run_for(2)
+        self.data.items = [self.armour, live(item(13, 0, "Wooden Bow", slot="right hand", typ=11))]
+        out, _ = self.run_for(5, start=3)
+        self.assertEqual(out, [])
+
     def test_number_reused_by_another_item(self):
         """The item's number now names another item of the party's: the item is gone all the same."""
         self.run_for(2)

@@ -154,6 +154,8 @@ class ItemWatch:
             del self._missing[key]
             if _same(was.record) in self._arrived:
                 continue              # (handed over: the same item with another member, a new number)
+            if changed_in_place(was, current):
+                continue              # (made another item where it was: the Loader's starting gear)
             out += self._gone(data, was, current, now, settings, bool(gains & sale_prices(was.record)), was.member in broke)
         self._seen = current              # (what the next look compares with; the rest wait in _missing)
         return out
@@ -251,6 +253,15 @@ def _still(was: ItemSeen, current: Dict[int, ItemSeen]) -> bool:
     """The item still there under its number (not another item that number now names)."""
     now = current.get(was.index)
     return now is not None and now.member == was.member and _same(now.record) == _same(was.record)
+
+
+def changed_in_place(was: ItemSeen, current: Dict[int, ItemSeen]) -> bool:
+    """The item's record made into another item where it was: its number still the same member's,
+    the record not freed. The Loader's starting gear does this (a new character's bone long sword
+    made the bow its weapon spec asks for, a kit's weapon or shield for the game's): the item wasn't
+    lost (an item report once said "the game freed it and reused the number")."""
+    now = current.get(was.index)
+    return now is not None and now.member == was.member and bool(struct.unpack_from("<H", now.record, ITEM_ID)[0])
 
 
 def renumbered(before: Dict[int, ItemSeen], after: Dict[int, ItemSeen]) -> List[ItemSeen]:

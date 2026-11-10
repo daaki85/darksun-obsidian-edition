@@ -4,7 +4,7 @@ is cast (DSCLOG's CAST_SITE, the dice log's KIND_CAST), "Miss" over whom an atta
 
 The Loader draws each in the game's font, its ink with a dark edge round it, as two one-bit masks
 (ROW bytes a row, bit 0 of the first byte the leftmost pixel) into one of DSCLOG's SLOTS in its
-header (TSR_LABELS); DSCLOG places it over the figure's feet and puts it on the screen again as
+tail (its segment the header's TSR_TAIL_SEG, the slots' offset there TSR_LABELS); DSCLOG places it over the figure's feet and puts it on the screen again as
 the game draws there. A label stays SHOW_FOR seconds; a new one takes the slot of one over the same
 figure, else a free one, else the oldest; but a charge used (PRIORITY, CHARGE_FOR seconds) is
 never replaced by a "Miss" or a spell's name while it shows. A slot is written with its number 0 first, so DSCLOG
@@ -16,7 +16,7 @@ from typing import List, Optional, Tuple
 
 from . import combatlog
 
-TSR_LABELS = 374        # DSCLOG's header: LBL_SLOTS
+TSR_TAIL_SEG, TSR_LABELS = 1834, 1838  # DSCLOG's header: its tail's segment, LBL_SLOTS's offset there
 SLOTS = 4               # (DSCLOG's LBL_SLOTS)
 ROW = 16                # (LBL_ROW) bytes a mask's row
 WIDTH_MOST = ROW * 8
@@ -117,7 +117,7 @@ class Labels:
         n = same if same is not None else free if free is not None else n
         dac = _dac(guest, tsr_hdr)
         self._number = self._number % 255 + 1
-        at = tsr_hdr + TSR_LABELS + n * SIZE
+        at = slots_at(guest, tsr_hdr) + n * SIZE
         guest.write(at, b"\0")
         data = slot_bytes(self._number, thing, masks(self.font, text), combatlog.nearest(dac, colour),
                           combatlog.nearest(dac, EDGE))
@@ -131,11 +131,15 @@ class Labels:
             return
         for n, s in enumerate(self._slots):
             if s is not None and (now >= s[0] or not self.on):
-                guest.write(tsr_hdr + TSR_LABELS + n * SIZE, b"\0")
+                guest.write(slots_at(guest, tsr_hdr) + n * SIZE, b"\0")
                 self._slots[n] = None
 
 
+def slots_at(guest, tsr_hdr: int) -> int:
+    """Where DSCLOG's LBL_SLOTS are (a linear address): in its tail, TSR_TAIL_SEG:TSR_LABELS."""
+    seg, _, off = struct.unpack("<HHH", guest.read(tsr_hdr + TSR_TAIL_SEG, 6))
+    return seg * 16 + off
+
+
 def _dac(guest, tsr_hdr: int) -> bytes:
-    base = tsr_hdr - struct.unpack("<H", guest.read(tsr_hdr + combatlog.TSR_HDR_OFF, 2))[0]
-    dac_off, = struct.unpack("<H", guest.read(tsr_hdr + combatlog.TSR_DAC, 2))
-    return guest.read(base + dac_off, 768)
+    return combatlog.tsr_dac(guest, tsr_hdr)

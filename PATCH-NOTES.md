@@ -1,6 +1,6 @@
 # Obsidian Edition: Patch Notes
 
-*A Dark Sun: Shattered Lands mod · Current version 2.14.1 · Every change from the original game*
+*A Dark Sun: Shattered Lands mod · Current version 2.15.0 · Every change from the original game*
 
 Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. You start the game with the Loader, which loads the mod with your options and logs every roll as it happens. Nearly everything is switchable, the game's own files are never touched, and your saves stay where they are.
 
@@ -25,7 +25,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 ## In the Game's Screens
 
-- **[New]** A combat log in the game: **L** on the map shows every roll, in the game's own lettering and the Loader's colours, at one of three levels of detail, and **L** again hides it. It works in a fight or after one (a thief's roll, a new level's hit points). It is a panel over the map's lower right that scrolls back (its scrollbar, or the mouse wheel on Windows), shrinks to one line or opens up with filters (All, Party, Damage, Saves).
+- **[New]** A combat log in the game: **L** on the map shows every roll, in small 7-pixel lettering (8 lines at a time) and the Loader's colours, at one of three levels of detail, and **L** again hides it. It works in a fight or after one (a thief's roll, a new level's hit points). It is a panel over the map's lower right that scrolls back (its scrollbar, or the mouse wheel on Windows), shrinks to one line or opens up with filters (All, Party, Damage, Saves).
 - **[New]** Names over figures: a spell's name floats over its caster as it is cast, "Miss" over anyone an attack misses, and "Armor: 7 left" when a spell that lasts a number of uses (Armor, Mirror Image, Reflected Image...) loses one, in the game's lettering (an Options switch, on).
 - **[New]** Out of a fight, the combat log panel's top line shows how long the game has run, `Day 47, 14:20`; in the arena, once the game has shown the count, how many arena fights the party has had instead (the game's own count, one a trip into the arena).
 - **[New]** The inventory screen shows THAC0, all five saving throws, the THAC0 with each weapon, DEX's reaction and defence adjustments, a thief's skills and, with ages on, the character's age, in the game's own lettering.
@@ -34,7 +34,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - **[New]** View Character shows THAC0 and saves, and for a character of several classes, which class levels up next.
 - **[New]** The USE screen shows the spell slots left at the spell level and list on show (wizard slots on the MAGE list, priest slots on the CLERIC list), and the most you get after resting.
 - **[New]** In a fight, the Look box shows a monster's hit points, AC, THAC0, alignment, magic resistance and chief defence (NEEDS +1 WEAPON, IMM FIRE COLD...). Close it to read the rest.
-- **[New]** Item boxes show a wand's charges left, and the bonus a cloak, boots or belt gives to thief skills.
+- **[New]** Item boxes show a wand's charges left, the bonus a cloak, boots or belt gives to thief skills, and a plain wooden, bone, stone or obsidian weapon's to-hit penalty (`Hit -1` for bone, `Hit -2` for obsidian).
 - **[New]** The Effects screen lists your kits and weapon specializations, and a Shinobi's chance to read languages; with the pointer on the icon of a spell that lasts a number of uses (Armor, Mirror Image, Reflected Image...), it says how many charges are left, for Enlarge how much more it gives (ENLARGED (+90% DICE), or DAMAGE with its rule off), and for Barkskin, Flesh Armor and Magical Vestments the armour AC they give (BARKSKIN (AC 3)).
 - **[New]** Reading a scroll on the inventory screen tells you what happened (YOU LEARN THE SPELL, YOU CAN NOT READ THE SCROLL, THAT IS NOT A SHINOBI SPELL...) on the line under the paper doll. The game showed nothing there.
 
@@ -43,31 +43,41 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 **Weapon specialization**
 
 - **[New]** Fighters specialize in one weapon spec, a kind of weapon such as the long sword (+1 to hit, +2 damage, 3/2 attacks a round), with **mastery** at 5th level (+3, +3) and **grand mastery** at 9th (a larger damage die and one more attack).
-- **[New]** Gladiators specialize in two weapon specs, a third at 6th level and a fourth at 9th. Rangers gain expertise with the bow and one other weapon spec. The Battle Mage, Crusader and Mind Warrior kits gain expertise with one melee weapon spec of their choice (3/2 attacks a round, 2 from 7th level); a thri-kreen Mind Warrior may take the chatkcha.
-- **[Changed]** Warriors attack at AD&D's plain rate with weapons outside their specializations *(was 3/2 with any weapon)*. Specialists shoot missiles faster.
+- **[New]** Gladiators specialize in two weapon specs, a third at 6th level and a fourth at 9th. Rangers gain expertise with the bow and one other weapon spec. The Battle Mage, Crusader and Mind Warrior kits gain expertise with one melee weapon spec of their choice (3/2 attacks a round, 2 from 7th level).
+- **[Fixed]** Warriors attack at AD&D's plain rate with weapons outside their specializations *(was 3/2 with any weapon)*. Specialists shoot missiles faster.
+- **[Changed]** Every thri-kreen, foes too, throws a chatkcha once more a round, AD&D's 2/1 for its own weapon *(was at the weapon's rate, like anyone)*; a thri-kreen Mind Warrior may take the chatkcha as its weapon spec.
 - **[New]** The weapons spells make count for specialization: the Flame Blade as a long sword, Shillelagh as a club, Spiritual Hammer as a mace.
 
 **Saving throws**
 
-- **[Changed]** Spells are saved against with the spell save *(was petrification/polymorph for almost every spell)*.
-- **[Changed]** Against fire, cold and electricity, DEX helps you dodge, from −5 to +6 *(was a doubled d20)*. Needing 14 at DEX 12, the chance to save against a Fireball is 35% *(was 70%)*.
+- **[Fixed]** Spells are saved against with the spell save *(was petrification/polymorph for almost every spell)*.
+- **[Fixed]** Against fire, cold and electricity, DEX helps you dodge, from −5 to +6 *(was a doubled d20)*. Needing 14 at DEX 12, the chance to save against a Fireball is 35% *(was 70%)*.
 
 > *Developers' Notes: The doubled d20 isn't in the manual or in AD&D. It made most enemies shrug off a Fireball. Nimble targets still dodge; slow ones now burn.*
 
 **Two weapons**
 
-- **[Changed]** Two weapons cost −2 to hit with the main hand and −4 with the off hand, less with high DEX; rangers and Twin-blades fight with two at no penalty in light armour *(was a small bonus at DEX 5 or less, otherwise nothing)*.
-- **[Changed]** The off hand attacks once a round, and extra attacks belong to the main hand *(was the full rate in each hand)*.
+- **[Fixed]** Two weapons cost −2 to hit with the main hand and −4 with the off hand, less with high DEX; rangers, Twin-blades and Battle Dancers fight with two at no penalty in light armour, a Justifier in any, and a Ghetto Fighter at 0 and −2 *(was a small bonus at DEX 5 or less, otherwise nothing)*.
+- **[Fixed]** The off hand attacks once a round, and extra attacks belong to the main hand *(was the full rate in each hand)*.
+
+**Held targets**
+
+- **[Fixed]** A blow on a held (Paralyzed) or Out Cold creature hits automatically and does normal damage, as in AD&D *(was a roll to hit as ever, and double damage)*. It cuts both ways: a held party member is hit every time too.
 
 **Armour and protection**
 
 - **[Changed]** Helms give AC 1 *(was 0)*.
 - **[Changed]** Rings and cloaks of protection follow AD&D: two rings don't stack, a ring gives no AC with magical armour, and a cloak does nothing with magical or metal armour or a shield.
-- **[Changed]** Acid and corroding touches let each item save by its material, as in AD&D *(was any non-magical armour destroyed outright)*.
+- **[Fixed]** Acid and corroding touches let each item save by its material, as in AD&D *(was any non-magical armour destroyed outright)*.
 
 **Races**
 
 - **[Changed]** Half-giants can hold a two-handed weapon in one hand.
+
+**Size and weapons**
+
+- **[New]** **Creature size**: a large target (a half-giant, a large monster, anyone Enlarged) takes AD&D's damage for large targets from a weapon (a long sword 1d12, a great axe 2d8, a gythka 1d10; a dagger 1d3, a chatkcha 1d4+2), and Hold Person and Charm Person don't work on it at all. A weapon's item box shows both damages (`1D8-1/1D12-1`), and Shillelagh's damage reads 1D6+1 (2D4 against a large foe). *(the game keeps no sizes)*
+- **[New]** **Cahulaks** fight as Dark Sun's rules describe them: a bladed head in each hand, so one more attack a round (at −2 and −4, as with two weapons, DEX helping), and a hit can tangle a man-sized or smaller foe, which then loses its next turn unless it saves against petrification. Half-giants, large monsters, anyone Enlarged, the bodiless (elementals, slimes, swarms, shadows) and a few other beasts can't be tangled ([the creatures' table](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/CREATURES.md) (spoilers) marks each). Twin-blades and Battle Dancers can't use cahulaks.
 
 ## Classes and Kits
 
@@ -76,16 +86,18 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - **[Changed]** Levels stop at a cap of **749,999 XP** instead of 9th level, shared out: one class goes as far as its next level needs no more (cleric 11th, druid 12th, fighter, gladiator and ranger 10th, preserver and psionicist 11th, thief 13th); two or three classes share it evenly (374,999 or 249,999 each); a human who changed class has what its old classes' levels didn't use *(was 9th level for every class)*.
 - **[Changed]** Character creation keeps what the die rolls: lower a score to raise another, but the six never add up to more than the die gave (shown under CHR as `SUM:99/101`), and the hit points stay as rolled, moving only with CON's bonus *(was any score clicked up to its most, and the hit points set by a click)*.
 - **[New]** **STORE** and **RECALL** on the character creation screen, as in Baldur's Gate: keep a roll, try the die again, and bring the kept roll back.
-- **[Changed]** An air cleric can use daggers, as its sphere allows *(was none: no dagger in the game listed the air cleric)*.
+- **[Fixed]** An air cleric can use daggers, as its sphere allows *(was none: no dagger in the game listed the air cleric)*.
+- **[Changed]** An air cleric may also use cahulaks (Dark Sun's cahulaks are thrown weapons, as AD&D's daggers are) *(was not: the class restrictions took them away)*.
 - **[New]** New characters start with fuller gear: a weapon in hand they can use, a sling, leather armour where they may wear it, a Stalker, Assassin or Shinobi a cloak, and some kits weapons of their own (a Battle Dancer two long swords, a Poisoner two of its weapon spec, daggers or short swords). A multiclass preserver starts with no armour, so it can cast.
-- **[Changed]** Class restrictions hold: a character may use an item only if every one of its classes allows it, and a multiclass preserver can't cast in armour *(was any one class allowing it)*. Thieves wear light armour only; a multiclass thief (or a human once a warrior or cleric) may wear heavier, losing its thief skills and backstab in it.
-- **[Changed]** Multiclass characters gain hit points as in AD&D: CON's bonus on every hit die (a warrior's if one class is a warrior), the total divided between the classes.
+- **[Fixed]** Class restrictions hold: a character may use an item only if every one of its classes allows it, and a multiclass preserver can't cast in armour *(was any one class allowing it)*. Thieves wear light armour only; a multiclass thief (or a human once a warrior or cleric) may wear heavier, losing its thief skills and backstab in it.
+- **[Fixed]** Multiclass characters gain hit points as in AD&D: CON's bonus on every hit die (a warrior's if one class is a warrior), the total divided between the classes.
 - **[Changed]** Every character's hit dice are rolled twice and the better kept, at character creation and at every level (a rule change, on unless unticked).
-- **[Changed]** Experience, priests' THAC0 and spell slots follow AD&D's tables: a gladiator needs 2,250 XP for 2nd level *(was 2,000)*, a preserver has 4 2 1 slots at 5th *(was 3 2 1)*, a cleric 3 3 1 *(was 3 2 1)*.
-- **[Changed]** A ranger's spells last and deal damage at its level minus 7, as AD&D has it *(was its full level)*.
+- **[Fixed]** Experience, priests' THAC0 and spell slots follow AD&D's tables: a gladiator needs 2,250 XP for 2nd level *(was 2,000)*, a preserver has 4 2 1 slots at 5th *(was 3 2 1)*, a cleric 3 3 1 *(was 3 2 1)*.
+- **[Fixed]** A ranger's spells last and deal damage at its level minus 7, as AD&D has it *(was its full level)*.
 - **[New]** **Ages** (a rule change, on unless unticked): each character has an age from the Dark Sun rules' tables, shown on the inventory screen and the Loader's Characters tab. Middle, old and venerable age change the scores, and a character dies at the most its race lives; everyone is a year older each 365 days of game time (the dice log says so), and magic ages them faster. **Haste** now asks each creature it speeds for a system shock roll by CON, as in AD&D: one that fails dies, and a party member who survives is a year older. **Restore Youth** (a 6th-level priest spell: Magic and Psionics) takes magical years back.
-- **[Changed]** **CON 20 and up** gives a hit point back at AD&D's rate, one an hour at CON 20 to one every 10 minutes at 25 *(was one every 5 minutes at any of them)*; and a dwarf's or halfling's poison save gets only its racial bonus, as in AD&D *(was CON's adjustment as well)* (a rule change, CON as in AD&D, on unless unticked).
-- **[Changed]** Preservers' INT sets their chance to learn a spell from a scroll (35% at INT 9 to 100% at 24) and the most spells of each level they can know. New preservers choose their starting spells.
+- **[Fixed]** **CON 20 and up** gives a hit point back at AD&D's rate, one an hour at CON 20 to one every 10 minutes at 25 *(was one every 5 minutes at any of them)*; and a dwarf's or halfling's poison save gets only its racial bonus, as in AD&D *(was CON's adjustment as well)* (a rule change, CON as in AD&D, on unless unticked).
+- **[Fixed]** **Dual-classing** as the manual has it: from 3rd level, with every prime requisite of the old class at 15 or more and every one of the new class at 17 or more (a rule change, on by default) *(was 2nd level, and one score a class checked: a ranger, druid or psionicist on WIS alone)*.
+- **[Fixed]** Preservers' INT sets their chance to learn a spell from a scroll (35% at INT 9 to 100% at 24) and the most spells of each level they can know. New preservers choose their starting spells.
 
 **Kits**
 
@@ -134,13 +146,17 @@ A few of them:
 - **Military Scout:** better at stealth, traps and climbing under the open sky, with +2 initiative and +1 to hit with bows and slings there, and its hiding isn't halved by the sun; worse under a roof, and it never backstabs.
 - **Spellarcher:** shoots every arrow as a magic one (1 better, at least +1), and weaves the touch spells it knows into arrows: a button on the USE screen for each, a spell slot for 5 arrows a preserver level in its empty quiver (or added to the same spell's arrows there), each casting its spell on what it hits at the archer's preserver level. They stay in the quiver until shot, as a Flame Blade stays in the hand. Making them plays the spell's own cast sound.
 - **Wild Fury:** Wild Fighting as each fight starts, a roll against CON at −4: one more attack a round in melee and +3 damage, or −3 to hit and AC 3 worse if it fails.
-- **[New]** The game's own party has features of its own: Gerakis fights wild (as a Wild Fury does), K'ratchek casts and uses psionics as a Wasteland Seer does and throws her chatkcha once more a round, Cilla hides as well in the sun as out of it (her feature, the Elven Shadow-walker), and Cermak is an Arcanist.
+- **[New]** The game's own party has features of its own: Gerakis fights wild (as a Wild Fury does), K'ratchek casts and uses psionics as a Wasteland Seer does, Cilla hides as well in the sun as out of it (her feature, the Elven Shadow-walker), and Cermak is an Arcanist.
 
 > *Developers' Notes: Each kit is built into the game's own code, so it works everywhere the game checks: THAC0, spell slots, hit dice, PSP costs, attacks a round and what you may hold. The player's guide has all 37, with a short description of who takes each one on Athas.*
 
 ## Magic and Psionics
 
-- **[Changed]** **Enlarge** makes only the weapon's dice bigger, 10% a caster level, rounded up, with STR and magic added after, as in AD&D (a rule change, on unless unticked) *(was the whole melee damage made bigger, STR included)*.
+- **[Fixed]** **Spells and psionics as the manual describes them** (a rule change, on by default, from the next start): saves against Bestow Curse and Blood Flow; Flaming Sphere negated by a save; no save against Quicksand; Solid Fog (1d3 rounds + 1 a level), Cause Fear (1d4 rounds), Minor Spell Turning (3 rounds a level) and Stinking Cloud (1d4+1 rounds) for the manual's time; Turn Pebble to Boulder 11-26; Minute Meteors five globes of 1d4; Flame Arrow a 5d6 bolt for every 5 caster levels; Ironskin a blow stopped a caster level; Chaos saved against by creatures of very high or very low INT; Color Spray saved against only by creatures of more levels than the caster, and Hold Undead only on undead of the caster's level or lower; Free Action frees creatures held by Web, Solid Fog, Quicksand, Entangle or Grease; Fire Shield +2 and Blur +1 on saves; Chill Touch weakens for an hour and sends undead fleeing; Cloudkill kills weak creatures; Feeblemind stops psionics too, and Heal cures it; Lower Resistance takes 30% plus 1% a level; Strength and Cat's Grace roll by class; Rainbow Pattern holds a round a level and breaks when its victim is hurt; Cell Adjustment heals 1d4; Biofeedback always leaves a blow at least 1. **Turn Undead** follows AD&D's table: turned undead flee for 3d4 rounds, the strongest results destroy, and a priest who fails can't try the same undead again that fight *(was destroyed or nothing, as often as the priest liked)*. Monsters' hit dice count as their level for saving throws *(was level 0 for a monster with no class)*.
+- **[Fixed]** **Monsters as the manual describes them** (with the same rule change): Shadows and Greater Shadows drain Strength and shrug off cold, the Babau and Blue Slaad carry deadly poison, the Styr breathes fire (and only +1 weapons hurt it), the Djinn turns invisible and makes mirror images, and the Tari's bite can carry disease *(was cold damage and paralysis, a corroding touch, disease, and nothing of the rest)*.
+- **[Fixed]** **Spells roll to hit** (a rule change, on by default, from the next start): the missile spells (Acid Arrow, Turn Pebble to Boulder, Magical Stone, Condense, and each of Minute Meteors' globes, at +2) and the Strine's spines roll against the target's AC, as do the touch spells cast at an enemy (Chill Touch, Shocking Grasp, Vampiric Touch, the Cause Wounds spells, Cause Disease, Poison); a miss does nothing *(was every one landing)*.
+- **[Changed]** **Resting** heals by the priests' remaining spells (and psionicists' Cell Adjustment) and a night's natural healing (3 HP and CON's bonus, plus CON 20+ regeneration) (a rule change, on by default) *(was every member healed to full)*.
+- **[Fixed]** **Enlarge** makes only the weapon's dice bigger, 10% a caster level, rounded up, with STR and magic added after, as in AD&D (a rule change, on unless unticked) *(was the whole melee damage made bigger, STR included)*.
 - **[New]** Six new wizard spells, each with its own icon and description:
 
 | Spell | Level | What it does |
@@ -150,7 +166,7 @@ A few of them:
 | **Reflected Image** | 1st | one image of the caster, struck instead of it half the time |
 | **Spook** | 1st | a creature flees for 3 rounds unless it saves |
 | **Friends** | 1st | CHA +2d4 for a short while, for better prices |
-| **Cat's Grace** | 2nd | DEX +1d6, for an hour of game time a caster level |
+| **Cat's Grace** | 2nd | DEX +1d8 for a rogue, 1d6 for a wizard, warrior or psionicist, 1d4 for a priest (1d6 for anyone with the manual's spells off), for an hour of game time a caster level |
 
 - **[New]** Ten 6th-level priest spells for clerics and druids of 11th level and up, with a 6th-level slot at 11th and two at 12th:
 
@@ -170,9 +186,9 @@ A few of them:
 ## Improved Thieving
 
 - **[New]** A soft breath as a thief or ranger hides in a fight, and a purse's jingle for a picked pocket (lifting one of the three named weapons plays the game's quest sound).
-- **[Changed]** Thief skills follow AD&D's table by level, with Dark Sun's race and DEX adjustments, and none goes above 95 *(was a 3rd-level elf with move silently 66 and hide in shadows 61)*.
+- **[Fixed]** Thief skills follow AD&D's table by level, with Dark Sun's race and DEX adjustments, and none goes above 95 *(was a 3rd-level elf with move silently 66 and hide in shadows 61)*.
 - **[New]** Thieves **hide in shadows and move silently** in a fight to backstab, halved in daylight. Rangers do it to attack from behind, at full strength under the open sky *(was a backstab only on a target turned to face someone else)*.
-- **[Changed]** A **backstab** multiplies only the weapon's dice; STR and magic bonuses are added once after, as in AD&D, and only the round's first attack is a backstab *(was the whole damage multiplied, STR included, so a strong thief could hit for over 100, on the first two attacks of the round)*.
+- **[Fixed]** A **backstab** multiplies only the weapon's dice; STR and magic bonuses are added once after, as in AD&D, and only the round's first attack is a backstab *(was the whole damage multiplied, STR included, so a strong thief could hit for over 100, on the first two attacks of the round)*.
 - **[New]** **Picking pockets** with a thief's **Pick Pockets** button on the USE screen (where a priest's Turn Undead is), then a click on anyone in sight: any thief can try, leader or not, and what's lifted goes in that thief's backpack. A cleric/thief has both buttons, the purse beside Turn Undead. Fail and you roll move silently to get away. A purse holds 2 to 5 ceramic pieces for each of the thief's levels, and a few named weapons can be lifted for 200 XP (once a game each).
 - **[New]** A worn cloak adds 10 to hiding, boots 10 to moving silently, and a belt 5 to picking pockets and opening locks, for thieves and rangers alike; the inventory screen's thief skills count them.
 
@@ -180,7 +196,7 @@ A few of them:
 
 **Magic weapons**
 
-- **[New]** Nineteen new magic weapons, each with its own icon and a story from the game's own item sage:
+- **[New]** Twenty-two new magic weapons, each with its own icon, and all but the Cahulaks +1 with a story from the game's own item sage:
 
 | Weapon | What it is |
 |---|---|
@@ -200,6 +216,9 @@ A few of them:
 | **Thornwall** | a bone polearm +1 |
 | **Gutterknot** | a club +1, the game's first magic club |
 | **Deepbiter** | a stone pick +1, the game's first magic pick |
+| **Cahulaks +1** | bone cahulaks +1, their blades glowing in fire colours: Legcrusher fights with them (no more clubs) |
+| **Emberlash** | obsidian cahulaks +1 an earth, fire or air cleric can wield |
+| **Ironwhirl** | metal cahulaks +2 an earth or air cleric can wield |
 | **Dunesong** | a bow +1, which the Bowyer's archery target counts as it does the game's own bows |
 | **Windlash** | a staff sling +1, the game's first magic staff sling |
 | **Skycutter** | a chatkcha +2 |
@@ -207,6 +226,8 @@ A few of them:
 Where each is found is in [ITEMS](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/ITEMS.md#every-magic-item).
 
 - **[Changed]** The Elven Leader's gift is a **Gythka +2** *(was +1)*.
+- **[Changed]** The elven caravan's buried cahulaks are a **Cahulaks +2**, still casting Cause Light Wounds on a hit, their blades glowing blue *(was the game's Cahulaks +1)*.
+- **[New]** The game's own **Polearm +1**, which it defines but never placed, is in the world now.
 
 **Magic armour and worn items**
 
@@ -218,6 +239,7 @@ Where each is found is in [ITEMS](https://github.com/daaki85/darksun-obsidian-ed
 - **[New]** **Rings of Protection +1** (two) and a **Cloak of Protection +1** (in Pehtucl's locked chest: see World): +1 AC and +1 on every saving throw.
 - **[New]** **Cloak of Elvenkind**: all but invisible when hiding in shadows. Thieves and rangers only.
 - **[New]** **Boots of Elvenkind**: silent when moving. Thieves and rangers only.
+- **[New]** **Boots of Speed**: in a fight, double movement and AC 2 better while the wearer can move. Anyone can wear them.
 - **[New]** **Arrowbane**: a silver circlet whose wearer can't be hurt by normal arrows, sling stones or chatkchas. Not armour: a preserver casts in it, and bracers and rings and cloaks of protection still work with it.
 - **[New]** **Sunking Crown**: a gold crown that protects its wearer from evil. Not armour, as Arrowbane isn't.
 - **[New]** **Girdle of Back Defense**: no enemy gets the bonus for attacking its wearer from behind, nor a backstab.
@@ -242,8 +264,10 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** **Daggers** in metal, and in bone: the only dagger a water cleric can use.
 - **[New]** **Maces** in obsidian and metal.
 - **[New]** A **metal pick** and a **metal polearm**.
+- **[New]** **Metal cahulaks**: the champions' mul wields them, and the Weapon Merchant sells them. The arena's dead body by the stone arch holds plain bone cahulaks.
+- **[New]** **Obsidian cahulaks**, which earth, fire and air clerics may use: Jark sells them, and an earth or fire cleric-warrior who picks the cahulaks starts with them.
 - **[Changed]** The game's **bone scale armour** set is complete, with its arm and leg pieces and helm.
-- **[New]** The game's plain **leather helm**, which it never placed: Kurzak wears one in the slave pens.
+- **[New]** The game's plain **leather helm**, which it never placed: Kurzak wears one in the slave pens, and Scar in the arena.
 
 ## World
 
@@ -255,13 +279,14 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** Merchants give your party leader a discount for high Charisma, from 5% at CHA 18 to 40% at 25.
 - **[Changed]** Merchants pay 60% of an item's price *(was all of it)*.
 - **[New]** Merchants keep the magical items you sell them, to buy back *(was destroyed when sold)*.
-- **[New]** Scar's henchmen carry bone axes, which they drop when they fall.
+- **[New]** Scar fights with a pair of obsidian cahulaks and wears a full leather suit with a helm; his henchmen swing bone great axes, which they drop when they fall, and wear leather chest and arm armour (in a new game: the arena's fighters are made on its first visit).
+- **[New]** People the party fights who had nothing in hand and struck with their fists carry weapons and armour that suit them.
 
 ## Graphics
 
 - **[New]** The party's figures show the weapons, shields, armour, helms and cloaks they wear, in each material's colours, walking and fighting.
-- **[New]** Magic gear glows on the party's figures: a weapon's bright edge, a shield's boss and rim, and sparks on armour, bracers, cloaks, helms, boots and belts shimmer in the animated colour nearest the item's icon: fire, green, violet or blue. The weapons spells make glow whole, the Flame Blade and Shillelagh in fire and Spiritual Hammer in blue, as do Kreenfang's blades. Boots of Elvenkind now show on the feet, in soft green.
-- **[New]** Nineteen of the game's magic items that sat still in their icons now shimmer, as its other magic items do: the Parting Staff, the Chameleon Gloves, the Hornblade, Cahulaks +1, Dag's Dagger, the Terror Blade, Blackmace, the Shimmer, Drake and Silk Armor, Tanelyv's and Grey's arm and leg pieces, the Living Cloak, the Golden Torque, Light of Dawn, El's Ring and the Orb of Knowledge. A plain item sharing an icon with one of them (plain cahulaks, a plain ring) keeps the still one.
+- **[New]** Magic gear glows on the party's figures: a weapon's bright edge, a shield's boss and rim, and sparks on armour, bracers, cloaks, helms, boots and belts shimmer in the animated colour nearest the item's icon: fire, green, violet or blue. The weapons spells make glow whole, the Flame Blade and Shillelagh in fire and Spiritual Hammer in blue, as do Kreenfang's blades. Boots of Elvenkind now show on the feet, in soft green. The mod's magic gear with no plus (the Boots of Speed, the Elvenkind cloak and boots, the girdles) glows too.
+- **[New]** Nineteen of the game's magic items that sat still in their icons now shimmer, as its other magic items do: the Parting Staff, the Chameleon Gloves, the Hornblade, Cahulaks +1 (Legcrusher's now, in fire colours; the caravan's, made +2, has a blue glow of its own), Dag's Dagger, the Terror Blade, Blackmace, the Shimmer, Drake and Silk Armor, Tanelyv's and Grey's arm and leg pieces, the Living Cloak, the Golden Torque, Light of Dawn, El's Ring and the Orb of Knowledge. A plain item sharing an icon with one of them (plain cahulaks, a plain ring) keeps the still one.
 - **[New]** Elves have pointed ears.
 - **[New]** With ages on, a party member's hair greys on the map as they age: streaks when middle-aged, grey when old, white when venerable (with what the party wears shown).
 - **[New]** Half-elves no longer look like humans: a half-elf man is built like the elf, a little broader, with short fair hair, a leather jerkin, green trousers and pointed ears; a half-elf woman is a little slimmer than the human woman, with golden hair in a bun, pointed ears, a purple cloak and red boots.
@@ -280,7 +305,9 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Changed]** The pointer stands still for less time after you pick up or put down an item in the inventory, so it jumps less far when it moves again *(was up to a tenth of a second)*.
 - **[Changed]** In a fight the view stays put while a figure walks, moving only to bring back one that walks off the screen *(was following each one near the edge)*.
 - **[Changed]** 40 save slots on four pages *(was 10)*, each also kept under its name in a folder of the Loader's, and 29 stored characters *(was 19)*.
-- **[Changed]** The game runs faster than with GOG's settings: DOSBox is given more of the computer's time, and a **Game speed** setting chooses how much (GOG's own, faster or fastest). On the map the whole party walks at full speed with shadows and dust on: when the screen can't keep up, a picture is skipped rather than everyone slowing down *(was half speed with the whole party in view)*. Steady pace is an Options switch under Game speed, on.
+- **[Changed]** The default game speed is Fastest (35,000 cycles): the whole party walks at full speed with nearly every picture shown. Faster stays for older computers.
+- **[Changed]** The mod's shadows, dust and see-through figures cost about a third less to draw: walking shows about 50% more pictures a second at the Faster speed (15.5, was 10.2) and walks faster at Fastest. Dust is lighter, as it was meant to be (a walker raised a puff almost every moment).
+- **[Changed]** The game runs faster than with GOG's settings: DOSBox is given more of the computer's time, and a **Game speed** setting chooses how much (GOG's own, faster or fastest). On the map the whole party keeps its walking pace with shadows and dust on: when drawing a picture costs the walkers more steps than the original game's pictures do, the next picture is skipped rather than everyone slowing down, and a quick computer sees every picture *(was slower with the whole party in view)*. Steady pace is an Options switch under Game speed, on.
 - **[New]** Crash reports: if the game stops with an error, the message stays on screen and a report is written, with the game's own error message and how much memory it had left; if it freezes, a freeze report saves what it was doing; if DOSBox closes while the game still runs, a report says so.
 - **[New]** A warning when memory runs low: the dice log tells you to save and restart before the game runs out (a fresh start has all of it back).
 - **[New]** Item reports: if an item vanishes from the party with nothing ordinary to explain it (not dropped, given, sold, used up or broken), or the game destroys one (acid, Detonate's blast), the Loader saves a report in `crash-logs`, as it does for a crash, and says so in the dice log.
@@ -289,6 +316,8 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 
 ## The Loader
 
+- **[New]** A **fight's summary** in the dice log as it ends: `Fight over: 3 rounds, 4 kills; the party dealt 61 damage and took 19`, then each member's attacks that hit, damage dealt, kills and damage taken.
+- **[New]** The dice log reads at a glance: each event on one line, what came of it first (`● Seneca hits Arena Guard for 11 — backstab`), the HP left and the roll in columns at the right, the sums under it dimmed, coloured by whether it went well or badly for the party. **Readable layout** above the log switches back to the lines as written.
 - **[New]** The Loader: it starts the game with the mod and your options, and stays open while you play, laid out in the game's own colours.
 - **[New]** **The dice log:** every attack, damage roll, saving throw, thief skill, initiative score and character creation roll as it happens, with the number it needed, the chance of success, and where every bonus came from.
 - **[New]** **Characters:** each party member's sheet as View Character lays it out, plus THAC0 with each weapon, saves as the d20 needed right now, attacks a round, current AC and what it's made of, spell slots and thief skills.
@@ -307,6 +336,15 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 
 ## Bug Fixes
 
+The main fixes are below; every bug of the original game the mod mends, with what the game did, is in [the game's bugs, fixed](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/GAME-BUGS.md).
+
+- **[Fixed]** The **Quicksilver Glove** fought as if it were wooden (−3 to hit, −2 damage): it had no material, which the game read as wood. It is leather now, as the Chameleon Gloves are.
+- **[Fixed]** **Alagorn** told two items wrong: the Quicksilver Glove as "Quicksilver Gauntlets" that graft a weapon to the hand (it casts Detonate on every hit), and the Helm of Contemplation as a shield against psionic attacks (it is Gaze Reflection). His menus now name the glove as the game does, and his two stories say what the items do.
+- **[Fixed]** **Alagorn**, asked about clothes when the party carried none, said "no magic clothes", then "Ah, magic clothes", and showed an empty menu. Now he says one thing and the menu matches.
+- **[Fixed]** The **Effects screen** showed "(15 CHARGES)" on a magic item's power (Shadowseeker's Detect Invisibility), from a stray byte. Charges now show only for a spell that lasts a number of uses or a timed effect.
+- **[Fixed]** A party member cured of poison at a rest (a druid's free Neutralize Poison) still died of the poison: the rest checked for poison before its cures. The cures now come first.
+- **[Fixed]** In a busy area, things could stop being drawn (an item dropped, a body, a figure, a doorway), as SSI's own note for Wake of the Ravager describes: the game has 300 picture slots and gave none back until the next area. Once all are taken, a slot nothing uses any more is now reused, so new pictures always show.
+- **[Fixed]** After many changes of gear in one area, the figures on the map could vanish (the party's and the monsters'), coming back for a moment when the inventory was opened: the Loader's dressing of the figures filled the game's store of pictures. The Loader now reuses the store's room for the new outfits, so they always show.
 - **[Fixed]** The game's **people put on their weapons and armour only at their first action in a fight**: until then they were AC 10, their armour unworn, so an opening blow, a backstab or a first-round hit met none, and their Look box showed no weapon. Now they wear and wield their gear from the moment they're on the map, as the game puts it on. They also wear the cloaks, belts, boots, amulets and up to two rings they carry, which the game never put on: each counts by the same rules as the party's.
 - **[Fixed]** **Mirror Image** stopped no weapon blow, and swallowed the caster's own spells (Armor cast on oneself was lost three times in four, an image with it). Now each hit, and each foe's spell aimed at one creature, has a 75% chance to strike an image instead (50% for Reflected Image); spells from your own side always get through.
 - **[Fixed]** **Armor** used up two charges for each hit, and one for any spell cast on its wearer, even a friend's Bless. Now one charge for each damaging hit, a weapon's or a spell's.
@@ -325,7 +363,10 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** Monsters' **walls** (Wall of Fire, Ice, Force and the rest) came out a single point. Now they run across the line of fire, four cells long.
 - **[Fixed]** Items that raise or lower an **ability score** worked from the backpack as well as worn. Now only while worn. (Found by OpenDS and yuan-ti.)
 - **[Fixed]** The **gladiator**'s better AC (1 for every 5 levels) came with no armour on. Now only in armour, as Dark Sun has it. (Found by OpenDS and yuan-ti.)
-- **[Fixed]** **Scare** let no one below 6th level save: its save for elf and half-elf priests asked for both races at once. Now an elf or half-elf priest saves as usual. (Found by yuan-ti.)
+- **[Fixed]** **Pehtucl's ambush** at the slave pens' fountain sent every Arena Guard and Guard in the pens after the party, from across the map, and a fight in the passage before the fountain could set off the alarm. Now only Pehtucl and the five guards he calls hunt the party, and the fountain masks a guard's yell in that passage too.
+- **[Fixed]** An **arrow or sling stone** counted as from behind (+2, the target's DEX and shield lost) by the target's facing, from any distance. Now only melee does; a missile is from behind only as a hidden archer's shot, shown as **unseen**.
+- **[Fixed]** **Scare** allowed no saving throw at all, so even a 7th-level fighter was Scared. Now 6th level and up always save, as the game's own code means; below 6th, creatures can't save, but an elf or half-elf priest saves as usual (its rule asked for both races at once: found by yuan-ti).
+- **[Fixed]** Creatures that **can't save** (against Chaos, Cloudkill, Scare below 6th level, Color Spray with the manual's spells) saved anyway: the game's comparison read the −100 as a big number. Now they fail, even on a natural 20; any other save still succeeds on a natural 20.
 - **[Fixed]** **Psionic Blast**'s wounds are imagined (its victim believes it has lost most of its hit points), but the game took them for good. Now a party member gets them back as the fight ends, and until then a blow that would kill them only knocks them out; they wake with the hit points back.
 - **[Fixed]** Thief skills no longer drop for holding a weapon. The game's equipment penalty looked at the hands, quiver and legs, and never at the armour worn.
 - **[Fixed]** **DELETE** in the character roster deleted the wrong character when the list was scrolled.
@@ -356,22 +397,12 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** A preserver or psionicist with another class couldn't claim to have scried the **haystack** or read the man's thoughts, and the cave guide told even a dwarf or halfling to "go bother someone your own size". **Dagolar's slime book** counted a fighter's or an air cleric's training as magical but not an earth, fire or water cleric's or a druid's: now any cleric, druid, preserver or psionicist can read it.
 - **[Fixed]** Cilla, an elf in the ready-made party, was drawn with the half-elf woman's figure; she looks like an elf now (a switch keeps the game's figure).
 
-Rules the game got wrong are put right too, each under its own heading above with a switch, on by default: the saving throws against spells and the doubled d20 against fire, cold and electricity, two weapons, warriors' attacks, helms' AC and acid on armour (Combat); class restrictions, multiclass hit points, the class tables, rangers' spells, preservers' learning from scrolls, CON's regeneration and poison saves (Classes and Kits); Enlarge's dice (Magic and Psionics); and thief skills (Improved Thieving).
+**Rules the game got wrong** are fixed too. Each is tagged **[Fixed]** under its own heading above and has a switch, on by default, for anyone who wants the game's own rule: the saving throws against spells and the doubled d20 against fire, cold and electricity, two weapons, warriors' attacks, acid on armour and held targets (Combat); class restrictions, multiclass hit points, the class tables, rangers' spells, dual-classing, preservers' learning from scrolls, CON's regeneration and poison saves (Classes and Kits); spells, psionics and monsters as the manual describes them (Turn Undead by AD&D's table with them), spells rolling to hit and Enlarge's dice (Magic and Psionics); and thief skills and backstabs (Improved Thieving). The other rule changes are the mod's own choices, not corrections, and stay **[Changed]** or **[New]**: helms' AC, resting, the XP level cap, hit dice rolled twice, creation scores as rolled, half-giants' two-handed weapons, creature size, cahulaks, a thri-kreen's extra chatkcha throw, and ages.
 
 ## Your Saved Games
 
-**You don't need to start a new game for these fixes.** They're in the patched game and the Loader, not in your saves, so they work from the moment you load. The fixes stop the old bugs from happening, but don't undo what they already did to a save. The README's [saved games](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/README.md#updating-backups-saved-games-and-the-loaders-files) has each of these in full:
+**You don't need to start a new game for these fixes.** They're in the patched game and the Loader, not in your saves, so they work from the moment you load. The fixes stop the old bugs from happening, but don't undo what they already did to a save.
 
-- **A save made with 2.14.0 is not for earlier versions,** one made with 2.13.2 or later not for 2.13.1 or earlier, and one made with 2.13.0 or later not for anything before 2.13.0. Older saves load in newer versions as they are.
-- **Share Strength and Dispel Magic:** strength kept from Share Strength stays; a character silenced by Dispel Magic casts again once it wears off.
-- **Ages:** each character in a save is given a starting age the first time the Loader sees them.
-- **Kits from earlier versions:** a Healer is given the cosmos spells; a thri-kreen druid/fighter Wasteland Seer has no kit now.
-- **Thieves' Tools** from an earlier version do nothing: a thief picks pockets with the Pick Pockets button.
-- **Most PSP** may go up once, the next time the game works it out.
-- **Thornwall in an older save:** never comes in a save from 1.2.0 to 2.5.0 that has been to the slave pens; already on the rack in one from 2.13.4 or earlier that has been to the arena.
-- **Kreenfang:** likely still on the dead body by the stone arch in a save from 2.13.4 or earlier that has been to the arena.
-- **Pehtucl's locked chest** comes with a new game.
-- **A save made with an earlier version while Kalzith was switched off** may start Kalzith's conversation when you talk to Semyon.
-- **A new game whose arena fight never began** (a 2.4.0 bug) can't be mended: start a new one.
+**A save isn't for an older version** where a release changed what a save holds: 2.13.0, 2.13.2 and 2.14.0 did, so a save made with one of them or later doesn't load in the versions before it. Older saves load in newer versions as they are.
 
-**A new game is still the way to see all of the mod.** Kits, STORE and RECALL and fuller starting gear come with characters made with the mod, and much of the new content (Kalzith, Semyon, the vulture, the new items in the slave pens) is in the game's first areas. A save made with the original game loads and plays with every fix and rule change, but its characters have no kits, and what it has already been through stays as it was.
+**A new game is still the way to see all of the mod.** Kits, STORE and RECALL and fuller starting gear come with characters made with the mod, and much of the new content (Kalzith, Semyon, the vulture, the new items in the slave pens) is in the game's first areas. The new and changed gear the game's people carry and its chests hold comes only in areas the save hasn't been to: where the party has been, they keep what they had. A save made with the original game loads and plays with every fix and rule change, but its characters have no kits, and what it has already been through stays as it was. What else an older save keeps is in the README's [saved games](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/README.md#updating-backups-saved-games-and-the-loaders-files).

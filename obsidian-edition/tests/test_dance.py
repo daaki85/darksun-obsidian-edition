@@ -92,7 +92,8 @@ class DanceTests(unittest.TestCase):
     def log(gd, d, w=None):
         return SimpleNamespace(game=gd, tsr_hdr=0x100, _kit_check=0.0, guest=gd.guest, _dances=d,
                                _wild=w or wild.WildFights(), _round_time=1000, _round=1,
-                               _out_of_fight=None, _fight_seen=False, _kits_due=False)
+                               _out_of_fight=None, _fight_seen=False, _kits_due=False,
+                               _recent_damage=[])
 
     def test_over_with_the_fight(self):
         """The game's fight flag up in the fight, then down FIGHT_OVER: the dance and Wild Fighting

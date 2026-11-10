@@ -1,6 +1,6 @@
 # Development: what the game and the Loader show
 
-*Part of the [development notes](DEVELOPMENT.md). How the game's own screens show more (the combat log, names over figures, THAC0 and saves, the Look box, charges), what the Loader's tabs read, and the controls, saves and game speed: where the patched game calls the helper (DSCLOG), and what the Loader reads and writes. Each heading names the section of the [features page](FEATURES.md) or the [README](README.md) it explains.*
+*Part of the [development notes](DEVELOPMENT.md). How the game's own screens show more (the combat log, names over figures, THAC0 and saves, the Look box, charges), what the Loader's tabs read, and the controls, saves and game speed: where the patched game calls the helper (DSCLOG), and what the Loader reads and writes. Most headings name the section of a player's page they explain (the [features page](FEATURES.md), the [README](README.md), [items](ITEMS.md), [kits](KITS.md), [bugs fixed](GAME-BUGS.md), [how the game works](HOW-THE-GAME-WORKS.md), [the dice log](DICE-LOG.md)); the rest, a part of one or a note of their own, say which at their start.*
 
 ## Contents
 
@@ -13,6 +13,8 @@
   - [The panel](#the-panel)
 - [Names over figures](#names-over-figures)
 - [THAC0, saves and thief skills](#thac0-saves-and-thief-skills)
+- [The creation screen](#the-creation-screen)
+- [Spell slots on the USE screen](#spell-slots-on-the-use-screen)
 - [Detonate's blast on an item](#detonates-blast-on-an-item)
 - [The psionic power check](#the-psionic-power-check)
 - [What hurts a monster (the Look box)](#what-hurts-a-monster-the-look-box)
@@ -21,7 +23,11 @@
 - [Scripts' requests and refused casts in the dice log](#scripts-requests-and-refused-casts-in-the-dice-log)
 - [Choosing an enemy: Tab, Enter and the rings](#choosing-an-enemy-tab-enter-and-the-rings)
 - [Scrolling the map](#scrolling-the-map)
+- [M, U and I: open a screen, close it again](#m-u-and-i-open-a-screen-close-it-again)
+- [The whole party in view](#the-whole-party-in-view)
+- [The view in fights](#the-view-in-fights)
 - [The pointer in scenes, and where it starts](#the-pointer-in-scenes-and-where-it-starts)
+- [Spells on the Effects screen](#spells-on-the-effects-screen)
 - [More saves](#more-saves)
 - [More characters](#more-characters)
 - [Game speed](#game-speed)
@@ -61,6 +67,8 @@ the game's own message said.
 
 ## The Bowyer's archery target
 
+([In How the game works](HOW-THE-GAME-WORKS.md#the-bowyers-archery-target).)
+
 Shooting at the target in Teaquetzl runs script 178 (with a bow in hand: the
 script counts objects 1017, 1039 and 30007, the bow, the Bow +2 and Phrain's
 Bow, into variables 1 to 3, added up at 40Dh; the Loader's copy jumps from
@@ -79,6 +87,8 @@ PROBE_SCRIPT_RAND records (position 57Fh, script 178's alone), the archer the on
 whose turn it is, the distances worked out the same way from where they stand.
 
 ## Ability checks in the scripts' conditions
+
+([In the dice log's page](DICE-LOG.md#checks-thief-skills-and-searches).)
 
 Some scripts test an ability without the ability check command: a condition
 compares the random command with a field of the character acting (fields 23 to
@@ -101,7 +111,7 @@ with the 3 ability checks the ability check command makes).
 
 ## The combat log in the game
 
-([In FEATURES](FEATURES.md#the-combat-log-in-the-game).)
+([In the features page](FEATURES.md#the-combat-log-in-the-game).)
 
 ### What the game allows
 
@@ -136,23 +146,20 @@ dice log running:
 - **Font.** The game's text font is RESOURCE.GFF's FONT 100, 9 pixels high
   with its shadow (`art.py`): a panel 67 pixels high holds a header and 6
   lines.
-- **Memory.** With GOG's settings (`ems=true`) DOSBox keeps EMS's 64 KB page
-  frame where upper memory would be, and with the helper loaded `mem` shows 1
-  KB of upper memory free. With `ems=false` (the launcher's own config, after
-  GOG's) it shows 65 KB (largest block 64 KB), conventional memory unchanged
-  at 632 KB ([Room in the helper](DEVELOPMENT.md#room-in-the-helper)). The game's memory layer (VMEM)
-  takes EMS, XMS or extended memory, whichever there is: without EMS it loaded
-  a save, walked the pens, opened a conversation and a shop, and played the
-  arena's opening fight to the end without a fault (a check, not a whole
-  game).
+- **Memory.** With GOG's settings (`ems=true`) EMS's page frame leaves the
+  helper too little upper memory, so the launcher turns EMS off: [EMS
+  off](DEVELOPMENT.md#ems-off) (the game's memory layer then uses XMS; without
+  EMS it loaded a save, walked the pens, opened a conversation and a shop, and
+  played the arena's opening fight to the end without a fault: a check, not a
+  whole game).
 
 ### The panel
 
 - **Where it lives.** The Loader draws the panel's picture (`combatlog.py`:
   180 × 78 palette indices in the area's own colours, matched to the palette
   DSCLOG last read) into the helper's far block, beside the dice log's ring
-  (`FAR_PANEL`; its segment `panel_seg`, header `+328`: [Room in the
-  helper](DEVELOPMENT.md#room-in-the-helper)).
+  (`FAR_PANEL`; its segment `panel_seg`, header `+328`: [the far
+  block](DEVELOPMENT.md#the-far-block)).
 - **Putting it on screen.** DSCLOG copies the picture into the screen on show,
   a plane at a time (`PANEL_BLIT`, its height kept on the screen; the Loader
   stores each row as its four planes' bytes in turn, `combatlog.planar`, so a
@@ -269,7 +276,10 @@ dice log running:
   `+346`, before `PANEL_NEW`; the picture's block is PANEL_W x 130, the most);
   its foot stays at row 198. Smaller than it was, DSCLOG draws the view again
   under it first. Collapsed is 15 rows (the newest line in the header), docked
-  78, expanded 130 (11 lines and the filters' row). The header's level chip
+  78, expanded 130 (14 lines and the filters' row). The lines are in a font of
+  the Loader's (`smallfont.py`: the X11 misc-fixed 4x6 glyphs, public domain,
+  with the game's shadow, 7 pixels a line); the header, the buttons and the
+  filters stay in the game's. The header's level chip
   and - / + buttons, and the filters, are pressed through `PANEL_MOUSE` as the
   scrollbar is. **L** (`INT 16h`, `our_key`, while the panel is on screen:
   `PANEL_LIVE`) is counted at `+348` and kept from the game; the keyboard hook
@@ -296,7 +306,7 @@ dice log running:
 
 ## Names over figures
 
-([In FEATURES](FEATURES.md#names-over-figures).)
+([In the features page](FEATURES.md#names-over-figures).)
 
 - **What starts one.** A spell's cast: `CAST_SITE` (INT 98h and its site
   number over `mov cx,[bp+6]` at 772AAh, the start of the routine at 772A5h
@@ -312,8 +322,9 @@ dice log running:
   its ink with a dark edge a pixel round it (the colours nearest gold or
   light grey and near black in the palette DSCLOG last read), as two one-bit
   masks of 16 bytes a row (128 pixels; longer names shortened word by word,
-  then cut) and 11 rows. They go into one of four slots in the header (`+374`,
-  `LBL_SIZE` 360 bytes each: the label's number, width, height, how far above
+  then cut) and 11 rows. They go into one of four slots in the helper's tail
+  (the header's `+1834` its segment, `+1838` their offset; `LBL_SIZE` 360
+  bytes each: the label's number, width, height, how far above
   the feet, the two colours, the map thing, the masks), the number written
   0 first and last of all, so DSCLOG never takes a half-written one. A label
   stays 1.5 seconds, a charge used 3 (`CHARGE_FOR`); a new one takes the slot
@@ -335,7 +346,11 @@ dice log running:
   boxes at the top, row 40, and kept on the screen; a figure whose feet are
   above the page's top, the view dragged away, gets none), as the main loop doesn't
   run while the game shows an attack or a spell.
-- **The main loop** (`LABEL_TICK`, after `PANEL_TICK` in `PROBE_SCROLL`)
+- **The main loop** (`LABEL_TICK`, after `PANEL_TICK` in `PROBE_SCROLL`, which
+  runs its pass with interrupts on when the game had them on, off only round
+  the pointer's read with the drag's state and `TARGET_CLICK`'s calls to the
+  game's mouse handler, so the game's clock loses no ticks to the redraws and
+  the retrace wait)
   places labels too, and has where one was drawn again when it goes, moves or
   changes (`LABEL_ERASE`: the game's routine for a rectangle of the view,
   `1DF3:142Fh`, with page 1 and a flip, as its own call at 28185h; page 0
@@ -353,7 +368,7 @@ dice log running:
 
 ## THAC0, saves and thief skills
 
-([In FEATURES](FEATURES.md#thac0-saves-and-thief-skills).)
+([In the features page](FEATURES.md#thac0-saves-and-thief-skills).)
 
 How: the patched game calls the helper (`INT 65h`) just after the panel's
 weapon lines; the helper prints the lines with the game's own text routine,
@@ -371,7 +386,7 @@ update them and waits for its answer, half a second at most (`STATS_SYNC`:
 pointer too, so the Loader answers from a thread of its own
 (`DiceLog.answer_stats_in_background`, a look each millisecond, about 4 ms to
 work the numbers out), not from its main loop's next pass: that took 26-79 ms
-with the Ledger's window open, on top of the game's own pause after an item is
+with the Loader's window open, on top of the game's own pause after an item is
 picked up or put down (50-90 ms at 20,000 cycles: its mouse handler, DSUN.EXE
 3573Dh, only queues the moves, and the pointer is drawn again once the game
 has done with the item). That pause is shorter too: the game flips its two
@@ -390,7 +405,83 @@ each class's next level in its tables and shows the lowest. Where it adds the
 closing bracket, the helper (`INT D2h`) finds which classes that number
 belongs to and adds their letters first.
 
+## The creation screen
+
+([In the features page](FEATURES.md#the-creation-screen).)
+
+What the creation screen gains is drawn by the helper with the game's own text
+routine, each where the game draws nothing of its own: the AGE ([The age on
+the creation screen](DEVELOPMENT-RULES.md#the-age-on-the-creation-screen)),
+SUM ([Scores and hit points as
+rolled](DEVELOPMENT-RULES.md#scores-and-hit-points-as-rolled)), STORE and
+RECALL ([STORE and
+RECALL](DEVELOPMENT-RULES.md#store-and-recall-on-the-creation-screen)), KITS
+([Kits](DEVELOPMENT-RULES.md#kits)), and the THAC0, below. The THAC0 shares the
+age's sites (`CR_AGE`, `CR_AGE_CON`, `CR_NAME`, `CR_OPEN`), named in the age's
+section.
+
+**THAC0** (`CR_THAC0_DRAW`, always, whatever the rules): `THAC0: M18 R19` at `CR_AGE_X`
+on the hit points' line, the THAC0 (`CR_THAC0_BASE`) less the game's STR
+to-hit table's entry (DS:7C2h + STR) for M and its DEX missile table's
+(`DEX_REACTION`'s, + DEX) for R, no less than 0. The game works the THAC0 out
+again as the classes change, but `PROBE_THAC0` reads the kit from the party's
+sheets, not the one being made, so the creature's `+1Fh` lacks a kit chosen on
+the panel: `PROBE_THAC0` keeps the game's own, kit-less (`THAC0_GAME`,
+`THAC0_SEEN` from `CR_OPEN` on), and `CR_THAC0_BASE` applies the sheet being
+made's kit to it (`kits.thac0`: a Scholar 1 worse, a warrior's THAC0 for the
+Swashbuckler, Crusader, Battle Mage and Mind Warrior); with none worked out on
+the screen (an EDIT), the creature's `+1Fh`, its kit in it. A kit chosen or
+taken back (`KIT_SHOWN_DUE`, from `KIT_ROW`) draws the hit points and the
+THAC0 again at the click's end (`KIT_REDRAW`), after a Battle Mage's, Mind
+Warrior's or Arcanist's hit points are rolled again (`KIT_REROLL`) the age too,
+whose PSP box that puts back. The hit points' box (the 7th, `CR_HP_BOX`) is widened to x 243
+(`cr_thac0_box`; DONE's left is 244), so the game's putting it back clears the
+line. It is drawn after each redraw of the hit points: the panel's, at
+`CR_AGE` (65A89h, PSP after them), a click on CON (`CR_AGE_CON`), and `CR_HP`
+(a site at 63AC3h, a click on the hit points, and 63EDAh); a click on STR or
+DEX redraws neither, so `RL_SUM` (the scores' redraw) puts the hit points' box
+back itself (`CR_BOX_PUT`, the far call's operand and the saved backgrounds'
+segment read from the overlay's code beside its site, as `CR_NAME` does for
+PSP's), draws the hit points again (`CR_PAIR_DRAW`, shared with PSP's) and the
+THAC0. Checked in DOSBox: THAC0 18 with STR 17 and DEX 15 `M17 R18`; DEX 18
+after a roll `R16`; STR 18 `M16` at once; a click on the hit points and on CON
+keep the line; a 3rd-level preserver `M19 R20`, a Scholar `M20 R21`, a Battle
+Mage `M17 R18` (the line and the age back after its hit points are rolled
+again). Tests: `test_thac0_line`.
+
+## Spell slots on the USE screen
+
+([In the features page](FEATURES.md#spell-slots-on-the-use-screen).)
+
+Always on, while the Loader (or its command-line dice log) runs. Two patches:
+`use` (DSUN.EXE 70FBBh, "add sp,0Ch" in the USE screen's routine that labels
+its LEVEL button, which runs whenever the screen is drawn or the level changes:
+`INT F2h`, `PROBE_USE`) and `window` (2BBA9h, "xor ax,ax / pop si" at the end
+of the game's routine that brings a window to the front and redraws it, which
+repaints the screen's panels after a character or a level is picked: `INT F4h`,
+`PROBE_WIN`, which draws only on the USE screen's window once `PROBE_USE` has
+drawn on it, `USE_WIN`). Both call `USE_DRAW`: for the selected character
+(the segment 3931h:25Bh) it finds, in `SLOTS_TEXT` (the header's +148: four
+of `SLOTS_SIZE`, 128 bytes, one a member), the heading and the line keyed by
+the list on show (DS:4AE8h, a byte a member: 1 MAGE, 2 CLERIC, 3 PSIONIC) and
+the level (DS:4AECh, the LEVEL button's), and prints them in the empty panel
+under the spells with the game's text routine (2B7Ah:16Dh). The PSIONIC list
+has no lines, so it shows none.
+
+The Loader writes the lines (`DiceLog.slots_lines`, `_write_slots`, only when
+they change): for each kind of magic the member casts, a heading (`SPELLS
+LEFT`, or `NO SPELLS IN ARMOUR` for a multiclass preserver's wizard spells
+when the class restrictions bar them, `game.no_spells`) and a line a spell
+level (`PRI 3/5`), each keyed by its first byte (`SLOT_KEY` 80h, the list
+shifted 4, the level; 0 the heading), "|" between them. The numbers are
+`game.spell_slots`: the slots left from the game's own counts, and the most
+with WIS's bonus (`max_spell_slots`), at the levels the class levels reach
+without WIS (the game gives WIS's bonus slots at levels the class can't cast
+yet too). They are the Characters tab's.
+
 ## Detonate's blast on an item
+
+([In How the game works](HOW-THE-GAME-WORKS.md#psionics); its line: [the dice log's page](DICE-LOG.md#checks-thief-skills-and-searches).)
 
 The effect switch (its values at CS:0D96h of the segment at file 78BA0h, case
 138 at 797F6h) queues effect 195 (the blast, 1d10) on the target, then calls
@@ -433,7 +524,7 @@ does.
 
 ## What hurts a monster (the Look box)
 
-([In FEATURES](FEATURES.md#what-hurts-a-monster-the-look-box).)
+([In the features page](FEATURES.md#what-hurts-a-monster-the-look-box).)
 
 How: the patched game calls the helper (`INT F5h`; INT 66h-6Fh can't be used:
 the game calls those itself, looking for sound drivers) where the box has
@@ -452,7 +543,7 @@ Barkskin...) is left out.
 
 ## Charges in item boxes
 
-([In FEATURES](FEATURES.md#charges-in-item-boxes).)
+([In the features page](FEATURES.md#charges-in-item-boxes).)
 
 An item that casts a spell has the spell + 1 in its `+0Fh` and its charges
 left in `+0Eh` (the routine finishing an item's use takes one off, 721E4h,
@@ -463,10 +554,16 @@ spell byte is below F9h (from there the game's own effects: a belt's STR, a
 ring's AC...) and the charges aren't 0, but not for fruit (type 60, eaten
 whole) nor scenery (a type whose `+08h` has both 20h and 40h: a door, a
 mirror, a crank), where those bytes hold something else (`TYPE_SCENERY`).
+With no charges to show, `IB_MATERIAL` (always on) draws `Hit -N` there for a
+weapon (its type's dice count, `+0Dh`, not 0) with no plus (the item's `+14h`)
+whose type's `+08h` has neither 80h (the game's own exemption: clubs, staves,
+the chatkcha) nor 40h (no material), of wood (`-3`), bone (`-1`), stone or
+obsidian (`-2`): `game.MATERIAL_TO_HIT`, the attack's own (the box's damage line
+already has the material's damage off).
 
 ## No manual check
 
-([In FEATURES](FEATURES.md#no-manual-check).)
+([In the features page](FEATURES.md#no-manual-check).)
 
 How: the dragon's question is the game's script 20, which script 120 runs (a
 call into another script, command 14h) when the party leaves the warrens
@@ -479,6 +576,8 @@ question. It is replaced only if it is the dragon's (its `" word on page "`
 line).
 
 ## Scripts' requests and refused casts in the dice log
+
+([In the dice log's page](DICE-LOG.md#spells-saves-and-effects).)
 
 Two `NS_IMAGE` sites record what the game does without a roll:
 
@@ -528,7 +627,11 @@ keeps the pointer it reports off the edges meanwhile. The Loader only switches
 it (`dsloader/scrolling.py`). (Turning the wheel isn't used: DOSBox 0.74,
 GOG's, never passes it on to the game.)
 
-**M, U and I.** `MAP_KEY`, in DSCLOG's `INT 16h` handler for both reads and
+## M, U and I: open a screen, close it again
+
+([In the features page](FEATURES.md#m-u-and-i-open-a-screen-close-it-again).)
+
+`MAP_KEY`, in DSCLOG's `INT 16h` handler for both reads and
 peeks, turns M into O (the game's key for its overhead map) while the map's
 main loop has run within the last tick or two (`MAP_TICK`, set in
 `PANEL_TICK`), and lets U and I (USE, inventory) through; `OVERHEAD` then holds
@@ -540,7 +643,11 @@ a peek, `AH=1`, then the read, `AH=0`), so `OVERHEAD` changes only on the read
 (`MK_READ`), and both give the same key. `PANEL_TICK` clears `OVERHEAD` when the
 map runs again.
 
-**The whole party in view.** The map's party is one figure while `DS:1168h`
+## The whole party in view
+
+([In the features page](FEATURES.md#the-whole-party-in-view).)
+
+The map's party is one figure while `DS:1168h`
 (`game.IN_COMBAT`: not 0 in a fight and while the party is spread out, so the
 Loader's `in_combat` also asks the fight state's +19h) is 0
 (each member's map record, `DS:6694h` + 32 a member, has 80h when inside the
@@ -557,7 +664,11 @@ still one figure. (A 5 put in the BIOS's buffer waits there: the game reads
 keys only in its keyboard interrupt.) Switch: `gamepatch.PARTY_SPREAD`
 (`party_spread`, on).
 
-**The view in a fight.** The game writes the view's place (`DS:1178h`,
+## The view in fights
+
+([In the features page](FEATURES.md#the-view-in-fights).)
+
+The game writes the view's place (`DS:1178h`,
 `117Ah`) in two routines that centre it (on a figure, `191F:01FFh`, and on a
 spot, `191F:0281h`; their callers test first whether the figure is off the
 screen, `0AC0:AC7Ah`) and in one that steps it toward a spot (`2191:0BE3h`,
@@ -654,6 +765,17 @@ The two are switches (`SCENE_POINTER`: `cine_step`, `cine_end`; `MOUSE_START`:
 `mouse_set`, `mouse_init`). The room in upper memory came from the freeze
 report's records (32 to 16, taken half as often).
 
+## Spells on the Effects screen
+
+([In the features page](FEATURES.md#spells-on-the-effects-screen).)
+
+A click on an effect's icon on the Effects screen ends it in the game; with the
+switch on (`gamepatch.EFFECTS_KEPT`, from the next start), a spell's effect
+is left on: two jumps in the screen's click handler (DSUN.EXE 7F226h and
+7F236h, the patches `effects_click_low` and `effects_click_high`) go to its way
+out instead of to the routine ending an effect. A psionic power's (spells 8Ah-ABh) still ends, as stopping it there is
+how a power is dropped.
+
 ## More saves
 
 ([In the features page](FEATURES.md#more-saves).)
@@ -682,7 +804,9 @@ GOG's DOSBox mounts it over the folder), and copies one newer than its copy to
 `Named saves/` as `Page P slot NN - NAME.SAV`, the name from the save's
 `STXT 1` (up to its first NUL; characters Windows won't take become `_`). A
 slot's copy under another name is removed. **Put a save in a slot...** copies
-a file back as `SAVE`/`SAVB`/`SAVC`/`SAVD` + the slot.
+a file back as `SAVE`/`SAVB`/`SAVC`/`SAVD` + the slot, through a temporary file,
+the slot's save first kept as `Replaced - Page P slot NN - NAME.SAV` (which
+`sync` doesn't match, so never removes).
 
 ## More characters
 
@@ -700,19 +824,21 @@ A New character counts as Okay wherever the game tests for Okay: a jump each
 
 ([In the features page](FEATURES.md#game-speed).)
 
-Measured in the slave pens at 20,000 cycles with everything on, walking (the
-leader's speed in pixels a second of the game's time):
+Measured in the slave pens with the whole party walking and everything on
+(`playtest/framerate.py`, which counts DSCLOG's page flips, the steps run and
+lost, and the leader's map units while walking):
 
-| | The leader's speed |
-|---|---|
-| The whole party in view, steady pace off | 152 to 175 |
-| The whole party in view, steady pace on | 249 to 278 |
-| The leader alone | about 220 to 260 |
+| | Pictures a second | Steps lost a second (of 96) | Walking, map units a second |
+|---|---|---|---|
+| 20,000 cycles, steady pace off | 16.6 | | 80 |
+| 20,000 cycles, steady pace on | 10.5 | 26 | 114 |
+| 35,000 cycles, steady pace on | 15.7 | 24 | 112 |
+| 20,000 cycles, the mod's drawing off, steady pace on | 16.4 | 22 | 121 |
 
-Frames stop being skipped from about 30,000 cycles. With the whole party walking
-in the slave pens, steady pace shows about 27 pictures a second, where the game
-shows about 37 without it (70 when no frame is late; counted by the game's page
-flips). The Loader's two speeds run DOSBox's dynamic core (GOG's settings run
+A fixed schedule of 70 frames a second on the clock (a tick 70 units, a frame
+96) doesn't suit the game: the map draws only when something moved, about 17
+times a second, so every frame looks late, and at 20,000 cycles it showed 6
+pictures a second and left out 17. The Loader's two speeds run DOSBox's dynamic core (GOG's settings run
 this game on the slower normal core): the same cycles do more, at about a third
 less of the computer's time.
 
@@ -721,25 +847,30 @@ frame (DSUN.EXE 1E8E4h) calls the step for everything (`call far 1DF3:26DC`,
 which also builds the list of what moved at DS:57D0h, 10 bytes each: where
 the thing was drawn, its size, the thing) and then the drawing of that list
 with the page flip (`call far 1DF3:15EA`), the flip waiting for the vertical
-retrace. The game has no other clock for walking: a step is a frame, and the
-"think" that starts a figure on its next square runs once a frame, for one
-creature at a time, so catching up a figure's animation steps alone (tried
-before) only made it wait at the end of its square. PROBE_PACE_DRAW keeps a
-schedule of 70 frames a second on the game's clock (DS:11D6h, 96 ticks a
-second: a tick 70 units, a frame 96): at a frame or more behind, on the map (a
+retrace; the frame is drawn only when something moved. The step runs only when
+DS:1F7Eh is set, which the game's timer (1DF3:29E8h, with the game's clock
+DS:11D6h, 96 ticks a second) does at each tick, and clears it: a step a tick
+at most, and a tick passed while drawing is a step lost. The "think" that
+starts a figure on its next square runs once a step, for one creature at a
+time, so catching up a figure's animation steps alone (tried before) only made
+it wait at the end of its square. PROBE_PACE_PASS counts the steps run (the
+flag set as the step is called); PROBE_PACE_DRAW, at each frame, adds the
+steps lost since the last (the clock's ticks less the steps run) to a debt in
+quarter ticks and takes off an allowance (`PACE_ALLOW`, 1.5 ticks: about what
+the unmodded game's own frames lose, 22 steps a second at 16.4 frames). While
+the debt is above 0, on the map (a
 fight, the fight state's +19h, draws every frame), the drawing and its flip are
 left out and the list is kept in the far block (FAR_PACE, 64 entries); the
 next frame drawn has it added after its own, so the old places of what moved
 in the skipped frame are drawn over too. PROBE_PACE_PASS sets "something
 moved" after the step when a kept list has waited 2 ticks, so a frame is drawn
-for it though nothing has moved since. A pause of 8 ticks (a load, a talk)
-starts the schedule afresh; at most 4 frames are owed.
+for it though nothing has moved since. A pause of 24 ticks (a load, a talk)
+starts the schedule afresh; the debt is held between -1.5 and 16 ticks.
 
-To count the pictures the game shows, watch the word at offset 118Eh of the
-flip routine's own code segment (the routine at DSUN.EXE 14414h toggles it at
-each flip): with the whole party walking in the slave pens it changed about 37
-times a second without steady pace and 27 with it, the step a picture going
-from one to two or three.
+To count the pictures the game shows, read DSCLOG's `flip_count` (header
++1832, counted at each flip); `pace_ran`, `pace_lost` and `pace_skipped` count
+the steps run, the steps lost and the frames left undrawn (`playtest/framerate.py`
+finds them by a symbol map of the helper as built).
 
 The Loader's drawing is as cheap as it can be without looking any different:
 a shadow is darkened a plane of the video memory at a time (the graphics
@@ -750,3 +881,34 @@ Loader draws the party's gear on are each exactly as long as their outfit,
 with only the room gear needs round the figure while walking (6 pixels at the
 sides, 2 above; 10 in a fight), since the game draws a walking figure's whole
 picture at every step.
+
+The drawing was made cheaper again on 2026-11-08, with the same picture
+(`tests/test_dsclog_drawing.py` runs it over a scene of figures against an
+emulated VGA, checks every screen against the one drawn before the change, and
+counts the instructions; DOSBox charges about a cycle each). A figure's shadow
+is tested against the part of the view being drawn again using its frame's
+real width and height, so a figure whose shadow can't reach that part costs
+nothing (the strip right of the combat log's panel and the rows under it are
+drawn as parts of their own). A frame row outside that part is passed over
+before any of its runs is worked out. Each thing remembers which slot of the
+shadows' cache holds its frame, so the 80 slots are searched only for a frame
+not seen before. The spans are darkened through `XLAT`, and the slant of a
+run comes from a table in place of a division. A dust puff's thickness by age,
+row and column is worked out once (DUST_BUILD, in the far block) in place of
+for every row of every puff, every pass. A see-through figure's pixels go
+through `XLAT` in place of a call. The four floor calls of a frame drawn round
+the panel now take 32% fewer instructions with everything on, 39% fewer with
+shadows alone, and 28% fewer with dust alone. A see-through figure takes 12% fewer.
+Some other passes are skipped. The panel is put again only when the floor drawn
+reaches it: the game draws the figures of a rectangle on a page of the
+rectangle's own, so the rectangles REDRAW_PARTS draws round the panel can't
+cover it. The view is drawn whole at most once in a pass of the main loop
+(the panel and the labels each asked for it after a scroll). When no slot
+holds a label, LABEL_STAMP returns at once. After walking stops, the dust's
+leftovers are cleared with a rectangle round them, not the whole view. A
+palette too dark for DARK (a fade, or a dark area) is tried again twice a
+second, not in every floor pass. Rings alone widen the rectangles by 16 and 8
+pixels, not by a shadow's 72 and 44.
+A walker now raises a puff every 6 pixels, as meant. Before, the clock's tick
+was added in place of the distance, so it raised one nearly every pass. A
+walker off the view raises none.

@@ -6,7 +6,7 @@ Kreenfang (the arena's gythka +1, no longer on the dead body by the stone arch).
   OBJECTS, so the others of the kind stay as they are), named "Champion", with gear of its own in
   its record: the Tohr-kreen (the arena's, 292) with Kreenfang; a half-giant (the arena's Guard,
   293) with a metal great axe, a leather shield and full scale armour and a bone helm; a mul
-  gladiator (the Wild Mul, 290) with two bone axes and the same armour; a halfling renegade (the
+  gladiator (the Wild Mul, 290) with metal cahulaks (worldgear.METAL_CAHULAKS) and the same armour; a halfling renegade (the
   Renegade, 289) with a sling, a bone short sword, full leather armour, a leather helm and a
   leather shield; an elven ranger (an elven caravan guard, 103) with a bow and arrows, an obsidian
   long sword and the same leather, helm and shield (the Tohr-kreen and the defiler wear none); a
@@ -94,7 +94,7 @@ def gear(chunks) -> Dict[int, List[Tuple[bytes, int]]]:
         HALF_GIANT: [(worldgear.weapon(worldgear.METAL_GREAT_AXE), RIGHT), (item(SHIELD_TYPE), LEFT),
                      (item(SCALE_CHEST), CHEST), (item(SCALE_ARM), ARM), (item(SCALE_LEGS), LEGS),
                      (bonescale.HELM, HEAD)],
-        MUL: [(worldgear.weapon(worldgear.BONE_AXE), RIGHT), (worldgear.weapon(worldgear.BONE_AXE), LEFT),
+        MUL: [(worldgear.weapon(worldgear.METAL_CAHULAKS), RIGHT),
               (item(SCALE_CHEST), CHEST), (item(SCALE_ARM), ARM), (item(SCALE_LEGS), LEGS),
               (bonescale.HELM, HEAD)],
         HALFLING: [(item(SLING_TYPE), MISSILE), (worldgear.weapon(worldgear.BONE_SHORT_SWORD), RIGHT),
@@ -177,12 +177,12 @@ def object_chunks(chunks) -> Dict[Tuple[str, int], bytes]:
 # ---------------------------------------------------------------------------------------------
 # In the fight: each champion's gear to its place, and the defiler's scroll
 
-# the slot each champion's item goes to, by item type (the two axes: the first the right hand)
+# the slot each champion's item goes to, by item type
 SLOTS: Dict[int, Sequence[Tuple[int, int]]] = {
     TOHR_KREEN: ((game.GYTHKA_TYPE, RIGHT),),
     HALF_GIANT: ((game.METAL_GREAT_AXE_TYPE, RIGHT), (SHIELD_TYPE, LEFT), (SCALE_CHEST, CHEST),
                  (SCALE_ARM, ARM), (SCALE_LEGS, LEGS), (BONE_HELM, HEAD)),
-    MUL: ((game.BONE_AXE_TYPE, RIGHT), (game.BONE_AXE_TYPE, LEFT), (SCALE_CHEST, CHEST), (SCALE_ARM, ARM),
+    MUL: ((game.METAL_CAHULAKS_TYPE, RIGHT), (SCALE_CHEST, CHEST), (SCALE_ARM, ARM),
           (SCALE_LEGS, LEGS), (BONE_HELM, HEAD)),
     HALFLING: ((SLING_TYPE, MISSILE), (BONE_SHORT_SWORD_TYPE, RIGHT), (LEATHER_CHEST, CHEST),
                (LEATHER_ARM, ARM), (LEATHER_LEGS, LEGS), (LEATHER_HELM, HEAD), (SHIELD_TYPE, LEFT)),

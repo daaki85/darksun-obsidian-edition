@@ -13,13 +13,18 @@ which loads the mod with your options.
   the rest.
 - **If something goes wrong:** [When something goes
   wrong](#when-something-goes-wrong).
-- **Everything in detail:** the contents below, the [features and
-  rules](FEATURES.md) (what the game shows, every rule and addition), the [kits](KITS.md), the [dice log's lines](DICE-LOG.md), the
-  [items](ITEMS.md) (spoilers),
-  [how the original game works](HOW-THE-GAME-WORKS.md), from its code, the
-  [patch
-  notes](https://github.com/daaki85/darksun-obsidian-edition/blob/main/PATCH-NOTES.md)
-  and, for developers, the [development notes](DEVELOPMENT.md).
+- **Everything in detail:** the contents below, and
+  - [features and rules](FEATURES.md): what the game shows, every rule and addition;
+  - [kits and weapon specs](KITS.md): every kit's gains, costs and starting gear, and weapon
+    specialization;
+  - [items](ITEMS.md) (spoilers): every item and where it is;
+  - [creatures](CREATURES.md) (spoilers): every one, its size, and whether cahulaks can tangle it;
+  - [the game's bugs, fixed](GAME-BUGS.md) (some spoilers): every bug of the original game the mod mends;
+  - [the dice log, line by line](DICE-LOG.md);
+  - [how the original game works](HOW-THE-GAME-WORKS.md), from its code;
+  - [the patch notes](https://github.com/daaki85/darksun-obsidian-edition/blob/main/PATCH-NOTES.md):
+    every change from the original game;
+  - for developers, [the development notes](DEVELOPMENT.md).
 
 ## Contents
 
@@ -59,11 +64,17 @@ which loads the mod with your options.
   saving throws and multiclass hit points as the books have them, scores and
   hit points kept as rolled, ages (a year each 365 days of game time, and Haste's cost), levels
   past 9th up to a cap by XP (10th to 13th for one class, lower for two or
-  three), Enlarge's weapon dice and CON's regeneration ([Rule
+  three), Enlarge's weapon dice, CON's regeneration, [creature
+  size](FEATURES.md#creature-size) (large foes take AD&D's large weapon dice,
+  and Hold and Charm Person don't work on them), [cahulaks](FEATURES.md#cahulaks)
+  as Dark Sun has them, [held targets](FEATURES.md#held-targets) hit
+  automatically, spells and psionics as the manual describes them, spells
+  rolling to hit, Turn Undead by AD&D's table, resting that heals by the
+  priests' spells and a night's rest, and dual-classing from 3rd level ([Rule
   changes](FEATURES.md#rule-changes)).
 - **More ways to build a character:** weapon specialization and mastery, kits
-  (three for each class, and thirteen for races' classes taken together:
-  pairs, and one set of three), STORE and RECALL for a
+  (three for each class, and thirteen multiclass kits, each for one race),
+  STORE and RECALL for a
   creation roll, fuller starting gear, and features of their own for the
   game's own party
   ([More character customization](FEATURES.md#more-character-customization)).
@@ -98,7 +109,7 @@ which loads the mod with your options.
   scripts' broken checks (the sewer grate's hack, a ranger's tracking, a
   halfling's greeting), and more; and
   the rules it got wrong, from spell saves to warriors' attacks, put right ([The
-  game's bugs, fixed](FEATURES.md#the-games-bugs-fixed)).
+  game's bugs, fixed](GAME-BUGS.md)).
 
 **What it changes on your computer.** The game's own files are never modified:
 the Loader runs a patched copy of the game from its own folder, and writes to
@@ -111,7 +122,7 @@ games and the Loader's files](#updating-backups-saved-games-and-the-loaders-file
 - **Windows** and the **GOG release** of Dark Sun: Shattered Lands (its
   `DSUN.EXE` is 611,408 bytes; with another version the Loader starts the game
   without the dice log and says why). The Loader runs it in the DOSBox that
-  comes with it.
+  comes with the GOG release.
 - **64-bit Python 3.8+** (32-bit Python can't read 64-bit DOSBox's memory),
   with no extra packages. The `.bat` files offer to install it
   ([One-time setup](#one-time-setup)).
@@ -135,12 +146,13 @@ setting (suggestions, not tested limits):
 | Game speed | Processor (one core's speed) | Memory |
 |---|---|---|
 | GOG's own (7,000 cycles) | anything that runs GOG's release | 2 GB |
-| Faster (20,000 cycles, the default) | a dual-core from about 2010 on, 2 GHz or more (Intel Core i3 or AMD Phenom II) | 4 GB |
-| Fastest (35,000 cycles: nearly every frame drawn in time, the smoothest) | a processor from about 2015 on, 3 GHz or more (Intel Core i5 or AMD Ryzen) | 4 GB |
+| Faster (20,000 cycles) | a dual-core from about 2010 on, 2 GHz or more (Intel Core i3 or AMD Phenom II) | 4 GB |
+| Fastest (35,000 cycles, the default) | a processor from about 2015 on, 3 GHz or more (Intel Core i5 or AMD Ryzen) | 4 GB |
 
 The Loader itself (Python and its window) needs about 100 MB of memory and
 little processor time. A screen of 1920×1080 or more shows the game's window
 at **Triple** size beside the Loader's; on a smaller one choose **Double**.
+Fastest, the default, draws nearly every frame in time and is the smoothest.
 If the computer can't keep up, the sound crackles or stutters and the game
 slows instead of speeding up: choose the next setting down.
 
@@ -217,7 +229,8 @@ when you close DOSBox. It uses the switches on the Loader's Options tab as you
 last set them (the combat log, monster descriptions, picking pockets, the rule
 changes); the new items, the new people and the cooked vulture are there too.
 If anything goes wrong it says so in a message box and writes the details to
-`play.log`.
+`play.log`. Only one Loader (a window, or the in-game rolls) can start or follow the
+game at a time: a second one says which has it and leaves the game alone.
 
 **Checking a save file:** drag a `SAVEnn.SAV` file from the game folder onto
 **`Show Save.bat`** to see the party it holds.
@@ -226,8 +239,9 @@ If anything goes wrong it says so in a message box and writes the details to
 program of its own ([daaki85/darksun-recompiled](https://github.com/daaki85/darksun-recompiled)),
 with the mod's patched game and helper built in. Unzip its
 `darksun-recompiled-windows-x64.zip` into this folder (so that
-`recompiled\dsun.exe` is here, or `dsun.exe` itself) or next to this
-folder, and the Loader starts that program instead of DOSBox from then on,
+`recompiled\dsun.exe` is here, or `dsun.exe` itself) or into its own
+`darksun-recompiled...` folder next to this one, and the Loader starts that
+program instead of DOSBox from then on,
 the dice log and the Loader's window attached as usual. As the game starts,
 the dice log says which one runs (`... in DOSBox` or `... as Dark Sun Recompiled`
 and where it is). The game's own `DSUN.EXE` is never taken for it, even with
@@ -272,14 +286,12 @@ effects already running follow them too (images, Armor's charges, Share
 Strength, Dispel Magic and the rest, from the next spell cast). The fixes stop
 the old bugs from happening, but what a bug already did stays in the save:
 
-- **A save made with 2.14.0 is not for earlier versions,** one made with
-  2.13.2 or later not for 2.13.1 or earlier, and one made with 2.13.0 or later
-  not for anything before 2.13.0. 2.14.0's new chest and the Loader's
-  conversations use scripts an older Loader doesn't have; since 2.13.0 the
-  weapon specs are kept packed with the age, and since 2.13.2 each
-  character's starting roll beside them, which an older Loader reads as other
-  specs. Older saves load in newer versions as they are: a character keeps its
-  age, and its roll is put on its sheet when the game is loaded.
+- **A save isn't for an older version** where a release changed what a save
+  holds: 2.13.0, 2.13.2, 2.14.0 and 2.15.0 (its new items) did, so a save made
+  with one of them or later doesn't load in the versions before it (a 2.14.1
+  save still loads in 2.14.0). Older saves load in newer versions as they are:
+  a character keeps its age, and its roll is put on its sheet when the game is
+  loaded.
 - **Share Strength and Dispel Magic:** a character who kept Share Strength's
   strength after the power ended still has it (it shows on their Effects
   screen): load a save from before the power was used to be rid of it. One
@@ -299,9 +311,7 @@ the old bugs from happening, but what a bug already did stays in the save:
   WIS are counted right now, and the most only ever rises.
 - **Thornwall in an older save:** in a save from 1.2.0 to 2.5.0 that has
   already been to the slave pens, the weapon rack is gone, so Thornwall never
-  comes onto it (a new game has the rack): fixing items that couldn't be
-  swapped in a pack meant renumbering the rack, and the game drops an object
-  it no longer finds. In a save from 2.13.4 or earlier that has already been to
+  comes onto it (a new game has the rack). In a save from 2.13.4 or earlier that has already been to
   the arena, Thornwall is already on the rack (it now comes only after
   Semyon's tip).
 - **Kreenfang:** in a save from 2.13.4 or earlier that has already been to the
@@ -322,8 +332,10 @@ the old bugs from happening, but what a bug already did stays in the save:
 A new game is still the way to see all of the mod: kits, STORE and RECALL and
 fuller starting gear come with characters made with it, and much of the new
 content (Kalzith, Semyon, the vulture, the new items in the slave pens) is in
-the game's first areas. A save from the original game has no kits, and what it
-has already been through stays as it was.
+the game's first areas. The new and changed gear the game's people carry and
+its chests hold comes only in areas the save hasn't been to: where the party
+has been, they keep what they had. A save from the original game has no kits,
+and what it has already been through stays as it was.
 
 **What the Loader writes**, all in its own folder (beside
 `Start Obsidian Edition.bat`) but the saves:
@@ -349,8 +361,8 @@ only by the mod's patched game.
 
 The window has the party on one side and the logs and tools on the other, with
 **Start the game**, the game window's size, the text size, **Freeze report**
-(see [reports](#crash-freeze-and-item-reports)) and **Reconnect** (to find the
-game again) along the top. The party pane has two tabs:
+(see [reports](#crash-freeze-and-item-reports)), **Reconnect** (to find the
+game again) and **Help** (the [player's guide](PLAYER-GUIDE.md) in your browser) along the top. The party pane has two tabs:
 
 - **Characters** (Alt+C): a card for each character, laid out like the game's
   View Character screen ([The Characters tab](#the-characters-tab)).
@@ -365,7 +377,7 @@ The other side has the **Dice log**, **Dialogue** and **Spells** tabs (below),
 **Options** (Alt+O) with the Loader's switches, in sections that open and
 close: click a section's heading (or Tab to it and press Space or Enter) to
 open it, ▸ when closed and ▾ when open. Which sections are open is remembered.
-Everything there applies in games started from the Loader; a switch that says
+Everything there applies in games started from the Loader or its `.bat` files; a switch that says
 "from the next start" waits until the game is started again. The sections are
 [In the game](FEATURES.md#in-the-game), [Rule changes](FEATURES.md#rule-changes), [More
 character customization](FEATURES.md#more-character-customization), [Expanded
@@ -377,13 +389,14 @@ and **Saves** ([Saves under their names](FEATURES.md#saves-under-their-names)).
 [The Options tab at a glance](PLAYER-GUIDE.md#the-options-tab-at-a-glance), in
 the player's guide, lists every switch with its default and when it counts.
 
-All are on by default (the red ring under the chosen enemy, the game speed
-Faster, the combat log in short) and are remembered for next time. **Restore defaults**, at the bottom
+Every switch is on by default, and the three choices start at the red ring
+under the chosen enemy, the game speed Fastest and the combat log in short;
+all are remembered for next time. **Restore defaults**, at the bottom
 of the tab, sets them all back (after asking). In a
 window too small to show the open sections, the tab scrolls (scrollbar, mouse
 wheel, or arrow and page keys once it has the focus).
 
-![The Options tab with Rule changes (all eighteen, in three groups: Characters, Weapons and armour, Magic) and New content open, the other sections closed](docs/options.png)
+![The Options tab with Rule changes (twenty-five switches, in three groups: Characters, Weapons and armour, Magic) and New content open, the other sections closed](docs/options.png)
 
 ### The Characters tab
 
@@ -498,7 +511,7 @@ installed the window uses its own lettering and no portraits.
 
 ## The dice log
 
-![The Loader during the arena's opening show: the Characters tab with the game's own party (Gerakis's Features: Wild Fighting and his age; K'ratchek's chatkcha 5/2 attacks a round and her features, open sky spells and psionics and one more chatkcha throw), and the dice log with Find on the first of 8 lines naming the Rampager: the party's features and ages as the game begins (Cilla an Elven Shadow-walker), the first round's initiative, Gerakis's Wild Fighting roll (passed: one more attack a round and +3 damage), and the Defiler's Fireball](docs/dicelog.png)
+![The Loader during the arena's opening show, in the readable layout: the Characters tab with the game's own party (Gerakis's Features: Wild Fighting and his age; K'ratchek's chatkcha 5/2 attacks a round and her open sky spells and psionics), and the dice log's last rounds: each attack with its outcome first, the d20 and the AC in columns and the working under it, round 5's initiative, the Rampager's two hits and its acid (the Defiler's save made), the Defiler's death, the party's PSP back, and the fight's summary](docs/dicelog.png)
 
 **Finding something.** Type a word in **Find** above the log (Ctrl+F puts
 you there) and press Enter: every match lights up, the log jumps to the first,
@@ -508,19 +521,44 @@ way; Escape clears it. Case doesn't matter, and hidden details aren't searched
 (tick **Show details** to include them). While you're looking at a match the
 log stays put as new lines come in. The Dialogue tab has the same box.
 
-**Reading it at a glance.** Lines at the left edge are the events: a round
+**The readable layout** (on unless **Readable layout**, above the log, is
+unticked; remembered): each event on a line of its own with what came of it
+first, `● Seneca hits Arena Guard for 11 — backstab, Bone Hayneedle +1`, then
+in columns at the right the HP it left (`19/30 (−11)`, marked `!` and coral
+when a party member is down to a third) and the roll (`d20 15 vs 4+ (85%) · AC
+8`). Under it, smaller and dim, the working: the to-hit sum against the
+target's AC with the lowest AC the roll would have hit, the damage dice, a
+save's line in full, each initiative score. A party member's line has a filled
+pip, a monster's a hollow one; a round starts with a rule and its order, a turn
+with `▸` and the name. The outcome's colour is the party's view of it: sky
+blue for good (the party hits, a monster fails its save), coral for bad (a
+monster hits, a party member fails), dim for a miss or a monster's save, gold
+for a kill. **Show details** hides the working as before. The log's own lines
+are kept as written: unticking the layout shows them again, and **Save...**
+and the crash and freeze reports use them.
+
+**A fight's summary.** As a fight ends (the game's fight flag down for 2
+seconds; each arena wave gets its own) the log sums it up: `Fight over: 3
+rounds, 4 kills; the party dealt 61 damage and took 19`, then a line for each
+member, `Seneca: 2 of 2 attacks hit, 30 dealt, 1 kill`. A kill goes to whoever
+hurt the creature last, a spell's damage to its caster, Magic Missile's too
+(only the party's own spells count). The readable layout shows it as the fight's
+close, every member's line shown.
+
+![One fight in the readable layout, the working shown (above) and hidden (below): Seneca's backstab and poison on an Arena Guard, then the Guards' swings at Lex and Jenna](docs/dicelog-readable.png)
+
+**Reading the lines as written.** Lines at the left edge are the events: a round
 starting, whose turn it is, attack rolls, saves, spells, kills. Lines indented
 two spaces are their results (damage, HP left); lines indented four spaces are
 the details: the sums behind a THAC0, a save's modifiers, the initiative
 scores. Untick **Show details**, above the log, to hide the details and keep
 the rest; they come back when it's ticked again. In the window, each kind has
 its colour (hits green, misses grey, damage amber, saves blue, turns sand,
-rounds underlined with a gap above), but the words say the same thing, so
-nothing depends on telling colours apart. Names stand out in bold: each party
+rounds underlined with a gap above), and the words say the same thing
+([accessibility](#accessibility)). Names stand out in bold: each party
 member in a colour of their own (cyan, magenta, peach and white, by place in
 the party) and every monster and other creature in red, so who acts and who is
-hit can be followed down the log. Every colour has at least 4.5:1 contrast
-with the log's background (WCAG 2.0 AA, as AODA asks).
+hit can be followed down the log.
 
 **Every line, and what it means.** [The dice log, line by line](DICE-LOG.md):
 fights, spells and saves, checks and thief skills, hit points and levels, character creation
@@ -561,8 +599,8 @@ level AA:
 - **The game's font** is only used for the window's title: it's a 9-pixel
   bitmap font, fine enlarged as a heading but harder to read than ordinary
   text, so everything else is in the system's fonts. The combat log in the
-  game is in that font, at the game's size; the same lines are in the Dice
-  log tab at any text size.
+  game uses a small 7-pixel font of the Loader's (its header, buttons and filters in the game's); the
+  same lines are in the Dice log tab at any text size.
 - **Screen readers:** tkinter's windows are not read well by screen readers.
   **Save...** on the Dice log and Dialogue tabs writes the log to a text file,
   and `python -m dsloader dicelog` prints the same log (dialogue included) in
@@ -588,6 +626,11 @@ level AA:
 - **The mouse is stuck in the game's window.** DOSBox, as GOG sets it up,
   takes the mouse at the first click in its window (that click does nothing
   in the game). **Ctrl+F10** lets it go; a click in the window takes it again.
+- **"DOSBox can't be given a folder whose path has ... in it"** as the game
+  starts: DOSBox reads its configuration in Windows' code page, and the game's
+  folder or the Obsidian Edition folder has a letter that code page hasn't
+  (from another alphabet, say). Move the game, or the Obsidian Edition folder,
+  to a folder whose path has only ordinary letters for your Windows.
 - **The Loader shows no party or rolls:** check that Python is the 64-bit one
   ([Requirements](#requirements)) and that the game was started from the
   Loader or one of its `.bat` files.
@@ -601,9 +644,14 @@ doing help (see [Reporting a problem](#reporting-a-problem)):
   writes a crash report; load the last save to go on. (Listed since 2.5.0;
   its cause isn't known yet.)
 - **In a long session, figures can vanish from the screen and the game then
-  freeze.** A likely cause is fixed, but it isn't proven to be the only one: if
-  it happens, press **Freeze report** on the Loader before closing DOSBox.
-  (Reported in 2.6.0; not seen since the fix in 2.7.0.)
+  freeze.** Three causes are fixed: one in 2.7.0; the Loader's new outfits
+  filling the game's picture store after many changes of gear in one area
+  (the Loader now reuses the store's room: [what the party
+  wears](FEATURES.md#what-the-party-wears)); and the game's own 300 picture
+  slots running out in a busy area, so that items, bodies, figures and
+  doorways stopped being drawn (a slot nothing uses is now reused: [the
+  game's bugs](GAME-BUGS.md#screens-and-memory)). If it still happens, press
+  **Freeze report** on the Loader before closing DOSBox. (Reported in 2.6.0.)
 
 ### Crash, freeze and item reports
 

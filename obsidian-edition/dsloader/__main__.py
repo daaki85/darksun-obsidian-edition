@@ -4,6 +4,7 @@ import argparse
 import collections
 import os
 import sys
+from typing import Optional
 
 from . import values
 from .guestmem import GuestMemory, locate
@@ -21,8 +22,11 @@ class CliError(Exception):
     pass
 
 
-def connect(args) -> GuestMemory:
-    pid = args.pid
+def connect(args, started: Optional[int] = None) -> GuestMemory:
+    """DOSBox's guest memory: in the process --pid names, else in STARTED (the pid of the DOSBox,
+    or recompiled program, this Loader started: another DOSBox running beside it doesn't matter),
+    else in the only DOSBox running."""
+    pid = args.pid if args.pid is not None else started
     if pid is None:
         found = find_dosbox_processes()
         if not found:
@@ -147,6 +151,19 @@ def cmd_checks(args) -> None:
 
 
 def cmd_dicelog(args) -> None:
+    from .launch import GameBusy, hold_game, release_game
+    try:  # (one Loader at a time follows the game: two would both make its changes)
+        hold_game("the dicelog command")
+    except GameBusy as e:
+        raise CliError(str(e)) from None
+    try:
+        _follow(args)
+    finally:
+        release_game()
+
+
+def _follow(args) -> None:
+    """cmd_dicelog's work: the dice log printed as the game runs."""
     import time
     from .dicelog import DiceLog
     from .dicelog import DiceLogError
@@ -161,7 +178,15 @@ def cmd_dicelog(args) -> None:
             time.sleep(2)
     log = DiceLog(guest, record_everything=args.raw)
     log.answer_stats_in_background()
-    log.use_settings(load_settings())  # the Ring +1, the rule changes, monster descriptions
+    from .launch import SettingsUnreadable
+    while True:  # (read strictly: one held elsewhere isn't the defaults, every rule on, no pockets tried)
+        try:
+            settings = load_settings(strict=True)
+            break
+        except SettingsUnreadable as e:
+            print(f"{e.strerror}. Waiting...", flush=True)
+            time.sleep(1)
+    log.use_settings(settings)  # the Ring +1, the rule changes, monster descriptions
     log.speaker_names = speaker_names()
     log.learned_speakers = learned_speakers()
 
@@ -243,12 +268,16 @@ def _game_dir(args) -> str:
 def cmd_launch(args) -> None:
     from . import launch
     game_dir = _game_dir(args)
-    dosbox, problem = launch.launch(game_dir)
+    dosbox, problem = launch.launch(game_dir, "the Loader's window")
     print(launch.started_line(game_dir))
+    if launch.left_out_line():
+        print(launch.left_out_line())
     if problem:
         print(f"The dice log can't run with this copy of the game ({problem}); starting the game without it.")
     from .viewer import run
-    run(Layout.load(args.layout), lambda: connect(args), dosbox, game_dir)
+    # (the DOSBox it started, by its pid: another DOSBox running beside it doesn't stop the attach)
+    run(Layout.load(args.layout), lambda: connect(args), dosbox, game_dir,
+        connect_pid=lambda pid: connect(args, pid))
 
 
 def cmd_play(args) -> None:
@@ -281,13 +310,17 @@ def cmd_play(args) -> None:
 
     try:
         game_dir = _game_dir(args)
-        dosbox, problem = launch.launch(game_dir)
+        dosbox, problem = launch.launch(game_dir, "Play Dark Sun (in-game rolls)")
         if problem:
             tell(f"The in-game additions can't run with this copy of the game ({problem}). "
                  "The game starts without them.")
             return
         note(launch.started_line(game_dir))
-        settings = launch.load_settings()
+        if launch.left_out_line():
+            tell(launch.left_out_line())
+        settings = launch.LAST_SETTINGS  # (as launch() read them, strictly: the copies' switches)
+        if settings is None:
+            settings = launch.load_settings(strict=True, tries=40)
         guest = None
         while guest is None and dosbox.poll() is None:  # DOSBox takes a moment to start
             try:
@@ -350,11 +383,13 @@ def cmd_play(args) -> None:
     except Exception:
         tell("Something went wrong; the details are in " + log_path)
         note(traceback.format_exc())
+    finally:
+        launch.release_game()  # (the game closed: another Loader may have it now)
 
 
 def cmd_view(args) -> None:
     from .viewer import run  # tkinter is only needed here
-    run(Layout.load(args.layout), lambda: connect(args))
+    run(Layout.load(args.layout), lambda: connect(args), connect_pid=lambda pid: connect(args, pid))
 
 
 def main(argv=None) -> int:
@@ -365,11 +400,11 @@ def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="dsloader", description="Dark Sun Obsidian Edition Loader: starts Dark Sun: Shattered Lands with the mod; party, dice log and memory tools")
     sub = p.add_subparsers(dest="command", required=True)
 
-    s = sub.add_parser("view", parents=[common], help="open the party viewer window")
+    s = sub.add_parser("view", parents=[common], help="open the Loader's window")
     s.add_argument("--layout", default=DEFAULT_LAYOUT, help="layout JSON file")
     s.set_defaults(func=cmd_view)
 
-    s = sub.add_parser("launch", parents=[common], help="start the game with the dice log helper, then the viewer")
+    s = sub.add_parser("launch", parents=[common], help="start the game with the dice log helper, then the Loader's window")
     s.add_argument("--game-dir", help="the game's install folder (remembered after the first time)")
     s.add_argument("--layout", default=DEFAULT_LAYOUT, help="layout JSON file")
     s.add_argument("--window-scale", type=int, choices=(1, 2, 3, 4),
@@ -380,7 +415,8 @@ def main(argv=None) -> int:
     s.add_argument("--windowed", dest="fullscreen", action="store_false")
     s.add_argument("--recompiled", metavar="PROGRAM",
                    help="start Dark Sun Recompiled's program (dsun.exe, built with the mod) instead of DOSBox (remembered; "
-                        "one unzipped into or beside this folder is found by itself; --dosbox undoes it)")
+                        "one unzipped into this folder, or into a darksun-recompiled folder beside it, is found by itself; "
+                        "--dosbox undoes it)")
     s.add_argument("--dosbox", action="store_true", help="back to starting the game in DOSBox")
     s.set_defaults(func=cmd_launch)
 
@@ -394,7 +430,8 @@ def main(argv=None) -> int:
     s.add_argument("--windowed", dest="fullscreen", action="store_false")
     s.add_argument("--recompiled", metavar="PROGRAM",
                    help="start Dark Sun Recompiled's program (dsun.exe, built with the mod) instead of DOSBox (remembered; "
-                        "one unzipped into or beside this folder is found by itself; --dosbox undoes it)")
+                        "one unzipped into this folder, or into a darksun-recompiled folder beside it, is found by itself; "
+                        "--dosbox undoes it)")
     s.add_argument("--dosbox", action="store_true", help="back to starting the game in DOSBox")
     s.set_defaults(func=cmd_play)
 

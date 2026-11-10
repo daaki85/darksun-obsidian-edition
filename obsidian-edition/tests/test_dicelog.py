@@ -3,6 +3,7 @@
 import os
 import struct
 import sys
+import threading
 import time
 import unittest
 from unittest import mock
@@ -90,6 +91,10 @@ def make_game():
     m[DS * 16 + game.DEX_AC + 16] = 0xFE  # DEX 16: AC -2
     hp = (LOAD_SEG + game.LEVEL_HP_SEG) * 16  # fighters roll d10 up to level 9; CON 21: at least 3
     m[hp + 0x10 + 9], m[hp + 4:hp + 7], m[hp + 0x38 + 21] = 1, bytes((10, 9, 3)), 3
+    # DSCLOG's header: its signature, and its ring (seq 0, slot 0, 4 entries at 0x100 in segment 0)
+    m[HDR:HDR + 8] = dicelog.HDR_SIG
+    struct.pack_into("<5H", m, HDR + 8, 0, 0, 4, Entry.SIZE, 0x100)
+    struct.pack_into("<H", m, HDR + dicelog.TSR_SLOTS_OFF, 0x1800)  # (the spell slots' copy past the header)
     # DSCLOG's text buffer
     struct.pack_into("<HHHH", m, HDR + 126, 0, 0x800, 256, 0)
     # DSCLOG's names after the game's own, in the table it noted
@@ -119,7 +124,7 @@ def words(*values):
 
 
 def entry(raw=0, code=b"", frame=b"", parent=b"", glob=(0, 0, 0, 0), locals_=b"", parent_code=b"",
-          parent_locals=b"", kind=KIND_ROLL, bp=0xFE00, parent_bp=0xFE40):
+          parent_locals=b"", kind=KIND_ROLL, bp=0xFE00, parent_bp=0xFE40, target_state=0):
     data = bytearray(Entry.SIZE)
     struct.pack_into("<8H", data, 0, 1, 0x10, 0x5000, raw & 0xFFFF, bp, DS, DS, parent_bp)
     data[16:16 + len(frame)] = frame
@@ -130,6 +135,7 @@ def entry(raw=0, code=b"", frame=b"", parent=b"", glob=(0, 0, 0, 0), locals_=b""
     data[128:128 + len(parent_code)] = parent_code
     data[144:144 + len(parent_locals)] = parent_locals
     struct.pack_into("<H", data, 184, kind)
+    struct.pack_into("<H", data, 188, target_state)
     return Entry.parse(bytes(data))
 
 
@@ -163,10 +169,10 @@ def two_hands(m):
 
 
 class AttackTests(unittest.TestCase):
-    def attack(self, d20, thac0, ac, item, item_type, after_f1, hit_bonus, attacker=0, combatant=0, **flags):
+    def attack(self, d20, thac0, ac, item, item_type, after_f1, hit_bonus, attacker=0, combatant=0, mode=1, **flags):
         # attack(): [BP+6] dword, THAC0, AC, attacker, sheet, item, item type, mode 1, attacker combatant,
         # two more, backstab, from behind
-        frame = words(0, 0, 0, 0, thac0, ac, attacker, 0, item, item_type, 1, combatant, 0, 0,
+        frame = words(0, 0, 0, 0, thac0, ac, attacker, 0, item, item_type, mode, combatant, 0, 0,
                       1 if flags.get("m24") else 0, 1 if flags.get("m1a") else 0)
         parent_locals = locals_at(0x28, m20=after_f1, m8=hit_bonus, **flags)
         return entry(raw_for(d20, 20), dicelog.ATTACK_SITE, frame, glob=(0x29, 0, 0, 0), parent_locals=parent_locals)
@@ -187,6 +193,14 @@ class AttackTests(unittest.TestCase):
         self.assertEqual(lines, [
             "Dag attacks Mountain Stalker from behind with Wooden Long Sword (1d8): d20 = 5, needs 9+ (60%), hits AC 6, target AC 2 -> miss",
             "    THAC0 16, +2 from behind, +6 STR, -3 wooden = 11"])
+
+    def test_unseen_shot(self):
+        """A missile from behind is a hidden archer's shot (DSCLOG's MISSILE_REAR takes the game's
+        from behind back for missiles): "unseen", not "from behind"."""
+        log = make_game()
+        lines = log.describe(self.attack(5, 11, 2, 6, 10, after_f1=8, hit_bonus=-3, m1a=1, mode=2))
+        self.assertIn(" unseen with ", lines[0])
+        self.assertIn("+2 unseen", lines[1])
 
     def test_miss_floats_over_the_target(self):
         """A miss floats "Miss" over its target (labels.py); a hit floats nothing."""
@@ -540,6 +554,163 @@ class BackstabTests(unittest.TestCase):
         self.assertIn("x5 backstab", self.backstab(14, 0)[0])
 
 
+class HelplessTests(unittest.TestCase):
+    """A weapon's blow on a held (Paralyzed) or Out Cold target: the attack routine hands the game's
+    damage call its damage x2 (58B0Dh), which 79BF9h takes for a helpless target (the effects'
+    bitset's bit 34, or the creature's +1Ch 3). Seen 2026-11-10: a hit for 13 took 26."""
+
+    def hit(self, log, stab=False, now=0.0, state=0):
+        if stab:
+            sheet = SHEETS + 0 * game.SHEET_SIZE  # (Dag a 6th-level thief: x3)
+            log.guest.mem[sheet + game.SHEET_CLASSES + 1], log.guest.mem[sheet + game.SHEET_LEVELS + 1] = 17, 6
+        parent = words(0, 0, 0, 0, 10, 4, 0, 0, 5, 7, 1, 0, 0, 0, int(stab), int(stab))
+        e = entry(raw_for(5, 8), dicelog.DICE_SITE, words(0, 0, 1, 8, 1), parent, (0x29, 0, 0, 0),
+                  parent_code=dicelog.WEAPON_DAMAGE_RETURN, parent_locals=locals_at(0x28, m14=0), target_state=state)
+        return log.describe(e, now=now)
+
+    def test_as_it_was_at_the_roll(self):
+        """DSCLOG writes the target's state into the entry as the dice are rolled (+188, HELPLESS_OF):
+        that is what counts, not the game's state when the entry is read (a blow that killed an Out Cold
+        target, a Hold ended, or one begun since: the audit). An entry without it (an older helper):
+        the game's state now."""
+        mark = dicelog.Entry.HELD_MARK
+        log = make_game()  # (nothing on the target now)
+        self.assertIn("for 36: (1d8 = [5] +1 weapon +12 STR 24) x2 Paralyzed", self.hit(log, state=mark | 1)[0])
+        self.assertIn("for 36: (1d8 = [5] +1 weapon +12 STR 24) x2 Out Cold", self.hit(log, state=mark | 2)[0])
+        set_effects(log, [(0x29, 2, game.PARALYZED_EFFECT)])  # (held only after the roll)
+        self.assertEqual(self.hit(log, state=mark)[0], "  Dag hits Mountain Stalker for 18: 1d8 = [5] +1 weapon +12 STR 24")
+        self.assertIn("x2 Paralyzed", self.hit(log, state=0)[0])  # (no word from the helper: as now)
+
+    def test_paralyzed_takes_double(self):
+        log = make_game()
+        self.assertEqual(self.hit(log), ["  Dag hits Mountain Stalker for 18: 1d8 = [5] +1 weapon +12 STR 24"])
+        set_effects(log, [(0x29, 2, game.PARALYZED_EFFECT)])
+        self.assertEqual(self.hit(log), ["  Dag hits Mountain Stalker for 36: (1d8 = [5] +1 weapon +12 STR 24) "
+                                         "x2 Paralyzed: a helpless target takes double"])
+        set_effects(log, [(0, 2, game.PARALYZED_EFFECT)])  # (the attacker held: not the target)
+        self.assertEqual(self.hit(log)[0], "  Dag hits Mountain Stalker for 18: 1d8 = [5] +1 weapon +12 STR 24")
+
+    def test_out_cold_takes_double(self):
+        log = make_game()
+        log.guest.mem[CREATURES + STALKER * game.CREATURE_SIZE + game.CREATURE_STATUS] = game.OUT_COLD
+        self.assertEqual(log.game.helpless(0x29), "Out Cold")
+        self.assertIn("for 36: (1d8 = [5] +1 weapon +12 STR 24) x2 Out Cold", self.hit(log)[0])
+
+    def test_after_the_backstab_before_biofeedback(self):
+        """The backstab's multiple is in the damage the attack routine doubles; Biofeedback's 2 comes
+        off after (79C83h, on what 79BF9h took)."""
+        log = make_game()
+        set_effects(log, [(0x29, 2, game.PARALYZED_EFFECT), (0x29, 0x29, game.BIOFEEDBACK_EFFECT)])
+        self.assertEqual(self.hit(log, stab=True),
+                         ["  Dag hits Mountain Stalker for 106: ((1d8 = [5] +1 weapon +12 STR 24) x3 backstab) "
+                          "x2 Paralyzed: a helpless target takes double -2 Biofeedback"])
+
+    def test_a_fall_before_its_roll_is_read(self):
+        """A hit's damage applied between a pass's reading of the ring and of HP: the pass's records
+        are read before the ring (_records_now, as _lines does), so the fall is seen with its roll in
+        the next pass, not unattributed now and "takes none of the 9 damage" later (the audit)."""
+        log = make_game()
+        stalker = CREATURES + STALKER * game.CREATURE_SIZE
+        struct.pack_into("<h", log.guest.mem, stalker, 30)
+        log.hp_changes(0.5)
+        log._snapshot = log._records_now()  # (pass k: the records read, then the ring: nothing yet)
+        struct.pack_into("<h", log.guest.mem, stalker, 21)  # (the game rolls 9 and takes it)
+        self.assertEqual(log.hp_changes(1.0), [])  # (not seen yet: its roll is read next pass)
+        log._snapshot = log._records_now()  # (pass k+1: the records, then the roll read)
+        log._hit(STALKER, 9, 1.02)
+        self.assertEqual(log.hp_changes(1.02), ["  Mountain Stalker now 21 HP (-9)"])
+        self.assertEqual(log.hp_changes(1.2 + dicelog.HIT_WAIT), [])  # (no "none of the damage")
+
+    def test_the_hp_fall_matches(self):
+        """The doubled damage is what the target's HP is matched against: no "resisted" note."""
+        log = make_game()
+        stalker = CREATURES + STALKER * game.CREATURE_SIZE
+        struct.pack_into("<h", log.guest.mem, stalker, 50)
+        log.hp_changes(0.5)
+        set_effects(log, [(0x29, 2, game.PARALYZED_EFFECT)])
+        self.hit(log, now=1.0)
+        struct.pack_into("<h", log.guest.mem, stalker, 14)
+        self.assertEqual(log.hp_changes(1.2), ["  Mountain Stalker now 14 HP (-36)"])
+
+    def test_held_rule_normal_damage(self):
+        """With RULE_HELD (DSCLOG's HELD_DAMAGE) the damage as rolled: no x2."""
+        log = make_game()
+        log.rules = game.RULE_HELD
+        set_effects(log, [(0x29, 2, game.PARALYZED_EFFECT)])
+        self.assertEqual(self.hit(log), ["  Dag hits Mountain Stalker for 18: 1d8 = [5] +1 weapon +12 STR 24"])
+
+    def test_held_rule_hits_automatically(self):
+        """With RULE_HELD (DSCLOG's HELD_HIT) a helpless target is hit whatever the d20, said under the
+        attack; without the rule, or on a target not helpless, the d20 as ever."""
+        attack = AttackTests.attack
+        for rules, effects, d20, want in ((game.RULE_HELD, [(0x29, 2, game.PARALYZED_EFFECT)], 1, "HIT"),
+                                          (game.RULE_HELD, [(0x29, 2, game.PARALYZED_EFFECT)], 18, "HIT"),
+                                          (0, [(0x29, 2, game.PARALYZED_EFFECT)], 1, "miss"),
+                                          (game.RULE_HELD, [], 1, "miss")):
+            log = make_game()
+            log.rules = rules
+            set_effects(log, effects)
+            lines = log.describe(attack(self, d20, 8, 4, 5, 9, after_f1=9, hit_bonus=1))
+            self.assertTrue(lines[0].endswith(f"target AC 4 -> {want}"), (rules, effects, d20, lines[0]))
+            held = rules and effects
+            self.assertEqual(lines[2:], ["    Paralyzed: hit automatically, for normal damage (AD&D's held target)"]
+                             if held else [])
+
+    def test_poisoner_hit_as_big_as_the_poison(self):
+        """A hit as big as the poison lands before its own poison (seen 2026-11-10, the rule on: falls of
+        7, 10 the first poison, 10 the off hand's hit, 10 its poison): the hit's, then the poison's. (The
+        poison made 18 here, the helper's hit.)"""
+        from dsloader import kits
+        log = make_game()
+        log.rules = game.RULE_HELD
+        stalker = CREATURES + STALKER * game.CREATURE_SIZE
+        struct.pack_into("<h", log.guest.mem, stalker, 100)
+        log.hp_changes(0.1)
+        set_effects(log, [(0x29, 2, game.PARALYZED_EFFECT)])
+        with mock.patch.object(log.game, "kit_ids", lambda m: [kits.POISONER] if m == 0 else []), \
+                mock.patch.dict(game.POISON_DAMAGE, {kits.POISON_POWER: 18}):
+            falls = []
+            for now, hp in ((0.0, None), (0.05, 82), (0.45, 64), (0.9, None), (0.95, 46), (1.4, 28)):
+                if hp is None:
+                    self.hit(log, now=now)  # (for 18: 1d8 = [5] +1 weapon +12 STR 24)
+                else:
+                    struct.pack_into("<h", log.guest.mem, stalker, hp)
+                    falls += log.hp_changes(now)
+        poison = "  Mountain Stalker takes 18 from Poison (10 damage), now {} HP"
+        self.assertEqual(falls, ["  Mountain Stalker now 82 HP (-18)", poison.format(64),
+                                 "  Mountain Stalker now 46 HP (-18)", poison.format(28)])
+
+    def test_poisoner_on_a_helpless_target(self):
+        """A Poisoner's melee hit poisons (DSCLOG's PROBE_POISON); a helpless target rolls no save
+        (79B0Ch), so the poison is named with the hit and its 10 put down to it, though it lands after
+        the round's next swing (seen 2026-11-10: -18, then -10, then the second hit)."""
+        from dsloader import kits
+        log = make_game()
+        stalker = CREATURES + STALKER * game.CREATURE_SIZE
+        struct.pack_into("<h", log.guest.mem, stalker, 100)
+        log.hp_changes(0.5)
+        with mock.patch.object(log.game, "kit_ids", lambda m: [kits.POISONER] if m == 0 else []):
+            self.assertEqual(len(self.hit(log, now=1.0)), 1)  # (not helpless: the game rolls the save)
+            set_effects(log, [(0x29, 2, game.PARALYZED_EFFECT)])
+            lines = self.hit(log, now=2.0)
+            self.assertEqual(lines[1], "  Mountain Stalker is poisoned by the hit: Poison (10 damage), no saving throw "
+                                       "(Paralyzed)")
+            hp = 100 - 18 - 36
+            struct.pack_into("<h", log.guest.mem, stalker, hp)
+            self.assertEqual(log.hp_changes(2.1), ["  Mountain Stalker now 46 HP (-54)"])
+            self.hit(log, now=2.2)  # (the next swing, logged before the first poison lands)
+            struct.pack_into("<h", log.guest.mem, stalker, hp - 10)
+            self.assertEqual(log.hp_changes(2.4), ["  Mountain Stalker takes 10 from Poison (10 damage), now 36 HP"])
+            struct.pack_into("<h", log.guest.mem, stalker, hp - 10 - 36 - 10)  # (the hit and its poison at once)
+            self.assertEqual(log.hp_changes(2.8),
+                             ["  Mountain Stalker takes 10 from Poison (10 damage) and 36 from the hit, now -10 HP"])
+            self.hit(log, now=3.0)
+            struct.pack_into("<h", log.guest.mem, stalker, hp - 10 - 36 - 10 - 36)
+            self.assertEqual(log.hp_changes(3.2), ["  Mountain Stalker now -46 HP (-36)"])  # (the poison not yet)
+            struct.pack_into("<h", log.guest.mem, stalker, -60)
+            self.assertEqual(log.hp_changes(9.0), ["  Mountain Stalker now -60 HP (-14)"])  # (too late: not the poison)
+
+
 class SaveTests(unittest.TestCase):
     def save_roll(self, log, natural, target=0x29, caster=0, spell=HOLD_PERSON):
         # the saving throw's frame: [BP+6] target, [BP+8] caster, [BP+0Ah] spell;
@@ -692,6 +863,160 @@ class SaveTests(unittest.TestCase):
         self.assertEqual(log.describe(e), ["    Abjure on Mountain Stalker: d20 = 4, needs 6 or more (11 - caster "
                                            "level 5 + its level 0) -> fails"])
 
+    def turn(self, log, roll, level, need, overlay=False):
+        """Turn Undead's d20 (7AE4Dh) from Jellybelly (combatant 2) on the stalker (0x29), the
+        routine's frame (target, caster, &flags, level) and [BP-6] the number needed."""
+        code = dicelog.OVERLAY_TRAP + bytes(8) if overlay else dicelog.TURN_ROLL_RETURN
+        return entry(raw_for(roll, 20), dicelog.DICE_SITE, words(0, 0, 1, 20), words(0, 0, 0x29, 2, 0x7F00, level),
+                     parent_locals=locals_at(0x28, m6=need), parent_code=code)
+
+    def make_undead(self, log, hd):
+        sheet = SHEETS + STALKER * game.SHEET_SIZE
+        log.guest.mem[sheet + game.SHEET_RACE], log.guest.mem[sheet + game.SHEET_LEVELS] = game.UNDEAD, hd
+
+    def test_turn_undead_needed(self):
+        """The game's number: 10 + 3 x (HD column - level row), the columns and rows as 7AE01h has them."""
+        need = dicelog.DiceLog.turn_needed
+        self.assertEqual([need(2, n) for n in range(1, 7)], [13, 10, 7, 4, 1, -2])
+        self.assertEqual([need(hd, 1) for hd in (1, 2, 3, 4, 5, 6)], [10, 13, 16, 19, 25, 28])  # (HD 5 is column 6)
+        self.assertEqual(need(5, 2), 20)  # (22 made 20)
+        self.assertEqual([need(6, n) for n in (3, 9, 10, 11, 12, 13, 14, 20)], [20, 4, 1, 1, -2, -5, -5, -5])
+        self.assertEqual(need(20, 1), need(12, 1))  # (the column stops at 13)
+
+    def test_turn_undead(self):
+        log = make_game()
+        m = log.guest.mem
+        self.make_undead(log, 2)
+        stalker = CREATURES + STALKER * game.CREATURE_SIZE
+        struct.pack_into("<h", m, stalker, 13)
+        self.assertEqual(log.hp_changes(0.5), [])  # the first look
+        self.assertEqual(log.describe(self.turn(log, 3, 4, 4), now=1.0),
+                         ["Jellybelly turns Mountain Stalker: d20 = 3, needs 4+ (priest level 4 vs 2 HD) -> not turned"])
+        self.assertEqual(log.describe(self.turn(log, 12, 4, 4), now=2.0),
+                         ["Jellybelly turns Mountain Stalker: d20 = 12, needs 4+ (priest level 4 vs 2 HD) -> destroyed"])
+        struct.pack_into("<h", m, stalker, 13 - 1000)  # (79A01h's 1000 damage)
+        self.assertEqual(log.hp_changes(2.5), ["  Mountain Stalker is destroyed by Turn Undead"])
+        struct.pack_into("<h", m, stalker, 5)  # (a later fall is said as ever)
+        log.hp_changes(30.0)
+        struct.pack_into("<h", m, stalker, 1)
+        self.assertEqual(log.hp_changes(31.0), ["  Mountain Stalker now 1 HP (-4)"])
+
+    def test_turn_undead_beyond_a_d20(self):
+        log = make_game()
+        self.make_undead(log, 6)
+        self.assertEqual(log.describe(self.turn(log, 20, 1, 28)),
+                         ["Jellybelly turns Mountain Stalker: d20 = 20, needs 28+, more than a d20 can roll "
+                          "(priest level 1 vs 6 HD) -> not turned"])
+        self.assertEqual(log.describe(self.turn(log, 1, 12, -2)),
+                         ["Jellybelly turns Mountain Stalker: d20 = 1, needs -2+, any roll (priest level 12 vs 6 HD) "
+                          "-> destroyed"])
+
+    def test_turn_undead_behind_the_overlay_stub(self):
+        """With the INT 3Fh stub in the way back: known by the last cast (190), the undead target and
+        [BP-6] matching the game's number for its HD and the level; else not Turn Undead's."""
+        log = make_game()
+        self.make_undead(log, 2)
+        with mock.patch.object(log, "_float") as floats:  # (the button's cast: named, not "special attack 190")
+            log.describe(entry(dicelog.TURN_UNDEAD_SPELL, frame=words(0, 0, 2, 0x29, dicelog.TURN_UNDEAD_SPELL),
+                               kind=dicelog.KIND_CAST))
+        self.assertEqual(floats.call_args[0][:2], (2, "Turn Undead"))
+        self.assertEqual(log._cast, (2, dicelog.TURN_UNDEAD_SPELL))
+        self.assertEqual(log.describe(self.turn(log, 9, 3, 7, overlay=True)),
+                         ["Jellybelly turns Mountain Stalker: d20 = 9, needs 7+ (priest level 3 vs 2 HD) -> destroyed"])
+        self.assertFalse(log._overlay_turn(self.turn(log, 9, 3, 8, overlay=True)))  # (not its number)
+        self.make_undead(log, 4)  # (level 0, a sheet with the button and no priest class: 22, made 20)
+        self.assertEqual(log.describe(self.turn(log, 4, 0, 20, overlay=True)),
+                         ["Jellybelly turns Mountain Stalker: d20 = 4, needs 20+ (priest level 0 vs 4 HD) -> not turned"])
+        log._cast = (2, HOLD_PERSON)
+        self.assertFalse(log._overlay_turn(self.turn(log, 9, 3, 7, overlay=True)))
+
+    def test_turn_undead_manual(self):
+        """Turn Undead the AD&D way (DSCLOG's TURN_SITE, KIND_TURN: the d20, then the priest, target,
+        the table's cell, level, HD, outcome, rounds, D*'s more): each outcome's line, a destruction
+        said by hp_changes as Turn Undead's."""
+        log = make_game()
+        m = log.guest.mem
+        self.make_undead(log, 2)
+        stalker = CREATURES + STALKER * game.CREATURE_SIZE
+        struct.pack_into("<h", m, stalker, 13)
+        self.assertEqual(log.hp_changes(0.5), [])
+        who = (log.game.combatant_creature(2), log.game.combatant_creature(0x29))
+        turn = lambda d20, *frame: log.describe(entry(d20, frame=words(0, 0, 2, 0x29, *frame, *who), kind=dicelog.KIND_TURN))
+        about = "(priest level 3 vs 2 HD, AD&D's table)"
+        self.assertEqual(turn(14, 16, 3, 2, dicelog.TURN_TURNED, 7, 0),
+                         [f"Jellybelly turns Mountain Stalker: d20 = 14, needs 16+ {about} -> turned: flees 3d4 = 7 "
+                          "rounds (Afraid)"])
+        self.assertEqual(turn(5, 16, 3, 2, dicelog.TURN_NOT, 0, 0),
+                         [f"Jellybelly turns Mountain Stalker: d20 = 5, needs 16+ {about} -> not turned: can't try "
+                          "again on it this fight"])
+        self.assertEqual(turn(0, 0, 3, 2, dicelog.TURN_AGAIN, 0, 0),
+                         ["Jellybelly can't turn Mountain Stalker again: failed against it this fight"])
+        self.assertEqual(turn(0, dicelog.TURN_T, 3, 2, dicelog.TURN_TURNED, 9, 0),
+                         [f"Jellybelly turns Mountain Stalker: turned: flees 3d4 = 9 rounds (Afraid), automatically "
+                          f"(T) {about}"])
+        self.assertEqual(turn(0, 0, 3, 2, dicelog.TURN_NONE, 0, 0),
+                         [f"Jellybelly turns Mountain Stalker: no chance {about}"])
+        self.assertEqual(turn(0, dicelog.TURN_DSTAR, 3, 2, dicelog.TURN_DSTARRED, 0, 5),
+                         [f"Jellybelly turns Mountain Stalker: destroyed automatically (D*), and up to 2d4 = 5 more "
+                          f"of its kind this turning {about}"])
+        self.assertEqual(turn(0, 0, 3, 2, dicelog.TURN_MORE_ONE, 0, 4),
+                         ["Jellybelly turns Mountain Stalker: destroyed, one of the D*'s more of its kind (4 left)"])
+        self.assertEqual(turn(0, dicelog.TURN_D, 3, 2, dicelog.TURN_DESTROYED, 0, 0),
+                         [f"Jellybelly turns Mountain Stalker: destroyed automatically (D) {about}"])
+        struct.pack_into("<h", m, stalker, 13 - 1000)
+        self.assertEqual(log.hp_changes(2.5), ["  Mountain Stalker is destroyed by Turn Undead"])
+
+    def test_turn_undead_renumbered(self):
+        """A turning out of a fight starts one, which numbers the combatants afresh before the record
+        is read: the names (and the destruction) come from the creatures recorded with it."""
+        log = make_game()
+        self.make_undead(log, 2)
+        who = (log.game.combatant_creature(2), log.game.combatant_creature(0x29))
+        stalker = CREATURES + STALKER * game.CREATURE_SIZE
+        struct.pack_into("<h", log.guest.mem, stalker, 13)
+        self.assertEqual(log.hp_changes(0.5), [])
+        # (the old numbers name nothing now: 0x30 and 0x31 are no creatures')
+        rec = entry(0, frame=words(0, 0, 0x30, 0x31, dicelog.TURN_D, 3, 2, dicelog.TURN_DESTROYED, 0, 0, *who),
+                    kind=dicelog.KIND_TURN)
+        self.assertEqual(log.describe(rec), ["Jellybelly turns Mountain Stalker: destroyed automatically (D) "
+                                             "(priest level 3 vs 2 HD, AD&D's table)"])
+        struct.pack_into("<h", log.guest.mem, stalker, 13 - 1000)
+        self.assertEqual(log.hp_changes(2.5), ["  Mountain Stalker is destroyed by Turn Undead"])
+
+    def test_turned_undead_flee(self):
+        """Afraid on an undead (TURN_SITE's turning, Chill Touch's) is said as fleeing, not with fear's immunity."""
+        log = make_game()
+        set_effects(log, [])
+        log.effect_changes(10.0)
+        set_effects(log, [(0x29, 2, dicelog.AFRAID_EFFECT)])
+        self.assertIn("immune", log.effect_changes(20.0)[0])  # (a living one: the game's words)
+        set_effects(log, [])
+        log.effect_changes(21.0)
+        self.make_undead(log, 2)
+        set_effects(log, [(0x29, 2, dicelog.AFRAID_EFFECT)])
+        self.assertEqual(log.effect_changes(30.0), ["Jellybelly gives Afraid to Mountain Stalker: it flees "
+                                                    "(the computer controls it; can't attack or cast spells)"])
+
+    def test_turn_cells(self):
+        """AD&D's turning table (the cells DSCLOG's TU_CELL gives): rows by HD, columns by level."""
+        cell = dicelog.DiceLog.turn_cell
+        T, D, DS = dicelog.TURN_T, dicelog.TURN_D, dicelog.TURN_DSTAR
+        levels = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14)
+        rows = {1: (10, 7, 4, T, T, D, D, DS, DS, DS, DS, DS), 2: (16, 13, 10, 7, 4, T, T, D, D, DS, DS, DS),
+                3: (19, 16, 13, 10, 7, 4, T, T, D, D, DS, DS), 5: (20, 19, 16, 13, 10, 7, 4, T, T, D, D, DS),
+                6: (0, 0, 20, 19, 16, 13, 10, 7, 4, T, T, D), 9: (0, 0, 0, 0, 0, 20, 19, 16, 13, 10, 7, 4),
+                11: (0, 0, 0, 0, 0, 0, 0, 20, 19, 16, 13, 10)}
+        for hd, row in rows.items():
+            self.assertEqual(tuple(cell(hd, lv) for lv in levels), row, hd)
+        self.assertEqual((cell(4, 1), cell(0, 1), cell(30, 14), cell(2, 11), cell(2, 13), cell(2, 40)), (19, 10, 10, DS, DS, DS))
+
+    def test_meteors_to_hit(self):
+        """Minute Meteors' own +2 named apart from the game's adjustments."""
+        log = make_game()
+        e = entry(8, frame=words(0, 0, 2, 40, dicelog.MINUTE_METEORS_SPELL, 16, 4, 1, 0, 4, 8, 2, 1), kind=dicelog.KIND_TOHIT)
+        line, = log.describe(e)
+        self.assertIn(f"needs 8+ (65%) (THAC0 16, +1 DEX, +2 {log.game.spell_name(33)}, +1 spells; target AC 4) -> HIT", line)
+
     def test_psp(self):
         log = make_game()
         dag = CREATURES + game.CREATURE_PSP
@@ -728,6 +1053,16 @@ class SaveTests(unittest.TestCase):
         self.assertEqual(log.describe(e), [])
         self.assertEqual(floated, [(2, log.game.spell_name(game.FRIENDS_SPELL))])
 
+    def test_spell_cast_names_its_caster_to_the_tally(self):
+        """A cast's record tells the fight's tally who cast the spell: its damage, said later, theirs."""
+        log = make_game()
+        log._float = lambda *a: None
+        spell = log.game.spell_name(game.FRIENDS_SPELL)
+        log._tally.feed(["Round 1: Jellybelly 20"])
+        log.describe(entry(game.FRIENDS_SPELL, frame=words(0, 0, 2, 0x29, game.FRIENDS_SPELL), kind=dicelog.KIND_CAST))
+        log._tally.feed([f"  Guard takes 6 from {spell}, now 4/10 HP"])
+        self.assertEqual(log._tally.members["Jellybelly"].dealt, 6)  # (a party member's)
+
     def test_aim_refused(self):
         """A spell cast with a click that the game refused (DSCLOG's AIM_SITE), with the reason."""
         log = make_game()
@@ -736,6 +1071,38 @@ class SaveTests(unittest.TestCase):
         line = log.describe(e)
         self.assertEqual(len(line), 1)
         self.assertIn("there: no line of sight", line[0])
+
+    def test_spell_to_hit(self):
+        """A missile or touch spell's attack roll (DSCLOG's SPELL_HIT, KIND_TOHIT: the d20, the frame's
+        caster, target, spell, THAC0, adjustments, their STR/DEX part, difficulty, AC, kind, hit): the
+        number needed and its parts; on a miss the damage rolled for it just before is lost, and
+        "Miss" floats over the target."""
+        log = make_game()
+        floated = []
+        log._float = lambda thing, text, colour, now: floated.append((thing, text))
+        frame = lambda *args: words(0, 0, *args)
+        e = entry(12, frame=frame(2, 40, 75, 16, 2, 1, 0, 4, 12, 2, 1), kind=dicelog.KIND_TOHIT)
+        line, = log.describe(e)
+        self.assertTrue(line.endswith(": attack d20 = 12, needs 10+ (55%) (THAC0 16, +1 DEX, +1 spells; "
+                                      "target AC 4) -> HIT"), line)
+        self.assertIn(f"'s {log.game.spell_name(75)} at ", line)
+        self.assertEqual(floated, [])
+        log._recent_damage.append((75, 7))
+        log._last_damage = (75, 7)
+        e = entry(1, frame=frame(2, 40, 75, 16, 2, 1, 0, 4, 1, 2, 0), kind=dicelog.KIND_TOHIT)
+        line, = log.describe(e)
+        self.assertTrue(line.endswith("attack d20 = 1 (natural 1), needs 10+ (55%) (THAC0 16, +1 DEX, +1 spells; "
+                                      "target AC 4) -> MISS: the spell does nothing, the 7 damage rolled lost"), line)
+        self.assertEqual((list(log._recent_damage), log._last_damage), ([], None))
+        self.assertEqual(floated, [(40, dicelog.labels.MISS)])
+        e = entry(9, frame=frame(40, 2, 3, 13, 3, 3, 2, -2, 9, 1, 0), kind=dicelog.KIND_TOHIT)
+        line, = log.describe(e)
+        self.assertIn(f"'s {log.game.spell_name(3)} at ", line)
+        self.assertTrue(line.endswith("touch attack d20 = 9, needs 10+ (55%) (THAC0 13, +3 STR, +2 difficulty; "
+                                      "target AC -2) -> MISS: the spell does nothing"), line)
+        e = entry(3, frame=frame(2, 40, dicelog.ACID_ARROW_SPELL, 14, 0, 0, 0, 12, 3, 2, 1), kind=dicelog.KIND_TOHIT)
+        self.assertIn("(THAC0 14 (a fighter's of the caster's level); target AC 12) -> HIT", log.describe(e)[0])
+        self.assertIn("hits on anything but a 1", log.describe(e)[0])
 
     def test_wall_instead(self):
         """Wall of Thorns' damage (DSCLOG's THORNS_DAMAGE: the damage | the spell << 8, the
@@ -1179,10 +1546,17 @@ class SaveTests(unittest.TestCase):
         self.assertEqual(log.game.save_modifiers(0x29, 0, HOLD_PERSON, game.PPD_SAVE),
                          [(1, "Blessed"), (5, "dwarf CON 19")])
 
-    def test_natural_20_needs_no_probe(self):
+    def test_natural_20(self):
+        """A natural 20 goes on to the probe (gamepatch's save_natural): it saves (DSCLOG's SAVE_SUM made
+        the total the number needed), unless the save can't be made (the -100's)."""
         log = make_game()
-        self.assertEqual(log.describe(self.save_roll(log, 20)),
+        self.assertEqual(log.describe(self.save_roll(log, 20)), [])
+        self.assertEqual(log.describe(self.probe(14)),
                          ["Mountain Stalker's saving throw vs Hold Person from Dag (spell): d20 = 20 (natural 20) -> saved"])
+        self.assertEqual(log.describe(self.save_roll(log, 20)), [])
+        self.assertEqual(log.describe(self.probe(-79 & 0xFF)),
+                         ["Mountain Stalker's saving throw vs Hold Person from Dag (spell): none allowed (cannot "
+                          "save, even on a natural 20) -> failed"])
 
     def test_magic_resistance(self):
         log = make_game()
@@ -1269,14 +1643,20 @@ class OtherTests(unittest.TestCase):
         log = make_game()
         m = log.guest.mem
         struct.pack_into("<HH", m, HDR + dicelog.TSR_STATS_REQ, 5, 4)
+        answered = threading.Event()
+        answer = log._answer_stats
+
+        def answer_and_tell():  # (the thread looks the method up on each pass: this one tells the test)
+            answer()
+            if struct.unpack_from("<H", m, HDR + dicelog.TSR_STATS_REPLY)[0] == 5:
+                answered.set()
+        log._answer_stats = answer_and_tell
         log.answer_stats_in_background()
         self.addCleanup(log.close)
-        deadline = time.monotonic() + 2
-        while struct.unpack_from("<H", m, HDR + dicelog.TSR_STATS_REPLY)[0] != 5 and time.monotonic() < deadline:
-            time.sleep(0.001)
+        self.assertTrue(answered.wait(30))  # (30 s only a guard against a hang)
         self.assertEqual(struct.unpack_from("<H", m, HDR + dicelog.TSR_STATS_REPLY)[0], 5)
         log.close()
-        log._stats_thread.join(1)
+        log._stats_thread.join(30)
         self.assertFalse(log._stats_thread.is_alive())
 
     def test_attach_needs_the_patched_game(self):
@@ -1352,9 +1732,136 @@ class OtherTests(unittest.TestCase):
         struct.pack_into("<H", log.guest.mem, HDR + dicelog.TSR_RING_SEG, HDR // 16)  # (the ring's segment)
         for seq in (3, 4, 5, 6):  # 1 and 2 were overwritten
             struct.pack_into("<H", log.guest.mem, HDR + ring + ((seq - 1) % nent) * esize, seq)
-        self.assertEqual([e.seq for e in log.poll()], [3, 4, 5, 6])
-        self.assertEqual(log.missed, 2)
+        # (3 is in slot 2, the one DSCLOG writes next: it may be being written over as the ring is
+        # read, so it is lost with 1 and 2)
+        self.assertEqual([e.seq for e in log.poll()], [4, 5, 6])
+        self.assertEqual(log.missed, 3)
         self.assertEqual(log.poll(), [])
+
+
+class ManualGroup3Tests(unittest.TestCase):
+    """Group 3 of the spells and psionics as the manual describes them (gamepatch.SPELLS_MANUAL; told
+    by Stinking Cloud's record's dice, game.spells_manual): the dice log's lines."""
+
+    def make(self, manual=True):
+        log = make_game()
+        record = lambda spell: (LOAD_SEG + game.SPELLS_SEG) * 16 + game.SPELLS_OFF - 0x10 + spell * game.SPELL_SIZE
+        log.guest.mem[record(game.STINKING_CLOUD) + 4] = 0x41 if manual else 0x61
+        self.record = record
+        return log
+
+    def amount(self, log, index, value):
+        base = (LOAD_SEG + game.EFFECTS_SEG) * 16 + game.EFFECTS_OFF
+        struct.pack_into("<b", log.guest.mem, base + index * 10 + 9, value)
+
+    def test_strength_by_class(self):
+        """STRENGTH_SITE's dice: the class named when the die is the one it gives (Dag a fighter: 1d8)."""
+        for manual, sides, want in ((True, 8, " (fighter)"), (True, 6, ""), (False, 8, "")):
+            log = self.make(manual)
+            e = entry(raw_for(6, sides), dicelog.DICE_SITE, words(0, 0, 1, sides), words(0, 0, 0, 0, 0, 0, 23),
+                      parent_code=dicelog.STRENGTH_ROLL_RETURN)
+            self.assertEqual(log.describe(e)[0].split(": ", 1)[1],
+                             f"1d{sides} = 6{want} -> Dag's STR +6 while it lasts (at most 24)")
+
+    def test_lower_resistance(self):
+        """Low Resistance on the target: 30 + its amount (the cast's level) off, not halved; a Lower
+        Resistance being cast: 30 + its level, the bigger of the two; without the switch, halved, and
+        the cast's own 30 + level (the game's 7A518h)."""
+        sheet = SHEETS + 3 * game.SHEET_SIZE
+        def line(manual, effect, spell, level=9):
+            log = self.make(manual)
+            struct.pack_into("<H", log.guest.mem, CREATURES + STALKER * game.CREATURE_SIZE + game.CREATURE_SHEET_INDEX, 3)
+            log.guest.mem[sheet + game.SHEET_MAGIC_RESISTANCE] = 80
+            set_effects(log, [(0x29, 0, dicelog.LOW_RESISTANCE)] if effect else [])
+            self.amount(log, 0, 12)
+            e = entry(raw_for(20, 100), dicelog.DICE_SITE, words(0, 0, 1, 100), words(0, 0, 0x29, spell, level),
+                      parent_code=dicelog.RESISTANCE_ROLL_RETURN)
+            return log.describe(e)[0].split(" vs ")[0]
+        self.assertEqual(line(True, True, FIREBALL), "Mountain Stalker magic resistance 38% (-42 Lower Resistance on it, level 12)")
+        self.assertEqual(line(True, True, 64, 15), "Mountain Stalker magic resistance 35% (-45 this Lower Resistance, level 15)")
+        self.assertEqual(line(True, False, FIREBALL), "Mountain Stalker magic resistance 80%")
+        self.assertEqual(line(False, True, FIREBALL), "Mountain Stalker magic resistance 40% (halved by Lower Resistance)")
+        self.assertEqual(line(False, False, 64), "Mountain Stalker magic resistance 41% (-39 this Lower Resistance, level 9)")
+
+    def test_manual_lines(self):
+        """KIND_MANUAL's lines: raw what, the frame the creature and three words."""
+        log = self.make()
+        say = lambda what, *frame: log.describe(entry(what, frame=words(0, 0, 0x29, *frame), kind=dicelog.KIND_MANUAL))
+        self.assertEqual(say(dicelog.MANUAL_CHILL, 2, 3, 0),
+                         ["Chill Touch on Mountain Stalker, undead: no damage, no STR lost; Afraid 1d4 = 3 rounds instead"])
+        self.assertEqual(say(dicelog.MANUAL_CLOUD, 3, 0, 0),
+                         ["Cloudkill: Mountain Stalker dies (under 4 HD: no save; its level for saves 3)"])
+        self.assertEqual(say(dicelog.MANUAL_CLOUD, 5, 0, 0),
+                         ["Cloudkill: Mountain Stalker dies (4 to 5 HD: the save failed; its level for saves 5)"])
+        self.assertEqual(say(dicelog.MANUAL_CELL, 2, 3, 1),
+                         ["Cell Adjustment: 1d4 = 3 -> Mountain Stalker healed 3 HP, and Mountain Stalker is cured of disease"])
+        self.assertEqual(say(dicelog.MANUAL_CELL, 2, 4, 0), ["Cell Adjustment: 1d4 = 4 -> Mountain Stalker healed 4 HP"])
+        self.assertEqual(say(dicelog.MANUAL_RAINBOW, 6, 0, 0),
+                         ["    Mountain Stalker takes 6 damage: Rainbow Pattern's hold on it ends"])
+        self.assertEqual(say(dicelog.MANUAL_FEEBLE, 2, 0, 0),
+                         ["Heal cures Mountain Stalker's Feeblemind: INT and WIS as they were"])
+        self.assertIn("is feebleminded", say(dicelog.MANUAL_PSIONIC, 11, 0, 0)[0])
+        # Cloudkill's death said as such by hp_changes, not as a wound
+        stalker = CREATURES + STALKER * game.CREATURE_SIZE
+        struct.pack_into("<h", log.guest.mem, stalker, 13)
+        log.hp_changes(0.5)
+        say(dicelog.MANUAL_CLOUD, 3, 0, 0)
+        struct.pack_into("<h", log.guest.mem, stalker, 13 - 1004)
+        self.assertEqual(log.hp_changes(2.5), ["  Mountain Stalker is slain by Cloudkill"])
+
+    def test_group4_lines(self):
+        """Group 4's lines: the monsters (KIND_MANUAL 7-9) and the rest (KIND_REST 1-2)."""
+        log = self.make()
+        say = lambda what, *frame: log.describe(entry(what, frame=words(0, 0, *frame), kind=dicelog.KIND_MANUAL))
+        self.assertEqual(say(dicelog.MANUAL_DRAIN, 0, 0x29, 5, 172),
+                         ["Mountain Stalker drains 1 STR from Dag: Weakened for 2d4 = 5 turns (no save)"])
+        self.assertEqual(say(dicelog.MANUAL_TARI, 1, 0x29, 2, 0),
+                         ["Mountain Stalker's bite on Daaki: 1 in 10, and a d2 for the manual's 1 in 20: 2 -> no disease"])
+        self.assertIn("-> the disease comes, if a save against poison fails", say(dicelog.MANUAL_TARI, 1, 0x29, 1, 0)[0])
+        self.assertEqual(say(dicelog.MANUAL_DJINN, 0x29, 6, 14, 0),
+                         ["Mountain Stalker turns invisible (14 rounds) and makes 6 mirror images of itself"])
+        rest = lambda what, *frame: log.describe(entry(what, frame=words(0, 0, *frame), kind=dicelog.KIND_REST))
+        self.assertEqual(rest(dicelog.REST_CAST, 0, 1, 71, 1, 2, 0),
+                         [f"At rest: Dag casts {log.game.spell_name(71)} on Daaki (1st-level slots: 2 left)"])
+        self.assertTrue(rest(dicelog.REST_CAST, 2, 1, 151, 0, 7, 0)[0].endswith(" on Daaki (7 PSP left)"))
+        self.assertEqual(rest(dicelog.REST_HEAL, 0, 30, 2, 35, 40, 16),
+                         ["Dag rests 8 hours: +3, +2 (CON 16) = +5, now 35/40 HP"])
+        self.assertEqual(rest(dicelog.REST_HEAL, 0, 38, 2, 40, 40, 16),
+                         ["Dag rests 8 hours: +3, +2 (CON 16) = +5 (+2: no more than the most), now 40/40 HP"])
+
+    def test_biofeedback_hit(self):
+        """The game's 2 less from a blow on a creature with Biofeedback (79BF9h; at least 1 with BIO_SITE)."""
+        for manual, effect, want in ((True, True, "for 16: 1d8 = [5] +1 weapon +12 STR 24 -2 Biofeedback"),
+                                     (True, False, "for 18: 1d8 = [5] +1 weapon +12 STR 24"),
+                                     (False, True, "for 16: 1d8 = [5] +1 weapon +12 STR 24 -2 Biofeedback")):
+            log = self.make(manual)
+            set_effects(log, [(0x29, 0x29, game.BIOFEEDBACK_EFFECT)] if effect else [])
+            parent = words(0, 0, 0, 0, 10, 4, 0, 0, 5, 7, 1)
+            e = entry(raw_for(5, 8), dicelog.DICE_SITE, words(0, 0, 1, 8, 1), parent, (0x29, 0, 0, 0),
+                      parent_code=dicelog.WEAPON_DAMAGE_RETURN)
+            self.assertEqual(log.describe(e), [f"  Dag hits Mountain Stalker {want}"])
+
+    def test_cannot_save(self):
+        """The save modifiers' -100: with the compare made signed (save_signed, always applied) none is
+        allowed, with the manual's spells or without."""
+        for manual in (True, False):
+            want = "none allowed (cannot save) -> failed"
+            log = self.make(manual)
+            e = entry((14 << 8) | 0xA8, frame=words(0, 0, 0x29, 0, HOLD_PERSON), locals_=locals_at(0x10, m6=5),
+                      kind=KIND_SAVE, bp=0xFD00)
+            self.assertEqual(log.describe(e)[-1].split(": ", 1)[1], want)
+
+    def test_save_modifiers(self):
+        """Fire Shield's +2 against fire or cold and Blur's +1 (FSHIELD_SITE, BLUR_SITE)."""
+        for manual in (True, False):
+            log = self.make(manual)
+            struct.pack_into("<H", log.guest.mem, self.record(FIREBALL) + 0x1A, 0x02)
+            set_effects(log, [(0x29, 0x29, game.FIRE_SHIELD_EFFECT), (0x29, 0x29, game.BLUR_EFFECT)])
+            got = [why for _, why in log.game.save_modifiers(0x29, 0, FIREBALL, 4)]
+            self.assertEqual(("Fire Shield" in got, "Blur" in got), (manual, manual))
+            struct.pack_into("<H", log.guest.mem, self.record(FIREBALL) + 0x1A, 0x80)
+            got = dict((why, amount) for amount, why in log.game.save_modifiers(0x29, 0, FIREBALL, 4))
+            self.assertNotIn("Fire Shield", got)
 
 
 class NewLinesTests(unittest.TestCase):
@@ -1413,6 +1920,68 @@ class NewLinesTests(unittest.TestCase):
         struct.pack_into("<I", m, SHEETS, 125)  # Dag's XP
         self.assertEqual(tracker.check(2.2), [])  # waits for the others' XP
         self.assertEqual(tracker.check(3.0), ["XP: Dag +125 (for Mountain Stalker 500)"])
+
+    def test_gear_due(self):
+        """DSCLOG's GEAR_DUE (a new member's DONE): the gear pass at once, the members whose items it
+        changed in GEAR_GIVEN, then GEAR_DUE cleared, for VIEW CHARACTER to be drawn again with them;
+        the game's item lists moving, both left for the next pass."""
+        from unittest import mock
+        from dsloader.game import ItemSeen
+        log = make_game()
+        m = log.guest.mem
+        seen = lambda typ: [ItemSeen(5, 0, "Dag", "right hand", "x", typ, bytes([typ]) * game.ITEM_SIZE, b"")]
+        lists = iter([seen(1), seen(2)])
+        m[HDR + dicelog.TSR_GEAR_DUE] = 1
+        with mock.patch.object(dicelog.names, "update", return_value=True), \
+                mock.patch.object(log.game, "party_items", side_effect=lambda: next(lists)), \
+                mock.patch.object(log, "_new_gear", return_value=True):
+            log._gear_due()
+        self.assertEqual((m[HDR + dicelog.TSR_GEAR_DUE], m[HDR + dicelog.TSR_GEAR_GIVEN]), (0, 1))
+        m[HDR + dicelog.TSR_GEAR_DUE], m[HDR + dicelog.TSR_GEAR_GIVEN] = 1, 0
+        with mock.patch.object(dicelog.names, "update", return_value=True), \
+                mock.patch.object(log.game, "party_items", return_value=seen(1)), \
+                mock.patch.object(log, "_new_gear", return_value=False):
+            log._gear_due()
+        self.assertEqual((m[HDR + dicelog.TSR_GEAR_DUE], m[HDR + dicelog.TSR_GEAR_GIVEN]), (1, 0))
+
+    def test_needle_avoided(self):
+        """Pehtucl's chest's needle sprung (its narration) and a find/remove traps success within
+        NEEDLE_WINDOW, either first: its flag set (DISARMED), for the chest's script to tell after
+        its click; the narration alone, or a roll alone, sets nothing."""
+        from unittest import mock
+        from dsloader.textlog import DialogueEntry
+        from dsloader import pehtuclchest
+        log = make_game()
+        sprung = DialogueEntry(0, text="Lex smashes at the lock, breaking it open, and a poisoned needle springs from it!")
+        with mock.patch.object(log.game, "flags_ready", return_value=True), \
+                mock.patch.object(log.game, "set_flag") as set_flag, mock.patch.object(dicelog.time, "monotonic") as clock:
+            clock.return_value = 100.0
+            log._dialogue = [sprung]
+            log.take_dialogue()
+            set_flag.assert_not_called()
+            clock.return_value = 101.0
+            log._avoided_at = 101.0  # (as _thief_skill notes a find/remove traps success)
+            log._needle_check()
+            set_flag.assert_called_once_with(pehtuclchest.DISARMED)
+            set_flag.reset_mock()
+            clock.return_value = 200.0  # (the roll first, a needle long after: nothing)
+            log._avoided_at = 150.0
+            log._dialogue = [sprung]
+            log.take_dialogue()
+            set_flag.assert_not_called()
+
+    def test_poison_damage_named(self):
+        """A poison's fixed 10 (a Poisoner's hit, a monster's) is the poison's, not an earlier
+        spell's roll of the same: once "takes 10 from Shocking Grasp". A new fight forgets the
+        last one's rolls."""
+        log = make_game()
+        log._recent_damage.append((10, 10))  # (spell 10's roll of 10, earlier)
+        log._spell_cast(176, 1.0)  # (the poison's save)
+        self.assertEqual(log._damage_source(10)[0], 176)
+        self.assertEqual(log._damage_source(10)[0], 176)
+        self.assertEqual(list(log._recent_damage), [(10, 10)])  # (left for its own damage)
+        dicelog._new_fight(log)
+        self.assertEqual(list(log._recent_damage), [])
 
     def test_prime_requisite_bonus(self):
         """10% more XP for a class whose prime requisites are all 16 or more (the manual's; the
@@ -2067,6 +2636,18 @@ class PassTests(unittest.TestCase):
         semyon.assert_called_once()
         kurzak.assert_called_once()
 
+    def test_monsters_mended_either_way(self):
+        """Each pass mends the running game's manual monsters to the game's copy: the manual's with
+        the spells as the manual has them (the copy's Stinking Cloud), the game's own without (the
+        switch turned off after a game was saved with it on: monsters.mend's way back)."""
+        from unittest import mock
+        log = make_game()
+        for manual in (True, False):
+            with mock.patch.object(log.game, "spells_manual", return_value=manual), \
+                    mock.patch.object(dicelog.monsters, "mend", return_value=[]) as mend:
+                log._watches()
+            mend.assert_called_once_with(log.game, manual)
+
     def test_error_key_by_where(self):
         """Errors told apart by kind and where they were raised, not their text: the same failure
         with another address in it each pass is one error (the window's and play.log's keys)."""
@@ -2196,3 +2777,254 @@ class PanelLevelTests(unittest.TestCase):
         self.assertEqual((log.combat_log_level, panel.level), (combatlog.DETAIL, combatlog.DETAIL))
         remember.assert_not_called()
         update.assert_called_once()
+
+
+class RingAndAttachTests(unittest.TestCase):
+    """The ring read robustly (a header or ring reading wrong said once, the log going on), the
+    in-progress marker 0xFFFF told from the real seq 0xFFFF, and a re-attach starting afresh."""
+
+    NENT, RING = 4, 0x100
+
+    def ring(self, log, seq, widx, slots, nent=NENT, esize=Entry.SIZE):
+        """The header at SEQ, slot WIDX next; SLOTS {slot: (seq, raw)}."""
+        m = log.guest.mem
+        struct.pack_into("<5H", m, HDR + 8, seq, widx, nent, esize, self.RING)
+        struct.pack_into("<H", m, HDR + dicelog.TSR_RING_SEG, HDR // 16)
+        for slot, (s, raw) in slots.items():
+            at = HDR + self.RING + slot * Entry.SIZE
+            struct.pack_into("<HHHH", m, at, s, 0, 0, raw)
+
+    def test_bad_header_said_once_and_the_log_goes_on(self):
+        log = make_game()
+        self.ring(log, 2, 2, {0: (1, 10), 1: (2, 20)}, esize=100)  # (an entry size too small to parse)
+        out = log.lines(now=1.0)
+        self.assertEqual(len([l for l in out if "Loader error in the dice log" in l]), 1, out)
+        self.assertEqual(log.last_seq, 0)  # (nothing taken)
+        self.assertFalse([l for l in log.lines(now=1.1) if "Loader error" in l])  # (said once)
+        self.ring(log, 2, 2, {0: (1, 10), 1: (2, 20)})  # (the header reads right again)
+        self.assertEqual([e.raw for e in log.poll()], [10, 20])
+        self.assertEqual(log.last_seq, 2)
+
+    def test_short_ring_read(self):
+        log = make_game()
+        self.ring(log, 1, 1, {0: (1, 10)})
+        real = log.guest.read
+        log.guest.read = lambda addr, size: real(addr, size)[:size // 2] if size == self.NENT * Entry.SIZE \
+            else real(addr, size)
+        with self.assertRaises(dicelog.DiceLogError):
+            log.poll()
+        self.assertEqual(log.last_seq, 0)
+
+    def test_still_patched_checks_the_header(self):
+        log = make_game()
+        m = log.guest.mem
+        m[log.rand_addr:log.rand_addr + 2] = dicelog.RAND_PATCHED
+        m[DS * 16 + game.BORLAND_SIG_OFFSET:DS * 16 + game.BORLAND_SIG_OFFSET + len(game.BORLAND_SIG)] = \
+            game.BORLAND_SIG
+        self.assertTrue(log.still_patched())
+        m[HDR:HDR + 8] = bytes(8)  # (DSCLOG's memory reused)
+        self.assertFalse(log.still_patched())
+        m[HDR:HDR + 8] = dicelog.HDR_SIG
+        self.ring(log, 1, 1, {0: (1, 10)}, nent=0)  # (reads wrong, pass after pass: attach again)
+        for n in range(dicelog.POLL_FAILS):
+            self.assertTrue(log.still_patched(), n)
+            log.lines(now=1.0 + n / 100)
+        self.assertFalse(log.still_patched())
+
+    def test_marker_at_the_write_slot_is_not_seq_ffff(self):
+        """The real 0xFFFF entry kept; the slot DSCLOG is writing (its seq the marker) skipped."""
+        log = make_game()
+        log.last_seq = 0xFFFD
+        self.ring(log, 0xFFFF, 3, {0: (0xFFFC, 1), 1: (0xFFFE, 2), 2: (0xFFFF, 3), 3: (0xFFFF, 999)})
+        self.assertEqual([(e.seq, e.raw) for e in log.poll()], [(0xFFFE, 2), (0xFFFF, 3)])
+        self.assertEqual(log.missed, 0)
+
+    def test_seq_ffff_just_published(self):
+        """The header's seq 0xFFFF published, the slot number not yet moved on: that slot's entry is real."""
+        log = make_game()
+        log.last_seq = 0xFFFD
+        self.ring(log, 0xFFFF, 2, {0: (0xFFFC, 1), 1: (0xFFFE, 2), 2: (0xFFFF, 3), 3: (0xFFFB, 4)})
+        self.assertEqual([(e.seq, e.raw) for e in log.poll()], [(0xFFFE, 2), (0xFFFF, 3)])
+
+    def test_marker_in_a_slot_written_during_the_read(self):
+        """DSCLOG wrote on while the ring was read: the slot it then began is half-written too."""
+        log = make_game()
+        log.last_seq = 0xFFFD
+        self.ring(log, 0xFFFF, 2, {0: (0xFFFE, 2), 1: (0xFFFF, 3), 2: (0, 5), 3: (0xFFFF, 999)})
+        real, reads = log.guest.read, []
+
+        def read(addr, size):
+            got = real(addr, size)
+            if addr == HDR and size == 24:
+                reads.append(1)
+                if len(reads) == 2:  # (the header as it is after the ring: seq 0 written, slot 3 begun)
+                    got = got[:8] + struct.pack("<HH", 0, 3) + got[12:]
+            return got
+        log.guest.read = read
+        self.assertEqual([(e.seq, e.raw) for e in log.poll()], [(0xFFFE, 2), (0xFFFF, 3)])
+
+    def test_attach_starts_the_dresser_and_gate_afresh(self):
+        log = make_game()
+        m = log.guest.mem
+        m[log.rand_addr:log.rand_addr + 2] = dicelog.RAND_PATCHED
+        m[DS * 16 + game.BORLAND_SIG_OFFSET:DS * 16 + game.BORLAND_SIG_OFFSET + len(game.BORLAND_SIG)] = \
+            game.BORLAND_SIG
+        log.guest.item_gate = None
+        first = game.GameData(log.guest, DS).guest.item_gate
+        self.assertIsNotNone(first)
+        game.GameData(log.guest, DS + 0x100)  # (the viewer's, each tick: the gate kept)
+        self.assertIs(log.guest.item_gate, first)
+        log._dresser, log._dresser_at = object(), 99.0
+        log._destroyed[STALKER] = "destroyed by Turn Undead"
+        self.assertEqual(log.attach(), "Dice log attached.")
+        self.assertEqual((log._dresser, log._dresser_at), (None, 0.0))
+        self.assertIsNot(log.guest.item_gate, first)  # (the new game's own)
+        self.assertIs(log.guest.item_gate.gd, log.game)
+        self.assertEqual(log._destroyed, {})
+
+
+class DestroyedTests(unittest.TestCase):
+    """A creature destroyed outright whose HP fall is never seen is forgotten (DESTROYED_WAIT, a
+    fight's end, a game loaded): a later monster in its record has its wounds said as wounds."""
+
+    def setUp(self):
+        self.log = make_game()
+        self.stalker = CREATURES + STALKER * game.CREATURE_SIZE
+        struct.pack_into("<h", self.log.guest.mem, self.stalker, 13)
+        self.assertEqual(self.log.hp_changes(0.5), [])
+
+    def test_expires(self):
+        log = self.log
+        log._destroyed[STALKER] = "destroyed by Turn Undead"
+        self.assertEqual(log.hp_changes(1.0), [])  # (no fall yet)
+        struct.pack_into("<h", log.guest.mem, self.stalker, 9)  # (another monster's wound, much later)
+        self.assertEqual(log.hp_changes(1.0 + dicelog.DESTROYED_WAIT + 1), ["  Mountain Stalker now 9 HP (-4)"])
+
+    def test_fall_in_time(self):
+        log = self.log
+        log._destroyed[STALKER] = "destroyed by Turn Undead"
+        self.assertEqual(log.hp_changes(1.0), [])
+        struct.pack_into("<h", log.guest.mem, self.stalker, 13 - 1000)
+        self.assertEqual(log.hp_changes(1.0 + dicelog.DESTROYED_WAIT / 2), ["  Mountain Stalker is destroyed by Turn Undead"])
+
+    def test_cleared_at_a_load_and_a_fights_end(self):
+        log = self.log
+        log._destroyed[STALKER] = "slain by Cloudkill"
+        log._party_check(1.0)
+        log._party = b"another"  # (a game loaded: another party)
+        log._party_check(2.0)
+        self.assertEqual(log._destroyed, {})
+        log._destroyed[STALKER] = "slain by Cloudkill"
+        log._tally = mock.Mock(started=True, end=mock.Mock(return_value=[]))
+        log._tally_seen, log._tally_out = True, 0.0
+        with mock.patch.object(log.game, "in_combat", return_value=False):
+            log._tally_end(dicelog.FIGHT_OVER + 1)
+        log._tally.end.assert_called_once()
+        self.assertEqual(log._destroyed, {})
+
+
+class Audit2Tests(unittest.TestCase):
+    """The second audit's fixes in the dice log: the pockets list never saved before the saved one
+    was read; a torn ring slot not taken; the size tables kept up whatever the cosmetic steps do;
+    a use answer DSCLOG gave up waiting for not carried out."""
+
+    def test_pockets_not_saved_until_the_saved_list_is_read(self):
+        """settings.json held at the start: this session's tries are kept, not saved over the
+        file's list; once the list can be read it is joined with them and saved whole."""
+        log = make_game()
+        log.load_picked([], known=False)
+        set_clock(log, 1000)
+        log.lines(now=1.0)  # (the game's clock seen)
+        log._remember_pick("Dag|41|9|Slave")
+        saved = []
+        self.assertEqual(log.save_learned(lambda names: None, saved.append), ({}, False))
+        self.assertEqual(saved, [])  # (no way to read the list given: nothing saved)
+
+        def held():
+            raise OSError("in use")
+        log.save_learned(lambda names: None, saved.append, held)
+        self.assertEqual(saved, [])
+        log._picked_retry = 0.0
+        log.save_learned(lambda names: None, saved.append, lambda: ["Dag|41|7|Trader@500", "Dag|41|8|Guard@5000"])
+        # (the file's Guard tried at 5000, later than this game's clock: another game's, forgotten)
+        self.assertEqual(saved, [["Dag|41|7|Trader@500", "Dag|41|9|Slave@1000"]])
+        self.assertEqual(log.picked, {"Dag|41|7|Trader", "Dag|41|9|Slave"})
+        log._remember_pick("Dag|41|8|Guard")
+        log.save_learned(lambda names: None, saved.append, lambda: self.fail("read again"))
+        self.assertEqual(saved[-1], ["Dag|41|7|Trader@500", "Dag|41|8|Guard@1000", "Dag|41|9|Slave@1000"])
+
+    def test_use_settings_from_an_unread_file(self):
+        log = make_game()
+        log.use_settings({}, picked_known=False)
+        log._remember_pick("Dag|41|9|Slave")
+        self.assertIsNone(log.take_picked())
+        log.use_settings({"pickpocketed": ["Dag|41|7|Trader@500"]})
+        self.assertEqual(log.picked, {"Dag|41|7|Trader"})
+
+    def test_a_slot_written_during_the_read_is_not_taken(self):
+        """DSCLOG wrote slot 0 while the ring was read: the old entry 5 the read found there may be
+        torn (its seq old, its body new), so it isn't taken, nor 6 in the slot after (being
+        written next): both counted as missed."""
+        log = make_game()
+        log.last_seq = 4
+        m, nent, ring = log.guest.mem, 4, 0x100
+        struct.pack_into("<5H", m, HDR + 8, 8, 0, nent, Entry.SIZE, ring)
+        struct.pack_into("<H", m, HDR + dicelog.TSR_RING_SEG, HDR // 16)
+        for slot, seq in enumerate((5, 6, 7, 8)):
+            struct.pack_into("<HHHH", m, HDR + ring + slot * Entry.SIZE, seq, 0, 0, seq * 10)
+        real, reads = log.guest.read, []
+
+        def read(addr, size):
+            got = real(addr, size)
+            if addr == HDR and size == 24:
+                reads.append(1)
+                if len(reads) == 2:  # (after the ring: seq 9 written in slot 0, slot 1 next)
+                    got = got[:8] + struct.pack("<HH", 9, 1) + got[12:]
+            return got
+        log.guest.read = read
+        self.assertEqual([(e.seq, e.raw) for e in log.poll()], [(7, 70), (8, 80)])
+        self.assertEqual(log.missed, 2)
+
+    def test_size_tables_kept_up_when_a_cosmetic_step_fails(self):
+        log = make_game()
+        log._shadows = mock.Mock()
+        log._shadows.update.side_effect = IndexError("a half-made palette")
+        log._big, log._large = mock.Mock(), mock.Mock()
+        self.assertEqual(log._drawn(1.0), [])
+        log._big.update.assert_called_once_with(log.game, HDR)
+        log._large.update.assert_called_once_with(log.game, HDR)
+        log._big.update.side_effect = ValueError("short read")  # (one table failing: the other still made)
+        log._drawn(2.0)
+        self.assertEqual(log._large.update.call_count, 2)
+
+    def test_a_pick_given_up_on_is_not_carried_out(self):
+        """DSCLOG gave up waiting (its PICK_WAIT) while the Loader held the item gate: nothing is
+        tried, moved or written, and no pocket marked tried."""
+        from dsloader import pickpocket
+        log = make_game()
+        m = log.guest.mem
+        struct.pack_into("<H", m, HDR + dicelog.TSR_USE_ITEM, dicelog.PICKED_BY)
+        struct.pack_into("<H", m, HDR + dicelog.TSR_USE_WHO, 0x30)
+        struct.pack_into("<H", m, HDR + dicelog.TSR_USE_SEQ, 1)
+        struct.pack_into("<H", m, HDR + dicelog.TSR_USE_TAKEN, 7)
+        log.pickpockets = True
+
+        def give_up(gd):  # (the gate's wait: DSCLOG's time ran out meanwhile)
+            struct.pack_into("<H", m, HDR + dicelog.TSR_USE_REPLY, 1)
+        items = mock.Mock()
+        items.return_value.thing.return_value = (2, 5)
+        with mock.patch.object(dicelog.itemgate, "hold", give_up), mock.patch.object(dicelog.ring, "Items", items), \
+                mock.patch.object(log, "_fighting", return_value=False), \
+                mock.patch.object(pickpocket, "attempt") as attempt:
+            self.assertEqual(log._answer_use(), [])
+        attempt.assert_not_called()
+        self.assertEqual(struct.unpack_from("<H", m, HDR + dicelog.TSR_USE_TAKEN)[0], 7)
+        self.assertEqual(log.picked, set())
+        struct.pack_into("<H", m, HDR + dicelog.TSR_USE_SEQ, 2)  # (asked again, and answered in time)
+        with mock.patch.object(dicelog.itemgate, "hold"), mock.patch.object(dicelog.ring, "Items", items), \
+                mock.patch.object(log, "_fighting", return_value=False), \
+                mock.patch.object(pickpocket, "attempt", return_value=pickpocket.Attempt("Dag fumbles.", [])) as attempt:
+            log._answer_use()
+        attempt.assert_called_once()
+        self.assertEqual(struct.unpack_from("<H", m, HDR + dicelog.TSR_USE_REPLY)[0], 2)
+

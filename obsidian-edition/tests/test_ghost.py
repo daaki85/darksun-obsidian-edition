@@ -2,7 +2,6 @@
 
 import struct
 import threading
-import time
 from unittest import mock
 import unittest
 
@@ -92,6 +91,7 @@ class UpdateTests(unittest.TestCase):
         m = self.gd.guest.mem
         struct.pack_into("<H", m, self.HDR + ghost.TSR_HDR_OFF, 0)
         struct.pack_into("<H", m, self.HDR + ghost.TSR_DAC, self.DAC - self.HDR)
+        struct.pack_into("<H", m, self.HDR + ghost.TSR_FAR_SEG, self.HDR // 16)  # (DAC's: the far block)
         m[self.DAC:self.DAC + 768] = grey_palette()
         struct.pack_into("<H", m, self.HDR + ghost.TSR_GHOST_SEG, self.SEG)
         self.redraws = 0
@@ -106,11 +106,8 @@ class UpdateTests(unittest.TestCase):
         g = ghost.Ghosts()
         g.update(self.gd, self.HDR, True, 1, self.redraw)
         self.assertEqual(self.on(), 0)  # (being made)
-        for _ in range(100):
-            time.sleep(0.05)
-            g.update(self.gd, self.HDR, True, 1, self.redraw)
-            if self.on():
-                break
+        self.join_worker(g)
+        g.update(self.gd, self.HDR, True, 1, self.redraw)
         self.assertEqual(self.on(), 1)
         blend, rep = ghost.tables(grey_palette())
         m = self.gd.guest.mem
@@ -127,13 +124,21 @@ class UpdateTests(unittest.TestCase):
         g.update(self.gd, self.HDR, False, 1, self.redraw)
         self.assertEqual(self.on(), 0)
 
+    def join_worker(self, g):
+        """Wait for the thread making the tables to finish (the timeout only a guard against a
+        hang: the test doesn't depend on how fast the machine is)."""
+        self.assertIsNotNone(g._worker)
+        g._worker.join(30)
+        self.assertFalse(g._worker.is_alive(), "tables never made")
+
     def wait_on(self, g, palettes):
-        for _ in range(100):
+        """A pass; if it started making the tables, the thread joined and a pass more, which
+        writes them: GHOST_ON on."""
+        g.update(self.gd, self.HDR, True, palettes, self.redraw)
+        if not self.on():
+            self.join_worker(g)
             g.update(self.gd, self.HDR, True, palettes, self.redraw)
-            if self.on():
-                return
-            time.sleep(0.05)
-        self.fail("tables never made")
+        self.assertEqual(self.on(), 1)
 
     def test_cycling_colours_keep_the_tables(self):
         """DSCLOG's palette copy changing only in the colours the game cycles (fire, water: 1-15,
@@ -203,6 +208,28 @@ class UpdateTests(unittest.TestCase):
             self.assertEqual(self.on(), 0)
             m[self.DAC + 100 * 3] = before
             g.update(self.gd, self.HDR, True, 3, self.redraw)
+        self.assertEqual(self.on(), 1)
+
+    def test_a_failed_build_leaves_no_mark(self):
+        """The tables' build failing in its thread: the palette not left marked as being made
+        (see-through figures off for good there), nor started again every pass; another palette's
+        made as ever. A DAC read short is not taken."""
+        g = ghost.Ghosts()
+        with mock.patch.object(ghost, "tables", side_effect=IndexError("short palette")):
+            g.update(self.gd, self.HDR, True, 1, self.redraw)
+            self.join_worker(g)
+        self.assertIsNone(g._making)
+        worker = g._worker
+        g.update(self.gd, self.HDR, True, 1, self.redraw)
+        self.assertIs(g._worker, worker)  # (not started again)
+        m = self.gd.guest.mem
+        m[self.DAC + 100 * 3] = (m[self.DAC + 100 * 3] + 9) % 64
+        self.wait_on(g, 2)
+        real = self.gd.guest.read
+        self.gd.guest.read = lambda at, n: real(at, n)[:n // 2] if n == 768 else real(at, n)
+        dac = g._dac
+        g.update(self.gd, self.HDR, True, 3, self.redraw)
+        self.assertIs(g._dac, dac)
         self.assertEqual(self.on(), 1)
 
     def test_no_block(self):

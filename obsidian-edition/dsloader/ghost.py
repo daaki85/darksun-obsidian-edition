@@ -32,7 +32,8 @@ from typing import Dict, List, Optional, Sequence, Tuple
 from . import game
 
 TSR_GHOST_SEG, TSR_GHOST_ON = 1826, 1828  # in DSCLOG's header
-TSR_DAC = 238  # (DSCLOG's copy of the palette: the offset of DAC, 768 values of 0-63)
+TSR_DAC = 238  # (DSCLOG's copy of the palette: the offset of DAC in its far block, 768 values of 0-63)
+TSR_FAR_SEG = 142  # (its far block's segment)
 TSR_HDR_OFF = 20
 REP_COUNT = 32
 GH_BLEND, GH_REP = 0, REP_COUNT * 256
@@ -142,15 +143,25 @@ class Ghosts:
         self._table: Optional[bytes] = None
         self._on: Optional[bool] = None
         self._off = False  # (GHOST_ON put to 0 while tables are made, not on again yet)
+        self._worker: Optional[threading.Thread] = None  # (the last thread started to make tables: the tests join it)
+        self._failed: set = set()  # (palettes whose tables couldn't be made)
 
     def _make(self, dac: bytes) -> None:
-        made = tables(dac)
-        with self._lock:
-            self._made[key(dac)] = made
-            while len(self._made) > MADE_KEPT:
-                self._made.popitem(last=False)
-            if self._making == key(dac):  # (its own mark only: another palette's may be being made)
-                self._making = None
+        made = None
+        try:
+            made = tables(dac)
+        except Exception:  # (a palette read wrong: not made, and not tried again)
+            pass
+        finally:  # (a build that fails never leaves its mark: the palette not taken as being made for good)
+            with self._lock:
+                if made is not None:
+                    self._made[key(dac)] = made
+                    while len(self._made) > MADE_KEPT:
+                        self._made.popitem(last=False)
+                else:
+                    self._failed.add(key(dac))  # (not started again and again, each pass)
+                if self._making == key(dac):  # (its own mark only: another palette's may be being made)
+                    self._making = None
 
     def update(self, gd, tsr_hdr: int, on: bool, palettes: int, redraw) -> None:
         """ON: the see-through figures drawn (the stealth rule's or anyone's invisibility); PALETTES
@@ -166,23 +177,26 @@ class Ghosts:
             self._on, self._written, self._palettes = False, None, -1
             return
         if palettes != self._palettes and palettes:
-            base = tsr_hdr - struct.unpack("<H", guest.read(tsr_hdr + TSR_HDR_OFF, 2))[0]
+            far = struct.unpack("<H", guest.read(tsr_hdr + TSR_FAR_SEG, 2))[0] * 16
             dac_off, = struct.unpack("<H", guest.read(tsr_hdr + TSR_DAC, 2))
-            self._dac = guest.read(base + dac_off, 768)
-            self._palettes = palettes
+            dac = guest.read(far + dac_off, 768)
+            if len(dac) == 768:  # (a short read: looked at again next pass)
+                self._dac = dac
+                self._palettes = palettes
         if self._dac is not None and key(self._dac) != self._written:
             wanted = key(self._dac)
             with self._lock:
                 made = self._made.get(wanted)
                 if made is not None:
                     self._made.move_to_end(wanted)
-                start = made is None and self._making != wanted
+                start = made is None and self._making != wanted and wanted not in self._failed
             if start:
                 guest.write(tsr_hdr + TSR_GHOST_ON, struct.pack("<H", 0))  # (till they are made)
                 self._off = True
                 with self._lock:  # (only once the write is made: marked first, a refused write
                     self._making = wanted  # left them marked as being made, and never made)
-                threading.Thread(target=self._make, args=(self._dac,), daemon=True).start()
+                self._worker = threading.Thread(target=self._make, args=(self._dac,), daemon=True)
+                self._worker.start()
             if made is not None:
                 blend, rep = made
                 guest.write(seg * 16 + GH_BLEND, blend)

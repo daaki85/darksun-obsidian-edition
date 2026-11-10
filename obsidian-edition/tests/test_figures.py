@@ -85,6 +85,23 @@ class GearTests(unittest.TestCase):
         sg.draw_belt(out, parts, 42, 2, frozenset((174, 175, 176)))
         self.assertEqual(out[6][2 + 1:2 + 6], [174, 175, sg._by_light(140, sg.BELTS[42]), 175, 174])
 
+    def test_magic_types_glow(self):
+        """The mod's magic gear with no plus or power (the Boots of Speed, Elvenkind, the girdles,
+        the amulet) glows on a figure as magic; plain gear doesn't."""
+        from dsloader import game
+
+        def item(kind, plus=0, power=0):
+            rec = bytearray(game.ITEM_SIZE)
+            struct.pack_into("<H", rec, game.ITEM_TYPE, kind)
+            rec[game.ITEM_PLUS], rec[game.ITEM_POWER] = plus & 0xFF, power
+            return bytes(rec)
+        for kind in (game.SPEED_BOOTS_TYPE, game.ELVEN_CLOAK_TYPE, game.ELVEN_BOOTS_TYPE,
+                     game.BACK_GIRDLE_TYPE, game.URNST_GIRDLE_TYPE, game.MR_AMULET_TYPE):
+            self.assertTrue(sprites._magic(item(kind)), kind)
+        self.assertFalse(sprites._magic(item(0x2C)))
+        self.assertTrue(sprites._magic(item(0x2C, plus=1)))
+        self.assertFalse(sprites._magic(item(0x2C, plus=-1)))
+
     def test_armour_only_where_worn(self):
         """Armour recolours the figure's own clothes (Own.clothes), only where it wore them."""
         rows = [[N, 140, 140, N]] * 3 + [[N, 204, 205, N]] * 4

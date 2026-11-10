@@ -125,7 +125,7 @@ WEAPON_SHAPES: Dict[int, str] = {
     20: MACE, 46: MACE, 30: MACE,
     22: AXE, 2: GREAT_AXE,
     19: POLEARM, 111: POLEARM, 112: POLEARM,
-    44: GYTHKA, 21: CAHULAKS,
+    44: GYTHKA, 21: CAHULAKS, game.METAL_CAHULAKS_TYPE: CAHULAKS, game.OBSIDIAN_CAHULAKS_TYPE: CAHULAKS,
     3: STAFF, 80: STAFF,
     4: SHIELD, 16: SHIELD, 34: SHIELD, 83: SHIELD, game.METAL_SHIELD_TYPE: SHIELD,  # (the last worldgear.py's Ironbulwark)
     0: SLING, 64: SLING, 1: BOW, 69: BOW, 48: CHATKCHA,
@@ -256,8 +256,11 @@ def _shape(shape: str) -> List[Tuple[int, List[Tuple[int, int]]]]:
     if shape == GYTHKA:
         return [(s, [(0, 1)]) for s in range(-5, 6)] + [(6, [(0, 2), (1, 0)]), (7, [(0, 0)]),
                                                         (-6, [(0, 2), (-1, 0)]), (-7, [(0, 0)])]
-    if shape == CAHULAKS:
-        return [(0, [(0, 1)]), (1, [(0, 2), (1, 0)]), (2, [(0, 2), (1, 0)]), (3, [(0, 0)])]
+    if shape == CAHULAKS:  # (a short haft, then a head of four blades, their tips hooked one way)
+        return [(0, [(0, 1)]), (1, [(0, 1)]), (2, [(0, 1)]),
+                (3, [(-2, 0), (0, 1), (2, 2)]),
+                (4, [(-2, 2), (-1, 2), (0, 1), (1, 2), (2, 2)]),
+                (5, [(-2, 2), (0, 2), (2, 0)]), (6, [(0, 0)])]
     if shape == STAFF:
         return [(s, [(0, 1)]) for s in range(-6, 9)] + [(9, [(0, 0)]), (-7, [(0, 0)])]
     return []
@@ -738,7 +741,8 @@ def draw_cloak(rows: Rows, body: Rows, model: int, parts: sp.Parts, item_type: i
 # Boots and belts, recoloured like armour (the artist's pixels kept): boots the feet and lower
 # shins, a belt a band at the waist across the body. Item type: shades, dark to light.
 BOOTS = {68: (204, 207, 205, 194, 206),  # Boots: faded leather
-         game.ELVEN_BOOTS_TYPE: (210, 53, 54, 55, 56)}  # Boots of Elvenkind: soft forest green
+         game.ELVEN_BOOTS_TYPE: (210, 53, 54, 55, 56),  # Boots of Elvenkind: soft forest green
+         game.SPEED_BOOTS_TYPE: (202, 163, 76, 32, 77)}  # Boots of Speed: red
 BELTS = {42: (204, 207, 205, 206), 35: (204, 207, 205, 206)}  # Belt, Belt of Might
 MIGHT_BELT, BUCKLE = 35, 168
 
@@ -934,6 +938,8 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
             hands["left"] = points[1]
     if combat and frame in sp.BOW_FRAMES:
         return out  # (the game draws the bow in the hands)
+    if "left" not in weapons and WEAPON_SHAPES.get(weapons.get("right", (None,))[0]) == CAHULAKS:
+        weapons = dict(weapons, left=weapons["right"])  # (a pair, one in each hand: one item)
     for hand in ("left", "right"):  # (the right drawn last, over the left)
         if hand not in weapons:
             continue

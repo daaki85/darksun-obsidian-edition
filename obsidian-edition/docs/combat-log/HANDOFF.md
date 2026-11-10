@@ -42,8 +42,8 @@ By line kind, as in the Ledger (`palette.LOG_COLOURS`), with names in the Ledger
 
 | Kind | Colour | Example (short level) |
 |---|---|---|
-| hit | `#8FD16A` | `Rampager attacks Defiler: 20 vs 16+ HIT, 2 damage` |
-| miss | `#B4B4C8` | `Gerakis attacks Slig: 5 vs 11+ miss` |
+| hit | `#8FD16A` | `Rampager hits Defiler for 2 (20 vs 16+)` |
+| miss | `#B4B4C8` | `Gerakis misses Slig (5 vs 11+)` |
 | damage / HP | `#FFA600` | `Defiler takes 16 from Acid, now 0/18 HP` · `Cone of Cold damage: 9d6 = 30` |
 | save / magic resistance | `#86ABFF` | `Slig saves vs Cone of Cold: d20 = 9, needs 16 -> failed` |
 | turn | `#D3A28A` | `Rampager's turn` |

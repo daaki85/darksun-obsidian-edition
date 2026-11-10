@@ -14,7 +14,7 @@ the Loader:
 - with the class restrictions, leaves a multiclass preserver's armour out (it can't cast in it;
   the shield stays);
 - gives a sling for the missile slot to one with no missile weapon (a Battle Dancer or Spellarcher a bow and
-  arrows; a fire cleric, who can't use one, an obsidian chatkcha for the backpack);
+  arrows; a fire or earth cleric, who can't use one, a chatkcha of its material for the backpack);
 - fills its empty chest, arm and leg slots with leather armour, where it may wear it (not a
   multiclass preserver, for its spells);
 - gives a Stalker, Assassin or Shinobi a plain cloak.

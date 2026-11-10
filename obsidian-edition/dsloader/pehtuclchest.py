@@ -31,6 +31,7 @@ test_pehtuclchest; Legcrusher's 797 after them). The chest, its cloak and its US
 command come with a new game: a save keeps the pens' objects and commands as they were made.
 """
 
+import os
 import struct
 from typing import Dict, List, Optional, Tuple
 
@@ -41,6 +42,7 @@ SCRIPT = 223  # the chest's (the game's run to 217; the Loader's: Kalzith's 218,
 USE = 0x6D  # (place in a script, script, object): what using the object runs (the cell doors': script 138)
 OBJECT = npcitems.PEHTUCL_CHEST
 DISARMED, UNLOCKED = 795, 796  # the Loader's flags: the needle gone; the lock open
+NEEDLE_SPRUNG = "poisoned needle"  # (in both lines that spring it: the dice log finds them by it)
 TRAP_OBJECT, GAME_TRAP = 2667, 2039  # the poison needle (past the champions' 2660-2666), and its model
 NEEDLE_DICE, NEEDLE_REACH, POISON_KIND = 2, 0, 0  # 2d6, on its square only, poison (DS:251Ch's first)
 TRAP_BYTE = 0x0F  # (the trap object's descriptor, where an item has its spell)
@@ -86,6 +88,11 @@ def script() -> bytes:
     def needle():
         s.op(LOCATE, ACTING)
         s.op(gpl.DO_ACTION, ("n", gpl.ACTION_TRAP), ("n", -TRAP_OBJECT), *WHERE)
+        # the game shows nothing when the party's best at traps avoids it: the Loader, seeing that
+        # roll, sets DISARMED (clear until now: the needle is sprung only while it is) before the
+        # click, and it is told
+        s.op(0x4F, ("n", NARRATION), kalzith.MORE)
+        s.when(kalzith._is(_flag(DISARMED), 1), lambda: tell("The needle is seen in time, and it hurts no one. "))
         s.flag(DISARMED, 1)
 
     def opened():
@@ -175,21 +182,58 @@ def _chest(gd) -> Optional[int]:
 _seen: Optional[int] = None  # (where the chest's record was last found)
 
 
-def watch(gd) -> List[str]:
+# the scripts the game runs: the Loader's copy (the game reads its scripts from it as it goes)
+SCRIPTS_COPY = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos", kalzith.SCRIPTS_FILE)
+_use_known: Tuple[Optional[Tuple[float, int]], bool] = (None, False)
+
+
+def has_use(path: str = SCRIPTS_COPY) -> bool:
+    """Whether the scripts the game runs (PATH, the Loader's copy) have the chest's USE command in
+    the pens' master script: with "New items" off, or a copy that wasn't written, they don't, and
+    nothing would ever open a shut chest. Read again only when the file changes."""
+    global _use_known
+    from . import gff
+    try:
+        st = os.stat(path)
+        key = (st.st_mtime, st.st_size)
+    except OSError:
+        return False
+    if _use_known[0] == key:
+        return _use_known[1]
+    try:
+        with open(path, "rb") as f:
+            master = gff.read_gff(f.read()).get(("MAS ", kalzith.MASTER), b"")
+    except (OSError, ValueError, struct.error, gff.GffError):
+        return False
+    found = gpl.encode_op((USE, [("n", kalzith.START), ("n", SCRIPT), ("n", -OBJECT)])) in master
+    _use_known = (key, found)
+    return found
+
+
+def watch(gd, scripted=None) -> List[str]:
     """Each pass: once UNLOCKED is set (the script, as the lock gives), the chest a chest again
-    (CHEST_TYPE), so the game opens it as the script ends and ever after. No lines."""
+    (CHEST_TYPE), so the game opens it as the script ends and ever after; until then, shut
+    (SHUT_TYPE). A game that came to the pens before 2.14.0 has the game's plain chest, made
+    then, with the USE command all the same (the pens' master script is read anew): its script
+    said "You must be next to the chest" and the game opened it anyway (seen in DOSBox, a
+    player's save). Shut, it is locked and trapped as in a new game. Only while the game's scripts
+    have its USE command (SCRIPTED, else has_use()): without it (New items off, or no scripts
+    copy) nothing would ever open it, so it is kept the game's plain chest (a save's shut one made
+    one again). No lines."""
     global _seen
-    if gd.region() != REGION or not gd.flags_ready() or not gd.flag(UNLOCKED):
+    if gd.region() != REGION or not gd.flags_ready():
         return []
+    locked = not gd.flag(UNLOCKED) and (has_use() if scripted is None else scripted)
+    want, other = (SHUT_TYPE, CHEST_TYPE) if locked else (CHEST_TYPE, SHUT_TYPE)
     if _seen is not None and gd.guest.read(_seen, 2) == struct.pack("<h", -OBJECT) \
-            and struct.unpack("<H", gd.guest.read(_seen + game.ITEM_TYPE, 2))[0] == CHEST_TYPE:
-        return []  # (a chest already where it was last seen: the table not scanned each pass)
+            and struct.unpack("<H", gd.guest.read(_seen + game.ITEM_TYPE, 2))[0] == want:
+        return []  # (as it should be, where it was last seen: the table not scanned each pass)
     at = _chest(gd)
     _seen = at
-    if at is None or struct.unpack("<H", gd.guest.read(at + game.ITEM_TYPE, 2))[0] != SHUT_TYPE:
+    if at is None or struct.unpack("<H", gd.guest.read(at + game.ITEM_TYPE, 2))[0] != other:
         return []
     itemgate.hold(gd)  # (an item record: as the game leaves its lists)
-    gd.guest.write(at + game.ITEM_TYPE, struct.pack("<H", CHEST_TYPE))
+    gd.guest.write(at + game.ITEM_TYPE, struct.pack("<H", want))
     return []
 
 

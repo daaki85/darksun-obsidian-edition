@@ -57,7 +57,29 @@ def load_image():
     image[268:270] = struct.pack("<H", RING_SEG)  # (the ring's segment, as DSCLOG's install sets it,
     image[138:140] = struct.pack("<H", RING_SEG)  # and the far block's: the text buffer's and the
     image[142:144] = struct.pack("<H", RING_SEG)  # other buffers', FAR_SEG)
-    return bytes(image)
+    image[1834:1836] = struct.pack("<H", TSR + struct.unpack_from("<H", image, 1836)[0])  # (the tail's
+    return bytes(image)                           #   segment, TAIL_SEG: past the image, as loaded)
+
+
+def vector_table(image):
+    """DSCLOG's ALL_VECTORS, as its install sets them: {vector: (where its entry is, the handler)};
+    the table is at the header's +144 in the image (+174 0: no FAR_DATA before it now)."""
+    hdr = struct.unpack_from("<H", image, 20)[0]
+    src, = struct.unpack_from("<H", image, hdr + 144)
+    n, = struct.unpack_from("<H", image, hdr + 174)
+    table, at = {}, src + n
+    while at + 3 <= len(image) and image[at]:
+        assert image[at] not in table, hex(image[at])  # (each vector once: its own probe's)
+        table[image[at]] = (at, struct.unpack_from("<H", image, at + 1)[0])
+        at += 3
+    return table
+
+
+def install_at(image, vector):
+    """Where VECTOR's handler is named in the install's table, less 4 (as "mov ax,25xxh / mov dx,"
+    named it before the table: the handler is the word at the result + 4); -1 if none."""
+    found = vector_table(image).get(vector)
+    return found[0] - 3 if found else -1
 
 
 def fill_probes(image):
@@ -116,6 +138,10 @@ class HeaderTests(unittest.TestCase):
         need, = struct.unpack_from("<H", image, hdr + heapcheck.TSR_UMB_NEED)
         self.assertGreater(need, heapcheck.OVR_PARAS)
         self.assertLessEqual(need, heapcheck.UMB_ROOM)
+        # (the helper as loaded is the whole image, its tail too, past the header's +1836 paragraphs)
+        tail_paras, = struct.unpack_from("<H", image, hdr + 1836)
+        self.assertGreater(len(image), tail_paras * 16)
+        self.assertGreaterEqual((need - heapcheck.OVR_PARAS - 2 - 0x10) * 16, len(image) + 256)
 
 
 @unittest.skipIf(Uc is None, "unicorn is not installed")
@@ -185,6 +211,7 @@ class StubTests(unittest.TestCase):
             self.assertEqual(e.code, after)
             self.assertEqual(e.parent_code, bytes(range(50, 66)))
             self.assertEqual(e.parent_locals, bytes(range(150, 190)))
+            self.assertTrue(e.target_state & Entry.HELD_MARK)  # (a roll: the target's state marked, +188)
 
         seq, widx, nent = struct.unpack("<HHH", mu.mem_read(TSR * 16 + hdr_off + 8, 6))
         self.assertEqual((seq, widx), (70, 70 % nent))
@@ -603,10 +630,8 @@ class UseItemTests(unittest.TestCase):
         from dsloader.gamepatch import VEC_GHOST
         mu, calls = self.mu, []
         image = load_image()
-        install = bytes((0xB8, VEC_GHOST, 0x25, 0xBA))  # (the install's mov ax,25xxh / mov dx: once,
-        at = image.find(install)                         #   its vector no other probe's)
-        self.assertGreater(at, 0)
-        self.assertEqual(image.find(install, at + 1), -1)
+        at = install_at(image, VEC_GHOST)  # (the install's table: once, its vector no other probe's,
+        self.assertGreater(at, 0)          #   as VECTOR_TABLE checks)
         handler = struct.unpack_from("<H", image, at + 4)[0]
         draw = (GAME_DS - 0x4356 + 0x1A0A) * 16 + 0x3180
         mu.mem_write(draw, b"\xcb")  # retf
@@ -656,8 +681,7 @@ class UseItemTests(unittest.TestCase):
         image = load_image()
 
         def handler(vector):
-            install = bytes((0xB8, vector, 0x25, 0xBA))
-            at = image.find(install)
+            at = install_at(image, vector)
             self.assertGreater(at, 0)
             return struct.unpack_from("<H", image, at + 4)[0]
         ghost_at, redraw_at = handler(VEC_GHOST), handler(VEC_REDRAW_ALL)
@@ -704,7 +728,7 @@ class UseItemTests(unittest.TestCase):
         from dsloader.gamepatch import VEC_REDRAW_ALL
         mu = self.mu
         image = load_image()
-        at = image.find(bytes((0xB8, VEC_REDRAW_ALL, 0x25, 0xBA)))
+        at = install_at(image, VEC_REDRAW_ALL)
         self.assertGreater(at, 0)
         redraw_at = struct.unpack_from("<H", image, at + 4)[0]
         seg, site = 0x8800, 0x0600
@@ -741,7 +765,7 @@ class UseItemTests(unittest.TestCase):
         from dsloader.gamepatch import VEC_GHOST
         mu = self.mu
         image = load_image()
-        at = image.find(bytes((0xB8, VEC_GHOST, 0x25, 0xBA)))
+        at = install_at(image, VEC_GHOST)
         handler = struct.unpack_from("<H", image, at + 4)[0]
         seg = 0x8800
         end = ghost.GH_TAB + 80 + 4096 + 192 * 8  # (GH_SPANS past GH_PIX's 4096, then 192 spans)
@@ -779,7 +803,7 @@ class UseItemTests(unittest.TestCase):
         from dsloader.gamepatch import VEC_GHOST
         mu = self.mu
         image = load_image()
-        at = image.find(bytes((0xB8, VEC_GHOST, 0x25, 0xBA)))
+        at = install_at(image, VEC_GHOST)
         handler = struct.unpack_from("<H", image, at + 4)[0]
         seg = 0x8800
         mu.mem_write(seg * 16, bytes(ghost.GH_TAB + 80))
@@ -1339,6 +1363,9 @@ class ScriptRandTests(unittest.TestCase):
         self.assertEqual((e.kind, e.raw & 0xFF, e.raw >> 8 & 0xFF, e.extra), (5, 0x7000 * 11 >> 15, 10, 2116))
         self.assertEqual((e.arg(2), e.arg(4), e.arg(6)), (4, 3, 2))
         self.assertEqual((e.ip, e.cs), (0x602, CALLER))  # (the code after the INT)
+        # the attack's target as the entry was made (HELPLESS_OF, HELD's tests cover its Paralyzed and
+        # Out Cold) only for a roll, a save or an AC (kinds 0-2): a script's roll has none, unmarked
+        self.assertEqual(e.target_state, 0)
 
 
 @unittest.skipIf(Uc is None, "needs unicorn")
@@ -1393,10 +1420,12 @@ class OverlayBufferTests(unittest.TestCase):
 @unittest.skipIf(Uc is None, "unicorn is not installed")
 class SteadyPaceTests(unittest.TestCase):
     """STEADY PACE (PROBE_PACE_PASS, PROBE_PACE_DRAW) in place of the map's frame's two far calls:
-    a frame a frame or more behind the schedule (70 a second on the game's clock) left undrawn, its
-    list of what moved kept for the next frame drawn; a fight's frames all drawn."""
+    the steps lost since the last frame (the clock's ticks less the steps run, a step running when
+    the timer's flag DS:1F7Eh is set) counted against an allowance of 1.5 ticks a frame; while more
+    are lost, a frame left undrawn, its list of what moved kept for the next frame drawn; a fight's
+    frames all drawn."""
     GAME = 0x6000  # (the game's code segment, as relocated: the routines' stand-ins at 26DCh and 15EAh)
-    CLOCK, LIST = 0x11D6, 0x57D0
+    CLOCK, LIST, DUE = 0x11D6, 0x57D0, 0x1F7E
     FIGHT = (GAME_DS - (0x4356 - 0x377E)) * 16 + 0x19  # (the fight's state's +19h: not 0 in a fight)
 
     def setUp(self):
@@ -1449,10 +1478,12 @@ class SteadyPaceTests(unittest.TestCase):
         return [struct.unpack_from("<5H", self.mu.mem_read(GAME_DS * 16 + self.LIST, n * 10), i * 10)
                 for i in range(n)]
 
-    def step(self, clock, moved=0):
-        """The step called at CLOCK, "something moved" MOVED before it: what it is after."""
+    def step(self, clock, moved=0, due=0):
+        """The step called at CLOCK, "something moved" MOVED before it and the timer's flag DUE:
+        what "something moved" is after."""
         mu = self.mu
         mu.mem_write(GAME_DS * 16 + self.CLOCK, struct.pack("<I", clock))
+        mu.mem_write(GAME_DS * 16 + self.DUE, struct.pack("<H", due))
         mu.mem_write(GAME_DS * 16 + 0xF010, struct.pack("<HH", moved, 7))
         self.run_at(0x100, (100, 50, 0, 0x0E00, 0))
         self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 7)
@@ -1461,23 +1492,33 @@ class SteadyPaceTests(unittest.TestCase):
     A, B, C = (10, 20, 16, 30, 1), (40, 20, 16, 30, 2), (80, 90, 16, 30, 3)
 
     def test_on_schedule(self):
-        """A frame each tick (sooner than the schedule's 70 a second): every one drawn, as the game's."""
+        """A step every tick, a frame after each: no step lost, every frame drawn, as the game's."""
         for t in range(1000, 1020):
+            self.step(t, due=1)
             self.assertEqual(self.frame(t, [self.A, self.B]), (2, 1))
 
+    def test_within_the_allowance(self):
+        """A frame that loses a step (1 tick: less than the allowance of 1.5) is always drawn."""
+        for t in range(1000, 1040, 2):
+            self.step(t, due=1)
+            self.assertEqual(self.frame(t, [self.A]), (1, 1))
+
     def test_behind(self):
-        """A frame behind: left undrawn (AX 1, as drawn), its list kept; the next drawn with its own
-        list and the kept one after it."""
+        """A frame that lost more than the allowance: the next left undrawn (AX 1, as drawn), its list
+        kept; the next drawn with its own list and the kept one after it."""
         self.assertEqual(self.frame(1000, [self.A]), (1, 1))  # (the first: the schedule starts)
-        self.assertEqual(self.frame(1003, [self.A, self.B]), (None, 1))  # (3 ticks: 114 of 96 behind)
-        self.assertEqual(self.frame(1003, [self.C]), (3, 1))  # (18 behind: drawn)
+        self.step(1003, due=1)
+        self.assertEqual(self.frame(1003, [self.A, self.B]), (None, 1))  # (2 of 3 ticks lost)
+        self.assertEqual(self.frame(1003, [self.C]), (3, 1))  # (none lost since: drawn)
         self.assertEqual(self.listed(3), [self.C, self.A, self.B])
+        self.step(1004, due=1)
         self.assertEqual(self.frame(1004, [self.C]), (1, 1))  # (nothing kept now)
 
     def test_fight(self):
         """In a fight (the fight's state's +19h, the game's own test) every frame drawn."""
         self.frame(1000, [self.A])
         self.assertEqual(self.frame(1003, [self.A, self.B], combat=1), (2, 1))
+        self.assertEqual(self.frame(1006, [self.A, self.B], combat=1), (2, 1))
 
     def test_kept_drawn_alone(self):
         """With a list kept, the step sets "something moved" once it has waited PACE_HOLD ticks (2), so
@@ -1492,14 +1533,14 @@ class SteadyPaceTests(unittest.TestCase):
         self.assertEqual(self.step(1010, moved=1), 1)
 
     def test_pause(self):
-        """After a pause (8 ticks or more: a load, a talk) the schedule starts afresh (the kept list
+        """After a pause (24 ticks or more: a load, a talk) the schedule starts afresh (the kept list
         drawn with the next frame); nothing to draw at all: the drawing not called (AX 1)."""
         self.frame(1000, [self.A])
         self.assertEqual(self.frame(1003, [self.B]), (None, 1))
-        self.assertEqual(self.frame(1020, []), (1, 1))
+        self.assertEqual(self.frame(1030, []), (1, 1))
         self.assertEqual(self.listed(1), [self.B])
-        self.assertEqual(self.frame(1021, []), (None, 1))
-        self.assertEqual(self.frame(1022, [self.C]), (1, 1))
+        self.assertEqual(self.frame(1031, []), (None, 1))
+        self.assertEqual(self.frame(1032, [self.C]), (1, 1))
 
     def test_kept_most(self):
         """At most 64 entries kept: a frame that would keep more is drawn."""
@@ -1514,7 +1555,7 @@ class KindTableTests(unittest.TestCase):
         """DSCLOG's weapon kinds by item type are specialize.py's."""
         from dsloader import specialize
         image = load_image()
-        want = bytearray(140)
+        want = bytearray(148)
         for t, k in specialize.KIND_OF_TYPE.items():
             want[t] = k + 1
         self.assertGreater(image.find(bytes(want)), 0)
@@ -1893,18 +1934,19 @@ class SpecializeTests(unittest.TestCase):
                 sheet[0x21:0x24], sheet[0x24:0x27] = bytes(classes), bytes(levels)
                 self.assertEqual(specialize.missile_attacks(halves, specialize.skill(bytes(sheet), weapon), weapon,
                                                             bytes(sheet)), want[0])
-        # K'ratchek (the game's own party's thri-kreen: kits.OWN_BIT) one more chatkcha throw a round, with
-        # weapon specialization or without, its kind chosen or not; not with the kits off, another
-        # missile weapon, or without the bit
+        # any thri-kreen one more chatkcha throw a round (AD&D's 2/1; K'ratchek's alone, kits.OWN_BIT with
+        # the kits on, until 2026-11-10), with weapon specialization or without, its kind chosen or not,
+        # whatever the rules; not with another missile weapon, nor anyone else
         from dsloader import kits
         both, kits_on = 4096 | game.RULE_KITS, game.RULE_KITS
-        for rules, weapon, kit, chosen, want in ((both, CHATKCHA, kits.OWN_BIT, (), 4), (kits_on, CHATKCHA, kits.OWN_BIT, (), 4),
-                                                 (both, CHATKCHA, kits.OWN_BIT, (12,), 5),
-                                                 (both, SLING, kits.OWN_BIT, (), 2), (both, CHATKCHA, 0, (), 2),
-                                                 (4096, CHATKCHA, kits.OWN_BIT, (), 2)):
-            with self.subTest(rules=rules, weapon=weapon, kit=kit, chosen=chosen):
+        for rules, weapon, kit, chosen, race, want in (
+                (both, CHATKCHA, kits.OWN_BIT, (), 8, 4), (kits_on, CHATKCHA, kits.OWN_BIT, (), 8, 4),
+                (both, CHATKCHA, kits.OWN_BIT, (12,), 8, 5), (both, SLING, kits.OWN_BIT, (), 8, 2),
+                (both, CHATKCHA, 0, (), 8, 4), (4096, CHATKCHA, kits.OWN_BIT, (), 8, 4), (0, CHATKCHA, 0, (), 8, 4),
+                (both, CHATKCHA, 0, (), 1, 2)):
+            with self.subTest(rules=rules, weapon=weapon, kit=kit, chosen=chosen, race=race):
                 self.assertEqual(self.attack(2, weapon, chosen=chosen, classes=(9, 7, 12), levels=(2, 2, 2),
-                                             missile=True, race=8, kit=kit, rules=rules)[0], want)
+                                             missile=True, race=race, kit=kit, rules=rules)[0], want)
         # (a human ranger turned preserver: no bow expertise until the preserver level passes the ranger's)
         self.assertEqual(self.attack(4, BOW, chosen=(0,), classes=(11, 13, 0), levels=(3, 5, 0), missile=True,
                                      race=1), (4, 15, 3, 8))
@@ -1974,6 +2016,41 @@ class SpecializeTests(unittest.TestCase):
                 mu.emu_start(CALLER * 16 + 0x600, CALLER * 16 + 0x604)
                 self.assertEqual(mu.reg_read(r.UC_X86_REG_SP), 0x7F6)
                 self.assertEqual(mu.reg_read(r.UC_X86_REG_AX) & 0xFF, want)
+
+    def test_item_box_material(self):
+        """An item box's "Hit -N" (PROBE_ITEM_BOX's IB_MATERIAL: ES:BX the type, [BP+6] the item): a
+        weapon (dice at +0Dh) with no plus (the item's +14h), its type not marked 80h (clubs, staves)
+        nor 40h (no material), of wood -3, bone -1, stone or obsidian -2; else none (DX 0)."""
+        mu = self.mu
+        image = load_image()
+        at = image.find(bytes.fromhex("31d226807f0d00"))  # (xor dx,dx / cmp byte [es:bx+0Dh],0)
+        self.assertGreater(at, 0)
+        items = 0x3000  # (DS:165Dh's far pointer to the items, 15h bytes each)
+        mu.mem_write(self.DS * 16 + 0x165D, struct.pack("<HH", 0, items))
+        mu.mem_write(TSR * 16 + 0xFFF0, b"\xf4")  # (the way back: a HLT)
+        for material, dice, plus, want in ((1, 1, 0, "Hit -1"), (0, 1, 0, "Hit -3"), (2, 2, 0, "Hit -2"),
+                                           (3, 1, 0, "Hit -2"), (4, 1, 0, None), (5, 1, 0, None),
+                                           (0x81, 1, 0, None), (0x40, 1, 0, None), (1, 0, 0, None),
+                                           (1, 1, 1, None)):
+            with self.subTest(material=material, dice=dice, plus=plus):
+                typ = bytearray(0x14)
+                typ[8], typ[0x0D] = material, dice
+                mu.mem_write(self.SHEETS * 16, bytes(typ))
+                item = bytearray(0x15)
+                item[0x14] = plus
+                mu.mem_write(items * 16 + 2 * 0x15, bytes(item))
+                mu.mem_write(SS * 16 + BP + 6, struct.pack("<H", 2))
+                mu.mem_write(SS * 16 + 0x7F4, struct.pack("<H", 0xFFF0))
+                for name, value in dict(cs=TSR, ds=self.DS, ss=SS, esp=0x7F4, ebp=BP, eflags=IF | 2, eax=0x1234,
+                                        ebx=0, es=self.SHEETS).items():
+                    mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+                mu.emu_start(TSR * 16 + at, 0, count=200)
+                self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_IP, r.UC_X86_REG_SP, r.UC_X86_REG_AX,
+                                                           r.UC_X86_REG_BX, r.UC_X86_REG_ES)],
+                                 [0xFFF1, 0x7F6, 0x1234, 0, self.SHEETS])
+                dx = mu.reg_read(r.UC_X86_REG_DX)
+                got = bytes(mu.mem_read(TSR * 16 + dx, 8)).split(b"\0")[0].decode() if dx else None
+                self.assertEqual(got, want)
 
     def test_off_hand_attacks(self):
         """With the rule for two weapons (AD&D's), a weapon in the off hand (the item at [BP+12h], in
@@ -2604,7 +2681,8 @@ class KindsAllowedTests(unittest.TestCase):
                game.METAL_MACE_TYPE: (1, 4, 0x1672), game.METAL_GREAT_AXE_TYPE: (1, 4, 0x1662),
                game.METAL_PICK_TYPE: (1, 4, 0x1772), game.METAL_POLEARM_TYPE: (1, 4, 0x1672),
                game.AIR_DAGGER_TYPE: (1, 4, 0x1FF3), game.BONE_GREAT_AXE_TYPE: (1, 1, 0x1668),
-               game.OBSIDIAN_GREAT_AXE_TYPE: (1, 3, 0x166E), game.BONE_DAGGER_TYPE: (1, 1, 0x1FFA)}
+               game.OBSIDIAN_GREAT_AXE_TYPE: (1, 3, 0x166E), game.BONE_DAGGER_TYPE: (1, 1, 0x1FFA),
+               game.METAL_CAHULAKS_TYPE: (1, 4, 0x167B), game.OBSIDIAN_CAHULAKS_TYPE: (1, 3, 0x167F)}
     TYPES = 0x8000  # (segment)
 
     def record(self, t):
@@ -2625,7 +2703,7 @@ class KindsAllowedTests(unittest.TestCase):
         mu.mem_write(TSR * 16, image)
         mu.mem_write(TSR * 16 + 0xFFF0, bytes((0xF4,)))  # (hlt: where KINDS_ALLOWED returns)
         mu.mem_write(GAME_DS * 16 + 0x1669, struct.pack("<HH", 0, self.TYPES))
-        mu.mem_write(self.TYPES * 16, b"".join(self.record(t) for t in range(140)))
+        mu.mem_write(self.TYPES * 16, b"".join(self.record(t) for t in range(148)))  # (KIND_TYPES: the game's and the Loader's)
         sheet = test_restrict.sheet
         combos = [(9,), (13,), (10,), (11,), (12,), (17,), (9, 12), (9, 17), (9, 11), (13, 5), (13, 12)]
         for c in range(1, 5):
@@ -2735,7 +2813,7 @@ class KindsAllowedTests(unittest.TestCase):
         self.assertIn(specialize.KINDS.index("bow"), restrict.allowed_kinds(sheet(9), self.record))
         fire = restrict.allowed_kinds(sheet(9, 3), self.record)
         self.assertEqual([specialize.KINDS[k] for k in fire],
-                         ["long sword", "dagger", "short sword", "mace", "axe", "great axe", "chatkcha"])
+                         ["long sword", "dagger", "short sword", "mace", "axe", "great axe", "cahulaks", "chatkcha"])
 
 
 @unittest.skipIf(Uc is None, "unicorn is not installed")
@@ -2925,8 +3003,8 @@ class RuleTests(RingTests):
     def setUp(self):
         super().setUp()
         image = load_image()
-        def handler(vector):  # (the helper's install code: "mov ax,25xxh / mov dx,handler")
-            at = image.find(bytes((0xB8, vector, 0x25, 0xBA)))
+        def handler(vector):  # (the helper's install table: the vector, its handler)
+            at = install_at(image, vector)
             return struct.unpack_from("<H", image, at + 4)[0] if at > 0 else -1
         two, double = handler(VEC_TWO), handler(VEC_DOUBLE)
         self.assertGreater(min(two, double), 0)
@@ -2971,6 +3049,32 @@ class RuleTests(RingTests):
         self.hands()
         self.assertEqual([self.two(adj, 4) for adj in (-3, 0, 1, 2, 5)], [-5, -2, -1, 0, 0])
         self.assertEqual([self.two(adj, 7) for adj in (-3, 0, 2, 3, 4, 5)], [-7, -4, -2, -1, 0, 0])
+
+    def test_cahulaks(self):
+        """The cahulaks' rule (RULES_HI 8192): the cahulaks (type 21) in the right hand alone are two
+        weapons, AD&D's numbers whatever the two-weapon rule: the main head's -2 plus the DEX adjustment, no
+        better than 0, and CAH_EXTRA how much worse the off head's (-4 plus it) is, for attacker CX
+        (CAH_WHO); without the rule as the game's."""
+        import test_dsclog_drawing as tdd
+        _, sym = tdd.build()
+        self.hands(right=(21, 3), left=(90, 99))
+        rules_hi = TSR * 16 + self.RULES + 100
+        def extra():
+            return struct.unpack("<hh", self.mu.mem_read(TSR * 16 + sym["cah_extra"], 4))
+        try:
+            for rules in (0, 4):
+                self.rules(rules)
+                self.mu.mem_write(rules_hi, struct.pack("<H", 8192))
+                for adj, main, off in ((-3, -5, -7), (0, -2, -4), (1, -1, -3), (2, 0, -2), (3, 0, -1), (5, 0, 0)):
+                    self.assertEqual(self.two(adj, 4), main, (rules, adj))
+                    self.assertEqual(extra(), (main - off, 3), (rules, adj))
+            self.mu.mem_write(rules_hi, struct.pack("<H", 0))
+            self.rules(4)
+            self.assertEqual(self.two(0, 4), 0)  # (nothing in the other hand: none, as ever)
+            self.rules(0)
+            self.assertEqual(self.two(-6, 4), 6)  # (the game's)
+        finally:
+            self.mu.mem_write(rules_hi, struct.pack("<H", 0))
 
     def test_twin_blade(self):
         """A Twin-blade (kits on): no AD&D two-weapon penalty, as kits.py's; the game's own bonus
@@ -3040,7 +3144,7 @@ class RuleTests(RingTests):
         image = load_image()
         from dsloader import gamepatch
         VEC_CR_SPELLS = gamepatch.VEC_CR_SPELLS
-        at = image.find(bytes((0xB8, VEC_CR_SPELLS, 0x25, 0xBA)))
+        at = install_at(image, VEC_CR_SPELLS)
         self.assertGreater(at, 0)
         self.mu.mem_write(VEC_CR_SPELLS * 4, struct.pack("<HH", struct.unpack_from("<H", image, at + 4)[0], TSR))
         self.hands()
@@ -3256,6 +3360,18 @@ class RuleTests(RingTests):
         self.assertEqual([self.two_handed(r) for r in (5, 1)], [True, False])
         self.assertEqual([self.two_handed(r, flags=0) for r in (5, 1)], [True, True])
 
+    def test_half_giants_cahulaks_take_both_hands(self):
+        """The cahulaks (type 21: a blade in each hand) take both hands, a half-giant's too; the
+        type found by its place in the table (DS:1669h), whichever segment names it."""
+        self.rules(512)
+        base = 0x300 - 21 * 20  # (the table's start, so that ES:BX is type 21)
+        self.mu.mem_write(GAME_DS * 16 + 0x1669, struct.pack("<HH", base, self.TYPES))
+        self.assertEqual([self.two_handed(r) for r in (5, 1)], [False, False])
+        self.mu.mem_write(GAME_DS * 16 + 0x1669, struct.pack("<HH", base + 0x10, self.TYPES - 1))  # (same place)
+        self.assertEqual(self.two_handed(5), False)
+        self.mu.mem_write(GAME_DS * 16 + 0x1669, struct.pack("<HH", base + 20, self.TYPES))  # (type 20 there)
+        self.assertEqual(self.two_handed(5), True)
+
     def tu_info_at(self, image):
         """The helper's TU_INFO (TSR's segment), from PROBE_SPELL_TEXT: three pops, "add sp,0Ch",
         three pushes, then "mov byte [cs:tu_info],0" and IRET; and the probe's offset."""
@@ -3426,7 +3542,7 @@ class NewSpellTests(RuleTests):
     def setUp(self):
         super().setUp()
         image = load_image()
-        at = image.find(bytes((0xB8, 0x98, 0x25, 0xBA)))
+        at = install_at(image, 0x98)
         self.assertGreater(at, 0)
         self.mu.mem_write(0x98 * 4, struct.pack("<HH", struct.unpack_from("<H", image, at + 4)[0], TSR))
         # (NS_SETUP's tables: the game's spell levels, records and effects, all zero here)
@@ -3591,6 +3707,385 @@ class NewSpellTests(RuleTests):
         self.assertEqual(hold(1, 40), 3)
         self.assertEqual(hold(0, 31), (0x7A1F0 - 0x7A333) & 0xFFFF)
         self.assertEqual(hold(0, 40), 0x7A359 - 0x7A333)
+
+    def test_classless_save_level(self):
+        """HD_SAVE (79D8Ch, "mov [bp-6],ax", AX the level routine's answer, the target's sheet at
+        [BP-0Eh] far): the level stored; a 0 for a creature with no class (+21h..23h) its hit dice
+        (+24h) instead; a classed creature's 0 kept."""
+        from dsloader import gamepatch
+        patch = next(p for p in gamepatch.PATCHES if p.name == "classless_save_level")
+        self.assertEqual((patch.offset, patch.replacement[2]), (0x79D8C, gamepatch.HD_SAVE_SITE))
+        mu = self.mu
+        mu.mem_write(SS * 16 + BP - 0x0E, struct.pack("<HH", 0x100, 0xA000))
+        def level(ax, classes, hd):
+            mu.mem_write(0xA000 * 16 + 0x100 + 0x21, bytes(classes) + bytes((hd, 0, 0)))
+            mu.mem_write(SS * 16 + BP - 6, struct.pack("<H", 0x5555))
+            self.at += 0x20
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, patch.replacement)
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, eax=ax,
+                                    ebx=0x2222, es=0x4444).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(start, start + len(patch.replacement))
+            self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_BX, r.UC_X86_REG_ES, r.UC_X86_REG_SP)],
+                             [0x2222, 0x4444, 0x800])
+            return struct.unpack("<h", mu.mem_read(SS * 16 + BP - 6, 2))[0]
+        self.assertEqual(level(5, (1, 0, 0), 5), 5)  # (a classed creature: the routine's)
+        self.assertEqual(level(0, (0, 0, 0), 12), 12)  # (an elemental of 12 HD)
+        self.assertEqual(level(0, (0, 0, 3), 12), 0)  # (a class: its 0 kept)
+        self.assertEqual(level(0, (0, 2, 0), 12), 0)
+        self.assertEqual(level(7, (0, 0, 0), 12), 7)  # (a human's +24h, the routine's)
+
+    def test_color_spray_level(self):
+        """SPRAY_SITE (79F83h, Dismissal's "cmp word [bp+14h],3Ch / jnz", 6 bytes; SI the modifier,
+        [BP+14h] the spell, [BP+16h] the caster's level, [BP-6] the target's): Color Spray (4) on a
+        target of the caster's level or lower: -100; higher, or another spell: none. Then Dismissal
+        (3Ch) on to its case (79F89h), any other spell past it (79F95h)."""
+        from dsloader import gamepatch
+        patch = next(p for p in gamepatch.PATCHES if p.name == "color_spray_level")
+        self.assertEqual((patch.offset, patch.replacement[2]), (0x79F83, gamepatch.SPRAY_SITE))
+        mu = self.mu
+        def spray(spell, caster, target):
+            mu.mem_write(SS * 16 + BP + 0x14, struct.pack("<HH", spell, caster))
+            mu.mem_write(SS * 16 + BP - 6, struct.pack("<h", target))
+            self.at += 0x40
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, patch.replacement)
+            for back in (6, 0x79F95 - 0x79F83):  # (a HLT at each way out)
+                mu.mem_write(start + back, b"\xf4")
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, eax=0x1234,
+                                    esi=3).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(start, 0, count=200)
+            self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_SP, r.UC_X86_REG_BP)],
+                             [0x1234, 0x800, BP])
+            si = struct.unpack("<h", struct.pack("<H", mu.reg_read(r.UC_X86_REG_SI)))[0]
+            return si, mu.reg_read(r.UC_X86_REG_IP) - self.at - 1
+        past = 0x79F95 - 0x79F83
+        self.assertEqual(spray(4, 5, 5), (-97, past))
+        self.assertEqual(spray(4, 5, 0), (-97, past))
+        self.assertEqual(spray(4, 5, 6), (3, past))  # (more levels than the caster: saves as usual)
+        self.assertEqual(spray(4, 0x105, 6), (3, past))  # (the level a byte)
+        self.assertEqual(spray(5, 9, 1), (3, past))  # (another spell)
+        self.assertEqual(spray(0x3C, 9, 1), (3, 6))  # (Dismissal: on to its case)
+
+    def test_spell_to_hit(self):
+        """SPELL_HIT (7A15Ah, "mov [bp-6],si" past a spell's immunity checks; SI the spell, DI the
+        target) and SPELL_STUB (the always-hit stub's "mov ax,1", 78BA3h): the cast CAST_SITE saw
+        (caster [BP+6], target [BP+8], spell [BP+0Ah], level [BP+0Ch]) of a missile spell, or a touch
+        spell at a creature of another side (+1Dh), rolls a d20 once with the game's rand(): THAC0
+        (+1Fh; Acid Arrow's 21 - the level) less the to-hit adjustments (5B8:EDh: target, caster,
+        no weapon, 2 a missile, 1 a touch) and a monster's difficulty ([11AEh] - 1), less the AC
+        (4E0:7Fh: target, caster, 0); a 20 hits, a 1 misses; Minute Meteors (33) +2 more. Recorded (kind 12); a miss makes the
+        stub answer 0 once, and [BP-6] Acid Arrow's (12h), so that the stub is called (the same for
+        the table's missiles; touch spells and Minute Meteors aren't in it). Nothing for another spell, a second roll of one cast, a weapon's spell, or one's own side."""
+        from dsloader import gamepatch
+        hit_patch = next(p for p in gamepatch.PATCHES if p.name == "spell_hit")
+        stub_patch = next(p for p in gamepatch.PATCHES if p.name == "spell_hit_stub")
+        self.assertEqual((hit_patch.offset, hit_patch.replacement[2]), (0x7A15A, gamepatch.SPELL_HIT_SITE))
+        self.assertEqual((stub_patch.offset, stub_patch.replacement[2]), (0x78BA3, gamepatch.SPELL_STUB_SITE))
+        self.assertEqual(gamepatch.SPELL_TO_HIT, ("spell_hit", "spell_hit_stub"))
+        mu = self.mu
+        image = load_image()
+        hdr_off, ring = struct.unpack_from("<H", image, 20)[0], struct.unpack_from("<H", image, 16)[0]
+        things = (GAME_DS + 0x3972 - 0x4356) * 16 + 0xC36
+        mu.mem_write(things + 2 * 3, struct.pack("<BH", 2, 5))  # (combatant 2: creature 5, a member)
+        mu.mem_write(things + 40 * 3, struct.pack("<BH", 2, 7))  # (combatant 40: creature 7, a monster)
+        mu.mem_write(things + 41 * 3, struct.pack("<BH", 2, 8))  # (41: creature 8, a monster on the party's side)
+        mu.mem_write(GAME_DS * 16 + 0x1665, struct.pack("<HH", 0, 0x9000))
+        for creature, side, thac0 in ((5, 1, 16), (7, 2, 13), (8, 1, 18)):
+            mu.mem_write(0x9000 * 16 + creature * 0x3A + 0x1D, bytes((side, 0, thac0)))
+        mu.mem_write(GAME_DS * 16 + 0x11AE, struct.pack("<H", 3))
+        stub = lambda seg, off: ((GAME_DS - (0x4356 - seg)) & 0xFFFF) * 16 + off
+        mu.mem_write(stub(0x42AB, 0xED), bytes.fromhex("558bec8b4606a300068b4608a302068b460ea30406"
+                                                     "8b460aa30606b802005dcb"))  # (+2, its arguments at DS:600h)
+        mu.mem_write(stub(0x41BE, 0x7F), bytes.fromhex("558bec8b4606a310068b4608a312068b460aa31406"
+                                                     "b804005dcb"))  # (AC 4, its arguments at DS:610h)
+        mu.mem_write(stub(0x41F1, 0x66), bytes.fromhex("b80100cb"))  # (DEX +1)
+        mu.mem_write(stub(0x41F1, 0x61), bytes.fromhex("b80300cb"))  # (STR +3)
+        load = (GAME_DS - 0x4356) & 0xFFFF
+        mu.mem_write(load * 16 + 0x822, bytes.fromhex("a10007cb"))  # (rand(): mov ax,[700h] / retf)
+        d20 = lambda n: ((n - 1) * 0x8000 + 19) // 20  # (a rand() giving that d20)
+
+        def run(code, **regs):
+            self.at += 0x40
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, code + b"\xf4")
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, **regs).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(start, 0, count=20000)
+            self.assertEqual(mu.reg_read(r.UC_X86_REG_IP) - self.at, len(code) + 1)
+
+        def seq():
+            return struct.unpack("<H", mu.mem_read(TSR * 16 + hdr_off + 8, 2))[0]
+
+        def cast(caster, target, spell, level=5, weapon=False):
+            if weapon:  # (ARROW_LEVEL first, as a weapon's spell on a hit: its frame left 4 bytes down)
+                run(bytes((0xCD, 0x98, gamepatch.ARROW_LEVEL)) + b"\x90" * 4, ecx=spell, edi=caster)
+            mu.mem_write(SS * 16 + BP + 6, struct.pack("<4H", caster, target, spell, level))
+            run(bytes((0xCD, 0x98, gamepatch.CAST_SITE)))
+
+        def lands(spell, target, raw):
+            """The site run (DI the target, SI the spell): [BP-6] after it, then the stub's AX twice,
+            and the entry recorded (None for none)."""
+            mu.mem_write(GAME_DS * 16 + 0x700, struct.pack("<H", raw))
+            mu.mem_write(SS * 16 + BP - 6, struct.pack("<H", 0x5555))
+            before = seq()
+            run(hit_patch.replacement, esi=spell, edi=target, eax=0x1111, ebx=0x2222)
+            self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_SP, r.UC_X86_REG_BP, r.UC_X86_REG_SI,
+                                                       r.UC_X86_REG_DI, r.UC_X86_REG_AX, r.UC_X86_REG_BX)],
+                             [0x800, BP, spell, target, 0x1111, 0x2222])
+            kept, = struct.unpack("<H", mu.mem_read(SS * 16 + BP - 6, 2))
+            answers = []
+            for _ in range(2):
+                run(stub_patch.replacement, eax=0x9999)
+                answers.append(mu.reg_read(r.UC_X86_REG_AX))
+            e = None
+            if seq() != before:
+                n = struct.unpack("<HHH", mu.mem_read(TSR * 16 + hdr_off + 8, 6))
+                e = Entry.parse(bytes(mu.mem_read(RING_SEG * 16 + ring + ((n[0] - 1) % n[2]) * Entry.SIZE,
+                                                  Entry.SIZE)))
+                e = (e.kind, e.raw) + tuple(e.arg(at) for at in range(6, 0x1C, 2))
+            return kept, answers, e
+
+        # Magical Stone (75) by member 2 at monster 40: THAC0 16, +2, AC 4: 10 or more hits
+        cast(2, 40, 75)
+        self.assertEqual(lands(75, 40, d20(10)), (75, [1, 1], (12, 10, 2, 40, 75, 16, 2, 1, 0, 4, 10, 2, 1)))
+        self.assertEqual(struct.unpack("<4H", mu.mem_read(GAME_DS * 16 + 0x600, 8)), (40, 2, 2, 0))
+        self.assertEqual(struct.unpack("<3H", mu.mem_read(GAME_DS * 16 + 0x610, 6)), (40, 2, 0))
+        self.assertEqual(lands(75, 40, d20(1)), (75, [1, 1], None))  # (one roll a cast)
+        cast(2, 40, 75)
+        self.assertEqual(lands(75, 40, d20(9)), (0x12, [0, 1], (12, 9, 2, 40, 75, 16, 2, 1, 0, 4, 9, 2, 0)))
+        cast(2, 40, 75)
+        self.assertEqual(lands(75, 40, d20(1))[1], [0, 1])  # (a natural 1)
+        mu.mem_write(0x9000 * 16 + 5 * 0x3A + 0x1F, bytes((30,)))
+        cast(2, 40, 75)
+        self.assertEqual(lands(75, 40, d20(20))[1], [1, 1])  # (a natural 20, though 28 is needed)
+        mu.mem_write(0x9000 * 16 + 5 * 0x3A + 0x1F, bytes((16,)))
+        # Acid Arrow (18) at level 7: THAC0 14 (a fighter's), so 8 or more
+        cast(2, 40, 18, level=7)
+        self.assertEqual(lands(18, 40, d20(8))[2][4:6], (18, 14))
+        cast(2, 40, 18, level=7)
+        self.assertEqual(lands(18, 40, d20(7))[:2], (0x12, [0, 1]))
+        # Minute Meteors (33): a missile with its own +2 (in the adjustments): 8 or more
+        cast(2, 40, 33)
+        self.assertEqual(lands(33, 40, d20(8)), (33, [1, 1], (12, 8, 2, 40, 33, 16, 4, 1, 0, 4, 8, 2, 1)))
+        cast(2, 40, 33)
+        self.assertEqual(lands(33, 40, d20(7))[:2], (0x12, [0, 1]))  # (not in the table: Acid Arrow's)
+        # Chill Touch (3): a touch, STR's +3; a miss puts Acid Arrow's 12h for the dispatch
+        cast(2, 40, 3)
+        self.assertEqual(lands(3, 40, d20(9)), (0x12, [0, 1], (12, 9, 2, 40, 3, 16, 2, 3, 0, 4, 9, 1, 0)))
+        self.assertEqual(mu.mem_read(GAME_DS * 16 + 0x604, 2), struct.pack("<H", 1))  # (kind 1)
+        cast(2, 40, 3)
+        self.assertEqual(lands(3, 40, d20(10))[:2], (3, [1, 1]))
+        cast(2, 41, 3)
+        self.assertEqual(lands(3, 41, d20(1)), (3, [1, 1], None))  # (its own side: no roll)
+        mu.mem_write(0x9000 * 16 + 8 * 0x3A + 0x1D, bytes((0x09,)))  # (side 1, a bit above the side's 3)
+        cast(2, 41, 3)
+        self.assertEqual(lands(3, 41, d20(1)), (3, [1, 1], None))  # (its own side still: the low 3 bits)
+        mu.mem_write(0x9000 * 16 + 8 * 0x3A + 0x1D, bytes((0x01,)))
+        # a monster (40) at member 2: THAC0 13, +2, difficulty 3 - 1, AC 4: 5 or more
+        cast(40, 2, 113)
+        self.assertEqual(lands(113, 2, d20(5))[2], (12, 5, 40, 2, 113, 13, 2, 3, 2, 4, 5, 1, 1))
+        cast(40, 2, 180)
+        self.assertEqual(lands(180, 2, d20(4))[:2], (0x12, [0, 1]))
+        # none for another spell, another target, a weapon's spell
+        cast(2, 40, 71)
+        self.assertEqual(lands(71, 40, d20(1)), (71, [1, 1], None))
+        cast(2, 40, 75)
+        self.assertEqual(lands(75, 41, d20(1)), (75, [1, 1], None))
+        self.assertEqual(lands(75, 40, d20(1))[1], [0, 1])  # (still the cast's, at its own target)
+        cast(2, 40, 3, weapon=True)
+        self.assertEqual(lands(3, 40, d20(1)), (3, [1, 1], None))
+        cast(2, 40, 3)  # (the next cast rolls again)
+        self.assertEqual(lands(3, 40, d20(1))[1], [0, 1])
+
+    def test_turn_undead_manual(self):
+        """TURN_SITE (7AE01h, Turn Undead's "mov al,[es:bx+24h]", 4 bytes; ES:BX the undead's sheet,
+        [BP+6] the target, [BP+8] the priest, [BP+0Ch] its level, [BP-4] the sheet's number): AD&D's
+        table's cell (dicelog's turn_cell) for the hit dice and level. A number: a d20 (rand()) of it
+        or more turns (598:3Eh adds Afraid, 17, for 3d4 x 60, then the routine's end, 7AE7Eh); less,
+        the failure (7AE75h), and this priest's next try on it this fight ends at once (7AE7Eh), no
+        roll; a turning out of a fight forgets the failures. T turns and D destroys (7AE60h), no roll;
+        D* destroys and the next 2d4 of its sheet this cast are destroyed with no roll; "---" none.
+        Recorded (kind 13: the d20, then caster, target, cell (0 when not looked up), level, HD,
+        outcome, rounds, more)."""
+        from dsloader import gamepatch
+        from dsloader.dicelog import DiceLog
+        patch = next(p for p in gamepatch.PATCHES if p.name == "turn_undead_manual")
+        self.assertEqual((patch.offset, patch.original.hex(), patch.replacement[2]),
+                         (0x7AE01, "268a4724", gamepatch.TURN_SITE))
+        self.assertIn("turn_undead_manual", gamepatch.SPELLS_MANUAL)
+        mu = self.mu
+        image = load_image()
+        hdr_off, ring = struct.unpack_from("<H", image, 20)[0], struct.unpack_from("<H", image, 16)[0]
+        load = (GAME_DS - 0x4356) & 0xFFFF
+        mu.mem_write(load * 16 + 0x822, bytes.fromhex("8b1e02078b8704078306020702cb"))  # (rand(): DS:704h on)
+        stub = ((GAME_DS - (0x4356 - 0x428F)) & 0xFFFF) * 16 + 0x3E
+        mu.mem_write(stub, bytes.fromhex("5589e5565751061e078d7606bf2006b90700f336a5ff061e0607595f5e5dcb"))
+        fight = ((GAME_DS - (0x4356 - 0x377E)) & 0xFFFF) * 16 + 0x19
+        die = lambda n, sides: ((n - 1) * 0x8000 + sides - 1) // sides  # (a rand() giving that roll)
+        destroy, fail, end = 0x7AE60 - 0x7AE04, 0x7AE75 - 0x7AE04, 0x7AE7E - 0x7AE04
+
+        def seq():
+            return struct.unpack("<H", mu.mem_read(TSR * 16 + hdr_off + 8, 2))[0]
+
+        def cast():
+            mu.mem_write(SS * 16 + BP + 6, struct.pack("<4H", 2, 40, 190, 3))
+            self.at += 0x40
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, bytes((0xCD, 0x98, gamepatch.CAST_SITE, 0xF4)))
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(start, 0, count=20000)
+
+        def turn(hd, level, rolls=(), caster=2, target=40, sheet=7, fighting=1):
+            mu.mem_write(GAME_DS * 16 + 0x702, struct.pack("<H", 0) + b"".join(struct.pack("<H", x) for x in rolls))
+            mu.mem_write(GAME_DS * 16 + 0x61E, bytes(16))
+            mu.mem_write(fight, struct.pack("<H", fighting))
+            mu.mem_write(0x9000 * 16 + 0x24, bytes((hd,)))
+            mu.mem_write(SS * 16 + BP - 4, struct.pack("<H", sheet))
+            mu.mem_write(SS * 16 + BP + 6, struct.pack("<HHHH", target, caster, 0x0777, level))
+            self.at += 0x100
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, patch.replacement)
+            for back in (destroy, fail, end):
+                mu.mem_write(CALLER * 16 + ((self.at + 3 + back) & 0xFFFF), b"\xf4")
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, es=0x9000,
+                                    ebx=0, esi=target, edi=0x0777).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            before = seq()
+            mu.emu_start(start, 0, count=50000)
+            self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_SP, r.UC_X86_REG_BP, r.UC_X86_REG_SI,
+                                                       r.UC_X86_REG_DI, r.UC_X86_REG_BX, r.UC_X86_REG_ES)],
+                             [0x800, BP, target, 0x0777, 0, 0x9000])
+            way = (mu.reg_read(r.UC_X86_REG_IP) - self.at - 4) & 0xFFFF
+            self.assertEqual(seq(), before + 1)
+            n = struct.unpack("<HHH", mu.mem_read(TSR * 16 + hdr_off + 8, 6))
+            e = Entry.parse(bytes(mu.mem_read(RING_SEG * 16 + ring + ((n[0] - 1) % n[2]) * Entry.SIZE, Entry.SIZE)))
+            self.assertEqual(e.kind, 13)
+            added = None
+            if struct.unpack("<H", mu.mem_read(GAME_DS * 16 + 0x61E, 2))[0]:
+                added = struct.unpack("<7H", mu.mem_read(GAME_DS * 16 + 0x620, 14))
+            return way, (e.raw,) + tuple(e.arg(at) for at in range(6, 0x16, 2)), added
+
+        # the table's cells, against dicelog's
+        cell = lambda hd, level: DiceLog.turn_cell(hd, level)
+        self.assertEqual([cell(1, lv) for lv in (1, 2, 3, 4, 6, 8, 14)], [10, 7, 4, 21, 22, 23, 23])
+        self.assertEqual([cell(11, lv) for lv in (7, 8, 9, 11, 13, 14, 20)], [0, 20, 19, 16, 13, 10, 10])
+        self.assertEqual([cell(5, lv) for lv in (1, 7, 8, 10, 12, 14)], [20, 4, 21, 22, 22, 23])
+        self.assertEqual([cell(2, 1), cell(3, 1), cell(4, 3), cell(6, 3), cell(6, 2)], [16, 19, 13, 20, 0])
+        # a number: 2 HD at level 3, 10 needed; a 10 turns, Afraid 3d4 (2 + 3 + 4) rounds
+        cast()
+        self.assertEqual(turn(2, 3, (die(10, 20), die(2, 4), die(3, 4), die(4, 4))),
+                         (end, (10, 2, 40, 10, 3, 2, 1, 9, 0), (40, 2, 190, 17, 540, 0, 0)))
+        # a 9 fails; the same priest's next try on it ends at once; another priest rolls
+        self.assertEqual(turn(2, 3, (die(9, 20),)), (fail, (9, 2, 40, 10, 3, 2, 0, 0, 0), None))
+        self.assertEqual(turn(2, 3, (die(20, 20),)), (end, (0, 2, 40, 0, 3, 2, 5, 0, 0), None))
+        self.assertEqual(turn(2, 3, (die(10, 20), 0, 0, 0), caster=1)[0], end)
+        self.assertEqual(turn(2, 3, (die(10, 20), 0, 0, 0), target=41)[1][6], 1)  # (another target)
+        self.assertEqual(turn(2, 3, (), fighting=1)[1][6], 5)
+        self.assertEqual(turn(2, 3, (die(10, 20), 0, 0, 0), fighting=0)[1][6], 1)  # (out of a fight: forgotten)
+        # combatants past 64 (map things up to 520: the people the Loader adds are past 256), each its own
+        self.assertEqual(turn(2, 3, (die(9, 20),), target=300)[0], fail)
+        self.assertEqual(turn(2, 3, (), target=300)[1][6], 5)
+        self.assertEqual(turn(2, 3, (die(10, 20), 0, 0, 0), target=44)[1][6], 1)  # (not 300's)
+        self.assertEqual(turn(2, 3, (die(9, 20),), target=519)[0], fail)
+        self.assertEqual(turn(2, 3, (die(10, 20), 0, 0, 0), target=519, caster=3)[1][6], 1)  # (another priest)
+        self.assertEqual(turn(2, 3, (), target=519)[1][6], 5)
+        self.assertEqual(turn(2, 3, (die(9, 20),), target=520)[0], fail)  # (past the map things: no memory)
+        self.assertEqual(turn(2, 3, (die(9, 20),), target=520)[1][6], 0)
+        self.assertEqual(turn(2, 3, (die(10, 20), 0, 0, 0), fighting=0, target=300)[1][6], 1)  # (forgotten)
+        # T, D: no roll
+        self.assertEqual(turn(1, 4, (0, 0, 0)), (end, (0, 2, 40, 21, 4, 1, 1, 3, 0), (40, 2, 190, 17, 180, 0, 0)))
+        self.assertEqual(turn(1, 6), (destroy, (0, 2, 40, 22, 6, 1, 2, 0, 0), None))
+        # "---": nothing
+        self.assertEqual(turn(6, 2), (end, (0, 2, 40, 0, 2, 6, 6, 0, 0), None))
+        # D*: 2d4 (1 + 2) more of sheet 7 this cast, with no roll; then its own D* again
+        self.assertEqual(turn(1, 9, (die(1, 4), die(2, 4)), target=41), (destroy, (0, 2, 41, 23, 9, 1, 3, 0, 3), None))
+        self.assertEqual(turn(2, 3, target=42), (destroy, (0, 2, 42, 0, 3, 2, 4, 0, 2), None))
+        self.assertEqual(turn(2, 3, (die(9, 20),), target=43, sheet=8)[0], fail)  # (another kind)
+        self.assertEqual(turn(2, 3, target=44)[1][6:], (4, 0, 1))
+        self.assertEqual(turn(2, 3, target=45)[1][6:], (4, 0, 0))
+        self.assertEqual(turn(2, 3, (die(9, 20),), target=46)[1][6], 0)
+        self.assertEqual(turn(1, 9, (die(4, 4), die(4, 4)), target=47)[1][6:], (3, 0, 8))
+        cast()  # (a new cast: none more)
+        self.assertEqual(turn(2, 3, (die(9, 20),), target=48)[1][6], 0)
+
+    def test_flame_arrow_count(self):
+        """FLAME_SITE (7567Fh, the cast's tail's "mov dl,[es:bx]", the record's +0, its bits 2-7 the
+        casts): Flame Arrow (28, [BP+0Ah]) one for every five of the cast's levels ([BP+0Ch]), at
+        least one; any other spell its record's byte."""
+        from dsloader import gamepatch
+        patch = next(p for p in gamepatch.PATCHES if p.name == "flame_arrow_count")
+        self.assertEqual((patch.offset, patch.original.hex(), patch.replacement[2]),
+                         (0x7567F, "268a17", gamepatch.FLAME_SITE))
+        self.assertIn("flame_arrow_count", gamepatch.SPELLS_MANUAL)
+        mu = self.mu
+        mu.mem_write(0x9000 * 16 + 0x30, bytes((0x0E,)))
+        def count(spell, level):
+            mu.mem_write(SS * 16 + BP + 0x0A, struct.pack("<HH", spell, level))
+            self.at += 0x20
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, patch.replacement + b"\xf4")
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, es=0x9000,
+                                    ebx=0x30, eax=0x1234, edx=0xAB00).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(start, 0, count=200)
+            self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_SP, r.UC_X86_REG_AX, r.UC_X86_REG_DH,
+                                                       r.UC_X86_REG_IP)], [0x800, 0x1234, 0xAB, self.at + 4])
+            return mu.reg_read(r.UC_X86_REG_DL)
+        self.assertEqual([count(28, lv) >> 2 for lv in (1, 4, 5, 9, 10, 15, 22)], [1, 1, 1, 1, 2, 3, 4])
+        self.assertEqual(count(75, 10), 0x0E)
+
+    def test_hold_undead_level(self):
+        """HOLD_HD (7A345h, the undead's "test word [bp+0Eh],100h", 5 bytes; SI the spell, DI the
+        target's thing, [BP+14h] the caster's level): Hold Undead (31) on an undead of more levels
+        than the caster's (its sheet's, SHEET_LEVEL's) immune (7A1F0h); else the game's test: the
+        bit set, immune; clear, on to the next (7A34Fh)."""
+        from dsloader import gamepatch
+        patch = next(p for p in gamepatch.PATCHES if p.name == "hold_undead_level")
+        self.assertEqual((patch.offset, patch.replacement[2]), (0x7A345, gamepatch.HOLD_HD_SITE))
+        mu = self.mu
+        things = (GAME_DS + 0x3972 - 0x4356) * 16 + 0xC36
+        mu.mem_write(things + 40 * 3, struct.pack("<BH", 2, 7))
+        mu.mem_write(things + 41 * 3, struct.pack("<BH", 1, 7))  # (not a creature)
+        mu.mem_write(GAME_DS * 16 + 0x1665, struct.pack("<HH", 0, 0x9000))
+        mu.mem_write(GAME_DS * 16 + 0x1661, struct.pack("<HH", 0, 0xA000))
+        mu.mem_write(0x9000 * 16 + 7 * 0x3A + 4, struct.pack("<H", 3))  # (creature 7: sheet 3)
+        immune, on = (0x7A1F0 - 0x7A345) & 0xFFFF, 0x7A34F - 0x7A345
+        def hold(spell, caster, sheet, flags=0, thing=40):
+            race, classes, levels = sheet
+            mu.mem_write(0xA000 * 16 + 3 * 0x47 + 0x18, bytes((race,)))
+            mu.mem_write(0xA000 * 16 + 3 * 0x47 + 0x21, bytes(classes) + bytes(levels))
+            mu.mem_write(SS * 16 + BP + 0x0E, struct.pack("<H", flags))
+            mu.mem_write(SS * 16 + BP + 0x14, struct.pack("<H", caster))
+            self.at += 0x80
+            start = CALLER * 16 + self.at
+            mu.mem_write(start, patch.replacement)
+            for back in (on, immune):
+                mu.mem_write(CALLER * 16 + ((self.at + back) & 0xFFFF), b"\xf4")
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, eax=0x1234,
+                                    ebx=0x2222, es=0x4444, esi=spell, edi=thing).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            mu.emu_start(start, 0, count=500)
+            self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_BX, r.UC_X86_REG_ES,
+                                                       r.UC_X86_REG_SP, r.UC_X86_REG_SI, r.UC_X86_REG_DI)],
+                             [0x1234, 0x2222, 0x4444, 0x800, spell, thing])
+            return (mu.reg_read(r.UC_X86_REG_IP) - self.at - 1) & 0xFFFF
+        skeleton = (3, (4, 0, 0), (6, 0, 0))  # (a 6th-level undead fighter, its race not human)
+        self.assertEqual(hold(31, 6, skeleton), on)
+        self.assertEqual(hold(31, 9, skeleton), on)
+        self.assertEqual(hold(31, 5, skeleton), immune)
+        self.assertEqual(hold(31, 5, (3, (4, 1, 0), (2, 6, 0))), immune)  # (its highest class's)
+        self.assertEqual(hold(31, 5, (3, (4, 0, 0), (2, 6, 0))), on)  # (a level with no class: none)
+        self.assertEqual(hold(31, 5, (3, (0, 0, 0), (8, 0, 0))), immune)  # (classless: its hit dice)
+        self.assertEqual(hold(31, 5, (1, (0, 0, 0), (8, 0, 0))), immune)  # (a human's +24h)
+        self.assertEqual(hold(40, 1, skeleton), on)  # (another spell)
+        self.assertEqual(hold(40, 9, skeleton, flags=0x100), immune)  # (the game's test)
+        self.assertEqual(hold(31, 9, skeleton, flags=0x100), immune)
+        self.assertEqual(hold(31, 1, skeleton, flags=0x0FF), immune)
+        self.assertEqual(hold(31, 1, skeleton, thing=41), on)  # (no creature: as before)
 
     def test_npp_save(self):
         """NS_NPP (7A7E9h, "add sp,4 / push 6 / push 27h", the charge's two arguments still on the
@@ -4389,7 +4884,7 @@ class NamesTests(unittest.TestCase):
         self.mu = mu = Uc(UC_ARCH_X86, UC_MODE_16)
         mu.mem_map(0, 0x100000)
         mu.mem_write(TSR * 16, image)
-        size = image.find(bytes.fromhex("8146fc7e04" "8356fe00"))  # 46 names of 25 bytes: 47Eh
+        size = image.find(bytes.fromhex("8146fcc904" "8356fe00"))  # 49 names of 25 bytes: 4C9h
         fill = fill_probes(image)[0]
         self.assertGreater(min(size, fill), 0)
         mu.mem_write(VEC_NAMES_SIZE * 4, struct.pack("<HH", size, TSR))
@@ -4408,7 +4903,7 @@ class NamesTests(unittest.TestCase):
 
     def test_room(self):
         """In place of "push dword 1": the chunk's size (the dword at [BP-4]) gets the room."""
-        for size, want in ((8050, 9200), (0xFF00, 0xFF00 + 1150)):
+        for size, want in ((8050, 9275), (0xFF00, 0xFF00 + 1225)):  # (49 names of 25 bytes)
             self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<I", size))
             self.assertEqual(self.interrupt(VEC_NAMES_SIZE), 0x7FC)
             self.assertEqual(struct.unpack("<II", self.mu.mem_read(SS * 16 + 0x7FC, 4) +
@@ -4440,7 +4935,7 @@ def kits_to_level():
 @unittest.skipIf(Uc is None, "unicorn not installed")
 class TickTests(unittest.TestCase):
     """PROBE_TICK: the game's timer handler's first instruction done, and every TICK_EVERY
-    strikes where the game was noted in TICKS (the header's +356, counted at +358)."""
+    strikes where the game was noted in TICKS (in the tail at the header's +356, counted at +358)."""
     VEC_TICK, EVERY, SLOTS = 0x87, 32, 16
 
     def setUp(self):
@@ -4474,7 +4969,8 @@ class TickTests(unittest.TestCase):
             self.strike(0x1000 + n)
         self.assertEqual(struct.unpack("<H", mu.mem_read(CALLER * 16 + 4, 2))[0], self.EVERY * (self.SLOTS + 2))
         self.assertEqual(struct.unpack("<H", mu.mem_read(self.hdr + 358, 2))[0], self.SLOTS + 2)
-        slots = [struct.unpack("<8H", mu.mem_read(TSR * 16 + ticks + 16 * k, 16)) for k in range(self.SLOTS)]
+        tail, = struct.unpack("<H", mu.mem_read(self.hdr + 1834, 2))  # (TICKS: the tail's)
+        slots = [struct.unpack("<8H", mu.mem_read(tail * 16 + ticks + 16 * k, 16)) for k in range(self.SLOTS)]
         # the newest (the 18th) in slot 1, the 17th in slot 0, the 3rd in slot 2
         want = lambda k: (0x1000 + self.EVERY * k - 1, 0x5678, 0x0246, SS, 0x800, BP, GAME_DS, 0x4321)
         self.assertEqual(slots[1], want(self.SLOTS + 2))
@@ -4495,7 +4991,7 @@ class StealthTests(unittest.TestCase):
         self.hdr = TSR * 16 + image.find(HDR_SIG)
         at = image.find(bytes.fromhex("2ef606") + struct.pack("<H", 170) + bytes([64]))
         self.assertGreater(at, 0)
-        mu.mem_write(VEC_STEALTH * 4, struct.pack("<HH", at - 15, TSR))  # (after its three pops)
+        mu.mem_write(VEC_STEALTH * 4, struct.pack("<HH", at - 21, TSR))  # (its three pops and "mov byte [cs:st_now],0" before it)
         mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
         mu.mem_write(GAME_DS * 16 + 0x1661, struct.pack("<HH", 0, self.SHEETS))
         mu.mem_write(GAME_DS * 16 + 0x1669, struct.pack("<HH", 0, self.TYPES))
@@ -4554,6 +5050,36 @@ class StealthTests(unittest.TestCase):
     def test_rule_off(self):
         self.mu.mem_write(TSR * 16 + 170, struct.pack("<H", 0))
         self.assertEqual(self.attack(), (0, 0, 15, 0, 0b0100, 0))
+
+    def test_missile_from_behind_only_unseen(self):
+        """MISSILE_REAR: a missile is from behind only as a hidden archer's shot (unseen: +2, the
+        target's DEX and shield not counting); the game's from behind by the target's facing is
+        taken back for a missile (its +2 too), whatever the rule; melee keeps it."""
+        self.assertEqual(self.attack(melee=2, behind=1, thac0=13, hidden=0)[:3], (0, 0, 15))
+        self.assertEqual(self.attack(melee=2)[:3], (1, 0, 13))  # (hidden: unseen)
+        self.assertEqual(self.attack(melee=1, behind=1, thac0=13, hidden=0)[:3], (1, 0, 13))
+        self.mu.mem_write(TSR * 16 + 170, struct.pack("<H", 0))  # (the stealth rule off)
+        self.assertEqual(self.attack(melee=2, behind=1, thac0=13, hidden=0)[:3], (0, 0, 15))
+
+    def test_backstab_first_attack_only(self):
+        """STAB_FIRST (RULE_HI_BACKSTAB): a party member's later attacks in the same round (the
+        game's clock unchanged) are no backstab, the +2 taken back, whatever the game said; from
+        behind stays. Another member's first is one; the next round's first is one again; a
+        creature not in the party is left to the game. (A thief with two weapons and a weapon
+        spec's extra attack had the third, the off-hand one, multiplied after a first that missed.)"""
+        mu, clock = self.mu, 0xC000
+        mu.mem_write(self.hdr + 270, struct.pack("<H", 128))
+        mu.mem_write(GAME_DS * 16 + 0x9B72, struct.pack("<HH", 0, clock))
+        mu.mem_write(clock * 16, struct.pack("<I", 600))
+        self.assertEqual(self.attack()[:3], (1, 1, 11))  # hidden: the round's first, a backstab
+        game_stab = dict(behind=1, stab=1, thac0=11, hidden=0)
+        self.assertEqual(self.attack(**game_stab)[:3], (1, 0, 13))  # its second: from behind only
+        self.assertEqual(self.attack(**game_stab)[:3], (1, 0, 13))  # (and its third, the off-hand)
+        self.assertEqual(self.attack(attacker=1, **game_stab)[:3], (1, 1, 11))  # another's first
+        self.assertEqual(self.attack(attacker=0x29, **game_stab)[:3], (1, 1, 11))  # not the party's
+        self.assertEqual(self.attack(attacker=0x29, **game_stab)[:3], (1, 1, 11))
+        mu.mem_write(clock * 16, struct.pack("<I", 660))  # the next round
+        self.assertEqual(self.attack(**game_stab)[:3], (1, 1, 11))
 
     def girdle(self, item_type, weapon_type=7):
         """Creature 6 (the target) wearing an item of ITEM_TYPE at the waist (none: 0), the
@@ -4640,11 +5166,12 @@ class TypesTests(unittest.TestCase):
         self.mu = mu = Uc(UC_ARCH_X86, UC_MODE_16)
         mu.mem_map(0, 0x100000)
         mu.mem_write(TSR * 16, image)
-        size = image.find(bytes.fromhex("8146fc5802" "8356fe00"))  # 30 types of 20 bytes: 258h
+        size = image.find(bytes.fromhex("8146fc9402" "8356fe00"))  # 33 types of 20 bytes: 294h
         names_fill, fill = fill_probes(image)
         self.assertGreater(min(size, fill - names_fill), 0)
         mu.mem_write(VEC_TYPES_SIZE * 4, struct.pack("<HH", size, TSR))
         mu.mem_write(VEC_TYPES_FILL * 4, struct.pack("<HH", fill, TSR))
+        # (EXTRA_TYPES: the tail's, loaded with the image; load_image sets TAIL_SEG)
         mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
         mu.mem_write(GAME_DS * 16 + 0x1669, struct.pack("<HH", 0, self.TYPES_SEG))
         self.hdr = TSR * 16 + image.find(HDR_SIG)
@@ -4658,12 +5185,12 @@ class TypesTests(unittest.TestCase):
         return mu.reg_read(r.UC_X86_REG_SP)
 
     def test_room_and_filled(self):
-        """The game's 115 types (2300 bytes): 600 bytes more reserved, and after the read
+        """The game's 115 types (2300 bytes): 660 bytes more reserved, and after the read
         DSCLOG's types at 115 on, the number noted, and Grey's Scale's arm and leg armour AC 3."""
         from dsloader import npcitems
         self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<I", 2300))
         self.assertEqual(self.interrupt(VEC_TYPES_SIZE), 0x7FC)
-        self.assertEqual(struct.unpack("<I", self.mu.mem_read(SS * 16 + BP - 4, 4))[0], 2900)
+        self.assertEqual(struct.unpack("<I", self.mu.mem_read(SS * 16 + BP - 4, 4))[0], 2960)
         self.mu.mem_write(SS * 16 + 0x7FC, bytes(4))
         self.assertEqual(self.interrupt(VEC_TYPES_FILL, eax=0), 0x80C)
         at = self.TYPES_SEG * 16 + 115 * 20
@@ -4675,6 +5202,8 @@ class TypesTests(unittest.TestCase):
         for dagger in (17, 33, 84, 94):  # (the game's daggers: the air cleric's bit set, the rest kept)
             self.assertEqual(self.mu.mem_read(self.TYPES_SEG * 16 + dagger * 20 + 0x10, 2), b"\x01\x00")
         self.assertEqual(self.mu.mem_read(self.TYPES_SEG * 16 + 18 * 20 + 0x10, 2), b"\x00\x00")  # (a club: not)
+        self.assertEqual([self.mu.mem_read(self.TYPES_SEG * 16 + t * 20 + 8, 1)[0] for t in (2, 113)], [4, 5])
+        # (the Great Axe +3's type metal, the Quicksilver Glove's leather: both no material in the game)
         self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_DS)], [0, GAME_DS])
 
     def test_not_read(self):
@@ -4696,7 +5225,7 @@ class QuiverTests(unittest.TestCase):
         self.mu = mu = Uc(UC_ARCH_X86, UC_MODE_16)
         mu.mem_map(0, 0x100000)
         mu.mem_write(TSR * 16, self.image)
-        at = self.image.find(bytes((0xB8, VEC_TAKE, 0x25, 0xBA)))
+        at = install_at(self.image, VEC_TAKE)
         self.assertGreater(at, 0)
         mu.mem_write(VEC_TAKE * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
         mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
@@ -4737,6 +5266,44 @@ class QuiverTests(unittest.TestCase):
         self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_SP, r.UC_X86_REG_SI, r.UC_X86_REG_AX,
                                                    r.UC_X86_REG_BP)], [0x800, slot, 0x1111, BP])
         return self.seen[0]
+
+    def kept(self, slot, item_name):
+        """QUIVER_KEPT (PROBE_CAN_USE's: an item put in inventory slot SLOT, the equip routine's [BP+8])
+        with the quiver holding ITEM_NAME: carry. The character's segment is read from the equip
+        routine's code, as the game has it after the INT (6EF36h: its "mov ax,348h" operand at 6EF6Dh)."""
+        from dsloader import gamepatch
+        mu = self.mu
+        mu.mem_write(self.LISTS * 16, struct.pack("<16h", *[-1] * 16))
+        if item_name is not None:
+            mu.mem_write(self.LISTS * 16 + 5 * 2, struct.pack("<h", 3))
+            mu.mem_write(self.ENTRIES * 16 + 3 * 10 + 4, struct.pack("<H", 7))
+            mu.mem_write(self.ITEMS * 16 + 7 * 0x15 + 0x12, struct.pack("<H", item_name))
+        patch = next(p for p in gamepatch.PATCHES if p.name == "can_use")
+        back = 0x2000 + 2  # (the INT's way back: the patch's INT is its first two bytes)
+        mu.mem_write(CALLER * 16 + back - 2, patch.replacement)
+        mu.mem_write(CALLER * 16 + back + (0x6EF6D - (patch.offset + 2)), struct.pack("<H", self.MEMBER_SEG))
+        mu.mem_write(SS * 16 + BP, struct.pack("<H", PARENT_BP))  # (the equip routine's frame, its [BP+8] the slot)
+        mu.mem_write(SS * 16 + PARENT_BP + 8, struct.pack("<H", slot))
+        stub = 0xFF00  # (a near call into the helper's segment, then a HLT)
+        sym = __import__("test_dsclog_drawing").build()[1]["quiver_kept"]
+        mu.mem_write(TSR * 16 + stub, b"\xe8" + struct.pack("<H", (sym - (stub + 3)) & 0xFFFF) + b"\xf4")
+        mu.mem_write(SS * 16 + 0x7FA, struct.pack("<HHH", back, CALLER, IF | 2))  # (the INT's frame)
+        for name, value in dict(cs=TSR, ds=self.DS, ss=SS, esp=0x7FA, ebp=BP, eflags=IF | 2).items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+        mu.emu_start(TSR * 16 + stub, TSR * 16 + stub + 3)
+        self.assertEqual(mu.reg_read(r.UC_X86_REG_SP), 0x7FA)
+        return bool(mu.reg_read(r.UC_X86_REG_EFLAGS) & 1)
+
+    def test_quiver_kept(self):
+        """QUIVER_KEPT (PROBE_CAN_USE): nothing goes into a quiver holding spell arrows; other arrows,
+        an empty quiver or another slot as the game has it. (Its segment's place was 2 bytes off once:
+        the character's number came from junk, so spell arrows could be swapped out.)"""
+        from dsloader import spellarrows
+        arrow = min(spellarrows.ARROW_NAMES)
+        self.assertTrue(self.kept(5, arrow))
+        self.assertFalse(self.kept(5, arrow - 1))
+        self.assertFalse(self.kept(5, None))
+        self.assertFalse(self.kept(7, arrow))
 
     def test_quiver(self):
         from dsloader import spellarrows
@@ -5189,7 +5756,7 @@ class KitTests(unittest.TestCase):
         # AREA_SITE (the game's own reads): AX and ES the table's segment, AL entry BX's +2
         patch = next(p for p in gamepatch.PATCHES if p.name == "area_table_0")
         mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
-        at = self.image.find(bytes((0xB8, gamepatch.VEC_CR_SPELLS, 0x25, 0xBA)))
+        at = install_at(self.image, gamepatch.VEC_CR_SPELLS)
         mu.mem_write(gamepatch.VEC_CR_SPELLS * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
         def area_site():
             code = stub * 16 + 0x100
@@ -5525,7 +6092,7 @@ class KitTests(unittest.TestCase):
         from dsloader import kitpages
         for name, kid in kitpages.KIT_IDS.items():
             with self.subTest(name=name):
-                self.call(rb"\x50\x51\x57\xbe..\x2e\x80\x3c\x00", eax=kid)
+                self.call(rb"\x50\x51\x57\x1e\x2e\x8e\x1e..\xbe..\x80\x3c\x00", eax=kid)
                 si = self.mu.reg_read(r.UC_X86_REG_SI)
                 text = bytes(self.mu.mem_read(TSR * 16 + si, 24)).split(b"\0")[0].decode()
                 self.assertEqual(text, "KIT: " + kitpages.row_text(name))
@@ -5750,7 +6317,7 @@ class KitTests(unittest.TestCase):
         the test's flags returned and DI left so (a spell all those kinds then does half)."""
         from dsloader import gamepatch
         image = load_image()
-        at = image.find(bytes((0xB8, gamepatch.VEC_CR_SPELLS, 0x25, 0xBA)))
+        at = install_at(image, gamepatch.VEC_CR_SPELLS)
         self.assertGreater(at, 0)
         self.mu.mem_write(gamepatch.VEC_CR_SPELLS * 4, struct.pack("<HH", struct.unpack_from("<H", image, at + 4)[0], TSR))
         self.mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
@@ -5779,7 +6346,7 @@ class KitTests(unittest.TestCase):
         them (CAST_WHO, CAST_SITE's)."""
         from dsloader import gamepatch, kits
         image = load_image()
-        at = image.find(bytes((0xB8, gamepatch.VEC_CR_SPELLS, 0x25, 0xBA)))
+        at = install_at(image, gamepatch.VEC_CR_SPELLS)
         self.mu.mem_write(gamepatch.VEC_CR_SPELLS * 4, struct.pack("<HH", struct.unpack_from("<H", image, at + 4)[0], TSR))
         if not getattr(self, "hooked", False):
             self.mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
@@ -5851,7 +6418,7 @@ class KitTests(unittest.TestCase):
         the test, whose flags come back; another neck item, or one in the backpack, doesn't."""
         from dsloader import gamepatch, worldgear
         image = load_image()
-        at = image.find(bytes((0xB8, gamepatch.VEC_CR_SPELLS, 0x25, 0xBA)))
+        at = install_at(image, gamepatch.VEC_CR_SPELLS)
         self.mu.mem_write(gamepatch.VEC_CR_SPELLS * 4, struct.pack("<HH", struct.unpack_from("<H", image, at + 4)[0], TSR))
         self.mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
         self.mu.mem_write(self.hdr + 212, struct.pack("<H", game.GAME_TYPES))
@@ -5885,7 +6452,7 @@ class KitTests(unittest.TestCase):
         from dsloader.gamepatch import VEC_ARROW
         image, mu = load_image(), self.mu
         mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
-        at = image.find(bytes((0xB8, gamepatch.VEC_CR_SPELLS, 0x25, 0xBA)))
+        at = install_at(image, gamepatch.VEC_CR_SPELLS)
         mu.mem_write(gamepatch.VEC_CR_SPELLS * 4, struct.pack("<HH", struct.unpack_from("<H", image, at + 4)[0], TSR))
         mu.mem_write(VEC_ARROW * 4, struct.pack("<HH", image.find(bytes.fromhex("53560650c41e5d16")), TSR))
         mu.mem_write(self.DS * 16 + 0x165D, struct.pack("<HH", 0, self.ITEMS))
@@ -6507,7 +7074,7 @@ class KitTests(unittest.TestCase):
     def run_vector(self, vector, code_len, **regs):
         """INT VECTOR as run_int, its handler where the helper's install sets it (the vectors read
         from the image's own install code: "mov ax,25xxh / mov dx,handler")."""
-        at = self.image.find(bytes((0xB8, vector, 0x25, 0xBA)))
+        at = install_at(self.image, vector)
         self.assertGreater(at, 0)
         handler = struct.unpack_from("<H", self.image, at + 4)[0]
         self.run_int(vector, self.image[handler:handler + 8].hex(), code_len, **regs)
@@ -6544,7 +7111,7 @@ class KitTests(unittest.TestCase):
             site = 0x640  # (past run_int's sites: the emulator keeps code it has seen)
             code = bytes((0xCD, VEC_END_TURN, 0x90, 0xEB, 0xFE)) + bytes(OUT - 2) + bytes((0xEB, 0xFE))
             self.mu.mem_write(CALLER * 16 + site, code)
-            install = self.image.find(bytes((0xB8, VEC_END_TURN, 0x25, 0xBA)))
+            install = install_at(self.image, VEC_END_TURN)
             self.mu.mem_write(VEC_END_TURN * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, install + 4)[0], TSR))
             self.mu.mem_write(SS * 16 + BP + 4, struct.pack("<HHH", caller, thing, actions))
             for name, value in dict(cs=CALLER, ds=self.DS, ss=SS, esp=0x7FC, ebp=BP, eflags=IF | 2, eax=0x1111,
@@ -6808,13 +7375,13 @@ class KitTests(unittest.TestCase):
         4, or 4 and two of 2nd level) and goes on past the game's grants (66F83h); another level:
         AX [BP-2], on as before."""
         from dsloader.gamepatch import VEC_CR_SPELLS, VEC_PICK_LEVEL
-        at = self.image.find(bytes((0xB8, VEC_PICK_LEVEL, 0x25, 0xBA)))
+        at = install_at(self.image, VEC_PICK_LEVEL)
         self.mu.mem_write(VEC_PICK_LEVEL * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
         self.rules(0)
         stub = (self.DS + 0x430A - 0x4356) * 16 + 0x5C
         # the stub as the window: count the calls, and the spell levels on offer at preserver level 9
         self.mu.mem_write(stub, bytes.fromhex(PICK_STUB % VEC_PICK_LEVEL))
-        at = self.image.find(bytes((0xB8, VEC_CR_SPELLS, 0x25, 0xBA)))
+        at = install_at(self.image, VEC_CR_SPELLS)
         self.mu.mem_write(VEC_CR_SPELLS * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
         if not getattr(self, "hooked", False):
             self.mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
@@ -6855,11 +7422,11 @@ class KitTests(unittest.TestCase):
         ones left are the game's own starting spells not yet known (PICK_FILL): 1st level Grease (7),
         Magic Missile (8), Shield (0Bh), Wall of Fog (9); 2nd level Fog Cloud (0Fh), Mirror Image (16h)."""
         from dsloader.gamepatch import VEC_CR_SPELLS, VEC_PICK_LEVEL
-        at = self.image.find(bytes((0xB8, VEC_PICK_LEVEL, 0x25, 0xBA)))
+        at = install_at(self.image, VEC_PICK_LEVEL)
         self.mu.mem_write(VEC_PICK_LEVEL * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
         self.rules(0)
         self.mu.mem_write((self.DS + 0x430A - 0x4356) * 16 + 0x5C, bytes.fromhex(PICK_STUB % VEC_PICK_LEVEL))
-        at = self.image.find(bytes((0xB8, VEC_CR_SPELLS, 0x25, 0xBA)))
+        at = install_at(self.image, VEC_CR_SPELLS)
         self.mu.mem_write(VEC_CR_SPELLS * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
         if not getattr(self, "hooked", False):
             self.mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
@@ -7001,7 +7568,7 @@ class KitTests(unittest.TestCase):
         its stub at DS less 4Ch), the spell levels on offer up to 1st meanwhile (PICK_CAP, as
         PROBE_PICK_LEVEL gives them), as it was after."""
         from dsloader.gamepatch import VEC_DUAL_SPELLS, VEC_PICK_LEVEL
-        at = self.image.find(bytes((0xB8, VEC_PICK_LEVEL, 0x25, 0xBA)))
+        at = install_at(self.image, VEC_PICK_LEVEL)
         self.mu.mem_write(VEC_PICK_LEVEL * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
         self.rules(0)
         self.picker_sheet(11, 0, 9)
@@ -7146,7 +7713,7 @@ class KitTests(unittest.TestCase):
         if not getattr(self, "hooked", False):
             mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
             self.hooked = True
-        at = self.image.find(bytes((0xB8, VEC_WP_CLASS, 0x25, 0xBA)))
+        at = install_at(self.image, VEC_WP_CLASS)
         mu.mem_write(VEC_WP_CLASS * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
         site = 0x600  # (a site of its own: run_vector's for VEC_CR_DIE shares the low bits)
         mu.mem_write(CALLER * 16 + site, bytes((0xCD, VEC_WP_CLASS, 0x90)))
@@ -7199,7 +7766,7 @@ class KitTests(unittest.TestCase):
         if not getattr(self, "hooked", False):
             mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
             self.hooked = True
-        at = self.image.find(bytes((0xB8, VEC_CR_PSP, 0x25, 0xBA)))
+        at = install_at(self.image, VEC_CR_PSP)
         mu.mem_write(VEC_CR_PSP * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
         site, back = 0x500, 0x520
         mu.mem_write(CALLER * 16 + site, bytes((0xCD, VEC_CR_PSP)))
@@ -7299,7 +7866,7 @@ class KitTests(unittest.TestCase):
         from dsloader import kits
         from dsloader.gamepatch import VEC_PICK_ANY
         who, site, open_at = 5, 0x700, 0x855CB - 0x85582
-        at = self.image.find(bytes((0xB8, VEC_PICK_ANY, 0x25, 0xBA)))
+        at = install_at(self.image, VEC_PICK_ANY)
         self.mu.mem_write(VEC_PICK_ANY * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
         if not getattr(self, "hooked", False):
             self.mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
@@ -7381,7 +7948,7 @@ class KitTests(unittest.TestCase):
 
     def said(self, vector, site):
         """INT VECTOR (a message probe) run from SITE: the far pointer it leaves pushed, the text."""
-        install = self.image.find(bytes((0xB8, vector, 0x25, 0xBA)))
+        install = install_at(self.image, vector)
         self.mu.mem_write(vector * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, install + 4)[0], TSR))
         if not getattr(self, "hooked", False):
             self.mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
@@ -7546,7 +8113,7 @@ class KitTests(unittest.TestCase):
                                                                 r.UC_X86_REG_SI, r.UC_X86_REG_ES)],
                                  [4, 0x2222, 0x3333, 0x4444, 0x6666])
         # PROBE_PICK_ANY: preserver level 1 (1st-level spells on offer), INT 9
-        at = self.image.find(bytes((0xB8, VEC_PICK_ANY, 0x25, 0xBA)))
+        at = install_at(self.image, VEC_PICK_ANY)
         self.mu.mem_write(VEC_PICK_ANY * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
         for rules, known, level, opens in ((game.RULE_INT_LEARN, first[:6], 1, False), (game.RULE_INT_LEARN, first[:5], 1, True),
                                            (game.RULE_INT_LEARN, first[:6], 3, True), (0, first[:6], 1, True)):
@@ -7639,7 +8206,7 @@ class AdndTablesTests(unittest.TestCase):
 
     def run_vector(self, vector, code_len, stack=b"", **regs):
         """INT VECTOR and its NOPs (CODE_LEN in all), STACK the words on the stack at the INT."""
-        at = self.image.find(bytes((0xB8, vector, 0x25, 0xBA)))
+        at = install_at(self.image, vector)
         self.assertGreater(at, 0)
         self.mu.mem_write(vector * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
         site = 0x400 + (vector & 0x1F) * 0x10  # (one for each vector: the emulator keeps code it has seen)
@@ -7791,7 +8358,7 @@ class RolledTests(AdndTablesTests):
         """INT VEC_CR_SPELLS, the site's number and NOPs (CODE_LEN in all); STACK the words on the
         stack at the INT, POPPED bytes of it gone after."""
         from dsloader.gamepatch import VEC_CR_SPELLS
-        at = self.image.find(bytes((0xB8, VEC_CR_SPELLS, 0x25, 0xBA)))
+        at = install_at(self.image, VEC_CR_SPELLS)
         self.mu.mem_write(VEC_CR_SPELLS * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
         ip = 0x600 + site * 0x10  # (one for each site: the emulator keeps code it has seen)
         self.mu.mem_write(CALLER * 16 + ip, bytes((0xCD, VEC_CR_SPELLS, site)) + b"\x90" * (code_len - 3))
@@ -8071,7 +8638,7 @@ class KeepTests(unittest.TestCase):
         first, = struct.unpack_from("<H", zero.group(1))
         count, = struct.unpack_from("<H", zero.group(2))
         end = first + 2 * count
-        self.assertGreaterEqual(count * 2, 1600)
+        self.assertGreaterEqual(count * 2, 980)  # (AFTER_INSTALL's buffers: the Look box's, the USE screen's...)
         self.assertLessEqual(end, len(image))  # (within the image loaded: over the install code)
         # the install's own "mov dx, paragraphs / jmp keep": the memory kept
         asked = [struct.unpack_from("<H", image, m.start() + 1)[0]
@@ -8109,3 +8676,216 @@ class KeepTests(unittest.TestCase):
         self.assertTrue(calls and calls[-1][0] == 0x31)
         self.assertEqual(calls[0][2], bytes(end - first))  # zeroed before the first DOS call
         self.assertEqual(calls[-1][1], asked[0])  # (and that kept)
+
+    def test_shrink_names_the_psp(self):
+        """KEEP's 4Ah (our block cut down before the upper memory blocks are taken) names the PSP's
+        segment, though the word PSP is install data in the range zeroed before it, and asks for
+        the paragraphs kept; it comes before every other DOS call but the zeroing's."""
+        image = bytearray(load_image())
+        zero = re.search(re.escape(bytes.fromhex("0e07bf")) + b"(..)" + re.escape(b"\xb9") + b"(..)" +
+                         re.escape(bytes.fromhex("31c0fcf3ab")), image, re.S)
+        keep = image.rfind(bytes.fromhex("2ea1"), 0, zero.start())
+        psp_at, = struct.unpack_from("<H", image, keep + 2)
+        psp = TSR - 0x10
+        image[psp_at:psp_at + 2] = struct.pack("<H", psp)
+        mu = Uc(UC_ARCH_X86, UC_MODE_16)
+        mu.mem_map(0, 0x100000)
+        mu.mem_write(TSR * 16, bytes(image))
+        calls = []
+
+        def dos(mu, intno, _):
+            if intno != 0x21:
+                return
+            ah = mu.reg_read(r.UC_X86_REG_AH)
+            calls.append((ah, mu.reg_read(r.UC_X86_REG_ES), mu.reg_read(r.UC_X86_REG_BX)))
+            flags = mu.reg_read(r.UC_X86_REG_EFLAGS)
+            if ah == 0x31:
+                mu.emu_stop()
+            elif ah == 0x4A:
+                mu.reg_write(r.UC_X86_REG_EFLAGS, flags & ~1)
+            else:
+                mu.reg_write(r.UC_X86_REG_EFLAGS, flags | 1)
+                mu.reg_write(r.UC_X86_REG_AX, 8)
+        mu.hook_add(UC_HOOK_INTR, dos)
+        mu.reg_write(r.UC_X86_REG_CS, TSR)
+        mu.reg_write(r.UC_X86_REG_SS, SS)
+        mu.reg_write(r.UC_X86_REG_SP, 0x1000)
+        mu.reg_write(r.UC_X86_REG_DX, 0x1234)
+        mu.emu_start(TSR * 16 + keep, 0, count=100000)
+        self.assertEqual(calls[0], (0x4A, psp, 0x1234))
+        self.assertEqual(calls[-1][0], 0x31)
+
+
+@unittest.skipIf(Uc is None, "unicorn not installed")
+class PictureSlotTests(RuleTests):
+    """PIC_REUSE: the picture cache's 300 slots (DSUN.EXE 25FA6h). Below 300 the game's own way; with
+    all taken a slot out of memory that no wall or map thing names is reused (a STALE one first), its
+    picture placed in the first gap of the store it fits, and the count left at 300."""
+    TABLE = GAME_DS - (0x4356 - 0x3E60)  # (the table's segment, below the game's DS)
+
+    def slot(self, k, number, length=0, place=-1, flags=0):
+        self.mu.mem_write(self.TABLE * 16 + k * 16, struct.pack("<HIiIBB", number, length, place, 0, flags, 0))
+
+    def entry(self, k):
+        return struct.unpack("<HIiIBB", bytes(self.mu.mem_read(self.TABLE * 16 + k * 16, 16)))
+
+    def count(self, value=None):
+        if value is not None:
+            self.mu.mem_write(GAME_DS * 16 + 0x1F84, struct.pack("<H", value))
+        return struct.unpack("<H", self.mu.mem_read(GAME_DS * 16 + 0x1F84, 2))[0]
+
+    def jump(self, number, stops, **regs):
+        """INT 98h and site NUMBER; run until IP reaches one of STOPS (offsets after the site's
+        number): which."""
+        mu = self.mu
+        self.at += 0x20
+        base = CALLER * 16 + self.at
+        mu.mem_write(base, bytes((0xCD, 0x98, number)))
+        ends = {base + 3 + s: s for s in stops}
+        hit = []
+        def hook(uc, address, size, _):
+            if address in ends:
+                hit.append(ends[address])
+                uc.emu_stop()
+        h = mu.hook_add(UC_HOOK_CODE, hook)
+        for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, **regs).items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+        try:
+            mu.emu_start(base, 0xFFFFF, count=5_000_000)
+        finally:
+            mu.hook_del(h)
+        self.assertEqual(len(hit), 1, "never came back")
+        self.assertEqual(mu.reg_read(r.UC_X86_REG_SP), 0x800)
+        return hit[0]
+
+    def setUp(self):
+        super().setUp()
+        image = load_image()
+        at = install_at(image, 0x98)
+        self.mu.mem_write(0x98 * 4, struct.pack("<HH", struct.unpack_from("<H", image, at + 4)[0], TSR))
+        self.mu.mem_write(self.TABLE * 16, bytes(300 * 16))
+        self.mu.mem_write(GAME_DS * 16 + 0x6694, b"\xff" * (520 * 32))  # (no thing names a slot)
+        self.mu.mem_write(GAME_DS * 16 + 0x574C, b"\xff" * (31 * 4))   # (nor a wall)
+
+    FAIL, PLACED = 0x25FD0 - 0x2600C, 0x2610D - 0x260CF
+
+    def full(self):
+        """All 300 taken, in memory, one after another in the store, 100 bytes each."""
+        for k in range(300):
+            self.slot(k, 1000 + k, 100, k * 100, 3)
+        self.count(300)
+
+    def test_sites(self):
+        from dsloader import gamepatch
+        for name, offset, site in (("pic_full", 0x26009, gamepatch.PIC_FULL_SITE),
+                                   ("pic_place", 0x260CC, gamepatch.PIC_PLACE_SITE),
+                                   ("pic_count", 0x2612B, gamepatch.PIC_COUNT_SITE),
+                                   ("pic_fail", 0x25FD0, gamepatch.PIC_FAIL_SITE)):
+            p = next(p for p in gamepatch.PATCHES if p.name == name)
+            self.assertEqual((p.offset, p.replacement[2]), (offset, site))
+            self.assertEqual(len(p.original), len(p.replacement))
+
+    def test_below_300_the_games_way(self):
+        from dsloader import gamepatch
+        self.count(203)
+        self.assertEqual(self.jump(gamepatch.PIC_FULL_SITE, (0, self.FAIL)), 0)
+        self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 203)
+        self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<HH", 0x40, 0x2345))
+        self.assertEqual(self.jump(gamepatch.PIC_PLACE_SITE, (0, self.PLACED)), 0)  # (the game's place)
+        self.assertEqual((self.mu.reg_read(r.UC_X86_REG_ES), self.mu.reg_read(r.UC_X86_REG_BX)), (0x2345, 0x40))
+        self.jump(gamepatch.PIC_COUNT_SITE, (0,))
+        self.assertEqual((self.mu.reg_read(r.UC_X86_REG_SI), self.count()), (203, 204))
+
+    def test_full_nothing_free(self):
+        """Every slot in memory: no slot, as the game (its "no slot" way on)."""
+        from dsloader import gamepatch
+        self.full()
+        self.assertEqual(self.jump(gamepatch.PIC_FULL_SITE, (0, self.FAIL)), self.FAIL)
+        self.assertEqual(self.count(), 300)
+
+    def test_full_reuses_a_free_slot(self):
+        """Out of memory and named by nothing: reused; a wall's, a thing's and one in memory not; a
+        STALE one first; then the place: the first gap it fits; the count stays 300."""
+        from dsloader import gamepatch
+        self.full()
+        for k in (10, 20, 30, 40, 250):
+            self.slot(k, 1000 + k, 100, k * 100, 1)  # (stored, out of memory)
+        self.mu.mem_write(GAME_DS * 16 + 0x574E + 4 * 3, struct.pack("<H", 10))  # a wall's
+        self.mu.mem_write(GAME_DS * 16 + 0x6694 + 32 * 400 + 0x0F, struct.pack("<H", 20))  # a thing's
+        self.assertEqual(self.jump(gamepatch.PIC_FULL_SITE, (0, self.FAIL)), 0)
+        self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 30)
+        self.assertEqual(self.entry(30)[0], 0xFFFE)  # (no number until its picture is in)
+        self.slot(30, 1030, 100, 3000, 3)      # (its picture in: in memory)
+        self.slot(250, 0xFFFE, 100, 25000, 1)  # a STALE one is taken before 40
+        self.jump(gamepatch.PIC_FULL_SITE, (0, self.FAIL))
+        self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 250)
+        # its picture of 150 bytes: its own old 100 too short, every other place held: past the end
+        self.slot(30, 0xFFFE, 100, 3000, 1)    # (30 let go again: its 100 free)
+        self.slot(250, 0xFFFE, 150, 25000, 1)
+        self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<HH", 250 * 16, self.TABLE))
+        self.assertEqual(self.jump(gamepatch.PIC_PLACE_SITE, (0, self.PLACED)), self.PLACED)
+        self.assertEqual(self.entry(250)[2], 30000)
+        # 80 bytes: the first gap, slot 30's old place (STALE) at 3000
+        self.slot(250, 0xFFFE, 80, 25000, 1)
+        self.jump(gamepatch.PIC_PLACE_SITE, (0, self.PLACED))
+        self.assertEqual(self.entry(250)[2], 3000)
+        self.jump(gamepatch.PIC_COUNT_SITE, (0,))
+        self.assertEqual((self.mu.reg_read(r.UC_X86_REG_SI), self.count()), (250, 300))
+
+    def test_failed_read_lets_the_reused_slot_go(self):
+        """A reused slot whose picture then failed to load (the game's write of the new number and
+        length, its read failing, its way out at 25FD0h): let go again, STALE and out of memory, so
+        no later lookup by that number reads the old picture's place; the game's AX FFFFh as ever.
+        Without a reuse (below 300, or no slot) the failure changes nothing."""
+        from dsloader import gamepatch
+        self.full()
+        self.slot(30, 1030, 100, 3000, 1)
+        self.jump(gamepatch.PIC_FULL_SITE, (0, self.FAIL))
+        self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 30)
+        self.slot(30, 2222, 180, 3000, 1)  # (the game's write: the new number and length, the old place)
+        self.assertEqual(self.jump(gamepatch.PIC_FAIL_SITE, (0,)), 0)
+        self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX) & 0xFFFF, 0xFFFF)
+        number, _, _, _, flags, _ = self.entry(30)
+        self.assertEqual((number, flags & 2), (0xFFFE, 0))
+        # the next picture: slot 30 again, and counted as a reuse only once it is in
+        self.jump(gamepatch.PIC_FULL_SITE, (0, self.FAIL))
+        self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 30)
+        self.jump(gamepatch.PIC_COUNT_SITE, (0,))
+        self.assertEqual((self.mu.reg_read(r.UC_X86_REG_SI), self.count()), (30, 300))
+        # a failure with no reuse pending: nothing written
+        self.slot(40, 1040, 100, 4000, 3)
+        before = self.entry(40)
+        self.jump(gamepatch.PIC_FAIL_SITE, (0,))
+        self.assertEqual(self.entry(40), before)
+        self.assertEqual(self.entry(30)[0], 0xFFFE)  # (as left: the count's site doesn't write it)
+
+    def test_round_from_the_last_reused(self):
+        """The search goes round from after the last reused slot: two pictures loaded and let go in
+        turn (an inventory's icons) take two slots, not one after the other in the same."""
+        from dsloader import gamepatch
+        self.full()
+        for k in (12, 40):
+            self.slot(k, 1000 + k, 100, k * 100, 1)
+        self.jump(gamepatch.PIC_FULL_SITE, (0, self.FAIL))
+        self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 12)
+        self.slot(12, 2000, 100, 1200, 1)  # (its picture in, then let go: free again)
+        self.jump(gamepatch.PIC_FULL_SITE, (0, self.FAIL))
+        self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 40)
+        self.slot(40, 2001, 100, 4000, 1)
+        self.jump(gamepatch.PIC_FULL_SITE, (0, self.FAIL))  # (round past the end, back to 12)
+        self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 12)
+
+    def test_gap_between_slots(self):
+        """A gap left where slots' places don't meet: the first one long enough."""
+        from dsloader import gamepatch
+        self.full()
+        self.slot(5, 1005, 40, 500, 3)    # (60 free after it)
+        self.slot(7, 1007, 10, 700, 3)    # (90 free after it)
+        self.slot(9, 0xFFFE, 0, 900, 1)   # the one reused
+        self.jump(gamepatch.PIC_FULL_SITE, (0, self.FAIL))
+        self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 9)
+        for length, place in ((50, 540), (90, 710), (95, 900), (101, 30000)):
+            self.slot(9, 0xFFFE, length, 900, 1)
+            self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<HH", 9 * 16, self.TABLE))
+            self.jump(gamepatch.PIC_PLACE_SITE, (0, self.PLACED))
+            self.assertEqual(self.entry(9)[2], place, length)

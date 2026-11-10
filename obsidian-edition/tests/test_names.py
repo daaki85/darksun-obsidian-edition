@@ -87,11 +87,16 @@ class HelperTests(unittest.TestCase):
         image = load_image()
         hdr = image.find(HDR_SIG)
         off, count = struct.unpack_from("<HH", image, hdr + names.TSR_NAMES_OFF)
+        off += struct.unpack_from("<H", image, hdr + 1836)[0] * 16  # (in the tail: TAIL_PARAS on)
         self.assertEqual(count, names.EXTRA)
-        size = names.KEPT
-        listed = [image[off + i * size:off + (i + 1) * size] for i in range(count)]
-        want = [names.NAMES.get(names.OWN + i, b"").ljust(size, b"\0") for i in range(count)]
+        listed = []
+        for _ in range(count):  # (each NUL-terminated, KEPT - 1 letters at most)
+            end = image.index(b"\0", off)
+            listed.append(image[off:end])
+            off = end + 1
+        want = [names.NAMES.get(names.OWN + i, b"") for i in range(count)]
         self.assertEqual(listed, want)
+        self.assertTrue(all(len(name) < names.KEPT for name in listed))
 
 
 if __name__ == "__main__":

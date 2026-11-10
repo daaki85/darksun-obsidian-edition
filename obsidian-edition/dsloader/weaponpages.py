@@ -35,6 +35,8 @@ WIND_WIDTH, WIND_HEIGHT, WIND_BACKGROUND = 0xBE, 0xC0, 0xC2
 BUTN_SIZE = 0x28  # a button's width and height
 PICTURES = (1014, 1185, 2504, 2427, 2506, 1183, 2508, 2510, 1019, 2512, 1011, 1188, 1010, 1017, 1015, 1016)
 POLEARM, POLEARM_SIZE = 9, 26  # (its picture, 36 pixels square, made smaller)
+POLEARM_FIT = 22  # (drawn so: the picture the Loader gave it till 2026-11-09, when the game's own
+                  # came back for the inventory and the ground, the item box having its own copy)
 # the interface's blue-greys, which no region's palette changes (17-31): the slot's face, its
 # dark top and left, light bottom and right, its lit edge, and a weapon out of use
 SLOT_FACE, SLOT_DARK, SLOT_LIGHT, SLOT_LIT, SLOT_OUT = 19, 17, 24, 31, 22
@@ -207,14 +209,17 @@ def _smaller(rows: Rows, size: int) -> Rows:
 
 def weapon_picture(objects: gff.Chunks, kind: int) -> Rows:
     """Kind KIND's weapon, as the game draws it in the inventory, trimmed (none if missing)."""
-    from .icons import OJFF_ICON, decode
+    from .icons import OJFF_ICON, decode, fit_box
     ojff = objects.get(("OJFF", PICTURES[kind]))
     if not ojff:
         return [[None]]
     bmp = objects.get(("BMP ", struct.unpack_from("<H", ojff, OJFF_ICON)[0]))
     if not bmp:
         return [[None]]
-    rows = _trim(decode(bmp))
+    rows = decode(bmp)
+    if kind == POLEARM:  # (the 22-pixel picture the Loader once drew it at everywhere, icons.fit_box's)
+        rows = fit_box(rows, POLEARM_FIT)
+    rows = _trim(rows)
     if kind == POLEARM and max(len(rows), len(rows[0])) > PICK_SLOT - 4:
         rows = _smaller(rows, POLEARM_SIZE)
     return rows

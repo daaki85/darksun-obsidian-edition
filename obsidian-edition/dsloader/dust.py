@@ -11,7 +11,8 @@ import functools
 import struct
 from typing import Optional
 
-TSR_DUST_ON, TSR_LIGHT, TSR_DAC = 234, 236, 238  # DSCLOG's header
+TSR_DUST_ON, TSR_LIGHT, TSR_DAC = 234, 236, 238  # DSCLOG's header (LIGHT's and DAC's offsets in its far block)
+TSR_FAR_SEG = 142  # (its far block's segment)
 TSR_HDR_OFF = 20
 FIRST, LAST = 16, 223  # the colours the game doesn't animate (as DARK's)
 LIGHTER = 0.45  # how far toward white a colour is wanted
@@ -68,8 +69,8 @@ class Dust:
             return
         if palettes == self._palettes or palettes == 0:
             return
-        base = tsr_hdr - struct.unpack("<H", guest.read(tsr_hdr + TSR_HDR_OFF, 2))[0]
         light_off, dac_off = struct.unpack("<HH", guest.read(tsr_hdr + TSR_LIGHT, 4))
-        guest.write(base + light_off, light_table(guest.read(base + dac_off, 768)))
+        far = struct.unpack("<H", guest.read(tsr_hdr + TSR_FAR_SEG, 2))[0] * 16
+        guest.write(far + light_off, light_table(guest.read(far + dac_off, 768)))
         guest.write(tsr_hdr + TSR_DUST_ON, struct.pack("<H", 1))
         self._on, self._palettes = True, palettes

@@ -21,6 +21,7 @@ TYPES = {
     17: (0x01, 0x03, 0x00, 0x1FF6),   # obsidian dagger
     18: (0x01, 0x80, 0x00, 0x177A),   # club
     20: (0x01, 0x01, 0x00, 0x167A),   # bone mace
+    21: (0x01, 0x01, 0x40, 0x167B),   # cahulaks (bone)
     22: (0x01, 0x04, 0x00, 0x177A),   # axe (metal)
     29: (0x01, 0x04, 0x00, 0x1776),   # Flame Blade (no kind)
     37: (0x01, 0x05, 0x00, 0x1FFF),   # Chameleon Gloves (no kind)
@@ -82,7 +83,7 @@ class RestrictTests(unittest.TestCase):
 
     def test_psionicist(self):
         psi = sheet(12)
-        self.assertEqual([t for t in TYPES if not ok(psi, t)], [0, 3, 9, 16, 22, 45, 57, 81, 89, 112])
+        self.assertEqual([t for t in TYPES if not ok(psi, t)], [0, 3, 9, 16, 21, 22, 45, 57, 81, 89, 112])
         # whatever the other class allows
         self.assertFalse(ok(sheet(9, 12), 57))
         self.assertFalse(ok(sheet(9, 12), 45))
@@ -128,10 +129,10 @@ class RestrictTests(unittest.TestCase):
 
     def test_cleric_spheres(self):
         allowed = lambda cls: [t for t in TYPES if TYPES[t][0] & 3 and ok(sheet(cls), t)]
-        self.assertEqual(allowed(1), [0, 1, 17, 29, 37, 48])   # air: missile, thrown, daggers
+        self.assertEqual(allowed(1), [0, 1, 17, 21, 29, 37, 48])   # air: missile, thrown, daggers, cahulaks
         self.assertEqual(allowed(2), [1, 3, 17, 18, 22, 29, 37, 45, 48, 112])  # earth (the chatkcha obsidian)
         self.assertEqual(allowed(3), [17, 29, 37, 45, 48])   # fire: obsidian
-        self.assertEqual(allowed(4), [1, 3, 18, 20, 29, 37, 81])   # water: bone, wood
+        self.assertEqual(allowed(4), [1, 3, 18, 20, 21, 29, 37, 81])   # water: bone, wood
         self.assertFalse(ok(sheet(9, 3), 81))  # multiclass too
         self.assertTrue(ok(sheet(3), 57))  # (armour as the game has it)
 

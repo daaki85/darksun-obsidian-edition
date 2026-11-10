@@ -1,7 +1,9 @@
 # The mod's sounds (dsloader/sounds.py), made at 32 kHz and brought down to the game's 8 kHz, 8-bit
 # unsigned mono (its BVOC clips' form): `python3 make.py FOLDER` (numpy) writes the eight candidates
 # the user chose from (2026-11-05); hide.wav is hide-1-fade-into-shadow.wav and pick.wav is
-# pocket-2-purse-jingle.wav. A development tool only: the Loader reads the WAV files.
+# pocket-2-purse-jingle.wav. A development tool only: the Loader reads the WAV files. Both made as loud
+# as the game's typical clip on 2026-11-09 (full scale, the hide clip 3 dB more through a soft limiter:
+# about -10.6 and -9.7 LUFS over their loudest 400 ms, the game's median -11.1).
 import numpy as np, wave, sys
 R = 32000; OUT = 8000
 rng = np.random.default_rng(7)
@@ -26,11 +28,15 @@ def place(total, parts):
     for at, sig in parts:
         i = int(at * R); out[i:i + len(sig)] += sig[:len(out) - i]
     return out
-def save(name, x, gain=0.8):
-    # to 8 kHz: lowpass under 3.6 kHz, then every 4th sample
+def save(name, x, gain=0.8, drive=0):
+    # to 8 kHz: lowpass under 3.6 kHz, then every 4th sample; DRIVE dB more through a soft limiter
+    # (tanh, the peak kept at GAIN), for a clip whose average is low for its peak
     k = np.sinc(np.arange(-48, 49) * 3600 * 2 / R) * np.hamming(97); k /= k.sum()
     y = np.convolve(x, k, 'same')[::R // OUT]
-    y = y / (np.abs(y).max() + 1e-9) * gain
+    y = y / (np.abs(y).max() + 1e-9)
+    if drive:
+        g = 10 ** (drive / 20); y = np.tanh(y * g) / np.tanh(g)
+    y = y * gain
     b = np.clip(np.round(y * 127 + 128), 0, 255).astype(np.uint8)
     with wave.open(name, 'wb') as w:
         w.setnchannels(1); w.setsampwidth(1); w.setframerate(OUT); w.writeframes(b.tobytes())
@@ -39,7 +45,7 @@ d = sys.argv[1]
 # --- hiding ---------------------------------------------------------------------------------
 n = rng.standard_normal(int(.75 * R))
 sweep = np.geomspace(2600, 220, len(n))                       # a breath that sinks into the dark
-save(f'{d}/hide-1-fade-into-shadow.wav', onepole(n, sweep) * env(len(n), .12, .55, 2.2), .55)
+save(f'{d}/hide-1-fade-into-shadow.wav', onepole(n, sweep) * env(len(n), .12, .55, 2.2), 1.0, 3)  # (.55 till 2026-11-09: too quiet)
 n = rng.standard_normal(int(.4 * R))
 save(f'{d}/hide-2-cloak-swish.wav', band(n, 500, np.geomspace(3000, 900, len(n))) * env(len(n), .05, .3, 3), .6)
 tt = t(.9); f = np.geomspace(330, 165, len(tt))
@@ -55,7 +61,7 @@ save(f'{d}/hide-4-falling-chime.wav', s * np.exp(-1.5 * tt), .5)
 # --- pickpocket -----------------------------------------------------------------------------
 save(f'{d}/pocket-1-two-coins.wav', place(.35, [(0, clink(2350)), (.07, clink(2900, amp=.7))]), .7)
 parts = [(rng.uniform(0, .18), clink(rng.uniform(2000, 3400), .18, rng.uniform(.4, 1))) for _ in range(6)]
-save(f'{d}/pocket-2-purse-jingle.wav', place(.4, parts), .7)
+save(f'{d}/pocket-2-purse-jingle.wav', place(.4, parts), 1.0)  # (.7 till 2026-11-09: too quiet)
 n = rng.standard_normal(int(.12 * R))
 snatch = band(n, 400, 2500) * env(len(n), .01, .1, 4)          # a quick tug of cloth, then a coin
 save(f'{d}/pocket-3-snatch-and-clink.wav', place(.4, [(0, snatch * .8), (.09, clink(2600, .25))]), .7)

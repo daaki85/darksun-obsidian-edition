@@ -107,6 +107,15 @@ ROBE_TYPE = GAME_TYPES + 25  # the robes (robes.py): worn on the chest, not armo
 METAL_SHIELD_TYPE = GAME_TYPES + 26  # a metal shield (worldgear.py's Ironbulwark): the game has none
 # the Girdle of Back Defense, the Golden Girdle of Urnst and the Amulet of Magic Resistance (worldgear.py)
 BACK_GIRDLE_TYPE, URNST_GIRDLE_TYPE, MR_AMULET_TYPE = GAME_TYPES + 27, GAME_TYPES + 28, GAME_TYPES + 29
+# the Boots of Speed (worldgear.py): in a fight, movement doubled and AC 2 better (DSCLOG's BOOTS_MOVE, BOOTS_AC)
+SPEED_BOOTS_TYPE = GAME_TYPES + 30
+# metal cahulaks (the champions' mul's): the game's Cahulaks (21), of metal (DSCLOG's METAL_CAHULAKS)
+METAL_CAHULAKS_TYPE = GAME_TYPES + 31
+# obsidian cahulaks (an earth or fire cleric-warrior's start, weaponchoice.py; air clerics may use any
+# cahulaks): the game's Cahulaks (21),
+# of obsidian, the fire cleric's bit added (DSCLOG's OBSIDIAN_CAHULAKS)
+OBSIDIAN_CAHULAKS_TYPE = GAME_TYPES + 32
+SPEED_AC = 2
 GYTHKA_TYPE = 0x2C  # the game's gythka ("2 handed Bone Gythka")
 # The Loader's rule changes (DSCLOG's RULES): helms count AC 1; AD&D's two-weapon penalties;
 # spells saved against with the spell save; no doubled d20 (2, once boots' movement, is unused)
@@ -161,6 +170,36 @@ RULE_ENLARGE = 33554432
 # every 10 minutes at 25; the game's every 5 minutes at any), and no CON adjustment to a dwarf's or
 # a halfling's paralysis/poison/death save, only its racial bonus (DSCLOG's RULE_HI_CON)
 RULE_CON = 67108864
+# Dual-classing as the manual has it: DUAL from 3rd level in the current class (the game's 2nd), and
+# every prime requisite the manual gives a class checked (tracker.PRIME_REQUISITES), the old class's at
+# 15 or more, the new one's at 17 or more (the game checks one a class: a ranger, druid or psionicist
+# on WIS alone); DSCLOG's RULE_HI_DUAL, DUAL_LEVEL, DUAL_PRIMES
+RULE_DUAL_CLASS = 134217728
+DUAL_LEVEL_GAME, DUAL_LEVEL_RULE, DUAL_OLD_LEAST, DUAL_NEW_LEAST = 2, 3, 15, 17
+# Resting heals by spells and natural healing: before a rest (mode 0, a fire ring's) each priest who can
+# cast spends its slots left on the party (Neutralize Poison on the Poisoned, Cure Blindness on the
+# Blind, Cure Disease without a cleric or druid of 5th level, then Cure Light, Serious and Critical
+# Wounds and Heal on the most wounded), and psionicists their Cell Adjustment (the Diseased, then the
+# wounded); then each member gets REST_NATURAL hit points plus CON's bonus (a warrior's, else at most
+# +2), not all of them (DSCLOG's RULE_HI_REST, REST_PRE, REST_HP)
+RULE_REST = 268435456
+# Cahulaks as Dark Sun's rules have them: a pair of heads, one in each hand, under the two-weapon
+# rule (the off head's one more attack a round; -2 the main head's, -4 the off head's, DEX's
+# reaction adjustment added, no better than 0), and a hit that tangles a man-sized or smaller
+# target failing a save against petrification (it loses its next turn; cahulaks.py's list of the
+# too big). DSCLOG's RULE_HI_CAHULAKS, CAHULAKS
+RULE_CAHULAKS = 536870912
+CAHULAKS_TYPE = 21
+# Creature size as in AD&D (sizes.py): a large target takes AD&D's large weapon dice, and Hold Person,
+# Charm Person and Charm Person or Mammal (a person) don't take on it; an Enlarged creature counts as
+# large (DSCLOG's RULE_HI_SIZE, SIZE)
+RULE_SIZE = 1073741824
+# AD&D's held target (the 2nd edition PHB's Table 51): a blow on a Paralyzed or Out Cold creature hits
+# automatically and does normal damage, where the game rolls the d20 and doubles it (DSCLOG's
+# RULE_HI_HELD, HELD)
+RULE_HELD = 2147483648
+CAHULAKS_TYPES = frozenset((CAHULAKS_TYPE, GAME_TYPES + 31, GAME_TYPES + 32))  # (bone, metal and obsidian)
+REST_NATURAL = 3
 SPEC_SLOTS, SPEC_COUNT = 0x14, 4
 # The sheet's +14h to +17h (the game never reads or writes them): the four weapon specs, kind + 1
 # each (0 none). Up to 2.12, a byte each; in 2.13 packed (SPEC_PACKED, +16h's top bit), 5 bits each
@@ -235,6 +274,7 @@ ITEM_ATTACKS = {ACID: "acid", TOUCH_ARMOUR: "corroding touch", TOUCH_WEAPON: "co
 # the powers a monster's hit casts for its poison properties (monsters.SPECIAL_ATTACKS: bits 13 and
 # 14, the routine giving a hit's special effects, DSUN.EXE 7A776h)
 POISON_POWERS = {176: "Poison (10 damage)", 177: "Poison (30 damage)"}
+POISON_DAMAGE = {176: 10, 177: 30}  # (theirs: no dice)
 # a monster's power the game has no name for, named by the effect its record puts on (+19h)
 POWER_EFFECT_NAMES = {34: "Paralysing attack", 13: "Disease attack", 51: "Entangling attack",
                       35: "Poison attack"}
@@ -251,7 +291,9 @@ RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("two_weapons", RULE_TWO_WEAPONS),
                  ("adnd_tables", RULE_ADND_TABLES), ("cha_prices", RULE_CHA_PRICES),
                  ("rolled_scores", RULE_ROLLED), ("buyback", RULE_BUYBACK),
                  ("backstab_dice", RULE_BACKSTAB), ("aging", RULE_AGING),
-                 ("enlarge_dice", RULE_ENLARGE), ("con_adnd", RULE_CON))
+                 ("enlarge_dice", RULE_ENLARGE), ("con_adnd", RULE_CON),
+                 ("dual_class", RULE_DUAL_CLASS), ("rest_heal", RULE_REST), ("cahulaks", RULE_CAHULAKS),
+                 ("creature_size", RULE_SIZE), ("held_hit", RULE_HELD))
 # The new spells (RULE_NEW_SPELLS; DSCLOG's NEW SPELLS): six wizard spells numbered after the game's
 # 196 (0-195), in records past its own (the 200h bytes after them, two small tables, moved into
 # DSCLOG at the game's start: its SEG_MOVE, SEGMENT_TABLE here); DSCLOG fills their records and rows
@@ -295,6 +337,9 @@ STRENGTH_SPELL, GRACE_EFFECT, CLAW_EFFECT, FOG_EFFECT = 23, 54, 6, 27
 AFFINITY_EFFECT, BODY_WEAPONRY_EFFECT = 61, 62  # (the first natural attack at least 1d10; 2d4: 7B71Bh)
 MIRROR_EFFECT, AFRAID_EFFECT, FRIENDS_EFFECT = 25, 17, 74
 ENLARGE_EFFECT = 16
+# Paralyzed (Hold Person, Hold Monster...): with Out Cold, what the game calls helpless (GameData.helpless):
+# no saving throw, and a weapon's blow does double damage (the attack routine's damage x2, 58B0Dh)
+PARALYZED_EFFECT, HELPLESS_TIMES = 34, 2
 IMAGE_CHANCE, REFLECT_CHANCE = 75, 50  # (an image taking a blow or a foe's spell: DSCLOG's)
 FRIENDS_MOST, SPOOK_MOST = 25, 6
 FLAMING_SPHERE = 14  # (once Cat's Grace's place)
@@ -353,6 +398,46 @@ DOUBLED_FLAGS = 0x86
 
 # settings kept under an earlier name (the new spells' switch was Cat's Grace's alone)
 OLD_SETTING_NAMES = {"new_spells": "cats_grace"}
+
+
+TURN_UNDEAD = 0xBE  # the clerics' Turn Undead, a spell record of its own (190)
+STINKING_CLOUD = 22
+STINKING_CLOUD_MANUAL_DICE = 0x41  # (its record's +4 with the spells as the manual has them: 1d4)
+
+
+def duration_bonus(spell: int, rec: bytes) -> int:
+    """A spell's rounds beyond its record's (DSCLOG's STINK_SITE: Stinking Cloud's 1d4+1, with the
+    spells as the manual has them, told by the record's dice made 1d4)."""
+    return 1 if spell == STINKING_CLOUD and len(rec) > 4 and rec[4] == STINKING_CLOUD_MANUAL_DICE else 0
+
+
+# With the spells as the manual has them (gamepatch.SPELLS_MANUAL), group 3 (DSCLOG's BLUR_SITE ...
+# CELL_SITE): Fire Shield's +2 on saves against fire and cold, Blur's +1; Strength's and Cat's
+# Grace's dice by class (MANUAL_DICE: each class's sides for Strength, then Cat's Grace; a
+# multiclass character's best; none, 1d6); Lower Resistance's 30 + its level; Biofeedback's 2 off a
+# blow; Cloudkill's bands; Cell Adjustment's 1d4
+FIRE_SHIELD_EFFECT, BLUR_EFFECT, BIOFEEDBACK_EFFECT, LOW_RESISTANCE_EFFECT = 20, 55, 4, 31
+FIRE_SHIELD_SAVE, BLUR_SAVE, BIOFEEDBACK_LESS, LOWER_RESISTANCE_BASE = 2, 1, 2, 30
+CLOUD_DIES, CLOUD_SAVES = 4, 5  # (under 4 levels no save; to 5 a failed save kills)
+MANUAL_DICE = {**{c: (6, 4) for c in range(1, 9)}, 9: (8, 6), 10: (8, 6), 11: (4, 6), 12: (6, 6),
+               **{c: (8, 6) for c in range(13, 17)}, 17: (6, 8)}
+MANUAL_CLASS_WORDS = {**{c: "cleric" for c in range(1, 5)}, **{c: "druid" for c in range(5, 9)}, 9: "fighter",
+                      10: "gladiator", 11: "preserver", 12: "psionicist", **{c: "ranger" for c in range(13, 17)},
+                      17: "thief"}
+
+
+def manual_die(spell: int, sheet: bytes) -> Tuple[int, str]:
+    """The die Strength (STRENGTH_SPELL) or Cat's Grace (GRACE_SPELL) rolls on the creature of SHEET
+    with the spells as the manual has them (DSCLOG's STRENGTH_SITE), and the class it is for: a
+    multiclass character's best die (its first class with it), 6 and "" for a creature with no class
+    (or any other spell: Adrenalin Control's)."""
+    which = {STRENGTH_SPELL: 0, GRACE_SPELL: 1}.get(spell)
+    best, why = 0, ""
+    if which is not None and len(sheet) > SHEET_CLASSES + 2:
+        for cls in sheet[SHEET_CLASSES:SHEET_CLASSES + 3]:
+            if cls in MANUAL_DICE and MANUAL_DICE[cls][which] > best:
+                best, why = MANUAL_DICE[cls][which], MANUAL_CLASS_WORDS[cls]
+    return (best, why) if best else (6, "")
 
 
 def rules_from_settings(settings: dict) -> int:
@@ -511,7 +596,7 @@ EFFECT_NAMES = {
 
 # What effects do, where the game's own code shows it (to-hit, AC and saving throws)
 EFFECT_RULES = {
-    2: "armour AC at most 6", 4: "AC -1", 7: "+1 to hit, +1 on saves", 8: "AC 4 worse",
+    2: "armour AC at most 6", 4: "AC -1, and 2 less damage from each blow and other crushing, edged or pointed damage", 7: "+1 to hit, +1 on saves", 8: "AC 4 worse",
     12: "-1 to hit", 16: "+10% melee damage per level of the spell",
     36: "+3 on saves against cold spells, half damage from them",
     38: "AC -2 and +2 on saves against evil",
@@ -538,7 +623,7 @@ EFFECT_RULES = {
     11: "each turn a d10: 1 runs off, 2-6 does nothing, 7-9 fights for a random side, 10 acts normally",
     17: "the computer controls it; can't attack or cast spells (undead are immune; Bravery stops it)",
     18: "whoever hits the wearer has Cause Fear cast on them (once)",
-    19: "can't cast spells",
+    19: "INT and WIS 3 while it lasts; can't cast spells",
     21: "can't be Paralyzed, Slowed or Stuck",
     # attacking uses a charge, and only effects with charges end that way: Invisibility has
     # one, Improved Invisibility (timed) has none
@@ -573,6 +658,26 @@ EFFECT_RULES[8] += "; can't cast spells that need sight"
 EFFECT_RULES[47] += ", half movement and attacks, loses every other turn; ends Haste (Free Action and " \
                     "Protection from Paralysis prevent it)"
 EFFECT_RULES[22] = "double movement and attacks; ends Slow"
+# ... and as they are with the spells and psionics as the manual has them (gamepatch.SPELLS_MANUAL,
+# group 3: DSCLOG's BLUR_SITE ... CELL_SITE, GR_SHADOWED, PSI_SITE)
+MANUAL_EFFECT_RULES = {
+    4: "AC -1, and 2 less damage from each blow and other crushing, edged or pointed damage (at least 1)",
+    19: "INT and WIS 3 while it lasts; can't cast spells or use psionic powers; Heal cures it",
+    20: EFFECT_RULES[20] + ", +2 on saves against fire and cold",
+    31: "magic resistance 30% + 1% a level of the casting lower",
+    55: "attackers -2 to hit, +1 on saves",
+    66: "STR + 1d6, at most 24; only the bigger of it and Strength counts",
+    67: "STR + 1d8 (warriors), 1d6 (priests, rogues, psionicists) or 1d4 (wizards), at most 24; only the "
+        "biggest of Strength and Adrenalin Control counts",
+    GRACE_EFFECT: "DEX + 1d8 (rogues), 1d6 (warriors, wizards, psionicists) or 1d4 (priests), at most 24; only "
+                  "the biggest counts",
+}
+
+
+def effect_rule(effect: int, manual: bool) -> str:
+    """What effect EFFECT does (EFFECT_RULES; MANUAL: with the spells as the manual has them,
+    MANUAL_EFFECT_RULES'), "" for one not listed."""
+    return (MANUAL_EFFECT_RULES.get(effect) if manual else None) or EFFECT_RULES.get(effect, "")
 # The strength damage adjustments the game adds after rolling melee damage: its own table
 # (STR_DAMAGE_TABLE), which gives STR 18 +4 (AD&D's 18/76-90; Dark Sun has no exceptional
 # strength); these if it can't be read. Seen in play for STR 17, 18, 19, 20, 22 and 24.
@@ -940,7 +1045,10 @@ class GameData:
         self.load_seg = ds - DGROUP
         if hasattr(guest, "guarded"):  # (the C runtime's check, at exit: "Null pointer assignment")
             guest.guarded["the game's data segment's start"] = (ds * 16, ds * 16 + NULL_AREA)
-        if hasattr(guest, "item_gate"):  # (the Loader's changes to the item lists: never mid-load)
+        # (the Loader's changes to the item lists: never mid-load). One gate a guest: the viewer
+        # builds a GameData every tick, and a new gate each time would drop the pass's state and
+        # might check another data segment's ranges (DiceLog.attach makes a new game's own)
+        if hasattr(guest, "item_gate") and guest.item_gate is None:
             from .itemgate import ItemGate
             guest.item_gate = ItemGate(self)
         self.rules = RULES_IN_FORCE if rules is None else rules
@@ -1205,6 +1313,16 @@ class GameData:
         data = self.guest.read((self.load_seg + EFFECTS_SEG) * 16 + EFFECTS_OFF, count * 10)
         return [Effect(*struct.unpack_from("<hh", data, i * 10), data[i * 10 + 6]) for i in range(count)]
 
+    def helpless(self, combatant: int) -> Optional[str]:
+        """Why COMBATANT is helpless to the game, or None: Paralyzed (its effects' bitset, 76944h,
+        bit 34) or Out Cold (its creature's +1Ch 3), the test of the save routine (79B0Ch: no roll,
+        failed) and of the damage's (79C46h: what a helpless target takes, a blow's damage x2)."""
+        if any(x.owner == combatant and x.id == PARALYZED_EFFECT for x in self.effects()):
+            return EFFECT_NAMES[PARALYZED_EFFECT]
+        creature = self.combatant_creature(combatant)
+        rec = self.creature(creature) if creature is not None else b""
+        return "Out Cold" if len(rec) > CREATURE_STATUS and rec[CREATURE_STATUS] == OUT_COLD else None
+
     def image_chance(self, combatant: int) -> int:
         """The chance (percent) of an image of COMBATANT's Mirror Images taking a blow or a foe's
         spell: 75, or 50 for one of Reflected Image (DSCLOG's IMAGE_CHANCE)."""
@@ -1288,6 +1406,8 @@ class GameData:
             return ITEM_ATTACKS[spell].capitalize()
         if spell in POISON_POWERS:  # (a monster's poisoned hit, and a Poisoner's: kits.POISON_POWER)
             return POISON_POWERS[spell]
+        if spell == TURN_UNDEAD:  # (a cleric's button on the USE screen, cast as spell 190: the game names it nowhere)
+            return "Turn Undead"
         if spell == DETONATE_BLAST:
             return f"Detonate's blast{self._power_dice(spell)}"
         if spell > SPELL_COUNT:  # monsters' powers, such as a paralysing touch: the game names none
@@ -1372,12 +1492,15 @@ class GameData:
         rule = self.spell_damage(spell)
         per_levels, adjust = (rule.per_levels, rule.adjust) if rule else (1, 0)
         levels = (max(level, 1) + adjust) * per_level // per_levels
-        total = min((levels + roll) * unit, 0x7FFF)
+        more = duration_bonus(spell, rec)
+        total = min((levels + roll + more) * unit, 0x7FFF)
         how = []
         if per_level:
             how.append(f"{per_level} for each " + ("caster level" if per_levels == 1 else f"{per_levels} caster levels")
                        + (f" ({signed_text(adjust)})" if adjust else "") + f" = {levels}")
         how.append(f"{roll} from the dice")
+        if more:
+            how.append(f"{more} more")
         return total, " + ".join(how)
 
     def damage_halved_by(self, target: int, spell: int) -> Optional[str]:
@@ -1423,6 +1546,26 @@ class GameData:
         rec = self.spell_record(spell)
         return len(rec) >= SPELL_SIZE and bool(struct.unpack_from("<H", rec, 0x11)[0] & MIND_AFFECTING)
 
+    def spells_manual(self) -> bool:
+        """Whether the game's copy has the spells as the manual describes them (gamepatch.SPELLS_MANUAL),
+        told by Stinking Cloud's record's dice made 1d4 (as DSCLOG's MANUAL_ON tells it)."""
+        try:
+            return duration_bonus(STINKING_CLOUD, self.spell_record(STINKING_CLOUD)) == 1
+        except (struct.error, IndexError, ValueError, OSError):
+            return False
+
+    def effect_amount(self, owner: int, effect: int) -> Optional[int]:
+        """The amount (+9 of its entry: Strength's roll, Lower Resistance's cast level with the
+        spells as the manual has them) of combatant OWNER's first EFFECT, None if it has none."""
+        count = self._word(EFFECT_COUNT)
+        if not 0 <= count <= 400:
+            return None
+        data = self.guest.read((self.load_seg + EFFECTS_SEG) * 16 + EFFECTS_OFF, count * 10)
+        for i in range(count):
+            if struct.unpack_from("<h", data, i * 10)[0] == owner and data[i * 10 + 6] == effect:
+                return struct.unpack_from("b", data, i * 10 + 9)[0]
+        return None
+
     def save_modifiers(self, target: int, caster: int, spell: int, save: int) -> List[Tuple[int, str]]:
         """What the game adds to a saving throw's d20 (besides the spell's own modifier), as
         [(amount, why), ...]: the target's rings (with the patched game), effects, class, race
@@ -1466,6 +1609,9 @@ class GameData:
             out.append((3, EFFECT_NAMES[EFFECT_SPIRIT_ARMOR]))
         if EFFECT_BARKSKIN in mine:
             out.append((1, EFFECT_NAMES[EFFECT_BARKSKIN]))
+        manual = (BLUR_EFFECT in mine or FIRE_SHIELD_EFFECT in mine) and self.spells_manual()
+        if manual and BLUR_EFFECT in mine:  # (DSCLOG's BLUR_SITE)
+            out.append((BLUR_SAVE, EFFECT_NAMES[BLUR_EFFECT]))
         if EFFECT_BLESSED in mine:
             out.append((1, EFFECT_NAMES[EFFECT_BLESSED]))
         if category & FEAR_CATEGORY and EFFECT_BRAVE in mine:
@@ -1476,6 +1622,8 @@ class GameData:
                                  (0x02, EFFECT_PROT_FIRE, 3)):
             if kinds & bit and eff in mine:
                 out.append((amount, EFFECT_NAMES[eff]))
+        if manual and kinds & 0x06 and FIRE_SHIELD_EFFECT in mine:  # (fire or cold: DSCLOG's FSHIELD_SITE)
+            out.append((FIRE_SHIELD_SAVE, EFFECT_NAMES[FIRE_SHIELD_EFFECT]))
         prayer = next((x for x in effects if x.id == EFFECT_PRAYER and x.owner == target), None)
         if prayer is not None:
             source = self.combatant_creature(prayer.caster)
@@ -2074,8 +2222,9 @@ class GameData:
                 have = self.sheet(creature)[SHEET_ATTACKS] if halves is None else halves
                 if kits.warrior_attacks(have, self.sheet(creature)) != have:
                     halves = kits.warrior_attacks(have, self.sheet(creature))
-            if missile and kind == kits.CHATKCHA and self.own_race(creature) == kits.THRI_KREEN:
-                # (K'ratchek's chatkcha comes back as if she had several: DSCLOG's OWN_THROWS)
+            sheet = self.sheet(creature)
+            if missile and kind == kits.CHATKCHA and len(sheet) > SHEET_RACE and sheet[SHEET_RACE] == kits.THRI_KREEN:
+                # (a thri-kreen's chatkcha, 2/1 as in AD&D: DSCLOG's OWN_THROWS)
                 halves = (typ[0x0B] if halves is None else halves) + kits.OWN_THROWS_MORE
             if not missile and self.wild.get(creature):
                 # (Wild Fighting, its check passed: 1 more attack a round in melee; DSCLOG's WILD_HALVES)
@@ -2108,19 +2257,20 @@ class GameData:
             out.append(WeaponHit(-1, -1, "unarmed", base - sum(n for _, n in parts), parts))
         return out
 
-    def two_weapons(self, creature: int, slot: int) -> Tuple[str, int]:
+    def two_weapons(self, creature: int, slot: int, head: Optional[str] = None) -> Tuple[str, int]:
         """The to-hit adjustment for an attack with the weapon in SLOT while two are ready (in
         melee), and what it's called. The game's: its DEX table for initiative, sign flipped and
         never below 0 (a bonus at DEX 5 or less). With RULE_TWO_WEAPONS, AD&D's: -2 main hand,
         -4 off hand, plus the DEX reaction adjustment, never above 0. Rangers: none, but with the
         rule only in light armour (DSCLOG's RG_TWO), a Justifier in any; a Twin-blade (kits.py) none with the rule, in
-        light armour too."""
+        light armour too. HEAD ("main" or "off"): the cahulaks' head of that name with RULE_CAHULAKS,
+        AD&D's whatever RULE_TWO_WEAPONS, with nothing in the other hand (DSCLOG's CAH_ADJUST)."""
         dex = self.creature(creature)[CREATURE_ABILITIES + 1]
         sheet = self.sheet(creature)
         ranger = len(sheet) >= SHEET_FLAGS + 2 and struct.unpack_from("<H", sheet, SHEET_FLAGS)[0] & SHEET_FLAG_RANGER
-        if not self.rules & RULE_TWO_WEAPONS:
+        if not self.rules & RULE_TWO_WEAPONS and not head:
             return f"two weapons at DEX {dex}", 0 if ranger else max(0, -self.dex_initiative(dex))
-        hand = "off hand" if slot == WEAPON_HANDS[1] else "main hand"
+        hand = f"cahulaks, {head} head" if head else "off hand" if slot == WEAPON_HANDS[1] else "main hand"
         from . import kits
         if ranger and kits.JUSTIFIER in self.kit_ids(creature):
             return f"two weapons, {hand} (Justifier)", 0  # (in any armour)
@@ -2131,13 +2281,17 @@ class GameData:
         for kid in (kits.TWIN_BLADE, kits.BATTLE_DANCER):
             if light and kid in kids:
                 return f"two weapons, {hand} ({kits.name(kid)})", 0
-        if slot not in WEAPON_HANDS or not self.melee_weapon_in(creature, sum(WEAPON_HANDS) - slot):
+        if head:
+            base = -4 if head == "off" else -2
+        elif slot not in WEAPON_HANDS or not self.melee_weapon_in(creature, sum(WEAPON_HANDS) - slot):
             return "two weapons", 0  # not a hand's weapon, or nothing to fight with in the other hand
-        base = TWO_WEAPON_PENALTY.get(slot, -2)
+        else:
+            base = TWO_WEAPON_PENALTY.get(slot, -2)
         for kid in kids:  # (a Ghetto Fighter's: none in the main hand, -2 in the off hand)
             if kits.two_weapon_base(kid, base) != base:
                 base, hand = kits.two_weapon_base(kid, base), f"{hand}, {kits.name(kid)}"
-        return (f"two weapons, {hand} at DEX {dex}", min(0, base + self.dex_initiative(dex)))
+        return (f"{hand} at DEX {dex}" if head else f"two weapons, {hand} at DEX {dex}",
+                min(0, base + self.dex_initiative(dex)))
 
     def armour_worn(self, creature: int) -> bool:
         """Armour worn (DSCLOG's ARMOUR_WORN), a helm too: an armour piece (not a shield, nor

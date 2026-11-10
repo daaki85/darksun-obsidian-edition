@@ -14,7 +14,8 @@ mottled like the game's dialogue window, in darker shades.
 
 The lines are the dice log's own (DiceLog.lines), from the fight (Log): in detail all of them, in
 short a line for each attack, saving throw and spell's damage with its dice, at the least what came
-of them. They are in the game's font (art.Font), in the Loader's colours for their kind
+of them. They are in a small font (smallfont: 7 pixels a line, 8 lines docked), the header and
+buttons in the game's (art.Font), in the Loader's colours for their kind
 (palette.LOG_COLOURS) with the names in the party's and the monsters' colours, a filled pip before
 a party member's line and a hollow one before a monster's, long lines wrapped with a hanging
 indent. Above them the round, who is acting and who is next. See docs/combat-log/HANDOFF.md.
@@ -25,10 +26,11 @@ import struct
 from collections import deque
 from typing import Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import palette
+from . import ledger, palette, smallfont
 
 TSR_HDR_OFF = 20  # DSCLOG's header: where it is in DSCLOG's segment
-TSR_DAC = 238  # ... the offset of DAC, the palette as DSCLOG last read it (768 values, 0-63)
+TSR_DAC = 238  # ... the offset of DAC in its far block, the palette as DSCLOG last read it (768 values, 0-63)
+TSR_FAR_SEG = 142  # ... its far block's segment (FAR_SEG: FFFFh, the HMA, as DOSBox has it)
 TSR_PANEL_ON, TSR_PANEL_SEG, TSR_PANEL_NEW = 326, 328, 330  # ... the panel shown; its picture; a new one
 TSR_PANEL_OFF = 140  # the picture's offset in TSR_PANEL_SEG's segment (DSCLOG's far block)
 PANEL_W, PANEL_H = 180, 78  # (DSCLOG's PANEL_W, PANEL_H)
@@ -55,8 +57,10 @@ COLOURS = {
 }
 WELL = (4, 15, PANEL_W - 5, PANEL_H - 5)  # x0, y0, x1, y1 (inclusive), in the picture
 GRAIN_HI_N, GRAIN_LO_N = 32, 32  # (of 256: the stone's pixels speckled lighter, darker)
-LINE_H = 9  # the font's height, its shadow in it
-ROWS = 6  # lines in the well
+LINES_FONT = smallfont.SmallFont()  # the lines' font (the header's and the buttons' are the game's)
+LINE_H = LINES_FONT.height  # a line's height, its shadow in it
+FILTER_H = 9  # the filters' row: its chips in the game's font
+ROWS = 8  # lines in the well
 TEXT_X = WELL[0] + 7  # where the lines start (after the pip)
 INDENT = 8  # a wrapped line's rows after its first, and each level of a detail line
 HEADER_X, HEADER_Y = 4, 2
@@ -77,22 +81,49 @@ class Line(NamedTuple):
     depth: int = 0  # a detail line's indent (the log's leading spaces, in twos)
 
 
+
+def far_block(guest, tsr_hdr: int) -> int:
+    """Where DSCLOG's far block is (its FAR_SEG, the header's +142, as a linear address): its
+    offsets from 10h on (DAC, RING_TAB, RED) are from here."""
+    return struct.unpack("<H", guest.read(tsr_hdr + TSR_FAR_SEG, 2))[0] * 16
+
+
+def tsr_dac(guest, tsr_hdr: int) -> bytes:
+    """DSCLOG's DAC: the palette as it last read it (768 values, 0-63), in its far block."""
+    off, = struct.unpack("<H", guest.read(tsr_hdr + TSR_DAC, 2))
+    return guest.read(far_block(guest, tsr_hdr) + off, 768)
+
 def line_kind(line: str) -> str:
-    """A dice log line's kind, for its colour (as the Loader's log shows it)."""
+    """A dice log line's kind, for its colour (as the Loader's log shows it): a weapon's or a
+    spell's attack roll a hit or a miss ("-> HIT", "-> miss", a spell's "-> MISS: ..."), Turn
+    Undead's a hit when it works (TURN_WORKS) and a miss when not (TURN_FAILS); HP back at a rest,
+    Cell Adjustment's and a shadow's drain damage; a cast at a rest and the rest of the manual's
+    monsters' and spells' lines other."""
     return ("round" if line.startswith(("Round ", "Initiative: ")) else
             "turn" if line.endswith("'s turn") else
             "save" if "'s saving throw vs " in line or " magic resistance " in line else
             "hit" if "-> HIT" in line else
-            "miss" if "-> miss" in line else
+            "miss" if "-> miss" in line or "-> MISS" in line else
             "detail" if line.startswith("    ") else
-            "damage" if line.startswith("  ") or " damage: " in line else "other")
+            "damage" if line.startswith("  ") or " damage: " in line else
+            "hit" if TURN_WORKS.match(line) else
+            "miss" if TURN_FAILS.match(line) else
+            "damage" if REST_HP.match(line) or HP_MANUAL.match(line) else "other")
+
+
+# Turn Undead's lines (dicelog's _turn_manual, _turn_undead): what came of it
+TURN_WORKS = re.compile(r".+? turns .+?: (?:.*-> (?:turned|destroyed)|destroyed(?: automatically|,)|turned: flees)")
+TURN_FAILS = re.compile(r".+? (?:turns .+?: (?:.*-> not turned|no chance)|can't turn .+ again: )")
+REST_HP = re.compile(r".+? rests 8 hours: .*now -?\d+/\d+ HP$")  # (natural healing at a rest: dicelog's _rest)
+HP_MANUAL = re.compile(r"(?:Cell Adjustment: .+ healed \d+ HP|.+ drains \d+ STR from |Cloudkill: .+ dies )")
 
 
 # The dice log's lines, as they are
 ATTACK = re.compile(r"(?P<who>.+?) attacks (?P<target>.+?)(?: with .+?)?: d20 = (?P<d20>\d+)(?: \(natural \d+\))?, "
                     r"(?:needs (?P<need>-?\d+)\+|only a 20 hits|(?P<any>hits on anything but a 1))(?: \([^)]*\))?.*-> (?P<result>HIT|miss)$")
-HIT_FOR = re.compile(r"(?P<who>.+?) hits (?P<target>.+?) for (?P<n>\d+): (?P<dice>[0-9d+\-]+)")
-SAVE = re.compile(r"(?P<who>.+?)'s saving throw vs (?P<what>.+?)(?: from .+?)?: d20 = (?P<d20>\d+)"
+# (the working opens with a bracket when the whole is multiplied: a backstab's, a helpless target's x2)
+HIT_FOR = re.compile(r"(?P<who>.+?) hits (?P<target>.+?) for (?P<n>\d+): (?P<dice>\(*[0-9d+\-]+)")
+SAVE = re.compile(r"(?P<who>.+?)'s saving throw vs (?P<what>.+?): d20 = (?P<d20>\d+)"
                   r"(?: \(natural \d+\))?(?:,? [^>]*? = (?P<total>-?\d+))?"  # (its modifiers, then the total)
                   r"(?:, needs (?P<need>-?\d+))?(?: \([^)]*\))? -> (?P<result>\w+)")
 RESIST = re.compile(r"(?P<who>.+?) magic resistance (?P<pct>\d+)% vs (?P<what>.+?): d100 = (?P<roll>\d+) -> "
@@ -100,6 +131,11 @@ RESIST = re.compile(r"(?P<who>.+?) magic resistance (?P<pct>\d+)% vs (?P<what>.+
 DAMAGE_ROLL = re.compile(r"(?P<what>.+?) damage: (?P<dice>\S+) = (?:\[[^\]]*\](?: [+-]\s?\d+)? = )?(?P<total>\d+)")
 PERCENT = re.compile(r"(?P<what>.+?): d100 = (?P<roll>\d+), needs (?P<need>-?\d+) or less.*-> (?P<result>.+)")
 ROUND = re.compile(r"Round (?P<n>\d+)")
+# a spell's attack roll (dicelog's _spell_to_hit: SPELL_HIT's missile and hostile touch spells)
+SPELL_ATTACK = re.compile(r"(?P<who>.+?)'s (?P<spell>.+?) at (?P<target>.+?): (?:touch )?attack d20 = (?P<d20>\d+)"
+                          r"(?: \(natural \d+\))?, (?:needs (?P<need>-?\d+)\+|only a 20 hits|"
+                          r"(?P<any>hits on anything but a 1))(?: \(\d+%\))?.* -> (?P<result>HIT|MISS)(?::.*)?$")
+TAKES = re.compile(r"(?P<who>.+?) takes (?P<n>\d+) from (?P<what>.+?)(?P<rest>(?: \(.*?\))?(?:,.*)?)$")
 NOT_THE_FIGHT = ("Message: ", "Dice: ", "Look: ", "Chosen with Tab", "(")
 A_ROLL = re.compile(r"\bd\d+ = |\b\d+d\d+\b")  # (a line with a die cast in it)
 NOT_A_FIGHT_ROLL = ("Character creation",)  # (rolls out of the game: not the panel's)
@@ -107,8 +143,9 @@ NOT_A_FIGHT_ROLL = ("Character creation",)  # (rolls out of the game: not the pa
 
 def shorten(line: str, level: str) -> Optional[str]:
     """A dice log line as the panel shows it at a level (None: not at that level). In detail,
-    the line itself; in short, the dice and what came of them ("Rampager attacks Defiler: 20 vs
-    16+ HIT"), no working; at the least, only what came of them ("Rampager hits Defiler")."""
+    the line itself; in short, what came of it first and its roll after ("Rampager hits Defiler
+    (20 vs 16+)", the readable layout's grammar, its damage put in by Log.at: "for 11"), no
+    working; at the least, only what came of it ("Rampager hits Defiler")."""
     text = line.strip()
     if level == DETAIL:
         return text
@@ -120,32 +157,45 @@ def shorten(line: str, level: str) -> Optional[str]:
     m = ATTACK.match(text)
     if m:
         need = m.group("need") or ("2" if m.group("any") else "20")
+        verb = 'hits' if m.group('result') == 'HIT' else 'misses'
+        target, how = m.group('target'), ""
+        for mark, said in ((" BACKSTAB", "backstab"), (" from behind", "from behind"), (" unseen", "unseen")):
+            if target.endswith(mark):
+                target, how = target[:-len(mark)], f", {said}"
         if level == MINIMAL:
-            return f"{m.group('who')} {'hits' if m.group('result') == 'HIT' else 'misses'} {m.group('target')}"
-        return f"{m.group('who')} attacks {m.group('target')}: {m.group('d20')} vs {need}+ {m.group('result')}"
+            return f"{m.group('who')} {verb} {target}"
+        return f"{m.group('who')} {verb} {target} ({m.group('d20')} vs {need}+{how})"
+    m = SPELL_ATTACK.match(text)
+    if m:
+        need = m.group("need") or ("2" if m.group("any") else "20")
+        head = f"{m.group('who')}'s {m.group('spell')} {'hits' if m.group('result') == 'HIT' else 'misses'} " \
+               f"{m.group('target')}"
+        return head if level == MINIMAL else f"{head} ({m.group('d20')} vs {need}+)"
     m = HIT_FOR.match(text)
     if m:
-        return f"for {m.group('n')}" if level == MINIMAL else f"{m.group('n')} damage ({m.group('dice')})"
+        return f"for {m.group('n')}"
     m = SAVE.match(text)
     if m:
         saved = m.group("result") == "saved"
+        what = ledger.save_source(m.group("what"))[0]  # (its caster and kind dropped; "Protection from Evil" kept)
         if level == MINIMAL:
-            return f"{m.group('who')} {'saves' if saved else 'fails to save'} vs {m.group('what')}"
-        need = f" vs {m.group('need')}" if m.group("need") else ""
-        return f"{m.group('who')}'s save vs {m.group('what')}: {m.group('total') or m.group('d20')}{need}, {m.group('result')}"
+            return f"{m.group('who')} {'saves' if saved else 'fails to save'} vs {what}"
+        need = f" vs {m.group('need')}+" if m.group("need") else ""
+        return f"{m.group('who')} {'saves' if saved else 'fails'} vs {what} " \
+               f"({m.group('total') or m.group('d20')}{need})"
     m = RESIST.match(text)
     if m:
         resisted = m.group("result").startswith("resisted")
         if level == MINIMAL:
             return f"{m.group('who')} resists {m.group('what')}" if resisted else None
-        return f"{m.group('who')} MR {m.group('pct')}% vs {m.group('what')}: {m.group('roll')}, " \
-               f"{'resisted' if resisted else 'not resisted'}"
+        return f"{m.group('who')} {'resists' if resisted else 'fails to resist'} {m.group('what')} " \
+               f"(MR {m.group('pct')}%: {m.group('roll')})"
     m = PERCENT.match(text)  # (a thief's skills, a scroll learnt)
     if m:
         result = m.group("result").split(":")[0]  # (what it means: the log has it)
         if level == MINIMAL:
             return f"{m.group('what')}: {result}"
-        return f"{m.group('what')}: {m.group('roll')} vs {m.group('need')} or less, {result}"
+        return f"{m.group('what')}: {result} ({m.group('roll')} vs {m.group('need')} or less)"
     m = DAMAGE_ROLL.match(text)
     if m:
         return None if level == MINIMAL else f"{m.group('what')} damage: {m.group('dice')} = {m.group('total')}"
@@ -189,11 +239,24 @@ class Log:
             depth = (len(line) - len(line.lstrip(" "))) // 2 if level == DETAIL else 0
             hit = HIT_FOR.match(line.strip()) if level != DETAIL else None
             if hit and out and out[-1].kind == "hit" and out[-1].text.startswith(hit.group("who")):
-                join = " " if level == MINIMAL else ", "
-                out[-1] = out[-1]._replace(text=out[-1].text + join + text)  # an attack's damage on its line
+                prev = out[-1].text  # an attack's damage on its line: "X hits Y for 11 (15 vs 4+)"
+                at = prev.rfind(" (") if level != MINIMAL and prev.endswith(")") else len(prev)
+                out[-1] = out[-1]._replace(text=f"{prev[:at]} {text}{prev[at:]}")
                 continue
             if hit:
-                text = f"{hit.group('who')} hits {hit.group('target')} " + (text if level == MINIMAL else f"for {text}")
+                text = f"{hit.group('who')} hits {hit.group('target')} {text}"
+            takes = TAKES.match(line.strip()) if level != DETAIL and line.startswith("  ") else None
+            if takes and out and out[-1].kind == "hit":
+                # a spell's damage on its attack's line: "Lex's Acid Arrow hits Templar for 3 (12 vs 4+)"
+                head = f"'s {takes.group('what')} hits {takes.group('who')}"
+                prev = out[-1].text
+                at = prev.rfind(" (") if level != MINIMAL and prev.endswith(")") else len(prev)
+                if prev[:at].endswith(head):
+                    out[-1] = out[-1]._replace(text=f"{prev[:at]} for {takes.group('n')}{prev[at:]}")
+                    rest = takes.group("rest").lstrip(", ")
+                    if rest and level != MINIMAL:  # (the HP it is left with, as a weapon's "now" line)
+                        out.append(Line("damage", _side(takes.group("who"), names), f"{takes.group('who')} {rest}"))
+                    continue
             if kind == "round":  # a rule, "ROUND 3", and in detail the order after it
                 m = ROUND.match(text)
                 if m is None:
@@ -320,11 +383,11 @@ class Geometry(NamedTuple):
 
     @property
     def text_y(self) -> int:
-        return self.well[1] + 2 + (LINE_H if self.filters else 0)
+        return self.well[1] + 2 + (FILTER_H if self.filters else 0)
 
 
 COLLAPSED, DOCKED, EXPANDED = "collapsed", "docked", "expanded"
-SIZES = {COLLAPSED: Geometry(15, 0), DOCKED: Geometry(PANEL_H, ROWS), EXPANDED: Geometry(130, 11, True)}
+SIZES = {COLLAPSED: Geometry(15, 0), DOCKED: Geometry(PANEL_H, ROWS), EXPANDED: Geometry(130, 14, True)}
 SIZE_ORDER = (COLLAPSED, DOCKED, EXPANDED)
 LEVEL_ORDER = (MINIMAL, SHORT, DETAIL)
 LEVEL_NAMES = {MINIMAL: "Least", SHORT: "Short", DETAIL: "Detail"}
@@ -500,7 +563,7 @@ def rows_of(font, lines: List[Line], names: Dict[str, str],
         if line.kind == "round":  # a rule across, the round in the middle
             out.append((line, TEXT_X, [(line.text, "log round")]))
             continue
-        rows = wrap(font, coloured(line.text, f"log {line.kind}", names), width - indent, width - indent - INDENT)
+        rows = wrap(LINES_FONT, coloured(line.text, f"log {line.kind}", names), width - indent, width - indent - INDENT)
         for n, row in enumerate(rows):
             out.append((line if n == 0 else None, TEXT_X + indent + (INDENT if n else 0), row))
     return out
@@ -578,7 +641,7 @@ def filter_rects(font, g: Geometry) -> List[Tuple[str, Tuple[int, int, int, int]
     y = g.well[1] + 1
     for key, label in FILTERS:
         x1 = x + _width(font, label) + 5
-        out.append((key, (x, y, x1, y + LINE_H - 1)))
+        out.append((key, (x, y, x1, y + FILTER_H - 1)))
         x = x1 + 3
     return out
 
@@ -646,18 +709,18 @@ def draw(background: bytes, font, ink: Dict[str, int], top: str, lines: List[Lin
         _button(picture, font, rect, dict(FILTERS)[key], ink, on=key == filt)
     for (line, x, runs), y, right in shown:
         if line is not None and line.kind == "round":
-            label = _width(font, line.text)
+            label = _width(LINES_FONT, line.text)
             mid = (TEXT_X + right) // 2
             for rx in list(range(TEXT_X, mid - label // 2 - 3)) + list(range(mid + label // 2 + 3, right)):
-                picture[(y + 4) * w + rx] = ink["log round"]
-            _text(picture, font, mid - label // 2, y, runs, ink, right)
+                picture[(y + 3) * w + rx] = ink["log round"]
+            _text(picture, LINES_FONT, mid - label // 2, y, runs, ink, right)
         else:
             if line is not None and line.side is not None:
-                _pip(picture, g.well[0] + 2, y + 3, line.side == "party",
+                _pip(picture, g.well[0] + 2, y + 2, line.side == "party",
                      ink["member0"] if line.side == "party" else ink["monster"])
-            _text(picture, font, x, y, runs, ink, right)
+            _text(picture, LINES_FONT, x, y, runs, ink, right)
     if first_row is not None and g.rows:  # the chip: "Latest" and the rows since
-        _button(picture, font, chip_rect(g), chip, ink)
+        _button(picture, LINES_FONT, chip_rect(g), chip, ink)
     return bytes(picture)
 
 
@@ -800,9 +863,7 @@ class Panel:
             on = False
         names = names or {}
         if on and palettes and palettes != self._palettes:
-            base = tsr_hdr - struct.unpack("<H", guest.read(tsr_hdr + TSR_HDR_OFF, 2))[0]
-            dac_off, = struct.unpack("<H", guest.read(tsr_hdr + TSR_DAC, 2))
-            self._dac = guest.read(base + dac_off, 768)
+            self._dac = tsr_dac(guest, tsr_hdr)
             self._ink = inks(self._dac)
             self._backgrounds = {}
             self._palettes = palettes

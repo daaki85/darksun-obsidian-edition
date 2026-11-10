@@ -29,6 +29,8 @@ cannot be loaded in a fresh install (2026-11-01).
 - `pens-fire-count4` (2026-11-05): from `pens-after-arena`, Kurzak followed to his stop and the
   party in the east hall's fire room (map 1896, 872; its door 115, 53 opened), with the arena
   count (the game's number 12) set to 4 in memory before the save, so the next trip is Scar's.
+  Its Scar and henchmen were made on the arena's first visit, before 2026-11-10's gear (Scar's long
+  sword, no helm or leggings; henchmen with bone axes and no armour): test their gear in a new game.
   Not rested yet. Its `DARKSAVE.GFF` is the one in the game folder (not rewritten at this save).
 - `pens-after-scar` (2026-11-05): from `pens-fire-count4`: rested, called, into the arena, Scar
   killed there by Cilla ("This makes Cilla king of the pens!"), the waves fought and out by the
@@ -40,3 +42,5 @@ cannot be loaded in a fresh install (2026-11-01).
   loading), through the arena's waves and out by the gate; in the pens at (1816, 440), Kurzak's
   greeting answered Goodbye. Nothing else done. Its `DARKSAVE.GFF` is the one in the game folder
   (not rewritten at this save).
+- `fountain-user`: the user's save "templar fountain" (2026-11-08): the slave pens, Pehtucl leading the party to the fountain, the ambush a moment away (its speech comes on loading). Only the user's SAVE01.SAV: CHARSAVE.GFF and DARKSAVE.GFF are pens-after-scar's (loads and plays). The ambush's fight: Pehtucl, 4 Arena Guards and a Guard; the script also sends every guard of those kinds in the region hunting (GPL 145 at 0xE99).
+- `trap-user`: the user's save "trap" (2026-11-08): the party (Lex, Jenna, Ester, Seneca) in Pehtucl's room, beside his chest (leader 136,1400; the chest about 200,1393 on the map, at screen 200,95 with the camera 0,1296). A game that came to the pens before 2.14.0: its chest was the game's plain one (type 31h), shut by the Loader since. Only the user's SAVE01.SAV: CHARSAVE.GFF and DARKSAVE.GFF are pens-after-scar's.

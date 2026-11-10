@@ -74,14 +74,43 @@ class PictureTests(unittest.TestCase):
         self.assertEqual(points, [(i, i) for i in range(4, 12)])
 
     def test_fit_box(self):
-        """The Polearm's 36x36 diagonal drawn 22x22, unbroken; a picture that fits, as it is."""
+        """The Polearm's 36x36 diagonal drawn 16x16, unbroken; a picture that fits, as it is."""
         rows = [[7 if x == y else None for x in range(36)] for y in range(36)]
         out = icons.fit_box(rows)
         self.assertEqual((len(out), len(out[0])), (icons.BOX_PICTURE, icons.BOX_PICTURE))
         self.assertEqual([(x, y) for y, r in enumerate(out) for x, p in enumerate(r) if p is not None],
-                         [(i, i) for i in range(22)])
+                         [(i, i) for i in range(16)])
         small = [[1, None], [None, 2]]
         self.assertIs(icons.fit_box(small), small)
+
+    def test_tall_weapons_box_copies(self):
+        """Each weapon picture taller than 16 (BOX_TALL) gets a copy for the item box, BOX_SMALL + its
+        place, drawn 16 at most (a narrow one keeping its shape); the picture itself is kept, for the
+        inventory and the ground. One the Loader changes (ICONS', SHINE's) is copied as it ends up."""
+        gythka = icons.encode([[0x3A if x == y else None for x in range(22)] for y in range(22)])
+        staff = icons.encode([[0x3A if x == 3 else None for x in range(7)] for y in range(27)])
+        plain = icons.encode([[0x3A if x == y else None for x in range(16)] for y in range(16)])
+        chunks = {("BMP ", 40): plain, ("BMP ", 2384): gythka, ("BMP ", 2157): staff}
+        for _, number, _, _, _ in icons.ICONS:
+            chunks[("OJFF", 0x10000 - number)] = bytes(12) + struct.pack("<H", 40) + b"rest"
+        new = icons.new_chunks(chunks)
+        self.assertNotIn(("BMP ", 2384), new)  # (the game's own kept)
+        small = lambda n: icons.decode(new[("BMP ", icons.BOX_SMALL + icons.BOX_TALL.index(n))])
+        self.assertEqual([len(small(2384)), len(small(2157)), max(len(r) for r in small(2157))], [16, 16, 4])
+        for n in (2447, 2513):  # (Kreenfang's and the Metal Polearm's, ICONS': made from the plain 16)
+            self.assertEqual(new[("BMP ", icons.BOX_SMALL + icons.BOX_TALL.index(n))], icons.encode(icons.fit_box(icons.decode(new[("BMP ", n)]))))
+        self.assertEqual(len(icons.BOX_TALL), len(set(icons.BOX_TALL)))
+
+    def test_box_table_in_dsclog(self):
+        """DSCLOG's BOX_PICS table and BOX_SMALL are icons'."""
+        import re
+        with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos", "dsclog.asm"),
+                  encoding="latin-1") as f:
+            text = f.read()
+        block = text[text.index("box_tall dw"):text.index("BOX_TALL_COUNT equ")]
+        numbers = [int(n) for line in block.splitlines() for n in re.findall(r"\b\d+\b", line.split(";")[0])]
+        self.assertEqual(tuple(numbers), icons.BOX_TALL)
+        self.assertIn(f"BOX_SMALL equ {icons.BOX_SMALL}", text)
 
     def test_glow(self):
         rows = [[1, 2, None]]
@@ -128,8 +157,9 @@ class CopyTests(unittest.TestCase):
             chunks[("BMP ", base)] = b"map " + bytes([base & 0xFF])
         chunks[("BMP ", 40)] = plain
         new = icons.new_chunks(chunks)
-        self.assertEqual(len(new), 3 * len(icons.ICONS) + 1)  # (and the Polearm's picture, fitted)
-        self.assertEqual(new[("BMP ", 40)], plain)  # (16 pixels: it fits as it is)
+        copies = sum(1 for k in new if k[0] == "BMP " and k[1] >= icons.BOX_SMALL and k[1] < icons.BOX_SMALL + len(icons.BOX_TALL))
+        self.assertEqual(len(new), 3 * len(icons.ICONS) + copies)  # (and the item box's copies of the tall ones)
+        self.assertNotIn(("BMP ", 40), new)  # (the plain picture kept)
         for name, number, obj, icon, _ in icons.ICONS:
             self.assertEqual(struct.unpack_from("<H", new[("OJFF", obj)], icons.OJFF_ICON)[0], icon)
             self.assertEqual(new.get(("BMP ", obj)), chunks.get(("BMP ", 0x10000 - number)))
@@ -304,6 +334,79 @@ class WhichTests(unittest.TestCase):
         for name, number, _, _, _ in icons.ICONS:
             self.assertEqual(icons.picture(name, False), number)
             self.assertEqual(icons.picture(name, True), icons.PICTURES[name])
+
+
+class WriteAtomicTests(unittest.TestCase):
+    """gff.write_atomic, which every copy's writer uses: a failed write leaves no .tmp (a copy's is
+    megabytes) and the earlier file as it was."""
+
+    def test_failed_replace_and_write(self):
+        import tempfile
+        from unittest import mock
+        with tempfile.TemporaryDirectory() as d:
+            dest = os.path.join(d, "SEGOBJEX.GFF")
+            gff.write_atomic(dest, b"one")
+            with mock.patch("os.replace", side_effect=PermissionError(13, "held by the game")):
+                with self.assertRaises(PermissionError):
+                    gff.write_atomic(dest, b"two")
+            self.assertEqual(os.listdir(d), ["SEGOBJEX.GFF"])
+            with open(dest, "rb") as f:
+                self.assertEqual(f.read(), b"one")
+
+            class Full:
+                def __len__(self):
+                    return 3
+            with self.assertRaises(TypeError):  # (a write that fails part-way)
+                gff.write_atomic(dest, Full())
+            self.assertEqual(os.listdir(d), ["SEGOBJEX.GFF"])
+
+
+OBJECTS = os.environ.get("DSUN_OBJECTS")
+
+
+@unittest.skipUnless(OBJECTS and os.path.isfile(OBJECTS), "needs the game's SEGOBJEX.GFF (DSUN_OBJECTS)")
+class BoxTallInDataTests(unittest.TestCase):
+    def test_every_tall_weapon_icon_in_box_tall(self):
+        """In the copy as built: every weapon's icon (an item of a weapon kind's type in any
+        RDFF, and the ICONS and SHINE items made from one) taller than the box's 16 is in
+        BOX_TALL, so the item box draws its small copy (a Metal Pick's 19, drawn bare, put its
+        last line on the box's edge)."""
+        import tempfile
+        from dsloader import dataitems, specialize
+        with tempfile.TemporaryDirectory() as d:
+            dest = os.path.join(d, icons.OBJECTS_FILE)
+            icons.write_objects(OBJECTS, dest, {})
+            with open(dest, "rb") as f:
+                chunks = gff.read_gff(f.read())
+        weapons = set()
+        for (kind, _), chunk in chunks.items():
+            if kind != "RDFF":
+                continue
+            try:
+                recs, _ = dataitems.records(chunk)
+            except (ValueError, IndexError, struct.error):
+                continue
+            for rec in recs:
+                if rec.kind == dataitems.ITEM and len(rec.data) >= game.ITEM_TYPE + 2 \
+                        and specialize.kind_of(struct.unpack_from("<H", rec.data, game.ITEM_TYPE)[0]) is not None:
+                    weapons.add(0x10000 - struct.unpack_from("<H", rec.data, 0)[0])
+        weapons |= {number for _, plain, number, _, _ in icons.ICONS if 0x10000 - plain in weapons}
+        weapons |= {number for _, number, _, _ in icons.SHINE if number in weapons}
+        self.assertIn(1381, weapons)  # (the Stone pick: the check sees the game's weapons)
+        tall = []
+        for number in sorted(weapons):
+            obj = chunks.get(("OJFF", number))
+            if obj is None:
+                continue
+            icon = struct.unpack_from("<H", obj, icons.OJFF_ICON)[0]
+            picture = chunks.get(("BMP ", icon))
+            if picture is not None and len(icons.decode(picture)) > icons.BOX_PICTURE and icon not in icons.BOX_TALL:
+                tall.append((number, icon, len(icons.decode(picture))))
+        self.assertEqual(tall, [])
+        for name, _, number, icon, _ in icons.ICONS:  # (the picks' icons, made from the Stone pick's)
+            if name in icons.PICK_PICTURE_FROM:
+                self.assertEqual(struct.unpack_from("<H", chunks[("OJFF", number)], icons.OJFF_ICON)[0], icon)
+                self.assertIn(icon, icons.BOX_TALL, name)
 
 
 if __name__ == "__main__":

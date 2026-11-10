@@ -5,6 +5,7 @@ import os
 import sys
 import unittest
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from dsloader import dataitems, gpl, kalzith, pehtuclchest as chest
@@ -108,12 +109,52 @@ class WatchTests(unittest.TestCase):
         return self.struct.unpack_from("<H", self.mem, self.at + self.game.ITEM_TYPE)[0]
 
     def test_opened_once_unlocked(self):
-        chest.watch(self.gd)
+        chest.watch(self.gd, True)
         self.assertEqual(self.kind(), chest.SHUT_TYPE)  # (still locked)
         self.flags.add(chest.UNLOCKED)
-        chest.watch(self.gd)
+        chest.watch(self.gd, True)
         self.assertEqual(self.kind(), chest.CHEST_TYPE)
 
+
+    def test_no_use_command_no_lock(self):
+        """Without the chest's USE command in the game's scripts (New items off, no scripts copy)
+        nothing would open a shut chest: it is kept the game's plain one, a save's shut one made one
+        again (the audit of 2026-11-10: shut for good otherwise)."""
+        chest._seen = None
+        chest.watch(self.gd, False)
+        self.assertEqual(self.kind(), chest.CHEST_TYPE)
+        chest.watch(self.gd, False)
+        self.assertEqual(self.kind(), chest.CHEST_TYPE)
+
+    def test_has_use(self):
+        """has_use reads the pens' master script of a scripts file: the command there or not."""
+        import tempfile, struct as st
+        use = gpl.encode_op((chest.USE, [("n", kalzith.START), ("n", chest.SCRIPT), ("n", -chest.OBJECT)]))
+        end = gpl.encode_op((kalzith.END, []))
+        for master, want in ((use + end, True), (end, False)):
+            from test_core import build_gff
+            data = build_gff({("MAS ", kalzith.MASTER): master})
+            with tempfile.NamedTemporaryFile(suffix=".GFF", delete=False) as f:
+                f.write(data)
+            try:
+                chest._use_known = (None, False)
+                self.assertEqual(chest.has_use(f.name), want)
+            finally:
+                os.remove(f.name)
+        self.assertFalse(chest.has_use("/nonexistent/GPLDATA.GFF"))
+
+    def test_an_older_games_chest_shut(self):
+        """A game that came to the pens before 2.14.0 has the game's plain chest: shut until
+        unlocked, as in a new game (it said "You must be next to the chest" and opened anyway)."""
+        self.struct.pack_into("<H", self.mem, self.at + self.game.ITEM_TYPE, chest.CHEST_TYPE)
+        chest._seen = None
+        chest.watch(self.gd, True)
+        self.assertEqual(self.kind(), chest.SHUT_TYPE)
+        self.flags.add(chest.UNLOCKED)
+        chest.watch(self.gd, True)
+        self.assertEqual(self.kind(), chest.CHEST_TYPE)
+        chest.watch(self.gd, True)
+        self.assertEqual(self.kind(), chest.CHEST_TYPE)  # (and stays one)
 
 @unittest.skipUnless(OBJECTS and os.path.isfile(OBJECTS), "needs the game's SEGOBJEX.GFF (DSUN_OBJECTS)")
 class NeedleTests(unittest.TestCase):

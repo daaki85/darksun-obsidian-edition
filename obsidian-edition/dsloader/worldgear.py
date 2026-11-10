@@ -30,10 +30,16 @@
 - The magic axes: Drakejaw, a bone axe +1, on one of the Magera guarding the wagon's prisoners;
   Glasshewer, an obsidian axe +2, on the elven slavers' Templar; Headsman, a metal great axe +2,
   in the arena Announcer's stash. And the Elven Leader's Gythka +1 made +2.
+- The magic cahulaks (of the Loader's materials: the game's are bone): Emberlash, an obsidian
+  cahulaks +1, on Uzoma, the leader of the Drajian patrol at the Hot Springs; Ironwhirl, a metal
+  cahulaks +2, on the Subterranean Temple's weapon rack. And the plain ones in the shops: metal at
+  the Weapon Merchant's, obsidian at Jark's.
 - Weapons for those who had too few magic ones: Galefang, a metal dagger +2 of DSCLOG's own type
   (made when no dagger was an air cleric's; now every one is), on the Rogue Shaman; Mindshard, an obsidian short sword +1, on Maris,
   and Stillwater, a bone short sword +1, in the chest Chaya gives as her apology (psionicists',
-  alone or with a cleric's); Linebreaker, a metal polearm +2, on the Troop Leader; Thornwall, a
+  alone or with a cleric's); the game's own Polearm +1, which it defines but never places or gives,
+  on Seref, the Draj agent at the Elven Caravan (where the cluebook puts it); Linebreaker, a metal
+  polearm +2, on the Troop Leader; Thornwall, a
   bone polearm +1, on the slave pens' weapon rack once Semyon has told of it (semyon.ship).
 - Magic shields, which the game has two of (the Drake Shield +1 and El's Shield +2, both
   leather): Gutterward, a wooden shield +1, on a skeleton in the warrens (one of the region's
@@ -55,7 +61,7 @@ pointing to it, in the Loader's copy of that region's file).
 import struct
 from typing import Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import dataitems, game, npcitems, specialize, weaponchoice
+from . import dataitems, game, gff, npcitems, specialize, weaponchoice
 
 # the bone long sword the game's merchants sell (SEGOBJEX's), which the weapons are made from
 TEMPLATE = npcitems._item("0cfc000000002d000000510000000000" "04ff1c0000")
@@ -74,6 +80,17 @@ OBSIDIAN_GREAT_AXE = weaponchoice.OTHERS[KIND("great axe")][0]
 METAL_GREAT_AXE = weaponchoice.OTHERS[KIND("great axe")][1]  # (300)
 METAL_PICK = (game.METAL_PICK_TYPE, 0xAD, 0x10000 - 2510, 150)
 METAL_POLEARM = weaponchoice.OTHERS[KIND("polearm")][0]  # (250)
+CAHULAKS_NAME = 0x14  # (the game's "Cahulaks")
+METAL_CAHULAKS = (game.METAL_CAHULAKS_TYPE, CAHULAKS_NAME, 0x10000 - 2670, 200)  # (the champions' mul's)
+OBSIDIAN_CAHULAKS = weaponchoice.OTHERS[KIND("cahulaks")][0]  # (15: an earth or fire cleric-warrior's start)
+SCAR = 87  # (Scar's object: his obsidian long sword made obsidian cahulaks)
+# the game's plain leather armour (its own records: SEGOBJEX's first of types 6, 7 and 8) and the
+# champions' helm (champions.HELM),
+# for Scar and his henchmen, who wore less than Merzol's gladiators and the champions after them
+LEATHER_CHEST_ITEM = npcitems._item("02fc000000000a00000006000000000004ff070000")
+LEATHER_ARM_ITEM = npcitems._item("01fc000000001400000007000000000004ff080000")
+LEATHER_LEGS_ITEM = npcitems._item("fefb000000001400000008000000000004ff090000")
+LEATHER_HELM_ITEM = npcitems._item("03fc000000000500000005000000000004ff060000")
 # (type, name entry, picture, price) and plus, priced as the game prices its own: a melee weapon as
 # the Obsidian Bloodwrath +1 (20,800, as its Hornblade +1 and Gythka +1), 20,800 a plus; a missile
 # weapon far less, as its Sling +1 (2,800; the Chatkcha +1 1,800, the Sling +2 3,500)
@@ -105,6 +122,11 @@ BONE_SHORT_SWORD_1 = ((game.BONE_SHORT_SWORD_TYPE, STILLWATER, 0x10000 - 2568, P
 POLEARM_2 = ((game.METAL_POLEARM_TYPE, LINEBREAKER, 0x10000 - 2570, 2 * PLUS_VALUE), 2)
 BONE_POLEARM = 19  # (the game's Polearm, of bone)
 BONE_POLEARM_1 = ((BONE_POLEARM, THORNWALL, 0x10000 - 2572, PLUS_VALUE), 1)
+# (the game's own Polearm +1, its object 1577: the game defines it but never places or gives it; the
+# cluebook has it in the Elven Caravan. Carried by Seref, the Draj agent there, and so by the Seref
+# its scripts make for his encounter on the road (171's 25h makes a copy of his object, 203))
+GAME_POLEARM_1 = ((BONE_POLEARM, 0x12, 0x10000 - 1577, 20000), 1)
+SEREF = 203
 # the weapons for the kits with too few (the dagger fighters, the archers, the thri-kreen): a bone
 # dagger +1 in Merzol's hay stash (his script's: haystash.py), an obsidian dagger +2 on the Lava
 # Rift's Hermit (in place of his stone one), a bow +1 the Bowyer sells (priced as a melee weapon:
@@ -207,6 +229,23 @@ NAMES.update({CLOAK_OF_ELVENKIND: b"Cloak/Elvenkind", BOOTS_OF_ELVENKIND: b"Boot
 # priced as the game's magic clothes: its Serpent Boots 20,000, Chameleon Gloves 30,000
 ELVEN_CLOAK = armour(game.ELVEN_CLOAK_TYPE, CLOAK_OF_ELVENKIND, 0x10000 - 2546, 25000, plus=0)
 ELVEN_BOOTS = armour(game.ELVEN_BOOTS_TYPE, BOOTS_OF_ELVENKIND, 0x10000 - 2548, 20000, plus=0)
+# the Boots of Speed (the DMG's: the user's, 2026-11-09): DSCLOG's type (the game's Boots', anyone's),
+# in a fight its wearer's movement doubled and AC 2 better (BOOTS_MOVE, BOOTS_AC); 20,000, as the
+# Encyclopedia Magica prices them and as the game's Serpent Boots. Carried by Dagger, the White Sand
+# Outlaws' chief (202; script 133's second band: met whatever came of Hototo's, and fought for the slave)
+BOOTS_OF_SPEED, DAGGER = 0x170, 202
+NAMES[BOOTS_OF_SPEED] = b"Boots of Speed"
+SPEED_BOOTS = armour(game.SPEED_BOOTS_TYPE, BOOTS_OF_SPEED, 0x10000 - 2668, 20000, plus=0)
+# the magic cahulaks of the Loader's types (the game has only bone ones): Emberlash, an obsidian
+# cahulaks +1 (an earth or fire cleric's), on Uzoma, the leader of the Drajian patrol that comes to the
+# Hot Springs once its templar is gone (196: RGNFF's, his alone); Ironwhirl, a metal cahulaks +2, on
+# the weapon rack of the Subterranean Temple beneath Teaquetzl (2252: that rack's alone), with the
+# game's Mace +2. Priced as the other named weapons, 20,800 a plus
+EMBERLASH, IRONWHIRL = 0x171, 0x172
+NAMES.update({EMBERLASH: b"Emberlash", IRONWHIRL: b"Ironwhirl"})
+OBSIDIAN_CAHULAKS_1 = ((game.OBSIDIAN_CAHULAKS_TYPE, EMBERLASH, 0x10000 - 2676, PLUS_VALUE), 1)
+METAL_CAHULAKS_2 = ((game.METAL_CAHULAKS_TYPE, IRONWHIRL, 0x10000 - 2678, 2 * PLUS_VALUE), 2)
+UZOMA, TEMPLE_RACK, TEMPLE = 196, 2252, 0x2D
 FLAME_BLADE_NAME, OBSIDIAN_LONG_SWORD, FOCUS_HEAT = 0x156, 45, 116
 from . import robes  # noqa: E402 (the robes: the Veiled Robe sold by Kel)
 VEILED_ROBE = armour(game.ROBE_TYPE, robes.VEILED, robes.PICTURE_VEILED, robes.VEILED_VALUE, plus=robes.VEILED_PLUS)
@@ -270,18 +309,29 @@ PLAIN = (BONE_SHORT_SWORD, OBSIDIAN_SHORT_SWORD, BONE_AXE, OBSIDIAN_AXE, OBSIDIA
 # (the objects: the people of each name in the region, as SEGOBJEX and the region's ETAB have them)
 GIFTS: Tuple[Gift, ...] = (
     # (the great axes in every material, a warrior's starting one being bone, and bone breaks:
-    # bone ones on every Wild Mul too. The game's shop shows a seller's first 34 items: Kalzith,
-    # given 42, showed 34 and none of the 8 oldest; these sellers have 29, 31 and 20)
+    # bone ones on every Wild Mul too; the cahulaks of the Loader's materials, metal at the Weapon
+    # Merchant's, obsidian at Jark's. The game's shop shows a seller's first 34 items: Kalzith,
+    # given 42, showed 34 and none of the 8 oldest; these sellers have 30, 32 and 20)
     Gift("Weapon Merchant", tuple(weapon(w) for w in PLAIN + (METAL_SHORT_SWORD, BONE_GREAT_AXE, OBSIDIAN_GREAT_AXE,
-                                                              METAL_GREAT_AXE, METAL_PICK, BONE_DAGGER)), (285,), 0x0B),
+                                                              METAL_GREAT_AXE, METAL_PICK, BONE_DAGGER,
+                                                              METAL_CAHULAKS)), (285,), 0x0B),
     Gift("Jark", tuple(weapon(w) for w in (BONE_SHORT_SWORD, OBSIDIAN_SHORT_SWORD, BONE_AXE, OBSIDIAN_MACE,
-                                           BONE_GREAT_AXE, OBSIDIAN_GREAT_AXE, BONE_DAGGER)), (106,), 0x1A),
+                                           BONE_GREAT_AXE, OBSIDIAN_GREAT_AXE, BONE_DAGGER, OBSIDIAN_CAHULAKS)),
+         (106,), 0x1A),
     Gift("Merzol", (weapon(OBSIDIAN_AXE),), (180,), 0x29),  # the slave pens' gladiator
     Gift("Chaero", (weapon(OBSIDIAN_SHORT_SWORD),), (41,), 0x1D),
     Gift("Tari", (weapon(OBSIDIAN_MACE),), (60, 243), 0x28),  # the warrens' Tari, every one
     Gift("Renegade", (weapon(BONE_SHORT_SWORD),), (289,)),  # (every one)
     Gift("Wild Mul", (weapon(BONE_AXE), weapon(BONE_GREAT_AXE)), (290,)),
-    Gift("Scar's henchman", (weapon(BONE_AXE),), (229,)),  # (every one; they carried nothing)
+    # (every one; they carried nothing: a bone great axe (the user's choice, 2026-11-10; a bone axe
+    # before), and leather chest and arm armour, as Merzol wears)
+    Gift("Scar's henchman", (weapon(BONE_GREAT_AXE), LEATHER_CHEST_ITEM, LEATHER_ARM_ITEM), (229,)),
+    # Scar (object 87, the arena's and the break-out's): a pair of plain obsidian cahulaks in place of
+    # his obsidian long sword (the user's choice)
+    Gift("Scar", (weapon(OBSIDIAN_CAHULAKS),), (SCAR,), instead=(45, 0)),
+    # ... and his leather chest and arm armour made a full leather suit with a helm: a step above
+    # Merzol (chest and arm), below the champions after him (scale, or leather with a shield)
+    Gift("Scar", (LEATHER_LEGS_ITEM, LEATHER_HELM_ITEM), (SCAR,)),
     # the defilers (both kinds, made by scripts) carried nothing, so left no body: a dagger each,
     # one kind obsidian (the game's plain one), the other bone
     Gift("Defiler", (weapon(weaponchoice.PLAIN[KIND("dagger")]),), (258,)),
@@ -315,6 +365,8 @@ MAGIC: Tuple[Gift, ...] = (
     # the circlet sold by Kel (the game's magic items' merchant), the crown worn by Keldar
     # (with the Veiled Robe, robes.py: the Ashen Robe is Kalzith's, kalzith.py)
     Gift("Kel", (ARROWBANE_ITEM, VEILED_ROBE, MR_AMULET_ITEM), (107,), 0x1A),
+    Gift("Seref", (weapon(*GAME_POLEARM_1),), (SEREF,), 0x1A),
+    Gift("Dagger", (SPEED_BOOTS,), (DAGGER,)),
     Gift("Keldar", (CROWN_ITEM,), (28,), 0x27),
     # the Warden's Plate, scattered: the helm on Dagolar (a boss's body, early on), the arms in the
     # Lower Castle's treasure chest (object 1360, with Dark Flame: behind the barrier the Serpent
@@ -354,6 +406,11 @@ MAGIC: Tuple[Gift, ...] = (
     # hunting the Gemfields (its own object); Dunesong with Windlash at the Bowyer's (above)
     Gift("Hermit", (weapon(*OBSIDIAN_DAGGER_2),), (HERMIT,), LAVA_RIFT, instead=(STONE_DAGGER, 0)),
     Gift("Thrikreen", (weapon(*CHATKCHA_2),), (THRIKREEN,), GEMFIELDS, clone=(GEMFIELDS_KREEN, 2598)),
+    # the magic cahulaks: Emberlash on Uzoma (the Hot Springs' Drajian patrol; his metal axe kept, the
+    # cahulaks in his hands: people.py readies the best melee weapon), Ironwhirl on the Subterranean
+    # Temple's weapon rack (with the game's Mace +2 and metal axe)
+    Gift("Uzoma", (weapon(*OBSIDIAN_CAHULAKS_1),), (UZOMA,)),
+    Gift("Weapon rack", (weapon(*METAL_CAHULAKS_2),), (TEMPLE_RACK,), TEMPLE),
 )
 HAYNEEDLE_ITEM = weapon(*BONE_DAGGER_1)  # (Merzol's hay stash's: haystash.py)
 
@@ -385,7 +442,8 @@ def gythka_chunks(chunks, out: Dict[Tuple[str, int], bytes]) -> Dict[Tuple[str, 
             changed[key] = dataitems.chunk(recs, end)
     return {k: v for k, v in changed.items() if v != chunks[k]}
 ELVEN_CLOAK_OBJECT = 2546  # (its picture's object: the item the Elven Leader's script makes)
-# the header numbers of the Loader's own item types: the game's item they're made from
+# the header numbers of the Loader's own item types: the game's item type each is made from (npcitems.TYPES),
+# whose items' header number (dataitems.numbers: the first seen) a new item of the type takes
 BASE_TYPES = {game.SHORT_SWORD_TYPE: 63, game.CLOAK_TYPE: 65, game.BONE_HELM_TYPE: 5, game.BONE_SHORT_SWORD_TYPE: 81,
               game.BONE_AXE_TYPE: 22, game.OBSIDIAN_SHORT_SWORD_TYPE: 45, game.OBSIDIAN_AXE_TYPE: 22,
               game.METAL_SHORT_SWORD_TYPE: 63, game.BRACERS_TYPE: 7, game.METAL_DAGGER_TYPE: 33,
@@ -393,7 +451,60 @@ BASE_TYPES = {game.SHORT_SWORD_TYPE: 63, game.CLOAK_TYPE: 65, game.BONE_HELM_TYP
               game.METAL_POLEARM_TYPE: 19, game.CIRCLET_TYPE: 36, game.CROWN_TYPE: 36, game.PLATE_CHEST_TYPE: 57,
               game.PLATE_ARMS_TYPE: 58, game.PLATE_LEGS_TYPE: 59, game.ELVEN_CLOAK_TYPE: 65, game.ELVEN_BOOTS_TYPE: 68,
               game.AIR_DAGGER_TYPE: 33, game.BONE_GREAT_AXE_TYPE: 2, game.OBSIDIAN_GREAT_AXE_TYPE: 2,
-              game.BONE_DAGGER_TYPE: 17, game.ROBE_TYPE: 65, game.METAL_SHIELD_TYPE: 4}
+              game.BONE_DAGGER_TYPE: 17, game.ROBE_TYPE: 65, game.METAL_SHIELD_TYPE: 4,
+              game.METAL_CAHULAKS_TYPE: 21, game.OBSIDIAN_CAHULAKS_TYPE: 21,
+              # the girdles: the Belt (42); the Amulet of Magic Resistance: the Necklace (36); the Boots of
+              # Speed: the Boots (68), as npcitems.TYPES makes their types
+              game.BACK_GIRDLE_TYPE: 42, game.URNST_GIRDLE_TYPE: 42, game.MR_AMULET_TYPE: 36,
+              game.SPEED_BOOTS_TYPE: 68}
+
+
+# The cahulaks (with the new magic weapons): Legcrusher's two clubs a Cahulaks +1 (a copy of the
+# game's, its shining icon with it, without its Cause Light Wounds: a plain +1); the elven caravan's buried Cahulaks
+# +1 made +2, with an object and a glow of its own (icons.ICONS' "Cahulaks +2"); the arena's dead body, which kept a plain bone gythka once Kreenfang went to the
+# champions, plain bone cahulaks.
+CAHULAKS_PLUS_OBJECT = 30003  # (the game's Cahulaks +1: its object, its icon's)
+LEGCRUSHER_CLUB = 18
+CAHULAKS_PLUS2_VALUE = 11600 + PLUS_VALUE
+
+
+def _is_object(obj: int):
+    return lambda rec: -struct.unpack_from("<h", rec, 0)[0] == obj
+
+
+def cahulaks_chunks(chunks, out: Dict[Tuple[str, int], bytes], champions_on: bool) -> Dict[Tuple[str, int], bytes]:
+    from . import arms, champions, dataitems, icons, npcitems
+    new: Dict[Tuple[str, int], bytes] = {}
+    chest = ("RDFF", CARAVAN_CHEST)
+    plus1 = next((r for r in dataitems.items_of(out.get(chest, chunks.get(chest, b"")))
+                  if _is_object(CAHULAKS_PLUS_OBJECT)(r)), None) if chest in chunks else None
+    if plus1 is None:
+        return new
+    numbers = header_numbers(chunks)
+
+    def plus2(rec: bytes) -> bytes:
+        rec = bytearray(rec)
+        struct.pack_into("<H", rec, 0, icons.PICTURES["Cahulaks +2"])  # (its own object: its own glow)
+        rec[game.ITEM_PLUS] = 2
+        struct.pack_into("<H", rec, arms.ITEM_VALUE, CAHULAKS_PLUS2_VALUE)
+        return bytes(rec)
+    new[chest] = dataitems.with_item_changed(out.get(chest, chunks[chest]), _is_object(CAHULAKS_PLUS_OBJECT), plus2)
+    key = ("RDFF", npcitems.LEGCRUSHER)
+    if key in chunks:
+        rdff = out.get(key, chunks[key])
+        rdff = dataitems.with_items_removed(
+            rdff, lambda rec: struct.unpack_from("<H", rec, game.ITEM_TYPE)[0] == LEGCRUSHER_CLUB)
+        plain1 = bytearray(plus1)
+        plain1[ITEM_SPELL] = 0  # (no Cause Light Wounds: a plain +1)
+        struct.pack_into("<H", plain1, ITEM_SPELL_SHOWN, 0)
+        new[key] = dataitems.with_items(rdff, [bytes(plain1)], numbers)
+    body = ("RDFF", arms.BODY)
+    plain = champions.game_item(chunks, game.CAHULAKS_TYPE)
+    if champions_on and body in chunks and plain is not None:
+        gythka = lambda rec: struct.unpack_from("<H", rec, game.ITEM_TYPE)[0] == game.GYTHKA_TYPE \
+            and rec[game.ITEM_PLUS] == 0
+        new[body] = dataitems.with_item_replaced(out.get(body, chunks[body]), gythka, plain, numbers)
+    return new
 
 
 def header_numbers(chunks) -> Dict[int, int]:
@@ -433,9 +544,60 @@ def object_chunks(chunks, gifts: Sequence[Gift], extra: Sequence[Tuple[int, Sequ
                 wanted.setdefault(obj, []).extend(gift.items)
     for obj, items in extra:
         wanted.setdefault(obj, []).extend(items)
-    for obj, items in wanted.items():
+    for obj, items in wanted.items():  # (after any swap of the same object's: INSTEAD's)
         if ("RDFF", obj) in chunks:
-            out[("RDFF", obj)] = dataitems.with_items(chunks[("RDFF", obj)], items, numbers)
+            out[("RDFF", obj)] = dataitems.with_items(out.get(("RDFF", obj), chunks[("RDFF", obj)]), items, numbers)
+    return out
+
+
+# People the party fights whom the game gave nothing to fight with (they struck with their fists),
+# 2026-11-09: each given what the armed of their kind carry (a copy of that object's own items) or,
+# with none of their kind armed, the game's plain items of the types named (the first of each type
+# in its data, as champions.game_item). Their scripts make them from these objects (a create copies
+# the object, items and all).
+#  - the Drajian Guards escorting Seref on the road (213; script 171) and the slave village's
+#    soldiers (195; script 152, "Slay them before..."): the armed Drajian Guard's (214);
+#  - the Lower Castle's unarmed Guard (281; "Guards! Guards! I caught them!"): the other Guards' (108);
+#  - Arant's Lazy guard (267), among his armed guards at the camp: theirs (82);
+#  - the White Sand Outlaws who burst from the sand (Slave Hunters 199, 201; script 133, "swords
+#    readied"), and their chiefs Hototo (200) and Dagger (202): a bone long sword and leather chest
+#    armour, the chiefs leather arm armour too;
+#  - the Psionicist of the final battle (257; script 62): a stone dagger;
+#  - the Tohr-kreen of the arena's waves (292), whose picture holds a gythka in every frame: one.
+# (Jake and Mow are Dagolar's guises: script 48 puts Dagolar, armed, in their place; Egrus is dead.)
+ARMED_LIKE = ((213, 214), (195, 214), (281, 108), (267, 82))
+LONG_SWORD_BONE, LEATHER_CHEST, LEATHER_ARMS, STONE_DAGGER_TYPE, GYTHKA_BONE = 0x51, 6, 7, 0x21, 0x2C
+KITS = {199: (LONG_SWORD_BONE, LEATHER_CHEST), 201: (LONG_SWORD_BONE, LEATHER_CHEST),
+        200: (LONG_SWORD_BONE, LEATHER_CHEST, LEATHER_ARMS), 202: (LONG_SWORD_BONE, LEATHER_CHEST, LEATHER_ARMS),
+        257: (STONE_DAGGER_TYPE,), 292: (GYTHKA_BONE,)}
+
+
+# The game's Gythka +3 (its object 2271) is given only as King Tectuktitlay's gift on the arena's
+# 1000th trip: Hototo, chief of the White Sand Outlaws (200; script 133's ambush), carries one too
+# (the user's decision, 2026-11-09), the gift kept. With the magic items.
+HOTOTO, GYTHKA_3_OBJECT = 200, 2271
+
+
+def game_object_item(chunks, obj: int) -> Optional[bytes]:
+    """The item record of the game's stand-alone item object OBJ (its first record), or None."""
+    if ("RDFF", obj) not in chunks:
+        return None
+    recs, _ = dataitems.records(chunks[("RDFF", obj)])
+    return recs[0].data if recs and len(recs[0].data) == game.ITEM_SIZE else None
+
+
+def fighters(chunks) -> List[Tuple[int, Sequence[bytes]]]:
+    """(object, items) for ARMED_LIKE and KITS, each only if it has no items of its own yet."""
+    from .champions import game_item
+    out: List[Tuple[int, Sequence[bytes]]] = []
+    for obj, like in ARMED_LIKE:
+        if ("RDFF", obj) in chunks and ("RDFF", like) in chunks and not dataitems.items_of(chunks[("RDFF", obj)]):
+            out.append((obj, dataitems.items_of(chunks[("RDFF", like)])))
+    for obj, kinds in KITS.items():
+        if ("RDFF", obj) in chunks and not dataitems.items_of(chunks[("RDFF", obj)]):
+            items = [game_item(chunks, kind) for kind in kinds]
+            if all(items):
+                out.append((obj, items))
     return out
 
 
@@ -449,8 +611,12 @@ def data_chunks(chunks, on: Dict[str, bool]) -> Dict[Tuple[str, int], bytes]:
     extra: List[Tuple[int, Sequence[bytes]]] = []
     if on.get("world_gear", True) is not False:
         gifts += GIFTS
+        extra += fighters(chunks)  # (those the party fights with nothing to fight with)
     if on.get("world_magic", True) is not False:
         gifts += MAGIC
+        gythka = game_object_item(chunks, GYTHKA_3_OBJECT)
+        if gythka is not None:
+            extra.append((HOTOTO, [gythka]))
     magic_arms = on.get("magic_arms", True) is not False
     if on.get("pens_gear", True) is not False:
         extra.append((bonescale.CHEST_OBJECT, bonescale.PIECES))
@@ -466,8 +632,14 @@ def data_chunks(chunks, on: Dict[str, bool]) -> Dict[Tuple[str, int], bytes]:
         from . import champions
         try:
             out.update(champions.object_chunks(chunks))
+            champions_on = True
         except (KeyError, ValueError, IndexError, struct.error):
             out.update(arms.kreenfang_chunks(chunks))  # (no champions: Kreenfang on the body, as before)
+            champions_on = False
+        try:
+            out.update(cahulaks_chunks(chunks, out, champions_on))
+        except (ValueError, struct.error):
+            pass  # (an object's record not as expected: the cahulaks where the game has them)
     if on.get("world_magic", True) is not False:
         out[("RDFF", ELVEN_CLOAK_OBJECT)] = dataitems.item_object(ELVEN_CLOAK, header_numbers(chunks).get(65, 0))
         out[("RDFF", HAYNEEDLE_OBJECT)] = dataitems.item_object(
@@ -506,10 +678,7 @@ def write_region(source: str, dest: str, region: int, gifts: Sequence[Gift]) -> 
     with open(source, "rb") as f:
         data = f.read()
     out = with_chunks(data, region_chunks(region, read_gff(data), gifts))
-    tmp = dest + ".tmp"
-    with open(tmp, "wb") as f:
-        f.write(out)
-    os.replace(tmp, dest)
+    gff.write_atomic(dest, out)  # (no .tmp left by a failed write)
 
 
 def regions(gifts: Sequence[Gift]) -> List[int]:

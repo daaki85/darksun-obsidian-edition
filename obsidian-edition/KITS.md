@@ -1,4 +1,4 @@
-# Kits
+# Kits and weapon specs
 
 *Part of Obsidian Edition's documentation, from the [README](README.md) and
 [Features and rules](FEATURES.md#kits). The
@@ -16,7 +16,8 @@ Each class has a table of its three kits: what each gives and costs, what a
 new character starts with ([Starting gear](#starting-gear)), and what else to
 know ([Kits that rule out classes and each
 other](#kits-that-rule-out-classes-and-each-other)). Levels in the tables are
-the kit's own class's.
+the kit's own class's. The weapon specs a warrior trains in, and the attacks a
+round they bring, are at the end ([Weapon specialization](#weapon-specialization)).
 
 ## Contents
 
@@ -36,6 +37,12 @@ the kit's own class's.
 - [Changing class](#changing-class)
 - [Kits that rule out classes and each
   other](#kits-that-rule-out-classes-and-each-other)
+- [Weapon specialization](#weapon-specialization)
+  - [Attacks a round](#attacks-a-round)
+  - [Choosing at creation](#choosing-at-creation)
+  - [Starting weapons](#starting-weapons)
+  - [At a level gained](#at-a-level-gained)
+  - [Where it shows](#where-it-shows)
 
 ## Fighter kits
 
@@ -46,7 +53,7 @@ armour.
 |---|---|---|---|---|
 | **Myrmidon** | with weapon specialization, a second weapon spec at 1st level (+1 to hit, +2 damage, 3/2 attacks a round); both weapon specs go on to **mastery at 5th level** (+3 to hit, +3 damage) and **grand mastery at 9th** (+3, +3, the damage die a size larger and one more attack a round) | −4 on saves against charms (Charm Person, Charm Monster, Charm Person or Mammal, Domination, Mass Domination); initiative 2 worse | the fighter's gear, and a plain weapon of its second weapon spec in the left hand in place of the shield (a bow in the missile slot, with arrows; a two-handed weapon in the backpack) | the second weapon spec is picked on the weapon window after DONE (EXIT after one leaves it with one) |
 | **Sentinel** | AC 2 better with a shield in a hand; +2 initiative, from 1st level | −1 on saves against wizards' and priests' spells | the fighter's gear | can't dual to druid or preserver; can't go with the Shinobi |
-| **Ravager** | +1 to hit and damage in melee; a base AC by level: **7 at 1st-2nd, 6 at 3rd-4th, 5 at 5th-6th, 4 at 7th-8th, 3 at 9th-10th**, armour bettering it as usual | no missile or thrown weapons; no shield; leather armour or none | the fighter's gear, with a second of its weapon in place of the shield (none if the weapon takes both hands) | the dice log shows its bonus as `+1 Ravager`; can't go with the Grove Warden |
+| **Ravager** | +1 to hit and damage in melee; a base AC by level: **7 at 1st-2nd, 6 at 3rd-4th, 5 at 5th-6th, 4 at 7th-8th, 3 at 9th-10th**, armour bettering it as usual | no missile or thrown weapons (cahulaks are allowed: the game doesn't throw them); no shield; leather armour or none | the fighter's gear, with a second of its weapon in place of the shield (none if the weapon takes both hands) | the dice log shows its bonus as `+1 Ravager`; can't go with the Grove Warden |
 
 ## Gladiator kits
 
@@ -56,8 +63,8 @@ armour.
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
 | **Arena Champion** | with a shield in a hand: +1 to hit and damage in melee, and AC 1 better, from 1st level | −1 to hit in melee with no shield | a shield in place of the off-hand club | can't dual to druid or preserver; can't go with the Shinobi |
-| **Twin-blade** | with the two-weapons rule, no penalty for two weapons in light armour, leather or none (others: −2 main hand, −4 off hand) | no shield; no two-handed weapon, bows and the staff sling among them (a half-giant may hold one in one hand, with the half-giants' rule) | the gladiator's gear: its long sword and club are its two weapons | in heavier armour, the usual penalty; can't go with the Healer |
-| **Brute** | +2 to hit and damage with a two-handed melee weapon | two-handed melee weapons only (a half-giant may add a shield); missile weapons, but not as a weapon spec | a two-handed weapon (a bone great axe without weapon specialization); the club is left behind | a bow or staff sling, two-handed as it is, doesn't get the +2; can't dual to psionicist or air cleric; can't go with the Shinobi or Lifebinder |
+| **Twin-blade** | with the two-weapons rule, no penalty for two weapons in light armour, leather or none (others: −2 main hand, −4 off hand) | no shield; no two-handed weapon, bows and the staff sling among them (a half-giant may hold one in one hand, with the half-giants' rule); never cahulaks, a half-giant's too | the gladiator's gear: its long sword and club are its two weapons | in heavier armour, the usual penalty; can't go with the Healer |
+| **Brute** | +2 to hit and damage with a two-handed melee weapon | two-handed melee weapons only (a half-giant may add a shield); missile weapons, but not as a weapon spec | a two-handed weapon (a bone great axe without weapon specialization); the club is left behind | a bow or staff sling, two-handed as it is, doesn't get the +2; can't dual to psionicist (an air cleric can: the cahulaks are two-handed); can't go with the Shinobi or Lifebinder |
 
 ## Ranger kits
 
@@ -68,7 +75,7 @@ armour.
 |---|---|---|---|---|
 | **Stalker** | +2 movement in a fight; +15 hide in shadows and move silently, and hiding not halved indoors (with hiding to backstab) | leather armour or none | the ranger's gear; with fuller starting gear, a cloak | can't dual to thief, and a thief (any thief kit or none) who duals to ranger can't take it: its hiding would add to a thief's own |
 | **Justifier** | with weapon specialization, its expertise with the bow and its chosen weapon spec becomes specialization: +1 to hit, +2 damage (SPECIALIZED IN on the Effects screen); with the two-weapons rule, no penalty for two weapons in any armour (another ranger's is in light armour only) | **one 1st-level priest spell slot from 10th level**, in place of a ranger's slots, cast at the ranger level less 9 (1st at 10th) | the ranger's gear | WIS gives it no bonus slots; can't dual to cleric |
-| **Seeker** | priest spell slots in place of a ranger's: **one 1st-level slot at 6th level, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th**; cast at the ranger level less 5 (1st at 6th, 5th at 10th; a ranger's: less 7), so 2nd-level spells from 8th and 3rd-level from 10th | its sphere's weapon limits, as a cleric of that sphere's (air: missile and thrown weapons, daggers; earth: stone, obsidian, metal, wood; fire: obsidian; water: bone, wood), but it keeps the bow | the ranger's gear, its long sword of a material its sphere allows | WIS gives it no bonus slots; can't dual to cleric |
+| **Seeker** | priest spell slots in place of a ranger's: **one 1st-level slot at 6th level, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th**; cast at the ranger level less 5 (1st at 6th, 5th at 10th; a ranger's: less 7), so 2nd-level spells from 8th and 3rd-level from 10th | its sphere's weapon limits, as a cleric of that sphere's (air: missile and thrown weapons, daggers, cahulaks; earth: stone, obsidian, metal, wood; fire: obsidian; water: bone, wood), but it keeps the bow | the ranger's gear, its long sword of a material its sphere allows | WIS gives it no bonus slots; can't dual to cleric |
 
 ## Thief kits
 
@@ -119,7 +126,7 @@ A psionicist starts with a club, bow and arrows, leather chest armour.
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
 | **Mind Bender** | telepathy powers (the defence modes too) cost 2 PSP less | psychokinesis powers cost 2 PSP more | the psionicist's gear | the 2 counts both to use a power and to keep it up each round, never below 1 (a power with no upkeep still has none) |
-| **Mind Warrior** | a warrior's THAC0 (21 less its level); a warrior's extra attacks in melee: **3/2 a round from 7th level**; with weapon specialization, expertise in one melee weapon spec of its choice (of those its class can use; a thri-kreen the chatkcha too, at 3/2 throws a round, 2 from a warrior class's 7th level) at **3/2 attacks a round, 2 from 7th level** | a tenth fewer PSP, the tenth rounded down (25 becomes 23) | the psionicist's gear | its weapon spec is chosen on the weapon window after DONE (the club for an EXIT; a thri-kreen's the chatkcha); its PSP stay a tenth fewer even with the kit asleep after a change of class; can't dual to fighter, gladiator or ranger; can't go with the Swashbuckler, Crusader or Battle Mage |
+| **Mind Warrior** | a warrior's THAC0 (21 less its level); a warrior's extra attacks in melee: **3/2 a round from 7th level**; with weapon specialization, expertise in one melee weapon spec of its choice (of those its class can use; a thri-kreen the chatkcha too, at 3/2 throws a round, 2 from a warrior class's 7th level, and one more as every thri-kreen) at **3/2 attacks a round, 2 from 7th level** | a tenth fewer PSP, the tenth rounded down (25 becomes 23) | the psionicist's gear | its weapon spec is chosen on the weapon window after DONE (the club for an EXIT; a thri-kreen's the chatkcha); its PSP stay a tenth fewer even with the kit asleep after a change of class; can't dual to fighter, gladiator or ranger; can't go with the Swashbuckler, Crusader or Battle Mage |
 | **Kineticist** | psychokinesis powers cost 2 PSP less | telepathy powers (the defence modes too) cost 2 PSP more | the psionicist's gear | as the Mind Bender's, the other way round |
 
 ## Multiclass kits
@@ -133,7 +140,7 @@ means an outdoor map, or open ground outside the buildings on a city map.
 
 | Kit | Race and classes | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|---|
-| **Battle Dancer** | elf cleric/fighter | a dance as each fight starts: a d20 against DEX − 4 (the Dancing proficiency's check at −4; a natural 20 always fails); at DEX − 4 or under, **+1 to hit, to damage and to AC** for that less the roll in rounds (at least 1), ending with the fight if that comes first (each fight, and each of the arena's waves, dances anew); with the two-weapons rule, no penalty for two weapons in light armour (leather or none) | long swords and bows only (but any long sword or bow, whatever its cleric's sphere allows); no shield; over it, it stumbles: **−1 to hit, to damage and to AC for 1d8 rounds** | a second long sword in the left hand, in place of the shield; with fuller starting gear, a bow and arrows if it has no missile weapon | its weapon spec is the long sword if none is picked; the dice log shows the dance's roll and its end |
+| **Battle Dancer** | elf cleric/fighter | a dance as each fight starts: a d20 against DEX − 4 (the Dancing proficiency's check at −4; a natural 20 always fails); at DEX − 4 or under, **+1 to hit, to damage and to AC** for that less the roll in rounds (at least 1), ending with the fight if that comes first (each fight, and each of the arena's waves, dances anew); with the two-weapons rule, no penalty for two weapons in light armour (leather or none) | long swords and bows only (but any long sword or bow, whatever its cleric's sphere allows), so no cahulaks; no shield; over it, it stumbles: **−1 to hit, to damage and to AC for 1d8 rounds** | a second long sword in the left hand, in place of the shield; with fuller starting gear, a bow and arrows if it has no missile weapon | its weapon spec is the long sword if none is picked; the dice log shows the dance's roll and its end |
 | **Shadowblade** | half-elf fighter/thief | +10 hide in shadows, +5 move silently; with the stealth rule, tries to hide in shadows even with an enemy right beside it | −10 pick pockets; **no shield**; light armour only | its classes' gear, without the shield | |
 | **Military Scout** | half-elf fighter/thief | under the open sky, +10 to find/remove traps, move silently, hide in shadows and climb walls, +2 initiative, and +1 to hit with a bow, sling or staff sling; hiding in shadows not halved in daylight | under a roof, −5 to the same four skills; **never backstabs** (attacking from behind still gives +2 to hit) | its classes' gear | the panel's and the dice log's numbers follow where it stands |
 | **Wilderness Avenger** | half-elf druid/fighter | +1 to hit and damage against anything, melee or missile; Cause Light, Serious and Critical Wounds do 1 more a die (+1, +2, +3); hides in shadows and moves silently as a ranger does, but at 5 a level of its best class (lower than a ranger's table), with its race's and DEX's adjustments | **no healing spells**: never knows Cure Light, Serious or Critical Wounds, Blood Flow, Heal or Water of Life | its classes' gear | with the stealth rule, its hiding gives an attack from behind (+2 to hit), never a backstab, as a ranger's does |
@@ -266,7 +273,7 @@ changes its slots; it is here, as the cleric is, to set the kits beside:
   tables, as a cleric's 6th-level slots come only with them).
 - A cleric's 11th level brings a **6th-level slot**
   ([6th-level priest spells](FEATURES.md#6th-level-priest-spells)); a
-  Crusader's one fewer leaves it none, and an Elementalist has 1 there (below). A preserver has no 6th-level spells to cast.
+  Crusader's one fewer leaves it none, and an Elementalist has 1 there (above). A preserver has no 6th-level spells to cast.
 - A **Seeker** and a **Justifier** have these in place of a ranger's own
   slots, with no bonus slots for WIS.
 - A **Shinobi** casts preserver spells at its thief level less 5, from its own
@@ -280,8 +287,8 @@ changes its slots; it is here, as the cleric is, to set the kits beside:
 ## Changing class
 
 A kit belongs to the class it was chosen with. A human who changes class
-(**DUAL** on the menu a right-click on a portrait opens, for a human of 2nd
-level or more) keeps it, but it sleeps as that class does: gifts and costs
+(**DUAL** on the menu a right-click on a portrait opens, for a human of 3rd
+level or more; 2nd with [the manual's dual-classing](FEATURES.md#dual-classing-as-the-manual-has-it) off) keeps it, but it sleeps as that class does: gifts and costs
 alike count again once the new class's level passes the old one's. The Effects
 screen shows `KIT: BATTLMAGE (ASLEEP)` until then, and the Loader's Characters
 tab says so too. Once
@@ -343,7 +350,7 @@ become the other, and a druid must be true neutral, a ranger good.
 | Shinobi | preserver | its own wizard slot table would take the new class's slots' place |
 | Swashbuckler, Crusader, Battle Mage, Mind Warrior | fighter, gladiator, ranger | a warrior's THAC0 is already their kit's |
 | Arena Champion, Sentinel | druid, preserver | their gift needs a shield, which those classes can't hold |
-| Brute | psionicist, air cleric | it needs a two-handed melee weapon, which those classes can't use |
+| Brute | psionicist | it needs a two-handed melee weapon, and a psionicist can use none (an air cleric can: the game holds the cahulaks in both hands, and a Brute gets its +2 with them) |
 | Stalker | thief | its +15 to hiding would add to a thief's own skills |
 | Grove Warden | gladiator | its AC would add to a gladiator's own, which betters with level too |
 | Healer | ranger of air, earth or fire | its sphere is water's only (after DUAL to a ranger, the sphere menu offers WATER ONLY) |
@@ -361,3 +368,167 @@ class to another, so only these can meet):
 | Swashbuckler, Crusader, Battle Mage, Mind Warrior | each other | each gives a warrior's THAC0: two would be one wasted |
 
 How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#kits).
+
+## Weapon specialization
+
+With **Weapon specialization** ticked, fighters, gladiators and rangers train
+in chosen weapon specs (weapon types), as in AD&D. **Every ranger starts
+with expertise in the bow**, on top of the weapon spec it chooses.
+
+| Who | Chooses | With a weapon of a chosen weapon spec |
+|---|---|---|
+| **Fighter** (one class or more) | 1 weapon spec | specialized: +1 to hit, +2 damage; **mastery** from 5th fighter level (+3 to hit, +3 damage); **grand mastery** from 9th (the same, the damage die a size larger, d8 to d10, and one more attack a round) |
+| **Gladiator** | 2 weapon specs at creation, a 3rd at 6th level and a 4th at 9th | specialized in each: +1 to hit, +2 damage |
+| **Ranger** (one class or more) | **the bow from the start**, and 1 weapon spec (any but the bow) | expertise: the game's attacks a round in melee, a specialist's rate of fire with a missile weapon, no other bonus |
+
+The game already gives every fighter, gladiator and ranger the specialist's
+attacks in melee (3/2 a round, 2 from 7th level). With the rule, a warrior
+fighting with a weapon outside its chosen weapon specs gets AD&D's plain rate,
+half an attack less; with a chosen weapon spec it keeps the game's rate (a
+grand master one more).
+
+Missile weapons have a rate of fire of their own in the game, the same for
+everyone (a bow 2 a round, a sling, staff sling or chatkcha 1). A thri-kreen
+throws a chatkcha one more time a round, whatever the rule (2 instead of 1:
+AD&D's 2/1 for the thri-kreen's own weapon). With the rule,
+fighters and gladiators shoot faster with a chosen weapon spec, and rangers
+with theirs and every bow: AD&D's specialist's rate for the sling, a step above
+it for the bow, staff sling and chatkcha. From 7th level every warrior shoots
+its other missile weapons faster too, a step behind a specialist, as in melee
+(AD&D keeps the weapon's own rate). Mastery's and grand mastery's bonuses to
+hit and damage count for missiles too.
+
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#weapon-specialization).
+
+### Attacks a round
+
+By skill and level (a warrior's level: the highest of its
+fighter, gladiator and ranger levels; a warrior class goes no higher than
+10th under the [XP cap](FEATURES.md#level-cap-by-xp)):
+
+| Skill with the weapon | Who | Melee, levels 1–6 | Melee, levels 7–10 | Bow, levels 1–6 | Bow, levels 7–10 | Sling, staff sling or chatkcha, levels 1–6 | Sling, staff sling or chatkcha, levels 7–10 |
+|---|---|---|---|---|---|---|---|
+| none | non-warriors: clerics, druids, preservers, psionicists, thieves | 1 | 1 | 2 | 2 | 1 | 1 |
+| not a chosen weapon spec | any warrior | 1 | 3/2 | 2 | 3 | 1 | 3/2 |
+| expertise | a ranger: every bow, and its chosen weapon spec (a [Justifier](#ranger-kits)'s are specialized); a [Battle Mage](#preserver-kits), [Crusader](#cleric-kits) or [Mind Warrior](#psionicist-kits): its chosen weapon spec (melee only, but a thri-kreen Mind Warrior's chatkcha; by its own class's level, a chatkcha by its warrior level) | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
+| specialized | a fighter's or gladiator's chosen weapon spec | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
+| mastery | a fighter's chosen weapon spec, from 5th level | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
+| grand mastery | a fighter's chosen weapon spec, from 9th level | | 3 | | 5 | | 3 |
+
+A thri-kreen throws a chatkcha once more a round than the table says.
+
+In a fight Haste doubles all of these and Slow halves them, rounded down (and a
+slowed character loses every other turn); the game's DAM lines and the
+Characters tab show them so.
+
+The sixteen weapon specs take in the game's weapons of every material and its
+named ones (Bloodwrath, Swiftbite and the like are long swords); gloves are
+none. The weapons spells make count for specialization as their AD&D weapon: the
+Flame Blade a long sword (AD&D's scimitar, which Athas hasn't), Shillelagh a
+club, Spiritual Hammer a mace (the war hammer's nearest). Class and kit
+restrictions leave them as the game has them: anyone who can cast the spell can
+hold its weapon.
+
+| Weapon specs (the weapon window's rows, from the top) |
+|---|
+| long sword, club, dagger, short sword |
+| mace, axe, great axe, pick |
+| quarterstaff, polearm, gythka, cahulaks |
+| chatkcha, bow, sling, staff sling |
+
+### Choosing at creation
+
+Press **DONE** on the character creation screen and
+a warrior (and a [Battle Mage](#preserver-kits), [Crusader](#cleric-kits) or
+[Mind Warrior](#psionicist-kits)) picks its weapon specs on the weapon window, the one a
+level gained brings up (below), as a preserver picks its
+spells on CHOOSE A SPELL: a fighter or ranger one, a gladiator two, a
+[Myrmidon](#fighter-kits) two. A preserver warrior picks its spells first. A
+multiclass warrior can choose only the weapon specs its other class lets it
+use: those of which the game (or the Loader) has a weapon the character may
+use, in any material. The rest are greyed:
+
+| A warrior (fighter, gladiator or ranger)… | Weapon specs it can choose | Starts with |
+|---|---|---|
+| …of one class, or with thief, preserver or druid | all sixteen (a ranger all but the bow) | the game's bone long sword |
+| …with psionicist (small weapons) | club, dagger, short sword, mace, chatkcha, bow, sling | a wooden club |
+| …with air cleric (missile and thrown weapons, daggers, cahulaks) | dagger, cahulaks, chatkcha, bow, sling, staff sling | an obsidian dagger |
+| …with earth cleric (stone, obsidian, metal, wood) | long sword, club, dagger, short sword, mace, axe, great axe, pick, quarterstaff, polearm, cahulaks, chatkcha, bow (the polearm in the mod's metal, the cahulaks in its obsidian or metal) | an obsidian long sword |
+| …with fire cleric (obsidian) | long sword, dagger, short sword, mace, axe, great axe, cahulaks (the mod's obsidian), chatkcha | an obsidian long sword |
+| …with water cleric (bone, wood) | long sword, club, dagger, short sword, mace, axe, great axe, quarterstaff, polearm, gythka, cahulaks, bow | the game's bone long sword |
+
+(The starting weapon is for the weapon spec picked first; [Starting weapons](#starting-weapons) has the
+rest. A ranger never has the bow to choose: its expertise with the bow comes
+anyway.)
+
+**EXIT** leaves picks unmade, and the Loader picks them (a Myrmidon's second
+excepted: it stays unpicked): the kit's weapon (a
+Ghetto Fighter's or Poisoner's dagger, a Battle Dancer's long sword), a
+thri-kreen's chatkcha, else the long sword (a gladiator's second the club), each
+only if it may be chosen, else the first that may. EXIT can't go back to the
+creation screen: DONE has made the character by then.
+
+![After DONE on the creation screen: the weapon window over it, a picture of each weapon spec, PICK A WEAPON SPECIALTY, the new character's name, and the picks left (1) beside EXIT; the hit points and age below it](docs/creation-weapons.png)
+
+### Starting weapons
+
+A new character starts the game with a plain weapon of its first weapon spec in
+place of the bone long sword the game gives warriors, in a material it may use,
+and the log says so (`Grog starts with a plain obsidian long sword for the
+weapon specialization chosen, in place of the bone long sword`):
+
+| Weapon spec | Starting weapon | For a cleric's sphere that can't use it |
+|---|---|---|
+| long sword | the game's bone long sword | obsidian (fire, earth) |
+| club, quarterstaff, bow | wooden (a bow with 20 arrows) | |
+| dagger, chatkcha | obsidian | a dagger: bone, the mod's (water) |
+| short sword | bone, the mod's | obsidian (fire, earth) |
+| mace, polearm, gythka, cahulaks | bone | a mace: obsidian, the game's plain Mace type with a picture of the mod's; a polearm: metal, the mod's (earth); cahulaks: obsidian, the mod's (earth, fire) |
+| axe | bone, the mod's | obsidian (fire, earth) |
+| great axe | bone, the mod's | obsidian (fire, earth) |
+| pick | stone | |
+| sling, staff sling | leather | |
+
+A two-handed weapon held in the hands puts the game's starting shield in the
+backpack (not a half-giant's, with
+[its rule](FEATURES.md#half-giants-two-handed-weapons)). A bow or staff sling goes in the
+missile slot instead, and the shield stays, as the game asks nothing of the
+hands for it. The weapon is made once: a long sword handed to the character
+later stays one.
+
+### At a level gained
+
+A warrior with fewer weapon specs than it is due (a
+gladiator reaching 6th or 9th, or any warrior from a game begun before the rule)
+picks the rest the way a psionicist picks a new power: in the game's own pop-up,
+made bigger, a picture of each weapon spec on a slot, six to a row, those its
+classes can't use (or it has) greyed. The pointer on a slot names it under them
+(**SPECIALIZE IN** / **POLEARM**, or **EXPERT IN** where the pick would be
+expertise: a ranger's, a Battle Mage's, a Crusader's or Mind Warrior's; as
+CHOOSE A SPELL names a spell), and lights the slot if it can be picked; off the
+slots the title comes back. The picks left are beside **EXIT** (which asks, as
+for powers, whether to leave with picks unmade: they're offered again at the
+next level).
+
+![The level-up window: a slot with a picture for each weapon spec, the pointer on the dagger's, lit, and SPECIALIZE IN / DAGGER under them; the club, great axe, pick, quarterstaff and the rest greyed for a fighter/fire cleric](docs/weapon-picker.png)
+
+### Where it shows
+
+The **Effects** screen lists the selected character's
+weapon specs under its effects ("SPECIALIZED IN", "MASTER OF", "GRAND MASTER
+OF", "EXPERT IN"); View Character's DAM line and the inventory screen's weapon
+lines count it (a staff sling specialist's `1.5x1D4+2`); the Characters tab
+lists them (**Weapons: long sword (grand mastery)**) and gives the attacks a
+round with each weapon ready, a missile weapon's its own (**Attacks: 3/2 a
+round with Long Sword, 1 with Axe, 3 with Bow**); and the dice log names it on
+each attack (`+1 specialized`, `+3 grand mastery`,
+`(d10 for d8: grand mastery)`). Both lists end with a ranger's bow, which
+every ranger is an expert with, chosen or not; and View Character, as the game
+has it, gives a character's melee rate whatever weapon is ready.
+
+![The Effects screen: Daaki, a 9th-level fighter, GRAND MASTER OF LONG SWORD](docs/effects-weapons.png)
+
+A human who dual-classes keeps what it earned as a fighter, gladiator or
+ranger: its weapon specs, and the weapons it chose, whatever the new class (or
+a kit) allows, count again once the new class's level passes the old. Till
+then they are asleep, as the class is.

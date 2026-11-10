@@ -22,7 +22,8 @@ class NumbersTests(unittest.TestCase):
         self.assertEqual(semyon.SCRIPT, 219)
         self.assertEqual(sorted(set(alagorn.COPY_OF.values())), [220, 221, 222])
         self.assertEqual(pehtuclchest.SCRIPT, 223)
-        self.assertEqual(sorted(kalzith.LOADER_SCRIPTS), list(range(218, 224)))
+        self.assertEqual(alagorn.TOLD_IN, {222: 224})  # (the weapons' stories, the copy calls)
+        self.assertEqual(sorted(kalzith.LOADER_SCRIPTS), list(range(218, 225)))
         self.assertTrue(set(kalzith.ENTRY_SCRIPTS) <= set(kalzith.LOADER_SCRIPTS))
 
 
@@ -77,6 +78,49 @@ class CopyTests(unittest.TestCase):
                 target = scripts.get(("GPL ", script))
                 self.assertIsNotNone(target, f"{key} calls script {script}, not there")
                 self.assertLess(place, len(target), f"{key} calls {script} at {place}, past its end")
+
+    def test_alagorn_every_kind_written(self):
+        """With every switch on, each of Alagorn's copies is written (no kind left out for length:
+        the weapons' copy once grew past the buffer and was dropped without a word), each new item's
+        reply in it, and the weapons' stories script decodes, each call into it landing on a
+        command just after a 19h (where a called part starts)."""
+        from dsloader import pensasks
+        out = kalzith.script_chunks(self.data, cloak=True, tome=True, hay=True, champions=True)
+        self.assertEqual(alagorn.LEFT_OUT, [])
+        for number in sorted(set(alagorn.COPY_OF.values()) | set(alagorn.TOLD_IN.values())):
+            self.assertIn(("GPL ", number), out)
+        for number in (alagorn.SCRIPT, alagorn.OTHER_SCRIPT):
+            for kind in alagorn.kinds(script=number):
+                target = alagorn.COPY_OF.get((kind.first_reply, kind.none_text), number)
+                for item, _ in kind.items:
+                    self.assertIn(gpl.encode_expr(("str", f"  {item}")), out[("GPL ", target)], (target, item))
+        for key, data in out.items():
+            if key[0] == "GPL ":
+                self.assertLessEqual(len(data), pensasks.LONGEST, key)
+        for copy, number in alagorn.TOLD_IN.items():
+            told = gpl.decode(out[("GPL ", number)], self.field_types)
+            starts = {o.at for i, o in enumerate(told) if i and told[i - 1].code == alagorn.START}
+            calls = [o.args[0][1] for o in gpl.walk(gpl.decode(out[("GPL ", copy)], self.field_types))
+                     if o.code == CALL and o.args[1] == ("n", number)]
+            self.assertEqual(len(calls), sum(len(k.items) for k in alagorn.kinds(script=alagorn.SCRIPT)
+                                             if alagorn.COPY_OF.get((k.first_reply, k.none_text)) == copy))
+            self.assertTrue(set(calls) <= starts, sorted(set(calls) - starts))
+
+    def test_loader_calls_on_commands(self):
+        """Every call in the Loader's own scripts goes to the start of a command of its target."""
+        out = kalzith.script_chunks(self.data, cloak=True, tome=True, hay=True, champions=True)
+        scripts = {**self.chunks, **out}
+        starts = {}
+        for key in out:
+            if key[0] not in ("GPL ", "MAS "):
+                continue
+            for op in gpl.walk(gpl.decode(out[key], self.field_types)):
+                if op.code != CALL or len(op.args) != 2 or any(a[0] != "n" for a in op.args):
+                    continue
+                place, script = op.args[0][1], op.args[1][1]
+                if script not in starts:
+                    starts[script] = {o.at for o in gpl.decode(scripts[("GPL ", script)], self.field_types)}
+                self.assertIn(place, starts[script], f"{key} calls {script} at {place}, not a command's start")
 
     def test_each_fits_the_buffer(self):
         """Every script of the copy (all switches on) fits the game's script buffer, as the longest

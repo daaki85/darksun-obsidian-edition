@@ -13,6 +13,7 @@ hand.
 """
 
 import json
+import os
 from dataclasses import dataclass, field
 from typing import Callable, Dict, List, Optional, Tuple
 
@@ -168,9 +169,15 @@ class Layout:
             spec = specs.setdefault(rname, {})
             spec["slots"] = [_hex(s) for s in rec.slots]
             spec["stride"] = _hex(rec.stride)
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(self.raw, f, indent=2)
-            f.write("\n")
+        tmp = f"{path}.{os.getpid()}.tmp"  # (written whole, then put in place: a crash mid-write
+        try:                                  # can't leave every command a broken layout)
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(self.raw, f, indent=2)
+                f.write("\n")
+            os.replace(tmp, path)
+        finally:
+            if os.path.exists(tmp):
+                os.remove(tmp)
 
     @property
     def name_record(self) -> Record:

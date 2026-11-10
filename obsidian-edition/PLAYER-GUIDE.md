@@ -13,7 +13,8 @@ Loader starts. Every rule change has a switch on the Loader's **Options** tab
 ([at a glance](#the-options-tab-at-a-glance)); where it helps to know what a
 switch changes, a **Without the mod** note says what the game does with it off.
 The [features page](FEATURES.md) has every rule in full detail, and the
-[Kits](KITS.md) page each kit's numbers: the guide links to their tables.
+[Kits](KITS.md) page each kit's numbers: the guide links to their tables. The Loader's **Help**
+button opens this guide as a web page.
 
 ## Contents
 
@@ -31,7 +32,6 @@ The [features page](FEATURES.md) has every rule in full detail, and the
     [Druid](#druid), [Psionicist](#psionicist)
 - [Kits](#kits)
   - [Multiclass kits](#multiclass-kits)
-  - [Kits' spell slots](#kits-spell-slots)
 - [Weapon specialization and attacks](#weapon-specialization-and-attacks)
 - [Experience and levels](#experience-and-levels)
   - [Hit points](#hit-points)
@@ -51,6 +51,7 @@ The [features page](FEATURES.md) has every rule in full detail, and the
   - [How spells work](#how-spells-work)
   - [Spell lists](#spell-lists)
   - [Status effects](#status-effects)
+  - [Resting](#resting)
 - [Psionics](#psionics)
 - [Equipment](#equipment)
   - [New items](#new-items)
@@ -68,7 +69,7 @@ The [features page](FEATURES.md) has every rule in full detail, and the
    and every roll shows as it happens in the Loader's dice log, and in the
    game itself when you press **L**:
 
-   ![The arena in round 7 of a fight: K'ratchek's turn, with the combat log over the map's lower right showing a Slig's hits on Cermak and his hit points after each](docs/combat-log.png)
+   ![Round 3 of a fight: Lex's turn, with the combat log over the map's lower right, in short and its small font, eight lines: Ester's swings at a Guard, the Guard's hit on Jenna for 10 and a miss, and her hit points after](docs/combat-log.png)
 
 3. Make your own party (**CREATE CHARACTERS**): weapon specs and kits are
    chosen when a character is made. The game's own four, used when you make
@@ -77,7 +78,8 @@ The [features page](FEATURES.md) has every rule in full detail, and the
 
 Already playing? Saves made before the mod load and play with its fixes and
 rules, but kits, fuller starting gear and much of the new content come with a
-new game (see [your saved
+new game, and the new gear the game's people carry and its chests hold comes
+only in areas the save hasn't been to (see [your saved
 games](README.md#updating-backups-saved-games-and-the-loaders-files)).
 
 ## Playing
@@ -85,7 +87,10 @@ games](README.md#updating-backups-saved-games-and-the-loaders-files)).
 The pointer has three modes, changed with a right-click: **Walk**, **Attack**
 and **Look**; a left-click acts. Look at someone to **Talk**, at a thing to
 **Use** or **Pick Up** it, and at a monster in a fight to see its hit points,
-AC and defences. Resting at a fire ring fills hit points, PSP and spell slots.
+AC and defences. Resting at a fire ring fills PSP and spell slots; with the
+mod's [Resting as in AD&D](#resting) the party's priests first cure the party with the
+spells they have left, and each member heals 3 hit points plus CON's bonus a
+night, not all of them.
 What the mod adds to the game's screens and controls is under [Quality of
 life](#quality-of-life).
 
@@ -104,10 +109,9 @@ Each click of the die rolls a whole character:
 
 - Each score is rolled **four times as 4d4 + 4** and the best kept (8 to 20),
   then the race's adjustment is added.
-- A score below the classes' minimum is raised to it: **17 in the prime
-  requisite**, otherwise **9** (clerics, fighters, preservers, thieves), **12**
-  (druids, psionicists), **13** (gladiators) or **14** (rangers). A character
-  of several classes takes the highest minimum of each score.
+- A score below what the classes need is raised to it: each class's least is
+  the manual's (the table below), and a character of several classes takes
+  the highest of each score.
 - **What the die gives is what you get.** A score can be lowered with a right
   click, and the points freed raise others with a left click, but the six
   never add up to more than the die gave. Under CHR, `SUM:99/101` is what
@@ -121,18 +125,17 @@ Each click of the die rolls a whole character:
 
 | Class | Prime requisites | Least at creation |
 |---|---|---|
-| Cleric | WIS | WIS 9 |
-| Druid | WIS, CHA | WIS 12, CHA 15 |
 | Fighter | STR | STR 9 |
 | Gladiator | STR | STR 13, DEX 12, CON 15 |
-| Preserver | INT | INT 9 |
-| Psionicist | CON, WIS | CON 11, INT 12, WIS 15 |
 | Ranger | STR, DEX, WIS | STR 13, DEX 13, CON 14, WIS 14 |
 | Thief | DEX | DEX 9 |
+| Preserver | INT | INT 9 |
+| Cleric | WIS | WIS 9 |
+| Druid | WIS, CHA | WIS 12, CHA 15 |
+| Psionicist | CON, WIS | CON 11, INT 12, WIS 15 |
 
-The die raises a score to the least the classes need (a multiclass character,
-the highest of their classes'). *Without the mod:* it raised the prime
-requisite to 17, and every other score to 9 to 14.
+*Without the mod:* the die raised the prime requisite to 17, and every other
+score to 9 to 14.
 
 What the scores do:
 
@@ -167,10 +170,10 @@ What the scores do:
 | Dwarf | +1 | −1 | +2 | | | −2 | better CON saves |
 | Elf | | +2 | −2 | +1 | −1 | | |
 | Half-elf | | +1 | −1 | | | | |
-| Half-giant | +4 | −5 | +2 | −5 | −3 | −3 | double hit dice; holds a two-handed weapon in one hand |
+| Half-giant | +4 | −5 | +2 | −5 | −3 | −3 | double hit dice; holds a two-handed weapon in one hand; large: weapons roll their larger dice against it, Hold and Charm Person fail on it, cahulaks can't tangle it ([size](#equipment)) |
 | Halfling | −2 | +2 | −1 | | +2 | −1 | better CON saves |
 | Mul | +2 | | +1 | −1 | | −2 | |
-| Thri-kreen | | +2 | | −1 | +1 | −2 | base AC 5, moves 15 (others 12); four claws (1d4) and a bite (1d4+1) a round, that cut (edged, not crushing); with weapons in hand, the weapons in the claws' place, and the bite still; no armour, cloaks, belts, boots or rings |
+| Thri-kreen | | +2 | | −1 | +1 | −2 | base AC 5, moves 15 (others 12); four claws (1d4) and a bite (1d4+1) a round, that cut (edged, not crushing); with weapons in hand, the weapons in the claws' place, and the bite still; throws a chatkcha once more a round; no armour, cloaks, belts, boots or rings |
 
 With each score rolled 8 to 20 before the adjustment, a race's scores run from
 8 to 20 plus its adjustment: a half-giant's STR 12 to 24, its DEX and INT 3 to
@@ -232,11 +235,15 @@ neutral, a ranger good), or fighter and ranger.
 **Dual class (humans only).** A human has one class, and can change to another
 with **DUAL** on a portrait's right-click menu when:
 
-- it is **2nd level or more** and has changed class at most once before;
-- its **current class's prime requisite is 15 or more**, and the **new
-  class's 17 or more** (here the game's one score a class: STR for fighters
-  and gladiators, WIS for clerics, druids, psionicists and rangers, INT for
-  preservers, DEX for thieves);
+- it is **3rd level or more** (as the manual says; 2nd with the rule change
+  [dual-classing as the manual has it](FEATURES.md#dual-classing-as-the-manual-has-it) off) and has
+  changed class at most once before;
+- **every prime requisite of its current class is 15 or more**, and **every
+  one of the new class's 17 or more** (the table below: a ranger's STR, DEX
+  and WIS, a druid's WIS and CHA, a psionicist's CON and WIS); with the rule
+  off, the game's one score a class (STR for fighters and gladiators, WIS for
+  clerics, druids, psionicists and rangers, INT for preservers, DEX for
+  thieves);
 - the new class is of **another group** than every class it has had: priests
   (cleric, druid), warriors (fighter, gladiator, ranger), preserver,
   psionicist, thief;
@@ -247,6 +254,10 @@ gives (its hit points, THAC0, saves, weapon specs and kit) **sleeps until the
 new class's level passes the old one's**; then both count. The new class can
 take a kit of its own, so a human may end up with three. Some kits rule out
 classes a human could change to ([kits](#kits)).
+
+The change starts the new class at 0 XP, and any XP past the old level's need
+is lost: change as soon as the level you want comes. How far the new class can
+then rise: [XP left over at the top](#xp-left-over-at-the-top).
 
 ## The classes
 
@@ -290,7 +301,7 @@ the strictest winning:
 | Thief | light only; with a warrior or cleric class, as that class allows, but no thief skills in heavier armour | leather ones only; with another class, only if that class is fighter, gladiator, ranger or cleric | as its classes allow |
 | Preserver, one class | none | none | a preserver's |
 | Druid | none | none | any but great axes |
-| Cleric | any | any | air: missile and thrown weapons, daggers; earth: stone, obsidian, metal, wood; fire: obsidian; water: bone, wood |
+| Cleric | any | any | air: missile and thrown weapons, daggers, cahulaks; earth: stone, obsidian, metal, wood; fire: obsidian; water: bone, wood |
 
 - A preserver with another class may wear what that class allows, but casts
   no spells while wearing armour (a helm counts, a shield doesn't). Bracers
@@ -311,15 +322,17 @@ the strictest winning:
 *Without the mod:* an item was allowed if **any** of the character's classes
 allowed it, and a preserver with another class cast in armour.
 
-Each class's section lists the magic weapons it can wield, the mod's new ones
-marked \*. A plain weapon of each type and material is listed as "bone short
+Each class's section lists the magic weapons it can wield, those the mod adds
+or changes marked \*. A plain weapon of each type and material is listed as "bone short
 sword" and the like.
 
 **Weaker materials.** Athas is short of metal, and the game makes a plain
 weapon of anything else worse: wood −3 to hit and −2 damage, bone −1 and −1,
 stone and obsidian −2 and −1. A weapon with a plus has no penalty, nor do clubs
 and staves, which are meant to be wooden. The inventory, View Character and the
-dice log all count it.
+dice log all count it, and the weapon's item box (right-click it) shows the
+to-hit under its damage: "Hit -1" for bone, the damage line already less the
+material's.
 
 ### Fighter
 
@@ -381,7 +394,8 @@ Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Hayneedle\* +1;
 Glasshewer\* +2, Drakejaw\* +1, Soulcrusher +1, Axe +1; Great Axe +3, Headsman\*
 +2; Gythka +3, Gythka +2\*, Kreenfang\* +1; Linebreaker\* +2, Polearm +1,
 Thornwall\* +1; Mace +2, Blackmace +1; Quarterstaff +2, Balk's Staff +1, Parting
-Staff +1; Gutterknot\* +1; Deepbiter\* +1; Cahulaks +1; Bow +2, Phrain's Bow +1,
+Staff +1; Gutterknot\* +1; Deepbiter\* +1; Ironwhirl\* +2, Cahulaks +2\*, Emberlash\* +1,
+Cahulaks +1\*; Bow +2, Phrain's Bow +1,
 Dunesong\* +1; Sling +2, Sling +1; Windlash\* +1; Skycutter\* +2, Chatkcha +1. A
 **Ravager** none of the bows, slings, Windlash, chatkchas or Dag's Dagger
 (thrown).
@@ -436,12 +450,12 @@ leg armour and a sling.
 **Magic weapons.** Every one ([the fighter's list](#fighter)). A
 **Twin-blade** none of the two-handed ones (great axes, gythkas, polearms,
 quarterstaffs, cahulaks, bows, staff sling); a **Brute** only Great Axe +3,
-Headsman\*, the gythkas, the polearms, the quarterstaffs and Cahulaks +1 in
+Headsman\*, the gythkas, the polearms, the quarterstaffs and the cahulaks in
 melee, and any missile weapon.
 
 ### Ranger
 
-*d10 · WIS · elf, half-elf, half-giant, halfling, human, thri-kreen · good
+*d10 · STR, DEX, WIS · elf, half-elf, half-giant, halfling, human, thri-kreen · good
 alignment · XP for 2nd level 2,250, for 10th 600,000*
 
 **How it plays.** A warrior of the wastes: the bow and one more weapon spec,
@@ -491,13 +505,13 @@ Stalker a cloak too).
 **More than one class.**
 
 - *Multiclass:* the combinations and their races are in [More than one class](#more-than-one-class).
-- *Dual class:* with WIS 15, a human ranger can become a cleric, preserver,
+- *Dual class:* with STR, DEX and WIS 15, a human ranger can become a cleric, preserver,
   psionicist or thief (a druid must be neutral, a ranger good). A human of
-  another class with WIS 17 and a good alignment can become a ranger. Some kits rule out a change of class
+  another class with STR, DEX and WIS 17 and a good alignment can become a ranger. Some kits rule out a change of class
   ([which](KITS.md#kits-that-rule-out-classes-and-each-other)).
 
 **Magic weapons.** Every one ([the fighter's list](#fighter)). A **Seeker**
-only its sphere's, and every bow: air, the daggers, bows, slings, Windlash\*,
+only its sphere's, and every bow: air, the daggers, the cahulaks, bows, slings, Windlash\*,
 the chatkchas; earth, the metal, obsidian, stone and wooden ones (no bone, no
 slings); fire, the obsidian ones and the bows; water, the bone and wooden ones.
 
@@ -549,7 +563,7 @@ little for the quieter arts.
 spells beside their knives. Their masters teach them only what they need, so
 a scroll is theirs only if they can make out its script, and they travel light.
 The Effects screen (Current Spell Effects) shows a Shinobi's chance to read a
-scroll under its kit ([as here](KITS.md#changing-class)).
+scroll under its kit ([the Effects screen's kit line](KITS.md#changing-class)).
 
 Each kit's gains, costs and starting gear: [Thief kits](KITS.md#thief-kits),
 and the Shinobi's slots by level in
@@ -657,9 +671,9 @@ has the most, air and fire the fewest.
 
 | Sphere | May wield | Plain weapons |
 |---|---|---|
-| Air | missile and thrown weapons, daggers | daggers (any material), chatkcha, bow, sling, staff sling |
-| Earth | stone, obsidian, metal, wood | obsidian and metal long swords, daggers and short swords; metal and obsidian maces, axes and great axes; club; stone and metal picks; quarterstaff; metal polearm; chatkcha; bow |
-| Fire | obsidian | obsidian long sword, dagger, short sword, mace, axe and great axe; chatkcha |
+| Air | missile and thrown weapons, daggers, cahulaks | daggers (any material), cahulaks, chatkcha, bow, sling, staff sling |
+| Earth | stone, obsidian, metal, wood | obsidian and metal long swords, daggers and short swords; metal and obsidian maces, axes and great axes; club; stone and metal picks; quarterstaff; metal polearm; metal and obsidian cahulaks; chatkcha; bow |
+| Fire | obsidian | obsidian long sword, dagger, short sword, mace, axe, great axe and cahulaks; chatkcha |
 | Water | bone, wood | bone long sword, dagger, short sword, mace, axe, great axe and polearm; club; quarterstaff; gythka; cahulaks; bow |
 
 **Kits.**
@@ -698,25 +712,27 @@ and fire a chatkcha; water none).
 
 - **Air:** every dagger (Dag's Dagger +3, Terror Blade +2, Galefang\* +2,
   Nightsliver\* +2, Hayneedle\* +1), Bow +2, Phrain's Bow +1, Dunesong\* +1,
-  Sling +2, Sling +1, Windlash\* +1, Skycutter\* +2, Chatkcha +1.
+  Sling +2, Sling +1, Windlash\* +1, Skycutter\* +2, Chatkcha +1, Ironwhirl\* +2,
+  Cahulaks +2\*, Emberlash\* +1, Cahulaks +1\*.
 - **Earth:** Dragonsbane +4, El's Drinker +2, Dark Flame +2, Bloodwrath +1,
   Flame Blade\* +1, Greenbright\* +2, Shadowseeker\* +1, Mindshard\* +1, Dag's
   Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Glasshewer\* +2,
   Soulcrusher +1, Axe +1, Headsman\* +2, Linebreaker\* +2, Blackmace +1, the
-  three quarterstaffs, Gutterknot\* +1, Deepbiter\* +1, Bow +2, Phrain's Bow +1,
-  Dunesong\* +1, Skycutter\* +2, Chatkcha +1.
+  three quarterstaffs, Gutterknot\* +1, Deepbiter\* +1, Ironwhirl\* +2, Emberlash\* +1,
+  Bow +2, Phrain's Bow +1, Dunesong\* +1, Skycutter\* +2, Chatkcha +1.
 - **Fire:** Dark Flame +2, Bloodwrath +1, Flame Blade\* +1, Mindshard\* +1,
-  Nightsliver\* +2, Glasshewer\* +2, Blackmace +1, Skycutter\* +2, Chatkcha +1.
+  Nightsliver\* +2, Glasshewer\* +2, Blackmace +1, Emberlash\* +1, Skycutter\* +2,
+  Chatkcha +1.
 - **Water:** Stillwater\* +1, Hayneedle\* +1, Drakejaw\* +1, Gythka +3,
   Gythka +2\*, Kreenfang\* +1, Polearm +1, Thornwall\* +1, Mace +2, the three
-  quarterstaffs, Gutterknot\* +1, Cahulaks +1, Bow +2, Phrain's Bow +1,
+  quarterstaffs, Gutterknot\* +1, Cahulaks +2\*, Cahulaks +1\*, Bow +2, Phrain's Bow +1,
   Dunesong\* +1.
 
 An Elementalist adds its second sphere's.
 
 ### Druid
 
-*d8 · WIS · half-elf, halfling, human, mul, thri-kreen · true neutral · XP
+*d8 · WIS, CHA · half-elf, halfling, human, mul, thri-kreen · true neutral · XP
 for 2nd level 2,000, for 10th 125,000*
 
 **How it plays.** A priest of the land and its element: no armour, but any
@@ -754,20 +770,20 @@ Each kit's gains, costs and starting gear:
 **More than one class.**
 
 - *Multiclass:* the combinations and their races are in [More than one class](#more-than-one-class).
-- *Dual class:* with WIS 15, a human druid can become a fighter, gladiator,
+- *Dual class:* with WIS and CHA 15, a human druid can become a fighter, gladiator,
   preserver, psionicist or thief; never a cleric, nor a ranger (who must be
   good). A human of another class becomes a druid only if true neutral. Some kits rule out a change of class
   ([which](KITS.md#kits-that-rule-out-classes-and-each-other)).
 
 **Magic weapons.** Every one but Great Axe +3 and Headsman\*. A **Grove
 Warden** none of the metal ones (Dragonsbane, El's Drinker, Greenbright\*,
-Shadowseeker\*, Dag's Dagger, Galefang\*, Soulcrusher, Axe +1, Linebreaker\*);
+Shadowseeker\*, Dag's Dagger, Galefang\*, Soulcrusher, Axe +1, Linebreaker\*, Ironwhirl\*);
 a **Lifebinder** only Mace +2, Blackmace +1, the three quarterstaffs,
 Gutterknot\* +1, the slings and Windlash\*.
 
 ### Psionicist
 
-*d6 · WIS · any race · XP for 2nd level 2,200, for 10th 400,000*
+*d6 · CON, WIS · any race · XP for 2nd level 2,200, for 10th 400,000*
 
 **How it plays.** The master of the mind's three disciplines, with a new power
 at each level (two at odd levels and at 4th) paid for in PSP. Light armour and
@@ -809,7 +825,7 @@ starting gear, also leather arm and leg armour.
 **More than one class.**
 
 - *Multiclass:* the combinations and their races are in [More than one class](#more-than-one-class).
-- *Dual class:* with WIS 15, a human psionicist can become a cleric, druid,
+- *Dual class:* with CON and WIS 15, a human psionicist can become a cleric, druid,
   fighter, gladiator, preserver, ranger or thief. Some kits rule out a change of class
   ([which](KITS.md#kits-that-rule-out-classes-and-each-other)).
 
@@ -837,10 +853,12 @@ below, say who takes each kit on Athas.
   window and the kit menu leave them out
   ([which, and why](KITS.md#kits-that-rule-out-classes-and-each-other)).
 - The dice log names each change a kit makes to a new character's gear.
+- Which kits change spell slots, and by how much at each level: [Kits' spell
+  slots](KITS.md#kits-spell-slots) on the Kits page.
 
 ### Multiclass kits
 
-Only the race named may take these, with both classes taken at once. "Under the
+Only the race named may take these, with all its classes taken at once. "Under the
 open sky" is an outdoor map, or open ground outside a city's buildings.
 
 *Battle Dancer* (elf cleric/fighter). Elven warrior-priests whose battle is a
@@ -902,15 +920,10 @@ Each kit's gains, costs and starting gear:
 **The game's own party** (START GAME with no party made), with kits on: Cermak
 is an Arcanist, and the other three are given a feature of their own, not a
 kit's. Gerakis fights wild, as a Wild Fury does; K'ratchek's spells and psionics
-are stronger under the open sky, as a Wasteland Seer's are, and her chatkcha
-comes back as if she had several (one more throw a round, which no kit gives);
+are stronger under the open sky, as a Wasteland Seer's are (her chatkcha's
+2 throws a round are every thri-kreen's: AD&D's 2/1);
 Cilla's hiding is never halved in daylight, as an Assassin's isn't (the dice
 log calls her an Elven Shadow-walker).
-
-### Kits' spell slots
-
-Which kits change spell slots, and by how much at each level: [Kits' spell
-slots](KITS.md#kits-spell-slots) on the Kits page.
 
 ## Weapon specialization and attacks
 
@@ -923,7 +936,7 @@ EXIT leaves the rest to the mod: the kit's own weapon (a Ghetto Fighter's
 dagger), a thri-kreen's chatkcha, else the long sword (a gladiator's second the
 club).
 
-![The level-up window: a picture of each weapon spec, the pointer on the dagger and SPECIALIZE IN / DAGGER under them, the specs this fighter/cleric can't use greyed](docs/weapon-picker.png)
+![The level-up window: a picture of each weapon spec, the pointer on the dagger and SPECIALIZE IN / DAGGER under them, the specs this fire cleric/fighter can't use greyed](docs/weapon-picker.png)
 
 | Who | Chooses | With a chosen weapon spec |
 |---|---|---|
@@ -939,7 +952,7 @@ class lets it use.
 **Attacks a round**, by the warrior's level (its best fighter, gladiator or
 ranger level). 3/2 means one attack one round and two the next.
 
-| With the weapon | Melee, 1-6 | Melee, 7-10 | Bow, 1-6 | Bow, 7-10 | Sling, staff sling, chatkcha, 1-6 | 7-10 |
+| With the weapon | Melee, 1-6 | Melee, 7-10 | Bow, 1-6 | Bow, 7-10 | Sling, staff sling, chatkcha (a thri-kreen's chatkcha +1), 1-6 | 7-10 |
 |---|---|---|---|---|---|---|
 | anyone who isn't a warrior | 1 | 1 | 2 | 2 | 1 | 1 |
 | a warrior, a weapon spec it hasn't chosen | 1 | 3/2 | 2 | 3 | 1 | 3/2 |
@@ -953,7 +966,8 @@ ranger level). 3/2 means one attack one round and two the next.
 
 For the three kits the level is their own class's. Their chosen weapon spec
 is a melee weapon. With [two weapons](#two-weapons), the off hand attacks
-once a round whatever the rate.
+once a round whatever the rate. A thri-kreen throws a chatkcha once more a round
+than the table says (AD&D's 2/1 for the thri-kreen's own weapon).
 
 *Without the mod:* every warrior has 3/2 attacks a round in melee (2 from 7th
 level) with any weapon, and no other bonus; missile weapons shoot at the
@@ -985,36 +999,98 @@ at 0 XP). XP keeps counting past the cap. The highest levels:
 
 | Class | One class | Two classes | Three classes |
 |---|---|---|---|
-| Cleric | 11 | 9 | 9 |
-| Druid | 12 | 12 | 11 |
 | Fighter | 10 | 9 | 8 |
 | Gladiator | 10 | – | – |
-| Preserver | 11 | 10 | 9 |
-| Psionicist | 11 | 9 | 9 |
 | Ranger | 10 | 9 | 8 |
 | Thief | 13 | 11 | 11 |
+| Preserver | 11 | 10 | 9 |
+| Cleric | 11 | 9 | 9 |
+| Druid | 12 | 12 | 11 |
+| Psionicist | 11 | 9 | 9 |
 
 *Without the mod:* every class stops at 9th.
 
 AD&D's tables:
 
-| To reach level | Fighter | Gladiator, ranger | Cleric | Druid | Preserver | Psionicist | Thief |
+| To reach level | Fighter | Gladiator, ranger | Thief | Preserver | Cleric | Druid | Psionicist |
 |---|---|---|---|---|---|---|---|
-| 2 | 2,000 | 2,250 | 1,500 | 2,000 | 2,500 | 2,200 | 1,250 |
-| 3 | 4,000 | 4,500 | 3,000 | 4,000 | 5,000 | 4,400 | 2,500 |
-| 4 | 8,000 | 9,000 | 6,000 | 7,500 | 10,000 | 8,800 | 5,000 |
-| 5 | 16,000 | 18,000 | 13,000 | 12,500 | 20,000 | 16,500 | 10,000 |
-| 6 | 32,000 | 36,000 | 27,500 | 20,000 | 40,000 | 30,000 | 20,000 |
-| 7 | 64,000 | 75,000 | 55,000 | 35,000 | 60,000 | 55,000 | 40,000 |
-| 8 | 125,000 | 150,000 | 110,000 | 60,000 | 90,000 | 100,000 | 70,000 |
-| 9 | 250,000 | 300,000 | 225,000 | 90,000 | 135,000 | 200,000 | 110,000 |
-| 10 | 500,000 | 600,000 | 450,000 | 125,000 | 250,000 | 400,000 | 160,000 |
-| 11 | 750,000 | 900,000 | 675,000 | 200,000 | 375,000 | 600,000 | 220,000 |
-| 12 | 1,000,000 | 1,200,000 | 900,000 | 300,000 | 750,000 | 800,000 | 440,000 |
-| 13 | 1,250,000 | 1,500,000 | 1,125,000 | 750,000 | 1,125,000 | 1,000,000 | 660,000 |
+| 2 | 2,000 | 2,250 | 1,250 | 2,500 | 1,500 | 2,000 | 2,200 |
+| 3 | 4,000 | 4,500 | 2,500 | 5,000 | 3,000 | 4,000 | 4,400 |
+| 4 | 8,000 | 9,000 | 5,000 | 10,000 | 6,000 | 7,500 | 8,800 |
+| 5 | 16,000 | 18,000 | 10,000 | 20,000 | 13,000 | 12,500 | 16,500 |
+| 6 | 32,000 | 36,000 | 20,000 | 40,000 | 27,500 | 20,000 | 30,000 |
+| 7 | 64,000 | 75,000 | 40,000 | 60,000 | 55,000 | 35,000 | 55,000 |
+| 8 | 125,000 | 150,000 | 70,000 | 90,000 | 110,000 | 60,000 | 100,000 |
+| 9 | 250,000 | 300,000 | 110,000 | 135,000 | 225,000 | 90,000 | 200,000 |
+| 10 | 500,000 | 600,000 | 160,000 | 250,000 | 450,000 | 125,000 | 400,000 |
+| 11 | 750,000 | 900,000 | 220,000 | 375,000 | 675,000 | 200,000 | 600,000 |
+| 12 | 1,000,000 | 1,200,000 | 440,000 | 750,000 | 900,000 | 300,000 | 800,000 |
+| 13 | 1,250,000 | 1,500,000 | 660,000 | 1,125,000 | 1,125,000 | 750,000 | 1,000,000 |
 
 *Without the mod:* a gladiator needs what a fighter does, a ranger 2,200 for
 2nd level and a thief 1,200.
+
+### XP left over at the top
+
+The cap stops levels, not XP: past a class's highest level the XP keeps
+counting (to the game's own limit, 2,000,000,000), but no level comes of it.
+What is left over is the cap less the XP the highest level needed. For a human
+it is also the room a new class has: dual-classing starts the new class at 0
+XP, and the new class may rise only as far as the cap less the old class's
+level's XP allows.
+
+One class, with AD&D's tables:
+
+| Class | Highest level | XP it needs | Next level needs | Left over |
+|---|---|---|---|---|
+| Fighter | 10 | 500,000 | 750,000 | 249,999 |
+| Gladiator | 10 | 600,000 | 900,000 | 149,999 |
+| Ranger | 10 | 600,000 | 900,000 | 149,999 |
+| Thief | 13 | 660,000 | 880,000 | 89,999 |
+| Preserver | 11 | 375,000 | 750,000 | 374,999 |
+| Cleric | 11 | 675,000 | 900,000 | 74,999 |
+| Druid | 12 | 300,000 | 750,000 | 449,999 |
+| Psionicist | 11 | 600,000 | 800,000 | 149,999 |
+
+A human can change class before the top. The room left for the new class, by
+the level the old class had when it changed:
+
+| Old class's level | Fighter | Gladiator, ranger | Thief | Preserver | Cleric | Druid | Psionicist |
+|---|---|---|---|---|---|---|---|
+| 3 | 745,999 | 745,499 | 747,499 | 744,999 | 746,999 | 745,999 | 745,599 |
+| 4 | 741,999 | 740,999 | 744,999 | 739,999 | 743,999 | 742,499 | 741,199 |
+| 5 | 733,999 | 731,999 | 739,999 | 729,999 | 736,999 | 737,499 | 733,499 |
+| 6 | 717,999 | 713,999 | 729,999 | 709,999 | 722,499 | 729,999 | 719,999 |
+| 7 | 685,999 | 674,999 | 709,999 | 689,999 | 694,999 | 714,999 | 694,999 |
+| 8 | 624,999 | 599,999 | 679,999 | 659,999 | 639,999 | 689,999 | 649,999 |
+| 9 | 499,999 | 449,999 | 639,999 | 614,999 | 524,999 | 659,999 | 549,999 |
+| 10 | 249,999 | 149,999 | 589,999 | 499,999 | 299,999 | 624,999 | 349,999 |
+| 11 | – | – | 529,999 | 374,999 | 74,999 | 549,999 | 149,999 |
+| 12 | – | – | 309,999 | – | – | 449,999 | – |
+| 13 | – | – | 89,999 | – | – | – | – |
+
+Look the room up in the XP table above: a fighter who changes at 9th has
+499,999, enough for a 10th-level cleric (450,000); one who changes at 10th has
+249,999, enough for a 9th. A human who changes class twice has the cap less
+both old levels' XP.
+
+Two or three classes share the cap (374,999 or 249,999 each):
+
+| Class | Two classes: highest level | Left over | Three classes: highest level | Left over |
+|---|---|---|---|---|
+| Fighter | 9 | 124,999 | 8 | 124,999 |
+| Ranger | 9 | 74,999 | 8 | 99,999 |
+| Thief | 11 | 154,999 | 11 | 29,999 |
+| Preserver | 10 | 124,999 | 9 | 114,999 |
+| Cleric | 9 | 149,999 | 9 | 24,999 |
+| Druid | 12 | 74,999 | 11 | 49,999 |
+| Psionicist | 9 | 174,999 | 9 | 49,999 |
+
+With the game's own XP tables (AD&D's off), a gladiator has the fighter's
+numbers (249,999 left over), and a druid needs 675,000 for 11th and 900,000
+for 12th, so stops at 11th with 74,999 left over (10th with two or three
+classes: 249,999 or 124,999). *Without the mod:* every class stops at 9th, all
+XP past 9th's need is left over, and a human who changes class loses it.
 
 ### Hit points
 
@@ -1091,8 +1167,8 @@ always misses, but **there are no critical hits**: a 20 does ordinary damage.
 To-hit changes with:
 
 - STR in melee, DEX with missiles;
-- the weapon's plus; a plain weapon of wood is −3, of stone or obsidian −2, of
-  bone −1 (metal has no penalty);
+- the weapon's plus, or a plain weapon's material
+  ([weaker materials](#what-each-class-may-use));
 - weapon specialization;
 - Bless and Prayer +1, Curse −1, Slow −4;
 - attacking from behind +2, a backstab +2 more;
@@ -1100,6 +1176,10 @@ To-hit changes with:
 
 Damage is the weapon's dice, its plus, specialization's bonus and, in melee,
 STR's bonus; at least 1.
+
+A **held** (Paralyzed) or **Out Cold** target is hit automatically, a 1 too,
+for normal damage, as in AD&D; a held party member too. *Without the mod:* the
+d20 was rolled as ever, and a hit did double damage.
 
 ### Two weapons
 
@@ -1109,12 +1189,14 @@ With a melee weapon in each hand:
   the DEX adjustment from [initiative](#initiative) added, which can lessen the
   penalty to 0 but never make it a bonus: DEX 17 is 0 and −2, DEX 21 is 0 and 0,
   DEX 3 is −5 and −7.
-- **Rangers and Twin-blades** have no penalty while all their armour is light
-  (leather, or none); a Justifier has none in any armour.
+- **Rangers, Twin-blades and Battle Dancers** have no penalty while all their
+  armour is light (leather, or none); a Justifier has none in any armour, and a
+  Ghetto Fighter's is 0 and −2.
 - **The off hand attacks once a round.** Extra attacks are the main hand's: a
   warrior at 3/2 attacks 3/2 + 1 (one round 1 + 1, the next 2 + 1).
 
 A weapon and a shield, or a weapon and a bow or sling, aren't two weapons.
+[Cahulaks](#equipment), a head in each hand, fight under the same penalties.
 
 *Without the mod:* no penalty (a small bonus at DEX 5 or less), and each hand
 attacks at the character's full rate.
@@ -1386,6 +1468,34 @@ limits:
   damage and duration alike. An elemental spell works only for a priest of
   that element.
 - **Area spells catch the caster** and the party.
+- **Hold Person, Charm Person and Charm Person or Mammal** don't work on a
+  large target (a half-giant, a large monster, anyone Enlarged), with no save;
+  Charm Person or Mammal still charms a large beast ([size](#equipment)).
+  *Without the mod:* the game keeps no sizes.
+- **Spells roll to hit** (a rule change, on by default). The missile spells,
+  Acid Arrow, Turn Pebble to Boulder, Magical Stone, Condense and each of Minute
+  Meteors' five globes (at +2), roll a d20 against the target's AC as a weapon
+  would (Acid Arrow with a fighter's THAC0 of the caster's level, the rest with
+  the caster's own, and DEX's missile adjustment), and so does a touch spell
+  cast at an enemy (Chill Touch, Shocking Grasp, Vampiric Touch, the Cause
+  Wounds spells, Cause Disease, Poison), with STR's. A 20 always hits, a 1
+  always misses, and a miss does nothing: "Miss" floats over the target.
+  Monsters' spines roll too. *Without the mod:* they always landed.
+- **Spells and psionics as the manual describes them** (a rule change, on by
+  default): twenty-four spells and two psionic powers, and seven monsters, as the manual
+  has them (Solid Fog for a few rounds, not the whole fight; Hold Undead only
+  on undead of the caster's level or lower; Strength by class; shadows that
+  drain STR; the list is in [the features
+  page](FEATURES.md#spells-and-psionics-as-the-manual-describes-them)).
+- **Turn Undead**, the cleric's button on the USE screen, follows AD&D's
+  turning table (with the manual's spells): it tries each undead in its area,
+  one at a time; by the undead's hit dice and the cleric's level, a d20 turns it
+  (it flees for 3d4 rounds), or it is turned or destroyed with no roll, or
+  can't be turned at all. A cleric who fails against an undead can't try it
+  again that fight. *Without the mod:* each success destroyed, and a failure
+  could be tried again and again.
+- **Resting** heals by the priests' spells left and a night's rest, not to
+  full: [Resting](#resting).
 - **Mirror Image**'s images take each hit, and each foe's spell aimed at one
   creature, three times in four (Reflected Image's half the time), the image
   vanishing and the blow or spell lost; your own side's spells always get
@@ -1413,9 +1523,11 @@ limits:
   specialization on, a spec counts with them as with a club, a long sword and a
   mace.
 - Six **new wizard spells**, learnt like any other:
-  - **Cat's Grace** (2nd level, on a party member): DEX + 1d6 (at most 24) for
-    an hour of game time a caster level, which betters AC, initiative, thief
-    skills and dodging.
+  - **Cat's Grace** (2nd level, on a party member): DEX up by a die that
+    depends on the class (a rogue 1d8; a wizard, warrior or psionicist 1d6; a
+    priest 1d4; a multiclass character's best; at most 24) for an hour of game
+    time a caster level, which betters AC, initiative, thief skills and
+    dodging. *Without the manual's spells:* DEX + 1d6 for anyone.
   - **Erdlu Claw** (1st level, on a party member): talons for 5 rounds a
     caster level. Unarmed attacks, a thri-kreen's claws but not its bite, do
     1d6+1 where that's better, are +1 to hit and count as a +1 magical edged
@@ -1443,7 +1555,7 @@ limits:
 | 1 | Armor, Burning Hands, Charm Person, Chill Touch, Color Spray, Enlarge, Erdlu Claw, Fogbolt, Friends, Gaze Reflection, Grease, Magic Missile, Reflected Image, Shield, Shocking Grasp, Spook, Wall of Fog |
 | 2 | Acid Arrow, Blur, Cat's Grace, Detect Invisibility, Flaming Sphere, Fog Cloud, Glitterdust, Invisibility, Mirror Image, Protection from Paralysis, Scare, Stinking Cloud, Strength, Web |
 | 3 | Blink, Dispel Magic, Fireball, Flame Arrow, Haste, Hold Person, Hold Undead, Lightning Bolt, Minor Malison, Minute Meteors, Monster Summoning I, Protection from Normal Missiles, Slow, Spirit Armor, Vampiric Touch |
-| 4 | Black Tentacles, Charm Monster, Confusion, Fear, Fire Shield, Ice Storm, Improved Invisibility, Minor Globe of Invulnerability, Minor Spell Turning, Monster Summoning II, Rainbow Pattern, Solid Fog, Stoneskin, Turn Pebble into Boulder, Wall of Fire, Wall of Ice |
+| 4 | Black Tentacles, Charm Monster, Confusion, Fear, Fire Shield, Ice Storm, Improved Invisibility, Minor Globe of Invulnerability, Minor Spell Turning, Monster Summoning II, Rainbow Pattern, Solid Fog, Stoneskin, Turn Pebble to Boulder, Wall of Fire, Wall of Ice |
 | 5 | Chaos, Cloudkill, Cone of Cold, Conjure Elemental, Dismissal, Domination, Feeblemind, Hold Monster, Lower Resistance to Magic, Monster Summoning III, Summon Shadow, Wall of Force, Wall of Stone |
 
 **Priests' spells.** Every cleric, druid and ranger has the common ones of the
@@ -1503,8 +1615,9 @@ AD&D's class tables and the **New spells** switch on):
 |---|---|
 | Blessed / Cursed | +1 / −1 to hit (Bless also +1 on saves); they cancel each other |
 | Hasted / Slowed | Hasted: double movement and attacks, +2 initiative; with ages on, a system shock roll and a year older. Slowed: half, loses every other turn, −4 to hit, AC 4 worse, −2 initiative |
-| Paralyzed | no turns; fails every save |
+| Paralyzed | no turns; fails every save; every blow hits it |
 | Stuck (Grease, Web, Entangle and the like) | can't move; Free Action stops it |
+| Tangled ([cahulaks](#equipment)) | loses its next turn: no movement, no attack |
 | Afraid | runs; can't attack or cast |
 | Charmed | fights for the caster |
 | Confused | each turn: runs off, does nothing, fights for a side picked at random, or acts normally |
@@ -1515,6 +1628,37 @@ AD&D's class tables and the **New spells** switch on):
 | Poisoned | fatal if time passes out of a fight (resting, for one) before it wears off or is cured |
 | Stoneskin, Mirror Image | each blow stopped, or image struck, uses a charge (an image takes a hit, or a foe's spell for one creature, three times in four) |
 | Invisible | ends with an attack or a harmful spell (Improved Invisibility doesn't) |
+
+### Resting
+
+Use a **fire ring** (the Look pointer on it, out of a fight) to rest 8 hours.
+The game then fills every member's spell slots and PSP, brings STR back (but
+a diseased member's), and a cleric or druid of 5th level or more among those
+Okay casts Cure Disease, Remove Curse and Remove Paralysis on everyone, a
+druid of 7th or more Neutralize Poison too. Anyone still **Poisoned** when the
+rest ends dies.
+
+With **Resting as in AD&D** (a rule change, on by default), the rest heals as
+AD&D's does:
+
+1. **The priests' spells first.** Before the slots fill again, each priest who
+   can cast spends the priest spells it has left on the party: Neutralize
+   Poison on the Poisoned, Cure Blindness on the Blind, Cure Disease on the
+   Diseased (when no cleric or druid of 5th level would cure it free), then
+   Cure Light, Serious and Critical Wounds and Heal on the most wounded, the
+   cure that fits what the night won't heal. So a 4th-level slot kept back
+   keeps a poisoned friend alive.
+2. **Then psionicists' Cell Adjustment** (5 PSP each: 1d4 HP and a disease
+   cured), on the Diseased, then the wounded, while their PSP last.
+3. **A night's natural healing:** each member heals **3 hit points plus CON's
+   hit point bonus** (its bonus a level, [hit points](#hit-points): a warrior's
+   in full, +1 at CON 15 up to +7, anyone else's at most +2), up to its most. CON 20 or more also regenerates through the
+   8 hours.
+
+So rest more than once to heal a badly hurt party with no priest, or keep cure
+spells back for the night. The dice log shows each: `At rest: Seneca casts Cure
+Light Wounds on Gerakis (1st-level slots: 1 left)` and `Gerakis rests 8 hours:
++3, +2 (CON 16) = +5, now 35/40 HP`. Untick the box for the game's rest.
 
 ## Psionics
 
@@ -1574,24 +1718,46 @@ worse than metal ([hitting](#hitting)), and can break (1 chance in 160 after a
 hit; not clubs or quarterstaffs). Weapons of every type come in several
 materials, the short sword among them.
 
-| Weapon | Damage | Can backstab |
-|---|---|---|
-| Dagger | 1d4 | yes |
-| Short sword | 1d6 | yes |
-| Long sword | 1d8 | yes |
-| Club | 1d6 | yes |
-| Quarterstaff | 1d6 | yes |
-| Axe | 1d8 | bone and obsidian ones (not metal) |
-| Pick | 1d4+1 | yes |
-| Great axe (two-handed) | 1d10 | no |
-| Mace | 1d6+1 | no |
-| Cahulaks | 1d6 | no |
-| Gythka (two-handed) | 2d4 | no |
-| Polearm | 1d10 | no |
-| Bow, sling, staff sling, chatkcha | by the missile | no: missiles never backstab |
+| Weapon | Damage | Against a large foe | Can backstab |
+|---|---|---|---|
+| Dagger | 1d4 | 1d3 | yes |
+| Short sword | 1d6 | 1d8 | yes |
+| Long sword | 1d8 | 1d12 | yes |
+| Club | 1d6 | 1d3 | yes |
+| Quarterstaff (two-handed) | 1d6 | 1d6 | yes |
+| Axe | 1d8 | 1d8 | bone and obsidian ones (not metal) |
+| Pick | 1d4+1 | 1d4 | yes |
+| Great axe (two-handed) | 1d10 | 2d8 | no |
+| Mace | 1d6+1 | 1d6 | no |
+| Cahulaks (both hands) | 1d6 | 1d6 | no |
+| Gythka (two-handed) | 2d4 | 1d10 | no |
+| Polearm (two-handed) | 1d10 | 2d6 | no |
+| Chatkcha | 1d6+2 | 1d4+2 | no: missiles never backstab |
+| Bow, sling, staff sling (bow and staff sling two-handed) | by the missile | the same | no |
 
 A half-giant holds a two-handed weapon in one hand, with a shield or a light
 weapon in the other.
+
+**Size.** Against a **large** target (a half-giant, a large monster such as the
+Mountain Stalker, anyone Enlarged) a weapon rolls AD&D's dice for large
+targets, the table's third column; its plus, STR and specialization are added
+as before. Shillelagh does 1d6+1 against smaller foes and 2d4 against large
+ones, Spiritual Hammer 1d4+1 and 1d4. A weapon's item box shows both
+(`1D8-1/1D12-1`); the inventory and View Character show the first. Hold Person
+and Charm Person don't work on a large target ([how spells
+work](#how-spells-work)). [The creatures' table](CREATURES.md) (spoilers) gives
+every creature's size. *Without the mod:* the game keeps no sizes.
+
+**Cahulaks** are two bladed heads on a rope, one in each hand. Their wielder
+attacks one more time a round, with the off head, at the [two-weapon](#two-weapons)
+penalties: −2 for the main head and −4 for the off, DEX's adjustment added but
+never making it a bonus (a ranger in light armour has none, a Justifier in any, a Ghetto Fighter 0
+and −2). A hit that does damage **tangles** a man-sized or smaller foe unless
+it saves against petrification: it loses its next turn. Half-giants, large monsters,
+anyone Enlarged, the bodiless (elementals, slimes, swarms, shadows) and a few
+other beasts can't be tangled ([the creatures' table](CREATURES.md) (spoilers)
+marks each). Twin-blades and Battle Dancers can't use cahulaks.
+*Without the mod:* a plain two-handed 1d6 weapon.
 
 **Armour** is worn in pieces (chest, arms, legs, a helm), each lowering AC by
 its own amount, and a shield and DEX lower it more (but not against an attack
@@ -1617,7 +1783,8 @@ armour is destroyed outright.
 
 The mod adds items the game never had, or never placed: here is what each
 is, not where it is ([Items](ITEMS.md) lists that, with spoilers, for those
-who want it). The mod's magic weapons are marked \* in each class's list.
+who want it). The magic weapons the mod adds or changes are marked \* in each
+class's list.
 
 **Mundane:**
 
@@ -1628,7 +1795,8 @@ who want it). The mod's magic weapons are marked \* in each class's list.
 | Bone, obsidian and metal great axes | 1d10, two-handed |
 | Bone and metal daggers | 1d4; the bone one is the only dagger a water cleric can use |
 | Obsidian and metal maces | 1d6+1 |
-| Metal pick, metal polearm | the game's, in metal |
+| Metal pick, metal polearm, metal cahulaks | the game's, in metal |
+| Obsidian cahulaks | the game's cahulaks, in obsidian: earth, fire and air clerics may use them |
 | Bone Scale Arm Armor, Leg Armor and Bone Helm | the rest of the bone scale set whose chest piece the game has |
 | Helm | a leather helm |
 
@@ -1655,11 +1823,16 @@ chosen type, often one of these.
 | Thornwall | bone polearm +1 |
 | Gutterknot | club +1 (the game has no magic club) |
 | Deepbiter | stone pick +1 |
+| Cahulaks +1 | bone cahulaks +1 |
+| Emberlash | obsidian cahulaks +1 |
+| Ironwhirl | metal cahulaks +2 |
 | Windlash | staff sling +1 |
 | Dunesong | bow +1 |
 | Skycutter | chatkcha +2 |
 
-The game's own Gythka +1, the Elven Leader's gift, is a Gythka +2 with the mod.
+The game's own Gythka +1 and Cahulaks +1 are a Gythka +2 and a Cahulaks +2
+with the mod (the cahulaks still cast Cause Light Wounds on a hit). The game's
+own Polearm +1, which it never placed, can be found now.
 
 **Other magic items:**
 
@@ -1679,6 +1852,7 @@ The game's own Gythka +1, the Elven Leader's gift, is a Gythka +2 with the mod.
 | Amulet of Magic Resistance | 15% magic resistance, added to any the wearer has |
 | Sunking Crown | a crown: Protection from Evil while worn; not armour |
 | Cloak of Elvenkind, Boots of Elvenkind | help a thief or ranger [hide and move silently](#hiding-in-shadows); thieves and rangers only |
+| Boots of Speed | in a fight, double movement and AC 2 better while the wearer can move (not Stuck, Paralyzed or Slowed); anyone may wear them |
 | Tome of Understanding | read from the inventory as a scroll: +1 WIS for good (at most 25) |
 | Six scrolls | spells the game has no scroll of |
 | Burning, Chill, Shocking and Vampiric Arrows | made only by a [Spellarcher](#multiclass-kits) from its own spells; they fade when the party rests |
@@ -1697,8 +1871,8 @@ without).
 | **THAC0, saves and thief skills on screen** | The inventory screen shows THAC0, all five saves, THAC0 with each weapon, DEX's adjustments and a thief's skills; View Character shows the saves, each labelled, MOVE and THAC0, and for a character of several classes which class goes up next. |
 | **Spell slots on the USE screen** | Spells left of each level, and the most after resting. |
 | **The Look box** | In a fight, a monster's hit points, AC, THAC0, alignment, magic resistance and chief defence; closing the box tells the rest. |
-| **Item boxes** | A wand's or other charged item's charges left; a cloak's, boots' or belt's bonus to thief skills. |
-| **The Effects screen** | Names each kit (a Shinobi's with its chance to read a scroll) and weapon spec, a page at a time when there are many; with the pointer on the icon of a spell that lasts a number of uses, the uses left: IMPROVED AC (10 CHARGES), MIRROR IMAGES (3 CHARGES). A magic item's power (Shadowseeker's Detect Invisibility) lasts while the item is readied and shows no charges. |
+| **Item boxes** | A wand's or other charged item's charges left; a plain weapon's to-hit (`Hit -1` for bone); with creature size, a weapon's damage against large targets too (`1D8-1/1D12-1`); a cloak's, boots' or belt's bonus to thief skills (`Hide +10`, `Silent +10`, `Pick +5, Lock +5`). |
+| **The Effects screen** | Names each kit (a Shinobi's with its chance to read a scroll) and weapon spec, a page at a time when there are many; with the pointer on the icon of a spell that lasts a number of uses, the uses left: IMPROVED AC (10 CHARGES), MIRROR IMAGES (3 CHARGES); for Enlarge how much more the weapon's dice give (ENLARGED (+90% DICE)), and for Barkskin, Flesh Armor and Magical Vestments the armour AC they give (BARKSKIN (AC 3)). A magic item's power (Shadowseeker's Detect Invisibility) lasts while the item is readied and shows no charges. |
 | **What a scroll says** | Reading a scroll on the inventory screen, the line under the paper doll gives the result: YOU LEARN THE SPELL, YOU CAN NOT READ THE SCROLL... *Without the mod:* nothing showed there. |
 | **New characters' thief skills** (a bug fixed) | A character not yet played shows its thief skills. *Without the mod:* they showed as 0. |
 
@@ -1743,13 +1917,16 @@ line](DICE-LOG.md) what each of its lines means.
 ## Worth knowing
 
 - **Cure poison before resting.** A character still Poisoned when time passes
-  out of a fight dies.
+  out of a fight dies (with Resting as in AD&D, a priest's Neutralize Poison left
+  unspent is cast at the rest: [resting](#resting)).
 - **Area spells catch the caster and the party.** Aim fireballs and clouds
   away from your own.
 - **Act before you are hit if you mean to cast** ([why](#initiative)).
 - **Someone Out Cold takes the most a spell's dice can do,** with no save.
-- **Two weapons cost to-hit** unless your DEX is high or you are a ranger or
-  Twin-blade in light armour, and the off hand attacks only once a round.
+- **Two weapons cost to-hit** unless your DEX is high or you are a ranger,
+  Twin-blade or Battle Dancer in light armour, and the off hand attacks only
+  once a round.
+- **A held or Out Cold foe is hit by every blow,** for normal damage.
 - **A warrior's weapon specs matter:** outside them it attacks once a round
   until 7th level.
 - **Multiclass preservers take off their armour to cast** (a helm counts),
@@ -1800,23 +1977,24 @@ line](DICE-LOG.md) what each of its lines means.
 |---|---|---|
 | In the game | a combat log in the game (L shows and hides it) | on |
 | | how much it says: at the least, in short or in detail | in short |
-| | describe monsters when you Look at them in a fight | on |
-| | float a spell's name over its caster, "Miss" over whoever an attack missed, and a spell's use lost ("Armor: 7 left") | on |
-| Rule changes | *characters:* class restrictions; multiclass hit points; hit dice rolled twice; scores and hit points as rolled; AD&D's class tables; CON as in AD&D; ages and magical aging; the XP level cap. *Weapons and armour:* two weapons; half-giants' two-handed weapons; rings and cloaks of protection; helms AC 1; items saving against acid. *Magic:* rangers' casting level; preservers' INT; the spell save; DEX instead of a doubled d20; Enlarge multiplying the weapon's dice only | all on |
+| | what hurts a monster (the Look box): describes a monster you Look at in a fight | on |
+| | names over figures: a spell's name over its caster, "Miss" over whoever an attack missed, and a used charge ("Armor: 7 left") | on |
+| Rule changes | *characters:* class restrictions; multiclass hit points; hit dice: the better of two; scores and hit points as rolled; AD&D's class tables; CON as in AD&D; ages and magical aging; dual-classing as the manual has it; level cap by XP. *Weapons and armour:* two weapons; half-giants' two-handed weapons; cahulaks as Dark Sun's rules have them; creature size as in AD&D; held targets as in AD&D; rings and cloaks of protection; helms AC 1; items saving against acid. *Magic:* rangers' casting level; preservers' INT; the spell save; DEX instead of a doubled d20; Enlarge multiplying the weapon's dice only; spells and psionics as the manual describes them (monsters' powers and Turn Undead by AD&D's table among them); spells roll to hit; resting as in AD&D | all on |
 | More character customization | weapon specialization; kits; STORE and RECALL on the creation screen; fuller starting gear | all on |
 | Expanded features | the leader's CHA at shops; buying back magical items; improved thieving: thief skills from AD&D's table, hiding in shadows to backstab, the cloak, boots and belt, backstabs multiplying the weapon's dice only, picking pockets | all on |
 | New content | the new spells (six wizard spells and ten 6th-level priest spells, one switch); new people (Kalzith; Semyon); a small quest (the cooked vulture); defilers' scrolls; new items (and an arena bout that comes with them) | all on |
 | Graphics | elves' ears and half-elves' own figures; Cilla drawn as an elf; what the party wears; shadows; dust; a hidden thief or ranger and anyone invisible drawn see-through | all on |
 | Controls | Tab and Enter; scrolling with the mouse wheel; the view in fights moving only to a figure off the screen; the pointer in scenes, a click skipping one; the pointer starting in the middle, moving as far up and down as across, and in a window as fast as the desktop's pointer; the whole party in view after a start, load or fight; spells kept on a click on the Effects screen (M, U and I have no switch) | all on |
 | | a red ring in a fight: none, or under the enemy chosen with Tab | under the enemy chosen |
-| Game speed | GOG's own, faster or fastest | faster |
+| Game speed | GOG's own, faster or fastest | fastest |
 | | the party walking at full speed whatever is drawn (steady pace) | on |
 | Wake of the Ravager (optional) | where Wake of the Ravager is installed, for the new priest spells' icons and pictures (found by itself when it can be) | (a folder) |
 | Saves | open the Named saves folder; put a save back in a slot | (buttons) |
 
 Rule changes, expanded features, the new spells and defilers' scrolls count at
 once in a game started from the Loader; the new people, quest and items,
-and any switch that says "from the next start" (STORE and RECALL among them),
+and any switch that says "from the next start" (STORE and RECALL, spells and
+psionics as the manual describes them and spells roll to hit among them),
 come the next time the game is started (a saved game keeps what it has). Kits,
 weapon specs and fuller starting gear go to characters made from then on. **Restore defaults**, at the bottom
 of the tab, sets every switch back.

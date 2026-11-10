@@ -15,10 +15,17 @@ From DSUN.EXE's damage code:
   better" is a monster only magical weapons hurt.
 * Undead (race 9 on the character sheet) take nothing from poison and draining, and mind-
   affecting spells and charms and holds don't work on them.
+
+With "Spells and psionics as the manual describes them" (gamepatch.SPELLS_MANUAL) the monsters are
+the manual's too: the shadows drain STR (DSCLOG's SHADOW_DRAIN) and shrug off cold, the Babau and the
+Blue Slaad carry a deadly poison, and the Styr, the Djinn and the Tari get kinds of their own
+(MANUAL_MONSTERS), in the Loader's copy of SEGOBJEX (object_chunks) and in a running game (mend).
 """
 
 import struct
 from typing import Dict, List, NamedTuple, Optional, Tuple
+
+from . import game
 
 CREATURE_KIND = 0x16  # word: the monster's kind (0 for people)
 MONSTER_KINDS_SEG = 0x3E45  # from the load segment, where the game has it ...
@@ -51,12 +58,23 @@ PROPERTY_TEXT = {
     9: "not held by Grease, Web, Entangle, Solid Fog, Quicksand or walls",
     21: "unaffected by Wall of Fog",
 }
+# its turns: one in four, its power at a foe (5A90Fh's table, for the bits shown)
+PROPERTY_TEXT[31] = "breathes fire for 3d6 one turn in four (a save halves)"
 # its hits cast one of the monsters' powers on the target as well
 SPECIAL_ATTACKS = {
     2: "2d6 cold", 3: "paralysis", 4: "2d6 acid", 13: "poison (10 damage)", 14: "poison (30 damage)",
     15: "deadly poison", 16: "20 acid, which can eat a worn piece of armour", 25: "disease (1 hit in 10)",
     24: "a corroding touch, which can eat a worn piece of armour and the weapon held",
 }
+# ... and as the monsters as the manual describes them have it, for a kind's bit (DSCLOG's SHADOW_DRAIN,
+# TARI_BITE, DJINN_TURN)
+SHADOW_KIND, GREATER_SHADOW_KIND, STYR_KIND, DJINN_KIND, TARI_KIND = 15, 13, 38, 39, 40
+DRAIN_TEXT = "1 STR drained (Weakened, 2d4 turns; no save)"
+MANUAL_SPECIAL = {(SHADOW_KIND, 2): DRAIN_TEXT, (GREATER_SHADOW_KIND, 3): DRAIN_TEXT,
+                  (TARI_KIND, 25): "disease (1 bite in 20)"}
+DJINN_NOTE = "turns invisible and makes 4 to 7 mirror images of itself at its first turn of a fight"
+DRAIN_TURNS = (2, 4)  # (2d4 turns: DSCLOG's)
+TURN_SECONDS = 600
 # a creature's alignment (its sheet's byte 1Ah), in two letters for the Look box and in words
 ALIGNMENTS = {1: ("LG", "lawful good"), 2: ("LN", "lawful neutral"), 3: ("LE", "lawful evil"),
               4: ("NG", "neutral good"), 5: ("TN", "true neutral"), 6: ("NE", "neutral evil"),
@@ -115,8 +133,9 @@ class Defences(NamedTuple):
     undead: bool
 
 
-def defences(rules: List[Rule], properties: int, undead: bool) -> Defences:
-    """What a monster's resistance rules and properties come to."""
+def defences(rules: List[Rule], properties: int, undead: bool, kind: int = 0, manual: bool = False) -> Defences:
+    """What a monster's resistance rules and properties come to (KIND's own, as the monsters as the
+    manual describes them have them, with MANUAL)."""
     # weapons: the least plus that does any damage, for each kind of weapon
     need = {}
     for bit, name in WEAPON_KINDS:
@@ -142,7 +161,10 @@ def defences(rules: List[Rule], properties: int, undead: bool) -> Defences:
             notes.append(text)
     if undead:
         notes.insert(0, "undead: mind-affecting spells, charms and holds don't work on it")
-    special = [text for bit, text in sorted(SPECIAL_ATTACKS.items()) if properties & (1 << bit)]
+    if manual and kind == DJINN_KIND:
+        notes.append(DJINN_NOTE)
+    special = [(MANUAL_SPECIAL.get((kind, bit), text) if manual else text)
+               for bit, text in sorted(SPECIAL_ATTACKS.items()) if properties & (1 << bit)]
     return Defences(weapon_plus, [] if weapon_plus == 4 else immune_kinds, half, immune, halved,
                     notes, special, undead)
 
@@ -189,7 +211,16 @@ def creature_defences(gd, tables: "MonsterTables", creature: int) -> Optional[De
     rec, sheet = gd.creature(creature), gd.sheet(creature)
     if len(rec) < 0x3A or len(sheet) < 0x47:
         return None
-    return tables.defences(struct.unpack_from("<H", rec, CREATURE_KIND)[0], sheet[0x18] == UNDEAD_RACE)
+    return tables.defences(struct.unpack_from("<H", rec, CREATURE_KIND)[0], sheet[0x18] == UNDEAD_RACE,
+                           _manual(gd))
+
+
+def _manual(gd) -> bool:
+    """The game's copy has the monsters as the manual describes them (its spells' switch)."""
+    try:
+        return bool(gd.spells_manual())
+    except (AttributeError, OSError, ValueError, struct.error):
+        return False
 
 
 def short_line(d: Defences, width: int = 15) -> str:
@@ -225,10 +256,10 @@ class MonsterTables:
             pcts = data[CLASS_PERCENTS_OFF + c * CLASS_SIZE:CLASS_PERCENTS_OFF + c * CLASS_SIZE + CLASS_RULES]
             self.rules[c] = [Rule(m, p) for m, p in zip(masks, pcts) if m]
 
-    def defences(self, kind: int, undead: bool) -> Defences:
+    def defences(self, kind: int, undead: bool, manual: bool = False) -> Defences:
         if not 0 <= kind < KIND_COUNT:
             return defences([], 0, undead)
-        return defences(self.rules.get(self.classes[kind], []), self.properties[kind], undead)
+        return defences(self.rules.get(self.classes[kind], []), self.properties[kind], undead, kind, manual)
 
 
 def monster_lines(gd, tables: MonsterTables, creature: int, ac: Optional[int]) -> Tuple[List[str], List[str]]:
@@ -244,7 +275,7 @@ def monster_lines(gd, tables: MonsterTables, creature: int, ac: Optional[int]) -
     mr = sheet[0x29]
     attacks = sheet[0x2A]
     undead = sheet[0x18] == UNDEAD_RACE
-    d = tables.defences(kind, undead)
+    d = tables.defences(kind, undead, _manual(gd))
     if ac is None:  # (no attack on it yet: counted as the game would, its armour and DEX)
         ac = gd.counted_ac(creature)
     ac_text = str(ac) if ac is not None else str(struct.unpack_from("b", sheet, 0x27)[0])
@@ -269,3 +300,100 @@ def monster_lines(gd, tables: MonsterTables, creature: int, ac: Optional[int]) -
     full = [head + (f", magic resistance {mr}%" if mr else "") + (f", {alignment[1]}" if alignment else "") + "."]
     full += describe(d)
     return short, full
+
+
+# The monsters the manual describes otherwise, given a kind of their own (kinds 38-40: no creature of
+# the game's has one; gamepatch's "styr_kind", "djinn_kind", "tari_kind") and the manual's numbers where
+# its record differs (Styr p. 51: HD 14, THAC0 7; Tari p. 52: HD 3, THAC0 17, AC 6, a bite of 1d3): by
+# name and race, each field (where, the game's, the manual's): "c" the creature record's offset, "s" the
+# sheet's (natural attacks at +2Bh: counts, dice, sides, bonuses, three of each)
+class Manual(NamedTuple):
+    name: bytes
+    race: int
+    objects: Tuple[int, ...]  # (its SEGOBJEX records)
+    fields: Tuple[Tuple[str, int, int, int], ...]
+
+
+MANUAL_MONSTERS = (
+    Manual(b"Styr", 12, (99,), (("c", CREATURE_KIND, 0, STYR_KIND), ("c", 0x1F, 11, 7), ("s", 0x24, 10, 14))),
+    Manual(b"Djinn", 14, (122,), (("c", CREATURE_KIND, 0, DJINN_KIND),)),
+    Manual(b"Tari", 1, (60, 65, 243), (("c", CREATURE_KIND, 0, TARI_KIND), ("c", 0x1F, 18, 17), ("s", 0x24, 2, 3),
+                                         ("s", 0x27, 10, 6), ("s", 0x31, 2, 3))),
+)
+RDFF_CREATURE, RDFF_SHEET = 0x0A, 0x4E  # (an object's RDFF record: its creature record, then its sheet's)
+RDFF_SIZES = ((0x08, game.CREATURE_SIZE), (0x4C, game.SHEET_SIZE))  # (each part's size word before it)
+
+
+def _set(record: bytearray, at: int, value: int, size: int) -> None:
+    if size == 2:
+        struct.pack_into("<H", record, at, value & 0xFFFF)
+    else:
+        record[at] = value & 0xFF
+
+
+def _get(record: bytes, at: int, size: int) -> int:
+    return struct.unpack_from("<H", record, at)[0] if size == 2 else record[at]
+
+
+def _size(at: int) -> int:
+    return 2 if at == CREATURE_KIND else 1
+
+
+def object_chunks(chunks) -> Dict[Tuple[str, int], bytes]:
+    """For the Loader's copy of SEGOBJEX with the monsters as the manual describes them: MANUAL_MONSTERS'
+    records (in CHUNKS) with their kinds and the manual's numbers, each only if it is the game's own."""
+    out: Dict[Tuple[str, int], bytes] = {}
+    for m in MANUAL_MONSTERS:
+        for number in m.objects:
+            rec = chunks.get(("RDFF", number))
+            if rec is None or len(rec) < RDFF_SHEET + game.SHEET_SIZE \
+                    or any(struct.unpack_from("<H", rec, at)[0] != size for at, size in RDFF_SIZES):
+                continue
+            if rec[RDFF_CREATURE + game.CREATURE_NAME:].split(b"\0", 1)[0] != m.name \
+                    or rec[RDFF_SHEET + game.SHEET_RACE] != m.race:
+                continue
+            base = {"c": RDFF_CREATURE, "s": RDFF_SHEET}
+            if any(_get(rec, base[part] + at, _size(at)) != old for part, at, old, _ in m.fields):
+                continue
+            new = bytearray(rec)
+            for part, at, _, value in m.fields:
+                _set(new, base[part] + at, value, _size(at))
+            out[("RDFF", number)] = bytes(new)
+    return out
+
+
+def mend(gd, manual: bool) -> List[str]:
+    """MANUAL_MONSTERS in the running game (a saved game's, or one begun before the switch) made as the
+    Loader's copy of SEGOBJEX has them with MANUAL, or as the game's without it: each creature on the
+    map by name and race with every field one way, its other way written."""
+    out: List[str] = []
+    combatants = gd.combatants()
+    creatures = game.far_pointer(gd.guest, gd.ds, game.CREATURES_PTR)
+    sheets = game.far_pointer(gd.guest, gd.ds, game.SHEETS_PTR)
+    indices = sorted(i for i in set(combatants.values()) if i >= game.PARTY_SIZE)
+    table = gd.creatures(indices[-1] + 1) if indices else b""
+    for index in indices:
+        rec = table[index * game.CREATURE_SIZE:(index + 1) * game.CREATURE_SIZE]
+        if len(rec) < game.CREATURE_SIZE:
+            continue
+        name = rec[game.CREATURE_NAME:game.CREATURE_NAME + 16].split(b"\0", 1)[0]
+        m = next((m for m in MANUAL_MONSTERS if m.name == name), None)
+        if m is None:
+            continue
+        sheet_index = struct.unpack_from("<H", rec, game.CREATURE_SHEET_INDEX)[0]
+        sheet = gd.guest.read(sheets + sheet_index * game.SHEET_SIZE, game.SHEET_SIZE)
+        if len(sheet) < game.SHEET_SIZE or sheet[game.SHEET_RACE] != m.race:
+            continue
+        parts = {"c": (rec, creatures + index * game.CREATURE_SIZE), "s": (sheet, sheets + sheet_index * game.SHEET_SIZE)}
+        have = [_get(parts[part][0], at, _size(at)) for part, at, _, _ in m.fields]
+        old, new = [f[2] for f in m.fields], [f[3] for f in m.fields]
+        want = new if manual else old
+        if have == want or have != (old if manual else new):
+            continue
+        for (part, at, _, _), value in zip(m.fields, want):
+            data, address = parts[part]
+            size = _size(at)
+            gd.guest.write(address + at, struct.pack("<H", value) if size == 2 else bytes((value,)))
+        out.append(f"({gd.creature_name(index)}: as the manual describes it)" if manual else
+                   f"({gd.creature_name(index)}: as the game has it)")
+    return out

@@ -4,6 +4,7 @@
 import struct
 from typing import List, NamedTuple, Optional
 
+from . import game
 from .game import (CATEGORY_DODGE, KIND_TO_SAVE, EFFECT_NAMES, EFFECT_RULES, NEW_SPELL_LEVELS, NEW_SPELLS, PARTY_SIZE,
                    PRIEST6_LEVEL, PRIEST6_SPELLS, HEAL_SPELL, HARM_SPELL, THORNS_SPELL, SUNSTROKE_SPELL,
                    HEARTSEEKER_SPELL, WATER_LIFE_SPELL, WHIRLWIND_SPELL, RESTORE_YOUTH_SPELL,
@@ -19,8 +20,6 @@ NO_SAVE_KIND = 6
 DAMAGE_KINDS = ((0x02, "fire"), (0x04, "cold"), (0x80, "electricity"), (0x40, "acid"), (0x01, "poison"),
                 (0x08, "crushing"), (0x10, "edged"), (0x20, "pointed"), (0x100, "draining"),
                 (0x400, "psionic"), (0x800, "death"))
-# rolled by code of their own rather than from the record (see the README's dice log table)
-OWN_DICE = {"Magic Missile", "Flame Arrow", "Minute Meteors"}
 ROUND = 60  # game seconds
 # The 6th-level priest spells whose records (the game's spells they are built on: Cure and Cause
 # Critical Wounds, Slay Living, Lend Health...) don't tell what DSCLOG makes them do: those lines
@@ -68,6 +67,30 @@ class SpellInfo(NamedTuple):
         return out
 
 
+FLAME_ARROW_SPELL = 28  # (with the spells as the manual has them: a bolt of 5d6 for every five levels)
+# The spells and powers whose lines DSCLOG's group 3 changes, with the spells as the manual has them
+# (gamepatch.SPELLS_MANUAL; their effects' rules game.MANUAL_EFFECT_RULES'), as FEATURES.md has them
+CHILL_TOUCH_SPELL, RAINBOW_SPELL, CLOUDKILL_SPELL, CELL_ADJUSTMENT_SPELL = 3, 50, 57, 151
+MANUAL_LINES = {
+    CHILL_TOUCH_SPELL: {"effect": "Weakened: STR 1 lower unless saved against (the game's); an undead takes no "
+                                  "damage and is Afraid 1d4 rounds instead"},
+    RAINBOW_SPELL: {"effect": "Paralyzed until it takes damage (any blow or spell)"},
+    CLOUDKILL_SPELL: {"effect": "a creature of under 4 levels (hit dice) dies with no save, one of 4 or 5 dies if it "
+                                "fails its save, one of 6 or more takes the damage"},
+    CELL_ADJUSTMENT_SPELL: {"effect": "heals 1d4 hit points and cures disease"},
+}
+
+
+def casts_text(spell: int, rec: bytes, rule) -> str:
+    """How many times a cast lands, from the record's +0 (bits 2-7: Magical Stone's three throws,
+    Minute Meteors' five globes as the manual has them), each its own aim and damage; Flame Arrow's
+    one for every five caster levels with its manual's fixed 5d6 (DSCLOG's FLAME_SITE)."""
+    if spell == FLAME_ARROW_SPELL and not rule.step_dice and rule.base_dice:
+        return ", a bolt for every 5 caster levels (at least one), each aimed and rolled"
+    count = (rec[0] >> 2) & 0x3F if rec else 1
+    return f", {count} times a cast, each aimed and rolled" if count > 1 else ""
+
+
 def damage_text(gd: GameData, spell: int, rec: bytes) -> str:
     rule = gd.spell_damage(spell)
     if rule is None or (rule.sides <= 1 and not rule.step_bonus):
@@ -87,12 +110,11 @@ def damage_text(gd: GameData, spell: int, rec: bytes) -> str:
     text = " + ".join(parts)
     if step:
         text += f", counting at most level {SPELL_LEVEL_CAP}"
+    text += casts_text(spell, rec, rule)
     kinds = struct.unpack_from("<H", rec, 0x1A)[0]
     names = [name for bit, name in DAMAGE_KINDS if kinds & bit]
     if names:
         text += f" [{', '.join(names)}]"
-    if gd.spell_name(spell) in OWN_DICE:
-        text += "; rolled by its own code, which leaves out the caster's level"
     return text
 
 
@@ -118,11 +140,12 @@ def save_text(gd: GameData, spell: int, rec: bytes, damages: bool) -> str:
 OWN_EFFECTS = {"Strength": 67, "Cat's Grace": 54}
 
 
-def effect_text(rec: bytes, name: str = "") -> str:
+def effect_text(rec: bytes, name: str = "", manual: bool = False) -> str:
     eff = struct.unpack_from("b", rec, 0x19)[0] or OWN_EFFECTS.get(name, 0)
     if eff > 0:
         name = EFFECT_NAMES.get(eff, f"effect {eff}")
-        return name + (f": {EFFECT_RULES[eff]}" if eff in EFFECT_RULES else "")
+        rule = game.effect_rule(eff, manual)
+        return name + (f": {rule}" if rule else "")
     if eff < 0:
         return "removes " + EFFECT_NAMES.get(-eff, f"effect {-eff}")
     return ""
@@ -142,6 +165,8 @@ def lasts_text(gd: GameData, spell: int, rec: bytes) -> str:
     each = "caster level" if per_levels == 1 else f"{per_levels} caster levels"
     each += f" (level {adjust:+d})" if adjust else ""
     dice = (f"{count}d{sides}" if sides > 1 else str(count)) if count else ""
+    more = game.duration_bonus(spell, rec)  # (Stinking Cloud's 1d4+1: DSCLOG's STINK_SITE)
+    dice += f"+{more}" if more and dice else ""
     if unit < 0:  # a number of uses: blows stopped, images, one attack...
         what, times = "charge", -unit
     elif unit % ROUND == 0:
@@ -186,9 +211,12 @@ def spell_info(gd: GameData, spell: int, party: List[int]) -> Optional[SpellInfo
             if level:
                 casters.append(f"{gd.creature_name(creature)} {ordinal(level)}")
     name = gd.spell_name(spell)
-    lines = {"damage": damage, "save": save_text(gd, spell, rec, bool(damage)), "effect": effect_text(rec, name),
-             "lasts": lasts_text(gd, spell, rec)}
+    manual = gd.spells_manual()
+    lines = {"damage": damage, "save": save_text(gd, spell, rec, bool(damage)),
+             "effect": effect_text(rec, name, manual), "lasts": lasts_text(gd, spell, rec)}
     lines.update(OWN_LINES.get(spell, {}))
+    if manual:
+        lines.update(MANUAL_LINES.get(spell, {}))
     return SpellInfo(spell, name, magic, spell_level(gd, spell), lines["damage"], lines["save"], lines["effect"],
                      lines["lasts"], casters)
 

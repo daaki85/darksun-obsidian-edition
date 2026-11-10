@@ -152,14 +152,14 @@ def extra(kid: int, dance: int = 0) -> int:
 
 
 # The game's own party (defaultparty.py), three of them given features of their own (not kits;
-# only K'ratchek's extra throw is something no kit gives): the kit byte's OWN_BIT (KIT_BYTE: bits 0-5 the
+# none is something no kit gives): the kit byte's OWN_BIT (KIT_BYTE: bits 0-5 the
 # classes' kits, 7 Friends known), set by the Loader as a new game starts; which feature by the
 # race (DSCLOG's OWN_RACE_B). Gerakis (a half-giant) Wild Fighting (wild.py); K'ratchek (a
-# thri-kreen) a Wasteland Seer's casting and PSP (SKY_LEVEL, PSI_KIT) and one more chatkcha throw a round
-# (OWN_THROWS); Cilla (an elf) the Elven Shadow-walker's hiding, never halved in daylight (stealth.py).
+# thri-kreen) a Wasteland Seer's casting and PSP (SKY_LEVEL, PSI_KIT; her chatkcha's
+# 2/1, OWN_THROWS, is every thri-kreen's, so not listed as hers); Cilla (an elf) the Elven Shadow-walker's hiding, never halved in daylight (stealth.py).
 OWN_BIT, KIT_OPEN = 0x40, 0xFF
 HALF_GIANT, ELF, THRI_KREEN = 5, 3, 8
-OWN_FEATURES = {HALF_GIANT: ("Wild Fighting",), THRI_KREEN: ("Open sky spells and psionics", "One more chatkcha throw"),
+OWN_FEATURES = {HALF_GIANT: ("Wild Fighting",), THRI_KREEN: ("Open sky spells and psionics",),
                 ELF: ("Elven Shadow-walker",)}
 CHATKCHA, OWN_THROWS_MORE = 12, 2  # (the chatkcha's weapon kind; one more throw a round, in halves)
 
@@ -555,7 +555,7 @@ _NO_SHIELD = frozenset(range(5, 9)) | {11}  # (druids and the preserver: no shie
 # table would take the new class's place (a Seeker's or Justifier's priest slots, a Shinobi's
 # wizard ones); a warrior's THAC0 is a warrior class's already (Swashbuckler, Crusader, Battle
 # Mage, Mind Warrior); it needs a shield the class can't hold (Arena Champion, Sentinel), or a
-# two-handed melee weapon the class can't use (Brute: a psionicist's, an air cleric's); a Stalker's
+# two-handed melee weapon the class can't use (Brute: a psionicist's); a Stalker's
 # hiding would add to a thief's own (the thief); a Grove Warden's AC to a gladiator's own (the
 # gladiator); a Healer's sphere is water's only (the rangers of air, earth and fire). The game itself
 # keeps a priest from the other priest class and a ranger (good) from the druid (true neutral), so the
@@ -563,7 +563,7 @@ _NO_SHIELD = frozenset(range(5, 9)) | {11}  # (druids and the preserver: no shie
 _NOT_WATER = frozenset((1, 2, 3, 5, 6, 7, 13, 14, 15))
 DUAL_BANS = {SEEKER: _PRIEST, JUSTIFIER: _PRIEST, SHINOBI: frozenset((11,)),
              **{k: _WARRIOR for k in WARRIOR_THAC0},
-             CHAMPION: _NO_SHIELD, SENTINEL: _NO_SHIELD, BRUTE: frozenset((12, 1)),
+             CHAMPION: _NO_SHIELD, SENTINEL: _NO_SHIELD, BRUTE: frozenset((12,)),
              STALKER: frozenset((17,)), GROVE_WARDEN: frozenset((10,)), HEALER: _NOT_WATER}
 
 

@@ -37,22 +37,24 @@ class WorldGearTests(unittest.TestCase):
 
     def test_merchants(self):
         """The Weapon Merchant stocks every new plain weapon (the great axes in every material, a
-        warrior's starting one being bone; every Wild Mul carries a bone one too), Jark all but the obsidian axe and the metal ones;
+        warrior's starting one being bone; every Wild Mul carries a bone one too) and metal cahulaks, Jark all but the
+        obsidian axe and the metal ones, and obsidian cahulaks;
         the kinds of people carry theirs each; no one the party wouldn't fight has one (Krikor, Uskuye,
         Lt. Kwerin), and no one Thieves' Tools (a thief's Pick Pockets button instead: pickpocket.py)."""
         from dsloader import tools
         sold = [icons.which(r) for r in gift("Weapon Merchant").items]
         self.assertEqual(sold, ["Bone Short Sword", "Obsidian Short Sword", "Bone Axe", "Obsidian Axe", "Obsidian Mace",
-                                "Short Sword", "Bone Great Axe", "Obsidian Great Axe", "Metal Great Axe", "Metal Pick", "Bone Dagger"])
+                                "Short Sword", "Bone Great Axe", "Obsidian Great Axe", "Metal Great Axe", "Metal Pick", "Bone Dagger",
+                                "Metal Cahulaks"])
         self.assertEqual([icons.which(r) for r in gift("Wild Mul").items], ["Bone Axe", "Bone Great Axe"])
-        self.assertEqual(([icons.which(r) for r in gift("Scar's henchman").items], gift("Scar's henchman").objects),
-                         (["Bone Axe"], (229,)))
+        self.assertEqual(([icons.which(r) for r in gift("Scar's henchman").items[:1]], gift("Scar's henchman").objects),
+                         (["Bone Great Axe"], (229,)))
         defilers = [(g.objects, [icons.which(r) or struct.unpack_from("<H", r, game.ITEM_TYPE)[0] for r in g.items])
                     for g in worldgear.GIFTS if g.name == "Defiler"]  # (a body to leave: a dagger each)
         self.assertEqual(defilers, [((258,), [17]), ((296,), ["Bone Dagger"])])
         self.assertEqual([icons.which(r) for r in gift("Jark").items],
                          ["Bone Short Sword", "Obsidian Short Sword", "Bone Axe", "Obsidian Mace", "Bone Great Axe",
-                          "Obsidian Great Axe", "Bone Dagger"])
+                          "Obsidian Great Axe", "Bone Dagger", "Obsidian Cahulaks"])
         self.assertFalse([g.name for g in worldgear.GIFTS + worldgear.MAGIC if any(tools.is_tools(r) for r in g.items)])
         self.assertNotIn("Mirlon", {g.name for g in worldgear.GIFTS})
         self.assertFalse({"Krikor", "Uskuye", "Kwerin"} & {g.name for g in worldgear.GIFTS + worldgear.MAGIC})
@@ -458,3 +460,217 @@ class DataTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class BaseTypesTests(unittest.TestCase):
+    def test_every_loader_type_has_a_base(self):
+        """Every item type the Loader adds (115 on) has a game type its header number is copied from:
+        the girdles the Belt's (42), the amulet the Necklace's (36), the Boots of Speed the Boots' (68)."""
+        from dsloader import npcitems
+        for kind in range(game.GAME_TYPES, game.GAME_TYPES + len(npcitems.TYPES)):
+            self.assertIn(kind, worldgear.BASE_TYPES)
+            self.assertLess(worldgear.BASE_TYPES[kind], game.GAME_TYPES, kind)
+        new = (game.BACK_GIRDLE_TYPE, game.URNST_GIRDLE_TYPE, game.MR_AMULET_TYPE, game.SPEED_BOOTS_TYPE)
+        self.assertEqual([worldgear.BASE_TYPES[t] for t in new], [42, 42, 36, 68])
+        # (each worn where its base is: the type record's +9, the Belt's waist 2, the Necklace's neck 7, the Boots' 4)
+        self.assertEqual([npcitems.TYPES[t - game.GAME_TYPES][9] for t in new], [2, 2, 7, 4])
+
+    @unittest.skipUnless(os.environ.get("DSUN_OBJECTS"), "needs the game's SEGOBJEX.GFF (DSUN_OBJECTS)")
+    def test_base_numbers(self):
+        """header_numbers gives the new types their base's number (the Belt 341, the Necklace 125, the Boots 333)."""
+        from dsloader import gff
+        with open(os.environ["DSUN_OBJECTS"], "rb") as f:
+            chunks = gff.read_gff(f.read())
+        numbers = worldgear.header_numbers(chunks)
+        self.assertEqual([numbers.get(t) for t in (game.BACK_GIRDLE_TYPE, game.URNST_GIRDLE_TYPE,
+                                                   game.MR_AMULET_TYPE, game.SPEED_BOOTS_TYPE)],
+                         [341, 341, 125, 333])
+
+
+class SerefTests(unittest.TestCase):
+    def test_seref_carries_the_games_polearm(self):
+        """Seref (object 203, in the Elven Caravan and made anew for his encounter) carries the game's
+        own Polearm +1 (its object 1577, type 19, name 12h, +1, 20,000), which the game never placed."""
+        gift = next(g for g in worldgear.MAGIC if g.name == "Seref")  # (with the magic items)
+        self.assertEqual((gift.objects, gift.region, gift.clone, gift.instead), ((203,), 0x1A, None, None))
+        rec, = gift.items
+        self.assertEqual((struct.unpack_from("<H", rec, 0)[0], struct.unpack_from("<H", rec, game.ITEM_TYPE)[0],
+                          struct.unpack_from("<H", rec, game.ITEM_NAME)[0], rec[game.ITEM_PLUS]),
+                         (0x10000 - 1577, 19, 0x12, 1))
+
+
+class FightersTests(unittest.TestCase):
+    def test_kits_named(self):
+        """The unarmed people the party fights: each copies an armed kind's items or gets the game's
+        plain items of the types named (worldgear.fighters, with the game's data: test below)."""
+        self.assertEqual(dict(worldgear.ARMED_LIKE), {213: 214, 195: 214, 281: 108, 267: 82})
+        self.assertEqual(worldgear.KITS[292], (worldgear.GYTHKA_BONE,))
+        self.assertEqual(worldgear.KITS[257], (worldgear.STONE_DAGGER_TYPE,))
+
+    @unittest.skipUnless(os.environ.get("DSUN_OBJECTS"), "needs the game's SEGOBJEX.GFF (DSUN_OBJECTS)")
+    def test_cahulaks_placed(self):
+        """Legcrusher's two clubs a plain Cahulaks +1 (the game's, object 30003, its spell taken off), the caravan chest's Cahulaks
+        +2 (32,400, its own object, 2672: its own glow), the arena body's plain gythka plain bone cahulaks (with the champions on), and the
+        champions' mul with metal cahulaks (type 146, object 2670) in place of two bone axes."""
+        from dsloader import arms, champions, dataitems, gff, npcitems
+        with open(os.environ["DSUN_OBJECTS"], "rb") as f:
+            chunks = gff.read_gff(f.read())
+        out = worldgear.data_chunks(chunks, {})
+        def items(obj):
+            return [(struct.unpack_from("<H", r, game.ITEM_TYPE)[0], -struct.unpack_from("<h", r, 0)[0],
+                     r[game.ITEM_PLUS], struct.unpack_from("<H", r, 6)[0])
+                    for r in dataitems.items_of(out.get(("RDFF", obj)) or chunks[("RDFF", obj)])]
+        legcrusher = items(npcitems.LEGCRUSHER)
+        self.assertNotIn(18, [t for t, _, _, _ in legcrusher])
+        self.assertIn((21, 30003, 1, 11600), legcrusher)
+        cah = next(r for r in dataitems.items_of(out[("RDFF", npcitems.LEGCRUSHER)])
+                   if struct.unpack_from("<H", r, game.ITEM_TYPE)[0] == 21)
+        self.assertEqual((cah[0x0F], struct.unpack_from("<H", cah, 2)[0]), (0, 0))  # (no Cause Light Wounds)
+        self.assertIn((21, 2672, 2, 32400), items(worldgear.CARAVAN_CHEST))
+        self.assertEqual([(t, p) for t, _, p, _ in items(arms.BODY)], [(21, 0)])
+        mul = items(champions.MUL)
+        self.assertEqual(mul[0][:3], (game.METAL_CAHULAKS_TYPE, 2670, 0))
+        self.assertNotIn(game.BONE_AXE_TYPE, [t for t, _, _, _ in mul])
+        for obj in (champions.MUL, arms.BODY):  # (both plain: no spell, no plus)
+            cah = next(r for r in dataitems.items_of(out[("RDFF", obj)])
+                       if struct.unpack_from("<H", r, game.ITEM_TYPE)[0] in game.CAHULAKS_TYPES)
+            self.assertEqual((cah[0x0F], struct.unpack_from("<H", cah, 2)[0], cah[game.ITEM_PLUS]), (0, 0, 0), obj)
+
+    @unittest.skipUnless(os.environ.get("DSUN_OBJECTS"), "needs the game's SEGOBJEX.GFF (DSUN_OBJECTS)")
+    def test_from_the_games_data(self):
+        from dsloader import dataitems, gff
+        with open(os.environ["DSUN_OBJECTS"], "rb") as f:
+            chunks = gff.read_gff(f.read())
+        got = {obj: [struct.unpack_from("<H", r, game.ITEM_TYPE)[0] for r in items] for obj, items in worldgear.fighters(chunks)}
+        self.assertEqual(sorted(got), [195, 199, 200, 201, 202, 213, 257, 267, 281, 292])
+        self.assertEqual(got[292], [0x2C])
+        self.assertEqual(sorted(got[213]), sorted(struct.unpack_from("<H", r, game.ITEM_TYPE)[0]
+                                                   for r in dataitems.items_of(chunks[("RDFF", 214)])))
+
+
+class MagicCahulaksTests(unittest.TestCase):
+    def test_magic_cahulaks(self):
+        """Emberlash (an obsidian cahulaks +1) on Uzoma, Ironwhirl (a metal cahulaks +2) on the
+        Subterranean Temple's weapon rack: their types, names (DSCLOG's 0x171, 0x172), pictures,
+        prices (20,800 a plus) and icons; cahulaks, two-handed, of obsidian and of metal."""
+        from dsloader import specialize
+        cases = ((worldgear.OBSIDIAN_CAHULAKS_1, game.OBSIDIAN_CAHULAKS_TYPE, 1, "Emberlash", 0x171, 2676, "Uzoma", (196,), None, 3),
+                 (worldgear.METAL_CAHULAKS_2, game.METAL_CAHULAKS_TYPE, 2, "Ironwhirl", 0x172, 2678, "Weapon rack", (2252,), 0x2D, 4))
+        for spec, type_, plus, name, entry, obj, holder, objects, region, material in cases:
+            item = worldgear.weapon(*spec)
+            self.assertEqual((struct.unpack_from("<H", item, game.ITEM_TYPE)[0], item[game.ITEM_PLUS],
+                              struct.unpack_from("<H", item, game.ITEM_NAME)[0], struct.unpack_from("<H", item, 0)[0]),
+                             (type_, plus, entry, 0x10000 - obj))
+            self.assertEqual(struct.unpack_from("<H", item, 6)[0], plus * worldgear.PLUS_VALUE)
+            self.assertEqual(icons.which(item), name)
+            self.assertEqual(icons.PICTURES[name], 0x10000 - obj)
+            self.assertEqual(names.NAMES[entry], name.encode())
+            self.assertLessEqual(len(name), 15)
+            g = next(g for g in worldgear.MAGIC if item in g.items)
+            self.assertEqual((g.name, g.objects, g.region, g.clone, g.instead), (holder, objects, region, None, None))
+            self.assertEqual(specialize.KINDS[specialize.KIND_OF_TYPE[type_]], "cahulaks")
+            record = npcitems.TYPES[type_ - game.GAME_TYPES]
+            self.assertEqual(record[8], material)
+            self.assertTrue(record[0x0F] & 0x40)  # (two-handed)
+            self.assertIn(obj + 1, icons.BOX_TALL)  # (its icon 18 rows: the item box draws a copy)
+        # (the plain ones still the plain ones)
+        self.assertEqual(icons.which(worldgear.weapon(worldgear.METAL_CAHULAKS)), "Metal Cahulaks")
+        self.assertEqual(icons.which(worldgear.weapon(worldgear.OBSIDIAN_CAHULAKS)), "Obsidian Cahulaks")
+        self.assertEqual(worldgear.OBSIDIAN_CAHULAKS[3], 15)  # (as the other obsidian weapons, past bone's 10)
+        self.assertEqual(worldgear.METAL_CAHULAKS[3], 200)
+
+    @unittest.skipUnless(os.environ.get("DSUN_OBJECTS"), "needs the game's SEGOBJEX.GFF (DSUN_OBJECTS)")
+    def test_placed_in_the_games_data(self):
+        """Uzoma and the temple's rack are each one entity's (RGNFF's Uzoma, RGN2D's rack: no one else
+        carries them), keep their own items, and get the cahulaks; the two sellers' stock stays
+        within the 34 items a shop shows."""
+        from dsloader import dataitems, gff
+        with open(os.environ["DSUN_OBJECTS"], "rb") as f:
+            chunks = gff.read_gff(f.read())
+        out = worldgear.data_chunks(chunks, {})
+
+        def kinds(obj):
+            return [(struct.unpack_from("<H", r, game.ITEM_TYPE)[0], r[game.ITEM_PLUS])
+                    for r in dataitems.items_of(out[("RDFF", obj)])]
+        self.assertEqual(kinds(196)[-1], (game.OBSIDIAN_CAHULAKS_TYPE, 1))
+        self.assertIn((22, 0), kinds(196))  # (his metal axe kept)
+        self.assertEqual(kinds(2252), [(20, 2), (22, 0), (game.METAL_CAHULAKS_TYPE, 2)])
+        for seller in (285, 106):
+            self.assertLessEqual(len(dataitems.items_of(out[("RDFF", seller)])), 34, seller)
+        game_dir = os.path.dirname(os.environ["DSUN_OBJECTS"])
+        seen = {}
+        for region in ("FF", "2D"):
+            path = os.path.join(game_dir, f"RGN{region}.GFF")
+            if not os.path.isfile(path):
+                self.skipTest("needs the game's region files beside SEGOBJEX.GFF")
+            with open(path, "rb") as f:
+                rgn = gff.read_gff(f.read())
+            for (kind, _), etab in rgn.items():
+                if kind == "ETAB":
+                    for i in range(len(etab) // dataitems.ENTITY.size):
+                        obj = -dataitems.ENTITY.unpack_from(etab, i * dataitems.ENTITY.size)[4]
+                        seen[obj] = seen.get(obj, 0) + 1
+        self.assertEqual((seen.get(196), seen.get(2252)), (1, 1))
+
+
+class SpeedBootsTests(unittest.TestCase):
+    def test_boots_of_speed(self):
+        """The Boots of Speed: DSCLOG's type (the game's Boots' copy, anyone's), its name entry, 20,000,
+        carried by Dagger (202); the Gythka +3 on Hototo too (worldgear.HOTOTO)."""
+        rec = worldgear.SPEED_BOOTS
+        self.assertEqual((struct.unpack_from("<H", rec, game.ITEM_TYPE)[0], struct.unpack_from("<H", rec, game.ITEM_NAME)[0],
+                          struct.unpack_from("<H", rec, 0)[0]), (game.SPEED_BOOTS_TYPE, 0x170, 0x10000 - 2668))
+        self.assertEqual(npcitems.TYPES[game.SPEED_BOOTS_TYPE - game.GAME_TYPES],
+                         bytes.fromhex("0000000001000a0085040000000000" "00ff1f0000"))  # (the game's Boots', type 68)
+        gift = next(g for g in worldgear.MAGIC if g.name == "Dagger")
+        self.assertEqual((gift.items, gift.objects), ((rec,), (202,)))
+        self.assertEqual(worldgear.NAMES[0x170], b"Boots of Speed")
+        self.assertEqual((worldgear.HOTOTO, worldgear.GYTHKA_3_OBJECT), (200, 2271))
+
+
+@unittest.skipUnless(os.environ.get("DSUN_OBJECTS"), "DSUN_OBJECTS (the game's SEGOBJEX.GFF) not given")
+class ScarTests(unittest.TestCase):
+    def test_obsidian_cahulaks_for_his_long_sword(self):
+        """Scar (object 87) gets plain obsidian cahulaks in place of his obsidian long sword (type 45),
+        his armour kept."""
+        import struct
+        from dsloader import dataitems, game, gff
+        with open(os.environ["DSUN_OBJECTS"], "rb") as f:
+            chunks = gff.read_gff(f.read())
+        gift = next(g for g in worldgear.GIFTS if g.name == "Scar")
+        self.assertEqual((gift.objects, gift.instead), ((worldgear.SCAR,), (45, 0)))
+        def types(data):
+            return [struct.unpack_from("<H", r, game.ITEM_TYPE)[0] for r in dataitems.items_of(data)
+                    if len(r) == game.ITEM_SIZE]
+        before = types(chunks[("RDFF", worldgear.SCAR)])
+        after = types(worldgear.object_chunks(chunks, [gift])[("RDFF", worldgear.SCAR)])
+        self.assertIn(45, before)
+        self.assertNotIn(45, after)
+        self.assertIn(game.OBSIDIAN_CAHULAKS_TYPE, after)
+        self.assertEqual(sorted(t for t in before if t != 45), sorted(t for t in after if t != game.OBSIDIAN_CAHULAKS_TYPE))
+
+    def test_armour(self):
+        """Scar's leather chest and arm armour (types 6, 7) made a full suit with leggings and a helm
+        (8, 5), above Merzol's (object 180: chest and arm); his henchmen (229), who carried nothing,
+        get a bone great axe and Merzol's leather chest and arm armour."""
+        import struct
+        from dsloader import dataitems, game, gff
+        with open(os.environ["DSUN_OBJECTS"], "rb") as f:
+            chunks = gff.read_gff(f.read())
+        def types(data):
+            return sorted(struct.unpack_from("<H", r, game.ITEM_TYPE)[0] for r in dataitems.items_of(data)
+                          if len(r) == game.ITEM_SIZE)
+        out = worldgear.object_chunks(chunks, worldgear.GIFTS)
+        merzol = types(chunks[("RDFF", 180)])
+        scar = types(out[("RDFF", worldgear.SCAR)])
+        self.assertTrue({6, 7} <= set(merzol))
+        self.assertEqual(sorted(t for t in scar if t in (5, 6, 7, 8)), [5, 6, 7, 8])
+        self.assertIn(game.OBSIDIAN_CAHULAKS_TYPE, scar)
+        self.assertNotIn(45, scar)
+        self.assertEqual(types(chunks[("RDFF", 229)]), [])
+        self.assertEqual(sorted(t for t in types(out[("RDFF", 229)]) if t in (6, 7)), [6, 7])
+        from dsloader import champions
+        for item, game_type in ((worldgear.LEATHER_CHEST_ITEM, 6), (worldgear.LEATHER_ARM_ITEM, 7),
+                                (worldgear.LEATHER_LEGS_ITEM, 8)):
+            self.assertEqual(dataitems.placed(item), dataitems.placed(champions.game_item(chunks, game_type)))
+        self.assertEqual(worldgear.LEATHER_HELM_ITEM, champions.HELM)  # (the champions' helm)

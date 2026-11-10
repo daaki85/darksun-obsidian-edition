@@ -23,6 +23,15 @@ DSCLOG's routines and variables are named in capitals on these pages
 - [How the dice log works](#how-the-dice-log-works)
 - [What is known](#what-is-known)
 - [Room in the helper](#room-in-the-helper)
+  - [Where DOSBox's memory is](#where-dosboxs-memory-is)
+  - [The limits](#the-limits)
+  - [The helper's segment](#the-helpers-segment)
+  - [The far block](#the-far-block)
+  - [Upper memory moved down](#upper-memory-moved-down)
+  - [EMS off](#ems-off)
+  - [The game's overlay buffer](#the-games-overlay-buffer)
+  - [The game's blocks kept for good](#the-games-blocks-kept-for-good)
+  - [Low memory in play](#low-memory-in-play)
 - [The crash report](#the-crash-report)
 - [The freeze report](#the-freeze-report)
 - [Reading the game's memory](#reading-the-games-memory)
@@ -45,9 +54,9 @@ DSCLOG's routines and variables are named in capitals on these pages
 | `dos/` | the helper DOSBox loads, `dsclog.asm` (built to `DSCLOG.EXE`), `umbplus.asm` (`UMBPLUS.COM`) and `gameend.asm` (`GAMEEND.COM`) |
 | `layouts/` | the game's memory layout (`shattered_lands.json`), for the Loader's window and Memory tools |
 | `tests/` | the unit tests, and `make_fake_party.py` for practising without the game |
-| `docs/` | the screenshots and the item icons the documentation shows |
+| `docs/` | the screenshots the documentation shows; `docs/items/`, the item icons (`docicons.py`), and `docs/creatures/`, the creatures' figures (`doccreatures.py`), both drawn from the game's data ([Generated pages](#generated-pages)) |
 | `*.bat` | what players double-click: the Loader, the game with or without its window, a save file's party |
-| `README.md`, `FEATURES.md`, `ITEMS.md`, `KITS.md`, `HOW-THE-GAME-WORKS.md`, `DICE-LOG.md`, `PLAYER-GUIDE.md` | the player's pages (`player-guide.html` is made from the guide) |
+| `README.md`, `FEATURES.md`, `ITEMS.md`, `KITS.md`, `GAME-BUGS.md`, `HOW-THE-GAME-WORKS.md`, `DICE-LOG.md`, `PLAYER-GUIDE.md`, `CREATURES.md` | the player's pages (`player-guide.html` is made from the guide, `CREATURES.md` by `doccreatures.py`) |
 | `../PATCH-NOTES.md`, `../CHANGELOG.md`, `../release-notes/` | the repository's root: the patch notes, the record of every pull request, and each release's notes |
 | `../playtest/` | the in-game test kit: tools that drive the game in DOSBox, saves and logs, and [its guide](../playtest/PLAYTESTING.md). It is outside this folder, so it never goes in the release zip |
 
@@ -65,12 +74,20 @@ by `test_theme`); `bonescale.py` puts the bone scale set together in its chest;
 layout files, `values.py` the value types they and the searches use (u8 to s32,
 str), and `search.py` the Memory tools' value search; `unblock.py` takes
 Windows' "downloaded from the internet" mark off the Loader's files;
-`patchnotes.py` and `guidepage.py` make the web pages (below).
+`patchnotes.py` and `guidepage.py` make the web pages, `docicons.py` and
+`doccreatures.py` the item icons and the creatures' table (below);
+`fighttally.py` is the dice log's summary as a fight ends, `ledger.py` the
+window's readable layout of the dice log's lines; `sizes.py` gives each
+creature AD&D's size (for [creature size](DEVELOPMENT-RULES.md#creature-size)
+and the creatures' table) and `cahulaks.py` keeps DSCLOG's list of those the
+cahulaks can't tangle ([the cahulaks](DEVELOPMENT-RULES.md#cahulaks)).
 
 ### Build
 
 After changing `dos/dsclog.asm`, rebuild the helper with
-[NASM](https://www.nasm.us/):
+[NASM](https://www.nasm.us/) **2.16.01**, the version the committed files are built with and
+the one the GitHub workflows install (nasm 3 encodes the helper otherwise, so its rebuild checks
+fail and the emulated tests read the wrong symbols):
 
 ```
 nasm -f bin -o dos/DSCLOG.EXE dos/dsclog.asm
@@ -98,37 +115,65 @@ then run the module. Both use `dsloader/pagestyle.css`, and carry their fonts
 inside them (`pagefonts.py`, from `dsloader/fonts`), so they load nothing from
 the internet.
 
+#### Generated pages
+
+Two more are made from the game's own data, so they need its folder (the one
+holding `DSUN.EXE`):
+
+```
+python -m dsloader.docicons GAME_FOLDER       # docs/items/*.png, the icons in ITEMS.md
+python -m dsloader.doccreatures GAME_FOLDER   # CREATURES.md and docs/creatures/*.png
+```
+
+`docicons` reads the Loader's copy of `SEGOBJEX.GFF` in `dos/` (start the game
+from the Loader once first, so it is there with the mod's icons) and the
+game's palette; it says which icons it couldn't draw (a new item needs its
+line in `docicons.ICONS`: [New items](DEVELOPMENT-CONTENT.md#new-items)).
+`doccreatures` reads the game's `SEGOBJEX.GFF` and palette, and takes each
+creature's size from `sizes.py` and whether it can be tangled from
+`cahulaks.why_not`: run it again after changing either.
+
 ### Tests
 
 ```
 python -m unittest discover -s tests
 ```
 
-Some tests need more, and are skipped without it:
+Some tests need more, and are skipped without it (each skip says what it
+needs: "needs tkinter", "DSUN_GPLDATA ... not given", which is the list to
+trust when a test file is added):
 
-- **unicorn** (`pip install unicorn`; the Release workflow pins 2.1.4):
-  `test_dsclog`, `test_gamepatch` and `test_shadows` run the helper's
-  interrupt handlers in a CPU emulator.
-- **tkinter**: the window's tests (`test_theme`, `test_partyview`, `test_find`).
-  Linux's Python often lacks it; in the cloud container `/usr/bin/python3.12`
-  has it.
+- **unicorn** (`pip install unicorn`; the workflows pin 2.1.4): the tests that
+  run the helper's interrupt handlers in a CPU emulator (`test_dsclog`,
+  `test_gamepatch`, `test_shadows`, `test_dsclog_drawing`, `test_cahulaks`,
+  `test_sizes`, `test_held`, `test_least_scores`, `test_manual_spells`,
+  `test_manual_group3`, `test_group4` among them).
+- **tkinter**: the window's tests (`test_theme`, `test_partyview`, `test_find`,
+  `test_viewer_options`, and `test_compiles`' window part; `test_viewer_settings` also
+  needs a display, so run it under `xvfb-run` on a machine without one). Linux's Python
+  often lacks it.
 - **The game's files**, named by environment variables: `DSUN_GPLDATA` (its
-  `GPLDATA.GFF`: `test_scriptnumbers`, `test_pehtuclchest`, `test_champions`,
-  and `test_sounds`, which reads the `RESOURCE.GFF` beside it), `DSUN_OBJECTS`
-  (its `SEGOBJEX.GFF`, with `GPLDATA.GFF` beside it: `test_figures`,
-  `test_pehtuclchest`) and `DSUN_RESOURCE` (its `RESOURCE.GFF`:
-  `test_kitpages`).
+  `GPLDATA.GFF`: `test_scriptnumbers`, `test_scriptfixes`, `test_pehtuclchest`,
+  `test_champions`, `test_audit_flags`, and `test_sounds`, which reads the `RESOURCE.GFF` beside
+  it), `DSUN_OBJECTS` (its `SEGOBJEX.GFF`, with `GPLDATA.GFF` beside it:
+  `test_figures`, `test_pehtuclchest`, `test_worldgear`, `test_audit_objects`,
+  `test_cahulaks`, `test_sizenames`, `test_group4`, which
+  falls back to `/tmp/playtest/inst/SEGOBJEX.GFF`, the playtest kit's game)
+  and `DSUN_RESOURCE` (its `RESOURCE.GFF`: `test_kitpages`, `test_spelltexts_fit`).
 
-Without tkinter or the game's files, 24 are skipped; with the files set, the 9
-that need tkinter.
+The **Obsidian Edition tests** workflow (`.github/workflows/tests.yml`) runs
+them on Windows, with unicorn 2.1.4, on every push to `obsidian-edition` and
+every pull request that touches the mod or the root's pages.
 
 Tests that guard the whole project rather than one module:
 
 | Test | What it checks |
 |---|---|
-| `test_doclinks` | every relative link and anchor in the Markdown pages goes somewhere, and each README or features page section the DEVELOPMENT pages explain links to its explanation |
+| `test_doclinks` | every relative link and anchor in the Markdown pages goes somewhere, and each section of the player's pages (README, features, items, kits, bugs fixed, how the game works) that a DEVELOPMENT page explains links to its explanation |
 | `test_compiles` | every module of the Loader compiles, the window's too |
 | `test_flagrange` | the Loader's game flags are in 756-807 and no two share one ([the table](#the-loaders-game-flags)) |
+| `test_audit_flags` | every module constant from 756 up, Alagorn's overflow flags and aging's count among them, found by itself: no two share a number, and (with `DSUN_GPLDATA`) the scripts copy uses no flag the modules don't have |
+| `test_audit_objects` | each object and picture the Loader adds to its SEGOBJEX copy is made by one module only |
 | `test_scriptnumbers` | the Loader's scripts have a number each, their calls land inside them, and each fits the game's script buffer |
 | `test_dsclog`'s `test_fits_upper_memory` | what the helper puts in upper memory fits the room DOSBox gives it |
 | `test_version` | the version is the same in `__init__.py`, the patch notes and the front page, and its release notes exist |
@@ -257,24 +302,28 @@ Every roll in the game goes through one function, Borland C++'s `rand()`.
    uses. One, at the start of a monster's turn, is in overlay code the game
    moves or unloads to load the dialogue window's, so the helper puts its way
    back in a stack frame the game's overlay manager fixes up (a stale address
-   used to restart a fight, or stop the game with "Stack overflow!"). A few
-   patches change the game outright: 29 saved characters rather than 19, DELETE
-   deleting the one chosen and a New character counting as Okay (see [more
-   characters](FEATURES.md#more-characters)), Enter loading only a save that is
-   there (see [more saves](FEATURES.md#more-saves)), a script buffer of 11,776
-   bytes rather than 10,000 (for [Dinos and the
-   Trustee](FEATURES.md#what-dinos-and-the-trustee-say-about-them)), and data
-   files looked for in the current folder rather than next to the program. The
-   helper also hooks DOS's `INT 21h`, to open the launcher's copies of
-   `SEGOBJEX.GFF`, `RESOURCE.GFF`, `GPLDATA.GFF` and some regions' files (for
-   the [new items](FEATURES.md#new-items), [Kalzith](FEATURES.md#kalzith),
-   [Semyon](FEATURES.md#semyon) and [no manual
-   check](FEATURES.md#no-manual-check)), and to keep what the game last wrote to
-   the screen for a crash report (see [the crash report](#the-crash-report)),
-   the mouse driver's `INT 33h` (for [scrolling the
-   map](FEATURES.md#scrolling-the-map)) and the keyboard's `INT 16h` (for Tab
-   and Enter). DOSBox runs it from the game folder, so it uses your saves as
-   usual.
+   used to restart a fight, or stop the game with "Stack overflow!").
+
+   A few patches change the game outright:
+   - 29 saved characters rather than 19, DELETE deleting the one chosen and a
+     New character counting as Okay ([more characters](FEATURES.md#more-characters));
+   - Enter loading only a save that is there ([more saves](FEATURES.md#more-saves));
+   - a script buffer of 11,776 bytes rather than 10,000 (for [Dinos and the
+     Trustee](FEATURES.md#what-dinos-and-the-trustee-say-about-them));
+   - data files looked for in the current folder rather than next to the program.
+
+   The helper also hooks:
+   - DOS's `INT 21h`, to open the launcher's copies of `SEGOBJEX.GFF`,
+     `RESOURCE.GFF`, `GPLDATA.GFF` and some regions' files (for the [new
+     items](FEATURES.md#new-items), [Kalzith](FEATURES.md#kalzith),
+     [Semyon](FEATURES.md#semyon) and [no manual
+     check](FEATURES.md#no-manual-check)), and to keep what the game last wrote
+     to the screen for a crash report ([the crash report](#the-crash-report));
+   - the mouse driver's `INT 33h` (for [scrolling the
+     map](FEATURES.md#scrolling-the-map));
+   - the keyboard's `INT 16h` (for Tab and Enter).
+
+   DOSBox runs it from the game folder, so it uses your saves as usual.
 2. `dos\DSCLOG.EXE` (source in `dos\dsclog.asm`) is a tiny DOS program loaded
    into upper memory before the game, so the game loses no memory. It answers
    those interrupts. Its `rand()` returns exactly the numbers the original
@@ -300,26 +349,17 @@ Every roll in the game goes through one function, Borland C++'s `rand()`.
    (`ItemsBusy`) waits for a later pass; DOSBox gone (`ProcessError`) is
    passed on; anything else is said once, keyed by its kind and where it was
    raised (`dicelog.error_key`, not its text, which may carry an address), in
-   the dice log, the window and `play` mode alike. A write the Loader stops
-   (`GuestMemory.guarded`: low memory and the start of the game's data
-   segment) is noted in `GuestMemory.refused` (the last 200, for a crash
-   report) and told in the log once. What the Loader saves as it goes (picked
+   the dice log, the window and `play` mode alike. A write the Loader stops is
+   told in the log once ([Reading the game's memory](#reading-the-games-memory)).
+   What the Loader saves as it goes (picked
    pockets, learned speakers' names) is kept for the next pass if
    settings.json can't be written (`DiceLog.save_learned`).
 
 Because the replacement produces identical numbers, the game plays exactly as
 it would without it, apart from what you choose on the Options tab (picking
 pockets, the [rule changes](FEATURES.md#rule-changes)), the Loader's other
-additions (the new items and the Ring +1, the cooked vulture, Kalzith, Semyon,
-what the party wears, shadows, dust, see-through figures, rings, Tab and Enter,
-scrolling) and the fixes always made: no equipment penalty on thief skills (see
-[Thief skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)), the
-roster's DELETE and New characters counting as Okay (see
-[More characters](FEATURES.md#more-characters)), no manual check (see
-[No manual check](FEATURES.md#no-manual-check)), the game's people wearing their
-gear from the start, Psionic Blast knocking out instead of killing, Scare's
-save for elf and half-elf priests, and the rest of [the game's bugs
-fixed](FEATURES.md#the-games-bugs-fixed).
+additions ([the features page](FEATURES.md) lists them) and [the game's bugs
+fixed](GAME-BUGS.md).
 
 Limitations:
 - Only the GOG release (`DSUN.EXE` of 611,408 bytes) is supported. With
@@ -373,6 +413,7 @@ parties, plus the in-game View Character screens.
 | sheet | `+0x0a` | s16 | The hit points rolled (or gained) for every class level, added up | the game's level-up code (DSUN.EXE 87250h) adds each new level's to it; max HP = this ÷ the number of classes + CON's bonus |
 | sheet | `+0x0c` | s16 | Max PSP | worked out at each level-up (873B2h): CON, INT and WIS bonuses, and for a psionicist +10 a level after the first, plus 1 a level for each WIS point above 15 |
 | sheet | `+0x10` | u16 | Entity ID | links the sheet to its creature record |
+| sheet | `+0x12` | u16 | Class flags, a bit for each class the character has: the clerics 1, 2, 4, 8 (air to water), druid 10h, fighter 20h, gladiator 40h, preserver 80h, psionicist 100h, ranger 200h, thief 400h (`game.SHEET_FLAGS`) | the game's class tests read it; the Turn Undead button shows for a cleric bit |
 | sheet | `+0x18` | u8 | Race: 1 Human, 2 Dwarf, 3 Elf, 4 Half-elf, 5 Half-giant, 6 Halfling, 7 Mul, 8 Thri-kreen | ability modifiers fit; 2, 6 and 7 from the character creation code's race table |
 | sheet | `+0x19` | u8 | Gender: 1 male, 2 female | |
 | sheet | `+0x1a` | u8 | Alignment: 1 LG, 2 LN, 3 LE, 4 NG, 5 TN, 6 NE, 7 CG, 8 CN, 9 CE | 1, 5, 7 confirmed in game |
@@ -384,6 +425,8 @@ parties, plus the in-game View Character screens.
 | sheet | `+0x29` | u8 | Magic resistance (%) | read by the game's magic resistance check |
 | sheet | `+0x2a` | u8 | Attacks per round × 2 | read by the game's combat code |
 | sheet | `+0x37` | u8 ×5 | Saves: para/poison, rod/staff, petrify, breath, spell | match the AD&D warrior table exactly |
+| sheet | `+0x3f` | u8 ×3 | The levels before any were lost (`game.SHEET_LEVELS_BEFORE`) | the game scales `+0x0a` by them |
+| sheet | `+0x43` | u8 | The Loader's kit byte: bits 0-5 the classes' kits, 40h the game's own party's feature, 80h Friends known; FFh none chosen (`kitpages.KIT_BYTE`) | the Loader's own |
 
 In memory, the game reaches both tables through far pointers in its data
 segment: `DS:0x1665` points to the creature table and `DS:0x1661` to the
@@ -417,7 +460,8 @@ backpack's list, and worn things that aren't weapons (starting armour, a
 cloak) to the worn list. Worn items found in `+0x0c` are left alone (the
 game's own party starts with its armour in `+0x08`, where the screen puts it:
 Gerakis's arm armour in a new game, 2026-11-02). Items are 21-byte records (`DS:0x165D`), item types 20-byte ones
-(`DS:0x1669`, 115 of them, from GPLDATA.GFF):
+(`DS:0x1669`, 115 of them, from GPLDATA.GFF; the helper adds the Loader's own types after them, from
+`game.GAME_TYPES` up):
 
 | Record | Offset | Field |
 |---|---|---|
@@ -429,7 +473,7 @@ Gerakis's arm armour in a new game, 2026-11-02). Items are 21-byte records (`DS:
 | item | `+0x12` | its name (an entry of the game's name table, 25 bytes each) |
 | item | `+0x14` | its plus |
 | type | `+0x04` | weight, in tenths of a pound |
-| type | `+0x08` | material in the low four bits (wood, bone, stone, obsidian, metal, leather); `0x80` spares a weapon the material's to-hit penalty |
+| type | `+0x08` | material in the low four bits (0 wood, 1 bone, 2 stone, 3 obsidian, 4 metal, 5 leather); `0x80` spares a weapon the material's to-hit penalty (the bow, club, quarterstaff, sling, arrows, chatkcha) |
 | type | `+0x0c`, `+0x0d`, `+0x0e` | damage dice: sides, count, bonus |
 | type | `+0x0f` | `0x80`: counts for AC |
 | type | `+0x12` | its AC (on top of the item's plus) |
@@ -464,87 +508,140 @@ spell known, through the far pointer at `DS:0x132A` (in a save, `SAVE` chunk
 
 ## Room in the helper
 
-DSCLOG has to load into upper memory, or the game loses 62 KB of conventional
-memory (570 KB free rather than 632 KB). It keeps its code and data in one
+DSCLOG has to load into upper memory, or the game loses about 61 KB of conventional
+memory (570 KB free rather than 632 KB, measured with an older, larger helper). It keeps its code and data in one
 64 KB segment, all reached through CS, and its big buffers apart, in its far
 block. With the map open the game needs 60,000 bytes in one piece each time it
 opens the view ("Out of memory in OEOpenGraph" when it can't), so every block
 the helper takes out of the game's 640 KB counts.
 
-**Where DOSBox's memory is** (DOSBox 0.74, GOG's; its source comes with the
-game, `DOSBOX/dosbox-0.74-2.1.tar.gz`). This table is the one place for the
-sizes; the paragraphs after it say how each piece got there.
+### Where DOSBox's memory is
+
+DOSBox 0.74, GOG's; its source comes with the game,
+`DOSBOX/dosbox-0.74-2.1.tar.gz`. This table and [the limits](#the-limits) are
+the one place for the sizes; the sections after them name the symbols only.
 
 | Memory | Size | What uses it |
 |---|---|---|
-| Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (86 KB before the music buffer moved out, 53 KB before the overlay buffer did; the unmodded game's 57 KB) |
+| Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (the unmodded game's 57 KB) |
 | C000h-C7FFh | 32 KB | the video BIOS (ROM) |
 | C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
-| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 62.5 KB (63,952 bytes with its PSP, measured), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, about 35.5 KB (36,336 bytes, measured) free in one piece |
+| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 66.7 KB (68,256 bytes with its PSP and its tail, (10h + `KEPT_PARAS`) paragraphs), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, and the rest free. **Measured 2026-11-10** (`playtest/memaudit.py`, in Pehtucl's ambush): 32,256 bytes free in one piece, and nothing between the helper and the overlay buffer (KEEP's resize, fixed that day; 288 bytes were left there before) |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
-| 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's far block, 57.6 KB, 6.4 KB free |
+| 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's [far block](#the-far-block), 65,484 bytes, 36 free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
 
-**The budget.** Each limit fails the build when passed (a negative `times`):
+### The limits
 
-- The helper's segment: its image with the install code is 63,792 bytes
-  (`image_len`; `DSCLOG.EXE` is 32 bytes more, 63,824, with its header), so
-  1,744 bytes of its 64 KB are spare. This is the limit for new code. Buffers
-  that start as zeros and aren't needed while installing can be laid over the
-  install code (1,760 bytes from `resident_end`), as `seg_space`, `area_space`
-  and `dark` are (`AFTER_INSTALL`, 1,664 bytes, declared with `resb` after the
-  image): `KEEP` zeroes them before its first DOS call and keeps memory to
-  `kept_end`, and the build fails if they outgrow the install code. Up to the
-  install code's size, each byte moved there is a byte of the segment freed
-  (`KeepTests`). Buffers the Loader finds at fixed header offsets stay where
-  they are. (The
-  install's 256-byte stack is past the image, in its own segment: `SS` in the
-  EXE's header is the paragraph after the image; the helper asks DOS for both,
-  `LOAD_EXTRA`.) Code shared by
-  many handlers is written once (`OVR_BACK`, the way back through the overlay
-  manager's frame; `SHEET_CLASSES`). Text the game reads from RESOURCE.GFF
-  belongs in the Loader's copy of it, not in the helper (`spelltexts.py`: the
-  descriptions moved there freed 1.6 KB), and so does data read from the
-  player's game (the pointer's picture, `POINTER.BIN`). What each change took
-  is in the CHANGELOG.
-- The far block: it ends at `FAR_END` (58,970), so the HMA has 6,566 bytes left
-  for more buffers.
-- Upper memory without `UMBPLUS.COM` (`UMB_ROOM`, D00Ah to F000h, 8,182
-  paragraphs): the helper as it loads and the overlay buffer (`UMB_NEED`, the
-  header's +372) need 6,083, and `test_fits_upper_memory` checks it too; what
-  stays once installed, with the music buffer and the see-through figures'
-  tables (`UMB_KEPT`: all four blocks and their MCBs), 7,699, so 483 (7.5 KB)
-  are spare.
+Each fails the build when passed (a negative `times`). From the build of
+2026-11-10 (DSCLOG.EXE 68,032 bytes: the 32-byte header, the segment's image
+of 62,480 and the tail's 5,520, `TAIL_BYTES`):
 
-To check the sizes after a change, build to a scratch file (`nasm -f bin -o
-/tmp/x.exe dos/dsclog.asm`, from `obsidian-edition/`) and look at its size.
+| Limit | Used | Room | Spare |
+|---|---|---|---|
+| [the helper's segment](#the-helpers-segment): `kept_end` (`resident_end` 61,488 + `AFTER_INSTALL` 992) | 62,480 bytes | 65,536 | 3,056 bytes |
+| [the far block](#the-far-block): `FAR_END` (its buffers from `FAR_RING`, 10h: 65,484 bytes) | 65,500 | 65,536 | 36 bytes |
+| upper memory as the helper loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,346 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,836 |
+| upper memory once installed: `UMB_KEPT` (the helper, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 7,968 paragraphs | 8,182 (`UMB_ROOM`) | 214 (3.4 KB) |
 
-**The far block** (`FAR_SEG`, the header's +142) holds, at fixed offsets from
-`FAR_RING` (10h) to `FAR_END`, 58,954 bytes: the dice log's ring (`NENT` 63
-entries of `ESIZE` 192 bytes), the panel's picture, the shadows' cache
+To check them after a change, build a scratch copy with `[map all FILE]` as its
+first line (`nasm -f bin -I dos/ -o /tmp/x.exe COPY`, from `obsidian-edition/`)
+and read the symbols in the map. What each change took is in the
+[CHANGELOG](../CHANGELOG.md); the two memory passes' steps, each checked in the
+game, are in [the 2026-11-08 log](../playtest/logs/2026-11-08-memory-pass.md)
+and [the 2026-11-09 log](../playtest/logs/2026-11-09-memory-pass-2.md).
+
+### The helper's segment
+
+What the helper reaches through CS is what stays (to `resident_end`), with the
+buffers laid over the install code after it (`AFTER_INSTALL`), together
+`kept_end`. This is the limit for new code. The image (`image_len`) is as long.
+Buffers that start as zeros, that only the game's own calls fill and that
+nothing needs while installing are laid over the install code (declared with
+`resb` after the image: the Look box's `look_text`, the USE screen's `u_line`
+and `slots_text`, `box_text`, `ns_scratch`, `shadow_tab`, `ef_text`; 992 bytes):
+`KEEP` zeroes them before its first DOS call and keeps memory to the tail's end
+(`KeepTests`). The segment holds whichever is longer, the install code or
+`AFTER_INSTALL`; the install code is the shorter (974 bytes: the vectors set
+from a table, `ALL_VECTORS`, each vector's byte and its handler's offset), so
+the image is made up to `AFTER_INSTALL`'s size with zeros (18 bytes at
+present). SEG_MOVE's two tables of the game's (`seg_space`, `area_space`) and
+the tables only one routine reads (the AD&D XP, slot, thief and DEX tables,
+the kits' names) are in the tail, read through `tail_seg`.
+Moving a zeroed buffer into `AFTER_INSTALL` frees nothing: it lengthens what it
+leaves. The ways to free the segment:
+
+- **the tail** (`TAIL_SEG`, the header's +1834): the paragraphs after the
+  image, in the EXE (`section tail`, its labels offsets from its own start),
+  loaded with it and kept with it by `KEEP` (`KEPT_PARAS`), outside the
+  segment. It costs upper memory as the segment did (the same block), but none
+  of the segment's room and none of the HMA's; data that starts with values
+  (the item types, the names) stays there as loaded, with no copy. Its segment
+  is the image's + `TAIL_PARAS` (+1836, set by the install at +1834); the
+  helper reaches it through a segment register set to `[cs:tail_seg]` around
+  each use, and a buffer the Loader keeps there has its offset in its header
+  field (the Loader reads it at `tail_seg` x 16: LBL_SLOTS, +1838; TICKS, +356;
+  LARGE_BITS, +1842). It is real-mode memory, so the game can be handed a far
+  pointer into it (the HMA is less safe for that);
+- **the far block** (the HMA, [below](#the-far-block)): FS, ES or DS set to
+  `FAR_SEG` around a buffer's use; the drawing passes keep FS on it for their
+  whole run, so a table they read costs nothing to move there (`cs:` becomes
+  `fs:`);
+- **code written once**: shared by many handlers (`OVR_BACK`, the way back
+  through the overlay manager's frame; `SHEET_CLASSES`; the sites after
+  `VEC_CR_SPELLS`'s INT through one table of a word a site, `SITE_TAB`), and
+  tables packed (the rings' outlines a quarter each, mirrored by
+  `RING_POINTS`; the AD&D XP table as words of 50 XP; the extra item names
+  NUL-terminated);
+- **the Loader's files**: text the game reads from RESOURCE.GFF belongs in the
+  Loader's copy of it, not in the helper (`spelltexts.py`: the descriptions
+  moved there freed 1.6 KB), and so does data read from the player's game (the
+  pointer's picture, `POINTER.BIN`).
+
+The install's 256-byte stack is past the image and the tail, in its own
+segment: `SS` in the EXE's header is the paragraph after the tail; the helper
+asks DOS for both, `LOAD_EXTRA`.
+
+### The far block
+
+`FAR_SEG` (the header's +142) holds, at fixed offsets from `FAR_RING` (10h) to
+`FAR_END` (its size in [the limits](#the-limits)): the dice log's ring (`NENT`
+63 entries of `ESIZE` 192 bytes; an entry's +184 is its kind, +186 the spell table's segment for
+a save, +188 the attack's target's state, and `dsclog.asm`'s comment on the entry has the rest), the panel's picture, the shadows' cache
 (`FAR_SC`), the text buffer, the shadows' spans and each thing's place as last
-seen (for the dust), the frames steady pace holds back, and the crash report's
-copy of the stack and the last text written to the screen (`DOS_QUIT`,
-`DOS_WRITE`). `FAR_INIT` (install code) puts it in the **HMA** (FFFFh:0010h,
-A20 on): XMS gives it (function 01h), or, where XMS says there is none (DOSBox
-0.74's answer, 90h: its XMS blocks start at 1 MB + 64 KB, `XMS_START`), it is
-used if all zero; A20 is turned on with XMS function 03h and checked
-(FFFFh:0010h no longer 0000h:0000h). The game never calls XMS's A20 or HMA
-functions (its XMS calls are 08h-0Dh), and no file DOSBox runs is EXEPACKed
-(the unpacker fails with A20 on below 64 KB). Without the HMA the block is a
-memory block of its own (upper memory, else conventional), `FAR_SEG` a
-paragraph below it so that its offsets are the same. The header gives the
-Loader each buffer's segment and offset: the ring's `ring_seg` (+268) and
-`ring_off` (+16), the text buffer's `tbuf_seg` (+138) and `tbuf_off` (+128),
-the panel's `panel_seg` (+328) and `panel_off` (+140). The helper reaches the
-internal ones through FS, pushed and set around each use (the game never sees
-it changed). The text buffer (`TSIZE`) is 2 KB; the Loader reads its size from
-the header and drains it every 20 ms from the command line and every 50 ms in
-its window (at most 251 bytes came in between two reads in the opening show,
-the busiest stretch measured). The most entries put in the ring in 2 seconds,
-measured, is 43 (the opening show), 16 in a fight.
+seen (for the dust), the frames steady pace holds back, the last text written
+to the screen (`DOS_WRITE`, for `DOS_QUIT`'s crash report), the dust's table,
+the palette as last read (`FAR_DAC`), the rings' tables (`FAR_RING_TAB`,
+`FAR_RED`), how far each thing has walked (`FAR_WALKED`), each colour's lighter
+one for the dust (`FAR_LIGHT`), the puffs (`FAR_PUFFS`), the shadows' colours
+(`FAR_DARK`), the per-fight tables over every combatant (`FAR_TU`, Turn
+Undead's tries; `FAR_SWEPT`, Whirlwind's sweep; `FAR_DJ`, the Djinn's first
+turn) and the Loader's bit for each combatant the cahulaks can't tangle
+(`FAR_BIG`, the header's +1840), all cleared by `FAR_INIT`. Buffers the Loader
+finds through the header keep their field, its value an offset in the far
+block, which the Loader reads at `far_seg` x 16 (DAC +238, RING_TAB +246, RED
++248, LIGHT +236). `FAR_INIT` (install code) puts it in the **HMA**
+(FFFFh:0010h, A20 on): XMS gives it (function 01h), or, where XMS says there is
+none (DOSBox 0.74's answer, 90h: its XMS blocks start at 1 MB + 64 KB,
+`XMS_START`), it is used if all zero; A20 is turned on with XMS function 03h
+and checked (FFFFh:0010h no longer 0000h:0000h). The game never calls XMS's A20
+or HMA functions (its XMS calls are 08h-0Dh), and no file DOSBox runs is
+EXEPACKed (the unpacker fails with A20 on below 64 KB). Without the HMA the
+block is a memory block of its own (upper memory, else conventional),
+`FAR_SEG` a paragraph below it so that its offsets are the same. The header
+gives the Loader each buffer's segment and offset: the ring's `ring_seg` (+268)
+and `ring_off` (+16), the text buffer's `tbuf_seg` (+138) and `tbuf_off`
+(+128), the panel's `panel_seg` (+328) and `panel_off` (+140). The helper
+reaches the internal ones through FS, pushed and set around each use (the game
+never sees it changed). The text buffer (`TSIZE`) is 2 KB; the Loader reads its
+size from the header and drains it at each read ([step 3
+above](#how-the-dice-log-works)); at most 251 bytes came in between two reads
+in the opening show, the busiest stretch measured. The most entries put in the
+ring in 2 seconds, measured, is 43 (the opening show), 16 in a fight.
 
-**Upper memory moved down.** DOSBox makes its upper memory block at D000h, but
+### Upper memory moved down
+
+DOSBox makes its upper memory block at D000h, but
 C800h-CFFFh is RAM too, and DOSBox's tables use only its first 192 paragraphs
 (at most a few more later: a program asking for more than 20 file handles,
 INT 21h AH=67h, takes some each time; the game does once, at DSUN.EXE 54F3h).
@@ -559,19 +656,26 @@ C8C0h throughout a save in the arena, walking and fighting, the helper at
 C90Ah). The helper still has to fit D000h-EFFFh (`UMB_ROOM`), so it works where
 the block can't be moved.
 
-**EMS off.** With GOG's settings there is one upper memory block of 63 KB,
+### EMS off
+
+With GOG's settings there is one upper memory block of 63 KB,
 EMS's 64 KB page frame taking the rest, and the helper doesn't fit it (it loads
 in the 640 KB and the game won't start). The launcher's config turns EMS off
 (`launch.DOS_LINES`: the game's memory layer uses XMS instead), which leaves
 upper memory for the helper and the game's buffers.
 
-**The game's overlay buffer** (32,992 bytes: twice the largest overlay, the
+### The game's overlay buffer
+
+The game's overlay buffer is 32,992 bytes (twice the largest overlay, the
 code the overlay manager loads as needed). The game asks farmalloc for it at
 startup (load+3653h:0D5Ch) and keeps it for good, so in the heap it was the
 largest block the 640 KB never got back. The patch `overlay_umb` makes that
 call `INT VEC_OVR_BUF` (`PROBE_OVR_BUF`), which hands over a block `KEEP`
 reserved: `KEEP` (resident code) first cuts the helper's own block down to what
-stays, then takes the buffer's block in the memory the install code had, so the
+stays (function 4Ah, its `ES` the PSP from `SS`: the word `psp` is install data,
+zeroed by then, and a call naming segment 0 fails, leaving the install's 16 stack
+paragraphs between the helper and the buffer), then
+takes the buffer's block in the memory the install code had, so the
 room is in one piece: the helper, the buffer and what is left free. The
 header's `ovr_given` (+368) is the buffer's segment once the game has it.
 Without the room the probe calls the game's farmalloc, as the call was. If the
@@ -579,7 +683,9 @@ buffer still ends up in the heap (another DOSBox, less upper memory), the
 Loader says so in the dice log once, and crash reports say where it is
 (`heapcheck.py`).
 
-**The game's blocks kept for good.** Of the game's far heap (Borland's,
+### The game's blocks kept for good
+
+Of the game's far heap (Borland's,
 farmalloc at load:1231h, farfree 1127h, farrealloc 138Eh), 134 KB is taken
 before the main menu and kept in place through loading a save, walking, an
 area change and a fight, logged by a research build of the helper with those
@@ -596,14 +702,16 @@ bp,sp") takes them by size: `farmalloc(12001)` is given `POOL_SEG`, a block
 which the wrapper reads for the guard byte); farfree of it marks it free for
 the next such request; farrealloc of it keeps it if the size fits, else moves
 the contents to a block of the heap. Nothing else changes. The music buffer was
-chosen as it fits in `UMB_ROOM` beside the rest (752 paragraphs with its MCB,
-of the 1,236 the helper, the overlay buffer and the see-through tables leave):
+chosen as it fits in `UMB_ROOM` beside the rest (752 paragraphs with its MCB;
+`UMB_KEPT` counts it):
 the sound effects' 1,502 wouldn't, and the sound driver may play them by DMA,
 which can't cross a 64 KB page. Measured with a save in the arena: the buffer
 in upper memory holding the XMIDI file, walking, the arena's area change and a
 fight as usual.
 
-**Low memory in play.** While the game runs, the Loader reads its memory every
+### Low memory in play
+
+While the game runs, the Loader reads its memory every
 few seconds (`heapcheck.Watch`): with the map's view open (DS:1F82h set),
 below 24 KB spare (DOS's after the game and the heap's free blocks) the dice
 log says to save and restart soon, once until it has been back above 32 KB.
@@ -635,8 +743,8 @@ The game's timer handler (IRQ 0, DSUN.EXE 3925Ch, the game's own from its
 start; its timers run from it, 120 strikes a second) begins with `INT VEC_TICK`
 (`PROBE_TICK`). Every 32nd strike (about 4 a second) DSCLOG notes what the
 timer interrupted: CS:IP, flags, SS:SP before the interrupt, BP, DS and ES, in
-`TICKS` (16 records of 16 bytes, the last 4 seconds; the header's +356 its
-offset, +358 the records taken). The Loader's
+`TICKS` (16 records of 16 bytes, the last 4 seconds; in the tail, the header's
++356 its offset there, +358 the records taken). The Loader's
 **Freeze report** (`freeze.py`) reads them newest first, names each place
 (DSCLOG's, the BIOS's, or the game's segment and DSUN.EXE offset, which overlaid
 code doesn't keep), shows the code there now and the newest stack, counts the
@@ -779,6 +887,9 @@ A save keeps 808 flags (`game.FLAG_COUNT`: a bit each in `SAVE` chunk
 freed, or the save's flags made longer, if the game allows it); then it goes in
 this table and in `tests/test_flagrange.py` (`FLAGS`, or `_ranges` for a block of them), which checks every
 flag is in range and none is shared.
+`tests/test_audit_flags.py` finds them without the list: every module constant from 756
+up, Alagorn's overflow flags with them, and with `DSUN_GPLDATA` the flags the scripts copy
+sets or reads.
 
 ## How each part works
 

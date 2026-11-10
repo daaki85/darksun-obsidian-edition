@@ -42,7 +42,13 @@ class LaunchTests(unittest.TestCase):
             self.assertIsNone(launch.found_recompiled_program(mod))
             native(beside)
             self.assertTrue(launch.native_program(beside))
-            self.assertEqual(launch.found_recompiled_program(mod), beside)
+            # (a program merely named dsun.exe in the folder holding the mod's, Downloads say, is
+            # never started: only one in the mod's folder or a darksun-recompiled folder)
+            self.assertIsNone(launch.found_recompiled_program(mod))
+            os.makedirs(os.path.join(d, "darksun-recompiled"))
+            named = os.path.join(d, "darksun-recompiled", launch.RECOMPILED_EXE)
+            native(named)
+            self.assertEqual(launch.found_recompiled_program(mod), named)
             dos = os.path.join(d, "DSUN.EXE")
             with open(dos, "wb") as f:
                 f.write(b"MZ" + bytes(0x60))
@@ -167,6 +173,64 @@ class LaunchTests(unittest.TestCase):
         # EMS off, so the helper has the upper memory block EMS's page frame would take
         self.assertLess(lines.index("ems=false"), lines.index("[autoexec]"))
         self.assertEqual(lines[lines.index("ems=false") - 1], "[dos]")
+
+    def test_every_patch_switch_skipped_when_off(self):
+        """Each of gamepatch's switches (a tuple of patch names) is left out of the patched game when
+        its Options key is off (prepare_patched_game's skip), and none is with every key on."""
+        from dsloader import gamepatch
+        names = {p.name for p in gamepatch.PATCHES}
+        switches = {key: value for key, value in vars(gamepatch).items()
+                    if key.isupper() and isinstance(value, tuple) and value and set(value) <= names}
+        self.assertIn("SPELLS_MANUAL", switches)
+        skips = []
+        saved = gamepatch.write_patched
+
+        def write_patched(source, target, skip=frozenset()):
+            skips.append(frozenset(skip))
+            raise gamepatch.PatchError("not in a test")
+        gamepatch.write_patched = write_patched
+        try:
+            def skip(settings):
+                self.assertEqual(launch.prepare_patched_game("nowhere", settings), "not in a test")
+                return skips[-1]
+            self.assertEqual(skip({}), frozenset())
+            off = {key: skip({key: False}) for key in launch.CONTENT}
+        finally:
+            gamepatch.write_patched = saved
+        for name, patches in switches.items():
+            keys = [key for key, skipped in off.items() if set(patches) <= skipped]
+            self.assertTrue(keys, f"gamepatch.{name}: no Options key leaves it out")
+        for key, skipped in off.items():  # (nothing else left out: only whole switches)
+            self.assertTrue(all(set(patches) <= skipped or not set(patches) & skipped
+                                for patches in switches.values()), key)
+            self.assertEqual(skipped, frozenset().union(*(p for p in switches.values() if set(p) <= skipped)), key)
+        self.assertNotIn("save_signed", frozenset().union(*off.values()))  # (always applied)
+
+    def test_conf_in_the_code_page(self):
+        """The conf in the encoding DOSBox reads it in (Windows' ANSI code page there, else UTF-8); a
+        folder whose name the code page can't hold is a LaunchError that says so."""
+        self.assertEqual(launch.conf_encoding(), "mbcs" if os.name == "nt" else "utf-8")
+        saved = launch.conf_encoding, launch.DOS_DIR
+        try:
+            with tempfile.TemporaryDirectory() as d:
+                game = make_game(d, cloud_saves=False)
+                launch.conf_encoding = lambda: "cp1252"
+                launch.DOS_DIR = os.path.join(d, "Café", "dos")
+                with open(launch.write_conf(game, os.path.join(d, "test.conf")), "rb") as f:
+                    self.assertIn(b'mount d "' + launch.DOS_DIR.encode("cp1252") + b'"\r\n', f.read())
+                launch.DOS_DIR = os.path.join(d, "ゲーム", "dos")
+                with self.assertRaises(launch.LaunchError) as raised:
+                    launch.write_conf(game, os.path.join(d, "test2.conf"))
+                self.assertIn("'ゲーム'", str(raised.exception))
+                self.assertIn('(mount d "', str(raised.exception))
+                self.assertIn("cp1252", str(raised.exception))
+                self.assertFalse(os.path.exists(os.path.join(d, "test2.conf")))
+                launch.conf_encoding = saved[0]
+                if os.name != "nt":
+                    with open(launch.write_conf(game, os.path.join(d, "test3.conf")), "rb") as f:
+                        self.assertIn(launch.DOS_DIR.encode("utf-8"), f.read())
+        finally:
+            launch.conf_encoding, launch.DOS_DIR = saved
 
     def test_conf_without_the_helper_leaves_ems_alone(self):
         with tempfile.TemporaryDirectory() as d:
@@ -394,14 +458,15 @@ class LaunchTests(unittest.TestCase):
             self.assertEqual(launch.dosbox_output(game, os.path.getmtime(os.path.join(game, "DOSBOX", "stdout.txt")) + 1), {})
 
     def test_game_speed(self):
-        """20000 cycles on the dynamic core unless asked otherwise (smooth walking with the party in
-        view, shadows and dust); 35000 the fastest (30000, the fastest of before, taken as it); GOG's
-        own when asked; nothing else taken."""
-        self.assertEqual(launch.cpu_lines({}), ["[cpu]", "core=dynamic", "cycles=fixed 20000", ""])
+        """35000 cycles on the dynamic core unless asked otherwise (the whole party walking at full
+        speed, nearly every picture drawn); 20000 when asked (30000, the fastest of before, taken as
+        35000); GOG's own when asked; nothing else taken."""
+        self.assertEqual(launch.cpu_lines({}), ["[cpu]", "core=dynamic", "cycles=fixed 35000", ""])
+        self.assertEqual(launch.cpu_lines({"cycles": 20000}), ["[cpu]", "core=dynamic", "cycles=fixed 20000", ""])
         self.assertEqual(launch.cpu_lines({"cycles": 35000}), ["[cpu]", "core=dynamic", "cycles=fixed 35000", ""])
         self.assertEqual(launch.cpu_lines({"cycles": 30000}), ["[cpu]", "core=dynamic", "cycles=fixed 35000", ""])
         self.assertEqual(launch.cpu_lines({"cycles": "gog"}), [])
-        self.assertEqual(launch.cpu_lines({"cycles": 99999}), ["[cpu]", "core=dynamic", "cycles=fixed 20000", ""])
+        self.assertEqual(launch.cpu_lines({"cycles": 99999}), ["[cpu]", "core=dynamic", "cycles=fixed 35000", ""])
 
     def test_a_window_three_times_the_game_unless_asked_otherwise(self):
         self.assertEqual(launch.display_lines({}),
@@ -442,6 +507,27 @@ class LaunchTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             game = make_game(d, cloud_saves=False)
             self.assertIn("GOG release", launch.prepare_patched_game(game))
+
+    def test_a_copy_left_out_is_told(self):
+        """A copy that can't be made (here a broken objects file and no scripts file) is in LEFT_OUT
+        and left_out_line, for the player (the audit of 2026-11-10: it was silent); a clean start
+        clears them."""
+        from unittest import mock
+        from dsloader import gamepatch, icons
+        with tempfile.TemporaryDirectory() as d:
+            game, dos = make_game(d, cloud_saves=False), os.path.join(d, "dos")
+            os.makedirs(dos)
+            with open(os.path.join(game, icons.OBJECTS_FILE), "wb") as f:
+                f.write(b"not a GFF file")
+            with mock.patch.object(gamepatch, "write_patched", lambda *a, **k: None), \
+                    mock.patch.object(launch, "DOS_DIR", dos):
+                self.assertIsNone(launch.prepare_patched_game(game, {}))
+                left = " ".join(launch.LEFT_OUT)
+                self.assertIn(icons.OBJECTS_FILE, left)
+                self.assertIn("GPLDATA.GFF", left)
+                self.assertIn("may not load", launch.left_out_line())
+                launch.LEFT_OUT[:] = []
+                self.assertIsNone(launch.left_out_line())
 
     def test_no_overlay_mount_without_cloud_saves(self):
         with tempfile.TemporaryDirectory() as d:

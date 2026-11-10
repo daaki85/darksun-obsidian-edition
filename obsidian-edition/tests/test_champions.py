@@ -114,7 +114,7 @@ class GearTests(unittest.TestCase):
         """Creature 5 a champion OBJ, alive, with KINDS in its backpack (thing 300, items 10 on)."""
         import test_ring
         m, base = self.m, self.base
-        for kind in (game.BONE_AXE_TYPE, game.BONE_DAGGER_TYPE):  # (weapons: their types say so)
+        for kind in (game.BONE_AXE_TYPE, game.BONE_DAGGER_TYPE, game.METAL_CAHULAKS_TYPE):  # (weapons: their types say so)
             m[test_ring.ITEM_TYPES + kind * game.ITEM_TYPE_SIZE] = 1
         struct.pack_into("<h", m, base, 30)
         m[base + game.CREATURE_STATUS] = game.STATUS_OKAY
@@ -137,13 +137,13 @@ class GearTests(unittest.TestCase):
                 for o in game.CREATURE_ITEM_LISTS]
 
     def test_mul_armed_and_armoured(self):
-        kinds = [game.BONE_AXE_TYPE, game.BONE_AXE_TYPE, champions.SCALE_CHEST, champions.SCALE_ARM]
+        kinds = [game.METAL_CAHULAKS_TYPE, champions.SCALE_CHEST, champions.SCALE_ARM]
         self.make(champions.MUL, kinds)
         gear = champions.Gear()
         gear.watch(self.gd)
         worn, held, pack = self.lists()
         self.assertEqual(worn, sorted([(champions.SCALE_CHEST, champions.CHEST), (champions.SCALE_ARM, champions.ARM)]))
-        self.assertEqual(held, sorted([(game.BONE_AXE_TYPE, champions.RIGHT), (game.BONE_AXE_TYPE, champions.LEFT)]))
+        self.assertEqual(held, [(game.METAL_CAHULAKS_TYPE, champions.RIGHT)])  # (both hands: one item)
         self.assertEqual(pack, [])
         gear.watch(self.gd)  # (once)
         self.assertEqual(self.lists()[1], held)
@@ -152,7 +152,7 @@ class GearTests(unittest.TestCase):
         """A game loaded where the champions were already equipped (the same creature, name and
         object): its gear, back in the backpack, is put on again."""
         import test_ring
-        kinds = [game.BONE_AXE_TYPE, champions.SCALE_CHEST]
+        kinds = [game.METAL_CAHULAKS_TYPE, champions.SCALE_CHEST]
         self.make(champions.MUL, kinds)
         ds, things = test_ring.DS * 16, slice(test_ring.THINGS, test_ring.THINGS + self.ring.THING_COUNT * 3)
         saved = (bytes(self.m[things]), bytes(self.m[ds + self.ring.FREE_THINGS:ds + self.ring.FREE_THINGS + 2]),
@@ -167,7 +167,7 @@ class GearTests(unittest.TestCase):
         gear.watch(self.gd)
         worn, held, pack = self.lists()
         self.assertEqual((worn, held, pack), ([(champions.SCALE_CHEST, champions.CHEST)],
-                                              [(game.BONE_AXE_TYPE, champions.RIGHT)], []))
+                                              [(game.METAL_CAHULAKS_TYPE, champions.RIGHT)], []))
 
     def test_not_a_champion(self):
         self.make(champions.MUL, [game.BONE_AXE_TYPE])

@@ -57,10 +57,22 @@ LOG_COLOURS = {
 PARTY_COLOURS = ("#6FD8E8", "#F48CF4", "#FFB86B", "#FFFFFF")  # cyan, magenta, peach, white
 MONSTER_COLOUR = "#FF7070"  # red
 
+# The readable layout's roles (ledger.py): what came of a roll by the party's side of it, the
+# working and the misses dimmed, kills and rewards to note, the round's rule
+LEDGER_COLOURS = {
+    "body": PALE,
+    "good": "#6CC6FF",  # sky blue: the party's hit, a monster's failed save
+    "bad": "#FF8A80",  # coral: a monster's hit, a party member's failed save, low HP
+    "dim": "#A0A0B8",
+    "note": "#FFE066",
+    "rule": "#7E7EA4",
+}
+
 # Every (text, background) pair the window uses
 TEXT_PAIRS: Dict[str, Tuple[str, str]] = {
     **{f"log {k}": (v, DEEP) for k, v in LOG_COLOURS.items()},
     "log text": (PALE, DEEP),
+    **{f"log, readable layout's {k}": (v, DEEP) for k, v in LEDGER_COLOURS.items() if k != "rule"},
     **{f"log, party member {n + 1}'s name": (c, DEEP) for n, c in enumerate(PARTY_COLOURS)},
     "log, a monster's name": (MONSTER_COLOUR, DEEP),
     "dialogue": (AMBER, DEEP),

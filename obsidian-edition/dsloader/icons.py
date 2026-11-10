@@ -120,10 +120,25 @@ def shorter_blade(rows: Rows, steps: int = 4) -> Rows:
     return out
 
 
-# The item box (right-click an item) puts its text below the picture, in room for one 22 pixels
-# tall (the gythka's, the tallest but one). The Polearm's is 36: its text ran out of the box.
-BOX_PICTURE = 22
-POLEARM_OBJECT = 0x10000 - 0xFB5E
+# The item box (right-click an item) draws a picture 16 pixels or less in a frame, its text from 28
+# down; a bigger one bare, its text from its height + 12 down (DSUN.EXE 8BBE4h): the Polearm's (36)
+# ran its text out of the box, the gythka's (22) put a weapon's last row (DSCLOG's "Hit -1", a wand's
+# charges) at the box's bottom edge. So the box alone is given a copy of each weapon picture taller
+# than 16 drawn 16 at most (BOX_SMALL on: DSCLOG's BOX_PICS, the box's two loads of the picture,
+# 8C344h and 8C384h, made to load the copy); the inventory and the ground keep the picture as it is
+# (the ground draws a dropped item with its icon). The game's (SEGOBJEX.GFF: each weapon item's
+# object's icon, 2026-11-09): the Bone Polearm's (2383) and Polearm +1's (2311), 36; the Parting
+# Staff's (2157) 27; Balk's Staff's (2143) 24; the Gythkas' (2287, 2254: 23; 2384: 22); a Stone pick's
+# (1494) 19; the Quarterstaffs' (2392, 2255), the Cahulaks' (2334) and the Striker's (1199) 18. The
+# Loader's own made from them: the Cahulaks +1's shining copy (2653, SHINE's) and Kreenfang's (2447),
+# the Metal Polearm's (2513), Linebreaker's (2571) and Thornwall's (2573), the Metal Cahulaks' (2671),
+# the Cahulaks +2's (2673), and Deepbiter's (2497) and the Metal Pick's (2511), made from the Stone
+# pick's 19 (PICK_PICTURE_FROM), the Obsidian Cahulaks' (2675), Emberlash's (2677) and Ironwhirl's
+# (2679), ICONS'.
+BOX_PICTURE = 16
+BOX_TALL = (2383, 2311, 2157, 2143, 2287, 2254, 2384, 1494, 2392, 2255, 2334, 1199,
+            2653, 2447, 2513, 2571, 2573, 2671, 2673, 2497, 2511, 2675, 2677, 2679)
+BOX_SMALL = 2900  # (BOX_TALL[i]'s copy is BOX_SMALL + i: numbers no picture of the game's has)
 
 
 def fit_box(rows: Rows, size: int = BOX_PICTURE) -> Rows:
@@ -203,6 +218,11 @@ STEEL = (22, 23, 24, 25, 26, 27, 28, 29, 30)  # dark to light
 # Dark stone greys raised to them (the dagger's and pick's), light bone-white heads given the blues
 # in their middle shades (the mace's, polearm's), the great axe's teal head too
 STONE_TO_METAL = {208: 211, 209: 212, 210: 213, 211: 161, 212: 214, 213: 215, 214: 216, 215: 217}
+# The picks' icons are drawn from the Hot Springs' stone pick (object 1381: a whole head, slate
+# blue-grey, gold fittings), not the pick's own object (1210: a near-black head in two pieces)
+PICK_PICTURE_FROM = {"Deepbiter": 1381, "Metal Pick": 1381}
+PICK_HEAD = (48, 49, 50, 51, 24)
+PICK_TO_METAL = {48: 211, 49: 212, 24: 213, 50: 214, 51: 216}
 LIGHT_TO_METAL = {210: 209, 211: 210, 212: 160, 213: 161, 214: 213, 215: 215}
 TEAL_TO_METAL = {70: 160, 71: 161, 72: 215}
 TEAL_TO_BONE = {70: 206, 71: 61, 72: 152}
@@ -248,6 +268,9 @@ def plate_icon(colours: Dict[int, int], bright: Tuple[int, ...]) -> Callable[[Ro
 LEATHER_TO_GREY = {128: 208, 129: 209, 134: 210, 135: 211, 136: 212, 137: 213, 138: 214, 139: 215, 140: 216}
 BOOTS_TO_ELVEN = {128: 209, 129: 210, 134: 211, 135: 212, 179: 53, 180: 54, 181: 55, 182: 56}
 LEAF = (54, 55, 56, 55)
+# the Boots of Speed (worldgear.py): the Boots' browns, by brightness, in reds no region changes,
+# every other pixel of their lightest in the fire colours the game cycles (they run like a flame)
+BOOTS_TO_SPEED = {129: 202, 128: 163, 134: 76, 135: 32, 179: 222, 180: 77, 181: 221, 182: 78}
 
 
 # the robes (robes.py), drawn: a hooded robe to the feet, wide sleeves with trimmed cuffs, a
@@ -355,6 +378,14 @@ def crown_icon(_rows: Rows = None) -> Rows:
 
 # (name, the plain item's picture, the new object's number, its icon's number, the icon made from
 # the plain one's)
+
+
+def ironwhirl_icon(rows: Rows) -> Rows:
+    """Ironwhirl (worldgear.py): the metal cahulaks', every pixel of its blades' greys in the fire
+    colours, their blue edges kept (Emberlash and the Cahulaks +1 burn every other pixel)."""
+    return glow(recolour(rows, LIGHT_TO_METAL), lambda p, x, y: p in (209, 210, 213, 215), FIRE)
+
+
 ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Short Sword", 0xFC0A, 2427, 2432, shorter_blade),
     ("Inixhide", 0xFC02, 2428, 2433,
@@ -377,7 +408,7 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Obsidian Mace", 0xFB5D, 2486, 2487, lambda r: recolour(r, MACE_OBSIDIAN)),
     # magic weapons of kinds the game has none of (worldgear.py): the game's magic look, its fire
     ("Gutterknot", 0xFB5F, 2494, 2495, lambda r: glow(r, lambda p, x, y: p >= 140 and p <= 143, FIRE)),
-    ("Deepbiter", 0xFB46, 2496, 2497, lambda r: glow(r, lambda p, x, y: p in (209, 210) and (x + y) % 2 == 0, FIRE)),
+    ("Deepbiter", 0xFB46, 2496, 2497, lambda r: glow(r, lambda p, x, y: p in PICK_HEAD and (x + y) % 2 == 0, FIRE)),
     ("Windlash", 0xFC08, 2498, 2499, lambda r: glow(r, lambda p, x, y: p in (59, 60, 61), FIRE)),
     ("Greenbright", 0xFC0A, 2500, 2501, lambda r: glow(shorter_blade(r), lambda p, x, y: p in BLADE, FIRE)),
     ("Bracers of Defense", 0xFC01, 2502, 2503, bracers_icon),  # (on the map: the leather Arm Armor)
@@ -386,8 +417,21 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Metal Dagger", 0xFB5A, 2504, 2505, lambda r: recolour(r, STONE_TO_METAL)),
     ("Metal Mace", 0xFB5D, 2506, 2507, lambda r: recolour(r, LIGHT_TO_METAL)),
     ("Metal Great Axe", 0xFC06, 2508, 2509, lambda r: recolour(r, {1: 58, 2: 59, **TEAL_TO_METAL})),
-    ("Metal Pick", 0xFB46, 2510, 2511, lambda r: recolour(r, STONE_TO_METAL)),
+    ("Metal Pick", 0xFB46, 2510, 2511, lambda r: recolour(r, PICK_TO_METAL)),
     ("Metal Polearm", 0xFB5E, 2512, 2513, lambda r: recolour(r, LIGHT_TO_METAL)),
+    ("Metal Cahulaks", 0xFB5C, 2670, 2671, lambda r: recolour(r, LIGHT_TO_METAL)),  # (the champions' mul's)
+    # an earth or fire cleric-warrior's start (weaponchoice.py): the blades in the obsidian axe's blacks
+    ("Obsidian Cahulaks", 0xFB5C, 2674, 2675, lambda r: recolour(r, AXE_OBSIDIAN)),
+    # the caravan's Cahulaks +2 (worldgear.cahulaks_chunks): its own picture, every pixel of its blades
+    # in the water's colours, where Legcrusher's Cahulaks +1 (the game's object) shines every other in
+    # the fire's
+    ("Cahulaks +2", 0xFB5C, 2672, 2673, lambda r: glow(r, lambda p, x, y: 210 <= p <= 213, WATER)),
+    # the magic cahulaks (worldgear.py): Emberlash, the obsidian cahulaks' with every other pixel of its
+    # blades in the fire colours (as Glasshewer's head); Ironwhirl, the metal cahulaks' with its greys
+    # all burning (ironwhirl_icon)
+    ("Emberlash", 0xFB5C, 2676, 2677,
+     lambda r: glow(recolour(r, AXE_OBSIDIAN), lambda p, x, y: 208 <= p <= 212 and (x + y) % 2 == 0, FIRE)),
+    ("Ironwhirl", 0xFB5C, 2678, 2679, ironwhirl_icon),
     # the circlet and the crown (worldgear.py), drawn; on the map, the Ring's
     ("Arrowbane", 0xFA1C, 2514, 2515, circlet_icon),
     ("Sunking Crown", 0xFA1C, 2516, 2517, crown_icon),
@@ -400,6 +444,8 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Cloak of Elvenkind", 0xFBE3, 2546, 2547, elven_cloak_icon),
     ("Boots of Elvenkind", 0xFBE5, 2548, 2549,
      lambda r: shining(recolour(r, BOOTS_TO_ELVEN), lambda p, x, y: 53 <= p <= 56, LEAF)),
+    ("Boots of Speed", 0xFBE5, 2668, 2669,
+     lambda r: glow(recolour(r, BOOTS_TO_SPEED), lambda p, x, y: p in (221, 78) and (x + y) % 2 == 0, FIRE)),
     # the Flame Blade (worldgear.py): the obsidian long sword's, its blade in the fire colours
     ("Flame Blade", 0xFC0B, 2550, 2551, lambda r: glow(r, lambda p, x, y: p in BLADE or p in (208, 209, 210), FIRE)),
     # the magic axes (worldgear.py): the bone and obsidian Axes and the metal Great Axe, every other
@@ -501,13 +547,7 @@ SHINE: Tuple[Tuple[str, int, Callable[[Rows], Rows], Optional[int]], ...] = (
 def new_chunks(chunks: gff.Chunks) -> gff.Chunks:
     """The objects and pictures to add to the game's SEGOBJEX.GFF."""
     out: gff.Chunks = {}
-    smaller: Dict[int, Rows] = {}
-    if ("OJFF", POLEARM_OBJECT) in chunks:  # (the Polearm's picture, small enough for the item box)
-        pole, = struct.unpack_from("<H", chunks[("OJFF", POLEARM_OBJECT)], OJFF_ICON)
-        if ("BMP ", pole) in chunks:
-            smaller[pole] = fit_box(decode(chunks[("BMP ", pole)]))
-            out[("BMP ", pole)] = encode(smaller[pole])
-    for _, plain, number, icon, make in ICONS:
+    for _, plain, number, icon, make in ICONS:  # (_: the name)
         base = 0x10000 - plain
         record = bytearray(chunks[("OJFF", base)])
         old_icon, = struct.unpack_from("<H", record, OJFF_ICON)
@@ -515,7 +555,10 @@ def new_chunks(chunks: gff.Chunks) -> gff.Chunks:
         out[("OJFF", number)] = bytes(record)
         if ("BMP ", base) in chunks:  # (the plain item's BMP of its own number, as the game's objects
             out[("BMP ", number)] = chunks[("BMP ", base)]  # have one; a necklace has none: kept so)
-        rows = smaller.get(old_icon) or decode(chunks[("BMP ", old_icon)])
+        source = PICK_PICTURE_FROM.get(_)
+        if source is not None and ("OJFF", source) in chunks:
+            old_icon, = struct.unpack_from("<H", chunks[("OJFF", source)], OJFF_ICON)
+        rows = decode(chunks[("BMP ", old_icon)])
         out[("BMP ", icon)] = encode(make(rows))
     for _, obj, make, own in SHINE:
         if ("OJFF", obj) in chunks:
@@ -526,6 +569,10 @@ def new_chunks(chunks: gff.Chunks) -> gff.Chunks:
                     record = bytearray(chunks[("OJFF", obj)])
                     struct.pack_into("<H", record, OJFF_ICON, own)
                     out[("OJFF", obj)] = bytes(record)
+    for i, icon in enumerate(BOX_TALL):  # (the item box's copies, from each picture as it ends up)
+        picture = out.get(("BMP ", icon)) or chunks.get(("BMP ", icon))
+        if picture is not None:
+            out[("BMP ", BOX_SMALL + i)] = encode(fit_box(decode(picture)))
     return out
 
 
@@ -917,11 +964,14 @@ def objects_beside(path: str) -> Optional[gff.Chunks]:
         return None
 
 
-def write_resources(source: str, dest: str, roll_store: bool = True) -> None:
+def write_resources(source: str, dest: str, roll_store: bool = True, spells_manual: bool = True,
+                    creature_size: bool = True) -> None:
     """The game's RESOURCE.GFF (SOURCE, only read) with the new spells' icons, the Pick Pockets
     button's, the descriptions of both and of the spell arrows (spelltexts.py), the save/load
     window's PAGE 1 to PAGE 4 buttons (savepages.py), the mod's sounds (sounds.py) and, with
-    ROLL_STORE, the creation screen's STORE and RECALL (rollstore.py), to DEST."""
+    ROLL_STORE, the creation screen's STORE and RECALL (rollstore.py), to DEST; with SPELLS_MANUAL, the
+    descriptions of the spells the manual's way (spelltexts.MANUAL_TEXTS); with CREATURE_SIZE, Hold and
+    Charm Person's saying they don't take on a large target (spelltexts.SIZE_TEXTS)."""
     with open(source, "rb") as f:
         data = f.read()
     chunks = gff.read_gff(data)
@@ -935,7 +985,7 @@ def write_resources(source: str, dest: str, roll_store: bool = True) -> None:
              **{("ICON", icon): encode(arrow_spell_icon(decode(chunks[("ICON", 21000 + touch)]), *how))
                 for icon, (touch, *how) in ARROW_BUTTONS.items()}}
     from . import spelltexts
-    added.update(spelltexts.chunks())
+    added.update(spelltexts.chunks(spells_manual, creature_size))
     from . import sounds  # the hiding's and the picked pocket's sounds (BVOC chunks past the game's)
     added.update(sounds.chunks())
     from . import art, game, wotrart  # the 6th-level priest spells' (Wake of the Ravager's, else tinted ones)
@@ -966,10 +1016,7 @@ def write_resources(source: str, dest: str, roll_store: bool = True) -> None:
     except (KeyError, ValueError, IndexError, struct.error):
         pass  # (no STORE and RECALL: the creation screen as the game has it)
     out = with_chunks(data, added)
-    tmp = dest + ".tmp"
-    with open(tmp, "wb") as f:
-        f.write(out)
-    os.replace(tmp, dest)
+    gff.write_atomic(dest, out)  # (no .tmp left by a failed write)
 
 
 def _palette(source: str) -> None:
@@ -988,12 +1035,13 @@ def _palette(source: str) -> None:
         pass
 
 
-def write_objects(source: str, dest: str, on: Optional[Dict[str, bool]] = None) -> Tuple[bool, Tuple[int, ...]]:
+def write_objects(source: str, dest: str, on: Optional[Dict[str, bool]] = None) -> Tuple[bool, Tuple[int, ...], bool]:
     """The game's SEGOBJEX.GFF (SOURCE, only read) with the Loader's icons, and its new items
     in their people's and chests' objects (the content switched ON: dataitems.py), to DEST.
-    Whether Kalzith's object is in it (his scripts name it: without it they mustn't be
-    written), and the objects added for items (the regions' copies and scripts naming them
-    mustn't be written without them)."""
+    Returns: that the copy was written (True; a failure raises); the objects added for items
+    (the regions' copies and scripts naming them mustn't be written without them); and whether
+    Kalzith's object is in it (his scripts name it: without it they mustn't be written, though
+    the copy is kept for the rest)."""
     with open(source, "rb") as f:
         data = f.read()
     from . import sprites
@@ -1035,12 +1083,13 @@ def write_objects(source: str, dest: str, on: Optional[Dict[str, bool]] = None) 
     from . import defaultparty
     if (on or {}).get("cilla_elf", True) is not False:  # (Cilla, an elf, drawn as one)
         added.update(defaultparty.figure_chunks(chunks, {**chunks, **added}))
+    from . import monsters  # (the Styr, the Djinn and the Tari as the manual describes them)
+    if (on or {}).get("spells_manual", True) is not False:
+        added.update(monsters.object_chunks({**chunks, **added}))
     out = with_chunks(data, added, room)
-    tmp = dest + ".tmp"
-    with open(tmp, "wb") as f:
-        f.write(out)
-    os.replace(tmp, dest)
-    return ("OJFF", kalzith.OBJECT) in his, tuple(sorted(n for (k, n) in items if k == "RDFF" and ("RDFF", n) not in chunks))
+    gff.write_atomic(dest, out)  # (no .tmp left by a failed write)
+    return True, tuple(sorted(n for (k, n) in items if k == "RDFF" and ("RDFF", n) not in chunks)), \
+        ("OJFF", kalzith.OBJECT) in his
 
 
 # The Loader's items, and the plain pictures they keep in a game that hasn't the copy
@@ -1061,7 +1110,8 @@ def _metal_types() -> Dict[int, str]:
     from . import game
     return {game.METAL_DAGGER_TYPE: "Metal Dagger", game.METAL_MACE_TYPE: "Metal Mace",
             game.METAL_GREAT_AXE_TYPE: "Metal Great Axe", game.METAL_PICK_TYPE: "Metal Pick",
-            game.METAL_POLEARM_TYPE: "Metal Polearm"}
+            game.METAL_POLEARM_TYPE: "Metal Polearm", game.METAL_CAHULAKS_TYPE: "Metal Cahulaks",
+            game.OBSIDIAN_CAHULAKS_TYPE: "Obsidian Cahulaks"}
 
 
 METAL_TYPES = _metal_types()
@@ -1147,6 +1197,8 @@ def which(rec: bytes) -> Optional[str]:
         return "Cloak of Elvenkind"
     if kind == game.ELVEN_BOOTS_TYPE:
         return "Boots of Elvenkind"
+    if kind == game.SPEED_BOOTS_TYPE:
+        return "Boots of Speed"
     if kind in PLATE_TYPES:
         return PLATE_TYPES[kind]
     if kind == METAL_HELM_TYPE and struct.unpack_from("<H", rec, game.ITEM_NAME)[0] == WARDENS_HELM:
@@ -1157,6 +1209,10 @@ def which(rec: bytes) -> Optional[str]:
         return "Linebreaker"
     if kind == 19 and plus == 1 and struct.unpack_from("<H", rec, game.ITEM_NAME)[0] == 0x160:
         return "Thornwall"
+    if kind == game.OBSIDIAN_CAHULAKS_TYPE and plus == 1:
+        return "Emberlash"
+    if kind == game.METAL_CAHULAKS_TYPE and plus == 2:
+        return "Ironwhirl"
     if kind in METAL_TYPES and plus == 0:
         return METAL_TYPES[kind]
     if plus == 1 and kind in MAGIC_KINDS:

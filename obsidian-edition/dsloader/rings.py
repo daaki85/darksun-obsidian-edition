@@ -13,7 +13,8 @@ from typing import Optional
 
 from . import game, shadows
 
-TSR_RINGS_ON, TSR_RING_TAB, TSR_RED = 244, 246, 248  # DSCLOG's header
+TSR_RINGS_ON, TSR_RING_TAB, TSR_RED = 244, 246, 248  # DSCLOG's header (RING_TAB's and RED's offsets in its far block)
+TSR_FAR_SEG = 142  # (its far block's segment)
 TSR_HDR_OFF = 20
 THINGS = 520
 FIRST, LAST = 16, 223  # the colours the game doesn't animate
@@ -91,7 +92,7 @@ class Rings:
     def update(self, gd, tsr_hdr: int, on: bool, palettes: int, chosen: Optional[int] = None) -> list:
         """Keep DSCLOG's ring up under the enemy chosen. Returns the enemies."""
         guest = gd.guest
-        base = tsr_hdr - struct.unpack("<H", guest.read(tsr_hdr + TSR_HDR_OFF, 2))[0]
+        far = struct.unpack("<H", guest.read(tsr_hdr + TSR_FAR_SEG, 2))[0] * 16
         if not on:
             if self._on is not False:
                 guest.write(tsr_hdr + TSR_RINGS_ON, struct.pack("<H", 0))
@@ -102,14 +103,14 @@ class Rings:
         if palettes != self._palettes and palettes:
             red_off, = struct.unpack("<H", guest.read(tsr_hdr + TSR_RED, 2))
             dac_off, = struct.unpack("<H", guest.read(tsr_hdr + 238, 2))  # (DSCLOG's DAC, as dust.py)
-            guest.write(base + red_off, red_table(guest.read(base + dac_off, 768)))
+            guest.write(far + red_off, red_table(guest.read(far + dac_off, 768)))
             guest.write(tsr_hdr + TSR_RINGS_ON, struct.pack("<H", 1))
             self._palettes, self._on = palettes, True
         marked = enemies(gd)
         table = ring_table(chosen if chosen in marked else None)
         if table != self._table:
             off, = struct.unpack("<H", guest.read(tsr_hdr + TSR_RING_TAB, 2))
-            guest.write(base + off, table)
+            guest.write(far + off, table)
             self._table = table
             shadows.redraw(gd, tsr_hdr)
         return marked

@@ -137,7 +137,7 @@ class AlagornTests(unittest.TestCase):
                                  ["  Balkazar's Staff", "  Kreenfang", "  Gutterknot", "  Deepbiter", "  Windlash",
                                   "  Drakejaw", "  Glasshewer", "  Headsman", "  Galefang", "  Linebreaker",
                                   "  Thornwall", "  Hayneedle", "  Nightsliver", "  Dunesong", "  Skycutter",
-                                  alagorn.NOTHING]])
+                                  "  Emberlash", "  Ironwhirl", alagorn.NOTHING]])
         sets = [alagorn._sets(op) for op in added if op.code == SET and op.args[0][0] == "op"]
         self.assertEqual(sets, [(2, alagorn._picture("Shadowseeker")), (3, alagorn._picture("Greenbright")),
                                 (4, alagorn._picture("Flame Blade")), (5, alagorn._picture("Mindshard")),
@@ -148,20 +148,23 @@ class AlagornTests(unittest.TestCase):
                                 (8, alagorn._picture("Headsman")), (9, alagorn._picture("Galefang")),
                                 (10, alagorn._picture("Linebreaker")), (11, alagorn._picture("Thornwall")),
                                 (12, alagorn._picture("Hayneedle")), (13, alagorn._picture("Nightsliver")),
-                                (14, alagorn._picture("Dunesong")), None])  # (Skycutter's in a flag: past the locals)
+                                (14, alagorn._picture("Dunesong")), None, None, None])  # (Skycutter's, Emberlash's
+        # and Ironwhirl's in flags: past the locals)
         lines = " ".join(gpl.strings(added))
         for name in ("Greenbright!", "A Flame Blade!", "Mindshard!", "Stillwater!", "Gutterknot!", "Deepbiter!",
                      "Windlash!", "Drakejaw!", "Glasshewer!", "Headsman!", "Galefang!", "Linebreaker!", "Thornwall!",
-                     "Hayneedle!", "Nightsliver!", "Dunesong!", "Skycutter!"):
+                     "Hayneedle!", "Nightsliver!", "Dunesong!", "Skycutter!", "Emberlash!", "Ironwhirl!"):
             self.assertIn(name, lines)
-        self.assertIn(alagorn._zero(list(range(15)) + [-alagorn.FLAGS]), [op.args[0] for op in added if op.code == TEST])
+        self.assertIn(alagorn._zero(list(range(15)) + [-alagorn.FLAGS, -alagorn.FLAGS - 1, -alagorn.FLAGS - 2]),
+                      [op.args[0] for op in added if op.code == TEST])
 
     def test_switches(self):
         """Only the switches' items; none, no change."""
         self.assertEqual([[i for i, _ in k.items] for k in alagorn.kinds(arms=False, magic=True)],
                          [["Greenbright", "Flame Blade", "Mindshard", "Stillwater"],
                           ["Gutterknot", "Deepbiter", "Windlash", "Drakejaw", "Glasshewer", "Headsman", "Galefang",
-                           "Linebreaker", "Thornwall", "Hayneedle", "Nightsliver", "Dunesong", "Skycutter"]])
+                           "Linebreaker", "Thornwall", "Hayneedle", "Nightsliver", "Dunesong", "Skycutter",
+                           "Emberlash", "Ironwhirl"]])
         self.assertEqual(alagorn.kinds(arms=False, magic=False), ())
         self.assertEqual(alagorn.script_chunks({("GPL ", alagorn.SCRIPT): self.script}, FIELDS, False, False), {})
 
@@ -267,7 +270,7 @@ class AlagornTests(unittest.TestCase):
                                 "Pehtucl's Ring of Protection +1", "Cloak of Protection +1", "Inixhide",
                                 "Drakejaw", "Glasshewer", "Headsman", "Galefang", "Mindshard", "Stillwater",
                                 "Linebreaker", "Thornwall", "Ashen Robe", "Veiled Robe", "Gutterward", "Ironbulwark",
-                                "Hayneedle", "Nightsliver", "Dunesong", "Skycutter"})
+                                "Hayneedle", "Nightsliver", "Dunesong", "Skycutter", "Emberlash", "Ironwhirl"})
         for name in told - {"Tome of Understanding"}:
             self.assertIn(name, icons.PICTURES)
 
@@ -308,3 +311,111 @@ class AlagornTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RetoldTests(unittest.TestCase):
+    """What Alagorn says of the Quicksilver Glove and the Helm of Contemplation (alagorn.retold): each
+    story's lines and the menu replies naming the glove run from after the script's end, the old
+    jumped over (and made exits), every goto as it was."""
+
+    def script(self):
+        s = _Script()
+        s.op(MENU, {"before": [], "title": ("str", "What item do you show him?"), "replies": [
+            {"text": ("str", text), "goto": ("label", label), "if": ("var", 0x8E, i), "before": [], "after": []}
+            for i, (text, label) in enumerate((("  Helm of Contemplation", "helm"), ("  Quicksilver Gauntlets", "glove")))]})
+        s.op(RETURN)
+        for label, lines in (("helm", alagorn.STORIES["Wearing a Helm of Contemplation creates a shield of thought around you, "][0]),
+                             ("glove", alagorn.STORIES["Quicksilver Gauntlets allow you to graft any one-handed melee weapon to "][0])):
+            s.label(label)
+            for line in lines:
+                s.op(0x4F, ("n", 115), ("str", line))
+            s.op(SET, ("n", 0), ("var", 14, 1))
+            s.op(RETURN)
+        return s.bytes(end=False)
+
+    def test_retold(self):
+        script = self.script()
+        out = alagorn.retold(script, FIELDS)
+        said = list(gpl.strings(gpl.decode(out, FIELDS)))
+        self.assertEqual([t for t in said if "graft" in t or "shield of thought" in t or "Gauntlets" in t], [])
+        self.assertIn("  Quicksilver Glove", said)
+        self.assertIn("Wearing a Helm of Contemplation turns a creature's gaze back on itself.", said)
+        self.assertIn("The Quicksilver Glove holds a psionic charge. Whatever it strikes is ", said)
+        old_ops, new_ops = gpl.decode(script, FIELDS), gpl.decode(out, FIELDS)
+        menus = [o for o in new_ops if o.code == MENU]
+        self.assertEqual([r["goto"] for r in menus[-1].args[0]["replies"]],
+                         [r["goto"] for r in old_ops[0].args[0]["replies"]])  # (the stories where they were)
+        self.assertEqual(out[old_ops[0].at], GOTO)
+        jumps_back = [o.args[0][1] for o in new_ops if o.code == GOTO and o.at >= len(script)]
+        sets = [o.at for o in old_ops if o.code == SET]
+        self.assertEqual(jumps_back, [old_ops[1].at] + sets)  # (after the menu; after each story's lines)
+        self.assertEqual(alagorn.retold(out, FIELDS), out)  # (once only)
+        self.assertEqual(alagorn.retold(alagorns(), FIELDS), alagorns())  # (a script without them: as it is)
+
+
+class ToldApartTests(unittest.TestCase):
+    """The weapons' copy (222) says its stories from a script of their own (alagorn.TOLD_IN: 224),
+    each story calling its part; a kind left out for length is told of, not dropped silently."""
+
+    def setUp(self):
+        self.script = alagorns(last=alagorn.NOTHING.strip())
+        kinds = alagorn.KINDS
+        entries = [alagorn._entry(self.script, FIELDS, k) for k in kinds]
+        talk = _Script()
+        for entry in entries:
+            talk.op(alagorn.CALL, ("n", entry), ("n", alagorn.SCRIPT))
+        self.talk = talk.bytes(end=False)
+        self.chunks = {("GPL ", alagorn.SCRIPT): self.script, ("GPL ", alagorn.TALK): self.talk}
+
+    def test_told_parts(self):
+        """Each item's part follows a 19h and ends at the next (a call's return); an exit last."""
+        weapons = tuple(k for k in alagorn.KINDS if k.first_reply == alagorn.WEAPONS[0])
+        stories, places = alagorn.told(weapons)
+        ops = gpl.decode(stories, FIELDS)
+        at = {o.at: i for i, o in enumerate(ops)}
+        self.assertEqual([o.code for o in ops[-2:]], [BACK, alagorn.EXIT])
+        self.assertEqual(ops[0].code, BACK)
+        self.assertEqual(list(places), [item for item, _ in weapons[0].items])
+        for item, text in weapons[0].items:
+            i = at[places[item]]  # (on a command's start)
+            self.assertEqual(ops[i - 1].code, BACK)
+            j = next(j for j in range(i, len(ops)) if ops[j].code == BACK)
+            said = "".join(o.args[1][1] for o in ops[i:j] if o.args[1][0] == "str")
+            self.assertEqual(said.split(), text.split())
+
+    def test_weapons_copy_calls_its_stories(self):
+        out = alagorn.script_chunks(self.chunks, FIELDS)
+        self.assertEqual(alagorn.LEFT_OUT, [])
+        self.assertEqual(sorted(out), [("GPL ", 211), ("GPL ", 213), ("GPL ", 222), ("GPL ", 224)])
+        copy, stories = out[("GPL ", 222)], out[("GPL ", 224)]
+        weapons = next(k for k in alagorn.KINDS if k.first_reply == alagorn.WEAPONS[0])
+        _, places = alagorn.told((weapons,))
+        ops = gpl.decode(copy, FIELDS)
+        in_copy = " ".join(gpl.strings(ops))
+        in_stories = " ".join(gpl.strings(gpl.decode(stories, FIELDS)))
+        for item, text in weapons.items:
+            self.assertIn(gpl.encode_expr(("str", f"  {item}")), copy)
+            self.assertNotIn(f"{item}!", in_copy)  # (its lines in 224 only)
+            self.assertIn(f"{item}!", in_stories)
+        calls = [o.args for o in ops if o.code == alagorn.CALL]
+        self.assertEqual(calls, [[("n", places[item]), ("n", 224)] for item, _ in weapons.items])
+        # each call a story's first command, its local cleared after it, as the stories said
+        for i, o in enumerate(ops):
+            if o.code == alagorn.CALL:
+                self.assertEqual(ops[i - 1].code, RETURN)
+                self.assertEqual(ops[i + 1].code, SET)
+        # the swords stay in 213, told there
+        self.assertIn("Shadowseeker! The head guards", " ".join(gpl.strings(gpl.decode(out[("GPL ", 213)], FIELDS))))
+
+    def test_too_long_reported(self):
+        """A kind whose script would be too long: the game's script, and why, in LEFT_OUT and the log."""
+        from unittest import mock
+        why = []
+        with mock.patch.object(alagorn, "LONGEST", len(self.script) + 10):
+            self.assertEqual(alagorn.with_items(self.script, FIELDS, alagorn.KINDS, why=why), self.script)
+            with self.assertLogs("dsloader.alagorn", "WARNING"):
+                out = alagorn.script_chunks(self.chunks, FIELDS)
+        self.assertTrue(why and "past the scripts' buffer" in why[0])
+        self.assertEqual(out, {})
+        self.assertEqual(len(alagorn.LEFT_OUT), 2)
+        self.assertTrue(any("Balkazar's Staff" in line for line in alagorn.LEFT_OUT))

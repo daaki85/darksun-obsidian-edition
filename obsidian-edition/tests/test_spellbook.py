@@ -12,9 +12,13 @@ from dsloader.game import SpellDamage, SpellRules
 
 
 class StubGame:
-    def __init__(self, damage=None, rules=None, negates=False, name="Spell", game_rules=0):
+    def __init__(self, damage=None, rules=None, negates=False, name="Spell", game_rules=0, manual=False):
         self.damage, self.spell, self.negates, self.name = damage, rules, negates, name
         self.rules = game_rules  # the Loader's rule changes (game.RULE_*)
+        self.manual = manual  # (the spells as the manual has them: game.spells_manual)
+
+    def spells_manual(self):
+        return self.manual
 
     def spell_damage(self, spell):
         return self.damage
@@ -104,9 +108,31 @@ class TextTests(unittest.TestCase):
             self.assertEqual(spellbook.damage_text(StubGame(rule), 113, record()), want)
         self.assertFalse(SpellDamage(1, 0, 1, 2, 0, 4).flat())  # (Magic Missile's +1 a step: grows)
 
-    def test_own_dice_noted(self):
+    def test_missiles_count_the_level(self):
+        """Magic Missile, Flame Arrow and Minute Meteors are rolled by the common damage routine
+        with the caster's level (seen in DOSBox 2026-11-08: Minute Meteors 9d4 at level 9): no note
+        that they leave it out."""
         gd = StubGame(SpellDamage(1, 1, 1, 2, 0, 4), name="Magic Missile")
-        self.assertIn("its own code", spellbook.damage_text(gd, 3, record(kinds=0x200)))
+        text = spellbook.damage_text(gd, 3, record(kinds=0x200))
+        self.assertNotIn("its own code", text)
+        self.assertIn("for each 2 caster levels", text)
+
+
+    def test_casts_a_cast(self):
+        """The record's +0 count (bits 2-7) said when more than one; Flame Arrow's manual 5d6 a bolt
+        for every five levels (DSCLOG's FLAME_SITE), the game's own (5d6 a step) said as before."""
+        from dsloader import gamepatch
+        meteors = next(p for p in gamepatch.PATCHES if p.name == "meteors_count").replacement[0]
+        b0, b1, b2 = next(p for p in gamepatch.PATCHES if p.name == "meteors_damage").replacement
+        rule = SpellDamage(b1 >> 3, b0 >> 5, b0 & 0x1F, (b1 & 7) or 1, b2 >> 4, b2 & 0x0F)
+        rec = bytes((meteors,)) + record()[1:]
+        self.assertEqual(spellbook.damage_text(StubGame(rule), 33, rec), "1d4, 5 times a cast, each aimed and rolled")
+        b0, b1, b2 = next(p for p in gamepatch.PATCHES if p.name == "flame_arrow_damage").replacement
+        rule = SpellDamage(b1 >> 3, b0 >> 5, b0 & 0x1F, (b1 & 7) or 1, b2 >> 4, b2 & 0x0F)
+        self.assertEqual(spellbook.damage_text(StubGame(rule), 28, bytes((6,)) + record()[1:]),
+                         "5d6, a bolt for every 5 caster levels (at least one), each aimed and rolled")
+        game_rule = SpellDamage(0, 5, 0, 5, 0, 6)  # (the game's: 5d6 for each 5 levels, one cast)
+        self.assertNotIn("bolt", spellbook.damage_text(StubGame(game_rule), 28, bytes((6,)) + record()[1:]))
 
 
 class PowerNameTests(unittest.TestCase):
@@ -134,9 +160,10 @@ class PowerNameTests(unittest.TestCase):
 
     def test_no_dice(self):
         gd = self.gd(None, 0)
-        self.assertEqual(gd.spell_name(190), "special attack 190")
+        self.assertEqual(gd.spell_name(191), "special attack 191")
         gd = self.gd(SpellDamage(1, 1, 0, 1, 0, 6), 0x02)  # grows with level: no fixed dice to show
-        self.assertEqual(gd.spell_name(190), "special attack 190")
+        self.assertEqual(gd.spell_name(191), "special attack 191")
+        self.assertEqual(gd.spell_name(190), "Turn Undead")  # (the clerics' button's spell)
 
 
 class DamageHalvedTests(unittest.TestCase):

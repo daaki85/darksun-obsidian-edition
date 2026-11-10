@@ -69,7 +69,8 @@ class DocLinkTests(unittest.TestCase):
 
     def test_readme_links_how_it_works(self):
         """The development pages on how each part works (DEVELOPMENT-SCREENS, -RULES and -CONTENT)
-        name README and features page sections by their headings; each such section links to its
+        name sections of the README, the features page and the pages split from it (items, kits, the
+        game's bugs, how the game works) by their headings; each such section links to its
         explanation, on the page that has it."""
         explained = {}
         for page in ("DEVELOPMENT-SCREENS.md", "DEVELOPMENT-RULES.md", "DEVELOPMENT-CONTENT.md"):
@@ -78,7 +79,8 @@ class DocLinkTests(unittest.TestCase):
                     if h != "Contents":
                         explained[h] = f"{page}#{slug(h)}"
         self.assertGreater(len(explained), 60)
-        missing = [heading for page in ("README.md", "FEATURES.md")
+        missing = [heading for page in ("README.md", "FEATURES.md", "ITEMS.md", "KITS.md",
+                                        "GAME-BUGS.md", "HOW-THE-GAME-WORKS.md")
                    for heading, body in sections(os.path.join(HERE, page))
                    if heading in explained and explained[heading] not in body]
         self.assertEqual(missing, [])

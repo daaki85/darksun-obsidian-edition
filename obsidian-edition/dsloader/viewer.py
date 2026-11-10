@@ -17,11 +17,14 @@ import subprocess
 import sys
 import time
 import tkinter as tk
+import webbrowser
+from collections import deque
+from pathlib import Path
 from tkinter import filedialog, messagebox, simpledialog, ttk
 from tkinter import font as tkfont
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
-from . import __version__, art, combatlog, dicelog, freeze, game, kits, launch, namedsaves, partyview, rings, spellbook, theme, values
+from . import __version__, art, combatlog, dicelog, ledger, freeze, game, kits, launch, namedsaves, partyview, rings, spellbook, theme, values
 from .dicelog import DiceLog, DiceLogError
 from .guestmem import GuestMemory
 from .layout import Layout
@@ -35,6 +38,8 @@ MAX_LOG_LINES = 3000
 HIGHLIGHT_SECONDS = 3.0
 HEX_PREFIX = 17  # width of "+0040  0012a3f0  "
 MAX_HITS = 500
+# the player's guide as a web page (dsloader.guidepage), beside the Loader in obsidian-edition/
+GUIDE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "player-guide.html")
 
 
 def _printable(data: bytes) -> str:
@@ -52,10 +57,14 @@ def _query_bytes(text: str) -> bytes:
 WINDOW_CHOICES = {"Single (320x240)": 1, "Double (640x480)": 2, "Triple (960x720)": 3, "Quadruple (1280x960)": 4, "Full screen": None}
 
 class Viewer:
-    def __init__(self, root: tk.Tk, layout: Layout, connect: Callable[[], GuestMemory]):
+    def __init__(self, root: tk.Tk, layout: Layout, connect: Callable[[], GuestMemory],
+                 connect_pid: Optional[Callable[[int], GuestMemory]] = None, dosbox=None):
         self.root = root
         self.layout = layout
         self.connect = connect
+        # (the DOSBox this window, or the launch before it, started: found by its pid, so that another
+        # DOSBox running beside it doesn't stop the attach)
+        self.connect_pid = connect_pid
         self.guest: Optional[GuestMemory] = None
         self.hits: List[int] = []
         self.hex_start = 0  # guest address of the first byte in the hex view
@@ -65,7 +74,7 @@ class Viewer:
         self.ds: Optional[int] = None  # the game's data segment, once found
         self.dice: Optional[DiceLog] = None
         self.next_try = 0.0  # when to retry connecting / attaching
-        self.dosbox = None  # the game, when started from here (Start the game)
+        self.dosbox = dosbox  # the game, when started from here (Start the game, or `launch`)
         self._game_dir, self._started, self._refused = None, 0.0, []  # (for a crash report)
         self._learned_unsaved = False  # (names or pockets the settings file refused, last pass)
         # the game's portraits and font, from the player's own install (if it can be found)
@@ -82,6 +91,9 @@ class Viewer:
         root.protocol("WM_DELETE_WINDOW", self.close)
         self._build()
         self.reconnect()
+        if self._options_unread:
+            self.status.set(f"The Options tab shows the defaults: {self._options_unread}. A switch you change is "
+                            "saved alone, the rest of your settings kept; open the Loader again to see them.")
         self._tick()
         self._dice_tick()
 
@@ -97,6 +109,8 @@ class Viewer:
         self.status = tk.StringVar(value="Not connected")
         # on a line of its own, below the buttons, so it never pushes them off at larger text sizes
         ttk.Label(self.root, textvariable=self.status, style="Status.TLabel", padding=(8, 2)).pack(fill="x")
+        # the player's guide (player-guide.html, beside the Loader) in the browser
+        ttk.Button(top, text="Help", command=self.open_guide).pack(side="right", padx=(4, 0))
         ttk.Button(top, text="Reconnect", command=self.reconnect).pack(side="right")
         # the game stopped but DOSBox runs on: where it was, its memory and the logs, in a zip
         ttk.Button(top, text="Freeze report", command=self.freeze_report).pack(side="right", padx=(0, 4))
@@ -147,9 +161,8 @@ class Viewer:
         tabs.add(dice, text="Dice log", underline=5)
         row = ttk.Frame(dice)
         row.pack(fill="x")
-        ttk.Button(row, text="Clear", command=lambda: self.dice_text.delete("1.0", "end")).pack(side="right")
-        ttk.Button(row, text="Save...", command=lambda: self.save_text(self.dice_text, "dice log")).pack(
-            side="right", padx=4)
+        ttk.Button(row, text="Clear", command=self.clear_dice).pack(side="right")
+        ttk.Button(row, text="Save...", command=self.save_dice).pack(side="right", padx=4)
         self.dice_status = tk.StringVar(value="Waiting for the game...")
         ttk.Label(row, textvariable=self.dice_status).pack(side="left", fill="x")
         dice_find = ttk.Frame(dice)
@@ -165,6 +178,11 @@ class Viewer:
                         ).pack(side="left")
         self.show_all = tk.BooleanVar(value=False)
         ttk.Checkbutton(row, text="Show unlabelled rolls", variable=self.show_all).pack(side="left", padx=(12, 0))
+        # the readable layout (ledger.py): the outcome first, the roll and HP in columns, the working
+        # under it; off, the log's own lines as they are written
+        self.readable = tk.BooleanVar(value=launch.load_settings().get("dice_layout", "readable") == "readable")
+        ttk.Checkbutton(row, text="Readable layout", variable=self.readable, command=self._layout_changed
+                        ).pack(side="left", padx=(12, 0))
         # the round's order stays here while the log scrolls on: who acts now, who is still to come
         self.round_line = tk.StringVar(value="")
         self.round_label = ttk.Label(dice, textvariable=self.round_line, style="Status.TLabel", wraplength=900,
@@ -188,7 +206,20 @@ class Viewer:
         # so they show over the line's own colour)
         for n, colour in enumerate(theme.PARTY_COLOURS):
             self.dice_text.tag_configure(f"member{n}", foreground=colour, font="LedgerFixedBold")
+        # the readable layout's: its roles' colours, the working smaller, the turn's marker, the
+        # event rows' columns (tabs set to the widget's width: _set_columns)
+        for role, colour in theme.LEDGER_COLOURS.items():
+            self.dice_text.tag_configure(f"lg_{role}", foreground=colour)
+        self.dice_text.tag_configure("lg_detail", font="LedgerFixedSmall", lmargin1=0, lmargin2=0)
+        self.dice_text.tag_configure("lg_turn", font="LedgerFixedSmall", spacing1=4)
+        self.dice_text.tag_configure("lg_round", spacing1=8, spacing3=2)
+        self.dice_text.tag_configure("lg_event", spacing1=2)
+        self.dice_text.tag_configure("lg_summary", spacing1=2, spacing3=6)
+        self.dice_text.bind("<Configure>", lambda e: self._set_columns(e.width), add="+")
         self.dice_text.tag_configure("monster", foreground=theme.MONSTER_COLOUR, font="LedgerFixedBold")
+        self._raw_dice: "deque[str]" = deque(maxlen=MAX_LOG_LINES)  # (the log's own lines, as written)
+        self._ledger = ledger.Ledger(lambda name: False)
+        self._slots: Set[str] = set()  # (the readable layout's slots waiting for their fills)
         self._monster_names: Set[str] = set()  # every monster seen in a fight this session
         self._finds: Dict[ttk.Frame, ttk.Entry] = {}  # each tab's find box, for Ctrl+F
         self._find_bar(dice_find, self.dice_text, dice)
@@ -321,7 +352,14 @@ class Viewer:
         area = theme.ScrollArea(tabs, padding=6)
         tabs.add(area, text="Options", underline=0)
         options = area.inner
-        settings = launch.load_settings()
+        # the player's settings, read strictly: one held a moment by an antivirus or a backup is tried
+        # again for a second, and if it still can't be read the tab shows the defaults and says so
+        # (_options_unread); only a switch then changed is saved, never the defaults over the file
+        try:
+            settings = launch.load_settings(strict=True, tries=20)
+            self._options_unread: Optional[str] = None
+        except launch.SettingsUnreadable as e:
+            settings, self._options_unread = {}, e.strerror
         self.sections: Dict[str, theme.Section] = {}
         opened = settings.get("options_open", [])
         opened = opened if isinstance(opened, list) else []
@@ -354,12 +392,13 @@ class Viewer:
                             command=self._options_changed).pack(anchor="w", padx=(20, 0))
         # the game's Look box, on a monster in a fight: what hurts it, then all of it in a window
         self.monster_info = tk.BooleanVar(value=bool(settings.get("monster_info", True)))
-        ttk.Checkbutton(in_game, text="Describe monsters when you Look at them in a fight (hit points, AC, THAC0 and defences, then a window)",
+        ttk.Checkbutton(in_game, text="What hurts a monster (the Look box): Look at one in a fight for its hit points, AC, "
+                        "THAC0 and defences, and the rest as the box closes",
                         variable=self.monster_info, command=self._options_changed).pack(anchor="w", pady=(4, 0))
         # names floating over figures on the map for a moment (labels.py)
         self.floating_names = tk.BooleanVar(value=bool(settings.get("floating_names", True)))
-        ttk.Checkbutton(in_game, text="Float a spell's name over its caster, \"Miss\" over whoever an attack missed, "
-                        "and a used charge (\"Armor: 7 left\") over its owner",
+        ttk.Checkbutton(in_game, text="Names over figures: a spell's name over its caster, \"Miss\" over whoever an "
+                        "attack missed, and a used charge (\"Armor: 7 left\") over its owner",
                         variable=self.floating_names, command=self._options_changed).pack(anchor="w")
         rules = section("rules", "Rule changes")
         # in three groups, as FEATURES.md has them
@@ -369,6 +408,11 @@ class Viewer:
             ttk.Label(frame, text=title, style="Status.TLabel").pack(anchor="w")
             frame.pack(anchor="w", fill="x", pady=(8 if rule_groups else 0, 0))
             rule_groups[group] = frame
+        # the spells' records as the manual has them (gamepatch.SPELLS_MANUAL), and missile and hostile
+        # touch spells rolling to hit (gamepatch.SPELL_TO_HIT): content switches (the game's copy is
+        # written with them), with their boxes among the rule changes below
+        self.spells_manual = tk.BooleanVar(value=settings.get("spells_manual", True) is not False)
+        self.spell_to_hit = tk.BooleanVar(value=settings.get("spell_to_hit", True) is not False)
         custom = section("custom", "More character customization")
         features = section("features", "Expanded features")
         # the thief's rules and picking pockets together, as the guide's Thieves section has them
@@ -379,7 +423,7 @@ class Viewer:
         new = section("new_content", "New content")
         ttk.Label(new, text="People, a quest, an arena bout and items: from the next start, in places "
                   "not yet visited. What a saved game already has (people met, items given) stays in it. "
-                  "The new spells: at once.",
+                  "The new spells and defilers' scrolls: at once.",
                   wraplength=460).pack(anchor="w")
         options.bind("<Configure>", lambda e, label=new.winfo_children()[-1]: label.configure(
             wraplength=max(200, e.width - 60)), add="+")
@@ -388,7 +432,9 @@ class Viewer:
         # one switch for each of game.RULE_SETTINGS
         self.rule_vars: Dict[str, tk.BooleanVar] = {}
         self.stealth_gear = tk.BooleanVar(value=settings.get("stealth_gear", True) is not False)
-        # (in the order FEATURES.md has them: the rule changes in their three groups)
+        # (in the order FEATURES.md has them, each opening with the name it has there: the rule
+        # changes in their three groups, then the rest in their sections)
+        own_vars = {"spells_manual": self.spells_manual, "spell_to_hit": self.spell_to_hit}
         for key, group, text in (
                 ("class_restrictions", "characters", "Class restrictions on armour, shields and weapons, the strictest class "
                                                      "winning (psionicists, multiclass thieves, preservers, druids, clerics' "
@@ -397,12 +443,12 @@ class Viewer:
                                                      "no thief skills in armour that isn't light"),
                 ("multiclass_hp", "characters", "Multiclass hit points as in AD&D: CON's bonus on every die (a warrior's if "
                                                 "a class is a warrior), the total shared between the classes"),
-                ("best_hit_die", "characters", "Hit dice rolled twice, the better kept, at creation and at every level "
-                                               "(every character)"),
-                ("rolled_scores", "characters", "Character creation keeps what the die rolls: a score may be raised only "
-                                                "while the six add up to no more than the die gave (lower one to raise "
-                                                "another; the total is shown under CHR), and the hit points can't be "
-                                                "clicked; a change of CON adds or takes off its bonus"),
+                ("best_hit_die", "characters", "Hit dice: the better of two, each die rolled twice at creation and at "
+                                               "every level (every character)"),
+                ("rolled_scores", "characters", "Scores and hit points as rolled: on the creation screen a score may be "
+                                                "raised only while the six add up to no more than the die gave (lower "
+                                                "one to raise another; the total is shown under CHR), and the hit points "
+                                                "can't be clicked; a change of CON adds or takes off its bonus"),
                 ("adnd_tables", "characters", "AD&D's class tables: the XP each class needs (a gladiator's its own, not the "
                                               "fighter's), priests' THAC0 (2 better every 3 levels), and clerics', druids' and "
                                               "preservers' spell slots by level (WIS's bonus slots stay the game's)"),
@@ -413,59 +459,95 @@ class Viewer:
                                         "scores changing at middle, old and venerable age, and dies at the most its race "
                                         "lives; a year older each 365 days of game time; Haste ages each it speeds a year, "
                                         "and each must survive a system shock roll (by CON), as in AD&D"),
+                ("dual_class", "characters", "Dual-classing as the manual has it: a human may change class from "
+                                             "3rd level (the game's 2nd), with every prime requisite of the old "
+                                             "class at 15 or more and every one of the new class at 17 or more "
+                                             "(the game checks only one: a ranger, druid or psionicist on WIS alone)"),
+                ("level_10", "characters", "Level cap by XP: 749,999 XP in place of the game's cap of 9th level; a single "
+                                           "class rises while its next level needs no more, a multiclass character's "
+                                           "classes share it evenly, and a human's new class gets what its old "
+                                           "classes' levels didn't use"),
                 ("two_weapons", "arms", "Two weapons: -2 main hand, -4 off hand, DEX reaction adjustment added "
-                                        "(no better than 0; rangers and Twin-blades none in light armour); the off hand attacks once a round"),
-                ("half_giant_hands", "arms", "Half-giants wield two-handed weapons in one hand (a shield or a light "
-                                             "weapon in the other; two heavy weapons still can't be held)"),
+                                        "(no better than 0; rangers and some kits none in light armour); the off hand "
+                                        "attacks once a round"),
+                ("half_giant_hands", "arms", "Half-giants' two-handed weapons: a half-giant wields one in one hand (a "
+                                             "shield or a light weapon in the other; two heavy weapons still can't be held)"),
+                ("cahulaks", "arms", "Cahulaks as Dark Sun's rules have them: a head in each hand, so one more attack a "
+                                     "round, at -2 and -4 (DEX's reaction adjustment added) even with Two weapons "
+                                     "unticked; a hit tangles a man-sized or smaller foe (not a half-giant, a large "
+                                     "creature or anyone Enlarged) that fails a save against petrification: it loses "
+                                     "its next turn"),
+                ("creature_size", "arms", "Creature size as in AD&D: a large target, party member or foe (a half-giant, "
+                                          "a Bulette, anyone Enlarged), takes AD&D's weapon dice against large creatures: "
+                                          "more from some weapons (a long sword 1d12), less from others (a dagger or "
+                                          "club 1d3); Hold Person and Charm Person have no effect on it"),
+                ("held_hit", "arms", "Held targets as in AD&D: a blow on a Paralyzed or Out Cold foe (or friend) "
+                                     "hits automatically and does normal damage (the game rolls to hit and "
+                                     "doubles the damage)"),
                 ("protection_rules", "arms", "Rings and cloaks of protection as in AD&D: only the better of two rings "
                                              "counts, a ring gives no AC with magical armour, and a cloak does nothing "
                                              "with magical or metal armour or a shield"),
                 ("helm_ac", "arms", "Helms give AC 1 (the game's helms give none)"),
-                ("item_saves", "arms", "Items save against acid as in AD&D, by material, a plus helping, where that's "
+                ("item_saves", "arms", "Items saving against acid as in AD&D, by material, a plus helping, where that's "
                                        "better than the game's (which destroys armour without a magical power outright)"),
-                ("ranger_casting_level", "magic", "Rangers' spells last and do damage as cast at the ranger level less 7, "
-                                                  "as the spell levels they may cast count it (the game takes the whole "
-                                                  "level)"),
+                ("ranger_casting_level", "magic", "Rangers' casting level: a ranger's spells last and do damage as cast "
+                                                  "at its level less 7, as its spell levels already count it (the game "
+                                                  "uses the whole ranger level)"),
                 ("int_learning", "magic", "Preservers' INT: a chance to learn a spell from a scroll (35% at INT 9 "
                                           "to 100% at 24; a failed try uses the scroll up) and the most spells of "
                                           "each spell level they may know (6 at INT 9, all from 19)"),
-                ("spell_save", "magic", "Spells are saved against with the spell save (the game uses "
+                ("spell_save", "magic", "Spells saved against with the spell save (the game uses "
                                         "petrification/polymorph)"),
-                ("no_doubled_save", "magic", "Saves against fire, cold and electricity: DEX defensive adjustment "
-                                             "instead of a doubled d20"),
+                ("no_doubled_save", "magic", "Fire, cold and electricity: DEX instead of a doubled d20 (DEX's "
+                                             "defensive adjustment on those saves; the game doubles the save's d20)"),
                 ("enlarge_dice", "magic", "Enlarge multiplies the weapon's dice only, rounded up, STR and magic added after, "
                                           "as in AD&D (the game multiplies the whole melee damage, STR included)"),
+                ("spells_manual", "magic", "Spells and psionics as the manual describes them: some two dozen spells' and "
+                                           "two powers' saves, times and damage as the manual gives them (Stinking Cloud, "
+                                           "Color Spray, Cloudkill...), Turn Undead by AD&D's table, monsters' saves by "
+                                           "hit dice and seven monsters' powers (the shadows' STR drain...), all listed in "
+                                           "Features and rules; from the next start"),
+                ("spell_to_hit", "magic", "Spells roll to hit: Acid Arrow, Turn Pebble to Boulder, Magical Stone, Condense, "
+                                          "Minute Meteors (+2) and a monster's spines, and touch spells on a foe (Chill "
+                                          "Touch, Shocking Grasp, Vampiric Touch, the Cause spells, Poison), against the "
+                                          "target's AC; from the next start"),
+                ("rest_heal", "magic", "Resting as in AD&D: before a rest the party's priests spend the spells "
+                                       "they have left on the party (Neutralize Poison, Cure Blindness, Cure "
+                                       "Disease, the Cure Wounds spells and Heal on the most wounded) and "
+                                       "psionicists their Cell Adjustment; then each heals 3 hit points plus "
+                                       "CON's bonus (the game fills them all)"),
                 ("weapon_specialization", None, "Weapon specialization: fighters and gladiators specialize (+1 to hit, +2 "
                                                 "damage), fighters on to mastery at 5th level and grand mastery at 9th; "
                                                 "rangers have expertise, every ranger with the bow; specialists and "
                                                 "rangers shoot missiles faster; other weapons at a warrior's plain rate "
                                                 "(chosen in the weapon window after DONE, and at a level up)"),
                 ("kits", None, "Kits: a character of one class may take one of its class's three kits, and some "
-                               "races' classes taken together (pairs, and one of three) have kits of their own, each giving something and "
-                               "costing something (chosen on the creation panel's KIT page); the game's own "
-                               "party gets features of its own"),
-                ("level_10", "characters", "An XP cap of 749,999 in place of the game's level cap of 9: a single class rises while "
-                                   "its next level needs no more; a multiclass character's classes share it evenly; "
-                                   "a human's new class gets what its old classes' levels didn't use"),
-                ("cha_prices", None, "The leader's CHA lowers what shops ask: 5% off at CHA 18 and 5% more for each "
+                               "multiclass characters (pairs of classes, and one trio) have kits of their own, each "
+                               "giving something and costing something (chosen on the creation panel's KIT page); the "
+                               "game's own party gets features of its own"),
+                ("cha_prices", None, "The leader's CHA at shops: 5% off what shops ask at CHA 18 and 5% more for each "
                                      "point after, to 40% at 25; shops pay 60% of an item's price"),
-                ("buyback", None, "Merchants keep the magical items the party sells them, to buy back at their price "
-                                  "(the game destroys whatever is sold; other items still are)"),
+                ("buyback", None, "Buying back magical items: merchants keep the magical items the party sells them, "
+                                  "to buy back at their price (the game destroys whatever is sold; other items still are)"),
                 ("thief_table", None, "Thief skills from AD&D's table by level, with Dark Sun's race and DEX adjustments "
                                       "(the game adds 4 a level to a base of its own, and DEX by a formula)"),
-                ("stealth", None, "Thieves hide in shadows and move silently to backstab, rangers to attack from behind "
-                                  "(with no enemy beside them; a thief's chance halved in daylight, a ranger's "
-                                  "indoors; a few kits differ)"),
+                ("stealth", None, "Hiding in shadows to backstab: thieves hide in shadows and move silently to backstab, "
+                                  "rangers to attack from behind (with no enemy beside them; a thief's chance halved in "
+                                  "daylight, a ranger's indoors; a few kits differ)"),
                 ("backstab_dice", None, "A backstab multiplies the weapon's dice only, STR and magic added after, as in "
                                         "AD&D, on the round's first attack only (the game multiplies the whole damage, STR "
                                         "included, on the first two)"),
-                ("new_spells", None, "New spells: six for wizards (Cat's Grace at 2nd level: DEX + 1d6; at 1st, Erdlu "
+                ("new_spells", None, "New spells: six for wizards (Cat's Grace at 2nd level: DEX + 1d6, by class with "
+                                     "Spells and psionics as the manual describes them; at 1st, Erdlu "
                                      "Claw (unarmed 1d6+1), Fogbolt (-3 to hit, AC 2 worse), Reflected Image, Spook and "
                                      "Friends) and ten 6th-level priest spells from 11th level (Heal, Harm, Blade Barrier...)")):
-            self.rule_vars[key] = tk.BooleanVar(
-                value=bool(settings.get(key, settings.get(game.OLD_SETTING_NAMES.get(key, key), True))))
+            if key in own_vars:
+                var = own_vars[key]
+            else:
+                var = self.rule_vars[key] = tk.BooleanVar(
+                    value=bool(settings.get(key, settings.get(game.OLD_SETTING_NAMES.get(key, key), True))))
             parent = rule_groups[group] if group else where.get(key, rules)
-            ttk.Checkbutton(parent, text=text, variable=self.rule_vars[key],
+            ttk.Checkbutton(parent, text=text, variable=var,
                             command=self._options_changed).pack(anchor="w", pady=(4 if parent.winfo_children()[:-1] else 0, 0))
             if key == "stealth":  # (under it: what worn gear adds)
                 ttk.Checkbutton(thieves, text="... a worn cloak adds 10 to hiding, worn boots 10 to moving silently; "
@@ -513,7 +595,7 @@ class Viewer:
                         "the half-elf woman's figure; from the next start)", variable=self.cilla_elf,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.show_gear = tk.BooleanVar(value=bool(settings.get("show_gear", True)))
-        ttk.Checkbutton(looks, text="Show what the party wears on their figures (weapons, armour, helms, "
+        ttk.Checkbutton(looks, text="What the party wears, drawn on their figures (weapons, armour, helms, "
                         "cloaks, boots, belts)", variable=self.show_gear,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.show_shadows = tk.BooleanVar(value=bool(settings.get("shadows", True)))
@@ -523,14 +605,14 @@ class Viewer:
         ttk.Checkbutton(looks, text="Dust raised behind the feet of anyone walking on sand or dirt",
                         variable=self.show_dust, command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.see_through = tk.BooleanVar(value=settings.get("see_through", True) is not False)
-        ttk.Checkbutton(looks, text="A thief or ranger hidden in shadows, and anyone invisible, drawn see-through (an "
+        ttk.Checkbutton(looks, text="See-through figures: a thief or ranger hidden in shadows, and anyone invisible (an "
                         "invisible enemy solid while one of the party detects invisibility)",
                         variable=self.see_through, command=self._options_changed).pack(anchor="w", pady=(4, 0))
 
         # the mouse and keys in the game
         controls = section("controls", "Controls")
         self.use_targeting = tk.BooleanVar(value=bool(settings.get("targeting", True)))
-        ttk.Checkbutton(controls, text="In a fight, Tab (Shift+Tab back) chooses an enemy and Enter attacks it, "
+        ttk.Checkbutton(controls, text="Choosing an enemy: in a fight, Tab (Shift+Tab back) chooses one and Enter attacks it, "
                         "even behind someone", variable=self.use_targeting,
                         command=self._options_changed).pack(anchor="w")
         self.ring_mode = tk.StringVar(value=rings.mode(settings))
@@ -540,18 +622,18 @@ class Viewer:
             ttk.Radiobutton(controls, text=text, value=value, variable=self.ring_mode,
                             command=self._options_changed).pack(anchor="w", padx=(20, 0))
         self.scroll_map = tk.BooleanVar(value=bool(settings.get("scroll_map", True)))
-        ttk.Checkbutton(controls, text="Scroll the map by pressing the mouse wheel and moving", variable=self.scroll_map,
+        ttk.Checkbutton(controls, text="Scrolling the map: press the mouse wheel and move", variable=self.scroll_map,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.camera_still = tk.BooleanVar(value=settings.get("camera_still", True) is not False)
-        ttk.Checkbutton(controls, text="In a fight, the view moves to a figure only when it walks off the screen "
+        ttk.Checkbutton(controls, text="The view in fights: it moves to a figure only when the figure walks off the screen "
                         "(the game's follows it near the edges; from the next start)", variable=self.camera_still,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.scene_pointer = tk.BooleanVar(value=settings.get("scene_pointer", True) is not False)
-        ttk.Checkbutton(controls, text="A pointer in the intro and the game's other scenes, and a click skips "
+        ttk.Checkbutton(controls, text="The pointer in scenes: shown in the intro and the game's other scenes, and a click skips "
                         "a scene as a key does; from the next start", variable=self.scene_pointer,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.mouse_start = tk.BooleanVar(value=settings.get("mouse_start", True) is not False)
-        ttk.Checkbutton(controls, text="The pointer starts in the middle of the screen, stays put as screens change, moves as far up and "
+        ttk.Checkbutton(controls, text="Where the pointer starts: in the middle of the screen; it stays put as screens change, moves as far up and "
                         "down as across, and in a window as fast as the desktop's pointer (the game's: at the "
                         "right edge, half as far, three times as fast); from the next start",
                         variable=self.mouse_start, command=self._options_changed).pack(anchor="w", pady=(4, 0))
@@ -560,7 +642,7 @@ class Viewer:
                         "does (the game's: often only the leader; 6 still gathers it); from the next start",
                         variable=self.party_spread, command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.effects_kept = tk.BooleanVar(value=settings.get("effects_kept", True) is not False)
-        ttk.Checkbutton(controls, text="A click on a spell's icon on the Effects screen leaves it on (the game "
+        ttk.Checkbutton(controls, text="Spells on the Effects screen: a click on a spell's icon leaves it on (the game "
                         "ends it; psionic powers can still be stopped); from the next start",
                         variable=self.effects_kept, command=self._options_changed).pack(anchor="w", pady=(4, 0))
 
@@ -571,9 +653,9 @@ class Viewer:
         self.game_speed = tk.StringVar(value=str(speed if speed in launch.SPEEDS or speed == launch.GOG_SPEED
                                                  else launch.DEFAULT_SPEED))
         for value, text in ((launch.GOG_SPEED, "GOG's own (walking can be choppy with shadows and dust)"),
-                            ("20000", "Faster: smooth walking with shadows and dust (the default)"),
-                            ("35000", "Fastest: the whole party in view walks smoothly, nearly every picture "
-                                      "shown (needs a faster PC)")):
+                            ("20000", "Faster: for an older PC (fewer pictures a second with the whole party in view)"),
+                            ("35000", "Fastest: the whole party walks at full speed, nearly every picture "
+                                      "shown (the default)")):
             ttk.Radiobutton(pace, text=text, value=value, variable=self.game_speed,
                             command=self._speed_chosen).pack(anchor="w")
         self.steady_pace = tk.BooleanVar(value=settings.get("steady_pace", True) is not False)
@@ -600,6 +682,7 @@ class Viewer:
         ttk.Button(buttons, text="Open the folder", command=self.open_named_saves).pack(side="left")
         ttk.Button(buttons, text="Put a save in a slot...", command=self.restore_save).pack(side="left", padx=(8, 0))
         ttk.Button(options, text="Restore defaults", command=self.restore_defaults).pack(anchor="w", pady=(12, 0))
+        self._options_shown = self._option_values()  # (as read: only what changes from it is saved)
 
     def _wotr_status(self) -> str:
         """Where the Loader finds Wake of the Ravager, for the 6th-level priest spells' art."""
@@ -629,6 +712,19 @@ class Viewer:
             messagebox.showinfo("Saves", "The Loader hasn't found the game yet: start it once from the Loader.",
                                 parent=self.root)
         return game_dir
+
+    def open_guide(self) -> None:
+        """The player's guide, made from PLAYER-GUIDE.md and shipped beside the Loader, in the browser."""
+        if not os.path.exists(GUIDE):
+            self.status.set(f"The player's guide isn't there: {GUIDE}")
+            return
+        try:
+            opened = webbrowser.open(Path(GUIDE).as_uri())
+        except webbrowser.Error:
+            opened = False
+        # (said either way: an opener can report success and still find no browser, as gio did)
+        self.status.set(f"The player's guide, opening in your browser: {GUIDE}" if opened
+                        else f"The player's guide is {GUIDE}")
 
     def open_named_saves(self) -> None:
         game_dir = self._saves_game_dir()
@@ -677,7 +773,7 @@ class Viewer:
         there = namedsaves.slot_name(game_dir, page, slot)
         if there is not None and not messagebox.askyesno(
                 "Put a save in a slot", f"Page {page} slot {slot} has \"{there}\". Put this save there instead? "
-                "(Its named copy stays in the folder.)", parent=self.root):
+                "(It is kept in the Named saves folder as \"Replaced - ...\".)", parent=self.root):
             return
         try:
             name = namedsaves.restore(copy, game_dir, page, slot)
@@ -696,13 +792,13 @@ class Viewer:
         for var in (self.monster_info, self.floating_names, self.stealth_gear, self.pickpockets, self.roll_store, self.elf_looks, self.cilla_elf,
                     self.starting_gear, self.show_gear, self.show_shadows, self.show_dust, self.see_through, self.use_targeting,
                     self.scroll_map, self.effects_kept, self.camera_still, self.scene_pointer, self.mouse_start,
-                    self.steady_pace, self.party_spread):
+                    self.steady_pace, self.party_spread, self.spells_manual, self.spell_to_hit):
             var.set(True)
         self.combat_log.set(True)
         self.combat_log_level.set(dicelog.combat_log_level({}))
         self.ring_mode.set(rings.mode({}))
         self.game_speed.set(str(launch.DEFAULT_SPEED))
-        self._options_changed()
+        self._options_changed(every=True)
         self._speed_chosen()
         self.status.set("Options set back to their defaults (a switch marked \"from the next start\" applies when the game is next started).")
 
@@ -769,7 +865,7 @@ class Viewer:
         """Save a log as a text file (to read with other tools, such as a screen reader)."""
         path = filedialog.asksaveasfilename(title=f"Save the {what}", defaultextension=".txt",
                                             initialfile=f"{what.replace(' ', '-')}.txt",
-                                            filetypes=[("Text", "*.txt"), ("All files", "*.*")])
+                                            filetypes=[("Text", "*.txt"), ("All files", "*.*")], parent=self.root)
         if path:
             try:
                 with open(path, "w", encoding="utf-8") as f:
@@ -792,7 +888,7 @@ class Viewer:
         try:
             path = freeze.freeze_report(self.guest.read, hdr, ds, __version__,
                                         launch.effective_switches(launch.load_settings()),
-                                        self.dice_text.get("1.0", "end-1c"), self.talk_text.get("1.0", "end-1c"),
+                                        "\n".join(self._raw_dice), self.talk_text.get("1.0", "end-1c"),
                                         launch.CRASH_DIR)
         except Exception as e:  # (DOSBox gone, say): said, not raised
             self.status.set(f"No freeze report: {e}")
@@ -820,7 +916,11 @@ class Viewer:
         self._drop_dice()
         self._drop_guest()
         try:
-            self.guest = self.connect()
+            started = self.dosbox if self.dosbox is not None and self.dosbox.poll() is None else None
+            if started is not None and self.connect_pid is not None:
+                self.guest = self.connect_pid(started.pid)
+            else:
+                self.guest = self.connect()
         except Exception as e:  # shown to the user, who can fix it and retry
             self.guest = None
             if not quiet or not self.status.get().startswith("Not connected"):
@@ -843,21 +943,25 @@ class Viewer:
                 return
             if not launch.is_game_dir(game_dir):
                 messagebox.showerror("Start the game", f"{game_dir} has no DSUN.EXE and DOSBOX folder; "
-                                     "pick the GOG install folder of Shattered Lands.")
+                                     "pick the GOG install folder of Shattered Lands.", parent=self.root)
                 return
             self._save_settings({"game_dir": game_dir})
             self.art = art.GameArt.of(game_dir)
         try:
             self._game_dir, self._started = game_dir, time.time()
-            self.dosbox, problem = launch.launch(game_dir)
-        except (launch.LaunchError, OSError) as e:
-            messagebox.showerror("Start the game", str(e))
+            self.dosbox, problem = launch.launch(game_dir, "the Loader's window")
+        except (launch.LaunchError, OSError) as e:  # (GameBusy among them: another Loader has the game)
+            messagebox.showerror("Start the game", str(e), parent=self.root)
             return
         if problem:
             self.status.set(f"Starting the game without the dice log: it can't run with this copy ({problem}).")
         else:
             self.status.set(launch.started_line(game_dir))
-        self._append_dice([launch.started_line(game_dir)])  # (DOSBox or Dark Sun Recompiled: which runs)
+        self._append_dice([launch.started_line(game_dir)])
+        left_out = launch.left_out_line()
+        if left_out:  # (a copy that couldn't be made: told, not silent)
+            self._append_dice([left_out])
+            messagebox.showwarning("Start the game", left_out, parent=self.root)  # (DOSBox or Dark Sun Recompiled: which runs)
         self.next_try = time.monotonic() + RETRY_SECONDS
         self._start_state()
 
@@ -867,6 +971,7 @@ class Viewer:
         if self.dosbox is None or self.dosbox.poll() is None:
             return
         code, self.dosbox = self.dosbox.returncode, None
+        self._release_game()
         self._append_dice([launch.closed_line(code)])
         note = launch.game_end_note()
         if code != 0 or note:
@@ -878,7 +983,7 @@ class Viewer:
         crash-logs (launch.crash_report), and say where in the log."""
         now = time.time()
         refused = list(self.guest.refused) if self.guest is not None else self._refused
-        text = launch.crash_report(code, note, launch.load_settings(), self.dice_text.get("1.0", "end"),
+        text = launch.crash_report(code, note, launch.load_settings(), "\n".join(self._raw_dice) + "\n",
                                    self.talk_text.get("1.0", "end"), refused,
                                    launch.dosbox_output(self._game_dir, self._started), self._started, now)
         try:
@@ -899,13 +1004,17 @@ class Viewer:
         try:
             self.layout = Layout.load(self.layout.path)
         except (OSError, ValueError, KeyError) as e:
-            messagebox.showerror("Layout", f"Could not load {self.layout.path}:\n{e}")
+            messagebox.showerror("Layout", f"Could not load {self.layout.path}:\n{e}", parent=self.root)
             return
         self._apply_layout()
 
     def save_layout(self) -> None:
-        self.layout.save()
-        messagebox.showinfo("Layout", f"Saved slots to {self.layout.path}")
+        try:
+            self.layout.save()
+        except OSError as e:  # (a folder that can't be written, or the file held elsewhere: said)
+            messagebox.showerror("Layout", f"Could not save {self.layout.path}:\n{e}", parent=self.root)
+            return
+        messagebox.showinfo("Layout", f"Saved slots to {self.layout.path}", parent=self.root)
 
     def search_name(self) -> None:
         text = self.search_text.get().strip()
@@ -914,7 +1023,7 @@ class Viewer:
         try:
             pattern = _query_bytes(text)
         except ValueError:
-            messagebox.showerror("Search", "After hex: give byte values like 14 16 12")
+            messagebox.showerror("Search", "After hex: give byte values like 14 16 12", parent=self.root)
             return
         try:
             data = self.guest.snapshot()
@@ -933,7 +1042,7 @@ class Viewer:
     def assign_hit(self) -> None:
         sel = self.hit_list.curselection()
         if not sel or sel[0] >= min(len(self.hits), MAX_HITS):  # (past the list: its "... more" line)
-            messagebox.showinfo("Assign", "Select a search hit first.")
+            messagebox.showinfo("Assign", "Select a search hit first.", parent=self.root)
             return
         slot = int(self.assign_slot.get()) - 1
         self.layout.clear_slot(slot)
@@ -962,7 +1071,7 @@ class Viewer:
         try:
             self.layout.name_record.stride = values.parse_int(text) if text else None
         except ValueError:
-            messagebox.showerror("Stride", f"Not a number: {text}")
+            messagebox.showerror("Stride", f"Not a number: {text}", parent=self.root)
             return
         self.link_records()
 
@@ -990,9 +1099,17 @@ class Viewer:
         self._drop_dice()
         self._drop_guest()
         self.ds = None
+        self._release_game()
         self.status.set(f"Disconnected ({err}). Waiting for DOSBox...")
         self.dice_status.set("Waiting for the game...")
         self.next_try = time.monotonic() + RETRY_SECONDS
+
+    def _release_game(self) -> None:
+        """The game's lock let go (launch.release_game) once this window neither runs a game nor
+        follows one, so another Loader, or `play`, may have it."""
+        running = self.dosbox is not None and self.dosbox.poll() is None
+        if not running and not (self.dice is not None and self.dice.attached):
+            launch.release_game()
 
     def _save_settings(self, changes: dict) -> bool:
         """CHANGES saved in settings.json; when it is held elsewhere (an antivirus, a backup), the
@@ -1005,13 +1122,15 @@ class Viewer:
             return False
 
     def close(self) -> None:
-        """Done with the dice log before closing: it lets go of the game (detach) and stops its thread."""
+        """Done with the dice log before closing: it lets go of the game (detach) and stops its thread,
+        and the game's lock goes."""
         try:
             if self.dice:
                 self.dice.detach()
                 self.dice.close()
         except Exception:
             pass
+        launch.release_game()
         self.root.destroy()
 
     def _tick(self) -> None:
@@ -1106,8 +1225,12 @@ class Viewer:
                 return
             self.next_try = now + RETRY_SECONDS
             if self.dice is None:
+                try:  # (strictly: the pockets tried, as saved; one held elsewhere read again later)
+                    saved, known = launch.load_settings(strict=True), True
+                except launch.SettingsUnreadable:
+                    saved, known = {}, False
                 self.dice = DiceLog(self.guest)
-                self.dice.use_settings(launch.load_settings())  # (the panel's size and state as saved; then the tab's own)
+                self.dice.use_settings(saved, picked_known=known)  # (the panel's size and state as saved; then the tab's own)
                 self.dice.answer_stats_in_background()
                 self.dice.speaker_names = launch.speaker_names()
                 self.dice.learned_speakers = launch.learned_speakers()
@@ -1131,12 +1254,17 @@ class Viewer:
                 self.dice.vulture_on = self.content_vars["vulture"].get()
                 self.dice.defiler_scrolls = self.content_vars["defiler_scrolls"].get()
                 self.dice.stealth_gear = self.stealth_gear.get()
-                self.dice.load_picked(launch.pickpocketed())
                 self.dice.set_rules(self._rules())
+            try:  # (one Loader at a time follows the game: two would both make its changes)
+                launch.hold_game("the Loader's window")
+            except launch.GameBusy as e:
+                self.dice_status.set(str(e))
+                return
             try:
                 self.dice_status.set(self.dice.attach())
             except DiceLogError as e:
                 self.dice_status.set(str(e))
+                self._release_game()  # (nothing followed: the lock not kept from `play` meanwhile; taken again next try)
             return
         if now >= self.next_try:  # every couple of seconds: has the game restarted?
             self.next_try = now + RETRY_SECONDS
@@ -1152,7 +1280,8 @@ class Viewer:
         self.round_line.set(self._round_text())
         # (names worked out from conversations kept, and shown on earlier lines; the pockets tried
         # kept; a save the file refused tried again next pass)
-        learned, failed = self.dice.save_learned(launch.add_learned_speakers, launch.set_pickpocketed)
+        learned, failed = self.dice.save_learned(launch.add_learned_speakers, launch.set_pickpocketed,
+                                                 lambda: launch.pickpocketed(tries=1))
         for portrait in learned:
             self._rename_portrait(portrait)
         if failed and not self._learned_unsaved:
@@ -1203,44 +1332,45 @@ class Viewer:
         if self._save_settings({"cycles": value if value == launch.GOG_SPEED else int(value)}):
             self.status.set("Game speed: from the next time you start the game.")
 
-    def _options_changed(self) -> None:
-        """A switch on the Options tab changed: all of them saved, and the log told."""
+    def _option_values(self) -> dict:
+        """Every switch of the Options tab as the tab shows it: {settings key: value}."""
+        values = {"monster_info": self.monster_info.get(), "floating_names": self.floating_names.get(),
+                  "combat_log": self.combat_log.get(), "combat_log_level": self.combat_log_level.get(),
+                  "pickpockets": self.pickpockets.get(), "show_gear": self.show_gear.get(),
+                  "starting_gear": self.starting_gear.get(), "shadows": self.show_shadows.get(),
+                  "dust": self.show_dust.get(), "see_through": self.see_through.get(),
+                  "elf_looks": self.elf_looks.get(), "cilla_elf": self.cilla_elf.get(),
+                  "rings": self.ring_mode.get(), "targeting": self.use_targeting.get(),
+                  "scroll_map": self.scroll_map.get(), "effects_kept": self.effects_kept.get(),
+                  "stealth_gear": self.stealth_gear.get(), "roll_store": self.roll_store.get(),
+                  "camera_still": self.camera_still.get(), "scene_pointer": self.scene_pointer.get(),
+                  "mouse_start": self.mouse_start.get(), "steady_pace": self.steady_pace.get(),
+                  "party_spread": self.party_spread.get(), "spells_manual": self.spells_manual.get(),
+                  "spell_to_hit": self.spell_to_hit.get()}
+        values.update({key: var.get() for key, var in self.content_vars.items()})
+        values.update({key: var.get() for key, var in self.rule_vars.items()})
+        return values
+
+    def _options_changed(self, every: bool = False) -> None:
+        """A switch on the Options tab changed: saved, and the log told. Only the switches changed
+        since the tab was read or last saved are written (EVERY: all of them, for Restore defaults),
+        so a tab that had to show the defaults (settings.json held elsewhere as it opened) never
+        puts them over the player's other choices."""
+        values = self._option_values()
+        shown = getattr(self, "_options_shown", {})
+        changes = values if every else {key: value for key, value in values.items()
+                                        if key not in shown or shown[key] != value}
         try:
             with launch.SETTINGS_LOCK:  # (read and written as one step)
                 settings = launch.load_settings(strict=True)
                 for old in ("turn_popups", "turn_popups_level", "turn_popups_detail"):  # (the turn pop-up, gone)
                     settings.pop(old, None)
-                settings["monster_info"] = self.monster_info.get()
-                settings["floating_names"] = self.floating_names.get()
-                settings["combat_log"] = self.combat_log.get()
-                settings["combat_log_level"] = self.combat_log_level.get()
-                settings["pickpockets"] = self.pickpockets.get()
-                settings["show_gear"] = self.show_gear.get()
-                settings["starting_gear"] = self.starting_gear.get()
-                settings["shadows"] = self.show_shadows.get()
-                settings["dust"] = self.show_dust.get()
-                settings["see_through"] = self.see_through.get()
-                settings["elf_looks"] = self.elf_looks.get()
-                settings["cilla_elf"] = self.cilla_elf.get()
-                settings["rings"] = self.ring_mode.get()
-                settings["targeting"] = self.use_targeting.get()
-                settings["scroll_map"] = self.scroll_map.get()
-                for key, var in self.content_vars.items():
-                    settings[key] = var.get()
-                settings["effects_kept"] = self.effects_kept.get()
-                settings["stealth_gear"] = self.stealth_gear.get()
-                settings["roll_store"] = self.roll_store.get()
-                settings["camera_still"] = self.camera_still.get()
-                settings["scene_pointer"] = self.scene_pointer.get()
-                settings["mouse_start"] = self.mouse_start.get()
-                settings["steady_pace"] = self.steady_pace.get()
-                settings["party_spread"] = self.party_spread.get()
-                for key, var in self.rule_vars.items():
-                    settings[key] = var.get()
+                settings.update(changes)
                 launch.save_settings(settings)
         except OSError as e:  # (settings.json held elsewhere: kept as it was, not saved over)
             self.status.set(f"The options could not be saved just now ({e}); change one again to retry.")
             return
+        self._options_shown = values
         if self.dice is not None:
             self.dice._settings = settings  # (the item reports' switches, as now)
             self.dice.set_monster_info(self.monster_info.get())
@@ -1495,17 +1625,114 @@ class Viewer:
                 taken.append((start, end))
                 self.dice_text.tag_add(tag, f"{row}.{start}", f"{row}.{end}")
 
-    def _append_dice(self, lines: List[str]) -> None:
+    def _append_dice(self, lines: List[str], keep: bool = True) -> None:
         names = self._log_names() if lines else []
+        if keep:
+            self._raw_dice.extend(lines)
+        readable = self.readable.get()
+        if readable:
+            party = {name for name, tag in names if tag.startswith("member")}
+            self._ledger.is_party = party.__contains__
         for line in lines:
-            tag = combatlog.line_kind(line)
-            self.dice_text.insert("end", line + "\n", tag)
-            self._colour_names(line, names)
+            if not readable:
+                tag = combatlog.line_kind(line)
+                self.dice_text.insert("end", line + "\n", tag)
+                self._colour_names(line, names)
+                continue
+            for op in self._ledger.feed(line):
+                if isinstance(op, ledger.Fill):
+                    self._fill(op, names)
+                else:
+                    self._row(op, line, names)
         excess = int(self.dice_text.index("end-1c").split(".")[0]) - MAX_LOG_LINES
         if excess > 0:
             self.dice_text.delete("1.0", f"{excess + 1}.0")
+            for sid in [sid for sid in self._slots if self.dice_text.index(sid) == "1.0"]:
+                self.dice_text.mark_unset(sid)  # (its row gone: never filled)
+                self._slots.discard(sid)
         if self._following.get(self.dice_text, True):
             self.dice_text.see("end")
+
+    _KIND_TAGS = {ledger.EVENT: ("lg_event",), ledger.DETAIL: ("detail", "lg_detail"), ledger.TURN: ("lg_turn",),
+                  ledger.ROUND: ("lg_round",), ledger.SUMMARY: ("lg_summary",)}
+
+    def _row(self, row: "ledger.Row", line: str, names: List[Tuple[str, str]]) -> None:
+        """A row of the readable layout at the log's end, its slots marked for their fills."""
+        start = self.dice_text.index("end-1c")
+        kind_tags = self._KIND_TAGS.get(row.kind) or (row.plain_kind or combatlog.line_kind(line),)
+        for piece in row.pieces:
+            if piece.slot:
+                self.dice_text.mark_set(piece.slot, "end-1c")
+                self.dice_text.mark_gravity(piece.slot, "left")  # (the rows after it come after it)
+                self._slots.add(piece.slot)
+                continue
+            tags = kind_tags if row.kind == ledger.PLAIN else kind_tags + (f"lg_{piece.role}",)
+            self.dice_text.insert("end", piece.text, tags)
+        self.dice_text.insert("end", "\n", kind_tags)
+        if row.kind != ledger.DETAIL:  # (the working stays dim: the names stand out above it)
+            self._colour_range(start, self.dice_text.index("end-1c"), names)
+
+    def _fill(self, fill: "ledger.Fill", names: List[Tuple[str, str]]) -> None:
+        """A slot an earlier row left, filled (a hit's damage, the HP left)."""
+        if fill.slot not in self._slots:
+            return
+        self._slots.discard(fill.slot)
+        at = self.dice_text.index(fill.slot)
+        line_tags = tuple(t for t in self.dice_text.tag_names(f"{at} linestart") if t.startswith("lg_event"))
+        for piece in reversed(fill.pieces):
+            self.dice_text.insert(fill.slot, piece.text, line_tags + (f"lg_{piece.role}",))
+        end = self.dice_text.index(f"{at}+{sum(len(p.text) for p in fill.pieces)}c")
+        self.dice_text.mark_unset(fill.slot)
+        self._colour_range(at, end, names)
+
+    def _colour_range(self, start: str, end: str, names: List[Tuple[str, str]]) -> None:
+        """Tag each name between START and END (a row or a fill just added)."""
+        text = self.dice_text.get(start, end)
+        taken: List[Tuple[int, int]] = []
+        for name, tag in names:
+            for found in re.finditer(r"(?<!\w)" + re.escape(name) + r"(?!\w)", text):
+                a, b = found.span()
+                if any(a < y and x < b for x, y in taken):
+                    continue
+                taken.append((a, b))
+                self.dice_text.tag_add(tag, f"{start}+{a}c", f"{start}+{b}c")
+
+    def _set_columns(self, width: int) -> None:
+        """The event rows' columns: the HP right-aligned, then the roll, both at the window's right."""
+        char = tkfont.nametofont("TkFixedFont").measure("0")
+        roll_at = max(char * 40, width - 16 - char * 30)
+        self.dice_text.tag_configure("lg_event", tabs=(roll_at - char * 2, "right", roll_at, "left"),
+                                     lmargin2=char * 4)
+        small = tkfont.nametofont("LedgerFixedSmall").measure("0")
+        self.dice_text.tag_configure("lg_detail", lmargin2=small * 8)  # (a long working's next lines, under it)
+
+    def _layout_changed(self) -> None:
+        """The readable layout on or off: the log shown again from its own lines."""
+        self._save_settings({"dice_layout": "readable" if self.readable.get() else "classic"})
+        self.dice_text.delete("1.0", "end")
+        for sid in self._slots:
+            self.dice_text.mark_unset(sid)
+        self._slots.clear()
+        self._ledger = ledger.Ledger(lambda name: False)
+        self._append_dice(list(self._raw_dice), keep=False)
+
+    def clear_dice(self) -> None:
+        self.dice_text.delete("1.0", "end")
+        self._raw_dice.clear()
+        self._slots.clear()
+        self._ledger = ledger.Ledger(lambda name: False)
+
+    def save_dice(self) -> None:
+        """Save the log's own lines (as written, whichever layout shows them)."""
+        path = filedialog.asksaveasfilename(title="Save the dice log", defaultextension=".txt",
+                                            filetypes=[("Text", "*.txt"), ("All files", "*.*")], parent=self.root)
+        if not path:
+            return
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                f.write("\n".join(self._raw_dice) + "\n")
+        except OSError as e:
+            messagebox.showerror("Save", f"Couldn't save the dice log: {e}", parent=self.root)
 
     def _ac_rows(self, slots) -> List[Tuple[str, List[str]]]:
         """The AC the game last worked out for each character in a fight, and what it was made
@@ -1725,12 +1952,14 @@ class Viewer:
             self.hex.tag_add("selected", *selected)
 
 
-def run(layout: Layout, connect: Callable[[], GuestMemory], dosbox=None, game_dir: Optional[str] = None) -> None:
+def run(layout: Layout, connect: Callable[[], GuestMemory], dosbox=None, game_dir: Optional[str] = None,
+        connect_pid: Optional[Callable[[int], GuestMemory]] = None) -> None:
     """The Loader's window; DOSBOX, if given, is the game started for it (from GAME_DIR), whose
-    closing is told in the log as if started from the window."""
+    closing is told in the log as if started from the window; CONNECT_PID attaches to a DOSBox by
+    its pid (the one started), CONNECT to whichever runs."""
     root = tk.Tk()
-    viewer = Viewer(root, layout, connect)
+    viewer = Viewer(root, layout, connect, connect_pid, dosbox)  # (its DOSBox known before it first connects)
     if dosbox is not None:
-        viewer.dosbox, viewer._game_dir, viewer._started = dosbox, game_dir, time.time()
+        viewer._game_dir, viewer._started = game_dir, time.time()
         viewer._start_state()
     root.mainloop()

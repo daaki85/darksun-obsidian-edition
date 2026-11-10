@@ -30,7 +30,7 @@ class CardTextTests(unittest.TestCase):
     def test_kit_label(self):
         """"Features:" for the game's own party's features alone, "Kit:" when a kit is there."""
         self.assertEqual(partyview.kit_label("Wild Fighting"), "Features")
-        self.assertEqual(partyview.kit_label("Open sky spells and psionics; One more chatkcha throw"), "Features")
+        self.assertEqual(partyview.kit_label("Open sky spells and psionics"), "Features")
         self.assertEqual(partyview.kit_label("Arcanist"), "Kit")
         self.assertEqual(partyview.kit_label("Wild Fury; Wild Fighting"), "Kit")
 

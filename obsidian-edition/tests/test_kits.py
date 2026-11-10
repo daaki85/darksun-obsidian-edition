@@ -166,3 +166,37 @@ class AvengerHealTests(unittest.TestCase):
 
     def test_not_an_avenger(self):
         self.assertEqual(self.make(kits.HEALER), ([], {}))
+
+
+class BruteBanTests(unittest.TestCase):
+    def test_brute_may_dual_to_air_cleric(self):
+        """A Brute needs a two-handed melee weapon: a psionicist has none, an air cleric the cahulaks."""
+        from dsloader import kits
+        self.assertTrue(kits.dual_banned(kits.BRUTE, 12))
+        self.assertFalse(kits.dual_banned(kits.BRUTE, 1))
+
+
+class DualBansInHelperTests(unittest.TestCase):
+    def test_helper_table_matches(self):
+        """DSCLOG's dual_bans (each kit's byte and its dword of banned classes) is kits.DUAL_BANS:
+        the DUAL window greys by the helper's, the Loader checks by its own (the audit, 2026-11-10)."""
+        import re
+        with open(os.path.join(os.path.dirname(__file__), "..", "dos", "dsclog.asm"), encoding="latin-1") as f:
+            text = f.read()
+        consts = {m.group(1): m.group(2).split(";")[0].strip()
+                  for m in re.finditer(r"^(\w+)\s+equ\s+(.+)$", text, re.M)}
+
+        def value(expr):
+            expr = re.sub(r"\b0x[0-9A-Fa-f]+\b|\b\d+\b", lambda m: str(int(m.group(0), 0)), expr)
+            names = re.findall(r"\b[A-Z_][A-Z0-9_]*\b", expr)
+            return eval(expr, {n: value(consts[n]) for n in names})  # (the asm's own constant expressions)
+        block = text[text.index("dual_bans   db"):]
+        block = block[:block.index("\n            db 0\n")]
+        lines = [line.split(";")[0].strip() for line in block.splitlines()]
+        lines[0] = lines[0][len("dual_bans"):].strip()
+        table = {}
+        for kit_line, bans_line in zip(lines[0::2], lines[1::2]):
+            self.assertTrue(kit_line.startswith("db ") and bans_line.startswith("dd "), (kit_line, bans_line))
+            mask = value(bans_line[3:])
+            table[value(kit_line[3:])] = frozenset(c for c in range(1, 18) if mask >> c & 1)
+        self.assertEqual(table, dict(kits.DUAL_BANS))
