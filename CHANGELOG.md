@@ -45,6 +45,19 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 DSCLOG.EXE 67,872 bytes (image 67,840: 64,832 in its segment, 3,008 in the tail), 704 of its
 segment spare.
 
+
+**Docs: rules the game got wrong counted as bug fixes**
+- Twenty-one PATCH-NOTES bullets move from `[Changed]` to `[Fixed]`: saves against spells, the
+  doubled d20, spells and psionics and monsters as the manual describes them, spells rolling to hit,
+  Enlarge, rangers' casting level, preservers' INT, dual-classing, class restrictions, multiclass hit
+  points, the class tables, CON 20 and up, two weapons, warriors' attacks, held targets, acid, thief
+  skills and backstabs, and the air cleric's daggers. Each is a rule the game gets wrong against its
+  manual, itself or the Player's Handbook. Helms' AC, resting, the level cap, hit dice, creation
+  scores, half-giants, creature size, cahulaks, ages and the bone scale set stay changes or additions.
+- The Bug Fixes section's closing paragraph says which; GAME-BUGS has a table of them (the game's
+  rule, the rulebook's, the switch); FEATURES' Rule changes says most are bugs, and the Enlarge entry
+  quotes the Player's Handbook (p. 173). The air cleric's daggers go in GAME-BUGS's Items table.
+
 **New**
 - **New rule: held targets as in AD&D** (Options, Weapons and armour; on by default; `RULE_HELD`,
   the Loader's `held_hit`, DSCLOG's `RULE_HI_HELD` 8000h and HELD: `HELD_HIT` at 589E9h, `HELD_DAMAGE`

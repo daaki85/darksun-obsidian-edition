@@ -44,30 +44,30 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 - **[New]** Fighters specialize in one weapon spec, a kind of weapon such as the long sword (+1 to hit, +2 damage, 3/2 attacks a round), with **mastery** at 5th level (+3, +3) and **grand mastery** at 9th (a larger damage die and one more attack).
 - **[New]** Gladiators specialize in two weapon specs, a third at 6th level and a fourth at 9th. Rangers gain expertise with the bow and one other weapon spec. The Battle Mage, Crusader and Mind Warrior kits gain expertise with one melee weapon spec of their choice (3/2 attacks a round, 2 from 7th level); a thri-kreen Mind Warrior may take the chatkcha.
-- **[Changed]** Warriors attack at AD&D's plain rate with weapons outside their specializations *(was 3/2 with any weapon)*. Specialists shoot missiles faster.
+- **[Fixed]** Warriors attack at AD&D's plain rate with weapons outside their specializations *(was 3/2 with any weapon)*. Specialists shoot missiles faster.
 - **[New]** The weapons spells make count for specialization: the Flame Blade as a long sword, Shillelagh as a club, Spiritual Hammer as a mace.
 
 **Saving throws**
 
-- **[Changed]** Spells are saved against with the spell save *(was petrification/polymorph for almost every spell)*.
-- **[Changed]** Against fire, cold and electricity, DEX helps you dodge, from −5 to +6 *(was a doubled d20)*. Needing 14 at DEX 12, the chance to save against a Fireball is 35% *(was 70%)*.
+- **[Fixed]** Spells are saved against with the spell save *(was petrification/polymorph for almost every spell)*.
+- **[Fixed]** Against fire, cold and electricity, DEX helps you dodge, from −5 to +6 *(was a doubled d20)*. Needing 14 at DEX 12, the chance to save against a Fireball is 35% *(was 70%)*.
 
 > *Developers' Notes: The doubled d20 isn't in the manual or in AD&D. It made most enemies shrug off a Fireball. Nimble targets still dodge; slow ones now burn.*
 
 **Two weapons**
 
-- **[Changed]** Two weapons cost −2 to hit with the main hand and −4 with the off hand, less with high DEX; rangers, Twin-blades and Battle Dancers fight with two at no penalty in light armour, a Justifier in any, and a Ghetto Fighter at 0 and −2 *(was a small bonus at DEX 5 or less, otherwise nothing)*.
-- **[Changed]** The off hand attacks once a round, and extra attacks belong to the main hand *(was the full rate in each hand)*.
+- **[Fixed]** Two weapons cost −2 to hit with the main hand and −4 with the off hand, less with high DEX; rangers, Twin-blades and Battle Dancers fight with two at no penalty in light armour, a Justifier in any, and a Ghetto Fighter at 0 and −2 *(was a small bonus at DEX 5 or less, otherwise nothing)*.
+- **[Fixed]** The off hand attacks once a round, and extra attacks belong to the main hand *(was the full rate in each hand)*.
 
 **Held targets**
 
-- **[Changed]** A blow on a held (Paralyzed) or Out Cold creature hits automatically and does normal damage, as in AD&D *(was a roll to hit as ever, and double damage)*. It cuts both ways: a held party member is hit every time too.
+- **[Fixed]** A blow on a held (Paralyzed) or Out Cold creature hits automatically and does normal damage, as in AD&D *(was a roll to hit as ever, and double damage)*. It cuts both ways: a held party member is hit every time too.
 
 **Armour and protection**
 
 - **[Changed]** Helms give AC 1 *(was 0)*.
 - **[Changed]** Rings and cloaks of protection follow AD&D: two rings don't stack, a ring gives no AC with magical armour, and a cloak does nothing with magical or metal armour or a shield.
-- **[Changed]** Acid and corroding touches let each item save by its material, as in AD&D *(was any non-magical armour destroyed outright)*.
+- **[Fixed]** Acid and corroding touches let each item save by its material, as in AD&D *(was any non-magical armour destroyed outright)*.
 
 **Races**
 
@@ -85,17 +85,17 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - **[Changed]** Levels stop at a cap of **749,999 XP** instead of 9th level, shared out: one class goes as far as its next level needs no more (cleric 11th, druid 12th, fighter, gladiator and ranger 10th, preserver and psionicist 11th, thief 13th); two or three classes share it evenly (374,999 or 249,999 each); a human who changed class has what its old classes' levels didn't use *(was 9th level for every class)*.
 - **[Changed]** Character creation keeps what the die rolls: lower a score to raise another, but the six never add up to more than the die gave (shown under CHR as `SUM:99/101`), and the hit points stay as rolled, moving only with CON's bonus *(was any score clicked up to its most, and the hit points set by a click)*.
 - **[New]** **STORE** and **RECALL** on the character creation screen, as in Baldur's Gate: keep a roll, try the die again, and bring the kept roll back.
-- **[Changed]** An air cleric can use daggers, as its sphere allows *(was none: no dagger in the game listed the air cleric)*.
+- **[Fixed]** An air cleric can use daggers, as its sphere allows *(was none: no dagger in the game listed the air cleric)*.
 - **[New]** New characters start with fuller gear: a weapon in hand they can use, a sling, leather armour where they may wear it, a Stalker, Assassin or Shinobi a cloak, and some kits weapons of their own (a Battle Dancer two long swords, a Poisoner two of its weapon spec, daggers or short swords). A multiclass preserver starts with no armour, so it can cast.
-- **[Changed]** Class restrictions hold: a character may use an item only if every one of its classes allows it, and a multiclass preserver can't cast in armour *(was any one class allowing it)*. Thieves wear light armour only; a multiclass thief (or a human once a warrior or cleric) may wear heavier, losing its thief skills and backstab in it.
-- **[Changed]** Multiclass characters gain hit points as in AD&D: CON's bonus on every hit die (a warrior's if one class is a warrior), the total divided between the classes.
+- **[Fixed]** Class restrictions hold: a character may use an item only if every one of its classes allows it, and a multiclass preserver can't cast in armour *(was any one class allowing it)*. Thieves wear light armour only; a multiclass thief (or a human once a warrior or cleric) may wear heavier, losing its thief skills and backstab in it.
+- **[Fixed]** Multiclass characters gain hit points as in AD&D: CON's bonus on every hit die (a warrior's if one class is a warrior), the total divided between the classes.
 - **[Changed]** Every character's hit dice are rolled twice and the better kept, at character creation and at every level (a rule change, on unless unticked).
-- **[Changed]** Experience, priests' THAC0 and spell slots follow AD&D's tables: a gladiator needs 2,250 XP for 2nd level *(was 2,000)*, a preserver has 4 2 1 slots at 5th *(was 3 2 1)*, a cleric 3 3 1 *(was 3 2 1)*.
-- **[Changed]** A ranger's spells last and deal damage at its level minus 7, as AD&D has it *(was its full level)*.
+- **[Fixed]** Experience, priests' THAC0 and spell slots follow AD&D's tables: a gladiator needs 2,250 XP for 2nd level *(was 2,000)*, a preserver has 4 2 1 slots at 5th *(was 3 2 1)*, a cleric 3 3 1 *(was 3 2 1)*.
+- **[Fixed]** A ranger's spells last and deal damage at its level minus 7, as AD&D has it *(was its full level)*.
 - **[New]** **Ages** (a rule change, on unless unticked): each character has an age from the Dark Sun rules' tables, shown on the inventory screen and the Loader's Characters tab. Middle, old and venerable age change the scores, and a character dies at the most its race lives; everyone is a year older each 365 days of game time (the dice log says so), and magic ages them faster. **Haste** now asks each creature it speeds for a system shock roll by CON, as in AD&D: one that fails dies, and a party member who survives is a year older. **Restore Youth** (a 6th-level priest spell: Magic and Psionics) takes magical years back.
-- **[Changed]** **CON 20 and up** gives a hit point back at AD&D's rate, one an hour at CON 20 to one every 10 minutes at 25 *(was one every 5 minutes at any of them)*; and a dwarf's or halfling's poison save gets only its racial bonus, as in AD&D *(was CON's adjustment as well)* (a rule change, CON as in AD&D, on unless unticked).
-- **[Changed]** **Dual-classing** as the manual has it: from 3rd level, with every prime requisite of the old class at 15 or more and every one of the new class at 17 or more (a rule change, on by default) *(was 2nd level, and one score a class checked: a ranger, druid or psionicist on WIS alone)*.
-- **[Changed]** Preservers' INT sets their chance to learn a spell from a scroll (35% at INT 9 to 100% at 24) and the most spells of each level they can know. New preservers choose their starting spells.
+- **[Fixed]** **CON 20 and up** gives a hit point back at AD&D's rate, one an hour at CON 20 to one every 10 minutes at 25 *(was one every 5 minutes at any of them)*; and a dwarf's or halfling's poison save gets only its racial bonus, as in AD&D *(was CON's adjustment as well)* (a rule change, CON as in AD&D, on unless unticked).
+- **[Fixed]** **Dual-classing** as the manual has it: from 3rd level, with every prime requisite of the old class at 15 or more and every one of the new class at 17 or more (a rule change, on by default) *(was 2nd level, and one score a class checked: a ranger, druid or psionicist on WIS alone)*.
+- **[Fixed]** Preservers' INT sets their chance to learn a spell from a scroll (35% at INT 9 to 100% at 24) and the most spells of each level they can know. New preservers choose their starting spells.
 
 **Kits**
 
@@ -150,11 +150,11 @@ A few of them:
 
 ## Magic and Psionics
 
-- **[Changed]** **Spells and psionics as the manual describes them** (a rule change, on by default, from the next start): saves against Bestow Curse and Blood Flow; Flaming Sphere negated by a save; no save against Quicksand; Solid Fog (1d3 rounds + 1 a level), Cause Fear (1d4 rounds), Minor Spell Turning (3 rounds a level) and Stinking Cloud (1d4+1 rounds) for the manual's time; Turn Pebble to Boulder 11-26; Minute Meteors five globes of 1d4; Flame Arrow a 5d6 bolt for every 5 caster levels; Ironskin a blow stopped a caster level; Chaos saved against by creatures of very high or very low INT; Color Spray saved against only by creatures of more levels than the caster, and Hold Undead only on undead of the caster's level or lower; Free Action frees creatures held by Web, Solid Fog, Quicksand, Entangle or Grease; Fire Shield +2 and Blur +1 on saves; Chill Touch weakens for an hour and sends undead fleeing; Cloudkill kills weak creatures; Feeblemind stops psionics too, and Heal cures it; Lower Resistance takes 30% plus 1% a level; Strength and Cat's Grace roll by class; Rainbow Pattern holds a round a level and breaks when its victim is hurt; Cell Adjustment heals 1d4; Biofeedback always leaves a blow at least 1. **Turn Undead** follows AD&D's table: turned undead flee for 3d4 rounds, the strongest results destroy, and a priest who fails can't try the same undead again that fight *(was destroyed or nothing, as often as the priest liked)*. Monsters' hit dice count as their level for saving throws *(was level 0 for a monster with no class)*.
-- **[Changed]** **Monsters as the manual describes them** (with the same rule change): Shadows and Greater Shadows drain Strength and shrug off cold, the Babau and Blue Slaad carry deadly poison, the Styr breathes fire (and only +1 weapons hurt it), the Djinn turns invisible and makes mirror images, and the Tari's bite can carry disease *(was cold damage and paralysis, a corroding touch, disease, and nothing of the rest)*.
-- **[Changed]** **Spells roll to hit** (a rule change, on by default, from the next start): the missile spells (Acid Arrow, Turn Pebble to Boulder, Magical Stone, Condense, and each of Minute Meteors' globes, at +2) and the Strine's spines roll against the target's AC, as do the touch spells cast at an enemy (Chill Touch, Shocking Grasp, Vampiric Touch, the Cause Wounds spells, Cause Disease, Poison); a miss does nothing *(was every one landing)*.
+- **[Fixed]** **Spells and psionics as the manual describes them** (a rule change, on by default, from the next start): saves against Bestow Curse and Blood Flow; Flaming Sphere negated by a save; no save against Quicksand; Solid Fog (1d3 rounds + 1 a level), Cause Fear (1d4 rounds), Minor Spell Turning (3 rounds a level) and Stinking Cloud (1d4+1 rounds) for the manual's time; Turn Pebble to Boulder 11-26; Minute Meteors five globes of 1d4; Flame Arrow a 5d6 bolt for every 5 caster levels; Ironskin a blow stopped a caster level; Chaos saved against by creatures of very high or very low INT; Color Spray saved against only by creatures of more levels than the caster, and Hold Undead only on undead of the caster's level or lower; Free Action frees creatures held by Web, Solid Fog, Quicksand, Entangle or Grease; Fire Shield +2 and Blur +1 on saves; Chill Touch weakens for an hour and sends undead fleeing; Cloudkill kills weak creatures; Feeblemind stops psionics too, and Heal cures it; Lower Resistance takes 30% plus 1% a level; Strength and Cat's Grace roll by class; Rainbow Pattern holds a round a level and breaks when its victim is hurt; Cell Adjustment heals 1d4; Biofeedback always leaves a blow at least 1. **Turn Undead** follows AD&D's table: turned undead flee for 3d4 rounds, the strongest results destroy, and a priest who fails can't try the same undead again that fight *(was destroyed or nothing, as often as the priest liked)*. Monsters' hit dice count as their level for saving throws *(was level 0 for a monster with no class)*.
+- **[Fixed]** **Monsters as the manual describes them** (with the same rule change): Shadows and Greater Shadows drain Strength and shrug off cold, the Babau and Blue Slaad carry deadly poison, the Styr breathes fire (and only +1 weapons hurt it), the Djinn turns invisible and makes mirror images, and the Tari's bite can carry disease *(was cold damage and paralysis, a corroding touch, disease, and nothing of the rest)*.
+- **[Fixed]** **Spells roll to hit** (a rule change, on by default, from the next start): the missile spells (Acid Arrow, Turn Pebble to Boulder, Magical Stone, Condense, and each of Minute Meteors' globes, at +2) and the Strine's spines roll against the target's AC, as do the touch spells cast at an enemy (Chill Touch, Shocking Grasp, Vampiric Touch, the Cause Wounds spells, Cause Disease, Poison); a miss does nothing *(was every one landing)*.
 - **[Changed]** **Resting** heals by the priests' remaining spells (and psionicists' Cell Adjustment) and a night's natural healing (3 HP and CON's bonus, plus CON 20+ regeneration) (a rule change, on by default) *(was every member healed to full)*.
-- **[Changed]** **Enlarge** makes only the weapon's dice bigger, 10% a caster level, rounded up, with STR and magic added after, as in AD&D (a rule change, on unless unticked) *(was the whole melee damage made bigger, STR included)*.
+- **[Fixed]** **Enlarge** makes only the weapon's dice bigger, 10% a caster level, rounded up, with STR and magic added after, as in AD&D (a rule change, on unless unticked) *(was the whole melee damage made bigger, STR included)*.
 - **[New]** Six new wizard spells, each with its own icon and description:
 
 | Spell | Level | What it does |
@@ -184,9 +184,9 @@ A few of them:
 ## Improved Thieving
 
 - **[New]** A soft breath as a thief or ranger hides in a fight, and a purse's jingle for a picked pocket (lifting one of the three named weapons plays the game's quest sound).
-- **[Changed]** Thief skills follow AD&D's table by level, with Dark Sun's race and DEX adjustments, and none goes above 95 *(was a 3rd-level elf with move silently 66 and hide in shadows 61)*.
+- **[Fixed]** Thief skills follow AD&D's table by level, with Dark Sun's race and DEX adjustments, and none goes above 95 *(was a 3rd-level elf with move silently 66 and hide in shadows 61)*.
 - **[New]** Thieves **hide in shadows and move silently** in a fight to backstab, halved in daylight. Rangers do it to attack from behind, at full strength under the open sky *(was a backstab only on a target turned to face someone else)*.
-- **[Changed]** A **backstab** multiplies only the weapon's dice; STR and magic bonuses are added once after, as in AD&D, and only the round's first attack is a backstab *(was the whole damage multiplied, STR included, so a strong thief could hit for over 100, on the first two attacks of the round)*.
+- **[Fixed]** A **backstab** multiplies only the weapon's dice; STR and magic bonuses are added once after, as in AD&D, and only the round's first attack is a backstab *(was the whole damage multiplied, STR included, so a strong thief could hit for over 100, on the first two attacks of the round)*.
 - **[New]** **Picking pockets** with a thief's **Pick Pockets** button on the USE screen (where a priest's Turn Undead is), then a click on anyone in sight: any thief can try, leader or not, and what's lifted goes in that thief's backpack. A cleric/thief has both buttons, the purse beside Turn Undead. Fail and you roll move silently to get away. A purse holds 2 to 5 ceramic pieces for each of the thief's levels, and a few named weapons can be lifted for 200 XP (once a game each).
 - **[New]** A worn cloak adds 10 to hiding, boots 10 to moving silently, and a belt 5 to picking pockets and opening locks, for thieves and rangers alike; the inventory screen's thief skills count them.
 
@@ -387,7 +387,7 @@ The main fixes are below; every bug of the original game the mod mends, with wha
 - **[Fixed]** A preserver or psionicist with another class couldn't claim to have scried the **haystack** or read the man's thoughts, and the cave guide told even a dwarf or halfling to "go bother someone your own size". **Dagolar's slime book** counted a fighter's or an air cleric's training as magical but not an earth, fire or water cleric's or a druid's: now any cleric, druid, preserver or psionicist can read it.
 - **[Fixed]** Cilla, an elf in the ready-made party, was drawn with the half-elf woman's figure; she looks like an elf now (a switch keeps the game's figure).
 
-Rules the game got wrong are put right too, each under its own heading above with a switch, on by default: the saving throws against spells and the doubled d20 against fire, cold and electricity, two weapons, warriors' attacks, helms' AC, acid on armour, held targets, creature size and cahulaks (Combat); class restrictions, multiclass hit points, the class tables, rangers' spells, dual-classing, preservers' learning from scrolls, CON's regeneration and poison saves (Classes and Kits); spells, psionics and monsters as the manual describes them (Turn Undead by AD&D's table with them), spells rolling to hit, resting and Enlarge's dice (Magic and Psionics); and thief skills (Improved Thieving).
+**Rules the game got wrong** are fixed too. Each is tagged **[Fixed]** under its own heading above and has a switch, on by default, for anyone who wants the game's own rule: the saving throws against spells and the doubled d20 against fire, cold and electricity, two weapons, warriors' attacks, acid on armour and held targets (Combat); class restrictions, multiclass hit points, the class tables, rangers' spells, dual-classing, preservers' learning from scrolls, CON's regeneration and poison saves (Classes and Kits); spells, psionics and monsters as the manual describes them (Turn Undead by AD&D's table with them), spells rolling to hit and Enlarge's dice (Magic and Psionics); and thief skills and backstabs (Improved Thieving). The other rule changes are the mod's own choices, not corrections, and stay **[Changed]** or **[New]**: helms' AC, resting, the XP level cap, hit dice rolled twice, creation scores as rolled, half-giants' two-handed weapons, creature size, cahulaks, and ages.
 
 ## Your Saved Games
 

@@ -5,7 +5,7 @@
 [People and quests](#people-and-quests).*
 
 The patched game mends these whatever the Options tab says. The rules the game got wrong, each with
-a switch, are the [rule changes](FEATURES.md#rule-changes). The script bugs are mended in the
+a switch, are [further down](#rules-it-got-wrong-with-a-switch). The script bugs are mended in the
 Loader's copy of the game's scripts; many were found by yuan-ti and the OpenDS project
 ([credits](https://github.com/daaki85/darksun-obsidian-edition#credits)). How the fixes work:
 [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#the-games-spells).
@@ -30,6 +30,7 @@ Loader's copy of the game's scripts; many were found by yuan-ti and the OpenDS p
 - [People and quests](#people-and-quests)
   - [Scripts that stuck, or ran twice](#scripts-that-stuck-or-ran-twice)
   - [Who is talking: class, race and sex](#who-is-talking-class-race-and-sex)
+- [Rules it got wrong, with a switch](#rules-it-got-wrong-with-a-switch)
 - [Two more, with a switch](#two-more-with-a-switch)
 - [Saved games](#saved-games)
 
@@ -117,6 +118,7 @@ Loader's copy of the game's scripts; many were found by yuan-ti and the OpenDS p
 | The **gladiator's armour optimisation** (AC 1 better a 5 gladiator levels) | Given with no armour on, where Dark Sun gives it to armour worn | Only with armour on (arms, legs, head or chest; not a shield, bracers or a robe) |
 | The game's **Sling +1** | A blank icon (its picture is missing from the game's data) | The Sling's, with a glow |
 | The game's **Great Axe +3** (the Army Commander's) | Its type had no material, as a ring's: its name showed none, and no sphere's cleric could wield it | Metal, as its icon's grey and teal head and its weight have it: "Metal Great Axe +3" |
+| The **air cleric's daggers** | None: no dagger in the game listed the air cleric among those who may use it, though its sphere allows daggers | Every dagger lists it ([how](DEVELOPMENT-CONTENT.md#new-items)) |
 
 ## Screens and memory
 
@@ -162,6 +164,34 @@ Loader's copy of the game's scripts; many were found by yuan-ti and the OpenDS p
 | **Dagolar's slime book**, in his laboratory | "Magical training" to read it took a psionicist, a preserver, a fighter or an air cleric, not an earth, fire or water cleric or a druid | A cleric, druid, preserver or psionicist (any one of the character's classes); a fighter has no magical training |
 | The cave guide's "Why don't you go bother someone **your own size**" | Asked "not a dwarf, or not a halfling?", true of everyone, so a dwarf or halfling heard it too | A dwarf or halfling is told to bother "someone else" |
 | Lines that depend on the **race or sex** of the one talking to someone | Read from the wrong record, so they always took the party's active member for a man of no race: a halfling was never greeted as a fellow halfling ("Oh, it is a relief to see a fellow halfling") nor named by race in the insult that follows, a woman was told "only a mad man would think of fighting Draj" and of "his purse", a thri-kreen never heard the bell the mastyrial hears near Demothi's camp, nor was told "your help" rather than "the help of any humanoid" | Each reads the active member's own race or sex |
+
+## Rules it got wrong, with a switch
+
+Most of the [rule changes](FEATURES.md#rule-changes) put right a rule the game gets wrong: it
+departs from its own manual, from itself, or from the Player's Handbook it follows. Each has a
+switch on the Options tab, on by default, so the game's own rule is still there to go back to. (The
+rule changes that are the mod's own choices, not corrections, are left out: helms' AC, resting, the
+XP level cap, hit dice, creation scores, half-giants' weapons, creature size, cahulaks and ages.)
+
+| Rule | The game | The rulebook | Switch |
+|---|---|---|---|
+| Saves against spells | Petrification or polymorph for almost every spell | The save against spells | [Spells saved against with the spell save](FEATURES.md#spells-saved-against-with-the-spell-save) |
+| Fire, cold and electricity | The save's d20 doubled (70% to save a Fireball where 35% is due), which the manual and AD&D don't have | DEX's adjustment | [Doubled d20](FEATURES.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20) |
+| Spells, psionics and monsters | Saves, times, damage and effects that part from its own manual (pp. 29-44) | As the manual has them | [As the manual describes them](FEATURES.md#spells-and-psionics-as-the-manual-describes-them) |
+| Missile and touch spells | Every one lands, every time | They roll to hit ("as if fired by a fighter") | [Spells roll to hit](FEATURES.md#spells-roll-to-hit) |
+| Enlarge | Grows the whole hit, STR's bonus and magic's too, rounded down | The weapon's dice grow, rounded up; STR, class and magic aren't altered (Player's Handbook p. 173) | [Enlarge](FEATURES.md#enlarge-multiplies-the-weapons-dice-only) |
+| A ranger's spells | Spell levels by its level less 7, but duration and damage by its whole level | Level less 7 for all | [Rangers' casting level](FEATURES.md#rangers-casting-level) |
+| Preservers' spells | Any spell learnt from any scroll, every spell known | INT's chance to learn, and its most spells of each level | [Preservers' INT](FEATURES.md#preservers-int) |
+| Dual-classing | From 2nd level, one prime requisite a class | From 3rd level, every prime requisite (the game's manual, pp. 12 and 22-26) | [Dual-classing](FEATURES.md#dual-classing-as-the-manual-has-it) |
+| Class restrictions | Any one class allowing an item is enough | The strictest class wins | [Class restrictions](FEATURES.md#class-restrictions) |
+| Multiclass hit points | CON's bonus once a level | CON's bonus on every hit die, the total shared | [Multiclass hit points](FEATURES.md#multiclass-hit-points) |
+| Class tables | Priests' THAC0 a level early, short spell slots, a little too little XP for 2nd level | AD&D's tables | [AD&D's class tables](FEATURES.md#adds-class-tables) |
+| CON 20 and up | A hit point back every 5 minutes at any CON; CON's adjustment on a dwarf's or halfling's poison save | AD&D's rate (one an hour at CON 20, one every 10 minutes at 25); the racial bonus only | [CON as in AD&D](FEATURES.md#con-as-in-add) |
+| Two weapons | No penalty (a small bonus at DEX 5 or less), the full rate in each hand | -2 and -4, DEX's adjustment, one attack with the off hand | [Two weapons](FEATURES.md#two-weapons) |
+| Warriors' attacks | 3/2 with any weapon | The plain rate outside a specialization | [Weapon specialization](FEATURES.md#weapon-specialization) |
+| Held and Out Cold targets | A roll to hit as ever, and double damage | A hit automatically, for normal damage | [Held targets](FEATURES.md#held-targets) |
+| Acid on armour | The item destroyed outright | Each item saves by its material | [Items saving against acid](FEATURES.md#items-saving-against-acid) |
+| Thief skills and backstabs | Skills too high (a 3rd-level elf with move silently 66); a backstab multiplied STR's bonus too | The Player's Handbook's table; a backstab multiplies the weapon's dice only | [Thief skills from AD&D's table](FEATURES.md#thief-skills-from-adds-table) |
 
 ## Two more, with a switch
 
