@@ -94,6 +94,12 @@ reach took 384 bytes of the segment (68,592 bytes before it).
   `test_big_enemy_beside`, `test_big_enemy_north`.)
 
 **Changed**
+- **The hide and pickpocket sounds about 5 dB louder** (the user: still too quiet). DOSBox plays every
+  clip at the same peak (the descriptor's +0Ah, 6Eh, isn't a volume: from 20 to 127 the output
+  peaked the same), so `sound-data/make.py` puts each through its soft limiter harder (hide 12 dB,
+  was 3; pick 9, was none): in DOSBox's output their loudest 400 ms went from -32.9 and -36.1 dBFS
+  to -27.5 and -30.5, against the game's fight sounds' -26.7 to -31.2
+  (playtest/logs/2026-11-10-sounds-denser.md).
 - **The combat log panel's font a pixel bigger** (the user's ask): the X11 misc-fixed 5x7 glyphs (public
   domain, as the 4x6 were) in a cell 5 wide and 8 high with the shadow, so 7 lines docked (was 8) and
   12 expanded (was 14). `smallfont.py` keeps each glyph's 7 rows as two hex digits.

@@ -278,6 +278,9 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   with 3 s between, the raw file's size noted round each, then the peak and the loudest 400 ms RMS of
   each stretch (numpy over the memmap): the game's fight sounds peak about 2,960, RMS -27 to -31 dBFS.
   A sound's descriptor +6 is its priority: the game skips one lower than the sound playing.
+  **The descriptor's +0Ah (6Eh) is not a volume** (2026-11-10, logs/2026-11-10-sounds-denser.md): set
+  from 20 to 127 the output peaked at 2,957 each time. DOSBox plays every clip at the same peak, so a
+  quiet clip can only be made denser (make.py's soft-limiter drive): hide now -27.5, pick -30.5 dBFS.
 - **The game's table of sounds** (2026-11-05): at load segment + 3A98h, offset 08A2h, 6 bytes each:
   +1 the kind (5 a digital clip), +2 a far pointer to a 12-byte descriptor (+7 its BVOC). 0-130
   are digital, 131-180 another kind (4), past 180 other data: a BVOC numbered past 130 isn't
