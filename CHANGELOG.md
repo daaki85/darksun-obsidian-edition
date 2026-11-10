@@ -42,7 +42,7 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 
 ## Next pull request (not opened yet)
 
-DSCLOG.EXE 67,856 bytes (image 67,824: 64,816 in its segment, 3,008 in the tail), 720 of its
+DSCLOG.EXE 67,872 bytes (image 67,840: 64,832 in its segment, 3,008 in the tail), 704 of its
 segment spare.
 
 **New**
@@ -224,6 +224,12 @@ segment spare.
   says where the page is when no browser opens it). Tested in `test_viewer_options`.
 
 **Changed**
+- **Air clerics may use the cahulaks** with the class restrictions (the user's decision): Dark Sun's
+  cahulaks can be thrown, as AD&D's daggers can, and the air sphere's weapons are missile and thrown
+  ones and daggers (the game throws neither). The game's own class list already had the air
+  cleric's bit; the restriction took it away. `restrict.AIR_KINDS`, DSCLOG's SPHERE_ALLOWS; the
+  docs' sphere tables; `test_restrict` (the game's cahulaks type among its types, which
+  `test_dsclog` emulates too).
 - **The gythka against a large target rolls 1d10**, the Dark Sun weapons guide's 2d4/1d10 (it was
   2d6, from no source): `sizes.LARGE_DICE` and DSCLOG's `large_dice`; the docs' tables.
 - **Every thri-kreen throws a chatkcha twice a round** (AD&D's 2/1, the user's source): DSCLOG's

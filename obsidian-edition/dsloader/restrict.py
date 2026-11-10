@@ -14,7 +14,7 @@ PROBE_CAN_USE does this in the game; this is its model, for the tests and the Lo
   armour all the same: kit_allows); a human preserver who was a warrior may (dual_warrior).
 - A druid: no armour, no shield.
 - A cleric: only the weapons of its sphere, or of any of its spheres (a ranger who became a
-  cleric keeps the ranger's): air, missile and thrown weapons and daggers; earth, stone,
+  cleric keeps the ranger's): air, missile and thrown weapons, daggers and cahulaks; earth, stone,
   obsidian, metal and wood; fire, obsidian; water, bone and wood.
 
 - A multiclass preserver, or a human who has been a preserver and a fighter, gladiator or ranger
@@ -51,6 +51,7 @@ NO_MATERIAL = 0x40  # (with a low nibble of 0)
 CLERICS, DRUIDS, RANGERS = range(1, 5), range(5, 9), range(13, 17)
 PRESERVER, PSIONICIST, THIEF = 11, 12, 17
 AIR, EARTH, FIRE, WATER = range(4)
+AIR_KINDS = (specialize.KINDS.index("dagger"), specialize.KINDS.index("cahulaks"))  # (an air cleric's melee)
 THIEF_BIT = 0x400  # (the sheet's class flags, +12h)
 
 PSIONICIST_KINDS = frozenset(specialize.KINDS.index(k) for k in
@@ -107,7 +108,9 @@ def elementalist_sphere(sheet: bytes) -> Set[int]:
 
 def sphere_allows(sphere: int, typ: bytes, kind: int) -> bool:
     if sphere == AIR:
-        return bool(typ[TYPE_FLAGS] & (MISSILE | THROWN)) or kind == specialize.KINDS.index("dagger")
+        # (and the cahulaks: thrown in Dark Sun, as daggers are in AD&D, though the game throws
+        # neither; DSCLOG's SPHERE_ALLOWS the same)
+        return bool(typ[TYPE_FLAGS] & (MISSILE | THROWN)) or kind in AIR_KINDS
     return material(typ) in {EARTH: (STONE, OBSIDIAN, METAL, WOOD), FIRE: (OBSIDIAN,), WATER: (BONE, WOOD)}[sphere]
 
 

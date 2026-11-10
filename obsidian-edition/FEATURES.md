@@ -518,7 +518,7 @@ own "Cannot use this item":
 | **Thief** | light only; a multiclass thief, or a human thief once a warrior or cleric, as its other class allows, but no thief skills in armour that isn't light | leather ones; a multiclass thief only if another of its classes allows shields (a fighter, gladiator, ranger or cleric) | as its classes allow |
 | **Preserver**, one class | none (a human preserver once a warrior: as the warrior could, but no spells in armour) | none | as the game has it |
 | **Druid** | none | none | as the game has it (any but great axes) |
-| **Cleric** | any | any | its sphere's: air missile and thrown weapons and daggers; earth stone, obsidian, metal and wood; fire obsidian; water bone and wood |
+| **Cleric** | any | any | its sphere's: air missile and thrown weapons, daggers and cahulaks (thrown in Dark Sun); earth stone, obsidian, metal and wood; fire obsidian; water bone and wood |
 
 A thief of any kind holds only leather shields, the rule or not: the game's own
 lists leave thieves out of the wooden shield, and the mod's metal one.

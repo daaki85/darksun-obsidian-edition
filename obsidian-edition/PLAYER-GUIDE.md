@@ -301,7 +301,7 @@ the strictest winning:
 | Thief | light only; with a warrior or cleric class, as that class allows, but no thief skills in heavier armour | leather ones only; with another class, only if that class is fighter, gladiator, ranger or cleric | as its classes allow |
 | Preserver, one class | none | none | a preserver's |
 | Druid | none | none | any but great axes |
-| Cleric | any | any | air: missile and thrown weapons, daggers; earth: stone, obsidian, metal, wood; fire: obsidian; water: bone, wood |
+| Cleric | any | any | air: missile and thrown weapons, daggers, cahulaks; earth: stone, obsidian, metal, wood; fire: obsidian; water: bone, wood |
 
 - A preserver with another class may wear what that class allows, but casts
   no spells while wearing armour (a helm counts, a shield doesn't). Bracers
@@ -670,7 +670,7 @@ has the most, air and fire the fewest.
 
 | Sphere | May wield | Plain weapons |
 |---|---|---|
-| Air | missile and thrown weapons, daggers | daggers (any material), chatkcha, bow, sling, staff sling |
+| Air | missile and thrown weapons, daggers, cahulaks | daggers (any material), cahulaks, chatkcha, bow, sling, staff sling |
 | Earth | stone, obsidian, metal, wood | obsidian and metal long swords, daggers and short swords; metal and obsidian maces, axes and great axes; club; stone and metal picks; quarterstaff; metal polearm; metal cahulaks; chatkcha; bow |
 | Fire | obsidian | obsidian long sword, dagger, short sword, mace, axe and great axe; chatkcha |
 | Water | bone, wood | bone long sword, dagger, short sword, mace, axe, great axe and polearm; club; quarterstaff; gythka; cahulaks; bow |

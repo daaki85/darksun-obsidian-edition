@@ -5024,7 +5024,8 @@ shield_not_leather:
         ret
 
 ; SPHERE_ALLOWS: carry clear if sphere AL (0 air, 1 earth, 2 fire, 3 water) allows the weapon:
-; air, missile and thrown weapons and daggers; the others by material.
+; air, missile and thrown weapons, daggers and the cahulaks (thrown in Dark Sun, as daggers are in
+; AD&D, though the game throws neither: the user's decision, 2026-11-10); the others by material.
 sphere_allows:
         push cx
         or al, al
@@ -5032,6 +5033,8 @@ sphere_allows:
         test byte [cs:cu_flags], 0x12
         jnz .yes
         cmp byte [cs:cu_kind], 2        ; (a dagger)
+        je .yes
+        cmp byte [cs:cu_kind], 11       ; (the cahulaks)
         je .yes
         jmp .no
 .mat:   mov ah, SPHERE_EARTH
