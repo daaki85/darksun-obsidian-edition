@@ -569,6 +569,10 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   that writes `window_scale` 3 to settings.json, so set it back to 1 afterwards (`launch.save_settings`)
   or the next start.sh run's checks fail. The status line then says "from the next time you start
   the game" in place of "Connected to DOSBox".
+  **The window Loader holds `game.lock`** (2026-11-10, logs/2026-11-10-loader-shots-and-chatkcha-line.md):
+  - start.sh's text dice log, started beside the window, exits at once. `dice.txt` stays empty, and nothing sets the new game's own features (no WILD FIGHTING on the Effects screen).
+  - To fix it: kill the window by pid first.
+  - A tall picture of the Options tab needs a screen taller than the window: Xvfb `-screen 0 1400x3400x24`, then `xdotool windowsize W 1320 3300`.
 - **The practice program** (`tests/make_fake_party.py`, for `docs/viewer.png`): run `dosbox
   FAKEPTY.COM` in a scratch folder, then the window; Sadira loses 1 HP a second and her byte wraps
   past 0 (133/30 two minutes in), so search `sadira`, pick the hit and Assign within about 15 s of

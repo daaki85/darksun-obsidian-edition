@@ -199,7 +199,7 @@ def _add_slots(gd: GameData, member: int, before: Dict[str, List[int]]) -> None:
 
 
 OWN_LINES = {"Gerakis": "Gerakis fights wild: Wild Fighting, as a fight starts.",
-             "K'ratchek": "K'ratchek is a Wasteland Seer, spells and psionics, and her chatkcha comes back as if she had several.",
+             "K'ratchek": "K'ratchek is a Wasteland Seer, spells and psionics.",
              "Cilla": "Cilla is an Elven Shadow-walker: her hiding is never halved in daylight."}
 
 

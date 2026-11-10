@@ -916,9 +916,8 @@ Each kit's gains, costs and starting gear:
 **The game's own party** (START GAME with no party made), with kits on: Cermak
 is an Arcanist, and the other three are given a feature of their own, not a
 kit's. Gerakis fights wild, as a Wild Fury does; K'ratchek's spells and psionics
-are stronger under the open sky, as a Wasteland Seer's are, and her chatkcha
-comes back as if she had several (one more throw a round, as every thri-kreen's
-does: AD&D's 2/1);
+are stronger under the open sky, as a Wasteland Seer's are (her chatkcha's
+2 throws a round are every thri-kreen's: AD&D's 2/1);
 Cilla's hiding is never halved in daylight, as an Assassin's isn't (the dice
 log calls her an Elven Shadow-walker).
 

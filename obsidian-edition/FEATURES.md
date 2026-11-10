@@ -1745,12 +1745,11 @@ elf's figure, with its own switch: see
 | Character | With weapon specialization | With class restrictions | With kits |
 |---|---|---|---|
 | **Gerakis**, half-giant gladiator | specializes in the long sword and the gythka; with [half-giants' two-handed weapons](#half-giants-two-handed-weapons), his club is a bone gythka, a two-handed weapon beside his long sword | | **Wild Fighting**, as a [Wild Fury](KITS.md#multiclass-kits) has it, as each fight starts |
-| **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | | casts and uses psionics as a [Wasteland Seer](KITS.md#multiclass-kits) does (druid spells 2 levels higher under the open sky, 1 lower under a roof; psionic powers 2 PSP less under the open sky, 1 more under a roof); her **chatkcha comes back as if she had several**: one more throw a round (2 instead of 1, or more with its weapon spec), as every thri-kreen's now does |
+| **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | | casts and uses psionics as a [Wasteland Seer](KITS.md#multiclass-kits) does (druid spells 2 levels higher under the open sky, 1 lower under a roof; psionic powers 2 PSP less under the open sky, 1 more under a roof); her chatkcha's 2 throws a round are every thri-kreen's ([Weapon specialization](#weapon-specialization)), not hers alone |
 | **Cermak**, human preserver, once a gladiator | specializes in the long sword and the axe, which count once his gladiator levels do again (when his preserver level passes them) | | an **Arcanist**, the kit of his preserver class: two preserver spells a turn in a fight |
 | **Cilla**, elf preserver, druid and thief | | no leather armour (a druid wears none), and she knows the **Armor** spell in its place | an **Elven Shadow-walker** (her own feature): with the [stealth rule](#hiding-in-shadows-to-backstab), her hiding in shadows is never halved in daylight |
 
-Gerakis's, K'ratchek's and Cilla's features are their own, not kits' (only
-K'ratchek's extra throw is something no kit gives). The Effects screen lists them (as it
+Gerakis's, K'ratchek's and Cilla's features are their own, not kits'. The Effects screen lists them (as it
 does kits), and the Characters tab beside the kit. Cermak's gear stays as it
 is (an Arcanist has none of its own), and so do the hit points the game gave
 him: the Arcanist's d3 counts from his next level.

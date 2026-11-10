@@ -152,14 +152,14 @@ def extra(kid: int, dance: int = 0) -> int:
 
 
 # The game's own party (defaultparty.py), three of them given features of their own (not kits;
-# only K'ratchek's extra throw is something no kit gives): the kit byte's OWN_BIT (KIT_BYTE: bits 0-5 the
+# none is something no kit gives): the kit byte's OWN_BIT (KIT_BYTE: bits 0-5 the
 # classes' kits, 7 Friends known), set by the Loader as a new game starts; which feature by the
 # race (DSCLOG's OWN_RACE_B). Gerakis (a half-giant) Wild Fighting (wild.py); K'ratchek (a
-# thri-kreen) a Wasteland Seer's casting and PSP (SKY_LEVEL, PSI_KIT) and one more chatkcha throw a round
-# (OWN_THROWS); Cilla (an elf) the Elven Shadow-walker's hiding, never halved in daylight (stealth.py).
+# thri-kreen) a Wasteland Seer's casting and PSP (SKY_LEVEL, PSI_KIT; her chatkcha's
+# 2/1, OWN_THROWS, is every thri-kreen's, so not listed as hers); Cilla (an elf) the Elven Shadow-walker's hiding, never halved in daylight (stealth.py).
 OWN_BIT, KIT_OPEN = 0x40, 0xFF
 HALF_GIANT, ELF, THRI_KREEN = 5, 3, 8
-OWN_FEATURES = {HALF_GIANT: ("Wild Fighting",), THRI_KREEN: ("Open sky spells and psionics", "One more chatkcha throw"),
+OWN_FEATURES = {HALF_GIANT: ("Wild Fighting",), THRI_KREEN: ("Open sky spells and psionics",),
                 ELF: ("Elven Shadow-walker",)}
 CHATKCHA, OWN_THROWS_MORE = 12, 2  # (the chatkcha's weapon kind; one more throw a round, in halves)
 

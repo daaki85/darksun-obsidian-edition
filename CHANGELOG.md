@@ -224,6 +224,8 @@ segment spare.
 - **Every thri-kreen throws a chatkcha twice a round** (AD&D's 2/1, the user's source): DSCLOG's
   OWN_THROWS and PROBE_MISSILE_LINE go by the sheet's race (8), foes too, whatever the rules; it was
   K'ratchek's alone (her own feature, with the kits on). `GameData.weapon_hits` the same.
+  Her Effects line `CHATKCHA 2/ROUND` and the Characters tab's "One more chatkcha throw" are gone,
+  as the rate is no longer hers alone (the Attacks line shows it for any thri-kreen).
 - **The chatkcha against a large target is 1d4+2** (AD&D's 1d6+2/1d4+2): it was 1d4+1 (`LARGE_DICE`
   and DSCLOG's `large_dice`; the docs' tables).
 - **Spell descriptions that said something else:** with the manual's spells, Strength, Ironskin,

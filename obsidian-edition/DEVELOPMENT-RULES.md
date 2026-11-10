@@ -1981,7 +1981,7 @@ race (`OWN_RACE_B`, `kits.own_race`; with `RULE_HI_KITS` only). Gerakis (the
 half-giant): Wild Fighting, `wild.py` rolling for him as for a Wild Fury
 (`kits.wild_fighter`), DSCLOG's effects going by the `KIT_WILD` bits alone.
 K'ratchek (the thri-kreen): `SKY_LEVEL` and `PSI_KIT` as a Wasteland Seer's (`CR_OWN_RACE`),
-and her Effects line `CHATKCHA 2/ROUND`. `OWN_THROWS` in `PROBE_ATTACKS` (and the
+no Effects line for the chatkcha (taken off 2026-11-10: the rate is every thri-kreen's). `OWN_THROWS` in `PROBE_ATTACKS` (and the
 inventory's `PROBE_MISSILE_LINE`) gives any thri-kreen (the sheet's race 8, foes too; hers
 alone, through `OWN_RACE_B`, until 2026-11-10) 2 more halves a round with a chatkcha,
 AD&D's 2/1, whatever the rules (`GameData.weapon_hits` the same). Cilla (the elf): `stealth.py`'s hiding not
