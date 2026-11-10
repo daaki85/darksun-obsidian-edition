@@ -17006,7 +17006,7 @@ large_dice   db 1, 12, 0            ; long sword: 1d12
              db 1, 4, -1            ; pick: 1d4 (1d4+1)
              db 0, 0, 0             ; quarterstaff: 1d6
              db 2, 6, 0             ; polearm: 2d6
-             db 2, 6, 0             ; gythka: 2d6
+             db 1, 10, 0            ; gythka: 1d10 (the Dark Sun weapons guide's 2d4/1d10)
              db 0, 0, 0             ; cahulaks: 1d6
              db 1, 4, 0             ; chatkcha: 1d4+2 (1d6+2: the +2 against any size)
              db 0, 0, 0, 0, 0, 0, 0, 0, 0 ; bow, sling, staff sling: as small

@@ -252,3 +252,14 @@ class SizeTests(tc.CahulaksTests):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SourceDiceTests(unittest.TestCase):
+    def test_dark_sun_weapons(self):
+        """The Dark Sun weapons guide's dice against large: the gythka 2d4/1d10, the chatkcha thrown
+        1d6+2/1d4+2, the cahulaks 1d6/1d6 (as small)."""
+        from dsloader import sizes, specialize
+        kind = specialize.KINDS.index
+        self.assertEqual(sizes.LARGE_DICE[kind("gythka")], (1, 10, 0))
+        self.assertEqual(sizes.LARGE_DICE[kind("chatkcha")], (1, 4, 0))
+        self.assertIsNone(sizes.LARGE_DICE[kind("cahulaks")])

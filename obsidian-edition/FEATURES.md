@@ -963,14 +963,14 @@ their kind...), and **anyone Enlarged**, whatever their size.
   | Chatkcha | 1d6+2 | 1d4+2 |
   | Great axe | 1d10 | 2d8 |
   | Polearm | 1d10 | 2d6 |
-  | Gythka | 2d4 | 2d6 |
+  | Gythka | 2d4 | 1d10 |
   | Axe, quarterstaff, cahulaks, bow, sling, staff sling | as the game | the same |
   | Shillelagh | 1d6+1 (the game: 2d4) | 2d4 |
   | Spiritual Hammer | 1d4+1 | 1d4 |
 
   Where the dice come from: AD&D 2nd Edition's *Player's Handbook* weapons table, each weapon by
   the entry whose small and man-sized dice are the game's (its pick is the horseman's pick,
-  1d4+1/1d4, 4 lb as the game's 40); the chatkcha and the cahulaks from
+  1d4+1/1d4, 4 lb as the game's 40); the chatkcha, the gythka and the cahulaks from
   [a Dark Sun weapons guide](https://www.geocities.ws/danach.geo/guide_1.html), which also gives a
   thri-kreen's chatkcha its 2/1.
 

@@ -224,6 +224,8 @@ segment spare.
   says where the page is when no browser opens it). Tested in `test_viewer_options`.
 
 **Changed**
+- **The gythka against a large target rolls 1d10**, the Dark Sun weapons guide's 2d4/1d10 (it was
+  2d6, from no source): `sizes.LARGE_DICE` and DSCLOG's `large_dice`; the docs' tables.
 - **Every thri-kreen throws a chatkcha twice a round** (AD&D's 2/1, the user's source): DSCLOG's
   OWN_THROWS and PROBE_MISSILE_LINE go by the sheet's race (8), foes too, whatever the rules; it was
   K'ratchek's alone (her own feature, with the kits on). `GameData.weapon_hits` the same.
@@ -618,7 +620,7 @@ segment spare.
 **Docs**
 - **Where the large dice come from:** FEATURES' creature size table names its sources, the Player's
   Handbook's weapons table (the pick as the horseman's pick) and the Dark Sun weapons guide the
-  chatkcha and cahulaks numbers came from.
+  chatkcha, gythka and cahulaks numbers came from.
 - **Screenshots retaken** (2026-11-10): `inventory.png` and `inventory-ranger.png` (SLNT, not MOVE),
   `hit-line-box.png` and `shadowseeker-box.png` (the large dice, at the other boxes' 2x),
   `new-spells.png` (Cat's Grace's by-class text), `tome.png` (the box alone, at 2x).

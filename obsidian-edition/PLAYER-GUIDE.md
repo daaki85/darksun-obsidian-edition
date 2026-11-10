@@ -1727,7 +1727,7 @@ materials, the short sword among them.
 | Great axe (two-handed) | 1d10 | 2d8 | no |
 | Mace | 1d6+1 | 1d6 | no |
 | Cahulaks (both hands) | 1d6 | 1d6 | no |
-| Gythka (two-handed) | 2d4 | 2d6 | no |
+| Gythka (two-handed) | 2d4 | 1d10 | no |
 | Polearm | 1d10 | 2d6 | no |
 | Chatkcha | 1d6+2 | 1d4+2 | no: missiles never backstab |
 | Bow, sling, staff sling | by the missile | the same | no |

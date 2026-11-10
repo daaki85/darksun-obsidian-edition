@@ -65,7 +65,7 @@ def size(name: str, race: int) -> str:
 # bonus's change), None where they are the small ones: the game's dice are AD&D's small and man-sized
 # (DSCLOG's LARGE_DICE, byte for byte)
 LARGE_DICE = ((1, 12, 0), (1, 3, 0), (1, 3, 0), (1, 8, 0), (1, 6, -1), None, (2, 8, 0), (1, 4, -1), None,
-              (2, 6, 0), (2, 6, 0), None, (1, 4, 0), None, None, None)
+              (2, 6, 0), (1, 10, 0), None, (1, 4, 0), None, None, None)
 SHILLELAGH_TYPE, HAMMER_TYPE = 28, 30  # (Shillelagh's 2d4 is AD&D's large: 1d6+1 smaller; the Hammer's 1d4 large)
 SPELLS = {2: "Charm Person", 30: "Hold Person", 86: "Hold Person", 82: "Charm Person or Mammal"}
 PERSON_ONLY = frozenset((82,))  # (Charm Person or Mammal: a mammal is charmed whatever its size)
