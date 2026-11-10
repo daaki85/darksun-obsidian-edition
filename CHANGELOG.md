@@ -75,8 +75,9 @@ segment spare.
 
 **New**
 - **Scar fights with a pair of obsidian cahulaks** in place of his obsidian long sword (the user's
-  choice), in the arena and when breaking out with him (`worldgear`'s gift, object 87). A save that
-  has already met him keeps his old gear. He also wears a full leather suit with a helm (leggings and
+  choice), in the arena and when breaking out with him (`worldgear`'s gift, object 87). The arena's
+  people are made at its first visit, so a game already past the first bout keeps the old Scar
+  (seen 2026-11-10: `pens-fire-count4`'s Scar still swung his long sword). He also wears a full leather suit with a helm (leggings and
   a helm added to his chest and arm armour: AC 3 with the Helms give AC 1 rule, 4 without, from 5), a
   step above Merzol (chest and arm) and below the champions after him; his henchmen, who wore
   nothing, get Merzol's leather chest and arm armour (AC 8, from 10). Their gladiator peers in
