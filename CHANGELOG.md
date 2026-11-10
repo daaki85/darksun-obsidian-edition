@@ -76,7 +76,8 @@ reach took 384 bytes of the segment (68,592 bytes before it).
   range byte stays 1 (above 1 the attack routines take a weapon for a missile weapon, playtest/logs/
   2026-11-10-polearm-reach.md). Two squares diagonally count 3 (no reach); the reach goes over a
   creature between; the computer still walks up beside its target and uses the reach only on a foe
-  already two away. (Tests: tests/test_reach.py. Not yet seen in the game.)
+  already two away. (Tests: tests/test_reach.py. Seen in the game 2026-11-10: a polearm swung from two
+  squares with no movement left, the bow in the missile slot left alone, playtest/logs/2026-11-10-polearm-reach.md.)
 
 **Changed**
 - **Six switches merged into three** (the user's choice), freeing three of DSCLOG's rule bits with bit 2
