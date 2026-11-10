@@ -785,7 +785,9 @@ GOG's DOSBox mounts it over the folder), and copies one newer than its copy to
 `Named saves/` as `Page P slot NN - NAME.SAV`, the name from the save's
 `STXT 1` (up to its first NUL; characters Windows won't take become `_`). A
 slot's copy under another name is removed. **Put a save in a slot...** copies
-a file back as `SAVE`/`SAVB`/`SAVC`/`SAVD` + the slot.
+a file back as `SAVE`/`SAVB`/`SAVC`/`SAVD` + the slot, through a temporary file,
+the slot's save first kept as `Replaced - Page P slot NN - NAME.SAV` (which
+`sync` doesn't match, so never removes).
 
 ## More characters
 

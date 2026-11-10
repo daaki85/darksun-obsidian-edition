@@ -741,7 +741,7 @@ class Viewer:
         there = namedsaves.slot_name(game_dir, page, slot)
         if there is not None and not messagebox.askyesno(
                 "Put a save in a slot", f"Page {page} slot {slot} has \"{there}\". Put this save there instead? "
-                "(Its named copy stays in the folder.)", parent=self.root):
+                "(It is kept in the Named saves folder as \"Replaced - ...\".)", parent=self.root):
             return
         try:
             name = namedsaves.restore(copy, game_dir, page, slot)
@@ -921,7 +921,11 @@ class Viewer:
             self.status.set(f"Starting the game without the dice log: it can't run with this copy ({problem}).")
         else:
             self.status.set(launch.started_line(game_dir))
-        self._append_dice([launch.started_line(game_dir)])  # (DOSBox or Dark Sun Recompiled: which runs)
+        self._append_dice([launch.started_line(game_dir)])
+        left_out = launch.left_out_line()
+        if left_out:  # (a copy that couldn't be made: told, not silent)
+            self._append_dice([left_out])
+            messagebox.showwarning("Start the game", left_out)  # (DOSBox or Dark Sun Recompiled: which runs)
         self.next_try = time.monotonic() + RETRY_SECONDS
         self._start_state()
 

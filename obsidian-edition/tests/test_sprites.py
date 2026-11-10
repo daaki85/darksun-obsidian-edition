@@ -377,6 +377,41 @@ class SpriteTests(unittest.TestCase):
             outfits[0] = ({"right": (SWORD, METAL)}, ())
             self.assertEqual(dresser.update(True, 4.0), [])  # (the table nearly full)
 
+    def test_reconnect_reloads_nothing(self):
+        """A new Dresser (the Loader connected again) on a copy already dressed: nothing taken out of
+        the game's table (it took up to 8 new slots each time, with no room check: the audit of
+        2026-11-10); a changed outfit then asks for room as any other change does."""
+        outfits = [({"right": (SWORD, METAL)}, ())]
+        worn, sprites.worn = sprites.worn, lambda gd, member, chunks=None: outfits[0]
+        self.addCleanup(setattr, sprites, "worn", worn)
+        with tempfile.TemporaryDirectory() as d:
+            dresser, path = self.dressed_copy(d)
+            gd = dresser.gd
+            walk, fight = sprites.picture_ids(300)
+            gd.entry(0, walk, 7)
+            gd.loaded([1234, walk, fight, 99])
+            self.assertEqual(dresser.update(True, 1.0), [300])
+            gd.entry(0, walk, 8)
+            gd.loaded([1234, walk, fight, 99])
+            def reconnected():
+                new = sprites.Dresser.__new__(sprites.Dresser)
+                new.gd, new.pics, new.items = gd, dresser.pics, dresser.items
+                new.copy_file, new.places, new._stamp = path, {}, None
+                new.shown, new.request_redraw, new._redraw_at = {}, None, None
+                new.store, new._built, new.reused = sprites.Store(gd), {}, 0
+                return new
+            again = reconnected()
+            again.update(True, 2.0)
+            self.assertEqual(gd.loaded_numbers(), [1234, walk, fight, 99])  # (nothing unloaded)
+            self.assertIn(300, again.shown)
+            # (connected again with the store full and another outfit: left as it is)
+            third = reconnected()
+            outfits[0] = ({}, ())
+            base = (gd.load_seg + sprites.PICTURE_TABLE_SEG) * 16 + 3 * sprites.PICTURE_ENTRY
+            gd.guest.write(base + sprites.SLOT_LENGTH, struct.pack("<Ii", 5000, sprites.STORE_SIZE - 6000))
+            self.assertEqual(third.update(True, 3.0), [])
+            self.assertEqual(gd.loaded_numbers(), [1234, walk, fight, 99])
+
     # The game's picture store reused (sprites.Store, Dresser._in_store): FakeGame.xms
     NOISE = bytes((i * 37 + 11) & 0xFF for i in range(256))  # (a picture of the game's, in memory)
     A, B = ({"right": (SWORD, METAL)}, ()), ({}, ())

@@ -125,9 +125,18 @@ def slot_name(game_dir: str, page: int, slot: int) -> Optional[str]:
         return None
 
 
-def restore(copy: str, game_dir: str, page: int, slot: int) -> str:
-    """A named copy (or any save file) put in the game's PAGE and SLOT, to be loaded from its list
-    (the slot's save, if any, replaced). Its name in the game. ValueError if it isn't a save."""
+def replaced_name(page: int, slot: int, name: str) -> str:
+    """The file the save a restore replaces is kept as: "Replaced - Page 1 slot 05 - NAME.SAV" (not
+    a slot's copy, so sync never replaces it)."""
+    return "Replaced - " + copy_name(page, slot, name)
+
+
+def restore(copy: str, game_dir: str, page: int, slot: int, folder: str = NAMED) -> str:
+    """A named copy (or any save file) put in the game's PAGE and SLOT, to be loaded from its list.
+    The slot's save, if any, is kept first in FOLDER (replaced_name; "(2)" and on if that is taken):
+    the slot's own named copy is replaced at the next sync, as for any slot saved over. Written
+    through a temporary file, so a failure leaves the slot as it was. Its name in the game.
+    ValueError if it isn't a save."""
     with open(copy, "rb") as f:
         data = f.read()
     name = save_name(data)
@@ -135,6 +144,20 @@ def restore(copy: str, game_dir: str, page: int, slot: int) -> str:
         raise ValueError(f"{os.path.basename(copy)} isn't a Shattered Lands save")
     if not (1 <= page <= len(PAGES) and 1 <= slot <= SLOTS):
         raise ValueError("no such page or slot")
+    old = slot_path(game_dir, page, slot)
+    if old is not None:
+        with open(old, "rb") as f:
+            before = f.read()
+        if before != data:
+            os.makedirs(folder, exist_ok=True)
+            kept = replaced_name(page, slot, save_name(before) or "no name")
+            base, n = kept[:-len(".SAV")], 2
+            while os.path.exists(os.path.join(folder, kept)):
+                kept, n = f"{base} ({n}).SAV", n + 1
+            shutil.copy2(old, os.path.join(folder, kept))
     path = os.path.join(saves_dir(game_dir), slot_file(page, slot))
-    shutil.copyfile(copy, path)
+    tmp = path + ".tmp"
+    with open(tmp, "wb") as f:
+        f.write(data)
+    os.replace(tmp, path)
     return name

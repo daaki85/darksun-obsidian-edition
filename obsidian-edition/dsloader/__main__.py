@@ -245,6 +245,8 @@ def cmd_launch(args) -> None:
     game_dir = _game_dir(args)
     dosbox, problem = launch.launch(game_dir)
     print(launch.started_line(game_dir))
+    if launch.left_out_line():
+        print(launch.left_out_line())
     if problem:
         print(f"The dice log can't run with this copy of the game ({problem}); starting the game without it.")
     from .viewer import run
@@ -287,6 +289,8 @@ def cmd_play(args) -> None:
                  "The game starts without them.")
             return
         note(launch.started_line(game_dir))
+        if launch.left_out_line():
+            tell(launch.left_out_line())
         settings = launch.load_settings()
         guest = None
         while guest is None and dosbox.poll() is None:  # DOSBox takes a moment to start

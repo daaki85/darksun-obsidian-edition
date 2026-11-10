@@ -586,6 +586,22 @@ class HelplessTests(unittest.TestCase):
                          ["  Dag hits Mountain Stalker for 106: ((1d8 = [5] +1 weapon +12 STR 24) x3 backstab) "
                           "x2 Paralyzed: a helpless target takes double -2 Biofeedback"])
 
+    def test_a_fall_before_its_roll_is_read(self):
+        """A hit's damage applied between a pass's reading of the ring and of HP: the pass's records
+        are read before the ring (_records_now, as _lines does), so the fall is seen with its roll in
+        the next pass, not unattributed now and "takes none of the 9 damage" later (the audit)."""
+        log = make_game()
+        stalker = CREATURES + STALKER * game.CREATURE_SIZE
+        struct.pack_into("<h", log.guest.mem, stalker, 30)
+        log.hp_changes(0.5)
+        log._snapshot = log._records_now()  # (pass k: the records read, then the ring: nothing yet)
+        struct.pack_into("<h", log.guest.mem, stalker, 21)  # (the game rolls 9 and takes it)
+        self.assertEqual(log.hp_changes(1.0), [])  # (not seen yet: its roll is read next pass)
+        log._snapshot = log._records_now()  # (pass k+1: the records, then the roll read)
+        log._hit(STALKER, 9, 1.02)
+        self.assertEqual(log.hp_changes(1.02), ["  Mountain Stalker now 21 HP (-9)"])
+        self.assertEqual(log.hp_changes(1.2 + dicelog.HIT_WAIT), [])  # (no "none of the damage")
+
     def test_the_hp_fall_matches(self):
         """The doubled damage is what the target's HP is matched against: no "resisted" note."""
         log = make_game()

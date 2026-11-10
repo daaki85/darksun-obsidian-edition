@@ -547,6 +547,21 @@ class Dresser:
             return False  # (tried again at the next update)
         return True
 
+    def _same_in_copy(self, pictures: Dict[int, bytes]) -> bool:
+        """Whether the copy already holds each of PICTURES ({number: chunk}) as it is."""
+        try:
+            with open(self.copy_file, "rb") as f:
+                for picture, chunk in pictures.items():
+                    place = self.places.get(picture)
+                    if place is None or place[2] != len(chunk):
+                        return False
+                    f.seek(place[1])
+                    if f.read(len(chunk)) != chunk:
+                        return False
+        except (OSError, TypeError):
+            return False
+        return bool(pictures)
+
     def _unload(self, pictures) -> None:
         """PICTURES taken out of the game's table of those it has loaded: it loads them anew."""
         count, = struct.unpack("<H", self.gd.guest.read(self.gd.ds * 16 + PICTURE_COUNT, 2))
@@ -738,10 +753,18 @@ class Dresser:
                             chunk = self.pics.build(obj, combat, {}, (), model, figure)
                         pictures[picture] = chunk
                     self._built[obj] = (key, pictures)
-                if obj in self.shown:  # (a new slot for any the store has no cell for: room for it?)
-                    left = [p for p in pictures if p not in self._in_store(pictures, dry=True)]
-                    if left and not self._room_for(sum(self.rooms.get(p, 0) for p in left), len(left)):
-                        continue  # (no room to load it anew: left as it is, tried again: STORE_SIZE)
+                if obj not in self.shown and self._same_in_copy(pictures):
+                    # (dressed so before: the copy holds these already, written by the Dresser before
+                    # a reconnect, and the game has loaded them or will: nothing to load anew)
+                    self.shown[obj] = key
+                    if self._point(member, figure, obj, reload=False):
+                        changed.append(obj)
+                    continue
+                # (a new slot for any the store has no cell for: room for it? On the first dressing
+                # too: after a reconnect it took up to 8 new slots each time, unchecked)
+                left = [p for p in pictures if p not in self._in_store(pictures, dry=True)]
+                if left and not self._room_for(sum(self.rooms.get(p, 0) for p in left), len(left)):
+                    continue  # (no room to load it anew: left as it is, tried again: STORE_SIZE)
                 if not self._write(pictures):
                     continue
                 placed = self._in_store(pictures)

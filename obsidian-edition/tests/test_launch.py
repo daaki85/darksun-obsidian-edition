@@ -502,6 +502,27 @@ class LaunchTests(unittest.TestCase):
             game = make_game(d, cloud_saves=False)
             self.assertIn("GOG release", launch.prepare_patched_game(game))
 
+    def test_a_copy_left_out_is_told(self):
+        """A copy that can't be made (here a broken objects file and no scripts file) is in LEFT_OUT
+        and left_out_line, for the player (the audit of 2026-11-10: it was silent); a clean start
+        clears them."""
+        from unittest import mock
+        from dsloader import gamepatch, icons
+        with tempfile.TemporaryDirectory() as d:
+            game, dos = make_game(d, cloud_saves=False), os.path.join(d, "dos")
+            os.makedirs(dos)
+            with open(os.path.join(game, icons.OBJECTS_FILE), "wb") as f:
+                f.write(b"not a GFF file")
+            with mock.patch.object(gamepatch, "write_patched", lambda *a, **k: None), \
+                    mock.patch.object(launch, "DOS_DIR", dos):
+                self.assertIsNone(launch.prepare_patched_game(game, {}))
+                left = " ".join(launch.LEFT_OUT)
+                self.assertIn(icons.OBJECTS_FILE, left)
+                self.assertIn("GPLDATA.GFF", left)
+                self.assertIn("may not load", launch.left_out_line())
+                launch.LEFT_OUT[:] = []
+                self.assertIsNone(launch.left_out_line())
+
     def test_no_overlay_mount_without_cloud_saves(self):
         with tempfile.TemporaryDirectory() as d:
             game = make_game(d, cloud_saves=False)

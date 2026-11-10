@@ -404,12 +404,27 @@ def content(settings: dict) -> dict:
     return {key: items if key in ITEM_PARTS else settings.get(key, True) is not False for key in CONTENT}
 
 
+# what the last prepare_patched_game couldn't make, each "PART (FILE: why)": the game then runs with the
+# game's own file there, and a save that has the mod's objects or scripts in it may not load
+LEFT_OUT: List[str] = []
+
+
+def left_out_line() -> Optional[str]:
+    """A line for the player on what LEFT_OUT holds, or None if nothing was left out."""
+    if not LEFT_OUT:
+        return None
+    return ("Started without " + "; ".join(LEFT_OUT) + ". The game runs on its own files there, and a save "
+            "made with them may not load: start the game again once the cause is put right.")
+
+
 def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Optional[str]:
     """Write DSUNLOG.EXE next to DSCLOG.EXE, and the copies of the game's files with the
     companion's additions: SEGOBJEX.GFF with its item icons (icons.py; without it the items keep
     the plain icons) and Kalzith's object, RESOURCE.GFF with Cat's Grace's icon, GPLDATA.GFF and
     RGN29.GFF with Kalzith (kalzith.py), each addition only if switched on in SETTINGS (CONTENT;
-    the saved settings if none given). Returns why the game can't be patched, or None."""
+    the saved settings if none given). Returns why the game can't be patched, or None; what of the
+    copies couldn't be made is in LEFT_OUT (left_out_line), for the player to be told."""
+    del LEFT_OUT[:]
     on = content(load_settings() if settings is None else settings)
     skip = (frozenset() if on["effects_kept"] else frozenset(gamepatch.EFFECTS_KEPT)) \
         | (frozenset() if on["roll_store"] else frozenset(gamepatch.ROLL_STORE)) \
@@ -429,8 +444,10 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
         objects = _find_file(game_dir, icons.OBJECTS_FILE)
         if objects:
             objects_ok, new_objects = icons.write_objects(objects, os.path.join(DOS_DIR, icons.OBJECTS_FILE), on)
-    except (gff.GffError, OSError, KeyError, struct.error, ValueError, IndexError):
-        pass  # no icons of our own: the game's plain ones
+        else:
+            LEFT_OUT.append(f"the new items, people and icons ({icons.OBJECTS_FILE}: not in the game's folder)")
+    except (gff.GffError, OSError, KeyError, struct.error, ValueError, IndexError) as e:
+        LEFT_OUT.append(f"the new items, people and icons ({icons.OBJECTS_FILE}: {e})")
     if not objects_ok:  # (an earlier start's copy taken away: DSCLOG would open it in place of the
         _drop(os.path.join(DOS_DIR, icons.OBJECTS_FILE))  # game's, made with other switches)
     # the regions with a person given an object of their own for a new item (worldgear.py): only
@@ -451,7 +468,8 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
                 worldgear.write_region(source, dest, region, mine)
             elif os.path.exists(dest):
                 os.remove(dest)
-        except (gff.GffError, OSError, KeyError, struct.error, ValueError, IndexError, gpl.ScriptError):
+        except (gff.GffError, OSError, KeyError, struct.error, ValueError, IndexError, gpl.ScriptError) as e:
+            LEFT_OUT.append(f"the gifts placed in {name} ({e})")
             try:
                 os.remove(dest)
             except OSError:
@@ -481,7 +499,8 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
                 os.remove(os.path.join(DOS_DIR, kalzith.REGION_FILE))
             except FileNotFoundError:
                 pass  # (no region copy to take away)
-    except (gff.GffError, OSError, KeyError, struct.error, ValueError, IndexError, gpl.ScriptError):
+    except (gff.GffError, OSError, KeyError, struct.error, ValueError, IndexError, gpl.ScriptError) as e:
+        LEFT_OUT.append(f"the new scripts: Kalzith, Semyon, the new people's talk ({kalzith.SCRIPTS_FILE}: {e})")
         for name in (kalzith.SCRIPTS_FILE, kalzith.REGION_FILE):  # (all or nothing: the game's own)
             try:
                 os.remove(os.path.join(DOS_DIR, name))
@@ -497,8 +516,8 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
             icons.write_resources(resources, os.path.join(DOS_DIR, icons.RESOURCE_FILE), on["roll_store"],
                                   on["spells_manual"])
             resources_ok = True
-    except (gff.GffError, OSError, KeyError, struct.error, ValueError, IndexError):
-        pass  # no Cat's Grace icon: Flaming Sphere's
+    except (gff.GffError, OSError, KeyError, struct.error, ValueError, IndexError) as e:
+        LEFT_OUT.append(f"the new spells' icons and texts ({icons.RESOURCE_FILE}: {e})")
     if not resources_ok:  # (as the objects' copy: no earlier start's in its place)
         _drop(os.path.join(DOS_DIR, icons.RESOURCE_FILE))
     return None

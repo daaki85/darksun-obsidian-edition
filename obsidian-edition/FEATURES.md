@@ -2969,7 +2969,8 @@ start the game without that window don't):
 slot's copy. The Options tab's **Saves** section has **Open the folder**, and
 **Put a save in a slot...**, which copies a named save (or any save file) into
 the page and slot you give, asking first if that slot holds one, to be loaded
-from the game's list.
+from the game's list. The save it replaces is kept in the folder as
+`Replaced - Page 1 slot 05 - NAME.SAV`.
 
 ### More characters
 

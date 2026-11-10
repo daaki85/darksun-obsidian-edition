@@ -1235,6 +1235,10 @@ class DiceLog:
         now = time.monotonic() if now is None else now
         out: List[str] = []
         missed = self.missed
+        # every combatant's record (HP, status) read before the ring: a fall seen this pass is then
+        # one whose roll, written first, is read now too (read after, a hit landing in between had
+        # its fall seen before its roll, and was later called "none of the damage": the audit)
+        self._snapshot = self._records_now()
         entries = self.poll()
         if self.missed > missed:  # (rolls lost from the ring: none half seen may be finished by others)
             self._forget_partial_rolls()
@@ -1847,15 +1851,28 @@ class DiceLog:
             out.append(f"    {seen[0]}'s {', '.join(moved)}")
         return out
 
+    def _records_now(self) -> Optional[Dict[int, Tuple[int, bytes]]]:
+        """{combatant: (creature, its record)} as they are now (hp_changes' snapshot), or None."""
+        g = self.game
+        try:
+            return {combatant: (index, g.creature(index)) for combatant, index in g.combatants().items()}
+        except (struct.error, IndexError, ValueError, TypeError, AttributeError):
+            return None
+
     def hp_changes(self, now: float) -> List[str]:
         """Every combatant's HP going down or up, with what's left (the game never shows a
         monster's HP). Put down to a spell while one is being cast (the damage after saves,
-        resistances and protections, or the healing)."""
+        resistances and protections, or the healing). The records are the pass's snapshot, taken
+        before its rolls were read (_lines), else read now."""
         g = self.game
         out = []
         current = {}
-        for combatant, index in sorted(g.combatants().items()):
-            rec = g.creature(index)
+        snapshot, self._snapshot = getattr(self, "_snapshot", None), None
+        if snapshot is None:
+            snapshot = {combatant: (index, None) for combatant, index in g.combatants().items()}
+        for combatant, (index, rec) in sorted(snapshot.items()):
+            if rec is None:
+                rec = g.creature(index)
             if len(rec) < 2:
                 continue
             hp = struct.unpack_from("<h", rec, 0)[0]

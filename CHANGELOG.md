@@ -451,7 +451,26 @@ segment spare.
   large: CAH_HIT now asks IS_LARGE (a half-giant, the Loader's LARGE_BITS, or Enlarged) where it
   asked for a half-giant only. The Options text, FEATURES, the guide and CREATURES.md say so.
 
-**Fixed: the Loader**
+**Fixed: the Loader** (found by the code audit, 2026-11-10; each with a test that failed before)
+- **Pehtucl's chest could be shut for good:** `pehtuclchest.watch` made it the shut type whenever
+  the party was in the pens, though only the mod's script (with New items on, and the scripts copy
+  written) ever opens it. Now it is shut only while the game's scripts have its USE command
+  (`has_use`, the copy read again when it changes); without it, it is the game's plain chest, a
+  save's shut one made one again.
+- **Reconnecting filled the picture store:** the first dressing after the Loader connected again
+  (a new Dresser) reloaded up to 8 pictures into new slots with no room check. Now a copy that
+  already holds the dressed pictures is left as it is, and a first dressing asks for room as any
+  other change does (`Dresser._same_in_copy`).
+- **A hit landing mid-pass was later called "takes none of the damage":** the HP were read after
+  the ring, so a fall could be seen before its roll; each pass now reads the records first
+  (`_records_now`, the snapshot `hp_changes` uses).
+- **A copy that couldn't be made was silent:** the game then ran on its own objects, scripts or
+  texts, which a save made with the mod's may not load. `prepare_patched_game` keeps what it left
+  out (`LEFT_OUT`, `left_out_line`), and the window (a warning and a log line) and `play` and
+  `launch` say it.
+- **Put a save in a slot replaced the slot's save with no copy kept:** the save it replaces is now
+  kept as `Replaced - Page P slot NN - NAME.SAV` in Named saves (which sync never removes), and the
+  slot is written through a temporary file.
 - **Figures vanished from the map after many gear changes in one area:** each time a member's
   outfit changed, the Loader took the old pictures out of the game's picture table, but the game
   takes neither a slot nor its room in its picture store (a fixed 741,376 bytes) back until an area
