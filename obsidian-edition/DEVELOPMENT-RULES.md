@@ -550,7 +550,7 @@ Loader's `RULE_SIZE`), `IS_LARGE` counts a combatant large when it is Enlarged
   line read back ("1D8-1"), the large dice worked out from it as `SIZE_DICE` does
   (`SL_CHANGE`), and drawn again with `/1D12-1` after it by the game's own text call
   (its far address read from the call before; the box's spare row is the "Hit -1"
-  or charges one). `SIZE_PRE` (72A8Ah, its "push word [bp+12h]", the push made in
+  or charges one), with interrupts on (`STI`: the INT turned them off). `SIZE_PRE` (72A8Ah, its "push word [bp+12h]", the push made in
   the handler, the interrupt's frame moved down a word) makes Shillelagh's line, the
   game's 2D4, 1D6+1 before it is drawn, everywhere (the box's then gets `/2D4`). The
   inventory and View Character keep the game's lines: their rows are full, and a
@@ -1981,9 +1981,10 @@ race (`OWN_RACE_B`, `kits.own_race`; with `RULE_HI_KITS` only). Gerakis (the
 half-giant): Wild Fighting, `wild.py` rolling for him as for a Wild Fury
 (`kits.wild_fighter`), DSCLOG's effects going by the `KIT_WILD` bits alone.
 K'ratchek (the thri-kreen): `SKY_LEVEL` and `PSI_KIT` as a Wasteland Seer's (`CR_OWN_RACE`),
-and `OWN_THROWS` in `PROBE_ATTACKS` (and the inventory's `PROBE_MISSILE_LINE`)
-2 more halves a round with a chatkcha, whatever the specialization rule
-(`GameData.weapon_hits` the same). Cilla (the elf): `stealth.py`'s hiding not
+and her Effects line `CHATKCHA 2/ROUND`. `OWN_THROWS` in `PROBE_ATTACKS` (and the
+inventory's `PROBE_MISSILE_LINE`) gives any thri-kreen (the sheet's race 8, foes too; hers
+alone, through `OWN_RACE_B`, until 2026-11-10) 2 more halves a round with a chatkcha,
+AD&D's 2/1, whatever the rules (`GameData.weapon_hits` the same). Cilla (the elf): `stealth.py`'s hiding not
 halved in daylight (`kits.not_halved_by_sun`, as an Assassin's and a Military
 Scout's). The Effects screen's lines are `OWN_LINES` (after the kits', in
 `EF_LINES_OF`); the Characters tab's `GameData.kit` adds `kits.OWN_FEATURES`.

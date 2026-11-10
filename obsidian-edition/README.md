@@ -227,7 +227,8 @@ when you close DOSBox. It uses the switches on the Loader's Options tab as you
 last set them (the combat log, monster descriptions, picking pockets, the rule
 changes); the new items, the new people and the cooked vulture are there too.
 If anything goes wrong it says so in a message box and writes the details to
-`play.log`.
+`play.log`. Only one Loader (a window, or the in-game rolls) can start or follow the
+game at a time: a second one says which has it and leaves the game alone.
 
 **Checking a save file:** drag a `SAVEnn.SAV` file from the game folder onto
 **`Show Save.bat`** to see the party it holds.
@@ -236,8 +237,9 @@ If anything goes wrong it says so in a message box and writes the details to
 program of its own ([daaki85/darksun-recompiled](https://github.com/daaki85/darksun-recompiled)),
 with the mod's patched game and helper built in. Unzip its
 `darksun-recompiled-windows-x64.zip` into this folder (so that
-`recompiled\dsun.exe` is here, or `dsun.exe` itself) or next to this
-folder, and the Loader starts that program instead of DOSBox from then on,
+`recompiled\dsun.exe` is here, or `dsun.exe` itself) or into its own
+`darksun-recompiled...` folder next to this one, and the Loader starts that
+program instead of DOSBox from then on,
 the dice log and the Loader's window attached as usual. As the game starts,
 the dice log says which one runs (`... in DOSBox` or `... as Dark Sun Recompiled`
 and where it is). The game's own `DSUN.EXE` is never taken for it, even with

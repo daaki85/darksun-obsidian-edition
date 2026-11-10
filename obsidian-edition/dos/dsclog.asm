@@ -3343,7 +3343,7 @@ probe_attacks:
 .store: call war_kit_of        ; (a Crusader's or Mind Warrior's extra attacks, in melee)
         cmp word [bp + 0x16], 1
         jle .melee_kit
-        call own_throws         ; (K'ratchek's chatkcha: one more a round)
+        call own_throws         ; (a thri-kreen's chatkcha: one more a round)
         jmp .kept
 .melee_kit:
         call wild_passed        ; (Wild Fighting, its check passed: 1 more a round in melee)
@@ -3371,9 +3371,9 @@ probe_attacks:
         jmp .hit
 
 ; OWN_THROWS: AX (the attacks a round in halves) one more a round (OWN_THROWS_MORE) for a missile
-; attack ([BP+16h] above 1) with a chatkcha (item type [BP+14h]) by K'ratchek, the game's own
-; party's thri-kreen (OWN_RACE_B; sheet number [BP+10h]): her chatkcha comes back as if she had
-; several (kits.OWN_THROWS). DS the game's; others kept.
+; attack ([BP+16h] above 1) with a chatkcha (item type [BP+14h]) by a thri-kreen (its sheet, number
+; [BP+10h], race 8): AD&D's 2/1 for a thri-kreen with its own throwing weapon (it was K'ratchek's
+; alone, a feature of the game's own party, until 2026-11-10). Always. DS the game's; others kept.
 OWN_THROWS_MORE equ 2
 own_throws:
         push bx
@@ -3383,10 +3383,7 @@ own_throws:
         imul si, si, 0x47
         les bx, [0x1661]
         add bx, si
-        push ax
-        call own_race_b
-        cmp al, THRI_KREEN_RACE
-        pop ax
+        cmp byte [es:bx + 0x18], THRI_KREEN_RACE  ; (any thri-kreen: AD&D's chatkcha 2/1)
         jne .out
         mov si, [bp + 0x14]
         cmp si, KIND_TYPES
@@ -3780,11 +3777,8 @@ probe_missile_line:
         cmp dl, SPEC_GRAND
         jne .own
         add word [ss:di + 0x0A], 2
-.own:   push ax                 ; (K'ratchek's chatkcha: one more a round, as OWN_THROWS)
-        call own_race_b
-        cmp al, THRI_KREEN_RACE
-        pop ax
-        jne .out
+.own:   cmp byte [es:bx + 0x18], THRI_KREEN_RACE ; (a thri-kreen's chatkcha: one more a round,
+        jne .out                ;   as OWN_THROWS)
         cmp si, KIND_TYPES
         jae .out
         cmp byte [cs:si + kind_of_type], MISSILE_KIND
@@ -16979,7 +16973,7 @@ large_dice   db 1, 12, 0            ; long sword: 1d12
              db 2, 6, 0             ; polearm: 2d6
              db 2, 6, 0             ; gythka: 2d6
              db 0, 0, 0             ; cahulaks: 1d6
-             db 1, 4, -1            ; chatkcha: 1d4+1 (1d6+2)
+             db 1, 4, 0             ; chatkcha: 1d4+2 (1d6+2: the +2 against any size)
              db 0, 0, 0, 0, 0, 0, 0, 0, 0 ; bow, sling, staff sling: as small
 is_large:                           ; CF if combatant AX is large (see SIZE). DS the game's; all kept.
         pusha
@@ -17100,7 +17094,8 @@ size_line:
         jz .ret
         cmp dword [bp - 6], 0
         jne .ret                    ; (an item box's only)
-        pushad
+        sti                         ; (interrupts on while the game's text routine draws: the INT
+        pushad                      ;   turned them off; IRET puts the caller's back)
         push es
         mov ax, 0x0402              ; (Shillelagh: 2D4, its line 1D6+1)
         mov dl, -1
@@ -24389,6 +24384,11 @@ mouse_event:                            ; AX = events, BX = buttons held, CX, DX
 ; PROBE_SCROLL: INT VEC_SCROLL replaces the start of "call far 3118:002E" (9Ah 2Eh 00h, then the
 ; segment: A9h makes it a harmless "test ax,<segment>" the loader may relocate), the game's main
 ; loop asking where the pointer is (its arguments, far pointers to x and y, on the stack).
+; Interrupts on again if the caller had them on (the INT turned them off: a whole pass of redraws,
+; the panel's blits and the retrace wait ran without the timer, which lost the game clock's ticks,
+; and the pointer lagged), off only where the original was (3118:002E: its INT 33h) and around what
+; the mouse's interrupt changes too: the pointer read with the drag's state (MOUSE_EVENT), and
+; TARGET_CLICK's calls to the game's mouse handler (which the driver calls with them off).
 probe_scroll:
         pop word [cs:s_resume]
         pop word [cs:s_resume + 2]
@@ -24402,6 +24402,10 @@ probe_scroll:
         push dx
         push si
         push di
+        test byte [cs:s_resume_fl + 1], 2   ; (the caller's flags' IF)
+        jz .masked
+        sti
+.masked:
         inc word [cs:main_ticks]
         mov byte [cs:arc_hold], 0       ; (an Arcanist's cast is over: PROBE_END_TURN)
         mov byte [cs:va_done], 0        ; (the view not drawn again yet in this pass: VIEW_AGAIN)
@@ -24416,12 +24420,14 @@ probe_scroll:
 .panel: call panel_tick
         call label_tick
         mov byte [cs:va_done], 0
-.read:  mov ax, 3
+.read:  pushf
+        cli                             ; (the pointer and the drag's state read together)
+        mov ax, 3
         int 0x33                        ; BX = buttons, CX, DX = where
         cmp word [cs:scroll_on], 0
-        je .wheel                       ; (the Loader's scrolling, as for a chosen enemy, anyway)
+        je .read_done                   ; (the Loader's scrolling, as for a chosen enemy, anyway)
         cmp byte [cs:drag], 2
-        jne .wheel
+        jne .read_done
         cmp byte [cs:drag_new], 0
         je .follow
         mov byte [cs:drag_new], 0
@@ -24436,7 +24442,11 @@ probe_scroll:
         mov si, [cs:cam0_y]
         sub si, dx
         add si, [cs:drag_y]
+        popf                            ; (the view drawn again: interrupts as they were)
         call pan_to
+        jmp .wheel
+.read_done:
+        popf
 .wheel: mov ax, [cs:pan_x]              ; the Loader's
         sub ax, [cs:pan_x_done]
         mov si, [cs:pan_y]
@@ -26590,6 +26600,8 @@ target_click:
         mov cx, [cs:t_x]
         mov dx, [cs:t_y]
         int 0x33
+        pushf                           ; (the game's handler as the driver calls it: interrupts
+        cli                             ;   off, so no event of the mouse's own comes between)
         pusha                           ; and a click
         push ds
         push es
@@ -26616,6 +26628,7 @@ target_click:
         pop es
         pop ds
         popa
+        popf
 .ret:   ret
 
 ; PROBE_HIT: INT VEC_HIT replaces "push bp / mov bp,sp / sub sp,10h" (6 bytes: INT + 4 NOPs) at the
@@ -27510,9 +27523,10 @@ keep:   mov ax, [cs:psp]
         cld
         rep stosw
         push dx                         ; our block cut down to what stays, the install code's
-        mov es, [cs:psp]                ;  memory given back: then the overlay buffer's block
-        mov bx, dx                      ;  (OVR_RESERVE) where it was, in upper memory, the rest
-        mov ah, 4Ah                     ;  of it in one piece above (the ring and panel at the top)
+        push ss                         ;  memory given back (ES the PSP, from SS: the word PSP is
+        pop es                          ;  install data, zeroed by now): then the overlay buffer's
+        mov bx, dx                      ;  block (OVR_RESERVE) where it was, in upper memory, the
+        mov ah, 4Ah                     ;  rest of it in one piece above (the ring and panel at the top)
         int 21h
         mov bx, OVR_RESERVE
         call umb_best

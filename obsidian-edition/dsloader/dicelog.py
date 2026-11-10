@@ -58,6 +58,8 @@ TSR_SOUND_REQ, TSR_PICK_SOUND = 1822, 1824  # a sound to play from the main loop
 TSR_SKILLS_ON = 266  # bits: item boxes name a cloak's and boots' bonus to hiding and moving silently;
 SKILLS_STEALTH, SKILLS_BELT = 1, 2  # a worn belt adds to picking pockets and opening locks (and its box says)
 SKILLS_ELVEN = 4  # the Cloak and Boots of Elvenkind's boxes name their chances (the hiding rule on)
+RING_MOST = 1024  # (DSCLOG's ring has 63 entries: a header giving far more reads wrong)
+WRITING = 0xFFFF  # an entry's seq while DSCLOG writes it (a real seq too, once in 65,536: poll)
 TSR_RING_SEG = 268  # the ring's segment (past the image, so it takes none of DSCLOG's 64 KB)
 TSR_GEAR_DUE, TSR_GEAR_GIVEN = 1830, 1831  # (DSCLOG's GEAR_WAIT: a new member's gear due; whose was given)
 TSR_CREATING = 361  # 1 while DSCLOG's weapon window asks a character being made for its weapon specs (CR_WEAPONS)
@@ -319,6 +321,8 @@ SPELL_WINDOW = 15.0  # seconds after a spell's roll in which HP changes are put 
 RECENT_DAMAGE = 8  # spell damages kept to tell an HP loss's spell by its amount (two walls at once)
 HITS_MATCHED = 8  # weapon hits waiting on one target at most, for matching an HP fall to them
 HIT_WAIT = 3.0  # seconds after a weapon hit's damage roll with no HP lost: the target took none
+POLL_FAILS = 25  # passes in a row whose ring read wrong before still_patched has the log attach again
+DESTROYED_WAIT = 3.0  # seconds a creature destroyed outright may take to show its HP fall
 POISON_WAIT = 3.0  # seconds a Poisoner's poison on a helpless target may take to land (queued: about 0.5)
 FIGHT_GAP = 120  # game seconds without a new round after which the fight is over
 # seconds (of ours) the game's fight flag stays down, once seen up in the fight, before the fight
@@ -637,6 +641,8 @@ class DiceLog:
         self._spell_id: Optional[int] = None
         self._cast: Tuple[Optional[int], Optional[int]] = (None, None)  # (the last spell cast: its caster, the spell)
         self._destroyed: Dict[int, str] = {}  # creature index -> what destroyed it outright (its HP fall said so)
+        self._destroyed_at: Dict[int, float] = {}  # ... and when a pass first looked for its fall (DESTROYED_WAIT)
+        self._poll_fails = 0  # passes in a row whose ring read wrong (POLL_FAILS)
         self.tracker: Optional[PartyTracker] = None
         self.defilers = defilerscrolls.DefilerScrolls()  # (a defiler in a fight may carry a scroll)
         self.champions = champions.Gear()  # (the champions' bout: their gear worn and held)
@@ -669,7 +675,17 @@ class DiceLog:
             self.tsr_hdr, self.rand_addr = hdr, rand_addr
             self.guest.write(hdr + 22, struct.pack("<5H", SEED, TARGET_GLOBAL, 0, 0, 0))
             self.game = GameData(self.guest, ds)
+            if hasattr(self.guest, "item_gate"):  # (the gate is this game's: GameData makes one only
+                old = self.guest.item_gate          # for a guest that has none, so a game started
+                if old is not None:                 # again needs its own, with its own data segment)
+                    old.end()
+                self.guest.item_gate = itemgate.ItemGate(self.game)
         self._scrolling.forget()  # (a DSCLOG of its own: told again)
+        # (the figures' Dresser holds the last game's GameData, its picture store and a redraw
+        # through the last DSCLOG header: made afresh for this game, at once)
+        self._dresser, self._dresser_at = None, 0.0
+        self._forget_destroyed()
+        self._poll_fails = 0
         self._dust = dust.Dust()
         self._rings = rings.Rings()
         self._big = cahulaks.Big()
@@ -1120,9 +1136,12 @@ class DiceLog:
         return (self.rand_addr - RAND_IP) // 16
 
     def still_patched(self) -> bool:
-        """False when the game has quit or been replaced by an unpatched one."""
+        """False when the game has quit or been replaced by an unpatched one, when DSCLOG's header
+        is gone from its place, or when its ring has read wrong for POLL_FAILS passes in a row
+        (the callers then attach again, which finds the header afresh)."""
         sig = self.guest.read(self.game.ds * 16 + game.BORLAND_SIG_OFFSET, len(game.BORLAND_SIG))
-        return sig == game.BORLAND_SIG and self.guest.read(self.rand_addr, 2) == RAND_PATCHED
+        return sig == game.BORLAND_SIG and self.guest.read(self.rand_addr, 2) == RAND_PATCHED \
+            and self.guest.read(self.tsr_hdr, len(HDR_SIG)) == HDR_SIG and self._poll_fails < POLL_FAILS
 
     def detach(self) -> None:
         self.rand_addr = None
@@ -1139,21 +1158,45 @@ class DiceLog:
 
     # ---- reading ----------------------------------------------------------------
 
-    def poll(self) -> List[Entry]:
-        """Entries written since the last poll, oldest first."""
+    def _ring_header(self) -> Tuple[int, int, int, int, int]:
+        """DSCLOG's ring as its header has it: (seq, the slot being written next, entries, entry
+        size, the ring's offset). DiceLogError for a header gone or reading wrong (DSCLOG's memory
+        reused by a game started again, a short read): the pass reads no rolls, last_seq stays."""
         head = self.guest.read(self.tsr_hdr, 24)
-        seq, _, nent, esize, ring_off = struct.unpack_from("<5H", head, 8)
+        if len(head) < 24 or head[:len(HDR_SIG)] != HDR_SIG:
+            raise DiceLogError("DSCLOG's header is no longer where it was")
+        seq, widx, nent, esize, ring_off = struct.unpack_from("<5H", head, 8)
+        if not 0 < nent <= RING_MOST or esize < Entry.SIZE or widx >= nent:
+            raise DiceLogError(f"DSCLOG's ring header reads wrong ({nent} entries of {esize} bytes, slot {widx})")
+        return seq, widx, nent, esize, ring_off
+
+    def poll(self) -> List[Entry]:
+        """Entries written since the last poll, oldest first. Raises DiceLogError for a header or
+        ring that reads wrong (nothing taken: the next poll tries again)."""
+        seq, widx, nent, esize, ring_off = self._ring_header()
         new = (seq - self.last_seq) & 0xFFFF
         if not new:
             return []
         ring_seg = struct.unpack("<H", self.guest.read(self.tsr_hdr + TSR_RING_SEG, 2))[0]
         ring_base = ring_seg * 16 + ring_off  # (the ring: a segment of its own, past the image)
         ring = self.guest.read(ring_base, nent * esize)
+        if len(ring) != nent * esize:
+            raise DiceLogError(f"DSCLOG's ring read short ({len(ring)} of {nent * esize} bytes)")
+        # the slots DSCLOG was writing as the ring was read: from the slot it was to write next as
+        # the header was read to the one it is to write next now. A slot being written has the
+        # marker 0xFFFF for its seq, which is also a real seq once in 65,536: there it is the
+        # marker (a half-written entry), except for the header's own seq 0xFFFF just published in
+        # the slot before the slot number moved on (the slot before it then holds 0xFFFE)
+        widx_now = self._ring_header()[1]
+        busy = {(widx + k) % nent for k in range((widx_now - widx) % nent + 1)}
+        seqs = [struct.unpack_from("<H", ring, i * esize)[0] for i in range(nent)]
         entries = {}
         for i in range(nent):
-            e = Entry.parse(ring[i * esize:(i + 1) * esize])
-            if 0 < (e.seq - self.last_seq) & 0xFFFF <= new:
-                entries[e.seq] = e
+            if i in busy and seqs[i] == WRITING and not (
+                    i == widx and seq == WRITING and nent > 1 and seqs[(i - 1) % nent] != WRITING):
+                continue
+            if 0 < (seqs[i] - self.last_seq) & 0xFFFF <= new:
+                entries[seqs[i]] = Entry.parse(ring[i * esize:(i + 1) * esize])
         self.missed += new - len(entries)
         self.last_seq = seq
         return [entries[s] for s in sorted(entries, key=lambda s: (s - seq - 1) & 0xFFFF)]
@@ -1239,7 +1282,13 @@ class DiceLog:
         # one whose roll, written first, is read now too (read after, a hit landing in between had
         # its fall seen before its roll, and was later called "none of the damage": the audit)
         self._snapshot = self._records_now()
-        entries = self.poll()
+        try:  # (a header or ring that reads wrong: said once, no rolls this pass, last_seq kept;
+            entries = self.poll()  # still_patched has the log attach again if it lasts)
+            self._poll_fails = 0
+        except (DiceLogError, struct.error, ValueError, IndexError) as e:
+            self._poll_fails += 1
+            out += self._error_once(e)
+            entries = []
         if self.missed > missed:  # (rolls lost from the ring: none half seen may be finished by others)
             self._forget_partial_rolls()
         try:  # (the charges: a failure leaves the rolls' lines without them, not lost)
@@ -1282,6 +1331,7 @@ class DiceLog:
         if not over:
             return []
         self._tally_seen, self._tally_out = False, None
+        self._forget_destroyed()  # (the fight over: none destroyed in it still to fall)
         return self._tally.end()
 
     def _error_once(self, err: Exception) -> List[str]:
@@ -1868,6 +1918,12 @@ class DiceLog:
         out = []
         current = {}
         snapshot, self._snapshot = getattr(self, "_snapshot", None), None
+        # (a creature destroyed outright whose fall isn't seen in DESTROYED_WAIT, removed or the
+        # game loaded first, is forgotten: its record, reused by a later fight's monster, would
+        # have that one's wound read "destroyed by Turn Undead")
+        for index in list(self._destroyed):
+            if now - self._destroyed_at.setdefault(index, now) > DESTROYED_WAIT:
+                self._forget_destroyed(index)
         if snapshot is None:
             snapshot = {combatant: (index, None) for combatant, index in g.combatants().items()}
         for combatant, (index, rec) in sorted(snapshot.items()):
@@ -1883,7 +1939,8 @@ class DiceLog:
             if before is None or before == hp or not -100 <= before <= 2000:
                 continue  # unchanged, or a record still being loaded
             who = g.creature_name(index)
-            gone = self._destroyed.pop(index, None)
+            gone = self._destroyed.get(index)
+            self._forget_destroyed(index)
             if gone is not None and hp < before:  # (Turn Undead's 1000 damage, Cloudkill's: not a wound)
                 out.append(f"  {who} is {gone}")
                 continue
@@ -1921,6 +1978,15 @@ class DiceLog:
                 out.append(f"  {who} {left} (+{hp - before})")
         self._hp = current
         return out + self.unhurt(now)
+
+    def _forget_destroyed(self, index: Optional[int] = None) -> None:
+        """A creature destroyed outright no longer waited on (INDEX), or none (a fight over, a game loaded)."""
+        if index is None:
+            self._destroyed.clear()
+            self._destroyed_at.clear()
+        else:
+            self._destroyed.pop(index, None)
+            self._destroyed_at.pop(index, None)
 
     def _poison_taken(self, index: int, lost: int, now: float) -> int:
         """The poison's damage in a fall of LOST HP when a Poisoner's poison is due on the creature
@@ -2182,6 +2248,7 @@ class DiceLog:
             self._party_clock = clock
         if party != self._party or back:  # (the same party loaded again: its clock goes back)
             self._party, self._party_changed_at = party, now
+            self._forget_destroyed()  # (a game loaded: its creatures aren't the ones destroyed)
         if now - self._party_changed_at < LOAD_SETTLE:
             if self.tracker:
                 self.tracker.reset()

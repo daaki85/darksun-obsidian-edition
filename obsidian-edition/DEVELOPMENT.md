@@ -519,7 +519,7 @@ the one place for the sizes; the sections after them name the symbols only.
 | Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (the unmodded game's 57 KB) |
 | C000h-C7FFh | 32 KB | the video BIOS (ROM) |
 | C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
-| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 66.4 KB as built (68,000 bytes with its PSP and its tail, (10h + `KEPT_PARAS`) paragraphs, 2026-11-10), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, and the rest free. **Last measured 2026-11-09** (`playtest/memaudit.py`, with a helper of 62,640 bytes): 37,392 bytes free in one piece and 288 bytes between the helper and the overlay buffer. The helper has grown 5,360 bytes since, so the free piece should be about 32 KB; not measured since |
+| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 66.4 KB as built (68,016 bytes with its PSP and its tail, (10h + `KEPT_PARAS`) paragraphs, 2026-11-10), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, and the rest free. **Last measured 2026-11-09** (`playtest/memaudit.py`, with a helper of 62,640 bytes): 37,392 bytes free in one piece and 288 bytes between the helper and the overlay buffer. The helper has grown 5,376 bytes since, so the free piece should be about 32 KB; not measured since |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
 | 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's [far block](#the-far-block), 65,484 bytes, 36 free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
@@ -532,10 +532,10 @@ of 64,736 and the tail's 3,008, `TAIL_BYTES`):
 
 | Limit | Used | Room | Spare |
 |---|---|---|---|
-| [the helper's segment](#the-helpers-segment): `kept_end` (`resident_end` 63,328 + `AFTER_INSTALL` 1,408) | 64,736 bytes | 65,536 | 800 bytes |
+| [the helper's segment](#the-helpers-segment): `kept_end` (`resident_end` 63,344 + `AFTER_INSTALL` 1,408) | 64,752 bytes | 65,536 | 784 bytes |
 | [the far block](#the-far-block): `FAR_END` (its buffers from `FAR_RING`, 10h: 65,484 bytes) | 65,500 | 65,536 | 36 bytes |
-| upper memory as the helper loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,330 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,852 |
-| upper memory once installed: `UMB_KEPT` (the helper, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 7,952 paragraphs | 8,182 (`UMB_ROOM`) | 230 (3.6 KB) |
+| upper memory as the helper loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,331 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,851 |
+| upper memory once installed: `UMB_KEPT` (the helper, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 7,953 paragraphs | 8,182 (`UMB_ROOM`) | 229 (3.6 KB) |
 
 To check them after a change, build a scratch copy with `[map all FILE]` as its
 first line (`nasm -f bin -I dos/ -o /tmp/x.exe COPY`, from `obsidian-edition/`)
@@ -660,7 +660,10 @@ startup (load+3653h:0D5Ch) and keeps it for good, so in the heap it was the
 largest block the 640 KB never got back. The patch `overlay_umb` makes that
 call `INT VEC_OVR_BUF` (`PROBE_OVR_BUF`), which hands over a block `KEEP`
 reserved: `KEEP` (resident code) first cuts the helper's own block down to what
-stays, then takes the buffer's block in the memory the install code had, so the
+stays (function 4Ah, its `ES` the PSP from `SS`: the word `psp` is install data,
+zeroed by then; until 2026-11-10 the call named segment 0 and failed, so the
+install's 16 stack paragraphs stayed between the helper and the buffer), then
+takes the buffer's block in the memory the install code had, so the
 room is in one piece: the helper, the buffer and what is left free. The
 header's `ovr_given` (+368) is the buffer's segment once the game has it.
 Without the room the probe calls the game's farmalloc, as the call was. If the

@@ -95,9 +95,9 @@ class HitTests(unittest.TestCase):
         self.assertEqual([h.thac0 for h in g.weapon_hits(0)], [8, 17])  # (the bow too)
         self.assertEqual(log.stats_entry(0)[1], 8)  # (the game's screens show it)
 
-    def test_kratcheks_chatkcha_with_specialization(self):
-        """K'ratchek (the game's own thri-kreen) throws her chatkcha once more a round, weapon
-        specialization on or off (its item type is not the weapon's kind)."""
+    def test_thri_kreen_chatkcha_two_a_round(self):
+        """Any thri-kreen (not K'ratchek alone, as before 2026-11-10) throws a chatkcha once more a
+        round (AD&D's 2/1), whatever the rules; anyone else at the weapon's own rate."""
         from dsloader import kits
         log = dag()
         g = log.game
@@ -105,13 +105,13 @@ class HitTests(unittest.TestCase):
         struct.pack_into("<H", m, ITEMS + 6 * game.ITEM_SIZE + game.ITEM_TYPE, 48)  # (a chatkcha)
         chatkcha = ITEM_TYPES + 48 * game.ITEM_TYPE_SIZE
         m[chatkcha + 0x0B], m[chatkcha], m[chatkcha + 0x0C], m[chatkcha + 0x0D] = 2, 2, 6, 1  # (1d6)
-        m[SHEETS + game.SHEET_RACE] = kits.THRI_KREEN
-        for rules in (game.RULE_KITS, game.RULE_KITS | game.RULE_SPECIALIZE):
+        m[SHEETS + 0x43] = 0  # (no kit, not the game's own party)
+        for rules in (0, game.RULE_KITS | game.RULE_SPECIALIZE):
             with self.subTest(rules=rules):
                 g.rules = rules
-                m[SHEETS + 0x43] = 0
+                m[SHEETS + game.SHEET_RACE] = 1  # (a human)
                 plain = g.weapon_hits(0)[-1].halves
-                m[SHEETS + 0x43] = kits.OWN_BIT
+                m[SHEETS + game.SHEET_RACE] = kits.THRI_KREEN
                 self.assertEqual(g.weapon_hits(0)[-1].halves, (plain or 2) + kits.OWN_THROWS_MORE)
 
     def test_two_weapon_rule_needs_two_weapons(self):

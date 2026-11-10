@@ -90,6 +90,10 @@ def make_game():
     m[DS * 16 + game.DEX_AC + 16] = 0xFE  # DEX 16: AC -2
     hp = (LOAD_SEG + game.LEVEL_HP_SEG) * 16  # fighters roll d10 up to level 9; CON 21: at least 3
     m[hp + 0x10 + 9], m[hp + 4:hp + 7], m[hp + 0x38 + 21] = 1, bytes((10, 9, 3)), 3
+    # DSCLOG's header: its signature, and its ring (seq 0, slot 0, 4 entries at 0x100 in segment 0)
+    m[HDR:HDR + 8] = dicelog.HDR_SIG
+    struct.pack_into("<5H", m, HDR + 8, 0, 0, 4, Entry.SIZE, 0x100)
+    struct.pack_into("<H", m, HDR + dicelog.TSR_SLOTS_OFF, 0x1800)  # (the spell slots' copy past the header)
     # DSCLOG's text buffer
     struct.pack_into("<HHHH", m, HDR + 126, 0, 0x800, 256, 0)
     # DSCLOG's names after the game's own, in the table it noted
@@ -2750,3 +2754,147 @@ class PanelLevelTests(unittest.TestCase):
         self.assertEqual((log.combat_log_level, panel.level), (combatlog.DETAIL, combatlog.DETAIL))
         remember.assert_not_called()
         update.assert_called_once()
+
+
+class RingAndAttachTests(unittest.TestCase):
+    """The ring read robustly (a header or ring reading wrong said once, the log going on), the
+    in-progress marker 0xFFFF told from the real seq 0xFFFF, and a re-attach starting afresh."""
+
+    NENT, RING = 4, 0x100
+
+    def ring(self, log, seq, widx, slots, nent=NENT, esize=Entry.SIZE):
+        """The header at SEQ, slot WIDX next; SLOTS {slot: (seq, raw)}."""
+        m = log.guest.mem
+        struct.pack_into("<5H", m, HDR + 8, seq, widx, nent, esize, self.RING)
+        struct.pack_into("<H", m, HDR + dicelog.TSR_RING_SEG, HDR // 16)
+        for slot, (s, raw) in slots.items():
+            at = HDR + self.RING + slot * Entry.SIZE
+            struct.pack_into("<HHHH", m, at, s, 0, 0, raw)
+
+    def test_bad_header_said_once_and_the_log_goes_on(self):
+        log = make_game()
+        self.ring(log, 2, 2, {0: (1, 10), 1: (2, 20)}, esize=100)  # (an entry size too small to parse)
+        out = log.lines(now=1.0)
+        self.assertEqual(len([l for l in out if "Loader error in the dice log" in l]), 1, out)
+        self.assertEqual(log.last_seq, 0)  # (nothing taken)
+        self.assertFalse([l for l in log.lines(now=1.1) if "Loader error" in l])  # (said once)
+        self.ring(log, 2, 2, {0: (1, 10), 1: (2, 20)})  # (the header reads right again)
+        self.assertEqual([e.raw for e in log.poll()], [10, 20])
+        self.assertEqual(log.last_seq, 2)
+
+    def test_short_ring_read(self):
+        log = make_game()
+        self.ring(log, 1, 1, {0: (1, 10)})
+        real = log.guest.read
+        log.guest.read = lambda addr, size: real(addr, size)[:size // 2] if size == self.NENT * Entry.SIZE \
+            else real(addr, size)
+        with self.assertRaises(dicelog.DiceLogError):
+            log.poll()
+        self.assertEqual(log.last_seq, 0)
+
+    def test_still_patched_checks_the_header(self):
+        log = make_game()
+        m = log.guest.mem
+        m[log.rand_addr:log.rand_addr + 2] = dicelog.RAND_PATCHED
+        m[DS * 16 + game.BORLAND_SIG_OFFSET:DS * 16 + game.BORLAND_SIG_OFFSET + len(game.BORLAND_SIG)] = \
+            game.BORLAND_SIG
+        self.assertTrue(log.still_patched())
+        m[HDR:HDR + 8] = bytes(8)  # (DSCLOG's memory reused)
+        self.assertFalse(log.still_patched())
+        m[HDR:HDR + 8] = dicelog.HDR_SIG
+        self.ring(log, 1, 1, {0: (1, 10)}, nent=0)  # (reads wrong, pass after pass: attach again)
+        for n in range(dicelog.POLL_FAILS):
+            self.assertTrue(log.still_patched(), n)
+            log.lines(now=1.0 + n / 100)
+        self.assertFalse(log.still_patched())
+
+    def test_marker_at_the_write_slot_is_not_seq_ffff(self):
+        """The real 0xFFFF entry kept; the slot DSCLOG is writing (its seq the marker) skipped."""
+        log = make_game()
+        log.last_seq = 0xFFFD
+        self.ring(log, 0xFFFF, 3, {0: (0xFFFC, 1), 1: (0xFFFE, 2), 2: (0xFFFF, 3), 3: (0xFFFF, 999)})
+        self.assertEqual([(e.seq, e.raw) for e in log.poll()], [(0xFFFE, 2), (0xFFFF, 3)])
+        self.assertEqual(log.missed, 0)
+
+    def test_seq_ffff_just_published(self):
+        """The header's seq 0xFFFF published, the slot number not yet moved on: that slot's entry is real."""
+        log = make_game()
+        log.last_seq = 0xFFFD
+        self.ring(log, 0xFFFF, 2, {0: (0xFFFC, 1), 1: (0xFFFE, 2), 2: (0xFFFF, 3), 3: (0xFFFB, 4)})
+        self.assertEqual([(e.seq, e.raw) for e in log.poll()], [(0xFFFE, 2), (0xFFFF, 3)])
+
+    def test_marker_in_a_slot_written_during_the_read(self):
+        """DSCLOG wrote on while the ring was read: the slot it then began is half-written too."""
+        log = make_game()
+        log.last_seq = 0xFFFD
+        self.ring(log, 0xFFFF, 2, {0: (0xFFFE, 2), 1: (0xFFFF, 3), 2: (0, 5), 3: (0xFFFF, 999)})
+        real, reads = log.guest.read, []
+
+        def read(addr, size):
+            got = real(addr, size)
+            if addr == HDR and size == 24:
+                reads.append(1)
+                if len(reads) == 2:  # (the header as it is after the ring: seq 0 written, slot 3 begun)
+                    got = got[:8] + struct.pack("<HH", 0, 3) + got[12:]
+            return got
+        log.guest.read = read
+        self.assertEqual([(e.seq, e.raw) for e in log.poll()], [(0xFFFE, 2), (0xFFFF, 3)])
+
+    def test_attach_starts_the_dresser_and_gate_afresh(self):
+        log = make_game()
+        m = log.guest.mem
+        m[log.rand_addr:log.rand_addr + 2] = dicelog.RAND_PATCHED
+        m[DS * 16 + game.BORLAND_SIG_OFFSET:DS * 16 + game.BORLAND_SIG_OFFSET + len(game.BORLAND_SIG)] = \
+            game.BORLAND_SIG
+        log.guest.item_gate = None
+        first = game.GameData(log.guest, DS).guest.item_gate
+        self.assertIsNotNone(first)
+        game.GameData(log.guest, DS + 0x100)  # (the viewer's, each tick: the gate kept)
+        self.assertIs(log.guest.item_gate, first)
+        log._dresser, log._dresser_at = object(), 99.0
+        log._destroyed[STALKER] = "destroyed by Turn Undead"
+        self.assertEqual(log.attach(), "Dice log attached.")
+        self.assertEqual((log._dresser, log._dresser_at), (None, 0.0))
+        self.assertIsNot(log.guest.item_gate, first)  # (the new game's own)
+        self.assertIs(log.guest.item_gate.gd, log.game)
+        self.assertEqual(log._destroyed, {})
+
+
+class DestroyedTests(unittest.TestCase):
+    """A creature destroyed outright whose HP fall is never seen is forgotten (DESTROYED_WAIT, a
+    fight's end, a game loaded): a later monster in its record has its wounds said as wounds."""
+
+    def setUp(self):
+        self.log = make_game()
+        self.stalker = CREATURES + STALKER * game.CREATURE_SIZE
+        struct.pack_into("<h", self.log.guest.mem, self.stalker, 13)
+        self.assertEqual(self.log.hp_changes(0.5), [])
+
+    def test_expires(self):
+        log = self.log
+        log._destroyed[STALKER] = "destroyed by Turn Undead"
+        self.assertEqual(log.hp_changes(1.0), [])  # (no fall yet)
+        struct.pack_into("<h", log.guest.mem, self.stalker, 9)  # (another monster's wound, much later)
+        self.assertEqual(log.hp_changes(1.0 + dicelog.DESTROYED_WAIT + 1), ["  Mountain Stalker now 9 HP (-4)"])
+
+    def test_fall_in_time(self):
+        log = self.log
+        log._destroyed[STALKER] = "destroyed by Turn Undead"
+        self.assertEqual(log.hp_changes(1.0), [])
+        struct.pack_into("<h", log.guest.mem, self.stalker, 13 - 1000)
+        self.assertEqual(log.hp_changes(1.0 + dicelog.DESTROYED_WAIT / 2), ["  Mountain Stalker is destroyed by Turn Undead"])
+
+    def test_cleared_at_a_load_and_a_fights_end(self):
+        log = self.log
+        log._destroyed[STALKER] = "slain by Cloudkill"
+        log._party_check(1.0)
+        log._party = b"another"  # (a game loaded: another party)
+        log._party_check(2.0)
+        self.assertEqual(log._destroyed, {})
+        log._destroyed[STALKER] = "slain by Cloudkill"
+        log._tally = mock.Mock(started=True, end=mock.Mock(return_value=[]))
+        log._tally_seen, log._tally_out = True, 0.0
+        with mock.patch.object(log.game, "in_combat", return_value=False):
+            log._tally_end(dicelog.FIGHT_OVER + 1)
+        log._tally.end.assert_called_once()
+        self.assertEqual(log._destroyed, {})

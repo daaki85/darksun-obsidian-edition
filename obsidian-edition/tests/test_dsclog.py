@@ -1930,18 +1930,19 @@ class SpecializeTests(unittest.TestCase):
                 sheet[0x21:0x24], sheet[0x24:0x27] = bytes(classes), bytes(levels)
                 self.assertEqual(specialize.missile_attacks(halves, specialize.skill(bytes(sheet), weapon), weapon,
                                                             bytes(sheet)), want[0])
-        # K'ratchek (the game's own party's thri-kreen: kits.OWN_BIT) one more chatkcha throw a round, with
-        # weapon specialization or without, its kind chosen or not; not with the kits off, another
-        # missile weapon, or without the bit
+        # any thri-kreen one more chatkcha throw a round (AD&D's 2/1; K'ratchek's alone, kits.OWN_BIT with
+        # the kits on, until 2026-11-10), with weapon specialization or without, its kind chosen or not,
+        # whatever the rules; not with another missile weapon, nor anyone else
         from dsloader import kits
         both, kits_on = 4096 | game.RULE_KITS, game.RULE_KITS
-        for rules, weapon, kit, chosen, want in ((both, CHATKCHA, kits.OWN_BIT, (), 4), (kits_on, CHATKCHA, kits.OWN_BIT, (), 4),
-                                                 (both, CHATKCHA, kits.OWN_BIT, (12,), 5),
-                                                 (both, SLING, kits.OWN_BIT, (), 2), (both, CHATKCHA, 0, (), 2),
-                                                 (4096, CHATKCHA, kits.OWN_BIT, (), 2)):
-            with self.subTest(rules=rules, weapon=weapon, kit=kit, chosen=chosen):
+        for rules, weapon, kit, chosen, race, want in (
+                (both, CHATKCHA, kits.OWN_BIT, (), 8, 4), (kits_on, CHATKCHA, kits.OWN_BIT, (), 8, 4),
+                (both, CHATKCHA, kits.OWN_BIT, (12,), 8, 5), (both, SLING, kits.OWN_BIT, (), 8, 2),
+                (both, CHATKCHA, 0, (), 8, 4), (4096, CHATKCHA, kits.OWN_BIT, (), 8, 4), (0, CHATKCHA, 0, (), 8, 4),
+                (both, CHATKCHA, 0, (), 1, 2)):
+            with self.subTest(rules=rules, weapon=weapon, kit=kit, chosen=chosen, race=race):
                 self.assertEqual(self.attack(2, weapon, chosen=chosen, classes=(9, 7, 12), levels=(2, 2, 2),
-                                             missile=True, race=8, kit=kit, rules=rules)[0], want)
+                                             missile=True, race=race, kit=kit, rules=rules)[0], want)
         # (a human ranger turned preserver: no bow expertise until the preserver level passes the ranger's)
         self.assertEqual(self.attack(4, BOW, chosen=(0,), classes=(11, 13, 0), levels=(3, 5, 0), missile=True,
                                      race=1), (4, 15, 3, 8))
@@ -8670,6 +8671,44 @@ class KeepTests(unittest.TestCase):
         self.assertTrue(calls and calls[-1][0] == 0x31)
         self.assertEqual(calls[0][2], bytes(end - first))  # zeroed before the first DOS call
         self.assertEqual(calls[-1][1], asked[0])  # (and that kept)
+
+    def test_shrink_names_the_psp(self):
+        """KEEP's 4Ah (our block cut down before the upper memory blocks are taken) names the PSP's
+        segment, though the word PSP is install data in the range zeroed before it, and asks for
+        the paragraphs kept; it comes before every other DOS call but the zeroing's."""
+        image = bytearray(load_image())
+        zero = re.search(re.escape(bytes.fromhex("0e07bf")) + b"(..)" + re.escape(b"\xb9") + b"(..)" +
+                         re.escape(bytes.fromhex("31c0fcf3ab")), image, re.S)
+        keep = image.rfind(bytes.fromhex("2ea1"), 0, zero.start())
+        psp_at, = struct.unpack_from("<H", image, keep + 2)
+        psp = TSR - 0x10
+        image[psp_at:psp_at + 2] = struct.pack("<H", psp)
+        mu = Uc(UC_ARCH_X86, UC_MODE_16)
+        mu.mem_map(0, 0x100000)
+        mu.mem_write(TSR * 16, bytes(image))
+        calls = []
+
+        def dos(mu, intno, _):
+            if intno != 0x21:
+                return
+            ah = mu.reg_read(r.UC_X86_REG_AH)
+            calls.append((ah, mu.reg_read(r.UC_X86_REG_ES), mu.reg_read(r.UC_X86_REG_BX)))
+            flags = mu.reg_read(r.UC_X86_REG_EFLAGS)
+            if ah == 0x31:
+                mu.emu_stop()
+            elif ah == 0x4A:
+                mu.reg_write(r.UC_X86_REG_EFLAGS, flags & ~1)
+            else:
+                mu.reg_write(r.UC_X86_REG_EFLAGS, flags | 1)
+                mu.reg_write(r.UC_X86_REG_AX, 8)
+        mu.hook_add(UC_HOOK_INTR, dos)
+        mu.reg_write(r.UC_X86_REG_CS, TSR)
+        mu.reg_write(r.UC_X86_REG_SS, SS)
+        mu.reg_write(r.UC_X86_REG_SP, 0x1000)
+        mu.reg_write(r.UC_X86_REG_DX, 0x1234)
+        mu.emu_start(TSR * 16 + keep, 0, count=100000)
+        self.assertEqual(calls[0], (0x4A, psp, 0x1234))
+        self.assertEqual(calls[-1][0], 0x31)
 
 
 @unittest.skipIf(Uc is None, "unicorn not installed")

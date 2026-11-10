@@ -460,6 +460,31 @@ if __name__ == "__main__":
     unittest.main()
 
 
+class BaseTypesTests(unittest.TestCase):
+    def test_every_loader_type_has_a_base(self):
+        """Every item type the Loader adds (115 on) has a game type its header number is copied from:
+        the girdles the Belt's (42), the amulet the Necklace's (36), the Boots of Speed the Boots' (68)."""
+        from dsloader import npcitems
+        for kind in range(game.GAME_TYPES, game.GAME_TYPES + len(npcitems.TYPES)):
+            self.assertIn(kind, worldgear.BASE_TYPES)
+            self.assertLess(worldgear.BASE_TYPES[kind], game.GAME_TYPES, kind)
+        new = (game.BACK_GIRDLE_TYPE, game.URNST_GIRDLE_TYPE, game.MR_AMULET_TYPE, game.SPEED_BOOTS_TYPE)
+        self.assertEqual([worldgear.BASE_TYPES[t] for t in new], [42, 42, 36, 68])
+        # (each worn where its base is: the type record's +9, the Belt's waist 2, the Necklace's neck 7, the Boots' 4)
+        self.assertEqual([npcitems.TYPES[t - game.GAME_TYPES][9] for t in new], [2, 2, 7, 4])
+
+    @unittest.skipUnless(os.environ.get("DSUN_OBJECTS"), "needs the game's SEGOBJEX.GFF (DSUN_OBJECTS)")
+    def test_base_numbers(self):
+        """header_numbers gives the new types their base's number (the Belt 341, the Necklace 125, the Boots 333)."""
+        from dsloader import gff
+        with open(os.environ["DSUN_OBJECTS"], "rb") as f:
+            chunks = gff.read_gff(f.read())
+        numbers = worldgear.header_numbers(chunks)
+        self.assertEqual([numbers.get(t) for t in (game.BACK_GIRDLE_TYPE, game.URNST_GIRDLE_TYPE,
+                                                   game.MR_AMULET_TYPE, game.SPEED_BOOTS_TYPE)],
+                         [341, 341, 125, 333])
+
+
 class SerefTests(unittest.TestCase):
     def test_seref_carries_the_games_polearm(self):
         """Seref (object 203, in the Elven Caravan and made anew for his encounter) carries the game's

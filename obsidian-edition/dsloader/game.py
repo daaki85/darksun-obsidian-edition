@@ -1041,7 +1041,10 @@ class GameData:
         self.load_seg = ds - DGROUP
         if hasattr(guest, "guarded"):  # (the C runtime's check, at exit: "Null pointer assignment")
             guest.guarded["the game's data segment's start"] = (ds * 16, ds * 16 + NULL_AREA)
-        if hasattr(guest, "item_gate"):  # (the Loader's changes to the item lists: never mid-load)
+        # (the Loader's changes to the item lists: never mid-load). One gate a guest: the viewer
+        # builds a GameData every tick, and a new gate each time would drop the pass's state and
+        # might check another data segment's ranges (DiceLog.attach makes a new game's own)
+        if hasattr(guest, "item_gate") and guest.item_gate is None:
             from .itemgate import ItemGate
             guest.item_gate = ItemGate(self)
         self.rules = RULES_IN_FORCE if rules is None else rules
@@ -2215,8 +2218,9 @@ class GameData:
                 have = self.sheet(creature)[SHEET_ATTACKS] if halves is None else halves
                 if kits.warrior_attacks(have, self.sheet(creature)) != have:
                     halves = kits.warrior_attacks(have, self.sheet(creature))
-            if missile and kind == kits.CHATKCHA and self.own_race(creature) == kits.THRI_KREEN:
-                # (K'ratchek's chatkcha comes back as if she had several: DSCLOG's OWN_THROWS)
+            sheet = self.sheet(creature)
+            if missile and kind == kits.CHATKCHA and len(sheet) > SHEET_RACE and sheet[SHEET_RACE] == kits.THRI_KREEN:
+                # (a thri-kreen's chatkcha, 2/1 as in AD&D: DSCLOG's OWN_THROWS)
                 halves = (typ[0x0B] if halves is None else halves) + kits.OWN_THROWS_MORE
             if not missile and self.wild.get(creature):
                 # (Wild Fighting, its check passed: 1 more attack a round in melee; DSCLOG's WILD_HALVES)

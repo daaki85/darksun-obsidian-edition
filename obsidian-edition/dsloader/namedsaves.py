@@ -73,6 +73,15 @@ def _copies(folder: str) -> Dict[Tuple[int, int], List[str]]:
     return out
 
 
+def _mtime(path: str) -> float:
+    """PATH's time, or 0 if it has gone since it was listed (taken away meanwhile: one pass of sync
+    isn't stopped by it)."""
+    try:
+        return os.path.getmtime(path)
+    except OSError:
+        return 0.0
+
+
 def sync(game_dir: str, folder: str = NAMED) -> List[str]:
     """Each of the game's saves copied into FOLDER under its name, where its copy is missing or
     older; a slot's copy under another name (the slot saved over) is replaced. The copies made."""
@@ -88,7 +97,7 @@ def sync(game_dir: str, folder: str = NAMED) -> List[str]:
             except OSError:
                 continue
             existing = copies.get((page, slot), [])
-            if existing and all(os.path.getmtime(os.path.join(folder, e)) >= stamp for e in existing):
+            if existing and all(_mtime(os.path.join(folder, e)) >= stamp for e in existing):
                 continue
             try:
                 with open(path, "rb") as f:

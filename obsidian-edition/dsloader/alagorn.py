@@ -28,9 +28,13 @@ which jumps back:
 - the kind's menu: a copy with the new items' replies after the game's last;
 - each of the kind's stories' test for none left: the new items counted too.
 
-The new stories are subroutines, as the game's replies are.
+The new stories are subroutines, as the game's replies are. The weapons' copy (222) would be
+longer than the scripts' buffer with its fourteen stories in it, so their lines are in a script of
+their own (TOLD_IN: 224), one part each after a 19h, and each story subroutine calls its part
+(14h, as his talk calls each of 212's and 213's parts; the 19h ending the part returns).
 """
 
+import logging
 from typing import Dict, List, Optional, Tuple
 
 from . import gpl, icons
@@ -69,6 +73,14 @@ SCRIPT_OF = {SWORDS: SCRIPT, WEAPONS: SCRIPT, RINGS: OTHER_SCRIPT, ARMOUR: OTHER
 TALK = 211
 COPY_OF = {CLOTHES: 220, RINGS: 221, OTHER: 221, WEAPONS: 222}
 CALL, START = 0x14, 0x19
+# ... and the weapons' copy with all fourteen of its stories in it would still be (12,405 bytes, the
+# buffer's LONGEST 11,376): their lines are in a script of their own, each story calling its part
+TOLD_IN = {222: 224}
+EXIT = 0x31
+# What script_chunks left out, and why (a kind's part too long, or not as expected), for the
+# Loader to tell: each run starts it afresh
+LEFT_OUT: List[str] = []
+_log = logging.getLogger(__name__)
 # (item, story): the slave pens' two (arms.py)
 ARMS = {
     SWORDS: (("Shadowseeker",
@@ -368,8 +380,29 @@ def _nothing(reply) -> bool:
     return reply["text"][0] == "str" and reply["text"][1].strip() == NOTHING.strip()
 
 
-def with_items(script: bytes, field_types: bytes, kinds=KINDS) -> bytes:
-    """SCRIPT (the game's) with each kind's new item (unchanged if it isn't as expected)."""
+def told(kinds) -> Tuple[bytes, Dict[str, int]]:
+    """A script of the kinds' new stories' lines (TOLD_IN), and where each item's part starts: a
+    19h, then each story's lines and a 19h ending it (a call's return, as each part of the
+    game's 212 and 213), and an exit after the last."""
+    out, places = bytearray(gpl.encode_op((START, []))), {}
+    for kind in kinds:
+        for item, text in kind.items:
+            places[item] = len(out)
+            s = _Script()
+            s.say(text)
+            out += s.bytes(end=False) + gpl.encode_op((START, []))
+    return bytes(out + gpl.encode_op((EXIT, []))), places
+
+
+def with_items(script: bytes, field_types: bytes, kinds=KINDS, told_in: Optional[Tuple[int, Dict[str, int]]] = None,
+               why: Optional[List[str]] = None) -> bytes:
+    """SCRIPT (the game's) with each kind's new item (unchanged if it isn't as expected, or would be
+    too long: the reason in WHY). TOLD_IN: (a script, each item's place in it) whose parts say the
+    stories (told()), called from each story instead of its lines here."""
+    def unchanged(reason: str) -> bytes:
+        if why is not None:
+            why.append(reason)
+        return script
     if any(gpl.encode_expr(("str", f"  {item}")) in script for kind in kinds for item, _ in kind.items):
         return script  # (done already: the commands made jumps no longer decode)
     ops = gpl.decode(script, field_types)
@@ -382,7 +415,7 @@ def with_items(script: bytes, field_types: bytes, kinds=KINDS) -> bytes:
         menu_i = next((i for i, o in enumerate(ops) if o.code == MENU and o.args[0]["replies"]
                        and o.args[0]["replies"][0]["text"] == ("str", kind.first_reply)), None)
         if none is None or menu_i is None or menu_i < 2:
-            return script
+            return unchanged(f"{kind.first_reply.strip()}'s part not found")
         first_test, held, chain = none, [], []
         while first_test >= 2 and ops[first_test - 1].code == 0x3E and ops[first_test - 2].code == TEST \
                 and _locals(ops[first_test - 2].args[0]) is not None:
@@ -391,7 +424,7 @@ def with_items(script: bytes, field_types: bytes, kinds=KINDS) -> bytes:
             chain.insert(0, (_locals(ops[first_test].args[0]), ops[first_test + 1].args[0]))
         done = _locals(ops[menu_i - 2].args[0]) if ops[menu_i - 2].code == TEST else None
         if not held or not done or len(done) != 1:
-            return script
+            return unchanged(f"{kind.first_reply.strip()}'s part not as expected")
         done = done[0]
         # the new items' locals: after the menu's, past the loop's own
         menu = ops[menu_i].args[0]
@@ -419,7 +452,11 @@ def with_items(script: bytes, field_types: bytes, kinds=KINDS) -> bytes:
         s.sub(f"left {k}", lambda all_of=all_of, done=done: s.when(_zero(all_of), lambda: s.set(done, 1)))
         for j, ((item, text), n) in enumerate(zip(kind.items, mine)):
             story = f"story {k} {j}"
-            s.sub(story, lambda text=text, n=n, k=k: (s.say(text), s.op(SET, ("n", 0), _set(n)), s.call(f"left {k}")))
+            if told_in is not None and item in told_in[1]:
+                say = lambda item=item: s.op(CALL, ("n", told_in[1][item]), ("n", told_in[0]))
+            else:
+                say = lambda text=text: s.say(text)
+            s.sub(story, lambda say=say, n=n, k=k: (say(), s.op(SET, ("n", 0), _set(n)), s.call(f"left {k}")))
             replies.insert(at + j, {"text": ("str", f"  {item}"), "goto": ("label", story),
                                     "if": _read(n), "before": [], "after": []})
         copy = f"menu {k}"
@@ -434,7 +471,7 @@ def with_items(script: bytes, field_types: bytes, kinds=KINDS) -> bytes:
                 continue
             start = at_index.get(reply["goto"][1]) if reply["goto"][0] == "n" else None
             if start is None:
-                return script
+                return unchanged(f"{kind.first_reply.strip()}'s story {r} not found")
             end = _story_end(ops, start)
             for t in range(start, end - 2):
                 names = _locals(ops[t].args[0]) if ops[t].code == TEST else None
@@ -449,7 +486,8 @@ def with_items(script: bytes, field_types: bytes, kinds=KINDS) -> bytes:
     added = s.bytes(base=len(script), end=False)
     out = bytearray(script) + added
     if len(out) > LONGEST:
-        return script
+        return unchanged(f"{', '.join(k.first_reply.strip() for k in kinds)}: {len(out)} bytes, past the "
+                         f"scripts' buffer ({LONGEST})")
     gpl.put_jumps(out, script, field_types, [(at, s.at[label]) for at, label in jumps])
     return bytes(out)
 
@@ -479,8 +517,15 @@ def script_chunks(chunks, field_types: bytes, arms: bool = True, magic: bool = T
                   pens: bool = True) -> Dict[Tuple[str, int], bytes]:
     """For the Loader's copy of GPLDATA: Alagorn's talks (his two scripts, and the copies of 212:
     COPY_OF) with the magic items of the switches on (ARMS: Kreenfang and Shadowseeker; PENS:
-    Inixhide and the rings and cloak of protection; MAGIC: the world's and the tome)."""
+    Inixhide and the rings and cloak of protection; MAGIC: the world's and the tome). A kind left
+    out (its script too long, or not as expected) is logged and in LEFT_OUT, with why."""
     out: Dict[Tuple[str, int], bytes] = {}
+    del LEFT_OUT[:]
+
+    def left_out(chosen, reason: str) -> None:
+        line = f"Alagorn's {', '.join(k.first_reply.strip() for k in chosen)} menu ({reason})"
+        LEFT_OUT.append(line)
+        _log.warning("left out: %s", line)
     for number in (SCRIPT, OTHER_SCRIPT):
         key = ("GPL ", number)
         if key not in chunks:
@@ -490,20 +535,39 @@ def script_chunks(chunks, field_types: bytes, arms: bool = True, magic: bool = T
             first = (kind.first_reply, kind.none_text)
             groups.setdefault(COPY_OF.get(first, number), []).append(kind)
         for target, chosen in groups.items():
-            changed = with_items(chunks[key], field_types, tuple(chosen))
+            stories, told_in = None, None
+            if target in TOLD_IN:
+                if ("GPL ", TOLD_IN[target]) in chunks:
+                    left_out(chosen, f"script {TOLD_IN[target]} is the game's")
+                    continue
+                stories, places = told(chosen)
+                told_in = (TOLD_IN[target], places)
+                if len(stories) > LONGEST:
+                    left_out(chosen, f"its stories' script, {len(stories)} bytes, past the buffer ({LONGEST})")
+                    continue
+            why: List[str] = []
+            changed = with_items(chunks[key], field_types, tuple(chosen), told_in, why)
             if changed == chunks[key]:
+                if why:
+                    left_out(chosen, "; ".join(why))
                 continue
             if target != number:
-                if ("GPL ", target) in chunks or ("GPL ", TALK) not in chunks:
+                if ("GPL ", target) in chunks:
+                    left_out(chosen, f"script {target} is the game's")
                     continue
+                if ("GPL ", TALK) not in chunks:
+                    continue  # (no talk to call it: nothing to tell from)
                 talk = out.get(("GPL ", TALK), chunks[("GPL ", TALK)])
                 for kind in chosen:
                     entry = _entry(chunks[key], field_types, kind)
                     talk = _called_from(talk, field_types, entry, target, number) if entry is not None and talk else None
                 if not talk:
+                    left_out(chosen, f"his talk ({TALK}) doesn't call the part as expected")
                     continue
                 out[("GPL ", TALK)] = talk
             out[("GPL ", target)] = changed
+            if stories is not None:
+                out[("GPL ", TOLD_IN[target])] = stories
     return out
 
 

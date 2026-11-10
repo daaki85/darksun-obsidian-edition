@@ -189,9 +189,8 @@ How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#the-combat-log-in-
 
 ### Names over figures
 
-With **Float a spell's name over its caster, "Miss" over whoever an attack
-missed, and a used charge ("Armor: 7 left") over its owner** ticked on the
-Options tab (the default), a spell's name floats over
+With **Names over figures** ticked on the Options tab (the default), a spell's
+name floats over
 its caster for a second and a half as it is cast, and "Miss" over anyone an
 attack misses, in the game's lettering with a dark edge. They work in and out
 of fights, for the party and the monsters alike, and a weapon's spell on a hit
@@ -227,8 +226,8 @@ takes half of, spells that don't work on it, and what its hits do besides
 damage. The AC is the one the game last used against it; before anything
 has attacked it, the Loader works it out as the game would, from its armour,
 shield and DEX (spells on it, such as Barkskin, aren't counted until then).
-The dice log gets the same lines (`Look: ...`). Untick **Describe
-monsters when you Look at them in a fight** on the Options tab to turn this
+The dice log gets the same lines (`Look: ...`). Untick **What hurts
+a monster (the Look box)** on the Options tab to turn this
 off.
 
 ![The Look box on a Screamer Beetle in the arena: LEVEL: 3, then HP 15/15 AC 2 and THAC0 17 AL TN added](docs/look-box.png)
@@ -417,7 +416,7 @@ game's attack takes it; the damage line above already has the material's
 damage off). Not for a weapon with a plus, nor for those the game spares
 (clubs, staves, the chatkcha), nor for metal.
 
-![A Bone Long Sword's item box in the game: 45 coins, "Bone" and "Long Sword", "1D8-1", "Hit -1"](docs/hit-line-box.png)
+![A Bone Long Sword's item box in the game: 45 coins, "Bone" and "Long Sword", "1D8-1/1D12-1" (with creature size on), "Hit -1"](docs/hit-line-box.png)
 
 How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#charges-in-item-boxes).
 
@@ -592,7 +591,7 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#multiclass-hit-points)
 
 #### Hit dice: the better of two
 
-With **Hit dice rolled twice** ticked, every character's hit die is rolled
+With **Hit dice: the better of two** ticked, every character's hit die is rolled
 twice and the better roll kept: at creation (one die for each starting level
 of each class) and at every level gained. Everything after the roll is the
 game's (or the other rules'): CON's least, a half-giant's double, and a
@@ -889,8 +888,8 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#two-weapons).
 
 #### Half-giants' two-handed weapons
 
-Half-giants stand up to twelve feet tall. With **Half-giants wield
-two-handed weapons in one hand** ticked, a half-giant can hold a two-handed
+Half-giants stand up to twelve feet tall. With **Half-giants' two-handed
+weapons** ticked, a half-giant can hold a two-handed
 weapon (a two-handed sword, a halberd, a bow) in one hand, with a shield or a
 light weapon in the other. The game's own rule that the two hands can't both
 hold heavy weapons (over 30 in weight each) still stands, so no half-giant
@@ -963,7 +962,7 @@ their kind...), and **anyone Enlarged**, whatever their size.
   | Club | 1d6 | 1d3 |
   | Mace | 1d6+1 | 1d6 |
   | Pick | 1d4+1 | 1d4 |
-  | Chatkcha | 1d6+2 | 1d4+1 |
+  | Chatkcha | 1d6+2 | 1d4+2 |
   | Great axe | 1d10 | 2d8 |
   | Polearm | 1d10 | 2d6 |
   | Gythka | 2d4 | 2d6 |
@@ -1067,7 +1066,7 @@ The game's own checks:
   a roll, plus or no plus: Tanelyv's Armor +2 goes as surely as plain leather.
   (The game reads the byte that holds the item's power, not its plus.)
 
-With **Items save against acid as in AD&D** ticked, each item needs the easier
+With **Items saving against acid as in AD&D** ticked, each item needs the easier
 of the game's number and AD&D's saving throw against acid for its material
 (the DMG's table), so no item is worse off than in the game. AD&D's number is
 less the item's plus, and 1 less again for a magical power:
@@ -1498,7 +1497,9 @@ half an attack less; with a chosen weapon spec it keeps the game's rate (a
 grand master one more).
 
 Missile weapons have a rate of fire of their own in the game, the same for
-everyone (a bow 2 a round, a sling, staff sling or chatkcha 1). With the rule,
+everyone (a bow 2 a round, a sling, staff sling or chatkcha 1). A thri-kreen
+throws a chatkcha one more time a round, whatever the rule (2 instead of 1:
+AD&D's 2/1 for the thri-kreen's own weapon). With the rule,
 fighters and gladiators shoot faster with a chosen weapon spec, and rangers
 with theirs and every bow: AD&D's specialist's rate for the sling, a step above
 it for the bow, staff sling and chatkcha. From 7th level every warrior shoots
@@ -1744,7 +1745,7 @@ elf's figure, with its own switch: see
 | Character | With weapon specialization | With class restrictions | With kits |
 |---|---|---|---|
 | **Gerakis**, half-giant gladiator | specializes in the long sword and the gythka; with [half-giants' two-handed weapons](#half-giants-two-handed-weapons), his club is a bone gythka, a two-handed weapon beside his long sword | | **Wild Fighting**, as a [Wild Fury](KITS.md#multiclass-kits) has it, as each fight starts |
-| **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | | casts and uses psionics as a [Wasteland Seer](KITS.md#multiclass-kits) does (druid spells 2 levels higher under the open sky, 1 lower under a roof; psionic powers 2 PSP less under the open sky, 1 more under a roof); her **chatkcha comes back as if she had several**: one more throw a round (2 instead of 1, or more with its weapon spec) |
+| **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | | casts and uses psionics as a [Wasteland Seer](KITS.md#multiclass-kits) does (druid spells 2 levels higher under the open sky, 1 lower under a roof; psionic powers 2 PSP less under the open sky, 1 more under a roof); her **chatkcha comes back as if she had several**: one more throw a round (2 instead of 1, or more with its weapon spec), as every thri-kreen's now does |
 | **Cermak**, human preserver, once a gladiator | specializes in the long sword and the axe, which count once his gladiator levels do again (when his preserver level passes them) | | an **Arcanist**, the kit of his preserver class: two preserver spells a turn in a fight |
 | **Cilla**, elf preserver, druid and thief | | no leather armour (a druid wears none), and she knows the **Armor** spell in its place | an **Elven Shadow-walker** (her own feature): with the [stealth rule](#hiding-in-shadows-to-backstab), her hiding in shadows is never halved in daylight |
 
@@ -1805,8 +1806,8 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#the-leaders-cha-at-sho
 
 ### Buying back magical items
 
-The game destroys whatever the party sells. With **Merchants keep the magical
-items the party sells them** ticked, a magical item sold (one with a plus, or a power:
+The game destroys whatever the party sells. With **Buying back magical
+items** ticked, a magical item sold (one with a plus, or a power:
 a ring, a wand, a scroll...) goes into the merchant's pack instead, and the
 shop offers it for sale at its price, less the leader's CHA discount, so it
 can be bought back. Anything else sold is gone, as in the game. With the CHA
@@ -1857,8 +1858,8 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#thief-skills-from-adds
 #### Hiding in shadows to backstab
 
 The game never rolls hide in shadows, and a thief only backstabs a target that
-has turned to face someone else. With **Thieves hide in shadows and move
-silently to backstab, rangers to attack from behind** ticked, a thief whose turn
+has turned to face someone else. With **Hiding in shadows to
+backstab** ticked, a thief whose turn
 comes in a fight with no enemy in any of the eight squares around them tries to
 hide in shadows; if they do, they try to move silently up to someone; and if
 both succeed, their next attack that turn counts as one from behind: +2 to hit,
@@ -2320,7 +2321,7 @@ item. The game's names are at most 15 letters, so the rings are
 the log give them in full. As with its own items, the game puts the material
 first: **Leather Inixhide**, **Metal +1 Shadowseeker** in the item box.
 
-![Shadowseeker's item box in the game: 22000, Detect Invisibility's icon, "Metal +1 Shadowseeker", 1D6+1](docs/shadowseeker-box.png)
+![Shadowseeker's item box in the game: 22000, Detect Invisibility's icon, "Metal +1 Shadowseeker", 1D6+1/1D8+1](docs/shadowseeker-box.png)
 
 **Alagorn**, the wizard of the Painted Badlands who identifies magic items,
 tells the story of every one of the mod's magic items in [Every magic

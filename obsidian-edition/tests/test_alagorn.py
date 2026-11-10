@@ -348,3 +348,71 @@ class RetoldTests(unittest.TestCase):
         self.assertEqual(jumps_back, [old_ops[1].at] + sets)  # (after the menu; after each story's lines)
         self.assertEqual(alagorn.retold(out, FIELDS), out)  # (once only)
         self.assertEqual(alagorn.retold(alagorns(), FIELDS), alagorns())  # (a script without them: as it is)
+
+
+class ToldApartTests(unittest.TestCase):
+    """The weapons' copy (222) says its stories from a script of their own (alagorn.TOLD_IN: 224),
+    each story calling its part; a kind left out for length is told of, not dropped silently."""
+
+    def setUp(self):
+        self.script = alagorns(last=alagorn.NOTHING.strip())
+        kinds = alagorn.KINDS
+        entries = [alagorn._entry(self.script, FIELDS, k) for k in kinds]
+        talk = _Script()
+        for entry in entries:
+            talk.op(alagorn.CALL, ("n", entry), ("n", alagorn.SCRIPT))
+        self.talk = talk.bytes(end=False)
+        self.chunks = {("GPL ", alagorn.SCRIPT): self.script, ("GPL ", alagorn.TALK): self.talk}
+
+    def test_told_parts(self):
+        """Each item's part follows a 19h and ends at the next (a call's return); an exit last."""
+        weapons = tuple(k for k in alagorn.KINDS if k.first_reply == alagorn.WEAPONS[0])
+        stories, places = alagorn.told(weapons)
+        ops = gpl.decode(stories, FIELDS)
+        at = {o.at: i for i, o in enumerate(ops)}
+        self.assertEqual([o.code for o in ops[-2:]], [BACK, alagorn.EXIT])
+        self.assertEqual(ops[0].code, BACK)
+        self.assertEqual(list(places), [item for item, _ in weapons[0].items])
+        for item, text in weapons[0].items:
+            i = at[places[item]]  # (on a command's start)
+            self.assertEqual(ops[i - 1].code, BACK)
+            j = next(j for j in range(i, len(ops)) if ops[j].code == BACK)
+            said = "".join(o.args[1][1] for o in ops[i:j] if o.args[1][0] == "str")
+            self.assertEqual(said.split(), text.split())
+
+    def test_weapons_copy_calls_its_stories(self):
+        out = alagorn.script_chunks(self.chunks, FIELDS)
+        self.assertEqual(alagorn.LEFT_OUT, [])
+        self.assertEqual(sorted(out), [("GPL ", 211), ("GPL ", 213), ("GPL ", 222), ("GPL ", 224)])
+        copy, stories = out[("GPL ", 222)], out[("GPL ", 224)]
+        weapons = next(k for k in alagorn.KINDS if k.first_reply == alagorn.WEAPONS[0])
+        _, places = alagorn.told((weapons,))
+        ops = gpl.decode(copy, FIELDS)
+        in_copy = " ".join(gpl.strings(ops))
+        in_stories = " ".join(gpl.strings(gpl.decode(stories, FIELDS)))
+        for item, text in weapons.items:
+            self.assertIn(gpl.encode_expr(("str", f"  {item}")), copy)
+            self.assertNotIn(f"{item}!", in_copy)  # (its lines in 224 only)
+            self.assertIn(f"{item}!", in_stories)
+        calls = [o.args for o in ops if o.code == alagorn.CALL]
+        self.assertEqual(calls, [[("n", places[item]), ("n", 224)] for item, _ in weapons.items])
+        # each call a story's first command, its local cleared after it, as the stories said
+        for i, o in enumerate(ops):
+            if o.code == alagorn.CALL:
+                self.assertEqual(ops[i - 1].code, RETURN)
+                self.assertEqual(ops[i + 1].code, SET)
+        # the swords stay in 213, told there
+        self.assertIn("Shadowseeker! The head guards", " ".join(gpl.strings(gpl.decode(out[("GPL ", 213)], FIELDS))))
+
+    def test_too_long_reported(self):
+        """A kind whose script would be too long: the game's script, and why, in LEFT_OUT and the log."""
+        from unittest import mock
+        why = []
+        with mock.patch.object(alagorn, "LONGEST", len(self.script) + 10):
+            self.assertEqual(alagorn.with_items(self.script, FIELDS, alagorn.KINDS, why=why), self.script)
+            with self.assertLogs("dsloader.alagorn", "WARNING"):
+                out = alagorn.script_chunks(self.chunks, FIELDS)
+        self.assertTrue(why and "past the scripts' buffer" in why[0])
+        self.assertEqual(out, {})
+        self.assertEqual(len(alagorn.LEFT_OUT), 2)
+        self.assertTrue(any("Balkazar's Staff" in line for line in alagorn.LEFT_OUT))

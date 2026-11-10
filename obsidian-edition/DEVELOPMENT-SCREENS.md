@@ -343,7 +343,11 @@ dice log running:
   boxes at the top, row 40, and kept on the screen; a figure whose feet are
   above the page's top, the view dragged away, gets none), as the main loop doesn't
   run while the game shows an attack or a spell.
-- **The main loop** (`LABEL_TICK`, after `PANEL_TICK` in `PROBE_SCROLL`)
+- **The main loop** (`LABEL_TICK`, after `PANEL_TICK` in `PROBE_SCROLL`, which
+  runs its pass with interrupts on when the game had them on, off only round
+  the pointer's read with the drag's state and `TARGET_CLICK`'s calls to the
+  game's mouse handler: until 2026-11-10 the whole pass, redraws and the
+  retrace wait too, ran with them off and the game's clock lost ticks)
   places labels too, and has where one was drawn again when it goes, moves or
   changes (`LABEL_ERASE`: the game's routine for a rectangle of the view,
   `1DF3:142Fh`, with page 1 and a flip, as its own call at 28185h; page 0

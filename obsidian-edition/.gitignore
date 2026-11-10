@@ -3,6 +3,8 @@ __pycache__/
 FAKEPTY.COM
 settings.json
 settings.json.tmp
+settings.json.*.tmp
+game.lock
 settings.json.bad
 dosbox_dicelog.conf
 DSUNLOG.EXE

@@ -53,10 +53,14 @@ def _query_bytes(text: str) -> bytes:
 WINDOW_CHOICES = {"Single (320x240)": 1, "Double (640x480)": 2, "Triple (960x720)": 3, "Quadruple (1280x960)": 4, "Full screen": None}
 
 class Viewer:
-    def __init__(self, root: tk.Tk, layout: Layout, connect: Callable[[], GuestMemory]):
+    def __init__(self, root: tk.Tk, layout: Layout, connect: Callable[[], GuestMemory],
+                 connect_pid: Optional[Callable[[int], GuestMemory]] = None, dosbox=None):
         self.root = root
         self.layout = layout
         self.connect = connect
+        # (the DOSBox this window, or the launch before it, started: found by its pid, so that another
+        # DOSBox running beside it doesn't stop the attach)
+        self.connect_pid = connect_pid
         self.guest: Optional[GuestMemory] = None
         self.hits: List[int] = []
         self.hex_start = 0  # guest address of the first byte in the hex view
@@ -66,7 +70,7 @@ class Viewer:
         self.ds: Optional[int] = None  # the game's data segment, once found
         self.dice: Optional[DiceLog] = None
         self.next_try = 0.0  # when to retry connecting / attaching
-        self.dosbox = None  # the game, when started from here (Start the game)
+        self.dosbox = dosbox  # the game, when started from here (Start the game, or `launch`)
         self._game_dir, self._started, self._refused = None, 0.0, []  # (for a crash report)
         self._learned_unsaved = False  # (names or pockets the settings file refused, last pass)
         # the game's portraits and font, from the player's own install (if it can be found)
@@ -83,6 +87,9 @@ class Viewer:
         root.protocol("WM_DELETE_WINDOW", self.close)
         self._build()
         self.reconnect()
+        if self._options_unread:
+            self.status.set(f"The Options tab shows the defaults: {self._options_unread}. A switch you change is "
+                            "saved alone, the rest of your settings kept; open the Loader again to see them.")
         self._tick()
         self._dice_tick()
 
@@ -339,7 +346,14 @@ class Viewer:
         area = theme.ScrollArea(tabs, padding=6)
         tabs.add(area, text="Options", underline=0)
         options = area.inner
-        settings = launch.load_settings()
+        # the player's settings, read strictly: one held a moment by an antivirus or a backup is tried
+        # again for a second, and if it still can't be read the tab shows the defaults and says so
+        # (_options_unread); only a switch then changed is saved, never the defaults over the file
+        try:
+            settings = launch.load_settings(strict=True, tries=20)
+            self._options_unread: Optional[str] = None
+        except launch.SettingsUnreadable as e:
+            settings, self._options_unread = {}, e.strerror
         self.sections: Dict[str, theme.Section] = {}
         opened = settings.get("options_open", [])
         opened = opened if isinstance(opened, list) else []
@@ -372,12 +386,13 @@ class Viewer:
                             command=self._options_changed).pack(anchor="w", padx=(20, 0))
         # the game's Look box, on a monster in a fight: what hurts it, then all of it in a window
         self.monster_info = tk.BooleanVar(value=bool(settings.get("monster_info", True)))
-        ttk.Checkbutton(in_game, text="Describe monsters when you Look at them in a fight (hit points, AC, THAC0 and defences, then a window)",
+        ttk.Checkbutton(in_game, text="What hurts a monster (the Look box): Look at one in a fight for its hit points, AC, "
+                        "THAC0 and defences, and the rest as the box closes",
                         variable=self.monster_info, command=self._options_changed).pack(anchor="w", pady=(4, 0))
         # names floating over figures on the map for a moment (labels.py)
         self.floating_names = tk.BooleanVar(value=bool(settings.get("floating_names", True)))
-        ttk.Checkbutton(in_game, text="Float a spell's name over its caster, \"Miss\" over whoever an attack missed, "
-                        "and a used charge (\"Armor: 7 left\") over its owner",
+        ttk.Checkbutton(in_game, text="Names over figures: a spell's name over its caster, \"Miss\" over whoever an "
+                        "attack missed, and a used charge (\"Armor: 7 left\") over its owner",
                         variable=self.floating_names, command=self._options_changed).pack(anchor="w")
         rules = section("rules", "Rule changes")
         # in three groups, as FEATURES.md has them
@@ -387,32 +402,11 @@ class Viewer:
             ttk.Label(frame, text=title, style="Status.TLabel").pack(anchor="w")
             frame.pack(anchor="w", fill="x", pady=(8 if rule_groups else 0, 0))
             rule_groups[group] = frame
-        # the spells' records as the manual has them (gamepatch.SPELLS_MANUAL)
+        # the spells' records as the manual has them (gamepatch.SPELLS_MANUAL), and missile and hostile
+        # touch spells rolling to hit (gamepatch.SPELL_TO_HIT): content switches (the game's copy is
+        # written with them), with their boxes among the rule changes below
         self.spells_manual = tk.BooleanVar(value=settings.get("spells_manual", True) is not False)
-        ttk.Checkbutton(rule_groups["magic"], text="Spells and psionics as the manual describes them: saves against Bestow "
-                        "Curse and Blood Flow; Flaming Sphere negated by a save; Solid Fog, Cause Fear "
-                        "and Minor Spell Turning for the manual's time; no save against Quicksand; Turn Pebble to Boulder 11-26, Ironskin a blow a "
-                        "level, Stinking Cloud "
-                        "1d4+1 rounds; Chaos saved against by INT 21+ or 4-; Free "
-                        "Action frees the Stuck; Color Spray saved against only by those of more levels than "
-                        "the caster, Hold Undead only on undead of no more; Minute Meteors five globes of 1d4, "
-                        "Flame Arrow a 5d6 bolt for every five levels; Turn Undead by AD&D's table (turned undead "
-                        "flee, a failed priest can't try again that fight); a classless monster's hit dice its "
-                        "level for saves; Fire Shield +2 and Blur +1 on saves; Chill Touch frightens undead; "
-                        "Cloudkill slays by hit dice; Lower Resistance 30% + 1% a level; Strength and Cat's Grace "
-                        "by class, not added to each other's kind; Rainbow Pattern a round a level, ended by "
-                        "damage; Feeblemind stops psionics and Heal cures it; Cell Adjustment 1d4; Biofeedback leaves "
-                        "at least 1 of a blow; and the monsters: shadows drain STR and shrug off cold, the Babau's and "
-                        "Blue Slaad's deadly poison, the Tari's disease, the Styr's fire breath, the Djinn's "
-                        "invisibility and images; from the next start", variable=self.spells_manual,
-                        command=self._options_changed).pack(anchor="w")
-        # missile and hostile touch spells roll to hit (gamepatch.SPELL_TO_HIT)
         self.spell_to_hit = tk.BooleanVar(value=settings.get("spell_to_hit", True) is not False)
-        ttk.Checkbutton(rule_groups["magic"], text="Spells roll to hit: Acid Arrow, Turn Pebble to Boulder, "
-                        "Magical Stone, Condense, Minute Meteors (+2) and a monster's spines, and touch spells on a foe (Chill Touch, "
-                        "Shocking Grasp, Vampiric Touch, the Cause spells, Poison), against the target's AC; "
-                        "from the next start", variable=self.spell_to_hit,
-                        command=self._options_changed).pack(anchor="w")
         custom = section("custom", "More character customization")
         features = section("features", "Expanded features")
         # the thief's rules and picking pockets together, as the guide's Thieves section has them
@@ -423,7 +417,7 @@ class Viewer:
         new = section("new_content", "New content")
         ttk.Label(new, text="People, a quest, an arena bout and items: from the next start, in places "
                   "not yet visited. What a saved game already has (people met, items given) stays in it. "
-                  "The new spells: at once.",
+                  "The new spells and defilers' scrolls: at once.",
                   wraplength=460).pack(anchor="w")
         options.bind("<Configure>", lambda e, label=new.winfo_children()[-1]: label.configure(
             wraplength=max(200, e.width - 60)), add="+")
@@ -432,7 +426,9 @@ class Viewer:
         # one switch for each of game.RULE_SETTINGS
         self.rule_vars: Dict[str, tk.BooleanVar] = {}
         self.stealth_gear = tk.BooleanVar(value=settings.get("stealth_gear", True) is not False)
-        # (in the order FEATURES.md has them: the rule changes in their three groups)
+        # (in the order FEATURES.md has them, each opening with the name it has there: the rule
+        # changes in their three groups, then the rest in their sections)
+        own_vars = {"spells_manual": self.spells_manual, "spell_to_hit": self.spell_to_hit}
         for key, group, text in (
                 ("class_restrictions", "characters", "Class restrictions on armour, shields and weapons, the strictest class "
                                                      "winning (psionicists, multiclass thieves, preservers, druids, clerics' "
@@ -441,12 +437,12 @@ class Viewer:
                                                      "no thief skills in armour that isn't light"),
                 ("multiclass_hp", "characters", "Multiclass hit points as in AD&D: CON's bonus on every die (a warrior's if "
                                                 "a class is a warrior), the total shared between the classes"),
-                ("best_hit_die", "characters", "Hit dice rolled twice, the better kept, at creation and at every level "
-                                               "(every character)"),
-                ("rolled_scores", "characters", "Character creation keeps what the die rolls: a score may be raised only "
-                                                "while the six add up to no more than the die gave (lower one to raise "
-                                                "another; the total is shown under CHR), and the hit points can't be "
-                                                "clicked; a change of CON adds or takes off its bonus"),
+                ("best_hit_die", "characters", "Hit dice: the better of two, each die rolled twice at creation and at "
+                                               "every level (every character)"),
+                ("rolled_scores", "characters", "Scores and hit points as rolled: on the creation screen a score may be "
+                                                "raised only while the six add up to no more than the die gave (lower "
+                                                "one to raise another; the total is shown under CHR), and the hit points "
+                                                "can't be clicked; a change of CON adds or takes off its bonus"),
                 ("adnd_tables", "characters", "AD&D's class tables: the XP each class needs (a gladiator's its own, not the "
                                               "fighter's), priests' THAC0 (2 better every 3 levels), and clerics', druids' and "
                                               "preservers' spell slots by level (WIS's bonus slots stay the game's)"),
@@ -461,38 +457,54 @@ class Viewer:
                                              "3rd level (the game's 2nd), with every prime requisite of the old "
                                              "class at 15 or more and every one of the new class at 17 or more "
                                              "(the game checks only one: a ranger, druid or psionicist on WIS alone)"),
+                ("level_10", "characters", "Level cap by XP: 749,999 XP in place of the game's cap of 9th level; a single "
+                                           "class rises while its next level needs no more, a multiclass character's "
+                                           "classes share it evenly, and a human's new class gets what its old "
+                                           "classes' levels didn't use"),
                 ("two_weapons", "arms", "Two weapons: -2 main hand, -4 off hand, DEX reaction adjustment added "
-                                        "(no better than 0; rangers and Twin-blades none in light armour); the off hand attacks once a round"),
+                                        "(no better than 0; rangers and some kits none in light armour); the off hand "
+                                        "attacks once a round"),
+                ("half_giant_hands", "arms", "Half-giants' two-handed weapons: a half-giant wields one in one hand (a "
+                                             "shield or a light weapon in the other; two heavy weapons still can't be held)"),
+                ("cahulaks", "arms", "Cahulaks as Dark Sun's rules have them: a head in each hand, so one more attack a "
+                                     "round, at -2 and -4 (DEX's reaction adjustment added) even with Two weapons "
+                                     "unticked; a hit tangles a man-sized or smaller foe (not a half-giant, a large "
+                                     "creature or anyone Enlarged) that fails a save against petrification: it loses "
+                                     "its next turn"),
+                ("creature_size", "arms", "Creature size as in AD&D: a large target, party member or foe (a half-giant, "
+                                          "a Bulette, anyone Enlarged), takes AD&D's weapon dice against large creatures: "
+                                          "more from some weapons (a long sword 1d12), less from others (a dagger or "
+                                          "club 1d3); Hold Person and Charm Person have no effect on it"),
                 ("held_hit", "arms", "Held targets as in AD&D: a blow on a Paralyzed or Out Cold foe (or friend) "
                                      "hits automatically and does normal damage (the game rolls to hit and "
                                      "doubles the damage)"),
-                ("creature_size", "arms", "Creature size as in AD&D: a large foe (a half-giant, a Bulette, an Enlarged "
-                                          "fighter...) takes AD&D's large weapon dice (a long sword 1d12); Hold Person "
-                                          "and Charm Person don't take on one"),
-                ("cahulaks", "arms", "Cahulaks as Dark Sun's rules have them: a head in each hand, the off head's "
-                                     "attack one more a round at the two-weapon penalties (-2 and -4, DEX added); a hit "
-                                     "tangles a man-sized or smaller foe (not a half-giant, a large creature or anyone "
-                                     "Enlarged) that fails a save against petrification: it loses its next turn"),
-                ("half_giant_hands", "arms", "Half-giants wield two-handed weapons in one hand (a shield or a light "
-                                             "weapon in the other; two heavy weapons still can't be held)"),
                 ("protection_rules", "arms", "Rings and cloaks of protection as in AD&D: only the better of two rings "
                                              "counts, a ring gives no AC with magical armour, and a cloak does nothing "
                                              "with magical or metal armour or a shield"),
                 ("helm_ac", "arms", "Helms give AC 1 (the game's helms give none)"),
-                ("item_saves", "arms", "Items save against acid as in AD&D, by material, a plus helping, where that's "
+                ("item_saves", "arms", "Items saving against acid as in AD&D, by material, a plus helping, where that's "
                                        "better than the game's (which destroys armour without a magical power outright)"),
-                ("ranger_casting_level", "magic", "Rangers' spells last and do damage as cast at the ranger level less 7, "
-                                                  "as the spell levels they may cast count it (the game takes the whole "
-                                                  "level)"),
+                ("ranger_casting_level", "magic", "Rangers' casting level: a ranger's spells last and do damage as cast "
+                                                  "at its level less 7, as its spell levels already count it (the game "
+                                                  "uses the whole ranger level)"),
                 ("int_learning", "magic", "Preservers' INT: a chance to learn a spell from a scroll (35% at INT 9 "
                                           "to 100% at 24; a failed try uses the scroll up) and the most spells of "
                                           "each spell level they may know (6 at INT 9, all from 19)"),
-                ("spell_save", "magic", "Spells are saved against with the spell save (the game uses "
+                ("spell_save", "magic", "Spells saved against with the spell save (the game uses "
                                         "petrification/polymorph)"),
-                ("no_doubled_save", "magic", "Saves against fire, cold and electricity: DEX defensive adjustment "
-                                             "instead of a doubled d20"),
+                ("no_doubled_save", "magic", "Fire, cold and electricity: DEX instead of a doubled d20 (DEX's "
+                                             "defensive adjustment on those saves; the game doubles the save's d20)"),
                 ("enlarge_dice", "magic", "Enlarge multiplies the weapon's dice only, rounded up, STR and magic added after, "
                                           "as in AD&D (the game multiplies the whole melee damage, STR included)"),
+                ("spells_manual", "magic", "Spells and psionics as the manual describes them: some two dozen spells' and "
+                                           "two powers' saves, times and damage as the manual gives them (Stinking Cloud, "
+                                           "Color Spray, Cloudkill...), Turn Undead by AD&D's table, monsters' saves by "
+                                           "hit dice and seven monsters' powers (the shadows' STR drain...), all listed in "
+                                           "Features and rules; from the next start"),
+                ("spell_to_hit", "magic", "Spells roll to hit: Acid Arrow, Turn Pebble to Boulder, Magical Stone, Condense, "
+                                          "Minute Meteors (+2) and a monster's spines, and touch spells on a foe (Chill "
+                                          "Touch, Shocking Grasp, Vampiric Touch, the Cause spells, Poison), against the "
+                                          "target's AC; from the next start"),
                 ("rest_heal", "magic", "Resting as in AD&D: before a rest the party's priests spend the spells "
                                        "they have left on the party (Neutralize Poison, Cure Blindness, Cure "
                                        "Disease, the Cure Wounds spells and Heal on the most wounded) and "
@@ -504,32 +516,32 @@ class Viewer:
                                                 "rangers shoot missiles faster; other weapons at a warrior's plain rate "
                                                 "(chosen in the weapon window after DONE, and at a level up)"),
                 ("kits", None, "Kits: a character of one class may take one of its class's three kits, and some "
-                               "races' classes taken together (pairs, and one of three) have kits of their own, each giving something and "
-                               "costing something (chosen on the creation panel's KIT page); the game's own "
-                               "party gets features of its own"),
-                ("level_10", "characters", "An XP cap of 749,999 in place of the game's level cap of 9: a single class rises while "
-                                   "its next level needs no more; a multiclass character's classes share it evenly; "
-                                   "a human's new class gets what its old classes' levels didn't use"),
-                ("cha_prices", None, "The leader's CHA lowers what shops ask: 5% off at CHA 18 and 5% more for each "
+                               "multiclass characters (pairs of classes, and one trio) have kits of their own, each "
+                               "giving something and costing something (chosen on the creation panel's KIT page); the "
+                               "game's own party gets features of its own"),
+                ("cha_prices", None, "The leader's CHA at shops: 5% off what shops ask at CHA 18 and 5% more for each "
                                      "point after, to 40% at 25; shops pay 60% of an item's price"),
-                ("buyback", None, "Merchants keep the magical items the party sells them, to buy back at their price "
-                                  "(the game destroys whatever is sold; other items still are)"),
+                ("buyback", None, "Buying back magical items: merchants keep the magical items the party sells them, "
+                                  "to buy back at their price (the game destroys whatever is sold; other items still are)"),
                 ("thief_table", None, "Thief skills from AD&D's table by level, with Dark Sun's race and DEX adjustments "
                                       "(the game adds 4 a level to a base of its own, and DEX by a formula)"),
-                ("stealth", None, "Thieves hide in shadows and move silently to backstab, rangers to attack from behind "
-                                  "(with no enemy beside them; a thief's chance halved in daylight, a ranger's "
-                                  "indoors; a few kits differ)"),
+                ("stealth", None, "Hiding in shadows to backstab: thieves hide in shadows and move silently to backstab, "
+                                  "rangers to attack from behind (with no enemy beside them; a thief's chance halved in "
+                                  "daylight, a ranger's indoors; a few kits differ)"),
                 ("backstab_dice", None, "A backstab multiplies the weapon's dice only, STR and magic added after, as in "
                                         "AD&D, on the round's first attack only (the game multiplies the whole damage, STR "
                                         "included, on the first two)"),
-                ("new_spells", None, "New spells: six for wizards (Cat's Grace at 2nd level: DEX + 1d6, or by class with the "
-                                     "manual's spells; at 1st, Erdlu "
+                ("new_spells", None, "New spells: six for wizards (Cat's Grace at 2nd level: DEX + 1d6, by class with "
+                                     "Spells and psionics as the manual describes them; at 1st, Erdlu "
                                      "Claw (unarmed 1d6+1), Fogbolt (-3 to hit, AC 2 worse), Reflected Image, Spook and "
                                      "Friends) and ten 6th-level priest spells from 11th level (Heal, Harm, Blade Barrier...)")):
-            self.rule_vars[key] = tk.BooleanVar(
-                value=bool(settings.get(key, settings.get(game.OLD_SETTING_NAMES.get(key, key), True))))
+            if key in own_vars:
+                var = own_vars[key]
+            else:
+                var = self.rule_vars[key] = tk.BooleanVar(
+                    value=bool(settings.get(key, settings.get(game.OLD_SETTING_NAMES.get(key, key), True))))
             parent = rule_groups[group] if group else where.get(key, rules)
-            ttk.Checkbutton(parent, text=text, variable=self.rule_vars[key],
+            ttk.Checkbutton(parent, text=text, variable=var,
                             command=self._options_changed).pack(anchor="w", pady=(4 if parent.winfo_children()[:-1] else 0, 0))
             if key == "stealth":  # (under it: what worn gear adds)
                 ttk.Checkbutton(thieves, text="... a worn cloak adds 10 to hiding, worn boots 10 to moving silently; "
@@ -664,6 +676,7 @@ class Viewer:
         ttk.Button(buttons, text="Open the folder", command=self.open_named_saves).pack(side="left")
         ttk.Button(buttons, text="Put a save in a slot...", command=self.restore_save).pack(side="left", padx=(8, 0))
         ttk.Button(options, text="Restore defaults", command=self.restore_defaults).pack(anchor="w", pady=(12, 0))
+        self._options_shown = self._option_values()  # (as read: only what changes from it is saved)
 
     def _wotr_status(self) -> str:
         """Where the Loader finds Wake of the Ravager, for the 6th-level priest spells' art."""
@@ -766,7 +779,7 @@ class Viewer:
         self.combat_log_level.set(dicelog.combat_log_level({}))
         self.ring_mode.set(rings.mode({}))
         self.game_speed.set(str(launch.DEFAULT_SPEED))
-        self._options_changed()
+        self._options_changed(every=True)
         self._speed_chosen()
         self.status.set("Options set back to their defaults (a switch marked \"from the next start\" applies when the game is next started).")
 
@@ -884,7 +897,11 @@ class Viewer:
         self._drop_dice()
         self._drop_guest()
         try:
-            self.guest = self.connect()
+            started = self.dosbox if self.dosbox is not None and self.dosbox.poll() is None else None
+            if started is not None and self.connect_pid is not None:
+                self.guest = self.connect_pid(started.pid)
+            else:
+                self.guest = self.connect()
         except Exception as e:  # shown to the user, who can fix it and retry
             self.guest = None
             if not quiet or not self.status.get().startswith("Not connected"):
@@ -913,8 +930,8 @@ class Viewer:
             self.art = art.GameArt.of(game_dir)
         try:
             self._game_dir, self._started = game_dir, time.time()
-            self.dosbox, problem = launch.launch(game_dir)
-        except (launch.LaunchError, OSError) as e:
+            self.dosbox, problem = launch.launch(game_dir, "the Loader's window")
+        except (launch.LaunchError, OSError) as e:  # (GameBusy among them: another Loader has the game)
             messagebox.showerror("Start the game", str(e))
             return
         if problem:
@@ -935,6 +952,7 @@ class Viewer:
         if self.dosbox is None or self.dosbox.poll() is None:
             return
         code, self.dosbox = self.dosbox.returncode, None
+        self._release_game()
         self._append_dice([launch.closed_line(code)])
         note = launch.game_end_note()
         if code != 0 or note:
@@ -972,7 +990,11 @@ class Viewer:
         self._apply_layout()
 
     def save_layout(self) -> None:
-        self.layout.save()
+        try:
+            self.layout.save()
+        except OSError as e:  # (a folder that can't be written, or the file held elsewhere: said)
+            messagebox.showerror("Layout", f"Could not save {self.layout.path}:\n{e}")
+            return
         messagebox.showinfo("Layout", f"Saved slots to {self.layout.path}")
 
     def search_name(self) -> None:
@@ -1058,9 +1080,17 @@ class Viewer:
         self._drop_dice()
         self._drop_guest()
         self.ds = None
+        self._release_game()
         self.status.set(f"Disconnected ({err}). Waiting for DOSBox...")
         self.dice_status.set("Waiting for the game...")
         self.next_try = time.monotonic() + RETRY_SECONDS
+
+    def _release_game(self) -> None:
+        """The game's lock let go (launch.release_game) once this window neither runs a game nor
+        follows one, so another Loader, or `play`, may have it."""
+        running = self.dosbox is not None and self.dosbox.poll() is None
+        if not running and not (self.dice is not None and self.dice.attached):
+            launch.release_game()
 
     def _save_settings(self, changes: dict) -> bool:
         """CHANGES saved in settings.json; when it is held elsewhere (an antivirus, a backup), the
@@ -1073,13 +1103,15 @@ class Viewer:
             return False
 
     def close(self) -> None:
-        """Done with the dice log before closing: it lets go of the game (detach) and stops its thread."""
+        """Done with the dice log before closing: it lets go of the game (detach) and stops its thread,
+        and the game's lock goes."""
         try:
             if self.dice:
                 self.dice.detach()
                 self.dice.close()
         except Exception:
             pass
+        launch.release_game()
         self.root.destroy()
 
     def _tick(self) -> None:
@@ -1201,6 +1233,11 @@ class Viewer:
                 self.dice.stealth_gear = self.stealth_gear.get()
                 self.dice.load_picked(launch.pickpocketed())
                 self.dice.set_rules(self._rules())
+            try:  # (one Loader at a time follows the game: two would both make its changes)
+                launch.hold_game("the Loader's window")
+            except launch.GameBusy as e:
+                self.dice_status.set(str(e))
+                return
             try:
                 self.dice_status.set(self.dice.attach())
             except DiceLogError as e:
@@ -1271,46 +1308,45 @@ class Viewer:
         if self._save_settings({"cycles": value if value == launch.GOG_SPEED else int(value)}):
             self.status.set("Game speed: from the next time you start the game.")
 
-    def _options_changed(self) -> None:
-        """A switch on the Options tab changed: all of them saved, and the log told."""
+    def _option_values(self) -> dict:
+        """Every switch of the Options tab as the tab shows it: {settings key: value}."""
+        values = {"monster_info": self.monster_info.get(), "floating_names": self.floating_names.get(),
+                  "combat_log": self.combat_log.get(), "combat_log_level": self.combat_log_level.get(),
+                  "pickpockets": self.pickpockets.get(), "show_gear": self.show_gear.get(),
+                  "starting_gear": self.starting_gear.get(), "shadows": self.show_shadows.get(),
+                  "dust": self.show_dust.get(), "see_through": self.see_through.get(),
+                  "elf_looks": self.elf_looks.get(), "cilla_elf": self.cilla_elf.get(),
+                  "rings": self.ring_mode.get(), "targeting": self.use_targeting.get(),
+                  "scroll_map": self.scroll_map.get(), "effects_kept": self.effects_kept.get(),
+                  "stealth_gear": self.stealth_gear.get(), "roll_store": self.roll_store.get(),
+                  "camera_still": self.camera_still.get(), "scene_pointer": self.scene_pointer.get(),
+                  "mouse_start": self.mouse_start.get(), "steady_pace": self.steady_pace.get(),
+                  "party_spread": self.party_spread.get(), "spells_manual": self.spells_manual.get(),
+                  "spell_to_hit": self.spell_to_hit.get()}
+        values.update({key: var.get() for key, var in self.content_vars.items()})
+        values.update({key: var.get() for key, var in self.rule_vars.items()})
+        return values
+
+    def _options_changed(self, every: bool = False) -> None:
+        """A switch on the Options tab changed: saved, and the log told. Only the switches changed
+        since the tab was read or last saved are written (EVERY: all of them, for Restore defaults),
+        so a tab that had to show the defaults (settings.json held elsewhere as it opened) never
+        puts them over the player's other choices."""
+        values = self._option_values()
+        shown = getattr(self, "_options_shown", {})
+        changes = values if every else {key: value for key, value in values.items()
+                                        if key not in shown or shown[key] != value}
         try:
             with launch.SETTINGS_LOCK:  # (read and written as one step)
                 settings = launch.load_settings(strict=True)
                 for old in ("turn_popups", "turn_popups_level", "turn_popups_detail"):  # (the turn pop-up, gone)
                     settings.pop(old, None)
-                settings["monster_info"] = self.monster_info.get()
-                settings["floating_names"] = self.floating_names.get()
-                settings["combat_log"] = self.combat_log.get()
-                settings["combat_log_level"] = self.combat_log_level.get()
-                settings["pickpockets"] = self.pickpockets.get()
-                settings["show_gear"] = self.show_gear.get()
-                settings["starting_gear"] = self.starting_gear.get()
-                settings["shadows"] = self.show_shadows.get()
-                settings["dust"] = self.show_dust.get()
-                settings["see_through"] = self.see_through.get()
-                settings["elf_looks"] = self.elf_looks.get()
-                settings["cilla_elf"] = self.cilla_elf.get()
-                settings["rings"] = self.ring_mode.get()
-                settings["targeting"] = self.use_targeting.get()
-                settings["scroll_map"] = self.scroll_map.get()
-                for key, var in self.content_vars.items():
-                    settings[key] = var.get()
-                settings["effects_kept"] = self.effects_kept.get()
-                settings["stealth_gear"] = self.stealth_gear.get()
-                settings["roll_store"] = self.roll_store.get()
-                settings["camera_still"] = self.camera_still.get()
-                settings["scene_pointer"] = self.scene_pointer.get()
-                settings["mouse_start"] = self.mouse_start.get()
-                settings["steady_pace"] = self.steady_pace.get()
-                settings["party_spread"] = self.party_spread.get()
-                settings["spells_manual"] = self.spells_manual.get()
-                settings["spell_to_hit"] = self.spell_to_hit.get()
-                for key, var in self.rule_vars.items():
-                    settings[key] = var.get()
+                settings.update(changes)
                 launch.save_settings(settings)
         except OSError as e:  # (settings.json held elsewhere: kept as it was, not saved over)
             self.status.set(f"The options could not be saved just now ({e}); change one again to retry.")
             return
+        self._options_shown = values
         if self.dice is not None:
             self.dice._settings = settings  # (the item reports' switches, as now)
             self.dice.set_monster_info(self.monster_info.get())
@@ -1892,12 +1928,14 @@ class Viewer:
             self.hex.tag_add("selected", *selected)
 
 
-def run(layout: Layout, connect: Callable[[], GuestMemory], dosbox=None, game_dir: Optional[str] = None) -> None:
+def run(layout: Layout, connect: Callable[[], GuestMemory], dosbox=None, game_dir: Optional[str] = None,
+        connect_pid: Optional[Callable[[int], GuestMemory]] = None) -> None:
     """The Loader's window; DOSBOX, if given, is the game started for it (from GAME_DIR), whose
-    closing is told in the log as if started from the window."""
+    closing is told in the log as if started from the window; CONNECT_PID attaches to a DOSBox by
+    its pid (the one started), CONNECT to whichever runs."""
     root = tk.Tk()
-    viewer = Viewer(root, layout, connect)
+    viewer = Viewer(root, layout, connect, connect_pid, dosbox)  # (its DOSBox known before it first connects)
     if dosbox is not None:
-        viewer.dosbox, viewer._game_dir, viewer._started = dosbox, game_dir, time.time()
+        viewer._game_dir, viewer._started = game_dir, time.time()
         viewer._start_state()
     root.mainloop()

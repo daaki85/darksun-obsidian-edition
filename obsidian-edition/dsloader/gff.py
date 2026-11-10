@@ -42,6 +42,8 @@ def read_gff(data: bytes) -> Chunks:
                 for _ in range(runs):
                     first, n = struct.unpack_from("<II", data, pos)
                     pos += 8
+                    if len(ids) + n > len(data) // 8:  # (each id's place takes 8 bytes of the file: a
+                        raise GffError(f"A run of {n} {ctype!r} ids is longer than the file can index")  # corrupt count)
                     ids += range(first, first + n)
                 ranged.append((ctype, index, ids))
                 continue
@@ -87,6 +89,8 @@ def index_places(data: bytes, ctype: str) -> Dict[int, Tuple[int, int, int]]:
                 for _ in range(runs):
                     first, n = struct.unpack_from("<II", data, pos)
                     pos += 8
+                    if len(ids) + n > len(data) // 8:  # (each id's place takes 8 bytes of the file: a
+                        raise GffError(f"A run of {n} {kind!r} ids is longer than the file can index")  # corrupt count)
                     ids += range(first, first + n)
                 if kind == ctype:
                     wanted = (index, ids)

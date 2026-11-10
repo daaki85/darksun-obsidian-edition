@@ -1,6 +1,6 @@
 @echo off
 rem Drag a SAVEnn.SAV file onto this file to see the party stored in it.
-cd /d "%~dp0"
+pushd "%~dp0"
 call "%~dp0dsloader\find-python.bat"
 if errorlevel 1 exit /b 1
 if "%~1"=="" (

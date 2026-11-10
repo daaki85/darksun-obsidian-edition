@@ -938,12 +938,14 @@ def objects_beside(path: str) -> Optional[gff.Chunks]:
         return None
 
 
-def write_resources(source: str, dest: str, roll_store: bool = True, spells_manual: bool = True) -> None:
+def write_resources(source: str, dest: str, roll_store: bool = True, spells_manual: bool = True,
+                    creature_size: bool = True) -> None:
     """The game's RESOURCE.GFF (SOURCE, only read) with the new spells' icons, the Pick Pockets
     button's, the descriptions of both and of the spell arrows (spelltexts.py), the save/load
     window's PAGE 1 to PAGE 4 buttons (savepages.py), the mod's sounds (sounds.py) and, with
     ROLL_STORE, the creation screen's STORE and RECALL (rollstore.py), to DEST; with SPELLS_MANUAL, the
-    descriptions of the spells the manual's way (spelltexts.MANUAL_TEXTS)."""
+    descriptions of the spells the manual's way (spelltexts.MANUAL_TEXTS); with CREATURE_SIZE, Hold and
+    Charm Person's saying they don't take on a large target (spelltexts.SIZE_TEXTS)."""
     with open(source, "rb") as f:
         data = f.read()
     chunks = gff.read_gff(data)
@@ -957,7 +959,7 @@ def write_resources(source: str, dest: str, roll_store: bool = True, spells_manu
              **{("ICON", icon): encode(arrow_spell_icon(decode(chunks[("ICON", 21000 + touch)]), *how))
                 for icon, (touch, *how) in ARROW_BUTTONS.items()}}
     from . import spelltexts
-    added.update(spelltexts.chunks(spells_manual))
+    added.update(spelltexts.chunks(spells_manual, creature_size))
     from . import sounds  # the hiding's and the picked pocket's sounds (BVOC chunks past the game's)
     added.update(sounds.chunks())
     from . import art, game, wotrart  # the 6th-level priest spells' (Wake of the Ravager's, else tinted ones)

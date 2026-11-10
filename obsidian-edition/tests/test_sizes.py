@@ -196,6 +196,21 @@ class SizeTests(tc.CahulaksTests):
         for text, kind, rules in (("1D6", AXE, RULE), ("1D8", LONG_SWORD, 0)):
             self.assertEqual(self.line(text, kind, rules=rules)[:3], (text, 2, 0), (text, kind))
 
+    def test_line_interrupts(self):
+        """SIZE_LINE calls the game's text routine with interrupts on (the INT turned them off; the
+        timer and the mouse must not wait for the whole draw), and the caller's flags come back."""
+        self.rules_hi(RULE)
+        stub = 0x7000  # (push bp / mov bp,sp / pushf / pop ax / mov cs:[0104h],ax / pop bp / retf)
+        self.mu.mem_write(stub * 16, bytes.fromhex("5589e59c582ea304015dcb"))
+        self.mu.mem_write(stub * 16 + 0x104, bytes(2))
+        self.mu.mem_write(td.CALLER * 16 + self.at + 0x100 + 3 - 10, struct.pack("<HH", 0, stub))
+        self.mu.mem_write(SS * 16 + BP - 0x2E, b"1D8-1" + bytes(35))
+        self.frame(m2=1, m6=0, m4=0, pE=50, pC=0xEC)
+        self.assertEqual(self.where("size_line", (), esi=LONG_SWORD), "end")
+        flags, = struct.unpack("<H", self.mu.mem_read(stub * 16 + 0x104, 2))
+        self.assertTrue(flags & td.IF, hex(flags))
+        self.assertTrue(self.mu.reg_read(tc.r.UC_X86_REG_EFLAGS) & td.IF)
+
     def pre(self, text, kind, box=False, rules=RULE, x=0xEC):
         """SIZE_PRE on a damage line TEXT about to be drawn: (the line, [BP+10h] its colour, the word
         it pushed, SP after)."""

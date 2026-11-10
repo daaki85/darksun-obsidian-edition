@@ -14,6 +14,7 @@ import os
 import string
 import struct
 import subprocess
+import tempfile
 import threading
 import time
 from typing import Dict, Iterator, List, Optional, Tuple
@@ -65,7 +66,8 @@ def is_game_dir(folder: str) -> bool:
 # Dark Sun Recompiled (github.com/daaki85/darksun-recompiled): the game translated into a program
 # of its own, with the mod's patched game and its helper built in. The Loader starts that program
 # instead of DOSBox when it finds it: unzipped into this folder (a "recompiled" subfolder, or its
-# files here), or beside this folder ("darksun-recompiled..." next to it), or named in SETTINGS
+# files here), or in its own "darksun-recompiled..." folder beside this one (a bare dsun.exe beside
+# this folder, in Downloads say, is never taken: it could be anything), or named in SETTINGS
 # ("recompiled"; `dsloader launch --recompiled <path>` remembers a path, `--dosbox` turns the
 # program off until `--recompiled` again). It is started with the game's folder (its data files;
 # the game is recognised by its DSUN.EXE) and the mod's dos folder as drive D (DSUNLOG.EXE and
@@ -91,13 +93,15 @@ def native_program(path: str) -> bool:
 
 
 def found_recompiled_program(here: str = HERE) -> Optional[str]:
-    """Dark Sun Recompiled's program where a player would put it: in this folder, in a folder
-    named after it, or beside this folder; None when there is none (a file of its name that is no
-    program of the computer's own, the game's DOS DSUN.EXE above all, isn't it: native_program)."""
+    """Dark Sun Recompiled's program where a player would put it: in this folder (or its
+    "recompiled" subfolder), or in a folder named after it ("darksun-recompiled...") in this folder
+    or beside it; None when there is none. Only those: a program merely named dsun.exe in the
+    folder that holds this one (Downloads, say) isn't taken, and a file of its name that is no
+    program of the computer's own, the game's DOS DSUN.EXE above all, isn't it either
+    (native_program)."""
     import glob as _glob
     parent = os.path.dirname(here)
-    candidates = [os.path.join(here, "recompiled", RECOMPILED_EXE), os.path.join(here, RECOMPILED_EXE),
-                  os.path.join(parent, RECOMPILED_EXE)]
+    candidates = [os.path.join(here, "recompiled", RECOMPILED_EXE), os.path.join(here, RECOMPILED_EXE)]
     candidates += sorted(_glob.glob(os.path.join(here, "darksun-recompiled*", RECOMPILED_EXE)))
     candidates += sorted(_glob.glob(os.path.join(parent, "darksun-recompiled*", RECOMPILED_EXE)))
     candidates += sorted(_glob.glob(os.path.join(parent, "darksun-recompiled*", "windows", RECOMPILED_EXE)))
@@ -147,9 +151,20 @@ def candidate_dirs() -> Iterator[str]:
 SETTINGS_VERSION = 2
 
 
+def settings_version(settings: dict) -> int:
+    """The settings' version (1 if none, or not a number: a hand-edited file's "2" is 2)."""
+    version = settings.get("settings_version", 1)
+    if isinstance(version, bool):
+        return 1
+    try:
+        return int(version)
+    except (TypeError, ValueError):
+        return 1
+
+
 def upgrade_settings(settings: dict) -> bool:
     """Bring settings saved by an older Loader up to SETTINGS_VERSION; True if anything changed."""
-    if not settings or settings.get("settings_version", 1) >= SETTINGS_VERSION:
+    if not settings or settings_version(settings) >= SETTINGS_VERSION:
         return False
     settings["combat_log"] = True
     settings["settings_version"] = SETTINGS_VERSION
@@ -161,38 +176,45 @@ def upgrade_settings(settings: dict) -> bool:
 SETTINGS_LOCK = threading.RLock()
 
 
-def load_settings(strict: bool = False) -> dict:
-    """settings.json as a dict ({} if there is none). STRICT, for a read that is changed and saved
-    again: a file that is there but can't be read now (Windows: open elsewhere for a moment, an
-    antivirus or a backup) is tried again, and then raises OSError rather than read as empty, so
-    the save after it can't put just the change in place of everything."""
+class SettingsUnreadable(OSError):
+    """settings.json is there but couldn't be read (held by an antivirus or a backup for a moment):
+    not the same as no settings, so nothing may be saved over it."""
+
+
+# how long a read of settings.json held elsewhere is tried for (tries, each SETTINGS_WAIT apart)
+SETTINGS_TRIES, SETTINGS_WAIT = 10, 0.05
+
+
+def load_settings(strict: bool = False, tries: int = SETTINGS_TRIES) -> dict:
+    """settings.json as a dict ({} if there is none). A file that is there but can't be read now
+    (Windows: open elsewhere for a moment, an antivirus or a backup) is tried again for a while;
+    then a plain read gives {}, and a STRICT one (for a read that is changed and saved again, or
+    whose answer must be the player's settings) raises SettingsUnreadable rather than read as
+    empty, so the save after it can't put just the change, or the defaults, in place of
+    everything. A missing file is {} either way."""
     with SETTINGS_LOCK:
-        for attempt in range(5):
+        for attempt in range(max(1, tries)):
             try:
                 with open(SETTINGS, encoding="utf-8-sig") as f:  # (a BOM from Notepad too)
                     settings = json.load(f)
                 break
             except FileNotFoundError:
                 return {}
-            except OSError:
-                if attempt == 4:  # (tried again first either way: one held a moment read as
-                    if not strict:  # empty lost the picked pockets once the next pick saved)
+            except OSError as e:
+                if attempt == max(1, tries) - 1:  # (tried again first either way: one held a moment
+                    if not strict:                # read as empty lost the picked pockets once the next pick saved)
                         return {}
-                    raise
-                time.sleep(0.05)
+                    raise SettingsUnreadable(e.errno, f"settings.json can't be read just now ({e.strerror or e})",
+                                             SETTINGS) from e
+                time.sleep(SETTINGS_WAIT)
             except ValueError:
                 # (unreadable: kept aside as settings.json.bad, so the next save can't lose what it held)
-                try:
-                    os.replace(SETTINGS, SETTINGS + ".bad")
-                except OSError:
-                    pass
+                _keep_aside()
                 return {}
         if not isinstance(settings, dict):  # (JSON, but not the Loader's: kept aside too)
-            try:
-                os.replace(SETTINGS, SETTINGS + ".bad")
-            except OSError:
-                pass
+            _keep_aside()
             return {}
+        _drop_misshapen(settings)
         if upgrade_settings(settings):
             try:
                 save_settings(settings)
@@ -201,23 +223,57 @@ def load_settings(strict: bool = False) -> dict:
         return settings
 
 
+# the settings kept as lists and dicts (and what each holds), which every reader takes as such: a
+# hand-edited file's other shape (a string, a number) is dropped as read, not raised at every start
+SHAPES = {"speakers": dict, "speakers_learned": dict, "pickpocketed": list}
+
+
+def _drop_misshapen(settings: dict) -> None:
+    for key, kind in SHAPES.items():
+        if key in settings and not isinstance(settings[key], kind):
+            del settings[key]
+    if "pickpocketed" in settings:
+        settings["pickpocketed"] = [e for e in settings["pickpocketed"] if isinstance(e, str)]
+
+
+def _keep_aside() -> None:
+    """settings.json, unreadable, renamed settings.json.bad (an earlier .bad kept as .bad-2...)."""
+    bad, n = SETTINGS + ".bad", 1
+    while os.path.exists(bad) and n < 100:
+        n += 1
+        bad = f"{SETTINGS}.bad-{n}"
+    try:
+        os.replace(SETTINGS, bad)
+    except OSError:
+        pass
+
+
 def save_settings(settings: dict) -> None:
-    """Written whole or not at all: into settings.json.tmp, then put in settings.json's place."""
+    """Written whole or not at all: into a temporary file of this write's own (two Loaders, or the
+    window and `play`, never share one), then put in settings.json's place."""
     settings["settings_version"] = SETTINGS_VERSION
     with SETTINGS_LOCK:
-        tmp = SETTINGS + ".tmp"
-        with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(settings, f, indent=2)
-            f.flush()
-            os.fsync(f.fileno())
-        for attempt in range(5):
-            try:
-                os.replace(tmp, SETTINGS)
-                return
-            except PermissionError:  # (Windows: the file open elsewhere for a moment)
-                if attempt == 4:
-                    raise
-                time.sleep(0.05)
+        fd, tmp = tempfile.mkstemp(prefix=os.path.basename(SETTINGS) + ".", suffix=".tmp",
+                                   dir=os.path.dirname(SETTINGS) or ".")
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                json.dump(settings, f, indent=2)
+                f.flush()
+                os.fsync(f.fileno())
+            for attempt in range(5):
+                try:
+                    os.replace(tmp, SETTINGS)
+                    return
+                except PermissionError:  # (Windows: the file open elsewhere for a moment)
+                    if attempt == 4:
+                        raise
+                    time.sleep(0.05)
+        finally:
+            if os.path.exists(tmp):  # (not put in place: not left behind)
+                try:
+                    os.remove(tmp)
+                except OSError:
+                    pass
 
 
 def update_settings(changes: dict) -> dict:
@@ -229,10 +285,24 @@ def update_settings(changes: dict) -> dict:
         return settings
 
 
+def _names(settings: dict, key: str) -> Dict[int, str]:
+    """{portrait: name} from the settings' KEY (nothing if a hand-edited file has no dict there)."""
+    names = settings.get(key, {})
+    if not isinstance(names, dict):
+        return {}
+    return {int(k): v for k, v in names.items() if str(k).isdigit() and isinstance(v, str) and v}
+
+
+def _dict_in(settings: dict, key: str) -> dict:
+    """settings[KEY], made a dict if it is missing or not one (a hand-edited file)."""
+    if not isinstance(settings.get(key), dict):
+        settings[key] = {}
+    return settings[key]
+
+
 def speaker_names() -> Dict[int, str]:
     """The names the player has given dialogue portraits: {portrait: name}."""
-    names = load_settings().get("speakers", {})
-    return {int(k): v for k, v in names.items() if str(k).isdigit() and isinstance(v, str) and v}
+    return _names(load_settings(), "speakers")
 
 
 def set_speaker_name(portrait: int, name: str) -> None:
@@ -243,7 +313,7 @@ def set_speaker_name(portrait: int, name: str) -> None:
 
 def _set_speaker_name(portrait: int, name: str) -> None:
     settings = load_settings(strict=True)
-    names = settings.setdefault("speakers", {})
+    names = _dict_in(settings, "speakers")
     if name:
         names[str(portrait)] = name
     else:
@@ -253,24 +323,23 @@ def _set_speaker_name(portrait: int, name: str) -> None:
 
 def learned_speakers() -> Dict[int, str]:
     """Portrait names the Loader worked out from conversations: {portrait: name}."""
-    names = load_settings().get("speakers_learned", {})
-    return {int(k): v for k, v in names.items() if str(k).isdigit() and isinstance(v, str) and v}
+    return _names(load_settings(), "speakers_learned")
 
 
 def pickpocketed() -> List[str]:
     """The pockets tried already (pickpocket.py), "key@game time" each: each person gets one try."""
-    return list(load_settings().get("pickpocketed", []))
+    entries = load_settings().get("pickpocketed", [])
+    return [e for e in entries if isinstance(e, str)] if isinstance(entries, list) else []
 
 
 def set_pickpocketed(entries: List[str]) -> None:
     update_settings({"pickpocketed": list(entries)})
 
 
-
 def add_learned_speakers(learned: Dict[int, str]) -> None:
     with SETTINGS_LOCK:
         settings = load_settings(strict=True)
-        settings.setdefault("speakers_learned", {}).update({str(k): v for k, v in learned.items()})
+        _dict_in(settings, "speakers_learned").update({str(k): v for k, v in learned.items()})
         save_settings(settings)
 
 
@@ -349,9 +418,10 @@ def cpu_lines(settings: dict) -> List[str]:
 DOS_LINES = ["[dos]", "ems=false", ""]
 
 
-def write_conf(game_dir: str, path: str = CONF, dice_log: bool = True) -> str:
-    """Our replacement for dosbox_darksun_single.conf. Without the dice log it just runs the game."""
-    settings = load_settings()
+def write_conf(game_dir: str, path: str = CONF, dice_log: bool = True, settings: Optional[dict] = None) -> str:
+    """Our replacement for dosbox_darksun_single.conf. Without the dice log it just runs the game.
+    SETTINGS: the saved ones if not given."""
+    settings = load_settings() if settings is None else settings
     lines = display_lines(settings) + cpu_lines(settings)
     if dice_log:  # (EMS's 64 KB page frame sits where the helper loads; the game takes XMS without it)
         lines += DOS_LINES
@@ -425,7 +495,9 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
     the saved settings if none given). Returns why the game can't be patched, or None; what of the
     copies couldn't be made is in LEFT_OUT (left_out_line), for the player to be told."""
     del LEFT_OUT[:]
-    on = content(load_settings() if settings is None else settings)
+    chosen = load_settings() if settings is None else settings
+    on = content(chosen)
+    size_rule = chosen.get("creature_size", True) is not False  # (Hold and Charm Person's texts)
     skip = (frozenset() if on["effects_kept"] else frozenset(gamepatch.EFFECTS_KEPT)) \
         | (frozenset() if on["roll_store"] else frozenset(gamepatch.ROLL_STORE)) \
         | (frozenset() if on["camera_still"] else frozenset(gamepatch.CAMERA)) \
@@ -494,6 +566,8 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
             if not source:
                 raise OSError(f"no {name}")
             write(source, os.path.join(DOS_DIR, name))
+        from . import alagorn  # (a story menu of Alagorn's too long for the game's scripts: told)
+        LEFT_OUT.extend(alagorn.LEFT_OUT)
         if not with_kalzith and not pens_clones:
             try:
                 os.remove(os.path.join(DOS_DIR, kalzith.REGION_FILE))
@@ -514,7 +588,7 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
         resources = _find_file(game_dir, icons.RESOURCE_FILE)
         if resources:
             icons.write_resources(resources, os.path.join(DOS_DIR, icons.RESOURCE_FILE), on["roll_store"],
-                                  on["spells_manual"])
+                                  on["spells_manual"], size_rule)
             resources_ok = True
     except (gff.GffError, OSError, KeyError, struct.error, ValueError, IndexError) as e:
         LEFT_OUT.append(f"the new spells' icons and texts ({icons.RESOURCE_FILE}: {e})")
@@ -529,6 +603,156 @@ def _drop(path: str) -> None:
         os.remove(path)
     except OSError:
         pass
+
+
+# One Loader at a time for this mod's game: the window, `play` and `dicelog` each take GAME_LOCK
+# before starting the game or attaching to it, and keep it while the game runs or they follow it.
+# Two at once would both make the game's changes (pickpockets, Kalzith's loot, gifts: twice) and one
+# would rewrite the dos folder's copies under the other's running game. The lock is the operating
+# system's on the file (Windows: msvcrt.locking; elsewhere fcntl.flock), so it goes with the process
+# that held it, however that ended: a lock file left by a crash is no lock. The file holds the
+# holder's pid and what it is, for the message; where the system can't lock the file (some network
+# drives), that pid is checked instead, and a dead one's file taken over.
+GAME_LOCK = os.path.join(HERE, "game.lock")
+_LOCK_AT = 1 << 20  # (Windows locks bytes: one far past the pid's line, so the line can still be read)
+
+
+class GameBusy(LaunchError):
+    """Another Loader (or `play`, or `dicelog`) has the game."""
+
+
+_HELD: Dict[str, object] = {}  # {"fd": the lock file's descriptor, "path": it, "what": the holder}
+
+
+def pid_alive(pid: int) -> bool:
+    """Whether a process PID runs (for a lock file the system couldn't lock)."""
+    if pid <= 0:
+        return False
+    if os.name == "nt":
+        import ctypes
+        k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        handle = k32.OpenProcess(0x1000, False, pid)  # (PROCESS_QUERY_LIMITED_INFORMATION)
+        if not handle:
+            return ctypes.get_last_error() == 5  # (access denied: there, someone else's)
+        try:
+            code = ctypes.c_ulong()
+            return bool(k32.GetExitCodeProcess(handle, ctypes.byref(code))) and code.value == 259  # STILL_ACTIVE
+        finally:
+            k32.CloseHandle(handle)
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    except OSError:
+        return False
+    return True
+
+
+def _lock_file(fd: int) -> Optional[bool]:
+    """The system's lock on FD: True taken, False held by another process, None if the system
+    can't lock it."""
+    import errno
+    try:
+        if os.name == "nt":
+            import msvcrt
+            os.lseek(fd, _LOCK_AT, os.SEEK_SET)
+            msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
+        else:
+            import fcntl
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        return True
+    except OSError as e:
+        if e.errno in (errno.EACCES, errno.EAGAIN, errno.EWOULDBLOCK, getattr(errno, "EDEADLOCK", errno.EDEADLK)):
+            return False
+        return None
+
+
+def lock_holder(path: Optional[str] = None) -> Tuple[int, str]:
+    """(pid, what) the lock file names (0, "" if none)."""
+    try:
+        with open(path or GAME_LOCK, encoding="utf-8", errors="replace") as f:
+            pid, _, what = f.readline().strip().partition(" ")
+        return int(pid), what
+    except (OSError, ValueError):
+        return 0, ""
+
+
+def busy_line(pid: int, what: str) -> str:
+    """Why the game can't be started or followed here: another holds it."""
+    who = f"{what} (process {pid})" if what and pid else (f"process {pid}" if pid else "another Loader")
+    return (f"The game is already started or followed by {who}, from this Obsidian Edition folder. Only one may "
+            "start it or follow it at a time: close that one (or the game it started) first.")
+
+
+def hold_game(what: str, path: Optional[str] = None) -> None:
+    """Take the game's lock for this process (WHAT: who holds it, for another's message); nothing if
+    this process holds it already. Raises GameBusy, naming the holder, if another process does."""
+    path = path or GAME_LOCK
+    if _HELD.get("path") == path:
+        return
+    while True:
+        try:
+            fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o644)
+        except OSError:  # (a folder that can't be written: no lock to be had, and none kept from the player)
+            return
+        taken = _lock_file(fd)
+        if taken is False:
+            os.close(fd)
+            raise GameBusy(busy_line(*lock_holder(path)))
+        if taken is None:  # (no system lock here: the pid in the file says)
+            pid, holder = lock_holder(path)
+            if pid and pid != os.getpid() and pid_alive(pid):
+                os.close(fd)
+                raise GameBusy(busy_line(pid, holder))
+        if os.name != "nt":  # (taken from a file another took away and made anew since: try again)
+            try:
+                if os.stat(path).st_ino != os.fstat(fd).st_ino:
+                    os.close(fd)
+                    continue
+            except FileNotFoundError:
+                os.close(fd)
+                continue
+        break
+    os.lseek(fd, 0, os.SEEK_SET)
+    os.ftruncate(fd, 0)
+    os.write(fd, f"{os.getpid()} {what}\n".encode("utf-8"))
+    _HELD.update(fd=fd, path=path, what=what)
+
+
+def release_game() -> None:
+    """Let the game's lock go (nothing if this process doesn't hold it); its file taken away."""
+    fd, path = _HELD.pop("fd", None), _HELD.pop("path", None)
+    _HELD.pop("what", None)
+    if fd is None:
+        return
+    try:
+        if os.name != "nt":
+            os.remove(path)  # (while still locked: no one takes the file being removed)
+    except OSError:
+        pass
+    try:
+        if os.name == "nt":
+            import msvcrt
+            try:
+                os.lseek(fd, _LOCK_AT, os.SEEK_SET)
+                msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+            except OSError:
+                pass
+        os.close(fd)
+    except OSError:
+        pass
+    if os.name == "nt":
+        try:
+            os.remove(path)  # (fails while another has it open: it is theirs then)
+        except OSError:
+            pass
+
+
+def holds_game() -> bool:
+    """Whether this process holds the game's lock."""
+    return "fd" in _HELD
 
 
 # Windows' codes for a program that crashes (DOSBox itself, not the game in it)
@@ -711,16 +935,35 @@ def write_crash_report(text: str, now: float, folder: str = CRASH_DIR, kind: str
     return path
 
 
-def launch(game_dir: str) -> Tuple[subprocess.Popen, Optional[str]]:
+def launch(game_dir: str, what: str = "the Loader") -> Tuple[subprocess.Popen, Optional[str]]:
     """Start the game. Returns DOSBox's process (or the recompiled program's) and, if the dice log
-    can't run, why."""
-    global STARTED
+    can't run, why. Takes the game's lock first (hold_game, WHAT naming this Loader): GameBusy if
+    another has the game; the caller lets it go (release_game) once the game has closed. Raises
+    LaunchError, too, when settings.json is there but can't be read: the copies are built by the
+    player's switches, never by the defaults in their place."""
     game_dir = os.path.abspath(game_dir)  # (DOSBox runs in its own folder: a relative path would miss)
-    program = recompiled_program()
+    try:
+        settings = load_settings(strict=True, tries=40)  # (two seconds: held a moment, then read)
+    except SettingsUnreadable as e:
+        raise LaunchError(f"{e.strerror}, so the game isn't started with the wrong options: start it "
+                          "again in a moment.") from None
+    held = holds_game()
+    hold_game(what)
+    try:
+        return _launch(game_dir, settings)
+    except BaseException:
+        if not held:
+            release_game()  # (nothing started: nothing held)
+        raise
+
+
+def _launch(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optional[str]]:
+    global STARTED
+    program = recompiled_program(settings)
     if program is not None:
         if not _find_file(game_dir, "DSUN.EXE"):
             raise LaunchError(f"{game_dir} has no DSUN.EXE; pick the GOG install folder")
-        problem = prepare_patched_game(game_dir)
+        problem = prepare_patched_game(game_dir, settings)
         if problem:
             raise LaunchError(f"The recompiled program runs the game with the helper, which needs the patched game ({problem}).")
         for old in (GAME_END, GAME_MESSAGE, GAME_OK):  # (the last game's)
@@ -737,7 +980,7 @@ def launch(game_dir: str) -> Tuple[subprocess.Popen, Optional[str]]:
         os.path.join(game_dir, "__support", "app"), "dosbox_darksun.conf")
     if not dosbox_dir or not settings_conf:
         raise LaunchError(f"{game_dir} does not look like the GOG install of Shattered Lands")
-    problem = prepare_patched_game(game_dir)
+    problem = prepare_patched_game(game_dir, settings)
     for old in (GAME_END, GAME_MESSAGE, GAME_OK):  # (the last game's)
         try:
             os.remove(old)
@@ -746,7 +989,7 @@ def launch(game_dir: str) -> Tuple[subprocess.Popen, Optional[str]]:
     exe = _find_file(dosbox_dir, "DOSBox.exe")
     if exe is None:
         raise LaunchError(f"No DOSBox.exe in {dosbox_dir}")
-    conf = write_conf(game_dir, dice_log=problem is None)
+    conf = write_conf(game_dir, dice_log=problem is None, settings=settings)
     return subprocess.Popen(
         [exe, "-conf", settings_conf, "-conf", conf, "-noconsole"],
         cwd=dosbox_dir), problem

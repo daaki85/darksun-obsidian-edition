@@ -403,7 +403,8 @@ def gythka_chunks(chunks, out: Dict[Tuple[str, int], bytes]) -> Dict[Tuple[str, 
             changed[key] = dataitems.chunk(recs, end)
     return {k: v for k, v in changed.items() if v != chunks[k]}
 ELVEN_CLOAK_OBJECT = 2546  # (its picture's object: the item the Elven Leader's script makes)
-# the header numbers of the Loader's own item types: the game's item they're made from
+# the header numbers of the Loader's own item types: the game's item type each is made from (npcitems.TYPES),
+# whose items' header number (dataitems.numbers: the first seen) a new item of the type takes
 BASE_TYPES = {game.SHORT_SWORD_TYPE: 63, game.CLOAK_TYPE: 65, game.BONE_HELM_TYPE: 5, game.BONE_SHORT_SWORD_TYPE: 81,
               game.BONE_AXE_TYPE: 22, game.OBSIDIAN_SHORT_SWORD_TYPE: 45, game.OBSIDIAN_AXE_TYPE: 22,
               game.METAL_SHORT_SWORD_TYPE: 63, game.BRACERS_TYPE: 7, game.METAL_DAGGER_TYPE: 33,
@@ -412,7 +413,11 @@ BASE_TYPES = {game.SHORT_SWORD_TYPE: 63, game.CLOAK_TYPE: 65, game.BONE_HELM_TYP
               game.PLATE_ARMS_TYPE: 58, game.PLATE_LEGS_TYPE: 59, game.ELVEN_CLOAK_TYPE: 65, game.ELVEN_BOOTS_TYPE: 68,
               game.AIR_DAGGER_TYPE: 33, game.BONE_GREAT_AXE_TYPE: 2, game.OBSIDIAN_GREAT_AXE_TYPE: 2,
               game.BONE_DAGGER_TYPE: 17, game.ROBE_TYPE: 65, game.METAL_SHIELD_TYPE: 4,
-              game.METAL_CAHULAKS_TYPE: 21}
+              game.METAL_CAHULAKS_TYPE: 21,
+              # the girdles: the Belt (42); the Amulet of Magic Resistance: the Necklace (36); the Boots of
+              # Speed: the Boots (68), as npcitems.TYPES makes their types
+              game.BACK_GIRDLE_TYPE: 42, game.URNST_GIRDLE_TYPE: 42, game.MR_AMULET_TYPE: 36,
+              game.SPEED_BOOTS_TYPE: 68}
 
 
 # The cahulaks (with the new magic weapons): Legcrusher's two clubs a Cahulaks +1 (a copy of the

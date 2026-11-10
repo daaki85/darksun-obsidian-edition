@@ -42,7 +42,7 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 
 ## Next pull request (not opened yet)
 
-DSCLOG.EXE 67,776 bytes (image 67,744: 64,736 in its segment, 3,008 in the tail), 800 of its
+DSCLOG.EXE 67,792 bytes (image 67,760: 64,752 in its segment, 3,008 in the tail), 784 of its
 segment spare.
 
 **New**
@@ -221,6 +221,18 @@ segment spare.
   layout switched off use them. (Tests: `test_ledger`.)
 
 **Changed**
+- **Every thri-kreen throws a chatkcha twice a round** (AD&D's 2/1, the user's source): DSCLOG's
+  OWN_THROWS and PROBE_MISSILE_LINE go by the sheet's race (8), foes too, whatever the rules; it was
+  K'ratchek's alone (her own feature, with the kits on). `GameData.weapon_hits` the same.
+- **The chatkcha against a large target is 1d4+2** (AD&D's 1d6+2/1d4+2): it was 1d4+1 (`LARGE_DICE`
+  and DSCLOG's `large_dice`; the docs' tables).
+- **Spell descriptions that said something else:** with the manual's spells, Strength, Ironskin,
+  Free Action, Solid Fog, Minor Spell Turning, Bestow Curse, Blood Flow, Chaos, Flame Arrow and Cell
+  Adjustment describe what they now do (`spelltexts.MANUAL_TEXTS`); with Creature size, Hold Person
+  (both), Charm Person and Charm Person or Mammal say they don't take on a large target
+  (`SIZE_TEXTS`, `icons.write_resources`' CREATURE_SIZE). Each no longer than the game's longest.
+- **The Options tab's texts:** each switch named as FEATURES.md names it, in FEATURES' order within
+  each group; the manual's spells' text 1,267 characters to 349; Creature size and Cahulaks reworded.
 - **The dice log shows the game's double damage on a helpless target**: a weapon blow on a
   Paralyzed or Out Cold creature does double (the attack routine, 5883Ah, hands the damage call
   5B8:20h its damage x2 too, "shl ax,1" at 58B0Dh, which 79BF9h takes when the target's effects'
@@ -350,6 +362,15 @@ segment spare.
   `playtest/framerate.py` reads it beside steady pace's frames left undrawn.
 
 **Fixed: the game**
+- **Alagorn told of none of the 14 new weapons:** with every switch on, his weapons copy (222) was
+  12,405 bytes, past the scripts' buffer (11,376), and was quietly left out. Their stories are now a
+  script of their own (224, 4,047 bytes) the copy calls (14h); 222 is 8,444. A menu left out for
+  length is reported (`alagorn.LEFT_OUT`, joined to the launch's `LEFT_OUT`). Found by a new test.
+- **DSCLOG's KEEP never shrank its block** (the resize read the PSP after zeroing it): a 16-paragraph
+  hole in upper memory; now ES from SS. **PROBE_SCROLL ran each map pass with interrupts off**
+  (redraws, the panel, the retrace wait): on when the caller had them on, off only round the
+  pointer's read and TARGET_CLICK's calls. **SIZE_LINE** called the game's text routine with
+  interrupts off: `sti` first. Each with a Unicorn test that failed before.
 - **Graphics disappeared in a busy area** (SSI's technical note 2712 for Wake of the Ravager, the
   same engine): the game's picture cache (DSUN.EXE 25FA6h) has 300 slots for every wall, door,
   figure and item picture drawn and gives none back until an area loads, so past 300 a new picture
@@ -452,6 +473,21 @@ segment spare.
   asked for a half-giant only. The Options text, FEATURES, the guide and CREATURES.md say so.
 
 **Fixed: the Loader** (found by the code audit, 2026-11-10; each with a test that failed before)
+- **Two Loaders on one game:** `game.lock` (an OS lock, by pid where none can be had) is taken by
+  `launch`, the window and `dicelog`; a second refuses, naming who has the game.
+- **settings.json:** a temporary file of its own per write; a file that can't be read is never
+  saved over with the defaults (`SettingsUnreadable`; the Options tab saves only what changed);
+  values of the wrong type are dropped as read.
+- **A `dsun.exe` beside the mod was run in place of DOSBox:** Dark Sun Recompiled is found only in
+  the mod's folder or its own, or by `--recompiled`.
+- **The window attached by process name:** now the DOSBox it started (its pid) first.
+- **The dice log stopped for good on a bad ring read:** reported once, attached again if it lasts;
+  a half-written entry (seq FFFFh) is no longer taken for a real one.
+- A game restarted in the same DOSBox gets fresh dressing and its own item gate; a creature
+  destroyed outright whose fall wasn't seen is forgotten (no later "destroyed by Turn Undead").
+- The girdles, the amulet and the Boots of Speed take their header numbers from the game's Belt,
+  Necklace and Boots (`BASE_TYPES`). The .bat files work from a network share (`pushd`); the
+  layout is saved whole; the GFF reader refuses impossible run counts.
 - **Pehtucl's chest could be shut for good:** `pehtuclchest.watch` made it the shut type whenever
   the party was in the pens, though only the mod's script (with New items on, and the scripts copy
   written) ever opens it. Now it is shut only while the game's scripts have its USE command
@@ -541,6 +577,14 @@ segment spare.
   `test_sprites`).
 
 **Docs**
+- **Screenshots retaken** (2026-11-10): `inventory.png` and `inventory-ranger.png` (SLNT, not MOVE),
+  `hit-line-box.png` and `shadowseeker-box.png` (the large dice, at the other boxes' 2x),
+  `new-spells.png` (Cat's Grace's by-class text), `tome.png` (the box alone, at 2x).
+- **CI and tests:** nasm installed on Windows, so DSCLOG.EXE, GAMEEND.COM, UMBPLUS.COM and the
+  least_scores patch are checked against their source (failing, not skipping, without nasm); the
+  Release workflow's manual run limited to main. New tests: DSCLOG's tables against the Loader's,
+  every module's game flags (none shared), every module's objects and pictures (made once each),
+  and `prepare_patched_game`'s copies.
 - **ITEMS.md checked against the game's data** (every item record, item type, region placement and
   script that hands an item out, with the cluebook): the Helm of Contemplation's power is Gaze
   Reflection, and the Quicksilver Glove's Detonate (both rows had been taken from what Alagorn says

@@ -542,10 +542,10 @@ def with_talk(master: bytes, field_types: bytes = b"") -> bytes:
 ENTRY = struct.Struct("<HHH")  # GPLI: (entry number, place in the script, script), numbered from 0
 ENTRIES = ("GPLI", 1)
 # The Loader's own scripts (the game's run to 217): Kalzith's talk, Semyon's (semyon.SCRIPT), Alagorn's
-# copies of 212 (alagorn.COPY_OF), Pehtucl's chest (pehtuclchest.SCRIPT): one number each
-# (test_scriptnumbers)
+# copies of 212 (alagorn.COPY_OF), Pehtucl's chest (pehtuclchest.SCRIPT), the weapons' stories Alagorn's
+# 222 calls (alagorn.TOLD_IN): one number each (test_scriptnumbers)
 LOADER_SCRIPTS = {218: "Kalzith", 219: "Semyon", 220: "Alagorn: clothes", 221: "Alagorn: rings and others",
-                  222: "Alagorn: weapons", 223: "Pehtucl's chest"}
+                  222: "Alagorn: weapons", 223: "Pehtucl's chest", 224: "Alagorn: the weapons' stories"}
 ENTRY_SCRIPTS = (218, 219, 223)  # (those with an entry point, in its order: Kalzith, Semyon, the chest)
 
 

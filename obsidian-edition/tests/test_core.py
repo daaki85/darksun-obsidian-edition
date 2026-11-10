@@ -269,5 +269,43 @@ class SaveFileTests(unittest.TestCase):
         self.assertIsNone(layout.records["creature"].slots[2])
 
 
+
+class HardeningTests(unittest.TestCase):
+    def test_a_corrupt_run_count_is_refused_not_built(self):
+        """A ranged type whose run claims more ids than the file could index: GffError at once,
+        not a list of billions of ids."""
+        from dsloader.gff import index_places
+        data = bytearray(struct.pack("<4s6I", b"GFFI", 0x30000, 28, 0, 0, 0, 0))
+        toc = struct.pack("<IIH", 8, 0, 1) + struct.pack("<4sI", b"BMP ", 0x80000001) \
+            + struct.pack("<III", 1, 1, 1) + struct.pack("<II", 1, 0x7FFFFFFF)
+        struct.pack_into("<II", data, 12, len(data), len(toc))
+        data = bytes(data + toc)
+        with self.assertRaises(GffError):
+            read_gff(data)
+        with self.assertRaises(GffError):
+            index_places(data, "BMP ")
+
+    def test_layout_saved_whole(self):
+        """Layout.save writes a file of its own and puts it in place: none left beside it, and a
+        failed write leaves the old layout as it was."""
+        from unittest import mock
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "layout.json")
+            with open(BUNDLED_LAYOUT) as f, open(path, "w") as g:
+                g.write(f.read())
+            layout = Layout.load(path)
+            layout.save()
+            self.assertEqual(os.listdir(d), ["layout.json"])
+            with mock.patch("json.dump", side_effect=OSError("disk full")):
+                with self.assertRaises(OSError):
+                    layout.save()
+            self.assertEqual(os.listdir(d), ["layout.json"])
+            self.assertEqual(Layout.load(path).count, 4)
+
+    def test_named_saves_copy_gone_meanwhile(self):
+        from dsloader import namedsaves
+        self.assertEqual(namedsaves._mtime(os.path.join(tempfile.gettempdir(), "no such save copy.SAV")), 0.0)
+
+
 if __name__ == "__main__":
     unittest.main()

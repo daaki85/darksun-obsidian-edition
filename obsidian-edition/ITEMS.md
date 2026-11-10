@@ -307,7 +307,7 @@ the Arrows +3, and the game's leather Helm (![](docs/items/leather-helm.png)) on
 
 What each item's chance is against the Rampager's acid and the Babau's
 corroding touch, in the game and with
-[Items save against acid as in AD&D](FEATURES.md#items-saving-against-acid)
+[Items saving against acid as in AD&D](FEATURES.md#items-saving-against-acid)
 (the easier of the game's number and AD&D's by material). Only what is worn on
 the arms, legs or chest can be lost, and the melee weapon held: helms,
 shields, cloaks, boots, belts, rings and amulets never are. A worn piece with

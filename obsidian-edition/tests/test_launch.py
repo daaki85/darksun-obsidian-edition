@@ -42,7 +42,13 @@ class LaunchTests(unittest.TestCase):
             self.assertIsNone(launch.found_recompiled_program(mod))
             native(beside)
             self.assertTrue(launch.native_program(beside))
-            self.assertEqual(launch.found_recompiled_program(mod), beside)
+            # (a program merely named dsun.exe in the folder holding the mod's, Downloads say, is
+            # never started: only one in the mod's folder or a darksun-recompiled folder)
+            self.assertIsNone(launch.found_recompiled_program(mod))
+            os.makedirs(os.path.join(d, "darksun-recompiled"))
+            named = os.path.join(d, "darksun-recompiled", launch.RECOMPILED_EXE)
+            native(named)
+            self.assertEqual(launch.found_recompiled_program(mod), named)
             dos = os.path.join(d, "DSUN.EXE")
             with open(dos, "wb") as f:
                 f.write(b"MZ" + bytes(0x60))

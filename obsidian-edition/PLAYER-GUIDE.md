@@ -917,7 +917,8 @@ Each kit's gains, costs and starting gear:
 is an Arcanist, and the other three are given a feature of their own, not a
 kit's. Gerakis fights wild, as a Wild Fury does; K'ratchek's spells and psionics
 are stronger under the open sky, as a Wasteland Seer's are, and her chatkcha
-comes back as if she had several (one more throw a round, which no kit gives);
+comes back as if she had several (one more throw a round, as every thri-kreen's
+does: AD&D's 2/1);
 Cilla's hiding is never halved in daylight, as an Assassin's isn't (the dice
 log calls her an Elven Shadow-walker).
 
@@ -962,7 +963,8 @@ ranger level). 3/2 means one attack one round and two the next.
 
 For the three kits the level is their own class's. Their chosen weapon spec
 is a melee weapon. With [two weapons](#two-weapons), the off hand attacks
-once a round whatever the rate.
+once a round whatever the rate. A thri-kreen throws a chatkcha once more a round
+than the table says (AD&D's 2/1 for the thri-kreen's own weapon).
 
 *Without the mod:* every warrior has 3/2 attacks a round in melee (2 from 7th
 level) with any weapon, and no other bonus; missile weapons shoot at the
@@ -1727,7 +1729,7 @@ materials, the short sword among them.
 | Cahulaks (both hands) | 1d6 | 1d6 | no |
 | Gythka (two-handed) | 2d4 | 2d6 | no |
 | Polearm | 1d10 | 2d6 | no |
-| Chatkcha | 1d6+2 | 1d4+1 | no: missiles never backstab |
+| Chatkcha | 1d6+2 | 1d4+2 | no: missiles never backstab |
 | Bow, sling, staff sling | by the missile | the same | no |
 
 A half-giant holds a two-handed weapon in one hand, with a shield or a light
@@ -1967,9 +1969,9 @@ line](DICE-LOG.md) what each of its lines means.
 |---|---|---|
 | In the game | a combat log in the game (L shows and hides it) | on |
 | | how much it says: at the least, in short or in detail | in short |
-| | describe monsters when you Look at them in a fight | on |
-| | float a spell's name over its caster, "Miss" over whoever an attack missed, and a spell's use lost ("Armor: 7 left") | on |
-| Rule changes | *characters:* class restrictions; multiclass hit points; hit dice rolled twice; scores and hit points as rolled; AD&D's class tables; CON as in AD&D; ages and magical aging; dual-classing as the manual has it; level cap by XP. *Weapons and armour:* two weapons; half-giants' two-handed weapons; cahulaks as Dark Sun's rules have them; creature size as in AD&D; held targets as in AD&D; rings and cloaks of protection; helms AC 1; items saving against acid. *Magic:* rangers' casting level; preservers' INT; the spell save; DEX instead of a doubled d20; Enlarge multiplying the weapon's dice only; spells and psionics as the manual describes them (monsters' powers and Turn Undead by AD&D's table among them); spells roll to hit; resting as in AD&D | all on |
+| | what hurts a monster (the Look box): describes a monster you Look at in a fight | on |
+| | names over figures: a spell's name over its caster, "Miss" over whoever an attack missed, and a spell's use lost ("Armor: 7 left") | on |
+| Rule changes | *characters:* class restrictions; multiclass hit points; hit dice: the better of two; scores and hit points as rolled; AD&D's class tables; CON as in AD&D; ages and magical aging; dual-classing as the manual has it; level cap by XP. *Weapons and armour:* two weapons; half-giants' two-handed weapons; cahulaks as Dark Sun's rules have them; creature size as in AD&D; held targets as in AD&D; rings and cloaks of protection; helms AC 1; items saving against acid. *Magic:* rangers' casting level; preservers' INT; the spell save; DEX instead of a doubled d20; Enlarge multiplying the weapon's dice only; spells and psionics as the manual describes them (monsters' powers and Turn Undead by AD&D's table among them); spells roll to hit; resting as in AD&D | all on |
 | More character customization | weapon specialization; kits; STORE and RECALL on the creation screen; fuller starting gear | all on |
 | Expanded features | the leader's CHA at shops; buying back magical items; improved thieving: thief skills from AD&D's table, hiding in shadows to backstab, the cloak, boots and belt, backstabs multiplying the weapon's dice only, picking pockets | all on |
 | New content | the new spells (six wizard spells and ten 6th-level priest spells, one switch); new people (Kalzith; Semyon); a small quest (the cooked vulture); defilers' scrolls; new items (and an arena bout that comes with them) | all on |

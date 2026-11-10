@@ -891,6 +891,15 @@ Alagorn's new menu lines are in the Loader's copy of his scripts
   items by another (221), and 213's weapons by a copy of 213 (222). His talk
   (script 211) calls each part by its offset in its script, so only the
   called script's number changes.
+- With every switch on, the weapons copy with its fourteen stories would still
+  be too long (12,405 bytes, the limit `pensasks.LONGEST` 11,376), so their
+  lines are in a script of their own (224, `alagorn.TOLD_IN`): a 19h, then
+  each story's lines and a 19h. Each story subroutine in 222 calls its part
+  (14h, place and script, as his talk calls 212's and 213's parts; the 19h
+  ending a part returns), then clears its value and runs the "none left" test
+  as before. 222 is now 8,444 bytes, 224 4,047. A kind whose copy is still too
+  long (or not as expected) is left out with its reason in `alagorn.LEFT_OUT`
+  and the log, not silently.
 - The added "none carried" check replays the game's own tests with their own
   jump targets: skipping one leaves the game's if/else nesting one level
   short.
