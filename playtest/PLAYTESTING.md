@@ -582,6 +582,11 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   - start.sh's text dice log, started beside the window, exits at once. `dice.txt` stays empty, and nothing sets the new game's own features (no WILD FIGHTING on the Effects screen).
   - To fix it: kill the window by pid first.
   - A tall picture of the Options tab needs a screen taller than the window: Xvfb `-screen 0 1400x3400x24`, then `xdotool windowsize W 1320 3300`.
+- **The load window for the docs** (2026-11-10, `docs/save-pages.png`): a save's name is its STXT
+  chunk (`namedsaves.NAME_CHUNK`), a fixed field padded with zeros, so ten saves with plain names are
+  the kept saves copied to `$PLAYTEST_WORK/inst/SAVE01-10.SAV` with that field rewritten in place
+  (`gff.read_gff` for the old bytes, then `find` and overwrite). Title, LOAD SAVED GAME (170,109),
+  the pointer moved off the list, a shot; PAGE 2 (252,106), a shot; both side by side at 200%.
 - **The practice program** (`tests/make_fake_party.py`, for `docs/viewer.png`): run `dosbox
   FAKEPTY.COM` in a scratch folder, then the window; Sadira loses 1 HP a second and her byte wraps
   past 0 (133/30 two minutes in), so search `sadira`, pick the hit and Assign within about 15 s of
