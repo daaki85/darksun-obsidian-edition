@@ -42,258 +42,133 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 
 ## Next pull request (not opened yet)
 
-DSCLOG.EXE 67,872 bytes (image 67,840: 64,832 in its segment, 3,008 in the tail), 704 of its
-segment spare.
+DSCLOG.EXE 68,016 bytes (image 67,984: [TO CONFIRM] in its segment, [TO CONFIRM] in the tail),
+3,104 of its segment spare [TO CONFIRM].
+
+**In short**
+- **Three new rules**, each a switch on by default: **held targets** as in AD&D (a blow on a held or
+  sleeping creature hits automatically, for normal damage), **creature size** (AD&D's weapon dice
+  against large targets; Hold and Charm Person fail on them) and **cahulaks** as Dark Sun has them
+  (a head in each hand, and a hit that can tangle).
+- **Spells, psionics and monsters as the manual describes them**, Turn Undead by AD&D's table among
+  them; the missile and hostile touch spells **roll to hit**.
+- **Resting** heals by the priests' spells and natural healing; **dual-classing** as the manual has it.
+- **New gear:** the Boots of Speed; more cahulaks (a Cahulaks +2, metal and obsidian cahulaks); the
+  game's own Polearm +1, never placed before; foes who fought with their fists are armed.
+- **Air clerics may use cahulaks**, and the Brute may dual-class to air cleric; **every thri-kreen**,
+  foes too, throws a chatkcha twice a round.
+- **The dice log** has a readable layout, a summary as each fight ends, and Turn Undead's rolls.
+- **The combat log panel** has a smaller font (8 lines docked, 14 expanded), and its Short lines
+  read as the readable layout does.
+- **The Loader** has a Help button that opens the player's guide; Fastest is the default speed.
+- **Smoother play:** steady pace without the choppy walking; shadows, dust and see-through figures
+  drawn for less.
+- **Graphics no longer disappear in a busy area** (the game's 300 picture slots reused), nor do
+  figures after many gear changes.
+- **The creatures' table** (CREATURES.md): every creature, its figure, its size and whether it can
+  be tangled.
+- **Fixes:** the game's (Scare's save, "can't save" that saved, Pehtucl's ambush, missiles from
+  behind, the Quicksilver Glove, Alagorn's stories) and the Loader's and DSCLOG's, from a full code
+  audit.
+- **Docs:** the game's bugs, the manual's spells, the new items and weapon specialization moved out
+  of FEATURES into pages of their own; ITEMS checked against the game's data; screenshots retaken.
 
 **New**
 - **New rule: held targets as in AD&D** (Options, Weapons and armour; on by default; `RULE_HELD`,
-  the Loader's `held_hit`, DSCLOG's `RULE_HI_HELD` 8000h and HELD: `HELD_HIT` at 589E9h, `HELD_DAMAGE`
-  at 58B0Dh): a blow on a Paralyzed or Out Cold creature hits automatically and does normal damage,
-  as the 2nd edition PHB's Table 51 has it ("defender sleeping or held: automatic"), where the game
-  rolled the d20 and doubled the damage. Both sides alike; AD&D's killing blow once no other
-  fighting is going on is left out. The dice log:
-  `    Paralyzed: hit automatically, for normal damage (AD&D's held target)` under the attack, no x2.
+  the Loader's `held_hit`, DSCLOG's `RULE_HI_HELD` 8000h and HELD: `HELD_HIT` at 589E9h,
+  `HELD_DAMAGE` at 58B0Dh): a blow on a Paralyzed or Out Cold creature hits automatically and does
+  normal damage, as the 2nd edition PHB's Table 51 has it ("defender sleeping or held: automatic"),
+  where the game rolls the d20 and doubles the damage. Both sides alike; AD&D's killing blow once
+  no other fighting is going on is left out. The dice log:
+  `    Paralyzed: hit automatically, for normal damage (AD&D's held target)` under the attack.
+  With the rule off, the dice log now shows the game's own rule: the hit's line ends
+  `x2 Paralyzed: a helpless target takes double` (the attack routine, 5883Ah, doubles the damage at
+  58B0Dh when the target's effects have bit 34 or its creature +1Ch is 3; the save routine's same
+  test, 79B0Ch, fails such a target with no roll), and a Poisoner's melee hit on a helpless target
+  names its poison and puts the 10 down to it when it lands (`GameData.helpless`,
+  `DiceLog._poison_taken`). DSCLOG writes the target's state into the ring entry as the dice are
+  rolled (+188, `HELPLESS_OF`, which HELD's own test uses too; only in an attack roll's, a save's
+  or an AC's entry), so a kill or a Hold ending before the line is written doesn't change it
+  (`Entry.helpless`; an older helper's entries: the game's state). The panel's short levels take a
+  hit line whose working opens with a bracket (a backstab's or this x2) as the attack's damage.
   How: [Held targets](obsidian-edition/DEVELOPMENT-RULES.md#held-targets). Seen in DOSBox
   (playtest/logs/2026-11-10-held-damage.md): with the rule, d20s of 8, 5 and 9 against "only a 20
-  hits" all hit a held Templar for their damage (6, 9: the HP falls matched); unticked, the same
-  setup missed on 12s and doubled the backstab. tests/test_held.py runs both sites in Unicorn.
+  hits" all hit a held Templar for their damage; without it, the misses and the doubled backstab.
+  `tests/test_held.py` runs both sites in Unicorn.
 - **New rule: creature size as in AD&D** (Options, Weapons and armour; on by default; `RULE_SIZE`,
-  DSCLOG's RULE_HI_SIZE and SIZE): a large target (the Loader's LARGE_BITS from sizes.py, in the
-  tail, the header's +1842; a half-giant; anyone Enlarged) takes AD&D's large weapon dice by kind
-  (SIZE_DICE from CAH_SWING: a long sword 1d12, a great axe 2d8, a dagger 1d3...; the Spiritual
-  Hammer 1d4), Shillelagh 1d6+1 against smaller ones; Hold Person, Charm Person and Charm Person
-  or Mammal (a person) are saved against at once by a large target (SIZE_SPARED from SAVE_SUM). The
-  dice log notes both. Seen in DOSBox: "1d12 for 1d8: a large target", "1d3 for 1d4", "Guard is too
-  big for Hold Person -> unaffected", a man-sized foe's save as before
-  (playtest/logs/2026-11-10-creature-size.md). How: [Creature
-  size](obsidian-edition/DEVELOPMENT-RULES.md#creature-size). +320 bytes of the segment, +66 of the tail
-- **The large dice in the item box** (the creature size rule; DSCLOG's SIZE_LINE at 72AA7h, after
-  7286Fh draws a weapon's damage line, and SIZE_PRE at 72A8Ah, before it): an item box's damage line
-  `1D8-1/1D12-1`; Shillelagh's line `1D6+1` (AD&D's against smaller foes; the game's 2D4 its large),
-  its box `1D6+1/2D4`. The inventory and View Character keep the game's lines (full rows: a first try
-  put a `Large` line under each weapon and ran off the inventory's panel; a click to switch them was
-  tried and set aside). Seen in DOSBox. +464 bytes of the segment
+  DSCLOG's RULE_HI_SIZE and SIZE): a large target takes AD&D's large weapon dice by kind
+  (`sizes.LARGE_DICE`, DSCLOG's `large_dice`, SIZE_DICE from CAH_SWING): a long sword 1d12, a short
+  sword 1d8, a dagger and a club 1d3, a mace 1d6, a pick 1d4, a great axe 2d8, a polearm 2d6, a
+  gythka 1d10 (the Dark Sun weapons guide's 2d4/1d10), a chatkcha 1d4+2 (AD&D's 1d6+2/1d4+2); the
+  axe, quarterstaff and cahulaks as against a man-sized one; the Spiritual Hammer 1d4, Shillelagh
+  1d6+1 against smaller ones (its 2D4 the large). FEATURES' table names the sources: the Player's
+  Handbook (the pick as the horseman's pick), the *Complete Book of Dwarves* for the great axe (its
+  two-handed battle axe, 1d10/2d8) and the Dark Sun weapons guide. Hold Person, Charm Person and
+  Charm Person or Mammal (a person) are saved against at once by a large target (SIZE_SPARED from
+  SAVE_SUM). Large is a half-giant, anyone Enlarged, or a creature large or bigger in sizes.py (the
+  Loader's LARGE_BITS, in the tail, the header's +1842, written before the Loader's cosmetic steps
+  so a failure in one can't leave it stale). An item box's damage line gives both
+  (`1D8-1/1D12-1`; Shillelagh's `1D6+1/2D4`; DSCLOG's SIZE_PRE at 72A8Ah and SIZE_LINE at 72AA7h,
+  round the game's damage line at 7286Fh); the inventory and View Character keep the game's lines.
+  The dice log notes both ("1d12 for 1d8: a large target", "Guard is too big for Hold Person ->
+  unaffected"). How: [Creature size](obsidian-edition/DEVELOPMENT-RULES.md#creature-size). Seen in
+  DOSBox: playtest/logs/2026-11-10-creature-size.md.
+- **Creature sizes** (`dsloader/sizes.py`, for rules to go by; the game keeps none): AD&D's T to G,
+  people by race (half-giants L, halflings S, thri-kreen M, a guess at 7 feet), the rest by name from
+  AD&D's and Dark Sun's monster books; the user's calls: the Drummer, the monster Slave, the Xorn,
+  the Psurlon and the Psurlon Adept large, and the six of the great tusked figure (the game's race
+  12, kind 31: the Magera, Blind One, Slave Leaders, Wagon Guard, Worker and the monster Guard; the
+  human Guards stay man-sized); 25 the mod's guesses (UNSURE, marked "?").
+- **The creatures' table** (obsidian-edition/CREATURES.md, made by `dsloader.doccreatures` from the
+  game's data, tested against sizes.py): every creature the game defines (189, one a name and race,
+  the default party left out), its figure as the game draws it standing (docs/creatures/, each its
+  own picture; the fighting picture for the Bulette, the Fire Eel and the Silt Horror, which come up
+  from the ground or the silt to fight: `doccreatures.BURROWERS`), its size, and whether the
+  cahulaks can tangle it (`cahulaks.why_not`).
 - **New rule: cahulaks as Dark Sun's rules have them** (Options, Weapons and armour; on by default;
   `RULE_CAHULAKS`, DSCLOG's RULE_HI_CAHULAKS and CAHULAKS): a head in each hand, the off head's one
   attack more a round under AD&D's two-weapon penalties whatever that rule (-2 the main head's
   swings, -4 the off head's, the round's last; DEX's reaction adjustment added, no better than 0);
   a hit that does damage tangles a man-sized or smaller target failing a save against
-  petrification: it loses its next turn, as Whirlwind's sweep. Not half-giants, nor the large and
-  the shapeless (cahulaks.py's BIG, a bit a combatant in the far block, the header's +1840). The
-  dice log names each head's penalty and the tangle's save. How:
-  [Cahulaks](obsidian-edition/DEVELOPMENT-RULES.md#cahulaks). Seen in DOSBox: two swings a round at
-  14+ and 16+ for Lex at DEX 10, the tangle's saves made and failed, a tangled Templar's next turn
-  gone (playtest/logs/2026-11-09-cahulaks.md).
-- **More cahulaks in the world** (with the new magic weapons, `worldgear.cahulaks_chunks`): Legcrusher's
-  two clubs a Cahulaks +1 (a copy of the game's with its shining icon, its Cause Light Wounds taken off: a plain +1;
-  `dataitems.with_items_removed`, new); the elven caravan's buried Cahulaks +1 made +2 (32,400); the
-  arena's dead body by the stone arch, which kept a plain bone gythka once Kreenfang went to the
-  champions, plain bone cahulaks; and the champions' mul **metal cahulaks** for his two bone axes: a
-  new item type (146, DSCLOG's 32nd extra type METAL_CAHULAKS: the game's Cahulaks, of metal; its icon
-  2670/2671 the bone one's heads in the metal polearm's colours, BOX_TALL too), counted as cahulaks
-  by every rule (the cahulaks' rule's sites, the half-giants' hands, the kits, restrict.py, the dice
-  log, specialization, the figure's drawing).
-- **New: the Boots of Speed** (the DMG's; the user's item), worn on the feet by anyone: in a fight the
+  petrification: it loses its next turn, as Whirlwind's sweep. Not tangled (CAH_HIT asks IS_LARGE,
+  and the far block's bit for each combatant, the header's +1840, written before the Loader's
+  cosmetic steps): half-giants, anyone Enlarged, whatever sizes.py makes large or bigger
+  (`big_table`, by each creature's race and name), the bodiless (`cahulaks.SHAPELESS`: elementals,
+  slimes, swarms, the Shadow and the greater shadows, the game's kind 13: the Shadow Guard, King,
+  Prince and Worker, Cragg, Tanelyv, Tristram and Tynan), and, the user's call, the spiders (Dark
+  Spider, Spider Mage, the "-tunk!" princes), the Sand Howler, Screamer Beetle, Xorn, Strine,
+  Daggoran, Magera and Alita (`cahulaks.UNTANGLED`). The cahulaks take both hands, a half-giant's too
+  (DSCLOG's PROBE_TWO_HANDED, TH_CAHULAKS), so a Twin-blade or a Battle Dancer can't use them
+  (KIT_FORBIDS, restrict.py). The figure holds a pair: a short haft and a hooked four-bladed head in
+  each hand, both at the hips walking (spritegear's CAHULAKS shape). The dice log names each head's
+  penalty and the tangle's save. How: [Cahulaks](obsidian-edition/DEVELOPMENT-RULES.md#cahulaks).
+  Seen in DOSBox: playtest/logs/2026-11-09-cahulaks.md. Tests: `test_shadows_shapeless`,
+  `test_shadow_kinds_in_data`.
+- **More cahulaks in the world** (with the new magic weapons, `worldgear.cahulaks_chunks`):
+  Legcrusher's two clubs a **Cahulaks +1** (a copy of the game's with its fire shimmer, its Cause
+  Light Wounds taken off: a plain +1; `dataitems.with_items_removed`, new); the elven caravan's
+  buried Cahulaks +1 made a **Cahulaks +2** (32,400), with an object and a picture of its own (object
+  2672, picture 2673 and its item box copy: its blades in the water's blues); the arena's dead body
+  by the stone arch plain bone cahulaks, in place of the game's plain gythka; and the champions' mul
+  **metal cahulaks** for his two bone axes.
+- **Metal and obsidian cahulaks:** two new item types, the game's Cahulaks in metal (146, DSCLOG's
+  METAL_CAHULAKS; its icon 2670/2671 the bone one's heads in the metal polearm's colours) and in
+  obsidian (147, OBSIDIAN_CAHULAKS), counted as cahulaks by every rule (the cahulaks' rule, the
+  hands, the kits, restrict.py, the dice log, specialization, the figure). Earth clerics may use
+  the metal ones, earth and fire clerics the obsidian ones; an earth or fire cleric-warrior who picks
+  the cahulaks as its weapon spec starts with obsidian ones (`weaponchoice`).
+- (magic metal and obsidian cahulaks: to be filled in)
+- **The Boots of Speed** (the DMG's; the user's item), worn on the feet by anyone: in a fight the
   wearer's movement doubled and AC 2 better while it can move (not Stuck, Paralyzed or Slowed);
   nothing out of a fight. DSCLOG's type SPEED_BOOTS (the 31st extra type, the game's Boots'), name
-  170h, BOOTS_MOVE (PROBE_MOVE) and BOOTS_AC (PROBE_AC); a red icon. Dagger, chief of the White Sand
-  Outlaws, wears them; Hototo, their other chief, carries the Gythka +3 (its 1000th-trip gift kept).
-  Seen in DOSBox: movement 240 for 120, foes' shots at AC 0 for her 2 (playtest/logs/2026-11-09-boots-of-speed.md).
-- **The game's Polearm +1 in play:** the game defines it (object 1577) but never places or gives it
-  (no script names it, not even by the negative number a create takes, and nothing holds one).
-  Seref, the Draj agent at the Elven Caravan, where the cluebook puts it, carries it, with the new
-  items on (`worldgear.MAGIC`): his object (203), which his encounter on the road copies too.
-- **Creature sizes** (`dsloader/sizes.py`, for rules to go by; the game keeps none): AD&D's T to G,
-  people by race (half-giants L, halflings S, thri-kreen M, a guess at 7 feet), the rest by name
-  from AD&D's and Dark Sun's monster books, 25 the mod's guesses (UNSURE, marked "?", and the thri-kreen's race); a Size column
-  in CREATURES.md, tested against sizes.py.
-- **Sizes, the user's calls:** the Drummer, the monster Slave, the Xorn, the Psurlon and the
-  Psurlon Adept large (sizes.py, CREATURES.md). And CREATURES.md draws each creature with its own
-  picture: the doc tool had taken the next picture number, meant for the burrowers, for 20 others
-  (Gilal a coffin, the Hermit a cloth, 14 people an elf or spearman on a box); only the Bulette, the
-  Fire Eel and the Silt Horror use their fighting picture (`doccreatures.BURROWERS`).
-- **The creatures' table** (obsidian-edition/CREATURES.md, made by `dsloader.doccreatures` from the
-  game's data): every creature the game defines (189, one a name and race, the default party left
-  out), its figure as the game draws it standing (docs/creatures/; the fighting picture's where that
-  shows much more: the Bulette, the Fire Eel and the Silt Horror come up from the ground or the silt to fight) and whether the
-  cahulaks can tangle it (`cahulaks.why_not`). Also kept from being tangled, the user's call: the
-  spiders (Dark Spider, Spider Mage, the "-tunk!" princes), the Sand Howler, Screamer Beetle, Xorn,
-  Strine, Daggoran, Magera and Alita (`cahulaks.UNTANGLED`).
-- **Spells and psionics as the manual describes them** (a new rule change, on by default, from the
-  next start: `spells_manual`, `gamepatch.SPELLS_MANUAL`; the spell records and DSCLOG sites; from
-  reports/spells-against-the-manual.md, which now says what was done with each of its points):
-  - *The records:* Bestow Curse and Blood Flow allow a save; a save negates Flaming Sphere; Solid
-    Fog 1d3 rounds + 1 a level (was until removed); Minor Spell Turning 3 rounds a level (was one
-    spell, never ending), turning every 1st- to 3rd-level spell for its whole time; Cause Fear 1d4
-    rounds (was 1 a level); Quicksand no save; Turn Pebble to Boulder 3d6+8 (was 6d6); Ironskin a
-    blow a caster level (its charges and its level divisor 1; was 1d6). Left as they were, after a
-    DOSBox run: Magical Stone (the game already throws three stones of 1d4: the report's "one" was
-    wrong, and a record of 3d4 made each stone 3d4) and Quicksand's time (its Stuck is a round at a
-    time, put on again while the quicksand's own 5d3 rounds last, so the record's time changes
-    nothing). Seen in DOSBox: playtest/logs/2026-11-08-manual-spells.md.
-  - **Stinking Cloud** 1d4+1 rounds (was 1d6: the record's dice 1d4, and DSCLOG's STINK_SITE adds
-    the round, which the record can't); **Chaos** lets a creature of INT 21+ or 4 or less save as
-    well as warriors (CHAOS_SITE, at the save modifiers' 79F80h); **Free Action** also frees the
-    Stuck (Web, Solid Fog, Quicksand, Entangle, Grease): its handler, shared with Remove Paralysis
-    and Protection from Paralysis, made a loop over the effects to remove through its own two far
-    calls (a Poisoned creature still stays Paralyzed, as the game has it). FEATURES lists what is
-    left as it is and why (Protection from Normal Missiles, Deflection and Inertial Barrier: one
-    effect; Confusion's and Chaos's one save; Mirror Image's images until struck). Tests:
-    `test_manual_spells`.
-  - **Hold Undead** holds only undead of the caster's level or lower (HOLD_HD_SITE, 7A345h);
-    **Color Spray** gives no save to creatures of the caster's level or lower (SPRAY_SITE, 79F83h);
-    and for saving throws a monster with no class counts its hit dice as its level (HD_SAVE_SITE,
-    79D8Ch: the game's level routine gives such a creature 0, so a 14-HD Rampager was Scared like a
-    1st-level one, and Dismissal was easy on elementals and slaadi). Seen in DOSBox
-    (playtest/logs/2026-11-08-hd-spells.md).
-  - **Minute Meteors: five globes of 1d4, each rolling to hit at +2** with spells that roll to hit
-    (the record's repeat count 5, as Magical Stone's 3; was one roll of 1d4 a caster level).
-    **Flame Arrow: a bolt for every 5 caster levels, 5d6 each** (DSCLOG's FLAME_SITE on the cast's
-    repeat count; was one sum of 5d6, 10d6 at 10th); no attack roll, as the manual and AD&D. Only
-    the party's casts repeat: a monster's Magical Stone, Minute Meteors or Flame Arrow lands once
-    (the game's other casting routes ignore the count).
-  - **Turn Undead the AD&D way** (DSCLOG's TURN_SITE at 7AE01h): AD&D 2e's turning table by the
-    undead's hit dice (rows: 1, 2, 3-4, 5, 6 ... 11+) and the priest's level (columns 1-9, 10-11,
-    12-13, 14+), where the game's formula put 2- and 3-HD undead a row easier and 5 HD a row harder;
-    a turn (the number made, or T) makes the undead flee, Afraid for 3d4 rounds (the game had no
-    fleeing: every success destroyed); D destroys, D* destroys and up to 2d4 more of its kind
-    reached by the same turning; "---" no chance. A priest who fails against an undead can't try it
-    again that fight (another priest can). The dice log says which (`turned: flees 3d4 = 9
-    rounds`, `destroyed automatically (D*)`, `can't try again`). Seen in DOSBox with Minute
-    Meteors and Flame Arrow: playtest/logs/2026-11-09-turn-undead-meteors.md.
-  - Fire Shield +2 on saves vs fire and cold (its description says so); Blur +1 on saves; Chill
-    Touch's Weakened lasts (an hour: its record gave it 0 rounds) and undead touched take no damage
-    and flee 1d4 rounds; Cloudkill kills under 4 HD with no save and those of 4-5 HD that fail, 6+
-    HD take its damage; Feeblemind (INT and WIS 3, as the game already did) stops psionics and Heal
-    cures it; Lower Resistance takes 30% + 1% a caster level off magic resistance (was halving it);
-    Strength's die by class (warriors 1d8, priests, rogues and psionicists 1d6, wizards 1d4) and the
-    mod's Cat's Grace's (rogues 1d8, wizards, warriors and psionicists 1d6, priests 1d4), the best
-    die for a multiclass character, at most 24, neither stacking with Adrenalin Control; Rainbow
-    Pattern a round a caster level, ended by damage on the creature it holds; Cell Adjustment heals
-    1d4 (and cures disease, as before); Biofeedback's -2 leaves a blow at least 1. Each seen in
-    DOSBox: playtest/logs/2026-11-09-group-3.md.
-  - **Monsters as the manual describes them:** Shadows and Greater Shadows drain 1 STR a hit (no
-    save, for 2d4 turns, stacking) in place of their cold damage and paralysis, and both are
-    unaffected by cold; the Babau's and Blue Slaad's deadly poison (save or die) in place of the
-    corroding touch and disease; the Tari a 3-HD bite of 1d3 with a 1-in-20 chance of disease; the
-    Styr a 3d6 fire breath, +1 weapons to hurt it, HD 14 and THAC0 7; the Djinn turns invisible and
-    makes mirror images at its first turn (the manual promises it no magic resistance). Seen in
-    DOSBox: playtest/logs/2026-11-09-group-4.md.
-- **Spells roll to hit** (a new rule change, on by default, from the next start: `spell_to_hit`,
-  `gamepatch.SPELL_TO_HIT`): the missile spells (Acid Arrow, Turn Pebble to Boulder, Magical Stone,
-  Condense, each of Minute Meteors' globes at +2; the Strine's spines) roll a d20 against the
-  target's AC with the caster's THAC0 (Acid Arrow a fighter's of the caster's level) and the game's
-  own to-hit adjustments (DEX), and the hostile touch spells (Chill Touch, Shocking Grasp, Vampiric
-  Touch, Cause Light, Serious and Critical Wounds, Cause Disease, Poison) with STR, at a creature of
-  another side; 20 always hits, 1 always misses. A miss does nothing (no damage, no burn, no
-  effect): "Miss" floats over the target and the dice log says `-> MISS: the spell does nothing,
-  the 2 damage rolled lost`. Each of Magical Stone's three throws rolls on its own. Spells carried
-  by a weapon's hit (spell arrows) don't roll again; Magic Missile and the areas are untouched.
-  DSCLOG's SPELL_HIT_SITE (7A15Ah, armed by CAST_SITE) and SPELL_STUB_SITE (the always-hit stub,
-  78BA3h). Seen in DOSBox (playtest/logs/2026-11-08-spell-to-hit.md). Tests: `test_spell_to_hit`
-  (dsclog, gamepatch, dicelog).
-- **Resting heals by spells and natural healing** (a new rule change, `rest_heal`, on by default):
-  before the rest each priest spends the slots left on Neutralize Poison for the Poisoned, Cure
-  Blindness, Cure Disease (when no cleric or druid of 5th+ casts it free), and the Cure Wounds
-  spells or Heal on the most wounded, and psionicists use Cell Adjustment, each through the game's
-  own cast (`At rest: Cilla casts Cure Critical Wounds on Gerakis (5th-level slots: 8 left)`); then
-  each heals 3 HP and CON's hit-point bonus (`Gerakis rests 8 hours: +3, +6 (CON 22) = +9`) instead
-  of all of them, CON 20+ regeneration coming on top for the 8 hours.
-- **Dual-classing as the manual has it** (a new rule change, `dual_class`, on by default): at 3rd
-  level of the old class, and every prime requisite checked (the old class's at 15+, the new one's
-  at 17+; the game checked one, WIS for rangers, druids and psionicists). Seen in DOSBox with
-  resting and the monsters: playtest/logs/2026-11-09-group-4.md.
-- **A fight's summary as it ends** (mock-up G's): `Fight over: 2 rounds, 1 kill; the party dealt 28
-  damage and took 6`, then each member's attacks hit, damage dealt, kills and damage taken, written
-  once the game's fight flag has been down 2 seconds (each arena wave gets its own). A kill goes to
-  whoever hurt the creature last, a spell's damage to its caster (named by the cast's record, so
-  Magic Missile's too; only a party member's spells count for the party). The readable layout shows it as the fight's close, its members' lines always shown.
-  (`fighttally.py`; tests: `test_fighttally`, `test_ledger`.)
-- **The dice log window has a readable layout** (mock-up G of the combat log research, on by
-  default, **Readable layout** to switch back; `dsloader/ledger.py`). Each event is a line with its
-  outcome first (`● Seneca hits Arena Guard for 11 — backstab, Bone Hayneedle +1`), the HP it left
-  and the roll in columns at the right, and the working under it, smaller and dim: the to-hit sum
-  with the AC it would have hit, the damage dice, the save's line in full, each initiative score.
-  Pips for whose line it is, a rule for each round, `▸` for each turn; the outcome coloured by the
-  party's view of it (sky blue good, coral bad, dim for misses and monsters' saves, gold for kills;
-  each at 4.5:1 or more on the log). A hit's damage and the HP left are filled into its line as their
-  own lines arrive. The log's own lines are kept: Save..., the crash and freeze reports and the
-  layout switched off use them. (Tests: `test_ledger`.)
-- **Help in the Loader's window:** a **Help** button at the top opens the player's guide
-  (`player-guide.html`, beside the Loader) in the browser (`viewer.open_guide`; the status line
-  says where the page is when no browser opens it). Tested in `test_viewer_options`.
-
-**Changed**
-- **Air clerics may use the cahulaks** with the class restrictions (the user's decision): Dark Sun's
-  cahulaks can be thrown, as AD&D's daggers can, and the air sphere's weapons are missile and thrown
-  ones and daggers (the game throws neither). The game's own class list already had the air
-  cleric's bit; the restriction took it away. `restrict.AIR_KINDS`, DSCLOG's SPHERE_ALLOWS; the
-  docs' sphere tables; `test_restrict` (the game's cahulaks type among its types, which
-  `test_dsclog` emulates too).
-- **The gythka against a large target rolls 1d10**, the Dark Sun weapons guide's 2d4/1d10 (it was
-  2d6, from no source): `sizes.LARGE_DICE` and DSCLOG's `large_dice`; the docs' tables.
-- **Every thri-kreen throws a chatkcha twice a round** (AD&D's 2/1, the user's source): DSCLOG's
-  OWN_THROWS and PROBE_MISSILE_LINE go by the sheet's race (8), foes too, whatever the rules; it was
-  K'ratchek's alone (her own feature, with the kits on). `GameData.weapon_hits` the same.
-  Her Effects line `CHATKCHA 2/ROUND` and the Characters tab's "One more chatkcha throw" are gone,
-  as the rate is no longer hers alone (the Attacks line shows it for any thri-kreen).
-- **The metal pick's and Deepbiter's icons** are drawn from the Hot Springs' stone pick (object
-  1381: a whole head, slate grey, gold fittings), not the pick's own object (1210), whose near-black
-  head is in two pieces: the metal one in the metal long sword's greys, Deepbiter's head in the
-  game's fire (`icons.PICK_PICTURE_FROM`). The item pictures in `docs/items` were drawn again: several
-  glows had changed since they last were.
-- **The chatkcha against a large target is 1d4+2** (AD&D's 1d6+2/1d4+2): it was 1d4+1 (`LARGE_DICE`
-  and DSCLOG's `large_dice`; the docs' tables).
-- **Spell descriptions that said something else:** with the manual's spells, Strength, Ironskin,
-  Free Action, Solid Fog, Minor Spell Turning, Bestow Curse, Blood Flow, Chaos, Flame Arrow and Cell
-  Adjustment describe what they now do (`spelltexts.MANUAL_TEXTS`); with Creature size, Hold Person
-  (both), Charm Person and Charm Person or Mammal say they don't take on a large target
-  (`SIZE_TEXTS`, `icons.write_resources`' CREATURE_SIZE). Each no longer than the game's longest.
-- **The Options tab's texts:** each switch named as FEATURES.md names it, in FEATURES' order within
-  each group; the manual's spells' text 1,267 characters to 349; Creature size and Cahulaks reworded.
-  The Graphics and Controls boxes too open with their FEATURES names now (See-through figures,
-  Choosing an enemy, Scrolling the map, The view in fights, The pointer in scenes, Where the pointer
-  starts, Spells on the Effects screen).
-- **The greater shadows can't be tangled:** the Shadow Guard, King, Prince and Worker, Cragg,
-  Tanelyv, Tristram and Tynan (the game's kind 13, the greater shadow, as the 6-HD Shadow) join the
-  Shadow in `cahulaks.SHAPELESS`: AD&D's shadows have no body a rope could hold, and the plain Shadow
-  was already out. CREATURES.md regenerated. Tests: `test_shadows_shapeless`, and with the game's
-  data `test_shadow_kinds_in_data` (every creature of the two shadow kinds in the table is shapeless).
-- **The dice log shows the game's double damage on a helpless target**: a weapon blow on a
-  Paralyzed or Out Cold creature does double (the attack routine, 5883Ah, hands the damage call
-  5B8:20h its damage x2 too, "shl ax,1" at 58B0Dh, which 79BF9h takes when the target's effects'
-  bitset has bit 34 or its creature +1Ch is 3; the save routine's same test, 79B0Ch, fails such a
-  target with no roll). The hit's line now ends `x2 Paralyzed: a helpless target takes double`, so
-  the HP fall matches it, and a Poisoner's melee hit on a helpless target names its poison (no save
-  line to show it) and puts the 10 down to it when it lands, after the round's next swing at times
-  (`GameData.helpless`, `DiceLog._poison_taken`). The combat log panel's short levels take a hit
-  line whose working opens with a bracket (a backstab's or this x2) as the attack's damage. Seen in
-  DOSBox: Seneca's backstab for 26 on a held Templar took 26, its poison 10, the off hand's 18 the
-  last 5 (playtest/logs/2026-11-10-held-damage.md). The game's rule is unchanged.
-- **Each magic cahulaks its own glow**: the caravan's Cahulaks +2 now has an object and a picture of
-  its own (icons.ICONS' "Cahulaks +2", object 2672, picture 2673 and its item box copy, DSCLOG's
-  BOX_TALL): every pixel of its blades in the water's blues, where Legcrusher's Cahulaks +1 keeps the
-  game's object's fire shimmer on every other. ITEMS.md's two rows say what each is, not how it
-  was made. Seen in DOSBox (the two objects put on Lex's items in memory: the inventory and the box)
-- **Large: the six of one great tusked figure** (the game's race 12, kind 31: the Magera, Blind One,
-  Slave Leaders, Wagon Guard, Worker and the monster Guard), the user's call. The cahulaks' "too big"
-  now comes from sizes.py (large or bigger, by race and name: the human Guards stay man-sized), no
-  longer a list of names of its own (`cahulaks.why_not`, `big_table` reading each creature's race).
-- **Cahulaks drawn as a pair**: a short haft and a hooked four-bladed head in each hand (both at
-  the hips walking), not one hook in one hand (spritegear's CAHULAKS shape; the left hand given the
-  right's). And with half-giants' two-handed weapons in one hand, the cahulaks still take both
-  hands (DSCLOG's PROBE_TWO_HANDED by the type's place in the table, TH_CAHULAKS; KIT_FORBIDS and
-  restrict.py: a half-giant Twin-blade can't pair them).
-- **The move-silently labels say "Silent"**: the inventory screen's thief row reads `SLNT` (it read
-  `MOVE`, beside View Character's MOVE, the character's movement), and the item boxes' stealth lines
-  `Silent +10` (boots) and `Silent 95%` (the Boots of Elvenkind) for `Move +10` and `Move 95%`: the
-  Boots of Speed's box read as if every pair of boots added movement (the user's catch). DSCLOG's
-  L_MOVE, IB_QUIET and IB_ELF_QUIET; its sizes unchanged. docs/gear-boxes.png and docs/elvenkind.png
-  retaken. Seen in DOSBox: playtest/logs/2026-11-09-silent-labels.md.
-- **The mod's magic gear with no plus or power glows on the figures**: the Boots of Speed, the
-  Cloak and Boots of Elvenkind, the Girdles of Back Defense and of Urnst (and the Amulet of Magic
-  Resistance, should a figure ever show the neck), by type (`sprites.MAGIC_TYPES`): the glow had
-  gone by a plus or a power only.
+  170h, BOOTS_MOVE (PROBE_MOVE) and BOOTS_AC (PROBE_AC); a red icon, and a glow on the figure.
+  Dagger, chief of the White Sand Outlaws, wears them; Hototo, their other chief, carries the
+  Gythka +3 (its 1000th-trip gift kept). Seen in DOSBox: movement 240 for 120, foes' shots at AC 0
+  for her 2 (playtest/logs/2026-11-09-boots-of-speed.md).
+- **The game's Polearm +1 in play:** the game defines it (object 1577, a stand-alone object in
+  RGNFF.GFF) but no script creates or gives it and nothing holds one. Seref, the Draj agent at the
+  Elven Caravan, where the cluebook puts it, carries it, with the new items on (`worldgear.MAGIC`):
+  his object (203), which his encounter on the road copies too.
 - **People the party fights who had nothing to fight with** (they struck with their fists), with
   the new mundane items on (`worldgear.fighters`): Seref's Drajian Guards (213) and the slave
   village's (195) the armed Drajian Guard's kit; the Lower Castle's unarmed Guard (281) the other
@@ -302,388 +177,433 @@ segment spare.
   arm armour too; the final battle's Psionicist (257) a stone dagger; the arena's Tohr-kreen (292),
   whose picture holds a gythka in every frame, a bone gythka. (Thri-kreen fight with their claws, as
   their pictures show; Jake and Mow are Dagolar's guises; Egrus is dead.)
+- **Spells and psionics as the manual describes them** (a new rule change, on by default, from the
+  next start: `spells_manual`, `gamepatch.SPELLS_MANUAL`; the spell records and DSCLOG sites; from
+  reports/spells-against-the-manual.md, which now says what was done with each of its points). Tests:
+  `test_manual_spells`. Seen in DOSBox: playtest/logs/2026-11-08-manual-spells.md,
+  2026-11-08-hd-spells.md, 2026-11-09-group-3.md, 2026-11-09-group-4.md,
+  2026-11-09-turn-undead-meteors.md.
+  - *The records:* Bestow Curse and Blood Flow allow a save; a save negates Flaming Sphere; Solid
+    Fog 1d3 rounds + 1 a level (was until removed); Minor Spell Turning 3 rounds a level (was one
+    spell, never ending), turning every 1st- to 3rd-level spell for its whole time; Cause Fear 1d4
+    rounds (was 1 a level); Quicksand no save; Turn Pebble to Boulder 3d6+8 (was 6d6); Ironskin a
+    blow a caster level (was 1d6). Left as they were, after a DOSBox run: Magical Stone (the game
+    already throws three stones of 1d4) and Quicksand's time (its Stuck is put on again while the
+    quicksand's own 5d3 rounds last).
+  - **Stinking Cloud** 1d4+1 rounds (was 1d6; DSCLOG's STINK_SITE adds the round); **Chaos** lets a
+    creature of INT 21+ or 4 or less save as well as warriors (CHAOS_SITE, 79F80h); **Free Action**
+    also frees the Stuck (Web, Solid Fog, Quicksand, Entangle, Grease): its handler, shared with
+    Remove Paralysis and Protection from Paralysis, made a loop over the effects to remove (a
+    Poisoned creature still stays Paralyzed, as the game has it). FEATURES lists what is left as it
+    is and why (Protection from Normal Missiles, Deflection and Inertial Barrier: one effect;
+    Confusion's and Chaos's one save; Mirror Image's images until struck).
+  - **Hold Undead** holds only undead of the caster's level or lower (HOLD_HD_SITE, 7A345h);
+    **Color Spray** gives no save to creatures of the caster's level or lower (SPRAY_SITE, 79F83h);
+    for saving throws a monster with no class counts its hit dice as its level (HD_SAVE_SITE,
+    79D8Ch: the game gave it 0, so a 14-HD Rampager was Scared like a 1st-level one, and Dismissal
+    was easy on elementals and slaadi).
+  - **Minute Meteors:** five globes of 1d4, each rolling to hit at +2 with spells that roll to hit
+    (the record's repeat count 5; was one roll of 1d4 a caster level). **Flame Arrow:** a bolt for
+    every 5 caster levels, 5d6 each (FLAME_SITE; was one sum of 5d6, 10d6 at 10th), no attack roll.
+    Only the party's casts repeat: a monster's Magical Stone, Minute Meteors or Flame Arrow lands
+    once.
+  - **Turn Undead the AD&D way** (TURN_SITE, 7AE01h): AD&D 2e's turning table by the undead's hit
+    dice and the priest's level, where the game's formula put 2- and 3-HD undead a row easier and
+    5 HD a row harder; a turn makes the undead flee, Afraid for 3d4 rounds (the game had no fleeing:
+    every success destroyed); D destroys, D* destroys and up to 2d4 more of its kind reached by the
+    same turning; "---" no chance. A priest who fails against an undead can't try it again that
+    fight. The dice log says which (`turned: flees 3d4 = 9 rounds`, `destroyed automatically (D*)`,
+    `can't try again`). The record carries the priest's and the undead's creatures, so a turning out
+    of a fight names them.
+  - Fire Shield +2 on saves vs fire and cold; Blur +1 on saves; Chill Touch's Weakened lasts an hour
+    (its record gave 0 rounds), and undead touched take no damage and flee 1d4 rounds; Cloudkill
+    kills under 4 HD with no save and those of 4-5 HD that fail, 6+ HD take its damage; Feeblemind
+    stops psionics and Heal cures it; Lower Resistance takes 30% + 1% a caster level off magic
+    resistance (was halving it); Strength's die by class (warriors 1d8, priests, rogues and
+    psionicists 1d6, wizards 1d4) and the mod's Cat's Grace's (rogues 1d8, wizards, warriors and
+    psionicists 1d6, priests 1d4), the best die for a multiclass character, at most 24, neither
+    stacking with Adrenalin Control; Rainbow Pattern a round a caster level, ended by damage on the
+    creature it holds; Cell Adjustment heals 1d4; Biofeedback's -2 leaves a blow at least 1.
+  - **Monsters as the manual describes them:** Shadows and Greater Shadows drain 1 STR a hit (no
+    save, for 2d4 turns, stacking) in place of their cold damage and paralysis, and both are
+    unaffected by cold; the Babau's and Blue Slaad's deadly poison (save or die) in place of the
+    corroding touch and disease; the Tari a 3-HD bite of 1d3 with a 1-in-20 chance of disease; the
+    Styr a 3d6 fire breath, +1 weapons to hurt it, HD 14 and THAC0 7; the Djinn turns invisible and
+    makes mirror images at its first turn.
+- **Spells roll to hit** (a new rule change, on by default, from the next start: `spell_to_hit`,
+  `gamepatch.SPELL_TO_HIT`): the missile spells (Acid Arrow, Turn Pebble to Boulder, Magical Stone,
+  Condense, each of Minute Meteors' globes at +2; the Strine's spines) roll a d20 against the
+  target's AC with the caster's THAC0 (Acid Arrow a fighter's of the caster's level) and DEX, and the
+  hostile touch spells (Chill Touch, Shocking Grasp, Vampiric Touch, Cause Light, Serious and
+  Critical Wounds, Cause Disease, Poison) with STR, at a creature of another side; 20 always hits, 1
+  always misses. A miss does nothing: "Miss" floats over the target and the dice log says
+  `-> MISS: the spell does nothing, the 2 damage rolled lost`. Each of Magical Stone's three throws
+  rolls on its own. Spells carried by a weapon's hit (spell arrows) don't roll again; Magic Missile
+  and the areas are untouched. The panel at Short: `Cermak's Minute Meteors hits Kalzith for 2 (8 vs
+  7+)` / `... misses Kalzith (4 vs 7+)`, in the hits' and misses' colours; in the readable layout an
+  event row, as a weapon's attack is. DSCLOG's SPELL_HIT_SITE (7A15Ah, armed by CAST_SITE) and
+  SPELL_STUB_SITE (78BA3h). Seen in DOSBox (playtest/logs/2026-11-08-spell-to-hit.md). Tests:
+  `test_spell_to_hit`.
+- **Resting heals by spells and natural healing** (a new rule change, `rest_heal`, on by default):
+  before the rest each priest spends the slots left on Neutralize Poison for the Poisoned, Cure
+  Blindness, Cure Disease (when no cleric or druid of 5th+ casts it free), and the Cure Wounds
+  spells or Heal on the most wounded, and psionicists use Cell Adjustment, each through the game's
+  own cast (`At rest: Cilla casts Cure Critical Wounds on Gerakis (5th-level slots: 8 left)`); then
+  each heals 3 HP and CON's hit-point bonus (`Gerakis rests 8 hours: +3, +6 (CON 22) = +9`) instead
+  of all of them, CON 20+ regeneration coming on top. The HP given back are in the damage colour on
+  the panel and in the Loader's log.
+- **Dual-classing as the manual has it** (a new rule change, `dual_class`, on by default): at 3rd
+  level of the old class, and every prime requisite checked (the old class's at 15+, the new one's
+  at 17+; the game checked one, WIS for rangers, druids and psionicists). Seen in DOSBox:
+  playtest/logs/2026-11-09-group-4.md.
+- **A fight's summary as it ends** (mock-up G's): `Fight over: 2 rounds, 1 kill; the party dealt 28
+  damage and took 6`, then each member's attacks hit, damage dealt, kills and damage taken, written
+  once the game's fight flag has been down 2 seconds (each arena wave gets its own). A kill goes to
+  whoever hurt the creature last. A spell's damage counts for the party only when a saving throw
+  against it or its attack roll names a party member as its caster. The readable layout shows it as
+  the fight's close. (`fighttally.py`; tests: `test_fighttally`, `test_ledger`.)
+- **The dice log window has a readable layout** (mock-up G of the combat log research, on by
+  default, **Readable layout** to switch back; `dsloader/ledger.py`). Each event is a line with its
+  outcome first (`● Seneca hits Arena Guard for 11 — backstab, Bone Hayneedle +1`), the HP it left
+  and the roll in columns at the right, and the working under it, smaller and dim: the to-hit sum
+  with the AC it would have hit, the damage dice, the save's line in full, each initiative score.
+  Pips for whose line it is, a rule for each round, `▸` for each turn; the outcome coloured by the
+  party's view of it (sky blue good, coral bad, dim for misses and monsters' saves, gold for kills;
+  each at 4.5:1 or more on the log). A hit's damage and the HP left are filled into its line as
+  their own lines arrive. The log's own lines are kept: Save..., the crash and freeze
+  reports and the layout switched off use them. (Tests: `test_ledger`.)
+- **Help in the Loader's window:** a **Help** button at the top opens the player's guide
+  (`player-guide.html`, beside the Loader) in the browser (`viewer.open_guide`), and the status line
+  names the guide's place whenever Help is clicked (an opener can report success and find no
+  browser, as `gio` did). Tested in `test_viewer_options`.
+
+**Changed**
+- **Air clerics may use the cahulaks** with the class restrictions (the user's decision): Dark Sun's
+  cahulaks can be thrown, as AD&D's daggers can, and the air sphere's weapons are missile and thrown
+  ones and daggers (the game throws neither). The game's own class list already had the air
+  cleric's bit; the restriction took it away. An air Seeker goes by its sphere too.
+  (`restrict.AIR_KINDS`, DSCLOG's SPHERE_ALLOWS; `test_restrict`.)
+- **A Brute may dual-class to air cleric** (was barred, with no two-handed melee weapon the class
+  could use): the cahulaks are its two-handed weapon now. A Brute still can't dual to psionicist.
+  (`kits.py`.)
+- **Every thri-kreen throws a chatkcha twice a round** (AD&D's 2/1, the user's source): DSCLOG's
+  OWN_THROWS and PROBE_MISSILE_LINE go by the sheet's race (8), foes too, whatever the rules
+  (`GameData.weapon_hits` the same); was K'ratchek's alone, her own feature with the kits on. Her
+  Effects line `CHATKCHA 2/ROUND` and the Characters tab's "One more chatkcha throw" are gone; the
+  Attacks line shows the rate for any thri-kreen.
+- **The metal pick's and Deepbiter's icons** are drawn from the Hot Springs' stone pick (object
+  1381: a whole head, slate grey, gold fittings), not the pick's own object (1210), whose near-black
+  head is in two pieces: the metal one in the metal long sword's greys, Deepbiter's head in the
+  game's fire (`icons.PICK_PICTURE_FROM`); both in the item box's list of tall pictures (the Loader's
+  and the helper's). The item pictures in `docs/items` drawn again.
+- **Spell descriptions that said something else:** with the manual's spells, Strength, Ironskin,
+  Free Action, Solid Fog, Minor Spell Turning, Bestow Curse, Blood Flow, Chaos, Flame Arrow and Cell
+  Adjustment describe what they now do (`spelltexts.MANUAL_TEXTS`); with Creature size, Hold Person
+  (both), Charm Person and Charm Person or Mammal say they don't take on a large target
+  (`SIZE_TEXTS`). Each fits the game's box (a seven-line box of 128 pixels), and the four spell
+  arrows' texts end "casts it on a hit" (Vampiric Arrows' had run past the edge):
+  `test_spelltexts_fit` wraps every text the Loader writes in the game's font.
+- **The Options tab's texts:** each switch named as FEATURES.md names it, in FEATURES' order within
+  each group; the manual's spells' text 1,267 characters to 349. The Graphics and Controls boxes
+  open with their FEATURES names too (See-through figures, Choosing an enemy, Scrolling the map,
+  The view in fights, The pointer in scenes, Where the pointer starts, Spells on the Effects
+  screen).
+- **The mod's magic gear with no plus or power glows on the figures:** the Cloak and Boots of
+  Elvenkind, the Girdles of Back Defense and of Urnst (and the Amulet of Magic Resistance, should a
+  figure ever show the neck), by type (`sprites.MAGIC_TYPES`): the glow had gone by a plus or a
+  power only.
+- **The move-silently labels say "Silent"**: the inventory screen's thief row reads `SLNT` (it read
+  `MOVE`, beside View Character's MOVE, the character's movement), and the item boxes' stealth lines
+  `Silent +10` (boots) and `Silent 95%` (the Boots of Elvenkind) for `Move +10` and `Move 95%` (the
+  user's catch). DSCLOG's L_MOVE, IB_QUIET and IB_ELF_QUIET. Seen in DOSBox:
+  playtest/logs/2026-11-09-silent-labels.md.
 - **Item boxes show a weaker material's to-hit** under a plain weapon's damage: `Hit -3` wood,
-  `Hit -1` bone, `Hit -2` stone and obsidian, as the game's attack takes it (the damage line already
-  had the material's damage off). Not with a plus, nor for the game's exempt weapons (clubs, staves,
-  the chatkcha: type +08h 80h), nor metal (DSCLOG's IB_MATERIAL, always on). Seen in DOSBox:
-  playtest/logs/2026-11-09-hit-line.md. The box puts its text below the picture, so a weapon
-  picture taller than 16 pixels (the polearms', staves', gythkas', a stone pick's, the cahulaks',
-  the striker's, up to 36; the Long Sword's is 15) put the last row at the box's edge: the box alone
-  now draws a copy 16 at most (`icons.BOX_TALL`, `BOX_SMALL`; DSCLOG's BOX_PICS, always on), the
-  inventory and the ground keeping the game's own picture (the Polearm's too, which the Loader had
-  drawn 22 everywhere; the weapon specs' picker keeps its 22).
+  `Hit -1` bone, `Hit -2` stone and obsidian, as the game's attack takes it. Not with a plus, nor
+  for the game's exempt weapons (clubs, staves, the chatkcha: type +08h 80h), nor metal (DSCLOG's
+  IB_MATERIAL, always on). And the box alone draws a weapon picture taller than 16 pixels (the
+  polearms', staves', gythkas', a stone pick's, the cahulaks', the striker's, up to 36) as a copy 16
+  high, so the last row no longer sits at the box's edge (`icons.BOX_TALL`, `BOX_SMALL`; DSCLOG's
+  BOX_PICS, always on); the inventory and the ground keep the game's own picture (the Polearm's too,
+  which the Loader had drawn 22 everywhere). Seen in DOSBox: playtest/logs/2026-11-09-hit-line.md.
 - **Turn Undead in the dice log:** `Seneca turns Guard: d20 = 11, needs 7+ (priest level 3 vs 2 HD)
   -> destroyed` / `-> not turned`, and `Zombie is destroyed by Turn Undead` in place of its HP line;
-  the floating name over the cleric says "Turn Undead" (was "special attack 190"). Turn Undead is
-  the clerics' button on the USE screen (spell 190, no slot): it tries each undead in its area, one
-  at a time, each with a d20 of its own against 10 + 3 x (its row - the level's), and a success
-  destroys it (the game has no fleeing: a failure calls an empty routine); seen in DOSBox: no limit
-  of uses, the same undead can be tried again (HOW-THE-GAME-WORKS's new Turn Undead section,
-  against AD&D's table; playtest/logs/2026-11-08-turn-undead.md). With the manual's spells, the
-  record carries the priest's and the undead's creatures, so a turning out of a fight, which starts
-  one and numbers the combatants afresh before the Loader reads it, names them (it said "?").
+  the floating name over the cleric says "Turn Undead" (was "special attack 190"); the panel colours
+  a turning as a hit or a miss. The game's own Turn Undead (spell 190, no slot) tries each undead in
+  its area with a d20 against 10 + 3 x (its row - the level's), and a success destroys it, with no
+  limit of uses (HOW-THE-GAME-WORKS's new Turn Undead section; playtest/logs/2026-11-08-turn-undead.md).
 - **The combat log panel's lines are in a smaller font,** 7 pixels a line where the game's is 9: 8
   lines docked (was 6), 14 expanded (was 11). The glyphs are the X11 misc-fixed 4x6 font's (public
   domain) with the game's drop shadow (`smallfont.py`); the header, buttons and filters keep the
-  game's font. The panel's pictures retaken in DOSBox with the final build (`docs/combat-log.png`,
-  `combat-log-expanded.png` and `combat-log-live.gif`, in Pehtucl's ambush, at Short).
+  game's font. `docs/combat-log.png`, `combat-log-expanded.png` and `combat-log-live.gif` retaken.
 - **The panel's Short level reads as the readable layout does:** what happened first, the roll in
   brackets after it, the damage on the attack's line (`Seneca hits Slig for 11 (15 vs 4+, backstab)`,
   `Guard misses Lex (6 vs 13+)`, `Slig fails vs Fireball (11 vs 16+)`, `Rampager fails to resist
   Fireball (MR 25%: 28)`, `Cilla hides in shadows: seen (85 vs 25 or less)`); was `Rampager attacks
   Defiler: 20 vs 16+ HIT, 4 damage (2d6)`. (`combatlog.shorten`, `Log.at`.)
 - **Steady pace keeps the game's real schedule,** and the choppy walking is gone. The game moves
-  everything on the map a step at each tick of its clock (96 a second: its timer sets DS:1F7Eh,
-  and the step runs only with it set), so a tick that passes while a picture is drawn is a step
-  lost. Steady pace assumed 70 pictures a second instead, while the map draws only when something
-  moved (about 17 a second), so it found every picture late and left most of them out: 6 shown a
-  second at 20,000 cycles. Now it counts the steps lost (the clock's ticks less the steps run)
-  against an allowance of 1.5 ticks a picture, about what the unmodded game's own pictures lose,
-  and leaves a picture out only while more are lost. (DSCLOG's STEADY PACE; tests:
-  `SteadyPaceTests`. `playtest/framerate.py` reports the steps run and lost and the walking speed
-  while walking: its speed had counted the waits between clicks.) The figures, with the cheaper
-  drawing below, are under it.
+  everything on the map a step at each tick of its clock (96 a second: DS:1F7Eh), so a tick that
+  passes while a picture is drawn is a step lost. Steady pace assumed 70 pictures a second, while
+  the map draws only when something moved (about 17), so it left most of them out: 6 shown a second
+  at 20,000 cycles. Now it counts the steps lost against an allowance of 1.5 ticks a picture, about
+  what the unmodded game's own pictures lose, and leaves a picture out only while more are lost.
+  (DSCLOG's STEADY PACE; tests: `SteadyPaceTests`. `playtest/framerate.py` reports the steps run and
+  lost and the walking speed.)
 - **The helper draws shadows, dust and see-through figures for less.** Shadows are worked out only
-  for figures whose shadow can reach the part of the view being drawn, rows outside it stepped over;
-  the shadow cache remembers each figure's slot; spans and see-through pixels are looked up with
-  XLAT; the lean comes from a table, not a division; the dust's thickness table is built once (in
-  the far block); the combat log panel is put back only when the redrawn rectangle overlaps it; dust
-  settling after a walk redraws only its rectangle; the floating names' timer code returns at once
-  with none shown. A floor pass takes 32% fewer instructions with everything on (39% with shadows
-  only), see-through figures 12% fewer, every screen byte-identical (`tests/test_dsclog_drawing.py`,
-  9 tests, against the old build's screens). In DOSBox, the whole party walking in the slave pens,
-  everything on, with the new steady pace: 20,000 cycles with steady pace on, 15.5 pictures a second
-  and walking 112 map units a second (was 10.2); off, 18.9 pictures (was 16.8) and 103 map units
-  (was 80); 35,000 cycles, steady pace on, 18.9 pictures and 141 (was 16.0 and 113)
+  for figures whose shadow can reach the part of the view being drawn; the shadow cache remembers
+  each figure's slot; spans and see-through pixels are looked up with XLAT; the lean comes from a
+  table; the dust's thickness table is built once; the combat log panel is put back only when the
+  redrawn rectangle overlaps it; dust settling after a walk redraws only its rectangle; the floating
+  names' timer code returns at once with none shown. A floor pass takes 32% fewer instructions with
+  everything on, see-through figures 12% fewer, every screen byte-identical
+  (`tests/test_dsclog_drawing.py`). In DOSBox, the whole party walking in the slave pens, everything
+  on: 20,000 cycles with steady pace, 15.5 pictures a second and 112 map units a second (was 10.2);
+  35,000 cycles, 18.9 pictures and 141 (was 16.0 and 113)
   (playtest/logs/2026-11-08-drawing-savings.md).
 - **Fastest (35,000 cycles) is the default game speed** (was Faster, 20,000). With the cheaper
-  drawing it shows about all the pictures the game draws while the whole party walks (18.9 a
-  second) and walks fastest (141 map units a second, against 112 at 20,000), for about 30% of a
-  core in DOSBox. A speed already chosen is kept; Faster stays for older computers.
+  drawing it shows about all the pictures the game draws while the whole party walks and walks
+  fastest, for about 30% of a core in DOSBox. A speed already chosen is kept; Faster stays for older
+  computers.
 
 **Changed: DSCLOG's room**
-- **The helper's room** ([DEVELOPMENT.md's limits](obsidian-edition/DEVELOPMENT.md#the-limits)): the cheaper drawing
-  made the helper 944 bytes bigger (448 bytes left in its 64 KB segment) and its far block 2 KB. A
-  first memory pass freed 3,136 bytes of the segment (448 -> 3,584 spare) and 190 paragraphs of
-  upper memory (the helper with its PSP 65,248 -> 62,208 bytes; the largest free piece 34,320 ->
-  37,392): the colour, ring and dust-walked tables moved to the far block (FAR_DAC, FAR_RING_TAB,
-  FAR_RED, FAR_WALKED: the header fields now offsets there, the Loader reading them at far_seg);
-  the AD&D XP table stored in fiftieths; the 134 vector installs made a table and a loop; the extra
-  names packed (playtest/logs/2026-11-08-memory-pass.md). The new rules then took it to 2,032
-  spare, and a second pass freed 4,000 (6,032 spare; upper memory 565 paragraphs spare, was 495):
-  the sites' dispatch a jump table (688 bytes); the rings' outlines kept as one quarter and
-  mirrored (336); a new tail section after the image, kept with the helper and found through header
-  +1834 (`tail_seg`), holding the floating names' slots, the extra item names and types and the
-  timer notes (the Loader's labels.py and freeze.py read them there); the dust's LIGHT, puffs and
-  DARK in the far block; the crash report writing the stack straight from SS
-  (playtest/logs/2026-11-09-memory-pass-2.md). Each pass checked in DOSBox (shadows, dust,
-  see-through, the ring, the panel's colours, labels, to-hit, Turn Undead, item names and types,
-  next-level XP, the Effects screen, Look, creation, a shop). With the manual's spells, the
-  monsters, resting and dual-classing, and the audit's fixes (their per-fight tables moved to the
-  far block), and what came after (the Boots of Speed, the picture slots' reuse, the cahulaks,
-  creature size, held targets), the helper has
-  800 bytes of its segment spare, 36 bytes free in the far block (the HMA) and 230 paragraphs of
-  upper memory spare (the build of 2026-11-10: DEVELOPMENT.md's limits).
+- **The helper's room** ([DEVELOPMENT.md's limits](obsidian-edition/DEVELOPMENT.md#the-limits)): the
+  cheaper drawing made the helper 944 bytes bigger and its far block 2 KB, and the new rules and
+  items took more. Three memory passes made room:
+  - The first freed 3,136 bytes of the segment and 190 paragraphs of upper memory: the colour, ring
+    and dust-walked tables moved to the far block (FAR_DAC, FAR_RING_TAB, FAR_RED, FAR_WALKED: the
+    header fields now offsets there, the Loader reading them at far_seg); the AD&D XP table stored in
+    fiftieths; the 134 vector installs a table and a loop; the extra names packed
+    (playtest/logs/2026-11-08-memory-pass.md).
+  - The second freed 4,000: the sites' dispatch a jump table (688 bytes); the rings' outlines kept as
+    one quarter and mirrored (336); a new tail section after the image, kept with the helper and
+    found through header +1834 (`tail_seg`), holding the floating names' slots, the extra item names
+    and types and the timer notes (the Loader's labels.py and freeze.py read them there); the dust's
+    LIGHT, puffs and DARK in the far block; the crash report writing the stack straight from SS
+    (playtest/logs/2026-11-09-memory-pass-2.md).
+  - The third freed about 2,400 more: the AD&D XP, slot, thief and DEX tables and the kits' names
+    moved to the tail; SEG_MOVE's two game tables moved to the tail; the helper's zero buffers laid
+    over the install code.
+  - Each pass checked in DOSBox (shadows, dust, see-through, the ring, the panel's colours, labels,
+    to-hit, Turn Undead, item names and types, next-level XP, the Effects screen, Look, creation, a
+    shop). Now: `kept_end` 62,432, 3,104 of the segment spare; `UMB_KEPT` 7,963 paragraphs, 219
+    spare [TO CONFIRM].
 - The helper counts the game's page flips (`flip_count`, header +1832), for a frame rate:
   `playtest/framerate.py` reads it beside steady pace's frames left undrawn.
 
 **Fixed: the game**
-- **Alagorn told of none of the 14 new weapons:** with every switch on, his weapons copy (222) was
-  12,405 bytes, past the scripts' buffer (11,376), and was quietly left out. Their stories are now a
-  script of their own (224, 4,047 bytes) the copy calls (14h); 222 is 8,444. A menu left out for
-  length is reported (`alagorn.LEFT_OUT`, joined to the launch's `LEFT_OUT`). Found by a new test.
-- **DSCLOG's KEEP never shrank its block** (the resize read the PSP after zeroing it): a 16-paragraph
-  hole in upper memory; now ES from SS. **PROBE_SCROLL ran each map pass with interrupts off**
-  (redraws, the panel, the retrace wait): on when the caller had them on, off only round the
-  pointer's read and TARGET_CLICK's calls. **SIZE_LINE** called the game's text routine with
-  interrupts off: `sti` first. Each with a Unicorn test that failed before.
 - **Graphics disappeared in a busy area** (SSI's technical note 2712 for Wake of the Ravager, the
   same engine): the game's picture cache (DSUN.EXE 25FA6h) has 300 slots for every wall, door,
   figure and item picture drawn and gives none back until an area loads, so past 300 a new picture
   had no slot and wasn't drawn. DSCLOG's PIC_REUSE (sites 26009h, 260CCh, 2612Bh; always on): with
   all taken, a slot out of memory that no wall (DS:574Eh) and no map thing (+0Fh) names is reused,
-  the Loader's STALE ones first, searching round from after the last reused (the inventory's icons,
-  let go once drawn, took one slot in turn otherwise: 3,590 reuses in a cycle); its picture goes in
-  the first gap of the store it fits, else past the furthest end. The pens hold 203 slots on
-  arrival and walking adds none. Seen in DOSBox: 145 items of different kinds dropped in the pens,
-  300 slots at the 9th dozen, then 18 reused, the store's end unchanged, every thing with its own
-  picture, the inventory, a walk away and back all as before
-  (playtest/logs/2026-11-09-picture-slot-reuse.md).
+  the Loader's STALE ones first, searching round from after the last reused; its picture goes in the
+  first gap of the store it fits, else past the furthest end. A slot reused for a picture whose read
+  then fails is let go again (PIC_FAIL, at the loader's way out, 25FD0h; `gamepatch`'s `pic_fail`),
+  not left with the new number and the old place. Seen in DOSBox: 145 items of different kinds
+  dropped in the pens, 300 slots at the 9th dozen, then 18 reused, every thing with its own picture
+  (playtest/logs/2026-11-09-picture-slot-reuse.md). Test:
+  `test_failed_read_lets_the_reused_slot_go`. Dark Sun Recompiled needs `tools/build_mod.sh` again
+  for the new sites.
 - **Alagorn told two items wrong** (script 212 and the Loader's copies of it): the Quicksilver Glove
   as "Quicksilver Gauntlets" that graft a weapon to the hand (it casts Detonate on every hit), the
   Helm of Contemplation as a shield against psionic attacks (it is Gaze Reflection). His menus name
-  the glove as the game does, and the two stories say what they do (`alagorn.retold`: the old lines
-  jumped over, the new run from after the script's end; always).
+  the glove as the game does, and the two stories say what they do (`alagorn.retold`, always).
 - **The Quicksilver Glove fought as a wooden weapon** (-3 to hit, -2 damage): its type has no
   material (40h, a ring's), and the game's to-hit and damage (DSUN.EXE 5EB49h, 5EBC1h) read only the
-  low nibble, 0, wood. Its type made leather, as the Chameleon Gloves' (DSCLOG's PROBE_TYPES_FILL,
-  as the Great Axe +3's metal): "Leather Quicksilver Glove", 1D6+2 (playtest/logs/2026-11-09-hit-line.md).
+  low nibble, 0, wood. Its type made leather, as the Chameleon Gloves' (DSCLOG's
+  PROBE_TYPES_FILL): "Leather Quicksilver Glove", 1D6+2.
 - **Scare allowed no saving throw at all,** so the 2.14.0 fix (`scare_elves`: an elf or half-elf
   priest's save) never ran, nor the game's own rule that 6th level and up always save: its record's
-  save byte (+1Fh) had "a save allowed" clear, and the saving throw (79A71h) stops at that test.
-  Seen in DOSBox: Scare on Merzol, a 7th-level fighter, and a 3rd-level gladiator, no save rolled
-  for either (the caster, inside the area, Scared too). The bit set (`scare_save`, 4222Fh A0h ->
-  A1h): 6th level and up save, below 6th no one can, but an elf or half-elf priest
-  (playtest/logs/2026-11-08-scare-no-save.md; found in the manual's review:
-  reports/spells-against-the-manual.md).
+  save byte (+1Fh) had "a save allowed" clear. The bit set (`scare_save`, 4222Fh A0h -> A1h): 6th
+  level and up save, below 6th no one can, but an elf or half-elf priest
+  (playtest/logs/2026-11-08-scare-no-save.md).
 - **"Can't save" saved:** the game compared a save's total with the number needed unsigned, so
   every -100 (Chaos, Cloudkill, Scare under 6th level, Color Spray with the manual's spells) wrapped
   round and the creature saved (seen in DOSBox: Arena Guards "unable to save" took half Cloudkill's
-  damage, a Guard against Scare was never Afraid). The compare made signed (`save_signed`, 79BBDh
-  `jae` -> `jge`), always on whatever the Options: -100 fails, even on a natural 20 (the game took
-  a natural 20 as saved before adding the modifiers, 79B5Fh: `save_natural` goes on with them, and
-  DSCLOG's SAVE_SUM makes a natural 20 a save unless the total is the -100's; the sum is also kept
-  in its byte, so a doubled 19 or 20 with Scare's +100 no longer wraps round to a failure).
+  damage). The compare made signed (`save_signed`, 79BBDh `jae` -> `jge`), always on: -100 fails,
+  even on a natural 20 (`save_natural`; DSCLOG's SAVE_SUM makes a natural 20 a save unless the total
+  is the -100's, and keeps the sum in its byte, so a doubled 19 or 20 with Scare's +100 no longer
+  wraps round to a failure). The dice log's line for it is `none allowed (cannot save) -> failed`.
 - **Resting while poisoned killed a member just cured:** the rest read each member's effects
   before casting its free cures and never again, so a 7th-level druid's Neutralize Poison was cast
-  and the member died of the poison anyway (seen in DOSBox: playtest/logs/2026-11-09-rest-poison.md).
-  The cures now come before the read (`rest_cures_first`, `rest_cures_loop`: the game's own bytes
-  reordered; always on).
+  and the member died of the poison anyway (playtest/logs/2026-11-09-rest-poison.md). The cures now
+  come before the read (`rest_cures_first`, `rest_cures_loop`: the game's own bytes reordered;
+  always on).
 - **Pehtucl's ambush brought every guard in the pens:** his script (GPL 145) made its five guards
-  at the fountain, then sent the whole kind, -90 and -293, hunting: up to ten more Arena Guards and
-  Guards from across the map (a player's save). Now each of the five is made alone and given the
-  hunt, the no-orders handler and the sight trigger itself (local big number 40, as the game's own
-  scripts give a creature just made its orders), Pehtucl his by kind (he is the only -37). And the
-  fountain's yell-masking zone (GPL 137 at FB5h, the fountain's room) takes in the passage before it,
-  where the party stands as he turns (x 42-80, y over 90): a fight there set off the alarm.
-  (`scriptfixes.py`, two repairs. Tests: `test_scriptfixes`. Seen in DOSBox with the player's save:
-  the five made on squares of their own, the fight theirs and Pehtucl's; with the game's script a
-  guard 55 squares off set out at once, with the fix none: playtest/logs/2026-11-08-fountain-needle.md.)
+  at the fountain, then sent the whole kind hunting: up to ten more Arena Guards and Guards from
+  across the map (a player's save). Now each of the five is made alone and given the hunt, the
+  no-orders handler and the sight trigger itself, Pehtucl his by kind. And the fountain's
+  yell-masking zone (GPL 137 at FB5h) takes in the passage before it, where the party stands as he
+  turns: a fight there set off the alarm. (`scriptfixes.py`; `test_scriptfixes`; seen in DOSBox with
+  the player's save: playtest/logs/2026-11-08-fountain-needle.md.)
 - **An arrow or sling stone was from behind by the target's facing, at any distance** (+2, the
   target's DEX and shield lost: a ranger's three arrows from across a room, a player's log), melee's
-  rule. A missile is now from behind only as a hidden archer's shot (the stealth rule), and the
-  dice log says "unseen" for it. (DSCLOG's `MISSILE_REAR`, first in `PROBE_STEALTH`; `st_now`.
-  Tests: `test_missile_from_behind_only_unseen`, `test_unseen_shot`.)
+  rule. A missile is now from behind only as a hidden archer's shot (the stealth rule), and the dice
+  log says "unseen" for it. (DSCLOG's `MISSILE_REAR`, first in `PROBE_STEALTH`. Tests:
+  `test_missile_from_behind_only_unseen`, `test_unseen_shot`.)
+
+**Fixed: the Loader and DSCLOG** (most found by the code audit, 2026-11-10, each with a test that
+failed before)
+- **Alagorn told of none of the 14 new weapons:** with every switch on, his weapons copy (222) was
+  12,405 bytes, past the scripts' buffer (11,376), and was quietly left out. Their stories are now a
+  script of their own (224, 4,047 bytes) the copy calls; 222 is 8,444. A menu left out for length is
+  reported (`alagorn.LEFT_OUT`, cleared at each start so an earlier start's lines don't linger).
+- **DSCLOG's KEEP never shrank its block** (the resize read the PSP after zeroing it): a
+  16-paragraph hole in upper memory; now ES from SS. **PROBE_SCROLL ran each map pass with
+  interrupts off** (redraws, the panel, the retrace wait): on when the caller had them on, off only
+  round the pointer's read and TARGET_CLICK's calls.
+- **A Spellarcher's spell arrows could be swapped out of the quiver:** QUIVER_KEPT (PROBE_CAN_USE)
+  read the character's segment 2 bytes off (`CU_MEMBER_SEG` counted from 6EF38h; the INT's way back
+  is 6EF36h), so putting other arrows in the quiver wasn't refused (`QuiverTests.test_quiver_kept`).
 - **A thief's later attacks in a round could still backstab:** with **A backstab multiplies the
   weapon's dice only**, only the round's first attack is meant to be a backstab, but the count it
   read (`[BP-14h]`) leaves the off-hand swing out, so a thief with two weapons and a weapon spec's
-  extra attack whose first swing missed had the third, the off-hand one, multiplied (a player's
-  log: "Seneca hits Merzol ... +3 backstab (the dice 3 x2 = 6)"), and every swing after the first
-  had the backstab's +2 to hit. Each party member's attack now keeps the game's clock (it moves a
-  round at a time in a fight); a later attack in the same round is no backstab, its +2 taken back,
-  from behind as the game has it. (DSCLOG's `STAB_FIRST`, in `PROBE_STEALTH`. Test:
-  `test_backstab_first_attack_only`.)
+  extra attack whose first swing missed had the off-hand one multiplied, and every swing after the
+  first had the backstab's +2 to hit. A later attack in the same round is no backstab now, its +2
+  taken back. (DSCLOG's `STAB_FIRST`, in `PROBE_STEALTH`; `test_backstab_first_attack_only`.)
 - **VIEW CHARACTER showed a new character's gear from before the Loader's** (a Poisoner's bone long
-  sword where it had a bow and daggers, its DAM line the sword's) until another member was chosen
-  and this one again: the Loader gives new characters their gear after the game has made the
-  character, and the screen, drawn once, never knew. At DONE the helper raises `gear_due`; the
-  Loader's next pass (tens of milliseconds, not the 3 seconds of its usual round) gives the gear
-  and says whose items it changed (`gear_given`); VIEW CHARACTER's probe waits for it (at most a
-  second, and only with the Loader there) and has the game's own routine draw the screen again
-  before it is shown. (`GEAR_WAIT` in `PROBE_VIEW`, the routine at 89E70h, its overlay's start:
-  stub 431Fh:3Eh; header +1830, +1831; `DiceLog._gear_due`. Tests: `test_gear_due`. Seen in
-  DOSBox: a new fighter given a bow for its weapon spec showed the bow and "DAM 1x1D6+0" at once.)
+  sword where it had a bow and daggers) until another member was chosen and this one again. At DONE
+  the helper raises `gear_due`; the Loader's next pass (tens of milliseconds) gives the gear and says
+  whose items it changed (`gear_given`); VIEW CHARACTER's probe waits for it (at most a second, and
+  only with the Loader there) and has the game's own routine draw the screen again. (`GEAR_WAIT` in
+  `PROBE_VIEW`; header +1830, +1831; `test_gear_due`. Seen in DOSBox.)
 - **In the helper's drawing:** a walker raised a dust puff on nearly every pass, not one per 6
   pixels walked (AX overwritten before the add), so there is less dust now, as designed; walkers off
-  the view raised dust and widened the redrawn area; the whole view could be drawn twice in one pass
-  (the panel's tick, then the labels'); a dark area retried its shadow tables on every pass (now
-  every 9 BIOS ticks); rings alone widened the redrawn rectangles by the shadows' 72/44 (now 16/8).
-- **Turn Undead's once a creature, Whirlwind's lost turn and the Djinn's first-turn tricks
-  worked only for the first 64 creatures on the map:** their per-fight tables (TU_FAILED, SWEPT,
-  DJ_DONE) had a bit for each of 64 combatants; they now cover every one up to MAP_COUNT (520), in
-  the far block (FAR_TU, FAR_SWEPT, FAR_DJ). (Tests: Turn Undead, Whirlwind and the Djinn at
-  combatants 64, 300, 519 and 520; seen in DOSBox: playtest/logs/2026-11-09-audit-fixes.md.)
-- **The mod's two sounds were hard to hear** (hiding in a fight, a picked pocket): saved at 55%
-  and 70% of full scale, and at the lowest priority, so a hide during a fight sound was skipped.
-  Now as loud as the game's typical clip (`sound-data/make.py`: full scale, the hide sound 3 dB more
-  through a soft limiter) and at priority 10, the game's fight sounds' highest (DSCLOG's
-  `mod_desc`). Heard in DOSBox: peaks as the game's (playtest/logs/2026-11-09-sounds-louder.md).
-
-- **A Spellarcher's spell arrows could be swapped out of the quiver** (found by the code audit,
-  2026-11-10): QUIVER_KEPT (PROBE_CAN_USE) read the character on show's segment 2 bytes off
-  (`CU_MEMBER_SEG` counted from 6EF38h; the INT's way back is 6EF36h), so it took a junk word for
-  the character and putting other arrows in the quiver wasn't refused. The equip test now runs
-  QUIVER_KEPT with the segment where the game keeps it (`QuiverTests.test_quiver_kept`).
-- **An Enlarged creature could be tangled by the cahulaks** though the size rule counts it as
-  large: CAH_HIT now asks IS_LARGE (a half-giant, the Loader's LARGE_BITS, or Enlarged) where it
-  asked for a half-giant only. The Options text, FEATURES, the guide and CREATURES.md say so.
-
-**Fixed: the Loader** (found by the code audit, 2026-11-10; each with a test that failed before)
-- **Help said nothing when no browser opened:** an opener can report success and find no browser
-  (`gio` did, 2026-11-10); the status line now names the guide whenever Help is clicked.
+  the view raised dust and widened the redrawn area; the whole view could be drawn twice in one pass;
+  a dark area retried its shadow tables on every pass (now every 9 BIOS ticks); rings alone widened
+  the redrawn rectangles by the shadows' 72/44 (now 16/8).
+- **Whirlwind's lost turn worked only for the first 64 creatures on the map:** its per-fight table
+  had a bit for each of 64 combatants. It and the new ones (Turn Undead's once a creature, the
+  Djinn's first-turn tricks) cover every one up to MAP_COUNT (520), in the far block (FAR_SWEPT,
+  FAR_TU, FAR_DJ). (Tests at combatants 64, 300, 519 and 520;
+  playtest/logs/2026-11-09-audit-fixes.md.)
+- **The mod's two sounds were hard to hear** (hiding in a fight, a picked pocket): saved at 55% and
+  70% of full scale, and at the lowest priority, so a hide during a fight sound was skipped. Now as
+  loud as the game's typical clip (`sound-data/make.py`) and at priority 10, the game's fight
+  sounds' highest (DSCLOG's `mod_desc`) (playtest/logs/2026-11-09-sounds-louder.md).
+- **Figures vanished from the map after many gear changes in one area:** each new outfit took a new
+  slot at the end of the game's picture store (a fixed 741,376 bytes), which the game gives back only
+  when an area loads; after some 30 to 60 changes a picture went past the store's end and the party's
+  and the monsters' figures weren't drawn. Now a figure dressed anew takes no new slot: the Loader
+  puts its pictures into cells the store already has (one holding the very picture; the figure's
+  own, out of memory; else the smallest unused cell with room), writing the store (the game's XMS
+  block) while DOSBox is paused. A picture with no cell takes a new slot only while the store and the
+  table keep room for it and for the game's own pictures (64 KB and 24 slots, measured from the
+  slot furthest in the store); else the figure stays as it was until the next area. In DOSBox about
+  290 outfit changes took 9 new slots (was one each), every figure drawn. (`sprites.Store`,
+  `Dresser._in_store`, `sprites._room_for`; tests: `test_no_room_in_the_games_store` and 6 more;
+  playtest/logs/2026-11-09-missing-figures.md, 2026-11-09-picture-store-fix.md.)
+- **Reconnecting filled the picture store:** the first dressing after the Loader connected again
+  reloaded up to 8 pictures into new slots with no room check. Now a copy that already holds the
+  dressed pictures is left as it is, and a first dressing asks for room as any other change does
+  (`Dresser._same_in_copy`).
+- **settings.json:** read strictly where losing it matters (when the Loader attaches, and the
+  pickpocket history before a pick is saved): a file held for a moment by another program is waited
+  for, never taken for the defaults, so the pockets tried and the rule switches can't be lost; a
+  temporary file of its own per write; a file that can't be read is never saved over with the
+  defaults (`SettingsUnreadable`; the Options tab saves only what changed); values of the wrong type
+  are dropped as read.
 - **Two Loaders on one game:** `game.lock` (an OS lock, by pid where none can be had) is taken by
-  `launch`, the window and `dicelog`; a second refuses, naming who has the game.
-- **settings.json:** a temporary file of its own per write; a file that can't be read is never
-  saved over with the defaults (`SettingsUnreadable`; the Options tab saves only what changed);
-  values of the wrong type are dropped as read.
+  `launch`, the window and `dicelog`; a second refuses, naming who has the game. The lock follows the
+  game: while a game a Loader started still runs, even with that Loader's window closed, no Loader
+  starts it again from that folder and rebuilds the files under it (`running_game`;
+  `test_gamelock`).
+- **A copy that couldn't be made was silent:** the game then ran on its own objects, scripts or
+  texts, which a save made with the mod's may not load. `prepare_patched_game` keeps what it left
+  out (`LEFT_OUT`, `left_out_line`), and the window (a warning and a log line), `play` and `launch`
+  say it; an objects copy that can't hold Kalzith is kept, and Kalzith reported left out. The copies
+  are written whole or not at all, with no stray `.tmp` (`gff.write_atomic`).
 - **A `dsun.exe` beside the mod was run in place of DOSBox:** Dark Sun Recompiled is found only in
   the mod's folder or its own, or by `--recompiled`.
 - **The window attached by process name:** now the DOSBox it started (its pid) first.
-- **The dice log stopped for good on a bad ring read:** reported once, attached again if it lasts;
-  a half-written entry (seq FFFFh) is no longer taken for a real one.
-- A game restarted in the same DOSBox gets fresh dressing and its own item gate; a creature
-  destroyed outright whose fall wasn't seen is forgotten (no later "destroyed by Turn Undead").
-- The girdles, the amulet and the Boots of Speed take their header numbers from the game's Belt,
-  Necklace and Boots (`BASE_TYPES`). The .bat files work from a network share (`pushd`); the
-  layout is saved whole; the GFF reader refuses impossible run counts.
-- **Pehtucl's chest could be shut for good:** `pehtuclchest.watch` made it the shut type whenever
-  the party was in the pens, though only the mod's script (with New items on, and the scripts copy
-  written) ever opens it. Now it is shut only while the game's scripts have its USE command
-  (`has_use`, the copy read again when it changes); without it, it is the game's plain chest, a
-  save's shut one made one again.
-- **Reconnecting filled the picture store:** the first dressing after the Loader connected again
-  (a new Dresser) reloaded up to 8 pictures into new slots with no room check. Now a copy that
-  already holds the dressed pictures is left as it is, and a first dressing asks for room as any
-  other change does (`Dresser._same_in_copy`).
+- **The dice log stopped for good on a bad ring read:** reported once, attached again if it lasts.
+  An entry being written (seq FFFFh) or read while DOSBox wrote over it (a torn entry) is skipped
+  and counted as missed, never taken for a real one.
 - **A hit landing mid-pass was later called "takes none of the damage":** the HP were read after
   the ring, so a fall could be seen before its roll; each pass now reads the records first
-  (`_records_now`, the snapshot `hp_changes` uses).
-- **A copy that couldn't be made was silent:** the game then ran on its own objects, scripts or
-  texts, which a save made with the mod's may not load. `prepare_patched_game` keeps what it left
-  out (`LEFT_OUT`, `left_out_line`), and the window (a warning and a log line) and `play` and
-  `launch` say it.
+  (`_records_now`).
+- **Pehtucl's chest could be shut for good:** `pehtuclchest.watch` made it the shut type whenever
+  the party was in the pens, though only the mod's script ever opens it. Now it is shut only while
+  the game's scripts have its USE command (`has_use`); without it, it is the game's plain chest.
+- **Pehtucl's chest opened anyway in a game from before 2.14.0** ("You must be next to the chest
+  ...", then its window): such a game's plain chest gets the USE command all the same, and the game
+  opens a plain chest as a USE script ends. The Loader now shuts a chest that isn't unlocked: locked
+  and trapped as in a new game (`test_an_older_games_chest_shut`; seen in DOSBox with a player's
+  save).
+- **A needle avoided said nothing:** with Pehtucl's chest's needle sprung and the party's best at
+  traps rolling clear of it, the game showed nothing, and it read as no trap. The Loader sees that
+  roll and sets the needle's flag (DISARMED); the script then says "The needle is seen in time, and
+  it hurts no one." (`DiceLog._needle_check`; `test_needle_avoided`; seen in DOSBox.)
 - **Put a save in a slot replaced the slot's save with no copy kept:** the save it replaces is now
   kept as `Replaced - Page P slot NN - NAME.SAV` in Named saves (which sync never removes), and the
   slot is written through a temporary file.
-- **Figures vanished from the map after many gear changes in one area:** each time a member's
-  outfit changed, the Loader took the old pictures out of the game's picture table, but the game
-  takes neither a slot nor its room in its picture store (a fixed 741,376 bytes) back until an area
-  loads, and a new outfit takes a new slot at the end. After some 30 to 60 changes in one area a
-  picture went past the store's end: the game's write fails unseen, the picture can't be read
-  back, and its failed reads keep taking memory, until the party's and the monsters' figures
-  weren't drawn (opening the inventory brought them back for a while). Now a figure dressed anew
-  takes no new slot at all: the Loader puts its pictures into cells the game's store already has
-  (one holding the very picture, an outfit changed back; the figure's own, out of memory; else the
-  smallest unused cell with room), writing the store (the game's XMS block, found and checked
-  against pictures in memory) while DOSBox is paused and never a picture in memory. A picture the
-  store has no cell for (and every picture where the store can't be found, as on Dark Sun
-  Recompiled) takes a new slot as before, but only while the store and the table keep room for it
-  and for the game's own pictures (64 KB and 24 slots); else the figure stays as it was until the
-  next area. In DOSBox about 290 outfit changes
-  across two areas, a fight and the inventory took 9 new slots (was one each), every figure drawn.
-  (`sprites.Store`, `Dresser._in_store`, `sprites._room_for`; tests:
-  `test_no_room_in_the_games_store` and 6 more; reproduced and checked in DOSBox:
-  playtest/logs/2026-11-09-missing-figures.md, playtest/logs/2026-11-09-picture-store-fix.md.)
-- **An item report said a new character's bone long sword "vanished"** ("the game freed it and
-  reused the number") when the Loader had made it the bow its weapon spec asks for, in the same
-  record. An item made into another where it was (its number still the same member's, the record
-  not freed) is no loss. (`itemwatch.changed_in_place`. Test: `test_changed_in_place`.)
-- **A needle avoided said nothing:** Pehtucl's chest's needle sprung and the party's best at traps
-  rolling clear of it, the game showed nothing, and it read as no trap. The Loader sees that roll
-  beside the needle's narration and sets the needle's flag (DISARMED, clear until then); the
-  script, after a click, says "The needle is seen in time, and it hurts no one." (No flag of the
-  game's 808 was free.) (`DiceLog._needle_check`, `pehtuclchest.script`. Test:
-  `test_needle_avoided`. Seen in DOSBox: Seneca's 22 against 52, the line, then the chest opened.)
-- **Pehtucl's chest opened anyway in a game from before 2.14.0** ("You must be next to the chest
-  ...", then its window): such a game made the game's plain chest as it came to the pens, but gets
-  the chest's USE command all the same, and the game opens a plain chest as a USE script ends,
-  whatever it said. The Loader now shuts a chest that isn't unlocked, as it makes a shut one a
-  chest once it is: locked and trapped as in a new game. (`pehtuclchest.watch`. Test:
-  `test_an_older_games_chest_shut`. Seen in DOSBox with a player's save: reproduced, then shut
-  within seconds of loading, and it stayed shut.)
-- **A Poisoner's poison was put down to another spell** ("Merzol takes 10 from Shocking Grasp"):
-  a loss is named after a recent damage roll it matches, whole or halved, and the list kept an
-  earlier fight's rolls. A new fight forgets them, and a poison's fixed damage (10 or 30) is its
-  own when its save is the latest. (`DiceLog._damage_source`, `_new_fight`. Test:
-  `test_poison_damage_named`.)
+- **An item report said a new character's bone long sword "vanished"** when the Loader had made it
+  the bow its weapon spec asks for, in the same record. An item made into another where it was is no
+  loss (`itemwatch.changed_in_place`; `test_changed_in_place`).
+- **A Poisoner's poison was put down to another spell** ("Merzol takes 10 from Shocking Grasp"): the
+  list of recent damage rolls kept an earlier fight's. A new fight forgets them, and a poison's
+  fixed damage (10 or 30) is its own when its save is the latest (`DiceLog._damage_source`;
+  `test_poison_damage_named`).
 - The dice log's notes called the "special effect: d10" roll a thri-kreen's bite: it is the
-  disease roll, the game's Blue Slaad's (with the manual's monsters the Blue Slaad has deadly
-  poison instead, and the roll is the Tari's, made 1 in 20); a thri-kreen's bite from 5th level
-  paralyses with no d10.
-- **"Can't save" said it saved** with the manual's spells off: the dice log's line for a -100
-  ("the game compares unsigned ... -> saved") is gone with `save_signed` always applied; it says
-  `none allowed (cannot save) -> failed`.
-- **The combat log panel read a spell's attack roll as a plain line:** at Short it is now `Cermak's
-  Minute Meteors hits Kalzith for 2 (8 vs 7+)` / `... misses Kalzith (4 vs 7+)`, the damage joined
-  to a hit, and at Least `Cermak's Minute Meteors misses Kalzith`, in the hits' and misses' colours;
-  Turn Undead's lines are coloured as a hit (turned, destroyed) or a miss (not turned, no chance,
-  can't try again), and the hit points a rest or Cell Adjustment gives back in the damage colour,
-  in the Loader's log too (`combatlog`). In the readable layout a spell's attack roll is an event
-  row, as a weapon's attack is (`ledger`). Seen in DOSBox: playtest/logs/2026-11-09-audit-fixes.md.
-- **The fight summary counted a monster's spells as the party's damage,** and any spell whose
-  caster it couldn't tell (Magic Missile's, with no save or attack roll naming the caster). A spell's
-  damage now counts for the party only when a saving throw against it or its attack roll names a
-  party member as its caster (`fighttally`).
+  disease roll, the game's Blue Slaad's (with the manual's monsters, the Tari's, 1 in 20); a
+  thri-kreen's bite from 5th level paralyses with no d10.
 - **A game or mod folder whose path has letters outside Windows' code page** gave DOSBox a broken
   configuration; the Loader now stops at start-up with a clear message saying what to move
   (`launch.conf_encoding`; README's troubleshooting).
-- The freeze report's dump of the helper's header runs to +373 (UMB_NEED, the overlay buffer's
-  place; was to +361, so the fields after it were left out) (`freeze.HEADER_BYTES`).
-- **The picture store's room** was measured from the table's last slot, which need not be the one
-  furthest in the store since slots are reused; it is now measured from the furthest. And writing
-  the store no longer pauses DOSBox a second time while it is already paused (`sprites`; tests in
-  `test_sprites`).
-- **A picture that failed to load into a reused slot** (the audit's last two decisions, 2026-11-10):
-  with all 300 picture slots taken, a slot reused for a picture whose read then failed kept the new
-  picture's number with the old one's place, and the next request for it read the wrong bytes (a
-  garbled figure). DSCLOG's PIC_FAIL, a new site at the loader's way out (25FD0h, `gamepatch`'s
-  `pic_fail`), lets the slot go again (STALE). Not reproduced in play; `test_dsclog`'s
-  `test_failed_read_lets_the_reused_slot_go`. Dark Sun Recompiled needs `tools/build_mod.sh` again
-  for the new site.
-- **A helpless target as it was at the roll:** the dice log asked whether a target was Paralyzed or
-  Out Cold when it wrote the line, a pass or more later, so a blow that killed an Out Cold target or
-  a Hold that ended in between showed undoubled damage (or "hit automatically" was missed). DSCLOG
-  now writes the target's state into each ring entry as the dice are rolled (+188, `HELPLESS_OF`,
-  which HELD's own test uses too), and the dice log reads it there (`Entry.helpless`; an older
-  helper's entries: the game's state, as before).
-- **Two spell boxes ran past their edge** (seen in the game, 2026-11-10): Chaos's text (the manual's)
-  took eight lines and Charm Person's (the size rule's) and Vampiric Arrows' would have; all three
-  are shorter, and the four spell arrows' texts end "casts it on a hit". `test_spelltexts_fit`
-  wraps every text the Loader writes in the game's font (a seven-line box of 128 pixels, measured
-  from the game's boxes).
-- **Two tests hung on the clock:** the stats thread's and the see-through tables' tests polled
-  against real time (flaky on a slow runner); they now join the worker thread (`ghost.Ghosts`
-  keeps it, `_worker`).
+- A game restarted in the same DOSBox gets fresh dressing and its own item gate; a creature
+  destroyed outright whose fall wasn't seen is forgotten (no later "destroyed by Turn Undead"). The
+  girdles, the amulet and the Boots of Speed take their header numbers from the game's Belt,
+  Necklace and Boots (`BASE_TYPES`). The .bat files work from a network share (`pushd`); the layout
+  is saved whole; the GFF reader refuses impossible run counts. The window's dialogs open over it
+  (parented to it). The freeze report's dump of the helper's header runs to +373 (UMB_NEED; was to
+  +361) (`freeze.HEADER_BYTES`). Writing the picture store no longer pauses DOSBox a second time
+  while it is already paused.
 
 **Docs**
-- **`gear.png`** is the user's picture of Gerakis in his gear (it was a before-and-after with the
-  shadows on too, at an uneven 2.5x that blurred it); `shadows.png` keeps the shadows.
-- **Where the large dice come from:** FEATURES' creature size table names its sources, the Player's
-  Handbook's weapons table (the pick as the horseman's pick), the *Complete Book of Dwarves* for the
-  great axe (its two-handed battle axe, 1d10/2d8) and the Dark Sun weapons guide the
-  chatkcha, gythka and cahulaks numbers came from.
-- **Screenshots retaken** (2026-11-10): `inventory.png` and `inventory-ranger.png` (SLNT, not MOVE),
-  `hit-line-box.png` and `shadowseeker-box.png` (the large dice, at the other boxes' 2x),
-  `new-spells.png` (Cat's Grace's by-class text), `tome.png` (the box alone, at 2x).
+- **FEATURES.md split:** the game's bugs fixed are a page of their own, `GAME-BUGS.md`, grouped by
+  kind (spells and psionics, fights, characters and items, screens and memory, people and quests),
+  each topic in tables by kind of bug; the detail of the manual's spells (each spell, AD&D's turning
+  table, the monsters, the known differences) is in HOW-THE-GAME-WORKS beside the game's own spells
+  and Turn Undead; the new items' prices, the Warden's Plate, bracers of defense, robes, icons and
+  names, Alagorn's stories and Pehtucl's chest are in ITEMS.md; weapon specialization is in KITS.md,
+  now "Kits and weapon specs" (the attacks a round, the sixteen weapon specs, choosing at creation,
+  the starting weapons, a level gained). FEATURES keeps each switch's summary and a link where each
+  block was; every link follows, and `test_doclinks` checks the new pages' "How it works" links too.
+- **ITEMS.md checked against the game's data** (every item record, item type, region placement and
+  script that hands an item out, with the cluebook): the Helm of Contemplation's power is Gaze
+  Reflection, and the Quicksilver Glove's Detonate; where the Draketooth, the Belt of Might and the
+  Orb of Knowledge lie, the Mace +2, the Bow +2, the Serpent Boots and El's Drinker; the Sling +2's
+  chest that isn't; Dag's Dagger's "extra damage" that isn't; the Terror Blade's acid chance; 15
+  kinds of magic fruit and 19 spell scrolls; Grey's Scale's arm and leg icons swapped back; the
+  Wand of Metal Detection, the plain stone pick, the gloves against acid and the missing finds
+  added. Where each script-given item comes from (Dragonsbane, the Teaquetzl rewards, the warrens'
+  sewer holes, the Terror Blade, Notaku's payments, Tanelyv's gifts, Laussa's ring and others);
+  "—" now only where nothing gives the item (the Golden Torque). The champions' gear in the mundane
+  tables; the polearms' doc icons at the game's own 36 pixels. The acid and corroding touch take
+  only a held weapon of reach 1 (DSUN.EXE 5900Ah), so chatkchas, slings and bows are out of the acid
+  table.
+- **The player guide's XP left over at the top:** each class's highest level under the 749,999 cap
+  and the XP left over, and for dual-classing humans the room a new class has by the level the old
+  class changed at (DSUN.EXE 86D38h); FEATURES links to it.
+- **The review's fixes across the pages:** the player's pages, the reference pages and the
+  development notes put right where they had fallen behind (air clerics' and air Seekers' cahulaks,
+  every thri-kreen's chatkcha, what can't be tangled, the gythka's large die, the Polearm +1 and the
+  armed foes in PATCH-NOTES, and more). FEATURES' "Helms" is "Helms give AC 1", the switch's name;
+  DEVELOPMENT-SCREENS gives M, U and I, the whole party in view and the view in fights headings of
+  their own; DICE-LOG has a row for Spook's save part; PATCH-NOTES' Bug Fixes link GAME-BUGS.md.
+- **Screenshots retaken:** `options.png`, `dicelog.png` and the load window (plain save names);
+  `inventory.png` and `inventory-ranger.png` (SLNT), `hit-line-box.png` and `shadowseeker-box.png`
+  (the large dice), `new-spells.png` (Cat's Grace's by-class text), `tome.png` (the box alone),
+  `gear-boxes.png` and `elvenkind.png` (Silent); the small shots at 2x; the GIFs trimmed. `gear.png` is the user's picture of Gerakis in his gear (it
+  was a before-and-after at an uneven 2.5x); `shadows.png` keeps the shadows.
+- **PLAYTESTING.md reorganised**, with what each play taught (the item type record's fields, a
+  person's new gear reaching only creatures made after it, picture slots while exploring, the
+  walkthrough and `setup_guide.sh`, the outstanding checks).
 - **CI and tests:** nasm installed on Windows, so DSCLOG.EXE, GAMEEND.COM, UMBPLUS.COM and the
   least_scores patch are checked against their source (failing, not skipping, without nasm); the
   Release workflow's manual run limited to main. New tests: DSCLOG's tables against the Loader's,
   every module's game flags (none shared), every module's objects and pictures (made once each),
-  and `prepare_patched_game`'s copies.
-- **ITEMS.md checked against the game's data** (every item record, item type, region placement and
-  script that hands an item out, with the cluebook): the Helm of Contemplation's power is Gaze
-  Reflection, and the Quicksilver Glove's Detonate (both rows had been taken from what Alagorn says
-  of them, script 212); where the Draketooth, the Belt of Might and the Orb of Knowledge lie (they
-  had "—"), the Mace +2 (a weapon rack), the Bow +2 (a skeleton), the Serpent Boots (a ceramic pot)
-  and El's Drinker (Gedron's safe too) are; the Sling +2's chest that isn't; Dag's Dagger's "extra
-  damage" that isn't; the Terror Blade's acid chance (its Poison is a power: 95%); 15 kinds of magic
-  fruit and 19 spell scrolls; Grey's Scale's arm and leg icons swapped back; and added the Wand of
-  Metal Detection, the plain stone pick, the gloves against acid and the missing finds.
-- **ITEMS.md: where the script-given items come from** (each from the script that gives it, with the
-  cluebook): Dragonsbane from Kraxis' body after the final battle, the Teaquetzl rewards (Swiftbite,
-  the Helm of Might, Phrain's Bow), the warrens' sewer holes (Axe +1, the Parting Staff), the Terror
-  Blade made in the Wyrm School's bowl, Notaku's payments, Tanelyv's gifts, Laussa's ring and others;
-  "—" now only where nothing gives the item (the Polearm +1, the Golden Torque). The champions' gear
-  in the mundane tables; the polearms' doc icons at the game's own 36 pixels.
-- **ITEMS.md, FEATURES and the guide: the chatkchas and the Polearm +1.** The acid and corroding
-  touch take only a held weapon of reach 1 (the type's +0Ah; the item list routine, DSUN.EXE
-  5900Ah, called with 1): chatkchas (reach 9), slings and bows are never taken, so the Chatkcha +1
-  and Skycutter are out of the acid table. The Polearm +1 is defined (a stand-alone object in
-  RGNFF.GFF, where the objects with no place on a map are, which scripts create into play), but no
-  script creates or gives it (by its number, negative as a create takes it, or through a variable),
-  and nothing holds one: nothing in play gives it (the cluebook's "Elven Caravan" is not in the data).
-- The player guide's **XP left over at the top**: each class's highest level under the 749,999 cap
-  and the XP left over (one, two or three classes), and for dual-classing humans the room a new
-  class has by the level the old class changed at (dual-classing starts the new class at 0 XP and
-  loses any XP past the old level's need: DSUN.EXE 86D38h); FEATURES links to it.
-- **FEATURES.md split** (3,079 lines to about 2,800): the game's bugs fixed are a page of their
-  own, `GAME-BUGS.md`, grouped by kind (spells and psionics, fights, characters and items, screens
-  and memory, people and quests); the detail of Spells and psionics as the manual describes them
-  (each spell, AD&D's turning table, the monsters, the known differences) is in
-  HOW-THE-GAME-WORKS beside the game's own spells and Turn Undead; the new items' prices, the
-  Warden's Plate, bracers of defense, robes, icons and names and Alagorn's stories are in ITEMS.md.
-  FEATURES keeps each switch's summary and a link where each block was; every link to the moved
-  sections follows it, and `test_doclinks` checks the new pages' "How it works" links too.
-- **Weapon specialization moved to KITS.md**, now "Kits and weapon specs": the attacks a round, the
-  sixteen weapon specs, choosing at creation, the starting weapons, a level gained and where it
-  shows, each under a heading of its own. FEATURES keeps the summary row and a paragraph; the links
-  to the detail (ITEMS, DICE-LOG, FEATURES' creation screen and new items) follow it, and
-  `test_doclinks` checks KITS.md's "How it works" links too.
-- **Smaller doc fixes:** the cahulaks' table row says an Enlarged foe can't be tangled; FEATURES'
-  "Helms" is "Helms give AC 1", the switch's name (links follow); DEVELOPMENT-SCREENS gives M, U and
-  I, the whole party in view and the view in fights headings of their own, so FEATURES' three
-  Controls sections each link their own; DICE-LOG has a row for Spook's save part (`-1 Spook, the
-  caster's levels`); PATCH-NOTES' Bug Fixes link GAME-BUGS.md.
+  and `prepare_patched_game`'s copies. Two tests that polled against real time (the stats thread's
+  and the see-through tables') join the worker thread now (`ghost.Ghosts` keeps it).
 
 ## Pull request #88 ([merged 2026-11-08](https://github.com/daaki85/darksun-obsidian-edition/pull/88))
 
