@@ -16,7 +16,7 @@ NAMES: Dict[str, str] = {
     # elementals and the outer planes
     "Air Elemental": "L", "Earth Elemental": "L", "Water Elemental": "L", "Fire Elemental": "L",
     "Lesser Air Eleme": "M", "Lesser Water Ele": "M", "Lsr Earth Elem": "M", "Lsr Fire Elem": "M",
-    "Djinn": "L", "Red Slaad": "L", "Blue Slaad": "L", "Vrock": "L", "Babau": "M", "Psurlon": "M",
+    "Djinn": "L", "Red Slaad": "L", "Blue Slaad": "L", "Vrock": "L", "Babau": "M", "Psurlon": "L",
     "Psurlon Adept": "M", "Slig": "M", "Dust Devil": "M", "Insect Swarm": "L", "Evard's Tentacle": "L",
     "Animated Statue": "L",
     # the undead
@@ -29,11 +29,11 @@ NAMES: Dict[str, str] = {
     # beasts
     "Bulette": "L", "Rampager": "L", "Silt Horror": "G", "Mountain Stalker": "L", "Otyugh": "L",
     "Wyvern": "L", "Dune Reaper": "H", "Styr": "L", "Fire Eel": "L", "Screamer Beetle": "L",
-    "Sand Howler": "M", "Xorn": "M", "Strine": "M", "Daggoran": "L", "Dagolar Slime": "M",
+    "Sand Howler": "M", "Xorn": "L", "Strine": "M", "Daggoran": "L", "Dagolar Slime": "M",
     "Tyrian Slime": "M", "Silt Runner": "S",
     # the peoples of the wastes and the deep (race "monster" in the game)
     "Magera": "L", "Ssurran": "M", "Ssovan": "M", "Laussa": "M", "Shaman Follower": "M", "Tribesman": "M",
-    "First Folk": "S", "Undermt Folk": "S", "Outcast": "M", "Drummer": "M", "Slave": "M",
+    "First Folk": "S", "Undermt Folk": "S", "Outcast": "M", "Drummer": "L", "Slave": "L",
     # (the six of one great tusked figure, the game's race 12 and kind 31: large, the user's call)
     "Blind One": "L", "Guard": "L", "Slave Leaders": "L", "Wagon Guard": "L", "Worker": "L",
 }
@@ -42,7 +42,7 @@ NAMES: Dict[str, str] = {
 UNSURE = frozenset((
     "Spider Mage", "Cheee-smak-tunk!", "Churr-te-tunk!", "Click-tunk!", "Alita", "Rampager",
     "Mountain Stalker", "Styr", "Fire Eel", "Screamer Beetle", "Strine", "Daggoran", "Laussa",
-    "Drummer", "First Folk", "Undermt Folk", "Insect Swarm", "Evard's Tentacle",
+    "First Folk", "Undermt Folk", "Insect Swarm", "Evard's Tentacle",
     "Animated Statue", "Dust Devil", "Lesser Air Eleme", "Lesser Water Ele", "Lsr Earth Elem",
     "Lsr Fire Elem", "Sand Howler", "Wyvern",
 ))

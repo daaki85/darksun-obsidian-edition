@@ -914,11 +914,11 @@ rules have them** ticked (on unless unticked):
   Large or bigger creatures (the Bulette, the Rampager, the Silt Horror, the
   Mountain Stalker, the Otyugh, the Wyvern, the Djinn, the slaads, the Vrock,
   the Dune Reaper, the Animated Statue, the mastyrials, the Styr, the Fire
-  Eel, and the great tusked Magera, Blind One, Slave Leaders, Wagon Guards,
+  Eel, the Psurlon, the Xorn, the Drummer and the monster Slaves, and the great tusked Magera, Blind One, Slave Leaders, Wagon Guards,
   Workers and the guards of their kind), nor anything with no body a rope could hold (elementals, the Dust
   Devil, the Insect Swarm, Evard's Tentacle, the slimes and the Shadow), nor
   the spiders (the Dark Spider, the Spider Mage and the "-tunk!" princes), the
-  Sand Howler, the Screamer Beetle, the Xorn, the Strine, the Daggoran and
+  Sand Howler, the Screamer Beetle, the Strine, the Daggoran and
   Alita.
 
 The game keeps no size for its creatures, so the list is the mod's, from

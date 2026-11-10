@@ -159,7 +159,7 @@ Made with `python -m dsloader.doccreatures GAME_FOLDER`, from the game's own dat
 | ![](docs/creatures/dagolar-slime-monster.png) | Dagolar Slime | monster | M (man-sized) | no: nothing to tangle |
 | ![](docs/creatures/dark-spider-monster.png) | Dark Spider | monster | L (large) | no: too big |
 | ![](docs/creatures/djinn-monster.png) | Djinn | monster | L (large) | no: too big |
-| ![](docs/creatures/drummer-monster.png) | Drummer | monster | M (man-sized) ? | yes |
+| ![](docs/creatures/drummer-monster.png) | Drummer | monster | L (large) | no: too big |
 | ![](docs/creatures/dune-reaper-monster.png) | Dune Reaper | monster | H (huge) | no: too big |
 | ![](docs/creatures/dust-devil-monster.png) | Dust Devil | monster | M (man-sized) ? | no: nothing to tangle |
 | ![](docs/creatures/earth-elemental-monster.png) | Earth Elemental | monster | L (large) | no: nothing to tangle |
@@ -179,7 +179,7 @@ Made with `python -m dsloader.doccreatures GAME_FOLDER`, from the game's own dat
 | ![](docs/creatures/mountain-stalker-monster.png) | Mountain Stalker | monster | L (large) ? | no: too big |
 | ![](docs/creatures/otyugh-monster.png) | Otyugh | monster | L (large) | no: too big |
 | ![](docs/creatures/outcast-monster.png) | Outcast | monster | M (man-sized) | yes |
-| ![](docs/creatures/psurlon-monster.png) | Psurlon | monster | M (man-sized) | yes |
+| ![](docs/creatures/psurlon-monster.png) | Psurlon | monster | L (large) | no: too big |
 | ![](docs/creatures/psurlon-adept-monster.png) | Psurlon Adept | monster | M (man-sized) | yes |
 | ![](docs/creatures/rampager-monster.png) | Rampager | monster | L (large) ? | no: too big |
 | ![](docs/creatures/red-slaad-monster.png) | Red Slaad | monster | L (large) | no: too big |
@@ -194,7 +194,7 @@ Made with `python -m dsloader.doccreatures GAME_FOLDER`, from the game's own dat
 | ![](docs/creatures/silt-horror-monster.png) | Silt Horror | monster | G (gargantuan) | no: too big |
 | ![](docs/creatures/silt-runner-monster.png) | Silt Runner | monster | S (small) | yes |
 | ![](docs/creatures/skull-elder-undead.png) | Skull Elder | undead | M (man-sized) | yes |
-| ![](docs/creatures/slave-monster.png) | Slave | monster | M (man-sized) | yes |
+| ![](docs/creatures/slave-monster.png) | Slave | monster | L (large) | no: too big |
 | ![](docs/creatures/slave-leaders-monster.png) | Slave Leaders | monster | L (large) | no: too big |
 | ![](docs/creatures/slig-monster.png) | Slig | monster | M (man-sized) | yes |
 | ![](docs/creatures/spider-mage-monster.png) | Spider Mage | monster | L (large) ? | no: too big |
@@ -214,5 +214,5 @@ Made with `python -m dsloader.doccreatures GAME_FOLDER`, from the game's own dat
 | ![](docs/creatures/water-elemental-monster.png) | Water Elemental | monster | L (large) | no: nothing to tangle |
 | ![](docs/creatures/worker-monster.png) | Worker | monster | L (large) | no: too big |
 | ![](docs/creatures/wyvern-monster.png) | Wyvern | monster | L (large) ? | no: too big |
-| ![](docs/creatures/xorn-monster.png) | Xorn | monster | M (man-sized) | no: can't be tangled |
+| ![](docs/creatures/xorn-monster.png) | Xorn | monster | L (large) | no: too big |
 | ![](docs/creatures/zombie-undead.png) | Zombie | undead | M (man-sized) | yes |
