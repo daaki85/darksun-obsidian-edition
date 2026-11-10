@@ -43,8 +43,9 @@ Releases, newest first: [2.15.0](#pull-request-89-merged-2026-11-10) (#89),
 
 ## Next pull request (not opened yet)
 
-DSCLOG.EXE 68,576 bytes (image 68,544: 63,024 in its segment, 5,520 in the tail), 2,512 of its
-segment spare; `UMB_NEED` 6,380 paragraphs (1,802 spare), `UMB_KEPT` 8,002 (180 spare).
+DSCLOG.EXE 68,976 bytes (image 68,944: 63,424 in its segment, 5,520 in the tail), 2,112 of its
+segment spare; `UMB_NEED` 6,405 paragraphs (1,777 spare), `UMB_KEPT` 8,027 (155 spare). The polearm's
+reach took 384 bytes of the segment (68,592 bytes before it).
 
 **New**
 - **Staff sling stinkpots** (AD&D's Arms and Equipment Guide), under the cahulaks' switch, now
@@ -64,6 +65,18 @@ segment spare; `UMB_NEED` 6,380 paragraphs (1,802 spare), `UMB_KEPT` 8,002 (180 
   2026-11-10: a held target nauseated, a free one's save, a nauseated attacker's -2,
   playtest/logs/2026-11-10-stinkpots.md.)
   Dispel Magic doesn't end Nauseated: the game's weighs only effects 0 to 73 (its loop, 7936Ch).
+- **Polearm reach**, under **Weapon traits** too (the user's design): a combatant, party member or foe,
+  whose hands hold a polearm and no other weapon (a shield beside it, or a bow in the missile slot, is
+  fine) strikes in melee at two squares as well as at one. One new site, `REACH_SITE` (`gamepatch`
+  "polearm_reach", 2211Fh: the end of the combatant distance routine, 1A0A:2BA5h): a distance of 2 is
+  1 for the game's melee tests (the pointer's sword, the attack pointer's click, the walk arrow's
+  click on a foe, the walk to attack arriving, the step switch's case 19, and the computer's attack
+  choice in overlay 612Eh), told by the way back, when the attacker's hands qualify (`REACH_HANDS`,
+  `kind_of_type`'s polearm) and the game's line test (898:00A4h) finds no wall between. The type's
+  range byte stays 1 (above 1 the attack routines take a weapon for a missile weapon, playtest/logs/
+  2026-11-10-polearm-reach.md). Two squares diagonally count 3 (no reach); the reach goes over a
+  creature between; the computer still walks up beside its target and uses the reach only on a foe
+  already two away. (Tests: tests/test_reach.py. Not yet seen in the game.)
 
 **Changed**
 - **Six switches merged into three** (the user's choice), freeing three of DSCLOG's rule bits with bit 2
@@ -97,6 +110,9 @@ segment spare; `UMB_NEED` 6,380 paragraphs (1,802 spare), `UMB_KEPT` 8,002 (180 
   stinkpot's: 1d3, 1d4 under grand mastery.
 - The stinkpots in FEATURES ([Staff sling stinkpots](obsidian-edition/FEATURES.md#staff-sling-stinkpots)),
   DEVELOPMENT-RULES, ITEMS, DICE-LOG, the player's guide and the patch notes; DEVELOPMENT's sizes.
+- The polearm's reach in FEATURES ([Polearm reach](obsidian-edition/FEATURES.md#polearm-reach)),
+  DEVELOPMENT-RULES, ITEMS, the Options text, the player's guide and the patch notes; DEVELOPMENT's
+  sizes.
 - The player's guide's magic items: "Six scrolls" named as Kalzith's, and the defilers' scrolls listed
   (any preserver spell; the champions' bout's defiler always has one); ITEMS likewise.
 

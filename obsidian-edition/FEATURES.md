@@ -45,6 +45,7 @@ running the game, the Loader's window and its dice log are in the
     - [Weapon traits](#weapon-traits)
       - [Cahulaks](#cahulaks)
       - [Staff sling stinkpots](#staff-sling-stinkpots)
+      - [Polearm reach](#polearm-reach)
     - [Creature size](#creature-size)
     - [Held targets](#held-targets)
     - [Rings and cloaks of protection](#rings-and-cloaks-of-protection)
@@ -859,6 +860,7 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#level-cap-by-xp).
 | [Creature size](#creature-size) | no sizes: a weapon does the same to a halfling and a Bulette; Hold Person and Charm Person take on a half-giant | a large target (a half-giant, a large monster, anyone Enlarged) takes AD&D's large weapon dice (a long sword 1d12); Hold Person, Charm Person and Charm Person or Mammal (on a person) don't take on it |
 | [Held targets](#held-targets) | a blow on a held or Out Cold creature rolls to hit as ever and does double damage | it hits automatically and does normal damage, as AD&D's held target |
 | [Weapon traits](#weapon-traits): [the staff sling](#staff-sling-stinkpots) | the staff sling shoots for 1d4 | it throws stinkpots: 1d3, and a target hit, unless undead or immune to poison, saves against poison or is nauseated, −2 to hit for 1d3+1 rounds |
+| [Weapon traits](#weapon-traits): [polearm reach](#polearm-reach) | a polearm strikes only an adjacent foe | a polearm held with no other weapon in the hands strikes a foe two squares away too |
 | [Rings and cloaks of protection](#rings-and-cloaks-of-protection) | no rings or cloaks of protection of its own; the mod's count in full, whatever else is worn | two rings don't add up, a ring gives no AC with magical armour, a cloak does nothing with magical or metal armour or a shield |
 | [Helms give AC 1](#helms-give-ac-1) | AC 0 | the game's helms give AC 1 rather than 0 |
 | [Items saving against acid](#items-saving-against-acid) | armour without a magical power destroyed outright, its plus ignored; a weapon on a d20 under 8 less its plus | an item the acid or corroding touch could destroy needs the easier of the game's number and AD&D's save by material, a plus helping |
@@ -910,8 +912,9 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#half-giants-two-handed
 #### Weapon traits
 
 One switch, **Weapon traits** (on unless unticked), gives weapons what AD&D's books give
-them and the game doesn't: the [cahulaks](#cahulaks) their two heads and their tangle, and the
-[staff sling](#staff-sling-stinkpots) its stinkpots. Untick it and all are the game's.
+them and the game doesn't: the [cahulaks](#cahulaks) their two heads and their tangle, the
+[staff sling](#staff-sling-stinkpots) its stinkpots, and the [polearm](#polearm-reach) its reach.
+Untick it and all are the game's.
 
 ##### Cahulaks
 
@@ -980,6 +983,32 @@ Templar's saving throw vs a stinkpot from Lex (paralysis/poison/death): d20 = 7,
 ```
 
 How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#staff-sling-stinkpots).
+
+##### Polearm reach
+
+A polearm is a long shaft with a blade or a hook at its end: it reaches past the square beside its
+wielder. With **Weapon traits** ticked (on unless unticked), a combatant whose hands hold a polearm
+and no other weapon strikes in melee at two squares as well as at one: two squares straight, or two
+across and one along. The other hand may hold a shield (a half-giant holds a polearm in one hand) or
+nothing; the missile slot doesn't count, so a bow there is fine. A second weapon in a hand, a second
+polearm too, takes the reach away. It holds for the party and its foes alike: the attack pointer
+shows the sword over a foe two squares away, a click on it swings, and the walk arrow's click on it
+attacks from where the wielder stands. Every polearm has it: the bone and the metal polearm, the
+Polearm +1, ***Thornwall*** and ***Linebreaker***.
+
+What it doesn't do:
+
+- **Two squares diagonally** (two across and two along) count as three, as the game measures: no
+  reach there.
+- It reaches **over a creature** standing between, friend or foe. A wall between stops it.
+- With a bow in the missile slot, a click on a foe two squares away swings the polearm rather than
+  shooting: the foe is in reach. From three squares on, the bow shoots as before.
+- A foe the computer controls still walks up beside its target when it closes in; it uses the reach
+  only against someone already two squares away.
+
+Untick it and a polearm strikes only an adjacent foe, as in the game.
+
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#polearm-reach).
 
 #### Creature size
 

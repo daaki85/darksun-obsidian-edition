@@ -1768,6 +1768,15 @@ for 1d3+1 rounds, −2 on its attack rolls. Undead, and anything immune to
 poison, shrug it off. *Without the mod:* the staff sling shot for 1d4, nothing
 more.
 
+**Polearm reach.** A polearm held with no other weapon in the hands (a shield,
+which only a half-giant can hold beside it, is fine; a bow in the missile slot
+too) strikes a foe two squares away as well as an adjacent one: two squares
+straight, or two across and one along, not two diagonally. The attack pointer
+shows the sword over such a foe; it reaches over a creature in between, not
+through a wall. Foes with polearms have the reach too. With a bow in the
+missile slot, a click on a foe two squares away swings the polearm; from three
+on, the bow shoots. *Without the mod:* a polearm strikes only an adjacent foe.
+
 **Armour** is worn in pieces (chest, arms, legs, a helm), each lowering AC by
 its own amount, and a shield and DEX lower it more (but not against an attack
 [from behind](#from-behind-and-backstabs)). **Helms give AC 1**. *Without
@@ -1989,7 +1998,7 @@ line](DICE-LOG.md) what each of its lines means.
 | | how much it says: at the least, in short or in detail | in short |
 | | what hurts a monster (the Look box): describes a monster you Look at in a fight | on |
 | | names over figures: a spell's name over its caster, "Miss" over whoever an attack missed, and a used charge ("Armor: 7 left") | on |
-| Rule changes | *characters:* class restrictions; multiclass hit points; hit dice: the better of two; scores and hit points as rolled; AD&D's class tables; CON as in AD&D; ages and magical aging; dual-classing as the manual has it; level cap by XP. *Weapons and armour:* two weapons; half-giants' two-handed weapons; weapon traits (the cahulaks' heads and tangle, the staff sling's stinkpots); creature size as in AD&D; held targets as in AD&D; rings and cloaks of protection; helms AC 1; items saving against acid. *Magic:* rangers' casting level; preservers' INT; saving throws against spells (the spell save, DEX instead of a doubled d20); Enlarge multiplying the weapon's dice only; spells and psionics as the manual describes them (monsters' powers and Turn Undead by AD&D's table among them); spells roll to hit; resting as in AD&D | all on |
+| Rule changes | *characters:* class restrictions; multiclass hit points; hit dice: the better of two; scores and hit points as rolled; AD&D's class tables; CON as in AD&D; ages and magical aging; dual-classing as the manual has it; level cap by XP. *Weapons and armour:* two weapons; half-giants' two-handed weapons; weapon traits (the cahulaks' heads and tangle, the staff sling's stinkpots, the polearm's reach); creature size as in AD&D; held targets as in AD&D; rings and cloaks of protection; helms AC 1; items saving against acid. *Magic:* rangers' casting level; preservers' INT; saving throws against spells (the spell save, DEX instead of a doubled d20); Enlarge multiplying the weapon's dice only; spells and psionics as the manual describes them (monsters' powers and Turn Undead by AD&D's table among them); spells roll to hit; resting as in AD&D | all on |
 | More character customization | weapon specialization; kits; STORE and RECALL on the creation screen; fuller starting gear | all on |
 | Expanded features | shops as in AD&D (the leader's CHA at shops, buying back magical items); improved thieving: thieves as in AD&D (thief skills from AD&D's table, backstabs multiplying the weapon's dice only), hiding in shadows to backstab, the cloak, boots and belt, picking pockets | all on |
 | New content | the new spells (six wizard spells and ten 6th-level priest spells, one switch); new people (Kalzith; Semyon); a small quest (the cooked vulture); defilers' scrolls; new items (and an arena bout that comes with them) | all on |

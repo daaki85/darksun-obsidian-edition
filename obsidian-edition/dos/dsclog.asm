@@ -17160,6 +17160,184 @@ stink_sides:
         pop bx
         pop es
         ret
+; REACH (RULE_HI_CAHULAKS, the Loader's rule "cahulaks", Weapon traits): a polearm reaches two
+; squares. REACH_SITE is "mov ax,[bp-16h]" (2211Fh; 3 bytes: the INT and the site's number) at the
+; end of the combatant distance routine (1A0A:2BA5h, 22045h: [BP+6] the attacker, [BP+8] the target,
+; both combatants; the least square distance between their footprints, 898:000Ch's: 1 adjacent,
+; diagonals too, 2 the square beyond, two across and one down too, two across and two down 3). It
+; does the MOV; then with the rule, for a distance of 2 asked by one of the game's melee tests
+; (REACH_CALLER), an attacker whose hands hold a polearm and no other weapon (REACH_HANDS), and no wall
+; on the line between the two (REACH_LINE), AX 1: the game then takes the target as adjacent. The melee tests, by their way back (each compares the
+; distance with 1): the pointer's sword (1587:2B7Ah, 1D7EAh), the attack pointer's click (1587:0AC5h,
+; 1B735h), the walk arrow's click on a foe (1587:04B8h, 1B128h), the walk to attack arriving
+; (1587:1C36h, 1C8A6h, and 1A0A:3071h, 22511h), the step switch's case 19 (1A0A:14A2h, 20942h); and
+; the computer's choice of an attack, in overlay 612Eh (56CC0h on; its CS wherever it is loaded): its
+; target's distance against its weapon's range (0DA7h, 57A67h), and the target it found in range
+; (1229h, 57EE9h), each told by its IP and the code around it (a far call to 2BA5h before, "add sp,4
+; / mov [bp-0Ah],ax" after). Every other caller (an ambush's, the spells', a missile's) keeps 2. The
+; type's range byte (+0Ah) stays 1: above 1 the attack routines take a weapon for a missile weapon.
+REACH_SITE   equ NS_IMAGE + 111   ; 2211Fh: the distance routine's result, a polearm's reach (REACH)
+REACH_1587   equ 0x4356 - 0x1587  ; (the callers' segments, less DS)
+REACH_1A0A   equ 0x4356 - 0x1A0A
+REACH_AI_RANGE equ 0x0DA7         ; (overlay 612Eh's ways back)
+REACH_AI_FOUND equ 0x1229
+POLEARM_KIND equ 10               ; (kind_of_type's polearm: its kind, 9, + 1)
+TYPE_WEAPON  equ 3                ; (a type's flags, +00h: 1 a melee weapon, 2 a missile weapon)
+reach_rets   dw REACH_1587, 0x2B7A, REACH_1587, 0x0AC5, REACH_1587, 0x04B8, REACH_1587, 0x1C36
+             dw REACH_1A0A, 0x3071, REACH_1A0A, 0x14A2
+REACH_RETS   equ ($ - reach_rets) / 4
+reach_site:
+        mov ax, [bp - 0x16]
+        cmp ax, 2
+        jne .out
+        test word [cs:rules_hi], RULE_HI_CAHULAKS
+        jz .out
+        pusha
+        push es
+        call reach_caller
+        jne .no
+        mov ax, [bp + 6]
+        call reach_hands
+        jne .no
+        call reach_line
+        jne .no
+        pop es
+        popa
+        mov ax, 1
+        iret
+.no:    pop es
+        popa
+.out:   iret
+
+; REACH_CALLER: ZF if the distance routine's way back ([BP+2], [BP+4]) is one of REACH's melee tests.
+; DS the game's; AX, CX, DX, SI, DI, ES changed.
+reach_caller:
+        mov dx, ds
+        sub dx, [bp + 4]                ; (DS less the caller's CS)
+        mov ax, [bp + 2]
+        mov si, reach_rets
+        mov cx, REACH_RETS
+.res:   cmp dx, [cs:si]
+        jne .next
+        cmp ax, [cs:si + 2]
+        je .ret
+.next:  add si, 4
+        loop .res
+        cmp ax, REACH_AI_RANGE
+        je .code
+        cmp ax, REACH_AI_FOUND
+        jne .ret
+.code:  mov es, [bp + 4]
+        mov di, ax
+        cmp word [es:di - 5], 0xA59A    ; (call far 2BA5h)
+        jne .ret
+        cmp byte [es:di - 3], 0x2B
+        jne .ret
+        cmp dword [es:di], 0x8904C483   ; (add sp,4 / mov [bp-0Ah],ax)
+        jne .ret
+        cmp word [es:di + 4], 0xF646
+.ret:   ret
+
+; REACH_HANDS: ZF if combatant AX holds a polearm (kind_of_type's POLEARM_KIND) in a hand, the right
+; (RIGHT_HAND) or the left (LEFT_HAND), and no other weapon (a type with a melee or missile flag) in
+; either: a shield, or nothing, in the other. The missile slot doesn't count. Its three item lists
+; (+08h, +0Ah, +0Ch), by each item's slot (+11h). DS the game's; AX, BX, CX, DX, SI, DI, ES changed.
+reach_hands:
+        call combatant_creature
+        jc .none
+        imul di, ax, 0x3A
+        xor dx, dx                      ; (DL the polearms in the hands, DH the other weapons)
+        mov cx, 8
+.list:  les bx, [CREATURES]
+        add bx, di
+        add bx, cx
+        mov si, [es:bx]
+        cmp si, NO_THING
+        jae .next
+        mov ax, ds
+        add ax, THINGS_SEG
+        mov es, ax
+        imul si, si, 3
+        cmp byte [es:si + THINGS], 1
+        jne .next                       ; (not an item)
+        mov si, [es:si + THINGS + 1]
+        mov byte [cs:reach_left], 100
+.item:  cmp si, NO_THING
+        jae .next
+        les bx, [ITEMS]
+        imul ax, si, 0x15
+        add bx, ax
+        mov al, [es:bx + 0x11]
+        cmp al, RIGHT_HAND
+        je .hand
+        cmp al, LEFT_HAND
+        jne .on
+.hand:  mov ax, [es:bx + 0x0A]          ; (its type)
+        cmp ax, KIND_TYPES
+        jae .other
+        push bx
+        mov bx, ax
+        cmp byte [cs:bx + kind_of_type], POLEARM_KIND
+        pop bx
+        jne .other
+        inc dl
+        jmp .on
+.other: push es
+        push bx
+        imul ax, ax, TYPE_SIZE
+        les bx, [ITEM_TYPES]
+        add bx, ax
+        test byte [es:bx], TYPE_WEAPON
+        pop bx
+        pop es
+        jz .on
+        inc dh
+.on:    mov si, [es:bx + 4]             ; (the next item in the list)
+        dec byte [cs:reach_left]
+        jnz .item
+.next:  add cx, 2
+        cmp cx, 0x0E
+        jb .list
+        cmp dx, 1                       ; (one polearm, no other weapon)
+        ret
+.none:  or sp, sp                       ; (no creature: ZF clear)
+        ret
+reach_left db 0
+
+; REACH_LINE: ZF if no wall is on the line from attacker [BP+6]'s square to target [BP+8]'s, by the
+; game's own test (898:00A4h, 0DE24h: two squares, x, y and a height of 0 each; 0, or -1 blocked by
+; a cell with its bit 80h, a wall), the one the attack pointer's click (at 1B700h) and the computer's
+; attack (57C99h) make; the walk arrow's click and the walk to attack make none, as for an adjacent
+; foe. The squares are the things' places (DS:669Dh, 669Fh + 20h a thing: sixteenths). DS the game's;
+; AX, BX, CX, DX, ES changed.
+REACH_LINE_SEG equ 0x898
+reach_line:
+        mov bx, [bp + 8]
+        shl bx, 5
+        push word 0
+        mov ax, [bx + WALL_POS + 2]
+        shr ax, 4
+        push ax
+        mov ax, [bx + WALL_POS]
+        shr ax, 4
+        push ax
+        mov bx, [bp + 6]
+        shl bx, 5
+        push word 0
+        mov ax, [bx + WALL_POS + 2]
+        shr ax, 4
+        push ax
+        mov ax, [bx + WALL_POS]
+        shr ax, 4
+        push ax
+        mov ax, ds
+        sub ax, DGROUP_SEG - REACH_LINE_SEG
+        mov [cs:reach_line_at + 2], ax
+        call far [cs:reach_line_at]
+        add sp, 12
+        or ax, ax
+        ret
+reach_line_at dw 0xA4, 0
 ; SIZE (RULE_HI_SIZE, the Loader's rule "creature_size"): AD&D's creature sizes, which the game keeps
 ; none of. A combatant is large (IS_LARGE) when Enlarged (effect 16), a half-giant (its sheet's race),
 ; or marked in LARGE_BITS (the Loader's, from dsloader/sizes.py: large, huge or gargantuan). Then:
@@ -17948,7 +18126,7 @@ RULE_HI_CON equ 1024            ; (RULES_HI) CON as in AD&D: regeneration's rate
 RULE_HI_DUAL equ 2048           ; (RULES_HI) dual-classing at 3rd level, every prime requisite checked (DUAL_LEVEL, DUAL_PRIMES)
 RULE_HI_REST equ 4096           ; (RULES_HI) rest heals by spells and natural healing (REST_PRE, REST_HP)
 RULE_HI_CAHULAKS equ 8192       ; (RULES_HI) Weapon traits: the cahulaks' heads and tangle (CAHULAKS), the staff
-                                ;   sling's stinkpots (STINKPOTS), the polearm's hook
+                                ;   sling's stinkpots (STINKPOTS), the polearm's reach (REACH)
 RULE_HI_SIZE equ 16384          ; (RULES_HI) creature size: large dice, Hold and Charm Person (SIZE)
 RULE_HI_HELD equ 32768          ; (RULES_HI) a held or Out Cold target hit automatically, normal damage (HELD)
 THINGS_SEG equ 0x3972 - 0x4356  ; the things table's segment, relative to DS
@@ -20472,6 +20650,7 @@ site_tab:
         site HELD_HIT_SITE, held_hit
         site HELD_DAMAGE_SITE, held_damage
         site PIC_FAIL_SITE, pic_fail
+        site REACH_SITE, reach_site
 SITE_COUNT equ ($ - site_tab) / 2
 
 ; NS_CMP: the compare of site RL_SITE (of NS_CMP_SITES), its flags into the INT's frame.

@@ -218,6 +218,8 @@ SIZE_LINE_SITE, SIZE_PRE_SITE = NS_IMAGE + 106, NS_IMAGE + 107
 HELD_HIT_SITE, HELD_DAMAGE_SITE = NS_IMAGE + 108, NS_IMAGE + 109
 # (the picture loader's failure: a reused slot let go again, DSCLOG's PIC_FAIL)
 PIC_FAIL_SITE = NS_IMAGE + 110
+# (the combatant distance routine's result: a polearm's reach, two squares as one, DSCLOG's REACH)
+REACH_SITE = NS_IMAGE + 111
 # the monster kinds' table (DSUN.EXE, the load segment's 3E45h: monsters.MONSTER_KINDS_SEG): a kind's
 # properties (a dword), its resistance class (a byte), a class's damage kinds (four words) and percents
 KINDS_FILE = 0x5400 + 0x3E45 * 16
@@ -598,6 +600,10 @@ PATCHES = (
     Patch("cahulaks_two", 0x59627, bytes.fromhex("837e06017e11"), _site(CAH_TWO_SITE, 6)),
     Patch("cahulaks_swing", 0x589B6, bytes.fromhex("c746fc0000"), _site(CAH_SWING_SITE, 5)),
     Patch("cahulaks_hit", 0x58B54, bytes.fromhex("c646eb00"), _site(CAH_HIT_SITE, 4)),
+    # ... and a polearm's reach (in the same switch): the end of the combatant distance routine
+    # (1A0A:2BA5h, 22045h), "mov ax,[bp-16h]" at 2211Fh: a distance of 2 made 1 for the game's melee
+    # tests when the attacker's hands hold a polearm and no other weapon.
+    Patch("polearm_reach", 0x2211F, bytes.fromhex("8b46ea"), _site(REACH_SITE, 3)),
     # The creature size rule (RULE_SIZE): a weapon's damage line just drawn (7286Fh's "inc word [bp-2]"
     # at 72AA7h, the item box's and the inventory's): its dice against a large target with it.
     Patch("size_line", 0x72AA7, bytes.fromhex("ff46fe"), _site(SIZE_LINE_SITE, 3)),

@@ -526,7 +526,7 @@ the one place for the sizes; the sections after them name the symbols only.
 | Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (the unmodded game's 57 KB) |
 | C000h-C7FFh | 32 KB | the video BIOS (ROM) |
 | C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
-| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 67.2 KB (68,800 bytes with its PSP and its tail, (10h + `KEPT_PARAS`) paragraphs), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, and the rest free. **Measured 2026-11-10** (`playtest/memaudit.py`, in Pehtucl's ambush): 32,256 bytes free in one piece, and nothing between the helper and the overlay buffer (KEEP's resize, fixed that day; 288 bytes were left there before) |
+| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 67.6 KB (69,200 bytes with its PSP and its tail, (10h + `KEPT_PARAS`) paragraphs), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, and the rest free. **Measured 2026-11-10** (`playtest/memaudit.py`, in Pehtucl's ambush): 32,256 bytes free in one piece, and nothing between the helper and the overlay buffer (KEEP's resize, fixed that day; 288 bytes were left there before) |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
 | 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's [far block](#the-far-block), 65,484 bytes, 36 free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
@@ -534,15 +534,15 @@ the one place for the sizes; the sections after them name the symbols only.
 ### The limits
 
 Each fails the build when passed (a negative `times`). From the build of
-2026-11-10, after 2.15.0, with the staff sling's stinkpots (DSCLOG.EXE 68,576 bytes: the 32-byte
-header, the segment's image of 63,024 and the tail's 5,520, `TAIL_BYTES`):
+2026-11-10, after 2.15.0, with the staff sling's stinkpots and the polearm's reach (DSCLOG.EXE 68,976
+bytes: the 32-byte header, the segment's image of 63,424 and the tail's 5,520, `TAIL_BYTES`):
 
 | Limit | Used | Room | Spare |
 |---|---|---|---|
-| [the helper's segment](#the-helpers-segment): `kept_end` (`resident_end` 62,032 + `AFTER_INSTALL` 992) | 63,024 bytes | 65,536 | 2,512 bytes |
+| [the helper's segment](#the-helpers-segment): `kept_end` (`resident_end` 62,432 + `AFTER_INSTALL` 992) | 63,424 bytes | 65,536 | 2,112 bytes |
 | [the far block](#the-far-block): `FAR_END` (its buffers from `FAR_RING`, 10h: 65,484 bytes) | 65,500 | 65,536 | 36 bytes |
-| upper memory as the helper loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,380 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,802 |
-| upper memory once installed: `UMB_KEPT` (the helper, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,002 paragraphs | 8,182 (`UMB_ROOM`) | 180 (2.9 KB) |
+| upper memory as the helper loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,405 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,777 |
+| upper memory once installed: `UMB_KEPT` (the helper, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,027 paragraphs | 8,182 (`UMB_ROOM`) | 155 (2.4 KB) |
 
 To check them after a change, build a scratch copy with `[map all FILE]` as its
 first line (`nasm -f bin -I dos/ -o /tmp/x.exe COPY`, from `obsidian-edition/`)

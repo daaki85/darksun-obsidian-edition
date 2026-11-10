@@ -478,7 +478,8 @@ class Viewer:
                                      "creature or anyone Enlarged) that fails a save against petrification: it loses "
                                      "its next turn. The staff sling throws stinkpots: 1d3 (the game's 1d4), and a "
                                      "target hit, unless undead or immune to poison, saves against poison or is "
-                                     "nauseated for 1d3+1 rounds: -2 to hit"),
+                                     "nauseated for 1d3+1 rounds: -2 to hit. A polearm held with no other weapon "
+                                     "(a shield is fine) strikes a foe two squares away as well as an adjacent one"),
                 ("creature_size", "arms", "Creature size as in AD&D: a large target, party member or foe (a half-giant, "
                                           "a Bulette, anyone Enlarged), takes AD&D's weapon dice against large creatures: "
                                           "more from some weapons (a long sword 1d12), less from others (a dagger or "
