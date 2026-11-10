@@ -144,6 +144,16 @@ class LinesTests(unittest.TestCase):
         self.assertEqual(log.at(c.SHORT, NAMES)[-1].text, "Seneca hits Slig for 11 (15 vs 4+, backstab)")
         self.assertEqual(log.at(c.MINIMAL, NAMES)[-1].text, "Seneca hits Slig for 11")
 
+    def test_multiplied_damage(self):
+        """A backstab's or a helpless target's multiple brackets the working: still the attack's line."""
+        for working in ("(1d4 = [3] +4 STR 18) x2 backstab",
+                        "(1d4 = [4] +1 weapon +4 STR 18) x2 Paralyzed: a helpless target takes double"):
+            log = c.Log()
+            log.add(["Seneca attacks Slig with Bone Hayneedle +1 (1d4+1): d20 = 15, needs 4+ (85%), "
+                     "hits AC -3, target AC 8 -> HIT", f"  Seneca hits Slig for 18: {working}"])
+            self.assertEqual(log.at(c.SHORT, NAMES)[-1].text, "Seneca hits Slig for 18 (15 vs 4+)")
+            self.assertEqual(log.at(c.MINIMAL, NAMES)[-1].text, "Seneca hits Slig for 18")
+
     def test_damage_without_its_attack_keeps_its_own_line(self):
         log = c.Log()
         log.add(["  Rampager hits Defiler for 4: 2d6 = [1 + 3]"])

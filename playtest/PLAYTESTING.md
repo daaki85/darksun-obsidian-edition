@@ -992,8 +992,13 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   target gets no save line from Hold Person** (it fails every save; the game logs only "gives
   Paralyzed"): free it first (`addeffect.py del C 34`). Hold Person's pointer stays up for its next
   target after a cast. `setmem.py ruleshi=-16384` / `=16384` turns the size rule off and on.
-  **Held foes lose more HP than the log shows** (an open finding, not the size rule: a hit for 8 took
-  16 and a miss after it 10, read from memory): don't check damage numbers on Paralyzed foes.
+  **Held foes take double from every blow**, the game's own rule (explained 2026-11-10,
+  logs/2026-11-10-held-damage.md: the damage routine, 79BF9h, takes the attack's damage x2 for a
+  Paralyzed or Out Cold target); the dice log's hit line says so (`x2 Paralyzed: a helpless target
+  takes double`) and its HP lines match. Seneca is a **Poisoner**: each of her melee hits also
+  poisons (10, no save for a held target: the log's `is poisoned by the hit` line), landing about
+  0.5 s later, after her next swing's line. To check a weapon's own damage, free the target
+  (`addeffect.py del C 34`) or use a member who isn't a Poisoner, and read the "hits X for N" line.
   `passuntil.sh` stops with "member N off screen"; `passn.sh N` drags the view first.
   **The large dice in the item box** (same day): I on the fight's first turn opens the member whose
   turn it is; a portrait (20,104 the third) shows another; a right-click on the right hand (66,92)
@@ -1014,6 +1019,13 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   Cahulaks +2's) and +0Ah (its type) through live.py (the items at the far pointer DS:165Dh, 15h
   bytes each; Lex's 43 the right hand, 36 the missile slot in `fountain-user`), then I and the
   member's portrait: the slot draws the object's icon (the box's text stays the old item's).
+- **Every HP change with its time** (2026-11-10, logs/2026-11-10-held-damage.md): a poller of each
+  combatant's HP (creature +0) every 10 ms, printing each change with the seconds since its start, run
+  in the background just before Tab + Return, shows falls the dice log's lines merge or order
+  differently (a poison landing after the next swing's line). The script is in that log; `live.py`'s
+  `gd.combatant_creature`, `gd.creature`, `gd.creature_name`. From `fountain-user` with every foe held,
+  `passuntil.sh 3` gives Seneca's turn, and Tab + Return backstabs the Templar (41 HP) about half the
+  time.
 - **Lots of items on the ground** (2026-11-09, logs/2026-11-09-picture-slot-reuse.md): `giveitems.py
   MEMBER N [FIRST]` gives items of different objects (each its own picture) into free backpack cells
   in memory (12 cells: then "no room"); `groundfill.sh CYCLES [FIRST]` gives Gerakis 12 and DROPs

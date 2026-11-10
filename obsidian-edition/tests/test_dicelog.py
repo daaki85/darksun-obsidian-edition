@@ -548,6 +548,86 @@ class BackstabTests(unittest.TestCase):
         self.assertIn("x5 backstab", self.backstab(14, 0)[0])
 
 
+class HelplessTests(unittest.TestCase):
+    """A weapon's blow on a held (Paralyzed) or Out Cold target: the attack routine hands the game's
+    damage call its damage x2 (58B0Dh), which 79BF9h takes for a helpless target (the effects'
+    bitset's bit 34, or the creature's +1Ch 3). Seen 2026-11-10: a hit for 13 took 26."""
+
+    def hit(self, log, stab=False, now=0.0):
+        if stab:
+            sheet = SHEETS + 0 * game.SHEET_SIZE  # (Dag a 6th-level thief: x3)
+            log.guest.mem[sheet + game.SHEET_CLASSES + 1], log.guest.mem[sheet + game.SHEET_LEVELS + 1] = 17, 6
+        parent = words(0, 0, 0, 0, 10, 4, 0, 0, 5, 7, 1, 0, 0, 0, int(stab), int(stab))
+        e = entry(raw_for(5, 8), dicelog.DICE_SITE, words(0, 0, 1, 8, 1), parent, (0x29, 0, 0, 0),
+                  parent_code=dicelog.WEAPON_DAMAGE_RETURN, parent_locals=locals_at(0x28, m14=0))
+        return log.describe(e, now=now)
+
+    def test_paralyzed_takes_double(self):
+        log = make_game()
+        self.assertEqual(self.hit(log), ["  Dag hits Mountain Stalker for 18: 1d8 = [5] +1 weapon +12 STR 24"])
+        set_effects(log, [(0x29, 2, game.PARALYZED_EFFECT)])
+        self.assertEqual(self.hit(log), ["  Dag hits Mountain Stalker for 36: (1d8 = [5] +1 weapon +12 STR 24) "
+                                         "x2 Paralyzed: a helpless target takes double"])
+        set_effects(log, [(0, 2, game.PARALYZED_EFFECT)])  # (the attacker held: not the target)
+        self.assertEqual(self.hit(log)[0], "  Dag hits Mountain Stalker for 18: 1d8 = [5] +1 weapon +12 STR 24")
+
+    def test_out_cold_takes_double(self):
+        log = make_game()
+        log.guest.mem[CREATURES + STALKER * game.CREATURE_SIZE + game.CREATURE_STATUS] = game.OUT_COLD
+        self.assertEqual(log.game.helpless(0x29), "Out Cold")
+        self.assertIn("for 36: (1d8 = [5] +1 weapon +12 STR 24) x2 Out Cold", self.hit(log)[0])
+
+    def test_after_the_backstab_before_biofeedback(self):
+        """The backstab's multiple is in the damage the attack routine doubles; Biofeedback's 2 comes
+        off after (79C83h, on what 79BF9h took)."""
+        log = make_game()
+        set_effects(log, [(0x29, 2, game.PARALYZED_EFFECT), (0x29, 0x29, game.BIOFEEDBACK_EFFECT)])
+        self.assertEqual(self.hit(log, stab=True),
+                         ["  Dag hits Mountain Stalker for 106: ((1d8 = [5] +1 weapon +12 STR 24) x3 backstab) "
+                          "x2 Paralyzed: a helpless target takes double -2 Biofeedback"])
+
+    def test_the_hp_fall_matches(self):
+        """The doubled damage is what the target's HP is matched against: no "resisted" note."""
+        log = make_game()
+        stalker = CREATURES + STALKER * game.CREATURE_SIZE
+        struct.pack_into("<h", log.guest.mem, stalker, 50)
+        log.hp_changes(0.5)
+        set_effects(log, [(0x29, 2, game.PARALYZED_EFFECT)])
+        self.hit(log, now=1.0)
+        struct.pack_into("<h", log.guest.mem, stalker, 14)
+        self.assertEqual(log.hp_changes(1.2), ["  Mountain Stalker now 14 HP (-36)"])
+
+    def test_poisoner_on_a_helpless_target(self):
+        """A Poisoner's melee hit poisons (DSCLOG's PROBE_POISON); a helpless target rolls no save
+        (79B0Ch), so the poison is named with the hit and its 10 put down to it, though it lands after
+        the round's next swing (seen 2026-11-10: -18, then -10, then the second hit)."""
+        from dsloader import kits
+        log = make_game()
+        stalker = CREATURES + STALKER * game.CREATURE_SIZE
+        struct.pack_into("<h", log.guest.mem, stalker, 100)
+        log.hp_changes(0.5)
+        with mock.patch.object(log.game, "kit_ids", lambda m: [kits.POISONER] if m == 0 else []):
+            self.assertEqual(len(self.hit(log, now=1.0)), 1)  # (not helpless: the game rolls the save)
+            set_effects(log, [(0x29, 2, game.PARALYZED_EFFECT)])
+            lines = self.hit(log, now=2.0)
+            self.assertEqual(lines[1], "  Mountain Stalker is poisoned by the hit: Poison (10 damage), no saving throw "
+                                       "(Paralyzed)")
+            hp = 100 - 18 - 36
+            struct.pack_into("<h", log.guest.mem, stalker, hp)
+            self.assertEqual(log.hp_changes(2.1), ["  Mountain Stalker now 46 HP (-54)"])
+            self.hit(log, now=2.2)  # (the next swing, logged before the first poison lands)
+            struct.pack_into("<h", log.guest.mem, stalker, hp - 10)
+            self.assertEqual(log.hp_changes(2.4), ["  Mountain Stalker takes 10 from Poison (10 damage), now 36 HP"])
+            struct.pack_into("<h", log.guest.mem, stalker, hp - 10 - 36 - 10)  # (the hit and its poison at once)
+            self.assertEqual(log.hp_changes(2.8),
+                             ["  Mountain Stalker takes 10 from Poison (10 damage) and 36 from the hit, now -10 HP"])
+            self.hit(log, now=3.0)
+            struct.pack_into("<h", log.guest.mem, stalker, hp - 10 - 36 - 10 - 36)
+            self.assertEqual(log.hp_changes(3.2), ["  Mountain Stalker now -46 HP (-36)"])  # (the poison not yet)
+            struct.pack_into("<h", log.guest.mem, stalker, -60)
+            self.assertEqual(log.hp_changes(9.0), ["  Mountain Stalker now -60 HP (-14)"])  # (too late: not the poison)
+
+
 class SaveTests(unittest.TestCase):
     def save_roll(self, log, natural, target=0x29, caster=0, spell=HOLD_PERSON):
         # the saving throw's frame: [BP+6] target, [BP+8] caster, [BP+0Ah] spell;

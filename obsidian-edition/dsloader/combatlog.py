@@ -121,7 +121,8 @@ HP_MANUAL = re.compile(r"(?:Cell Adjustment: .+ healed \d+ HP|.+ drains \d+ STR 
 # The dice log's lines, as they are
 ATTACK = re.compile(r"(?P<who>.+?) attacks (?P<target>.+?)(?: with .+?)?: d20 = (?P<d20>\d+)(?: \(natural \d+\))?, "
                     r"(?:needs (?P<need>-?\d+)\+|only a 20 hits|(?P<any>hits on anything but a 1))(?: \([^)]*\))?.*-> (?P<result>HIT|miss)$")
-HIT_FOR = re.compile(r"(?P<who>.+?) hits (?P<target>.+?) for (?P<n>\d+): (?P<dice>[0-9d+\-]+)")
+# (the working opens with a bracket when the whole is multiplied: a backstab's, a helpless target's x2)
+HIT_FOR = re.compile(r"(?P<who>.+?) hits (?P<target>.+?) for (?P<n>\d+): (?P<dice>\(*[0-9d+\-]+)")
 SAVE = re.compile(r"(?P<who>.+?)'s saving throw vs (?P<what>.+?): d20 = (?P<d20>\d+)"
                   r"(?: \(natural \d+\))?(?:,? [^>]*? = (?P<total>-?\d+))?"  # (its modifiers, then the total)
                   r"(?:, needs (?P<need>-?\d+))?(?: \([^)]*\))? -> (?P<result>\w+)")

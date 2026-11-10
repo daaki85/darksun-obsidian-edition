@@ -57,6 +57,17 @@ DSCLOG.EXE 67,680 bytes (image 67,648), 896 of its segment spare.
   (playtest/logs/2026-11-09-picture-slot-reuse.md).
 
 **Changed**
+- **The dice log shows the game's double damage on a helpless target**: a weapon blow on a
+  Paralyzed or Out Cold creature does double (the attack routine, 5883Ah, hands the damage call
+  5B8:20h its damage x2 too, "shl ax,1" at 58B0Dh, which 79BF9h takes when the target's effects'
+  bitset has bit 34 or its creature +1Ch is 3; the save routine's same test, 79B0Ch, fails such a
+  target with no roll). The hit's line now ends `x2 Paralyzed: a helpless target takes double`, so
+  the HP fall matches it, and a Poisoner's melee hit on a helpless target names its poison (no save
+  line to show it) and puts the 10 down to it when it lands, after the round's next swing at times
+  (`GameData.helpless`, `DiceLog._poison_taken`). The combat log panel's short levels take a hit
+  line whose working opens with a bracket (a backstab's or this x2) as the attack's damage. Seen in
+  DOSBox: Seneca's backstab for 26 on a held Templar took 26, its poison 10, the off hand's 18 the
+  last 5 (playtest/logs/2026-11-10-held-damage.md). The game's rule is unchanged.
 - **New rule: creature size as in AD&D** (Options, Weapons and armour; on by default; `RULE_SIZE`,
   DSCLOG's RULE_HI_SIZE and SIZE): a large target (the Loader's LARGE_BITS from sizes.py, in the
   tail, the header's +1842; a half-giant; anyone Enlarged) takes AD&D's large weapon dice by kind

@@ -319,6 +319,7 @@ SPELL_WINDOW = 15.0  # seconds after a spell's roll in which HP changes are put 
 RECENT_DAMAGE = 8  # spell damages kept to tell an HP loss's spell by its amount (two walls at once)
 HITS_MATCHED = 8  # weapon hits waiting on one target at most, for matching an HP fall to them
 HIT_WAIT = 3.0  # seconds after a weapon hit's damage roll with no HP lost: the target took none
+POISON_WAIT = 3.0  # seconds a Poisoner's poison on a helpless target may take to land (queued: about 0.5)
 FIGHT_GAP = 120  # game seconds without a new round after which the fight is over
 # seconds (of ours) the game's fight flag stays down, once seen up in the fight, before the fight
 # counts as over: the game clears it as a fight ends and between the arena's waves (and it is
@@ -581,6 +582,7 @@ class DiceLog:
         self._skip_choice = False
         self._hits: Dict[int, dict] = {}  # creature -> weapon hits not yet seen in its HP: their
         # damage, in order ("hits"), when the last landed ("at"), its HP then ("hp")
+        self._poison_due: Dict[int, List[float]] = {}  # creature -> when each poison with no save was queued
         self._tables: Optional[monsters.MonsterTables] = None  # the monster kinds (read once)
         self._round, self._round_time = 0, None  # this fight's round, and the game time it began
         self._dances = dance.Dances()  # (the Battle Dancers' dances, round by round)
@@ -1871,6 +1873,13 @@ class DiceLog:
             sheet = g.sheet(index)
             most = struct.unpack_from("<h", sheet, game.SHEET_MAX_HP)[0] if len(sheet) >= game.SHEET_SIZE else None
             left = f"now {hp}/{most} HP" if most and most > 0 else f"now {hp} HP"
+            poison = self._poison_taken(index, max(before - hp, 0), now)
+            if poison:  # (a Poisoner's poison on a helpless target, alone or with hits after it)
+                hit, resisted, unhurt = self._hits_seen(index, before - hp - poison, hp) \
+                    if before - hp > poison else (0, "", [])
+                also = f" and {hit} from the hit" if hit else ""
+                out.append(f"  {who} takes {poison} from {g.spell_name(kits.POISON_POWER)}{also}, {left}")
+                continue
             hit, resisted, unhurt = self._hits_seen(index, max(before - hp, 0), hp)
             for rolled in unhurt:
                 reason = self._weapon_reason(index) or "a protection or resistance took it"
@@ -1895,6 +1904,21 @@ class DiceLog:
                 out.append(f"  {who} {left} (+{hp - before})")
         self._hp = current
         return out + self.unhurt(now)
+
+    def _poison_taken(self, index: int, lost: int, now: float) -> int:
+        """The poison's damage in a fall of LOST HP when a Poisoner's poison is due on the creature
+        (queued in the last POISON_WAIT seconds) and the fall is the poison, or the poison and the
+        first weapon hits waiting; else 0."""
+        due = [at for at in self._poison_due.get(index, []) if now - at <= POISON_WAIT]
+        self._poison_due[index] = due
+        amount = game.POISON_DAMAGE[kits.POISON_POWER]
+        if not due or lost < amount:
+            return 0
+        hits = self._hits.get(index, {}).get("hits", [])
+        if lost != amount and not self._hits_prefix(hits, lost - amount):
+            return 0
+        due.pop(0)
+        return amount
 
     def _hit(self, target: int, damage: int, now: float) -> None:
         """A weapon hit's damage rolled against TARGET: to be seen in its HP."""
@@ -3023,6 +3047,12 @@ class DiceLog:
             else:
                 total *= times
                 steps = f"({steps}) x{times} backstab"
+        # a held (Paralyzed) or Out Cold target takes double: the attack routine hands the game's
+        # damage call its damage x2 too (58B0Dh, "shl ax,1"), which 79BF9h takes for a helpless target
+        helpless = g.helpless(e.glob[0])
+        if helpless and total > 0:
+            total *= game.HELPLESS_TIMES
+            steps = f"({steps}) x{game.HELPLESS_TIMES} {helpless}: a helpless target takes double"
         if total > 0 and any(x.owner == e.glob[0] and x.id == game.BIOFEEDBACK_EFFECT for x in g.effects()):
             # (the game's own 2 off a blow, 79BF9h, leaving none of 2 or less; at least 1 with the
             # spells as the manual has them: DSCLOG's BIO_SITE)
@@ -3034,7 +3064,17 @@ class DiceLog:
         if target is not None:  # so the HP it takes isn't put down to a spell being cast
             self._hit(target, total, now)
         line = f"{g.creature_name(attacker)} hits {g.combatant_name(e.glob[0])} for {total}: {steps}"
-        return ["  " + line]
+        out = ["  " + line]
+        if helpless and mode is not None and mode <= 1 and attacker < game.PARTY_SIZE \
+                and kits.POISONER in g.kit_ids(attacker):
+            # a Poisoner's melee hit queues the monsters' poison (DSCLOG's PROBE_POISON), whose save a
+            # helpless target doesn't roll (79B0Ch): no save line, so it is named here, and its HP fall,
+            # landing after the round's next swing at times, is put down to it (_poison_taken)
+            if target is not None:
+                self._poison_due.setdefault(target, []).append(now)
+            out.append(f"  {g.combatant_name(e.glob[0])} is poisoned by the hit: {g.spell_name(kits.POISON_POWER)}, "
+                       f"no saving throw ({helpless})")
+        return out
 
     def _enlarge_level(self, combatant: Optional[int]) -> int:
         """The level Enlarge counts at on COMBATANT: each Enlarge on them at its caster's level

@@ -101,8 +101,9 @@ no menu opens Effects, and closing that leaves the view at the map's corner: `sc
 `walktime.py` times a walk; `healparty.py` heals in memory (never save after). Check the dice
 log's "target AC" against `counted_ac` when foes hit too often (a vector clash once made it 255).
 A fight with the guards on purpose: `toalarm.sh`, then `restalarm.sh` (the pointer the eye first).
-Paralyzed foes (`foeset.py C eff=34`) get no save line from Hold Person, and lose more HP than the
-log shows (an open finding): free a target first, and don't check damage on held foes.
+Paralyzed foes (`foeset.py C eff=34`) get no save line from Hold Person (a held target fails every
+save unrolled), and take double from every blow (the game's rule; the dice log's `x2 Paralyzed`).
+Seneca is a Poisoner: her hits add 10 (`is poisoned by the hit`), landing after her next swing.
 
 **Git.** The repository is `daaki85/darksun-obsidian-edition` (was `milenkovicdarko`: if `git remote -v`
 still shows that, `git remote set-url origin https://github.com/daaki85/darksun-obsidian-edition.git`).

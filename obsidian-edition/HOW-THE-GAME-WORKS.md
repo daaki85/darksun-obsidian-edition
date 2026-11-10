@@ -15,6 +15,7 @@ the game, and checked here in the game's own code.
 - [Character creation](#character-creation)
 - [Initiative](#initiative)
 - [No critical hits](#no-critical-hits)
+- [Helpless targets take double](#helpless-targets-take-double)
 - [The game's two weapons](#the-games-two-weapons)
 - [Attacks from behind and backstabs](#attacks-from-behind-and-backstabs)
 - [The game's saving throws](#the-games-saving-throws)
@@ -88,7 +89,24 @@ A natural 20 on an attack always hits, and a natural 1 always misses, but
 that is all the d20 does: the game has no critical hits or fumbles. Its attack
 routine uses the d20 only for those two checks and the comparison with THAC0,
 and never passes it to the damage routine, so a hit on a 20 rolls the same
-damage as any other. A backstab is the only thing that multiplies a blow's damage by a whole number (Enlarge scales it by 10% a caster level).
+damage as any other. Two things multiply a blow's damage by a whole number: a backstab, and a
+[helpless target](#helpless-targets-take-double) (Enlarge scales it by 10% a caster level).
+
+## Helpless targets take double
+
+A creature that is **Paralyzed** (Hold Person, Hold Monster, a sand howler's gaze, Blood Flow...)
+or **Out Cold** takes **double damage from every weapon blow** that hits it, and makes no saving
+throw at all: it fails each one without a roll. The game's attack routine hands its damage
+routine two numbers, the damage and twice the damage, and the damage routine takes the second
+when its target is helpless; the save routine fails a helpless target before rolling. The x2
+comes after a backstab's multiple (a backstab x3 on a held target is x6) and before Biofeedback's
+2 off. The blow still has to hit: the d20 is rolled as ever (a held target is no easier to hit),
+and the manual says nothing of any of it. A spell's damage comes with its own second number,
+the most its dice can do, which a helpless target takes instead.
+
+The dice log shows the blow's x2 (`x2 Paralyzed: a helpless target takes double`), and a
+Poisoner's hit on a helpless target, whose poison has no save to show, as `is poisoned by the
+hit: Poison (10 damage), no saving throw (Paralyzed)`, followed by the 10 when it lands.
 
 ## The game's two weapons
 

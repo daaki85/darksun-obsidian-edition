@@ -329,6 +329,9 @@ STRENGTH_SPELL, GRACE_EFFECT, CLAW_EFFECT, FOG_EFFECT = 23, 54, 6, 27
 AFFINITY_EFFECT, BODY_WEAPONRY_EFFECT = 61, 62  # (the first natural attack at least 1d10; 2d4: 7B71Bh)
 MIRROR_EFFECT, AFRAID_EFFECT, FRIENDS_EFFECT = 25, 17, 74
 ENLARGE_EFFECT = 16
+# Paralyzed (Hold Person, Hold Monster...): with Out Cold, what the game calls helpless (GameData.helpless):
+# no saving throw, and a weapon's blow does double damage (the attack routine's damage x2, 58B0Dh)
+PARALYZED_EFFECT, HELPLESS_TIMES = 34, 2
 IMAGE_CHANCE, REFLECT_CHANCE = 75, 50  # (an image taking a blow or a foe's spell: DSCLOG's)
 FRIENDS_MOST, SPOOK_MOST = 25, 6
 FLAMING_SPHERE = 14  # (once Cat's Grace's place)
@@ -1298,6 +1301,16 @@ class GameData:
             return []
         data = self.guest.read((self.load_seg + EFFECTS_SEG) * 16 + EFFECTS_OFF, count * 10)
         return [Effect(*struct.unpack_from("<hh", data, i * 10), data[i * 10 + 6]) for i in range(count)]
+
+    def helpless(self, combatant: int) -> Optional[str]:
+        """Why COMBATANT is helpless to the game, or None: Paralyzed (its effects' bitset, 76944h,
+        bit 34) or Out Cold (its creature's +1Ch 3), the test of the save routine (79B0Ch: no roll,
+        failed) and of the damage's (79C46h: what a helpless target takes, a blow's damage x2)."""
+        if any(x.owner == combatant and x.id == PARALYZED_EFFECT for x in self.effects()):
+            return EFFECT_NAMES[PARALYZED_EFFECT]
+        creature = self.combatant_creature(combatant)
+        rec = self.creature(creature) if creature is not None else b""
+        return "Out Cold" if len(rec) > CREATURE_STATUS and rec[CREATURE_STATUS] == OUT_COLD else None
 
     def image_chance(self, combatant: int) -> int:
         """The chance (percent) of an image of COMBATANT's Mirror Images taking a blow or a foe's

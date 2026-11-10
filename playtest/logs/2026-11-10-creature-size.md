@@ -34,7 +34,8 @@ Held (Paralyzed) foes lose more HP than the dice log shows: Seneca's hit for 6 t
 swing, a miss, took 10 (the Templar 41 -> 29 -> 19); the same on an Arena Guard made man-sized
 again (a hit for 8 took 16, a miss 10: 30 -> 4, read from memory before and after); and with the size
 rule off Jenna's hits of 10 and 12 killed a 30-HP guard. So it comes with the target being held, not
-with the size rule. Not followed further here.
+with the size rule. **Explained** in 2026-11-10-held-damage.md: the game's double damage on a
+helpless target, and Seneca's Poisoner poison (no save for a held target).
 
 Memory edits only; the game was not saved.
 
