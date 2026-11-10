@@ -806,6 +806,12 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   Cahulaks +2's) and +0Ah (its type) through live.py (the items at the far pointer DS:165Dh, 15h
   bytes each; Lex's 43 the right hand, 36 the missile slot in `fountain-user`), then I and the
   member's portrait: the slot draws the object's icon (the box's text stays the old item's).
+- **A weapon spec's grand master for a test** (2026-11-10, logs/2026-11-10-grand-mastery-large.md): write
+  the member's sheet (the far pointer DS:1661h + (creature +4) x 47h) classes (9,0,0), levels (9,0,0) and
+  +14h-+17h `01 00 00 00` (the long sword, unpacked; a sheet's +16h top bit marks them packed), then
+  `specialize.skill(sheet, ITEM_TYPE)` reads 5 (GRAND). `foeset.py C race=5` makes a kind large (a sheet
+  is shared, so one combatant of each). With every foe held, Tab chooses the nearest foe even when the
+  member can't reach it: the END menu then opens with Move 0 (E ends the turn).
 - **Every HP change with its time** (2026-11-10, logs/2026-11-10-held-damage.md): a poller of each
   combatant's HP (creature +0) every 10 ms, printing each change with the seconds since its start, run
   in the background just before Tab + Return, shows falls the dice log's lines merge or order
