@@ -621,6 +621,30 @@ class HelplessTests(unittest.TestCase):
             self.assertEqual(lines[2:], ["    Paralyzed: hit automatically, for normal damage (AD&D's held target)"]
                              if held else [])
 
+    def test_poisoner_hit_as_big_as_the_poison(self):
+        """A hit as big as the poison lands before its own poison (seen 2026-11-10, the rule on: falls of
+        7, 10 the first poison, 10 the off hand's hit, 10 its poison): the hit's, then the poison's. (The
+        poison made 18 here, the helper's hit.)"""
+        from dsloader import kits
+        log = make_game()
+        log.rules = game.RULE_HELD
+        stalker = CREATURES + STALKER * game.CREATURE_SIZE
+        struct.pack_into("<h", log.guest.mem, stalker, 100)
+        log.hp_changes(0.1)
+        set_effects(log, [(0x29, 2, game.PARALYZED_EFFECT)])
+        with mock.patch.object(log.game, "kit_ids", lambda m: [kits.POISONER] if m == 0 else []), \
+                mock.patch.dict(game.POISON_DAMAGE, {kits.POISON_POWER: 18}):
+            falls = []
+            for now, hp in ((0.0, None), (0.05, 82), (0.45, 64), (0.9, None), (0.95, 46), (1.4, 28)):
+                if hp is None:
+                    self.hit(log, now=now)  # (for 18: 1d8 = [5] +1 weapon +12 STR 24)
+                else:
+                    struct.pack_into("<h", log.guest.mem, stalker, hp)
+                    falls += log.hp_changes(now)
+        poison = "  Mountain Stalker takes 18 from Poison (10 damage), now {} HP"
+        self.assertEqual(falls, ["  Mountain Stalker now 82 HP (-18)", poison.format(64),
+                                 "  Mountain Stalker now 46 HP (-18)", poison.format(28)])
+
     def test_poisoner_on_a_helpless_target(self):
         """A Poisoner's melee hit poisons (DSCLOG's PROBE_POISON); a helpless target rolls no save
         (79B0Ch), so the poison is named with the hit and its 10 put down to it, though it lands after

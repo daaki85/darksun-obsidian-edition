@@ -1908,13 +1908,18 @@ class DiceLog:
     def _poison_taken(self, index: int, lost: int, now: float) -> int:
         """The poison's damage in a fall of LOST HP when a Poisoner's poison is due on the creature
         (queued in the last POISON_WAIT seconds) and the fall is the poison, or the poison and the
-        first weapon hits waiting; else 0."""
+        first weapon hits waiting; else 0. A hit lands at once, its poison about 0.5 s later: a fall
+        the first waiting hits make up is theirs when they are no newer than the oldest poison due."""
         due = [at for at in self._poison_due.get(index, []) if now - at <= POISON_WAIT]
         self._poison_due[index] = due
         amount = game.POISON_DAMAGE[kits.POISON_POWER]
         if not due or lost < amount:
             return 0
-        hits = self._hits.get(index, {}).get("hits", [])
+        entry = self._hits.get(index, {})
+        hits = entry.get("hits", [])
+        times = entry.get("times", [])[-len(hits):] if hits else []
+        if times and times[0] <= due[0] and self._hits_prefix(hits, lost):
+            return 0  # (a hit as old as the poison or older lands first: its own poison comes after it)
         if lost != amount and not self._hits_prefix(hits, lost - amount):
             return 0
         due.pop(0)
@@ -1924,6 +1929,7 @@ class DiceLog:
         """A weapon hit's damage rolled against TARGET: to be seen in its HP."""
         entry = self._hits.setdefault(target, {"hits": [], "at": now, "hp": self._hp.get(target)})
         entry["hits"].append(damage)
+        entry.setdefault("times", []).append(now)  # (each hit's: the hits are taken from the front)
         entry["at"] = now
 
     def _hits_seen(self, index: int, lost: int, hp: int) -> Tuple[int, str, List[int]]:

@@ -97,3 +97,11 @@ Build 67,744 bytes (before the rebase onto the size rule's SIZE_PRE: 67,776 afte
 
 Not tried in the game: a monster's blow on a held party member (the same routine and sites; the
 unit tests run them with any target).
+
+## After the rebase (the merged build, 67,776 bytes: sites 108 and 109)
+6. **Rule on, again**: rolls of 7, 12 and 15 against "only a 20 hits" all hit for normal damage. One
+   label was wrong: the off hand's hit did exactly 10, the poison's amount, and the log called that
+   fall poison (the totals right). A hit lands at once and its poison about 0.5 s after, so a fall the
+   waiting hits make up is now theirs when they are no newer than the oldest poison due
+   (`_poison_taken`, each hit's time kept). Run again: falls of 7 (the backstab), 10 (its poison), 13
+   (the second hit), 10 (its poison), 1 (the third hit, the kill): each line right.
