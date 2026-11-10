@@ -400,11 +400,11 @@ def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="dsloader", description="Dark Sun Obsidian Edition Loader: starts Dark Sun: Shattered Lands with the mod; party, dice log and memory tools")
     sub = p.add_subparsers(dest="command", required=True)
 
-    s = sub.add_parser("view", parents=[common], help="open the party viewer window")
+    s = sub.add_parser("view", parents=[common], help="open the Loader's window")
     s.add_argument("--layout", default=DEFAULT_LAYOUT, help="layout JSON file")
     s.set_defaults(func=cmd_view)
 
-    s = sub.add_parser("launch", parents=[common], help="start the game with the dice log helper, then the viewer")
+    s = sub.add_parser("launch", parents=[common], help="start the game with the dice log helper, then the Loader's window")
     s.add_argument("--game-dir", help="the game's install folder (remembered after the first time)")
     s.add_argument("--layout", default=DEFAULT_LAYOUT, help="layout JSON file")
     s.add_argument("--window-scale", type=int, choices=(1, 2, 3, 4),
