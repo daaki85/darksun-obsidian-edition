@@ -511,7 +511,7 @@ installed the window uses its own lettering and no portraits.
 
 ## The dice log
 
-![The Loader during the arena's opening show, in the readable layout: the Characters tab with the game's own party (Gerakis's Features: Wild Fighting and his age; K'ratchek's chatkcha 5/2 attacks a round), and the dice log's last rounds: each attack with its outcome first, the d20 and the AC in columns and the working under it, round 4's initiative, the Rampager's acid and the Defiler's failed save and death, the party's PSP back, and the fight's summary](docs/dicelog.png)
+![The Loader during the arena's opening show, in the readable layout: the Characters tab with the game's own party (Gerakis's Features: Wild Fighting and his age; K'ratchek's chatkcha 5/2 attacks a round and her open sky spells and psionics), and the dice log's last rounds: each attack with its outcome first, the d20 and the AC in columns and the working under it, round 5's initiative, the Rampager's two hits and its acid (the Defiler's save made), the Defiler's death, the party's PSP back, and the fight's summary](docs/dicelog.png)
 
 **Finding something.** Type a word in **Find** above the log (Ctrl+F puts
 you there) and press Enter: every match lights up, the log jumps to the first,

@@ -597,6 +597,9 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
 
 ### Pictures for the docs
 
+- **View Character** is the inventory's first bottom icon (168,187), not 52,171 (2026-11-10). A
+  magic item for a look at its box: an item's +0 (object), +0Ah (type), +12h (name), +14h (plus),
+  +0Ch cleared, written with the inventory closed (logs/2026-11-10-memory-pass-3-and-new-cahulaks.md).
 - **The inventory panel's picture for the docs** (2026-11-05): I opens the inventory; the panel is
   `shot.sh`'s x 230-319, y 0-199, scaled 2x (`convert -crop 90x200+230+0 +repage -scale 200%`).
   A class can be tried in memory: the sheet's class byte (`SHEET_CLASSES`, 13 a ranger) and its

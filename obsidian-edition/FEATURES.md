@@ -414,7 +414,7 @@ game's attack takes it; the damage line above already has the material's
 damage off). Not for a weapon with a plus, nor for those the game spares
 (clubs, staves, the chatkcha), nor for metal.
 
-![A Bone Long Sword's item box in the game: 45 coins, "Bone" and "Long Sword", "1D8-1/1D12-1" (with creature size on), "Hit -1"](docs/hit-line-box.png)
+![A Stone Dagger's item box in the game: "Stone Dagger", "1D4-1/1D3-1" (with creature size on: a dagger does less to a large target), "Hit -2"](docs/hit-line-box.png)
 
 How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#charges-in-item-boxes).
 

@@ -63,7 +63,9 @@ while image[at]:
         print('  vector %02Xh: %04X:%04X, not its handler %04X:%04X' % ((vec,) + struct.unpack_from('<HH', mem, vec * 4)[::-1] + (seg, handler)))
     at += 3
 print('vectors in the table: %d, %s' % (vectors, 'all at their handlers' if vectors_ok else 'see above'))
-for name, end in (('extra_types', 'extra_types_end'), ('extra_names', 'tail_end')):
+# (SEG_MOVE's two tables of the game's, seg_space and area_space, sit between the names and the kits'
+# names: the game fills them as it runs, so they aren't compared)
+for name, end in (('extra_types', 'extra_types_end'), ('extra_names', 'seg_space'), ('kit_names', 'tail_end')):
     lo, hi = sym[name][1], sym[end][1]
     same = mem[tail_seg * 16 + lo:tail_seg * 16 + hi] == image[tail_paras * 16 + lo:tail_paras * 16 + hi]
     bad += not same
