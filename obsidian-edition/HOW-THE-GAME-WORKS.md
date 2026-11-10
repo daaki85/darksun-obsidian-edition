@@ -40,15 +40,14 @@ Every click of the die on the creation screen (and every change of race or sex)
 rolls a new character. From the game's code, and checked against the screen:
 
 * **Abilities.** Each score is rolled four times as 4d4 + 4 (8 to 20), the
-  best of the four kept, and the race's adjustment added. The score is then
-  raised, if need be, to the class's minimum in the manual: cleric WIS 9;
-  druid WIS 12, CHA 15; fighter STR 9; gladiator STR 13, DEX 12, CON 15;
-  preserver INT 9; psionicist CON 11, INT 12, WIS 15; ranger STR 13, DEX 13,
-  CON 14, WIS 14; thief DEX 9. A multiclass character takes the highest of
-  their classes' minimums. *Without the mod:* the game raised the class's
-  prime requisite to 17 and every other score to 9 (clerics, fighters,
-  preservers, thieves), 12 (druids, psionicists), 13 (gladiators) or 14
-  (rangers), CHA included.
+  best of the four kept, and the race's adjustment added. The game then
+  raises the class's prime requisite to 17 and every other score to 9
+  (clerics, fighters, preservers, thieves), 12 (druids, psionicists), 13
+  (gladiators) or 14 (rangers), CHA included. (With the Loader: a score is
+  raised only to the class's minimum in the manual: cleric WIS 9; druid WIS
+  12, CHA 15; fighter STR 9; gladiator STR 13, DEX 12, CON 15; preserver INT 9;
+  psionicist CON 11, INT 12, WIS 15; ranger STR 13, DEX 13, CON 14, WIS 14;
+  thief DEX 9; a multiclass character the highest of its classes' minimums.)
 * **Race adjustments** (STR, DEX, CON, INT, WIS, CHA): dwarf +1 −1 +2 0 0 −2;
   elf 0 +2 −2 +1 −1 0; half-elf 0 +1 −1 0 0 0; half-giant +4 −5 +2 −5 −3 −3;
   halfling −2 +2 −1 0 +2 −1; mul +2 0 +1 −1 0 −2; thri-kreen 0 +2 0 −1 +1 −2.
@@ -530,20 +529,15 @@ destroyed` (code: DSUN.EXE 7ADB7h, the number at 7AE01h-7AE48h, the d20 at 7AE4D
 
 **With "Spells and psionics as the manual describes them"** (the default) all of the above is the game's rule
 only with the box unticked. Ticked, the mod takes over where the game works out its number
-(7AE01h) and uses AD&D's turning table instead ([the table](FEATURES.md#spells-and-psionics-as-the-manual-describes-them)):
-its rows by hit dice (1 or less, 2, 3-4, 5, then 6 to 11 or more; the zombie, ghast and special
-rows unused, as the game has no kinds of undead), its columns by level (1-9, 10-11, 12-13, 14 and
-more). A number is the d20 needed to **turn**: the undead is made Afraid (the effect Cause Fear
-gives; the game's own way of adding it would refuse it to the undead, who are immune to fear spells)
-for 3d4 rounds, and flees; T turns with no roll, D destroys with no roll (the game's 1000 damage),
-D\* destroys and makes the next undead of the same monster that turning reaches (up to 2d4 rolled)
-destroyed with no roll; --- is no chance, nothing rolled. A priest who rolls under the number can't
-try that undead again in the fight (another priest can): the try ends at once, the turn spent, with
-no roll. The failures are forgotten when the next fight's first round starts, and by a turning out
-of a fight, which starts a new one (so a failure from out of a fight is forgotten as that fight's
-first round starts). Magic resistance is still checked first, by the game. The dice log says the
-number, the roll and the outcome (`... needs 10+ (priest level 3 vs 2 HD, AD&D's table) -> turned:
-flees 3d4 = 7 rounds (Afraid)`).
+(7AE01h) and uses AD&D's turning table instead: [the table and what each result
+does](FEATURES.md#spells-and-psionics-as-the-manual-describes-them). How it fits the game: a
+turned undead is made Afraid with the effect Cause Fear gives (the game's own way of adding it
+would refuse it to the undead, who are immune to fear spells); a priest who failed against an
+undead and tries it again ends the try at once, the turn spent, with no roll; the failures are forgotten when the next fight's first
+round starts, and by a turning out of a fight, which starts a new one (so a failure from out of a
+fight is forgotten as that fight's first round starts). Magic resistance is still checked first, by
+the game. The dice log says the number, the roll and the outcome (`... needs 10+ (priest level 3
+vs 2 HD, AD&D's table) -> turned: flees 3d4 = 7 rounds (Afraid)`).
 
 ## Psionics
 
@@ -829,10 +823,7 @@ manual's advice to collapse the party "speeds up the game" is this), the mod's
 gear, shadows and dust, and how fast the computer runs DOSBox. Even the
 unmodded game loses a step or so for each picture it shows.
 
-Measured in the slave pens with the whole party walking, everything on
-(`playtest/framerate.py`): at 20,000 cycles, with steady pace off,
-the game showed 18.9 pictures a second and the leader walked 103 map units a
-second; with [steady pace](FEATURES.md#game-speed) on, 15.5 pictures and 112;
-at 35,000 cycles with steady pace on, 18.9 and 141. Steady pace keeps the
-walk near the game's own by leaving out the pictures that would lose too many
-steps, rather than waiting for them.
+The Loader's [steady pace](FEATURES.md#game-speed) keeps the walk near the
+game's own by leaving out the pictures that would lose too many steps, rather
+than waiting for them; its section has the pictures a second and the walking
+speeds measured with it and without.

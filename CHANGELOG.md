@@ -9,7 +9,9 @@ notes](PATCH-NOTES.md).
 A note on DSCLOG's sizes: up to #84 the figure called its "image" may be the file's, DSCLOG.EXE
 (#83's 63,680 and #84's 64,320 are the files' sizes; the image is the file less its 32-byte
 header), and the spare room beside it, up to #85, is counted from that figure. #85 names the
-file's size as such; from #86 on, both are given.
+file's size as such; from #86 on, both are given. The "image" here is the file less its header:
+from the tail (2026-11-09, after #88) that is the helper's 64 KB segment's part (DEVELOPMENT.md's
+`image_len`) and the tail together, and the spare room is the segment's.
 
 Releases before 2.12.2 give the release's line as a **Release** bullet; from 2.12.2 on it is the
 entry's first line.
@@ -40,47 +42,21 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 
 ## Next pull request (not opened yet)
 
-DSCLOG.EXE 67,776 bytes (image 67,744), 800 of its segment spare.
+DSCLOG.EXE 67,776 bytes (image 67,744: 64,736 in its segment, 3,008 in the tail), 800 of its
+segment spare.
 
-**Fixed**
-- **Graphics disappearing in a busy area** (SSI's technical note 2712 for Wake of the Ravager, the
-  same engine): the game's picture cache (DSUN.EXE 25FA6h) has 300 slots for every wall, door,
-  figure and item picture drawn and gives none back until an area loads, so past 300 a new picture
-  had no slot and wasn't drawn. DSCLOG's PIC_REUSE (sites 26009h, 260CCh, 2612Bh; always on): with
-  all taken, a slot out of memory that no wall (DS:574Eh) and no map thing (+0Fh) names is reused,
-  the Loader's STALE ones first, searching round from after the last reused (the inventory's icons,
-  let go once drawn, took one slot in turn otherwise: 3,590 reuses in a cycle); its picture goes in
-  the first gap of the store it fits, else past the furthest end. The pens hold 203 slots on
-  arrival and walking adds none. Seen in DOSBox: 145 items of different kinds dropped in the pens,
-  300 slots at the 9th dozen, then 18 reused, the store's end unchanged, every thing with its own
-  picture, the inventory, a walk away and back all as before
-  (playtest/logs/2026-11-09-picture-slot-reuse.md).
-
-**Changed**
+**New**
 - **New rule: held targets as in AD&D** (Options, Weapons and armour; on by default; `RULE_HELD`,
-  the Loader's `held_hit`, DSCLOG's `RULE_HI_HELD` 8000h, the last of `rules_hi`'s bits): a blow on a
-  Paralyzed or Out Cold creature hits automatically and does normal damage, as the 2nd edition
-  PHB's Table 51 has it ("defender sleeping or held: automatic"), where the game rolled the d20 and
-  doubled the damage. DSCLOG's HELD: `HELD_HIT` (589E9h, the natural 20's "cmp word [bp-6],14h": its
-  ZF made in the handler for the JE to the hit, set too for a helpless target) and `HELD_DAMAGE`
-  (58B0Dh, "mov ax,[bp-4] / shl ax,1": what a helpless target takes, x2 only without the rule);
-  `HELD_NOW` the game's own test (effect 34 on DS:494Ah's combatant, or its creature's +1Ch 3). Both
-  sides alike. AD&D's killing blow once no other fighting is going on is left out. The dice log:
+  the Loader's `held_hit`, DSCLOG's `RULE_HI_HELD` 8000h and HELD: `HELD_HIT` at 589E9h, `HELD_DAMAGE`
+  at 58B0Dh): a blow on a Paralyzed or Out Cold creature hits automatically and does normal damage,
+  as the 2nd edition PHB's Table 51 has it ("defender sleeping or held: automatic"), where the game
+  rolled the d20 and doubled the damage. Both sides alike; AD&D's killing blow once no other
+  fighting is going on is left out. The dice log:
   `    Paralyzed: hit automatically, for normal damage (AD&D's held target)` under the attack, no x2.
-  Seen in DOSBox (playtest/logs/2026-11-10-held-damage.md): with the rule, d20s of 8, 5 and 9 against
-  "only a 20 hits" all hit a held Templar for their damage (6, 9: the HP falls matched); unticked, the
-  same setup missed on 12s and doubled the backstab. tests/test_held.py runs both sites in Unicorn.
-- **The dice log shows the game's double damage on a helpless target**: a weapon blow on a
-  Paralyzed or Out Cold creature does double (the attack routine, 5883Ah, hands the damage call
-  5B8:20h its damage x2 too, "shl ax,1" at 58B0Dh, which 79BF9h takes when the target's effects'
-  bitset has bit 34 or its creature +1Ch is 3; the save routine's same test, 79B0Ch, fails such a
-  target with no roll). The hit's line now ends `x2 Paralyzed: a helpless target takes double`, so
-  the HP fall matches it, and a Poisoner's melee hit on a helpless target names its poison (no save
-  line to show it) and puts the 10 down to it when it lands, after the round's next swing at times
-  (`GameData.helpless`, `DiceLog._poison_taken`). The combat log panel's short levels take a hit
-  line whose working opens with a bracket (a backstab's or this x2) as the attack's damage. Seen in
-  DOSBox: Seneca's backstab for 26 on a held Templar took 26, its poison 10, the off hand's 18 the
-  last 5 (playtest/logs/2026-11-10-held-damage.md). The game's rule is unchanged.
+  How: [Held targets](obsidian-edition/DEVELOPMENT-RULES.md#held-targets). Seen in DOSBox
+  (playtest/logs/2026-11-10-held-damage.md): with the rule, d20s of 8, 5 and 9 against "only a 20
+  hits" all hit a held Templar for their damage (6, 9: the HP falls matched); unticked, the same
+  setup missed on 12s and doubled the backstab. tests/test_held.py runs both sites in Unicorn.
 - **New rule: creature size as in AD&D** (Options, Weapons and armour; on by default; `RULE_SIZE`,
   DSCLOG's RULE_HI_SIZE and SIZE): a large target (the Loader's LARGE_BITS from sizes.py, in the
   tail, the header's +1842; a half-giant; anyone Enlarged) takes AD&D's large weapon dice by kind
@@ -89,12 +65,8 @@ DSCLOG.EXE 67,776 bytes (image 67,744), 800 of its segment spare.
   or Mammal (a person) are saved against at once by a large target (SIZE_SPARED from SAVE_SUM). The
   dice log notes both. Seen in DOSBox: "1d12 for 1d8: a large target", "1d3 for 1d4", "Guard is too
   big for Hold Person -> unaffected", a man-sized foe's save as before
-  (playtest/logs/2026-11-10-creature-size.md). +320 bytes of the segment, +66 of the tail
-- **Each magic cahulaks its own glow**: the caravan's Cahulaks +2 now has an object and a picture of
-  its own (icons.ICONS' "Cahulaks +2", object 2672, picture 2673 and its item box copy, DSCLOG's
-  BOX_TALL): every pixel of its blades in the water's blues, where Legcrusher's Cahulaks +1 keeps the
-  game's object's fire shimmer on every other. ITEMS.md's two rows say what each is, not how it
-  was made. Seen in DOSBox (the two objects put on Lex's items in memory: the inventory and the box)
+  (playtest/logs/2026-11-10-creature-size.md). How: [Creature
+  size](obsidian-edition/DEVELOPMENT-RULES.md#creature-size). +320 bytes of the segment, +66 of the tail
 - **The large dice in the item box** (the creature size rule; DSCLOG's SIZE_LINE at 72AA7h, after
   7286Fh draws a weapon's damage line, and SIZE_PRE at 72A8Ah, before it): an item box's damage line
   `1D8-1/1D12-1`; Shillelagh's line `1D6+1` (AD&D's against smaller foes; the game's 2D4 its large),
@@ -103,16 +75,15 @@ DSCLOG.EXE 67,776 bytes (image 67,744), 800 of its segment spare.
   tried and set aside). Seen in DOSBox. +464 bytes of the segment
 - **New rule: cahulaks as Dark Sun's rules have them** (Options, Weapons and armour; on by default;
   `RULE_CAHULAKS`, DSCLOG's RULE_HI_CAHULAKS and CAHULAKS): a head in each hand, the off head's one
-  attack more a round (CAH_MORE in OFF_HAND_HALVES: the attack and the DAM lines) under AD&D's
-  two-weapon penalties whatever that rule (CAH_TWO at 59627h, PROBE_TWO's CAH_ADJUST: -2 the main
-  head's swings, CAH_SWING at 589B6h: -4 the off head's, the round's last; DEX's reaction adjustment
-  added, no better than 0); a hit that does damage tangles a man-sized or smaller target failing a
-  save against petrification (its sheet's +39h, a d20): it loses its next turn, as Whirlwind's sweep
-  (CAH_HIT at 58B54h). Not half-giants, nor the Large and shapeless by name (cahulaks.py's BIG, a bit
-  a combatant in the far block, the header's +1840). The dice log names each head's penalty and the
-  tangle's save (KIND_MANUAL 10). Seen in DOSBox: two swings a round at 14+ and 16+ for Lex at DEX
-  10, the tangle's saves made and failed, a tangled Templar's next turn gone
-  (playtest/logs/2026-11-09-cahulaks.md).
+  attack more a round under AD&D's two-weapon penalties whatever that rule (-2 the main head's
+  swings, -4 the off head's, the round's last; DEX's reaction adjustment added, no better than 0);
+  a hit that does damage tangles a man-sized or smaller target failing a save against
+  petrification: it loses its next turn, as Whirlwind's sweep. Not half-giants, nor the large and
+  the shapeless (cahulaks.py's BIG, a bit a combatant in the far block, the header's +1840). The
+  dice log names each head's penalty and the tangle's save. How:
+  [Cahulaks](obsidian-edition/DEVELOPMENT-RULES.md#cahulaks). Seen in DOSBox: two swings a round at
+  14+ and 16+ for Lex at DEX 10, the tangle's saves made and failed, a tangled Templar's next turn
+  gone (playtest/logs/2026-11-09-cahulaks.md).
 - **More cahulaks in the world** (with the new magic weapons, `worldgear.cahulaks_chunks`): Legcrusher's
   two clubs a Cahulaks +1 (a copy of the game's with its shining icon, its Cause Light Wounds taken off: a plain +1;
   `dataitems.with_items_removed`, new); the elven caravan's buried Cahulaks +1 made +2 (32,400); the
@@ -122,64 +93,32 @@ DSCLOG.EXE 67,776 bytes (image 67,744), 800 of its segment spare.
   2670/2671 the bone one's heads in the metal polearm's colours, BOX_TALL too), counted as cahulaks
   by every rule (the cahulaks' rule's sites, the half-giants' hands, the kits, restrict.py, the dice
   log, specialization, the figure's drawing).
-- **Large: the six of one great tusked figure** (the game's race 12, kind 31: the Magera, Blind One,
-  Slave Leaders, Wagon Guard, Worker and the monster Guard), the user's call. The cahulaks' "too big"
-  now comes from sizes.py (large or bigger, by race and name: the human Guards stay man-sized), no
-  longer a list of names of its own (`cahulaks.why_not`, `big_table` reading each creature's race).
-- **Creature sizes** (`dsloader/sizes.py`, for rules to go by; the game keeps none): AD&D's T to G,
-  people by race (half-giants L, halflings S, thri-kreen M, a guess at 7 feet), the rest by name
-  from AD&D's and Dark Sun's monster books, 27 the mod's guesses (UNSURE, marked "?"); a Size column
-  in CREATURES.md, tested against sizes.py.
-- **The creatures' table** (obsidian-edition/CREATURES.md, made by `dsloader.doccreatures` from the
-  game's data): every creature the game defines (189, one a name and race, the default party left
-  out), its figure as the game draws it standing (docs/creatures/; the fighting picture's where that
-  shows much more: the Bulette and the Silt Horror come up from the ground to fight) and whether the
-  cahulaks can tangle it (`cahulaks.why_not`). Also kept from being tangled, the user's call: the
-  spiders (Dark Spider, Spider Mage, the "-tunk!" princes), the Sand Howler, Screamer Beetle, Xorn,
-  Strine, Daggoran, Magera and Alita (`cahulaks.UNTANGLED`).
-- **Cahulaks drawn as a pair**: a short haft and a hooked four-bladed head in each hand (both at
-  the hips walking), not one hook in one hand (spritegear's CAHULAKS shape; the left hand given the
-  right's). And with half-giants' two-handed weapons in one hand, the cahulaks still take both
-  hands (DSCLOG's PROBE_TWO_HANDED by the type's place in the table, TH_CAHULAKS; KIT_FORBIDS and
-  restrict.py: a half-giant Twin-blade can't pair them).
-- **The move-silently labels say "Silent"**: the inventory screen's thief row reads `SLNT` (it read
-  `MOVE`, beside View Character's MOVE, the character's movement), and the item boxes' stealth lines
-  `Silent +10` (boots) and `Silent 95%` (the Boots of Elvenkind) for `Move +10` and `Move 95%`: the
-  Boots of Speed's box read as if every pair of boots added movement (the user's catch). DSCLOG's
-  L_MOVE, IB_QUIET and IB_ELF_QUIET; its sizes unchanged. docs/gear-boxes.png and docs/elvenkind.png
-  retaken. Seen in DOSBox: playtest/logs/2026-11-09-silent-labels.md.
-- **The mod's magic gear with no plus or power glows on the figures**: the Boots of Speed, the
-  Cloak and Boots of Elvenkind, the Girdles of Back Defense and of Urnst (and the Amulet of Magic
-  Resistance, should a figure ever show the neck), by type (`sprites.MAGIC_TYPES`): the glow had
-  gone by a plus or a power only.
 - **New: the Boots of Speed** (the DMG's; the user's item), worn on the feet by anyone: in a fight the
   wearer's movement doubled and AC 2 better while it can move (not Stuck, Paralyzed or Slowed);
   nothing out of a fight. DSCLOG's type SPEED_BOOTS (the 31st extra type, the game's Boots'), name
   170h, BOOTS_MOVE (PROBE_MOVE) and BOOTS_AC (PROBE_AC); a red icon. Dagger, chief of the White Sand
   Outlaws, wears them; Hototo, their other chief, carries the Gythka +3 (its 1000th-trip gift kept).
   Seen in DOSBox: movement 240 for 120, foes' shots at AC 0 for her 2 (playtest/logs/2026-11-09-boots-of-speed.md).
-- **People the party fights who had nothing to fight with** (they struck with their fists), with
-  the new mundane items on (`worldgear.fighters`): Seref's Drajian Guards (213) and the slave
-  village's (195) the armed Drajian Guard's kit; the Lower Castle's unarmed Guard (281) the other
-  Guards'; Arant's lazy guard (267) his guards'; the White Sand Outlaws (Slave Hunters 199 and 201,
-  Hototo and Dagger, script 133: "swords readied") a bone long sword and leather, the chiefs leather
-  arm armour too; the final battle's Psionicist (257) a stone dagger; the arena's Tohr-kreen (292),
-  whose picture holds a gythka in every frame, a bone gythka. (Thri-kreen fight with their claws, as
-  their pictures show; Jake and Mow are Dagolar's guises; Egrus is dead.)
 - **The game's Polearm +1 in play:** the game defines it (object 1577) but never places or gives it
   (no script names it, not even by the negative number a create takes, and nothing holds one).
   Seref, the Draj agent at the Elven Caravan, where the cluebook puts it, carries it, with the new
   items on (`worldgear.MAGIC`): his object (203), which his encounter on the road copies too.
-- **Item boxes show a weaker material's to-hit** under a plain weapon's damage: `Hit -3` wood,
-  `Hit -1` bone, `Hit -2` stone and obsidian, as the game's attack takes it (the damage line already
-  had the material's damage off). Not with a plus, nor for the game's exempt weapons (clubs, staves,
-  the chatkcha: type +08h 80h), nor metal (DSCLOG's IB_MATERIAL, always on). Seen in DOSBox:
-  playtest/logs/2026-11-09-hit-line.md. The box puts its text below the picture, so a weapon
-  picture taller than 16 pixels (the polearms', staves', gythkas', a stone pick's, the cahulaks',
-  the striker's, up to 36; the Long Sword's is 15) put the last row at the box's edge: the box alone
-  now draws a copy 16 at most (`icons.BOX_TALL`, `BOX_SMALL`; DSCLOG's BOX_PICS, always on), the
-  inventory and the ground keeping the game's own picture (the Polearm's too, which the Loader had
-  drawn 22 everywhere; the weapon specs' picker keeps its 22).
+- **Creature sizes** (`dsloader/sizes.py`, for rules to go by; the game keeps none): AD&D's T to G,
+  people by race (half-giants L, halflings S, thri-kreen M, a guess at 7 feet), the rest by name
+  from AD&D's and Dark Sun's monster books, 25 the mod's guesses (UNSURE, marked "?", and the thri-kreen's race); a Size column
+  in CREATURES.md, tested against sizes.py.
+- **Sizes, the user's calls:** the Drummer, the monster Slave, the Xorn, the Psurlon and the
+  Psurlon Adept large (sizes.py, CREATURES.md). And CREATURES.md draws each creature with its own
+  picture: the doc tool had taken the next picture number, meant for the burrowers, for 20 others
+  (Gilal a coffin, the Hermit a cloth, 14 people an elf or spearman on a box); only the Bulette, the
+  Fire Eel and the Silt Horror use their fighting picture (`doccreatures.BURROWERS`).
+- **The creatures' table** (obsidian-edition/CREATURES.md, made by `dsloader.doccreatures` from the
+  game's data): every creature the game defines (189, one a name and race, the default party left
+  out), its figure as the game draws it standing (docs/creatures/; the fighting picture's where that
+  shows much more: the Bulette, the Fire Eel and the Silt Horror come up from the ground or the silt to fight) and whether the
+  cahulaks can tangle it (`cahulaks.why_not`). Also kept from being tangled, the user's call: the
+  spiders (Dark Spider, Spider Mage, the "-tunk!" princes), the Sand Howler, Screamer Beetle, Xorn,
+  Strine, Daggoran, Magera and Alita (`cahulaks.UNTANGLED`).
 - **Spells and psionics as the manual describes them** (a new rule change, on by default, from the
   next start: `spells_manual`, `gamepatch.SPELLS_MANUAL`; the spell records and DSCLOG sites; from
   reports/spells-against-the-manual.md, which now says what was done with each of its points):
@@ -264,16 +203,6 @@ DSCLOG.EXE 67,776 bytes (image 67,744), 800 of its segment spare.
   level of the old class, and every prime requisite checked (the old class's at 15+, the new one's
   at 17+; the game checked one, WIS for rangers, druids and psionicists). Seen in DOSBox with
   resting and the monsters: playtest/logs/2026-11-09-group-4.md.
-- **Turn Undead in the dice log:** `Seneca turns Guard: d20 = 11, needs 7+ (priest level 3 vs 2 HD)
-  -> destroyed` / `-> not turned`, and `Zombie is destroyed by Turn Undead` in place of its HP line;
-  the floating name over the cleric says "Turn Undead" (was "special attack 190"). Turn Undead is
-  the clerics' button on the USE screen (spell 190, no slot): it tries each undead in its area, one
-  at a time, each with a d20 of its own against 10 + 3 x (its row - the level's), and a success
-  destroys it (the game has no fleeing: a failure calls an empty routine); seen in DOSBox: no limit
-  of uses, the same undead can be tried again (HOW-THE-GAME-WORKS's new Turn Undead section,
-  against AD&D's table; playtest/logs/2026-11-08-turn-undead.md). With the manual's spells, the
-  record carries the priest's and the undead's creatures, so a turning out of a fight, which starts
-  one and numbers the combatants afresh before the Loader reads it, names them (it said "?").
 - **A fight's summary as it ends** (mock-up G's): `Fight over: 2 rounds, 1 kill; the party dealt 28
   damage and took 6`, then each member's attacks hit, damage dealt, kills and damage taken, written
   once the game's fight flag has been down 2 seconds (each arena wave gets its own). A kill goes to
@@ -290,6 +219,71 @@ DSCLOG.EXE 67,776 bytes (image 67,744), 800 of its segment spare.
   each at 4.5:1 or more on the log). A hit's damage and the HP left are filled into its line as their
   own lines arrive. The log's own lines are kept: Save..., the crash and freeze reports and the
   layout switched off use them. (Tests: `test_ledger`.)
+
+**Changed**
+- **The dice log shows the game's double damage on a helpless target**: a weapon blow on a
+  Paralyzed or Out Cold creature does double (the attack routine, 5883Ah, hands the damage call
+  5B8:20h its damage x2 too, "shl ax,1" at 58B0Dh, which 79BF9h takes when the target's effects'
+  bitset has bit 34 or its creature +1Ch is 3; the save routine's same test, 79B0Ch, fails such a
+  target with no roll). The hit's line now ends `x2 Paralyzed: a helpless target takes double`, so
+  the HP fall matches it, and a Poisoner's melee hit on a helpless target names its poison (no save
+  line to show it) and puts the 10 down to it when it lands, after the round's next swing at times
+  (`GameData.helpless`, `DiceLog._poison_taken`). The combat log panel's short levels take a hit
+  line whose working opens with a bracket (a backstab's or this x2) as the attack's damage. Seen in
+  DOSBox: Seneca's backstab for 26 on a held Templar took 26, its poison 10, the off hand's 18 the
+  last 5 (playtest/logs/2026-11-10-held-damage.md). The game's rule is unchanged.
+- **Each magic cahulaks its own glow**: the caravan's Cahulaks +2 now has an object and a picture of
+  its own (icons.ICONS' "Cahulaks +2", object 2672, picture 2673 and its item box copy, DSCLOG's
+  BOX_TALL): every pixel of its blades in the water's blues, where Legcrusher's Cahulaks +1 keeps the
+  game's object's fire shimmer on every other. ITEMS.md's two rows say what each is, not how it
+  was made. Seen in DOSBox (the two objects put on Lex's items in memory: the inventory and the box)
+- **Large: the six of one great tusked figure** (the game's race 12, kind 31: the Magera, Blind One,
+  Slave Leaders, Wagon Guard, Worker and the monster Guard), the user's call. The cahulaks' "too big"
+  now comes from sizes.py (large or bigger, by race and name: the human Guards stay man-sized), no
+  longer a list of names of its own (`cahulaks.why_not`, `big_table` reading each creature's race).
+- **Cahulaks drawn as a pair**: a short haft and a hooked four-bladed head in each hand (both at
+  the hips walking), not one hook in one hand (spritegear's CAHULAKS shape; the left hand given the
+  right's). And with half-giants' two-handed weapons in one hand, the cahulaks still take both
+  hands (DSCLOG's PROBE_TWO_HANDED by the type's place in the table, TH_CAHULAKS; KIT_FORBIDS and
+  restrict.py: a half-giant Twin-blade can't pair them).
+- **The move-silently labels say "Silent"**: the inventory screen's thief row reads `SLNT` (it read
+  `MOVE`, beside View Character's MOVE, the character's movement), and the item boxes' stealth lines
+  `Silent +10` (boots) and `Silent 95%` (the Boots of Elvenkind) for `Move +10` and `Move 95%`: the
+  Boots of Speed's box read as if every pair of boots added movement (the user's catch). DSCLOG's
+  L_MOVE, IB_QUIET and IB_ELF_QUIET; its sizes unchanged. docs/gear-boxes.png and docs/elvenkind.png
+  retaken. Seen in DOSBox: playtest/logs/2026-11-09-silent-labels.md.
+- **The mod's magic gear with no plus or power glows on the figures**: the Boots of Speed, the
+  Cloak and Boots of Elvenkind, the Girdles of Back Defense and of Urnst (and the Amulet of Magic
+  Resistance, should a figure ever show the neck), by type (`sprites.MAGIC_TYPES`): the glow had
+  gone by a plus or a power only.
+- **People the party fights who had nothing to fight with** (they struck with their fists), with
+  the new mundane items on (`worldgear.fighters`): Seref's Drajian Guards (213) and the slave
+  village's (195) the armed Drajian Guard's kit; the Lower Castle's unarmed Guard (281) the other
+  Guards'; Arant's lazy guard (267) his guards'; the White Sand Outlaws (Slave Hunters 199 and 201,
+  Hototo and Dagger, script 133: "swords readied") a bone long sword and leather, the chiefs leather
+  arm armour too; the final battle's Psionicist (257) a stone dagger; the arena's Tohr-kreen (292),
+  whose picture holds a gythka in every frame, a bone gythka. (Thri-kreen fight with their claws, as
+  their pictures show; Jake and Mow are Dagolar's guises; Egrus is dead.)
+- **Item boxes show a weaker material's to-hit** under a plain weapon's damage: `Hit -3` wood,
+  `Hit -1` bone, `Hit -2` stone and obsidian, as the game's attack takes it (the damage line already
+  had the material's damage off). Not with a plus, nor for the game's exempt weapons (clubs, staves,
+  the chatkcha: type +08h 80h), nor metal (DSCLOG's IB_MATERIAL, always on). Seen in DOSBox:
+  playtest/logs/2026-11-09-hit-line.md. The box puts its text below the picture, so a weapon
+  picture taller than 16 pixels (the polearms', staves', gythkas', a stone pick's, the cahulaks',
+  the striker's, up to 36; the Long Sword's is 15) put the last row at the box's edge: the box alone
+  now draws a copy 16 at most (`icons.BOX_TALL`, `BOX_SMALL`; DSCLOG's BOX_PICS, always on), the
+  inventory and the ground keeping the game's own picture (the Polearm's too, which the Loader had
+  drawn 22 everywhere; the weapon specs' picker keeps its 22).
+- **Turn Undead in the dice log:** `Seneca turns Guard: d20 = 11, needs 7+ (priest level 3 vs 2 HD)
+  -> destroyed` / `-> not turned`, and `Zombie is destroyed by Turn Undead` in place of its HP line;
+  the floating name over the cleric says "Turn Undead" (was "special attack 190"). Turn Undead is
+  the clerics' button on the USE screen (spell 190, no slot): it tries each undead in its area, one
+  at a time, each with a d20 of its own against 10 + 3 x (its row - the level's), and a success
+  destroys it (the game has no fleeing: a failure calls an empty routine); seen in DOSBox: no limit
+  of uses, the same undead can be tried again (HOW-THE-GAME-WORKS's new Turn Undead section,
+  against AD&D's table; playtest/logs/2026-11-08-turn-undead.md). With the manual's spells, the
+  record carries the priest's and the undead's creatures, so a turning out of a fight, which starts
+  one and numbers the combatants afresh before the Loader reads it, names them (it said "?").
 - **The combat log panel's lines are in a smaller font,** 7 pixels a line where the game's is 9: 8
   lines docked (was 6), 14 expanded (was 11). The glyphs are the X11 misc-fixed 4x6 font's (public
   domain) with the game's drop shadow (`smallfont.py`); the header, buttons and filters keep the
@@ -328,7 +322,9 @@ DSCLOG.EXE 67,776 bytes (image 67,744), 800 of its segment spare.
   drawing it shows about all the pictures the game draws while the whole party walks (18.9 a
   second) and walks fastest (141 map units a second, against 112 at 20,000), for about 30% of a
   core in DOSBox. A speed already chosen is kept; Faster stays for older computers.
-- **The helper's room** (DEVELOPMENT.md's budget, corrected with each step): the cheaper drawing
+
+**Changed: DSCLOG's room**
+- **The helper's room** ([DEVELOPMENT.md's limits](obsidian-edition/DEVELOPMENT.md#the-limits)): the cheaper drawing
   made the helper 944 bytes bigger (448 bytes left in its 64 KB segment) and its far block 2 KB. A
   first memory pass freed 3,136 bytes of the segment (448 -> 3,584 spare) and 190 paragraphs of
   upper memory (the helper with its PSP 65,248 -> 62,208 bytes; the largest free piece 34,320 ->
@@ -346,12 +342,26 @@ DSCLOG.EXE 67,776 bytes (image 67,744), 800 of its segment spare.
   see-through, the ring, the panel's colours, labels, to-hit, Turn Undead, item names and types,
   next-level XP, the Effects screen, Look, creation, a shop). With the manual's spells, the
   monsters, resting and dual-classing, and the audit's fixes (their per-fight tables moved to the
-  far block), the helper ends the pull request with 2,736 bytes of its segment spare, 102 bytes
-  free in the far block (the HMA) and 357 paragraphs of upper memory spare.
+  far block), and what came after (the Boots of Speed, the picture slots' reuse, the cahulaks,
+  creature size, held targets), the helper has
+  800 bytes of its segment spare, 36 bytes free in the far block (the HMA) and 230 paragraphs of
+  upper memory spare (the build of 2026-11-10: DEVELOPMENT.md's limits).
 - The helper counts the game's page flips (`flip_count`, header +1832), for a frame rate:
   `playtest/framerate.py` reads it beside steady pace's frames left undrawn.
 
 **Fixed: the game**
+- **Graphics disappeared in a busy area** (SSI's technical note 2712 for Wake of the Ravager, the
+  same engine): the game's picture cache (DSUN.EXE 25FA6h) has 300 slots for every wall, door,
+  figure and item picture drawn and gives none back until an area loads, so past 300 a new picture
+  had no slot and wasn't drawn. DSCLOG's PIC_REUSE (sites 26009h, 260CCh, 2612Bh; always on): with
+  all taken, a slot out of memory that no wall (DS:574Eh) and no map thing (+0Fh) names is reused,
+  the Loader's STALE ones first, searching round from after the last reused (the inventory's icons,
+  let go once drawn, took one slot in turn otherwise: 3,590 reuses in a cycle); its picture goes in
+  the first gap of the store it fits, else past the furthest end. The pens hold 203 slots on
+  arrival and walking adds none. Seen in DOSBox: 145 items of different kinds dropped in the pens,
+  300 slots at the 9th dozen, then 18 reused, the store's end unchanged, every thing with its own
+  picture, the inventory, a walk away and back all as before
+  (playtest/logs/2026-11-09-picture-slot-reuse.md).
 - **Alagorn told two items wrong** (script 212 and the Loader's copies of it): the Quicksilver Glove
   as "Quicksilver Gauntlets" that graft a weapon to the hand (it casts Detonate on every hit), the
   Helm of Contemplation as a shield against psionic attacks (it is Gaze Reflection). His menus name

@@ -37,6 +37,7 @@ running the game, the Loader's window and its dice log are in the
     - [AD&D's class tables](#adds-class-tables)
     - [CON as in AD&D](#con-as-in-add)
     - [Ages and magical aging](#ages-and-magical-aging)
+    - [Dual-classing as the manual has it](#dual-classing-as-the-manual-has-it)
     - [Level cap by XP](#level-cap-by-xp)
   - [Weapons and armour](#weapons-and-armour)
     - [Two weapons](#two-weapons)
@@ -53,7 +54,9 @@ running the game, the Loader's window and its dice log are in the
     - [Spells saved against with the spell save](#spells-saved-against-with-the-spell-save)
     - [Fire, cold and electricity: DEX instead of a doubled d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20)
     - [Enlarge multiplies the weapon's dice only](#enlarge-multiplies-the-weapons-dice-only)
+    - [Spells and psionics as the manual describes them](#spells-and-psionics-as-the-manual-describes-them)
     - [Spells roll to hit](#spells-roll-to-hit)
+    - [Resting as in AD&D](#resting-as-in-add)
 - [More character customization](#more-character-customization)
   - [Weapon specialization](#weapon-specialization)
   - [Kits](#kits) (a page of its own: [Kits](KITS.md))
@@ -141,7 +144,7 @@ and misses' colours, as is Turn Undead's outcome (turned or destroyed a hit, not
 turned a miss); the hit points a rest or Cell Adjustment gives back are in the
 damage colour, as in the Loader's log. It never waits for a click.
 
-![The combat log in short as a fight in the slave pens is played with Tab and Enter: Lex's hit on an Arena Guard and the guard's misses, Seneca hiding in shadows and moving silently, her backstab missing and her off-hand blow hitting, the poison, the kill and its XP, each line as it happens](docs/combat-log-live.gif)
+![The combat log in short as Pehtucl's ambush at the slave pens' fountain is played with Tab and Enter: Lex's hit on an Arena Guard and the guard's misses, Seneca hiding in shadows and moving silently, her backstab missing and her off-hand blow hitting, the poison, the kill and its XP, each line as it happens](docs/combat-log-live.gif)
 
 In detail, each attack names the weapon and its dice, the d20 against what it needed, the chance
 in percent, the AC it would hit and the target's AC, and the THAC0's parts follow (the panel
@@ -180,7 +183,7 @@ there; **-** makes it smaller.
   party's lines), **Damage** (hits, damage and deaths) and **Saves** (saving
   throws and magic resistance). Its size is remembered.
 
-![The combat log expanded in a fight in the slave pens, in short: fourteen lines in its small font, under the All, Party, Damage and Saves filters](docs/combat-log-expanded.png)
+![The combat log expanded in Pehtucl's ambush at the slave pens' fountain, in short: fourteen lines in its small font, under the All, Party, Damage and Saves filters](docs/combat-log-expanded.png)
 
 How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#the-combat-log-in-the-game).
 
@@ -374,6 +377,7 @@ points:
   ([weapon specialization](#weapon-specialization)).
 
 A picture of it: [STORE and RECALL](#store-and-recall-on-the-creation-screen).
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#the-creation-screen).
 
 ### Spell slots on the USE screen
 
@@ -395,6 +399,8 @@ The numbers are the Characters tab's (see [spell slots](README.md#the-characters
 WIS bonus included, printed with the game's own text routine; they show while
 the Loader (or its command-line dice log) is running.
 
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#spell-slots-on-the-use-screen).
+
 ### Charges in item boxes
 
 An item that casts a spell with charges (the wands, the Storm Ring, the
@@ -411,7 +417,7 @@ game's attack takes it; the damage line above already has the material's
 damage off). Not for a weapon with a plus, nor for those the game spares
 (clubs, staves, the chatkcha), nor for metal.
 
-![A Bone Long Sword's item box in the game: 45 coins, "Bone Long Sword", "1D8-1", "Hit -1"](docs/hit-line-box.png)
+![A Bone Long Sword's item box in the game: 45 coins, "Bone" and "Long Sword", "1D8-1", "Hit -1"](docs/hit-line-box.png)
 
 How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#charges-in-item-boxes).
 
@@ -475,7 +481,7 @@ How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#no-manual-check).
 
 ## Rule changes
 
-Twenty-two changes that bring the game's own rules closer to AD&D, each with its
+Twenty-five changes that bring the game's own rules closer to AD&D, each with its
 own box in the Options tab's **Rule changes** section, grouped there as they
 are here: [characters](#characters), [weapons and armour](#weapons-and-armour)
 and [magic](#magic). All are on by default,
@@ -845,8 +851,8 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#level-cap-by-xp).
 |---|---|---|
 | [Two weapons](#two-weapons) | no penalty (a small bonus at DEX 5 or less), and each hand attacks at the whole rate | −2 main hand, −4 off hand, DEX's reaction adjustment added; rangers, Twin-blades and Battle Dancers none in light armour, a Justifier none in any, a Ghetto Fighter 0 and −2; the off hand attacks once a round |
 | [Half-giants' two-handed weapons](#half-giants-two-handed-weapons) | two hands for a two-handed weapon, as for anyone | a half-giant wields a two-handed weapon in one hand |
-| [Cahulaks](#cahulaks) | a plain two-handed 1d6 weapon | a head in each hand: one attack more a round at −2 and −4 (DEX added); a hit tangles a man-sized foe that fails a save against petrification: it loses its next turn |
-| [Creature size](#creature-size) | no sizes: a weapon does the same to a halfling and a Bulette; Hold Person and Charm Person take on a half-giant | a large target (a half-giant, a large monster, anyone Enlarged) takes AD&D's large weapon dice (a long sword 1d12); Hold Person and Charm Person don't take on it |
+| [Cahulaks](#cahulaks) | a plain two-handed 1d6 weapon | a head in each hand: one attack more a round at −2 and −4 (DEX added); a hit tangles a man-sized or smaller foe that fails a save against petrification: it loses its next turn |
+| [Creature size](#creature-size) | no sizes: a weapon does the same to a halfling and a Bulette; Hold Person and Charm Person take on a half-giant | a large target (a half-giant, a large monster, anyone Enlarged) takes AD&D's large weapon dice (a long sword 1d12); Hold Person, Charm Person and Charm Person or Mammal (on a person) don't take on it |
 | [Held targets](#held-targets) | a blow on a held or Out Cold creature rolls to hit as ever and does double damage | it hits automatically and does normal damage, as AD&D's held target |
 | [Rings and cloaks of protection](#rings-and-cloaks-of-protection) | no rings or cloaks of protection of its own; the mod's count in full, whatever else is worn | two rings don't add up, a ring gives no AC with magical armour, a cloak does nothing with magical or metal armour or a shield |
 | [Helms give AC 1](#helms) | AC 0 | the game's helms give AC 1 rather than 0 |
@@ -890,7 +896,7 @@ light weapon in the other. The game's own rule that the two hands can't both
 hold heavy weapons (over 30 in weight each) still stands, so no half-giant
 holds two two-handed weapons. **Cahulaks** are the exception: a pair of
 four-bladed heads on a rope, one in each hand, they take both of a half-giant's
-hands too (and a half-giant Twin-blade can't pair them with another weapon).
+hands too (and a Twin-blade, half-giant or not, can't hold them at all).
 With two weapons ready, the two-weapon penalties apply as for anyone. The inventory screen still writes "2 handed" in the
 weapon's line: that is its weapon type, not a limit.
 
@@ -906,25 +912,24 @@ rules have them** ticked (on unless unticked):
   off head, under the [two-weapon](#two-weapons) penalties whether that box is
   ticked or not: −2 for the main head's swings, −4 for the off head's (the
   round's last swing), DEX's reaction adjustment added and never better than 0.
-  Rangers, Twin-blades and Battle Dancers in light armour take none, and a
-  Ghetto Fighter 0 and −2, as with two weapons. The inventory's damage line
-  counts the extra attack.
+  Rangers in light armour (a Justifier in any) take none, and a Ghetto Fighter
+  0 and −2, as with two weapons. Twin-blades and Battle Dancers can't hold
+  cahulaks at all: a Twin-blade's kit forbids two-handed weapons (for the
+  cahulaks a half-giant's too), and a Battle Dancer's allows only long swords
+  and bows.
+  The inventory's damage line counts the extra attack.
 - **The tangle.** A hit that does damage tangles the target unless it saves
   against petrification (its own number, a d20): a tangled foe loses its next
   turn, no movement and no attack (this round's, if it has yet to act). Only a
-  man-sized or smaller foe can be tangled: not a half-giant, nor the game's
-  Large or bigger creatures (the Bulette, the Rampager, the Silt Horror, the
-  Mountain Stalker, the Otyugh, the Wyvern, the Djinn, the slaads, the Vrock,
-  the Dune Reaper, the Animated Statue, the mastyrials, the Styr, the Fire
-  Eel, the Psurlon, the Xorn, the Drummer and the monster Slaves, and the great tusked Magera, Blind One, Slave Leaders, Wagon Guards,
-  Workers and the guards of their kind), nor anything with no body a rope could hold (elementals, the Dust
-  Devil, the Insect Swarm, Evard's Tentacle, the slimes and the Shadow), nor
-  the spiders (the Dark Spider, the Spider Mage and the "-tunk!" princes), the
-  Sand Howler, the Screamer Beetle, the Strine, the Daggoran and
-  Alita.
+  man-sized or smaller foe can be tangled: not a half-giant, nor anything large
+  or bigger in [the creatures' table](CREATURES.md) (whether or not
+  [Creature size](#creature-size) is ticked), nor anything with no body a
+  rope could hold (elementals, the Dust Devil, the Insect Swarm, Evard's
+  Tentacle, the slimes and the Shadow), nor two the mod keeps from it by name
+  (the Sand Howler and the Strine).
 
-The game keeps no size for its creatures, so the list is the mod's, from
-AD&D's sizes. **[The creatures' table](CREATURES.md)** shows every creature
+The game keeps no size for its creatures, so who is too big is the mod's call,
+from AD&D's sizes. **[The creatures' table](CREATURES.md)** shows every creature
 of the game with its figure, its size and whether the cahulaks can tangle it.
 
 ```
@@ -949,7 +954,7 @@ their kind...), and **anyone Enlarged**, whatever their size.
 - **Weapon damage.** A weapon hitting a large target rolls AD&D's dice against
   large creatures; the game's dice are AD&D's against small and man-sized ones.
 
-  | Weapon | Small and man-sized (the game) | Large |
+  | Weapon | Small and man-sized | Large |
   |---|---|---|
   | Long sword | 1d8 | 1d12 |
   | Short sword | 1d6 | 1d8 |
@@ -962,7 +967,7 @@ their kind...), and **anyone Enlarged**, whatever their size.
   | Polearm | 1d10 | 2d6 |
   | Gythka | 2d4 | 2d6 |
   | Axe, quarterstaff, cahulaks, bow, sling, staff sling | as the game | the same |
-  | Shillelagh | 1d6+1 | 2d4 |
+  | Shillelagh | 1d6+1 (the game: 2d4) | 2d4 |
   | Spiritual Hammer | 1d4+1 | 1d4 |
 
   Shillelagh's 2d4 is AD&D's against large creatures, so with the rule it rolls
@@ -1016,8 +1021,8 @@ rules for them:
 - **A ring gives no AC with magical armour** (any worn armour piece, helm
   included, with a plus), but still adds to saving throws.
 - **A cloak does nothing,** neither AC nor saves, with magical armour, with
-  metal armour (Chain, Grey's Scale, Tanelyv's Armor, the Helm of
-  Contemplation) or with a shield in either hand. Natural armour is fine:
+  metal armour (Chain, Grey's Scale, Tanelyv's Armor, the Warden's Plate, the
+  Helm of Contemplation) or with a shield in either hand. Natural armour is fine:
   leather and bone (Ring, Brigandine and Scale are bone in Dark Sun), and
   plain helms. The cloak still adds to a ring.
 
@@ -1030,8 +1035,9 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#rings-and-cloaks-of-pr
 #### Helms
 
 The game's helms count as armour but give AC 0. With **Helms give AC 1**
-ticked they give 1: the plain leather Helm, Dapartea's Helm, the metal Helm of
-Contemplation and the Helm of Might. It shows on the View Character and inventory screens like
+ticked every helm gives 1, the game's and the mod's: the leather Helm (Kel
+sells one as Dapartea's Helm), the leather helm +1, the Helm of Might, the
+metal Helm of Contemplation, the Bone Helm and the Warden's Helm. It shows on the View Character and inventory screens like
 any armour, and as `AC BONUS:1` in a helm's box (right-click it), worn or not.
 
 How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#helms).
@@ -1042,8 +1048,8 @@ Two monsters' hits can destroy an item: the **Rampager's acid** a worn piece
 of armour, and the **Babau's corroding touch** (the game's; with [the
 manual's monsters](#spells-and-psionics-as-the-manual-describes-them) the Babau has its deadly
 poison instead) a worn piece of armour and the
-melee weapon held (the first one in the character's list of held items whose
-reach, its type's +0Ah, is 1: bows, slings and chatkchas never). The game makes the check on every such hit, whether or not
+melee weapon held (the first one in the character's list of held items with a
+melee reach: bows, slings and chatkchas never). The game makes the check on every such hit, whether or not
 the target's saving throw against the attack succeeds, and shows its own
 message when the item goes ("Armor is corroded", "Weapon is corroded"). Only
 pieces worn on the arms, legs or chest count (bracers and robes among them),
@@ -1109,9 +1115,9 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#items-saving-against-a
 | [Spells saved against with the spell save](#spells-saved-against-with-the-spell-save) | almost every spell saved against with petrification/polymorph | the spell save rather than petrification/polymorph |
 | [Fire, cold and electricity: DEX instead of a doubled d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20) | the save's d20 doubled, so most creatures shrug off a Fireball (70% to save where 35% is due) | DEX's defensive adjustment on those saves rather than a doubled d20 |
 | [Enlarge multiplies the weapon's dice only](#enlarge-multiplies-the-weapons-dice-only) | the whole melee damage multiplied, STR included | 10% a caster level on the weapon's dice, rounded up, STR and the rest added after |
-| [Spells and psionics as the manual describes them](#spells-and-psionics-as-the-manual-describes-them) | twenty-five spells' and two powers' saves, times, damage and effects the game's own way, Turn Undead destroying or doing nothing, a classless monster's level 0 for its saves, seven monsters' powers not the manual's | as the manual has them, Turn Undead by AD&D's table (turned undead flee), the monster's level its hit dice, the shadows' STR drain, the Babau's and Blue Slaad's deadly poison, the Tari's disease, the Styr's breath, the Djinn's invisibility (from the next start) |
-| [Resting as in AD&D](#resting-as-in-add) | a rest fills every member's hit points; priests' slots left unspent; the free cures only from a cleric or druid of 5th level | the priests spend their slots left on the party before the rest (poison, blindness, disease, then the most wounded) and psionicists their Cell Adjustment; then each heals 3 + CON's bonus a night |
+| [Spells and psionics as the manual describes them](#spells-and-psionics-as-the-manual-describes-them) | twenty-four spells' (and the mod's Cat's Grace) and two powers' saves, times, damage and effects the game's own way, Turn Undead destroying or doing nothing, a classless monster's level 0 for its saves, seven monsters' powers not the manual's | as the manual has them, Turn Undead by AD&D's table (turned undead flee), the monster's level its hit dice, the shadows' STR drain, the Babau's and Blue Slaad's deadly poison, the Tari's disease, the Styr's breath, the Djinn's invisibility (from the next start) |
 | [Spells roll to hit](#spells-roll-to-hit) | Acid Arrow, Turn Pebble to Boulder, Magical Stone, Condense, Minute Meteors and the touch spells never miss | they roll to hit against the target's AC, a missile's with DEX, a touch's with STR; a miss does nothing (from the next start) |
+| [Resting as in AD&D](#resting-as-in-add) | a rest fills every member's hit points; priests' slots left unspent; the free cures only from a cleric or druid of 5th level | the priests spend their slots left on the party before the rest (poison, blindness, disease, then the most wounded) and psionicists their Cell Adjustment; then each heals 3 + CON's bonus a night |
 
 #### Rangers' casting level
 
@@ -1157,7 +1163,7 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#preservers-int).
 
 #### Spells saved against with the spell save
 
-Almost every spell is marked for the game's "kind 5" save, which it treats as
+Almost every spell is marked for a save the game treats as
 petrification/polymorph; with this rule it is the spell save. The spells
 marked for paralysis/poison/death (the poison clouds, Poison, Slay Living, the
 psionic attacks) keep it, as AD&D has them, and so do three monsters' powers
@@ -1198,7 +1204,12 @@ where the game made it 22 (20 × 110%). A backstab then multiplies the
 enlarged dice. The Effects screen names it ENLARGED (+90% DICE), not
 (+90% DAMAGE).
 
-How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#enlarges-dice).
+With [Creature size](#creature-size) ticked, an Enlarged creature also counts
+as large: weapons hit it with their large dice, and Hold Person, Charm Person
+and Charm Person or Mammal (on a person) don't take on it. That is a cost of
+Enlarging a party member too.
+
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#enlarge-multiplies-the-weapons-dice-only).
 
 #### Spells and psionics as the manual describes them
 
@@ -1282,17 +1293,11 @@ it, and Dismissal's and Color Spray's level checks took it for the weakest
 there is: with the box ticked its level for saving throws is its hit dice (the
 game's level everywhere else is left as it was).
 
-**The saves that couldn't fail.** The game's saving throw (DSUN.EXE 79A71h)
-compares its total with the number needed as unsigned bytes, so the −100 its
-save modifiers give for "can't save" (Chaos for all but warriors, Cloudkill on
-creatures of 6th level or lower, Scare below 6th level, and the mod's Color
-Spray rule) makes a total such as −85, read as 171: always a save. Seen in
-DOSBox: Arena Guards "unable to save" took half Cloudkill's damage, and a Guard
-"unable to save" against Scare was never Afraid. The compare is now signed,
-whether the box is ticked or not (a bug fix, always on): "can't save" fails, even
-on a natural 20 (the game took a natural 20 as a save before adding anything;
-the patched game adds the modifiers first, and a natural 20 saves unless the
-save can't be made).
+**The saves that couldn't fail.** In the game a creature that "can't save"
+(Chaos for all but warriors, Cloudkill on the weak, Scare below 6th level, and
+this box's Color Spray) always saved. That is [a bug fixed](#the-games-bugs-fixed),
+whether the box is ticked or not: "can't save" fails, even on a natural 20
+([what the game did](HOW-THE-GAME-WORKS.md#the-games-saving-throws)).
 
 **In more detail:**
 
@@ -1316,9 +1321,9 @@ save can't be made).
   time the cloud strikes (as cast and at each round in it):
   `Cloudkill: Guard dies (under 4 HD: no save; its level for saves 3)`.
   AD&D's bands are by hit dice (4+1, 6); the game's levels are whole numbers.
-- **Feeblemind**: the game already makes INT and WIS 3 while it lasts (its
-  ability routine, 7B848h), and they come back as they were when it ends; it
-  stops spells. With the box it stops psionic powers too (each fails its power
+- **Feeblemind**: the game already makes INT and WIS 3 while it lasts, and
+  they come back as they were when it ends; it stops spells. With the box it
+  stops psionic powers too (each fails its power
   check, costing half the PSP as any failed check does:
   `Seneca is feebleminded: Biofeedback can't be used (no psionics)`), and the
   mod's Heal (with [the new spells](#6th-level-priest-spells)) cures it: `Heal cures Seneca's Feeblemind: INT and WIS as they were`.
@@ -1345,7 +1350,7 @@ save can't be made).
   any other crushing, edged or pointed damage, but a blow of 2 or less did none;
   now at least 1. The log's hit line shows it (`-2 Biofeedback`).
 
-How it is done: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#spells-and-psionics-as-the-manual-group-3).
+How it is done: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#spells-and-psionics-as-the-manual-describes-them).
 
 **The monsters as the manual describes them** (the same box). Where
 the manual (pp. 33-52) gives a monster a power its record hasn't, or the record
@@ -1383,7 +1388,7 @@ manual says, or the change would make a different spell rather than fix one:
 | Control Body | the controlled creature fights at -6 | Charmed 5 rounds, no -6 |
 | Mass Domination | up to five creatures | one |
 | Detonate | 1d10 to everyone within 10' | the target only |
-| Quicksand | held 1 turn + 1 round a level | Stuck a round at a time, put on again each round while the quicksand lasts (5d3 rounds of its own); its record's time changes nothing (seen in DOSBox) |
+| Quicksand | held 1 turn + 1 round a level | Stuck a round at a time, put on again each round while the quicksand lasts (5d3 rounds of its own); its record's time changes nothing |
 | Feeblemind | INT and WIS drop "dramatically" | to 3 (the game's own choice, an idiot's in AD&D) |
 | Chill Touch | Strength back a point an hour, repeated touches | each touch's point back after an hour |
 | Rainbow Pattern | one save, as it is cast (a time of its own: "special") | the pattern stays on the ground for 2d3 rounds of its own and makes everyone in it, the caster too, save again each turn (a round a level and damage ending a hold are the manual's: above) |
@@ -1425,7 +1430,9 @@ game. How it is done: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#spells-roll-to
 The game's rest at a fire ring fills every member's hit points, PSP and spell
 slots, and casts its free cures ([how the game rests](HOW-THE-GAME-WORKS.md#resting)).
 In AD&D a night's rest heals a hit point (the Dark Sun manual says nothing of
-it), and priests heal the party with the spells they have left. With **Resting
+it), and priests heal the party with the spells they have left. The mod takes a
+middle way between that point and the game's full heal: 3 hit points and CON's
+bonus a night (step 3 below). With **Resting
 as in AD&D** ticked, before the slots fill again:
 
 1. Each priest who can cast (Okay, not feebleminded, paralysed, charmed or
@@ -1722,7 +1729,7 @@ Cloud, Mirror Image), less any already picked. The character is already saved
 when the window opens, so EXIT can't take you back to the creation screen.
 
 Always on (it isn't a switch of its own). How it works:
-[DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#kits) (its rows for a new preserver's spells).
+[DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#preservers-first-spells).
 
 ### The game's own party
 
@@ -2237,6 +2244,15 @@ gythka). Each now carries what the armed of their kind carry, or plain gear to
 match: the outlaws bone long swords and leather, the Psionicist a stone dagger,
 the Tohr-kreen a gythka. Where, in [Every mundane weapon](ITEMS.md#every-mundane-weapon).
 
+**Cahulaks** ([their rule](#cahulaks)). **Legcrusher**, the pens'
+half-giant monster trainer, fights with a **Cahulaks +1** in place of his two
+clubs: a plain +1 copy of the game's own, its blades in the fire colours. The
+game's own Cahulaks +1, in the Elven Caravan's buried chest, is made the
+**Cahulaks +2**: still casting Cause Light Wounds on a hit, its blades glowing
+blue. The champions' mul fights with **metal cahulaks** (the game has only
+bone ones), and the dead body by the arena's stone arch holds plain bone
+cahulaks. Where, in [Items](ITEMS.md#every-magic-item).
+
 **The Boots of Speed** (the DMG's) are new: worn on the feet by anyone, in a
 fight they double the wearer's movement (Move 24 for a human's 12, "the speed
 of a fast horse") and make its AC 2 better while it can move (not Stuck,
@@ -2263,6 +2279,7 @@ dearest, the Wand of Missiles, is 65,000):
 | Items | Price |
 |---|---|
 | Magic melee weapons, and Dunesong | 20,800 a plus (41,600 for a +2; a +1 with a spell 22,000; the game's Bow +2 is 50,800) |
+| Legcrusher's Cahulaks +1; the Cahulaks +2 | 11,600 (the game's Cahulaks +1's); 32,400 (that, +20,800 for the plus more) |
 | Windlash; Skycutter | 2,800 (as the game's Sling +1); 3,500 (as its Sling +2) |
 | Plain metal weapons | 50 to 300 |
 | Bracers of defense | 5,000 a point of AC |
@@ -2270,6 +2287,7 @@ dearest, the Wand of Missiles, is 65,000):
 | Inixhide; the Ashen Robe | 6,000 |
 | Veiled Robe | 40,000 |
 | Cloak and Boots of Elvenkind | 25,000 and 20,000 |
+| Boots of Speed | 20,000 (as the game's Serpent Boots) |
 | Warden's Arms and Legs; Chest; Helm | 27,000 each; 36,000; 30,000 |
 | Arrowbane; Sunking Crown | 30,000; 40,000 |
 | Girdle of Back Defense; Golden Girdle of Urnst; Amulet of Magic Resistance | 25,000; 20,000; 35,000 |
@@ -2305,8 +2323,8 @@ first: **Leather Inixhide**, **Metal +1 Shadowseeker** in the item box.
 
 **Alagorn**, the wizard of the Painted Badlands who identifies magic items,
 tells the story of every one of the mod's magic items in [Every magic
-item](ITEMS.md#every-magic-item) but the plain Gythka +2, the Boots of Speed, the
-two girdles and the Amulet of Magic Resistance when
+item](ITEMS.md#every-magic-item) but the plain Gythka +2, the two cahulaks, the
+Boots of Speed, the two girdles and the Amulet of Magic Resistance when
 the party carries it, in the menu the game would put it in (swords, weapons,
 rings, armor, shields, clothes or other items), before "Nothing". As with the
 game's own, one story for each kind: the four pairs of bracers share one, and
@@ -2536,7 +2554,7 @@ do: [their gear is worn](#the-games-bugs-fixed) from the start too).
 What they carry is on their bodies afterwards; the Tohr-kreen falls as a dead
 Tohr-kreen of its own, Kreenfang in it. It comes once. A party that breaks out
 with Scar instead, or leaves the pens another way, doesn't meet them. (The dead
-body by the arena's stone arch has a plain gythka.)
+body by the arena's stone arch has plain bone cahulaks.)
 
 How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#the-champions-bout).
 
@@ -2672,9 +2690,12 @@ second is moved to pictures of their own.
 A new outfit's pictures go into room the game's own picture store already has
 (an outfit changed back takes its old pictures again), so gear can be changed as
 often as you like in one area (on Dark Sun Recompiled, where the store can't be
-reached, a figure near a full store keeps its outfit until the next area). Before this fix some 30 to 60 changes in one area
-filled the store, and figures, the party's and the monsters', vanished from the
-map until the next area.
+reached, a figure near a full store keeps its outfit until the next area).
+Without this, some 30 to 60 changes in one area filled the store, and figures,
+the party's and the monsters', vanished from the map until the next area. (The
+store is a different limit from the game's 300 picture slots, which [the bugs
+fixed](#the-games-bugs-fixed) also see to: "Graphics disappearing in a busy
+area".)
 
 ![The party in the arena as the game draws them (left) and with gear and shadows on (right): Gerakis with his bone long sword and gythka, Cermak with his staff and sling, Cilla (an elf) with her bone long sword and sling, each casting a shadow toward the lower right](docs/gear.png)
 
@@ -2730,13 +2751,15 @@ How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#see-through-figure
 The game makes most of its magic items' icons shine in the inventory, a shop
 and on the ground: their colours turn, as the water's and the fire's do. Some
 it left still. The Loader gives 19 of them the shine of the others: the Parting
-Staff, the Chameleon Gloves, the Hornblade, Cahulaks +1, Dag's Dagger, the
+Staff, the Chameleon Gloves, the Hornblade, the Cahulaks +1, Dag's Dagger, the
 Terror Blade, Blackmace, the Shimmer, Drake and Silk Armor, Tanelyv's and
 Grey's arm and leg pieces, the Living Cloak, the Golden Torque, Light of Dawn,
-El's Ring and the Orb of Knowledge. Cahulaks +1, Light of Dawn and El's Ring
+El's Ring and the Orb of Knowledge. The Cahulaks +1, Light of Dawn and El's Ring
 share their picture with a plain item in the game, so they get one of their own
-and the plain cahulaks and ring stay still. The Loader's own magic items shine
-in their icons too. Always on: only the pictures change.
+(the cahulaks' in the fire colours) and the plain cahulaks and ring stay still.
+That Cahulaks +1 is now Legcrusher's copy; the game's own, made the Cahulaks +2
+([New items](#new-items)), has an object and a blue glow of its own. The
+Loader's own magic items shine in their icons too. Always on: only the pictures change.
 
 How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#new-items).
 
@@ -2865,6 +2888,8 @@ What else the Effects screen shows (a spell's charges left, Enlarge's damage,
 the armour spells' AC, kits and weapon specs): [the Effects
 screen](#the-effects-screen).
 
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#spells-on-the-effects-screen).
+
 ## Game speed
 
 In the game everything on the map moves a step at each tick of its clock (96
@@ -2886,9 +2911,6 @@ rather than a slower walk. Fights draw every frame, as the game does.
 | 20,000 cycles, steady pace off | 18.9 | 103 |
 | 20,000 cycles, steady pace on | 15.5 | 112 |
 | 35,000 cycles, steady pace on | 18.9 | 141 |
-
-(Measured after the helper's drawing was made cheaper; before it, 16.8 and 80, 10.2 and 113, and
-16.0 and 113.)
 
 ![The whole party walking back and forth in the slave pens, the same clicks on both sides: with steady pace off on the left and on on the right, where the party gets to each spot sooner](docs/steady-pace.gif)
 
@@ -2985,7 +3007,7 @@ got wrong, each with a switch, are the [rule changes](#rule-changes)):
 
 | | The game | With the Loader |
 |---|---|---|
-| **Graphics disappearing in a busy area** (SSI's note 2712 for Wake of the Ravager, the same engine) | The game keeps 300 picture slots for walls, doors, figures and items lying about, and gives none back until the next area: once a visit had used 300 (items of many kinds dropped, bodies, spells, new monsters), a new picture got no slot and wasn't drawn: an item on the ground, a body, a figure, a doorway | Once all 300 are taken, a slot holding a picture nothing uses now (out of memory, named by no wall or thing on the map) is reused, its picture put where it fits in the store; checked in DOSBox with 145 items of different kinds dropped in one area: every one drawn, 18 slots reused |
+| **Graphics disappearing in a busy area** (SSI's note 2712 for Wake of the Ravager, the same engine) | The game keeps 300 picture slots for walls, doors, figures and items lying about, and gives none back until the next area: once a visit had used 300 (items of many kinds dropped, bodies, spells, new monsters), a new picture got no slot and wasn't drawn: an item on the ground, a body, a figure, a doorway | Once all 300 are taken, a slot holding a picture nothing uses now (out of memory, named by no wall or thing on the map) is reused, its picture put where it fits in the store (a different limit from the picture store [the party's outfits](#what-the-party-wears) fill) |
 | **Mirror Image** (and Reflected Image) | The images stopped no weapon blow, and took a spell for one creature three times in four whoever cast it: Armor cast on oneself was lost, an image with it | Each hit, and each foe's spell for one creature, strikes an image three times in four (Reflected Image's half the time); your own side's spells always get through ([how long it lasts](HOW-THE-GAME-WORKS.md#spells-and-effects)) |
 | **Armor** | A charge used each time any spell or blow landed on the wearer, as well as for the damage: two for each hit, and one for a friend's Bless | One charge for each damaging hit |
 | **Share Strength** (any maintained power on someone else) | Ended, it stayed on the one who got it, and could end another of the psionicist's own effects instead | It ends on everyone it was on |
@@ -2996,7 +3018,7 @@ got wrong, each with a switch, are the [rule changes](#rule-changes)):
 | **Negative Plane Protection** | Saved as against Vampiric Touch, which allows no save, so it never stopped anything | A save against paralysis, poison and death, as AD&D's against death magic: saved, the undead's touch is stopped and it takes 2d6 |
 | **Acid Arrow** | After the hit its acid never burned again: its time was a timer that only ended it, and nothing spent it a round at a time | 2d4 acid at the start of each round it lasts (a round for each started minute of its time: four for an 11th-level caster) |
 | **Scare**'s save | No one saved, of any level (a 7th-level fighter was Scared): its record allowed no save, so the save code's rules for it never ran; and those asked for an elf or half-elf priest as one creature of both races | 6th level and up always save, as the game's code means; below 6th level creatures can't save (whatever the Options: the fix below makes "can't save" fail), but an elf or half-elf priest saves as usual |
-| **"Can't save"** (Chaos for all but warriors, Cloudkill on the weak, Scare below 6th level, Color Spray with the manual's spells) | The saving throw compared its total with the number needed unsigned, so the −100 for "can't save" made a total such as −85, read as 171: the creature always saved | "Can't save" fails, even on a natural 20 ([more](#spells-and-psionics-as-the-manual-describes-them)) |
+| **"Can't save"** (Chaos for all but warriors, Cloudkill on the weak, Scare below 6th level, Color Spray with the manual's spells) | The saving throw compared its total with the number needed unsigned, so the −100 for "can't save" made a total such as −85, read as 171: the creature always saved | "Can't save" fails, even on a natural 20 (the game took a natural 20 as a save before adding anything; the patched game adds the modifiers first: [the game's saving throws](HOW-THE-GAME-WORKS.md#the-games-saving-throws)) |
 | **Cloak of Bravery** | Its +4 on saves against fear asked for a mark no spell had, so it never applied | +4 against Scare, Fear, Cause Fear and Insect Plague (and a Cloak of Fear's), and the new [Spook](#new-wizard-spells) |
 | A **berserk** or **confused** party member | Could end it fighting for the monsters' side: their side is rolled each turn, and only a charm's end put it back | Back on their own side when it ends |
 | The **fire elementals** | The resistances the wrong way round: the fire elemental hurt by +1 weapons, the lesser one only by +2 and by fire | The fire elemental needs +2 weapons and the lesser one +1, as the clue book has them, and neither takes anything from fire |

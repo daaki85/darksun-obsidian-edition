@@ -1,6 +1,6 @@
 # Development: the rules
 
-*Part of the [development notes](DEVELOPMENT.md). How each rule change, the character customization (weapon specs, kits, the starting gear) and the improved thieving are done: where the patched game calls the helper (DSCLOG), and what the Loader reads and writes. Each heading names the section of the [features page](FEATURES.md) or the [README](README.md) it explains.*
+*Part of the [development notes](DEVELOPMENT.md). How each rule change, the character customization (weapon specs, kits, the starting gear) and the improved thieving are done: where the patched game calls the helper (DSCLOG), and what the Loader reads and writes. Most headings name the section of the [features page](FEATURES.md) or the [README](README.md) they explain; the rest, a part of one or a note of their own, say which at their start.*
 
 ## Contents
 
@@ -29,12 +29,14 @@
 - [Preservers' INT](#preservers-int)
 - [Spells saved against with the spell save](#spells-saved-against-with-the-spell-save)
 - [Fire, cold and electricity: DEX instead of a doubled d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20)
-- [Enlarge's dice](#enlarges-dice)
+- [Enlarge multiplies the weapon's dice only](#enlarge-multiplies-the-weapons-dice-only)
 - [Spells roll to hit](#spells-roll-to-hit)
 - [Resting as in AD&D](#resting-as-in-add)
-- [Turn Undead, Minute Meteors and Flame Arrow as the manual](#turn-undead-minute-meteors-and-flame-arrow-as-the-manual)
-- [Spells and psionics as the manual, group 3](#spells-and-psionics-as-the-manual-group-3)
-- [The monsters as the manual describes them](#the-monsters-as-the-manual-describes-them)
+- [Spells and psionics as the manual describes them](#spells-and-psionics-as-the-manual-describes-them)
+  - [The spell records, Stinking Cloud, Chaos and Free Action](#the-spell-records-stinking-cloud-chaos-and-free-action)
+  - [Turn Undead, Minute Meteors and Flame Arrow](#turn-undead-minute-meteors-and-flame-arrow)
+  - [The saves, and the other spells and psionics](#the-saves-and-the-other-spells-and-psionics)
+  - [The monsters](#the-monsters)
 - [Weapon specialization](#weapon-specialization)
 - [Kits](#kits)
   - [The kits](#the-kits)
@@ -43,6 +45,7 @@
   - [Multiclass kits](#multiclass-kits)
   - [Where each effect goes](#where-each-effect-goes)
   - [How they're checked](#how-theyre-checked)
+- [Preservers' first spells](#preservers-first-spells)
 - [Level cap by XP](#level-cap-by-xp)
 - [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen)
 - [Fuller starting gear](#fuller-starting-gear)
@@ -51,6 +54,7 @@
 - [Buying back magical items](#buying-back-magical-items)
 - [Thief skills from AD&D's table](#thief-skills-from-adds-table)
 - [Hiding in shadows to backstab](#hiding-in-shadows-to-backstab)
+  - [A backstab multiplies the weapon's dice only](#a-backstab-multiplies-the-weapons-dice-only)
 - [Spell arrows](#spell-arrows)
 - [Picking pockets](#picking-pockets)
 
@@ -387,34 +391,9 @@ a Sentinel fighter edited, renamed and DONE kept the kit, its long sword and
 its age; with the die rolled during EDIT, a new age and the same kit and spec.
 Tests: `test_edit_keeps_its_specs`.
 
-The THAC0 (`CR_THAC0_DRAW`, whatever the rules): `THAC0: M18 R19` at `CR_AGE_X`
-on the hit points' line, the THAC0 (`CR_THAC0_BASE`) less the game's STR
-to-hit table's entry (DS:7C2h + STR) for M and its DEX missile table's
-(`DEX_REACTION`'s, + DEX) for R, no less than 0. The game works the THAC0 out
-again as the classes change, but `PROBE_THAC0` reads the kit from the party's
-sheets, not the one being made, so the creature's `+1Fh` lacks a kit chosen on
-the panel: `PROBE_THAC0` keeps the game's own, kit-less (`THAC0_GAME`,
-`THAC0_SEEN` from `CR_OPEN` on), and `CR_THAC0_BASE` applies the sheet being
-made's kit to it (`kits.thac0`: a Scholar 1 worse, a warrior's THAC0 for the
-Swashbuckler, Crusader, Battle Mage and Mind Warrior); with none worked out on
-the screen (an EDIT), the creature's `+1Fh`, its kit in it. A kit chosen or
-taken back (`KIT_SHOWN_DUE`, from `KIT_ROW`) draws the hit points and the
-THAC0 again at the click's end (`KIT_REDRAW`), after a Battle Mage's, Mind
-Warrior's or Arcanist's hit points are rolled again (`KIT_REROLL`) the age too,
-whose PSP box that puts back. The hit points' box (the 7th, `CR_HP_BOX`) is widened to x 243
-(`cr_thac0_box`; DONE's left is 244), so the game's putting it back clears the
-line. It is drawn after each redraw of the hit points: the panel's, at
-`CR_AGE` (65A89h, PSP after them), a click on CON (`CR_AGE_CON`), and `CR_HP`
-(a site at 63AC3h, a click on the hit points, and 63EDAh); a click on STR or
-DEX redraws neither, so `RL_SUM` (the scores' redraw) puts the hit points' box
-back itself (`CR_BOX_PUT`, the far call's operand and the saved backgrounds'
-segment read from the overlay's code beside its site, as `CR_NAME` does for
-PSP's), draws the hit points again (`CR_PAIR_DRAW`, shared with PSP's) and the
-THAC0. Checked in DOSBox: THAC0 18 with STR 17 and DEX 15 `M17 R18`; DEX 18
-after a roll `R16`; STR 18 `M16` at once; a click on the hit points and on CON
-keep the line; a 3rd-level preserver `M19 R20`, a Scholar `M20 R21`, a Battle
-Mage `M17 R18` (the line and the age back after its hit points are rolled
-again). Tests: `test_thac0_line`.
+The THAC0 line drawn beside the hit points, on the same redraws: [The creation
+screen](DEVELOPMENT-SCREENS.md#the-creation-screen).
+
 Before 2.13.2 the age was rolled from the name and race (`natural_start`, a
 16-bit hash, DSCLOG's `AGE_ROLL` then); a character given one keeps it, and
 `give_ages` puts that roll on its sheet, silently. `CR_AGE` and `CR_NAME` keep
@@ -744,7 +723,7 @@ own "can be dodged" flag (bit 40h of the spell's category word), which no spell
 has, so the game's save routine adds the DEX defensive adjustment from its own
 table.
 
-## Enlarge's dice
+## Enlarge multiplies the weapon's dice only
 
 ([In the features page](FEATURES.md#enlarge-multiplies-the-weapons-dice-only).)
 
@@ -869,11 +848,50 @@ the 8 hours, mode 1. Not cast: a ranger's priest spells (5B8:B1h and B6h count c
 a Dying member isn't healed (pass 2 leaves it). Tests: tests/test_group4.py (`test_rest_spells`,
 `test_rest_hp`), test_dicelog's `test_group4_lines`.
 
-## Turn Undead, Minute Meteors and Flame Arrow as the manual
+## Spells and psionics as the manual describes them
 
-([In the features page](FEATURES.md#spells-and-psionics-as-the-manual-describes-them).) Part
-of "Spells and psionics as the manual describes them" (`gamepatch.SPELLS_MANUAL`): off, the
-five patches below are left out and the game's copy has DSUN.EXE's bytes.
+([In the features page](FEATURES.md#spells-and-psionics-as-the-manual-describes-them).)
+One switch, `spells_manual` (on by default, from the next start): the patches
+in `gamepatch.SPELLS_MANUAL`; off, they are left out and the game's copy has
+DSUN.EXE's bytes, and DSCLOG's code that runs either way tells it by
+`MANUAL_ON`. The points come from reports/spells-against-the-manual.md, which
+says what was done with each.
+
+### The spell records, Stinking Cloud, Chaos and Free Action
+
+The spell records (spell s at file 41F70h + 20h x s: +4 the duration's dice,
+count low and sides high, +5 that a caster level, +7 the unit, 60 a round, -1
+charges or -9999 until removed; +12h's 80h a save negating the damage;
++1Ch..+1Eh the damage's dice; +1Fh the save, bit 0 one allowed), changed in the
+Loader's copy of DSUN.EXE: Bestow Curse and Blood Flow allow a save, a save
+negates Flaming Sphere, Solid Fog's and Minor Spell Turning's times, Cause
+Fear's, Quicksand no save, Ironskin a blow a caster level (its level divisor,
+shared with the damage formula, made 1), Turn Pebble to Boulder 3d6+8 (each
+patch named for it in `gamepatch.py`). Then three sites:
+
+- **Stinking Cloud**: the record's dice made 1d4 and DSCLOG's `STINK_SITE`
+  (76D73h, in the time's routine, which rolls the dice with no bonus) adds the
+  round.
+- **Chaos**: `CHAOS_SITE` over the save modifiers' "sub si,100" (79F80h), the
+  -100 for anyone not a warrior, skipped for a creature of INT 21 or more, or 4
+  or less.
+- **Free Action**: its handler (79406h), shared with Remove Paralysis and
+  Protection from Paralysis (the spells' table at 79936h, their words at
+  +4Ch), removes Slowed, then Paralyzed unless the creature is Poisoned; it is
+  made a loop over the effects to remove pushed on the stack, through its own
+  two far calls (their segment words, which the overlay manager fixes up, kept
+  where they were), and Free Action's word points at a start that takes Stuck
+  off first (`free_action_stuck`, `free_action_loop` and the three words).
+
+Hold Undead's level, Color Spray's and a classless creature's level for its
+saves (`HOLD_HD_SITE`, `SPRAY_SITE`, `HD_SAVE_SITE`) are with the game's own
+fixes to those spells: [The game's
+spells](DEVELOPMENT-CONTENT.md#the-games-spells). Tests: test_manual_spells
+(`test_records`, `test_stinking_cloud_round_more`, `test_free_action`,
+`test_remove_paralysis`, `test_level_sites`). Checked in DOSBox:
+playtest/logs/2026-11-08-manual-spells.md, 2026-11-08-hd-spells.md.
+
+### Turn Undead, Minute Meteors and Flame Arrow
 
 **Turn Undead** (`turn_undead_manual`, 7AE01h, `mov al,[es:bx+24h]`, 4 bytes:
 DSCLOG's `TURN_SITE`, `tu_site`). The game's turning of one undead (7ADB7h:
@@ -940,10 +958,9 @@ way, the refusal, D\*'s count, the Afraid call's arguments), `test_flame_arrow_c
 `test_turn_cells`, `test_meteors_to_hit`; test_manual_spells' `test_records`;
 test_spellbook's `test_casts_a_cast`.
 
-## Spells and psionics as the manual, group 3
+### The saves, and the other spells and psionics
 
-([In the features page](FEATURES.md#spells-and-psionics-as-the-manual-describes-them).)
-All in `gamepatch.SPELLS_MANUAL` (off: DSUN.EXE's bytes). DSCLOG's sites are
+DSCLOG's sites are
 `BLUR_SITE` ... `CELL_SITE` (`NS_IMAGE` + 78 to 87, in `SITE_TAB`'s order);
 code that runs either way tells the switch by `MANUAL_ON` (Stinking Cloud's
 record's dice made 41h, as the Loader's `GameData.spells_manual`). The dice
@@ -1028,10 +1045,9 @@ the patches, `ACID_ROUNDS`, `ACID_ONCE`, `GR_SHADOWED`, Heal's cure,
 `CHILL_UNDEAD`), test_dicelog's `ManualGroup3Tests`. Checked in DOSBox:
 playtest/logs/2026-11-09-group-3.md.
 
-## The monsters as the manual describes them
+### The monsters
 
-([In the features page](FEATURES.md#spells-and-psionics-as-the-manual-describes-them); the same
-switch, `gamepatch.SPELLS_MANUAL`; the research: playtest/logs/2026-11-09-group-4-research.md.)
+(The research: playtest/logs/2026-11-09-group-4-research.md.)
 
 The monster kinds' table (load segment 3E45h, file 43850h, `gamepatch.KINDS_FILE`: a dword of
 properties a kind, its resistance class at +A8h, a class's four masks at +D2h and percents at +DAh,
@@ -1708,34 +1724,8 @@ How each of these is done:
   `KIT_AT`, asleep too; `KIT_BANS`), from `DUAL_BANS` (a kit's number, then a dword of class bits;
   `kits.DUAL_BANS`). The slot kits' tables (`PROBE_SLOTS`) replace the whole count for their kind of
   magic, so they would take a new cleric's, druid's or preserver's slots' place.
-- **A new preserver's spells, on changing class.** Every human (not a kit's). Where: the routine
-  that changes a human's class, for a preserver (86DB5h), takes away its wizard spells and marks
-  Grease (8) and Magic Missile (7) known: `PROBE_DUAL_SPELLS` (`INT 9Ch`, new: those two `push /
-  push si / call 500:43h / add sp,4`, 22 bytes from 86DE4h) calls CHOOSE A SPELL (620:5Ch, 85560h:
-  the level up's) twice in their place, through its stub (`PICK_STUB`: DS less 4Ch, as `WP_STUB`),
-  with the spell levels on offer up to 1st (`PICK_CAP`, which `PROBE_PICK_LEVEL` heeds). The dual
-  routine is in CHOOSE A SPELL's own overlay (85560h to 87250h), so the call can't unload the code
-  it returns to. The same call from another overlay needs its way back where the overlay manager can
-  patch it: see the next one (at creation).
-- **A new preserver's spells, at creation.** Every preserver. Where: the creation screen's DONE
-  (overlay 65480h) marks spells known by preserver level (`[BP-2]`, 66F2Dh on: 7 and 8 at 1st; 9 and
-  0Bh too at 2nd; 0Fh and 16h too at 3rd). `PROBE_CR_SPELLS` (`INT 98h`, new: `mov ax,[bp-2]`, 3
-  bytes) has a character made on the creation screen (the grants called from DONE, 66556h: their way
-  back at `[BP+2]`, `[BP+4]` is the INT's less `CR_FROM_DONE`, in the same overlay; START GAME with
-  no party made calls them for the game's own party from 65480h+6FBh, which keeps the game's spells,
-  and the creature's status can't tell the two, Okay in both) pick as many on CHOOSE A SPELL
-  (`PICK_SPELLS`: 2, 4, or 4 and two of 2nd level; a Scholar's one more a level, `KIT_MADE`) and
-  goes on past them (66F83h, `CR_SPELLS_PAST`). CHOOSE A SPELL returns nothing; EXIT leaves it with
-  no spell learnt, which `PICK_SPELLS` tells by counting the member's known preserver spells before
-  and after (`PICK_KNOWN`, the low four bits of each byte from `KNOWN_OFF`, as 500:43h sets them;
-  the party's four only, creation's and DUAL's among them). Then the picks end and `PICK_FILL` marks
-  the game's own spells known for those left, in its order, less any known (`fill_first`,
-  `fill_second`). DONE's routine (6649Ch) has saved the character to its slot and opened its files
-  (550:57h) before the grants, so going back to the creation screen from here isn't done. CHOOSE A
-  SPELL is another overlay, whose loading may put the creation code out: without care the game is
-  lost on the way back. The INT's way back is pushed as a stack frame (`push cs / push ip / push bp
-  / mov bp,sp`) that the overlay manager walks and patches to reload the code first, as
-  `PROBE_LV_PICK` and `PROBE_DUAL_KIT` do, and read back after.
+- **A new preserver's spells**, on changing class and at creation: [Preservers'
+  first spells](#preservers-first-spells).
 - **Sound numbers on the sheet.** Every character. Where: the game reads a word at sheet `+42h`
   (78FDAh, `mov dx,[es:bx+42h]`: a sound to play, 4 if 0) and at `+44h` (81DE3h, `mov
   ax,[es:bx+44h]`: played if not 0), and the kit byte (`+43h`) and second sphere (`+45h`) are their
@@ -1806,6 +1796,42 @@ Each kit's helper code is held to its Python by emulated tests
 each was played in the game: the creation screen's KIT page and hit dice, the
 level ups (Shinobi and Scholar spells, Seeker slots), the KIT menu after DUAL
 with its bans, and the Effects screen's pages.
+
+## Preservers' first spells
+
+([In the features page](FEATURES.md#preservers-first-spells).) Always on, with
+or without kits; the Scholar's one more is the kits' (`KIT_MADE`,
+`PROBE_DUAL_SPELLS`' third pick).
+
+**On changing class** (every human, not a kit's): the routine
+that changes a human's class, for a preserver (86DB5h), takes away its wizard spells and marks
+Grease (8) and Magic Missile (7) known: `PROBE_DUAL_SPELLS` (`INT 9Ch`, new: those two `push /
+push si / call 500:43h / add sp,4`, 22 bytes from 86DE4h) calls CHOOSE A SPELL (620:5Ch, 85560h:
+the level up's) twice in their place, through its stub (`PICK_STUB`: DS less 4Ch, as `WP_STUB`),
+with the spell levels on offer up to 1st (`PICK_CAP`, which `PROBE_PICK_LEVEL` heeds). The dual
+routine is in CHOOSE A SPELL's own overlay (85560h to 87250h), so the call can't unload the code
+it returns to. The same call from another overlay needs its way back where the overlay manager can
+patch it: see the next one (at creation).
+
+**At creation** (every preserver): the creation screen's DONE
+(overlay 65480h) marks spells known by preserver level (`[BP-2]`, 66F2Dh on: 7 and 8 at 1st; 9 and
+0Bh too at 2nd; 0Fh and 16h too at 3rd). `PROBE_CR_SPELLS` (`INT 98h`, new: `mov ax,[bp-2]`, 3
+bytes) has a character made on the creation screen (the grants called from DONE, 66556h: their way
+back at `[BP+2]`, `[BP+4]` is the INT's less `CR_FROM_DONE`, in the same overlay; START GAME with
+no party made calls them for the game's own party from 65480h+6FBh, which keeps the game's spells,
+and the creature's status can't tell the two, Okay in both) pick as many on CHOOSE A SPELL
+(`PICK_SPELLS`: 2, 4, or 4 and two of 2nd level; a Scholar's one more a level, `KIT_MADE`) and
+goes on past them (66F83h, `CR_SPELLS_PAST`). CHOOSE A SPELL returns nothing; EXIT leaves it with
+no spell learnt, which `PICK_SPELLS` tells by counting the member's known preserver spells before
+and after (`PICK_KNOWN`, the low four bits of each byte from `KNOWN_OFF`, as 500:43h sets them;
+the party's four only, creation's and DUAL's among them). Then the picks end and `PICK_FILL` marks
+the game's own spells known for those left, in its order, less any known (`fill_first`,
+`fill_second`). DONE's routine (6649Ch) has saved the character to its slot and opened its files
+(550:57h) before the grants, so going back to the creation screen from here isn't done. CHOOSE A
+SPELL is another overlay, whose loading may put the creation code out: without care the game is
+lost on the way back. The INT's way back is pushed as a stack frame (`push cs / push ip / push bp
+/ mov bp,sp`) that the overlay manager walks and patches to reload the code first, as
+`PROBE_LV_PICK` and `PROBE_DUAL_KIT` do, and read back after.
 
 ## Level cap by XP
 
@@ -2067,13 +2093,53 @@ of weight 40 or less).
 
 How many attacks: the attack routine multiplies when both backstab flags are set
 and the round's count of attacks so far (`[BP-14h]`) is 1 or less (58A71h), so
-the first two swings of the round, an off-hand one too. `STAB_TIMES` (with
-`RULE_HI_BACKSTAB`) multiplies only when the count is 0; the dice log
-(`dicelog`'s backstab line, `parent_local(-0x14)`) says the same.
+the first two swings of the round, an off-hand one too. With the next rule only
+the first is a backstab.
+
+### A backstab multiplies the weapon's dice only
+
+The switch `backstab_dice` (`game.RULE_BACKSTAB`; DSCLOG's `RULE_HI_BACKSTAB`
+in `rules_hi`; on unless unticked). The game's backstab multiplies the whole of a
+hit's damage, STR's bonus and the weapon's plus included (x2 to x5 by thief
+level, 595C4h); AD&D's multiplies the weapon's dice only, the rest added once,
+and only the round's first attack is one. Two `NS_IMAGE` sites in the attack
+routine (5883Ah), applied whatever the switch, the rule's bit read at the
+time:
+
+- `STAB_ROLL` (`STAB_SITE`, 58A29h, `cmp word [bp+16h],1`, 4 bytes), just after
+  the damage's roll: the dice's own sum (the damage less what the routine added
+  to them, `[BP-12h]`) kept in `STAB_DICE` (`STAB_KNOWN` set), then the compare
+  made and its flags handed back. It also tells `ENL_SITE` a melee hit's dice
+  are known ([Enlarge](#enlarge-multiplies-the-weapons-dice-only), which comes
+  between and multiplies those dice first, so a backstab multiplies the
+  enlarged ones).
+- `STAB_TIMES` (`TIMES_SITE`, 58A80h, the game's `push ax / mov ax,[bp-4] / pop
+  dx / imul dx / mov [bp-4],ax`, 10 bytes, AX the multiplier): an Assassin's
+  multiplier one more first (a party member, `kits.backstab_times`, rule or
+  not); then with the rule, on the round's first attack (`[BP-14h]` 0) and a
+  hit, the kept dice added again once for each time past the first; on the
+  second, no multiplying at all; without the rule, or the dice not known, the
+  game's multiplying of the whole.
+
+The round's count `STAB_TIMES` reads leaves the off-hand swing out, so a thief
+with three attacks (two weapons and a weapon spec's extra) had the third
+multiplied after a first that missed: `STAB_FIRST` (in `PROBE_STEALTH`,
+with the rule, a party member only) keeps each member's last attack by the
+game's clock (the dword through DS:9B72h's far pointer, a round at a time in a
+fight, `STAB_CLOCK`), and a later attack at the same clock has its backstab
+taken back (`[BP-24h]` cleared, its +2 to hit off THAC0 `[BP-20h]`); from
+behind stays.
+
+The dice log's damage line says which: `+10 backstab (the dice 5 x3 = 15)`
+with the rule, `(1d8 = [5] +12 STR 24) x3 backstab` without (`dicelog`'s
+backstab step, the round's count read from the attack's frame,
+`parent_local(-0x14)`). Tests: test_dsclog's `test_backstab_dice`,
+`test_backstab_first_attack_only`, `test_assassin_backstab`; test_dicelog's
+`test_backstab_multiplies_the_damage`, `test_enlarge_before_the_backstab`.
 
 ## Spell arrows
 
-([The Spellarcher](KITS.md#multiclass-kits); `spellarrows.py`.)
+([In the kits page](KITS.md#multiclass-kits): the Spellarcher; `spellarrows.py`.)
 
 **The buttons.** Outside a fight, `PP_SHOW` gives a Spellarcher
 (`KIT_SPELLARCHER` awake) a button in the USE screen's ability row for each

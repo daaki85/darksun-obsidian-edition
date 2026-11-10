@@ -1,6 +1,6 @@
 # Development: what the game and the Loader show
 
-*Part of the [development notes](DEVELOPMENT.md). How the game's own screens show more (the combat log, names over figures, THAC0 and saves, the Look box, charges), what the Loader's tabs read, and the controls, saves and game speed: where the patched game calls the helper (DSCLOG), and what the Loader reads and writes. Each heading names the section of the [features page](FEATURES.md) or the [README](README.md) it explains.*
+*Part of the [development notes](DEVELOPMENT.md). How the game's own screens show more (the combat log, names over figures, THAC0 and saves, the Look box, charges), what the Loader's tabs read, and the controls, saves and game speed: where the patched game calls the helper (DSCLOG), and what the Loader reads and writes. Most headings name the section of the [features page](FEATURES.md) or the [README](README.md) they explain; the rest, a part of one or a note of their own, say which at their start.*
 
 ## Contents
 
@@ -13,6 +13,8 @@
   - [The panel](#the-panel)
 - [Names over figures](#names-over-figures)
 - [THAC0, saves and thief skills](#thac0-saves-and-thief-skills)
+- [The creation screen](#the-creation-screen)
+- [Spell slots on the USE screen](#spell-slots-on-the-use-screen)
 - [Detonate's blast on an item](#detonates-blast-on-an-item)
 - [The psionic power check](#the-psionic-power-check)
 - [What hurts a monster (the Look box)](#what-hurts-a-monster-the-look-box)
@@ -22,6 +24,7 @@
 - [Choosing an enemy: Tab, Enter and the rings](#choosing-an-enemy-tab-enter-and-the-rings)
 - [Scrolling the map](#scrolling-the-map)
 - [The pointer in scenes, and where it starts](#the-pointer-in-scenes-and-where-it-starts)
+- [Spells on the Effects screen](#spells-on-the-effects-screen)
 - [More saves](#more-saves)
 - [More characters](#more-characters)
 - [Game speed](#game-speed)
@@ -61,6 +64,8 @@ the game's own message said.
 
 ## The Bowyer's archery target
 
+([In How the game works](HOW-THE-GAME-WORKS.md#the-bowyers-archery-target).)
+
 Shooting at the target in Teaquetzl runs script 178 (with a bow in hand: the
 script counts objects 1017, 1039 and 30007, the bow, the Bow +2 and Phrain's
 Bow, into variables 1 to 3, added up at 40Dh; the Loader's copy jumps from
@@ -79,6 +84,8 @@ PROBE_SCRIPT_RAND records (position 57Fh, script 178's alone), the archer the on
 whose turn it is, the distances worked out the same way from where they stand.
 
 ## Ability checks in the scripts' conditions
+
+([In the dice log's page](DICE-LOG.md#checks-thief-skills-and-searches).)
 
 Some scripts test an ability without the ability check command: a condition
 compares the random command with a field of the character acting (fields 23 to
@@ -101,7 +108,7 @@ with the 3 ability checks the ability check command makes).
 
 ## The combat log in the game
 
-([In FEATURES](FEATURES.md#the-combat-log-in-the-game).)
+([In the features page](FEATURES.md#the-combat-log-in-the-game).)
 
 ### What the game allows
 
@@ -136,23 +143,20 @@ dice log running:
 - **Font.** The game's text font is RESOURCE.GFF's FONT 100, 9 pixels high
   with its shadow (`art.py`): a panel 67 pixels high holds a header and 6
   lines.
-- **Memory.** With GOG's settings (`ems=true`) DOSBox keeps EMS's 64 KB page
-  frame where upper memory would be, and with the helper loaded `mem` shows 1
-  KB of upper memory free. With `ems=false` (the launcher's own config, after
-  GOG's) it shows 65 KB (largest block 64 KB), conventional memory unchanged
-  at 632 KB ([Room in the helper](DEVELOPMENT.md#room-in-the-helper)). The game's memory layer (VMEM)
-  takes EMS, XMS or extended memory, whichever there is: without EMS it loaded
-  a save, walked the pens, opened a conversation and a shop, and played the
-  arena's opening fight to the end without a fault (a check, not a whole
-  game).
+- **Memory.** With GOG's settings (`ems=true`) EMS's page frame leaves the
+  helper too little upper memory, so the launcher turns EMS off: [EMS
+  off](DEVELOPMENT.md#ems-off) (the game's memory layer then uses XMS; without
+  EMS it loaded a save, walked the pens, opened a conversation and a shop, and
+  played the arena's opening fight to the end without a fault: a check, not a
+  whole game).
 
 ### The panel
 
 - **Where it lives.** The Loader draws the panel's picture (`combatlog.py`:
   180 × 78 palette indices in the area's own colours, matched to the palette
   DSCLOG last read) into the helper's far block, beside the dice log's ring
-  (`FAR_PANEL`; its segment `panel_seg`, header `+328`: [Room in the
-  helper](DEVELOPMENT.md#room-in-the-helper)).
+  (`FAR_PANEL`; its segment `panel_seg`, header `+328`: [the far
+  block](DEVELOPMENT.md#the-far-block)).
 - **Putting it on screen.** DSCLOG copies the picture into the screen on show,
   a plane at a time (`PANEL_BLIT`, its height kept on the screen; the Loader
   stores each row as its four planes' bytes in turn, `combatlog.planar`, so a
@@ -299,7 +303,7 @@ dice log running:
 
 ## Names over figures
 
-([In FEATURES](FEATURES.md#names-over-figures).)
+([In the features page](FEATURES.md#names-over-figures).)
 
 - **What starts one.** A spell's cast: `CAST_SITE` (INT 98h and its site
   number over `mov cx,[bp+6]` at 772AAh, the start of the routine at 772A5h
@@ -357,7 +361,7 @@ dice log running:
 
 ## THAC0, saves and thief skills
 
-([In FEATURES](FEATURES.md#thac0-saves-and-thief-skills).)
+([In the features page](FEATURES.md#thac0-saves-and-thief-skills).)
 
 How: the patched game calls the helper (`INT 65h`) just after the panel's
 weapon lines; the helper prints the lines with the game's own text routine,
@@ -375,7 +379,7 @@ update them and waits for its answer, half a second at most (`STATS_SYNC`:
 pointer too, so the Loader answers from a thread of its own
 (`DiceLog.answer_stats_in_background`, a look each millisecond, about 4 ms to
 work the numbers out), not from its main loop's next pass: that took 26-79 ms
-with the Ledger's window open, on top of the game's own pause after an item is
+with the Loader's window open, on top of the game's own pause after an item is
 picked up or put down (50-90 ms at 20,000 cycles: its mouse handler, DSUN.EXE
 3573Dh, only queues the moves, and the pointer is drawn again once the game
 has done with the item). That pause is shorter too: the game flips its two
@@ -394,7 +398,83 @@ each class's next level in its tables and shows the lowest. Where it adds the
 closing bracket, the helper (`INT D2h`) finds which classes that number
 belongs to and adds their letters first.
 
+## The creation screen
+
+([In the features page](FEATURES.md#the-creation-screen).)
+
+What the creation screen gains is drawn by the helper with the game's own text
+routine, each where the game draws nothing of its own: the AGE ([The age on
+the creation screen](DEVELOPMENT-RULES.md#the-age-on-the-creation-screen)),
+SUM ([Scores and hit points as
+rolled](DEVELOPMENT-RULES.md#scores-and-hit-points-as-rolled)), STORE and
+RECALL ([STORE and
+RECALL](DEVELOPMENT-RULES.md#store-and-recall-on-the-creation-screen)), KITS
+([Kits](DEVELOPMENT-RULES.md#kits)), and the THAC0, below. The THAC0 shares the
+age's sites (`CR_AGE`, `CR_AGE_CON`, `CR_NAME`, `CR_OPEN`), named in the age's
+section.
+
+**THAC0** (`CR_THAC0_DRAW`, always, whatever the rules): `THAC0: M18 R19` at `CR_AGE_X`
+on the hit points' line, the THAC0 (`CR_THAC0_BASE`) less the game's STR
+to-hit table's entry (DS:7C2h + STR) for M and its DEX missile table's
+(`DEX_REACTION`'s, + DEX) for R, no less than 0. The game works the THAC0 out
+again as the classes change, but `PROBE_THAC0` reads the kit from the party's
+sheets, not the one being made, so the creature's `+1Fh` lacks a kit chosen on
+the panel: `PROBE_THAC0` keeps the game's own, kit-less (`THAC0_GAME`,
+`THAC0_SEEN` from `CR_OPEN` on), and `CR_THAC0_BASE` applies the sheet being
+made's kit to it (`kits.thac0`: a Scholar 1 worse, a warrior's THAC0 for the
+Swashbuckler, Crusader, Battle Mage and Mind Warrior); with none worked out on
+the screen (an EDIT), the creature's `+1Fh`, its kit in it. A kit chosen or
+taken back (`KIT_SHOWN_DUE`, from `KIT_ROW`) draws the hit points and the
+THAC0 again at the click's end (`KIT_REDRAW`), after a Battle Mage's, Mind
+Warrior's or Arcanist's hit points are rolled again (`KIT_REROLL`) the age too,
+whose PSP box that puts back. The hit points' box (the 7th, `CR_HP_BOX`) is widened to x 243
+(`cr_thac0_box`; DONE's left is 244), so the game's putting it back clears the
+line. It is drawn after each redraw of the hit points: the panel's, at
+`CR_AGE` (65A89h, PSP after them), a click on CON (`CR_AGE_CON`), and `CR_HP`
+(a site at 63AC3h, a click on the hit points, and 63EDAh); a click on STR or
+DEX redraws neither, so `RL_SUM` (the scores' redraw) puts the hit points' box
+back itself (`CR_BOX_PUT`, the far call's operand and the saved backgrounds'
+segment read from the overlay's code beside its site, as `CR_NAME` does for
+PSP's), draws the hit points again (`CR_PAIR_DRAW`, shared with PSP's) and the
+THAC0. Checked in DOSBox: THAC0 18 with STR 17 and DEX 15 `M17 R18`; DEX 18
+after a roll `R16`; STR 18 `M16` at once; a click on the hit points and on CON
+keep the line; a 3rd-level preserver `M19 R20`, a Scholar `M20 R21`, a Battle
+Mage `M17 R18` (the line and the age back after its hit points are rolled
+again). Tests: `test_thac0_line`.
+
+## Spell slots on the USE screen
+
+([In the features page](FEATURES.md#spell-slots-on-the-use-screen).)
+
+Always on, while the Loader (or its command-line dice log) runs. Two patches:
+`use` (DSUN.EXE 70FBBh, "add sp,0Ch" in the USE screen's routine that labels
+its LEVEL button, which runs whenever the screen is drawn or the level changes:
+`INT F2h`, `PROBE_USE`) and `window` (2BBA9h, "xor ax,ax / pop si" at the end
+of the game's routine that brings a window to the front and redraws it, which
+repaints the screen's panels after a character or a level is picked: `INT F4h`,
+`PROBE_WIN`, which draws only on the USE screen's window once `PROBE_USE` has
+drawn on it, `USE_WIN`). Both call `USE_DRAW`: for the selected character
+(the segment 3931h:25Bh) it finds, in `SLOTS_TEXT` (the header's +148: four
+of `SLOTS_SIZE`, 128 bytes, one a member), the heading and the line keyed by
+the list on show (DS:4AE8h, a byte a member: 1 MAGE, 2 CLERIC, 3 PSIONIC) and
+the level (DS:4AECh, the LEVEL button's), and prints them in the empty panel
+under the spells with the game's text routine (2B7Ah:16Dh). The PSIONIC list
+has no lines, so it shows none.
+
+The Loader writes the lines (`DiceLog.slots_lines`, `_write_slots`, only when
+they change): for each kind of magic the member casts, a heading (`SPELLS
+LEFT`, or `NO SPELLS IN ARMOUR` for a multiclass preserver's wizard spells
+when the class restrictions bar them, `game.no_spells`) and a line a spell
+level (`PRI 3/5`), each keyed by its first byte (`SLOT_KEY` 80h, the list
+shifted 4, the level; 0 the heading), "|" between them. The numbers are
+`game.spell_slots`: the slots left from the game's own counts, and the most
+with WIS's bonus (`max_spell_slots`), at the levels the class levels reach
+without WIS (the game gives WIS's bonus slots at levels the class can't cast
+yet too). They are the Characters tab's.
+
 ## Detonate's blast on an item
+
+([In How the game works](HOW-THE-GAME-WORKS.md#psionics); its line: [the dice log's page](DICE-LOG.md#checks-thief-skills-and-searches).)
 
 The effect switch (its values at CS:0D96h of the segment at file 78BA0h, case
 138 at 797F6h) queues effect 195 (the blast, 1d10) on the target, then calls
@@ -437,7 +517,7 @@ does.
 
 ## What hurts a monster (the Look box)
 
-([In FEATURES](FEATURES.md#what-hurts-a-monster-the-look-box).)
+([In the features page](FEATURES.md#what-hurts-a-monster-the-look-box).)
 
 How: the patched game calls the helper (`INT F5h`; INT 66h-6Fh can't be used:
 the game calls those itself, looking for sound drivers) where the box has
@@ -456,7 +536,7 @@ Barkskin...) is left out.
 
 ## Charges in item boxes
 
-([In FEATURES](FEATURES.md#charges-in-item-boxes).)
+([In the features page](FEATURES.md#charges-in-item-boxes).)
 
 An item that casts a spell has the spell + 1 in its `+0Fh` and its charges
 left in `+0Eh` (the routine finishing an item's use takes one off, 721E4h,
@@ -476,7 +556,7 @@ already has the material's damage off).
 
 ## No manual check
 
-([In FEATURES](FEATURES.md#no-manual-check).)
+([In the features page](FEATURES.md#no-manual-check).)
 
 How: the dragon's question is the game's script 20, which script 120 runs (a
 call into another script, command 14h) when the party leaves the warrens
@@ -489,6 +569,8 @@ question. It is replaced only if it is the dragon's (its `" word on page "`
 line).
 
 ## Scripts' requests and refused casts in the dice log
+
+([In the dice log's page](DICE-LOG.md#spells-saves-and-effects).)
 
 Two `NS_IMAGE` sites record what the game does without a roll:
 
@@ -663,6 +745,17 @@ screen the scale depends on the monitor, and DOSBox's own is kept.
 The two are switches (`SCENE_POINTER`: `cine_step`, `cine_end`; `MOUSE_START`:
 `mouse_set`, `mouse_init`). The room in upper memory came from the freeze
 report's records (32 to 16, taken half as often).
+
+## Spells on the Effects screen
+
+([In the features page](FEATURES.md#spells-on-the-effects-screen).)
+
+A click on an effect's icon on the Effects screen ends it in the game; with the
+switch on (`gamepatch.EFFECTS_KEPT`, from the next start), a spell's effect
+is left on: two jumps in the screen's click handler (DSUN.EXE 7F226h and
+7F236h, the patches `effects_click_low` and `effects_click_high`) go to its way
+out instead of to the routine ending an effect. A psionic power's (spells 8Ah-ABh) still ends, as stopping it there is
+how a power is dropped.
 
 ## More saves
 

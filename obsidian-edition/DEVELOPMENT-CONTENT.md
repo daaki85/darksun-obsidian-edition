@@ -1,6 +1,6 @@
 # Development: spells, items, people, graphics and the game's bugs
 
-*Part of the [development notes](DEVELOPMENT.md). How the game's script and spell bugs are mended, and how the new spells, items and people and the graphics are done. Each heading names the section of the [features page](FEATURES.md) or the [README](README.md) it explains.*
+*Part of the [development notes](DEVELOPMENT.md). How the game's script and spell bugs are mended, and how the new spells, items and people and the graphics are done. Most headings name the section of the [features page](FEATURES.md) or the [README](README.md) they explain; the rest, a part of one or a note of their own, say which at their start.*
 
 ## Contents
 
@@ -684,7 +684,7 @@ count DS:1E24h), moving the rest down.
   as Strength's adds to STR (`INT EFh`). With the spells as the manual has them
   the dice are by class (`STRENGTH_SITE` at 79483h, Strength's too), and a
   smaller Cat's Grace beside a bigger one adds nothing (`GR_SHADOWED`): see
-  [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#spells-and-psionics-as-the-manual-group-3).
+  [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#the-saves-and-the-other-spells-and-psionics).
   Heal's (`PROBE_CURE`) also takes Feeblemind off there.
 - Erdlu Claw puts effect 6 (unused) on its target. In the routine giving a
   natural attack's dice (7B66Ch, `NS_CLAW` at 7B70Ah; DX the set of natural
@@ -771,14 +771,6 @@ site's number, `RL_*` 1-6, `PK_HOVER` 7, `RG_TWO` 8, the new spells' 9 on).
 A site's handler must leave the game's registers as they were: an early
 version took the site number in AL before saving them, which handed the name
 routine spell 0 and showed ARMOR as every spell's name on the USE screen.
-
-A click on an effect's icon on the Effects screen ([In the features
-page](FEATURES.md#spells-on-the-effects-screen)) ends it in the game; with the
-switch on, a spell's effect is left on: two jumps in the screen's click handler
-(DSUN.EXE 7F226h and 7F236h, `effects_click_low` and `effects_click_high` in
-`dsloader/gamepatch.py`) go to its way out instead of to the routine ending an
-effect. A psionic power's (spells 8Ah-ABh) still ends, as stopping it there is
-how a power is dropped.
 
 ## New items
 
@@ -1411,7 +1403,7 @@ drawn, so no shadow. Loading one from here, in the middle of a drawing, could pu
 picture the game is about to draw, so instead DSCLOG keeps each frame's shadow as it draws it
 (`SC_START`, `SC_PUT`, `SC_END`: the runs that cast a shadow, three bytes each, at most 64, under
 the picture's number from the cache slot's `+6` and the frame) in 80 slots of 208 bytes in the
-helper's far block (`SC_SEG`, at `FAR_SC`: see [Room in the helper](DEVELOPMENT.md#room-in-the-helper)),
+helper's far block (`SC_SEG`, at `FAR_SC`: see [the far block](DEVELOPMENT.md#the-far-block)),
 the oldest given up first. A figure
 whose picture is out casts its frame's kept shadow, or another frame's of the same picture
 (`SC_FIND`). Measured in the arena: 74 slots filled in a few rounds, the party and the monsters seen

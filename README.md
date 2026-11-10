@@ -8,7 +8,7 @@ with your options and keeps the full dice log while you play. Nearly every
 rule change and addition has a switch on the Loader's Options tab; the full
 list is in [What it does](obsidian-edition/README.md#what-it-does).
 
-![Round 3 of a fight in the slave pens: Lex's turn, with the combat log over the map's lower right, in short and its small font, eight lines: Ester's swings at a Guard, the Guard's hit on Jenna for 10 and a miss, and her hit points after](obsidian-edition/docs/combat-log.png)
+![Round 3 of a fight: Lex's turn, with the combat log over the map's lower right, in short and its small font, eight lines: Ester's swings at a Guard, the Guard's hit on Jenna for 10 and a miss, and her hit points after](obsidian-edition/docs/combat-log.png)
 
 ## Getting started
 
@@ -43,26 +43,25 @@ double-click, with the options as last set.)
   (the combat log, the Look box, THAC0 and saves), and every rule change and
   addition in detail, with its switch
 - [Kits](obsidian-edition/KITS.md): every kit's gains, costs and starting gear
-- [The dice log, line by line](obsidian-edition/DICE-LOG.md): every kind of line
-  the Loader's dice log writes, and what it means
-- [Patch notes](PATCH-NOTES.md): every change from the original game, in one
-  page to share
 - [Items](obsidian-edition/ITEMS.md): every magic item, weapon and piece of armour,
   with its icon and where it is (spoilers)
+- [Creatures](obsidian-edition/CREATURES.md): every creature, its size and
+  whether cahulaks can tangle it (spoilers)
+- [The dice log, line by line](obsidian-edition/DICE-LOG.md): every kind of line
+  the Loader's dice log writes, and what it means
 - [How the game works](obsidian-edition/HOW-THE-GAME-WORKS.md): the original
   game's own rules, from its code
+- [Patch notes](PATCH-NOTES.md): every change from the original game, in one
+  page to share
 - [Changelog](CHANGELOG.md) and [development
   notes](obsidian-edition/DEVELOPMENT.md): for developers and testers
 
 ## What it changes on your computer
 
 The game's own files are never modified: the Loader runs a patched copy of the
-game from its own folder. It writes to the game folder only your saves (page 1
-in the game's own `SAVE` files, pages 2 to 4 as `SAVB`, `SAVC` and `SAVD`
-files) and your characters (in the game's own `CHARSAVE.GFF`, up to 29). A save
-made with the new items can hold items the original game doesn't have: load it
-with the Loader. To uninstall, delete the Loader's folder ([what stays
-behind](obsidian-edition/README.md#updating-backups-saved-games-and-the-loaders-files)).
+game from its own folder, and writes to the game folder only your saves and
+characters. To uninstall, delete the Loader's folder ([what stays behind, and
+where the saves go](obsidian-edition/README.md#updating-backups-saved-games-and-the-loaders-files)).
 
 ## What's new
 

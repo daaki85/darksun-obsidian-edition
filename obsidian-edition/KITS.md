@@ -56,7 +56,7 @@ armour.
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
 | **Arena Champion** | with a shield in a hand: +1 to hit and damage in melee, and AC 1 better, from 1st level | −1 to hit in melee with no shield | a shield in place of the off-hand club | can't dual to druid or preserver; can't go with the Shinobi |
-| **Twin-blade** | with the two-weapons rule, no penalty for two weapons in light armour, leather or none (others: −2 main hand, −4 off hand) | no shield; no two-handed weapon, bows and the staff sling among them (a half-giant may hold one in one hand, with the half-giants' rule) | the gladiator's gear: its long sword and club are its two weapons | in heavier armour, the usual penalty; can't go with the Healer |
+| **Twin-blade** | with the two-weapons rule, no penalty for two weapons in light armour, leather or none (others: −2 main hand, −4 off hand) | no shield; no two-handed weapon, bows and the staff sling among them (a half-giant may hold one in one hand, with the half-giants' rule); never cahulaks, a half-giant's too | the gladiator's gear: its long sword and club are its two weapons | in heavier armour, the usual penalty; can't go with the Healer |
 | **Brute** | +2 to hit and damage with a two-handed melee weapon | two-handed melee weapons only (a half-giant may add a shield); missile weapons, but not as a weapon spec | a two-handed weapon (a bone great axe without weapon specialization); the club is left behind | a bow or staff sling, two-handed as it is, doesn't get the +2; can't dual to psionicist or air cleric; can't go with the Shinobi or Lifebinder |
 
 ## Ranger kits
@@ -133,7 +133,7 @@ means an outdoor map, or open ground outside the buildings on a city map.
 
 | Kit | Race and classes | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|---|
-| **Battle Dancer** | elf cleric/fighter | a dance as each fight starts: a d20 against DEX − 4 (the Dancing proficiency's check at −4; a natural 20 always fails); at DEX − 4 or under, **+1 to hit, to damage and to AC** for that less the roll in rounds (at least 1), ending with the fight if that comes first (each fight, and each of the arena's waves, dances anew); with the two-weapons rule, no penalty for two weapons in light armour (leather or none) | long swords and bows only (but any long sword or bow, whatever its cleric's sphere allows); no shield; over it, it stumbles: **−1 to hit, to damage and to AC for 1d8 rounds** | a second long sword in the left hand, in place of the shield; with fuller starting gear, a bow and arrows if it has no missile weapon | its weapon spec is the long sword if none is picked; the dice log shows the dance's roll and its end |
+| **Battle Dancer** | elf cleric/fighter | a dance as each fight starts: a d20 against DEX − 4 (the Dancing proficiency's check at −4; a natural 20 always fails); at DEX − 4 or under, **+1 to hit, to damage and to AC** for that less the roll in rounds (at least 1), ending with the fight if that comes first (each fight, and each of the arena's waves, dances anew); with the two-weapons rule, no penalty for two weapons in light armour (leather or none) | long swords and bows only (but any long sword or bow, whatever its cleric's sphere allows), so no cahulaks; no shield; over it, it stumbles: **−1 to hit, to damage and to AC for 1d8 rounds** | a second long sword in the left hand, in place of the shield; with fuller starting gear, a bow and arrows if it has no missile weapon | its weapon spec is the long sword if none is picked; the dice log shows the dance's roll and its end |
 | **Shadowblade** | half-elf fighter/thief | +10 hide in shadows, +5 move silently; with the stealth rule, tries to hide in shadows even with an enemy right beside it | −10 pick pockets; **no shield**; light armour only | its classes' gear, without the shield | |
 | **Military Scout** | half-elf fighter/thief | under the open sky, +10 to find/remove traps, move silently, hide in shadows and climb walls, +2 initiative, and +1 to hit with a bow, sling or staff sling; hiding in shadows not halved in daylight | under a roof, −5 to the same four skills; **never backstabs** (attacking from behind still gives +2 to hit) | its classes' gear | the panel's and the dice log's numbers follow where it stands |
 | **Wilderness Avenger** | half-elf druid/fighter | +1 to hit and damage against anything, melee or missile; Cause Light, Serious and Critical Wounds do 1 more a die (+1, +2, +3); hides in shadows and moves silently as a ranger does, but at 5 a level of its best class (lower than a ranger's table), with its race's and DEX's adjustments | **no healing spells**: never knows Cure Light, Serious or Critical Wounds, Blood Flow, Heal or Water of Life | its classes' gear | with the stealth rule, its hiding gives an attack from behind (+2 to hit), never a backstab, as a ranger's does |
@@ -266,7 +266,7 @@ changes its slots; it is here, as the cleric is, to set the kits beside:
   tables, as a cleric's 6th-level slots come only with them).
 - A cleric's 11th level brings a **6th-level slot**
   ([6th-level priest spells](FEATURES.md#6th-level-priest-spells)); a
-  Crusader's one fewer leaves it none, and an Elementalist has 1 there (below). A preserver has no 6th-level spells to cast.
+  Crusader's one fewer leaves it none, and an Elementalist has 1 there (above). A preserver has no 6th-level spells to cast.
 - A **Seeker** and a **Justifier** have these in place of a ranger's own
   slots, with no bonus slots for WIS.
 - A **Shinobi** casts preserver spells at its thief level less 5, from its own
@@ -281,7 +281,7 @@ changes its slots; it is here, as the cleric is, to set the kits beside:
 
 A kit belongs to the class it was chosen with. A human who changes class
 (**DUAL** on the menu a right-click on a portrait opens, for a human of 3rd
-level or more; 2nd with [the manual's dual-classing](FEATURES.md#rule-changes) off) keeps it, but it sleeps as that class does: gifts and costs
+level or more; 2nd with [the manual's dual-classing](FEATURES.md#dual-classing-as-the-manual-has-it) off) keeps it, but it sleeps as that class does: gifts and costs
 alike count again once the new class's level passes the old one's. The Effects
 screen shows `KIT: BATTLMAGE (ASLEEP)` until then, and the Loader's Characters
 tab says so too. Once

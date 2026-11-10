@@ -99,25 +99,26 @@ Every creature Shattered Lands defines, each with its figure as the game draws i
 whether [cahulaks](FEATURES.md#cahulaks) can tangle it (with the rule on: a hit that does damage
 tangles a man-sized or smaller creature that fails a save against petrification, and it loses
 its next turn). The game keeps no size for its creatures, so who is too big is the mod's call,
-from AD&D's sizes: half-giants, the Large and bigger, those with nothing a rope could hold, and a
-few the mod keeps from being tangled (the spiders among them). The people the party meets in
-towns are here too: any of them can be fought.
+from AD&D's sizes: half-giants and anything large or bigger can't be tangled, nor anything with
+nothing a rope could hold, nor two the mod keeps from being tangled by name (the Sand Howler and
+the Strine). The people the party meets in towns are here too: any of them can be fought. Names
+are the game's own, cut short as the game has them ("Lsr Fire Elem").
 
 **Size** is AD&D's (T tiny, S small, M man-sized, L large, H huge, G gargantuan), which the game
 doesn't keep either: people by race (a half-giant large, a halfling small), the
 rest by name, from AD&D's and Dark Sun's monster books; a **?** marks the mod's guess, for the
-game's own creatures no book describes (`dsloader/sizes.py`). [Creature
-size](FEATURES.md#creature-size) goes by it: a large one (or bigger) takes AD&D's large weapon dice and
-isn't held or charmed by Hold Person or Charm Person.
+game's own creatures no book describes. [Creature size](FEATURES.md#creature-size) goes by it: a
+large one (or bigger) takes AD&D's large weapon dice and isn't held or charmed by Hold Person,
+Charm Person, or Charm Person or Mammal (on a person).
 
-Made with `python -m dsloader.doccreatures GAME_FOLDER`, from the game's own data.
+Made from the game's own data by `dsloader/doccreatures.py`; the sizes are in `dsloader/sizes.py`.
 """
 
 
 def table(rows: List[Creature]) -> str:
     out = [INTRO]
     for title, keep in (("People", lambda c: 1 <= c.race <= 8), ("Monsters", lambda c: not 1 <= c.race <= 8)):
-        out += ["", f"## {title}", "", "| | Creature | Race | Size | Cahulaks can tangle it |", "|---|---|---|---|---|"]
+        out += ["", f"## {title}", "", "| Figure | Creature | Race | Size | Cahulaks can tangle it |", "|---|---|---|---|---|"]
         for c in rows:
             if keep(c):
                 out.append(f"| ![](docs/creatures/{slug(c)}.png) | {c.name} | {race_name(c.race)} | {size_text(c)} "

@@ -108,8 +108,8 @@ that day: the download went through with no environment change, `loadsave.sh pen
 loaded (region 29h, leader 1816,440, window 320x240, dice log attached). A worker restart of
 the session killed DOSBox as an idle pause does. With the game's files the unit tests run
 more: `DSUN_GPLDATA=$G/GPLDATA.GFF DSUN_OBJECTS=$G/SEGOBJEX.GFF DSUN_RESOURCE=$G/RESOURCE.GFF`
-(`G=$PLAYTEST_WORK/inst`). With them set, `python3` skips 9, all for want of tkinter; without
-them, 24 (2026-11-07). `/usr/bin/python3.12` has tkinter.
+(`G=$PLAYTEST_WORK/inst`). With them set, `python3` skips 10, all for want of tkinter; without
+them, 29 (2026-11-10). `/usr/bin/python3.12` has tkinter.
 
 **A fresh container by hand (2026-11-06)**, if the setup script didn't run: `apt-get update`, then
 install `dosbox xdotool innoextract nasm` (`Xvfb`, ImageMagick, poppler were there). The Drive

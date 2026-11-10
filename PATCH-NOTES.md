@@ -56,7 +56,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 **Two weapons**
 
-- **[Changed]** Two weapons cost −2 to hit with the main hand and −4 with the off hand, less with high DEX; rangers and Twin-blades fight with two at no penalty in light armour *(was a small bonus at DEX 5 or less, otherwise nothing)*.
+- **[Changed]** Two weapons cost −2 to hit with the main hand and −4 with the off hand, less with high DEX; rangers, Twin-blades and Battle Dancers fight with two at no penalty in light armour, a Justifier in any, and a Ghetto Fighter at 0 and −2 *(was a small bonus at DEX 5 or less, otherwise nothing)*.
 - **[Changed]** The off hand attacks once a round, and extra attacks belong to the main hand *(was the full rate in each hand)*.
 
 **Held targets**
@@ -72,9 +72,11 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 **Races**
 
 - **[Changed]** Half-giants can hold a two-handed weapon in one hand.
-- **[New]** **Creature size**: a large foe (a half-giant, a large monster, anyone Enlarged) takes AD&D's damage for large targets from a weapon (a long sword 1d12, a great axe 2d8, a dagger 1d3), and Hold Person and Charm Person don't take on it at all. A weapon's item box shows both damages (`1D8-1/1D12-1`), and Shillelagh's damage reads 1D6+1 (2D4 against a large foe). *(the game keeps no sizes)*
-- **[New]** **More cahulaks**: Legcrusher fights with a Cahulaks +1 (no more clubs), the elven caravan's buried cahulaks are now +2, the arena's dead body by the stone arch holds plain cahulaks, and the champions' mul wields **metal cahulaks**, a new weapon.
-- **[New]** **Cahulaks** fight as Dark Sun's rules describe them: a bladed head in each hand, so one more attack a round (at −2 and −4, as with two weapons, DEX helping), and a hit can tangle a man-sized foe, which then loses its next turn unless it saves against petrification. Half-giants, big monsters and shapeless things can't be tangled.
+
+**Size and weapons**
+
+- **[New]** **Creature size**: a large target (a half-giant, a large monster, anyone Enlarged) takes AD&D's damage for large targets from a weapon (a long sword 1d12, a great axe 2d8; a dagger 1d3, a chatkcha 1d4+1), and Hold Person and Charm Person don't work on it at all. A weapon's item box shows both damages (`1D8-1/1D12-1`), and Shillelagh's damage reads 1D6+1 (2D4 against a large foe). *(the game keeps no sizes)*
+- **[New]** **Cahulaks** fight as Dark Sun's rules describe them: a bladed head in each hand, so one more attack a round (at −2 and −4, as with two weapons, DEX helping), and a hit can tangle a man-sized or smaller foe, which then loses its next turn unless it saves against petrification. Half-giants, large monsters and shapeless things can't be tangled. Twin-blades and Battle Dancers can't use cahulaks.
 
 ## Classes and Kits
 
@@ -192,7 +194,7 @@ A few of them:
 
 **Magic weapons**
 
-- **[New]** Nineteen new magic weapons, each with its own icon and a story from the game's own item sage:
+- **[New]** Twenty new magic weapons, each with its own icon and a story from the game's own item sage:
 
 | Weapon | What it is |
 |---|---|
@@ -212,6 +214,7 @@ A few of them:
 | **Thornwall** | a bone polearm +1 |
 | **Gutterknot** | a club +1, the game's first magic club |
 | **Deepbiter** | a stone pick +1, the game's first magic pick |
+| **Cahulaks +1** | bone cahulaks +1, their blades glowing in fire colours: Legcrusher fights with them (no more clubs) |
 | **Dunesong** | a bow +1, which the Bowyer's archery target counts as it does the game's own bows |
 | **Windlash** | a staff sling +1, the game's first magic staff sling |
 | **Skycutter** | a chatkcha +2 |
@@ -219,6 +222,7 @@ A few of them:
 Where each is found is in [ITEMS](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/ITEMS.md#every-magic-item).
 
 - **[Changed]** The Elven Leader's gift is a **Gythka +2** *(was +1)*.
+- **[Changed]** The elven caravan's buried cahulaks are a **Cahulaks +2**, still casting Cause Light Wounds on a hit, their blades glowing blue *(was the game's Cahulaks +1)*.
 
 **Magic armour and worn items**
 
@@ -255,6 +259,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** **Daggers** in metal, and in bone: the only dagger a water cleric can use.
 - **[New]** **Maces** in obsidian and metal.
 - **[New]** A **metal pick** and a **metal polearm**.
+- **[New]** **Metal cahulaks**: the champions' mul wields them. The arena's dead body by the stone arch holds plain bone cahulaks.
 - **[Changed]** The game's **bone scale armour** set is complete, with its arm and leg pieces and helm.
 - **[New]** The game's plain **leather helm**, which it never placed: Kurzak wears one in the slave pens.
 
@@ -274,7 +279,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 
 - **[New]** The party's figures show the weapons, shields, armour, helms and cloaks they wear, in each material's colours, walking and fighting.
 - **[New]** Magic gear glows on the party's figures: a weapon's bright edge, a shield's boss and rim, and sparks on armour, bracers, cloaks, helms, boots and belts shimmer in the animated colour nearest the item's icon: fire, green, violet or blue. The weapons spells make glow whole, the Flame Blade and Shillelagh in fire and Spiritual Hammer in blue, as do Kreenfang's blades. Boots of Elvenkind now show on the feet, in soft green. The mod's magic gear with no plus (the Boots of Speed, the Elvenkind cloak and boots, the girdles) glows too.
-- **[New]** Nineteen of the game's magic items that sat still in their icons now shimmer, as its other magic items do: the Parting Staff, the Chameleon Gloves, the Hornblade, Cahulaks +1, Dag's Dagger, the Terror Blade, Blackmace, the Shimmer, Drake and Silk Armor, Tanelyv's and Grey's arm and leg pieces, the Living Cloak, the Golden Torque, Light of Dawn, El's Ring and the Orb of Knowledge. A plain item sharing an icon with one of them (plain cahulaks, a plain ring) keeps the still one.
+- **[New]** Nineteen of the game's magic items that sat still in their icons now shimmer, as its other magic items do: the Parting Staff, the Chameleon Gloves, the Hornblade, Cahulaks +1 (Legcrusher's now, in fire colours; the caravan's, made +2, has a blue glow of its own), Dag's Dagger, the Terror Blade, Blackmace, the Shimmer, Drake and Silk Armor, Tanelyv's and Grey's arm and leg pieces, the Living Cloak, the Golden Torque, Light of Dawn, El's Ring and the Orb of Knowledge. A plain item sharing an icon with one of them (plain cahulaks, a plain ring) keeps the still one.
 - **[New]** Elves have pointed ears.
 - **[New]** With ages on, a party member's hair greys on the map as they age: streaks when middle-aged, grey when old, white when venerable (with what the party wears shown).
 - **[New]** Half-elves no longer look like humans: a half-elf man is built like the elf, a little broader, with short fair hair, a leather jerkin, green trousers and pointed ears; a half-elf woman is a little slimmer than the human woman, with golden hair in a bun, pointed ears, a purple cloak and red boots.
@@ -380,22 +385,12 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Fixed]** A preserver or psionicist with another class couldn't claim to have scried the **haystack** or read the man's thoughts, and the cave guide told even a dwarf or halfling to "go bother someone your own size". **Dagolar's slime book** counted a fighter's or an air cleric's training as magical but not an earth, fire or water cleric's or a druid's: now any cleric, druid, preserver or psionicist can read it.
 - **[Fixed]** Cilla, an elf in the ready-made party, was drawn with the half-elf woman's figure; she looks like an elf now (a switch keeps the game's figure).
 
-Rules the game got wrong are put right too, each under its own heading above with a switch, on by default: the saving throws against spells and the doubled d20 against fire, cold and electricity, two weapons, warriors' attacks, helms' AC and acid on armour (Combat); class restrictions, multiclass hit points, the class tables, rangers' spells, dual-classing, preservers' learning from scrolls, CON's regeneration and poison saves (Classes and Kits); spells, psionics and monsters as the manual describes them (Turn Undead by AD&D's table with them), spells rolling to hit, resting and Enlarge's dice (Magic and Psionics); and thief skills (Improved Thieving).
+Rules the game got wrong are put right too, each under its own heading above with a switch, on by default: the saving throws against spells and the doubled d20 against fire, cold and electricity, two weapons, warriors' attacks, helms' AC, acid on armour, held targets, creature size and cahulaks (Combat); class restrictions, multiclass hit points, the class tables, rangers' spells, dual-classing, preservers' learning from scrolls, CON's regeneration and poison saves (Classes and Kits); spells, psionics and monsters as the manual describes them (Turn Undead by AD&D's table with them), spells rolling to hit, resting and Enlarge's dice (Magic and Psionics); and thief skills (Improved Thieving).
 
 ## Your Saved Games
 
-**You don't need to start a new game for these fixes.** They're in the patched game and the Loader, not in your saves, so they work from the moment you load. The fixes stop the old bugs from happening, but don't undo what they already did to a save. The README's [saved games](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/README.md#updating-backups-saved-games-and-the-loaders-files) has each of these in full:
+**You don't need to start a new game for these fixes.** They're in the patched game and the Loader, not in your saves, so they work from the moment you load. The fixes stop the old bugs from happening, but don't undo what they already did to a save.
 
-- **A save made with 2.14.0 is not for earlier versions,** one made with 2.13.2 or later not for 2.13.1 or earlier, and one made with 2.13.0 or later not for anything before 2.13.0. Older saves load in newer versions as they are.
-- **Share Strength and Dispel Magic:** strength kept from Share Strength stays; a character silenced by Dispel Magic casts again once it wears off.
-- **Ages:** each character in a save is given a starting age the first time the Loader sees them.
-- **Kits from earlier versions:** a Healer is given the cosmos spells; a thri-kreen druid/fighter Wasteland Seer has no kit now.
-- **Thieves' Tools** from an earlier version do nothing: a thief picks pockets with the Pick Pockets button.
-- **Most PSP** may go up once, the next time the game works it out.
-- **Thornwall in an older save:** never comes in a save from 1.2.0 to 2.5.0 that has been to the slave pens; already on the rack in one from 2.13.4 or earlier that has been to the arena.
-- **Kreenfang:** likely still on the dead body by the stone arch in a save from 2.13.4 or earlier that has been to the arena.
-- **Pehtucl's locked chest** comes with a new game.
-- **A save made with an earlier version while Kalzith was switched off** may start Kalzith's conversation when you talk to Semyon.
-- **A new game whose arena fight never began** (a 2.4.0 bug) can't be mended: start a new one.
+**A save isn't for an older version** where a release changed what a save holds: 2.13.0, 2.13.2 and 2.14.0 did, so a save made with one of them or later doesn't load in the versions before it. Older saves load in newer versions as they are.
 
-**A new game is still the way to see all of the mod.** Kits, STORE and RECALL and fuller starting gear come with characters made with the mod, and much of the new content (Kalzith, Semyon, the vulture, the new items in the slave pens) is in the game's first areas. A save made with the original game loads and plays with every fix and rule change, but its characters have no kits, and what it has already been through stays as it was.
+**A new game is still the way to see all of the mod.** Kits, STORE and RECALL and fuller starting gear come with characters made with the mod, and much of the new content (Kalzith, Semyon, the vulture, the new items in the slave pens) is in the game's first areas. The new and changed gear the game's people carry and its chests hold comes only in areas the save hasn't been to: where the party has been, they keep what they had. A save made with the original game loads and plays with every fix and rule change, but its characters have no kits, and what it has already been through stays as it was. What else an older save keeps is in the README's [saved games](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/README.md#updating-backups-saved-games-and-the-loaders-files).

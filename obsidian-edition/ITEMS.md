@@ -9,6 +9,16 @@ mod's [new items](FEATURES.md#new-items), the game's and the mod's, with their i
 and where each is; then each item's chance
 [against acid](#items-against-acid).
 
+## Contents
+
+- [Every magic item](#every-magic-item): weapons, missile weapons, by weapon
+  spec, body armour, arm and leg armour, head, shields and gloves, other worn
+  items, held items
+  - [Pehtucl's chest](#pehtucls-chest)
+- [Every mundane weapon](#every-mundane-weapon)
+- [Every mundane armour piece](#every-mundane-armour-piece)
+- [Items against acid](#items-against-acid): chest, arms and legs, weapons
+
 ## Every magic item
 
 All the magic items in a game with the mod's new content on: the game's own,
@@ -44,7 +54,7 @@ Belt of Might making STR at least 24.
 | ![](docs/items/gythka-plus3.png) | Bone | gythka | Gythka +3 | +3 | carried by **Hototo**, chief of the White Sand Outlaws who burst from the sand (fought if the talk goes wrong; the mod's); and the arena's [1000th trip](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights), King Tectuktitlay's gift |
 | ![](docs/items/gythka-plus2.png) | Bone | gythka | ***Gythka +2*** | the game's Gythka +1, made +2 | the **Elven Leader**'s gift, after the fight with his men (he carries it too) |
 | ![](docs/items/kreenfang.png) | Bone | gythka | ***Kreenfang*** | a gythka +1 (2d4+1) | carried by the **Tohr-kreen** leading the champions in the arena, after **Scar** is killed ([the champions' bout](FEATURES.md#the-champions-bout)) |
-| ![](docs/items/cahulaks-plus2.png) | Bone | cahulaks | ***Cahulaks +2*** | +2; casts Cause Light Wounds on a hit (the game's Cahulaks +1, made +2); its blades glow blue | the caravan's buried chest |
+| ![](docs/items/cahulaks-plus2.png) | Bone | cahulaks | ***Cahulaks +2*** | +2; casts Cause Light Wounds on a hit (the game's Cahulaks +1, made +2); its blades glow blue | the Elven Caravan's buried chest (Kel's caravan), with the Boots of Elvenkind |
 | ![](docs/items/cahulaks-plus1.png) | Bone | cahulaks | ***Cahulaks +1*** | +1; its blades glow in fire colours | carried by **Legcrusher**, the pens' half-giant monster trainer, in place of his two clubs (the mod's) |
 | ![](docs/items/dragonsbane.png) | Metal | long sword | Dragonsbane | +4 | Kraxis' sword, taken from his body after the final battle against Draj's army |
 | ![](docs/items/els-drinker.png) | Metal | long sword | El's Drinker | +2, Vampiric Touch | the safe in Gedron, with 2,000 ceramic pieces; and the arena's [1000th trip](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights), King Tectuktitlay's gift |
@@ -90,23 +100,26 @@ Belt of Might making STR at least 24.
 | ![](docs/items/vampiric-arrows.png) | Wooden | arrows | ***Vampiric Arrows*** | cast Vampiric Touch on what they hit | the same |
 
 **By weapon spec**, for [weapon
-specialization](FEATURES.md#weapon-specialization):
+specialization](FEATURES.md#weapon-specialization), in the weapon window's order:
 
 | Weapon spec | Magic weapons |
 |---|---|
 | Long sword | Dragonsbane +4, Swiftbite +2, El's Drinker +2, Dark Flame +2, Draketooth +1, Hornblade +1, Bloodwrath +1, ***Flame Blade*** +1 |
-| Short sword | ***Greenbright*** +2, ***Shadowseeker*** +1, ***Mindshard*** +1, ***Stillwater*** +1 |
+| Club | ***Gutterknot*** +1 |
 | Dagger | Dag's Dagger +3, Terror Blade +2, ***Galefang*** +2, ***Nightsliver*** +2, ***Hayneedle*** +1 |
+| Short sword | ***Greenbright*** +2, ***Shadowseeker*** +1, ***Mindshard*** +1, ***Stillwater*** +1 |
+| Mace | Mace +2, Blackmace +1 |
 | Axe | ***Glasshewer*** +2, ***Drakejaw*** +1, Soulcrusher +1, Axe +1 |
 | Great axe | Great Axe +3, ***Headsman*** +2 |
-| Gythka | Gythka +3, ***Gythka +2***, ***Kreenfang*** +1 |
-| Polearm | ***Linebreaker*** +2, Polearm +1, ***Thornwall*** +1 |
-| Mace | Mace +2, Blackmace +1 |
+| Pick | ***Deepbiter*** +1 |
 | Quarterstaff | Quarterstaff +2, Balk's Staff +1, Parting Staff +1 |
-| Sling | Sling +2, Sling +1 |
-| Club, pick, cahulaks | ***Gutterknot*** +1, ***Deepbiter*** +1, ***Cahulaks +2***, ***Cahulaks +1*** |
+| Polearm | ***Linebreaker*** +2, Polearm +1, ***Thornwall*** +1 |
+| Gythka | Gythka +3, ***Gythka +2***, ***Kreenfang*** +1 |
+| Cahulaks | ***Cahulaks +2***, ***Cahulaks +1*** |
+| Chatkcha | ***Skycutter*** +2, Chatkcha +1 |
 | Bow | Bow +2, Phrain's Bow +1, ***Dunesong*** +1 |
-| Staff sling, chatkcha | ***Windlash*** +1, ***Skycutter*** +2, Chatkcha +1 |
+| Sling | Sling +2, Sling +1 |
+| Staff sling | ***Windlash*** +1 |
 
 **Body armour:**
 
@@ -120,7 +133,7 @@ specialization](FEATURES.md#weapon-specialization):
 
 **Arm and leg armour:**
 
-| Icon | Slot | Material | Item | Bonus | Where |
+| Icon | Slot | Material | Item | Bonus / power | Where |
 |---|---|---|---|---|---|
 | ![](docs/items/tanelyvs-arm-armor.png) | Arms | Metal | Tanelyv's Armor | chain +2 | the spirit Tanelyv's gift in the Wyrm Temple (with the chest piece), once Balkazar is dead |
 | ![](docs/items/wardens-arms.png) | Arms | Metal | ***Warden's Arms*** | plate arm armour +1 (AC 2, +1) | the Lower Castle's treasure chest, with Dark Flame (behind the wall the Serpent Boots show, where the vrock perch) |
@@ -133,7 +146,7 @@ Tanelyv's Armor also has a chest piece, metal, with no plus (AC 4 better: the ch
 
 **Head:**
 
-| Icon | Material | Item | Power | Where |
+| Icon | Material | Item | Bonus / power | Where |
 |---|---|---|---|---|
 | ![](docs/items/helm-of-might.png) | Leather | Helm of Might | STR +1 | a reward in the party's hut in Teaquetzl, once Cedrilte joins the alliance (with Arrows +3, a bracelet and a pear) |
 | ![](docs/items/leather-helm.png) | Leather | Leather helm +1 | | a chest |
@@ -155,7 +168,7 @@ Tanelyv's Armor also has a chest piece, metal, with no plus (AC 4 better: the ch
 
 **Other worn items:**
 
-| Icon | Slot | Item | Power | Where |
+| Icon | Slot | Item | Bonus / power | Where |
 |---|---|---|---|---|
 | ![](docs/items/bracers-of-defense.png) | Arms | ***Bracers of Defense*** | AC for those wearing no armour: [bracers of defense](FEATURES.md#bracers-of-defense) | **Mikquetzl** (AC 6, in his pack), **Wyrmias** (AC 5), **Balkazar** (AC 4), **Dagolar** (AC 2, the one carrying Dag's Dagger) |
 | ![](docs/items/ashen-robe.png) | Chest | ***Ashen Robe*** | +1 AC; +1 on saves against spells | worn by **Kalzith**, who sells it with his scrolls, and left with his body if he's killed ([Robes](FEATURES.md#robes)) |
@@ -164,7 +177,7 @@ Tanelyv's Armor also has a chest piece, metal, with no plus (AC 4 better: the ch
 | ![](docs/items/girdle-of-back-defense.png) | Waist | ***Girdle of Back Defense*** | no enemy gets the +2 to hit for attacking its wearer from behind, nor a thief's backstab | carried by the **Troop Leader**, with Linebreaker |
 | ![](docs/items/golden-girdle-of-urnst.png) | Waist | ***Golden Girdle of Urnst*** | AC 3 better against swords (long and short), in melee | carried by **Wyrmias**, with his bracers |
 | ![](docs/items/serpent-boots.png) | Feet | Serpent Boots | Displacement | a ceramic pot (the cluebook's broken jar) in the Lower Castle |
-| ![](docs/items/boots-of-elvenkind.png) | Feet | ***Boots of Elvenkind*** | soft boots: [silent](FEATURES.md#hiding-in-shadows-to-backstab), with hiding to backstab on; thieves and rangers only | the buried chest of Kel's caravan, with the Cahulaks +2 |
+| ![](docs/items/boots-of-elvenkind.png) | Feet | ***Boots of Elvenkind*** | soft boots: [silent](FEATURES.md#hiding-in-shadows-to-backstab), with hiding to backstab on; thieves and rangers only | the Elven Caravan's buried chest (Kel's caravan), with the Cahulaks +2 |
 | ![](docs/items/boots-of-speed.png) | Feet | ***Boots of Speed*** | in a fight, the wearer's movement doubled (the speed of a fast horse: Move 24 to a human's 12) and AC 2 better while it can move (not Stuck, Paralyzed or Slowed); anyone may wear them; not out of a fight | carried by **Dagger**, chief of the White Sand Outlaws, whose band comes for the blank-eyed slave (fought if the party keeps the slave from him) |
 | ![](docs/items/living-cloak.png) | Cloak | Living Cloak | Inertial Barrier | Dagolar |
 | ![](docs/items/cloak-of-protection-plus1.png) | Cloak | ***Cloak of Protection +1*** | +1 AC and +1 on every saving throw, from the cloak slot | in [Pehtucl's chest](#pehtucls-chest), beside the slave pens' head templar: locked and trapped. In a game saved before 2.14.0 that has been to the pens, he wears the cloak instead, and the chest is the plain one |
@@ -214,8 +227,8 @@ Traps), else it does 2d6 poison damage to the one who sprang it. Once open, it s
 Every plain weapon in a game with the new items, the game's and the mod's,
 by type and material: who sells it and who carries it (by the names the game
 gives them; many are of a kind, such as every Renegade or Tari). The **Weapon
-Merchant** and the **Bowyer** are in Teaquetzl, **Jark** and **Kel** in Kel's
-caravan. The game's plain stone pick is a
+Merchant** and the **Bowyer** are in Teaquetzl, **Jark** and **Kel** in the Elven
+Caravan (Kel's caravan). The game's plain stone pick is a
 [starting weapon](FEATURES.md#weapon-specialization), and two lie in the Hot
 Springs; Deepbiter is its magic one.
 
@@ -278,7 +291,7 @@ off AC 10 (the game's own numbers; a character's AC adds up its pieces).
 | Legs | bone | Brigandine Leg Armor | 1 | Jark, Armor Merchant | Keldar, Templar, Chaya, Caravan Master, Chahl, Elven Leader |  |
 | Legs | bone | Scale Leg Armor | 1 | Jark | Uskuye, Elite Guard, a chest in the slave pens, the arena's champions (the half-giant, the mul) | **new** placement |
 | Legs | metal | Chain Leg Armor | 1 | Armor Merchant | Army Commander, a skeleton in the Upper Castle |  |
-| Head | leather | Helm | 0 (1 with [Helms give AC 1](FEATURES.md#helms)) | Armor Merchant, Kel ("Dapartea's Helm") | Kurzak, a chest in the Upper Castle, a chest in the slave pens, a bag in the slave pens, the arena's champions (the halfling, the elf) | **new** placement |
+| Head | leather | Helm | 0 (1 with [Helms give AC 1](FEATURES.md#helms)) | Armor Merchant, Kel (who sells it as Dapartea's Helm) | Kurzak, a chest in the Upper Castle, a chest in the slave pens, a bag in the slave pens, the arena's champions (the halfling, the elf) | **new** placement |
 | Head | bone | Bone Helm | 0 (1 with [Helms give AC 1](FEATURES.md#helms)) | — | a chest in the slave pens, the arena's champions (the half-giant, the mul) | **new**: the bone scale set's helm |
 | Hand | wood | Shield | 1 | — | Wyvern Master, Arant, Chaya, Elven Leader, Templar, a chest in the slave pens |  |
 | Hand | leather | Shield | 1 | — | Keldar, Templar, Caravan Master, Gladiator, the arena's champions (the half-giant, the halfling, the elf) |  |
@@ -331,8 +344,7 @@ no magical power is lost at once in the game (0%); one with a power never is
 
 **Weapons** (the first melee weapon held), by material, the game's and the
 mod's. A weapon's spell (Dark Flame's Burning Hands) is a magical power. Only a
-weapon of reach 1 is ever taken (the type's +0Ah; DSUN.EXE 5900Ah, which the
-attack calls with 1): chatkchas (the Chatkcha +1, ***Skycutter***: reach 9),
+melee weapon is ever taken: chatkchas (the Chatkcha +1, ***Skycutter***),
 slings and bows never are:
 
 | Item | Saved in the game | Saved with the rule |
@@ -340,8 +352,9 @@ slings and bows never are:
 | Plain bone or metal weapons | 65% | 65% (the game's: needs 8) |
 | Plain wooden weapons | 65% | 65% (needs 8) |
 | Plain stone or obsidian weapons | 65% | 80% (needs 5) |
-| Bone +1: Hornblade, Draketooth, Polearm +1, Cahulaks +1, ***Stillwater***, ***Hayneedle***, ***Drakejaw***, ***Thornwall***, ***Kreenfang*** | 70% | 70% (the game's: needs 7) |
-| Bone +2: Swiftbite, Mace +2, ***Gythka +2***, ***Cahulaks +2*** | 75% | 75% (the game's: needs 6) |
+| Bone +1: Hornblade, Draketooth, Polearm +1, ***Cahulaks +1***, ***Stillwater***, ***Hayneedle***, ***Drakejaw***, ***Thornwall***, ***Kreenfang*** | 70% | 70% (the game's: needs 7) |
+| Bone +2: Swiftbite, Mace +2, ***Gythka +2*** | 75% | 75% (the game's: needs 6) |
+| Bone +2 with a power: ***Cahulaks +2*** (Cause Light Wounds) | 75% | 75% (the game's: needs 6) |
 | Bone +3: Gythka +3 | 80% | 80% (the game's: needs 5) |
 | Metal +1: Soulcrusher, Axe +1, ***Shadowseeker*** | 70% | 70% (the game's: needs 7) |
 | Metal +2: El's Drinker, ***Greenbright***, ***Galefang***, ***Headsman***, ***Linebreaker*** | 75% | 75% (the game's: needs 6) |
