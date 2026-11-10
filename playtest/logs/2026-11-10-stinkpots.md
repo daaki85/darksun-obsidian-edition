@@ -30,3 +30,12 @@ Templar attacks Jenna with Obsidian Bloodwrath +1 (1d8+1): d20 = 1 (natural 1), 
 By then the effect showed 60 s, "1 round" left: it counts down.
 
 Not looked at: the effect's NAUSEATED entry on the Effects screen. That screen shows party members, and the effect was only on a foe. Its name and icon are covered by `test_stinkpots`.
+
+## The pick and the axe (commit 192c6ff)
+After `loadsave.sh fountain-user` (`buildcheck.py` OK), the type table in memory, through the far pointer DS:1669h, read:
+- type 112 (the game's pick, Deepbiter's): 1d6+1;
+- type 127 (the Metal Pick): 1d6+1;
+- type 0 (the staff sling): 1d3;
+- type 22 (the metal axe): 1d8.
+
+The large dice (the pick 2d4, the axe 1d10) are tested in emulation (`test_sizes`); I didn't hit a large foe with them in the game.
