@@ -71,6 +71,8 @@ OTHERS = {
     specialize.KINDS.index("great axe"): ((game.OBSIDIAN_GREAT_AXE_TYPE, 0x03, 0x10000 - 2576, 25),
                                           (game.METAL_GREAT_AXE_TYPE, 0x03, 0x10000 - 2508, 300)),
     specialize.KINDS.index("polearm"): ((game.METAL_POLEARM_TYPE, 0x12, 0x10000 - 2512, 250),),
+    # the Loader's obsidian cahulaks (an earth or fire cleric's; the game's are bone, water's)
+    specialize.KINDS.index("cahulaks"): ((game.OBSIDIAN_CAHULAKS_TYPE, 0x14, 0x10000 - 2674, 15),),
 }
 MISSILE_KINDS = frozenset(specialize.KINDS.index(k) for k in ("bow", "sling", "staff sling"))
 BOW = specialize.KINDS.index("bow")

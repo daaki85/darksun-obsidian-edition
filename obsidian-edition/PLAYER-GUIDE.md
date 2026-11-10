@@ -170,10 +170,10 @@ What the scores do:
 | Dwarf | +1 | −1 | +2 | | | −2 | better CON saves |
 | Elf | | +2 | −2 | +1 | −1 | | |
 | Half-elf | | +1 | −1 | | | | |
-| Half-giant | +4 | −5 | +2 | −5 | −3 | −3 | double hit dice; holds a two-handed weapon in one hand |
+| Half-giant | +4 | −5 | +2 | −5 | −3 | −3 | double hit dice; holds a two-handed weapon in one hand; large: weapons roll their larger dice against it, Hold and Charm Person fail on it, cahulaks can't tangle it ([size](#equipment)) |
 | Halfling | −2 | +2 | −1 | | +2 | −1 | better CON saves |
 | Mul | +2 | | +1 | −1 | | −2 | |
-| Thri-kreen | | +2 | | −1 | +1 | −2 | base AC 5, moves 15 (others 12); four claws (1d4) and a bite (1d4+1) a round, that cut (edged, not crushing); with weapons in hand, the weapons in the claws' place, and the bite still; no armour, cloaks, belts, boots or rings |
+| Thri-kreen | | +2 | | −1 | +1 | −2 | base AC 5, moves 15 (others 12); four claws (1d4) and a bite (1d4+1) a round, that cut (edged, not crushing); with weapons in hand, the weapons in the claws' place, and the bite still; throws a chatkcha once more a round; no armour, cloaks, belts, boots or rings |
 
 With each score rolled 8 to 20 before the adjustment, a race's scores run from
 8 to 20 plus its adjustment: a half-giant's STR 12 to 24, its DEX and INT 3 to
@@ -510,7 +510,7 @@ Stalker a cloak too).
   ([which](KITS.md#kits-that-rule-out-classes-and-each-other)).
 
 **Magic weapons.** Every one ([the fighter's list](#fighter)). A **Seeker**
-only its sphere's, and every bow: air, the daggers, bows, slings, Windlash\*,
+only its sphere's, and every bow: air, the daggers, the cahulaks, bows, slings, Windlash\*,
 the chatkchas; earth, the metal, obsidian, stone and wooden ones (no bone, no
 slings); fire, the obsidian ones and the bows; water, the bone and wooden ones.
 
@@ -711,7 +711,8 @@ and fire a chatkcha; water none).
 
 - **Air:** every dagger (Dag's Dagger +3, Terror Blade +2, Galefang\* +2,
   Nightsliver\* +2, Hayneedle\* +1), Bow +2, Phrain's Bow +1, Dunesong\* +1,
-  Sling +2, Sling +1, Windlash\* +1, Skycutter\* +2, Chatkcha +1.
+  Sling +2, Sling +1, Windlash\* +1, Skycutter\* +2, Chatkcha +1, Cahulaks +2\*,
+  Cahulaks +1\*.
 - **Earth:** Dragonsbane +4, El's Drinker +2, Dark Flame +2, Bloodwrath +1,
   Flame Blade\* +1, Greenbright\* +2, Shadowseeker\* +1, Mindshard\* +1, Dag's
   Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Glasshewer\* +2,
@@ -933,7 +934,7 @@ EXIT leaves the rest to the mod: the kit's own weapon (a Ghetto Fighter's
 dagger), a thri-kreen's chatkcha, else the long sword (a gladiator's second the
 club).
 
-![The level-up window: a picture of each weapon spec, the pointer on the dagger and SPECIALIZE IN / DAGGER under them, the specs this fighter/cleric can't use greyed](docs/weapon-picker.png)
+![The level-up window: a picture of each weapon spec, the pointer on the dagger and SPECIALIZE IN / DAGGER under them, the specs this fire cleric/fighter can't use greyed](docs/weapon-picker.png)
 
 | Who | Chooses | With a chosen weapon spec |
 |---|---|---|
@@ -949,7 +950,7 @@ class lets it use.
 **Attacks a round**, by the warrior's level (its best fighter, gladiator or
 ranger level). 3/2 means one attack one round and two the next.
 
-| With the weapon | Melee, 1-6 | Melee, 7-10 | Bow, 1-6 | Bow, 7-10 | Sling, staff sling, chatkcha, 1-6 | 7-10 |
+| With the weapon | Melee, 1-6 | Melee, 7-10 | Bow, 1-6 | Bow, 7-10 | Sling, staff sling, chatkcha (a thri-kreen's chatkcha +1), 1-6 | 7-10 |
 |---|---|---|---|---|---|---|
 | anyone who isn't a warrior | 1 | 1 | 2 | 2 | 1 | 1 |
 | a warrior, a weapon spec it hasn't chosen | 1 | 3/2 | 2 | 3 | 1 | 3/2 |
@@ -1479,7 +1480,7 @@ limits:
   always misses, and a miss does nothing: "Miss" floats over the target.
   Monsters' spines roll too. *Without the mod:* they always landed.
 - **Spells and psionics as the manual describes them** (a rule change, on by
-  default): some thirty spells and powers, and seven monsters, as the manual
+  default): twenty-four spells and two psionic powers, and seven monsters, as the manual
   has them (Solid Fog for a few rounds, not the whole fight; Hold Undead only
   on undead of the caster's level or lower; Strength by class; shadows that
   drain STR; the list is in [the features
@@ -1721,16 +1722,16 @@ materials, the short sword among them.
 | Short sword | 1d6 | 1d8 | yes |
 | Long sword | 1d8 | 1d12 | yes |
 | Club | 1d6 | 1d3 | yes |
-| Quarterstaff | 1d6 | 1d6 | yes |
+| Quarterstaff (two-handed) | 1d6 | 1d6 | yes |
 | Axe | 1d8 | 1d8 | bone and obsidian ones (not metal) |
 | Pick | 1d4+1 | 1d4 | yes |
 | Great axe (two-handed) | 1d10 | 2d8 | no |
 | Mace | 1d6+1 | 1d6 | no |
 | Cahulaks (both hands) | 1d6 | 1d6 | no |
 | Gythka (two-handed) | 2d4 | 1d10 | no |
-| Polearm | 1d10 | 2d6 | no |
+| Polearm (two-handed) | 1d10 | 2d6 | no |
 | Chatkcha | 1d6+2 | 1d4+2 | no: missiles never backstab |
-| Bow, sling, staff sling | by the missile | the same | no |
+| Bow, sling, staff sling (bow and staff sling two-handed) | by the missile | the same | no |
 
 A half-giant holds a two-handed weapon in one hand, with a shield or a light
 weapon in the other.
@@ -1748,11 +1749,12 @@ every creature's size. *Without the mod:* the game keeps no sizes.
 **Cahulaks** are two bladed heads on a rope, one in each hand. Their wielder
 attacks one more time a round, with the off head, at the [two-weapon](#two-weapons)
 penalties: −2 for the main head and −4 for the off, DEX's adjustment added but
-never making it a bonus (a ranger in light armour has none, a Ghetto Fighter 0
+never making it a bonus (a ranger in light armour has none, a Justifier in any, a Ghetto Fighter 0
 and −2). A hit that does damage **tangles** a man-sized or smaller foe unless
-it saves against petrification: it loses its next turn. Half-giants, the large
-monsters, anyone Enlarged and things with no body a rope could hold
-(elementals, slimes...) can't be tangled. Twin-blades and Battle Dancers can't use cahulaks.
+it saves against petrification: it loses its next turn. Half-giants, large monsters,
+anyone Enlarged, the bodiless (elementals, slimes, swarms, shadows) and a few
+other beasts can't be tangled ([the creatures' table](CREATURES.md) (spoilers)
+marks each). Twin-blades and Battle Dancers can't use cahulaks.
 *Without the mod:* a plain two-handed 1d6 weapon.
 
 **Armour** is worn in pieces (chest, arms, legs, a helm), each lowering AC by
@@ -1824,7 +1826,8 @@ chosen type, often one of these.
 | Skycutter | chatkcha +2 |
 
 The game's own Gythka +1 and Cahulaks +1 are a Gythka +2 and a Cahulaks +2
-with the mod (the cahulaks still cast Cause Light Wounds on a hit).
+with the mod (the cahulaks still cast Cause Light Wounds on a hit). The game's
+own Polearm +1, which it never placed, can be found now.
 
 **Other magic items:**
 
@@ -1864,7 +1867,7 @@ without).
 | **Spell slots on the USE screen** | Spells left of each level, and the most after resting. |
 | **The Look box** | In a fight, a monster's hit points, AC, THAC0, alignment, magic resistance and chief defence; closing the box tells the rest. |
 | **Item boxes** | A wand's or other charged item's charges left; a plain weapon's to-hit (`Hit -1` for bone); with creature size, a weapon's damage against large targets too (`1D8-1/1D12-1`); a cloak's, boots' or belt's bonus to thief skills (`Hide +10`, `Silent +10`, `Pick +5, Lock +5`). |
-| **The Effects screen** | Names each kit (a Shinobi's with its chance to read a scroll) and weapon spec, a page at a time when there are many; with the pointer on the icon of a spell that lasts a number of uses, the uses left: IMPROVED AC (10 CHARGES), MIRROR IMAGES (3 CHARGES). A magic item's power (Shadowseeker's Detect Invisibility) lasts while the item is readied and shows no charges. |
+| **The Effects screen** | Names each kit (a Shinobi's with its chance to read a scroll) and weapon spec, a page at a time when there are many; with the pointer on the icon of a spell that lasts a number of uses, the uses left: IMPROVED AC (10 CHARGES), MIRROR IMAGES (3 CHARGES); for Enlarge how much more the weapon's dice give (ENLARGED (+90% DICE)), and for Barkskin, Flesh Armor and Magical Vestments the armour AC they give (BARKSKIN (AC 3)). A magic item's power (Shadowseeker's Detect Invisibility) lasts while the item is readied and shows no charges. |
 | **What a scroll says** | Reading a scroll on the inventory screen, the line under the paper doll gives the result: YOU LEARN THE SPELL, YOU CAN NOT READ THE SCROLL... *Without the mod:* nothing showed there. |
 | **New characters' thief skills** (a bug fixed) | A character not yet played shows its thief skills. *Without the mod:* they showed as 0. |
 
@@ -1970,7 +1973,7 @@ line](DICE-LOG.md) what each of its lines means.
 | In the game | a combat log in the game (L shows and hides it) | on |
 | | how much it says: at the least, in short or in detail | in short |
 | | what hurts a monster (the Look box): describes a monster you Look at in a fight | on |
-| | names over figures: a spell's name over its caster, "Miss" over whoever an attack missed, and a spell's use lost ("Armor: 7 left") | on |
+| | names over figures: a spell's name over its caster, "Miss" over whoever an attack missed, and a used charge ("Armor: 7 left") | on |
 | Rule changes | *characters:* class restrictions; multiclass hit points; hit dice: the better of two; scores and hit points as rolled; AD&D's class tables; CON as in AD&D; ages and magical aging; dual-classing as the manual has it; level cap by XP. *Weapons and armour:* two weapons; half-giants' two-handed weapons; cahulaks as Dark Sun's rules have them; creature size as in AD&D; held targets as in AD&D; rings and cloaks of protection; helms AC 1; items saving against acid. *Magic:* rangers' casting level; preservers' INT; the spell save; DEX instead of a doubled d20; Enlarge multiplying the weapon's dice only; spells and psionics as the manual describes them (monsters' powers and Turn Undead by AD&D's table among them); spells roll to hit; resting as in AD&D | all on |
 | More character customization | weapon specialization; kits; STORE and RECALL on the creation screen; fuller starting gear | all on |
 | Expanded features | the leader's CHA at shops; buying back magical items; improved thieving: thief skills from AD&D's table, hiding in shadows to backstab, the cloak, boots and belt, backstabs multiplying the weapon's dice only, picking pockets | all on |

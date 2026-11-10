@@ -105,6 +105,75 @@ class GameLockTests(unittest.TestCase):
                 launch.launch(d)
             prepare.assert_not_called()
 
+    def game(self) -> subprocess.Popen:
+        """A process standing in for the game a Loader started (DOSBox)."""
+        proc = subprocess.Popen([sys.executable, "-c", "import sys; sys.stdin.read()"], stdin=subprocess.PIPE)
+
+        def end():
+            if proc.poll() is None:
+                proc.kill()
+            proc.wait()
+            proc.stdin.close()
+        self.addCleanup(end)
+        return proc
+
+    def test_the_game_outlives_the_loader_that_started_it(self):
+        """The window closed with its game still running: the lock goes, but the game's line stays
+        in the file, so a second start is refused (the copies not rebuilt under the running game)
+        while a Loader following that game may still take the lock; once the game has closed, a
+        start goes ahead."""
+        game = self.game()
+        launch.hold_game("the Loader's window", self.lock)
+        launch.note_game(game.pid, sys.executable)
+        self.assertEqual(launch.lock_game(self.lock), (game.pid, os.path.basename(os.path.realpath(sys.executable)).lower()))
+        launch.release_game()
+        self.assertTrue(os.path.exists(self.lock))  # (kept: the game runs on)
+        self.assertEqual(launch.running_game(self.lock), game.pid)
+        launch.hold_game("the dicelog command", self.lock)  # (following it: allowed, its line kept)
+        self.assertEqual(launch.lock_game(self.lock)[0], game.pid)
+        launch.release_game()
+        with tempfile.TemporaryDirectory() as d, \
+                mock.patch.object(launch, "GAME_LOCK", self.lock), \
+                mock.patch.object(launch, "SETTINGS", os.path.join(d, "settings.json")), \
+                mock.patch.object(launch, "_launch") as started:
+            with self.assertRaises(launch.GameBusy) as caught:
+                launch.launch(d)
+            self.assertIn(f"still running (process {game.pid})", str(caught.exception))
+            started.assert_not_called()
+            self.assertFalse(launch.holds_game())
+            game.kill()
+            game.wait()
+            self.assertEqual(launch.running_game(self.lock), 0)
+            started.return_value = (mock.Mock(pid=4321, args=["DOSBox.exe", "-conf"]), None)
+            launch.launch(d)
+            started.assert_called_once()
+            self.assertEqual(launch.lock_game(self.lock)[0], 4321)
+            self.assertEqual(launch.LAST_SETTINGS, {})
+
+    def test_a_pid_reused_by_another_program_is_not_the_game(self):
+        with mock.patch.object(launch, "pid_alive", lambda pid: True):
+            with mock.patch.object(launch, "process_name", lambda pid: "notepad.exe"):
+                self.assertFalse(launch.game_alive(1234, "dosbox.exe"))
+            with mock.patch.object(launch, "process_name", lambda pid: "DOSBox.exe".lower()):
+                self.assertTrue(launch.game_alive(1234, "DOSBox.exe"))
+            with mock.patch.object(launch, "process_name", lambda pid: None):  # (can't tell: alive is enough)
+                self.assertTrue(launch.game_alive(1234, "dosbox.exe"))
+        self.assertFalse(launch.game_alive(0, "dosbox.exe"))
+
+    def test_a_dead_games_lock_file_is_taken_away(self):
+        game = self.game()
+        launch.hold_game("the Loader's window", self.lock)
+        launch.note_game(game.pid, "python")
+        game.kill()
+        game.wait()
+        launch.release_game()
+        self.assertFalse(os.path.exists(self.lock))
+
+    @unittest.skipUnless(sys.platform.startswith("linux") or os.name == "nt", "no way to ask a process's program")
+    def test_process_name(self):
+        self.assertEqual(launch.process_name(os.getpid()), os.path.basename(os.path.realpath(sys.executable)).lower())
+        self.assertIsNone(launch.process_name(0))
+
     def test_dicelog_command_refused(self):
         self.holder()
         with mock.patch.object(launch, "GAME_LOCK", self.lock):
@@ -170,6 +239,75 @@ class SettingsTests(unittest.TestCase):
             with self.assertRaises(launch.LaunchError):  # (a launch never builds the copies from defaults)
                 launch.launch(self.dir)
         self.assertIs(launch.load_settings()["dust"], False)
+
+    def held(self):
+        """settings.json held elsewhere (an antivirus, a backup) while the block runs."""
+        import builtins
+        real_open = builtins.open
+
+        def locked(path, *args, **kwargs):
+            if path == launch.SETTINGS:
+                raise PermissionError(13, "in use", path)
+            return real_open(path, *args, **kwargs)
+        import contextlib
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch("builtins.open", locked))
+        stack.enter_context(mock.patch("time.sleep"))
+        return stack
+
+    def test_pickpocketed_read_strictly(self):
+        """The pockets tried, held elsewhere: SettingsUnreadable, never [] (which the next pick
+        would save over every earlier try)."""
+        self.write({"pickpocketed": ["Dag|41|7|Trader@500"]})
+        with self.held():
+            with self.assertRaises(launch.SettingsUnreadable):
+                launch.pickpocketed()
+        self.assertEqual(launch.pickpocketed(), ["Dag|41|7|Trader@500"])
+
+    def test_prepare_reads_the_switches_strictly(self):
+        """prepare_patched_game with no settings given never builds the copies from the defaults."""
+        self.write({"kalzith": False})
+        with self.held(), mock.patch.object(launch.gamepatch, "write_patched") as patched:
+            with self.assertRaises(launch.SettingsUnreadable):
+                launch.prepare_patched_game(self.dir)
+            patched.assert_not_called()
+
+    def test_dicelog_command_waits_for_the_settings(self):
+        """The dicelog command's switches and rules read strictly: a file held at the start is
+        waited for, not taken for every rule on."""
+        self.write({"pickpocketed": ["Dag|41|7|Trader@500"], "helms": False})
+        tries = []
+        real = launch.load_settings
+
+        def load(strict=False, tries_=None, **kwargs):
+            if strict and not tries:
+                tries.append(1)
+                raise launch.SettingsUnreadable(13, "settings.json can't be read just now (in use)")
+            return real(strict=strict, **kwargs)
+
+        class Stop(Exception):
+            pass
+        got = {}
+
+        class Log:
+            def __init__(self, guest, record_everything=False):
+                pass
+
+            def answer_stats_in_background(self):
+                pass
+
+            def use_settings(self, settings, picked_known=True):
+                got.update(settings=settings, known=picked_known)
+                raise Stop()
+        with mock.patch.object(launch, "load_settings", load), mock.patch.object(cli, "connect", lambda args: object()), \
+                mock.patch("dsloader.dicelog.DiceLog", Log), mock.patch("time.sleep"), \
+                mock.patch("builtins.print"):
+            with self.assertRaises(Stop):
+                cli._follow(argparse.Namespace(pid=None, host_base=None, raw=False, all=False))
+        self.assertEqual(tries, [1])
+        self.assertEqual(got["settings"]["pickpocketed"], ["Dag|41|7|Trader@500"])
+        self.assertIs(got["settings"]["helms"], False)
+        self.assertTrue(got["known"])
 
     def test_a_second_unreadable_file_keeps_the_first(self):
         for text in ("{cut", "{also cut"):

@@ -57,7 +57,7 @@ pointing to it, in the Loader's copy of that region's file).
 import struct
 from typing import Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import dataitems, game, npcitems, specialize, weaponchoice
+from . import dataitems, game, gff, npcitems, specialize, weaponchoice
 
 # the bone long sword the game's merchants sell (SEGOBJEX's), which the weapons are made from
 TEMPLATE = npcitems._item("0cfc000000002d000000510000000000" "04ff1c0000")
@@ -413,7 +413,7 @@ BASE_TYPES = {game.SHORT_SWORD_TYPE: 63, game.CLOAK_TYPE: 65, game.BONE_HELM_TYP
               game.PLATE_ARMS_TYPE: 58, game.PLATE_LEGS_TYPE: 59, game.ELVEN_CLOAK_TYPE: 65, game.ELVEN_BOOTS_TYPE: 68,
               game.AIR_DAGGER_TYPE: 33, game.BONE_GREAT_AXE_TYPE: 2, game.OBSIDIAN_GREAT_AXE_TYPE: 2,
               game.BONE_DAGGER_TYPE: 17, game.ROBE_TYPE: 65, game.METAL_SHIELD_TYPE: 4,
-              game.METAL_CAHULAKS_TYPE: 21,
+              game.METAL_CAHULAKS_TYPE: 21, game.OBSIDIAN_CAHULAKS_TYPE: 21,
               # the girdles: the Belt (42); the Amulet of Magic Resistance: the Necklace (36); the Boots of
               # Speed: the Boots (68), as npcitems.TYPES makes their types
               game.BACK_GIRDLE_TYPE: 42, game.URNST_GIRDLE_TYPE: 42, game.MR_AMULET_TYPE: 36,
@@ -639,10 +639,7 @@ def write_region(source: str, dest: str, region: int, gifts: Sequence[Gift]) -> 
     with open(source, "rb") as f:
         data = f.read()
     out = with_chunks(data, region_chunks(region, read_gff(data), gifts))
-    tmp = dest + ".tmp"
-    with open(tmp, "wb") as f:
-        f.write(out)
-    os.replace(tmp, dest)
+    gff.write_atomic(dest, out)  # (no .tmp left by a failed write)
 
 
 def regions(gifts: Sequence[Gift]) -> List[int]:

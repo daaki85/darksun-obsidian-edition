@@ -39,7 +39,7 @@ _TYPES = {
     "quarterstaff": (3, 80),  # Quarterstaff, Parting Staff; Balk's Staff
     "polearm": (19, 111, game.METAL_POLEARM_TYPE),
     "gythka": (game.GYTHKA_TYPE,),
-    "cahulaks": (21, game.METAL_CAHULAKS_TYPE),
+    "cahulaks": (21, game.METAL_CAHULAKS_TYPE, game.OBSIDIAN_CAHULAKS_TYPE),
     "chatkcha": (48,),
     "bow": (1, 69),  # Bow, Seeker; Phrain's Bow
     "sling": (64,),

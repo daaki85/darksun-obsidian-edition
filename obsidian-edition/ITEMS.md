@@ -4,19 +4,18 @@
 every item is. The [player's guide](PLAYER-GUIDE.md#new-items) lists what the
 mod adds and who can use it, without saying where.*
 
-What the mod's own items cost, and more on its armour, robes, icons and names; then every magic
-item, mundane weapon and mundane armour piece in a game with the mod's [new
-items](FEATURES.md#new-items), the game's and the mod's, with their icons and where each is; then
-each item's chance [against acid](#items-against-acid).
+Every magic item, mundane weapon and mundane armour piece in a game with the mod's [new
+items](FEATURES.md#new-items), the game's and the mod's, with their icons and where each is;
+first, more on the mod's own items; last, each item's chance [against acid](#items-against-acid).
 
 ## Contents
 
-- [The mod's new items](#the-mods-new-items): prices, the Warden's Plate, bracers of defense, robes,
-  icons and names, Alagorn's stories
+- [The mod's new items](#the-mods-new-items): [prices](#prices), [the Warden's Plate](#the-wardens-plate),
+  [bracers of defense](#bracers-of-defense), [robes](#robes), [icons and names](#icons-and-names),
+  [Alagorn's stories](#alagorns-stories), [Pehtucl's chest](#pehtucls-chest)
 - [Every magic item](#every-magic-item): weapons, missile weapons, by weapon
   spec, body armour, arm and leg armour, head, shields and gloves, other worn
   items, held items
-  - [Pehtucl's chest](#pehtucls-chest)
 - [Every mundane weapon](#every-mundane-weapon)
 - [Every mundane armour piece](#every-mundane-armour-piece)
 - [Items against acid](#items-against-acid): chest, arms and legs, weapons
@@ -24,7 +23,7 @@ each item's chance [against acid](#items-against-acid).
 ## The mod's new items
 
 What the mod's [new items](FEATURES.md#new-items) cost, the armour that needs saying more of,
-their icons and names, and what Alagorn tells of them. Where each is, and what it does, is in the
+their icons and names, what Alagorn tells of them, and Pehtucl's chest. Where each is, and what it does, is in the
 tables below.
 
 ### Prices
@@ -136,6 +135,21 @@ it casts Detonate on every hit; the **Helm of Contemplation** (a "shield of
 thought against all psionic attacks") "turns a creature's gaze back on itself":
 Gaze Reflection.
 
+### Pehtucl's chest
+
+The chest beside Pehtucl, the slave pens' head templar, holds the Cloak of
+Protection +1. It is locked, with a poisoned needle in the lock, and can only
+be worked from beside it. Used by a thief, it is first searched for traps
+(find/remove traps: the needle drawn out, or set off) and then picked (open
+locks; a failed try can be tried again). Anyone else can try to bash it open
+(5% a try, and 5% more for each of STR 18, 20, 22 and 24), which sets the
+needle off if it is still there. A needle set off is a trap as the game's are:
+the party's best at find/remove traps may still spot it in time (or Detect
+Traps), else it does 2d6 poison damage to the one who sprang it. Once open, it stays open. It comes with a new game, with
+**New items, magical and mundane** on.
+
+How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#pehtucls-chest).
+
 ## Every magic item
 
 All the magic items in a game with the mod's new content on: the game's own,
@@ -147,10 +161,8 @@ A weapon's spell (Dark Flame's Burning Hands, Balk's Staff's Slow...) goes on
 whoever it hits, every hit, with no charge used; one the game counts as helpful
 (Shadowseeker's Detect Invisibility) is on its wielder instead while it is
 readied. The powers here are the item's own, from the data. What Alagorn says of
-an item when shown it isn't always what it does: the Golden Torque has no power;
-his stories of the Quicksilver Glove (grafting a weapon) and the Helm of
-Contemplation (a shield against psionic attacks) say what they do with the
-Loader ([Alagorn's stories](#alagorns-stories)). The items that change a
+an item when shown it isn't always what it does: the Golden Torque has no power
+(two of his stories are corrected: [Alagorn's stories](#alagorns-stories)). The items that change a
 score (Draketooth, Dag's Dagger, the Helm and Belt of Might, El's Ring, the
 Steadfast Ring and the Ring of Insight) do it while worn, the
 Belt of Might making STR at least 24.
@@ -326,21 +338,6 @@ Tanelyv's Armor also has a chest piece, metal, with no plus (AC 4 better: the ch
 | ![](docs/items/tome-of-understanding.png) | ***Tome of Understanding*** | read as a scroll is (right-click it in the inventory, click its icon): the one whose pack it is in gains a point of WIS for good (at most 25), and the tome is gone. Not in a fight, as no scroll can be read in one | **Father Garyn**'s gift, in Teaquetzl, when the party brings him the ranike pith from Notaku |
 | ![](docs/items/apple.png) ![](docs/items/scroll.png) ![](docs/items/kalzith-scroll.png) | Magic fruit (15 kinds), spell scrolls (19), psionic scrolls (11), ***Kalzith's six scrolls*** | used once | many places; Kalzith's in [his shop](FEATURES.md#kalzith), spells the game has no scroll of |
 
-### Pehtucl's chest
-
-The chest beside Pehtucl, the slave pens' head templar, holds the Cloak of
-Protection +1. It is locked, with a poisoned needle in the lock, and can only
-be worked from beside it. Used by a thief, it is first searched for traps
-(find/remove traps: the needle drawn out, or set off) and then picked (open
-locks; a failed try can be tried again). Anyone else can try to bash it open
-(5% a try, and 5% more for each of STR 18, 20, 22 and 24), which sets the
-needle off if it is still there. A needle set off is a trap as the game's are:
-the party's best at find/remove traps may still spot it in time (or Detect
-Traps), else it does 2d6 poison damage to the one who sprang it. Once open, it stays open. It comes with a new game, with
-**New items, magical and mundane** on.
-
-How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#pehtucls-chest).
-
 ## Every mundane weapon
 
 Every plain weapon in a game with the new items, the game's and the mod's,
@@ -379,7 +376,7 @@ Springs; Deepbiter is its magic one.
 | ![](docs/items/bone-polearm.png) | polearm | bone | Weapon Merchant | a weapon rack in the Lower Castle, a weapon rack in the slave pens |  |
 | ![](docs/items/metal-polearm.png) | polearm | metal | — | Castle Guard | **new**: the game's polearm, in metal; an earth cleric's starting polearm |
 | ![](docs/items/gythka.png) | gythka | bone | Jark, Weapon Merchant | Guardian, the arena's Tohr-kreen (the mod's: its picture holds one) |  |
-| ![](docs/items/cahulaks.png) | cahulaks | bone | Weapon Merchant | the dead body by the arena's stone arch, where Kreenfang was (the mod's, with the champions' bout) |  |
+| ![](docs/items/cahulaks.png) | cahulaks | bone | Weapon Merchant | the dead body by the arena's stone arch, in place of the game's plain gythka (the mod's, with the champions' bout) |  |
 | ![](docs/items/metal-cahulaks.png) | cahulaks | metal | — | the arena's champions (the mul) | **new**: the game's cahulaks, in metal |
 | ![](docs/items/chatkcha.png) | chatkcha | obsidian | Jark, Bowyer | — |  |
 | ![](docs/items/bow.png) | bow | wood | Jark, Kel, Bowyer | Wyvern Master, Ranger, Arant, Castle Guard, Guard, Arant's Guard, Arena Guard, Caravan Guard, Slaver Guard, Elven Leader, Uzoma, Drajian Guard, Army Commander, Elite Guard, Village Hero, a chest in the Upper Castle, a chest, a chest in Dagolar's tunnels, the arena's champions (the elf), Arant's lazy guard (the mod's) |  |

@@ -1,7 +1,9 @@
 # How the game works
 
 *Part of Obsidian Edition's documentation: the original game's own rules, for
-the curious. [The README](README.md) is about the mod.*
+the curious, and the detail of one rule change ([Spells and psionics as the
+manual describes them](#spells-and-psionics-as-the-manual-describes-them)).
+[The README](README.md) is about the mod.*
 
 What the game does that its manual doesn't say, from its code and checked in
 play. The dice log shows each as it happens, and the [rule
@@ -173,7 +175,8 @@ mace 100, as AD&D's 1, 3 and 10 lb), so the limit is 4 lb. Missile weapons
 | Axe | metal (70) | 1d8 | no |
 | Great axe | bone (50); obsidian, metal (70) | 1d10 | no |
 | Mace | bone, obsidian, metal (100) | 1d6+1 | no |
-| Cahulaks, gythka | bone (120) | 1d6, 2d4 | no |
+| Cahulaks | bone, metal (120) | 1d6 | no |
+| Gythka | bone (120) | 2d4 | no |
 | Polearm | bone, metal (150) | 1d10 | no |
 
 About a dozen more weapon types are in the game's tables with no item of
@@ -663,7 +666,7 @@ also logs the power check and the PSP spent; a power with a save logs the save.
 | Superior Invisibility | unseen; ends if it attacks | Invisible; attacking or casting at an enemy ends it | the effect |
 | Ego Whip | stunned 1d4 rounds | can't attack or cast harmful spells for 1d4 rounds; psionic defence, no save | the defence and the effect |
 | Id Insinuation | paralyzed 1d4 rounds; combat only | Paralyzed 1d4 rounds; psionic defence, no save; combat only | the defence and the effect |
-| Psionic Blast | believes it has lost 80% of its HP | loses real HP down to a fifth of its maximum on a failed save vs paralysis/poison/death; psionic defence first; the Edition gives a party member the HP back at the fight's end (one knocked out wakes), and until then a blow that would kill it knocks it out | the defence, save, HP lost and given back |
+| Psionic Blast | believes it has lost 80% of its HP | loses real HP down to a fifth of its maximum on a failed save vs paralysis/poison/death; psionic defence first; with the Loader, a party member gets the HP back at the fight's end (one knocked out wakes), and until then a blow that would kill it knocks it out | the defence, save, HP lost and given back |
 | Mind Bar | 75% resistance to mind spells | the same | the resistance roll |
 | Synaptic Static | no one nearby can use psionics | its keeper can't; anyone else must beat the static (above) | the contest |
 | Tower of Iron Will, Intellect Fortress, Mental Barrier, Mind Blank, Thought Shield | defences against psionic attacks | defence modes (above) | the defence rolls |
@@ -740,7 +743,7 @@ a power the manual hasn't:
 | Monster | The game | As the manual |
 |---|---|---|
 | Shadow | 1d4+1, and 2d6 cold, each hit; cold hurts it | its chilling grasp's light 1d4+1, and **1 STR drained** each hit, no save (Weakened for 2d4 turns; each hit its own, so they add up, STR never below 3); unaffected by cold, +1 weapons to hurt it (as before) |
-| Greater Shadow (the 6-HD Shadow, Shadow Guard, King, Prince and Worker, Cragg, Tanelyv, Tristram) | 2 attacks of 2d6, each paralysing for 2d6 rounds (a save); any spell hurts it in full | 2 attacks of 2d6 and **1 STR drained** each hit, as the shadow's; "unaffected by cold-based attacks"; +1 weapons, AC 4, HD 6 and THAC0 15 as before |
+| Greater Shadow (the 6-HD Shadow, Shadow Guard, King, Prince and Worker, Cragg, Tanelyv, Tristram, Tynan) | 2 attacks of 2d6, each paralysing for 2d6 rounds (a save); any spell hurts it in full | 2 attacks of 2d6 and **1 STR drained** each hit, as the shadow's; "unaffected by cold-based attacks"; +1 weapons, AC 4, HD 6 and THAC0 15 as before |
 | Babau | its claws a corroding touch (worn armour and the weapon held may be eaten) | its horn's **deadly poison** (the priests' Poison, AD&D's: a save against poison, else death, in a fight too) |
 | Blue Slaad | disease, 1 rake in 10 | its bite's **deadly poison**, as the babau's |
 | Tari | no disease; HD 2, THAC0 18, AC 10, a 1d2 bite | a bite of **1d3** that brings **disease 1 in 20** (a save against poison), HD 3, THAC0 17, AC 6 (better with the leather some wear) |
@@ -887,7 +890,7 @@ Paralysis on each party member, and so does the best druid; a druid of 7th
 level or more casts Neutralize Poison on each too (found by CalvinRodo's
 yuan-ti). Anyone still poisoned when the rest ends dies. The game looked at who
 was poisoned before those cures, so a 7th-level druid's cure saved no one; the
-mod casts the cures first ([the fix](DEVELOPMENT-CONTENT.md#the-games-spells)).
+mod casts the cures first ([the fix](GAME-BUGS.md#resting)).
 
 ## Searching junk, hay and wardrobes
 

@@ -32,6 +32,15 @@ class RuleTextsTests(unittest.TestCase):
                 self.assertLessEqual(len(text), GAME_LONGEST, (n, text))
                 self.assertTrue(text.isascii(), n)
 
+    def test_under_the_byte_limit(self):
+        """Every SPIN chunk the copy can have, with each switch, under the box's 195 bytes (it
+        reads 200, from its 5th byte), as TEXTS' and MANUAL_TEXTS' own tests check theirs."""
+        for manual in (False, True):
+            for size in (False, True):
+                for key, chunk in spelltexts.chunks(manual, size).items():
+                    self.assertLess(len(chunk), 195, (manual, size, key))
+        self.assertTrue(all(len(t.encode("ascii")) + 2 < 195 for t in spelltexts.SIZE_TEXTS.values()))
+
 
 if __name__ == "__main__":
     unittest.main()

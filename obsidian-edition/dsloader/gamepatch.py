@@ -30,6 +30,8 @@ import os
 import struct
 from typing import NamedTuple
 
+from . import gff
+
 GOG_SIZE = 611408  # DSUN.EXE of the GOG release (1.1)
 
 VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG, VEC_CHAR = range(0x60, 0x66)  # as in dsclog.asm
@@ -1370,7 +1372,4 @@ def write_patched(source: str, dest: str, skip=frozenset()) -> None:
                 return
     except OSError:
         pass
-    tmp = dest + ".tmp"
-    with open(tmp, "wb") as f:
-        f.write(data)
-    os.replace(tmp, dest)
+    gff.write_atomic(dest, data)  # (no .tmp left by a failed write)

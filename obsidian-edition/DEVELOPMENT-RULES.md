@@ -1,6 +1,6 @@
 # Development: the rules
 
-*Part of the [development notes](DEVELOPMENT.md). How each rule change, the character customization (weapon specs, kits, the starting gear) and the improved thieving are done: where the patched game calls the helper (DSCLOG), and what the Loader reads and writes. Most headings name the section of the [features page](FEATURES.md) or the [README](README.md) they explain; the rest, a part of one or a note of their own, say which at their start.*
+*Part of the [development notes](DEVELOPMENT.md). How each rule change, the character customization (weapon specs, kits, the starting gear) and the improved thieving are done: where the patched game calls the helper (DSCLOG), and what the Loader reads and writes. Most headings name the section of a player's page they explain (the [features page](FEATURES.md), the [README](README.md), [items](ITEMS.md), [kits](KITS.md), [bugs fixed](GAME-BUGS.md), [how the game works](HOW-THE-GAME-WORKS.md), [the dice log](DICE-LOG.md)); the rest, a part of one or a note of their own, say which at their start.*
 
 ## Contents
 
@@ -11,7 +11,7 @@
 - [AD&D's class tables](#adds-class-tables)
 - [CON as in AD&D](#con-as-in-add)
 - [Dual-classing as the manual has it](#dual-classing-as-the-manual-has-it)
-- [Ages](#ages)
+- [Ages and magical aging](#ages-and-magical-aging)
   - [Haste's aging](#hastes-aging)
   - [Restore Youth](#restore-youth)
   - [Natural aging](#natural-aging)
@@ -270,7 +270,7 @@ The old class is the sheet's first, as the game's (a second change checks the
 first class's level and primes, the game's way). Checked by the emulator
 (`test_group4`'s `test_dual_level`, `test_dual_primes`).
 
-## Ages
+## Ages and magical aging
 
 ([In the features page](FEATURES.md#ages-and-magical-aging).)
 
@@ -576,7 +576,11 @@ both the game's with it off (`gamepatch` "held_hit" and "held_damage"):
   (`NS_HAS`, effect 34) or Out Cold (its creature's +1Ch): the hit, whatever the d20.
 - `HELD_DAMAGE` (58B0Dh; 5 bytes): AX the damage, doubled only without the rule.
 
-The dice log (`GameData.helpless`, the same test): the attack's line says HIT, with `Paralyzed: hit
+`HELD_NOW` and the dice log share one test (`HELPLESS_OF`): each ring entry keeps the attack's
+target's state at the roll at +188 (8000h, plus 1 Paralyzed or 2 Out Cold), read by
+`Entry.helpless` through `DiceLog._helpless`, so a blow that kills or a Hold that ends before the
+line is written still reads right (an older helper's entries fall back to `GameData.helpless`).
+The attack's line says HIT, with `Paralyzed: hit
 automatically, for normal damage (AD&D's held target)` under it, and the damage line has no x2.
 
 ## Rings and cloaks of protection
@@ -1982,9 +1986,8 @@ race (`OWN_RACE_B`, `kits.own_race`; with `RULE_HI_KITS` only). Gerakis (the
 half-giant): Wild Fighting, `wild.py` rolling for him as for a Wild Fury
 (`kits.wild_fighter`), DSCLOG's effects going by the `KIT_WILD` bits alone.
 K'ratchek (the thri-kreen): `SKY_LEVEL` and `PSI_KIT` as a Wasteland Seer's (`CR_OWN_RACE`),
-no Effects line for the chatkcha (taken off 2026-11-10: the rate is every thri-kreen's). `OWN_THROWS` in `PROBE_ATTACKS` (and the
-inventory's `PROBE_MISSILE_LINE`) gives any thri-kreen (the sheet's race 8, foes too; hers
-alone, through `OWN_RACE_B`, until 2026-11-10) 2 more halves a round with a chatkcha,
+no Effects line for the chatkcha (the rate is every thri-kreen's). `OWN_THROWS` in `PROBE_ATTACKS` (and the
+inventory's `PROBE_MISSILE_LINE`) gives any thri-kreen (the sheet's race 8, foes too) 2 more halves a round with a chatkcha,
 AD&D's 2/1, whatever the rules (`GameData.weapon_hits` the same). Cilla (the elf): `stealth.py`'s hiding not
 halved in daylight (`kits.not_halved_by_sun`, as an Assassin's and a Military
 Scout's). The Effects screen's lines are `OWN_LINES` (after the kits', in

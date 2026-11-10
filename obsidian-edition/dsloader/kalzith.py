@@ -28,7 +28,7 @@ does the slave-pen items (npcitems); the game's shop screen (24h) sells what he 
 import struct
 from typing import Callable, Dict, List, Optional, Tuple
 
-from . import game, gpl, itemgate
+from . import game, gff, gpl, itemgate
 from .gff import read_gff
 
 OBJECT = 1000  # (no object of the game's has it. Past the game's object table, 520 long: the
@@ -843,10 +843,7 @@ def _write(source: str, dest: str, added) -> None:
     with open(source, "rb") as f:
         data = f.read()
     out = with_chunks(data, added(data))
-    tmp = dest + ".tmp"
-    with open(tmp, "wb") as f:
-        f.write(out)
-    os.replace(tmp, dest)
+    gff.write_atomic(dest, out)  # (no .tmp left by a failed write)
 
 
 def write_scripts(source: str, dest: str, kalzith: bool = True, semyon: bool = True, vulture: bool = True,

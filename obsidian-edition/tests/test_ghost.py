@@ -210,6 +210,28 @@ class UpdateTests(unittest.TestCase):
             g.update(self.gd, self.HDR, True, 3, self.redraw)
         self.assertEqual(self.on(), 1)
 
+    def test_a_failed_build_leaves_no_mark(self):
+        """The tables' build failing in its thread: the palette not left marked as being made
+        (see-through figures off for good there), nor started again every pass; another palette's
+        made as ever. A DAC read short is not taken."""
+        g = ghost.Ghosts()
+        with mock.patch.object(ghost, "tables", side_effect=IndexError("short palette")):
+            g.update(self.gd, self.HDR, True, 1, self.redraw)
+            self.join_worker(g)
+        self.assertIsNone(g._making)
+        worker = g._worker
+        g.update(self.gd, self.HDR, True, 1, self.redraw)
+        self.assertIs(g._worker, worker)  # (not started again)
+        m = self.gd.guest.mem
+        m[self.DAC + 100 * 3] = (m[self.DAC + 100 * 3] + 9) % 64
+        self.wait_on(g, 2)
+        real = self.gd.guest.read
+        self.gd.guest.read = lambda at, n: real(at, n)[:n // 2] if n == 768 else real(at, n)
+        dac = g._dac
+        g.update(self.gd, self.HDR, True, 3, self.redraw)
+        self.assertIs(g._dac, dac)
+        self.assertEqual(self.on(), 1)
+
     def test_no_block(self):
         struct.pack_into("<H", self.gd.guest.mem, self.HDR + ghost.TSR_GHOST_SEG, 0)
         g = ghost.Ghosts()

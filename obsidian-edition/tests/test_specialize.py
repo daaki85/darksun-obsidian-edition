@@ -313,6 +313,12 @@ class StartWeaponTests(unittest.TestCase):
         self.assertEqual(self.start("long sword", (9, 2)), ("long sword", 45))  # earth: obsidian
         self.assertEqual(self.start("dagger", (9, 2)), ("dagger", 17))
         self.assertEqual(self.start("mace", (9, 3)), ("mace", 46))  # a plain obsidian mace, the Loader's
+        # the cahulaks: the game's bone ones (water's); the Loader's obsidian ones for earth and fire
+        obsidian = game.OBSIDIAN_CAHULAKS_TYPE
+        self.assertEqual(self.start("cahulaks", (9,)), ("cahulaks", 21))
+        self.assertEqual(self.start("cahulaks", (9, 4)), ("cahulaks", 21))
+        self.assertEqual(self.start("cahulaks", (9, 2)), ("cahulaks", obsidian))
+        self.assertEqual(self.start("cahulaks", (9, 3)), ("cahulaks", obsidian))
 
 
 class FinishNewTests(unittest.TestCase):

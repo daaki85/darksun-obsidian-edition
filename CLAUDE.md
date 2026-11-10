@@ -35,7 +35,8 @@ What stalls on it and not in DOSBox is a program fault to report.
 **Start from a save.** `sh loadsave.sh pens-after-arena` loads the slave pens after the arena
 (region 29h); `saves/README.md` lists the others (`pens-after-scar`: Scar killed, the champions
 due; `pens-thornwall-rack`: Thornwall on the weapon rack, the party in the east passage;
-`pens-new-chest`: a new game's pens, run `shut.py` after). Save at every milestone (Escape, S, click a slot at 120,46, type a name, SAVE at
+`pens-new-chest`: a new game's pens, run `shut.py` after; `fountain-user`: Pehtucl's ambush on
+loading, the usual start for a fight, spell or rule test). Save at every milestone (Escape, S, click a slot at 120,46, type a name, SAVE at
 253,46: the game then quits) and add it to `playtest/saves/` with a README line.
 
 **The window must be 320x240** (`xdotool getwindowgeometry`): start.sh sets the Loader's
@@ -128,9 +129,11 @@ Monitor, and every step gets a `timeout`.
    Staying sends more fights.
 3. The pens: the party arrives at (1816,440) and Kurzak greets it (choose Goodbye). The cluebook
    (`Cluebook.PDF`, `pdftotext -layout`) gives the rest. Kurzak's door is the entryway south of
-   his stop (99,33-34) into the hall; the corridor gate (81,20-21) is locked, so the way west is
-   the door at (113,90) (locked once, 2026-11-04: check its look box), the bottom corridor and its door (93,94) (`doorpath.py`). Then: #11, break into the stalker pen, kill
-   the mountain stalker, push the button on the north wall; #12 is the sewer grate (46,86).
+   his stop (squares 99,33-34) into the hall; the corridor gate (squares 81,20-21) is locked, so the
+   way west is the door at square (113,90) (locked once, 2026-11-04: check its look box), the bottom corridor and its door (square 93,94) (`doorpath.py`). Then: #11, break into the stalker pen, kill
+   the mountain stalker, push the button on the north wall; #12 is the sewer grate (map 46,86, square 2,5).
 4. Back to the arena: rest at the fire room's ring (door 1848,856, the look pointer) two or three
    times, then answer Kurzak's call at once (`toarena.sh`; `toalarm.sh` + `restalarm.sh` for the
    alarm fight instead). After Scar's death in the arena the next visit is the champions' bout.
+5. Water: whenever a play reaches a new area, note in the test log and in PLAYTESTING.md where
+   water, jugs or waterskins are (the user's idea of resting costing water one day).

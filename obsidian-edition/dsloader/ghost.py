@@ -144,15 +144,24 @@ class Ghosts:
         self._on: Optional[bool] = None
         self._off = False  # (GHOST_ON put to 0 while tables are made, not on again yet)
         self._worker: Optional[threading.Thread] = None  # (the last thread started to make tables: the tests join it)
+        self._failed: set = set()  # (palettes whose tables couldn't be made)
 
     def _make(self, dac: bytes) -> None:
-        made = tables(dac)
-        with self._lock:
-            self._made[key(dac)] = made
-            while len(self._made) > MADE_KEPT:
-                self._made.popitem(last=False)
-            if self._making == key(dac):  # (its own mark only: another palette's may be being made)
-                self._making = None
+        made = None
+        try:
+            made = tables(dac)
+        except Exception:  # (a palette read wrong: not made, and not tried again)
+            pass
+        finally:  # (a build that fails never leaves its mark: the palette not taken as being made for good)
+            with self._lock:
+                if made is not None:
+                    self._made[key(dac)] = made
+                    while len(self._made) > MADE_KEPT:
+                        self._made.popitem(last=False)
+                else:
+                    self._failed.add(key(dac))  # (not started again and again, each pass)
+                if self._making == key(dac):  # (its own mark only: another palette's may be being made)
+                    self._making = None
 
     def update(self, gd, tsr_hdr: int, on: bool, palettes: int, redraw) -> None:
         """ON: the see-through figures drawn (the stealth rule's or anyone's invisibility); PALETTES
@@ -170,15 +179,17 @@ class Ghosts:
         if palettes != self._palettes and palettes:
             far = struct.unpack("<H", guest.read(tsr_hdr + TSR_FAR_SEG, 2))[0] * 16
             dac_off, = struct.unpack("<H", guest.read(tsr_hdr + TSR_DAC, 2))
-            self._dac = guest.read(far + dac_off, 768)
-            self._palettes = palettes
+            dac = guest.read(far + dac_off, 768)
+            if len(dac) == 768:  # (a short read: looked at again next pass)
+                self._dac = dac
+                self._palettes = palettes
         if self._dac is not None and key(self._dac) != self._written:
             wanted = key(self._dac)
             with self._lock:
                 made = self._made.get(wanted)
                 if made is not None:
                     self._made.move_to_end(wanted)
-                start = made is None and self._making != wanted
+                start = made is None and self._making != wanted and wanted not in self._failed
             if start:
                 guest.write(tsr_hdr + TSR_GHOST_ON, struct.pack("<H", 0))  # (till they are made)
                 self._off = True

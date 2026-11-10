@@ -588,10 +588,13 @@ record:
         mov [es:di+186], cx
         mov word [cs:extra], 0
         push ax
+        xor ax, ax                      ; (only a roll, a save or an AC (kinds 0-2) has a target:
+        cmp word [cs:kind], 3           ;   the rest's +188 left 0, unmarked)
+        jae .held
         mov ax, [TARGET]
         call helpless_of
         mov ah, 0x80
-        mov [es:di+188], ax
+.held:  mov [es:di+188], ax
         pop ax
         mov cx, [ss:si+6]
         mov [es:di+2], cx
@@ -634,7 +637,7 @@ record:
         add bx, 2
         cmp bx, 8
         jb .glob
-        push ds                 ; DI is at +72: the caller's locals
+        push ds                 ; DI is at +88: the caller's locals
         push si
         push ss
         pop ds
@@ -644,7 +647,7 @@ record:
         pop si
         pop ds
 
-        push ds                 ; DI is at +88: the calling code
+        push ds                 ; DI is at +104: the calling code
         push si
         lds si, [ss:si+6]       ; the return address of this rand() call
         mov cx, 12
@@ -654,7 +657,7 @@ record:
         lds si, [ss:bp+2]       ; the return address in the caller's frame
         mov cx, 8
         rep movsw
-        push ss                 ; DI is at +128: the caller's caller's locals
+        push ss                 ; DI is at +144: the caller's caller's locals
         pop ds
         mov si, [bp]
         sub si, 0x28
@@ -3408,7 +3411,7 @@ own_throws:
 ; OWN_RACE_B: AL the race of sheet ES:BX if it is one of the game's own party given a feature of
 ; its own (KIT_BYTE's OWN_BIT, set by the Loader as a new game starts: defaultparty.py), with the
 ; kits on (RULE_HI_KITS): Gerakis (half-giant) Wild Fighting (the Loader's, KIT_WILD), K'ratchek
-; (thri-kreen) a Wasteland Seer's casting (SKY_LEVEL) and OWN_THROWS, Cilla (elf) the Elven
+; (thri-kreen) a Wasteland Seer's casting (SKY_LEVEL; OWN_THROWS is any thri-kreen's), Cilla (elf) the Elven
 ; Wanderer's hiding (the Loader's); else 0, ZF set. CR_OWN_RACE the same for creature AX (DS the
 ; game's). Others kept.
 OWN_BIT equ 0x40
@@ -3746,8 +3749,8 @@ probe_dam_line:
 ; "1D4"), ES:BX its item type's record, SI the type, the routine's [BP-6] the creature (0 for
 ; none), the damage bonus, the dice's sides and their count pushed as for PROBE_DAM_LINE. AL: the
 ; weapon's attacks a round (halves). With RULE_SPECIALIZE, the rate of fire as PROBE_ATTACKS gives
-; it (MISSILE_RATE), and the bonus and sides as PROBE_SPEC_DAMAGE does; K'ratchek's chatkcha one
-; more a round, as OWN_THROWS (with the kits on, whatever the specialization rule). With no
+; it (MISSILE_RATE), and the bonus and sides as PROBE_SPEC_DAMAGE does; any thri-kreen's chatkcha
+; one more a round, as OWN_THROWS (whatever the rules). With no
 ; creature (an item box: this branch for a melee weapon too), at least one a round.
 probe_missile_line:
         mov al, [es:bx + 0x0B]
@@ -4367,6 +4370,8 @@ kit_forbids_one:                ; (AL the kit, KIT_WHERE its class's place)
         cmp dx, TH_CAHULAKS
         je .type                ; (a blade in each hand: both hands, a half-giant's too)
         cmp dx, 115 + 31        ; (the metal ones: METAL_CAHULAKS)
+        je .type
+        cmp dx, 115 + 32        ; (the obsidian ones: OBSIDIAN_CAHULAKS)
         je .type
         inc ch
 .type:  call kit_class_of_sheet     ; (a ranger's sphere, for a Seeker: its class less 13)
@@ -6534,13 +6539,15 @@ kit_of_sheet:
         push ax
         push cx
         push di
+        push ds
+        mov ds, [cs:tail_seg]           ; (the names are the tail's)
         mov si, kit_short
-.short: cmp byte [cs:si], 0
+.short: cmp byte [si], 0
         je .long
-        cmp [cs:si], al
+        cmp [si], al
         je .found
 .skip:  inc si
-        cmp byte [cs:si], 0
+        cmp byte [si], 0
         jne .skip
         inc si
         jmp .short
@@ -6548,22 +6555,25 @@ kit_of_sheet:
         jmp .name
 .long:  call kit_name_ptr
 .name:  mov di, kit_line + 5    ; (after "KIT: ")
-.char:  cs lodsb
+.char:  lodsb
         mov [cs:di], al
         inc di
         or al, al
         jnz .char
         mov si, kit_line
+        pop ds
         or di, di               ; (ZF clear)
 .out:   pop di
         pop cx
         pop ax
         ret
 
-; KIT_NAME_PTR: CS:SI kit AL's name in KIT_NAMES (AL not 0). Others kept.
+; KIT_NAME_PTR: SI kit AL's name in KIT_NAMES (AL not 0), in the tail (TAIL_SEG). Others kept.
 kit_name_ptr:
         push ax
         push cx
+        push ds
+        mov ds, [cs:tail_seg]
         movzx cx, al            ; (the kit's place in KIT_NAMES, from 1: (class - 1) * 3 + kit)
         and cl, 3
         shr al, 2
@@ -6574,11 +6584,12 @@ kit_name_ptr:
         mov si, kit_names
 .skip:  dec cx
         jz .out
-.past:  cs lodsb
+.past:  lodsb
         or al, al
         jnz .past
         jmp .skip
-.out:   pop cx
+.out:   pop ds
+        pop cx
         pop ax
         ret
 
@@ -8353,14 +8364,22 @@ dk_ask:
 .opt:   mov al, ch
         add al, cl
         mov dx, dk_blank
+        mov [cs:dk_seg], cs             ; (a blank row: the helper's; a kit's name: the tail's)
         call dk_banned
         jc .row
         push si
         call kit_name_ptr
         mov dx, si
         pop si
+        push ax
+        mov ax, [cs:tail_seg]
+        mov [cs:dk_seg], ax
+        pop ax
 .row:   mov [cs:di], dx
-        mov [cs:di + 2], cs
+        push ax
+        mov ax, [cs:dk_seg]
+        mov [cs:di + 2], ax
+        pop ax
         sub di, 4
         dec cl
         jnz .opt
@@ -10428,34 +10447,9 @@ ef_put:
         popa
         ret
 
-; Each class's kits (kitpages.KITS), the creation screen's classes in order, three each
-kit_names    db 'ELEMENTALIST', 0, 'HEALER', 0, 'CRUSADER', 0
-             db 'GROVE WARDEN', 0, 'LIFEBINDER', 0, 'WANDERER', 0
-             db 'MYRMIDON', 0, 'SENTINEL', 0, 'RAVAGER', 0
-             db 'ARENA CHAMPION', 0, 'TWIN-BLADE', 0, 'BRUTE', 0
-             db 'SCHOLAR', 0, 'BATTLE MAGE', 0, 'ARCANIST', 0
-             db 'MIND BENDER', 0, 'MIND WARRIOR', 0, 'KINETICIST', 0
-             db 'STALKER', 0, 'JUSTIFIER', 0, 'SEEKER', 0
-             db 'SWASHBUCKLER', 0, 'ASSASSIN', 0, 'SHINOBI', 0
-             db 'BATTLE DANCER', 0, 0, 0                ; (the multiclass groups', three to each)
-             db 'SHADOWBLADE', 0, 'MILITARY SCOUT', 0, 0
-             db 'WILDERNESS AVENGER', 0, 0, 0
-             db 'RESCUER', 0, 0, 0
-             db 'GHETTO FIGHTER', 0, 'WAYFINDER', 0, 0
-             db 'SPELLARCHER', 0, 0, 0
-             db 'TITAN MIND', 0, 0, 0
-             db 'POISONER', 0, 0, 0
-             db 'SPIRIT CALLER', 0, 0, 0
-             db 'WASTELAND SEER', 0, 0, 0
-             db 'WILD FURY', 0, 0, 0
 kit_class_of db 1, 1, 1, 1, 2, 2, 2, 2, 3, 4, 5, 6, 7, 7, 7, 7, 8   ; (a sheet's class, 1-17: the screen's)
 kit_asleep   db ' (ASLEEP)', 0
-; Shorter names for the Effects screen's line (kitpages.SHORT): the kit, the name. 0 ends it.
-kit_short    db KIT_CHAMPION, 'CHAMPION', 0, KIT_SWASHBUCKLER, 'SWASHBUCK', 0, KIT_ELEMENTALIST, 'ELEMENTAL', 0
-             db KIT_GROVE_WARDEN, 'WARDEN', 0, KIT_BATTLE_MAGE, 'BATTLMAGE', 0, KIT_MIND_BENDER, 'M-BENDER', 0
-             db KIT_MIND_WARRIOR, 'M-WARRIOR', 0, KIT_BATTLE_DANCER, 'B-DANCER', 0, KIT_SHADOWBLADE, 'SHADOWBLD', 0
-             db KIT_SCOUT, 'M-SCOUT', 0, KIT_AVENGER, 'W-AVENGER', 0, KIT_GHETTO, 'G-FIGHTER', 0
-             db KIT_SPELLARCHER, 'SPELLARCH', 0, KIT_SPIRIT_CALLER, 'S-CALLER', 0, KIT_WASTE_SEER, 'WASTE SEER', 0, 0
+dk_seg       dw 0                         ; (DK_ASK: a row's segment)
 ef_more      db 'MORE: CLICK HERE', 0
 ; The game's own party's features on the Effects screen (OWN_RACE_B): the race, the line. 0 ends it.
 own_lines    db 5, 'WILD FIGHTING', 0, 8, 'OPEN SKY SPELLS/PSI', 0
@@ -11701,7 +11695,7 @@ dual_bans   db KIT_SEEKER
             db KIT_SENTINEL
             dd DB_NO_SHIELD
             db KIT_BRUTE
-            dd (1 << 12) | (1 << 1)     ; (the psionicist, the air cleric)
+            dd 1 << 12                  ; (the psionicist: no two-handed melee weapon; an air cleric has the cahulaks)
             db KIT_STALKER
             dd 1 << 17                  ; (the thief: its own hiding, the Stalker's on top)
             db KIT_GROVE_WARDEN
@@ -11997,14 +11991,14 @@ conjured_kinds db 2, 1, 5       ; (kind + 1: club, long sword, mace)
 
 ; By item type (the game's 115, then the Loader's own: 115 its short sword), the weapon kind
 ; + 1 (dsloader/specialize.py's KIND_OF_TYPE; 0 none)
-KIND_TYPES equ 147
+KIND_TYPES equ 148
 kind_of_type  db 16, 14, 7, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 2, 10, 5, 12, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0
               db 0, 3, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 11, 1, 5, 1, 13, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
               db 15, 0, 0, 0, 0, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 1, 0, 0, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0
               db 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 8, 0, 0, 4, 0, 0, 4, 6, 4, 6, 4, 0, 3, 5, 7, 8
               db 10, 0, 0, 0, 0, 0, 0, 0, 3   ; (136: the air clerics' metal dagger, Galefang's)
               db 7, 7, 3                      ; (137, 138: the bone and obsidian great axes; 139 the bone dagger)
-              db 0, 0, 0, 0, 0, 0, 12         ; (146: the metal cahulaks, METAL_CAHULAKS)
+              db 0, 0, 0, 0, 0, 0, 12, 12     ; (146, 147: the metal and obsidian cahulaks)
 
 ; AD&D's class tables (RULE_HI_TABLES): the XP each class needs, priests' THAC0, and clerics',
 ; druids' and preservers' spell slots by level, as AD&D's Player's Handbook and Dark Sun have them
@@ -12035,7 +12029,10 @@ xp_need:
 .row:   imul bx, bx, ADND_XP_LEVELS * 2
         add bx, cx
         add bx, cx
-        movzx eax, word [cs:bx + adnd_xp - ADND_XP_LEVELS * 2]
+        push es                         ; (the table is the tail's)
+        mov es, [cs:tail_seg]
+        movzx eax, word [es:bx + adnd_xp - ADND_XP_LEVELS * 2]
+        pop es
         imul eax, eax, ADND_XP_UNIT
         pop bx
         ret
@@ -12046,14 +12043,6 @@ xp_need:
 ; gladiator's, so not kept: the thief's is the 7th
 ADND_XP_LEVELS equ 14
 ADND_XP_UNIT   equ 50
-adnd_xp dw 0, 30, 60, 120, 260, 550, 1100, 2200, 4500, 9000, 13500, 18000, 22500, 27000  ; cleric
-        dw 0, 40, 80, 150, 250, 400, 700, 1200, 1800, 2500, 4000, 6000, 15000, 30000  ; druid
-        dw 0, 40, 80, 160, 320, 640, 1280, 2500, 5000, 10000, 15000, 20000, 25000, 30000  ; fighter
-        dw 0, 45, 90, 180, 360, 720, 1500, 3000, 6000, 12000, 18000, 24000, 30000, 36000  ; gladiator
-        dw 0, 50, 100, 200, 400, 800, 1200, 1800, 2700, 5000, 7500, 15000, 22500, 30000  ; preserver
-        dw 0, 44, 88, 176, 330, 600, 1100, 2000, 4000, 8000, 12000, 16000, 20000, 24000  ; psionicist
-        ; (the ranger's, row 7: the gladiator's, row 4)
-        dw 0, 25, 50, 100, 200, 400, 800, 1400, 2200, 3200, 4400, 8800, 13200, 17600  ; thief
 
 ; PROBE_XP: INT VEC_XP replaces "imul eax,eax,64h" (4 bytes: INT + 2 NOPs) where the game takes the
 ; XP for the next level from its table, at a level up (DSUN.EXE 87BBBh) and on View Character
@@ -12164,7 +12153,10 @@ probe_adnd_slots:
 .sixth: mov ah, 0
         jmp .sum
 .col:   add bx, ax
-        mov al, [cs:bx + adnd_slots]
+        push es                         ; (the table is the tail's)
+        mov es, [cs:tail_seg]
+        mov al, [es:bx + adnd_slots]
+        pop es
         mov ah, 0
         jmp .sum
 .none:  xor ax, ax
@@ -12197,8 +12189,6 @@ probe_adnd_slots:
         ret
 ; AD&D's spell slots by level 1-12, spell levels 1-5: priests (clerics and druids), then wizards
 SLOT_LEVELS equ 12
-adnd_slots db 1,0,0,0,0, 2,0,0,0,0, 2,1,0,0,0, 3,2,0,0,0, 3,3,1,0,0, 3,3,2,0,0, 3,3,2,1,0, 3,3,3,2,0, 4,4,3,2,1, 4,4,3,3,2, 5,4,4,3,2, 6,5,5,3,2
-           db 1,0,0,0,0, 2,0,0,0,0, 2,1,0,0,0, 3,2,0,0,0, 4,2,1,0,0, 4,2,2,0,0, 4,3,2,1,0, 4,3,3,2,0, 4,3,3,2,1, 4,4,3,2,2, 4,4,4,3,3, 4,4,4,4,4
 
 ; The leader's CHA and shop prices (RULE_HI_CHA_PRICES; prices.py):
 ; buying costs 5% less at CHA 18 and 5% more for each point above, to 40% at 25. The leader
@@ -16557,7 +16547,8 @@ box_pic:
         pop si
         iret
 box_tall dw 2383, 2311, 2157, 2143, 2287, 2254, 2384, 1494, 2392, 2255, 2334, 1199  ; (the game's)
-         dw 2653, 2447, 2513, 2571, 2573, 2671, 2673  ; (the Loader's own: icons.BOX_TALL)
+         dw 2653, 2447, 2513, 2571, 2573, 2671, 2673, 2497, 2511, 2675  ; (the Loader's own: icons.BOX_TALL;
+                                        ;   the last two the picks', 19 rows: icons.PICK_PICTURE_FROM)
 BOX_TALL_COUNT equ ($ - box_tall) / 2
 
 ; PIC_REUSE: the game's picture cache (DSUN.EXE 25FA6h, a WALL or BMP chunk's slot) has 300 slots,
@@ -16772,7 +16763,8 @@ pic_count:
 ; reused by PIC_FULL whose picture then failed to load (its read, 260BBh) already holds the new
 ; picture's number and length but the old one's place: found by that number later, it would be
 ; read from the wrong place (a garbled figure). So it is let go again (STALE, not in memory), as
-; the game's own failure leaves an uncounted slot.
+; the game's own failure leaves an uncounted slot. (PF_REUSE and PF_SLOT are one load's: the game
+; loads one picture at a time, none from within another's size, memory or read calls.)
 pic_fail:
         cmp byte [cs:pf_reuse], 0
         je .out
@@ -16814,6 +16806,7 @@ pf_reuse   db 0
 ;   (MN_TANGLE). A Twin-blade or Battle Dancer in light armour, and a ranger, take no penalty (PROBE_TWO's).
 CAHULAKS     equ TH_CAHULAKS
 METAL_CAHULAKS equ 115 + 31         ; (EXTRA_TYPES' 32nd: the metal ones, the champions' mul's)
+OBSIDIAN_CAHULAKS equ 115 + 32      ; (... 33rd: the obsidian ones, an earth or fire cleric-warrior's)
 CT_SKIP      equ 0x5963E - 0x5962A  ; (595ECh's "no two weapons" way, from after the site's number)
 MN_TANGLE    equ 10
 TARGET       equ 0x494A             ; DS: the attack's target (a combatant)
@@ -16840,6 +16833,8 @@ item_is_cahulaks:                   ; ZF if item AX (its number) is of the cahul
         cmp word [es:bx + 0x0A], CAHULAKS
         je .kind
         cmp word [es:bx + 0x0A], METAL_CAHULAKS
+        je .kind
+        cmp word [es:bx + 0x0A], OBSIDIAN_CAHULAKS
 .kind:  pop bx
         pop es
         ret
@@ -16900,6 +16895,8 @@ cah_swing:
         cmp word [bp + 0x14], CAHULAKS
         je .cah
         cmp word [bp + 0x14], METAL_CAHULAKS
+        je .cah
+        cmp word [bp + 0x14], OBSIDIAN_CAHULAKS
         jne .out
 .cah:   push ax
         mov ax, [bp + 0x18]
@@ -16928,6 +16925,8 @@ cah_hit:
         cmp word [bp + 0x14], CAHULAKS
         je .cah
         cmp word [bp + 0x14], METAL_CAHULAKS
+        je .cah
+        cmp word [bp + 0x14], OBSIDIAN_CAHULAKS
         jne .out
 .cah:   sti
         pushad
@@ -18639,7 +18638,10 @@ probe_thief_skill:
 .level: dec ax
         imul bx, bx, THIEF_LEVELS
         add bx, ax
-        mov al, [cs:thief_table+bx]
+        push es                         ; (the table is the tail's)
+        mov es, [cs:tail_seg]
+        mov al, [es:thief_table+bx]
+        pop es
         mov ah, 0
         add dx, ax
         mov bx, [bp+8]
@@ -18656,7 +18658,10 @@ probe_thief_skill:
 .high:  sub ax, 9
         imul ax, ax, 5
         add bx, ax
-        mov al, [cs:dex_table+bx]
+        push es                         ; (the table is the tail's)
+        mov es, [cs:tail_seg]
+        mov al, [es:dex_table+bx]
+        pop es
         cbw
         add dx, ax
 .done:  mov si, dx
@@ -18728,6 +18733,9 @@ th_cahulaks:                    ; ZF if ES:BX is the cahulaks' type (by address:
         je .out
         add edx, (115 + 31 - TH_CAHULAKS) * 20   ; (the metal ones: METAL_CAHULAKS)
         cmp eax, edx
+        je .out
+        add edx, 20                     ; (the obsidian ones: OBSIDIAN_CAHULAKS)
+        cmp eax, edx
 .out:   pop edx
         pop eax
         ret
@@ -18777,31 +18785,7 @@ probe_chunk_id:
 
 ; AD&D's average thief skills, levels 1-13, a row per skill (game.AD_D_THIEF)
 THIEF_LEVELS equ 13
-thief_table:
-        db 30, 35, 40, 45, 50, 55, 60, 65, 70, 80, 90, 95, 99     ; pick pockets
-        db 25, 29, 33, 37, 42, 47, 52, 57, 62, 67, 72, 77, 82     ; open locks
-        db 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80     ; find/remove traps
-        db 15, 21, 27, 33, 40, 47, 55, 62, 70, 78, 86, 94, 99     ; move silently
-        db 10, 15, 20, 25, 31, 37, 43, 49, 56, 63, 70, 77, 85     ; hide in shadows
-        db 10, 10, 15, 15, 20, 20, 25, 25, 30, 30, 35, 35, 40     ; hear noise
-        db 85, 86, 87, 88, 90, 92, 94, 96, 98, 99, 99, 99, 99     ; climb walls
-        db 0, 0, 0, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65        ; read languages
 ; Dark Sun's DEX adjustments, DEX 9-22, a row per DEX: pick, open, traps, move, hide (game.DEX_ADJUST)
-dex_table:
-        db -15, -10, -10, -20, -10
-        db -10, -5, -10, -15, -5
-        db -5, 0, -5, -10, 0
-        db 0, 0, 0, -5, 0
-        db 0, 0, 0, 0, 0
-        db 0, 0, 0, 0, 0
-        db 0, 0, 0, 0, 0
-        db 0, 5, 0, 0, 0
-        db 5, 10, 0, 5, 5
-        db 10, 15, 5, 10, 10
-        db 15, 20, 10, 15, 15
-        db 20, 25, 12, 20, 17
-        db 25, 27, 15, 25, 20
-        db 27, 30, 17, 30, 22
 
 ; PROBE_DOS_OPEN: the DOS services (INT 21h), hooked. Opening a file (AH=3Dh) whose name ends in
 ; one of COPIES' (SEGOBJEX.GFF, the game's objects and their pictures; RESOURCE.GFF, its screens'
@@ -19123,14 +19107,13 @@ seg_move:
         jne .out
         mov ds, [es:SEL_STACK]  ; (the 200h bytes, here)
         xor si, si
-        mov ax, cs
-        add ax, (seg_space - hdr) / 16
+        mov ax, [cs:tail_seg]           ; (SEG_SPACE: the tail's, whole paragraphs)
+        add ax, (seg_space - tail_start) / 16
         mov [es:SEL_STACK], ax
         add ax, (SEG_KINDS - SEG_STACK)
         mov [es:SEL_KINDS], ax
         push es
-        mov ax, cs
-        mov es, ax
+        mov es, [cs:tail_seg]
         mov di, seg_space
         mov cx, SEG_BYTES / 2
         cld
@@ -19139,8 +19122,8 @@ seg_move:
         push es
         mov ds, [es:SEL_AREAS]  ; (the pictures' table, here, and the new entries after it)
         xor si, si
-        mov ax, cs
-        add ax, (area_space - hdr) / 16
+        mov ax, [cs:tail_seg]           ; (AREA_SPACE: the tail's, whole paragraphs)
+        add ax, (area_space - tail_start) / 16
         mov es, ax
         xor di, di
         mov cx, AREA_COUNT * AREA_SIZE / 2
@@ -20377,7 +20360,7 @@ ns_cmp:
 ; known; 0 for a party member's at 2F8h:168h, 8Ah bytes each). For a party member's new spell,
 ; NS_SCRATCH's byte for it, 1 if its sheet says known (NS_KNOWS), on to the routine's end with it.
 NS_KNOWN_PAST equ 0x5DD6D - 0x5DD07
-ns_scratch times 4 * NS_COUNT db 0
+; (NS_SCRATCH: AFTER_INSTALL's, over the install code)
 ns_known:
         pushad
         push es
@@ -20642,7 +20625,7 @@ BOX_LINE_SEG equ 0x4272         ; (the inventory line's routine, 580h:5Ch in ove
 BOX_LINE_OFF equ 0x5C
 BOX_WIN     equ 0x11A4          ; DS: the inventory line's window (far)
 BOX_LINE_ARG equ 0x2C06         ; (the word 6E111h passes it)
-box_text times BOX_TEXT_SIZE db 0
+; (BOX_TEXT: AFTER_INSTALL's, over the install code)
 box_at   dw 0
 box_nudge db 0
 box_line dd 0
@@ -22249,7 +22232,7 @@ ef_named:
         pop cx
         pop si
         ret
-ef_text times EF_NAME_MAX + 18 db 0  ; (the name, then " (+2550% DAMAGE)" at most)
+; (EF_TEXT: AFTER_INSTALL's, over the install code: the name, then " (+2550% DAMAGE)" at most)
 
 ; NS_CHARGES: AL the charges left (+8) on effect CL of thing AX (the game's table of active
 ; effects), 0 if none, AH its handle (+7), and DX the spell that made it (+4). DS the game's; others kept.
@@ -22514,7 +22497,7 @@ n_fl    dw 0
 ; companion's own items that no type of the game's fits (a metal short sword, a cloak of
 ; protection). Nothing in the game limits the numbers to its own.
 TYPE_SIZE   equ 20
-TYPES_EXTRA equ 32
+TYPES_EXTRA equ 33
 TYPES_PTR   equ 0x1669          ; DS: far pointer to the item types
 BRACERS     equ 8               ; (the bracers of defense: the ninth of them)
 ROBE        equ 25              ; (the robes: dsloader/robes.py)
@@ -22779,14 +22762,13 @@ l_win   dd 0
 l_line  times L_LINE_SIZE db 0
 l_side  db 0                    ; the line being drawn goes beside LEVEL (LOOK_SIDE)
 look_pending db 0
-look_text times LOOK_SIZE db 0
+; (LOOK_TEXT: AFTER_INSTALL's, over the install code)
 
 USE_X      equ 0x96             ; the panel under the spells (window coordinates): its top,
 USE_FIRST_Y equ 0x6C            ; three lines above where the icons of usable items (fruit,
 USE_STEP   equ 7                ; wands...) go, along the panel's bottom from 0x81
 USE_LAST_Y equ 0x7A
-u_line  times SLOTS_SIZE db 0
-slots_text times 4 * SLOTS_SIZE db 0
+; (U_LINE and SLOTS_TEXT, one after the other: AFTER_INSTALL's, over the install code)
 
 tput:                           ; AL -> text buffer at position BX
         push bx
@@ -27151,7 +27133,7 @@ lit_sum    dw 0
 lit_most   dw 0
 best_c     db 0
 want       times 3 db 0
-shadow_tab times (MAP_COUNT + 7) / 8 db 0
+; (SHADOW_TAB: AFTER_INSTALL's, over the install code)
                                 ; (DARK, 256 bytes: over the install code, AFTER_INSTALL; DAC
                                 ;   the far block's, FAR_DAC)
 
@@ -27597,7 +27579,7 @@ keep:   mov ax, [cs:psp]
         mov ax, 3100h
         int 21h
 
-align 16                        ; (SEG_SPACE and AREA_SPACE, AFTER_INSTALL's, paragraphs)
+align 16                        ; (AFTER_INSTALL's buffers from here)
 resident_end:                   ; (the ring and the other big buffers: the far block, FAR_INIT)
 RING_BYTES equ NENT * ESIZE
 
@@ -27973,7 +27955,8 @@ VECTORS equ (all_vectors_end - all_vectors) / 3
 
 ; (the install code's room made up to AFTER_INSTALL's, if it is less: what's left is room for more
 ; install code, which takes none of the segment until then)
-AFTER_INSTALL_BYTES equ SEG_BYTES + ((AREA_BYTES + 15) & ~15)
+AI_BUFFERS equ LOOK_SIZE + 5 * SLOTS_SIZE + BOX_TEXT_SIZE + 4 * NS_COUNT + (MAP_COUNT + 7) / 8 + EF_NAME_MAX + 18
+AFTER_INSTALL_BYTES equ (AI_BUFFERS + 15) & ~15
         times (AFTER_INSTALL_BYTES - ($ - resident_end)) * (AFTER_INSTALL_BYTES > $ - resident_end) db 0
         align 16, db 0
 image_len equ $ - $$
@@ -27985,9 +27968,17 @@ LOAD_EXTRA equ (STACK + 15) / 16
 ; AFTER_INSTALL: buffers that start as zeros, laid over the install code (from RESIDENT_END), which
 ; is done with by then: KEEP zeroes them and keeps memory to KEPT_END. They take none of the
 ; segment's room past the install code's, so long as they fit within it (the build fails if not).
+; Only buffers the game's own calls fill (none an interrupt reaches while installing). SEG_MOVE's
+; two tables of the game's are the tail's (SEG_SPACE, AREA_SPACE).
 [absolute resident_end]
-seg_space  resb SEG_BYTES       ; (SEG_MOVE's: the stack's 60h bytes, then the monster kinds')
-area_space resb (AREA_BYTES + 15) & ~15 ; (... and the pictures' table: both whole paragraphs)
+look_text  resb LOOK_SIZE
+u_line     resb SLOTS_SIZE          ; (U_LINE, then SLOTS_TEXT right after it)
+slots_text resb 4 * SLOTS_SIZE
+box_text   resb BOX_TEXT_SIZE
+ns_scratch resb 4 * NS_COUNT
+shadow_tab resb (MAP_COUNT + 7) / 8
+ef_text    resb EF_NAME_MAX + 18
+           resb AFTER_INSTALL_BYTES - AI_BUFFERS
 after_install_end:
         times -(after_install_end - resident_end != AFTER_INSTALL_BYTES) db 0 ; (AFTER_INSTALL_BYTES: these)
 kept_end   equ resident_end + ((after_install_end - resident_end + 15) & ~15)
@@ -28121,6 +28112,10 @@ extra_types:
         ; metal (+8: 4)
         db 0x01, 0x00, 0x28, 0x00, 0x78, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
         db 0x06, 0x01, 0x00, 0x40, 0x7B, 0x16, 0x00, 0x01
+        ; obsidian cahulaks (OBSIDIAN_CAHULAKS: an earth or fire cleric-warrior's start, weaponchoice.py):
+        ; the game's Cahulaks' (21), of obsidian (+8: 3), the fire cleric's bit added (+10h: 4)
+        db 0x01, 0x00, 0x28, 0x00, 0x78, 0x00, 0xFA, 0x00, 0x03, 0x05, 0x01, 0x01
+        db 0x06, 0x01, 0x00, 0x40, 0x7F, 0x16, 0x00, 0x01
 extra_types_end:
         times -(extra_types_end - extra_types != TYPES_EXTRA * TYPE_SIZE) db 0 ; (a negative count: not TYPES_EXTRA)
 lbl_slots  times LBL_SLOTS * LBL_SIZE db 0 ; (the Loader's: LABELS, the header's +1838)
@@ -28183,6 +28178,73 @@ extra_names:
         db "Vampiric Arrows", 0
         db "Boots of Speed", 0          ; (the Boots of Speed: dsloader/worldgear.py, BOOTS_SPEED)
         times NAMES_EXTRA - 47 db 0     ; (empty names, if any)
+; SEG_MOVE's two tables of the game's: the stack's 60h bytes then the monster kinds', and the pictures'
+; table with its new entries; whole paragraphs, zeros till the game's are copied in
+        align 16, db 0
+seg_space  times SEG_BYTES db 0
+area_space times (AREA_BYTES + 15) & ~15 db 0
+; the kits' names (KIT_NAME_PTR, KIT_OF_SHEET, DK_ASK's rows), read through TAIL_SEG
+; Each class's kits (kitpages.KITS), the creation screen's classes in order, three each
+kit_names    db 'ELEMENTALIST', 0, 'HEALER', 0, 'CRUSADER', 0
+             db 'GROVE WARDEN', 0, 'LIFEBINDER', 0, 'WANDERER', 0
+             db 'MYRMIDON', 0, 'SENTINEL', 0, 'RAVAGER', 0
+             db 'ARENA CHAMPION', 0, 'TWIN-BLADE', 0, 'BRUTE', 0
+             db 'SCHOLAR', 0, 'BATTLE MAGE', 0, 'ARCANIST', 0
+             db 'MIND BENDER', 0, 'MIND WARRIOR', 0, 'KINETICIST', 0
+             db 'STALKER', 0, 'JUSTIFIER', 0, 'SEEKER', 0
+             db 'SWASHBUCKLER', 0, 'ASSASSIN', 0, 'SHINOBI', 0
+             db 'BATTLE DANCER', 0, 0, 0                ; (the multiclass groups', three to each)
+             db 'SHADOWBLADE', 0, 'MILITARY SCOUT', 0, 0
+             db 'WILDERNESS AVENGER', 0, 0, 0
+             db 'RESCUER', 0, 0, 0
+             db 'GHETTO FIGHTER', 0, 'WAYFINDER', 0, 0
+             db 'SPELLARCHER', 0, 0, 0
+             db 'TITAN MIND', 0, 0, 0
+             db 'POISONER', 0, 0, 0
+             db 'SPIRIT CALLER', 0, 0, 0
+             db 'WASTELAND SEER', 0, 0, 0
+             db 'WILD FURY', 0, 0, 0
+; Shorter names for the Effects screen's line (kitpages.SHORT): the kit, the name. 0 ends it.
+kit_short    db KIT_CHAMPION, 'CHAMPION', 0, KIT_SWASHBUCKLER, 'SWASHBUCK', 0, KIT_ELEMENTALIST, 'ELEMENTAL', 0
+             db KIT_GROVE_WARDEN, 'WARDEN', 0, KIT_BATTLE_MAGE, 'BATTLMAGE', 0, KIT_MIND_BENDER, 'M-BENDER', 0
+             db KIT_MIND_WARRIOR, 'M-WARRIOR', 0, KIT_BATTLE_DANCER, 'B-DANCER', 0, KIT_SHADOWBLADE, 'SHADOWBLD', 0
+             db KIT_SCOUT, 'M-SCOUT', 0, KIT_AVENGER, 'W-AVENGER', 0, KIT_GHETTO, 'G-FIGHTER', 0
+             db KIT_SPELLARCHER, 'SPELLARCH', 0, KIT_SPIRIT_CALLER, 'S-CALLER', 0, KIT_WASTE_SEER, 'WASTE SEER', 0, 0
+; tables only one reader uses, read through TAIL_SEG (the third memory pass)
+adnd_xp dw 0, 30, 60, 120, 260, 550, 1100, 2200, 4500, 9000, 13500, 18000, 22500, 27000  ; cleric
+        dw 0, 40, 80, 150, 250, 400, 700, 1200, 1800, 2500, 4000, 6000, 15000, 30000  ; druid
+        dw 0, 40, 80, 160, 320, 640, 1280, 2500, 5000, 10000, 15000, 20000, 25000, 30000  ; fighter
+        dw 0, 45, 90, 180, 360, 720, 1500, 3000, 6000, 12000, 18000, 24000, 30000, 36000  ; gladiator
+        dw 0, 50, 100, 200, 400, 800, 1200, 1800, 2700, 5000, 7500, 15000, 22500, 30000  ; preserver
+        dw 0, 44, 88, 176, 330, 600, 1100, 2000, 4000, 8000, 12000, 16000, 20000, 24000  ; psionicist
+        ; (the ranger's, row 7: the gladiator's, row 4)
+        dw 0, 25, 50, 100, 200, 400, 800, 1400, 2200, 3200, 4400, 8800, 13200, 17600  ; thief
+adnd_slots db 1,0,0,0,0, 2,0,0,0,0, 2,1,0,0,0, 3,2,0,0,0, 3,3,1,0,0, 3,3,2,0,0, 3,3,2,1,0, 3,3,3,2,0, 4,4,3,2,1, 4,4,3,3,2, 5,4,4,3,2, 6,5,5,3,2
+           db 1,0,0,0,0, 2,0,0,0,0, 2,1,0,0,0, 3,2,0,0,0, 4,2,1,0,0, 4,2,2,0,0, 4,3,2,1,0, 4,3,3,2,0, 4,3,3,2,1, 4,4,3,2,2, 4,4,4,3,3, 4,4,4,4,4
+thief_table:
+        db 30, 35, 40, 45, 50, 55, 60, 65, 70, 80, 90, 95, 99     ; pick pockets
+        db 25, 29, 33, 37, 42, 47, 52, 57, 62, 67, 72, 77, 82     ; open locks
+        db 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80     ; find/remove traps
+        db 15, 21, 27, 33, 40, 47, 55, 62, 70, 78, 86, 94, 99     ; move silently
+        db 10, 15, 20, 25, 31, 37, 43, 49, 56, 63, 70, 77, 85     ; hide in shadows
+        db 10, 10, 15, 15, 20, 20, 25, 25, 30, 30, 35, 35, 40     ; hear noise
+        db 85, 86, 87, 88, 90, 92, 94, 96, 98, 99, 99, 99, 99     ; climb walls
+        db 0, 0, 0, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65        ; read languages
+dex_table:
+        db -15, -10, -10, -20, -10
+        db -10, -5, -10, -15, -5
+        db -5, 0, -5, -10, 0
+        db 0, 0, 0, -5, 0
+        db 0, 0, 0, 0, 0
+        db 0, 0, 0, 0, 0
+        db 0, 0, 0, 0, 0
+        db 0, 5, 0, 0, 0
+        db 5, 10, 0, 5, 5
+        db 10, 15, 5, 10, 10
+        db 15, 20, 10, 15, 15
+        db 20, 25, 12, 20, 17
+        db 25, 27, 15, 25, 20
+        db 27, 30, 17, 30, 22
         align 16, db 0
 tail_end:
 TAIL_BYTES equ tail_end - tail_start

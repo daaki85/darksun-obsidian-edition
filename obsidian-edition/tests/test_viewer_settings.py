@@ -117,6 +117,50 @@ class ViewerSettingsTests(unittest.TestCase):
         v._release_game()
         self.assertFalse(launch.holds_game())
 
+    def attach_once(self, v, held=False):
+        """One try at following the game, with a stand-in dice log whose attach fails (a plain
+        game); settings.json HELD elsewhere as it is read. The stand-in."""
+        made = []
+
+        def Log(guest):
+            log = mock.MagicMock()
+            log.attached = False
+            log.attach.side_effect = viewer.DiceLogError("not the patched game")
+            made.append(log)
+            return log
+        real_open = builtins.open
+
+        def locked(path, *args, **kwargs):
+            if held and path == launch.SETTINGS:
+                raise PermissionError(13, "in use", path)
+            return real_open(path, *args, **kwargs)
+        v.guest, v.next_try = object(), 0.0
+        with mock.patch.object(viewer, "DiceLog", Log), mock.patch("builtins.open", locked), mock.patch("time.sleep"):
+            v._dice_step()
+        return made[0]
+
+    def test_attach_reads_the_pockets_strictly_and_lets_the_lock_go(self):
+        """settings.json held as the window first follows the game: the dice log is told its list
+        of pockets isn't the saved one (nothing saved over it); an attach that fails lets the
+        game's lock go (`play` not refused meanwhile), taken again at the next try."""
+        launch.save_settings({"pickpocketed": ["Dag|41|7|Trader@500"]})
+        v = self.window()
+        log = self.attach_once(v, held=True)
+        args, kwargs = log.use_settings.call_args
+        self.assertEqual((args[0], kwargs.get("picked_known")), ({}, False))
+        log.attach.assert_called_once()
+        self.assertFalse(launch.holds_game())
+        self.assertIn("not the patched game", v.dice_status.get())
+
+    def test_attach_with_the_settings_read(self):
+        launch.save_settings({"pickpocketed": ["Dag|41|7|Trader@500"]})
+        v = self.window()
+        log = self.attach_once(v)
+        args, kwargs = log.use_settings.call_args
+        self.assertEqual(args[0]["pickpocketed"], ["Dag|41|7|Trader@500"])
+        self.assertIs(kwargs.get("picked_known"), True)
+        log.load_picked.assert_not_called()  # (not read a second time, non-strictly)
+
 
 if __name__ == "__main__":
     unittest.main()

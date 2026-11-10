@@ -1,6 +1,6 @@
 # Development: spells, items, people, graphics and the game's bugs
 
-*Part of the [development notes](DEVELOPMENT.md). How the game's script and spell bugs are mended, and how the new spells, items and people and the graphics are done. Most headings name the section of the [features page](FEATURES.md) or the [README](README.md) they explain; the rest, a part of one or a note of their own, say which at their start.*
+*Part of the [development notes](DEVELOPMENT.md). How the game's script and spell bugs are mended, and how the new spells, items and people and the graphics are done. Most headings name the section of a player's page they explain (the [features page](FEATURES.md), the [README](README.md), [items](ITEMS.md), [kits](KITS.md), [bugs fixed](GAME-BUGS.md), [how the game works](HOW-THE-GAME-WORKS.md), [the dice log](DICE-LOG.md)); the rest, a part of one or a note of their own, say which at their start.*
 
 ## Contents
 
@@ -22,6 +22,7 @@
 - [The cooked vulture](#the-cooked-vulture)
 - [Defilers' scrolls](#defilers-scrolls)
 - [What the party wears](#what-the-party-wears)
+- [Graphics disappearing in a busy area](#graphics-disappearing-in-a-busy-area)
 - [Elves and half-elves](#elves-and-half-elves)
 - [Shadows](#shadows)
 - [Dust](#dust)
@@ -541,9 +542,11 @@ the spell + 1 as the game's own) and icons (21196-21201) are chunks of the
 launcher's copy of RESOURCE.GFF (`spelltexts.py`, `icons.py`), so they take no
 room in the helper. A description follows the game's own: the name in capitals,
 two spaces, then a terse line with damage as a range ("Inflicts 8 to 64 pts of
-damage"), and no level or sphere. Its box shows about 7 lines of about 24
-characters and cuts off the rest, so check a changed one on the USE screen
-(right-click the icon).
+damage"), and no level or sphere. Its box shows 7 lines of 128 pixels of the
+game's font, the first less the icon, and cuts off the rest:
+`tests/test_spelltexts_fit.py` wraps every text the Loader writes that way, so a
+new or changed text is checked there first. `spelltexts`' tables are keyed by the
+SPIN chunk, the spell + 1 (its 24 is Strength; spell 24 is Web).
 
 Wake of the Ravager's spell icons (`wotrart.py`, for the 6th-level priest
 spells) are read from the player's own copy of that game, and never kept in the
@@ -1138,7 +1141,7 @@ up.
 
 ## Pehtucl's chest
 
-([In the new items](FEATURES.md#new-items); `pehtuclchest.py`, whose docstring has the detail.)
+([In the items page](ITEMS.md#pehtucls-chest); `pehtuclchest.py`, whose docstring has the detail.)
 
 A USE command in the pens' master script (MAS 41: 6Dh, (place, script, object), as each cell door
 has one running script 138) runs script 223 when the chest (object 1568) is used, from beside it
@@ -1332,6 +1335,32 @@ Each thing on the map names the picture it is drawn with and the slot in the
 game's picture table it is drawn from; for a second member of the same figure
 the Loader names their spare there and empties the slot, and the game loads
 the picture and fills it.
+
+## Graphics disappearing in a busy area
+
+([In the bugs fixed](GAME-BUGS.md#pictures-and-memory).)
+
+How: the game's picture cache (`DSUN.EXE` 25FA6h, the slot for a WALL or BMP chunk) has 300
+slots, each 16 bytes: a picture's number, length, place in the store, memory and flags. The count
+is at DS:1F84h, and no slot is given back until a region loads, so at 300 a new picture got no
+slot and wasn't drawn. DSCLOG's `PIC_REUSE` changes nothing below 300 slots, and is always on (a
+fix). With all 300 taken, four sites (`gamepatch` "pic_full", "pic_place", "pic_count" and
+"pic_fail") do this:
+- `PIC_FULL` (26009h) picks a slot to reuse. It must be out of memory (flag 2 clear) and named by
+  no wall (the walls' slots at DS:574Eh) and no map thing (+0Fh). A slot the Loader let go
+  (`CACHE_STALE`, FFFEh) is taken first; else the first free one, the search going round from the
+  slot after the last reused, so the oldest reuse goes first. With none free, no slot, as the game.
+- `PIC_PLACE` (260CCh) puts the reused slot's picture in the first gap in the store it fits (the
+  other slots' places and lengths, the STALE ones left out), else past the furthest end.
+- `PIC_COUNT` (2612Bh) gives the reused slot's number and leaves the count at 300.
+- `PIC_FAIL` (25FD0h, the loader's "no picture") lets a reused slot go again (STALE, not in memory)
+  when its picture's read failed: it holds the new number but the old place, and would otherwise be
+  read from the wrong place later.
+
+`pf_count` counts the slots reused and `pf_failed` those let go after a failed read, for the tests
+(`test_dsclog`'s `PictureSlotTests`) and playtests (`playtest/slotcount.py`; the log is
+`playtest/logs/2026-11-09-picture-slot-reuse.md`). The picture store the
+[party's outfits](#what-the-party-wears) fill is a different limit.
 
 ## Elves and half-elves
 

@@ -178,7 +178,15 @@ def _follow(args) -> None:
             time.sleep(2)
     log = DiceLog(guest, record_everything=args.raw)
     log.answer_stats_in_background()
-    log.use_settings(load_settings())  # the Ring +1, the rule changes, monster descriptions
+    from .launch import SettingsUnreadable
+    while True:  # (read strictly: one held elsewhere isn't the defaults, every rule on, no pockets tried)
+        try:
+            settings = load_settings(strict=True)
+            break
+        except SettingsUnreadable as e:
+            print(f"{e.strerror}. Waiting...", flush=True)
+            time.sleep(1)
+    log.use_settings(settings)  # the Ring +1, the rule changes, monster descriptions
     log.speaker_names = speaker_names()
     log.learned_speakers = learned_speakers()
 
@@ -310,7 +318,9 @@ def cmd_play(args) -> None:
         note(launch.started_line(game_dir))
         if launch.left_out_line():
             tell(launch.left_out_line())
-        settings = launch.load_settings()
+        settings = launch.LAST_SETTINGS  # (as launch() read them, strictly: the copies' switches)
+        if settings is None:
+            settings = launch.load_settings(strict=True, tries=40)
         guest = None
         while guest is None and dosbox.poll() is None:  # DOSBox takes a moment to start
             try:

@@ -10,6 +10,7 @@ Layout, as seen in Shattered Lands saves:
            u32 count, then per chunk: u32 offset, u32 length.
 """
 
+import os
 import struct
 from typing import Dict, List, Tuple
 
@@ -143,3 +144,20 @@ def rooms(data: bytes, ctype: str) -> Dict[int, int]:
         after = next((s for s in starts if s > off), len(data))
         out[cid] = after - off
     return out
+
+
+def write_atomic(dest: str, data: bytes) -> None:
+    """DATA written to DEST whole or not at all: into DEST.tmp, then put in its place. A write
+    that fails (a full disk; on Windows DEST held open by the game or an antivirus) leaves no
+    .tmp behind (a copy's is megabytes) and DEST as it was."""
+    tmp = dest + ".tmp"
+    try:
+        with open(tmp, "wb") as f:
+            f.write(data)
+        os.replace(tmp, dest)
+    finally:
+        if os.path.exists(tmp):
+            try:
+                os.remove(tmp)
+            except OSError:
+                pass

@@ -326,9 +326,11 @@ def learned_speakers() -> Dict[int, str]:
     return _names(load_settings(), "speakers_learned")
 
 
-def pickpocketed() -> List[str]:
-    """The pockets tried already (pickpocket.py), "key@game time" each: each person gets one try."""
-    entries = load_settings().get("pickpocketed", [])
+def pickpocketed(tries: int = SETTINGS_TRIES) -> List[str]:
+    """The pockets tried already (pickpocket.py), "key@game time" each: each person gets one try.
+    Read strictly: SettingsUnreadable if settings.json is held elsewhere, never [] in place of the
+    list (which the next pick would then save over it)."""
+    entries = load_settings(strict=True, tries=tries).get("pickpocketed", [])
     return [e for e in entries if isinstance(e, str)] if isinstance(entries, list) else []
 
 
@@ -495,7 +497,9 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
     the saved settings if none given). Returns why the game can't be patched, or None; what of the
     copies couldn't be made is in LEFT_OUT (left_out_line), for the player to be told."""
     del LEFT_OUT[:]
-    chosen = load_settings() if settings is None else settings
+    from . import alagorn
+    del alagorn.LEFT_OUT[:]  # (an earlier start's: its scripts written only with some switches on)
+    chosen = load_settings(strict=True) if settings is None else settings
     on = content(chosen)
     size_rule = chosen.get("creature_size", True) is not False  # (Hold and Charm Person's texts)
     skip = (frozenset() if on["effects_kept"] else frozenset(gamepatch.EFFECTS_KEPT)) \
@@ -511,11 +515,14 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
         gamepatch.write_patched(_find_file(game_dir, "DSUN.EXE"), os.path.join(DOS_DIR, PATCHED_EXE), skip)
     except (gamepatch.PatchError, OSError) as e:
         return str(e)
-    objects_ok, new_objects = False, ()
+    objects_ok, new_objects, kalzith_object = False, (), False
     try:
         objects = _find_file(game_dir, icons.OBJECTS_FILE)
         if objects:
-            objects_ok, new_objects = icons.write_objects(objects, os.path.join(DOS_DIR, icons.OBJECTS_FILE), on)
+            objects_ok, new_objects, kalzith_object = icons.write_objects(
+                objects, os.path.join(DOS_DIR, icons.OBJECTS_FILE), on)
+            if not objects_ok:  # (not written, though nothing raised: said, not dropped unseen)
+                LEFT_OUT.append(f"the new items, people and icons ({icons.OBJECTS_FILE}: not written)")
         else:
             LEFT_OUT.append(f"the new items, people and icons ({icons.OBJECTS_FILE}: not in the game's folder)")
     except (gff.GffError, OSError, KeyError, struct.error, ValueError, IndexError) as e:
@@ -526,7 +533,10 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
     # with that object in the objects copy (a region naming an object that isn't there would stop
     # the game)
     # (the slave pens' clones go into Kalzith's copy of the pens, when he's in it: one copy)
-    with_kalzith = on["kalzith"] and objects_ok
+    with_kalzith = on["kalzith"] and objects_ok and kalzith_object
+    if on["kalzith"] and objects_ok and not kalzith_object:  # (the rest of the copy kept)
+        LEFT_OUT.append(f"Kalzith, the slave pens' defiler ({icons.OBJECTS_FILE}: his object couldn't be "
+                        "made in this copy of the game)")
     gifts = (worldgear.GIFTS if on["world_gear"] else ()) + (worldgear.MAGIC if on["world_magic"] else ())
     pens_clones = [g for g in gifts if g.region == kalzith.REGION and g.clone and g.clone[1] in new_objects]
     for region in worldgear.regions(worldgear.GIFTS + worldgear.MAGIC):
@@ -566,8 +576,7 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
             if not source:
                 raise OSError(f"no {name}")
             write(source, os.path.join(DOS_DIR, name))
-        from . import alagorn  # (a story menu of Alagorn's too long for the game's scripts: told)
-        LEFT_OUT.extend(alagorn.LEFT_OUT)
+        LEFT_OUT.extend(alagorn.LEFT_OUT)  # (a story menu of Alagorn's too long for the game's scripts: told)
         if not with_kalzith and not pens_clones:
             try:
                 os.remove(os.path.join(DOS_DIR, kalzith.REGION_FILE))
@@ -624,18 +633,36 @@ class GameBusy(LaunchError):
 _HELD: Dict[str, object] = {}  # {"fd": the lock file's descriptor, "path": it, "what": the holder}
 
 
+def _kernel32():
+    """kernel32 with the process calls' types set (a HANDLE is pointer-sized: not cut to a C int)."""
+    import ctypes
+    from ctypes import wintypes
+    k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    k32.OpenProcess.restype = wintypes.HANDLE
+    k32.OpenProcess.argtypes = (wintypes.DWORD, wintypes.BOOL, wintypes.DWORD)
+    k32.GetExitCodeProcess.restype = wintypes.BOOL
+    k32.GetExitCodeProcess.argtypes = (wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD))
+    k32.CloseHandle.restype = wintypes.BOOL
+    k32.CloseHandle.argtypes = (wintypes.HANDLE,)
+    k32.QueryFullProcessImageNameW.restype = wintypes.BOOL
+    k32.QueryFullProcessImageNameW.argtypes = (wintypes.HANDLE, wintypes.DWORD, wintypes.LPWSTR,
+                                               ctypes.POINTER(wintypes.DWORD))
+    return k32
+
+
 def pid_alive(pid: int) -> bool:
     """Whether a process PID runs (for a lock file the system couldn't lock)."""
     if pid <= 0:
         return False
     if os.name == "nt":
         import ctypes
-        k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        from ctypes import wintypes
+        k32 = _kernel32()
         handle = k32.OpenProcess(0x1000, False, pid)  # (PROCESS_QUERY_LIMITED_INFORMATION)
         if not handle:
             return ctypes.get_last_error() == 5  # (access denied: there, someone else's)
         try:
-            code = ctypes.c_ulong()
+            code = wintypes.DWORD()
             return bool(k32.GetExitCodeProcess(handle, ctypes.byref(code))) and code.value == 259  # STILL_ACTIVE
         finally:
             k32.CloseHandle(handle)
@@ -648,6 +675,42 @@ def pid_alive(pid: int) -> bool:
     except OSError:
         return False
     return True
+
+
+def process_name(pid: int) -> Optional[str]:
+    """The file name of the program process PID runs (lower case, "dosbox.exe"), or None if it
+    can't be told (gone, someone else's, or no way to ask on this system)."""
+    if pid <= 0:
+        return None
+    if os.name == "nt":
+        import ctypes
+        from ctypes import wintypes
+        k32 = _kernel32()
+        handle = k32.OpenProcess(0x1000, False, pid)
+        if not handle:
+            return None
+        try:
+            size = wintypes.DWORD(1024)
+            buf = ctypes.create_unicode_buffer(size.value)
+            if not k32.QueryFullProcessImageNameW(handle, 0, buf, ctypes.byref(size)):
+                return None
+            return os.path.basename(buf.value).lower() or None
+        finally:
+            k32.CloseHandle(handle)
+    try:
+        return os.path.basename(os.readlink(f"/proc/{pid}/exe")).lower() or None
+    except OSError:
+        return None
+
+
+def game_alive(pid: int, name: str) -> bool:
+    """Whether the game a Loader started (GAME_LOCK's game line: its PID and program's NAME) still
+    runs: the pid alive, and running that program where the system says which (a pid reused by
+    another program since is not the game)."""
+    if not pid_alive(pid):
+        return False
+    now = process_name(pid)
+    return now is None or not name or now == name.lower()
 
 
 def _lock_file(fd: int) -> Optional[bool]:
@@ -677,6 +740,36 @@ def lock_holder(path: Optional[str] = None) -> Tuple[int, str]:
         return int(pid), what
     except (OSError, ValueError):
         return 0, ""
+
+
+GAME_LINE = "game"  # (the lock file's second line: "game PID PROGRAM", the game the holder started)
+
+
+def lock_game(path: Optional[str] = None) -> Tuple[int, str]:
+    """(pid, program) of the game the lock file says was started (0, "" if none)."""
+    try:
+        with open(path or GAME_LOCK, encoding="utf-8", errors="replace") as f:
+            f.readline()
+            word, _, rest = f.readline().strip().partition(" ")
+        if word != GAME_LINE:
+            return 0, ""
+        pid, _, name = rest.partition(" ")
+        return int(pid), name
+    except (OSError, ValueError):
+        return 0, ""
+
+
+def running_game(path: Optional[str] = None) -> int:
+    """The pid of the game a Loader started from this folder if it still runs (the Loader that
+    started it closed since, or this one), else 0."""
+    pid, name = lock_game(path)
+    return pid if pid and game_alive(pid, name) else 0
+
+
+def game_running_line(pid: int) -> str:
+    return (f"The game started from this Obsidian Edition folder earlier is still running (process {pid}), "
+            "though the Loader that started it has closed. Close that game first: starting it again now "
+            "would write the mod's files under it.")
 
 
 def busy_line(pid: int, what: str) -> str:
@@ -715,20 +808,44 @@ def hold_game(what: str, path: Optional[str] = None) -> None:
                 os.close(fd)
                 continue
         break
-    os.lseek(fd, 0, os.SEEK_SET)
-    os.ftruncate(fd, 0)
-    os.write(fd, f"{os.getpid()} {what}\n".encode("utf-8"))
-    _HELD.update(fd=fd, path=path, what=what)
+    game = lock_game(path)  # (a game a closed Loader started, still running: its line kept)
+    _HELD.update(fd=fd, path=path, what=what, game=game if game[0] and game_alive(*game) else (0, ""))
+    _write_lock()
+
+
+def _write_lock() -> None:
+    """The held lock file's lines: this process and what it is; the game it (or a Loader before
+    it) started, if any."""
+    fd = _HELD["fd"]
+    pid, name = _HELD.get("game", (0, ""))
+    text = f"{os.getpid()} {_HELD['what']}\n" + (f"{GAME_LINE} {pid} {name}\n" if pid else "")
+    try:
+        os.lseek(fd, 0, os.SEEK_SET)
+        os.ftruncate(fd, 0)
+        os.write(fd, text.encode("utf-8"))
+    except OSError:
+        pass
+
+
+def note_game(pid: int, program: str) -> None:
+    """The game this process started (its pid and program) written in the held lock file: while it
+    runs, no Loader starts the game again from this folder (running_game), even once this one has
+    let the lock go (the window closed with the game still running)."""
+    if "fd" in _HELD:
+        _HELD["game"] = (pid, os.path.basename(os.path.realpath(program)).lower() if program else "")
+        _write_lock()
 
 
 def release_game() -> None:
     """Let the game's lock go (nothing if this process doesn't hold it); its file taken away."""
     fd, path = _HELD.pop("fd", None), _HELD.pop("path", None)
     _HELD.pop("what", None)
+    game = _HELD.pop("game", (0, ""))
     if fd is None:
         return
+    keep = bool(game[0]) and game_alive(*game)  # (the game still runs: its line stays for the next Loader)
     try:
-        if os.name != "nt":
+        if os.name != "nt" and not keep:
             os.remove(path)  # (while still locked: no one takes the file being removed)
     except OSError:
         pass
@@ -743,7 +860,7 @@ def release_game() -> None:
         os.close(fd)
     except OSError:
         pass
-    if os.name == "nt":
+    if os.name == "nt" and not keep:
         try:
             os.remove(path)  # (fails while another has it open: it is theirs then)
         except OSError:
@@ -947,14 +1064,27 @@ def launch(game_dir: str, what: str = "the Loader") -> Tuple[subprocess.Popen, O
     except SettingsUnreadable as e:
         raise LaunchError(f"{e.strerror}, so the game isn't started with the wrong options: start it "
                           "again in a moment.") from None
+    global LAST_SETTINGS
     held = holds_game()
     hold_game(what)
     try:
-        return _launch(game_dir, settings)
+        running = running_game(_HELD.get("path"))  # (one a closed Loader started: its files in use)
+        if running:
+            raise GameBusy(game_running_line(running))
+        proc, problem = _launch(game_dir, settings)
     except BaseException:
         if not held:
             release_game()  # (nothing started: nothing held)
         raise
+    args = proc.args if isinstance(proc.args, (list, tuple)) else [proc.args]
+    note_game(proc.pid, str(args[0]) if args else "")
+    LAST_SETTINGS = settings
+    return proc, problem
+
+
+# the settings launch() last started the game with, read strictly (the dice log's switches and rules
+# for `play`, as the copies were built: never a second read that could find the file held)
+LAST_SETTINGS: Optional[dict] = None
 
 
 def _launch(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optional[str]]:

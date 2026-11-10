@@ -377,7 +377,7 @@ The other side has the **Dice log**, **Dialogue** and **Spells** tabs (below),
 **Options** (Alt+O) with the Loader's switches, in sections that open and
 close: click a section's heading (or Tab to it and press Space or Enter) to
 open it, ▸ when closed and ▾ when open. Which sections are open is remembered.
-Everything there applies in games started from the Loader; a switch that says
+Everything there applies in games started from the Loader or its `.bat` files; a switch that says
 "from the next start" waits until the game is started again. The sections are
 [In the game](FEATURES.md#in-the-game), [Rule changes](FEATURES.md#rule-changes), [More
 character customization](FEATURES.md#more-character-customization), [Expanded
@@ -545,7 +545,7 @@ hurt the creature last, a spell's damage to its caster, Magic Missile's too
 (only the party's own spells count). The readable layout shows it as the fight's
 close, every member's line shown.
 
-![The readable layout: the same fight with the working shown and hidden](docs/dicelog-readable.png)
+![One fight in the readable layout, the working shown (above) and hidden (below): Seneca's backstab and poison on an Arena Guard, then the Guards' swings at Lex and Jenna](docs/dicelog-readable.png)
 
 **Reading the lines as written.** Lines at the left edge are the events: a round
 starting, whose turn it is, attack rolls, saves, spells, kills. Lines indented

@@ -131,11 +131,12 @@ def shorter_blade(rows: Rows, steps: int = 4) -> Rows:
 # Staff's (2157) 27; Balk's Staff's (2143) 24; the Gythkas' (2287, 2254: 23; 2384: 22); a Stone pick's
 # (1494) 19; the Quarterstaffs' (2392, 2255), the Cahulaks' (2334) and the Striker's (1199) 18. The
 # Loader's own made from them: the Cahulaks +1's shining copy (2653, SHINE's) and Kreenfang's (2447),
-# the Metal Polearm's (2513), Linebreaker's (2571) and Thornwall's (2573), the Metal Cahulaks' (2671) and
-# the Cahulaks +2's (2673), ICONS'.
+# the Metal Polearm's (2513), Linebreaker's (2571) and Thornwall's (2573), the Metal Cahulaks' (2671),
+# the Cahulaks +2's (2673), and Deepbiter's (2497) and the Metal Pick's (2511), made from the Stone
+# pick's 19 (PICK_PICTURE_FROM), ICONS'.
 BOX_PICTURE = 16
 BOX_TALL = (2383, 2311, 2157, 2143, 2287, 2254, 2384, 1494, 2392, 2255, 2334, 1199,
-            2653, 2447, 2513, 2571, 2573, 2671, 2673)
+            2653, 2447, 2513, 2571, 2573, 2671, 2673, 2497, 2511, 2675)
 BOX_SMALL = 2900  # (BOX_TALL[i]'s copy is BOX_SMALL + i: numbers no picture of the game's has)
 
 
@@ -410,6 +411,8 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Metal Pick", 0xFB46, 2510, 2511, lambda r: recolour(r, PICK_TO_METAL)),
     ("Metal Polearm", 0xFB5E, 2512, 2513, lambda r: recolour(r, LIGHT_TO_METAL)),
     ("Metal Cahulaks", 0xFB5C, 2670, 2671, lambda r: recolour(r, LIGHT_TO_METAL)),  # (the champions' mul's)
+    # an earth or fire cleric-warrior's start (weaponchoice.py): the blades in the obsidian axe's blacks
+    ("Obsidian Cahulaks", 0xFB5C, 2674, 2675, lambda r: recolour(r, AXE_OBSIDIAN)),
     # the caravan's Cahulaks +2 (worldgear.cahulaks_chunks): its own picture, every pixel of its blades
     # in the water's colours, where Legcrusher's Cahulaks +1 (the game's object) shines every other in
     # the fire's
@@ -998,10 +1001,7 @@ def write_resources(source: str, dest: str, roll_store: bool = True, spells_manu
     except (KeyError, ValueError, IndexError, struct.error):
         pass  # (no STORE and RECALL: the creation screen as the game has it)
     out = with_chunks(data, added)
-    tmp = dest + ".tmp"
-    with open(tmp, "wb") as f:
-        f.write(out)
-    os.replace(tmp, dest)
+    gff.write_atomic(dest, out)  # (no .tmp left by a failed write)
 
 
 def _palette(source: str) -> None:
@@ -1020,12 +1020,13 @@ def _palette(source: str) -> None:
         pass
 
 
-def write_objects(source: str, dest: str, on: Optional[Dict[str, bool]] = None) -> Tuple[bool, Tuple[int, ...]]:
+def write_objects(source: str, dest: str, on: Optional[Dict[str, bool]] = None) -> Tuple[bool, Tuple[int, ...], bool]:
     """The game's SEGOBJEX.GFF (SOURCE, only read) with the Loader's icons, and its new items
     in their people's and chests' objects (the content switched ON: dataitems.py), to DEST.
-    Whether Kalzith's object is in it (his scripts name it: without it they mustn't be
-    written), and the objects added for items (the regions' copies and scripts naming them
-    mustn't be written without them)."""
+    Returns: that the copy was written (True; a failure raises); the objects added for items
+    (the regions' copies and scripts naming them mustn't be written without them); and whether
+    Kalzith's object is in it (his scripts name it: without it they mustn't be written, though
+    the copy is kept for the rest)."""
     with open(source, "rb") as f:
         data = f.read()
     from . import sprites
@@ -1071,11 +1072,9 @@ def write_objects(source: str, dest: str, on: Optional[Dict[str, bool]] = None) 
     if (on or {}).get("spells_manual", True) is not False:
         added.update(monsters.object_chunks({**chunks, **added}))
     out = with_chunks(data, added, room)
-    tmp = dest + ".tmp"
-    with open(tmp, "wb") as f:
-        f.write(out)
-    os.replace(tmp, dest)
-    return ("OJFF", kalzith.OBJECT) in his, tuple(sorted(n for (k, n) in items if k == "RDFF" and ("RDFF", n) not in chunks))
+    gff.write_atomic(dest, out)  # (no .tmp left by a failed write)
+    return True, tuple(sorted(n for (k, n) in items if k == "RDFF" and ("RDFF", n) not in chunks)), \
+        ("OJFF", kalzith.OBJECT) in his
 
 
 # The Loader's items, and the plain pictures they keep in a game that hasn't the copy
@@ -1096,7 +1095,8 @@ def _metal_types() -> Dict[int, str]:
     from . import game
     return {game.METAL_DAGGER_TYPE: "Metal Dagger", game.METAL_MACE_TYPE: "Metal Mace",
             game.METAL_GREAT_AXE_TYPE: "Metal Great Axe", game.METAL_PICK_TYPE: "Metal Pick",
-            game.METAL_POLEARM_TYPE: "Metal Polearm", game.METAL_CAHULAKS_TYPE: "Metal Cahulaks"}
+            game.METAL_POLEARM_TYPE: "Metal Polearm", game.METAL_CAHULAKS_TYPE: "Metal Cahulaks",
+            game.OBSIDIAN_CAHULAKS_TYPE: "Obsidian Cahulaks"}
 
 
 METAL_TYPES = _metal_types()

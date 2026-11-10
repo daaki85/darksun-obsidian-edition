@@ -43,8 +43,9 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 **Weapon specialization**
 
 - **[New]** Fighters specialize in one weapon spec, a kind of weapon such as the long sword (+1 to hit, +2 damage, 3/2 attacks a round), with **mastery** at 5th level (+3, +3) and **grand mastery** at 9th (a larger damage die and one more attack).
-- **[New]** Gladiators specialize in two weapon specs, a third at 6th level and a fourth at 9th. Rangers gain expertise with the bow and one other weapon spec. The Battle Mage, Crusader and Mind Warrior kits gain expertise with one melee weapon spec of their choice (3/2 attacks a round, 2 from 7th level); a thri-kreen Mind Warrior may take the chatkcha.
+- **[New]** Gladiators specialize in two weapon specs, a third at 6th level and a fourth at 9th. Rangers gain expertise with the bow and one other weapon spec. The Battle Mage, Crusader and Mind Warrior kits gain expertise with one melee weapon spec of their choice (3/2 attacks a round, 2 from 7th level).
 - **[Changed]** Warriors attack at AD&D's plain rate with weapons outside their specializations *(was 3/2 with any weapon)*. Specialists shoot missiles faster.
+- **[Changed]** Every thri-kreen, foes too, throws a chatkcha once more a round, AD&D's 2/1 for its own weapon *(was at the weapon's rate, like anyone)*; a thri-kreen Mind Warrior may take the chatkcha as its weapon spec.
 - **[New]** The weapons spells make count for specialization: the Flame Blade as a long sword, Shillelagh as a club, Spiritual Hammer as a mace.
 
 **Saving throws**
@@ -75,8 +76,8 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 **Size and weapons**
 
-- **[New]** **Creature size**: a large target (a half-giant, a large monster, anyone Enlarged) takes AD&D's damage for large targets from a weapon (a long sword 1d12, a great axe 2d8; a dagger 1d3, a chatkcha 1d4+2), and Hold Person and Charm Person don't work on it at all. A weapon's item box shows both damages (`1D8-1/1D12-1`), and Shillelagh's damage reads 1D6+1 (2D4 against a large foe). *(the game keeps no sizes)*
-- **[New]** **Cahulaks** fight as Dark Sun's rules describe them: a bladed head in each hand, so one more attack a round (at −2 and −4, as with two weapons, DEX helping), and a hit can tangle a man-sized or smaller foe, which then loses its next turn unless it saves against petrification. Half-giants, large monsters and shapeless things can't be tangled. Twin-blades and Battle Dancers can't use cahulaks.
+- **[New]** **Creature size**: a large target (a half-giant, a large monster, anyone Enlarged) takes AD&D's damage for large targets from a weapon (a long sword 1d12, a great axe 2d8, a gythka 1d10; a dagger 1d3, a chatkcha 1d4+2), and Hold Person and Charm Person don't work on it at all. A weapon's item box shows both damages (`1D8-1/1D12-1`), and Shillelagh's damage reads 1D6+1 (2D4 against a large foe). *(the game keeps no sizes)*
+- **[New]** **Cahulaks** fight as Dark Sun's rules describe them: a bladed head in each hand, so one more attack a round (at −2 and −4, as with two weapons, DEX helping), and a hit can tangle a man-sized or smaller foe, which then loses its next turn unless it saves against petrification. Half-giants, large monsters, anyone Enlarged, the bodiless (elementals, slimes, swarms, shadows) and a few other beasts can't be tangled ([the creatures' table](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/CREATURES.md) (spoilers) marks each). Twin-blades and Battle Dancers can't use cahulaks.
 
 ## Classes and Kits
 
@@ -85,7 +86,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - **[Changed]** Levels stop at a cap of **749,999 XP** instead of 9th level, shared out: one class goes as far as its next level needs no more (cleric 11th, druid 12th, fighter, gladiator and ranger 10th, preserver and psionicist 11th, thief 13th); two or three classes share it evenly (374,999 or 249,999 each); a human who changed class has what its old classes' levels didn't use *(was 9th level for every class)*.
 - **[Changed]** Character creation keeps what the die rolls: lower a score to raise another, but the six never add up to more than the die gave (shown under CHR as `SUM:99/101`), and the hit points stay as rolled, moving only with CON's bonus *(was any score clicked up to its most, and the hit points set by a click)*.
 - **[New]** **STORE** and **RECALL** on the character creation screen, as in Baldur's Gate: keep a roll, try the die again, and bring the kept roll back.
-- **[Changed]** An air cleric can use daggers, as its sphere allows *(was none: no dagger in the game listed the air cleric)*.
+- **[Changed]** An air cleric can use daggers and cahulaks, as its sphere allows (Dark Sun's cahulaks are thrown weapons) *(was no dagger: none in the game listed the air cleric; the class restrictions took the cahulaks away)*.
 - **[New]** New characters start with fuller gear: a weapon in hand they can use, a sling, leather armour where they may wear it, a Stalker, Assassin or Shinobi a cloak, and some kits weapons of their own (a Battle Dancer two long swords, a Poisoner two of its weapon spec, daggers or short swords). A multiclass preserver starts with no armour, so it can cast.
 - **[Changed]** Class restrictions hold: a character may use an item only if every one of its classes allows it, and a multiclass preserver can't cast in armour *(was any one class allowing it)*. Thieves wear light armour only; a multiclass thief (or a human once a warrior or cleric) may wear heavier, losing its thief skills and backstab in it.
 - **[Changed]** Multiclass characters gain hit points as in AD&D: CON's bonus on every hit die (a warrior's if one class is a warrior), the total divided between the classes.
@@ -144,7 +145,7 @@ A few of them:
 - **Military Scout:** better at stealth, traps and climbing under the open sky, with +2 initiative and +1 to hit with bows and slings there, and its hiding isn't halved by the sun; worse under a roof, and it never backstabs.
 - **Spellarcher:** shoots every arrow as a magic one (1 better, at least +1), and weaves the touch spells it knows into arrows: a button on the USE screen for each, a spell slot for 5 arrows a preserver level in its empty quiver (or added to the same spell's arrows there), each casting its spell on what it hits at the archer's preserver level. They stay in the quiver until shot, as a Flame Blade stays in the hand. Making them plays the spell's own cast sound.
 - **Wild Fury:** Wild Fighting as each fight starts, a roll against CON at −4: one more attack a round in melee and +3 damage, or −3 to hit and AC 3 worse if it fails.
-- **[New]** The game's own party has features of its own: Gerakis fights wild (as a Wild Fury does), K'ratchek casts and uses psionics as a Wasteland Seer does and throws her chatkcha once more a round, Cilla hides as well in the sun as out of it (her feature, the Elven Shadow-walker), and Cermak is an Arcanist.
+- **[New]** The game's own party has features of its own: Gerakis fights wild (as a Wild Fury does), K'ratchek casts and uses psionics as a Wasteland Seer does, Cilla hides as well in the sun as out of it (her feature, the Elven Shadow-walker), and Cermak is an Arcanist.
 
 > *Developers' Notes: Each kit is built into the game's own code, so it works everywhere the game checks: THAC0, spell slots, hit dice, PSP costs, attacks a round and what you may hold. The player's guide has all 37, with a short description of who takes each one on Athas.*
 
@@ -223,6 +224,7 @@ Where each is found is in [ITEMS](https://github.com/daaki85/darksun-obsidian-ed
 
 - **[Changed]** The Elven Leader's gift is a **Gythka +2** *(was +1)*.
 - **[Changed]** The elven caravan's buried cahulaks are a **Cahulaks +2**, still casting Cause Light Wounds on a hit, their blades glowing blue *(was the game's Cahulaks +1)*.
+- **[New]** The game's own **Polearm +1**, which it defines but never placed, is in the world now.
 
 **Magic armour and worn items**
 
@@ -274,6 +276,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[Changed]** Merchants pay 60% of an item's price *(was all of it)*.
 - **[New]** Merchants keep the magical items you sell them, to buy back *(was destroyed when sold)*.
 - **[New]** Scar's henchmen carry bone axes, which they drop when they fall.
+- **[New]** People the party fights who had nothing in hand and struck with their fists carry weapons and armour that suit them.
 
 ## Graphics
 
@@ -387,7 +390,7 @@ The main fixes are below; every bug of the original game the mod mends, with wha
 - **[Fixed]** A preserver or psionicist with another class couldn't claim to have scried the **haystack** or read the man's thoughts, and the cave guide told even a dwarf or halfling to "go bother someone your own size". **Dagolar's slime book** counted a fighter's or an air cleric's training as magical but not an earth, fire or water cleric's or a druid's: now any cleric, druid, preserver or psionicist can read it.
 - **[Fixed]** Cilla, an elf in the ready-made party, was drawn with the half-elf woman's figure; she looks like an elf now (a switch keeps the game's figure).
 
-Rules the game got wrong are put right too, each under its own heading above with a switch, on by default: the saving throws against spells and the doubled d20 against fire, cold and electricity, two weapons, warriors' attacks, helms' AC, acid on armour, held targets, creature size and cahulaks (Combat); class restrictions, multiclass hit points, the class tables, rangers' spells, dual-classing, preservers' learning from scrolls, CON's regeneration and poison saves (Classes and Kits); spells, psionics and monsters as the manual describes them (Turn Undead by AD&D's table with them), spells rolling to hit, resting and Enlarge's dice (Magic and Psionics); and thief skills (Improved Thieving).
+The rules the game got wrong (saving throws, two weapons, warriors' attacks, class tables and more) are under their own headings above, each with a switch.
 
 ## Your Saved Games
 

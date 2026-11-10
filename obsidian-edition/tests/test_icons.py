@@ -336,5 +336,78 @@ class WhichTests(unittest.TestCase):
             self.assertEqual(icons.picture(name, True), icons.PICTURES[name])
 
 
+class WriteAtomicTests(unittest.TestCase):
+    """gff.write_atomic, which every copy's writer uses: a failed write leaves no .tmp (a copy's is
+    megabytes) and the earlier file as it was."""
+
+    def test_failed_replace_and_write(self):
+        import tempfile
+        from unittest import mock
+        with tempfile.TemporaryDirectory() as d:
+            dest = os.path.join(d, "SEGOBJEX.GFF")
+            gff.write_atomic(dest, b"one")
+            with mock.patch("os.replace", side_effect=PermissionError(13, "held by the game")):
+                with self.assertRaises(PermissionError):
+                    gff.write_atomic(dest, b"two")
+            self.assertEqual(os.listdir(d), ["SEGOBJEX.GFF"])
+            with open(dest, "rb") as f:
+                self.assertEqual(f.read(), b"one")
+
+            class Full:
+                def __len__(self):
+                    return 3
+            with self.assertRaises(TypeError):  # (a write that fails part-way)
+                gff.write_atomic(dest, Full())
+            self.assertEqual(os.listdir(d), ["SEGOBJEX.GFF"])
+
+
+OBJECTS = os.environ.get("DSUN_OBJECTS")
+
+
+@unittest.skipUnless(OBJECTS and os.path.isfile(OBJECTS), "needs the game's SEGOBJEX.GFF (DSUN_OBJECTS)")
+class BoxTallInDataTests(unittest.TestCase):
+    def test_every_tall_weapon_icon_in_box_tall(self):
+        """In the copy as built: every weapon's icon (an item of a weapon kind's type in any
+        RDFF, and the ICONS and SHINE items made from one) taller than the box's 16 is in
+        BOX_TALL, so the item box draws its small copy (a Metal Pick's 19, drawn bare, put its
+        last line on the box's edge)."""
+        import tempfile
+        from dsloader import dataitems, specialize
+        with tempfile.TemporaryDirectory() as d:
+            dest = os.path.join(d, icons.OBJECTS_FILE)
+            icons.write_objects(OBJECTS, dest, {})
+            with open(dest, "rb") as f:
+                chunks = gff.read_gff(f.read())
+        weapons = set()
+        for (kind, _), chunk in chunks.items():
+            if kind != "RDFF":
+                continue
+            try:
+                recs, _ = dataitems.records(chunk)
+            except (ValueError, IndexError, struct.error):
+                continue
+            for rec in recs:
+                if rec.kind == dataitems.ITEM and len(rec.data) >= game.ITEM_TYPE + 2 \
+                        and specialize.kind_of(struct.unpack_from("<H", rec.data, game.ITEM_TYPE)[0]) is not None:
+                    weapons.add(0x10000 - struct.unpack_from("<H", rec.data, 0)[0])
+        weapons |= {number for _, plain, number, _, _ in icons.ICONS if 0x10000 - plain in weapons}
+        weapons |= {number for _, number, _, _ in icons.SHINE if number in weapons}
+        self.assertIn(1381, weapons)  # (the Stone pick: the check sees the game's weapons)
+        tall = []
+        for number in sorted(weapons):
+            obj = chunks.get(("OJFF", number))
+            if obj is None:
+                continue
+            icon = struct.unpack_from("<H", obj, icons.OJFF_ICON)[0]
+            picture = chunks.get(("BMP ", icon))
+            if picture is not None and len(icons.decode(picture)) > icons.BOX_PICTURE and icon not in icons.BOX_TALL:
+                tall.append((number, icon, len(icons.decode(picture))))
+        self.assertEqual(tall, [])
+        for name, _, number, icon, _ in icons.ICONS:  # (the picks' icons, made from the Stone pick's)
+            if name in icons.PICK_PICTURE_FROM:
+                self.assertEqual(struct.unpack_from("<H", chunks[("OJFF", number)], icons.OJFF_ICON)[0], icon)
+                self.assertIn(icon, icons.BOX_TALL, name)
+
+
 if __name__ == "__main__":
     unittest.main()

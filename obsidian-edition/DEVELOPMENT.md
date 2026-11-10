@@ -147,18 +147,17 @@ trust when a test file is added):
   `test_sizes`, `test_held`, `test_least_scores`, `test_manual_spells`,
   `test_manual_group3`, `test_group4` among them).
 - **tkinter**: the window's tests (`test_theme`, `test_partyview`, `test_find`,
-  `test_viewer_options`, and `test_compiles`' window part). Linux's Python
+  `test_viewer_options`, and `test_compiles`' window part; `test_viewer_settings` also
+  needs a display, so run it under `xvfb-run` on a machine without one). Linux's Python
   often lacks it.
 - **The game's files**, named by environment variables: `DSUN_GPLDATA` (its
   `GPLDATA.GFF`: `test_scriptnumbers`, `test_scriptfixes`, `test_pehtuclchest`,
-  `test_champions`, and `test_sounds`, which reads the `RESOURCE.GFF` beside
+  `test_champions`, `test_audit_flags`, and `test_sounds`, which reads the `RESOURCE.GFF` beside
   it), `DSUN_OBJECTS` (its `SEGOBJEX.GFF`, with `GPLDATA.GFF` beside it:
-  `test_figures`, `test_pehtuclchest`, `test_worldgear`, `test_group4`, which
+  `test_figures`, `test_pehtuclchest`, `test_worldgear`, `test_audit_objects`,
+  `test_cahulaks`, `test_sizenames`, `test_group4`, which
   falls back to `/tmp/playtest/inst/SEGOBJEX.GFF`, the playtest kit's game)
-  and `DSUN_RESOURCE` (its `RESOURCE.GFF`: `test_kitpages`).
-
-With unicorn but without tkinter or the game's files, 29 are skipped; with the
-files set, the 10 that need tkinter (2026-11-10, 1,697 tests).
+  and `DSUN_RESOURCE` (its `RESOURCE.GFF`: `test_kitpages`, `test_spelltexts_fit`).
 
 The **Obsidian Edition tests** workflow (`.github/workflows/tests.yml`) runs
 them on Windows, with unicorn 2.1.4, on every push to `obsidian-edition` and
@@ -168,9 +167,11 @@ Tests that guard the whole project rather than one module:
 
 | Test | What it checks |
 |---|---|
-| `test_doclinks` | every relative link and anchor in the Markdown pages goes somewhere, and each README or features page section the DEVELOPMENT pages explain links to its explanation |
+| `test_doclinks` | every relative link and anchor in the Markdown pages goes somewhere, and each section of the player's pages (README, features, items, kits, bugs fixed, how the game works) that a DEVELOPMENT page explains links to its explanation |
 | `test_compiles` | every module of the Loader compiles, the window's too |
 | `test_flagrange` | the Loader's game flags are in 756-807 and no two share one ([the table](#the-loaders-game-flags)) |
+| `test_audit_flags` | every module constant from 756 up, Alagorn's overflow flags and aging's count among them, found by itself: no two share a number, and (with `DSUN_GPLDATA`) the scripts copy uses no flag the modules don't have |
+| `test_audit_objects` | each object and picture the Loader adds to its SEGOBJEX copy is made by one module only |
 | `test_scriptnumbers` | the Loader's scripts have a number each, their calls land inside them, and each fits the game's script buffer |
 | `test_dsclog`'s `test_fits_upper_memory` | what the helper puts in upper memory fits the room DOSBox gives it |
 | `test_version` | the version is the same in `__init__.py`, the patch notes and the front page, and its release notes exist |
@@ -410,6 +411,7 @@ parties, plus the in-game View Character screens.
 | sheet | `+0x0a` | s16 | The hit points rolled (or gained) for every class level, added up | the game's level-up code (DSUN.EXE 87250h) adds each new level's to it; max HP = this ÷ the number of classes + CON's bonus |
 | sheet | `+0x0c` | s16 | Max PSP | worked out at each level-up (873B2h): CON, INT and WIS bonuses, and for a psionicist +10 a level after the first, plus 1 a level for each WIS point above 15 |
 | sheet | `+0x10` | u16 | Entity ID | links the sheet to its creature record |
+| sheet | `+0x12` | u16 | Class flags, a bit for each class the character has: the clerics 1, 2, 4, 8 (air to water), druid 10h, fighter 20h, gladiator 40h, preserver 80h, psionicist 100h, ranger 200h, thief 400h (`game.SHEET_FLAGS`) | the game's class tests read it; the Turn Undead button shows for a cleric bit |
 | sheet | `+0x18` | u8 | Race: 1 Human, 2 Dwarf, 3 Elf, 4 Half-elf, 5 Half-giant, 6 Halfling, 7 Mul, 8 Thri-kreen | ability modifiers fit; 2, 6 and 7 from the character creation code's race table |
 | sheet | `+0x19` | u8 | Gender: 1 male, 2 female | |
 | sheet | `+0x1a` | u8 | Alignment: 1 LG, 2 LN, 3 LE, 4 NG, 5 TN, 6 NE, 7 CG, 8 CN, 9 CE | 1, 5, 7 confirmed in game |
@@ -421,6 +423,8 @@ parties, plus the in-game View Character screens.
 | sheet | `+0x29` | u8 | Magic resistance (%) | read by the game's magic resistance check |
 | sheet | `+0x2a` | u8 | Attacks per round × 2 | read by the game's combat code |
 | sheet | `+0x37` | u8 ×5 | Saves: para/poison, rod/staff, petrify, breath, spell | match the AD&D warrior table exactly |
+| sheet | `+0x3f` | u8 ×3 | The levels before any were lost (`game.SHEET_LEVELS_BEFORE`) | the game scales `+0x0a` by them |
+| sheet | `+0x43` | u8 | The Loader's kit byte: bits 0-5 the classes' kits, 40h the game's own party's feature, 80h Friends known; FFh none chosen (`kitpages.KIT_BYTE`) | the Loader's own |
 
 In memory, the game reaches both tables through far pointers in its data
 segment: `DS:0x1665` points to the creature table and `DS:0x1661` to the
@@ -454,7 +458,8 @@ backpack's list, and worn things that aren't weapons (starting armour, a
 cloak) to the worn list. Worn items found in `+0x0c` are left alone (the
 game's own party starts with its armour in `+0x08`, where the screen puts it:
 Gerakis's arm armour in a new game, 2026-11-02). Items are 21-byte records (`DS:0x165D`), item types 20-byte ones
-(`DS:0x1669`, 115 of them, from GPLDATA.GFF):
+(`DS:0x1669`, 115 of them, from GPLDATA.GFF; the helper adds the Loader's own types after them, from
+`game.GAME_TYPES` up):
 
 | Record | Offset | Field |
 |---|---|---|
@@ -466,7 +471,7 @@ Gerakis's arm armour in a new game, 2026-11-02). Items are 21-byte records (`DS:
 | item | `+0x12` | its name (an entry of the game's name table, 25 bytes each) |
 | item | `+0x14` | its plus |
 | type | `+0x04` | weight, in tenths of a pound |
-| type | `+0x08` | material in the low four bits (wood, bone, stone, obsidian, metal, leather); `0x80` spares a weapon the material's to-hit penalty |
+| type | `+0x08` | material in the low four bits (0 wood, 1 bone, 2 stone, 3 obsidian, 4 metal, 5 leather); `0x80` spares a weapon the material's to-hit penalty (the bow, club, quarterstaff, sling, arrows, chatkcha) |
 | type | `+0x0c`, `+0x0d`, `+0x0e` | damage dice: sides, count, bonus |
 | type | `+0x0f` | `0x80`: counts for AC |
 | type | `+0x12` | its AC (on top of the item's plus) |
@@ -595,7 +600,8 @@ asks DOS for both, `LOAD_EXTRA`.
 
 `FAR_SEG` (the header's +142) holds, at fixed offsets from `FAR_RING` (10h) to
 `FAR_END` (its size in [the limits](#the-limits)): the dice log's ring (`NENT`
-63 entries of `ESIZE` 192 bytes), the panel's picture, the shadows' cache
+63 entries of `ESIZE` 192 bytes; an entry's +184 is its kind, +186 the spell table's segment for
+a save, +188 the attack's target's state, and `dsclog.asm`'s comment on the entry has the rest), the panel's picture, the shadows' cache
 (`FAR_SC`), the text buffer, the shadows' spans and each thing's place as last
 seen (for the dust), the frames steady pace holds back, the last text written
 to the screen (`DOS_WRITE`, for `DOS_QUIT`'s crash report), the dust's table,
@@ -661,8 +667,8 @@ largest block the 640 KB never got back. The patch `overlay_umb` makes that
 call `INT VEC_OVR_BUF` (`PROBE_OVR_BUF`), which hands over a block `KEEP`
 reserved: `KEEP` (resident code) first cuts the helper's own block down to what
 stays (function 4Ah, its `ES` the PSP from `SS`: the word `psp` is install data,
-zeroed by then; until 2026-11-10 the call named segment 0 and failed, so the
-install's 16 stack paragraphs stayed between the helper and the buffer), then
+zeroed by then, and a call naming segment 0 fails, leaving the install's 16 stack
+paragraphs between the helper and the buffer), then
 takes the buffer's block in the memory the install code had, so the
 room is in one piece: the helper, the buffer and what is left free. The
 header's `ovr_given` (+368) is the buffer's segment once the game has it.
@@ -875,6 +881,9 @@ A save keeps 808 flags (`game.FLAG_COUNT`: a bit each in `SAVE` chunk
 freed, or the save's flags made longer, if the game allows it); then it goes in
 this table and in `tests/test_flagrange.py` (`FLAGS`, or `_ranges` for a block of them), which checks every
 flag is in range and none is shared.
+`tests/test_audit_flags.py` finds them without the list: every module constant from 756
+up, Alagorn's overflow flags with them, and with `DSUN_GPLDATA` the flags the scripts copy
+sets or reads.
 
 ## How each part works
 

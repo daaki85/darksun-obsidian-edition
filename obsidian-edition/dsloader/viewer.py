@@ -865,7 +865,7 @@ class Viewer:
         """Save a log as a text file (to read with other tools, such as a screen reader)."""
         path = filedialog.asksaveasfilename(title=f"Save the {what}", defaultextension=".txt",
                                             initialfile=f"{what.replace(' ', '-')}.txt",
-                                            filetypes=[("Text", "*.txt"), ("All files", "*.*")])
+                                            filetypes=[("Text", "*.txt"), ("All files", "*.*")], parent=self.root)
         if path:
             try:
                 with open(path, "w", encoding="utf-8") as f:
@@ -943,7 +943,7 @@ class Viewer:
                 return
             if not launch.is_game_dir(game_dir):
                 messagebox.showerror("Start the game", f"{game_dir} has no DSUN.EXE and DOSBOX folder; "
-                                     "pick the GOG install folder of Shattered Lands.")
+                                     "pick the GOG install folder of Shattered Lands.", parent=self.root)
                 return
             self._save_settings({"game_dir": game_dir})
             self.art = art.GameArt.of(game_dir)
@@ -951,7 +951,7 @@ class Viewer:
             self._game_dir, self._started = game_dir, time.time()
             self.dosbox, problem = launch.launch(game_dir, "the Loader's window")
         except (launch.LaunchError, OSError) as e:  # (GameBusy among them: another Loader has the game)
-            messagebox.showerror("Start the game", str(e))
+            messagebox.showerror("Start the game", str(e), parent=self.root)
             return
         if problem:
             self.status.set(f"Starting the game without the dice log: it can't run with this copy ({problem}).")
@@ -961,7 +961,7 @@ class Viewer:
         left_out = launch.left_out_line()
         if left_out:  # (a copy that couldn't be made: told, not silent)
             self._append_dice([left_out])
-            messagebox.showwarning("Start the game", left_out)  # (DOSBox or Dark Sun Recompiled: which runs)
+            messagebox.showwarning("Start the game", left_out, parent=self.root)  # (DOSBox or Dark Sun Recompiled: which runs)
         self.next_try = time.monotonic() + RETRY_SECONDS
         self._start_state()
 
@@ -1004,7 +1004,7 @@ class Viewer:
         try:
             self.layout = Layout.load(self.layout.path)
         except (OSError, ValueError, KeyError) as e:
-            messagebox.showerror("Layout", f"Could not load {self.layout.path}:\n{e}")
+            messagebox.showerror("Layout", f"Could not load {self.layout.path}:\n{e}", parent=self.root)
             return
         self._apply_layout()
 
@@ -1012,9 +1012,9 @@ class Viewer:
         try:
             self.layout.save()
         except OSError as e:  # (a folder that can't be written, or the file held elsewhere: said)
-            messagebox.showerror("Layout", f"Could not save {self.layout.path}:\n{e}")
+            messagebox.showerror("Layout", f"Could not save {self.layout.path}:\n{e}", parent=self.root)
             return
-        messagebox.showinfo("Layout", f"Saved slots to {self.layout.path}")
+        messagebox.showinfo("Layout", f"Saved slots to {self.layout.path}", parent=self.root)
 
     def search_name(self) -> None:
         text = self.search_text.get().strip()
@@ -1023,7 +1023,7 @@ class Viewer:
         try:
             pattern = _query_bytes(text)
         except ValueError:
-            messagebox.showerror("Search", "After hex: give byte values like 14 16 12")
+            messagebox.showerror("Search", "After hex: give byte values like 14 16 12", parent=self.root)
             return
         try:
             data = self.guest.snapshot()
@@ -1042,7 +1042,7 @@ class Viewer:
     def assign_hit(self) -> None:
         sel = self.hit_list.curselection()
         if not sel or sel[0] >= min(len(self.hits), MAX_HITS):  # (past the list: its "... more" line)
-            messagebox.showinfo("Assign", "Select a search hit first.")
+            messagebox.showinfo("Assign", "Select a search hit first.", parent=self.root)
             return
         slot = int(self.assign_slot.get()) - 1
         self.layout.clear_slot(slot)
@@ -1071,7 +1071,7 @@ class Viewer:
         try:
             self.layout.name_record.stride = values.parse_int(text) if text else None
         except ValueError:
-            messagebox.showerror("Stride", f"Not a number: {text}")
+            messagebox.showerror("Stride", f"Not a number: {text}", parent=self.root)
             return
         self.link_records()
 
@@ -1225,8 +1225,12 @@ class Viewer:
                 return
             self.next_try = now + RETRY_SECONDS
             if self.dice is None:
+                try:  # (strictly: the pockets tried, as saved; one held elsewhere read again later)
+                    saved, known = launch.load_settings(strict=True), True
+                except launch.SettingsUnreadable:
+                    saved, known = {}, False
                 self.dice = DiceLog(self.guest)
-                self.dice.use_settings(launch.load_settings())  # (the panel's size and state as saved; then the tab's own)
+                self.dice.use_settings(saved, picked_known=known)  # (the panel's size and state as saved; then the tab's own)
                 self.dice.answer_stats_in_background()
                 self.dice.speaker_names = launch.speaker_names()
                 self.dice.learned_speakers = launch.learned_speakers()
@@ -1250,7 +1254,6 @@ class Viewer:
                 self.dice.vulture_on = self.content_vars["vulture"].get()
                 self.dice.defiler_scrolls = self.content_vars["defiler_scrolls"].get()
                 self.dice.stealth_gear = self.stealth_gear.get()
-                self.dice.load_picked(launch.pickpocketed())
                 self.dice.set_rules(self._rules())
             try:  # (one Loader at a time follows the game: two would both make its changes)
                 launch.hold_game("the Loader's window")
@@ -1261,6 +1264,7 @@ class Viewer:
                 self.dice_status.set(self.dice.attach())
             except DiceLogError as e:
                 self.dice_status.set(str(e))
+                self._release_game()  # (nothing followed: the lock not kept from `play` meanwhile; taken again next try)
             return
         if now >= self.next_try:  # every couple of seconds: has the game restarted?
             self.next_try = now + RETRY_SECONDS
@@ -1276,7 +1280,8 @@ class Viewer:
         self.round_line.set(self._round_text())
         # (names worked out from conversations kept, and shown on earlier lines; the pockets tried
         # kept; a save the file refused tried again next pass)
-        learned, failed = self.dice.save_learned(launch.add_learned_speakers, launch.set_pickpocketed)
+        learned, failed = self.dice.save_learned(launch.add_learned_speakers, launch.set_pickpocketed,
+                                                 lambda: launch.pickpocketed(tries=1))
         for portrait in learned:
             self._rename_portrait(portrait)
         if failed and not self._learned_unsaved:
@@ -1720,14 +1725,14 @@ class Viewer:
     def save_dice(self) -> None:
         """Save the log's own lines (as written, whichever layout shows them)."""
         path = filedialog.asksaveasfilename(title="Save the dice log", defaultextension=".txt",
-                                            filetypes=[("Text", "*.txt"), ("All files", "*.*")])
+                                            filetypes=[("Text", "*.txt"), ("All files", "*.*")], parent=self.root)
         if not path:
             return
         try:
             with open(path, "w", encoding="utf-8") as f:
                 f.write("\n".join(self._raw_dice) + "\n")
         except OSError as e:
-            messagebox.showerror("Save", f"Couldn't save the dice log: {e}")
+            messagebox.showerror("Save", f"Couldn't save the dice log: {e}", parent=self.root)
 
     def _ac_rows(self, slots) -> List[Tuple[str, List[str]]]:
         """The AC the game last worked out for each character in a fight, and what it was made

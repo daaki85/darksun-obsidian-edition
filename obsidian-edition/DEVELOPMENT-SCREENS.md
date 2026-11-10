@@ -1,6 +1,6 @@
 # Development: what the game and the Loader show
 
-*Part of the [development notes](DEVELOPMENT.md). How the game's own screens show more (the combat log, names over figures, THAC0 and saves, the Look box, charges), what the Loader's tabs read, and the controls, saves and game speed: where the patched game calls the helper (DSCLOG), and what the Loader reads and writes. Most headings name the section of the [features page](FEATURES.md) or the [README](README.md) they explain; the rest, a part of one or a note of their own, say which at their start.*
+*Part of the [development notes](DEVELOPMENT.md). How the game's own screens show more (the combat log, names over figures, THAC0 and saves, the Look box, charges), what the Loader's tabs read, and the controls, saves and game speed: where the patched game calls the helper (DSCLOG), and what the Loader reads and writes. Most headings name the section of a player's page they explain (the [features page](FEATURES.md), the [README](README.md), [items](ITEMS.md), [kits](KITS.md), [bugs fixed](GAME-BUGS.md), [how the game works](HOW-THE-GAME-WORKS.md), [the dice log](DICE-LOG.md)); the rest, a part of one or a note of their own, say which at their start.*
 
 ## Contents
 
@@ -349,8 +349,8 @@ dice log running:
 - **The main loop** (`LABEL_TICK`, after `PANEL_TICK` in `PROBE_SCROLL`, which
   runs its pass with interrupts on when the game had them on, off only round
   the pointer's read with the drag's state and `TARGET_CLICK`'s calls to the
-  game's mouse handler: until 2026-11-10 the whole pass, redraws and the
-  retrace wait too, ran with them off and the game's clock lost ticks)
+  game's mouse handler, so the game's clock loses no ticks to the redraws and
+  the retrace wait)
   places labels too, and has where one was drawn again when it goes, moves or
   changes (`LABEL_ERASE`: the game's routine for a rectangle of the view,
   `1DF3:142Fh`, with page 1 and a flip, as its own call at 28185h; page 0
@@ -835,10 +835,10 @@ lost, and the leader's map units while walking):
 | 35,000 cycles, steady pace on | 15.7 | 24 | 112 |
 | 20,000 cycles, the mod's drawing off, steady pace on | 16.4 | 22 | 121 |
 
-Until this change the schedule was 70 frames a second on the clock (a tick 70
-units, a frame 96): the map draws only when something moved, about 17 times a
-second, so every frame looked late, and at 20,000 cycles it showed 6 pictures a
-second and left out 17. The Loader's two speeds run DOSBox's dynamic core (GOG's settings run
+A fixed schedule of 70 frames a second on the clock (a tick 70 units, a frame
+96) doesn't suit the game: the map draws only when something moved, about 17
+times a second, so every frame looks late, and at 20,000 cycles it showed 6
+pictures a second and left out 17. The Loader's two speeds run DOSBox's dynamic core (GOG's settings run
 this game on the slower normal core): the same cycles do more, at about a third
 less of the computer's time.
 

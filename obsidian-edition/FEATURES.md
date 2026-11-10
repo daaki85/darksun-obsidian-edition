@@ -742,7 +742,7 @@ in the figure's own pictures, walking and fighting (with
 hair is left as it is. Dwarves and muls are hairless on Athas, and thri-kreen
 have no hair, so they keep their looks.
 
-How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#ages).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#ages-and-magical-aging).
 
 #### Dual-classing as the manual has it
 
@@ -893,7 +893,7 @@ light weapon in the other. The game's own rule that the two hands can't both
 hold heavy weapons (over 30 in weight each) still stands, so no half-giant
 holds two two-handed weapons. **Cahulaks** are the exception: a pair of
 four-bladed heads on a rope, one in each hand, they take both of a half-giant's
-hands too (and a Twin-blade, half-giant or not, can't hold them at all).
+hands too.
 With two weapons ready, the two-weapon penalties apply as for anyone. The inventory screen still writes "2 handed" in the
 weapon's line: that is its weapon type, not a limit.
 
@@ -1206,13 +1206,14 @@ Gerakis hits Screamer Beetle for 21: 1d8 = [4] -1 bone +2 specialized +3 Wild Fi
 ```
 
 where the game made it 22 (20 × 110%). A backstab then multiplies the
-enlarged dice. The Effects screen names it ENLARGED (+90% DICE), not
-(+90% DAMAGE).
+enlarged dice. The Effects screen names it ENLARGED (+10% DICE) for this 1st-level caster,
+not (+10% DAMAGE).
 
 With [Creature size](#creature-size) ticked, an Enlarged creature also counts
 as large: weapons hit it with their large dice, and Hold Person, Charm Person
 and Charm Person or Mammal (on a person) don't take on it. That is a cost of
-Enlarging a party member too.
+Enlarging a party member too. And cahulaks can't tangle anyone Enlarged, the
+rule ticked or not ([Cahulaks](#cahulaks)).
 
 How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#enlarge-multiplies-the-weapons-dice-only).
 
@@ -1381,7 +1382,8 @@ one (+1 to hit, +2 damage), on to mastery at 5th level and grand mastery at
 has expertise in one and the bow. With a chosen weapon spec a warrior keeps
 the game's attacks a round and shoots missiles faster; with any other weapon
 it has AD&D's plain rate. Each warrior picks after DONE on the creation screen
-and starts with a plain weapon of its pick. The attacks a round, the choices,
+and starts with a plain weapon of its pick. A thri-kreen throws a chatkcha once
+more a round, whatever the rule. The attacks a round, the choices,
 the starting weapons and where it shows are on the kits page: [Weapon
 specialization](KITS.md#weapon-specialization).
 
@@ -1503,7 +1505,7 @@ elf's figure, with its own switch: see
 | Character | With weapon specialization | With class restrictions | With kits |
 |---|---|---|---|
 | **Gerakis**, half-giant gladiator | specializes in the long sword and the gythka; with [half-giants' two-handed weapons](#half-giants-two-handed-weapons), his club is a bone gythka, a two-handed weapon beside his long sword | | **Wild Fighting**, as a [Wild Fury](KITS.md#multiclass-kits) has it, as each fight starts |
-| **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | | casts and uses psionics as a [Wasteland Seer](KITS.md#multiclass-kits) does (druid spells 2 levels higher under the open sky, 1 lower under a roof; psionic powers 2 PSP less under the open sky, 1 more under a roof); her chatkcha's 2 throws a round are every thri-kreen's ([Weapon specialization](#weapon-specialization)), not hers alone |
+| **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | | casts and uses psionics as a [Wasteland Seer](KITS.md#multiclass-kits) does (druid spells 2 levels higher under the open sky, 1 lower under a roof; psionic powers 2 PSP less under the open sky, 1 more under a roof); her chatkcha's one throw more a round is every thri-kreen's (5/2 a round, specialized; [Weapon specialization](KITS.md#weapon-specialization)), not hers alone |
 | **Cermak**, human preserver, once a gladiator | specializes in the long sword and the axe, which count once his gladiator levels do again (when his preserver level passes them) | | an **Arcanist**, the kit of his preserver class: two preserver spells a turn in a fight |
 | **Cilla**, elf preserver, druid and thief | | no leather armour (a druid wears none), and she knows the **Armor** spell in its place | an **Elven Shadow-walker** (her own feature): with the [stealth rule](#hiding-in-shadows-to-backstab), her hiding in shadows is never halved in daylight |
 
@@ -1985,43 +1987,30 @@ it does, and marked **new** in
 [Every mundane weapon](ITEMS.md#every-mundane-weapon). The game has no short
 sword at all, no bone or obsidian axe or great axe, no bone dagger, few plain
 metal weapons and no magic club, pick or staff sling. The mod also places
-armour the game has but never placed: the rest of the bone scale set (the game
-places only its chest piece), with a **Bone Helm** of the mod's (AC 1 with
-[Helms give AC 1](#helms-give-ac-1), worn by those who can wear the armour, not
-thieves), and the game's leather **Helm**: where, in [Every mundane armour
-piece](ITEMS.md#every-mundane-armour-piece). And the game's own **Polearm +1**,
-which it defines but never places or gives (the cluebook puts it in the Elven
-Caravan): **Seref**, the Draj agent there, carries it, and so does the Seref
-the party meets on the road with his guards and daggorans.
+armour and a weapon the game has but never placed: the rest of the bone scale
+set, with a **Bone Helm** of the mod's (AC 1 with [Helms give AC
+1](#helms-give-ac-1), worn by those who can wear the armour, not thieves), the game's leather **Helm** and its own **Polearm +1**.
 
 ![Dream's pack with the bone scale set: the chest, arm and leg pieces, and the Bone Helm under the pointer with its name](docs/bonescale.png)
 
-**People who fought with their fists.** The game gave some of the people the
-party fights nothing at all, so they struck bare-handed: Seref's Drajian Guards
-and the slave village's, the White Sand Outlaws who burst from the sand
-("swords readied"), the Lower Castle's one unarmed Guard, Arant's lazy guard,
-the final battle's Psionicist and the arena's Tohr-kreen (whose picture holds a
-gythka). Each now carries what the armed of their kind carry, or plain gear to
-match: the outlaws bone long swords and leather, the Psionicist a stone dagger,
-the Tohr-kreen a gythka. Where, in [Every mundane weapon](ITEMS.md#every-mundane-weapon).
+**People who fought with their fists.** Some of the people the party fights
+had nothing in hand and struck bare-handed: Seref's Drajian Guards and the
+slave village's, the White Sand Outlaws, the Lower Castle's one unarmed Guard,
+Arant's lazy guard, the final battle's Psionicist and the arena's Tohr-kreen.
+Each now carries what the armed of their kind carry, or plain gear to match
+([Every mundane weapon](ITEMS.md#every-mundane-weapon)).
 
-**Cahulaks** ([their rule](#cahulaks)). **Legcrusher**, the pens'
-half-giant monster trainer, fights with a **Cahulaks +1** in place of his two
-clubs: a plain +1 copy of the game's own, its blades in the fire colours. The
-game's own Cahulaks +1, in the Elven Caravan's buried chest, is made the
-**Cahulaks +2**: still casting Cause Light Wounds on a hit, its blades glowing
-blue. The champions' mul fights with **metal cahulaks** (the game has only
-bone ones), and the dead body by the arena's stone arch holds plain bone
-cahulaks. Where, in [Items](ITEMS.md#every-magic-item).
+**Cahulaks** ([their rule](#cahulaks)): **Legcrusher**, the pens' half-giant
+monster trainer, fights with a **Cahulaks +1**; the game's own Cahulaks +1 is
+made the **Cahulaks +2**; the champions' mul fights with **metal cahulaks**
+(the game has only bone ones); and the dead body by the arena's stone arch
+holds plain bone ones ([Items](ITEMS.md#every-magic-item)).
 
-**The Boots of Speed** (the DMG's) are new: worn on the feet by anyone, in a
-fight they double the wearer's movement (Move 24 for a human's 12, "the speed
-of a fast horse") and make its AC 2 better while it can move (not Stuck,
-Paralyzed or Slowed). Out of a fight they do nothing: the party walks as ever.
-The DMG's slowing for weight and rest after hours of running are left out. Like
-any boots they also give the stealth rule's +10 to moving silently. Dagger, chief
-of the White Sand Outlaws, wears them, and Hototo, their other chief, carries
-the Gythka +3 (still also the arena's 1000th-trip gift).
+**The Boots of Speed** (the DMG's) are new: in a fight they double the
+wearer's movement and better its AC by 2 ([Items](ITEMS.md#every-magic-item)).
+Out of a fight they do nothing, and the DMG's slowing for weight and rest
+after hours of running are left out. Like any boots they also give the
+stealth rule's +10 to moving silently.
 
 **Pehtucl's chest**, with the Cloak of Protection +1 in it, is locked and
 trapped: a thief can disarm and pick it, anyone else bash it open, which sets
@@ -2216,8 +2205,7 @@ on top of their kinds' AC, as the party's does (and as the game's own people's
 do: [their gear is worn](GAME-BUGS.md#who-turns-up-and-how) from the start too).
 What they carry is on their bodies afterwards; the Tohr-kreen falls as a dead
 Tohr-kreen of its own, Kreenfang in it. It comes once. A party that breaks out
-with Scar instead, or leaves the pens another way, doesn't meet them. (The dead
-body by the arena's stone arch has plain bone cahulaks.)
+with Scar instead, or leaves the pens another way, doesn't meet them.
 
 How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#the-champions-bout).
 
@@ -2360,7 +2348,7 @@ store is a different limit from the game's 300 picture slots, which [the bugs
 fixed](GAME-BUGS.md#screens-and-memory) also see to: "Graphics disappearing in a busy
 area".)
 
-![Gerakis on the sand, drawn with what he wears: his armour on his chest, arms and legs, and his weapon in hand](docs/gear.png)
+![Gerakis on the sand, drawn with the gear he carries](docs/gear.png)
 
 ![Gerakis standing in the arena in magic gear: sparks shimmer over his armour, and the edge of the weapon at his hip glints](docs/magic-glint.gif)
 
@@ -2414,14 +2402,13 @@ How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#see-through-figure
 The game makes most of its magic items' icons shine in the inventory, a shop
 and on the ground: their colours turn, as the water's and the fire's do. Some
 it left still. The Loader gives 19 of them the shine of the others: the Parting
-Staff, the Chameleon Gloves, the Hornblade, the Cahulaks +1, Dag's Dagger, the
-Terror Blade, Blackmace, the Shimmer, Drake and Silk Armor, Tanelyv's and
-Grey's arm and leg pieces, the Living Cloak, the Golden Torque, Light of Dawn,
-El's Ring and the Orb of Knowledge. The Cahulaks +1, Light of Dawn and El's Ring
-share their picture with a plain item in the game, so they get one of their own
-(the cahulaks' in the fire colours) and the plain cahulaks and ring stay still.
-That Cahulaks +1 is now Legcrusher's copy; the game's own, made the Cahulaks +2
-([New items](#new-items)), has an object and a blue glow of its own. The
+Staff, the Chameleon Gloves, the Hornblade, the Cahulaks +1 (now Legcrusher's;
+the game's own is the mod's Cahulaks +2, glowing blue: [New items](#new-items)),
+Dag's Dagger, the Terror Blade, Blackmace, the Shimmer, Drake and Silk Armor,
+Tanelyv's and Grey's arm and leg pieces, the Living Cloak, the Golden Torque,
+Light of Dawn, El's Ring and the Orb of Knowledge. The Cahulaks +1, Light of
+Dawn and El's Ring share their picture with a plain item, so they get one of
+their own and the plain cahulaks and ring stay still. The
 Loader's own magic items shine in their icons too. Always on: only the pictures change.
 
 How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#new-items).
@@ -2643,18 +2630,8 @@ under 20 to 29 aren't shown, and aren't lost; they come back with the Loader.
 (The game saves a new character under the highest free number, so the first
 ten made after the 19th go to 20 to 29.)
 
-The patched game also fixes a bug of the game's own: **DELETE** in the
-roster deleted the character in the row clicked counting from the top of the
-list, not from the top of what was shown. With the list scrolled down,
-another character was deleted. Now it deletes the one chosen.
-
-A character made with CREATE CHARACTERS is **New** (with its starting gear,
-given when DONE is clicked) until the game starts, when the game makes it
-Okay. The game's tests for Okay left New out, so a New thief's skills all
-showed 0 on the inventory screen, and the Loader did the same. The patched
-game counts New as Okay wherever it tests for Okay, and so does the Loader.
-Left as they were: the status under the portrait still reads New, and the game
-still makes New characters Okay when the game starts.
+The patched game also fixes DELETE in a scrolled roster and New characters'
+thief skills ([bugs fixed](GAME-BUGS.md#making-and-keeping-characters)).
 
 How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#more-characters).
 

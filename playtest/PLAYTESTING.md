@@ -29,6 +29,16 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
    pens just after the arena, is the usual start). None came with the game and none were on the
    Drive (2026-11-01). **Save at every milestone** (below) and add the save to `playtest/saves/`
    with a line in its README, then commit: replaying the arena took most of a day.
+4. **Never `pkill -f` or `pgrep -f | kill` a pattern your own command line contains**: it kills the
+   shell running it (exit 144, twice on 2026-11-01, the second time with this rule already written:
+   run the kill as its own command, by pid, and nothing else in it). Kill by pid, found by a pattern
+   your command line can't match (`pgrep -f "sh [l]eavearena.sh"`), then `kill PID` in a command of
+   its own. And stopping a background task can leave its children running: check with pgrep
+   afterwards.
+5. **Never cut steps out of a bigger script with sed**: its header may restart the whole game.
+   Use the small tools.
+6. **Every step gets its own `timeout`**; long runs go in the background and are followed through
+   the watchdog's Monitor, not by sleeping.
 
 ## 1. Setting up
 
@@ -57,24 +67,14 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
    the built copy (`GPLDATA=../obsidian-edition/dos/GPLDATA.GFF python3 dec.py SCRIPT LO HI`) and
    check the change is there before trusting anything seen in play. Memory edits are lost on any
    restart.
-   For a DSCLOG change, find a few of the new code's bytes in memory where they are in
-   `dos/DSCLOG.EXE` (less its 20h header, from DSCLOG's segment: C91B0h in the 2026-11 runs), and
-   read the vectors it hooks in the table at segment 0 (each its own handler: two probes on one
-   vector once made every attack's AC 255). `ghostchk.py` shows the see-through block is there.
-   Compare code, not the whole image: the variables in it differ once the game runs (1,235 bytes
-   did, 2026-11-08); take a routine's offset from a symbol map (`[map all FILE]` in a scratch copy
-   of the source, as framerate.py's `symbols()`) and compare 40 bytes there. Since 2026-11-08 the
-   vectors are set from a table in the install code (`all_vectors`: the vector byte, then its
-   handler's offset): read it from the EXE and check each vector in segment 0 against it. **The
-   far block** (`far_seg`, the header's +142: FFFFh, the HMA, so linear FFFF0h + offset) now holds
-   DAC (+238's offset), RING_TAB (+246), RED (+248), LIGHT (+236), the dust's walked counts, its
-   puffs and DARK: a tool reading those at the helper's segment reads stale bytes (`dacwatch.py`
-   and `ghostwatch.py` were changed for it). **The tail** (2026-11-09: `tail_seg`, the header's
-   +1834, the paragraph after the image, +1836 paragraphs on from the helper's segment) holds the
-   labels' slots (+1838's offset), TICKS (+356's), the item types and the companion's names; the
-   header's +144 is now where ALL_VECTORS is in the image. **`buildcheck.py`** does the whole
-   check (routines' bytes against the EXE, every vector at its handler, the tail's segment and
-   its data) in one go; it takes routine names to compare others.
+   For a DSCLOG change, run **`python3 buildcheck.py`**: it compares 40 bytes of a set of routines
+   in memory with `dos/DSCLOG.EXE` (name others to compare them), checks every hooked vector in
+   segment 0 points at its handler (two probes on one vector once made every attack's AC 255) and
+   checks the tail's segment and data. Compare code, not the whole image: the variables in it differ
+   once the game runs. To do it by hand, take the offsets from [the helper's
+   segment](../obsidian-edition/DEVELOPMENT.md#the-helpers-segment) and [the far
+   block](../obsidian-edition/DEVELOPMENT.md#the-far-block): a tool reading the far block's data
+   at the helper's segment reads stale bytes. `ghostchk.py` shows the see-through block is there.
    **Comparing two builds' memory**: put the old `DSCLOG.EXE` in `obsidian-edition/dos/` for one
    `loadsave.sh`, run `memaudit.py`, then put the new one back and `cmp` it with a fresh build;
    don't do it while the unit tests run (they read `dos/DSCLOG.EXE`). A failing
@@ -108,14 +108,20 @@ that day: the download went through with no environment change, `loadsave.sh pen
 loaded (region 29h, leader 1816,440, window 320x240, dice log attached). A worker restart of
 the session killed DOSBox as an idle pause does. With the game's files the unit tests run
 more: `DSUN_GPLDATA=$G/GPLDATA.GFF DSUN_OBJECTS=$G/SEGOBJEX.GFF DSUN_RESOURCE=$G/RESOURCE.GFF`
-(`G=$PLAYTEST_WORK/inst`). With them set, `python3` skips 10, all for want of tkinter; without
-them, 29 (2026-11-10). `/usr/bin/python3.12` has tkinter.
+(`G=$PLAYTEST_WORK/inst`). With them set, only the tests that need tkinter (or a display) are
+skipped ([the list](../obsidian-edition/DEVELOPMENT.md#tests)). `/usr/bin/python3.12` has tkinter.
 
 **A fresh container by hand (2026-11-06)**, if the setup script didn't run: `apt-get update`, then
 install `dosbox xdotool innoextract nasm` (`Xvfb`, ImageMagick, poppler were there). The Drive
 installer download is blocked by the default network policy (403 on `drive.usercontent.google.com`):
 allow that host with update_environment, wait ~20 s, then `setup_game.sh` works (22 MB). `start.sh`
 shows the window at 640x400 until a save is loaded; after `loadsave.sh` it is 320x240.
+
+**The shared DOSBox lock** (2026-11-08): with another agent on the same DOSBox, every play step
+ran under `flock /tmp/playtest/dosbox.lock`, held for the whole session by a background
+`flock ... -c 'while [ -e HELDFILE ]; do sleep 2; done'` (each Bash call is a new shell, so `exec
+9>` doesn't last); removing HELDFILE releases it. A DOSBox found running that this session didn't
+start isn't restarted: play in it (`loadsave.sh` would kill it).
 
 ## 1b. The recompiled program as the target (Dark Sun Recompiled)
 
@@ -202,6 +208,11 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   is fought with by anyone (a Tohr-kreen with Headsman: "attacks Cermak with Headsman +2
   (1d10+2)"); armour in the worn list counts for anyone's AC. A creature that dies carrying
   something leaves a Dead Body (object 1101) with its things.
+- **A person's new gear and old saves** (2026-11-09): the Loader's changes to a person's items (its
+  object's record in SEGOBJEX, as worldgear's) reach only creatures the game makes after them: in
+  `fountain-user` Legcrusher still held his two Wooden Clubs (`npcgear.py`), not the Cahulaks +1, since
+  the save holds him as he was made. Test such a change in a new game, or an area not yet visited.
+  Type 146 (the metal cahulaks) read from the game's type table as built (`gd.item_type_record`).
 - **Setting the arena's visit count**: in the pens the game's numbers have a place in memory;
   number 12 is the count (4: the next trip is Scar's; 5 and up the everyday speech, or the
   champions' after Scar's death in the arena). Write it at the far pointer DS:1356h + 2 x 12.
@@ -285,28 +296,12 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   `dataitems.records`). The undead (race 9) all have a class. With "Spells and psionics as the manual describes them" a classless
   creature's saves count its hit dice as its level (DSCLOG's HD_SAVE_SITE in the save modifiers only;
   checked 2026-11-08, logs/2026-11-08-hd-spells.md).
-- **Memory after the 2026-11-08 memory pass** (logs/2026-11-08-memory-pass.md): `memaudit.py` on
-  the map in the pens: the helper's block 62,208 bytes with its PSP, the overlay buffer 32,992,
-  the see-through tables 14,160, the music buffer 12,016, 37,392 free in one piece. **View
-  Character** (I, then the inventory's bottom icons; the Effects screen is the one at 243,187, View
-  Character at 52,171; the portraits there at 65/112, 55/110) shows each member's EXP and the next
-  level's need with its class letter ("EXP:4487 (5000 Pr)"): a quick check of the XP tables
-  (AD&D's when the header's rules_hi, +270, has bit 8). `framerate.py`'s walk clicks at y 104: from
-  `fountain-user` after its fight they land in the fountain and nobody walks (0 map units/s).
-- **Memory after the second memory pass** (2026-11-09, logs/2026-11-09-memory-pass-2.md): the
-  helper's block 62,640 bytes with its PSP and tail (the build before: 63,760), 288 bytes free
-  between it and the overlay buffer (704), 37,392 free in one piece (35,856); DOS memory free after
-  the game 97 KB, as before. The old build for a comparison: `git show HEAD:obsidian-edition/dos/
-  DSCLOG.EXE` into a scratch file, copied into `dos/` for one `loadsave.sh`, then the new one put
-  back (`cmp` it with a fresh build). A quick look at the far block and the tail in a running game:
-  LIGHT at the header's +236 (an offset in the far block), the puffs 256 after it and DARK 288 after
-  those; TICKS at `tail_seg` x 16 + the +356 offset, the labels' slots at +1838's.
-- **Memory** (2026-11-06, logs/2026-11-06-memory-audit.md): `memaudit.py` lists every DOS block (the
-  game's, DSCLOG's, the overlay buffer, the see-through tables, the music buffer, free) and the
-  heap; `memsample.py LABEL` gives one line (free DOS memory after the game: 100,016 bytes on the
-  map in the pens, 131-138 KB while the inventory or USE screen is open); `dacwatch.py SECONDS`
-  shows DSCLOG's palette copy changing (every 30 s where the game cycles colours). `ghostwatch.py
-  SECONDS` counts samples with GHOST_ON 0.
+- **A read-only dice log** (`rolog.py`, 2026-11-08): to try changed dice-log code on a DOSBox whose
+  Loader isn't this session's (stopping another's Loader was refused), run `rolog.py` into a file of
+  your own: describe() and hp_changes() from this checkout, no writes to the game. Its pending rolls
+  ("Dice: ...") and the Loader's come seconds after the lines around them: read the order with care.
+  `--d20` shows each 1d20's caller code and frame (an overlay's INT 3Fh stub, `cd3f...`, in place of
+  the code after the call is common in the spells' overlay).
 
 ### Frame rate and cycles (framerate.py)
 
@@ -319,6 +314,8 @@ clock and the game's clock (96 a second) against real time; the leader's map uni
 whole run, so every setting read 64 to 66); and DOSBox's CPU. `PT_CYCLES=N sh start.sh` (or before
 loadsave.sh) sets DOSBox's cycles; settings are changed with `launch.save_settings` before loading
 (the scripts were /tmp/playtest/matrix*.sh: see the log of 2026-11-08).
+Its walk clicks are at y 104: from `fountain-user` after its fight they land in the fountain and
+nobody walks (0 map units/s), so measure from another save.
 
 How the game paces walking: its timer (DSUN.EXE seg 1DF3:29E8h) sets DS:1F7Eh at each tick of
 the game's clock (DS:11D6h, 96 a second); the step (1DF3:26DCh) runs only with it set and clears
@@ -433,7 +430,7 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   or hides the combat log panel; **E opens the Effects screen** (not "end turn"); Escape closes a
   screen or menu that is open, and **opens EXIT: SAVE GAME? when nothing is**: a click after that
   can quit to DOS. Press Escape only with a menu or screen showing.
-- **Ending a turn by hand**: section 4 rule 11 (a click ON the figure opens its END menu, E there
+- **Ending a turn by hand**: section 4 rule 8 (a click ON the figure opens its END menu, E there
   is END TURN; E with no menu up opens the Effects screen).
 - **Loose `xdotool` commands need `DISPLAY=:55`** (`export DISPLAY=:55` first): the kit's tools
   set it, a command typed on its own doesn't ("Can't open display").
@@ -551,26 +548,55 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   +0Ch (the game keeps there the icon it last drew, and draws that again), and give it the item's own
   type (+0Ah): the Loader sets +0, the object, from the type, so a type 127 always comes back as the
   Metal Pick (Deepbiter is type 112).
-- **An item type's record** (2026-11-10, 20 bytes at the far pointer `game.ITEM_TYPES_PTR` + type x
-  14h, read through live.py): +04h the weight (tenths of a pound), +08h the material in the low nibble
-  (0 wood, 1 bone, 2 stone, 3 obsidian, 4 metal, 5 leather) with 80h marking a type the weak
-  materials' penalties skip (the bow, club, quarterstaff 3, sling, arrows 62, chatkcha 48), +0Ch the
-  damage die's sides, +0Dh how many, +0Eh the bonus (the pick's 4, 1, 1: 1d4+1).
+- **An item type's record** (2026-11-10): `gd.item_type_record(item)` through live.py reads an item's
+  20-byte type record; its fields (material codes, damage dice) are in [the item types'
+  table](../obsidian-edition/DEVELOPMENT.md#what-is-known).
 - **A class in memory** (2026-11-10, logs/2026-11-10-air-cleric-gythka-shadows.md): a member's sheet
-  at the far pointer DS:1661h + (creature +4) x 47h; classes +21h (1-4 the clerics, air to water),
-  levels +24h, flags +12h (a bit a class: 1 the air cleric, 4 the fire cleric). Then take a held item
+  at the far pointer DS:1661h + (creature +4) x 47h; classes +21h, levels +24h, flags +12h (the
+  offsets: [the sheet's table](../obsidian-edition/DEVELOPMENT.md#what-is-known)). Then take a held item
   out and put it back (two clicks on its place in the inventory) to run the game's can-use check:
   "CANNOT USE THIS ITEM" when refused. **A creature's name** for a test: its record's +28h (16 bytes);
   the Loader's lists that go by name (`cahulaks.big_table`) follow within a pass.
 - **The Loader window's Help** (same day): in this container `gio` takes the URL and finds no browser,
   so nothing opens; the status line names the guide either way.
-- **A spell box's text** (same day): `spelltexts`' tables are keyed by the SPIN chunk, the spell + 1
-  (its 24 is Strength; spell 24 is Web): teach `spellsetup.py` the spell number. The box holds 7 lines
-  of 128 pixels of the game's font, the first less the icon; `tests/test_spelltexts_fit.py` wraps every
-  text the Loader writes that way, so a new or changed text is checked there first.
+- **A spell box's text** (same day): teach `spellsetup.py` the spell number, not the SPIN chunk (the
+  spell + 1); the box's limits are in [new spells](../obsidian-edition/DEVELOPMENT-CONTENT.md#new-spells-wizard-and-6th-level-priest).
 - **route.py won't walk through a figure** (2026-11-05): with someone standing at (99, 31), in
   front of Kurzak's entryway (99, 33-34, open), it found no way south from his stop and gave up;
   the live grid showed the doorway clear. Walk round with clicks, or wait for him to move.
+- **View Character** (2026-11-08): I, then the inventory's bottom icons (the Effects screen is the
+  one at 243,187, View Character at 52,171; the portraits there at 65/112, 55/110). It shows each
+  member's EXP and the next level's need with its class letter ("EXP:4487 (5000 Pr)"): a quick check
+  of the XP tables (AD&D's when the header's rules_hi, +270, has 8, RULE_HI_TABLES).
+- **The leader**: the inventory screen's small face button left of each portrait (the first of the
+  two; the lit one is the leader's): Cilla's at (7, 152), the others' 44 higher each (2026-11-08,
+  from the manual's "Leader" button).
+- **Talking to someone who walks** (the Trustee, 2026-11-08): wait where his rounds pass
+  (`$WORK`-free scripts: his thing from `gd.combatants()`, his place at DS:669Dh + 32n), and when he
+  is on screen and near, `pointer.py look`: the eye pauses the game, so he stops. A slow press on his
+  figure (about 12 pixels above his feet; a red eye means bare floor) opens the Look box; its first
+  button (left, about 188,158 when the box is low) talks. A YES/NO question first: Y or N.
+- **The Trustee's pocket** (his talk's "(PICK THE TRUSTEE'S POCKETS)"): offered only if the one
+  talking is a thief, within 4 squares of him as the talk opens, and the key isn't stolen (flag 55;
+  script 146 at 884h-8ABh): a talk opened from the Look box across a room has no such line. "You
+  find a key!", then Goodbye hands it over (GIVE at 0ABh, to the one talking; at his feet if that
+  fails) with 250 XP. The key's icon (picture 2161, 12 x 5) is a faint grey key on the grey cell,
+  near invisible at the game's size: hover the cell for "SLAVEPEN KEY" (logs/2026-11-08-trustee-key.md).
+- **An XP award by hand** (2026-11-08): the dice log's tracker sees an award only as each sheet's
+  XP going up, so `award.py N` (each member's sheet XP += N / its classes, a human's N;
+  the sheet from `aging.sheet_address`) stand in for a kill's to check what follows an award (the
+  prime requisite bonus); on the creation screen `leasts.sh` reads each score's least (`creationscores.py`). Restart the dice log (kill its pid; `python3 -u -m dsloader dicelog >>
+  $PLAYTEST_WORK/dice.txt` from obsidian-edition, setsid nohup) to run changed Loader code. QUIT on
+  the EXIT menu ends DOSBox.
+- **Picking a pocket:** U, the thief's portrait (Cilla 108,108), the purse under the spell counts
+  (157,145, a slow press: the USE screen closes), then the talk pointer on the person. The result
+  is a narration box with a Continue line (click it, 30,157). From `pens-after-scar` (2026-11-07,
+  logs/2026-11-07-release-check.md): walkto (1816,408), (1704,408), (1592,440), `viewto.py 1592
+  470`, and Kurzak stands just south of the party (thing 47 at 1592,504; his figure at 190,118).
+  A failure the thief slips away from can be tried again at once.
+
+### Pictures for the docs
+
 - **The inventory panel's picture for the docs** (2026-11-05): I opens the inventory; the panel is
   `shot.sh`'s x 230-319, y 0-199, scaled 2x (`convert -crop 90x200+230+0 +repage -scale 200%`).
   A class can be tried in memory: the sheet's class byte (`SHEET_CLASSES`, 13 a ranger) and its
@@ -604,32 +630,11 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   FAKEPTY.COM` in a scratch folder, then the window; Sadira loses 1 HP a second and her byte wraps
   past 0 (133/30 two minutes in), so search `sadira`, pick the hit and Assign within about 15 s of
   starting it. Reconnect picks up a restarted DOSBox.
-- **The leader**: the inventory screen's small face button left of each portrait (the first of the
-  two; the lit one is the leader's): Cilla's at (7, 152), the others' 44 higher each (2026-11-08,
-  from the manual's "Leader" button).
-- **Talking to someone who walks** (the Trustee, 2026-11-08): wait where his rounds pass
-  (`$WORK`-free scripts: his thing from `gd.combatants()`, his place at DS:669Dh + 32n), and when he
-  is on screen and near, `pointer.py look`: the eye pauses the game, so he stops. A slow press on his
-  figure (about 12 pixels above his feet; a red eye means bare floor) opens the Look box; its first
-  button (left, about 188,158 when the box is low) talks. A YES/NO question first: Y or N.
-- **The Trustee's pocket** (his talk's "(PICK THE TRUSTEE'S POCKETS)"): offered only if the one
-  talking is a thief, within 4 squares of him as the talk opens, and the key isn't stolen (flag 55;
-  script 146 at 884h-8ABh): a talk opened from the Look box across a room has no such line. "You
-  find a key!", then Goodbye hands it over (GIVE at 0ABh, to the one talking; at his feet if that
-  fails) with 250 XP. The key's icon (picture 2161, 12 x 5) is a faint grey key on the grey cell,
-  near invisible at the game's size: hover the cell for "SLAVEPEN KEY" (logs/2026-11-08-trustee-key.md).
-- **An XP award by hand** (2026-11-08): the dice log's tracker sees an award only as each sheet's
-  XP going up, so `award.py N` (each member's sheet XP += N / its classes, a human's N;
-  the sheet from `aging.sheet_address`) stand in for a kill's to check what follows an award (the
-  prime requisite bonus); on the creation screen `leasts.sh` reads each score's least (`creationscores.py`). Restart the dice log (kill its pid; `python3 -u -m dsloader dicelog >>
-  $PLAYTEST_WORK/dice.txt` from obsidian-edition, setsid nohup) to run changed Loader code. QUIT on
-  the EXIT menu ends DOSBox.
-- **Picking a pocket:** U, the thief's portrait (Cilla 108,108), the purse under the spell counts
-  (157,145, a slow press: the USE screen closes), then the talk pointer on the person. The result
-  is a narration box with a Continue line (click it, 30,157). From `pens-after-scar` (2026-11-07,
-  logs/2026-11-07-release-check.md): walkto (1816,408), (1704,408), (1592,440), `viewto.py 1592
-  470`, and Kurzak stands just south of the party (thing 47 at 1592,504; his figure at 190,118).
-  A failure the thief slips away from can be tried again at once.
+- **The combat log's doc pictures** (2026-11-09, logs/2026-11-09-combat-log-shots.md): from
+  `fountain-user`'s ambush, `scroll.py -60 -80` in the fight brings the party left of the panel; the
+  docked panel's **+** is at (311,129), the expanded one's **-** at (296,74) (not 311). Pictures are
+  `shot.sh`'s scaled 200%; a GIF is `import -window` grabs in a loop (about 32 a second), picked 40
+  ms apart and `convert -delay 4 -scale 200% -layers Optimize`.
 
 ## 4. Fights
 
@@ -654,44 +659,22 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
    DSCLOG's PROBE_MOVE); the END menu shows what is left ("Move : 12"). **boxclick.sh once a fight is
    on clicks the map**: on a member's turn its clicks at 160,20 walk it (one walked Seneca 100).
    A DSCLOG routine can be tried on the live state: snapshot `g.read(0, 0x110000)` into Unicorn, CS the
-   helper's segment (the header DSCLOGva less its offset in the image), DS the game's, a HLT for the
+   helper's segment (the header, found by its signature `dicelog.HDR_SIG`, less its offset in the image), DS the game's, a HLT for the
    return.
-6. **Spells** (more below, "Casting spells for a test"): open the USE button (24,17), page to the spell (LEVEL at 196,171), click its icon, then the target
-   (2026-11-08: a plain click on the icon closes the screen and gives an aiming pointer with the
-   spell's range drawn as a ring of beads; a click on a figure inside casts. The icons drawn
-   **crossed out** can't be cast then: clicks on them do nothing, and RETURN TO GAME then a map
-   click walks the caster instead. They were crossed at a turn's start and plain the next round;
-   why is open. A spell taught in memory (the known byte at segment DS-B56h, 168h + member x 8Ah
-   + spell) shows and casts as any other. `passto.sh N` passes the party's turns to member N's,
-   opening each END menu by a click above the figure, checked by the screen changing, before E);
-   out of a fight (U, the caster's portrait, e.g. Cermak 66,108) the target is a portrait on the
-   same screen: the icon (177,59 the first), then the target's portrait (Gerakis 66,62), and the
-   dice log says it ("Cermak gives Enlarged to Gerakis"); no name floats, the screen covers the
-   map (2026-11-07);
-   check the dice log for the spell's line before going on. If none appears, look at the screen:
-   usually a menu left open, the wrong spell page, or no Move or slots left. Try Tab + Return at
-   the targeting step before clicking a figure.
+6. **Spells**: USE (24,17), the level page (LEVEL at 196,171), the icon, then the target; check
+   the dice log for the spell's line before going on. The detail: [Casting spells for a
+   test](#casting-spells-for-a-test).
 7. **Shots**: unreliable. Enter is a left click on the enemy: with Move left the member walks up
    and fights hand to hand; with Move 0 the END menu opens; in Attack mode a far target showed the
    red "can't" pointer and the turn passed. A shot test needs a clear line, a target in range, and
    a readied missile weapon with ammunition in the missile slot.
-8. **Never `pkill -f` or `pgrep -f | kill` a pattern your own command line contains**: it kills the
-   shell running it (exit 144, twice on 2026-11-01, the second time with this rule already written:
-   run the kill as its own command, by pid, and nothing else in it). Kill by pid, found by a pattern
-   your command line can't match (`pgrep -f "sh [l]eavearena.sh"`), then `kill PID` in a command of
-   its own. And stopping a background task can leave its children running: check with pgrep
-   afterwards.
-9. **Never cut steps out of a bigger script with sed**: its header may restart the whole game.
-   Use the small tools.
-10. **Every step gets its own `timeout`**; long runs go in the background and are followed through
-   the watchdog's Monitor, not by sleeping.
-11. **Passing one member's turn** (2026-11-05): `memberpos.py N` gives its figure on the screen;
+8. **Passing one member's turn** (2026-11-05): `memberpos.py N` gives its figure on the screen;
    a click there opens its END menu, and E in that menu ends the turn. E with no menu up opens
    the Effects screen, and closing that (Escape) left the view at the map's corner (camera 0,0):
    drag it back with `scroll.py` (about 216 x 72 map units for each -216 -96 drag). A member off
    the screen (memberpos gives y below 0) can't be clicked: drag the view first. Tab + Return
    didn't end Gerakis's turn (his weapons' reach); the END menu does.
-12. **"target AC" in the dice log** is the AC the game uses for an attack: check it against
+9. **"target AC" in the dice log** is the AC the game uses for an attack: check it against
    `gd.counted_ac` (`acs.py`) whenever the foes seem to hit too often. A test fight that
    goes badly: `healparty.py` puts the party's hit points back in memory (never save after).
 
@@ -700,14 +683,14 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
 - **A blow from outside a fight is struck before the fight begins** (2026-11-06, `orderwatch.py`:
   fight_on and the dice log every 10 ms).
 - **Seeing foes attack, without killing them** (2026-11-05, logs/2026-11-05-champions.md): not
-  `fightout.sh` (it puts every foe at 1 HP); pass the party's turns instead (rule 11), stopping
+  `fightout.sh` (it puts every foe at 1 HP); pass the party's turns instead (rule 8), stopping
   once the dice log has N more "attacks NAME" lines (`passmiss.sh` does it for a miss, then drags
   the view and takes a shot). Between
   waves click the messages and walk about in the arena (staying brings more fights). It can lose
   the whole party ("YOUR PARTY HAS BEEN DEFEATED"; a level-1 party loses to the champions): have
   a save to go back to.
 - **Testing Psionic Blast without a blaster** (2026-11-04): find DSCLOG's header in memory
-  (`b'DSCLOGva'`, 16-aligned; 0xC91B0 in that run), write a member's kept hit points at +1814
+  (its signature, `dicelog.HDR_SIG`, 16-aligned; 0xC91B0 in that run), write a member's kept hit points at +1814
   (a word per combatant 0-3) and the member's HP (creature record +0) to -9, so any blow would
   kill by the game's rule (damage at HP + 10); pass turns until it's hit: it goes to 0 HP, not
   dead, and the fight's end gives the hit points back ("shakes off Psionic Blast's imagined
@@ -744,269 +727,6 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   panel for passto.sh, or use fightout.sh.
 - **memberpos.py can miss** a figure in a crowd: about 12 pixels higher
   opened the END menu; check a shot first.
-- **Casting spells for a test** (2026-11-08, logs/2026-11-08-manual-spells.md, from `fountain-user`
-  clicked into Pehtucl's ambush): `spellsetup.py 0=9 2=9 hp=200` teaches the spells, fills every
-  slot and sets each of the member's casting classes (any place) to level 9 (Lex, #0, is the preserver there, Ester, #2,
-  the priest), and prints the pages the LEVEL button will offer (`0 Wizard: LEVEL pages [1, 3]`);
-  `hp.py 150` keeps the foes up. Then:
-  - **The USE screen remembers the spell level page** each caster was last on: the LEVEL button is
-    at **(196,171)** (not y 187) and steps 1, 2, ... 5, 1; shoot the page before clicking an icon.
-    The arc at (266,171) is RETURN TO GAME. Icons are about 18 apart, five a row: x 176, 194, 212,
-    230, 248; y 59, 77, 97; in spell-number order of the spells known at that level (`gd.spell_level`).
-  - **Aimed spells** close the screen and give the aiming pointer (a ring of beads, or a box for an
-    area); a click on a foe's figure casts. Harmful aimed spells are refused on the party ("can't
-    cast X there: not a creature that spell can be cast on"), and "no creature there" means the
-    click missed the figure: click lower, on the body (zoom a shot). **Touch spells** (record
-    +0Ch 3 or 5: Free Action, Ironskin, Blood Flow, Cure Light Wounds, Remove Paralysis...) keep
-    the screen up and wait for a **portrait** (66,62 / 112,62 / 66,108 / 112,108): their icon
-    "does nothing" until one is clicked, and through a portrait even Blood Flow lands on the party.
-    Self spells (Minor Spell Turning) cast at the icon's click.
-  - **Crossed-out icons**: a caster hit just before its turn ("YOU WERE HIT" in the bar) has every
-    icon crossed for that turn; plain again the next round.
-  - **A right-click while aiming cancels, and passed the turn twice**; Escape on the USE screen is
-    safer. A Stuck or Paralyzed member's turn opens with its END menu up: E ends it, Escape closes it
-    to act (USE then opens). **`passuntil.sh N`** passes turns until member N's by the END menu
-    (checked by its pixels, never E blind: E for a member with no menu, Jenna with Free Action, opened
-    the Effects screen; its icon at 100,171 goes back to USE). passto.sh's clicks above a figure
-    walked Lex off alone once.
-  - **A spell outside the caster's spheres is cast at level 0** (2026-11-08,
-    logs/2026-11-08-touch-level-and-hd.md): spellsetup.py teaches any spell, and the USE screen lets
-    it be cast, but the level its time and damage take (5E25Ch) counts only classes sharing a sphere
-    with it, so a fire cleric's Blood Flow or Ironskin got "caster level 0" (taken as 1). Touch or
-    aimed makes no difference (Free Action on a portrait: 600 s at druid 1, 5400 s at druid 9).
-    spellsetup.py now names such spells ("cast at level 0"): set a class of that sphere in memory.
-    In `pens-after-arena` Cilla is an earth druid (Ironskin, Free Action, Quicksand) and K'ratchek a
-    fire druid (his priest levels move with the sky: K'ratchek counts as a Wasteland Seer). Out of a
-    fight, U then Cilla (108,108), the CLERIC/MAGE button (150,171) switches the spell kind; an aimed
-    summon there did nothing (red no-sign). In a fight a summon keeps no effect timer (effects.py
-    shows none) and no "lasts" line.
-  - **Giving an effect in memory** (2026-11-09, logs/2026-11-09-rest-poison.md): `addeffect.py OWNER
-    EFFECT [SPELL]` inserts a record in the effect table in owner order (35 Poisoned, 13 Diseased);
-    `addeffect.py del OWNER EFFECT` takes it out. A rest at the fire ring then shows what the rest does
-    with it (a Poisoned member dies: status 5, creature +1Ch). `restfixmem.py check|fix|undo` swaps the
-    rest's pass 2 in the overlay buffer for the proposed "cures first" order (rest once first, so the
-    overlay is loaded). Death does not take effects off a member.
-  - **`effects.py`** lists the effects with time left (Stuck (11 rounds), Ironskin (6 charges));
-    `effects.py OWNER 51 34 86` rewrites a Stuck into Paralyzed (47 Slowed) to test a cure.
-  - The fight's Templar was creature 30 (the dice log's saves showed its WIS 17), not 11: check
-    which creature a combatant is before writing its scores.
-  - **Level and class tests on a foe** (2026-11-08, logs/2026-11-08-hd-spells.md): write the
-    target's sheet in memory (race +18h, classes +21h..23h, levels +24h..26h; race 9 makes it
-    undead for Hold Undead). Creatures of one kind share a sheet (the ambush's three Guards, 8, 9
-    and 31, all sheet 15). The ambush's foes read map position -1,-1 at DS:669Dh + 32 x thing:
-    find them on a shot, not from that table. Archers hitting the caster before its turn cross out
-    its icons turn after turn: kill them in memory by name (`aging.kill`) when the story doesn't
-    matter (never save). A "cannot save" in the dice log is the save's -100 (a natural 20 is shown
-    first and saves); a natural 1 is shown before it too.
-  - **Color Spray** (preserver 1, its icon first on Lex's page in `fountain-user`) can catch a
-    member beside the figure clicked. **Hold Undead** (preserver 3) aims with the spell's icon as
-    the pointer, takes a second click for another target, and logs "lasts N rounds" for each
-    landing even on an immune target (then nothing more: no save, no effect).
-  - A cast that logs nothing but takes a slot was a click beside the figure: aim from a zoomed shot.
-  - Magical Stone gives three throws a casting (the stone pointer comes back; the turn ends after
-    the third). The count is the spell record's byte +0, bits 2-7 (Magical Stone 3, Hold Person 4,
-    Hold Undead 2, the rest 1), counted at DS:942Ch by the cast's end (DSUN 7566Eh).
-  - **Spells rolling to hit** (2026-11-08, logs/2026-11-08-spell-to-hit.md): with `spell_to_hit` on
-    each missile or hostile touch spell has a line `X's SPELL at Y: [touch ]attack d20 = ...` after
-    its damage roll; each of Magical Stone's three throws rolls. **Touch spells need the caster
-    beside the target** ("too far away" from two squares): walk it up on its turn first, cast the
-    next. Moving a combatant in memory (DS:669Dh + 32n) moves neither its figure nor what a click
-    finds. **Escape while aiming** cancels the aim but opens EXIT GAME? (CANCEL 125,116). For hits
-    on demand, raise the target's sheet base AC (+27h) in memory; a weapon's spell on a hit can be
-    tried by writing a held weapon's item +0Fh (the spell + 1). Put both back, never save.
-  - **Turn Undead** (2026-11-08, logs/2026-11-08-turn-undead.md): U (in a fight it opens the USE
-    screen for the one whose turn it is; the click at 24,17 opened the inventory), the TURN UNDEAD
-    button at (158,146) with a slow press (out of a fight the thief's purse is beside it, at 176), then
-    the aiming box: a click on the undead's figure. The button shows for any sheet with a cleric
-    element in +12h bits 0-3 (1/2/4/8): to make a member a cleric in memory, set a class byte (+21h..)
-    to 1-4, its level (+24h..), and OR +12h with the element (a druid, 5-8, has 0 there: no button).
-    A target is undead by the sheet's race (+18h = 9), its HD the sheet's +24h; creatures of a kind
-    share a sheet. Each use ends the turn; out of a fight it starts one. The ambush's foes' places
-    did read right this time (`DS:669Dh + 32 x combatant`, map units): screen = map - camera.
-  - **Turn Undead the AD&D way** (2026-11-09, logs/2026-11-09-turn-undead-meteors.md; "Spells as the
-    manual describes them"): `turnsetup.py MEMBER LEVEL [COMBATANT=HD ...]` makes a member a fire
-    cleric of LEVEL in its **second** class place (+22h; a preserver whose class is there, Lex in
-    `fountain-user`, loses it: give him a cleric third class by hand, +23h 3, +26h the level) and each
-    combatant's sheet undead of HD hit dice (every creature of that sheet), and lists the combatants
-    with sheet, race, HD and HP. Each outcome by the table: level 4 vs 1 HD is T, 6 D, 8 D\*, 3 a 4
-    needed, 1 vs 5 HD a 20. The turning's box takes every undead it reaches (the Templar beside a
-    Guard was tried too); four Arena Guards stood together off the right edge of `fountain-user`'s
-    view: `scroll.py -150 0` in the fight brought them on, the aim then showed a ring of beads (the
-    range), and a click inside it took all four. A turned undead walks off and doesn't attack (the
-    Guard ran north off the screen). A human with a cleric class added in memory is priest level 0
-    to the game (Jenna). The party's places (DS:669Dh + 32n) were right; most Arena Guards read far
-    off the map.
-  - **The LEVEL button didn't move from LEVEL 1** once (2026-11-09, `fountain-user`, Lex after
-    `spellsetup.py 0=10 33 28`, clicks at 186-205,171). It **did not come back** in a later check
-    (logs/2026-11-09-level-button.md: three loads with the same arguments, in and out of the fight,
-    the rules off too: 1, 3, 1, 3 each time). No fault in the game or the mod. The game's rule (88A94h ->
-    81664h): a level is offered when a spell of it is known, the classes give a slot there on
-    resting (not slots left: a 0/1 page is offered) and it is at most (caster level + 1) / 2 (81B16h
-    for spell 0 or 69); a **human's casting class in place 2 or 3 counts 0 unless below the first
-    class's level** (5E7CFh, and no slots, 5E130h: the MAGE page went away entirely). spellsetup.py
-    prints the pages and warns of that. A stuck button means a caster level of 0 or 1: check what
-    else was written to the sheet. For a level-1 test spell: Ester's Magical Stone, `spellsetup.py
-    2=9`, the priest page's second row, second icon (hover an icon for its name in the bar at the
-    bottom, y 182-194). An Arena Guard off the right edge was in reach.
-  - **The USE screen's LEVEL button skips levels with nothing known** (or no class slot, or past
-    the caster level's cap); the USE screen opens on the kind with slots (PSIONIC when a member has no
-    wizard or priest slots), the kind button at 150,171: Lex at preserver 10 with
-    only 3rd-level spells known went 1 to 3; at preserver 4 it stayed on 1 (no 3rd-level spells at
-    that level: the least for Flame Arrow is 5). **The first click after U opens the screen was lost
-    twice**: shoot the page after each LEVEL click. A caster shot ("YOU WERE HIT" in the bar) before
-    his turn couldn't cast though his icons weren't crossed: the next round's cast worked.
-  - **Combatants past 64** (2026-11-09, logs/2026-11-09-audit-fixes.md): out of a fight the map's
-    things keep their numbers (`pens-after-scar`: Kalzith 220, guards 256-290, Mirlon 317; every
-    combatant of `fountain-user` is under 64), but **a fight renumbers them**: at its Round 1 the things
-    past the party moved to 21-47 (Kalzith 42). So a combatant past 64 in a fight is rare; the unit
-    tests cover them. A Turn Undead out of a fight starts one, and its line named the target "?"
-    (the number had changed by the time the dice log read it); since 2026-11-09 the record carries
-    the creatures and the line names them (logs/2026-11-09-turn-undead-name.md: Cermak on Kalzith).
-    **party.py's classes don't tell a human**: a human who dual-classed lists two; read the race
-    (sheet +18h, 1 human) before making a priest with turnsetup.py (a human's added class is level 0). DSCLOG's per-fight tables are in the
-    far block since then: TU_FAILED at FFFF0h + FD10h (a byte a combatant, bit N priest N), SWEPT
-    (FF18h) and DJ_DONE (FF59h), a bit a combatant. Kalzith's pen (`route.py 1592 584`, then
-    `route.py 1560 860`) puts the party beside him for a turning, and the aiming box reaches him there
-    (the guards west of Kurzak's stop are behind a wall: "no line of sight").
-  - **The panel's level chip** (2026-11-09): a click on the expanded panel's chip (292,74) docks the
-    panel instead; the docked panel's chip (268,129) cycles Detail -> Least -> Short. The mouse wheel
-    doesn't reach it under DOSBox; a click on the scrollbar's track above the handle (309,140) pages up.
-    The cycle was used to see the spell to-hit lines at Short.
-  - **Minute Meteors and Flame Arrow** (same log): with the manual's spells, Minute Meteors gives five
-    casts a slot (the pointer comes back after each, as Magical Stone's), each with its attack line
-    (`+2 Minute Meteors`), and Flame Arrow one cast for every five levels (2 at preserver 10, 3 at 15,
-    1 at 9), each 5d6 with no attack roll. Click the target once per cast, 4 s apart.
-  - **Group 3 of the manual's spells** (2026-11-09, logs/2026-11-09-group-3.md, `fountain-user`):
-    - **`foeset.py`** lists every combatant (creature, HP, sheet, race, classes, levels, magic
-      resistance, the creature record's six scores) and the table of active effects (owner, caster,
-      spell, effect, handle, charges, amount); `foeset.py C race= cls=a,b,c lv=a,b,c mr= hp= int=
-      eff=ID[:SPELL[:AMOUNT]]` writes them (the sheet is shared by a kind; effects go in owner order,
-      handles from 200, no timer). Used for Fire Shield (20), Blur (55), Biofeedback (4), Feeblemind
-      (19), Diseased (13) and Paralyzed (34) on a creature. (`addeffect.py`, another session's, adds
-      effects too.)
-    - **A creature's scores (+22h) are worked out only when something asks** (a spell's handler that
-      changes them, an effect's end): an effect put on in memory shows in them after the next
-      Strength cast on that creature, for one.
-    - **"cannot save" used to mean a save**: the game's save compare is unsigned (79BBAh), so every
-      −100 saved. Since `save_signed` it fails (with the manual's spells only at first; always applied,
-      in no switch, from 2026-11-09).
-      Look at the effect or the HP, not only the save line.
-    - **Archers crossing out the caster's icons every turn** (hit before its turn): `foeset.py C
-      eff=34` (Paralyzed) on each foe that shoots; then the turns come clean. Paralyzed foes also
-      fail every save (handy for a failed save on demand).
-    - **Touch spells: adjacent only** ("too far away" at two squares diagonally): click a floor square
-      beside the target with the walk arrow, then cast in the same turn (it worked with Move left).
-      A miss with icons already up: `foeset`-free trick, the sheet's base AC (+27h) 30. **Escape while
-      aiming** opens EXIT GAME?; its CANCEL leaves the aim up (the next map click casts at it); a
-      right-click cancels and passes the turn.
-    - **Range**: Cloudkill at about 230 map units said "too far away"; at 80 it cast. Rainbow Pattern
-      and Cloudkill are areas that stay: Rainbow Pattern (2d3 rounds) made Lex, Jenna and Seneca save
-      each turn and paralysed some, so aim them away from the party; Cloudkill near the party: raise
-      the party's levels in memory first (6 and up only take damage).
-    - **Psionic powers in memory**: a member knows power P (0-33, numbered from 138) when its byte at
-      the segment of selector 2F0h (`game.SEGMENT_TABLE` + `POWER_OWN_SELECTOR`), +77h + member x 22h
-      + P, has bits 3-7 set (write 8). The four members of `fountain-user` already know Life
-      Draining, Biofeedback, Flesh Armor, Graft Weapon and Mind Blank. U on the member's turn opens the
-      PSIONIC page; icons in power order; Adrenalin Control and Cell Adjustment then take a portrait.
-    - **A spell's description in a fight**: on the USE screen a right-click on its icon opens the box
-      (Fire Shield's and Cat's Grace's, logs/img/2026-11-09-group-3-*.png); a known bit or
-      `spellsetup.py 0=10 44` first.
-    - **A hang** (fixed): a kill made by DSCLOG's own far call of 4E0:61h inside a lasting cloud's
-      round left the screen still and the pointer stuck at DS:A133h while the game's clock (DS:11D6h)
-      ran on: `compare -metric AE` of two shots 5 s apart gave 0, and clicks did nothing. Restart.
-    - Two natural 20s in a row came up on one Guard's saves; nothing wrong found.
-  - **Group 4: the manual's monsters, dual-classing, resting** (2026-11-09, logs/2026-11-09-group-4.md):
-    - **Monster powers on demand**: `kinds.py CREATURE=KIND` writes a creature record's kind (+16h);
-      a kind's properties and resistance class then apply to it (15/13 the shadows' STR drain, 3 the
-      babau's deadly poison, 38 the Styr's breath, 39 the Djinn's first-turn invisibility and images,
-      40 the Tari's disease). **The hit powers come with melee hits only** (7A6BAh): the ambush's Arena
-      Guards (bows) never brought one; the Guards (two clubs) did, and only from the first attack set
-      (the off hand's hits brought none). A kind set on a creature not in the fight does nothing: set
-      every guard of the kind. **The priests' Poison a hit casts (bit 15) kills at once on a failed save**,
-      in a fight too ("Jenna takes 263 from Poison, now 0/300 HP", status 5): put the member back in
-      memory (`addeffect.py del N 35`, `setmem.py status=N:1 hp=N:300`).
-    - **`passn.sh N`** passes N party turns as passuntil.sh does, dragging the view to each member
-      first (the ambush's party stood 200 map units apart; passuntil.sh stopped "off screen").
-    - **A Weakened's amount is added to STR** (the ability routine, 7B80Eh): -1 takes a point off, 1 adds
-      one (a first drain raised STR, seen); Chill Touch's is -1 (79855h). Each Weakened is its own entry.
-    - **The DUAL window** (dual-classing): the inventory screen (I), a right-click on a portrait (Cermak
-      20,104 in pens-fire-count4) opens EDIT NAME / DROP / DUAL (CANCEL in DUAL's place when it isn't
-      offered); DUAL at 90,145; the classes greyed or white (zoom a shot: `convert -crop 120x110+150+30
-      -scale 300%`); EXIT 213,145. `sheetscore.py M lv=N con=N ...` sets the first level and the creature's
-      scores (what the window reads). `setmem.py ruleshi=-2048` turns the rule off in DSCLOG's header
-      for a comparison (the Loader writes the rules only when they change).
-    - **Rests for a test**: `pens-fire-count4`, `ringrest.sh`; each rest test from a fresh load (two rests
-      bring Kurzak's call, and his patience runs out). `setmem.py` sets HP (negative too, with status 3
-      for Out Cold), PSP, a power known (`power=1:13`, K'ratchek's Cell Adjustment) and DSCLOG's rules;
-      K'ratchek (a druid there) knows Neutralize Poison and has a 4th-level slot. The rest's dice-log
-      lines: `At rest: ... casts ...`, `X rests 8 hours: +3, +6 (CON 22) = +9, now 19/54 HP`; CON 20+
-      regeneration's +12 for the 8 hours then follows as an HP line.
-- **A read-only dice log** (`rolog.py`, 2026-11-08): to try changed dice-log code on a DOSBox whose
-  Loader isn't this session's (stopping another's Loader was refused), run `rolog.py` into a file of
-  your own: describe() and hp_changes() from this checkout, no writes to the game. Its pending rolls
-  ("Dice: ...") and the Loader's come seconds after the lines around them: read the order with care.
-  `--d20` shows each 1d20's caller code and frame (an overlay's INT 3Fh stub, `cd3f...`, in place of
-  the code after the call is common in the spells' overlay).
-- **The shared DOSBox lock** (2026-11-08): with another agent on the same DOSBox, every play step
-  ran under `flock /tmp/playtest/dosbox.lock`, held for the whole session by a background
-  `flock ... -c 'while [ -e HELDFILE ]; do sleep 2; done'` (each Bash call is a new shell, so `exec
-  9>` doesn't last); removing HELDFILE releases it. A DOSBox found running that this session didn't
-  start isn't restarted: play in it (`loadsave.sh` would kill it).
-- **Figures gone from the map** (2026-11-08, the ambush after a long run of clicks): the party, and at
-  times the foes, weren't drawn though their places were right; I then Escape (the inventory opened
-  and shut) drew them again, for a while. Clicks on a figure not drawn missed (passuntil.sh gave up).
-  **Found 2026-11-09** (logs/2026-11-09-missing-figures.md): the game's **picture store** (741,376
-  bytes, fixed, DSUN.EXE 60D9Bh) and its table of 300 picture slots (load segment + 3E60h; DS:1F84h
-  the slots taken) are given back only at an area load. Each time the Loader dresses a member anew
-  (any change to what its figure wears: inventory moves, a weapon's +0Fh written in memory) it marks
-  the old pictures FFFEh and the game takes a new slot and about 7 KB of store for each. The pens
-  take 200 slots and 275 KB on arrival, so after some 30-60 gear changes there a picture lies past
-  the store's end: drawn while in memory, never read back once let go, and every failed read keeps
-  the memory it took, until no figure can be loaded (all gone; I then Escape frees that memory, so
-  they come back for a while). **A long test in one area with many gear changes runs into it**:
-  check `cachelist.py` (slots taken) and `cachelist.py all` (the last slot's place + length against
-  741,376), and reload the save or change area to start afresh. Fixed: the Loader leaves a figure
-  undressed when the store has no room (`_room_for`), and reuses the game's slots (the picture-store
-  fix, below), so the store hardly grows. Flaming Sphere cast at a foe two squares off struck the
-  caster (twice); farther off it took a slot and logged nothing.
-- **Watching figures and pictures** (2026-11-09): `figwatch.py SECONDS [EVERY] [TAG]` (passive, no
-  writes: each member's screen place, its map record's +0 (80h: not drawn), its picture slot (+0Fh)
-  with that slot's number and flags (2: in memory), the draw list's order and the member's place in
-  it, and a strip of grabs round each figure); `drawlist.py [all]` (the draw list at DS:6690h, kept
-  in rising y: the drawing finds its window DS:57CAh-57C8h by a scan that stops at the first y past
-  the view, so an entry out of order would hide all after it; never seen out of order);
-  `cachelist.py [all]`; `poolfree.py [SECONDS]` (the picture memory's free bytes, DS:8E94h);
-  `fillcache.py MEMBER SLOT UNTIL` (fills the slots fast by toggling a worn item's slot byte, the
-  Loader dressing each time; memory edit, never save); `figcheck.py LABEL` (a grab before and after
-  DSCLOG's VIEW_REDRAW, header +242, and the pixels changed round each member: a figure missing then
-  drawn shows hundreds). An inventory move in a test: `click.py` the item, then the place; an item
-  left on the pointer isn't in a shot (it was dropped by the next click on DROP, 213,134).
-- **The picture store itself** (2026-11-09, logs/2026-11-09-picture-store.md): an XMS block behind
-  the game's paged memory manager (handle DS:4C33h, pages through the directory at DS:42D2h); in
-  DOSBox it was guest RAM at 110000h, XMS pages 2-2Fh in one run. `picstore.py` finds it and checks
-  every in-memory picture against its store bytes (`check`; all should match), lists the STALE cells
-  (`stale`) or dumps a slot. The picture pool is 60,000 bytes; opening the inventory (I) puts every
-  picture out of memory (`cachelist.py`: 0 in memory). `outfitcycle.py MEMBER SLOT N` changes an
-  outfit N times (as fillcache.py, but waiting for the Loader's copy to be written, not for the
-  slots to grow) and prints slots, STALE, the store's end and whether the figure is drawn each time.
-  A scratch copy of the mod for a Loader change: `git archive HEAD | tar -x -C DIR`, the game copied
-  to its own `PLAYTEST_WORK`, and the tools run from `DIR/playtest` (start.sh takes the Loader from
-  the kit's parent folder); restart only the dice log (`python3 -u -m dsloader dicelog` from
-  `DIR/obsidian-edition`) to run changed Loader code in a running game.
-- **The combat log's doc pictures** (2026-11-09, logs/2026-11-09-combat-log-shots.md): from
-  `fountain-user`'s ambush, `scroll.py -60 -80` in the fight brings the party left of the panel; the
-  docked panel's **+** is at (311,129), the expanded one's **-** at (296,74) (not 311). Pictures are
-  `shot.sh`'s scaled 200%; a GIF is `import -window` grabs in a loop (about 32 a second), picked 40
-  ms apart and `convert -delay 4 -scale 200% -layers Optimize`.
-- **Picture slots while exploring** (2026-11-09, logs/2026-11-09-picture-slots-explore.md): the
-  pens load 203 of the 300 slots on arrival and walking about adds none (`slotcount.py` at each
-  stop); fights add a few (bodies, dropped items, spells). Wake of the Ravager's "graphics disappear"
-  note is this same limit; leaving the region clears it.
-- **A person's new gear and old saves** (2026-11-09): the Loader's changes to a person's items (its
-  object's record in SEGOBJEX, as worldgear's) reach only creatures the game makes after them: in
-  `fountain-user` Legcrusher still held his two Wooden Clubs (`npcgear.py`), not the Cahulaks +1, since
-  the save holds him as he was made. Test such a change in a new game, or an area not yet visited.
-  Type 146 (the metal cahulaks) read from the game's type table as built (`gd.item_type_record`).
 - **A weapon's rule in a fight** (2026-11-09, logs/2026-11-09-cahulaks.md): from `fountain-user`, a
   weapon put on a member in memory (a whole record from SEGOBJEX: `champions.game_item(chunks, TYPE)`,
   its link +4, flags and slot kept, +08h 270Fh) before the speech box is clicked; Tab + Return on the
@@ -1062,6 +782,285 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   `gd.combatant_creature`, `gd.creature`, `gd.creature_name`. From `fountain-user` with every foe held,
   `passuntil.sh 3` gives Seneca's turn, and Tab + Return backstabs the Templar (41 HP) about half the
   time.
+
+### Casting spells for a test
+
+From `fountain-user` clicked into Pehtucl's ambush (2026-11-08, logs/2026-11-08-manual-spells.md):
+`spellsetup.py 0=9 2=9 hp=200` teaches the spells, fills every slot and sets each of the member's
+casting classes (any place) to level 9 (Lex, #0, is the preserver there, Ester, #2, the priest), and
+prints the pages the LEVEL button will offer (`0 Wizard: LEVEL pages [1, 3]`); `hp.py 150` keeps the
+foes up. Then:
+
+- **The basics** (2026-11-07/08): open the USE button (24,17), page to the spell (LEVEL at
+  196,171), click its icon, then the target. A plain click on the icon closes the screen and gives an
+  aiming pointer with the spell's range drawn as a ring of beads; a click on a figure inside casts.
+  A spell taught in memory (the known byte at segment DS-B56h, 168h + member x 8Ah + spell) shows and
+  casts as any other. `passto.sh N` passes the party's turns to member N's, opening each END menu by
+  a click above the figure, checked by the screen changing, before E. Out of a fight (U, the caster's
+  portrait, e.g. Cermak 66,108) the target is a portrait on the same screen: the icon (177,59 the
+  first), then the target's portrait (Gerakis 66,62), and the dice log says it ("Cermak gives
+  Enlarged to Gerakis"); no name floats, the screen covers the map. Check the dice log for the
+  spell's line before going on. If none appears, look at the screen: usually a menu left open, the
+  wrong spell page, or no Move or slots left. Try Tab + Return at the targeting step before clicking
+  a figure.
+- **The USE screen remembers the spell level page** each caster was last on: the LEVEL button is
+  at **(196,171)** (not y 187) and steps 1, 2, ... 5, 1; shoot the page before clicking an icon.
+  The arc at (266,171) is RETURN TO GAME. Icons are about 18 apart, five a row: x 176, 194, 212,
+  230, 248; y 59, 77, 97; in spell-number order of the spells known at that level (`gd.spell_level`).
+- **Aimed spells** close the screen and give the aiming pointer (a ring of beads, or a box for an
+  area); a click on a foe's figure casts. Harmful aimed spells are refused on the party ("can't
+  cast X there: not a creature that spell can be cast on"), and "no creature there" means the
+  click missed the figure: click lower, on the body (zoom a shot). **Touch spells** (record
+  +0Ch 3 or 5: Free Action, Ironskin, Blood Flow, Cure Light Wounds, Remove Paralysis...) keep
+  the screen up and wait for a **portrait** (66,62 / 112,62 / 66,108 / 112,108): their icon
+  "does nothing" until one is clicked, and through a portrait even Blood Flow lands on the party.
+  Self spells (Minor Spell Turning) cast at the icon's click.
+- **Crossed-out icons**: a caster hit just before its turn ("YOU WERE HIT" in the bar) has every
+  icon crossed for that turn; plain again the next round. Clicks on them do nothing, and RETURN TO
+  GAME then a map click walks the caster instead.
+- **A right-click while aiming cancels, and passed the turn twice**; Escape on the USE screen is
+  safer. A Stuck or Paralyzed member's turn opens with its END menu up: E ends it, Escape closes it
+  to act (USE then opens). **`passuntil.sh N`** passes turns until member N's by the END menu
+  (checked by its pixels, never E blind: E for a member with no menu, Jenna with Free Action, opened
+  the Effects screen; its icon at 100,171 goes back to USE). passto.sh's clicks above a figure
+  walked Lex off alone once.
+- **A spell outside the caster's spheres is cast at level 0** (2026-11-08,
+  logs/2026-11-08-touch-level-and-hd.md): spellsetup.py teaches any spell, and the USE screen lets
+  it be cast, but the level its time and damage take (5E25Ch) counts only classes sharing a sphere
+  with it, so a fire cleric's Blood Flow or Ironskin got "caster level 0" (taken as 1). Touch or
+  aimed makes no difference (Free Action on a portrait: 600 s at druid 1, 5400 s at druid 9).
+  spellsetup.py now names such spells ("cast at level 0"): set a class of that sphere in memory.
+  In `pens-after-arena` Cilla is an earth druid (Ironskin, Free Action, Quicksand) and K'ratchek a
+  fire druid (his priest levels move with the sky: K'ratchek counts as a Wasteland Seer). Out of a
+  fight, U then Cilla (108,108), the CLERIC/MAGE button (150,171) switches the spell kind; an aimed
+  summon there did nothing (red no-sign). In a fight a summon keeps no effect timer (effects.py
+  shows none) and no "lasts" line.
+- **Giving an effect in memory** (2026-11-09, logs/2026-11-09-rest-poison.md): `addeffect.py OWNER
+  EFFECT [SPELL]` inserts a record in the effect table in owner order (35 Poisoned, 13 Diseased);
+  `addeffect.py del OWNER EFFECT` takes it out. A rest at the fire ring then shows what the rest does
+  with it (a Poisoned member dies: status 5, creature +1Ch). `restfixmem.py check|fix|undo` swaps the
+  rest's pass 2 in the overlay buffer for the proposed "cures first" order (rest once first, so the
+  overlay is loaded). Death does not take effects off a member.
+- **`effects.py`** lists the effects with time left (Stuck (11 rounds), Ironskin (6 charges));
+  `effects.py OWNER 51 34 86` rewrites a Stuck into Paralyzed (47 Slowed) to test a cure.
+- The fight's Templar was creature 30 (the dice log's saves showed its WIS 17), not 11: check
+  which creature a combatant is before writing its scores.
+- **Level and class tests on a foe** (2026-11-08, logs/2026-11-08-hd-spells.md): write the
+  target's sheet in memory (race +18h, classes +21h..23h, levels +24h..26h; race 9 makes it
+  undead for Hold Undead). Creatures of one kind share a sheet (the ambush's three Guards, 8, 9
+  and 31, all sheet 15). The ambush's foes read map position -1,-1 at DS:669Dh + 32 x thing:
+  find them on a shot, not from that table. Archers hitting the caster before its turn cross out
+  its icons turn after turn: kill them in memory by name (`aging.kill`) when the story doesn't
+  matter (never save). A "cannot save" in the dice log is the save's -100 (a natural 20 is shown
+  first and saves); a natural 1 is shown before it too.
+- **Color Spray** (preserver 1, its icon first on Lex's page in `fountain-user`) can catch a
+  member beside the figure clicked. **Hold Undead** (preserver 3) aims with the spell's icon as
+  the pointer, takes a second click for another target, and logs "lasts N rounds" for each
+  landing even on an immune target (then nothing more: no save, no effect).
+- A cast that logs nothing but takes a slot was a click beside the figure: aim from a zoomed shot.
+- Magical Stone gives three throws a casting (the stone pointer comes back; the turn ends after
+  the third). The count is the spell record's byte +0, bits 2-7 (Magical Stone 3, Hold Person 4,
+  Hold Undead 2, the rest 1), counted at DS:942Ch by the cast's end (DSUN 7566Eh).
+- **Spells rolling to hit** (2026-11-08, logs/2026-11-08-spell-to-hit.md): with `spell_to_hit` on
+  each missile or hostile touch spell has a line `X's SPELL at Y: [touch ]attack d20 = ...` after
+  its damage roll; each of Magical Stone's three throws rolls. **Touch spells need the caster
+  beside the target** ("too far away" from two squares): walk it up on its turn first, cast the
+  next. Moving a combatant in memory (DS:669Dh + 32n) moves neither its figure nor what a click
+  finds. **Escape while aiming** cancels the aim but opens EXIT GAME? (CANCEL 125,116). For hits
+  on demand, raise the target's sheet base AC (+27h) in memory; a weapon's spell on a hit can be
+  tried by writing a held weapon's item +0Fh (the spell + 1). Put both back, never save.
+- **Turn Undead** (2026-11-08, logs/2026-11-08-turn-undead.md): U (in a fight it opens the USE
+  screen for the one whose turn it is; the click at 24,17 opened the inventory), the TURN UNDEAD
+  button at (158,146) with a slow press (out of a fight the thief's purse is beside it, at 176), then
+  the aiming box: a click on the undead's figure. The button shows for any sheet with a cleric
+  element in +12h bits 0-3 (1/2/4/8): to make a member a cleric in memory, set a class byte (+21h..)
+  to 1-4, its level (+24h..), and OR +12h with the element (a druid, 5-8, has 0 there: no button).
+  A target is undead by the sheet's race (+18h = 9), its HD the sheet's +24h; creatures of a kind
+  share a sheet. Each use ends the turn; out of a fight it starts one. The ambush's foes' places
+  did read right this time (`DS:669Dh + 32 x combatant`, map units): screen = map - camera.
+- **Turn Undead the AD&D way** (2026-11-09, logs/2026-11-09-turn-undead-meteors.md; "Spells as the
+  manual describes them"): `turnsetup.py MEMBER LEVEL [COMBATANT=HD ...]` makes a member a fire
+  cleric of LEVEL in its **second** class place (+22h; a preserver whose class is there, Lex in
+  `fountain-user`, loses it: give him a cleric third class by hand, +23h 3, +26h the level) and each
+  combatant's sheet undead of HD hit dice (every creature of that sheet), and lists the combatants
+  with sheet, race, HD and HP. Each outcome by the table: level 4 vs 1 HD is T, 6 D, 8 D\*, 3 a 4
+  needed, 1 vs 5 HD a 20. The turning's box takes every undead it reaches (the Templar beside a
+  Guard was tried too); four Arena Guards stood together off the right edge of `fountain-user`'s
+  view: `scroll.py -150 0` in the fight brought them on, the aim then showed a ring of beads (the
+  range), and a click inside it took all four. A turned undead walks off and doesn't attack (the
+  Guard ran north off the screen). A human with a cleric class added in memory is priest level 0
+  to the game (Jenna). The party's places (DS:669Dh + 32n) were right; most Arena Guards read far
+  off the map.
+- **The LEVEL button didn't move from LEVEL 1** once (2026-11-09, `fountain-user`, Lex after
+  `spellsetup.py 0=10 33 28`, clicks at 186-205,171). It **did not come back** in a later check
+  (logs/2026-11-09-level-button.md: three loads with the same arguments, in and out of the fight,
+  the rules off too: 1, 3, 1, 3 each time). No fault in the game or the mod. The game's rule (88A94h ->
+  81664h): a level is offered when a spell of it is known, the classes give a slot there on
+  resting (not slots left: a 0/1 page is offered) and it is at most (caster level + 1) / 2 (81B16h
+  for spell 0 or 69); a **human's casting class in place 2 or 3 counts 0 unless below the first
+  class's level** (5E7CFh, and no slots, 5E130h: the MAGE page went away entirely). spellsetup.py
+  prints the pages and warns of that. A stuck button means a caster level of 0 or 1: check what
+  else was written to the sheet. For a level-1 test spell: Ester's Magical Stone, `spellsetup.py
+  2=9`, the priest page's second row, second icon (hover an icon for its name in the bar at the
+  bottom, y 182-194). An Arena Guard off the right edge was in reach.
+- **The USE screen's LEVEL button skips levels with nothing known** (or no class slot, or past
+  the caster level's cap); the USE screen opens on the kind with slots (PSIONIC when a member has no
+  wizard or priest slots), the kind button at 150,171: Lex at preserver 10 with
+  only 3rd-level spells known went 1 to 3; at preserver 4 it stayed on 1 (no 3rd-level spells at
+  that level: the least for Flame Arrow is 5). **The first click after U opens the screen was lost
+  twice**: shoot the page after each LEVEL click. A caster shot ("YOU WERE HIT" in the bar) before
+  his turn couldn't cast though his icons weren't crossed: the next round's cast worked.
+- **Combatants past 64** (2026-11-09, logs/2026-11-09-audit-fixes.md): out of a fight the map's
+  things keep their numbers (`pens-after-scar`: Kalzith 220, guards 256-290, Mirlon 317; every
+  combatant of `fountain-user` is under 64), but **a fight renumbers them**: at its Round 1 the things
+  past the party moved to 21-47 (Kalzith 42). So a combatant past 64 in a fight is rare; the unit
+  tests cover them. A Turn Undead out of a fight starts one, and its line named the target "?"
+  (the number had changed by the time the dice log read it); since 2026-11-09 the record carries
+  the creatures and the line names them (logs/2026-11-09-turn-undead-name.md: Cermak on Kalzith).
+  **party.py's classes don't tell a human**: a human who dual-classed lists two; read the race
+  (sheet +18h, 1 human) before making a priest with turnsetup.py (a human's added class is level 0). DSCLOG's per-fight tables are in the
+  far block since then: TU_FAILED at FFFF0h + FD10h (a byte a combatant, bit N priest N), SWEPT
+  (FF18h) and DJ_DONE (FF59h), a bit a combatant. Kalzith's pen (`route.py 1592 584`, then
+  `route.py 1560 860`) puts the party beside him for a turning, and the aiming box reaches him there
+  (the guards west of Kurzak's stop are behind a wall: "no line of sight").
+- **The panel's level chip** (2026-11-09): a click on the expanded panel's chip (292,74) docks the
+  panel instead; the docked panel's chip (268,129) cycles Detail -> Least -> Short. The mouse wheel
+  doesn't reach it under DOSBox; a click on the scrollbar's track above the handle (309,140) pages up.
+  The cycle was used to see the spell to-hit lines at Short.
+- **Minute Meteors and Flame Arrow** (same log): with the manual's spells, Minute Meteors gives five
+  casts a slot (the pointer comes back after each, as Magical Stone's), each with its attack line
+  (`+2 Minute Meteors`), and Flame Arrow one cast for every five levels (2 at preserver 10, 3 at 15,
+  1 at 9), each 5d6 with no attack roll. Click the target once per cast, 4 s apart.
+
+#### foeset.py, saves, touch spells and powers
+
+(2026-11-09, logs/2026-11-09-group-3.md, `fountain-user`.)
+
+- **`foeset.py`** lists every combatant (creature, HP, sheet, race, classes, levels, magic
+  resistance, the creature record's six scores) and the table of active effects (owner, caster,
+  spell, effect, handle, charges, amount); `foeset.py C race= cls=a,b,c lv=a,b,c mr= hp= int=
+  eff=ID[:SPELL[:AMOUNT]]` writes them (the sheet is shared by a kind; effects go in owner order,
+  handles from 200, no timer). Used for Fire Shield (20), Blur (55), Biofeedback (4), Feeblemind
+  (19), Diseased (13) and Paralyzed (34) on a creature. (`addeffect.py`, another session's, adds
+  effects too.)
+- **A creature's scores (+22h) are worked out only when something asks** (a spell's handler that
+  changes them, an effect's end): an effect put on in memory shows in them after the next
+  Strength cast on that creature, for one.
+- **"cannot save" used to mean a save**: the game's save compare is unsigned (79BBAh), so every
+  −100 saved. Since `save_signed` it fails (with the manual's spells only at first; always applied,
+  in no switch, from 2026-11-09).
+  Look at the effect or the HP, not only the save line.
+- **Archers crossing out the caster's icons every turn** (hit before its turn): `foeset.py C
+  eff=34` (Paralyzed) on each foe that shoots; then the turns come clean. Paralyzed foes also
+  fail every save (handy for a failed save on demand).
+- **Touch spells: adjacent only** ("too far away" at two squares diagonally): click a floor square
+  beside the target with the walk arrow, then cast in the same turn (it worked with Move left).
+  A miss with icons already up: `foeset`-free trick, the sheet's base AC (+27h) 30. **Escape while
+  aiming** opens EXIT GAME?; its CANCEL leaves the aim up (the next map click casts at it); a
+  right-click cancels and passes the turn.
+- **Range**: Cloudkill at about 230 map units said "too far away"; at 80 it cast. Rainbow Pattern
+  and Cloudkill are areas that stay: Rainbow Pattern (2d3 rounds) made Lex, Jenna and Seneca save
+  each turn and paralysed some, so aim them away from the party; Cloudkill near the party: raise
+  the party's levels in memory first (6 and up only take damage).
+- **Psionic powers in memory**: a member knows power P (0-33, numbered from 138) when its byte at
+  the segment of selector 2F0h (`game.SEGMENT_TABLE` + `POWER_OWN_SELECTOR`), +77h + member x 22h
+  + P, has bits 3-7 set (write 8). The four members of `fountain-user` already know Life
+  Draining, Biofeedback, Flesh Armor, Graft Weapon and Mind Blank. U on the member's turn opens the
+  PSIONIC page; icons in power order; Adrenalin Control and Cell Adjustment then take a portrait.
+- **A spell's description in a fight**: on the USE screen a right-click on its icon opens the box
+  (Fire Shield's and Cat's Grace's, logs/img/2026-11-09-group-3-*.png); a known bit or
+  `spellsetup.py 0=10 44` first.
+- **A hang** (fixed): a kill made by DSCLOG's own far call of 4E0:61h inside a lasting cloud's
+  round left the screen still and the pointer stuck at DS:A133h while the game's clock (DS:11D6h)
+  ran on: `compare -metric AE` of two shots 5 s apart gave 0, and clicks did nothing. Restart.
+- Two natural 20s in a row came up on one Guard's saves; nothing wrong found.
+
+#### Monster powers, dual-classing and resting
+
+(2026-11-09, logs/2026-11-09-group-4.md.)
+
+- **Monster powers on demand**: `kinds.py CREATURE=KIND` writes a creature record's kind (+16h);
+  a kind's properties and resistance class then apply to it (15/13 the shadows' STR drain, 3 the
+  babau's deadly poison, 38 the Styr's breath, 39 the Djinn's first-turn invisibility and images,
+  40 the Tari's disease). **The hit powers come with melee hits only** (7A6BAh): the ambush's Arena
+  Guards (bows) never brought one; the Guards (two clubs) did, and only from the first attack set
+  (the off hand's hits brought none). A kind set on a creature not in the fight does nothing: set
+  every guard of the kind. **The priests' Poison a hit casts (bit 15) kills at once on a failed save**,
+  in a fight too ("Jenna takes 263 from Poison, now 0/300 HP", status 5): put the member back in
+  memory (`addeffect.py del N 35`, `setmem.py status=N:1 hp=N:300`).
+- **`passn.sh N`** passes N party turns as passuntil.sh does, dragging the view to each member
+  first (the ambush's party stood 200 map units apart; passuntil.sh stopped "off screen").
+- **A Weakened's amount is added to STR** (the ability routine, 7B80Eh): -1 takes a point off, 1 adds
+  one (a first drain raised STR, seen); Chill Touch's is -1 (79855h). Each Weakened is its own entry.
+- **The DUAL window** (dual-classing): the inventory screen (I), a right-click on a portrait (Cermak
+  20,104 in pens-fire-count4) opens EDIT NAME / DROP / DUAL (CANCEL in DUAL's place when it isn't
+  offered); DUAL at 90,145; the classes greyed or white (zoom a shot: `convert -crop 120x110+150+30
+  -scale 300%`); EXIT 213,145. `sheetscore.py M lv=N con=N ...` sets the first level and the creature's
+  scores (what the window reads). `setmem.py ruleshi=-2048` turns the rule off in DSCLOG's header
+  for a comparison (the Loader writes the rules only when they change).
+- **Rests for a test**: `pens-fire-count4`, `ringrest.sh`; each rest test from a fresh load (two rests
+  bring Kurzak's call, and his patience runs out). `setmem.py` sets HP (negative too, with status 3
+  for Out Cold), PSP, a power known (`power=1:13`, K'ratchek's Cell Adjustment) and DSCLOG's rules;
+  K'ratchek (a druid there) knows Neutralize Poison and has a 4th-level slot. The rest's dice-log
+  lines: `At rest: ... casts ...`, `X rests 8 hours: +3, +6 (CON 22) = +9, now 19/54 HP`; CON 20+
+  regeneration's +12 for the 8 hours then follows as an HP line.
+
+## 4b. Pictures, the picture store and memory
+
+- **Memory**: `memaudit.py` lists every DOS block (the game's, DSCLOG's, the overlay buffer, the
+  see-through tables, the music buffer, free) and the heap; `memsample.py LABEL` gives one line (free
+  DOS memory after the game, more while the inventory or USE screen is open); `dacwatch.py SECONDS`
+  shows DSCLOG's palette copy changing (every 30 s where the game cycles colours); `ghostwatch.py
+  SECONDS` counts samples with GHOST_ON 0. The current figures are in [where DOSBox's memory
+  is](../obsidian-edition/DEVELOPMENT.md#where-dosboxs-memory-is); the history is in
+  logs/2026-11-08-memory-pass.md and logs/2026-11-09-memory-pass-2.md. The old build for a
+  comparison: `git show HEAD:obsidian-edition/dos/DSCLOG.EXE` into a scratch file, copied into `dos/`
+  for one `loadsave.sh`, then the new one put back (`cmp` it with a fresh build).
+- **Figures gone from the map** (2026-11-08, the ambush after a long run of clicks): the party, and at
+  times the foes, weren't drawn though their places were right; I then Escape (the inventory opened
+  and shut) drew them again, for a while. Clicks on a figure not drawn missed (passuntil.sh gave up).
+  **Found 2026-11-09** (logs/2026-11-09-missing-figures.md): the game's **picture store** (741,376
+  bytes, fixed, DSUN.EXE 60D9Bh) and its table of 300 picture slots (load segment + 3E60h; DS:1F84h
+  the slots taken) are given back only at an area load. Each time the Loader dresses a member anew
+  (any change to what its figure wears: inventory moves, a weapon's +0Fh written in memory) it marks
+  the old pictures FFFEh and the game takes a new slot and about 7 KB of store for each. The pens
+  take 200 slots and 275 KB on arrival, so after some 30-60 gear changes there a picture lies past
+  the store's end: drawn while in memory, never read back once let go, and every failed read keeps
+  the memory it took, until no figure can be loaded (all gone; I then Escape frees that memory, so
+  they come back for a while). **A long test in one area with many gear changes runs into it**:
+  check `cachelist.py` (slots taken) and `cachelist.py all` (the last slot's place + length against
+  741,376), and reload the save or change area to start afresh. Fixed: the Loader leaves a figure
+  undressed when the store has no room (`_room_for`), and reuses the game's slots (the picture-store
+  fix, below), so the store hardly grows. Flaming Sphere cast at a foe two squares off struck the
+  caster (twice); farther off it took a slot and logged nothing.
+- **Watching figures and pictures** (2026-11-09): `figwatch.py SECONDS [EVERY] [TAG]` (passive, no
+  writes: each member's screen place, its map record's +0 (80h: not drawn), its picture slot (+0Fh)
+  with that slot's number and flags (2: in memory), the draw list's order and the member's place in
+  it, and a strip of grabs round each figure); `drawlist.py [all]` (the draw list at DS:6690h, kept
+  in rising y: the drawing finds its window DS:57CAh-57C8h by a scan that stops at the first y past
+  the view, so an entry out of order would hide all after it; never seen out of order);
+  `cachelist.py [all]`; `poolfree.py [SECONDS]` (the picture memory's free bytes, DS:8E94h);
+  `fillcache.py MEMBER SLOT UNTIL` (fills the slots fast by toggling a worn item's slot byte, the
+  Loader dressing each time; memory edit, never save); `figcheck.py LABEL` (a grab before and after
+  DSCLOG's VIEW_REDRAW, header +242, and the pixels changed round each member: a figure missing then
+  drawn shows hundreds). An inventory move in a test: `click.py` the item, then the place; an item
+  left on the pointer isn't in a shot (it was dropped by the next click on DROP, 213,134).
+- **The picture store itself** (2026-11-09, logs/2026-11-09-picture-store.md): an XMS block behind
+  the game's paged memory manager (handle DS:4C33h, pages through the directory at DS:42D2h); in
+  DOSBox it was guest RAM at 110000h, XMS pages 2-2Fh in one run. `picstore.py` finds it and checks
+  every in-memory picture against its store bytes (`check`; all should match), lists the STALE cells
+  (`stale`) or dumps a slot. The picture pool is 60,000 bytes; opening the inventory (I) puts every
+  picture out of memory (`cachelist.py`: 0 in memory). `outfitcycle.py MEMBER SLOT N` changes an
+  outfit N times (as fillcache.py, but waiting for the Loader's copy to be written, not for the
+  slots to grow) and prints slots, STALE, the store's end and whether the figure is drawn each time.
+  A scratch copy of the mod for a Loader change: `git archive HEAD | tar -x -C DIR`, the game copied
+  to its own `PLAYTEST_WORK`, and the tools run from `DIR/playtest` (start.sh takes the Loader from
+  the kit's parent folder); restart only the dice log (`python3 -u -m dsloader dicelog` from
+  `DIR/obsidian-edition`) to run changed Loader code in a running game.
+- **Picture slots while exploring** (2026-11-09, logs/2026-11-09-picture-slots-explore.md): the
+  pens load 203 of the 300 slots on arrival and walking about adds none (`slotcount.py` at each
+  stop); fights add a few (bodies, dropped items, spells). Wake of the Ravager's "graphics disappear"
+  note is this same limit; leaving the region clears it.
 - **Lots of items on the ground** (2026-11-09, logs/2026-11-09-picture-slot-reuse.md): `giveitems.py
   MEMBER N [FIRST]` gives items of different objects (each its own picture) into free backpack cells
   in memory (12 cells: then "no room"); `groundfill.sh CYCLES [FIRST]` gives Gerakis 12 and DROPs
@@ -1092,7 +1091,9 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
 
 ## 5. The story so far: what's known of the route
 
-**A new game** (`start.sh`, then `topartyfight.sh`: START GAME, the ready-made party, the opening,
+### A new game
+
+A new game (`start.sh`, then `topartyfight.sh`: START GAME, the ready-made party, the opening,
 the step forward) ends in the arena's first fight (region 2Ah), party at about (488, 424).
 - The opening's show fight (a Rampager kills a Defiler) isn't the party's: leave it be.
 - The party then waits at the gate (488, 168-184): "Gladiators: Step forward, into the arena!".
@@ -1110,6 +1111,84 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   bone wall, and it waits on flag 5 (MAS 42 sets it on loading); the flags can't be read in the
   arena. Why it sometimes doesn't is open. **When it doesn't start, restart (`start.sh`) and try
   again before digging.**
+
+### The arena (region 2Ah)
+
+As of 2026-11-01:
+
+- Several waves (Sligs and a Screamer Beetle; Sand Howlers and a Tohr-kreen; ...), then "The
+  crowd is awed...", the Announcer, and "Yell something back at the Announcer?" (N), then
+  "Attention gladiators: Go back to the pens to heal your wounds." After a repeat fight it may
+  say only that, with no YES/NO question (arenawaves.sh stops at either).
+- **Staying sends another fight, every time**: the clock after "Go back to the pens" is short (a
+  few walking clicks; it barely moves while the party stands), then "Since you will not leave, you
+  must fight!", "If you don't want to return to the pens, then you must want another fight!" or
+  "Excellent! These gladiators wish to fight again!" and a wave (Silt Runners, a Screamer
+  Beetle...), each able to bring a level-up screen, and "Go back to the pens" again, until the
+  party leaves. Leave at once, and don't walk south or east first (the 2026-11-01 run lost its
+  time getting the view to the wall).
+- **Out of the arena** (done 2026-11-01, the fourth run; `leavearena.sh` does all of it): after the
+  last fight, drag the view north (scroll.py) until the ground inside the wall (488, 232) shows,
+  click it, and the party walks round into it by itself (the user's advice, 2026-11-01: if the
+  party stops at the stone wall, click inside the wall's boundary; don't stay outside the walls,
+  as more monsters are sent); then click the gate strip (488, 184): "This corridor leads down to
+  the slavepens. Do you wish to continue? (Answer Yes or No)": **Y** (N, as for the Announcer,
+  turns it down, and the question comes back only on stepping off the strip and on again). The
+  party comes out in the pens (region 29h) at (1816, 440). In the scripts (MAS 42's move
+  triggers): the gate strip, squares 28-32 at row 11 (map x 448-527, y 176-191), runs script 3 at
+  73Eh, which (with flag 11 set, by script 2 at BB8h, and local 32 at 0) takes the party to the
+  pens (region 29h, 113, 27); squares 5-7 at rows 30-32 run script 3 at 6B4h ("Gladiators
+  escaping! Guards! Sound the alarms!": avoid them).
+- The cluebook (#13): "Follow Kurzak to and from the pens when fighting in the Arena."
+
+### The slave pens (region 29h)
+
+Through the gate the party comes out at (1816, 440) and Kurzak
+meets it ("These are the slavepens. I'm Kurzak, leader of the guards. Follow me. I'm here to lead
+you to your cell."; his menu: help me escape or I'll kill you, about yourself, the half-giant,
+escaped slaves, the exits, Goodbye: "Get moving! I gotta get back to work."). `pens-after-arena`
+was saved a little further on, in the corridor at (1672, 344) with Kurzak beside the party
+(checked by loading it, 2026-11-07). The way to the grate, from the scripts and the region file (2026-11-01):
+- The stalker pen nearest the north: its door, objects 2163/2164 at (256, 864-896), is barred.
+  Using it says "The door is locked. It appears quite sturdy."; attacking it (138:121h) rolls
+  RAND(30) against the attacker's STR to bash it open, and the Mountain Stalker (151, at 187,856)
+  then hunts the party. A second stalker pen is further south (door 2157/2158 at 255,1087-1119).
+- **From the save, follow Kurzak**: the party starts in the corridor at (1672, 344), shut in on the
+  west (the corridor runs on to 1352-1400, 344): a gate at squares (81, 20-21), map (1304, 320-351), the gold post west of it,
+  is closed (live grid 192/193), clicking it does nothing, and no script opens those squares.
+  Kurzak (object 29) walks his route a waypoint at a time (141 at 0h: squares 99,25 then 99,31...),
+  each waiting for the party within 4 squares: `python3 follow.py 29` keeps walking the party
+  beside him. At (99, 32): "All right, go through the door. There's a place to rest down the east
+  hall. I'll come get you when it's time for your next fight. If you want to fight before that,
+  knock on the door." 
+- **Into the pens (2026-11-01, the user)**: Kurzak's "door" is the entryway south of where he
+  stops, squares (99, 33-34), map (1592, 536-551), open once he has led the party there; through it
+  is the east-west hall (rows 35-37, columns 90-115), the cells south of it, and "the east hall"
+  (the campfire) down the passage at columns 112-114. `route.py 1592 584` walks through.
+- **The corridor gate (81, 20-21) is locked**: the look pointer on the gold post opens a look box
+  titled "Door" whose only live button is the third (USE, 116,137): "The door is locked. It
+  appears quite sturdy." The box message then has to be clicked away (boxclick.sh), and the
+  pointer is left on the eye: right-click on to the arrow before walking.
+- **The other way west** (`doorpath.py`, with BLOCK="81,20 81,21"): down the east passage to the
+  door at (113, 90) (map 1816, 1448; `route.py 1816 1400` stands beside it; locked on 2026-11-04,
+  with the party straight from the arena and Kurzak followed: check its look box), west along the bottom
+  corridor (rows 91-95) through the door at (93, 94), north up columns 34-35 to the south hall
+  (rows 66-70), and north at columns 17-20 to the stalker pen's anteroom (its door 16, 54-56).
+  On the way, two slaves whisper "Is it time to break out yet?" / "Shh, not yet!".
+- **Opening the stalker pen's door sets off the alarm** (the user, 2026-11-01): plan for it (the
+  guards come) or find another way to the button.
+- Button 1281 at (139, 748), the pen's north wall: used from within 4 squares (137:1AE8h, else
+  "is too far away to press the button") it sets flag 518 and "hears a click as the secret door to
+  the west opens". (Button 1280 at 1335,798 opens another door, 81-82,53-54, only once the monster
+  266 at 1264,848 is gone or flag 317 is set; otherwise "presses the button, but nothing happens".)
+- The grate, object 1234 at map (46, 86) (square 2, 5), the far northwest; walking onto squares
+  3-4, 5-6 (map 48-79, 80-111) runs its menu (137:29Bh): Pick the lock / Rip it open / Hack the lock off.
+- **The weapon rack** (Thornwall's, object 2599) is at square (48, 34), map (779, 550), in the room
+  west of the door at (65, 38-39); from (52, 36) beside it the game has made it. Its contents (map
+  object 478 on 2026-11-04): Polearm, Quarterstaff, Polearm, Axe, with Thornwall first once
+  Semyon has told of the shipment (flags 756, then 757).
+- The pens' cell doors (2141-2164) have USE (script 138) and ATTACK handlers ("This door is too
+  strong to bash open" for the cells').
 - **Resting** (the user, 2026-11-05): the fire room off the east passage, its door at square (115,
   53), map (1848, 856), opened with the look pointer; in it a small fire ring among haystacks (map
   about 1931, 856): the **look pointer on the ring** rests ("THE PARTY RESTS", hit points full; the
@@ -1158,79 +1237,6 @@ is the eye). `toarena.sh` answers the call instead (up to the arena).
   then the kind (2 Magic melee weapons); he lists only items the party holds. The next `start.sh` or
   `loadsave.sh` writes the scripts afresh.
 
-**The arena (region 2Ah)**, as of 2026-11-01:
-- Several waves (Sligs and a Screamer Beetle; Sand Howlers and a Tohr-kreen; ...), then "The
-  crowd is awed...", the Announcer, and "Yell something back at the Announcer?" (N), then
-  "Attention gladiators: Go back to the pens to heal your wounds." After a repeat fight it may
-  say only that, with no YES/NO question (arenawaves.sh stops at either).
-- **Staying sends another fight, every time**: the clock after "Go back to the pens" is short (a
-  few walking clicks; it barely moves while the party stands), then "Since you will not leave, you
-  must fight!", "If you don't want to return to the pens, then you must want another fight!" or
-  "Excellent! These gladiators wish to fight again!" and a wave (Silt Runners, a Screamer
-  Beetle...), each able to bring a level-up screen, and "Go back to the pens" again, until the
-  party leaves. Leave at once, and don't walk south or east first (the 2026-11-01 run lost its
-  time getting the view to the wall).
-- **Out of the arena** (done 2026-11-01, the fourth run; `leavearena.sh` does all of it): after the
-  last fight, drag the view north (scroll.py) until the ground inside the wall (488, 232) shows,
-  click it, and the party walks round into it by itself (the user's advice, 2026-11-01: if the
-  party stops at the stone wall, click inside the wall's boundary; don't stay outside the walls,
-  as more monsters are sent); then click the gate strip (488, 184): "This corridor leads down to
-  the slavepens. Do you wish to continue? (Answer Yes or No)": **Y** (N, as for the Announcer,
-  turns it down, and the question comes back only on stepping off the strip and on again). The
-  party comes out in the pens (region 29h) at (1816, 440). In the scripts (MAS 42's move
-  triggers): the gate strip, squares 28-32 at row 11 (map x 448-527, y 176-191), runs script 3 at
-  73Eh, which (with flag 11 set, by script 2 at BB8h, and local 32 at 0) takes the party to the
-  pens (region 29h, 113, 27); squares 5-7 at rows 30-32 run script 3 at 6B4h ("Gladiators
-  escaping! Guards! Sound the alarms!": avoid them).
-- The cluebook (#13): "Follow Kurzak to and from the pens when fighting in the Arena."
-
-**The slave pens (region 29h)**: through the gate the party comes out at (1816, 440) and Kurzak
-meets it ("These are the slavepens. I'm Kurzak, leader of the guards. Follow me. I'm here to lead
-you to your cell."; his menu: help me escape or I'll kill you, about yourself, the half-giant,
-escaped slaves, the exits, Goodbye: "Get moving! I gotta get back to work."). `pens-after-arena`
-was saved a little further on, in the corridor at (1672, 344) with Kurzak beside the party
-(checked by loading it, 2026-11-07). The way to the grate, from the scripts and the region file (2026-11-01):
-- The stalker pen nearest the north: its door, objects 2163/2164 at (256, 864-896), is barred.
-  Using it says "The door is locked. It appears quite sturdy."; attacking it (138:121h) rolls
-  RAND(30) against the attacker's STR to bash it open, and the Mountain Stalker (151, at 187,856)
-  then hunts the party. A second stalker pen is further south (door 2157/2158 at 255,1087-1119).
-- **From the save, follow Kurzak**: the party starts in the corridor at (1672, 344), shut in on the
-  west (the corridor runs on to 1352-1400, 344): a gate at squares (81, 20-21), map (1304, 320-351), the gold post west of it,
-  is closed (live grid 192/193), clicking it does nothing, and no script opens those squares.
-  Kurzak (object 29) walks his route a waypoint at a time (141 at 0h: squares 99,25 then 99,31...),
-  each waiting for the party within 4 squares: `python3 follow.py 29` keeps walking the party
-  beside him. At (99, 32): "All right, go through the door. There's a place to rest down the east
-  hall. I'll come get you when it's time for your next fight. If you want to fight before that,
-  knock on the door." 
-- **Into the pens (2026-11-01, the user)**: Kurzak's "door" is the entryway south of where he
-  stops, squares (99, 33-34), map (1592, 536-551), open once he has led the party there; through it
-  is the east-west hall (rows 35-37, columns 90-115), the cells south of it, and "the east hall"
-  (the campfire) down the passage at columns 112-114. `route.py 1592 584` walks through.
-- **The corridor gate (81, 20-21) is locked**: the look pointer on the gold post opens a look box
-  titled "Door" whose only live button is the third (USE, 116,137): "The door is locked. It
-  appears quite sturdy." The box message then has to be clicked away (boxclick.sh), and the
-  pointer is left on the eye: right-click on to the arrow before walking.
-- **The other way west** (`doorpath.py`, with BLOCK="81,20 81,21"): down the east passage to the
-  door at (113, 90) (map 1816, 1448; `route.py 1816 1400` stands beside it; locked on 2026-11-04,
-  with the party straight from the arena and Kurzak followed: check its look box), west along the bottom
-  corridor (rows 91-95) through the door at (93, 94), north up columns 34-35 to the south hall
-  (rows 66-70), and north at columns 17-20 to the stalker pen's anteroom (its door 16, 54-56).
-  On the way, two slaves whisper "Is it time to break out yet?" / "Shh, not yet!".
-- **Opening the stalker pen's door sets off the alarm** (the user, 2026-11-01): plan for it (the
-  guards come) or find another way to the button.
-- Button 1281 at (139, 748), the pen's north wall: used from within 4 squares (137:1AE8h, else
-  "is too far away to press the button") it sets flag 518 and "hears a click as the secret door to
-  the west opens". (Button 1280 at 1335,798 opens another door, 81-82,53-54, only once the monster
-  266 at 1264,848 is gone or flag 317 is set; otherwise "presses the button, but nothing happens".)
-- The grate, object 1234 at (46, 86), the far northwest; walking onto squares 3-4, 5-6 (map
-  48-79, 80-111) runs its menu (137:29Bh): Pick the lock / Rip it open / Hack the lock off.
-- **The weapon rack** (Thornwall's, object 2599) is at square (48, 34), map (779, 550), in the room
-  west of the door at (65, 38-39); from (52, 36) beside it the game has made it. Its contents (map
-  object 478 on 2026-11-04): Polearm, Quarterstaff, Polearm, Axe, with Thornwall first once
-  Semyon has told of the shipment (flags 756, then 757).
-- The pens' cell doors (2141-2164) have USE (script 138) and ATTACK handlers ("This door is too
-  strong to bash open" for the cells').
-
 - **Pehtucl's chest** (2026-11-07, logs/2026-11-07-pehtucls-chest.md,
   logs/2026-11-07-review-fixes.md): `saves/pens-new-chest` is a new game with the chest's USE
   command (older saves lack it), but its chest was made before the shut type: run `shut.py` after
@@ -1251,11 +1257,13 @@ was saved a little further on, in the corridor at (1672, 344) with Kurzak beside
 
 From the cluebook's map: #11 the stalker pen (break the door,
 kill the mountain stalker, push the button on the north wall: a secret door to the northwest
-corner), #12 the sewer grate (square 46, 86; "use" it or walk over it: rip, hack or pick; a failed
+corner), #12 the sewer grate (map 46, 86; "use" it or walk over it: rip, hack or pick; a failed
 try can be tried again), #15 the campfire (rest; two rests bring the next arena fight; keeping
 Kurzak waiting sets off the alarm), #10 Pehtucl's ambush (Bloodwrath on his body).
 
-**Water for resting (an idea for later, the user's, 2026-11-10):** resting might one day cost water,
+### Water for resting (an idea for later)
+
+The user's idea (2026-11-10): resting might one day cost water,
 which would need water and jugs on sale or to find in every part of the game. Whenever a play
 reaches a new area, note in the test log and here where water, jugs or waterskins are (a shop,
 a well, a body, a chest), with the region and map position. Nothing is built for it yet.
@@ -1275,5 +1283,5 @@ commit and push. Do it at each stop, not only at the end: a pause can lose the c
 
 1. Stop the watchdog; restore anything raised in memory.
 2. Send the test log; copy it to `playtest/logs/` and commit.
-3. Add any new kind of stall to this guide (a numbered rule, the date and the test), and any new
+3. Add any new kind of stall to this guide (a dated bullet where it belongs, or a numbered rule in section 4 for a fight stall, with the test), and any new
    tool to this folder, then commit and push both.

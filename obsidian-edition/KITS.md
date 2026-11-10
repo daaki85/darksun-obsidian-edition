@@ -53,7 +53,7 @@ armour.
 |---|---|---|---|---|
 | **Myrmidon** | with weapon specialization, a second weapon spec at 1st level (+1 to hit, +2 damage, 3/2 attacks a round); both weapon specs go on to **mastery at 5th level** (+3 to hit, +3 damage) and **grand mastery at 9th** (+3, +3, the damage die a size larger and one more attack a round) | −4 on saves against charms (Charm Person, Charm Monster, Charm Person or Mammal, Domination, Mass Domination); initiative 2 worse | the fighter's gear, and a plain weapon of its second weapon spec in the left hand in place of the shield (a bow in the missile slot, with arrows; a two-handed weapon in the backpack) | the second weapon spec is picked on the weapon window after DONE (EXIT after one leaves it with one) |
 | **Sentinel** | AC 2 better with a shield in a hand; +2 initiative, from 1st level | −1 on saves against wizards' and priests' spells | the fighter's gear | can't dual to druid or preserver; can't go with the Shinobi |
-| **Ravager** | +1 to hit and damage in melee; a base AC by level: **7 at 1st-2nd, 6 at 3rd-4th, 5 at 5th-6th, 4 at 7th-8th, 3 at 9th-10th**, armour bettering it as usual | no missile or thrown weapons; no shield; leather armour or none | the fighter's gear, with a second of its weapon in place of the shield (none if the weapon takes both hands) | the dice log shows its bonus as `+1 Ravager`; can't go with the Grove Warden |
+| **Ravager** | +1 to hit and damage in melee; a base AC by level: **7 at 1st-2nd, 6 at 3rd-4th, 5 at 5th-6th, 4 at 7th-8th, 3 at 9th-10th**, armour bettering it as usual | no missile or thrown weapons (cahulaks, which the game doesn't throw, are allowed); no shield; leather armour or none | the fighter's gear, with a second of its weapon in place of the shield (none if the weapon takes both hands) | the dice log shows its bonus as `+1 Ravager`; can't go with the Grove Warden |
 
 ## Gladiator kits
 
@@ -75,7 +75,7 @@ armour.
 |---|---|---|---|---|
 | **Stalker** | +2 movement in a fight; +15 hide in shadows and move silently, and hiding not halved indoors (with hiding to backstab) | leather armour or none | the ranger's gear; with fuller starting gear, a cloak | can't dual to thief, and a thief (any thief kit or none) who duals to ranger can't take it: its hiding would add to a thief's own |
 | **Justifier** | with weapon specialization, its expertise with the bow and its chosen weapon spec becomes specialization: +1 to hit, +2 damage (SPECIALIZED IN on the Effects screen); with the two-weapons rule, no penalty for two weapons in any armour (another ranger's is in light armour only) | **one 1st-level priest spell slot from 10th level**, in place of a ranger's slots, cast at the ranger level less 9 (1st at 10th) | the ranger's gear | WIS gives it no bonus slots; can't dual to cleric |
-| **Seeker** | priest spell slots in place of a ranger's: **one 1st-level slot at 6th level, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th**; cast at the ranger level less 5 (1st at 6th, 5th at 10th; a ranger's: less 7), so 2nd-level spells from 8th and 3rd-level from 10th | its sphere's weapon limits, as a cleric of that sphere's (air: missile and thrown weapons, daggers; earth: stone, obsidian, metal, wood; fire: obsidian; water: bone, wood), but it keeps the bow | the ranger's gear, its long sword of a material its sphere allows | WIS gives it no bonus slots; can't dual to cleric |
+| **Seeker** | priest spell slots in place of a ranger's: **one 1st-level slot at 6th level, two at 7th, and a 2nd-level slot at 8th, two at 9th, and a 3rd-level slot at 10th**; cast at the ranger level less 5 (1st at 6th, 5th at 10th; a ranger's: less 7), so 2nd-level spells from 8th and 3rd-level from 10th | its sphere's weapon limits, as a cleric of that sphere's (air: missile and thrown weapons, daggers, cahulaks; earth: stone, obsidian, metal, wood; fire: obsidian; water: bone, wood), but it keeps the bow | the ranger's gear, its long sword of a material its sphere allows | WIS gives it no bonus slots; can't dual to cleric |
 
 ## Thief kits
 
@@ -126,7 +126,7 @@ A psionicist starts with a club, bow and arrows, leather chest armour.
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
 | **Mind Bender** | telepathy powers (the defence modes too) cost 2 PSP less | psychokinesis powers cost 2 PSP more | the psionicist's gear | the 2 counts both to use a power and to keep it up each round, never below 1 (a power with no upkeep still has none) |
-| **Mind Warrior** | a warrior's THAC0 (21 less its level); a warrior's extra attacks in melee: **3/2 a round from 7th level**; with weapon specialization, expertise in one melee weapon spec of its choice (of those its class can use; a thri-kreen the chatkcha too, at 3/2 throws a round, 2 from a warrior class's 7th level) at **3/2 attacks a round, 2 from 7th level** | a tenth fewer PSP, the tenth rounded down (25 becomes 23) | the psionicist's gear | its weapon spec is chosen on the weapon window after DONE (the club for an EXIT; a thri-kreen's the chatkcha); its PSP stay a tenth fewer even with the kit asleep after a change of class; can't dual to fighter, gladiator or ranger; can't go with the Swashbuckler, Crusader or Battle Mage |
+| **Mind Warrior** | a warrior's THAC0 (21 less its level); a warrior's extra attacks in melee: **3/2 a round from 7th level**; with weapon specialization, expertise in one melee weapon spec of its choice (of those its class can use; a thri-kreen the chatkcha too, at 3/2 throws a round, 2 from a warrior class's 7th level, and one more as every thri-kreen) at **3/2 attacks a round, 2 from 7th level** | a tenth fewer PSP, the tenth rounded down (25 becomes 23) | the psionicist's gear | its weapon spec is chosen on the weapon window after DONE (the club for an EXIT; a thri-kreen's the chatkcha); its PSP stay a tenth fewer even with the kit asleep after a change of class; can't dual to fighter, gladiator or ranger; can't go with the Swashbuckler, Crusader or Battle Mage |
 | **Kineticist** | psychokinesis powers cost 2 PSP less | telepathy powers (the defence modes too) cost 2 PSP more | the psionicist's gear | as the Mind Bender's, the other way round |
 
 ## Multiclass kits
@@ -350,7 +350,7 @@ become the other, and a druid must be true neutral, a ranger good.
 | Shinobi | preserver | its own wizard slot table would take the new class's slots' place |
 | Swashbuckler, Crusader, Battle Mage, Mind Warrior | fighter, gladiator, ranger | a warrior's THAC0 is already their kit's |
 | Arena Champion, Sentinel | druid, preserver | their gift needs a shield, which those classes can't hold |
-| Brute | psionicist, air cleric | it needs a two-handed melee weapon, which those classes can't use |
+| Brute | psionicist, air cleric | it needs a two-handed melee weapon: a psionicist can use none, and an air cleric's cahulaks are a one-handed pair, a head in each hand |
 | Stalker | thief | its +15 to hiding would add to a thief's own skills |
 | Grove Warden | gladiator | its AC would add to a gladiator's own, which betters with level too |
 | Healer | ranger of air, earth or fire | its sphere is water's only (after DUAL to a ranger, the sphere menu offers WATER ONLY) |
@@ -414,6 +414,8 @@ fighter, gladiator and ranger levels; a warrior class goes no higher than
 | specialized | a fighter's or gladiator's chosen weapon spec | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
 | mastery | a fighter's chosen weapon spec, from 5th level | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
 | grand mastery | a fighter's chosen weapon spec, from 9th level | | 3 | | 5 | | 3 |
+
+A thri-kreen throws a chatkcha once more a round than the table says.
 
 In a fight Haste doubles all of these and Slow halves them, rounded down (and a
 slowed character loses every other turn); the game's DAM lines and the

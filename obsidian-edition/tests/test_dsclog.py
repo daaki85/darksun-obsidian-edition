@@ -211,6 +211,7 @@ class StubTests(unittest.TestCase):
             self.assertEqual(e.code, after)
             self.assertEqual(e.parent_code, bytes(range(50, 66)))
             self.assertEqual(e.parent_locals, bytes(range(150, 190)))
+            self.assertTrue(e.target_state & Entry.HELD_MARK)  # (a roll: the target's state marked, +188)
 
         seq, widx, nent = struct.unpack("<HHH", mu.mem_read(TSR * 16 + hdr_off + 8, 6))
         self.assertEqual((seq, widx), (70, 70 % nent))
@@ -1362,9 +1363,9 @@ class ScriptRandTests(unittest.TestCase):
         self.assertEqual((e.kind, e.raw & 0xFF, e.raw >> 8 & 0xFF, e.extra), (5, 0x7000 * 11 >> 15, 10, 2116))
         self.assertEqual((e.arg(2), e.arg(4), e.arg(6)), (4, 3, 2))
         self.assertEqual((e.ip, e.cs), (0x602, CALLER))  # (the code after the INT)
-        # the attack's target as the entry was made (HELPLESS_OF; HELD's tests cover its Paralyzed and
-        # Out Cold): here no combatant, so the mark alone
-        self.assertEqual(e.target_state, Entry.HELD_MARK)
+        # the attack's target as the entry was made (HELPLESS_OF, HELD's tests cover its Paralyzed and
+        # Out Cold) only for a roll, a save or an AC (kinds 0-2): a script's roll has none, unmarked
+        self.assertEqual(e.target_state, 0)
 
 
 @unittest.skipIf(Uc is None, "needs unicorn")
@@ -1554,7 +1555,7 @@ class KindTableTests(unittest.TestCase):
         """DSCLOG's weapon kinds by item type are specialize.py's."""
         from dsloader import specialize
         image = load_image()
-        want = bytearray(147)
+        want = bytearray(148)
         for t, k in specialize.KIND_OF_TYPE.items():
             want[t] = k + 1
         self.assertGreater(image.find(bytes(want)), 0)
@@ -2680,7 +2681,8 @@ class KindsAllowedTests(unittest.TestCase):
                game.METAL_MACE_TYPE: (1, 4, 0x1672), game.METAL_GREAT_AXE_TYPE: (1, 4, 0x1662),
                game.METAL_PICK_TYPE: (1, 4, 0x1772), game.METAL_POLEARM_TYPE: (1, 4, 0x1672),
                game.AIR_DAGGER_TYPE: (1, 4, 0x1FF3), game.BONE_GREAT_AXE_TYPE: (1, 1, 0x1668),
-               game.OBSIDIAN_GREAT_AXE_TYPE: (1, 3, 0x166E), game.BONE_DAGGER_TYPE: (1, 1, 0x1FFA)}
+               game.OBSIDIAN_GREAT_AXE_TYPE: (1, 3, 0x166E), game.BONE_DAGGER_TYPE: (1, 1, 0x1FFA),
+               game.METAL_CAHULAKS_TYPE: (1, 4, 0x167B), game.OBSIDIAN_CAHULAKS_TYPE: (1, 3, 0x167F)}
     TYPES = 0x8000  # (segment)
 
     def record(self, t):
@@ -2701,7 +2703,7 @@ class KindsAllowedTests(unittest.TestCase):
         mu.mem_write(TSR * 16, image)
         mu.mem_write(TSR * 16 + 0xFFF0, bytes((0xF4,)))  # (hlt: where KINDS_ALLOWED returns)
         mu.mem_write(GAME_DS * 16 + 0x1669, struct.pack("<HH", 0, self.TYPES))
-        mu.mem_write(self.TYPES * 16, b"".join(self.record(t) for t in range(140)))
+        mu.mem_write(self.TYPES * 16, b"".join(self.record(t) for t in range(148)))  # (KIND_TYPES: the game's and the Loader's)
         sheet = test_restrict.sheet
         combos = [(9,), (13,), (10,), (11,), (12,), (17,), (9, 12), (9, 17), (9, 11), (13, 5), (13, 12)]
         for c in range(1, 5):
@@ -2811,7 +2813,7 @@ class KindsAllowedTests(unittest.TestCase):
         self.assertIn(specialize.KINDS.index("bow"), restrict.allowed_kinds(sheet(9), self.record))
         fire = restrict.allowed_kinds(sheet(9, 3), self.record)
         self.assertEqual([specialize.KINDS[k] for k in fire],
-                         ["long sword", "dagger", "short sword", "mace", "axe", "great axe", "chatkcha"])
+                         ["long sword", "dagger", "short sword", "mace", "axe", "great axe", "cahulaks", "chatkcha"])
 
 
 @unittest.skipIf(Uc is None, "unicorn is not installed")
@@ -5164,7 +5166,7 @@ class TypesTests(unittest.TestCase):
         self.mu = mu = Uc(UC_ARCH_X86, UC_MODE_16)
         mu.mem_map(0, 0x100000)
         mu.mem_write(TSR * 16, image)
-        size = image.find(bytes.fromhex("8146fc8002" "8356fe00"))  # 32 types of 20 bytes: 280h
+        size = image.find(bytes.fromhex("8146fc9402" "8356fe00"))  # 33 types of 20 bytes: 294h
         names_fill, fill = fill_probes(image)
         self.assertGreater(min(size, fill - names_fill), 0)
         mu.mem_write(VEC_TYPES_SIZE * 4, struct.pack("<HH", size, TSR))
@@ -5183,12 +5185,12 @@ class TypesTests(unittest.TestCase):
         return mu.reg_read(r.UC_X86_REG_SP)
 
     def test_room_and_filled(self):
-        """The game's 115 types (2300 bytes): 640 bytes more reserved, and after the read
+        """The game's 115 types (2300 bytes): 660 bytes more reserved, and after the read
         DSCLOG's types at 115 on, the number noted, and Grey's Scale's arm and leg armour AC 3."""
         from dsloader import npcitems
         self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<I", 2300))
         self.assertEqual(self.interrupt(VEC_TYPES_SIZE), 0x7FC)
-        self.assertEqual(struct.unpack("<I", self.mu.mem_read(SS * 16 + BP - 4, 4))[0], 2940)
+        self.assertEqual(struct.unpack("<I", self.mu.mem_read(SS * 16 + BP - 4, 4))[0], 2960)
         self.mu.mem_write(SS * 16 + 0x7FC, bytes(4))
         self.assertEqual(self.interrupt(VEC_TYPES_FILL, eax=0), 0x80C)
         at = self.TYPES_SEG * 16 + 115 * 20
@@ -6090,7 +6092,7 @@ class KitTests(unittest.TestCase):
         from dsloader import kitpages
         for name, kid in kitpages.KIT_IDS.items():
             with self.subTest(name=name):
-                self.call(rb"\x50\x51\x57\xbe..\x2e\x80\x3c\x00", eax=kid)
+                self.call(rb"\x50\x51\x57\x1e\x2e\x8e\x1e..\xbe..\x80\x3c\x00", eax=kid)
                 si = self.mu.reg_read(r.UC_X86_REG_SI)
                 text = bytes(self.mu.mem_read(TSR * 16 + si, 24)).split(b"\0")[0].decode()
                 self.assertEqual(text, "KIT: " + kitpages.row_text(name))
@@ -8636,7 +8638,7 @@ class KeepTests(unittest.TestCase):
         first, = struct.unpack_from("<H", zero.group(1))
         count, = struct.unpack_from("<H", zero.group(2))
         end = first + 2 * count
-        self.assertGreaterEqual(count * 2, 1400)
+        self.assertGreaterEqual(count * 2, 980)  # (AFTER_INSTALL's buffers: the Look box's, the USE screen's...)
         self.assertLessEqual(end, len(image))  # (within the image loaded: over the install code)
         # the install's own "mov dx, paragraphs / jmp keep": the memory kept
         asked = [struct.unpack_from("<H", image, m.start() + 1)[0]

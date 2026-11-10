@@ -8,7 +8,8 @@ The patched game mends these whatever the Options tab says. The rules the game g
 a switch, are the [rule changes](FEATURES.md#rule-changes). The script bugs are mended in the
 Loader's copy of the game's scripts; many were found by yuan-ti and the OpenDS project
 ([credits](https://github.com/daaki85/darksun-obsidian-edition#credits)). How the fixes work:
-[DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#the-games-spells).
+[DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md) (the script bugs, the spells, worn items), the
+memory fixes in [DEVELOPMENT.md](DEVELOPMENT.md#room-in-the-helper), and the rows' own links.
 
 ## Contents
 
@@ -97,7 +98,7 @@ Loader's copy of the game's scripts; many were found by yuan-ti and the OpenDS p
 
 | | The game | With the Loader |
 |---|---|---|
-| **DELETE** in the roster | With the list scrolled, deleted another character | Deletes the one chosen ([more characters](FEATURES.md#more-characters)) |
+| **DELETE** in the roster | Deleted the character in the row clicked counting from the top of the list, not from the top of what was shown, so with the list scrolled down another character was deleted | Deletes the one chosen ([how](DEVELOPMENT-SCREENS.md#more-characters)) |
 | The **creation screen's least scores** | The class's prime requisite raised to 17 and every other score to 9 to 14, against the manual: a fighter's STR never below 17, a thief's CHA never below 9, while a druid's CHA, a ranger's STR and DEX and a psionicist's CON had no minimum of their own | The manual's: cleric WIS 9; druid WIS 12, CHA 15; fighter STR 9; gladiator STR 13, DEX 12, CON 15; preserver INT 9; psionicist CON 11, INT 12, WIS 15; ranger STR 13, DEX 13, CON 14, WIS 14; thief DEX 9; a multiclass character the highest of their classes' ([character creation](HOW-THE-GAME-WORKS.md#character-creation)) |
 | **XP for high prime requisites** | None, though the manual promises 10% more XP to a class whose prime requisites are all 16 or more | 10% more of every award for each such class, divided by a multiclass character's classes (one XP for them all); a human's class followed now. The Loader adds it as each award comes, so it needs the Loader following the game ([Experience and levels](PLAYER-GUIDE.md#experience-and-levels)) |
 
@@ -105,7 +106,7 @@ Loader's copy of the game's scripts; many were found by yuan-ti and the OpenDS p
 
 | | The game | With the Loader |
 |---|---|---|
-| A **New** character's thief skills | Shown as 0 | Shown as they are ([more characters](FEATURES.md#more-characters)) |
+| A **New** character's thief skills | A character made with CREATE CHARACTERS is New until the game starts, when the game makes it Okay; the game's tests for Okay left New out, so a New thief's skills all showed 0 on the inventory screen | The patched game and the Loader count New as Okay wherever they test for Okay; the status under the portrait still reads New, and the game still makes New characters Okay when it starts |
 | **Thief skills**' equipment penalty | Taken for anything in the hands, quiver or leg slot (a weapon held cost 5 to 10 points), never for the armour worn | None ([how the game works out thief skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)) |
 | A thief skill rolled **for the whole party** (a trap going off, hearing the men by the wagon) | Meant for the member with the best chance, but the pick compared the wrong way round, so the first party member always rolled | The member with the best chance rolls ([where the game rolls them](HOW-THE-GAME-WORKS.md#where-the-game-rolls-thief-skills)) |
 
@@ -115,6 +116,7 @@ Loader's copy of the game's scripts; many were found by yuan-ti and the OpenDS p
 |---|---|---|
 | Items that raise or lower an **ability score** | Changed the score wherever they were, the backpack too, so one carried did as much as one worn | Only while worn ([how](DEVELOPMENT-CONTENT.md#worn-items-the-gladiators-armour-and-psionic-blast)) |
 | The **gladiator's armour optimisation** (AC 1 better a 5 gladiator levels) | Given with no armour on, where Dark Sun gives it to armour worn | Only with armour on (arms, legs, head or chest; not a shield, bracers or a robe) |
+| **Alagorn's stories** of the Quicksilver Glove and the Helm of Contemplation | Told of what neither does: gauntlets that graft a weapon to the hand, and a shield of thought against all psionic attacks | What each does: Detonate on every hit, and Gaze Reflection ([Alagorn's stories](ITEMS.md#alagorns-stories)) |
 | The game's **Sling +1** | A blank icon (its picture is missing from the game's data) | The Sling's, with a glow |
 | The game's **Great Axe +3** (the Army Commander's) | Its type had no material, as a ring's: its name showed none, and no sphere's cleric could wield it | Metal, as its icon's grey and teal head and its weight have it: "Metal Great Axe +3" |
 
@@ -126,13 +128,14 @@ Loader's copy of the game's scripts; many were found by yuan-ti and the OpenDS p
 |---|---|---|
 | **View Character's DAM line** with a wooden, bone, stone or obsidian weapon | One or two more than the attack does: it left out the weaker material's damage (2 for wood, 1 for the others, on a weapon with no plus), which the inventory's line and the attack take off | The same as the inventory's and the attack's |
 | The **DAM lines** of a **hasted** or **slowed** character (the inventory screen, View Character) | The attacks a round as if neither: a fight's attack doubles them for Haste and halves them for Slow, but the lines never did, and the inventory's showed half an attack a round (Slow's) as one | Twice, or half, as the attack has them (`3x1D8+13` hasted, `0.5x1D8+6` slowed), as on the Loader's Characters tab |
+| **What a scroll says** on the inventory screen | YOU LEARN THE SPELL, YOU CAN NOT READ THE SCROLL and the rest were written to the line under the paper doll but never reached the screen | Shown there, until the pointer is on something else ([what a scroll says](FEATURES.md#what-a-scroll-says)) |
 | An archer's **pointer** after a shot | Showed "can't shoot" once any shot of the round was made (one that killed its target, say), though the click still shot the shots left | Shows "can't" only once every shot of the round is made |
 
 ### Pictures and memory
 
 | | The game | With the Loader |
 |---|---|---|
-| **Graphics disappearing in a busy area** (SSI's note 2712 for Wake of the Ravager, the same engine) | The game keeps 300 picture slots for walls, doors, figures and items lying about, and gives none back until the next area: once a visit had used 300 (items of many kinds dropped, bodies, spells, new monsters), a new picture got no slot and wasn't drawn: an item on the ground, a body, a figure, a doorway | Once all 300 are taken, a slot holding a picture nothing uses now (out of memory, named by no wall or thing on the map) is reused, its picture put where it fits in the store (a different limit from the picture store [the party's outfits](FEATURES.md#what-the-party-wears) fill) |
+| **Graphics disappearing in a busy area** (SSI's note 2712 for Wake of the Ravager, the same engine) | The game keeps 300 picture slots for walls, doors, figures and items lying about, and gives none back until the next area: once a visit had used 300 (items of many kinds dropped, bodies, spells, new monsters), a new picture got no slot and wasn't drawn: an item on the ground, a body, a figure, a doorway | Once all 300 are taken, a slot holding a picture nothing uses now (out of memory, named by no wall or thing on the map) is reused, its picture put where it fits in the store (a different limit from the picture store [the party's outfits](FEATURES.md#what-the-party-wears) fill) ([how](DEVELOPMENT-CONTENT.md#graphics-disappearing-in-a-busy-area)) |
 | A magic item's **glow in a shop** | Stood still: a shop runs its own loop, which never turned the colours that make it shine | Shines, as on the map and in the inventory |
 | **"Out of memory in OEOpenGraph"** in a long session | The map needs a large block of memory each time it comes back (after the USE screen, a talk, a menu), and with the map up the game had little more than that to spare, so it could stop | Part of the game's code and its music buffer kept in upper memory, so there is much more to spare, and a warning in the dice log if it runs low (`Memory is running low: ...`) ([crash, freeze and item reports](README.md#crash-freeze-and-item-reports)) |
 

@@ -576,6 +576,10 @@ class DiceLog:
         # forgotten when that save is loaded (the clock goes back past it)
         self.picked_at: Dict[str, Optional[int]] = {}
         self._picked_changed = False
+        # whether the saved list was read (strictly): until it has been, none is saved (one saved
+        # from an empty start would put this session's tries in place of every earlier one)
+        self._picked_known = True
+        self._picked_retry = 0.0  # (when save_learned may next try reading the saved list)
         self._clock: Optional[int] = None  # (the game's clock at _forget_undone_picks' last look)
         self._mended_in: Optional[int] = None  # the area Kalzith's scrolls were last mended in
         self._party_done: set = set()  # the game's own party's changes made (defaultparty.py)
@@ -748,9 +752,12 @@ class DiceLog:
             flags = USE_ASK | (PICK_BUTTON if on else 0)
             self.guest.write(self.tsr_hdr + TSR_PICK_ON, struct.pack("<H", flags))
 
-    def load_picked(self, entries) -> None:
+    def load_picked(self, entries, known: bool = True) -> None:
         """The pockets tried, as remembered (settings.json): "key@game time" (or a bare key, from
-        an earlier version: forgotten the first time a game is loaded)."""
+        an earlier version: forgotten the first time a game is loaded). KNOWN false: the saved list
+        couldn't be read (settings.json held elsewhere): nothing is saved until save_learned has
+        read it and merged this session's tries in."""
+        self._picked_known = known
         self.picked, self.picked_at = set(), {}
         for entry in entries:
             key, at, when = entry.rpartition("@")
@@ -759,10 +766,26 @@ class DiceLog:
             self.picked.add(key)
             self.picked_at[key] = int(when) if when else None
 
+    def _merge_picked(self, entries) -> None:
+        """The saved list (read late: settings.json was held at the start) joined with this
+        session's tries, which win for a key in both; then marked known. Saved keys tried later
+        than the game's clock are forgotten as _forget_undone_picks would have."""
+        session, session_at = self.picked, self.picked_at
+        self.load_picked(entries)
+        now = self._clock
+        for key in list(self.picked):
+            if now is not None and self.picked_at.get(key) is not None and self.picked_at[key] > now:
+                self.picked.discard(key)
+                self.picked_at.pop(key, None)
+        self.picked |= session
+        self.picked_at.update(session_at)
+        self._picked_changed = True
+
     def take_picked(self) -> Optional[List[str]]:
         """All the pockets tried, for the caller to remember in place of what it had (settings.json),
-        when they have changed since the last call; else None."""
-        if not self._picked_changed:
+        when they have changed since the last call; else None (and None while the saved list is
+        not known: kept for later)."""
+        if not self._picked_changed or not self._picked_known:
             return None
         self._picked_changed = False
         return sorted(key if self.picked_at.get(key) is None else f"{key}@{self.picked_at[key]}"
@@ -837,6 +860,14 @@ class DiceLog:
                                         self.guest.read(self.tsr_hdr + TSR_USE_WHO, 2))
             it = ring.Items(self.game)
             kind, index = it.thing(thing) if 0 <= thing < ring.THING_COUNT else (None, None)
+            if spellarrows.ARROWS_BY <= item < 0xFFFF and (item < PICKED_BY or self.pickpockets) \
+                    and not self._fighting():
+                # (the gate held, DOSBox paused, before anything is moved: then DSCLOG's answer
+                # looked at again. One it gave up waiting for (PICK_WAIT, the game gone its own
+                # way) is dropped, nothing moved and no pocket marked tried)
+                itemgate.hold(self.game)
+                if self.guest.read(self.tsr_hdr + TSR_USE_REPLY, 2) == seq:
+                    return []
             if spellarrows.ARROWS_BY <= item < PICKED_BY:
                 taken = True
                 if self._fighting():
@@ -890,8 +921,10 @@ class DiceLog:
         if self.tsr_hdr is not None:
             self.guest.write(self.tsr_hdr + TSR_LOOK_ON, struct.pack("<H", int(on)))
 
-    def use_settings(self, settings: dict) -> None:
-        """The Options tab's switches for the game, as saved (for the logs without a window)."""
+    def use_settings(self, settings: dict, picked_known: bool = True) -> None:
+        """The Options tab's switches for the game, as saved (for the logs without a window): read
+        strictly (an unreadable file isn't the defaults). PICKED_KNOWN false: SETTINGS isn't the
+        saved file (it couldn't be read), so its pockets list isn't either (load_picked)."""
         self._settings = settings
         self.monster_info = bool(settings.get("monster_info", True))
         self.arena_ring = settings.get("new_items", True) is not False  # (with the new items)
@@ -916,7 +949,7 @@ class DiceLog:
         self.stealth_gear = bool(settings.get("stealth_gear", True))
         self.ring_mode = rings.mode(settings)
         self.use_targeting = bool(settings.get("targeting", True))
-        self.load_picked(settings.get("pickpocketed", []))
+        self.load_picked(settings.get("pickpocketed", []), known=picked_known)
         self.rules = game.rules_from_settings(settings)
 
     def set_rules(self, rules: int) -> None:
@@ -1194,17 +1227,20 @@ class DiceLog:
         if len(ring) != nent * esize:
             raise DiceLogError(f"DSCLOG's ring read short ({len(ring)} of {nent * esize} bytes)")
         # the slots DSCLOG was writing as the ring was read: from the slot it was to write next as
-        # the header was read to the one it is to write next now. A slot being written has the
-        # marker 0xFFFF for its seq, which is also a real seq once in 65,536: there it is the
-        # marker (a half-written entry), except for the header's own seq 0xFFFF just published in
-        # the slot before the slot number moved on (the slot before it then holds 0xFFFE)
+        # the header was read to the one it is to write next now. None of them is taken, whatever
+        # seq it shows: one read with its old seq may have had its body written over while the
+        # read went on (ReadProcessMemory isn't atomic against DOSBox), and its old entry is lost
+        # either way (counted as missed). The one exception is the header's own entry, published
+        # in the slot before the slot number moved on (slot WIDX holding the header's seq); where
+        # that seq is 0xFFFF, which is also the marker of a slot being written, it is the entry
+        # only if the slot before it isn't marked too (it then holds 0xFFFE)
         widx_now = self._ring_header()[1]
         busy = {(widx + k) % nent for k in range((widx_now - widx) % nent + 1)}
         seqs = [struct.unpack_from("<H", ring, i * esize)[0] for i in range(nent)]
         entries = {}
         for i in range(nent):
-            if i in busy and seqs[i] == WRITING and not (
-                    i == widx and seq == WRITING and nent > 1 and seqs[(i - 1) % nent] != WRITING):
+            if i in busy and not (i == widx and seqs[i] == seq and (
+                    seq != WRITING or (nent > 1 and seqs[(i - 1) % nent] != WRITING))):
                 continue
             if 0 < (seqs[i] - self.last_seq) & 0xFFFF <= new:
                 entries[seqs[i]] = Entry.parse(ring[i * esize:(i + 1) * esize])
@@ -1631,6 +1667,13 @@ class DiceLog:
         the enemy chosen with Tab and the rings, dust."""
         if self.tsr_hdr is None:
             return []
+        # the game rules' tables first, each on its own: DSCLOG's cahulaks tangle (who is too big)
+        # and size rule (who is large) never left stale by a cosmetic step failing before them
+        for table in (self._big, self._large):
+            try:
+                table.update(self.game, self.tsr_hdr)
+            except (struct.error, IndexError, ValueError):
+                pass
         try:
             self._shadows.update(self.game, self.tsr_hdr, self.show_shadows, now,
                                  needed=self.show_dust or self.ring_mode != rings.OFF or self.combat_log
@@ -1642,8 +1685,6 @@ class DiceLog:
             out = self._targeting.update(self.game, self.tsr_hdr, self.use_targeting, foes)
             self._rings.update(self.game, self.tsr_hdr, self.ring_mode != rings.OFF, self._shadows.palettes,
                                self._targeting.chosen)
-            self._big.update(self.game, self.tsr_hdr)  # (the cahulaks' tangle: who is too big)
-            self._large.update(self.game, self.tsr_hdr)  # (the size rule: who is large)
             self._dust.update(self.game, self.tsr_hdr, self.show_dust, self._shadows.palettes)
             hdr = self.tsr_hdr
             self._ghosts.update(self.game, hdr, self.see_through, self._shadows.palettes,
@@ -2182,12 +2223,19 @@ class DiceLog:
         out, self._new_speakers = self._new_speakers, {}
         return out
 
-    def save_learned(self, add_speakers, set_picked) -> Tuple[Dict[int, str], bool]:
+    def save_learned(self, add_speakers, set_picked, get_picked=None) -> Tuple[Dict[int, str], bool]:
         """The portrait names learned and the pockets tried since the last call, saved with
         ADD_SPEAKERS and SET_PICKED (launch's: settings.json). A save that fails (OSError: the file
         held by an antivirus or a backup) is kept for the next call, not lost (a pocket forgotten
-        could be picked again). The names saved, and whether anything failed."""
+        could be picked again). While the saved list of pockets isn't known (load_picked), it is
+        read with GET_PICKED (strict: OSError if it can't be read; every couple of seconds) and
+        merged before anything is saved. The names saved, and whether anything failed."""
         failed = False
+        if not self._picked_known and get_picked is not None and time.monotonic() >= self._picked_retry:
+            try:
+                self._merge_picked(get_picked())
+            except OSError:
+                self._picked_retry = time.monotonic() + 2.0
         learned = self.take_speakers()
         if learned:
             try:

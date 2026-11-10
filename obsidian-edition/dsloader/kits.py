@@ -555,7 +555,7 @@ _NO_SHIELD = frozenset(range(5, 9)) | {11}  # (druids and the preserver: no shie
 # table would take the new class's place (a Seeker's or Justifier's priest slots, a Shinobi's
 # wizard ones); a warrior's THAC0 is a warrior class's already (Swashbuckler, Crusader, Battle
 # Mage, Mind Warrior); it needs a shield the class can't hold (Arena Champion, Sentinel), or a
-# two-handed melee weapon the class can't use (Brute: a psionicist's, an air cleric's); a Stalker's
+# two-handed melee weapon the class can't use (Brute: a psionicist's); a Stalker's
 # hiding would add to a thief's own (the thief); a Grove Warden's AC to a gladiator's own (the
 # gladiator); a Healer's sphere is water's only (the rangers of air, earth and fire). The game itself
 # keeps a priest from the other priest class and a ranger (good) from the druid (true neutral), so the
@@ -563,7 +563,7 @@ _NO_SHIELD = frozenset(range(5, 9)) | {11}  # (druids and the preserver: no shie
 _NOT_WATER = frozenset((1, 2, 3, 5, 6, 7, 13, 14, 15))
 DUAL_BANS = {SEEKER: _PRIEST, JUSTIFIER: _PRIEST, SHINOBI: frozenset((11,)),
              **{k: _WARRIOR for k in WARRIOR_THAC0},
-             CHAMPION: _NO_SHIELD, SENTINEL: _NO_SHIELD, BRUTE: frozenset((12, 1)),
+             CHAMPION: _NO_SHIELD, SENTINEL: _NO_SHIELD, BRUTE: frozenset((12,)),
              STALKER: frozenset((17,)), GROVE_WARDEN: frozenset((10,)), HEALER: _NOT_WATER}
 
 

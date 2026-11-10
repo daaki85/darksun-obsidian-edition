@@ -166,3 +166,11 @@ class AvengerHealTests(unittest.TestCase):
 
     def test_not_an_avenger(self):
         self.assertEqual(self.make(kits.HEALER), ([], {}))
+
+
+class BruteBanTests(unittest.TestCase):
+    def test_brute_may_dual_to_air_cleric(self):
+        """A Brute needs a two-handed melee weapon: a psionicist has none, an air cleric the cahulaks."""
+        from dsloader import kits
+        self.assertTrue(kits.dual_banned(kits.BRUTE, 12))
+        self.assertFalse(kits.dual_banned(kits.BRUTE, 1))

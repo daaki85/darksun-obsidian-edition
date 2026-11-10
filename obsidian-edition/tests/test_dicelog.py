@@ -1732,8 +1732,10 @@ class OtherTests(unittest.TestCase):
         struct.pack_into("<H", log.guest.mem, HDR + dicelog.TSR_RING_SEG, HDR // 16)  # (the ring's segment)
         for seq in (3, 4, 5, 6):  # 1 and 2 were overwritten
             struct.pack_into("<H", log.guest.mem, HDR + ring + ((seq - 1) % nent) * esize, seq)
-        self.assertEqual([e.seq for e in log.poll()], [3, 4, 5, 6])
-        self.assertEqual(log.missed, 2)
+        # (3 is in slot 2, the one DSCLOG writes next: it may be being written over as the ring is
+        # read, so it is lost with 1 and 2)
+        self.assertEqual([e.seq for e in log.poll()], [4, 5, 6])
+        self.assertEqual(log.missed, 3)
         self.assertEqual(log.poll(), [])
 
 
@@ -2919,3 +2921,110 @@ class DestroyedTests(unittest.TestCase):
             log._tally_end(dicelog.FIGHT_OVER + 1)
         log._tally.end.assert_called_once()
         self.assertEqual(log._destroyed, {})
+
+
+class Audit2Tests(unittest.TestCase):
+    """The second audit's fixes in the dice log: the pockets list never saved before the saved one
+    was read; a torn ring slot not taken; the size tables kept up whatever the cosmetic steps do;
+    a use answer DSCLOG gave up waiting for not carried out."""
+
+    def test_pockets_not_saved_until_the_saved_list_is_read(self):
+        """settings.json held at the start: this session's tries are kept, not saved over the
+        file's list; once the list can be read it is joined with them and saved whole."""
+        log = make_game()
+        log.load_picked([], known=False)
+        set_clock(log, 1000)
+        log.lines(now=1.0)  # (the game's clock seen)
+        log._remember_pick("Dag|41|9|Slave")
+        saved = []
+        self.assertEqual(log.save_learned(lambda names: None, saved.append), ({}, False))
+        self.assertEqual(saved, [])  # (no way to read the list given: nothing saved)
+
+        def held():
+            raise OSError("in use")
+        log.save_learned(lambda names: None, saved.append, held)
+        self.assertEqual(saved, [])
+        log._picked_retry = 0.0
+        log.save_learned(lambda names: None, saved.append, lambda: ["Dag|41|7|Trader@500", "Dag|41|8|Guard@5000"])
+        # (the file's Guard tried at 5000, later than this game's clock: another game's, forgotten)
+        self.assertEqual(saved, [["Dag|41|7|Trader@500", "Dag|41|9|Slave@1000"]])
+        self.assertEqual(log.picked, {"Dag|41|7|Trader", "Dag|41|9|Slave"})
+        log._remember_pick("Dag|41|8|Guard")
+        log.save_learned(lambda names: None, saved.append, lambda: self.fail("read again"))
+        self.assertEqual(saved[-1], ["Dag|41|7|Trader@500", "Dag|41|8|Guard@1000", "Dag|41|9|Slave@1000"])
+
+    def test_use_settings_from_an_unread_file(self):
+        log = make_game()
+        log.use_settings({}, picked_known=False)
+        log._remember_pick("Dag|41|9|Slave")
+        self.assertIsNone(log.take_picked())
+        log.use_settings({"pickpocketed": ["Dag|41|7|Trader@500"]})
+        self.assertEqual(log.picked, {"Dag|41|7|Trader"})
+
+    def test_a_slot_written_during_the_read_is_not_taken(self):
+        """DSCLOG wrote slot 0 while the ring was read: the old entry 5 the read found there may be
+        torn (its seq old, its body new), so it isn't taken, nor 6 in the slot after (being
+        written next): both counted as missed."""
+        log = make_game()
+        log.last_seq = 4
+        m, nent, ring = log.guest.mem, 4, 0x100
+        struct.pack_into("<5H", m, HDR + 8, 8, 0, nent, Entry.SIZE, ring)
+        struct.pack_into("<H", m, HDR + dicelog.TSR_RING_SEG, HDR // 16)
+        for slot, seq in enumerate((5, 6, 7, 8)):
+            struct.pack_into("<HHHH", m, HDR + ring + slot * Entry.SIZE, seq, 0, 0, seq * 10)
+        real, reads = log.guest.read, []
+
+        def read(addr, size):
+            got = real(addr, size)
+            if addr == HDR and size == 24:
+                reads.append(1)
+                if len(reads) == 2:  # (after the ring: seq 9 written in slot 0, slot 1 next)
+                    got = got[:8] + struct.pack("<HH", 9, 1) + got[12:]
+            return got
+        log.guest.read = read
+        self.assertEqual([(e.seq, e.raw) for e in log.poll()], [(7, 70), (8, 80)])
+        self.assertEqual(log.missed, 2)
+
+    def test_size_tables_kept_up_when_a_cosmetic_step_fails(self):
+        log = make_game()
+        log._shadows = mock.Mock()
+        log._shadows.update.side_effect = IndexError("a half-made palette")
+        log._big, log._large = mock.Mock(), mock.Mock()
+        self.assertEqual(log._drawn(1.0), [])
+        log._big.update.assert_called_once_with(log.game, HDR)
+        log._large.update.assert_called_once_with(log.game, HDR)
+        log._big.update.side_effect = ValueError("short read")  # (one table failing: the other still made)
+        log._drawn(2.0)
+        self.assertEqual(log._large.update.call_count, 2)
+
+    def test_a_pick_given_up_on_is_not_carried_out(self):
+        """DSCLOG gave up waiting (its PICK_WAIT) while the Loader held the item gate: nothing is
+        tried, moved or written, and no pocket marked tried."""
+        from dsloader import pickpocket
+        log = make_game()
+        m = log.guest.mem
+        struct.pack_into("<H", m, HDR + dicelog.TSR_USE_ITEM, dicelog.PICKED_BY)
+        struct.pack_into("<H", m, HDR + dicelog.TSR_USE_WHO, 0x30)
+        struct.pack_into("<H", m, HDR + dicelog.TSR_USE_SEQ, 1)
+        struct.pack_into("<H", m, HDR + dicelog.TSR_USE_TAKEN, 7)
+        log.pickpockets = True
+
+        def give_up(gd):  # (the gate's wait: DSCLOG's time ran out meanwhile)
+            struct.pack_into("<H", m, HDR + dicelog.TSR_USE_REPLY, 1)
+        items = mock.Mock()
+        items.return_value.thing.return_value = (2, 5)
+        with mock.patch.object(dicelog.itemgate, "hold", give_up), mock.patch.object(dicelog.ring, "Items", items), \
+                mock.patch.object(log, "_fighting", return_value=False), \
+                mock.patch.object(pickpocket, "attempt") as attempt:
+            self.assertEqual(log._answer_use(), [])
+        attempt.assert_not_called()
+        self.assertEqual(struct.unpack_from("<H", m, HDR + dicelog.TSR_USE_TAKEN)[0], 7)
+        self.assertEqual(log.picked, set())
+        struct.pack_into("<H", m, HDR + dicelog.TSR_USE_SEQ, 2)  # (asked again, and answered in time)
+        with mock.patch.object(dicelog.itemgate, "hold"), mock.patch.object(dicelog.ring, "Items", items), \
+                mock.patch.object(log, "_fighting", return_value=False), \
+                mock.patch.object(pickpocket, "attempt", return_value=pickpocket.Attempt("Dag fumbles.", [])) as attempt:
+            log._answer_use()
+        attempt.assert_called_once()
+        self.assertEqual(struct.unpack_from("<H", m, HDR + dicelog.TSR_USE_REPLY)[0], 2)
+
