@@ -131,10 +131,11 @@ def shorter_blade(rows: Rows, steps: int = 4) -> Rows:
 # Staff's (2157) 27; Balk's Staff's (2143) 24; the Gythkas' (2287, 2254: 23; 2384: 22); a Stone pick's
 # (1494) 19; the Quarterstaffs' (2392, 2255), the Cahulaks' (2334) and the Striker's (1199) 18. The
 # Loader's own made from them: the Cahulaks +1's shining copy (2653, SHINE's) and Kreenfang's (2447),
-# the Metal Polearm's (2513), Linebreaker's (2571) and Thornwall's (2573), ICONS'.
+# the Metal Polearm's (2513), Linebreaker's (2571) and Thornwall's (2573), the Metal Cahulaks' (2671) and
+# the Cahulaks +2's (2673), ICONS'.
 BOX_PICTURE = 16
 BOX_TALL = (2383, 2311, 2157, 2143, 2287, 2254, 2384, 1494, 2392, 2255, 2334, 1199,
-            2653, 2447, 2513, 2571, 2573, 2671)
+            2653, 2447, 2513, 2571, 2573, 2671, 2673)
 BOX_SMALL = 2900  # (BOX_TALL[i]'s copy is BOX_SMALL + i: numbers no picture of the game's has)
 
 
@@ -404,6 +405,10 @@ ICONS: Tuple[Tuple[str, int, int, int, Callable[[Rows], Rows]], ...] = (
     ("Metal Pick", 0xFB46, 2510, 2511, lambda r: recolour(r, STONE_TO_METAL)),
     ("Metal Polearm", 0xFB5E, 2512, 2513, lambda r: recolour(r, LIGHT_TO_METAL)),
     ("Metal Cahulaks", 0xFB5C, 2670, 2671, lambda r: recolour(r, LIGHT_TO_METAL)),  # (the champions' mul's)
+    # the caravan's Cahulaks +2 (worldgear.cahulaks_chunks): its own picture, every pixel of its blades
+    # in the water's colours, where Legcrusher's Cahulaks +1 (the game's object) shines every other in
+    # the fire's
+    ("Cahulaks +2", 0xFB5C, 2672, 2673, lambda r: glow(r, lambda p, x, y: 210 <= p <= 213, WATER)),
     # the circlet and the crown (worldgear.py), drawn; on the map, the Ring's
     ("Arrowbane", 0xFA1C, 2514, 2515, circlet_icon),
     ("Sunking Crown", 0xFA1C, 2516, 2517, crown_icon),

@@ -24,7 +24,7 @@ ICONS: Dict[str, int] = {
     "tome-of-understanding": 1446, "kalzith-scroll": 1440, "gythka-plus2": 2534,
     # the game's magic items
     "swiftbite": 2641, "draketooth": 30002, "hornblade": 2270, "gythka-plus3": 2271, "mace-plus2": 2642,
-    "polearm-plus1": 1577, "cahulaks-plus1": 30003, "cahulaks-plus2": 30003, "dragonsbane": 2605, "els-drinker": 30001,
+    "polearm-plus1": 1577, "cahulaks-plus1": 30003, "cahulaks-plus2": 2672, "dragonsbane": 2605, "els-drinker": 30001,
     "dags-dagger": 30005, "soulcrusher": 1607, "axe-plus1": 2284, "dark-flame": 30000, "bloodwrath": 1576,
     "terror-blade": 2041, "blackmace": 30006, "quarterstaff-plus2": 2272, "balks-staff": 30004,
     "parting-staff": 30044, "great-axe-plus3": 1018, "bow-plus2": 1039, "phrains-bow": 30007,

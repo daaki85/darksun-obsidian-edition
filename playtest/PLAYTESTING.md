@@ -1010,6 +1010,10 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   EDIT NAME menu opened (it then blocks every click; Escape posted after it didn't close it in step);
   **1-4** (the table at 6FDD0h + 1E3Bh) give event 7, which doesn't draw the shown member again.
   `symread.py NAME...` reads DSCLOG's variables in the running game by name.
+  **An item's icon in the game** (same day): write a held item's +0 (minus the object: -2672 the
+  Cahulaks +2's) and +0Ah (its type) through live.py (the items at the far pointer DS:165Dh, 15h
+  bytes each; Lex's 43 the right hand, 36 the missile slot in `fountain-user`), then I and the
+  member's portrait: the slot draws the object's icon (the box's text stays the old item's).
 - **Lots of items on the ground** (2026-11-09, logs/2026-11-09-picture-slot-reuse.md): `giveitems.py
   MEMBER N [FIRST]` gives items of different objects (each its own picture) into free backpack cells
   in memory (12 cells: then "no room"); `groundfill.sh CYCLES [FIRST]` gives Gerakis 12 and DROPs

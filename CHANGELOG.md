@@ -66,6 +66,11 @@ DSCLOG.EXE 67,680 bytes (image 67,648), 896 of its segment spare.
   dice log notes both. Seen in DOSBox: "1d12 for 1d8: a large target", "1d3 for 1d4", "Guard is too
   big for Hold Person -> unaffected", a man-sized foe's save as before
   (playtest/logs/2026-11-10-creature-size.md). +320 bytes of the segment, +66 of the tail
+- **Each magic cahulaks its own glow**: the caravan's Cahulaks +2 now has an object and a picture of
+  its own (icons.ICONS' "Cahulaks +2", object 2672, picture 2673 and its item box copy, DSCLOG's
+  BOX_TALL): every pixel of its blades in the water's blues, where Legcrusher's Cahulaks +1 keeps the
+  game's object's fire shimmer on every other. ITEMS.md's two rows say what each is, not how it
+  was made. Seen in DOSBox (the two objects put on Lex's items in memory: the inventory and the box)
 - **The large dice in the item box** (the creature size rule; DSCLOG's SIZE_LINE at 72AA7h, after
   7286Fh draws a weapon's damage line, and SIZE_PRE at 72A8Ah, before it): an item box's damage line
   `1D8-1/1D12-1`; Shillelagh's line `1D6+1` (AD&D's against smaller foes; the game's 2D4 its large),

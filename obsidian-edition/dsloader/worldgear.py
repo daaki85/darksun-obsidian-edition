@@ -417,7 +417,7 @@ BASE_TYPES = {game.SHORT_SWORD_TYPE: 63, game.CLOAK_TYPE: 65, game.BONE_HELM_TYP
 
 # The cahulaks (with the new magic weapons): Legcrusher's two clubs a Cahulaks +1 (a copy of the
 # game's, its shining icon with it, without its Cause Light Wounds: a plain +1); the elven caravan's buried Cahulaks
-# +1 made +2; the arena's dead body, which kept a plain bone gythka once Kreenfang went to the
+# +1 made +2, with an object and a glow of its own (icons.ICONS' "Cahulaks +2"); the arena's dead body, which kept a plain bone gythka once Kreenfang went to the
 # champions, plain bone cahulaks.
 CAHULAKS_PLUS_OBJECT = 30003  # (the game's Cahulaks +1: its object, its icon's)
 LEGCRUSHER_CLUB = 18
@@ -429,7 +429,7 @@ def _is_object(obj: int):
 
 
 def cahulaks_chunks(chunks, out: Dict[Tuple[str, int], bytes], champions_on: bool) -> Dict[Tuple[str, int], bytes]:
-    from . import arms, champions, dataitems, npcitems
+    from . import arms, champions, dataitems, icons, npcitems
     new: Dict[Tuple[str, int], bytes] = {}
     chest = ("RDFF", CARAVAN_CHEST)
     plus1 = next((r for r in dataitems.items_of(out.get(chest, chunks.get(chest, b"")))
@@ -440,6 +440,7 @@ def cahulaks_chunks(chunks, out: Dict[Tuple[str, int], bytes], champions_on: boo
 
     def plus2(rec: bytes) -> bytes:
         rec = bytearray(rec)
+        struct.pack_into("<H", rec, 0, icons.PICTURES["Cahulaks +2"])  # (its own object: its own glow)
         rec[game.ITEM_PLUS] = 2
         struct.pack_into("<H", rec, arms.ITEM_VALUE, CAHULAKS_PLUS2_VALUE)
         return bytes(rec)

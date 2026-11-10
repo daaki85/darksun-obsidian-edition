@@ -16548,7 +16548,7 @@ box_pic:
         pop si
         iret
 box_tall dw 2383, 2311, 2157, 2143, 2287, 2254, 2384, 1494, 2392, 2255, 2334, 1199  ; (the game's)
-         dw 2653, 2447, 2513, 2571, 2573, 2671  ; (the Loader's own: icons.BOX_TALL)
+         dw 2653, 2447, 2513, 2571, 2573, 2671, 2673  ; (the Loader's own: icons.BOX_TALL)
 BOX_TALL_COUNT equ ($ - box_tall) / 2
 
 ; PIC_REUSE: the game's picture cache (DSUN.EXE 25FA6h, a WALL or BMP chunk's slot) has 300 slots,

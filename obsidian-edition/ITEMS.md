@@ -44,8 +44,8 @@ Belt of Might making STR at least 24.
 | ![](docs/items/gythka-plus3.png) | Bone | gythka | Gythka +3 | +3 | carried by **Hototo**, chief of the White Sand Outlaws who burst from the sand (fought if the talk goes wrong; the mod's); and the arena's [1000th trip](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights), King Tectuktitlay's gift |
 | ![](docs/items/gythka-plus2.png) | Bone | gythka | ***Gythka +2*** | the game's Gythka +1, made +2 | the **Elven Leader**'s gift, after the fight with his men (he carries it too) |
 | ![](docs/items/kreenfang.png) | Bone | gythka | ***Kreenfang*** | a gythka +1 (2d4+1) | carried by the **Tohr-kreen** leading the champions in the arena, after **Scar** is killed ([the champions' bout](FEATURES.md#the-champions-bout)) |
-| ![](docs/items/cahulaks-plus2.png) | Bone | cahulaks | ***Cahulaks +2*** | the game's Cahulaks +1, made +2; Cause Light Wounds | the caravan's buried chest |
-| ![](docs/items/cahulaks-plus1.png) | Bone | cahulaks | ***Cahulaks +1*** | +1 (the game's, without its Cause Light Wounds) | carried by **Legcrusher**, the pens' half-giant monster trainer, in place of his two clubs (the mod's) |
+| ![](docs/items/cahulaks-plus2.png) | Bone | cahulaks | ***Cahulaks +2*** | +2; casts Cause Light Wounds on a hit (the game's Cahulaks +1, made +2); its blades glow blue | the caravan's buried chest |
+| ![](docs/items/cahulaks-plus1.png) | Bone | cahulaks | ***Cahulaks +1*** | +1; its blades glow in fire colours | carried by **Legcrusher**, the pens' half-giant monster trainer, in place of his two clubs (the mod's) |
 | ![](docs/items/dragonsbane.png) | Metal | long sword | Dragonsbane | +4 | Kraxis' sword, taken from his body after the final battle against Draj's army |
 | ![](docs/items/els-drinker.png) | Metal | long sword | El's Drinker | +2, Vampiric Touch | the safe in Gedron, with 2,000 ceramic pieces; and the arena's [1000th trip](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights), King Tectuktitlay's gift |
 | ![](docs/items/dags-dagger.png) | Metal | dagger | Dag's Dagger | +3, CHA +1 | Dagolar |
