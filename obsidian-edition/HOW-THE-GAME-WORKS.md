@@ -464,7 +464,7 @@ on by default, which changes wizard spells and psionic powers too: its table lis
 | Cause Disease | saps STR and HP; save | Diseased on a failed save: nothing is lowered; a STR something else lowered stays down until it is cured | the save and the effect |
 | Conjure Lesser Elemental (four) | 1 turn + 1 round a level | summons one, 10 + 1 a level rounds | the summoning |
 | Cure Blindness or Deafness, Cure Disease | cure them | end Blind, Diseased | the effect ending |
-| Dispel Magic | removes spells | each effect separately, d100 at or under 50 + 5 x the dispeller's level − 5 x the effect's caster level (the levels of every effect of that kind on the target, usually one); can't touch Biofeedback, Diseased, Feeblemind, Synaptic Static, Mind Bar, Poisoned, Graft Weapon, No spell use, Stuck | each d100 |
+| Dispel Magic | removes spells | each effect separately, d100 at or under 50 + 5 x the dispeller's level − 5 x the effect's caster level (the levels of every effect of that kind on the target, usually one); can't touch Biofeedback, Diseased, Feeblemind, Synaptic Static, Mind Bar, Poisoned, Graft Weapon, No spell use, Stuck, nor any effect past 73 (it looks at 0 to 73 only: the mod's Friends, 74, and a stinkpot's Nauseated, 75) | each d100 |
 | Magical Vestments | AC 5, 1 better per 3 levels above 5; 5 rounds a level | the same | the effect |
 | Negative Plane Protection | stops one draining attack by undead | the game's own never worked; the patched game: a save against paralysis/poison/death stops one, and the undead takes 2d6 | the save and the effect |
 | Prayer | +1 to hit and saves for friends, −1 for foes; 1 round a level | the same | the effect, and each save's ±1 |

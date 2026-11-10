@@ -62,6 +62,7 @@ segment spare; `UMB_NEED` 6,380 paragraphs (1,802 spare), `UMB_KEPT` 8,002 (180 
   breakdown `-2 Nauseated`. (Tests: tests/test_stinkpots.py; `test_to_hit_effects`. Seen in the game
   2026-11-10: a held target nauseated, a free one's save, a nauseated attacker's -2,
   playtest/logs/2026-11-10-stinkpots.md.)
+  Dispel Magic doesn't end Nauseated: the game's weighs only effects 0 to 73 (its loop, 7936Ch).
 
 **Changed**
 - **The pick is the footman's pick and the axe the battle axe** (*Player's Option: Skills & Powers*,

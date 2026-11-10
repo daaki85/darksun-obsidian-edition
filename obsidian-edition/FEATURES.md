@@ -1037,7 +1037,8 @@ is one:
   −2 on its attack rolls. The Effects screen, the Look box and the portrait's status name it
   NAUSEATED. Undead, and anything immune to poison, are unaffected. A second stinkpot on a
   nauseated creature brings its own rounds, which run beside the first's: the −2 lasts until the
-  last of them ends, and never doubles.
+  last of them ends, and never doubles. It is fumes, not magic: Dispel Magic doesn't end it (the
+  game's Dispel Magic weighs only effects 0 to 73, and Nauseated is 75).
 
 Untick it and the staff sling is the game's: 1d4, no fumes (a creature already nauseated stays so
 until its rounds run out). The dice log names the save and what came of it:
