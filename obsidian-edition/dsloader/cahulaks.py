@@ -18,7 +18,11 @@ BIG_BYTES = MAP_COUNT // 8 + 1
 SHAPELESS = frozenset((
     "Air Elemental", "Earth Elemental", "Water Elemental", "Fire Elemental", "Lesser Air Eleme",
     "Lesser Water Ele", "Lsr Earth Elem", "Lsr Fire Elem", "Dust Devil", "Insect Swarm",
-    "Evard's Tentacle", "Dagolar Slime", "Tyrian Slime", "Shadow",
+    "Evard's Tentacle", "Dagolar Slime", "Tyrian Slime",
+    # the shadows: the Shadow (kind 15) and the greater shadows (kind 13, the 6-HD Shadow too), bodiless
+    # as AD&D has them
+    "Shadow", "Shadow Guard", "Shadow King", "Shadow Prince", "Shadow Worker", "Cragg", "Tanelyv", "Tristram",
+    "Tynan",
 ))
 # ... and those the mod keeps from being tangled whatever their size: the spiders (the Dark Spider,
 # the Spider Mage and the "-tunk!" princes of their kind) and other beasts of Athas

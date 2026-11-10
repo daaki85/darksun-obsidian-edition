@@ -15,7 +15,8 @@ which loads the mod with your options.
   wrong](#when-something-goes-wrong).
 - **Everything in detail:** the contents below, and
   - [features and rules](FEATURES.md): what the game shows, every rule and addition;
-  - [kits](KITS.md): every kit's gains, costs and starting gear;
+  - [kits and weapon specs](KITS.md): every kit's gains, costs and starting gear, and weapon
+    specialization;
   - [items](ITEMS.md) (spoilers): every item and where it is;
   - [creatures](CREATURES.md) (spoilers): every one, its size, and whether cahulaks can tangle it;
   - [the game's bugs, fixed](GAME-BUGS.md) (some spoilers): every bug of the original game the mod mends;

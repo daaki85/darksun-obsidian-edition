@@ -156,7 +156,7 @@ Made from the game's own data by `dsloader/doccreatures.py`; the sizes are in `d
 | ![](docs/creatures/churr-te-tunk-monster.png) | Churr-te-tunk! | monster | L (large) ? | no: too big |
 | ![](docs/creatures/click-tunk-monster.png) | Click-tunk! | monster | L (large) ? | no: too big |
 | ![](docs/creatures/convert-undead.png) | Convert | undead | M (man-sized) | yes |
-| ![](docs/creatures/cragg-undead.png) | Cragg | undead | M (man-sized) | yes |
+| ![](docs/creatures/cragg-undead.png) | Cragg | undead | M (man-sized) | no: nothing to tangle |
 | ![](docs/creatures/daggoran-monster.png) | Daggoran | monster | L (large) ? | no: too big |
 | ![](docs/creatures/dagolar-slime-monster.png) | Dagolar Slime | monster | M (man-sized) | no: nothing to tangle |
 | ![](docs/creatures/dark-spider-monster.png) | Dark Spider | monster | L (large) | no: too big |
@@ -188,10 +188,10 @@ Made from the game's own data by `dsloader/doccreatures.py`; the sizes are in `d
 | ![](docs/creatures/sand-howler-monster.png) | Sand Howler | monster | M (man-sized) ? | no: can't be tangled |
 | ![](docs/creatures/screamer-beetle-monster.png) | Screamer Beetle | monster | L (large) ? | no: too big |
 | ![](docs/creatures/shadow-undead.png) | Shadow | undead | M (man-sized) | no: nothing to tangle |
-| ![](docs/creatures/shadow-guard-undead.png) | Shadow Guard | undead | M (man-sized) | yes |
-| ![](docs/creatures/shadow-king-undead.png) | Shadow King | undead | M (man-sized) | yes |
-| ![](docs/creatures/shadow-prince-undead.png) | Shadow Prince | undead | M (man-sized) | yes |
-| ![](docs/creatures/shadow-worker-undead.png) | Shadow Worker | undead | M (man-sized) | yes |
+| ![](docs/creatures/shadow-guard-undead.png) | Shadow Guard | undead | M (man-sized) | no: nothing to tangle |
+| ![](docs/creatures/shadow-king-undead.png) | Shadow King | undead | M (man-sized) | no: nothing to tangle |
+| ![](docs/creatures/shadow-prince-undead.png) | Shadow Prince | undead | M (man-sized) | no: nothing to tangle |
+| ![](docs/creatures/shadow-worker-undead.png) | Shadow Worker | undead | M (man-sized) | no: nothing to tangle |
 | ![](docs/creatures/shaman-follower-monster.png) | Shaman Follower | monster | M (man-sized) | yes |
 | ![](docs/creatures/silt-horror-monster.png) | Silt Horror | monster | G (gargantuan) | no: too big |
 | ![](docs/creatures/silt-runner-monster.png) | Silt Runner | monster | S (small) | yes |
@@ -204,11 +204,11 @@ Made from the game's own data by `dsloader/doccreatures.py`; the sizes are in `d
 | ![](docs/creatures/ssurran-monster.png) | Ssurran | monster | M (man-sized) | yes |
 | ![](docs/creatures/strine-monster.png) | Strine | monster | M (man-sized) ? | no: can't be tangled |
 | ![](docs/creatures/styr-monster.png) | Styr | monster | L (large) ? | no: too big |
-| ![](docs/creatures/tanelyv-undead.png) | Tanelyv | undead | M (man-sized) | yes |
+| ![](docs/creatures/tanelyv-undead.png) | Tanelyv | undead | M (man-sized) | no: nothing to tangle |
 | ![](docs/creatures/taras-follower-undead.png) | Tara's Follower | undead | M (man-sized) | yes |
 | ![](docs/creatures/tribesman-monster.png) | Tribesman | monster | M (man-sized) | yes |
-| ![](docs/creatures/tristram-undead.png) | Tristram | undead | M (man-sized) | yes |
-| ![](docs/creatures/tynan-undead.png) | Tynan | undead | M (man-sized) | yes |
+| ![](docs/creatures/tristram-undead.png) | Tristram | undead | M (man-sized) | no: nothing to tangle |
+| ![](docs/creatures/tynan-undead.png) | Tynan | undead | M (man-sized) | no: nothing to tangle |
 | ![](docs/creatures/tyrian-slime-monster.png) | Tyrian Slime | monster | M (man-sized) | no: nothing to tangle |
 | ![](docs/creatures/undermt-folk-monster.png) | Undermt Folk | monster | S (small) ? | yes |
 | ![](docs/creatures/vrock-monster.png) | Vrock | monster | L (large) | no: too big |

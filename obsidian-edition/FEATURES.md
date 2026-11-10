@@ -46,7 +46,7 @@ running the game, the Loader's window and its dice log are in the
     - [Creature size](#creature-size)
     - [Held targets](#held-targets)
     - [Rings and cloaks of protection](#rings-and-cloaks-of-protection)
-    - [Helms](#helms)
+    - [Helms give AC 1](#helms-give-ac-1)
     - [Items saving against acid](#items-saving-against-acid)
   - [Magic](#magic)
     - [Rangers' casting level](#rangers-casting-level)
@@ -59,7 +59,7 @@ running the game, the Loader's window and its dice log are in the
     - [Resting as in AD&D](#resting-as-in-add)
 - [More character customization](#more-character-customization)
   - [Weapon specialization](#weapon-specialization)
-  - [Kits](#kits) (a page of its own: [Kits](KITS.md))
+  - [Kits](#kits) (a page of its own: [Kits and weapon specs](KITS.md))
   - [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen)
   - [Fuller starting gear](#fuller-starting-gear)
   - [Preservers' first spells](#preservers-first-spells)
@@ -371,7 +371,7 @@ points:
 - **KITS**, at the end of the disciplines' or spheres' panel
   ([choosing a kit](KITS.md#choosing-a-kit)); after DONE, the weapon window
   for a warrior's weapon specs
-  ([weapon specialization](#weapon-specialization)).
+  ([weapon specialization](KITS.md#choosing-at-creation)).
 
 A picture of it: [STORE and RECALL](#store-and-recall-on-the-creation-screen).
 How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#the-creation-screen).
@@ -848,11 +848,11 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#level-cap-by-xp).
 |---|---|---|
 | [Two weapons](#two-weapons) | no penalty (a small bonus at DEX 5 or less), and each hand attacks at the whole rate | −2 main hand, −4 off hand, DEX's reaction adjustment added; rangers, Twin-blades and Battle Dancers none in light armour, a Justifier none in any, a Ghetto Fighter 0 and −2; the off hand attacks once a round |
 | [Half-giants' two-handed weapons](#half-giants-two-handed-weapons) | two hands for a two-handed weapon, as for anyone | a half-giant wields a two-handed weapon in one hand |
-| [Cahulaks](#cahulaks) | a plain two-handed 1d6 weapon | a head in each hand: one attack more a round at −2 and −4 (DEX added); a hit tangles a man-sized or smaller foe that fails a save against petrification: it loses its next turn |
+| [Cahulaks](#cahulaks) | a plain two-handed 1d6 weapon | a head in each hand: one attack more a round at −2 and −4 (DEX added); a hit tangles a man-sized or smaller foe (not anyone Enlarged) that fails a save against petrification: it loses its next turn |
 | [Creature size](#creature-size) | no sizes: a weapon does the same to a halfling and a Bulette; Hold Person and Charm Person take on a half-giant | a large target (a half-giant, a large monster, anyone Enlarged) takes AD&D's large weapon dice (a long sword 1d12); Hold Person, Charm Person and Charm Person or Mammal (on a person) don't take on it |
 | [Held targets](#held-targets) | a blow on a held or Out Cold creature rolls to hit as ever and does double damage | it hits automatically and does normal damage, as AD&D's held target |
 | [Rings and cloaks of protection](#rings-and-cloaks-of-protection) | no rings or cloaks of protection of its own; the mod's count in full, whatever else is worn | two rings don't add up, a ring gives no AC with magical armour, a cloak does nothing with magical or metal armour or a shield |
-| [Helms give AC 1](#helms) | AC 0 | the game's helms give AC 1 rather than 0 |
+| [Helms give AC 1](#helms-give-ac-1) | AC 0 | the game's helms give AC 1 rather than 0 |
 | [Items saving against acid](#items-saving-against-acid) | armour without a magical power destroyed outright, its plus ignored; a weapon on a d20 under 8 less its plus | an item the acid or corroding touch could destroy needs the easier of the game's number and AD&D's save by material, a plus helping |
 
 #### Two weapons
@@ -923,7 +923,7 @@ rules have them** ticked (on unless unticked):
   [Creature size](#creature-size) is ticked), nor anyone Enlarged (large while
   the spell lasts), nor anything with no body a
   rope could hold (elementals, the Dust Devil, the Insect Swarm, Evard's
-  Tentacle, the slimes and the Shadow), nor two the mod keeps from it by name
+  Tentacle, the slimes, and the shadows, greater ones too), nor two the mod keeps from it by name
   (the Sand Howler and the Strine).
 
 The game keeps no size for its creatures, so who is too big is the mod's call,
@@ -967,6 +967,12 @@ their kind...), and **anyone Enlarged**, whatever their size.
   | Axe, quarterstaff, cahulaks, bow, sling, staff sling | as the game | the same |
   | Shillelagh | 1d6+1 (the game: 2d4) | 2d4 |
   | Spiritual Hammer | 1d4+1 | 1d4 |
+
+  Where the dice come from: AD&D 2nd Edition's *Player's Handbook* weapons table, each weapon by
+  the entry whose small and man-sized dice are the game's (its pick is the horseman's pick,
+  1d4+1/1d4, 4 lb as the game's 40); the chatkcha and the cahulaks from
+  [a Dark Sun weapons guide](https://www.geocities.ws/danach.geo/guide_1.html), which also gives a
+  thri-kreen's chatkcha its 2/1.
 
   Shillelagh's 2d4 is AD&D's against large creatures, so with the rule it rolls
   1d6+1 against smaller ones. A weapon's plus, STR, specialization and the rest
@@ -1030,7 +1036,7 @@ counts in full, whatever else is worn.
 
 How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#rings-and-cloaks-of-protection).
 
-#### Helms
+#### Helms give AC 1
 
 The game's helms count as armour but give AC 0. With **Helms give AC 1**
 ticked every helm gives 1, the game's and the mod's: the leather Helm (Kel
@@ -1038,7 +1044,7 @@ sells one as Dapartea's Helm), the leather helm +1, the Helm of Might, the
 metal Helm of Contemplation, the Bone Helm and the Warden's Helm. It shows on the View Character and inventory screens like
 any armour, and as `AC BONUS:1` in a helm's box (right-click it), worn or not.
 
-How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#helms).
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#helms-give-ac-1).
 
 #### Items saving against acid
 
@@ -1368,152 +1374,15 @@ fitted to these choices, come with them.
 ### Weapon specialization
 
 With **Weapon specialization** ticked, fighters, gladiators and rangers train
-in chosen weapon specs (weapon types), as in AD&D. **Every ranger starts
-with expertise in the bow**, on top of the weapon spec it chooses.
-
-| Who | Chooses | With a weapon of a chosen weapon spec |
-|---|---|---|
-| **Fighter** (one class or more) | 1 weapon spec | specialized: +1 to hit, +2 damage; **mastery** from 5th fighter level (+3 to hit, +3 damage); **grand mastery** from 9th (the same, the damage die a size larger, d8 to d10, and one more attack a round) |
-| **Gladiator** | 2 weapon specs at creation, a 3rd at 6th level and a 4th at 9th | specialized in each: +1 to hit, +2 damage |
-| **Ranger** (one class or more) | **the bow from the start**, and 1 weapon spec (any but the bow) | expertise: the game's attacks a round in melee, a specialist's rate of fire with a missile weapon, no other bonus |
-
-The game already gives every fighter, gladiator and ranger the specialist's
-attacks in melee (3/2 a round, 2 from 7th level). With the rule, a warrior
-fighting with a weapon outside its chosen weapon specs gets AD&D's plain rate,
-half an attack less; with a chosen weapon spec it keeps the game's rate (a
-grand master one more).
-
-Missile weapons have a rate of fire of their own in the game, the same for
-everyone (a bow 2 a round, a sling, staff sling or chatkcha 1). A thri-kreen
-throws a chatkcha one more time a round, whatever the rule (2 instead of 1:
-AD&D's 2/1 for the thri-kreen's own weapon). With the rule,
-fighters and gladiators shoot faster with a chosen weapon spec, and rangers
-with theirs and every bow: AD&D's specialist's rate for the sling, a step above
-it for the bow, staff sling and chatkcha. From 7th level every warrior shoots
-its other missile weapons faster too, a step behind a specialist, as in melee
-(AD&D keeps the weapon's own rate). Mastery's and grand mastery's bonuses to
-hit and damage count for missiles too.
-
-**Attacks a round,** by skill and level (a warrior's level: the highest of its
-fighter, gladiator and ranger levels; a warrior class goes no higher than
-10th under the [XP cap](#level-cap-by-xp)):
-
-| Skill with the weapon | Who | Melee, levels 1–6 | Melee, levels 7–10 | Bow, levels 1–6 | Bow, levels 7–10 | Sling, staff sling or chatkcha, levels 1–6 | Sling, staff sling or chatkcha, levels 7–10 |
-|---|---|---|---|---|---|---|---|
-| none | non-warriors: clerics, druids, preservers, psionicists, thieves | 1 | 1 | 2 | 2 | 1 | 1 |
-| not a chosen weapon spec | any warrior | 1 | 3/2 | 2 | 3 | 1 | 3/2 |
-| expertise | a ranger: every bow, and its chosen weapon spec (a [Justifier](#kits)'s are specialized); a [Battle Mage](#kits), [Crusader](#kits) or [Mind Warrior](#kits): its chosen weapon spec (melee only, but a thri-kreen Mind Warrior's chatkcha; by its own class's level, a chatkcha by its warrior level) | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
-| specialized | a fighter's or gladiator's chosen weapon spec | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
-| mastery | a fighter's chosen weapon spec, from 5th level | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
-| grand mastery | a fighter's chosen weapon spec, from 9th level | | 3 | | 5 | | 3 |
-
-In a fight Haste doubles all of these and Slow halves them, rounded down (and a
-slowed character loses every other turn); the game's DAM lines and the
-Characters tab show them so.
-
-The sixteen weapon specs take in the game's weapons of every material and its
-named ones (Bloodwrath, Swiftbite and the like are long swords); gloves are
-none. The weapons spells make count for specialization as their AD&D weapon: the
-Flame Blade a long sword (AD&D's scimitar, which Athas hasn't), Shillelagh a
-club, Spiritual Hammer a mace (the war hammer's nearest). Class and kit
-restrictions leave them as the game has them: anyone who can cast the spell can
-hold its weapon.
-
-| Weapon specs (the weapon window's rows, from the top) |
-|---|
-| long sword, club, dagger, short sword |
-| mace, axe, great axe, pick |
-| quarterstaff, polearm, gythka, cahulaks |
-| chatkcha, bow, sling, staff sling |
-
-**Choosing at creation.** Press **DONE** on the character creation screen and
-a warrior (and a [Battle Mage](#kits), [Crusader](#kits) or
-[Mind Warrior](#kits)) picks its weapon specs on the weapon window, the one a
-level gained brings up (below), as a preserver picks its
-spells on CHOOSE A SPELL: a fighter or ranger one, a gladiator two, a
-[Myrmidon](#kits) two. A preserver warrior picks its spells first. A
-multiclass warrior can choose only the weapon specs its other class lets it
-use: those of which the game (or the Loader) has a weapon the character may
-use, in any material. The rest are greyed:
-
-| A warrior (fighter, gladiator or ranger)… | Weapon specs it can choose | Starts with |
-|---|---|---|
-| …of one class, or with thief, preserver or druid | all sixteen (a ranger all but the bow) | the game's bone long sword |
-| …with psionicist (small weapons) | club, dagger, short sword, mace, chatkcha, bow, sling | a wooden club |
-| …with air cleric (missile and thrown weapons, daggers) | dagger, chatkcha, bow, sling, staff sling | an obsidian dagger |
-| …with earth cleric (stone, obsidian, metal, wood) | long sword, club, dagger, short sword, mace, axe, great axe, pick, quarterstaff, polearm, chatkcha, bow (the polearm in the mod's metal) | an obsidian long sword |
-| …with fire cleric (obsidian) | long sword, dagger, short sword, mace, axe, great axe, chatkcha | an obsidian long sword |
-| …with water cleric (bone, wood) | long sword, club, dagger, short sword, mace, axe, great axe, quarterstaff, polearm, gythka, cahulaks, bow | the game's bone long sword |
-
-(The starting weapon is for the weapon spec picked first; the next table has the
-rest. A ranger never has the bow to choose: its expertise with the bow comes
-anyway.)
-
-**EXIT** leaves picks unmade, and the Loader picks them (a Myrmidon's second
-excepted: it stays unpicked): the kit's weapon (a
-Ghetto Fighter's or Poisoner's dagger, a Battle Dancer's long sword), a
-thri-kreen's chatkcha, else the long sword (a gladiator's second the club), each
-only if it may be chosen, else the first that may. EXIT can't go back to the
-creation screen: DONE has made the character by then.
-
-![After DONE on the creation screen: the weapon window over it, a picture of each weapon spec, PICK A WEAPON SPECIALTY, the new character's name, and the picks left (1) beside EXIT; the hit points and age below it](docs/creation-weapons.png)
-
-A new character starts the game with a plain weapon of its first weapon spec in
-place of the bone long sword the game gives warriors, in a material it may use,
-and the log says so (`Grog starts with a plain obsidian long sword for the
-weapon specialization chosen, in place of the bone long sword`):
-
-| Weapon spec | Starting weapon | For a cleric's sphere that can't use it |
-|---|---|---|
-| long sword | the game's bone long sword | obsidian (fire, earth) |
-| club, quarterstaff, bow | wooden (a bow with 20 arrows) | |
-| dagger, chatkcha | obsidian | a dagger: bone, the mod's (water) |
-| short sword | bone, the mod's | obsidian (fire, earth) |
-| mace, polearm, gythka, cahulaks | bone | a mace: obsidian, the game's plain Mace type with a picture of the mod's; a polearm: metal, the mod's (earth) |
-| axe | bone, the mod's | obsidian (fire, earth) |
-| great axe | bone, the mod's | obsidian (fire, earth) |
-| pick | stone | |
-| sling, staff sling | leather | |
-
-A two-handed weapon held in the hands puts the game's starting shield in the
-backpack (not a half-giant's, with
-[its rule](#half-giants-two-handed-weapons)). A bow or staff sling goes in the
-missile slot instead, and the shield stays, as the game asks nothing of the
-hands for it. The weapon is made once: a long sword handed to the character
-later stays one.
-
-**At a level gained.** A warrior with fewer weapon specs than it is due (a
-gladiator reaching 6th or 9th, or any warrior from a game begun before the rule)
-picks the rest the way a psionicist picks a new power: in the game's own pop-up,
-made bigger, a picture of each weapon spec on a slot, six to a row, those its
-classes can't use (or it has) greyed. The pointer on a slot names it under them
-(**SPECIALIZE IN** / **POLEARM**, or **EXPERT IN** where the pick would be
-expertise: a ranger's, a Battle Mage's, a Crusader's or Mind Warrior's; as
-CHOOSE A SPELL names a spell), and lights the slot if it can be picked; off the
-slots the title comes back. The picks left are beside **EXIT** (which asks, as
-for powers, whether to leave with picks unmade: they're offered again at the
-next level).
-
-![The level-up window: a slot with a picture for each weapon spec, the pointer on the dagger's, lit, and SPECIALIZE IN / DAGGER under them; the club, great axe, pick, quarterstaff and the rest greyed for a fighter/fire cleric](docs/weapon-picker.png)
-
-**Where it shows.** The **Effects** screen lists the selected character's
-weapon specs under its effects ("SPECIALIZED IN", "MASTER OF", "GRAND MASTER
-OF", "EXPERT IN"); View Character's DAM line and the inventory screen's weapon
-lines count it (a staff sling specialist's `1.5x1D4+2`); the Characters tab
-lists them (**Weapons: long sword (grand mastery)**) and gives the attacks a
-round with each weapon ready, a missile weapon's its own (**Attacks: 3/2 a
-round with Long Sword, 1 with Axe, 3 with Bow**); and the dice log names it on
-each attack (`+1 specialized`, `+3 grand mastery`,
-`(d10 for d8: grand mastery)`). Both lists end with a ranger's bow, which
-every ranger is an expert with, chosen or not; and View Character, as the game
-has it, gives a character's melee rate whatever weapon is ready.
-
-![The Effects screen: Daaki, a 9th-level fighter, GRAND MASTER OF LONG SWORD](docs/effects-weapons.png)
-
-A human who dual-classes keeps what it earned as a fighter, gladiator or
-ranger: its weapon specs, and the weapons it chose, whatever the new class (or
-a kit) allows, count again once the new class's level passes the old. Till
-then they are asleep, as the class is.
+in chosen weapon specs (weapon types), as in AD&D: a fighter specializes in
+one (+1 to hit, +2 damage), on to mastery at 5th level and grand mastery at
+9th; a gladiator in two, a third at 6th level and a fourth at 9th; a ranger
+has expertise in one and the bow. With a chosen weapon spec a warrior keeps
+the game's attacks a round and shoots missiles faster; with any other weapon
+it has AD&D's plain rate. Each warrior picks after DONE on the creation screen
+and starts with a plain weapon of its pick. The attacks a round, the choices,
+the starting weapons and where it shows are on the kits page: [Weapon
+specialization](KITS.md#weapon-specialization).
 
 How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#weapon-specialization).
 
@@ -1521,7 +1390,8 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#weapon-specialization)
 
 With **Kits** ticked, a character may take a kit when it is made, on the
 creation panel's **KIT** page. Who may take which, and every kit's gains, costs,
-starting gear and rules, are on a page of their own, [Kits](KITS.md):
+starting gear and rules, are on a page of their own, [Kits and weapon
+specs](KITS.md):
 
 | Class | Kits |
 |---|---|
@@ -2116,7 +1986,7 @@ sword at all, no bone or obsidian axe or great axe, no bone dagger, few plain
 metal weapons and no magic club, pick or staff sling. The mod also places
 armour the game has but never placed: the rest of the bone scale set (the game
 places only its chest piece), with a **Bone Helm** of the mod's (AC 1 with
-[Helms give AC 1](#helms), worn by those who can wear the armour, not
+[Helms give AC 1](#helms-give-ac-1), worn by those who can wear the armour, not
 thieves), and the game's leather **Helm**: where, in [Every mundane armour
 piece](ITEMS.md#every-mundane-armour-piece). And the game's own **Polearm +1**,
 which it defines but never places or gives (the cluebook puts it in the Elven
@@ -2158,7 +2028,7 @@ off its poisoned needle (2d6 poison). How, in
 [Items](ITEMS.md#pehtucls-chest). A new game only.
 
 The bone and obsidian weapons are also new characters' starting weapons with
-[weapon specialization](#weapon-specialization), each in a material the
+[weapon specialization](KITS.md#starting-weapons), each in a material the
 character can use. Dunesong, the bow +1 the Bowyer sells, counts at his
 archery target as the game's own bows do ([the target's
 rules](HOW-THE-GAME-WORKS.md#the-bowyers-archery-target)).
@@ -2611,8 +2481,7 @@ them when pressed a second time. **U** on the inventory, or **I** on USE,
 switches to the other screen, as in the game. After a click on a screen's
 buttons or another key, the next **U** or **I** works as in the game.
 
-How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#scrolling-the-map) (its
-paragraph on M, U and I).
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#m-u-and-i-open-a-screen-close-it-again).
 
 ### The whole party in view
 
@@ -2625,21 +2494,18 @@ until the next fight or load. On by default: **The whole party in view as a
 game starts or loads and after each fight** on the Options tab, from the next
 start.
 
-How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#scrolling-the-map) (its
-paragraph on the whole party in view).
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#the-whole-party-in-view).
 
 ### The view in fights
 
 The game moved the view after a figure walking in a fight as soon as it came
 near the screen's edge, a step at a time, so the view drifted after every
 figure that walked, monsters' too. Now it moves only once the figure has
-walked off the screen, to bring it back into view (on by default: **In a
-fight, the view moves to a figure only when it walks off the screen** on the
-Options tab, from the next start). Out of fights the view follows the party
+walked off the screen, to bring it back into view (on by default: **The view
+in fights** on the Options tab, from the next start). Out of fights the view follows the party
 as the game has it.
 
-How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#scrolling-the-map) (its part
-on the view in a fight).
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#the-view-in-fights).
 
 ### The pointer in scenes, and where it starts
 
@@ -2662,7 +2528,8 @@ moved, too fast and coarse to put an item where you meant in the inventory.
 
 ![The game's pointer in the SSI logo before the intro, and on the king's decree that opens a new game](docs/scene-pointer.png)
 
-Each has its switch on the Options tab, on by default (from the next start).
+Each has its switch on the Options tab (**The pointer in scenes** and **Where
+the pointer starts**), on by default (from the next start).
 
 How it works:
 [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#the-pointer-in-scenes-and-where-it-starts).
@@ -2673,8 +2540,7 @@ On the Effects screen (a character's spells and powers in effect), a click on
 an effect's icon ends it in the game, so a stray click loses a spell. With the
 Loader a click leaves a spell on; a psionic power's effect still ends, as that
 is how a power is stopped. It has a switch in the Options tab's **Controls**
-section (**A click on a spell's icon on the Effects screen leaves it on**,
-from the next start).
+section (**Spells on the Effects screen**, from the next start).
 
 What else the Effects screen shows (a spell's charges left, Enlarge's damage,
 the armour spells' AC, kits and weapon specs): [the Effects

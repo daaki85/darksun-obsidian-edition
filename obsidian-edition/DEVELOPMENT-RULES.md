@@ -23,7 +23,7 @@
 - [Creature size](#creature-size)
 - [Held targets](#held-targets)
 - [Rings and cloaks of protection](#rings-and-cloaks-of-protection)
-- [Helms](#helms)
+- [Helms give AC 1](#helms-give-ac-1)
 - [Items saving against acid](#items-saving-against-acid)
 - [Rangers' casting level](#rangers-casting-level)
 - [Preservers' INT](#preservers-int)
@@ -593,9 +593,9 @@ hand's ring): the AC routine drops a ring with magical armour and the worse
 of two rings, and both drop the cloak with any of the three. The Loader's
 saves and AC rows weigh it the same way (`GameData.protection`).
 
-## Helms
+## Helms give AC 1
 
-([In the features page](FEATURES.md#helms).)
+([In the features page](FEATURES.md#helms-give-ac-1).)
 
 How: the helper sets the helm types' AC as the game's AC routine reads it
 (`INT F8h`, the Ring +1's place), and as the item box reads it for its "AC
@@ -1095,7 +1095,8 @@ tests/test_group4.py.
 
 ## Weapon specialization
 
-([In the features page](FEATURES.md#weapon-specialization).)
+([In the features page](FEATURES.md#weapon-specialization); in full on [the kits
+page](KITS.md#weapon-specialization).)
 
 How: the chosen weapon types are kept in four bytes of each character's own
 record that the game never uses (+14h to +17h), so saves and the

@@ -595,7 +595,7 @@ class Viewer:
                         "the half-elf woman's figure; from the next start)", variable=self.cilla_elf,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.show_gear = tk.BooleanVar(value=bool(settings.get("show_gear", True)))
-        ttk.Checkbutton(looks, text="Show what the party wears on their figures (weapons, armour, helms, "
+        ttk.Checkbutton(looks, text="What the party wears, drawn on their figures (weapons, armour, helms, "
                         "cloaks, boots, belts)", variable=self.show_gear,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.show_shadows = tk.BooleanVar(value=bool(settings.get("shadows", True)))
@@ -605,14 +605,14 @@ class Viewer:
         ttk.Checkbutton(looks, text="Dust raised behind the feet of anyone walking on sand or dirt",
                         variable=self.show_dust, command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.see_through = tk.BooleanVar(value=settings.get("see_through", True) is not False)
-        ttk.Checkbutton(looks, text="A thief or ranger hidden in shadows, and anyone invisible, drawn see-through (an "
+        ttk.Checkbutton(looks, text="See-through figures: a thief or ranger hidden in shadows, and anyone invisible (an "
                         "invisible enemy solid while one of the party detects invisibility)",
                         variable=self.see_through, command=self._options_changed).pack(anchor="w", pady=(4, 0))
 
         # the mouse and keys in the game
         controls = section("controls", "Controls")
         self.use_targeting = tk.BooleanVar(value=bool(settings.get("targeting", True)))
-        ttk.Checkbutton(controls, text="In a fight, Tab (Shift+Tab back) chooses an enemy and Enter attacks it, "
+        ttk.Checkbutton(controls, text="Choosing an enemy: in a fight, Tab (Shift+Tab back) chooses one and Enter attacks it, "
                         "even behind someone", variable=self.use_targeting,
                         command=self._options_changed).pack(anchor="w")
         self.ring_mode = tk.StringVar(value=rings.mode(settings))
@@ -622,18 +622,18 @@ class Viewer:
             ttk.Radiobutton(controls, text=text, value=value, variable=self.ring_mode,
                             command=self._options_changed).pack(anchor="w", padx=(20, 0))
         self.scroll_map = tk.BooleanVar(value=bool(settings.get("scroll_map", True)))
-        ttk.Checkbutton(controls, text="Scroll the map by pressing the mouse wheel and moving", variable=self.scroll_map,
+        ttk.Checkbutton(controls, text="Scrolling the map: press the mouse wheel and move", variable=self.scroll_map,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.camera_still = tk.BooleanVar(value=settings.get("camera_still", True) is not False)
-        ttk.Checkbutton(controls, text="In a fight, the view moves to a figure only when it walks off the screen "
+        ttk.Checkbutton(controls, text="The view in fights: it moves to a figure only when the figure walks off the screen "
                         "(the game's follows it near the edges; from the next start)", variable=self.camera_still,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.scene_pointer = tk.BooleanVar(value=settings.get("scene_pointer", True) is not False)
-        ttk.Checkbutton(controls, text="A pointer in the intro and the game's other scenes, and a click skips "
+        ttk.Checkbutton(controls, text="The pointer in scenes: shown in the intro and the game's other scenes, and a click skips "
                         "a scene as a key does; from the next start", variable=self.scene_pointer,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.mouse_start = tk.BooleanVar(value=settings.get("mouse_start", True) is not False)
-        ttk.Checkbutton(controls, text="The pointer starts in the middle of the screen, stays put as screens change, moves as far up and "
+        ttk.Checkbutton(controls, text="Where the pointer starts: in the middle of the screen; it stays put as screens change, moves as far up and "
                         "down as across, and in a window as fast as the desktop's pointer (the game's: at the "
                         "right edge, half as far, three times as fast); from the next start",
                         variable=self.mouse_start, command=self._options_changed).pack(anchor="w", pady=(4, 0))
@@ -642,7 +642,7 @@ class Viewer:
                         "does (the game's: often only the leader; 6 still gathers it); from the next start",
                         variable=self.party_spread, command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.effects_kept = tk.BooleanVar(value=settings.get("effects_kept", True) is not False)
-        ttk.Checkbutton(controls, text="A click on a spell's icon on the Effects screen leaves it on (the game "
+        ttk.Checkbutton(controls, text="Spells on the Effects screen: a click on a spell's icon leaves it on (the game "
                         "ends it; psionic powers can still be stopped); from the next start",
                         variable=self.effects_kept, command=self._options_changed).pack(anchor="w", pady=(4, 0))
 

@@ -23,6 +23,9 @@
 - [Scripts' requests and refused casts in the dice log](#scripts-requests-and-refused-casts-in-the-dice-log)
 - [Choosing an enemy: Tab, Enter and the rings](#choosing-an-enemy-tab-enter-and-the-rings)
 - [Scrolling the map](#scrolling-the-map)
+- [M, U and I: open a screen, close it again](#m-u-and-i-open-a-screen-close-it-again)
+- [The whole party in view](#the-whole-party-in-view)
+- [The view in fights](#the-view-in-fights)
 - [The pointer in scenes, and where it starts](#the-pointer-in-scenes-and-where-it-starts)
 - [Spells on the Effects screen](#spells-on-the-effects-screen)
 - [More saves](#more-saves)
@@ -624,7 +627,11 @@ keeps the pointer it reports off the edges meanwhile. The Loader only switches
 it (`dsloader/scrolling.py`). (Turning the wheel isn't used: DOSBox 0.74,
 GOG's, never passes it on to the game.)
 
-**M, U and I.** `MAP_KEY`, in DSCLOG's `INT 16h` handler for both reads and
+## M, U and I: open a screen, close it again
+
+([In the features page](FEATURES.md#m-u-and-i-open-a-screen-close-it-again).)
+
+`MAP_KEY`, in DSCLOG's `INT 16h` handler for both reads and
 peeks, turns M into O (the game's key for its overhead map) while the map's
 main loop has run within the last tick or two (`MAP_TICK`, set in
 `PANEL_TICK`), and lets U and I (USE, inventory) through; `OVERHEAD` then holds
@@ -636,7 +643,11 @@ a peek, `AH=1`, then the read, `AH=0`), so `OVERHEAD` changes only on the read
 (`MK_READ`), and both give the same key. `PANEL_TICK` clears `OVERHEAD` when the
 map runs again.
 
-**The whole party in view.** The map's party is one figure while `DS:1168h`
+## The whole party in view
+
+([In the features page](FEATURES.md#the-whole-party-in-view).)
+
+The map's party is one figure while `DS:1168h`
 (`game.IN_COMBAT`: not 0 in a fight and while the party is spread out, so the
 Loader's `in_combat` also asks the fight state's +19h) is 0
 (each member's map record, `DS:6694h` + 32 a member, has 80h when inside the
@@ -653,7 +664,11 @@ still one figure. (A 5 put in the BIOS's buffer waits there: the game reads
 keys only in its keyboard interrupt.) Switch: `gamepatch.PARTY_SPREAD`
 (`party_spread`, on).
 
-**The view in a fight.** The game writes the view's place (`DS:1178h`,
+## The view in fights
+
+([In the features page](FEATURES.md#the-view-in-fights).)
+
+The game writes the view's place (`DS:1178h`,
 `117Ah`) in two routines that centre it (on a figure, `191F:01FFh`, and on a
 spot, `191F:0281h`; their callers test first whether the figure is off the
 screen, `0AC0:AC7Ah`) and in one that steps it toward a spot (`2191:0BE3h`,

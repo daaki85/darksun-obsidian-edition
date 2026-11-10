@@ -243,6 +243,14 @@ segment spare.
   (`SIZE_TEXTS`, `icons.write_resources`' CREATURE_SIZE). Each no longer than the game's longest.
 - **The Options tab's texts:** each switch named as FEATURES.md names it, in FEATURES' order within
   each group; the manual's spells' text 1,267 characters to 349; Creature size and Cahulaks reworded.
+  The Graphics and Controls boxes too open with their FEATURES names now (See-through figures,
+  Choosing an enemy, Scrolling the map, The view in fights, The pointer in scenes, Where the pointer
+  starts, Spells on the Effects screen).
+- **The greater shadows can't be tangled:** the Shadow Guard, King, Prince and Worker, Cragg,
+  Tanelyv, Tristram and Tynan (the game's kind 13, the greater shadow, as the 6-HD Shadow) join the
+  Shadow in `cahulaks.SHAPELESS`: AD&D's shadows have no body a rope could hold, and the plain Shadow
+  was already out. CREATURES.md regenerated. Tests: `test_shadows_shapeless`, and with the game's
+  data `test_shadow_kinds_in_data` (every creature of the two shadow kinds in the table is shapeless).
 - **The dice log shows the game's double damage on a helpless target**: a weapon blow on a
   Paralyzed or Out Cold creature does double (the attack routine, 5883Ah, hands the damage call
   5B8:20h its damage x2 too, "shl ax,1" at 58B0Dh, which 79BF9h takes when the target's effects'
@@ -608,6 +616,9 @@ segment spare.
   keeps it, `_worker`).
 
 **Docs**
+- **Where the large dice come from:** FEATURES' creature size table names its sources, the Player's
+  Handbook's weapons table (the pick as the horseman's pick) and the Dark Sun weapons guide the
+  chatkcha and cahulaks numbers came from.
 - **Screenshots retaken** (2026-11-10): `inventory.png` and `inventory-ranger.png` (SLNT, not MOVE),
   `hit-line-box.png` and `shadowseeker-box.png` (the large dice, at the other boxes' 2x),
   `new-spells.png` (Cat's Grace's by-class text), `tome.png` (the box alone, at 2x).
@@ -650,6 +661,16 @@ segment spare.
   Warden's Plate, bracers of defense, robes, icons and names and Alagorn's stories are in ITEMS.md.
   FEATURES keeps each switch's summary and a link where each block was; every link to the moved
   sections follows it, and `test_doclinks` checks the new pages' "How it works" links too.
+- **Weapon specialization moved to KITS.md**, now "Kits and weapon specs": the attacks a round, the
+  sixteen weapon specs, choosing at creation, the starting weapons, a level gained and where it
+  shows, each under a heading of its own. FEATURES keeps the summary row and a paragraph; the links
+  to the detail (ITEMS, DICE-LOG, FEATURES' creation screen and new items) follow it, and
+  `test_doclinks` checks KITS.md's "How it works" links too.
+- **Smaller doc fixes:** the cahulaks' table row says an Enlarged foe can't be tangled; FEATURES'
+  "Helms" is "Helms give AC 1", the switch's name (links follow); DEVELOPMENT-SCREENS gives M, U and
+  I, the whole party in view and the view in fights headings of their own, so FEATURES' three
+  Controls sections each link their own; DICE-LOG has a row for Spook's save part (`-1 Spook, the
+  caster's levels`); PATCH-NOTES' Bug Fixes link GAME-BUGS.md.
 
 ## Pull request #88 ([merged 2026-11-08](https://github.com/daaki85/darksun-obsidian-edition/pull/88))
 

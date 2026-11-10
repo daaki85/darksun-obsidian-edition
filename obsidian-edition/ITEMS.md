@@ -56,7 +56,7 @@ dearest, the Wand of Missiles, is 65,000):
 
 The **Warden's Plate** is plate mail +1 in four pieces: the chest 4 better
 than no armour (its AC 3, +1), the arms and legs 3 each (AC 2, +1), the helm 2
-(a helm's AC 1 with [helms giving AC 1](FEATURES.md#helms), +1): 12 better as a set, so a
+(a helm's AC 1 with [helms giving AC 1](FEATURES.md#helms-give-ac-1), +1): 12 better as a set, so a
 wearer with no other help goes from AC 10 to AC −2. (With that rule off the
 helm gives only its +1: 11 better, AC −1.) The game adds up its pieces' AC
 this way for all armour, so a full set does better than AD&D's plate mail +1
@@ -217,7 +217,7 @@ Belt of Might making STR at least 24.
 | ![](docs/items/vampiric-arrows.png) | Wooden | arrows | ***Vampiric Arrows*** | cast Vampiric Touch on what they hit | the same |
 
 **By weapon spec**, for [weapon
-specialization](FEATURES.md#weapon-specialization), in the weapon window's order:
+specialization](KITS.md#weapon-specialization), in the weapon window's order:
 
 | Weapon spec | Magic weapons |
 |---|---|
@@ -348,7 +348,7 @@ by type and material: who sells it and who carries it (by the names the game
 gives them; many are of a kind, such as every Renegade or Tari). The **Weapon
 Merchant** and the **Bowyer** are in Teaquetzl, **Jark** and **Kel** in the Elven
 Caravan (Kel's caravan). The game's plain stone pick is a
-[starting weapon](FEATURES.md#weapon-specialization), and two lie in the Hot
+[starting weapon](KITS.md#starting-weapons), and two lie in the Hot
 Springs; Deepbiter is its magic one.
 
 | Icon | Type | Material | Sold by | Carried by, or found in | The mod's |
@@ -410,8 +410,8 @@ off AC 10 (the game's own numbers; a character's AC adds up its pieces).
 | Legs | bone | Brigandine Leg Armor | 1 | Jark, Armor Merchant | Keldar, Templar, Chaya, Caravan Master, Chahl, Elven Leader |  |
 | Legs | bone | Scale Leg Armor | 1 | Jark | Uskuye, Elite Guard, a chest in the slave pens, the arena's champions (the half-giant, the mul) | **new** placement |
 | Legs | metal | Chain Leg Armor | 1 | Armor Merchant | Army Commander, a skeleton in the Upper Castle |  |
-| Head | leather | Helm | 0 (1 with [Helms give AC 1](FEATURES.md#helms)) | Armor Merchant, Kel (who sells it as Dapartea's Helm) | Kurzak, a chest in the Upper Castle, a chest in the slave pens, a bag in the slave pens, the arena's champions (the halfling, the elf) | **new** placement |
-| Head | bone | Bone Helm | 0 (1 with [Helms give AC 1](FEATURES.md#helms)) | — | a chest in the slave pens, the arena's champions (the half-giant, the mul) | **new**: the bone scale set's helm |
+| Head | leather | Helm | 0 (1 with [Helms give AC 1](FEATURES.md#helms-give-ac-1)) | Armor Merchant, Kel (who sells it as Dapartea's Helm) | Kurzak, a chest in the Upper Castle, a chest in the slave pens, a bag in the slave pens, the arena's champions (the halfling, the elf) | **new** placement |
+| Head | bone | Bone Helm | 0 (1 with [Helms give AC 1](FEATURES.md#helms-give-ac-1)) | — | a chest in the slave pens, the arena's champions (the half-giant, the mul) | **new**: the bone scale set's helm |
 | Hand | wood | Shield | 1 | — | Wyvern Master, Arant, Chaya, Elven Leader, Templar, a chest in the slave pens |  |
 | Hand | leather | Shield | 1 | — | Keldar, Templar, Caravan Master, Gladiator, the arena's champions (the half-giant, the halfling, the elf) |  |
 

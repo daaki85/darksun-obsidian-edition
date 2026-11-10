@@ -56,6 +56,31 @@ class LoaderTests(unittest.TestCase):
         self.assertEqual(bits, {5, 300, 519, 30, 1, 40})  # (520: past the map things)
         self.assertTrue(cahulaks.UNTANGLED.isdisjoint(cahulaks.SHAPELESS))
 
+    def test_shadows_shapeless(self):
+        """The Shadow and the greater shadows, the same kind of being, have nothing to tangle."""
+        for name in ("Shadow", "Shadow Guard", "Shadow King", "Shadow Prince", "Shadow Worker", "Cragg",
+                     "Tanelyv", "Tristram", "Tynan"):
+            self.assertEqual(cahulaks.why_not(name, 9), "nothing to tangle", name)
+
+    @unittest.skipUnless(os.environ.get("DSUN_OBJECTS"), "DSUN_OBJECTS (the game's SEGOBJEX.GFF) not given")
+    def test_shadow_kinds_in_data(self):
+        """Every creature of the shadows' kinds (monsters.SHADOW_KIND, GREATER_SHADOW_KIND) with a figure
+        in the creatures' table is shapeless."""
+        from dsloader import doccreatures, gff, monsters
+        with open(os.environ["DSUN_OBJECTS"], "rb") as f:
+            chunks = gff.read_gff(f.read())
+        shown = {c.obj for c in doccreatures.creatures(chunks)}
+        found = set()
+        for (kind, obj), data in chunks.items():
+            if kind != "RDFF" or obj not in shown:
+                continue
+            if struct.unpack_from("<H", data, monsters.RDFF_CREATURE + monsters.CREATURE_KIND)[0] in (
+                    monsters.SHADOW_KIND, monsters.GREATER_SHADOW_KIND):
+                at = monsters.RDFF_CREATURE + game.CREATURE_NAME
+                found.add(data[at:at + 16].split(b"\0", 1)[0].decode("cp437").strip())
+        self.assertGreater(len(found), 5)
+        self.assertEqual(found - cahulaks.SHAPELESS, set())
+
 
 @unittest.skipIf(td.Uc is None, "unicorn not installed")
 class CahulaksTests(tg.SiteTests):

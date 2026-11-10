@@ -329,6 +329,8 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 
 ## Bug Fixes
 
+The main fixes are below; every bug of the original game the mod mends, with what the game did, is in [the game's bugs, fixed](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/GAME-BUGS.md).
+
 - **[Fixed]** The **Quicksilver Glove** fought as if it were wooden (−3 to hit, −2 damage): it had no material, which the game read as wood. It is leather now, as the Chameleon Gloves are.
 - **[Fixed]** A party member cured of poison at a rest (a druid's free Neutralize Poison) still died of the poison: the rest checked for poison before its cures. The cures now come first.
 - **[Fixed]** In a busy area, things could stop being drawn (an item dropped, a body, a figure, a doorway), as SSI's own note for Wake of the Ravager describes: the game has 300 picture slots and gave none back until the next area. Once all are taken, a slot nothing uses any more is now reused, so new pictures always show.
