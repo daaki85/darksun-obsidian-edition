@@ -64,6 +64,13 @@ segment spare; `UMB_NEED` 6,380 paragraphs (1,802 spare), `UMB_KEPT` 8,002 (180 
   playtest/logs/2026-11-10-stinkpots.md.)
 
 **Changed**
+- **The pick is the footman's pick and the axe the battle axe** (*Player's Option: Skills & Powers*,
+  the user's choice): every pick (the game's type 112, Deepbiter's and the stone picks', and the
+  Loader's Metal Pick, 127) 1d6+1, was 1d4+1 (the horseman's); against a large target 2d4 (was 1d4),
+  and the axe 1d10 (was its 1d8). DSCLOG's PROBE_TYPES_FILL sets type 112's sides (no switch, as
+  the Great Axe's material), `npcitems` the Metal Pick's; LARGE_DICE and `sizes.LARGE_DICE` the
+  large dice (with **Creature size as in AD&D**). KITS', FEATURES', the guide's and
+  HOW-THE-GAME-WORKS' tables. (Tests: `test_room_and_filled`, `test_sizes`, the KITS table's.)
 - **Grand mastery's die is the next greater die size, against every target** (Player's Option:
   Combat & Tactics). It was 2 more sides (a d12 became a d14) and was lost against a large target:
   the creature size rule's large dice (SIZE_DICE, at the swing) replaced the step PROBE_SPEC_DAMAGE

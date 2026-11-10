@@ -170,7 +170,7 @@ mace 100, as AD&D's 1, 3 and 10 lb), so the limit is 4 lb. Missile weapons
 | Club | wood (30) | 1d6 | yes |
 | Quarterstaff | wood (40) | 1d6 | yes |
 | Axe | bone, obsidian (30) | 1d8 | yes |
-| Pick | stone, metal (40) | 1d4+1 | yes |
+| Pick | stone, metal (40) | 1d6+1 (the game: 1d4+1) | yes |
 | Shillelagh, Flame Blade, Spiritual Hammer (spells) | (10, 40, 40) | 2d4, 1d4+4, 1d4+1 | yes |
 | Axe | metal (70) | 1d8 | no |
 | Great axe | bone (50); obsidian, metal (70) | 1d10 | no |

@@ -5210,6 +5210,9 @@ class TypesTests(unittest.TestCase):
         self.assertEqual(self.mu.mem_read(self.TYPES_SEG * 16 + 18 * 20 + 0x10, 2), b"\x00\x00")  # (a club: not)
         self.assertEqual([self.mu.mem_read(self.TYPES_SEG * 16 + t * 20 + 8, 1)[0] for t in (2, 113)], [4, 5])
         # (the Great Axe +3's type metal, the Quicksilver Glove's leather: both no material in the game)
+        self.assertEqual(self.mu.mem_read(self.TYPES_SEG * 16 + 112 * 20 + 0x0C, 1)[0], 6)
+        # (the game's pick, Deepbiter's and the stone picks': the footman's pick's 1d6+1, Skills & Powers)
+        self.assertEqual(npcitems.TYPES[127 - 115][0x0C], 6)  # (the Loader's Metal Pick's too)
         self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_DS)], [0, GAME_DS])
 
     def test_not_read(self):

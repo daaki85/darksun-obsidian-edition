@@ -64,7 +64,7 @@ def size(name: str, race: int) -> str:
 # by weapon kind (specialize.KINDS' order), AD&D's dice against a large target (count, sides, the
 # bonus's change), None where they are the small ones: the game's dice are AD&D's small and man-sized
 # (DSCLOG's LARGE_DICE, byte for byte)
-LARGE_DICE = ((1, 12, 0), (1, 3, 0), (1, 3, 0), (1, 8, 0), (1, 6, -1), None, (2, 8, 0), (1, 4, -1), None,
+LARGE_DICE = ((1, 12, 0), (1, 3, 0), (1, 3, 0), (1, 8, 0), (1, 6, -1), (1, 10, 0), (2, 8, 0), (2, 4, -1), None,
               (2, 6, 0), (1, 10, 0), None, (1, 4, 0), None, None, None)
 SHILLELAGH_TYPE, HAMMER_TYPE = 28, 30  # (Shillelagh's 2d4 is AD&D's large: 1d6+1 smaller; the Hammer's 1d4 large)
 SPELLS = {2: "Charm Person", 30: "Hold Person", 86: "Hold Person", 82: "Charm Person or Mammal"}

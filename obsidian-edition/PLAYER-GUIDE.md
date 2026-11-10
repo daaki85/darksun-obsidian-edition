@@ -1727,8 +1727,8 @@ materials, the short sword among them.
 | Long sword | 1d8 | 1d12 | yes |
 | Club | 1d6 | 1d3 | yes |
 | Quarterstaff (two-handed) | 1d6 | 1d6 | yes |
-| Axe | 1d8 | 1d8 | bone and obsidian ones (not metal) |
-| Pick | 1d4+1 | 1d4 | yes |
+| Axe | 1d8 | 1d10 | bone and obsidian ones (not metal) |
+| Pick | 1d6+1 | 2d4 | yes |
 | Great axe (two-handed) | 1d10 | 2d8 | no |
 | Mace | 1d6+1 | 1d6 | no |
 | Cahulaks (both hands) | 1d6 | 1d6 | no |

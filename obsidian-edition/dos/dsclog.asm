@@ -17176,9 +17176,9 @@ large_dice   db 1, 12, 0            ; long sword: 1d12
              db 1, 3, 0             ; dagger: 1d3
              db 1, 8, 0             ; short sword: 1d8
              db 1, 6, -1            ; mace: 1d6 (1d6+1)
-             db 0, 0, 0             ; axe: as small (1d8)
+             db 1, 10, 0            ; axe: 1d10 (the battle axe's: Player's Option: Skills & Powers)
              db 2, 8, 0             ; great axe: 2d8
-             db 1, 4, -1            ; pick: 1d4 (1d4+1)
+             db 2, 4, -1            ; pick: 2d4 (1d6+1: the footman's pick, Skills & Powers)
              db 0, 0, 0             ; quarterstaff: 1d6
              db 2, 6, 0             ; polearm: 2d6
              db 1, 10, 0            ; gythka: 1d10 (the Dark Sun weapons guide's 2d4/1d10)
@@ -22710,6 +22710,7 @@ ELVEN_CLOAK equ 19              ; (the Cloak and Boots of Elvenkind)
 ELVEN_BOOTS equ 20
 GREYS_ARMS  equ 54              ; Grey's Scale's arm and leg armour: the game's AC 2 each, made 3
 GREYS_LEGS  equ 24              ; (PROBE_TYPES_FILL)
+PICK_TYPE   equ 112             ; (PROBE_TYPES_FILL: the game's pick, Deepbiter's and the stone picks')
 GREAT_AXE   equ 2               ; the game's Great Axe +3's type: no material (40h, a ring's), made metal
 METAL_MAT   equ 4               ; a type's +8 for metal (the material's low nibble, as the metal short sword's)
 QUICKSILVER equ 113             ; the Quicksilver Glove's type: no material (40h), which the game's to-hit
@@ -22765,6 +22766,7 @@ probe_types_fill:
         mov byte [es:di+GREYS_ARMS*TYPE_SIZE+0x12], 3
         mov byte [es:di+GREYS_LEGS*TYPE_SIZE+0x12], 3
         mov byte [es:di+GREAT_AXE*TYPE_SIZE+8], METAL_MAT
+        mov byte [es:di+PICK_TYPE*TYPE_SIZE+0x0C], 6 ; (the footman's pick's 1d6+1, Skills & Powers: was 1d4+1)
         mov byte [es:di+QUICKSILVER*TYPE_SIZE+8], LEATHER
         or byte [es:di+17*TYPE_SIZE+0x10], AIR_CLERIC
         or byte [es:di+33*TYPE_SIZE+0x10], AIR_CLERIC
@@ -28245,9 +28247,10 @@ extra_types:
         ; the Great Axe's (2)
         db 0x01, 0x00, 0x10, 0x00, 0x46, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
         db 0x0A, 0x01, 0x00, 0x40, 0x62, 0x16, 0x00, 0x02
-        ; the pick's (112)
+        ; the pick's (112), its 1d6+1 the footman's pick's (Player's Option: Skills & Powers), as
+        ; PROBE_TYPES_FILL makes the game's
         db 0x01, 0x00, 0x20, 0x00, 0x28, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
-        db 0x04, 0x01, 0x01, 0x00, 0x72, 0x17, 0x00, 0x00
+        db 0x06, 0x01, 0x01, 0x00, 0x72, 0x17, 0x00, 0x00
         ; the Polearm's (19)
         db 0x01, 0x00, 0x30, 0x00, 0x96, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
         db 0x0A, 0x01, 0x00, 0x40, 0x72, 0x16, 0x00, 0x06

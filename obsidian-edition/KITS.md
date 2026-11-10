@@ -454,9 +454,9 @@ weak material's penalty, STR and mastery's +3 damage add as ever.
 | dagger | 1d4 | 1d3 | 1d6 | 1d4 |
 | short sword | 1d6 | 1d8 | 1d8 | 1d10 |
 | mace | 1d6+1 | 1d6 | 1d8+1 | 1d8 |
-| axe | 1d8 | 1d8 | 1d10 | 1d10 |
+| axe | 1d8 | 1d10 | 1d10 | 1d12 |
 | great axe | 1d10 | 2d8 | 1d12 | 2d10 |
-| pick | 1d4+1 | 1d4 | 1d6+1 | 1d6 |
+| pick | 1d6+1 | 2d4 | 1d8+1 | 2d6 |
 | quarterstaff | 1d6 | 1d6 | 1d8 | 1d8 |
 | polearm | 1d10 | 2d6 | 1d12 | 2d8 |
 | gythka | 2d4 | 1d10 | 2d6 | 1d12 |
