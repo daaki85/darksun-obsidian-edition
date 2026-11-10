@@ -42,6 +42,8 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 
 ## Next pull request (not opened yet)
 
+Obsidian Edition 2.15.0 ([release notes](release-notes/v2.15.0.md)).
+
 DSCLOG.EXE 68,032 bytes (image 68,000: 62,480 in its segment, 5,520 in the tail), 3,056 of its
 segment spare.
 

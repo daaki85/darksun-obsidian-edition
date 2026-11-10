@@ -287,9 +287,9 @@ Strength, Dispel Magic and the rest, from the next spell cast). The fixes stop
 the old bugs from happening, but what a bug already did stays in the save:
 
 - **A save isn't for an older version** where a release changed what a save
-  holds: 2.13.0, 2.13.2 and 2.14.0 did, so a save made with one of them or
-  later doesn't load in the versions before it (a 2.14.1 save still loads in
-  2.14.0). Older saves load in newer versions as they are:
+  holds: 2.13.0, 2.13.2, 2.14.0 and 2.15.0 (its new items) did, so a save made
+  with one of them or later doesn't load in the versions before it (a 2.14.1
+  save still loads in 2.14.0). Older saves load in newer versions as they are:
   a character keeps its age, and its roll is put on its sheet when the game is
   loaded.
 - **Share Strength and Dispel Magic:** a character who kept Share Strength's

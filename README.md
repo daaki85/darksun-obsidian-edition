@@ -67,12 +67,13 @@ where the saves go](obsidian-edition/README.md#updating-backups-saved-games-and-
 
 ## What's new
 
-**Obsidian Edition 2.14.1** is out ([release notes](release-notes/v2.14.1.md)):
-each class's least scores at creation are the manual's, a class whose prime
-requisites are all 16 or more earns 10% more XP, the game's Great Axe +3 is
-metal, and bows the Loader gave shoot again. 2.14.0 brought see-through hidden
-and invisible figures, the champions' bout after Scar's death, Pehtucl's locked
-and trapped chest, and the game's people wearing their gear from the start.
+**Obsidian Edition 2.15.0** is out ([release notes](release-notes/v2.15.0.md)):
+three new AD&D rules (held targets, creature size, and cahulaks as Dark Sun has
+them), spells, psionics and monsters as the manual describes them, resting and
+dual-classing by the manual, the Boots of Speed and new cahulaks to find
+(Emberlash and Ironwhirl), a better-armed Scar, and graphics that no longer
+vanish in a busy area. 2.14.1 brought the manual's least scores at creation and
+its 10% more XP for high prime requisites.
 
 Every release has notes of its own, in [`release-notes`](release-notes).
 
