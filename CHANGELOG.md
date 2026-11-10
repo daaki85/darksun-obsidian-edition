@@ -63,6 +63,8 @@ segment spare.
   with a `[Fixed]` bullet in PATCH-NOTES: Alagorn's clothes when none are carried, and the Effects
   screen's "(15 CHARGES)" on an item's power. The rest of the changelog's fixes are bugs in the
   mod's own code or content (its new spells, items and quests, the Loader, DSCLOG), so they stay out.
+- Turn Undead (the game's own turning formula, where AD&D has its table) gets its own row in
+  GAME-BUGS's rules table; PATCH-NOTES already had it as `[Fixed]` inside the manual-spells bullet.
 
 **New**
 - **New rule: held targets as in AD&D** (Options, Weapons and armour; on by default; `RULE_HELD`,
