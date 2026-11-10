@@ -15016,6 +15016,8 @@ CAH_SWING_SITE equ NS_IMAGE + 104     ; 589B6h: a swing's start: the off head's 
 CAH_HIT_SITE equ NS_IMAGE + 105       ; 58B54h: a weapon's hit that did damage: the tangle (CAHULAKS)
 SIZE_LINE_SITE equ NS_IMAGE + 106     ; 72AA7h: a weapon's damage line drawn: its large dice (SIZE_LINE)
 SIZE_PRE_SITE equ NS_IMAGE + 107      ; 72A8Ah: a weapon's damage line about to be drawn: Shillelagh's (SIZE_PRE)
+HELD_HIT_SITE equ NS_IMAGE + 108      ; 589E9h: the natural 20's test: a held target hit automatically (HELD)
+HELD_DAMAGE_SITE equ NS_IMAGE + 109   ; 58B0Dh: what a helpless target takes: x2 only without HELD
 KIND_TURN  equ 13
 TU_DESTROY equ 0x7AE60 - 0x7AE04 ; (the ways on, less the address after the site's number)
 TU_FAIL    equ 0x7AE75 - 0x7AE04
@@ -17313,6 +17315,65 @@ sl_draw   dd 0
 sl_dice   dw 0                      ; (the large dice: the count, then the sides)
 sl_bonus  dw 0
 
+; HELD (RULE_HI_HELD, the Loader's rule "held_hit"): AD&D's held target (the 2nd edition PHB's Table
+; 51, "defender sleeping or held: automatic": the attack automatically hits and causes normal damage).
+; The game rolls the d20 as ever, and doubles a blow's damage on a helpless target (Paralyzed, effect
+; 34, or Out Cold, its creature's +1Ch 3): the attack routine (5883Ah) hands the damage call its damage
+; x2 too (58B0Dh), which 79BF9h takes for one. With the rule:
+; - HELD_HIT ("cmp word [bp-6],14h", 589E9h; 4 bytes: the natural 20's test, "je 58A00h" the hit after
+;   it): ZF in the INT's frame for that JE, set on the game's 20 or, with the rule, a helpless target
+;   (whatever the d20: a 1 too);
+; - HELD_DAMAGE ("mov ax,[bp-4] / shl ax,1", 58B0Dh; 5 bytes: what a helpless target takes, pushed
+;   next): AX the damage, doubled only without the rule.
+; Both sides alike: a monster's blow on a held party member too. The dice log says it (dicelog.py).
+HELD_OUT_COLD equ 3                 ; (a creature's +1Ch: Out Cold)
+held_hit:
+        push ax
+        push bx
+        mov bx, sp                  ; ([BX+8] the INT's flags)
+        and word [ss:bx + 8], ~0x40
+        cmp word [bp - 6], 20
+        je .hit
+        call held_now
+        jnc .out
+.hit:   or word [ss:bx + 8], 0x40   ; (ZF: the game's JE to the hit)
+.out:   pop bx
+        pop ax
+        iret
+held_damage:
+        mov ax, [bp - 4]
+        test byte [cs:rules_hi + 1], RULE_HI_HELD >> 8 ; (a byte's test: a word's with 8000h is how
+        jnz .out                    ;   the unit tests find PROBE_HP_BEST)
+        shl ax, 1
+.out:   iret
+held_now:                           ; CF with the rule on and the attack's target (TARGET) helpless:
+        test byte [cs:rules_hi + 1], RULE_HI_HELD >> 8 ; Paralyzed or Out Cold. DS the game's; all kept.
+        jz .ret                     ; (TEST clears CF)
+        pusha
+        push es
+        mov ax, [TARGET]
+        cmp ax, MAP_COUNT
+        jae .no
+        mov dx, ax
+        mov cl, HELD_EFFECT
+        call ns_has
+        je .yes
+        mov ax, dx
+        call combatant_creature
+        jc .no
+        les bx, [CREATURES]
+        imul ax, ax, 0x3A
+        add bx, ax
+        cmp byte [es:bx + 0x1C], HELD_OUT_COLD
+        je .yes
+.no:    pop es
+        popa
+        clc
+        ret
+.yes:   pop es
+        popa
+        stc
+.ret:   ret
 cah_extra  dw 0                     ; how much worse the off head's swing is than the main head's
 cah_who    dw -1                    ; ... for this attacker (a combatant; -1 none)
 
@@ -17662,6 +17723,7 @@ RULE_HI_DUAL equ 2048           ; (RULES_HI) dual-classing at 3rd level, every p
 RULE_HI_REST equ 4096           ; (RULES_HI) rest heals by spells and natural healing (REST_PRE, REST_HP)
 RULE_HI_CAHULAKS equ 8192       ; (RULES_HI) cahulaks: a head in each hand, a tangle on a hit (CAHULAKS)
 RULE_HI_SIZE equ 16384          ; (RULES_HI) creature size: large dice, Hold and Charm Person (SIZE)
+RULE_HI_HELD equ 32768          ; (RULES_HI) a held or Out Cold target hit automatically, normal damage (HELD)
 THINGS_SEG equ 0x3972 - 0x4356  ; the things table's segment, relative to DS
 
 ; PROBE_MOVE: INT VEC_MOVE replaces "mov es:[bx+22Bh],ax" (5 bytes: INT + 3 NOPs) where a
@@ -20196,6 +20258,8 @@ site_tab:
         site CAH_HIT_SITE, cah_hit
         site SIZE_LINE_SITE, size_line
         site SIZE_PRE_SITE, size_pre
+        site HELD_HIT_SITE, held_hit
+        site HELD_DAMAGE_SITE, held_damage
 SITE_COUNT equ ($ - site_tab) / 2
 
 ; NS_CMP: the compare of site RL_SITE (of NS_CMP_SITES), its flags into the INT's frame.

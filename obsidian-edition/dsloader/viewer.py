@@ -463,6 +463,9 @@ class Viewer:
                                              "(the game checks only one: a ranger, druid or psionicist on WIS alone)"),
                 ("two_weapons", "arms", "Two weapons: -2 main hand, -4 off hand, DEX reaction adjustment added "
                                         "(no better than 0; rangers and Twin-blades none in light armour); the off hand attacks once a round"),
+                ("held_hit", "arms", "Held targets as in AD&D: a blow on a Paralyzed or Out Cold foe (or friend) "
+                                     "hits automatically and does normal damage (the game rolls to hit and "
+                                     "doubles the damage)"),
                 ("creature_size", "arms", "Creature size as in AD&D: a large foe (a half-giant, a Bulette, an Enlarged "
                                           "fighter...) takes AD&D's large weapon dice (a long sword 1d12); Hold Person "
                                           "and Charm Person don't take on one"),

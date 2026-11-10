@@ -190,6 +190,10 @@ CAHULAKS_TYPE = 21
 # Charm Person and Charm Person or Mammal (a person) don't take on it; an Enlarged creature counts as
 # large (DSCLOG's RULE_HI_SIZE, SIZE)
 RULE_SIZE = 1073741824
+# AD&D's held target (the 2nd edition PHB's Table 51): a blow on a Paralyzed or Out Cold creature hits
+# automatically and does normal damage, where the game rolls the d20 and doubles it (DSCLOG's
+# RULE_HI_HELD, HELD)
+RULE_HELD = 2147483648
 CAHULAKS_TYPES = frozenset((CAHULAKS_TYPE, GAME_TYPES + 31))  # (the bone and the metal: METAL_CAHULAKS_TYPE)
 REST_NATURAL = 3
 SPEC_SLOTS, SPEC_COUNT = 0x14, 4
@@ -285,7 +289,7 @@ RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("two_weapons", RULE_TWO_WEAPONS),
                  ("backstab_dice", RULE_BACKSTAB), ("aging", RULE_AGING),
                  ("enlarge_dice", RULE_ENLARGE), ("con_adnd", RULE_CON),
                  ("dual_class", RULE_DUAL_CLASS), ("rest_heal", RULE_REST), ("cahulaks", RULE_CAHULAKS),
-                 ("creature_size", RULE_SIZE))
+                 ("creature_size", RULE_SIZE), ("held_hit", RULE_HELD))
 # The new spells (RULE_NEW_SPELLS; DSCLOG's NEW SPELLS): six wizard spells numbered after the game's
 # 196 (0-195), in records past its own (the 200h bytes after them, two small tables, moved into
 # DSCLOG at the game's start: its SEG_MOVE, SEGMENT_TABLE here); DSCLOG fills their records and rows

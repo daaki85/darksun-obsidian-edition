@@ -2711,6 +2711,9 @@ class DiceLog:
         attacker_combatant, target_combatant = e.arg(0x18), e.glob[0]
         need = thac0 - ac
         hit = d20 == 20 or (d20 != 1 and d20 >= need)
+        # AD&D's held target (RULE_HELD, DSCLOG's HELD_HIT): a Paralyzed or Out Cold one is hit whatever the d20
+        held = g.helpless(e.glob[0]) if self.rules & game.RULE_HELD else None
+        hit = hit or bool(held)
         note = " (natural 20)" if d20 == 20 else " (natural 1)" if d20 == 1 else ""
 
         self._last_attacker = g.creature_name(attacker)
@@ -2741,7 +2744,10 @@ class DiceLog:
         breakdown = self._thac0_breakdown(e, thac0, attacker, attacker_combatant, target_combatant, weapon, mode, item_type,
                                           (specialize.SKILL_NAMES.get(skill, ""), specialize.to_hit(skill)),
                                           [(kit_name, kit_hit)] if kit_hit else [])
-        return [head, "    " + breakdown]
+        out = [head, "    " + breakdown]
+        if held:
+            out.append(f"    {held}: hit automatically, for normal damage (AD&D's held target)")
+        return out
 
     def weapon_skill(self, attacker: Optional[int], item_type: Optional[int]) -> int:
         """A creature's weapon specialization skill with a weapon (specialize.skill), with the rule on."""
@@ -3048,9 +3054,10 @@ class DiceLog:
                 total *= times
                 steps = f"({steps}) x{times} backstab"
         # a held (Paralyzed) or Out Cold target takes double: the attack routine hands the game's
-        # damage call its damage x2 too (58B0Dh, "shl ax,1"), which 79BF9h takes for a helpless target
+        # damage call its damage x2 too (58B0Dh, "shl ax,1"), which 79BF9h takes for a helpless target;
+        # with RULE_HELD (DSCLOG's HELD_DAMAGE) the damage as it is, AD&D's
         helpless = g.helpless(e.glob[0])
-        if helpless and total > 0:
+        if helpless and total > 0 and not self.rules & game.RULE_HELD:
             total *= game.HELPLESS_TIMES
             steps = f"({steps}) x{game.HELPLESS_TIMES} {helpless}: a helpless target takes double"
         if total > 0 and any(x.owner == e.glob[0] and x.id == game.BIOFEEDBACK_EFFECT for x in g.effects()):

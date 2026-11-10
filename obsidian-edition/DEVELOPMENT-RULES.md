@@ -21,6 +21,7 @@
 - [Half-giants' two-handed weapons](#half-giants-two-handed-weapons)
 - [Cahulaks](#cahulaks)
 - [Creature size](#creature-size)
+- [Held targets](#held-targets)
 - [Rings and cloaks of protection](#rings-and-cloaks-of-protection)
 - [Helms](#helms)
 - [Items saving against acid](#items-saving-against-acid)
@@ -575,6 +576,28 @@ Loader's `RULE_SIZE`), `IS_LARGE` counts a combatant large when it is Enlarged
   inventory and View Character keep the game's lines: their rows are full, and a
   click to switch them (tried 2026-11-10) found no way to have the game redraw the
   panel cleanly (playtest/logs/2026-11-10-creature-size.md).
+
+## Held targets
+
+([In the features page](FEATURES.md#held-targets).)
+
+The game's way: the weapon attack routine (5883Ah) rolls the d20 on every swing (589B6h on), hits
+on a 20 (589E9h, "cmp word [bp-6],14h / je 58A00h"), misses on a 1, else compares THAC0 less AC with
+the roll. On a hit it hands the damage call (5B8:20h, 78BA8h) the damage and, at 58B0Dh ("mov
+ax,[bp-4] / shl ax,1 / push ax"), twice the damage: what a helpless target takes. The damage routine
+(79BF9h) takes that second number when the target's effects' bitset (598:25h = 76944h, a bit an
+effect) has bit 34, Paralyzed, at its +4's bit 2, or its creature's +1Ch is 3, Out Cold; the save
+routine (79A71h) fails such a target before rolling (79B0Ch, the same test).
+
+With the rule (`RULE_HELD`, DSCLOG's `RULE_HI_HELD` 8000h, the Loader's `held_hit`), two sites,
+both the game's with it off (`gamepatch` "held_hit" and "held_damage"):
+- `HELD_HIT` (589E9h; 4 bytes): the game's compare made in the handler and its ZF put in the INT's
+  frame for the JE after it, set too when `HELD_NOW` finds the attack's target (DS:494Ah) Paralyzed
+  (`NS_HAS`, effect 34) or Out Cold (its creature's +1Ch): the hit, whatever the d20.
+- `HELD_DAMAGE` (58B0Dh; 5 bytes): AX the damage, doubled only without the rule.
+
+The dice log (`GameData.helpless`, the same test): the attack's line says HIT, with `Paralyzed: hit
+automatically, for normal damage (AD&D's held target)` under it, and the damage line has no x2.
 
 ## Rings and cloaks of protection
 

@@ -59,6 +59,10 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - **[Changed]** Two weapons cost −2 to hit with the main hand and −4 with the off hand, less with high DEX; rangers and Twin-blades fight with two at no penalty in light armour *(was a small bonus at DEX 5 or less, otherwise nothing)*.
 - **[Changed]** The off hand attacks once a round, and extra attacks belong to the main hand *(was the full rate in each hand)*.
 
+**Held targets**
+
+- **[Changed]** A blow on a held (Paralyzed) or Out Cold creature hits automatically and does normal damage, as in AD&D *(was a roll to hit as ever, and double damage)*. It cuts both ways: a held party member is hit every time too.
+
 **Armour and protection**
 
 - **[Changed]** Helms give AC 1 *(was 0)*.

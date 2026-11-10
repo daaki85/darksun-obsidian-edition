@@ -992,10 +992,15 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   target gets no save line from Hold Person** (it fails every save; the game logs only "gives
   Paralyzed"): free it first (`addeffect.py del C 34`). Hold Person's pointer stays up for its next
   target after a cast. `setmem.py ruleshi=-16384` / `=16384` turns the size rule off and on.
-  **Held foes take double from every blow**, the game's own rule (explained 2026-11-10,
-  logs/2026-11-10-held-damage.md: the damage routine, 79BF9h, takes the attack's damage x2 for a
-  Paralyzed or Out Cold target); the dice log's hit line says so (`x2 Paralyzed: a helpless target
-  takes double`) and its HP lines match. Seneca is a **Poisoner**: each of her melee hits also
+  **Held foes are hit automatically, for normal damage** (the rule `held_hit`, on by default since
+  2026-11-10, logs/2026-11-10-held-damage.md: the dice log's `Paralyzed: hit automatically` under the
+  attack). With it off, the game's way: the d20 as ever and double damage (the damage routine,
+  79BF9h, takes the attack's damage x2 for a Paralyzed or Out Cold target; the hit line's `x2
+  Paralyzed`). So a to-hit test needs a free target, or the rule off: `"held_hit": false` in
+  `obsidian-edition/settings.json` before `loadsave.sh` (the Loader writes the rules at the start; a
+  `setmem.py ruleshi=-32768` changes DSCLOG but not the dice log's idea of the rules), and take it
+  out after. To see a held target hit on any roll, write its sheet's base AC (+27h) -10 in memory:
+  "only a 20 hits ... -> HIT". Seneca is a **Poisoner**: each of her melee hits also
   poisons (10, no save for a held target: the log's `is poisoned by the hit` line), landing about
   0.5 s later, after her next swing's line. To check a weapon's own damage, free the target
   (`addeffect.py del C 34`) or use a member who isn't a Poisoner, and read the "hits X for N" line.

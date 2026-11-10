@@ -102,7 +102,8 @@ no menu opens Effects, and closing that leaves the view at the map's corner: `sc
 log's "target AC" against `counted_ac` when foes hit too often (a vector clash once made it 255).
 A fight with the guards on purpose: `toalarm.sh`, then `restalarm.sh` (the pointer the eye first).
 Paralyzed foes (`foeset.py C eff=34`) get no save line from Hold Person (a held target fails every
-save unrolled), and take double from every blow (the game's rule; the dice log's `x2 Paralyzed`).
+save unrolled), and are hit automatically for normal damage (the rule `held_hit`, on by default;
+off, the game's d20 and double damage: the dice log's `x2 Paralyzed`).
 Seneca is a Poisoner: her hits add 10 (`is poisoned by the hit`), landing after her next swing.
 
 **Git.** The repository is `daaki85/darksun-obsidian-edition` (was `milenkovicdarko`: if `git remote -v`

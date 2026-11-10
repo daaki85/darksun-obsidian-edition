@@ -597,6 +597,30 @@ class HelplessTests(unittest.TestCase):
         struct.pack_into("<h", log.guest.mem, stalker, 14)
         self.assertEqual(log.hp_changes(1.2), ["  Mountain Stalker now 14 HP (-36)"])
 
+    def test_held_rule_normal_damage(self):
+        """With RULE_HELD (DSCLOG's HELD_DAMAGE) the damage as rolled: no x2."""
+        log = make_game()
+        log.rules = game.RULE_HELD
+        set_effects(log, [(0x29, 2, game.PARALYZED_EFFECT)])
+        self.assertEqual(self.hit(log), ["  Dag hits Mountain Stalker for 18: 1d8 = [5] +1 weapon +12 STR 24"])
+
+    def test_held_rule_hits_automatically(self):
+        """With RULE_HELD (DSCLOG's HELD_HIT) a helpless target is hit whatever the d20, said under the
+        attack; without the rule, or on a target not helpless, the d20 as ever."""
+        attack = AttackTests.attack
+        for rules, effects, d20, want in ((game.RULE_HELD, [(0x29, 2, game.PARALYZED_EFFECT)], 1, "HIT"),
+                                          (game.RULE_HELD, [(0x29, 2, game.PARALYZED_EFFECT)], 18, "HIT"),
+                                          (0, [(0x29, 2, game.PARALYZED_EFFECT)], 1, "miss"),
+                                          (game.RULE_HELD, [], 1, "miss")):
+            log = make_game()
+            log.rules = rules
+            set_effects(log, effects)
+            lines = log.describe(attack(self, d20, 8, 4, 5, 9, after_f1=9, hit_bonus=1))
+            self.assertTrue(lines[0].endswith(f"target AC 4 -> {want}"), (rules, effects, d20, lines[0]))
+            held = rules and effects
+            self.assertEqual(lines[2:], ["    Paralyzed: hit automatically, for normal damage (AD&D's held target)"]
+                             if held else [])
+
     def test_poisoner_on_a_helpless_target(self):
         """A Poisoner's melee hit poisons (DSCLOG's PROBE_POISON); a helpless target rolls no save
         (79B0Ch), so the poison is named with the hit and its 10 put down to it, though it lands after

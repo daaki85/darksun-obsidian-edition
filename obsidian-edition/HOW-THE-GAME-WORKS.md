@@ -104,6 +104,9 @@ comes after a backstab's multiple (a backstab x3 on a held target is x6) and bef
 and the manual says nothing of any of it. A spell's damage comes with its own second number,
 the most its dice can do, which a helpless target takes instead.
 
+With [Held targets as in AD&D](FEATURES.md#held-targets) ticked (the default) the mod has such a
+blow hit automatically for normal damage instead, as AD&D's 2nd edition does.
+
 The dice log shows the blow's x2 (`x2 Paralyzed: a helpless target takes double`), and a
 Poisoner's hit on a helpless target, whose poison has no save to show, as `is poisoned by the
 hit: Poison (10 damage), no saving throw (Paralyzed)`, followed by the 10 when it lands.

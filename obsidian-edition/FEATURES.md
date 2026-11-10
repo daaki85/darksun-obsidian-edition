@@ -43,6 +43,7 @@ running the game, the Loader's window and its dice log are in the
     - [Half-giants' two-handed weapons](#half-giants-two-handed-weapons)
     - [Cahulaks](#cahulaks)
     - [Creature size](#creature-size)
+    - [Held targets](#held-targets)
     - [Rings and cloaks of protection](#rings-and-cloaks-of-protection)
     - [Helms](#helms)
     - [Items saving against acid](#items-saving-against-acid)
@@ -846,6 +847,7 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#level-cap-by-xp).
 | [Half-giants' two-handed weapons](#half-giants-two-handed-weapons) | two hands for a two-handed weapon, as for anyone | a half-giant wields a two-handed weapon in one hand |
 | [Cahulaks](#cahulaks) | a plain two-handed 1d6 weapon | a head in each hand: one attack more a round at −2 and −4 (DEX added); a hit tangles a man-sized foe that fails a save against petrification: it loses its next turn |
 | [Creature size](#creature-size) | no sizes: a weapon does the same to a halfling and a Bulette; Hold Person and Charm Person take on a half-giant | a large target (a half-giant, a large monster, anyone Enlarged) takes AD&D's large weapon dice (a long sword 1d12); Hold Person and Charm Person don't take on it |
+| [Held targets](#held-targets) | a blow on a held or Out Cold creature rolls to hit as ever and does double damage | it hits automatically and does normal damage, as AD&D's held target |
 | [Rings and cloaks of protection](#rings-and-cloaks-of-protection) | no rings or cloaks of protection of its own; the mod's count in full, whatever else is worn | two rings don't add up, a ring gives no AC with magical armour, a cloak does nothing with magical or metal armour or a shield |
 | [Helms give AC 1](#helms) | AC 0 | the game's helms give AC 1 rather than 0 |
 | [Items saving against acid](#items-saving-against-acid) | armour without a magical power destroyed outright, its plus ignored; a weapon on a d20 under 8 less its plus | an item the acid or corroding touch could destroy needs the easier of the game's number and AD&D's save by material, a plus helping |
@@ -981,6 +983,25 @@ their kind...), and **anyone Enlarged**, whatever their size.
   as before.
 
 How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#creature-size).
+
+#### Held targets
+
+A creature that is Paralyzed (Hold Person, Hold Monster, a sand howler's gaze, Blood Flow...) or
+Out Cold is helpless. The game still rolls the d20 against it, and a blow that hits does **double**
+damage ([how the game works](HOW-THE-GAME-WORKS.md#helpless-targets-take-double)). AD&D's
+2nd edition (the Player's Handbook's combat modifiers, "defender sleeping or held: automatic")
+has the attack **hit automatically and do normal damage**. With **Held targets as in AD&D** ticked
+(on unless unticked), so it is: every melee blow, shot or throw at a helpless creature hits, a
+natural 1 too (a Mirror Image can still take it), for the damage rolled. It works both ways: a
+held party member is hit by every blow aimed at it. The dice log says it under the attack
+(`    Paralyzed: hit automatically, for normal damage (AD&D's held target)`); with the rule off, the
+damage line shows the game's `x2 Paralyzed`.
+
+AD&D also lets a held creature be slain outright once no other fighting is going on; the rule
+leaves that out. A helpless creature still makes no saving throw (the game's, and AD&D's
+Paralyzed), and a spell's damage on it is still the most its dice can do (the game's).
+
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#held-targets).
 
 #### Rings and cloaks of protection
 

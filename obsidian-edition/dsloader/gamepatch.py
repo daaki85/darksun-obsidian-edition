@@ -212,6 +212,8 @@ PIC_FULL_SITE, PIC_PLACE_SITE, PIC_COUNT_SITE = NS_IMAGE + 100, NS_IMAGE + 101, 
 CAH_TWO_SITE, CAH_SWING_SITE, CAH_HIT_SITE = NS_IMAGE + 103, NS_IMAGE + 104, NS_IMAGE + 105
 # (a weapon's damage line drawn, the item box's and the inventory's: its large dice, DSCLOG's SIZE_LINE)
 SIZE_LINE_SITE, SIZE_PRE_SITE = NS_IMAGE + 106, NS_IMAGE + 107
+# (AD&D's held target, RULE_HELD: hit automatically, normal damage: DSCLOG's HELD)
+HELD_HIT_SITE, HELD_DAMAGE_SITE = NS_IMAGE + 108, NS_IMAGE + 109
 # the monster kinds' table (DSUN.EXE, the load segment's 3E45h: monsters.MONSTER_KINDS_SEG): a kind's
 # properties (a dword), its resistance class (a byte), a class's damage kinds (four words) and percents
 KINDS_FILE = 0x5400 + 0x3E45 * 16
@@ -597,6 +599,11 @@ PATCHES = (
     # ... and Shillelagh's line, about to be drawn ("push word [bp+12h]" at 72A8Ah): 1D6+1, AD&D's
     # against a smaller target, its 2D4 the large one.
     Patch("size_pre", 0x72A8A, bytes.fromhex("ff7612"), _site(SIZE_PRE_SITE, 3)),
+    # AD&D's held target (RULE_HELD; each site the game's with it off): the attack's natural 20 test
+    # (589E9h, "cmp word [bp-6],14h", before its JE to the hit), the hit on a helpless target too; and
+    # what a helpless target takes (58B0Dh, "mov ax,[bp-4] / shl ax,1"), the damage, not x2.
+    Patch("held_hit", 0x589E9, bytes.fromhex("837efa14"), _site(HELD_HIT_SITE, 4)),
+    Patch("held_damage", 0x58B0D, bytes.fromhex("8b46fcd1e0"), _site(HELD_DAMAGE_SITE, 5)),
     # The monsters as the manual describes them (in the same switch; reports/group 4's research,
     # playtest/logs/2026-11-09-group-4-research.md). The kinds' properties: bit 15 a hit (the last
     # natural attack's) casting the priests' Poison (119), bit 24 the corroding touch, bit 25 disease

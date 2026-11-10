@@ -72,3 +72,28 @@ while time.time() - t0 < secs:
     last = now
     time.sleep(0.01)
 ```
+
+## The rule: held targets as in AD&D (the user's choice, option 1)
+The user asked for AD&D 2nd edition's held target as a rule, on by default: hit automatically,
+normal damage (PHB Table 51). DSCLOG's HELD (sites 589E9h and 58B0Dh), the Loader's `held_hit`.
+Build 67,744 bytes (before the rebase onto the size rule's SIZE_PRE: 67,776 after, the sites 108 and 109), `buildcheck.py` OK; both sites seen patched in the running game's code
+(`cd 98 9e 90 74 11` at the d20's test, `cd 98 9f 90 90` at the damage).
+
+4. **Rule on** (`rules_hi` FFFFh): `fountain-user`, every foe held, the Templar's sheet base AC
+   (+27h) written -10 (its AC -16: only a 20 hits), Seneca's turn, Tab + Return:
+   ```
+   Seneca attacks Templar with Bone Hayneedle +1 (1d4+1): d20 = 8, only a 20 hits (5%), hits AC 8, target AC -16 -> HIT
+       Paralyzed: hit automatically, for normal damage (AD&D's held target)
+     Seneca hits Templar for 6: 1d4 = [1] +1 weapon +4 STR 18
+     Templar now 35/41 HP (-6)
+     Templar takes 10 from Poison (10 damage), now 25/41 HP
+   Seneca attacks Templar with Shadowseeker +1 (1d6+1): d20 = 5, ... -> HIT    (for 9: -9, then the poison's 10)
+   Seneca attacks Templar with Shadowseeker +1 (1d6+1): d20 = 9, ... -> HIT    (for 13: the last 6)
+   ```
+   The poller: 41 -> 35 -> 25 -> 16 -> 6 -> 0. Every swing hit, each for its damage, not doubled.
+5. **Rule off** (`"held_hit": false` in settings.json, reloaded: `rules_hi` 7FFFh), the same setup:
+   a natural 20 backstab for 26 (`x2 Paralyzed`), then two Shadowseeker swings on 12: misses. The
+   game's way. settings.json put back.
+
+Not tried in the game: a monster's blow on a held party member (the same routine and sites; the
+unit tests run them with any target).

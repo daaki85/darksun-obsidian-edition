@@ -488,7 +488,8 @@ sizes; the paragraphs after it say how each piece got there.
 **The budget.** Each limit fails the build when passed (a negative `times`):
 
 - The helper's segment: what it reaches through CS is what stays (to
-  `resident_end`, 63,232 bytes since the large dice in the item box (2026-11-10, SIZE_LINE, SIZE_PRE; 62,768
+  `resident_end`, 63,328 bytes since AD&D's held target (2026-11-10, HELD: HELD_HIT, HELD_DAMAGE, HELD_NOW;
+  63,232 after the large dice in the item box, SIZE_LINE, SIZE_PRE; 62,768
   after the creature size rule, SIZE: IS_LARGE, SIZE_DICE, SIZE_SPARED, LARGE_DICE; 62,448 after the metal cahulaks, METAL_CAHULAKS; 62,400 after the
   cahulaks' rule, CAHULAKS; 61,968 after the
   picture slots' reuse and the cahulaks' hands, PIC_REUSE, TH_CAHULAKS; 61,392 after the Boots of Speed, BOOTS_MOVE, BOOTS_AC; 61,200 after the item box's own pictures, BOX_PICS; 61,104 after its `Hit -N`, IB_MATERIAL; 61,024 when a natural 20 stopped saving against "can't save", SAVE_SUM; 60,912 when Turn Undead's record carried its creatures,
@@ -496,7 +497,7 @@ sizes; the paragraphs after it say how each piece got there.
   tables SWEPT, TU_FAILED and DJ_DONE moved to the far block, 48 bytes freed;
   60,912 after group 4, 59,088 before it, 58,096 before group 3) and the
   buffers laid over the install code after it (`AFTER_INSTALL`, 1,408), together
-  `kept_end`, 64,640 bytes, so 896 bytes of its 64 KB are spare. This is the limit for new code. The image
+  `kept_end`, 64,736 bytes, so 800 bytes of its 64 KB are spare. This is the limit for new code. The image
   (`image_len`) is as long. Buffers that start as zeros and aren't needed while
   installing are laid over the install code, as `seg_space` and `area_space`
   are (declared with `resb` after the image): `KEEP` zeroes them before its

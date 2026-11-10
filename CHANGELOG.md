@@ -40,7 +40,7 @@ Releases, newest first: [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 
 ## Next pull request (not opened yet)
 
-DSCLOG.EXE 67,680 bytes (image 67,648), 896 of its segment spare.
+DSCLOG.EXE 67,776 bytes (image 67,744), 800 of its segment spare.
 
 **Fixed**
 - **Graphics disappearing in a busy area** (SSI's technical note 2712 for Wake of the Ravager, the
@@ -57,6 +57,19 @@ DSCLOG.EXE 67,680 bytes (image 67,648), 896 of its segment spare.
   (playtest/logs/2026-11-09-picture-slot-reuse.md).
 
 **Changed**
+- **New rule: held targets as in AD&D** (Options, Weapons and armour; on by default; `RULE_HELD`,
+  the Loader's `held_hit`, DSCLOG's `RULE_HI_HELD` 8000h, the last of `rules_hi`'s bits): a blow on a
+  Paralyzed or Out Cold creature hits automatically and does normal damage, as the 2nd edition
+  PHB's Table 51 has it ("defender sleeping or held: automatic"), where the game rolled the d20 and
+  doubled the damage. DSCLOG's HELD: `HELD_HIT` (589E9h, the natural 20's "cmp word [bp-6],14h": its
+  ZF made in the handler for the JE to the hit, set too for a helpless target) and `HELD_DAMAGE`
+  (58B0Dh, "mov ax,[bp-4] / shl ax,1": what a helpless target takes, x2 only without the rule);
+  `HELD_NOW` the game's own test (effect 34 on DS:494Ah's combatant, or its creature's +1Ch 3). Both
+  sides alike. AD&D's killing blow once no other fighting is going on is left out. The dice log:
+  `    Paralyzed: hit automatically, for normal damage (AD&D's held target)` under the attack, no x2.
+  Seen in DOSBox (playtest/logs/2026-11-10-held-damage.md): with the rule, d20s of 8, 5 and 9 against
+  "only a 20 hits" all hit a held Templar for their damage (6, 9: the HP falls matched); unticked, the
+  same setup missed on 12s and doubled the backstab. tests/test_held.py runs both sites in Unicorn.
 - **The dice log shows the game's double damage on a helpless target**: a weapon blow on a
   Paralyzed or Out Cold creature does double (the attack routine, 5883Ah, hands the damage call
   5B8:20h its damage x2 too, "shl ax,1" at 58B0Dh, which 79BF9h takes when the target's effects'
