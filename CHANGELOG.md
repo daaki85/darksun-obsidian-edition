@@ -626,6 +626,8 @@ segment spare.
   keeps it, `_worker`).
 
 **Docs**
+- **`gear.png`** is the user's picture of Gerakis in his gear (it was a before-and-after with the
+  shadows on too, at an uneven 2.5x that blurred it); `shadows.png` keeps the shadows.
 - **Where the large dice come from:** FEATURES' creature size table names its sources, the Player's
   Handbook's weapons table (the pick as the horseman's pick), the *Complete Book of Dwarves* for the
   great axe (its two-handed battle axe, 1d10/2d8) and the Dark Sun weapons guide the

@@ -2360,7 +2360,7 @@ store is a different limit from the game's 300 picture slots, which [the bugs
 fixed](GAME-BUGS.md#screens-and-memory) also see to: "Graphics disappearing in a busy
 area".)
 
-![The party in the arena as the game draws them (left) and with gear and shadows on (right): Gerakis with his bone long sword and gythka, Cermak with his staff and sling, Cilla (an elf) with her bone long sword and sling, each casting a shadow toward the lower right](docs/gear.png)
+![Gerakis on the sand, drawn with what he wears: his armour on his chest, arms and legs, and his weapon in hand](docs/gear.png)
 
 ![Gerakis standing in the arena in magic gear: sparks shimmer over his armour, and the edge of the weapon at his hip glints](docs/magic-glint.gif)
 
