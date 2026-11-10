@@ -210,9 +210,9 @@ In between a 1 and a 20 the doubled roll makes saving far easier: needing 14,
 a normal d20 saves 35% of the time and a doubled one 70%, which is why
 Fireball's victims usually get away with half damage. It isn't AD&D, and the
 game never explains it; it may have been meant as a dodge. The log says it on
-each save: `d20 = 7, doubled against fire = 14`. Two of the mod's
-[rule changes](FEATURES.md#spells-saved-against-with-the-spell-save) put the
-spell save back and take the doubled d20 away.
+each save: `d20 = 7, doubled against fire = 14`. The mod's
+[**Saving throws against spells**](FEATURES.md#spells-saved-against-with-the-spell-save)
+puts the spell save back and takes the doubled d20 away.
 
 The target's spells and effects:
 - Blessed +1, Barkskin +1, Spirit Armor +3 (but not on

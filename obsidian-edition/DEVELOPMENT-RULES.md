@@ -818,6 +818,8 @@ draws it blank.
 
 ([In the features page](FEATURES.md#spells-saved-against-with-the-spell-save).)
 
+Part of the switch Saving throws against spells (`spell_save`; `RULE_SPELL_SAVE` is `RULE_NO_DOUBLE`).
+
 How: the Loader writes the game's own table that turns a spell's kind of save
 into one of the five (a table of words at DS:1E75h, read afresh for every
 save), and puts it back when the rule is unticked.
@@ -826,6 +828,8 @@ save), and puts it back when the rule is unticked.
 
 ([In the features
 page](FEATURES.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20).)
+
+Part of the switch Saving throws against spells (`spell_save`; `RULE_SPELL_SAVE` is `RULE_NO_DOUBLE`).
 
 How: the helper does the save's doubling (`INT F0h`) only while this rule is
 off, and the Loader marks the fire, cold and electricity spells with the game's

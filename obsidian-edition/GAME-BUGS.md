@@ -177,12 +177,12 @@ Most of the [rule changes](FEATURES.md#rule-changes) put right a rule the game g
 departs from its own manual, from itself, or from the Player's Handbook it follows. Each has a
 switch on the Options tab, on by default, so the game's own rule is still there to go back to. (The
 rule changes that are the mod's own choices, not corrections, are left out: helms' AC, resting, the
-XP level cap, hit dice, creation scores, half-giants' weapons, creature size, cahulaks and ages.)
+XP level cap, hit dice, creation scores, half-giants' weapons, creature size, weapon traits (cahulaks, stinkpots, polearm reach) and ages.)
 
 | Rule | The game | The rulebook | Switch |
 |---|---|---|---|
-| Saves against spells | Petrification or polymorph for almost every spell | The save against spells | [Spells saved against with the spell save](FEATURES.md#spells-saved-against-with-the-spell-save) |
-| Fire, cold and electricity | The save's d20 doubled (70% to save a Fireball where 35% is due), which the manual and AD&D don't have | DEX's adjustment | [Doubled d20](FEATURES.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20) |
+| Saves against spells | Petrification or polymorph for almost every spell | The save against spells | [Saving throws against spells](FEATURES.md#spells-saved-against-with-the-spell-save) |
+| Fire, cold and electricity | The save's d20 doubled (70% to save a Fireball where 35% is due), which the manual and AD&D don't have | DEX's adjustment | [Saving throws against spells](FEATURES.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20) |
 | Spells, psionics and monsters | Saves, times, damage and effects that part from its own manual (pp. 29-44) | As the manual has them | [As the manual describes them](FEATURES.md#spells-and-psionics-as-the-manual-describes-them) |
 | Turn Undead | A d20 against a number of its own, a row too easy for 2- and 3-HD undead and a row too hard for 5 HD; a success destroys, there is no fleeing, and a priest may try the same undead as often as they like | AD&D's turning table: undead turned flee for 3d4 rounds, D destroys, D* destroys more of the kind, "---" no chance; a priest who fails can't try that undead again that fight ([the table](HOW-THE-GAME-WORKS.md#adds-turning-table)) | [As the manual describes them](FEATURES.md#spells-and-psionics-as-the-manual-describes-them) (it goes with the spells' switch) |
 | Missile and touch spells | Every one lands, every time | They roll to hit ("as if fired by a fighter") | [Spells roll to hit](FEATURES.md#spells-roll-to-hit) |
@@ -198,7 +198,7 @@ XP level cap, hit dice, creation scores, half-giants' weapons, creature size, ca
 | Warriors' attacks | 3/2 with any weapon | The plain rate outside a specialization | [Weapon specialization](FEATURES.md#weapon-specialization) |
 | Held and Out Cold targets | A roll to hit as ever, and double damage | A hit automatically, for normal damage | [Held targets](FEATURES.md#held-targets) |
 | Acid on armour | The item destroyed outright | Each item saves by its material | [Items saving against acid](FEATURES.md#items-saving-against-acid) |
-| Thief skills and backstabs | Skills too high (a 3rd-level elf with move silently 66); a backstab multiplied STR's bonus too | The Player's Handbook's table; a backstab multiplies the weapon's dice only | [Thief skills from AD&D's table](FEATURES.md#thief-skills-from-adds-table) |
+| Thief skills and backstabs | Skills too high (a 3rd-level elf with move silently 66); a backstab multiplied STR's bonus too | The Player's Handbook's table; a backstab multiplies the weapon's dice only | [Thieves as in AD&D](FEATURES.md#thief-skills-from-adds-table) |
 
 ## Two more, with a switch
 

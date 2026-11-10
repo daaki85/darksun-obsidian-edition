@@ -66,8 +66,8 @@ which loads the mod with your options.
   past 9th up to a cap by XP (10th to 13th for one class, lower for two or
   three), Enlarge's weapon dice, CON's regeneration, [creature
   size](FEATURES.md#creature-size) (large foes take AD&D's large weapon dice,
-  and Hold and Charm Person don't work on them), [cahulaks](FEATURES.md#cahulaks)
-  as Dark Sun has them, [held targets](FEATURES.md#held-targets) hit
+  and Hold and Charm Person don't work on them), [weapon traits](FEATURES.md#weapon-traits)
+  (cahulaks as Dark Sun has them, the staff sling's stinkpots, polearm reach), [held targets](FEATURES.md#held-targets) hit
   automatically, spells and psionics as the manual describes them, spells
   rolling to hit, Turn Undead by AD&D's table, resting that heals by the
   priests' spells and a night's rest, and dual-classing from 3rd level ([Rule
@@ -396,7 +396,7 @@ of the tab, sets them all back (after asking). In a
 window too small to show the open sections, the tab scrolls (scrollbar, mouse
 wheel, or arrow and page keys once it has the focus).
 
-![The Options tab with Rule changes (twenty-five switches, in three groups: Characters, Weapons and armour, Magic) and New content open, the other sections closed](docs/options.png)
+![The Options tab with Rule changes (twenty-four switches, in three groups: Characters, Weapons and armour, Magic) and New content open, the other sections closed](docs/options.png)
 
 ### The Characters tab
 

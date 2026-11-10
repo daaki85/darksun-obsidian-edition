@@ -373,8 +373,8 @@ Springs; Deepbiter is its magic one.
 | ![](docs/items/bone-great-axe.png) | great axe | bone | Jark, Weapon Merchant | Wild Mul, Scar's henchmen | **new**: 1d10, two-handed; lighter than metal (and breaks as bone does); a warrior's starting great axe |
 | ![](docs/items/metal-great-axe.png) | great axe | metal | Weapon Merchant | the arena's champions (the half-giant) | **new**: the game's great axe, in metal |
 | ![](docs/items/obsidian-great-axe.png) | great axe | obsidian | Jark, Weapon Merchant | — | **new**: 1d10, two-handed; a fire or earth cleric's starting great axe |
-| ![](docs/items/metal-pick.png) | pick | metal | Weapon Merchant | — | **new**: the game's pick, in metal |
-| ![](docs/items/stone-pick.png) | pick | stone | — | on the ground in the Hot Springs (two); a starting weapon |  |
+| ![](docs/items/metal-pick.png) | pick | metal | Weapon Merchant | — | **new**: the game's pick, in metal; 1d6+1, the footman's pick (2d4 against a large target with [Creature size](FEATURES.md#creature-size)) |
+| ![](docs/items/stone-pick.png) | pick | stone | — | on the ground in the Hot Springs (two); a starting weapon | 1d6+1, the footman's pick (the game's 1d4+1); 2d4 against a large target with [Creature size](FEATURES.md#creature-size) |
 | ![](docs/items/quarterstaff.png) | quarterstaff | wood | Jark, Weapon Merchant | Mikquetzl, Troop Leader, Dakaren, Dagolar, Wyrmias, Hermit, Father Garyn, Notaku, a weapon rack in the Lower Castle, a skeleton in the Undermountain, a chest, a weapon rack in the slave pens |  |
 | ![](docs/items/bone-polearm.png) | polearm | bone | Weapon Merchant | a weapon rack in the Lower Castle, a weapon rack in the slave pens | reaches two squares with [the rule](FEATURES.md#polearm-reach), held with no other weapon (a shield is fine) |
 | ![](docs/items/metal-polearm.png) | polearm | metal | — | Castle Guard | **new**: the game's polearm, in metal; an earth cleric's starting polearm; reaches two squares with [the rule](FEATURES.md#polearm-reach), as the bone one |

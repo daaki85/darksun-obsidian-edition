@@ -95,16 +95,21 @@ reach took 384 bytes of the segment (68,592 bytes before it).
   and the axe 1d10 (was its 1d8). DSCLOG's PROBE_TYPES_FILL sets type 112's sides (no switch, as
   the Great Axe's material), `npcitems` the Metal Pick's; LARGE_DICE and `sizes.LARGE_DICE` the
   large dice (with **Creature size as in AD&D**). KITS', FEATURES', the guide's and
-  HOW-THE-GAME-WORKS' tables. (Tests: `test_room_and_filled`, `test_sizes`, the KITS table's.)
+  HOW-THE-GAME-WORKS' tables. (Tests: `test_room_and_filled`, `test_sizes`, the KITS table's. The game's
+  type table read 1d6+1 for both picks in the game, playtest/logs/2026-11-10-stinkpots.md.)
 - **Grand mastery's die is the next greater die size, against every target** (Player's Option:
   Combat & Tactics). It was 2 more sides (a d12 became a d14) and was lost against a large target:
   the creature size rule's large dice (SIZE_DICE, at the swing) replaced the step PROBE_SPEC_DAMAGE
   had made. Now DSCLOG's NEXT_DIE (d2, d3, d4, d6, d8, d10, d12, d20) steps the die at the attack,
   the View Character and inventory lines, and a grand master's large dice: a long sword 1d10, and
   1d20 against a large target. The dice log says `(1d20 for 1d8: a large target, grand mastery)`.
-  (Tests: `test_grand_mastery_next_die`, `SizeTests.test_grand_master_on_large`, `NextDieTests`.)
+  (Tests: `test_grand_mastery_next_die`, `SizeTests.test_grand_master_on_large`, `NextDieTests`. Seen in
+  the game 2026-11-10: a grand master's long sword 1d20 on a large Templar,
+  playtest/logs/2026-11-10-grand-mastery-large.md.)
 
 **Docs**
+- docs/options.png still shows 2.15.0's switches (the two save switches, the cahulaks' own, the separate
+  shop and thief boxes): to be retaken before the release.
 - KITS: a table of every weapon spec's dice, man-sized and large, with and without grand mastery
   ([Grand mastery's damage](obsidian-edition/KITS.md#grand-masterys-damage); `GrandMasteryTableTests`
   keeps it in step with `sizes.LARGE_DICE` and `specialize.next_die`). The staff sling's row is its
