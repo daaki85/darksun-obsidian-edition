@@ -1103,7 +1103,7 @@ more of the game's memory.
 
 ## The game's people's gear
 
-([In the bugs fixed](GAME-BUGS.md#fights); `people.py`.)
+([In the bugs fixed](GAME-BUGS.md#who-turns-up-and-how); `people.py`.)
 
 The game makes a person's items in its backpack list (+0Ch) and puts them on only at its first
 action in a fight. Seen in DOSBox (2026-11-06, `playtest/logs/2026-11-06-npcs-equip.md`): at the

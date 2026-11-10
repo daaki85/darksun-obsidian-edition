@@ -313,7 +313,7 @@ From the game's damage and fighting code; none of this is in the manual:
   meets no armour. Once on, a weapon in hand is fought with (in place of the
   first two natural attacks) and worn armour counts. The game never puts on
   rings, cloaks, belts, boots or amulets. (With the Loader: [worn from the
-  start](GAME-BUGS.md#fights).)
+  start](GAME-BUGS.md#who-turns-up-and-how).)
 
 The dice log notes a weapon hit that takes less than its roll, or nothing at
 all, with what the monster's defences say about it
@@ -375,7 +375,7 @@ Charm, Feeblemind, Web and a few others last until removed.
 | Afraid | The computer runs it; it can't attack or cast. Undead are immune, and Cloak of Bravery stops the next fear (and ends) |
 | Charmed | Joins the caster's side, run by the computer |
 | Confused | Each turn a d10: 1 runs off, 2–6 does nothing, 7–9 fights for a side picked with a d2, 10 acts normally (the log shows the rolls) |
-| Berserk | Fights for a side picked at random each turn; can't cast. In the game a party member could be left on the monsters' side when this or Confused ended; the patched game puts it back ([bugs fixed](GAME-BUGS.md#fights)) |
+| Berserk | Fights for a side picked at random each turn; can't cast. In the game a party member could be left on the monsters' side when this or Confused ended; the patched game puts it back ([bugs fixed](GAME-BUGS.md#sides-and-blows)) |
 | Can't Attack (Stinking Cloud) | Can't attack or cast harmful spells |
 | No spell use, Feeblemind | Can't cast spells. Feeblemind also makes INT and WIS 3 while it lasts (as they were after) and nothing ends it; with the manual's spells it stops psionic powers too, and the mod's Heal cures it |
 | Blind | AC 4 worse, −2 initiative, can't cast spells that need sight |
@@ -804,7 +804,7 @@ chance out as:
   and ignores chest and arm armour and helmets, so a thief holding any weapon
   pays it. (The manual's "anything other than leather-type armor" is AD&D's
   rule, not what the code does.) (With the Loader: [no equipment
-  penalty](GAME-BUGS.md#fights).)
+  penalty](GAME-BUGS.md#thief-skills).)
 - plus the situation's bonus or penalty (a hard lock, say).
 
 With **Thief skills from AD&D's table** ticked (see
@@ -859,7 +859,7 @@ doors, walls...), which ask in two ways. These are all of them:
 
 A party check is meant to go to the member with the best chance, but the
 game's pick compares the wrong way round, so the first party member always
-rolls (with the Loader: [the best](GAME-BUGS.md#fights)). (The game also has a script command that lets
+rolls (with the Loader: [the best](GAME-BUGS.md#thief-skills)). (The game also has a script command that lets
 each member try in turn, but no script uses it.)
 
 **The game never rolls move silently, hide in shadows or read languages**, so on

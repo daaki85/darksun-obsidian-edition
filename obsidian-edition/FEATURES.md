@@ -816,7 +816,7 @@ and thief skills are worked out from the level. So past 9th:
   better for every 5 gladiator levels, so −2 at 10th where it was −1. (The
   Loader counts it in **AC: spells, rings, other**.) In armour only, as Dark
   Sun has it: the game gave it with none ([the game's bugs,
-  fixed](GAME-BUGS.md#fights)).
+  fixed](GAME-BUGS.md#items)).
 - **THAC0 and saves** improve as the game's formulas give: 11 for a 10th-level
   gladiator, 14 for a 10th-level druid, as for AD&D's warriors and priests.
 - **Spell slots** grow at the levels casters already have, up to 5th. With
@@ -2342,7 +2342,7 @@ The first wave is six **champions** in place of the game's:
 
 They fight with their weapons, the two archers shooting, and their armour counts
 on top of their kinds' AC, as the party's does (and as the game's own people's
-do: [their gear is worn](GAME-BUGS.md#fights) from the start too).
+do: [their gear is worn](GAME-BUGS.md#who-turns-up-and-how) from the start too).
 What they carry is on their bodies afterwards; the Tohr-kreen falls as a dead
 Tohr-kreen of its own, Kreenfang in it. It comes once. A party that breaks out
 with Scar instead, or leaves the pens another way, doesn't meet them. (The dead
