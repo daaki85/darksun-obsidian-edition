@@ -1194,6 +1194,11 @@ corner), #12 the sewer grate (square 46, 86; "use" it or walk over it: rip, hack
 try can be tried again), #15 the campfire (rest; two rests bring the next arena fight; keeping
 Kurzak waiting sets off the alarm), #10 Pehtucl's ambush (Bloodwrath on his body).
 
+**Water for resting (an idea for later, the user's, 2026-11-10):** resting might one day cost water,
+which would need water and jugs on sale or to find in every part of the game. Whenever a play
+reaches a new area, note in the test log and here where water, jugs or waterskins are (a shop,
+a well, a body, a chest), with the region and map position. Nothing is built for it yet.
+
 ## 6. After
 
 **Other sessions push to this branch too** (2026-11-01: a Dark Sun Recompiled session changed the
