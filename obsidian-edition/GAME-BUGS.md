@@ -118,6 +118,8 @@ Loader's copy of the game's scripts; many were found by yuan-ti and the OpenDS p
 | The **gladiator's armour optimisation** (AC 1 better a 5 gladiator levels) | Given with no armour on, where Dark Sun gives it to armour worn | Only with armour on (arms, legs, head or chest; not a shield, bracers or a robe) |
 | The game's **Sling +1** | A blank icon (its picture is missing from the game's data) | The Sling's, with a glow |
 | The game's **Great Axe +3** (the Army Commander's) | Its type had no material, as a ring's: its name showed none, and no sphere's cleric could wield it | Metal, as its icon's grey and teal head and its weight have it: "Metal Great Axe +3" |
+| The game's **Quicksilver Glove** | Its type had no material, which the game read as wood: it fought at -3 to hit and -2 damage | Leather, as the Chameleon Gloves are: "Leather Quicksilver Glove", 1D6+2 |
+| **Alagorn's** stories of two items | The Quicksilver Glove as "Quicksilver Gauntlets" that graft a weapon to the hand, the Helm of Contemplation as a shield against psionic attacks | The glove's name as the game has it and what it does (Detonate on every hit); the helm as Gaze Reflection |
 | The **air cleric's daggers** | None: no dagger in the game listed the air cleric among those who may use it, though its sphere allows daggers | Every dagger lists it ([how](DEVELOPMENT-CONTENT.md#new-items)) |
 
 ## Screens and memory

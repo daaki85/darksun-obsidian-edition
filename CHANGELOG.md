@@ -57,6 +57,8 @@ segment spare.
 - The Bug Fixes section's closing paragraph says which; GAME-BUGS has a table of them (the game's
   rule, the rulebook's, the switch); FEATURES' Rule changes says most are bugs, and the Enlarge entry
   quotes the Player's Handbook (p. 173). The air cleric's daggers go in GAME-BUGS's Items table.
+- The Quicksilver Glove's missing material (wood's -3 and -2) and Alagorn's two wrong stories join
+  GAME-BUGS's Items table; the stories get a `[Fixed]` bullet in PATCH-NOTES (the glove's had one).
 
 **New**
 - **New rule: held targets as in AD&D** (Options, Weapons and armour; on by default; `RULE_HELD`,
