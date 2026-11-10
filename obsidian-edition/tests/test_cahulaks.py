@@ -39,17 +39,22 @@ class LoaderTests(unittest.TestCase):
         self.assertIn(("cahulaks", game.RULE_CAHULAKS), game.RULE_SETTINGS)
 
     def test_big_table(self):
-        """A bit for each combatant whose creature's name is on the list (too big, or shapeless)."""
+        """A bit for each combatant that can't be tangled: too big by sizes.py (by race and name: the
+        monster Guard, not a human one), shapeless, or kept from it; a half-giant too."""
+        names = ["Cermak", "Bulette", "Slig", "Tyrian Slime", "Wyvern", "Djinn", "Guard", "Guard", "Gerakis", "Xorn"]
+        races = [1, 12, 14, 12, 13, 14, 12, 1, 5, 12]
         class Gd:
             def combatants(self):
-                return {0: 0, 5: 1, 9: 2, 300: 3, 519: 4, 520: 5}
+                return {0: 0, 5: 1, 9: 2, 300: 3, 519: 4, 520: 5, 30: 6, 31: 7, 1: 8, 40: 9}
             def creature_name(self, creature):
-                return ["Gerakis", "Bulette", "Slig", "Tyrian Slime", "Wyvern", "Djinn"][creature]
+                return names[creature]
+            def sheet(self, creature):
+                return bytes(0x18) + bytes([races[creature]]) + bytes(0x2E)
         table = cahulaks.big_table(Gd())
         self.assertEqual(len(table), cahulaks.BIG_BYTES)
         bits = {n for n in range(cahulaks.MAP_COUNT) if table[n // 8] >> (n % 8) & 1}
-        self.assertEqual(bits, {5, 300, 519})  # (520: past the map things)
-        self.assertTrue(cahulaks.LARGE.isdisjoint(cahulaks.SHAPELESS))
+        self.assertEqual(bits, {5, 300, 519, 30, 1, 40})  # (520: past the map things)
+        self.assertTrue(cahulaks.UNTANGLED.isdisjoint(cahulaks.SHAPELESS))
 
 
 @unittest.skipIf(td.Uc is None, "unicorn not installed")

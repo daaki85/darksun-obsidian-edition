@@ -32,16 +32,17 @@ NAMES: Dict[str, str] = {
     "Sand Howler": "M", "Xorn": "M", "Strine": "M", "Daggoran": "L", "Dagolar Slime": "M",
     "Tyrian Slime": "M", "Silt Runner": "S",
     # the peoples of the wastes and the deep (race "monster" in the game)
-    "Magera": "M", "Ssurran": "M", "Ssovan": "M", "Laussa": "M", "Shaman Follower": "M", "Tribesman": "M",
-    "First Folk": "S", "Undermt Folk": "S", "Outcast": "M", "Blind One": "M", "Drummer": "M",
-    "Guard": "M", "Slave": "M", "Slave Leaders": "M", "Wagon Guard": "M", "Worker": "M",
+    "Magera": "L", "Ssurran": "M", "Ssovan": "M", "Laussa": "M", "Shaman Follower": "M", "Tribesman": "M",
+    "First Folk": "S", "Undermt Folk": "S", "Outcast": "M", "Drummer": "M", "Slave": "M",
+    # (the six of one great tusked figure, the game's race 12 and kind 31: large, the user's call)
+    "Blind One": "L", "Guard": "L", "Slave Leaders": "L", "Wagon Guard": "L", "Worker": "L",
 }
 
 # the guesses (no book to go by for the game's own creatures, or the books disagree)
 UNSURE = frozenset((
     "Spider Mage", "Cheee-smak-tunk!", "Churr-te-tunk!", "Click-tunk!", "Alita", "Rampager",
     "Mountain Stalker", "Styr", "Fire Eel", "Screamer Beetle", "Strine", "Daggoran", "Laussa",
-    "Blind One", "Drummer", "First Folk", "Undermt Folk", "Insect Swarm", "Evard's Tentacle",
+    "Drummer", "First Folk", "Undermt Folk", "Insect Swarm", "Evard's Tentacle",
     "Animated Statue", "Dust Devil", "Lesser Air Eleme", "Lesser Water Ele", "Lsr Earth Elem",
     "Lsr Fire Elem", "Sand Howler", "Wyvern",
 ))

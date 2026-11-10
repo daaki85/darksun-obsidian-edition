@@ -78,6 +78,10 @@ DSCLOG.EXE 66,832 bytes (image 66,800), 1,680 of its segment spare.
   2670/2671 the bone one's heads in the metal polearm's colours, BOX_TALL too), counted as cahulaks
   by every rule (the cahulaks' rule's sites, the half-giants' hands, the kits, restrict.py, the dice
   log, specialization, the figure's drawing).
+- **Large: the six of one great tusked figure** (the game's race 12, kind 31: the Magera, Blind One,
+  Slave Leaders, Wagon Guard, Worker and the monster Guard), the user's call. The cahulaks' "too big"
+  now comes from sizes.py (large or bigger, by race and name: the human Guards stay man-sized), no
+  longer a list of names of its own (`cahulaks.why_not`, `big_table` reading each creature's race).
 - **Creature sizes** (`dsloader/sizes.py`, for rules to go by; the game keeps none): AD&D's T to G,
   people by race (half-giants L, halflings S, thri-kreen M, a guess at 7 feet), the rest by name
   from AD&D's and Dark Sun's monster books, 27 the mod's guesses (UNSURE, marked "?"); a Size column

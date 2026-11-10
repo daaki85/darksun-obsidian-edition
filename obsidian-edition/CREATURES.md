@@ -140,22 +140,22 @@ Made with `python -m dsloader.doccreatures GAME_FOLDER`, from the game's own dat
 | | Creature | Race | Size | Cahulaks can tangle it |
 |---|---|---|---|---|
 | ![](docs/creatures/air-elemental-elemental.png) | Air Elemental | elemental | L (large) | no: nothing to tangle |
-| ![](docs/creatures/alita-monster.png) | Alita | monster | L (large) ? | no: can't be tangled |
+| ![](docs/creatures/alita-monster.png) | Alita | monster | L (large) ? | no: too big |
 | ![](docs/creatures/animated-statue-monster.png) | Animated Statue | monster | L (large) ? | no: too big |
 | ![](docs/creatures/aposs-undead.png) | Aposs | undead | M (man-sized) | yes |
 | ![](docs/creatures/babau-monster.png) | Babau | monster | M (man-sized) | yes |
 | ![](docs/creatures/black-mastyrial-monster.png) | Black Mastyrial | monster | L (large) | no: too big |
-| ![](docs/creatures/blind-one-monster.png) | Blind One | monster | M (man-sized) ? | yes |
+| ![](docs/creatures/blind-one-monster.png) | Blind One | monster | L (large) | no: too big |
 | ![](docs/creatures/blue-slaad-monster.png) | Blue Slaad | monster | L (large) | no: too big |
 | ![](docs/creatures/bulette-monster.png) | Bulette | monster | L (large) | no: too big |
-| ![](docs/creatures/cheee-smak-tunk-monster.png) | Cheee-smak-tunk! | monster | L (large) ? | no: can't be tangled |
-| ![](docs/creatures/churr-te-tunk-monster.png) | Churr-te-tunk! | monster | L (large) ? | no: can't be tangled |
-| ![](docs/creatures/click-tunk-monster.png) | Click-tunk! | monster | L (large) ? | no: can't be tangled |
+| ![](docs/creatures/cheee-smak-tunk-monster.png) | Cheee-smak-tunk! | monster | L (large) ? | no: too big |
+| ![](docs/creatures/churr-te-tunk-monster.png) | Churr-te-tunk! | monster | L (large) ? | no: too big |
+| ![](docs/creatures/click-tunk-monster.png) | Click-tunk! | monster | L (large) ? | no: too big |
 | ![](docs/creatures/convert-undead.png) | Convert | undead | M (man-sized) | yes |
 | ![](docs/creatures/cragg-undead.png) | Cragg | undead | M (man-sized) | yes |
-| ![](docs/creatures/daggoran-monster.png) | Daggoran | monster | L (large) ? | no: can't be tangled |
+| ![](docs/creatures/daggoran-monster.png) | Daggoran | monster | L (large) ? | no: too big |
 | ![](docs/creatures/dagolar-slime-monster.png) | Dagolar Slime | monster | M (man-sized) | no: nothing to tangle |
-| ![](docs/creatures/dark-spider-monster.png) | Dark Spider | monster | L (large) | no: can't be tangled |
+| ![](docs/creatures/dark-spider-monster.png) | Dark Spider | monster | L (large) | no: too big |
 | ![](docs/creatures/djinn-monster.png) | Djinn | monster | L (large) | no: too big |
 | ![](docs/creatures/drummer-monster.png) | Drummer | monster | M (man-sized) ? | yes |
 | ![](docs/creatures/dune-reaper-monster.png) | Dune Reaper | monster | H (huge) | no: too big |
@@ -165,14 +165,14 @@ Made with `python -m dsloader.doccreatures GAME_FOLDER`, from the game's own dat
 | ![](docs/creatures/fire-eel-monster.png) | Fire Eel | monster | L (large) ? | no: too big |
 | ![](docs/creatures/fire-elemental-monster.png) | Fire Elemental | monster | L (large) | no: nothing to tangle |
 | ![](docs/creatures/first-folk-monster.png) | First Folk | monster | S (small) ? | yes |
-| ![](docs/creatures/guard-monster.png) | Guard | monster | M (man-sized) | yes |
+| ![](docs/creatures/guard-monster.png) | Guard | monster | L (large) | no: too big |
 | ![](docs/creatures/insect-swarm-monster.png) | Insect Swarm | monster | L (large) ? | no: nothing to tangle |
 | ![](docs/creatures/laussa-monster.png) | Laussa | monster | M (man-sized) ? | yes |
 | ![](docs/creatures/lesser-air-eleme-monster.png) | Lesser Air Eleme | monster | M (man-sized) ? | no: nothing to tangle |
 | ![](docs/creatures/lesser-water-ele-monster.png) | Lesser Water Ele | monster | M (man-sized) ? | no: nothing to tangle |
 | ![](docs/creatures/lsr-earth-elem-monster.png) | Lsr Earth Elem | monster | M (man-sized) ? | no: nothing to tangle |
 | ![](docs/creatures/lsr-fire-elem-monster.png) | Lsr Fire Elem | monster | M (man-sized) ? | no: nothing to tangle |
-| ![](docs/creatures/magera-monster.png) | Magera | monster | M (man-sized) | no: can't be tangled |
+| ![](docs/creatures/magera-monster.png) | Magera | monster | L (large) | no: too big |
 | ![](docs/creatures/mastyrial-monster.png) | Mastyrial | monster | L (large) | no: too big |
 | ![](docs/creatures/mountain-stalker-monster.png) | Mountain Stalker | monster | L (large) ? | no: too big |
 | ![](docs/creatures/otyugh-monster.png) | Otyugh | monster | L (large) | no: too big |
@@ -182,7 +182,7 @@ Made with `python -m dsloader.doccreatures GAME_FOLDER`, from the game's own dat
 | ![](docs/creatures/rampager-monster.png) | Rampager | monster | L (large) ? | no: too big |
 | ![](docs/creatures/red-slaad-monster.png) | Red Slaad | monster | L (large) | no: too big |
 | ![](docs/creatures/sand-howler-monster.png) | Sand Howler | monster | M (man-sized) ? | no: can't be tangled |
-| ![](docs/creatures/screamer-beetle-monster.png) | Screamer Beetle | monster | L (large) ? | no: can't be tangled |
+| ![](docs/creatures/screamer-beetle-monster.png) | Screamer Beetle | monster | L (large) ? | no: too big |
 | ![](docs/creatures/shadow-undead.png) | Shadow | undead | M (man-sized) | no: nothing to tangle |
 | ![](docs/creatures/shadow-guard-undead.png) | Shadow Guard | undead | M (man-sized) | yes |
 | ![](docs/creatures/shadow-king-undead.png) | Shadow King | undead | M (man-sized) | yes |
@@ -193,9 +193,9 @@ Made with `python -m dsloader.doccreatures GAME_FOLDER`, from the game's own dat
 | ![](docs/creatures/silt-runner-monster.png) | Silt Runner | monster | S (small) | yes |
 | ![](docs/creatures/skull-elder-undead.png) | Skull Elder | undead | M (man-sized) | yes |
 | ![](docs/creatures/slave-monster.png) | Slave | monster | M (man-sized) | yes |
-| ![](docs/creatures/slave-leaders-monster.png) | Slave Leaders | monster | M (man-sized) | yes |
+| ![](docs/creatures/slave-leaders-monster.png) | Slave Leaders | monster | L (large) | no: too big |
 | ![](docs/creatures/slig-monster.png) | Slig | monster | M (man-sized) | yes |
-| ![](docs/creatures/spider-mage-monster.png) | Spider Mage | monster | L (large) ? | no: can't be tangled |
+| ![](docs/creatures/spider-mage-monster.png) | Spider Mage | monster | L (large) ? | no: too big |
 | ![](docs/creatures/ssovan-monster.png) | Ssovan | monster | M (man-sized) | yes |
 | ![](docs/creatures/ssurran-monster.png) | Ssurran | monster | M (man-sized) | yes |
 | ![](docs/creatures/strine-monster.png) | Strine | monster | M (man-sized) ? | no: can't be tangled |
@@ -208,9 +208,9 @@ Made with `python -m dsloader.doccreatures GAME_FOLDER`, from the game's own dat
 | ![](docs/creatures/tyrian-slime-monster.png) | Tyrian Slime | monster | M (man-sized) | no: nothing to tangle |
 | ![](docs/creatures/undermt-folk-monster.png) | Undermt Folk | monster | S (small) ? | yes |
 | ![](docs/creatures/vrock-monster.png) | Vrock | monster | L (large) | no: too big |
-| ![](docs/creatures/wagon-guard-monster.png) | Wagon Guard | monster | M (man-sized) | yes |
+| ![](docs/creatures/wagon-guard-monster.png) | Wagon Guard | monster | L (large) | no: too big |
 | ![](docs/creatures/water-elemental-monster.png) | Water Elemental | monster | L (large) | no: nothing to tangle |
-| ![](docs/creatures/worker-monster.png) | Worker | monster | M (man-sized) | yes |
+| ![](docs/creatures/worker-monster.png) | Worker | monster | L (large) | no: too big |
 | ![](docs/creatures/wyvern-monster.png) | Wyvern | monster | L (large) ? | no: too big |
 | ![](docs/creatures/xorn-monster.png) | Xorn | monster | M (man-sized) | no: can't be tangled |
 | ![](docs/creatures/zombie-undead.png) | Zombie | undead | M (man-sized) | yes |
