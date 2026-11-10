@@ -811,6 +811,10 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   link, flags and slot kept) shoots on the member's turn with `pointer.py attack` and a click on the
   foe's figure, about 10 pixels above its feet (DS:669Dh + 32 x combatant, less the camera); beside the
   figure the pointer shows the red "can't" sign and nothing happens.
+- **Melee reach isn't the type's range byte** (2026-11-10, logs/2026-11-10-polearm-reach.md): a polearm
+  with its type's +0Ah set to 2, held alone, with Move 0, two squares from a held foe: the attack does
+  nothing and the turn passes; with a bow in the missile slot the click shoots it instead. To take a held
+  item out in memory: `ring.unlink(gd, ring.Items(gd), ITEM, "why")` through live.py.
 - **A weapon spec's grand master for a test** (2026-11-10, logs/2026-11-10-grand-mastery-large.md): write
   the member's sheet (the far pointer DS:1661h + (creature +4) x 47h) classes (9,0,0), levels (9,0,0) and
   +14h-+17h `01 00 00 00` (the long sword, unpacked; a sheet's +16h top bit marks them packed), then
