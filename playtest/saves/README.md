@@ -30,7 +30,7 @@ cannot be loaded in a fresh install (2026-11-01).
   party in the east hall's fire room (map 1896, 872; its door 115, 53 opened), with the arena
   count (the game's number 12) set to 4 in memory before the save, so the next trip is Scar's.
   Its Scar and henchmen were made on the arena's first visit, before 2026-11-10's gear (Scar's long
-  sword, no helm or leggings; bare henchmen): test their gear in a new game.
+  sword, no helm or leggings; henchmen with bone axes and no armour): test their gear in a new game.
   Not rested yet. Its `DARKSAVE.GFF` is the one in the game folder (not rewritten at this save).
 - `pens-after-scar` (2026-11-05): from `pens-fire-count4`: rested, called, into the arena, Scar
   killed there by Cilla ("This makes Cilla king of the pens!"), the waves fought and out by the

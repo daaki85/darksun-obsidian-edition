@@ -81,7 +81,9 @@ segment spare.
   a helm added to his chest and arm armour: AC 3 with the Helms give AC 1 rule, 4 without, from 5), a
   step above Merzol (chest and arm) and below the champions after him; his henchmen, who wore
   nothing, get Merzol's leather chest and arm armour (AC 8, from 10), and each now swings a bone
-  great axe (1d10, two-handed) in place of the mod's bone axe. Their gladiator peers in
+  great axe (1d10, two-handed) in place of the mod's bone axe. (Scar's gear and the henchmen's
+  armour seen in the game 2026-11-10, playtest/logs/2026-11-10-scar-bout-gear.md; the great axes
+  not yet.) Their gladiator peers in
   Merzol's gang wear one brigandine arm piece and a shield.
 - **New rule: held targets as in AD&D** (Options, Weapons and armour; on by default; `RULE_HELD`,
   the Loader's `held_hit`, DSCLOG's `RULE_HI_HELD` 8000h and HELD: `HELD_HIT` at 589E9h,

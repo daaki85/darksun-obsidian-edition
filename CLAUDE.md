@@ -134,7 +134,9 @@ Monitor, and every step gets a `timeout`.
    the mountain stalker, push the button on the north wall; #12 is the sewer grate (map 46,86, square 2,5).
 4. Back to the arena (the arena's people are made on its first visit: a gear change for Scar shows
    only in a new game; `setcount.py 4` sets Scar's trip): rest at the fire room's ring (door 1848,856, the look pointer) two or three
-   times, then answer Kurzak's call at once (`toarena.sh`; `toalarm.sh` + `restalarm.sh` for the
+   times, then answer Kurzak's call at once (`toarena.sh`; in the arena `walkto.py` can't take the bone
+   wall's gap: `scroll.py 0 -100` twice, click the gap (screen about 178,118), then clicks at map
+   (488,420) until `fight_on 1`; `toalarm.sh` + `restalarm.sh` for the
    alarm fight instead). After Scar's death in the arena the next visit is the champions' bout.
 5. Water: whenever a play reaches a new area, note in the test log and in PLAYTESTING.md where
    water, jugs or waterskins are (the user's idea of resting costing water one day).

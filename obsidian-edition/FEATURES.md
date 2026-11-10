@@ -2015,7 +2015,7 @@ made the **Cahulaks +2**; the champions' mul fights with **metal cahulaks**
 (the game has only bone ones); and the dead body by the arena's stone arch
 holds plain bone ones. Metal and obsidian cahulaks are sold too, the metal by
 Teaquetzl's Weapon Merchant and the obsidian by Jark (earth and fire clerics may
-use obsidian ones, earth clerics metal ones too), and two have names of their own:
+use obsidian ones, earth clerics metal ones too, air clerics any), and two have names of their own:
 **Emberlash**, an obsidian cahulaks +1 wielded by Uzoma of the Drajian patrol near
 the Hot Springs, and **Ironwhirl**, a metal cahulaks +2 on the Subterranean
 Temple's weapon rack ([Items](ITEMS.md#every-magic-item)).

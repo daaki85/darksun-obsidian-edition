@@ -725,7 +725,7 @@ and fire a chatkcha; water none).
   Chatkcha +1.
 - **Water:** Stillwater\* +1, Hayneedle\* +1, Drakejaw\* +1, Gythka +3,
   Gythka +2\*, Kreenfang\* +1, Polearm +1, Thornwall\* +1, Mace +2, the three
-  quarterstaffs, Gutterknot\* +1, the two magic cahulaks, Bow +2, Phrain's Bow +1,
+  quarterstaffs, Gutterknot\* +1, Cahulaks +2\*, Cahulaks +1\*, Bow +2, Phrain's Bow +1,
   Dunesong\* +1.
 
 An Elementalist adds its second sphere's.
@@ -1796,7 +1796,7 @@ class's list.
 | Bone and metal daggers | 1d4; the bone one is the only dagger a water cleric can use |
 | Obsidian and metal maces | 1d6+1 |
 | Metal pick, metal polearm, metal cahulaks | the game's, in metal |
-| Obsidian cahulaks | the game's cahulaks, in obsidian: earth and fire clerics may use them |
+| Obsidian cahulaks | the game's cahulaks, in obsidian: earth, fire and air clerics may use them |
 | Bone Scale Arm Armor, Leg Armor and Bone Helm | the rest of the bone scale set whose chest piece the game has |
 | Helm | a leather helm |
 

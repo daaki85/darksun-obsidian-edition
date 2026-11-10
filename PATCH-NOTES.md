@@ -196,7 +196,7 @@ A few of them:
 
 **Magic weapons**
 
-- **[New]** Twenty-two new magic weapons, each with its own icon and a story from the game's own item sage:
+- **[New]** Twenty-two new magic weapons, each with its own icon, and all but the Cahulaks +1 with a story from the game's own item sage:
 
 | Weapon | What it is |
 |---|---|
@@ -265,9 +265,9 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** **Maces** in obsidian and metal.
 - **[New]** A **metal pick** and a **metal polearm**.
 - **[New]** **Metal cahulaks**: the champions' mul wields them, and the Weapon Merchant sells them. The arena's dead body by the stone arch holds plain bone cahulaks.
-- **[New]** **Obsidian cahulaks**, which earth and fire clerics may use: Jark sells them, and an earth or fire cleric-warrior who picks the cahulaks starts with them.
+- **[New]** **Obsidian cahulaks**, which earth, fire and air clerics may use: Jark sells them, and an earth or fire cleric-warrior who picks the cahulaks starts with them.
 - **[Changed]** The game's **bone scale armour** set is complete, with its arm and leg pieces and helm.
-- **[New]** The game's plain **leather helm**, which it never placed: Kurzak wears one in the slave pens.
+- **[New]** The game's plain **leather helm**, which it never placed: Kurzak wears one in the slave pens, and Scar in the arena.
 
 ## World
 
@@ -279,7 +279,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** Merchants give your party leader a discount for high Charisma, from 5% at CHA 18 to 40% at 25.
 - **[Changed]** Merchants pay 60% of an item's price *(was all of it)*.
 - **[New]** Merchants keep the magical items you sell them, to buy back *(was destroyed when sold)*.
-- **[New]** Scar's henchmen carry bone axes, which they drop when they fall.
+- **[New]** Scar fights with a pair of obsidian cahulaks and wears a full leather suit with a helm; his henchmen swing bone great axes, which they drop when they fall, and wear leather chest and arm armour (in a new game: the arena's fighters are made on its first visit).
 - **[New]** People the party fights who had nothing in hand and struck with their fists carry weapons and armour that suit them.
 
 ## Graphics
@@ -397,7 +397,7 @@ The main fixes are below; every bug of the original game the mod mends, with wha
 - **[Fixed]** A preserver or psionicist with another class couldn't claim to have scried the **haystack** or read the man's thoughts, and the cave guide told even a dwarf or halfling to "go bother someone your own size". **Dagolar's slime book** counted a fighter's or an air cleric's training as magical but not an earth, fire or water cleric's or a druid's: now any cleric, druid, preserver or psionicist can read it.
 - **[Fixed]** Cilla, an elf in the ready-made party, was drawn with the half-elf woman's figure; she looks like an elf now (a switch keeps the game's figure).
 
-**Rules the game got wrong** are fixed too. Each is tagged **[Fixed]** under its own heading above and has a switch, on by default, for anyone who wants the game's own rule: the saving throws against spells and the doubled d20 against fire, cold and electricity, two weapons, warriors' attacks, acid on armour and held targets (Combat); class restrictions, multiclass hit points, the class tables, rangers' spells, dual-classing, preservers' learning from scrolls, CON's regeneration and poison saves (Classes and Kits); spells, psionics and monsters as the manual describes them (Turn Undead by AD&D's table with them), spells rolling to hit and Enlarge's dice (Magic and Psionics); and thief skills and backstabs (Improved Thieving). The other rule changes are the mod's own choices, not corrections, and stay **[Changed]** or **[New]**: helms' AC, resting, the XP level cap, hit dice rolled twice, creation scores as rolled, half-giants' two-handed weapons, creature size, cahulaks, and ages.
+**Rules the game got wrong** are fixed too. Each is tagged **[Fixed]** under its own heading above and has a switch, on by default, for anyone who wants the game's own rule: the saving throws against spells and the doubled d20 against fire, cold and electricity, two weapons, warriors' attacks, acid on armour and held targets (Combat); class restrictions, multiclass hit points, the class tables, rangers' spells, dual-classing, preservers' learning from scrolls, CON's regeneration and poison saves (Classes and Kits); spells, psionics and monsters as the manual describes them (Turn Undead by AD&D's table with them), spells rolling to hit and Enlarge's dice (Magic and Psionics); and thief skills and backstabs (Improved Thieving). The other rule changes are the mod's own choices, not corrections, and stay **[Changed]** or **[New]**: helms' AC, resting, the XP level cap, hit dice rolled twice, creation scores as rolled, half-giants' two-handed weapons, creature size, cahulaks, a thri-kreen's extra chatkcha throw, and ages.
 
 ## Your Saved Games
 
