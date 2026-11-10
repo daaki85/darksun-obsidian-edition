@@ -409,6 +409,27 @@ DOUBLED_FLAGS = 0x86
 
 # settings kept under an earlier name (the new spells' switch was Cat's Grace's alone)
 OLD_SETTING_NAMES = {"new_spells": "cats_grace"}
+# switches merged into another (after 2.15.0): an old file's half of a pair, if unticked, unticks the
+# merged switch (fold_merged, once: save_settings folds it in and drops the old key)
+MERGED_SETTINGS = {"no_doubled_save": "spell_save", "buyback": "cha_prices", "backstab_dice": "thief_table"}
+
+
+def fold_merged(settings: dict) -> dict:
+    """SETTINGS with each merged-away switch folded into the one it joined: unticked if either was
+    (a player who turned off half of a pair keeps the game's rule for both), the old key dropped."""
+    for old, new in MERGED_SETTINGS.items():
+        if old in settings:
+            if not settings.pop(old):
+                settings[new] = False
+    return settings
+
+
+def setting_on(settings: dict, key: str) -> bool:
+    """Whether rule switch KEY is ticked in SETTINGS: its value, an earlier name's, or a merged-away
+    half's untick (fold_merged); on by default."""
+    if any(not settings.get(old, True) for old, new in MERGED_SETTINGS.items() if new == key):
+        return False
+    return bool(settings.get(key, settings.get(OLD_SETTING_NAMES.get(key, key), True)))
 
 
 TURN_UNDEAD = 0xBE  # the clerics' Turn Undead, a spell record of its own (190)
@@ -452,8 +473,7 @@ def manual_die(spell: int, sheet: bytes) -> Tuple[int, str]:
 
 
 def rules_from_settings(settings: dict) -> int:
-    return sum(bit for key, bit in RULE_SETTINGS
-               if settings.get(key, settings.get(OLD_SETTING_NAMES.get(key, key), True)))
+    return sum(bit for key, bit in RULE_SETTINGS if setting_on(settings, key))
 
 
 def kind_to_save(kind: int, rules: int) -> int:

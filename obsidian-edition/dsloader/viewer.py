@@ -548,7 +548,7 @@ class Viewer:
                 var = own_vars[key]
             else:
                 var = self.rule_vars[key] = tk.BooleanVar(
-                    value=bool(settings.get(key, settings.get(game.OLD_SETTING_NAMES.get(key, key), True))))
+                    value=game.setting_on(settings, key))
             parent = rule_groups[group] if group else where.get(key, rules)
             ttk.Checkbutton(parent, text=text, variable=var,
                             command=self._options_changed).pack(anchor="w", pady=(4 if parent.winfo_children()[:-1] else 0, 0))

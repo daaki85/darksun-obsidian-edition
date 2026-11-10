@@ -88,7 +88,10 @@ reach took 384 bytes of the segment (68,592 bytes before it).
   items; RULES_HI 64 free), **Thieves as in AD&D** (`thief_table`: AD&D's thief skills and the
   backstab's dice; RULES_HI 128 free). `game.RULE_SPELL_SAVE`, `RULE_BUYBACK` and `RULE_BACKSTAB`
   name their switches' bits; the Options texts, FEATURES, the guide and DEVELOPMENT-RULES name the
-  switches. A settings file's `no_doubled_save`, `buyback` and `backstab_dice` are ignored now.
+  switches. A 2.15.0 settings file's `no_doubled_save`, `buyback` or `backstab_dice` unticked unticks the
+  switch it joined (`game.setting_on`), and the first save folds it in and drops the old key
+  (`game.fold_merged`, from `launch.save_settings`), so a player keeps the game's rule they chose.
+  (Test: `test_merged_switches`.)
 - **The pick is the footman's pick and the axe the battle axe** (*Player's Option: Skills & Powers*,
   the user's choice): every pick (the game's type 112, Deepbiter's and the stone picks', and the
   Loader's Metal Pick, 127) 1d6+1, was 1d4+1 (the horseman's); against a large target 2d4 (was 1d4),
