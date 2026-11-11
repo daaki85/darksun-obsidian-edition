@@ -8,4 +8,7 @@ WORK=${PLAYTEST_WORK:-/tmp/playtest}; GAME=${DS_GAME:-$WORK/inst}
 # window is that size; the program's is resized to it by start_recomp.sh).
 TARGET=${PT_TARGET:-dosbox}; DSUN=${DSUN:-/home/user/darksun-recompiled/build/cmake/dsun}
 if [ "$TARGET" = recomp ]; then WINQ="--name Recompiled"; else WINQ="--class dosbox"; fi
-export PT REPO WORK GAME TARGET DSUN WINQ DISPLAY=:55; mkdir -p "$WORK"
+# INSTALL: the owner's private repository of the installers and the walkthrough, checked out beside
+# this one (never public: the files are the owner's own copies; setup_game.sh joins them from it)
+INSTALL=${PT_INSTALL_FILES:-$REPO/../darksun-installation-files}
+export PT REPO WORK GAME TARGET DSUN WINQ INSTALL DISPLAY=:55; mkdir -p "$WORK"
