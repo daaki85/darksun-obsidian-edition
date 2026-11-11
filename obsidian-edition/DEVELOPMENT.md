@@ -188,8 +188,11 @@ has the tools and how to use them.
 The **Release** workflow (`.github/workflows/release.yml`) runs the tests on
 Windows (with unicorn 2.1.4), zips the `obsidian-edition` folder as
 `Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>.zip` (with `git archive`,
-so only what is committed goes in) and publishes it with
-`release-notes/v<version>.md` as its notes. Before it:
+so only what is committed goes in), adds the patch notes' web page, made at the
+repository's root, to the zip's folder (`.github/add_to_zip.py`), and publishes
+the zip and that page with `release-notes/v<version>.md` as its notes
+(`tests/test_release.py` checks the workflow does, and that the page's links all
+work from the zip). Before it:
 
 1. Set the version in `dsloader/__init__.py` (`__version__`), the patch notes'
    "Current version" (and drop their line on what comes with the next release)

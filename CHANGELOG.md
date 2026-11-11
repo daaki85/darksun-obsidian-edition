@@ -43,6 +43,16 @@ Releases, newest first: [2.16.1](#pull-request-91-merged-2026-11-11) (#91),
 [1.1.0](#pull-request-18-merged-2026-10-06) (#18), [1.0.0](#pull-request-12-merged-2026-10-02)
 (#12).
 
+## Next pull request (not opened yet)
+
+**Fixed**
+- **The release has the patch notes' web page** (the user's report: 2.16.1's didn't). The page is
+  made at the repository's root, beside PATCH-NOTES.md, and the zip is the obsidian-edition folder
+  alone, so no release had it. The Release workflow now adds it to the zip's folder, next to
+  `player-guide.html` (`.github/add_to_zip.py`), and attaches it to the release on its own too.
+  Its links are all web addresses, so it works from the zip. Test `tests/test_release.py`; the
+  README's documentation list names it.
+
 ## Pull request #92 ([merged 2026-11-11](https://github.com/daaki85/darksun-obsidian-edition/pull/92))
 
 No release: nothing in `obsidian-edition/` changed (it is 2.16.1's, byte for byte).
