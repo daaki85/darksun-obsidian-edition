@@ -1,6 +1,6 @@
 # Obsidian Edition: Changes from the Original Game
 
-*A Dark Sun: Shattered Lands mod · Current version 2.16.1 · What the mod adds and changes, and its main bug fixes*
+*A Dark Sun: Shattered Lands mod · Current version 2.17.0 · What the mod adds and changes, and its main bug fixes*
 
 Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. You start the game with the Loader, which loads the mod with your options and logs every roll as it happens. Nearly everything is switchable, the game's own files are never touched, and your saves stay where they are.
 
@@ -359,6 +359,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 
 ## Documentation
 
+- **[New]** **The manual in the download**: the player's guide, features and rules, kits, items, creatures, the game's bugs fixed, the dice log and these patch notes as web pages that link to each other (the spoiler pages marked). The Loader's **Help** button opens its start page.
 - **[New]** **[How the game works](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/HOW-THE-GAME-WORKS.md)** compares every cleric spell and psionic power with the manual: what the manual says, what the game's code does, and what the log shows.
 
 The full tables of the [kits](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/KITS.md) and the [items](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/ITEMS.md) (where each is) are in the mod's documentation too.
@@ -400,6 +401,7 @@ The main fixes are below; every bug of the original game the mod mends, with wha
 - **[Fixed]** Thief skills no longer drop for holding a weapon. The game's equipment penalty looked at the hands, quiver and legs, and never at the armour worn.
 - **[Fixed]** **DELETE** in the character roster deleted the wrong character when the list was scrolled.
 - **[Fixed]** A character not yet played showed 0 in every thief skill.
+- **[Fixed]** **Kurzak's door** could stand open but still bar the way: the party couldn't step into the doorway, and Legcrusher, sent to fetch them, stood still for good. Now the doorway opens as the door shows it.
 - **[Fixed]** Once the party has killed **Legcrusher**, **Kurzak** no longer calls for him when they're late for a fight, nor greets them as if he'd brought them, nor speaks of him as still about when asked (Dinos neither): he wonders where his monster trainer has got to.
 - **[Fixed]** The **Trustee** in the slave pens could stop on his rounds and stay busy for good, never talking again. Now he walks on, even in a save where he's already stuck, once talked to; and a save made while he was walking no longer leaves him standing still when it's loaded (the same for anyone else who walks rounds of their own).
 - **[Fixed]** In a long session the game could stop with **"Out of memory in OEOpenGraph"**: each time the map comes back (after the USE screen, a talk, a menu) it needs a large block of free memory, and little was left over. Part of the game's code and its music now live in upper memory, which leaves about 97 KB to spare with the map up (the original game: 57 KB).
@@ -424,6 +426,7 @@ The main fixes are below; every bug of the original game the mod mends, with wha
 - **[Fixed]** The **Draj serf**, left far behind on the way to region 10, stayed without his orders and gave a second obelisk gem when talked to again. Now he comes along. (Found by OpenDS and yuan-ti.)
 - **[Fixed]** Lines that depend on the active member's **race or sex** always took them for a man of no race: a halfling is now greeted as a fellow halfling, a woman told "only a mad woman would think of fighting Draj", a thri-kreen hears the bell the mastyrial hears near Demothi's camp. (The halfling's found by yuan-ti.)
 - **[Fixed]** A preserver or psionicist with another class couldn't claim to have scried the **haystack** or read the man's thoughts, and the cave guide told even a dwarf or halfling to "go bother someone your own size". **Dagolar's slime book** counted a fighter's or an air cleric's training as magical but not an earth, fire or water cleric's or a druid's: now any cleric, druid, preserver or psionicist can read it.
+- **[Fixed]** At creation, a **ranger** (or a Battle Mage, Crusader or Mind Warrior) was asked to "PICK A WEAPON SPECIALTY" though it takes expertise: the window now asks for a weapon of expertise.
 - **[Fixed]** Cilla, an elf in the ready-made party, was drawn with the half-elf woman's figure; she looks like an elf now (a switch keeps the game's figure).
 
 **Rules the game got wrong** are fixed too. Each is tagged **[Fixed]** under its own heading above and has a switch, on by default, for anyone who wants the game's own rule: the saving throws against spells and the doubled d20 against fire, cold and electricity, two weapons, warriors' attacks, acid on armour and held targets (Combat); class restrictions, multiclass hit points, the class tables, rangers' spells, dual-classing, preservers' learning from scrolls, CON's regeneration and poison saves (Classes and Kits); spells, psionics and monsters as the manual describes them (Turn Undead by AD&D's table with them), spells rolling to hit and Enlarge's dice (Magic and Psionics); and thief skills and backstabs (Improved Thieving). The other rule changes are the mod's own choices, not corrections, and stay **[Changed]** or **[New]**: helms' AC, resting, the XP level cap, hit dice rolled twice, creation scores as rolled, half-giants' two-handed weapons, creature size, weapon traits (cahulaks, the staff sling's stinkpots, polearm reach), a thri-kreen's extra chatkcha throw, and ages.

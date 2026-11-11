@@ -69,9 +69,10 @@ where the saves go](obsidian-edition/README.md#updating-backups-saved-games-and-
 
 ## What's new
 
-**Obsidian Edition 2.16.1** is out ([release notes](release-notes/v2.16.1.md)):
-fixes to looting, selling, thieves' locks and saved games' named copies, every
-Options switch in one table in the player's guide, and a better Help page. 2.16.0
+**Obsidian Edition 2.17.0** is out ([release notes](release-notes/v2.17.0.md)):
+the player's manual as linked web pages in the download (Help opens it), a pocket
+barred until a level only when the thief is caught, a ranger asked for a weapon of
+expertise, Kalzith's new past, and Kurzak's door no longer barring the way. 2.16.0
 brought looting a body with **T** and selling spare gear with **S**, thieves who
 may try a failed lock or pocket again after a level, polearm reach and staff sling
 stinkpots, the footman's pick, and a fight with Legcrusher at the fountain.
