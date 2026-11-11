@@ -89,6 +89,8 @@ capture; window grabs (`import -window`) are 320x240, so y x 1.2.
 - Figures gone from the map: the game's picture store full (`cachelist.py`, `poolfree.py`,
   `figwatch.py`; since the Loader reuses the store's cells, `outfitcycle.py` / `randout.py`
   change outfits for a test; `fillcache.py` now stalls).
+- Looting: a body's window open (the eye on it), T takes all, Shift+T all but plain weapons (`dsword.py 5E6`: the open one).
+- Selling: on a shop's screen S sells the plain gear in the backpack of the member on show.
 - E opens the Effects screen. In an END <NAME>'S MOVE menu (a click on the member's figure
   opens it), E is END TURN.
 - The creation screen: CREATE CHARACTERS (165,92), right-click an empty slot, NEW (110,57). A score's

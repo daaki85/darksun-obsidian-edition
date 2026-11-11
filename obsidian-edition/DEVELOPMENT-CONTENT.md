@@ -134,7 +134,22 @@ file holds (script 10 at 352h, -261; script 195 at 35h, -144: the same number
 are real objects (an item's +0 is its object's number negated: the grate's
 Bloodwrath, -1576, always hacks the lock); the thief skill checks (DO_ACTION 3)
 and ability checks (59h) each test the skill or ability their text names, and
-the weapon search for the grate looks in the right hand (item +11h slot 3).
+the weapon search for the grate looked in the right hand only (item +11h slot 3;
+the next paragraph but one has the repair).
+
+The grate's weapon search (A79h) now takes the first item in either hand (slot
+3 or 10) that is a melee weapon (the user's ask, 2026-11-11). The scripts can't
+read an item's type: no item field leads to it (fields 0-99 and the kind's
+72,0-99 tried in play; field 72 is the item's +0, its kind, and 85 its slot,
++11h). So the test leaves out each kind held in a hand whose type has no melee
+bit (+00h & 1): bows, slings, chatkchas, shields and the Storm Ring, the game's
+and the Loader's (`scriptfixes.NOT_MELEE`; a test checks it against the game's
+SEGOBJEX and IT1R). The search runs as the reply menu is made (command 49h,
+DSUN 5DF:140Ah, copies each item in turn into one scratch object, 2Bh, its
+number at 3923:35Fh); on a find the game named it (41h stores into 3923:361h,
+2Ch) and went round again, and that step copied the next item over it: the
+axe in hand was hacked with "his Bow". The repair leaves the loop at once on a
+find, to its RETURN (A96h). No weapon to hack with, no "Hack the lock off.".
 (Hototo's "Where is Dagger, bug / woman?", script 132 at 198h, tests race
 alone, but only after a sex test at B0h: a man is taken for Dagger.)
 
@@ -181,6 +196,18 @@ them. Dinos's script is `pensasks.py`'s copy by then, whose own jumps leave byte
 read on: the places come from the game's script, and a line is changed only where the copy
 still has the game's bytes. Tests: `test_kurzak`. Not yet seen in play: it needs Legcrusher killed at
 the fountain and the party late for a fight.
+
+**Legcrusher at the fountain** (the user's design, 2026-11-11): his fetching speech (136 at 31Dh,
+"Kurzak told me to bring you to the arena. If ya don't go, ") becomes a jump to code after the
+script's end (`kurzak.with_fountain`): LOCATE (09h) on his kind (-326) gives his square (locals
+33, 34), and in `scriptfixes`' fountain zone (the room, x 54-80, y over 73, or the passage, x
+42-80, y over 90) he says his lines, three windows (54h portrait 100, his; 0, the emblem, for the
+narration in the game's words for a guard's masked yell, GPL 137 at FF2h; 100 again), each clicked, his
+fields 74 and 75 are set to 2 (40h, as the guards' sight trigger does, GPL 74 at 2Bh), he gets the
+ambush guards' orders (08h hunt, 6Fh GPL 74 at 100, 1Bh GPL 74 at 89, range 5) and the script
+ends (31h); elsewhere the game's two lines, then back to 374h. Seen in DOSBox with the user's save
+`legcrusher-fountain-user` (the party at square 68,94): the lines, then a fight of Legcrusher alone
+(round 1: the party and him), killed in a round, DEAD (797) set. Tests: `FountainTests`.
 
 ## Mirror Image
 
@@ -435,7 +462,9 @@ after the `ns_list_` patches):
   (2531:083Ch), so 1194h stayed 1 and the glow stood still. DSCLOG's
   `SHOP_LOOP` (7DE11h, the loop's "cmp word [11B2h],1") and `SHOP_SHINE`
   (2AFA6h, the wait's "or di,di / jz 084Fh") do as the main loop while 11B2h
-  is 1, then the replaced test.
+  is 1, then the replaced test. `SHOP_LOOP` also stamps the BIOS tick in
+  `shop_at` (header +1858), so S sells only on a shop's screen
+  ([DEVELOPMENT-SCREENS](DEVELOPMENT-SCREENS.md#selling-plain-gear-s)).
 
 ## Worn items, the gladiator's armour and Psionic Blast
 
@@ -1227,8 +1256,14 @@ doesn't draw from it (changed in memory, nothing changed on screen), so the
 object itself is swapped: `gamepatch`'s `champion_body` makes the push INT
 81h (`PROBE_WORN`, told apart by its return address 2754h), "push 0FFFFh",
 "push ax", and DSCLOG answers 2666 (`champions.BODY`) when the dying map
-object ([BP+6], its object at DS:66AEh + 32 each) is the Tohr-kreen champion,
-else 1101. Object 2666 is a copy of 1101 (its record renumbered) with a picture
+object ([BP+6]) is a thri-kreen (its sheet's race, +18h, 8), any of them, and
+the game has the Loader's objects (`OBJECTS_ON`), else 1101. (Till 2026-11-11
+only the Tohr-kreen champion, by its object number: the arena's thri-kreen died
+as a human's Dead Body, the user's report.) The body is in the Loader's
+SEGOBJEX copy whatever the switches (`champions.body_chunks`, from
+`worldgear.data_chunks`). Seen in DOSBox 2026-11-11: Pehtucl's Guard made a
+thri-kreen in memory (`foeset.py 30 race=8`) and the fight fought out, its body
+object 2666, the arena guards' 1101. Object 2666 is a copy of 1101 (its record renumbered) with a picture
 of its own, 2666 (`bodyart.py`: the Tohr-kreen's frame 8 turned on its side,
 squashed to 0.75 of its height, darkened to 0.7, its gythka's pale pixels left
 out, over the red of the Dead Body's blood). Seen in DOSBox: the six came on

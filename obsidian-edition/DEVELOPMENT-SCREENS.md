@@ -21,6 +21,8 @@
 - [Charges in item boxes](#charges-in-item-boxes)
 - [No manual check](#no-manual-check)
 - [Scripts' requests and refused casts in the dice log](#scripts-requests-and-refused-casts-in-the-dice-log)
+- [Looting a body: T and Shift+T](#looting-a-body-t-and-shiftt)
+- [Selling plain gear: S](#selling-plain-gear-s)
 - [Choosing an enemy: Tab, Enter and the rings](#choosing-an-enemy-tab-enter-and-the-rings)
 - [Scrolling the map](#scrolling-the-map)
 - [M, U and I: open a screen, close it again](#m-u-and-i-open-a-screen-close-it-again)
@@ -276,9 +278,9 @@ dice log running:
   `+346`, before `PANEL_NEW`; the picture's block is PANEL_W x 130, the most);
   its foot stays at row 198. Smaller than it was, DSCLOG draws the view again
   under it first. Collapsed is 15 rows (the newest line in the header), docked
-  78, expanded 130 (14 lines and the filters' row). The lines are in a font of
-  the Loader's (`smallfont.py`: the X11 misc-fixed 4x6 glyphs, public domain,
-  with the game's shadow, 7 pixels a line); the header, the buttons and the
+  78 (7 lines), expanded 130 (12 lines and the filters' row). The lines are in a font of
+  the Loader's (`smallfont.py`: the X11 misc-fixed 5x7 glyphs, public domain,
+  with the game's shadow, 8 pixels a line; the 4x6 through 2.15.0); the header, the buttons and the
   filters stay in the game's. The header's level chip
   and - / + buttons, and the filters, are pressed through `PANEL_MOUSE` as the
   scrollbar is. **L** (`INT 16h`, `our_key`, while the panel is on screen:
@@ -597,6 +599,39 @@ Two `NS_IMAGE` sites record what the game does without a roll:
   call, 0020:00A4 in the overlay's terms), -5 too far. A refusal is kind 7
   (`KIND_AIM`): the answer and the spell (DS:9428h) in the value, the caster
   (DS:9426h) in EXTRA.
+
+## Looting a body: T and Shift+T
+
+([In the features page](FEATURES.md#looting-a-body-t-and-shiftt).)
+
+How: DSCLOG's `INT 16h` hook (`OUR_KEY`) hands each key to `LOOT_KEY` first. T
+(1474h) or Shift+T (1454h) while the game's DS:05E6h names a container (a map
+thing whose window is open; 9999 none) is made Escape, which shuts the window.
+When the game reads the key (not a peek: `MK_READ`), DSCLOG counts it in
+`loot_seq` (header +1846) with the container (`loot_thing`, +1848) and the mode
+(`loot_mode`, +1850: 0 T, everything; 1 Shift+T, all but plain weapons). The
+dice log's `_loot_pass` sees the count change and, once the window is shut,
+`dsloader/loot.py` moves each item into the backpack of the first member up and
+about with room (the game's own list links: `_relink`), keeps what doesn't fit in the
+container, and writes a line of what each took. Other keys, and T with no
+window open, pass as they were.
+
+## Selling plain gear: S
+
+([In the features page](FEATURES.md#selling-plain-gear-s).)
+
+How: `SELL_KEY`, next in `OUR_KEY`, takes S (1F73h) or Shift+S (1F53h) only on a
+shop's screen: `SHOP_LOOP` (the shop's loop, [beside its
+shine](DEVELOPMENT-CONTENT.md)) stamps the BIOS tick in `shop_at` (+1858) on
+each pass, and S counts only within `SHOP_FRESH` (2) ticks of it. The key is
+made Escape, which shuts the shop, and when read it is counted in `sell_seq`
+(+1852) with the member on show (the game's 3931h:25Bh, `sell_member` +1854)
+and the merchant (DS:179Ch, `sell_merchant` +1856). The dice log's `_sell_pass`
+then has `dsloader/sell.py` sell that member's plain gear (`plain_gear`: no plus
+or power, not worn or held, not ammunition, metal, keys, nor what the shop won't
+buy) at the game's price (SELL_PRICE's 60% with **Shops as in AD&D**), keeping
+the magic for buyback, adding the money (MONEY_SEG 3781h:357h) and writing the
+sale's line.
 
 ## Choosing an enemy: Tab, Enter and the rings
 

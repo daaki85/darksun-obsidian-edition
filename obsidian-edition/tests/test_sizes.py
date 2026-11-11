@@ -17,7 +17,7 @@ import test_dsclog as td  # noqa: E402
 
 SS, BP, GAME_DS = td.SS, td.BP, td.GAME_DS
 RULE = 16384  # RULES_HI's RULE_HI_SIZE
-LONG_SWORD, MACE, AXE = 41, 20, 22  # (types of those kinds: DSCLOG's KIND_OF_TYPE)
+LONG_SWORD, MACE, AXE, STAFF = 41, 20, 22, 3  # (types of those kinds: DSCLOG's KIND_OF_TYPE)
 
 
 def load_tests(loader, tests, pattern):
@@ -58,7 +58,9 @@ class LoaderTests(unittest.TestCase):
         kinds = dict(zip(specialize.KINDS, sizes.LARGE_DICE))
         self.assertEqual(kinds["long sword"], (1, 12, 0))
         self.assertEqual(kinds["great axe"], (2, 8, 0))
-        self.assertIsNone(kinds["axe"])
+        self.assertEqual(kinds["axe"], (1, 10, 0))  # (the battle axe's, Skills & Powers)
+        self.assertEqual(kinds["pick"], (2, 4, -1))  # (the footman's pick's 2d4, its own +1 off)
+        self.assertIsNone(kinds["quarterstaff"])
         self.assertEqual(sizes.dice_change(LONG_SWORD, True, 0), (1, 12, 0))
         self.assertIsNone(sizes.dice_change(LONG_SWORD, False, 0))
         self.assertEqual(sizes.dice_change(sizes.SHILLELAGH_TYPE, False, None), (1, 6, 1))
@@ -119,7 +121,8 @@ class SizeTests(tc.CahulaksTests):
         self.large(20)
         self.assertEqual(self.dice(LONG_SWORD, count=1, sides=8), (1, 12, 0))
         self.assertEqual(self.dice(MACE, count=1, sides=6, bonus=1), (1, 6, 0))
-        self.assertEqual(self.dice(AXE, count=1, sides=6), (1, 6, 0))
+        self.assertEqual(self.dice(AXE, count=1, sides=8), (1, 10, 0))
+        self.assertEqual(self.dice(STAFF, count=1, sides=6), (1, 6, 0))  # (no large dice of its own)
         self.assertEqual(self.dice(sizes.SHILLELAGH_TYPE), (2, 4, 0))
         self.assertEqual(self.dice(sizes.HAMMER_TYPE, count=1, sides=4, bonus=1), (1, 4, 0))
         for change in (dict(rules=0), dict(index=1), dict(item=-1)):
@@ -129,6 +132,30 @@ class SizeTests(tc.CahulaksTests):
         self.assertEqual(self.dice(LONG_SWORD, count=1, sides=8), (1, 8, 0))
         self.assertEqual(self.dice(sizes.SHILLELAGH_TYPE), (1, 6, 1))
         self.assertEqual(self.dice(sizes.HAMMER_TYPE, count=1, sides=4, bonus=1), (1, 4, 1))
+
+    def test_grand_master_on_large(self):
+        """A grand master's large dice a die larger too (Player's Option: Combat & Tactics: a long
+        sword 1d20 against a large target): the attacker's sheet ([BP+10h]) a 9th-level fighter of
+        the long sword, the rule RULE_SPECIALIZE on; a master's (5th) and with the rule off as ever."""
+        from dsloader import game as g
+        self.target(thing=20, race=1)
+        self.large(20)
+        attacker = tc.tg.SHEETS * 16 + 3 * 0x47
+        sheet = bytearray(0x47)
+        sheet[0x14] = 1  # (the long sword, kind 0, chosen)
+        sheet[0x21:0x24], sheet[0x24:0x27] = bytes((9, 0, 0)), bytes((9, 0, 0))
+        self.mu.mem_write(attacker, bytes(sheet))
+        self.mu.mem_write(self.hdr + 170, struct.pack("<H", g.RULE_SPECIALIZE))
+        self.frame(p10=3)
+        self.assertEqual(self.dice(LONG_SWORD, count=1, sides=10), (1, 20, 0))
+        self.assertEqual(self.dice(MACE, count=1, sides=8, bonus=1), (1, 6, 0))  # (not its weapon spec)
+        sheet[0x24] = 5
+        self.mu.mem_write(attacker, bytes(sheet))
+        self.assertEqual(self.dice(LONG_SWORD, count=1, sides=8), (1, 12, 0))
+        sheet[0x24] = 9
+        self.mu.mem_write(attacker, bytes(sheet))
+        self.mu.mem_write(self.hdr + 170, struct.pack("<H", 0))
+        self.assertEqual(self.dice(LONG_SWORD, count=1, sides=8), (1, 12, 0))
 
     def test_what_is_large(self):
         """IS_LARGE: the Loader's bit, a half-giant (its race), or Enlarged (the game's effect 16)."""
@@ -193,7 +220,7 @@ class SizeTests(tc.CahulaksTests):
         self.assertEqual(self.line("1D6+12", MACE)[0], "1D6+12/1D6+11")
         self.assertEqual(self.line("1D6+1", sizes.SHILLELAGH_TYPE)[0], "1D6+1/2D4")
         self.assertEqual(self.line("1D8+7", LONG_SWORD, box=False)[:3], ("1D8+7", 2, 0))
-        for text, kind, rules in (("1D6", AXE, RULE), ("1D8", LONG_SWORD, 0)):
+        for text, kind, rules in (("1D6", STAFF, RULE), ("1D8", LONG_SWORD, 0)):
             self.assertEqual(self.line(text, kind, rules=rules)[:3], (text, 2, 0), (text, kind))
 
     def test_line_interrupts(self):

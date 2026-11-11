@@ -80,6 +80,7 @@ class HitTests(unittest.TestCase):
                 ([(0, 0, game.SLOWED_EFFECT)], 13, ("Slowed", -4)),
                 ([(0, 0, 49)], 8, ("Graft Weapon", 1)),
                 ([(0, 0, game.FOG_EFFECT)], 12, ("Fogbolt", -3)),
+                ([(0, 0, game.STINK_EFFECT)], 11, ("Nauseated", -2)),  # (a stinkpot's)
                 ([(0, 0, game.EFFECT_PRAYER)], 8, ("Prayer", 1)),  # (his own side's)
                 ([(0, 0x29, game.EFFECT_PRAYER)], 10, ("Prayer", -1)),  # (the Mountain Stalker's)
                 ([(1, 1, 7), (1, 1, 12)], 9, None)):  # (on someone else)
@@ -357,11 +358,29 @@ class SettingsTests(unittest.TestCase):
             self.assertRegex(source, r'\(\s*"' + re.escape(key) + r'",\s*(?:None|"\w+"),\s*"', key)  # (its group, then its text)
         bits = [bit for _, bit in game.RULE_SETTINGS]
         self.assertEqual(len(set(bits)), len(bits))
+    def test_merged_switches(self):
+        """A 2.15.0 settings file's merged-away halves: unticked, they untick the switch they joined
+        (game.setting_on, rules_from_settings), and fold_merged moves that over once, dropping the old
+        key, so a later tick of the merged switch counts."""
+        old = {"spell_save": True, "no_doubled_save": False, "cha_prices": True, "buyback": True,
+               "thief_table": True, "backstab_dice": False}
+        self.assertFalse(game.setting_on(old, "spell_save"))
+        self.assertTrue(game.setting_on(old, "cha_prices"))
+        self.assertFalse(game.setting_on(old, "thief_table"))
+        rules = game.rules_from_settings(old)
+        self.assertFalse(rules & game.RULE_SPELL_SAVE)
+        self.assertTrue(rules & game.RULE_BUYBACK)
+        self.assertFalse(rules & game.RULE_BACKSTAB)
+        folded = game.fold_merged(dict(old))
+        self.assertEqual(folded, {"spell_save": False, "cha_prices": True, "thief_table": False})
+        folded["spell_save"] = True  # (ticked again in the window)
+        self.assertTrue(game.setting_on(folded, "spell_save"))
+
     def test_saved_options(self):
         log = dag()
-        log.use_settings({"helm_ac": False, "new_items": False, "arena_ring": True, "no_doubled_save": False})
+        log.use_settings({"helm_ac": False, "new_items": False, "arena_ring": True, "spell_save": False})
         self.assertEqual((log.rules, log.arena_ring, log.monster_info),
-                         (game.RULE_TWO_WEAPONS | game.RULE_SPELL_SAVE | game.RULE_NEW_SPELLS
+                         (game.RULE_TWO_WEAPONS | game.RULE_NEW_SPELLS
                           | game.RULE_STEALTH | game.RULE_LEVEL_10 | game.RULE_THIEF_TABLE
                           | game.RULE_HALF_GIANT | game.RULE_PROTECTION | game.RULE_ITEM_SAVES
                           | game.RULE_SPECIALIZE | game.RULE_RESTRICT | game.RULE_MULTI_HP | game.RULE_HP_BEST
@@ -369,7 +388,7 @@ class SettingsTests(unittest.TestCase):
                           | game.RULE_ROLLED | game.RULE_BUYBACK | game.RULE_BACKSTAB | game.RULE_AGING
                           | game.RULE_ENLARGE | game.RULE_CON | game.RULE_DUAL_CLASS
                           | game.RULE_REST | game.RULE_CAHULAKS | game.RULE_SIZE
-                          | game.RULE_HELD, False, True))
+                          | game.RULE_HELD | game.RULE_STINKPOTS, False, True))
 
 
 class SpeakerTests(unittest.TestCase):

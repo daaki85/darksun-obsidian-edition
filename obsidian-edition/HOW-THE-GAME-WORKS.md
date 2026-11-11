@@ -170,7 +170,7 @@ mace 100, as AD&D's 1, 3 and 10 lb), so the limit is 4 lb. Missile weapons
 | Club | wood (30) | 1d6 | yes |
 | Quarterstaff | wood (40) | 1d6 | yes |
 | Axe | bone, obsidian (30) | 1d8 | yes |
-| Pick | stone, metal (40) | 1d4+1 | yes |
+| Pick | stone, metal (40) | 1d6+1 (the game: 1d4+1) | yes |
 | Shillelagh, Flame Blade, Spiritual Hammer (spells) | (10, 40, 40) | 2d4, 1d4+4, 1d4+1 | yes |
 | Axe | metal (70) | 1d8 | no |
 | Great axe | bone (50); obsidian, metal (70) | 1d10 | no |
@@ -210,9 +210,9 @@ In between a 1 and a 20 the doubled roll makes saving far easier: needing 14,
 a normal d20 saves 35% of the time and a doubled one 70%, which is why
 Fireball's victims usually get away with half damage. It isn't AD&D, and the
 game never explains it; it may have been meant as a dodge. The log says it on
-each save: `d20 = 7, doubled against fire = 14`. Two of the mod's
-[rule changes](FEATURES.md#spells-saved-against-with-the-spell-save) put the
-spell save back and take the doubled d20 away.
+each save: `d20 = 7, doubled against fire = 14`. The mod's
+[**Saving throws against spells**](FEATURES.md#spells-saved-against-with-the-spell-save)
+puts the spell save back and takes the doubled d20 away.
 
 The target's spells and effects:
 - Blessed +1, Barkskin +1, Spirit Armor +3 (but not on
@@ -464,7 +464,7 @@ on by default, which changes wizard spells and psionic powers too: its table lis
 | Cause Disease | saps STR and HP; save | Diseased on a failed save: nothing is lowered; a STR something else lowered stays down until it is cured | the save and the effect |
 | Conjure Lesser Elemental (four) | 1 turn + 1 round a level | summons one, 10 + 1 a level rounds | the summoning |
 | Cure Blindness or Deafness, Cure Disease | cure them | end Blind, Diseased | the effect ending |
-| Dispel Magic | removes spells | each effect separately, d100 at or under 50 + 5 x the dispeller's level − 5 x the effect's caster level (the levels of every effect of that kind on the target, usually one); can't touch Biofeedback, Diseased, Feeblemind, Synaptic Static, Mind Bar, Poisoned, Graft Weapon, No spell use, Stuck | each d100 |
+| Dispel Magic | removes spells | each effect separately, d100 at or under 50 + 5 x the dispeller's level − 5 x the effect's caster level (the levels of every effect of that kind on the target, usually one); can't touch Biofeedback, Diseased, Feeblemind, Synaptic Static, Mind Bar, Poisoned, Graft Weapon, No spell use, Stuck, nor any effect past 73 (it looks at 0 to 73 only: the mod's Friends, 74, and a stinkpot's Nauseated, 75) | each d100 |
 | Magical Vestments | AC 5, 1 better per 3 levels above 5; 5 rounds a level | the same | the effect |
 | Negative Plane Protection | stops one draining attack by undead | the game's own never worked; the patched game: a save against paralysis/poison/death stops one, and the undead takes 2d6 | the save and the effect |
 | Prayer | +1 to hit and saves for friends, −1 for foes; 1 round a level | the same | the effect, and each save's ±1 |
@@ -810,7 +810,7 @@ chance out as:
   penalty](GAME-BUGS.md#thief-skills).)
 - plus the situation's bonus or penalty (a hard lock, say).
 
-With **Thief skills from AD&D's table** ticked (see
+With **Thieves as in AD&D** ticked (see
 [Thief skills from AD&D's table](FEATURES.md#thief-skills-from-adds-table)),
 the first two and the DEX part are AD&D's instead.
 

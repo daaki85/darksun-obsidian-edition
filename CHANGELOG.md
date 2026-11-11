@@ -16,7 +16,8 @@ from the tail (2026-11-09, after #88) that is the helper's 64 KB segment's part 
 Releases before 2.12.2 give the release's line as a **Release** bullet; from 2.12.2 on it is the
 entry's first line.
 
-Releases, newest first: [2.15.0](#pull-request-89-merged-2026-11-10) (#89),
+Releases, newest first: [2.16.0](#pull-request-90-merged-2026-11-11) (#90),
+[2.15.0](#pull-request-89-merged-2026-11-10) (#89),
 [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 [2.14.0](#pull-request-87-merged-2026-11-07) (#86 and #87),
 [2.13.4](#pull-request-85-merged-2026-11-02) (#85),
@@ -40,6 +41,195 @@ Releases, newest first: [2.15.0](#pull-request-89-merged-2026-11-10) (#89),
 (#33), [1.2.0](#pull-request-30-merged-2026-10-08) (#30),
 [1.1.0](#pull-request-18-merged-2026-10-06) (#18), [1.0.0](#pull-request-12-merged-2026-10-02)
 (#12).
+
+## Pull request #90 ([merged 2026-11-11](https://github.com/daaki85/darksun-obsidian-edition/pull/90))
+
+DSCLOG.EXE 69,344 bytes (63,792 in its segment), 1,744 of its segment spare; `UMB_NEED` 6,428
+paragraphs (1,754 spare), `UMB_KEPT` 8,050 (132 spare). Before the T and S keys, 69,136 (63,584,
+1,952 spare); before the pointer and lock changes, 68,976 and 2,112 spare. The polearm's reach took 384
+bytes of the segment (68,592 bytes before it).
+
+**New**
+- **Selling plain gear in one go** (the user's ask and choices: the member on show, plain gear only):
+  on a shop's screen **S** sells the plain weapons, armour, shields and clothing in that member's
+  backpack (no plus, no power; not worn or held; not ammunition or metal, the user's choices; not keys, nor what
+  the shop won't buy), each
+  at the game's price (its value, times the count for a stack; 60% with Shops as in AD&D, as DSCLOG's
+  SELL_PRICE). DSCLOG's `SELL_KEY` (only while the shop's loop has run in the last two BIOS ticks:
+  `SHOP_LOOP` now marks the time) makes the key Escape and notes the member on show (the game's
+  3931h:25Bh) and the merchant (header +1852 to +1858); `sell.py` sells once the shop is shut. Seen in
+  the game with the user's save (Kalzith's shop, before ammunition and metal were kept: Gerakis 10 things for 119, K'ratchek 12 for 98, the
+  magic ones kept: playtest/logs/2026-11-11-selling.md); tests/test_sell.py.
+- **Legcrusher at the fountain** (the user's design): sent to fetch a party that is in the fountain's
+  room or the passage before it, he says they are out of their cells, yells for the guards (the
+  fountain drowns it) and attacks alone, instead of his warning (`kurzak.with_fountain`, script 136).
+  Seen in the game with the user's save; tests `FountainTests`.
+- **Looting a body in one go** (the user's ask and choice): with a body's (or any container's)
+  window open, **T** takes everything in it into the party's backpacks and **Shift+T** all but plain
+  weapons (no plus, no power); what has no room stays. DSCLOG's `LOOT_KEY` (in the INT 16h hook)
+  makes the key Escape, which shuts the window, and counts it with the container (the game's
+  DS:05E6h, its map thing while the window is open) and the mode (header +1846 to +1850); the
+  Loader's `loot.py` moves the things once the window is shut (each to the first member, in the
+  party's order, with a free backpack cell, as a picked pocket's), links the container's list again
+  from what stays or gives it back when empty, and logs who took what, with the purse's sound. Seen
+  in the game (Pehtucl's ambush: his body with Shift+T, all 11 things taken; a guard's with Shift+T,
+  the bow and sword left, then T: playtest/logs/2026-11-11-looting.md); tests/test_loot.py.
+- **A lock or a pocket a thief failed is tried again by that thief only after a level gained**
+  (the user's ask; *Player's Option: Skills & Powers*' open locks), with **Thieves as in AD&D**. A new
+  site, `LOCK_SITE` (803D3h, the game's skill check's chance), makes a lock the member failed at its
+  thief level now out of reach (`LOCK_BARRED`, at DSCLOG's header +1844, kept by the Loader's
+  `locks.py`); a fumbled pocket (failed, unnoticed) is refused to that thief the same way
+  (`pickpocket.fumble_key`). Another thief of the party may try either. Being caught stays final.
+  Traps: the mod's only trap, Pehtucl's chest's needle, is spent whether found or sprung, so no
+  rule is needed there. DSCLOG.EXE 69,136 bytes. Seen in the game (Pehtucl's chest:
+  playtest/logs/2026-11-11-lock-retry.md); tests/test_locks.py.
+- **Staff sling stinkpots** (AD&D's Arms and Equipment Guide), under the cahulaks' switch, now
+  **Weapon traits** (the setting `cahulaks` as before, so a 2.15.0 settings file keeps its choice;
+  `RULE_HI_CAHULAKS`; `game.RULE_STINKPOTS` names it). It had a switch of its own on bit 2 of the
+  rules for a while; merged at the user's choice, bit 2 is free again. The staff sling's shot is a clay pot of burning sulphur: 1d3 crushing against any
+  size (DSCLOG's `STINK_SIDES` makes item type 0's sides 3 in the game's type table, at its read and
+  at each pass of the main loop; 4 again with the rule off), and a hit that did damage (`STINK_HIT`,
+  from the cahulaks' `CAH_HIT` site) makes a target that is neither undead (the game's test, 7BE20h)
+  nor immune to poison (7B492h's share of the poison damage kind) make the game's own save against
+  power 176 (paralysis/poison/death, every modifier counted). A failure is Nauseated, a new effect
+  (75), for 1d3+1 rounds, added through 76442h under Stinking Cloud's number: `NS_HIT` takes 2 off the
+  nauseated creature's attacks, and `NS_ENTRY` names it NAUSEATED with Stinking Cloud's icon (the
+  game's table of effect names ends at 74; its entry is kept past Reflected Image's). The dice log
+  names the save for the stinkpot and gives the rounds (`MN_STINK`, `MN_NAUSEA`), and the to-hit
+  breakdown `-2 Nauseated`. (Tests: tests/test_stinkpots.py; `test_to_hit_effects`. Seen in the game
+  2026-11-10: a held target nauseated, a free one's save, a nauseated attacker's -2,
+  playtest/logs/2026-11-10-stinkpots.md.)
+  Dispel Magic doesn't end Nauseated: the game's weighs only effects 0 to 73 (its loop, 7936Ch).
+- **Polearm reach**, under **Weapon traits** too (the user's design): a combatant, party member or foe,
+  whose hands hold a polearm and no other weapon (a shield beside it, or a bow in the missile slot, is
+  fine) strikes in melee at two squares as well as at one. One new site, `REACH_SITE` (`gamepatch`
+  "polearm_reach", 2211Fh: the end of the combatant distance routine, 1A0A:2BA5h): a distance of 2 is
+  1 for the game's melee tests (the pointer's sword, the attack pointer's click, the walk arrow's
+  click on a foe, the walk to attack arriving, the step switch's case 19, and the computer's attack
+  choice in overlay 612Eh), told by the way back, when the attacker's hands qualify (`REACH_HANDS`,
+  `kind_of_type`'s polearm) and the game's line test (898:00A4h) finds no wall between. The type's
+  range byte stays 1 (above 1 the attack routines take a weapon for a missile weapon, playtest/logs/
+  2026-11-10-polearm-reach.md). Two squares diagonally count 3 (no reach); the reach goes over a
+  creature between; the computer still walks up beside its target and uses the reach only on a foe
+  already two away. (Tests: tests/test_reach.py. Seen in the game 2026-11-10: a polearm swung from two
+  squares with no movement left, the bow in the missile slot left alone, playtest/logs/2026-11-10-polearm-reach.md.)
+
+**Fixed**
+- **From the code audit before 2.16.0:**
+  - The stinkpot and the cahulaks' tests at a hit (DSCLOG's `CAH_HIT`, and the cahulaks' second
+    swing) read the attack's item type, `[BP+14h]`, which the game leaves unset for a natural
+    attack (no item, `[BP+12h]` -1). A claw or fist with a stale 0 there would have been a
+    stinkpot. Both now need an item, and the stinkpot a shot (`[BP+16h]` over 1), not a blow with
+    the staff sling. Test `test_not_a_natural_attack_or_a_blow`.
+  - T could lose things when the game had too few free things to make a member's backpack list:
+    they were unlinked from the body before the list was asked for. `loot.take` now makes or finds
+    each taker's list while planning, before anything moves. Test `test_no_list_to_be_had`.
+  - A game restarted in the same DOSBox keeps DSCLOG's header address: the dice log's lock table,
+    and its T and S counts, are now taken afresh on attaching.
+  - S cleared the shop's stamp as it counted, so a Loader pass before the shop had shut could
+    sell while the shop's code still ran. The dice log now waits `SHOP_FRESH` ticks after it sees
+    the S, and the shop's loop re-stamps if it is still running. Seen in the game: the sale comes
+    as the shop shuts.
+- **The sewer grate's hack wants a melee weapon** (the user's ask). The weapon search (script 137
+  at A79h) took whatever was in the weapon hand, a bow too; now the first item in either hand that
+  is a melee weapon, and with none no "Hack the lock off." is offered. The scripts can't read an
+  item's type, so the test leaves out the kinds held in a hand that aren't melee weapons
+  (`scriptfixes.NOT_MELEE`, checked against the game's data by `test_not_melee_kinds`). And the
+  hack named the wrong weapon: on a find the game looped once more, and that step copied the next
+  item over the found one ("hacks the lock off with his Bow" with an axe in hand); now the search
+  ends on the find. Seen with the user's grate save: the axe used, and with only a bow in hand no
+  hack (playtest/logs/2026-11-11-grate-melee.md).
+- **Semyon's shipment reaches an emptied weapon rack** (the user's report: his tip, then an empty
+  rack). A rack the party had emptied has no list of contents, and `semyon.ship` only added to one;
+  now it makes the list (`semyon._new_contents`, from the game's free things). Seen with the user's
+  save (playtest/logs/2026-11-11-semyon-rack.md); test `test_rack_emptied`.
+- **Every thri-kreen leaves a thri-kreen's body** (the user's report: the arena's died as a human's
+  Dead Body). DSCLOG's body choice (PROBE_WORN at 59412h) names the dead Tohr-kreen's body (2666) for
+  any dying thri-kreen (its sheet's race), once the game has the Loader's objects (OBJECTS_ON), not
+  only the champions' Tohr-kreen; the body is added to the Loader's SEGOBJEX copy whatever the
+  switches (`champions.body_chunks`). Seen in DOSBox (a guard made a thri-kreen: its body 2666).
+  (Test: `test_champion_body`.)
+- **Pehtucl's chest spoke with the last face shown** (the user's report: Kalzith's, after talking
+  to him). Its script set no portrait, so the dialogue window kept the last one; it now sets the
+  window's emblem first (GPL 54h with 0, `pehtuclchest.EMBLEM`), and the dice log names the lines
+  "Narration". The script is the Loader's copy, so saves already past the pens have it too. Seen in
+  the game (playtest/logs/2026-11-11-lock-retry.md).
+- **The pointer left images of itself on the map** (the user's report, in a fight, after 2.15.0).
+  2.15.0's audit turned interrupts on for the whole of PROBE_SCROLL's pass (the map's main loop), so
+  the game, which draws its pointer from the mouse's interrupt (keeping what is under it, to put back
+  when it moves), could draw it in the middle of DSCLOG's own drawing. Now they are off again while
+  DSCLOG draws (`DRAW_MASKED`: the dust and whirlwinds, the view drawn again, the panel, the labels,
+  a drag's or the Loader's scroll), as before 2.15.0, and on for the rest (the sounds, the clicks).
+  DSCLOG.EXE 16 bytes larger (68,992). Not reproduced here before the fix (sweeps of the pointer with
+  the view drawn again 30 times a second showed none); seen not to recur after it in the same test.
+  (Tests: tests/test_scroll_interrupts.py.)
+- **The Spellarcher's arrows play their spell's cast sound as they are made** (the user's report: no
+  sound). The Loader asked for it from the map's main loop (`SOUND_REQ`), which doesn't run while the
+  USE screen, where the arrows' button is, is open. Now it hands the sound over with its answer
+  (`PICK_SOUND`, as a picked pocket's), and DSCLOG's `ARROWS_ASK` plays it at once (Burning Hands'
+  and Shocking Grasp's 81, Chill Touch's 78, Vampiric Touch's 82). DSCLOG's size unchanged (the 8
+  bytes in the segment's padding).
+- **The stealth rule's "enemy beside" counts a big creature's every square** (the user's report: a
+  thief hid in shadows next to an otyugh). The test measured from each foe's own square; a creature
+  bigger than one square (the sheet's byte +3Dh: & 7 its squares to each side, / 8 its squares north,
+  as the game's distance routine, 1A0A:2BA5h through 1A0A:2AB4h, has them) could stand beside the
+  thief with its square two away. `stealth.footprint`, `stealth.touching`. (Tests:
+  `test_big_enemy_beside`, `test_big_enemy_north`.)
+
+**Changed**
+- **The hide and pickpocket sounds about 5 dB louder** (the user: still too quiet). DOSBox plays every
+  clip at the same peak (the descriptor's +0Ah, 6Eh, isn't a volume: from 20 to 127 the output
+  peaked the same), so `sound-data/make.py` puts each through its soft limiter harder (hide 12 dB,
+  was 3; pick 9, was none): in DOSBox's output their loudest 400 ms went from -32.9 and -36.1 dBFS
+  to -27.5 and -30.5, against the game's fight sounds' -26.7 to -31.2
+  (playtest/logs/2026-11-10-sounds-denser.md).
+- **The combat log panel's font a pixel bigger** (the user's ask): the X11 misc-fixed 5x7 glyphs (public
+  domain, as the 4x6 were) in a cell 5 wide and 8 high with the shadow, so 7 lines docked (was 8) and
+  12 expanded (was 14). `smallfont.py` keeps each glyph's 7 rows as two hex digits.
+- **Six switches merged into three** (the user's choice), freeing three of DSCLOG's rule bits with bit 2
+  already freed (the Weapon traits merge): four free now, room for the rules to come. Each keeps one
+  setting's name, so a saved choice carries over: **Saving throws against spells** (`spell_save`:
+  the spell save and DEX instead of a doubled d20; bit 8, the spell save's, which only the Loader
+  acted on, free), **Shops as in AD&D** (`cha_prices`: the leader's CHA and buying back magical
+  items; RULES_HI 64 free), **Thieves as in AD&D** (`thief_table`: AD&D's thief skills and the
+  backstab's dice; RULES_HI 128 free). `game.RULE_SPELL_SAVE`, `RULE_BUYBACK` and `RULE_BACKSTAB`
+  name their switches' bits; the Options texts, FEATURES, the guide and DEVELOPMENT-RULES name the
+  switches. A 2.15.0 settings file's `no_doubled_save`, `buyback` or `backstab_dice` unticked unticks the
+  switch it joined (`game.setting_on`), and the first save folds it in and drops the old key
+  (`game.fold_merged`, from `launch.save_settings`), so a player keeps the game's rule they chose.
+  (Test: `test_merged_switches`.)
+- **The pick is the footman's pick and the axe the battle axe** (*Player's Option: Skills & Powers*,
+  the user's choice): every pick (the game's type 112, Deepbiter's and the stone picks', and the
+  Loader's Metal Pick, 127) 1d6+1, was 1d4+1 (the horseman's); against a large target 2d4 (was 1d4),
+  and the axe 1d10 (was its 1d8). DSCLOG's PROBE_TYPES_FILL sets type 112's sides (no switch, as
+  the Great Axe's material), `npcitems` the Metal Pick's; LARGE_DICE and `sizes.LARGE_DICE` the
+  large dice (with **Creature size as in AD&D**). KITS', FEATURES', the guide's and
+  HOW-THE-GAME-WORKS' tables. (Tests: `test_room_and_filled`, `test_sizes`, the KITS table's. The game's
+  type table read 1d6+1 for both picks in the game, playtest/logs/2026-11-10-stinkpots.md.)
+- **Grand mastery's die is the next greater die size, against every target** (Player's Option:
+  Combat & Tactics). It was 2 more sides (a d12 became a d14) and was lost against a large target:
+  the creature size rule's large dice (SIZE_DICE, at the swing) replaced the step PROBE_SPEC_DAMAGE
+  had made. Now DSCLOG's NEXT_DIE (d2, d3, d4, d6, d8, d10, d12, d20) steps the die at the attack,
+  the View Character and inventory lines, and a grand master's large dice: a long sword 1d10, and
+  1d20 against a large target. The dice log says `(1d20 for 1d8: a large target, grand mastery)`.
+  (Tests: `test_grand_mastery_next_die`, `SizeTests.test_grand_master_on_large`, `NextDieTests`. Seen in
+  the game 2026-11-10: a grand master's long sword 1d20 on a large Templar,
+  playtest/logs/2026-11-10-grand-mastery-large.md.)
+
+**Docs**
+- docs/options.png retaken: the Options tab with the merged switches (Weapon traits, Saving throws
+  against spells, Shops and Thieves as in AD&D), Rule changes and New content open; 706 x 2473.
+- KITS: a table of every weapon spec's dice, man-sized and large, with and without grand mastery
+  ([Grand mastery's damage](obsidian-edition/KITS.md#grand-masterys-damage); `GrandMasteryTableTests`
+  keeps it in step with `sizes.LARGE_DICE` and `specialize.next_die`). The staff sling's row is its
+  stinkpot's: 1d3, 1d4 under grand mastery.
+- The stinkpots in FEATURES ([Staff sling stinkpots](obsidian-edition/FEATURES.md#staff-sling-stinkpots)),
+  DEVELOPMENT-RULES, ITEMS, DICE-LOG, the player's guide and the patch notes; DEVELOPMENT's sizes.
+- The polearm's reach in FEATURES ([Polearm reach](obsidian-edition/FEATURES.md#polearm-reach)),
+  DEVELOPMENT-RULES, ITEMS, the Options text, the player's guide and the patch notes; DEVELOPMENT's
+  sizes.
+- The player's guide's magic items: "Six scrolls" named as Kalzith's, and the defilers' scrolls listed
+  (any preserver spell; the champions' bout's defiler always has one); ITEMS likewise.
 
 ## Pull request #89 ([merged 2026-11-10](https://github.com/daaki85/darksun-obsidian-edition/pull/89))
 

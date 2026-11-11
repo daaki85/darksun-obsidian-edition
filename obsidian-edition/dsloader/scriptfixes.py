@@ -24,8 +24,8 @@ as it is).
   tested as a bit of its class code, and the roll has to beat the score, not come under it. Now a
   ranger reads the tracks on a d20 under WIS + its level's bonus, for XP.
 - The slave pens' sewer grate: hacking its lock off is never offered (the search for a weapon in
-  hand stops at once), and a hack that works leaves it shut; one that fails says the weapon
-  breaks, and keeps it (now one that can break, as in a fight, is gone; a metal or magic one
+  hand stops at once; now it finds a melee weapon in either hand, not a bow, and names that one),
+  and a hack that works leaves it shut; one that fails says the weapon breaks, and keeps it (now one that can break, as in a fight, is gone; a metal or magic one
   rings off the grate unharmed); and an attack on it always broke the lock (now a Strength roll,
   as ripping it open has).
 - The Rebel Mindhome's 5000 XP for killing the spiders came again at every talk to their leader;
@@ -151,6 +151,28 @@ _FOUNTAIN_NOW = (gpl.encode_op((TEST, [("expr", ["(", *_zone(*FOUNTAIN_ROOM), ")
                                                   "(", *_zone(*FOUNTAIN_PASSAGE), ")"])]))
                  + _FOUNTAIN_WAS[-3:])  # (its IF, to the alarm, kept)
 
+# GPL 137 at A79h: the sewer grate's hack looks for the weapon to hack with among the leader's
+# things: the first in the weapon hand (an item's field 85, its slot +11h, = 3), a bow too ("hacks
+# the lock off with his Bow"). Now the first in either hand (3, or 10 the other) that is a melee
+# weapon, as the user asked; none, no hack is offered. The scripts can't read an item's type (no
+# field leads to it, 2026-11-11), only its kind (field 72, the item's +00h: minus the object it
+# was made from, which items of a kind share), so the test leaves out every kind held in a hand
+# whose type isn't a melee weapon (+00h without 1: bows, slings, chatkchas, shields, the Storm
+# Ring), the game's and the Loader's (its magic items: Skycutter, Dunesong, Gutterward, Windlash)
+HELD, KIND = ("field", 0x802B, [85]), ("field", 0x802B, [72])
+NOT_MELEE = (-31010, -30016, -2646, -2644, -2596, -2594, -2586, -2533, -2498, -1604, -1189, -1039,
+             -1020, -1017, -1016, -1015, -1010)
+_MELEE_WAS = bytes.fromhex("18e2b1802b0155d78f03e1" "3e0a8f")
+# what the game does on finding it (the flag at 14:3 set, command 41h naming it 2Ch: the item the
+# search copied to 2Bh), then out of the search's loop at once, to its RETURN (A96h): the game
+# went round again first, and the loop's next step copied the next item over the found one (the
+# 2026-11-01 test's "hacks the lock off with his Bow" for the axe in hand)
+_FOUND, _SEARCH_DONE = bytes.fromhex("168f018e03" "41892b"), 0xA96
+_MELEE_NOW = gpl.encode_op((TEST, [("expr", [
+    "(", "(", HELD, "==", ("n", 3), ")", "or", "(", HELD, "==", ("n", 10), ")", ")",
+    *[t for kind in NOT_MELEE for t in ("and", "(", KIND, "!=", ("n", kind), ")")]])])) + _MELEE_WAS[-3:] + \
+    _FOUND + bytes((JUMP,)) + _SEARCH_DONE.to_bytes(2, "big")
+
 REPAIRS = (
     Repair(41, 0x1D, bytes.fromhex("66090900c8"), bytes.fromhex("6600010029"),
            "Darkhold: the wyvern scene's creature keeps its look text"),
@@ -229,6 +251,7 @@ REPAIRS = (
                          "0180" "18b18025024715d78f013e003f4f00629205d1a79a00603f004c4f00629205d1979200"
                          "6067"),
            "the sewer grate: a hack at its lock says his or her", relocate=(51, 64)),
+    Repair(137, 0xA79, _MELEE_WAS, _MELEE_NOW, "the sewer grate: a hack wants a melee weapon in hand"),
     Repair(137, 0xA14, bytes.fromhex("4f006292055c8018"),
            bytes.fromhex("4f006292055c80184f00628100168f01cd01f9"),
            "the sewer grate: a hack that works opens it"),

@@ -142,7 +142,8 @@ The chest beside Pehtucl, the slave pens' head templar, holds the Cloak of
 Protection +1. It is locked, with a poisoned needle in the lock, and can only
 be worked from beside it. Used by a thief, it is first searched for traps
 (find/remove traps: the needle drawn out, or set off) and then picked (open
-locks; a failed try can be tried again). Anyone else can try to bash it open
+locks; a failed try can be tried again (with **Thieves as in AD&D**, by the same thief only once
+they have gained a thief level; another thief may try at once)). Anyone else can try to bash it open
 (5% a try, and 5% more for each of STR 18, 20, 22 and 24), which sets the
 needle off if it is still there. A needle set off is a trap as the game's are:
 the party's best at find/remove traps may still spot it in time (or Detect
@@ -179,8 +180,8 @@ Belt of Might making STR at least 24.
 | ![](docs/items/stillwater.png) | Bone | short sword | ***Stillwater*** | a bone short sword +1: a **psionicist** can wield it, alone or with a water cleric | in the chest **Chaya** gives as her apology |
 | ![](docs/items/mace-plus2.png) | Bone | mace | Mace +2 | +2 | a weapon rack in the Subterranean Temple, with the Storm Ring |
 | ![](docs/items/drakejaw.png) | Bone | axe | ***Drakejaw*** | a bone axe +1 (1d8+1): a water cleric can wield it | carried by one of the **Magera** guarding the wagon's prisoners |
-| ![](docs/items/polearm-plus1.png) | Bone | polearm | Polearm +1 | +1 | carried by **Seref**, the Draj agent at the Elven Caravan, and by the Seref met on the road with his Drajian Guards and daggorans (his script makes a copy of him there). Placed by the mod: the game defines it but never places or gives it (the cluebook says the Elven Caravan) |
-| ![](docs/items/thornwall.png) | Bone | polearm | ***Thornwall*** | a bone polearm +1 | on the slave pens' **weapon rack**, once **Semyon**, in his pen, has told of the weapon shipment ("Seen anything useful?") |
+| ![](docs/items/polearm-plus1.png) | Bone | polearm | Polearm +1 | +1; its reach as any polearm's, with [the rule](FEATURES.md#polearm-reach) | carried by **Seref**, the Draj agent at the Elven Caravan, and by the Seref met on the road with his Drajian Guards and daggorans (his script makes a copy of him there). Placed by the mod: the game defines it but never places or gives it (the cluebook says the Elven Caravan) |
+| ![](docs/items/thornwall.png) | Bone | polearm | ***Thornwall*** | a bone polearm +1; its reach as any polearm's, with [the rule](FEATURES.md#polearm-reach) | on the slave pens' **weapon rack**, once **Semyon**, in his pen, has told of the weapon shipment ("Seen anything useful?") |
 | ![](docs/items/gythka-plus3.png) | Bone | gythka | Gythka +3 | +3 | carried by **Hototo**, chief of the White Sand Outlaws who burst from the sand (fought if the talk goes wrong; the mod's); and the arena's [1000th trip](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights), King Tectuktitlay's gift |
 | ![](docs/items/gythka-plus2.png) | Bone | gythka | ***Gythka +2*** | the game's Gythka +1, made +2 | the **Elven Leader**'s gift, after the fight with his men (he carries it too) |
 | ![](docs/items/kreenfang.png) | Bone | gythka | ***Kreenfang*** | a gythka +1 (2d4+1) | carried by the **Tohr-kreen** leading the champions in the arena, after **Scar** is killed ([the champions' bout](FEATURES.md#the-champions-bout)) |
@@ -196,7 +197,7 @@ Belt of Might making STR at least 24.
 | ![](docs/items/axe-plus1.png) | Metal | axe | Axe +1 | +1 | hidden in a sewer hole in the Tari's warrens; or made at Teaquetzl's forge from the Meteor Metal and the Metal Rod |
 | ![](docs/items/great-axe-plus3.png) | Metal | great axe | Great Axe +3 | +3 (the game gave its type no material: metal with the Loader) | the Army Commander |
 | ![](docs/items/headsman.png) | Metal | great axe | ***Headsman*** | a metal great axe +2 | in the arena **Announcer**'s stash, with his Stoneskin scroll, rings and gems |
-| ![](docs/items/linebreaker.png) | Metal | polearm | ***Linebreaker*** | a metal polearm +2 | carried by the **Troop Leader** |
+| ![](docs/items/linebreaker.png) | Metal | polearm | ***Linebreaker*** | a metal polearm +2; its reach as any polearm's, with [the rule](FEATURES.md#polearm-reach) | carried by the **Troop Leader** |
 | ![](docs/items/ironwhirl.png) | Metal | cahulaks | ***Ironwhirl*** | a metal cahulaks +2 (two-handed); its blades' greys all burn in fire colours | on the **weapon rack** of the Subterranean Temple beneath Teaquetzl, with the Mace +2 and a metal axe |
 | ![](docs/items/dark-flame.png) | Obsidian | long sword | Dark Flame | +2, Burning Hands | the Lower Castle's chest |
 | ![](docs/items/bloodwrath.png) | Obsidian | long sword | Bloodwrath | +1 | Pehtucl, the pens' templar |
@@ -219,7 +220,7 @@ Belt of Might making STR at least 24.
 |---|---|---|---|---|---|
 | ![](docs/items/sling-plus2.png) | Leather | sling | Sling +2 | +2 | Chaya, and her apology chest |
 | ![](docs/items/sling-plus1.png) | Leather | sling | Sling +1 | +1 | a chest |
-| ![](docs/items/windlash.png) | Leather | staff sling | ***Windlash*** | a staff sling +1 (the game has no magic staff sling) | sold by the **Bowyer** |
+| ![](docs/items/windlash.png) | Leather | staff sling | ***Windlash*** | a staff sling +1 (the game has no magic staff sling); its stinkpots as any staff sling's, with [the rule](FEATURES.md#staff-sling-stinkpots) | sold by the **Bowyer** |
 | ![](docs/items/skycutter.png) | Obsidian | chatkcha | ***Skycutter*** | a chatkcha +2 | carried by one of the **thri-kreen** hunting the Gemfields |
 | ![](docs/items/chatkcha-plus1.png) | Obsidian | chatkcha | Chatkcha +1 | +1, Produce Fire | the Guardian |
 | ![](docs/items/bow-plus2.png) | Wooden | bow | Bow +2 | +2 | a skeleton in the Upper Castle |
@@ -339,7 +340,7 @@ Tanelyv's Armor also has a chest piece, metal, with no plus (AC 4 better: the ch
 | ![](docs/items/wand-of-metal-detection.png) | Wand of Metal Detection ("Metal Detection" in the game) | detects metal (25 charges) | the sage's gift in the Red Sands Plateau, after he identifies the party's magic items (with an obelisk gem) |
 | ![](docs/items/llods-rod.png) | Llod's Rod | travel between the obelisks | the Visionary |
 | ![](docs/items/tome-of-understanding.png) | ***Tome of Understanding*** | read as a scroll is (right-click it in the inventory, click its icon): the one whose pack it is in gains a point of WIS for good (at most 25), and the tome is gone. Not in a fight, as no scroll can be read in one | **Father Garyn**'s gift, in Teaquetzl, when the party brings him the ranike pith from Notaku |
-| ![](docs/items/apple.png) ![](docs/items/scroll.png) ![](docs/items/kalzith-scroll.png) | Magic fruit (15 kinds), spell scrolls (19), psionic scrolls (11), ***Kalzith's six scrolls*** | used once | many places; Kalzith's in [his shop](FEATURES.md#kalzith), spells the game has no scroll of |
+| ![](docs/items/apple.png) ![](docs/items/scroll.png) ![](docs/items/kalzith-scroll.png) | Magic fruit (15 kinds), spell scrolls (19), psionic scrolls (11), ***Kalzith's six scrolls*** | used once | many places; Kalzith's in [his shop](FEATURES.md#kalzith), spells the game has no scroll of; and a scroll of any preserver spell on a defiler's body ([defilers' scrolls](FEATURES.md#defilers-scrolls)) |
 
 ## Every mundane weapon
 
@@ -373,11 +374,11 @@ Springs; Deepbiter is its magic one.
 | ![](docs/items/bone-great-axe.png) | great axe | bone | Jark, Weapon Merchant | Wild Mul, Scar's henchmen | **new**: 1d10, two-handed; lighter than metal (and breaks as bone does); a warrior's starting great axe |
 | ![](docs/items/metal-great-axe.png) | great axe | metal | Weapon Merchant | the arena's champions (the half-giant) | **new**: the game's great axe, in metal |
 | ![](docs/items/obsidian-great-axe.png) | great axe | obsidian | Jark, Weapon Merchant | — | **new**: 1d10, two-handed; a fire or earth cleric's starting great axe |
-| ![](docs/items/metal-pick.png) | pick | metal | Weapon Merchant | — | **new**: the game's pick, in metal |
-| ![](docs/items/stone-pick.png) | pick | stone | — | on the ground in the Hot Springs (two); a starting weapon |  |
+| ![](docs/items/metal-pick.png) | pick | metal | Weapon Merchant | — | **new**: the game's pick, in metal; 1d6+1, the footman's pick (2d4 against a large target with [Creature size](FEATURES.md#creature-size)) |
+| ![](docs/items/stone-pick.png) | pick | stone | — | on the ground in the Hot Springs (two); a starting weapon | 1d6+1, the footman's pick (the game's 1d4+1); 2d4 against a large target with [Creature size](FEATURES.md#creature-size) |
 | ![](docs/items/quarterstaff.png) | quarterstaff | wood | Jark, Weapon Merchant | Mikquetzl, Troop Leader, Dakaren, Dagolar, Wyrmias, Hermit, Father Garyn, Notaku, a weapon rack in the Lower Castle, a skeleton in the Undermountain, a chest, a weapon rack in the slave pens |  |
-| ![](docs/items/bone-polearm.png) | polearm | bone | Weapon Merchant | a weapon rack in the Lower Castle, a weapon rack in the slave pens |  |
-| ![](docs/items/metal-polearm.png) | polearm | metal | — | Castle Guard | **new**: the game's polearm, in metal; an earth cleric's starting polearm |
+| ![](docs/items/bone-polearm.png) | polearm | bone | Weapon Merchant | a weapon rack in the Lower Castle, a weapon rack in the slave pens | reaches two squares with [the rule](FEATURES.md#polearm-reach), held with no other weapon (a shield is fine) |
+| ![](docs/items/metal-polearm.png) | polearm | metal | — | Castle Guard | **new**: the game's polearm, in metal; an earth cleric's starting polearm; reaches two squares with [the rule](FEATURES.md#polearm-reach), as the bone one |
 | ![](docs/items/gythka.png) | gythka | bone | Jark, Weapon Merchant | Guardian, the arena's Tohr-kreen (the mod's: its picture holds one) |  |
 | ![](docs/items/cahulaks.png) | cahulaks | bone | Weapon Merchant | the dead body by the arena's stone arch, in place of the game's plain gythka (the mod's, with the champions' bout) |  |
 | ![](docs/items/metal-cahulaks.png) | cahulaks | metal | Weapon Merchant | the arena's champions (the mul) | **new**: the game's cahulaks, in metal; earth and air clerics may use them |
@@ -385,7 +386,7 @@ Springs; Deepbiter is its magic one.
 | ![](docs/items/chatkcha.png) | chatkcha | obsidian | Jark, Bowyer | — |  |
 | ![](docs/items/bow.png) | bow | wood | Jark, Kel, Bowyer | Wyvern Master, Ranger, Arant, Castle Guard, Guard, Arant's Guard, Arena Guard, Caravan Guard, Slaver Guard, Elven Leader, Uzoma, Drajian Guard, Army Commander, Elite Guard, Village Hero, a chest in the Upper Castle, a chest, a chest in Dagolar's tunnels, the arena's champions (the elf), Arant's lazy guard (the mod's) |  |
 | ![](docs/items/sling.png) | sling | leather | Bowyer | Mehtar, Renegade, Silt Runner, a chest in the slave pens, a bag in the slave pens, the arena's champions (the halfling) |  |
-| ![](docs/items/staff-sling.png) | staff sling | leather | Jark, Bowyer | — |  |
+| ![](docs/items/staff-sling.png) | staff sling | leather | Jark, Bowyer | — | throws stinkpots with [the rule](FEATURES.md#staff-sling-stinkpots): 1d3 (the game's 1d4), and a target hit saves against poison or is nauseated, −2 to hit for 1d3+1 rounds |
 
 ## Every mundane armour piece
 

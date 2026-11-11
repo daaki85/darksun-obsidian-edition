@@ -218,6 +218,10 @@ SIZE_LINE_SITE, SIZE_PRE_SITE = NS_IMAGE + 106, NS_IMAGE + 107
 HELD_HIT_SITE, HELD_DAMAGE_SITE = NS_IMAGE + 108, NS_IMAGE + 109
 # (the picture loader's failure: a reused slot let go again, DSCLOG's PIC_FAIL)
 PIC_FAIL_SITE = NS_IMAGE + 110
+# (the combatant distance routine's result: a polearm's reach, two squares as one, DSCLOG's REACH)
+REACH_SITE = NS_IMAGE + 111
+# (the thief skill check's chance: a lock its thief failed at this level out of reach, DSCLOG's LOCK_SITE)
+LOCK_SITE = NS_IMAGE + 112
 # the monster kinds' table (DSUN.EXE, the load segment's 3E45h: monsters.MONSTER_KINDS_SEG): a kind's
 # properties (a dword), its resistance class (a byte), a class's damage kinds (four words) and percents
 KINDS_FILE = 0x5400 + 0x3E45 * 16
@@ -598,6 +602,10 @@ PATCHES = (
     Patch("cahulaks_two", 0x59627, bytes.fromhex("837e06017e11"), _site(CAH_TWO_SITE, 6)),
     Patch("cahulaks_swing", 0x589B6, bytes.fromhex("c746fc0000"), _site(CAH_SWING_SITE, 5)),
     Patch("cahulaks_hit", 0x58B54, bytes.fromhex("c646eb00"), _site(CAH_HIT_SITE, 4)),
+    # ... and a polearm's reach (in the same switch): the end of the combatant distance routine
+    # (1A0A:2BA5h, 22045h), "mov ax,[bp-16h]" at 2211Fh: a distance of 2 made 1 for the game's melee
+    # tests when the attacker's hands hold a polearm and no other weapon.
+    Patch("polearm_reach", 0x2211F, bytes.fromhex("8b46ea"), _site(REACH_SITE, 3)),
     # The creature size rule (RULE_SIZE): a weapon's damage line just drawn (7286Fh's "inc word [bp-2]"
     # at 72AA7h, the item box's and the inventory's): its dice against a large target with it.
     Patch("size_line", 0x72AA7, bytes.fromhex("ff46fe"), _site(SIZE_LINE_SITE, 3)),
@@ -960,6 +968,9 @@ PATCHES = (
     # ... and where a click on a button it doesn't know goes to its end: jmp (DSCLOG: PAGE 1 to
     # PAGE 4, savepages.py)
     Patch("save_click", 0x74B9F, bytes.fromhex("e94302"), _interrupt(VEC_SAVE_CLICK, 3)),
+    # the game's thief skill check (803B8h): its chance, "mov [bp-2],ax" at 803D3h: a lock the thief
+    # failed at the thief level it has now is out of reach (DSCLOG's LOCK_SITE; the Loader's locks.py)
+    Patch("lock_retry", 0x803D3, bytes.fromhex("8946fe"), _site(LOCK_SITE, 3)),
     Patch("thief_skill", 0x80307, bytes.fromhex("8bc6c1e00203d08bf2"),
           bytes((0xCD, VEC_THIEF_SKILL, 0x72, 0x80386 - 0x8030B)) + b"\x90" * 5),
     # a bug of the game's own (DSUN.EXE 1DF3:142F, which makes two child pages of the view, frees

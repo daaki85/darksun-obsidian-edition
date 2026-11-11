@@ -105,6 +105,44 @@ if __name__ == "__main__":
     unittest.main()
 
 
+class FountainTests(unittest.TestCase):
+    """Legcrusher's fetching speech (script 136) asks first whether he is at the fountain."""
+
+    def speech(self):
+        s = _Script()
+        s.op(0x4F, ("n", 115), ("str", "Bad gladiators! "))
+        s.op(0x4F, ("n", 115), ("str", k.FOUNTAIN_LINE))
+        s.op(0x4F, ("n", 115), ("str", "there'll be trouble for ya."))
+        s.op(0x4F, ("n", 115), MORE)
+        return s.bytes(end=True)
+
+    def test_the_branch(self):
+        script = self.speech()
+        out = k.with_fountain(script, FIELDS)
+        ops = gpl.decode(out, FIELDS)
+        line = gpl.decode(script, FIELDS)[1]
+        self.assertEqual(next(o for o in ops if o.at == line.at).code, 0x64)
+        added = [o for o in ops if o.at >= len(script)]
+        self.assertEqual((added[0].code, added[0].args), (k.LOCATE, [("n", -k.LEGCRUSHER)]))
+        said = strings(added)
+        self.assertIn("Gladiators out of cells! Bad gladiators! Guards! GUARDS! ", said)
+        self.assertEqual([o.args for o in added if o.code == k.PORTRAIT], [[("n", 100)], [("n", 0)], [("n", 100)]])
+        self.assertIn(k.FOUNTAIN_LINE, said)  # (elsewhere: the game's words)
+        sets = [o.args for o in added if o.code == 0x40]
+        self.assertEqual(sets, [[("field", k.LEGCRUSHER, [k.SIDE]), ("n", 2)],
+                                [("field", k.LEGCRUSHER, [k.ATTITUDE]), ("n", 2)]])
+        self.assertIn(0x08, [o.code for o in added])  # (his hunt)
+        self.assertEqual(added[-1].code, 0x64)  # (back to the game's script after its lines)
+        self.assertEqual(added[-1].args, [("n", gpl.decode(script, FIELDS)[3].at)])
+        self.assertEqual(k.with_fountain(out, FIELDS, script), out)  # (once)
+
+    def test_left_alone_when_not_the_games(self):
+        s = _Script()
+        s.op(0x4F, ("n", 115), ("str", "Something else. "))
+        script = s.bytes(end=True)
+        self.assertEqual(k.with_fountain(script, FIELDS), script)
+
+
 class WatchTests(unittest.TestCase):
     """DEAD set once Legcrusher is seen dead; not while he lives, nor without the flags."""
 

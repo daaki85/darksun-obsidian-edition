@@ -118,8 +118,18 @@ OBSIDIAN_CAHULAKS_TYPE = GAME_TYPES + 32
 SPEED_AC = 2
 GYTHKA_TYPE = 0x2C  # the game's gythka ("2 handed Bone Gythka")
 # The Loader's rule changes (DSCLOG's RULES): helms count AC 1; AD&D's two-weapon penalties;
-# spells saved against with the spell save; no doubled d20 (2, once boots' movement, is unused)
-RULE_HELMS, RULE_TWO_WEAPONS, RULE_SPELL_SAVE, RULE_NO_DOUBLE = 1, 4, 8, 16
+# spells saved against with the spell save; no doubled d20
+RULE_HELMS, RULE_TWO_WEAPONS, RULE_NO_DOUBLE = 1, 4, 16
+# one switch, Saving throws against spells (the setting "spell_save"): the spell save and no doubled d20
+# (bit 8, the spell save's own once, which only the Loader acts on, free)
+RULE_SPELL_SAVE = RULE_NO_DOUBLE
+# The staff sling's shot a stinkpot (AD&D's Arms and Equipment Guide): 1d3 crushing against any size
+# (the game's 1d4: DSCLOG's STINK_SIDES keeps type 0's dice), and a hit makes the target, unless
+# undead or immune to poison, save against poison (the game's save, as against a monster's poisoned
+# hit) or be Nauseated (STINK_EFFECT: -2 to hit) for 1d3+1 rounds (DSCLOG's RULES bit 2, once boots'
+# movement, unused and free again: the stinkpots are the Weapon traits switch's, RULE_CAHULAKS: STINKPOTS)
+STAFF_SLING_TYPE, STINK_DICE, SLING_DICE = 0, (1, 3), (1, 4)
+STINK_EFFECT, STINK_TO_HIT, STINK_SAVE_POWER = 75, -2, 176
 RULE_NEW_SPELLS = 32  # the new wizard spells (NEW_SPELLS)
 RULE_STEALTH = 64  # a thief hiding in shadows and moving silently backstabs (stealth.py)
 RULE_LEVEL_10 = 128  # an XP cap (XP_CAP, shared out) in place of the game's level cap of 9
@@ -155,10 +165,10 @@ RULE_CHA_PRICES = 1048576
 # the six add up to no more than the die gave, the hit points not changed by a click
 RULE_ROLLED = 2097152
 # magical items sold to a merchant kept in its pack, to buy back (buyback.py; DSCLOG's RULE_HI_BUYBACK)
-RULE_BUYBACK = 4194304
+RULE_BUYBACK = RULE_CHA_PRICES  # (one switch, Shops as in AD&D: the setting "cha_prices"; 4194304 free)
 # a backstab multiplies the weapon's dice only, STR and the rest added after (the PHB; DSCLOG's
 # RULE_HI_BACKSTAB, STAB_TIMES); else the game's, the whole damage multiplied
-RULE_BACKSTAB = 8388608
+RULE_BACKSTAB = RULE_THIEF_TABLE  # (one switch, Thieves as in AD&D: the setting "thief_table"; 8388608 free)
 # ages from Dark Sun's tables, their categories' changes to the scores and death at the most a race
 # lives (aging.py), and Haste's magical aging: a system shock roll and a year (DSCLOG's RULE_HI_AGING)
 RULE_AGING = 16777216
@@ -189,6 +199,7 @@ RULE_REST = 268435456
 # target failing a save against petrification (it loses its next turn; cahulaks.py's list of the
 # too big). DSCLOG's RULE_HI_CAHULAKS, CAHULAKS
 RULE_CAHULAKS = 536870912
+RULE_STINKPOTS = RULE_WEAPON_TRAITS = RULE_CAHULAKS  # (one switch, "Weapon traits": the cahulaks', the stinkpots, the hook)
 CAHULAKS_TYPE = 21
 # Creature size as in AD&D (sizes.py): a large target takes AD&D's large weapon dice, and Hold Person,
 # Charm Person and Charm Person or Mammal (a person) don't take on it; an Enlarged creature counts as
@@ -281,7 +292,7 @@ POWER_EFFECT_NAMES = {34: "Paralysing attack", 13: "Disease attack", 51: "Entang
 POWER_KIND_NAMES = {"pointed": "piercing", "edged": "slashing"}  # (else the damage kind's own name)
 # the Options' setting for each, all on unless unticked
 RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("two_weapons", RULE_TWO_WEAPONS),
-                 ("spell_save", RULE_SPELL_SAVE), ("no_doubled_save", RULE_NO_DOUBLE),
+                 ("spell_save", RULE_SPELL_SAVE),
                  ("new_spells", RULE_NEW_SPELLS), ("stealth", RULE_STEALTH), ("level_10", RULE_LEVEL_10),
                  ("thief_table", RULE_THIEF_TABLE), ("half_giant_hands", RULE_HALF_GIANT),
                  ("protection_rules", RULE_PROTECTION), ("item_saves", RULE_ITEM_SAVES),
@@ -289,8 +300,8 @@ RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("two_weapons", RULE_TWO_WEAPONS),
                  ("multiclass_hp", RULE_MULTI_HP), ("best_hit_die", RULE_HP_BEST), ("kits", RULE_KITS),
                  ("ranger_casting_level", RULE_RANGER_CAST), ("int_learning", RULE_INT_LEARN),
                  ("adnd_tables", RULE_ADND_TABLES), ("cha_prices", RULE_CHA_PRICES),
-                 ("rolled_scores", RULE_ROLLED), ("buyback", RULE_BUYBACK),
-                 ("backstab_dice", RULE_BACKSTAB), ("aging", RULE_AGING),
+                 ("rolled_scores", RULE_ROLLED),
+                 ("aging", RULE_AGING),
                  ("enlarge_dice", RULE_ENLARGE), ("con_adnd", RULE_CON),
                  ("dual_class", RULE_DUAL_CLASS), ("rest_heal", RULE_REST), ("cahulaks", RULE_CAHULAKS),
                  ("creature_size", RULE_SIZE), ("held_hit", RULE_HELD))
@@ -398,6 +409,27 @@ DOUBLED_FLAGS = 0x86
 
 # settings kept under an earlier name (the new spells' switch was Cat's Grace's alone)
 OLD_SETTING_NAMES = {"new_spells": "cats_grace"}
+# switches merged into another (after 2.15.0): an old file's half of a pair, if unticked, unticks the
+# merged switch (fold_merged, once: save_settings folds it in and drops the old key)
+MERGED_SETTINGS = {"no_doubled_save": "spell_save", "buyback": "cha_prices", "backstab_dice": "thief_table"}
+
+
+def fold_merged(settings: dict) -> dict:
+    """SETTINGS with each merged-away switch folded into the one it joined: unticked if either was
+    (a player who turned off half of a pair keeps the game's rule for both), the old key dropped."""
+    for old, new in MERGED_SETTINGS.items():
+        if old in settings:
+            if not settings.pop(old):
+                settings[new] = False
+    return settings
+
+
+def setting_on(settings: dict, key: str) -> bool:
+    """Whether rule switch KEY is ticked in SETTINGS: its value, an earlier name's, or a merged-away
+    half's untick (fold_merged); on by default."""
+    if any(not settings.get(old, True) for old, new in MERGED_SETTINGS.items() if new == key):
+        return False
+    return bool(settings.get(key, settings.get(OLD_SETTING_NAMES.get(key, key), True)))
 
 
 TURN_UNDEAD = 0xBE  # the clerics' Turn Undead, a spell record of its own (190)
@@ -441,8 +473,7 @@ def manual_die(spell: int, sheet: bytes) -> Tuple[int, str]:
 
 
 def rules_from_settings(settings: dict) -> int:
-    return sum(bit for key, bit in RULE_SETTINGS
-               if settings.get(key, settings.get(OLD_SETTING_NAMES.get(key, key), True)))
+    return sum(bit for key, bit in RULE_SETTINGS if setting_on(settings, key))
 
 
 def kind_to_save(kind: int, rules: int) -> int:
@@ -591,7 +622,7 @@ EFFECT_NAMES = {
     64: "Strength Borrowed", 65: "Strength Lent", 66: "Adrenalin Control", 67: "Strength",
     68: "Weakened", 69: "Extra Hitpoints", 70: "Flame Blade", 71: "Spirit. Hammer", 72: "Shillelagh",
     73: "Prayer", GRACE_EFFECT: "Cat's Grace", CLAW_EFFECT: "Erdlu Claw", FOG_EFFECT: "Fogbolt",
-    FRIENDS_EFFECT: "Friends",
+    FRIENDS_EFFECT: "Friends", STINK_EFFECT: "Nauseated",
 }
 
 # What effects do, where the game's own code shows it (to-hit, AC and saving throws)
@@ -612,6 +643,7 @@ EFFECT_RULES = {
     CLAW_EFFECT: "unarmed attacks (a thri-kreen's claws, not its bite) do 1d6+1 where that is better, +1 to hit, as a +1 magical edged weapon (talons)",
     FOG_EFFECT: "-3 to hit, and +2 to hit it (as AC 2 worse)",
     FRIENDS_EFFECT: f"CHA + 2d4, at most {FRIENDS_MOST}",
+    STINK_EFFECT: "-2 to hit (a staff sling's stinkpot)",
     73: "+1 to hit and saves for the caster's side, -1 for the other",
     # what the game's turn, movement, casting and damage code does with the rest
     28: "missile attacks miss it", 37: "no damage from fire, cold, electricity or magic alone",
@@ -803,7 +835,8 @@ SAVE_SHORT = ("PPD", "RSW", "PP", "BW", "SP")  # as the game's inventory screen 
 # the attacker's effects, the weapon's plus or its material's penalty
 STR_TO_HIT, DEX_MISSILE = 0x7C2, 0x7DC  # DS: a byte per ability score
 STR_DAMAGE_TABLE = 0x7A8  # DS: the same, for melee damage (just before STR_TO_HIT)
-HIT_EFFECTS = ((7, 1), (12, -1), (47, -4), (49, 1), (FOG_EFFECT, -3))  # Blessed, Cursed, Slowed, Graft Weapon, Fogbolt
+HIT_EFFECTS = ((7, 1), (12, -1), (47, -4), (49, 1), (FOG_EFFECT, -3),  # Blessed, Cursed, Slowed, Graft Weapon, Fogbolt
+               (STINK_EFFECT, STINK_TO_HIT))  # ... and the stinkpot's Nauseated (DSCLOG's NS_HIT)
 WEAPON_HANDS = (EQUIP_SLOTS.index("right hand"), EQUIP_SLOTS.index("left hand"))
 MISSILE_SLOT = EQUIP_SLOTS.index("missile")
 

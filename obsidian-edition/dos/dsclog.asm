@@ -419,7 +419,8 @@ sound_req  dw 0xFFFF            ; +1822 the Loader sets a sound to play from the
                                 ;      (SOUND_TICK: a thief hidden, sounds.py's HIDE_SOUND); DSCLOG
                                 ;      sets it back to FFFFh (none) once played
 pick_sound dw 0xFFFF            ; +1824 ... and one to play with PICK_TEXT when no XP is given
-                                ;      (GIVE_XP: a pocket picked, PICK_SOUND), set back as well
+                                ;      (GIVE_XP: a pocket picked, PICK_SOUND), or as spell arrows
+                                ;      are made (ARROWS_ASK: the spell's cast sound), set back as well
 ghost_seg  dw 0                 ; +1826 GHOST's block in upper memory (KEEP; 0: none, no see-through
                                 ;      figures): the Loader writes BLEND, REP and GHOST_TAB into it
 ghost_on   dw 0                 ; +1828 the Loader sets 1 once BLEND and REP are made for the palette
@@ -443,6 +444,17 @@ big_off    dw FAR_BIG           ; +1840 offset of BIG in the far block: the Load
                                 ;      combatant too big for the cahulaks to tangle (cahulaks.py)
 large_off  dw large_bits        ; +1842 offset of LARGE_BITS in the tail: the Loader's: a bit per
                                 ;      combatant large or bigger (sizes.py; SIZE)
+lock_off   dw lock_barred       ; +1844 offset of LOCK_BARRED in this segment: the Loader's: the
+                                ;      locks each party member may not try again yet (LOCK_SITE)
+loot_seq   dw 0                 ; +1846 T or Shift+T read with a body's (a container's) window open,
+                                ;      counted (LOOT_KEY): the Loader takes what is in it
+loot_thing dw 0xFFFF            ; +1848 ... the container's map thing (the game's DS:05E6h then)
+loot_mode  dw 0                 ; +1850 ... 0 T: everything; 1 Shift+T: all but plain weapons
+sell_seq   dw 0                 ; +1852 S read on a shop's screen, counted (SELL_KEY): the Loader
+                                ;      sells the plain gear in the backpack of ...
+sell_member dw 0                ; +1854 ... the party member on show then
+sell_merchant dw 0              ; +1856 ... to the shop's merchant (DS:179Ch)
+shop_at    dw 0                 ; +1858 the BIOS tick of the shop's loop's last pass (SHOP_LOOP)
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -3151,7 +3163,8 @@ prot_scan:
 ; (WAR_KIT_OF), whatever RULE_SPECIALIZE. Specialization +1 to hit, mastery +3 (the THAC0 less).
 ; PROBE_SPEC_DAMAGE: INT VEC_SPEC_DAMAGE replaces "add [bp-12h],ax" (3 bytes: INT + NOP; 588F2h),
 ; the strength bonus added to the damage bonus: specialization +2, mastery +3, and grand mastery
-; the damage dice one size larger (2 more sides: d8 to d10, 2d4 to 2d6).
+; the damage dice the next greater die size (NEXT_DIE: d8 to d10, 2d4 to 2d6, d12 to d20), against
+; a large target too (SIZE_DICE): Player's Option: Combat & Tactics' "against all opponents".
 SPEC_SLOTS equ 0x14
 SPEC_COUNT equ 4
 SPEC_PACKED equ 0x80            ; (+16h's top bit: the specs packed, +17h the age)
@@ -3678,7 +3691,11 @@ probe_spec_damage:
 .three: add word [bp - 0x12], 3
         cmp dl, SPEC_GRAND
         jne .out
-        add word [bp - 0x10], 2
+        push ax
+        mov ax, [bp - 0x10]
+        call next_die
+        mov [bp - 0x10], ax
+        pop ax
 .out:   pop dx
 .done:  iret
 
@@ -3728,7 +3745,11 @@ probe_dam_line:
 .three: add word [bp + 0x0C], 3
         cmp dl, SPEC_GRAND
         jne .out
-        add word [bp + 0x0A], 2
+        push ax
+        mov ax, [bp + 0x0A]
+        call next_die
+        mov [bp + 0x0A], ax
+        pop ax
 .out:   pop dx
         pop bp
 .done:  push cx                 ; (a Crusader's or Mind Warrior's extra attacks; the off hand's
@@ -3788,7 +3809,11 @@ probe_missile_line:
 .three: add word [ss:di + 0x0C], 3
         cmp dl, SPEC_GRAND
         jne .own
-        add word [ss:di + 0x0A], 2
+        push ax
+        mov ax, [ss:di + 0x0A]
+        call next_die
+        mov [ss:di + 0x0A], ax
+        pop ax
 .own:   cmp byte [es:bx + 0x18], THRI_KREEN_RACE ; (a thri-kreen's chatkcha: one more a round,
         jne .out                ;   as OWN_THROWS)
         cmp si, KIND_TYPES
@@ -3876,7 +3901,11 @@ probe_view_dam:
 .three: add word [bp - 0x0E], 3
         cmp dl, SPEC_GRAND
         jne .out
-        add word [bp - 4], 2
+        push ax
+        mov ax, [bp - 4]
+        call next_die
+        mov [bp - 4], ax
+        pop ax
 .out:   mov ax, si              ; (a Crusader's or Mind Warrior's extra attacks, not a missile
         imul ax, ax, 0x14       ; weapon's)
         push es
@@ -5204,12 +5233,12 @@ nc_who  dw 0                            ; (the character the test was asked abou
 ;   Cold case), as the blast's wounds are imagined; Disintegrate's (DX 10000 and up) still kills;
 ; - where the game makes a Dead Body for a creature that dies carrying something (612E:2752h,
 ;   59412h: "push 0FFFF044Dh", object 1101; the INT, then "push 0FFFFh / push ax"): AX the body's
-;   object, 1101, or the champions' Tohr-kreen's own (champions.py) when the dying creature (its
-;   map object [BP+6], DS the game's) is that champion.
+;   object, 1101, or a dead thri-kreen's (champions.BODY) when the dying creature (its map object
+;   [BP+6], DS the game's) is a thri-kreen, any (the user's: the arena's died as a human body; the
+;   champions' Tohr-kreen alone till 2026-11-11), and the game has the Loader's objects (OBJECTS_ON).
 WORN_AC_RET equ 0x22C8                  ; (the AC routine's INT's return address)
 BODY_RET    equ 0x2754                  ; (the dead body's)
 DEAD_BODY   equ 1101                    ; (the game's Dead Body)
-KREEN_CHAMPION equ 2660                 ; (champions.TOHR_KREEN)
 KREEN_BODY  equ 2666                    ; (champions.BODY)
 MAP_OBJECT  equ 0x66AE                  ; (a map object's object number: DS:66AEh + 32 each)
 BLAST_RET   equ 0x0B69                  ; (Psionic Blast's)
@@ -5265,16 +5294,17 @@ probe_worn:
 .ko_cmp: cmp ax, dx                     ; (the game's)
         retf 2
 .body:  pop bp
+        cmp word [cs:objects_on], 0     ; (the Loader's objects, the body among them, in use)
+        je .plain
         push bx
-        mov bx, [bp+6]                  ; the dying creature's map object (the game's frame)
-        shl bx, 5
-        mov ax, [bx+MAP_OBJECT]
+        push es
+        mov ax, [bp+6]                  ; the dying creature's map object (the game's frame)
+        call thing_sheet
+        cmp byte [es:bx + 0x18], THRI_KREEN_RACE
+        pop es
         pop bx
-        cmp ax, KREEN_CHAMPION
         je .kreen
-        cmp ax, -KREEN_CHAMPION
-        je .kreen
-        mov ax, DEAD_BODY
+.plain: mov ax, DEAD_BODY
         iret
 .kreen: mov ax, KREEN_BODY
         iret
@@ -11831,6 +11861,24 @@ spec_of:
         pop bx
         ret
 
+; NEXT_DIE: AX a die's sides; AX the next greater die size (grand mastery's, Player's Option: Combat
+; & Tactics: d2, d3, d4, d6, d8, d10, d12, d20; a die past d20 kept). Others kept.
+next_die:
+        push si
+        mov si, die_sizes
+.next:  cmp ax, [cs:si]
+        jb .got
+        add si, 2
+        cmp si, die_sizes_end
+        jb .next
+        pop si
+        ret
+.got:   mov ax, [cs:si]
+        pop si
+        ret
+die_sizes dw 2, 3, 4, 6, 8, 10, 12, 20
+die_sizes_end:
+
 ; SPEC_OF_SHEET: DL the skill with item type SI of the character whose sheet is at ES:BX:
 ; SPEC_NONE (it has chosen no kinds), SPEC_PLAIN (not this kind), SPEC_EXPERT (a ranger's: no
 ; fighter or gladiator class; and every ranger's with the bow, chosen or not), SPEC_SPECIAL,
@@ -14399,7 +14447,7 @@ burn_pass:
         jmp .next
 .done:  ret
 
-; BACKSTAB DICE (RULE_HI_BACKSTAB): the game's backstab multiplies the whole of a hit's damage,
+; BACKSTAB DICE (RULE_THIEF_TABLE, Thieves as in AD&D): the game's backstab multiplies the whole of a hit's damage,
 ; STR's bonus and the weapon's included (x2 to x5 by thief level: 595C4h); AD&D's multiplies the
 ; weapon's dice only, the rest added once. STAB_ROLL: "cmp word [bp+16h],1" (58A29h; 4 bytes) in the
 ; attack (AX the damage just rolled, [BP-12h] what it added to the dice): the dice's sum kept, then
@@ -14437,7 +14485,7 @@ stab_times:
         pop ax
         jne .rule
         inc ax                          ; (an Assassin: one more)
-.rule:  test word [cs:rules_hi], RULE_HI_BACKSTAB
+.rule:  test word [cs:rules], RULE_THIEF_TABLE ; (Thieves as in AD&D: the backstab's dice too)
         jz .whole
         cmp word [bp - 0x14], 0
         je .first
@@ -16891,6 +16939,8 @@ cah_swing:
         call size_dice          ; (the creature size rule: a large target's dice, the call's first swing)
         test word [cs:rules_hi], RULE_HI_CAHULAKS
         jz .out
+        cmp word [bp + 0x12], 0     ; (no item: a natural attack, its [BP+14h] never set)
+        jl .out
         cmp word [bp + 0x16], 1
         jg .out
         cmp word [bp + 0x14], CAHULAKS
@@ -16916,12 +16966,18 @@ cah_swing:
 .out:   iret
 
 ; CAH_HIT ("mov byte [bp-15h],0", 58B54h; 4 bytes: a weapon's hit has done damage): the cahulaks'
-; tangle (see CAHULAKS).
+; tangle (see CAHULAKS), and the staff sling's stinkpot (STINKPOTS).
 cah_hit:
         mov byte [bp - 0x15], 0
-        test word [cs:rules_hi], RULE_HI_CAHULAKS
+        test word [cs:rules_hi], RULE_HI_CAHULAKS ; (Weapon traits: the cahulaks', the stinkpot, the hook)
         jz .out
-        cmp word [bp + 0x16], 1
+        cmp word [bp + 0x12], 0     ; (no item: a natural attack, its [BP+14h] never set: audit 2026-11-11)
+        jl .out
+        cmp word [bp + 0x14], STAFF_SLING
+        jne .rule
+        cmp word [bp + 0x16], 1     ; (the staff sling's stinkpot is its shot, not a blow with it)
+        jg stink_hit
+.rule:  cmp word [bp + 0x16], 1
         jg .out
         cmp word [bp + 0x14], CAHULAKS
         je .cah
@@ -16988,6 +17044,318 @@ cah_hit:
 .done:  pop es
         popad
 .out:   iret
+
+; STINKPOTS (RULE_HI_CAHULAKS, the Loader's rule "cahulaks", Weapon traits): the staff sling's shot is a stinkpot, a
+; clay pot of burning sulphur (AD&D's Arms and Equipment Guide). Its damage is 1d3 crushing against
+; any size (type 0's dice, STINK_SIDES). A hit (STINK_HIT, from CAH_HIT: [BP+14h] the type, [BP+18h]
+; the thrower, TARGET the target) on a target still standing, not undead (5B8:A2h, 7BE20h) and not
+; immune to poison (5B8:66h, 7B492h: the share it takes of the poison damage kind, 1, 0 none), makes
+; it save against poison: the game's saving throw (5B8:2Fh, 79A71h) as against a monster's poisoned
+; hit (power 176: paralysis/poison/death, with every modifier the game gives it; a held target fails).
+; A failure: Nauseated (STINK_EFFECT, 75, past the game's 74: -2 to hit, NS_HIT; its name and icon
+; NS_ENTRY's) for 1d3+1 rounds, added through 598:3Eh (76442h) under Stinking Cloud (22): an effect
+; filed under a power past 137 with a party member as its thrower is taken for a psionic power's upkeep
+; as it ends (76883h). In a frame the overlay manager can fix up. Recorded: MN_STINK before the save
+; (target, thrower, 0 a save follows, 1 undead, 2 immune to poison), MN_NAUSEA after it (target,
+; thrower, the d3, the rounds; 0 and 0 saved).
+STAFF_SLING  equ 0              ; the staff sling's item type
+STINK_SIDES  equ 3              ; (its dice's sides with the rule: 1d3; the game's 4)
+SLING_SIDES  equ 4
+STINK_EFFECT equ 75
+STINK_SPELL  equ 22             ; (Stinking Cloud: the effect's spell)
+STINK_SAVE   equ 176            ; (a monster's poisoned hit: the save's record)
+STINK_POISON equ 1              ; (the poison damage kind)
+STINK_TO_HIT equ 2
+STINK_UNDEAD equ 1              ; (MN_STINK's +0Ah)
+STINK_IMMUNE equ 2
+MN_STINK     equ 11
+MN_NAUSEA    equ 12
+stink_hit:
+        sti
+        pushad
+        push es
+        mov ax, [TARGET]
+        cmp ax, MAP_COUNT
+        jae .out
+        call combatant_creature
+        jc .out
+        imul ax, ax, 0x3A
+        les bx, [CREATURES]
+        add bx, ax
+        cmp word [es:bx], 0
+        jle .out                    ; (felled by the blow)
+        mov ax, [TARGET]
+        mov [cs:mn_frame], ax
+        mov ax, [bp + 0x18]
+        mov [cs:mn_frame + 2], ax
+        xor eax, eax
+        mov [cs:mn_frame + 4], eax
+        mov bx, sp
+        push word [ss:bx + 36]      ; (the way back, in a frame the overlay manager can fix up)
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        push word [cs:mn_frame]
+        th_far TH_STUB_5B8, 0xA2    ; (undead: AL)
+        add sp, 2
+        mov dx, STINK_UNDEAD
+        or al, al
+        jnz .spared
+        push word STINK_POISON
+        push cs
+        push word stink_none        ; (its effects' bits: none count against poison)
+        push word [cs:mn_frame]
+        th_far TH_STUB_5B8, 0x66    ; (the share of poison it takes)
+        add sp, 8
+        mov dx, STINK_IMMUNE
+        or ax, ax
+        jz .spared
+        mov ax, MN_STINK
+        call mn_rec
+        push word 0                 ; (the level)
+        push word STINK_SAVE
+        push word [cs:mn_frame + 2]
+        push word [cs:mn_frame]
+        th_far TH_STUB_5B8, 0x2F    ; (the save: AX 1 saved)
+        add sp, 8
+        or ax, ax
+        jnz .saved
+        mov ax, 3
+        call game_die
+        mov [cs:mn_frame + 4], ax
+        inc ax
+        mov [cs:mn_frame + 6], ax
+        push word 0
+        push word 0
+        imul ax, ax, ROUND_SECONDS
+        push ax
+        push word STINK_EFFECT
+        push word STINK_SPELL
+        push word [cs:mn_frame + 2]
+        push word [cs:mn_frame]
+        th_far TU_STUB, 0x3E        ; (target, thrower, spell, effect, time, 0)
+        add sp, 14
+.saved: mov ax, MN_NAUSEA
+        call mn_rec
+        jmp ovr_back
+.spared:
+        mov [cs:mn_frame + 4], dx
+        mov ax, MN_STINK
+        call mn_rec
+        jmp ovr_back
+.out:   pop es
+        popad
+        iret
+stink_none times 10 db 0
+
+; STINK_SIDES: the staff sling's type's (0) damage dice's sides (+0Ch) as the rule has them: the
+; stinkpot's 3 with it, the game's 4 without; only in the table TYPES_FILL last saw read in (TYPES_PTR
+; still it), and only over a 3 or a 4. DS the game's; all registers kept.
+stink_sides:
+        push es
+        push bx
+        push ax
+        les bx, [TYPES_PTR]
+        cmp bx, [cs:types_ptr]
+        jne .out
+        mov ax, es
+        or ax, ax
+        jz .out
+        cmp ax, [cs:types_ptr + 2]
+        jne .out
+        mov al, STINK_SIDES
+        test word [cs:rules_hi], RULE_HI_CAHULAKS
+        jnz .set
+        mov al, SLING_SIDES
+.set:   mov ah, [es:bx + STAFF_SLING * TYPE_SIZE + 0x0C]
+        cmp ah, STINK_SIDES
+        je .put
+        cmp ah, SLING_SIDES
+        jne .out
+.put:   mov [es:bx + STAFF_SLING * TYPE_SIZE + 0x0C], al
+.out:   pop ax
+        pop bx
+        pop es
+        ret
+; REACH (RULE_HI_CAHULAKS, the Loader's rule "cahulaks", Weapon traits): a polearm reaches two
+; squares. REACH_SITE is "mov ax,[bp-16h]" (2211Fh; 3 bytes: the INT and the site's number) at the
+; end of the combatant distance routine (1A0A:2BA5h, 22045h: [BP+6] the attacker, [BP+8] the target,
+; both combatants; the least square distance between their footprints, 898:000Ch's: 1 adjacent,
+; diagonals too, 2 the square beyond, two across and one down too, two across and two down 3). It
+; does the MOV; then with the rule, for a distance of 2 asked by one of the game's melee tests
+; (REACH_CALLER), an attacker whose hands hold a polearm and no other weapon (REACH_HANDS), and no wall
+; on the line between the two (REACH_LINE), AX 1: the game then takes the target as adjacent. The melee tests, by their way back (each compares the
+; distance with 1): the pointer's sword (1587:2B7Ah, 1D7EAh), the attack pointer's click (1587:0AC5h,
+; 1B735h), the walk arrow's click on a foe (1587:04B8h, 1B128h), the walk to attack arriving
+; (1587:1C36h, 1C8A6h, and 1A0A:3071h, 22511h), the step switch's case 19 (1A0A:14A2h, 20942h); and
+; the computer's choice of an attack, in overlay 612Eh (56CC0h on; its CS wherever it is loaded): its
+; target's distance against its weapon's range (0DA7h, 57A67h), and the target it found in range
+; (1229h, 57EE9h), each told by its IP and the code around it (a far call to 2BA5h before, "add sp,4
+; / mov [bp-0Ah],ax" after). Every other caller (an ambush's, the spells', a missile's) keeps 2. The
+; type's range byte (+0Ah) stays 1: above 1 the attack routines take a weapon for a missile weapon.
+REACH_SITE   equ NS_IMAGE + 111   ; 2211Fh: the distance routine's result, a polearm's reach (REACH)
+LOCK_SITE    equ NS_IMAGE + 112   ; 803D3h: a thief skill check's chance, a lock barred (LOCK_SITE)
+REACH_1587   equ 0x4356 - 0x1587  ; (the callers' segments, less DS)
+REACH_1A0A   equ 0x4356 - 0x1A0A
+REACH_AI_RANGE equ 0x0DA7         ; (overlay 612Eh's ways back)
+REACH_AI_FOUND equ 0x1229
+POLEARM_KIND equ 10               ; (kind_of_type's polearm: its kind, 9, + 1)
+TYPE_WEAPON  equ 3                ; (a type's flags, +00h: 1 a melee weapon, 2 a missile weapon)
+reach_rets   dw REACH_1587, 0x2B7A, REACH_1587, 0x0AC5, REACH_1587, 0x04B8, REACH_1587, 0x1C36
+             dw REACH_1A0A, 0x3071, REACH_1A0A, 0x14A2
+REACH_RETS   equ ($ - reach_rets) / 4
+reach_site:
+        mov ax, [bp - 0x16]
+        cmp ax, 2
+        jne .out
+        test word [cs:rules_hi], RULE_HI_CAHULAKS
+        jz .out
+        pusha
+        push es
+        call reach_caller
+        jne .no
+        mov ax, [bp + 6]
+        call reach_hands
+        jne .no
+        call reach_line
+        jne .no
+        pop es
+        popa
+        mov ax, 1
+        iret
+.no:    pop es
+        popa
+.out:   iret
+
+; REACH_CALLER: ZF if the distance routine's way back ([BP+2], [BP+4]) is one of REACH's melee tests.
+; DS the game's; AX, CX, DX, SI, DI, ES changed.
+reach_caller:
+        mov dx, ds
+        sub dx, [bp + 4]                ; (DS less the caller's CS)
+        mov ax, [bp + 2]
+        mov si, reach_rets
+        mov cx, REACH_RETS
+.res:   cmp dx, [cs:si]
+        jne .next
+        cmp ax, [cs:si + 2]
+        je .ret
+.next:  add si, 4
+        loop .res
+        cmp ax, REACH_AI_RANGE
+        je .code
+        cmp ax, REACH_AI_FOUND
+        jne .ret
+.code:  mov es, [bp + 4]
+        mov di, ax
+        cmp word [es:di - 5], 0xA59A    ; (call far 2BA5h)
+        jne .ret
+        cmp byte [es:di - 3], 0x2B
+        jne .ret
+        cmp dword [es:di], 0x8904C483   ; (add sp,4 / mov [bp-0Ah],ax)
+        jne .ret
+        cmp word [es:di + 4], 0xF646
+.ret:   ret
+
+; REACH_HANDS: ZF if combatant AX holds a polearm (kind_of_type's POLEARM_KIND) in a hand, the right
+; (RIGHT_HAND) or the left (LEFT_HAND), and no other weapon (a type with a melee or missile flag) in
+; either: a shield, or nothing, in the other. The missile slot doesn't count. Its three item lists
+; (+08h, +0Ah, +0Ch), by each item's slot (+11h). DS the game's; AX, BX, CX, DX, SI, DI, ES changed.
+reach_hands:
+        call combatant_creature
+        jc .none
+        imul di, ax, 0x3A
+        xor dx, dx                      ; (DL the polearms in the hands, DH the other weapons)
+        mov cx, 8
+.list:  les bx, [CREATURES]
+        add bx, di
+        add bx, cx
+        mov si, [es:bx]
+        cmp si, NO_THING
+        jae .next
+        mov ax, ds
+        add ax, THINGS_SEG
+        mov es, ax
+        imul si, si, 3
+        cmp byte [es:si + THINGS], 1
+        jne .next                       ; (not an item)
+        mov si, [es:si + THINGS + 1]
+        mov byte [cs:reach_left], 100
+.item:  cmp si, NO_THING
+        jae .next
+        les bx, [ITEMS]
+        imul ax, si, 0x15
+        add bx, ax
+        mov al, [es:bx + 0x11]
+        cmp al, RIGHT_HAND
+        je .hand
+        cmp al, LEFT_HAND
+        jne .on
+.hand:  mov ax, [es:bx + 0x0A]          ; (its type)
+        cmp ax, KIND_TYPES
+        jae .other
+        push bx
+        mov bx, ax
+        cmp byte [cs:bx + kind_of_type], POLEARM_KIND
+        pop bx
+        jne .other
+        inc dl
+        jmp .on
+.other: push es
+        push bx
+        imul ax, ax, TYPE_SIZE
+        les bx, [ITEM_TYPES]
+        add bx, ax
+        test byte [es:bx], TYPE_WEAPON
+        pop bx
+        pop es
+        jz .on
+        inc dh
+.on:    mov si, [es:bx + 4]             ; (the next item in the list)
+        dec byte [cs:reach_left]
+        jnz .item
+.next:  add cx, 2
+        cmp cx, 0x0E
+        jb .list
+        cmp dx, 1                       ; (one polearm, no other weapon)
+        ret
+.none:  or sp, sp                       ; (no creature: ZF clear)
+        ret
+reach_left db 0
+
+; REACH_LINE: ZF if no wall is on the line from attacker [BP+6]'s square to target [BP+8]'s, by the
+; game's own test (898:00A4h, 0DE24h: two squares, x, y and a height of 0 each; 0, or -1 blocked by
+; a cell with its bit 80h, a wall), the one the attack pointer's click (at 1B700h) and the computer's
+; attack (57C99h) make; the walk arrow's click and the walk to attack make none, as for an adjacent
+; foe. The squares are the things' places (DS:669Dh, 669Fh + 20h a thing: sixteenths). DS the game's;
+; AX, BX, CX, DX, ES changed.
+REACH_LINE_SEG equ 0x898
+reach_line:
+        mov bx, [bp + 8]
+        shl bx, 5
+        push word 0
+        mov ax, [bx + WALL_POS + 2]
+        shr ax, 4
+        push ax
+        mov ax, [bx + WALL_POS]
+        shr ax, 4
+        push ax
+        mov bx, [bp + 6]
+        shl bx, 5
+        push word 0
+        mov ax, [bx + WALL_POS + 2]
+        shr ax, 4
+        push ax
+        mov ax, [bx + WALL_POS]
+        shr ax, 4
+        push ax
+        mov ax, ds
+        sub ax, DGROUP_SEG - REACH_LINE_SEG
+        mov [cs:reach_line_at + 2], ax
+        call far [cs:reach_line_at]
+        add sp, 12
+        or ax, ax
+        ret
+reach_line_at dw 0xA4, 0
 ; SIZE (RULE_HI_SIZE, the Loader's rule "creature_size"): AD&D's creature sizes, which the game keeps
 ; none of. A combatant is large (IS_LARGE) when Enlarged (effect 16), a half-giant (its sheet's race),
 ; or marked in LARGE_BITS (the Loader's, from dsloader/sizes.py: large, huge or gargantuan). Then:
@@ -17004,9 +17372,9 @@ large_dice   db 1, 12, 0            ; long sword: 1d12
              db 1, 3, 0             ; dagger: 1d3
              db 1, 8, 0             ; short sword: 1d8
              db 1, 6, -1            ; mace: 1d6 (1d6+1)
-             db 0, 0, 0             ; axe: as small (1d8)
+             db 1, 10, 0            ; axe: 1d10 (the battle axe's: Player's Option: Skills & Powers)
              db 2, 8, 0             ; great axe: 2d8
-             db 1, 4, -1            ; pick: 1d4 (1d4+1)
+             db 2, 4, -1            ; pick: 2d4 (1d6+1: the footman's pick, Skills & Powers)
              db 0, 0, 0             ; quarterstaff: 1d6
              db 2, 6, 0             ; polearm: 2d6
              db 1, 10, 0            ; gythka: 1d10 (the Dark Sun weapons guide's 2d4/1d10)
@@ -17079,6 +17447,14 @@ size_dice:                          ; (CAH_SWING's: the call's first swing with 
         mov [bp - 0x10], ax
         movsx ax, byte [cs:si + large_dice + 2]
         add [bp - 0x12], ax
+        test word [cs:rules], RULE_SPECIALIZE ; (a grand master's: the next greater die, as its
+        jz .done                    ;   own dice's at PROBE_SPEC_DAMAGE, which these replace)
+        call spec_of
+        cmp dl, SPEC_GRAND
+        jne .done
+        mov ax, [bp - 0x10]
+        call next_die
+        mov [bp - 0x10], ax
 .done:  popa
 .ret:   ret
 size_spared:                        ; (SAVE_SUM's: AX the save's sum) SAVE_MOST for Hold or Charm
@@ -17734,15 +18110,17 @@ amulet_mr:
         iret
 
 ; RULES (set by the Loader, from its Options): a helm counts AC 1, ... (2, once boots'
-; movement in a fight, is unused)
+; movement in a fight: unused, free for a rule)
 RULE_HELMS equ 1
 RULE_TWO_WEAPONS equ 4
-RULE_SPELL_SAVE equ 8           ; (the Loader writes the game's save table for this one)
+; (8: once the spell save's own, which the Loader alone acts on: free, the spell save now Saving throws
+;   against spells with RULE_NO_DOUBLE)
 RULE_NO_DOUBLE equ 16
 RULE_NEW_SPELLS equ 32          ; three new wizard spells: Cat's Grace, Erdlu Claw, Fogbolt (NEW SPELLS)
 RULE_STEALTH equ 64             ; (the Loader rolls the hiding and moving silently, and sets STEALTH)
 RULE_LEVEL_10 equ 128          ; class levels go up to 10, not 9
-RULE_THIEF_TABLE equ 256        ; thief skills from AD&D's table and Dark Sun's DEX adjustments
+RULE_THIEF_TABLE equ 256        ; Thieves as in AD&D: thief skills from AD&D's table and Dark Sun's DEX adjustments,
+                                ;   and a backstab multiplying the weapon's dice only (STAB_TIMES)
 RULE_HALF_GIANT equ 512         ; half-giants wield two-handed weapons in one hand
 RULE_PROTECTION equ 1024        ; AD&D's rings and cloaks of protection (PROBE_RING_AC, RING_PLUS)
 RULE_ITEM_SAVES equ 2048        ; items save against acid as in AD&D where better (PROBE_ITEM_*)
@@ -17751,20 +18129,22 @@ RULE_RESTRICT equ 8192          ; class restrictions on armour, shields and weap
 RULE_MULTI_HP equ 16384         ; multiclass hit points as in AD&D (PROBE_MC_*)
 RULE_HP_BEST equ 32768          ; a hit die rolled twice, the better kept (PROBE_HP_BEST)
 RULE_HI_KITS equ 1              ; (RULES_HI) kits, chosen on the creation panel's KIT page (KIT_*)
-RULE_HI_CHA_PRICES equ 16      ; (RULES_HI) the leader's CHA lowers what shops ask (CHA_PRICE)
+RULE_HI_CHA_PRICES equ 16      ; (RULES_HI) Shops as in AD&D: the leader's CHA lowers what shops ask (CHA_PRICE),
+                                ;   and magical items sold to a merchant kept to buy back (SELL_KEEP)
 RULE_HI_ROLLED equ 32           ; (RULES_HI) creation's scores and hit points as rolled (RL_SCORE, RL_HP)
 RULE_HI_TABLES equ 8            ; (RULES_HI) AD&D's class tables: XP, priests' THAC0, spell slots (XP_NEED, PROBE_*)
 RULE_HI_INT    equ 4            ; (RULES_HI) INT's chance to learn a scroll's spell and most spells a level (INT_LEARN)
 RULE_HI_RANGER equ 2            ; (RULES_HI) a ranger's spells' durations and damage at its level less 7 (PROBE_RANGER_LEVEL)
-RULE_HI_BUYBACK equ 64          ; (RULES_HI) magical items sold to a merchant kept to buy back (SELL_KEEP)
-RULE_HI_BACKSTAB equ 128        ; (RULES_HI) a backstab multiplies the weapon's dice only (STAB_TIMES)
+; (RULES_HI 64: once the buyback's own, now Shops as in AD&D with RULE_HI_CHA_PRICES: free)
+; (RULES_HI 128: once the backstab dice's own, now Thieves as in AD&D with RULE_THIEF_TABLE: free)
 RULE_HI_AGING equ 256           ; (RULES_HI) ages, and Haste's magical aging: the Loader's (aging.py; no
                                 ;   STATS age without it, so AGE_TEXT needs no test of its own)
 RULE_HI_ENLARGE equ 512         ; (RULES_HI) Enlarge multiplies the weapon's dice only (ENL_SITE)
 RULE_HI_CON equ 1024            ; (RULES_HI) CON as in AD&D: regeneration's rates, dwarves' poison saves (REGEN_SITE, CON_SAVE)
 RULE_HI_DUAL equ 2048           ; (RULES_HI) dual-classing at 3rd level, every prime requisite checked (DUAL_LEVEL, DUAL_PRIMES)
 RULE_HI_REST equ 4096           ; (RULES_HI) rest heals by spells and natural healing (REST_PRE, REST_HP)
-RULE_HI_CAHULAKS equ 8192       ; (RULES_HI) cahulaks: a head in each hand, a tangle on a hit (CAHULAKS)
+RULE_HI_CAHULAKS equ 8192       ; (RULES_HI) Weapon traits: the cahulaks' heads and tangle (CAHULAKS), the staff
+                                ;   sling's stinkpots (STINKPOTS), the polearm's reach (REACH)
 RULE_HI_SIZE equ 16384          ; (RULES_HI) creature size: large dice, Hold and Charm Person (SIZE)
 RULE_HI_HELD equ 32768          ; (RULES_HI) a held or Out Cold target hit automatically, normal damage (HELD)
 THINGS_SEG equ 0x3972 - 0x4356  ; the things table's segment, relative to DS
@@ -20288,6 +20668,8 @@ site_tab:
         site HELD_HIT_SITE, held_hit
         site HELD_DAMAGE_SITE, held_damage
         site PIC_FAIL_SITE, pic_fail
+        site REACH_SITE, reach_site
+        site LOCK_SITE, lock_site
 SITE_COUNT equ ($ - site_tab) / 2
 
 ; NS_CMP: the compare of site RL_SITE (of NS_CMP_SITES), its flags into the INT's frame.
@@ -20913,6 +21295,10 @@ shop_shine:
 shop_loop:
         pushad
         push es
+        xor ax, ax                      ; (the shop's screen up now: SELL_KEY)
+        mov es, ax
+        mov ax, [es:0x46C]
+        mov [cs:shop_at], ax
         mov di, sp
         call shine_turn
         cmp word [SHINE_SCREEN], 1
@@ -21768,7 +22154,8 @@ arrows_arm:
 ; ARROWS_ASK: the Spellarcher on show asks for the arrows of ARROWS_WHICH's touch spell: to the
 ; Loader as an item used on the map is (USE_ITEM ARROWS_BY and the member, USE_WHO the spell's place
 ; in ARROW_SPELLS: dsloader/spellarrows.py), which uses up a slot, makes them and says what came of
-; it (PICK_TEXT, shown). DS the game's; registers changed.
+; it (PICK_TEXT, shown), or, made, has the spell's cast sound played (PICK_SOUND). DS the game's;
+; registers changed.
 ARROWS_BY  equ 0xFE00
 arrows_ask:
         mov ax, ds
@@ -21804,8 +22191,11 @@ arrows_ask:
         ret
 .ready: pop es
         cmp byte [cs:pick_text], 0
-        je .done                ; (made: nothing to say)
-        mov word [cs:show_text], pick_text
+        jne .say
+        mov ax, 0xFFFF          ; (made: nothing to say, and the spell's cast sound, PICK_SOUND,
+        xchg ax, [cs:pick_sound] ;  now: the map's main loop, SOUND_REQ's, waits for the screen)
+        jmp play_sound
+.say:   mov word [cs:show_text], pick_text
         call show_window
 .done:  ret
 
@@ -21875,12 +22265,17 @@ pp_kept_icon dw 0
 ; status under a portrait (BX, on party member DI) find an effect's entry in the effects' table
 ; (6 bytes each from effect 1: the name, far, then the icon) by its number times 6: Mirror Images
 ; put there by Reflected Image (NS_EFFECT_SPELL) is REFLECT_ENTRY's instead, its name and icon,
-; which NS_SETUP keeps past the spell rows (as an entry of the table's segment).
+; which NS_SETUP keeps past the spell rows (as an entry of the table's segment); the stinkpot's
+; Nauseated (STINK_EFFECT, past the table's 74 entries: selector 3E0h is 1BCh bytes) STINK_ENTRY's,
+; after it, its name NAUSEATED and Stinking Cloud's icon, put there each time.
 NS_DI equ 2
 NS_BX equ 18
 EF_SHOWN_FROM_DS equ 0x4356 - 0x3931 ; the character on show on the Effects screen (348h:25Bh)
 EF_SHOWN     equ 0x25B
 REFLECT_ENTRY equ (SPELL_LEVELS_SEG + 0x4356 - 0x3F8D) * 16 + SPELL_LEVELS + (NS_FIRST + 16) * 7
+STINK_ENTRY  equ REFLECT_ENTRY + 6
+STINK_ICON   equ NS_ICON + STINKING_CLOUD ; (Stinking Cloud's, as the game's Can't Attack has it)
+ns_name_stink db "NAUSEATED", 0
 ns_entry:
         pushad
         push es
@@ -21904,6 +22299,8 @@ ns_entry:
         mov word [ss:di + bx], REFLECT_ENTRY + 6
         jmp .out
 .thing: mov dx, [ss:di + bx]    ; (DX the effect)
+        cmp dx, STINK_EFFECT
+        je .stink
         cmp dx, MIRROR_EFFECT
         jne .times
         call ns_setup           ; (its entry as the rule has it now)
@@ -21928,6 +22325,14 @@ ns_entry:
 .out:   pop es
         popad
         iret
+.stink: mov ax, ds
+        sub ax, EFFECT_TABLE_FROM_DS
+        mov es, ax
+        mov word [es:STINK_ENTRY], ns_name_stink
+        mov [es:STINK_ENTRY + 2], cs
+        mov word [es:STINK_ENTRY + 4], STINK_ICON
+        mov word [ss:di + bx], STINK_ENTRY + 6
+        jmp .out
 
 ; SELL_PRICE: "mov si,es:[bx+6]" (83CCAh; 4 bytes: the site's number and a NOP after the INT) where
 ; a shop takes the price it pays for the item the party sells (ES:BX the item; shown in its offer,
@@ -21960,7 +22365,7 @@ sell_price:
 
 ; SELL_KEEP: "push word [179Eh]" (83D9Eh; 4 bytes: the site's number and a NOP after the INT) where
 ; a shop has paid for the item the party sold and empties the item list of the thing holding it,
-; the pointer's (0A0h:1C94h, which does nothing for 270Fh). With RULE_HI_BUYBACK and a magical item (a plus, +14h, or a power,
+; the pointer's (0A0h:1C94h, which does nothing for 270Fh). With RULE_HI_CHA_PRICES (Shops as in AD&D) and a magical item (a plus, +14h, or a power,
 ; +0Fh: rings, wands, scrolls...), 270Fh is pushed in its place and the thing and the merchant
 ; (DS:179Ch) queued (SOLD_Q, SOLD_SEQ) for the Loader, which puts the item in the merchant's pack,
 ; where the shop lists it; any other item is pushed and freed as the game does. The push: the
@@ -21976,7 +22381,7 @@ sell_keep:
         push cx
         push es
         mov cx, [SOLD_THING]
-        test word [cs:rules_hi], RULE_HI_BUYBACK
+        test word [cs:rules_hi], RULE_HI_CHA_PRICES ; (Shops as in AD&D: the buyback too)
         jz .push
         cmp cx, NO_THING
         jae .push
@@ -22339,13 +22744,18 @@ ns_find:
 
 ; NS_HIT: "test byte [bp-8],80h" (7C430h; 4 bytes: the site's number and a NOP after the INT) in the
 ; routine adding up an attack's to-hit adjustments from effects (7C3E9h: SI the sum; the attacker's
-; bits at [BP-18h], the target's at [BP-0Eh]), where the target's Blur takes 2: Fogbolt's 3 off for
-; a fogged attacker and 2 on against a fogged target (its AC 2 worse), then that test.
+; bits at [BP-18h], the target's at [BP-0Eh], 10 bytes: effects 0-79), where the target's Blur takes 2:
+; a nauseated attacker's 2 off (the stinkpot's STINK_EFFECT, whatever the rules: only its rule puts it
+; on), Fogbolt's 3 off for a fogged attacker and 2 on against a fogged target (its AC 2 worse), then
+; that test.
 ns_hit:
         pushad
         push es
         mov di, sp
-        test byte [cs:rules], RULE_NEW_SPELLS
+        test byte [bp - 0x18 + STINK_EFFECT / 8], 1 << (STINK_EFFECT % 8)
+        jz .fog
+        sub word [ss:di + NS_SI], STINK_TO_HIT
+.fog:   test byte [cs:rules], RULE_NEW_SPELLS
         jz .test
         test byte [bp - 0x18 + FOG_EFFECT / 8], 1 << (FOG_EFFECT % 8)
         jz .target
@@ -22509,6 +22919,7 @@ ELVEN_CLOAK equ 19              ; (the Cloak and Boots of Elvenkind)
 ELVEN_BOOTS equ 20
 GREYS_ARMS  equ 54              ; Grey's Scale's arm and leg armour: the game's AC 2 each, made 3
 GREYS_LEGS  equ 24              ; (PROBE_TYPES_FILL)
+PICK_TYPE   equ 112             ; (PROBE_TYPES_FILL: the game's pick, Deepbiter's and the stone picks')
 GREAT_AXE   equ 2               ; the game's Great Axe +3's type: no material (40h, a ring's), made metal
 METAL_MAT   equ 4               ; a type's +8 for metal (the material's low nibble, as the metal short sword's)
 QUICKSILVER equ 113             ; the Quicksilver Glove's type: no material (40h), which the game's to-hit
@@ -22538,7 +22949,8 @@ probe_types_size:
 ; metal axe's grey and teal, its weight the metal great axe's 70); makes the Quicksilver Glove's
 ; type leather (no material, which the game's to-hit and damage took for wood); and lets air
 ; clerics use the game's daggers (17, 33, 84, 94: none had their bit; their sphere's weapons
-; are daggers and missile and thrown ones).
+; are daggers and missile and thrown ones); and the staff sling's dice as the stinkpots' rule has
+; them (STINK_SIDES, again at each pass of the main loop, the rule switched or not).
 probe_types_fill:
         pop word [cs:n_ip]
         pop word [cs:n_cs]
@@ -22559,9 +22971,11 @@ probe_types_fill:
         les di, [TYPES_PTR]
         mov [cs:types_ptr], di
         mov [cs:types_ptr+2], es
+        call stink_sides                ; (the staff sling's dice as the stinkpots' rule has them)
         mov byte [es:di+GREYS_ARMS*TYPE_SIZE+0x12], 3
         mov byte [es:di+GREYS_LEGS*TYPE_SIZE+0x12], 3
         mov byte [es:di+GREAT_AXE*TYPE_SIZE+8], METAL_MAT
+        mov byte [es:di+PICK_TYPE*TYPE_SIZE+0x0C], 6 ; (the footman's pick's 1d6+1, Skills & Powers: was 1d4+1)
         mov byte [es:di+QUICKSILVER*TYPE_SIZE+8], LEATHER
         or byte [es:di+17*TYPE_SIZE+0x10], AIR_CLERIC
         or byte [es:di+33*TYPE_SIZE+0x10], AIR_CLERIC
@@ -22589,6 +23003,50 @@ probe_types_fill:
 .out:   iret
 ; (EXTRA_TYPES' bytes: the tail's)
 ; (EXTRA_NAMES: the tail's)
+
+; LOCK_SITE: "mov [bp-2],ax" (803D3h; 3 bytes: the INT and the site's number) in the game's thief
+; skill check (803B8h(character [BP+6], skill [BP+8], bonus [BP+0Ch]): a d100 under [BP-2] succeeds).
+; Does the MOV; then for open locks by a party member, a lock that member failed at the thief level
+; it has now (PO: Skills & Powers: "If a thief fails to open a lock, he cannot attempt to open that
+; lock again until advancing a level") is out of reach: [BP-2] LOCK_NEVER, which no roll is under
+; (the dice log names it). The lock is the thing the script was started on (TALK_TARGET) in the
+; region the party is in; the Loader keeps LOCK_BARRED (dsloader/locks.py): for each member 0-3,
+; LOCK_MAX (region, thing) word pairs, FFFFh for none.
+LOCK_SKILL   equ 1                ; (open locks: game.THIEF_SKILLS' second)
+LOCK_NEVER   equ -2000
+LOCK_MAX     equ 4
+LOCK_REGION  equ 0x117C           ; DS: the region the party is in
+LOCK_TALK_SEG equ 0x3781          ; (the game's segment, less its load segment) and the thing the
+LOCK_TALK    equ 0x365            ;   running script was started on there
+lock_site:
+        mov [bp - 2], ax
+        cmp word [bp + 8], LOCK_SKILL
+        jne .out
+        cmp word [bp + 6], 4
+        jae .out
+        pusha
+        push es
+        mov ax, ds
+        sub ax, DGROUP_SEG - LOCK_TALK_SEG
+        mov es, ax
+        mov dx, [es:LOCK_TALK]
+        mov ax, [LOCK_REGION]
+        mov bx, [bp + 6]
+        shl bx, 4                       ; (LOCK_MAX x 4 bytes a member)
+        add bx, lock_barred
+        mov cx, LOCK_MAX
+.each:  cmp [cs:bx], ax
+        jne .next
+        cmp [cs:bx + 2], dx
+        jne .next
+        mov word [bp - 2], LOCK_NEVER
+        jmp .done
+.next:  add bx, 4
+        loop .each
+.done:  pop es
+        popa
+.out:   iret
+lock_barred times 4 * LOCK_MAX dw 0xFFFF, 0xFFFF
 
 ; STEALTH (RULE_STEALTH): a thief who starts a turn with no enemy next to them may hide in
 ; shadows and move silently up to someone; the Loader rolls both and, when both succeed,
@@ -22678,7 +23136,7 @@ missile_rear:
         add word [bp - 0x20], 2
 .ret:   ret
 
-; STAB_FIRST: in PROBE_STEALTH (SI the attacker, a creature; DS the game's), with RULE_HI_BACKSTAB:
+; STAB_FIRST: in PROBE_STEALTH (SI the attacker, a creature; DS the game's), with RULE_THIEF_TABLE (Thieves as in AD&D):
 ; only a party member's first attack of a round is a backstab, as in AD&D. The game's own test
 ; (58A71h) lets two through and the round's count STAB_TIMES read ([BP-14h]) leaves the off-hand
 ; swing out, so a thief with three attacks (two weapons and a weapon spec's extra) had the third
@@ -22687,7 +23145,7 @@ missile_rear:
 ; same clock has its backstab taken back ([BP-24h] cleared, its +2 to hit off THAC0 [BP-20h]);
 ; from behind stays as it is. All registers kept.
 stab_first:
-        test word [cs:rules_hi], RULE_HI_BACKSTAB
+        test word [cs:rules], RULE_THIEF_TABLE ; (Thieves as in AD&D: the backstab's dice too)
         jz .ret
         cmp si, 3
         ja .ret
@@ -24420,6 +24878,11 @@ mouse_event:                            ; AX = events, BX = buttons held, CX, DX
 ; and the pointer lagged), off only where the original was (3118:002E: its INT 33h) and around what
 ; the mouse's interrupt changes too: the pointer read with the drag's state (MOUSE_EVENT), and
 ; TARGET_CLICK's calls to the game's mouse handler (which the driver calls with them off).
+; DRAW_MASKED: and off while DSCLOG draws on the screen (the dust, the whirlwinds, the view drawn
+; again, the panel, the labels, a drag's or the Loader's scroll), as before 2.15.0: the game draws
+; its pointer from the mouse's interrupt (keeping what is under it, to put back when it moves), and
+; one drawn in the middle of those left images of itself on the map as it moved (the user's report
+; after 2.15.0, in a fight). The rest of the pass (the sounds, the clicks) keeps them on.
 probe_scroll:
         pop word [cs:s_resume]
         pop word [cs:s_resume + 2]
@@ -24440,16 +24903,23 @@ probe_scroll:
         inc word [cs:main_ticks]
         mov byte [cs:arc_hold], 0       ; (an Arcanist's cast is over: PROBE_END_TURN)
         mov byte [cs:va_done], 0        ; (the view not drawn again yet in this pass: VIEW_AGAIN)
+        pushf
+        cli                             ; (drawing: DRAW_MASKED)
         call dust_tick
         call whirl_tick
+        popf
         call sound_tick
+        call stink_sides                ; (the rule switched since: the staff sling's dice)
         call target_click
+        pushf
+        cli                             ; (drawing: DRAW_MASKED)
         cmp word [cs:view_redraw], 0
         je .panel
         mov word [cs:view_redraw], 0
         call view_again
 .panel: call panel_tick
         call label_tick
+        popf
         mov byte [cs:va_done], 0
 .read:  pushf
         cli                             ; (the pointer and the drag's state read together)
@@ -24473,8 +24943,8 @@ probe_scroll:
         mov si, [cs:cam0_y]
         sub si, dx
         add si, [cs:drag_y]
-        popf                            ; (the view drawn again: interrupts as they were)
-        call pan_to
+        call pan_to                     ; (the view drawn again: DRAW_MASKED)
+        popf
         jmp .wheel
 .read_done:
         popf
@@ -24491,7 +24961,10 @@ probe_scroll:
         add [cs:cam0_y], si
         add ax, [CAM_X]
         add si, [CAM_Y]
+        pushf
+        cli                             ; (drawing: DRAW_MASKED)
         call pan_to
+        popf
 .report:
         cmp byte [cs:drag], 0
         je .put
@@ -26561,6 +27034,8 @@ mk_read db 0                    ; (1 when MAP_KEY's key is being read, 0 when pe
 overhead db 0                   ; ('m', 'u' or 'i': the screen its key opened, 0 none)
 
 our_key:                                ; AX a key: CF set (and counted) if it is one of ours
+        call loot_key
+        call sell_key
         cmp ax, KEY_L
         je .l
         cmp ax, KEY_SHIFT_L
@@ -26596,6 +27071,90 @@ our_key:                                ; AX a key: CF set (and counted) if it i
         ret
 .no:    clc
         ret
+
+; LOOT_KEY: (OUR_KEY's first) T or Shift+T with a container's window open (a body's, a chest's: the
+; game's DS:05E6h its map thing, 9999 none) is made Escape, which closes the window, and, when the
+; key is read (MK_READ; a peek only looks), counted in LOOT_SEQ with the container (LOOT_THING) and
+; T's mode or Shift+T's (LOOT_MODE): the Loader then moves what is in it into the party's backpacks
+; (dsloader/loot.py), once the window is shut. Other keys, and these with no window, as they were.
+; AX the key (Escape now, for one of these); others kept.
+KEY_T        equ 0x1474
+KEY_SHIFT_T  equ 0x1454
+LOOT_OPEN    equ 0x05E6             ; (the game's DS) the container whose window is open
+LOOT_NONE    equ 9999
+loot_key:
+        cmp ax, KEY_T
+        je .t
+        cmp ax, KEY_SHIFT_T
+        jne .ret
+.t:     push ds
+        push bx
+        mov bx, [cs:game_ds]
+        or bx, bx
+        jz .out
+        mov ds, bx
+        mov bx, [LOOT_OPEN]
+        cmp bx, LOOT_NONE
+        je .out
+        cmp byte [cs:mk_read], 0
+        je .esc                         ; (peeked: told it is Escape, counted when read)
+        mov [cs:loot_thing], bx
+        mov word [cs:loot_mode], 0
+        cmp ax, KEY_SHIFT_T
+        jne .count
+        mov word [cs:loot_mode], 1
+.count: inc word [cs:loot_seq]
+.esc:   mov ax, KEY_ESCAPE
+.out:   pop bx
+        pop ds
+.ret:   ret
+
+; SELL_KEY: (OUR_KEY's) S or Shift+S on a shop's screen (its loop, SHOP_LOOP, run within the last
+; SHOP_FRESH BIOS ticks) is made Escape, which shuts the shop, and, when the key is read (MK_READ),
+; counted in SELL_SEQ with the party member on show (the game's 3931h:25Bh) and the shop's merchant
+; (DS:179Ch): the Loader sells that member's plain gear to it (dsloader/sell.py) once the shop is
+; shut. AX the key (Escape now, for one of these); others kept.
+KEY_S        equ 0x1F73
+KEY_SHIFT_S  equ 0x1F53
+SHOP_FRESH   equ 2
+SELL_WHO_SEG equ 0x4356 - 0x3931        ; (the game's DS less the segment of the member on show)
+sell_key:
+        cmp ax, KEY_S
+        je .s
+        cmp ax, KEY_SHIFT_S
+        jne .ret
+.s:     push ds
+        push bx
+        push ax
+        mov bx, [cs:game_ds]
+        or bx, bx
+        jz .out
+        cmp word [cs:shop_at], 0
+        je .out
+        xor ax, ax
+        mov ds, ax
+        mov ax, [0x46C]
+        sub ax, [cs:shop_at]
+        cmp ax, SHOP_FRESH
+        ja .out
+        cmp byte [cs:mk_read], 0
+        je .esc                         ; (peeked: told it is Escape, counted when read)
+        mov ds, bx
+        mov ax, [SHOP_MERCHANT]
+        mov [cs:sell_merchant], ax
+        sub bx, SELL_WHO_SEG
+        mov ds, bx
+        mov ax, [0x25B]
+        mov [cs:sell_member], ax
+        inc word [cs:sell_seq]
+        mov word [cs:shop_at], 0        ; (shut: the next S is a key of the game's)
+.esc:   pop ax
+        mov ax, KEY_ESCAPE
+        push ax
+.out:   pop ax
+        pop bx
+        pop ds
+.ret:   ret
 
 ; TARGET_CLICK: (in PROBE_SCROLL, DS = the game's) Enter on the chosen enemy: a left click at its feet
 target_click:
@@ -28041,9 +28600,10 @@ extra_types:
         ; the Great Axe's (2)
         db 0x01, 0x00, 0x10, 0x00, 0x46, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
         db 0x0A, 0x01, 0x00, 0x40, 0x62, 0x16, 0x00, 0x02
-        ; the pick's (112)
+        ; the pick's (112), its 1d6+1 the footman's pick's (Player's Option: Skills & Powers), as
+        ; PROBE_TYPES_FILL makes the game's
         db 0x01, 0x00, 0x20, 0x00, 0x28, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
-        db 0x04, 0x01, 0x01, 0x00, 0x72, 0x17, 0x00, 0x00
+        db 0x06, 0x01, 0x01, 0x00, 0x72, 0x17, 0x00, 0x00
         ; the Polearm's (19)
         db 0x01, 0x00, 0x30, 0x00, 0x96, 0x00, 0xFA, 0x00, 0x04, 0x05, 0x01, 0x01
         db 0x0A, 0x01, 0x00, 0x40, 0x72, 0x16, 0x00, 0x06

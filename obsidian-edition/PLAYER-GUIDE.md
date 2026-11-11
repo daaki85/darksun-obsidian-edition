@@ -346,7 +346,8 @@ it is the fighter's weapon for the whole game.
 
 - [Weapon specialization](#weapon-specialization-and-attacks): one weapon
   type, +1 to hit and +2 damage with 3/2 attacks a round; **mastery** at 5th
-  level (+3 and +3), **grand mastery** at 9th (the damage die a size larger
+  level (+3 and +3), **grand mastery** at 9th (the damage die the next size
+  up, against large targets too: a long sword 1d10, 1d20 against a large one;
   and one more attack). Other weapons attack once a round until 7th level.
   *Without the mod:* 3/2 attacks with any weapon, no other bonus.
 - Hit dice rolled twice; levels up to the [XP cap](#experience-and-levels).
@@ -940,7 +941,7 @@ club).
 
 | Who | Chooses | With a chosen weapon spec |
 |---|---|---|
-| Fighter | 1 weapon spec | specialized: +1 to hit, +2 damage; **mastery** from 5th level: +3 to hit, +3 damage; **grand mastery** from 9th: the same, the damage die a size larger and one more attack a round |
+| Fighter | 1 weapon spec | specialized: +1 to hit, +2 damage; **mastery** from 5th level: +3 to hit, +3 damage; **grand mastery** from 9th: the same, the damage die the next size up (against large targets too) and one more attack a round |
 | Gladiator | 2 weapon specs, a 3rd at 6th level, a 4th at 9th | specialized in each: +1 to hit, +2 damage |
 | Ranger | the bow, and 1 weapon spec | expertise: a specialist's attacks, no other bonus |
 
@@ -1334,7 +1335,9 @@ and the same race and DEX adjustments.
 - **Open locks, find/remove traps, climb walls, hear noise** and the one
   pocket the game has to pick: when the game asks, at certain locks, traps
   and walls. A locked and trapped chest the mod adds asks a thief to check
-  it for traps first, then to pick the lock (as often as needed); anyone
+  it for traps first, then to pick the lock (again and again; with **Thieves as in AD&D**, a thief
+  who fails must gain a thief level before trying that lock again, though
+  another thief may try); anyone
   else may try to bash it open, which sets off a trap still in it. A trap
   that goes off may still be avoided by the party's best at find/remove
   traps.
@@ -1348,7 +1351,8 @@ and the same race and DEX adjustments.
   - **success:** one small thing from them goes into the thief's backpack
     (with a purse's jingle): something light that isn't worn on the body;
   - **failure:** the thief rolls **move silently** to slip away. Made, they can
-    try again; missed, they are caught, and that person keeps a hand on their
+    try again (with Thieves as in AD&D, that thief once they have gained a level);
+    missed, they are caught, and that person keeps a hand on their
     pockets from then on.
 
   When nothing worth taking is left, the thief takes 2 to 5 ceramic pieces
@@ -1618,6 +1622,7 @@ AD&D's class tables and the **New spells** switch on):
 | Paralyzed | no turns; fails every save; every blow hits it |
 | Stuck (Grease, Web, Entangle and the like) | can't move; Free Action stops it |
 | Tangled ([cahulaks](#equipment)) | loses its next turn: no movement, no attack |
+| Nauseated ([a stinkpot](#equipment)) | −2 to hit |
 | Afraid | runs; can't attack or cast |
 | Charmed | fights for the caster |
 | Confused | each turn: runs off, does nothing, fights for a side picked at random, or acts normally |
@@ -1725,15 +1730,16 @@ materials, the short sword among them.
 | Long sword | 1d8 | 1d12 | yes |
 | Club | 1d6 | 1d3 | yes |
 | Quarterstaff (two-handed) | 1d6 | 1d6 | yes |
-| Axe | 1d8 | 1d8 | bone and obsidian ones (not metal) |
-| Pick | 1d4+1 | 1d4 | yes |
+| Axe | 1d8 | 1d10 | bone and obsidian ones (not metal) |
+| Pick | 1d6+1 | 2d4 | yes |
 | Great axe (two-handed) | 1d10 | 2d8 | no |
 | Mace | 1d6+1 | 1d6 | no |
 | Cahulaks (both hands) | 1d6 | 1d6 | no |
 | Gythka (two-handed) | 2d4 | 1d10 | no |
 | Polearm (two-handed) | 1d10 | 2d6 | no |
 | Chatkcha | 1d6+2 | 1d4+2 | no: missiles never backstab |
-| Bow, sling, staff sling (bow and staff sling two-handed) | by the missile | the same | no |
+| Bow, sling (bow two-handed) | by the missile | the same | no |
+| Staff sling (two-handed) | 1d3: a stinkpot | the same | no |
 
 A half-giant holds a two-handed weapon in one hand, with a shield or a light
 weapon in the other.
@@ -1758,6 +1764,21 @@ anyone Enlarged, the bodiless (elementals, slimes, swarms, shadows) and a few
 other beasts can't be tangled ([the creatures' table](CREATURES.md) (spoilers)
 marks each). Twin-blades and Battle Dancers can't use cahulaks.
 *Without the mod:* a plain two-handed 1d6 weapon.
+
+**Stinkpots.** The staff sling throws clay pots of burning sulphur: 1d3 damage
+against any size, and a target hit saves against poison or is **nauseated**
+for 1d3+1 rounds, −2 on its attack rolls. Undead, and anything immune to
+poison, shrug it off. *Without the mod:* the staff sling shot for 1d4, nothing
+more.
+
+**Polearm reach.** A polearm held with no other weapon in the hands (a shield,
+which only a half-giant can hold beside it, is fine; a bow in the missile slot
+too) strikes a foe two squares away as well as an adjacent one: two squares
+straight, or two across and one along, not two diagonally. The attack pointer
+shows the sword over such a foe; it reaches over a creature in between, not
+through a wall. Foes with polearms have the reach too. With a bow in the
+missile slot, a click on a foe two squares away swings the polearm; from three
+on, the bow shoots. *Without the mod:* a polearm strikes only an adjacent foe.
 
 **Armour** is worn in pieces (chest, arms, legs, a helm), each lowering AC by
 its own amount, and a shield and DEX lower it more (but not against an attack
@@ -1854,7 +1875,8 @@ own Polearm +1, which it never placed, can be found now.
 | Cloak of Elvenkind, Boots of Elvenkind | help a thief or ranger [hide and move silently](#hiding-in-shadows); thieves and rangers only |
 | Boots of Speed | in a fight, double movement and AC 2 better while the wearer can move (not Stuck, Paralyzed or Slowed); anyone may wear them |
 | Tome of Understanding | read from the inventory as a scroll: +1 WIS for good (at most 25) |
-| Six scrolls | spells the game has no scroll of |
+| Kalzith's six scrolls | Shield, Burning Hands, Blur, Cat's Grace (with the new spells on), Lightning Bolt and Haste, sold by Kalzith: spells the game has no scroll of |
+| Defilers' scrolls | a scroll of any preserver spell (the game's 69, and the new ones with the new spells on), carried by a defiler 1 time in 20 and found on its body; the arena's defiler in the champions' bout always has one, of Fogbolt, Spook or Reflected Image (of the game's own spells with the new spells off) |
 | Burning, Chill, Shocking and Vampiric Arrows | made only by a [Spellarcher](#multiclass-kits) from its own spells; they fade when the party rests |
 
 The game's own Grey's Scale arm and leg armour is AC 3 each with the mod (2
@@ -1882,6 +1904,8 @@ without).
 |---|---|
 | **Tab and Enter** | On a party member's turn in a fight, **Tab** chooses the nearest enemy (Tab again for the next, **Shift+Tab** back) and **Enter** attacks it, walking up to it first if need be, even behind someone else: no aiming with the mouse. A red ring marks the enemy chosen. |
 | **Scrolling with the mouse** | Press the wheel and drag the map. |
+| **Selling with S** | On a shop's screen, **S** sells the plain gear (weapons, armour, shields, clothing: no plus, no magic) in the backpack of the member on show, at the shop's prices; worn and held things, ammunition, metal, magic, keys, scrolls, food and gems stay. *Without the mod:* one thing at a time. |
+| **Looting with T** | With a body's (or a chest's) window open, **T** puts everything in it into the party's backpacks, and **Shift+T** everything but plain weapons; what doesn't fit stays. *Without the mod:* a click to take each thing and another to put it down. |
 | **M, U and I** | **M** on the map opens the overhead map (the game's **O**), and **M** again closes it. **U** and **I** close the USE and inventory screens when pressed again (and still switch from one to the other). |
 | **The whole party in view** | A game starts and loads with every party member on the map, and they stay in view after a fight, as the game's **5** does. **6** still gathers them into the leader. *Without the mod:* often only the leader, until you press 5. |
 | **A steady view in fights** | The view no longer drifts after each figure walking near the screen's edge in a fight; it moves only to bring back one that has walked off the screen. *Without the mod:* it follows them. |
@@ -1979,12 +2003,12 @@ line](DICE-LOG.md) what each of its lines means.
 | | how much it says: at the least, in short or in detail | in short |
 | | what hurts a monster (the Look box): describes a monster you Look at in a fight | on |
 | | names over figures: a spell's name over its caster, "Miss" over whoever an attack missed, and a used charge ("Armor: 7 left") | on |
-| Rule changes | *characters:* class restrictions; multiclass hit points; hit dice: the better of two; scores and hit points as rolled; AD&D's class tables; CON as in AD&D; ages and magical aging; dual-classing as the manual has it; level cap by XP. *Weapons and armour:* two weapons; half-giants' two-handed weapons; cahulaks as Dark Sun's rules have them; creature size as in AD&D; held targets as in AD&D; rings and cloaks of protection; helms AC 1; items saving against acid. *Magic:* rangers' casting level; preservers' INT; the spell save; DEX instead of a doubled d20; Enlarge multiplying the weapon's dice only; spells and psionics as the manual describes them (monsters' powers and Turn Undead by AD&D's table among them); spells roll to hit; resting as in AD&D | all on |
+| Rule changes | *characters:* class restrictions; multiclass hit points; hit dice: the better of two; scores and hit points as rolled; AD&D's class tables; CON as in AD&D; ages and magical aging; dual-classing as the manual has it; level cap by XP. *Weapons and armour:* two weapons; half-giants' two-handed weapons; weapon traits (the cahulaks' heads and tangle, the staff sling's stinkpots, the polearm's reach); creature size as in AD&D; held targets as in AD&D; rings and cloaks of protection; helms AC 1; items saving against acid. *Magic:* rangers' casting level; preservers' INT; saving throws against spells (the spell save, DEX instead of a doubled d20); Enlarge multiplying the weapon's dice only; spells and psionics as the manual describes them (monsters' powers and Turn Undead by AD&D's table among them); spells roll to hit; resting as in AD&D | all on |
 | More character customization | weapon specialization; kits; STORE and RECALL on the creation screen; fuller starting gear | all on |
-| Expanded features | the leader's CHA at shops; buying back magical items; improved thieving: thief skills from AD&D's table, hiding in shadows to backstab, the cloak, boots and belt, backstabs multiplying the weapon's dice only, picking pockets | all on |
+| Expanded features | shops as in AD&D (the leader's CHA at shops, buying back magical items); improved thieving: thieves as in AD&D (thief skills from AD&D's table, backstabs multiplying the weapon's dice only, a failed lock or pocket tried again by that thief only a level later), hiding in shadows to backstab, the cloak, boots and belt, picking pockets | all on |
 | New content | the new spells (six wizard spells and ten 6th-level priest spells, one switch); new people (Kalzith; Semyon); a small quest (the cooked vulture); defilers' scrolls; new items (and an arena bout that comes with them) | all on |
 | Graphics | elves' ears and half-elves' own figures; Cilla drawn as an elf; what the party wears; shadows; dust; a hidden thief or ranger and anyone invisible drawn see-through | all on |
-| Controls | Tab and Enter; scrolling with the mouse wheel; the view in fights moving only to a figure off the screen; the pointer in scenes, a click skipping one; the pointer starting in the middle, moving as far up and down as across, and in a window as fast as the desktop's pointer; the whole party in view after a start, load or fight; spells kept on a click on the Effects screen (M, U and I have no switch) | all on |
+| Controls | Tab and Enter; scrolling with the mouse wheel; the view in fights moving only to a figure off the screen; the pointer in scenes, a click skipping one; the pointer starting in the middle, moving as far up and down as across, and in a window as fast as the desktop's pointer; the whole party in view after a start, load or fight; spells kept on a click on the Effects screen (M, U and I, T and Shift+T for looting and S for selling have no switch) | all on |
 | | a red ring in a fight: none, or under the enemy chosen with Tab | under the enemy chosen |
 | Game speed | GOG's own, faster or fastest | fastest |
 | | the party walking at full speed whatever is drawn (steady pace) | on |

@@ -779,5 +779,44 @@ class ConjuredTests(unittest.TestCase):
         self.assertEqual(specialize.spec_kind_of(45), specialize.kind_of(45))
 
 
+
+class NextDieTests(unittest.TestCase):
+    def test_next_die(self):
+        """Grand mastery's next greater die (Player's Option: Combat & Tactics), as DSCLOG's NEXT_DIE."""
+        from dsloader import specialize as sp
+        self.assertEqual([sp.next_die(d) for d in (2, 3, 4, 6, 8, 10, 12, 20)], [3, 4, 6, 8, 10, 12, 20, 20])
+
+
+
+class GrandMasteryTableTests(unittest.TestCase):
+    def test_kits_table(self):
+        """KITS.md's grand mastery table: a row for each weapon spec, in specialize.KINDS' order; its
+        large dice sizes.LARGE_DICE's (the small ones where it has none), and both grand mastery
+        columns those a die larger (specialize.next_die); the staff sling's the stinkpot's 1d3."""
+        import re
+        from dsloader import sizes, specialize as sp
+        with open(os.path.join(os.path.dirname(__file__), "..", "KITS.md"), encoding="utf-8") as f:
+            text = f.read()
+        block = text[text.index("### Grand mastery's damage"):text.index("### Choosing at creation")]
+        rows = [[c.strip() for c in line.strip("|").split("|")] for line in block.splitlines()
+                if line.startswith("| ") and not line.startswith("| Weapon spec")]
+        self.assertEqual([r[0] for r in rows], list(sp.KINDS))
+
+        def dice(t):
+            c, s, b = re.fullmatch(r"(\d+)d(\d+)([+-]\d+)?", t).groups()
+            return int(c), int(s), int(b or 0)
+        for kind, (name, small, large, grand, grand_large) in enumerate(rows):
+            c, s, b = dice(small)
+            want = sizes.LARGE_DICE[kind]
+            lc, ls, lb = (want[0], want[1], b + want[2]) if want else (c, s, b)
+            self.assertEqual(dice(large), (lc, ls, lb), name)
+            self.assertEqual(dice(grand), (c, sp.next_die(s), b), name)
+            self.assertEqual(dice(grand_large), (lc, sp.next_die(ls), lb), name)
+        # (the staff sling's row its stinkpot's, game.RULE_STINKPOTS: the 1d3 DSCLOG's STINK_SIDES makes it)
+        staff = rows[sp.KINDS.index("staff sling")]
+        self.assertEqual(dice(staff[1])[:2], game.STINK_DICE)
+        self.assertEqual(dice(staff[3])[:2], (1, 4))
+
+
 if __name__ == "__main__":
     unittest.main()

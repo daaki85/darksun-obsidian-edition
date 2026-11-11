@@ -1,6 +1,6 @@
 # Obsidian Edition: Patch Notes
 
-*A Dark Sun: Shattered Lands mod · Current version 2.15.0 · Every change from the original game*
+*A Dark Sun: Shattered Lands mod · Current version 2.16.0 · Every change from the original game*
 
 Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. You start the game with the Loader, which loads the mod with your options and logs every roll as it happens. Nearly everything is switchable, the game's own files are never touched, and your saves stay where they are.
 
@@ -25,7 +25,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 ## In the Game's Screens
 
-- **[New]** A combat log in the game: **L** on the map shows every roll, in small 7-pixel lettering (8 lines at a time) and the Loader's colours, at one of three levels of detail, and **L** again hides it. It works in a fight or after one (a thief's roll, a new level's hit points). It is a panel over the map's lower right that scrolls back (its scrollbar, or the mouse wheel on Windows), shrinks to one line or opens up with filters (All, Party, Damage, Saves).
+- **[New]** A combat log in the game: **L** on the map shows every roll, in small lettering, 8 pixels a line (7 lines at a time) and the Loader's colours, at one of three levels of detail, and **L** again hides it. It works in a fight or after one (a thief's roll, a new level's hit points). It is a panel over the map's lower right that scrolls back (its scrollbar, or the mouse wheel on Windows), shrinks to one line or opens up with filters (All, Party, Damage, Saves).
 - **[New]** Names over figures: a spell's name floats over its caster as it is cast, "Miss" over anyone an attack misses, and "Armor: 7 left" when a spell that lasts a number of uses (Armor, Mirror Image, Reflected Image...) loses one, in the game's lettering (an Options switch, on).
 - **[New]** Out of a fight, the combat log panel's top line shows how long the game has run, `Day 47, 14:20`; in the arena, once the game has shown the count, how many arena fights the party has had instead (the game's own count, one a trip into the arena).
 - **[New]** The inventory screen shows THAC0, all five saving throws, the THAC0 with each weapon, DEX's reaction and defence adjustments, a thief's skills and, with ages on, the character's age, in the game's own lettering.
@@ -42,7 +42,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 **Weapon specialization**
 
-- **[New]** Fighters specialize in one weapon spec, a kind of weapon such as the long sword (+1 to hit, +2 damage, 3/2 attacks a round), with **mastery** at 5th level (+3, +3) and **grand mastery** at 9th (a larger damage die and one more attack).
+- **[New]** Fighters specialize in one weapon spec, a kind of weapon such as the long sword (+1 to hit, +2 damage, 3/2 attacks a round), with **mastery** at 5th level (+3, +3) and **grand mastery** at 9th (the damage die one size up against every target, as in *Player's Option: Combat & Tactics*: a long sword 1d10, and 1d20 against a large foe; and one more attack).
 - **[New]** Gladiators specialize in two weapon specs, a third at 6th level and a fourth at 9th. Rangers gain expertise with the bow and one other weapon spec. The Battle Mage, Crusader and Mind Warrior kits gain expertise with one melee weapon spec of their choice (3/2 attacks a round, 2 from 7th level).
 - **[Fixed]** Warriors attack at AD&D's plain rate with weapons outside their specializations *(was 3/2 with any weapon)*. Specialists shoot missiles faster.
 - **[Changed]** Every thri-kreen, foes too, throws a chatkcha once more a round, AD&D's 2/1 for its own weapon *(was at the weapon's rate, like anyone)*; a thri-kreen Mind Warrior may take the chatkcha as its weapon spec.
@@ -77,7 +77,10 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 **Size and weapons**
 
 - **[New]** **Creature size**: a large target (a half-giant, a large monster, anyone Enlarged) takes AD&D's damage for large targets from a weapon (a long sword 1d12, a great axe 2d8, a gythka 1d10; a dagger 1d3, a chatkcha 1d4+2), and Hold Person and Charm Person don't work on it at all. A weapon's item box shows both damages (`1D8-1/1D12-1`), and Shillelagh's damage reads 1D6+1 (2D4 against a large foe). *(the game keeps no sizes)*
+- **[Changed]** The **pick** is AD&D's footman's pick, 1d6+1 (2d4 against a large foe), and the **axe** the battle axe, 1d10 against a large foe, as *Player's Option: Skills & Powers* has them *(the pick was the horseman's 1d4+1 (1d4); the axe 1d8 against any size)*. Deepbiter and the Metal Pick hit as the footman's pick too.
 - **[New]** **Cahulaks** fight as Dark Sun's rules describe them: a bladed head in each hand, so one more attack a round (at −2 and −4, as with two weapons, DEX helping), and a hit can tangle a man-sized or smaller foe, which then loses its next turn unless it saves against petrification. Half-giants, large monsters, anyone Enlarged, the bodiless (elementals, slimes, swarms, shadows) and a few other beasts can't be tangled ([the creatures' table](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/CREATURES.md) (spoilers) marks each). Twin-blades and Battle Dancers can't use cahulaks.
+- **[New]** **Staff sling stinkpots** (AD&D's *Arms and Equipment Guide*; with the cahulaks' traits, one switch: **Weapon traits**): the staff sling throws clay pots of burning sulphur, 1d3 damage against any size, and a target hit saves against poison or is nauseated for 1d3+1 rounds, −2 on its attack rolls (NAUSEATED on the Effects screen). Undead, and anything immune to poison, are unaffected. *(was a plain 1d4 shot)*
+- **[New]** **Polearm reach** (with **Weapon traits**): a polearm held with no other weapon in the hands (a bow in the missile slot is fine, and so is a shield in a half-giant's other hand, the only one who can hold a polearm in one) strikes a foe two squares away as well as an adjacent one, for the party and its foes alike. Two squares diagonally don't count. *(a polearm struck only an adjacent foe)*
 
 ## Classes and Kits
 
@@ -190,6 +193,8 @@ A few of them:
 - **[New]** Thieves **hide in shadows and move silently** in a fight to backstab, halved in daylight. Rangers do it to attack from behind, at full strength under the open sky *(was a backstab only on a target turned to face someone else)*.
 - **[Fixed]** A **backstab** multiplies only the weapon's dice; STR and magic bonuses are added once after, as in AD&D, and only the round's first attack is a backstab *(was the whole damage multiplied, STR included, so a strong thief could hit for over 100, on the first two attacks of the round)*.
 - **[New]** **Picking pockets** with a thief's **Pick Pockets** button on the USE screen (where a priest's Turn Undead is), then a click on anyone in sight: any thief can try, leader or not, and what's lifted goes in that thief's backpack. A cleric/thief has both buttons, the purse beside Turn Undead. Fail and you roll move silently to get away. A purse holds 2 to 5 ceramic pieces for each of the thief's levels, and a few named weapons can be lifted for 200 XP (once a game each).
+- **[Changed]** With **Thieves as in AD&D**, a thief who fails a lock or a pocket may try that one again only after gaining a level, as *Player's Option: Skills & Powers* has it; another thief may try at once *(was again and again)*.
+- **[Changed]** A thief beside any square of a big creature counts as beside an enemy, and can't hide there *(was its one square only)*.
 - **[New]** A worn cloak adds 10 to hiding, boots 10 to moving silently, and a belt 5 to picking pockets and opening locks, for thieves and rangers alike; the inventory screen's thief skills count them.
 
 ## Items
@@ -275,6 +280,8 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** More of **Semyon**'s story, for players who help him in the arena. Once he has told of it (ask him "Seen anything useful?"), **Thornwall** comes onto the slave pens' weapon rack.
 - **[New]** **Pehtucl's chest**, locked and trapped with a poisoned needle: a thief disarms it and picks the lock, anyone else can try to bash it open and set the needle off. The Cloak of Protection +1 is inside.
 - **[New]** A last arena bout: once Scar dies in the arena, six champions from a distant arena come to test the new king, led by a Tohr-kreen carrying **Kreenfang** ([the champions' bout](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#the-champions-bout)).
+- **[New]** Legcrusher, sent to fetch a party that is out by the fountain, sees they've left their cells, bellows for the guards (the fountain drowns him out) and attacks alone *(was his warning, as if they were in the cells)*.
+- **[Fixed]** Every thri-kreen leaves a thri-kreen's body *(was a human's Dead Body)*.
 - **[New]** A use for the cooked vulture: share it with the pens' cook for a full rest and 100 XP each.
 - **[New]** Merchants give your party leader a discount for high Charisma, from 5% at CHA 18 to 40% at 25.
 - **[Changed]** Merchants pay 60% of an item's price *(was all of it)*.
@@ -298,6 +305,8 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 
 - **[New]** **Tab** chooses the nearest enemy and **Enter** attacks it, with no aiming of the mouse. A red ring marks the enemy chosen.
 - **[New]** Press the mouse wheel and drag to scroll the map.
+- **[New]** **T** with a body's or chest's window open takes everything into the party's backpacks, and **Shift+T** all but plain weapons *(was a click and a drop for each item)*.
+- **[New]** **S** on a shop's screen sells the plain gear in the backpack of the member on show, keeping what is worn or held, magic items, ammunition and anything metal *(was a click for each item)*.
 - **[New]** **M** opens the overhead map, and **M** again closes it. **U** and **I** close the USE and inventory screens when pressed again.
 - **[Changed]** A game starts and loads with the whole party on the map, and it stays in view after a fight, as **5** does (an Options switch, on); **6** still gathers it into the leader *(was the leader alone, often, until 5)*.
 - **[New]** The game's pointer in the intro, its logos and its other scenes, and a click skips a scene as a key does *(was no pointer, and only a key)*.
@@ -329,7 +338,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** Each shot at the **Bowyer's archery target** in the dice log: the roll, what it needed, how far the archer is from the target and the Bowyer, and whether a centre shot earns his arrows.
 - **[New]** **How the game works** compares every cleric spell and psionic power with the manual: what the manual says, what the game's code does, and what the log shows.
 - **[New]** The Loader can run the game as **Dark Sun Recompiled**, the game translated into a program of its own, instead of in DOSBox, where it is installed.
-- **[New]** **Options:** nearly every rule change and addition in these notes has its own switch (not the keys and the game's fixed bugs), all on by default (the red ring's, the game speed's and the combat log's level aside), and **Restore defaults** sets them all back.
+- **[New]** **Options:** nearly every rule change and addition in these notes has a switch, some sharing one such as **Weapon traits** (not the keys, the game's fixed bugs or the footman's pick), all on by default (the red ring's, the game speed's and the combat log's level aside), and **Restore defaults** sets them all back.
 - **[New]** **Accessibility:** text that can be enlarged up to 2.5 times (**A+**, **A-**, **Ctrl +** and **Ctrl -**), every control reachable from the keyboard, colours with at least 4.5:1 contrast, and the logs saved as text for screen readers.
 
 > *Developers' Notes: Shattered Lands rolls dice for everything and shows you almost none of it. Fireball victims kept saving and nobody knew why (the game doubles the d20 against fire). The Loader started as a way to see those numbers. Once we could see them, we started fixing them.*
@@ -389,7 +398,7 @@ The main fixes are below; every bug of the original game the mod mends, with wha
 - **[Fixed]** **Slay Living**'s description said a creature that saves takes 3 to 17; the game does 2 to 16 (half of 4d8). It says so now.
 - **[Fixed]** Three of the game's script bugs: in **Darkhold** the portcullis guard stopped fighting back when attacked and three creatures lost their look text; the **Lava Rifts** ranger's trigger ran the hermit's talk (endless, with a second Iron Necklace); and **Linara** in Gedron, after the extract, ended her talk with no menu, so Jasmine's spellbook never came up.
 - **[Fixed]** A ranger could never read the tracks around the **Wagon Train's bodies**: the check found no ranger, tested the wrong thing for its level, and rolled the wrong way round. Now a ranger reads them on a d20 under its WIS (more at higher levels), for XP. (Found by yuan-ti.)
-- **[Fixed]** The slave pens' **sewer grate** never offered "hack the lock off", and a hack that worked left it shut. Now a member with a weapon in hand can hack it open, half the time (always with Bloodwrath). A failed hack said the weapon broke but kept it: now a weapon that can break in a fight (plain wood, bone, stone or obsidian) is lost, and a metal or magic one rings off the grate unharmed. An attack on the grate always broke its lock: now it takes a Strength roll, as ripping it open does. (Found by yuan-ti.)
+- **[Fixed]** The slave pens' **sewer grate** never offered "hack the lock off", and a hack that worked left it shut. Now a member with a melee weapon in hand (not a bow, sling or shield) can hack it open, half the time (always with Bloodwrath), and the weapon named is the one in hand. A failed hack said the weapon broke but kept it: now a weapon that can break in a fight (plain wood, bone, stone or obsidian) is lost, and a metal or magic one rings off the grate unharmed. An attack on the grate always broke its lock: now it takes a Strength roll, as ripping it open does. (Found by yuan-ti.)
 - **[Fixed]** The **Rebel Mindhome** in Undermountain gave its 5000 XP for the spiders again at every talk once they were dead. Now once. (Found by yuan-ti.)
 - **[Fixed]** The **messenger in region 9**, who comes with men bursting from the sand once the elves have left, came only if the party left the region and came back. Now he comes. (Found by OpenDS and yuan-ti.)
 - **[Fixed]** The **Draj serf**, left far behind on the way to region 10, stayed without his orders and gave a second obelisk gem when talked to again. Now he comes along. (Found by OpenDS and yuan-ti.)
@@ -397,7 +406,7 @@ The main fixes are below; every bug of the original game the mod mends, with wha
 - **[Fixed]** A preserver or psionicist with another class couldn't claim to have scried the **haystack** or read the man's thoughts, and the cave guide told even a dwarf or halfling to "go bother someone your own size". **Dagolar's slime book** counted a fighter's or an air cleric's training as magical but not an earth, fire or water cleric's or a druid's: now any cleric, druid, preserver or psionicist can read it.
 - **[Fixed]** Cilla, an elf in the ready-made party, was drawn with the half-elf woman's figure; she looks like an elf now (a switch keeps the game's figure).
 
-**Rules the game got wrong** are fixed too. Each is tagged **[Fixed]** under its own heading above and has a switch, on by default, for anyone who wants the game's own rule: the saving throws against spells and the doubled d20 against fire, cold and electricity, two weapons, warriors' attacks, acid on armour and held targets (Combat); class restrictions, multiclass hit points, the class tables, rangers' spells, dual-classing, preservers' learning from scrolls, CON's regeneration and poison saves (Classes and Kits); spells, psionics and monsters as the manual describes them (Turn Undead by AD&D's table with them), spells rolling to hit and Enlarge's dice (Magic and Psionics); and thief skills and backstabs (Improved Thieving). The other rule changes are the mod's own choices, not corrections, and stay **[Changed]** or **[New]**: helms' AC, resting, the XP level cap, hit dice rolled twice, creation scores as rolled, half-giants' two-handed weapons, creature size, cahulaks, a thri-kreen's extra chatkcha throw, and ages.
+**Rules the game got wrong** are fixed too. Each is tagged **[Fixed]** under its own heading above and has a switch, on by default, for anyone who wants the game's own rule: the saving throws against spells and the doubled d20 against fire, cold and electricity, two weapons, warriors' attacks, acid on armour and held targets (Combat); class restrictions, multiclass hit points, the class tables, rangers' spells, dual-classing, preservers' learning from scrolls, CON's regeneration and poison saves (Classes and Kits); spells, psionics and monsters as the manual describes them (Turn Undead by AD&D's table with them), spells rolling to hit and Enlarge's dice (Magic and Psionics); and thief skills and backstabs (Improved Thieving). The other rule changes are the mod's own choices, not corrections, and stay **[Changed]** or **[New]**: helms' AC, resting, the XP level cap, hit dice rolled twice, creation scores as rolled, half-giants' two-handed weapons, creature size, weapon traits (cahulaks, the staff sling's stinkpots, polearm reach), a thri-kreen's extra chatkcha throw, and ages.
 
 ## Your Saved Games
 

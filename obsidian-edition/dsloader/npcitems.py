@@ -51,7 +51,7 @@ TYPES = (  # as DSCLOG's EXTRA_TYPES has them
     bytes.fromhex("010020000a00fa000405010104010000f31f0000"),
     bytes.fromhex("010008006400fa00040501010601010072160001"),
     bytes.fromhex("010010004600fa00040501010a01004062160002"),
-    bytes.fromhex("010020002800fa00040501010401010072170000"),
+    bytes.fromhex("010020002800fa00040501010601010072170000"),  # (1d6+1: the footman's pick)
     bytes.fromhex("010030009600fa00040501010a01004072160006"),
     # a circlet and a crown (worldgear.py): the Necklace's, worn on the head, not armour
     bytes.fromhex("000000000100fa00" "4006000000000000" "ff1f0000"),

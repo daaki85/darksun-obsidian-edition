@@ -28,7 +28,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import aging, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
@@ -259,6 +259,12 @@ MANUAL_CHILL, MANUAL_CLOUD, MANUAL_CELL, MANUAL_RAINBOW, MANUAL_FEEBLE, MANUAL_P
 # its save follow); a djinn's first turn (+6 the djinn) +8 its images, +0Ah the rounds invisible
 MANUAL_DRAIN, MANUAL_TARI, MANUAL_DJINN = range(7, 10)
 MANUAL_TANGLE = 10  # (DSCLOG's CAHULAKS: +6 the target, +8 the attacker, +0Ah the d20, +0Ch the save needed)
+# ... and the staff sling's stinkpot (DSCLOG's STINKPOTS, game.RULE_STINKPOTS): before its save +6 the
+# target, +8 the thrower, +0Ah what (STINK_SAVES a save follows, the game's against power 176, named for
+# the stinkpot here; STINK_UNDEAD, STINK_IMMUNE none); after it +6, +8, +0Ah the d3 and +0Ch the rounds
+# Nauseated (0 and 0: saved)
+MANUAL_STINK, MANUAL_NAUSEA = 11, 12
+STINK_SAVES, STINK_UNDEAD, STINK_IMMUNE = 0, 1, 2
 # DSCLOG's rest (game.RULE_REST: REST_PRE, REST_HP, RS_REC): raw = what; a cast at rest (REST_CAST): its
 # frame +6 the caster, +8 the target, +0Ah the spell, +0Ch its slot's level (0 a psionic power), +0Eh the
 # slots of that level left (a power: the PSP left); a night's natural healing (REST_HEAL): +6 the member,
@@ -571,7 +577,11 @@ class DiceLog:
         self._scrolling = scrolling.Scrolling()
         self._dresser: Optional[sprites.Dresser] = None
         self._dresser_at = 0.0  # (when to try making the Dresser next: the game's files not found yet)
-        self.picked: set = set()  # the pockets tried already (each person gets one try)
+        self.picked: set = set()  # the pockets tried already (each person gets one try), and locks failed (locks.py)
+        self._sell_seen: Optional[Tuple[int, int]] = None  # (DSCLOG's header, SELL_SEQ as last acted on)
+        self._sell_noticed: Optional[Tuple[int, int]] = None  # (SELL_SEQ new, the BIOS tick it was seen at)
+        self._loot_seen: Optional[Tuple[int, int]] = None  # (DSCLOG's header, LOOT_SEQ as last acted on)
+        self._locks_written: Optional[Tuple[int, bytes]] = None  # (DSCLOG's header and LOCK_BARRED as last written)
         # ... and when, by the game's clock: one tried after the game being played was saved is
         # forgotten when that save is loaded (the clock goes back past it)
         self.picked_at: Dict[str, Optional[int]] = {}
@@ -618,6 +628,7 @@ class DiceLog:
         self._tally_out: Optional[float] = None  # (when the flag was first seen down after that)
         self._stale_turn: Optional[int] = None  # the last round's last turn, until the new one's first
         self._save_rolls: Dict[Tuple[int, int], int] = {}  # (SS, save frame BP) -> natural d20
+        self._stink: Optional[Tuple[int, int, bool]] = None  # (a stinkpot's target, thrower, its save line seen)
         self._static_rolls: Dict[Tuple[int, int], int] = {}  # (SS, power check BP) -> the first d20 of a Static contest
         self._defence_rolls: Dict[Tuple[int, int], int] = {}  # (SS, defence BP) -> a psionic defence's first roll
         self._errors_said: set = set()  # (the kinds of error a pass has written once: _error_once)
@@ -706,6 +717,9 @@ class DiceLog:
         self._big = cahulaks.Big()
         self._large = sizes.Large()
         self._targeting.forget()
+        # (a game restarted in the same DOSBox has a new DSCLOG at the same header: its lock table
+        # written anew, and its T and S counts taken afresh as the start, audit 2026-11-11)
+        self._locks_written = self._loot_seen = self._sell_seen = None
         self._arena_count = None
         self.tracker = PartyTracker(self.game)
         self.defilers = defilerscrolls.DefilerScrolls()
@@ -854,7 +868,7 @@ class DiceLog:
         seq = self.guest.read(self.tsr_hdr + TSR_USE_SEQ, 2)
         if seq == self.guest.read(self.tsr_hdr + TSR_USE_REPLY, 2):
             return []
-        result, taken = None, False
+        result, taken, cast = None, False, 0
         try:
             item, thing = struct.unpack("<HH", self.guest.read(self.tsr_hdr + TSR_USE_ITEM, 2) +
                                         self.guest.read(self.tsr_hdr + TSR_USE_WHO, 2))
@@ -874,8 +888,8 @@ class DiceLog:
                     result = pickpocket.Attempt(spellarrows.NOT_IN_A_FIGHT, [])
                 else:
                     result = self._arrows.make(self.game, item & 0xFF, thing)
-                    if result and not result.text:  # (made: the spell's own cast sound, as it is cast)
-                        self._play_game_sound(spellarrows.cast_sound(self.game, thing))
+                    if result and not result.text:  # (made: the spell's own cast sound, as it is cast,
+                        cast = spellarrows.cast_sound(self.game, thing)  # by DSCLOG with the answer)
             elif PICKED_BY <= item < 0xFFFF and self.pickpockets:
                 taken = True
                 if self._fighting():
@@ -890,6 +904,8 @@ class DiceLog:
             result, taken = None, False
         self._write_pick_text(result.text if result else "")
         self._write_xp(result)
+        if 0 < cast <= 130:  # (the USE screen's button: the map's main loop, SOUND_REQ's, waits for it to close)
+            self.guest.write(self.tsr_hdr + TSR_PICK_SOUND, struct.pack("<H", cast))
         self.guest.write(self.tsr_hdr + TSR_USE_TAKEN, struct.pack("<H", int(taken)))
         self.guest.write(self.tsr_hdr + TSR_USE_REPLY, seq)
         if not result:
@@ -899,6 +915,66 @@ class DiceLog:
         if result.paid:
             self._remember_pick(result.paid)
         return result.log or [result.text]
+
+    def _loot_pass(self) -> List[str]:
+        """T or Shift+T with a container's window open (DSCLOG's LOOT_KEY): once the window is shut,
+        what is in it into the party's backpacks (loot.py), with the purse's sound."""
+        if self.tsr_hdr is None:
+            return []
+        seq, thing, mode = struct.unpack("<HHH", self.guest.read(self.tsr_hdr + loot.TSR_LOOT_SEQ, 6))
+        if self._loot_seen is None or self._loot_seen[0] != self.tsr_hdr:
+            self._loot_seen = (self.tsr_hdr, seq)  # (a new DSCLOG, or the first look: nothing asked yet)
+            return []
+        if seq == self._loot_seen[1] or loot.window_open(self.game):
+            return []
+        try:
+            lines, took = loot.take(self.game, thing, mode)
+        except itemgate.ItemsBusy:
+            return []  # (the game changing its lists: in a later pass)
+        self._loot_seen = (self.tsr_hdr, seq)
+        if took:
+            self.guest.write(self.tsr_hdr + TSR_SOUND_REQ, struct.pack("<H", sounds.PICK_SOUND))
+        return lines
+
+    def _sell_pass(self) -> List[str]:
+        """S on a shop's screen (DSCLOG's SELL_KEY): once the shop is shut, the member's plain gear
+        sold (sell.py), with the purse's sound."""
+        if self.tsr_hdr is None:
+            return []
+        seq, member = struct.unpack("<HH", self.guest.read(self.tsr_hdr + sell.TSR_SELL_SEQ, 4))
+        if self._sell_seen is None or self._sell_seen[0] != self.tsr_hdr:
+            self._sell_seen = (self.tsr_hdr, seq)
+            return []
+        if seq == self._sell_seen[1]:
+            self._sell_noticed = None
+            return []
+        # (SELL_KEY clears the shop's stamp as it counts S, before the shop has shut: wait until the
+        # shop's loop, which stamps it each pass, has had SHOP_FRESH ticks to show it still runs;
+        # audit 2026-11-11)
+        now = sell.bios_tick(self.game)
+        if self._sell_noticed is None or self._sell_noticed[0] != seq:
+            self._sell_noticed = (seq, now)
+        if (now - self._sell_noticed[1]) & 0xFFFF <= sell.SHOP_FRESH or sell.shop_up(self.game, self.tsr_hdr):
+            return []
+        try:
+            lines, paid = sell.sell(self.game, member)
+        except itemgate.ItemsBusy:
+            return []
+        self._sell_seen = (self.tsr_hdr, seq)
+        if paid:
+            self.guest.write(self.tsr_hdr + TSR_SOUND_REQ, struct.pack("<H", sounds.PICK_SOUND))
+        return lines
+
+    def _locks_pass(self) -> None:
+        """DSCLOG's LOCK_BARRED: the locks each member failed at its thief level now (locks.py), with
+        Thieves as in AD&D; none without it."""
+        if self.tsr_hdr is None:
+            return
+        rows = locks.barred(self.game, self.picked) if self.game.rules & game.RULE_THIEF_TABLE else []
+        data = (self.tsr_hdr, locks.table(rows))  # (a new DSCLOG, its table written anew)
+        if data != self._locks_written:
+            locks.write(self.game, self.tsr_hdr, data[1])
+            self._locks_written = data
 
     def _arrows_pass(self) -> List[str]:
         """The Spellarchers' spell arrows: after a rest, every one fades (spellarrows.py)."""
@@ -1422,6 +1498,9 @@ class DiceLog:
         out += step(self._answer_use)
         out += step(self._gear_due)
         out += step(self._arrows_pass)
+        out += step(self._loot_pass)
+        out += step(self._sell_pass)
+        step(self._locks_pass)
         out += step(self._answer_look)
         out += step(lambda: self._changes(now))
         out += step(lambda: self._take_text(now))
@@ -2759,7 +2838,30 @@ class DiceLog:
             then = "saved" if saved else "tangled: loses its next turn"
             return [f"    {self._name(a)}'s cahulaks tangle {name}? Save against petrification: "
                     f"d20 = {b}, needs {c}+ -> {then}"]
+        if e.raw == MANUAL_STINK:
+            if b == STINK_SAVES:  # (the game's save line next, named for it: _save_line)
+                self._stink = (who, a, False)
+                return []
+            self._stink = None
+            why = "undead" if b == STINK_UNDEAD else "immune to poison"
+            return [f"    {self._name(a)}'s stinkpot bursts on {name}: {why}, unaffected"]
+        if e.raw == MANUAL_NAUSEA:
+            seen = self._stink is not None and self._stink[:2] == (who, a) and self._stink[2]
+            self._stink = None
+            if not c:
+                return []  # (saved: its save line said so)
+            how = "" if seen else ", no saving throw (helpless)"
+            return [f"    {self._name(a)}'s stinkpot: {name} is nauseated{how}, -2 to hit for "
+                    f"1d3+1 = {b} + 1 = {c} rounds"]
         return []
+
+    def _stink_save(self, target, spell) -> bool:
+        """The save at hand is a stinkpot's (MANUAL_STINK just before it, the game's save against
+        power 176 on its target): noted as seen."""
+        if self._stink is None or spell != game.STINK_SAVE_POWER or self._stink[0] != target:
+            return False
+        self._stink = self._stink[:2] + (True,)
+        return True
 
     def _rest(self, e: Entry) -> List[str]:
         """What DSCLOG's rest did (KIND_REST): a priest's or psionicist's cast before it, a member's
@@ -2809,9 +2911,17 @@ class DiceLog:
             return []
         name = game.THIEF_SKILLS[skill] if 0 <= skill < len(game.THIEF_SKILLS) else f"skill {skill}"
         head = f"{self._name(who)} tries to {name}: d100 = {roll}"
+        if chance == locks.NEVER and skill == locks.OPEN_LOCKS:  # (DSCLOG's LOCK_SITE: locks.py)
+            return [f"{head} -> failure ({self._name(who)} failed this lock at this thief level: "
+                    "another try once a level is gained)"]
         if chance <= -500:  # the game takes 1000 off when an effect makes it impossible
             return [f"{head} -> failure (an effect stops it)"]
         head += f", needs {chance} or less -> {'success' if roll <= chance else 'failure'}"
+        if skill == locks.OPEN_LOCKS and roll > chance and 0 <= who < game.PARTY_SIZE \
+                and self.game.rules & game.RULE_THIEF_TABLE:  # (no other try till a level is gained)
+            failed = locks.failed_key(self.game, who)
+            if failed is not None:
+                self._remember_pick(failed)
         if name == "find/remove traps" and roll <= chance:  # (perhaps avoiding a trap: _needle_check)
             self._avoided_at = time.monotonic()
             self._needle_check()
@@ -2961,6 +3071,9 @@ class DiceLog:
         if on(target_combatant, game.FOG_EFFECT):
             parts.append(("target's Fogbolt", 2))
             situational -= 2
+        if on(attacker_combatant, game.STINK_EFFECT):  # (a stinkpot's Nauseated: DSCLOG's NS_HIT)
+            parts.append((EFFECT_NAMES[game.STINK_EFFECT], game.STINK_TO_HIT))
+            situational -= game.STINK_TO_HIT
         prayer = next((x for x in effects if x.owner == attacker_combatant and x.id == 73), None)
         if prayer:
             caster = g.combatant_creature(prayer.caster)
@@ -3159,13 +3272,17 @@ class DiceLog:
             + (f" {signed(material)} {MATERIALS[weapon.material].lower()}" if material else "") \
             + (f" {signed(extra)} {specialize.SKILL_NAMES[skill]}" if extra else "") \
             + (f" {signed(kit)} {kit_name}" if kit else "")
-        if skill == specialize.GRAND:
-            steps += f" (d{sides} for d{sides - 2}: grand mastery)"
-        elif weapon and weapon.sides and self.rules & game.RULE_SIZE \
-                and (count, sides) != (weapon.count, weapon.sides):  # (DSCLOG's SIZE_DICE)
+        grand = skill == specialize.GRAND
+        own_dice = (weapon.count, weapon.sides) if weapon and weapon.sides else None
+        if own_dice and grand and (count, sides) == (own_dice[0], specialize.next_die(own_dice[1])):
+            steps += f" (d{sides} for d{own_dice[1]}: grand mastery)"
+        elif own_dice and self.rules & game.RULE_SIZE and (count, sides) != own_dice:  # (DSCLOG's SIZE_DICE)
             large = e.parent_arg(0x14) != sizes.SHILLELAGH_TYPE
-            steps += f" ({count}d{sides} for {weapon.count}d{weapon.sides}: " \
-                + ("a large target)" if large else "a target smaller than large)")
+            steps += f" ({count}d{sides} for {own_dice[0]}d{own_dice[1]}: " \
+                + (("a large target, grand mastery)" if grand else "a large target)") if large
+                   else "a target smaller than large)")
+        elif grand:
+            steps += " (grand mastery)"
         if sum(faces) + bonus < 1:
             steps += " (raised to the minimum of 1)"
         dice = sum(faces)  # (the weapon's dice: Enlarge's and a backstab's with their rules)
@@ -3896,7 +4013,8 @@ class DiceLog:
         save_natural)."""
         natural = scaled(e.raw, 20) + 1
         spell, target, caster = e.parent_arg(0x0A), e.parent_arg(6), e.parent_arg(8)
-        self._spell_cast(spell, now)
+        if not self._stink_save(target, spell):  # (a stinkpot's: no spell's damage to follow)
+            self._spell_cast(spell, now)
         needed = e.parent_locals[0x28 - 1]
         index = e.parent_local(-6)
         pending = self._flush_spell(spell)
@@ -4142,16 +4260,19 @@ class DiceLog:
         kind = SAVE_NAMES.get(index, "?")
         # a spell left on the ground (Grease, a cloud) makes its victims save with themselves as the caster
         source = f" from {g.combatant_name(caster)}" if caster != target else ""
-        who = f"{g.combatant_name(target)}'s saving throw vs {g.spell_name(spell)}{source} ({kind})"
+        stink = self._stink_save(target, spell)
+        what = "a stinkpot" if stink else g.spell_name(spell)
+        who = f"{g.combatant_name(target)}'s saving throw vs {what}{source} ({kind})"
+        result = (lambda _, saved: "saved" if saved else "failed: nauseated") if stink else self._save_result
         if total is None:
-            return f"{who}: d20 = {natural} (natural {natural}) -> {self._save_result(spell, natural == 20)}"
+            return f"{who}: d20 = {natural} (natural {natural}) -> {result(spell, natural == 20)}"
         if total >= 0x80:  # the game adds -100 / +100 for "can't save" / "always saves"
             total -= 0x100
         if total < -50:  # (gamepatch's save_signed, always applied: the game's compare made signed)
             note = ", even on a natural 20" if natural == 20 else ""
             return f"{who}: none allowed (cannot save{note}) -> failed"
         if natural == 20:  # (DSCLOG's SAVE_SUM: made at least the number needed)
-            return f"{who}: d20 = 20 (natural 20) -> {self._save_result(spell, True)}"
+            return f"{who}: d20 = 20 (natural 20) -> {result(spell, True)}"
         if total > 100:
             if g.rules & game.RULE_SIZE and sizes.spared(g, spell, target):
                 return f"{who}: {g.combatant_name(target)} is too big for {g.spell_name(spell)} -> unaffected"
@@ -4184,7 +4305,7 @@ class DiceLog:
         if natural is not None:
             doubled = bool(rules and rules.doubles_roll)
             chance = f" ({save_chance(needed - (total - (rolled or 0)), doubled)}% to save)"
-        return f"{who}: {steps}, needs {needed}{chance} -> {self._save_result(spell, total >= needed)}"
+        return f"{who}: {steps}, needs {needed}{chance} -> {result(spell, total >= needed)}"
 
     def _save_result(self, spell: int, saved: bool) -> str:
         """'saved' or 'failed', and what that does to the spell's damage: the amount from the

@@ -22,6 +22,8 @@
 - [Cahulaks](#cahulaks)
 - [Creature size](#creature-size)
 - [Held targets](#held-targets)
+- [Staff sling stinkpots](#staff-sling-stinkpots)
+- [Polearm reach](#polearm-reach)
 - [Rings and cloaks of protection](#rings-and-cloaks-of-protection)
 - [Helms give AC 1](#helms-give-ac-1)
 - [Items saving against acid](#items-saving-against-acid)
@@ -583,6 +585,109 @@ line is written still reads right (an older helper's entries fall back to `GameD
 The attack's line says HIT, with `Paralyzed: hit
 automatically, for normal damage (AD&D's held target)` under it, and the damage line has no x2.
 
+## Staff sling stinkpots
+
+([In the features page](FEATURES.md#staff-sling-stinkpots).)
+
+The rule is **Weapon traits**, the cahulaks' switch (`RULE_CAHULAKS`, `RULE_HI_CAHULAKS`, the Loader's
+`cahulaks`; `game.RULE_STINKPOTS` names it too); DSCLOG's `STINKPOTS`; no new patch in the game:
+
+- **The dice.** The staff sling is item type 0 (IT1R's first record, `020008001400fa00...`: missile
+  only, crushing, 1d4 at +0Ch/+0Dh). `STINK_SIDES` writes its sides, 3 with the rule and 4 without, in
+  the table the game read (`TYPES_FILL`, which notes it in `types_ptr`) and again at each pass of the
+  main loop (`PROBE_SCROLL`), so a switch takes at once; only over a 3 or a 4, only while DS:1669h
+  still points there. The game's attack, the item box, the inventory and View Character all read that
+  record, and grand mastery's `NEXT_DIE` steps the 3 to a 4.
+- **The hit.** `CAH_HIT` (58B54h, the cahulaks' site: a weapon hit that did damage, `[BP+14h]` the
+  type, `[BP+18h]` the thrower, DS:494Ah the target) goes on to `STINK_HIT` for type 0. A target
+  still standing (its creature's HP above 0) is spared if undead (5B8:A2h, 7BE20h, the game's own
+  test) or if it takes none of the poison damage kind (5B8:66h, 7B492h: the share of damage kind 1 by
+  its kind's resistance rules; its effects' bits, which only fire, cold and electricity read, given
+  as zeros, `stink_none`). Otherwise the game's saving throw (5B8:2Fh, 79A71h: target, thrower,
+  power 176, level 0) as against a monster's poisoned hit: record 176's +1Fh is 21h,
+  paralysis/poison/death, and its damage kinds (100h) don't double the d20; every modifier the game
+  gives that save counts, and a held or Out Cold target fails before rolling. A failure adds
+  Nauseated (75) through 598:3Eh (76442h: target, thrower, spell 22, effect 75, (1d3 + 1) x 60
+  seconds, 0). The spell is Stinking Cloud's: an effect filed under a spell of 8Ah or more with a
+  party member as its caster clears a bit in the psionic powers' table as it ends (76883h), and no
+  compare of an effect's spell with 22 turns up in the game's code. The calls are made in a frame the overlay
+  manager can fix up (`OVR_BACK`), as `SHADOW_DRAIN`'s.
+- **Nauseated (75).** The effects' bits (598:25h, 76944h) are 10 bytes, effects 0-79. `NS_HIT`
+  (7C430h) takes 2 off a nauseated attacker's to-hit sum whatever the rules (only the rule puts the
+  effect on). The game's table of effects' names and icons (selector 3E0h, 1BCh bytes) ends at 74,
+  so `NS_ENTRY` gives 75 an entry of its own, `STINK_ENTRY`, after Reflected Image's past the spell
+  rows (segment 4010h at 1FEh, zeros in the game): NAUSEATED and Stinking Cloud's icon (21022). Those
+  five sites are the game's only readers of the table.
+- **The dice log.** `KIND_MANUAL` entries: `MN_STINK` (11) before the save (target, thrower; 0 a save
+  follows, 1 undead, 2 immune), `MN_NAUSEA` (12) after it (target, thrower, the d3 and the rounds; 0 and
+  0 saved). Between them the game's save line is named for the stinkpot (`DiceLog._stink_save`, and no
+  spell's damage window opened), `-> failed: nauseated`. The to-hit breakdown names `Nauseated -2`
+  (`game.HIT_EFFECTS`).
+
+Tests: tests/test_stinkpots.py (`StinkHitTests` runs the site in Unicorn with the game's routines
+stubbed, `StinkSidesTests`, `StinkEffectTests`, the dice log's lines).
+
+## Polearm reach
+
+([In the features page](FEATURES.md#polearm-reach).)
+
+The rule is **Weapon traits** again (`RULE_CAHULAKS`, `RULE_HI_CAHULAKS`, the Loader's `cahulaks`);
+DSCLOG's `REACH`, one site (`gamepatch` "polearm_reach").
+
+The game's way: every melee decision asks the combatant distance routine (1A0A:2BA5h, 22045h:
+`[BP+6]` the attacker, `[BP+8]` the target, both combatants) for the least distance between the two
+footprints, in squares by 898:000Ch (0DD8Ch: the smallest s with s x s + s at least dx x dx + dy x dy:
+one square across or diagonally 1, two across 2, two across and one down 2, two across and two down
+3), and compares it with 1. The item type's range byte (+0Ah) is 1 for every melee weapon and plays no
+part in it (playtest/logs/2026-11-10-polearm-reach.md: a polearm whose type's +0Ah was 2 still
+couldn't strike two squares away). It can't be made 2 either: the weapon picker (5900Ah) and the
+attack routines (58019h, 5883Ah) take a weapon of range above 1 for a missile weapon (ammunition,
+the projectile, the missile flag), and so do DSCLOG and the dice log.
+
+`REACH_SITE` (2211Fh, the routine's end, "mov ax,[bp-16h]"; 3 bytes: the INT and the site's number)
+does the MOV, then, with the rule, makes a result of 2 a 1 when all three hold:
+
+- **The caller is a melee test**, told by the way back (`REACH_CALLER`): resident ones by segment
+  (the CS less the game's DS, so wherever the game is loaded) and IP, `reach_rets`: the pointer's
+  shape (1587:2B7Ah, after 1D7E5h: the sword at 1 or less, else the missile test); the attack
+  pointer's click (1587:0AC5h, after 1B730h: the distance into DS:496Ch, then 1DFF2h with it); the
+  walk arrow's click on a foe (1587:04B8h, after 1B123h: 1 or less attacks at once, else a path and
+  action 13h); the walk to attack arriving (1587:1C36h, after 1C8A1h, and 1A0A:3071h, after 2250Eh);
+  the step switch's case 19 (1A0A:14A2h, after 2093Eh). The computer's attack choice is in overlay
+  612Eh (56CC0h on, its CS wherever the overlay manager loads it): its target's distance against its
+  weapon's range (0DA7h, after 57A62h; at 57C54h a range at least the distance attacks, through
+  58019h with that distance) and the target 57F44h found in range (1229h, after 57EE4h). Those two are
+  told by the IP and the code around it, read through the way back: `9A A5 2B` (a far call to 2BA5h)
+  before and `83 C4 04 89 46 F6` ("add sp,4 / mov [bp-0Ah],ax") after. The other callers keep 2:
+  2013Ch (an ambush), 20924h, 209AFh, 209C5h, 209E3h in the step switch, 56E1Fh and 59FBEh in the
+  overlay, 7AEC6h (a spell).
+- **The attacker's hands hold a polearm and no other weapon** (`REACH_HANDS`): its creature
+  (`COMBATANT_CREATURE`), its three item lists (+08h, +0Ah, +0Ch), each item's slot (+11h): in the
+  right hand (3) or the left (10), a type `kind_of_type` makes a polearm (10, the kind + 1: the
+  game's 19 and 111 and the Loader's metal polearm, `game.METAL_POLEARM_TYPE`) counts one, any other
+  type with a weapon flag (its +00h's 1 melee or 2 missile, `restrict.is_weapon`) one other weapon.
+  Reach is one polearm and no other: a shield (flag 4) or nothing beside it. The missile slot (2) and
+  the backpack aren't hands.
+- **No wall is on the line between them** (`REACH_LINE`): the game's own line test (898:00A4h,
+  0DE24h; the two things' squares, from DS:669Dh and 669Fh + 20h a thing in sixteenths, a height of
+  0 each; -1 when a cell on the line has its bit 80h), which the attack pointer's click (1B700h) and
+  the computer's attack (57C99h) make before the distance; the walk arrow's click and the walk to
+  attack make none, as an adjacent foe needs none, so `REACH_LINE` asks it for every caller.
+
+The game then takes the target as adjacent: the pointer's sword, the click's attack (the attack
+routine is given the 1, so the polearm swings as a melee weapon; with a bow in the missile slot the
+click at two squares swings rather than shoots), the walk arrow's attack from where the wielder
+stands, and the computer's attack on a foe two squares away.
+
+Limits, kept: two across and two down count 3 (no reach); a creature between doesn't stop the reach;
+the computer's approach still walks to an adjacent square (its path finder, 1A0A:2E99h, isn't
+asked), so a computer-controlled polearm uses the reach only on a foe already two away.
+
+Tests: tests/test_reach.py (the site in Unicorn: a polearm alone or with a shield, a bow in the missile
+slot; another weapon, a second polearm, a non-melee caller, an overlay IP without the AI's code, a
+wall on the line (the line test stubbed), the rule off, distances 1 and 3; and, with DSUN.EXE beside GPLDATA.GFF, every call of the routine in the
+game: the melee callers' code and the ones left alone).
+
 ## Rings and cloaks of protection
 
 ([In the features page](FEATURES.md#rings-and-cloaks-of-protection).)
@@ -713,6 +818,8 @@ draws it blank.
 
 ([In the features page](FEATURES.md#spells-saved-against-with-the-spell-save).)
 
+Part of the switch Saving throws against spells (`spell_save`; `RULE_SPELL_SAVE` is `RULE_NO_DOUBLE`).
+
 How: the Loader writes the game's own table that turns a spell's kind of save
 into one of the five (a table of words at DS:1E75h, read afresh for every
 save), and puts it back when the rule is unticked.
@@ -721,6 +828,8 @@ save), and puts it back when the rule is unticked.
 
 ([In the features
 page](FEATURES.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20).)
+
+Part of the switch Saving throws against spells (`spell_save`; `RULE_SPELL_SAVE` is `RULE_NO_DOUBLE`).
 
 How: the helper does the save's doubling (`INT F0h`) only while this rule is
 off, and the Loader marks the fire, cold and electricity spells with the game's
@@ -2038,8 +2147,8 @@ thing holding it (`push word [179Eh]` / `call 0A0h:1C94h` at 83D9Eh; the routine
 does nothing for 270Fh), its items back on the free list. That thing is the
 pointer's (`DS:179Eh`, 523: one of the few past the 520 objects), never freed:
 with nothing held the game has it all zeros (kind 0). `SELL_KEEP` (an `INT 98h`
-site over the push, `RULE_HI_BUYBACK`, the second rules word's 64:
-`game.RULE_BUYBACK`) looks at the thing's first item (things table, kind 1) and,
+site over the push, with Shops as in AD&D, `RULE_HI_CHA_PRICES`, the second rules word's 16:
+`game.RULE_BUYBACK` names it) looks at the thing's first item (things table, kind 1) and,
 for one with a plus (`+14h` above 0) or a power (`+0Fh`), pushes 270Fh in its
 place (the registers kept, the interrupt's frame moved down a word, the word
 under it) and queues the thing and the shop's merchant (`DS:179Ch`, the object
@@ -2074,6 +2183,25 @@ the patched game empties it (`thief_slots` in `gamepatch.py`, DSUN.EXE 44F70h).
 The Loader reads the list from the running game, so its numbers match whichever
 game it is.
 
+### A lock or a pocket failed: another try a level later
+
+With the same switch. **Locks:** the game rolls open locks only in its scripts' skill check
+(803B8h(character, skill, bonus): a d100 under [BP-2], the chance). One new site, `LOCK_SITE`
+(`gamepatch` "lock_retry", 803D3h, "mov [bp-2],ax"), does the MOV, then for open locks by a party
+member looks up the lock in `LOCK_BARRED` (its offset at DSCLOG's header +1844): for each member 0-3,
+four (region, thing) word pairs, the thing being the one the running script was started on
+(TALK_TARGET, 3781h:0365h from the load segment), the region the party's (DS:117Ch). A match makes the
+chance `LOCK_NEVER` (-2000), which no roll is under. The dice log, seeing a party member's open locks
+fail (PERCENT_SITE's entry), remembers it with the pockets tried (`locks.key`: the party, the region,
+the thing, the member and its thief level; undone by loading an earlier save, as a pocket tried) and
+each pass writes the table: the locks each member failed at the thief level it has now
+(`locks.barred`). A level gained, the pair is gone. The dice log names a barred try ("failed this lock
+at this thief level"). **Pockets:** a fumble (failed, unnoticed) is remembered as
+`pickpocket.fumble_key` (the person's key, the thief and its thief level), and that thief is refused
+until its thief level is higher. Seen in the game 2026-11-11 (Pehtucl's chest, a 1st-level thief:
+failed, barred, then rolled again at 2nd level: playtest/logs/2026-11-11-lock-retry.md). Tests:
+tests/test_locks.py, `test_fumbled_with_thieves_as_in_add`.
+
 ## Hiding in shadows to backstab
 
 ([In the features page](FEATURES.md#hiding-in-shadows-to-backstab).)
@@ -2104,8 +2232,8 @@ the first is a backstab.
 
 ### A backstab multiplies the weapon's dice only
 
-The switch `backstab_dice` (`game.RULE_BACKSTAB`; DSCLOG's `RULE_HI_BACKSTAB`
-in `rules_hi`; on unless unticked). The game's backstab multiplies the whole of a
+Part of the switch Thieves as in AD&D (`thief_table`; `game.RULE_BACKSTAB` names it,
+`RULE_THIEF_TABLE`; DSCLOG's `RULE_THIEF_TABLE` in `rules`; on unless unticked). The game's backstab multiplies the whole of a
 hit's damage, STR's bonus and the weapon's plus included (x2 to x5 by thief
 level, 595C4h); AD&D's multiplies the weapon's dice only, the rest added once,
 and only the round's first attack is one. Two `NS_IMAGE` sites in the attack

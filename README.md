@@ -67,13 +67,14 @@ where the saves go](obsidian-edition/README.md#updating-backups-saved-games-and-
 
 ## What's new
 
-**Obsidian Edition 2.15.0** is out ([release notes](release-notes/v2.15.0.md)):
-three new AD&D rules (held targets, creature size, and cahulaks as Dark Sun has
-them), spells, psionics and monsters as the manual describes them, resting and
-dual-classing by the manual, the Boots of Speed and new cahulaks to find
-(Emberlash and Ironwhirl), a better-armed Scar, and graphics that no longer
-vanish in a busy area. 2.14.1 brought the manual's least scores at creation and
-its 10% more XP for high prime requisites.
+**Obsidian Edition 2.16.0** is out ([release notes](release-notes/v2.16.0.md)):
+looting a body with **T** and selling spare gear with **S**, thieves who may try a
+failed lock or pocket again after a level, polearm reach and staff sling
+stinkpots, the footman's pick, and a fight with Legcrusher at the fountain.
+2.15.0 brought three new AD&D rules (held targets, creature size, and cahulaks
+as Dark Sun has them), spells, psionics and monsters as the manual describes
+them, the Boots of Speed and new cahulaks to find, and graphics that no longer
+vanish in a busy area.
 
 Every release has notes of its own, in [`release-notes`](release-notes).
 

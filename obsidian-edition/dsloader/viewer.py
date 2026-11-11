@@ -427,8 +427,8 @@ class Viewer:
                   wraplength=460).pack(anchor="w")
         options.bind("<Configure>", lambda e, label=new.winfo_children()[-1]: label.configure(
             wraplength=max(200, e.width - 60)), add="+")
-        where = {"weapon_specialization": custom, "kits": custom, "cha_prices": features, "buyback": features,
-                 "thief_table": thieves, "stealth": thieves, "backstab_dice": thieves, "new_spells": new}
+        where = {"weapon_specialization": custom, "kits": custom, "cha_prices": features,
+                 "thief_table": thieves, "stealth": thieves, "new_spells": new}
         # one switch for each of game.RULE_SETTINGS
         self.rule_vars: Dict[str, tk.BooleanVar] = {}
         self.stealth_gear = tk.BooleanVar(value=settings.get("stealth_gear", True) is not False)
@@ -472,11 +472,14 @@ class Viewer:
                                         "attacks once a round"),
                 ("half_giant_hands", "arms", "Half-giants' two-handed weapons: a half-giant wields one in one hand (a "
                                              "shield or a light weapon in the other; two heavy weapons still can't be held)"),
-                ("cahulaks", "arms", "Cahulaks as Dark Sun's rules have them: a head in each hand, so one more attack a "
+                ("cahulaks", "arms", "Weapon traits: the cahulaks have a head in each hand, so one more attack a "
                                      "round, at -2 and -4 (DEX's reaction adjustment added) even with Two weapons "
-                                     "unticked; a hit tangles a man-sized or smaller foe (not a half-giant, a large "
+                                     "unticked, and a hit tangles a man-sized or smaller foe (not a half-giant, a large "
                                      "creature or anyone Enlarged) that fails a save against petrification: it loses "
-                                     "its next turn"),
+                                     "its next turn. The staff sling throws stinkpots: 1d3 (the game's 1d4), and a "
+                                     "target hit, unless undead or immune to poison, saves against poison or is "
+                                     "nauseated for 1d3+1 rounds: -2 to hit. A polearm held with no other weapon "
+                                     "(a shield is fine) strikes a foe two squares away as well as an adjacent one"),
                 ("creature_size", "arms", "Creature size as in AD&D: a large target, party member or foe (a half-giant, "
                                           "a Bulette, anyone Enlarged), takes AD&D's weapon dice against large creatures: "
                                           "more from some weapons (a long sword 1d12), less from others (a dagger or "
@@ -496,10 +499,10 @@ class Viewer:
                 ("int_learning", "magic", "Preservers' INT: a chance to learn a spell from a scroll (35% at INT 9 "
                                           "to 100% at 24; a failed try uses the scroll up) and the most spells of "
                                           "each spell level they may know (6 at INT 9, all from 19)"),
-                ("spell_save", "magic", "Spells saved against with the spell save (the game uses "
-                                        "petrification/polymorph)"),
-                ("no_doubled_save", "magic", "Fire, cold and electricity: DEX instead of a doubled d20 (DEX's "
-                                             "defensive adjustment on those saves; the game doubles the save's d20)"),
+                ("spell_save", "magic", "Saving throws against spells: spells saved against with the spell save "
+                                        "(the game uses petrification/polymorph), and against fire, cold and "
+                                        "electricity DEX's defensive adjustment in place of a doubled d20 (the "
+                                        "game doubles the save's d20)"),
                 ("enlarge_dice", "magic", "Enlarge multiplies the weapon's dice only, rounded up, STR and magic added after, "
                                           "as in AD&D (the game multiplies the whole melee damage, STR included)"),
                 ("spells_manual", "magic", "Spells and psionics as the manual describes them: some two dozen spells' and "
@@ -525,18 +528,19 @@ class Viewer:
                                "multiclass characters (pairs of classes, and one trio) have kits of their own, each "
                                "giving something and costing something (chosen on the creation panel's KIT page); the "
                                "game's own party gets features of its own"),
-                ("cha_prices", None, "The leader's CHA at shops: 5% off what shops ask at CHA 18 and 5% more for each "
-                                     "point after, to 40% at 25; shops pay 60% of an item's price"),
-                ("buyback", None, "Buying back magical items: merchants keep the magical items the party sells them, "
-                                  "to buy back at their price (the game destroys whatever is sold; other items still are)"),
-                ("thief_table", None, "Thief skills from AD&D's table by level, with Dark Sun's race and DEX adjustments "
-                                      "(the game adds 4 a level to a base of its own, and DEX by a formula)"),
+                ("cha_prices", None, "Shops as in AD&D: the leader's CHA at shops, 5% off what shops ask at CHA 18 "
+                                     "and 5% more for each point after, to 40% at 25, shops paying 60% of an item's "
+                                     "price; and merchants keep the magical items the party sells them, to buy back "
+                                     "at their price (the game destroys whatever is sold; other items still are)"),
+                ("thief_table", None, "Thieves as in AD&D: thief skills from AD&D's table by level, with Dark Sun's "
+                                      "race and DEX adjustments (the game adds 4 a level to a base of its own, and DEX "
+                                      "by a formula); and a backstab multiplies the weapon's dice only, STR and magic "
+                                      "added after, on the round's first attack only (the game multiplies the whole "
+                                      "damage, STR included, on the first two); and a lock or pocket a thief failed is "
+                                      "tried again by that thief only after a level gained"),
                 ("stealth", None, "Hiding in shadows to backstab: thieves hide in shadows and move silently to backstab, "
                                   "rangers to attack from behind (with no enemy beside them; a thief's chance halved in "
                                   "daylight, a ranger's indoors; a few kits differ)"),
-                ("backstab_dice", None, "A backstab multiplies the weapon's dice only, STR and magic added after, as in "
-                                        "AD&D, on the round's first attack only (the game multiplies the whole damage, STR "
-                                        "included, on the first two)"),
                 ("new_spells", None, "New spells: six for wizards (Cat's Grace at 2nd level: DEX + 1d6, by class with "
                                      "Spells and psionics as the manual describes them; at 1st, Erdlu "
                                      "Claw (unarmed 1d6+1), Fogbolt (-3 to hit, AC 2 worse), Reflected Image, Spook and "
@@ -545,7 +549,7 @@ class Viewer:
                 var = own_vars[key]
             else:
                 var = self.rule_vars[key] = tk.BooleanVar(
-                    value=bool(settings.get(key, settings.get(game.OLD_SETTING_NAMES.get(key, key), True))))
+                    value=game.setting_on(settings, key))
             parent = rule_groups[group] if group else where.get(key, rules)
             ttk.Checkbutton(parent, text=text, variable=var,
                             command=self._options_changed).pack(anchor="w", pady=(4 if parent.winfo_children()[:-1] else 0, 0))

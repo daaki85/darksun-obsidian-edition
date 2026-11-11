@@ -39,6 +39,7 @@ round they bring, are at the end ([Weapon specialization](#weapon-specialization
   other](#kits-that-rule-out-classes-and-each-other)
 - [Weapon specialization](#weapon-specialization)
   - [Attacks a round](#attacks-a-round)
+  - [Grand mastery's damage](#grand-masterys-damage)
   - [Choosing at creation](#choosing-at-creation)
   - [Starting weapons](#starting-weapons)
   - [At a level gained](#at-a-level-gained)
@@ -51,7 +52,7 @@ armour.
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
-| **Myrmidon** | with weapon specialization, a second weapon spec at 1st level (+1 to hit, +2 damage, 3/2 attacks a round); both weapon specs go on to **mastery at 5th level** (+3 to hit, +3 damage) and **grand mastery at 9th** (+3, +3, the damage die a size larger and one more attack a round) | −4 on saves against charms (Charm Person, Charm Monster, Charm Person or Mammal, Domination, Mass Domination); initiative 2 worse | the fighter's gear, and a plain weapon of its second weapon spec in the left hand in place of the shield (a bow in the missile slot, with arrows; a two-handed weapon in the backpack) | the second weapon spec is picked on the weapon window after DONE (EXIT after one leaves it with one) |
+| **Myrmidon** | with weapon specialization, a second weapon spec at 1st level (+1 to hit, +2 damage, 3/2 attacks a round); both weapon specs go on to **mastery at 5th level** (+3 to hit, +3 damage) and **grand mastery at 9th** (+3, +3, the damage die the next greater die size, against large targets too, and one more attack a round) | −4 on saves against charms (Charm Person, Charm Monster, Charm Person or Mammal, Domination, Mass Domination); initiative 2 worse | the fighter's gear, and a plain weapon of its second weapon spec in the left hand in place of the shield (a bow in the missile slot, with arrows; a two-handed weapon in the backpack) | the second weapon spec is picked on the weapon window after DONE (EXIT after one leaves it with one) |
 | **Sentinel** | AC 2 better with a shield in a hand; +2 initiative, from 1st level | −1 on saves against wizards' and priests' spells | the fighter's gear | can't dual to druid or preserver; can't go with the Shinobi |
 | **Ravager** | +1 to hit and damage in melee; a base AC by level: **7 at 1st-2nd, 6 at 3rd-4th, 5 at 5th-6th, 4 at 7th-8th, 3 at 9th-10th**, armour bettering it as usual | no missile or thrown weapons (cahulaks are allowed: the game doesn't throw them); no shield; leather armour or none | the fighter's gear, with a second of its weapon in place of the shield (none if the weapon takes both hands) | the dice log shows its bonus as `+1 Ravager`; can't go with the Grove Warden |
 
@@ -377,7 +378,7 @@ with expertise in the bow**, on top of the weapon spec it chooses.
 
 | Who | Chooses | With a weapon of a chosen weapon spec |
 |---|---|---|
-| **Fighter** (one class or more) | 1 weapon spec | specialized: +1 to hit, +2 damage; **mastery** from 5th fighter level (+3 to hit, +3 damage); **grand mastery** from 9th (the same, the damage die a size larger, d8 to d10, and one more attack a round) |
+| **Fighter** (one class or more) | 1 weapon spec | specialized: +1 to hit, +2 damage; **mastery** from 5th fighter level (+3 to hit, +3 damage); **grand mastery** from 9th (the same, the damage die the next greater die size against every target, as Player's Option: Combat & Tactics has it: a long sword 1d10, and 1d20 for its 1d12 against a large target: [every weapon's](#grand-masterys-damage); and one more attack a round) |
 | **Gladiator** | 2 weapon specs at creation, a 3rd at 6th level and a 4th at 9th | specialized in each: +1 to hit, +2 damage |
 | **Ranger** (one class or more) | **the bow from the start**, and 1 weapon spec (any but the bow) | expertise: the game's attacks a round in melee, a specialist's rate of fire with a missile weapon, no other bonus |
 
@@ -435,6 +436,42 @@ hold its weapon.
 | mace, axe, great axe, pick |
 | quarterstaff, polearm, gythka, cahulaks |
 | chatkcha, bow, sling, staff sling |
+
+### Grand mastery's damage
+
+A fighter's grand mastery (9th level, its chosen weapon spec) makes the weapon's damage dice the
+next greater die size, against every target, as Player's Option: Combat & Tactics has it: d2,
+d3, d4, d6, d8, d10, d12, d20, each die of the weapon (a gythka's 2d4 2d6). Against a large
+target the step is made on the weapon's large dice, with **Creature size as in AD&D** ticked; with
+it unticked every target takes the small dice. The table gives each weapon spec's plain weapon's
+dice (the game's own, or the Loader's for the kinds the game has none of); a weapon's plus, a
+weak material's penalty, STR and mastery's +3 damage add as ever.
+
+| Weapon spec | Man-sized or smaller | Large | Grand mastery, man-sized or smaller | Grand mastery, large |
+|---|---|---|---|---|
+| long sword | 1d8 | 1d12 | 1d10 | 1d20 |
+| club | 1d6 | 1d3 | 1d8 | 1d4 |
+| dagger | 1d4 | 1d3 | 1d6 | 1d4 |
+| short sword | 1d6 | 1d8 | 1d8 | 1d10 |
+| mace | 1d6+1 | 1d6 | 1d8+1 | 1d8 |
+| axe | 1d8 | 1d10 | 1d10 | 1d12 |
+| great axe | 1d10 | 2d8 | 1d12 | 2d10 |
+| pick | 1d6+1 | 2d4 | 1d8+1 | 2d6 |
+| quarterstaff | 1d6 | 1d6 | 1d8 | 1d8 |
+| polearm | 1d10 | 2d6 | 1d12 | 2d8 |
+| gythka | 2d4 | 1d10 | 2d6 | 1d12 |
+| cahulaks | 1d6 | 1d6 | 1d8 | 1d8 |
+| chatkcha | 1d6+2 | 1d4+2 | 1d8+2 | 1d6+2 |
+| bow | 1d8 | 1d8 | 1d10 | 1d10 |
+| sling | 1d4 | 1d4 | 1d6 | 1d6 |
+| staff sling | 1d3 | 1d3 | 1d4 | 1d4 |
+
+A bow's, sling's or staff sling's dice are the weapon's own, as the game rolls them for a shot (a
+bow 1d8 with the game's arrows); missile weapons have no large dice of their own. The staff sling's
+are its stinkpot's, 1d3, with [Weapon traits](FEATURES.md#weapon-traits) ticked;
+unticked, the game's 1d4 (1d6 under grand mastery). The dice log shows
+the step on each hit: `(d10 for d8: grand mastery)`, and against a large target `(1d20 for 1d8: a
+large target, grand mastery)`.
 
 ### Choosing at creation
 
@@ -517,12 +554,12 @@ next level).
 The **Effects** screen lists the selected character's
 weapon specs under its effects ("SPECIALIZED IN", "MASTER OF", "GRAND MASTER
 OF", "EXPERT IN"); View Character's DAM line and the inventory screen's weapon
-lines count it (a staff sling specialist's `1.5x1D4+2`); the Characters tab
+lines count it (a staff sling specialist's `1.5x1D3+2`, its stinkpots' 1d3); the Characters tab
 lists them (**Weapons: long sword (grand mastery)**) and gives the attacks a
 round with each weapon ready, a missile weapon's its own (**Attacks: 3/2 a
 round with Long Sword, 1 with Axe, 3 with Bow**); and the dice log names it on
 each attack (`+1 specialized`, `+3 grand mastery`,
-`(d10 for d8: grand mastery)`). Both lists end with a ranger's bow, which
+`(d10 for d8: grand mastery)`; against a large target `(1d20 for 1d8: a large target, grand mastery)`). Both lists end with a ranger's bow, which
 every ranger is an expert with, chosen or not; and View Character, as the game
 has it, gives a character's melee rate whatever weapon is ready.
 

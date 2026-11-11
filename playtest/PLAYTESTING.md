@@ -234,6 +234,16 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   only in a new game: `pens-fire-count4`'s Scar still swung his old long sword. The route for it: a
   new game through the arena (about 25 minutes, below), Goodbye to Kurzak, `follow.py 29`,
   `setcount.py 4`, the fire room and its rests, `toarena.sh`.
+- **Reading a value inside a script** (2026-11-11): a test build whose repair PRINTs (4Fh, 98) a
+  field prints nothing for a number; print a marker string under an IF per guess instead (TEST
+  field == N, IF, PRINT " aN", ENDIF; the IF's address in `relocate`). Keep such a probe small: one
+  of about 200 tests (some 5 KB of detour) ran nothing at all, nor did 100 reading fields 72,n.
+  Item fields seen: 72 = the item's +00h (its kind, minus its object), 85 = its slot (+11h); no
+  field 0-99, nor 72,0-99, gave its type. The game's command table is words at DS:00C0h + 2 x
+  command, the handlers in segment 5DFh (the dispatcher at linear 5FE9h, `call [bx+0C0h]`): dump
+  memory with live.py (`gd.guest.read(0, 0xA0000)`) and `ndisasm -b16 -o OFF`. 41h (5DF:1895h)
+  stores its value, an object's number (or a kind, looked up), in 3923:361h (object 2Ch); 49h
+  (5DF:140Ah), the item loop, copies each item into one scratch object (2Bh, 3923:35Fh).
 - **The arena's flags and numbers can't be set from outside** (2026-11-05): the pointers at
   DS:1352h and 1356h stay null in the arena even while a script waits on a message, so a poller
   never found them. To test a script's branch there, build a copy of the scripts with the test
@@ -266,6 +276,36 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   with the Shinobi kit in memory (class 17 at sheet +21h, level +24h, kit byte +43h = 3, flags 0400h).
   `give` adds the defilers' scrolls (`defilerscrolls.scroll`). Never save after. live.py's `gd` has
   no rules set, so `gd.kit_ids` reads []: use `kitpages.kits_of(gd.sheet(m))`.
+- **No call from Kurzak after a rest** (2026-11-11, logs/2026-11-11-arrows-sound-and-no-call.md): check
+  flag 497 (`state.py 497`). The Trustee's key used on a door sets it (GPLI routine 752, script 137 at
+  1h) and the call script then never calls, until the party talks to a guard carrying routine 753
+  (objects 55, 260, 261; MAS 29 makes them). `KIND='MAS ' dec.py 29 0 140` decodes the pens' master
+  script; GPLI 1 is the index of named routines (id, offset, script: 2-byte words). The game clock:
+  the dword at DS:9B72h's far pointer, in seconds (a rest adds 28,808).
+- **A Spellarcher for a test** (2026-11-11): a sheet made a half-elf (+18h 4) fighter/preserver (+21h
+  9, 11) with kit byte +43h 1, and `spellsetup.py M=5 10 1 3 39`; the arrow buttons are the USE
+  screen's row under SPELLS LEFT (157,147 the first; a slow press), not the top row (the spells).
+- **A lock barred until a level** (2026-11-11, logs/2026-11-11-lock-retry.md): Pehtucl's chest with a
+  1st-level thief (`thief.py 0 1`) fails easily; a second use reads "failed this lock at this thief
+  level", and `thief.py 0 2` lets it roll again. `chestuse.sh` cycles the pointer with two right-clicks:
+  after a use the eye is still up, so set it with `pointer.py look` instead. If the eye shows red
+  over the chest, `pointer.py walk` then `look` again.
+- **Pointer trails** (2026-11-11): sweeping the pointer with `xdotool mousemove_relative` (DOSBox takes
+  only relative moves) while asking for view redraws (DSCLOG header +242 = 1, 30 a second) showed no
+  trails, before or after the fix (interrupts off again while DSCLOG draws: DRAW_MASKED).
+- **The pens' weapon rack** (2026-11-11, logs/2026-11-11-semyon-rack.md): `rackcheck.py` shows it (object
+  2599), what's in it and where any Thornwall is. A rack the party emptied has contents 9999 (no list).
+- **Looting** (2026-11-11, logs/2026-11-11-looting.md): the look pointer's slow press on a body opens its
+  window; `dsword.py 5E6` reads its map thing (9999 shut). **T** / **Shift+T** (`xdotool key shift+t`)
+  with it open take everything / all but plain weapons; Escape shuts it.
+- **Selling with S** (2026-11-11, logs/2026-11-11-selling.md): Kalzith's shop (his look box's first button
+  Talk at 163,86; 1, then 1 "Show us what you have"); S on the shop sells the plain gear of the member
+  on show (the game's 3931h:25Bh; a portrait click changes it). Kalzith moves: zoom a shot to find him.
+- **Shop and pocket tools** (2026-11-11): `openshop.sh` (Kalzith's shop from `selling-junk-user`, finding
+  him from memory), `pocket.sh X Y NAME` (one pocket try by the thief at USE-screen portrait X,Y on NAME;
+  its result window wants the key 1), `carried.py NAME` (what someone carries, with name numbers). `bodyitems.py` lists what each dead body on the map holds (name, type, plus, power, value).
+  The game's SELL: an item on the pointer, SELL 265,63, TAKE IT 140,91. Backpack cells on the shop
+  screen run down two columns (193,26 and 211,26, 18 apart).
 - **Hearing the game** (2026-11-05): start.sh sends DOSBox's sound to a file when `PT_AUDIO` names
   one (`export PT_AUDIO=$WORK/audio.raw` before start.sh or loadsave.sh; else /dev/null): raw
   16-bit stereo at 44100 Hz, about 176 KB a second, real time. Note the file's size before and
@@ -278,6 +318,9 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   with 3 s between, the raw file's size noted round each, then the peak and the loudest 400 ms RMS of
   each stretch (numpy over the memmap): the game's fight sounds peak about 2,960, RMS -27 to -31 dBFS.
   A sound's descriptor +6 is its priority: the game skips one lower than the sound playing.
+  **The descriptor's +0Ah (6Eh) is not a volume** (2026-11-10, logs/2026-11-10-sounds-denser.md): set
+  from 20 to 127 the output peaked at 2,957 each time. DOSBox plays every clip at the same peak, so a
+  quiet clip can only be made denser (make.py's soft-limiter drive): hide now -27.5, pick -30.5 dBFS.
 - **The game's table of sounds** (2026-11-05): at load segment + 3A98h, offset 08A2h, 6 bytes each:
   +1 the kind (5 a digital clip), +2 a far pointer to a 12-byte descriptor (+7 its BVOC). 0-130
   are digital, 131-180 another kind (4), past 180 other data: a BVOC numbered past 130 isn't
@@ -806,6 +849,21 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   Cahulaks +2's) and +0Ah (its type) through live.py (the items at the far pointer DS:165Dh, 15h
   bytes each; Lex's 43 the right hand, 36 the missile slot in `fountain-user`), then I and the
   member's portrait: the slot draws the object's icon (the box's text stays the old item's).
+- **A shot with a weapon put in memory** (2026-11-10, logs/2026-11-10-stinkpots.md): a missile-slot
+  weapon replaced by another type (the scratch `setitem.py ITEM TYPE` in that log: a SEGOBJEX record,
+  link, flags and slot kept) shoots on the member's turn with `pointer.py attack` and a click on the
+  foe's figure, about 10 pixels above its feet (DS:669Dh + 32 x combatant, less the camera); beside the
+  figure the pointer shows the red "can't" sign and nothing happens.
+- **Melee reach isn't the type's range byte** (2026-11-10, logs/2026-11-10-polearm-reach.md): a polearm
+  with its type's +0Ah set to 2, held alone, with Move 0, two squares from a held foe: the attack does
+  nothing and the turn passes; with a bow in the missile slot the click shoots it instead. To take a held
+  item out in memory: `ring.unlink(gd, ring.Items(gd), ITEM, "why")` through live.py.
+- **A weapon spec's grand master for a test** (2026-11-10, logs/2026-11-10-grand-mastery-large.md): write
+  the member's sheet (the far pointer DS:1661h + (creature +4) x 47h) classes (9,0,0), levels (9,0,0) and
+  +14h-+17h `01 00 00 00` (the long sword, unpacked; a sheet's +16h top bit marks them packed), then
+  `specialize.skill(sheet, ITEM_TYPE)` reads 5 (GRAND). `foeset.py C race=5` makes a kind large (a sheet
+  is shared, so one combatant of each). With every foe held, Tab chooses the nearest foe even when the
+  member can't reach it: the END menu then opens with Move 0 (E ends the turn).
 - **Every HP change with its time** (2026-11-10, logs/2026-11-10-held-damage.md): a poller of each
   combatant's HP (creature +0) every 10 ms, printing each change with the seconds since its start, run
   in the background just before Tab + Return, shows falls the dice log's lines merge or order
@@ -1214,6 +1272,11 @@ was saved a little further on, in the corridor at (1672, 344) with Kurzak beside
   266 at 1264,848 is gone or flag 317 is set; otherwise "presses the button, but nothing happens".)
 - The grate, object 1234 at map (46, 86) (square 2, 5), the far northwest; walking onto squares
   3-4, 5-6 (map 48-79, 80-111) runs its menu (137:29Bh): Pick the lock / Rip it open / Hack the lock off.
+  From `saves/grate-user` (Cromwell leading, beside it): `walkto.py 60 100`, then the Y key, then
+  the reply's number key (`xdotool key --window <DOSBox's window> 2`). The weapon search runs as the
+  menu is made, before the question. Hack is offered for the first melee weapon in either hand
+  (2026-11-11); `itemedit.py 0 2 slot=3` then `itemedit.py 0 3 slot=2` (just after loading) puts
+  Cromwell's Bow in the weapon hand and the Axe out: then only Rip it open / Leave.
 - **The weapon rack** (Thornwall's, object 2599) is at square (48, 34), map (779, 550), in the room
   west of the door at (65, 38-39); from (52, 36) beside it the game has made it. Its contents (map
   object 478 on 2026-11-04): Polearm, Quarterstaff, Polearm, Axe, with Thornwall first once

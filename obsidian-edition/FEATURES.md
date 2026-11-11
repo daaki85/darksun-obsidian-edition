@@ -42,7 +42,10 @@ running the game, the Loader's window and its dice log are in the
   - [Weapons and armour](#weapons-and-armour)
     - [Two weapons](#two-weapons)
     - [Half-giants' two-handed weapons](#half-giants-two-handed-weapons)
-    - [Cahulaks](#cahulaks)
+    - [Weapon traits](#weapon-traits)
+      - [Cahulaks](#cahulaks)
+      - [Staff sling stinkpots](#staff-sling-stinkpots)
+      - [Polearm reach](#polearm-reach)
     - [Creature size](#creature-size)
     - [Held targets](#held-targets)
     - [Rings and cloaks of protection](#rings-and-cloaks-of-protection)
@@ -80,6 +83,7 @@ running the game, the Loader's window and its dice log are in the
     - [Semyon](#semyon)
     - [What Dinos and the Trustee say about them](#what-dinos-and-the-trustee-say-about-them)
   - [The champions' bout](#the-champions-bout)
+  - [Legcrusher at the fountain](#legcrusher-at-the-fountain)
   - [The cooked vulture](#the-cooked-vulture)
   - [Defilers' scrolls](#defilers-scrolls)
 - [Graphics](#graphics)
@@ -91,6 +95,8 @@ running the game, the Loader's window and its dice log are in the
   - [Magic items' icons](#magic-items-icons)
   - [Spells on the ground](#spells-on-the-ground)
 - [Controls](#controls)
+  - [Looting a body: T and Shift+T](#looting-a-body-t-and-shiftt)
+  - [Selling plain gear: S](#selling-plain-gear-s)
   - [Choosing an enemy: Tab, Enter and the rings](#choosing-an-enemy-tab-enter-and-the-rings)
   - [Scrolling the map](#scrolling-the-map)
   - [M, U and I: open a screen, close it again](#m-u-and-i-open-a-screen-close-it-again)
@@ -118,9 +124,9 @@ With **A combat log in the game** ticked on the Options tab (the default),
 **L** on the map shows the [dice log](README.md#the-dice-log)'s lines in the game
 itself, and **L** again hides them: in a fight or out of one, whenever you
 want to read back. It doesn't open by itself, and stays as you left it (from
-one game to the next too). The lines are in a small font of the Loader's, 7
-pixels a line (the game's own is 9, so 8 lines fit where 6 did), with the
-game's drop shadow; the header, buttons and filters are in the game's font. The
+one game to the next too). The lines are in a small font of the Loader's, 8
+pixels a line with its drop shadow (the game's own is 9, so 7 lines fit where
+6 did); the header, buttons and filters are in the game's font. The
 lines are in the Loader's colours for each kind of line (hits green, misses grey, damage
 amber, saving throws blue), the party's names in their colours and the
 monsters' in red, a filled pip before a party member's line and a hollow one
@@ -176,8 +182,8 @@ there; **-** makes it smaller.
 - **Its buttons**, on the right of its top line: **L**, which hides it as the
   key does; the level (**Least**, **Short**, **Detail**; a click goes to the
   next, and the Options tab follows); and **-** and **+** for a smaller or
-  bigger panel. It starts at eight lines; collapsed, it is one line, the
-  newest; expanded, it is taller (14 lines) and has filters along its top: **All**, **Party** (the
+  bigger panel. It starts at seven lines; collapsed, it is one line, the
+  newest; expanded, it is taller (12 lines) and has filters along its top: **All**, **Party** (the
   party's lines), **Damage** (hits, damage and deaths) and **Saves** (saving
   throws and magic resistance). Its size is remembered.
 
@@ -853,7 +859,9 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#level-cap-by-xp).
 |---|---|---|
 | [Two weapons](#two-weapons) | no penalty (a small bonus at DEX 5 or less), and each hand attacks at the whole rate | −2 main hand, −4 off hand, DEX's reaction adjustment added; rangers, Twin-blades and Battle Dancers none in light armour, a Justifier none in any, a Ghetto Fighter 0 and −2; the off hand attacks once a round |
 | [Half-giants' two-handed weapons](#half-giants-two-handed-weapons) | two hands for a two-handed weapon, as for anyone | a half-giant wields a two-handed weapon in one hand |
-| [Cahulaks](#cahulaks) | a plain two-handed 1d6 weapon | a head in each hand: one attack more a round at −2 and −4 (DEX added); a hit tangles a man-sized or smaller foe (not anyone Enlarged) that fails a save against petrification: it loses its next turn |
+| [Weapon traits](#weapon-traits): [cahulaks](#cahulaks) | a plain two-handed 1d6 weapon | a head in each hand: one attack more a round at −2 and −4 (DEX added); a hit tangles a man-sized or smaller foe (not anyone Enlarged) that fails a save against petrification: it loses its next turn |
+| [Weapon traits](#weapon-traits): [the staff sling](#staff-sling-stinkpots) | the staff sling shoots for 1d4 | it throws stinkpots: 1d3, and a target hit, unless undead or immune to poison, saves against poison or is nauseated, −2 to hit for 1d3+1 rounds |
+| [Weapon traits](#weapon-traits): [polearm reach](#polearm-reach) | a polearm strikes only an adjacent foe | a polearm held with no other weapon in the hands strikes a foe two squares away too |
 | [Creature size](#creature-size) | no sizes: a weapon does the same to a halfling and a Bulette; Hold Person and Charm Person take on a half-giant | a large target (a half-giant, a large monster, anyone Enlarged) takes AD&D's large weapon dice (a long sword 1d12); Hold Person, Charm Person and Charm Person or Mammal (on a person) don't take on it |
 | [Held targets](#held-targets) | a blow on a held or Out Cold creature rolls to hit as ever and does double damage | it hits automatically and does normal damage, as AD&D's held target |
 | [Rings and cloaks of protection](#rings-and-cloaks-of-protection) | no rings or cloaks of protection of its own; the mod's count in full, whatever else is worn | two rings don't add up, a ring gives no AC with magical armour, a cloak does nothing with magical or metal armour or a shield |
@@ -904,11 +912,18 @@ weapon's line: that is its weapon type, not a limit.
 
 How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#half-giants-two-handed-weapons).
 
-#### Cahulaks
+#### Weapon traits
+
+One switch, **Weapon traits** (on unless unticked), gives weapons what AD&D's books give
+them and the game doesn't: the [cahulaks](#cahulaks) their two heads and their tangle, the
+[staff sling](#staff-sling-stinkpots) its stinkpots, and the [polearm](#polearm-reach) its reach.
+Untick it and all are the game's.
+
+##### Cahulaks
 
 Cahulaks are a pair of four-bladed heads tied to the ends of a rope, as Dark Sun's
-rules describe them: one head in each hand. With **Cahulaks as Dark Sun's
-rules have them** ticked (on unless unticked):
+rules describe them: one head in each hand. With **Weapon traits** ticked
+(on unless unticked):
 
 - **A head in each hand.** The wielder attacks one more time a round, with the
   off head, under the [two-weapon](#two-weapons) penalties whether that box is
@@ -944,6 +959,60 @@ Lex attacks Templar with Bone Cahulaks (1d6): d20 = 16, needs 16+ (25%), hits AC
 
 How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#cahulaks).
 
+##### Staff sling stinkpots
+
+AD&D's *Arms and Equipment Guide* gives the staff sling a stinkpot to throw: a clay pot of burning
+sulphur. With **Weapon traits** ticked (on unless unticked), the staff sling's standard shot
+is one:
+
+- **Damage 1d3** crushing, against any size (the game's staff sling 1d4). The inventory's and the
+  item box's damage lines say 1D3; a grand master's die is the next size, 1d4
+  ([Grand mastery's damage](KITS.md#grand-masterys-damage)).
+- **The fumes.** A hit that does damage makes the target save against poison (paralysis, poison or
+  death: the game's own saving throw, as against a monster's poisoned hit, with every bonus the game
+  gives it; a held or sleeping target fails). On a failure it is **Nauseated** for 1d3+1 rounds:
+  −2 on its attack rolls. The Effects screen, the Look box and the portrait's status name it
+  NAUSEATED. Undead, and anything immune to poison, are unaffected. A second stinkpot on a
+  nauseated creature brings its own rounds, which run beside the first's: the −2 lasts until the
+  last of them ends, and never doubles. It is fumes, not magic: Dispel Magic doesn't end it (the
+  game's Dispel Magic weighs only effects 0 to 73, and Nauseated is 75).
+
+Untick it and the staff sling is the game's: 1d4, no fumes (a creature already nauseated stays so
+until its rounds run out). The dice log names the save and what came of it:
+
+```
+Templar's saving throw vs a stinkpot from Lex (paralysis/poison/death): d20 = 7, needs 14 (40% to save) -> failed: nauseated
+    Lex's stinkpot: Templar is nauseated, -2 to hit for 1d3+1 = 2 + 1 = 3 rounds
+```
+
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#staff-sling-stinkpots).
+
+##### Polearm reach
+
+A polearm is a long shaft with a blade or a hook at its end: it reaches past the square beside its
+wielder. With **Weapon traits** ticked (on unless unticked), a combatant whose hands hold a polearm
+and no other weapon strikes in melee at two squares as well as at one: two squares straight, or two
+across and one along. The other hand may hold a shield (a half-giant holds a polearm in one hand) or
+nothing; the missile slot doesn't count, so a bow there is fine. A second weapon in a hand, a second
+polearm too, takes the reach away. It holds for the party and its foes alike: the attack pointer
+shows the sword over a foe two squares away, a click on it swings, and the walk arrow's click on it
+attacks from where the wielder stands. Every polearm has it: the bone and the metal polearm, the
+Polearm +1, ***Thornwall*** and ***Linebreaker***.
+
+What it doesn't do:
+
+- **Two squares diagonally** (two across and two along) count as three, as the game measures: no
+  reach there.
+- It reaches **over a creature** standing between, friend or foe. A wall between stops it.
+- With a bow in the missile slot, a click on a foe two squares away swings the polearm rather than
+  shooting: the foe is in reach. From three squares on, the bow shoots as before.
+- A foe the computer controls still walks up beside its target when it closes in; it uses the reach
+  only against someone already two squares away.
+
+Untick it and a polearm strikes only an adjacent foe, as in the game.
+
+How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#polearm-reach).
+
 #### Creature size
 
 AD&D gives every creature a size, and some of its rules go by it; the game keeps
@@ -964,18 +1033,21 @@ their kind...), and **anyone Enlarged**, whatever their size.
   | Dagger | 1d4 | 1d3 |
   | Club | 1d6 | 1d3 |
   | Mace | 1d6+1 | 1d6 |
-  | Pick | 1d4+1 | 1d4 |
+  | Pick | 1d6+1 | 2d4 |
+  | Axe | 1d8 | 1d10 |
   | Chatkcha | 1d6+2 | 1d4+2 |
   | Great axe | 1d10 | 2d8 |
   | Polearm | 1d10 | 2d6 |
   | Gythka | 2d4 | 1d10 |
-  | Axe, quarterstaff, cahulaks, bow, sling, staff sling | as the game | the same |
+  | Quarterstaff, cahulaks, bow, sling | as the game | the same |
+  | Staff sling | 1d3 with [Weapon traits](#staff-sling-stinkpots) (the game: 1d4) | the same |
   | Shillelagh | 1d6+1 (the game: 2d4) | 2d4 |
   | Spiritual Hammer | 1d4+1 | 1d4 |
 
   Where the dice come from: AD&D 2nd Edition's *Player's Handbook* weapons table, each weapon by
-  the entry whose small and man-sized dice are the game's (its pick is the horseman's pick,
-  1d4+1/1d4, 4 lb as the game's 40); the great axe the *Complete Book of Dwarves*' two-handed
+  the entry whose small and man-sized dice are the game's; the pick the footman's pick and the
+  axe the battle axe of *Player's Option: Skills & Powers* (1d6+1/2d4 and 1d8/1d10: the pick was
+  the horseman's, 1d4+1/1d4, and its 1d6+1 is the mod's, with no switch); the great axe the *Complete Book of Dwarves*' two-handed
   battle axe (1d10/2d8); the chatkcha, the gythka and the cahulaks from
   [a Dark Sun weapons guide](https://www.geocities.ws/danach.geo/guide_1.html), which also gives a
   thri-kreen's chatkcha its 2/1.
@@ -1173,6 +1245,9 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#preservers-int).
 
 #### Spells saved against with the spell save
 
+One switch, **Saving throws against spells**, gives this and [DEX instead of a doubled
+d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20) together.
+
 Almost every spell is marked for a save the game treats as
 petrification/polymorph; with this rule it is the spell save. The spells
 marked for paralysis/poison/death (the poison clouds, Poison, Slay Living, the
@@ -1186,7 +1261,7 @@ How it works:
 #### Fire, cold and electricity: DEX instead of a doubled d20
 
 The game doubles the save's d20 against those spells (and nine monsters'
-attacks of those kinds). With this rule the d20 isn't doubled and AD&D's DEX
+attacks of those kinds). With **Saving throws against spells** ticked the d20 isn't doubled and AD&D's DEX
 defensive adjustment is added instead, as AD&D does for attacks that can be
 dodged: −5 at DEX 1, −4 at 3, −3 at 4, ... none for 7-14, +1 at 15, +2 at 16,
 +3 at 17, +4 at 18-20, +5 at 21-23 and +6 at 24-25. Fireball stays dangerous
@@ -1545,18 +1620,16 @@ effect at once; untick one and the game is as it was.
 
 | Box on the Options tab | What it adds |
 |---|---|
-| [The leader's CHA at shops](#the-leaders-cha-at-shops) | the party leader's CHA 18 or more lowers what shops ask, 5% to 40% at 25; shops pay 60% |
-| [Buying back magical items](#buying-back-magical-items) | a magical item sold stays in the merchant's stock, to buy back |
-| [Thief skills from AD&D's table](#thief-skills-from-adds-table) | AD&D's table by level, with Dark Sun's race and DEX adjustments |
+| [Shops as in AD&D](#the-leaders-cha-at-shops) | the party leader's CHA 18 or more lowers what shops ask, 5% to 40% at 25; shops pay 60%; a magical item sold stays in the merchant's stock, to [buy back](#buying-back-magical-items) |
+| [Thieves as in AD&D](#thief-skills-from-adds-table) | AD&D's thief skill table by level, with Dark Sun's race and DEX adjustments; a backstab multiplies the weapon's dice only, STR and magic added after, on the round's first attack only; a lock or pocket failed is tried again by that thief only after a level gained |
 | [Hiding in shadows to backstab](#hiding-in-shadows-to-backstab) | thieves hide and move silently to backstab, rangers to attack from behind |
 | ... [a worn cloak, boots and belt](#hiding-in-shadows-to-backstab) | the box under it: +10 hiding, +10 moving silently, +5 picking pockets and opening locks |
-| [A backstab multiplies the weapon's dice only](#hiding-in-shadows-to-backstab) | STR and magic added after, on the round's first attack only, as in AD&D |
 | [Picking pockets](#picking-pockets) | a thief's Pick Pockets button, then anyone in sight, until caught |
 
 ### The leader's CHA at shops
 
-The game's shops ask an item's price whoever buys. With **The leader's CHA at
-shops** ticked, the party leader's CHA lowers it, 5% from CHA 18 and 5% more
+The game's shops ask an item's price whoever buys. With **Shops as in AD&D**
+ticked (one switch with [buying back magical items](#buying-back-magical-items)), the party leader's CHA lowers it, 5% from CHA 18 and 5% more
 for each point after, to 40% at 25 (the highest a CHA can be):
 
 | Leader's CHA | 17 or less | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 |
@@ -1574,8 +1647,8 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#the-leaders-cha-at-sho
 
 ### Buying back magical items
 
-The game destroys whatever the party sells. With **Buying back magical
-items** ticked, a magical item sold (one with a plus, or a power:
+The game destroys whatever the party sells. With **Shops as in AD&D** ticked
+(one switch with [the leader's CHA](#the-leaders-cha-at-shops)), a magical item sold (one with a plus, or a power:
 a ring, a wand, a scroll...) goes into the merchant's pack instead, and the
 shop offers it for sale at its price, less the leader's CHA discount, so it
 can be bought back. Anything else sold is gone, as in the game. With the CHA
@@ -1598,7 +1671,7 @@ The game's thief skills come out high: a 3rd-level elf thief with DEX 22 has
 move silently 66 and hide in shadows 61. AD&D gives 27 and 20 at 3rd level
 before race and DEX. The game adds 4 a level to a base of its own, and its DEX
 formula gives move silently and hide in shadows less than Dark Sun's table at
-high DEX, and some other skills more. With **Thief skills from AD&D's table**
+high DEX, and some other skills more. With **Thieves as in AD&D**
 ticked, a skill is:
 
 - AD&D's average for the thief level (the Player's Handbook's table, carried on
@@ -1619,6 +1692,12 @@ The situation and effects then count as before. So Azil, a 3rd-level elf thief w
 DEX 22: pick pockets 40 + 5 + 27 = 72, open locks 58, find traps 47, move
 silently 62, hide in shadows 52, hear noise 20, climb walls 87. A ranger's
 move silently and hide in shadows take the same race and DEX adjustments.
+The same switch keeps a thief from a lock they failed until they have gained a
+thief level (*Player's Option: Skills & Powers*: "If a thief fails to open a
+lock, he cannot attempt to open that lock again until advancing a level"): the
+game's safe, the sewer grate, the cell doors and Pehtucl's chest. Tried again before, the
+roll fails at once, and the dice log says why. Another thief of the party may
+try it. A failed pocket is the same ([Picking pockets](#picking-pockets)).
 Untick it for the game's numbers.
 
 How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#thief-skills-from-adds-table).
@@ -1650,8 +1729,8 @@ Tezral attacks Slig BACKSTAB with Bone Long Sword (1d8): d20 = 11, needs 10+ (55
   Tezral hits Slig for 9: 1d8 = [1] -1 bone (raised to the minimum of 1) +7 STR 19 +1 backstab (the dice 1 x2 = 2)
 ```
 
-With **A backstab multiplies the weapon's dice only** (on unless unticked, in
-the same Options group) a backstab multiplies the weapon's dice and adds STR,
+With **Thieves as in AD&D** (on unless unticked; one switch with [AD&D's thief
+skills](#thief-skills-from-adds-table)) a backstab multiplies the weapon's dice and adds STR,
 the weapon's plus and the rest once, as AD&D has it: `1d8 = [5] +12 STR 24 +10
 backstab (the dice 5 x3 = 15)` is 27 (the 5 rolled and the 10 more that x3
 adds) where the game made it 51. The multiplier is x2 at thief levels 1-4, x3
@@ -1761,7 +1840,9 @@ a worn belt's 5 counted, as in the thief rows):
   own sound; the three weapons keep the quest's).
   This goes by what each thing is, wherever its owner keeps it.
 - **Failure:** a move silently roll. Made, the thief slips away unnoticed;
-  missed, they're caught.
+  missed, they're caught. With **Thieves as in AD&D**, a thief who slipped away
+  can't try that person again until they have gained a thief level ("Daaki
+  needs another level to try them again."); another thief of the party can.
 
 With nothing like that left on them, the thief takes what's in their purse
 instead: ceramic pieces, 2 to 5 for each of the thief's levels (a 4th-level
@@ -2218,10 +2299,32 @@ They fight with their weapons, the two archers shooting, and their armour counts
 on top of their kinds' AC, as the party's does (and as the game's own people's
 do: [their gear is worn](GAME-BUGS.md#who-turns-up-and-how) from the start too).
 What they carry is on their bodies afterwards; the Tohr-kreen falls as a dead
-Tohr-kreen of its own, Kreenfang in it. It comes once. A party that breaks out
+Tohr-kreen of its own (as every thri-kreen now does), Kreenfang in it. It comes once. A party that breaks out
 with Scar instead, or leaves the pens another way, doesn't meet them.
 
 How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#the-champions-bout).
+
+### Legcrusher at the fountain
+
+(Always on, with no switch.)
+
+When the party is slow to answer Kurzak's call, he sends Legcrusher, the pens'
+half-giant, to fetch them. If Legcrusher finds them at the fountain (its room or
+the passage before it, where the fountain's roar already masks a guard's yell),
+he doesn't deliver his warning: he sees the gladiators out of their cells, yells
+for the guards, the fountain drowns him, and he attacks, alone:
+
+> Gladiators out of cells! Bad gladiators! Guards! GUARDS!
+>
+> *Legcrusher tries to yell for help but the roar of the fountain masks his voice.*
+>
+> Nobody come? Then Legcrusher take you back himself!
+
+(three windows: his face, the window's plain emblem for the narration, his face again)
+
+No alarm goes up and no guards come. Killed, he is missed: Kurzak's later lines
+say his monster trainer has gone (how: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#the-games-script-bugs), "Kurzak and Legcrusher").
+Elsewhere Legcrusher says what the game has him say.
 
 ### The cooked vulture
 
@@ -2441,8 +2544,51 @@ How it works:
 
 ## Controls
 
-Each has a switch in the Options tab's **Controls** section, but M, U and I,
-which are always on.
+Each has a switch in the Options tab's **Controls** section, except M, U and I,
+T and Shift+T (looting) and S (selling), which are always on.
+
+### Looting a body: T and Shift+T
+
+With a body's window open (the look pointer on a body, or on a chest, a
+container of any kind), **T** takes everything in it and **Shift+T** everything
+but plain weapons (a weapon with no plus and no power: the guards' bone and
+wooden swords, bows and clubs). The window closes, and each thing goes into a
+backpack, in the order the window shows them: the first party member's, in the
+party's order, that has a free cell (a member dying or dead takes nothing).
+What doesn't fit stays in the body, and so do the plain weapons for Shift+T:
+open it again and press T to take those too. The purse's jingle plays, and the
+dice log says who took what:
+
+```
+Lex takes Slavepen key, Grapes, Guava (4), Obsidian Bloodwrath +1
+Ester takes Leather Belt, Leather Arm Armor, Leather Chest Armor, Wooden Arrows
+Plain weapons left: Wooden Bow, Obsidian Long Sword
+```
+
+*Without the mod:* each thing is a click to take it from the window and another
+to put it down, a body at a time.
+
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#looting-a-body-t-and-shiftt).
+
+### Selling plain gear: S
+
+On a shop's screen, **S** sells everything plain in the backpack of the party
+member on show: weapons, armour, shields and anything worn (a cloak, boots, a
+belt) with no plus and no magic. What the member wears or holds stays, and so
+does ammunition (arrows, bolts, sling stones), anything of metal (rare on
+Athas), anything magic, keys, scrolls, food, water and gems, and whatever the
+shop won't buy. Each thing fetches what the shop would pay for it on its own
+(a stack, its price times its count; with **Shops as in AD&D**, 60% of its
+price), the shop closes back to the merchant's talk, the purse jingles, and the
+dice log lists the sale:
+
+```
+Gerakis sells 9 things for 95 ceramic pieces: Wooden Club 1, Bone Axe 4, ...
+```
+
+Ask to see the wares again to go on, with another member on show.
+
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#selling-plain-gear-s).
 
 ### Choosing an enemy: Tab, Enter and the rings
 

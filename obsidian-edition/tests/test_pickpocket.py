@@ -186,6 +186,21 @@ class PickTests(unittest.TestCase):
         self.assertFalse(result.lifted)  # (no sound)
         self.assertEqual(self.attempt(5).text, "Dag lifts Bag from Guard unnoticed.")
 
+    def test_fumbled_with_thieves_as_in_add(self):
+        """Thieves as in AD&D: unnoticed, he may try that person's pockets again only once he has
+        gained a thief level (Player's Option: Skills & Powers)."""
+        from test_dicelog import SHEETS
+        self.log.game.rules |= game.RULE_THIEF_TABLE
+        result = self.attempt(50, 16)
+        self.assertEqual(result.text, "Dag fumbles Guard's pockets, but slips away unnoticed. "
+                                      "Dag needs another level to try them again.")
+        self.assertTrue(result.key.endswith("|fumbled|Dag|L4"))
+        self.tried.add(result.key)  # (as the dice log does)
+        self.assertEqual(self.attempt(5).text, "Dag fumbled Guard's pockets before: Dag needs another level to "
+                                               "try them again.")
+        self.m[SHEETS + game.SHEET_LEVELS + 1] = 5  # (a thief level gained)
+        self.assertEqual(self.attempt(5).text, "Dag lifts Bag from Guard unnoticed.")
+
     def test_not_a_thief(self):
         from test_dicelog import SHEETS
         self.m[SHEETS + game.SHEET_CLASSES + 1] = 0

@@ -251,6 +251,8 @@ def _keep_aside() -> None:
 def save_settings(settings: dict) -> None:
     """Written whole or not at all: into a temporary file of this write's own (two Loaders, or the
     window and `play`, never share one), then put in settings.json's place."""
+    from . import game
+    game.fold_merged(settings)  # (a merged-away switch's untick kept in the one it joined)
     settings["settings_version"] = SETTINGS_VERSION
     with SETTINGS_LOCK:
         fd, tmp = tempfile.mkstemp(prefix=os.path.basename(SETTINGS) + ".", suffix=".tmp",
@@ -998,7 +1000,7 @@ def effective_switches(settings: dict) -> Dict[str, object]:
     from . import game
     out: Dict[str, object] = {key: settings.get(key, default) for key, default in SWITCH_DEFAULTS.items()}
     out.update(content(settings))
-    out.update({key: bool(settings.get(key, settings.get(game.OLD_SETTING_NAMES.get(key, key), True)))
+    out.update({key: game.setting_on(settings, key)
                 for key, _ in game.RULE_SETTINGS})  # (as game.rules_from_settings reads them)
     from . import dicelog, rings
     out["rings"] = rings.mode(settings)  # (an older "all" is the chosen enemy's now)

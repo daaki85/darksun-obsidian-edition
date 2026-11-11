@@ -1,7 +1,9 @@
 """PROBE_SCROLL (the map's main loop asking where the pointer is) and interrupts: the pass's own work
-(the view drawn again, the panel, the labels, a sound) with interrupts on when the game had them on,
-off only where the original was (its INT 33h) and round TARGET_CLICK's calls to the game's mouse
-handler, which the driver calls with them off."""
+with interrupts on when the game had them on (a sound, the clicks), off where the original was (its
+INT 33h), round TARGET_CLICK's calls to the game's mouse handler, which the driver calls with them
+off, and while DSCLOG draws on the screen (DRAW_MASKED: the view drawn again, the panel, the labels,
+the dust): the game draws its pointer from the mouse's interrupt, and one drawn in the middle of
+those left images of itself on the map (the user's report after 2.15.0, which drew with them on)."""
 import os
 import struct
 import subprocess
@@ -120,14 +122,15 @@ class ScrollInterruptTests(unittest.TestCase):
         self.assertEqual(self.notes(CALLER * 16, 2), (100, 100))  # (where the pointer is)
         return mu.reg_read(td.r.UC_X86_REG_EFLAGS)
 
-    def test_redraw_with_interrupts_on(self):
-        """The view drawn again in the pass (VIEW_REDRAW): with interrupts on; the pointer read
-        with them off, as the game's own routine reads it; the caller's flags back."""
+    def test_redraw_with_interrupts_off(self):
+        """The view drawn again in the pass (VIEW_REDRAW): with interrupts off though the caller had
+        them on (DRAW_MASKED: no pointer drawn by the mouse's interrupt in the middle of it); the
+        pointer read with them off, as the game's own routine reads it; the caller's flags back."""
         self.word("view_redraw", 1)
         flags = self.run_pass(IF)
         drew_flags, drew = self.notes(self.centre + 0x200, 2)
         self.assertEqual(drew, 1)
-        self.assertTrue(drew_flags & IF, hex(drew_flags))
+        self.assertFalse(drew_flags & IF, hex(drew_flags))
         read_flags, = self.notes(STUBS * 16 + 0x100)
         self.assertFalse(read_flags & IF, hex(read_flags))
         self.assertTrue(flags & IF)
@@ -142,7 +145,7 @@ class ScrollInterruptTests(unittest.TestCase):
 
     def test_target_click_with_interrupts_off(self):
         """TARGET_CLICK's press and release reach the game's mouse handler with interrupts off (as
-        the driver calls it), though the rest of the pass has them on."""
+        the driver calls it), and the view is drawn with them off too (DRAW_MASKED)."""
         self.word("game_mask", 0x7F)
         self.word("hit_target", 5)
         self.mu.mem_write(GAME_DS * 16 + MAP_THINGS + 5 * 32 + 9, struct.pack("<HH", 150, 120))
@@ -154,7 +157,7 @@ class ScrollInterruptTests(unittest.TestCase):
         self.assertFalse(handler_flags & IF, hex(handler_flags))
         drew_flags, drew = self.notes(self.centre + 0x200, 2)
         self.assertEqual(drew, 1)
-        self.assertTrue(drew_flags & IF)
+        self.assertFalse(drew_flags & IF)
 
 
 if __name__ == "__main__":

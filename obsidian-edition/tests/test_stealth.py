@@ -162,6 +162,30 @@ class StealthTests(unittest.TestCase):
         self.assertEqual(stealth.turn(self.gd, 0, rolls()),
                          (["Dag can't hide in shadows: Mountain Stalker is right beside them"], False))
 
+    def big(self, size):
+        """The Mountain Stalker's footprint byte (+3Dh: squares to each side, & 7; squares north, / 8)."""
+        rec = CREATURES + STALKER * game.CREATURE_SIZE
+        index = struct.unpack_from("<H", self.m, rec + game.CREATURE_SHEET_INDEX)[0]
+        self.m[SHEETS + index * game.SHEET_SIZE + stealth.SHEET_FOOTPRINT] = size
+
+    def test_big_enemy_beside(self):
+        """A big creature (an otyugh) covers more than its own square: the game's distance routine
+        counts every square of it, and so does the rule. Two squares east, one square to each side
+        of it: its west square touches the thief's."""
+        self.place(0x29, 12, 10)
+        self.assertTrue(stealth.turn(self.gd, 0, rolls(1, 1))[1])
+        self.big(1)
+        self.assertEqual(stealth.turn(self.gd, 0, rolls())[1], False)
+
+    def test_big_enemy_north(self):
+        """Its depth reaches north of its square: two squares south of the thief, one deep."""
+        self.place(0x29, 10, 12)
+        self.assertTrue(stealth.turn(self.gd, 0, rolls(1, 1))[1])
+        self.big(1 << 3)
+        self.assertEqual(stealth.turn(self.gd, 0, rolls())[1], False)
+        self.place(0x29, 10, 8)  # (north of the thief, its depth away from them)
+        self.assertTrue(stealth.turn(self.gd, 0, rolls(1, 1))[1])
+
     def test_shadowblade_beside(self):
         """A Shadowblade (a half-elf fighter/thief's kit) hides with an enemy right beside them."""
         from dsloader import kits

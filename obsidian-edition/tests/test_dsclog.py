@@ -1036,13 +1036,23 @@ class WornTests(unittest.TestCase):
 
     def test_champion_body(self):
         """Where the game makes a Dead Body (612E:2752h, its INT returning to 2754h): AX the body's
-        object, 1101, or the champions' Tohr-kreen's own (2666) for the dying creature's map object
-        ([BP+6], its object at DS:66AEh + 32 each) when that is the Tohr-kreen champion (2660)."""
-        mu = self.mu
-        for thing, obj, want in ((7, 292, 1101), (7, 2660, 2666), (40, -2660, 2666), (40, 2661, 1101)):
-            with self.subTest(thing=thing, obj=obj):
+        object, 1101, or a dead thri-kreen's (2666, champions.BODY) when the dying creature ([BP+6],
+        a map object: its creature's sheet, +18h the race) is a thri-kreen (8), any (the champions'
+        Tohr-kreen only till 2026-11-11, when the arena's died as a human's body), and the game has
+        the Loader's objects (OBJECTS_ON, header +218: 0, the game's own, which has no 2666)."""
+        mu, image = self.mu, load_image()
+        hdr = TSR * 16 + struct.unpack_from("<H", image, 20)[0]
+        things = (GAME_DS - 0x9E4) * 16 + 0xC36
+        SHEETS = 0xC000
+        mu.mem_write(GAME_DS * 16 + 0x1661, struct.pack("<HH", 0, SHEETS))
+        for thing, creature, sheet, race in ((7, 2, 5, 8), (40, 3, 6, 1)):
+            mu.mem_write(things + thing * 3, struct.pack("<BH", 2, creature))
+            mu.mem_write(self.CREATURES * 16 + creature * 0x3A + 4, struct.pack("<H", sheet))
+            mu.mem_write(SHEETS * 16 + sheet * 0x47 + 0x18, bytes([race]))
+        for on, thing, want in ((1, 7, 2666), (1, 40, 1101), (0, 7, 1101)):
+            with self.subTest(objects_on=on, thing=thing):
+                mu.mem_write(hdr + 218, struct.pack("<H", on))
                 mu.mem_write(SS * 16 + BP + 6, struct.pack("<H", thing))
-                mu.mem_write(GAME_DS * 16 + 0x66AE + thing * 32, struct.pack("<h", obj))
                 self.run_at(0x2752, eax=0x1234, ebx=0x5555, edx=0x6666)
                 self.assertEqual((mu.reg_read(r.UC_X86_REG_AX), mu.reg_read(r.UC_X86_REG_BX), mu.reg_read(r.UC_X86_REG_DX)),
                                  (want, 0x5555, 0x6666))
@@ -1598,7 +1608,7 @@ class SpecializeTests(unittest.TestCase):
             mu.mem_write(self.ITEM_TYPES * 16 + typ * 0x14, bytes(rec))
 
     def attack(self, halves, weapon, chosen=(), classes=(9, 0, 0), levels=(5, 0, 0), rules=4096, missile=False, race=0,
-               kit=0, shield=False, me=5, target_race=None, packed=False):
+               kit=0, shield=False, me=5, target_race=None, packed=False, sides=8):
         """(attacks in halves, THAC0, damage bonus, sides) after both probes, with THAC0 15, a
         damage bonus of 1 before the STR bonus of 2 is added, 1d8; the attacker (thing 7,
         creature 5) with a shield in its left hand or none (SHIELD)."""
@@ -1638,7 +1648,7 @@ class SpecializeTests(unittest.TestCase):
         mu.mem_write(SS * 16 + BP + 0x0A, struct.pack("<H", 15))
         mu.mem_write(SS * 16 + BP + 0x10, struct.pack("<H", 3))
         mu.mem_write(SS * 16 + BP + 0x14, struct.pack("<HHH", weapon, 2 if missile else 0, 7))
-        mu.mem_write(SS * 16 + BP - 0x12, struct.pack("<HHH", 1, 8, 1))  # damage bonus, sides, count
+        mu.mem_write(SS * 16 + BP - 0x12, struct.pack("<HHH", 1, sides, 1))  # damage bonus, sides, count
         mu.mem_write(CALLER * 16 + 0x600, bytes((0xCD, VEC_ATTACKS, 0x90, 0x90, 0xB8, 2, 0, 0xCD, VEC_SPEC_DAMAGE, 0x90)))
         for name, value in dict(cs=CALLER, ds=self.DS, ss=SS, esp=0x7FC, ebp=BP, eflags=IF | 2, eax=halves,
                                 ebx=0x2222, ecx=0x3333, edx=0x4444, esi=0x5555, es=0x6666).items():
@@ -1777,6 +1787,12 @@ class SpecializeTests(unittest.TestCase):
 
     def test_grand_mastery(self):
         self.assertEqual(self.attack(4, self.LONG_SWORD, chosen=(0,), levels=(9, 0, 0)), (6, 12, 6, 10))
+
+    def test_grand_mastery_next_die(self):
+        """Grand mastery's die is the next greater die size (NEXT_DIE, Player's Option: Combat &
+        Tactics): d12 to d20, d3 to d4, d6 to d8; a d20 kept."""
+        for sides, want in ((12, 20), (3, 4), (6, 8), (10, 12), (20, 20)):
+            self.assertEqual(self.attack(4, self.LONG_SWORD, chosen=(0,), levels=(9, 0, 0), sides=sides)[3], want, sides)
 
     def test_arena_champion(self):
         """An Arena Champion in melee: with a shield in a hand +1 to hit and damage, without one -1
@@ -4288,7 +4304,7 @@ class NewSpellTests(RuleTests):
             mu.emu_start(start, start + len(code))
             return mu.reg_read(r.UC_X86_REG_EFLAGS)
         def stab(rules_hi, rolled, bonus, damage, times, mode=1, made=0):
-            self.rules_hi(rules_hi)
+            self.rules_merged(rules_hi)
             mu.mem_write(SS * 16 + BP - 0x14, struct.pack("<h", made))  # (the round's attacks so far)
             mu.mem_write(SS * 16 + BP - 0x12, struct.pack("<h", bonus))
             mu.mem_write(SS * 16 + BP + 0x16, struct.pack("<H", mode))
@@ -4323,7 +4339,7 @@ class NewSpellTests(RuleTests):
                 mu.reg_write(getattr(r, "UC_X86_REG_" + reg.upper()), value)
             mu.emu_start(start, start + len(code))
         def enlarge(rules_hi, levels, damage, rolled=None, bonus=-1, times=3):
-            self.rules_hi(rules_hi)
+            self.rules_merged(rules_hi)
             if rolled is not None:  # (the hit's roll: STAB_ROLL keeps its dice)
                 mu.mem_write(SS * 16 + BP - 0x12, struct.pack("<h", bonus))
                 mu.mem_write(SS * 16 + BP + 0x16, struct.pack("<H", 1))
@@ -4615,6 +4631,20 @@ class NewSpellTests(RuleTests):
     def rules_hi(self, value):
         self.mu.mem_write(TSR * 16 + load_image().find(HDR_SIG) + 270, struct.pack("<H", value))
 
+    def rules_merged(self, rules_hi):
+        """RULES_HI as the tests give it, the merged switches' old bits (the backstab dice's 128, the
+        buyback's 64) moved to the switches they are now part of: Thieves as in AD&D (RULES 256) and
+        Shops as in AD&D (RULES_HI 16)."""
+        hdr = TSR * 16 + load_image().find(HDR_SIG)
+        lo = struct.unpack("<H", self.mu.mem_read(hdr + 170, 2))[0] & ~256
+        if rules_hi & 128:
+            lo |= 256
+        self.mu.mem_write(hdr + 170, struct.pack("<H", lo))
+        hi = rules_hi & ~(128 | 64)
+        if rules_hi & 64:
+            hi |= 16
+        self.rules_hi(hi)
+
     def test_sell_price(self):
         """What a shop pays (SELL_PRICE, "mov si,es:[bx+6]", ES:BX the item): with the CHA
         prices rule (RULE_HI 16) 60%, rounded down, never below 1; all of it without; 9999 (not for
@@ -4643,7 +4673,7 @@ class NewSpellTests(RuleTests):
         self.mu.mem_write(GAME_DS * 16 + 0x179E, struct.pack("<HH", 330, 77)[:2])
         self.mu.mem_write(GAME_DS * 16 + 0x179C, struct.pack("<H", 77))
         def sell(plus, power, rules_hi):
-            self.rules_hi(rules_hi)
+            self.rules_merged(rules_hi)
             rec = bytearray(0x15)
             rec[0x14], rec[0x0F] = plus & 0xFF, power
             self.mu.mem_write(0x9800 * 16 + 5 * 0x15, bytes(rec))
@@ -5068,7 +5098,7 @@ class StealthTests(unittest.TestCase):
         creature not in the party is left to the game. (A thief with two weapons and a weapon
         spec's extra attack had the third, the off-hand one, multiplied after a first that missed.)"""
         mu, clock = self.mu, 0xC000
-        mu.mem_write(self.hdr + 270, struct.pack("<H", 128))
+        mu.mem_write(self.hdr + 170, struct.pack("<H", struct.unpack("<H", mu.mem_read(self.hdr + 170, 2))[0] | 256))  # (Thieves as in AD&D: the backstab rule)
         mu.mem_write(GAME_DS * 16 + 0x9B72, struct.pack("<HH", 0, clock))
         mu.mem_write(clock * 16, struct.pack("<I", 600))
         self.assertEqual(self.attack()[:3], (1, 1, 11))  # hidden: the round's first, a backstab
@@ -5204,6 +5234,9 @@ class TypesTests(unittest.TestCase):
         self.assertEqual(self.mu.mem_read(self.TYPES_SEG * 16 + 18 * 20 + 0x10, 2), b"\x00\x00")  # (a club: not)
         self.assertEqual([self.mu.mem_read(self.TYPES_SEG * 16 + t * 20 + 8, 1)[0] for t in (2, 113)], [4, 5])
         # (the Great Axe +3's type metal, the Quicksilver Glove's leather: both no material in the game)
+        self.assertEqual(self.mu.mem_read(self.TYPES_SEG * 16 + 112 * 20 + 0x0C, 1)[0], 6)
+        # (the game's pick, Deepbiter's and the stone picks': the footman's pick's 1d6+1, Skills & Powers)
+        self.assertEqual(npcitems.TYPES[127 - 115][0x0C], 6)  # (the Loader's Metal Pick's too)
         self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_DS)], [0, GAME_DS])
 
     def test_not_read(self):
