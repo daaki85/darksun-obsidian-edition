@@ -1349,7 +1349,8 @@ and the same race and DEX adjustments.
   - **success:** one small thing from them goes into the thief's backpack
     (with a purse's jingle): something light that isn't worn on the body;
   - **failure:** the thief rolls **move silently** to slip away. Made, they can
-    try again; missed, they are caught, and that person keeps a hand on their
+    try again (with Thieves as in AD&D, that thief once they have gained a level);
+    missed, they are caught, and that person keeps a hand on their
     pockets from then on.
 
   When nothing worth taking is left, the thief takes 2 to 5 ceramic pieces

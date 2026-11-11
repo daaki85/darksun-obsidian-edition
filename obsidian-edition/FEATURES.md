@@ -1618,7 +1618,7 @@ effect at once; untick one and the game is as it was.
 | Box on the Options tab | What it adds |
 |---|---|
 | [Shops as in AD&D](#the-leaders-cha-at-shops) | the party leader's CHA 18 or more lowers what shops ask, 5% to 40% at 25; shops pay 60%; a magical item sold stays in the merchant's stock, to [buy back](#buying-back-magical-items) |
-| [Thieves as in AD&D](#thief-skills-from-adds-table) | AD&D's thief skill table by level, with Dark Sun's race and DEX adjustments; a backstab multiplies the weapon's dice only, STR and magic added after, on the round's first attack only |
+| [Thieves as in AD&D](#thief-skills-from-adds-table) | AD&D's thief skill table by level, with Dark Sun's race and DEX adjustments; a backstab multiplies the weapon's dice only, STR and magic added after, on the round's first attack only; a lock or pocket failed is tried again by that thief only after a level gained |
 | [Hiding in shadows to backstab](#hiding-in-shadows-to-backstab) | thieves hide and move silently to backstab, rangers to attack from behind |
 | ... [a worn cloak, boots and belt](#hiding-in-shadows-to-backstab) | the box under it: +10 hiding, +10 moving silently, +5 picking pockets and opening locks |
 | [Picking pockets](#picking-pockets) | a thief's Pick Pockets button, then anyone in sight, until caught |
@@ -1689,6 +1689,12 @@ The situation and effects then count as before. So Azil, a 3rd-level elf thief w
 DEX 22: pick pockets 40 + 5 + 27 = 72, open locks 58, find traps 47, move
 silently 62, hide in shadows 52, hear noise 20, climb walls 87. A ranger's
 move silently and hide in shadows take the same race and DEX adjustments.
+The same switch keeps a thief from a lock they failed until they have gained a
+thief level (*Player's Option: Skills & Powers*: "If a thief fails to open a
+lock, he cannot attempt to open that lock again until advancing a level"): the
+game's safe, grate and cell doors and Pehtucl's chest. Tried again before, the
+roll fails at once, and the dice log says why. Another thief of the party may
+try it. A failed pocket is the same ([Picking pockets](#picking-pockets)).
 Untick it for the game's numbers.
 
 How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#thief-skills-from-adds-table).
@@ -1831,7 +1837,9 @@ a worn belt's 5 counted, as in the thief rows):
   own sound; the three weapons keep the quest's).
   This goes by what each thing is, wherever its owner keeps it.
 - **Failure:** a move silently roll. Made, the thief slips away unnoticed;
-  missed, they're caught.
+  missed, they're caught. With **Thieves as in AD&D**, a thief who slipped away
+  can't try that person again until they have gained a thief level ("Daaki
+  needs another level to try them again."); another thief of the party can.
 
 With nothing like that left on them, the thief takes what's in their purse
 instead: ceramic pieces, 2 to 5 for each of the thief's levels (a 4th-level

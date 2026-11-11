@@ -275,6 +275,14 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
 - **A Spellarcher for a test** (2026-11-11): a sheet made a half-elf (+18h 4) fighter/preserver (+21h
   9, 11) with kit byte +43h 1, and `spellsetup.py M=5 10 1 3 39`; the arrow buttons are the USE
   screen's row under SPELLS LEFT (157,147 the first; a slow press), not the top row (the spells).
+- **A lock barred until a level** (2026-11-11, logs/2026-11-11-lock-retry.md): Pehtucl's chest with a
+  1st-level thief (`thief.py 0 1`) fails easily; a second use reads "failed this lock at this thief
+  level", and `thief.py 0 2` lets it roll again. `chestuse.sh` cycles the pointer with two right-clicks:
+  after a use the eye is still up, so set it with `pointer.py look` instead. If the eye shows red
+  over the chest, `pointer.py walk` then `look` again.
+- **Pointer trails** (2026-11-11): sweeping the pointer with `xdotool mousemove_relative` (DOSBox takes
+  only relative moves) while asking for view redraws (DSCLOG header +242 = 1, 30 a second) showed no
+  trails, before or after the fix (interrupts off again while DSCLOG draws: DRAW_MASKED).
 - **Hearing the game** (2026-11-05): start.sh sends DOSBox's sound to a file when `PT_AUDIO` names
   one (`export PT_AUDIO=$WORK/audio.raw` before start.sh or loadsave.sh; else /dev/null): raw
   16-bit stereo at 44100 Hz, about 176 KB a second, real time. Note the file's size before and

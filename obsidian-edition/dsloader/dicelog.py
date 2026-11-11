@@ -28,7 +28,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import aging, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, locks, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
@@ -577,7 +577,8 @@ class DiceLog:
         self._scrolling = scrolling.Scrolling()
         self._dresser: Optional[sprites.Dresser] = None
         self._dresser_at = 0.0  # (when to try making the Dresser next: the game's files not found yet)
-        self.picked: set = set()  # the pockets tried already (each person gets one try)
+        self.picked: set = set()  # the pockets tried already (each person gets one try), and locks failed (locks.py)
+        self._locks_written: Optional[Tuple[int, bytes]] = None  # (DSCLOG's header and LOCK_BARRED as last written)
         # ... and when, by the game's clock: one tried after the game being played was saved is
         # forgotten when that save is loaded (the clock goes back past it)
         self.picked_at: Dict[str, Optional[int]] = {}
@@ -908,6 +909,17 @@ class DiceLog:
         if result.paid:
             self._remember_pick(result.paid)
         return result.log or [result.text]
+
+    def _locks_pass(self) -> None:
+        """DSCLOG's LOCK_BARRED: the locks each member failed at its thief level now (locks.py), with
+        Thieves as in AD&D; none without it."""
+        if self.tsr_hdr is None:
+            return
+        rows = locks.barred(self.game, self.picked) if self.game.rules & game.RULE_THIEF_TABLE else []
+        data = (self.tsr_hdr, locks.table(rows))  # (a new DSCLOG, its table written anew)
+        if data != self._locks_written:
+            locks.write(self.game, self.tsr_hdr, data[1])
+            self._locks_written = data
 
     def _arrows_pass(self) -> List[str]:
         """The Spellarchers' spell arrows: after a rest, every one fades (spellarrows.py)."""
@@ -1431,6 +1443,7 @@ class DiceLog:
         out += step(self._answer_use)
         out += step(self._gear_due)
         out += step(self._arrows_pass)
+        step(self._locks_pass)
         out += step(self._answer_look)
         out += step(lambda: self._changes(now))
         out += step(lambda: self._take_text(now))
@@ -2841,9 +2854,17 @@ class DiceLog:
             return []
         name = game.THIEF_SKILLS[skill] if 0 <= skill < len(game.THIEF_SKILLS) else f"skill {skill}"
         head = f"{self._name(who)} tries to {name}: d100 = {roll}"
+        if chance == locks.NEVER and skill == locks.OPEN_LOCKS:  # (DSCLOG's LOCK_SITE: locks.py)
+            return [f"{head} -> failure ({self._name(who)} failed this lock at this thief level: "
+                    "another try once a level is gained)"]
         if chance <= -500:  # the game takes 1000 off when an effect makes it impossible
             return [f"{head} -> failure (an effect stops it)"]
         head += f", needs {chance} or less -> {'success' if roll <= chance else 'failure'}"
+        if skill == locks.OPEN_LOCKS and roll > chance and 0 <= who < game.PARTY_SIZE \
+                and self.game.rules & game.RULE_THIEF_TABLE:  # (no other try till a level is gained)
+            failed = locks.failed_key(self.game, who)
+            if failed is not None:
+                self._remember_pick(failed)
         if name == "find/remove traps" and roll <= chance:  # (perhaps avoiding a trap: _needle_check)
             self._avoided_at = time.monotonic()
             self._needle_check()

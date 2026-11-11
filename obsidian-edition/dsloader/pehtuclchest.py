@@ -5,7 +5,8 @@ the Cloak of Protection +1 in it), locked and trapped: a script of its own runs 
 - Only from beside it (as the game's safe: "You must be next to ..."). A thief (the character using it) first looks for traps: find/remove traps (the scripts' skill
   check) finds and disarms the poison needle in its lock; failing, the thief springs it. Either
   way the needle is gone (DISARMED). Then open locks: success unlocks it for good (UNLOCKED);
-  failing, it holds, and the thief may try again.
+  failing, it holds, and the thief may try again (with Thieves as in AD&D, once they have gained
+  a thief level: locks.py, the game's check barred meanwhile).
 - Anyone else has no idea how to pick it, but may bash it, as the game's safe in GPL 71 is
   bashed: a d100 under 5, and 5 more for each of STR 18, 20, 22 and 24; success smashes the lock
   and springs the needle (unless a thief has disarmed it), failure only makes noise; again as

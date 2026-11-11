@@ -43,11 +43,20 @@ Releases, newest first: [2.15.0](#pull-request-89-merged-2026-11-10) (#89),
 
 ## Next pull request (not opened yet)
 
-DSCLOG.EXE 68,976 bytes (image 68,944: 63,424 in its segment, 5,520 in the tail), 2,112 of its
-segment spare; `UMB_NEED` 6,405 paragraphs (1,777 spare), `UMB_KEPT` 8,027 (155 spare). The polearm's
+DSCLOG.EXE 69,136 bytes (63,584 in its segment), 1,952 of its segment spare (68,976 and 2,112 before
+the pointer and lock changes below; the figures that follow are from then): `UMB_NEED` 6,405 paragraphs (1,777 spare), `UMB_KEPT` 8,027 (155 spare). The polearm's
 reach took 384 bytes of the segment (68,592 bytes before it).
 
 **New**
+- **A lock or a pocket a thief failed is tried again by that thief only after a level gained**
+  (the user's ask; *Player's Option: Skills & Powers*' open locks), with **Thieves as in AD&D**. A new
+  site, `LOCK_SITE` (803D3h, the game's skill check's chance), makes a lock the member failed at its
+  thief level now out of reach (`LOCK_BARRED`, at DSCLOG's header +1844, kept by the Loader's
+  `locks.py`); a fumbled pocket (failed, unnoticed) is refused to that thief the same way
+  (`pickpocket.fumble_key`). Another thief of the party may try either. Being caught stays final.
+  Traps: the mod's only trap, Pehtucl's chest's needle, is spent whether found or sprung, so no
+  rule is needed there. DSCLOG.EXE 69,136 bytes. Seen in the game (Pehtucl's chest:
+  playtest/logs/2026-11-11-lock-retry.md); tests/test_locks.py.
 - **Staff sling stinkpots** (AD&D's Arms and Equipment Guide), under the cahulaks' switch, now
   **Weapon traits** (the setting `cahulaks` as before, so a 2.15.0 settings file keeps its choice;
   `RULE_HI_CAHULAKS`; `game.RULE_STINKPOTS` names it). It had a switch of its own on bit 2 of the

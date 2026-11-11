@@ -2183,6 +2183,25 @@ the patched game empties it (`thief_slots` in `gamepatch.py`, DSUN.EXE 44F70h).
 The Loader reads the list from the running game, so its numbers match whichever
 game it is.
 
+### A lock or a pocket failed: another try a level later
+
+With the same switch. **Locks:** the game rolls open locks only in its scripts' skill check
+(803B8h(character, skill, bonus): a d100 under [BP-2], the chance). One new site, `LOCK_SITE`
+(`gamepatch` "lock_retry", 803D3h, "mov [bp-2],ax"), does the MOV, then for open locks by a party
+member looks up the lock in `LOCK_BARRED` (its offset at DSCLOG's header +1844): for each member 0-3,
+four (region, thing) word pairs, the thing being the one the running script was started on
+(TALK_TARGET, 3781h:0365h from the load segment), the region the party's (DS:117Ch). A match makes the
+chance `LOCK_NEVER` (-2000), which no roll is under. The dice log, seeing a party member's open locks
+fail (PERCENT_SITE's entry), remembers it with the pockets tried (`locks.key`: the party, the region,
+the thing, the member and its thief level; undone by loading an earlier save, as a pocket tried) and
+each pass writes the table: the locks each member failed at the thief level it has now
+(`locks.barred`). A level gained, the pair is gone. The dice log names a barred try ("failed this lock
+at this thief level"). **Pockets:** a fumble (failed, unnoticed) is remembered as
+`pickpocket.fumble_key` (the person's key, the thief and its thief level), and that thief is refused
+until its thief level is higher. Seen in the game 2026-11-11 (Pehtucl's chest, a 1st-level thief:
+failed, barred, then rolled again at 2nd level: playtest/logs/2026-11-11-lock-retry.md). Tests:
+tests/test_locks.py, `test_fumbled_with_thieves_as_in_add`.
+
 ## Hiding in shadows to backstab
 
 ([In the features page](FEATURES.md#hiding-in-shadows-to-backstab).)

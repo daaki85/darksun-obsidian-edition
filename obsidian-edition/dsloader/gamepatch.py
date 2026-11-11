@@ -220,6 +220,8 @@ HELD_HIT_SITE, HELD_DAMAGE_SITE = NS_IMAGE + 108, NS_IMAGE + 109
 PIC_FAIL_SITE = NS_IMAGE + 110
 # (the combatant distance routine's result: a polearm's reach, two squares as one, DSCLOG's REACH)
 REACH_SITE = NS_IMAGE + 111
+# (the thief skill check's chance: a lock its thief failed at this level out of reach, DSCLOG's LOCK_SITE)
+LOCK_SITE = NS_IMAGE + 112
 # the monster kinds' table (DSUN.EXE, the load segment's 3E45h: monsters.MONSTER_KINDS_SEG): a kind's
 # properties (a dword), its resistance class (a byte), a class's damage kinds (four words) and percents
 KINDS_FILE = 0x5400 + 0x3E45 * 16
@@ -966,6 +968,9 @@ PATCHES = (
     # ... and where a click on a button it doesn't know goes to its end: jmp (DSCLOG: PAGE 1 to
     # PAGE 4, savepages.py)
     Patch("save_click", 0x74B9F, bytes.fromhex("e94302"), _interrupt(VEC_SAVE_CLICK, 3)),
+    # the game's thief skill check (803B8h): its chance, "mov [bp-2],ax" at 803D3h: a lock the thief
+    # failed at the thief level it has now is out of reach (DSCLOG's LOCK_SITE; the Loader's locks.py)
+    Patch("lock_retry", 0x803D3, bytes.fromhex("8946fe"), _site(LOCK_SITE, 3)),
     Patch("thief_skill", 0x80307, bytes.fromhex("8bc6c1e00203d08bf2"),
           bytes((0xCD, VEC_THIEF_SKILL, 0x72, 0x80386 - 0x8030B)) + b"\x90" * 5),
     # a bug of the game's own (DSUN.EXE 1DF3:142F, which makes two child pages of the view, frees

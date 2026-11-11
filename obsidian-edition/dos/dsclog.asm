@@ -444,6 +444,8 @@ big_off    dw FAR_BIG           ; +1840 offset of BIG in the far block: the Load
                                 ;      combatant too big for the cahulaks to tangle (cahulaks.py)
 large_off  dw large_bits        ; +1842 offset of LARGE_BITS in the tail: the Loader's: a bit per
                                 ;      combatant large or bigger (sizes.py; SIZE)
+lock_off   dw lock_barred       ; +1844 offset of LOCK_BARRED in this segment: the Loader's: the
+                                ;      locks each party member may not try again yet (LOCK_SITE)
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -17178,6 +17180,7 @@ stink_sides:
 ; / mov [bp-0Ah],ax" after). Every other caller (an ambush's, the spells', a missile's) keeps 2. The
 ; type's range byte (+0Ah) stays 1: above 1 the attack routines take a weapon for a missile weapon.
 REACH_SITE   equ NS_IMAGE + 111   ; 2211Fh: the distance routine's result, a polearm's reach (REACH)
+LOCK_SITE    equ NS_IMAGE + 112   ; 803D3h: a thief skill check's chance, a lock barred (LOCK_SITE)
 REACH_1587   equ 0x4356 - 0x1587  ; (the callers' segments, less DS)
 REACH_1A0A   equ 0x4356 - 0x1A0A
 REACH_AI_RANGE equ 0x0DA7         ; (overlay 612Eh's ways back)
@@ -20652,6 +20655,7 @@ site_tab:
         site HELD_DAMAGE_SITE, held_damage
         site PIC_FAIL_SITE, pic_fail
         site REACH_SITE, reach_site
+        site LOCK_SITE, lock_site
 SITE_COUNT equ ($ - site_tab) / 2
 
 ; NS_CMP: the compare of site RL_SITE (of NS_CMP_SITES), its flags into the INT's frame.
@@ -22981,6 +22985,50 @@ probe_types_fill:
 .out:   iret
 ; (EXTRA_TYPES' bytes: the tail's)
 ; (EXTRA_NAMES: the tail's)
+
+; LOCK_SITE: "mov [bp-2],ax" (803D3h; 3 bytes: the INT and the site's number) in the game's thief
+; skill check (803B8h(character [BP+6], skill [BP+8], bonus [BP+0Ch]): a d100 under [BP-2] succeeds).
+; Does the MOV; then for open locks by a party member, a lock that member failed at the thief level
+; it has now (PO: Skills & Powers: "If a thief fails to open a lock, he cannot attempt to open that
+; lock again until advancing a level") is out of reach: [BP-2] LOCK_NEVER, which no roll is under
+; (the dice log names it). The lock is the thing the script was started on (TALK_TARGET) in the
+; region the party is in; the Loader keeps LOCK_BARRED (dsloader/locks.py): for each member 0-3,
+; LOCK_MAX (region, thing) word pairs, FFFFh for none.
+LOCK_SKILL   equ 1                ; (open locks: game.THIEF_SKILLS' second)
+LOCK_NEVER   equ -2000
+LOCK_MAX     equ 4
+LOCK_REGION  equ 0x117C           ; DS: the region the party is in
+LOCK_TALK_SEG equ 0x3781          ; (the game's segment, less its load segment) and the thing the
+LOCK_TALK    equ 0x365            ;   running script was started on there
+lock_site:
+        mov [bp - 2], ax
+        cmp word [bp + 8], LOCK_SKILL
+        jne .out
+        cmp word [bp + 6], 4
+        jae .out
+        pusha
+        push es
+        mov ax, ds
+        sub ax, DGROUP_SEG - LOCK_TALK_SEG
+        mov es, ax
+        mov dx, [es:LOCK_TALK]
+        mov ax, [LOCK_REGION]
+        mov bx, [bp + 6]
+        shl bx, 4                       ; (LOCK_MAX x 4 bytes a member)
+        add bx, lock_barred
+        mov cx, LOCK_MAX
+.each:  cmp [cs:bx], ax
+        jne .next
+        cmp [cs:bx + 2], dx
+        jne .next
+        mov word [bp - 2], LOCK_NEVER
+        jmp .done
+.next:  add bx, 4
+        loop .each
+.done:  pop es
+        popa
+.out:   iret
+lock_barred times 4 * LOCK_MAX dw 0xFFFF, 0xFFFF
 
 ; STEALTH (RULE_STEALTH): a thief who starts a turn with no enemy next to them may hide in
 ; shadows and move silently up to someone; the Loader rolls both and, when both succeed,
