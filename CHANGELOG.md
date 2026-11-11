@@ -43,6 +43,18 @@ Releases, newest first: [2.16.1](#pull-request-91-merged-2026-11-11) (#91),
 [1.1.0](#pull-request-18-merged-2026-10-06) (#18), [1.0.0](#pull-request-12-merged-2026-10-02)
 (#12).
 
+## Pull request #92 ([merged 2026-11-11](https://github.com/daaki85/darksun-obsidian-edition/pull/92))
+
+No release: nothing in `obsidian-edition/` changed (it is 2.16.1's, byte for byte).
+
+**Playtest kit**
+- **The installers from the owner's private repository.** `env.sh` names `INSTALL`, the private
+  `daaki85/darksun-installation-files` checked out beside this repository (`PT_INSTALL_FILES` to
+  override). `setup_game.sh` and `setup_ravager.sh` run its `join.sh`, which rebuilds both
+  installers in `$WORK/dl` and checks their checksums; `setup_guide.sh` takes the walkthrough from
+  it. Tried from an empty work folder: game extracted, walkthrough made into text. The guide and
+  CLAUDE.md say how.
+
 ## Pull request #91 ([merged 2026-11-11](https://github.com/daaki85/darksun-obsidian-edition/pull/91))
 
 DSCLOG.EXE 69,360 bytes (63,808 in its segment), 1,728 of its segment spare; `UMB_NEED` 6,429
