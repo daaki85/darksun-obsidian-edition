@@ -2318,7 +2318,7 @@ for the guards, the fountain drowns him, and he attacks, alone:
 (three windows: his face, the window's plain emblem for the narration, his face again)
 
 No alarm goes up and no guards come. Killed, he is missed: Kurzak's later lines
-say his monster trainer has gone (how: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#kurzak-and-legcrusher)).
+say his monster trainer has gone (how: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#the-games-script-bugs), "Kurzak and Legcrusher").
 Elsewhere Legcrusher says what the game has him say.
 
 ### The cooked vulture
