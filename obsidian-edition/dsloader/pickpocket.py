@@ -11,9 +11,11 @@ person into the backpack. On a failure, a move silently roll decides whether the
 unnoticed. With nothing else on them, the thief takes coins (party money: 2 to 5 for each thief level), and that is
 the last try on them. A thief can go on trying the same person until caught (both rolls
 failed) or until they take the coins; after that, their pockets are out of reach. With Thieves as
-in AD&D, a fumble (the pick failed, the thief unnoticed) also keeps that thief from that person's
-pockets until the thief gains a thief level (fumble_key: the level is in what is remembered);
-another thief of the party may try them meanwhile.
+in AD&D, a thief caught keeps from that person's pockets only until the thief gains a thief level
+(caught_key: the level is in what is remembered; the user's rule, 2026-11-11: one who fumbled but
+slipped away unnoticed may try again at once); another thief of the party may try them meanwhile.
+The game's words stay in the story ("keeps a close hand on their purse"); the rule's reason is
+for the dice log alone.
 
 Lifting Kurzak's Short Sword (npcitems.py), Churrr's Gutterknot or Maris's Mindshard (worldgear.py) is worth SWORD_XP
 to the thief, given as the game gives
@@ -63,7 +65,7 @@ NOT_IN_A_FIGHT = "No time to pick pockets in the middle of a fight."
 class Attempt:
     text: str  # for the game's dialogue window
     log: List[str]  # for the dice log
-    key: Optional[str] = None  # to remember: the person's pockets out of reach (the thief was caught), or a fumble's (fumble_key)
+    key: Optional[str] = None  # to remember: the person's pockets out of reach (the thief was caught), or the thief's, caught (caught_key)
     xp_to: Optional[int] = None  # a party member given XP for what was lifted (the game's routine)
     xp: int = 0
     lifted: bool = False  # something (or the coins) taken: the purse's sound (sounds.PICK_SOUND)
@@ -78,10 +80,11 @@ def _seen(data: bytes) -> Optional[str]:
     return LIFTABLE_NAMES.get(struct.unpack_from("<H", data, game.ITEM_NAME)[0])
 
 
-def fumble_key(key: str, thief: str, level: int) -> str:
-    """What is remembered of THIEF's fumble (failed, unnoticed) on the pockets of KEY at thief level
+def caught_key(key: str, thief: str, level: int) -> str:
+    """What is remembered of THIEF caught (the pick and the getaway both failed) at the pockets of KEY
+    at thief level
     LEVEL: with Thieves as in AD&D that thief may try them again only at a higher level."""
-    return f"{key}|fumbled|{thief}|L{level}"
+    return f"{key}|caught|{thief}|L{level}"
 
 
 def thief_level(gd: GameData, member: int) -> int:
@@ -297,10 +300,11 @@ def attempt(gd: GameData, tried: set, roll: Callable[[], int] = lambda: random.r
     if key in tried:
         return Attempt(f"{npc} keeps a close hand on their purse now: {thief} won't get another chance.", [])
     level = thief_level(gd, leader)
-    fumbled = fumble_key(key, thief, level) if gd.rules & game.RULE_THIEF_TABLE else None
-    if fumbled is not None and fumbled in tried:
-        return Attempt(f"{thief} fumbled {npc}'s pockets before: {thief} needs another level to try "
-                       "them again.", [])
+    caught = caught_key(key, thief, level) if gd.rules & game.RULE_THIEF_TABLE else None
+    if caught is not None and caught in tried:
+        text = f"{npc} remembers {thief}, and keeps a close hand on their purse."
+        return Attempt(text, [f"{text} ({thief} was caught at this thief level: another try once a "
+                              "level is gained, with Thieves as in AD&D)"])
     it = ring.Items(gd)
     cell = free_cell(gd, it, leader)
     if cell is None:
@@ -346,10 +350,12 @@ def attempt(gd: GameData, tried: set, roll: Callable[[], int] = lambda: random.r
                  + ("success" if d100 <= quiet else "failed"))
     if d100 <= quiet:
         text = f"{thief} fumbles {npc}'s pockets, but slips away unnoticed."
-        if fumbled is not None:  # (Thieves as in AD&D: another try by this thief once a level is gained)
-            text += f" {thief} needs another level to try them again."
         lines.append("  " + text)
-        return Attempt(text, lines, fumbled)  # (no key: free to try again)
+        return Attempt(text, lines)  # (no key: free to try again)
+    if caught is not None:  # (Thieves as in AD&D: this thief again once a level is gained, others now)
+        text = f"{npc} catches {thief}'s hand!"
+        lines += ["  " + text, f"  ({thief} may try {npc} again once a thief level is gained)"]
+        return Attempt(text, lines, caught)
     text = f"{npc} catches {thief}'s hand! {npc} will be too wary for {thief} to try again."
     lines.append("  " + text)
     return Attempt(text, lines, key)

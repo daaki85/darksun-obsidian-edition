@@ -186,18 +186,29 @@ class PickTests(unittest.TestCase):
         self.assertFalse(result.lifted)  # (no sound)
         self.assertEqual(self.attempt(5).text, "Dag lifts Bag from Guard unnoticed.")
 
-    def test_fumbled_with_thieves_as_in_add(self):
-        """Thieves as in AD&D: unnoticed, he may try that person's pockets again only once he has
-        gained a thief level (Player's Option: Skills & Powers)."""
-        from test_dicelog import SHEETS
+    def test_slips_away_with_thieves_as_in_add(self):
+        """Thieves as in AD&D: unnoticed, he may still try again at once (the user's rule)."""
         self.log.game.rules |= game.RULE_THIEF_TABLE
         result = self.attempt(50, 16)
-        self.assertEqual(result.text, "Dag fumbles Guard's pockets, but slips away unnoticed. "
-                                      "Dag needs another level to try them again.")
-        self.assertTrue(result.key.endswith("|fumbled|Dag|L4"))
+        self.assertEqual(result.text, "Dag fumbles Guard's pockets, but slips away unnoticed.")
+        self.assertIsNone(result.key)
+        self.assertEqual(self.attempt(5).text, "Dag lifts Bag from Guard unnoticed.")
+
+    def test_caught_with_thieves_as_in_add(self):
+        """Thieves as in AD&D: caught (both rolls failed), he may try that person's pockets again only
+        once he has gained a thief level (Player's Option: Skills & Powers); the game's words say
+        nothing of levels, the dice log does."""
+        from test_dicelog import SHEETS
+        self.log.game.rules |= game.RULE_THIEF_TABLE
+        result = self.attempt(99, 99)  # (both failed, whatever the table gives)
+        self.assertEqual(result.text, "Guard catches Dag's hand!")
+        self.assertTrue(result.key.endswith("|caught|Dag|L4"))
+        self.assertIn("(Dag may try Guard again once a thief level is gained)", result.log[-1])
         self.tried.add(result.key)  # (as the dice log does)
-        self.assertEqual(self.attempt(5).text, "Dag fumbled Guard's pockets before: Dag needs another level to "
-                                               "try them again.")
+        barred = self.attempt(5)
+        self.assertEqual(barred.text, "Guard remembers Dag, and keeps a close hand on their purse.")
+        self.assertNotIn("level", barred.text)
+        self.assertIn("another try once a level is gained", barred.log[0])
         self.m[SHEETS + game.SHEET_LEVELS + 1] = 5  # (a thief level gained)
         self.assertEqual(self.attempt(5).text, "Dag lifts Bag from Guard unnoticed.")
 

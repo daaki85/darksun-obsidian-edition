@@ -77,6 +77,16 @@ Releases, newest first: [2.16.1](#pull-request-91-merged-2026-11-11) (#91),
   player's guide and DEVELOPMENT.md (the folders, Build, the tests, Making a release) say so.
 
 **Fixed**
+- **A pocket is barred until a level only when the thief is caught** (the user's rule: "I meant
+  if the thief is completely caught"). With **Thieves as in AD&D**, a fumble the thief slipped away
+  from barred that thief until a level gained, and the game said "Magramar needs another level to
+  try them again", which the user found too metagame. Now a thief who slips away unnoticed may try
+  again at once; one caught (the pick and the move silently both failed) is remembered as
+  `pickpocket.caught_key` and may try that person again once a thief level is gained, others at
+  once (without the switch, caught is for good, as before). The game's words stay in the story:
+  "Kurzak catches Magramar's hand!", and a try too soon "Kurzak remembers Magramar, and keeps a close
+  hand on their purse."; the rule's reason is in the dice log alone. An older save's fumble keys
+  are ignored. Tests `test_caught_with_thieves_as_in_add`, `test_slips_away_with_thieves_as_in_add`.
 - **A ranger is asked for a weapon of expertise, not a specialty** (the user's report). Creation's
   weapon window had a fixed title, "PICK A WEAPON SPECIALTY,", though a ranger (or a Battle Mage, a
   Crusader, a Mind Warrior) takes expertise and each weapon's box already said "EXPERT IN". DSCLOG's

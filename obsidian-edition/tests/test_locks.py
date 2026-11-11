@@ -1,5 +1,5 @@
 """A lock a thief failed is out of reach until the thief gains a level (locks.py, DSCLOG's
-LOCK_SITE), and a fumbled pocket the same for that thief (pickpocket.fumble_key), with Thieves as in
+LOCK_SITE), and a pocket the thief was caught at the same for that thief (pickpocket.caught_key), with Thieves as in
 AD&D."""
 import os
 import struct
@@ -76,9 +76,9 @@ class LoaderTests(unittest.TestCase):
         self.assertEqual(struct.unpack_from("<8H", data, 32), (1, 2, 3, 4, 5, 6, 7, 8))
         self.assertEqual(set(data[16:32]), {0xFF})
 
-    def test_fumble_key_has_the_level(self):
-        self.assertNotEqual(pickpocket.fumble_key("a|41|30|Kurzak", "Cilla", 4),
-                            pickpocket.fumble_key("a|41|30|Kurzak", "Cilla", 5))
+    def test_caught_key_has_the_level(self):
+        self.assertNotEqual(pickpocket.caught_key("a|41|30|Kurzak", "Cilla", 4),
+                            pickpocket.caught_key("a|41|30|Kurzak", "Cilla", 5))
 
 
 @unittest.skipIf(td.Uc is None, "unicorn not installed")

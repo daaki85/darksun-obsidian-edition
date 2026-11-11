@@ -2196,11 +2196,14 @@ fail (PERCENT_SITE's entry), remembers it with the pockets tried (`locks.key`: t
 the thing, the member and its thief level; undone by loading an earlier save, as a pocket tried) and
 each pass writes the table: the locks each member failed at the thief level it has now
 (`locks.barred`). A level gained, the pair is gone. The dice log names a barred try ("failed this lock
-at this thief level"). **Pockets:** a fumble (failed, unnoticed) is remembered as
-`pickpocket.fumble_key` (the person's key, the thief and its thief level), and that thief is refused
-until its thief level is higher. Seen in the game 2026-11-11 (Pehtucl's chest, a 1st-level thief:
+at this thief level"). **Pockets:** a thief caught (the pick and the move silently both
+failed) is remembered as `pickpocket.caught_key` (the person's key, the thief and its thief level),
+and that thief is refused until its thief level is higher (the game's message in the story: "Kurzak
+remembers Daaki, and keeps a close hand on their purse."; the reason in the dice log alone). One who
+fumbled but slipped away unnoticed may try again at once (the user's rule, 2026-11-11; until then a
+fumble barred the thief too, and the message named the level, which the user found too metagame). Seen in the game 2026-11-11 (Pehtucl's chest, a 1st-level thief:
 failed, barred, then rolled again at 2nd level: playtest/logs/2026-11-11-lock-retry.md). Tests:
-tests/test_locks.py, `test_fumbled_with_thieves_as_in_add`.
+tests/test_locks.py, `test_caught_with_thieves_as_in_add`, `test_slips_away_with_thieves_as_in_add`.
 
 ## Hiding in shadows to backstab
 

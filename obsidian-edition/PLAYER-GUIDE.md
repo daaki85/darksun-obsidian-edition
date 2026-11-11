@@ -1355,9 +1355,9 @@ and the same race and DEX adjustments.
   - **success:** one small thing from them goes into the thief's backpack
     (with a purse's jingle): something light that isn't worn on the body;
   - **failure:** the thief rolls **move silently** to slip away. Made, they can
-    try again (with Thieves as in AD&D, that thief once they have gained a level);
-    missed, they are caught, and that person keeps a hand on their
-    pockets from then on.
+    try again at once; missed, they are caught, and that person keeps a hand on
+    their pockets from then on (with Thieves as in AD&D, until that thief has
+    gained a level; another thief may try at once).
 
   When nothing worth taking is left, the thief takes 2 to 5 ceramic pieces
   from the purse for each thief level, and that is the last try on them. A
@@ -2094,7 +2094,7 @@ size](FEATURES.md#creature-size)).
 
 | Loader label | Default | Takes effect | Details |
 |---|---|---|---|
-| Thieves as in AD&D: thief skills from AD&D's table, a backstab multiplying the weapon's dice only, a failed lock or pocket tried again only a level later | on | at once | [Thief skills from AD&D's table](FEATURES.md#thief-skills-from-adds-table) |
+| Thieves as in AD&D: thief skills from AD&D's table, a backstab multiplying the weapon's dice only, a failed lock, or a pocket the thief was caught at, tried again only a level later | on | at once | [Thief skills from AD&D's table](FEATURES.md#thief-skills-from-adds-table) |
 | Hiding in shadows to backstab: thieves hide in shadows and move silently to backstab, rangers to attack from behind | on | at once | [Hiding in shadows to backstab](FEATURES.md#hiding-in-shadows-to-backstab) |
 | ... a worn cloak adds 10 to hiding, worn boots 10 to moving silently, a worn belt 5 to picking pockets and opening locks | on | at once | [Hiding in shadows to backstab](FEATURES.md#hiding-in-shadows-to-backstab) |
 | Picking pockets: a thief's Pick Pockets button on the USE screen, then a click on anyone in sight (not in a fight), until caught | on | at once | [Picking pockets](FEATURES.md#picking-pockets) |

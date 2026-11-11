@@ -494,7 +494,7 @@ class Viewer:
                 ("cha_prices", None, "Shops as in AD&D: the leader's CHA lowers what shops ask, shops pay 60%, and "
                                      "merchants keep the magical items sold them, to buy back"),
                 ("thief_table", None, "Thieves as in AD&D: thief skills from AD&D's table, a backstab multiplying the "
-                                      "weapon's dice only, a failed lock or pocket tried again only a level later"),
+                                      "weapon's dice only, a failed lock, or a pocket the thief was caught at, tried again only a level later"),
                 ("stealth", None, "Hiding in shadows to backstab: thieves hide in shadows and move silently to backstab, "
                                   "rangers to attack from behind"),
                 ("new_spells", None, "New spells: six for wizards (Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, "
