@@ -6166,6 +6166,10 @@ probe_pk_title:
         mov word [bp + 8], 0x3026
         push ds
         push bx
+        cmp byte [cs:lv_mode], 0
+        je .colours
+        call lv_title_of        ; (AX the title, while DS is still the game's)
+.colours:
         lds bx, [bp + 2]        ; the line's colours, in the pushes that come next: the game's ...
         mov byte [bx + PK_TITLE_SECOND], PK_GAME_SECOND
         mov byte [bx + PK_TITLE_INK], PK_GAME_INK
@@ -6178,7 +6182,7 @@ probe_pk_title:
         mov byte [bx + PK_TITLE_WIDTH], PK_PICK_WIDTH
         mov byte [bx + PK_TITLE_Y], PK_PICK_Y
         mov [bp + 10], cs
-        mov word [bp + 8], lv_title
+        mov [bp + 8], ax
 .out:   pop bx
         pop ds
         pop ax
@@ -6313,6 +6317,7 @@ lv_avail  dw 0
 lv_member dw 0
 lv_count_text db '  0', 0
 lv_title  db 'PICK A WEAPON SPECIALTY,', 0
+lv_title_x db 'PICK A WEAPON OF EXPERTISE,', 0  ; (a ranger's, or a kit's with expertise: LV_TITLE_OF)
 
 ; PROBE_EF_ROWS: INT VEC_EF_ROWS replaces "pop di / pop si" (2 bytes; DSUN.EXE 7F13Eh) at the end of
 ; the Effects screen's routine that puts the selected character's effects in their cells (7EDFAh,
@@ -8784,7 +8789,8 @@ pk_hover:
         push word [PK_NAMES + 2]
         push ax
         push cs
-        push word lv_title
+        call lv_title_of
+        push ax
         jmp .draw
 .slot:  push cs
         xor ah, ah
@@ -8809,6 +8815,21 @@ pk_hover:
 .out:   pop es
         popad
         iret
+
+; LV_TITLE_OF: AX the pick window's title for LV_MEMBER: "PICK A WEAPON OF EXPERTISE," when it would
+; have expertise with the first kind (as PK_WORD judges each weapon's: a ranger, a Battle Mage, a
+; Crusader, a Mind Warrior), else "PICK A WEAPON SPECIALTY," (the user's report, 2026-11-11: a ranger
+; was asked for a specialty). Others kept.
+lv_title_of:                    ; (DS the game's, as PK_WORD needs; only in LV_MODE: PK_WORD
+        push dx                 ;   puts a kind in the sheet for a moment)
+        xor ax, ax
+        call pk_word
+        mov ax, lv_title
+        cmp dx, lv_expert
+        jne .ret
+        mov ax, lv_title_x
+.ret:   pop dx
+        ret
 
 ; PK_WORD: DX the first line for kind AX: "EXPERT IN" when LV_MEMBER would have expertise with it
 ; once picked, else "SPECIALIZE IN" (the kind put in the sheet's first empty SPEC_SLOTS byte for

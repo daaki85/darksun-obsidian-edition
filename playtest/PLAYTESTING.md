@@ -529,6 +529,9 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
 
 ## The creation screen
 
+- **At the main menu the mouse may not be captured yet** (2026-11-11): `click.py` reads the pointer
+  stuck at (160,100) and clicks do nothing. `xdotool windowfocus W`, then
+  `xdotool mousemove --window W 160 30 click 1`, and it follows.
 - **The creation screen** (logs/2026-11-08-creation-least.md): the main menu's CREATE CHARACTERS
   (165,92) opens VIEW CHARACTER (its bottom icons: view character, inventory, cast, effects at x 52,
   76, 100, 122, y 171; RETURN TO GAME 266,172 goes back to the menu); right-click an empty slot
@@ -553,7 +556,7 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   read the sheet's +18h). Then click the classes (CLERIC 250,13). The **CLERICAL SPHERE** list is in
   the lower window (AIR 235,105, EARTH 113, FIRE 121, WATER 129): while one sphere is chosen the
   others are greyed and take no click, so click the chosen one off first. DONE (279,183) opens the
-  weapon window (PICK A WEAPON SPECIALTY): icons 33 apart from (72,46), three rows; the cahulaks
+  weapon window (PICK A WEAPON SPECIALTY, or OF EXPERTISE for a ranger or a Battle Mage): icons 33 apart from (72,46), three rows; the cahulaks
   are the second row's last (245,78). A click there closes it and the dice log gives the start
   weapon ("starts with a plain obsidian cahulaks ... in place of the bone long sword"). The
   inventory is the second bottom icon (76,172).

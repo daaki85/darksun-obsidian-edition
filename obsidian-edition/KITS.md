@@ -334,7 +334,8 @@ weapons), the first again after the last:
 
 With **Weapon specialization** ticked, a human who becomes a fighter,
 gladiator or ranger (or a Battle Mage) then picks the weapon types it is due
-on the same window as at a level up (**PICK A WEAPON SPECIALTY**), less any it
+on the same window as at a level up (**PICK A WEAPON SPECIALTY**, or **PICK A WEAPON
+OF EXPERTISE** for a ranger or a Battle Mage), less any it
 has already.
 
 ## Kits that rule out classes and each other
