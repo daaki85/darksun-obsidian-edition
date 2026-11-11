@@ -28,8 +28,8 @@ which loads the mod with your options.
   - [the dice log, line by line](DICE-LOG.md);
   - [how the original game works](HOW-THE-GAME-WORKS.md), from its code;
   - [the patch notes](https://github.com/daaki85/darksun-obsidian-edition/blob/main/PATCH-NOTES.md):
-    what the mod adds and changes from the original game, and its main bug fixes; also in this
-    folder as a web page, `patch-notes.html`, with a button that copies them for a forum;
+    what the mod adds and changes from the original game, and its main bug fixes; also in the
+    release's folder as a web page, `patch-notes.html`, with a button that copies them for a forum;
   - for developers, [the development notes](DEVELOPMENT.md).
 
 ## Contents

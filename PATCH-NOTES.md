@@ -1,6 +1,6 @@
 # Obsidian Edition: Changes from the Original Game
 
-*A Dark Sun: Shattered Lands mod · Current version 2.17.0 · What the mod adds and changes, and its main bug fixes*
+*A Dark Sun: Shattered Lands mod · Current version 2.17.1 · What the mod adds and changes, and its main bug fixes*
 
 Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. You start the game with the Loader, which loads the mod with your options and logs every roll as it happens. Nearly everything is switchable, the game's own files are never touched, and your saves stay where they are.
 
@@ -58,7 +58,7 @@ The full catalogue follows, by part of the game.
 **Weapon specialization**
 
 - **[New]** Fighters specialize in one weapon spec, a kind of weapon such as the long sword (+1 to hit, +2 damage, 3/2 attacks a round), with **mastery** at 5th level (+3, +3) and **grand mastery** at 9th (the damage die one size up against every target, as in *Player's Option: Combat & Tactics*: a long sword 1d10, and 1d20 against a large foe; and one more attack).
-- **[New]** Gladiators specialize in two weapon specs, a third at 6th level and a fourth at 9th. Rangers gain expertise with the bow and one other weapon spec. The Battle Mage, Crusader and Mind Warrior kits gain expertise with one melee weapon spec of their choice (3/2 attacks a round, 2 from 7th level).
+- **[New]** Gladiators specialize in two weapon specs, a third at 6th level and a fourth at 9th. Rangers gain expertise with the bow and one other weapon spec. The Battle Mage, Crusader and Mind Warrior kits gain expertise with one melee weapon spec of their choice (3/2 attacks a round, 2 from 7th level). Their weapon window asks for a weapon of expertise, a specialist's for a specialty.
 - **[Fixed]** Warriors attack at AD&D's plain rate with weapons outside their specializations *(was 3/2 with any weapon)*. Specialists shoot missiles faster.
 - **[Changed]** Every thri-kreen, foes too, throws a chatkcha once more a round, AD&D's 2/1 for its own weapon *(was at the weapon's rate, like anyone)*; a thri-kreen Mind Warrior may take the chatkcha as its weapon spec.
 - **[New]** The weapons spells make count for specialization: the Flame Blade as a long sword, Shillelagh as a club, Spiritual Hammer as a mace.
@@ -360,7 +360,7 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 
 ## Documentation
 
-- **[New]** **The manual in the download**: the player's guide, features and rules, kits, items, creatures, the game's bugs fixed, the dice log and these patch notes as web pages that link to each other (the spoiler pages marked). The Loader's **Help** button opens its start page.
+- **[New]** **The manual in the download**: a start page, the player's guide, features and rules, kits, items, creatures, the game's bugs fixed, the dice log, how the original game works and these patch notes as web pages that link to each other (the spoiler pages marked). The Loader's **Help** button opens its start page.
 - **[New]** **[How the game works](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/HOW-THE-GAME-WORKS.md)** compares every cleric spell and psionic power with the manual: what the manual says, what the game's code does, and what the log shows.
 
 The full tables of the [kits](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/KITS.md) and the [items](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/ITEMS.md) (where each is) are in the mod's documentation too.
@@ -427,7 +427,6 @@ The main fixes are below; every bug of the original game the mod mends, with wha
 - **[Fixed]** The **Draj serf**, left far behind on the way to region 10, stayed without his orders and gave a second obelisk gem when talked to again. Now he comes along. (Found by OpenDS and yuan-ti.)
 - **[Fixed]** Lines that depend on the active member's **race or sex** always took them for a man of no race: a halfling is now greeted as a fellow halfling, a woman told "only a mad woman would think of fighting Draj", a thri-kreen hears the bell the mastyrial hears near Demothi's camp. (The halfling's found by yuan-ti.)
 - **[Fixed]** A preserver or psionicist with another class couldn't claim to have scried the **haystack** or read the man's thoughts, and the cave guide told even a dwarf or halfling to "go bother someone your own size". **Dagolar's slime book** counted a fighter's or an air cleric's training as magical but not an earth, fire or water cleric's or a druid's: now any cleric, druid, preserver or psionicist can read it.
-- **[Fixed]** At creation, a **ranger** (or a Battle Mage, Crusader or Mind Warrior) was asked to "PICK A WEAPON SPECIALTY" though it takes expertise: the window now asks for a weapon of expertise.
 - **[Fixed]** Cilla, an elf in the ready-made party, was drawn with the half-elf woman's figure; she looks like an elf now (a switch keeps the game's figure).
 
 **Rules the game got wrong** are fixed too. Each is tagged **[Fixed]** under its own heading above and has a switch, on by default, for anyone who wants the game's own rule: the saving throws against spells and the doubled d20 against fire, cold and electricity, two weapons, warriors' attacks, acid on armour and held targets (Combat); class restrictions, multiclass hit points, the class tables, rangers' spells, dual-classing, preservers' learning from scrolls, CON's regeneration and poison saves (Classes and Kits); spells, psionics and monsters as the manual describes them (Turn Undead by AD&D's table with them), spells rolling to hit and Enlarge's dice (Magic and Psionics); and thief skills and backstabs (Improved Thieving). The other rule changes are the mod's own choices, not corrections, and stay **[Changed]** or **[New]**: helms' AC, resting, the XP level cap, hit dice rolled twice, creation scores as rolled, half-giants' two-handed weapons, creature size, weapon traits (cahulaks, the staff sling's stinkpots, polearm reach), a thri-kreen's extra chatkcha throw, and ages.

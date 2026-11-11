@@ -504,7 +504,8 @@ excepted: it stays unpicked): the kit's weapon (a
 Ghetto Fighter's or Poisoner's dagger, a Battle Dancer's long sword), a
 thri-kreen's chatkcha, else the long sword (a gladiator's second the club), each
 only if it may be chosen, else the first that may. EXIT can't go back to the
-creation screen: DONE has made the character by then.
+creation screen: DONE has made the character by then. Then every new character
+picks its psionic powers ([Psionic powers at creation](FEATURES.md#psionic-powers-at-creation)).
 
 ![After DONE on the creation screen: the weapon window over it, a picture of each weapon spec, PICK A WEAPON SPECIALTY, the new character's name, and the picks left (1) beside EXIT; the hit points and age below it](docs/creation-weapons.png)
 

@@ -1,5 +1,5 @@
 #!/bin/sh
-# setup_guide.sh: kibbitz's GameFAQs walkthrough of Shattered Lands, made searchable: from
+# setup_guide.sh: the owner's walkthrough of Shattered Lands, made searchable: from
 # $WORK/guide/kibbitz.html (the owner's saved copy of the page, from the private repository of installation
 # files, $INSTALL, or put there by hand) to its text,
 # $WORK/guide/kibbitz.txt (grep -n -i). Someone else's work: never committed, never shared from a

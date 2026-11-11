@@ -105,7 +105,8 @@ choose **NEW**, then set race, classes, sphere and alignment, roll, and press
 **DONE**. [Choosing a kit](KITS.md#choosing-a-kit) walks through the panel,
 the mod's **KITS** page among it. After DONE a warrior picks its weapon specs
 ([weapon specialization](#weapon-specialization-and-attacks)), as a preserver
-picks its spells. A party has one to four characters, all good or neutral.
+picks its spells, and every character then picks its psionic powers
+([features](FEATURES.md#psionic-powers-at-creation)). A party has one to four characters, all good or neutral.
 
 ### Ability scores
 

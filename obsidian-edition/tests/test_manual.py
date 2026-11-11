@@ -159,6 +159,11 @@ class MarkdownTests(unittest.TestCase):
         self.assertEqual(manual.inline("***T*** and <https://a.b/c>"),
                          '<strong><em>T</em></strong> and <a href="https://a.b/c">https://a.b/c</a>')
         self.assertEqual(manual.inline("a < b & `<v>`"), "a &lt; b &amp; <code>&lt;v&gt;</code>")
+
+    def test_title_escaped_once(self):
+        """A heading's "&" is "&amp;" once in the page's <title>, not "&amp;amp;"."""
+        page = manual._page("index.html", "README.md", manual.inline("AD&D rules"), "", "", "", "x")
+        self.assertIn("<title>AD&amp;D rules ·", page)
         self.assertEqual(manual.slug("Kits' spell slots"), "kits-spell-slots")
         self.assertEqual(manual.slug("AD&D's [table](x.md)"), "adds-table")
 

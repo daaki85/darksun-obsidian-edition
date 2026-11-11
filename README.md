@@ -69,13 +69,12 @@ where the saves go](obsidian-edition/README.md#updating-backups-saved-games-and-
 
 ## What's new
 
-**Obsidian Edition 2.17.0** is out ([release notes](release-notes/v2.17.0.md)):
-psionic powers picked when a character is made, the player's manual as linked web pages in the download (Help opens it), a pocket
-barred until a level only when the thief is caught, a ranger asked for a weapon of
-expertise, Kalzith's new past, and Kurzak's door no longer barring the way. 2.16.0
-brought looting a body with **T** and selling spare gear with **S**, thieves who
-may try a failed lock or pocket again after a level, polearm reach and staff sling
-stinkpots, the footman's pick, and a fight with Legcrusher at the fountain.
+**Obsidian Edition 2.17.1** is out ([release notes](release-notes/v2.17.1.md)):
+corrections to the documentation after an audit of 2.17.0. 2.17.0
+brought psionic powers picked when a character is made, the player's manual
+as linked web pages in the download (Help opens it), a pocket barred until a
+level only when the thief is caught, a ranger asked for a weapon of expertise,
+Kalzith's new past, and Kurzak's door no longer barring the way.
 
 What earlier releases brought is in their own notes, in
 [`release-notes`](release-notes).
