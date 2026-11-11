@@ -67,9 +67,11 @@ where the saves go](obsidian-edition/README.md#updating-backups-saved-games-and-
 
 ## What's new
 
-**Obsidian Edition 2.16.0** is out ([release notes](release-notes/v2.16.0.md)):
-looting a body with **T** and selling spare gear with **S**, thieves who may try a
-failed lock or pocket again after a level, polearm reach and staff sling
+**Obsidian Edition 2.16.1** is out ([release notes](release-notes/v2.16.1.md)):
+fixes to looting, selling, thieves' locks and saved games' named copies, every
+Options switch in one table in the player's guide, and a better Help page. 2.16.0
+brought looting a body with **T** and selling spare gear with **S**, thieves who
+may try a failed lock or pocket again after a level, polearm reach and staff sling
 stinkpots, the footman's pick, and a fight with Legcrusher at the fountain.
 
 What earlier releases brought is in their own notes, in
