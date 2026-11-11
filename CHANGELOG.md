@@ -16,7 +16,8 @@ from the tail (2026-11-09, after #88) that is the helper's 64 KB segment's part 
 Releases before 2.12.2 give the release's line as a **Release** bullet; from 2.12.2 on it is the
 entry's first line.
 
-Releases, newest first: [2.16.0](#pull-request-90-merged-2026-11-11) (#90),
+Releases, newest first: [2.16.1](#pull-request-91-merged-2026-11-11) (#91),
+[2.16.0](#pull-request-90-merged-2026-11-11) (#90),
 [2.15.0](#pull-request-89-merged-2026-11-10) (#89),
 [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 [2.14.0](#pull-request-87-merged-2026-11-07) (#86 and #87),
@@ -41,6 +42,97 @@ Releases, newest first: [2.16.0](#pull-request-90-merged-2026-11-11) (#90),
 (#33), [1.2.0](#pull-request-30-merged-2026-10-08) (#30),
 [1.1.0](#pull-request-18-merged-2026-10-06) (#18), [1.0.0](#pull-request-12-merged-2026-10-02)
 (#12).
+
+## Pull request #91 ([merged 2026-11-11](https://github.com/daaki85/darksun-obsidian-edition/pull/91))
+
+DSCLOG.EXE 69,360 bytes (63,808 in its segment), 1,728 of its segment spare; `UMB_NEED` 6,429
+paragraphs (1,753 spare), `UMB_KEPT` 8,051 (131 spare). 2.16.0's: 69,344 and 1,744 spare.
+
+**Fixed** (from a review of the repository by ChatGPT, checked against the code first)
+- **S never takes an item without paying for it.** `sell.sell` unlinked every item and paid the
+  total at the end, so a failed money write left the gear gone and the purse unchanged (and, with
+  the key counted once, never retried). Now each item is paid for, then unlinked, and the pay taken
+  back if it can't be. Tests `test_a_failed_money_write_takes_nothing`, `test_a_failed_unlink_is_not_paid`.
+- **A save put back in a slot with its old time is copied to Named saves.** `namedsaves.sync`
+  skipped a slot whose copy was as new or newer, whatever it held, so a restored older backup left
+  the named folder offering the newer save. A copy is now the slot's only with the same time and
+  size, or the same bytes. Tests `test_older_backup_put_back`, `test_same_name_other_bytes`.
+- **"Copy as Markdown" on the patch notes' page says "Copied" only when it was:** a failed copy
+  shows the text selected, with a note to press Ctrl+C.
+- **The Help page (player-guide.html):** its index has each section's subsections, as the guide's
+  contents do (Fighter, Thief, Saving throws...), and its links to the mod's other pages (KITS.md,
+  FEATURES.md...: 37) go to their GitHub copies, whose heading anchors a browser follows (a local
+  .md file opens as plain text, or not at all). Test `test_index_and_other_pages`.
+- **Links that left the zip:** DEVELOPMENT.md's links to `../playtest/` and `../CHANGELOG.md` go
+  to GitHub; `test_shipped_pages_stay_in_the_zip` keeps every shipped page's links inside the
+  folder.
+- **A failed lock is remembered by what it is, not its map number** (the 2.16.0 audit's leftover).
+  `locks.py` kept the thing number the lock's script was started on; the game hands map things'
+  numbers out again as it makes and drops them, so a lock could be forgotten, or another barred.
+  A failure is now remembered as the lock's object and place (`o1568@201,1402` for Pehtucl's
+  chest), and the table DSCLOG reads is made from whatever things are that lock now
+  (`locks.things_now`); an older key's bare number is read as before. Seen in the game: Gerakis's
+  failure at the chest barred his next try. Test `test_a_lock_by_what_it_is`.
+- **A second body's T no longer replaces one not yet taken** (the audit's other leftover). DSCLOG
+  kept one pending T; a second, before the Loader had taken the first, overwrote it. Now
+  `LOOT_KEY` leaves a T as the game's key (the window stays open, to press again) while
+  `LOOT_THING` isn't FFFFh, and the Loader sets it back once it has taken the body
+  (`loot.release`). Seen in the game: Pehtucl's body and a guard's, one after the other, both
+  taken. Test `test_one_pending_at_a_time`.
+- **Caps Lock no longer swaps T and Shift+T** (from the 2.16.0 audit). `LOOT_KEY` took the mode from
+  the letter's case, which Caps Lock turns round; it now reads the Shift keys held (the BIOS
+  keyboard flags, 0:0417h bits 0-1). S has no mode, so either case already sold the same. Tests
+  `LootKeyTests` (test_dsclog_drawing).
+- **A T or S whose work fails is counted once** (from the audit): an error other than the game
+  being busy with its lists left the key unhandled, so the dice log tried it again each pass.
+
+**Changed**
+- **The playtest kit no longer fetches the game, Wake of the Ravager or the walkthrough from public
+  links** (the user: sharing them would be piracy). The setup scripts take the user's own copies
+  put in place by hand, and say so when they're missing; the Drive copies' downloads are
+  restricted.
+- **Code tidying from the audit:** a stack is priced by its count as stored, as the game's own
+  sale (83D6Bh) does (was at least 1). `test_worn_and_held_kept` is now `test_a_body_slot_kept`
+  (what it tested: plain_gear's slot test), and `test_worn_and_held_lists_untouched` checks that a
+  worn and a held sword are left alone. Old switch names in comments (`RULE_HI_BACKSTAB`,
+  `RULE_HI_BUYBACK`, "RULE_HI 64") now the merged rules' (`RULE_THIEF_TABLE`, `RULE_HI_CHA_PRICES`).
+
+**Docs**
+- **Reorganised, from the review** (the user's go-ahead):
+  - The player's guide's **Options tab at a glance** is a table of every switch: its Loader label,
+    default, when it takes effect (at once, next start, new characters, first visit) and where its
+    details are; `tests/test_optionstable.py` keeps it in step with the Loader's labels. The guide's
+    opening names the places and people the labels show.
+  - The packaged README's **What it does** is eight short families with links; its update section
+    has Updating, Backing up your saves, **Compatibility with older saves**, What the Loader writes
+    and Uninstalling; its documentation index links **Weapon specialization and damage**.
+  - The Loader's longest option texts are shortened to the switch's effects (the names kept; the
+    detail is in FEATURES.md).
+  - DICE-LOG.md: looting and selling under a new **Inventory and shops**. ITEMS.md: the item
+    indexes first, the mod's own items' details after.
+  - PATCH-NOTES.md is **Changes from the original game**, with an **At a glance** summary, a
+    **Documentation** section (How the game works, moved out of The Loader), and a subtitle that no
+    longer promises every change; the web page carries the note on unreleased changes.
+  - The old combat log design handoff moved out of the shipped `docs/` to
+    `reports/combat-log-design-handoff.md`.
+  - The root README's What's new holds the current release only.
+  - The playtest guide: a **Startup procedure** first (about 1,900 words, read in full), then
+    **Recipes** by job and **The route through the story**; dated incidents moved to
+    `playtest/HISTORY.md`. CLAUDE.md's summary cut to the essentials.
+- **From the review:** the 2.16.0 release notes said each merged switch keeps its saved choice;
+  it does only when the old pair agreed (`game.fold_merged`: one off, the merged one off), now
+  said, and in the changelog. The update steps (the release notes, the README) name the **Named
+  saves** folder with `settings.json`, and the backup steps the `cloud_saves` folder the game
+  reads first. The guide's weapon table gives the bow (1d8) and sling (1d4) their own dice, as the
+  game rolls them (was "by the missile"), and its opening names what has no switch (the keys, the
+  game's fixed bugs, the footman's pick; was "every rule change"). The patch notes' Spellarcher
+  says its arrows fade at the next rest. `docs/viewer.png` retaken (the toolbar's Help button).
+- **The combat log's pictures retaken with the panel's present font** (8 pixels a line, 7 lines
+  docked, 12 expanded; the user's ask after 2.16.0): `docs/combat-log.png`,
+  `combat-log-expanded.png`, `combat-log-detail.png` (now from Pehtucl's ambush, not the alarm
+  fight) and `combat-log-live.gif`, with their alt texts. The GIF is DOSBox's own 320x200
+  screenshots taken about 14 a second (Ctrl+F5 in a loop), not window grabs: the window is 4:3
+  (playtest/logs/2026-11-11-combat-log-shots.md).
 
 ## Pull request #90 ([merged 2026-11-11](https://github.com/daaki85/darksun-obsidian-edition/pull/90))
 
@@ -188,7 +280,8 @@ bytes of the segment (68,592 bytes before it).
   12 expanded (was 14). `smallfont.py` keeps each glyph's 7 rows as two hex digits.
 - **Six switches merged into three** (the user's choice), freeing three of DSCLOG's rule bits with bit 2
   already freed (the Weapon traits merge): four free now, room for the rules to come. Each keeps one
-  setting's name, so a saved choice carries over: **Saving throws against spells** (`spell_save`:
+  setting's name, so a saved choice carries over (`game.fold_merged`: if the old pair differed, the
+  merged switch is off): **Saving throws against spells** (`spell_save`:
   the spell save and DEX instead of a doubled d20; bit 8, the spell save's, which only the Loader
   acted on, free), **Shops as in AD&D** (`cha_prices`: the leader's CHA and buying back magical
   items; RULES_HI 64 free), **Thieves as in AD&D** (`thief_table`: AD&D's thief skills and the

@@ -1,5 +1,6 @@
 """The player's guide as a web page: PLAYER-GUIDE.md made player-guide.html, in the patch notes'
-look (pagestyle.css, which the patch notes' page shares), with the guide's sections as the index.
+look (pagestyle.css, which the patch notes' page shares), with the guide's sections and their subsections as the index, and links to the mod's other pages
+going to their GitHub copies (a browser follows a heading's anchor there).
 
 `python -m dsloader.guidepage` writes it; tests/test_guidepage.py checks it is up to date. Only
 the Markdown the guide uses: headings, paragraphs, lists (nested, numbered, with images and
@@ -25,6 +26,9 @@ main p > img, main li > img { display: block; margin: 12px 0; border: 1px solid 
 td img { image-rendering: pixelated; }
 h5 { font: 700 15px var(--font-body); margin: 14px 0 4px; }
 .lede em { color: var(--muted); }
+nav.index { max-height: calc(100vh - 40px); overflow-y: auto; }
+nav.index ol ol { gap: 3px; margin: 4px 0 4px 12px; font-size: 13px; }
+@media (max-width: 900px) { nav.index { max-height: none; } nav.index ol ol { display: none; } }
 """
 
 
@@ -32,6 +36,18 @@ def slug(text: str) -> str:
     """GitHub's anchor for a heading: lower case, punctuation but hyphens gone, spaces hyphens."""
     text = re.sub(r"[`*_\[\]()]", "", text).lower()
     return re.sub(r"[^\w\- ]", "", text).replace(" ", "-")
+
+
+DOCS = "https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/"
+
+
+def href(target: str) -> str:
+    """A link's target in the page: another of the mod's Markdown pages (KITS.md#...) is GitHub's
+    copy, whose headings' anchors a browser can follow (a local .md opens as plain text, or not at
+    all); the guide's own anchors, images and web addresses as they are."""
+    if re.match(r"^[A-Z][A-Z0-9-]*\.md(#|$)", target):
+        return DOCS + target
+    return target
 
 
 def inline(text: str) -> str:
@@ -51,7 +67,7 @@ def inline(text: str) -> str:
     out = html.escape(out, quote=False)
     out = re.sub(r"!\[([^\]]*)\]\(([^)\s]+)\)",
                  lambda m: f'<img src="{html.escape(m.group(2))}" alt="{html.escape(m.group(1))}">', out)
-    out = re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", lambda m: f'<a href="{html.escape(m.group(2))}">{m.group(1)}</a>', out)
+    out = re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", lambda m: f'<a href="{html.escape(href(m.group(2)))}">{m.group(1)}</a>', out)
     out = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", out)
     out = re.sub(r"(?<![\w*])\*(?!\s)(.+?)(?<!\s)\*(?![\w*])", r"<em>\1</em>", out)
     out = re.sub(r"\x01(\d+)\x01", lambda m: escapes[int(m.group(1))], out)
@@ -134,6 +150,7 @@ def body(markdown: str) -> Tuple[str, List[Tuple[str, str]], str, str]:
     lines = markdown.splitlines()
     out: List[str] = []
     sections: List[Tuple[str, str]] = []
+    subsections: List[List[Tuple[str, str]]] = []  # (each section's ### headings, for the index)
     title, lede, skipping = "", [], False
     i = 0
     while i < len(lines):
@@ -155,9 +172,12 @@ def body(markdown: str) -> Tuple[str, List[Tuple[str, str]], str, str]:
                 if sections:
                     out.append("</section>")
                 sections.append((slug(text), text))
+                subsections.append([])
                 out.append(f'<section id="{slug(text)}">')
                 out.append(f"<h2>{inline(text)}</h2>")
             else:
+                if level == 3 and subsections:
+                    subsections[-1].append((slug(text), text))
                 out.append(f'<h{level} id="{slug(text)}">{inline(text)}</h{level}>')
             continue
         if skipping:
@@ -191,6 +211,7 @@ def body(markdown: str) -> Tuple[str, List[Tuple[str, str]], str, str]:
             out.append(f"<p>{text}</p>")
     if sections:
         out.append("</section>")
+    body.subsections = subsections  # (read by build: the index's second level)
     return "\n".join(out), sections, title, "".join(f'<p class="lede">{p}</p>' for p in lede)
 
 
@@ -203,7 +224,11 @@ def style() -> str:
 def build() -> str:
     with open(GUIDE, encoding="utf-8") as f:
         content, sections, _, lede = body(f.read())
-    index = "".join(f'<li><a href="#{a}">{inline(t)}</a></li>' for a, t in sections)
+    subs = getattr(body, "subsections", [[] for _ in sections])
+    index = "".join(f'<li><a href="#{a}">{inline(t)}</a>'
+                    + ("<ol>" + "".join(f'<li><a href="#{sa}">{inline(st)}</a></li>' for sa, st in sub) + "</ol>"
+                       if sub else "") + "</li>"
+                    for (a, t), sub in zip(sections, subs))
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -229,7 +254,7 @@ def build() -> str:
   </main>
 </div>
 <footer>
-  <p>Obsidian Edition runs on Windows with the GOG release of Dark Sun: Shattered Lands, in DOSBox. The <a href="README.md">README</a> and its <a href="FEATURES.md">features page</a> have every rule in full detail, and the <a href="https://github.com/daaki85/darksun-obsidian-edition/blob/main/PATCH-NOTES.md">patch notes</a> every change from the original game.</p>
+  <p>Obsidian Edition runs on Windows with the GOG release of Dark Sun: Shattered Lands, in DOSBox. The <a href="{DOCS}README.md">README</a> and its <a href="{DOCS}FEATURES.md">features page</a> have every rule in full detail, and the <a href="https://github.com/daaki85/darksun-obsidian-edition/blob/main/PATCH-NOTES.md">patch notes</a> every change from the original game.</p>
 </footer>
 </body>
 </html>

@@ -17,6 +17,8 @@ which loads the mod with your options.
   - [features and rules](FEATURES.md): what the game shows, every rule and addition;
   - [kits and weapon specs](KITS.md): every kit's gains, costs and starting gear, and weapon
     specialization;
+  - [Weapon specialization and damage](KITS.md#weapon-specialization): attacks a round, grand
+    mastery's damage dice, choosing at creation and at a level gained, starting weapons;
   - [items](ITEMS.md) (spoilers): every item and where it is;
   - [creatures](CREATURES.md) (spoilers): every one, its size, and whether cahulaks can tangle it;
   - [the game's bugs, fixed](GAME-BUGS.md) (some spoilers): every bug of the original game the mod mends;
@@ -36,8 +38,10 @@ which loads the mod with your options.
   - [Every time you play](#every-time-you-play)
   - [Other ways to start](#other-ways-to-start)
   - [Updating, backups, saved games and the Loader's
-    files](#updating-backups-saved-games-and-the-loaders-files) (uninstalling
-    too)
+    files](#updating-backups-saved-games-and-the-loaders-files):
+    [updating](#updating), [backing up your saves](#backing-up-your-saves),
+    [compatibility with older saves](#compatibility-with-older-saves), [what
+    the Loader writes](#what-the-loader-writes), [uninstalling](#uninstalling)
 - [The Loader's window](#the-loaders-window)
   - [The Characters tab](#the-characters-tab)
   - [The Spells tab](#the-spells-tab)
@@ -52,64 +56,42 @@ which loads the mod with your options.
 
 ## What it does
 
-- **Shows what the game keeps hidden.** Every roll is logged as it happens:
-  attacks, damage, saving throws, thief skills, initiative, even the dice at
-  character creation, each with what it needed and where every bonus came from
-  ([the dice log](#the-dice-log)). **L** shows a combat log over the map,
-  spells' names and charges used float over the figures, the game's own
-  screens gain THAC0, saves, thief skills, spell slots and charges left, and
-  the Look box tells you what can hurt a monster ([In the game](FEATURES.md#in-the-game)).
-- **Brings the rules closer to AD&D:** class restrictions, AD&D's class tables
-  (experience, priests' THAC0, spell slots), INT's limits on learning spells,
-  saving throws and multiclass hit points as the books have them, scores and
-  hit points kept as rolled, ages (a year each 365 days of game time, and Haste's cost), levels
-  past 9th up to a cap by XP (10th to 13th for one class, lower for two or
-  three), Enlarge's weapon dice, CON's regeneration, [creature
-  size](FEATURES.md#creature-size) (large foes take AD&D's large weapon dice,
-  and Hold and Charm Person don't work on them), [weapon traits](FEATURES.md#weapon-traits)
-  (cahulaks as Dark Sun has them, the staff sling's stinkpots, polearm reach), [held targets](FEATURES.md#held-targets) hit
-  automatically, spells and psionics as the manual describes them, spells
-  rolling to hit, Turn Undead by AD&D's table, resting that heals by the
-  priests' spells and a night's rest, and dual-classing from 3rd level ([Rule
-  changes](FEATURES.md#rule-changes)).
-- **More ways to build a character:** weapon specialization and mastery, kits
-  (three for each class, and thirteen multiclass kits, each for one race),
-  STORE and RECALL for a
-  creation roll, fuller starting gear, and features of their own for the
-  game's own party
-  ([More character customization](FEATURES.md#more-character-customization)).
-- **Expanded play:** thieves with AD&D's skills hide in shadows to backstab
-  and pick pockets, the party leader's CHA lowers shop prices, and merchants
-  sell back the magical items you sold them
-  ([Expanded features](FEATURES.md#expanded-features)).
-- **More of Athas:** new weapons in every material, magic items with stories of
-  their own (robes and bracers among them, for those who wear no armour), six
-  wizard spells ([Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook and
-  Friends](FEATURES.md#new-wizard-spells)) and ten [6th-level priest
-  spells](FEATURES.md#6th-level-priest-spells) (Heal, Blade Barrier,
-  Whirlwind, Restore Youth...), Kalzith (a defiler who sells scrolls), defilers who drop
-  scrolls, more of Semyon's story, a last arena bout against six champions,
-  Pehtucl's locked, trapped chest, sounds for hiding and picking pockets,
-  and a use for the cooked vulture ([New
-  content](FEATURES.md#new-content)). On the map, the party wears its weapons
-  and armour (its magic gear glinting), figures cast shadows and kick up dust,
-  a hidden thief or ranger and anyone invisible are drawn see-through, and
-  elves and half-elves have a look of their own; and the game's magic items
-  whose icons stood still shine as the rest do ([Graphics](FEATURES.md#graphics)).
-- **Quality of life:** better [controls](FEATURES.md#controls) (Tab and Enter
-  in fights, dragging the map with the mouse wheel held down), [more saves and
+Eight families of changes. Most have a switch on the Loader's **Options** tab
+([each switch, its default and when it counts](PLAYER-GUIDE.md#the-options-tab-at-a-glance));
+[Features and rules](FEATURES.md) has every one in full.
+
+- **Shows what the game keeps hidden.** Every roll as it happens, with what it
+  needed and where each bonus came from ([the dice log](#the-dice-log)); a
+  combat log over the map, names over figures and the Look box ([In the
+  game](FEATURES.md#in-the-game)); THAC0, saves, thief skills, spell slots and
+  charges on the game's own screens ([Always on](FEATURES.md#always-on)).
+- **Brings the rules closer to AD&D.** Twenty-four switches for characters,
+  weapons and armour, and magic, from class restrictions and levels past 9th
+  to creature size and spell saves ([Rule changes](FEATURES.md#rule-changes);
+  in play, [the player's guide](PLAYER-GUIDE.md)).
+- **More ways to build a character.** Weapon specialization, kits for every
+  class and for some multiclass characters, STORE and RECALL, fuller starting
+  gear ([More character customization](FEATURES.md#more-character-customization);
+  every kit in [Kits and weapon specs](KITS.md)).
+- **Expanded play.** Thieves with AD&D's skills who hide in shadows and pick
+  pockets; the leader's CHA at shops and magical items to buy back ([Expanded
+  features](FEATURES.md#expanded-features)).
+- **More of Athas.** New wizard and 6th-level priest spells, new people, a
+  quest, a last arena bout and new items ([New
+  content](FEATURES.md#new-content), with spoilers; without them, the guide's
+  [spell lists](PLAYER-GUIDE.md#spell-lists) and [new
+  items](PLAYER-GUIDE.md#new-items); every item in [Items](ITEMS.md)).
+- **Graphics.** The party's gear on its figures, shadows, dust, see-through
+  figures, elves and half-elves of their own look, and magic items' icons
+  that shine ([Graphics](FEATURES.md#graphics)).
+- **Quality of life.** Better [controls](FEATURES.md#controls), [more saves and
   characters](FEATURES.md#more-saves-and-characters), a [game
-  speed](FEATURES.md#game-speed) setting, crash, freeze and item reports, and
-  [no manual check](FEATURES.md#no-manual-check).
-- **Fixes the game's bugs:** Mirror Image stopping no blow, Armor wearing out
-  twice as fast, Share Strength never ending, Dispel Magic silencing the party,
-  Negative Plane Protection never working, Cause Wounds' odd dice, Psionic
-  Blast's imagined wounds kept for good, ability items working from the
-  backpack, the game's people fighting unarmoured until their first action, the gladiator's armour bonus without armour, the game's
-  scripts' broken checks (the sewer grate's hack, a ranger's tracking, a
-  halfling's greeting), and more; and
-  the rules it got wrong, from spell saves to warriors' attacks, put right ([The
-  game's bugs, fixed](GAME-BUGS.md)).
+  speed](FEATURES.md#game-speed) setting, [crash, freeze and item
+  reports](#crash-freeze-and-item-reports) and [no manual
+  check](FEATURES.md#no-manual-check).
+- **Fixes the game's bugs.** Some fifty, always on, from spells that never did
+  what they say to the scripts' broken checks, and the rules it got wrong
+  ([The game's bugs, fixed](GAME-BUGS.md)).
 
 **What it changes on your computer.** The game's own files are never modified:
 the Loader runs a patched copy of the game from its own folder, and writes to
@@ -265,19 +247,32 @@ start through the Loader does that).
 
 ### Updating, backups, saved games and the Loader's files
 
-**Updating.** Unzip the new release into a folder of its own and copy
-`settings.json` from the old folder into it to keep your options (the
-**Named saves** folder too, if you want its copies). Your saves and characters
-are in the game folder, so nothing else needs moving. Then delete the old
+#### Updating
+
+Unzip the new release into a folder of its own and copy two
+things from the old folder into it: `settings.json` (your options) and the
+**Named saves** folder (each save's copy under its name, and the `Replaced -`
+copies a restore keeps, which may be the only copy left of a save). Your saves
+and characters are in the game folder (or its `cloud_saves` folder, where GOG
+keeps them when it has one), so nothing else needs moving. Then delete the old
 folder.
 
+#### Backing up your saves
+
 **Back up your saves first.** Before the first game with the mod, copy the
-game folder's save files (`SAVE*`, and `SAVB*`, `SAVC*` and `SAVD*` once
-you have them) and `CHARSAVE.GFF` somewhere safe. The Loader never
+save files (`SAVE*`, and `SAVB*`, `SAVC*` and `SAVD*` once you have them) and
+`CHARSAVE.GFF` somewhere safe: from the game folder's `cloud_saves` folder if
+it has one (the game reads its saves from there first), else from the game
+folder. The Loader never
 changes the game's own files, but your saves are written by the patched game:
 one with the new items ticked can hold item types the original game doesn't
 have, so load such a save with the Loader. To go back to the original game,
 start it the GOG way and load a save from before the mod.
+
+#### Compatibility with older saves
+
+Read this when you carry on a game saved with the original game or an earlier
+version of the mod; for a new game none of it matters.
 
 **Your saved games.** A save from the original game, or an earlier version
 of the mod, loads and plays with every fix and rule change from the moment it
@@ -337,8 +332,9 @@ its chests hold comes only in areas the save hasn't been to: where the party
 has been, they keep what they had. A save from the original game has no kits,
 and what it has already been through stays as it was.
 
-**What the Loader writes**, all in its own folder (beside
-`Start Obsidian Edition.bat`) but the saves:
+#### What the Loader writes
+
+All in its own folder (beside `Start Obsidian Edition.bat`) but the saves:
 
 | File or folder | What it holds |
 |---|---|
@@ -351,7 +347,9 @@ and what it has already been through stays as it was.
 | `layouts`, `.dsloader-search.json` | only from the Memory tools: a layout you save there, and a memory search's results |
 | the game folder | your saves (page 1 in the game's own `SAVE` files, pages 2 to 4 as `SAVB`, `SAVC` and `SAVD`) and characters in `CHARSAVE.GFF` |
 
-**Uninstalling.** Delete the Loader's folder. Nothing of the mod is left in
+#### Uninstalling
+
+Delete the Loader's folder. Nothing of the mod is left in
 the game folder but your saves and characters: page 1's saves (`SAVE*`) and
 `CHARSAVE.GFF` load in the original game as long as they hold none of the
 new items (see above); the extra pages (`SAVB*`, `SAVC*`, `SAVD*`) are read

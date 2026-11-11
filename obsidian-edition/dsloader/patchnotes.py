@@ -3,7 +3,8 @@ player's guide shares (pagestyle.css), with the notes' sections as the index and
 copies the Markdown itself for forums.
 
 `python -m dsloader.patchnotes` writes it; tests/test_patchnotes.py checks it is up to date. Only
-the Markdown the notes use: the title, the italic line under it, paragraphs, bold lines as
+the Markdown the notes use: the title, the italic line under it (and the italic notes after it, such as
+the version's status, shown under it on the page), paragraphs, bold lines as
 sub-headings, lists whose items open with a tag (**[New]**, **[Changed]**, **[Fixed]**), tables,
 and "> *Developers' Notes: ...*" quotes; *(was ...)* comes out as the old value."""
 
@@ -44,11 +45,12 @@ def item(text: str) -> str:
 
 def body(markdown: str) -> Tuple[str, List[Tuple[str, str]], dict]:
     """The notes' HTML body, their sections [(anchor, title)], and the opening's parts (title,
-    subtitle, lede, download)."""
+    subtitle, lede, download, and the status: the italic notes after the subtitle, such as that the
+    notes can hold changes not yet released)."""
     lines = markdown.splitlines()
     out: List[str] = []
     sections: List[Tuple[str, str]] = []
-    head = {"title": "", "subtitle": "", "lede": "", "download": f"{REPO}/releases/latest"}
+    head = {"title": "", "subtitle": "", "lede": "", "download": f"{REPO}/releases/latest", "status": []}
     skipping = False
     i = 0
     while i < len(lines):
@@ -112,16 +114,18 @@ def body(markdown: str) -> Tuple[str, List[Tuple[str, str]], dict]:
             para.append(lines[i].strip())
             i += 1
         text = " ".join(para)
-        if not sections:  # (the opening: the italic line, the lede, the download, the page's own note)
+        if not sections:  # (the opening: the italic line, the lede, the download, the status, the page's own note)
             download = re.match(r"^\*\*Download:\*\* (\S+)$", text)
             if download:
                 head["download"] = download.group(1)
             elif re.match(r"^\*[^*].*\*$", text):
                 if not head["subtitle"]:
                     head["subtitle"] = text[1:-1]
+                else:
+                    head["status"].append(inline(text[1:-1]))
             elif not head["lede"]:
                 head["lede"] = inline(text)
-            continue
+            continue  # (a plain paragraph after the lede is the Markdown's own note: the page is that)
         out.append(f"<p>{inline(text)}</p>")
     if sections:
         out.append("</section>")
@@ -134,6 +138,7 @@ def build() -> str:
     content, sections, head = body(markdown)
     index = "".join(f'<li><a href="#{a}">{inline(t)}</a></li>' for a, t in sections)
     name, _, kind = head["title"].partition(": ")
+    status = "".join(f'  <p class="meta">{s}</p>\n' for s in head["status"])
     source = markdown.replace("</", "<\\/")  # (inside a script)
     return f"""<!doctype html>
 <html lang="en">
@@ -150,7 +155,7 @@ def build() -> str:
   <div class="eyebrow">Dark Sun: Shattered Lands · Mod</div>
   <h1>{html.escape(name)}<br>{html.escape(kind)}</h1>
   <div class="meta">{html.escape(head["subtitle"])}</div>
-  <p class="lede">{head["lede"]}</p>
+{status}  <p class="lede">{head["lede"]}</p>
   <div class="actions">
     <a class="btn" href="{html.escape(head["download"])}">Download</a>
     <a class="btn ghost" href="{REPO}/blob/main/obsidian-edition/PLAYER-GUIDE.md">Player's guide</a>
@@ -177,8 +182,19 @@ def build() -> str:
   const text = document.getElementById('source').textContent.replace(/<\\\\\\//g, '</');
   const btn = document.getElementById('copy'), ok = document.getElementById('copied'), ta = document.getElementById('md');
   btn.addEventListener('click', () => {{
-    const done = () => {{ ok.hidden = false; setTimeout(() => {{ ok.hidden = true; }}, 2500); }};
-    const fallback = () => {{ ta.value = text; ta.select(); try {{ document.execCommand('copy'); }} catch (e) {{}} done(); }};
+    const done = () => {{ ok.textContent = 'Copied'; ok.hidden = false; setTimeout(() => {{ ok.hidden = true; }}, 2500); }};
+    const failed = () => {{
+      // (no clipboard to be had: the text shown, selected, for Ctrl+C; never "Copied" when it wasn't)
+      ta.value = text; ta.className = 'shown'; ta.removeAttribute('aria-hidden'); ta.tabIndex = 0;
+      ta.focus(); ta.select();
+      ok.textContent = 'Could not copy: the text is selected below, press Ctrl+C'; ok.hidden = false;
+    }};
+    const fallback = () => {{
+      ta.value = text; ta.select();
+      let copied = false;
+      try {{ copied = document.execCommand('copy'); }} catch (e) {{ copied = false; }}
+      if (copied) done(); else failed();
+    }};
     try {{ navigator.clipboard.writeText(text).then(done, fallback); }} catch (e) {{ fallback(); }}
   }});
 }})();

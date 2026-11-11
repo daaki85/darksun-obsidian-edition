@@ -8,7 +8,7 @@ with your options and keeps the full dice log while you play. Nearly every
 rule change and addition has a switch on the Loader's Options tab; the full
 list is in [What it does](obsidian-edition/README.md#what-it-does).
 
-![Round 3 of a fight: Lex's turn, with the combat log over the map's lower right, in short and its small font, eight lines: Ester's swings at a Guard, the Guard's hit on Jenna for 10 and a miss, and her hit points after](obsidian-edition/docs/combat-log.png)
+![Round 4 of Pehtucl's ambush at the slave pens' fountain: Jenna's turn, with the combat log over the map's lower right, in short and its small font, seven lines: the Arena Guard's hit points after each blow, Seneca's miss, and Jenna seen as she tries to hide in shadows](obsidian-edition/docs/combat-log.png)
 
 ## Getting started
 
@@ -53,8 +53,8 @@ double-click, with the options as last set.)
   the Loader's dice log writes, and what it means
 - [How the game works](obsidian-edition/HOW-THE-GAME-WORKS.md): the original
   game's own rules, from its code
-- [Patch notes](PATCH-NOTES.md): every change from the original game, in one
-  page to share
+- [Changes from the original game](PATCH-NOTES.md): what the mod adds and
+  changes, and its main bug fixes, in one page to share
 - [Changelog](CHANGELOG.md) and [development
   notes](obsidian-edition/DEVELOPMENT.md): for developers and testers
 
@@ -67,16 +67,15 @@ where the saves go](obsidian-edition/README.md#updating-backups-saved-games-and-
 
 ## What's new
 
-**Obsidian Edition 2.16.0** is out ([release notes](release-notes/v2.16.0.md)):
-looting a body with **T** and selling spare gear with **S**, thieves who may try a
-failed lock or pocket again after a level, polearm reach and staff sling
+**Obsidian Edition 2.16.1** is out ([release notes](release-notes/v2.16.1.md)):
+fixes to looting, selling, thieves' locks and saved games' named copies, every
+Options switch in one table in the player's guide, and a better Help page. 2.16.0
+brought looting a body with **T** and selling spare gear with **S**, thieves who
+may try a failed lock or pocket again after a level, polearm reach and staff sling
 stinkpots, the footman's pick, and a fight with Legcrusher at the fountain.
-2.15.0 brought three new AD&D rules (held targets, creature size, and cahulaks
-as Dark Sun has them), spells, psionics and monsters as the manual describes
-them, the Boots of Speed and new cahulaks to find, and graphics that no longer
-vanish in a busy area.
 
-Every release has notes of its own, in [`release-notes`](release-notes).
+What earlier releases brought is in their own notes, in
+[`release-notes`](release-notes).
 
 ## About
 

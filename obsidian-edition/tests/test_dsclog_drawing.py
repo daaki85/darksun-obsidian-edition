@@ -556,3 +556,52 @@ class DrawingTests(unittest.TestCase):
         scene.count = 0
         mu.emu_start(TSR * 16 + sym["label_stamp"], TSR * 16 + 0xFFF0, count=10000)
         self.assertLess(scene.count, 15)
+
+
+@unittest.skipIf(Uc is None or not shutil.which("nasm"), "needs unicorn and nasm")
+class LootKeyTests(unittest.TestCase):
+    """LOOT_KEY: T or Shift+T with a container's window open is made Escape and counted; Shift+T's
+    mode comes from the Shift keys held (BIOS 0:0417h bits 0-1), not the letter's case, so Caps Lock
+    doesn't swap the two."""
+
+    THING = 345
+    release = True
+
+    def setUp(self):
+        self.scene = scene = Scene()
+        scene.put("game_ds", struct.pack("<H", GAME_DS))
+        scene.put("mk_read", b"\x01")
+        scene.mu.mem_write(GAME_DS * 16 + 0x05E6, struct.pack("<H", self.THING))
+
+    def press(self, key, shift):
+        scene = self.scene
+        scene.mu.mem_write(0x417, bytes((shift,)))
+        scene.call("loot_key", eax=key, ds=0x1234)
+        self.assertEqual(scene.mu.reg_read(r.UC_X86_REG_DS), 0x1234)  # (given back)
+        seq, thing, mode = struct.unpack("<HHH", scene.get("loot_seq", 6))
+        ax = scene.mu.reg_read(r.UC_X86_REG_AX)
+        if self.release:
+            scene.put("loot_thing", struct.pack("<H", 0xFFFF))  # (as the Loader does once it has taken it)
+        return ax, seq, thing, mode
+
+    def test_modes(self):
+        esc = 0x011B
+        self.assertEqual(self.press(0x1474, 0), (esc, 1, self.THING, 0))  # t
+        self.assertEqual(self.press(0x1454, 0), (esc, 2, self.THING, 0))  # T with Caps Lock: still T
+        self.assertEqual(self.press(0x1454, 1), (esc, 3, self.THING, 1))  # Shift+T (right Shift)
+        self.assertEqual(self.press(0x1474, 2), (esc, 4, self.THING, 1))  # Shift+T with Caps Lock (left Shift)
+
+    def test_one_pending_at_a_time(self):
+        """A T counted and not yet taken by the Loader (LOOT_THING not FFFFh): the next T is left as
+        the game's key (the window stays open), not counted over it; released, it counts."""
+        self.release = False
+        self.assertEqual(self.press(0x1474, 0), (0x011B, 1, self.THING, 0))
+        self.scene.mu.mem_write(GAME_DS * 16 + 0x05E6, struct.pack("<H", self.THING + 1))  # (another body)
+        self.assertEqual(self.press(0x1474, 0), (0x1474, 1, self.THING, 0))
+        self.scene.put("loot_thing", struct.pack("<H", 0xFFFF))  # (the Loader took the first)
+        self.assertEqual(self.press(0x1474, 0), (0x011B, 2, self.THING + 1, 0))
+
+    def test_no_window(self):
+        self.scene.mu.mem_write(GAME_DS * 16 + 0x05E6, struct.pack("<H", 9999))
+        self.assertEqual(self.press(0x1474, 0)[:2], (0x1474, 0))  # (the game's own key, not counted)
+        self.assertEqual(self.press(0x1F73, 0)[:2], (0x1F73, 0))  # (another key)

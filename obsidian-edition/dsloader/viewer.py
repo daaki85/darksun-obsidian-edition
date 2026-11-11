@@ -437,114 +437,68 @@ class Viewer:
         own_vars = {"spells_manual": self.spells_manual, "spell_to_hit": self.spell_to_hit}
         for key, group, text in (
                 ("class_restrictions", "characters", "Class restrictions on armour, shields and weapons, the strictest class "
-                                                     "winning (psionicists, multiclass thieves, preservers, druids, clerics' "
-                                                     "spheres); a multiclass preserver, or a human preserver who was a warrior, casts "
-                                                     "no spells in armour, and a thief with another class (now or before) has "
-                                                     "no thief skills in armour that isn't light"),
-                ("multiclass_hp", "characters", "Multiclass hit points as in AD&D: CON's bonus on every die (a warrior's if "
-                                                "a class is a warrior), the total shared between the classes"),
+                                                     "winning; no spells or thief skills in armour for some multiclass "
+                                                     "characters"),
+                ("multiclass_hp", "characters", "Multiclass hit points as in AD&D: CON's bonus on every die, the total "
+                                                "shared between the classes"),
                 ("best_hit_die", "characters", "Hit dice: the better of two, each die rolled twice at creation and at "
                                                "every level (every character)"),
-                ("rolled_scores", "characters", "Scores and hit points as rolled: on the creation screen a score may be "
-                                                "raised only while the six add up to no more than the die gave (lower "
-                                                "one to raise another; the total is shown under CHR), and the hit points "
-                                                "can't be clicked; a change of CON adds or takes off its bonus"),
-                ("adnd_tables", "characters", "AD&D's class tables: the XP each class needs (a gladiator's its own, not the "
-                                              "fighter's), priests' THAC0 (2 better every 3 levels), and clerics', druids' and "
-                                              "preservers' spell slots by level (WIS's bonus slots stay the game's)"),
-                ("con_adnd", "characters", "CON as in AD&D: from CON 20 a hit point back an hour, to one every 10 minutes at 25 "
-                                           "(the game's every 5 minutes at any); dwarves and halflings add only their racial "
-                                           "bonus to poison saves, not CON's adjustment too"),
-                ("aging", "characters", "Ages and magical aging: each character has an age from Dark Sun's tables, its "
-                                        "scores changing at middle, old and venerable age, and dies at the most its race "
-                                        "lives; a year older each 365 days of game time; Haste ages each it speeds a year, "
-                                        "and each must survive a system shock roll (by CON), as in AD&D"),
-                ("dual_class", "characters", "Dual-classing as the manual has it: a human may change class from "
-                                             "3rd level (the game's 2nd), with every prime requisite of the old "
-                                             "class at 15 or more and every one of the new class at 17 or more "
-                                             "(the game checks only one: a ranger, druid or psionicist on WIS alone)"),
-                ("level_10", "characters", "Level cap by XP: 749,999 XP in place of the game's cap of 9th level; a single "
-                                           "class rises while its next level needs no more, a multiclass character's "
-                                           "classes share it evenly, and a human's new class gets what its old "
-                                           "classes' levels didn't use"),
-                ("two_weapons", "arms", "Two weapons: -2 main hand, -4 off hand, DEX reaction adjustment added "
-                                        "(no better than 0; rangers and some kits none in light armour); the off hand "
-                                        "attacks once a round"),
-                ("half_giant_hands", "arms", "Half-giants' two-handed weapons: a half-giant wields one in one hand (a "
-                                             "shield or a light weapon in the other; two heavy weapons still can't be held)"),
-                ("cahulaks", "arms", "Weapon traits: the cahulaks have a head in each hand, so one more attack a "
-                                     "round, at -2 and -4 (DEX's reaction adjustment added) even with Two weapons "
-                                     "unticked, and a hit tangles a man-sized or smaller foe (not a half-giant, a large "
-                                     "creature or anyone Enlarged) that fails a save against petrification: it loses "
-                                     "its next turn. The staff sling throws stinkpots: 1d3 (the game's 1d4), and a "
-                                     "target hit, unless undead or immune to poison, saves against poison or is "
-                                     "nauseated for 1d3+1 rounds: -2 to hit. A polearm held with no other weapon "
-                                     "(a shield is fine) strikes a foe two squares away as well as an adjacent one"),
-                ("creature_size", "arms", "Creature size as in AD&D: a large target, party member or foe (a half-giant, "
-                                          "a Bulette, anyone Enlarged), takes AD&D's weapon dice against large creatures: "
-                                          "more from some weapons (a long sword 1d12), less from others (a dagger or "
-                                          "club 1d3); Hold Person and Charm Person have no effect on it"),
-                ("held_hit", "arms", "Held targets as in AD&D: a blow on a Paralyzed or Out Cold foe (or friend) "
-                                     "hits automatically and does normal damage (the game rolls to hit and "
-                                     "doubles the damage)"),
-                ("protection_rules", "arms", "Rings and cloaks of protection as in AD&D: only the better of two rings "
-                                             "counts, a ring gives no AC with magical armour, and a cloak does nothing "
-                                             "with magical or metal armour or a shield"),
+                ("rolled_scores", "characters", "Scores and hit points as rolled: on the creation screen the six scores "
+                                                "add up to no more than the die gave, and the hit points can't be clicked"),
+                ("adnd_tables", "characters", "AD&D's class tables: the XP each class needs, priests' THAC0, and "
+                                              "clerics', druids' and preservers' spell slots by level"),
+                ("con_adnd", "characters", "CON as in AD&D: hit points back at AD&D's rate from CON 20, and no CON "
+                                           "adjustment on top of dwarves' and halflings' racial bonus to poison saves"),
+                ("aging", "characters", "Ages and magical aging: an age from Dark Sun's tables, scores changing as it "
+                                        "rises, a year each 365 days of game time; Haste ages a year, with a system "
+                                        "shock roll"),
+                ("dual_class", "characters", "Dual-classing as the manual has it: a human may change class from 3rd "
+                                             "level, with the manual's prime requisites for both classes"),
+                ("level_10", "characters", "Level cap by XP: levels past 9th, up to 749,999 XP (shared by a "
+                                           "multiclass character's classes)"),
+                ("two_weapons", "arms", "Two weapons: -2 main hand, -4 off hand, DEX's reaction adjustment added; "
+                                        "the off hand attacks once a round"),
+                ("half_giant_hands", "arms", "Half-giants' two-handed weapons: a half-giant wields one in one hand, a "
+                                             "shield or a light weapon in the other"),
+                ("cahulaks", "arms", "Weapon traits: the cahulaks' extra attack and tangle, the staff sling's "
+                                     "stinkpots, and a polearm's reach of two squares"),
+                ("creature_size", "arms", "Creature size as in AD&D: large targets take AD&D's large weapon dice, and "
+                                          "Hold Person and Charm Person have no effect on them"),
+                ("held_hit", "arms", "Held targets as in AD&D: a blow on a Paralyzed or Out Cold creature hits "
+                                     "automatically, for normal damage (the game rolls, and doubles it)"),
+                ("protection_rules", "arms", "Rings and cloaks of protection as in AD&D: only the better ring counts, "
+                                             "a ring gives no AC with magical armour, a cloak none with magical or "
+                                             "metal armour or a shield"),
                 ("helm_ac", "arms", "Helms give AC 1 (the game's helms give none)"),
-                ("item_saves", "arms", "Items saving against acid as in AD&D, by material, a plus helping, where that's "
-                                       "better than the game's (which destroys armour without a magical power outright)"),
-                ("ranger_casting_level", "magic", "Rangers' casting level: a ranger's spells last and do damage as cast "
-                                                  "at its level less 7, as its spell levels already count it (the game "
-                                                  "uses the whole ranger level)"),
-                ("int_learning", "magic", "Preservers' INT: a chance to learn a spell from a scroll (35% at INT 9 "
-                                          "to 100% at 24; a failed try uses the scroll up) and the most spells of "
-                                          "each spell level they may know (6 at INT 9, all from 19)"),
-                ("spell_save", "magic", "Saving throws against spells: spells saved against with the spell save "
-                                        "(the game uses petrification/polymorph), and against fire, cold and "
-                                        "electricity DEX's defensive adjustment in place of a doubled d20 (the "
-                                        "game doubles the save's d20)"),
-                ("enlarge_dice", "magic", "Enlarge multiplies the weapon's dice only, rounded up, STR and magic added after, "
-                                          "as in AD&D (the game multiplies the whole melee damage, STR included)"),
-                ("spells_manual", "magic", "Spells and psionics as the manual describes them: some two dozen spells' and "
-                                           "two powers' saves, times and damage as the manual gives them (Stinking Cloud, "
-                                           "Color Spray, Cloudkill...), Turn Undead by AD&D's table, monsters' saves by "
-                                           "hit dice and seven monsters' powers (the shadows' STR drain...), all listed in "
-                                           "Features and rules; from the next start"),
-                ("spell_to_hit", "magic", "Spells roll to hit: Acid Arrow, Turn Pebble to Boulder, Magical Stone, Condense, "
-                                          "Minute Meteors (+2) and a monster's spines, and touch spells on a foe (Chill "
-                                          "Touch, Shocking Grasp, Vampiric Touch, the Cause spells, Poison), against the "
+                ("item_saves", "arms", "Items saving against acid as in AD&D, by material, a plus helping (the game "
+                                       "destroys armour without a magical power outright)"),
+                ("ranger_casting_level", "magic", "Rangers' casting level: a ranger casts its spells at its level less 7 "
+                                                  "(the game uses the whole ranger level)"),
+                ("int_learning", "magic", "Preservers' INT: INT sets the chance to learn a spell from a scroll and the "
+                                          "most spells known at each spell level"),
+                ("spell_save", "magic", "Saving throws against spells: the spell save, and DEX's defensive adjustment "
+                                        "against fire, cold and electricity in place of a doubled d20"),
+                ("enlarge_dice", "magic", "Enlarge multiplies the weapon's dice only, STR and magic added after, as in "
+                                          "AD&D (the game multiplies the whole damage)"),
+                ("spells_manual", "magic", "Spells and psionics as the manual describes them: saves, times and damage, "
+                                           "Turn Undead by AD&D's table, monsters' saves and powers; from the next start"),
+                ("spell_to_hit", "magic", "Spells roll to hit: missile spells, and touch spells on a foe, against the "
                                           "target's AC; from the next start"),
-                ("rest_heal", "magic", "Resting as in AD&D: before a rest the party's priests spend the spells "
-                                       "they have left on the party (Neutralize Poison, Cure Blindness, Cure "
-                                       "Disease, the Cure Wounds spells and Heal on the most wounded) and "
-                                       "psionicists their Cell Adjustment; then each heals 3 hit points plus "
-                                       "CON's bonus (the game fills them all)"),
-                ("weapon_specialization", None, "Weapon specialization: fighters and gladiators specialize (+1 to hit, +2 "
-                                                "damage), fighters on to mastery at 5th level and grand mastery at 9th; "
-                                                "rangers have expertise, every ranger with the bow; specialists and "
-                                                "rangers shoot missiles faster; other weapons at a warrior's plain rate "
-                                                "(chosen in the weapon window after DONE, and at a level up)"),
-                ("kits", None, "Kits: a character of one class may take one of its class's three kits, and some "
-                               "multiclass characters (pairs of classes, and one trio) have kits of their own, each "
-                               "giving something and costing something (chosen on the creation panel's KIT page); the "
-                               "game's own party gets features of its own"),
-                ("cha_prices", None, "Shops as in AD&D: the leader's CHA at shops, 5% off what shops ask at CHA 18 "
-                                     "and 5% more for each point after, to 40% at 25, shops paying 60% of an item's "
-                                     "price; and merchants keep the magical items the party sells them, to buy back "
-                                     "at their price (the game destroys whatever is sold; other items still are)"),
-                ("thief_table", None, "Thieves as in AD&D: thief skills from AD&D's table by level, with Dark Sun's "
-                                      "race and DEX adjustments (the game adds 4 a level to a base of its own, and DEX "
-                                      "by a formula); and a backstab multiplies the weapon's dice only, STR and magic "
-                                      "added after, on the round's first attack only (the game multiplies the whole "
-                                      "damage, STR included, on the first two); and a lock or pocket a thief failed is "
-                                      "tried again by that thief only after a level gained"),
+                ("rest_heal", "magic", "Resting as in AD&D: priests and psionicists heal the party with what they have "
+                                       "left, then each heals 3 hit points plus CON's bonus (the game fills them all)"),
+                ("weapon_specialization", None, "Weapon specialization: fighters and gladiators specialize, fighters on "
+                                                "to mastery and grand mastery, rangers take expertise (chosen after DONE "
+                                                "and at a level up)"),
+                ("kits", None, "Kits: three for each class and some for multiclass characters, each giving something "
+                               "and costing something (chosen on the creation panel's KIT page)"),
+                ("cha_prices", None, "Shops as in AD&D: the leader's CHA lowers what shops ask, shops pay 60%, and "
+                                     "merchants keep the magical items sold them, to buy back"),
+                ("thief_table", None, "Thieves as in AD&D: thief skills from AD&D's table, a backstab multiplying the "
+                                      "weapon's dice only, a failed lock or pocket tried again only a level later"),
                 ("stealth", None, "Hiding in shadows to backstab: thieves hide in shadows and move silently to backstab, "
-                                  "rangers to attack from behind (with no enemy beside them; a thief's chance halved in "
-                                  "daylight, a ranger's indoors; a few kits differ)"),
-                ("new_spells", None, "New spells: six for wizards (Cat's Grace at 2nd level: DEX + 1d6, by class with "
-                                     "Spells and psionics as the manual describes them; at 1st, Erdlu "
-                                     "Claw (unarmed 1d6+1), Fogbolt (-3 to hit, AC 2 worse), Reflected Image, Spook and "
-                                     "Friends) and ten 6th-level priest spells from 11th level (Heal, Harm, Blade Barrier...)")):
+                                  "rangers to attack from behind"),
+                ("new_spells", None, "New spells: six for wizards (Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, "
+                                     "Spook and Friends) and ten 6th-level priest spells (Heal, Harm, Blade Barrier...)")):
             if key in own_vars:
                 var = own_vars[key]
             else:
@@ -554,8 +508,8 @@ class Viewer:
             ttk.Checkbutton(parent, text=text, variable=var,
                             command=self._options_changed).pack(anchor="w", pady=(4 if parent.winfo_children()[:-1] else 0, 0))
             if key == "stealth":  # (under it: what worn gear adds)
-                ttk.Checkbutton(thieves, text="... a worn cloak adds 10 to hiding, worn boots 10 to moving silently; "
-                                            "a worn belt adds 5 to picking pockets and opening locks (hiding or not)",
+                ttk.Checkbutton(thieves, text="... a worn cloak adds 10 to hiding, worn boots 10 to moving silently, "
+                                            "a worn belt 5 to picking pockets and opening locks",
                                 variable=self.stealth_gear, command=self._options_changed).pack(anchor="w", padx=(20, 0))
 
         self.roll_store = tk.BooleanVar(value=settings.get("roll_store", True) is not False)
@@ -563,10 +517,8 @@ class Viewer:
                         "and bring the kept roll back (from the next start)", variable=self.roll_store,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.starting_gear = tk.BooleanVar(value=bool(settings.get("starting_gear", True)))
-        ttk.Checkbutton(custom, text="Fuller starting gear: new characters (and the game's own party) also get a weapon in hand they can use, "
-                        "a sling, leather armour where they may wear it (Stalkers, Assassins and "
-                        "Shinobi a cloak, some kits their own weapons); a multiclass preserver starts "
-                        "with no armour",
+        ttk.Checkbutton(custom, text="Fuller starting gear: new characters (and the game's own party) also get a weapon "
+                        "they can use, a sling, and leather armour where they may wear it",
                         variable=self.starting_gear, command=self._options_changed).pack(anchor="w", pady=(4, 0))
 
         self.content_vars: Dict[str, tk.BooleanVar] = {}
@@ -576,9 +528,8 @@ class Viewer:
                 ("vulture", "The cooked vulture: Dinos cooks it for the party (XP and a full rest)"),
                 ("defiler_scrolls", "Defilers' scrolls: a defiler in a fight carries a scroll of a random "
                                     "preserver spell one time in 20, dropped where it dies"),
-                (launch.NEW_ITEMS, "New items, magical and mundane: weapons, armour and other gear the game "
-                                   "lacks or never placed, on its people, in its shops and chests (the guide's "
-                                   "New items lists them), and the champions' arena bout after Scar's death")):
+                (launch.NEW_ITEMS, "New items, magical and mundane: weapons, armour and other gear on the game's "
+                                   "people, in its shops and chests, and the champions' arena bout after Scar's death")):
             self.content_vars[key] = tk.BooleanVar(value=settings.get(key, True) is not False)
             ttk.Checkbutton(new, text=text, variable=self.content_vars[key],
                             command=self._options_changed).pack(anchor="w", pady=(4, 0))
@@ -637,13 +588,12 @@ class Viewer:
                         "a scene as a key does; from the next start", variable=self.scene_pointer,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.mouse_start = tk.BooleanVar(value=settings.get("mouse_start", True) is not False)
-        ttk.Checkbutton(controls, text="Where the pointer starts: in the middle of the screen; it stays put as screens change, moves as far up and "
-                        "down as across, and in a window as fast as the desktop's pointer (the game's: at the "
-                        "right edge, half as far, three times as fast); from the next start",
+        ttk.Checkbutton(controls, text="Where the pointer starts: in the middle of the screen, moving as far up and down as "
+                        "across, and in a window as fast as the desktop's pointer; from the next start",
                         variable=self.mouse_start, command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.party_spread = tk.BooleanVar(value=settings.get("party_spread", True) is not False)
         ttk.Checkbutton(controls, text="The whole party in view as a game starts or loads and after each fight, as 5 "
-                        "does (the game's: often only the leader; 6 still gathers it); from the next start",
+                        "does; from the next start",
                         variable=self.party_spread, command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.effects_kept = tk.BooleanVar(value=settings.get("effects_kept", True) is not False)
         ttk.Checkbutton(controls, text="Spells on the Effects screen: a click on a spell's icon leaves it on (the game "
@@ -663,8 +613,8 @@ class Viewer:
             ttk.Radiobutton(pace, text=text, value=value, variable=self.game_speed,
                             command=self._speed_chosen).pack(anchor="w")
         self.steady_pace = tk.BooleanVar(value=settings.get("steady_pace", True) is not False)
-        ttk.Checkbutton(pace, text="Steady pace: walking at full speed on the map whatever is drawn (when a picture takes too "
-                        "long, the next is skipped rather than the party slowing down)", variable=self.steady_pace,
+        ttk.Checkbutton(pace, text="Steady pace: walking at full speed on the map whatever is drawn (a picture skipped "
+                        "rather than the party slowed)", variable=self.steady_pace,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         # Wake of the Ravager, for the 6th-level priest spells' icons and pictures (wotrart.py)
         ravager = section("ravager", "Wake of the Ravager (optional)")

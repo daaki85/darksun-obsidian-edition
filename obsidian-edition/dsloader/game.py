@@ -164,10 +164,10 @@ RULE_CHA_PRICES = 1048576
 # creation's scores and hit points as rolled (DSCLOG's RULE_HI_ROLLED, RL_*): a score raised only while
 # the six add up to no more than the die gave, the hit points not changed by a click
 RULE_ROLLED = 2097152
-# magical items sold to a merchant kept in its pack, to buy back (buyback.py; DSCLOG's RULE_HI_BUYBACK)
+# magical items sold to a merchant kept in its pack, to buy back (buyback.py; DSCLOG's SELL_KEEP, under RULE_HI_CHA_PRICES)
 RULE_BUYBACK = RULE_CHA_PRICES  # (one switch, Shops as in AD&D: the setting "cha_prices"; 4194304 free)
 # a backstab multiplies the weapon's dice only, STR and the rest added after (the PHB; DSCLOG's
-# RULE_HI_BACKSTAB, STAB_TIMES); else the game's, the whole damage multiplied
+# STAB_TIMES and STAB_FIRST, under RULE_THIEF_TABLE); else the game's, the whole damage multiplied
 RULE_BACKSTAB = RULE_THIEF_TABLE  # (one switch, Thieves as in AD&D: the setting "thief_table"; 8388608 free)
 # ages from Dark Sun's tables, their categories' changes to the scores and death at the most a race
 # lives (aging.py), and Haste's magical aging: a system shock roll and a year (DSCLOG's RULE_HI_AGING)

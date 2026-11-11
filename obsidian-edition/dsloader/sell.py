@@ -68,7 +68,7 @@ def price(gd: GameData, rec: bytes) -> int:
         value = prices.sell_price(value)
     typ = gd.item_type_record(rec)
     if len(typ) > restrict.TYPE_KIND_FLAGS and typ[restrict.TYPE_KIND_FLAGS] & STACKS:
-        value *= max(1, struct.unpack_from("<H", rec, COUNT)[0])
+        value *= struct.unpack_from("<H", rec, COUNT)[0]  # (as stored, as the game's 83D6Bh)
     return value
 
 
@@ -88,13 +88,21 @@ def sell(gd: GameData, member: int) -> Tuple[List[str], int]:
     for item, rec in goods:
         paid = price(gd, rec)
         name = gd.item_label(rec, gd.item_type_record(rec))
-        if ring.unlink(gd, ring.Items(gd), item, f"sold: {name}", empty=True):
-            entry = sold.setdefault(name, [0, 0])
-            entry[0] += 1
-            entry[1] += paid
-            total += paid
-    if total:
-        gd.add_money(total)
+        # each item paid for before it leaves, and the pay taken back if it can't: a failed write
+        # never leaves a thing gone unpaid (ChatGPT's review, 2026-11-11)
+        gd.add_money(paid)
+        try:
+            gone = ring.unlink(gd, ring.Items(gd), item, f"sold: {name}", empty=True)
+        except Exception:
+            gd.add_money(-paid)
+            raise
+        if not gone:
+            gd.add_money(-paid)
+            continue
+        entry = sold.setdefault(name, [0, 0])
+        entry[0] += 1
+        entry[1] += paid
+        total += paid
     who, count = gd.creature_name(member), sum(n for n, _ in sold.values())
     listed = ", ".join(f"{name} x{n} {paid}" if n > 1 else f"{name} {paid}" for name, (n, paid) in sold.items())
     return [f"{who} sells {count} things for {total} ceramic pieces: {listed}"], total

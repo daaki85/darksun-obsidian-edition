@@ -1,12 +1,26 @@
-# Obsidian Edition: Patch Notes
+# Obsidian Edition: Changes from the Original Game
 
-*A Dark Sun: Shattered Lands mod · Current version 2.16.0 · Every change from the original game*
+*A Dark Sun: Shattered Lands mod · Current version 2.16.1 · What the mod adds and changes, and its main bug fixes*
 
 Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. You start the game with the Loader, which loads the mod with your options and logs every roll as it happens. Nearly everything is switchable, the game's own files are never touched, and your saves stay where they are.
 
 **Download:** https://github.com/daaki85/darksun-obsidian-edition/releases/latest
 
-*These notes are also a web page, [`patch-notes.html`](patch-notes.html), with a button that copies them as Markdown for forums. They follow the repository, so a change made since the current version is here before its release; the [changelog](CHANGELOG.md) says which pull request brought it.*
+*These notes follow the repository, so they can include changes made since the current version that are not yet in a release; the [changelog](https://github.com/daaki85/darksun-obsidian-edition/blob/main/CHANGELOG.md) says which pull request brought each one.*
+
+These notes are also a web page, [`patch-notes.html`](patch-notes.html), with a button that copies them as Markdown for forums.
+
+## At a Glance
+
+- **Every hidden roll shown.** The Loader's dice log writes each attack, saving throw, check and creation roll as it happens, with the number it needed and where each bonus came from. A combat log in the game (**L**) shows the rolls on the map.
+- **Rules closer to AD&D 2nd Edition.** Saving throws, weapon specialization, two weapons, thief skills, class restrictions and the class tables as the books have them; spells, psionics and monsters as the manual describes them.
+- **More to choose and find.** Three kits for each class ([every kit](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/KITS.md)), twenty-two new magic weapons and more new magic and plain items ([every item, and where it is](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/ITEMS.md)), and new people and an arena bout in the game's first areas.
+- **The party as it is dressed.** The figures show the gear they wear, magic gear glows on them, and elves have pointed ears.
+- **Quicker play.** Keys to choose a target, loot a body and sell plain gear, 40 save slots, a faster default speed, and no copy protection.
+- **Bugs fixed.** The main fixes are under [Bug Fixes](#bug-fixes); every one, with what the game did, is in [the game's bugs, fixed](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/GAME-BUGS.md).
+- **Your choice.** Nearly every change has a switch in the Loader's Options. The game's own files are never touched, and saves made with the original game load (see [Your Saved Games](#your-saved-games)).
+
+The full catalogue follows, by part of the game.
 
 ## Contents
 
@@ -20,6 +34,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 - [Graphics](#graphics)
 - [Quality of Life](#quality-of-life)
 - [The Loader](#the-loader)
+- [Documentation](#documentation)
 - [Bug Fixes](#bug-fixes)
 - [Your Saved Games](#your-saved-games)
 
@@ -147,7 +162,7 @@ A few of them:
 - **Ravager:** fights without a shield or missile weapons, with a natural AC that hardens from 7 to 3 as it levels.
 - **Battle Dancer:** dances as each fight starts, a roll against DEX at −4: +1 to hit, damage and AC for a few rounds, or −1 if it stumbles. Long swords and bows only, and no shield.
 - **Military Scout:** better at stealth, traps and climbing under the open sky, with +2 initiative and +1 to hit with bows and slings there, and its hiding isn't halved by the sun; worse under a roof, and it never backstabs.
-- **Spellarcher:** shoots every arrow as a magic one (1 better, at least +1), and weaves the touch spells it knows into arrows: a button on the USE screen for each, a spell slot for 5 arrows a preserver level in its empty quiver (or added to the same spell's arrows there), each casting its spell on what it hits at the archer's preserver level. They stay in the quiver until shot, as a Flame Blade stays in the hand. Making them plays the spell's own cast sound.
+- **Spellarcher:** shoots every arrow as a magic one (1 better, at least +1), and weaves the touch spells it knows into arrows: a button on the USE screen for each, a spell slot for 5 arrows a preserver level in its empty quiver (or added to the same spell's arrows there), each casting its spell on what it hits at the archer's preserver level. They stay in the quiver until shot or the next rest, when any left fade, so a slot spent just before resting is lost. Making them plays the spell's own cast sound.
 - **Wild Fury:** Wild Fighting as each fight starts, a roll against CON at −4: one more attack a round in melee and +3 damage, or −3 to hit and AC 3 worse if it fails.
 - **[New]** The game's own party has features of its own: Gerakis fights wild (as a Wild Fury does), K'ratchek casts and uses psionics as a Wasteland Seer does, Cilla hides as well in the sun as out of it (her feature, the Elven Shadow-walker), and Cermak is an Arcanist.
 
@@ -336,12 +351,17 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** More of a fight in the dice log: the **psionic defence** against Ego Whip, Id Insinuation, Psychic Crush and Psionic Blast; the **protection that halved** a spell's damage (Resist Fire, Fire Shield...); what a monster's **special attack** does (`Paralysing attack: lasts 7 rounds unless saved against`); **Detonate**'s blast on an item: which one, the d20, and whether it's gone (it picks the worn item that breaks most easily, a bone helm before bone armour); and whether a thri-kreen strikes with a **claw or its bite**.
 - **[New]** More of the game's own choices in the dice log: why it **refused a spell** you clicked (no line of sight, too far...); what a **script** asked for (a rest, random monsters, an arena bout); the **ability checks scripts make** with a roll of their own (a CHA to talk someone round, STR to break chains); and a party member's **ability score** changing.
 - **[New]** Each shot at the **Bowyer's archery target** in the dice log: the roll, what it needed, how far the archer is from the target and the Bowyer, and whether a centre shot earns his arrows.
-- **[New]** **How the game works** compares every cleric spell and psionic power with the manual: what the manual says, what the game's code does, and what the log shows.
 - **[New]** The Loader can run the game as **Dark Sun Recompiled**, the game translated into a program of its own, instead of in DOSBox, where it is installed.
 - **[New]** **Options:** nearly every rule change and addition in these notes has a switch, some sharing one such as **Weapon traits** (not the keys, the game's fixed bugs or the footman's pick), all on by default (the red ring's, the game speed's and the combat log's level aside), and **Restore defaults** sets them all back.
 - **[New]** **Accessibility:** text that can be enlarged up to 2.5 times (**A+**, **A-**, **Ctrl +** and **Ctrl -**), every control reachable from the keyboard, colours with at least 4.5:1 contrast, and the logs saved as text for screen readers.
 
 > *Developers' Notes: Shattered Lands rolls dice for everything and shows you almost none of it. Fireball victims kept saving and nobody knew why (the game doubles the d20 against fire). The Loader started as a way to see those numbers. Once we could see them, we started fixing them.*
+
+## Documentation
+
+- **[New]** **[How the game works](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/HOW-THE-GAME-WORKS.md)** compares every cleric spell and psionic power with the manual: what the manual says, what the game's code does, and what the log shows.
+
+The full tables of the [kits](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/KITS.md) and the [items](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/ITEMS.md) (where each is) are in the mod's documentation too.
 
 ## Bug Fixes
 

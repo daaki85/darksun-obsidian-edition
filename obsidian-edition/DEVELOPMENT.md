@@ -58,7 +58,7 @@ DSCLOG's routines and variables are named in capitals on these pages
 | `*.bat` | what players double-click: the Loader, the game with or without its window, a save file's party |
 | `README.md`, `FEATURES.md`, `ITEMS.md`, `KITS.md`, `GAME-BUGS.md`, `HOW-THE-GAME-WORKS.md`, `DICE-LOG.md`, `PLAYER-GUIDE.md`, `CREATURES.md` | the player's pages (`player-guide.html` is made from the guide, `CREATURES.md` by `doccreatures.py`) |
 | `../PATCH-NOTES.md`, `../CHANGELOG.md`, `../release-notes/` | the repository's root: the patch notes, the record of every pull request, and each release's notes |
-| `../playtest/` | the in-game test kit: tools that drive the game in DOSBox, saves and logs, and [its guide](../playtest/PLAYTESTING.md). It is outside this folder, so it never goes in the release zip |
+| `../playtest/` | the in-game test kit: tools that drive the game in DOSBox, saves and logs, and [its guide](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/PLAYTESTING.md). It is outside this folder, so it never goes in the release zip |
 
 Each module of `dsloader` opens with what it does. Those the sections below
 don't come back to: `__main__.py` is the command line (below); `gff.py` and
@@ -180,7 +180,7 @@ Tests that guard the whole project rather than one module:
 | `test_guidepage`, `test_patchnotes` | the web pages are up to date with their Markdown, and their links work |
 
 The unit tests don't play the game. For anything DSCLOG or a script touches,
-check it in the game too: [the playtesting guide](../playtest/PLAYTESTING.md)
+check it in the game too: [the playtesting guide](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/PLAYTESTING.md)
 has the tools and how to use them.
 
 ### Making a release
@@ -198,7 +198,7 @@ so only what is committed goes in) and publishes it with
 2. Finish `release-notes/v<version>.md` and the CHANGELOG's entry, and
    rebuild `DSCLOG.EXE` and the web pages if their sources changed.
 3. Check in the game anything DSCLOG or a script touches ([the playtesting
-   guide](../playtest/PLAYTESTING.md)).
+   guide](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/PLAYTESTING.md)).
 4. Merge to `main`, then push the tag `v<version>`, or run the workflow by hand
    (Actions → Release → Run workflow), which makes the tag.
 5. Once the pull request is merged, rename the CHANGELOG's "## Next pull
@@ -526,7 +526,7 @@ the one place for the sizes; the sections after them name the symbols only.
 | Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (the unmodded game's 57 KB) |
 | C000h-C7FFh | 32 KB | the video BIOS (ROM) |
 | C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
-| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 67.9 KB (69,568 bytes with its PSP and its tail, (10h + `KEPT_PARAS`) paragraphs), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, and the rest free. **Measured 2026-11-10** (`playtest/memaudit.py`, in Pehtucl's ambush): 32,256 bytes free in one piece, and nothing between the helper and the overlay buffer (KEEP's resize, fixed that day; 288 bytes were left there before) |
+| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 68.0 KB (69,584 bytes with its PSP and its tail, (10h + `KEPT_PARAS`) paragraphs), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, and the rest free. **Measured 2026-11-10** (`playtest/memaudit.py`, in Pehtucl's ambush): 32,256 bytes free in one piece, and nothing between the helper and the overlay buffer (KEEP's resize, fixed that day; 288 bytes were left there before) |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
 | 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's [far block](#the-far-block), 65,484 bytes, 36 free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
@@ -534,22 +534,22 @@ the one place for the sizes; the sections after them name the symbols only.
 ### The limits
 
 Each fails the build when passed (a negative `times`). From the build of
-2026-11-11, for 2.16.0, with the T and S keys (DSCLOG.EXE 69,344
-bytes: the 32-byte header, the segment's image of 63,792 and the tail's 5,520, `TAIL_BYTES`):
+2026-11-11, after 2.16.0, with T's mode from the Shift keys (DSCLOG.EXE 69,360
+bytes: the 32-byte header, the segment's image of 63,808 and the tail's 5,520, `TAIL_BYTES`):
 
 | Limit | Used | Room | Spare |
 |---|---|---|---|
-| [the helper's segment](#the-helpers-segment): `kept_end` (`resident_end` 62,800 + `AFTER_INSTALL` 992) | 63,792 bytes | 65,536 | 1,744 bytes |
+| [the helper's segment](#the-helpers-segment): `kept_end` (`resident_end` 62,816 + `AFTER_INSTALL` 992) | 63,808 bytes | 65,536 | 1,728 bytes |
 | [the far block](#the-far-block): `FAR_END` (its buffers from `FAR_RING`, 10h: 65,484 bytes) | 65,500 | 65,536 | 36 bytes |
-| upper memory as the helper loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,428 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,754 |
-| upper memory once installed: `UMB_KEPT` (the helper, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,050 paragraphs | 8,182 (`UMB_ROOM`) | 132 (2.1 KB) |
+| upper memory as the helper loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,429 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,753 |
+| upper memory once installed: `UMB_KEPT` (the helper, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,051 paragraphs | 8,182 (`UMB_ROOM`) | 131 (2.1 KB) |
 
 To check them after a change, build a scratch copy with `[map all FILE]` as its
 first line (`nasm -f bin -I dos/ -o /tmp/x.exe COPY`, from `obsidian-edition/`)
 and read the symbols in the map. What each change took is in the
-[CHANGELOG](../CHANGELOG.md); the two memory passes' steps, each checked in the
-game, are in [the 2026-11-08 log](../playtest/logs/2026-11-08-memory-pass.md)
-and [the 2026-11-09 log](../playtest/logs/2026-11-09-memory-pass-2.md).
+[CHANGELOG](https://github.com/daaki85/darksun-obsidian-edition/blob/main/CHANGELOG.md); the two memory passes' steps, each checked in the
+game, are in [the 2026-11-08 log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-08-memory-pass.md)
+and [the 2026-11-09 log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-09-memory-pass-2.md).
 
 ### The helper's segment
 

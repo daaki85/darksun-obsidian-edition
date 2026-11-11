@@ -924,6 +924,7 @@ class DiceLog:
         seq, thing, mode = struct.unpack("<HHH", self.guest.read(self.tsr_hdr + loot.TSR_LOOT_SEQ, 6))
         if self._loot_seen is None or self._loot_seen[0] != self.tsr_hdr:
             self._loot_seen = (self.tsr_hdr, seq)  # (a new DSCLOG, or the first look: nothing asked yet)
+            loot.release(self.game, self.tsr_hdr)  # (nothing pending: T counts again)
             return []
         if seq == self._loot_seen[1] or loot.window_open(self.game):
             return []
@@ -931,7 +932,12 @@ class DiceLog:
             lines, took = loot.take(self.game, thing, mode)
         except itemgate.ItemsBusy:
             return []  # (the game changing its lists: in a later pass)
+        except Exception:
+            self._loot_seen = (self.tsr_hdr, seq)  # (once: not tried again on what is left, each pass)
+            loot.release(self.game, self.tsr_hdr)
+            raise
         self._loot_seen = (self.tsr_hdr, seq)
+        loot.release(self.game, self.tsr_hdr)  # (DSCLOG holds a T meanwhile: one body at a time)
         if took:
             self.guest.write(self.tsr_hdr + TSR_SOUND_REQ, struct.pack("<H", sounds.PICK_SOUND))
         return lines
@@ -960,6 +966,9 @@ class DiceLog:
             lines, paid = sell.sell(self.game, member)
         except itemgate.ItemsBusy:
             return []
+        except Exception:
+            self._sell_seen = (self.tsr_hdr, seq)  # (once: not sold again each pass)
+            raise
         self._sell_seen = (self.tsr_hdr, seq)
         if paid:
             self.guest.write(self.tsr_hdr + TSR_SOUND_REQ, struct.pack("<H", sounds.PICK_SOUND))
