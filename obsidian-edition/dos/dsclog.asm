@@ -16939,6 +16939,8 @@ cah_swing:
         call size_dice          ; (the creature size rule: a large target's dice, the call's first swing)
         test word [cs:rules_hi], RULE_HI_CAHULAKS
         jz .out
+        cmp word [bp + 0x12], 0     ; (no item: a natural attack, its [BP+14h] never set)
+        jl .out
         cmp word [bp + 0x16], 1
         jg .out
         cmp word [bp + 0x14], CAHULAKS
@@ -16969,11 +16971,13 @@ cah_hit:
         mov byte [bp - 0x15], 0
         test word [cs:rules_hi], RULE_HI_CAHULAKS ; (Weapon traits: the cahulaks', the stinkpot, the hook)
         jz .out
+        cmp word [bp + 0x12], 0     ; (no item: a natural attack, its [BP+14h] never set: audit 2026-11-11)
+        jl .out
         cmp word [bp + 0x14], STAFF_SLING
-        je stink_hit
-.rule:  test word [cs:rules_hi], RULE_HI_CAHULAKS
-        jz .out
-        cmp word [bp + 0x16], 1
+        jne .rule
+        cmp word [bp + 0x16], 1     ; (the staff sling's stinkpot is its shot, not a blow with it)
+        jg stink_hit
+.rule:  cmp word [bp + 0x16], 1
         jg .out
         cmp word [bp + 0x14], CAHULAKS
         je .cah

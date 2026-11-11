@@ -33,9 +33,13 @@ WORN_AT = 0x09
 AMMUNITION = 11  # (a type's worn place, +09h: the quiver's; arrows, bolts, sling stones: never sold, the user's choice)
 
 
+def bios_tick(gd: GameData) -> int:
+    return struct.unpack("<H", gd.guest.read(BIOS_TICK, 2))[0]
+
+
 def shop_up(gd: GameData, tsr_hdr: int) -> bool:
     at, = struct.unpack("<H", gd.guest.read(tsr_hdr + TSR_SHOP_AT, 2))
-    now, = struct.unpack("<H", gd.guest.read(BIOS_TICK, 2))
+    now = bios_tick(gd)
     return at != 0 and (now - at) & 0xFFFF <= SHOP_FRESH
 
 

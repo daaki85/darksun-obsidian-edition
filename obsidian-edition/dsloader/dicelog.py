@@ -579,6 +579,7 @@ class DiceLog:
         self._dresser_at = 0.0  # (when to try making the Dresser next: the game's files not found yet)
         self.picked: set = set()  # the pockets tried already (each person gets one try), and locks failed (locks.py)
         self._sell_seen: Optional[Tuple[int, int]] = None  # (DSCLOG's header, SELL_SEQ as last acted on)
+        self._sell_noticed: Optional[Tuple[int, int]] = None  # (SELL_SEQ new, the BIOS tick it was seen at)
         self._loot_seen: Optional[Tuple[int, int]] = None  # (DSCLOG's header, LOOT_SEQ as last acted on)
         self._locks_written: Optional[Tuple[int, bytes]] = None  # (DSCLOG's header and LOCK_BARRED as last written)
         # ... and when, by the game's clock: one tried after the game being played was saved is
@@ -716,6 +717,9 @@ class DiceLog:
         self._big = cahulaks.Big()
         self._large = sizes.Large()
         self._targeting.forget()
+        # (a game restarted in the same DOSBox has a new DSCLOG at the same header: its lock table
+        # written anew, and its T and S counts taken afresh as the start, audit 2026-11-11)
+        self._locks_written = self._loot_seen = self._sell_seen = None
         self._arena_count = None
         self.tracker = PartyTracker(self.game)
         self.defilers = defilerscrolls.DefilerScrolls()
@@ -941,7 +945,16 @@ class DiceLog:
         if self._sell_seen is None or self._sell_seen[0] != self.tsr_hdr:
             self._sell_seen = (self.tsr_hdr, seq)
             return []
-        if seq == self._sell_seen[1] or sell.shop_up(self.game, self.tsr_hdr):
+        if seq == self._sell_seen[1]:
+            self._sell_noticed = None
+            return []
+        # (SELL_KEY clears the shop's stamp as it counts S, before the shop has shut: wait until the
+        # shop's loop, which stamps it each pass, has had SHOP_FRESH ticks to show it still runs;
+        # audit 2026-11-11)
+        now = sell.bios_tick(self.game)
+        if self._sell_noticed is None or self._sell_noticed[0] != seq:
+            self._sell_noticed = (seq, now)
+        if (now - self._sell_noticed[1]) & 0xFFFF <= sell.SHOP_FRESH or sell.shop_up(self.game, self.tsr_hdr):
             return []
         try:
             lines, paid = sell.sell(self.game, member)

@@ -201,7 +201,7 @@ class StinkHitTests(tc.CahulaksTests):
             out.append((e.kind, e.raw) + tuple(e.arg(at) for at in (6, 8, 0x0A, 0x0C)))
         return out
 
-    def throw(self, d3=2, rules=RULE, kind=0, reach=2, attacker=1, undead=0, share=100, saved=0):
+    def throw(self, d3=2, rules=RULE, kind=0, reach=2, attacker=1, undead=0, share=100, saved=0, item=5):
         """CAH_HIT after a hit with item type KIND: the game's routines stubbed (UNDEAD the undead test's
         AL, SHARE the poison's share, SAVED the save's AX); (the save's calls, the effects added, the
         records made)."""
@@ -216,7 +216,7 @@ class StinkHitTests(tc.CahulaksTests):
             self.mu.mem_write(at, code)
             self.mu.mem_write(GAME_DS * 16 + counter, bytes(2))
         self.mu.mem_write(GAME_DS * 16 + self.SEED, struct.pack("<I", self.seed_for((d3, 3))))
-        self.frame(p14=kind, p16=reach, p18=attacker)
+        self.frame(p12=item, p14=kind, p16=reach, p18=attacker)
         self.mu.mem_write(SS * 16 + BP - 0x15, b"\x63")
         before = self.seq()
         self.assertEqual(self.where("cahulaks_hit", ()), "end")
@@ -263,6 +263,13 @@ class StinkHitTests(tc.CahulaksTests):
         self.assertEqual(self.throw(kind=64), ([], [], []))  # (a sling)
         self.target(thing=20, creature=9, hp=0)
         self.assertEqual(self.throw(), ([], [], []))
+
+    def test_not_a_natural_attack_or_a_blow(self):
+        """A natural attack (no item, [BP+12h] -1: the game never sets the type word then, so it may be
+        a stale 0, the staff sling's) and a blow with the staff sling (not its shot): nothing."""
+        self.target(thing=20, creature=9)
+        self.assertEqual(self.throw(item=-1), ([], [], []))
+        self.assertEqual(self.throw(reach=1), ([], [], []))
 
 
 @unittest.skipIf(td.Uc is None, "unicorn not installed")

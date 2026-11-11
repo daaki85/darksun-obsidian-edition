@@ -88,6 +88,16 @@ class LootTests(unittest.TestCase):
         self.assertEqual(lines, ["Dag takes Bag, Wooden Long Sword", "No room in the backpacks for: Cell Key, Wooden Boots"])
         self.assertEqual(self.contents(), [KEY, BOOTS])
 
+    def test_no_list_to_be_had(self):
+        """Dag has no backpack list and the game too few free things to make one: nothing is taken,
+        and nothing lost (the body keeps all four)."""
+        from unittest import mock
+        with mock.patch.object(ring.Items, "spare_things", lambda self: False):
+            lines, took = loot.take(self.gd, BODY, loot.ALL)
+        self.assertFalse(took)
+        self.assertEqual(self.contents(), [CLUB, SWORD, KEY, BOOTS])
+        self.assertEqual(lines, ["The party's backpacks are full: nothing taken."])
+
     def test_listed(self):
         self.assertEqual(loot._listed(["Grapes", "Guava", "Guava", "Bloodwrath", "Guava"]),
                          "Grapes, Guava (3), Bloodwrath")

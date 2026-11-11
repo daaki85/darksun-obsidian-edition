@@ -90,6 +90,7 @@ def take(gd: GameData, thing: int, mode: int) -> Tuple[List[str], bool]:
     plan: Dict[int, Tuple[int, int]] = {}  # item: (member, cell)
     taken_cells: Dict[int, set] = {}
     takers = _takers(gd)
+    ready: Dict[int, bool] = {}  # member: whether it has a backpack list to take into
     plain: List[int] = []
     for item in items:
         if mode == NO_PLAIN_WEAPONS and plain_weapon(gd, it.item(item)):
@@ -99,7 +100,13 @@ def take(gd: GameData, thing: int, mode: int) -> Tuple[List[str], bool]:
             cells = taken_cells.setdefault(member, set())
             used = _used(gd, it, member) | cells  # (what it has, and what is planned for it already)
             cell = next((c for c in pickpocket.BACKPACK if c not in used), None)
-            if cell is not None:
+            if cell is None:
+                continue
+            if member not in ready:  # (its backpack list, made now if it has none, before anything
+                # is unlinked: with too few free things there is none, and nothing goes to it)
+                ready[member] = pickpocket.party_list(gd, it, member, cell) is not None
+                it = ring.Items(gd)  # (read again: the list may be new)
+            if ready[member]:
                 cells.add(cell)
                 plan[item] = (member, cell)
                 break

@@ -43,9 +43,10 @@ Releases, newest first: [2.15.0](#pull-request-89-merged-2026-11-10) (#89),
 
 ## Next pull request (not opened yet)
 
-DSCLOG.EXE 69,136 bytes (63,584 in its segment), 1,952 of its segment spare (68,976 and 2,112 before
-the pointer and lock changes below; the figures that follow are from then): `UMB_NEED` 6,405 paragraphs (1,777 spare), `UMB_KEPT` 8,027 (155 spare). The polearm's
-reach took 384 bytes of the segment (68,592 bytes before it).
+DSCLOG.EXE 69,344 bytes (63,792 in its segment), 1,744 of its segment spare; `UMB_NEED` 6,428
+paragraphs (1,754 spare), `UMB_KEPT` 8,050 (132 spare). Before the T and S keys, 69,136 (63,584,
+1,952 spare); before the pointer and lock changes, 68,976 and 2,112 spare. The polearm's reach took 384
+bytes of the segment (68,592 bytes before it).
 
 **New**
 - **Selling plain gear in one go** (the user's ask and choices: the member on show, plain gear only):
@@ -113,6 +114,21 @@ reach took 384 bytes of the segment (68,592 bytes before it).
   squares with no movement left, the bow in the missile slot left alone, playtest/logs/2026-11-10-polearm-reach.md.)
 
 **Fixed**
+- **From the code audit before 2.16.0:**
+  - The stinkpot and the cahulaks' tests at a hit (DSCLOG's `CAH_HIT`, and the cahulaks' second
+    swing) read the attack's item type, `[BP+14h]`, which the game leaves unset for a natural
+    attack (no item, `[BP+12h]` -1). A claw or fist with a stale 0 there would have been a
+    stinkpot. Both now need an item, and the stinkpot a shot (`[BP+16h]` over 1), not a blow with
+    the staff sling. Test `test_not_a_natural_attack_or_a_blow`.
+  - T could lose things when the game had too few free things to make a member's backpack list:
+    they were unlinked from the body before the list was asked for. `loot.take` now makes or finds
+    each taker's list while planning, before anything moves. Test `test_no_list_to_be_had`.
+  - A game restarted in the same DOSBox keeps DSCLOG's header address: the dice log's lock table,
+    and its T and S counts, are now taken afresh on attaching.
+  - S cleared the shop's stamp as it counted, so a Loader pass before the shop had shut could
+    sell while the shop's code still ran. The dice log now waits `SHOP_FRESH` ticks after it sees
+    the S, and the shop's loop re-stamps if it is still running. Seen in the game: the sale comes
+    as the shop shuts.
 - **The sewer grate's hack wants a melee weapon** (the user's ask). The weapon search (script 137
   at A79h) took whatever was in the weapon hand, a bow too; now the first item in either hand that
   is a melee weapon, and with none no "Hack the lock off." is offered. The scripts can't read an
