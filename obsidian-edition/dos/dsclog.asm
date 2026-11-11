@@ -448,7 +448,8 @@ lock_off   dw lock_barred       ; +1844 offset of LOCK_BARRED in this segment: t
                                 ;      locks each party member may not try again yet (LOCK_SITE)
 loot_seq   dw 0                 ; +1846 T or Shift+T read with a body's (a container's) window open,
                                 ;      counted (LOOT_KEY): the Loader takes what is in it
-loot_thing dw 0xFFFF            ; +1848 ... the container's map thing (the game's DS:05E6h then)
+loot_thing dw 0xFFFF            ; +1848 ... the container's map thing (the game's DS:05E6h then);
+                                ;      FFFFh again once the Loader has taken it (none pending)
 loot_mode  dw 0                 ; +1850 ... 0 T: everything; 1 Shift+T: all but plain weapons
 sell_seq   dw 0                 ; +1852 S read on a shop's screen, counted (SELL_KEY): the Loader
                                 ;      sells the plain gear in the backpack of ...
@@ -27096,6 +27097,8 @@ loot_key:
         mov bx, [LOOT_OPEN]
         cmp bx, LOOT_NONE
         je .out
+        cmp word [cs:loot_thing], 0xFFFF ; (the last T not yet taken by the Loader: this one left as
+        jne .out                        ;   the game's key, the window kept open, to be pressed again)
         cmp byte [cs:mk_read], 0
         je .esc                         ; (peeked: told it is Escape, counted when read)
         mov [cs:loot_thing], bx

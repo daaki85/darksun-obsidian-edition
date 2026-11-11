@@ -55,6 +55,20 @@ class LoaderTests(unittest.TestCase):
         gd.levels[0] = 5  # (a level gained: the lock can be tried again)
         self.assertEqual(locks.barred(gd, tried)[0], [])
 
+    def test_a_lock_by_what_it_is(self):
+        """A lock remembered by its object and place is barred under whatever thing number it has
+        now (the game hands the numbers out again), and nowhere else."""
+        gd = FakeGame(["Cilla", "Gerakis", "K'ratchek", "Cermak"], [4, 1, 1, 1])
+        tried = {locks.key("Cilla", 0x29, "o1234@736,1376", "Cilla", 4)}
+        now = locks.things_now
+        try:
+            locks.things_now = lambda g, ident: [377] if ident == "o1234@736,1376" else []
+            self.assertEqual(locks.barred(gd, tried)[0], [(0x29, 377)])
+            locks.things_now = lambda g, ident: []  # (not made on this map now)
+            self.assertEqual(locks.barred(gd, tried)[0], [])
+        finally:
+            locks.things_now = now
+
     def test_table(self):
         data = locks.table([[(0x29, 200)], [], [(1, 2), (3, 4), (5, 6), (7, 8)], []])
         self.assertEqual(len(data), 4 * locks.LOCK_MAX * 4)

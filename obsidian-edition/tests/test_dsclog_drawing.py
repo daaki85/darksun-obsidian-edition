@@ -565,6 +565,7 @@ class LootKeyTests(unittest.TestCase):
     doesn't swap the two."""
 
     THING = 345
+    release = True
 
     def setUp(self):
         self.scene = scene = Scene()
@@ -578,7 +579,10 @@ class LootKeyTests(unittest.TestCase):
         scene.call("loot_key", eax=key, ds=0x1234)
         self.assertEqual(scene.mu.reg_read(r.UC_X86_REG_DS), 0x1234)  # (given back)
         seq, thing, mode = struct.unpack("<HHH", scene.get("loot_seq", 6))
-        return scene.mu.reg_read(r.UC_X86_REG_AX), seq, thing, mode
+        ax = scene.mu.reg_read(r.UC_X86_REG_AX)
+        if self.release:
+            scene.put("loot_thing", struct.pack("<H", 0xFFFF))  # (as the Loader does once it has taken it)
+        return ax, seq, thing, mode
 
     def test_modes(self):
         esc = 0x011B
@@ -586,6 +590,16 @@ class LootKeyTests(unittest.TestCase):
         self.assertEqual(self.press(0x1454, 0), (esc, 2, self.THING, 0))  # T with Caps Lock: still T
         self.assertEqual(self.press(0x1454, 1), (esc, 3, self.THING, 1))  # Shift+T (right Shift)
         self.assertEqual(self.press(0x1474, 2), (esc, 4, self.THING, 1))  # Shift+T with Caps Lock (left Shift)
+
+    def test_one_pending_at_a_time(self):
+        """A T counted and not yet taken by the Loader (LOOT_THING not FFFFh): the next T is left as
+        the game's key (the window stays open), not counted over it; released, it counts."""
+        self.release = False
+        self.assertEqual(self.press(0x1474, 0), (0x011B, 1, self.THING, 0))
+        self.scene.mu.mem_write(GAME_DS * 16 + 0x05E6, struct.pack("<H", self.THING + 1))  # (another body)
+        self.assertEqual(self.press(0x1474, 0), (0x1474, 1, self.THING, 0))
+        self.scene.put("loot_thing", struct.pack("<H", 0xFFFF))  # (the Loader took the first)
+        self.assertEqual(self.press(0x1474, 0), (0x011B, 2, self.THING + 1, 0))
 
     def test_no_window(self):
         self.scene.mu.mem_write(GAME_DS * 16 + 0x05E6, struct.pack("<H", 9999))

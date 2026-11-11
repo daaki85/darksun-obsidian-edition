@@ -26,6 +26,12 @@ ALL, NO_PLAIN_WEAPONS = 0, 1
 STATUS_GONE = (4, 5)  # (Dying, Dead)
 
 
+def release(gd: GameData, tsr_hdr: int) -> None:
+    """LOOT_THING made FFFFh: the T DSCLOG counted is taken, and the next T is counted (DSCLOG holds
+    one, leaving it the game's key, while one is pending: a second body's T never replaces it)."""
+    gd.guest.write(tsr_hdr + TSR_LOOT_THING, struct.pack("<H", 0xFFFF))
+
+
 def window_open(gd: GameData) -> bool:
     return struct.unpack("<H", gd.guest.read(gd.ds * 16 + OPEN, 2))[0] != NONE
 

@@ -5,8 +5,10 @@ advancing a level"), with Thieves as in AD&D (RULE_THIEF_TABLE).
 The game rolls open locks only in its scripts' skill checks (803B8h: a safe, a grate, cell doors,
 and the Loader's Pehtucl's chest), for the character who used the lock. The dice log sees each roll
 (PERCENT_SITE) and, for a party member's failure, remembers the lock with the pockets tried
-(DiceLog.picked, KEY): the party, the region, the thing the script was started on (the lock), the
-member and its thief level then. A save loaded from before it forgets it, as a pocket tried.
+(DiceLog.picked, KEY): the party, the region, the lock (the thing the script was started on, by
+what it is: its object and its place on the map, `o1234@x,y`, since the game hands the map's
+thing numbers out again as it makes and drops things; an older key's bare thing number is read
+as before), the member and its thief level then. A save loaded from before it forgets it, as a pocket tried.
 
 LOCK_BARRED (DSCLOG's, its offset at the header's +1844) holds, for each member 0-3, up to LOCK_MAX
 (region, thing) word pairs: the locks that member failed at the thief level it has now. DSCLOG's
@@ -33,8 +35,32 @@ def talk_thing(gd: GameData) -> Optional[int]:
     return thing if 0 <= thing < game.THINGS else None
 
 
-def key(party: str, region: int, thing: int, member: str, level: int) -> str:
+def key(party: str, region: int, thing, member: str, level: int) -> str:
+    """THING: the lock's identity (identity()), or a bare thing number (older keys, tests)."""
     return f"{party}|lock|{region}|{thing}|{member}|L{level}"
+
+
+def identity(gd: GameData, thing: int) -> Optional[str]:
+    """THING's lasting name: its object and its place on the map ("o1234@736,1376"), or None."""
+    if not 0 <= thing < game.THINGS:
+        return None
+    base = gd.ds * 16
+    obj, = struct.unpack("<h", gd.guest.read(base + game.THING_OBJECT + thing * 32, 2))
+    x, y = struct.unpack("<HH", gd.guest.read(base + game.POSITIONS + thing * 32, 4))
+    return f"o{abs(obj)}@{x},{y}" if obj else None
+
+
+def things_now(gd: GameData, ident: str) -> List[int]:
+    """The map things that are IDENT now (its thing number may differ from when it was failed)."""
+    data_obj = gd.guest.read(gd.ds * 16 + game.THING_OBJECT, game.THINGS * 32)
+    data_pos = gd.guest.read(gd.ds * 16 + game.POSITIONS, game.THINGS * 32)
+    out = []
+    for t in range(game.THINGS):
+        obj, = struct.unpack_from("<h", data_obj, t * 32)
+        x, y = struct.unpack_from("<HH", data_pos, t * 32)
+        if obj and f"o{abs(obj)}@{x},{y}" == ident:
+            out.append(t)
+    return out
 
 
 def failed_key(gd: GameData, member: int) -> Optional[str]:
@@ -42,8 +68,9 @@ def failed_key(gd: GameData, member: int) -> Optional[str]:
     thing = talk_thing(gd)
     if thing is None:
         return None
-    return key(gd.creature_name(0), gd.region(), thing, gd.creature_name(member),
-               pickpocket.thief_level(gd, member))
+    lock = identity(gd, thing)
+    return key(gd.creature_name(0), gd.region(), lock if lock is not None else thing,
+               gd.creature_name(member), pickpocket.thief_level(gd, member))
 
 
 def barred(gd: GameData, tried: Iterable[str]) -> List[List[Tuple[int, int]]]:
@@ -56,9 +83,16 @@ def barred(gd: GameData, tried: Iterable[str]) -> List[List[Tuple[int, int]]]:
         name, level = gd.creature_name(member), pickpocket.thief_level(gd, member)
         head = f"{party}|lock|{region}|"
         tail = f"|{name}|L{level}"
-        things = sorted(int(k[len(head):-len(tail)]) for k in tried
-                        if k.startswith(head) and k.endswith(tail) and k[len(head):-len(tail)].isdigit())
-        out.append([(region, t) for t in things][-LOCK_MAX:])
+        things = set()
+        for k in tried:
+            if not (k.startswith(head) and k.endswith(tail)):
+                continue
+            lock = k[len(head):-len(tail)]
+            if lock.isdigit():  # (an older key: the thing number as it was)
+                things.add(int(lock))
+            elif lock.startswith("o"):
+                things.update(things_now(gd, lock))
+        out.append([(region, t) for t in sorted(things)][-LOCK_MAX:])
     return out
 
 
