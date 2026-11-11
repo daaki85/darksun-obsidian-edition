@@ -1,11 +1,12 @@
 #!/bin/sh
 # setup_game.sh: the game for testing, in $GAME: the GOG installer extracted with innoextract.
 # The installer is the owner's own copy and is never downloaded from a public link (the repository
-# is public; sharing it would be piracy): put it at $WORK/dl/sl.exe by hand first (or name it in
-# $PT_SL_INSTALLER). Needs: dosbox Xvfb xdotool imagemagick innoextract (all apt packages).
+# is public; sharing it would be piracy): joined from the owner's private repository of installation files checked out
+# beside this one ($INSTALL: env.sh), or put at $WORK/dl/sl.exe by hand (or named in $PT_SL_INSTALLER). Needs: dosbox Xvfb xdotool imagemagick innoextract (all apt packages).
 . "$(dirname "$0")/env.sh"
 [ -f "$GAME/DSUN.EXE" ] && { echo "already there: $GAME"; exit 0; }
 mkdir -p "$WORK/dl" "$GAME"
+[ -s "$WORK/dl/sl.exe" ] && [ -s "$WORK/dl/rav.exe" ] || { [ -x "$INSTALL/join.sh" ] && sh "$INSTALL/join.sh" "$WORK/dl"; }
 SL=${PT_SL_INSTALLER:-$WORK/dl/sl.exe}
 [ -s "$SL" ] || { echo "no installer at $SL: put your own copy of the GOG installer there (never a public link)"; exit 1; }
 cd "$GAME" && innoextract -s -d . "$SL" && ls DSUN.EXE GPLDATA.GFF

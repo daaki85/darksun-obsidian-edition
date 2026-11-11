@@ -26,8 +26,10 @@ they differ.
   procedure](playtest/PLAYTESTING.md#startup-procedure).
 - **Never fetch the game, Wake of the Ravager or the walkthrough from a public link, and never put a
   link to them in this public repository** (that is piracy, the user's word, 2026-11-11): the
-  installers go at `$PLAYTEST_WORK/dl/sl.exe` and `rav.exe` from a copy the user provides privately;
-  the walkthrough (`setup_guide.sh`) is never committed.
+  installers and the walkthrough come from the user's **private** repository
+  `daaki85/darksun-installation-files`, checked out beside this one (`setup_game.sh`,
+  `setup_ravager.sh` and `setup_guide.sh` use it; attach it with `add_repo` if a session lacks it),
+  and nothing from it is ever committed here.
 - **The window must be 320x240** (`xdotool getwindowgeometry`): at 960x720 every pixel check
   (message boxes, CHOOSE A SPELL) fails and the loops stall.
 - **DOSBox dies when the session sits idle**: after any pause, check `pgrep -x dosbox` and reload.

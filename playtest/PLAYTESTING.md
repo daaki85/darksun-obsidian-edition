@@ -70,10 +70,13 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
    installs most of them, below).
 2. The game: `sh setup_game.sh` extracts the GOG installer with innoextract into `$DS_GAME`.
    **The installer is the user's own copy and is never fetched from a public link** ([why the
-   links are gone](HISTORY.md#the-games-installer)). Put it at `$WORK/dl/sl.exe` first (or name it
-   in `PT_SL_INSTALLER`), from a copy the user provides to the session privately (an upload, or the
-   Drive connector's download when the user asks); the script stops and says so when it isn't
-   there. **A bare `innoextract` has no `DARKSAVE.GFF` in the game folder** (GOG's install puts
+   links are gone](HISTORY.md#the-games-installer)). It comes from the user's **private**
+   repository of installation files, checked out beside this one (`$INSTALL` in env.sh, default
+   `../darksun-installation-files`; `PT_INSTALL_FILES` to name another): the scripts run its
+   `join.sh`, which puts both installers in `$WORK/dl` (the Ravager's in three parts there, GitHub
+   taking files up to 100 MB) and checks them against its SHA256SUMS. Without the checkout, put the
+   installer at `$WORK/dl/sl.exe` (or name it in `PT_SL_INSTALLER`); the script stops and says so
+   when it has neither. Never copy the installers or the walkthrough anywhere public. **A bare `innoextract` has no `DARKSAVE.GFF` in the game folder** (GOG's install puts
    `__support/save` in `cloud_saves`, which its DOSBox overlays on C:; Linux's DOSBox 0.74-3 has no
    overlay mount), and the game quits at START GAME with "DARKSAVE.GFF to DARKRUN.GFF failed" in
    `dos/GAMEEND.TXT` (and leaves DARKRUN.GFF empty): `setup_game.sh` copies `__support/save/*` into
@@ -81,13 +84,17 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
    mount, which this DOSBox refuses.
 3. **The environment's setup script:** the user's "Google Drive" cloud environment installs
    `innoextract nasm dosbox xdotool`, `pip install capstone unicorn`, and runs `setup_game.sh` and
-   `setup_ravager.sh` when the container is built fresh. Those find no installer unless one was put
-   in place (no public download), and stop with a message: in a new session check `command -v
-   dosbox` and `$PLAYTEST_WORK/inst/DSUN.EXE`, and if the game is missing ask the user for their
-   copy. With it in place, `export PLAYTEST_WORK=/tmp/playtest`, then `loadsave.sh`.
+   `setup_ravager.sh` when the container is built fresh; they find the installers in the private
+   repository's checkout when the session has it (the environment's Repositories list must include
+   `daaki85/darksun-installation-files`: a setup script can't fetch a private repository itself),
+   and otherwise stop with a message. In a new session check `command -v dosbox` and
+   `$PLAYTEST_WORK/inst/DSUN.EXE`; if the game is missing, attach that repository (`add_repo`),
+   clone it beside this one and run `setup_game.sh`. Then `export PLAYTEST_WORK=/tmp/playtest` and
+   `loadsave.sh`.
 4. **A fresh container by hand**, if the setup script didn't run: `apt-get update`, then install
-   `dosbox xdotool innoextract nasm` (`Xvfb`, ImageMagick, poppler were there). Then the user's
-   installer at `$WORK/dl/sl.exe` (22 MB) and `setup_game.sh`.
+   `dosbox xdotool innoextract nasm` (`Xvfb`, ImageMagick, poppler were there). Then the private
+   repository's checkout beside this one (or the installer at `$WORK/dl/sl.exe`, 22 MB) and
+   `setup_game.sh`.
 5. **The unit tests with the game's files** run more: `DSUN_GPLDATA=$G/GPLDATA.GFF
    DSUN_OBJECTS=$G/SEGOBJEX.GFF DSUN_RESOURCE=$G/RESOURCE.GFF` (`G=$PLAYTEST_WORK/inst`). With them
    set, only the tests that need tkinter (or a display) are skipped ([the
@@ -98,13 +105,13 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
    of its own (`innoextract` into its `PLAYTEST_WORK/inst`): `start.sh` and `topartyfight.sh` from
    that kit run the zip's Loader.
 7. **A walkthrough** (the user's): `sh setup_guide.sh` makes the user's copy of kibbitz's GameFAQs
-   guide, put at `$WORK/guide/kibbitz.html` by hand, into text, `kibbitz.txt`, to search (`grep -n
+   guide (from the private repository's `guide/`, or put at `$WORK/guide/kibbitz.html` by hand) into text, `kibbitz.txt`, to search (`grep -n
    -i caravan`): where things are, who sells what, quest steps and talk choices ("2-4-2"), region by
    region. Someone else's work: never commit it (the repository is public). Weigh it with the game's
    data: it is one player's account.
 8. **Wake of the Ravager**, the sequel, for comparing (its code, data and README; nothing in the
-   kit plays it): `sh setup_ravager.sh`, the user's GOG installer (put at `$WORK/dl/rav.exe` first,
-   as the game's), into `$WORK/rav`. What's known of its program: [Wake of the
+   kit plays it): `sh setup_ravager.sh`, the user's GOG installer (from the private repository, as the
+   game's, or put at `$WORK/dl/rav.exe`), into `$WORK/rav`. What's known of its program: [Wake of the
    Ravager](#wake-of-the-ravager).
 
 ## 3. Starting the game and checking the build
