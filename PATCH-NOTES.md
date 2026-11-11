@@ -25,7 +25,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 ## In the Game's Screens
 
-- **[New]** A combat log in the game: **L** on the map shows every roll, in small 7-pixel lettering (8 lines at a time) and the Loader's colours, at one of three levels of detail, and **L** again hides it. It works in a fight or after one (a thief's roll, a new level's hit points). It is a panel over the map's lower right that scrolls back (its scrollbar, or the mouse wheel on Windows), shrinks to one line or opens up with filters (All, Party, Damage, Saves).
+- **[New]** A combat log in the game: **L** on the map shows every roll, in small lettering, 8 pixels a line (7 lines at a time) and the Loader's colours, at one of three levels of detail, and **L** again hides it. It works in a fight or after one (a thief's roll, a new level's hit points). It is a panel over the map's lower right that scrolls back (its scrollbar, or the mouse wheel on Windows), shrinks to one line or opens up with filters (All, Party, Damage, Saves).
 - **[New]** Names over figures: a spell's name floats over its caster as it is cast, "Miss" over anyone an attack misses, and "Armor: 7 left" when a spell that lasts a number of uses (Armor, Mirror Image, Reflected Image...) loses one, in the game's lettering (an Options switch, on).
 - **[New]** Out of a fight, the combat log panel's top line shows how long the game has run, `Day 47, 14:20`; in the arena, once the game has shown the count, how many arena fights the party has had instead (the game's own count, one a trip into the arena).
 - **[New]** The inventory screen shows THAC0, all five saving throws, the THAC0 with each weapon, DEX's reaction and defence adjustments, a thief's skills and, with ages on, the character's age, in the game's own lettering.
@@ -42,7 +42,7 @@ Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands.
 
 **Weapon specialization**
 
-- **[New]** Fighters specialize in one weapon spec, a kind of weapon such as the long sword (+1 to hit, +2 damage, 3/2 attacks a round), with **mastery** at 5th level (+3, +3) and **grand mastery** at 9th (the next greater damage die against every target, a long sword's 1d12 against a large one 1d20 as Player's Option: Combat & Tactics has it, and one more attack).
+- **[New]** Fighters specialize in one weapon spec, a kind of weapon such as the long sword (+1 to hit, +2 damage, 3/2 attacks a round), with **mastery** at 5th level (+3, +3) and **grand mastery** at 9th (the damage die one size up against every target, as in *Player's Option: Combat & Tactics*: a long sword 1d10, and 1d20 against a large foe; and one more attack).
 - **[New]** Gladiators specialize in two weapon specs, a third at 6th level and a fourth at 9th. Rangers gain expertise with the bow and one other weapon spec. The Battle Mage, Crusader and Mind Warrior kits gain expertise with one melee weapon spec of their choice (3/2 attacks a round, 2 from 7th level).
 - **[Fixed]** Warriors attack at AD&D's plain rate with weapons outside their specializations *(was 3/2 with any weapon)*. Specialists shoot missiles faster.
 - **[Changed]** Every thri-kreen, foes too, throws a chatkcha once more a round, AD&D's 2/1 for its own weapon *(was at the weapon's rate, like anyone)*; a thri-kreen Mind Warrior may take the chatkcha as its weapon spec.
@@ -193,6 +193,8 @@ A few of them:
 - **[New]** Thieves **hide in shadows and move silently** in a fight to backstab, halved in daylight. Rangers do it to attack from behind, at full strength under the open sky *(was a backstab only on a target turned to face someone else)*.
 - **[Fixed]** A **backstab** multiplies only the weapon's dice; STR and magic bonuses are added once after, as in AD&D, and only the round's first attack is a backstab *(was the whole damage multiplied, STR included, so a strong thief could hit for over 100, on the first two attacks of the round)*.
 - **[New]** **Picking pockets** with a thief's **Pick Pockets** button on the USE screen (where a priest's Turn Undead is), then a click on anyone in sight: any thief can try, leader or not, and what's lifted goes in that thief's backpack. A cleric/thief has both buttons, the purse beside Turn Undead. Fail and you roll move silently to get away. A purse holds 2 to 5 ceramic pieces for each of the thief's levels, and a few named weapons can be lifted for 200 XP (once a game each).
+- **[Changed]** With **Thieves as in AD&D**, a thief who fails a lock or a pocket may try that one again only after gaining a level, as *Player's Option: Skills & Powers* has it; another thief may try at once *(was again and again)*.
+- **[Changed]** A thief beside any square of a big creature counts as beside an enemy, and can't hide there *(was its one square only)*.
 - **[New]** A worn cloak adds 10 to hiding, boots 10 to moving silently, and a belt 5 to picking pockets and opening locks, for thieves and rangers alike; the inventory screen's thief skills count them.
 
 ## Items
@@ -278,6 +280,8 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 - **[New]** More of **Semyon**'s story, for players who help him in the arena. Once he has told of it (ask him "Seen anything useful?"), **Thornwall** comes onto the slave pens' weapon rack.
 - **[New]** **Pehtucl's chest**, locked and trapped with a poisoned needle: a thief disarms it and picks the lock, anyone else can try to bash it open and set the needle off. The Cloak of Protection +1 is inside.
 - **[New]** A last arena bout: once Scar dies in the arena, six champions from a distant arena come to test the new king, led by a Tohr-kreen carrying **Kreenfang** ([the champions' bout](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#the-champions-bout)).
+- **[New]** Legcrusher, sent to fetch a party that is out by the fountain, sees they've left their cells, bellows for the guards (the fountain drowns him out) and attacks alone *(was his warning, as if they were in the cells)*.
+- **[Fixed]** Every thri-kreen leaves a thri-kreen's body *(was a human's Dead Body)*.
 - **[New]** A use for the cooked vulture: share it with the pens' cook for a full rest and 100 XP each.
 - **[New]** Merchants give your party leader a discount for high Charisma, from 5% at CHA 18 to 40% at 25.
 - **[Changed]** Merchants pay 60% of an item's price *(was all of it)*.
@@ -301,6 +305,8 @@ The plain weapons the game never had, sold by merchants and carried across Athas
 
 - **[New]** **Tab** chooses the nearest enemy and **Enter** attacks it, with no aiming of the mouse. A red ring marks the enemy chosen.
 - **[New]** Press the mouse wheel and drag to scroll the map.
+- **[New]** **T** with a body's or chest's window open takes everything into the party's backpacks, and **Shift+T** all but plain weapons *(was a click and a drop for each item)*.
+- **[New]** **S** on a shop's screen sells the plain gear in the backpack of the member on show, keeping what is worn or held, magic items, ammunition and anything metal *(was a click for each item)*.
 - **[New]** **M** opens the overhead map, and **M** again closes it. **U** and **I** close the USE and inventory screens when pressed again.
 - **[Changed]** A game starts and loads with the whole party on the map, and it stays in view after a fight, as **5** does (an Options switch, on); **6** still gathers it into the leader *(was the leader alone, often, until 5)*.
 - **[New]** The game's pointer in the intro, its logos and its other scenes, and a click skips a scene as a key does *(was no pointer, and only a key)*.

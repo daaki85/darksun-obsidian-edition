@@ -40,7 +40,7 @@ def shop_up(gd: GameData, tsr_hdr: int) -> bool:
 
 
 def plain_gear(gd: GameData, rec: bytes) -> bool:
-    """Gear (a weapon, ammunition, armour, a shield, anything worn) with no plus and no power,
+    """Gear (a weapon, armour, a shield, anything worn; not ammunition or metal) with no plus and no power,
     that the shop would buy; not a key."""
     if struct.unpack_from("<H", rec, game.ITEM_TYPE)[0] >= game.NO_ITEM:
         return False

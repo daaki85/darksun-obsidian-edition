@@ -599,7 +599,7 @@ level AA:
 - **The game's font** is only used for the window's title: it's a 9-pixel
   bitmap font, fine enlarged as a heading but harder to read than ordinary
   text, so everything else is in the system's fonts. The combat log in the
-  game uses a small 7-pixel font of the Loader's (its header, buttons and filters in the game's); the
+  game uses a small font of the Loader's (8 pixels a line) (its header, buttons and filters in the game's); the
   same lines are in the Dice log tab at any text size.
 - **Screen readers:** tkinter's windows are not read well by screen readers.
   **Save...** on the Dice log and Dialogue tabs writes the log to a text file,

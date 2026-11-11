@@ -134,7 +134,8 @@ file holds (script 10 at 352h, -261; script 195 at 35h, -144: the same number
 are real objects (an item's +0 is its object's number negated: the grate's
 Bloodwrath, -1576, always hacks the lock); the thief skill checks (DO_ACTION 3)
 and ability checks (59h) each test the skill or ability their text names, and
-the weapon search for the grate looks in the right hand (item +11h slot 3).
+the weapon search for the grate looked in the right hand only (item +11h slot 3;
+the next paragraph but one has the repair).
 
 The grate's weapon search (A79h) now takes the first item in either hand (slot
 3 or 10) that is a melee weapon (the user's ask, 2026-11-11). The scripts can't
@@ -461,7 +462,9 @@ after the `ns_list_` patches):
   (2531:083Ch), so 1194h stayed 1 and the glow stood still. DSCLOG's
   `SHOP_LOOP` (7DE11h, the loop's "cmp word [11B2h],1") and `SHOP_SHINE`
   (2AFA6h, the wait's "or di,di / jz 084Fh") do as the main loop while 11B2h
-  is 1, then the replaced test.
+  is 1, then the replaced test. `SHOP_LOOP` also stamps the BIOS tick in
+  `shop_at` (header +1858), so S sells only on a shop's screen
+  ([DEVELOPMENT-SCREENS](DEVELOPMENT-SCREENS.md#selling-plain-gear-s)).
 
 ## Worn items, the gladiator's armour and Psionic Blast
 

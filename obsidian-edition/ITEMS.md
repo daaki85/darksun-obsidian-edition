@@ -142,8 +142,8 @@ The chest beside Pehtucl, the slave pens' head templar, holds the Cloak of
 Protection +1. It is locked, with a poisoned needle in the lock, and can only
 be worked from beside it. Used by a thief, it is first searched for traps
 (find/remove traps: the needle drawn out, or set off) and then picked (open
-locks; a failed try can be tried again, by another thief, or with **Thieves as in AD&D** by the same
-thief only once they have gained a thief level). Anyone else can try to bash it open
+locks; a failed try can be tried again (with **Thieves as in AD&D**, by the same thief only once
+they have gained a thief level; another thief may try at once)). Anyone else can try to bash it open
 (5% a try, and 5% more for each of STR 18, 20, 22 and 24), which sets the
 needle off if it is still there. A needle set off is a trap as the game's are:
 the party's best at find/remove traps may still spot it in time (or Detect

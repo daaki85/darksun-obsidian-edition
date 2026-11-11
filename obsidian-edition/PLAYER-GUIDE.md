@@ -1335,7 +1335,9 @@ and the same race and DEX adjustments.
 - **Open locks, find/remove traps, climb walls, hear noise** and the one
   pocket the game has to pick: when the game asks, at certain locks, traps
   and walls. A locked and trapped chest the mod adds asks a thief to check
-  it for traps first, then to pick the lock (as often as needed); anyone
+  it for traps first, then to pick the lock (again and again; with **Thieves as in AD&D**, a thief
+  who fails must gain a thief level before trying that lock again, though
+  another thief may try); anyone
   else may try to bash it open, which sets off a trap still in it. A trap
   that goes off may still be avoided by the party's best at find/remove
   traps.
@@ -2003,10 +2005,10 @@ line](DICE-LOG.md) what each of its lines means.
 | | names over figures: a spell's name over its caster, "Miss" over whoever an attack missed, and a used charge ("Armor: 7 left") | on |
 | Rule changes | *characters:* class restrictions; multiclass hit points; hit dice: the better of two; scores and hit points as rolled; AD&D's class tables; CON as in AD&D; ages and magical aging; dual-classing as the manual has it; level cap by XP. *Weapons and armour:* two weapons; half-giants' two-handed weapons; weapon traits (the cahulaks' heads and tangle, the staff sling's stinkpots, the polearm's reach); creature size as in AD&D; held targets as in AD&D; rings and cloaks of protection; helms AC 1; items saving against acid. *Magic:* rangers' casting level; preservers' INT; saving throws against spells (the spell save, DEX instead of a doubled d20); Enlarge multiplying the weapon's dice only; spells and psionics as the manual describes them (monsters' powers and Turn Undead by AD&D's table among them); spells roll to hit; resting as in AD&D | all on |
 | More character customization | weapon specialization; kits; STORE and RECALL on the creation screen; fuller starting gear | all on |
-| Expanded features | shops as in AD&D (the leader's CHA at shops, buying back magical items); improved thieving: thieves as in AD&D (thief skills from AD&D's table, backstabs multiplying the weapon's dice only), hiding in shadows to backstab, the cloak, boots and belt, picking pockets | all on |
+| Expanded features | shops as in AD&D (the leader's CHA at shops, buying back magical items); improved thieving: thieves as in AD&D (thief skills from AD&D's table, backstabs multiplying the weapon's dice only, a failed lock or pocket tried again by that thief only a level later), hiding in shadows to backstab, the cloak, boots and belt, picking pockets | all on |
 | New content | the new spells (six wizard spells and ten 6th-level priest spells, one switch); new people (Kalzith; Semyon); a small quest (the cooked vulture); defilers' scrolls; new items (and an arena bout that comes with them) | all on |
 | Graphics | elves' ears and half-elves' own figures; Cilla drawn as an elf; what the party wears; shadows; dust; a hidden thief or ranger and anyone invisible drawn see-through | all on |
-| Controls | Tab and Enter; scrolling with the mouse wheel; the view in fights moving only to a figure off the screen; the pointer in scenes, a click skipping one; the pointer starting in the middle, moving as far up and down as across, and in a window as fast as the desktop's pointer; the whole party in view after a start, load or fight; spells kept on a click on the Effects screen (M, U and I have no switch) | all on |
+| Controls | Tab and Enter; scrolling with the mouse wheel; the view in fights moving only to a figure off the screen; the pointer in scenes, a click skipping one; the pointer starting in the middle, moving as far up and down as across, and in a window as fast as the desktop's pointer; the whole party in view after a start, load or fight; spells kept on a click on the Effects screen (M, U and I, T and Shift+T for looting and S for selling have no switch) | all on |
 | | a red ring in a fight: none, or under the enemy chosen with Tab | under the enemy chosen |
 | Game speed | GOG's own, faster or fastest | fastest |
 | | the party walking at full speed whatever is drawn (steady pace) | on |

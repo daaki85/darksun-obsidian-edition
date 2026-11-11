@@ -56,7 +56,7 @@ reach took 384 bytes of the segment (68,592 bytes before it).
   SELL_PRICE). DSCLOG's `SELL_KEY` (only while the shop's loop has run in the last two BIOS ticks:
   `SHOP_LOOP` now marks the time) makes the key Escape and notes the member on show (the game's
   3931h:25Bh) and the merchant (header +1852 to +1858); `sell.py` sells once the shop is shut. Seen in
-  the game with the user's save (Kalzith's shop: Gerakis 10 things for 119, K'ratchek 12 for 98, the
+  the game with the user's save (Kalzith's shop, before ammunition and metal were kept: Gerakis 10 things for 119, K'ratchek 12 for 98, the
   magic ones kept: playtest/logs/2026-11-11-selling.md); tests/test_sell.py.
 - **Legcrusher at the fountain** (the user's design): sent to fetch a party that is in the fountain's
   room or the passage before it, he says they are out of their cells, yells for the guards (the

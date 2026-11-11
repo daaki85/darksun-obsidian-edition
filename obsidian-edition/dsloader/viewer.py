@@ -536,7 +536,8 @@ class Viewer:
                                       "race and DEX adjustments (the game adds 4 a level to a base of its own, and DEX "
                                       "by a formula); and a backstab multiplies the weapon's dice only, STR and magic "
                                       "added after, on the round's first attack only (the game multiplies the whole "
-                                      "damage, STR included, on the first two)"),
+                                      "damage, STR included, on the first two); and a lock or pocket a thief failed is "
+                                      "tried again by that thief only after a level gained"),
                 ("stealth", None, "Hiding in shadows to backstab: thieves hide in shadows and move silently to backstab, "
                                   "rangers to attack from behind (with no enemy beside them; a thief's chance halved in "
                                   "daylight, a ranger's indoors; a few kits differ)"),

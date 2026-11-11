@@ -83,6 +83,7 @@ running the game, the Loader's window and its dice log are in the
     - [Semyon](#semyon)
     - [What Dinos and the Trustee say about them](#what-dinos-and-the-trustee-say-about-them)
   - [The champions' bout](#the-champions-bout)
+  - [Legcrusher at the fountain](#legcrusher-at-the-fountain)
   - [The cooked vulture](#the-cooked-vulture)
   - [Defilers' scrolls](#defilers-scrolls)
 - [Graphics](#graphics)
@@ -94,6 +95,8 @@ running the game, the Loader's window and its dice log are in the
   - [Magic items' icons](#magic-items-icons)
   - [Spells on the ground](#spells-on-the-ground)
 - [Controls](#controls)
+  - [Looting a body: T and Shift+T](#looting-a-body-t-and-shiftt)
+  - [Selling plain gear: S](#selling-plain-gear-s)
   - [Choosing an enemy: Tab, Enter and the rings](#choosing-an-enemy-tab-enter-and-the-rings)
   - [Scrolling the map](#scrolling-the-map)
   - [M, U and I: open a screen, close it again](#m-u-and-i-open-a-screen-close-it-again)
@@ -121,9 +124,9 @@ With **A combat log in the game** ticked on the Options tab (the default),
 **L** on the map shows the [dice log](README.md#the-dice-log)'s lines in the game
 itself, and **L** again hides them: in a fight or out of one, whenever you
 want to read back. It doesn't open by itself, and stays as you left it (from
-one game to the next too). The lines are in a small font of the Loader's, 7
-pixels a line (the game's own is 9, so 8 lines fit where 6 did), with the
-game's drop shadow; the header, buttons and filters are in the game's font. The
+one game to the next too). The lines are in a small font of the Loader's, 8
+pixels a line with its drop shadow (the game's own is 9, so 7 lines fit where
+6 did); the header, buttons and filters are in the game's font. The
 lines are in the Loader's colours for each kind of line (hits green, misses grey, damage
 amber, saving throws blue), the party's names in their colours and the
 monsters' in red, a filled pip before a party member's line and a hollow one
@@ -1692,7 +1695,7 @@ move silently and hide in shadows take the same race and DEX adjustments.
 The same switch keeps a thief from a lock they failed until they have gained a
 thief level (*Player's Option: Skills & Powers*: "If a thief fails to open a
 lock, he cannot attempt to open that lock again until advancing a level"): the
-game's safe, grate and cell doors and Pehtucl's chest. Tried again before, the
+game's safe, the sewer grate, the cell doors and Pehtucl's chest. Tried again before, the
 roll fails at once, and the dice log says why. Another thief of the party may
 try it. A failed pocket is the same ([Picking pockets](#picking-pockets)).
 Untick it for the game's numbers.
@@ -2296,12 +2299,14 @@ They fight with their weapons, the two archers shooting, and their armour counts
 on top of their kinds' AC, as the party's does (and as the game's own people's
 do: [their gear is worn](GAME-BUGS.md#who-turns-up-and-how) from the start too).
 What they carry is on their bodies afterwards; the Tohr-kreen falls as a dead
-Tohr-kreen of its own, Kreenfang in it. It comes once. A party that breaks out
+Tohr-kreen of its own (as every thri-kreen now does), Kreenfang in it. It comes once. A party that breaks out
 with Scar instead, or leaves the pens another way, doesn't meet them.
 
 How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#the-champions-bout).
 
 ### Legcrusher at the fountain
+
+(Always on, with no switch.)
 
 When the party is slow to answer Kurzak's call, he sends Legcrusher, the pens'
 half-giant, to fetch them. If Legcrusher finds them at the fountain (its room or
@@ -2539,8 +2544,8 @@ How it works:
 
 ## Controls
 
-Each has a switch in the Options tab's **Controls** section, but M, U and I,
-and T for looting and S for selling, which are always on.
+Each has a switch in the Options tab's **Controls** section, except M, U and I,
+T and Shift+T (looting) and S (selling), which are always on.
 
 ### Looting a body: T and Shift+T
 
@@ -2563,9 +2568,7 @@ Plain weapons left: Wooden Bow, Obsidian Long Sword
 *Without the mod:* each thing is a click to take it from the window and another
 to put it down, a body at a time.
 
-How it works: `dsloader/loot.py`; DSCLOG's `LOOT_KEY` (the key made Escape,
-which shuts the window, and the body noted for the Loader: the game's DS:05E6h
-names the container whose window is open).
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#looting-a-body-t-and-shiftt).
 
 ### Selling plain gear: S
 
@@ -2580,14 +2583,12 @@ price), the shop closes back to the merchant's talk, the purse jingles, and the
 dice log lists the sale:
 
 ```
-Gerakis sells 10 things for 119 ceramic pieces: Wooden Club 1, Bone Axe 4, ...
+Gerakis sells 9 things for 95 ceramic pieces: Wooden Club 1, Bone Axe 4, ...
 ```
 
 Ask to see the wares again to go on, with another member on show.
 
-How it works: `dsloader/sell.py`; DSCLOG's `SELL_KEY` (the key made Escape, which
-shuts the shop, with the member on show and the merchant noted; the shop's own
-loop marks the time, so S does this on a shop's screen only).
+How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#selling-plain-gear-s).
 
 ### Choosing an enemy: Tab, Enter and the rings
 

@@ -303,7 +303,7 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   on show (the game's 3931h:25Bh; a portrait click changes it). Kalzith moves: zoom a shot to find him.
 - **Shop and pocket tools** (2026-11-11): `openshop.sh` (Kalzith's shop from `selling-junk-user`, finding
   him from memory), `pocket.sh X Y NAME` (one pocket try by the thief at USE-screen portrait X,Y on NAME;
-  its result window wants the key 1), `carried.py NAME` (what someone carries, with name numbers).
+  its result window wants the key 1), `carried.py NAME` (what someone carries, with name numbers). `bodyitems.py` lists what each dead body on the map holds (name, type, plus, power, value).
   The game's SELL: an item on the pointer, SELL 265,63, TAKE IT 140,91. Backpack cells on the shop
   screen run down two columns (193,26 and 211,26, 18 apart).
 - **Hearing the game** (2026-11-05): start.sh sends DOSBox's sound to a file when `PT_AUDIO` names
