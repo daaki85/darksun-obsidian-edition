@@ -53,8 +53,8 @@ double-click, with the options as last set.)
   the Loader's dice log writes, and what it means
 - [How the game works](obsidian-edition/HOW-THE-GAME-WORKS.md): the original
   game's own rules, from its code
-- [Patch notes](PATCH-NOTES.md): every change from the original game, in one
-  page to share
+- [Changes from the original game](PATCH-NOTES.md): what the mod adds and
+  changes, and its main bug fixes, in one page to share
 - [Changelog](CHANGELOG.md) and [development
   notes](obsidian-edition/DEVELOPMENT.md): for developers and testers
 
@@ -71,12 +71,9 @@ where the saves go](obsidian-edition/README.md#updating-backups-saved-games-and-
 looting a body with **T** and selling spare gear with **S**, thieves who may try a
 failed lock or pocket again after a level, polearm reach and staff sling
 stinkpots, the footman's pick, and a fight with Legcrusher at the fountain.
-2.15.0 brought three new AD&D rules (held targets, creature size, and cahulaks
-as Dark Sun has them), spells, psionics and monsters as the manual describes
-them, the Boots of Speed and new cahulaks to find, and graphics that no longer
-vanish in a busy area.
 
-Every release has notes of its own, in [`release-notes`](release-notes).
+What earlier releases brought is in their own notes, in
+[`release-notes`](release-notes).
 
 ## About
 

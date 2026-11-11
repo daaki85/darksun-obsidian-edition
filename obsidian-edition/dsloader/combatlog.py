@@ -18,7 +18,8 @@ of them. They are in a small font (smallfont: 8 pixels a line, 7 lines docked), 
 buttons in the game's (art.Font), in the Loader's colours for their kind
 (palette.LOG_COLOURS) with the names in the party's and the monsters' colours, a filled pip before
 a party member's line and a hollow one before a monster's, long lines wrapped with a hanging
-indent. Above them the round, who is acting and who is next. See docs/combat-log/HANDOFF.md.
+indent. Above them the round, who is acting and who is next. See the repository's
+reports/combat-log-design-handoff.md (outside the release).
 """
 
 import re

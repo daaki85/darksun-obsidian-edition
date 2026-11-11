@@ -65,6 +65,19 @@ paragraphs (1,753 spare), `UMB_KEPT` 8,051 (131 spare). 2.16.0's: 69,344 and 1,7
 - **Links that left the zip:** DEVELOPMENT.md's links to `../playtest/` and `../CHANGELOG.md` go
   to GitHub; `test_shipped_pages_stay_in_the_zip` keeps every shipped page's links inside the
   folder.
+- **A failed lock is remembered by what it is, not its map number** (the 2.16.0 audit's leftover).
+  `locks.py` kept the thing number the lock's script was started on; the game hands map things'
+  numbers out again as it makes and drops them, so a lock could be forgotten, or another barred.
+  A failure is now remembered as the lock's object and place (`o1568@201,1402` for Pehtucl's
+  chest), and the table DSCLOG reads is made from whatever things are that lock now
+  (`locks.things_now`); an older key's bare number is read as before. Seen in the game: Gerakis's
+  failure at the chest barred his next try. Test `test_a_lock_by_what_it_is`.
+- **A second body's T no longer replaces one not yet taken** (the audit's other leftover). DSCLOG
+  kept one pending T; a second, before the Loader had taken the first, overwrote it. Now
+  `LOOT_KEY` leaves a T as the game's key (the window stays open, to press again) while
+  `LOOT_THING` isn't FFFFh, and the Loader sets it back once it has taken the body
+  (`loot.release`). Seen in the game: Pehtucl's body and a guard's, one after the other, both
+  taken. Test `test_one_pending_at_a_time`.
 - **Caps Lock no longer swaps T and Shift+T** (from the 2.16.0 audit). `LOOT_KEY` took the mode from
   the letter's case, which Caps Lock turns round; it now reads the Shift keys held (the BIOS
   keyboard flags, 0:0417h bits 0-1). S has no mode, so either case already sold the same. Tests
@@ -73,6 +86,10 @@ paragraphs (1,753 spare), `UMB_KEPT` 8,051 (131 spare). 2.16.0's: 69,344 and 1,7
   being busy with its lists left the key unhandled, so the dice log tried it again each pass.
 
 **Changed**
+- **The playtest kit no longer fetches the game, Wake of the Ravager or the walkthrough from public
+  links** (the user: sharing them would be piracy). The setup scripts take the user's own copies
+  put in place by hand, and say so when they're missing; the Drive copies' downloads are
+  restricted.
 - **Code tidying from the audit:** a stack is priced by its count as stored, as the game's own
   sale (83D6Bh) does (was at least 1). `test_worn_and_held_kept` is now `test_a_body_slot_kept`
   (what it tested: plain_gear's slot test), and `test_worn_and_held_lists_untouched` checks that a
@@ -80,6 +97,27 @@ paragraphs (1,753 spare), `UMB_KEPT` 8,051 (131 spare). 2.16.0's: 69,344 and 1,7
   `RULE_HI_BUYBACK`, "RULE_HI 64") now the merged rules' (`RULE_THIEF_TABLE`, `RULE_HI_CHA_PRICES`).
 
 **Docs**
+- **Reorganised, from the review** (the user's go-ahead):
+  - The player's guide's **Options tab at a glance** is a table of every switch: its Loader label,
+    default, when it takes effect (at once, next start, new characters, first visit) and where its
+    details are; `tests/test_optionstable.py` keeps it in step with the Loader's labels. The guide's
+    opening names the places and people the labels show.
+  - The packaged README's **What it does** is eight short families with links; its update section
+    has Updating, Backing up your saves, **Compatibility with older saves**, What the Loader writes
+    and Uninstalling; its documentation index links **Weapon specialization and damage**.
+  - The Loader's longest option texts are shortened to the switch's effects (the names kept; the
+    detail is in FEATURES.md).
+  - DICE-LOG.md: looting and selling under a new **Inventory and shops**. ITEMS.md: the item
+    indexes first, the mod's own items' details after.
+  - PATCH-NOTES.md is **Changes from the original game**, with an **At a glance** summary, a
+    **Documentation** section (How the game works, moved out of The Loader), and a subtitle that no
+    longer promises every change; the web page carries the note on unreleased changes.
+  - The old combat log design handoff moved out of the shipped `docs/` to
+    `reports/combat-log-design-handoff.md`.
+  - The root README's What's new holds the current release only.
+  - The playtest guide: a **Startup procedure** first (about 1,900 words, read in full), then
+    **Recipes** by job and **The route through the story**; dated incidents moved to
+    `playtest/HISTORY.md`. CLAUDE.md's summary cut to the essentials.
 - **From the review:** the 2.16.0 release notes said each merged switch keeps its saved choice;
   it does only when the old pair agreed (`game.fold_merged`: one off, the merged one off), now
   said, and in the changelog. The update steps (the release notes, the README) name the **Named

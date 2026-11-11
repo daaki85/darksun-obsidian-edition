@@ -4,13 +4,16 @@ How **Dark Sun: Shattered Lands** plays with the Obsidian Edition mod: making
 a party, the classes and kits, fighting, magic, psionics, equipment and
 levels, with the tables you need.
 
-It is **spoiler-free**: no places past the opening arena, no people but Kalzith
-and Semyon (the Options tab names them), no quests, and no word of where any item is found (the mod's new items are listed
-by what they are).
+It is **spoiler-free**: no places, people or quests past the opening arena but
+those the Loader's Options tab names (the slave pens, Kalzith, Semyon, Dinos's
+cooked vulture and Scar, in the labels [at the end](#the-options-tab-at-a-glance)),
+and no word of where any item is found (the mod's new items are listed by what
+they are).
 
 Everything here is the mod with its **default options**, which is how the
 Loader starts. Nearly every rule change has a switch on the Loader's **Options** tab
-([at a glance](#the-options-tab-at-a-glance)); the exceptions, always on, are the
+([at a glance](#the-options-tab-at-a-glance): each switch, its default and when it
+takes effect); the exceptions, always on, are the
 keys (T, S, M, U, I), the fixes to the game's own bugs and the footman's pick. Where it helps to know what a
 switch changes, a **Without the mod** note says what the game does with it off.
 The [features page](FEATURES.md) has every rule in full detail, and the
@@ -81,7 +84,7 @@ Already playing? Saves made before the mod load and play with its fixes and
 rules, but kits, fuller starting gear and much of the new content come with a
 new game, and the new gear the game's people carry and its chests hold comes
 only in areas the save hasn't been to (see [your saved
-games](README.md#updating-backups-saved-games-and-the-loaders-files)).
+games](README.md#compatibility-with-older-saves)).
 
 ## Playing
 
@@ -1999,28 +2002,155 @@ line](DICE-LOG.md) what each of its lines means.
 
 ## The Options tab at a glance
 
-| Section | Switch | Default |
-|---|---|---|
-| In the game | a combat log in the game (L shows and hides it) | on |
-| | how much it says: at the least, in short or in detail | in short |
-| | what hurts a monster (the Look box): describes a monster you Look at in a fight | on |
-| | names over figures: a spell's name over its caster, "Miss" over whoever an attack missed, and a used charge ("Armor: 7 left") | on |
-| Rule changes | *characters:* class restrictions; multiclass hit points; hit dice: the better of two; scores and hit points as rolled; AD&D's class tables; CON as in AD&D; ages and magical aging; dual-classing as the manual has it; level cap by XP. *Weapons and armour:* two weapons; half-giants' two-handed weapons; weapon traits (the cahulaks' heads and tangle, the staff sling's stinkpots, the polearm's reach); creature size as in AD&D; held targets as in AD&D; rings and cloaks of protection; helms AC 1; items saving against acid. *Magic:* rangers' casting level; preservers' INT; saving throws against spells (the spell save, DEX instead of a doubled d20); Enlarge multiplying the weapon's dice only; spells and psionics as the manual describes them (monsters' powers and Turn Undead by AD&D's table among them); spells roll to hit; resting as in AD&D | all on |
-| More character customization | weapon specialization; kits; STORE and RECALL on the creation screen; fuller starting gear | all on |
-| Expanded features | shops as in AD&D (the leader's CHA at shops, buying back magical items); improved thieving: thieves as in AD&D (thief skills from AD&D's table, backstabs multiplying the weapon's dice only, a failed lock or pocket tried again by that thief only a level later), hiding in shadows to backstab, the cloak, boots and belt, picking pockets | all on |
-| New content | the new spells (six wizard spells and ten 6th-level priest spells, one switch); new people (Kalzith; Semyon); a small quest (the cooked vulture); defilers' scrolls; new items (and an arena bout that comes with them) | all on |
-| Graphics | elves' ears and half-elves' own figures; Cilla drawn as an elf; what the party wears; shadows; dust; a hidden thief or ranger and anyone invisible drawn see-through | all on |
-| Controls | Tab and Enter; scrolling with the mouse wheel; the view in fights moving only to a figure off the screen; the pointer in scenes, a click skipping one; the pointer starting in the middle, moving as far up and down as across, and in a window as fast as the desktop's pointer; the whole party in view after a start, load or fight; spells kept on a click on the Effects screen (M, U and I, T and Shift+T for looting and S for selling have no switch) | all on |
-| | a red ring in a fight: none, or under the enemy chosen with Tab | under the enemy chosen |
-| Game speed | GOG's own, faster or fastest | fastest |
-| | the party walking at full speed whatever is drawn (steady pace) | on |
-| Wake of the Ravager (optional) | where Wake of the Ravager is installed, for the new priest spells' icons and pictures (found by itself when it can be) | (a folder) |
-| Saves | open the Named saves folder; put a save back in a slot | (buttons) |
+Every switch on the Loader's **Options** tab, in the tab's order and under its
+sections, with the words the Loader gives it. They count in games started from
+the Loader or its `.bat` files. **Restore defaults**, at the bottom of the tab,
+sets every switch back to the default below.
 
-Rule changes, expanded features, the new spells and defilers' scrolls count at
-once in a game started from the Loader; the new people, quest and items,
-and any switch that says "from the next start" (STORE and RECALL, spells and
-psionics as the manual describes them and spells roll to hit among them),
-come the next time the game is started (a saved game keeps what it has). Kits,
-weapon specs and fuller starting gear go to characters made from then on. **Restore defaults**, at the bottom
-of the tab, sets every switch back.
+**Takes effect** says when a change counts:
+
+- **at once**: in the game running, as soon as the box is ticked or unticked;
+- **next start**: the next time the game is started (the Loader writes it into
+  the game's copy as it starts it; the label says "from the next start");
+- **new characters**: characters made from then on, while those already made
+  keep what they have;
+- **first visit**: from the next start, in an area the party hasn't visited
+  yet. A saved game keeps what it already has (people met, items given); a new
+  game has it all.
+
+Some changes have no switch and are always on: the keys **T** and **Shift+T**
+(looting), **S** (selling), **M**, **U** and **I**
+([controls](FEATURES.md#controls)), what the game's own screens show
+([always on](FEATURES.md#always-on)), the fixes to [the game's own
+bugs](GAME-BUGS.md) and the footman's pick's 1d6+1 ([creature
+size](FEATURES.md#creature-size)).
+
+**In the game**
+
+| Loader label | Default | Takes effect | Details |
+|---|---|---|---|
+| A combat log in the game: L on the map shows and hides it | on | at once | [The combat log in the game](FEATURES.md#the-combat-log-in-the-game) |
+| ... at the least: what came of each attack and spell | | at once | [The combat log in the game](FEATURES.md#the-combat-log-in-the-game) |
+| ... in short: each roll, what it needed and the damage | chosen | at once | [The combat log in the game](FEATURES.md#the-combat-log-in-the-game) |
+| ... in detail, as in the log | | at once | [The combat log in the game](FEATURES.md#the-combat-log-in-the-game) |
+| What hurts a monster (the Look box): Look at one in a fight for its hit points, AC, THAC0 and defences, and the rest as the box closes | on | at once | [What hurts a monster](FEATURES.md#what-hurts-a-monster-the-look-box) |
+| Names over figures: a spell's name over its caster, "Miss" over whoever an attack missed, and a used charge ("Armor: 7 left") over its owner | on | at once | [Names over figures](FEATURES.md#names-over-figures) |
+
+**Rule changes: Characters**
+
+| Loader label | Default | Takes effect | Details |
+|---|---|---|---|
+| Class restrictions on armour, shields and weapons, the strictest class winning; no spells or thief skills in armour for some multiclass characters | on | at once | [Class restrictions](FEATURES.md#class-restrictions) |
+| Multiclass hit points as in AD&D: CON's bonus on every die, the total shared between the classes | on | at once | [Multiclass hit points](FEATURES.md#multiclass-hit-points) |
+| Hit dice: the better of two, each die rolled twice at creation and at every level (every character) | on | at once | [Hit dice](FEATURES.md#hit-dice-the-better-of-two) |
+| Scores and hit points as rolled: on the creation screen the six scores add up to no more than the die gave, and the hit points can't be clicked | on | at once | [Scores and hit points as rolled](FEATURES.md#scores-and-hit-points-as-rolled) |
+| AD&D's class tables: the XP each class needs, priests' THAC0, and clerics', druids' and preservers' spell slots by level | on | at once | [AD&D's class tables](FEATURES.md#adds-class-tables) |
+| CON as in AD&D: hit points back at AD&D's rate from CON 20, and no CON adjustment on top of dwarves' and halflings' racial bonus to poison saves | on | at once | [CON as in AD&D](FEATURES.md#con-as-in-add) |
+| Ages and magical aging: an age from Dark Sun's tables, scores changing as it rises, a year each 365 days of game time; Haste ages a year, with a system shock roll | on | at once (a character made before gets its age when the Loader first sees it) | [Ages and magical aging](FEATURES.md#ages-and-magical-aging) |
+| Dual-classing as the manual has it: a human may change class from 3rd level, with the manual's prime requisites for both classes | on | at once | [Dual-classing](FEATURES.md#dual-classing-as-the-manual-has-it) |
+| Level cap by XP: levels past 9th, up to 749,999 XP (shared by a multiclass character's classes) | on | at once | [Level cap by XP](FEATURES.md#level-cap-by-xp) |
+
+**Rule changes: Weapons and armour**
+
+| Loader label | Default | Takes effect | Details |
+|---|---|---|---|
+| Two weapons: -2 main hand, -4 off hand, DEX's reaction adjustment added; the off hand attacks once a round | on | at once | [Two weapons](FEATURES.md#two-weapons) |
+| Half-giants' two-handed weapons: a half-giant wields one in one hand, a shield or a light weapon in the other | on | at once | [Half-giants' two-handed weapons](FEATURES.md#half-giants-two-handed-weapons) |
+| Weapon traits: the cahulaks' extra attack and tangle, the staff sling's stinkpots, and a polearm's reach of two squares | on | at once | [Weapon traits](FEATURES.md#weapon-traits) |
+| Creature size as in AD&D: large targets take AD&D's large weapon dice, and Hold Person and Charm Person have no effect on them | on | at once (Hold Person's and Charm Person's descriptions: next start) | [Creature size](FEATURES.md#creature-size) |
+| Held targets as in AD&D: a blow on a Paralyzed or Out Cold creature hits automatically, for normal damage (the game rolls, and doubles it) | on | at once | [Held targets](FEATURES.md#held-targets) |
+| Rings and cloaks of protection as in AD&D: only the better ring counts, a ring gives no AC with magical armour, a cloak none with magical or metal armour or a shield | on | at once | [Rings and cloaks of protection](FEATURES.md#rings-and-cloaks-of-protection) |
+| Helms give AC 1 (the game's helms give none) | on | at once | [Helms give AC 1](FEATURES.md#helms-give-ac-1) |
+| Items saving against acid as in AD&D, by material, a plus helping (the game destroys armour without a magical power outright) | on | at once | [Items saving against acid](FEATURES.md#items-saving-against-acid) |
+
+**Rule changes: Magic**
+
+| Loader label | Default | Takes effect | Details |
+|---|---|---|---|
+| Rangers' casting level: a ranger casts its spells at its level less 7 (the game uses the whole ranger level) | on | at once | [Rangers' casting level](FEATURES.md#rangers-casting-level) |
+| Preservers' INT: INT sets the chance to learn a spell from a scroll and the most spells known at each spell level | on | at once | [Preservers' INT](FEATURES.md#preservers-int) |
+| Saving throws against spells: the spell save, and DEX's defensive adjustment against fire, cold and electricity in place of a doubled d20 | on | at once | [The spell save](FEATURES.md#spells-saved-against-with-the-spell-save); [DEX instead of a doubled d20](FEATURES.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20) |
+| Enlarge multiplies the weapon's dice only, STR and magic added after, as in AD&D (the game multiplies the whole damage) | on | at once | [Enlarge](FEATURES.md#enlarge-multiplies-the-weapons-dice-only) |
+| Spells and psionics as the manual describes them: saves, times and damage, Turn Undead by AD&D's table, monsters' saves and powers; from the next start | on | next start | [Spells and psionics as the manual describes them](FEATURES.md#spells-and-psionics-as-the-manual-describes-them) |
+| Spells roll to hit: missile spells, and touch spells on a foe, against the target's AC; from the next start | on | next start | [Spells roll to hit](FEATURES.md#spells-roll-to-hit) |
+| Resting as in AD&D: priests and psionicists heal the party with what they have left, then each heals 3 hit points plus CON's bonus (the game fills them all) | on | at once | [Resting as in AD&D](FEATURES.md#resting-as-in-add) |
+
+**More character customization**
+
+| Loader label | Default | Takes effect | Details |
+|---|---|---|---|
+| Weapon specialization: fighters and gladiators specialize, fighters on to mastery and grand mastery, rangers take expertise (chosen after DONE and at a level up) | on | at once (picked after DONE; a warrior made before picks at its next level gained) | [Weapon specialization](FEATURES.md#weapon-specialization); [in full](KITS.md#weapon-specialization) |
+| Kits: three for each class and some for multiclass characters, each giving something and costing something (chosen on the creation panel's KIT page) | on | new characters | [Kits](FEATURES.md#kits); [every kit](KITS.md) |
+| STORE and RECALL on the creation screen: keep a roll, try the die again, and bring the kept roll back (from the next start) | on | next start | [STORE and RECALL](FEATURES.md#store-and-recall-on-the-creation-screen) |
+| Fuller starting gear: new characters (and the game's own party) also get a weapon they can use, a sling, and leather armour where they may wear it | on | new characters (the game's own party: in a new game) | [Fuller starting gear](FEATURES.md#fuller-starting-gear) |
+
+**Expanded features**
+
+| Loader label | Default | Takes effect | Details |
+|---|---|---|---|
+| Shops as in AD&D: the leader's CHA lowers what shops ask, shops pay 60%, and merchants keep the magical items sold them, to buy back | on | at once | [The leader's CHA at shops](FEATURES.md#the-leaders-cha-at-shops); [buying back](FEATURES.md#buying-back-magical-items) |
+
+**Expanded features: Improved thieving**
+
+| Loader label | Default | Takes effect | Details |
+|---|---|---|---|
+| Thieves as in AD&D: thief skills from AD&D's table, a backstab multiplying the weapon's dice only, a failed lock or pocket tried again only a level later | on | at once | [Thief skills from AD&D's table](FEATURES.md#thief-skills-from-adds-table) |
+| Hiding in shadows to backstab: thieves hide in shadows and move silently to backstab, rangers to attack from behind | on | at once | [Hiding in shadows to backstab](FEATURES.md#hiding-in-shadows-to-backstab) |
+| ... a worn cloak adds 10 to hiding, worn boots 10 to moving silently, a worn belt 5 to picking pockets and opening locks | on | at once | [Hiding in shadows to backstab](FEATURES.md#hiding-in-shadows-to-backstab) |
+| Picking pockets: a thief's Pick Pockets button on the USE screen, then a click on anyone in sight (not in a fight), until caught | on | at once | [Picking pockets](FEATURES.md#picking-pockets) |
+
+**New content** (the tab's note: "People, a quest, an arena bout and items:
+from the next start, in places not yet visited. What a saved game already has
+(people met, items given) stays in it. The new spells and defilers' scrolls: at
+once.")
+
+| Loader label | Default | Takes effect | Details |
+|---|---|---|---|
+| New spells: six for wizards (Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook and Friends) and ten 6th-level priest spells (Heal, Harm, Blade Barrier...) | on | at once | [New wizard spells](FEATURES.md#new-wizard-spells); [6th-level priest spells](FEATURES.md#6th-level-priest-spells) |
+| Kalzith, a defiler slave in the slave pens who sells arcane scrolls (new games) | on | first visit (the slave pens) | [Kalzith](FEATURES.md#kalzith) (spoilers) |
+| Semyon in the slave pens after he leaves the arena, and breaking out with Scar | on | first visit (the slave pens) | [Semyon](FEATURES.md#semyon) (spoilers) |
+| The cooked vulture: Dinos cooks it for the party (XP and a full rest) | on | next start | [The cooked vulture](FEATURES.md#the-cooked-vulture) (spoilers) |
+| Defilers' scrolls: a defiler in a fight carries a scroll of a random preserver spell one time in 20, dropped where it dies | on | at once | [Defilers' scrolls](FEATURES.md#defilers-scrolls) (spoilers) |
+| New items, magical and mundane: weapons, armour and other gear on the game's people, in its shops and chests, and the champions' arena bout after Scar's death | on | first visit (each item's area) | [New items](FEATURES.md#new-items) (spoilers); this guide's [New items](#new-items) |
+
+**Graphics**
+
+| Loader label | Default | Takes effect | Details |
+|---|---|---|---|
+| Elves have pointed ears, and half-elves figures of their own instead of the humans' (from the next start) | on | next start | [Elves and half-elves](FEATURES.md#elves-and-half-elves) |
+| Cilla, an elf in the game's own party, drawn as an elf (the game gives her the half-elf woman's figure; from the next start) | on | next start (ticked, also in a game already begun, from the next area or load) | [Elves and half-elves](FEATURES.md#elves-and-half-elves) |
+| What the party wears, drawn on their figures (weapons, armour, helms, cloaks, boots, belts) | on | at once | [What the party wears](FEATURES.md#what-the-party-wears) |
+| Shadows under the figures (soft, on the floor) | on | at once | [Shadows](FEATURES.md#shadows) |
+| Dust raised behind the feet of anyone walking on sand or dirt | on | at once | [Dust](FEATURES.md#dust) |
+| See-through figures: a thief or ranger hidden in shadows, and anyone invisible (an invisible enemy solid while one of the party detects invisibility) | on | at once | [See-through figures](FEATURES.md#see-through-figures) |
+
+**Controls**
+
+| Loader label | Default | Takes effect | Details |
+|---|---|---|---|
+| Choosing an enemy: in a fight, Tab (Shift+Tab back) chooses one and Enter attacks it, even behind someone | on | at once | [Choosing an enemy](FEATURES.md#choosing-an-enemy-tab-enter-and-the-rings) |
+| A red ring on the ground in a fight: ... none | | at once | [Choosing an enemy](FEATURES.md#choosing-an-enemy-tab-enter-and-the-rings) |
+| A red ring on the ground in a fight: ... under the enemy chosen with Tab | chosen | at once | [Choosing an enemy](FEATURES.md#choosing-an-enemy-tab-enter-and-the-rings) |
+| Scrolling the map: press the mouse wheel and move | on | at once | [Scrolling the map](FEATURES.md#scrolling-the-map) |
+| The view in fights: it moves to a figure only when the figure walks off the screen (the game's follows it near the edges; from the next start) | on | next start | [The view in fights](FEATURES.md#the-view-in-fights) |
+| The pointer in scenes: shown in the intro and the game's other scenes, and a click skips a scene as a key does; from the next start | on | next start | [The pointer in scenes](FEATURES.md#the-pointer-in-scenes-and-where-it-starts) |
+| Where the pointer starts: in the middle of the screen, moving as far up and down as across, and in a window as fast as the desktop's pointer; from the next start | on | next start | [Where it starts](FEATURES.md#the-pointer-in-scenes-and-where-it-starts) |
+| The whole party in view as a game starts or loads and after each fight, as 5 does; from the next start | on | next start | [The whole party in view](FEATURES.md#the-whole-party-in-view) |
+| Spells on the Effects screen: a click on a spell's icon leaves it on (the game ends it; psionic powers can still be stopped); from the next start | on | next start | [Spells on the Effects screen](FEATURES.md#spells-on-the-effects-screen) |
+
+**Game speed (from the next start)**
+
+| Loader label | Default | Takes effect | Details |
+|---|---|---|---|
+| GOG's own (walking can be choppy with shadows and dust) | | next start | [Game speed](FEATURES.md#game-speed) |
+| Faster: for an older PC (fewer pictures a second with the whole party in view) | | next start | [Game speed](FEATURES.md#game-speed) |
+| Fastest: the whole party walks at full speed, nearly every picture shown (the default) | chosen | next start | [Game speed](FEATURES.md#game-speed) |
+| Steady pace: walking at full speed on the map whatever is drawn (a picture skipped rather than the party slowed) | on | next start | [Game speed](FEATURES.md#game-speed) |
+
+**Wake of the Ravager (optional)** and **Saves**
+
+| Loader label | Default | Takes effect | Details |
+|---|---|---|---|
+| Choose its folder... | found by itself where it can be | next start | where Wake of the Ravager is installed, for the new priest spells' icons and pictures: [Requirements](README.md#requirements) |
+| Open the folder | (a button) | | opens the Named saves folder: [Saves under their names](FEATURES.md#saves-under-their-names) |
+| Put a save in a slot... | (a button) | | puts a named save back in one of the game's slots: [Saves under their names](FEATURES.md#saves-under-their-names) |

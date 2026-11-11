@@ -14,6 +14,7 @@ layout](README.md#the-dice-log)).
 - [Fights](#fights)
 - [Spells, saves and effects](#spells-saves-and-effects)
 - [Checks, thief skills and searches](#checks-thief-skills-and-searches)
+- [Inventory and shops](#inventory-and-shops)
 - [Hit points, kills and levels](#hit-points-kills-and-levels)
 - [Character creation](#character-creation)
 - [Ages](#ages)
@@ -133,14 +134,19 @@ creatures save again as they stay in them; those lines have no "from".
 | `Cilla picks Tobrian's pocket: d100 = 23, needs 45 or less -> success` / `  Cilla lifts Stone Dagger from Tobrian unnoticed.` | A thief's Pick Pockets button on the USE screen (see [Picking pockets](FEATURES.md#picking-pockets)): the d100 against the thief's pick pockets, then what came of it on the line below. For one of the three weapons worth XP, `  Cilla receives 200 experience points!` follows. With nothing small left on the person, the thief takes their coins instead, the last try on them: `  coins: 3d4+3 (2 to 5 for each of 3 thief levels) = 11` and `  Cilla lifts 11 ceramic pieces from Tobrian's purse, all there was to take.` |
 | `  Daaki moves silently to get away: d100 = 12, needs 55 or less -> success` / `  Daaki fumbles Tobrian's pockets, but slips away unnoticed.` / `  Tobrian catches Daaki's hand! Tobrian will be too wary for Daaki to try again.` | A failed try: a move silently roll to get away. Made, the thief slips away and may try the same person again; missed, they're caught, and can't try that person again. A thief may go on trying until caught or until they take the coins; with **Thieves as in AD&D**, only after gaining a thief level, and a try before then says `  Daaki needs another level to try them again.` |
 | `Cilla tries to open locks: d100 = 40 -> failure (Cilla failed this lock at this thief level: another try once a level is gained)` | With **Thieves as in AD&D**, a lock this thief has failed, tried again before a level is gained (see [Thief skills from AD&D's table](FEATURES.md#thief-skills-from-adds-table)): no chance, whatever the roll. Another thief may still try. |
-| `Ester takes Bone Axe, Guava (4)` / `No room in the backpacks for: Leather Chest Armour` / `Plain weapons left: Wooden Club` | **T** or **Shift+T** with a body's or chest's window open ([Looting a body](FEATURES.md#looting-a-body-t-and-shiftt)): what each member took, what didn't fit, and with Shift+T the plain weapons left behind. |
-| `Gerakis sells 9 things for 95 ceramic pieces: Wooden Club 1, Bone Axe 4, ...` / `Gerakis has no plain gear in the backpack to sell.` | **S** on a shop's screen ([Selling plain gear](FEATURES.md#selling-plain-gear-s)): what the member on show sold, each with its price. |
 | `Tezral hides in shadows: d100 = 21, needs 27 or less (54, halved in daylight) -> hidden` / `  Tezral moves silently: ...` / `Tezral can't hide in shadows: Slig is right beside them` | A thief's or ranger's hiding and moving silently at the start of their turn (with [hiding to backstab](FEATURES.md#hiding-in-shadows-to-backstab) on), or why they can't: an enemy in one of the eight squares around them. |
 | `    X's special effect on Y: d10 = 1, works on a 1 -> it works` | The 1-in-10 extra effect some creatures' hits have: the disease of the game's Blue Slaad. With [the manual's monsters](HOW-THE-GAME-WORKS.md#the-monsters-as-the-manual-describes-them) (the default) the Blue Slaad has deadly poison instead, with no d10, and the roll is a Tari's bite's, made 1 in 20 by a d2 more. A thri-kreen's paralysing bite, from 5th level, rolls no d10: its hit queues the paralysis, and the target's save is the roll. |
 | `    X's Bone Long Sword nearly broke: 0 on 0-7, then 12 on 0-19 (needed 0)` / `... BREAKS` | The weapon check the game makes after an attack sequence whose last attack hit. Only non-magical wood, bone, stone and obsidian weapons can break (and not every kind: clubs and quarterstaffs can't): they break when a 0-7 roll and then a 0-19 roll both come up 0, 1 chance in 160. The line only appears when the first roll comes up 0. |
 | `  Rampager's acid on Gerakis's Leather Chest Armor: d20 = 12, needs 10 (AD&D's, 10 for leather; the game's: destroyed without a roll) -> safe` | An item the Rampager's acid or the Babau's corroding touch could destroy: the d20, the number it needed and whose number that was (see [Items saving against acid](FEATURES.md#items-saving-against-acid)). |
 | `  Detonate's blast on Cilla's Bone Helm: d20 = 7, breaks it under 15 (15) -> DESTROYED` | Detonate (a daggoran's too) trying to destroy its target's worn item that breaks most easily, on a d20 under 15 less its plus (see [Psionics](HOW-THE-GAME-WORKS.md#psionics)). |
 | `Haystack searched: 0-10 = 7, an old, soiled loincloth (the party's 2nd find of 6 in hay)` / `  The rat's bite: 0-4 = 3 damage` | Searching a junk pile, a haystack or a wardrobe: the game's roll, what it found, and how far its count has got (see [Searching junk, hay and wardrobes](HOW-THE-GAME-WORKS.md#searching-junk-hay-and-wardrobes)); a rat's bite or a falling pot rolls its damage the same way. |
+
+## Inventory and shops
+
+| Line | Meaning |
+|---|---|
+| `Ester takes Bone Axe, Guava (4)` / `No room in the backpacks for: Leather Chest Armour` / `Plain weapons left: Wooden Club` | **T** or **Shift+T** with a body's or chest's window open ([Looting a body](FEATURES.md#looting-a-body-t-and-shiftt)): what each member took, what didn't fit, and with Shift+T the plain weapons left behind. |
+| `Gerakis sells 9 things for 95 ceramic pieces: Wooden Club 1, Bone Axe 4, ...` / `Gerakis has no plain gear in the backpack to sell.` | **S** on a shop's screen ([Selling plain gear](FEATURES.md#selling-plain-gear-s)): what the member on show sold, each with its price. |
 
 ## Hit points, kills and levels
 
