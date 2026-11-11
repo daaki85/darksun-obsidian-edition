@@ -700,6 +700,13 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   the kept saves copied to `$PLAYTEST_WORK/inst/SAVE01-10.SAV` with that field rewritten in place
   (`gff.read_gff` for the old bytes, then `find` and overwrite). Title, LOAD SAVED GAME (170,109),
   the pointer moved off the list, a shot; PAGE 2 (252,106), a shot; both side by side at 200%.
+- **`docs/viewer.png` retaken** (2026-11-11): Xvfb `:56` 1440x900, `dosbox FAKEPTY.COM -exit` in a
+  scratch folder, `python3.12 -m dsloader view` (apt's `python3-tk`). Clicks by window position
+  (`xdotool mousemove --window W X Y click 1`): Memory tools (950,132), name box (735,199), Search
+  (913,199), the hit (700,268), Assign (956,235), All fields (161,132), a byte (995,499). The
+  Game window list is a separate window (`import -window` shows it black): Triple is its third line
+  (600,132 on the screen); it writes `window_scale` 3, so copy settings.json back afterwards. From
+  the program's start to the shot in about 9 s: Sadira 21/30.
 - **The practice program** (`tests/make_fake_party.py`, for `docs/viewer.png`): run `dosbox
   FAKEPTY.COM` in a scratch folder, then the window; Sadira loses 1 HP a second and her byte wraps
   past 0 (133/30 two minutes in), so search `sadira`, pick the hit and Assign within about 15 s of

@@ -67,6 +67,27 @@ class DocLinkTests(unittest.TestCase):
                                 bad.append(f"{os.path.relpath(path, REPO)}:{n} {target} (no anchor)")
         self.assertEqual(bad, [])
 
+    def test_shipped_pages_stay_in_the_zip(self):
+        """The release zip holds the obsidian-edition folder alone: its pages' relative links never
+        leave it (what is outside goes by its GitHub address), and the GitHub links to files of the
+        repository name files that are there."""
+        bad = []
+        base = "https://github.com/daaki85/darksun-obsidian-edition/blob/main/"
+        for path in glob.glob(os.path.join(HERE, "*.md")) + glob.glob(os.path.join(HERE, "docs", "**", "*.md"), recursive=True):
+            with open(path, encoding="utf-8") as f:
+                for n, line in enumerate(f, 1):
+                    for target in re.findall(r"\]\(([^)\s]+)\)", line):
+                        rel = os.path.relpath(path, REPO)
+                        if target.startswith(base):
+                            name = target[len(base):].partition("#")[0]
+                            if name and not os.path.exists(os.path.join(REPO, name)):
+                                bad.append(f"{rel}:{n} {target} (no such file in the repository)")
+                        elif not target.startswith(("http", "mailto", "#")):
+                            dest = os.path.normpath(os.path.join(os.path.dirname(path), target.partition("#")[0]))
+                            if not dest.startswith(HERE + os.sep) and dest != HERE:
+                                bad.append(f"{rel}:{n} {target} (outside the zip)")
+        self.assertEqual(bad, [])
+
     def test_readme_links_how_it_works(self):
         """The development pages on how each part works (DEVELOPMENT-SCREENS, -RULES and -CONTENT)
         name sections of the README, the features page and the pages split from it (items, kits, the

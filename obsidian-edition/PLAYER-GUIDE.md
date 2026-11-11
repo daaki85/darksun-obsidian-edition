@@ -9,8 +9,9 @@ and Semyon (the Options tab names them), no quests, and no word of where any ite
 by what they are).
 
 Everything here is the mod with its **default options**, which is how the
-Loader starts. Every rule change has a switch on the Loader's **Options** tab
-([at a glance](#the-options-tab-at-a-glance)); where it helps to know what a
+Loader starts. Nearly every rule change has a switch on the Loader's **Options** tab
+([at a glance](#the-options-tab-at-a-glance)); the exceptions, always on, are the
+keys (T, S, M, U, I), the fixes to the game's own bugs and the footman's pick. Where it helps to know what a
 switch changes, a **Without the mod** note says what the game does with it off.
 The [features page](FEATURES.md) has every rule in full detail, and the
 [Kits](KITS.md) page each kit's numbers: the guide links to their tables. The Loader's **Help**
@@ -1738,7 +1739,8 @@ materials, the short sword among them.
 | Gythka (two-handed) | 2d4 | 1d10 | no |
 | Polearm (two-handed) | 1d10 | 2d6 | no |
 | Chatkcha | 1d6+2 | 1d4+2 | no: missiles never backstab |
-| Bow, sling (bow two-handed) | by the missile | the same | no |
+| Bow (two-handed) | 1d8: the bow's own dice, whatever the arrows | the same | no |
+| Sling | 1d4: the sling's own | the same | no |
 | Staff sling (two-handed) | 1d3: a stinkpot | the same | no |
 
 A half-giant holds a two-handed weapon in one hand, with a shield or a light

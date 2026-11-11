@@ -22,6 +22,17 @@ class GuidePageTests(unittest.TestCase):
         ids = set(re.findall(r' id="([^"]+)"', page))
         self.assertEqual(set(re.findall(r'href="#([^"]+)"', page)) - ids, set())
 
+    def test_index_and_other_pages(self):
+        """The index has each section's subsections (as the guide's contents), and a link to another
+        of the mod's pages goes to its GitHub copy, where a browser follows the heading's anchor."""
+        page = guidepage.build()
+        index = page[page.index('<nav class="index"'):page.index("</nav>")]
+        self.assertIn('<a href="#thief">Thief</a>', index)
+        self.assertNotIn('href="KITS.md', page)
+        self.assertIn('href="' + guidepage.DOCS + 'KITS.md#', page)
+        self.assertEqual(guidepage.href("#fighter"), "#fighter")
+        self.assertEqual(guidepage.href("docs/x.png"), "docs/x.png")
+
     def test_markdown(self):
         self.assertEqual(guidepage.inline("**A** *b* `c*d` [e](#f) \\* x"),
                          '<strong>A</strong> <em>b</em> <code>c*d</code> <a href="#f">e</a> * x')

@@ -177,8 +177,19 @@ def build() -> str:
   const text = document.getElementById('source').textContent.replace(/<\\\\\\//g, '</');
   const btn = document.getElementById('copy'), ok = document.getElementById('copied'), ta = document.getElementById('md');
   btn.addEventListener('click', () => {{
-    const done = () => {{ ok.hidden = false; setTimeout(() => {{ ok.hidden = true; }}, 2500); }};
-    const fallback = () => {{ ta.value = text; ta.select(); try {{ document.execCommand('copy'); }} catch (e) {{}} done(); }};
+    const done = () => {{ ok.textContent = 'Copied'; ok.hidden = false; setTimeout(() => {{ ok.hidden = true; }}, 2500); }};
+    const failed = () => {{
+      // (no clipboard to be had: the text shown, selected, for Ctrl+C; never "Copied" when it wasn't)
+      ta.value = text; ta.className = 'shown'; ta.removeAttribute('aria-hidden'); ta.tabIndex = 0;
+      ta.focus(); ta.select();
+      ok.textContent = 'Could not copy: the text is selected below, press Ctrl+C'; ok.hidden = false;
+    }};
+    const fallback = () => {{
+      ta.value = text; ta.select();
+      let copied = false;
+      try {{ copied = document.execCommand('copy'); }} catch (e) {{ copied = false; }}
+      if (copied) done(); else failed();
+    }};
     try {{ navigator.clipboard.writeText(text).then(done, fallback); }} catch (e) {{ fallback(); }}
   }});
 }})();

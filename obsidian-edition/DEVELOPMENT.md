@@ -58,7 +58,7 @@ DSCLOG's routines and variables are named in capitals on these pages
 | `*.bat` | what players double-click: the Loader, the game with or without its window, a save file's party |
 | `README.md`, `FEATURES.md`, `ITEMS.md`, `KITS.md`, `GAME-BUGS.md`, `HOW-THE-GAME-WORKS.md`, `DICE-LOG.md`, `PLAYER-GUIDE.md`, `CREATURES.md` | the player's pages (`player-guide.html` is made from the guide, `CREATURES.md` by `doccreatures.py`) |
 | `../PATCH-NOTES.md`, `../CHANGELOG.md`, `../release-notes/` | the repository's root: the patch notes, the record of every pull request, and each release's notes |
-| `../playtest/` | the in-game test kit: tools that drive the game in DOSBox, saves and logs, and [its guide](../playtest/PLAYTESTING.md). It is outside this folder, so it never goes in the release zip |
+| `../playtest/` | the in-game test kit: tools that drive the game in DOSBox, saves and logs, and [its guide](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/PLAYTESTING.md). It is outside this folder, so it never goes in the release zip |
 
 Each module of `dsloader` opens with what it does. Those the sections below
 don't come back to: `__main__.py` is the command line (below); `gff.py` and
@@ -180,7 +180,7 @@ Tests that guard the whole project rather than one module:
 | `test_guidepage`, `test_patchnotes` | the web pages are up to date with their Markdown, and their links work |
 
 The unit tests don't play the game. For anything DSCLOG or a script touches,
-check it in the game too: [the playtesting guide](../playtest/PLAYTESTING.md)
+check it in the game too: [the playtesting guide](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/PLAYTESTING.md)
 has the tools and how to use them.
 
 ### Making a release
@@ -198,7 +198,7 @@ so only what is committed goes in) and publishes it with
 2. Finish `release-notes/v<version>.md` and the CHANGELOG's entry, and
    rebuild `DSCLOG.EXE` and the web pages if their sources changed.
 3. Check in the game anything DSCLOG or a script touches ([the playtesting
-   guide](../playtest/PLAYTESTING.md)).
+   guide](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/PLAYTESTING.md)).
 4. Merge to `main`, then push the tag `v<version>`, or run the workflow by hand
    (Actions → Release → Run workflow), which makes the tag.
 5. Once the pull request is merged, rename the CHANGELOG's "## Next pull
@@ -547,9 +547,9 @@ bytes: the 32-byte header, the segment's image of 63,808 and the tail's 5,520, `
 To check them after a change, build a scratch copy with `[map all FILE]` as its
 first line (`nasm -f bin -I dos/ -o /tmp/x.exe COPY`, from `obsidian-edition/`)
 and read the symbols in the map. What each change took is in the
-[CHANGELOG](../CHANGELOG.md); the two memory passes' steps, each checked in the
-game, are in [the 2026-11-08 log](../playtest/logs/2026-11-08-memory-pass.md)
-and [the 2026-11-09 log](../playtest/logs/2026-11-09-memory-pass-2.md).
+[CHANGELOG](https://github.com/daaki85/darksun-obsidian-edition/blob/main/CHANGELOG.md); the two memory passes' steps, each checked in the
+game, are in [the 2026-11-08 log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-08-memory-pass.md)
+and [the 2026-11-09 log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-09-memory-pass-2.md).
 
 ### The helper's segment
 

@@ -65,6 +65,24 @@ class NamedSavesTests(unittest.TestCase):
         self.assertEqual(namedsaves.sync(self.game, self.named), ["Page 1 slot 01 - Arena.SAV"])
         self.assertEqual(os.listdir(self.named), ["Page 1 slot 01 - Arena.SAV"])
 
+    def test_older_backup_put_back(self):
+        """An older save put back in a slot with its old time kept (a restored backup): its copy
+        replaces the newer one's, though older (the slot's copy follows the slot)."""
+        self.put(self.game, "SAVE01.SAV", save("Newer"), 2000)
+        namedsaves.sync(self.game, self.named)
+        self.put(self.game, "SAVE01.SAV", save("Restored older"), 1000)
+        self.assertEqual(namedsaves.sync(self.game, self.named), ["Page 1 slot 01 - Restored older.SAV"])
+        self.assertEqual(os.listdir(self.named), ["Page 1 slot 01 - Restored older.SAV"])
+
+    def test_same_name_other_bytes(self):
+        """The same name saved again with another time: copied anew; the same bytes again: not."""
+        self.put(self.game, "SAVE01.SAV", save("Pens"), 2000)
+        namedsaves.sync(self.game, self.named)
+        self.put(self.game, "SAVE01.SAV", save("Pens") + b"x", 1000)
+        self.assertEqual(namedsaves.sync(self.game, self.named), ["Page 1 slot 01 - Pens.SAV"])
+        self.put(self.game, "SAVE01.SAV", save("Pens") + b"x", 3000)  # (touched: same bytes)
+        self.assertEqual(namedsaves.sync(self.game, self.named), [])
+
     def test_cloud_saves_first(self):
         """GOG's cloud_saves (mounted over the folder) before the game folder's own."""
         cloud = os.path.join(self.game, "cloud_saves")

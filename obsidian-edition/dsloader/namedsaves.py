@@ -82,9 +82,26 @@ def _mtime(path: str) -> float:
         return 0.0
 
 
+def _same_stamp(copy: str, path: str, stamp: float) -> bool:
+    """COPY has PATH's time (sync gives each copy its save's) and size."""
+    try:
+        return os.path.getmtime(copy) == stamp and os.path.getsize(copy) == os.path.getsize(path)
+    except OSError:
+        return False
+
+
+def _same_bytes(copy: str, data: bytes) -> bool:
+    try:
+        with open(copy, "rb") as f:
+            return f.read() == data
+    except OSError:
+        return False
+
+
 def sync(game_dir: str, folder: str = NAMED) -> List[str]:
-    """Each of the game's saves copied into FOLDER under its name, where its copy is missing or
-    older; a slot's copy under another name (the slot saved over) is replaced. The copies made."""
+    """Each of the game's saves copied into FOLDER under its name, where its copy is missing or not
+    the same save (another time and size, or other bytes); a slot's copy under another name (the
+    slot saved over) is replaced. The copies made."""
     copies = _copies(folder)
     made = []
     for page in range(1, len(PAGES) + 1):
@@ -97,8 +114,8 @@ def sync(game_dir: str, folder: str = NAMED) -> List[str]:
             except OSError:
                 continue
             existing = copies.get((page, slot), [])
-            if existing and all(_mtime(os.path.join(folder, e)) >= stamp for e in existing):
-                continue
+            if len(existing) == 1 and _same_stamp(os.path.join(folder, existing[0]), path, stamp):
+                continue  # (its copy, made from it: the same time and size)
             try:
                 with open(path, "rb") as f:
                     data = f.read()
@@ -108,6 +125,14 @@ def sync(game_dir: str, folder: str = NAMED) -> List[str]:
             if name is None:
                 continue  # (being written, or not a save)
             target = copy_name(page, slot, name)
+            # a copy with an older or newer time is the slot's only if it holds the same bytes: a
+            # backup put back in the slot with its old time kept is copied too (ChatGPT's review)
+            if existing == [target] and _same_bytes(os.path.join(folder, target), data):
+                try:  # (its time taken too, so the next pass needn't read it again)
+                    os.utime(os.path.join(folder, target), (stamp, stamp))
+                except OSError:
+                    pass
+                continue
             try:
                 os.makedirs(folder, exist_ok=True)
                 tmp = os.path.join(folder, target + ".tmp")

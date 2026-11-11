@@ -81,6 +81,24 @@ class SellTests(unittest.TestCase):
         self.assertEqual(paid, 0)
         self.assertIn(90, self.pack())
 
+    def test_a_failed_money_write_takes_nothing(self):
+        """The purse can't be written: the plain sword stays in the backpack (nothing gone unpaid)."""
+        from unittest import mock
+        with mock.patch.object(type(self.gd), "add_money", side_effect=OSError("write failed")):
+            with self.assertRaises(OSError):
+                sell.sell(self.gd, 0)
+        self.assertEqual(self.pack(), [90, 91, 92, 93])
+        self.assertEqual(self.gd.money(), self.money)
+
+    def test_a_failed_unlink_is_not_paid(self):
+        """The item can't be taken out of its list: no money for it."""
+        from unittest import mock
+        self.gd.rules &= ~game.RULE_CHA_PRICES
+        with mock.patch.object(ring, "unlink", return_value=False):
+            lines, paid = sell.sell(self.gd, 0)
+        self.assertEqual(paid, 0)
+        self.assertEqual(self.gd.money(), self.money)
+
     def test_a_body_slot_kept(self):
         """An item whose slot is one of the body's (3, the weapon hand), even in the backpack's list,
         isn't sold (plain_gear's slot test)."""

@@ -47,7 +47,24 @@ Releases, newest first: [2.16.0](#pull-request-90-merged-2026-11-11) (#90),
 DSCLOG.EXE 69,360 bytes (63,808 in its segment), 1,728 of its segment spare; `UMB_NEED` 6,429
 paragraphs (1,753 spare), `UMB_KEPT` 8,051 (131 spare). 2.16.0's: 69,344 and 1,744 spare.
 
-**Fixed**
+**Fixed** (from a review of the repository by ChatGPT, checked against the code first)
+- **S never takes an item without paying for it.** `sell.sell` unlinked every item and paid the
+  total at the end, so a failed money write left the gear gone and the purse unchanged (and, with
+  the key counted once, never retried). Now each item is paid for, then unlinked, and the pay taken
+  back if it can't be. Tests `test_a_failed_money_write_takes_nothing`, `test_a_failed_unlink_is_not_paid`.
+- **A save put back in a slot with its old time is copied to Named saves.** `namedsaves.sync`
+  skipped a slot whose copy was as new or newer, whatever it held, so a restored older backup left
+  the named folder offering the newer save. A copy is now the slot's only with the same time and
+  size, or the same bytes. Tests `test_older_backup_put_back`, `test_same_name_other_bytes`.
+- **"Copy as Markdown" on the patch notes' page says "Copied" only when it was:** a failed copy
+  shows the text selected, with a note to press Ctrl+C.
+- **The Help page (player-guide.html):** its index has each section's subsections, as the guide's
+  contents do (Fighter, Thief, Saving throws...), and its links to the mod's other pages (KITS.md,
+  FEATURES.md...: 37) go to their GitHub copies, whose heading anchors a browser follows (a local
+  .md file opens as plain text, or not at all). Test `test_index_and_other_pages`.
+- **Links that left the zip:** DEVELOPMENT.md's links to `../playtest/` and `../CHANGELOG.md` go
+  to GitHub; `test_shipped_pages_stay_in_the_zip` keeps every shipped page's links inside the
+  folder.
 - **Caps Lock no longer swaps T and Shift+T** (from the 2.16.0 audit). `LOOT_KEY` took the mode from
   the letter's case, which Caps Lock turns round; it now reads the Shift keys held (the BIOS
   keyboard flags, 0:0417h bits 0-1). S has no mode, so either case already sold the same. Tests
@@ -63,6 +80,14 @@ paragraphs (1,753 spare), `UMB_KEPT` 8,051 (131 spare). 2.16.0's: 69,344 and 1,7
   `RULE_HI_BUYBACK`, "RULE_HI 64") now the merged rules' (`RULE_THIEF_TABLE`, `RULE_HI_CHA_PRICES`).
 
 **Docs**
+- **From the review:** the 2.16.0 release notes said each merged switch keeps its saved choice;
+  it does only when the old pair agreed (`game.fold_merged`: one off, the merged one off), now
+  said, and in the changelog. The update steps (the release notes, the README) name the **Named
+  saves** folder with `settings.json`, and the backup steps the `cloud_saves` folder the game
+  reads first. The guide's weapon table gives the bow (1d8) and sling (1d4) their own dice, as the
+  game rolls them (was "by the missile"), and its opening names what has no switch (the keys, the
+  game's fixed bugs, the footman's pick; was "every rule change"). The patch notes' Spellarcher
+  says its arrows fade at the next rest. `docs/viewer.png` retaken (the toolbar's Help button).
 - **The combat log's pictures retaken with the panel's present font** (8 pixels a line, 7 lines
   docked, 12 expanded; the user's ask after 2.16.0): `docs/combat-log.png`,
   `combat-log-expanded.png`, `combat-log-detail.png` (now from Pehtucl's ambush, not the alarm
@@ -216,7 +241,8 @@ bytes of the segment (68,592 bytes before it).
   12 expanded (was 14). `smallfont.py` keeps each glyph's 7 rows as two hex digits.
 - **Six switches merged into three** (the user's choice), freeing three of DSCLOG's rule bits with bit 2
   already freed (the Weapon traits merge): four free now, room for the rules to come. Each keeps one
-  setting's name, so a saved choice carries over: **Saving throws against spells** (`spell_save`:
+  setting's name, so a saved choice carries over (`game.fold_merged`: if the old pair differed, the
+  merged switch is off): **Saving throws against spells** (`spell_save`:
   the spell save and DEX instead of a doubled d20; bit 8, the spell save's, which only the Loader
   acted on, free), **Shops as in AD&D** (`cha_prices`: the leader's CHA and buying back magical
   items; RULES_HI 64 free), **Thieves as in AD&D** (`thief_table`: AD&D's thief skills and the

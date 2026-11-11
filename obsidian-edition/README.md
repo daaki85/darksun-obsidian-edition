@@ -265,15 +265,19 @@ start through the Loader does that).
 
 ### Updating, backups, saved games and the Loader's files
 
-**Updating.** Unzip the new release into a folder of its own and copy
-`settings.json` from the old folder into it to keep your options (the
-**Named saves** folder too, if you want its copies). Your saves and characters
-are in the game folder, so nothing else needs moving. Then delete the old
+**Updating.** Unzip the new release into a folder of its own and copy two
+things from the old folder into it: `settings.json` (your options) and the
+**Named saves** folder (each save's copy under its name, and the `Replaced -`
+copies a restore keeps, which may be the only copy left of a save). Your saves
+and characters are in the game folder (or its `cloud_saves` folder, where GOG
+keeps them when it has one), so nothing else needs moving. Then delete the old
 folder.
 
 **Back up your saves first.** Before the first game with the mod, copy the
-game folder's save files (`SAVE*`, and `SAVB*`, `SAVC*` and `SAVD*` once
-you have them) and `CHARSAVE.GFF` somewhere safe. The Loader never
+save files (`SAVE*`, and `SAVB*`, `SAVC*` and `SAVD*` once you have them) and
+`CHARSAVE.GFF` somewhere safe: from the game folder's `cloud_saves` folder if
+it has one (the game reads its saves from there first), else from the game
+folder. The Loader never
 changes the game's own files, but your saves are written by the patched game:
 one with the new items ticked can hold item types the original game doesn't
 have, so load such a save with the Loader. To go back to the original game,
