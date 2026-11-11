@@ -402,9 +402,16 @@ def conversation() -> bytes:
                 ("Farewell.", then_leave(go), ALWAYS)])
 
     def who():
-        s.say("Kalzith. Once a sorcerer's apprentice in Draj, now Pehtucl's property. The templars "
-              "put a defiler in the arena now and then: the crowd loves to watch one burn. The rest of "
-              "the time they put me in here, where the ground's already dead.")
+        # (a slave scribe of a Draji merchant house, taught in secret by a defiler hiding among its
+        # caravan hands: wizardry is a crime on Athas, kept from all but the sorcerer-kings, so no one
+        # is openly apprenticed to a wizard; the user's note, 2026-11-11)
+        s.say("Kalzith. I kept the tallies for a merchant house in Draj. A defiler hid among its "
+              "caravan hands, and he taught me what no slave should know. The templars caught me "
+              "drawing life from a noble's garden.")
+        s.page()
+        s.say("Now I'm Pehtucl's property. The templars put a defiler in the arena now and then: the "
+              "crowd loves to watch one burn. The rest of the time they put me in here, where the "
+              "ground's already dead.")
 
     def respect():
         s.clear()

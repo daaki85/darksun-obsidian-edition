@@ -77,6 +77,12 @@ Releases, newest first: [2.16.1](#pull-request-91-merged-2026-11-11) (#91),
   player's guide and DEVELOPMENT.md (the folders, Build, the tests, Making a release) say so.
 
 **Fixed**
+- **Kalzith's background fits Athas** (the user: a sorcerer's apprentice doesn't, where wizardry is
+  a crime and the sorcerer-kings keep magic to themselves and their templars). He kept the tallies
+  for a merchant house in Draj, was taught in secret by a defiler among its caravan hands, and was
+  caught by the templars drawing life from a noble's garden; then the arena's line as before, on a
+  second page (`kalzith.py`'s "Who are you?"). Seen in the game: both pages fit his window
+  (playtest/logs/2026-11-11-kalzith-background.md).
 - **A pocket is barred until a level only when the thief is caught** (the user's rule: "I meant
   if the thief is completely caught"). With **Thieves as in AD&D**, a fumble the thief slipped away
   from barred that thief until a level gained, and the game said "Magramar needs another level to
