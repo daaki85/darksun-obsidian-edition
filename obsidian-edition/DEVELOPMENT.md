@@ -558,15 +558,15 @@ the one place for the sizes; the sections after them name the symbols only.
 ### The limits
 
 Each fails the build when passed (a negative `times`). From the build of
-2026-11-11, after 2.16.0, with T's mode from the Shift keys (DSCLOG.EXE 69,360
-bytes: the 32-byte header, the segment's image of 63,808 and the tail's 5,520, `TAIL_BYTES`):
+2026-11-11 for 2.17.0, with the psionic powers picked at creation (DSCLOG.EXE 70,128
+bytes: the 32-byte header, the segment's image of 64,576 and the tail's 5,520, `TAIL_BYTES`):
 
 | Limit | Used | Room | Spare |
 |---|---|---|---|
-| [the helper's segment](#the-helpers-segment): `kept_end` (`resident_end` 62,816 + `AFTER_INSTALL` 992) | 63,808 bytes | 65,536 | 1,728 bytes |
+| [the helper's segment](#the-helpers-segment): `kept_end` (`resident_end` 63,584 + `AFTER_INSTALL` 992) | 64,576 bytes | 65,536 | 960 bytes |
 | [the far block](#the-far-block): `FAR_END` (its buffers from `FAR_RING`, 10h: 65,484 bytes) | 65,500 | 65,536 | 36 bytes |
-| upper memory as the helper loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,429 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,753 |
-| upper memory once installed: `UMB_KEPT` (the helper, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,051 paragraphs | 8,182 (`UMB_ROOM`) | 131 (2.1 KB) |
+| upper memory as the helper loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,477 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,705 |
+| upper memory once installed: `UMB_KEPT` (the helper, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,099 paragraphs | 8,182 (`UMB_ROOM`) | 83 (1.3 KB) |
 
 To check them after a change, build a scratch copy with `[map all FILE]` as its
 first line (`nasm -f bin -I dos/ -o /tmp/x.exe COPY`, from `obsidian-edition/`)

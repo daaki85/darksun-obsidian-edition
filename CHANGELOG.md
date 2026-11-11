@@ -44,7 +44,36 @@ Releases, newest first: [2.17.0](#pull-request-93-merged-2026-11-11) (#93),
 [1.1.0](#pull-request-18-merged-2026-10-06) (#18), [1.0.0](#pull-request-12-merged-2026-10-02)
 (#12).
 
+## Next pull request (not opened yet)
+
+Obsidian Edition 2.17.1 ([release notes](release-notes/v2.17.1.md)): an audit of 2.17.0 (the
+DSCLOG changes, the Loader's Python and the documentation, each read by a reviewer of its own).
+DSCLOG unchanged (70,128 bytes). The reviews found no correctness bug in the code.
+
+**Fixed**
+- **A manual page's title escaped once** (`manual._page`): a heading with "&" gave "&amp;amp;" in
+  the page's `<title>`. Test `test_title_escaped_once`. The release test reads pictures (`src=`)
+  as well as links on the patch notes page.
+
+**Documentation**
+- The player's guide's "Making a party" and KITS.md's "Choosing at creation" name the psionic
+  picks after DONE; GAME-BUGS.md has Kurzak's door; PATCH-NOTES.md lists all ten manual pages and
+  moves the ranger's window title from Bug Fixes (it was the mod's own window, at creation and at a
+  level up) to weapon specialization; the #93 entry has its release line and DSCLOG's figures,
+  and DEVELOPMENT.md's limits are 2.17.0's (`UMB_KEPT` 83 paragraphs spare); DEVELOPMENT-RULES.md's
+  lock playtest is back with the locks, the pocket tests named in tests/test_pickpocket.py; the
+  README says the patch notes page is in the release's folder; the playtest kit's notes: the
+  doorway save opens within 10 game seconds, the weapon window's title for the Crusader and Mind
+  Warrior, and the walkthrough no longer named by its public source.
+- Left as it is: a thief caught at a pocket under 2.16 stays barred from that person for good in
+  a save of then; the "until a level" rule counts from 2.17 on.
+
 ## Pull request #93 ([merged 2026-11-11](https://github.com/daaki85/darksun-obsidian-edition/pull/93))
+
+Obsidian Edition 2.17.0 ([release notes](release-notes/v2.17.0.md)).
+
+DSCLOG.EXE 70,128 bytes (64,576 in its segment), 960 of its segment spare; `UMB_NEED` 6,477
+paragraphs (1,705 spare), `UMB_KEPT` 8,099 (83 spare). 2.16.1's: 69,360 and 1,728 spare.
 
 **New**
 - **Psionic powers picked at creation** (the user's idea: "Let the player pick which ones they
