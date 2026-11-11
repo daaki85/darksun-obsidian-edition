@@ -446,6 +446,10 @@ large_off  dw large_bits        ; +1842 offset of LARGE_BITS in the tail: the Lo
                                 ;      combatant large or bigger (sizes.py; SIZE)
 lock_off   dw lock_barred       ; +1844 offset of LOCK_BARRED in this segment: the Loader's: the
                                 ;      locks each party member may not try again yet (LOCK_SITE)
+loot_seq   dw 0                 ; +1846 T or Shift+T read with a body's (a container's) window open,
+                                ;      counted (LOOT_KEY): the Loader takes what is in it
+loot_thing dw 0xFFFF            ; +1848 ... the container's map thing (the game's DS:05E6h then)
+loot_mode  dw 0                 ; +1850 ... 0 T: everything; 1 Shift+T: all but plain weapons
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -27017,6 +27021,7 @@ mk_read db 0                    ; (1 when MAP_KEY's key is being read, 0 when pe
 overhead db 0                   ; ('m', 'u' or 'i': the screen its key opened, 0 none)
 
 our_key:                                ; AX a key: CF set (and counted) if it is one of ours
+        call loot_key
         cmp ax, KEY_L
         je .l
         cmp ax, KEY_SHIFT_L
@@ -27052,6 +27057,43 @@ our_key:                                ; AX a key: CF set (and counted) if it i
         ret
 .no:    clc
         ret
+
+; LOOT_KEY: (OUR_KEY's first) T or Shift+T with a container's window open (a body's, a chest's: the
+; game's DS:05E6h its map thing, 9999 none) is made Escape, which closes the window, and, when the
+; key is read (MK_READ; a peek only looks), counted in LOOT_SEQ with the container (LOOT_THING) and
+; T's mode or Shift+T's (LOOT_MODE): the Loader then moves what is in it into the party's backpacks
+; (dsloader/loot.py), once the window is shut. Other keys, and these with no window, as they were.
+; AX the key (Escape now, for one of these); others kept.
+KEY_T        equ 0x1474
+KEY_SHIFT_T  equ 0x1454
+LOOT_OPEN    equ 0x05E6             ; (the game's DS) the container whose window is open
+LOOT_NONE    equ 9999
+loot_key:
+        cmp ax, KEY_T
+        je .t
+        cmp ax, KEY_SHIFT_T
+        jne .ret
+.t:     push ds
+        push bx
+        mov bx, [cs:game_ds]
+        or bx, bx
+        jz .out
+        mov ds, bx
+        mov bx, [LOOT_OPEN]
+        cmp bx, LOOT_NONE
+        je .out
+        cmp byte [cs:mk_read], 0
+        je .esc                         ; (peeked: told it is Escape, counted when read)
+        mov [cs:loot_thing], bx
+        mov word [cs:loot_mode], 0
+        cmp ax, KEY_SHIFT_T
+        jne .count
+        mov word [cs:loot_mode], 1
+.count: inc word [cs:loot_seq]
+.esc:   mov ax, KEY_ESCAPE
+.out:   pop bx
+        pop ds
+.ret:   ret
 
 ; TARGET_CLICK: (in PROBE_SCROLL, DS = the game's) Enter on the chosen enemy: a left click at its feet
 target_click:

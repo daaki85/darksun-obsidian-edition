@@ -48,6 +48,16 @@ the pointer and lock changes below; the figures that follow are from then): `UMB
 reach took 384 bytes of the segment (68,592 bytes before it).
 
 **New**
+- **Looting a body in one go** (the user's ask and choice): with a body's (or any container's)
+  window open, **T** takes everything in it into the party's backpacks and **Shift+T** all but plain
+  weapons (no plus, no power); what has no room stays. DSCLOG's `LOOT_KEY` (in the INT 16h hook)
+  makes the key Escape, which shuts the window, and counts it with the container (the game's
+  DS:05E6h, its map thing while the window is open) and the mode (header +1846 to +1850); the
+  Loader's `loot.py` moves the things once the window is shut (each to the first member, in the
+  party's order, with a free backpack cell, as a picked pocket's), links the container's list again
+  from what stays or gives it back when empty, and logs who took what, with the purse's sound. Seen
+  in the game (Pehtucl's ambush: his body with Shift+T, all 11 things taken; a guard's with Shift+T,
+  the bow and sword left, then T: playtest/logs/2026-11-11-looting.md); tests/test_loot.py.
 - **A lock or a pocket a thief failed is tried again by that thief only after a level gained**
   (the user's ask; *Player's Option: Skills & Powers*' open locks), with **Thieves as in AD&D**. A new
   site, `LOCK_SITE` (803D3h, the game's skill check's chance), makes a lock the member failed at its

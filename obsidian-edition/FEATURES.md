@@ -2520,7 +2520,32 @@ How it works:
 ## Controls
 
 Each has a switch in the Options tab's **Controls** section, but M, U and I,
-which are always on.
+and T for looting, which are always on.
+
+### Looting a body: T and Shift+T
+
+With a body's window open (the look pointer on a body, or on a chest, a
+container of any kind), **T** takes everything in it and **Shift+T** everything
+but plain weapons (a weapon with no plus and no power: the guards' bone and
+wooden swords, bows and clubs). The window closes, and each thing goes into a
+backpack, in the order the window shows them: the first party member's, in the
+party's order, that has a free cell (a member dying or dead takes nothing).
+What doesn't fit stays in the body, and so do the plain weapons for Shift+T:
+open it again and press T to take those too. The purse's jingle plays, and the
+dice log says who took what:
+
+```
+Lex takes Slavepen key, Grapes, Guava (4), Obsidian Bloodwrath +1
+Ester takes Leather Belt, Leather Arm Armor, Leather Chest Armor, Wooden Arrows
+Plain weapons left: Wooden Bow, Obsidian Long Sword
+```
+
+*Without the mod:* each thing is a click to take it from the window and another
+to put it down, a body at a time.
+
+How it works: `dsloader/loot.py`; DSCLOG's `LOOT_KEY` (the key made Escape,
+which shuts the window, and the body noted for the Loader: the game's DS:05E6h
+names the container whose window is open).
 
 ### Choosing an enemy: Tab, Enter and the rings
 

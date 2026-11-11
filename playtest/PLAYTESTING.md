@@ -285,6 +285,9 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   trails, before or after the fix (interrupts off again while DSCLOG draws: DRAW_MASKED).
 - **The pens' weapon rack** (2026-11-11, logs/2026-11-11-semyon-rack.md): `rackcheck.py` shows it (object
   2599), what's in it and where any Thornwall is. A rack the party emptied has contents 9999 (no list).
+- **Looting** (2026-11-11, logs/2026-11-11-looting.md): the look pointer's slow press on a body opens its
+  window; `dsword.py 5E6` reads its map thing (9999 shut). **T** / **Shift+T** (`xdotool key shift+t`)
+  with it open take everything / all but plain weapons; Escape shuts it.
 - **Hearing the game** (2026-11-05): start.sh sends DOSBox's sound to a file when `PT_AUDIO` names
   one (`export PT_AUDIO=$WORK/audio.raw` before start.sh or loadsave.sh; else /dev/null): raw
   16-bit stereo at 44100 Hz, about 176 KB a second, real time. Note the file's size before and

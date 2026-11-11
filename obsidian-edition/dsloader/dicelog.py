@@ -28,7 +28,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import aging, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, locks, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, locks, loot, monsters, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
@@ -578,6 +578,7 @@ class DiceLog:
         self._dresser: Optional[sprites.Dresser] = None
         self._dresser_at = 0.0  # (when to try making the Dresser next: the game's files not found yet)
         self.picked: set = set()  # the pockets tried already (each person gets one try), and locks failed (locks.py)
+        self._loot_seen: Optional[Tuple[int, int]] = None  # (DSCLOG's header, LOOT_SEQ as last acted on)
         self._locks_written: Optional[Tuple[int, bytes]] = None  # (DSCLOG's header and LOCK_BARRED as last written)
         # ... and when, by the game's clock: one tried after the game being played was saved is
         # forgotten when that save is loaded (the clock goes back past it)
@@ -909,6 +910,26 @@ class DiceLog:
         if result.paid:
             self._remember_pick(result.paid)
         return result.log or [result.text]
+
+    def _loot_pass(self) -> List[str]:
+        """T or Shift+T with a container's window open (DSCLOG's LOOT_KEY): once the window is shut,
+        what is in it into the party's backpacks (loot.py), with the purse's sound."""
+        if self.tsr_hdr is None:
+            return []
+        seq, thing, mode = struct.unpack("<HHH", self.guest.read(self.tsr_hdr + loot.TSR_LOOT_SEQ, 6))
+        if self._loot_seen is None or self._loot_seen[0] != self.tsr_hdr:
+            self._loot_seen = (self.tsr_hdr, seq)  # (a new DSCLOG, or the first look: nothing asked yet)
+            return []
+        if seq == self._loot_seen[1] or loot.window_open(self.game):
+            return []
+        try:
+            lines, took = loot.take(self.game, thing, mode)
+        except itemgate.ItemsBusy:
+            return []  # (the game changing its lists: in a later pass)
+        self._loot_seen = (self.tsr_hdr, seq)
+        if took:
+            self.guest.write(self.tsr_hdr + TSR_SOUND_REQ, struct.pack("<H", sounds.PICK_SOUND))
+        return lines
 
     def _locks_pass(self) -> None:
         """DSCLOG's LOCK_BARRED: the locks each member failed at its thief level now (locks.py), with
@@ -1443,6 +1464,7 @@ class DiceLog:
         out += step(self._answer_use)
         out += step(self._gear_due)
         out += step(self._arrows_pass)
+        out += step(self._loot_pass)
         step(self._locks_pass)
         out += step(self._answer_look)
         out += step(lambda: self._changes(now))
