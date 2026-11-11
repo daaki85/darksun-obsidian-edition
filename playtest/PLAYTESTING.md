@@ -291,6 +291,11 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
 - **Selling with S** (2026-11-11, logs/2026-11-11-selling.md): Kalzith's shop (his look box's first button
   Talk at 163,86; 1, then 1 "Show us what you have"); S on the shop sells the plain gear of the member
   on show (the game's 3931h:25Bh; a portrait click changes it). Kalzith moves: zoom a shot to find him.
+- **Shop and pocket tools** (2026-11-11): `openshop.sh` (Kalzith's shop from `selling-junk-user`, finding
+  him from memory), `pocket.sh X Y NAME` (one pocket try by the thief at USE-screen portrait X,Y on NAME;
+  its result window wants the key 1), `carried.py NAME` (what someone carries, with name numbers).
+  The game's SELL: an item on the pointer, SELL 265,63, TAKE IT 140,91. Backpack cells on the shop
+  screen run down two columns (193,26 and 211,26, 18 apart).
 - **Hearing the game** (2026-11-05): start.sh sends DOSBox's sound to a file when `PT_AUDIO` names
   one (`export PT_AUDIO=$WORK/audio.raw` before start.sh or loadsave.sh; else /dev/null): raw
   16-bit stereo at 44100 Hz, about 176 KB a second, real time. Note the file's size before and
