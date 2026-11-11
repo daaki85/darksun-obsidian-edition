@@ -709,6 +709,14 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   docked panel's **+** is at (311,129), the expanded one's **-** at (296,74) (not 311). Pictures are
   `shot.sh`'s scaled 200%; a GIF is `import -window` grabs in a loop (about 32 a second), picked 40
   ms apart and `convert -delay 4 -scale 200% -layers Optimize`.
+  **2026-11-11:** the panel's level button is at (262,129) docked and (262,74) expanded; a click
+  goes Detail, Least, Short, Detail. The panel remembers its size and level across loads. For a GIF
+  at the docs' 640x400, take DOSBox's own screenshots in a loop (`xdotool key --window W ctrl+F5;
+  sleep 0.04`: about 14 a second, all kept, in `inst/__support/app/capture/`), then `convert
+  -delay 8 dsunlog_*.png -scale 200% -layers Optimize` (314 frames, 457 KB). Window grabs are
+  320x240 (4:3) and gave 1 MB; Ctrl+Alt+F5, DOSBox's video capture, wrote no file. From a fresh load
+  of `fountain-user` the first turns stay near the camera after `scroll.py -60 -80`; later a
+  member out of movement gets the END menu over the panel (E ends the turn).
 
 ## 4. Fights
 

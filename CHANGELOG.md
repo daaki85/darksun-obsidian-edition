@@ -42,6 +42,16 @@ Releases, newest first: [2.16.0](#pull-request-90-merged-2026-11-11) (#90),
 [1.1.0](#pull-request-18-merged-2026-10-06) (#18), [1.0.0](#pull-request-12-merged-2026-10-02)
 (#12).
 
+## Next pull request (not opened yet)
+
+**Docs**
+- **The combat log's pictures retaken with the panel's present font** (8 pixels a line, 7 lines
+  docked, 12 expanded; the user's ask after 2.16.0): `docs/combat-log.png`,
+  `combat-log-expanded.png`, `combat-log-detail.png` (now from Pehtucl's ambush, not the alarm
+  fight) and `combat-log-live.gif`, with their alt texts. The GIF is DOSBox's own 320x200
+  screenshots taken about 14 a second (Ctrl+F5 in a loop), not window grabs: the window is 4:3
+  (playtest/logs/2026-11-11-combat-log-shots.md).
+
 ## Pull request #90 ([merged 2026-11-11](https://github.com/daaki85/darksun-obsidian-edition/pull/90))
 
 DSCLOG.EXE 69,344 bytes (63,792 in its segment), 1,744 of its segment spare; `UMB_NEED` 6,428

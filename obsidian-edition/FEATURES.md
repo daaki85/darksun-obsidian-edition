@@ -148,13 +148,13 @@ and misses' colours, as is Turn Undead's outcome (turned or destroyed a hit, not
 turned a miss); the hit points a rest or Cell Adjustment gives back are in the
 damage colour, as in the Loader's log. It never waits for a click.
 
-![The combat log in short as Pehtucl's ambush at the slave pens' fountain is played with Tab and Enter: Lex's hit on an Arena Guard and the guard's misses, Seneca hiding in shadows and moving silently, her backstab missing and her off-hand blow hitting, the poison, the kill and its XP, each line as it happens](docs/combat-log-live.gif)
+![The combat log in short as Pehtucl's ambush at the slave pens' fountain is played with Tab and Enter: Jenna hidden in shadows but heard moving, an Arena Guard's miss and hit on her, Lex's miss on the Templar, the guards' hits on Seneca, her try at hiding seen, her misses and her hit with Shadowseeker, the Templar failing his save against her poison, and Ester's blow that kills him, each line as it happens](docs/combat-log-live.gif)
 
 In detail, each attack names the weapon and its dice, the d20 against what it needed, the chance
 in percent, the AC it would hit and the target's AC, and the THAC0's parts follow (the panel
 here is expanded, as below):
 
-![The combat log in detail, expanded, in the slave pens' alarm fight: Kurzak, at the top beside K'ratchek, attacks K'ratchek with Shadowseeker +1 (1d6+1), d20 = 4, needs 15+ (30%), a miss, and under it his THAC0 14, +1 for the weapon, -2 for two weapons, in the main hand, = 15; above, the end of his off-hand blow with his obsidian long sword](docs/combat-log-detail.png)
+![The combat log in detail, expanded, in Pehtucl's ambush: an attack's d20, the roll needed and the AC it hits, with the THAC0's make-up under it (THAC0 19, +2 STR, +1 weapon, +1 specialized = 15), the Arena Guard's hit points after a blow, and Jenna's hide in shadows: d100 = 53, needs 52 or less (52, a Stalker: not halved indoors), seen](docs/combat-log-detail.png)
 
 **The panel** sits over the map's lower right. A window the game opens over
 the map (a character's menu, a question) hides it until it closes. Expanded, it
@@ -187,7 +187,7 @@ there; **-** makes it smaller.
   party's lines), **Damage** (hits, damage and deaths) and **Saves** (saving
   throws and magic resistance). Its size is remembered.
 
-![The combat log expanded in Pehtucl's ambush at the slave pens' fountain, in short: fourteen lines in its small font, under the All, Party, Damage and Saves filters](docs/combat-log-expanded.png)
+![The combat log expanded in Pehtucl's ambush at the slave pens' fountain, in short: twelve lines in its small font, under the All, Party, Damage and Saves filters: Seneca's hit, the Arena Guard failing its save against her poison, his hit points after each blow, and Jenna's try at hiding](docs/combat-log-expanded.png)
 
 How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#the-combat-log-in-the-game).
 

@@ -8,7 +8,7 @@ with your options and keeps the full dice log while you play. Nearly every
 rule change and addition has a switch on the Loader's Options tab; the full
 list is in [What it does](obsidian-edition/README.md#what-it-does).
 
-![Round 3 of a fight: Lex's turn, with the combat log over the map's lower right, in short and its small font, eight lines: Ester's swings at a Guard, the Guard's hit on Jenna for 10 and a miss, and her hit points after](obsidian-edition/docs/combat-log.png)
+![Round 4 of Pehtucl's ambush at the slave pens' fountain: Jenna's turn, with the combat log over the map's lower right, in short and its small font, seven lines: the Arena Guard's hit points after each blow, Seneca's miss, and Jenna seen as she tries to hide in shadows](obsidian-edition/docs/combat-log.png)
 
 ## Getting started
 

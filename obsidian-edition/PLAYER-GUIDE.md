@@ -69,7 +69,7 @@ button opens this guide as a web page.
    and every roll shows as it happens in the Loader's dice log, and in the
    game itself when you press **L**:
 
-   ![Round 3 of a fight: Lex's turn, with the combat log over the map's lower right, in short and its small font, eight lines: Ester's swings at a Guard, the Guard's hit on Jenna for 10 and a miss, and her hit points after](docs/combat-log.png)
+   ![Round 4 of Pehtucl's ambush at the slave pens' fountain: Jenna's turn, with the combat log over the map's lower right, in short and its small font, seven lines: the Arena Guard's hit points after each blow, Seneca's miss, and Jenna seen as she tries to hide in shadows](docs/combat-log.png)
 
 3. Make your own party (**CREATE CHARACTERS**): weapon specs and kits are
    chosen when a character is made. The game's own four, used when you make
