@@ -2301,6 +2301,22 @@ with Scar instead, or leaves the pens another way, doesn't meet them.
 
 How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#the-champions-bout).
 
+### Legcrusher at the fountain
+
+When the party is slow to answer Kurzak's call, he sends Legcrusher, the pens'
+half-giant, to fetch them. If Legcrusher finds them at the fountain (its room or
+the passage before it, where the fountain's roar already masks a guard's yell),
+he doesn't deliver his warning: he sees the gladiators out of their cells, yells
+for the guards, the fountain drowns him, and he attacks, alone:
+
+> Gladiators out of cells! Bad gladiators! Guards! GUARDS!
+> *Legcrusher bellows for the guards, but the roar of the fountain swallows his voice.*
+> Nobody hears. Then Legcrusher take you back himself!
+
+No alarm goes up and no guards come. Killed, he is missed: Kurzak's later lines
+say his monster trainer has gone (how: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#kurzak-and-legcrusher)).
+Elsewhere Legcrusher says what the game has him say.
+
 ### The cooked vulture
 
 Hit the arena's vulture and its feathers come off (a plucked vulture); the

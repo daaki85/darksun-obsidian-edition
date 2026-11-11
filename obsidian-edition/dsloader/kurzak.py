@@ -13,6 +13,13 @@ the scripts do next is the game's. (Not whether he is on the map, as the game's 
 others: script 136 makes him only as Kurzak calls, after the call's first line, and he is off the
 map again once he has fetched the party, so that asked "gone" of a living Legcrusher.)
 
+At the fountain (the user's design, 2026-11-11): when Legcrusher comes for a party in the
+fountain's room or the passage before it (scriptfixes' zone, where the alarm script lets "the
+roar of the fountain" mask a yell), he says they are out of their cells, bellows for the guards,
+the fountain drowns him, and he attacks: his side made the party's foes (fields 74 and 75 = 2,
+as the guards' sight trigger does) and the ambush guards' orders (hunt, a no-orders handler, a
+sight trigger: scriptfixes._orders). Elsewhere his words as the game's (FOUNTAIN_LINE on).
+
 As pensasks.py does, nothing of the game's scripts moves: the first of the lines becomes a jump
 (64h) to code put after the script's end (the rest of that command filler never reached), which
 says one or the other and jumps back to what follows the game's lines.
@@ -47,6 +54,16 @@ LINES: Tuple[Tuple[int, str, str], ...] = (
     (DINOS_SCRIPT, "Kurzak's looking for you. You better go fight before he sends ",
      "Kurzak's looking for you. You'd better go fight before he comes down here himself."),
 )
+
+# Legcrusher at the fountain: the game's line his fetching speech opens with (script 136), and his
+# words there instead
+FOUNTAIN_LINE = "Kurzak told me to bring you to the arena. If ya don't go, "
+FOUNTAIN_WORDS = ("Gladiators out of cells! Bad gladiators! Guards! GUARDS!",
+                  "Legcrusher bellows for the guards, but the roar of the fountain swallows his voice.",
+                  "Nobody hears. Then Legcrusher take you back himself!")
+NARRATION, LOCATE, END = 98, 0x09, 0x31
+SIDE, ATTITUDE, AGAINST = 74, 75, 2  # (an object's fields, as the guards' sight trigger sets them: GPL 74 at 2Bh)
+X, Y = ("var", 137, 33), ("var", 137, 34)  # (LOCATE's square)
 
 # (Legcrusher alive: DEAD clear, read as the game's scripts read a flag)
 HERE = ("expr", ["(", ("var", 0x8D, DEAD), "==", ("n", 0), ")"])
@@ -109,6 +126,64 @@ def with_notice(script: bytes, field_types: bytes, number: int, original: Option
     return bytes(out)
 
 
+def at_fountain() -> tuple:
+    """The test: Legcrusher (LOCATE on his kind) in the fountain's room or the passage before it."""
+    from .scriptfixes import FOUNTAIN_PASSAGE, FOUNTAIN_ROOM
+
+    def zone(x_over: int, x_under: int, y_over: int) -> list:
+        return ["(", X, ">", ("n", x_over), ")", "and", "(", X, "<", ("n", x_under), ")", "and",
+                "(", Y, ">", ("n", y_over), ")"]
+    return ("expr", ["(", *zone(*FOUNTAIN_ROOM), ")", "or", "(", *zone(*FOUNTAIN_PASSAGE), ")"])
+
+
+def with_fountain(script: bytes, field_types: bytes, original: Optional[bytes] = None) -> bytes:
+    """Script 136 (CALL_SCRIPT, or the Loader's copy so far) with Legcrusher's fetching speech
+    asking first whether he is at the fountain (unchanged if the line isn't as the game has it, or
+    done already)."""
+    from .scriptfixes import AMBUSH_HANDLERS, HUNT, NO_ORDERS, SIGHT
+    if gpl.encode_expr(("str", _lines(FOUNTAIN_WORDS[0])[0])) in script:
+        return script
+    try:
+        ops = gpl.decode(original or script, field_types)
+    except gpl.ScriptError:
+        return script
+    run = _run(ops, FOUNTAIN_LINE)
+    if run is None:
+        return script
+    start, end = run
+    if script[ops[start].at:ops[end].at] != (original or script)[ops[start].at:ops[end].at]:
+        return script
+
+    def fountain():
+        s.say(FOUNTAIN_WORDS[0])
+        s.say(FOUNTAIN_WORDS[1], NARRATION)
+        s.say(FOUNTAIN_WORDS[2])
+        s.page()
+        s.op(0x40, ("field", LEGCRUSHER, [SIDE]), ("n", AGAINST))
+        s.op(0x40, ("field", LEGCRUSHER, [ATTITUDE]), ("n", AGAINST))
+        who = ("n", -LEGCRUSHER)
+        (idle_at, idle), (sight_at, sight) = AMBUSH_HANDLERS  # (the ambush guards' orders)
+        s.op(HUNT, who)
+        s.op(NO_ORDERS, ("n", idle_at), ("n", idle), who)
+        s.op(SIGHT, ("n", sight_at), ("n", sight), who, ("n", 5))
+        s.op(END)
+
+    s = _Script()
+    s.label("fountain")
+    s.op(LOCATE, ("n", -LEGCRUSHER))
+    s.when(at_fountain(), fountain,
+           lambda: [s.op(SAY, *o.args) for o in ops[start:end]])
+    s.op(GOTO, ("n", ops[end].at))
+    out = bytearray(script) + s.bytes(base=len(script), end=False)
+    if len(out) > LONGEST:
+        return script
+    jump = gpl.encode_op((GOTO, [("n", s.at["fountain"])]))
+    past = ops[start + 1].at
+    at = ops[start].at
+    out[at:past] = jump + bytes([FILLER]) * (past - at - len(jump))
+    return bytes(out)
+
+
 def script_chunks(chunks, field_types: bytes, out: Dict[Tuple[str, int], bytes]) -> Dict[Tuple[str, int], bytes]:
     """The changed scripts, each from OUT (the Loader's changes so far) or else CHUNKS (the game's)."""
     changed = {}
@@ -118,6 +193,8 @@ def script_chunks(chunks, field_types: bytes, out: Dict[Tuple[str, int], bytes])
         if script is None:
             continue
         new = with_notice(script, field_types, number, chunks.get(key))
+        if number == CALL_SCRIPT:
+            new = with_fountain(new, field_types, chunks.get(key))
         if new != script:
             changed[key] = new
     return changed

@@ -182,6 +182,17 @@ read on: the places come from the game's script, and a line is changed only wher
 still has the game's bytes. Tests: `test_kurzak`. Not yet seen in play: it needs Legcrusher killed at
 the fountain and the party late for a fight.
 
+**Legcrusher at the fountain** (the user's design, 2026-11-11): his fetching speech (136 at 31Dh,
+"Kurzak told me to bring you to the arena. If ya don't go, ") becomes a jump to code after the
+script's end (`kurzak.with_fountain`): LOCATE (09h) on his kind (-326) gives his square (locals
+33, 34), and in `scriptfixes`' fountain zone (the room, x 54-80, y over 73, or the passage, x
+42-80, y over 90) he says his lines (the middle one narration, 98), the page is clicked, his
+fields 74 and 75 are set to 2 (40h, as the guards' sight trigger does, GPL 74 at 2Bh), he gets the
+ambush guards' orders (08h hunt, 6Fh GPL 74 at 100, 1Bh GPL 74 at 89, range 5) and the script
+ends (31h); elsewhere the game's two lines, then back to 374h. Seen in DOSBox with the user's save
+`legcrusher-fountain-user` (the party at square 68,94): the lines, then a fight of Legcrusher alone
+(round 1: the party and him), killed in a round, DEAD (797) set. Tests: `FountainTests`.
+
 ## Mirror Image
 
 ([In the bugs fixed](GAME-BUGS.md#spells-and-psionics).)

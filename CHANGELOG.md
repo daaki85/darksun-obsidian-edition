@@ -48,6 +48,10 @@ the pointer and lock changes below; the figures that follow are from then): `UMB
 reach took 384 bytes of the segment (68,592 bytes before it).
 
 **New**
+- **Legcrusher at the fountain** (the user's design): sent to fetch a party that is in the fountain's
+  room or the passage before it, he says they are out of their cells, yells for the guards (the
+  fountain drowns it) and attacks alone, instead of his warning (`kurzak.with_fountain`, script 136).
+  Seen in the game with the user's save; tests `FountainTests`.
 - **Looting a body in one go** (the user's ask and choice): with a body's (or any container's)
   window open, **T** takes everything in it into the party's backpacks and **Shift+T** all but plain
   weapons (no plus, no power); what has no room stays. DSCLOG's `LOOT_KEY` (in the INT 16h hook)
