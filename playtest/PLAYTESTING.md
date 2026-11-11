@@ -266,6 +266,15 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   with the Shinobi kit in memory (class 17 at sheet +21h, level +24h, kit byte +43h = 3, flags 0400h).
   `give` adds the defilers' scrolls (`defilerscrolls.scroll`). Never save after. live.py's `gd` has
   no rules set, so `gd.kit_ids` reads []: use `kitpages.kits_of(gd.sheet(m))`.
+- **No call from Kurzak after a rest** (2026-11-11, logs/2026-11-11-arrows-sound-and-no-call.md): check
+  flag 497 (`state.py 497`). The Trustee's key used on a door sets it (GPLI routine 752, script 137 at
+  1h) and the call script then never calls, until the party talks to a guard carrying routine 753
+  (objects 55, 260, 261; MAS 29 makes them). `KIND='MAS ' dec.py 29 0 140` decodes the pens' master
+  script; GPLI 1 is the index of named routines (id, offset, script: 2-byte words). The game clock:
+  the dword at DS:9B72h's far pointer, in seconds (a rest adds 28,808).
+- **A Spellarcher for a test** (2026-11-11): a sheet made a half-elf (+18h 4) fighter/preserver (+21h
+  9, 11) with kit byte +43h 1, and `spellsetup.py M=5 10 1 3 39`; the arrow buttons are the USE
+  screen's row under SPELLS LEFT (157,147 the first; a slow press), not the top row (the spells).
 - **Hearing the game** (2026-11-05): start.sh sends DOSBox's sound to a file when `PT_AUDIO` names
   one (`export PT_AUDIO=$WORK/audio.raw` before start.sh or loadsave.sh; else /dev/null): raw
   16-bit stereo at 44100 Hz, about 176 KB a second, real time. Note the file's size before and
