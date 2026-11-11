@@ -20,8 +20,11 @@ A bare `innoextract` lacks the game folder's `DARKSAVE.GFF` (GOG keeps it in `__
 `setup_game.sh` copies it): without it START GAME quits. The release zip on a clean install: the
 guide's "A clean install and the release zip".
 Wake of the Ravager, for comparing only: `setup_ravager.sh` (into `$PLAYTEST_WORK/rav`).
-A walkthrough (kibbitz's, GameFAQs): `setup_guide.sh` (from the Drive; text in
-`$PLAYTEST_WORK/guide/kibbitz.txt`); never commit it.
+A walkthrough (kibbitz's, GameFAQs): `setup_guide.sh` (the user's copy put at
+`$PLAYTEST_WORK/guide/kibbitz.html` by hand; text in `kibbitz.txt`); never commit it.
+**Never fetch the game, Wake of the Ravager or the walkthrough from a public link, and never put a
+link to them in this public repository** (that is piracy, the user's word, 2026-11-11): the
+installers go at `$PLAYTEST_WORK/dl/sl.exe` and `rav.exe` from a copy the user provides privately.
 `start.sh` starts Xvfb, the Loader's patched game in DOSBox and the dice log
 (`$PLAYTEST_WORK/dice.txt`). Check the build under test is in place before trusting anything
 (`GPLDATA=../obsidian-edition/dos/GPLDATA.GFF python3 dec.py SCRIPT LO HI`; for DSCLOG, new code's

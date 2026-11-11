@@ -26,8 +26,7 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
    sewer grate, for one, is behind the stalker pen's secret door).
 3. **Start from a saved game past the parts you don't need**: `sh loadsave.sh NAME` loads one of
    `playtest/saves/`; [its README](saves/README.md) lists them all (`pens-after-arena`, the slave
-   pens just after the arena, is the usual start). None came with the game and none were on the
-   Drive (2026-11-01). **Save at every milestone** (below) and add the save to `playtest/saves/`
+   pens just after the arena, is the usual start). None came with the game (2026-11-01). **Save at every milestone** (below) and add the save to `playtest/saves/`
    with a line in its README, then commit: replaying the arena took most of a day.
 4. **Never `pkill -f` or `pgrep -f | kill` a pattern your own command line contains**: it kills the
    shell running it (exit 144, twice on 2026-11-01, the second time with this rule already written:
@@ -45,16 +44,21 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
 1. Packages: `dosbox Xvfb xdotool imagemagick innoextract poppler-utils nasm python3-tk`, and
    `pip install capstone unicorn` (check with `command -v`; the environment's setup script
    installs most of them, below).
-2. The game: `sh setup_game.sh` (the GOG installer from the user's Google Drive, file id in the
-   script, extracted with innoextract into `$DS_GAME`).
-   **A walkthrough** (2026-11-09, the user's): `sh setup_guide.sh` fetches kibbitz's GameFAQs guide
-   from the same Drive folder into `$WORK/guide/kibbitz.html` and its text, `kibbitz.txt`, to
+2. The game: `sh setup_game.sh` extracts the GOG installer with innoextract into `$DS_GAME`.
+   **The installer is the user's own copy and is never fetched from a public link** (2026-11-11:
+   the user's Drive copies were shared by link, and those links were in this public repository;
+   that is piracy, so their downloads are now restricted and the links are gone from the scripts).
+   Put it at `$WORK/dl/sl.exe` first (or name it in `PT_SL_INSTALLER`), from a copy the user
+   provides to the session privately (an upload, or the Drive connector's download when the
+   user asks); the script stops and says so when it isn't there.
+   **A walkthrough** (2026-11-09, the user's): `sh setup_guide.sh` makes the user's copy of
+   kibbitz's GameFAQs guide, put at `$WORK/guide/kibbitz.html` by hand, into text, `kibbitz.txt`, to
    search (`grep -n -i caravan`): where things are, who sells what, quest steps and talk choices
    ("2-4-2"), region by region. Someone else's work: never commit it (the repository is public).
    Weigh it with the game's data: it is one player's account.
    Wake of the Ravager, the sequel, for comparing (its code, data and README; nothing in the kit
-   plays it): `sh setup_ravager.sh`, the GOG installer from the same Drive folder, into
-   `$WORK/rav`. Its DSUN.EXE is laid out otherwise: the creature/sheet records 42h bytes at the far
+   plays it): `sh setup_ravager.sh`, the user's GOG installer (put at `$WORK/dl/rav.exe`
+   first, as the game's), into `$WORK/rav`. Its DSUN.EXE is laid out otherwise: the creature/sheet records 42h bytes at the far
    pointer DS:19C5h, a class's level at +1Eh, its class at +1Bh; the XP table is RESOURCE.GFF's
    DATA 1000 (8 rows of 20 words, in hundreds, looked up by `lcall 5C8:20` with 3E8h); much of the
    code is in overlays, so a far call's segment isn't a place in the file. Its level-up (95860h on)
@@ -97,15 +101,13 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
    (every xdotool call: "Can't open display"). `pgrep -a Xvfb`; else `setsid nohup Xvfb :55 -screen
    0 1024x768x24 &` by hand.
 
-**The environment's setup script (2026-11-06):** the user's "Google Drive" cloud environment now
-installs `innoextract nasm dosbox xdotool`, `pip install capstone unicorn`, and runs
-`setup_game.sh` into `/tmp/playtest/inst` (and, from 2026-11-08, `setup_ravager.sh` into
-`/tmp/playtest/rav`, about 12 s) when the container is built fresh, with
-`drive.usercontent.google.com` and `drive.google.com` already allowed. So a new session should
-only need `export PLAYTEST_WORK=/tmp/playtest`, then `loadsave.sh` (check `command -v dosbox` and
-`$PLAYTEST_WORK/inst/DSUN.EXE` first; if missing, do it by hand, as below). Checked by hand
-that day: the download went through with no environment change, `loadsave.sh pens-after-scar`
-loaded (region 29h, leader 1816,440, window 320x240, dice log attached). A worker restart of
+**The environment's setup script (2026-11-06):** the user's "Google Drive" cloud environment
+installs `innoextract nasm dosbox xdotool`, `pip install capstone unicorn`, and runs `setup_game.sh`
+and `setup_ravager.sh` when the container is built fresh. Since 2026-11-11 those find no installer
+unless one was put in place (no public download), and stop with a message: in a new session check
+`command -v dosbox` and `$PLAYTEST_WORK/inst/DSUN.EXE`, and if the game is missing ask the user for
+their copy. With it in place, `export PLAYTEST_WORK=/tmp/playtest`, then `loadsave.sh`. (Checked on
+2026-11-06, with the old download: `loadsave.sh pens-after-scar` loaded (region 29h, leader 1816,440, window 320x240, dice log attached). A worker restart of
 the session killed DOSBox as an idle pause does. With the game's files the unit tests run
 more: `DSUN_GPLDATA=$G/GPLDATA.GFF DSUN_OBJECTS=$G/SEGOBJEX.GFF DSUN_RESOURCE=$G/RESOURCE.GFF`
 (`G=$PLAYTEST_WORK/inst`). With them set, only the tests that need tkinter (or a display) are
@@ -123,9 +125,8 @@ into the game folder. Don't make a `cloud_saves` folder here: the Loader then wr
 mount, which this DOSBox refuses.
 
 **A fresh container by hand (2026-11-06)**, if the setup script didn't run: `apt-get update`, then
-install `dosbox xdotool innoextract nasm` (`Xvfb`, ImageMagick, poppler were there). The Drive
-installer download is blocked by the default network policy (403 on `drive.usercontent.google.com`):
-allow that host with update_environment, wait ~20 s, then `setup_game.sh` works (22 MB). `start.sh`
+install `dosbox xdotool innoextract nasm` (`Xvfb`, ImageMagick, poppler were there). Then the
+user's installer at `$WORK/dl/sl.exe` (22 MB) and `setup_game.sh`. `start.sh`
 shows the window at 640x400 until a save is loaded; after `loadsave.sh` it is 320x240.
 
 **The shared DOSBox lock** (2026-11-08): with another agent on the same DOSBox, every play step
