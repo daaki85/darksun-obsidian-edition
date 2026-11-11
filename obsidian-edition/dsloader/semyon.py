@@ -277,6 +277,23 @@ def found(gd) -> bool:
     return False
 
 
+def _new_contents(gd, it, rack_item: int):
+    """A list of contents for the rack (item RACK_ITEM), empty, from the game's free things (as
+    npcitems' new lists: only with more than ring.RESERVE free), in its record's +08h; or None.
+    (A rack the party has emptied has none: the game's 9999.)"""
+    import struct
+    from . import game, ring
+    free = it.word(ring.FREE_THINGS)
+    if free >= ring.THING_COUNT or not it.spare_things():
+        return None
+    ds = gd.ds * 16
+    gd.guest.write(ds + ring.FREE_THINGS, struct.pack("<H", it.thing(free)[1] & 0xFFFF))
+    gd.guest.write(ds + ring.THINGS_USED, struct.pack("<H", it.word(ring.THINGS_USED) + 1))
+    gd.guest.write(it.things + free * 3, struct.pack("<BH", game.THING_ITEM, game.NO_ITEM))
+    gd.guest.write(it.items + rack_item * game.ITEM_SIZE + ring.ITEM_CONTENTS, struct.pack("<H", free))
+    return free
+
+
 def ship(gd) -> bool:
     """In the pens, once Semyon has told of the shipment (TOLD), Thornwall onto the pens' weapon
     rack (first among its contents), once (SHIPPED); none if a Thornwall is somewhere already. An
@@ -284,19 +301,21 @@ def ship(gd) -> bool:
     The game makes a region's map objects near the party only (walking on makes more and drops
     far ones), so the rack is looked for by its own object (worldgear.PENS_RACK_OBJECT) among
     the map objects, and nothing is done until it is there (a Thornwall on it, from a save of
-    before, seen then too). Its item type, 6Ch, is a coffin's as well."""
+    before, seen then too). Its item type, 6Ch, is a coffin's as well. A rack the party has
+    emptied first has no list of its contents (+08h 9999): one is made for it (_new_contents; the
+    user's game, 2026-11-11, where Semyon's tip led to an empty rack)."""
     import struct
     from . import game, icons, ring, worldgear
     if gd.region() != PENS or not gd.flag(TOLD) or gd.flag(SHIPPED):
         return False
     it = ring.Items(gd)
-    rack = None
+    rack, rack_item = None, None
     for thing in gd.things_of(worldgear.PENS_RACK_OBJECT):
         kind, first = it.thing(thing)
         if kind == game.THING_ITEM and 0 <= first < game.NO_ITEM:
             rec = it.item(first)
             if struct.unpack_from("<H", rec, game.ITEM_TYPE)[0] == worldgear.RACK_TYPE:
-                rack = rec
+                rack, rack_item = rec, first
                 break
     if rack is None:
         return False  # (not made yet: the party is far from it)
@@ -308,8 +327,13 @@ def ship(gd) -> bool:
     rec = rack
     contents, = struct.unpack_from("<H", rec, ring.ITEM_CONTENTS)
     item = it.word(ring.FREE_ITEMS)
-    if not 0 <= contents < ring.THING_COUNT or item >= game.NO_ITEM:
+    if item >= game.NO_ITEM or not it.spare_items():
         return False
+    if not 0 <= contents < ring.THING_COUNT:  # (emptied by the party: no list of contents left)
+        contents = _new_contents(gd, it, rack_item)
+        if contents is None:
+            return False
+        it = ring.Items(gd)  # (its table read again: the new list in it)
     kind, first = it.thing(contents)
     if kind != game.THING_ITEM:
         return False

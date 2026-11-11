@@ -89,6 +89,10 @@ reach took 384 bytes of the segment (68,592 bytes before it).
   squares with no movement left, the bow in the missile slot left alone, playtest/logs/2026-11-10-polearm-reach.md.)
 
 **Fixed**
+- **Semyon's shipment reaches an emptied weapon rack** (the user's report: his tip, then an empty
+  rack). A rack the party had emptied has no list of contents, and `semyon.ship` only added to one;
+  now it makes the list (`semyon._new_contents`, from the game's free things). Seen with the user's
+  save (playtest/logs/2026-11-11-semyon-rack.md); test `test_rack_emptied`.
 - **Every thri-kreen leaves a thri-kreen's body** (the user's report: the arena's died as a human's
   Dead Body). DSCLOG's body choice (PROBE_WORN at 59412h) names the dead Tohr-kreen's body (2666) for
   any dying thri-kreen (its sheet's race), once the game has the Loader's objects (OBJECTS_ON), not

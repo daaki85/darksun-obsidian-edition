@@ -316,6 +316,22 @@ class ShipmentTests(unittest.TestCase):
         self.assertFalse(semyon.ship(self.gd))  # (once)
         self.assertEqual(self.rack_items(), [60, 11])
 
+    def test_rack_emptied(self):
+        """The party took the rack's weapons before his tip: no list of contents (+08h 9999). One is
+        made from the game's free things, and Thornwall put in it (the user's game, 2026-11-11)."""
+        game, ring = self.game_, self.ring
+        at = self.items + 10 * game.ITEM_SIZE + ring.ITEM_CONTENTS
+        struct.pack_into("<H", self.m, at, game.NO_ITEM)
+        it = ring.Items(self.gd)
+        free, used = it.word(ring.FREE_THINGS), it.word(ring.THINGS_USED)
+        self.assertLess(free, ring.THING_COUNT)
+        self.gd.set_flag(semyon.TOLD)
+        self.assertTrue(semyon.ship(self.gd))
+        contents = struct.unpack_from("<H", self.m, at)[0]
+        self.assertEqual(contents, free)
+        self.assertEqual([i for i, _ in ring.Items(self.gd).chain(contents)], [60])
+        self.assertEqual(ring.Items(self.gd).word(ring.THINGS_USED), used + 1)
+
     def test_rack_not_made(self):
         """The rack not among the map objects yet (the party far from it), and a coffin of the
         racks' item type: nothing, till the rack is made."""

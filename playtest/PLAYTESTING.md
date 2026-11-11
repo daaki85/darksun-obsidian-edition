@@ -283,6 +283,8 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
 - **Pointer trails** (2026-11-11): sweeping the pointer with `xdotool mousemove_relative` (DOSBox takes
   only relative moves) while asking for view redraws (DSCLOG header +242 = 1, 30 a second) showed no
   trails, before or after the fix (interrupts off again while DSCLOG draws: DRAW_MASKED).
+- **The pens' weapon rack** (2026-11-11, logs/2026-11-11-semyon-rack.md): `rackcheck.py` shows it (object
+  2599), what's in it and where any Thornwall is. A rack the party emptied has contents 9999 (no list).
 - **Hearing the game** (2026-11-05): start.sh sends DOSBox's sound to a file when `PT_AUDIO` names
   one (`export PT_AUDIO=$WORK/audio.raw` before start.sh or loadsave.sh; else /dev/null): raw
   16-bit stereo at 44100 Hz, about 176 KB a second, real time. Note the file's size before and
