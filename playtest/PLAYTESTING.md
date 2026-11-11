@@ -104,8 +104,8 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
    `obsidian-edition/` beside a copy of the kit (`git archive HEAD playtest | tar -x`), with a game
    of its own (`innoextract` into its `PLAYTEST_WORK/inst`): `start.sh` and `topartyfight.sh` from
    that kit run the zip's Loader.
-7. **A walkthrough** (the user's): `sh setup_guide.sh` makes the user's copy of kibbitz's GameFAQs
-   guide (from the private repository's `guide/`, or put at `$WORK/guide/kibbitz.html` by hand) into text, `kibbitz.txt`, to search (`grep -n
+7. **A walkthrough** (the user's): `sh setup_guide.sh` makes the user's copy of the
+   walkthrough (from the private repository's `guide/`, or put at `$WORK/guide/kibbitz.html` by hand) into text, `kibbitz.txt`, to search (`grep -n
    -i caravan`): where things are, who sells what, quest steps and talk choices ("2-4-2"), region by
    region. Someone else's work: never commit it (the repository is public). Weigh it with the game's
    data: it is one player's account.
@@ -556,7 +556,7 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   read the sheet's +18h). Then click the classes (CLERIC 250,13). The **CLERICAL SPHERE** list is in
   the lower window (AIR 235,105, EARTH 113, FIRE 121, WATER 129): while one sphere is chosen the
   others are greyed and take no click, so click the chosen one off first. DONE (279,183) opens the
-  weapon window (PICK A WEAPON SPECIALTY, or OF EXPERTISE for a ranger or a Battle Mage): icons 33 apart from (72,46), three rows; the cahulaks
+  weapon window (PICK A WEAPON SPECIALTY, or OF EXPERTISE for a ranger, Battle Mage, Crusader or Mind Warrior; at a level up too): icons 33 apart from (72,46), three rows; the cahulaks
   are the second row's last (245,78). A click there closes it and the dice log gives the start
   weapon ("starts with a plain obsidian cahulaks ... in place of the bone long sword"). The
   inventory is the second bottom icon (76,172).

@@ -411,7 +411,7 @@ def _page(current: str, source: str, title: str, opening: str, index: str, conte
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{html.escape(re.sub(r"<[^>]+>", " ", title))} · Obsidian Edition manual</title>
+<title>{html.escape(html.unescape(re.sub(r"<[^>]+>", " ", title)))} · Obsidian Edition manual</title>
 <!-- Made from {source} by obsidian-edition/dsloader/manual.py: edit the Markdown, then run python -m dsloader.manual -->
 <link rel="stylesheet" href="{CSS}">
 </head>

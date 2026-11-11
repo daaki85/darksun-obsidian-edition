@@ -26,7 +26,8 @@ class ReleaseTests(unittest.TestCase):
         away from the repository's root, none points at a file that isn't there."""
         with open(os.path.join(ROOT, "patch-notes.html"), encoding="utf-8") as f:
             page = f.read()
-        local = [h for h in re.findall(r'href="([^"]+)"', page) if not h.startswith(("http", "#", "mailto"))]
+        local = [h for h in re.findall(r'(?:href|src)="([^"]+)"', page)
+                 if not h.startswith(("http", "#", "mailto", "data:"))]
         self.assertEqual(local, [])
 
 
