@@ -21,7 +21,7 @@ Kreenfang (the arena's gythka +1, no longer on the dead body by the stone arch).
 - Killed, the Tohr-kreen leaves a body of its own: the game makes a Dead Body (object 1101) for
   a creature that dies carrying something (DSUN.EXE 59412h, "push 0FFFF044Dh"); DSCLOG's
   PROBE_WORN takes that push (gamepatch's champion_body) and names BODY instead when the dying
-  creature is the Tohr-kreen champion: a dead Tohr-kreen's picture (a copy of 1101's object and
+  creature is a thri-kreen, the champion or any other (body_chunks, added whatever the switches): a dead Tohr-kreen's picture (a copy of 1101's object and
   record, its own picture drawn from the Tohr-kreen's), Kreenfang and the rest in it as the
   game puts them.
 - The bout (the arena's scripts, script_chunks): where the arena's death handler (script 3 at
@@ -166,12 +166,22 @@ def object_chunks(chunks) -> Dict[Tuple[str, int], bytes]:
             rdff = _with_dex(rdff, DEX[obj])
         out[("RDFF", obj)] = dataitems.with_items(rdff, [rec for rec, _ in things[obj]], numbers)
         out[("OJFF", obj)] = chunks[("OJFF", base)]
+    out.update(body_chunks(chunks))
+    return out
+
+
+def body_chunks(chunks) -> Dict[Tuple[str, int], bytes]:
+    """For the Loader's copy of SEGOBJEX: a dead thri-kreen's body (BODY), a copy of the game's Dead
+    Body with a picture of its own, which DSCLOG names for any thri-kreen that dies carrying
+    something (champions or not: worldgear.data_chunks adds it whatever the switches); {} if its
+    number is taken or the Dead Body is missing."""
+    if any((kind, BODY) in chunks for kind in ("OJFF", "RDFF", "BMP ")) or ("OJFF", DEAD_BODY) not in chunks:
+        return {}
     body = bytearray(chunks[("OJFF", DEAD_BODY)])
     struct.pack_into("<H", body, kalzith.OJFF_PICTURE, BODY)
-    out[("OJFF", BODY)] = bytes(body)
-    out[("RDFF", BODY)] = dataitems.renumbered(chunks[("RDFF", DEAD_BODY)], BODY)
-    out[("BMP ", BODY)] = body_picture(chunks)
-    return out
+    return {("OJFF", BODY): bytes(body),
+            ("RDFF", BODY): dataitems.renumbered(chunks[("RDFF", DEAD_BODY)], BODY),
+            ("BMP ", BODY): body_picture(chunks)}
 
 
 # ---------------------------------------------------------------------------------------------

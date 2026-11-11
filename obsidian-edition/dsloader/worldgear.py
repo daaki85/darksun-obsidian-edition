@@ -628,8 +628,12 @@ def data_chunks(chunks, on: Dict[str, bool]) -> Dict[Tuple[str, int], bytes]:
     if on.get("pens_gear", True) is not False:  # (the poison needle of Pehtucl's chest: pehtuclchest.py)
         from . import pehtuclchest
         out.update(pehtuclchest.object_chunks(chunks, out))
+    from . import champions
+    try:  # (a dead thri-kreen's body, for any that dies carrying something: DSCLOG's PROBE_WORN)
+        out.update(champions.body_chunks(chunks))
+    except (KeyError, ValueError, IndexError, struct.error):
+        pass
     if magic_arms:  # (Kreenfang the champions' Tohr-kreen's: the arena's dead body keeps its plain one)
-        from . import champions
         try:
             out.update(champions.object_chunks(chunks))
             champions_on = True

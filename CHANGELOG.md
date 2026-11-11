@@ -89,6 +89,12 @@ reach took 384 bytes of the segment (68,592 bytes before it).
   squares with no movement left, the bow in the missile slot left alone, playtest/logs/2026-11-10-polearm-reach.md.)
 
 **Fixed**
+- **Every thri-kreen leaves a thri-kreen's body** (the user's report: the arena's died as a human's
+  Dead Body). DSCLOG's body choice (PROBE_WORN at 59412h) names the dead Tohr-kreen's body (2666) for
+  any dying thri-kreen (its sheet's race), once the game has the Loader's objects (OBJECTS_ON), not
+  only the champions' Tohr-kreen; the body is added to the Loader's SEGOBJEX copy whatever the
+  switches (`champions.body_chunks`). Seen in DOSBox (a guard made a thri-kreen: its body 2666).
+  (Test: `test_champion_body`.)
 - **Pehtucl's chest spoke with the last face shown** (the user's report: Kalzith's, after talking
   to him). Its script set no portrait, so the dialogue window kept the last one; it now sets the
   window's emblem first (GPL 54h with 0, `pehtuclchest.EMBLEM`), and the dice log names the lines

@@ -1036,13 +1036,23 @@ class WornTests(unittest.TestCase):
 
     def test_champion_body(self):
         """Where the game makes a Dead Body (612E:2752h, its INT returning to 2754h): AX the body's
-        object, 1101, or the champions' Tohr-kreen's own (2666) for the dying creature's map object
-        ([BP+6], its object at DS:66AEh + 32 each) when that is the Tohr-kreen champion (2660)."""
-        mu = self.mu
-        for thing, obj, want in ((7, 292, 1101), (7, 2660, 2666), (40, -2660, 2666), (40, 2661, 1101)):
-            with self.subTest(thing=thing, obj=obj):
+        object, 1101, or a dead thri-kreen's (2666, champions.BODY) when the dying creature ([BP+6],
+        a map object: its creature's sheet, +18h the race) is a thri-kreen (8), any (the champions'
+        Tohr-kreen only till 2026-11-11, when the arena's died as a human's body), and the game has
+        the Loader's objects (OBJECTS_ON, header +218: 0, the game's own, which has no 2666)."""
+        mu, image = self.mu, load_image()
+        hdr = TSR * 16 + struct.unpack_from("<H", image, 20)[0]
+        things = (GAME_DS - 0x9E4) * 16 + 0xC36
+        SHEETS = 0xC000
+        mu.mem_write(GAME_DS * 16 + 0x1661, struct.pack("<HH", 0, SHEETS))
+        for thing, creature, sheet, race in ((7, 2, 5, 8), (40, 3, 6, 1)):
+            mu.mem_write(things + thing * 3, struct.pack("<BH", 2, creature))
+            mu.mem_write(self.CREATURES * 16 + creature * 0x3A + 4, struct.pack("<H", sheet))
+            mu.mem_write(SHEETS * 16 + sheet * 0x47 + 0x18, bytes([race]))
+        for on, thing, want in ((1, 7, 2666), (1, 40, 1101), (0, 7, 1101)):
+            with self.subTest(objects_on=on, thing=thing):
+                mu.mem_write(hdr + 218, struct.pack("<H", on))
                 mu.mem_write(SS * 16 + BP + 6, struct.pack("<H", thing))
-                mu.mem_write(GAME_DS * 16 + 0x66AE + thing * 32, struct.pack("<h", obj))
                 self.run_at(0x2752, eax=0x1234, ebx=0x5555, edx=0x6666)
                 self.assertEqual((mu.reg_read(r.UC_X86_REG_AX), mu.reg_read(r.UC_X86_REG_BX), mu.reg_read(r.UC_X86_REG_DX)),
                                  (want, 0x5555, 0x6666))

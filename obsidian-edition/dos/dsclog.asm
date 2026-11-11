@@ -5224,12 +5224,12 @@ nc_who  dw 0                            ; (the character the test was asked abou
 ;   Cold case), as the blast's wounds are imagined; Disintegrate's (DX 10000 and up) still kills;
 ; - where the game makes a Dead Body for a creature that dies carrying something (612E:2752h,
 ;   59412h: "push 0FFFF044Dh", object 1101; the INT, then "push 0FFFFh / push ax"): AX the body's
-;   object, 1101, or the champions' Tohr-kreen's own (champions.py) when the dying creature (its
-;   map object [BP+6], DS the game's) is that champion.
+;   object, 1101, or a dead thri-kreen's (champions.BODY) when the dying creature (its map object
+;   [BP+6], DS the game's) is a thri-kreen, any (the user's: the arena's died as a human body; the
+;   champions' Tohr-kreen alone till 2026-11-11), and the game has the Loader's objects (OBJECTS_ON).
 WORN_AC_RET equ 0x22C8                  ; (the AC routine's INT's return address)
 BODY_RET    equ 0x2754                  ; (the dead body's)
 DEAD_BODY   equ 1101                    ; (the game's Dead Body)
-KREEN_CHAMPION equ 2660                 ; (champions.TOHR_KREEN)
 KREEN_BODY  equ 2666                    ; (champions.BODY)
 MAP_OBJECT  equ 0x66AE                  ; (a map object's object number: DS:66AEh + 32 each)
 BLAST_RET   equ 0x0B69                  ; (Psionic Blast's)
@@ -5285,16 +5285,17 @@ probe_worn:
 .ko_cmp: cmp ax, dx                     ; (the game's)
         retf 2
 .body:  pop bp
+        cmp word [cs:objects_on], 0     ; (the Loader's objects, the body among them, in use)
+        je .plain
         push bx
-        mov bx, [bp+6]                  ; the dying creature's map object (the game's frame)
-        shl bx, 5
-        mov ax, [bx+MAP_OBJECT]
+        push es
+        mov ax, [bp+6]                  ; the dying creature's map object (the game's frame)
+        call thing_sheet
+        cmp byte [es:bx + 0x18], THRI_KREEN_RACE
+        pop es
         pop bx
-        cmp ax, KREEN_CHAMPION
         je .kreen
-        cmp ax, -KREEN_CHAMPION
-        je .kreen
-        mov ax, DEAD_BODY
+.plain: mov ax, DEAD_BODY
         iret
 .kreen: mov ax, KREEN_BODY
         iret

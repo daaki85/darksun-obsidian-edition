@@ -1227,8 +1227,14 @@ doesn't draw from it (changed in memory, nothing changed on screen), so the
 object itself is swapped: `gamepatch`'s `champion_body` makes the push INT
 81h (`PROBE_WORN`, told apart by its return address 2754h), "push 0FFFFh",
 "push ax", and DSCLOG answers 2666 (`champions.BODY`) when the dying map
-object ([BP+6], its object at DS:66AEh + 32 each) is the Tohr-kreen champion,
-else 1101. Object 2666 is a copy of 1101 (its record renumbered) with a picture
+object ([BP+6]) is a thri-kreen (its sheet's race, +18h, 8), any of them, and
+the game has the Loader's objects (`OBJECTS_ON`), else 1101. (Till 2026-11-11
+only the Tohr-kreen champion, by its object number: the arena's thri-kreen died
+as a human's Dead Body, the user's report.) The body is in the Loader's
+SEGOBJEX copy whatever the switches (`champions.body_chunks`, from
+`worldgear.data_chunks`). Seen in DOSBox 2026-11-11: Pehtucl's Guard made a
+thri-kreen in memory (`foeset.py 30 race=8`) and the fight fought out, its body
+object 2666, the arena guards' 1101. Object 2666 is a copy of 1101 (its record renumbered) with a picture
 of its own, 2666 (`bodyart.py`: the Tohr-kreen's frame 8 turned on its side,
 squashed to 0.75 of its height, darkened to 0.7, its gythka's pale pixels left
 out, over the red of the Dead Body's blood). Seen in DOSBox: the six came on
