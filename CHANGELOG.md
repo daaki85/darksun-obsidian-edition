@@ -16,7 +16,8 @@ from the tail (2026-11-09, after #88) that is the helper's 64 KB segment's part 
 Releases before 2.12.2 give the release's line as a **Release** bullet; from 2.12.2 on it is the
 entry's first line.
 
-Releases, newest first: [2.16.1](#pull-request-91-merged-2026-11-11) (#91),
+Releases, newest first: [2.17.0](#pull-request-93-merged-2026-11-11) (#93),
+[2.16.1](#pull-request-91-merged-2026-11-11) (#91),
 [2.16.0](#pull-request-90-merged-2026-11-11) (#90),
 [2.15.0](#pull-request-89-merged-2026-11-10) (#89),
 [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
@@ -42,6 +43,93 @@ Releases, newest first: [2.16.1](#pull-request-91-merged-2026-11-11) (#91),
 (#33), [1.2.0](#pull-request-30-merged-2026-10-08) (#30),
 [1.1.0](#pull-request-18-merged-2026-10-06) (#18), [1.0.0](#pull-request-12-merged-2026-10-02)
 (#12).
+
+## Pull request #93 ([merged 2026-11-11](https://github.com/daaki85/darksun-obsidian-edition/pull/93))
+
+**New**
+- **Psionic powers picked at creation** (the user's idea: "Let the player pick which ones they
+  want. For full psionicists and for others."). The game gave every new character of a
+  discipline the same four powers and Mind Blank, and every psionicist its level's row of a
+  table (5, 6 or 11). Now DONE opens the level up's PICK A PSIONIC POWER window for as many picks
+  (four; a psionicist 4, 5 or 10), after a warrior's weapon window: one not a psionicist picks from
+  its own discipline (the discipline button stays on it), a psionicist from all three. Mind Blank
+  is still everyone's; powers known are left out of the list; EXIT leaves the game's own for the
+  picks unmade; EDIT with the same classes and discipline keeps the powers; the game's own party
+  (START GAME) keeps the game's. DSCLOG's `PSI_GRANT` (66DDEh), `PSI_ASK` (from `CR_WEAPONS`),
+  `PSI_LIST` (86143h) and `PSI_CYCLE` (8631Ah), gamepatch `psi_grant`, `psi_list`, `psi_cycle`.
+  DSCLOG.EXE 70,128 bytes. Seen in the game: a fighter (telepathy: two picked, two the game's on
+  EXIT), a 3rd-level psionicist (ten picked across the three), EDIT, a character dropped and added
+  back from the roster with its picks, and START GAME's party with the game's powers
+  (playtest/logs/2026-11-11-psionic-picks.md).
+- **The manual: the player's pages as web pages that link to each other, in the download.** The
+  zip's `manual` folder has ten pages, each made from its Markdown (which stays the source and
+  reads the same on GitHub): `index.html`, the start page, from the README; the player's guide,
+  features and rules, kits, items (spoilers), creatures (spoilers), the game's bugs fixed (some
+  spoilers), the dice log line by line, how the original game works, and the changes from the
+  original game (`changes.html`, from PATCH-NOTES.md through `patchnotes.py`). Each page has a bar
+  of all ten (the one on show marked, the spoiler pages marked so, their own warnings kept) and an
+  index of its sections and subsections; they share `manual/manual.css` (the patch notes' look and
+  fonts, loaded once, not in every page). Links between the pages go to the HTML files with the
+  same anchors (`KITS.md#x` is `kits.html#x`, the README `index.html`, the patch notes by path or
+  GitHub address `changes.html`), pictures to `../docs/`, and the development pages, the changelog
+  and the rest of the repository to GitHub. The Loader's **Help** button opens
+  `manual/index.html` (`viewer.HELP_PAGE`, `manual.START`); `player-guide.html` beside the Loader
+  is gone, now `manual/player-guide.html`.
+- **`dsloader/manual.py`** makes them (`python -m dsloader.manual`; `python -m dsloader.guidepage`,
+  now its alias, too), from the guide's converter made general: Markdown blocks parsed
+  recursively, so a list item can hold tables, code, pictures and paragraphs (the guide's two
+  tables inside list items, its CHA prices and DEX modifiers, showed as raw `|` rows), fenced code,
+  block quotes (the Announcer's and Legcrusher's lines), `***bold italics***`, `<https://...>`
+  addresses, a numbered list's start, table column alignment, lazy continuation lines, and
+  GitHub's anchors for repeated headings (`-1`, `-2`), with links' text in a heading's anchor as
+  GitHub has it. `patchnotes.body` takes the manual's link rule for its copy; the root's
+  `patch-notes.html` is unchanged. Tests `tests/test_manual.py` (replacing `test_guidepage.py`):
+  each page and the style up to date (the failure names the command), every relative link and
+  picture a file in the zip and every `page.html#anchor` one that page has, no link to a `.md`
+  file, no id twice on a page, no Markdown left showing, the converter's pieces, and Help's page
+  read from `viewer.py`'s source (no tkinter needed); `test_help_opens_the_manual` in
+  `test_viewer_options` with tkinter. The README, its front page's documentation list, the
+  player's guide and DEVELOPMENT.md (the folders, Build, the tests, Making a release) say so.
+
+**Fixed**
+- **Kurzak's door, open but barring the way** (the user's save "error doorway blocked"). The
+  pens' entryway (squares 99,33-34) was drawn open and both its leaves (objects 2145-2146) were
+  open, but the game's live walk map still had square 99,34 shut: the party could not step into
+  the doorway, and Legcrusher, sent to fetch them, stood still for good (his only way to them).
+  The dice log now puts it right (`kurzakdoor.py`): in the pens, out of fights, with both leaves
+  open (their map record's +12h, bit 08h) and the square shut for 10 game seconds (longer than a
+  door's swing), the square is floor again, and the log says "Kurzak's door: open, but its doorway
+  was barred on the map; opened". On the user's save Legcrusher walked through at once and said
+  his line, and the party walked through to Kurzak ("I'm glad you listened to Legcrusher"). The
+  game's own call was checked too, unchanged: it opens the door, and Legcrusher comes through it.
+  Tests `tests/test_kurzakdoor.py` (playtest/logs/2026-11-11-doorway-blocked.md).
+- **Kalzith's background fits Athas** (the user: a sorcerer's apprentice doesn't, where wizardry is
+  a crime and the sorcerer-kings keep magic to themselves and their templars). He kept the tallies
+  for a merchant house in Draj, was taught in secret by a defiler among its caravan hands, and was
+  caught by the templars drawing life from a noble's garden; then the arena's line as before, on a
+  second page (`kalzith.py`'s "Who are you?"). Seen in the game: both pages fit his window
+  (playtest/logs/2026-11-11-kalzith-background.md).
+- **A pocket is barred until a level only when the thief is caught** (the user's rule: "I meant
+  if the thief is completely caught"). With **Thieves as in AD&D**, a fumble the thief slipped away
+  from barred that thief until a level gained, and the game said "Magramar needs another level to
+  try them again", which the user found too metagame. Now a thief who slips away unnoticed may try
+  again at once; one caught (the pick and the move silently both failed) is remembered as
+  `pickpocket.caught_key` and may try that person again once a thief level is gained, others at
+  once (without the switch, caught is for good, as before). The game's words stay in the story:
+  "Kurzak catches Magramar's hand!", and a try too soon "Kurzak remembers Magramar, and keeps a close
+  hand on their purse."; the rule's reason is in the dice log alone. An older save's fumble keys
+  are ignored. Tests `test_caught_with_thieves_as_in_add`, `test_slips_away_with_thieves_as_in_add`.
+- **A ranger is asked for a weapon of expertise, not a specialty** (the user's report). Creation's
+  weapon window had a fixed title, "PICK A WEAPON SPECIALTY,", though a ranger (or a Battle Mage, a
+  Crusader, a Mind Warrior) takes expertise and each weapon's box already said "EXPERT IN". DSCLOG's
+  `LV_TITLE_OF` now gives "PICK A WEAPON OF EXPERTISE," when `PK_WORD` judges the first kind
+  expertise. DSCLOG.EXE 69,424 bytes. Seen in the game (a new human ranger); test `test_pick_title`.
+- **The release has the patch notes' web page** (the user's report: 2.16.1's didn't). The page is
+  made at the repository's root, beside PATCH-NOTES.md, and the zip is the obsidian-edition folder
+  alone, so no release had it. The Release workflow now adds it to the zip's folder, next to
+  the manual's folder (`.github/add_to_zip.py`), and attaches it to the release on its own too.
+  Its links are all web addresses, so it works from the zip. Test `tests/test_release.py`; the
+  README's documentation list names it.
 
 ## Pull request #92 ([merged 2026-11-11](https://github.com/daaki85/darksun-obsidian-edition/pull/92))
 

@@ -24,7 +24,7 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 from tkinter import font as tkfont
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
-from . import __version__, art, combatlog, dicelog, ledger, freeze, game, kits, launch, namedsaves, partyview, rings, spellbook, theme, values
+from . import __version__, art, combatlog, dicelog, ledger, freeze, game, kits, launch, manual, namedsaves, partyview, rings, spellbook, theme, values
 from .dicelog import DiceLog, DiceLogError
 from .guestmem import GuestMemory
 from .layout import Layout
@@ -38,8 +38,8 @@ MAX_LOG_LINES = 3000
 HIGHLIGHT_SECONDS = 3.0
 HEX_PREFIX = 17  # width of "+0040  0012a3f0  "
 MAX_HITS = 500
-# the player's guide as a web page (dsloader.guidepage), beside the Loader in obsidian-edition/
-GUIDE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "player-guide.html")
+# what Help opens: the manual's start page, manual/index.html beside the Loader (dsloader.manual)
+HELP_PAGE = manual.START
 
 
 def _printable(data: bytes) -> str:
@@ -109,7 +109,7 @@ class Viewer:
         self.status = tk.StringVar(value="Not connected")
         # on a line of its own, below the buttons, so it never pushes them off at larger text sizes
         ttk.Label(self.root, textvariable=self.status, style="Status.TLabel", padding=(8, 2)).pack(fill="x")
-        # the player's guide (player-guide.html, beside the Loader) in the browser
+        # the manual (manual/index.html, beside the Loader) in the browser
         ttk.Button(top, text="Help", command=self.open_guide).pack(side="right", padx=(4, 0))
         ttk.Button(top, text="Reconnect", command=self.reconnect).pack(side="right")
         # the game stopped but DOSBox runs on: where it was, its memory and the logs, in a zip
@@ -494,7 +494,7 @@ class Viewer:
                 ("cha_prices", None, "Shops as in AD&D: the leader's CHA lowers what shops ask, shops pay 60%, and "
                                      "merchants keep the magical items sold them, to buy back"),
                 ("thief_table", None, "Thieves as in AD&D: thief skills from AD&D's table, a backstab multiplying the "
-                                      "weapon's dice only, a failed lock or pocket tried again only a level later"),
+                                      "weapon's dice only, a failed lock, or a pocket the thief was caught at, tried again only a level later"),
                 ("stealth", None, "Hiding in shadows to backstab: thieves hide in shadows and move silently to backstab, "
                                   "rangers to attack from behind"),
                 ("new_spells", None, "New spells: six for wizards (Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, "
@@ -668,17 +668,18 @@ class Viewer:
         return game_dir
 
     def open_guide(self) -> None:
-        """The player's guide, made from PLAYER-GUIDE.md and shipped beside the Loader, in the browser."""
-        if not os.path.exists(GUIDE):
-            self.status.set(f"The player's guide isn't there: {GUIDE}")
+        """The manual, made from the player's pages (README.md, PLAYER-GUIDE.md, ...) and shipped beside
+        the Loader in manual/, at its start page, in the browser."""
+        if not os.path.exists(HELP_PAGE):
+            self.status.set(f"The manual isn't there: {HELP_PAGE}")
             return
         try:
-            opened = webbrowser.open(Path(GUIDE).as_uri())
+            opened = webbrowser.open(Path(HELP_PAGE).as_uri())
         except webbrowser.Error:
             opened = False
         # (said either way: an opener can report success and still find no browser, as gio did)
-        self.status.set(f"The player's guide, opening in your browser: {GUIDE}" if opened
-                        else f"The player's guide is {GUIDE}")
+        self.status.set(f"The manual, opening in your browser: {HELP_PAGE}" if opened
+                        else f"The manual is {HELP_PAGE}")
 
     def open_named_saves(self) -> None:
         game_dir = self._saves_game_dir()

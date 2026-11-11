@@ -1,5 +1,5 @@
-# Publishes a release: the tests, then a zip of the obsidian-edition folder with the notes in
-# release-notes/<tag>.md. Either a version tag (v1.0.0, ...) is pushed, or the workflow is run by
+# Publishes a release: the tests, then a zip of the obsidian-edition folder (and the patch notes'
+# web page, patch-notes.html, in it and beside it) with the notes in release-notes/<tag>.md. Either a version tag (v1.0.0, ...) is pushed, or the workflow is run by
 # hand (Actions -> Release -> Run workflow) on main: then the tag is "v" and dsloader's
 # __version__, made on the commit it runs on.
 name: Release
@@ -51,10 +51,14 @@ jobs:
         shell: bash
         run: |
           git archive --format=zip --prefix="Dark-Sun-Shattered-Lands-Obsidian-Edition-$VERSION/" -o "Dark-Sun-Shattered-Lands-Obsidian-Edition-$VERSION.zip" "$GITHUB_SHA":obsidian-edition
+          # (the patch notes' web page is made at the repository's root, beside PATCH-NOTES.md: added
+          # to the zip's folder too, next to the manual's folder; its links are all web addresses)
+          python .github/add_to_zip.py "Dark-Sun-Shattered-Lands-Obsidian-Edition-$VERSION.zip" \
+            "Dark-Sun-Shattered-Lands-Obsidian-Edition-$VERSION/patch-notes.html" patch-notes.html
       - name: Release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "v$VERSION" "Dark-Sun-Shattered-Lands-Obsidian-Edition-$VERSION.zip" --target "$GITHUB_SHA" \
+          gh release create "v$VERSION" "Dark-Sun-Shattered-Lands-Obsidian-Edition-$VERSION.zip" patch-notes.html --target "$GITHUB_SHA" \
             --title "Dark Sun: Shattered Lands - Obsidian Edition $VERSION" --notes-file "release-notes/v$VERSION.md"

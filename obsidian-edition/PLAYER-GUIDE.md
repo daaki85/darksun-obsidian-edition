@@ -18,7 +18,7 @@ keys (T, S, M, U, I), the fixes to the game's own bugs and the footman's pick. W
 switch changes, a **Without the mod** note says what the game does with it off.
 The [features page](FEATURES.md) has every rule in full detail, and the
 [Kits](KITS.md) page each kit's numbers: the guide links to their tables. The Loader's **Help**
-button opens this guide as a web page.
+button opens the manual: this guide and the other pages as web pages, in the `manual` folder.
 
 ## Contents
 
@@ -794,6 +794,9 @@ Gutterknot\* +1, the slings and Windlash\*.
 at each level (two at odd levels and at 4th) paid for in PSP. Light armour and
 small weapons; +2 on saves against mind-affecting spells and charms. Every
 other character has one discipline and uses it as a 1st-level psionicist.
+Every new character picks its powers when it is made: four of its discipline,
+or a psionicist as many as its level gives, from all three; all know Mind
+Blank ([features](FEATURES.md#psionic-powers-at-creation)).
 
 **What the mod changes.**
 
@@ -1355,9 +1358,9 @@ and the same race and DEX adjustments.
   - **success:** one small thing from them goes into the thief's backpack
     (with a purse's jingle): something light that isn't worn on the body;
   - **failure:** the thief rolls **move silently** to slip away. Made, they can
-    try again (with Thieves as in AD&D, that thief once they have gained a level);
-    missed, they are caught, and that person keeps a hand on their
-    pockets from then on.
+    try again at once; missed, they are caught, and that person keeps a hand on
+    their pockets from then on (with Thieves as in AD&D, until that thief has
+    gained a level; another thief may try at once).
 
   When nothing worth taking is left, the thief takes 2 to 5 ceramic pieces
   from the purse for each thief level, and that is the last try on them. A
@@ -2094,7 +2097,7 @@ size](FEATURES.md#creature-size)).
 
 | Loader label | Default | Takes effect | Details |
 |---|---|---|---|
-| Thieves as in AD&D: thief skills from AD&D's table, a backstab multiplying the weapon's dice only, a failed lock or pocket tried again only a level later | on | at once | [Thief skills from AD&D's table](FEATURES.md#thief-skills-from-adds-table) |
+| Thieves as in AD&D: thief skills from AD&D's table, a backstab multiplying the weapon's dice only, a failed lock, or a pocket the thief was caught at, tried again only a level later | on | at once | [Thief skills from AD&D's table](FEATURES.md#thief-skills-from-adds-table) |
 | Hiding in shadows to backstab: thieves hide in shadows and move silently to backstab, rangers to attack from behind | on | at once | [Hiding in shadows to backstab](FEATURES.md#hiding-in-shadows-to-backstab) |
 | ... a worn cloak adds 10 to hiding, worn boots 10 to moving silently, a worn belt 5 to picking pockets and opening locks | on | at once | [Hiding in shadows to backstab](FEATURES.md#hiding-in-shadows-to-backstab) |
 | Picking pockets: a thief's Pick Pockets button on the USE screen, then a click on anyone in sight (not in a fight), until caught | on | at once | [Picking pockets](FEATURES.md#picking-pockets) |

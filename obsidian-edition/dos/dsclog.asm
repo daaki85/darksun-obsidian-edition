@@ -6108,8 +6108,11 @@ PK_PICK_INK   equ 0xD9              ; (near-white: 234, 234, 234)
 probe_pk_count:
         mov dx, ax
         cmp byte [cs:lv_mode], 0
+        je .psi
+        mov dx, 2               ; (2: [4AECh] 1, as the routine counts; PROBE_PK_LEFT shows ours,
+.psi:   cmp byte [cs:psi_mode], 0       ;   or puts PSI_ASK's count there)
         je .flags
-        mov dx, 2               ; (2: [4AECh] 1, as the routine counts; PROBE_PK_LEFT shows ours)
+        mov dx, 2
 .flags: push bp
         mov bp, sp
         push ax
@@ -6145,7 +6148,12 @@ probe_pk_win:
         iret
 
 probe_pk_left:
-        mov al, [0x4AEC]
+        cmp byte [cs:psi_seed], 0       ; (PSI_ASK's picks, once, as the window is first drawn)
+        je .game
+        mov al, [cs:psi_seed]
+        mov [PSI_LEFT], al
+        mov byte [cs:psi_seed], 0
+.game:  mov al, [0x4AEC]
         cmp byte [cs:lv_mode], 0
         je .out
         mov al, [cs:lv_left]
@@ -6166,6 +6174,10 @@ probe_pk_title:
         mov word [bp + 8], 0x3026
         push ds
         push bx
+        cmp byte [cs:lv_mode], 0
+        je .colours
+        call lv_title_of        ; (AX the title, while DS is still the game's)
+.colours:
         lds bx, [bp + 2]        ; the line's colours, in the pushes that come next: the game's ...
         mov byte [bx + PK_TITLE_SECOND], PK_GAME_SECOND
         mov byte [bx + PK_TITLE_INK], PK_GAME_INK
@@ -6178,7 +6190,7 @@ probe_pk_title:
         mov byte [bx + PK_TITLE_WIDTH], PK_PICK_WIDTH
         mov byte [bx + PK_TITLE_Y], PK_PICK_Y
         mov [bp + 10], cs
-        mov word [bp + 8], lv_title
+        mov [bp + 8], ax
 .out:   pop bx
         pop ds
         pop ax
@@ -6313,6 +6325,7 @@ lv_avail  dw 0
 lv_member dw 0
 lv_count_text db '  0', 0
 lv_title  db 'PICK A WEAPON SPECIALTY,', 0
+lv_title_x db 'PICK A WEAPON OF EXPERTISE,', 0  ; (a ranger's, or a kit's with expertise: LV_TITLE_OF)
 
 ; PROBE_EF_ROWS: INT VEC_EF_ROWS replaces "pop di / pop si" (2 bytes; DSUN.EXE 7F13Eh) at the end of
 ; the Effects screen's routine that puts the selected character's effects in their cells (7EDFAh,
@@ -8784,7 +8797,8 @@ pk_hover:
         push word [PK_NAMES + 2]
         push ax
         push cs
-        push word lv_title
+        call lv_title_of
+        push ax
         jmp .draw
 .slot:  push cs
         xor ah, ah
@@ -8809,6 +8823,21 @@ pk_hover:
 .out:   pop es
         popad
         iret
+
+; LV_TITLE_OF: AX the pick window's title for LV_MEMBER: "PICK A WEAPON OF EXPERTISE," when it would
+; have expertise with the first kind (as PK_WORD judges each weapon's: a ranger, a Battle Mage, a
+; Crusader, a Mind Warrior), else "PICK A WEAPON SPECIALTY," (the user's report, 2026-11-11: a ranger
+; was asked for a specialty). Others kept.
+lv_title_of:                    ; (DS the game's, as PK_WORD needs; only in LV_MODE: PK_WORD
+        push dx                 ;   puts a kind in the sheet for a moment)
+        xor ax, ax
+        call pk_word
+        mov ax, lv_title
+        cmp dx, lv_expert
+        jne .ret
+        mov ax, lv_title_x
+.ret:   pop dx
+        ret
 
 ; PK_WORD: DX the first line for kind AX: "EXPERT IN" when LV_MEMBER would have expertise with it
 ; once picked, else "SPECIALIZE IN" (the kind put in the sheet's first empty SPEC_SLOTS byte for
@@ -9103,6 +9132,7 @@ cr_open:
         mov al, [es:bx + KIT_BYTE]
         mov [cs:ed_kit], al
         mov byte [cs:ed_on], 1
+        call psi_snap                   ; (its disciplines and powers: PSI_KEEP)
         push si
         push di
         xor eax, eax            ; (its classes as the creation screen numbers them)
@@ -17196,6 +17226,9 @@ stink_sides:
 ; type's range byte (+0Ah) stays 1: above 1 the attack routines take a weapon for a missile weapon.
 REACH_SITE   equ NS_IMAGE + 111   ; 2211Fh: the distance routine's result, a polearm's reach (REACH)
 LOCK_SITE    equ NS_IMAGE + 112   ; 803D3h: a thief skill check's chance, a lock barred (LOCK_SITE)
+PSI_GRANT_SITE equ NS_IMAGE + 113 ; 66DDEh: a new member's psionic powers from the game's table (PSI_GRANT)
+PSI_LIST_SITE equ NS_IMAGE + 114  ; 86143h: the psionicists' pop-up's list, a power known (PSI_LIST)
+PSI_CYCLE_SITE equ NS_IMAGE + 115 ; 8631Ah: the pop-up's discipline button (PSI_CYCLE)
 REACH_1587   equ 0x4356 - 0x1587  ; (the callers' segments, less DS)
 REACH_1A0A   equ 0x4356 - 0x1A0A
 REACH_AI_RANGE equ 0x0DA7         ; (overlay 612Eh's ways back)
@@ -20671,6 +20704,9 @@ site_tab:
         site PIC_FAIL_SITE, pic_fail
         site REACH_SITE, reach_site
         site LOCK_SITE, lock_site
+        site PSI_GRANT_SITE, psi_grant
+        site PSI_LIST_SITE, psi_list
+        site PSI_CYCLE_SITE, psi_cycle
 SITE_COUNT equ ($ - site_tab) / 2
 
 ; NS_CMP: the compare of site RL_SITE (of NS_CMP_SITES), its flags into the INT's frame.
@@ -21815,11 +21851,17 @@ cr_weapons:
         mov cx, [bp + 8]
         mov [bp + 8], si
         pop bp
-        test word [cs:rules], RULE_SPECIALIZE
-        jz .iret
         cmp si, LV_PARTY
         jae .iret
-        sti
+        test word [cs:rules], RULE_SPECIALIZE
+        jnz .on
+        cmp si, [cs:psi_member]         ; (no weapons: the psionic powers alone, if due)
+        jne .iret
+        cmp byte [cs:psi_due], 0
+        jne .on
+        cmp byte [cs:psi_keep], 0
+        je .iret
+.on:    sti
         pushad
         push es
         mov bx, sp              ; the interrupt frame at BX+34: IP, CS, flags
@@ -21827,6 +21869,8 @@ cr_weapons:
         push word [ss:bx + 34]
         push bp
         mov bp, sp
+        test word [cs:rules], RULE_SPECIALIZE
+        jz .done
         les bx, [LV_SHEETS]     ; (none yet: whatever the kit page put in)
         imul ax, si, 0x47
         add bx, ax
@@ -21843,7 +21887,8 @@ cr_weapons:
         call lv_check
         mov byte [cs:lv_creating], 0
         mov byte [cs:gear_due], 1       ; (the Loader's gear for it, before VIEW CHARACTER shows it: GEAR_WAIT)
-.done:  mov byte [cs:ed_on], 0
+.done:  call psi_ask                    ; (its psionic powers: PSI_GRANT's picks)
+        mov byte [cs:ed_on], 0
         jmp ovr_back             ; (the way back as the overlay manager left it)
 .iret:  iret
 
@@ -23048,6 +23093,279 @@ lock_site:
         popa
 .out:   iret
 lock_barred times 4 * LOCK_MAX dw 0xFFFF, 0xFFFF
+
+; Psionic powers picked at creation (always on, as the preservers' first spells). The game's routine
+; giving a new member its disciplines and powers (66CF1h, called by the creation screen's DONE at
+; 6654Ch; DI the member; [BP-6] 1 for a psionicist, its level [BP-2]; else [BP-4] its discipline,
+; 0-2, as chosen on the panel) clears all 34 powers, then gives those of a row of the game's table
+; (selector 338h): a psionicist its level's (+1Ch + 11 x the level: 5 at 1st, 6 at 2nd, 11 at 3rd),
+; anyone else its discipline's (+6 + 11 x the discipline: four and Mind Blank), in a loop on SI
+; (0-10), DX the power (0-33) or -1, each through 4F8:3Eh(member, power).
+; PSI_GRANT: "cmp dx,-1" (66DDEh; 3 bytes: the INT and the site's number), its "jz" after kept. For
+; DONE's call (not START GAME's for the game's own party, 65480h+6FBh) only Mind Blank, which every
+; mind has, is given (ZF clear); each other power is a pick due (PSI_DUE) and kept as a default
+; (PSI_DEFAULTS), ZF set. EDIT on a party member with its own classes, race, kit and disciplines
+; (ED_SAME, PSI_SNAP's): none given, none due, and PSI_ASK puts its powers back as they were.
+; PSI_ASK, from CR_WEAPONS once DONE has closed its windows: the psionicists' pop-up (620:57h, the
+; level up's PICK A PSIONIC POWER) for the member, PSI_DUE picks (PROBE_PK_LEFT puts them in
+; [4AECh] as the window is drawn), the game's own picking: a power clicked is known, [4AECh] one
+; less, the window closed at none. Its discipline button (PSI_CYCLE) turns through all three for a
+; psionicist; anyone else keeps its own discipline. The list leaves out powers known (PSI_LIST).
+; Picks left (EXIT) are the game's: PSI_DEFAULTS' first not known.
+PSI_FROM_DONE equ 0x66DE1 - 0x6654F     ; (the INT's way back, less the routine's into DONE)
+PSI_GRANT_CALL equ 0x66DE6 - 0x66DE1    ; (the grant's far call's address, 4F8:3Eh as fixed up)
+PSI_MIND_BLANK equ 30
+PSI_ROWS   equ 11
+PSI_DISC_SIZE equ 7                     ; (selector 2F0h: a member's disciplines, a word each, 7 bytes apart)
+POWER_STRIDE equ 0x22                   ; (and its powers, a byte each from +77h, 22h a member)
+POWER_OWN  equ 0x77
+POWER_COUNT equ 34
+PSI_SHOWN  equ 0x9CE2                   ; DS: the discipline the pop-up shows, a byte a member
+PSI_LEFT   equ 0x4AEC                   ; DS: the powers left to pick
+PSI_LIST_ADD equ 0x8616A - 0x86146      ; (PSI_LIST: the power listed, less the INT's way back)
+PSI_LIST_SKIP equ 0x86173 - 0x86146     ; (left out)
+psi_grant:
+        push eax
+        push bx
+        mov bx, sp                      ; [BX+6] the INT's IP, +8 its CS, +10 its flags
+        mov ax, [ss:bx + 6]
+        sub ax, PSI_FROM_DONE
+        cmp ax, [bp + 2]
+        jne .game
+        mov ax, [ss:bx + 8]
+        cmp ax, [bp + 4]
+        jne .game
+        or si, si
+        jnz .row
+        push ds                         ; (the first row: the member's picks start)
+        lds ax, [ss:bx + 6]
+        add ax, PSI_GRANT_CALL
+        xchg ax, bx
+        mov eax, [bx]
+        mov [cs:psi_call], eax
+        pop ds
+        mov bx, sp
+        mov byte [cs:psi_due], 0
+        mov [cs:psi_member], di
+        mov ax, [bp - 6]
+        mov [cs:psi_psion], al
+        mov ax, [bp - 4]
+        mov [cs:psi_disc], al
+        call psi_kept
+.row:   cmp dx, -1
+        je .flags
+        cmp byte [cs:psi_keep], 0
+        jne .skip                       ; (EDIT, the same: put back after)
+        cmp dx, PSI_MIND_BLANK
+        je .game                        ; (ZF clear, as -1's compare leaves it: given)
+        push bx
+        movzx bx, byte [cs:psi_due]
+        cmp bx, PSI_ROWS
+        jae .full
+        mov [cs:psi_defaults + bx], dl
+        inc byte [cs:psi_due]
+.full:  pop bx
+.skip:  xor ax, ax                      ; (ZF set: not given)
+        jmp .flags
+.game:  cmp dx, -1
+.flags: pushf
+        pop ax
+        and ax, 0x08D5
+        and word [ss:bx + 10], 0xFFFF - 0x08D5
+        or [ss:bx + 10], ax
+        pop bx
+        pop eax
+        iret
+
+; PSI_KEPT: PSI_KEEP set for EDIT on member DI with its own classes, race and kit (ED_SAME) and
+; disciplines (as PSI_SNAP kept them; the routine has just written them), else clear. DS the
+; game's; all registers kept.
+psi_kept:
+        pusha
+        push es
+        mov byte [cs:psi_keep], 0
+        cmp byte [cs:ed_on], 0
+        je .out
+        cmp di, [CR_EDITING]
+        jne .out
+        les bx, [LV_SHEETS]
+        imul ax, di, 0x47
+        add bx, ax
+        call ed_same
+        jc .out
+        call psi_seg
+        imul di, di, PSI_DISC_SIZE
+        mov si, ed_disc
+        mov cx, 6
+.disc:  mov al, [es:di]
+        cmp al, [cs:si]
+        jne .out
+        inc di
+        inc si
+        loop .disc
+        mov byte [cs:psi_keep], 1
+.out:   pop es
+        popa
+        ret
+
+; PSI_SEG: ES selector 2F0h's segment, the disciplines' and powers' (at a fixed place from DS,
+; POWERS_KNOWN_FROM_DS). DS the game's.
+psi_seg:
+        push ax
+        mov ax, ds
+        sub ax, POWERS_KNOWN_FROM_DS
+        mov es, ax
+        pop ax
+        ret
+
+; PSI_SNAP: EDIT on party member [CR_EDITING] (CR_OPEN): its disciplines and powers kept (ED_DISC,
+; ED_POWERS), for PSI_KEEP. DS the game's; all registers kept.
+psi_snap:
+        pusha
+        push es
+        call psi_seg
+        mov bx, [CR_EDITING]
+        imul si, bx, PSI_DISC_SIZE
+        mov di, ed_disc
+        mov cx, 6
+.disc:  mov al, [es:si]
+        mov [cs:di], al
+        inc si
+        inc di
+        loop .disc
+        imul si, bx, POWER_STRIDE
+        add si, POWER_OWN
+        mov di, ed_powers
+        mov cx, POWER_COUNT
+.pow:   mov al, [es:si]
+        mov [cs:di], al
+        inc si
+        inc di
+        loop .pow
+        pop es
+        popa
+        ret
+
+; PSI_ASK (CR_WEAPONS, in its frame the overlay manager can fix up): the new member PSI_MEMBER's
+; psionic powers: its own back (PSI_KEEP), or PSI_DUE picks on the psionicists' pop-up, those left
+; the game's defaults. DS the game's; all registers kept.
+psi_ask:
+        pusha
+        push es
+        mov si, [cs:psi_member]
+        cmp si, LV_PARTY
+        jae .out
+        call psi_seg
+        cmp byte [cs:psi_keep], 0
+        je .pick
+        imul di, si, POWER_STRIDE       ; (EDIT, the same: its powers as they were)
+        add di, POWER_OWN
+        mov bx, ed_powers
+        mov cx, POWER_COUNT
+.back:  mov al, [cs:bx]
+        mov [es:di], al
+        inc bx
+        inc di
+        loop .back
+        jmp .out
+.pick:  movzx cx, byte [cs:psi_due]
+        or cx, cx
+        jz .out
+        xor al, al                      ; (the discipline shown first: a psionicist's first, or its own)
+        cmp byte [cs:psi_psion], 0
+        jne .shown
+        mov al, [cs:psi_disc]
+.shown: mov [si + PSI_SHOWN], al
+        mov [cs:psi_seed], cl
+        mov byte [cs:psi_mode], 1
+        mov byte [cs:showing], 1
+        mov ax, ds
+        add ax, PICK_STUB
+        mov word [cs:lv_psi], DK_PSI
+        mov [cs:lv_psi + 2], ax
+        push si
+        call far [cs:lv_psi]
+        add sp, 2
+        mov byte [cs:psi_mode], 0
+        mov byte [cs:showing], 0
+        movzx cx, byte [PSI_LEFT]       ; (picks left unmade: the game's)
+        cmp byte [cs:psi_seed], 0
+        je .left
+        movzx cx, byte [cs:psi_seed]    ; (the window never drawn: all)
+        mov byte [cs:psi_seed], 0
+.left:  movzx dx, byte [cs:psi_due]
+        xor bx, bx
+.def:   or cx, cx
+        jz .out
+        cmp bx, dx
+        jae .out
+        call psi_seg
+        movzx ax, byte [cs:psi_defaults + bx]
+        imul di, si, POWER_STRIDE
+        add di, ax
+        test byte [es:di + POWER_OWN], 0xF8
+        jnz .next                       ; (known)
+        push bx
+        push cx
+        push dx
+        push ax                         ; (the power, then the member: as the game's own call)
+        push si
+        call far [cs:psi_call]
+        add sp, 4
+        pop dx
+        pop cx
+        pop bx
+        dec cx
+.next:  inc bx
+        jmp .def
+.out:   mov word [cs:psi_member], 0xFFFF
+        mov byte [cs:psi_due], 0
+        mov byte [cs:psi_keep], 0
+        pop es
+        popa
+        ret
+
+; PSI_LIST: "or ax,ax / jz 8616Ah" (86143h; 4 bytes: the INT, the site's number and a NOP) in the
+; pop-up's list (86107h), AX whether member [348h:25Bh] knows power SI of the discipline shown
+; (4F8:39h): not known, listed (8616Ah); known, listed if its own number is under 30 (on at
+; 86147h, the NOP's). With PSI_MODE a power known is left out (86173h).
+psi_list:
+        push bp
+        mov bp, sp
+        or ax, ax
+        jz .add
+        cmp byte [cs:psi_mode], 0
+        je .on
+        add word [bp + 2], PSI_LIST_SKIP
+        jmp .out
+.add:   add word [bp + 2], PSI_LIST_ADD
+        jmp .out
+.on:    inc word [bp + 2]               ; (past the NOP)
+.out:   pop bp
+        iret
+
+; PSI_CYCLE: "inc byte [bx-631Eh]" (8631Ah; 4 bytes: the INT, the site's number and a NOP), the
+; pop-up's discipline button (BX the member): the next discipline, or with PSI_MODE for one not a
+; psionicist its own kept.
+psi_cycle:
+        cmp byte [cs:psi_mode], 0
+        je .next
+        cmp byte [cs:psi_psion], 0
+        je .out
+.next:  inc byte [bx + PSI_SHOWN]
+.out:   iret
+
+psi_call    dd 0                ; 4F8:3Eh, a power given (member, power), as fixed up
+psi_member  dw 0xFFFF           ; (PSI_GRANT's member, for PSI_ASK)
+psi_due     db 0
+psi_psion   db 0                ; (1: a psionicist, all three disciplines)
+psi_disc    db 0
+psi_keep    db 0
+psi_mode    db 0                ; 1 while PSI_ASK has the pop-up up
+psi_seed    db 0                ; (the picks, for PROBE_PK_LEFT to put in [4AECh] once)
+psi_defaults times PSI_ROWS db 0
+ed_disc     times 6 db 0
+ed_powers   times POWER_COUNT db 0
 
 ; STEALTH (RULE_STEALTH): a thief who starts a turn with no enemy next to them may hide in
 ; shadows and move silently up to someone; the Loader rolls both and, when both succeed,

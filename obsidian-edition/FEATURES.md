@@ -66,6 +66,7 @@ running the game, the Loader's window and its dice log are in the
   - [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen)
   - [Fuller starting gear](#fuller-starting-gear)
   - [Preservers' first spells](#preservers-first-spells)
+  - [Psionic powers at creation](#psionic-powers-at-creation)
   - [The game's own party](#the-games-own-party)
 - [Expanded features](#expanded-features)
   - [The leader's CHA at shops](#the-leaders-cha-at-shops)
@@ -1577,6 +1578,36 @@ when the window opens, so EXIT can't take you back to the creation screen.
 Always on (it isn't a switch of its own). How it works:
 [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#preservers-first-spells).
 
+### Psionic powers at creation
+
+Every new character picks its psionic powers when **DONE** is clicked on the
+creation screen, on the game's **PICK A PSIONIC POWER** window (the one a
+psionicist picks a power on at a level up), where the game always handed out
+the same ones:
+
+- **Anyone not a psionicist** has the one discipline chosen on the creation
+  panel, and picks **four** of its powers (the game gave each discipline the
+  same four: Detonate, Ballistic Attack, Control Body and Inertial Barrier for
+  psychokinesis; Life Draining, Biofeedback, Graft Weapon and Flesh Armor for
+  psychometabolism; Superior Invisibility, Ego Whip, Psionic Blast and
+  Intellect Fortress for telepathy). The window's discipline button stays on
+  that discipline.
+- **A psionicist** picks as many as the game gave for its starting level: 4 at
+  1st, 5 at 2nd, 10 at 3rd, from all three disciplines (the button turns
+  through them).
+- Every character still knows **Mind Blank**, the defence every mind has, as
+  in the game; the list leaves out powers already known.
+
+**EXIT** on the window (then EXIT again at "YOU HAVE MORE") ends the picking:
+the powers still to pick are the game's own, in its order, less any already
+picked. A warrior picks its weapon specs first, on the weapon window. **EDIT**
+on a party member that keeps its classes, race, kit and discipline keeps its
+powers too, with no window. The game's own party (START GAME with no party
+made) keeps the game's powers.
+
+Always on (it isn't a switch of its own). How it works:
+[DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#psionic-powers-at-creation).
+
 ### The game's own party
 
 START GAME with no party made plays the game's own four, who were made before
@@ -1621,7 +1652,7 @@ effect at once; untick one and the game is as it was.
 | Box on the Options tab | What it adds |
 |---|---|
 | [Shops as in AD&D](#the-leaders-cha-at-shops) | the party leader's CHA 18 or more lowers what shops ask, 5% to 40% at 25; shops pay 60%; a magical item sold stays in the merchant's stock, to [buy back](#buying-back-magical-items) |
-| [Thieves as in AD&D](#thief-skills-from-adds-table) | AD&D's thief skill table by level, with Dark Sun's race and DEX adjustments; a backstab multiplies the weapon's dice only, STR and magic added after, on the round's first attack only; a lock or pocket failed is tried again by that thief only after a level gained |
+| [Thieves as in AD&D](#thief-skills-from-adds-table) | AD&D's thief skill table by level, with Dark Sun's race and DEX adjustments; a backstab multiplies the weapon's dice only, STR and magic added after, on the round's first attack only; a lock failed, or a pocket the thief was caught at, is tried again by that thief only after a level gained |
 | [Hiding in shadows to backstab](#hiding-in-shadows-to-backstab) | thieves hide and move silently to backstab, rangers to attack from behind |
 | ... [a worn cloak, boots and belt](#hiding-in-shadows-to-backstab) | the box under it: +10 hiding, +10 moving silently, +5 picking pockets and opening locks |
 | [Picking pockets](#picking-pockets) | a thief's Pick Pockets button, then anyone in sight, until caught |
@@ -1697,7 +1728,7 @@ thief level (*Player's Option: Skills & Powers*: "If a thief fails to open a
 lock, he cannot attempt to open that lock again until advancing a level"): the
 game's safe, the sewer grate, the cell doors and Pehtucl's chest. Tried again before, the
 roll fails at once, and the dice log says why. Another thief of the party may
-try it. A failed pocket is the same ([Picking pockets](#picking-pockets)).
+try it. A pocket the thief was caught at is the same ([Picking pockets](#picking-pockets)).
 Untick it for the game's numbers.
 
 How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#thief-skills-from-adds-table).
@@ -1839,10 +1870,11 @@ a worn belt's 5 counted, as in the thief rows):
   Anything else lifted, or the coins, comes with a purse's jingle (the mod's
   own sound; the three weapons keep the quest's).
   This goes by what each thing is, wherever its owner keeps it.
-- **Failure:** a move silently roll. Made, the thief slips away unnoticed;
-  missed, they're caught. With **Thieves as in AD&D**, a thief who slipped away
-  can't try that person again until they have gained a thief level ("Daaki
-  needs another level to try them again."); another thief of the party can.
+- **Failure:** a move silently roll. Made, the thief slips away unnoticed and
+  may try again; missed, they're caught. With **Thieves as in AD&D**, a thief
+  who was caught can try that person again once they have gained a thief level
+  (until then the person "remembers Daaki, and keeps a close hand on their
+  purse"; the dice log says why); another thief of the party can try at once.
 
 With nothing like that left on them, the thief takes what's in their purse
 instead: ceramic pieces, 2 to 5 for each of the thief's levels (a 4th-level
@@ -1851,7 +1883,8 @@ person.
 
 A thief can go on trying the same person until **caught** (both rolls failed)
 or until they take the coins; after that, that person keeps a hand on their
-pockets for good. The Loader remembers who in `settings.json`, for this party,
+pockets for good (with **Thieves as in AD&D**, the coins still end it, and a
+thief caught may try again a level later). The Loader remembers who in `settings.json`, for this party,
 with the time on the game's clock: load a game saved before the try and the
 clock goes back past it, so the try is forgotten and the person can be tried
 again. The Trustee is left to his own conversation. What happens comes up in

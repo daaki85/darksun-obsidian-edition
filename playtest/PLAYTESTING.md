@@ -529,6 +529,9 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
 
 ## The creation screen
 
+- **At the main menu the mouse may not be captured yet** (2026-11-11): `click.py` reads the pointer
+  stuck at (160,100) and clicks do nothing. `xdotool windowfocus W`, then
+  `xdotool mousemove --window W 160 30 click 1`, and it follows.
 - **The creation screen** (logs/2026-11-08-creation-least.md): the main menu's CREATE CHARACTERS
   (165,92) opens VIEW CHARACTER (its bottom icons: view character, inventory, cast, effects at x 52,
   76, 100, 122, y 171; RETURN TO GAME 266,172 goes back to the menu); right-click an empty slot
@@ -553,10 +556,19 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   read the sheet's +18h). Then click the classes (CLERIC 250,13). The **CLERICAL SPHERE** list is in
   the lower window (AIR 235,105, EARTH 113, FIRE 121, WATER 129): while one sphere is chosen the
   others are greyed and take no click, so click the chosen one off first. DONE (279,183) opens the
-  weapon window (PICK A WEAPON SPECIALTY): icons 33 apart from (72,46), three rows; the cahulaks
+  weapon window (PICK A WEAPON SPECIALTY, or OF EXPERTISE for a ranger or a Battle Mage): icons 33 apart from (72,46), three rows; the cahulaks
   are the second row's last (245,78). A click there closes it and the dice log gives the start
   weapon ("starts with a plain obsidian cahulaks ... in place of the bone long sword"). The
   inventory is the second bottom icon (76,172).
+- **Psionic powers at creation** (logs/2026-11-11-psionic-picks.md): after DONE (and a warrior's
+  weapon window) PICK A PSIONIC POWER opens: icons from (123,62), 17 apart, five to a row (the
+  list closes up after each pick: clicking (123,62) again takes the next); the discipline button
+  (117,140); the count beside it; EXIT (202,140), then EXIT at YOU HAVE MORE (140,91). The last
+  pick closes it. Each member's known powers: `python3 powers.py` (selector 2F0h's segment,
+  +77h + member x 22h + power, bits 3-7). A discipline at creation: P-KINESIS (250,106), P-METAB (250,114),
+  TELEPATHY (250,122); click the chosen one off first. DROP (125,66 on a member's menu, then YES)
+  refuses the last member; ADD (112,66 on an empty slot's menu) lists the roster (a name, then ADD
+  252,46).
 - **The DUAL window** (dual-classing, logs/2026-11-09-group-4.md): the inventory screen (I), a
   right-click on a portrait (Cermak 20,104 in pens-fire-count4) opens EDIT NAME / DROP / DUAL
   (CANCEL in DUAL's place when it isn't offered); DUAL at 90,145; the classes greyed or white (zoom
@@ -1389,6 +1401,15 @@ The way to the grate, from the scripts and the region file, and the cluebook:
   (`state.py 497`). The Trustee's key used on a door sets it (GPLI routine 752, script 137 at 1h)
   and the call script then never calls, until the party talks to a guard carrying routine 753
   (objects 55, 260, 261; MAS 29 makes them).
+
+- **Kurzak's door** (logs/2026-11-11-doorway-blocked.md): the entryway, squares 99,33-34 (99,34 is
+  the one that shuts); its leaves objects 2145 and 2146: map record +12h bit 08h open (20h or 10h
+  shut), +17h the frame (07h the spiked gate, 04h open). It is the only way between Kurzak's stop
+  and the pens' south passages. The game's call opens it; `doorwatch.py SECONDS` (background) prints
+  the square, Kurzak and Legcrusher at each change. If the leaves are open and the square shut, the
+  Loader's `kurzakdoor.py` opens the square after 10 game seconds ("Kurzak's door: open, but its
+  doorway was barred on the map; opened"). **A door action (22h, 2) is no way to open a door from
+  a script line**: put before Kurzak's line it shut the open door.
 
 ### Into the arena from the pens
 

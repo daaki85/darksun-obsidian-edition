@@ -5975,6 +5975,34 @@ class KitTests(unittest.TestCase):
         finally:
             game.RULES_IN_FORCE = old
 
+    def test_pick_title(self):
+        """LV_TITLE_OF: the weapon window's title for LV_MEMBER, judged as PK_WORD judges its first
+        kind: "PICK A WEAPON OF EXPERTISE," for a ranger or a Battle Mage (the user's report: a
+        ranger was asked for a specialty), "PICK A WEAPON SPECIALTY," for a fighter, a gladiator or a
+        Justifier; the sheet as it was after."""
+        rules = game.RULE_SPECIALIZE | game.RULE_KITS
+        self.rules(rules)
+        self.mu.mem_write(self.DS * 16 + 0x1661, struct.pack("<HH", 0, self.SHEET))
+        cases = (((9, 0, 0), 0, "PICK A WEAPON SPECIALTY,"), ((10, 0, 0), 0, "PICK A WEAPON SPECIALTY,"),
+                 ((13, 0, 0), 0, "PICK A WEAPON OF EXPERTISE,"), ((13, 0, 0), 2, "PICK A WEAPON SPECIALTY,"),
+                 ((11, 0, 0), 2, "PICK A WEAPON OF EXPERTISE,"))
+        old = game.RULES_IN_FORCE
+        try:
+            game.RULES_IN_FORCE = rules
+            for classes, kit, want in cases:
+                with self.subTest(classes=classes, kit=kit):
+                    sheet = bytearray(game.SHEET_SIZE)
+                    sheet[0x21:0x24], sheet[0x24], sheet[0x43] = bytes(classes), 4, kit
+                    self.mu.mem_write(self.SHEET * 16, bytes(sheet))
+                    self.call(rb"\x52\x31\xc0\xe8..\xb8..\x81\xfa..\x75\x03\xb8..\x5a\xc3", edx=0x1234)
+                    ax = self.mu.reg_read(r.UC_X86_REG_AX)
+                    text = bytes(self.mu.mem_read(TSR * 16 + ax, 32)).split(b"\0")[0].decode()
+                    self.assertEqual(text, want)
+                    self.assertEqual(self.mu.reg_read(r.UC_X86_REG_DX), 0x1234)
+                    self.assertEqual(bytes(self.mu.mem_read(self.SHEET * 16, game.SHEET_SIZE)), bytes(sheet))
+        finally:
+            game.RULES_IN_FORCE = old
+
     SPEC_GET = rb"\x26\xf6\x47\x16\x80\x75\x06\x26\x0f\xb6\x40\x14\xc3"
     SPEC_SET = rb"\xe8..\xe8..\x2e\x88\x84..\xe8..\xc3"
     # (a new member's sheet at creation's DONE, CR_WEAPONS: no specs and no age, packed)

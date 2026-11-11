@@ -34,9 +34,11 @@ double-click, with the options as last set.)
 
 ## Documentation
 
+- The manual: the player's pages below as web pages that link to each other, in
+  the release's `manual` folder (start at `manual/index.html`); the Loader's **Help**
+  button opens it
 - [The player's guide](obsidian-edition/PLAYER-GUIDE.md): the rules, without
-  spoilers, a section for each class (also as a web page,
-  [`player-guide.html`](obsidian-edition/player-guide.html))
+  spoilers, a section for each class
 - [The full documentation](obsidian-edition/README.md): installing, running, the
   Loader's window and the dice log
 - [Features and rules](obsidian-edition/FEATURES.md): what the game shows
@@ -67,9 +69,10 @@ where the saves go](obsidian-edition/README.md#updating-backups-saved-games-and-
 
 ## What's new
 
-**Obsidian Edition 2.16.1** is out ([release notes](release-notes/v2.16.1.md)):
-fixes to looting, selling, thieves' locks and saved games' named copies, every
-Options switch in one table in the player's guide, and a better Help page. 2.16.0
+**Obsidian Edition 2.17.0** is out ([release notes](release-notes/v2.17.0.md)):
+psionic powers picked when a character is made, the player's manual as linked web pages in the download (Help opens it), a pocket
+barred until a level only when the thief is caught, a ranger asked for a weapon of
+expertise, Kalzith's new past, and Kurzak's door no longer barring the way. 2.16.0
 brought looting a body with **T** and selling spare gear with **S**, thieves who
 may try a failed lock or pocket again after a level, polearm reach and staff sling
 stinkpots, the footman's pick, and a fight with Legcrusher at the fountain.

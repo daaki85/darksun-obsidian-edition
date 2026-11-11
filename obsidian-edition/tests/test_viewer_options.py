@@ -88,9 +88,10 @@ class OptionsTests(unittest.TestCase):
             self.assertEqual(settings.get(key), default, key)
         self.assertEqual(launch.effective_switches(settings), launch.effective_switches({}))
 
-    def test_help_opens_the_guide(self):
-        """Help, at the top of the window, opens player-guide.html (beside the Loader) in the browser
-        as a file URL; where no browser opens it, the status line says where it is."""
+    def test_help_opens_the_manual(self):
+        """Help, at the top of the window, opens the manual's start page (manual/index.html, beside
+        the Loader) in the browser as a file URL; where no browser opens it, the status line says
+        where it is."""
         def buttons(widget):
             for child in widget.winfo_children():
                 if isinstance(child, viewer.ttk.Button):
@@ -98,18 +99,18 @@ class OptionsTests(unittest.TestCase):
                 yield from buttons(child)
         help_ = [b for b in buttons(self.root) if b.cget("text") == "Help"]
         self.assertEqual(len(help_), 1)
-        self.assertTrue(os.path.isfile(viewer.GUIDE), viewer.GUIDE)
+        self.assertTrue(os.path.isfile(viewer.HELP_PAGE), viewer.HELP_PAGE)
         opened = []
         real = viewer.webbrowser.open
         self.addCleanup(lambda: setattr(viewer.webbrowser, "open", real))
         viewer.webbrowser.open = lambda url: opened.append(url) or True
         help_[0].invoke()
         self.assertEqual(len(opened), 1)
-        self.assertTrue(opened[0].startswith("file:") and opened[0].endswith("/player-guide.html"), opened)
-        self.assertIn("player-guide.html", self.viewer.status.get())  # (said even when it opened)
+        self.assertTrue(opened[0].startswith("file:") and opened[0].endswith("/manual/index.html"), opened)
+        self.assertIn("index.html", self.viewer.status.get())  # (said even when it opened)
         viewer.webbrowser.open = lambda url: False
         self.viewer.open_guide()
-        self.assertIn("player-guide.html", self.viewer.status.get())
+        self.assertIn(os.path.join("manual", "index.html"), self.viewer.status.get())
 
 
 if __name__ == "__main__":

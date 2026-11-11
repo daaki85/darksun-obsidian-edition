@@ -222,6 +222,8 @@ PIC_FAIL_SITE = NS_IMAGE + 110
 REACH_SITE = NS_IMAGE + 111
 # (the thief skill check's chance: a lock its thief failed at this level out of reach, DSCLOG's LOCK_SITE)
 LOCK_SITE = NS_IMAGE + 112
+# (a new member's psionic powers picked, not the game's table's: DSCLOG's PSI_GRANT, PSI_LIST, PSI_CYCLE)
+PSI_GRANT_SITE, PSI_LIST_SITE, PSI_CYCLE_SITE = NS_IMAGE + 113, NS_IMAGE + 114, NS_IMAGE + 115
 # the monster kinds' table (DSUN.EXE, the load segment's 3E45h: monsters.MONSTER_KINDS_SEG): a kind's
 # properties (a dword), its resistance class (a byte), a class's damage kinds (four words) and percents
 KINDS_FILE = 0x5400 + 0x3E45 * 16
@@ -1216,6 +1218,14 @@ PATCHES = (
     # ... and a new warrior its weapon specs on the weapon window (DSCLOG's CR_WEAPONS), once DONE
     # has closed the screen's windows (their memory free for it): pop cx / push si / nop
     Patch("cr_weapons", 0x666DF, bytes.fromhex("595690"), _site(CR_WEAPONS, 3)),
+    # ... and every new member its psionic powers on the psionicists' pop-up (DSCLOG's PSI_GRANT,
+    # PSI_ASK from CR_WEAPONS): the game's grants from its table (the routine 66CF1h) give only Mind
+    # Blank, each other power a pick ("cmp dx,-1", its "jz" kept); the pop-up's list leaves out the
+    # powers known ("or ax,ax / jz"), and its discipline button keeps one not a psionicist to its
+    # own ("inc byte [bx-631Eh]")
+    Patch("psi_grant", 0x66DDE, bytes.fromhex("83faff"), _site(PSI_GRANT_SITE, 3)),
+    Patch("psi_list", 0x86143, bytes.fromhex("0bc07423"), _site(PSI_LIST_SITE, 4)),
+    Patch("psi_cycle", 0x8631A, bytes.fromhex("fe87e29c"), _site(PSI_CYCLE_SITE, 4)),
     # Creation's scores and hit points as rolled (game.RULE_ROLLED): a score click kept to the
     # die's total, a hit point click doing nothing, the die's total kept as its three loops set
     # CHR, and the totals drawn under CHR. No vectors are left: these share VEC_CR_SPELLS, the

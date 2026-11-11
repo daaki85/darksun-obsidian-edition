@@ -48,6 +48,7 @@
   - [Where each effect goes](#where-each-effect-goes)
   - [How they're checked](#how-theyre-checked)
 - [Preservers' first spells](#preservers-first-spells)
+- [Psionic powers at creation](#psionic-powers-at-creation)
 - [Level cap by XP](#level-cap-by-xp)
 - [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen)
 - [Fuller starting gear](#fuller-starting-gear)
@@ -1948,6 +1949,41 @@ lost on the way back. The INT's way back is pushed as a stack frame (`push cs / 
 / mov bp,sp`) that the overlay manager walks and patches to reload the code first, as
 `PROBE_LV_PICK` and `PROBE_DUAL_KIT` do, and read back after.
 
+## Psionic powers at creation
+
+([In the features page](FEATURES.md#psionic-powers-at-creation).) Always on.
+
+The routine that gives a new member its disciplines and powers (66CF1h, overlay 65480h, called
+by the creation screen's DONE at 6654Ch, DI the member) sets the disciplines' words from the
+panel's choice (DS:4980h; selector 2F0h, a word each, 7 bytes a member), clears all 34 powers
+(4F8:43h) and gives a row of the game's table (selector 338h) through 4F8:3Eh(member, power):
+a psionicist (`[BP-6]` 1) its level's (`+1Ch` + 11 x `[BP-2]`: 5 powers at 1st, 6 at 2nd, 11 at
+3rd), anyone else its discipline's (`+6` + 11 x `[BP-4]`, 0-2: four of it and Mind Blank), in a
+loop on SI (0-10) with DX the power or -1. A power's record (selector 408h, 8 bytes) has its
+discipline at `+3` (bits 0-5; 40h a science, 80h a defence mode).
+
+`PSI_GRANT` (a site of `INT 98h`, new: `cmp dx,-1`, 3 bytes at 66DDEh, its `jz` kept): for
+DONE's call (the routine's way back, `[BP+2]` and `[BP+4]`, is the INT's less `PSI_FROM_DONE`;
+START GAME's for the game's own party isn't) only Mind Blank (30) is given; each other power is
+a pick due (`PSI_DUE`) and a default (`PSI_DEFAULTS`). It keeps the grant's far address
+(`PSI_GRANT_CALL`, as the loader fixed it up). EDIT on the member with its own classes, race and
+kit (`ED_SAME`) and disciplines (`PSI_SNAP` keeps them with its powers at `CR_OPEN`) gives none
+and asks for none (`PSI_KEEP`).
+
+`PSI_ASK`, called by `CR_WEAPONS` (after a warrior's weapon specs, or alone without weapon
+specialization) in its frame the overlay manager can fix up, puts the member's powers back for
+`PSI_KEEP`, or opens the psionicists' pop-up (620:57h, the level up's) for `PSI_DUE` picks: the
+discipline shown (DS:9CE2h + the member) the member's own for one not a psionicist, the first for
+a psionicist; `PROBE_PK_COUNT` lets it open (`PSI_MODE`) and `PROBE_PK_LEFT` puts the picks in
+the window's count (DS:4AECh) as it is first drawn. The game's own picking does the rest: a
+power clicked is given, the count one less, the window closed at none. `PSI_LIST` (`INT 98h`,
+new: `or ax,ax / jz`, 4 bytes at 86143h, in the list of the discipline shown, 86107h) leaves out
+a power known (the game lists it again, to raise its own number); `PSI_CYCLE` (`inc byte
+[bx-631Eh]`, 4 bytes at 8631Ah, the discipline button) does nothing for one not a psionicist.
+EXIT ("YOU HAVE MORE", EXIT) leaves the count above none: `PSI_ASK` gives that many of
+`PSI_DEFAULTS`, in the game's order, less any known. A character dropped and added back from the
+roster keeps the powers it picked.
+
 ## Level cap by XP
 
 ([In the features page](FEATURES.md#level-cap-by-xp).)
@@ -2196,11 +2232,14 @@ fail (PERCENT_SITE's entry), remembers it with the pockets tried (`locks.key`: t
 the thing, the member and its thief level; undone by loading an earlier save, as a pocket tried) and
 each pass writes the table: the locks each member failed at the thief level it has now
 (`locks.barred`). A level gained, the pair is gone. The dice log names a barred try ("failed this lock
-at this thief level"). **Pockets:** a fumble (failed, unnoticed) is remembered as
-`pickpocket.fumble_key` (the person's key, the thief and its thief level), and that thief is refused
-until its thief level is higher. Seen in the game 2026-11-11 (Pehtucl's chest, a 1st-level thief:
+at this thief level"). **Pockets:** a thief caught (the pick and the move silently both
+failed) is remembered as `pickpocket.caught_key` (the person's key, the thief and its thief level),
+and that thief is refused until its thief level is higher (the game's message in the story: "Kurzak
+remembers Daaki, and keeps a close hand on their purse."; the reason in the dice log alone). One who
+fumbled but slipped away unnoticed may try again at once (the user's rule, 2026-11-11; until then a
+fumble barred the thief too, and the message named the level, which the user found too metagame). Seen in the game 2026-11-11 (Pehtucl's chest, a 1st-level thief:
 failed, barred, then rolled again at 2nd level: playtest/logs/2026-11-11-lock-retry.md). Tests:
-tests/test_locks.py, `test_fumbled_with_thieves_as_in_add`.
+tests/test_locks.py, `test_caught_with_thieves_as_in_add`, `test_slips_away_with_thieves_as_in_add`.
 
 ## Hiding in shadows to backstab
 
