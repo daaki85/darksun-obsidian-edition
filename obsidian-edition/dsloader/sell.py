@@ -1,9 +1,10 @@
 """Selling a party member's plain gear in one go (the user's ask, 2026-11-11, after looting: S).
 
 On a shop's screen, S sells everything plain in the backpack of the party member on show: a
-weapon (melee, missile or thrown), ammunition, armour, a shield, or anything worn (a cloak, boots,
-a belt, a helm), with no plus and no magical power. What is worn or held is never sold, nor
-anything magic, keys, scrolls, food, water, gems, or what the shop won't buy (a price of 9999).
+weapon (melee, missile or thrown), armour, a shield, or anything worn (a cloak, boots, a belt, a
+helm), with no plus and no magical power. What is worn or held is never sold, nor ammunition (the
+user's choice), anything magic, keys, scrolls, food, water, gems, or what the shop won't buy (a
+price of 9999).
 
 DSCLOG's SELL_KEY makes the key Escape, which shuts the shop (back to its merchant's talk), and
 counts it (SELL_SEQ, header +1852) with the member on show (SELL_MEMBER, +1854: the game's
@@ -27,8 +28,9 @@ NOT_FOR_SALE = 9999
 STACKS = 0x02  # (a type's +0Fh: a stack, its count at the item's +02h)
 COUNT = 0x02
 VALUE = 0x06
-GEAR = restrict.MELEE | restrict.MISSILE | restrict.SHIELD | restrict.THROWN | 0x08  # (0x08: ammunition)
+GEAR = restrict.MELEE | restrict.MISSILE | restrict.SHIELD | restrict.THROWN
 WORN_AT = 0x09
+AMMUNITION = 11  # (a type's worn place, +09h: the quiver's; arrows, bolts, sling stones: never sold, the user's choice)
 
 
 def shop_up(gd: GameData, tsr_hdr: int) -> bool:
@@ -44,6 +46,8 @@ def plain_gear(gd: GameData, rec: bytes) -> bool:
         return False
     typ = gd.item_type_record(rec)
     if len(typ) < game.ITEM_TYPE_SIZE:
+        return False
+    if typ[WORN_AT] == AMMUNITION:
         return False
     gear = typ[restrict.TYPE_FLAGS] & GEAR or typ[restrict.TYPE_KIND_FLAGS] & restrict.ARMOUR or typ[WORN_AT]
     plus = struct.unpack_from("b", rec, game.ITEM_PLUS)[0]

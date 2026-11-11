@@ -29,8 +29,10 @@ class SellTests(unittest.TestCase):
         struct.pack_into("<h", m, CREATURES + 0 * game.CREATURE_SIZE + pickpocket.PACK_LIST, PACK)
         struct.pack_into("<Bh", m, THINGS + PACK * 3, game.THING_ITEM, 90)
         m[ITEM_TYPES + 45 * game.ITEM_TYPE_SIZE] = 1  # (long sword: melee)
-        m[ITEM_TYPES + 70 * game.ITEM_TYPE_SIZE] = 0x08  # (arrows: ammunition ...
+        m[ITEM_TYPES + 70 * game.ITEM_TYPE_SIZE + sell.WORN_AT] = sell.AMMUNITION  # (arrows: ammunition ...
         m[ITEM_TYPES + 70 * game.ITEM_TYPE_SIZE + 0x0F] = sell.STACKS  # ... in a stack)
+        m[ITEM_TYPES + 71 * game.ITEM_TYPE_SIZE] = 1  # (a plain club, stacked: priced times its count)
+        m[ITEM_TYPES + 71 * game.ITEM_TYPE_SIZE + 0x0F] = sell.STACKS
         for item, nxt, typ, value, plus, slot, count in ((90, 91, 45, 50, 0, 14, 0), (91, 92, 45, 900, 1, 15, 0),
                                                         (92, 93, 66, 5, 0, 16, 0), (93, game.NO_ITEM, 70, 2, 0, 17, 20)):
             rec = bytearray(game.ITEM_SIZE)
@@ -47,21 +49,27 @@ class SellTests(unittest.TestCase):
         return [i for i, _ in ring.Items(self.gd).chain(PACK, inside=False)]
 
     def test_sells_the_plain_gear(self):
+        """The plain sword sold; the sword +1, the bag and the arrows (ammunition: never) kept."""
         self.gd.rules &= ~game.RULE_CHA_PRICES
         lines, paid = sell.sell(self.gd, 0)
-        self.assertEqual(paid, 50 + 2 * 20)
-        self.assertEqual(self.pack(), [91, 92])  # (the sword +1 and the bag kept)
-        self.assertEqual(self.gd.money(), self.money + 90)
-        self.assertTrue(lines[0].startswith("Dag sells 2 things for 90 ceramic pieces"))
+        self.assertEqual(paid, 50)
+        self.assertEqual(self.pack(), [91, 92, 93])
+        self.assertEqual(self.gd.money(), self.money + 50)
+        self.assertTrue(lines[0].startswith("Dag sells 1 things for 50 ceramic pieces"))
 
     def test_shops_as_in_add(self):
         self.gd.rules |= game.RULE_CHA_PRICES
         _, paid = sell.sell(self.gd, 0)
-        self.assertEqual(paid, 30 + 1 * 20)  # (60% of 50; of 2, 1, times the stack)
+        self.assertEqual(paid, 30)  # (60% of 50)
+
+    def test_a_stack_times_its_count(self):
+        self.gd.rules &= ~game.RULE_CHA_PRICES
+        struct.pack_into("<H", self.m, ITEMS + 93 * game.ITEM_SIZE + game.ITEM_TYPE, 71)
+        _, paid = sell.sell(self.gd, 0)
+        self.assertEqual(paid, 50 + 2 * 20)
 
     def test_nothing_to_sell(self):
-        for item in (90, 93):
-            self.m[ITEMS + item * game.ITEM_SIZE + game.ITEM_PLUS] = 1
+        self.m[ITEMS + 90 * game.ITEM_SIZE + game.ITEM_PLUS] = 1
         lines, paid = sell.sell(self.gd, 0)
         self.assertEqual((paid, lines), (0, ["Dag has no plain gear in the backpack to sell."]))
         self.assertEqual(self.pack(), [90, 91, 92, 93])

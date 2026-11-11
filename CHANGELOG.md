@@ -49,8 +49,9 @@ reach took 384 bytes of the segment (68,592 bytes before it).
 
 **New**
 - **Selling plain gear in one go** (the user's ask and choices: the member on show, plain gear only):
-  on a shop's screen **S** sells the plain weapons, ammunition, armour, shields and clothing in that
-  member's backpack (no plus, no power; not worn or held; not keys, nor what the shop won't buy), each
+  on a shop's screen **S** sells the plain weapons, armour, shields and clothing in that member's
+  backpack (no plus, no power; not worn or held; not ammunition, the user's choice; not keys, nor what
+  the shop won't buy), each
   at the game's price (its value, times the count for a stack; 60% with Shops as in AD&D, as DSCLOG's
   SELL_PRICE). DSCLOG's `SELL_KEY` (only while the shop's loop has run in the last two BIOS ticks:
   `SHOP_LOOP` now marks the time) makes the key Escape and notes the member on show (the game's

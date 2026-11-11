@@ -2570,10 +2570,10 @@ names the container whose window is open).
 ### Selling plain gear: S
 
 On a shop's screen, **S** sells everything plain in the backpack of the party
-member on show: weapons, ammunition, armour, shields and anything worn (a cloak,
-boots, a belt) with no plus and no magic. What the member wears or holds stays,
-and so does anything magic, keys, scrolls, food, water and gems, and whatever
-the shop won't buy. Each thing fetches what the shop would pay for it on its own
+member on show: weapons, armour, shields and anything worn (a cloak, boots, a
+belt) with no plus and no magic. What the member wears or holds stays, and so
+does ammunition (arrows, bolts, sling stones), anything magic, keys, scrolls,
+food, water and gems, and whatever the shop won't buy. Each thing fetches what the shop would pay for it on its own
 (a stack, its price times its count; with **Shops as in AD&D**, 60% of its
 price), the shop closes back to the merchant's talk, the purse jingles, and the
 dice log lists the sale:
