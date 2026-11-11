@@ -80,6 +80,15 @@ reach took 384 bytes of the segment (68,592 bytes before it).
   squares with no movement left, the bow in the missile slot left alone, playtest/logs/2026-11-10-polearm-reach.md.)
 
 **Fixed**
+- **The pointer left images of itself on the map** (the user's report, in a fight, after 2.15.0).
+  2.15.0's audit turned interrupts on for the whole of PROBE_SCROLL's pass (the map's main loop), so
+  the game, which draws its pointer from the mouse's interrupt (keeping what is under it, to put back
+  when it moves), could draw it in the middle of DSCLOG's own drawing. Now they are off again while
+  DSCLOG draws (`DRAW_MASKED`: the dust and whirlwinds, the view drawn again, the panel, the labels,
+  a drag's or the Loader's scroll), as before 2.15.0, and on for the rest (the sounds, the clicks).
+  DSCLOG.EXE 16 bytes larger (68,992). Not reproduced here before the fix (sweeps of the pointer with
+  the view drawn again 30 times a second showed none); seen not to recur after it in the same test.
+  (Tests: tests/test_scroll_interrupts.py.)
 - **The Spellarcher's arrows play their spell's cast sound as they are made** (the user's report: no
   sound). The Loader asked for it from the map's main loop (`SOUND_REQ`), which doesn't run while the
   USE screen, where the arrows' button is, is open. Now it hands the sound over with its answer

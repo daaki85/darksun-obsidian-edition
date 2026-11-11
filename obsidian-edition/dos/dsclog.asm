@@ -24812,6 +24812,11 @@ mouse_event:                            ; AX = events, BX = buttons held, CX, DX
 ; and the pointer lagged), off only where the original was (3118:002E: its INT 33h) and around what
 ; the mouse's interrupt changes too: the pointer read with the drag's state (MOUSE_EVENT), and
 ; TARGET_CLICK's calls to the game's mouse handler (which the driver calls with them off).
+; DRAW_MASKED: and off while DSCLOG draws on the screen (the dust, the whirlwinds, the view drawn
+; again, the panel, the labels, a drag's or the Loader's scroll), as before 2.15.0: the game draws
+; its pointer from the mouse's interrupt (keeping what is under it, to put back when it moves), and
+; one drawn in the middle of those left images of itself on the map as it moved (the user's report
+; after 2.15.0, in a fight). The rest of the pass (the sounds, the clicks) keeps them on.
 probe_scroll:
         pop word [cs:s_resume]
         pop word [cs:s_resume + 2]
@@ -24832,17 +24837,23 @@ probe_scroll:
         inc word [cs:main_ticks]
         mov byte [cs:arc_hold], 0       ; (an Arcanist's cast is over: PROBE_END_TURN)
         mov byte [cs:va_done], 0        ; (the view not drawn again yet in this pass: VIEW_AGAIN)
+        pushf
+        cli                             ; (drawing: DRAW_MASKED)
         call dust_tick
         call whirl_tick
+        popf
         call sound_tick
         call stink_sides                ; (the rule switched since: the staff sling's dice)
         call target_click
+        pushf
+        cli                             ; (drawing: DRAW_MASKED)
         cmp word [cs:view_redraw], 0
         je .panel
         mov word [cs:view_redraw], 0
         call view_again
 .panel: call panel_tick
         call label_tick
+        popf
         mov byte [cs:va_done], 0
 .read:  pushf
         cli                             ; (the pointer and the drag's state read together)
@@ -24866,8 +24877,8 @@ probe_scroll:
         mov si, [cs:cam0_y]
         sub si, dx
         add si, [cs:drag_y]
-        popf                            ; (the view drawn again: interrupts as they were)
-        call pan_to
+        call pan_to                     ; (the view drawn again: DRAW_MASKED)
+        popf
         jmp .wheel
 .read_done:
         popf
@@ -24884,7 +24895,10 @@ probe_scroll:
         add [cs:cam0_y], si
         add ax, [CAM_X]
         add si, [CAM_Y]
+        pushf
+        cli                             ; (drawing: DRAW_MASKED)
         call pan_to
+        popf
 .report:
         cmp byte [cs:drag], 0
         je .put
