@@ -2540,7 +2540,7 @@ How it works:
 ## Controls
 
 Each has a switch in the Options tab's **Controls** section, but M, U and I,
-and T for looting, which are always on.
+and T for looting and S for selling, which are always on.
 
 ### Looting a body: T and Shift+T
 
@@ -2566,6 +2566,27 @@ to put it down, a body at a time.
 How it works: `dsloader/loot.py`; DSCLOG's `LOOT_KEY` (the key made Escape,
 which shuts the window, and the body noted for the Loader: the game's DS:05E6h
 names the container whose window is open).
+
+### Selling plain gear: S
+
+On a shop's screen, **S** sells everything plain in the backpack of the party
+member on show: weapons, ammunition, armour, shields and anything worn (a cloak,
+boots, a belt) with no plus and no magic. What the member wears or holds stays,
+and so does anything magic, keys, scrolls, food, water and gems, and whatever
+the shop won't buy. Each thing fetches what the shop would pay for it on its own
+(a stack, its price times its count; with **Shops as in AD&D**, 60% of its
+price), the shop closes back to the merchant's talk, the purse jingles, and the
+dice log lists the sale:
+
+```
+Gerakis sells 10 things for 119 ceramic pieces: Wooden Club 1, Bone Axe 4, ...
+```
+
+Ask to see the wares again to go on, with another member on show.
+
+How it works: `dsloader/sell.py`; DSCLOG's `SELL_KEY` (the key made Escape, which
+shuts the shop, with the member on show and the merchant noted; the shop's own
+loop marks the time, so S does this on a shop's screen only).
 
 ### Choosing an enemy: Tab, Enter and the rings
 

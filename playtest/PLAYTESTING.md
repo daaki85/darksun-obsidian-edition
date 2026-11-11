@@ -288,6 +288,9 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
 - **Looting** (2026-11-11, logs/2026-11-11-looting.md): the look pointer's slow press on a body opens its
   window; `dsword.py 5E6` reads its map thing (9999 shut). **T** / **Shift+T** (`xdotool key shift+t`)
   with it open take everything / all but plain weapons; Escape shuts it.
+- **Selling with S** (2026-11-11, logs/2026-11-11-selling.md): Kalzith's shop (his look box's first button
+  Talk at 163,86; 1, then 1 "Show us what you have"); S on the shop sells the plain gear of the member
+  on show (the game's 3931h:25Bh; a portrait click changes it). Kalzith moves: zoom a shot to find him.
 - **Hearing the game** (2026-11-05): start.sh sends DOSBox's sound to a file when `PT_AUDIO` names
   one (`export PT_AUDIO=$WORK/audio.raw` before start.sh or loadsave.sh; else /dev/null): raw
   16-bit stereo at 44100 Hz, about 176 KB a second, real time. Note the file's size before and

@@ -1902,6 +1902,7 @@ without).
 |---|---|
 | **Tab and Enter** | On a party member's turn in a fight, **Tab** chooses the nearest enemy (Tab again for the next, **Shift+Tab** back) and **Enter** attacks it, walking up to it first if need be, even behind someone else: no aiming with the mouse. A red ring marks the enemy chosen. |
 | **Scrolling with the mouse** | Press the wheel and drag the map. |
+| **Selling with S** | On a shop's screen, **S** sells the plain gear (weapons, ammunition, armour, shields, clothing: no plus, no magic) in the backpack of the member on show, at the shop's prices; worn and held things, magic, keys, scrolls, food and gems stay. *Without the mod:* one thing at a time. |
 | **Looting with T** | With a body's (or a chest's) window open, **T** puts everything in it into the party's backpacks, and **Shift+T** everything but plain weapons; what doesn't fit stays. *Without the mod:* a click to take each thing and another to put it down. |
 | **M, U and I** | **M** on the map opens the overhead map (the game's **O**), and **M** again closes it. **U** and **I** close the USE and inventory screens when pressed again (and still switch from one to the other). |
 | **The whole party in view** | A game starts and loads with every party member on the map, and they stay in view after a fight, as the game's **5** does. **6** still gathers them into the leader. *Without the mod:* often only the leader, until you press 5. |

@@ -450,6 +450,11 @@ loot_seq   dw 0                 ; +1846 T or Shift+T read with a body's (a conta
                                 ;      counted (LOOT_KEY): the Loader takes what is in it
 loot_thing dw 0xFFFF            ; +1848 ... the container's map thing (the game's DS:05E6h then)
 loot_mode  dw 0                 ; +1850 ... 0 T: everything; 1 Shift+T: all but plain weapons
+sell_seq   dw 0                 ; +1852 S read on a shop's screen, counted (SELL_KEY): the Loader
+                                ;      sells the plain gear in the backpack of ...
+sell_member dw 0                ; +1854 ... the party member on show then
+sell_merchant dw 0              ; +1856 ... to the shop's merchant (DS:179Ch)
+shop_at    dw 0                 ; +1858 the BIOS tick of the shop's loop's last pass (SHOP_LOOP)
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -21286,6 +21291,10 @@ shop_shine:
 shop_loop:
         pushad
         push es
+        xor ax, ax                      ; (the shop's screen up now: SELL_KEY)
+        mov es, ax
+        mov ax, [es:0x46C]
+        mov [cs:shop_at], ax
         mov di, sp
         call shine_turn
         cmp word [SHINE_SCREEN], 1
@@ -27022,6 +27031,7 @@ overhead db 0                   ; ('m', 'u' or 'i': the screen its key opened, 0
 
 our_key:                                ; AX a key: CF set (and counted) if it is one of ours
         call loot_key
+        call sell_key
         cmp ax, KEY_L
         je .l
         cmp ax, KEY_SHIFT_L
@@ -27092,6 +27102,53 @@ loot_key:
 .count: inc word [cs:loot_seq]
 .esc:   mov ax, KEY_ESCAPE
 .out:   pop bx
+        pop ds
+.ret:   ret
+
+; SELL_KEY: (OUR_KEY's) S or Shift+S on a shop's screen (its loop, SHOP_LOOP, run within the last
+; SHOP_FRESH BIOS ticks) is made Escape, which shuts the shop, and, when the key is read (MK_READ),
+; counted in SELL_SEQ with the party member on show (the game's 3931h:25Bh) and the shop's merchant
+; (DS:179Ch): the Loader sells that member's plain gear to it (dsloader/sell.py) once the shop is
+; shut. AX the key (Escape now, for one of these); others kept.
+KEY_S        equ 0x1F73
+KEY_SHIFT_S  equ 0x1F53
+SHOP_FRESH   equ 2
+SELL_WHO_SEG equ 0x4356 - 0x3931        ; (the game's DS less the segment of the member on show)
+sell_key:
+        cmp ax, KEY_S
+        je .s
+        cmp ax, KEY_SHIFT_S
+        jne .ret
+.s:     push ds
+        push bx
+        push ax
+        mov bx, [cs:game_ds]
+        or bx, bx
+        jz .out
+        cmp word [cs:shop_at], 0
+        je .out
+        xor ax, ax
+        mov ds, ax
+        mov ax, [0x46C]
+        sub ax, [cs:shop_at]
+        cmp ax, SHOP_FRESH
+        ja .out
+        cmp byte [cs:mk_read], 0
+        je .esc                         ; (peeked: told it is Escape, counted when read)
+        mov ds, bx
+        mov ax, [SHOP_MERCHANT]
+        mov [cs:sell_merchant], ax
+        sub bx, SELL_WHO_SEG
+        mov ds, bx
+        mov ax, [0x25B]
+        mov [cs:sell_member], ax
+        inc word [cs:sell_seq]
+        mov word [cs:shop_at], 0        ; (shut: the next S is a key of the game's)
+.esc:   pop ax
+        mov ax, KEY_ESCAPE
+        push ax
+.out:   pop ax
+        pop bx
         pop ds
 .ret:   ret
 
