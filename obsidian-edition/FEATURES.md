@@ -66,6 +66,7 @@ running the game, the Loader's window and its dice log are in the
   - [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen)
   - [Fuller starting gear](#fuller-starting-gear)
   - [Preservers' first spells](#preservers-first-spells)
+  - [Psionic powers at creation](#psionic-powers-at-creation)
   - [The game's own party](#the-games-own-party)
 - [Expanded features](#expanded-features)
   - [The leader's CHA at shops](#the-leaders-cha-at-shops)
@@ -1576,6 +1577,36 @@ when the window opens, so EXIT can't take you back to the creation screen.
 
 Always on (it isn't a switch of its own). How it works:
 [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#preservers-first-spells).
+
+### Psionic powers at creation
+
+Every new character picks its psionic powers when **DONE** is clicked on the
+creation screen, on the game's **PICK A PSIONIC POWER** window (the one a
+psionicist picks a power on at a level up), where the game always handed out
+the same ones:
+
+- **Anyone not a psionicist** has the one discipline chosen on the creation
+  panel, and picks **four** of its powers (the game gave each discipline the
+  same four: Detonate, Ballistic Attack, Control Body and Inertial Barrier for
+  psychokinesis; Life Draining, Biofeedback, Graft Weapon and Flesh Armor for
+  psychometabolism; Superior Invisibility, Ego Whip, Psionic Blast and
+  Intellect Fortress for telepathy). The window's discipline button stays on
+  that discipline.
+- **A psionicist** picks as many as the game gave for its starting level: 4 at
+  1st, 5 at 2nd, 10 at 3rd, from all three disciplines (the button turns
+  through them).
+- Every character still knows **Mind Blank**, the defence every mind has, as
+  in the game; the list leaves out powers already known.
+
+**EXIT** on the window (then EXIT again at "YOU HAVE MORE") ends the picking:
+the powers still to pick are the game's own, in its order, less any already
+picked. A warrior picks its weapon specs first, on the weapon window. **EDIT**
+on a party member that keeps its classes, race, kit and discipline keeps its
+powers too, with no window. The game's own party (START GAME with no party
+made) keeps the game's powers.
+
+Always on (it isn't a switch of its own). How it works:
+[DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#psionic-powers-at-creation).
 
 ### The game's own party
 

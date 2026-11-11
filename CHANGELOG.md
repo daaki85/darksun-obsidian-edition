@@ -46,6 +46,20 @@ Releases, newest first: [2.16.1](#pull-request-91-merged-2026-11-11) (#91),
 ## Next pull request (not opened yet)
 
 **New**
+- **Psionic powers picked at creation** (the user's idea: "Let the player pick which ones they
+  want. For full psionicists and for others."). The game gave every new character of a
+  discipline the same four powers and Mind Blank, and every psionicist its level's row of a
+  table (5, 6 or 11). Now DONE opens the level up's PICK A PSIONIC POWER window for as many picks
+  (four; a psionicist 4, 5 or 10), after a warrior's weapon window: one not a psionicist picks from
+  its own discipline (the discipline button stays on it), a psionicist from all three. Mind Blank
+  is still everyone's; powers known are left out of the list; EXIT leaves the game's own for the
+  picks unmade; EDIT with the same classes and discipline keeps the powers; the game's own party
+  (START GAME) keeps the game's. DSCLOG's `PSI_GRANT` (66DDEh), `PSI_ASK` (from `CR_WEAPONS`),
+  `PSI_LIST` (86143h) and `PSI_CYCLE` (8631Ah), gamepatch `psi_grant`, `psi_list`, `psi_cycle`.
+  DSCLOG.EXE 70,128 bytes. Seen in the game: a fighter (telepathy: two picked, two the game's on
+  EXIT), a 3rd-level psionicist (ten picked across the three), EDIT, a character dropped and added
+  back from the roster with its picks, and START GAME's party with the game's powers
+  (playtest/logs/2026-11-11-psionic-picks.md).
 - **The manual: the player's pages as web pages that link to each other, in the download.** The
   zip's `manual` folder has ten pages, each made from its Markdown (which stays the source and
   reads the same on GitHub): `index.html`, the start page, from the README; the player's guide,

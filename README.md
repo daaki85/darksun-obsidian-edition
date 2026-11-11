@@ -70,7 +70,7 @@ where the saves go](obsidian-edition/README.md#updating-backups-saved-games-and-
 ## What's new
 
 **Obsidian Edition 2.17.0** is out ([release notes](release-notes/v2.17.0.md)):
-the player's manual as linked web pages in the download (Help opens it), a pocket
+psionic powers picked when a character is made, the player's manual as linked web pages in the download (Help opens it), a pocket
 barred until a level only when the thief is caught, a ranger asked for a weapon of
 expertise, Kalzith's new past, and Kurzak's door no longer barring the way. 2.16.0
 brought looting a body with **T** and selling spare gear with **S**, thieves who

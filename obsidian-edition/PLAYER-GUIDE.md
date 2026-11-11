@@ -794,6 +794,9 @@ Gutterknot\* +1, the slings and Windlash\*.
 at each level (two at odd levels and at 4th) paid for in PSP. Light armour and
 small weapons; +2 on saves against mind-affecting spells and charms. Every
 other character has one discipline and uses it as a 1st-level psionicist.
+Every new character picks its powers when it is made: four of its discipline,
+or a psionicist as many as its level gives, from all three; all know Mind
+Blank ([features](FEATURES.md#psionic-powers-at-creation)).
 
 **What the mod changes.**
 

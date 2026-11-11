@@ -560,6 +560,15 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   are the second row's last (245,78). A click there closes it and the dice log gives the start
   weapon ("starts with a plain obsidian cahulaks ... in place of the bone long sword"). The
   inventory is the second bottom icon (76,172).
+- **Psionic powers at creation** (logs/2026-11-11-psionic-picks.md): after DONE (and a warrior's
+  weapon window) PICK A PSIONIC POWER opens: icons from (123,62), 17 apart, five to a row (the
+  list closes up after each pick: clicking (123,62) again takes the next); the discipline button
+  (117,140); the count beside it; EXIT (202,140), then EXIT at YOU HAVE MORE (140,91). The last
+  pick closes it. Each member's known powers: `python3 powers.py` (selector 2F0h's segment,
+  +77h + member x 22h + power, bits 3-7). A discipline at creation: P-KINESIS (250,106), P-METAB (250,114),
+  TELEPATHY (250,122); click the chosen one off first. DROP (125,66 on a member's menu, then YES)
+  refuses the last member; ADD (112,66 on an empty slot's menu) lists the roster (a name, then ADD
+  252,46).
 - **The DUAL window** (dual-classing, logs/2026-11-09-group-4.md): the inventory screen (I), a
   right-click on a portrait (Cermak 20,104 in pens-fire-count4) opens EDIT NAME / DROP / DUAL
   (CANCEL in DUAL's place when it isn't offered); DUAL at 90,145; the classes greyed or white (zoom
