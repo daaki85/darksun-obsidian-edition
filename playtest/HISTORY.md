@@ -239,6 +239,9 @@ read in the arena. Why it sometimes doesn't is open.
   [the pointer](#the-pointer)). In a fresh container the same day `toalarm.sh` then `restalarm.sh`
   worked first time, with the eye set by two right-clicks on bare floor.
 - 2026-11-10: the fire room's door shut in a new game; Alagorn's talk tried through Kalzith.
+- 2026-11-11: the user's save with Kurzak's door open but its square shut on the walk map
+  (the party barred, Legcrusher standing still); a door action added to the call shut the door
+  instead, and was dropped; the Loader's `kurzakdoor.py` opens the square.
 
 ## The LEVEL button that stuck
 
@@ -325,4 +328,5 @@ file name. The others, by the day they were found:
   a lock barred until a level; pointer trails; the weapon rack's tool; looting with T; selling with
   S; the shop and pocket tools; `docs/viewer.png` retaken; the combat log panel's level button and
   its GIF; bodies under the party's figures and Caps Lock; the grate's Hack for the first melee
-  weapon in either hand; the installers' public links removed.
+  weapon in either hand; the installers' public links removed; Kurzak's door barred on the walk
+  map (`doorwatch.py`).

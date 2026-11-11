@@ -1393,6 +1393,15 @@ The way to the grate, from the scripts and the region file, and the cluebook:
   and the call script then never calls, until the party talks to a guard carrying routine 753
   (objects 55, 260, 261; MAS 29 makes them).
 
+- **Kurzak's door** (logs/2026-11-11-doorway-blocked.md): the entryway, squares 99,33-34 (99,34 is
+  the one that shuts); its leaves objects 2145 and 2146: map record +12h bit 08h open (20h or 10h
+  shut), +17h the frame (07h the spiked gate, 04h open). It is the only way between Kurzak's stop
+  and the pens' south passages. The game's call opens it; `doorwatch.py SECONDS` (background) prints
+  the square, Kurzak and Legcrusher at each change. If the leaves are open and the square shut, the
+  Loader's `kurzakdoor.py` opens the square after 10 game seconds ("Kurzak's door: open, but its
+  doorway was barred on the map; opened"). **A door action (22h, 2) is no way to open a door from
+  a script line**: put before Kurzak's line it shut the open door.
+
 ### Into the arena from the pens
 
 - (the user) After the call, Kurzak's entryway (`route.py 1592 584`), his stop (1592, 520), north

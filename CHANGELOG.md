@@ -77,6 +77,17 @@ Releases, newest first: [2.16.1](#pull-request-91-merged-2026-11-11) (#91),
   player's guide and DEVELOPMENT.md (the folders, Build, the tests, Making a release) say so.
 
 **Fixed**
+- **Kurzak's door, open but barring the way** (the user's save "error doorway blocked"). The
+  pens' entryway (squares 99,33-34) was drawn open and both its leaves (objects 2145-2146) were
+  open, but the game's live walk map still had square 99,34 shut: the party could not step into
+  the doorway, and Legcrusher, sent to fetch them, stood still for good (his only way to them).
+  The dice log now puts it right (`kurzakdoor.py`): in the pens, out of fights, with both leaves
+  open (their map record's +12h, bit 08h) and the square shut for 10 game seconds (longer than a
+  door's swing), the square is floor again, and the log says "Kurzak's door: open, but its doorway
+  was barred on the map; opened". On the user's save Legcrusher walked through at once and said
+  his line, and the party walked through to Kurzak ("I'm glad you listened to Legcrusher"). The
+  game's own call was checked too, unchanged: it opens the door, and Legcrusher comes through it.
+  Tests `tests/test_kurzakdoor.py` (playtest/logs/2026-11-11-doorway-blocked.md).
 - **Kalzith's background fits Athas** (the user: a sorcerer's apprentice doesn't, where wizardry is
   a crime and the sorcerer-kings keep magic to themselves and their templars). He kept the tallies
   for a merchant house in Draj, was taught in secret by a defiler among its caravan hands, and was

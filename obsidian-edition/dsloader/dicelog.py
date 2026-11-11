@@ -28,7 +28,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import aging, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
@@ -674,6 +674,7 @@ class DiceLog:
         self.champions = champions.Gear()  # (the champions' bout: their gear worn and held)
         self.people = people.People()  # (the game's people in their gear from the start: people.py)
         self.walkers = stuckwalk.StuckWalkers()  # (people a saved walk left standing)
+        self.kurzak_door = kurzakdoor.DoorMend()  # (Kurzak's door open, its doorway shut on the walk map)
         self.defiler_scrolls = True
         self.buyback = buyback.Buyback()  # (magical items sold, kept to buy back: the rule's DSCLOG part)
         self.text: Optional[TextBuffer] = None
@@ -726,6 +727,7 @@ class DiceLog:
         self.champions = champions.Gear()
         self.people = people.People()
         self.walkers.forget()
+        self.kurzak_door.forget()
         heapcheck.WATCH = heapcheck.Watch()  # (a new game, a new session's lowest)
         self.text = TextBuffer(self.guest.read, hdr)
         self.set_record_everything(self.record_everything)
@@ -1733,6 +1735,7 @@ class DiceLog:
         quiet(self._mend_scrolls)
         quiet(lambda: tools.repaint(self.game))  # (sets of Thieves' Tools an earlier version gave: their name and picture)
         out += quiet(lambda: [stuckwalk.stopped_line(name) for name in self.walkers.check(self.game)])
+        out += quiet(lambda: [kurzakdoor.opened_line()] if self.kurzak_door.check(self.game) else [])
         # (the game's memory: a crash report's, and a word when it runs low)
         out += quiet(lambda: heapcheck.WATCH.take(self.guest.read, self.game.load_seg, self.game.ds, self.tsr_hdr))
         out += quiet(self._ring_search)

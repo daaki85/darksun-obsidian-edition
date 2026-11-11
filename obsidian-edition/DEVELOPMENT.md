@@ -70,7 +70,8 @@ message boxes DSCLOG copies; `partyview.py` and `spellbook.py` draw the
 Characters and Spells tabs, `theme.py` the window's look, from `palette.py`'s
 colours (sampled from the game's screens, each text colour's contrast checked
 by `test_theme`); `bonescale.py` puts the bone scale set together in its chest;
-`stuckwalk.py` sets people walking again whose scripted walk stopped;
+`stuckwalk.py` sets people walking again whose scripted walk stopped; `kurzakdoor.py` opens
+Kurzak's doorway on the walk map when his door is open but the map has it shut;
 `process.py` reads and writes another process's memory, `layout.py` the memory
 layout files, `values.py` the value types they and the searches use (u8 to s32,
 str), and `search.py` the Memory tools' value search; `unblock.py` takes
