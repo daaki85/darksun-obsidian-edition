@@ -45,11 +45,47 @@ Releases, newest first: [2.16.1](#pull-request-91-merged-2026-11-11) (#91),
 
 ## Next pull request (not opened yet)
 
+**New**
+- **The manual: the player's pages as web pages that link to each other, in the download.** The
+  zip's `manual` folder has ten pages, each made from its Markdown (which stays the source and
+  reads the same on GitHub): `index.html`, the start page, from the README; the player's guide,
+  features and rules, kits, items (spoilers), creatures (spoilers), the game's bugs fixed (some
+  spoilers), the dice log line by line, how the original game works, and the changes from the
+  original game (`changes.html`, from PATCH-NOTES.md through `patchnotes.py`). Each page has a bar
+  of all ten (the one on show marked, the spoiler pages marked so, their own warnings kept) and an
+  index of its sections and subsections; they share `manual/manual.css` (the patch notes' look and
+  fonts, loaded once, not in every page). Links between the pages go to the HTML files with the
+  same anchors (`KITS.md#x` is `kits.html#x`, the README `index.html`, the patch notes by path or
+  GitHub address `changes.html`), pictures to `../docs/`, and the development pages, the changelog
+  and the rest of the repository to GitHub. The Loader's **Help** button opens
+  `manual/index.html` (`viewer.HELP_PAGE`, `manual.START`); `player-guide.html` beside the Loader
+  is gone, now `manual/player-guide.html`.
+- **`dsloader/manual.py`** makes them (`python -m dsloader.manual`; `python -m dsloader.guidepage`,
+  now its alias, too), from the guide's converter made general: Markdown blocks parsed
+  recursively, so a list item can hold tables, code, pictures and paragraphs (the guide's two
+  tables inside list items, its CHA prices and DEX modifiers, showed as raw `|` rows), fenced code,
+  block quotes (the Announcer's and Legcrusher's lines), `***bold italics***`, `<https://...>`
+  addresses, a numbered list's start, table column alignment, lazy continuation lines, and
+  GitHub's anchors for repeated headings (`-1`, `-2`), with links' text in a heading's anchor as
+  GitHub has it. `patchnotes.body` takes the manual's link rule for its copy; the root's
+  `patch-notes.html` is unchanged. Tests `tests/test_manual.py` (replacing `test_guidepage.py`):
+  each page and the style up to date (the failure names the command), every relative link and
+  picture a file in the zip and every `page.html#anchor` one that page has, no link to a `.md`
+  file, no id twice on a page, no Markdown left showing, the converter's pieces, and Help's page
+  read from `viewer.py`'s source (no tkinter needed); `test_help_opens_the_manual` in
+  `test_viewer_options` with tkinter. The README, its front page's documentation list, the
+  player's guide and DEVELOPMENT.md (the folders, Build, the tests, Making a release) say so.
+
 **Fixed**
+- **A ranger is asked for a weapon of expertise, not a specialty** (the user's report). Creation's
+  weapon window had a fixed title, "PICK A WEAPON SPECIALTY,", though a ranger (or a Battle Mage, a
+  Crusader, a Mind Warrior) takes expertise and each weapon's box already said "EXPERT IN". DSCLOG's
+  `LV_TITLE_OF` now gives "PICK A WEAPON OF EXPERTISE," when `PK_WORD` judges the first kind
+  expertise. DSCLOG.EXE 69,424 bytes. Seen in the game (a new human ranger); test `test_pick_title`.
 - **The release has the patch notes' web page** (the user's report: 2.16.1's didn't). The page is
   made at the repository's root, beside PATCH-NOTES.md, and the zip is the obsidian-edition folder
   alone, so no release had it. The Release workflow now adds it to the zip's folder, next to
-  `player-guide.html` (`.github/add_to_zip.py`), and attaches it to the release on its own too.
+  the manual's folder (`.github/add_to_zip.py`), and attaches it to the release on its own too.
   Its links are all web addresses, so it works from the zip. Test `tests/test_release.py`; the
   README's documentation list names it.
 

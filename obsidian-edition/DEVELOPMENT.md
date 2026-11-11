@@ -56,7 +56,8 @@ DSCLOG's routines and variables are named in capitals on these pages
 | `tests/` | the unit tests, and `make_fake_party.py` for practising without the game |
 | `docs/` | the screenshots the documentation shows; `docs/items/`, the item icons (`docicons.py`), and `docs/creatures/`, the creatures' figures (`doccreatures.py`), both drawn from the game's data ([Generated pages](#generated-pages)) |
 | `*.bat` | what players double-click: the Loader, the game with or without its window, a save file's party |
-| `README.md`, `FEATURES.md`, `ITEMS.md`, `KITS.md`, `GAME-BUGS.md`, `HOW-THE-GAME-WORKS.md`, `DICE-LOG.md`, `PLAYER-GUIDE.md`, `CREATURES.md` | the player's pages (`player-guide.html` is made from the guide, `CREATURES.md` by `doccreatures.py`) |
+| `README.md`, `FEATURES.md`, `ITEMS.md`, `KITS.md`, `GAME-BUGS.md`, `HOW-THE-GAME-WORKS.md`, `DICE-LOG.md`, `PLAYER-GUIDE.md`, `CREATURES.md` | the player's pages (made into the manual's web pages, `CREATURES.md` by `doccreatures.py`) |
+| `manual/` | the manual: the player's pages and the patch notes as web pages that link to each other, made from their Markdown by `manual.py` ([Build](#build)); the Loader's **Help** opens `manual/index.html` |
 | `../PATCH-NOTES.md`, `../CHANGELOG.md`, `../release-notes/` | the repository's root: the patch notes, the record of every pull request, and each release's notes |
 | `../playtest/` | the in-game test kit: tools that drive the game in DOSBox, saves and logs, and [its guide](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/PLAYTESTING.md). It is outside this folder, so it never goes in the release zip |
 
@@ -74,7 +75,7 @@ by `test_theme`); `bonescale.py` puts the bone scale set together in its chest;
 layout files, `values.py` the value types they and the searches use (u8 to s32,
 str), and `search.py` the Memory tools' value search; `unblock.py` takes
 Windows' "downloaded from the internet" mark off the Loader's files;
-`patchnotes.py` and `guidepage.py` make the web pages, `docicons.py` and
+`patchnotes.py` and `manual.py` make the web pages (`guidepage.py` is the manual's older name), `docicons.py` and
 `doccreatures.py` the item icons and the creatures' table (below);
 `fighttally.py` is the dice log's summary as a fight ends, `ledger.py` the
 window's readable layout of the dice log's lines; `sizes.py` gives each
@@ -108,12 +109,29 @@ nasm -f bin -o dos/GAMEEND.COM dos/gameend.asm
 nasm -f bin -o dos/UMBPLUS.COM dos/umbplus.asm
 ```
 
-Two web pages are made from Markdown: `player-guide.html` from
-`PLAYER-GUIDE.md` (`python -m dsloader.guidepage`) and `../patch-notes.html`
-from `../PATCH-NOTES.md` (`python -m dsloader.patchnotes`). Edit the Markdown,
-then run the module. Both use `dsloader/pagestyle.css`, and carry their fonts
-inside them (`pagefonts.py`, from `dsloader/fonts`), so they load nothing from
-the internet.
+The web pages are made from Markdown. Edit the Markdown, then run the module:
+
+- **The manual**, `manual/` (`python -m dsloader.manual`; `python -m dsloader.guidepage`, its
+  older name, does the same): ten pages, each from its Markdown, which stays the source and reads
+  the same on GitHub. `index.html`, the start page the Loader's **Help** button opens, is made
+  from `README.md`; then `player-guide.html` (`PLAYER-GUIDE.md`), `features.html`, `kits.html`,
+  `items.html`, `creatures.html`, `game-bugs.html`, `dice-log.html`,
+  `how-the-game-works.html` and `changes.html` (`../PATCH-NOTES.md`, read by `patchnotes.py`).
+  `manual.PAGES` lists them. Each page has a bar of all ten (the spoiler pages marked) and an
+  index of its own sections; the pages share `manual/manual.css` (`pagestyle.css` and the fonts).
+  The generator rewrites the links, not the Markdown: a link to another of the pages (`KITS.md#x`,
+  `README.md`, `../PATCH-NOTES.md` or its GitHub address) goes to its HTML file with the same
+  anchor, a picture to `../docs/`, and anything else of the repository (the development pages, the
+  changelog) to its GitHub address. Headings keep GitHub's anchors (a repeated one `-1`, `-2`), so
+  the Markdown's own links land. A page needing Markdown the generator doesn't know shows it raw:
+  `tests/test_manual.py` looks for that, and for links that don't land.
+- **The patch notes' page**, `../patch-notes.html`, from `../PATCH-NOTES.md`
+  (`python -m dsloader.patchnotes`): one page to share, with a button that copies the Markdown,
+  added to the release zip and attached to the release.
+
+Both use `dsloader/pagestyle.css`, and carry their fonts (`pagefonts.py`, from `dsloader/fonts`:
+inside the patch notes' page, in `manual.css` for the manual), so they load nothing from the
+internet and work opened straight from the unzipped folder.
 
 #### Generated pages
 
@@ -177,7 +195,7 @@ Tests that guard the whole project rather than one module:
 | `test_scriptnumbers` | the Loader's scripts have a number each, their calls land inside them, and each fits the game's script buffer |
 | `test_dsclog`'s `test_fits_upper_memory` | what the helper puts in upper memory fits the room DOSBox gives it |
 | `test_version` | the version is the same in `__init__.py`, the patch notes and the front page, and its release notes exist |
-| `test_guidepage`, `test_patchnotes` | the web pages are up to date with their Markdown, and their links work |
+| `test_manual`, `test_patchnotes` | the web pages are up to date with their Markdown, and their links work: each of the manual's lands on a file in the zip and an anchor its page has, with no link to a Markdown file and no id twice; Help opens the manual's start page |
 
 The unit tests don't play the game. For anything DSCLOG or a script touches,
 check it in the game too: [the playtesting guide](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/PLAYTESTING.md)
@@ -199,7 +217,9 @@ work from the zip). Before it:
    and the front page's "**Obsidian Edition ...** is out";
    `tests/test_version.py` checks they agree and that the release notes exist.
 2. Finish `release-notes/v<version>.md` and the CHANGELOG's entry, and
-   rebuild `DSCLOG.EXE` and the web pages if their sources changed.
+   rebuild `DSCLOG.EXE` if its source changed, and the web pages
+   (`python -m dsloader.manual` and `python -m dsloader.patchnotes`) if their Markdown did;
+   `test_manual` and `test_patchnotes` fail until they are.
 3. Check in the game anything DSCLOG or a script touches ([the playtesting
    guide](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/PLAYTESTING.md)).
 4. Merge to `main`, then push the tag `v<version>`, or run the workflow by hand

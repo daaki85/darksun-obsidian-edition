@@ -13,6 +13,9 @@ which loads the mod with your options.
   the rest.
 - **If something goes wrong:** [When something goes
   wrong](#when-something-goes-wrong).
+- **Offline:** these pages are also web pages that link to each other, the
+  manual, in the `manual` folder: open `manual/index.html`, or press the
+  Loader's **Help** button.
 - **Everything in detail:** the contents below, and
   - [features and rules](FEATURES.md): what the game shows, every rule and addition;
   - [kits and weapon specs](KITS.md): every kit's gains, costs and starting gear, and weapon
@@ -361,7 +364,7 @@ only by the mod's patched game.
 The window has the party on one side and the logs and tools on the other, with
 **Start the game**, the game window's size, the text size, **Freeze report**
 (see [reports](#crash-freeze-and-item-reports)), **Reconnect** (to find the
-game again) and **Help** (the [player's guide](PLAYER-GUIDE.md) in your browser) along the top. The party pane has two tabs:
+game again) and **Help** (the manual, in your browser: these pages as web pages, from the `manual` folder, at its start page, this one) along the top. The party pane has two tabs:
 
 - **Characters** (Alt+C): a card for each character, laid out like the game's
   View Character screen ([The Characters tab](#the-characters-tab)).

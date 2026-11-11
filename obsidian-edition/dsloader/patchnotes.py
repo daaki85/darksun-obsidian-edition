@@ -13,7 +13,7 @@ import os
 import re
 from typing import List, Tuple
 
-from .guidepage import _cells, inline, slug
+from .manual import _cells, inline, inline as _inline, slug
 from . import pagefonts
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -31,22 +31,25 @@ def style() -> str:
         return f.read()
 
 
-def item(text: str) -> str:
-    """A list item: its tag as a label, its *(was ...)* as the old value."""
+def item(text: str, link=None) -> str:
+    """A list item: its tag as a label, its *(was ...)* as the old value (LINK: as inline's)."""
     tag = re.match(r"\*\*\[(\w+)\]\*\* (.*)$", text)
     label = ""
     if tag and tag.group(1) in TAGS:
         label = f'<span class="tag {TAGS[tag.group(1)]}">{tag.group(1)}</span>'
         text = tag.group(2)
-    out = inline(text)
+    out = inline(text, link)
     out = re.sub(r"<em>(\(was .+?\))</em>", r'<span class="was">\1</span>', out)
     return f"<li>{label}{out}</li>"
 
 
-def body(markdown: str) -> Tuple[str, List[Tuple[str, str]], dict]:
+def body(markdown: str, link=None) -> Tuple[str, List[Tuple[str, str]], dict]:
     """The notes' HTML body, their sections [(anchor, title)], and the opening's parts (title,
     subtitle, lede, download, and the status: the italic notes after the subtitle, such as that the
-    notes can hold changes not yet released)."""
+    notes can hold changes not yet released). LINK says where a link goes (manual.inline's: the
+    manual's copy of the notes sends links to its own pages)."""
+    def inline(text: str) -> str:
+        return _inline(text, link)
     lines = markdown.splitlines()
     out: List[str] = []
     sections: List[Tuple[str, str]] = []
@@ -94,7 +97,7 @@ def body(markdown: str) -> Tuple[str, List[Tuple[str, str]], dict]:
         if line.startswith("- "):
             items = []
             while i < len(lines) and lines[i].startswith("- "):
-                items.append(item(lines[i][2:].strip()))
+                items.append(item(lines[i][2:].strip(), link))
                 i += 1
             out.append("<ul>" + "".join(items) + "</ul>")
             continue

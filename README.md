@@ -34,9 +34,11 @@ double-click, with the options as last set.)
 
 ## Documentation
 
+- The manual: the player's pages below as web pages that link to each other, in
+  the release's `manual` folder (start at `manual/index.html`); the Loader's **Help**
+  button opens it
 - [The player's guide](obsidian-edition/PLAYER-GUIDE.md): the rules, without
-  spoilers, a section for each class (also as a web page,
-  [`player-guide.html`](obsidian-edition/player-guide.html))
+  spoilers, a section for each class
 - [The full documentation](obsidian-edition/README.md): installing, running, the
   Loader's window and the dice log
 - [Features and rules](obsidian-edition/FEATURES.md): what the game shows

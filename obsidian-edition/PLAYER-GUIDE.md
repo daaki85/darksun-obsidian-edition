@@ -18,7 +18,7 @@ keys (T, S, M, U, I), the fixes to the game's own bugs and the footman's pick. W
 switch changes, a **Without the mod** note says what the game does with it off.
 The [features page](FEATURES.md) has every rule in full detail, and the
 [Kits](KITS.md) page each kit's numbers: the guide links to their tables. The Loader's **Help**
-button opens this guide as a web page.
+button opens the manual: this guide and the other pages as web pages, in the `manual` folder.
 
 ## Contents
 
