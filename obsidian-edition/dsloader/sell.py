@@ -2,8 +2,8 @@
 
 On a shop's screen, S sells everything plain in the backpack of the party member on show: a
 weapon (melee, missile or thrown), armour, a shield, or anything worn (a cloak, boots, a belt, a
-helm), with no plus and no magical power. What is worn or held is never sold, nor ammunition (the
-user's choice), anything magic, keys, scrolls, food, water, gems, or what the shop won't buy (a
+helm), with no plus and no magical power. What is worn or held is never sold, nor ammunition or
+anything of metal (the user's choices), anything magic, keys, scrolls, food, water, gems, or what the shop won't buy (a
 price of 9999).
 
 DSCLOG's SELL_KEY makes the key Escape, which shuts the shop (back to its merchant's talk), and
@@ -47,8 +47,8 @@ def plain_gear(gd: GameData, rec: bytes) -> bool:
     typ = gd.item_type_record(rec)
     if len(typ) < game.ITEM_TYPE_SIZE:
         return False
-    if typ[WORN_AT] == AMMUNITION:
-        return False
+    if typ[WORN_AT] == AMMUNITION or restrict.material(typ) == restrict.METAL:
+        return False  # (ammunition, and metal, rare and dear on Athas: kept, the user's choices)
     gear = typ[restrict.TYPE_FLAGS] & GEAR or typ[restrict.TYPE_KIND_FLAGS] & restrict.ARMOUR or typ[WORN_AT]
     plus = struct.unpack_from("b", rec, game.ITEM_PLUS)[0]
     value = struct.unpack_from("<H", rec, VALUE)[0]

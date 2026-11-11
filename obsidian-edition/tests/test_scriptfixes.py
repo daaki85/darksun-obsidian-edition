@@ -82,6 +82,22 @@ class RepairTests(unittest.TestCase):
                 self.assertIn(bytes.fromhex("80250247"), r.now)
                 self.assertNotIn(bytes.fromhex("802501"), r.now)
 
+    def test_grate_hack_wants_a_melee_weapon(self):
+        """The weapon search (137 at A79h): an item in either hand (slot field 85: 3 or 10) whose
+        kind (field 72) is none of NOT_MELEE; on a find the game's flag and naming (41h), then out
+        of the loop to its RETURN, not round again (that copied the next item over the found)."""
+        search = next(r for r in sf.REPAIRS if (r.script, r.at) == (137, 0xA79))
+        ops = gpl.decode(search.now, b"")
+        parts = ops[0].args[0][1]
+        self.assertEqual(ops[0].code, sf.TEST)
+        self.assertEqual(parts.count(sf.HELD), 2)
+        for kind in sf.NOT_MELEE:
+            self.assertIn(("n", kind), parts)
+            self.assertEqual(parts[parts.index(("n", kind)) - 2], sf.KIND)
+        self.assertEqual([(o.code, o.args) for o in ops[1:]],
+                         [(sf.IF, [("n", 0xA8F)]), (0x16, [("n", 1), ("var", 14, 3)]),
+                          (0x41, [("var", 137, 43)]), (sf.JUMP, [("n", 0xA96)])])
+
     def test_grate_attack_rolls_strength_and_award_once(self):
         grate = next(r for r in sf.REPAIRS if (r.script, r.at) == (137, 0xB5C))
         self.assertTrue(grate.now.startswith(bytes.fromhex("18e28c528f1ee1da")))  # TEST (RAND(30)) <
@@ -206,3 +222,41 @@ class FountainTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+OBJECTS = os.environ.get("DSUN_OBJECTS")
+
+
+@unittest.skipUnless(GPLDATA and os.path.isfile(GPLDATA) and OBJECTS and os.path.isfile(OBJECTS),
+                     "needs the game's GPLDATA.GFF and SEGOBJEX.GFF (DSUN_GPLDATA, DSUN_OBJECTS)")
+class NotMeleeTests(unittest.TestCase):
+    def test_not_melee_kinds(self):
+        """Every kind of item in the Loader's objects (the game's and its own) whose type is held in
+        a hand (missile, shield or thrown: +00h & 16h) but has no melee bit is in NOT_MELEE, and
+        nothing in NOT_MELEE is a melee weapon."""
+        import struct
+        import tempfile
+        from dsloader import dataitems, game, gff, icons
+        with open(GPLDATA, "rb") as f:
+            types = gff.read_gff(f.read())[("IT1R", 1)]
+        with tempfile.TemporaryDirectory() as tmp:
+            out = os.path.join(tmp, icons.OBJECTS_FILE)
+            icons.write_objects(OBJECTS, out, {})
+            with open(out, "rb") as f:
+                chunks = gff.read_gff(f.read())
+        kinds = {}
+        for (ctype, _), data in chunks.items():
+            if ctype != "RDFF":
+                continue
+            try:
+                items = dataitems.items_of(data)
+            except ValueError:
+                continue
+            for rec in items:
+                if len(rec) == game.ITEM_SIZE:
+                    t = struct.unpack_from("<H", rec, game.ITEM_TYPE)[0]
+                    if t * 20 < len(types):
+                        kinds.setdefault(struct.unpack_from("<h", rec, 0)[0], set()).add(types[t * 20])
+        hand = {k for k, flags in kinds.items() if all(f & 0x16 and not f & 1 for f in flags)}
+        self.assertLessEqual(hand, set(sf.NOT_MELEE))
+        self.assertFalse({k for k in sf.NOT_MELEE if any(f & 1 for f in kinds.get(k, ()))})

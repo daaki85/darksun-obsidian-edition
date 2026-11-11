@@ -50,7 +50,7 @@ reach took 384 bytes of the segment (68,592 bytes before it).
 **New**
 - **Selling plain gear in one go** (the user's ask and choices: the member on show, plain gear only):
   on a shop's screen **S** sells the plain weapons, armour, shields and clothing in that member's
-  backpack (no plus, no power; not worn or held; not ammunition, the user's choice; not keys, nor what
+  backpack (no plus, no power; not worn or held; not ammunition or metal, the user's choices; not keys, nor what
   the shop won't buy), each
   at the game's price (its value, times the count for a stack; 60% with Shops as in AD&D, as DSCLOG's
   SELL_PRICE). DSCLOG's `SELL_KEY` (only while the shop's loop has run in the last two BIOS ticks:
@@ -113,6 +113,15 @@ reach took 384 bytes of the segment (68,592 bytes before it).
   squares with no movement left, the bow in the missile slot left alone, playtest/logs/2026-11-10-polearm-reach.md.)
 
 **Fixed**
+- **The sewer grate's hack wants a melee weapon** (the user's ask). The weapon search (script 137
+  at A79h) took whatever was in the weapon hand, a bow too; now the first item in either hand that
+  is a melee weapon, and with none no "Hack the lock off." is offered. The scripts can't read an
+  item's type, so the test leaves out the kinds held in a hand that aren't melee weapons
+  (`scriptfixes.NOT_MELEE`, checked against the game's data by `test_not_melee_kinds`). And the
+  hack named the wrong weapon: on a find the game looped once more, and that step copied the next
+  item over the found one ("hacks the lock off with his Bow" with an axe in hand); now the search
+  ends on the find. Seen with the user's grate save: the axe used, and with only a bow in hand no
+  hack (playtest/logs/2026-11-11-grate-melee.md).
 - **Semyon's shipment reaches an emptied weapon rack** (the user's report: his tip, then an empty
   rack). A rack the party had emptied has no list of contents, and `semyon.ship` only added to one;
   now it makes the list (`semyon._new_contents`, from the game's free things). Seen with the user's

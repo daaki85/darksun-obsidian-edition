@@ -234,6 +234,16 @@ names the program, default `/home/user/darksun-recompiled/build/cmake/dsun`), 20
   only in a new game: `pens-fire-count4`'s Scar still swung his old long sword. The route for it: a
   new game through the arena (about 25 minutes, below), Goodbye to Kurzak, `follow.py 29`,
   `setcount.py 4`, the fire room and its rests, `toarena.sh`.
+- **Reading a value inside a script** (2026-11-11): a test build whose repair PRINTs (4Fh, 98) a
+  field prints nothing for a number; print a marker string under an IF per guess instead (TEST
+  field == N, IF, PRINT " aN", ENDIF; the IF's address in `relocate`). Keep such a probe small: one
+  of about 200 tests (some 5 KB of detour) ran nothing at all, nor did 100 reading fields 72,n.
+  Item fields seen: 72 = the item's +00h (its kind, minus its object), 85 = its slot (+11h); no
+  field 0-99, nor 72,0-99, gave its type. The game's command table is words at DS:00C0h + 2 x
+  command, the handlers in segment 5DFh (the dispatcher at linear 5FE9h, `call [bx+0C0h]`): dump
+  memory with live.py (`gd.guest.read(0, 0xA0000)`) and `ndisasm -b16 -o OFF`. 41h (5DF:1895h)
+  stores its value, an object's number (or a kind, looked up), in 3923:361h (object 2Ch); 49h
+  (5DF:140Ah), the item loop, copies each item into one scratch object (2Bh, 3923:35Fh).
 - **The arena's flags and numbers can't be set from outside** (2026-11-05): the pointers at
   DS:1352h and 1356h stay null in the arena even while a script waits on a message, so a poller
   never found them. To test a script's branch there, build a copy of the scripts with the test
@@ -1262,6 +1272,11 @@ was saved a little further on, in the corridor at (1672, 344) with Kurzak beside
   266 at 1264,848 is gone or flag 317 is set; otherwise "presses the button, but nothing happens".)
 - The grate, object 1234 at map (46, 86) (square 2, 5), the far northwest; walking onto squares
   3-4, 5-6 (map 48-79, 80-111) runs its menu (137:29Bh): Pick the lock / Rip it open / Hack the lock off.
+  From `saves/grate-user` (Cromwell leading, beside it): `walkto.py 60 100`, then the Y key, then
+  the reply's number key (`xdotool key --window <DOSBox's window> 2`). The weapon search runs as the
+  menu is made, before the question. Hack is offered for the first melee weapon in either hand
+  (2026-11-11); `itemedit.py 0 2 slot=3` then `itemedit.py 0 3 slot=2` (just after loading) puts
+  Cromwell's Bow in the weapon hand and the Axe out: then only Rip it open / Leave.
 - **The weapon rack** (Thornwall's, object 2599) is at square (48, 34), map (779, 550), in the room
   west of the door at (65, 38-39); from (52, 36) beside it the game has made it. Its contents (map
   object 478 on 2026-11-04): Polearm, Quarterstaff, Polearm, Axe, with Thornwall first once

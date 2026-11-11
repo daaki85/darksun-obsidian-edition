@@ -74,6 +74,13 @@ class SellTests(unittest.TestCase):
         self.assertEqual((paid, lines), (0, ["Dag has no plain gear in the backpack to sell."]))
         self.assertEqual(self.pack(), [90, 91, 92, 93])
 
+    def test_metal_kept(self):
+        m = self.m
+        m[ITEM_TYPES + 45 * game.ITEM_TYPE_SIZE + 0x08] = 4  # (the long sword's material: metal)
+        lines, paid = sell.sell(self.gd, 0)
+        self.assertEqual(paid, 0)
+        self.assertIn(90, self.pack())
+
     def test_worn_and_held_kept(self):
         self.m[ITEMS + 90 * game.ITEM_SIZE + game.ITEM_SLOT] = 3  # (in the hand)
         sell.sell(self.gd, 0)

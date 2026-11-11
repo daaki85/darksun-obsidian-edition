@@ -135,6 +135,20 @@ are real objects (an item's +0 is its object's number negated: the grate's
 Bloodwrath, -1576, always hacks the lock); the thief skill checks (DO_ACTION 3)
 and ability checks (59h) each test the skill or ability their text names, and
 the weapon search for the grate looks in the right hand (item +11h slot 3).
+
+The grate's weapon search (A79h) now takes the first item in either hand (slot
+3 or 10) that is a melee weapon (the user's ask, 2026-11-11). The scripts can't
+read an item's type: no item field leads to it (fields 0-99 and the kind's
+72,0-99 tried in play; field 72 is the item's +0, its kind, and 85 its slot,
++11h). So the test leaves out each kind held in a hand whose type has no melee
+bit (+00h & 1): bows, slings, chatkchas, shields and the Storm Ring, the game's
+and the Loader's (`scriptfixes.NOT_MELEE`; a test checks it against the game's
+SEGOBJEX and IT1R). The search runs as the reply menu is made (command 49h,
+DSUN 5DF:140Ah, copies each item in turn into one scratch object, 2Bh, its
+number at 3923:35Fh); on a find the game named it (41h stores into 3923:361h,
+2Ch) and went round again, and that step copied the next item over it: the
+axe in hand was hacked with "his Bow". The repair leaves the loop at once on a
+find, to its RETURN (A96h). No weapon to hack with, no "Hack the lock off.".
 (Hototo's "Where is Dagger, bug / woman?", script 132 at 198h, tests race
 alone, but only after a sex test at B0h: a man is taken for Dagger.)
 
