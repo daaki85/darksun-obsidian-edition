@@ -58,10 +58,13 @@ LINES: Tuple[Tuple[int, str, str], ...] = (
 # Legcrusher at the fountain: the game's line his fetching speech opens with (script 136), and his
 # words there instead
 FOUNTAIN_LINE = "Kurzak told me to bring you to the arena. If ya don't go, "
+# (each a window of its own: his, the narration's with the window's emblem, in the game's words for a
+# guard's yell masked there, GPL 137 at FF2h; then his again)
 FOUNTAIN_WORDS = ("Gladiators out of cells! Bad gladiators! Guards! GUARDS!",
-                  "Legcrusher bellows for the guards, but the roar of the fountain swallows his voice.",
-                  "Nobody hears. Then Legcrusher take you back himself!")
+                  "Legcrusher tries to yell for help but the roar of the fountain masks his voice.",
+                  "Nobody come? Then Legcrusher take you back himself!")
 NARRATION, LOCATE, END = 98, 0x09, 0x31
+PORTRAIT, EMBLEM, HIS_FACE = 0x54, 0, 100  # (the window's portrait: 0 its emblem; his, as 136 at 2B6h sets it)
 SIDE, ATTITUDE, AGAINST = 74, 75, 2  # (an object's fields, as the guards' sight trigger sets them: GPL 74 at 2Bh)
 X, Y = ("var", 137, 33), ("var", 137, 34)  # (LOCATE's square)
 
@@ -155,8 +158,13 @@ def with_fountain(script: bytes, field_types: bytes, original: Optional[bytes] =
         return script
 
     def fountain():
+        s.op(PORTRAIT, ("n", HIS_FACE))
         s.say(FOUNTAIN_WORDS[0])
+        s.page()
+        s.op(PORTRAIT, ("n", EMBLEM))
         s.say(FOUNTAIN_WORDS[1], NARRATION)
+        s.page()
+        s.op(PORTRAIT, ("n", HIS_FACE))
         s.say(FOUNTAIN_WORDS[2])
         s.page()
         s.op(0x40, ("field", LEGCRUSHER, [SIDE]), ("n", AGAINST))

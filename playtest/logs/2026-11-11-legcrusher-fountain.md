@@ -11,3 +11,8 @@ fountain swallows his voice. / Nobody hears. Then Legcrusher take you back himse
 one window). Clicked away (`boxclick.sh`): a fight, round 1 "Cilla 30, K'ratchek 28, Legcrusher 27,
 Gerakis 26, Cermak 25" (no guard); `fightout.sh`: "Legcrusher is killed", one round, the party took
 no damage; flag 797 (DEAD) set. The save has flag 497 set too (the Trustee's key used before).
+
+Then (the user: the narration in his window read oddly): three windows, his face (portrait 100),
+the emblem (0) for "Legcrusher tries to yell for help but the roar of the fountain masks his voice."
+(the game's own words for a guard's yell there), his face for "Nobody come? Then Legcrusher take you
+back himself!". Seen so in DOSBox, then the fight, him alone.

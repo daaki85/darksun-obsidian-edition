@@ -2310,8 +2310,12 @@ he doesn't deliver his warning: he sees the gladiators out of their cells, yells
 for the guards, the fountain drowns him, and he attacks, alone:
 
 > Gladiators out of cells! Bad gladiators! Guards! GUARDS!
-> *Legcrusher bellows for the guards, but the roar of the fountain swallows his voice.*
-> Nobody hears. Then Legcrusher take you back himself!
+>
+> *Legcrusher tries to yell for help but the roar of the fountain masks his voice.*
+>
+> Nobody come? Then Legcrusher take you back himself!
+
+(three windows: his face, the window's plain emblem for the narration, his face again)
 
 No alarm goes up and no guards come. Killed, he is missed: Kurzak's later lines
 say his monster trainer has gone (how: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#kurzak-and-legcrusher)).

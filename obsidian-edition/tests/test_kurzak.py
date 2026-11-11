@@ -126,6 +126,7 @@ class FountainTests(unittest.TestCase):
         self.assertEqual((added[0].code, added[0].args), (k.LOCATE, [("n", -k.LEGCRUSHER)]))
         said = strings(added)
         self.assertIn("Gladiators out of cells! Bad gladiators! Guards! GUARDS! ", said)
+        self.assertEqual([o.args for o in added if o.code == k.PORTRAIT], [[("n", 100)], [("n", 0)], [("n", 100)]])
         self.assertIn(k.FOUNTAIN_LINE, said)  # (elsewhere: the game's words)
         sets = [o.args for o in added if o.code == 0x40]
         self.assertEqual(sets, [[("field", k.LEGCRUSHER, [k.SIDE]), ("n", 2)],

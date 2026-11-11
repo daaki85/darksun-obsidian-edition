@@ -186,7 +186,8 @@ the fountain and the party late for a fight.
 "Kurzak told me to bring you to the arena. If ya don't go, ") becomes a jump to code after the
 script's end (`kurzak.with_fountain`): LOCATE (09h) on his kind (-326) gives his square (locals
 33, 34), and in `scriptfixes`' fountain zone (the room, x 54-80, y over 73, or the passage, x
-42-80, y over 90) he says his lines (the middle one narration, 98), the page is clicked, his
+42-80, y over 90) he says his lines, three windows (54h portrait 100, his; 0, the emblem, for the
+narration in the game's words for a guard's masked yell, GPL 137 at FF2h; 100 again), each clicked, his
 fields 74 and 75 are set to 2 (40h, as the guards' sight trigger does, GPL 74 at 2Bh), he gets the
 ambush guards' orders (08h hunt, 6Fh GPL 74 at 100, 1Bh GPL 74 at 89, range 5) and the script
 ends (31h); elsewhere the game's two lines, then back to 374h. Seen in DOSBox with the user's save
