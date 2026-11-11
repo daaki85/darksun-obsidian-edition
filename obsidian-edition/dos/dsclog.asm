@@ -27075,7 +27075,7 @@ our_key:                                ; AX a key: CF set (and counted) if it i
 ; LOOT_KEY: (OUR_KEY's first) T or Shift+T with a container's window open (a body's, a chest's: the
 ; game's DS:05E6h its map thing, 9999 none) is made Escape, which closes the window, and, when the
 ; key is read (MK_READ; a peek only looks), counted in LOOT_SEQ with the container (LOOT_THING) and
-; T's mode or Shift+T's (LOOT_MODE): the Loader then moves what is in it into the party's backpacks
+; T's mode or Shift+T's (LOOT_MODE: Shift held, whatever Caps Lock does to the letter): the Loader then moves what is in it into the party's backpacks
 ; (dsloader/loot.py), once the window is shut. Other keys, and these with no window, as they were.
 ; AX the key (Escape now, for one of these); others kept.
 KEY_T        equ 0x1474
@@ -27100,8 +27100,10 @@ loot_key:
         je .esc                         ; (peeked: told it is Escape, counted when read)
         mov [cs:loot_thing], bx
         mov word [cs:loot_mode], 0
-        cmp ax, KEY_SHIFT_T
-        jne .count
+        xor bx, bx                      ; (Shift held, from the BIOS keyboard flags, 0:0417h bits 0-1:
+        mov ds, bx                      ;   not the letter's case, which Caps Lock turns round; DS is
+        test byte [0x417], 3            ;   given back at .out)
+        jz .count
         mov word [cs:loot_mode], 1
 .count: inc word [cs:loot_seq]
 .esc:   mov ax, KEY_ESCAPE

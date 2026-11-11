@@ -68,7 +68,7 @@ def price(gd: GameData, rec: bytes) -> int:
         value = prices.sell_price(value)
     typ = gd.item_type_record(rec)
     if len(typ) > restrict.TYPE_KIND_FLAGS and typ[restrict.TYPE_KIND_FLAGS] & STACKS:
-        value *= max(1, struct.unpack_from("<H", rec, COUNT)[0])
+        value *= struct.unpack_from("<H", rec, COUNT)[0]  # (as stored, as the game's 83D6Bh)
     return value
 
 

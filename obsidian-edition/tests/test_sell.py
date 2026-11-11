@@ -81,10 +81,29 @@ class SellTests(unittest.TestCase):
         self.assertEqual(paid, 0)
         self.assertIn(90, self.pack())
 
-    def test_worn_and_held_kept(self):
-        self.m[ITEMS + 90 * game.ITEM_SIZE + game.ITEM_SLOT] = 3  # (in the hand)
+    def test_a_body_slot_kept(self):
+        """An item whose slot is one of the body's (3, the weapon hand), even in the backpack's list,
+        isn't sold (plain_gear's slot test)."""
+        self.m[ITEMS + 90 * game.ITEM_SIZE + game.ITEM_SLOT] = 3
         sell.sell(self.gd, 0)
         self.assertIn(90, self.pack())
+
+    def test_worn_and_held_lists_untouched(self):
+        """What is worn (+08h) or held (+0Ah) is in lists of its own, which S never reads: a plain
+        sword in each stays, whatever is sold from the backpack."""
+        m = self.m
+        for offset, thing, item, slot in ((0x08, 461, 94, 10), (0x0A, 462, 95, 3)):
+            struct.pack_into("<h", m, CREATURES + 0 * game.CREATURE_SIZE + offset, thing)
+            struct.pack_into("<Bh", m, THINGS + thing * 3, game.THING_ITEM, item)
+            m[ITEMS + item * game.ITEM_SIZE:ITEMS + (item + 1) * game.ITEM_SIZE] = \
+                m[ITEMS + 90 * game.ITEM_SIZE:ITEMS + 91 * game.ITEM_SIZE]
+            struct.pack_into("<h", m, ITEMS + item * game.ITEM_SIZE + game.ITEM_NEXT, game.NO_ITEM)
+            m[ITEMS + item * game.ITEM_SIZE + game.ITEM_SLOT] = slot
+        self.gd.rules &= ~game.RULE_CHA_PRICES
+        _, paid = sell.sell(self.gd, 0)
+        self.assertEqual(paid, 50)  # (the backpack's plain sword alone)
+        for thing, item in ((461, 94), (462, 95)):
+            self.assertEqual([i for i, _ in ring.Items(self.gd).chain(thing, inside=False)], [item])
 
 
 if __name__ == "__main__":

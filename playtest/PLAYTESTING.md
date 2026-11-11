@@ -718,6 +718,10 @@ panel shows only after `L` (panel.sh reads "hidden" for the expanded panel: look
   of `fountain-user` the first turns stay near the camera after `scroll.py -60 -80`; later a
   member out of movement gets the END menu over the panel (E ends the turn).
 
+- **Looting** (2026-11-11): bodies under the party's figures can't be clicked (a look click there
+  opens the member's Effects screen): walk the party aside first. `xdotool key --window W Caps_Lock`
+  sets the BIOS's Caps Lock flag (0:0417h 40h) for a test (logs/2026-11-11-caps-lock-loot.md).
+
 ## 4. Fights
 
 1. **Story fights: `sh fightout.sh`.** It sets every foe to 1 HP (not the arena's prisoners) and

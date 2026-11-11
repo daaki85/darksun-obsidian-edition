@@ -931,6 +931,9 @@ class DiceLog:
             lines, took = loot.take(self.game, thing, mode)
         except itemgate.ItemsBusy:
             return []  # (the game changing its lists: in a later pass)
+        except Exception:
+            self._loot_seen = (self.tsr_hdr, seq)  # (once: not tried again on what is left, each pass)
+            raise
         self._loot_seen = (self.tsr_hdr, seq)
         if took:
             self.guest.write(self.tsr_hdr + TSR_SOUND_REQ, struct.pack("<H", sounds.PICK_SOUND))
@@ -960,6 +963,9 @@ class DiceLog:
             lines, paid = sell.sell(self.game, member)
         except itemgate.ItemsBusy:
             return []
+        except Exception:
+            self._sell_seen = (self.tsr_hdr, seq)  # (once: not sold again each pass)
+            raise
         self._sell_seen = (self.tsr_hdr, seq)
         if paid:
             self.guest.write(self.tsr_hdr + TSR_SOUND_REQ, struct.pack("<H", sounds.PICK_SOUND))

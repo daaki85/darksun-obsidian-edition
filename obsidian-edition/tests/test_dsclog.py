@@ -4287,7 +4287,7 @@ class NewSpellTests(RuleTests):
     def test_backstab_dice(self):
         """STAB_ROLL (58A29h, AX the damage rolled, [BP-12h] what it added to the dice) keeps the
         dice's sum and returns "cmp word [bp+16h],1"'s flags; STAB_TIMES (58A80h, AX the
-        multiplier, [BP-4] the damage): with RULE_HI_BACKSTAB (128) the dice added again for each
+        multiplier, [BP-4] the damage): with RULE_THIEF_TABLE (Thieves as in AD&D) the dice added again for each
         time past the first, else the whole multiplied; a miss (0) stays 0; an Assassin's multiplier
         one more (kits.backstab_times)."""
         from dsloader import gamepatch, kits
@@ -4661,7 +4661,7 @@ class NewSpellTests(RuleTests):
 
     def test_sell_keep(self):
         """A shop freeing the thing holding an item sold ("push word [179Eh]", SELL_KEEP): with the
-        buyback rule (RULE_HI 64) and a magical item (a plus or a power), 270Fh pushed in its place
+        buyback (Shops as in AD&D, RULE_HI_CHA_PRICES) and a magical item (a plus or a power), 270Fh pushed in its place
         and the thing and the merchant (DS:179Ch) queued in the header (+308 counted, +310 the
         entries); anything else, or the rule off, the thing pushed."""
         from dsloader import gamepatch
@@ -5092,7 +5092,7 @@ class StealthTests(unittest.TestCase):
         self.assertEqual(self.attack(melee=2, behind=1, thac0=13, hidden=0)[:3], (0, 0, 15))
 
     def test_backstab_first_attack_only(self):
-        """STAB_FIRST (RULE_HI_BACKSTAB): a party member's later attacks in the same round (the
+        """STAB_FIRST (RULE_THIEF_TABLE, Thieves as in AD&D): a party member's later attacks in the same round (the
         game's clock unchanged) are no backstab, the +2 taken back, whatever the game said; from
         behind stays. Another member's first is one; the next round's first is one again; a
         creature not in the party is left to the game. (A thief with two weapons and a weapon

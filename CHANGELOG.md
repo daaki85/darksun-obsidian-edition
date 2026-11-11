@@ -44,6 +44,24 @@ Releases, newest first: [2.16.0](#pull-request-90-merged-2026-11-11) (#90),
 
 ## Next pull request (not opened yet)
 
+DSCLOG.EXE 69,360 bytes (63,808 in its segment), 1,728 of its segment spare; `UMB_NEED` 6,429
+paragraphs (1,753 spare), `UMB_KEPT` 8,051 (131 spare). 2.16.0's: 69,344 and 1,744 spare.
+
+**Fixed**
+- **Caps Lock no longer swaps T and Shift+T** (from the 2.16.0 audit). `LOOT_KEY` took the mode from
+  the letter's case, which Caps Lock turns round; it now reads the Shift keys held (the BIOS
+  keyboard flags, 0:0417h bits 0-1). S has no mode, so either case already sold the same. Tests
+  `LootKeyTests` (test_dsclog_drawing).
+- **A T or S whose work fails is counted once** (from the audit): an error other than the game
+  being busy with its lists left the key unhandled, so the dice log tried it again each pass.
+
+**Changed**
+- **Code tidying from the audit:** a stack is priced by its count as stored, as the game's own
+  sale (83D6Bh) does (was at least 1). `test_worn_and_held_kept` is now `test_a_body_slot_kept`
+  (what it tested: plain_gear's slot test), and `test_worn_and_held_lists_untouched` checks that a
+  worn and a held sword are left alone. Old switch names in comments (`RULE_HI_BACKSTAB`,
+  `RULE_HI_BUYBACK`, "RULE_HI 64") now the merged rules' (`RULE_THIEF_TABLE`, `RULE_HI_CHA_PRICES`).
+
 **Docs**
 - **The combat log's pictures retaken with the panel's present font** (8 pixels a line, 7 lines
   docked, 12 expanded; the user's ask after 2.16.0): `docs/combat-log.png`,
