@@ -2,7 +2,7 @@
 
 ## The Spellarcher's arrows: their cast sound
 Build: obsidian-edition at "Spell arrows play their cast sound at once, from the USE screen".
-From `pens-after-scar` with `PT_AUDIO`: Gerakis' (member 2) sheet made a half-elf fighter/preserver
+From `pens-after-scar` with `PT_AUDIO`: Cermak's (member 2) sheet made a half-elf fighter/preserver
 (race +18h 4, classes +21h 9, 11, levels 5, 5, kit byte +43h 1: multiclass group 14's first kit,
 the Spellarcher, 57) and taught the four touch spells (`spellsetup.py 2=5 10 1 3 39`), in memory.
 U, his portrait (66,108): the USE screen's top row is the spells themselves (a click there aims
