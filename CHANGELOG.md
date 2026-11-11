@@ -16,7 +16,8 @@ from the tail (2026-11-09, after #88) that is the helper's 64 KB segment's part 
 Releases before 2.12.2 give the release's line as a **Release** bullet; from 2.12.2 on it is the
 entry's first line.
 
-Releases, newest first: [2.15.0](#pull-request-89-merged-2026-11-10) (#89),
+Releases, newest first: [2.16.0](#pull-request-90-merged-2026-11-11) (#90),
+[2.15.0](#pull-request-89-merged-2026-11-10) (#89),
 [2.14.1](#pull-request-88-merged-2026-11-08) (#88),
 [2.14.0](#pull-request-87-merged-2026-11-07) (#86 and #87),
 [2.13.4](#pull-request-85-merged-2026-11-02) (#85),
@@ -41,7 +42,7 @@ Releases, newest first: [2.15.0](#pull-request-89-merged-2026-11-10) (#89),
 [1.1.0](#pull-request-18-merged-2026-10-06) (#18), [1.0.0](#pull-request-12-merged-2026-10-02)
 (#12).
 
-## Next pull request (not opened yet)
+## Pull request #90 ([merged 2026-11-11](https://github.com/daaki85/darksun-obsidian-edition/pull/90))
 
 DSCLOG.EXE 69,344 bytes (63,792 in its segment), 1,744 of its segment spare; `UMB_NEED` 6,428
 paragraphs (1,754 spare), `UMB_KEPT` 8,050 (132 spare). Before the T and S keys, 69,136 (63,584,
