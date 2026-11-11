@@ -56,6 +56,8 @@ CHEST_TYPE, SHUT_TYPE = 0x31, 0x67  # the chest's item type, and the one it has 
 NEAR = 2  # (how far from it the one using it may stand: as the game's safe, op 80h, the distance)
 DISTANCE = 0x80
 NARRATION = 98  # (the dialogue window's lines as the game's safe has them)
+PORTRAIT, EMBLEM = 0x54, 0  # the dialogue window's portrait (GPL 54h), and 0: its emblem, a face of no one
+#   (without it, a talk's last face stayed: the user's, 2026-11-11, Kalzith's over the chest's lines)
 ACTING = ("var", 137, 37)  # the character using it
 NAME = ("field", 0x8025, [19])  # ... its name
 STRENGTH = ("field", 0x8025, [23])  # ... its STR
@@ -81,6 +83,7 @@ def script() -> bytes:
     """The chest's script (SCRIPT)."""
     s = kalzith._Script()
     s.op(kalzith.BEGIN)
+    s.op(PORTRAIT, ("n", EMBLEM))  # (the window's emblem: else the last face shown, a talk's, stays)
 
     def tell(*parts):
         for part in parts:

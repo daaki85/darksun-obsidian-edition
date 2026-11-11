@@ -89,6 +89,11 @@ reach took 384 bytes of the segment (68,592 bytes before it).
   squares with no movement left, the bow in the missile slot left alone, playtest/logs/2026-11-10-polearm-reach.md.)
 
 **Fixed**
+- **Pehtucl's chest spoke with the last face shown** (the user's report: Kalzith's, after talking
+  to him). Its script set no portrait, so the dialogue window kept the last one; it now sets the
+  window's emblem first (GPL 54h with 0, `pehtuclchest.EMBLEM`), and the dice log names the lines
+  "Narration". The script is the Loader's copy, so saves already past the pens have it too. Seen in
+  the game (playtest/logs/2026-11-11-lock-retry.md).
 - **The pointer left images of itself on the map** (the user's report, in a fight, after 2.15.0).
   2.15.0's audit turned interrupts on for the whole of PROBE_SCROLL's pass (the map's main loop), so
   the game, which draws its pointer from the mouse's interrupt (keeping what is under it, to put back

@@ -20,3 +20,11 @@ A use right after a message sometimes didn't open the look box (the eye showed r
 
 The pocket fumble's rule is covered by `test_fumbled_with_thieves_as_in_add` (not played).
 Not saved (memory edits).
+
+## The chest's portrait (the user's report: Kalzith's face over the chest's lines)
+The chest's script set no portrait, so the window kept the last face shown (a talk's). Now it sets
+portrait 0 (GPL 54h: the window's emblem) first. From `pens-new-chest` as above (`thief.py 0 9`):
+the chest used, "[Narration] The chest is locked. Gerakis checks the lock for traps, and draws out a
+poisoned needle hidden in it. Gerakis works at the lock but it holds." and the window's top left the
+emblem (`img` not kept). Pehtucl, beside the chest, couldn't be reached from the party's square ("NO
+PATH FROM HERE"), so no face was shown first; the script sets the emblem whatever was shown.
