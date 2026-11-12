@@ -330,3 +330,5 @@ file name. The others, by the day they were found:
   its GIF; bodies under the party's figures and Caps Lock; the grate's Hack for the first melee
   weapon in either hand; the installers' public links removed; Kurzak's door barred on the walk
   map (`doorwatch.py`); psionic powers picked at creation, DROP and ADD from the roster.
+- **2026-11-12**: a kit chosen at creation (NO KIT clicked off first), a fire cleric/fighter Battle
+  Dancer's starting gear.

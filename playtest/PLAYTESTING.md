@@ -560,6 +560,13 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   are the second row's last (245,78). A click there closes it and the dice log gives the start
   weapon ("starts with a plain obsidian cahulaks ... in place of the bone long sword"). The
   inventory is the second bottom icon (76,172).
+- **A kit at creation** (2026-11-12, an elf fire cleric/fighter Battle Dancer): the big portrait
+  (40,60) steps the race (read the sheet's +18h after each click: human 1, dwarf 2, elf 3; two
+  clicks a race); CLERIC (250,13) adds the class and the CLERICAL SPHERE list (AIR 240,105 is
+  chosen first: click it off, then FIRE 240,121); KITS (232,138) opens the kit page, where NO KIT
+  (240,106) is marked and must be clicked off before a kit (the first kit 240,114) takes a click;
+  the kit is the sheet's +43h (1-3). The Battle Dancer's weapon window has only the long sword
+  (72,46) and the bow in use. `python3 carried.py NAME` lists what the new character holds.
 - **Psionic powers at creation** (logs/2026-11-11-psionic-picks.md): after DONE (and a warrior's
   weapon window) PICK A PSIONIC POWER opens: icons from (123,62), 17 apart, five to a row (the
   list closes up after each pick: clicking (123,62) again takes the next); the discipline button
