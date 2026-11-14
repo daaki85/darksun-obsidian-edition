@@ -369,6 +369,7 @@ The full tables of the [kits](https://github.com/daaki85/darksun-obsidian-editio
 
 The main fixes are below; every bug of the original game the mod mends, with what the game did, is in [the game's bugs, fixed](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/GAME-BUGS.md).
 
+- **[Fixed]** An archer that killed its target with its **last arrow** lost the rest of its turn, though a shot was still due: the game counted the shots cut to the arrows left as the whole round's. Now its turn goes on, as after any kill, to walk, ready more arrows or strike again.
 - **[Fixed]** The **Quicksilver Glove** fought as if it were wooden (−3 to hit, −2 damage): it had no material, which the game read as wood. It is leather now, as the Chameleon Gloves are.
 - **[Fixed]** **Alagorn** told two items wrong: the Quicksilver Glove as "Quicksilver Gauntlets" that graft a weapon to the hand (it casts Detonate on every hit), and the Helm of Contemplation as a shield against psionic attacks (it is Gaze Reflection). His menus now name the glove as the game does, and his two stories say what the items do.
 - **[Fixed]** **Alagorn**, asked about clothes when the party carried none, said "no magic clothes", then "Ah, magic clothes", and showed an empty menu. Now he says one thing and the menu matches.

@@ -771,6 +771,18 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   two long swords, its worst case) ends at y 162 and the panel's stone at about 176: no room for
   more lines. **No weapon name is wider than "+1 Shadowseeker"** (82 pixels, the panel's whole 82;
   "+3 Dag's Dagger" the same; measured in the game's font, `art.GameArt(GAME).font`).
+- **An archer's shots and its turn** (logs/2026-11-14-quiver-turn.md): `shotinfo.py [MEMBER]` lists
+  the foes on the screen with their places (click about 10 pixels above the feet in attack mode);
+  `turnwatch.py MEMBER SECONDS`, started in the background just before the click, prints each
+  change of whose turn it is and the member's turn bytes (segment DS - (4356h - 37BDh), a byte a
+  combatant): **+181h** the attacks made this round (63h: spent, the turn ends; set back to 0 as it
+  does), **+1ABh** the attack commands. **An attack command spends the turn unless it kills its
+  target**: against one still standing the turn passes after the shots whatever is left; a kill
+  with attacks left keeps it (walk, ready, strike again). For a kill on demand, `foeset.py C hp=1`.
+  **Arrows set in memory must be set before the fight starts** (a stack's count at its item +
+  `weaponchoice.ITEM_COUNT`, before the ambush's speech is clicked): changed in a fight the game's
+  own readied list doesn't see it. With no arrows at all, a click on a far foe walks the member up
+  and strikes with its melee weapon instead of shooting.
 - **A shot with a weapon put in memory** (logs/2026-11-10-stinkpots.md): a missile-slot weapon
   replaced by another type (the scratch `setitem.py ITEM TYPE` in that log: a SEGOBJEX record,
   link, flags and slot kept) shoots on the member's turn with `pointer.py attack` and a click on the
@@ -1126,6 +1138,15 @@ The measurements (pens-after-arena, the whole party walking, 2026-11-08), the ol
 and the faster drawing's: [HISTORY.md](HISTORY.md#frame-rate-measurements).
 
 ## Scripts and the game's code
+
+- **The docs' code addresses (5883Ah and the like) are DSUN.EXE file offsets**, the patches'
+  (`gamepatch.Patch`'s offset), not linear addresses in memory: most of the fight code is an
+  overlay, so memory there reads zeros or other code. Disassemble the file (capstone, 16-bit, the
+  offset as the address: near jumps and calls come out right within a routine); a near call's
+  target is offset + 3 + rel16. Far calls in it carry relocations: leave their bytes where they are
+  in a patch. A new hook needs no vector of its own: a site (`gamepatch._site`, DSCLOG's `site`
+  table, in order) on VEC_CR_SPELLS; a site replacing a compare puts its flags into the INT's frame
+  (`ammo_turn`). (logs/2026-11-14-quiver-turn.md)
 
 - **The arena's flags and numbers can't be set from outside**: the pointers at DS:1352h and 1356h
   stay null in the arena even while a script waits on a message, so a poller never finds them. To

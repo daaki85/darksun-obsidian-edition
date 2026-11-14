@@ -47,6 +47,19 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
 
 ## Next pull request (not opened yet)
 
+**Fixed**
+- **An archer's turn lost with its last arrow** (the game's bug, the user's report): the weapon
+  attack routine (5883Ah) cuts a shot's attacks ([BP-8]) to the arrows left (5899Ah; "Out of ammo"
+  with none) and, once that many are made, writes 63h to the attacker's +181h (58C45h), which ends
+  the turn (5844Eh). A kill with attacks left lets anyone go on (the caller's loop), so an archer
+  that killed with its last arrow lost a turn any other kill keeps. DSCLOG's new sites `AMMO_CAP`
+  (5899Ah: the round's attacks before the cut kept) and `AMMO_TURN` (58C38h: a party member's attacks
+  made compared with them) keep it; monsters as the game has them. Against a target still standing
+  the turn ends as before (the game's rule: an attack command spends the turn unless it kills).
+  Checked in the game (playtest/logs/2026-11-14-quiver-turn.md): Ester, one arrow and two shots,
+  killed the Templar and kept her turn (walked on); without the two patches the turn went to Jenna.
+  DSCLOG 70,208 bytes (+80).
+
 **Changed**
 - **Wild Fury's Wild Fighting is The Complete Barbarian's Handbook's again**: fighting wild is −3
   to hit and AC 3 worse (no worse than 10) for the fight whatever the check, and a passed check

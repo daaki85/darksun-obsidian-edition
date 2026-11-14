@@ -224,6 +224,9 @@ REACH_SITE = NS_IMAGE + 111
 LOCK_SITE = NS_IMAGE + 112
 # (a new member's psionic powers picked, not the game's table's: DSCLOG's PSI_GRANT, PSI_LIST, PSI_CYCLE)
 PSI_GRANT_SITE, PSI_LIST_SITE, PSI_CYCLE_SITE = NS_IMAGE + 113, NS_IMAGE + 114, NS_IMAGE + 115
+# (a party member's shot cut to the arrows left keeps its turn while attacks are left: DSCLOG's
+# AMMO_CAP and AMMO_TURN, the game's bug)
+AMMO_CAP_SITE, AMMO_TURN_SITE = NS_IMAGE + 116, NS_IMAGE + 117
 # the monster kinds' table (DSUN.EXE, the load segment's 3E45h: monsters.MONSTER_KINDS_SEG): a kind's
 # properties (a dword), its resistance class (a byte), a class's damage kinds (four words) and percents
 KINDS_FILE = 0x5400 + 0x3E45 * 16
@@ -1185,6 +1188,11 @@ PATCHES = (
     # the routine finding a missile weapon's ammunition, where it keeps the ammunition's plus:
     # mov es:[0006h],al (DSCLOG makes a Spellarcher's arrows 1 better, at least +1)
     Patch("arrow", 0x58D27, bytes.fromhex("26a20600"), _interrupt(VEC_ARROW, 4)),
+    # the weapon attack routine: a shot's attacks cut to the arrows left (mov [bp-8],dx), and the
+    # attacks made compared with the round's as it ends (cmp ax,[bp-8]): a party member whose
+    # quiver runs dry keeps its turn while attacks are left (DSCLOG's AMMO_CAP, AMMO_TURN)
+    Patch("ammo_cap", 0x5899A, bytes.fromhex("8956f8"), _site(AMMO_CAP_SITE, 3)),
+    Patch("ammo_turn", 0x58C38, bytes.fromhex("3b46f8"), _site(AMMO_TURN_SITE, 3)),
     # the routine saying whether an item may be taken from an inventory slot, where it found none
     # of the spells that keep a weapon in the hand: jz to its yes (DSCLOG keeps a Spellarcher's
     # spell arrows in the quiver as those spells keep their weapons)

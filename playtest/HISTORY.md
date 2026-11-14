@@ -281,6 +281,18 @@ table at 6FDD0h + 1E3Bh) give event 7, which doesn't draw the shown member again
 command and the shut type; `pens-new-chest` was saved then. 2026-11-08: `saves/trap-user`, a game
 from before 2.14.0, where the chest was the game's plain one.
 
+## An archer's turn and the quiver (2026-11-14)
+
+The user reported an archer's turn ending as its quiver ran dry. The code addresses in the docs were
+first read in a memory snapshot and gave zeros (they are DSUN.EXE file offsets; the fight code is an
+overlay): read from the file they gave the cause (the shots cut to the arrows left, that cut count
+then marking the round's attacks spent, +181h 63h). With the fix the first play still lost the turn,
+which looked like a failed fix until `turnwatch.py` showed +181h at 1: the turn passed because the
+target was still standing, the game's own rule for every attack. The test that shows the bug is a
+kill with the last arrow (target at 1 HP); a baseline build without the two patches confirmed it.
+A first rerun with the quiver already emptied in that fight walked Ester up to strike with her sword:
+arrows written in a fight aren't seen, so the count is set before the fight starts.
+
 ## When things were learned
 
 The recipes in the guide mostly carry no date; a recipe with a log names its date in the log's
