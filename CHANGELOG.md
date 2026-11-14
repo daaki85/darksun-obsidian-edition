@@ -66,6 +66,12 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   (`LV_SCHOLAR`), at creation (`KIT_MADE` in the picks) and on changing class to preserver
   (`PROBE_DUAL_SPELLS`). Its −1 to hit stays. KITS.md's slot table loses its column. Tests:
   `test_int_learn`'s Scholar, `test_scholar_picks_no_more`, `test_slots`, `test_cermak_arcanist`.
+- **The Arcanist: its preserver spells cast a level higher** (the user's call, in place of two
+  spells a turn): `PROBE_SPELL_LEVEL`'s new `ARC_LEVEL` adds 1 to a party Arcanist's wizard spells'
+  level for their duration and damage (the new wizard spells, 196-201, too; `kits.arc_level`). The
+  two-spells probes are gone: `PROBE_CAST_MARK`, `PROBE_CAST_DONE`, `PROBE_END_TURN`,
+  `PROBE_ROUND_MARK` (vectors 93h-96h free again) and `ARC_HOLD`'s clearing in `PROBE_SCROLL`. Its
+  d3 hit die stays. Test: `test_arc_level` in place of `test_arcanist_second_spell`.
 - **The Spellarcher, after The Complete Book of Elves** (the user's design): a spell slot makes
   **one** spell arrow (was 5 a preserver level); one stack of each spell, 24 at most, the arrow
   joining it wherever it is (a new stack in the quiver if empty, else the pack; a full stack takes

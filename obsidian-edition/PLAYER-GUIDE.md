@@ -623,8 +623,8 @@ allows them).
 **Kits.**
 
 *Arcanist.* Scholars of the Veiled Alliance who live for the Art, hoarding
-spells while their bodies wither from years of study in hiding. In a fight they
-can weave two spells while others weave one.
+spells while their bodies wither from years of study in hiding. Their spells
+strike and last as a preserver's a level beyond them.
 
 *Scholar.* Keepers of forbidden lore who have spent more time over hidden
 libraries than learning to hold a weapon. No scroll's spell is beyond them:

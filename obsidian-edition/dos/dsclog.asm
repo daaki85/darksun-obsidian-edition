@@ -130,10 +130,6 @@ VEC_SOUND_44 equ 0x9A      ; PROBE_SOUND_44
 VEC_DUAL_KIT equ 0x99      ; PROBE_DUAL_KIT
 VEC_CR_SPELLS equ 0x98     ; PROBE_CR_SPELLS
 VEC_EF_CLICK equ 0x97      ; PROBE_EF_CLICK
-VEC_CAST_MARK equ 0x96     ; PROBE_CAST_MARK
-VEC_ROUND_MARK equ 0x95    ; PROBE_ROUND_MARK
-VEC_CAST_DONE equ 0x94     ; PROBE_CAST_DONE
-VEC_END_TURN equ 0x93      ; PROBE_END_TURN
 VEC_LEARN_SAID equ 0x92    ; PROBE_LEARN_SAID
 VEC_LEARN_REFUSED equ 0x91 ; PROBE_LEARN_REFUSED
 VEC_XP equ 0x90            ; PROBE_XP
@@ -7746,101 +7742,6 @@ probe_hit_round:
 .out:   pop ax
         iret
 
-; The Arcanist's second preserver spell in a turn. In a fight, a spell cast ends the caster's turn,
-; through the fight's routine that sets a combatant's actions (59256h; with 0, none: the turn is
-; over), called from the routine finishing any use of what the USE screen armed (a spell from a
-; slot, an item's charge: 720F4h, which takes the slot or charge) and from the routines that cast;
-; the routine casting a spell aimed on the map also marks the caster (the mark of a hit, +0AFh in
-; the fight's table), and a marked character is offered no spell. An Arcanist's first preserver
-; spell of its turn (DS:[54FBh] 0: from its wizard slots; DS:[54FCh] the party member) does
-; neither: ARC_CASTS counts them, and ARC_HOLD keeps the turn from ending till the game's main loop
-; runs again (PROBE_SCROLL), so it can cast a second; a hit still marks it.
-; PROBE_CAST_MARK: INT VEC_CAST_MARK replaces "mov byte es:[bx+0AFh],1" (6 bytes: INT + 4 NOPs;
-; DSUN.EXE 845F0h), the caster BX marked. PROBE_CAST_DONE: INT VEC_CAST_DONE replaces the finishing
-; routine's "cmp word es:[19h],0" (6 bytes; 722AFh; ES the segment of the fight's state, not 0 in a
-; fight): counts, sets ARC_HOLD (the party member + 1) for the first, and gives the JE after it
-; the game's flags. PROBE_END_TURN: INT VEC_END_TURN replaces "mov si,[bp+8]" (3 bytes: INT + NOP;
-; 59256h, [BP+6] the combatant, [BP+8] the actions) and returns at once, leaving the actions be,
-; when ending ARC_HOLD's turn from another of the game's code segments (the fight's own routines,
-; a turn ended from the combat menu among them, call it from its own). PROBE_ROUND_MARK: INT
-; VEC_ROUND_MARK replaces "mov byte es:[si+0AFh],0" (6 bytes; 57621h) where creature SI's turn
-; starts and its mark is cleared: its count too.
-ARM_KIND equ 0x54FB             ; (the armed thing's kind: 0 a wizard spell from a slot, 1 a priest's, 3 an item)
-ARM_WHO  equ 0x54FC             ; (the party member using it)
-END_TURN_OUT equ 0x592AF - 0x5925F  ; (the routine's "pop si / leave / retf", from the INT's return: its NOP)
-arc_casts db 0, 0, 0, 0         ; (party members 0-3: an Arcanist's preserver spells this turn)
-arc_hold  db 0                  ; (the party member + 1 whose turn a cast doesn't end; 0 none)
-probe_cast_mark:
-        cmp bx, 4
-        jae .mark
-        cmp byte [ARM_KIND], 0
-        jne .mark
-        cmp byte [cs:arc_casts + bx], 0
-        jne .mark
-        push ax
-        mov ax, bx
-        call cr_is
-        db KIT_ARCANIST
-        pop ax
-        jne .mark
-        iret
-.mark:  mov byte [es:bx + 0xAF], 1
-        iret
-
-probe_cast_done:
-        sti
-        push ax
-        push bx
-        mov byte [cs:arc_hold], 0
-        cmp word [es:0x19], 0
-        je .flags                       ; (not in a fight)
-        cmp byte [ARM_KIND], 0
-        jne .game
-        movzx bx, byte [ARM_WHO]
-        cmp bx, 4
-        jae .game
-        mov ax, bx
-        call cr_is
-        db KIT_ARCANIST
-        jne .game
-        inc byte [cs:arc_casts + bx]
-        cmp byte [cs:arc_casts + bx], 1
-        jne .game
-        inc bx
-        mov [cs:arc_hold], bl
-.game:  cmp word [es:0x19], 0           ; (the game's flags)
-.flags: pop bx
-        pop ax
-        retf 2
-
-probe_end_turn:
-        mov si, [bp + 8]
-        or si, si
-        jnz .ret                        ; (actions left: not the turn's end)
-        push ax
-        push bp
-        movzx ax, byte [cs:arc_hold]
-        dec ax
-        js .ends                        ; (none held)
-        cmp ax, [bp + 6]
-        jne .ends
-        mov ax, [bp + 4]                ; the caller's code segment ...
-        mov bp, sp
-        cmp ax, [bp + 6]                ; ... and the routine's own (the INT's return, past AX and BP)
-        je .ends
-        add word [bp + 4], END_TURN_OUT ; (held: return at once)
-.ends:  pop bp
-        pop ax
-.ret:   iret
-
-probe_round_mark:
-        mov byte [es:si + 0xAF], 0
-        mov byte [cs:arc_hold], 0
-        cmp si, 4
-        jae .ret
-        mov byte [cs:arc_casts + si], 0
-.ret:   iret
-
 ; The Shinobi's spells (kits.SHINOBI_SPELLS): spell, spell level. Wizard spells are 0 to WIZARD_LAST;
 ; Fogbolt, Reflected Image, Spook and Friends, new spells, count only with RULE_NEW_SPELLS (SHINOBI_KNOWS).
 SHINOBI_SPELLS:
@@ -7891,11 +7792,46 @@ probe_cast_level:
 ; arguments; DI the best level of the caster's classes that cast it, PROBE_RANGER_LEVEL's for a
 ; ranger): AX that, for a wizard spell a Shinobi's as PROBE_CAST_LEVEL's; for a priest spell a
 ; Spirit Caller's or Wasteland Seer's (or K'ratchek's: OWN_RACE_B) 2 more under the open sky (its KIT_OUTDOORS bit), 1 less
-; under a roof, no less than 1 (SKY_LEVEL; kits.sky_level).
+; under a roof, no less than 1 (SKY_LEVEL; kits.sky_level); for a wizard spell an Arcanist's 1 more
+; (ARC_LEVEL; kits.arc_level).
 probe_spell_level:
         mov ax, di
         call sky_level
+        call arc_level
         jmp shinobi_wizard
+
+; ARC_LEVEL: AX (the level wizard spell [BP+8] is cast at by combatant [BP+6], for its duration and
+; damage) 1 more for an Arcanist (a party member): its preserver spells cast a level higher. A new
+; wizard spell (NS_FIRST to NS_FIRST + PRIEST6 - 1, with RULE_NEW_SPELLS) too. DS the game's; others kept.
+ARC_MORE equ 1
+arc_level:
+        cmp word [bp + 8], WIZARD_LAST
+        jbe .wizard
+        cmp word [bp + 8], NS_FIRST
+        jb .ret
+        cmp word [bp + 8], NS_FIRST + PRIEST6
+        jae .ret                ; (a priest spell)
+.wizard:
+        push bx
+        push cx
+        push es
+        mov cx, ax
+        mov ax, ds
+        add ax, THINGS_SEG
+        mov es, ax
+        imul bx, [bp + 6], 3
+        mov ax, [es:bx + COMBATANT_CREATURE]
+        cmp ax, 3
+        ja .out                 ; (not a party member)
+        call cr_is
+        db KIT_ARCANIST
+        jne .out
+        add cx, ARC_MORE
+.out:   mov ax, cx
+        pop es
+        pop cx
+        pop bx
+.ret:   ret
 
 ; SKY_LEVEL: AX (the level priest spell [BP+8] is cast at by combatant [BP+6]) with a Spirit
 ; Caller's or Wasteland Seer's: 2 more under the open sky, 1 less under a roof (no less than 1).
@@ -25292,7 +25228,6 @@ probe_scroll:
         sti
 .masked:
         inc word [cs:main_ticks]
-        mov byte [cs:arc_hold], 0       ; (an Arcanist's cast is over: PROBE_END_TURN)
         mov byte [cs:va_done], 0        ; (the view not drawn again yet in this pass: VIEW_AGAIN)
         pushf
         cli                             ; (drawing: DRAW_MASKED)
@@ -28887,10 +28822,6 @@ all_vectors:
         vector VEC_DUAL_KIT, probe_dual_kit
         vector VEC_CR_SPELLS, probe_cr_spells
         vector VEC_EF_CLICK, probe_ef_click
-        vector VEC_CAST_MARK, probe_cast_mark
-        vector VEC_ROUND_MARK, probe_round_mark
-        vector VEC_CAST_DONE, probe_cast_done
-        vector VEC_END_TURN, probe_end_turn
         vector VEC_LEARN_SAID, probe_learn_said
         vector VEC_LEARN_REFUSED, probe_learn_refused
         vector VEC_XP, probe_xp

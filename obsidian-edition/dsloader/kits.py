@@ -404,6 +404,18 @@ def sky_level(kid: int, spell: int, level: int, outdoors: bool) -> int:
     return level + SKY_MORE if outdoors else level - 1 if level > 1 else level
 
 
+ARC_MORE = 1  # an Arcanist's wizard spells cast this many levels higher (DSCLOG's ARC_LEVEL)
+NEW_WIZARD_SPELLS = range(196, 202)  # (the new spells that are a wizard's: Cat's Grace to Friends)
+
+
+def arc_level(kid: int, spell: int, level: int) -> int:
+    """The level wizard spell SPELL takes for its duration and damage, LEVEL the game's, with an
+    Arcanist's (PROBE_SPELL_LEVEL's ARC_LEVEL): 1 more. Not the spell levels it may cast."""
+    if kid != ARCANIST or not (0 <= spell <= WIZARD_LAST or spell in NEW_WIZARD_SPELLS):
+        return level
+    return level + ARC_MORE
+
+
 def spell_class_level(kid: int, cls: int, level: int, ranger_rule: bool) -> int:
     """The level of class CLS (LEVEL) that a spell's duration and damage count (the game's routine
     at 5E25Ch, which takes the best of the caster's classes that cast the spell), with

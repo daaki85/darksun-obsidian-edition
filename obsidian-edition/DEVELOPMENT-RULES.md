@@ -1493,7 +1493,7 @@ emulated tests hold the helper to it:
 | a power's PSP to keep it up | Mind Bender, Kineticist, Titan Mind, Wasteland Seer | `PROBE_PSP_KEEP`, `PROBE_PSP_KEEP_DX` |
 | the off hand | Healer, Battle Mage | `PROBE_CAN_USE` (`KIT_FORBIDS`) |
 | casting though hit | Battle Mage | `PROBE_HIT_ROUND` |
-| two spells in a turn | Arcanist | `PROBE_CAST_MARK`, `PROBE_CAST_DONE`, `PROBE_END_TURN` |
+| a wizard spell's level, 1 more | Arcanist | `PROBE_SPELL_LEVEL`'s `ARC_LEVEL` |
 | THAC0 | Scholar (a warrior's: Swashbuckler, Crusader, Battle Mage, Mind Warrior, `WAR_HIT`) | `PROBE_THAC0` |
 | initiative | Sentinel, Military Scout, Myrmidon | `PROBE_INIT` |
 | to hit with a missile | Military Scout | `PROBE_ATTACKS` (`KIT_TO_HIT`) |
@@ -1621,22 +1621,11 @@ How each is done:
   byte es:[si+0AFh],1`, 58733h, in the routine taking damage off; cleared at a round's start,
   57621h), and a marked character can't choose a spell on the USE screen (892F3h, 55898h) and has a
   queued one dropped (8991Bh): `PROBE_HIT_ROUND` (`INT ADh`, new) doesn't mark a Battle Mage.
-- **Two spells in a turn.** Arcanist (preserver spells, in a fight). Where: a spell aimed on the map
-  ends the caster's turn in two ways: the routine casting it marks the caster as a hit does (845F0h;
-  so no spell is offered again), and the routine finishing any use of what the USE screen armed
-  (720F4h: it takes the slot or the item's charge; `DS:[54FBh]` the kind, 0 a wizard spell from a
-  slot, `[54FCh]` the party member) asks the fight's routine that sets a combatant's actions
-  (59256h) for none, as do the routines that cast, from their own code segments. A spell on a party
-  member from the USE screen does neither (the game's own: the turn goes on). `PROBE_CAST_MARK`
-  (`INT 96h`, new) doesn't mark an Arcanist for its first preserver spell of the turn;
-  `PROBE_CAST_DONE` (`INT 94h`, new: the finishing routine's `cmp word es:[19h],0`, 722AFh) counts
-  its preserver spells (`ARC_CASTS`) and sets `ARC_HOLD` for the first; `PROBE_END_TURN` (`INT 93h`,
-  new: `mov si,[bp+8]`, 5925Dh) then returns at once when ending that member's turn is asked from
-  another code segment (the fight's own routines, a turn ended from the combat menu among them, ask
-  from its own), till the map's main loop runs again (`PROBE_SCROLL`) or a turn starts;
-  `PROBE_ROUND_MARK` (`INT 95h`, new: the turn's start clearing the mark, 57621h) clears the count.
-  Checked in the game: two Magic Missiles in a turn, the second marking it and ending the turn;
-  ended from the combat menu after one.
+- **A wizard spell cast a level higher.** Arcanist (its preserver spells' duration and damage, the
+  new wizard spells too; not the spell levels it may cast). Where: `PROBE_SPELL_LEVEL`'s `ARC_LEVEL`
+  (`kits.arc_level`), as the Spirit Caller's `SKY_LEVEL`. Up to 2.17 an Arcanist cast two preserver
+  spells a turn in a fight (`PROBE_CAST_MARK`, `PROBE_CAST_DONE`, `PROBE_END_TURN` and
+  `PROBE_ROUND_MARK`, vectors 93h-96h, all gone).
 - **THAC0.** Scholar (1 worse). Swashbuckler, Crusader, Battle Mage, Mind Warrior: a warrior's (21
   less the kit's level, where better) with the kit's chosen weapon spec alone (without weapon
   specialization, its kinds), on the attack: `WAR_HIT` in `PROBE_ATTACKS`, from the creature's

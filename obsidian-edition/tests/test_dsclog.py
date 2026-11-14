@@ -7089,76 +7089,28 @@ class KitTests(unittest.TestCase):
                     self.assertEqual(self.mu.mem_read(marks * 16 + 5 + 0xAF, 1)[0], 0 if battle_mage else 1)
                     self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 0x1111)
 
-    def test_arcanist_second_spell(self):
-        """PROBE_CAST_MARK, PROBE_CAST_DONE, PROBE_END_TURN and PROBE_ROUND_MARK: in a fight (ES:[19h]
-        not 0) a spell aimed on the map marks its caster (ES:BX+0AFh) and finishing the cast ends
-        the turn (the actions routine called with 0); an Arcanist's first preserver spell of its
-        turn (DS:[54FBh] 0, party member DS:[54FCh]) does neither, the end asked from another code
-        segment being let go (the routine's own ending it still does), till the main loop runs;
-        its second does, as does a priest spell, an item or another kit's; a turn's start (SI)
-        clears the mark and the count. The JE after the finishing routine's compare keeps the
-        game's flags."""
-        from dsloader.gamepatch import VEC_CAST_MARK, VEC_CAST_DONE, VEC_END_TURN, VEC_ROUND_MARK
-        marks, fight = 0x8600, 0x8700
-        ZF, OUT = 0x40, 0x592AF - 0x59260
-        def ends(thing=2, caller=0x1234, actions=0):
-            """Whether the actions routine (CALLER the segment calling it) goes on to set them."""
-            site = 0x640  # (past run_int's sites: the emulator keeps code it has seen)
-            code = bytes((0xCD, VEC_END_TURN, 0x90, 0xEB, 0xFE)) + bytes(OUT - 2) + bytes((0xEB, 0xFE))
-            self.mu.mem_write(CALLER * 16 + site, code)
-            install = install_at(self.image, VEC_END_TURN)
-            self.mu.mem_write(VEC_END_TURN * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, install + 4)[0], TSR))
-            self.mu.mem_write(SS * 16 + BP + 4, struct.pack("<HHH", caller, thing, actions))
-            for name, value in dict(cs=CALLER, ds=self.DS, ss=SS, esp=0x7FC, ebp=BP, eflags=IF | 2, eax=0x1111,
-                                    esi=0x5555).items():
-                self.mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
-            self.mu.emu_start(CALLER * 16 + site, 0, count=60)
-            ip = self.mu.reg_read(r.UC_X86_REG_IP)
-            self.assertIn(ip, (site + 3, site + 3 + OUT))
-            self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_SP, r.UC_X86_REG_BP,
-                                                            r.UC_X86_REG_SI)], [0x1111, 0x7FC, BP, actions])
-            return ip == site + 3
-        def cast(kind, aimed=True):
-            """(marked, turn ends) for party member 2's cast of KIND."""
-            self.mu.mem_write(self.DS * 16 + 0x54FB, bytes((kind, 2)))
-            if aimed:
-                self.run_vector(VEC_CAST_MARK, 6, ebx=2, es=marks, eax=0x1111)
-                self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_BX)], [0x1111, 2])
-            self.run_vector(VEC_CAST_DONE, 6, es=fight, eax=0x1111, ebx=0x2222)
-            self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_BX)], [0x1111, 0x2222])
-            self.assertFalse(self.mu.reg_read(r.UC_X86_REG_EFLAGS) & ZF)  # (in a fight: the game's)
-            return self.mu.mem_read(marks * 16 + 2 + 0xAF, 1)[0], ends()
-        def new_turn():
-            self.mu.mem_write(marks * 16 + 2 + 0xAF, b"\1")
-            self.run_vector(VEC_ROUND_MARK, 6, esi=2, es=marks)
-            self.assertEqual(self.mu.mem_read(marks * 16 + 2 + 0xAF, 1)[0], 0)
-        self.mu.mem_write(fight * 16 + 0x19, struct.pack("<H", 1))
-        for rules in (game.RULE_KITS, 0):
-            self.rules(rules)
-            for cls, kit in ((11, 3), (11, 2), (1, 3)):
-                self.creature(cls, kit, index=2)
-                arcanist = bool(rules) and (cls, kit) == (11, 3)
-                with self.subTest(rules=rules, cls=cls, kit=kit):
-                    new_turn()
-                    self.assertEqual(cast(0), (0, False) if arcanist else (1, True))
-                    self.assertTrue(ends(caller=CALLER))  # (the fight's own routines: the turn ends)
-                    self.assertTrue(ends(thing=1))  # (another's turn)
-                    self.assertEqual(ends(actions=0x10), True)
-                    self.assertEqual(cast(0), (1, True))
-                    new_turn()
-                    self.assertEqual([cast(0, aimed=False), cast(0, aimed=False)],
-                                     [(0, False), (0, True)] if arcanist else [(0, True)] * 2)
-                    new_turn()
-                    self.assertEqual([cast(1), cast(3)], [(1, True)] * 2)  # (a priest spell, an item)
-                    new_turn()
-                    self.assertEqual(cast(0)[1], not arcanist)
-                    new_turn()  # (a turn's start lets the held turn go)
-                    self.assertTrue(ends())
-        self.mu.mem_write(fight * 16 + 0x19, struct.pack("<H", 0))  # (out of a fight: the game's)
-        self.run_vector(VEC_CAST_DONE, 6, es=fight)
-        self.assertTrue(self.mu.reg_read(r.UC_X86_REG_EFLAGS) & ZF)
-        self.assertTrue(ends())
-
+    def test_arc_level(self):
+        """PROBE_SPELL_LEVEL's ARC_LEVEL: an Arcanist's (preserver kit 3, a party member) wizard
+        spells a level higher for their duration and damage, the new wizard spells (196-201) too
+        (kits.arc_level); priest spells, another preserver's and anyone's not in the party as they
+        are."""
+        from dsloader import kits
+        from dsloader.gamepatch import VEC_SPELL_LEVEL
+        self.rules(game.RULE_KITS)
+        for kit, index, kid in ((3, 2, kits.ARCANIST), (1, 2, 0), (0, 2, 0), (3, 5, 0)):
+            self.creature(11, kit, index=index, level=5)
+            things = ((self.DS + 0x3972 - 0x4356) & 0xFFFF) * 16 + 0xC36
+            self.mu.mem_write(things + 7 * 3, struct.pack("<Bh", 2, index))
+            for spell in (0, 30, 68, 69, 100, 137, 196, 201, 202):
+                for given in (1, 2, 5):
+                    with self.subTest(kit=kit, index=index, spell=spell, given=given):
+                        self.mu.mem_write(SS * 16 + BP + 6, struct.pack("<HH", 7, spell))
+                        self.run_vector(VEC_SPELL_LEVEL, 2, eax=0x1111, ebx=0x2222, ecx=0x3333, edi=given)
+                        self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), kits.arc_level(kid, spell, given))
+                        self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_BX, r.UC_X86_REG_CX)],
+                                         [0x2222, 0x3333])
+        self.assertEqual([kits.arc_level(kits.ARCANIST, s, 5) for s in (30, 100, 196, 202)], [6, 5, 6, 5])
+        self.assertEqual(kits.arc_level(kits.SCHOLAR, 30, 5), 5)
     SHINOBI_CASES = ((17, 3), (17, 1), (11, 1), (13, 2))
 
     def test_cast_level(self):
