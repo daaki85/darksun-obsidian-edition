@@ -742,8 +742,9 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   out after. To see a held target hit on any roll, write its sheet's base AC (+27h) -10 in memory:
   "only a 20 hits ... -> HIT". **A Paralyzed target gets no save line from Hold Person** (it fails
   every save; the game logs only "gives Paralyzed"): free it first (`addeffect.py del C 34`).
-- Seneca is a **Poisoner**: each of her melee hits also poisons (10, no save for a held target: the
-  log's `is poisoned by the hit` line), landing about 0.5 s later, after her next swing's line. To
+- Seneca is a **Poisoner**: each of her weapons' first melee hit in a fight also poisons (10, no save
+  for a held target: the log's `is poisoned by the hit` line), landing about 0.5 s later, after her
+  next swing's line; a weapon's later hits that fight don't (since 2.18: the header's +1860). To
   check a weapon's own damage, free the target (`addeffect.py del C 34`) or use a member who isn't a
   Poisoner, and read the "hits X for N" line.
 - **Testing Psionic Blast without a blaster**: find DSCLOG's header in memory (its signature,

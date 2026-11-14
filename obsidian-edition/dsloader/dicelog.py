@@ -2687,6 +2687,8 @@ class DiceLog:
             self._fight_seen, self._out_of_fight = False, None
         danced = self._dances.round(g, self.tsr_hdr, number, start=start)
         danced += self._wild.round(g, self.tsr_hdr, number, start=start)
+        if start and self.tsr_hdr is not None:  # (a Poisoner's doses: each weapon poisons once a fight)
+            self.guest.write(self.tsr_hdr + kits.TSR_POISON_USED, b"\x00")
         self.round_order = [(combatant, name, score) for score, _, _, _, combatant, name in rows]
         self._acted = set()
         # a new round: its first turn is a new turn even for whoever had the last one (a thief

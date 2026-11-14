@@ -452,6 +452,11 @@ sell_seq   dw 0                 ; +1852 S read on a shop's screen, counted (SELL
 sell_member dw 0                ; +1854 ... the party member on show then
 sell_merchant dw 0              ; +1856 ... to the shop's merchant (DS:179Ch)
 shop_at    dw 0                 ; +1858 the BIOS tick of the shop's loop's last pass (SHOP_LOOP)
+poison_used db 0                ; +1860 a Poisoner's weapons that have poisoned this fight (PROBE_POISON):
+                                ;      bit N party member N's main hand, bit N + 4 its off hand; the
+                                ;      Loader clears it as each fight starts (poisoner.py's FIGHT_START)
+kit_off    db 0                 ; +1861 bit N: party member N's last melee attack with its left hand's
+                                ;      weapon (NOTE_SHOT, from PROBE_ATTACKS: PROBE_POISON's hand)
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -2311,8 +2316,9 @@ tick_count dw 0
 ; PROBE_POISON: INT VEC_POISON replaces "jmp 7A7C5h" (3 bytes: INT + NOP; DSUN.EXE 7A6DDh) in the
 ; routine giving a hit's special effects (DI the attacker's combatant, SI the target's; the
 ; attacker's creature at its [BP-6]), where a person who isn't a thri-kreen has none and goes on to
-; the end. Each melee weapon hit of a Poisoner's (not a shot or a throw: KIT_SHOT, from
-; PROBE_ATTACKS; the routine's [BP+12h], the spell or power behind
+; the end. A Poisoner's first melee weapon hit in a fight with each hand's weapon (not a shot or a
+; throw: KIT_SHOT, from PROBE_ATTACKS; the hand KIT_OFF; once: POISON_USED, which the Loader clears
+; as a fight starts, as a dose is used up; the routine's [BP+12h], the spell or power behind
 ; the damage, -1: not the poison's own damage, power 176, which comes back through here with the
 ; Poisoner as its attacker and would poison again and again) queues the monsters' poison on the
 ; target as a monster's poisoned hit does (the routine at 790D2h: the target, the attacker, power
@@ -2338,6 +2344,13 @@ probe_poison:
         call cr_is
         db KIT_POISONER
         jne .out
+        mov cx, ax              ; (its hand's bit: N main, N + 4 off)
+        bt word [cs:kit_off], ax
+        jnc .hand
+        add cx, 4
+.hand:  bt word [cs:poison_used], cx
+        jc .out                 ; (that weapon's dose used this fight)
+        bts word [cs:poison_used], cx
         mov es, [bp + 4]
         mov bx, [bp + 2]
         mov eax, [es:bx + PZ_TO_LEVEL]
@@ -3707,17 +3720,39 @@ war_kit_halves:
         ret
 
 ; NOTE_SHOT: KIT_SHOT's bit for the attacker ([BP+0Eh]), a party member: set for a missile ([BP+16h]
-; above 1: a shot or a throw), else clear. All registers kept.
+; above 1: a shot or a throw), else clear; and KIT_OFF's: set for a melee attack with the weapon in
+; its left hand (the weapon's item [BP+12h], its slot +11h POISON_OFF_SLOT), else clear (PROBE_POISON:
+; each hand's weapon poisons once a fight). DS the game's; all registers kept.
+POISON_OFF_SLOT equ 10          ; (an item's +11h: the left hand)
 note_shot:
         push ax
+        push bx
+        push es
         mov ax, [bp + 0x0E]
         cmp ax, 3
         ja .out
         btr word [cs:kit_shot], ax
+        btr word [cs:kit_off], ax
         cmp word [bp + 0x16], 1
-        jle .out
+        jle .melee
         bts word [cs:kit_shot], ax
-.out:   pop ax
+        jmp .out
+.melee: push ax
+        mov ax, [bp + 0x12]
+        cmp ax, 0x270F
+        jae .main               ; (no weapon: unarmed)
+        imul ax, ax, 0x15
+        les bx, [ITEMS]
+        add bx, ax
+        cmp byte [es:bx + 0x11], POISON_OFF_SLOT
+        jne .main
+        pop ax
+        bts word [cs:kit_off], ax
+        jmp .out
+.main:  pop ax
+.out:   pop es
+        pop bx
+        pop ax
         ret
 
 probe_spec_damage:

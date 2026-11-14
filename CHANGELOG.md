@@ -72,6 +72,12 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   two-spells probes are gone: `PROBE_CAST_MARK`, `PROBE_CAST_DONE`, `PROBE_END_TURN`,
   `PROBE_ROUND_MARK` (vectors 93h-96h free again) and `ARC_HOLD`'s clearing in `PROBE_SCROLL`. Its
   d3 hit die stays. Test: `test_arc_level` in place of `test_arcanist_second_spell`.
+- **The Poisoner: each melee weapon poisons once a fight** (the user's call, as a dose is used
+  up): `PROBE_POISON` poisons a party Poisoner's hit only if that hand's weapon hasn't this fight
+  (`POISON_USED`, a new header byte at +1860: bit N main hand, N + 4 off hand, cleared by the dice
+  log as each fight starts, `kits.TSR_POISON_USED`); the hand from `KIT_OFF` (+1861), which
+  `NOTE_SHOT` sets for a melee attack with the left hand's weapon (its item's +11h 10). Tests:
+  `test_poisoner`, `test_note_off_hand`.
 - **The Spellarcher, after The Complete Book of Elves** (the user's design): a spell slot makes
   **one** spell arrow (was 5 a preserver level); one stack of each spell, 24 at most, the arrow
   joining it wherever it is (a new stack in the quiver if empty, else the pack; a full stack takes

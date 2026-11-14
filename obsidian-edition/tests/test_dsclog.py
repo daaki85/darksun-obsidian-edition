@@ -1698,6 +1698,20 @@ class SpecializeTests(unittest.TestCase):
         finally:
             self.mu.mem_write(hdr + 360, bytes(1))
 
+    def test_note_off_hand(self):
+        """NOTE_SHOT (PROBE_ATTACKS): the header's +1861 bit N set for party member N's melee attack
+        with its left hand's weapon (the item [BP+12h], its slot +11h 10), clear for another (the
+        right hand, none, or a shot): PROBE_POISON's hand."""
+        from dsloader import kits
+        hdr = TSR * 16 + load_image().find(HDR_SIG)
+        off = hdr + kits.TSR_POISON_USED + 1
+        for item, missile, want in ((3, False, 0x04), (0xFFFF, False, 0), (3, True, 0)):
+            with self.subTest(item=item, missile=missile):
+                self.mu.mem_write(off, bytes((0xF0 if want else 0x04,)))
+                self.mu.mem_write(SS * 16 + BP + 0x12, struct.pack("<H", item))  # (item 3: in the left hand)
+                self.attack(2, self.LONG_SWORD, me=2, missile=missile)
+                self.assertEqual(self.mu.mem_read(off, 1)[0] & 0x0F, want)
+
     def test_war_hit(self):
         """WAR_HIT (kits.war_hit): a Swashbuckler's or Battle Mage's warrior THAC0 (21 less its level)
         with its chosen weapon spec alone, where better than its own; without weapon specialization
@@ -6549,7 +6563,9 @@ class KitTests(unittest.TestCase):
             self.mu.mem_write(hdr + 350, bytes(1))
 
     def test_poisoner(self):
-        """PROBE_POISON: each melee weapon hit of a Poisoner's (halfling fighter/thief; not a shot or
+        """PROBE_POISON: a Poisoner's (halfling fighter/thief) first melee weapon hit in a fight with
+        each hand's weapon (its dose: the header's +1860, bit N main hand, N + 4 the off hand, its
+        hand +1861's bit N; the Loader clears +1860 as a fight starts); not a shot or
         a throw, the header's +360 bit clear; the routine's
         [BP+12h] -1, no spell or power behind the damage: not the poison's own, which would chain)
         queues the monsters' poison (power 176) on the target through the game's routine (790D2h: target, attacker,
@@ -6591,17 +6607,29 @@ class KitTests(unittest.TestCase):
                                                        r.UC_X86_REG_AX, r.UC_X86_REG_BP)],
                              [0x7F0, 0x21, 0x02, 0x1111, BP])
             return list(queued), mu.mem_read(hdr + 360, 1)[0]
+        used = lambda: mu.mem_read(hdr + kits.TSR_POISON_USED, 1)[0]
+        fresh = lambda: mu.mem_write(hdr + kits.TSR_POISON_USED, bytes(2))  # (a fight's start; the main hand)
         try:
             mu.mem_write(hdr + 360, bytes(1))
+            fresh()
             self.creature(9, 1, index=2, second=17, race=6)  # a halfling fighter/thief Poisoner
             self.assertEqual(self.kit_of(9, 1, game.RULE_KITS, 17, 6), kits.POISONER)
             self.assertEqual(hit(2), ([(0x21, 0x02, kits.POISON_POWER, 7)], 0))
-            self.assertEqual(hit(2), ([(0x21, 0x02, kits.POISON_POWER, 7)], 0))  # (every hit)
+            self.assertEqual(used(), 0x04)
+            self.assertEqual(hit(2), ([], 0))  # (the main hand's dose used: no more this fight)
+            mu.mem_write(hdr + kits.TSR_POISON_USED + 1, bytes((0x04,)))  # (its off hand's weapon)
+            self.assertEqual(hit(2), ([(0x21, 0x02, kits.POISON_POWER, 7)], 0))
+            self.assertEqual(used(), 0x44)
+            self.assertEqual(hit(2), ([], 0))
+            fresh()  # (the next fight)
+            self.assertEqual(hit(2), ([(0x21, 0x02, kits.POISON_POWER, 7)], 0))
+            fresh()
             mu.mem_write(hdr + 360, bytes((0x04,)))  # (KIT_SHOT: its last attack a shot or a throw)
             self.assertEqual(hit(2), ([], 4))
             mu.mem_write(hdr + 360, bytes((0x0B,)))  # (the others' shots)
             self.assertEqual(hit(2), ([(0x21, 0x02, kits.POISON_POWER, 7)], 0x0B))
             mu.mem_write(hdr + 360, bytes(1))
+            fresh()
             self.assertEqual(hit(2, kits.POISON_POWER), ([], 0))  # (the poison's own damage: not again)
             self.assertEqual(hit(2, 72), ([], 0))  # (a spell's)
             self.assertEqual(hit(5), ([], 0))  # (not a party member)

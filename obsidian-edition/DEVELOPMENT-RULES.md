@@ -1636,10 +1636,12 @@ How each is done:
   `PROBE_INIT` (`INT B8h`, new: the round's 20 added at DSUN.EXE 5750Eh).
 - **To hit with a missile.** Military Scout (a bow, sling or staff sling, its `KIT_OUTDOORS` bit).
   Where: `KIT_TO_HIT` in `PROBE_ATTACKS` (`kits.missile_to_hit`).
-- **A hit's poison.** Poisoner (every melee weapon hit; the header's +360, `KIT_SHOT`, once a fight
-  up to 2.10.0, now bit N party member N's last weapon attack a shot or a throw: set or cleared by
-  `NOTE_SHOT` in `PROBE_ATTACKS`, from the weapon attack routine's `[BP+16h]`, above 1 for a
-  missile). Where: `PROBE_POISON` (`INT 86h`, new: the `jmp 7A7C5h` at DSUN.EXE 7A6DDh, in the
+- **A hit's poison.** Poisoner (each hand's melee weapon's first hit in a fight: `POISON_USED`, the
+  header's +1860, bit N party member N's main hand, N + 4 its off hand, cleared by the Loader as a
+  fight starts; the hand `KIT_OFF`, +1861, bit N set by `NOTE_SHOT` for a melee attack with the
+  weapon in the left hand, its item's +11h 10; the header's +360, `KIT_SHOT`, bit N party member
+  N's last weapon attack a shot or a throw: set or cleared by `NOTE_SHOT` in `PROBE_ATTACKS`, from
+  the weapon attack routine's `[BP+16h]`, above 1 for a missile). Where: `PROBE_POISON` (`INT 86h`, new: the `jmp 7A7C5h` at DSUN.EXE 7A6DDh, in the
   routine giving a hit's special effects, 7A539h, where a person who isn't a thri-kreen has none; DI
   the attacker, SI the target, `[BP-6]` the attacker's creature, `[BP+12h]` the spell or power
   behind the damage, -1 for a weapon's): for a melee weapon hit only (`KIT_SHOT`'s bit clear; the

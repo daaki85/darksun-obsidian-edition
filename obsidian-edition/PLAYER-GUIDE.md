@@ -905,7 +905,7 @@ what it hits; the arrows last until shot, a stack of each spell of up to 24
 inward, to their own great bodies; other minds remain a puzzle to them.
 
 *Poisoner* (halfling fighter/thief). Halfling hunters whose blades
-carry the jungle's venoms: every wound they deal up close is poisoned. They
+carry the jungle's venoms: each blade's first wound in a fight is poisoned. They
 train with the dagger and the short sword alone, and travel light.
 
 *Spirit Caller* (halfling cleric/psionicist). Shamans of the halfling tribes,

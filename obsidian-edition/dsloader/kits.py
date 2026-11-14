@@ -525,7 +525,8 @@ def arrow_plus(kid: int, plus: int, spell_arrow: bool = False, preserver_level: 
     return best
 
 
-POISON_POWER = 176  # the monsters' "poison (10 damage)", each hit of a Poisoner's (PROBE_POISON)
+POISON_POWER = 176  # the monsters' "poison (10 damage)", a Poisoner's weapon's first hit in a fight (PROBE_POISON)
+TSR_POISON_USED = 1860  # DSCLOG's header: bit N member N's main hand has poisoned this fight, N + 4 its off hand
 
 
 # a Wild Fury's Wild Fighting (wild.py; DSCLOG's KIT_WILD): checked against CON - 4 as a fight starts,

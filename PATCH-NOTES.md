@@ -160,7 +160,7 @@ A few of them:
 - **Assassin:** a backstab one step deadlier (×3 at 1st level up to ×6 from 13th), for −15 to picking pockets and locks.
 - **Wilderness Avenger:** +1 to hit and damage against anything, and Cause Wounds spells doing 1 more a die, for no healing spells at all.
 - **Rescuer:** cures heal 1 more a die and +2 movement in a fight, for no shield and only +1 from behind.
-- **Poisoner:** every melee hit poisons (a save or 10 damage), for a dagger or short sword spec only.
+- **Poisoner:** each melee weapon's first hit in a fight poisons (a save or 10 damage), for a dagger or short sword spec only.
 - **Battle Mage:** a warrior's THAC0 with its chosen weapon, leather armour it can cast in, expertise with that weapon, and spells that still go off after being hit.
 - **Swashbuckler, Crusader, Mind Warrior:** a warrior's THAC0 with the kit's chosen weapon only (the Swashbuckler's a long sword, dagger or short sword, as *The Complete Thief's Handbook*'s weapon of choice; its thief skills −5).
 - **Shinobi:** a thief trained by the Veiled Alliance who casts preserver spells from 6th level (4th-level ones, Improved Invisibility, Solid Fog and Confusion, at 13th), and learns its own from a scroll only if it can read it (its read languages).
