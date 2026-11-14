@@ -1034,14 +1034,13 @@ class SaveTests(unittest.TestCase):
         self.assertEqual(log.describe(e), [])
         self.assertEqual(log.describe(e, show_all=True), ["Script: a map cell blocked (request 10: 3, 40, 12)"])
 
-    def test_games_rest_fades_the_arrows(self):
-        """The game's own rest (DSCLOG's REST_SITE: request 0, each member's turn): no line, but
-        the spell arrows fade in the next pass, as for a script's rest request."""
+    def test_games_rest_leaves_the_arrows(self):
+        """The game's own rest (DSCLOG's REST_SITE: request 0, each member's turn): no line, and the
+        spell arrows stay (they last until shot)."""
         log = make_game()
-        self.assertFalse(log._rest_due)
         e = entry(0, frame=words(0, 0, 1, 0, 0, 0), kind=dicelog.KIND_REQUEST)
         self.assertEqual(log.describe(e), [])
-        self.assertTrue(log._rest_due)
+        self.assertFalse(hasattr(log, "_rest_due"))
 
     def test_spell_cast_floats_its_name(self):
         """A spell cast (DSCLOG's CAST_SITE: the caster at [BP+6], the spell its value): its name

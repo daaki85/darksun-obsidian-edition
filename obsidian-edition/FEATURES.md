@@ -553,9 +553,9 @@ was a fighter, gladiator, ranger or cleric, may wear the armour its other class
 allows; in armour that isn't light, every **thief skill is 0** (the inventory
 screen's PICK to CLMB, the Characters tab's "none in armour that isn't light")
 and it can't **backstab** (nor hide in shadows to backstab). A human warrior who
-was a thief is the same. The Assassin, Shinobi, Shadowblade, Poisoner and
-Spellarcher wear light armour only, even while a human's kit is asleep after
-a change of class ([Kits](KITS.md)).
+was a thief is the same. The Assassin, Shinobi, Shadowblade and Poisoner
+wear light armour only, even while a human's kit is asleep after a change of
+class, and the Spellarcher none at all ([Kits](KITS.md)).
 
 A human who has changed class is held by the class it has now; another race by
 all of its classes. A ranger turned cleric uses both spheres' weapons, and a

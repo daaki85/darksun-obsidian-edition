@@ -2222,9 +2222,8 @@ class CanUseTests(unittest.TestCase):
         return mu.reg_read(r.UC_X86_REG_AX)
 
     def test_spell_arrows_spellarchers_only(self):
-        """ARROWS_FORBID: a Spellarcher's spell arrows (named 16Ch-16Fh) readied by a Spellarcher
-        only, whatever the rules; anyone may carry them in the backpack (slot 18); plain arrows as
-        the game has them."""
+        """ARROWS_FORBID: a Spellarcher's spell arrows (named 16Ch-16Fh) carried by a Spellarcher
+        only, whatever the rules, in the backpack (slot 18) too; plain arrows as the game has them."""
         from dsloader import kitpages, spellarrows
         items = 0x7000
         self.mu.mem_write(GAME_DS * 16 + 0x165D, struct.pack("<HH", 0, items))
@@ -2242,7 +2241,8 @@ class CanUseTests(unittest.TestCase):
                 self.assertTrue(self.can_use(bytes(archer), 62, rules))
                 self.assertEqual(bool(self.can_use(bytes(other), 62, rules)), ok)
                 self.assertEqual(bool(self.can_use(bytes(other), 62, game.RULE_KITS)), ok)  # (no restrictions)
-                self.assertTrue(self.can_use(bytes(other), 62, rules, slot=18))  # (carried)
+                self.assertEqual(bool(self.can_use(bytes(other), 62, rules, slot=18)), ok)  # (carried)
+                self.assertTrue(self.can_use(bytes(archer), 62, rules, slot=18))
 
     def test_dual_class(self):
         """A fighter turned psionicist (or cleric): its long sword back once the new level passes."""
@@ -5249,115 +5249,6 @@ class TypesTests(unittest.TestCase):
 
 
 @unittest.skipIf(Uc is None, "unicorn is not installed")
-class QuiverTests(unittest.TestCase):
-    """PROBE_TAKE (the game's "may this item leave inventory slot SI?", 6F44Bh, where it found no spell
-    keeping a weapon in the hand) and QUIVER_LOCKED: a Spellarcher's spell arrows stay in the quiver
-    (slot 5), refused as a Flame Blade is refused its hand; anything else as the game has it."""
-    DS, LISTS, ENTRIES, ITEMS, MEMBER_SEG = 0x9000, 0x8000, 0x8100, 0x8200, 0x8300
-
-    def setUp(self):
-        from dsloader.gamepatch import VEC_TAKE
-        self.image = load_image()
-        self.mu = mu = Uc(UC_ARCH_X86, UC_MODE_16)
-        mu.mem_map(0, 0x100000)
-        mu.mem_write(TSR * 16, self.image)
-        at = install_at(self.image, VEC_TAKE)
-        self.assertGreater(at, 0)
-        mu.mem_write(VEC_TAKE * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
-        mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
-        self.site = 0x1000
-        back = self.site + 2
-        mu.mem_write(CALLER * 16 + self.site, bytes((0xCD, VEC_TAKE)))
-        mu.mem_write(CALLER * 16 + back + (0x6F455 - 0x6F4B2), struct.pack("<H", self.MEMBER_SEG))
-        self.ends = {back: "on", back + (0x6F4C1 - 0x6F4B2): "no", back + (0x6F4D6 - 0x6F4B2): "yes"}
-        self.seen = []
-
-        def stop(uc, address, size, data):
-            ip = address - CALLER * 16
-            if ip in self.ends:
-                self.seen.append(self.ends[ip])
-                uc.emu_stop()
-        mu.hook_add(UC_HOOK_CODE, stop, begin=CALLER * 16 + back, end=CALLER * 16 + back + 0x30)
-        for ip in self.ends:
-            mu.mem_write(CALLER * 16 + ip, b"\x90")
-        mu.mem_write(self.DS * 16 + 0x540C, struct.pack("<HH", 0, self.LISTS))
-        mu.mem_write(self.MEMBER_SEG * 16 + 0x25B, struct.pack("<H", 1))  # (party member 1 on show)
-        mu.mem_write(self.DS * 16 + 0x541A + 4, struct.pack("<HH", 0, self.ENTRIES))
-        mu.mem_write(self.DS * 16 + 0x165D, struct.pack("<HH", 0, self.ITEMS))
-
-    def take(self, slot, item_name, spell_weapon=False):
-        """Slot SLOT asked about, the item in the quiver named ITEM_NAME (None: the quiver empty)."""
-        mu = self.mu
-        mu.mem_write(self.LISTS * 16, struct.pack("<16h", *[-1] * 16))
-        if item_name is not None:
-            mu.mem_write(self.LISTS * 16 + 5 * 2, struct.pack("<h", 3))  # (entry 3 of the list)
-            mu.mem_write(self.ENTRIES * 16 + 3 * 10 + 4, struct.pack("<H", 7))  # (item 7)
-            mu.mem_write(self.ITEMS * 16 + 7 * 0x15 + 0x12, struct.pack("<H", item_name))
-        del self.seen[:]
-        flags = IF | 2 | (0 if spell_weapon else 0x40)  # (ZF: no spell keeping a weapon in the hand)
-        for name, value in dict(cs=CALLER, ds=self.DS, ss=SS, esp=0x800, ebp=BP, eflags=flags, esi=slot,
-                                eax=0x1111).items():
-            self.mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
-        mu.emu_start(CALLER * 16 + self.site, CALLER * 16 + self.site + 0x40)
-        self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_SP, r.UC_X86_REG_SI, r.UC_X86_REG_AX,
-                                                   r.UC_X86_REG_BP)], [0x800, slot, 0x1111, BP])
-        return self.seen[0]
-
-    def kept(self, slot, item_name):
-        """QUIVER_KEPT (PROBE_CAN_USE's: an item put in inventory slot SLOT, the equip routine's [BP+8])
-        with the quiver holding ITEM_NAME: carry. The character's segment is read from the equip
-        routine's code, as the game has it after the INT (6EF36h: its "mov ax,348h" operand at 6EF6Dh)."""
-        from dsloader import gamepatch
-        mu = self.mu
-        mu.mem_write(self.LISTS * 16, struct.pack("<16h", *[-1] * 16))
-        if item_name is not None:
-            mu.mem_write(self.LISTS * 16 + 5 * 2, struct.pack("<h", 3))
-            mu.mem_write(self.ENTRIES * 16 + 3 * 10 + 4, struct.pack("<H", 7))
-            mu.mem_write(self.ITEMS * 16 + 7 * 0x15 + 0x12, struct.pack("<H", item_name))
-        patch = next(p for p in gamepatch.PATCHES if p.name == "can_use")
-        back = 0x2000 + 2  # (the INT's way back: the patch's INT is its first two bytes)
-        mu.mem_write(CALLER * 16 + back - 2, patch.replacement)
-        mu.mem_write(CALLER * 16 + back + (0x6EF6D - (patch.offset + 2)), struct.pack("<H", self.MEMBER_SEG))
-        mu.mem_write(SS * 16 + BP, struct.pack("<H", PARENT_BP))  # (the equip routine's frame, its [BP+8] the slot)
-        mu.mem_write(SS * 16 + PARENT_BP + 8, struct.pack("<H", slot))
-        stub = 0xFF00  # (a near call into the helper's segment, then a HLT)
-        sym = __import__("test_dsclog_drawing").build()[1]["quiver_kept"]
-        mu.mem_write(TSR * 16 + stub, b"\xe8" + struct.pack("<H", (sym - (stub + 3)) & 0xFFFF) + b"\xf4")
-        mu.mem_write(SS * 16 + 0x7FA, struct.pack("<HHH", back, CALLER, IF | 2))  # (the INT's frame)
-        for name, value in dict(cs=TSR, ds=self.DS, ss=SS, esp=0x7FA, ebp=BP, eflags=IF | 2).items():
-            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
-        mu.emu_start(TSR * 16 + stub, TSR * 16 + stub + 3)
-        self.assertEqual(mu.reg_read(r.UC_X86_REG_SP), 0x7FA)
-        return bool(mu.reg_read(r.UC_X86_REG_EFLAGS) & 1)
-
-    def test_quiver_kept(self):
-        """QUIVER_KEPT (PROBE_CAN_USE): nothing goes into a quiver holding spell arrows; other arrows,
-        an empty quiver or another slot as the game has it. (Its segment's place was 2 bytes off once:
-        the character's number came from junk, so spell arrows could be swapped out.)"""
-        from dsloader import spellarrows
-        arrow = min(spellarrows.ARROW_NAMES)
-        self.assertTrue(self.kept(5, arrow))
-        self.assertFalse(self.kept(5, arrow - 1))
-        self.assertFalse(self.kept(5, None))
-        self.assertFalse(self.kept(7, arrow))
-
-    def test_quiver(self):
-        from dsloader import spellarrows
-        arrow = min(spellarrows.ARROW_NAMES)
-        self.assertEqual(self.take(5, arrow), "no")  # (spell arrows in the quiver: kept)
-        self.assertEqual(self.take(5, arrow + 3), "no")
-        self.assertEqual(self.take(5, arrow, spell_weapon=True), "no")
-        self.assertEqual(self.take(5, arrow - 1), "yes")  # (other arrows)
-        self.assertEqual(self.take(5, None), "yes")
-        self.assertEqual(self.take(7, arrow), "yes")  # (another slot)
-        self.assertEqual(self.take(7, arrow, spell_weapon=True), "on")  # (the game's hand tests)
-
-
-if __name__ == "__main__":
-    unittest.main()
-
-
-@unittest.skipIf(Uc is None, "unicorn is not installed")
 class SavePageTests(unittest.TestCase):
     """PROBE_SAVE_PAGE (PgUp, PgDn) and PROBE_SAVE_CLICK (PAGE 1, PAGE 2) in the save/load window's
     event routine: the page's letter in the game's two save names, the window's own routines run
@@ -6699,10 +6590,11 @@ class KitTests(unittest.TestCase):
             mu.mem_write(hdr + 360, bytes(1))
 
     def test_spellarcher_arrows(self):
-        """PROBE_ARROW: the ammunition's plus kept (ES:[6]) for a shot, 1 better and at least +1
-        for a Spellarcher (half-elf fighter/preserver) whose turn it is shooting from a bow; as it
-        is for a sling, or for anyone else (kits.arrow_plus)."""
-        from dsloader import kits
+        """PROBE_ARROW: the ammunition's plus kept (ES:[6]) for a shot; for a Spellarcher (half-elf
+        fighter/preserver) whose turn it is shooting its spell arrows (named 16Ch-16Fh) from a bow,
+        +1 from its 5th preserver level and +2 from its 9th (a cursed minus as none); its plain
+        arrows, a sling's stones, and anyone else's as they are (kits.arrow_plus)."""
+        from dsloader import kits, spellarrows
         from dsloader.gamepatch import VEC_ARROW
         mu = self.mu
         at = self.image.find(bytes.fromhex("53560650c41e5d16"))
@@ -6713,31 +6605,41 @@ class KitTests(unittest.TestCase):
         self.rules(game.RULE_KITS)
         things = ((self.DS + 0x3972 - 0x4356) & 0xFFFF) * 16 + 0xC36
         ammo_seg = 0x7800
+        spell, plain = spellarrows.ARROWS[2].name, 0x36
 
-        def shot(plus, weapon_type, turn=7):
+        def shot(plus, weapon_type, name, turn=7):
             mu.mem_write(self.DS * 16 + 0x4979, struct.pack("<H", turn))
             mu.mem_write(SS * 16 + BP + 0x0C, struct.pack("<H", weapon_type))
             mu.mem_write(ammo_seg * 16 + 6, bytes((0x55,)))
-            for name, value in dict(cs=CALLER, ds=self.DS, es=ammo_seg, ss=SS, esp=0x7F0, ebp=BP, eflags=IF | 2,
-                                    eax=0x1100 | plus & 0xFF, ebx=0x2222, esi=0x3333).items():
-                mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            arrows = bytearray(0x15)
+            struct.pack_into("<H", arrows, 0x12, name)
+            mu.mem_write(self.ITEMS * 16 + 4 * 0x15, bytes(arrows))  # (item 4, DI: the ammunition)
+            for reg, value in dict(cs=CALLER, ds=self.DS, es=ammo_seg, ss=SS, esp=0x7F0, ebp=BP, eflags=IF | 2,
+                                   eax=0x1100 | plus & 0xFF, ebx=0x2222, esi=0x3333, edi=4).items():
+                mu.reg_write(getattr(r, "UC_X86_REG_" + reg.upper()), value)
             mu.emu_start(CALLER * 16 + 0x700, CALLER * 16 + 0x704)
             self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_BX, r.UC_X86_REG_SI, r.UC_X86_REG_ES)],
                              [0x2222, 0x3333, ammo_seg])
             return struct.unpack("b", mu.mem_read(ammo_seg * 16 + 6, 1))[0]
-        self.creature(9, 1, index=2, second=11, race=4)  # thing 7 is creature 2: a Spellarcher
-        self.assertEqual(self.kit_of(9, 1, game.RULE_KITS, 11, 4), kits.SPELLARCHER)
-        for plus in (0, 1, 3, -1):
-            with self.subTest(plus=plus):
-                self.assertEqual(shot(plus, 1), kits.arrow_plus(kits.SPELLARCHER, plus))  # (a bow)
-                self.assertEqual(shot(plus, 69), kits.arrow_plus(kits.SPELLARCHER, plus))  # (Phrain's Bow)
-                self.assertEqual(shot(plus, 64), plus)  # (a sling: its stones as they are)
-        self.assertEqual([kits.arrow_plus(kits.SPELLARCHER, p) for p in (0, 1, 3, -1)], [1, 2, 4, 1])
+        for level in (1, 4, 5, 8, 9, 12):
+            self.creature(9, 1, index=2, second=11, race=4, level=level)  # thing 7 is creature 2: a Spellarcher
+            self.assertEqual(self.kit_of(9, 1, game.RULE_KITS, 11, 4), kits.SPELLARCHER)
+            for plus in (0, 1, 3, -1):
+                with self.subTest(level=level, plus=plus):
+                    want = kits.arrow_plus(kits.SPELLARCHER, plus, True, level)
+                    self.assertEqual(shot(plus, 1, spell), want)  # (a bow)
+                    self.assertEqual(shot(plus, 69, spell), want)  # (Phrain's Bow)
+                    self.assertEqual(shot(plus, 1, plain), plus)  # (plain arrows: as they are)
+                    self.assertEqual(shot(plus, 64, spell), plus)  # (a sling: as it is)
+        self.assertEqual([kits.arrow_plus(kits.SPELLARCHER, 0, True, lv) for lv in (4, 5, 8, 9)], [0, 1, 1, 2])
+        self.assertEqual([kits.arrow_plus(kits.SPELLARCHER, p, True, 5) for p in (0, 1, 3, -1)], [1, 1, 3, 1])
+        self.assertEqual(kits.arrow_plus(kits.SPELLARCHER, -1, True, 1), 0)
+        self.assertEqual([kits.arrow_plus(kits.SPELLARCHER, p) for p in (0, 2, -1)], [0, 2, -1])  # (plain arrows)
         mu.mem_write(things + 7 * 3, struct.pack("<Bh", 2, 5))  # (creature 5: not a party member)
-        self.creature(9, 1, index=5, second=11, race=4)
-        self.assertEqual(shot(0, 1), 0)
-        self.creature(9, 1, index=2, second=17, race=4)  # (a Shadowblade)
-        self.assertEqual(shot(2, 1), 2)
+        self.creature(9, 1, index=5, second=11, race=4, level=9)
+        self.assertEqual(shot(0, 1, spell), 0)
+        self.creature(9, 1, index=2, second=17, race=4, level=9)  # (a Shadowblade)
+        self.assertEqual(shot(2, 1, spell), 2)
 
     def test_thac0(self):
         """PROBE_THAC0: 20 less SI, and kits.thac0 (a warrior's for the Swashbuckler, Crusader,

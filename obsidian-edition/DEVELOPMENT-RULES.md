@@ -1506,7 +1506,7 @@ emulated tests hold the helper to it:
 | from behind, backstab | Military Scout, Rescuer, Assassin | `PROBE_STEALTH` (`KIT_REAR`) |
 | initiative, Move in a fight | Wayfinder | `PROBE_INIT`, `KIT_MOVE` |
 | shields | Shadowblade, Ghetto Fighter, Rescuer | `KIT_FORBIDS` |
-| light armour only | Assassin, Shinobi, Shadowblade, Poisoner, Spellarcher | `KIT_LIGHT` |
+| light armour only; no armour at all | Assassin, Shinobi, Shadowblade, Poisoner; Spellarcher | `KIT_LIGHT` (its `BARE`) |
 | hiding, moving silently | Stalker, Assassin and Military Scout, Wilderness Avenger, Shadowblade | `stealth.py` |
 | the two-weapon penalty | Twin-blade, Battle Dancer, Justifier, Ghetto Fighter | `PROBE_TWO`, `RG_TWO` |
 | gear allowed | Ravager, Twin-blade, Brute, Stalker, Grove Warden, Lifebinder, Shinobi, Battle Dancer, Shadowblade, Ghetto Fighter and Rescuer, Seeker | `PROBE_CAN_USE`, `KINDS_ALLOWED` |
@@ -1656,7 +1656,7 @@ How each is done:
   through the routine a monster's poisoned hit uses (790D2h: target, attacker, power, level; the
   level from 508:2Ah, whose far call is at 7A7ACh), then jumps on. The game rolls the save
   (paralysis/poison/death) and deals the damage.
-- **An arrow's plus.** Spellarcher (1 better, at least +1, from a bow). Where: `PROBE_ARROW` (`INT
+- **An arrow's plus.** Spellarcher (its spell arrows from a bow: +1 from 5th preserver level, +2 from 9th, `ARROW_PLUS_NOW`; other arrows as they are). Where: `PROBE_ARROW` (`INT
   85h`, new: `mov es:[0006h],al`, DSUN.EXE 58D27h, in the routine finding a missile weapon's
   ammunition, 58C8Fh, `[BP+0Ch]` the weapon's type): `ES:[6]` is the plus the shot's damage adds
   (58992h) and its +1/+2/+3 damage kinds take where better than the bow's (581C4h). The shooter is
@@ -1685,7 +1685,7 @@ How each is done:
   Wayfinder of the party is New or Okay, `PATH_UP`; 1 less while one is down and none up,
   `PATH_DOWN`). Where: `PROBE_INIT`, `KIT_MOVE`; `GameData.path_finder`, `GameData.path_lost`.
 - **Shields.** Shadowblade, Ghetto Fighter, Rescuer. Where: `KIT_FORBIDS` (`kits.forbids`).
-- **Light armour only.** Assassin, Shinobi, Shadowblade, Poisoner, Spellarcher (asleep too). Where:
+- **Light armour only.** Assassin, Shinobi, Shadowblade, Poisoner (asleep too); the Spellarcher no armour, helm or shield at all (`BARE`: bracers, robes and a cloak of protection aren't armour; `kits.BARE_KITS`), and its class's armour left behind at creation (`weaponchoice.kit_gear`). Where:
   `KIT_LIGHT` (`kits.LIGHT_KITS`).
 - **Hiding, moving silently.** Stalker, Assassin and Military Scout (not halved in daylight:
   `kits.not_halved_by_sun`), Wilderness Avenger (a ranger's, 5 a level of its best class),
@@ -2334,32 +2334,19 @@ which hands the click to the Loader as an item used on the map is (`USE_ITEM`
 answers with no text and nothing is shown; refused (not known, no slot), its
 words (`PICK_TEXT`) are.
 
-**The Loader** (`SpellArrows.make`), with the Spellarcher's quiver empty (with
-the same spell's arrows in it, their count goes up by as many, to `MOST_ARROWS`,
-the item's word; with anything else, it says so and uses nothing), takes a slot of the touch spell's level from the
-wizard slots left (`SLOTS_LEFT`; none left, it says so) and puts a stack of the
-game's Arrows (type 62) in the quiver (`npcitems.add_to` with the ammunition
-slot; `weaponchoice.bow_ahead` then puts the bow ahead of it in the list). The
-stack is named Burning, Chill, Shocking or Vampiric Arrows (names 16Ch-16Fh),
-their pictures objects 2614-2621 (the Arrows' icon, its heads in the spell's
-colours), value 0, 5 a preserver level. Slots are the only limit. At a rest (a
-script's REQUEST 1 or 4, `REQ_SITE`, as at a fire ring, or the vulture meal)
-`vanish` gives every spell arrow back to the free list, wherever it is.
-
-**Kept in the quiver.** The game keeps a Flame Blade, Spiritual Hammer or
-Shillelagh (and a Graft Weapon's weapon) in the hand: the routine saying whether
-the character on show may take an item out of an inventory slot (6F44Bh: SI the
-slot, the item's +11h slot + 4; `[BP+8]` nonzero to say why not) asks for those
-four effects and refuses the hand slots with "Item grafted on", and the equip
-routine (6EF52h) refuses an item into a hand they hold the same way. Spell arrows
-are kept the same way: `PROBE_TAKE` (`INT F7h`, new: the `jz` to that routine's
-yes, 6F4B0h, where none of the four is up) refuses slot 5, the quiver, when it
-holds spell arrows (`QUIVER_LOCKED`: the inventory's slot table, `DS:540Ch`, a
-word a slot, names the entry in the character's list, `DS:541Ah` + 4 x the
-character, 10 bytes each, +4 the item; the character on show at the segment the
-routine's "mov ax,348h" gives, 6F454h), and `QUIVER_KEPT`, first in
-`PROBE_CAN_USE`, refuses any item into such a quiver (the equip routine's
-`[BP+8]` 5; its segment from 6EF6Ch), "Cannot use this item".
+**The Loader** (`SpellArrows.make`) takes a slot of the touch spell's level from
+the wizard slots left (`SLOTS_LEFT`; none left, it says so) for one arrow
+(`ARROWS_A_SLOT`, as *The Complete Book of Elves*'s Spellarcher casts a spell onto
+an arrow). The Spellarcher keeps one stack of each spell, `STACK_MOST` (24) at
+most: the arrow joins that spell's stack wherever it is (its count up by one; a
+full stack takes none and uses no slot); with none, a new stack of the game's
+Arrows (type 62) goes in the quiver when it is empty (`npcitems.add_to` with the
+ammunition slot; `weaponchoice.bow_ahead` then puts the bow ahead of it in the
+list), else in a backpack cell. The stack is named Burning, Chill, Shocking or
+Vampiric Arrows (names 16Ch-16Fh), their pictures objects 2614-2621 (the Arrows'
+icon, its heads in the spell's colours), value 0. They last until shot: nothing
+takes them away at a rest (up to 2.17 they faded, and the quiver kept them: 5 a
+preserver level made a stack). They are readied and put away as any arrows.
 
 **The hit.** The weapon attack routine (5883Ah) casts only the weapon's own
 spell on a hit (its item's +0Fh, the spell + 1, at 58B63h; cast by 598:89h with
@@ -2375,20 +2362,15 @@ above 1, a bow's type at [BP+14h]) with spell arrows their spell instead, when a
 Spellarcher shot them (`PROBE_ARROW`'s `AMMO_ARCHER`), and `ARROW_SPELL`
 (`NS_IMAGE+29`, over "mov cl,es:[bx+0Fh]") hands it on. The arrows hold no spell
 themselves, so nothing else in the game (the USE screen's items, breaking, acid)
-sees one. Only a Spellarcher readies them: `ARROWS_FORBID`, in `PROBE_CAN_USE`
+sees one. Only a Spellarcher carries them: `ARROWS_FORBID`, in `PROBE_CAN_USE`
 (whatever the rules), refuses spell arrows (the equip routine's item, its
-`[BP+6]`) to anyone else, but for the backpack (slot 18), so they can be carried
-and handed on. The four spells' records pass the routine's own test (+30h's low
-bits 2, not 1). Checked in the game: Burning and Chill Arrows buttons for a
-Spellarcher knowing both (one in Turn Undead's place, one beside it), their
-names and descriptions, a click on each making 20 arrows for a 4th-level
-Spellarcher with a 1st-level slot used, and Chill Touch cast on a hit with them.
-Checked for the quiver: with spell arrows in it, a button says the quiver must be
-empty and uses no slot, a click on them says "Item grafted on", and Wooden Arrows
-put on them "Cannot use this item"; with it empty, 25 Burning Arrows made into it
-for a 5th-level Spellarcher, a slot used. Arrows put in the ammunition slot by
-memory writes during a fight are not shot (the game keeps its own list of what
-each combatant has readied): they're made outside fights only.
+`[BP+6]`) to anyone else, the backpack (slot 18) too. The four spells' records pass the
+routine's own test (+30h's low bits 2, not 1). Checked in the game (up to 2.17's rules):
+Burning and Chill Arrows buttons for a Spellarcher knowing both (one in Turn Undead's
+place, one beside it), their names and descriptions, a click on each making arrows with
+a 1st-level slot used, and Chill Touch cast on a hit with them. Arrows put in the
+ammunition slot by memory writes during a fight are not shot (the game keeps its own
+list of what each combatant has readied): they're made outside fights only.
 
 ## Picking pockets
 

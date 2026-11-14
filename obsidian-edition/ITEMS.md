@@ -95,7 +95,7 @@ Belt of Might making STR at least 24.
 | ![](docs/items/phrains-bow.png) | Wooden | bow | Phrain's Bow | +1, Acid Arrow | a reward in the party's hut in Teaquetzl, once Gedron joins the alliance (with Arrows +2, a scroll and an orange) |
 | ![](docs/items/dunesong.png) | Wooden | bow | ***Dunesong*** | a bow +1, which the Bowyer's archery target counts as the game's own bows | sold by the **Bowyer** |
 | ![](docs/items/arrows-plus3.png) | Wooden | arrows | Arrows +3, +2, +1 | | +3 in chests; +2 from the Bowyer's archery target and Teaquetzl's rewards; +1 Kel, the Elven Leader and a bag in the slave pens |
-| ![](docs/items/burning-arrows.png) | Wooden | arrows | ***Burning Arrows*** | cast Burning Hands on what they hit | made by a [Spellarcher](KITS.md#multiclass-kits) (its arrow buttons), and readied by a Spellarcher only; worth nothing, gone at the next rest |
+| ![](docs/items/burning-arrows.png) | Wooden | arrows | ***Burning Arrows*** | cast Burning Hands on what they hit | made by a [Spellarcher](KITS.md#multiclass-kits) (its arrow buttons, one a spell slot), and carried by a Spellarcher only; worth nothing, they last until shot |
 | ![](docs/items/chill-arrows.png) | Wooden | arrows | ***Chill Arrows*** | cast Chill Touch on what they hit | the same |
 | ![](docs/items/shocking-arrows.png) | Wooden | arrows | ***Shocking Arrows*** | cast Shocking Grasp on what they hit | the same |
 | ![](docs/items/vampiric-arrows.png) | Wooden | arrows | ***Vampiric Arrows*** | cast Vampiric Touch on what they hit | the same |

@@ -166,7 +166,7 @@ A few of them:
 - **Ravager:** fights without a shield or missile weapons, with a natural AC that hardens from 7 to 3 as it levels.
 - **Battle Dancer:** dances as each fight starts, a roll against DEX at −4: +1 to hit, damage and AC for a few rounds, or −1 if it stumbles. Long swords and bows only, and no shield.
 - **Military Scout:** better at stealth, traps and climbing under the open sky, with +2 initiative and +1 to hit with bows and slings there, and its hiding isn't halved by the sun; worse under a roof, and it never backstabs.
-- **Spellarcher:** shoots every arrow as a magic one (1 better, at least +1), and weaves the touch spells it knows into arrows: a button on the USE screen for each, a spell slot for 5 arrows a preserver level in its empty quiver (or added to the same spell's arrows there), each casting its spell on what it hits at the archer's preserver level. They stay in the quiver until shot or the next rest, when any left fade, so a slot spent just before resting is lost. Making them plays the spell's own cast sound.
+- **Spellarcher:** weaves the touch spells it knows into arrows, as *The Complete Book of Elves*'s Spellarcher does: a button on the USE screen for each, a spell slot for one arrow that casts its spell on what it hits at the archer's preserver level. One stack of each spell, of 24 at most; they last until shot, and only a Spellarcher carries them. Its spell arrows are +1 from 5th preserver level and +2 from 9th. It wears no armour, helm or shield. Making them plays the spell's own cast sound.
 - **Wild Fury:** Wild Fighting as each fight starts, a roll against CON at −4: −3 to hit and AC 3 worse for the fight whatever the roll, and with it passed one more attack a round in melee and +3 damage, as *The Complete Barbarian's Handbook* has it.
 - **[New]** The game's own party has features of its own: Gerakis fights wild (as a Wild Fury does), K'ratchek casts and uses psionics as a Wasteland Seer does, Cilla hides as well in the sun as out of it (her feature, the Elven Shadow-walker), and Cermak is an Arcanist.
 
@@ -277,7 +277,7 @@ Where each is found is in [ITEMS](https://github.com/daaki85/darksun-obsidian-ed
 - **[New]** **Tome of Understanding**: read it for +1 WIS for good.
 - **[New]** **Kalzith's six scrolls**: Shield, Burning Hands, Blur, Cat's Grace (with the new spells on), Lightning Bolt and Haste, spells the game has no scroll of.
 - **[New]** **Defilers' scrolls**: a defiler in a fight may carry a scroll of a preserver spell, one time in 20, found on its body.
-- **[New]** **Burning, Chill, Shocking and Vampiric Arrows**: a Spellarcher's own, woven from its touch spells; each casts its spell on what it hits, and they fade at the next rest.
+- **[New]** **Burning, Chill, Shocking and Vampiric Arrows**: a Spellarcher's own, woven from its touch spells, one a slot; each casts its spell on what it hits, and they last until shot.
 
 **Mundane items**
 

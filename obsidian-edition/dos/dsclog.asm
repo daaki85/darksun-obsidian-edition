@@ -154,7 +154,6 @@ VEC_FLIP equ 0x8B          ; PROBE_FLIP
 VEC_PACE_PASS equ 0x83     ; PROBE_PACE_PASS
 VEC_PACE_DRAW equ 0x82     ; PROBE_PACE_DRAW
 VEC_WORN equ 0x81          ; PROBE_WORN
-VEC_TAKE equ 0xF7          ; PROBE_TAKE
 VEC_SPHERE equ 0xFF        ; PROBE_SPHERE
 TSIZE    equ 2048     ; bytes in the text buffer (a power of two)
 
@@ -2369,12 +2368,61 @@ probe_poison:
         iret
 pz_far  dd 0
 
+; ARROW_PLUS_NOW: AL, a spell arrow's plus (signed), made what it is for the Spellarcher whose turn
+; it is (WHOSE_TURN's combatant): the better of it (at least 0) and +1 from its SPELL_ARROW_PLUS1st
+; preserver level, +2 from its SPELL_ARROW_PLUS2th. DS the game's; others kept.
+arrow_plus_now:
+        push bx
+        push cx
+        push es
+        cmp al, 0
+        jge .got
+        xor al, al
+.got:   mov cl, al
+        mov ax, ds
+        add ax, THINGS_SEG
+        mov es, ax
+        imul bx, [WHOSE_TURN], 3
+        mov ax, [es:bx + COMBATANT_CREATURE]
+        call creature_sheet     ; (ES:BX its sheet)
+        xor ax, ax
+        cmp byte [es:bx + 0x21], PRESERVER_CLASS
+        jne .c2
+        mov al, [es:bx + 0x24]
+.c2:    cmp byte [es:bx + 0x22], PRESERVER_CLASS
+        jne .c3
+        mov al, [es:bx + 0x25]
+.c3:    cmp byte [es:bx + 0x23], PRESERVER_CLASS
+        jne .level
+        mov al, [es:bx + 0x26]
+.level: xor ah, ah
+        cmp al, SPELL_ARROW_PLUS2
+        jae .two
+        cmp al, SPELL_ARROW_PLUS1
+        jae .one
+        mov al, cl
+        jmp .out
+.two:   mov al, 2
+        jmp .best
+.one:   mov al, 1
+.best:  cmp al, cl
+        jge .out
+        mov al, cl
+.out:   pop es
+        pop cx
+        pop bx
+        ret
+
 ; PROBE_ARROW: INT VEC_ARROW replaces "mov es:[0006h],al" (4 bytes: INT + 2 NOPs; DSUN.EXE 58D27h)
 ; in the routine that finds a missile weapon's ammunition (58C8Fh; [BP+0Ch] the weapon's item
 ; type), where it keeps the ammunition's plus (AL) for the shot's damage and magic (the game takes
 ; the better of the weapon's and the ammunition's plus for the hit's +1/+2/+3 damage kinds). For a
-; Spellarcher whose turn it is (WHOSE_TURN's combatant; kits.arrow_plus), arrows shot from a bow
-; are 1 better and at least +1.
+; Spellarcher whose turn it is (WHOSE_TURN's combatant; kits.arrow_plus), its spell arrows (named
+; ARROW_NAME to +3) shot from a bow are +1 from its 5th preserver level and +2 from its 9th (a
+; cursed one's minus counted as none), so they hurt what only magic weapons hurt; other arrows as
+; they are.
+SPELL_ARROW_PLUS1 equ 5         ; (the preserver levels: kits.SPELL_ARROW_LEVELS)
+SPELL_ARROW_PLUS2 equ 9
 probe_arrow:
         push bx
         push si
@@ -2408,10 +2456,13 @@ probe_arrow:
 .not:   pop ax
         jne .store
         mov byte [cs:ammo_archer], 1
-        cmp al, 0
-        jge .plus
-        xor al, al              ; (a cursed arrow: +1 all the same)
-.plus:  inc al
+        push bx
+        mov bx, [cs:ammo_name]
+        sub bx, ARROW_NAME
+        cmp bx, 4
+        pop bx
+        jae .store              ; (plain arrows, magical or not: as they are)
+        call arrow_plus_now     ; (a spell arrow: +1 from 5th preserver level, +2 from 9th)
 .store: mov [es:0x6], al
         pop si
         pop bx
@@ -4133,8 +4184,6 @@ frame_speed:
 ; (CLASS_FORBIDS) is not allowed either. The kit's own (KIT_ALLOWS) are allowed whatever the
 ; game's lists and the restrictions; the kit's limits (KIT_FORBIDS) hold over everything.
 probe_can_use:
-        call quiver_kept        ; (the quiver's spell arrows stay: nothing in their place)
-        jc .no
         and ax, [es:bx + 0x12]
         jnz .game
         call kit_allows         ; (the game's lists say no: the kit's own, all the same)
@@ -4160,124 +4209,16 @@ probe_can_use:
 .no:    xor ax, ax
 .done:  iret
 
-; QUIVER_KEPT: (PROBE_CAN_USE, its INT frame past this call's return) carry set if the equip
-; routine (its frame [BP], [BP+8] the inventory slot, 5 the quiver) is putting an item in a quiver
-; that holds a Spellarcher's spell arrows (QUIVER_LOCKED): they stay until shot or faded, as a Flame
-; Blade stays in the hand. The equip routine's "mov ax,348h" (6EF6Ch) gives the character on show's
-; segment. All registers kept.
-CU_MEMBER_SEG equ 0x6EF6D - 0x6EF36     ; (from the INT's way back: its patch at 6EF34h)
-INV_QUIVER    equ 5                     ; (the inventory's slots: the item's +11h slot + 4)
-quiver_kept:
-        push si
-        push di
-        push es
-        push ax
-        mov si, [bp]
-        cmp word [ss:si + 8], INV_QUIVER
-        jne .no
-        mov di, sp
-        mov si, [ss:di + 10]            ; (the INT's return, past the four pushes and this call's)
-        mov es, [ss:di + 12]
-        mov ax, [es:si + CU_MEMBER_SEG]
-        call quiver_locked
-        jmp .out
-.no:    clc
-.out:   pop ax
-        pop es
-        pop di
-        pop si
-        ret
-
-; PROBE_TAKE: INT VEC_TAKE replaces "jz 6F4D6h" (2 bytes; DSUN.EXE 6F4B0h) in the routine that
-; says whether the character on show may take the item out of inventory slot SI ([BP+8] nonzero:
-; say why not), where it has asked about Graft Weapon, Flame Blade, Spiritual Hammer and Shillelagh
-; (ZF set: none of them): those keep their weapon in the hand ("Item grafted on"). A Spellarcher's
-; spell arrows in the quiver (slot 5: QUIVER_LOCKED) are kept the same way, whatever the spells;
-; else on as the jump would have gone. The routine's "mov ax,348h" (6F454h) gives the character's
-; segment.
-TAKE_REFUSE    equ 0x6F4C1 - 0x6F4B2    ; (from the INT's way back: no, said if asked)
-TAKE_ALLOW     equ 0x6F4D6 - 0x6F4B2    ; (yes)
-TAKE_MEMBER_SEG equ 0x6F455 - 0x6F4B2
-probe_take:
-        push bp
-        mov bp, sp              ; [BP+2] the way back, [BP+4] its segment
-        pushf
-        cmp si, INV_QUIVER
-        jne .game
-        push ax
-        push si
-        push es
-        les si, [bp + 2]
-        mov ax, [es:si + TAKE_MEMBER_SEG]
-        pop es
-        pop si
-        call quiver_locked
-        pop ax
-        jnc .game
-        popf
-        add word [bp + 2], TAKE_REFUSE
-        pop bp
-        iret
-.game:  popf
-        jnz .on                 ; (a spell's weapon: the hands' tests follow)
-        add word [bp + 2], TAKE_ALLOW
-.on:    pop bp
-        iret
-
-; QUIVER_LOCKED: carry set if the quiver of the character on show (its number at AX:25Bh) holds a
-; Spellarcher's spell arrows (named ARROW_NAME to +3): the inventory's slot table (DS:540Ch, far: a
-; word for each slot, -1 empty) names its entry in the character's list (DS:541Ah + 4 x the
-; character, far: 10 bytes each, +4 the item). DS the game's; all registers kept.
-INV_SLOTS     equ 0x540C
-INV_ENTRIES   equ 0x541A
-quiver_locked:
-        pusha
-        push es
-        mov di, ax
-        les bx, [INV_SLOTS]
-        mov ax, es
-        or ax, bx
-        jz .no                  ; (no inventory)
-        mov si, [es:bx + INV_QUIVER * 2]
-        cmp si, -1
-        je .no
-        mov es, di
-        mov bx, [es:0x25B]
-        shl bx, 2
-        les bx, [bx + INV_ENTRIES]
-        imul si, si, 10
-        mov ax, [es:bx + si + 4]
-        cmp ax, 0x270F
-        jae .no
-        imul ax, ax, 0x15
-        les bx, [0x165D]
-        add bx, ax
-        mov ax, [es:bx + 0x12]
-        sub ax, ARROW_NAME
-        cmp ax, 4
-        jae .no
-        pop es
-        popa
-        stc
-        ret
-.no:    pop es
-        popa
-        clc
-        ret
-
 ; ARROWS_FORBID: carry set if the item being equipped (the equip routine's [BP+6]) is a
 ; Spellarcher's spell arrows (named ARROW_NAME to +3: dsloader/spellarrows.py) and the character
-; whose sheet is at ES:BX isn't a Spellarcher, unless they go in the backpack (slot 18): only a
-; Spellarcher readies them, whatever the rules. DS the game's; all registers kept.
-EQUIP_BACKPACK equ 18
+; whose sheet is at ES:BX isn't a Spellarcher, wherever they go (the backpack too): only a
+; Spellarcher carries them, whatever the rules. DS the game's; all registers kept.
 arrows_forbid:
         push ax
         push si
         push es
         push bx
         mov si, [bp]            ; (the equip routine's frame)
-        cmp word [ss:si + 8], EQUIP_BACKPACK
-        je .ok
         imul ax, [ss:si + 6], 0x15
         les si, [ITEMS]
         add si, ax
@@ -4311,7 +4252,7 @@ arrows_forbid:
 ; with RULE_HALF_GIANT); a Brute a one-handed melee weapon, and a shield (but a half-giant's,
 ; with the rule), and with KF_SPEC set (a weapon spec chosen) a missile weapon; a Stalker armour
 ; that isn't light (leather, or of no material); an Assassin, Shinobi, Shadowblade, Poisoner or
-; Spellarcher the same, asleep too (KIT_LIGHT); a Grove Warden a metal weapon; a Lifebinder a
+; Spellarcher no armour, helm or shield at all (KIT_LIGHT's BARE); a Grove Warden a metal weapon; a Lifebinder a
 ; weapon of a kind not blunt (KIT_BLUNT); a Shinobi a shield, armour that isn't light, and a
 ; weapon not of its kinds (KIT_SHINOBI); a Battle Dancer a shield, and a weapon not of its kinds
 ; (kit_dancer); a Seeker a weapon its sphere doesn't allow (as a cleric's: SPHERE_ALLOWS), but the bow. A weapon of a kind the character specialized in (its
@@ -4348,14 +4289,19 @@ kit_forbids:
         pop ax
         ret
 ; KIT_LIGHT: carry set if kit AL keeps its character to light armour whether awake or asleep (an
-; Assassin, Shinobi, Shadowblade, Poisoner or Spellarcher: kits.LIGHT_KITS, a thief's own limit
-; kept after dual-classing) and item type DX is armour that isn't light (leather, or of no
-; material; not a shield). All registers kept.
+; Assassin, Shinobi, Shadowblade or Poisoner: kits.LIGHT_KITS, a thief's own limit kept after
+; dual-classing) and item type DX is armour that isn't light (leather, or of no material; not a
+; shield); or, a Spellarcher (BARE: kits.BARE_KITS), if DX is armour, a helm or a shield at all,
+; as the Complete Book of Elves's Spellarcher wears none (bracers, robes and a cloak of protection
+; aren't armour: BRACERS_AX, BARE_CLOAK). All registers kept.
+BARE_CLOAK equ 8                ; (the item type's +9: worn as a cloak)
 kit_light:
         push ax
         push bx
         push si
         push es
+        cmp al, KIT_SPELLARCHER
+        je .bare
         mov si, light_kits
 .kit:   cmp byte [cs:si], 0
         je .no
@@ -4378,13 +4324,25 @@ kit_light:
         je .no
         stc
         jmp .out
+.bare:  les bx, [ITEM_TYPES]
+        imul ax, dx, 0x14
+        add bx, ax
+        test byte [es:bx + 0x0F], KT_ARMOUR
+        jz .no                  ; (not armour, a helm or a shield)
+        cmp byte [es:bx + 9], BARE_CLOAK
+        je .no                  ; (a cloak of protection)
+        mov ax, dx
+        call bracers_ax
+        je .no                  ; (bracers of defense, a robe)
+        stc
+        jmp .out
 .no:    clc
 .out:   pop es
         pop si
         pop bx
         pop ax
         ret
-light_kits db KIT_ASSASSIN, KIT_SHINOBI, KIT_SHADOWBLADE, KIT_POISONER, KIT_SPELLARCHER, 0
+light_kits db KIT_ASSASSIN, KIT_SHINOBI, KIT_SHADOWBLADE, KIT_POISONER, 0
 
 kit_forbids_one:                ; (AL the kit, KIT_WHERE its class's place)
         push ax
@@ -28811,7 +28769,6 @@ all_vectors:
         vector VEC_BOX_AC, probe_box_ac
         vector VEC_TICK, probe_tick
         vector VEC_POISON, probe_poison
-        vector VEC_TAKE, probe_take
         vector VEC_SPHERE, probe_sphere
         vector VEC_ARROW, probe_arrow
         vector VEC_HEAP, probe_heap

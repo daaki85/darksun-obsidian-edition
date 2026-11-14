@@ -618,8 +618,7 @@ class DiceLog:
         self._dances = dance.Dances()  # (the Battle Dancers' dances, round by round)
         self._wild = wild.WildFights()  # (the Wild Furies' Wild Fighting, fight by fight)
         self._blast = psiblast.BlastWatch()  # (Psionic Blast's imagined wounds, given back as a fight ends)
-        self._arrows = spellarrows.SpellArrows()  # (the Spellarchers' spell arrows, made and faded)
-        self._rest_due = False  # (a rest seen: the spell arrows fade in the next pass)
+        self._arrows = spellarrows.SpellArrows()  # (the Spellarchers' spell arrows, made)
         self._kit_check = 0.0  # (when KIT_OUTDOORS was last brought up to date)
         self._out_of_fight: Optional[float] = None  # (since when the game's fight flag is down)
         self._fight_seen = False  # (the flag seen up since the dances and Wild Fighting were rolled)
@@ -987,21 +986,6 @@ class DiceLog:
         if data != self._locks_written:
             locks.write(self.game, self.tsr_hdr, data[1])
             self._locks_written = data
-
-    def _arrows_pass(self) -> List[str]:
-        """The Spellarchers' spell arrows: after a rest, every one fades (spellarrows.py)."""
-        if self.tsr_hdr is None:
-            return []
-        out: List[str] = []
-        try:
-            if self._rest_due:
-                out = self._arrows.rest(self.game)
-                self._rest_due = False
-        except itemgate.ItemsBusy:
-            pass  # (tried again in the next pass)
-        except (struct.error, IndexError, ValueError):
-            pass
-        return out
 
     def set_monster_info(self, on: bool) -> None:
         """Have the game's Look box (in a fight) say what hurts a monster, and then show all of it."""
@@ -1508,7 +1492,6 @@ class DiceLog:
         step(self._answer_stats)
         out += step(self._answer_use)
         out += step(self._gear_due)
-        out += step(self._arrows_pass)
         out += step(self._loot_pass)
         out += step(self._sell_pass)
         step(self._locks_pass)
@@ -3577,8 +3560,6 @@ class DiceLog:
         """A script's REQUEST (DSCLOG's REQ_SITE), named; the everyday ones only with "Show
         unlabelled rolls"."""
         number = e.raw & 0xFFFF
-        if number in spellarrows.REST_REQUESTS:
-            self._rest_due = True  # (the spell arrows fade)
         if number not in REQUESTS_SHOWN and not show_all:
             return []
         name = REQUEST_NAMES.get(number, "an unknown request")

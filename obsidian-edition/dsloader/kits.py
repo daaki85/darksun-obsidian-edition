@@ -471,10 +471,20 @@ def ghetto_to_hit(kid: int, kind: Optional[int]) -> int:
 SCOUT_MISSILE_KINDS = frozenset((BOW, BOW + 1, BOW + 2))  # (the bow, sling and staff sling)
 
 
-def arrow_plus(kid: int, plus: int) -> int:
+SPELL_ARROW_LEVELS = (5, 9)  # a Spellarcher's preserver levels for its spell arrows' +1 and +2
+
+
+def arrow_plus(kid: int, plus: int, spell_arrow: bool = False, preserver_level: int = 0) -> int:
     """An arrow's plus as a character of kit KID shoots it from a bow (PROBE_ARROW): a Spellarcher's
-    1 better, and at least +1 (magical, so it hurts what only magic weapons hurt)."""
-    return max(plus, 0) + 1 if kid == SPELLARCHER else plus
+    spell arrows (SPELL_ARROW) +1 from its 5th preserver level and +2 from its 9th (a cursed one's
+    minus counted as none), so they hurt what only magic weapons hurt; any other arrow as it is."""
+    if kid != SPELLARCHER or not spell_arrow:
+        return plus
+    best = max(plus, 0)
+    for bonus, level in enumerate(SPELL_ARROW_LEVELS, 1):
+        if preserver_level >= level:
+            best = max(best, bonus)
+    return best
 
 
 POISON_POWER = 176  # the monsters' "poison (10 damage)", each hit of a Poisoner's (PROBE_POISON)
@@ -689,13 +699,20 @@ def forbids_off_hand(kid: int, typ: bytes) -> bool:
 
 
 # the kits held to light armour asleep too (DSCLOG's KIT_LIGHT): a thief's own limit kept after
-# dual-classing, and an archer's
-LIGHT_KITS = frozenset((ASSASSIN, SHINOBI, SHADOWBLADE, POISONER, SPELLARCHER))
+# dual-classing
+LIGHT_KITS = frozenset((ASSASSIN, SHINOBI, SHADOWBLADE, POISONER))
+# the kits that wear no armour, helm or shield at all (DSCLOG's KIT_LIGHT, its BARE): the Complete
+# Book of Elves's Spellarcher; bracers, robes and a cloak of protection aren't armour
+BARE_KITS = frozenset((SPELLARCHER,))
 
 
 def light_only(kid: int, typ: bytes) -> bool:
     """Whether kit KID, awake or asleep, keeps its character from item type TYP: armour that isn't
-    light, for LIGHT_KITS (DSCLOG's KIT_LIGHT)."""
+    light, for LIGHT_KITS; any armour, helm or shield, for BARE_KITS (DSCLOG's KIT_LIGHT)."""
+    if kid in BARE_KITS:
+        from . import restrict
+        return bool(typ[0x0F] & ARMOUR) and not restrict.is_bracers(typ) and not restrict.is_robe(typ) \
+            and typ[9] != restrict.CLOAK_SLOT
     return kid in LIGHT_KITS and bool(typ[0x0F] & ARMOUR) and not typ[0] & SHIELD \
         and typ[8] & 0x4F not in (LEATHER, NO_MATERIAL)
 

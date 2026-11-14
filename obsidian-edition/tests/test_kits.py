@@ -200,3 +200,27 @@ class DualBansInHelperTests(unittest.TestCase):
             mask = value(bans_line[3:])
             table[value(kit_line[3:])] = frozenset(c for c in range(1, 18) if mask >> c & 1)
         self.assertEqual(table, dict(kits.DUAL_BANS))
+
+
+class SpellarcherBareTests(unittest.TestCase):
+    def test_no_armour(self):
+        """A Spellarcher (kits.BARE_KITS) wears no armour, helm or shield at all, leather too; bracers
+        of defense, a robe and a cloak of protection aren't armour (DSCLOG's KIT_LIGHT, its BARE)."""
+        from dsloader import kits
+
+        def typ(flags=0, material=0, worn=0, kinds=0x80, classes=b"\xff\xff"):
+            t = bytearray(0x14)
+            t[0], t[8], t[9], t[0x0F] = flags, material, worn, kinds
+            t[0x10:0x12] = classes
+            return bytes(t)
+        leather_chest, metal_chest = typ(material=5, worn=1), typ(material=4, worn=1)
+        helm, shield = typ(material=1, worn=7), typ(flags=0x04, material=0, worn=0)
+        bracers, robe = typ(material=0x40, worn=3), typ(material=0x40, worn=1, classes=b"\x90\x01")
+        cloak, bow = typ(material=0x40, worn=8), typ(flags=0x02, kinds=0)
+        for t, no in ((leather_chest, True), (metal_chest, True), (helm, True), (shield, True),
+                      (bracers, False), (robe, False), (cloak, False), (bow, False)):
+            with self.subTest(t=t.hex()):
+                self.assertEqual(kits.light_only(kits.SPELLARCHER, t), no)
+        self.assertFalse(kits.light_only(kits.SHADOWBLADE, leather_chest))  # (light armour: as before)
+        self.assertTrue(kits.light_only(kits.SHADOWBLADE, metal_chest))
+        self.assertNotIn(kits.SPELLARCHER, kits.LIGHT_KITS)

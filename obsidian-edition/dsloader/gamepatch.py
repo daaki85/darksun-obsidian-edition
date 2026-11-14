@@ -94,7 +94,6 @@ VEC_HEAP = 0xCB
 VEC_FLIP = 0x8B
 VEC_PACE_PASS, VEC_PACE_DRAW = 0x83, 0x82
 VEC_WORN = 0x81
-VEC_TAKE = 0xF7
 VEC_SPHERE = 0xFF
 # the game's data segment (4356h) in DSUN.EXE: after the 5400h-byte header
 DS_FILE = 0x5400 + 0x4356 * 16
@@ -1200,10 +1199,6 @@ PATCHES = (
     # for that member, as fallen, so its turn goes on to ready arrows (DSCLOG's AMMO_OKAY)
     *(Patch(f"ammo_okay_{n}", offset, _OKAY_TEST + bytes((jump,)), _site(site, 5) + bytes((_OKAY_JUMPS[jump],)))
       for n, ((offset, site), jump) in enumerate(zip(AMMO_OK_SITES, (0x74, 0x75, 0x74)), 1)),
-    # the routine saying whether an item may be taken from an inventory slot, where it found none
-    # of the spells that keep a weapon in the hand: jz to its yes (DSCLOG keeps a Spellarcher's
-    # spell arrows in the quiver as those spells keep their weapons)
-    Patch("take", 0x6F4B0, bytes.fromhex("7424"), _interrupt(VEC_TAKE, 2)),
     # the sphere menu after DUAL to a cleric, druid or ranger, its answer compared: cmp ax,1 (DSCLOG
     # makes it WATER ONLY for a Healer, when the DUAL window opens, and its answer water)
     Patch("sphere", 0x86BC3, bytes.fromhex("3d0100"), _interrupt(VEC_SPHERE, 3)),

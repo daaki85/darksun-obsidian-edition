@@ -47,6 +47,23 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
 
 ## Next pull request (not opened yet)
 
+**Changed**
+- **The Spellarcher, after The Complete Book of Elves** (the user's design): a spell slot makes
+  **one** spell arrow (was 5 a preserver level); one stack of each spell, 24 at most, the arrow
+  joining it wherever it is (a new stack in the quiver if empty, else the pack; a full stack takes
+  none, no slot used); the arrows **last until shot** (no fading at a rest: the rest hook,
+  `vanish` and `REST_REQUESTS` gone); the quiver no longer keeps them (`PROBE_TAKE`, its vector
+  F7h, `QUIVER_KEPT` and `QUIVER_LOCKED` gone, and the game patch `take`); only a Spellarcher
+  carries them, the backpack too (`ARROWS_FORBID`); its plain arrows no longer 1 better: its
+  **spell arrows** are +1 from 5th preserver level and +2 from 9th (`PROBE_ARROW`'s
+  `ARROW_PLUS_NOW`, `kits.arrow_plus`); it wears **no armour, helm or shield** (`KIT_LIGHT`'s
+  `BARE`, `kits.BARE_KITS`; bracers, robes and a cloak of protection allowed), its class's armour
+  left behind at creation (`weaponchoice.kit_gear`). Tests rewritten: `test_spellarrows`,
+  `test_dsclog`'s `test_spellarcher_arrows` and `test_spell_arrows_spellarchers_only`
+  (`QuiverTests` gone), `test_kits`' `SpellarcherBareTests`, `test_dicelog`'s rest test.
+  KITS.md, the player's guide, ITEMS.md, DICE-LOG.md, FEATURES.md, DEVELOPMENT-RULES.md and the
+  patch notes say so. DSCLOG 70,256 bytes.
+
 **Fixed**
 - **An archer's turn lost with its last arrow** (the game's bug, the user's report): the weapon
   attack routine (5883Ah) cuts a shot's attacks ([BP-8]) to the arrows left (5899Ah; "Out of ammo"

@@ -4,15 +4,14 @@ Outside a fight, the USE screen gives a Spellarcher a button for each touch spel
 Hands, Chill Touch and Shocking Grasp at 1st level, Vampiric Touch at 3rd), with Turn Undead's and
 Pick Pockets' (DSCLOG's PP_SHOW: in Turn Undead's place when no priest's element has it, then the
 slots beside it). Pressed, it comes here as an item used on the map does (dicelog's _answer_use:
-USE_ITEM ARROWS_BY and the member, USE_WHO the spell's place in ARROWS): with the Spellarcher's
-quiver empty, a slot of that spell's level is used up and a stack of ARROWS_PER_LEVEL arrows for
-each of its preserver levels goes in the quiver, worth nothing (no merchant pays for them); with
-the same spell's arrows in it, as many more are added to them (to MOST_ARROWS); with anything
-else in the quiver, nothing is made. Slots are the only limit. The arrows stay in the quiver
-until shot or faded, as a Flame Blade stays in the hand (DSCLOG's PROBE_TAKE and QUIVER_KEPT).
-
-At a rest (the game's own, from its menu or a script, as at a fire ring; a script's other rest
-request; or the vulture meal) every spell arrow left anywhere fades (`vanish`).
+USE_ITEM ARROWS_BY and the member, USE_WHO the spell's place in ARROWS): a slot of that spell's
+level is used up for ARROWS_A_SLOT arrow, as the Complete Book of Elves's Spellarcher casts one
+spell onto one arrow. The Spellarcher keeps one stack of each spell's arrows, of STACK_MOST at
+most: the arrow joins that spell's stack wherever it is (the quiver or the pack); with none, a new
+stack goes in the quiver if it is empty, else in the pack. A full stack takes no more (no slot
+used). The arrows are worth nothing (no merchant pays for them), last until shot (no fading at a
+rest), may be readied and put away as any arrows, and only a Spellarcher may carry them (DSCLOG's
+ARROWS_FORBID).
 
 An arrow casts its spell on what it hits, shot from a bow (DSCLOG's ARROW_HIT: the game casts only
 a bow's own spell; the arrow's, told by its name, takes its place), at the archer's caster level as
@@ -20,9 +19,9 @@ the game reckons it for that spell: the Spellarcher's preserver level.
 """
 
 import struct
-from typing import Dict, List, NamedTuple, Set
+from typing import NamedTuple
 
-from . import game, kits, npcitems, pickpocket, ring, weaponchoice
+from . import game, kits, npcitems, pickpocket, weaponchoice
 from .game import GameData
 
 
@@ -43,13 +42,12 @@ NAMES = {0x16C: b"Burning Arrows", 0x16D: b"Chill Arrows", 0x16E: b"Shocking Arr
 ARROW_NAMES = {a.name for a in ARROWS}
 # their pictures (icons.py: the game's Arrows', tinted for each spell), objects 2614-2621
 PICTURES = {0x16C: 0x10000 - 2614, 0x16D: 0x10000 - 2616, 0x16E: 0x10000 - 2618, 0x16F: 0x10000 - 2620}
-ARROWS_PER_LEVEL = 5
-MOST_ARROWS = 0xFFFF  # (a stack's count: the item's word)
+ARROWS_A_SLOT = 1     # an arrow for each slot used
+STACK_MOST = 24       # a spell's stack, at most
 ARROWS_TYPE = weaponchoice.ARROWS[1]  # (the game's Arrows)
 TEMPLATE = npcitems._item("0cfc000000002d000000510000000000" "04ff1c0000")  # (worldgear's)
 ARROWS_BY = 0xFE00      # USE_ITEM for an arrow button's click (DSCLOG's ARROWS_BY): the member its low byte
 KNOWN_FROM_DS, KNOWN_OFF, KNOWN_STRIDE = 0x4356 - 0x3800, 0x168, 0x8A  # (DSCLOG's KNOWN_*)
-REST_REQUESTS = (0, 1, 4)  # a REQUEST that rests the party (dicelog.REQUEST_NAMES; 0 the game's rest, DSCLOG's REST_SITE)
 NOT_IN_A_FIGHT = "Spell arrows can't be made in a fight."
 
 
@@ -100,8 +98,8 @@ def cast_sound(gd: GameData, row: int) -> int:
 
 class SpellArrows:
     def make(self, gd: GameData, member: int, row: int) -> "pickpocket.Attempt":
-        """Party member MEMBER's button for ARROWS[ROW]: a slot used and the arrows in its empty quiver
-        (no text: the game shows none), or why not."""
+        """Party member MEMBER's button for ARROWS[ROW]: a slot used for an arrow, on the spell's stack
+        or a new one (no text: the game shows none), or why not."""
         if not 0 <= row < len(ARROWS) or not 0 <= member < game.PARTY_SIZE:
             return pickpocket.Attempt("No spell arrows can be made now.", [])
         arrow = ARROWS[row]
@@ -110,63 +108,35 @@ class SpellArrows:
             return pickpocket.Attempt(f"{who} can't weave {arrow.spell_name} into arrows.", [])
         if gd.no_spells(member):  # (a multiclass preserver in armour casts nothing: restrict.no_spells)
             return pickpocket.Attempt(f"{who} can't weave spell arrows in armour.", [])
+        name = NAMES[arrow.name].decode().lower()
+        stack = next(((index, item) for index, item, _ in gd._worn(member)
+                      if struct.unpack_from("<H", item, game.ITEM_NAME)[0] == arrow.name), None)
+        had = struct.unpack_from("<H", stack[1], weaponchoice.ITEM_COUNT)[0] if stack is not None else 0
+        if had + ARROWS_A_SLOT > STACK_MOST:
+            return pickpocket.Attempt(f"{who}'s {name} are a full stack ({STACK_MOST}).", [])
         if slots_left(gd, member, arrow.level) <= 0:
             return pickpocket.Attempt(f"{who} has no {_nth(arrow.level)}-level spell left for "
                                       f"{arrow.spell_name}'s arrows.", [])
-        name = NAMES[arrow.name].decode().lower()
-        quiver = next(((index, item) for index, item, _ in gd._worn(member)
-                       if item[game.ITEM_SLOT] == weaponchoice.AMMO_SLOT), None)
-        if quiver is not None and struct.unpack_from("<H", quiver[1], game.ITEM_NAME)[0] != arrow.name:
-            return pickpocket.Attempt(f"{who}'s quiver must be empty, or hold {name}, to weave "
-                                      f"{arrow.spell_name} into arrows.", [])
-        level = gd.class_level(member, game.PRESERVER)
-        count = ARROWS_PER_LEVEL * max(level, 1)
-        had = 0
-        if quiver is not None:  # (the same spell's: as many more on the stack)
-            had = struct.unpack_from("<H", quiver[1], weaponchoice.ITEM_COUNT)[0]
-            if had + count > MOST_ARROWS:
-                return pickpocket.Attempt(f"{who}'s quiver holds no more {name}.", [])
-            gd.guest.write(item_address(gd, quiver[0]) + weaponchoice.ITEM_COUNT, struct.pack("<H", had + count))
+        where = ""
+        if stack is not None:  # (the spell's own stack, wherever it is)
+            gd.guest.write(item_address(gd, stack[0]) + weaponchoice.ITEM_COUNT,
+                           struct.pack("<H", had + ARROWS_A_SLOT))
         else:
-            if not npcitems.add_to(gd, member, arrows_item(arrow, count), weaponchoice.AMMO_SLOT):
+            empty = not any(item[game.ITEM_SLOT] == weaponchoice.AMMO_SLOT for _, item, _ in gd._worn(member))
+            if not npcitems.add_to(gd, member, arrows_item(arrow, ARROWS_A_SLOT),
+                                   weaponchoice.AMMO_SLOT if empty else None):
                 return pickpocket.Attempt("No spell arrows can be made now.", [])
-            weaponchoice.bow_ahead(gd, member)
+            if empty:
+                weaponchoice.bow_ahead(gd, member)
+            where = " in the quiver" if empty else " in the pack"
         at = gd.ds * 16 + game.SLOTS_LEFT["Wizard"] + member * game.SLOTS_STRIDE + arrow.level
         gd.guest.write(at, bytes((slots_left(gd, member, arrow.level) - 1,)))
-        now = f", {had + count} in the quiver now" if had else ""
-        log = f"{who} makes {count} {name} ({ARROWS_PER_LEVEL} a preserver level, {level}){now}: a " \
-              f"{_nth(arrow.level)}-level slot used; each casts {arrow.spell_name} on what it hits; " \
-              f"they stay in the quiver until shot, and fade at the next rest"
+        total = had + ARROWS_A_SLOT
+        log = f"{who} makes one of the {name}{where} ({total} of {STACK_MOST} now): a " \
+              f"{_nth(arrow.level)}-level slot used; it casts {arrow.spell_name} on what it hits, " \
+              f"and lasts until shot"
         return pickpocket.Attempt("", [log])  # (no window: only a refusal is shown)
-
-    def rest(self, gd: GameData) -> List[str]:
-        """The party rested: every spell arrow fades."""
-        return vanish(gd)
 
 
 def _nth(level: int) -> str:
     return {1: "1st", 2: "2nd", 3: "3rd"}.get(level, f"{level}th")
-
-
-def vanish(gd: GameData) -> List[str]:
-    """Every spell arrow, wherever it is, given back to the game's free list: lines for the log."""
-    party_lists: Set[int] = set()
-    for member in range(game.PARTY_SIZE):
-        rec = gd.creature(member)
-        if len(rec) >= game.CREATURE_SIZE:
-            party_lists.update(struct.unpack_from("<h", rec, o)[0] for o in game.CREATURE_ITEM_LISTS)
-    counts: Dict[int, int] = {}
-    stuck: Set[int] = set()  # (a container's only item, left: the game's containers aren't empty)
-    for _ in range(ring.THING_COUNT):  # (one at a time: each unlink changes the lists)
-        it = ring.Items(gd)
-        found = next(((thing, index, rec) for thing in range(ring.THING_COUNT)
-                      for index, rec in it.chain(thing, inside=False) if is_arrow(rec) and index not in stuck), None)
-        if found is None:
-            break
-        thing, index, rec = found
-        name = struct.unpack_from("<H", rec, game.ITEM_NAME)[0]
-        if not ring.unlink(gd, it, index, "spell arrows faded at a rest", empty=thing in party_lists):
-            stuck.add(index)
-            continue
-        counts[name] = counts.get(name, 0) + struct.unpack_from("<H", rec, weaponchoice.ITEM_COUNT)[0]
-    return [f"The {NAMES[name].decode().lower()} fade with the rest ({count})" for name, count in counts.items()]
