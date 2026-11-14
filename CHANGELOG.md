@@ -59,11 +59,20 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   Checked in the game (playtest/logs/2026-11-14-quiver-turn.md): Ester, one arrow and two shots,
   killed the Templar and kept her turn (walked on); without the two patches the turn went to Jenna.
   DSCLOG 70,208 bytes (+80).
-- **In progress, not yet decided with the user:** a party member's turn kept when its quiver runs dry
-  against a target still standing (DSCLOG's `AMMO_OKAY` sites at 5843Fh, 584A4h and 5850Eh: the
-  attack command's "target still Okay" tests answer "fallen" for it; NEW_AS_OKAY's jbe/ja kept in
-  the same patches). Checked: the turn stays. Not done: arrows readied mid-fight from another
-  member's quiver don't shoot (the fight's own item list); see the log. DSCLOG 70,272 bytes.
+
+**New**
+- **An archer's quiver in a fight** (the user's request): `quiver.py`. As a party member's turn
+  starts in a fight, a quiver under 5 arrows is topped up to 20 from the member's backpack stacks of
+  the same kind (type, name and plus), by count (the game reads the quiver stack's count at each
+  shot; a stack put in the slot by memory in a fight isn't shot, and arrows readied by hand after a
+  volley can't be shot that turn: logs/2026-11-14-quiver-turn.md parts 2-3); an emptied backpack
+  stack is unlinked. After each party shot, "Arrows: N left" (quiver and pack) or "Out of arrows"
+  floats over the archer (labels.py, the charges' blue and priority). A party member whose volley
+  its quiver cut short keeps its turn against a target still standing: DSCLOG's `AMMO_OKAY` sites
+  (5843Fh, 584A4h, 5850Eh) make the attack command's "target still Okay" tests answer "fallen" for
+  it, NEW_AS_OKAY's jbe/ja kept in the same patches. Checked in the game (the log's part 4).
+  Tests: `test_quiver.py`; `test_gamepatch`'s `test_new_counts_as_okay` counts the three. DSCLOG
+  70,272 bytes.
 
 **Changed**
 - **Wild Fury's Wild Fighting is The Complete Barbarian's Handbook's again**: fighting wild is −3

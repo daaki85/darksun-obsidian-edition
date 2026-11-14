@@ -28,7 +28,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from . import aging, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
@@ -551,6 +551,7 @@ class DiceLog:
         self.floating_names = True  # spells' names over their casters, "Miss" over the missed (labels.py)
         self._panel = combatlog.Panel()
         self._labels = labels.Labels()  # names floating over figures: a spell's, a miss (labels.py)
+        self._quiver_kind: Dict[int, bytes] = {}  # each party archer's last quiver stack (quiver.py: "Out of arrows")
         self._labels_font_tried = False
         self.combat_log_level = combatlog.SHORT  # ... its lines in short, in detail or the results only
         self._fight_at: Optional[float] = None  # ... when a fight was last seen (its last lines go in too)
@@ -2554,6 +2555,11 @@ class DiceLog:
                 lines, hidden = [], False
             out += lines
             self._set_stealth(hidden, turn)
+        if turn < game.PARTY_SIZE:  # (a party archer's quiver topped up from its pack: quiver.py)
+            try:
+                out += quiver.top_up(self.game, turn)
+            except (struct.error, IndexError, ValueError):
+                pass
         return out
 
     def _first_able(self) -> Optional[int]:
@@ -2750,6 +2756,7 @@ class DiceLog:
             out = self.flush(now, force=True) + self._attack(e)
             if len(out) >= 2 and out[-2].endswith("-> miss"):
                 self._float(e.glob[0], labels.MISS, labels.MISS_INK, now)
+            self._arrows_left(e, now)
             return out
         if code.startswith(DICE_SITE):
             return self._dice_roll(e, show_all, now)
@@ -2958,6 +2965,22 @@ class DiceLog:
         if capped:  # (DSCLOG's PROBE_BELT: AD&D's most, the equipment penalty, if any, within it)
             steps.append(f"(at most {game.THIEF_MOST})")
         return [head, f"    {name} {chance} = " + " ".join(steps).replace(" +", " + ").replace(" -", " - ")]
+
+    def _arrows_left(self, e: Entry, now: float) -> None:
+        """After a party member's shot (mode above 1): the arrows it has left floating over it
+        (quiver.py), in the charges' blue, as Armor's "7 left"."""
+        attacker, mode, combatant = e.arg(0x0E), e.arg(0x16), e.arg(0x18)
+        if mode is None or mode <= 1 or attacker is None or not 0 <= attacker < game.PARTY_SIZE:
+            return
+        try:
+            found = quiver.quiver(self.game, attacker)
+            if found is not None:
+                self._quiver_kind[attacker] = found[1]
+            text = quiver.left_label(self.game, attacker, self._quiver_kind.get(attacker))
+        except (struct.error, IndexError, ValueError):
+            return
+        if text:
+            self._float(combatant, text, labels.CHARGE_INK, now, priority=1)
 
     def _float(self, thing: Optional[int], text: str, colour, now: float, priority: int = 0) -> None:
         """TEXT floating over combatant THING for a moment (labels.py), with the switch on."""

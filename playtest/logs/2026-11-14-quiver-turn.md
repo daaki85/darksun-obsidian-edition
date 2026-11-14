@@ -64,3 +64,11 @@ the turn ends after the shots, with arrows or without: that is the game's rule f
     click). After a kill, the game does allow a second shot (at another target: the mod's
     `shots_left` notes). The click's own handler wasn't found (the attack-mode pointer code at
     1D66Ah picks only the icon; 5786Dh is the monsters' turn routine).
+
+## Part 4: the quiver topped up from the pack, and the count over the archer (the user's choice)
+15. `quiver.py`: as a party archer's turn starts in a fight, a quiver under 5 is topped up to 20
+    from the pack's stacks of the same kind (by count: the quiver stack the game knows stays); after
+    each party shot "Arrows: N left" floats over the archer.
+16. Ester with 3 arrows, Jenna's 68 handed into Ester's **pack** on her turn; two shots (one left):
+    "Arrows: 69 left" over her. Her next turn: "Ester fills the quiver from the pack: +19, 20
+    Wooden Arrows ready" (quiver 20, pack 49), and both shots went off: "Arrows: 67 left".

@@ -63,6 +63,10 @@ The full catalogue follows, by part of the game.
 - **[Changed]** Every thri-kreen, foes too, throws a chatkcha once more a round, AD&D's 2/1 for its own weapon *(was at the weapon's rate, like anyone)*; a thri-kreen Mind Warrior may take the chatkcha as its weapon spec.
 - **[New]** The weapons spells make count for specialization: the Flame Blade as a long sword, Shillelagh as a club, Spiritual Hammer as a mace.
 
+**Archers**
+
+- **[New]** As a party archer's turn starts in a fight, a quiver of fewer than 5 arrows is filled from its own pack's stacks of the same arrows, and the arrows it has left float over it after each shot ("Arrows: 17 left", like Armor's charges). An archer whose quiver runs dry mid-volley keeps its turn, to walk, fight hand to hand or end it.
+
 **Saving throws**
 
 - **[Fixed]** Spells are saved against with the spell save *(was petrification/polymorph for almost every spell)*.
