@@ -783,6 +783,14 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   `weaponchoice.ITEM_COUNT`, before the ambush's speech is clicked): changed in a fight the game's
   own readied list doesn't see it. With no arrows at all, a click on a far foe walks the member up
   and strikes with its melee weapon instead of shooting.
+- **Readying arrows in a fight** (logs/2026-11-14-quiver-turn.md): on the member's turn, I, then
+  the quiver (66,26) and a backpack cell (195,26) by clicks; another member's arrows: its portrait
+  (20,63 the second), its quiver, the archer's portrait (20,104 the third), the archer's quiver
+  (a same-kind stack merges). Escape, then `pointer.py attack` again: **closing the inventory leaves
+  the pointer in walk mode** (DS:11B8h 1), and a click then walks. **A stack made in memory
+  (`npcitems.add_to`) never shoots**: test readying with the game's own items. After a volley at a
+  target still standing, a second shot at it that turn does nothing even with arrows readied (not
+  yet understood).
 - **A shot with a weapon put in memory** (logs/2026-11-10-stinkpots.md): a missile-slot weapon
   replaced by another type (the scratch `setitem.py ITEM TYPE` in that log: a SEGOBJEX record,
   link, flags and slot kept) shoots on the member's turn with `pointer.py attack` and a click on the

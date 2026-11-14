@@ -51,3 +51,16 @@ the turn ends after the shots, with arrows or without: that is the game's rule f
     that came to the archer during the fight: a stack given by another member, or one made in
     memory. (The mod's `shots_left` patch already lets a shot follow a kill, +181h under 63h.)
 11. A memory-made stack (npcitems.add_to) is no test of readying: it never shoots.
+
+## Part 3: why arrows readied after running dry don't shoot (2026-11-14, later)
+12. Handing arrows over works in itself: Jenna's 68 given to Ester's quiver on a fresh turn shot
+    twice (41 to 30).
+13. Tried keeping the emptied stack instead of the game deleting it (a site AMMO_KEEP at 58DA9h):
+    the stack stayed at 0, Jenna's arrows merged into it (the very item Ester began the fight
+    with, 68 arrows), and the shot was **still refused** on that turn. So the deletion isn't the
+    cause; the experiment was dropped.
+14. What remains: after a volley at a target still standing, a second shot at **the same target**
+    in that turn does nothing (the pointer shows the sword; nothing in her turn bytes changes on the
+    click). After a kill, the game does allow a second shot (at another target: the mod's
+    `shots_left` notes). The click's own handler wasn't found (the attack-mode pointer code at
+    1D66Ah picks only the icon; 5786Dh is the monsters' turn routine).
