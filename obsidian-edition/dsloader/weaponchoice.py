@@ -120,7 +120,8 @@ def kinds_for(sheet: bytes, allowed: Optional[List[int]] = None) -> List[int]:
         first = chosen[0] or defaults[0]
         return [first, chosen[1] if chosen[1] != first else 0, 0, 0]
     if FIGHTER in classes or classes & set(RANGERS) or specialize.battle_mage(sheet) \
-            or specialize.war_kit(sheet) is not None:
+            or specialize.war_kit(sheet) is not None \
+            or game.RULES_IN_FORCE & game.RULE_KITS and kits.SWASHBUCKLER in kitpages.kit_ids(sheet):
         return [chosen[0] or defaults[0], 0, 0, 0]
     return [0, 0, 0, 0]
 

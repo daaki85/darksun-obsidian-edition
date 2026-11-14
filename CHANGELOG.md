@@ -48,6 +48,18 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
 ## Next pull request (not opened yet)
 
 **Changed**
+- **A warrior's THAC0 with the kit's chosen weapon only** (the user's call, after The Complete
+  Thief's Handbook's Swashbuckler): the Swashbuckler, Battle Mage, Crusader and Mind Warrior no
+  longer have it with every weapon. `PROBE_THAC0` and `CR_THAC0_BASE` leave it out (the sheet's
+  THAC0 is the classes'), and the new `WAR_HIT`, in `PROBE_ATTACKS` after `KIT_TO_HIT`, takes the
+  creature's THAC0 (+1Fh) less a warrior's (21 less the kit's level, 1 at best) off the attack's
+  THAC0 with a weapon of the kit's chosen weapon spec (with weapon specialization; without it the
+  kit's kinds: `SWASH_KINDS`, `KIT_BM_KINDS`, melee). The Swashbuckler picks its weapon of choice
+  on the weapon window after DONE (`LV_DUE` one, `KINDS_ALLOWED` the long sword, dagger and short
+  sword; no specialization's bonus or attacks: a thief's chosen kind is plain), and its thief
+  skills are −5 (was −10). The Loader's THAC0 for each weapon (`game.weapon_hits`) and the dice
+  log (`_kit_attack`) show it as "Swashbuckler (a warrior's THAC0)" (`kits.war_hit`). Tests:
+  `test_dsclog`'s `test_war_hit`, `test_thac0`, `test_thac0_line`, `test_swashbuckler`.
 - **The Spellarcher, after The Complete Book of Elves** (the user's design): a spell slot makes
   **one** spell arrow (was 5 a preserver level); one stack of each spell, 24 at most, the arrow
   joining it wherever it is (a new stack in the quiver if empty, else the pack; a full stack takes

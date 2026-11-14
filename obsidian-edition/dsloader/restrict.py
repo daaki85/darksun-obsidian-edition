@@ -298,7 +298,7 @@ def allowed_kinds(sheet: bytes, type_record) -> List[int]:
     say, only the psionicist's). TYPE_RECORD(type) gives an item type's record. DSCLOG's
     KINDS_ALLOWED. Not the bow for a ranger: it has expertise with the bow already. A Battle Mage
     (kits.py) its own, whatever its class; a Spellarcher the bow only; a Poisoner the dagger and
-    short sword; a Crusader or Mind Warrior its class's melee ones (a thri-kreen Mind Warrior the
+    short sword; a Swashbuckler the long sword, dagger and short sword; a Crusader or Mind Warrior its class's melee ones (a thri-kreen Mind Warrior the
     chatkcha too)."""
     from . import kitpages, kits
     if game.RULES_IN_FORCE & game.RULE_KITS and kits.BATTLE_MAGE in kitpages.kit_ids(sheet):
@@ -307,6 +307,8 @@ def allowed_kinds(sheet: bytes, type_record) -> List[int]:
         return [kits.BOW]
     if game.RULES_IN_FORCE & game.RULE_KITS and kits.POISONER in kitpages.kit_ids(sheet):
         return sorted(kits.POISONER_KINDS)
+    if game.RULES_IN_FORCE & game.RULE_KITS and kits.SWASHBUCKLER in kitpages.kit_ids(sheet):
+        return sorted(kits.SWASHBUCKLER_KINDS)
     ranger = int.from_bytes(sheet[game.SHEET_FLAGS:game.SHEET_FLAGS + 2], "little") & 0x200
     war = specialize.war_kit(sheet)
     melee = kits.MELEE_KINDS | (kits.KREEN_WARRIOR_KINDS if war == kits.MIND_WARRIOR

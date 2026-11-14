@@ -430,8 +430,8 @@ again as the classes change, but `PROBE_THAC0` reads the kit from the party's
 sheets, not the one being made, so the creature's `+1Fh` lacks a kit chosen on
 the panel: `PROBE_THAC0` keeps the game's own, kit-less (`THAC0_GAME`,
 `THAC0_SEEN` from `CR_OPEN` on), and `CR_THAC0_BASE` applies the sheet being
-made's kit to it (`kits.thac0`: a Scholar 1 worse, a warrior's THAC0 for the
-Swashbuckler, Crusader, Battle Mage and Mind Warrior); with none worked out on
+made's kit to it (`kits.thac0`: a Scholar 1 worse; a warrior THAC0 kit's is its
+chosen weapon's alone, on the attack: `WAR_HIT`); with none worked out on
 the screen (an EDIT), the creature's `+1Fh`, its kit in it. A kit chosen or
 taken back (`KIT_SHOWN_DUE`, from `KIT_ROW`) draws the hit points and the
 THAC0 again at the click's end (`KIT_REDRAW`), after a Battle Mage's, Mind

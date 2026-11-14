@@ -1372,6 +1372,16 @@ class DiceLog:
             if weapon or hit or dam or more:
                 names.append(kits.name(kid) + (" under the open sky" if kid == kits.SCOUT else ""))
                 to_hit, damage = to_hit + weapon + hit + more, damage + weapon + dam + more
+        if attacker is not None and mode is not None and item_type is not None:  # (DSCLOG's WAR_HIT)
+            try:
+                rec = g.creature(attacker)
+                own = struct.unpack("b", rec[game.CREATURE_THAC0:game.CREATURE_THAC0 + 1])[0]
+                kid, war = kits.war_hit(g.sheet(attacker), kind, own, bool(self.rules & game.RULE_SPECIALIZE))
+            except (struct.error, IndexError, ValueError, AttributeError, TypeError):
+                kid, war = 0, 0
+            if war:
+                names.append(f"{kits.name(kid)} (a warrior's THAC0)")
+                to_hit += war
         if attacker in g.wild and mode is not None:  # (DSCLOG's WILD_*: a Wild Fury's, or Gerakis's own)
             names.append("Wild Fighting")
             to_hit += kits.WILD_TO_HIT  # (whatever the check)

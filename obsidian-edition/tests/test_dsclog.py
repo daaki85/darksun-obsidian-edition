@@ -901,7 +901,7 @@ class BeltTests(unittest.TestCase):
         self.assertEqual([kits.thief_skill(kits.ASSASSIN, k) for k in range(4)], [-15, -15, 0, 0])
 
     def test_swashbuckler(self):
-        """A Swashbuckler (kits on): 10 less to every skill (kits.thief_skill), the belt's 5 still
+        """A Swashbuckler (kits on): 5 less to every skill (kits.thief_skill), the belt's 5 still
         added to pick pockets and open locks, never below 0; kits off, none."""
         from dsloader import kits
         sheets = 0xB000
@@ -911,11 +911,11 @@ class BeltTests(unittest.TestCase):
         sheet[0x21], sheet[0x43] = 17, 1
         self.mu.mem_write(sheets * 16 + 2 * 0x47, bytes(sheet))
         self.mu.mem_write(self.hdr + 270, struct.pack("<H", 1))
-        self.assertEqual([self.chance(skill) for skill in range(8)], [35, 35, 30, 30, 30, 30, 30, 30])
+        self.assertEqual([self.chance(skill) for skill in range(8)], [40, 40, 35, 35, 35, 35, 35, 35])
         self.assertEqual(self.chance(4, si=5), 0)
         self.mu.mem_write(self.hdr + 270, struct.pack("<H", 0))
         self.assertEqual([self.chance(skill) for skill in range(5)], [45, 45, 40, 40, 40])
-        self.assertEqual({kits.thief_skill(kits.SWASHBUCKLER, k) for k in range(8)}, {-10})
+        self.assertEqual({kits.thief_skill(kits.SWASHBUCKLER, k) for k in range(8)}, {-5})
 
     def test_multiclass_kits(self):
         """The fighter/thieves' kits (creature 1, a party member): their KIT_SKILLS rows as
@@ -1608,7 +1608,7 @@ class SpecializeTests(unittest.TestCase):
             mu.mem_write(self.ITEM_TYPES * 16 + typ * 0x14, bytes(rec))
 
     def attack(self, halves, weapon, chosen=(), classes=(9, 0, 0), levels=(5, 0, 0), rules=4096, missile=False, race=0,
-               kit=0, shield=False, me=5, target_race=None, packed=False, sides=8):
+               kit=0, shield=False, me=5, target_race=None, packed=False, sides=8, own_thac0=0):
         """(attacks in halves, THAC0, damage bonus, sides) after both probes, with THAC0 15, a
         damage bonus of 1 before the STR bonus of 2 is added, 1d8; the attacker (thing 7,
         creature 5) with a shield in its left hand or none (SHIELD)."""
@@ -1628,6 +1628,7 @@ class SpecializeTests(unittest.TestCase):
         rec = bytearray(0x3A)
         struct.pack_into("<HHHH", rec, 4, 3, 0, 0, 0)
         struct.pack_into("<HHH", rec, 8, 8 if shield else 0x270F, 0x270F, 0x270F)
+        rec[0x1F] = own_thac0  # (its classes' THAC0, as the game keeps it: WAR_HIT's)
         mu.mem_write(self.CREATURES * 16 + me * 0x3A, bytes(rec))
         things = (self.DS + 0x3972 - 0x4356) * 16 + 0xC36
         mu.mem_write(things + 7 * 3, struct.pack("<Bh", 2, me))
@@ -1696,6 +1697,33 @@ class SpecializeTests(unittest.TestCase):
             self.assertEqual(self.mu.mem_read(hdr + 360, 1)[0], 0x08)
         finally:
             self.mu.mem_write(hdr + 360, bytes(1))
+
+    def test_war_hit(self):
+        """WAR_HIT (kits.war_hit): a Swashbuckler's or Battle Mage's warrior THAC0 (21 less its level)
+        with its chosen weapon spec alone, where better than its own; without weapon specialization
+        with the kit's kinds (a Swashbuckler's long sword, dagger, short sword; a Battle Mage's
+        KIT_BM_KINDS); no kit, nothing."""
+        from dsloader import kits
+        spec = game.RULE_KITS | game.RULE_SPECIALIZE
+        swash = dict(classes=(17, 0, 0), levels=(9, 0, 0), kit=1, own_thac0=16)  # (warrior 12: 4 better)
+        mage = dict(classes=(11, 0, 0), levels=(9, 0, 0), kit=2, own_thac0=18)  # (warrior 12: 6 better)
+        for who, kit, bonus in ((swash, kits.SWASHBUCKLER, 4), (mage, kits.BATTLE_MAGE, 6)):
+            with self.subTest(kit=kit):
+                self.assertEqual(self.attack(2, self.LONG_SWORD, chosen=(0,), rules=spec, **who)[1], 15 - bonus)
+                self.assertEqual(self.attack(2, self.AXE, chosen=(0,), rules=spec, **who)[1], 15)  # (not chosen)
+                self.assertEqual(self.attack(2, self.DAGGER, rules=game.RULE_KITS, **who)[1], 15 - bonus)  # (its kinds)
+                self.assertEqual(self.attack(2, self.LONG_SWORD, chosen=(0,), rules=spec, **dict(who, kit=0))[1], 15)
+        self.assertEqual(self.attack(2, self.AXE, rules=game.RULE_KITS, **swash)[1], 15)  # (an axe: not a Swashbuckler's)
+        self.assertEqual(self.attack(2, self.AXE, rules=game.RULE_KITS, **mage)[1], 15 - 6)  # (a Battle Mage's)
+        self.assertEqual(self.attack(2, self.LONG_SWORD, chosen=(0,), rules=spec, **dict(swash, own_thac0=11))[1], 15)
+        sheet = bytearray(game.SHEET_SIZE)
+        sheet[0x21], sheet[0x24], sheet[0x43] = 17, 9, 1
+        sheet[0x14] = 1  # (the long sword chosen)
+        self.assertEqual(kits.war_hit(bytes(sheet), 0, 16, True), (kits.SWASHBUCKLER, 4))
+        self.assertEqual(kits.war_hit(bytes(sheet), 5, 16, True), (kits.SWASHBUCKLER, 0))
+        self.assertEqual(kits.war_hit(bytes(sheet), 2, 16, False), (kits.SWASHBUCKLER, 4))
+        self.assertEqual(kits.war_hit(bytes(sheet), 5, 16, False), (kits.SWASHBUCKLER, 0))
+        self.assertEqual(kits.war_hit(bytes(sheet), None, 16, True), (0, 0))
 
     def test_wild_fury(self):
         """Wild Fighting for a Wild Fury (a mul druid/fighter, party member 2; the header's +355,
@@ -6642,8 +6670,9 @@ class KitTests(unittest.TestCase):
         self.assertEqual(shot(2, 1, spell), 2)
 
     def test_thac0(self):
-        """PROBE_THAC0: 20 less SI, and kits.thac0 (a warrior's for the Swashbuckler, Crusader,
-        Battle Mage and Mind Warrior where better; the Scholar's 1 worse); kits off, the game's."""
+        """PROBE_THAC0: 20 less SI, and kits.thac0 (the Scholar's 1 worse; the Swashbuckler's,
+        Crusader's, Battle Mage's and Mind Warrior's warrior THAC0 not here: WAR_HIT gives it with the
+        chosen weapon); kits off, the game's."""
         from dsloader import kits, kitpages
         from dsloader.gamepatch import VEC_THAC0, PATCHES
         self.assertIn(("thac0", 0x876BB), [(p.name, p.offset) for p in PATCHES])
@@ -6671,10 +6700,10 @@ class KitTests(unittest.TestCase):
                     self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), kits.thac0(kid, level, own))
                     self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_BX, r.UC_X86_REG_CX, r.UC_X86_REG_ES,
                                                                     r.UC_X86_REG_SP)], [0x2222, 0x3333, 0x6666, 0x7FC])
-        # A human Mind Warrior (psionicist 6) who became a thief: the kit asleep (the game's THAC0)
-        # until the thief level passes 6, then a warrior's by its psionicist level (21 - 6 = 15)
+        # A human Mind Warrior (psionicist 6) who became a thief: the game's THAC0, its kit asleep or
+        # awake (the warrior's is WAR_HIT's, on the attack)
         self.rules(game.RULE_KITS)
-        for thief, want in ((4, 18), (6, 18), (7, 15)):
+        for thief, want in ((4, 18), (6, 18), (7, 18)):
             with self.subTest(thief=thief):
                 sheet = bytearray(game.SHEET_SIZE)
                 sheet[0x18], sheet[0x21:0x23], sheet[0x24:0x26], sheet[kitpages.KIT_BYTE] = 1, bytes((17, 12)), bytes((thief, 6)), 2
@@ -6688,7 +6717,7 @@ class KitTests(unittest.TestCase):
                 self.mu.emu_start(CALLER * 16 + 0x600, CALLER * 16 + 0x605)
                 self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), want)
         self.assertEqual([kits.thac0(kits.SWASHBUCKLER, 9, 16), kits.thac0(kits.SCHOLAR, 9, 18),
-                          kits.thac0(kits.CRUSADER, 25, 4), kits.thac0(0, 9, 16)], [12, 19, 1, 16])
+                          kits.thac0(kits.CRUSADER, 25, 4), kits.thac0(0, 9, 16)], [16, 19, 4, 16])
 
     KIT_CASES = ((11, 3), (11, 2), (11, 1), (1, 3), (1, 1), (13, 3), (13, 2), (13, 1), (17, 1), (9, 0))
 
@@ -8467,14 +8496,15 @@ class RolledTests(AdndTablesTests):
                     if on:
                         self.assertEqual(drawn[0][:2], (146, 177))
         # with a THAC0 worked out on this screen (PROBE_THAC0's, no kit): the kit on the sheet being
-        # made (kits.thac0): a Scholar 1 worse, a Battle Mage a warrior's where better; kits off, none
+        # made (kits.thac0): a Scholar 1 worse, a Battle Mage the game's (its warrior THAC0 is its
+        # chosen weapon's alone, on the attack); kits off, none
         import re
         found = re.search(rb"\x2e\x88\x0e(..)\x2e\xc6\x06(..)\x01", self.image, re.S)
         game_at, seen_at = (struct.unpack("<H", found.group(n))[0] for n in (1, 2))
         self.mu.mem_write(TSR * 16 + game_at, bytes((20,)))
         self.mu.mem_write(TSR * 16 + seen_at, bytes((1,)))
         self.mu.mem_write(self.CREATURE * 16 + 0x1F, struct.pack("b", 20))
-        for rules_hi, kit, want in ((1, 1, 21), (1, 2, 18), (1, 3, 20), (1, 0, 20), (0, 1, 20)):
+        for rules_hi, kit, want in ((1, 1, 21), (1, 2, 20), (1, 3, 20), (1, 0, 20), (0, 1, 20)):
             with self.subTest(rules_hi=rules_hi, kit=kit):
                 self.mu.mem_write(self.hdr + self.RULES_HI, struct.pack("<H", rules_hi))
                 sheet = bytearray(0x47)

@@ -41,7 +41,7 @@ AVENGER_NO_HEAL = frozenset((CURE_LIGHT, BLOOD_FLOW, CURE_SERIOUS, CURE_CRITICAL
 # (DSCLOG's AV_CAUSE)
 CAUSE_LIGHT, CAUSE_SERIOUS, CAUSE_CRITICAL = 72, 113, 128
 CAUSE_DICE = {CAUSE_LIGHT: 1, CAUSE_SERIOUS: 2, CAUSE_CRITICAL: 3}
-# the kits with a warrior's THAC0 (PROBE_THAC0)
+# the kits with a warrior's THAC0, with their chosen weapon spec alone (DSCLOG's WAR_HIT)
 WARRIOR_THAC0 = frozenset((SWASHBUCKLER, CRUSADER, BATTLE_MAGE, MIND_WARRIOR))
 TWIN_BLADE, BRUTE = KIT_IDS["Twin-blade"], KIT_IDS["Brute"]
 GROVE_WARDEN, LIFEBINDER = KIT_IDS["Grove Warden"], KIT_IDS["Lifebinder"]
@@ -70,6 +70,8 @@ MELEE_KINDS = frozenset(range(12))
 KREEN_WARRIOR_KINDS = frozenset((12,))
 # a Poisoner's weapon specs to choose from (DSCLOG's KIT_POISON_KINDS): the dagger and short sword
 POISONER_KINDS = frozenset((2, 3))
+# a Swashbuckler's (DSCLOG's SWASH_KINDS): the long sword, dagger and short sword, its weapon of choice
+SWASHBUCKLER_KINDS = frozenset((0, 2, 3))
 # the Shinobi's wizard spells (DSCLOG's SHINOBI_SPELLS): (spell, spell level). It learns one at each
 # level up from thief level SHINOBI_FIRST, and its own from scrolls once read (read languages); it casts at its thief level less 5.
 # Fogbolt, Reflected Image, Spook and Friends, new spells, only with the new spells on (their known bits: NS_KNOWS)
@@ -100,7 +102,7 @@ DANCER_KINDS = frozenset((0, BOW))
 DAGGER = 2  # (the dagger's weapon kind: a Ghetto Fighter's +1)
 # by kit, what it adds to each thief skill (pick pockets, open locks, find/remove traps, move
 # silently, hide in shadows, hear noise, climb walls, read languages: DSCLOG's KIT_SKILLS)
-SKILLS = {SWASHBUCKLER: (-10,) * 8, ASSASSIN: (-15, -15, 0, 0, 0, 0, 0, 0),
+SKILLS = {SWASHBUCKLER: (-5,) * 8, ASSASSIN: (-15, -15, 0, 0, 0, 0, 0, 0),
           SHADOWBLADE: (-10, 0, 0, 5, 10, 0, 0, 0), GHETTO: (5, 0, -5, 0, 5, 0, 0, 0),
           WAYFINDER: (-10, 0, 0, 10, 10, 0, 0, 0)}
 # a Military Scout's skills that change with the sky: +10 under the open sky, -5 under a roof
@@ -242,13 +244,40 @@ def dance_ac(kid: int, dance: int) -> int:
 
 def thac0(kid: int, level: int, game_thac0: int) -> int:
     """The THAC0 the game gives a character of kit KID (PROBE_THAC0), its own GAME_THAC0 at class
-    level LEVEL: a Swashbuckler's, Crusader's, Battle Mage's or Mind Warrior's a warrior's (21 less
-    the level, 1 at best) where better; a Scholar's 1 worse."""
+    level LEVEL: a Scholar's 1 worse. (A warrior THAC0 kit's is its chosen weapon's alone: war_hit.)"""
     if kid == SCHOLAR:
         return game_thac0 + 1
-    if kid in WARRIOR_THAC0:
-        return min(game_thac0, max(1, 21 - level))
     return game_thac0
+
+
+def war_kinds(kid: int) -> frozenset:
+    """A warrior THAC0 kit's weapon kinds, without weapon specialization (DSCLOG's WAR_HIT)."""
+    return {SWASHBUCKLER: SWASHBUCKLER_KINDS, BATTLE_MAGE: BATTLE_MAGE_KINDS}.get(kid, MELEE_KINDS)
+
+
+def war_hit(sheet: bytes, kind: Optional[int], own_thac0: int, specialization: bool) -> Tuple[int, int]:
+    """(kit, what it adds to hit) for a weapon of KIND (None: none) in the hands of the character of
+    SHEET, its THAC0 OWN_THAC0 (its classes'), as DSCLOG's WAR_HIT: a Swashbuckler's, Battle Mage's,
+    Crusader's or Mind Warrior's warrior THAC0 (21 less the kit's class level, 1 at best) where
+    better, with its chosen weapon spec alone (SPECIALIZATION on), or with the kit's kinds (off:
+    war_kinds); (0, 0) otherwise. The Complete Thief's Handbook's Swashbuckler has a fighter's
+    THAC0 with its weapon of choice only."""
+    from . import game, kitpages
+    if kind is None:
+        return 0, 0
+    found = [(kid, place) for kid, place, awake in kitpages.kits_of(sheet) if awake and kid in WARRIOR_THAC0]
+    for kid in (SWASHBUCKLER, BATTLE_MAGE, CRUSADER, MIND_WARRIOR):  # (DSCLOG's order)
+        place = next((p for k, p in found if k == kid), None)
+        if place is None:
+            continue
+        if specialization:
+            if kind + 1 not in game.spec_kinds(sheet):
+                return kid, 0
+        elif kind not in war_kinds(kid):
+            return kid, 0
+        warrior = max(1, 21 - sheet[0x24 + place])
+        return kid, max(0, own_thac0 - warrior)
+    return 0, 0
 
 
 def slot_level(kid: int, level: int) -> int:

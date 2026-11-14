@@ -310,8 +310,8 @@ another weapon shows at once. Spells start and end as time passes in the game, w
 doesn't while these screens are open; open the screen again to see such a
 change.
 
-- **THAC0**: the character's THAC0 (its classes' best, a kit's warrior THAC0
-  in it) less STR's to-hit adjustment (DEX's for a missile weapon), the
+- **THAC0**: the character's THAC0 (its classes' best; a kit's warrior THAC0
+  with its chosen weapon) less STR's to-hit adjustment (DEX's for a missile weapon), the
   weapon's plus (or, for a plain wooden, bone, stone or obsidian weapon, its
   material's penalty), its weapon spec's to-hit (specialization, mastery,
   expertise), a kit's (a Ravager's, a Brute's, an Arena Champion's...), the

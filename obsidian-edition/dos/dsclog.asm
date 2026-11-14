@@ -3390,6 +3390,8 @@ probe_attacks:
         call note_shot          ; (a shot or a throw: no poison from it)
         call kit_to_hit         ; (a Ravager's, a Brute's, an Arena Champion's)
         sub [bp + 0x0A], ax
+        call war_hit            ; (a warrior THAC0 kit's, with its chosen weapon)
+        sub [bp + 0x0A], ax
         call kit_extra          ; (a Battle Dancer's dance, a Wilderness Avenger's against undead)
         sub [bp + 0x0A], ax
         pop ax
@@ -5704,7 +5706,8 @@ wp_rules:
 ; use (a fire cleric's long sword the obsidian one, not the plain bone one); not the bow for a
 ; ranger (its class flags, +12h: 200h), who has expertise with it already; a Battle Mage the
 ; one-handed melee kinds (KIT_BM_KINDS), not thrown, whatever its class lets it use; a Spellarcher
-; the bow only; a Poisoner the dagger and short sword (KIT_POISON_KINDS); a kind KIT_ALLOWS lets it use whatever its classes (a Battle Dancer's long sword);
+; the bow only; a Poisoner the dagger and short sword (KIT_POISON_KINDS); a Swashbuckler the long
+; sword, dagger and short sword (SWASH_KINDS); a kind KIT_ALLOWS lets it use whatever its classes (a Battle Dancer's long sword);
 ; a Crusader or Mind Warrior only melee kinds (KIT_MELEE_KINDS), and a thri-kreen Mind Warrior the
 ; chatkcha as well (KIT_KREEN_KINDS). DS = the game's. Others kept.
 KIT_KREEN_KINDS equ 0x1000      ; (the chatkcha)
@@ -5730,8 +5733,14 @@ kinds_allowed:
 .poisoner:
         call kit_is_b             ; (a Poisoner: the dagger and short sword)
         db KIT_POISONER
-        jne .types
+        jne .swash
         mov di, KIT_POISON_KINDS
+        jmp .all
+.swash:
+        call kit_is_b             ; (a Swashbuckler: the long sword, dagger and short sword)
+        db KIT_SWASHBUCKLER
+        jne .types
+        mov di, SWASH_KINDS
         jmp .all
 .types: xor dx, dx              ; DX each item type of a kind, CL its kind
         xor di, di
@@ -5948,7 +5957,8 @@ lv_scholar:
         ret
 
 ; LV_DUE: CX the weapon kinds the character whose sheet is ES:BX is due: a gladiator 2, 3 from 6th
-; level, 4 from 9th; a fighter or ranger 1 (a Myrmidon being made 2: LV_CREATING); 0 for others. A human's earlier classes (dual-classed)
+; level, 4 from 9th; a fighter or ranger 1 (a Myrmidon being made 2: LV_CREATING); a Battle Mage,
+; Crusader, Mind Warrior or Swashbuckler 1 (its weapon of choice); 0 for others. A human's earlier classes (dual-classed)
 ; count only once its first class's level has passed theirs. Others kept.
 lv_due:
         push ax
@@ -5987,10 +5997,13 @@ lv_due:
 .next:  inc si
         cmp si, 3
         jb .class
-        or cl, cl               ; (a Battle Mage, Crusader or Mind Warrior: one)
+        or cl, cl               ; (a Battle Mage, Crusader, Mind Warrior or Swashbuckler: one)
         jnz .myrmidon
         call kit_is_b
         db KIT_BATTLE_MAGE
+        je .one_kit
+        call kit_is_b
+        db KIT_SWASHBUCKLER
         je .one_kit
         call war_kit_is
         jne .out
@@ -6939,6 +6952,91 @@ kit_melee:
         pop bx
         ret
 
+; WAR_HIT: AX what a Swashbuckler's, Crusader's, Battle Mage's or Mind Warrior's warrior THAC0 adds
+; to hit in the weapon attack routine (the attacker its [BP+0Eh], the sheet its [BP+10h], the item
+; type [BP+14h]; kits.war_to_hit): with a weapon of the kit's chosen weapon spec (one of its
+; SPEC_SLOTS, with RULE_SPECIALIZE; without it, of the kit's kinds: a Swashbuckler's long sword,
+; dagger or short sword, SWASH_KINDS; a Battle Mage's KIT_BM_KINDS; a Crusader's or Mind Warrior's
+; melee ones), its creature's THAC0 (+1Fh, its classes') less a warrior's (21 less the kit's class
+; level, 1 at best) where that is better, else 0. The Complete Thief's Handbook's Swashbuckler has
+; a fighter's THAC0 with its weapon of choice only. DS the game's; others kept.
+SWASH_KINDS equ 0x000D          ; (long sword, dagger, short sword)
+war_hit:
+        push bx
+        push cx
+        push si
+        push es
+        xor cx, cx
+        mov si, [bp + 0x14]
+        cmp si, KIND_TYPES
+        jae .out
+        movzx si, byte [cs:si + kind_of_type]   ; (the kind + 1; 0 none)
+        or si, si
+        jz .out
+        les bx, [0x1661]
+        imul ax, [bp + 0x10], 0x47
+        add bx, ax
+        mov ax, SWASH_KINDS
+        call kit_is_b
+        db KIT_SWASHBUCKLER
+        je .kit
+        mov ax, KIT_BM_KINDS
+        call kit_is_b
+        db KIT_BATTLE_MAGE
+        je .kit
+        mov ax, KIT_MELEE_KINDS
+        call kit_is_b
+        db KIT_CRUSADER
+        je .kit
+        call kit_is_b
+        db KIT_MIND_WARRIOR
+        jne .out
+.kit:   test word [cs:rules], RULE_SPECIALIZE
+        jz .mask
+        mov cx, si              ; (CL the kind + 1, as the slots keep it)
+        push si
+        xor si, si
+.slot:  push ax
+        call spec_get
+        cmp al, cl
+        pop ax
+        je .chosen
+        inc si
+        cmp si, SPEC_COUNT
+        jb .slot
+        pop si
+        xor cx, cx
+        jmp .out
+.chosen:
+        pop si
+        jmp .level
+.mask:  lea cx, [si - 1]
+        bt ax, cx
+        mov cx, 0
+        jnc .out
+.level: call kit_level
+        movzx cx, al
+        neg cx
+        add cx, 21
+        cmp cx, 1
+        jge .warrior
+        mov cx, 1
+.warrior:                       ; (CX a warrior's THAC0; the creature's own, less it)
+        les bx, [CREATURES]
+        imul ax, [bp + 0x0E], 0x3A
+        add bx, ax
+        movsx ax, byte [es:bx + 0x1F]
+        sub ax, cx
+        mov cx, ax
+        jg .out
+        xor cx, cx
+.out:   mov ax, cx
+        pop es
+        pop si
+        pop cx
+        pop bx
+        ret
+
 ; KIT_TO_HIT: AX what the attacker's kit adds to hit in the weapon attack routine (the attacker
 ; its [BP+0Eh], the sheet its [BP+10h], the item type [BP+14h], [BP+16h] above 1 for a missile):
 ; for a melee attack KIT_CHAMPION's and KIT_MELEE's; for a missile a Military Scout's 1 with a bow,
@@ -7172,8 +7270,9 @@ probe_init:
 ; PROBE_THAC0: INT VEC_THAC0 replaces "mov ax,14h / sub ax,si" (5 bytes: INT + 3 NOPs; DSUN.EXE
 ; 876BBh) at the end of the game's THAC0 routine (SI the most any of the character's classes
 ; takes off 20, [BP+6] its sheet's number), which every write of a creature's THAC0 (+1Fh) uses:
-; AX 20 less SI, and the kit's (kits.thac0): a Swashbuckler's, Crusader's, Battle Mage's or Mind
-; Warrior's a warrior's (21 less its level) where that is better, a Scholar's 1 worse.
+; AX 20 less SI, and the kit's (kits.thac0): a Scholar's 1 worse. (A Swashbuckler's, Crusader's,
+; Battle Mage's or Mind Warrior's warrior THAC0 is no longer here, with every weapon: WAR_HIT gives
+; it on the attack, with the kit's chosen weapon spec alone.)
 probe_thac0:
         push bx
         push cx
@@ -7185,18 +7284,6 @@ probe_thac0:
         les bx, [0x1661]
         imul ax, [bp + 6], 0x47
         add bx, ax
-        call kit_is_b           ; (each kit it has awake: the best warrior THAC0 of them)
-        db KIT_SWASHBUCKLER
-        call .warrior
-        call kit_is_b
-        db KIT_CRUSADER
-        call .warrior
-        call kit_is_b
-        db KIT_BATTLE_MAGE
-        call .warrior
-        call kit_is_b
-        db KIT_MIND_WARRIOR
-        call .warrior
         call kit_is_b
         db KIT_SCHOLAR
         jne .out
@@ -7206,21 +7293,6 @@ probe_thac0:
         pop cx
         pop bx
         iret
-.warrior:                       ; (ZF set: CX the warrior THAC0 by the kit's level where better)
-        jne .ret
-        push ax
-        call kit_level
-        movzx ax, al
-        neg ax
-        add ax, 21
-        cmp ax, 1
-        jge .best
-        mov ax, 1
-.best:  cmp ax, cx
-        jge .kept
-        mov cx, ax
-.kept:  pop ax
-.ret:   ret
 
 ; PROBE_SLOTS: INT VEC_SLOTS replaces "mov ax,[bp-2]" (3 bytes: INT + NOP; DSUN.EXE 5E255h) at the
 ; end of the game's spell slot routine (the slots a combatant has at a spell level, on resting
@@ -9351,8 +9423,8 @@ cr_thac0_less:                  ; (at CS:DI, CL less DS:SI's table's entry for t
 .put:   jmp c_itoa
 
 ; CR_THAC0_BASE: AL the THAC0 of the character being made: the game's last (THAC0_GAME, worked out as
-; its classes changed) with the kit on the sheet being made (kits.thac0: a Swashbuckler's, Crusader's,
-; Battle Mage's or Mind Warrior's a warrior's, 21 less the level, where better; a Scholar's 1 worse),
+; its classes changed) with the kit on the sheet being made (kits.thac0: a Scholar's 1 worse; a
+; warrior THAC0 kit's is the chosen weapon's alone, WAR_HIT, so not here),
 ; the kit not counted there (PROBE_THAC0 reads the party's sheets); none worked out on this screen (an
 ; EDIT), the creature's own (+1Fh, its kit in it). DS the game's.
 cr_thac0_base:
@@ -9374,27 +9446,9 @@ cr_thac0_base:
         shl dl, 2
         add dl, ah              ; (the kit, as KIT_IS numbers them)
         cmp dl, KIT_SCHOLAR
-        jne .warrior
+        jne .ret
         inc al
 .ret:   ret
-.warrior:
-        cmp dl, KIT_SWASHBUCKLER
-        je .level
-        cmp dl, KIT_CRUSADER
-        je .level
-        cmp dl, KIT_BATTLE_MAGE
-        je .level
-        cmp dl, KIT_MIND_WARRIOR
-        jne .ret
-.level: mov ah, 21
-        sub ah, [es:bx + 0x24]
-        cmp ah, 1
-        jge .best
-        mov ah, 1
-.best:  cmp ah, al
-        jge .ret
-        mov al, ah
-        ret
 
 cr_text_routine:                ; (c_draw_line: the game's text routine, the screen's window)
         mov ax, ds
@@ -27921,7 +27975,7 @@ thief_heavy:
 ; (kits.thief_skill): KIT_SKILLS' row for each of its kits; a Military Scout's 10 to finding traps,
 ; moving silently, hiding and climbing while under the open sky (KIT_OUTDOORS), 5 less under a roof.
 ; DS the game's; others kept.
-kit_skills db KIT_SWASHBUCKLER, -10, -10, -10, -10, -10, -10, -10, -10  ; (pick pockets, open locks,
+kit_skills db KIT_SWASHBUCKLER, -5, -5, -5, -5, -5, -5, -5, -5  ; (pick pockets, open locks,
            db KIT_ASSASSIN, -15, -15, 0, 0, 0, 0, 0, 0                  ;  traps, move silently, hide,
            db KIT_SHADOWBLADE, -10, 0, 0, 5, 10, 0, 0, 0                ;  hear noise, climb, read)
            db KIT_GHETTO, 5, 0, -5, 0, 5, 0, 0, 0
