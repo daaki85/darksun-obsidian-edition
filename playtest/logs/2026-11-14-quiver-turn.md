@@ -76,3 +76,18 @@ the turn ends after the shots, with arrows or without: that is the game's rule f
     floating count now shows the quiver's arrows only (the pack's can't be shot until readied).
 18. Checked after: Ester with 3 arrows and 68 in her pack shot two: "Arrows: 1 left" over her, and
     no top-up on her next turn.
+
+## Part 5: the Spellarcher's new rules (trap-user, Lex the Spellarcher, outside a fight)
+19. The arrow button with no 1st-level slot: "Lex has no 1st-level spell left for Shocking
+    Grasp's arrows". With two slots given in memory: "Lex makes one of the shocking arrows (21 of 24
+    now)", a slot used (2 to 1). (Mind: the button shuts the USE screen; an Escape after it opened
+    EXIT: SAVE GAME?, cancelled.)
+20. The quiver lock gone: the Shocking Arrows taken out of the quiver into the pack (no "Item
+    grafted on").
+21. Put into Jenna's pack they went in (the game asks nothing of a backpack move), so the Loader
+    returns them: once the inventory shut, "The shocking arrows go back to Lex from Jenna: only a
+    Spellarcher carries them (21)" (nothing while the inventory was up).
+22. Leather chest armour onto Lex: "CANNOT USE THIS ITEM" (light armour was allowed before). A
+    shield already held in an old save stays until taken off (kit_gear fits new characters only).
+23. Not seen in play: the +1/+2 at 5th/9th preserver level (Lex is 2nd; the emulator test covers
+    it), and a rest leaving the arrows (the code that faded them is gone; unit test).

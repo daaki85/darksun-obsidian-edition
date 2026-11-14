@@ -158,3 +158,65 @@ class SpellArrowsTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class StrayTests(unittest.TestCase):
+    """return_strays: spell arrows another party member carries go back to the Spellarcher."""
+
+    def gd(self, items, combat=False, inventory=False):
+        """ITEMS: member -> {item number: (name, count, slot)}."""
+        gd = mock.Mock()
+        gd.items = {m: dict(v) for m, v in items.items()}
+
+        def worn(m):
+            for index, (name, count, slot) in gd.items.get(m, {}).items():
+                rec = bytearray(game.ITEM_SIZE)
+                rec[game.ITEM_SLOT] = slot
+                struct.pack_into("<H", rec, game.ITEM_NAME, name)
+                struct.pack_into("<H", rec, weaponchoice.ITEM_COUNT, count)
+                yield index, bytes(rec), b""
+        gd._worn = lambda m: list(worn(m))
+        gd.creature = lambda m: bytes(game.CREATURE_SIZE)
+        gd.creature_name = lambda m: ("Lex", "Jenna", "Ester", "Seneca")[m]
+        gd.in_combat = lambda: combat
+        gd.inventory = inventory
+        return gd
+
+    def run_it(self, gd):
+        written, added, removed = [], [], []
+        with mock.patch.object(spellarrows, "is_spellarcher", lambda gd_, m: m == 0), \
+                mock.patch.object(spellarrows, "inventory_up", lambda gd_: gd.inventory), \
+                mock.patch.object(spellarrows, "item_address", lambda gd_, i: i * 100), \
+                mock.patch.object(spellarrows.ring, "Items", lambda gd_: None), \
+                mock.patch.object(spellarrows.ring, "unlink", lambda gd_, it, i, what, empty=False: removed.append(i) or True), \
+                mock.patch.object(spellarrows.npcitems, "add_to", lambda gd_, m, rec, slot=None: added.append(m) or True):
+            gd.guest.write = lambda at, data: written.append((at // 100, struct.unpack("<H", data)[0]))
+            lines = spellarrows.return_strays(gd)
+        return lines, written, added, removed
+
+    def test_onto_the_stack(self):
+        shock, chill = spellarrows.ARROWS[2].name, spellarrows.ARROWS[1].name
+        gd = self.gd({0: {5: (shock, 10, 1)}, 1: {30: (shock, 7, 20), 31: (0x36, 40, 1)}, 2: {40: (chill, 3, 21)}})
+        lines, written, added, removed = self.run_it(gd)
+        self.assertEqual(written, [(5, 17)])  # (Jenna's 7 onto Lex's 10)
+        self.assertEqual(added, [0])  # (Ester's chill arrows: Lex has none, a stack of their own)
+        self.assertEqual(sorted(removed), [30, 40])  # (plain arrows stay with Jenna)
+        self.assertEqual(lines[0], "The shocking arrows go back to Lex from Jenna: only a Spellarcher carries them (7)")
+
+    def test_over_a_stack(self):
+        """Two that would come to more than STACK_MOST: the stray stack into the pack as it is."""
+        shock = spellarrows.ARROWS[2].name
+        gd = self.gd({0: {5: (shock, 20, 1)}, 1: {30: (shock, 7, 20)}})
+        lines, written, added, removed = self.run_it(gd)
+        self.assertEqual((written, added, removed), ([], [0], [30]))
+
+    def test_left_be(self):
+        """Nothing in a fight, with the inventory up, or with no Spellarcher in the party."""
+        shock = spellarrows.ARROWS[2].name
+        for kw in (dict(combat=True), dict(inventory=True)):
+            with self.subTest(**kw):
+                self.assertEqual(self.run_it(self.gd({0: {}, 1: {30: (shock, 7, 20)}}, **kw)), ([], [], [], []))
+        gd = self.gd({1: {30: (shock, 7, 20)}})
+        with mock.patch.object(spellarrows, "is_spellarcher", lambda gd_, m: False), \
+                mock.patch.object(spellarrows, "inventory_up", lambda gd_: False):
+            self.assertEqual(spellarrows.return_strays(gd), [])

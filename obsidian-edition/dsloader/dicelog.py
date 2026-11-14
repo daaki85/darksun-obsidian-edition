@@ -1678,6 +1678,7 @@ class DiceLog:
                     out += weaponchoice.kit_gear(self.game)
                 for member in range(game.PARTY_SIZE):  # (and a Wilderness Avenger's healing spells)
                     out += kits.cosmos_spells(self.game, member) + kits.avenger_heals(self.game, member)
+                out += spellarrows.return_strays(self.game)  # (spell arrows only a Spellarcher carries)
             if self.starting_gear and new_ok:  # (new characters' starting gear filled out)
                 out += startgear.fill(self.game)
             out += defaultparty.ready(self.game, self.rules, self._party_done, self.starting_gear)  # (the game's own party, once)

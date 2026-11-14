@@ -2364,7 +2364,9 @@ Spellarcher shot them (`PROBE_ARROW`'s `AMMO_ARCHER`), and `ARROW_SPELL`
 themselves, so nothing else in the game (the USE screen's items, breaking, acid)
 sees one. Only a Spellarcher carries them: `ARROWS_FORBID`, in `PROBE_CAN_USE`
 (whatever the rules), refuses spell arrows (the equip routine's item, its
-`[BP+6]`) to anyone else, the backpack (slot 18) too. The four spells' records pass the
+`[BP+6]`) to anyone else; the game asks nothing of an item put in a backpack, so the Loader
+(`spellarrows.return_strays`, out of fights with the inventory shut: `INVENTORY_SLOTS`) takes any
+another member carries back to the party's Spellarcher. The four spells' records pass the
 routine's own test (+30h's low bits 2, not 1). Checked in the game (up to 2.17's rules):
 Burning and Chill Arrows buttons for a Spellarcher knowing both (one in Turn Undead's
 place, one beside it), their names and descriptions, a click on each making arrows with

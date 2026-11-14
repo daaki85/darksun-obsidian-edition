@@ -475,7 +475,9 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   no rules set, so `gd.kit_ids` reads []: use `kitpages.kits_of(gd.sheet(m))`.
 - **A Spellarcher for a test**: a sheet made a half-elf (+18h 4) fighter/preserver (+21h 9, 11)
   with kit byte +43h 1, and `spellsetup.py M=5 10 1 3 39`; the arrow buttons are the USE screen's
-  row under SPELLS LEFT (157,147 the first; a slow press), not the top row (the spells).
+  row under SPELLS LEFT (157,147 the first; a slow press), not the top row (the spells). **A press
+  shuts the USE screen**: an Escape after it opens EXIT: SAVE GAME? (CANCEL at 140,116). `trap-user`'s
+  Lex is a Spellarcher (Shocking Grasp; logs/2026-11-14-quiver-turn.md part 5).
 - **A thief in memory**: `thief.py N LEVEL` / `thief.py N off`.
 - **An XP award by hand**: the dice log's tracker sees an award only as each sheet's XP going up, so
   `award.py N` (each member's sheet XP += N / its classes, a human's N; the sheet from

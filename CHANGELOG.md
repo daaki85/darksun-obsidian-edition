@@ -54,7 +54,9 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   none, no slot used); the arrows **last until shot** (no fading at a rest: the rest hook,
   `vanish` and `REST_REQUESTS` gone); the quiver no longer keeps them (`PROBE_TAKE`, its vector
   F7h, `QUIVER_KEPT` and `QUIVER_LOCKED` gone, and the game patch `take`); only a Spellarcher
-  carries them, the backpack too (`ARROWS_FORBID`); its plain arrows no longer 1 better: its
+  carries them (`ARROWS_FORBID` for readying; the game asks nothing of a backpack move, so
+  `spellarrows.return_strays` takes any another member is given back to the Spellarcher, out of
+  fights with the inventory shut); its plain arrows no longer 1 better: its
   **spell arrows** are +1 from 5th preserver level and +2 from 9th (`PROBE_ARROW`'s
   `ARROW_PLUS_NOW`, `kits.arrow_plus`); it wears **no armour, helm or shield** (`KIT_LIGHT`'s
   `BARE`, `kits.BARE_KITS`; bracers, robes and a cloak of protection allowed), its class's armour
