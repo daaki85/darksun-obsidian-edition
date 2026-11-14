@@ -72,3 +72,7 @@ the turn ends after the shots, with arrows or without: that is the game's rule f
 16. Ester with 3 arrows, Jenna's 68 handed into Ester's **pack** on her turn; two shots (one left):
     "Arrows: 69 left" over her. Her next turn: "Ester fills the quiver from the pack: +19, 20
     Wooden Arrows ready" (quiver 20, pack 49), and both shots went off: "Arrows: 67 left".
+17. The user chose not to have the automatic reload: the top-up was taken out of the Loader. The
+    floating count now shows the quiver's arrows only (the pack's can't be shot until readied).
+18. Checked after: Ester with 3 arrows and 68 in her pack shot two: "Arrows: 1 left" over her, and
+    no top-up on her next turn.

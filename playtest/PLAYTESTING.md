@@ -794,7 +794,7 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
 - **An archer's test fight in one step**: `sh tofight.sh N` loads `fountain-user`, gives Ester N
   arrows (`setarrows.py MEMBER N`, before the ambush starts), starts the fight, holds every foe and
   passes to Ester's turn; the Templar is at screen (240,144). `ammodump.py` prints the archers' item
-  records. **The floating arrow count** shows for about a second in `shot.sh` grabs half a second
+  records. **The floating arrow count** (the quiver's) shows for about a second in `shot.sh` grabs half a second
   apart (crop round the figure and montage them).
 - **A shot with a weapon put in memory** (logs/2026-11-10-stinkpots.md): a missile-slot weapon
   replaced by another type (the scratch `setitem.py ITEM TYPE` in that log: a SEGOBJEX record,

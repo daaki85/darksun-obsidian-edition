@@ -65,7 +65,7 @@ The full catalogue follows, by part of the game.
 
 **Archers**
 
-- **[New]** As a party archer's turn starts in a fight, a quiver of fewer than 5 arrows is filled from its own pack's stacks of the same arrows, and the arrows it has left float over it after each shot ("Arrows: 17 left", like Armor's charges). An archer whose quiver runs dry mid-volley keeps its turn, to walk, fight hand to hand or end it.
+- **[New]** The arrows left in a party archer's quiver float over it after each shot ("Arrows: 17 left", like Armor's charges). An archer whose quiver runs dry mid-volley keeps its turn, to walk, fight hand to hand or end it.
 
 **Saving throws**
 

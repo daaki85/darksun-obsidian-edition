@@ -61,18 +61,15 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   DSCLOG 70,208 bytes (+80).
 
 **New**
-- **An archer's quiver in a fight** (the user's request): `quiver.py`. As a party member's turn
-  starts in a fight, a quiver under 5 arrows is topped up to 20 from the member's backpack stacks of
-  the same kind (type, name and plus), by count (the game reads the quiver stack's count at each
-  shot; a stack put in the slot by memory in a fight isn't shot, and arrows readied by hand after a
-  volley can't be shot that turn: logs/2026-11-14-quiver-turn.md parts 2-3); an emptied backpack
-  stack is unlinked. After each party shot, "Arrows: N left" (quiver and pack) or "Out of arrows"
+- **An archer's arrows left, and its turn when the quiver runs dry** (the user's request):
+  `quiver.py`: after each party shot, "Arrows: N left" (the quiver's count) or "Out of arrows"
   floats over the archer (labels.py, the charges' blue and priority). A party member whose volley
   its quiver cut short keeps its turn against a target still standing: DSCLOG's `AMMO_OKAY` sites
   (5843Fh, 584A4h, 5850Eh) make the attack command's "target still Okay" tests answer "fallen" for
-  it, NEW_AS_OKAY's jbe/ja kept in the same patches. Checked in the game (the log's part 4).
-  Tests: `test_quiver.py`; `test_gamepatch`'s `test_new_counts_as_okay` counts the three. DSCLOG
-  70,272 bytes.
+  it, NEW_AS_OKAY's jbe/ja kept in the same patches. A top-up of the quiver from the pack at each
+  turn's start was built and seen working (the log's part 4), then taken out at the user's word:
+  reloading stays the player's. Tests: `test_quiver.py`; `test_gamepatch`'s
+  `test_new_counts_as_okay` counts the three. DSCLOG 70,272 bytes.
 
 **Changed**
 - **Wild Fury's Wild Fighting is The Complete Barbarian's Handbook's again**: fighting wild is −3

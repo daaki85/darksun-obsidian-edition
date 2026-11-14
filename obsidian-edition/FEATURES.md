@@ -212,18 +212,10 @@ long, and a "Miss" or a spell's name never pushes one out.
 
 ![An arena fight with Sligs: "Armor: 8 left" in light blue as a blow uses one of Armor's charges, and "Miss" beside it](docs/floating-charges.png)
 
-After a party archer's shot, the arrows it has left float over it the same way, in the same light
-blue: "Arrows: 17 left" (its quiver and its pack's stacks of the same arrows; "Stones" for a
-sling's), and "Out of arrows" at none.
-
-**The quiver topped up from the pack.** As a party archer's turn starts in a fight, a quiver
-holding fewer than 5 arrows (the most shots a round) is filled to 20 from the archer's own pack,
-from stacks of the very same arrows (the same kind, name and plus: a Spellarcher's spell arrows only
-from the same spell's), and the dice log says so ("Ester fills the quiver from the pack: +19, 20
-Wooden Arrows ready"). The game shoots only what is in the quiver, and arrows readied there by hand
-after a volley can't be shot that turn, so carried arrows used to sit in the pack. An archer whose
-quiver runs dry in the middle of its shots keeps its turn: to walk, fight hand to hand, or end it.
-A quiver already empty isn't filled (ready arrows by hand, a turn before).
+After a party archer's shot, the arrows left in its quiver float over it the same way, in the
+same light blue: "Arrows: 17 left" ("Stones" for a sling's), and "Out of arrows" at none. An
+archer whose quiver runs dry in the middle of its shots keeps its turn, to walk, fight hand to hand
+or end it; arrows readied by hand then shoot from its next turn.
 
 How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#names-over-figures).
 

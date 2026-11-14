@@ -2555,11 +2555,6 @@ class DiceLog:
                 lines, hidden = [], False
             out += lines
             self._set_stealth(hidden, turn)
-        if turn < game.PARTY_SIZE:  # (a party archer's quiver topped up from its pack: quiver.py)
-            try:
-                out += quiver.top_up(self.game, turn)
-            except (struct.error, IndexError, ValueError):
-                pass
         return out
 
     def _first_able(self) -> Optional[int]:
