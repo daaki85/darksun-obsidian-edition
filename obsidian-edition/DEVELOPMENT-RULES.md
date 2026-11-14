@@ -1482,19 +1482,19 @@ emulated tests hold the helper to it:
 | to hit | Ravager, Brute, Ghetto Fighter, Arena Champion, Battle Dancer, Wilderness Avenger, Wild Fury | `PROBE_ATTACKS` (`KIT_TO_HIT`) |
 | AC | Ravager, Wanderer, Sentinel and Arena Champion, Grove Warden, Battle Dancer, Wild Fury | `PROBE_AC` (`KIT_AC`) |
 | movement | Stalker, Rescuer | `PROBE_MOVE` |
-| spell slots | Scholar, Battle Mage, Crusader, Seeker and Justifier, Elementalist | `PROBE_SLOTS`, `PROBE_SLOT_LEVEL` |
+| spell slots | Battle Mage, Crusader, Seeker and Justifier, Elementalist | `PROBE_SLOTS`, `PROBE_SLOT_LEVEL` |
 | a power's PSP | Mind Bender, Kineticist, Titan Mind, Wasteland Seer | `PROBE_PSP_USE`, `PROBE_PSP_TABLE`, `PROBE_PSP_DEFENCE` |
 | a cure's healing | Healer, Lifebinder, Rescuer | `PROBE_CURE` |
 | a spell's damage | Wilderness Avenger | `AV_CAUSE`, `HARM_SITE` |
 | healing spells never known | Wilderness Avenger | `PROBE_EL_KNOW` (`AV_KNOW`), `AV_GRANT` |
 | casting level | Seeker, Justifier, Shinobi | `PROBE_RANGER_CAST`, `PROBE_CAST_LEVEL`, `PROBE_SPELL_LEVEL` |
 | wizard spells for a thief | Shinobi | `PROBE_SLOTS`, `PROBE_PICK_ANY`, `PROBE_PICK_LIST` |
-| spells learnt at a level up | Scholar | `PROBE_LV_PICK` |
+| a scroll's spell learnt for sure | Scholar | `INT_LEARN` |
 | a power's PSP to keep it up | Mind Bender, Kineticist, Titan Mind, Wasteland Seer | `PROBE_PSP_KEEP`, `PROBE_PSP_KEEP_DX` |
 | the off hand | Healer, Battle Mage | `PROBE_CAN_USE` (`KIT_FORBIDS`) |
 | casting though hit | Battle Mage | `PROBE_HIT_ROUND` |
 | two spells in a turn | Arcanist | `PROBE_CAST_MARK`, `PROBE_CAST_DONE`, `PROBE_END_TURN` |
-| THAC0 | Swashbuckler, Crusader, Battle Mage, Mind Warrior, Scholar | `PROBE_THAC0` |
+| THAC0 | Scholar (a warrior's: Swashbuckler, Crusader, Battle Mage, Mind Warrior, `WAR_HIT`) | `PROBE_THAC0` |
 | initiative | Sentinel, Military Scout, Myrmidon | `PROBE_INIT` |
 | to hit with a missile | Military Scout | `PROBE_ATTACKS` (`KIT_TO_HIT`) |
 | a hit's poison | Poisoner | `PROBE_POISON` |
@@ -1534,7 +1534,7 @@ How each is done:
   `KIT_DANCE`), Wild Fury (fighting wild, passed or failed: 3 worse, no worse than 10, `KIT_WILD`'s bit N). Where:
   `PROBE_AC` (`INT 62h`, the end of the AC routine: `KIT_AC`).
 - **Movement.** Stalker, Rescuer (2 more). Where: `PROBE_MOVE` (`KIT_MOVE`).
-- **Spell slots.** Scholar (+1 wizard), Battle Mage (−1 wizard), Crusader (−1 priest), Seeker and
+- **Spell slots.** Battle Mage (−1 wizard), Crusader (−1 priest), Seeker and
   Justifier (their priest tables, `SEEKER_SLOTS`, by ranger level, in place of the game's),
   Elementalist (a level behind, `PROBE_SLOT_LEVEL`; but at least 1 at a spell level its own cleric
   level reaches, 2 × the spell level − 1, `PROBE_SLOTS`). Where: `PROBE_SLOTS` (`INT B6h`, new: the
@@ -1604,9 +1604,10 @@ How each is done:
   A scroll: see [Preservers' INT](#preservers-int). Armour: the game has no armour rule for a single
   class's spells (the multiclass preserver's is the class restrictions'), so it casts in the light
   armour it may wear.
-- **Spells learnt at a level up.** Scholar (one more). Where: `PROBE_LV_PICK`'s `LV_SCHOLAR`: at a
-  preserver's level up, the routine offering its spell (620:5Ch, its far call read from the code
-  after the probe) called once before the game's own.
+- **A scroll's spell learnt for sure.** Scholar (its chance 100, with the rule for INT; INT's most
+  a level still holds). Where: `INT_LEARN` (up to 2.17 it had a wizard slot more at each spell
+  level, `PROBE_SLOTS`, and a spell more at each level up, `PROBE_LV_PICK`'s `LV_SCHOLAR`, and at
+  creation and DUAL, `KIT_MADE` and `PROBE_DUAL_SPELLS`).
 - **A power's PSP to keep it up.** Mind Bender, Kineticist, Titan Mind, Wasteland Seer (as the cost
   to use it; 63h, none, left alone). Where: `PROBE_PSP_KEEP` (`INT B0h`, new: the table's `+2` read
   where the round's cost is taken, 5CE49h, the combatant in SI) and `PROBE_PSP_KEEP_DX` (`INT AEh`,
@@ -1636,8 +1637,10 @@ How each is done:
   `PROBE_ROUND_MARK` (`INT 95h`, new: the turn's start clearing the mark, 57621h) clears the count.
   Checked in the game: two Magic Missiles in a turn, the second marking it and ending the turn;
   ended from the combat menu after one.
-- **THAC0.** Swashbuckler, Crusader, Battle Mage, Mind Warrior (a warrior's: 21 less the level,
-  where better), Scholar (1 worse). Where: `PROBE_THAC0` (`INT B7h`, new: the end of the game's
+- **THAC0.** Scholar (1 worse). Swashbuckler, Crusader, Battle Mage, Mind Warrior: a warrior's (21
+  less the kit's level, where better) with the kit's chosen weapon spec alone (without weapon
+  specialization, its kinds), on the attack: `WAR_HIT` in `PROBE_ATTACKS`, from the creature's
+  `+1Fh`. Where (the Scholar's): `PROBE_THAC0` (`INT B7h`, new: the end of the game's
   THAC0 routine, `mov ax,14h / sub ax,si` at DSUN.EXE 876BBh, which every write of a creature's
   THAC0, `+1Fh`, uses: on making a character, 66CE0h, and at a level up, 86D7Eh and 87A91h).
 - **Initiative.** Sentinel; Military Scout (its `KIT_OUTDOORS` bit); Myrmidon (2 less). Where:
@@ -1862,8 +1865,7 @@ How each of these is done:
   (the level up's weapon kinds, through the psionicists' pop-up, 620:57h: `PICK_STUB`'s entry 57h).
   The menu is another overlay, so the INT's way back is put in a stack frame the overlay manager
   walks and patches (`push cs / push ip / push bp / mov bp,sp`, as `PROBE_LV_PICK`), and read back
-  from it after. `PROBE_DUAL_SPELLS` gives three picks, not two, when the kit taken for the new
-  preserver class is the Scholar.
+  from it after.
 - **Starting gear fitted to the kit.** Ravager, Brute, Shinobi, Seeker (a forbidden hand item),
   Shadowblade, Ghetto Fighter, Rescuer (the shield left behind), Arena Champion (a shield), Ghetto
   Fighter (a dagger in hand: `_ghetto_dagger`), Poisoner (one of its weapon spec in each hand, the
@@ -1910,14 +1912,13 @@ helper's code (emulated) to the Python.
 Each kit's helper code is held to its Python by emulated tests
 (`tests/test_dsclog.py` runs the helper's routines in a CPU emulator), and
 each was played in the game: the creation screen's KIT page and hit dice, the
-level ups (Shinobi and Scholar spells, Seeker slots), the KIT menu after DUAL
+level ups (Shinobi spells, Seeker slots), the KIT menu after DUAL
 with its bans, and the Effects screen's pages.
 
 ## Preservers' first spells
 
 ([In the features page](FEATURES.md#preservers-first-spells).) Always on, with
-or without kits; the Scholar's one more is the kits' (`KIT_MADE`,
-`PROBE_DUAL_SPELLS`' third pick).
+or without kits.
 
 **On changing class** (every human, not a kit's): the routine
 that changes a human's class, for a preserver (86DB5h), takes away its wizard spells and marks
@@ -1936,7 +1937,7 @@ bytes) has a character made on the creation screen (the grants called from DONE,
 back at `[BP+2]`, `[BP+4]` is the INT's less `CR_FROM_DONE`, in the same overlay; START GAME with
 no party made calls them for the game's own party from 65480h+6FBh, which keeps the game's spells,
 and the creature's status can't tell the two, Okay in both) pick as many on CHOOSE A SPELL
-(`PICK_SPELLS`: 2, 4, or 4 and two of 2nd level; a Scholar's one more a level, `KIT_MADE`) and
+(`PICK_SPELLS`: 2, 4, or 4 and two of 2nd level) and
 goes on past them (66F83h, `CR_SPELLS_PAST`). CHOOSE A SPELL returns nothing; EXIT leaves it with
 no spell learnt, which `PICK_SPELLS` tells by counting the member's known preserver spells before
 and after (`PICK_KNOWN`, the low four bits of each byte from `KNOWN_OFF`, as 500:43h sets them;

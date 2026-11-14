@@ -60,6 +60,12 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   skills are −5 (was −10). The Loader's THAC0 for each weapon (`game.weapon_hits`) and the dice
   log (`_kit_attack`) show it as "Swashbuckler (a warrior's THAC0)" (`kits.war_hit`). Tests:
   `test_dsclog`'s `test_war_hit`, `test_thac0`, `test_thac0_line`, `test_swashbuckler`.
+- **The Scholar: a scroll's spell always learnt** (the user's call, in place of all it had): with
+  the rule for INT its chance is 100 (`INT_LEARN`; INT's most a level still holds). Gone: its wizard
+  slot more at each spell level (`PROBE_SLOTS`, `kits.slots`), its spell more at each level up
+  (`LV_SCHOLAR`), at creation (`KIT_MADE` in the picks) and on changing class to preserver
+  (`PROBE_DUAL_SPELLS`). Its −1 to hit stays. KITS.md's slot table loses its column. Tests:
+  `test_int_learn`'s Scholar, `test_scholar_picks_no_more`, `test_slots`, `test_cermak_arcanist`.
 - **The Spellarcher, after The Complete Book of Elves** (the user's design): a spell slot makes
   **one** spell arrow (was 5 a preserver level); one stack of each spell, 24 at most, the arrow
   joining it wherever it is (a new stack in the quiver if empty, else the pack; a full stack takes

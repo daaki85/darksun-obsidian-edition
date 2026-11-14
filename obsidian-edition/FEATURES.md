@@ -1562,17 +1562,14 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#fuller-starting-gear).
 
 A human who becomes a preserver picks its first two spells on the game's
 **CHOOSE A SPELL** window, twice over, from the 1st-level ones (the game gave
-it Grease and Magic Missile), as a preserver picks one at each level up. If
-it takes the **Scholar** kit for its new preserver class, it picks a third,
-as a Scholar picks one more at each level up.
+it Grease and Magic Missile), as a preserver picks one at each level up.
 
 A new preserver picks its starting spells the same way when **DONE** is
 clicked on the creation screen, in place of the ones the game handed out by
 its starting level: two 1st-level spells at 1st level (where the game gives
 Grease and Magic Missile), four at 2nd (the game adds Shield and Wall of
 Fog), and four 1st-level and two 2nd-level at 3rd (the game adds Fog Cloud and
-Mirror Image). A Scholar picks one more for each level. A multiclass preserver
-picks too.
+Mirror Image). A multiclass preserver picks too.
 
 **EXIT** on CHOOSE A SPELL (then EXIT again at "YOU HAVEN'T CHOSEN") ends the
 picking, at creation and on changing class: the spells still to pick are the

@@ -5840,10 +5840,6 @@ probe_lv_pick:
         push bp
         mov bp, sp
         call lv_check
-        cmp byte [cs:lv_class], 0x0B
-        jne .scholar_done
-        call lv_scholar
-.scholar_done:
         jmp ovr_back             ; (the way back as the overlay manager left it)
 
 ; Character SI (DS the game's) asked for weapon kinds while it has fewer than it is due
@@ -5934,26 +5930,6 @@ lv_shinobi:
 .out:   pop es
         pop bx
         pop ax
-        ret
-
-; LV_SCHOLAR: for character SI gone up a level as a preserver, a Scholar's spell more: the game's
-; CHOOSE A SPELL (LV_SPELL) once before the game's own. All registers kept.
-lv_scholar:
-        pusha
-        push es
-        cmp si, LV_PARTY
-        jae .out
-        les bx, [LV_SHEETS]
-        imul ax, si, 0x47
-        add bx, ax
-        call kit_is_b
-        db KIT_SCHOLAR
-        jne .out
-        push si
-        call far [cs:lv_spell]
-        add sp, 2
-.out:   pop es
-        popa
         ret
 
 ; LV_DUE: CX the weapon kinds the character whose sheet is ES:BX is due: a gladiator 2, 3 from 6th
@@ -7316,13 +7292,6 @@ probe_slots:
         imul bx, [bp + 6], 3
         mov ax, [es:bx + COMBATANT_CREATURE]
         call creature_sheet     ; (each kit it has awake)
-        call kit_is_b
-        db KIT_SCHOLAR
-        jne .battle
-        cmp byte [bp + 8], SLOT_WIZARD
-        jne .battle
-        jcxz .battle
-        inc cx
 .battle:
         call kit_is_b
         db KIT_BATTLE_MAGE
@@ -8366,11 +8335,6 @@ probe_dual_spells:
         imul ax, si, 0x47
         add bx, ax
         pop ax
-        call kit_is_b           ; (the Scholar kit taken for the new preserver class: one more, as
-                                ; at its level ups)
-        db KIT_SCHOLAR
-        jne .pick
-        inc cx
 .pick:  call ns_forget_all       ; (the new spells too: the game took its own)
         call pick_spells
         pop es
@@ -8634,8 +8598,8 @@ dk_spheres db 'AIR', 0, 0, 0, 'EARTH', 0, 'FIRE', 0, 0, 'WATER', 0
 ; the creation screen's DONE (overlay 65480h), where the game makes a new preserver (SI, its
 ; preserver level [BP-2]) know spells of its choosing: Grease and Magic Missile at 1st level,
 ; Shield and Wall of Fog too at 2nd, Fog Cloud and Mirror Image too at 3rd. It picks as many on
-; CHOOSE A SPELL instead (PICK_SPELLS: 2, 4, or 4 and two of 2nd level), a Scholar one more for
-; each level (KIT_MADE), then on past the game's (CR_SPELLS_PAST). CHOOSE A SPELL is overlay code
+; CHOOSE A SPELL instead (PICK_SPELLS: 2, 4, or 4 and two of 2nd level), then on past the game's
+; (CR_SPELLS_PAST). CHOOSE A SPELL is overlay code
 ; of its own: the way back is put in a frame the overlay manager can fix up, as for PROBE_LV_PICK
 ; (without it the game's code is lost). Another level, or the grants run for the game's own
 ; party (START GAME with no party made calls them from 65480h+6FBh, not DONE's 66556h): AX [BP-2],
@@ -8694,12 +8658,6 @@ probe_cr_spells:
         jne .scholar
         mov ch, 2
 .scholar:
-        push ax
-        call kit_made
-        cmp al, KIT_SCHOLAR
-        pop ax
-        jne .frame
-        add cl, al
 .frame: push word [ss:bx + 36]
         mov ax, [ss:bx + 34]
         add ax, CR_SPELLS_PAST
@@ -9846,7 +9804,8 @@ probe_scroll_learn:
 ; spell level it may know (INT_MOST): knowing that many of the spell's level, it can't (AX 0, and
 ; PROBE_LEARN_REFUSED's message, LEARN_FULL_TEXT: the scroll is kept); else a d100 above the chance
 ; and it fails (AX kept: the game teaches it and uses the scroll up, PROBE_LEARN_SAID takes the
-; spell back and says so). The try is told to the Loader (LEARN_SEQ...). DS the game's; others kept.
+; spell back and says so); a Scholar's chance is 100, so it always learns one it may know. The try
+; is told to the Loader (LEARN_SEQ...). DS the game's; others kept.
 INT_FIRST    equ 9                      ; (the rows' first INT; a preserver's least)
 INT_ROWS     equ 17                     ; (9 to 25)
 INT_ALL      equ 255                    ; (no most)
@@ -9883,9 +9842,18 @@ int_learn:
         mov [cs:learn_spell], dl
         mov byte [cs:learn_read], 0     ; (no read roll: a Shinobi's last one isn't this try's)
         mov byte [cs:learn_read_chance], 0
-        call int_row                    ; (BX the INT's row, AL the INT)
+        xor cl, cl                      ; (CL 1 for a Scholar: its chance 100)
+        call kit_is_b
+        db KIT_SCHOLAR
+        jne .row
+        inc cl
+.row:   call int_row                    ; (BX the INT's row, AL the INT)
         mov [cs:learn_int], al
         mov al, [cs:int_chance + bx]
+        or cl, cl
+        jz .chance
+        mov al, 100
+.chance:
         mov [cs:learn_chance], al
         mov al, dl
         call spell_level_of             ; (CL the spell's level)

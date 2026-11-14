@@ -155,7 +155,7 @@ The full catalogue follows, by part of the game.
 A few of them:
 
 - **Arcanist:** two preserver spells per turn in a fight, for a d3 hit die.
-- **Scholar:** one more spell slot at each spell level, and one more spell learnt at each level, for 1 worse to hit.
+- **Scholar:** with the rule for INT, always learns a spell from a scroll (its chance 100%), for 1 worse to hit.
 - **Healer:** a water cleric only, given the sphere of the cosmos: the spells only druids had, Cure Serious and Critical Wounds, Raise Dead and Neutralize Poison among them, each cure healing 1 more a die.
 - **Assassin:** a backstab one step deadlier (×3 at 1st level up to ×6 from 13th), for −15 to picking pockets and locks.
 - **Wilderness Avenger:** +1 to hit and damage against anything, and Cause Wounds spells doing 1 more a die, for no healing spells at all.

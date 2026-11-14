@@ -95,7 +95,7 @@ spells.
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
-| **Scholar** | a spell slot more at each spell level it has slots at, from 1st level (2 at 1st where a preserver has 1); a spell more learnt at each level up (CHOOSE A SPELL comes up twice), and one more for each level when it is made | −1 to hit (THAC0 1 worse) | the preserver's gear | |
+| **Scholar** | with the rule for INT, a spell from a scroll **always learnt**: its chance is 100% where another preserver's is INT's (still no more spells of a level than its INT allows); its slots and spells learnt at a level up as any preserver's | −1 to hit (THAC0 1 worse) | the preserver's gear | without the rule for INT every preserver learns a scroll's spell, so the kit gives nothing then |
 | **Battle Mage** | a warrior's THAC0 (21 less its level) with its **chosen weapon spec** only (without weapon specialization, with its weapon kinds: the one-handed melee ones below); a spell still cast after being hit earlier in the round; a d6 hit die; light armour (leather, or none) worn, and spells cast in it; with weapon specialization, expertise in one weapon spec of its choice (long sword, club, dagger, short sword, mace, axe or pick), whose weapons it may use as well as a preserver's own, at **3/2 attacks a round, 2 from 7th level** | one fewer spell slot at each spell level (none at 1st level); nothing in the off hand | with weapon specialization, a plain weapon of its chosen weapon spec in place of the quarterstaff | its weapon spec is chosen on the weapon window after DONE (the long sword for an EXIT); can't dual to fighter, gladiator or ranger; can't go with the Swashbuckler, Crusader or Mind Warrior |
 | **Arcanist** | in a fight, casts two preserver spells each turn instead of one (its first doesn't end the turn; being hit still stops the second) | a d3 hit die (a preserver's is a d4) | the preserver's gear | its hit die is rolled again when the kit is chosen or taken back on the creation screen |
 
@@ -253,21 +253,21 @@ to the highest level each class reaches under the
 level). The druid has no kit that
 changes its slots; it is here, as the cleric is, to set the kits beside:
 
-| Level | Preserver | Scholar | Battle Mage | Cleric | Elementalist | Crusader | Druid | Justifier (ranger) | Seeker (ranger) | Shinobi (thief) |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | 1 | 2 | — | 1 | 1 | — | 1 | — | — | — |
-| 2 | 2 | 3 | 1 | 2 | 1 | 1 | 2 | — | — | — |
-| 3 | 2 1 | 3 2 | 1 | 2 1 | 2 1 | 1 | 2 1 | — | — | — |
-| 4 | 3 2 | 4 3 | 2 1 | 3 2 | 2 1 | 2 1 | 3 2 | — | — | — |
-| 5 | 4 2 1 | 5 3 2 | 3 1 | 3 3 1 | 3 2 1 | 2 2 | 3 3 1 | — | — | — |
-| 6 | 4 2 2 | 5 3 3 | 3 1 1 | 3 3 2 | 3 3 1 | 2 2 1 | 3 3 2 | — | 1 | 1 |
-| 7 | 4 3 2 1 | 5 4 3 2 | 3 2 1 | 3 3 2 1 | 3 3 2 1 | 2 2 1 | 3 3 2 1 | — | 2 | 2 |
-| 8 | 4 3 3 2 | 5 4 4 3 | 3 2 2 1 | 3 3 3 2 | 3 3 2 1 | 2 2 2 1 | 3 3 3 2 | — | 2 1 | 2 1 |
-| 9 | 4 3 3 2 1 | 5 4 4 3 2 | 3 2 2 1 | 4 4 3 2 1 | 3 3 3 2 1 | 3 3 2 1 | 4 4 3 2 1 | — | 2 2 | 2 2 |
-| 10 | 4 4 3 2 2 | 5 5 4 3 3 | 3 3 2 1 1 | 4 4 3 3 2 | 4 4 3 2 1 | 3 3 2 2 1 | 4 4 3 3 2 | 1 | 2 2 1 | 2 2 1 |
-| 11 | 4 4 4 3 3 | 5 5 5 4 4 | 3 3 3 2 2 | 5 4 4 3 2 1 | 4 4 3 3 2 1 | 4 3 3 2 1 | 5 4 4 3 2 1 | | | 3 2 1 |
-| 12 | | | | | | | 6 5 5 3 2 2 | | | 3 2 2 |
-| 13 | | | | | | | | | | 3 3 2 1 |
+| Level | Preserver | Battle Mage | Cleric | Elementalist | Crusader | Druid | Justifier (ranger) | Seeker (ranger) | Shinobi (thief) |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | 1 | — | 1 | 1 | — | 1 | — | — | — |
+| 2 | 2 | 1 | 2 | 1 | 1 | 2 | — | — | — |
+| 3 | 2 1 | 1 | 2 1 | 2 1 | 1 | 2 1 | — | — | — |
+| 4 | 3 2 | 2 1 | 3 2 | 2 1 | 2 1 | 3 2 | — | — | — |
+| 5 | 4 2 1 | 3 1 | 3 3 1 | 3 2 1 | 2 2 | 3 3 1 | — | — | — |
+| 6 | 4 2 2 | 3 1 1 | 3 3 2 | 3 3 1 | 2 2 1 | 3 3 2 | — | 1 | 1 |
+| 7 | 4 3 2 1 | 3 2 1 | 3 3 2 1 | 3 3 2 1 | 2 2 1 | 3 3 2 1 | — | 2 | 2 |
+| 8 | 4 3 3 2 | 3 2 2 1 | 3 3 3 2 | 3 3 2 1 | 2 2 2 1 | 3 3 3 2 | — | 2 1 | 2 1 |
+| 9 | 4 3 3 2 1 | 3 2 2 1 | 4 4 3 2 1 | 3 3 3 2 1 | 3 3 2 1 | 4 4 3 2 1 | — | 2 2 | 2 2 |
+| 10 | 4 4 3 2 2 | 3 3 2 1 1 | 4 4 3 3 2 | 4 4 3 2 1 | 3 3 2 2 1 | 4 4 3 3 2 | 1 | 2 2 1 | 2 2 1 |
+| 11 | 4 4 4 3 3 | 3 3 3 2 2 | 5 4 4 3 2 1 | 4 4 3 3 2 1 | 4 3 3 2 1 | 5 4 4 3 2 1 | | | 3 2 1 |
+| 12 | | | | | | 6 5 5 3 2 2 | | | 3 2 2 |
+| 13 | | | | | | | | | 3 3 2 1 |
 
 - A **Crusader** and an **Elementalist** add WIS's bonus slots as a cleric
   does; the Crusader still has one fewer at each spell level with them.

@@ -5494,10 +5494,10 @@ class LevelPickTests(unittest.TestCase):
         self.assertEqual(self.level_up((17,), (8,), cls=17, kit=3, rules=game.RULE_KITS, member=4)[1], 0x60D)
         self.assertEqual(kits.SHINOBI_FIRST, 6)
 
-    def test_scholar_picks_one_more(self):
-        """A Scholar gone up a preserver level has CHOOSE A SPELL once from the probe (then the
-        game's own, past the JNZ); another preserver, or the kits off, none from the probe."""
-        for kit, rules, calls in ((1, game.RULE_KITS, 1), (2, game.RULE_KITS, 0), (0, game.RULE_KITS, 0),
+    def test_scholar_picks_no_more(self):
+        """A Scholar gone up a preserver level has the game's own CHOOSE A SPELL alone (past the
+        JNZ), as any preserver: its gift is a scroll's spell learnt for sure (INT_LEARN)."""
+        for kit, rules, calls in ((1, game.RULE_KITS, 0), (2, game.RULE_KITS, 0), (0, game.RULE_KITS, 0),
                                   (1, 0, 0)):
             with self.subTest(kit=kit, rules=rules):
                 self.assertEqual(self.level_up((11,), (5,), cls=11, kit=kit, rules=rules), (0, 0x606))
@@ -6767,7 +6767,7 @@ class KitTests(unittest.TestCase):
         # Handbook's Seeker table (3 2 1, 3 2 2, 3 3 2 1)
         self.assertEqual([[kits.slots(kits.SHINOBI, kits.WIZARD, lv, sl, 0) for sl in (1, 2, 3, 4)] for lv in (10, 11, 12, 13)],
                          [[2, 2, 1, 0], [3, 2, 1, 0], [3, 2, 2, 0], [3, 3, 2, 1]])
-        self.assertEqual([kits.slots(kits.SCHOLAR, kits.WIZARD, 5, 1, n) for n in (0, 2)], [0, 3])
+        self.assertEqual([kits.slots(kits.SCHOLAR, kits.WIZARD, 5, 1, n) for n in (0, 2)], [0, 2])  # (no slot more)
         self.assertEqual(kits.slots(kits.ARCANIST, kits.WIZARD, 5, 1, 2), 2)
         # an Elementalist: a level behind, but 1 at each spell level its own level reaches (2 x - 1)
         self.assertEqual([kits.slots(kits.ELEMENTALIST, kits.PRIEST, lv, sl, 0) for lv, sl in (
@@ -7928,11 +7928,11 @@ class KitTests(unittest.TestCase):
     # spell levels as the game's table has them (wizard spells 1-68)
     WIZARD_LEVELS = {s: 1 if s <= 11 else 2 if s <= 24 else 3 if s <= 39 else 4 if s <= 55 else 5 for s in range(1, 69)}
 
-    def int_setup(self, who, intelligence, known):
-        """Party member WHO a preserver of INT INTELLIGENCE knowing the spells KNOWN; the game's
-        spell levels; the rule for INT on."""
-        self.rules(game.RULE_INT_LEARN)
-        self.creature(11, 0, index=who, level=5)
+    def int_setup(self, who, intelligence, known, kit=0):
+        """Party member WHO a preserver of INT INTELLIGENCE knowing the spells KNOWN (of KIT: 1 a
+        Scholar, with the kits on); the game's spell levels; the rule for INT on."""
+        self.rules(game.RULE_INT_LEARN | (game.RULE_KITS if kit else 0))
+        self.creature(11, kit, index=who, level=5)
         self.mu.mem_write(self.CREATURES * 16 + who * 0x3A + 0x25, bytes((intelligence,)))
         levels = ((self.DS + 0x3FB9 - 0x4356) & 0xFFFF) * 16 + 0x19C
         for spell, level in self.WIZARD_LEVELS.items():
@@ -8012,6 +8012,13 @@ class KitTests(unittest.TestCase):
         self.mu.mem_write(hdr + 366, bytes((48, 100)))
         self.assertEqual(learn(11)[1][:4], [who, 11, 19, 95])
         self.assertEqual(list(self.mu.mem_read(hdr + 366, 2)), [0, 0])
+        # a Scholar: its chance 100, every try learnt; still no more than its INT's most
+        for n in range(12):
+            self.int_setup(who, 9, first[:5], kit=1)
+            ax, told = learn(8)
+            self.assertEqual((ax, told[:4], told[5]), (1, [who, 8, 9, 100], intlearn.LEARNT))
+        self.int_setup(who, 9, first[:6], kit=1)
+        self.assertEqual(learn(8)[1][5], intlearn.FULL)
         # the game's own: the rule off, a priest spell, or a spell it knows (AX 0 already)
         self.int_setup(who, 9, first[:6])
         self.rules(0)

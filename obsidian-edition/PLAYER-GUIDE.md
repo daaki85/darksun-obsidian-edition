@@ -627,9 +627,8 @@ spells while their bodies wither from years of study in hiding. In a fight they
 can weave two spells while others weave one.
 
 *Scholar.* Keepers of forbidden lore who have spent more time over hidden
-libraries than learning to hold a weapon. Every new level of skill brings
-another spell into their books, and they hold one more spell of each level
-ready than other preservers.
+libraries than learning to hold a weapon. No scroll's spell is beyond them:
+where another preserver may fail to learn one, a Scholar always does.
 
 *Battle Mage.* Preservers who learned in the arena or the legions that a spell
 is no use if you are dead before you finish it. They fight in leather with a
