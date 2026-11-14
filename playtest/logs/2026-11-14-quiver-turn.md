@@ -36,3 +36,18 @@ DSCLOG, and test again.
 Fixed and checked: an archer (a party member) that kills its target with its last arrow keeps its
 turn, as after any kill, to walk, ready more arrows or strike again. Against a target still standing
 the turn ends after the shots, with arrows or without: that is the game's rule for every attack.
+
+## Part 2: the turn kept against a target still standing (the user's follow-up)
+9. DSCLOG sites AMMO_OKAY (5843Fh, 584A4h, 5850Eh: the attack command's "target still Okay"
+   tests answer "fallen" for a member whose volley its quiver cut short, attacks left), with
+   NEW_AS_OKAY's jbe/ja kept in the same patches. Ester, 1 arrow, 2 shots, Templar at full HP: shot
+   (41 to 37), "Out of ammo", **the turn stayed hers** (+181h 1, +1D5h kept).
+10. Readying more arrows then: the game's inventory works mid-turn (Jenna's 68 arrows given to
+    Ester's quiver: portrait, quiver, Ester's portrait, quiver), but **the shot is refused**: the
+    pointer shows the sword (its check, 1D5AEh, builds its item list afresh) yet a click does
+    nothing, on that turn and on her next. A stack the archer had in its quiver when the fight began,
+    moved to the backpack and back on her turn, shoots (two shots, 41 to 31). So the attack works
+    from the fight's own per-combatant item list (58C8Fh walks it), which doesn't take in an item
+    that came to the archer during the fight: a stack given by another member, or one made in
+    memory. (The mod's `shots_left` patch already lets a shot follow a kill, +181h under 63h.)
+11. A memory-made stack (npcitems.add_to) is no test of readying: it never shoots.

@@ -17233,6 +17233,9 @@ PSI_LIST_SITE equ NS_IMAGE + 114  ; 86143h: the psionicists' pop-up's list, a po
 PSI_CYCLE_SITE equ NS_IMAGE + 115 ; 8631Ah: the pop-up's discipline button (PSI_CYCLE)
 AMMO_CAP_SITE equ NS_IMAGE + 116  ; 5899Ah: a shot's attacks cut to the arrows left (AMMO_CAP)
 AMMO_TURN_SITE equ NS_IMAGE + 117 ; 58C38h: the attacks spent: the turn over, or not (AMMO_TURN)
+AMMO_OK1_SITE equ NS_IMAGE + 118  ; 5843Fh: the attack command's target still Okay? (AMMO_OKAY)
+AMMO_OK2_SITE equ NS_IMAGE + 119  ; 584A4h: the same, again (AMMO_OKAY)
+AMMO_OK3_SITE equ NS_IMAGE + 120  ; 5850Eh: the same, before the turn's end (AMMO_OKAY)
 REACH_1587   equ 0x4356 - 0x1587  ; (the callers' segments, less DS)
 REACH_1A0A   equ 0x4356 - 0x1A0A
 REACH_AI_RANGE equ 0x0DA7         ; (overlay 612Eh's ways back)
@@ -17805,7 +17808,13 @@ held_damage:
 ; member (the attacker, [BP+0Eh], 0-3) whose shot was cut, against the round's attacks before the
 ; cut, so the turn stays its own (to ready arrows, or end it) while attacks are left; the others,
 ; and every attack not cut, against [BP-8] as the game has it. The flags its JL takes go into the
-; INT's frame.
+; INT's frame. With attacks left so (the shots cut, the round not spent), the member is AMMO_OUT.
+; AMMO_OKAY: "cmp byte es:[bx+1Ch],1" (5843Fh, 584A4h, 5850Eh; 5 bytes each), the attack command's
+; (58019h) tests of its target still Okay after the attacks (its jumps NEW_AS_OKAY's jbe/ja): Okay,
+; the command ends the turn (5844Eh's block, then 58543h's call), where a target fallen leaves the
+; turn its own. For the AMMO_OUT member (the command's attacker, [BP-0Eh]) the target answers as
+; fallen (above Okay), so the turn goes on as after a kill: arrows readied from the pack, the
+; shots left made, or a walk. The target itself is as it was. Others: the game's compare.
 AMMO_FLAGS equ 0x08D5               ; (CF, PF, AF, ZF, SF, OF: a compare's)
 ammo_cap:
         push ax
@@ -17824,7 +17833,16 @@ ammo_turn:
         cmp word [bp + 0x0E], 3
         jbe .cmp                    ; (a party member: the round's attacks before the cut)
 .plain: mov bx, [bp - 8]
-.cmp:   cmp ax, bx
+.cmp:   mov word [cs:ammo_out], -1
+        cmp ax, bx
+        jge .set                    ; (the round spent)
+        cmp bx, [bp - 8]
+        je .set                     ; (not cut: the game's way)
+        push ax
+        mov ax, [bp + 0x0E]
+        mov [cs:ammo_out], ax       ; (cut, with attacks left: AMMO_OKAY's)
+        pop ax
+.set:   cmp ax, bx
         pushf
         mov bp, sp                  ; ([BP] these flags, [BP+10] the INT's)
         push ax
@@ -17837,7 +17855,28 @@ ammo_turn:
         pop bp
         pop bx
         iret
+ammo_okay:
+        push ax
+        push bp
+        mov ax, [bp - 0x0E]
+        cmp ax, [cs:ammo_out]
+        jne .game
+        mov ax, 2                   ; (fallen, to the tests: above Okay)
+        cmp ax, 1
+        jmp .flags
+.game:  cmp byte [es:bx + 0x1C], 1
+.flags: pushf
+        mov bp, sp                  ; ([BP] these flags, [BP+10] the INT's)
+        mov ax, [bp]
+        and ax, AMMO_FLAGS
+        and word [bp + 10], ~AMMO_FLAGS
+        or [bp + 10], ax
+        popf
+        pop bp
+        pop ax
+        iret
 ammo_real dw -1                     ; (AMMO_CAP's: the round's attacks before the cut; -1 none)
+ammo_out dw -1                      ; (AMMO_TURN's: the party member whose shots were cut, attacks left)
 held_now:                           ; CF with the rule on and the attack's target (TARGET) helpless:
         test byte [cs:rules_hi + 1], RULE_HI_HELD >> 8 ; Paralyzed or Out Cold. DS the game's; all kept.
         jz .ret                     ; (TEST clears CF)
@@ -20757,6 +20796,9 @@ site_tab:
         site PSI_CYCLE_SITE, psi_cycle
         site AMMO_CAP_SITE, ammo_cap
         site AMMO_TURN_SITE, ammo_turn
+        site AMMO_OK1_SITE, ammo_okay
+        site AMMO_OK2_SITE, ammo_okay
+        site AMMO_OK3_SITE, ammo_okay
 SITE_COUNT equ ($ - site_tab) / 2
 
 ; NS_CMP: the compare of site RL_SITE (of NS_CMP_SITES), its flags into the INT's frame.

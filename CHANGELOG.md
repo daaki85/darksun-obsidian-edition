@@ -59,6 +59,11 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   Checked in the game (playtest/logs/2026-11-14-quiver-turn.md): Ester, one arrow and two shots,
   killed the Templar and kept her turn (walked on); without the two patches the turn went to Jenna.
   DSCLOG 70,208 bytes (+80).
+- **In progress, not yet decided with the user:** a party member's turn kept when its quiver runs dry
+  against a target still standing (DSCLOG's `AMMO_OKAY` sites at 5843Fh, 584A4h and 5850Eh: the
+  attack command's "target still Okay" tests answer "fallen" for it; NEW_AS_OKAY's jbe/ja kept in
+  the same patches). Checked: the turn stays. Not done: arrows readied mid-fight from another
+  member's quiver don't shoot (the fight's own item list); see the log. DSCLOG 70,272 bytes.
 
 **Changed**
 - **Wild Fury's Wild Fighting is The Complete Barbarian's Handbook's again**: fighting wild is −3

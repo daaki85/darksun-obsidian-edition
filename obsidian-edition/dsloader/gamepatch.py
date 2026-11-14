@@ -227,6 +227,9 @@ PSI_GRANT_SITE, PSI_LIST_SITE, PSI_CYCLE_SITE = NS_IMAGE + 113, NS_IMAGE + 114, 
 # (a party member's shot cut to the arrows left keeps its turn while attacks are left: DSCLOG's
 # AMMO_CAP and AMMO_TURN, the game's bug)
 AMMO_CAP_SITE, AMMO_TURN_SITE = NS_IMAGE + 116, NS_IMAGE + 117
+# (the attack command's tests of its target still Okay: as fallen for that member, the turn its own)
+# (with NEW_AS_OKAY's jbe/ja after them, in the same patch: those three are left out of its own)
+AMMO_OK_SITES = ((0x5843F, NS_IMAGE + 118), (0x584A4, NS_IMAGE + 119), (0x5850E, NS_IMAGE + 120))
 # the monster kinds' table (DSUN.EXE, the load segment's 3E45h: monsters.MONSTER_KINDS_SEG): a kind's
 # properties (a dword), its resistance class (a byte), a class's damage kinds (four words) and percents
 KINDS_FILE = 0x5400 + 0x3E45 * 16
@@ -1193,6 +1196,10 @@ PATCHES = (
     # quiver runs dry keeps its turn while attacks are left (DSCLOG's AMMO_CAP, AMMO_TURN)
     Patch("ammo_cap", 0x5899A, bytes.fromhex("8956f8"), _site(AMMO_CAP_SITE, 3)),
     Patch("ammo_turn", 0x58C38, bytes.fromhex("3b46f8"), _site(AMMO_TURN_SITE, 3)),
+    # the attack command's tests of its target still Okay after the attacks (cmp byte es:[bx+1Ch],1):
+    # for that member, as fallen, so its turn goes on to ready arrows (DSCLOG's AMMO_OKAY)
+    *(Patch(f"ammo_okay_{n}", offset, _OKAY_TEST + bytes((jump,)), _site(site, 5) + bytes((_OKAY_JUMPS[jump],)))
+      for n, ((offset, site), jump) in enumerate(zip(AMMO_OK_SITES, (0x74, 0x75, 0x74)), 1)),
     # the routine saying whether an item may be taken from an inventory slot, where it found none
     # of the spells that keep a weapon in the hand: jz to its yes (DSCLOG keeps a Spellarcher's
     # spell arrows in the quiver as those spells keep their weapons)
@@ -1321,7 +1328,8 @@ PATCHES = (
           bytes.fromhex("c706814b2e5c"  # mov word [4B81h], ".\"
                         "be834b"  # mov si, 4B83h
                         "eb14")),  # jmp to mov byte [si],0
-    *(_new_as_okay(offset, jump) for offset, jump in NEW_AS_OKAY),
+    *(_new_as_okay(offset, jump) for offset, jump in NEW_AS_OKAY
+      if offset not in {o for o, _ in AMMO_OK_SITES}),  # (those three: ammo_okay_*)
 )
 
 
