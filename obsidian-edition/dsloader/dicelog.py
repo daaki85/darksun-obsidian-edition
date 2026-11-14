@@ -26,7 +26,7 @@ import threading
 import time
 from collections import Counter, deque
 from dataclasses import dataclass
-from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
+from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple
 
 from . import aging, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
@@ -364,6 +364,9 @@ def error_key(err: BaseException) -> Tuple[str, str, int]:
     where = frames[-1] if frames else None
     return (type(err).__name__, where.filename if where else "", where.lineno or 0 if where else 0)
 
+POISON_OFF_SLOT = 10  # (an item's slot +11h: the left hand; DSCLOG's)
+
+
 class DiceLogError(Exception):
     pass
 
@@ -551,6 +554,7 @@ class DiceLog:
         self.floating_names = True  # spells' names over their casters, "Miss" over the missed (labels.py)
         self._panel = combatlog.Panel()
         self._labels = labels.Labels()  # names floating over figures: a spell's, a miss (labels.py)
+        self._poison_doses: Set[int] = set()  # (a Poisoner's weapons that poisoned this fight: member, + 4 the off hand)
         self._quiver_kind: Dict[int, bytes] = {}  # each party archer's last quiver stack (quiver.py: "Out of arrows")
         self._labels_font_tried = False
         self.combat_log_level = combatlog.SHORT  # ... its lines in short, in detail or the results only
@@ -2687,8 +2691,10 @@ class DiceLog:
             self._fight_seen, self._out_of_fight = False, None
         danced = self._dances.round(g, self.tsr_hdr, number, start=start)
         danced += self._wild.round(g, self.tsr_hdr, number, start=start)
-        if start and self.tsr_hdr is not None:  # (a Poisoner's doses: each weapon poisons once a fight)
-            self.guest.write(self.tsr_hdr + kits.TSR_POISON_USED, b"\x00")
+        if start:  # (a Poisoner's doses: each weapon poisons once a fight)
+            self._poison_doses = set()
+            if self.tsr_hdr is not None:
+                self.guest.write(self.tsr_hdr + kits.TSR_POISON_USED, b"\x00")
         self.round_order = [(combatant, name, score) for score, _, _, _, combatant, name in rows]
         self._acted = set()
         # a new round: its first turn is a new turn even for whoever had the last one (a thief
@@ -3371,15 +3377,32 @@ class DiceLog:
         line = f"{g.creature_name(attacker)} hits {g.combatant_name(e.glob[0])} for {total}: {steps}"
         out = ["  " + line]
         if helpless and mode is not None and mode <= 1 and attacker < game.PARTY_SIZE \
-                and kits.POISONER in g.kit_ids(attacker):
-            # a Poisoner's melee hit queues the monsters' poison (DSCLOG's PROBE_POISON), whose save a
-            # helpless target doesn't roll (79B0Ch): no save line, so it is named here, and its HP fall,
-            # landing after the round's next swing at times, is put down to it (_poison_taken)
+                and kits.POISONER in g.kit_ids(attacker) and self._poison_dose(attacker, e.parent_arg(0x12)):
+            # a Poisoner's melee hit queues the monsters' poison (DSCLOG's PROBE_POISON: each hand's
+            # weapon's first hit in a fight), whose save a helpless target doesn't roll (79B0Ch): no save
+            # line, so it is named here, and its HP fall, landing after the round's next swing at
+            # times, is put down to it (_poison_taken)
             if target is not None:
                 self._poison_due.setdefault(target, []).append(now)
             out.append(f"  {g.combatant_name(e.glob[0])} is poisoned by the hit: {g.spell_name(kits.POISON_POWER)}, "
                        f"no saving throw ({helpless})")
         return out
+
+    def _poison_dose(self, member: int, item: Optional[int]) -> bool:
+        """Whether a Poisoner's melee hit with ITEM poisons, as DSCLOG's PROBE_POISON has it: that
+        hand's weapon (the left hand's, its slot 10, or the right's) not used yet this fight; marked
+        used."""
+        hand = 0
+        if item is not None and 0 <= item < game.NO_ITEM:
+            try:
+                rec = self.game.guest.read(spellarrows.item_address(self.game, item), game.ITEM_SIZE)
+                hand = 4 if len(rec) > game.ITEM_SLOT and rec[game.ITEM_SLOT] == POISON_OFF_SLOT else 0
+            except (struct.error, IndexError, ValueError):
+                pass
+        if member + hand in self._poison_doses:
+            return False
+        self._poison_doses.add(member + hand)
+        return True
 
     def _enlarge_level(self, combatant: Optional[int]) -> int:
         """The level Enlarge counts at on COMBATANT: each Enlarge on them at its caster's level

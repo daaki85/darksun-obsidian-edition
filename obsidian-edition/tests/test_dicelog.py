@@ -672,6 +672,7 @@ class HelplessTests(unittest.TestCase):
             falls = []
             for now, hp in ((0.0, None), (0.05, 82), (0.45, 64), (0.9, None), (0.95, 46), (1.4, 28)):
                 if hp is None:
+                    log._poison_doses.clear()  # (each hit the other hand's weapon: its own dose)
                     self.hit(log, now=now)  # (for 18: 1d8 = [5] +1 weapon +12 STR 24)
                 else:
                     struct.pack_into("<h", log.guest.mem, stalker, hp)
@@ -681,9 +682,10 @@ class HelplessTests(unittest.TestCase):
                                  "  Mountain Stalker now 46 HP (-18)", poison.format(28)])
 
     def test_poisoner_on_a_helpless_target(self):
-        """A Poisoner's melee hit poisons (DSCLOG's PROBE_POISON); a helpless target rolls no save
-        (79B0Ch), so the poison is named with the hit and its 10 put down to it, though it lands after
-        the round's next swing (seen 2026-11-10: -18, then -10, then the second hit)."""
+        """A Poisoner's melee hit poisons (DSCLOG's PROBE_POISON: each hand's weapon's first hit in a
+        fight); a helpless target rolls no save (79B0Ch), so the poison is named with the hit and its
+        10 put down to it, though it lands after the round's next swing (seen 2026-11-10: -18, then
+        -10, then the second hit). The same weapon's next hit that fight names none."""
         from dsloader import kits
         log = make_game()
         stalker = CREATURES + STALKER * game.CREATURE_SIZE
@@ -698,6 +700,7 @@ class HelplessTests(unittest.TestCase):
             hp = 100 - 18 - 36
             struct.pack_into("<h", log.guest.mem, stalker, hp)
             self.assertEqual(log.hp_changes(2.1), ["  Mountain Stalker now 46 HP (-54)"])
+            log._poison_doses.clear()  # (the next swing the off hand's: its own dose)
             self.hit(log, now=2.2)  # (the next swing, logged before the first poison lands)
             struct.pack_into("<h", log.guest.mem, stalker, hp - 10)
             self.assertEqual(log.hp_changes(2.4), ["  Mountain Stalker takes 10 from Poison (10 damage), now 36 HP"])
@@ -709,6 +712,7 @@ class HelplessTests(unittest.TestCase):
             self.assertEqual(log.hp_changes(3.2), ["  Mountain Stalker now -46 HP (-36)"])  # (the poison not yet)
             struct.pack_into("<h", log.guest.mem, stalker, -60)
             self.assertEqual(log.hp_changes(9.0), ["  Mountain Stalker now -60 HP (-14)"])  # (too late: not the poison)
+            self.assertEqual(len(self.hit(log, now=9.5)), 1)  # (that weapon's dose used this fight: no poison)
 
 
 class SaveTests(unittest.TestCase):

@@ -744,7 +744,9 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   every save; the game logs only "gives Paralyzed"): free it first (`addeffect.py del C 34`).
 - Seneca is a **Poisoner**: each of her weapons' first melee hit in a fight also poisons (10, no save
   for a held target: the log's `is poisoned by the hit` line), landing about 0.5 s later, after her
-  next swing's line; a weapon's later hits that fight don't (since 2.18: the header's +1860). To
+  next swing's line; a weapon's later hits that fight don't (since 2.18: the header's +1860, which
+  `symread.py`-style reads show as 88h once both her hands have poisoned). Her Hayneedle is in the left
+  hand, Shadowseeker in the right (logs/2026-11-14-quiver-turn.md part 6). To
   check a weapon's own damage, free the target (`addeffect.py del C 34`) or use a member who isn't a
   Poisoner, and read the "hits X for N" line.
 - **Testing Psionic Blast without a blaster**: find DSCLOG's header in memory (its signature,

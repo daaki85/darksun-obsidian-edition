@@ -91,3 +91,15 @@ the turn ends after the shots, with arrows or without: that is the game's rule f
     shield already held in an old save stays until taken off (kit_gear fits new characters only).
 23. Not seen in play: the +1/+2 at 5th/9th preserver level (Lex is 2nd; the emulator test covers
     it), and a rest leaving the arrows (the code that faded them is gone; unit test).
+
+## Part 6: the kit changes of 2026-11-14 (fountain-user, Seneca the Poisoner)
+24. The Poisoner's doses: Seneca (Hayneedle in the left hand, Shadowseeker in the right), every foe
+    held. Her first turn: each weapon's first hit poisoned ("is poisoned by the hit", two "takes 10
+    from Poison"), Shadowseeker's second hit not. Her next turn, the same fight: no poison, the Arena
+    Guard's HP falling by the hits alone (30, 17, 7). The header's +1860 read 88h (her two hands).
+25. The first run's dice log still named a poison on every hit: its line was the Loader's own guess
+    (every Poisoner hit on a helpless target); the game had held to the doses (no "takes 10" line
+    on the second turn). The dice log now keeps the same record (`_poison_dose`).
+26. Not played (no such kit in the test saves; the emulated tests cover them): the warrior THAC0 with
+    the chosen weapon (Swashbuckler, Battle Mage, Crusader, Mind Warrior), the Scholar's sure
+    learning, the Arcanist's level higher, and one kit a character after DUAL.

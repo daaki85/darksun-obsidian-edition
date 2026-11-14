@@ -77,7 +77,8 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   (`POISON_USED`, a new header byte at +1860: bit N main hand, N + 4 off hand, cleared by the dice
   log as each fight starts, `kits.TSR_POISON_USED`); the hand from `KIT_OFF` (+1861), which
   `NOTE_SHOT` sets for a melee attack with the left hand's weapon (its item's +11h 10). Tests:
-  `test_poisoner`, `test_note_off_hand`.
+  `test_poisoner`, `test_note_off_hand`; the dice log's "is poisoned by the hit" follows the same
+  doses (`_poison_dose`). Checked in the game (playtest/logs/2026-11-14-quiver-turn.md part 6).
 - **One kit a character** (the user's call): `DK_ASK` asks no kit after DUAL of a human that has a
   kit already (the kit byte's places, its low six bits, not 0; not `KIT_OPEN`; the game's own
   party's `OWN_BIT` isn't a kit); one with none is asked as before. KITS.md's kit pairs stand for
