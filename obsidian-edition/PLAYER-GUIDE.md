@@ -855,10 +855,11 @@ below, say who takes each kit on Athas.
   Mind Warrior may take the chatkcha), in the weapon window after DONE, and the **Elementalist** its second sphere on the CLERICAL SPHERE
   list.
 - A kit belongs to its class: a human who changes class keeps it, asleep until
-  the new class's level passes the old.
-- Some kits rule out classes a human could change to, and some can't go
-  together in a human who changes class (one kit for each class); the DUAL
-  window and the kit menu leave them out
+  the new class's level passes the old. **One kit a character:** a human with a
+  kit takes no other when it changes class; one with none may take one for
+  the new class.
+- Some kits rule out classes a human could change to; the DUAL window and the
+  kit menu leave them out
   ([which, and why](KITS.md#kits-that-rule-out-classes-and-each-other)).
 - The dice log names each change a kit makes to a new character's gear.
 - Which kits change spell slots, and by how much at each level: [Kits' spell

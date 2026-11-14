@@ -1841,7 +1841,9 @@ How each of these is done:
   ax,[es:bx+44h]`: played if not 0), and the kit byte (`+43h`) and second sphere (`+45h`) are their
   high bytes, 0 in every one of the game's sheets: `PROBE_SOUND_42` and `PROBE_SOUND_44` (`INT 9Bh`,
   `INT 9Ah`, new, 4 bytes each) read the low byte alone (`movzx`).
-- **A kit for a dual-classing human's new class.** Every kit. Where: in the routine that changes a
+- **A kit for a dual-classing human's new class.** Every kit, for a human with none yet (one kit a
+  character: `DK_ASK` asks none of one whose kit byte has a place's bits, `KIT_PLACES_BITS`, and
+  isn't `KIT_OPEN`; `OWN_BIT` alone isn't a kit). Where: in the routine that changes a
   human's class (86C80h), once the classes have moved down and the new one (`[BP+8]`) is first:
   `PROBE_DUAL_KIT` (`INT 99h`, new: `cmp word [bp+8],0Ch`, 4 bytes at 86D90h; the compare done
   after, its flags back with `RETF 2`) shows the game's three-choice menu, the one the DUAL window

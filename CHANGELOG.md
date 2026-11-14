@@ -78,6 +78,10 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   log as each fight starts, `kits.TSR_POISON_USED`); the hand from `KIT_OFF` (+1861), which
   `NOTE_SHOT` sets for a melee attack with the left hand's weapon (its item's +11h 10). Tests:
   `test_poisoner`, `test_note_off_hand`.
+- **One kit a character** (the user's call): `DK_ASK` asks no kit after DUAL of a human that has a
+  kit already (the kit byte's places, its low six bits, not 0; not `KIT_OPEN`; the game's own
+  party's `OWN_BIT` isn't a kit); one with none is asked as before. KITS.md's kit pairs stand for
+  older saves' characters. Test: `test_dual_kit` rewritten.
 - **The Spellarcher, after The Complete Book of Elves** (the user's design): a spell slot makes
   **one** spell arrow (was 5 a preserver level); one stack of each spell, 24 at most, the arrow
   joining it wherever it is (a new stack in the quiver if empty, else the pack; a full stack takes

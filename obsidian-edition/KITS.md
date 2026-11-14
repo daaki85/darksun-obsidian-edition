@@ -312,14 +312,16 @@ has changed class may use the weapon types it chose whatever the new class
 allows. While that class or kit sleeps, the types go with it, and come back
 when it wakes.
 
-A human who changes class may take a kit for the new class too, so a human
-can have up to three, one for each class it has had. Right after DUAL (and
-the sphere a new cleric picks), the game's own three-choice menu asks for it:
-**KIT: NONE** at the top, then the new class's kits; click one, or the top
-row for none. A kit that can't go with the character's other classes or kits
-(below) is left off the menu. A new **Elementalist** then picks its second
-sphere on the same menu (**SPHERE 2: NONE**, then the three other spheres).
-Each kit sleeps and wakes with its own class.
+**One kit a character.** A human who changes class keeps the kit it has, and
+takes no other: one that has a kit for an earlier class is offered none for
+the new one. A human with no kit yet may take one for the new class: right
+after DUAL (and the sphere a new cleric picks), the game's own three-choice
+menu asks for it, **KIT: NONE** at the top, then the new class's kits; click
+one, or the top row for none. A kit that can't go with the character's other
+classes (below) is left off the menu. A new **Elementalist** then picks its
+second sphere on the same menu (**SPHERE 2: NONE**, then the three other
+spheres). The kit sleeps and wakes with its own class. (Up to 2.17 a human
+could take a kit for each class it had, up to three.)
 
 ![The KIT menu after DUAL: a Battle Mage turned thief, offered Swashbuckler and Assassin (not the Shinobi)](docs/dual-kit-menu.png)
 
@@ -360,9 +362,9 @@ become the other, and a druid must be true neutral, a ranger good.
 | Grove Warden | gladiator | its AC would add to a gladiator's own, which betters with level too |
 | Healer | ranger of air, earth or fire | its sphere is water's only (after DUAL to a ranger, the sphere menu offers WATER ONLY) |
 
-And some kits can't go together, whichever came first (a human has one kit for
-each of its classes, and the game never lets a human change from one warrior
-class to another, so only these can meet):
+And some kits couldn't go together (when a human could take a kit for each
+of its classes, up to 2.17; a character has one kit now, so these no longer
+meet in a new one, and stand for characters of older saves):
 
 | Kit | Can't go with | Why |
 |---|---|---|

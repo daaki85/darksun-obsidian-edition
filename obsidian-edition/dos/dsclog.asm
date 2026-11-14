@@ -8357,13 +8357,21 @@ probe_dual_kit:
         retf 2
 
 ; DK_ASK: member SI (DS the game's), its new class AL first on its sheet: PROBE_DUAL_KIT's menus and
-; weapon kinds. Registers changed.
+; weapon kinds. A character keeps to one kit: one that has a kit already (for an earlier class: the
+; kit byte's places, its low six bits, not 0; not KIT_OPEN; the game's own party's features,
+; OWN_BIT, aren't kits) is asked no kit for its new class. Registers changed.
+KIT_PLACES_BITS equ 0x3F        ; (the kit byte's two bits for each of three places)
 dk_ask:
         les bx, [LV_SHEETS]
         imul cx, si, 0x47
         add bx, cx
         test word [cs:rules_hi], RULE_HI_KITS
         jz .specs
+        cmp byte [es:bx + KIT_BYTE], KIT_OPEN
+        je .none
+        test byte [es:bx + KIT_BYTE], KIT_PLACES_BITS
+        jnz .specs              ; (a kit already: one a character)
+.none:
         movzx di, al
         dec di
         cmp di, 16

@@ -7476,7 +7476,8 @@ class KitTests(unittest.TestCase):
         """PROBE_DUAL_KIT: the new class's kit on the game's three-choice menu (4D0:25h, through its
         stub at DS less 1A2h): "KIT: NONE", the class's three kits, a barred one blank; the row
         clicked goes in the kit byte's bits for the new class; an Elementalist's second sphere on
-        the menu again. Then the compare, its flags back."""
+        the menu again. One kit a character: one with a kit already is asked none. Then the
+        compare, its flags back."""
         from dsloader import kitpages, kits
         from dsloader.gamepatch import VEC_DUAL_KIT
         stub = (self.DS + 0x41B4 - 0x4356) * 16 + 0x25
@@ -7509,34 +7510,48 @@ class KitTests(unittest.TestCase):
             return menus, bytes(self.mu.mem_read(self.SHEET * 16 + 3 * 0x47, game.SHEET_SIZE))
 
         self.rules(game.RULE_KITS)
-        # a Myrmidon fighter 5 becomes a preserver: Scholar taken; Battle Mage barred (a warrior THAC0)
-        self.dual_sheet((11, 9), (1, 5), 1)
+        # a fighter 5 with no kit becomes a preserver: Scholar taken; Battle Mage barred (a warrior THAC0)
+        self.dual_sheet((11, 9), (1, 5), 0)
         menus, sheet = run(11, [1])
         self.assertEqual(menus, [["KIT: NONE", "SCHOLAR", "", "ARCANIST"]])
-        self.assertEqual(kitpages.kits_of(sheet), [(kits.MYRMIDON, 1, False), (kits.SCHOLAR, 0, True)])
+        self.assertEqual(kitpages.kits_of(sheet), [(kits.SCHOLAR, 0, True)])
         # the barred row clicked, or the title: none
         for row in (2, 0, 4):
-            self.dual_sheet((11, 9), (1, 5), 1)
+            self.dual_sheet((11, 9), (1, 5), 0)
             _, sheet = run(11, [row])
-            self.assertEqual(sheet[kitpages.KIT_BYTE], 1)
-        # a Twin-blade gladiator becomes a fire cleric: Healer and Crusader barred; an Elementalist picks water
-        self.dual_sheet((3, 10), (1, 5), 2)
-        menus, sheet = run(3, [1, 3])
-        self.assertEqual(menus, [["KIT: NONE", "ELEMENTALIST", "", ""],
-                                 ["SPHERE 2: NONE", "AIR", "EARTH", "WATER"]])
-        self.assertEqual(kitpages.kits_of(sheet), [(kits.TWIN_BLADE, 1, False), (kits.ELEMENTALIST, 0, True)])
-        self.assertEqual(kits.second_sphere(kits.ELEMENTALIST, sheet), 3)
-        # twice changed: the third kit's bits above the second's
-        self.dual_sheet((12, 11, 9), (1, 6, 5), 0b0101)
-        menus, sheet = run(12, [1])
-        self.assertEqual(menus, [["KIT: NONE", "MIND BENDER", "", "KINETICIST"]])  # (the Mind Warrior: a fighter's)
-        self.assertEqual(kitpages.kits_of(sheet)[-1], (kits.MIND_BENDER, 0, True))
-        self.assertEqual(sheet[kitpages.KIT_BYTE], 0b010101)
-        # without the rule: no menu
-        self.rules(0)
+            self.assertEqual(sheet[kitpages.KIT_BYTE], 0)
+        # one kit a character: a Myrmidon fighter becomes a preserver: no menu, its kit as it was
         self.dual_sheet((11, 9), (1, 5), 1)
         menus, sheet = run(11, [1])
         self.assertEqual((menus, sheet[kitpages.KIT_BYTE]), ([], 1))
+        # ... and a kit for the second class of three: none for the third
+        self.dual_sheet((12, 11, 9), (1, 6, 5), 0b0100)
+        menus, sheet = run(12, [1])
+        self.assertEqual((menus, sheet[kitpages.KIT_BYTE]), ([], 0b0100))
+        # a gladiator with no kit becomes a fire cleric: Healer and Crusader barred; an Elementalist picks water
+        self.dual_sheet((3, 10), (1, 5), 0)
+        menus, sheet = run(3, [1, 3])
+        self.assertEqual(menus, [["KIT: NONE", "ELEMENTALIST", "", ""],
+                                 ["SPHERE 2: NONE", "AIR", "EARTH", "WATER"]])
+        self.assertEqual(kitpages.kits_of(sheet), [(kits.ELEMENTALIST, 0, True)])
+        self.assertEqual(kits.second_sphere(kits.ELEMENTALIST, sheet), 3)
+        # twice changed with no kit: the third class's bits above the others' places
+        self.dual_sheet((12, 11, 9), (1, 6, 5), 0)
+        menus, sheet = run(12, [1])
+        self.assertEqual(menus, [["KIT: NONE", "MIND BENDER", "", "KINETICIST"]])  # (the Mind Warrior: a fighter's)
+        self.assertEqual(sheet[kitpages.KIT_BYTE], 0b010000)
+        # no kit chosen (KIT_OPEN), or the game's own party's feature alone (OWN_BIT): asked, as no kit
+        for byte, after in ((kits.KIT_OPEN, 0b0100), (kits.OWN_BIT, kits.OWN_BIT | 0b0100)):  # (the new class's bits)
+            with self.subTest(byte=byte):
+                self.dual_sheet((11, 9), (1, 5), byte)
+                menus, sheet = run(11, [1])
+                self.assertEqual(menus, [["KIT: NONE", "SCHOLAR", "", "ARCANIST"]])
+                self.assertEqual(sheet[kitpages.KIT_BYTE], after)
+        # without the rule: no menu
+        self.rules(0)
+        self.dual_sheet((11, 9), (1, 5), 0)
+        menus, sheet = run(11, [1])
+        self.assertEqual((menus, sheet[kitpages.KIT_BYTE]), ([], 0))
 
     def test_dual_spells(self):
         """PROBE_DUAL_SPELLS: a new preserver picks two spells on CHOOSE A SPELL (620:5Ch, through
