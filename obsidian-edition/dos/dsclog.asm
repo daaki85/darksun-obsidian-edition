@@ -382,8 +382,9 @@ kit_dance  times 4 db 0         ; +351 each party member's Battle Dancer's dance
                                 ;      well, -1 stumbled, 0 none; to hit, to damage and on AC (KIT_EXTRA)
 kit_wild   db 0                 ; +355 Wild Fighting, the Loader's (wild.py: it rolls each Wild Fury's
                                 ;      check as a fight starts, clears it as the fight ends): bit N
-                                ;      party member N's check failed (3 worse to hit, AC 3 worse), bit
-                                ;      N + 4 it passed (1 more attack a round in melee, 3 more damage)
+                                ;      party member N fights wild (3 worse to hit, AC 3 worse), bit
+                                ;      N + 4 its check passed too (1 more attack a round in melee, 3 more
+                                ;      damage)
 tick_off   dw ticks             ; +356 offset of TICKS in the tail (TAIL_SEG): where the game was as
                                 ;      its timer struck (PROBE_TICK), TICK_SLOTS records of TICK_SIZE
                                 ;      bytes, for the Loader's freeze report
@@ -6828,7 +6829,7 @@ kit_is_b:
 ; the creature's kit's (kits.ac): a Ravager's base AC by its level (RAVAGER_AC) where it is better
 ; than its sheet's (+27h), its armour improving it as before; a Wanderer's 1 worse; a Sentinel's 2
 ; better with a shield in a hand, an Arena Champion's 1; a Grove Warden's 1 better for every 3 druid levels. DS the game's;
-; a Wild Fury whose Wild Fighting check failed (KIT_WILD) 3 worse, no worse than 10.
+; a Wild Fury fighting wild (KIT_WILD's bit N, whatever its check) 3 worse, no worse than 10.
 ; others kept.
 kit_ac:
         test word [cs:rules_hi], RULE_HI_KITS
@@ -6846,7 +6847,7 @@ kit_ac:
         cmp byte [es:bx + THINGS], 2
         jne .out                ; (not a creature)
         mov ax, [es:bx + THINGS + 1]
-        cmp ax, 3               ; (Wild Fighting failed: 3 worse, no worse than 10)
+        cmp ax, 3               ; (fighting wild: 3 worse, no worse than 10)
         ja .sheet
         bt word [cs:kit_wild], ax
         jnc .sheet
@@ -7052,7 +7053,8 @@ kit_to_hit:
         jmp wild_to_hit
 
 ; WILD_TO_HIT: AX (what the attacker's kit adds to hit) 3 less if the attacker in the weapon attack
-; routine ([BP+0Eh]) is a party member whose Wild Fighting check failed (KIT_WILD: kits.WILD_TO_HIT).
+; routine ([BP+0Eh]) is a party member fighting wild, whatever its check (KIT_WILD's bit N:
+; kits.WILD_TO_HIT).
 ; Others kept.
 WILD_TO_HIT  equ 3
 WILD_DAMAGE  equ 3

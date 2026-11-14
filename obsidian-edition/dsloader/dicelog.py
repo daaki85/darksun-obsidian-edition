@@ -1389,10 +1389,9 @@ class DiceLog:
                 to_hit, damage = to_hit + weapon + hit + more, damage + weapon + dam + more
         if attacker in g.wild and mode is not None:  # (DSCLOG's WILD_*: a Wild Fury's, or Gerakis's own)
             names.append("Wild Fighting")
+            to_hit += kits.WILD_TO_HIT  # (whatever the check)
             if g.wild[attacker]:
                 damage += kits.WILD_DAMAGE
-            else:
-                to_hit += kits.WILD_TO_HIT
         return " and ".join(names), to_hit, damage
 
     def lines(self, show_all: bool = False, now: Optional[float] = None) -> List[str]:

@@ -481,8 +481,8 @@ POISON_POWER = 176  # the monsters' "poison (10 damage)", each hit of a Poisoner
 
 
 # a Wild Fury's Wild Fighting (wild.py; DSCLOG's KIT_WILD): checked against CON - 4 as a fight starts,
-# for the fight. Passed, 1 more attack a round in melee (2 halves) and 3 more damage; failed, 3
-# worse to hit and AC 3 worse (no worse than WILD_AC_MOST), every fight.
+# for the fight. Whatever the check, 3 worse to hit and AC 3 worse (no worse than WILD_AC_MOST);
+# passed, also 1 more attack a round in melee (2 halves) and 3 more damage; every fight.
 WILD_TO_HIT, WILD_DAMAGE, WILD_HALVES, WILD_AC, WILD_AC_MOST = -3, 3, 2, 3, 10
 
 

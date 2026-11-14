@@ -1460,8 +1460,8 @@ and forgets the last fight's monsters' ACs (`_new_fight`), for a fight soon
 after another (the arena's next wave) too. At `+355` (`KIT_WILD`) each Wild
 Fury's (and Gerakis's) Wild Fighting, which `wild.py` rolls as a fight's first
 round begins (a d20 against CON − 4, a natural 20 failing: `kits.WILD_CHECK`)
-and clears as the dances end: bit N, member N's check failed; bit N + 4, it
-passed.
+and clears as the dances end: bit N, member N fights wild (its penalties, whatever the
+check); bit N + 4 as well, its check passed (its gains).
 
 ### Where each effect goes
 
@@ -1526,12 +1526,12 @@ How each is done:
   Wild Fury (Wild Fighting passed: +3, melee or missile, `WILD_PASSED`). Where: `PROBE_SPEC_DAMAGE`
   (`KIT_ATTACK_DAMAGE`), and the DAM lines (`PROBE_DAM_LINE`, `PROBE_VIEW_DAM`: `KIT_MELEE` only).
 - **To hit.** Ravager, Brute, Ghetto Fighter (and 1 worse with anything but a dagger), Arena
-  Champion, Battle Dancer, Wilderness Avenger, Wild Fury (Wild Fighting failed: −3, `WILD_TO_HIT` by
-  `KIT_WILD`). Where: `PROBE_ATTACKS` (`KIT_TO_HIT`: `KIT_CHAMPION`, `KIT_EXTRA`, and `KIT_MELEE` in
+  Champion, Battle Dancer, Wilderness Avenger, Wild Fury (fighting wild, passed or failed: −3, `WILD_TO_HIT` by
+  `KIT_WILD`'s bit N). Where: `PROBE_ATTACKS` (`KIT_TO_HIT`: `KIT_CHAMPION`, `KIT_EXTRA`, and `KIT_MELEE` in
   melee).
 - **AC.** Ravager (`RAVAGER_AC` by level against the sheet's base AC, `+27h`), Wanderer, Sentinel
   and Arena Champion (a shield in a hand: `PROT_SCAN`), Grove Warden, Battle Dancer (its dance:
-  `KIT_DANCE`), Wild Fury (Wild Fighting failed: 3 worse, no worse than 10, `KIT_WILD`). Where:
+  `KIT_DANCE`), Wild Fury (fighting wild, passed or failed: 3 worse, no worse than 10, `KIT_WILD`'s bit N). Where:
   `PROBE_AC` (`INT 62h`, the end of the AC routine: `KIT_AC`).
 - **Movement.** Stalker, Rescuer (2 more). Where: `PROBE_MOVE` (`KIT_MOVE`).
 - **Spell slots.** Scholar (+1 wizard), Battle Mage (−1 wizard), Crusader (−1 priest), Seeker and

@@ -3,9 +3,10 @@ checked for each one as a fight's first round begins, kept for the fight, and gi
 (its KIT_WILD bits) for to hit, damage, attacks and AC.
 
 The check is the Wild Fighting proficiency's (The Complete Barbarian's Handbook): a d20 against
-CON - 4 (the check at -4; a natural 20 always fails). Passed, 1 more attack a round in melee and
-3 more damage; failed, 3 worse to hit and AC 3 worse (no worse than 10); either for the whole fight,
-and over with it, so the next fight's first round checks again.
+CON - 4 (the check at -4; a natural 20 always fails). Fighting wild is 3 worse to hit and AC 3
+worse (no worse than 10) whatever the check; passed, it is also 1 more attack a round in melee and
+3 more damage (the book's: a failed check gives the penalties and none of the benefits). Either
+for the whole fight, and over with it, so the next fight's first round checks again.
 """
 
 import random
@@ -13,7 +14,7 @@ from typing import Callable, Dict, List, Optional
 
 from . import game, kits
 
-TSR_WILD = 355  # DSCLOG's header (KIT_WILD): bit N member N's check failed, bit N + 4 passed
+TSR_WILD = 355  # DSCLOG's header (KIT_WILD): bit N member N fights wild (its penalties), bit N + 4 its check passed
 
 
 class WildFights:
@@ -25,7 +26,7 @@ class WildFights:
         if tsr_hdr is not None:
             bits = 0
             for member, passed in self.fighting.items():
-                bits |= 1 << (member + 4 if passed else member)
+                bits |= (1 << member) | ((1 << (member + 4)) if passed else 0)
             gd.guest.write(tsr_hdr + TSR_WILD, bytes((bits,)))
 
     def stop(self, gd, tsr_hdr) -> None:
@@ -52,7 +53,7 @@ class WildFights:
             self.fighting[member] = passed
             check = f"{who} fights wild: d20 = {d20}, needs {min(con + kits.WILD_CHECK, 19)} or less (CON {con} {kits.WILD_CHECK})"
             if passed:
-                out.append(f"{check} -> 1 more attack a round and +3 damage for the fight")
+                out.append(f"{check} -> 1 more attack a round and +3 damage, -3 to hit and AC 3 worse for the fight")
             else:
                 out.append(f"{check} -> fails: -3 to hit and AC 3 worse for the fight")
         self._write(gd, tsr_hdr)

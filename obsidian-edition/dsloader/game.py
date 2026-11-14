@@ -2239,8 +2239,8 @@ class GameData:
                     + kits.ghetto_to_hit(kid, kind)
                 if kit:
                     parts.append((kits.name(kid), kit))
-            if self.wild.get(creature) is False:  # (DSCLOG's WILD_TO_HIT: a Wild Fury, or Gerakis)
-                parts.append(("Wild Fighting failed", kits.WILD_TO_HIT))
+            if creature in self.wild:  # (DSCLOG's WILD_TO_HIT: a Wild Fury, or Gerakis, whatever the check)
+                parts.append(("Wild Fighting", kits.WILD_TO_HIT))
             if self.rules & RULE_SPECIALIZE:  # (weapon specialization: DSCLOG's PROBE_ATTACKS)
                 from . import specialize
                 item_type = struct.unpack_from("<H", item, ITEM_TYPE)[0]  # (KIND stays the weapon kind)
@@ -2284,8 +2284,8 @@ class GameData:
                 kit = kits.ghetto_to_hit(kid, None)
                 if kit:
                     parts.append((kits.name(kid), kit))
-            if self.wild.get(creature) is False:
-                parts.append(("Wild Fighting failed", kits.WILD_TO_HIT))
+            if creature in self.wild:
+                parts.append(("Wild Fighting", kits.WILD_TO_HIT))
             parts = [(why, n) for why, n in parts if n]
             out.append(WeaponHit(-1, -1, "unarmed", base - sum(n for _, n in parts), parts))
         return out

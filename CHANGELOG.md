@@ -45,6 +45,21 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
 [1.1.0](#pull-request-18-merged-2026-10-06) (#18), [1.0.0](#pull-request-12-merged-2026-10-02)
 (#12).
 
+## Next pull request (not opened yet)
+
+**Changed**
+- **Wild Fury's Wild Fighting is The Complete Barbarian's Handbook's again**: fighting wild is −3
+  to hit and AC 3 worse (no worse than 10) for the fight whatever the check, and a passed check
+  adds the extra melee attack and +3 damage on top; a failed one still gives the penalties alone.
+  Before, a passed check gave the gains with no penalty, which made the kit near free at a mul's
+  CON (70% to 95%). Gerakis's Wild Fighting, the same code, changes with it. The Loader (`wild.py`)
+  sets KIT_WILD's bit N for anyone fighting wild and bit N + 4 as well when the check passed;
+  DSCLOG already read the two bits apart, so only its comments changed (DSCLOG.EXE rebuilt
+  identical). The Loader's to-hit figures (`game.weapon_hits`) and the dice log (`_kit_attack`)
+  count the −3 either way. Tests: `test_wild.py`, `test_dsclog`'s `test_wild_fury` (bits 0x44:
+  +1 attack, −3 to hit, +3 damage) and `test_wild_ac`, `test_now`'s `test_unarmed_kits`.
+  KITS.md, DICE-LOG.md, DEVELOPMENT-RULES.md and the patch notes say so.
+
 ## Pull request #94 ([merged 2026-11-11](https://github.com/daaki85/darksun-obsidian-edition/pull/94))
 
 Obsidian Edition 2.17.1 ([release notes](release-notes/v2.17.1.md)): an audit of 2.17.0 (the
