@@ -26,8 +26,8 @@ and every party figure can wear it, in all its pictures (15 walking, 14 fighting
     the human woman's pictures): they are made here the same way and dressed like the rest, and
     the elves keep the pointed ears the Loader draws.
 
-The pictures are judged with two tools beside this one: outfitcheck.py (every frame checked by
-rule, the worst listed and drawn large) and outfitreview.py (a page where they move as in the
+The pictures are judged and finished with three tools beside this one: outfitfixes.py (corrections
+by hand to single frames, kept as text and laid on each time the pictures are made), outfitcheck.py (every frame checked by rule, the worst listed and drawn large) and outfitreview.py (a page where they move as in the
 game, to mark the frames that look wrong).
 
 Nothing of the game's is in the repository: the pictures are read from the player's install.
@@ -48,7 +48,10 @@ from typing import Dict, FrozenSet, List, NamedTuple, Optional, Set, Tuple
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "obsidian-edition"))
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from dsloader import art, figures, gff, halfelf, spritegear as sg, spriteparts as sp  # noqa: E402
+import outfitfixes  # noqa: E402
 
 Rows = List[List[Optional[int]]]
 Cell = Tuple[int, int]
@@ -170,7 +173,9 @@ OUTFITS: Dict[int, Outfit] = {o.npc: o for o in (
 
 
 class Game:
-    def __init__(self, game_dir: str):
+    def __init__(self, game_dir: str, fixes: Optional[dict] = None):
+        self.fixes = outfitfixes.read() if fixes is None else fixes  # (corrections by hand)
+        self.stale: Dict[tuple, list] = {}  # (those left off: the rules changed under them)
         def load(name):
             path = art._find(game_dir, name)
             if not path:
@@ -678,13 +683,22 @@ class Game:
             big[y + P][x + P] = ramp[max(0, min(n - 1, t))]
         return self.ears(big, fig, 1, 13), -P, -P
 
-    def full(self, key, npc: int) -> Tuple[List, List]:
+    def full(self, key, npc: int, fixed: bool = True) -> Tuple[List, List]:
         """Every picture of a figure in NPC's outfit, each (rows, x, y, the figure's own frame it
-        stands in): 15 walking; 14 fighting (13 dead)."""
+        stands in): 15 walking; 14 fighting (13 dead). FIXED: with the corrections made by hand
+        (outfitfixes.py) laid on."""
         o, fig = OUTFITS[npc], self.fig(key)
         walk = [(*self.dress(key, o, 0, f), fig.rows(0, f)) for f in range(15)]
         fight = [(*self.dress(key, o, 1, f), fig.rows(1, f)) for f in range(13)]
         fight.append((*self.dead(key, o), fig.rows(1, 13)))
+        name = dict(FIGURES).get(key, str(key))
+        for cb, frames in ((0, walk), (1, fight)):
+            for f, (rows, ox, _, _) in enumerate(frames):
+                fix = self.fixes.get((o.name, name, cb, f))
+                if fix and fixed:
+                    stale = outfitfixes.apply(rows, -ox, fix, self.palette)
+                    if stale:
+                        self.stale[(o.name, name, cb, f)] = stale
         return walk, fight
 
 

@@ -18,6 +18,8 @@ The faults:
   bare     skin showing where the clothes cover it, well past what the figure's other frames
            of that view show
   no cloak the outfit has a cloak and the frame shows next to none (the hit frame aside)
+  stale    a correction by hand (outfitfixes.py) the rules have changed under: left off, to be
+           looked at again
   flicker  the cloak's size jumping from one frame of a walk or a blow to the next, more than
            the person's own cloak does
 """
@@ -31,7 +33,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import outfits as O  # noqa: E402
 
-WEIGHT = {"face": 4, "speck": 2, "hole": 3, "scrap": 1, "bare": 0.5, "covered": 1, "no cloak": 30, "flicker": 20}
+WEIGHT = {"face": 4, "speck": 2, "hole": 3, "scrap": 1, "bare": 0.5, "covered": 1, "no cloak": 30, "flicker": 20, "stale": 50}
 CYCLES = [(0, (3, 4, 5, 6)), (0, (7, 8, 9, 10)), (0, (11, 12, 13, 14)), (1, (0, 1, 2)), (1, (3, 4, 5)), (1, (6, 7, 8))]
 
 
@@ -118,6 +120,9 @@ def check(game: O.Game) -> List[Tuple[float, str, object, int, int, Dict[str, in
                         theirs = max(person[(cb, a)], person[(cb, b)]) / max(1, min(person[(cb, a)], person[(cb, b)]))
                         if mine > 1.6 * theirs and abs(got[(cb, a)][1] - got[(cb, b)][1]) > 25:
                             faults[(cb, b)]["flicker"] = 1
+            for (outfit, figure, cb, f), cells in game.stale.items():
+                if outfit == o.name and figure == name:
+                    faults[(cb, f)]["stale"] = len(cells)
             for (cb, f), c in faults.items():
                 score = sum(WEIGHT[k] * n for k, n in c.items())
                 if score:
@@ -171,6 +176,10 @@ def main(argv: List[str]) -> None:
             total[k] += n
     frames = len(O.OUTFITS) * len(O.FIGURES) * 29
     print(f"{len(found)} of {frames} frames with a fault; " + ", ".join(f"{k} {n}" for k, n in total.most_common()))
+    by = collections.Counter((outfit, figure) for (outfit, figure, _, _), fix in game.fixes.items() if fix)
+    if by:
+        print(f"{sum(len(f) for f in game.fixes.values())} pixels corrected by hand in {len([f for f in game.fixes.values() if f])} frames; "
+              "most on " + ", ".join(f"{o} {fig} ({n} frames)" for (o, fig), n in by.most_common(3)))
     picture(game, found[:int(argv[2]) if len(argv) > 2 else 40], os.path.join(argv[1], "check.png"))
 
 
