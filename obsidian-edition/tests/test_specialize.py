@@ -209,15 +209,22 @@ class NewCharacterTests(unittest.TestCase):
         finally:
             game.RULES_IN_FORCE = old
 
-    def test_myrmidon_keeps_its_second(self):
-        """A Myrmidon (kits on) keeps a second kind marked; another fighter doesn't."""
-        from dsloader import weaponchoice
+    def test_myrmidon_polearm_second(self):
+        """A Myrmidon (kits on): its first kind its own pick (the long sword for none), its second
+        the polearm whatever was marked; another fighter one kind alone."""
+        from dsloader import kits, weaponchoice
         s = bytearray(sheet((0, 5), classes=(9, 0, 0)))
         s[0x43] = 1
         old = game.RULES_IN_FORCE
         try:
             game.RULES_IN_FORCE = game.RULE_KITS
-            self.assertEqual(weaponchoice.kinds_for(bytes(s)), [1, 6, 0, 0])
+            self.assertEqual(weaponchoice.kinds_for(bytes(s)), [1, kits.POLEARM + 1, 0, 0])
+            self.assertEqual(weaponchoice.kinds_for(bytes(sheet((13,), classes=(9, 0, 0)))[:0x43] + b"\x01"
+                                                    + bytes(sheet((13,), classes=(9, 0, 0)))[0x44:]),
+                             [14, kits.POLEARM + 1, 0, 0])  # (the bow, as any fighter may)
+            self.assertEqual(weaponchoice.kinds_for(bytes(sheet((), classes=(9, 0, 0)))[:0x43] + b"\x01"
+                                                    + bytes(sheet((), classes=(9, 0, 0)))[0x44:]),
+                             [1, kits.POLEARM + 1, 0, 0])  # (none picked: the long sword)
             s[0x43] = 2
             self.assertEqual(weaponchoice.kinds_for(bytes(s)), [1, 0, 0, 0])
         finally:
@@ -679,9 +686,10 @@ class KitGearTests(FinishNewTests):
         self.assertIn("second", out[1])
 
     def test_myrmidon_two_weapons(self):
-        """A Myrmidon with weapon specialization: a plain weapon of its second kind in the backpack."""
+        """A Myrmidon with weapon specialization: a plain weapon of its second kind, the polearm, in the
+        backpack."""
         from dsloader import weaponchoice
-        right, left = self.character(9, 1, ("long sword", "axe"))
+        right, left = self.character(9, 1, ("long sword", "polearm"))
         self.gd.rules = game.RULE_SPECIALIZE | game.RULE_KITS
         self.give(weaponchoice.START_TYPE, weaponchoice.START_NAME, right)
         self.give(4, 0x05, left)
@@ -698,7 +706,7 @@ class KitGearTests(FinishNewTests):
         with mock.patch("dsloader.npcitems.add_to", add_to):
             out = weaponchoice.kit_gear(self.gd)
             self.assertEqual(weaponchoice.kit_gear(self.gd), [])
-        self.assertEqual(self.item(2), (weaponchoice.PLAIN[specialize.KINDS.index("axe")][0], 20))
+        self.assertEqual(self.item(2), (weaponchoice.PLAIN[specialize.KINDS.index("polearm")][0], 20))
         self.assertEqual(self.item(1), (4, left))  # (the shield kept)
         self.assertIn("Myrmidon", out[0])
 

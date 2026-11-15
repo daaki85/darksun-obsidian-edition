@@ -5,7 +5,7 @@ CR_WEAPONS; weaponpages.py draws it); once the window is closed, and before it i
 (its status New), the Loader makes them whole (kinds_for), the picks left unmade given defaults:
 
 - a fighter or ranger has one kind, its kit's weapon, a thri-kreen's chatkcha, else the long
-  sword (a Myrmidon, kits.py, a second only if picked; a Battle Mage, kits.py, one of its own); a
+  sword (a Myrmidon, kits.py, the polearm its second; a Battle Mage, kits.py, one of its own); a
   gladiator two, the long sword and the club if none were picked; any other class none;
 - the game's starting weapon, the bone long sword in the right hand, becomes a plain weapon of
   the first kind, of bone or obsidian where the game has one, in a material the character can use
@@ -117,9 +117,10 @@ def kinds_for(sheet: bytes, allowed: Optional[List[int]] = None) -> List[int]:
         seconds = [k for k in (2, 1) if k in ok] + defaults  # (the club, as the panel puts in)
         second = chosen[1] if chosen[1] and chosen[1] != first else next((k for k in seconds if k != first), 0)
         return [first, second, 0, 0]
-    if FIGHTER in classes and specialize.myrmidon(sheet):  # (a second kind, if one was marked)
-        first = chosen[0] or defaults[0]
-        return [first, chosen[1] if chosen[1] != first else 0, 0, 0]
+    if FIGHTER in classes and specialize.myrmidon(sheet):  # (its second kind the polearm, given)
+        from . import kits
+        first = next((k for k in chosen if k and k != kits.POLEARM + 1), 0) or defaults[0]
+        return [first, kits.POLEARM + 1, 0, 0]
     if FIGHTER in classes or classes & set(RANGERS) or specialize.battle_mage(sheet) \
             or specialize.war_kit(sheet) is not None \
             or game.RULES_IN_FORCE & game.RULE_KITS and kits.SWASHBUCKLER in kitpages.kit_ids(sheet):

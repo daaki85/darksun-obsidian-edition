@@ -86,11 +86,14 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   kit already (the kit byte's places, its low six bits, not 0; not `KIT_OPEN`; the game's own
   party's `OWN_BIT` isn't a kit); one with none is asked as before. KITS.md's kit pairs stand for
   older saves' characters. Test: `test_dual_kit` rewritten.
-- **The Myrmidon: melee weapon specs only** (the user's call, from the kits' review: a bow as its
-  second spec made it a grand master archer and swordsman at once): `KINDS_ALLOWED` and
-  `restrict.allowed_kinds` give a Myrmidon `KIT_MELEE_KINDS` alone, for both its specs. A saved
-  Myrmidon with a missile spec keeps it. Test: `test_as_the_python`'s Myrmidon, Sentinel and
-  Swashbuckler cases.
+- **The Myrmidon: its second weapon spec the polearm** (the user's call, after *The Complete
+  Fighter's Handbook*'s military weapons; in place of melee specs only, tried first): a new
+  Myrmidon picks one weapon spec as any fighter (the bow too, not the polearm: `KINDS_ALLOWED`'s
+  `MYRM_POLEARM`, `restrict.allowed_kinds`), and the Loader gives it the polearm as its second
+  (`weaponchoice.kinds_for`, `kits.POLEARM`), both going on to mastery and grand mastery as before;
+  `LV_DUE` no longer asks for two. Its starting gear's plain polearm goes in the backpack. A
+  Myrmidon of an older save keeps its two. Tests: `test_myrmidon_polearm_second`,
+  `test_myrmidon_two_weapons`, `KindsAllowedTests`.
 - **The Spellarcher, after The Complete Book of Elves** (the user's design): a spell slot makes
   **one** spell arrow (was 5 a preserver level); one stack of each spell, 24 at most, the arrow
   joining it wherever it is (a new stack in the quiver if empty, else the pack; a full stack takes

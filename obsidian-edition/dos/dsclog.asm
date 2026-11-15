@@ -5753,12 +5753,12 @@ wp_rules:
 ; one-handed melee kinds (KIT_BM_KINDS), not thrown, whatever its class lets it use; a Spellarcher
 ; the bow only; a Poisoner the dagger and short sword (KIT_POISON_KINDS); a Swashbuckler the long
 ; sword, dagger and short sword (SWASH_KINDS); a kind KIT_ALLOWS lets it use whatever its classes (a Battle Dancer's long sword);
-; a Myrmidon only melee kinds (KIT_MELEE_KINDS: the drilled foot soldier, no missile weapon among its
-; two weapon specs); a Crusader or Mind Warrior only melee kinds (KIT_MELEE_KINDS), and a thri-kreen Mind Warrior the
+; a Myrmidon any but the polearm (its second weapon spec, given by the Loader: weaponchoice.kinds_for); a Crusader or Mind Warrior only melee kinds (KIT_MELEE_KINDS), and a thri-kreen Mind Warrior the
 ; chatkcha as well (KIT_KREEN_KINDS). DS = the game's. Others kept.
 KIT_KREEN_KINDS equ 0x1000      ; (the chatkcha)
 KIT_BM_KINDS equ 0x00BF         ; a Battle Mage's: long sword, club, dagger, short sword, mace, axe, pick
 KIT_MELEE_KINDS equ 0x0FFF      ; (not the chatkcha, bow, sling or staff sling)
+MYRM_POLEARM equ 9              ; (the polearm's kind, less 1: a Myrmidon's own second weapon spec)
 KIT_POISON_KINDS equ 0x000C     ; a Poisoner's: dagger, short sword
 kinds_allowed:
         push cx
@@ -5818,10 +5818,10 @@ kinds_allowed:
 .no:    inc dx
         cmp dx, KIND_TYPES
         jb .type
-        call kit_is_b           ; (a Myrmidon: melee kinds alone, both its specs)
+        call kit_is_b           ; (a Myrmidon: any but the polearm, its second spec given it: weaponchoice.kinds_for)
         db KIT_MYRMIDON
         jne .war
-        and di, KIT_MELEE_KINDS
+        btr di, MYRM_POLEARM
 .war:   call war_kit_is         ; (a Crusader or Mind Warrior: its class's melee kinds; a
         jne .ranger             ;   thri-kreen Mind Warrior's chatkcha too)
         mov ax, di
@@ -6010,7 +6010,8 @@ lv_scholar:
         ret
 
 ; LV_DUE: CX the weapon kinds the character whose sheet is ES:BX is due: a gladiator 2, 3 from 6th
-; level, 4 from 9th; a fighter or ranger 1 (a Myrmidon being made 2: LV_CREATING); a Battle Mage,
+; level, 4 from 9th; a fighter or ranger 1 (a Myrmidon too: its second, the polearm, the Loader's,
+; weaponchoice.kinds_for; up to 2.17 a second of its choice, LV_CREATING); a Battle Mage,
 ; Crusader, Mind Warrior or Swashbuckler 1 (its weapon of choice); 0 for others. A human's earlier classes (dual-classed)
 ; count only once its first class's level has passed theirs. Others kept.
 lv_due:
@@ -6051,7 +6052,7 @@ lv_due:
         cmp si, 3
         jb .class
         or cl, cl               ; (a Battle Mage, Crusader, Mind Warrior or Swashbuckler: one)
-        jnz .myrmidon
+        jnz .out
         call kit_is_b
         db KIT_BATTLE_MAGE
         je .one_kit
@@ -6062,15 +6063,6 @@ lv_due:
         jne .out
 .one_kit:
         mov cl, 1
-.myrmidon:
-        cmp byte [cs:lv_creating], 0    ; (a new Myrmidon: two, the second its own choice)
-        je .out
-        cmp cl, 2
-        jae .out
-        call kit_is_b
-        db KIT_MYRMIDON
-        jne .out
-        mov cl, 2
 .out:   pop si
         pop ax
         ret
@@ -22041,7 +22033,7 @@ pp_close:
 ; and let go of their pictures (the weapon window, bigger than the psionicists', fails to open
 ; while they hold the memory: "Failed to open window"). With weapon specialization, a warrior (or a
 ; Battle Mage) picks its weapon specs on the level-up window, as at a level up or DUAL (LV_CHECK,
-; through the psionicists' pop-up, 620:57h: DK_PSI), as many as it is due (LV_DUE; a Myrmidon two),
+; through the psionicists' pop-up, 620:57h: DK_PSI), as many as it is due (LV_DUE),
 ; from those its classes and kit allow; the creation screen has no weapon pages. Picks the window
 ; was left with unmade are the Loader's defaults (weaponchoice.kinds_for). The way back is put in
 ; a frame the overlay manager can fix up, as for PROBE_CR_SPELLS.

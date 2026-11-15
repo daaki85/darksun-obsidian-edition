@@ -365,7 +365,8 @@ theirs ([what each class may use](#what-each-class-may-use)).
 **Kits.**
 
 *Myrmidon.* Drilled in a sorcerer-king's legions, where a soldier who falls out
-of step is left for the kanks. They master two weapons where others master one,
+of step is left for the kanks. They master the polearm of the battle line as well
+as a weapon of their own choosing,
 but years of obeying orders leave their minds open to anyone who barks them,
 and they wait for the order to strike.
 
@@ -854,7 +855,7 @@ A character takes a kit, or none, when it is made, on the creation panel's
 numbers and starting gear; the class sections above, and the multiclass kits
 below, say who takes each kit on Athas.
 
-- The **Myrmidon** chooses its second weapon spec, and the **Battle Mage**,
+- The **Myrmidon** is given the polearm as its second weapon spec, and the **Battle Mage**,
   **Crusader** and **Mind Warrior** their one (a melee weapon; a thri-kreen
   Mind Warrior may take the chatkcha), in the weapon window after DONE, and the **Elementalist** its second sphere on the CLERICAL SPHERE
   list.

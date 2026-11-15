@@ -478,6 +478,7 @@ def move(kid: int) -> int:
     return 2 if kid in (STALKER, RESCUER) else 0
 
 
+POLEARM = 9  # (the polearm's weapon kind: a Myrmidon's second weapon spec, given it: weaponchoice.kinds_for)
 MYRMIDON_INITIATIVE = -2  # (the drilled soldier waits for the order to strike: PROBE_INIT)
 
 

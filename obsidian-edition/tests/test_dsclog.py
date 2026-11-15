@@ -2852,8 +2852,9 @@ class KindsAllowedTests(unittest.TestCase):
                 self.assertNotIn(kits.BOW, restrict.allowed_kinds(bytes(s), self.record))
             from dsloader import kits
             myrmidon, fighter = bytearray(sheet(9)), bytearray(sheet(9))
-            myrmidon[0x43] = 1  # (a Myrmidon: melee kinds only, both specs; a fighter with no kit the bow too)
-            self.assertTrue(set(restrict.allowed_kinds(bytes(myrmidon), self.record)) <= kits.MELEE_KINDS)
+            myrmidon[0x43] = 1  # (a Myrmidon: as a fighter, the bow too, but the polearm, its second given it)
+            self.assertEqual(set(restrict.allowed_kinds(bytes(fighter), self.record))
+                             - set(restrict.allowed_kinds(bytes(myrmidon), self.record)), {kits.POLEARM})
             self.assertIn(kits.BOW, restrict.allowed_kinds(bytes(fighter), self.record))
             self.assertEqual(restrict.allowed_kinds(bytes(bytearray(sheet(17)) [:0x43] + b"\x01" + bytes(sheet(17))[0x44:]),
                                                     self.record), sorted(kits.SWASHBUCKLER_KINDS))

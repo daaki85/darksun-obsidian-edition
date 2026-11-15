@@ -155,7 +155,7 @@ The full catalogue follows, by part of the game.
 
 A few of them:
 
-- **Myrmidon:** its two weapon specs are melee weapons only (no bow, sling or chatkcha), each going on to mastery and grand mastery.
+- **Myrmidon:** its second weapon spec is the polearm, the battle line's weapon; its first is chosen as any fighter's, and both go on to mastery and grand mastery.
 - **One kit a character:** a human who changes class keeps its kit and takes no other (one with none may take one for the new class).
 - **Arcanist:** its preserver spells cast a level higher (duration and damage), for a d3 hit die.
 - **Scholar:** learns a spell more at each level up (and one more for each level at creation), for 1 worse to hit, with its touch spells too *(was a spell slot more at each spell level as well)*.

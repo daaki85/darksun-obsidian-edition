@@ -299,8 +299,8 @@ def allowed_kinds(sheet: bytes, type_record) -> List[int]:
     KINDS_ALLOWED. Not the bow for a ranger: it has expertise with the bow already (but a Seeker,
     which hasn't: its sphere's weapons alone, the bow among them where its sphere allows one). A Battle Mage
     (kits.py) its own, whatever its class; a Spellarcher the bow only; a Poisoner the dagger and
-    short sword; a Swashbuckler the long sword, dagger and short sword; a Myrmidon melee ones alone (both
-    its specs); a Crusader or Mind Warrior its class's melee ones (a thri-kreen Mind Warrior the
+    short sword; a Swashbuckler the long sword, dagger and short sword; a Myrmidon any but the polearm
+    (its second weapon spec, given it: weaponchoice.kinds_for); a Crusader or Mind Warrior its class's melee ones (a thri-kreen Mind Warrior the
     chatkcha too)."""
     from . import kitpages, kits
     if game.RULES_IN_FORCE & game.RULE_KITS and kits.BATTLE_MAGE in kitpages.kit_ids(sheet):
@@ -316,9 +316,9 @@ def allowed_kinds(sheet: bytes, type_record) -> List[int]:
     war = specialize.war_kit(sheet)
     melee = kits.MELEE_KINDS | (kits.KREEN_WARRIOR_KINDS if war == kits.MIND_WARRIOR
                                 and sheet[game.SHEET_RACE] == kits.THRI_KREEN else frozenset())
-    myrmidon = specialize.myrmidon(sheet)  # (melee kinds alone, both its specs: DSCLOG's KINDS_ALLOWED)
+    myrmidon = specialize.myrmidon(sheet)  # (any but the polearm, its own: DSCLOG's KINDS_ALLOWED)
     return [kind for kind, name in enumerate(specialize.KINDS)
             if not (ranger and name == "bow") and not (war is not None and kind not in melee)
-            and not (myrmidon and kind not in kits.MELEE_KINDS)
+            and not (myrmidon and kind == kits.POLEARM)
             and any(usable(sheet, t, type_record(t)) and not kit_forbids(sheet, t, type_record(t), spec=True)
                     for t in specialize._TYPES[name])]

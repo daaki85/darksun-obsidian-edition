@@ -1255,8 +1255,8 @@ opening at 62182h), while the psionicists' own still fits. The game's memory for
 it is the window's pictures: packed with repeats (`icons._pack`, as the game
 packs its own: a byte n, odd for one pixel n >> 1 + 1 times), its marble and
 sixteen slots come to 41 KB rather than 93 KB, and it opens for a fourth
-character made after CHOOSE A SPELL too. `LV_DUE` gives a Myrmidon being made
-two (`LV_CREATING`). The way back is a frame the overlay manager can patch, as
+character made after CHOOSE A SPELL too. (`LV_DUE` gave a Myrmidon being made two,
+`LV_CREATING`, up to 2.17; its second is now the polearm, the Loader's: `weaponchoice.kinds_for`.) The way back is a frame the overlay manager can patch, as
 for `PROBE_CR_SPELLS`, whose CHOOSE A SPELL comes first. While the window is up,
 `LV_CREATING` (the header's +361) is 1, and the Loader leaves the New character
 alone (`DiceLog._weapons_asked`): otherwise it would put in the defaults before
@@ -1722,13 +1722,15 @@ How each is done:
   specialization; the bow, not chosen, stays every ranger's expertise: up to 2.17 it was
   specialized too). Where: `SPEC_OF_SHEET`'s end: `SPEC_EXPERT` made `SPEC_SPECIAL` for a
   Justifier, the ranger's bow path (`.rbow`) jumping past it; `specialize.skill`.
-- **Weapon specs.** Myrmidon (two, the second to grand mastery), Brute (no missile spec), Battle
+- **Weapon specs.** Myrmidon (two, both to grand mastery: the first its own, any but the polearm,
+  `KINDS_ALLOWED`'s `MYRM_POLEARM`, `restrict.allowed_kinds`; the second the polearm, given by the
+  Loader, `weaponchoice.kinds_for`, `kits.POLEARM`; up to 2.17 both chosen, melee only), Brute (no missile spec), Battle
   Mage (one, of `KIT_BM_KINDS`: expertise), Spellarcher (the bow only), Poisoner (the dagger or
   short sword only: `KIT_POISON_KINDS`), Crusader and Mind Warrior (one, of its class's melee kinds:
   `KIT_MELEE_KINDS`; a thri-kreen Mind Warrior the chatkcha too, `KIT_KREEN_KINDS`, the race byte
   +18h, `kits.KREEN_WARRIOR_KINDS`). Where: `SPEC_OF_SHEET` (a Battle Mage's chosen weapon type
   `SPEC_EXPERT`), `KIT_FORBIDS`, `KINDS_ALLOWED` (a Battle Mage its own weapon types, whatever its
-  class), `LV_DUE` (a Battle Mage one, a Myrmidon being made two), so DONE's weapon window
+  class), `LV_DUE` (a Battle Mage one), so DONE's weapon window
   (`CR_WEAPONS`) asks a Battle Mage as it asks a warrior.
 - **Attacks a round.** Wild Fury (Wild Fighting passed: 1 more in melee, `WILD_HALVES`, in
   `PROBE_ATTACKS` before the off hand's cap; not on the DAM lines); Battle Mage (its chosen weapon
@@ -1889,7 +1891,7 @@ How each of these is done:
   dagger or the short sword: `_poisoner_daggers`), Battle Mage (its weapon spec's weapon), Battle
   Dancer (a second long sword in the left hand in place of the shield, `_kit_second_weapon`, and a
   bow and arrows, with fuller starting gear: `startgear.py`); Myrmidon (its second weapon spec's
-  weapon in the left hand in place of the shield, if one-handed and for melee). Where: the game
+  weapon, the polearm, in the backpack). Where: the game
   gives a new character its class's gear when DONE is clicked (the README's table, seen in play).
   The dice log's `weaponchoice.kit_gear` (after `finish_new`, with the rule for kits; New characters
   only), for a hand's item `restrict.kit_forbids` forbids (the off hand as such): a weapon in the

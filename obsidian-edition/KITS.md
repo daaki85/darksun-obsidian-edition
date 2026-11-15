@@ -52,7 +52,7 @@ armour.
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
-| **Myrmidon** | with weapon specialization, a second weapon spec at 1st level (+1 to hit, +2 damage, 3/2 attacks a round); both weapon specs go on to **mastery at 5th level** (+3 to hit, +3 damage) and **grand mastery at 9th** (+3, +3, the damage die the next greater die size, against large targets too, and one more attack a round) | **both its weapon specs melee ones** (no bow, sling, staff sling or chatkcha: a drilled foot soldier); −4 on saves against charms (Charm Person, Charm Monster, Charm Person or Mammal, Domination, Mass Domination); initiative 2 worse | the fighter's gear, and a plain weapon of its second weapon spec in the left hand in place of the shield (a two-handed weapon in the backpack) | the second weapon spec is picked on the weapon window after DONE (EXIT after one leaves it with one) |
+| **Myrmidon** | with weapon specialization, a second weapon spec at 1st level, **the polearm** (+1 to hit, +2 damage, 3/2 attacks a round; its reach of two squares with the weapon traits rule), its first chosen as any fighter's; both weapon specs go on to **mastery at 5th level** (+3 to hit, +3 damage) and **grand mastery at 9th** (+3, +3, the damage die the next greater die size, against large targets too, and one more attack a round) | its second weapon spec the polearm, not a choice; −4 on saves against charms (Charm Person, Charm Monster, Charm Person or Mammal, Domination, Mass Domination); initiative 2 worse | the fighter's gear, and a plain polearm in the backpack | its first weapon spec is picked on the weapon window after DONE (any a fighter may take but the polearm); a Myrmidon of an older save keeps the second it chose |
 | **Sentinel** | AC 2 better with a shield in a hand, from 1st level | −1 on saves against wizards' and priests' spells; −1 to hit in melee without a shield | the fighter's gear | can't dual to druid or preserver; can't go with the Shinobi |
 | **Ravager** | +1 to hit and damage in melee; a base AC by level: **7 at 1st-2nd, 6 at 3rd-4th, 5 at 5th-6th, 4 at 7th-8th, 3 at 9th-10th**, armour bettering it as usual | no missile or thrown weapons (cahulaks are allowed: the game doesn't throw them); no shield; leather armour or none | the fighter's gear, with a second of its weapon in place of the shield (none if the weapon takes both hands) | the dice log shows its bonus as `+1 Ravager`; can't go with the Grove Warden |
 
@@ -485,8 +485,8 @@ Press **DONE** on the character creation screen and
 a warrior (and a [Battle Mage](#preserver-kits), [Crusader](#cleric-kits) or
 [Mind Warrior](#psionicist-kits)) picks its weapon specs on the weapon window, the one a
 level gained brings up (below), as a preserver picks its
-spells on CHOOSE A SPELL: a fighter or ranger one, a gladiator two, a
-[Myrmidon](#fighter-kits) two. A preserver warrior picks its spells first. A
+spells on CHOOSE A SPELL: a fighter or ranger one (a
+[Myrmidon](#fighter-kits) one, the polearm its second, given), a gladiator two. A preserver warrior picks its spells first. A
 multiclass warrior can choose only the weapon specs its other class lets it
 use: those of which the game (or the Loader) has a weapon the character may
 use, in any material. The rest are greyed:
@@ -504,8 +504,8 @@ use, in any material. The rest are greyed:
 rest. A ranger never has the bow to choose: its expertise with the bow comes
 anyway.)
 
-**EXIT** leaves picks unmade, and the Loader picks them (a Myrmidon's second
-excepted: it stays unpicked): the kit's weapon (a
+**EXIT** leaves picks unmade, and the Loader picks them (a Myrmidon's second is
+the polearm whatever is picked): the kit's weapon (a
 Ghetto Fighter's or Poisoner's dagger, a Battle Dancer's long sword), a
 thri-kreen's chatkcha, else the long sword (a gladiator's second the club), each
 only if it may be chosen, else the first that may. EXIT can't go back to the
