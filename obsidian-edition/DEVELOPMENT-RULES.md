@@ -429,7 +429,9 @@ Gerakis old and Cilla venerable, their figures redrawn as their ages were set.
 
 ## Two weapons
 
-([In the features page](FEATURES.md#two-weapons).)
+([In the features page](FEATURES.md#two-weapons).) Always on since 2.18: `game.RULES_ALWAYS`
+puts `RULE_TWO_WEAPONS` in the rules word whatever the settings (its switch is gone); DSCLOG
+still tests the bit.
 
 How: the game reads the attacker's DEX adjustment when it works out the
 two-weapon adjustment; the helper takes over from there (`INT FEh`) and gives
@@ -1694,9 +1696,10 @@ How each is done:
   an EXIT on the weapon window after DONE, `weaponchoice.kinds_for` makes a Ghetto Fighter's or
   Poisoner's spec the dagger and a Battle Dancer's the long sword, if allowed (`kits.default_kind`);
   `weaponchoice._ghetto_dagger` puts a dagger in a Ghetto Fighter's hand.
-- **Skill with a weapon.** Justifier (expertise, the bow's and its chosen weapon type's, becomes
-  specialization). Where: `SPEC_OF_SHEET`'s end: `SPEC_EXPERT` made `SPEC_SPECIAL` for a Justifier;
-  `specialize.skill`.
+- **Skill with a weapon.** Justifier (expertise with its chosen weapon type becomes
+  specialization; the bow, not chosen, stays every ranger's expertise: up to 2.17 it was
+  specialized too). Where: `SPEC_OF_SHEET`'s end: `SPEC_EXPERT` made `SPEC_SPECIAL` for a
+  Justifier, the ranger's bow path (`.rbow`) jumping past it; `specialize.skill`.
 - **Weapon specs.** Myrmidon (two, the second to grand mastery), Brute (no missile spec), Battle
   Mage (one, of `KIT_BM_KINDS`: expertise), Spellarcher (the bow only), Poisoner (the dagger or
   short sword only: `KIT_POISON_KINDS`), Crusader and Mind Warrior (one, of its class's melee kinds:
@@ -1708,8 +1711,9 @@ How each is done:
 - **Attacks a round.** Wild Fury (Wild Fighting passed: 1 more in melee, `WILD_HALVES`, in
   `PROBE_ATTACKS` before the off hand's cap; not on the DAM lines); Battle Mage (its chosen weapon
   type: expertise, 3/2, 2 from 7th preserver level); Crusader and Mind Warrior (a warrior's extra
-  attacks in melee, 3/2 from 7th level of the kit's class (2 from 13th, past the level cap), weapon
-  specialization on or off). Where: `EXPERT_HALVES` where `PROBE_ATTACKS`, `PROBE_DAM_LINE` and
+  attacks in melee, 3/2 from 7th level of the kit's class (2 from 13th, past the level cap), without
+  weapon specialization: with it, `WAR_KIT_HALVES` gives none and the chosen weapon spec's
+  expertise is the kit's extra attacks; up to 2.17 with it on too). Where: `EXPERT_HALVES` where `PROBE_ATTACKS`, `PROBE_DAM_LINE` and
   `PROBE_VIEW_DAM` leave a non-warrior's (2 halves or fewer) alone; `specialize.expert_attacks`.
   `WAR_KIT_HALVES` in the same three probes, after the rest (`WAR_KIT_OF` in `PROBE_ATTACKS`, not
   for a missile: `[BP+16h]` above 1, or in View Character a type's `+0` bit 2);
@@ -1729,7 +1733,7 @@ How each is done:
   the sheet). The creation screen's range (the least and most hit points it allows, `DS:[4998h]` and
   `[4996h]`, worked out with the rolls by 655D6h): `PROBE_CR_DIE` (`INT A3h`, new: `mov
   al,es:[bx+14Ah]`, 65677h, the die from its table by creation class). `kits.hit_die`.
-- **Max PSP.** Mind Warrior (a tenth fewer, rounded down). Where: at a level up: `PROBE_MAX_PSP`
+- **Max PSP.** Mind Warrior (a fifth fewer, rounded down: `kits.MIND_PSP`; a tenth up to 2.17). Where: at a level up: `PROBE_MAX_PSP`
   (`INT A4h`, new: `les bx,[bp-8]`, 8748Fh, the sum in SI before it goes in the sheet, in the
   routine at 873B2h, which the level-up check runs for every party member, and a game's start too;
   first `PSP_SCORES` puts the game's CON, INT and WIS bonuses right: WIS read through `DS:11A0h`,
@@ -1805,7 +1809,7 @@ How each of these is done:
   picks, the Battle Mage's 7th-level expertise) and its class from `KIT_CLASS_OF_SHEET` (a Seeker's
   sphere, an Elementalist's cleric); `PROBE_SLOT_LEVEL` puts an Elementalist's slots behind for its
   own class's place only (`KIT_AT` there). `PROBE_HIT_DIE` gives a kit's die only for one class (a
-  human who changed class rolls for its new one); `PROBE_MAX_PSP` takes a Mind Warrior's tenth with
+  human who changed class rolls for its new one); `PROBE_MAX_PSP` takes a Mind Warrior's fifth with
   `KIT_HAS`, as a sleeping psionicist class still gives its PSP. `SPEC_OF_SHEET` treats a
   dual-classed Battle Mage's weapon spec as the kit's (none asleep, expertise awake), not a new
   warrior class's. The Effects screen has a `KIT:` line for each kit, the oldest class's first, `

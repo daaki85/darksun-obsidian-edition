@@ -3222,7 +3222,7 @@ prot_scan:
 ; specialist's rate (3/2, then 2 from 7th level, 5/2 from 13th); in melee a warrior (more than 2
 ; halves) with a weapon of a kind not chosen has AD&D's plain rate, half an attack less, and a
 ; grand master one more. A Crusader or Mind Warrior has a warrior's extra attacks in melee
-; (WAR_KIT_OF), whatever RULE_SPECIALIZE. Specialization +1 to hit, mastery +3 (the THAC0 less).
+; (WAR_KIT_OF) without RULE_SPECIALIZE (with it, its chosen weapon spec's expertise alone). Specialization +1 to hit, mastery +3 (the THAC0 less).
 ; PROBE_SPEC_DAMAGE: INT VEC_SPEC_DAMAGE replaces "add [bp-12h],ax" (3 bytes: INT + NOP; 588F2h),
 ; the strength bonus added to the damage bonus: specialization +2, mastery +3, and grand mastery
 ; the damage dice the next greater die size (NEXT_DIE: d8 to d10, 2d4 to 2d6, d12 to d20), against
@@ -3687,10 +3687,13 @@ war_kit_is:
 ; WAR_KIT_HALVES: AX the melee attacks a round (halves) of a character who isn't a warrior (2 or
 ; fewer), ES:BX its sheet: a Crusader's or Mind Warrior's (kit awake) the warrior's extra attacks,
 ; 3/2 a round from 7th level of the kit's class, 2 from 13th, the better of the two kits' for a
-; human with both (kits.warrior_attacks). Others kept.
+; human with both (kits.warrior_attacks); with RULE_SPECIALIZE none (its chosen weapon spec has
+; expertise's, EXPERT_HALVES: the extra attacks with that weapon alone). Others kept.
 war_kit_halves:
         cmp ax, 2
         ja .ret
+        test word [cs:rules], RULE_SPECIALIZE
+        jnz .ret
         push dx
         mov dx, ax
         call kit_is_b
@@ -11952,7 +11955,8 @@ spec_of_sheet:
         cmp al, 16
         ja .rnext
         mov dl, SPEC_EXPERT
-        jmp .ret
+        jmp .out                ; (expertise, a Justifier's too: its chosen weapon spec's alone
+                                ;   becomes specialization)
 .rnext: inc si
         cmp si, 3
         jb .rbow
@@ -12018,7 +12022,7 @@ spec_of_sheet:
         cmp ch, GRAND_MASTERY
         jb .ret
         mov dl, SPEC_GRAND
-.ret:   cmp dl, SPEC_EXPERT     ; (a Justifier's expertise, the bow's too: specialization)
+.ret:   cmp dl, SPEC_EXPERT     ; (a Justifier's expertise with its chosen weapon spec: specialization)
         jne .out
         call kit_is_b
         db KIT_JUSTIFIER
@@ -18585,7 +18589,7 @@ probe_hit_die:
 ; PROBE_MAX_PSP: INT VEC_MAX_PSP replaces "les bx,[bp-8]" (3 bytes: INT + NOP; DSUN.EXE 8748Fh) where
 ; the level-up routine (873B2h, run for each party member) has a character's most PSP worked out
 ; (SI) and puts it in the sheet ([BP-8], far: its +0Ch) when more than it was, the gain on the
-; creature's PSP too: ES:BX the sheet, and a Mind Warrior's SI a tenth less (kits.max_psp), its kit
+; creature's PSP too: ES:BX the sheet, and a Mind Warrior's SI a fifth less (kits.max_psp), its kit
 ; asleep or not (KIT_HAS). First the game's CON, INT and WIS bonuses are put right (PSP_SCORES):
 ; it read WIS from the creation screen's record (DS:11A0h) rather than the member's (its creature,
 ; [BP-4]), and its tables (a byte for each score from 15, in the overlay's segment that its "mov
@@ -18605,7 +18609,7 @@ probe_max_psp:
         push dx
         mov ax, si
         xor dx, dx
-        mov cx, 10
+        mov cx, 5               ; (a fifth less: kits.MIND_PSP)
         div cx
         sub si, ax
         pop dx
@@ -18767,7 +18771,7 @@ kit_made:
 
 ; PROBE_CR_PSP: INT VEC_CR_PSP replaces "pop bp; retf" (2 bytes; DSUN.EXE 65C3Dh), the end of the
 ; creation PSP routine (65B39h), which has put the sheet being made's most PSP in its +0Ch: a Mind
-; Warrior's a tenth fewer, rounded down (kits.max_psp). Then the routine's own end, the interrupt
+; Warrior's a fifth fewer, rounded down (kits.max_psp). Then the routine's own end, the interrupt
 ; frame dropped, its flags put back first: the INT cleared IF, and a click on a score reaches the
 ; routine with nothing after to set it again (the game's clock stopped, and the game with it).
 probe_cr_psp:
@@ -18788,7 +18792,7 @@ probe_cr_psp:
         les bx, [WP_CREATION]
         mov ax, [es:bx + 0x0C]
         xor dx, dx
-        mov cx, 10
+        mov cx, 5
         div cx
         sub [es:bx + 0x0C], ax
         pop es

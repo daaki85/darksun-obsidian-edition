@@ -2058,7 +2058,6 @@ size](FEATURES.md#creature-size)).
 
 | Loader label | Default | Takes effect | Details |
 |---|---|---|---|
-| Two weapons: -2 main hand, -4 off hand, DEX's reaction adjustment added; the off hand attacks once a round | on | at once | [Two weapons](FEATURES.md#two-weapons) |
 | Half-giants' two-handed weapons: a half-giant wields one in one hand, a shield or a light weapon in the other | on | at once | [Half-giants' two-handed weapons](FEATURES.md#half-giants-two-handed-weapons) |
 | Weapon traits: the cahulaks' extra attack and tangle, the staff sling's stinkpots, and a polearm's reach of two squares | on | at once | [Weapon traits](FEATURES.md#weapon-traits) |
 | Creature size as in AD&D: large targets take AD&D's large weapon dice, and Hold Person and Charm Person have no effect on them | on | at once (Hold Person's and Charm Person's descriptions: next start) | [Creature size](FEATURES.md#creature-size) |

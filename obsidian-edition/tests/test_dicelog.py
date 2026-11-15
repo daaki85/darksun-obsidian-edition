@@ -247,6 +247,12 @@ class AttackTests(unittest.TestCase):
         lines = log.describe(self.attack(18, 9, 4, 5, 9, after_f1=10, hit_bonus=1, m16=2))
         self.assertEqual(lines[1], "    THAC0 16, +6 STR, +1 weapon = 9")
 
+    def test_two_weapons_always_on(self):
+        """The two-weapons rule has no switch (2.18): on whatever the settings, an old False too."""
+        self.assertNotIn("two_weapons", dict(game.RULE_SETTINGS))
+        for settings in ({}, {"two_weapons": False}, {key: False for key, _ in game.RULE_SETTINGS}):
+            self.assertTrue(game.rules_from_settings(settings) & game.RULE_TWO_WEAPONS)
+
     def test_two_weapons_adnd(self):
         """With the Loader's rule: -2 main hand, -4 off hand, the DEX reaction adjustment
         (the game's initiative table) added, never above 0."""

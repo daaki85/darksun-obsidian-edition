@@ -291,7 +291,7 @@ POWER_EFFECT_NAMES = {34: "Paralysing attack", 13: "Disease attack", 51: "Entang
                       35: "Poison attack"}
 POWER_KIND_NAMES = {"pointed": "piercing", "edged": "slashing"}  # (else the damage kind's own name)
 # the Options' setting for each, all on unless unticked
-RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("two_weapons", RULE_TWO_WEAPONS),
+RULE_SETTINGS = (("helm_ac", RULE_HELMS),
                  ("spell_save", RULE_SPELL_SAVE),
                  ("new_spells", RULE_NEW_SPELLS), ("stealth", RULE_STEALTH), ("level_10", RULE_LEVEL_10),
                  ("thief_table", RULE_THIEF_TABLE), ("half_giant_hands", RULE_HALF_GIANT),
@@ -472,8 +472,13 @@ def manual_die(spell: int, sheet: bytes) -> Tuple[int, str]:
     return (best, why) if best else (6, "")
 
 
+# the rule changes with no switch, always on: AD&D's two weapons (its "two_weapons" switch gone in
+# 2.18, the user's call: an older settings file's False is passed over)
+RULES_ALWAYS = RULE_TWO_WEAPONS
+
+
 def rules_from_settings(settings: dict) -> int:
-    return sum(bit for key, bit in RULE_SETTINGS if setting_on(settings, key))
+    return RULES_ALWAYS | sum(bit for key, bit in RULE_SETTINGS if setting_on(settings, key))
 
 
 def kind_to_save(kind: int, rules: int) -> int:
@@ -2256,8 +2261,9 @@ class GameData:
                     halves = specialize.expert_attacks(self.sheet(creature)[SHEET_ATTACKS], skill, self.sheet(creature))
             if not missile and self.rules & RULE_KITS:  # (a Crusader's or Mind Warrior's extra attacks)
                 have = self.sheet(creature)[SHEET_ATTACKS] if halves is None else halves
-                if kits.warrior_attacks(have, self.sheet(creature)) != have:
-                    halves = kits.warrior_attacks(have, self.sheet(creature))
+                spec = bool(self.rules & RULE_SPECIALIZE)
+                if kits.warrior_attacks(have, self.sheet(creature), spec) != have:
+                    halves = kits.warrior_attacks(have, self.sheet(creature), spec)
             sheet = self.sheet(creature)
             if missile and kind == kits.CHATKCHA and len(sheet) > SHEET_RACE and sheet[SHEET_RACE] == kits.THRI_KREEN:
                 # (a thri-kreen's chatkcha, 2/1 as in AD&D: DSCLOG's OWN_THROWS)

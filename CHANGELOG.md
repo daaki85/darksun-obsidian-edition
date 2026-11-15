@@ -123,6 +123,20 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   `KF_SPHERE` now the kit's class less 1, mod 4 (a druid's sphere as a ranger's); `kits.forbids`.
   Its kit gear is fitted as any kit's (`kit_gear`). Tests: `test_kits`' `test_seeker`,
   `test_dsclog`'s `CanUseTests.test_kits` (a Warden of each sphere).
+- **The Crusader and Mind Warrior: their extra attacks with the chosen weapon alone** (the user's
+  call): with weapon specialization on, `WAR_KIT_HALVES` gives no warrior's 3/2 from 7th level
+  with every melee weapon; the chosen weapon spec's expertise (3/2, 2 from 7th) is the extra
+  attack (`kits.warrior_attacks`' `spec`). Without the rule, as before (their weapon kinds are any
+  melee weapon). Tests: `test_warrior_kits_attacks`, `test_war_kit_expertise`.
+- **The Mind Warrior: a fifth fewer PSP** (the user's call; was a tenth): `PROBE_MAX_PSP` and
+  `PROBE_CR_PSP` divide by 5 (`kits.MIND_PSP`). Tests: `test_max_psp`, `test_cr_psp`.
+- **The Justifier: its chosen weapon spec specialized, the bow at expertise** (the user's call):
+  `SPEC_OF_SHEET`'s ranger bow path (a bow not chosen) skips the Justifier's step up
+  (`specialize.skill` the same); a bow it chose is specialized. Test: `test_justifier`.
+- **Two weapons: always on** (the user's call, with the Twin-blade as it is): the Options switch
+  "Two weapons" is gone (`game.RULE_SETTINGS`, the viewer's list, the player's guide's table);
+  `game.RULES_ALWAYS` puts `RULE_TWO_WEAPONS` in every rules word, an older settings file's False
+  passed over. Test: `test_viewer_settings` uses another switch.
 
 **Fixed**
 - **An archer's turn lost with its last arrow** (the game's bug, the user's report): the weapon

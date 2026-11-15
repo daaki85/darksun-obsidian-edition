@@ -1108,7 +1108,7 @@ PATCHES = (
     # Justifier's 9 (kits.spell_class_level)
     Patch("ranger_level", 0x5E3B8, bytes.fromhex("268a4724"), _interrupt(VEC_RANGER_LEVEL, 4)),
     # A kit's hit die (the Battle Mage's d6, the Arcanist's d3) where a level's die is taken from
-    # the class's group, and the Mind Warrior's a tenth fewer PSP where a level up sets them; at
+    # the class's group, and the Mind Warrior's a fifth fewer PSP where a level up sets them; at
     # creation, the die for the most hit points a new character can have, and the end of the
     # routine working out its PSP
     Patch("hit_die", 0x87308, bytes.fromhex("268a870000"), _interrupt(VEC_HIT_DIE, 5)),

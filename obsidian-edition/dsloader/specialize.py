@@ -91,9 +91,12 @@ def active_classes(sheet: bytes) -> List[Tuple[int, int]]:
 
 def skill(sheet: bytes, item_type: Optional[int]) -> int:
     """The character's skill with a weapon type, as DSCLOG's SPEC_OF_SHEET: a Justifier's (kits.py)
-    expertise is specialization."""
+    expertise with its chosen weapon spec is specialization (every ranger's bow, not chosen,
+    stays expertise)."""
     level = _skill(sheet, item_type)
-    return SPECIAL if level == EXPERT and justifier(sheet) else level
+    kind = spec_kind_of(item_type) if item_type is not None else None
+    chosen = kind is not None and kind + 1 in game.spec_kinds(sheet)
+    return SPECIAL if level == EXPERT and chosen and justifier(sheet) else level
 
 
 def justifier(sheet: bytes) -> bool:

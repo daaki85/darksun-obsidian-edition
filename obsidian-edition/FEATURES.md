@@ -876,7 +876,8 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#level-cap-by-xp).
 
 #### Two weapons
 
-With **Two weapons** ticked, a character with a melee weapon in each hand
+Always on (its Options switch went in 2.18: a settings file's old choice is
+passed over), a character with a melee weapon in each hand
 attacks at −2 with the main (right) hand and −4 with the off (left) hand, plus
 the DEX reaction adjustment (the table under
 [Initiative](HOW-THE-GAME-WORKS.md#initiative)). That can bring the penalty to 0
@@ -896,7 +897,7 @@ as do the THAC0 lines on the Characters tab and the inventory screen.
 The off hand attacks once a round, whoever holds it: extra attacks (a
 fighter's, gladiator's or ranger's 3/2 from the game, a specialist's,
 mastery's, the kits') are the main hand's alone. So a 7th-level Crusader
-with a club in each hand attacks 3/2 + 1 a round: 1 + 1 in one round, 2 + 1
+(without weapon specialization) with a club in each hand attacks 3/2 + 1 a round: 1 + 1 in one round, 2 + 1
 in the next. The game gives each hand the whole rate (1 + 1, then 2 + 2).
 The off hand's DAM lines (the inventory screen and View Character) show its
 one attack.

@@ -121,12 +121,14 @@ def name(kid: int) -> str:
 WARRIOR_ATTACKS = frozenset((CRUSADER, MIND_WARRIOR))
 
 
-def warrior_attacks(halves: int, sheet: bytes) -> int:
+def warrior_attacks(halves: int, sheet: bytes, spec: bool = False) -> int:
     """The melee attacks a round (in halves) of a character who isn't a warrior (HALVES the game's,
     2 or fewer), as DSCLOG's WAR_KIT_HALVES: a Crusader's or Mind Warrior's (kit awake) a warrior's
-    extra attacks, 3/2 a round from 7th level of the kit's class, 2 from 13th; else HALVES."""
+    extra attacks, 3/2 a round from 7th level of the kit's class, 2 from 13th; else HALVES. With
+    weapon specialization (SPEC) none: its chosen weapon spec's expertise is its extra attacks,
+    with that weapon alone (specialize.expert_attacks)."""
     from . import kitpages
-    if halves > 2:
+    if halves > 2 or spec:
         return halves
     for kid in WARRIOR_ATTACKS & set(kitpages.kit_ids(sheet)):
         level = kitpages.kit_level(sheet, kid)
@@ -444,10 +446,13 @@ def hit_die(kid: int, sides: int) -> int:
     return {BATTLE_MAGE: 6, ARCANIST: 3}.get(kid, sides)
 
 
+MIND_PSP = 5  # (a Mind Warrior's PSP a fifth fewer; a tenth up to 2.17)
+
+
 def max_psp(kid: int, psp: int) -> int:
-    """The most PSP a level up gives, PSP the game's (PROBE_MAX_PSP): a Mind Warrior's a tenth
-    fewer (rounded down)."""
-    return psp - psp // 10 if kid == MIND_WARRIOR else psp
+    """The most PSP a level up gives, PSP the game's (PROBE_MAX_PSP): a Mind Warrior's a fifth
+    fewer (the fifth rounded down)."""
+    return psp - psp // MIND_PSP if kid == MIND_WARRIOR else psp
 
 
 def shinobi_pick_level(level: int) -> int:

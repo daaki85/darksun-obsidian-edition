@@ -1908,8 +1908,9 @@ class SpecializeTests(unittest.TestCase):
 
     def test_war_kit_expertise(self):
         """A Crusader or Mind Warrior (kits and weapon specialization on): the expertise rate with
-        its chosen melee weapon spec, 3/2 a round, 2 from 7th level; another weapon the war kits'
-        own rate, the game's 1 before 7th level (specialize.skill, expert_attacks)."""
+        its chosen melee weapon spec, 3/2 a round, 2 from 7th level; another weapon the game's 1 a
+        round, at 7th level too (the kits' extra attacks are the chosen weapon's alone)
+        (specialize.skill, expert_attacks)."""
         from dsloader import specialize
         both = 4096 | game.RULE_KITS
         for cls, kit in ((1, 3), (12, 2)):
@@ -1919,7 +1920,7 @@ class SpecializeTests(unittest.TestCase):
                 self.assertEqual(self.attack(2, self.LONG_SWORD, **war)[0], 3)
                 self.assertEqual(self.attack(2, self.LONG_SWORD, **seventh)[0], 4)
                 self.assertEqual(self.attack(2, self.AXE, **war)[0], 2)
-                self.assertEqual(self.attack(2, self.AXE, **seventh)[0], 3)
+                self.assertEqual(self.attack(2, self.AXE, **seventh)[0], 2)
                 self.assertEqual(self.attack(2, self.LONG_SWORD, **dict(war, rules=4096))[0], 2)
                 self.assertEqual(self.attack(2, self.LONG_SWORD, **dict(war, kit=1))[0], 2)
                 sheet = bytearray(game.SHEET_SIZE)
@@ -1935,13 +1936,15 @@ class SpecializeTests(unittest.TestCase):
                     game.RULES_IN_FORCE = old
 
     def test_justifier(self):
-        """A Justifier (kits on): its chosen weapon spec and the bow specialized, +1 to hit and +2
-        damage, where another ranger has expertise; another kind the plain rate (specialize.skill)."""
+        """A Justifier (kits on): its chosen weapon spec specialized, +1 to hit and +2 damage, where
+        another ranger has expertise; the bow, not chosen, every ranger's expertise (specialized up
+        to 2.17); chosen, specialized; another kind the plain rate (specialize.skill)."""
         from dsloader import specialize
         both = 4096 | game.RULE_KITS
         just = dict(classes=(13, 0, 0), levels=(4, 0, 0), chosen=(0,), kit=2, rules=both)
         self.assertEqual(self.attack(3, self.LONG_SWORD, **just), (3, 14, 5, 8))
-        self.assertEqual(self.attack(2, 1, missile=True, **just)[1:3], (14, 5))  # (item type 1: a bow)
+        self.assertEqual(self.attack(2, 1, missile=True, **just)[1:3], (15, 3))  # (item type 1: a bow)
+        self.assertEqual(self.attack(2, 1, missile=True, **dict(just, chosen=(13,)))[1:3], (14, 5))  # (the bow chosen)
         self.assertEqual(self.attack(3, self.AXE, **just), (2, 15, 3, 8))
         self.assertEqual(self.attack(3, self.LONG_SWORD, **dict(just, kit=3)), (3, 15, 3, 8))  # (a Seeker)
         self.assertEqual(self.attack(3, self.LONG_SWORD, **dict(just, rules=4096)), (3, 15, 3, 8))
@@ -1951,7 +1954,7 @@ class SpecializeTests(unittest.TestCase):
         try:
             game.RULES_IN_FORCE = both
             self.assertEqual([specialize.skill(bytes(sheet), t) for t in (self.LONG_SWORD, 1, self.AXE)],
-                             [specialize.SPECIAL, specialize.SPECIAL, specialize.PLAIN])
+                             [specialize.SPECIAL, specialize.EXPERT, specialize.PLAIN])
             game.RULES_IN_FORCE = 4096
             self.assertEqual(specialize.skill(bytes(sheet), self.LONG_SWORD), specialize.EXPERT)
         finally:
@@ -2132,7 +2135,8 @@ class SpecializeTests(unittest.TestCase):
 
     def test_warrior_kits_attacks(self):
         """A Crusader (cleric) or Mind Warrior (psionicist), the rule for kits on: a warrior's extra
-        attacks in melee, 3/2 a round from 7th level, 2 from 13th, weapon specialization on or off;
+        attacks in melee, 3/2 a round from 7th level, 2 from 13th, without weapon specialization (with
+        it, a weapon not its chosen spec's has none: the chosen one's expertise is its extra attacks);
         not with a missile weapon, nor for another kit or with the rule off (kits.warrior_attacks)."""
         from dsloader import kits as kit_rules
         on = game.RULE_KITS
@@ -2148,12 +2152,13 @@ class SpecializeTests(unittest.TestCase):
                 with self.subTest(who=who, level=level):
                     lv = dict(who, levels=(level, 0, 0))
                     self.assertEqual(self.attack(2, self.AXE, rules=on, **lv)[0], want)
-                    self.assertEqual(self.attack(2, self.AXE, rules=on | 4096, **lv)[0], want)
+                    self.assertEqual(self.attack(2, self.AXE, rules=on | 4096, **lv)[0], 2)  # (not its chosen spec)
                     self.assertEqual(self.dam_line(2, self.AXE, rules=on, **lv)[0], want)
                     self.assertEqual(self.view_dam(2, self.AXE, rules=on, **lv)[0], want)
                     sheet = bytearray(game.SHEET_SIZE)
                     sheet[0x21], sheet[0x24], sheet[0x43] = who["classes"][0], level, who["kit"]
                     self.assertEqual(kit_rules.warrior_attacks(2, bytes(sheet)), want)
+                    self.assertEqual(kit_rules.warrior_attacks(2, bytes(sheet), spec=True), 2)
         seven = dict(crusader, levels=(7, 0, 0))
         self.assertEqual(self.attack(2, 1, rules=on, missile=True, **seven)[0], 2)
         self.assertEqual(self.view_dam(2, 1, rules=on, missile=True, **seven)[0], 2)
@@ -7763,7 +7768,7 @@ class KitTests(unittest.TestCase):
 
     def test_cr_psp(self):
         """PROBE_CR_PSP: the creation PSP routine's end ("pop bp / retf"), the sheet being made's
-        most PSP (+0Ch) a tenth less for a Mind Warrior (kits.max_psp); the flags as at the INT
+        most PSP (+0Ch) a fifth less for a Mind Warrior (kits.max_psp); the flags as at the INT
         (IF set again: a click on a score once stopped the game here)."""
         from dsloader import kits
         from dsloader.gamepatch import VEC_CR_PSP
@@ -7843,7 +7848,7 @@ class KitTests(unittest.TestCase):
                                  [0x1111, 5 * 0x47, 0x3333, 0x4444, self.SHEET])
 
     def test_max_psp(self):
-        """PROBE_MAX_PSP: ES:BX the sheet ([BP-8]), and SI (the most PSP) a tenth less for a Mind
+        """PROBE_MAX_PSP: ES:BX the sheet ([BP-8]), and SI (the most PSP) a fifth less for a Mind
         Warrior (kits.max_psp)."""
         from dsloader import kits
         from dsloader.gamepatch import VEC_MAX_PSP
@@ -7862,7 +7867,7 @@ class KitTests(unittest.TestCase):
                                                                         r.UC_X86_REG_CX, r.UC_X86_REG_DX,
                                                                         r.UC_X86_REG_ES)],
                                          [0x1111, 5 * 0x47, 0x3333, 0x4444, self.SHEET])
-        self.assertEqual([kits.max_psp(kits.MIND_WARRIOR, 37), kits.max_psp(kits.MIND_BENDER, 37)], [34, 37])
+        self.assertEqual([kits.max_psp(kits.MIND_WARRIOR, 37), kits.max_psp(kits.MIND_BENDER, 37)], [30, 37])
 
     def test_pick_any(self):
         """PROBE_PICK_ANY: [BP-2] and flags as "mov [bp-2],ax / or ax,ax" (the JG after going on for

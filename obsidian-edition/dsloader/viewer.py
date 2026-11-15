@@ -456,8 +456,6 @@ class Viewer:
                                              "level, with the manual's prime requisites for both classes"),
                 ("level_10", "characters", "Level cap by XP: levels past 9th, up to 749,999 XP (shared by a "
                                            "multiclass character's classes)"),
-                ("two_weapons", "arms", "Two weapons: -2 main hand, -4 off hand, DEX's reaction adjustment added; "
-                                        "the off hand attacks once a round"),
                 ("half_giant_hands", "arms", "Half-giants' two-handed weapons: a half-giant wields one in one hand, a "
                                              "shield or a light weapon in the other"),
                 ("cahulaks", "arms", "Weapon traits: the cahulaks' extra attack and tangle, the staff sling's "
