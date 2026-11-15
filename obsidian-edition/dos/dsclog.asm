@@ -1034,7 +1034,9 @@ probe_char:
 ; new characters their gear only after the game has made the character (weaponchoice.py,
 ; startgear.py), and VIEW CHARACTER, drawn once, kept showing the game's (a Poisoner's bone long
 ; sword, its bow and daggers only once another member was chosen and this one again). With the
-; Loader there (STATS fresh), its pass is waited for (GEAR_DUE cleared), at most GEAR_TICKS; if it
+; Loader there (its LOADER_BEAT fresh: up to 2.17 STATS fresh, which on the creation screen they
+; never are, and GEAR_DUE was cleared, so GEAR_HOLD at DONE waited for nothing), its pass is waited
+; for (GEAR_DUE cleared), at most GEAR_TICKS (on a timeout GEAR_DUE left set for the Loader); if it
 ; changed a member's items (GEAR_GIVEN), the screen is drawn again by the game's own routine, the
 ; one this probe is in (CH_START, at the start of its overlay's segment, loaded and running), with
 ; the new gear, before it is shown. Not again from within that (VIEW_NESTED). Registers: the
@@ -1051,8 +1053,8 @@ gear_wait:
         mov es, ax
         mov bx, [es:0x46C]              ; (the BIOS timer: the wait's start)
         mov ax, bx
-        sub ax, [cs:stats_stamp]
-        cmp ax, STATS_FRESH
+        sub ax, [cs:loader_beat]        ; (the Loader there: its heartbeat, not STATS, which aren't
+        cmp ax, LOADER_FRESH            ;   kept on the creation screen)
         jae .none                       ; (no Loader: the game's gear, as ever)
 .wait:  cmp byte [cs:gear_due], 0
         je .waited
@@ -1060,6 +1062,8 @@ gear_wait:
         sub ax, bx
         cmp ax, GEAR_TICKS
         jb .wait
+        pop es                          ; (the Loader slow: GEAR_DUE left for it, and GEAR_HOLD)
+        ret
 .none:  mov byte [cs:gear_due], 0
         pop es
 .ret:   ret

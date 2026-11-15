@@ -1967,6 +1967,17 @@ class NewLinesTests(unittest.TestCase):
                 mock.patch.object(log, "_new_gear", return_value=False):
             log._gear_due()
         self.assertEqual((m[HDR + dicelog.TSR_GEAR_DUE], m[HDR + dicelog.TSR_GEAR_GIVEN]), (1, 0))
+        # (the weapon window up: what changed kept in GEAR_GIVEN, GEAR_DUE left set for the pass after it)
+        m[HDR + dicelog.TSR_CREATING] = 1
+        lists = iter([seen(1), seen(2), seen(2), seen(2)])
+        with mock.patch.object(dicelog.names, "update", return_value=True), \
+                mock.patch.object(log.game, "party_items", side_effect=lambda: next(lists)), \
+                mock.patch.object(log, "_new_gear", return_value=True):
+            log._gear_due()
+            self.assertEqual((m[HDR + dicelog.TSR_GEAR_DUE], m[HDR + dicelog.TSR_GEAR_GIVEN]), (1, 1))
+            m[HDR + dicelog.TSR_CREATING] = 0
+            log._gear_due()  # (the window gone: nothing more changed, the earlier change still told)
+        self.assertEqual((m[HDR + dicelog.TSR_GEAR_DUE], m[HDR + dicelog.TSR_GEAR_GIVEN]), (0, 1))
 
     def test_needle_avoided(self):
         """Pehtucl's chest's needle sprung (its narration) and a find/remove traps success within

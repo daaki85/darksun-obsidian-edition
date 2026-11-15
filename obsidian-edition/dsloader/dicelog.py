@@ -317,6 +317,7 @@ EFFECT_INTERVAL = 0.25  # seconds between looks at the active effects
 RING_INTERVAL = 3.0  # seconds between looks for the arena's Ring +1
 STATS_ANSWER_STEP = 0.001  # seconds between the stats thread's looks at DSCLOG's requests
 STATS_ANSWER_IDLE = 0.5  # ... while the game isn't attached, or a look failed
+BEAT_STEP = 0.25  # seconds between the Loader's heartbeats (LOADER_BEAT), from the stats thread
 ITEMS_STILL_WAIT = 0.06  # seconds the game's free lists are watched for, before the Loader changes item lists
 NEAR_SPEAKER = 4 * 16  # map units: a speaker beside the party (a talk without replies: _follow_talk)
 LOAD_SETTLE = 3.0  # seconds after the party changes (a game was loaded) when effects are not news
@@ -1184,6 +1185,10 @@ class DiceLog:
         with self._stats_lock:
             if self.tsr_hdr is None or self.rand_addr is None:
                 return
+            now = time.monotonic()
+            if now - getattr(self, "_beat_at", 0.0) >= BEAT_STEP:  # (the heartbeat: GEAR_HOLD, _beat)
+                self._beat_at = now
+                self._beat()
             req = self.guest.read(self.tsr_hdr + TSR_STATS_REQ, 2)
             if req != self.guest.read(self.tsr_hdr + TSR_STATS_REPLY, 2):
                 self._write_stats_now()
@@ -1502,7 +1507,6 @@ class DiceLog:
         party's items, initiative and turns, the creation screen. Each step on its own (_step)."""
         out: List[str] = []
         step = self._step
-        step(self._beat)
         step(self._forget_undone_picks)
         step(lambda: self._kit_tick(now))
         step(self._answer_stats)
@@ -1649,8 +1653,9 @@ class DiceLog:
         return out
 
     def _beat(self) -> None:
-        """The BIOS timer into DSCLOG's LOADER_BEAT each pass: the Loader is there (GEAR_HOLD waits for
-        its pass at the creation screen's DONE, so the roster's copy of a new character has its gear)."""
+        """The BIOS timer into DSCLOG's LOADER_BEAT, every BEAT_STEP from the stats thread (the main
+        pass isn't run often enough on the creation screen): the Loader is there (GEAR_HOLD waits for
+        its gear pass at the creation screen's DONE, so the roster's copy of a new character has it)."""
         if self.tsr_hdr is not None:
             self.guest.write(self.tsr_hdr + TSR_LOADER_BEAT, self.guest.read(BIOS_TIMER, 2))
 
@@ -1658,7 +1663,10 @@ class DiceLog:
         """A new member just made (DSCLOG's GEAR_DUE, at DONE): new characters' gear given now, not
         at the next RING_INTERVAL, while VIEW CHARACTER waits to be shown (GEAR_WAIT); then the
         members whose items changed (GEAR_GIVEN, for it to draw the screen again) and the flag
-        cleared. The game's item lists moving: the next pass."""
+        cleared. The game's item lists moving: the next pass. DSCLOG's weapon window up (the new
+        character's gear waits for its specs): GEAR_DUE left set, for the pass after it, and for
+        GEAR_HOLD, which keeps the game from writing the roster's copy until then (up to 2.17
+        cleared at once, and a character ADDed in a later session came back with the game's gear)."""
         if self.tsr_hdr is None or not self.guest.read(self.tsr_hdr + TSR_GEAR_DUE, 1)[0]:
             return []
         out: List[str] = []
@@ -1678,8 +1686,10 @@ class DiceLog:
             return out
         after = items()
         given = sum(1 << m for m in range(game.PARTY_SIZE) if before.get(m) != after.get(m))
+        given |= self.guest.read(self.tsr_hdr + TSR_GEAR_GIVEN, 1)[0]  # (a pass before the window's end)
         self.guest.write(self.tsr_hdr + TSR_GEAR_GIVEN, bytes((given,)))
-        self.guest.write(self.tsr_hdr + TSR_GEAR_DUE, b"\0")
+        if not self._weapons_asked():
+            self.guest.write(self.tsr_hdr + TSR_GEAR_DUE, b"\0")
         return out
 
     def _new_gear(self, out: List[str]) -> bool:
