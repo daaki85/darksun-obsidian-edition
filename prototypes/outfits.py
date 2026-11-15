@@ -432,12 +432,25 @@ class Game:
                     t = (x - hx) * ux + (y - hy) * uy  # (along the arm, from the hand)
                     off = abs((x - hx) * uy - (y - hy) * ux)
                     low = y > p.waist + 1  # (a hand hanging by the thigh: the thigh is not arm)
-                    if low and (c not in SKINC or off > 1 or math.hypot(x - hx, y - hy) > 2.5):
-                        continue
+                    if low and (c not in SKINC or (off > 1 and math.hypot(x - hx, y - hy) > 3)):
+                        continue  # (but the fingers past the wristband are the hand)
                     if -3 <= t <= length and off <= wide and (t >= 0 or math.hypot(x - hx, y - hy) <= 3):
                         d = d0 + max(0.0, t)
                         if d < out.get((x, y), 99):
                             out[(x, y)] = d
+        for comp in comps(band):  # (the wrist is where the wristband is: skin past it the hand, before it the arm)
+            bx, by = sorted(comp)[len(comp) // 2]
+            ax, ay = shoulder(bx)
+            far = math.hypot(bx - ax, by - ay)
+            for y in range(by - 5, by + 6):
+                for x in range(bx - 5, bx + 6):
+                    if not (0 <= y < len(own) and 0 <= x < len(own[0])) or own[y][x] not in SKINC or (x, y) in keep:
+                        continue
+                    if math.hypot(x - ax, y - ay) > far + 0.5:
+                        if math.hypot(x - bx, y - by) <= 4 and not middle(x, y):
+                            out[(x, y)] = 0.0
+                    elif (x, y) in out and out[(x, y)] <= 2:
+                        out[(x, y)] = 3.0
         return out
 
     def bow(self, fig: Figure, own: Rows, p) -> Set[Cell]:
@@ -480,7 +493,7 @@ class Game:
                     continue
                 if q in keep:
                     what[q] = "head"
-                    if hair and y >= sy and c not in SKINC and c not in hair and c != 254 and q not in p.hair:
+                    if hair and y >= sy - (1 if fig.model in figures.ELVES else 0) and c not in SKINC and c not in hair and c != 254 and q not in p.hair:
                         rows[y][x] = tone(c, o.torso)  # (a collar)
                     continue
                 if fig.sure_bands and q in wrists:
@@ -500,7 +513,7 @@ class Game:
                         elif not edge(own, x, y):
                             rows[y][x] = o.sleeves[0]
                     continue
-                low = y > bottom - boot_h
+                low = y > bottom - boot_h or any(fy - boot_h < y <= fy and fa - 1 <= x <= fb + 1 for fy, fa, fb in p.feet)
                 if low or (not skin and y > waist + 0.45 * (bottom - waist)):
                     what[q] = "boot"
                     if o.boots and c != 254 and (skin and o.cover if o.harness else not skin or o.cover):
@@ -561,7 +574,8 @@ class Game:
                 if (x, y) in p.hair:
                     cells.add((x, y))
                 elif box and (p.facing == sp.BACK or y <= brow or (p.facing == sp.SIDE and x <= mid and c not in SKINC)
-                              or (c not in SKINC and y <= brow + 1 and p.facing != sp.SIDE)):
+                              or (c not in SKINC and y <= brow + 1 and p.facing != sp.SIDE
+                                  and (x <= h.left + 1 or x >= h.right - 1))):
                     cells.add((x, y))
                 elif fig.maker and y < neck and c in (145, 148) and abs(x - mid) > 2.5 and p.facing != sp.SIDE:
                     cells.add((x, y))  # (a half-elf's ear tips, under the hood)
@@ -590,9 +604,12 @@ class Game:
                 if xs:
                     rim |= {(min(xs) - 1, y), (max(xs) + 1, y)}
             sa, sb = p.shoulders[1], p.shoulders[2]
-            cells |= {(x, y) for y in (neck, neck + 1) for x in range(sa + 1, sb) if abs(x - mid) >= 2
-                      and 0 <= y < len(own) and 0 <= x < len(own[0]) and own[y][x] is not None
-                      and own[y][x] not in SKINC}  # (the yoke, on the clothes at the shoulders)
+            cells |= {(x, y) for y in (neck, neck + 1) for x in range(max(sa + 1, h.left - 2), min(sb, h.right + 3))
+                      if abs(x - mid) >= 2 and 0 <= y < len(own) and 0 <= x < len(own[0])
+                      and own[y][x] is not None}  # (the yoke, on the shoulders beside the neck)
+        elif p.facing == sp.SIDE:
+            cells |= {(x, y) for y in (neck, neck + 1) for x in range(h.left - 1, int(mid) + 1)
+                      if 0 <= y < len(own) and 0 <= x < len(own[0]) and own[y][x] is not None}  # (down the back)
         width = max(1, h.right - h.left + 2)
         height = max(1, neck - h.top + 1)
         for x, y in cells | rim:
@@ -609,7 +626,7 @@ class Game:
         """An open cloak seen from the front, drawn on the figure itself so that it is the same
         from frame to frame: it hangs behind the body from the shoulders to three fifths of the
         way from the waist to the feet, inside the shoulders at the top and two pixels past them at
-        the scalloped hem; wherever the picture is empty within it is cloak: its left edge lit, its right
+        the hem; wherever the picture is empty within it is cloak: its left edge lit, its right
         edge mid, its inside the cloak's second shade with a fold every fourth pixel, its hem the darkest."""
         ramp, n = o.cloak, len(o.cloak)
         sy, sa, sb = p.shoulders
@@ -620,8 +637,6 @@ class Game:
             Y = y + PAD
             for x in range(left, right + 1):
                 X = x + PAD
-                if y == hem and (x - left) % 4 == 2:
-                    continue  # (the hem scalloped)
                 if 0 <= Y < len(out) and 0 <= X < len(out[0]) and out[Y][X] is None:
                     if x == left:
                         c = ramp[n - 2]
