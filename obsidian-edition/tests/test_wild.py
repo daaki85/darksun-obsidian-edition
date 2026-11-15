@@ -50,11 +50,11 @@ class FakeGd:
 
 class WildTests(unittest.TestCase):
     def test_passed(self):
-        """d20 = 12 against CON 18 - 4: passed, its bits N (3 worse to hit, AC 3 worse) and N + 4 (1 more
+        """d20 = 12 against CON 18: passed, its bits N (3 worse to hit, AC 3 worse) and N + 4 (1 more
         attack, 3 more damage) set, for the fight; cleared as it ends."""
         gd, w = FakeGd(), wild.WildFights()
         out = w.round(gd, HDR, 1, lambda a, b: 12)
-        self.assertEqual(out, ["Mul fights wild: d20 = 12, needs 14 or less (CON 18 -4) -> 1 more attack a round "
+        self.assertEqual(out, ["Mul fights wild: d20 = 12, needs 18 or less (CON 18) -> 1 more attack a round "
                                "and +3 damage, -3 to hit and AC 3 worse for the fight"])
         self.assertEqual((gd.wild, gd.bits()), ({2: True}, 0x44))
         self.assertEqual(w.round(gd, HDR, 2), [])
@@ -63,11 +63,11 @@ class WildTests(unittest.TestCase):
         self.assertEqual((gd.wild, gd.bits()), ({}, 0))
 
     def test_failed(self):
-        """d20 = 15 against CON 18 - 4 (passed without the -4): failed, its bit N alone set (3 worse to hit,
-        AC 3 worse, and none of the gains)."""
+        """d20 = 19 against CON 18: failed, its bit N alone set (3 worse to hit, AC 3 worse, and none of
+        the gains)."""
         gd, w = FakeGd(), wild.WildFights()
-        out = w.round(gd, HDR, 1, lambda a, b: 15)
-        self.assertEqual(out, ["Mul fights wild: d20 = 15, needs 14 or less (CON 18 -4) -> fails: -3 to hit and AC "
+        out = w.round(gd, HDR, 1, lambda a, b: 19)
+        self.assertEqual(out, ["Mul fights wild: d20 = 19, needs 18 or less (CON 18) -> fails: -3 to hit and AC "
                                "3 worse for the fight"])
         self.assertEqual((gd.wild, gd.bits()), ({2: False}, 0x04))
 
@@ -115,7 +115,7 @@ class WildTests(unittest.TestCase):
         self.assertEqual(attack(0, None), ("", 0, 0))
 
     def test_kits(self):
-        self.assertEqual([kits.wild_check(15, d) for d in (1, 11, 12, 15, 20)], [True, True, False, False, False])
+        self.assertEqual([kits.wild_check(15, d) for d in (1, 11, 15, 16, 20)], [True, True, True, False, False])
         self.assertEqual([kits.wild_check(25, d) for d in (19, 20)], [True, False])  # (a natural 20 always fails)
         self.assertEqual([kits.wild_ac(a) for a in (-3, 0, 7, 8, 10, 11)], [0, 3, 10, 10, 10, 11])
 

@@ -53,7 +53,7 @@ armour.
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
 | **Myrmidon** | with weapon specialization, a second weapon spec at 1st level (+1 to hit, +2 damage, 3/2 attacks a round); both weapon specs go on to **mastery at 5th level** (+3 to hit, +3 damage) and **grand mastery at 9th** (+3, +3, the damage die the next greater die size, against large targets too, and one more attack a round) | **both its weapon specs melee ones** (no bow, sling, staff sling or chatkcha: a drilled foot soldier); −4 on saves against charms (Charm Person, Charm Monster, Charm Person or Mammal, Domination, Mass Domination); initiative 2 worse | the fighter's gear, and a plain weapon of its second weapon spec in the left hand in place of the shield (a two-handed weapon in the backpack) | the second weapon spec is picked on the weapon window after DONE (EXIT after one leaves it with one) |
-| **Sentinel** | AC 2 better with a shield in a hand; +2 initiative, from 1st level | −1 on saves against wizards' and priests' spells | the fighter's gear | can't dual to druid or preserver; can't go with the Shinobi |
+| **Sentinel** | AC 2 better with a shield in a hand, from 1st level | −1 on saves against wizards' and priests' spells; −1 to hit in melee without a shield | the fighter's gear | can't dual to druid or preserver; can't go with the Shinobi |
 | **Ravager** | +1 to hit and damage in melee; a base AC by level: **7 at 1st-2nd, 6 at 3rd-4th, 5 at 5th-6th, 4 at 7th-8th, 3 at 9th-10th**, armour bettering it as usual | no missile or thrown weapons (cahulaks are allowed: the game doesn't throw them); no shield; leather armour or none | the fighter's gear, with a second of its weapon in place of the shield (none if the weapon takes both hands) | the dice log shows its bonus as `+1 Ravager`; can't go with the Grove Warden |
 
 ## Gladiator kits
@@ -95,7 +95,7 @@ spells.
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
-| **Scholar** | with the rule for INT, a spell from a scroll **always learnt**: its chance is 100% where another preserver's is INT's (still no more spells of a level than its INT allows); its slots and spells learnt at a level up as any preserver's | −1 to hit (THAC0 1 worse) | the preserver's gear | without the rule for INT every preserver learns a scroll's spell, so the kit gives nothing then |
+| **Scholar** | **bonus wizard slots from INT**, as a priest's from WIS: one more 1st-level slot at INT 16, and a 2nd-level one too at 17, a 3rd-level one at 18 and a 4th-level one at 19, each only at a spell level its preserver level gives it slots at ([the table](#kits-spell-slots)) | −1 to hit (THAC0 1 worse) | the preserver's gear | its spells learnt at a level up and from scrolls are any preserver's |
 | **Battle Mage** | a warrior's THAC0 (21 less its level) with its **chosen weapon spec** only (without weapon specialization, with its weapon kinds: the one-handed melee ones below); a spell still cast after being hit earlier in the round; a d6 hit die; light armour (leather, or none) worn, and spells cast in it; with weapon specialization, expertise in one weapon spec of its choice (long sword, club, dagger, short sword, mace, axe or pick), whose weapons it may use as well as a preserver's own, at **3/2 attacks a round, 2 from 7th level** | one fewer spell slot at each spell level (none at 1st level); nothing in the off hand | with weapon specialization, a plain weapon of its chosen weapon spec in place of the quarterstaff | its weapon spec is chosen on the weapon window after DONE (the long sword for an EXIT); can't dual to fighter, gladiator or ranger; can't go with the Swashbuckler, Crusader or Mind Warrior |
 | **Arcanist** | its preserver spells are **cast a level higher** for their duration and damage (a 5th-level Arcanist's Magic Missile and Fireball are a 6th-level caster's); not the spell levels it may cast | a d3 hit die (a preserver's is a d4) | the preserver's gear | its hit die is rolled again when the kit is chosen or taken back on the creation screen |
 
@@ -116,7 +116,7 @@ A druid starts with a club and sling.
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
-| **Grove Warden** | AC 1 better for every 3 druid levels: **1 at 3rd, 2 at 6th, 3 at 9th, 4 at 12th** | no metal weapons | the druid's gear | can't dual to gladiator, and a gladiator who duals to druid can't take it (its AC would add to a gladiator's own); can't go with the Ravager |
+| **Grove Warden** | AC 1 better for every 3 druid levels: **1 at 3rd, 2 at 6th, 3 at 9th, 4 at 12th** | its sphere's weapon limits, as a cleric of that sphere's (air: missile and thrown weapons, daggers, cahulaks; earth: stone, obsidian, metal, wood; fire: obsidian; water: bone, wood), the bow too | the druid's gear | can't dual to gladiator, and a gladiator who duals to druid can't take it (its AC would add to a gladiator's own); can't go with the Ravager |
 | **Lifebinder** | Cure Light, Serious and Critical Wounds heal a d8 more, Blood Flow a d6 | blunt weapons only (club, mace, quarterstaff, sling, staff sling) | the druid's gear | the dice log notes the extra die; can't go with the Brute |
 | **Wanderer** | resists fire and cold as the Resist Fire and Resist Cold spells do: +3 on saves against fire and cold spells, and half the damage of a spell that is all fire or all cold | AC 1 worse | the druid's gear | |
 
@@ -147,13 +147,13 @@ means an outdoor map, or open ground outside the buildings on a city map.
 | **Wilderness Avenger** | half-elf druid/fighter | +1 to hit and damage against anything, melee or missile; Cause Light, Serious and Critical Wounds do 1 more a die (+1, +2, +3); hides in shadows and moves silently as a ranger does, but at 5 a level of its best class (lower than a ranger's table), with its race's and DEX's adjustments | **no healing spells**: never knows Cure Light, Serious or Critical Wounds, Blood Flow, Heal or Water of Life | its classes' gear | with the stealth rule, its hiding gives an attack from behind (+2 to hit), never a backstab, as a ranger's does |
 | **Rescuer** | half-elf cleric/ranger | Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3); +2 movement in a fight | attacking from behind gives **+1 to hit, not +2**; **no shield** | its classes' gear, without the shield | the dice log says "from behind (Rescuer)" |
 | **Ghetto Fighter** | dwarf fighter/thief | +1 to hit and damage with a dagger in melee; with the two-weapons rule, no penalty in the main hand and −2 in the off hand (others: −2 and −4); +5 pick pockets and hide in shadows | −5 find/remove traps; **−1 to hit with anything but a dagger** (melee, missile or unarmed); **no shield** | its classes' gear, without the shield, with a dagger in its hand (whatever its weapon spec) | its weapon spec is the dagger if none is picked; DEX's adjustment still applies to the two-weapons penalty |
-| **Wayfinder** | dwarf fighter/thief | +10 hide in shadows and move silently; **Path-finder**: while it's up (Okay), every party member has +1 initiative and +1 Move in a fight | −10 pick pockets; **while it's down** (stunned, out cold, dying, dead, animated or petrified) and no other Wayfinder is up, every party member has **−1 initiative and −1 Move** in a fight | its classes' gear | the dice log's initiative lines say "Wayfinder's Path-finder" or "Wayfinder down" |
+| **Wayfinder** | dwarf fighter/thief | +10 hide in shadows and move silently; **Path-finder**: while it's up (Okay), every party member has +1 initiative in a fight | −10 pick pockets; **while it's down** (stunned, out cold, dying, dead, animated or petrified) and no other Wayfinder is up, every party member has **−1 initiative** in a fight | its classes' gear | the dice log's initiative lines say "Wayfinder's Path-finder" or "Wayfinder down" |
 | **Spellarcher** | half-elf fighter/preserver | **Spell arrows**, as *The Complete Book of Elves*'s Spellarcher casts a touch spell onto an arrow: a button on the USE screen (in the row where Turn Undead and Pick Pockets go) for each touch spell it knows: Burning Hands, Chill Touch, Shocking Grasp (1st level), Vampiric Touch (3rd). Outside a fight, a click uses a slot of that level for **one arrow**, with the spell's own cast sound, which casts the spell on what it hits at the archer's preserver level. It keeps **one stack of each spell's arrows, 24 at most**: the arrow joins that stack wherever it is (the quiver or the pack); with none, a new stack goes in the quiver if it is empty, else in the pack; a full stack takes no more (no slot used). They **last until shot** (no fading at a rest), are readied and put away as any arrows, and are worth nothing. Shot from a bow, its spell arrows are **+1 from its 5th preserver level and +2 from its 9th**, so they hurt what only magic weapons hurt; its other arrows are as they are | its weapon spec is the bow, and only the bow (the weapon window offers nothing else); **no armour, helm or shield at all** (bracers, robes and a cloak of protection are fine); only a Spellarcher carries spell arrows (another party member can't ready them, and any it is given go back to the Spellarcher) | a bow and arrows, and no armour | sling stones and other missiles as they are |
 | **Titan Mind** | half-giant fighter/psionicist | psychometabolism powers cost 2 PSP less | telepathy powers (the defence modes too) cost 2 PSP more | its classes' gear | as the Mind Bender's: to use a power and to keep it up, never below 1 |
 | **Poisoner** | halfling fighter/thief | **each melee weapon's first hit in a fight poisons**, as a dose is used up (a dagger in each hand, two doses a fight; not a shot or a throw): the monsters' own poison (as a giant spider's bite), a save against paralysis/poison/death or 10 damage | its weapon spec the dagger or the short sword only (the weapon window offers no other); light armour only | its classes' gear, with one of its weapon spec (a dagger, or a short sword if that is picked) in each hand (its long sword made one, its shield left behind) | its weapon spec is the dagger if none is picked; the dice log shows the save as "vs Poison (10 damage)" |
 | **Spirit Caller** | halfling cleric/psionicist | under the open sky, its cleric spells are cast **2 levels higher** (duration and damage) | under a roof, 1 level lower (no lower than 1) | its classes' gear | the spells it may cast and its slots are its own level's |
 | **Wasteland Seer** | thri-kreen druid/fighter/psionicist | under the open sky, its druid spells are cast **2 levels higher** (duration and damage), and its psionic powers cost **2 PSP less** | under a roof, its druid spells 1 level lower (no lower than 1), and its powers 1 PSP more | its classes' gear | as the Spirit Caller's; the PSP counts both to use a power and to keep it up, never below 1 (a power with no upkeep still has none) |
-| **Wild Fury** | mul druid/fighter | **Wild Fighting** as each fight starts: a d20 against CON − 4 (the proficiency's check at −4; a natural 20 always fails); at CON − 4 or under, **1 more attack a round in melee and +3 damage** (melee or missile) for the fight, checked anew in each fight (each of the arena's waves too) | fighting wild, the check passed or not, **−3 to hit and AC 3 worse** (no worse than 10) for the fight: a failed check gives these and none of the gains, as *The Complete Barbarian's Handbook* has it | its classes' gear | the dice log shows the check |
+| **Wild Fury** | mul druid/fighter | **Wild Fighting** as each fight starts: a d20 against CON (the proficiency's check; a natural 20 always fails); at CON or under, **1 more attack a round in melee and +3 damage** (melee or missile) for the fight, checked anew in each fight (each of the arena's waves too) | fighting wild, the check passed or not, **−3 to hit and AC 3 worse** (no worse than 10) for the fight: a failed check gives these and none of the gains, as *The Complete Barbarian's Handbook* has it | its classes' gear | the dice log shows the check |
 
 A thief skill a kit lowers never goes below 0. The kits start with their
 classes' gear, fitted as other kits' is ([Starting gear](#starting-gear)). A
@@ -221,7 +221,7 @@ more on top.
 ## The kits in play
 
 - **Shown everywhere.** The dice log and the Loader show each kit's part: a
-  Ravager's to-hit and damage, a Sentinel's initiative and saves, a Stalker's
+  Ravager's to-hit and damage, a Sentinel's saves and to-hit, a Stalker's
   hiding, the THAC0 for each weapon, a kit's hit die on the hit point lines.
 - **Hit dice.** The Battle Mage's and Arcanist's are rolled on the creation
   screen and at every level up.
@@ -234,8 +234,8 @@ more on top.
   out when the character is made and at each level up.
 - **Spell slots** are the game's own wherever it counts them (resting, the
   spell lists, the Loader's Spells tab). WIS's bonus slots count for the
-  Crusader and Elementalist as for a cleric (a preserver, Scholar or not, has
-  none), not for the Seeker's and Justifier's own tables.
+  Crusader and Elementalist as for a cleric, not for the Seeker's and
+  Justifier's own tables; a preserver has none from INT but the Scholar.
 - **Casting level.** A kit's casting level is the one a spell's duration and
   damage take, and half of it (rounded up) is the highest spell level it may
   cast (the Seeker's, Justifier's and Shinobi's are in their tables above; a
@@ -269,6 +269,11 @@ changes its slots; it is here, as the cleric is, to set the kits beside:
 | 12 | | | | | | 6 5 5 3 2 2 | | | 3 2 2 |
 | 13 | | | | | | | | | 3 3 2 1 |
 
+- A **Scholar** adds INT's bonus slots to the preserver's (the table has no
+  column for it, as they go by INT): at INT 16 one more at 1st level, at 17
+  at 1st and 2nd, at 18 at 1st to 3rd, at 19 and more at 1st to 4th, at a
+  spell level the preserver column has a slot at. A 5th-level Scholar with INT
+  18 has 5 3 2.
 - A **Crusader** and an **Elementalist** add WIS's bonus slots as a cleric
   does; the Crusader still has one fewer at each spell level with them.
 - An **Elementalist**'s slots are a level behind, but never none at a spell

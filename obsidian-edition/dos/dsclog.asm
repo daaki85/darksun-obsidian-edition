@@ -4285,7 +4285,7 @@ arrows_forbid:
 ; with RULE_HALF_GIANT); a Brute a one-handed melee weapon, and a shield (but a half-giant's,
 ; with the rule), and with KF_SPEC set (a weapon spec chosen) a missile weapon; a Stalker armour
 ; that isn't light (leather, or of no material); an Assassin, Shinobi, Shadowblade, Poisoner or
-; Spellarcher no armour, helm or shield at all (KIT_LIGHT's BARE); a Grove Warden a metal weapon; a Lifebinder a
+; Spellarcher no armour, helm or shield at all (KIT_LIGHT's BARE); a Grove Warden a weapon its druid sphere doesn't allow (SPHERE_ALLOWS, the bow too); a Lifebinder a
 ; weapon of a kind not blunt (KIT_BLUNT); a Shinobi a shield, armour that isn't light, and a
 ; weapon not of its kinds (KIT_SHINOBI); a Battle Dancer a shield, and a weapon not of its kinds
 ; (kit_dancer); a Seeker a weapon its sphere doesn't allow (as a cleric's: SPHERE_ALLOWS), but the bow. A weapon of a kind the character specialized in (its
@@ -4396,8 +4396,9 @@ kit_forbids_one:                ; (AL the kit, KIT_WHERE its class's place)
         cmp dx, 115 + 32        ; (the obsidian ones: OBSIDIAN_CAHULAKS)
         je .type
         inc ch
-.type:  call kit_class_of_sheet     ; (a ranger's sphere, for a Seeker: its class less 13)
-        sub al, 13
+.type:  call kit_class_of_sheet     ; (the class's sphere, a Seeker's ranger's or a Grove Warden's
+        dec al                          ;   druid's: its class less 1, mod 4)
+        and al, 3
         mov [cs:kf_sphere], al
         mov byte [cs:kf_chosen], 0      ; (a weapon of a kind it specialized in: the kit keeps
         cmp byte [cs:kf_spec], 0        ; it from none, but for the off hand's rules)
@@ -4495,18 +4496,12 @@ kit_forbids_one:                ; (AL the kit, KIT_WHERE its class's place)
         je .ok
         jmp .no
 .warden:
-        cmp cl, KIT_GROVE_WARDEN
-        jne .lifebinder
-        test al, KT_MELEE | KT_MISSILE
-        jz .ok
-        mov al, [es:bx + 8]
-        and al, 0x4F
-        cmp al, MATERIAL_METAL
-        je .no
-        jmp .ok
+        cmp cl, KIT_GROVE_WARDEN        ; a Grove Warden: its druid sphere's weapons, as a cleric's
+        je .sphere
 .lifebinder:
         cmp cl, KIT_SEEKER      ; a Seeker: its sphere's weapons (SPHERE_ALLOWS), but the bow
         jne .blunt
+.sphere:
         test al, KT_MELEE | KT_MISSILE
         jz .ok
         cmp dx, KIND_TYPES
@@ -4515,8 +4510,11 @@ kit_forbids_one:                ; (AL the kit, KIT_WHERE its class's place)
         mov ah, [cs:si + kind_of_type]
         sub ah, 1
         jc .ok                  ; (no kind: as the game has it)
+        cmp cl, KIT_SEEKER
+        jne .not_bow
         cmp ah, BOW_KIND - 1
         je .ok
+.not_bow:
         mov [cs:cu_kind], ah
         mov [cs:cu_flags], al
         mov al, [es:bx + 8]     ; (the material, as CLASS_FORBIDS keeps it)
@@ -4659,7 +4657,7 @@ kit_shinobi dw 0xF10C           ; bits by kind: dagger, short sword, quarterstaf
                                 ;   staff sling
 kf_spec    db 0
 kf_off_hand db 0               ; (KIT_FORBIDS: the item going to the off hand)
-kf_sphere  db 0                 ; (KIT_FORBIDS: a ranger's sphere, 0 air to 3 water)
+kf_sphere  db 0                 ; (KIT_FORBIDS: a ranger's or druid's sphere, 0 air to 3 water)
 kf_chosen  db 0                 ; (KIT_FORBIDS: a weapon of a kind it specialized in)
 EQUIP_OFF_HAND equ 14          ; the equip routine's slot for the off (left) hand
 
@@ -7216,19 +7214,25 @@ kit_extra:
 
 ; KIT_CHAMPION: AX 1 if the attacker in the weapon attack routine (its thing [BP+18h], its sheet
 ; [BP+10h]) is an Arena Champion with a shield in a hand, -1 if one without, else 0 (kits.champion:
-; in melee, with one +1 to hit and damage, without one -1 to hit). DS the game's; others kept.
+; in melee, with one +1 to hit and damage, without one -1 to hit); a Sentinel -1 without a shield,
+; 0 with one (its gift is the shield's AC: KIT_AC). DS the game's; others kept.
+champ_sentinel db 0
 kit_champion:
         push bx
         push es
         les bx, [0x1661]
         imul ax, [bp + 0x10], 0x47
         add bx, ax
+        mov byte [cs:champ_sentinel], 0
         call kit_is_b
         db KIT_CHAMPION
-        pop es
+        je .kit
+        call kit_is_b
+        db KIT_SENTINEL
+        jne .none
+        mov byte [cs:champ_sentinel], 1
+.kit:   pop es
         pop bx
-        mov ax, 0
-        jne .ret
         push di
         mov ax, ds
         add ax, THINGS_SEG
@@ -7240,23 +7244,25 @@ kit_champion:
         test byte [cs:p_flags], P_SHIELD
         jz .out
         mov ax, 1
+        cmp byte [cs:champ_sentinel], 0
+        je .out
+        xor ax, ax              ; (a Sentinel with a shield: nothing to hit)
 .out:   pop di
-.ret:   ret
+        ret
+.none:  pop es
+        pop bx
+        xor ax, ax
+        ret
 
 ; PROBE_INIT: INT VEC_INIT replaces "add dx,14h" (3 bytes: INT + NOP; DSUN.EXE 5750Eh) where a
 ; combatant's initiative for the round is made (DX the 0-9 roll and its adjustments, SI the
-; creature): the game's 20 added, and a Sentinel's 2 more, a Military Scout's 2 under the open sky
+; creature): the game's 20 added, and a Military Scout's 2 under the open sky
 ; (its KIT_OUTDOORS bit), and 1 for each party member while a Wayfinder of the party is up
 ; (PATH_UP; kits.initiative); a Myrmidon's 2 less.
 probe_init:
         add dx, 20
         push ax
         mov ax, si
-        call cr_is
-        db KIT_SENTINEL
-        jne .myrmidon
-        add dx, 2
-.myrmidon:
         call cr_is
         db KIT_MYRMIDON
         jne .scout
@@ -7310,13 +7316,16 @@ probe_thac0:
 ; end of the game's spell slot routine (the slots a combatant has at a spell level, on resting
 ; and wherever the most is wanted: [BP+6] the combatant, [BP+8] the kind of magic, 1 wizard and 2
 ; priest, [BP+0Ah] the spell level; [BP-2] the slots its classes give): AX the slots, with the
-; kit's (kits.slots): a Scholar's wizard slots 1 more at each spell level it has any, a Battle
+; kit's (kits.slots): a Scholar's wizard slots 1 more at a spell level it has any of, from INT 16
+; at 1st, 17 at 2nd, 18 at 3rd and 19 at 4th (its creature record's INT, +25h), a Battle
 ; Mage's 1 fewer, a Crusader's priest slots 1 fewer; an Elementalist's (a level behind:
 ; PROBE_SLOT_LEVEL) at least 1 at a spell level its cleric level reaches; a Seeker's and a Justifier's priest slots
 ; their own tables' (SEEKER_SLOTS), by ranger level; a Shinobi's wizard slots the Seeker's, by
 ; thief level.
 SLOT_WIZARD  equ 1
 SLOT_PRIEST  equ 2
+SCHOLAR_INT  equ 15                     ; (kits.SCHOLAR_INT, SCHOLAR_LAST)
+SCHOLAR_LAST equ 4
 probe_slots:
         push bx
         push cx
@@ -7328,6 +7337,28 @@ probe_slots:
         imul bx, [bp + 6], 3
         mov ax, [es:bx + COMBATANT_CREATURE]
         call creature_sheet     ; (each kit it has awake)
+        call kit_is_b
+        db KIT_SCHOLAR
+        jne .battle
+        cmp byte [bp + 8], SLOT_WIZARD
+        jne .battle
+        jcxz .battle
+        cmp byte [bp + 0x0A], SCHOLAR_LAST
+        ja .battle
+        push ax
+        push bx
+        push es
+        les bx, [CREATURES]
+        imul ax, ax, 0x3A
+        add bx, ax
+        mov al, [es:bx + 0x25]  ; (INT)
+        pop es
+        pop bx
+        sub al, SCHOLAR_INT
+        cmp al, [bp + 0x0A]
+        pop ax
+        jl .battle              ; (INT less than 15 + the spell level)
+        inc cx
 .battle:
         call kit_is_b
         db KIT_BATTLE_MAGE
@@ -9788,8 +9819,7 @@ probe_scroll_learn:
 ; spell level it may know (INT_MOST): knowing that many of the spell's level, it can't (AX 0, and
 ; PROBE_LEARN_REFUSED's message, LEARN_FULL_TEXT: the scroll is kept); else a d100 above the chance
 ; and it fails (AX kept: the game teaches it and uses the scroll up, PROBE_LEARN_SAID takes the
-; spell back and says so); a Scholar's chance is 100, so it always learns one it may know. The try
-; is told to the Loader (LEARN_SEQ...). DS the game's; others kept.
+; spell back and says so). The try is told to the Loader (LEARN_SEQ...). DS the game's; others kept.
 INT_FIRST    equ 9                      ; (the rows' first INT; a preserver's least)
 INT_ROWS     equ 17                     ; (9 to 25)
 INT_ALL      equ 255                    ; (no most)
@@ -9826,18 +9856,9 @@ int_learn:
         mov [cs:learn_spell], dl
         mov byte [cs:learn_read], 0     ; (no read roll: a Shinobi's last one isn't this try's)
         mov byte [cs:learn_read_chance], 0
-        xor cl, cl                      ; (CL 1 for a Scholar: its chance 100)
-        call kit_is_b
-        db KIT_SCHOLAR
-        jne .row
-        inc cl
-.row:   call int_row                    ; (BX the INT's row, AL the INT)
+        call int_row                    ; (BX the INT's row, AL the INT)
         mov [cs:learn_int], al
         mov al, [cs:int_chance + bx]
-        or cl, cl
-        jz .chance
-        mov al, 100
-.chance:
         mov [cs:learn_chance], al
         mov al, dl
         call spell_level_of             ; (CL the spell's level)
@@ -10258,7 +10279,8 @@ kit_charms dw 2, 40, 61, 82, 158, 159
 kit_charms_end:
 
 ; KIT_MOVE: AX (a creature's movement for its turn in a fight, its Move x 10; SI the creature)
-; with its kit's: a Stalker's or a Rescuer's 2 more. Others kept.
+; with its kit's: a Stalker's or a Rescuer's 2 more. (A Wayfinder's Path-finder is initiative alone
+; since 2.18: no Move.) Others kept.
 kit_move:
         push ax
         mov ax, si
@@ -10269,21 +10291,12 @@ kit_move:
         call cr_is
         db KIT_RESCUER
 .two:   pop ax
-        jne .path
-        add ax, 20
-.path:  cmp si, 3               ; (a party member, while a Wayfinder of the party is up: 1 more;
-        ja .ret                 ;   while one is down and none up, 1 less: PATH_DOWN)
-        call path_up
-        jne .down
-        add ax, 10
-        ret
-.down:  call path_down
         jne .ret
-        sub ax, 10
+        add ax, 20
 .ret:   ret
 
 ; PATH_UP: ZF set if a party member up (creatures 0-3, status New or Okay) is a Wayfinder (kit
-; awake): Path-finder, the party's 1 more Move in a fight and 1 more initiative (kits.path_finder).
+; awake): Path-finder, the party's 1 more initiative (kits.path_finder).
 ; DS the game's; all registers kept.
 path_up:
         push ax

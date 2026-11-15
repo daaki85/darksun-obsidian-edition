@@ -1793,7 +1793,7 @@ class GameData:
                 rules >>= 4
         for kid in kids:
             total = kits.slots(kid, bit, kitpages.kit_level(sheet, kid), spell_level, total,
-                               bool(self.rules & RULE_ADND_TABLES))
+                               bool(self.rules & RULE_ADND_TABLES), self.creature(member)[CREATURE_ABILITIES + 3])
         from . import robes
         return robes.slots(robes.worn_plus(self._worn(member)), bit, spell_level, total)
 
@@ -2465,7 +2465,7 @@ class GameData:
 
     def path_finder(self) -> bool:
         """A party member up (New or Okay) is a Wayfinder: the party's Path-finder (DSCLOG's
-        PATH_UP: kits.PATH_MOVE, kits.PATH_INITIATIVE)."""
+        PATH_UP: kits.PATH_INITIATIVE)."""
         from . import kits
         for m in range(PARTY_SIZE):
             rec = self.creature(m)

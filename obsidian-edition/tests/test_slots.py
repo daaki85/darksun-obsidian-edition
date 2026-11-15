@@ -32,7 +32,7 @@ def with_tables():
     return log
 
 
-def set_character(log, member, classes, levels, wis, race=2):
+def set_character(log, member, classes, levels, wis, race=2, intel=10):
     m = log.guest.mem
     sheet = SHEETS + member * game.SHEET_SIZE
     m[sheet + game.SHEET_CLASSES:sheet + game.SHEET_CLASSES + 3] = bytes(classes)
@@ -40,6 +40,7 @@ def set_character(log, member, classes, levels, wis, race=2):
     m[sheet + game.SHEET_RACE] = race
     creature = game.far_pointer(log.guest, DS, game.CREATURES_PTR) + member * game.CREATURE_SIZE
     m[creature + game.CREATURE_ABILITIES + 4] = wis
+    m[creature + game.CREATURE_ABILITIES + 3] = intel
 
 
 class SlotTests(unittest.TestCase):
@@ -97,16 +98,20 @@ if __name__ == "__main__":
 
     def test_kits(self):
         """The kits' slots (kits.slots, kits.slot_level), as DSCLOG's PROBE_SLOTS and
-        PROBE_SLOT_LEVEL: a Scholar's 1 more, a Crusader's 1 fewer, an Elementalist's a level
+        PROBE_SLOT_LEVEL: a Scholar's 1 more by INT, a Crusader's 1 fewer, an Elementalist's a level
         behind, a Seeker's own table; and only with the rule."""
         log = with_tables()
         g = game.GameData(log.guest, DS, rules=game.RULE_KITS)
         sheet = SHEETS
         kit = lambda k: log.guest.mem.__setitem__(sheet + 0x43, k)
-        set_character(log, 0, (PRESERVER, 0, 0), (5, 0, 0), 10)
+        set_character(log, 0, (PRESERVER, 0, 0), (5, 0, 0), 10, intel=17)
         plain = [g.max_spell_slots(0, 1, n) for n in range(1, 5)]
-        kit(1)  # a Scholar
-        self.assertEqual([g.max_spell_slots(0, 1, n) for n in range(1, 5)], [n + 1 if n else 0 for n in plain])
+        kit(1)  # a Scholar, INT 17: 1 more at 1st and 2nd level, where it has any
+        self.assertEqual([g.max_spell_slots(0, 1, n) for n in range(1, 5)],
+                         [n + 1 if n and lv <= 2 else n for lv, n in enumerate(plain, 1)])
+        set_character(log, 0, (PRESERVER, 0, 0), (5, 0, 0), 10, intel=15)
+        self.assertEqual([g.max_spell_slots(0, 1, n) for n in range(1, 5)], plain)  # (INT 15: none more)
+        set_character(log, 0, (PRESERVER, 0, 0), (5, 0, 0), 10, intel=17)
         kit(3)  # an Arcanist: as it is
         self.assertEqual([g.max_spell_slots(0, 1, n) for n in range(1, 5)], plain)
         set_character(log, 0, (1, 0, 0), (7, 0, 0), 18)

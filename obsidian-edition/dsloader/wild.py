@@ -3,7 +3,7 @@ checked for each one as a fight's first round begins, kept for the fight, and gi
 (its KIT_WILD bits) for to hit, damage, attacks and AC.
 
 The check is the Wild Fighting proficiency's (The Complete Barbarian's Handbook): a d20 against
-CON - 4 (the check at -4; a natural 20 always fails). Fighting wild is 3 worse to hit and AC 3
+CON (a natural 20 always fails; up to 2.17 against CON - 4). Fighting wild is 3 worse to hit and AC 3
 worse (no worse than 10) whatever the check; passed, it is also 1 more attack a round in melee and
 3 more damage (the book's: a failed check gives the penalties and none of the benefits). Either
 for the whole fight, and over with it, so the next fight's first round checks again.
@@ -51,7 +51,7 @@ class WildFights:
             con, d20 = rec[game.CREATURE_ABILITIES + 2], roll(1, 20)
             passed = kits.wild_check(con, d20)
             self.fighting[member] = passed
-            check = f"{who} fights wild: d20 = {d20}, needs {min(con + kits.WILD_CHECK, 19)} or less (CON {con} {kits.WILD_CHECK})"
+            check = f"{who} fights wild: d20 = {d20}, needs {min(con + kits.WILD_CHECK, 19)} or less (CON {con})"
             if passed:
                 out.append(f"{check} -> 1 more attack a round and +3 damage, -3 to hit and AC 3 worse for the fight")
             else:

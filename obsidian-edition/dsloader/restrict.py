@@ -166,7 +166,7 @@ def kit_forbids(sheet: bytes, item_type: int, typ: bytes, spec: bool = False, of
             if off_hand and kits.forbids_off_hand(kid, typ):
                 return True
             continue
-        sphere = (kitpages.kit_class_of(sheet, kid) - 1) % 4  # (a ranger's, for a Seeker)
+        sphere = (kitpages.kit_class_of(sheet, kid) - 1) % 4  # (a ranger's for a Seeker, a druid's for a Grove Warden)
         if kits.forbids(kid, typ, kind, half_giant, spec, off_hand, sphere):
             return True
     return False

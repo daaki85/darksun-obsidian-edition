@@ -1675,7 +1675,8 @@ class SpecializeTests(unittest.TestCase):
                          (3, 13, 6, 8))
         self.assertEqual(self.attack(2, self.AXE, rules=kits, kit=3, missile=True)[1:3], (15, 3))
         self.assertEqual(self.attack(3, self.AXE, rules=0, kit=3)[1:3], (15, 3))
-        self.assertEqual(self.attack(3, self.AXE, rules=kits, kit=2)[1:3], (15, 3))  # (a Sentinel)
+        self.assertEqual(self.attack(3, self.AXE, rules=kits, kit=2, shield=True)[1:3], (15, 3))  # (a Sentinel, its shield held)
+        self.assertEqual(self.attack(3, self.AXE, rules=kits, kit=2)[1:3], (16, 3))  # (a Sentinel without one: 1 worse)
         glad = dict(classes=(10, 0, 0), levels=(3, 0, 0), rules=kits, kit=3)
         self.assertEqual(self.attack(3, self.TWO_HANDED, **glad)[1:3], (13, 5))
         self.assertEqual(self.attack(3, self.AXE, **glad)[1:3], (15, 3))
@@ -1813,7 +1814,7 @@ class SpecializeTests(unittest.TestCase):
                 self.assertEqual(self.attack(4, self.AXE, chosen=(0, 5), levels=(9, 0, 0), rules=kits, kit=1,
                                              packed=packed), (6, 12, 6, 10))
                 self.assertEqual(self.attack(3, self.AXE, chosen=(0, 5), levels=(5, 0, 0), rules=kits, kit=2,
-                                             packed=packed), (3, 14, 5, 8))
+                                             packed=packed, shield=True), (3, 14, 5, 8))  # (a Sentinel with its shield)
 
     def test_conjured_weapons(self):
         """The weapons spells make count as their AD&D kind for specialization (SPEC_KIND): the
@@ -1858,7 +1859,7 @@ class SpecializeTests(unittest.TestCase):
         kits = 4096 | game.RULE_KITS
         self.assertEqual(self.attack(3, self.AXE, chosen=(0, 5), levels=(5, 0, 0), rules=kits, kit=1), (3, 12, 6, 8))
         self.assertEqual(self.attack(4, self.AXE, chosen=(0, 5), levels=(9, 0, 0), rules=kits, kit=1), (6, 12, 6, 10))
-        self.assertEqual(self.attack(3, self.AXE, chosen=(0, 5), levels=(5, 0, 0), rules=kits, kit=2), (3, 14, 5, 8))
+        self.assertEqual(self.attack(3, self.AXE, chosen=(0, 5), levels=(5, 0, 0), rules=kits, kit=2, shield=True), (3, 14, 5, 8))
         self.assertEqual(self.attack(3, self.AXE, chosen=(0, 5), levels=(5, 0, 0), rules=4096, kit=1), (3, 14, 5, 8))
         from dsloader import specialize
         sheet = bytearray(game.SHEET_SIZE)
@@ -2451,7 +2452,7 @@ class CanUseTests(unittest.TestCase):
 
     def test_kits(self):
         """KIT_FORBIDS in PROBE_CAN_USE as restrict.kit_forbids (kits.forbids): the Twin-blade,
-        Brute, Stalker, Grove Warden and Lifebinder, a half-giant or not, the rule for half-giants'
+        Brute, Stalker, Grove Warden (of each sphere) and Lifebinder, a half-giant or not, the rule for half-giants'
         hands on or off, for every item type of tests/test_restrict.py."""
         hdr = TSR * 16 + load_image().find(HDR_SIG)
         old = game.RULES_IN_FORCE
@@ -2461,7 +2462,7 @@ class CanUseTests(unittest.TestCase):
                 game.RULES_IN_FORCE = rules | game.RULE_KITS
                 self.mu.mem_write(hdr + 270, struct.pack("<H", 1))
                 for cls, kit in ((10, 2), (10, 3), (13, 1), (5, 1), (5, 2), (17, 3), (9, 3),
-                                 (13, 3), (14, 3), (15, 3), (16, 3), (13, 2)):
+                                 (13, 3), (14, 3), (15, 3), (16, 3), (13, 2), (6, 1), (7, 1), (8, 1)):
                     for race in (2, game.RACE_HALF_GIANT):
                         s = bytearray(test_restrict.sheet(cls, race=race))
                         s[0x43] = kit
@@ -6198,7 +6199,7 @@ class KitTests(unittest.TestCase):
                   ebp=BP)
         return struct.unpack("<h", struct.pack("<H", self.mu.reg_read(r.UC_X86_REG_AX)))[0]
 
-    def creature(self, cls, kit, index=5, level=1, base=10, shield=False, second=0, race=0, third=0):
+    def creature(self, cls, kit, index=5, level=1, base=10, shield=False, second=0, race=0, third=0, intel=0):
         """Creature INDEX (its sheet the same number) of class CLS with kit KIT, its base AC BASE,
         a shield in its left hand or not (SHIELD); the things table's thing 7 is it, thing 8 the
         shield's item list."""
@@ -6208,6 +6209,7 @@ class KitTests(unittest.TestCase):
         mu.mem_write(self.DS * 16 + 0x1661, struct.pack("<HH", 0, self.SHEET))
         rec = bytearray(0x3A)
         rec[4:6] = struct.pack("<H", index)
+        rec[0x25] = intel
         struct.pack_into("<HHH", rec, 8, 8 if shield else 0x270F, 0x270F, 0x270F)
         mu.mem_write(self.CREATURES * 16 + index * 0x3A, bytes(rec))
         mu.mem_write(self.DS * 16 + 0x165D, struct.pack("<HH", 0, self.ITEMS))
@@ -6508,8 +6510,8 @@ class KitTests(unittest.TestCase):
 
     def test_scout_and_path_finder(self):
         """A Military Scout's 2 more initiative and 1 to hit with a bow or sling under the open sky
-        (its KIT_OUTDOORS bit), and the Wayfinder's Path-finder: 1 more initiative and 10 more Move
-        (1 square) for each party member while a Wayfinder of the party is up (New or Okay)."""
+        (its KIT_OUTDOORS bit), and the Wayfinder's Path-finder: 1 more initiative for each party
+        member while a Wayfinder of the party is up (New or Okay); its Move as it is (no more since 2.18)."""
         from dsloader import kits
         from dsloader.gamepatch import VEC_INIT
         at = self.image.find(bytes.fromhex("83c214"))
@@ -6558,11 +6560,11 @@ class KitTests(unittest.TestCase):
             for st, more in ((1, 1), (0, 1), (2, -1), (3, -1), (5, -1), (7, -1), (8, 0)):
                 with self.subTest(status=st):
                     status(3, st)
-                    self.assertEqual((initiative(1), move(1), initiative(0)), (more, 10 * more, 2 + more))
+                    self.assertEqual((initiative(1), move(1), initiative(0)), (more, 0, 2 + more))
             status(2, 3)  # (a second Wayfinder, down: the one up counts)
             self.creature(9, 2, index=2, second=17, race=2)
             status(3, 1)
-            self.assertEqual((initiative(1), move(1)), (1, 10))
+            self.assertEqual((initiative(1), move(1)), (1, 0))
             status(3, 1)
             self.assertEqual((initiative(5), move(5)), (0, 0))  # (not a party member)
         finally:
@@ -6775,12 +6777,13 @@ class KitTests(unittest.TestCase):
             self.rules(rules)
             for cls, kit in self.KIT_CASES + ((17, 3),):
                 kid = self.kit_of(cls, kit, rules)
-                for level in (1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15):
-                    self.creature(cls, kit, level=level)
+                for level, intel in [(lv, i) for lv in (1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15)
+                                     for i in ((9, 16, 17, 18, 19, 25) if kid == kits.SCHOLAR else (10,))]:
+                    self.creature(cls, kit, level=level, intel=intel)
                     for magic in (kits.WIZARD, kits.PRIEST):
                         for spell_level in (1, 2, 3, 4, 5, 6):
                             for given in (0, 1, 3):
-                                with self.subTest(rules=rules, cls=cls, kit=kit, level=level, magic=magic,
+                                with self.subTest(rules=rules, cls=cls, kit=kit, level=level, intel=intel, magic=magic,
                                                   spell_level=spell_level, given=given):
                                     self.mu.mem_write(SS * 16 + BP - 2, struct.pack("<H", given))
                                     self.mu.mem_write(SS * 16 + BP + 6, struct.pack("<HHH", 7, magic, spell_level))
@@ -6791,7 +6794,7 @@ class KitTests(unittest.TestCase):
                                     self.mu.emu_start(CALLER * 16 + 0x600, CALLER * 16 + 0x603)
                                     self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX),
                                                      kits.slots(kid, magic, level, spell_level, given,
-                                                                bool(rules & game.RULE_ADND_TABLES)))
+                                                                bool(rules & game.RULE_ADND_TABLES), intel))
                                     self.assertEqual([self.mu.reg_read(x) for x in (
                                         r.UC_X86_REG_BX, r.UC_X86_REG_CX, r.UC_X86_REG_DX, r.UC_X86_REG_ES,
                                         r.UC_X86_REG_SP)], [0x2222, 0x3333, 0x4444, 0x6666, 0x7FC])
@@ -6801,7 +6804,13 @@ class KitTests(unittest.TestCase):
         # Handbook's Seeker table (3 2 1, 3 2 2, 3 3 2 1)
         self.assertEqual([[kits.slots(kits.SHINOBI, kits.WIZARD, lv, sl, 0) for sl in (1, 2, 3, 4)] for lv in (10, 11, 12, 13)],
                          [[2, 2, 1, 0], [3, 2, 1, 0], [3, 2, 2, 0], [3, 3, 2, 1]])
-        self.assertEqual([kits.slots(kits.SCHOLAR, kits.WIZARD, 5, 1, n) for n in (0, 2)], [0, 2])  # (no slot more)
+        # a Scholar: a wizard slot more where it has any, from INT 16 at 1st level to 19 at 4th
+        self.assertEqual([[kits.slots(kits.SCHOLAR, kits.WIZARD, 9, sl, 2, intel=i) for sl in (1, 2, 3, 4, 5)]
+                          for i in (15, 16, 17, 18, 19, 25)],
+                         [[2, 2, 2, 2, 2], [3, 2, 2, 2, 2], [3, 3, 2, 2, 2], [3, 3, 3, 2, 2], [3, 3, 3, 3, 2],
+                          [3, 3, 3, 3, 2]])
+        self.assertEqual([kits.slots(kits.SCHOLAR, kits.WIZARD, 5, 1, 0, intel=19), kits.slots(kits.SCHOLAR, kits.PRIEST, 5, 1, 2, intel=19)],
+                         [0, 2])  # (none where the game gives none; no priest slot more)
         self.assertEqual(kits.slots(kits.ARCANIST, kits.WIZARD, 5, 1, 2), 2)
         # an Elementalist: a level behind, but 1 at each spell level its own level reaches (2 x - 1)
         self.assertEqual([kits.slots(kits.ELEMENTALIST, kits.PRIEST, lv, sl, 0) for lv, sl in (
@@ -8013,11 +8022,10 @@ class KitTests(unittest.TestCase):
         self.mu.mem_write(hdr + 366, bytes((48, 100)))
         self.assertEqual(learn(11)[1][:4], [who, 11, 19, 95])
         self.assertEqual(list(self.mu.mem_read(hdr + 366, 2)), [0, 0])
-        # a Scholar: its chance 100, every try learnt; still no more than its INT's most
-        for n in range(12):
-            self.int_setup(who, 9, first[:5], kit=1)
-            ax, told = learn(8)
-            self.assertEqual((ax, told[:4], told[5]), (1, [who, 8, 9, 100], intlearn.LEARNT))
+        # a Scholar: the rule's chance, as any preserver's (its sure learning went in 2.18); no
+        # more than its INT's most
+        self.int_setup(who, 9, first[:5], kit=1)
+        self.assertEqual(learn(8)[1][:4], [who, 8, 9, 35])
         self.int_setup(who, 9, first[:6], kit=1)
         self.assertEqual(learn(8)[1][5], intlearn.FULL)
         # the game's own: the rule off, a priest spell, or a spell it knows (AX 0 already)

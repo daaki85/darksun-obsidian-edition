@@ -60,12 +60,15 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   skills are −5 (was −10). The Loader's THAC0 for each weapon (`game.weapon_hits`) and the dice
   log (`_kit_attack`) show it as "Swashbuckler (a warrior's THAC0)" (`kits.war_hit`). Tests:
   `test_dsclog`'s `test_war_hit`, `test_thac0`, `test_thac0_line`, `test_swashbuckler`.
-- **The Scholar: a scroll's spell always learnt** (the user's call, in place of all it had): with
-  the rule for INT its chance is 100 (`INT_LEARN`; INT's most a level still holds). Gone: its wizard
-  slot more at each spell level (`PROBE_SLOTS`, `kits.slots`), its spell more at each level up
-  (`LV_SCHOLAR`), at creation (`KIT_MADE` in the picks) and on changing class to preserver
-  (`PROBE_DUAL_SPELLS`). Its −1 to hit stays. KITS.md's slot table loses its column. Tests:
-  `test_int_learn`'s Scholar, `test_scholar_picks_no_more`, `test_slots`, `test_cermak_arcanist`.
+- **The Scholar: bonus wizard slots from INT** (the user's call, in place of all it had, as a
+  priest's from WIS): `PROBE_SLOTS` gives a Scholar's wizard slots 1 more at a spell level it has
+  any of, 1st from INT 16, 2nd from 17, 3rd from 18, 4th from 19 (the creature record's INT, +25h;
+  `kits.slots`' `intel`, `kits.SCHOLAR_INT`). Gone: its slot more at every spell level, its spell
+  more at each level up (`LV_SCHOLAR`), at creation (`KIT_MADE` in the picks) and on changing class
+  to preserver (`PROBE_DUAL_SPELLS`); a sure scroll learning (`INT_LEARN`'s chance 100), tried on
+  this branch first, went too. Its −1 to hit stays. KITS.md's slot table has no column for it (a
+  note below it). Tests: `test_dsclog`'s `test_slots` (INT 9 to 25) and `test_int_learn`'s
+  Scholar, `test_slots`' `test_kits`, `test_scholar_picks_no_more`, `test_cermak_arcanist`.
 - **The Arcanist: its preserver spells cast a level higher** (the user's call, in place of two
   spells a turn): `PROBE_SPELL_LEVEL`'s new `ARC_LEVEL` adds 1 to a party Arcanist's wizard spells'
   level for their duration and damage (the new wizard spells, 196-201, too; `kits.arc_level`). The
@@ -105,6 +108,21 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   (`QuiverTests` gone), `test_kits`' `SpellarcherBareTests`, `test_dicelog`'s rest test.
   KITS.md, the player's guide, ITEMS.md, DICE-LOG.md, FEATURES.md, DEVELOPMENT-RULES.md and the
   patch notes say so. DSCLOG 70,256 bytes.
+- **The Wild Fury: a plain CON check** (the user's call, from the kits' review): Wild Fighting
+  passes on a d20 at or under CON, no −4 (`WILD_CHECK` 0, split from the Battle Dancer's
+  `DANCE_CHECK`, still −4). Tests: `test_wild`.
+- **The Wayfinder: +1 initiative only** (the user's call): its Move +2 is gone (`KIT_MOVE`'s path
+  block, the viewer's line); downed, it costs the party only its −1 initiative. Test:
+  `test_scout_and_path_finder`.
+- **The Sentinel: no initiative, −1 to hit without a shield** (the user's call): its +2 initiative
+  is gone (`PROBE_INIT`); `KIT_CHAMPION` now takes a Sentinel's melee attack without a shield in a
+  hand 1 worse (`kits.champion`); its AC 2 better with one stays. Tests: `test_champion`,
+  `test_dsclog`'s Sentinel cases.
+- **The Grove Warden: its sphere's weapons** (the user's call, in place of no metal weapons):
+  `KIT_FORBIDS` gives the Grove Warden the Seeker's `SPHERE_ALLOWS` path (no bow kept),
+  `KF_SPHERE` now the kit's class less 1, mod 4 (a druid's sphere as a ranger's); `kits.forbids`.
+  Its kit gear is fitted as any kit's (`kit_gear`). Tests: `test_kits`' `test_seeker`,
+  `test_dsclog`'s `CanUseTests.test_kits` (a Warden of each sphere).
 
 **Fixed**
 - **An archer's turn lost with its last arrow** (the game's bug, the user's report): the weapon

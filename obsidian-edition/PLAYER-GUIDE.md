@@ -627,8 +627,9 @@ spells while their bodies wither from years of study in hiding. Their spells
 strike and last as a preserver's a level beyond them.
 
 *Scholar.* Keepers of forbidden lore who have spent more time over hidden
-libraries than learning to hold a weapon. No scroll's spell is beyond them:
-where another preserver may fail to learn one, a Scholar always does.
+libraries than learning to hold a weapon. The sharper the mind, the more
+spells it holds ready: a clever Scholar has a spell or more each day that
+another preserver does without.
 
 *Battle Mage.* Preservers who learned in the arena or the legions that a spell
 is no use if you are dead before you finish it. They fight in leather with a
@@ -756,8 +757,8 @@ weapon but the great axes (the game's lists).
 **Kits.**
 
 *Grove Warden.* Guardians of an oasis or a hidden grove, whose skin toughens
-like bark the longer they keep watch. They refuse metal, which the land gave up
-only at great cost.
+like bark the longer they keep watch. They take up only the weapons their
+element allows, as a cleric of it does.
 
 *Wanderer.* Druids with no grove of their own, crossing salt flats and stony
 barrens under the sun and the freezing night. Heat and cold barely touch them,
@@ -892,7 +893,7 @@ with no shield to slow them.
 up in the cities' poorest quarters, where a dagger in each hand settles most
 arguments. Wayfinders are dwarves whose focus is the hidden road: they slip
 past unseen, but have little use for other people's purses, and a party they
-guide moves and acts that little bit quicker.
+guide acts that little bit quicker.
 
 *Spellarcher* (half-elf fighter/preserver). Half-elf freedom fighters who
 weave a little magic into every arrow. The technique is a secret, and the bow

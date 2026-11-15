@@ -157,7 +157,7 @@ A few of them:
 - **Myrmidon:** its two weapon specs are melee weapons only (no bow, sling or chatkcha), each going on to mastery and grand mastery.
 - **One kit a character:** a human who changes class keeps its kit and takes no other (one with none may take one for the new class).
 - **Arcanist:** its preserver spells cast a level higher (duration and damage), for a d3 hit die.
-- **Scholar:** with the rule for INT, always learns a spell from a scroll (its chance 100%), for 1 worse to hit.
+- **Scholar:** bonus wizard slots from INT, as a priest's from WIS: one more 1st-level slot at INT 16, and at 2nd level too at 17, 3rd at 18 and 4th at 19, for 1 worse to hit.
 - **Healer:** a water cleric only, given the sphere of the cosmos: the spells only druids had, Cure Serious and Critical Wounds, Raise Dead and Neutralize Poison among them, each cure healing 1 more a die.
 - **Assassin:** a backstab one step deadlier (×3 at 1st level up to ×6 from 13th), for −15 to picking pockets and locks.
 - **Wilderness Avenger:** +1 to hit and damage against anything, and Cause Wounds spells doing 1 more a die, for no healing spells at all.
@@ -170,7 +170,7 @@ A few of them:
 - **Battle Dancer:** dances as each fight starts, a roll against DEX at −4: +1 to hit, damage and AC for a few rounds, or −1 if it stumbles. Long swords and bows only, and no shield.
 - **Military Scout:** better at stealth, traps and climbing under the open sky, with +2 initiative and +1 to hit with bows and slings there, and its hiding isn't halved by the sun; worse under a roof, and it never backstabs.
 - **Spellarcher:** weaves the touch spells it knows into arrows, as *The Complete Book of Elves*'s Spellarcher does: a button on the USE screen for each, a spell slot for one arrow that casts its spell on what it hits at the archer's preserver level. One stack of each spell, of 24 at most; they last until shot, and only a Spellarcher carries them. Its spell arrows are +1 from 5th preserver level and +2 from 9th. It wears no armour, helm or shield. Making them plays the spell's own cast sound.
-- **Wild Fury:** Wild Fighting as each fight starts, a roll against CON at −4: −3 to hit and AC 3 worse for the fight whatever the roll, and with it passed one more attack a round in melee and +3 damage, as *The Complete Barbarian's Handbook* has it.
+- **Wild Fury:** Wild Fighting as each fight starts, a roll against CON: −3 to hit and AC 3 worse for the fight whatever the roll, and with it passed one more attack a round in melee and +3 damage, as *The Complete Barbarian's Handbook* has it.
 - **[New]** The game's own party has features of its own: Gerakis fights wild (as a Wild Fury does), K'ratchek casts and uses psionics as a Wasteland Seer does, Cilla hides as well in the sun as out of it (her feature, the Elven Shadow-walker), and Cermak is an Arcanist.
 
 > *Developers' Notes: Each kit is built into the game's own code, so it works everywhere the game checks: THAC0, spell slots, hit dice, PSP costs, attacks a round and what you may hold. The player's guide has all 37, with a short description of who takes each one on Athas.*

@@ -1846,11 +1846,6 @@ class Viewer:
                 kit = gd.kit(index) if known and index < game.PARTY_SIZE else None
                 kit_move = sum(kits.move(k) for k in gd.kit_ids(index)) if kit else 0
                 move_why = [kit] if kit_move else []
-                if known and index < game.PARTY_SIZE:  # (DSCLOG's KIT_MOVE: a Wayfinder's, the party's)
-                    path = kits.PATH_MOVE if gd.path_finder() else -kits.PATH_MOVE if gd.path_lost() else 0
-                    if path:
-                        kit_move += path
-                        move_why.append("Path-finder" if path > 0 else "Wayfinder down")
             except (struct.error, IndexError, ValueError):
                 weapons, no_spells, kit, kit_move, move_why = [], False, None, 0, []
             age = None

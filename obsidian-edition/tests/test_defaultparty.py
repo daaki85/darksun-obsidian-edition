@@ -127,7 +127,7 @@ class DefaultPartyTests(unittest.TestCase):
         self.assertEqual((gd.left(0, 1), gd.left(0, 2)), (1, 0))  # (the Arcanist has no slot more)
         self.assertEqual(dp.set_kit(gd, 0, "Cermak"), [])
         self.assertEqual(gd.left(0, 1), 1)
-        # no kit gives a slot more now (the Scholar's went in 2.18): those left as they were
+        # a Scholar at this INT gives no slot more (its bonus slots go by INT from 16): those left as they were
         gd = Gd(bytes(cermak))
         before = dp._most_slots(gd, 0)
         gd.guest.write(gd.at + kitpages.KIT_BYTE, bytes([kitpages.kit_byte(gd.sheet(0), 0, kitpages.KITS[5].index("Scholar") + 1)]))

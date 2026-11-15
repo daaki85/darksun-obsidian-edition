@@ -1459,7 +1459,7 @@ round then rolls again (`_kits_due`), and the log counts the rounds from 1 again
 and forgets the last fight's monsters' ACs (`_new_fight`), for a fight soon
 after another (the arena's next wave) too. At `+355` (`KIT_WILD`) each Wild
 Fury's (and Gerakis's) Wild Fighting, which `wild.py` rolls as a fight's first
-round begins (a d20 against CON − 4, a natural 20 failing: `kits.WILD_CHECK`)
+round begins (a d20 against CON, a natural 20 failing: `kits.WILD_CHECK` 0; −4 up to 2.17)
 and clears as the dances end: bit N, member N fights wild (its penalties, whatever the
 check); bit N + 4 as well, its check passed (its gains).
 
@@ -1482,20 +1482,19 @@ emulated tests hold the helper to it:
 | to hit | Ravager, Brute, Ghetto Fighter, Arena Champion, Battle Dancer, Wilderness Avenger, Wild Fury | `PROBE_ATTACKS` (`KIT_TO_HIT`) |
 | AC | Ravager, Wanderer, Sentinel and Arena Champion, Grove Warden, Battle Dancer, Wild Fury | `PROBE_AC` (`KIT_AC`) |
 | movement | Stalker, Rescuer | `PROBE_MOVE` |
-| spell slots | Battle Mage, Crusader, Seeker and Justifier, Elementalist | `PROBE_SLOTS`, `PROBE_SLOT_LEVEL` |
+| spell slots | Scholar, Battle Mage, Crusader, Seeker and Justifier, Elementalist | `PROBE_SLOTS`, `PROBE_SLOT_LEVEL` |
 | a power's PSP | Mind Bender, Kineticist, Titan Mind, Wasteland Seer | `PROBE_PSP_USE`, `PROBE_PSP_TABLE`, `PROBE_PSP_DEFENCE` |
 | a cure's healing | Healer, Lifebinder, Rescuer | `PROBE_CURE` |
 | a spell's damage | Wilderness Avenger | `AV_CAUSE`, `HARM_SITE` |
 | healing spells never known | Wilderness Avenger | `PROBE_EL_KNOW` (`AV_KNOW`), `AV_GRANT` |
 | casting level | Seeker, Justifier, Shinobi | `PROBE_RANGER_CAST`, `PROBE_CAST_LEVEL`, `PROBE_SPELL_LEVEL` |
 | wizard spells for a thief | Shinobi | `PROBE_SLOTS`, `PROBE_PICK_ANY`, `PROBE_PICK_LIST` |
-| a scroll's spell learnt for sure | Scholar | `INT_LEARN` |
 | a power's PSP to keep it up | Mind Bender, Kineticist, Titan Mind, Wasteland Seer | `PROBE_PSP_KEEP`, `PROBE_PSP_KEEP_DX` |
 | the off hand | Healer, Battle Mage | `PROBE_CAN_USE` (`KIT_FORBIDS`) |
 | casting though hit | Battle Mage | `PROBE_HIT_ROUND` |
 | a wizard spell's level, 1 more | Arcanist | `PROBE_SPELL_LEVEL`'s `ARC_LEVEL` |
 | THAC0 | Scholar (a warrior's: Swashbuckler, Crusader, Battle Mage, Mind Warrior, `WAR_HIT`) | `PROBE_THAC0` |
-| initiative | Sentinel, Military Scout, Myrmidon | `PROBE_INIT` |
+| initiative | Military Scout, Myrmidon | `PROBE_INIT` |
 | to hit with a missile | Military Scout | `PROBE_ATTACKS` (`KIT_TO_HIT`) |
 | a hit's poison | Poisoner | `PROBE_POISON` |
 | an arrow's plus | Spellarcher | `PROBE_ARROW` |
@@ -1504,7 +1503,7 @@ emulated tests hold the helper to it:
 | a spell's damage | Wanderer | `WANDER_DMG` |
 | thief skills | Assassin, Swashbuckler, Shadowblade, Ghetto Fighter, Wayfinder, Military Scout | `PROBE_BELT` |
 | from behind, backstab | Military Scout, Rescuer, Assassin | `PROBE_STEALTH` (`KIT_REAR`) |
-| initiative, Move in a fight | Wayfinder | `PROBE_INIT`, `KIT_MOVE` |
+| initiative in a fight | Wayfinder | `PROBE_INIT` |
 | shields | Shadowblade, Ghetto Fighter, Rescuer | `KIT_FORBIDS` |
 | light armour only; no armour at all | Assassin, Shinobi, Shadowblade, Poisoner; Spellarcher | `KIT_LIGHT` (its `BARE`) |
 | hiding, moving silently | Stalker, Assassin and Military Scout, Wilderness Avenger, Shadowblade | `stealth.py` |
@@ -1526,7 +1525,7 @@ How each is done:
   Wild Fury (Wild Fighting passed: +3, melee or missile, `WILD_PASSED`). Where: `PROBE_SPEC_DAMAGE`
   (`KIT_ATTACK_DAMAGE`), and the DAM lines (`PROBE_DAM_LINE`, `PROBE_VIEW_DAM`: `KIT_MELEE` only).
 - **To hit.** Ravager, Brute, Ghetto Fighter (and 1 worse with anything but a dagger), Arena
-  Champion, Battle Dancer, Wilderness Avenger, Wild Fury (fighting wild, passed or failed: −3, `WILD_TO_HIT` by
+  Champion, Sentinel (melee without a shield in a hand: −1, `KIT_CHAMPION`), Battle Dancer, Wilderness Avenger, Wild Fury (fighting wild, passed or failed: −3, `WILD_TO_HIT` by
   `KIT_WILD`'s bit N). Where: `PROBE_ATTACKS` (`KIT_TO_HIT`: `KIT_CHAMPION`, `KIT_EXTRA`, and `KIT_MELEE` in
   melee).
 - **AC.** Ravager (`RAVAGER_AC` by level against the sheet's base AC, `+27h`), Wanderer, Sentinel
@@ -1534,7 +1533,8 @@ How each is done:
   `KIT_DANCE`), Wild Fury (fighting wild, passed or failed: 3 worse, no worse than 10, `KIT_WILD`'s bit N). Where:
   `PROBE_AC` (`INT 62h`, the end of the AC routine: `KIT_AC`).
 - **Movement.** Stalker, Rescuer (2 more). Where: `PROBE_MOVE` (`KIT_MOVE`).
-- **Spell slots.** Battle Mage (−1 wizard), Crusader (−1 priest), Seeker and
+- **Spell slots.** Scholar (+1 wizard at a spell level with any, by INT: 1st from 16, 2nd from 17,
+  3rd from 18, 4th from 19; the creature record's INT, `+25h`; `kits.SCHOLAR_INT`), Battle Mage (−1 wizard), Crusader (−1 priest), Seeker and
   Justifier (their priest tables, `SEEKER_SLOTS`, by ranger level, in place of the game's),
   Elementalist (a level behind, `PROBE_SLOT_LEVEL`; but at least 1 at a spell level its own cleric
   level reaches, 2 × the spell level − 1, `PROBE_SLOTS`). Where: `PROBE_SLOTS` (`INT B6h`, new: the
@@ -1604,10 +1604,6 @@ How each is done:
   A scroll: see [Preservers' INT](#preservers-int). Armour: the game has no armour rule for a single
   class's spells (the multiclass preserver's is the class restrictions'), so it casts in the light
   armour it may wear.
-- **A scroll's spell learnt for sure.** Scholar (its chance 100, with the rule for INT; INT's most
-  a level still holds). Where: `INT_LEARN` (up to 2.17 it had a wizard slot more at each spell
-  level, `PROBE_SLOTS`, and a spell more at each level up, `PROBE_LV_PICK`'s `LV_SCHOLAR`, and at
-  creation and DUAL, `KIT_MADE` and `PROBE_DUAL_SPELLS`).
 - **A power's PSP to keep it up.** Mind Bender, Kineticist, Titan Mind, Wasteland Seer (as the cost
   to use it; 63h, none, left alone). Where: `PROBE_PSP_KEEP` (`INT B0h`, new: the table's `+2` read
   where the round's cost is taken, 5CE49h, the combatant in SI) and `PROBE_PSP_KEEP_DX` (`INT AEh`,
@@ -1632,7 +1628,7 @@ How each is done:
   `+1Fh`. Where (the Scholar's): `PROBE_THAC0` (`INT B7h`, new: the end of the game's
   THAC0 routine, `mov ax,14h / sub ax,si` at DSUN.EXE 876BBh, which every write of a creature's
   THAC0, `+1Fh`, uses: on making a character, 66CE0h, and at a level up, 86D7Eh and 87A91h).
-- **Initiative.** Sentinel; Military Scout (its `KIT_OUTDOORS` bit); Myrmidon (2 less). Where:
+- **Initiative.** Military Scout (its `KIT_OUTDOORS` bit); Myrmidon (2 less). Where:
   `PROBE_INIT` (`INT B8h`, new: the round's 20 added at DSUN.EXE 5750Eh).
 - **To hit with a missile.** Military Scout (a bow, sling or staff sling, its `KIT_OUTDOORS` bit).
   Where: `KIT_TO_HIT` in `PROBE_ATTACKS` (`kits.missile_to_hit`).
@@ -1675,9 +1671,9 @@ How each is done:
   `STAB_TIMES`, `kits.backstab_times`). Where: `PROBE_STEALTH`'s `KIT_REAR` (`kits.backstabs`,
   `kits.rear_to_hit`), after the game's own setting of `[BP-1Ah]` and `[BP-24h]` and the stealth
   rule's; the backstab flag is pushed for the attack after it (DSUN.EXE 5838Ah).
-- **Initiative, Move in a fight.** Wayfinder (Path-finder: each party member 1 more while a
-  Wayfinder of the party is New or Okay, `PATH_UP`; 1 less while one is down and none up,
-  `PATH_DOWN`). Where: `PROBE_INIT`, `KIT_MOVE`; `GameData.path_finder`, `GameData.path_lost`.
+- **Initiative in a fight.** Wayfinder (Path-finder: each party member 1 more while a Wayfinder of
+  the party is New or Okay, `PATH_UP`; 1 less while one is down and none up, `PATH_DOWN`; its Move
+  too up to 2.17). Where: `PROBE_INIT`; `GameData.path_finder`, `GameData.path_lost`.
 - **Shields.** Shadowblade, Ghetto Fighter, Rescuer. Where: `KIT_FORBIDS` (`kits.forbids`).
 - **Light armour only.** Assassin, Shinobi, Shadowblade, Poisoner (asleep too); the Spellarcher no armour, helm or shield at all (`BARE`: bracers, robes and a cloak of protection aren't armour; `kits.BARE_KITS`), and its class's armour left behind at creation (`weaponchoice.kit_gear`). Where:
   `KIT_LIGHT` (`kits.LIGHT_KITS`).
@@ -1689,8 +1685,10 @@ How each is done:
   (in any armour); Ghetto Fighter (2 less in each hand). Where: `PROBE_TWO`; `RG_TWO`.
 - **Gear allowed.** Ravager, Twin-blade, Brute, Stalker, Grove Warden, Lifebinder, Shinobi, Battle
   Dancer (no shield; `kit_dancer`: long sword and bow kinds), Shadowblade, Ghetto Fighter and
-  Rescuer (no shield), Seeker (its sphere's weapons, as a cleric's: `SPHERE_ALLOWS` with `CU_*` set
-  from the item type, its sphere the ranger class less 13; the bow kept). Where: `PROBE_CAN_USE` and
+  Rescuer (no shield), Seeker and Grove Warden (its sphere's weapons, as a cleric's: `SPHERE_ALLOWS`
+  with `CU_*` set from the item type, `KF_SPHERE` the kit's class less 1, mod 4: the ranger's or
+  druid's; the Seeker keeps the bow, the Grove Warden doesn't; up to 2.17 the Grove Warden had no
+  metal weapons instead). Where: `PROBE_CAN_USE` and
   `KINDS_ALLOWED` (`KIT_FORBIDS`: `restrict.kit_forbids`; and `KIT_ALLOWS`, so a Battle Dancer may
   specialize in the long sword whatever its cleric's sphere), whatever the class restrictions. For
   an EXIT on the weapon window after DONE, `weaponchoice.kinds_for` makes a Ghetto Fighter's or

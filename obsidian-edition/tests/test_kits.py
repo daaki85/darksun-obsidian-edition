@@ -31,7 +31,9 @@ class KitEffectTests(unittest.TestCase):
         self.assertEqual((kits.ac(kits.CHAMPION, True), kits.ac(kits.CHAMPION, False)), (-1, 0))
         self.assertEqual([kits.champion(kits.CHAMPION, s, m) for s in (True, False) for m in (True, False)],
                          [(1, 1), (0, 0), (-1, 0), (0, 0)])
-        self.assertEqual(kits.champion(kits.SENTINEL, False, True), (0, 0))
+        self.assertEqual([kits.champion(kits.SENTINEL, s, m) for s in (True, False) for m in (True, False)],
+                         [(0, 0), (0, 0), (-1, 0), (0, 0)])  # (a Sentinel: -1 without its shield, in melee)
+        self.assertEqual((kits.initiative(kits.SENTINEL), kits.initiative(kits.MYRMIDON)), (0, -2))
 
     def test_sentinel(self):
         self.assertEqual((kits.ac(kits.SENTINEL, True), kits.ac(kits.SENTINEL, False)), (-2, 0))
@@ -53,6 +55,12 @@ class KitEffectTests(unittest.TestCase):
         self.assertEqual([kits.forbids(S, bow, kits.BOW, False, sphere=s) for s in range(4)], [False] * 4)
         self.assertFalse(kits.forbids(S, weapon(kits.MELEE, 3), 2, False, sphere=0))  # (air: a dagger)
         self.assertFalse(kits.forbids(kits.JUSTIFIER, bone_sword, 0, False, sphere=2))
+        # a Grove Warden: its druid sphere's weapons, the bow too (a wooden one: not for fire)
+        W = kits.GROVE_WARDEN
+        self.assertEqual([kits.forbids(W, obsidian_sword, 0, False, sphere=s) for s in range(4)], [True, False, False, True])
+        self.assertEqual([kits.forbids(W, bone_sword, 0, False, sphere=s) for s in range(4)], [True, True, True, False])
+        self.assertEqual([kits.forbids(W, bow, kits.BOW, False, sphere=s) for s in range(4)], [False, False, True, False])
+        self.assertFalse(kits.forbids(W, weapon(kits.MELEE, 3), None, False, sphere=2))  # (no kind: as the game has it)
 
     def test_forbids(self):
         def typ(flags=0, kinds=0, mat=0x40):

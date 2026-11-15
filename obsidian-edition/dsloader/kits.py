@@ -197,8 +197,9 @@ def not_halved_by_sun(kids, race: int) -> str:
 
 
 # the dance's and Wild Fighting's checks: a d20 against DEX or CON with this (a proficiency check's
-# modifier: the score 4 lower)
-DANCE_CHECK = WILD_CHECK = -4
+# modifier: the dance's the score 4 lower; Wild Fighting's none, its successes paying its penalties)
+DANCE_CHECK = -4
+WILD_CHECK = 0  # (Wild Fighting's: the proficiency's own check, CON, as The Complete Barbarian's Handbook has it)
 
 
 def dance(dex: int, d20: int, fail_roll: int) -> Tuple[int, int]:
@@ -286,12 +287,22 @@ def slot_level(kid: int, level: int) -> int:
     return max(0, level - 1) if kid == ELEMENTALIST else level
 
 
-def slots(kid: int, magic: int, level: int, spell_level: int, game_slots: int, adnd: bool = True) -> int:
+SCHOLAR_INT = 15   # (a Scholar's wizard slot more at spell level N from INT 15 + N: 1st at 16 ... 4th at 19)
+SCHOLAR_LAST = 4
+
+
+def slots(kid: int, magic: int, level: int, spell_level: int, game_slots: int, adnd: bool = True,
+          intel: int = 0) -> int:
     """The spell slots at SPELL_LEVEL of a character of kit KID and class level LEVEL, the game
-    giving GAME_SLOTS of MAGIC (WIZARD or PRIEST) (PROBE_SLOTS): a Battle Mage's wizard slots 1 fewer, a Crusader's priest slots 1 fewer, an
+    giving GAME_SLOTS of MAGIC (WIZARD or PRIEST) (PROBE_SLOTS): a Scholar's wizard slots 1 more at
+    a spell level it has any of, from INT 16 at 1st, 17 at 2nd, 18 at 3rd and 19 at 4th (INTEL, as
+    a priest's WIS gives); a Battle Mage's wizard slots 1 fewer, a Crusader's priest slots 1 fewer, an
     Elementalist's (slot_level: a level behind) at least 1 at a spell level its LEVEL reaches; a
     Seeker's and a Justifier's priest slots their own tables' (SEEKER_SLOTS), WIS's left out, and a
     Shinobi's wizard slots the Seeker's by its thief level."""
+    if kid == SCHOLAR and magic == WIZARD:
+        return game_slots + int(bool(game_slots) and spell_level <= SCHOLAR_LAST
+                                and intel - SCHOLAR_INT >= spell_level)
     if (kid == BATTLE_MAGE and magic == WIZARD) or (kid == CRUSADER and magic == PRIEST):
         return max(0, game_slots - 1)
     if kid == ELEMENTALIST and magic == PRIEST and not game_slots and level >= 2 * spell_level - 1 \
@@ -465,19 +476,17 @@ MYRMIDON_INITIATIVE = -2  # (the drilled soldier waits for the order to strike: 
 
 
 def initiative(kid: int, outdoors: bool = False) -> int:
-    """Added to initiative (PROBE_INIT): a Sentinel's 2, a Military Scout's 2 under the open sky
-    (OUTDOORS), a Myrmidon's 2 less."""
-    if kid == SENTINEL:
-        return 2
+    """Added to initiative (PROBE_INIT): a Military Scout's 2 under the open sky (OUTDOORS), a
+    Myrmidon's 2 less. (A Sentinel's 2 more went in 2.18.)"""
     if kid == MYRMIDON:
         return MYRMIDON_INITIATIVE
     return 2 if kid == SCOUT and outdoors else 0
 
 
-# Path-finder: while a Wayfinder of the party is up, each party member's Move in a fight and
-# initiative 1 more (DSCLOG's PATH_UP, in KIT_MOVE and PROBE_INIT); while one is down (stunned to
-# petrified) and none up, 1 less (PATH_DOWN)
-PATH_MOVE, PATH_INITIATIVE = 1, 1
+# Path-finder: while a Wayfinder of the party is up, each party member's initiative 1 more
+# (DSCLOG's PATH_UP, in PROBE_INIT); while one is down (stunned to petrified) and none up, 1 less
+# (PATH_DOWN). (Up to 2.17 their Move in a fight too.)
+PATH_INITIATIVE = 1
 # attacking from behind: 2 to hit (the game's), a Rescuer's 1 (DSCLOG's KIT_REAR); a Military
 # Scout never backstabs (KIT_REAR takes it back)
 REAR, RESCUER_REAR = 2, 1
@@ -529,14 +538,14 @@ POISON_POWER = 176  # the monsters' "poison (10 damage)", a Poisoner's weapon's 
 TSR_POISON_USED = 1860  # DSCLOG's header: bit N member N's main hand has poisoned this fight, N + 4 its off hand
 
 
-# a Wild Fury's Wild Fighting (wild.py; DSCLOG's KIT_WILD): checked against CON - 4 as a fight starts,
+# a Wild Fury's Wild Fighting (wild.py; DSCLOG's KIT_WILD): checked against CON as a fight starts,
 # for the fight. Whatever the check, 3 worse to hit and AC 3 worse (no worse than WILD_AC_MOST);
 # passed, also 1 more attack a round in melee (2 halves) and 3 more damage; every fight.
 WILD_TO_HIT, WILD_DAMAGE, WILD_HALVES, WILD_AC, WILD_AC_MOST = -3, 3, 2, 3, 10
 
 
 def wild_check(con: int, d20: int) -> bool:
-    """Wild Fighting's check: a D20 of CON - 4 or less (the proficiency's, at WILD_CHECK); a natural
+    """Wild Fighting's check: a D20 of CON or less (the proficiency's, WILD_CHECK 0); a natural
     20 always fails."""
     return d20 <= con + WILD_CHECK and d20 != 20
 
@@ -567,11 +576,14 @@ def save(kid: int, spell: int, kinds: int = 0) -> int:
 
 
 def champion(kid: int, shield: bool, melee: bool) -> Tuple[int, int]:
-    """(to hit, damage) an Arena Champion adds to an attack (KIT_CHAMPION), in melee only: with a
-    shield in a hand +1 and +1; with none, -1 to hit."""
-    if kid != CHAMPION or not melee:
+    """(to hit, damage) an Arena Champion or Sentinel adds to an attack (KIT_CHAMPION), in melee
+    only: an Arena Champion with a shield in a hand +1 and +1, a Sentinel nothing; with none, -1 to
+    hit, either."""
+    if kid not in (CHAMPION, SENTINEL) or not melee:
         return 0, 0
-    return (1, 1) if shield else (-1, 0)
+    if shield:
+        return (1, 1) if kid == CHAMPION else (0, 0)
+    return -1, 0
 
 
 def thief_skill(kid: int, skill: int, outdoors: bool = False) -> int:
@@ -763,7 +775,8 @@ def forbids(kid: int, typ: bytes, kind: Optional[int], half_giant: bool, spec: b
     light; a Twin-blade a shield, and a two-handed weapon (but a
     half-giant's, HALF_GIANT: with the rule for its hands); a Brute a one-handed melee weapon, a
     shield (but a half-giant's), and, choosing a weapon spec (SPEC), a missile weapon; a Stalker
-    armour that isn't light; a Grove Warden a metal weapon; a Lifebinder a weapon of a kind not
+    armour that isn't light; a Grove Warden a weapon (of a kind) its druid's SPHERE doesn't allow,
+    as a cleric's (the bow too); a Lifebinder a weapon of a kind not
     blunt; a Shinobi a shield, armour that isn't light, a weapon not of SHINOBI_KINDS; a Seeker a
     weapon (of a kind) its SPHERE (0 air to 3 water) doesn't allow, as a cleric's
     (restrict.sphere_allows), but the bow; a Battle Dancer a shield, and a weapon not of
@@ -787,7 +800,8 @@ def forbids(kid: int, typ: bytes, kind: Optional[int], half_giant: bool, spec: b
     if kid == STALKER:
         return bool(kinds & ARMOUR) and not flags & SHIELD and mat not in (LEATHER, NO_MATERIAL)
     if kid == GROVE_WARDEN:
-        return weapon and mat == METAL
+        from . import restrict
+        return weapon and kind is not None and not restrict.sphere_allows(sphere, typ, kind)
     if kid == LIFEBINDER:
         return kind is not None and kind not in BLUNT
     if kid == SEEKER:
