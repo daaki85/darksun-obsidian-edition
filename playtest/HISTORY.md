@@ -344,3 +344,14 @@ file name. The others, by the day they were found:
   map (`doorwatch.py`); psionic powers picked at creation, DROP and ADD from the roster.
 - **2026-11-12**: a kit chosen at creation (NO KIT clicked off first), a fire cleric/fighter Battle
   Dancer's starting gear.
+
+
+## The roster and the Loader's creation gear (2026-11-15)
+
+In-game checks of the kit rebalance (logs/2026-11-15-kit-rebalance-checks.md): a Myrmidon made in
+one session had "long sword, polearm" and a polearm in the backpack; ADDed from the roster in the
+next session it had the long sword spec alone and only the game's gear. The game writes the new
+character to the roster at DONE; the Loader's changes (weapon spec defaults, kit gear, fuller
+starting gear) come after, in memory, and reach the party that is played then, never the roster.
+The Myrmidon's polearm spec went into DSCLOG (MYRM_POLEARM, written at DONE) and was seen kept after
+a restart; the Loader's creation gear for the roster is still open.

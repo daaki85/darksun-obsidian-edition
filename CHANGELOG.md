@@ -90,9 +90,11 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   Fighter's Handbook*'s military weapons; in place of melee specs only, tried first): a new
   Myrmidon picks one weapon spec as any fighter (the bow too, not the polearm: `KINDS_ALLOWED`'s
   `MYRM_POLEARM`, `restrict.allowed_kinds`), and the Loader gives it the polearm as its second
-  (`weaponchoice.kinds_for`, `kits.POLEARM`), both going on to mastery and grand mastery as before;
+  (DSCLOG's `MYRM_POLEARM` at DONE, after the weapon window, so the roster's copy the game writes then
+  has it, and `weaponchoice.kinds_for`, `kits.POLEARM`), both going on to mastery and grand mastery as before;
   `LV_DUE` no longer asks for two. Its starting gear's plain polearm goes in the backpack. A
-  Myrmidon of an older save keeps its two. Tests: `test_myrmidon_polearm_second`,
+  Myrmidon of an older save keeps its two. Checked in the game (playtest/logs/2026-11-15-kit-rebalance-checks.md,
+  with every other kit changed on this branch). Tests: `test_myrmidon_polearm`, `test_myrmidon_polearm_second`,
   `test_myrmidon_two_weapons`, `KindsAllowedTests`.
 - **The Spellarcher, after The Complete Book of Elves** (the user's design): a spell slot makes
   **one** spell arrow (was 5 a preserver level); one stack of each spell, 24 at most, the arrow

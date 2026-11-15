@@ -569,6 +569,33 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   (240,106) is marked and must be clicked off before a kit (the first kit 240,114) takes a click;
   the kit is the sheet's +43h (1-3). The Battle Dancer's weapon window has only the long sword
   (72,46) and the bow in use. `python3 carried.py NAME` lists what the new character holds.
+- **Every kit at creation** (logs/2026-11-15-kit-rebalance-checks.md): the KITS page's rows are
+  NO KIT (240,106), then the class's three kits at y 114, 122, 130 (fighter: Myrmidon, Sentinel,
+  Ravager; gladiator: Champion, Twin-blade, Brute; ranger: Stalker, Justifier, Seeker; thief:
+  Swashbuckler, Assassin, Shinobi; preserver: Scholar, Battle Mage, Arcanist; cleric: Elementalist,
+  Healer, Crusader, the Healer offered with WATER marked; druid: Warden, Lifebinder, Wanderer); a
+  multiclass race's own kit is the only row (a mul druid/fighter: WILD FURY; a dwarf fighter/thief:
+  G-FIGHTER, WAYFINDER). The class list's numbers on the creation sheet (+21h) are the list's (1
+  cleric ... 7 ranger, 8 thief), not the game's; DONE turns them into the game's (a fire ranger 15).
+  `python3 sheetinfo.py` lists each member's classes, kits and weapon specs by name; `known.py M`
+  its spells; `canuse.py M TYPE...` the kit rules for item types. **The race**: the big portrait
+  (40,60), read the sheet's +18h after each click (two clicks a race; 1 human ... 4 half-elf, 7
+  mul). **A priest's discipline**: a cleric's or druid's panel shows its spheres; **VIEW
+  PSIONICS** (240,138, in the KITS button's place on the kit page) shows the disciplines (P-KINESIS
+  250,106, P-METAB 114, TELEPATHY 122; click the marked one off first), VIEW SPHERES back.
+  **CHOOSE A SPELL at creation**: icons 6 a row, about 18 apart from (122,71), rows 22 apart (a
+  click at 99,72 lands beside them and does nothing); the list closes up after each pick; LEVEL 1
+  turns LEVEL 2 for a 3rd-level preserver's 2nd-level picks. **P-METAB's 14 powers** are powers 6-19
+  in order (Animal Affinity first): Cell Adjustment the 8th, second row third (157,79).
+  **DROP and ADD**: on VIEW CHARACTER a right-click on a slot opens its menu just right of it (the
+  second slot's, 120,52: NEW/EDIT 165,57, ADD/DROP 165,66; the fourth's, 120,110: 166,117 and
+  166,125); DROP asks YES (the first row); the last member can't be dropped ("LAST ONE: CAN'T
+  DROP", OKAY). ADD lists the roster, the newest first (scroll with the arrow at 219,146; a name,
+  then ADD 252,46). A dropped character's record stays in memory (`sheetinfo.py` still lists it).
+  **The roster keeps the character as the game wrote it at DONE**: what the Loader gives after
+  (`kinds_for`'s defaults, kit gear, fuller starting gear) is in memory only, and a character ADDed
+  in a later session has the game's own gear (the Myrmidon's polearm spec is DSCLOG's, written at
+  DONE: MYRM_POLEARM).
 - **Psionic powers at creation** (logs/2026-11-11-psionic-picks.md): after DONE (and a warrior's
   weapon window) PICK A PSIONIC POWER opens: icons from (123,62), 17 apart, five to a row (the
   list closes up after each pick: clicking (123,62) again takes the next); the discipline button
@@ -689,12 +716,20 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
 6. **Spells**: USE (24,17), the level page (LEVEL at 196,171), the icon, then the target; check
    the dice log for the spell's line before going on. The detail: [Casting spells for a
    test](#casting-spells-for-a-test).
-7. **Shots**: unreliable. Enter is a left click on the enemy: with Move left the member walks up
+7. **Shots**: a bow is used only against a foe not beside the archer: Tab + Return walks it up and
+   strikes (with its melee weapon, or bare-handed with none), even from afar. To shoot: on its
+   turn `pointer.py attack`, then a click on the foe's figure 10 pixels above its feet (`foepos.py`
+   lists each living foe's place on the screen), the archer not next to that foe (2026-11-15: a
+   Spellarcher beside a Slig shot the Screamer Beetle two squares off). Before that it was thought
+   unreliable: Enter is a left click on the enemy: with Move left the member walks up
    and fights hand to hand; with Move 0 the END menu opens; in Attack mode a far target showed the
    red "can't" pointer and the turn passed. A shot test needs a clear line, a target in range, and
    a readied missile weapon with ammunition in the missile slot. [A shot with a weapon put in
    memory](#weapons-and-rules-in-a-fight).
-8. **Passing one member's turn**: `memberpos.py N` gives its figure on the screen; a click there
+8. **Playing the party's turns to a member's**: `PARTY="A|B|C|D" sh untilturn.sh NAME` (Tab +
+   Return for each named member's turn, messages clicked away, the foes' turns waited out) stops at
+   NAME's turn; `stepfight.sh` from the arena gate clicks south until the fight is on.
+   **Passing one member's turn**: `memberpos.py N` gives its figure on the screen; a click there
    opens its END menu, and E in that menu ends the turn. E with no menu up opens the Effects screen,
    and closing that (Escape) left the view at the map's corner (camera 0,0): drag it back with
    `scroll.py` (about 216 x 72 map units for each -216 -96 drag). A member off the screen
@@ -825,6 +860,15 @@ prints the pages the LEVEL button will offer (`0 Wizard: LEVEL pages [1, 3]`); `
 foes up. Teach `spellsetup.py` the spell number, not the SPIN chunk (the spell + 1); spells it
 teaches outside the caster's spheres it names ("cast at level 0"). Then:
 
+- **A power out of a fight** (logs/2026-11-15-kit-rebalance-checks.md): U, the user's portrait,
+  the kind button (150,171) CLERIC/MAGE -> PSIONIC (the P-METAB powers then: Animal Affinity 176,59,
+  Energy Containment 194, Life Draining 212, Cell Adjustment 230), the icon, the target's portrait.
+  A failed power check costs 2 PSP and logs "psionic power check fails"; try again.
+- **Spell arrows** (a Spellarcher): the USE screen on it shows, under its spells, a button for each
+  touch spell it knows (Burning red, Shocking blue: 157,147 and 176,147 with those two); a slow
+  press makes one arrow ("makes one of the shocking arrows in the pack (1 of 24 now)") and **closes
+  the screen** (an Escape after it opens EXIT: SAVE GAME?). With wooden arrows in the quiver the
+  new stack goes to the pack: swap them in the inventory (quiver 66,26, a backpack cell).
 - **The basics**: open the USE button (24,17), page to the spell (LEVEL at 196,171), click its icon,
   then the target. A plain click on the icon closes the screen and gives an aiming pointer with the
   spell's range drawn as a ring of beads; a click on a figure inside casts. A spell taught in memory

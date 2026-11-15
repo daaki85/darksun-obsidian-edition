@@ -1724,7 +1724,9 @@ How each is done:
   Justifier, the ranger's bow path (`.rbow`) jumping past it; `specialize.skill`.
 - **Weapon specs.** Myrmidon (two, both to grand mastery: the first its own, any but the polearm,
   `KINDS_ALLOWED`'s `MYRM_POLEARM`, `restrict.allowed_kinds`; the second the polearm, given by the
-  Loader, `weaponchoice.kinds_for`, `kits.POLEARM`; up to 2.17 both chosen, melee only), Brute (no missile spec), Battle
+  Loader, `weaponchoice.kinds_for`, `kits.POLEARM`, and by DSCLOG's `MYRM_POLEARM` at DONE, after
+  the weapon window: the game writes the roster's copy then, before the Loader's changes; up to 2.17
+  both chosen, melee only), Brute (no missile spec), Battle
   Mage (one, of `KIT_BM_KINDS`: expertise), Spellarcher (the bow only), Poisoner (the dagger or
   short sword only: `KIT_POISON_KINDS`), Crusader and Mind Warrior (one, of its class's melee kinds:
   `KIT_MELEE_KINDS`; a thri-kreen Mind Warrior the chatkcha too, `KIT_KREEN_KINDS`, the race byte

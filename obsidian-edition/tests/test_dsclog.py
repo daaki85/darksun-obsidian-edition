@@ -6662,6 +6662,38 @@ class KitTests(unittest.TestCase):
         self.assertEqual(hit(chill, weapon_type=64), (0, False))  # (from a sling)
         self.assertEqual(hit(chill, archer=False), (0, False))  # (not a Spellarcher's shot)
 
+    def test_myrmidon_polearm(self):
+        """MYRM_POLEARM (CR_WEAPONS, at DONE after the weapon window): a new Myrmidon's second weapon
+        spec slot the polearm (kits.POLEARM + 1) when empty, in the sheet the game keeps, so the
+        roster's copy has it; its first, or a second already there, kept; another kit's, or the kits
+        off, untouched."""
+        import re
+        from dsloader import kits
+        at = re.search(rb"\x60\x06\xc4\x1e\x61\x16\x6b\xc6\x47\x01\xc3\xe8..\x0d", self.image, re.S).start()
+        self.mu.mem_write(self.DS * 16 + 0x1661, struct.pack("<HH", 0, self.SHEET))
+        hdr = TSR * 16 + self.image.find(HDR_SIG)
+        self.mu.mem_write(TSR * 16 + 0xFFF0, bytes((0xF4,)))
+        for rules, kit, first, second, want in ((game.RULE_KITS, 1, 1, 0, [1, kits.POLEARM + 1]),
+                                                (game.RULE_KITS, 1, 0, 0, [0, kits.POLEARM + 1]),
+                                                (game.RULE_KITS, 1, 1, 6, [1, 6]),
+                                                (game.RULE_KITS, 2, 1, 0, [1, 0]),
+                                                (0, 1, 1, 0, [1, 0])):
+            with self.subTest(rules=rules, kit=kit, first=first, second=second):
+                self.mu.mem_write(hdr + 270, struct.pack("<H", rules >> 16))
+                sheet = bytearray(game.SHEET_SIZE)
+                sheet[0x21], sheet[0x24], sheet[0x43] = 9, 3, kit
+                sheet[0x14], sheet[0x15] = first, second  # (the byte layout, as an old sheet's)
+                self.mu.mem_write(self.SHEET * 16 + 2 * 0x47, bytes(sheet))
+                self.mu.mem_write(SS * 16 + 0x7FC, struct.pack("<H", 0xFFF0))
+                for name, value in dict(cs=TSR, ds=self.DS, ss=SS, esp=0x7FC, esi=2, ebx=0x2222, es=0x6666).items():
+                    self.mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+                self.mu.emu_start(TSR * 16 + at, TSR * 16 + 0xFFF0)
+                got = bytes(self.mu.mem_read(self.SHEET * 16 + 2 * 0x47, game.SHEET_SIZE))
+                self.assertEqual(list(game.spec_kinds(got))[:2], want)
+                self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_SI, r.UC_X86_REG_BX, r.UC_X86_REG_ES)],
+                                 [2, 0x2222, 0x6666])
+        self.mu.mem_write(hdr + 270, struct.pack("<H", 0))
+
     def test_scout_and_path_finder(self):
         """A Military Scout's 2 more initiative and 1 to hit with a bow or sling under the open sky
         (its KIT_OUTDOORS bit), and the Wayfinder's Path-finder: 1 more initiative for each party

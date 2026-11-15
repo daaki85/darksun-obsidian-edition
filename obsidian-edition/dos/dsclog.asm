@@ -22078,11 +22078,35 @@ cr_weapons:
         mov byte [cs:lv_creating], 1
         call lv_check
         mov byte [cs:lv_creating], 0
+        call myrm_polearm               ; (a Myrmidon's second, the polearm: in the sheet the game keeps)
         mov byte [cs:gear_due], 1       ; (the Loader's gear for it, before VIEW CHARACTER shows it: GEAR_WAIT)
 .done:  call psi_ask                    ; (its psionic powers: PSI_GRANT's picks)
         mov byte [cs:ed_on], 0
         jmp ovr_back             ; (the way back as the overlay manager left it)
 .iret:  iret
+
+; MYRM_POLEARM: for new member SI, a Myrmidon (its kit on the sheet, LV_SHEETS), the polearm put in
+; its second weapon spec slot (SPEC_SET slot 1, MYRM_POLEARM + 1) when that is empty: here at DONE,
+; so the roster's copy the game writes then has it (the Loader's weaponchoice.kinds_for, after,
+; came too late for it: a Myrmidon added again from the roster had lost it). All registers kept.
+myrm_polearm:
+        pusha
+        push es
+        les bx, [LV_SHEETS]
+        imul ax, si, 0x47
+        add bx, ax
+        call kit_is_b
+        db KIT_MYRMIDON
+        jne .out
+        mov si, 1
+        call spec_get
+        or ax, ax
+        jnz .out
+        mov al, MYRM_POLEARM + 1
+        call spec_set
+.out:   pop es
+        popa
+        ret
 
 ; ED_ROLLED: CF set unless an EDIT's own roll is still shown (ED_AGE): it is until the creature
 ; being made's six scores aren't those it had (ED_SCORES: the die rolled), ED_AGE cleared then. DS
