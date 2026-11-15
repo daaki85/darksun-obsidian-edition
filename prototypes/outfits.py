@@ -416,7 +416,7 @@ class Game:
                 starts.append((near[0][1], 0.0))
         for comp in comps(band):  # (a wristband with no hand found by it: the hand is past it from the shoulder)
             bx, by = sorted(comp)[len(comp) // 2]
-            if not any(abs(bx - x) <= 4 and abs(by - y) <= 4 for (x, y), _ in starts):
+            if not any(abs(bx - x) <= 2 and abs(by - y) <= 2 for (x, y), _ in starts):
                 ax, ay = shoulder(bx)
                 d = math.hypot(bx - ax, by - ay) or 1.0
                 starts.append(((bx + (bx - ax) * 2 / d, by + (by - ay) * 2 / d), 0.0))
@@ -431,6 +431,9 @@ class Game:
                         continue
                     t = (x - hx) * ux + (y - hy) * uy  # (along the arm, from the hand)
                     off = abs((x - hx) * uy - (y - hy) * ux)
+                    low = y > p.waist + 1  # (a hand hanging by the thigh: the thigh is not arm)
+                    if low and (c not in SKINC or off > 1 or math.hypot(x - hx, y - hy) > 2.5):
+                        continue
                     if -3 <= t <= length and off <= wide and (t >= 0 or math.hypot(x - hx, y - hy) <= 3):
                         d = d0 + max(0.0, t)
                         if d < out.get((x, y), 99):
@@ -472,12 +475,12 @@ class Game:
                     rows[y][x] = shade(fig.cloak_shade[c], o.cloak or o.torso)
                     what[q] = "cloak"
                     continue
-                if q in bow:
+                if q in bow or (fig.maker and y < sy and c in (145, 148)):  # (the bow; a half-elf's ear tips)
                     what[q] = "head"
                     continue
                 if q in keep:
                     what[q] = "head"
-                    if hair and y >= sy - 1 and c not in SKINC and c not in hair and c != 254 and q not in p.hair:
+                    if hair and y >= sy and c not in SKINC and c not in hair and c != 254 and q not in p.hair:
                         rows[y][x] = tone(c, o.torso)  # (a collar)
                     continue
                 if fig.sure_bands and q in wrists:
@@ -506,7 +509,7 @@ class Game:
                     what[q] = "torso"
                     if c == 254:
                         if o.cover and not o.harness and not edge(own, x, y):
-                            rows[y][x] = o.torso[0]  # (black inside the garment: its darkest shade)
+                            rows[y][x] = o.torso[1 if o.closed else 0]  # (black inside the garment: its darkest shade)
                     elif not skin or o.cover:
                         rows[y][x] = tone(c, o.torso)
                 else:
@@ -518,6 +521,12 @@ class Game:
                             rows[y][x] = o.legs[0]
                     elif o.legs and (not skin or o.cover):
                         rows[y][x] = tone(c, o.legs)
+        if fig.cloak:  # (what her own cloak shuts in, seen from behind: its dark shade)
+            shut = [q for q, k in what.items() if k in ("torso", "leg") and p.facing == sp.BACK and
+                    sum(what.get((q[0] + a, q[1] + b)) == "cloak" for a in (-1, 0, 1) for b in (-1, 0, 1)) >= 5]
+            for x, y in shut:
+                what[(x, y)] = "cloak"
+                rows[y][x] = (o.cloak or o.torso)[1]
         if p.facing != sp.SIDE:
             # (skin taken for the chest or a leg, but apart from them: an arm the hand wasn't found on)
             cx, core = (p.head.left + p.head.right) / 2, 0.3 * (p.shoulders[2] - p.shoulders[1])
@@ -551,9 +560,11 @@ class Game:
                 box = y < neck and h.left - 1 <= x <= h.right + 1
                 if (x, y) in p.hair:
                     cells.add((x, y))
-                elif box and (p.facing == sp.BACK or y <= brow or (p.facing == sp.SIDE and x <= mid)
-                              or (c not in SKINC and y <= brow + 1)):
+                elif box and (p.facing == sp.BACK or y <= brow or (p.facing == sp.SIDE and x <= mid and c not in SKINC)
+                              or (c not in SKINC and y <= brow + 1 and p.facing != sp.SIDE)):
                     cells.add((x, y))
+                elif fig.maker and y < neck and c in (145, 148) and abs(x - mid) > 2.5 and p.facing != sp.SIDE:
+                    cells.add((x, y))  # (a half-elf's ear tips, under the hood)
         grow = list(cells)  # (the hair spriteparts didn't take for hair: hair-coloured, touching the hood)
         while grow:
             x, y = grow.pop()
@@ -569,10 +580,15 @@ class Game:
             if y < neck:
                 for a, b in ((-1, 0), (1, 0), (0, -1)):
                     n = (x + a, y + b)
+                    if p.facing == sp.SIDE and a == 1 and y > brow:
+                        continue  # (nothing before the face)
                     if not (0 <= n[1] < len(own) and 0 <= n[0] < len(own[0])) or own[n[1]][n[0]] is None:
                         rim.add(n)
         if p.facing == sp.FRONT:
-            rim |= {(x, y) for y in range(brow, neck) for x in (h.left - 1, h.right + 1)}  # (beside the face)
+            for y in range(brow, neck):  # (beside the face, against the head as it is drawn in that row)
+                xs = [x for x in range(h.left - 1, h.right + 2) if 0 <= y < len(own) and 0 <= x < len(own[0]) and own[y][x] is not None]
+                if xs:
+                    rim |= {(min(xs) - 1, y), (max(xs) + 1, y)}
             sa, sb = p.shoulders[1], p.shoulders[2]
             cells |= {(x, y) for y in (neck, neck + 1) for x in range(sa + 1, sb) if abs(x - mid) >= 2
                       and 0 <= y < len(own) and 0 <= x < len(own[0]) and own[y][x] is not None
@@ -651,7 +667,7 @@ class Game:
                 inside = 0 <= y < h and 0 <= x < w
                 if inside and rows[y][x] is not None:
                     part = what.get((x, y))
-                    if part in ("head", "hand", "boot", "cloak"):
+                    if part in ("head", "boot", "cloak") or (part == "hand" and p.facing != sp.BACK):
                         continue
                     if p.facing == sp.BACK:
                         over = y >= neck - 1
