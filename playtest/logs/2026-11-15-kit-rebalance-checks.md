@@ -185,10 +185,32 @@ In the fight:
 - Checked on the new build (buildcheck: myrm_polearm, cr_weapons the same): a Myrmidon made (the
   bow picked) had "bow, polearm"; DOSBox restarted, the character ADDed from the roster: **"bow,
   polearm"** kept.
-- Still open (older than this branch, every kit and class): the Loader's creation gear (a
+- Still open then (older than this branch, every kit and class): the Loader's creation gear (a
   Myrmidon's polearm item, the bow and arrows of a bow spec, fuller starting gear, a Spellarcher's
   armour left behind...) isn't in the roster's copy; a character added again later has the game's
-  own gear.
+  own gear. Fixed in part 7.
+
+## Part 7: the Loader's creation gear in the roster's copy
+
+- Timed with `gearpoll.py` from DONE: GEAR_DUE set, the weapon window (lv_creating), the dice log's
+  gear lines and CHARSAVE.GFF's write. Three causes found, one after another:
+  1. `GEAR_WAIT` (VIEW CHARACTER's) cleared GEAR_DUE whenever STATS weren't fresh, and on the
+     creation screen they never are: `GEAR_HOLD` (new, before the roster write) then waited for
+     nothing. Both now test the Loader's heartbeat (+1865, the stats thread's, every 0.25 s; age 1-5
+     ticks seen), and GEAR_WAIT leaves GEAR_DUE set on its timeout.
+  2. The Loader cleared GEAR_DUE in a pass while the weapon window was up, giving nothing (the gear
+     waits for the specs). Now it leaves it set until the window is gone.
+  3. A plain fighter (Holdfast, slot 1) still got nothing: its creature reads **Okay**, not New, all
+     through DONE, and the Loader's gear steps take only New ones (an earlier Swashbuckler in slot 3
+     got its gear only because that slot's record was left New). DSCLOG now names the character
+     (`GEAR_WHO`, +1867, its sheet index) and `game.being_new` counts it.
+- Gripsure (human fighter, slot 1, short sword picked): gear_due at 10.41 s, "starts with a plain
+  bone short sword" and "more gear: Sling" at 10.51 s, CHARSAVE.GFF written at 30.09 s (after the
+  four powers). DOSBox restarted, ADDed: Bone Short Sword in hand, Leather Sling, the leather
+  armour and shield. **PASS.**
+- Bowtest (human fighter, slot 2, bow picked), Gripsure in slot 1: gear at 10.47 s, written at
+  20.79 s; Gripsure (Okay, ADDed) untouched. Restarted, ADDed: Wooden Bow, Wooden Arrows, Bone
+  Short Sword, armour and shield. **PASS.**
 
 ## Summary
 
@@ -206,6 +228,7 @@ In the fight:
 | Sentinel | AC +2 with a shield; no initiative; -1 without a shield | PASS |
 | Wild Fury | CON - 4 check; -3 / +3 / 1 more attack / AC 3 worse | PASS |
 | Spellarcher | bow only; armour left behind; arrow made; save against its Shocking Grasp arrow | PASS |
+| (any) | the Loader's creation gear in the roster's copy, ADDed after a restart (part 7) | PASS |
 
 Not played: the Justifier (its bow's expertise), the Crusader and Mind Warrior (extra attacks at
 7th level), a non-fire Seeker's bow on the weapon window, the Assassin's and Shinobi's light armour

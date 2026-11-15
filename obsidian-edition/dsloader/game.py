@@ -1049,6 +1049,17 @@ STATUS_NEW = 0  # not yet played (the game makes it Okay when the game starts)
 STATUS_ABLE = (STATUS_NEW, STATUS_OKAY)  # counted as Okay (the patched game's NEW_AS_OKAY)
 
 
+def being_new(gd, rec: bytes) -> bool:
+    """A party member's creature record a New character's: not yet played, or the one the creation
+    screen's DONE just made (GD.making, its sheet index, from DSCLOG's GEAR_WHO), which the game
+    keeps Okay until after it has written the roster's copy (the Loader's creation gear, given only
+    to New characters, came too late for that copy up to 2.17)."""
+    if rec[CREATURE_STATUS] == STATUS_NEW:
+        return True
+    making = getattr(gd, "making", None)
+    return making is not None and struct.unpack_from("<H", rec, CREATURE_SHEET_INDEX)[0] == making
+
+
 # The spell's damage kinds (its flags word): the saving throw doubles the d20 against fire,
 # cold and electricity, and no other kind
 DOUBLED_KINDS = {0x02: "fire", 0x04: "cold", 0x80: "electricity"}

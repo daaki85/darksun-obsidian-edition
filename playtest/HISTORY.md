@@ -354,4 +354,12 @@ next session it had the long sword spec alone and only the game's gear. The game
 character to the roster at DONE; the Loader's changes (weapon spec defaults, kit gear, fuller
 starting gear) come after, in memory, and reach the party that is played then, never the roster.
 The Myrmidon's polearm spec went into DSCLOG (MYRM_POLEARM, written at DONE) and was seen kept after
-a restart; the Loader's creation gear for the roster is still open.
+a restart; the Loader's creation gear for the roster took three fixes (log part 7): VIEW
+CHARACTER's GEAR_WAIT cleared the gear flag when STATS weren't fresh (never, on the creation
+screen); the Loader cleared it in a pass made while the weapon window was up, giving nothing; and
+the character being made reads Okay, not New, until after the roster write, so the Loader's gear
+steps skipped it. With DSCLOG naming the character (GEAR_WHO) and holding the roster write
+(GEAR_HOLD) for the Loader's heartbeat-checked pass, two fighters ADDed after a restart had their
+gear. Along the way: a worker restart killed Xvfb and DOSBox (restart both); clicks at the main
+menu did nothing until the mouse was captured (the guide's note); a kit row ignored its click
+because NO KIT was still marked; BackSpace in the name field does nothing (Delete does).

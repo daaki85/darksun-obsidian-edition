@@ -462,6 +462,8 @@ bad_luck   db 0                 ; +1862 a Swashbuckler's bad luck on its last th
 bad_luck_who dw 0xFFFF          ; +1863 ... and whose (its creature): the dice log's (kits.TSR_BAD_LUCK)
 loader_beat dw 0                ; +1865 the BIOS timer at the Loader's last pass (dicelog's _beat): GEAR_HOLD's
                                 ;      test of the Loader there (STATS aren't kept on the creation screen)
+gear_who   db 0xFF              ; +1867 the sheet index of the character DONE just made (with GEAR_DUE):
+                                ;      the game keeps it Okay, not New, till after the roster's write
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -22076,7 +22078,9 @@ cr_weapons:
         jc .new
         call ed_keep            ; (EDIT, the same classes and kit: its weapon specs, none asked)
         jmp .done
-.new:   call age_put                    ; (no specs, and the creation screen's roll and age: a new
+.new:   mov ax, si
+        mov [cs:gear_who], al           ; (which, for the Loader's gear: game.being_new)
+        call age_put                    ; (no specs, and the creation screen's roll and age: a new
         mov ax, ds                      ;   member, whatever the slot's last character left)
         add ax, PICK_STUB
         mov word [cs:lv_psi], DK_PSI

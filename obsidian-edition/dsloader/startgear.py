@@ -89,7 +89,7 @@ def fill(gd) -> List[str]:
     out: List[str] = []
     for member in range(game.PARTY_SIZE):
         rec = gd.creature(member)
-        if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME] or rec[game.CREATURE_STATUS] != game.STATUS_NEW:
+        if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME] or not game.being_new(gd, rec):
             continue
         out += fill_member(gd, member)
     return out

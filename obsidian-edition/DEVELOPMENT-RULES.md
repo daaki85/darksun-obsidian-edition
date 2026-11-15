@@ -2089,7 +2089,18 @@ the die, RECALL twice, the scores, hit points, PSP and age put back each time.
 switch, a Python-only one as `pickpockets` is: `launch.SWITCH_DEFAULTS`,
 `DiceLog.starting_gear`), for each party member whose status is New and who
 has items (the game gives a character its gear when DONE is clicked; before
-that it has none). What a character "can use" (`can_use`) is the game's class
+that it has none). A character DONE has just made reads Okay to the game until
+after it has written the roster's copy, so DSCLOG names it (`GEAR_WHO`, header
++1867, its sheet index, with `GEAR_DUE`) and `game.being_new` counts it New for
+`finish_new`, `class_gear`, `kit_gear` and `fill`. **The roster's copy**: the
+game writes it at DONE's end, after the weapon window and the psionic powers;
+DSCLOG's `GEAR_HOLD` holds that write until the Loader has cleared `GEAR_DUE`
+(at most about ten seconds, and only with the Loader there: its heartbeat,
+`LOADER_BEAT` at +1865, which the dice log's stats thread writes every quarter
+second), and the Loader leaves `GEAR_DUE` set while the weapon window is up
+(the gear waits for the specs), as `GEAR_WAIT` (VIEW CHARACTER's) does on its
+own one-second timeout. So a character ADDed in a later session has the
+Loader's gear. What a character "can use" (`can_use`) is the game's class
 lists (or `restrict.kit_allows`) and, with the class restrictions on,
 `restrict.usable`; never what `restrict.kit_forbids`. In order:
 

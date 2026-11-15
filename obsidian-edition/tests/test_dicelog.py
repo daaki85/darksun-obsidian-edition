@@ -1979,6 +1979,29 @@ class NewLinesTests(unittest.TestCase):
             log._gear_due()  # (the window gone: nothing more changed, the earlier change still told)
         self.assertEqual((m[HDR + dicelog.TSR_GEAR_DUE], m[HDR + dicelog.TSR_GEAR_GIVEN]), (0, 1))
 
+    def test_being_new(self):
+        """game.being_new: status New, or the sheet index DSCLOG's GEAR_WHO names (the character DONE
+        just made, still Okay to the game); _gear_due sets it for its pass only."""
+        from types import SimpleNamespace
+        from unittest import mock
+        rec = bytearray(game.CREATURE_SIZE)
+        rec[game.CREATURE_STATUS] = game.STATUS_OKAY
+        struct.pack_into("<H", rec, game.CREATURE_SHEET_INDEX, 2)
+        self.assertFalse(game.being_new(SimpleNamespace(), bytes(rec)))
+        self.assertFalse(game.being_new(SimpleNamespace(making=1), bytes(rec)))
+        self.assertTrue(game.being_new(SimpleNamespace(making=2), bytes(rec)))
+        rec[game.CREATURE_STATUS] = game.STATUS_NEW
+        self.assertTrue(game.being_new(SimpleNamespace(making=None), bytes(rec)))
+        log = make_game()
+        m = log.guest.mem
+        m[HDR + dicelog.TSR_GEAR_DUE], m[HDR + dicelog.TSR_GEAR_WHO] = 1, 2
+        seen = []
+        with mock.patch.object(dicelog.names, "update", return_value=True), \
+                mock.patch.object(log.game, "party_items", return_value=[]), \
+                mock.patch.object(log, "_new_gear", side_effect=lambda out: seen.append(log.game.making) or True):
+            log._gear_due()
+        self.assertEqual((seen, log.game.making), ([2], None))
+
     def test_needle_avoided(self):
         """Pehtucl's chest's needle sprung (its narration) and a find/remove traps success within
         NEEDLE_WINDOW, either first: its flag set (DISARMED), for the chest's script to tell after

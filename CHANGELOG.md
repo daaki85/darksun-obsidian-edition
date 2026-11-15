@@ -179,6 +179,21 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   `test_avenger_spells`, `AvengerHealTests.test_healer_and_lifebinder`.
 
 **Fixed**
+- **A new character ADDed in a later session lost the Loader's creation gear** (found in the kit
+  checks: a Myrmidon's polearm, a Swashbuckler's armour, a fighter's chosen weapon in place of the
+  bone long sword). The game writes the character to the roster (CHARSAVE.GFF) at the end of DONE,
+  after the psionic powers; the Loader's gear came after it, in memory only, for three reasons:
+  the character reads Okay, not New, until after that write (`finish_new`, `class_gear`, `kit_gear`
+  and `startgear.fill` give only to New ones); the Loader cleared `GEAR_DUE` while DSCLOG's weapon
+  window was up, giving nothing; and `GEAR_WAIT` (VIEW CHARACTER's) cleared it when STATS weren't
+  fresh, which on the creation screen they never are. Now DSCLOG names the character (`GEAR_WHO`,
+  +1867; `game.being_new`), the Loader leaves `GEAR_DUE` set while the window is up, `GEAR_WAIT`
+  and the new `GEAR_HOLD` (at the end of `CR_WEAPONS`, before the roster write) test for the Loader
+  by its heartbeat (`LOADER_BEAT`, +1865, from the dice log's stats thread), and `GEAR_HOLD` waits
+  for its gear (up to about ten seconds). Checked in the game
+  (playtest/logs/2026-11-15-kit-rebalance-checks.md part 7): two fighters, slots 1 and 2, given a
+  short sword and sling, and a bow, arrows and short sword, ADDed after a restart with them. Tests:
+  `test_gear_hold`, `test_gear_due`, `test_being_new`. DSCLOG 70,640 bytes.
 - **An archer's turn lost with its last arrow** (the game's bug, the user's report): the weapon
   attack routine (5883Ah) cuts a shot's attacks ([BP-8]) to the arrows left (5899Ah; "Out of ammo"
   with none) and, once that many are made, writes 63h to the attacker's +181h (58C45h), which ends

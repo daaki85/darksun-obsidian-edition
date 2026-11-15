@@ -239,7 +239,7 @@ def finish_new(gd) -> List[str]:
     items = game.far_pointer(gd.guest, gd.ds, game.ITEMS_PTR)
     for member in range(game.PARTY_SIZE):
         rec = gd.creature(member)
-        if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME] or rec[game.CREATURE_STATUS] != game.STATUS_NEW:
+        if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME] or not game.being_new(gd, rec):
             continue
         index = struct.unpack_from("<H", rec, game.CREATURE_SHEET_INDEX)[0]
         sheet = gd.guest.read(sheets + index * game.SHEET_SIZE, game.SHEET_SIZE)
@@ -297,7 +297,7 @@ def class_gear(gd) -> List[str]:
     read = lambda t: gd.guest.read(types + t * game.ITEM_TYPE_SIZE, game.ITEM_TYPE_SIZE)
     for member in range(game.PARTY_SIZE):
         rec = gd.creature(member)
-        if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME] or rec[game.CREATURE_STATUS] != game.STATUS_NEW:
+        if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME] or not game.being_new(gd, rec):
             continue
         index = struct.unpack_from("<H", rec, game.CREATURE_SHEET_INDEX)[0]
         sheet = gd.guest.read(sheets + index * game.SHEET_SIZE, game.SHEET_SIZE)
@@ -356,7 +356,7 @@ def kit_gear(gd) -> List[str]:
     right, left = game.WEAPON_HANDS
     for member in range(game.PARTY_SIZE):
         rec = gd.creature(member)
-        if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME] or rec[game.CREATURE_STATUS] != game.STATUS_NEW:
+        if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME] or not game.being_new(gd, rec):
             continue
         index = struct.unpack_from("<H", rec, game.CREATURE_SHEET_INDEX)[0]
         sheet = gd.guest.read(sheets + index * game.SHEET_SIZE, game.SHEET_SIZE)

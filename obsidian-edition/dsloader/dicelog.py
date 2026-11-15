@@ -62,7 +62,8 @@ RING_MOST = 1024  # (DSCLOG's ring has 63 entries: a header giving far more read
 WRITING = 0xFFFF  # an entry's seq while DSCLOG writes it (a real seq too, once in 65,536: poll)
 TSR_RING_SEG = 268  # the ring's segment (past the image, so it takes none of DSCLOG's 64 KB)
 TSR_GEAR_DUE, TSR_GEAR_GIVEN = 1830, 1831  # (DSCLOG's GEAR_WAIT: a new member's gear due; whose was given)
-TSR_LOADER_BEAT = 1865  # (the BIOS timer at the Loader's last pass: DSCLOG's GEAR_HOLD, _beat)
+TSR_LOADER_BEAT = 1865
+TSR_GEAR_WHO = 1867  # (the sheet index of the character DONE just made, FFh none: DSCLOG's GEAR_WHO)  # (the BIOS timer at the Loader's last pass: DSCLOG's GEAR_HOLD, _beat)
 TSR_CREATING = 361  # 1 while DSCLOG's weapon window asks a character being made for its weapon specs (CR_WEAPONS)
 TSR_READ_LANG = 362  # each party member's chance to read languages, kept with STATS (DSCLOG's SHINOBI_READ)
 TSR_LEARN_READ = 366  # a Shinobi's try at a scroll: the d100 to read it and the chance (intlearn.py)
@@ -1678,9 +1679,12 @@ class DiceLog:
                 mine.setdefault(i.member, set()).add((i.index, i.record))
             return {m: frozenset(v) for m, v in mine.items()}
         before = items()
+        who = self.guest.read(self.tsr_hdr + TSR_GEAR_WHO, 1)[0]
+        self.game.making = None if who == 0xFF else who  # (still Okay to the game: game.being_new)
         try:
             still = self._new_gear(out)
         finally:
+            self.game.making = None
             itemgate.release(self.game)
         if not still:
             return out

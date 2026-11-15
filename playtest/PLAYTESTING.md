@@ -569,6 +569,15 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   (240,106) is marked and must be clicked off before a kit (the first kit 240,114) takes a click;
   the kit is the sheet's +43h (1-3). The Battle Dancer's weapon window has only the long sword
   (72,46) and the bow in use. `python3 carried.py NAME` lists what the new character holds.
+- **A name at creation** (2026-11-15): click the name (40,128), press **Delete** 16 times
+  (BackSpace does nothing; typing goes in front of the old name), type it, Return.
+- **The Loader's gear and the roster** (logs/2026-11-15-kit-rebalance-checks.md part 7): start
+  `timeout 115 python3 gearpoll.py > $WORK/gearpoll.log &` just before DONE; the dice log's
+  "starts with ..." lines must come before `charsave_written=True` (the roster write, after the
+  four psionic powers). To see the roster's copy: restart (start.sh, title, CREATE CHARACTERS),
+  right-click an empty slot, ADD (112,66), click the name in the list (rows y 45 + 11n; the last
+  made is not always last: read the shot), ADD (252,46), EXIT (252,66), then list its items with
+  `gd.party_items()` (live.py).
 - **Every kit at creation** (logs/2026-11-15-kit-rebalance-checks.md): the KITS page's rows are
   NO KIT (240,106), then the class's three kits at y 114, 122, 130 (fighter: Myrmidon, Sentinel,
   Ravager; gladiator: Champion, Twin-blade, Brute; ranger: Stalker, Justifier, Seeker; thief:
