@@ -41,8 +41,9 @@ def garments(o: O.Outfit) -> List[frozenset]:
     return [frozenset(r) for r in (o.cloak, o.torso, o.sleeves, o.legs, o.boots) if r]
 
 
-def frame_faults(rows: O.Rows, own: O.Rows, o: O.Outfit, p) -> Tuple[Dict[str, int], int, float]:
-    """A dressed frame's faults, its cloak's size and how much of the figure's skin still shows."""
+def frame_faults(rows: O.Rows, own: O.Rows, o: O.Outfit, p, where: list = None) -> Tuple[Dict[str, int], int, float]:
+    """A dressed frame's faults, its cloak's size and how much of the figure's skin still shows.
+    WHERE: a list to put each faulty pixel in, (fault, x, y) in the figure's own frame."""
     P = O.PAD
     h, w = len(rows), len(rows[0])
     sets = garments(o)
@@ -64,18 +65,26 @@ def frame_faults(rows: O.Rows, own: O.Rows, o: O.Outfit, p) -> Tuple[Dict[str, i
                         and p.head.left <= x - P <= p.head.right and (x - P, y - P) not in p.hair and not (
                             o.hood and (p.facing == O.sp.BACK or (p.facing == O.sp.SIDE and x - P <= (p.head.left + p.head.right) / 2))):
                     out["face"] += 1
+                    if where is not None:
+                        where.append(("face", x - P, y - P))
                 if c in cloak:
                     area += 1
                 mine = [s for s in sets if c in s]
                 before = was(x, y)  # (the figure's own clothes in other colours keep their own detail)
                 if mine and (before is None or before in O.SKINC) and not any(n in s for n in near for s in mine):
                     out["speck"] += 1
+                    if where is not None:
+                        where.append(("speck", x - P, y - P))
             elif cloak and c not in cloak and c != 254 and sum(n in cloak for n in near) >= 7:
                 out["hole"] += 1
+                if where is not None:
+                    where.append(("hole", x - P, y - P))
     pieces = O.comps(O.sil(rows))
     if pieces:
         main = max(pieces, key=len)
         out["scrap"] += sum(len(c) for c in pieces if c is not main)
+        if where is not None:
+            where += [("scrap", x - P, y - P) for c in pieces if c is not main for x, y in c]
     skin_was = sum(c in O.SKINC for r in own for c in r)
     skin_now = sum(c in O.SKINC for r in rows for c in r)
     return out, area, skin_now / max(1, skin_was)
