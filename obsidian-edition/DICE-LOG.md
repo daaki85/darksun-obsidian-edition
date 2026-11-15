@@ -59,7 +59,7 @@ hits (see [No critical hits](HOW-THE-GAME-WORKS.md#no-critical-hits)).
 
 **Kits in the lines.** A kit shows where it changes a number, by name: an attack's THAC0 line has
 `from behind (Rescuer)` for the Rescuer's +1, the initiative's parts `Wayfinder's Path-finder`
-(or `Wayfinder down`), a healing spell's `+1 Healer` or a Lifebinder's `+ 1d8 Lifebinder (the
+(and the Wayfinder's own `+2 Wayfinder`), a healing spell's `+1 Healer` or a Lifebinder's `+ 1d8 Lifebinder (the
 helper's roll)`, and a Wilderness Avenger's `+1 Wilderness Avenger` on a Cause spell's damage
 ([Kits](KITS.md)).
 
