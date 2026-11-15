@@ -296,7 +296,8 @@ def allowed_kinds(sheet: bytes, type_record) -> List[int]:
     """The weapon kinds a character can choose: those with an item type of the game's (any
     material: a fire cleric's long sword the obsidian one) that it can use (a fighter/psionicist,
     say, only the psionicist's). TYPE_RECORD(type) gives an item type's record. DSCLOG's
-    KINDS_ALLOWED. Not the bow for a ranger: it has expertise with the bow already. A Battle Mage
+    KINDS_ALLOWED. Not the bow for a ranger: it has expertise with the bow already (but a Seeker,
+    which hasn't: its sphere's weapons alone, the bow among them where its sphere allows one). A Battle Mage
     (kits.py) its own, whatever its class; a Spellarcher the bow only; a Poisoner the dagger and
     short sword; a Swashbuckler the long sword, dagger and short sword; a Myrmidon melee ones alone (both
     its specs); a Crusader or Mind Warrior its class's melee ones (a thri-kreen Mind Warrior the
@@ -310,7 +311,8 @@ def allowed_kinds(sheet: bytes, type_record) -> List[int]:
         return sorted(kits.POISONER_KINDS)
     if game.RULES_IN_FORCE & game.RULE_KITS and kits.SWASHBUCKLER in kitpages.kit_ids(sheet):
         return sorted(kits.SWASHBUCKLER_KINDS)
-    ranger = int.from_bytes(sheet[game.SHEET_FLAGS:game.SHEET_FLAGS + 2], "little") & 0x200
+    ranger = int.from_bytes(sheet[game.SHEET_FLAGS:game.SHEET_FLAGS + 2], "little") & 0x200 \
+        and not (game.RULES_IN_FORCE & game.RULE_KITS and kits.SEEKER in kitpages.kit_ids(sheet))
     war = specialize.war_kit(sheet)
     melee = kits.MELEE_KINDS | (kits.KREEN_WARRIOR_KINDS if war == kits.MIND_WARRIOR
                                 and sheet[game.SHEET_RACE] == kits.THRI_KREEN else frozenset())

@@ -5748,7 +5748,8 @@ wp_rules:
 ; KINDS_ALLOWED: AX the kinds (bit 0 the long sword) the character whose sheet is at ES:BX can
 ; choose: those with an item type (KIND_OF_TYPE) the game's class lists and CLASS_FORBIDS let it
 ; use (a fire cleric's long sword the obsidian one, not the plain bone one); not the bow for a
-; ranger (its class flags, +12h: 200h), who has expertise with it already; a Battle Mage the
+; ranger (its class flags, +12h: 200h), who has expertise with it already, but a Seeker, who
+; hasn't (offered where its sphere allows a bow, as every weapon it is offered); a Battle Mage the
 ; one-handed melee kinds (KIT_BM_KINDS), not thrown, whatever its class lets it use; a Spellarcher
 ; the bow only; a Poisoner the dagger and short sword (KIT_POISON_KINDS); a Swashbuckler the long
 ; sword, dagger and short sword (SWASH_KINDS); a kind KIT_ALLOWS lets it use whatever its classes (a Battle Dancer's long sword);
@@ -5835,6 +5836,9 @@ kinds_allowed:
 .ranger:
         test word [es:bx + 0x12], 0x200
         jz .all                 ; (a ranger)
+        call kit_is_b           ; (a Seeker has no bow expertise: the bow offered, where its sphere allows one)
+        db KIT_SEEKER
+        je .all
         btr di, BOW_KIND - 1
 .all:   mov ax, di
         pop di

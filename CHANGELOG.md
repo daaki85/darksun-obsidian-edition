@@ -143,8 +143,10 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
 - **The Seeker: no bow exception, no bow expertise** (the user's call): its bow follows its sphere
   (a fire Seeker has none; `KIT_FORBIDS`, `kits.forbids`), and it has no ranger's bow expertise unless
   the bow is its weapon spec (`SPEC_OF_SHEET`, `specialize._skill`). A forbidden missile weapon goes
-  into the backpack at creation (`weaponchoice.kit_gear`). Tests: `test_seeker`, `test_seeker_bow`,
-  `test_ranger_expertise`.
+  into the backpack at creation (`weaponchoice.kit_gear`). The weapon window offers it only its
+  sphere's weapons, the bow among them where the sphere allows one (`KINDS_ALLOWED`,
+  `restrict.allowed_kinds`: no other ranger is offered the bow). Tests: `test_seeker`,
+  `test_seeker_bow`, `test_ranger_expertise`, `KindsAllowedTests`.
 - **The Swashbuckler: bad luck** (the user's call, in place of −5 to every skill): each thief skill
   roll 0 to 25 worse, rolled each time: the game's (`PROBE_BELT`, a d26 less 1 from the game's seed,
   kept in the header's `BAD_LUCK`, +1862, and `BAD_LUCK_WHO` for the dice log's line, "-N

@@ -2834,6 +2834,21 @@ class KindsAllowedTests(unittest.TestCase):
                     got = mu.reg_read(r.UC_X86_REG_AX)
                     self.assertEqual([k for k in range(16) if got >> k & 1], restrict.allowed_kinds(bytes(s), self.record))
             from dsloader import kits
+            # a Seeker: the bow offered where its sphere allows one (no ranger's expertise with it), never
+            # for fire; every kind offered one it can use (restrict.kit_forbids passes it); another
+            # ranger never offered the bow
+            for cls in (13, 14, 15, 16):
+                s = bytearray(sheet(cls))
+                s[0x43] = 3
+                offered = restrict.allowed_kinds(bytes(s), self.record)
+                self.assertEqual(kits.BOW in offered, cls != 15, cls)
+                for kind in offered:
+                    self.assertTrue(any(restrict.usable(bytes(s), t, self.record(t))
+                                        and not restrict.kit_forbids(bytes(s), t, self.record(t), spec=True)
+                                        for t in specialize._TYPES[specialize.KINDS[kind]]), (cls, kind))
+                s[0x43] = 2
+                self.assertNotIn(kits.BOW, restrict.allowed_kinds(bytes(s), self.record))
+            from dsloader import kits
             myrmidon, fighter = bytearray(sheet(9)), bytearray(sheet(9))
             myrmidon[0x43] = 1  # (a Myrmidon: melee kinds only, both specs; a fighter with no kit the bow too)
             self.assertTrue(set(restrict.allowed_kinds(bytes(myrmidon), self.record)) <= kits.MELEE_KINDS)
