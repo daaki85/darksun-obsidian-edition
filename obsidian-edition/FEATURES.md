@@ -1393,7 +1393,7 @@ does:
 
 | Spells | How they roll |
 |---|---|
-| Acid Arrow | as an arrow from a fighter of the caster's level: THAC0 21 less the caster level, with the caster's DEX missile adjustment (the manual's "as if fired by a fighter") |
+| Acid Arrow | as an arrow from a fighter of the caster's level: THAC0 21 less the caster level (a [Scholar](KITS.md#preserver-kits)'s 1 worse, as its own THAC0), with the caster's DEX missile adjustment (the manual's "as if fired by a fighter") |
 | Turn Pebble to Boulder, Magical Stone, Condense, and the spines some monsters shoot | the caster's own THAC0, with its DEX missile adjustment |
 | Minute Meteors | the caster's own THAC0, with its DEX missile adjustment and the spell's own +2 (the manual's), each globe its own roll (five globes with [Spells and psionics as the manual describes them](#spells-and-psionics-as-the-manual-describes-them)) |
 | Chill Touch, Shocking Grasp, Vampiric Touch, Cause Light, Serious and Critical Wounds, Cause Disease, Poison | a touch attack with the caster's own THAC0 and STR adjustment, only at a creature of another side (a foe, or a friend turned against it): on one's own side they land as before |

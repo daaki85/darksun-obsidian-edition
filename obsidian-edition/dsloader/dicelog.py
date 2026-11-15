@@ -232,7 +232,7 @@ KIND_HEAT = 10  # DSCLOG's HEAT_SITE: Sunstroke's heat on a creature: raw = the 
 KIND_SWEPT = 11  # DSCLOG's SWEPT_MARK: Whirlwind's damage on a creature that failed its save: raw = it
 # DSCLOG's SPELL_HIT: a missile or hostile touch spell's attack roll (the rule "spells roll to hit"):
 # raw = the d20; its frame +6 the caster, +8 the target (combatants), +0Ah the spell, +0Ch the THAC0
-# (Acid Arrow's 21 - the cast's level), +0Eh the game's to-hit adjustments, +10h the STR or DEX part
+# (Acid Arrow's 21 - the cast's level, a Scholar's 1 more), +0Eh the game's to-hit adjustments, +10h the STR or DEX part
 # of them, +12h a monster's difficulty, +14h the target's AC, +16h the d20, +18h 1 a touch, 2 a
 # missile, +1Ah 1 for a hit
 KIND_TOHIT = 12
@@ -2795,7 +2795,10 @@ class DiceLog:
         name = g.spell_name(spell)
         note = " (natural 20)" if d20 == 20 else " (natural 1)" if d20 == 1 else ""
         needs = ("hits on anything but a 1" if need <= 2 else "only a 20 hits" if need > 20 else f"needs {need}+")
-        base = f"THAC0 {thac0}" + (" (a fighter's of the caster's level)" if spell == ACID_ARROW_SPELL else "")
+        creature = g.combatant_creature(caster)
+        scholar = spell == ACID_ARROW_SPELL and creature is not None and kits.SCHOLAR in g.kit_ids(creature)
+        base = f"THAC0 {thac0}" + ((" (a fighter's of the caster's level, a Scholar's 1 worse)" if scholar
+                                    else " (a fighter's of the caster's level)") if spell == ACID_ARROW_SPELL else "")
         own = METEORS_TO_HIT if spell == MINUTE_METEORS_SPELL else 0
         parts = [(("STR" if kind == 1 else "DEX"), part), (name, own), ("spells", bonus - part - own),
                  ("difficulty", difficulty)]

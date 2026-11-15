@@ -65,7 +65,8 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   more for each level at creation (`KIT_MADE` in the picks) and on changing class to preserver
   (`PROBE_DUAL_SPELLS`), as up to 2.17; its slot more at each spell level is gone (`PROBE_SLOTS`,
   `kits.slots`), and it learns from scrolls as any preserver. Its −1 to hit stays, which its touch
-  spells, Minute Meteors and Turn Pebble to Boulder roll with (not Acid Arrow's fighter's THAC0). KITS.md's slot table has
+  spells, Minute Meteors and Turn Pebble to Boulder roll with, and Acid Arrow too: `SPELL_HIT` makes its
+  fighter's THAC0 1 worse for a Scholar (the dice log says so). Test: `test_spell_to_hit`. KITS.md's slot table has
   no column for it. Tests: `test_scholar_picks_one_more`, `test_slots`, `test_int_learn`'s Scholar,
   `test_slots`' `test_kits`.
 - **The Arcanist: its preserver spells cast a level higher** (the user's call, in place of two

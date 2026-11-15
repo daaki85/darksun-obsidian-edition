@@ -3985,6 +3985,20 @@ class NewSpellTests(RuleTests):
         self.assertEqual(lands(18, 40, d20(8))[2][4:6], (18, 14))
         cast(2, 40, 18, level=7)
         self.assertEqual(lands(18, 40, d20(7))[:2], (0x12, [0, 1]))
+        # ... a Scholar's (a preserver, kits on) 1 worse, as its own THAC0 is: 15, so 9 or more
+        hdr = TSR * 16 + image.find(HDR_SIG)
+        sheets = 0x9800
+        mu.mem_write(GAME_DS * 16 + 0x1661, struct.pack("<HH", 0, sheets))
+        mu.mem_write(0x9000 * 16 + 5 * 0x3A + 4, struct.pack("<H", 3))  # (creature 5's sheet: 3)
+        scholar = bytearray(game.SHEET_SIZE)
+        scholar[0x21], scholar[0x24], scholar[0x43] = 11, 7, 1
+        mu.mem_write(sheets * 16 + 3 * 0x47, bytes(scholar))
+        mu.mem_write(hdr + 270, struct.pack("<H", game.RULE_KITS >> 16))
+        cast(2, 40, 18, level=7)
+        self.assertEqual(lands(18, 40, d20(9))[2][4:6], (18, 15))
+        cast(2, 40, 18, level=7)
+        self.assertEqual(lands(18, 40, d20(8))[:2], (0x12, [0, 1]))
+        mu.mem_write(hdr + 270, struct.pack("<H", 0))
         # Minute Meteors (33): a missile with its own +2 (in the adjustments): 8 or more
         cast(2, 40, 33)
         self.assertEqual(lands(33, 40, d20(8)), (33, [1, 1], (12, 8, 2, 40, 33, 16, 4, 1, 0, 4, 8, 2, 1)))

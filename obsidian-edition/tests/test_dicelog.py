@@ -1112,6 +1112,12 @@ class SaveTests(unittest.TestCase):
         e = entry(3, frame=frame(2, 40, dicelog.ACID_ARROW_SPELL, 14, 0, 0, 0, 12, 3, 2, 1), kind=dicelog.KIND_TOHIT)
         self.assertIn("(THAC0 14 (a fighter's of the caster's level); target AC 12) -> HIT", log.describe(e)[0])
         self.assertIn("hits on anything but a 1", log.describe(e)[0])
+        from unittest import mock
+        from dsloader import kits
+        with mock.patch.object(log.game, "kit_ids", lambda creature: [kits.SCHOLAR]):  # (a Scholar: DSCLOG's 1 worse)
+            e = entry(3, frame=frame(2, 40, dicelog.ACID_ARROW_SPELL, 15, 0, 0, 0, 12, 3, 2, 1), kind=dicelog.KIND_TOHIT)
+            self.assertIn("(THAC0 15 (a fighter's of the caster's level, a Scholar's 1 worse); target AC 12)",
+                          log.describe(e)[0])
 
     def test_wall_instead(self):
         """Wall of Thorns' damage (DSCLOG's THORNS_DAMAGE: the damage | the spell << 8, the

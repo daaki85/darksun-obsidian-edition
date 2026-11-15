@@ -14900,7 +14900,19 @@ th_hit:
         jne .own
         mov ax, 21
         movzx cx, byte [cs:th_level]
-        sub ax, cx                      ; (a fighter's of the cast's level)
+        sub ax, cx                      ; (a fighter's of the cast's level ...)
+        push ax
+        mov ax, [cs:th_caster]
+        mov cx, 0
+        call combatant_creature
+        jc .scholar
+        call cr_is                      ; (... a Scholar's 1 worse, as its own THAC0: kits.thac0)
+        db KIT_SCHOLAR
+        jne .scholar
+        inc cx
+.scholar:
+        pop ax
+        add ax, cx
 .own:   mov [cs:th_thac0], ax
         xor ax, ax
         cmp word [cs:th_caster], IMAGE_PARTY

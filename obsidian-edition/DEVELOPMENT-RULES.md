@@ -885,7 +885,7 @@ skips the damage and the effect). The stub is the game's unfinished to-hit test.
   (kind 1, STR) and only at a creature of another side (creature +1Dh's low 3 bits,
   the side as 809A2h passes it to the cast). THAC0:
   the caster's creature +1Fh (Acid Arrow: 21 less the cast's level, 772A5h's
-  `[bp+0Ch]`); less 5B8:EDh (7C3E9h: target, attacker, no weapon, kind; effects,
+  `[bp+0Ch]`, 1 more for a Scholar, `KIT_SCHOLAR`, as its +1Fh has it); less 5B8:EDh (7C3E9h: target, attacker, no weapon, kind; effects,
   STR or DEX) and, for a combatant of 4 or more, `[11AEh]` - 1 (as 5837Ch); the
   AC is 4E0:7Fh (58DD3h: target, attacker, 0), the weapon attack's. The d20 is
   the game's rand() (`blow_rand`); 20 hits, 1 misses. The calls are in a frame
