@@ -19,16 +19,23 @@ and every party figure can wear it, in all its pictures (15 walking, 14 fighting
   * the human woman's own cloak (the game draws her in one) takes the outfit's colours instead;
   * a hood worn up (the thief's) is the figure's own hair and crown in the cloak's shades, a
     pixel fuller, the face left;
-  * the hit frame (12), which the game's people don't have, is the figure's own, the cloak that of
-    the person standing; the dead frame (13) is the figure's own corpse in the outfit's colours,
-    a cloak spread on the ground round it.
+  * the hit frame (12), which the game's people don't have, is the figure's own, with the human
+    woman's cloak as she reels; the dead frame (13) is the figure's own corpse in the outfit's
+    colours, a cloak spread on the ground under it;
+  * the half-elves' figures are the Loader's own (figures.py makes them from the elf man's and
+    the human woman's pictures): they are made here the same way and dressed like the rest, and
+    the elves keep the pointed ears the Loader draws.
+
+The pictures are judged with two tools beside this one: outfitcheck.py (every frame checked by
+rule, the worst listed and drawn large) and outfitreview.py (a page where they move as in the
+game, to mark the frames that look wrong).
 
 Nothing of the game's is in the repository: the pictures are read from the player's install.
 
     python3 prototypes/outfits.py GAME_DIR OUT_DIR [NPC ...]
 
 writes OUT_DIR/outfit_<npc>.png for each (default: 1252 warrior, 630 thief, 1563 priest, 724
-mage) on the eleven figures, each frame drawn where the game would put it (its picture's anchor,
+mage) on the thirteen figures (the half-elves' the Loader's own: figures.py), each frame drawn where the game would put it (its picture's anchor,
 the bottom middle of the figure's own picture).
 """
 
@@ -41,7 +48,7 @@ from typing import Dict, FrozenSet, List, NamedTuple, Optional, Set, Tuple
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "obsidian-edition"))
 
-from dsloader import art, gff, spritegear as sg, spriteparts as sp  # noqa: E402
+from dsloader import art, figures, gff, halfelf, spritegear as sg, spriteparts as sp  # noqa: E402
 
 Rows = List[List[Optional[int]]]
 Cell = Tuple[int, int]
@@ -55,6 +62,81 @@ BANDS = {249: 214, 250: 212}  # (the green wristbands steel, on every class)
 DARK = {254, 69, 129, 158}  # (a cloak's fold lines)
 BOW = {179, 180, 181, 182, 183}
 PAD = 8
+HALF_ELF_MAN, HALF_ELF_WOMAN = "half-elf man", "half-elf woman"  # (figures of the Loader's own: figures.py)
+
+
+class Figure:
+    """One of the party's figures: one of the game's models, or a half-elf's, which the Loader
+    makes from the elf man's or the human woman's pictures (figures.py)."""
+
+    def __init__(self, game: "Game", key):
+        self.game, self.key = game, key
+        self.maker = None
+        if key in (HALF_ELF_MAN, HALF_ELF_WOMAN):
+            self.model = figures.ELF_MAN if key == HALF_ELF_MAN else figures.HUMAN_WOMAN
+            made = figures.HalfElfMan if key == HALF_ELF_MAN else figures.HalfElfWoman
+            self.maker = made([game.fr(self.model, f) for f in range(15)], [game.fr(self.model + 1, f) for f in range(14)])
+            self.hair = figures.GOLDEN_HAIR
+            self.cloak = frozenset(getattr(self.maker, "cloak", ()))  # (her own cloak's colours)
+            self.sure_bands = True
+        else:
+            self.model = key
+            self.hair = sp.MODELS[key][2]
+            self.cloak = frozenset(WOMAN_CLOAK) if key == sg.CLOAK_MODEL else frozenset()
+            self.sure_bands = sp.MODELS[key][1] <= frozenset(BANDS) | {43}  # (not the half-giants' greys, their clothes' too)
+        self._rows: Dict[Tuple[int, int], Rows] = {}
+        self._parts: Dict[Tuple[int, int], object] = {}
+
+    def rows(self, cb: int, f: int) -> Rows:
+        if (cb, f) not in self._rows:
+            self._rows[(cb, f)] = self.maker.frame(f, bool(cb)) if self.maker else self.game.fr(self.model + cb, f)
+        return self._rows[(cb, f)]
+
+    def parts(self, cb: int, f: int):
+        if (cb, f) not in self._parts:
+            rows = self.rows(cb, f)
+            p = figures.own(self.maker, f, bool(cb), rows, self.model).parts if self.maker else sp.parts(rows, self.model, f, bool(cb))
+            p = shouldered(p, rows, self.model)
+            if cb and f == 11:
+                p = self.turned(p, rows)
+            self._parts[(cb, f)] = p
+        return self._parts[(cb, f)]
+
+    def turned(self, p, rows: Rows):
+        """The parts of fighting frame 11 (the bow drawn "from the side": the figure is turned to
+        the viewer, and spriteparts takes the bow's tip for the head). The head is the top of the
+        picture without the bow's colours, as wide as the figure's head standing; the shoulders the row at
+        its foot; the waist as spriteparts puts it; seen from the front."""
+        body = [[None if c in BOW else c for c in r] for r in rows]  # (without the bow's golden browns)
+        ys = [y for y, r in enumerate(body) if sum(c is not None for c in r) >= 2]
+        stand = self.parts(0, 0)
+        if not ys or not stand.head:
+            return p
+        top = ys[0]
+        xs = [x for y in range(top, min(top + 3, len(body))) for x, c in enumerate(body[y]) if c is not None]
+        mid = sorted(xs)[len(xs) // 2]
+        half = (stand.head.right - stand.head.left) / 2
+        left, right = int(round(mid - half)), int(round(mid + half))
+        neck = min(len(body) - 1, top + sp.HEAD_ROWS[self.model][0])
+        row = [x for x, c in enumerate(body[neck]) if c is not None] or [left, right]
+        hair = {(x, y) for y in range(top, neck) for x in range(max(0, left - 1), min(len(body[0]), right + 2))
+                if rows[y][x] in self.hair and rows[y][x] not in SKINC and abs(x - mid) <= half + 1}
+        return p._replace(facing=sp.FRONT, head=sp.Head(top, left, right, top + stand.head.brow - stand.head.top),
+                          hair=hair, shoulders=(neck, min(row), max(row)),
+                          waist=neck + round((p.bottom - neck) * 0.42))
+
+    def bands(self, cb: int, f: int) -> Set[Cell]:
+        """The wristbands' pixels."""
+        rows = self.rows(cb, f)
+        if not self.maker:
+            colours = sp.MODELS[self.model][1]
+            return {(x, y) for y, r in enumerate(rows) for x, c in enumerate(r) if c in colours}
+        if hasattr(self.maker, "bands"):
+            return set(self.maker.bands.get((bool(cb), f), ()))
+        at = figures.mover(self.maker.cuts.get((bool(cb), f)))
+        colours = sp.MODELS[self.model][1]
+        return {(at(x, y), y) for y, r in enumerate(self.game.fr(self.model + cb, f)) for x, c in enumerate(r) if c in colours}
+
 
 
 class Outfit(NamedTuple):
@@ -102,7 +184,13 @@ class Game:
         self._align: Dict[Tuple[int, int, int, int], Tuple[int, int]] = {}
         self._erased: Dict[Tuple[int, int, int], Tuple[Rows, Set]] = {}
         self._layer: Dict[Tuple[int, int, int], Dict[Cell, int]] = {}
-        self._bow: Dict[int, Set[int]] = {}
+        self._bow: Dict[object, Set[int]] = {}
+        self._figs: Dict[object, Figure] = {}
+
+    def fig(self, key) -> Figure:
+        if key not in self._figs:
+            self._figs[key] = Figure(self, key)
+        return self._figs[key]
 
     def fr(self, pic: int, f: int) -> Rows:
         if (pic, f) not in self._frames:
@@ -214,7 +302,7 @@ class Game:
                 if not add:
                     break
                 layer.update(add)
-            pm = parts(human, MAN, f, bool(cb))
+            pm = self.fig(MAN).parts(cb, f)
             drop = set()
             if pm.facing in (sp.FRONT, sp.SIDE) and pm.head and pm.shoulders and pm.waist is not None:
                 # (a sleeve down the forearm lies where the man's arm is, not the figure's: the
@@ -284,7 +372,7 @@ class Game:
 
     # the clothes --------------------------------------------------------------------------------
 
-    def arms(self, own: Rows, p, keep: Set[Cell], bands: FrozenSet[int] = frozenset()) -> Dict[Cell, int]:
+    def arms(self, own: Rows, p, keep: Set[Cell], wrists: Set[Cell] = frozenset(), sure: bool = False) -> Dict[Cell, int]:
         """The arms' skin: each pixel reached from a hand through skin, and how far along."""
         sy, sa, sb = p.shoulders
         side = p.facing == sp.SIDE
@@ -293,6 +381,7 @@ class Game:
         core = 0.3 * (sb - sa)  # (the chest and thighs between the arms, seen from the front or behind)
         out: Dict[Cell, int] = {}
 
+        band = set(wrists) if sure else {(x, y) for y, r in enumerate(own) for x, c in enumerate(r) if c in BANDS}
         chest = {}  # (each row's run through the body's middle: its middle three fifths are the chest)
         for y in range(sy, p.waist + 1):
             run = sg._torso_run(own, y, cx, sa, sb)
@@ -301,7 +390,7 @@ class Game:
 
         def skin(q):
             x, y = q
-            if not (0 <= y < len(own) and 0 <= x < len(own[0]) and (own[y][x] in SKINC or own[y][x] in BANDS)) or q in keep:
+            if not (0 <= y < len(own) and 0 <= x < len(own[0]) and (own[y][x] in SKINC or q in band)) or q in keep:
                 return False
             if side:
                 return y >= sy
@@ -311,8 +400,8 @@ class Game:
             near = sorted((abs(a) + abs(b), (hx + a, hy + b)) for a in range(-2, 3) for b in range(-2, 3) if skin((hx + a, hy + b)))
             if near:
                 starts.append(near[0][1])
-        # (and from the green wristbands, where a hand isn't found: an arm flung out in a blow)
-        starts += [(x, y) for y, r in enumerate(own) for x, c in enumerate(r) if c in BANDS and skin((x, y))]
+        # (and from the wristbands, where a hand isn't found: an arm flung out in a blow)
+        starts += [q for q in band if skin(q)]
         for start in starts:
             todo = collections.deque([(start, 0)])
             seen = {start}
@@ -326,18 +415,18 @@ class Game:
                     for b in (-1, 0, 1):
                         n = (q[0] + a, q[1] + b)
                         if n not in seen and (skin(n) or (d < 4 and n not in keep and 0 <= n[1] < len(own)
-                                                          and 0 <= n[0] < len(own[0]) and own[n[1]][n[0]] in bands)):
+                                                          and 0 <= n[0] < len(own[0]) and n in wrists)):
                             seen.add(n)
                             todo.append((n, d + 1))
         return out
 
-    def bow(self, model: int, own: Rows, p) -> Set[Cell]:
-        """The bow in a bow frame: the colours MODEL's walking frames don't have, and its golden
+    def bow(self, fig: Figure, own: Rows, p) -> Set[Cell]:
+        """The bow in a bow frame: the colours the figure's walking frames don't have, and its golden
         browns in thin pieces (a line a pixel or two wide), not hair."""
-        if model not in self._bow:
-            walking = {c for f in range(15) for r in self.fr(model, f) for c in r if c is not None}
-            self._bow[model] = {c for f in sp.BOW_FRAMES for r in self.fr(model + 1, f) for c in r if c is not None} - walking
-        out = {(x, y) for y, r in enumerate(own) for x, c in enumerate(r) if c in self._bow[model]}
+        if fig.key not in self._bow:
+            walking = {c for f in range(15) for r in fig.rows(0, f) for c in r if c is not None}
+            self._bow[fig.key] = {c for f in sp.BOW_FRAMES for r in fig.rows(1, f) for c in r if c is not None} - walking
+        out = {(x, y) for y, r in enumerate(own) for x, c in enumerate(r) if c in self._bow[fig.key]}
         gold = {(x, y) for y, r in enumerate(own) for x, c in enumerate(r) if c in BOW}
         for comp in comps(gold):
             near = sum((x + a, y + b) in comp for x, y in comp for a in (-1, 0, 1) for b in (-1, 0, 1)) / len(comp) - 1
@@ -345,7 +434,7 @@ class Game:
                 out |= comp
         return out
 
-    def clothe(self, own: Rows, model: int, p, o: Outfit, bow: Set[Cell] = frozenset()) -> Tuple[Rows, Dict[Cell, str]]:
+    def clothe(self, own: Rows, fig: Figure, p, o: Outfit, wrists: Set[Cell], bow: Set[Cell] = frozenset()) -> Tuple[Rows, Dict[Cell, str]]:
         """The figure's frame in the outfit's clothes (not its cloak), and what each pixel is:
         head, hand, arm, torso, leg, boot, cloak (the woman's own)."""
         rows = [list(r) for r in own]
@@ -354,8 +443,8 @@ class Game:
             return rows, what
         sy, waist, bottom = p.shoulders[0], p.waist, p.bottom
         keep = sg._keep_out(own, p)
-        bands, hair = sp.MODELS[model][1], sp.MODELS[model][2]
-        arm = self.arms(own, p, keep, bands)
+        hair = fig.hair
+        arm = self.arms(own, p, keep, wrists, fig.sure_bands)
         reach = max(4, waist - sy)
         boot_h = max(2, int(round(0.2 * (bottom - waist))))
         for y, r in enumerate(own):
@@ -363,7 +452,7 @@ class Game:
                 if c is None:
                     continue
                 q = (x, y)
-                if model == sg.CLOAK_MODEL and c in WOMAN_CLOAK:
+                if c in fig.cloak and not (fig.sure_bands and q in wrists):
                     rows[y][x] = tone(c, o.cloak or o.torso, cloth=True)
                     what[q] = "cloak"
                     continue
@@ -375,8 +464,8 @@ class Game:
                     if hair and y >= sy - 1 and c not in SKINC and c not in hair and c != 254 and q not in p.hair:
                         rows[y][x] = tone(c, o.torso)  # (a collar)
                     continue
-                if c in bands and c in BANDS:
-                    rows[y][x] = BANDS[c]
+                if fig.sure_bands and q in wrists:
+                    rows[y][x] = BANDS.get(c, c)
                     what[q] = "hand"
                     continue
                 skin = c in SKINC
@@ -453,23 +542,24 @@ class Game:
             if 0 <= y + PAD < len(out) and 0 <= x + PAD < len(out[0]):
                 out[y + PAD][x + PAD] = ramp[max(0, min(len(ramp) - 1, int(t * (len(ramp) - 1) + 0.5)))]
 
-    def dress(self, model: int, o: Outfit, cb: int, f: int) -> Tuple[Rows, int, int]:
-        """MODEL's frame in the outfit, and where its first pixel is in MODEL's own frame."""
-        own = self.fr(model + cb, f)
-        p = parts(own, model, f, bool(cb))
-        rows, what = self.clothe(own, model, p, o, self.bow(model, own, p) if cb and f in sp.BOW_FRAMES else frozenset())
+    def dress(self, key, o: Outfit, cb: int, f: int) -> Tuple[Rows, int, int]:
+        """A figure's frame in the outfit, and where its first pixel is in the figure's own frame."""
+        fig = self.fig(key)
+        own, p = fig.rows(cb, f), fig.parts(cb, f)
+        rows, what = self.clothe(own, fig, p, o, fig.bands(cb, f), self.bow(fig, own, p) if cb and f in sp.BOW_FRAMES else frozenset())
         h, w = len(rows), len(rows[0])
         out: Rows = [[None] * (w + 2 * PAD) for _ in range(PAD)] + \
             [[None] * PAD + r + [None] * PAD for r in rows] + [[None] * (w + 2 * PAD) for _ in range(PAD)]
-        mt = marks(own, model, f, bool(cb))
+        mt = marks(p, own, fig.cloak)
+        laid: Set[Cell] = set()
         hit = bool(cb) and f == 12  # (the game's people have no hit frame: the human woman's cloak, as she reels)
         src = sg.CLOAK_MODEL if hit else MAN
-        ms = marks(self.fr(src + cb, f), src, f, bool(cb))
-        if o.cloak and mt and ms and (model != sg.CLOAK_MODEL or o.closed):
+        ms = marks(self.fig(src).parts(cb, f), self.fig(src).rows(cb, f), self.fig(src).cloak)
+        if o.cloak and mt and ms and (not fig.cloak or o.closed):
             neck = mt["neck"]
             sa, sb = p.shoulders[1], p.shoulders[2]
             layer = self.her_cloak(cb, f) if hit else self.cloak_layer(o, cb, f)
-            placed = self.warp(layer, o.cloak, ms, mt, self.scale(model) / self.scale(src), w, h)
+            placed = self.warp(layer, o.cloak, ms, mt, self.scale(key) / self.scale(src), w, h)
             for (x, y), c in placed.items():
                 if y < neck - (0 if o.hood or p.facing == sp.FRONT else 2):
                     continue  # (a hood worn down lies at the nape)
@@ -488,30 +578,44 @@ class Game:
                     if not over:
                         continue
                 out[y + PAD][x + PAD] = c
+                laid.add((x + PAD, y + PAD))
+        pieces = comps(sil(out))  # (a piece of the cloak apart from the figure: gone)
+        for comp in pieces:
+            if comp is not max(pieces, key=len) and comp <= laid:
+                for x, y in comp:
+                    out[y][x] = None
         if o.cloak and o.hood and p.head and p.shoulders:
             self.hood(out, own, p, o)
-        return tidy(out, 4), -PAD, -PAD
+        return self.ears(tidy(out, 4), fig, cb, f), -PAD, -PAD
 
-    def size(self, model: int) -> Tuple[int, int]:
-        """The figure's height and width standing in front view (without the woman's cloak)."""
-        rows = [[None if p in WOMAN_CLOAK and model == sg.CLOAK_MODEL else p for p in r] for r in self.fr(model, 0)]
+    @staticmethod
+    def ears(out: Rows, fig: Figure, cb: int, f: int) -> Rows:
+        """The elves' pointed ears, as the Loader draws them over what an elf wears (figures.py)."""
+        if fig.key in figures.ELVES:
+            return figures.ears_over(out, fig.rows(cb, f), fig.key, f, bool(cb), PAD)
+        return out
+
+    def size(self, key) -> Tuple[int, int]:
+        """The figure's height and width standing in front view (without a cloak of its own)."""
+        fig = self.fig(key)
+        rows = [[None if p in fig.cloak else p for p in r] for r in fig.rows(0, 0)]
         cells = sil(rows)
         xs, ys = [x for x, _ in cells], [y for _, y in cells]
         return max(ys) - min(ys) + 1, max(xs) - min(xs) + 1
 
-    def scale(self, model: int) -> float:
-        """How much smaller the man is than MODEL, sideways: the mean of the height and width ratios."""
-        (hm, wm), (ht, wt) = self.size(MAN), self.size(model)
+    def scale(self, key) -> float:
+        """How much smaller the man is than the figure, sideways: the mean of the height and width ratios."""
+        (hm, wm), (ht, wt) = self.size(MAN), self.size(key)
         return (hm / ht + wm / wt) / 2
 
-    def dead(self, model: int, o: Outfit) -> Tuple[Rows, int, int]:
+    def dead(self, key, o: Outfit) -> Tuple[Rows, int, int]:
         """MODEL's dead frame (lying feet up the picture, head down it) in the outfit's colours:
         its own clothes in the tunic's; the raised legs in the leggings' and boots'; where the
         clothes cover the skin, the chest too, and for sleeves the arms as far as the wristbands;
         the face, hands and hair kept. A cloak lies spread under the body from the legs down,
         lit from the left, its folds running down it, a dark edge to the right and below."""
-        h = self.fr(model + 1, 13)
-        bands, hair = sp.MODELS[model][1], sp.MODELS[model][2]
+        fig = self.fig(key)
+        h, hair, model = fig.rows(1, 13), fig.hair, fig.model
         cells = sil(h)
         ys = sorted(y for _, y in cells)
         top, bottom = ys[0], ys[-1]
@@ -519,19 +623,18 @@ class Game:
         head = bottom - sp.HEAD_ROWS[model][0]  # (the head below it)
         xs = [x for x, y in cells if cut <= y <= head]
         mid, half = (min(xs) + max(xs)) / 2, (max(xs) - min(xs)) / 2
-        wrists = {(x, y) for x, y in cells if h[y][x] in bands}
+        wrists = fig.bands(1, 13)
         out = [list(r) for r in h]
         for y, r in enumerate(h):
             for x, c in enumerate(r):
                 if c is None or c == 254 or (c in hair and y >= cut):
                     continue
                 skin = c in SKINC
-                if model == sg.CLOAK_MODEL and c in WOMAN_CLOAK:
+                if (x, y) in wrists:
+                    if fig.sure_bands:
+                        out[y][x] = BANDS.get(c, c)
+                elif c in fig.cloak:
                     out[y][x] = tone(c, o.cloak or o.torso, cloth=True)
-                elif c in BANDS:
-                    out[y][x] = BANDS[c]
-                elif c in bands:
-                    continue
                 elif y < cut:
                     ramp = o.boots if y <= top + 2 else o.legs
                     if ramp and (not skin or (o.cover and y > top + 2)):
@@ -547,8 +650,8 @@ class Game:
         w = len(h[0])
         big: Rows = [[None] * (w + 2 * P) for _ in range(P)] + \
             [[None] * P + r + [None] * P for r in out] + [[None] * (w + 2 * P) for _ in range(P)]
-        if not o.cloak or model == sg.CLOAK_MODEL:
-            return big, -P, -P
+        if not o.cloak or fig.cloak:
+            return self.ears(big, fig, 1, 13), -P, -P
         ramp, n = o.cloak, len(o.cloak)
         span = {}
         for y in range(cut + 1, bottom + 1):
@@ -573,15 +676,15 @@ class Game:
             elif (x - 1, y) not in cloth | cells or (x, y - 1) not in cloth | cells:
                 t = min(t, 1)
             big[y + P][x + P] = ramp[max(0, min(n - 1, t))]
-        return big, -P, -P
+        return self.ears(big, fig, 1, 13), -P, -P
 
-    def full(self, model: int, npc: int) -> Tuple[List, List]:
-        """Every picture of MODEL in NPC's outfit, each (rows, x, y, the frame it stands in):
-        15 walking; 14 fighting (13 dead)."""
-        o = OUTFITS[npc]
-        walk = [(*self.dress(model, o, 0, f), (model, f)) for f in range(15)]
-        fight = [(*self.dress(model, o, 1, f), (model + 1, f)) for f in range(13)]
-        fight.append((*self.dead(model, o), (model + 1, 13)))
+    def full(self, key, npc: int) -> Tuple[List, List]:
+        """Every picture of a figure in NPC's outfit, each (rows, x, y, the figure's own frame it
+        stands in): 15 walking; 14 fighting (13 dead)."""
+        o, fig = OUTFITS[npc], self.fig(key)
+        walk = [(*self.dress(key, o, 0, f), fig.rows(0, f)) for f in range(15)]
+        fight = [(*self.dress(key, o, 1, f), fig.rows(1, f)) for f in range(13)]
+        fight.append((*self.dead(key, o), fig.rows(1, 13)))
         return walk, fight
 
 
@@ -661,10 +764,9 @@ def edge(rows: Rows, x: int, y: int) -> bool:
         for a, b in ((1, 0), (-1, 0), (0, 1), (0, -1)))
 
 
-def parts(rows: Rows, model: int, f: int, combat: bool):
-    """spriteparts' parts, the shoulders where it finds none (the half-giants shooting, from
-    behind) put at the foot of the head, as wide as the picture's row there."""
-    p = sp.parts(rows, model, f, combat)
+def shouldered(p, rows: Rows, model: int):
+    """Parts with the shoulders, where spriteparts finds none (the half-giants shooting, from
+    behind), put at the foot of the head, as wide as the picture's row there."""
     if p.head and not p.shoulders and p.facing:
         y = min(len(rows) - 1, p.head.top + sp.HEAD_ROWS[model][(sp.FRONT, sp.BACK, sp.SIDE).index(p.facing)])
         xs = [x for x, c in enumerate(rows[y]) if c is not None]
@@ -673,12 +775,21 @@ def parts(rows: Rows, model: int, f: int, combat: bool):
     return p
 
 
-def marks(rows: Rows, model: int, f: int, combat: bool) -> Optional[dict]:
-    p = parts(rows, model, f, combat)
+def marks(p, rows: Rows, cloak: FrozenSet[int] = frozenset()) -> Optional[dict]:
+    """A figure's landmarks from its parts: the crown, neck, waist and feet, and where a cloak
+    hangs from across it: its middle, or from the side (facing right) its back, the picture's
+    left edge between the shoulders and the waist (a cloak of its own, CLOAK's colours, aside)."""
     if not (p.head and p.shoulders and p.waist is not None):
         return None
     sy, sa, sb = p.shoulders
-    cx = (p.head.left + p.head.right) / 2 if p.facing != sp.SIDE else (sa + sb) / 2
+    cx = (p.head.left + p.head.right) / 2
+    if p.facing == sp.SIDE:
+        lefts = []
+        for y in range(sy + 1, p.waist + 1):
+            xs = [x for x, c in enumerate(rows[y]) if c is not None and c not in cloak and (x, y) not in p.hair] if y < len(rows) else []
+            if xs:
+                lefts.append(min(xs))
+        cx = sorted(lefts)[len(lefts) // 2] if lefts else (sa + sb) / 2
     return dict(top=p.head.top, neck=sy, waist=p.waist, bottom=p.bottom, cx=cx,
                 headw=max(1, p.head.right - p.head.left), shw=max(1, sb - sa))
 
@@ -704,7 +815,8 @@ def tone(c: int, ramp: Tuple[int, ...], cloth: bool = False) -> int:
     return ramp[max(0, min(len(ramp) - 1, int(t * (len(ramp) - 1) + 0.5)))]
 
 
-FIGURES = [(2095, "human man"), (2099, "human woman"), (2061, "elf man"), (2059, "elf woman"),
+FIGURES = [(2095, "human man"), (2099, "human woman"), (HALF_ELF_MAN, HALF_ELF_MAN), (HALF_ELF_WOMAN, HALF_ELF_WOMAN),
+           (2061, "elf man"), (2059, "elf woman"),
            (2055, "dwarf man"), (2053, "dwarf woman"), (2072, "half-giant man"), (2074, "half-giant woman"),
            (2093, "mul"), (2068, "halfling man"), (2070, "halfling woman")]
 COLUMNS = [("front", 0, 0), ("back", 0, 1), ("side", 0, 2), ("walk", 0, 3), ("walk", 0, 7), ("walk", 0, 11),
@@ -731,8 +843,7 @@ def sheet(game: Game, npc: int, path: str) -> None:
         walk, fight = game.full(model, npc)
         tile = Image.new("RGB", (len(COLUMNS) * CW, CH), ground)
         for ci, (_, cb, f) in enumerate(COLUMNS):
-            rows, ox, oy, (pic, base_f) = (walk, fight)[cb][f]
-            own = game.fr(pic, base_f)
+            rows, ox, oy, own = (walk, fight)[cb][f]
             bx, by = ci * CW + CW // 2 - len(own[0]) // 2, BASE - len(own)
             for y, r in enumerate(rows):
                 for x, p in enumerate(r):
