@@ -89,6 +89,8 @@ class Figure:
             self.sure_bands = sp.MODELS[key][1] <= frozenset(BANDS) | {43}  # (not the half-giants' greys, their clothes' too)
         self._rows: Dict[Tuple[int, int], Rows] = {}
         self._parts: Dict[Tuple[int, int], object] = {}
+        shades = sorted(self.cloak, key=light)  # (its own cloak's shades, dark to light: 0 to 1)
+        self.cloak_shade = {c: i / max(1, len(shades) - 1) for i, c in enumerate(shades)}
 
     def rows(self, cb: int, f: int) -> Rows:
         if (cb, f) not in self._rows:
@@ -156,18 +158,20 @@ class Outfit(NamedTuple):
     legs: Optional[Tuple[int, ...]]
     boots: Optional[Tuple[int, ...]]
     cover: bool  # the clothes cover the skin too (else only the figure's own clothes change)
+    kilt: float = 0  # the leggings stop this far from the waist to the feet (0: they go all the way)
+    harness: bool = False  # black inside the clothes stays black (straps), and boots a figure has stay as they are
 
 
 OUTFITS: Dict[int, Outfit] = {o.npc: o for o in (
-    Outfit("Warrior", 1252, None, frozenset(), False, False,
-           (204, 207, 205, 180, 201), None, 0, (204, 207, 205, 180, 201), (204, 207, 205, 194), False),
+    Outfit("Warrior", 1252, None, frozenset(), False, False,  # (a leather jerkin and kilt, bare arms and shins)
+           (204, 129, 128, 205, 180), None, 0, (204, 129, 128, 205, 180), (204, 129, 128, 205), True, 0.45, True),
     Outfit("Thief", 630, (69, 188, 53, 189, 54, 190, 55), frozenset((53, 54, 55, 56, 188, 189, 190, 191)), True, False,
-           (158, 69, 210, 49, 24, 50), None, 0, (158, 69, 210, 70, 194, 50), (69, 48, 210, 49), True),
-    Outfit("Priest", 1563, (129, 202, 195, 163, 76, 32, 77, 164),
+           (69, 210, 49, 24, 50), None, 0, (69, 210, 70, 194, 50), (69, 48, 210, 49), True),
+    Outfit("Priest", 1563, (129, 202, 195, 163, 76, 32, 77),
            frozenset((202, 163, 32, 77, 164, 195, 76, 137, 136, 44)), False, True,
            (129, 202, 195, 163, 32, 77), (129, 202, 195, 163, 32, 77), 0, (129, 202, 195, 163), (69, 210, 194, 213), True),
     Outfit("Mage", 724, (158, 159, 38, 160, 71, 161), frozenset((158, 159, 38, 39, 160, 161, 71, 40, 70)), False, False,
-           (129, 128, 205, 180, 201, 200), (158, 159, 38, 160, 71, 161), 0, (188, 53, 189, 54, 55, 56),
+           (129, 128, 205, 180, 201), (158, 159, 38, 160, 71, 161), 0, (188, 53, 189, 54, 55, 56),
            (204, 129, 134, 136, 138), True),
 )}
 
@@ -284,6 +288,7 @@ class Game:
                 if len(comp) >= 6:
                     cells |= comp
             near8 = [(a, b_) for a in (-1, 0, 1) for b_ in (-1, 0, 1) if a or b_]
+            inner: Set[Cell] = set()
             grow = True
             while grow:  # (its shadowed inside and fold lines: dark, past the man's outline; holes over him)
                 grow = False
@@ -293,8 +298,11 @@ class Game:
                     n = sum((q[0] + a, q[1] + b_) in cells for a, b_ in near8)
                     if n >= (1 if man(q) is None else 5):
                         cells.add(q)
+                        if man(q) is None:
+                            inner.add(q)
                         grow = True
-            layer = {q: cols[q] for q in cells}
+            # (drawn as cloth, not as holes: the shadowed inside in the cloak's second shade, black in its darkest)
+            layer = {q: o.cloak[1] if q in inner else o.cloak[0] if cols[q] == 254 else cols[q] for q in cells}
             for _ in range(3):  # (holes: where the weapon was, or a pixel the man has too)
                 xs, ys = [x for x, _ in layer], [y for _, y in layer]
                 add = {}
@@ -313,7 +321,7 @@ class Game:
                 # (a sleeve down the forearm lies where the man's arm is, not the figure's: the
                 # figure's own arm takes the sleeve's colours instead)
                 far = 0.6 * max(4, pm.waist - pm.shoulders[0])
-                drop = {q for q, d in self.arms(human, pm, sg._keep_out(human, pm)).items() if d <= far}
+                drop = {q for q, d in self.arms(human, pm, keep_out(human, pm, self.fig(MAN).hair)).items() if d <= far}
             if cb and f in sp.BOW_FRAMES:  # (the person's bow, drawn in the cloak's colours, where the man's is)
                 drop |= {(x + a, y) for y, r in enumerate(human) for x, c in enumerate(r) if c in BOW
                          for a in (-2, -1, 0, 1, 2)}
@@ -377,15 +385,16 @@ class Game:
 
     # the clothes --------------------------------------------------------------------------------
 
-    def arms(self, own: Rows, p, keep: Set[Cell], wrists: Set[Cell] = frozenset(), sure: bool = False) -> Dict[Cell, int]:
-        """The arms' skin: each pixel reached from a hand through skin, and how far along."""
+    def arms(self, own: Rows, p, keep: Set[Cell], wrists: Set[Cell] = frozenset(), sure: bool = False) -> Dict[Cell, float]:
+        """The arms: each pixel of the picture along the line from a hand to its shoulder (within
+        two pixels of it, three on a half-giant; not the head, nor the middle of the chest seen
+        from the front or behind), and how far up the arm from the hand it is (to 2: the hand).
+        A hand is where spriteparts finds one, or just past a wristband it finds none at."""
         sy, sa, sb = p.shoulders
         side = p.facing == sp.SIDE
-        reach = max(4, p.waist - sy) * (1 if side else 1.5)
         cx = (p.head.left + p.head.right) / 2
-        core = 0.3 * (sb - sa)  # (the chest and thighs between the arms, seen from the front or behind)
-        out: Dict[Cell, int] = {}
-
+        core = 0.3 * (sb - sa)
+        wide = 2.0 if sb - sa < 22 else 3.0
         band = set(wrists) if sure else {(x, y) for y, r in enumerate(own) for x, c in enumerate(r) if c in BANDS}
         chest = {}  # (each row's run through the body's middle: its middle three fifths are the chest)
         for y in range(sy, p.waist + 1):
@@ -393,36 +402,39 @@ class Game:
             if run and run[1] - run[0] >= 0.4 * (sb - sa):
                 chest[y] = ((run[0] + run[1]) / 2, 0.3 * (run[1] - run[0]))
 
-        def skin(q):
-            x, y = q
-            if not (0 <= y < len(own) and 0 <= x < len(own[0]) and (own[y][x] in SKINC or q in band)) or q in keep:
-                return False
-            if side:
-                return y >= sy
-            return not (y >= sy and abs(x - cx) <= core) and not (y in chest and abs(x - chest[y][0]) <= chest[y][1])
-        starts = []
+        def middle(x, y):
+            return not side and ((y >= sy and abs(x - cx) <= core) or (y in chest and abs(x - chest[y][0]) <= chest[y][1]))
+
+        def shoulder(x):
+            return ((sa + sb) / 2, sy + 1) if side else ((sa + 1) if x < cx else (sb - 1), sy + 1)
+        starts = []  # (a hand's pixel, and how far up the arm it already is)
         for hx, hy in p.hands.values():
-            near = sorted((abs(a) + abs(b), (hx + a, hy + b)) for a in range(-2, 3) for b in range(-2, 3) if skin((hx + a, hy + b)))
+            near = sorted((abs(a) + abs(b), (hx + a, hy + b)) for a in range(-2, 3) for b in range(-2, 3)
+                          if 0 <= hy + b < len(own) and 0 <= hx + a < len(own[0]) and own[hy + b][hx + a] in SKINC
+                          and (hx + a, hy + b) not in keep)
             if near:
-                starts.append(near[0][1])
-        # (and from the wristbands, where a hand isn't found: an arm flung out in a blow)
-        starts += [q for q in band if skin(q)]
-        for start in starts:
-            todo = collections.deque([(start, 0)])
-            seen = {start}
-            while todo:
-                q, d = todo.popleft()
-                if d < out.get(q, 99):
-                    out[q] = d
-                if d >= reach:
-                    continue
-                for a in (-1, 0, 1):
-                    for b in (-1, 0, 1):
-                        n = (q[0] + a, q[1] + b)
-                        if n not in seen and (skin(n) or (d < 4 and n not in keep and 0 <= n[1] < len(own)
-                                                          and 0 <= n[0] < len(own[0]) and n in wrists)):
-                            seen.add(n)
-                            todo.append((n, d + 1))
+                starts.append((near[0][1], 0.0))
+        for comp in comps(band):  # (a wristband with no hand found by it: the hand is past it from the shoulder)
+            bx, by = sorted(comp)[len(comp) // 2]
+            if not any(abs(bx - x) <= 4 and abs(by - y) <= 4 for (x, y), _ in starts):
+                ax, ay = shoulder(bx)
+                d = math.hypot(bx - ax, by - ay) or 1.0
+                starts.append(((bx + (bx - ax) * 2 / d, by + (by - ay) * 2 / d), 0.0))
+        out: Dict[Cell, float] = {}
+        for (hx, hy), d0 in starts:
+            ax, ay = shoulder(hx)
+            length = math.hypot(ax - hx, ay - hy) or 1.0
+            ux, uy = (ax - hx) / length, (ay - hy) / length
+            for y, r in enumerate(own):
+                for x, c in enumerate(r):
+                    if c is None or (x, y) in keep or middle(x, y):
+                        continue
+                    t = (x - hx) * ux + (y - hy) * uy  # (along the arm, from the hand)
+                    off = abs((x - hx) * uy - (y - hy) * ux)
+                    if -3 <= t <= length and off <= wide and (t >= 0 or math.hypot(x - hx, y - hy) <= 3):
+                        d = d0 + max(0.0, t)
+                        if d < out.get((x, y), 99):
+                            out[(x, y)] = d
         return out
 
     def bow(self, fig: Figure, own: Rows, p) -> Set[Cell]:
@@ -447,10 +459,9 @@ class Game:
         if not (p.head and p.shoulders and p.waist is not None):
             return rows, what
         sy, waist, bottom = p.shoulders[0], p.waist, p.bottom
-        keep = sg._keep_out(own, p)
+        keep = keep_out(own, p, fig.hair)
         hair = fig.hair
         arm = self.arms(own, p, keep, wrists, fig.sure_bands)
-        reach = max(4, waist - sy)
         boot_h = max(2, int(round(0.2 * (bottom - waist))))
         for y, r in enumerate(own):
             for x, c in enumerate(r):
@@ -458,7 +469,7 @@ class Game:
                     continue
                 q = (x, y)
                 if c in fig.cloak and not (fig.sure_bands and q in wrists):
-                    rows[y][x] = tone(c, o.cloak or o.torso, cloth=True)
+                    rows[y][x] = shade(fig.cloak_shade[c], o.cloak or o.torso)
                     what[q] = "cloak"
                     continue
                 if q in bow:
@@ -470,31 +481,42 @@ class Game:
                         rows[y][x] = tone(c, o.torso)  # (a collar)
                     continue
                 if fig.sure_bands and q in wrists:
-                    rows[y][x] = BANDS.get(c, c)
+                    rows[y][x] = BANDS.get(c, 212)
                     what[q] = "hand"
                     continue
                 skin = c in SKINC
-                if skin and q in arm:
-                    if arm[q] <= 2:
+                if q in arm and (skin or o.sleeves):
+                    if skin and arm[q] <= 2:
                         what[q] = "hand"
-                    elif not o.sleeves or arm[q] < o.sleeve_from * reach:
+                    elif not o.sleeves:
                         what[q] = "forearm"
-                    else:
+                    else:  # (a sleeve to the wrist, over the figure's own sleeve too)
                         what[q] = "arm"
-                        rows[y][x] = tone(c, o.sleeves)
+                        if c != 254:
+                            rows[y][x] = tone(c, o.sleeves)
+                        elif not edge(own, x, y):
+                            rows[y][x] = o.sleeves[0]
                     continue
                 low = y > bottom - boot_h
                 if low or (not skin and y > waist + 0.45 * (bottom - waist)):
                     what[q] = "boot"
-                    if o.boots and c != 254 and (not skin or o.cover):
+                    if o.boots and c != 254 and (skin and o.cover if o.harness else not skin or o.cover):
                         rows[y][x] = tone(c, o.boots)
                 elif y <= waist:
                     what[q] = "torso"
-                    if c != 254 and (not skin or o.cover):
+                    if c == 254:
+                        if o.cover and not o.harness and not edge(own, x, y):
+                            rows[y][x] = o.torso[0]  # (black inside the garment: its darkest shade)
+                    elif not skin or o.cover:
                         rows[y][x] = tone(c, o.torso)
                 else:
                     what[q] = "leg"
-                    if o.legs and c != 254 and (not skin or o.cover):
+                    if o.kilt and y > waist + o.kilt * (bottom - waist):
+                        pass  # (below the kilt: the figure's own legs)
+                    elif c == 254:
+                        if o.cover and o.legs and not o.harness and not edge(own, x, y):
+                            rows[y][x] = o.legs[0]
+                    elif o.legs and (not skin or o.cover):
                         rows[y][x] = tone(c, o.legs)
         if p.facing != sp.SIDE:
             # (skin taken for the chest or a leg, but apart from them: an arm the hand wasn't found on)
@@ -511,23 +533,37 @@ class Game:
                             rows[y][x] = own[y][x]
         return rows, what
 
-    def hood(self, out: Rows, own: Rows, p, o: Outfit) -> None:
-        """A hood worn up: the figure's hair and crown in the cloak's shades (lit from the left),
-        a pixel fuller round the head, the face left."""
+    def hood(self, out: Rows, own: Rows, p, o: Outfit, fig: Figure, bow: Set[Cell]) -> None:
+        """A hood worn up: the figure's hair (all of it, wherever it hangs) and crown in the
+        cloak's shades (lit from the left), black among them the darkest; a pixel fuller round the
+        head; from the front down beside the face to the shoulders, where a yoke joins it to the
+        cloak; the face left."""
         ramp = o.cloak
         h, neck = p.head, p.shoulders[0]
         mid = (h.left + h.right) / 2
+        brow = max(h.brow, h.top + int(0.35 * (neck - h.top)))  # (a bald head's brow: a third down it)
+        hairc = fig.hair - SKINC
         cells = set()
         for y, r in enumerate(own):
             for x, c in enumerate(r):
-                if c is None:
+                if c is None or (x, y) in bow:
                     continue
                 box = y < neck and h.left - 1 <= x <= h.right + 1
                 if (x, y) in p.hair:
                     cells.add((x, y))
-                elif box and (p.facing == sp.BACK or y <= h.brow or (p.facing == sp.SIDE and x <= mid)
-                              or (c not in SKINC and y <= h.brow + 1)):
+                elif box and (p.facing == sp.BACK or y <= brow or (p.facing == sp.SIDE and x <= mid)
+                              or (c not in SKINC and y <= brow + 1)):
                     cells.add((x, y))
+        grow = list(cells)  # (the hair spriteparts didn't take for hair: hair-coloured, touching the hood)
+        while grow:
+            x, y = grow.pop()
+            for a in (-1, 0, 1):
+                for b in (-1, 0, 1):
+                    n = (x + a, y + b)
+                    if n not in cells and n not in bow and 0 <= n[1] < len(own) and 0 <= n[0] < len(own[0]) \
+                            and own[n[1]][n[0]] in hairc:
+                        cells.add(n)
+                        grow.append(n)
         rim = set()
         for x, y in cells:
             if y < neck:
@@ -535,6 +571,12 @@ class Game:
                     n = (x + a, y + b)
                     if not (0 <= n[1] < len(own) and 0 <= n[0] < len(own[0])) or own[n[1]][n[0]] is None:
                         rim.add(n)
+        if p.facing == sp.FRONT:
+            rim |= {(x, y) for y in range(brow, neck) for x in (h.left - 1, h.right + 1)}  # (beside the face)
+            sa, sb = p.shoulders[1], p.shoulders[2]
+            cells |= {(x, y) for y in (neck, neck + 1) for x in range(sa + 1, sb) if abs(x - mid) >= 2
+                      and 0 <= y < len(own) and 0 <= x < len(own[0]) and own[y][x] is not None
+                      and own[y][x] not in SKINC}  # (the yoke, on the clothes at the shoulders)
         width = max(1, h.right - h.left + 2)
         height = max(1, neck - h.top + 1)
         for x, y in cells | rim:
@@ -543,28 +585,66 @@ class Game:
                 t -= 0.15
             c = own[y][x] if 0 <= y < len(own) and 0 <= x < len(own[0]) else None
             if c == 254 and (x, y) not in rim:
-                continue
+                t = 0
             if 0 <= y + PAD < len(out) and 0 <= x + PAD < len(out[0]):
                 out[y + PAD][x + PAD] = ramp[max(0, min(len(ramp) - 1, int(t * (len(ramp) - 1) + 0.5)))]
+
+    def front_cloak(self, out: Rows, p, o: Outfit, laid: Set[Cell]) -> None:
+        """An open cloak seen from the front, drawn on the figure itself so that it is the same
+        from frame to frame: it hangs behind the body from the shoulders to three fifths of the
+        way from the waist to the feet, inside the shoulders at the top and two pixels past them at
+        the scalloped hem; wherever the picture is empty within it is cloak: its left edge lit, its right
+        edge mid, its inside the cloak's second shade with a fold every fourth pixel, its hem the darkest."""
+        ramp, n = o.cloak, len(o.cloak)
+        sy, sa, sb = p.shoulders
+        hem = p.waist + int(round(0.6 * (p.bottom - p.waist)))
+        for y in range(sy + 1, hem + 1):
+            flare = (3 * (y - sy)) // max(1, hem - sy) - 1  # (inside the shoulders at the top, two past them at the hem)
+            left, right = sa - flare, sb + flare
+            Y = y + PAD
+            for x in range(left, right + 1):
+                X = x + PAD
+                if y == hem and (x - left) % 4 == 2:
+                    continue  # (the hem scalloped)
+                if 0 <= Y < len(out) and 0 <= X < len(out[0]) and out[Y][X] is None:
+                    if x == left:
+                        c = ramp[n - 2]
+                    elif x == left + 1:
+                        c = ramp[max(1, n - 3)]
+                    elif x == right:
+                        c = ramp[2]
+                    elif y >= hem - 1:
+                        c = ramp[0]
+                    else:
+                        c = ramp[2] if (x - left) % 4 == 3 else ramp[1]  # (a fold every fourth pixel)
+                    out[Y][X] = c
+                    laid.add((X, Y))
 
     def dress(self, key, o: Outfit, cb: int, f: int) -> Tuple[Rows, int, int]:
         """A figure's frame in the outfit, and where its first pixel is in the figure's own frame."""
         fig = self.fig(key)
         own, p = fig.rows(cb, f), fig.parts(cb, f)
-        rows, what = self.clothe(own, fig, p, o, fig.bands(cb, f), self.bow(fig, own, p) if cb and f in sp.BOW_FRAMES else frozenset())
+        bow = self.bow(fig, own, p) if cb and f in sp.BOW_FRAMES else frozenset()
+        rows, what = self.clothe(own, fig, p, o, fig.bands(cb, f), bow)
         h, w = len(rows), len(rows[0])
         out: Rows = [[None] * (w + 2 * PAD) for _ in range(PAD)] + \
             [[None] * PAD + r + [None] * PAD for r in rows] + [[None] * (w + 2 * PAD) for _ in range(PAD)]
-        mt = marks(p, own, fig.cloak)
         laid: Set[Cell] = set()
+        mt = marks(p, own, fig.cloak)
         hit = bool(cb) and f == 12  # (the game's people have no hit frame: the human woman's cloak, as she reels)
         src = sg.CLOAK_MODEL if hit else MAN
         ms = marks(self.fig(src).parts(cb, f), self.fig(src).rows(cb, f), self.fig(src).cloak)
-        if o.cloak and mt and ms and (not fig.cloak or o.closed):
+        if o.cloak and not o.closed and not fig.cloak and p.facing == sp.FRONT and p.shoulders and p.waist is not None:
+            self.front_cloak(out, p, o, laid)
+        elif o.cloak and mt and ms and (not fig.cloak or o.closed):
             neck = mt["neck"]
             sa, sb = p.shoulders[1], p.shoulders[2]
             layer = self.her_cloak(cb, f) if hit else self.cloak_layer(o, cb, f)
             placed = self.warp(layer, o.cloak, ms, mt, self.scale(key) / self.scale(src), w, h)
+            for q, c in list(placed.items()):  # (a shade alone among others, left by the resampling: its neighbours')
+                near = [placed[n] for n in ((q[0] + 1, q[1]), (q[0] - 1, q[1]), (q[0], q[1] + 1), (q[0], q[1] - 1)) if n in placed]
+                if len(near) >= 3 and c not in near:
+                    placed[q] = collections.Counter(near).most_common(1)[0][0]
             for (x, y), c in placed.items():
                 if y < neck - (0 if o.hood or p.facing == sp.FRONT else 2):
                     continue  # (a hood worn down lies at the nape)
@@ -584,14 +664,51 @@ class Game:
                         continue
                 out[y + PAD][x + PAD] = c
                 laid.add((x + PAD, y + PAD))
+        if p.facing == sp.SIDE:  # (sand between the cloak and the back, up to four pixels: cloak)
+            for Y, r in enumerate(out):
+                for X in range(len(r) - 2):
+                    if (X, Y) in laid and r[X + 1] is None:
+                        n = 1
+                        while X + n + 1 < len(r) and r[X + n + 1] is None and n < 5:
+                            n += 1
+                        if n <= 4 and X + n + 1 < len(r) and r[X + n + 1] is not None:
+                            for k in range(1, n + 1):
+                                r[X + k] = r[X]
+                                laid.add((X + k, Y))
+        for _ in range(2):  # (a line of the cloak with nothing above or below it: its lit edge left over)
+            for X, Y in list(laid):
+                if not any(out[Y + b][X + a] is not None for b in (-1, 1) for a in (-1, 0, 1)
+                           if 0 <= Y + b < len(out) and 0 <= X + a < len(out[0])):
+                    out[Y][X] = None
+                    laid.discard((X, Y))
+        if o.closed and p.facing == sp.FRONT and p.waist is not None:
+            self.skirt(out, what, p, o)
         pieces = comps(sil(out))  # (a piece of the cloak apart from the figure: gone)
         for comp in pieces:
             if comp is not max(pieces, key=len) and comp <= laid:
                 for x, y in comp:
                     out[y][x] = None
         if o.cloak and o.hood and p.head and p.shoulders:
-            self.hood(out, own, p, o)
-        return self.ears(tidy(out, 4), fig, cb, f), -PAD, -PAD
+            self.hood(out, own, p, o, fig, bow)
+        return (tidy(out, 4) if o.hood else self.ears(tidy(out, 4), fig, cb, f)), -PAD, -PAD
+
+    @staticmethod
+    def skirt(out: Rows, what: Dict[Cell, str], p, o: Outfit) -> None:
+        """A robe closed over the legs, seen from the front: from the waist three fifths of the
+        way to the feet, the gap between the legs and a pixel each side of them in the robe's
+        middle shades, a fold every third pixel, lighter to the left, a dark hem."""
+        ramp, n = o.cloak, len(o.cloak)
+        foot = p.waist + int(round(0.6 * (p.bottom - p.waist)))
+        cx = (p.head.left + p.head.right) / 2
+        for y in range(p.waist + 1, foot + 1):
+            xs = [x for (x, yy), k in what.items() if yy == y and k in ("leg", "torso")]
+            if not xs:
+                continue
+            for x in range(min(xs) - 1, max(xs) + 2):
+                X, Y = x + PAD, y + PAD
+                if 0 <= X < len(out[0]) and out[Y][X] is None:
+                    t = n // 2 + (1 if x < cx - 2 else 0) - (1 if (x - int(cx)) % 3 == 0 else 0)
+                    out[Y][X] = ramp[1] if y == foot else ramp[max(1, min(n - 1, t))]
 
     @staticmethod
     def ears(out: Rows, fig: Figure, cb: int, f: int) -> Rows:
@@ -625,6 +742,7 @@ class Game:
         ys = sorted(y for _, y in cells)
         top, bottom = ys[0], ys[-1]
         cut = ys[len(ys) // 3]  # (the raised legs above it)
+        feet = top + max(2, int(round(0.1 * (bottom - top))))
         head = bottom - sp.HEAD_ROWS[model][0]  # (the head below it)
         xs = [x for x, y in cells if cut <= y <= head]
         mid, half = (min(xs) + max(xs)) / 2, (max(xs) - min(xs)) / 2
@@ -632,21 +750,25 @@ class Game:
         out = [list(r) for r in h]
         for y, r in enumerate(h):
             for x, c in enumerate(r):
-                if c is None or c == 254 or (c in hair and y >= cut):
+                if c is None or c == 254:
+                    continue
+                if c in hair and y >= cut:
+                    if o.hood and o.cloak and c not in SKINC:
+                        out[y][x] = shade(min(1.0, light(c) * 1.4), o.cloak)  # (the hood, fallen with them)
                     continue
                 skin = c in SKINC
                 if (x, y) in wrists:
                     if fig.sure_bands:
-                        out[y][x] = BANDS.get(c, c)
+                        out[y][x] = BANDS.get(c, 212)
                 elif c in fig.cloak:
-                    out[y][x] = tone(c, o.cloak or o.torso, cloth=True)
+                    out[y][x] = shade(fig.cloak_shade[c], o.cloak or o.torso)
                 elif y < cut:
-                    ramp = o.boots if y <= top + 2 else o.legs
-                    if ramp and (not skin or (o.cover and y > top + 2)):
+                    ramp = o.boots if y <= feet else o.legs
+                    if ramp and (not skin or (o.cover and y > feet)):
                         out[y][x] = tone(c, ramp)
                 elif not skin:
                     out[y][x] = tone(c, o.torso)
-                elif o.cover and y <= head and not any(abs(x - a) <= 3 and abs(y - b) <= 3 for a, b in wrists):
+                elif o.cover and y <= head and not any(abs(x - a) <= 1 and abs(y - b) <= 1 for a, b in wrists):
                     if abs(x - mid) <= 0.45 * half:
                         out[y][x] = tone(c, o.torso)
                     elif o.sleeves and not o.sleeve_from:
@@ -657,29 +779,37 @@ class Game:
             [[None] * P + r + [None] * P for r in out] + [[None] * (w + 2 * P) for _ in range(P)]
         if not o.cloak or fig.cloak:
             return self.ears(big, fig, 1, 13), -P, -P
+        # The cloak, tied at the neck, lies under the body fanned out toward the feet (up the picture):
+        # no wider than the shoulders at the neck, five or six pixels past the body each side at the
+        # hips and a little beyond, shifted a little to the left; lighter to the left, its folds
+        # running from the neck, a shadow where the body lies on it, its right edge dark.
         ramp, n = o.cloak, len(o.cloak)
-        span = {}
-        for y in range(cut + 1, bottom + 1):
-            row = [x for x, yy in cells if yy == y]
-            if row:
-                span[y] = (min(row), max(row))
-        cloth = set()
-        length = max(1, bottom - cut)
-        for y, (l, r) in span.items():
-            e = 2 + min(2, int(3 * (y - cut) / length))
-            cloth |= {(x, y) for x in range(l - e, r + e + 1)}
-        l, r = span[bottom]
-        for k in (1, 2):  # (rounded off below the head)
-            cloth |= {(x, bottom + k) for x in range(l - 3 + 2 * k, r + 4 - 2 * k)}
-        cloth -= cells
-        for x, y in cloth:
-            t = n // 2 + (1 if x < mid - half * 0.4 else -1 if x > mid + half * 0.4 else 0)
-            if (x + (y - cut) // 3) % 4 == 0:
-                t -= 1  # (a fold)
-            if (x + 1, y) not in cloth | cells or (x, y + 1) not in cloth | cells:
-                t = 0
-            elif (x - 1, y) not in cloth | cells or (x, y - 1) not in cloth | cells:
-                t = min(t, 1)
+        big_one = (bottom - top) / 24.0
+        stand = fig.parts(0, 0)
+        neck_half = ((stand.head.right - stand.head.left) / 2 + 2) if stand.head else 5
+        hip_half = neck_half + 5 * max(0.8, big_one)
+        first = max(top, cut - 2)
+        cloth = {}
+        for y in range(first, head + 1):
+            k = (head - y) / max(1, head - first)  # (0 at the neck, 1 at the hem)
+            hw = neck_half + (hip_half - neck_half) * min(1.0, k * 1.3)
+            cx = mid - 1.5 * k
+            for x in range(int(round(cx - hw)), int(round(cx + hw)) + 1):
+                if y == first and (x - int(cx)) % 4 == 0:
+                    continue  # (the hem uneven)
+                if (x, y) not in cells:
+                    cloth[(x, y)] = (cx, hw)
+        for (x, y), (cx, hw) in cloth.items():
+            u = (x - cx) / max(1.0, hw)
+            t = n // 2 + (1 if u < -0.33 else -1 if u > 0.33 else 0)
+            if any(abs(x - (cx + j * hw / 3)) < 0.5 for j in (-2, -1, 1, 2)):
+                t = 1  # (a fold, from the neck)
+            if (x - 1, y) in cells or (x, y - 1) in cells:
+                t = 0  # (the body's shadow on it)
+            elif (x + 1, y) not in cloth and (x + 1, y) not in cells:
+                t = 1
+            elif (x - 1, y) not in cloth and (x - 1, y) not in cells:
+                t = min(n - 2, t + 1)
             big[y + P][x + P] = ramp[max(0, min(n - 1, t))]
         return self.ears(big, fig, 1, 13), -P, -P
 
@@ -778,6 +908,25 @@ def edge(rows: Rows, x: int, y: int) -> bool:
         for a, b in ((1, 0), (-1, 0), (0, 1), (0, -1)))
 
 
+def keep_out(own: Rows, p, hair: FrozenSet[int]) -> Set[Cell]:
+    """What clothes never recolour: the head (its box down to the shoulders), the hair, and the
+    dark strands among the hair (black, or one of the hair's own colours, with two hair pixels
+    by it): not the body under long hair."""
+    out = set(p.hair)
+    if p.head and p.shoulders:
+        h, neck = p.head, p.shoulders[0]
+        out |= {(x, y) for y in range(h.top, neck) for x in range(h.left, h.right + 1)}
+    for _ in range(2):
+        among = set()
+        for y, row in enumerate(own):
+            for x, c in enumerate(row):
+                if c is not None and (x, y) not in out and (c == 254 or (c in hair and c not in SKINC)) and \
+                        sum((x + a, y + b) in p.hair for a in (-1, 0, 1) for b in (-1, 0, 1)) >= 2:
+                    among.add((x, y))
+        out |= among
+    return out
+
+
 def shouldered(p, rows: Rows, model: int):
     """Parts with the shoulders, where spriteparts finds none (the half-giants shooting, from
     behind), put at the foot of the head, as wide as the picture's row there."""
@@ -819,6 +968,11 @@ def _pw(y: float, src: dict, dst: dict) -> float:
     if b[0] == a[0]:
         return a[1]
     return a[1] + (y - a[0]) * (b[1] - a[1]) / (b[0] - a[0])
+
+
+def shade(t: float, ramp: Tuple[int, ...]) -> int:
+    """A cloak's shade T (0 its darkest, 1 its lightest) in RAMP: never RAMP's darkest, its fold lines'."""
+    return ramp[max(1, min(len(ramp) - 1, int(t * (len(ramp) - 1) + 0.5)))]
 
 
 def tone(c: int, ramp: Tuple[int, ...], cloth: bool = False) -> int:
