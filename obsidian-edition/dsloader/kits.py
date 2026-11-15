@@ -7,7 +7,7 @@ that number, 0 for none (the rule off, more than one class, none chosen).
 import struct
 from typing import List, Optional, Tuple
 
-from .game import FOG_SPELL, FRIENDS_SPELL, HEAL_SPELL, NEW_SPELLS, REFLECT_SPELL, SPOOK_SPELL, WATER_LIFE_SPELL
+from .game import FOG_SPELL, FRIENDS_SPELL, HARM_SPELL, HEAL_SPELL, NEW_SPELLS, REFLECT_SPELL, SPOOK_SPELL, WATER_LIFE_SPELL
 from .kitpages import KIT_IDS, KITS
 
 RAVAGER, SENTINEL, STALKER = KIT_IDS["Ravager"], KIT_IDS["Sentinel"], KIT_IDS["Stalker"]
@@ -40,6 +40,11 @@ AVENGER_NO_HEAL = frozenset((CURE_LIGHT, BLOOD_FLOW, CURE_SERIOUS, CURE_CRITICAL
 # Cause Light, Serious and Critical Wounds, and their dice: a Wilderness Avenger's 1 more a die
 # (DSCLOG's AV_CAUSE)
 CAUSE_LIGHT, CAUSE_SERIOUS, CAUSE_CRITICAL = 72, 113, 128
+# the harming spells a Healer or Lifebinder never knows (DSCLOG's AV_HARM; Harm, the 6th-level one,
+# NS_PRIEST_KNOWS's): the Cause Wounds spells, Cause Disease, Poison, Slay Living
+CAUSE_DISEASE, POISON_SPELL, SLAY_LIVING = 97, 119, 136
+NO_HARM = frozenset((CAUSE_LIGHT, CAUSE_SERIOUS, CAUSE_CRITICAL, CAUSE_DISEASE, POISON_SPELL, SLAY_LIVING,
+                     HARM_SPELL))
 CAUSE_DICE = {CAUSE_LIGHT: 1, CAUSE_SERIOUS: 2, CAUSE_CRITICAL: 3}
 # the kits with a warrior's THAC0, with their chosen weapon spec alone (DSCLOG's WAR_HIT)
 WARRIOR_THAC0 = frozenset((SWASHBUCKLER, CRUSADER, BATTLE_MAGE, MIND_WARRIOR))
@@ -352,9 +357,11 @@ def harm_bonus(kid: int, spell: int) -> int:
 
 
 def knows_heal(kid: int, spell: int) -> bool:
-    """Whether a character of kit KID may know healing spell SPELL (a Wilderness Avenger never
-    knows AVENGER_NO_HEAL's)."""
-    return not (kid == AVENGER and spell in AVENGER_NO_HEAL)
+    """Whether a character of kit KID may know priest spell SPELL: a Wilderness Avenger never knows
+    AVENGER_NO_HEAL's healing ones, a Healer or Lifebinder NO_HARM's harming ones."""
+    if kid == AVENGER:
+        return spell not in AVENGER_NO_HEAL
+    return not (kid in (HEALER, LIFEBINDER) and spell in NO_HARM)
 
 
 def cure_die(kid: int, spell: int) -> int:
@@ -476,16 +483,19 @@ MYRMIDON_INITIATIVE = -2  # (the drilled soldier waits for the order to strike: 
 
 def initiative(kid: int, outdoors: bool = False) -> int:
     """Added to initiative (PROBE_INIT): a Military Scout's 2 under the open sky (OUTDOORS), a
-    Myrmidon's 2 less. (A Sentinel's 2 more went in 2.18.)"""
+    Myrmidon's 2 less, a Wayfinder's own 2 more (on top of its Path-finder's 1 for the party).
+    (A Sentinel's 2 more went in 2.18.)"""
     if kid == MYRMIDON:
         return MYRMIDON_INITIATIVE
+    if kid == WAYFINDER:
+        return WAYFINDER_INITIATIVE
     return 2 if kid == SCOUT and outdoors else 0
 
 
 # Path-finder: while a Wayfinder of the party is up, each party member's initiative 1 more
-# (DSCLOG's PATH_UP, in PROBE_INIT); while one is down (stunned to petrified) and none up, 1 less
-# (PATH_DOWN). (Up to 2.17 their Move in a fight too.)
-PATH_INITIATIVE = 1
+# (DSCLOG's PATH_UP, in PROBE_INIT), and the Wayfinder's own 2 more (WAYFINDER_INITIATIVE). (Up to
+# 2.17 their Move in a fight too, and 1 less for the party while one was down.)
+PATH_INITIATIVE, WAYFINDER_INITIATIVE = 1, 2
 # attacking from behind: 2 to hit (the game's), a Rescuer's 1 (DSCLOG's KIT_REAR); a Military
 # Scout never backstabs (KIT_REAR takes it back)
 REAR, RESCUER_REAR = 2, 1
@@ -710,7 +720,8 @@ def cosmos_spells(gd, member: int) -> List[str]:
     for spell in PRIEST_SPELLS:
         mask = struct.unpack_from("<I", masks, spell * game.SPELL_SPHERES_SIZE)[0]
         own = 2 << cls
-        if mask & own or not spell_spheres(HEALER, cls, None, mask) & own or known[spell] & 0x0F:
+        if mask & own or not spell_spheres(HEALER, cls, None, mask) & own or known[spell] & 0x0F \
+                or spell in NO_HARM:  # (its harming ones never: AV_HARM)
             continue
         gd.guest.write(known_at + spell, bytes(((known[spell] & 0xF0) | 1,)))
         learnt.append(gd.spell_name(spell))
@@ -720,24 +731,31 @@ def cosmos_spells(gd, member: int) -> List[str]:
 
 
 def avenger_heals(gd, member: int) -> List[str]:
-    """A Wilderness Avenger in the party knows no healing spell (AVENGER_NO_HEAL), as DSCLOG's
-    AV_KNOW keeps them from it when it is made (a level up marks no priest spells): one made
-    before (2.10.0 or earlier) has them marked not known, as the game marks a priest's (the low
-    four bits 0). Lines for the log, the spells taken away."""
+    """A Wilderness Avenger in the party knows no healing spell (AVENGER_NO_HEAL), a Healer or
+    Lifebinder no harming one (NO_HARM), as DSCLOG's AV_KNOW keeps them from it when it is made (a
+    level up marks no priest spells): one made before (a Wilderness Avenger of 2.10.0 or earlier,
+    a Healer or Lifebinder of 2.17 or earlier) has them marked not known, as the game marks a
+    priest's (the low four bits 0). Lines for the log, the spells taken away."""
     from . import game
     rec = gd.creature(member)
-    if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME] or AVENGER not in gd.kit_ids(member):
+    if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME]:
         return []
+    kids = gd.kit_ids(member)
+    kid = next((k for k in (AVENGER, HEALER, LIFEBINDER) if k in kids), None)
+    if kid is None:
+        return []
+    barred, what = (AVENGER_NO_HEAL, "healing") if kid == AVENGER else (NO_HARM, "harming")
     known_at = game.far_pointer(gd.guest, gd.ds, KNOWN_SPELLS_PTR) + member * (game.SPELL_COUNT + 1)
     known = gd.guest.read(known_at, game.SPELL_COUNT + 1)
     gone = []
-    for spell in sorted(s for s in AVENGER_NO_HEAL if s < len(known)):
+    for spell in sorted(s for s in barred if s < len(known)):
         if known[spell] & 0x0F:
             gd.guest.write(known_at + spell, bytes((known[spell] & 0xF0,)))
             gone.append(gd.spell_name(spell))
     if not gone:
         return []
-    return [f"{gd.creature_name(member)}, a Wilderness Avenger, knows no healing spells: {', '.join(gone)} taken away"]
+    return [f"{gd.creature_name(member)}, {'a Wilderness Avenger' if kid == AVENGER else 'a ' + name(kid)}, "
+            f"knows no {what} spells: {', '.join(gone)} taken away"]
 
 
 def allows(kid: int, typ: bytes, kind: Optional[int], chosen: Optional[int], specialize: bool) -> bool:
@@ -762,8 +780,8 @@ def forbids_off_hand(kid: int, typ: bytes) -> bool:
     return kid == BATTLE_MAGE or kid == HEALER and bool(typ[0] & (MELEE | MISSILE | THROWN))
 
 
-# the kits held to light armour asleep too (DSCLOG's KIT_LIGHT): a thief's own limit kept after
-# dual-classing
+# the kits held to light armour (DSCLOG's KIT_LIGHT), while awake: asleep after a change of class,
+# the limit sleeps with the kit (up to 2.18's first changes, kept)
 LIGHT_KITS = frozenset((ASSASSIN, SHINOBI, SHADOWBLADE, POISONER))
 # the kits that wear no armour, helm or shield at all (DSCLOG's KIT_LIGHT, its BARE): the Complete
 # Book of Elves's Spellarcher; bracers, robes and a cloak of protection aren't armour

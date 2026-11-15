@@ -896,7 +896,7 @@ with no shield to slow them.
 up in the cities' poorest quarters, where a dagger in each hand settles most
 arguments. Wayfinders are dwarves whose focus is the hidden road: they slip
 past unseen, but have little use for other people's purses, and a party they
-guide acts that little bit quicker.
+guide acts that little bit quicker, the guide quickest of all.
 
 *Spellarcher* (half-elf fighter/preserver). Half-elf freedom fighters who
 weave a little magic into every arrow. The technique is a secret, and the bow

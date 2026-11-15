@@ -4313,10 +4313,10 @@ kit_forbids:
         jc .ok
 .place: call kit_at
         jz .next
-        call kit_light          ; (the light-armour kits, asleep too)
-        jc .out
         call kit_awake
-        jc .next
+        jc .next                ; (a kit asleep: its limits too, light armour's among them, since 2.18)
+        call kit_light          ; (the light-armour kits)
+        jc .out
         mov [cs:kit_where], di
         call kit_forbids_one
         jc .out
@@ -4327,9 +4327,9 @@ kit_forbids:
         pop cx
         pop ax
         ret
-; KIT_LIGHT: carry set if kit AL keeps its character to light armour whether awake or asleep (an
-; Assassin, Shinobi, Shadowblade or Poisoner: kits.LIGHT_KITS, a thief's own limit kept after
-; dual-classing) and item type DX is armour that isn't light (leather, or of no material; not a
+; KIT_LIGHT: carry set if kit AL (awake: asleep after a change of class, its limit sleeps with it,
+; since 2.18) keeps its character to light armour (an Assassin, Shinobi, Shadowblade or Poisoner:
+; kits.LIGHT_KITS) and item type DX is armour that isn't light (leather, or of no material; not a
 ; shield); or, a Spellarcher (BARE: kits.BARE_KITS), if DX is armour, a helm or a shield at all,
 ; as the Complete Book of Elves's Spellarcher wears none (bracers, robes and a cloak of protection
 ; aren't armour: BRACERS_AX, BARE_CLOAK). All registers kept.
@@ -7301,15 +7301,22 @@ kit_champion:
 ; combatant's initiative for the round is made (DX the 0-9 roll and its adjustments, SI the
 ; creature): the game's 20 added, and a Military Scout's 2 under the open sky
 ; (its KIT_OUTDOORS bit), and 1 for each party member while a Wayfinder of the party is up
-; (PATH_UP; kits.initiative); a Myrmidon's 2 less.
+; (PATH_UP; kits.initiative); a Myrmidon's 2 less; a Wayfinder's own 2 more (WAYFINDER_INIT; up to
+; 2.18's first changes, the party's 1 less while one was down: PATH_DOWN, gone).
+WAYFINDER_INIT equ 2
 probe_init:
         add dx, 20
         push ax
         mov ax, si
         call cr_is
         db KIT_MYRMIDON
-        jne .scout
+        jne .wayfinder
         sub dx, 2
+.wayfinder:
+        call cr_is
+        db KIT_WAYFINDER
+        jne .scout
+        add dx, WAYFINDER_INIT
 .scout: cmp si, 3
         ja .out                 ; (not a party member)
         call cr_is
@@ -7319,12 +7326,8 @@ probe_init:
         jnc .path
         add dx, 2
 .path:  call path_up
-        jne .down
-        inc dx
-        jmp .out
-.down:  call path_down          ; (a Wayfinder down, none up: 1 less)
         jne .out
-        dec dx
+        inc dx
 .out:   pop ax
         iret
 
@@ -10351,41 +10354,6 @@ path_up:
         pop ax
         ret
 
-; PATH_DOWN: ZF set if no party member up is a Wayfinder (PATH_UP) and one not up (status 2-7:
-; stunned to petrified; not Gone) is: Path-finder lost, the party's 1 less Move in a fight and 1
-; less initiative (kits.path_finder). DS the game's; all registers kept.
-path_down:
-        call path_up
-        jne .scan
-        or sp, sp               ; (ZF clear: one is up)
-        ret
-.scan:
-        push ax
-        push bx
-        push es
-        xor ax, ax
-.member:
-        push ax
-        les bx, [CREATURES]
-        imul ax, ax, 0x3A
-        add bx, ax
-        mov ah, [es:bx + 0x1C]
-        sub ah, 2               ; (not New or Okay, and not Gone: 2 to 7)
-        cmp ah, 7 - 2
-        pop ax
-        ja .next
-        call cr_is
-        db KIT_WAYFINDER
-        je .out
-.next:  inc ax
-        cmp ax, 4
-        jb .member
-        or ax, ax               ; (ZF clear: none)
-.out:   pop es
-        pop bx
-        pop ax
-        ret
-
 ; AGE_TEXT: CF set when party member BX has no age in its STATS (the Loader not keeping them, the
 ; rule off, none given); else AGE_SHORT "AGE: 23", for the inventory panel. All registers kept.
 age_text:
@@ -11567,13 +11535,15 @@ probe_el_know:
         pop bx
         test [es:bx + 0x19D], ecx
         jz .out
-        call av_know            ; (a Wilderness Avenger's healing spells: not known)
+        call av_know            ; (a Wilderness Avenger's healing spells, a Healer's or Lifebinder's
+                                ;   harming ones: not known)
 .out:   pop ecx
         pop eax
         retf 2
 
-; AV_KNOW: (PROBE_EL_KNOW) ZF set if creature SI is a Wilderness Avenger and the spell whose place
-; in the table is BX (the spell x 7) a healing one (AV_HEAL), else clear. Others kept.
+; AV_KNOW: (PROBE_EL_KNOW) ZF set if the spell whose place in the table is BX (the spell x 7) is
+; one creature SI's kit never knows: a Wilderness Avenger's healing ones (AV_HEAL), a Healer's or
+; Lifebinder's harming ones (AV_HARM); else clear. Others kept.
 av_know:
         push ax
         push dx
@@ -11583,15 +11553,49 @@ av_know:
         mov bx, 7
         div bx
         call av_heal
-        jnc .no
+        jnc .harm
         mov ax, si
         call cr_is
         db KIT_AVENGER
+        jmp .out
+.harm:  call av_harm
+        jnc .no
+        mov ax, si
+        call cr_is
+        db KIT_HEALER
+        je .out
+        call cr_is
+        db KIT_LIFEBINDER
         jmp .out
 .no:    or sp, sp               ; (ZF clear)
 .out:   pop bx
         pop dx
         pop ax
+        ret
+
+; AV_HARM: CF set if spell AX is one a Healer or Lifebinder never knows (kits.NO_HARM): Cause
+; Light, Serious and Critical Wounds, Cause Disease, Poison and Slay Living (Harm: NS_PRIEST_KNOWS).
+; All registers kept.
+av_harms db 72, 113, 128, 97, 119, 136
+AV_HARMS_COUNT equ 6
+av_harm:
+        push si
+        push cx
+        or ah, ah
+        jnz .no
+        mov si, av_harms
+        mov cx, AV_HARMS_COUNT
+.find:  cmp al, [cs:si]
+        je .yes
+        inc si
+        loop .find
+.no:    pop cx
+        pop si
+        clc
+        ret
+.yes:   pop cx
+        pop si
+        stc
         ret
 
 ; AV_HEAL: CF set if spell AX is one a Wilderness Avenger never knows (kits.AVENGER_NO_HEAL): Cure
@@ -12846,7 +12850,8 @@ wander_dmg:
 ; AV_GRANT: "test es:[bx+19Dh],edx" (5E499h; 6 bytes: the INT, the site's number and 3 NOPs) in
 ; the routine giving a priest the spells of its spheres (5E401h: [BP+6] the character, SI the spell,
 ; EDX its priest classes' mask; a spell meeting it learnt; no caller found, guarded as PROBE_EL_GRANT
-; guards it): a Wilderness Avenger's healing spells (AV_HEAL) not given. The test made, its flags returned.
+; guards it): a Wilderness Avenger's healing spells (AV_HEAL), a Healer's or Lifebinder's harming
+; ones (AV_HARM), not given. The test made, its flags returned.
 av_grant:
         pushad
         push es
@@ -12855,9 +12860,17 @@ av_grant:
         jz .flags
         mov ax, si
         call av_heal
-        jnc .given
+        jnc .harm
         call cb_is
         db KIT_AVENGER
+        jmp .flags
+.harm:  call av_harm            ; (a Healer's or Lifebinder's harming spells: AV_HARM)
+        jnc .given
+        call cb_is
+        db KIT_HEALER
+        je .flags
+        call cb_is
+        db KIT_LIFEBINDER
         jmp .flags
 .given: or sp, sp               ; (ZF clear)
 .flags: pushf
@@ -20349,12 +20362,22 @@ ns_priest_knows:
         cmp cl, HEAL_SPELL - NS_FIRST   ; (a Wilderness Avenger's healing spells: not its: AV_HEAL)
         je .avenger
         cmp cl, WATER_LIFE_SPELL - NS_FIRST
-        jne .second
+        jne .harm
 .avenger:
         call kit_is_b
         db KIT_AVENGER
         jne .second
         xor edx, edx
+        jmp .second
+.harm:  cmp cl, HARM_SPELL - NS_FIRST   ; (Harm: not a Healer's or Lifebinder's, AV_HARM's)
+        jne .second
+        call kit_is_b
+        db KIT_HEALER
+        je .none
+        call kit_is_b
+        db KIT_LIFEBINDER
+        jne .second
+.none:  xor edx, edx
 .second:
         call el_second          ; (AL its second sphere, 0-3)
         jz .healer

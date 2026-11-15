@@ -2457,18 +2457,6 @@ class GameData:
         from . import kits
         return kits.own_race(self.sheet(creature))
 
-    def path_lost(self) -> bool:
-        """No party member up is a Wayfinder, and one down (stunned to petrified; not Gone) is:
-        Path-finder lost, the party's 1 less (DSCLOG's PATH_DOWN)."""
-        from . import kits
-        if self.path_finder():
-            return False
-        for m in range(PARTY_SIZE):
-            rec = self.creature(m)
-            if len(rec) > CREATURE_STATUS and 2 <= rec[CREATURE_STATUS] <= 7 and kits.WAYFINDER in self.kit_ids(m):
-                return True
-        return False
-
     def path_finder(self) -> bool:
         """A party member up (New or Okay) is a Wayfinder: the party's Path-finder (DSCLOG's
         PATH_UP: kits.PATH_INITIATIVE)."""

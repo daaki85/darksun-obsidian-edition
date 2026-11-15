@@ -2668,8 +2668,7 @@ class DiceLog:
                     parts.append((kits.initiative(kid, outdoors), kits.name(kid) + (
                         " under the open sky" if kid == kits.SCOUT else "")))
             if index < game.PARTY_SIZE and path is None:  # (the same for the whole party: once a round)
-                path = (kits.PATH_INITIATIVE, "Wayfinder's Path-finder") if g.path_finder() else \
-                    (-kits.PATH_INITIATIVE, "Wayfinder down") if g.path_lost() else ()
+                path = (kits.PATH_INITIATIVE, "Wayfinder's Path-finder") if g.path_finder() else ()
             if index < game.PARTY_SIZE and path:
                 parts.append(path)
             score = INITIATIVE_BASE + roll + sum(v for v, _ in parts)

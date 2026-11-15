@@ -161,6 +161,17 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   save bit for a spell arrow's cast alone (`spellarrows.SAVED`). Test: `test_spell_arrows`.
 - **The Wild Fury's check at −4 again** (the user's call, after trying it without): `WILD_CHECK` −4.
 - **The Shinobi's spells** are said to be its own short list (21), not every preserver spell.
+- **The Wayfinder: its own +2 initiative, no penalty when down** (the user's call): `PROBE_INIT`
+  adds a Wayfinder's own 2 (`WAYFINDER_INIT`, `kits.WAYFINDER_INITIATIVE`) to the party's Path-finder
+  1; `PATH_DOWN` and `GameData.path_lost` are gone. Test: `test_scout_and_path_finder`.
+- **The Assassin's and Shinobi's light armour sleeps with the kit** (the user's call): `KIT_FORBIDS`
+  tests `KIT_AWAKE` before `KIT_LIGHT`, and `restrict.kit_forbids` and `forbidding_kit` take only
+  awake kits'. Test: `CanUseTests.test_kits` (a human Assassin asleep, then awake).
+- **The Healer and Lifebinder never know the harming spells** (the user's call): Cause Light, Serious
+  and Critical Wounds, Cause Disease, Poison, Slay Living (`AV_HARM` in `AV_KNOW` and `AV_GRANT`) and
+  Harm (`NS_PRIEST_KNOWS`); `kits.NO_HARM`, `knows_heal`; the Healer's cosmos spells given by the
+  Loader leave them out, and one made before has them taken away (`kits.avenger_heals`). Tests:
+  `test_avenger_spells`, `AvengerHealTests.test_healer_and_lifebinder`.
 
 **Fixed**
 - **An archer's turn lost with its last arrow** (the game's bug, the user's report): the weapon

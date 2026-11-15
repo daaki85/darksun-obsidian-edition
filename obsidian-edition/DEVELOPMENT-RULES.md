@@ -1490,6 +1490,7 @@ emulated tests hold the helper to it:
 | a cure's healing | Healer, Lifebinder, Rescuer | `PROBE_CURE` |
 | a spell's damage | Wilderness Avenger | `AV_CAUSE`, `HARM_SITE` |
 | healing spells never known | Wilderness Avenger | `PROBE_EL_KNOW` (`AV_KNOW`), `AV_GRANT` |
+| harming spells never known | Healer, Lifebinder | `PROBE_EL_KNOW` (`AV_KNOW`'s `AV_HARM`), `AV_GRANT`, `NS_PRIEST_KNOWS` |
 | casting level | Seeker, Justifier, Shinobi | `PROBE_RANGER_CAST`, `PROBE_CAST_LEVEL`, `PROBE_SPELL_LEVEL` |
 | wizard spells for a thief | Shinobi | `PROBE_SLOTS`, `PROBE_PICK_ANY`, `PROBE_PICK_LIST` |
 | a power's PSP to keep it up | Mind Bender, Kineticist, Titan Mind, Wasteland Seer | `PROBE_PSP_KEEP`, `PROBE_PSP_KEEP_DX` |
@@ -1582,6 +1583,10 @@ How each is done:
   aren't learnt); the 6th-level two in `NS_PRIEST_KNOWS` (no mask for an Avenger). One made with
   2.10.0 or earlier, with them known: `kits.avenger_heals` marks them not known when the save is
   loaded.
+- **Harming spells never known.** Healer, Lifebinder (Cause Light, Serious and Critical Wounds, 72,
+  113, 128; Cause Disease, 97; Poison, 119; Slay Living, 136: `AV_HARM`, `kits.NO_HARM`; and Harm,
+  `NS_PRIEST_KNOWS`). Where: as the Wilderness Avenger's healing spells (`AV_KNOW`, `AV_GRANT`); one
+  made with 2.17 or earlier has them taken away by the Loader (`kits.avenger_heals`).
 - **Casting level.** Seeker (the ranger level less 5), Justifier (less 9), Shinobi (for its wizard
   spells, the thief level less 5). Where: the game works it out in two places, both with the
   combatant and the spell as arguments. The caster level routine, 81B16h, counts a ranger's level 7
@@ -1684,10 +1689,13 @@ How each is done:
   `kits.rear_to_hit`), after the game's own setting of `[BP-1Ah]` and `[BP-24h]` and the stealth
   rule's; the backstab flag is pushed for the attack after it (DSUN.EXE 5838Ah).
 - **Initiative in a fight.** Wayfinder (Path-finder: each party member 1 more while a Wayfinder of
-  the party is New or Okay, `PATH_UP`; 1 less while one is down and none up, `PATH_DOWN`; its Move
-  too up to 2.17). Where: `PROBE_INIT`; `GameData.path_finder`, `GameData.path_lost`.
+  the party is New or Okay, `PATH_UP`, and the Wayfinder's own 2 more, `WAYFINDER_INIT`,
+  `kits.WAYFINDER_INITIATIVE`; up to 2.17 its Move too, and 1 less for the party while one was
+  down, `PATH_DOWN`, gone). Where: `PROBE_INIT`; `GameData.path_finder`.
 - **Shields.** Shadowblade, Ghetto Fighter, Rescuer. Where: `KIT_FORBIDS` (`kits.forbids`).
-- **Light armour only.** Assassin, Shinobi, Shadowblade, Poisoner (asleep too); the Spellarcher no armour, helm or shield at all (`BARE`: bracers, robes and a cloak of protection aren't armour; `kits.BARE_KITS`), and its class's armour left behind at creation (`weaponchoice.kit_gear`). Where:
+- **Light armour only.** Assassin, Shinobi, Shadowblade, Poisoner (awake only: asleep after a change
+  of class the limit sleeps with the kit, `KIT_FORBIDS` testing `KIT_AWAKE` first; up to 2.17
+  asleep too); the Spellarcher no armour, helm or shield at all (`BARE`: bracers, robes and a cloak of protection aren't armour; `kits.BARE_KITS`), and its class's armour left behind at creation (`weaponchoice.kit_gear`). Where:
   `KIT_LIGHT` (`kits.LIGHT_KITS`).
 - **Hiding, moving silently.** Stalker, Assassin and Military Scout (not halved in daylight:
   `kits.not_halved_by_sun`), Wilderness Avenger (a ranger's, 5 a level of its best class),

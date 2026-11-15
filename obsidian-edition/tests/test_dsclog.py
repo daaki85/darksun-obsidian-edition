@@ -2564,12 +2564,14 @@ class CanUseTests(unittest.TestCase):
                               if not restrict.kit_forbids(bytes(shinobi), t, test_restrict.record(t))],
                              [17, 1, 3, 0, 6, 90, 48])  # (dagger, bow, quarterstaff, staff sling, leather, silk, chatkcha)
             # light armour only (KIT_LIGHT): an Assassin, a Poisoner (halfling fighter/thief), a
-            # Shadowblade and Spellarcher (half-elf), and an Assassin asleep (a human thief, now a
-            # fighter of a level not past it); the same thief with no kit may wear it
+            # Shadowblade and Spellarcher (half-elf); an Assassin asleep (a human thief, now a fighter
+            # of a level not past it) may wear it, its limit asleep too (since 2.18), and once awake
+            # (the fighter's level past it) not; the same thief with no kit may
             game.RULES_IN_FORCE = game.RULE_RESTRICT | game.RULE_KITS
             for classes, race, kit, levels, light in (((17,), 2, 2, (1,), True), ((9, 17), 6, 1, (1, 1), True),
                                                       ((9, 17), 4, 1, (1, 1), True), ((9, 11), 4, 1, (1, 1), True),
-                                                      ((9, 17), game.HUMAN, 2, (2, 5), True),
+                                                      ((9, 17), game.HUMAN, 2, (2, 5), False),
+                                                      ((9, 17), game.HUMAN, 2, (6, 5), True),
                                                       ((9, 17), game.HUMAN, 0, (2, 5), False)):
                 s = bytearray(test_restrict.sheet(*classes, race=race))
                 s[0x43] = kit
@@ -6532,6 +6534,24 @@ class KitTests(unittest.TestCase):
                 self.mu.mem_write(cast, struct.pack("<HH", 7, 113))  # (another spell cast last: the game's)
                 site(gamepatch.HARM_SITE, 3, eax=5, edi=72, esi=40)
                 self.assertEqual(struct.unpack("<h", self.mu.mem_read(SS * 16 + BP - 6, 2))[0], 5)
+        # a Healer (a water cleric) and a Lifebinder (a druid) never know the harming spells
+        # (kits.NO_HARM: AV_HARM), the kits on; a Grove Warden and a Crusader do
+        self.rules(game.RULE_KITS)
+        for cls, kit in ((4, 2), (5, 2), (5, 1), (4, 3)):
+            self.creature(cls, kit)
+            kid = self.kit_of(cls, kit)
+            self.mu.mem_write(SS * 16 + BP + 6, struct.pack("<H", 7))
+            for spell in (72, 113, 128, 97, 119, 136, 71, 112):
+                self.mu.mem_write(spells * 16 + spell * 7 + 0x19D, struct.pack("<I", 0xFFFFFFFF))
+                known = kits.knows_heal(kid, spell)
+                with self.subTest(cls=cls, kit=kit, spell=spell, probe="harm know"):
+                    self.run_vector(VEC_EL_KNOW, 6, eax=bit, ebx=spell * 7, ecx=0x12345678, esi=5, es=spells)
+                    self.assertEqual(not self.mu.reg_read(r.UC_X86_REG_EFLAGS) & 0x40, known)
+                with self.subTest(cls=cls, kit=kit, spell=spell, probe="harm grant"):
+                    site(gamepatch.AV_GRANT, 6, ebx=spell * 7, edx=bit, esi=spell, edi=0x7777, es=spells)
+                    self.assertEqual(not self.mu.reg_read(r.UC_X86_REG_EFLAGS) & 0x40, known)
+        self.assertEqual([kits.knows_heal(k, s) for k in (kits.HEALER, kits.LIFEBINDER, kits.GROVE_WARDEN)
+                          for s in (72, game.HARM_SPELL)], [False, False, False, False, True, True])
         self.assertEqual([kits.harm_bonus(kits.AVENGER, s) for s in (72, 113, 128, 71)], [1, 2, 3, 0])
         self.assertEqual(kits.harm_bonus(kits.HEALER, 72), 0)
         self.assertFalse(kits.knows_heal(kits.AVENGER, game.HEAL_SPELL))
@@ -6689,11 +6709,15 @@ class KitTests(unittest.TestCase):
             self.assertEqual([kits.missile_to_hit(kits.SCOUT, k, True) for k in (13, 14, 15, 0, 12)], [1, 1, 1, 0, 0])
             self.assertEqual(kits.missile_to_hit(kits.SCOUT, 13, False), 0)
             self.creature(9, 2, index=3, second=17, race=2)  # a dwarf fighter/thief Wayfinder
-            # (up, New or Okay: 1 more; down, stunned to petrified: 1 less; Gone: none)
-            for st, more in ((1, 1), (0, 1), (2, -1), (3, -1), (5, -1), (7, -1), (8, 0)):
+            # (up, New or Okay: 1 more; down, stunned to petrified, or Gone: none, no less since 2.18;
+            # the Wayfinder's own 2 more, kits.initiative)
+            for st, more in ((1, 1), (0, 1), (2, 0), (3, 0), (5, 0), (7, 0), (8, 0)):
                 with self.subTest(status=st):
                     status(3, st)
                     self.assertEqual((initiative(1), move(1), initiative(0)), (more, 0, 2 + more))
+            status(3, 1)
+            self.assertEqual(initiative(3), kits.WAYFINDER_INITIATIVE + 1)  # (its own 2, and its Path-finder's 1)
+            self.assertEqual(kits.initiative(kits.WAYFINDER), 2)
             status(2, 3)  # (a second Wayfinder, down: the one up counts)
             self.creature(9, 2, index=2, second=17, race=2)
             status(3, 1)

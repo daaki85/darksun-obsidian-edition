@@ -154,8 +154,8 @@ def kit_forbids(sheet: bytes, item_type: int, typ: bytes, spec: bool = False, of
     from . import kitpages, kits
     if not game.RULES_IN_FORCE & game.RULE_KITS:
         return False
-    if any(kits.light_only(kid, typ) for kid, _, _ in kitpages.kits_of(sheet)):
-        return True  # (a thief's or archer's kit, asleep too: light armour only)
+    if any(kits.light_only(kid, typ) for kid, _, awake in kitpages.kits_of(sheet) if awake):
+        return True  # (a thief's or archer's kit, awake: light armour only; asleep, its limit sleeps too)
     kind = specialize.kind_of(item_type) if is_weapon(typ) else None
     chosen = not spec and kind is not None and kind + 1 in game.spec_kinds(sheet) \
         and specs_awake(sheet)
@@ -181,8 +181,8 @@ def forbidding_kit(sheet: bytes, item_type: int, typ: bytes) -> Optional[int]:
     from . import kitpages, kits
     if not game.RULES_IN_FORCE & game.RULE_KITS:
         return None
-    for kid, _, _ in kitpages.kits_of(sheet):
-        if kits.light_only(kid, typ):
+    for kid, _, awake in kitpages.kits_of(sheet):
+        if awake and kits.light_only(kid, typ):
             return kid
     kind = specialize.kind_of(item_type) if is_weapon(typ) else None
     half_giant = sheet[game.SHEET_RACE] == game.RACE_HALF_GIANT and bool(game.RULES_IN_FORCE & game.RULE_HALF_GIANT) \

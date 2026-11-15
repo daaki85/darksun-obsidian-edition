@@ -173,8 +173,16 @@ class AvengerHealTests(unittest.TestCase):
         self.assertEqual(written, {1071: bytes((0,)), 1112: bytes((0x20,))})  # (Cause Light Wounds, 72, kept)
         self.assertEqual(lines, ["Asha, a Wilderness Avenger, knows no healing spells: spell 71, spell 112 taken away"])
 
+    def test_healer_and_lifebinder(self):
+        """A Healer or Lifebinder (one made with 2.17 or earlier) has the harming spells it knows
+        (NO_HARM) marked not known; its cures kept."""
+        for kid, name in ((kits.HEALER, "Healer"), (kits.LIFEBINDER, "Lifebinder")):
+            lines, written = self.make(kid)
+            self.assertEqual(written, {1072: bytes((0,))})  # (Cause Light Wounds; Cure Light, 71, kept)
+            self.assertEqual(lines, [f"Asha, a {name}, knows no harming spells: spell 72 taken away"])
+
     def test_not_an_avenger(self):
-        self.assertEqual(self.make(kits.HEALER), ([], {}))
+        self.assertEqual(self.make(kits.GROVE_WARDEN), ([], {}))
 
 
 class BruteBanTests(unittest.TestCase):
