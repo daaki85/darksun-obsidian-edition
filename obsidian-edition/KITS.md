@@ -95,7 +95,7 @@ spells.
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
-| **Scholar** | **bonus wizard slots from INT**, as a priest's from WIS: one more 1st-level slot at INT 16, and a 2nd-level one too at 17, a 3rd-level one at 18 and a 4th-level one at 19, each only at a spell level its preserver level gives it slots at ([the table](#kits-spell-slots)) | −1 to hit (THAC0 1 worse) | the preserver's gear | its spells learnt at a level up and from scrolls are any preserver's |
+| **Scholar** | **more spells learnt**: one more on CHOOSE A SPELL for each level it starts at (3 at 1st level, a preserver's 2), one more at each level up (2, a preserver's 1), and one more on changing class to preserver; its slots are any preserver's | −1 to hit (THAC0 1 worse), its touch spells (Chill Touch, Shocking Grasp, Vampiric Touch), Minute Meteors and Turn Pebble to Boulder too, which roll with its THAC0 (not Acid Arrow: a fighter's of its level) | the preserver's gear | it learns from scrolls as any preserver (INT's chance and most a level) |
 | **Battle Mage** | a warrior's THAC0 (21 less its level) with its **chosen weapon spec** only (without weapon specialization, with its weapon kinds: the one-handed melee ones below); a spell still cast after being hit earlier in the round; a d6 hit die; light armour (leather, or none) worn, and spells cast in it; with weapon specialization, expertise in one weapon spec of its choice (long sword, club, dagger, short sword, mace, axe or pick), whose weapons it may use as well as a preserver's own, at **3/2 attacks a round, 2 from 7th level** | one fewer spell slot at each spell level (none at 1st level); nothing in the off hand | with weapon specialization, a plain weapon of its chosen weapon spec in place of the quarterstaff | its weapon spec is chosen on the weapon window after DONE (the long sword for an EXIT); can't dual to fighter, gladiator or ranger; can't go with the Swashbuckler, Crusader or Mind Warrior |
 | **Arcanist** | its preserver spells are **cast a level higher** for their duration and damage (a 5th-level Arcanist's Magic Missile and Fireball are a 6th-level caster's); not the spell levels it may cast | a d3 hit die (a preserver's is a d4) | the preserver's gear | its hit die is rolled again when the kit is chosen or taken back on the creation screen |
 
@@ -235,7 +235,7 @@ more on top.
 - **Spell slots** are the game's own wherever it counts them (resting, the
   spell lists, the Loader's Spells tab). WIS's bonus slots count for the
   Crusader and Elementalist as for a cleric, not for the Seeker's and
-  Justifier's own tables; a preserver has none from INT but the Scholar.
+  Justifier's own tables; a preserver has none from INT.
 - **Casting level.** A kit's casting level is the one a spell's duration and
   damage take, and half of it (rounded up) is the highest spell level it may
   cast (the Seeker's, Justifier's and Shinobi's are in their tables above; a
@@ -269,11 +269,6 @@ changes its slots; it is here, as the cleric is, to set the kits beside:
 | 12 | | | | | | 6 5 5 3 2 2 | | | 3 2 2 |
 | 13 | | | | | | | | | 3 3 2 1 |
 
-- A **Scholar** adds INT's bonus slots to the preserver's (the table has no
-  column for it, as they go by INT): at INT 16 one more at 1st level, at 17
-  at 1st and 2nd, at 18 at 1st to 3rd, at 19 and more at 1st to 4th, at a
-  spell level the preserver column has a slot at. A 5th-level Scholar with INT
-  18 has 5 3 2.
 - A **Crusader** and an **Elementalist** add WIS's bonus slots as a cleric
   does; the Crusader still has one fewer at each spell level with them.
 - An **Elementalist**'s slots are a level behind, but never none at a spell

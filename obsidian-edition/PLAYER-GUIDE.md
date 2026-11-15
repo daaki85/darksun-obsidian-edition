@@ -630,9 +630,9 @@ spells while their bodies wither from years of study in hiding. Their spells
 strike and last as a preserver's a level beyond them.
 
 *Scholar.* Keepers of forbidden lore who have spent more time over hidden
-libraries than learning to hold a weapon. The sharper the mind, the more
-spells it holds ready: a clever Scholar has a spell or more each day that
-another preserver does without.
+libraries than learning to hold a weapon. A Scholar learns two spells at
+each level where another preserver learns one, and so has the right one to
+hand more often; its touch spells miss a little more often for it.
 
 *Battle Mage.* Preservers who learned in the arena or the legions that a spell
 is no use if you are dead before you finish it. They fight in leather with a

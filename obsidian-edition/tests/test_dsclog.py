@@ -5621,10 +5621,10 @@ class LevelPickTests(unittest.TestCase):
         self.assertEqual(self.level_up((17,), (8,), cls=17, kit=3, rules=game.RULE_KITS, member=4)[1], 0x60D)
         self.assertEqual(kits.SHINOBI_FIRST, 6)
 
-    def test_scholar_picks_no_more(self):
-        """A Scholar gone up a preserver level has the game's own CHOOSE A SPELL alone (past the
-        JNZ), as any preserver: its gift is a scroll's spell learnt for sure (INT_LEARN)."""
-        for kit, rules, calls in ((1, game.RULE_KITS, 0), (2, game.RULE_KITS, 0), (0, game.RULE_KITS, 0),
+    def test_scholar_picks_one_more(self):
+        """A Scholar gone up a preserver level has CHOOSE A SPELL once from the probe (then the
+        game's own, past the JNZ); another preserver, or the kits off, none from the probe."""
+        for kit, rules, calls in ((1, game.RULE_KITS, 1), (2, game.RULE_KITS, 0), (0, game.RULE_KITS, 0),
                                   (1, 0, 0)):
             with self.subTest(kit=kit, rules=rules):
                 self.assertEqual(self.level_up((11,), (5,), cls=11, kit=kit, rules=rules), (0, 0x606))
@@ -6896,13 +6896,12 @@ class KitTests(unittest.TestCase):
             self.rules(rules)
             for cls, kit in self.KIT_CASES + ((17, 3),):
                 kid = self.kit_of(cls, kit, rules)
-                for level, intel in [(lv, i) for lv in (1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15)
-                                     for i in ((9, 16, 17, 18, 19, 25) if kid == kits.SCHOLAR else (10,))]:
-                    self.creature(cls, kit, level=level, intel=intel)
+                for level in (1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15):
+                    self.creature(cls, kit, level=level)
                     for magic in (kits.WIZARD, kits.PRIEST):
                         for spell_level in (1, 2, 3, 4, 5, 6):
                             for given in (0, 1, 3):
-                                with self.subTest(rules=rules, cls=cls, kit=kit, level=level, intel=intel, magic=magic,
+                                with self.subTest(rules=rules, cls=cls, kit=kit, level=level, magic=magic,
                                                   spell_level=spell_level, given=given):
                                     self.mu.mem_write(SS * 16 + BP - 2, struct.pack("<H", given))
                                     self.mu.mem_write(SS * 16 + BP + 6, struct.pack("<HHH", 7, magic, spell_level))
@@ -6913,7 +6912,7 @@ class KitTests(unittest.TestCase):
                                     self.mu.emu_start(CALLER * 16 + 0x600, CALLER * 16 + 0x603)
                                     self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX),
                                                      kits.slots(kid, magic, level, spell_level, given,
-                                                                bool(rules & game.RULE_ADND_TABLES), intel))
+                                                                bool(rules & game.RULE_ADND_TABLES)))
                                     self.assertEqual([self.mu.reg_read(x) for x in (
                                         r.UC_X86_REG_BX, r.UC_X86_REG_CX, r.UC_X86_REG_DX, r.UC_X86_REG_ES,
                                         r.UC_X86_REG_SP)], [0x2222, 0x3333, 0x4444, 0x6666, 0x7FC])
@@ -6923,13 +6922,7 @@ class KitTests(unittest.TestCase):
         # Handbook's Seeker table (3 2 1, 3 2 2, 3 3 2 1)
         self.assertEqual([[kits.slots(kits.SHINOBI, kits.WIZARD, lv, sl, 0) for sl in (1, 2, 3, 4)] for lv in (10, 11, 12, 13)],
                          [[2, 2, 1, 0], [3, 2, 1, 0], [3, 2, 2, 0], [3, 3, 2, 1]])
-        # a Scholar: a wizard slot more where it has any, from INT 16 at 1st level to 19 at 4th
-        self.assertEqual([[kits.slots(kits.SCHOLAR, kits.WIZARD, 9, sl, 2, intel=i) for sl in (1, 2, 3, 4, 5)]
-                          for i in (15, 16, 17, 18, 19, 25)],
-                         [[2, 2, 2, 2, 2], [3, 2, 2, 2, 2], [3, 3, 2, 2, 2], [3, 3, 3, 2, 2], [3, 3, 3, 3, 2],
-                          [3, 3, 3, 3, 2]])
-        self.assertEqual([kits.slots(kits.SCHOLAR, kits.WIZARD, 5, 1, 0, intel=19), kits.slots(kits.SCHOLAR, kits.PRIEST, 5, 1, 2, intel=19)],
-                         [0, 2])  # (none where the game gives none; no priest slot more)
+        self.assertEqual([kits.slots(kits.SCHOLAR, kits.WIZARD, 5, 1, n) for n in (0, 2)], [0, 2])  # (no slot more: its spells more instead)
         self.assertEqual(kits.slots(kits.ARCANIST, kits.WIZARD, 5, 1, 2), 2)
         # an Elementalist: a level behind, but 1 at each spell level its own level reaches (2 x - 1)
         self.assertEqual([kits.slots(kits.ELEMENTALIST, kits.PRIEST, lv, sl, 0) for lv, sl in (

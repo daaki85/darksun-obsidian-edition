@@ -1798,7 +1798,7 @@ class GameData:
                 rules >>= 4
         for kid in kids:
             total = kits.slots(kid, bit, kitpages.kit_level(sheet, kid), spell_level, total,
-                               bool(self.rules & RULE_ADND_TABLES), self.creature(member)[CREATURE_ABILITIES + 3])
+                               bool(self.rules & RULE_ADND_TABLES))
         from . import robes
         return robes.slots(robes.worn_plus(self._worn(member)), bit, spell_level, total)
 

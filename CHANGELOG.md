@@ -60,15 +60,14 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   skills are −5 (was −10). The Loader's THAC0 for each weapon (`game.weapon_hits`) and the dice
   log (`_kit_attack`) show it as "Swashbuckler (a warrior's THAC0)" (`kits.war_hit`). Tests:
   `test_dsclog`'s `test_war_hit`, `test_thac0`, `test_thac0_line`, `test_swashbuckler`.
-- **The Scholar: bonus wizard slots from INT** (the user's call, in place of all it had, as a
-  priest's from WIS): `PROBE_SLOTS` gives a Scholar's wizard slots 1 more at a spell level it has
-  any of, 1st from INT 16, 2nd from 17, 3rd from 18, 4th from 19 (the creature record's INT, +25h;
-  `kits.slots`' `intel`, `kits.SCHOLAR_INT`). Gone: its slot more at every spell level, its spell
-  more at each level up (`LV_SCHOLAR`), at creation (`KIT_MADE` in the picks) and on changing class
-  to preserver (`PROBE_DUAL_SPELLS`); a sure scroll learning (`INT_LEARN`'s chance 100), tried on
-  this branch first, went too. Its −1 to hit stays. KITS.md's slot table has no column for it (a
-  note below it). Tests: `test_dsclog`'s `test_slots` (INT 9 to 25) and `test_int_learn`'s
-  Scholar, `test_slots`' `test_kits`, `test_scholar_picks_no_more`, `test_cermak_arcanist`.
+- **The Scholar: a spell more learnt, no slot more** (the user's call, after trying a sure scroll
+  learning and INT's bonus slots on this branch): one more spell at each level up (`LV_SCHOLAR`), one
+  more for each level at creation (`KIT_MADE` in the picks) and on changing class to preserver
+  (`PROBE_DUAL_SPELLS`), as up to 2.17; its slot more at each spell level is gone (`PROBE_SLOTS`,
+  `kits.slots`), and it learns from scrolls as any preserver. Its −1 to hit stays, which its touch
+  spells, Minute Meteors and Turn Pebble to Boulder roll with (not Acid Arrow's fighter's THAC0). KITS.md's slot table has
+  no column for it. Tests: `test_scholar_picks_one_more`, `test_slots`, `test_int_learn`'s Scholar,
+  `test_slots`' `test_kits`.
 - **The Arcanist: its preserver spells cast a level higher** (the user's call, in place of two
   spells a turn): `PROBE_SPELL_LEVEL`'s new `ARC_LEVEL` adds 1 to a party Arcanist's wizard spells'
   level for their duration and damage (the new wizard spells, 196-201, too; `kits.arc_level`). The

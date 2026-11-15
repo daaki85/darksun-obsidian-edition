@@ -158,7 +158,7 @@ A few of them:
 - **Myrmidon:** its two weapon specs are melee weapons only (no bow, sling or chatkcha), each going on to mastery and grand mastery.
 - **One kit a character:** a human who changes class keeps its kit and takes no other (one with none may take one for the new class).
 - **Arcanist:** its preserver spells cast a level higher (duration and damage), for a d3 hit die.
-- **Scholar:** bonus wizard slots from INT, as a priest's from WIS: one more 1st-level slot at INT 16, and at 2nd level too at 17, 3rd at 18 and 4th at 19, for 1 worse to hit.
+- **Scholar:** learns a spell more at each level up (and one more for each level at creation), for 1 worse to hit, with its touch spells too *(was a spell slot more at each spell level as well)*.
 - **Healer:** a water cleric only, given the sphere of the cosmos: the spells only druids had, Cure Serious and Critical Wounds, Raise Dead and Neutralize Poison among them, each cure healing 1 more a die.
 - **Assassin:** a backstab one step deadlier (×3 at 1st level up to ×6 from 13th), for −15 to picking pockets and locks.
 - **Wilderness Avenger:** +1 to hit and damage against anything, and Cause Wounds spells doing 1 more a die, for no healing spells at all.

@@ -1484,7 +1484,8 @@ emulated tests hold the helper to it:
 | to hit | Ravager, Brute, Ghetto Fighter, Arena Champion, Battle Dancer, Wilderness Avenger, Wild Fury | `PROBE_ATTACKS` (`KIT_TO_HIT`) |
 | AC | Ravager, Wanderer, Sentinel and Arena Champion, Grove Warden, Battle Dancer, Wild Fury | `PROBE_AC` (`KIT_AC`) |
 | movement | Stalker, Rescuer | `PROBE_MOVE` |
-| spell slots | Scholar, Battle Mage, Crusader, Seeker and Justifier, Elementalist | `PROBE_SLOTS`, `PROBE_SLOT_LEVEL` |
+| spell slots | Battle Mage, Crusader, Seeker and Justifier, Elementalist | `PROBE_SLOTS`, `PROBE_SLOT_LEVEL` |
+| spells learnt | Scholar | `PROBE_LV_PICK` (`LV_SCHOLAR`), `KIT_MADE` in `PROBE_CR_SPELLS`, `PROBE_DUAL_SPELLS` |
 | a power's PSP | Mind Bender, Kineticist, Titan Mind, Wasteland Seer | `PROBE_PSP_USE`, `PROBE_PSP_TABLE`, `PROBE_PSP_DEFENCE` |
 | a cure's healing | Healer, Lifebinder, Rescuer | `PROBE_CURE` |
 | a spell's damage | Wilderness Avenger | `AV_CAUSE`, `HARM_SITE` |
@@ -1535,8 +1536,12 @@ How each is done:
   `KIT_DANCE`), Wild Fury (fighting wild, passed or failed: 3 worse, no worse than 10, `KIT_WILD`'s bit N). Where:
   `PROBE_AC` (`INT 62h`, the end of the AC routine: `KIT_AC`).
 - **Movement.** Stalker, Rescuer (2 more). Where: `PROBE_MOVE` (`KIT_MOVE`).
-- **Spell slots.** Scholar (+1 wizard at a spell level with any, by INT: 1st from 16, 2nd from 17,
-  3rd from 18, 4th from 19; the creature record's INT, `+25h`; `kits.SCHOLAR_INT`), Battle Mage (−1 wizard), Crusader (−1 priest), Seeker and
+- **Spells learnt.** Scholar: one more at each level up (`PROBE_LV_PICK`'s `LV_SCHOLAR`: the game's
+  CHOOSE A SPELL once before its own), one more for each level at creation (`KIT_MADE` in
+  `PROBE_CR_SPELLS`' count) and on changing class to preserver (`PROBE_DUAL_SPELLS`). Up to 2.17 a
+  slot more at each spell level too; on this branch it was tried as a sure scroll learning, then as
+  INT's bonus slots, before this.
+- **Spell slots.** Battle Mage (−1 wizard), Crusader (−1 priest), Seeker and
   Justifier (their priest tables, `SEEKER_SLOTS`, by ranger level, in place of the game's),
   Elementalist (a level behind, `PROBE_SLOT_LEVEL`; but at least 1 at a spell level its own cleric
   level reaches, 2 × the spell level − 1, `PROBE_SLOTS`). Where: `PROBE_SLOTS` (`INT B6h`, new: the
