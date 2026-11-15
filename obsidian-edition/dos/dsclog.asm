@@ -5739,7 +5739,8 @@ wp_rules:
 ; one-handed melee kinds (KIT_BM_KINDS), not thrown, whatever its class lets it use; a Spellarcher
 ; the bow only; a Poisoner the dagger and short sword (KIT_POISON_KINDS); a Swashbuckler the long
 ; sword, dagger and short sword (SWASH_KINDS); a kind KIT_ALLOWS lets it use whatever its classes (a Battle Dancer's long sword);
-; a Crusader or Mind Warrior only melee kinds (KIT_MELEE_KINDS), and a thri-kreen Mind Warrior the
+; a Myrmidon only melee kinds (KIT_MELEE_KINDS: the drilled foot soldier, no missile weapon among its
+; two weapon specs); a Crusader or Mind Warrior only melee kinds (KIT_MELEE_KINDS), and a thri-kreen Mind Warrior the
 ; chatkcha as well (KIT_KREEN_KINDS). DS = the game's. Others kept.
 KIT_KREEN_KINDS equ 0x1000      ; (the chatkcha)
 KIT_BM_KINDS equ 0x00BF         ; a Battle Mage's: long sword, club, dagger, short sword, mace, axe, pick
@@ -5803,7 +5804,11 @@ kinds_allowed:
 .no:    inc dx
         cmp dx, KIND_TYPES
         jb .type
-        call war_kit_is         ; (a Crusader or Mind Warrior: its class's melee kinds; a
+        call kit_is_b           ; (a Myrmidon: melee kinds alone, both its specs)
+        db KIT_MYRMIDON
+        jne .war
+        and di, KIT_MELEE_KINDS
+.war:   call war_kit_is         ; (a Crusader or Mind Warrior: its class's melee kinds; a
         jne .ranger             ;   thri-kreen Mind Warrior's chatkcha too)
         mov ax, di
         and di, KIT_MELEE_KINDS

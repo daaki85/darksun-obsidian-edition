@@ -2786,7 +2786,7 @@ class KindsAllowedTests(unittest.TestCase):
             mu.mem_write(hdr + 270, struct.pack("<H", 1))
             for classes, kit in (((10,), 3), ((10,), 2), ((5,), 2), ((17,), 3), ((5,), 1), ((11,), 2), ((11,), 1),
                                  ((13,), 3), ((14,), 3), ((15,), 3), ((16,), 3), ((13,), 2), ((1,), 1), ((3,), 1),
-                                 ((1,), 3), ((12,), 2)):
+                                 ((1,), 3), ((12,), 2), ((9,), 1), ((9,), 2), ((17,), 1)):
                 s = bytearray(sheet(*classes))
                 s[0x43] = kit
                 with self.subTest(classes=classes, kit=kit):
@@ -2798,6 +2798,12 @@ class KindsAllowedTests(unittest.TestCase):
                     got = mu.reg_read(r.UC_X86_REG_AX)
                     self.assertEqual([k for k in range(16) if got >> k & 1], restrict.allowed_kinds(bytes(s), self.record))
             from dsloader import kits
+            myrmidon, fighter = bytearray(sheet(9)), bytearray(sheet(9))
+            myrmidon[0x43] = 1  # (a Myrmidon: melee kinds only, both specs; a fighter with no kit the bow too)
+            self.assertTrue(set(restrict.allowed_kinds(bytes(myrmidon), self.record)) <= kits.MELEE_KINDS)
+            self.assertIn(kits.BOW, restrict.allowed_kinds(bytes(fighter), self.record))
+            self.assertEqual(restrict.allowed_kinds(bytes(bytearray(sheet(17)) [:0x43] + b"\x01" + bytes(sheet(17))[0x44:]),
+                                                    self.record), sorted(kits.SWASHBUCKLER_KINDS))
             for classes, kit in (((1,), 3), ((12,), 2)):  # a Crusader's, a Mind Warrior's: melee kinds only
                 s = bytearray(sheet(*classes))
                 s[0x43] = kit

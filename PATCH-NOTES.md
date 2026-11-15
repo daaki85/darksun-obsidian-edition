@@ -154,6 +154,7 @@ The full catalogue follows, by part of the game.
 
 A few of them:
 
+- **Myrmidon:** its two weapon specs are melee weapons only (no bow, sling or chatkcha), each going on to mastery and grand mastery.
 - **One kit a character:** a human who changes class keeps its kit and takes no other (one with none may take one for the new class).
 - **Arcanist:** its preserver spells cast a level higher (duration and damage), for a d3 hit die.
 - **Scholar:** with the rule for INT, always learns a spell from a scroll (its chance 100%), for 1 worse to hit.
