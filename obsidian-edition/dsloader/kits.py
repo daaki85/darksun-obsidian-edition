@@ -102,7 +102,7 @@ DANCER_KINDS = frozenset((0, BOW))
 DAGGER = 2  # (the dagger's weapon kind: a Ghetto Fighter's +1)
 # by kit, what it adds to each thief skill (pick pockets, open locks, find/remove traps, move
 # silently, hide in shadows, hear noise, climb walls, read languages: DSCLOG's KIT_SKILLS)
-SKILLS = {SWASHBUCKLER: (-5,) * 8, ASSASSIN: (-15, -15, 0, 0, 0, 0, 0, 0),
+SKILLS = {ASSASSIN: (-15, -15, 0, 0, 0, 0, 0, 0),
           SHADOWBLADE: (-10, 0, 0, 5, 10, 0, 0, 0), GHETTO: (5, 0, -5, 0, 5, 0, 0, 0),
           WAYFINDER: (-10, 0, 0, 10, 10, 0, 0, 0)}
 # a Military Scout's skills that change with the sky: +10 under the open sky, -5 under a roof
@@ -199,9 +199,9 @@ def not_halved_by_sun(kids, race: int) -> str:
 
 
 # the dance's and Wild Fighting's checks: a d20 against DEX or CON with this (a proficiency check's
-# modifier: the dance's the score 4 lower; Wild Fighting's none, its successes paying its penalties)
-DANCE_CHECK = -4
-WILD_CHECK = 0  # (Wild Fighting's: the proficiency's own check, CON, as The Complete Barbarian's Handbook has it)
+# modifier: each the score 4 lower; Wild Fighting's a plain CON check for a while in 2.18, the -4
+# put back at the user's word)
+DANCE_CHECK = WILD_CHECK = -4
 
 
 def dance(dex: int, d20: int, fail_roll: int) -> Tuple[int, int]:
@@ -449,6 +449,9 @@ def hit_die(kid: int, sides: int) -> int:
 MIND_PSP = 5  # (a Mind Warrior's PSP a fifth fewer; a tenth up to 2.17)
 
 
+CELL_MORE = 4  # (a Lifebinder's Cell Adjustment a d4 more: DSCLOG's CELL_SITE, as its cures a die more)
+
+
 def max_psp(kid: int, psp: int) -> int:
     """The most PSP a level up gives, PSP the game's (PROBE_MAX_PSP): a Mind Warrior's a fifth
     fewer (the fifth rounded down)."""
@@ -543,14 +546,14 @@ POISON_POWER = 176  # the monsters' "poison (10 damage)", a Poisoner's weapon's 
 TSR_POISON_USED = 1860  # DSCLOG's header: bit N member N's main hand has poisoned this fight, N + 4 its off hand
 
 
-# a Wild Fury's Wild Fighting (wild.py; DSCLOG's KIT_WILD): checked against CON as a fight starts,
+# a Wild Fury's Wild Fighting (wild.py; DSCLOG's KIT_WILD): checked against CON - 4 as a fight starts,
 # for the fight. Whatever the check, 3 worse to hit and AC 3 worse (no worse than WILD_AC_MOST);
 # passed, also 1 more attack a round in melee (2 halves) and 3 more damage; every fight.
 WILD_TO_HIT, WILD_DAMAGE, WILD_HALVES, WILD_AC, WILD_AC_MOST = -3, 3, 2, 3, 10
 
 
 def wild_check(con: int, d20: int) -> bool:
-    """Wild Fighting's check: a D20 of CON or less (the proficiency's, WILD_CHECK 0); a natural
+    """Wild Fighting's check: a D20 of CON - 4 or less (the proficiency's, at WILD_CHECK); a natural
     20 always fails."""
     return d20 <= con + WILD_CHECK and d20 != 20
 
@@ -591,10 +594,24 @@ def champion(kid: int, shield: bool, melee: bool) -> Tuple[int, int]:
     return -1, 0
 
 
+BAD_LUCK = 25  # (a Swashbuckler's bad luck: 0 to this off each thief skill roll, rolled each time)
+TSR_BAD_LUCK = 1862  # DSCLOG's header: the last one PROBE_BELT rolled (a byte), and whose (+1863, a word: the creature)
+
+
+def bad_luck(kids, rng=None) -> int:
+    """What a Swashbuckler's bad luck takes off one thief skill roll (DSCLOG's PROBE_BELT for the
+    game's rolls; the Loader's own, pickpocket.py and stealth.py, the same): 0 to BAD_LUCK, by
+    RNG (random.randint's form) for one of KIDS; 0 for anyone else. The skills shown are without it."""
+    if SWASHBUCKLER not in kids:
+        return 0
+    import random
+    return (rng or random.randint)(0, BAD_LUCK)
+
+
 def thief_skill(kid: int, skill: int, outdoors: bool = False) -> int:
     """Added to a thief skill (game.THIEF_SKILLS' numbers; the helper's KIT_SKILL): SKILLS' (an
-    Assassin's -15 to pick pockets and open locks, a Swashbuckler's -10 to every one, a
-    Shadowblade's, Ghetto Fighter's and Wayfinder's); a Military Scout's +10 to finding traps,
+    Assassin's -15 to pick pockets and open locks, a Shadowblade's, Ghetto Fighter's and
+    Wayfinder's; a Swashbuckler's none here: its bad luck is rolled each time, bad_luck); a Military Scout's +10 to finding traps,
     moving silently, hiding and climbing under the open sky (OUTDOORS), -5 under a roof."""
     if kid == SCOUT:
         return (SCOUT_OUT if outdoors else SCOUT_IN) if skill in SCOUT_SKILLS else 0
@@ -621,7 +638,7 @@ _NO_SHIELD = frozenset(range(5, 9)) | {11}  # (druids and the preserver: no shie
 # table would take the new class's place (a Seeker's or Justifier's priest slots, a Shinobi's
 # wizard ones); a warrior's THAC0 is a warrior class's already (Swashbuckler, Crusader, Battle
 # Mage, Mind Warrior); it needs a shield the class can't hold (Arena Champion, Sentinel), or a
-# two-handed melee weapon the class can't use (Brute: a psionicist's); a Stalker's
+# two-handed melee weapon the class can't use (Brute: a psionicist's, an air cleric's); a Stalker's
 # hiding would add to a thief's own (the thief); a Grove Warden's AC to a gladiator's own (the
 # gladiator); a Healer's sphere is water's only (the rangers of air, earth and fire). The game itself
 # keeps a priest from the other priest class and a ranger (good) from the druid (true neutral), so the
@@ -629,7 +646,7 @@ _NO_SHIELD = frozenset(range(5, 9)) | {11}  # (druids and the preserver: no shie
 _NOT_WATER = frozenset((1, 2, 3, 5, 6, 7, 13, 14, 15))
 DUAL_BANS = {SEEKER: _PRIEST, JUSTIFIER: _PRIEST, SHINOBI: frozenset((11,)),
              **{k: _WARRIOR for k in WARRIOR_THAC0},
-             CHAMPION: _NO_SHIELD, SENTINEL: _NO_SHIELD, BRUTE: frozenset((12,)),
+             CHAMPION: _NO_SHIELD, SENTINEL: _NO_SHIELD, BRUTE: frozenset((1, 12)),
              STALKER: frozenset((17,)), GROVE_WARDEN: frozenset((10,)), HEALER: _NOT_WATER}
 
 
@@ -774,7 +791,7 @@ def light_only(kid: int, typ: bytes) -> bool:
 
 
 def forbids(kid: int, typ: bytes, kind: Optional[int], half_giant: bool, spec: bool = False,
-            off_hand: bool = False, sphere: int = 0) -> bool:
+            off_hand: bool = False, sphere: int = 0, cahulaks: bool = False) -> bool:
     """Whether the kit keeps a character from an item type (TYP its record; KIND its weapon kind,
     or None), as DSCLOG's KIT_FORBIDS: a Ravager a shield, a missile or thrown weapon and armour that isn't
     light; a Twin-blade a shield, and a two-handed weapon (but a
@@ -784,7 +801,7 @@ def forbids(kid: int, typ: bytes, kind: Optional[int], half_giant: bool, spec: b
     as a cleric's (the bow too); a Lifebinder a weapon of a kind not
     blunt; a Shinobi a shield, armour that isn't light, a weapon not of SHINOBI_KINDS; a Seeker a
     weapon (of a kind) its SPHERE (0 air to 3 water) doesn't allow, as a cleric's
-    (restrict.sphere_allows), but the bow; a Battle Dancer a shield, and a weapon not of
+    (restrict.sphere_allows), the bow too (kept whatever the sphere up to 2.18's first changes); a Battle Dancer a shield, and a weapon not of
     DANCER_KINDS; a Shadowblade, a Ghetto Fighter and a Rescuer a shield. Going to the off hand (OFF_HAND): nothing for a Battle
     Mage, no weapon for a Healer."""
     flags, kinds, mat = typ[0], typ[0x0F], typ[8] & 0x4F
@@ -794,13 +811,13 @@ def forbids(kid: int, typ: bytes, kind: Optional[int], half_giant: bool, spec: b
     light = not kinds & ARMOUR or bool(flags & SHIELD) or mat in (LEATHER, NO_MATERIAL)
     if kid == RAVAGER:
         return bool(flags & (SHIELD | MISSILE | THROWN)) or not light
-    if kid == TWIN_BLADE:
-        return bool(flags & SHIELD) or weapon and bool(kinds & TWO_HANDED) and not half_giant
+    if kid == TWIN_BLADE:  # (the CAHULAKS, a blade in each hand, its own)
+        return bool(flags & SHIELD) or weapon and bool(kinds & TWO_HANDED) and not half_giant and not cahulaks
     if kid == BRUTE:
         if flags & SHIELD:
             return not half_giant
-        if flags & MELEE:
-            return not kinds & TWO_HANDED
+        if flags & MELEE:  # (the CAHULAKS two weapons to it, not one two-handed one)
+            return not kinds & TWO_HANDED or cahulaks
         return bool(flags & MISSILE) and spec
     if kid == STALKER:
         return bool(kinds & ARMOUR) and not flags & SHIELD and mat not in (LEATHER, NO_MATERIAL)
@@ -811,7 +828,7 @@ def forbids(kid: int, typ: bytes, kind: Optional[int], half_giant: bool, spec: b
         return kind is not None and kind not in BLUNT
     if kid == SEEKER:
         from . import restrict
-        return weapon and kind is not None and kind != BOW and not restrict.sphere_allows(sphere, typ, kind)
+        return weapon and kind is not None and not restrict.sphere_allows(sphere, typ, kind)
     if kid == SHINOBI:
         if flags & SHIELD:
             return True

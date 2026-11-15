@@ -17,7 +17,8 @@ CR_WEAPONS; weaponpages.py draws it); once the window is closed, and before it i
 With kits (kit_gear), the game's starting gear fitted to the kit, whatever the weapon rules: a
 weapon the kit forbids becomes one it allows (a Shinobi's long sword a short sword, a Brute's a
 great axe, a Seeker's of its sphere's material), a shield it forbids is taken away (a Ravager's),
-an off-hand weapon it forbids goes to the backpack (a Brute's club), an Arena Champion's off-hand club becomes a
+an off-hand or missile weapon it forbids goes to the backpack (a Brute's club, a fire Seeker's
+bow), an Arena Champion's off-hand club becomes a
 shield, and a Battle Mage's quarterstaff its chosen weapon spec's weapon.
 """
 
@@ -371,7 +372,7 @@ def kit_gear(gd) -> List[str]:
             packed = _packed_start(item, owned)  # (the game's long sword in the backpack: the kit forbids it)
             shield = bool(typ[0] & kits.SHIELD)  # (in a hand or the backpack: left behind if forbidden)
             armour = bool(typ[0x0F] & kits.ARMOUR) and not shield  # (armour or a helm: a Spellarcher wears none)
-            if slot not in (right, left) and not packed and not shield and not armour \
+            if slot not in (right, left, MISSILE_SLOT) and not packed and not shield and not armour \
                     or not restrict.kit_forbids(sheet, type_, typ, off_hand=slot == left):
                 continue
             at = items + item_index * game.ITEM_SIZE

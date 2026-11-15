@@ -1805,6 +1805,9 @@ class ManualGroup3Tests(unittest.TestCase):
         self.assertEqual(say(dicelog.MANUAL_CELL, 2, 3, 1),
                          ["Cell Adjustment: 1d4 = 3 -> Mountain Stalker healed 3 HP, and Mountain Stalker is cured of disease"])
         self.assertEqual(say(dicelog.MANUAL_CELL, 2, 4, 0), ["Cell Adjustment: 1d4 = 4 -> Mountain Stalker healed 4 HP"])
+        self.assertEqual(say(dicelog.MANUAL_CELL, 2, 7, 0x0301),  # (a Lifebinder's d4 more, 3, above the cure's byte)
+                         ["Cell Adjustment: 1d4 = 4, +1d4 = 3 (Lifebinder) -> Mountain Stalker healed 7 HP, and "
+                          "Mountain Stalker is cured of disease"])
         self.assertEqual(say(dicelog.MANUAL_RAINBOW, 6, 0, 0),
                          ["    Mountain Stalker takes 6 damage: Rainbow Pattern's hold on it ends"])
         self.assertEqual(say(dicelog.MANUAL_FEEBLE, 2, 0, 0),

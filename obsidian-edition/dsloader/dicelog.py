@@ -2832,8 +2832,10 @@ class DiceLog:
                 self._destroyed[creature] = "slain by Cloudkill"
             return [f"Cloudkill: {name} dies ({band}; its level for saves {a})"]
         if e.raw == MANUAL_CELL:
-            cured = f", and {name} is cured of disease" if c else ""
-            return [f"Cell Adjustment: 1d4 = {b} -> {name} healed {b} HP{cured}"]
+            cured = f", and {name} is cured of disease" if (c or 0) & 0xFF else ""
+            more = (c or 0) >> 8  # (a Lifebinder's d4 more: DSCLOG's CELL_SITE, kits.CELL_MORE)
+            dice = f"1d4 = {b - more}, +1d4 = {more} (Lifebinder)" if more else f"1d4 = {b}"
+            return [f"Cell Adjustment: {dice} -> {name} healed {b} HP{cured}"]
         if e.raw == MANUAL_RAINBOW:
             return [f"    {name} takes {a} damage: Rainbow Pattern's hold on it ends"]
         if e.raw == MANUAL_FEEBLE:
@@ -2915,6 +2917,18 @@ class DiceLog:
         took = (f"an image is struck instead, the {what} lost" if roll <= chance else f"the {what} gets through")
         return f"{head}, {chance} or less strikes an image -> {took}"
 
+    def _bad_luck(self, creature: int) -> int:
+        """The bad luck DSCLOG's PROBE_BELT last took off a Swashbuckler's thief skill roll (the
+        header's TSR_BAD_LUCK), if it was CREATURE's; else 0."""
+        from . import kits
+        if self.tsr_hdr is None or kits.SWASHBUCKLER not in self.game.kit_ids(creature):
+            return 0
+        try:
+            luck, who = struct.unpack("<BH", self.guest.read(self.tsr_hdr + kits.TSR_BAD_LUCK, 3))
+        except (struct.error, ValueError, OSError):
+            return 0
+        return luck if who == creature else 0
+
     def _thief_skill(self, e: Entry) -> List[str]:
         """A thief skill check (the game's routine at 803B8h): d100 under the skill's chance plus
         the situation's bonus. Its arguments are (character, skill, bonus); [BP-2] the chance.
@@ -2947,13 +2961,16 @@ class DiceLog:
         outdoors = self.game.outdoors(creature)
         kid = next((k for k in self.game.kit_ids(creature) if kits.thief_skill(k, skill, outdoors)), 0)
         kit = kits.thief_skill(kid, skill, outdoors)
-        if kit and chance == 0:  # (no less than 0: what the kit took off can't be told apart)
-            kit = 0
-        rest = chance - bonus - kit - sum(n for _, n in parts)
+        luck = self._bad_luck(creature)  # (a Swashbuckler's, rolled by DSCLOG's PROBE_BELT for this roll)
+        if (kit or luck) and chance == 0:  # (no less than 0: what the kit took off can't be told apart)
+            kit = luck = 0
+        rest = chance - bonus - kit + luck - sum(n for _, n in parts)
         steps = [f"{n}" if what == "base" else f"{n} {what}" if not i else f"{signed(n)} {what}"
                  for i, (what, n) in enumerate(parts)]
         if kit:
             steps.append(f"{signed(kit)} {kits.name(kid)}")
+        if luck:
+            steps.append(f"-{luck} Swashbuckler's bad luck")
         capped = self.game.rules & game.RULE_THIEF_TABLE and rest < 0 and chance - bonus == game.THIEF_MOST
         if bonus:
             steps.append(f"{signed(bonus)} this attempt")

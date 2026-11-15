@@ -1461,7 +1461,7 @@ round then rolls again (`_kits_due`), and the log counts the rounds from 1 again
 and forgets the last fight's monsters' ACs (`_new_fight`), for a fight soon
 after another (the arena's next wave) too. At `+355` (`KIT_WILD`) each Wild
 Fury's (and Gerakis's) Wild Fighting, which `wild.py` rolls as a fight's first
-round begins (a d20 against CON, a natural 20 failing: `kits.WILD_CHECK` 0; −4 up to 2.17)
+round begins (a d20 against CON − 4, a natural 20 failing: `kits.WILD_CHECK`)
 and clears as the dances end: bit N, member N fights wild (its penalties, whatever the
 check); bit N + 4 as well, its check passed (its gains).
 
@@ -1556,7 +1556,8 @@ How each is done:
   `kits.psp_cost`. Monsters' powers (5A773h) are left alone.
 - **A cure's healing.** Healer (+1 a die of Cure Light, Serious, Critical Wounds: spells 71, 112,
   127), Lifebinder (a die more: a d8, Blood Flow's, 108, a d6, rolled from the game's rand() seed by
-  `GAME_DIE`), Rescuer (as the Healer). Where: `PROBE_CURE` (`INT B1h`, new: "nop / push cs" at
+  `GAME_DIE`; and Cell Adjustment a d4 more, `CELL_SITE`, `kits.CELL_MORE`, the die in `MN_CELL`'s
+  last word's high byte for the dice log), Rescuer (as the Healer). Where: `PROBE_CURE` (`INT B1h`, new: "nop / push cs" at
   DSUN.EXE 79619h in the handler for spells with rules of their own, where the healing, pushed with
   the target, goes to the routine that heals; the caster its `[BP+8]`, the spell `[BP+0Eh]`; the
   probe pushes CS itself). The Cell Adjustment's jump into 79618h is clear of it.
@@ -1664,10 +1665,13 @@ How each is done:
   Cold). Where: `WANDER_DMG` (an `NS_IMAGE` site: "test [bp+0Ch],di" at DSUN.EXE 7B56Fh, in the
   routine giving the share of a spell's damage a creature takes, 7B492h, where DI holds the kinds
   its effects guard it from; fire and cold added for a Wanderer); `GameData.damage_halved_by`.
-- **Thief skills.** Assassin (pick pockets, open locks), Swashbuckler (all), Shadowblade, Ghetto
-  Fighter, Wayfinder (`KIT_SKILLS`, a signed byte a skill), Military Scout (+10 or −5 by its
-  `KIT_OUTDOORS` bit). Where: `PROBE_BELT` (the thief skill routine's end: `KIT_SKILL`, no lower
-  than 0).
+- **Thief skills.** Assassin (pick pockets, open locks), Shadowblade, Ghetto Fighter, Wayfinder
+  (`KIT_SKILLS`, a signed byte a skill), Military Scout (+10 or −5 by its `KIT_OUTDOORS` bit),
+  Swashbuckler (its bad luck: a d26 less 1, 0 to `BAD_LUCK` 25, off each roll, from the game's
+  rand() seed, kept in the header's `BAD_LUCK` and `BAD_LUCK_WHO`, +1862, for the dice log;
+  `kits.bad_luck` for the Loader's own rolls, pickpocket.py and stealth.py; the skills shown,
+  `thief_skills_now`, without it; up to 2.17 a flat −5, at first −10). Where: `PROBE_BELT` (the
+  thief skill routine's end, the chance a roll is held against: `KIT_SKILL`, no lower than 0).
 - **From behind, backstab.** Military Scout (a backstab taken back: `[BP-24h]` cleared, its 2 to hit
   with it), Rescuer (from behind +1, not +2); Assassin (a backstab's multiplier one more, x3 to x6:
   `STAB_TIMES`, `kits.backstab_times`). Where: `PROBE_STEALTH`'s `KIT_REAR` (`kits.backstabs`,
@@ -1689,8 +1693,12 @@ How each is done:
   Dancer (no shield; `kit_dancer`: long sword and bow kinds), Shadowblade, Ghetto Fighter and
   Rescuer (no shield), Seeker and Grove Warden (its sphere's weapons, as a cleric's: `SPHERE_ALLOWS`
   with `CU_*` set from the item type, `KF_SPHERE` the kit's class less 1, mod 4: the ranger's or
-  druid's; the Seeker keeps the bow, the Grove Warden doesn't; up to 2.17 the Grove Warden had no
-  metal weapons instead). Where: `PROBE_CAN_USE` and
+  druid's, the bow too; up to 2.17 the Seeker kept the bow whatever its sphere, and the Grove
+  Warden had no metal weapons instead; a Seeker has no ranger's bow expertise either,
+  `SPEC_OF_SHEET`'s `.rbow` path passing it over, `specialize._skill`); the Twin-blade the
+  cahulaks, two-handed as they are, and the Brute not (`KF_CAHULAKS`, `kits.forbids`' `cahulaks`:
+  the type in `game.CAHULAKS_TYPES`). A missile weapon the kit forbids goes into the backpack at
+  creation (`weaponchoice.kit_gear`: a fire Seeker's bow). Where: `PROBE_CAN_USE` and
   `KINDS_ALLOWED` (`KIT_FORBIDS`: `restrict.kit_forbids`; and `KIT_ALLOWS`, so a Battle Dancer may
   specialize in the long sword whatever its cleric's sphere), whatever the class restrictions. For
   an EXIT on the weapon window after DONE, `weaponchoice.kinds_for` makes a Ghetto Fighter's or
@@ -1818,8 +1826,8 @@ How each of these is done:
   `kit_at`, `kit_awake`, `kits_of`, `kit_ids`, `kit_level`, `kit_class_of` are the Loader's.
 - **Classes barred to a dual-classing human.** Seeker, Justifier (cleric); Shinobi (preserver);
   Swashbuckler, Crusader, Battle Mage, Mind Warrior (fighter, gladiator, ranger); Arena Champion,
-  Sentinel (druid, preserver: no shield); Brute (psionicist: no two-handed melee
-  weapon; an air cleric has the cahulaks); Stalker (thief: its hiding on a thief's own); Grove Warden (gladiator: its AC on a
+  Sentinel (druid, preserver: no shield); Brute (psionicist, air cleric: no two-handed melee
+  weapon it may use, the cahulaks not one for it since 2.18); Stalker (thief: its hiding on a thief's own); Grove Warden (gladiator: its AC on a
   gladiator's own); Healer (the rangers of air, earth and fire: water's sphere only; the game
   already keeps a priest from the other priest class, and a ranger, who must be good, from the
   druid, who must be neutral, so `DUAL_BANS`' clerics and druids there and the Seeker's and
@@ -2356,7 +2364,10 @@ routine keeps the arrows' plus) also keeps their name (`AMMO_NAME`); `ARROW_HIT`
 (`NS_IMAGE+28`, over "cmp byte es:[bx+0Fh],0") gives a shot from a bow ([BP+16h]
 above 1, a bow's type at [BP+14h]) with spell arrows their spell instead, when a
 Spellarcher shot them (`PROBE_ARROW`'s `AMMO_ARCHER`), and `ARROW_SPELL`
-(`NS_IMAGE+29`, over "mov cl,es:[bx+0Fh]") hands it on. The arrows hold no spell
+(`NS_IMAGE+29`, over "mov cl,es:[bx+0Fh]") hands it on. The target saves against it as
+against the spell; `ARROW_SAVE`, from `CAST_SITE`'s `TH_CAST`, sets bit 0 of Shocking Grasp's and
+Vampiric Touch's records' save byte (+1Fh: 0A0h, no save, made 0A1h, a save against spells) for a
+spell arrow's cast and clears it for any other (`spellarrows.SAVED`). The arrows hold no spell
 themselves, so nothing else in the game (the USE screen's items, breaking, acid)
 sees one. Only a Spellarcher carries them: `ARROWS_FORBID`, in `PROBE_CAN_USE`
 (whatever the rules), refuses spell arrows (the equip routine's item, its

@@ -534,6 +534,22 @@ class KitGearTests(FinishNewTests):
         self.assertIn("a Shinobi can't use it", out[0])
         self.assertEqual(weaponchoice.kit_gear(self.gd), [])  # (once)
 
+    def test_seeker_bow(self):
+        """A Seeker's bow follows its ranger sphere (no bow kept whatever the sphere): a fire
+        Seeker's wooden bow goes into the backpack; an earth one keeps it."""
+        from dsloader import weaponchoice
+        bow = weaponchoice.PLAIN[specialize.KINDS.index("bow")]
+        for cls, kept in ((15, False), (14, True)):
+            with self.subTest(cls=cls):
+                self.setUp()
+                self.character(cls, 3)
+                self.give(bow[0], bow[1], weaponchoice.MISSILE_SLOT)
+                out = weaponchoice.kit_gear(self.gd)
+                self.assertEqual(self.item(0), (bow[0], weaponchoice.MISSILE_SLOT if kept else 30))
+                self.assertEqual(bool(out), not kept)
+                if out:
+                    self.assertIn("a Seeker can't use it", out[0])
+
     def test_poisoner_daggers(self):
         """A Poisoner (a halfling fighter/thief): a dagger in each hand, its long sword made one and
         its shield left behind; once. With the short sword its weapon spec, a short sword in each."""

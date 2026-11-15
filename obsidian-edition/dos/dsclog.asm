@@ -457,6 +457,9 @@ poison_used db 0                ; +1860 a Poisoner's weapons that have poisoned 
                                 ;      Loader clears it as each fight starts (poisoner.py's FIGHT_START)
 kit_off    db 0                 ; +1861 bit N: party member N's last melee attack with its left hand's
                                 ;      weapon (NOTE_SHOT, from PROBE_ATTACKS: PROBE_POISON's hand)
+bad_luck   db 0                 ; +1862 a Swashbuckler's bad luck on its last thief skill roll (PROBE_BELT:
+                                ;      0 to BAD_LUCK taken off) ...
+bad_luck_who dw 0xFFFF          ; +1863 ... and whose (its creature): the dice log's (kits.TSR_BAD_LUCK)
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -4380,6 +4383,16 @@ kit_light:
         ret
 light_kits db KIT_ASSASSIN, KIT_SHINOBI, KIT_SHADOWBLADE, KIT_POISONER, 0
 
+; KF_CAHULAKS: ZF set if item type DX is the cahulaks (bone, metal or obsidian:
+; game.CAHULAKS_TYPES). All registers kept.
+kf_cahulaks:
+        cmp dx, TH_CAHULAKS
+        je .ret
+        cmp dx, 115 + 31        ; (METAL_CAHULAKS)
+        je .ret
+        cmp dx, 115 + 32        ; (OBSIDIAN_CAHULAKS)
+.ret:   ret
+
 kit_forbids_one:                ; (AL the kit, KIT_WHERE its class's place)
         push ax
         push bx
@@ -4461,6 +4474,8 @@ kit_forbids_one:                ; (AL the kit, KIT_WHERE its class's place)
         jnz .no
         test al, KT_MELEE | KT_MISSILE
         jz .ok
+        call kf_cahulaks        ; (the cahulaks: a blade in each hand, a Twin-blade's own)
+        je .ok
         test ah, KT_TWO_HANDED
         jz .ok
         or ch, ch
@@ -4475,6 +4490,8 @@ kit_forbids_one:                ; (AL the kit, KIT_WHERE its class's place)
         jmp .no
 .melee: test al, KT_MELEE
         jz .missile
+        call kf_cahulaks        ; (the cahulaks: two weapons, not one two-handed one)
+        je .no
         test ah, KT_TWO_HANDED
         jz .no
         jmp .ok
@@ -4502,7 +4519,7 @@ kit_forbids_one:                ; (AL the kit, KIT_WHERE its class's place)
         cmp cl, KIT_GROVE_WARDEN        ; a Grove Warden: its druid sphere's weapons, as a cleric's
         je .sphere
 .lifebinder:
-        cmp cl, KIT_SEEKER      ; a Seeker: its sphere's weapons (SPHERE_ALLOWS), but the bow
+        cmp cl, KIT_SEEKER      ; a Seeker: its ranger sphere's weapons (SPHERE_ALLOWS), the bow too
         jne .blunt
 .sphere:
         test al, KT_MELEE | KT_MISSILE
@@ -4513,11 +4530,6 @@ kit_forbids_one:                ; (AL the kit, KIT_WHERE its class's place)
         mov ah, [cs:si + kind_of_type]
         sub ah, 1
         jc .ok                  ; (no kind: as the game has it)
-        cmp cl, KIT_SEEKER
-        jne .not_bow
-        cmp ah, BOW_KIND - 1
-        je .ok
-.not_bow:
         mov [cs:cu_kind], ah
         mov [cs:cu_flags], al
         mov al, [es:bx + 8]     ; (the material, as CLASS_FORBIDS keeps it)
@@ -11738,7 +11750,7 @@ dual_bans   db KIT_SEEKER
             db KIT_SENTINEL
             dd DB_NO_SHIELD
             db KIT_BRUTE
-            dd 1 << 12                  ; (the psionicist: no two-handed melee weapon; an air cleric has the cahulaks)
+            dd 1 << 12 | 1 << 1         ; (the psionicist and air cleric: no two-handed melee weapon for a Brute)
             db KIT_STALKER
             dd 1 << 17                  ; (the thief: its own hiding, the Stalker's on top)
             db KIT_GROVE_WARDEN
@@ -11939,8 +11951,11 @@ spec_of_sheet:
         inc si
         cmp si, SPEC_COUNT
         jb .slot
-        cmp cl, BOW_KIND        ; (not chosen: a ranger's bow all the same)
+        cmp cl, BOW_KIND        ; (not chosen: a ranger's bow all the same, but a Seeker's)
         jne .ret
+        call kit_is_b
+        db KIT_SEEKER
+        je .ret
         xor si, si
 .rbow:  mov al, [es:bx + si + 0x21]
         or si, si               ; (a human's earlier classes once the first's level has passed theirs)
@@ -14961,11 +14976,48 @@ th_cast:
         mov [cs:th_level], al
         xor al, al
         xchg al, [cs:th_weapon]
+        call arrow_save                 ; (a spell arrow's Shocking Grasp or Vampiric Touch: a save)
         xor al, 1
         mov [cs:th_armed], al
         mov word [cs:tu_more], 0        ; (TURN_SITE's D*: the cast's own)
         pop ax
         ret
+
+; ARROW_SAVE: for the cast TH_CAST has (AL 1 for a weapon's spell on a hit; [BP+0Ah] the spell),
+; the save allowed (bit 0 of the record's save byte, +1Fh) for a spell arrow's (ARROW_HIT's
+; ARROW_CAST) Shocking Grasp or Vampiric Touch (ARROW_SAVES), whose records allow none: monsters
+; save against the arrows' spells as against Burning Hands' and Chill Touch's (a save against
+; spells); any other cast of them as the game has it (the bit clear again). All registers kept.
+arrow_save:
+        cmp byte [cs:seg_moved], 0
+        je .ret
+        pusha
+        push es
+        mov dl, al
+        and dl, [cs:arrow_cast]         ; (DL 1: a spell arrow's cast)
+        mov ax, ds
+        sub ax, SPELLS_FROM_DS
+        mov es, ax
+        mov si, arrow_saves
+.next:  movzx bx, byte [cs:si]
+        shl bx, 5
+        and byte [es:bx + SPELL_RECS + 0x1F], 0xFE
+        or dl, dl
+        jz .on
+        mov ax, [bp + 0x0A]
+        cmp al, [cs:si]
+        jne .on
+        or ah, ah
+        jnz .on
+        or byte [es:bx + SPELL_RECS + 0x1F], 1
+.on:    inc si
+        cmp si, arrow_saves + ARROW_SAVES
+        jb .next
+        pop es
+        popa
+.ret:   ret
+arrow_saves db 10, 39                   ; (Shocking Grasp, Vampiric Touch: spellarrows.SAVED)
+ARROW_SAVES equ $ - arrow_saves
 
 th_missiles db 18, 53, 75, 111, 180, 33          ; Acid Arrow, Turn Pebble to Boulder, Magical Stone, Condense, spines,
                                                  ;   Minute Meteors
@@ -15698,18 +15750,36 @@ bio_site:
 
 ; CELL_SITE (gamepatch "cell_adjustment_heal"): Cell Adjustment's case in the handler for spells with
 ; rules of their own (DI the target, [BP+8] the user), "push 2 / jmp 79618h" (795A2h; 4 bytes: 2 HP):
-; 1d4 HP, AX for the game's "push ax" (79617h) and the healing after it; its record's removal of
-; Diseased (effect F3h, -13) came before (CELL_CURED, ACID_ONCE's). Recorded (MN_CELL).
+; 1d4 HP, a Lifebinder's a d4 more (kits.CELL_MORE), AX for the game's "push ax" (79617h) and the
+; healing after it; its record's removal of Diseased (effect F3h, -13) came before (CELL_CURED,
+; ACID_ONCE's). Recorded (MN_CELL: the healing, then the cure in the low byte, the Lifebinder's
+; die in the high byte).
 CELL_HEAL  equ 0x79617 - (0x795A2 + 3)
 cell_heal:
         pusha
+        xor cx, cx              ; (CX the Lifebinder's d4, 0 for anyone else)
+        push es
+        mov ax, ds
+        add ax, THINGS_SEG
+        mov es, ax
+        imul bx, [bp + 8], 3
+        mov ax, [es:bx + COMBATANT_CREATURE]
+        pop es
+        call cr_is
+        db KIT_LIFEBINDER
+        jne .roll
         mov ax, 4
         call game_die
+        mov cx, ax
+.roll:  mov ax, 4
+        call game_die
+        add ax, cx
         mov [cs:mn_frame], di
         mov bx, [bp + 8]
         mov [cs:mn_frame + 2], bx
         mov [cs:mn_frame + 4], ax
         movzx bx, byte [cs:cell_cured]
+        mov bh, cl
         mov [cs:mn_frame + 6], bx
         mov byte [cs:cell_cured], 0
         mov bx, sp
@@ -27848,12 +27918,14 @@ ib_elf_quiet db 'Silent 95%', 0
 ; PROBE_BELT: INT VEC_BELT replaces "mov ax,si" (2 bytes) at the end of the game's thief skill
 ; routine (DSUN.EXE 803B2h: SI the chance, armour and effects counted; DI the thief's object; the
 ; game's [BP+8] the skill, a dword). With SKILLS_BELT, a thief wearing a belt (the waist slot)
-; gets BELT_BONUS more to pick pockets (0) and open locks (1); then the kit's (KIT_SKILL), no less
-; than 0, as the Loader counts them (game.py's thief_skills_now); 0 for a thief in armour that
+; gets BELT_BONUS more to pick pockets (0) and open locks (1); then the kit's (KIT_SKILL), and a
+; Swashbuckler's bad luck, 0 to BAD_LUCK off at each roll (BAD_LUCK_WHO, the header's: the dice
+; log's), no less than 0, as the Loader counts them (game.py's thief_skills_now); 0 for a thief in armour that
 ; isn't light (THIEF_HEAVY); with RULE_THIEF_TABLE, no more than THIEF_MOST (AD&D's most after
 ; every adjustment: game.THIEF_MOST; the situation's bonus and the effects', which the game's caller
 ; adds after (DSUN.EXE 803D0h), not counted); then AX = the chance, as the code would have.
 WAIST      equ 5                ; the item's slot byte while worn as a belt
+BAD_LUCK   equ 25               ; (kits.BAD_LUCK)
 BELT_BONUS equ 5
 THIEF_MOST equ 95
 COMBATANT_CREATURE equ 0xC37    ; in the things table: an object's creature (3 bytes an object)
@@ -27891,7 +27963,22 @@ probe_belt:
         mov si, [bp + 8]
         call kit_skill
         pop si
-        or ax, ax
+        push ax                 ; (a Swashbuckler's bad luck: a d26 less 1 more off, rolled each time)
+        mov ax, cx
+        call cr_is
+        db KIT_SWASHBUCKLER
+        pop ax
+        jne .luck
+        push ax
+        mov ax, BAD_LUCK + 1
+        call game_die
+        dec ax
+        mov [cs:bad_luck], al
+        mov [cs:bad_luck_who], cx
+        mov bx, ax
+        pop ax
+        sub ax, bx
+.luck:  or ax, ax
         jz .done
         add dx, ax
         jns .done
@@ -27943,9 +28030,9 @@ thief_heavy:
 ; (kits.thief_skill): KIT_SKILLS' row for each of its kits; a Military Scout's 10 to finding traps,
 ; moving silently, hiding and climbing while under the open sky (KIT_OUTDOORS), 5 less under a roof.
 ; DS the game's; others kept.
-kit_skills db KIT_SWASHBUCKLER, -5, -5, -5, -5, -5, -5, -5, -5  ; (pick pockets, open locks,
-           db KIT_ASSASSIN, -15, -15, 0, 0, 0, 0, 0, 0                  ;  traps, move silently, hide,
-           db KIT_SHADOWBLADE, -10, 0, 0, 5, 10, 0, 0, 0                ;  hear noise, climb, read)
+kit_skills db KIT_ASSASSIN, -15, -15, 0, 0, 0, 0, 0, 0     ; (pick pockets, open locks, traps,
+           db KIT_SHADOWBLADE, -10, 0, 0, 5, 10, 0, 0, 0  ;  move silently, hide, hear noise, climb,
+                                                          ;  read; the Swashbuckler's: PROBE_BELT's bad luck)
            db KIT_GHETTO, 5, 0, -5, 0, 5, 0, 0, 0
            db KIT_WAYFINDER, -10, 0, 0, 10, 10, 0, 0, 0
            db 0

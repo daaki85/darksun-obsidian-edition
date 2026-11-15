@@ -118,8 +118,9 @@ def _skill(sheet: bytes, item_type: Optional[int]) -> int:
             return NONE
         return EXPERT if kind is not None and kind + 1 == chosen[0] else PLAIN
     if kind is None or kind + 1 not in chosen:
-        # (every ranger's expertise with the bow, chosen or not)
-        if kind == KINDS.index("bow") and any(c in RANGERS for c, _ in active_classes(sheet)):
+        # (every ranger's expertise with the bow, chosen or not; not a Seeker's)
+        if kind == KINDS.index("bow") and any(c in RANGERS for c, _ in active_classes(sheet)) \
+                and not (game.RULES_IN_FORCE & game.RULE_KITS and kits.SEEKER in kitpages.kit_ids(sheet)):
             return EXPERT
         return PLAIN
     active = active_classes(sheet)

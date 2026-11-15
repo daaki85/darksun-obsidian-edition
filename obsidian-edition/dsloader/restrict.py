@@ -167,7 +167,7 @@ def kit_forbids(sheet: bytes, item_type: int, typ: bytes, spec: bool = False, of
                 return True
             continue
         sphere = (kitpages.kit_class_of(sheet, kid) - 1) % 4  # (a ranger's for a Seeker, a druid's for a Grove Warden)
-        if kits.forbids(kid, typ, kind, half_giant, spec, off_hand, sphere):
+        if kits.forbids(kid, typ, kind, half_giant, spec, off_hand, sphere, item_type in game.CAHULAKS_TYPES):
             return True
     return False
 
@@ -189,7 +189,7 @@ def forbidding_kit(sheet: bytes, item_type: int, typ: bytes) -> Optional[int]:
         and item_type not in game.CAHULAKS_TYPES  # (a blade in each hand: both hands, a half-giant's too)
     for kid in kitpages.kit_ids(sheet):
         sphere = (kitpages.kit_class_of(sheet, kid) - 1) % 4
-        if kits.forbids(kid, typ, kind, half_giant, False, False, sphere):
+        if kits.forbids(kid, typ, kind, half_giant, False, False, sphere, item_type in game.CAHULAKS_TYPES):
             return kid
     return None
 

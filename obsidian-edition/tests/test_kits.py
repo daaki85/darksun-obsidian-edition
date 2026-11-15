@@ -43,7 +43,8 @@ class KitEffectTests(unittest.TestCase):
         self.assertEqual((kits.melee(0, True), kits.ac(0, True), kits.move(0), kits.name(0)), (0, 0, 0, ""))
 
     def test_seeker(self):
-        """A Seeker's sphere weapons, as a cleric's of that sphere, but the bow whatever the sphere."""
+        """A Seeker's sphere weapons, as a cleric's of that sphere, the bow too (a wooden one: not for
+        fire)."""
         def weapon(flags, mat):
             t = bytearray(0x14)
             t[0], t[8] = flags, mat
@@ -52,7 +53,7 @@ class KitEffectTests(unittest.TestCase):
         obsidian_sword, bone_sword, bow = weapon(kits.MELEE, 3), weapon(kits.MELEE, 1), weapon(kits.MISSILE, 0)
         self.assertEqual([kits.forbids(S, obsidian_sword, 0, False, sphere=s) for s in range(4)], [True, False, False, True])
         self.assertEqual([kits.forbids(S, bone_sword, 0, False, sphere=s) for s in range(4)], [True, True, True, False])
-        self.assertEqual([kits.forbids(S, bow, kits.BOW, False, sphere=s) for s in range(4)], [False] * 4)
+        self.assertEqual([kits.forbids(S, bow, kits.BOW, False, sphere=s) for s in range(4)], [False, False, True, False])
         self.assertFalse(kits.forbids(S, weapon(kits.MELEE, 3), 2, False, sphere=0))  # (air: a dagger)
         self.assertFalse(kits.forbids(kits.JUSTIFIER, bone_sword, 0, False, sphere=2))
         # a Grove Warden: its druid sphere's weapons, the bow too (a wooden one: not for fire)
@@ -177,11 +178,24 @@ class AvengerHealTests(unittest.TestCase):
 
 
 class BruteBanTests(unittest.TestCase):
-    def test_brute_may_dual_to_air_cleric(self):
-        """A Brute needs a two-handed melee weapon: a psionicist has none, an air cleric the cahulaks."""
+    def test_brute_no_air_cleric(self):
+        """A Brute needs a two-handed melee weapon: a psionicist has none, nor an air cleric now the
+        cahulaks are none for a Brute (2.18); the other clerics have."""
         from dsloader import kits
         self.assertTrue(kits.dual_banned(kits.BRUTE, 12))
-        self.assertFalse(kits.dual_banned(kits.BRUTE, 1))
+        self.assertTrue(kits.dual_banned(kits.BRUTE, 1))
+        self.assertFalse(any(kits.dual_banned(kits.BRUTE, c) for c in (2, 3, 4)))
+
+    def test_cahulaks(self):
+        """The cahulaks (a blade in each hand): a Twin-blade's own, two-handed as they are; not a
+        Brute's (no +2 for each head)."""
+        from dsloader import kits
+        cah = bytearray(0x14)
+        cah[0], cah[0x0F] = kits.MELEE, kits.TWO_HANDED
+        self.assertFalse(kits.forbids(kits.TWIN_BLADE, bytes(cah), 5, False, cahulaks=True))
+        self.assertTrue(kits.forbids(kits.TWIN_BLADE, bytes(cah), 5, False))  # (another two-handed weapon)
+        self.assertTrue(kits.forbids(kits.BRUTE, bytes(cah), 5, False, cahulaks=True))
+        self.assertFalse(kits.forbids(kits.BRUTE, bytes(cah), 5, False))
 
 
 class DualBansInHelperTests(unittest.TestCase):

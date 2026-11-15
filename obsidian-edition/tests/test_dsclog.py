@@ -901,8 +901,9 @@ class BeltTests(unittest.TestCase):
         self.assertEqual([kits.thief_skill(kits.ASSASSIN, k) for k in range(4)], [-15, -15, 0, 0])
 
     def test_swashbuckler(self):
-        """A Swashbuckler (kits on): 5 less to every skill (kits.thief_skill), the belt's 5 still
-        added to pick pockets and open locks, never below 0; kits off, none."""
+        """A Swashbuckler (kits on): its bad luck, a d26 less 1 (0 to kits.BAD_LUCK) off each roll
+        from the game's seed, kept in the header (TSR_BAD_LUCK: the amount, then whose creature),
+        the belt's 5 still added to pick pockets and open locks, never below 0; kits off, none."""
         from dsloader import kits
         sheets = 0xB000
         self.mu.mem_write(self.DS * 16 + 0x1661, struct.pack("<HH", 0, sheets))
@@ -911,11 +912,22 @@ class BeltTests(unittest.TestCase):
         sheet[0x21], sheet[0x43] = 17, 1
         self.mu.mem_write(sheets * 16 + 2 * 0x47, bytes(sheet))
         self.mu.mem_write(self.hdr + 270, struct.pack("<H", 1))
-        self.assertEqual([self.chance(skill) for skill in range(8)], [40, 40, 35, 35, 35, 35, 35, 35])
-        self.assertEqual(self.chance(4, si=5), 0)
+        luck = lambda seed: ((((seed * 0x015A4E35 + 1) & 0xFFFFFFFF) >> 16) & 0x7FFF) * 26 // 32768
+        for seed in (0x12345678, 0x0BADF00D, 7, 0xFFFFFFFF):
+            for skill in range(8):
+                with self.subTest(seed=seed, skill=skill):
+                    self.mu.mem_write(self.DS * 16 + 0x4122, struct.pack("<I", seed))
+                    self.assertEqual(self.chance(skill), max(0, (45 if skill < 2 else 40) - luck(seed)))
+                    self.assertEqual(struct.unpack("<BH", self.mu.mem_read(self.hdr + kits.TSR_BAD_LUCK, 3)),
+                                     (luck(seed), 1))  # (creature 1)
+        self.mu.mem_write(self.DS * 16 + 0x4122, struct.pack("<I", 0x0BADF00D))
+        self.assertGreater(luck(0x0BADF00D), 5)
+        self.assertEqual(self.chance(4, si=5), 0)  # (never below 0)
         self.mu.mem_write(self.hdr + 270, struct.pack("<H", 0))
         self.assertEqual([self.chance(skill) for skill in range(5)], [45, 45, 40, 40, 40])
-        self.assertEqual({kits.thief_skill(kits.SWASHBUCKLER, k) for k in range(8)}, {-5})
+        self.assertEqual({kits.thief_skill(kits.SWASHBUCKLER, k) for k in range(8)}, {0})
+        self.assertEqual([kits.bad_luck([kits.SWASHBUCKLER], lambda a, b: b), kits.bad_luck([kits.ASSASSIN], lambda a, b: b)],
+                         [kits.BAD_LUCK, 0])
 
     def test_multiclass_kits(self):
         """The fighter/thieves' kits (creature 1, a party member): their KIT_SKILLS rows as
@@ -1961,8 +1973,26 @@ class SpecializeTests(unittest.TestCase):
             game.RULES_IN_FORCE = old
 
     def test_ranger_expertise(self):
-        """A ranger: the rate with the chosen kind, no bonuses; another kind, the plain rate."""
+        """A ranger: the rate with the chosen kind, no bonuses; another kind, the plain rate; the
+        bow's expertise any ranger's but a Seeker's."""
         ranger = dict(classes=(13, 0, 0), levels=(4, 0, 0))
+        both = 4096 | game.RULE_KITS
+        # every ranger's bow expertise (3/1 at 4th level), not chosen; a Seeker's none (its bow plain),
+        # unless the bow is its chosen weapon spec (specialize.skill)
+        self.assertEqual(self.attack(2, 1, missile=True, chosen=(0,), rules=both, **ranger)[0], 6)
+        self.assertEqual(self.attack(2, 1, missile=True, chosen=(0,), kit=3, rules=both, **ranger)[0], 2)
+        self.assertEqual(self.attack(2, 1, missile=True, chosen=(13,), kit=3, rules=both, **ranger)[0], 6)
+        from dsloader import specialize
+        seeker = bytearray(game.SHEET_SIZE)
+        seeker[0x14], seeker[0x21], seeker[0x24], seeker[0x43] = 1, 13, 4, 3
+        old = game.RULES_IN_FORCE
+        try:
+            game.RULES_IN_FORCE = both
+            self.assertEqual(specialize.skill(bytes(seeker), 1), specialize.PLAIN)
+            seeker[0x43] = 0
+            self.assertEqual(specialize.skill(bytes(seeker), 1), specialize.EXPERT)
+        finally:
+            game.RULES_IN_FORCE = old
         self.assertEqual(self.attack(3, self.LONG_SWORD, chosen=(0,), **ranger), (3, 15, 3, 8))
         self.assertEqual(self.attack(3, self.AXE, chosen=(0,), **ranger), (2, 15, 3, 8))
 
@@ -3972,6 +4002,54 @@ class NewSpellTests(RuleTests):
         self.assertEqual(lands(3, 40, d20(1)), (3, [1, 1], None))
         cast(2, 40, 3)  # (the next cast rolls again)
         self.assertEqual(lands(3, 40, d20(1))[1], [0, 1])
+
+    def test_cell_lifebinder(self):
+        """CELL_SITE (Cell Adjustment's "push 2 / jmp", 795A2h; [BP+8] the user, DI the target): AX
+        1d4 from the game's seed, a Lifebinder's (a druid, kit awake) a d4 more (kits.CELL_MORE),
+        back to the routine's "push ax"; recorded (MN_CELL: the healing, then the cure's byte and the
+        Lifebinder's die above it)."""
+        from dsloader import gamepatch, kits
+        mu = self.mu
+        image = load_image()
+        hdr = TSR * 16 + image.find(HDR_SIG)
+        hdr_off, ring = struct.unpack_from("<H", image, 20)[0], struct.unpack_from("<H", image, 16)[0]
+        creatures, sheets = 0x8800, 0x8A00
+        mu.mem_write(GAME_DS * 16 + 0x1665, struct.pack("<HH", 0, creatures))
+        mu.mem_write(GAME_DS * 16 + 0x1661, struct.pack("<HH", 0, sheets))
+        rec = bytearray(0x3A)
+        rec[4:6] = struct.pack("<H", 5)
+        mu.mem_write(creatures * 16 + 5 * 0x3A, bytes(rec))
+        things = ((GAME_DS + 0x3972 - 0x4356) & 0xFFFF) * 16 + 0xC36
+        mu.mem_write(things + 7 * 3, struct.pack("<Bh", 2, 5))
+        back = 0x79617 - (0x795A2 + 3)
+        roll = lambda seed: ((((seed * 0x015A4E35 + 1) & 0xFFFFFFFF) >> 16) & 0x7FFF) * 4 // 32768 + 1
+        for rules, kit, more in ((game.RULE_KITS, 2, True), (game.RULE_KITS, 1, False), (0, 2, False)):
+            with self.subTest(rules=rules, kit=kit):
+                mu.mem_write(hdr + 170, struct.pack("<H", rules & 0xFFFF))
+                mu.mem_write(hdr + 270, struct.pack("<H", rules >> 16))
+                sheet = bytearray(0x47)
+                sheet[0x21], sheet[0x24], sheet[0x43] = 5, 3, kit  # (a druid 3: Lifebinder 2, Grove Warden 1)
+                mu.mem_write(sheets * 16 + 5 * 0x47, bytes(sheet))
+                mu.mem_write(SS * 16 + BP + 8, struct.pack("<H", 7))
+                seed = 0x12345678
+                mu.mem_write(GAME_DS * 16 + 0x4122, struct.pack("<I", seed))
+                self.at += 0x200
+                start = CALLER * 16 + self.at
+                mu.mem_write(start, bytes((0xCD, 0x98, gamepatch.CELL_SITE, 0x90)))
+                mu.mem_write(CALLER * 16 + self.at + 3 + back, b"\xf4")
+                for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2,
+                                        edi=40).items():
+                    mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+                mu.emu_start(start, CALLER * 16 + self.at + 3 + back)
+                first = roll(seed)
+                second = roll((seed * 0x015A4E35 + 1) & 0xFFFFFFFF)
+                want = first + second if more else first
+                self.assertEqual(mu.reg_read(r.UC_X86_REG_AX), want)
+                self.assertEqual(mu.reg_read(r.UC_X86_REG_SP), 0x800)
+                n = struct.unpack("<HHH", mu.mem_read(TSR * 16 + hdr_off + 8, 6))
+                e = Entry.parse(bytes(mu.mem_read(RING_SEG * 16 + ring + ((n[0] - 1) % n[2]) * Entry.SIZE, Entry.SIZE)))
+                self.assertEqual((e.arg(6), e.arg(8), e.arg(0x0A), e.arg(0x0C) >> 8), (40, 7, want, first if more else 0))
+        self.assertEqual(kits.CELL_MORE, 4)
 
     def test_turn_undead_manual(self):
         """TURN_SITE (7AE01h, Turn Undead's "mov al,[es:bx+24h]", 4 bytes; ES:BX the undead's sheet,
@@ -6457,7 +6535,8 @@ class KitTests(unittest.TestCase):
         """ARROW_HIT and ARROW_SPELL (58B63h, 58B78h: the weapon attack routine's test of the
         weapon's spell, +0Fh, and its taking it): a shot from a bow with spell arrows (their name,
         kept by PROBE_ARROW) casts the arrows' spell when a Spellarcher shot it; plain arrows, a
-        melee hit or a sling, the weapon's own; anyone else's shot, none (spellarrows.py)."""
+        melee hit or a sling, the weapon's own; anyone else's shot, none (spellarrows.py). A spell
+        arrow's Shocking Grasp or Vampiric Touch allows a save (ARROW_SAVE at CAST_SITE)."""
         from dsloader import gamepatch, spellarrows
         from dsloader.gamepatch import VEC_ARROW
         image, mu = load_image(), self.mu
@@ -6500,10 +6579,22 @@ class KitTests(unittest.TestCase):
             sp = mu.reg_read(r.UC_X86_REG_SP)
             self.assertEqual((sp, mu.reg_read(r.UC_X86_REG_AX)), (0x7F0 - 4, spell))
             return struct.unpack("<HH", mu.mem_read(SS * 16 + sp, 4))
+        recs = ((self.DS - (0x4356 - 0x3CB4)) & 0xFFFF) * 16 + 0x30
+        for spell in spellarrows.SAVED:  # (their records allow no save: the game's 0A0h)
+            mu.mem_write(recs + spell * 0x20 + 0x1F, b"\xa0")
+
+        def cast(spell):  # (CAST_SITE, the cast's start: the record's save byte for it after)
+            mu.mem_write(SS * 16 + BP + 6, struct.pack("<HHH", 7, 8, spell))
+            run(bytes((0xCD, gamepatch.VEC_CR_SPELLS, gamepatch.CAST_SITE)), 0x6C0)
+            return [mu.mem_read(recs + s * 0x20 + 0x1F, 1)[0] for s in spellarrows.SAVED]
         for arrow in spellarrows.ARROWS:
             with self.subTest(arrow=arrow.spell_name):
                 self.assertEqual(hit(arrow.name), (arrow.spell + 1, True))
                 self.assertEqual(cast_level(arrow.spell), (arrow.spell, 3))  # (the preserver level, not 6)
+                # a save against a spell arrow's Shocking Grasp or Vampiric Touch (its record's bit 0
+                # for the cast), as against Burning Hands' and Chill Touch's own
+                self.assertEqual(cast(arrow.spell), [0xA1 if s == arrow.spell else 0xA0 for s in spellarrows.SAVED])
+                self.assertEqual(cast(arrow.spell), [0xA0, 0xA0])  # (cast by hand next: as the game has it)
         hit(0x36, own=0x28)
         self.assertEqual(cast_level(0x27), (0x27, 6))  # (a bow's own spell: the game's level 6)
         chill = spellarrows.ARROWS[1].name

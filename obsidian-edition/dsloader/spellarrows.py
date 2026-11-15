@@ -17,7 +17,9 @@ a backpack, those another member is found carrying go back to the party's Spella
 
 An arrow casts its spell on what it hits, shot from a bow (DSCLOG's ARROW_HIT: the game casts only
 a bow's own spell; the arrow's, told by its name, takes its place), at the archer's caster level as
-the game reckons it for that spell: the Spellarcher's preserver level.
+the game reckons it for that spell: the Spellarcher's preserver level. The target saves against it
+as against the spell (Burning Hands halved, Chill Touch none), and against the arrows' Shocking
+Grasp and Vampiric Touch too, which the game's records give no save (SAVED: DSCLOG's ARROW_SAVE).
 """
 
 import struct
@@ -40,6 +42,10 @@ ARROWS = (
     Arrow(10, "Shocking Grasp", 0x16E, 1),
     Arrow(39, "Vampiric Touch", 0x16F, 3),
 )
+# the arrows' spells whose records allow no save (Shocking Grasp, Vampiric Touch): an arrow's cast
+# of them allows one, a save against spells, as Burning Hands and Chill Touch have (DSCLOG's
+# ARROW_SAVE: bit 0 of the record's save byte for that cast alone)
+SAVED = (10, 39)
 NAMES = {0x16C: b"Burning Arrows", 0x16D: b"Chill Arrows", 0x16E: b"Shocking Arrows", 0x16F: b"Vampiric Arrows"}
 ARROW_NAMES = {a.name for a in ARROWS}
 # their pictures (icons.py: the game's Arrows', tinted for each spell), objects 2614-2621

@@ -108,9 +108,6 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   (`QuiverTests` gone), `test_kits`' `SpellarcherBareTests`, `test_dicelog`'s rest test.
   KITS.md, the player's guide, ITEMS.md, DICE-LOG.md, FEATURES.md, DEVELOPMENT-RULES.md and the
   patch notes say so. DSCLOG 70,256 bytes.
-- **The Wild Fury: a plain CON check** (the user's call, from the kits' review): Wild Fighting
-  passes on a d20 at or under CON, no −4 (`WILD_CHECK` 0, split from the Battle Dancer's
-  `DANCE_CHECK`, still −4). Tests: `test_wild`.
 - **The Wayfinder: +1 initiative only** (the user's call): its Move +2 is gone (`KIT_MOVE`'s path
   block, the viewer's line); downed, it costs the party only its −1 initiative. Test:
   `test_scout_and_path_finder`.
@@ -137,6 +134,30 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   "Two weapons" is gone (`game.RULE_SETTINGS`, the viewer's list, the player's guide's table);
   `game.RULES_ALWAYS` puts `RULE_TWO_WEAPONS` in every rules word, an older settings file's False
   passed over. Test: `test_viewer_settings` uses another switch.
+- **The Twin-blade and the Brute: the cahulaks the Twin-blade's** (the user's call): `KIT_FORBIDS`
+  lets a Twin-blade hold them (a blade in each hand) and keeps a Brute from them (`KF_CAHULAKS`;
+  `kits.forbids`' `cahulaks`), so a Brute can't dual to air cleric either (`DUAL_BANS`, `dual_bans`:
+  no two-handed melee weapon it may use). In light armour a Twin-blade's cahulaks have no penalty
+  on either head (`PROBE_TWO` passes it over before `CAH_ADJUST`, as before). Tests: `test_kits`'
+  `test_cahulaks` and `test_brute_no_air_cleric`, `CanUseTests.test_kits`.
+- **The Seeker: no bow exception, no bow expertise** (the user's call): its bow follows its sphere
+  (a fire Seeker has none; `KIT_FORBIDS`, `kits.forbids`), and it has no ranger's bow expertise unless
+  the bow is its weapon spec (`SPEC_OF_SHEET`, `specialize._skill`). A forbidden missile weapon goes
+  into the backpack at creation (`weaponchoice.kit_gear`). Tests: `test_seeker`, `test_seeker_bow`,
+  `test_ranger_expertise`.
+- **The Swashbuckler: bad luck** (the user's call, in place of −5 to every skill): each thief skill
+  roll 0 to 25 worse, rolled each time: the game's (`PROBE_BELT`, a d26 less 1 from the game's seed,
+  kept in the header's `BAD_LUCK`, +1862, and `BAD_LUCK_WHO` for the dice log's line, "-N
+  Swashbuckler's bad luck") and the Loader's (`kits.bad_luck`: pickpocket.py, stealth.py). The
+  skills shown are without it. Tests: `BeltTests.test_swashbuckler`, `BadLuckTests`.
+- **The Lifebinder: Cell Adjustment a d4 more** (the user's call: a non-psionicist picks four powers of
+  one discipline, so a Lifebinder may have it): `CELL_SITE` (`kits.CELL_MORE`); the dice log shows
+  "1d4 = 4, +1d4 = 3 (Lifebinder)". Test: `test_cell_lifebinder`.
+- **The Spellarcher's arrows: a save against Shocking Grasp and Vampiric Touch too** (the user's
+  call; their records allow none, Burning Hands' and Chill Touch's do): `ARROW_SAVE` sets the record's
+  save bit for a spell arrow's cast alone (`spellarrows.SAVED`). Test: `test_spell_arrows`.
+- **The Wild Fury's check at −4 again** (the user's call, after trying it without): `WILD_CHECK` −4.
+- **The Shinobi's spells** are said to be its own short list (21), not every preserver spell.
 
 **Fixed**
 - **An archer's turn lost with its last arrow** (the game's bug, the user's report): the weapon

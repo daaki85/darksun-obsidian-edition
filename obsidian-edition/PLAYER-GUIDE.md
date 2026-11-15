@@ -455,9 +455,9 @@ leg armour and a sling.
 
 **Magic weapons.** Every one ([the fighter's list](#fighter)). A
 **Twin-blade** none of the two-handed ones (great axes, gythkas, polearms,
-quarterstaffs, cahulaks, bows, staff sling); a **Brute** only Great Axe +3,
-Headsman\*, the gythkas, the polearms, the quarterstaffs and the cahulaks in
-melee, and any missile weapon.
+quarterstaffs, bows, staff sling), but the cahulaks, a blade in each hand; a
+**Brute** only Great Axe +3, Headsman\*, the gythkas, the polearms and the
+quarterstaffs in melee (not the cahulaks), and any missile weapon.
 
 ### Ranger
 
@@ -517,9 +517,11 @@ Stalker a cloak too).
   ([which](KITS.md#kits-that-rule-out-classes-and-each-other)).
 
 **Magic weapons.** Every one ([the fighter's list](#fighter)). A **Seeker**
-only its sphere's, and every bow: air, the daggers, the cahulaks, bows, slings, Windlash\*,
-the chatkchas; earth, the metal, obsidian, stone and wooden ones (no bone, no
-slings); fire, the obsidian ones and the bows; water, the bone and wooden ones.
+only its sphere's, bows too: air, the daggers, the cahulaks, bows, slings, Windlash\*,
+the chatkchas; earth, the metal, obsidian, stone and wooden ones (wooden bows; no
+bone, no slings); fire, the obsidian ones alone (no bow); water, the bone and
+wooden ones. A Seeker has no ranger's expertise with the bow either, unless the
+bow is its weapon spec.
 
 ### Thief
 
@@ -562,8 +564,9 @@ strike from behind deadlier than any other thief, and leave locks and purses
 to lesser thieves.
 
 *Swashbuckler.* Swaggering rogues of the merchant houses and the elven markets,
-as handy with a blade as any soldier. All that time spent fighting leaves
-little for the quieter arts.
+as handy with a blade as any soldier. Their luck is another matter: a lock
+that opens for them one day sticks the next, and every try at a thief's craft
+may go a little or a lot worse (0 to 25 off, rolled each time).
 
 *Shinobi.* Spies trained in secret by the Veiled Alliance, who carry a few
 spells beside their knives. Their masters teach them only what they need, so
@@ -1199,7 +1202,7 @@ With a melee weapon in each hand:
   penalty to 0 but never make it a bonus: DEX 17 is 0 and −2, DEX 21 is 0 and 0,
   DEX 3 is −5 and −7.
 - **Rangers, Twin-blades and Battle Dancers** have no penalty while all their
-  armour is light (leather, or none); a Justifier has none in any armour, and a
+  armour is light (leather, or none), a Twin-blade with cahulaks too; a Justifier has none in any armour, and a
   Ghetto Fighter's is 0 and −2.
 - **The off hand attacks once a round.** Extra attacks are the main hand's: a
   warrior at 3/2 attacks 3/2 + 1 (one round 1 + 1, the next 2 + 1).
@@ -1771,7 +1774,8 @@ and −2). A hit that does damage **tangles** a man-sized or smaller foe unless
 it saves against petrification: it loses its next turn. Half-giants, large monsters,
 anyone Enlarged, the bodiless (elementals, slimes, swarms, shadows) and a few
 other beasts can't be tangled ([the creatures' table](CREATURES.md) (spoilers)
-marks each). Twin-blades and Battle Dancers can't use cahulaks.
+marks each). Twin-blades fight with them as with any two weapons, with no
+penalty in light armour; Battle Dancers and Brutes can't use them.
 *Without the mod:* a plain two-handed 1d6 weapon.
 
 **Stinkpots.** The staff sling throws clay pots of burning sulphur: 1d3 damage
