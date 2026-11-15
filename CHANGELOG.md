@@ -154,7 +154,8 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   skills shown are without it. Tests: `BeltTests.test_swashbuckler`, `BadLuckTests`.
 - **The Lifebinder: Cell Adjustment a d4 more** (the user's call: a non-psionicist picks four powers of
   one discipline, so a Lifebinder may have it): `CELL_SITE` (`kits.CELL_MORE`); the dice log shows
-  "1d4 = 4, +1d4 = 3 (Lifebinder)". Test: `test_cell_lifebinder`.
+  "1d4 = 4, +1d4 = 3 (Lifebinder)"; the Healer's and Rescuer's 1 more (`kits.CELL_PLUS`, as their cures
+  1 more a die: "1d4 = 3, +1 (Healer)"). Tests: `test_cell_lifebinder`, `test_manual_lines`.
 - **The Spellarcher's arrows: a save against Shocking Grasp and Vampiric Touch too** (the user's
   call; their records allow none, Burning Hands' and Chill Touch's do): `ARROW_SAVE` sets the record's
   save bit for a spell arrow's cast alone (`spellarrows.SAVED`). Test: `test_spell_arrows`.

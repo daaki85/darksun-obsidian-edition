@@ -2833,8 +2833,16 @@ class DiceLog:
             return [f"Cloudkill: {name} dies ({band}; its level for saves {a})"]
         if e.raw == MANUAL_CELL:
             cured = f", and {name} is cured of disease" if (c or 0) & 0xFF else ""
-            more = (c or 0) >> 8  # (a Lifebinder's d4 more: DSCLOG's CELL_SITE, kits.CELL_MORE)
-            dice = f"1d4 = {b - more}, +1d4 = {more} (Lifebinder)" if more else f"1d4 = {b}"
+            more = (c or 0) >> 8  # (the user's kit's more: DSCLOG's CELL_SITE, kits.CELL_MORE, CELL_PLUS)
+            user = self.game.combatant_creature(a) if a is not None else None
+            kids = self.game.kit_ids(user) if user is not None else []
+            if more and kits.LIFEBINDER in kids:
+                dice = f"1d4 = {b - more}, +1d4 = {more} (Lifebinder)"
+            elif more:
+                kit = next((kits.name(k) for k in kids if k in (kits.HEALER, kits.RESCUER)), "kit")
+                dice = f"1d4 = {b - more}, +{more} ({kit})"
+            else:
+                dice = f"1d4 = {b}"
             return [f"Cell Adjustment: {dice} -> {name} healed {b} HP{cured}"]
         if e.raw == MANUAL_RAINBOW:
             return [f"    {name} takes {a} damage: Rainbow Pattern's hold on it ends"]

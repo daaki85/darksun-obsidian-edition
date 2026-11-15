@@ -450,6 +450,7 @@ MIND_PSP = 5  # (a Mind Warrior's PSP a fifth fewer; a tenth up to 2.17)
 
 
 CELL_MORE = 4  # (a Lifebinder's Cell Adjustment a d4 more: DSCLOG's CELL_SITE, as its cures a die more)
+CELL_PLUS = 1  # (a Healer's or Rescuer's 1 more, as their cures 1 more a die)
 
 
 def max_psp(kid: int, psp: int) -> int:

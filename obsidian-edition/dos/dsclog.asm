@@ -15754,11 +15754,12 @@ bio_site:
 
 ; CELL_SITE (gamepatch "cell_adjustment_heal"): Cell Adjustment's case in the handler for spells with
 ; rules of their own (DI the target, [BP+8] the user), "push 2 / jmp 79618h" (795A2h; 4 bytes: 2 HP):
-; 1d4 HP, a Lifebinder's a d4 more (kits.CELL_MORE), AX for the game's "push ax" (79617h) and the
-; healing after it; its record's removal of Diseased (effect F3h, -13) came before (CELL_CURED,
-; ACID_ONCE's). Recorded (MN_CELL: the healing, then the cure in the low byte, the Lifebinder's
-; die in the high byte).
+; 1d4 HP, a Lifebinder's a d4 more (kits.CELL_MORE), a Healer's or Rescuer's 1 more (CELL_PLUS, as
+; their cures 1 more a die), AX for the game's "push ax" (79617h) and the healing after it; its
+; record's removal of Diseased (effect F3h, -13) came before (CELL_CURED, ACID_ONCE's). Recorded
+; (MN_CELL: the healing, then the cure in the low byte, the kit's more in the high byte).
 CELL_HEAL  equ 0x79617 - (0x795A2 + 3)
+CELL_PLUS  equ 1                ; (kits.CELL_PLUS)
 cell_heal:
         pusha
         xor cx, cx              ; (CX the Lifebinder's d4, 0 for anyone else)
@@ -15769,6 +15770,14 @@ cell_heal:
         imul bx, [bp + 8], 3
         mov ax, [es:bx + COMBATANT_CREATURE]
         pop es
+        mov cl, CELL_PLUS
+        call cr_is              ; (a Healer or Rescuer: 1 more)
+        db KIT_HEALER
+        je .roll
+        call cr_is
+        db KIT_RESCUER
+        je .roll
+        xor cx, cx
         call cr_is
         db KIT_LIFEBINDER
         jne .roll

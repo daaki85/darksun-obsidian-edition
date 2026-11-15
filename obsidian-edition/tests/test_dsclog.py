@@ -4020,7 +4020,8 @@ class NewSpellTests(RuleTests):
 
     def test_cell_lifebinder(self):
         """CELL_SITE (Cell Adjustment's "push 2 / jmp", 795A2h; [BP+8] the user, DI the target): AX
-        1d4 from the game's seed, a Lifebinder's (a druid, kit awake) a d4 more (kits.CELL_MORE),
+        1d4 from the game's seed, a Lifebinder's (a druid, kit awake) a d4 more (kits.CELL_MORE), a
+        Healer's (a cleric) or Rescuer's (a half-elf cleric/ranger) 1 more (kits.CELL_PLUS),
         back to the routine's "push ax"; recorded (MN_CELL: the healing, then the cure's byte and the
         Lifebinder's die above it)."""
         from dsloader import gamepatch, kits
@@ -4038,12 +4039,18 @@ class NewSpellTests(RuleTests):
         mu.mem_write(things + 7 * 3, struct.pack("<Bh", 2, 5))
         back = 0x79617 - (0x795A2 + 3)
         roll = lambda seed: ((((seed * 0x015A4E35 + 1) & 0xFFFFFFFF) >> 16) & 0x7FFF) * 4 // 32768 + 1
-        for rules, kit, more in ((game.RULE_KITS, 2, True), (game.RULE_KITS, 1, False), (0, 2, False)):
-            with self.subTest(rules=rules, kit=kit):
+        for rules, cls, kit, more in ((game.RULE_KITS, 5, 2, "die"), (game.RULE_KITS, 5, 1, None), (0, 5, 2, None),
+                                      (game.RULE_KITS, 1, 2, "plus"), (game.RULE_KITS, (1, 13), 1, "plus"),
+                                      (game.RULE_KITS, 1, 3, None)):
+            with self.subTest(rules=rules, cls=cls, kit=kit):
                 mu.mem_write(hdr + 170, struct.pack("<H", rules & 0xFFFF))
                 mu.mem_write(hdr + 270, struct.pack("<H", rules >> 16))
                 sheet = bytearray(0x47)
-                sheet[0x21], sheet[0x24], sheet[0x43] = 5, 3, kit  # (a druid 3: Lifebinder 2, Grove Warden 1)
+                # (a druid 3: Lifebinder 2, Grove Warden 1; a cleric: Healer 2, Crusader 3; a half-elf
+                # cleric/ranger: Rescuer 1)
+                first, second = (cls, 0) if isinstance(cls, int) else cls
+                sheet[0x21], sheet[0x22], sheet[0x24], sheet[0x25], sheet[0x43] = first, second, 3, 3 if second else 0, kit
+                sheet[0x18] = 4 if second else 0
                 mu.mem_write(sheets * 16 + 5 * 0x47, bytes(sheet))
                 mu.mem_write(SS * 16 + BP + 8, struct.pack("<H", 7))
                 seed = 0x12345678
@@ -4056,14 +4063,15 @@ class NewSpellTests(RuleTests):
                                         edi=40).items():
                     mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
                 mu.emu_start(start, CALLER * 16 + self.at + 3 + back)
-                first = roll(seed)
-                second = roll((seed * 0x015A4E35 + 1) & 0xFFFFFFFF)
-                want = first + second if more else first
+                one = roll(seed)
+                two = roll((seed * 0x015A4E35 + 1) & 0xFFFFFFFF)
+                extra = one if more == "die" else kits.CELL_PLUS if more == "plus" else 0
+                want = (one + two) if more == "die" else one + extra
                 self.assertEqual(mu.reg_read(r.UC_X86_REG_AX), want)
                 self.assertEqual(mu.reg_read(r.UC_X86_REG_SP), 0x800)
                 n = struct.unpack("<HHH", mu.mem_read(TSR * 16 + hdr_off + 8, 6))
                 e = Entry.parse(bytes(mu.mem_read(RING_SEG * 16 + ring + ((n[0] - 1) % n[2]) * Entry.SIZE, Entry.SIZE)))
-                self.assertEqual((e.arg(6), e.arg(8), e.arg(0x0A), e.arg(0x0C) >> 8), (40, 7, want, first if more else 0))
+                self.assertEqual((e.arg(6), e.arg(8), e.arg(0x0A), e.arg(0x0C) >> 8), (40, 7, want, extra))
         self.assertEqual(kits.CELL_MORE, 4)
 
     def test_turn_undead_manual(self):

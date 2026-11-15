@@ -1557,7 +1557,8 @@ How each is done:
 - **A cure's healing.** Healer (+1 a die of Cure Light, Serious, Critical Wounds: spells 71, 112,
   127), Lifebinder (a die more: a d8, Blood Flow's, 108, a d6, rolled from the game's rand() seed by
   `GAME_DIE`; and Cell Adjustment a d4 more, `CELL_SITE`, `kits.CELL_MORE`, the die in `MN_CELL`'s
-  last word's high byte for the dice log), Rescuer (as the Healer). Where: `PROBE_CURE` (`INT B1h`, new: "nop / push cs" at
+  last word's high byte for the dice log), Rescuer (as the Healer; the Healer's and Rescuer's Cell
+  Adjustment 1 more, `CELL_PLUS`, the high byte the same). Where: `PROBE_CURE` (`INT B1h`, new: "nop / push cs" at
   DSUN.EXE 79619h in the handler for spells with rules of their own, where the healing, pushed with
   the target, goes to the routine that heals; the caster its `[BP+8]`, the spell `[BP+0Eh]`; the
   probe pushes CS itself). The Cell Adjustment's jump into 79618h is clear of it.
