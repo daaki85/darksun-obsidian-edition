@@ -6694,6 +6694,52 @@ class KitTests(unittest.TestCase):
                                  [2, 0x2222, 0x6666])
         self.mu.mem_write(hdr + 270, struct.pack("<H", 0))
 
+    def test_gear_hold(self):
+        """GEAR_HOLD (CR_WEAPONS' end, before DONE's roster write): with GEAR_DUE set and the Loader
+        there (LOADER_BEAT, +1865, under LOADER_FRESH ticks old), it waits until the Loader clears
+        GEAR_DUE (its gear in the character, so in the roster's copy), at most GEAR_HOLD_TICKS of the
+        BIOS timer (0:46Ch), GEAR_DUE then left set; with it clear, or no Loader, no wait. Registers
+        kept."""
+        import re
+        from unicorn import UC_HOOK_MEM_READ
+        at = re.search(rb"\x2e\x80\x3e..\x00\x74.\x50\x53\x06\x31\xc0\x8e\xc0\x26\x8b\x1e\x6c\x04", self.image, re.S).start()
+        due = TSR * 16 + struct.unpack_from("<H", self.image, at + 3)[0]
+        self.assertEqual(due, TSR * 16 + self.image.find(HDR_SIG) + 1830)  # (the header's GEAR_DUE)
+        self.mu.mem_write(TSR * 16 + 0xFFF0, bytes((0xF4,)))
+        state = {"reads": 0, "clear_at": None}
+
+        def tick(uc, access, address, size, value, data):  # (each read of the timer: a tick on)
+            if address == 0x46C:
+                state["reads"] += 1
+                uc.mem_write(0x46C, struct.pack("<H", (struct.unpack("<H", uc.mem_read(0x46C, 2))[0] + 1) & 0xFFFF))
+                if state["clear_at"] == state["reads"]:
+                    uc.mem_write(due, b"\0")
+        self.mu.hook_add(UC_HOOK_MEM_READ, tick, begin=0x46C, end=0x46D)
+
+        from dsloader import dicelog
+        beat = TSR * 16 + self.image.find(HDR_SIG) + dicelog.TSR_LOADER_BEAT
+
+        def run(flag, clear_at, beat_age=3):
+            state["reads"], state["clear_at"] = 0, clear_at
+            self.mu.mem_write(due, bytes((flag,)))
+            self.mu.mem_write(0x46C, struct.pack("<H", 0xFFF0))  # (the count wraps round midnight's way too)
+            self.mu.mem_write(beat, struct.pack("<H", (0xFFF0 - beat_age) & 0xFFFF))
+            self.mu.mem_write(SS * 16 + 0x7FC, struct.pack("<H", 0xFFF0))
+            for name, value in dict(cs=TSR, ds=0x9000, ss=SS, esp=0x7FC, eax=0x1111, ebx=0x2222, es=0x6666).items():
+                self.mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+            self.mu.emu_start(TSR * 16 + at, TSR * 16 + 0xFFF0, count=100000)
+            self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_BX, r.UC_X86_REG_ES)],
+                             [0x1111, 0x2222, 0x6666])
+            return self.mu.mem_read(due, 1)[0], state["reads"]
+        self.assertEqual(run(0, None), (0, 0))  # (nothing due: no wait)
+        self.assertEqual(run(1, 5), (0, 5))  # (the Loader's pass done: on at once)
+        flag, reads = run(1, None)  # (no pass: about ten seconds, then on, GEAR_DUE left for GEAR_WAIT)
+        self.assertEqual(flag, 1)
+        self.assertGreaterEqual(reads, 182)
+        self.assertLess(reads, 186)
+        self.assertEqual(run(1, None, beat_age=200), (1, 1))  # (no Loader: on at once, the game's gear)
+        self.assertEqual(run(1, None, beat_age=91), (1, 1))
+
     def test_scout_and_path_finder(self):
         """A Military Scout's 2 more initiative and 1 to hit with a bow or sling under the open sky
         (its KIT_OUTDOORS bit), and the Wayfinder's Path-finder: 1 more initiative for each party

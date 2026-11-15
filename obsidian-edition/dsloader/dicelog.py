@@ -62,6 +62,7 @@ RING_MOST = 1024  # (DSCLOG's ring has 63 entries: a header giving far more read
 WRITING = 0xFFFF  # an entry's seq while DSCLOG writes it (a real seq too, once in 65,536: poll)
 TSR_RING_SEG = 268  # the ring's segment (past the image, so it takes none of DSCLOG's 64 KB)
 TSR_GEAR_DUE, TSR_GEAR_GIVEN = 1830, 1831  # (DSCLOG's GEAR_WAIT: a new member's gear due; whose was given)
+TSR_LOADER_BEAT = 1865  # (the BIOS timer at the Loader's last pass: DSCLOG's GEAR_HOLD, _beat)
 TSR_CREATING = 361  # 1 while DSCLOG's weapon window asks a character being made for its weapon specs (CR_WEAPONS)
 TSR_READ_LANG = 362  # each party member's chance to read languages, kept with STATS (DSCLOG's SHINOBI_READ)
 TSR_LEARN_READ = 366  # a Shinobi's try at a scroll: the d100 to read it and the chance (intlearn.py)
@@ -1501,6 +1502,7 @@ class DiceLog:
         party's items, initiative and turns, the creation screen. Each step on its own (_step)."""
         out: List[str] = []
         step = self._step
+        step(self._beat)
         step(self._forget_undone_picks)
         step(lambda: self._kit_tick(now))
         step(self._answer_stats)
@@ -1645,6 +1647,12 @@ class DiceLog:
         finally:
             itemgate.release(self.game)
         return out
+
+    def _beat(self) -> None:
+        """The BIOS timer into DSCLOG's LOADER_BEAT each pass: the Loader is there (GEAR_HOLD waits for
+        its pass at the creation screen's DONE, so the roster's copy of a new character has its gear)."""
+        if self.tsr_hdr is not None:
+            self.guest.write(self.tsr_hdr + TSR_LOADER_BEAT, self.guest.read(BIOS_TIMER, 2))
 
     def _gear_due(self) -> List[str]:
         """A new member just made (DSCLOG's GEAR_DUE, at DONE): new characters' gear given now, not

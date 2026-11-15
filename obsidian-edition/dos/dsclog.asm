@@ -460,6 +460,8 @@ kit_off    db 0                 ; +1861 bit N: party member N's last melee attac
 bad_luck   db 0                 ; +1862 a Swashbuckler's bad luck on its last thief skill roll (PROBE_BELT:
                                 ;      0 to BAD_LUCK taken off) ...
 bad_luck_who dw 0xFFFF          ; +1863 ... and whose (its creature): the dice log's (kits.TSR_BAD_LUCK)
+loader_beat dw 0                ; +1865 the BIOS timer at the Loader's last pass (dicelog's _beat): GEAR_HOLD's
+                                ;      test of the Loader there (STATS aren't kept on the creation screen)
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -22081,9 +22083,45 @@ cr_weapons:
         call myrm_polearm               ; (a Myrmidon's second, the polearm: in the sheet the game keeps)
         mov byte [cs:gear_due], 1       ; (the Loader's gear for it, before VIEW CHARACTER shows it: GEAR_WAIT)
 .done:  call psi_ask                    ; (its psionic powers: PSI_GRANT's picks)
+        call gear_hold                  ; (the Loader's gear in it before the game writes the roster)
         mov byte [cs:ed_on], 0
         jmp ovr_back             ; (the way back as the overlay manager left it)
 .iret:  iret
+
+; GEAR_HOLD: (CR_WEAPONS' end) a new member just made (GEAR_DUE), the Loader's pass waited for (GEAR_DUE
+; cleared), at most GEAR_HOLD_TICKS, with the Loader there (its LOADER_BEAT under LOADER_FRESH old;
+; STATS aren't kept fresh on the creation screen, so not GEAR_WAIT's test): the game's DONE writes the
+; character to the roster (CHARSAVE.GFF's CHAR chunk, the routine at DSUN.EXE 668C3h) right after
+; this site, from memory, so the Loader's weapon spec defaults, kit gear and fuller starting gear
+; (weaponchoice.py, startgear.py) are in the roster's copy too, as in the party played (up to 2.17 a
+; character added again from the roster had the game's gear alone). The Loader's pass took 50 ms
+; warm, over 2 s as a session's first. On a timeout GEAR_DUE stays set for GEAR_WAIT. All
+; registers kept.
+GEAR_HOLD_TICKS equ 182         ; (about ten seconds, at most)
+LOADER_FRESH equ 91             ; (about five seconds)
+gear_hold:
+        cmp byte [cs:gear_due], 0
+        je .ret
+        push ax
+        push bx
+        push es
+        xor ax, ax
+        mov es, ax
+        mov bx, [es:0x46C]              ; (the BIOS timer: the wait's start)
+        mov ax, bx
+        sub ax, [cs:loader_beat]
+        cmp ax, LOADER_FRESH
+        jae .out                        ; (no Loader: the game's gear, as ever)
+.wait:  cmp byte [cs:gear_due], 0
+        je .out
+        mov ax, [es:0x46C]
+        sub ax, bx
+        cmp ax, GEAR_HOLD_TICKS
+        jb .wait
+.out:   pop es
+        pop bx
+        pop ax
+.ret:   ret
 
 ; MYRM_POLEARM: for new member SI, a Myrmidon (its kit on the sheet, LV_SHEETS), the polearm put in
 ; its second weapon spec slot (SPEC_SET slot 1, MYRM_POLEARM + 1) when that is empty: here at DONE,
