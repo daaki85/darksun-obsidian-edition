@@ -2399,9 +2399,7 @@ arrow_plus_now:
         jge .got
         xor al, al
 .got:   mov cl, al
-        mov ax, ds
-        add ax, THINGS_SEG
-        mov es, ax
+        call es_things
         imul bx, [WHOSE_TURN], 3
         mov ax, [es:bx + COMBATANT_CREATURE]
         call creature_sheet     ; (ES:BX its sheet)
@@ -2463,9 +2461,7 @@ probe_arrow:
         jne .store              ; (not a bow: sling stones as they are)
         push ax
         push es
-        mov ax, ds
-        add ax, THINGS_SEG
-        mov es, ax
+        call es_things
         imul bx, [WHOSE_TURN], 3
         mov ax, [es:bx + COMBATANT_CREATURE]
         pop es
@@ -2555,9 +2551,7 @@ arrow_level:
         mov ax, 6
         cmp byte [cs:arrow_cast], 0
         je .put
-        mov ax, ds
-        add ax, THINGS_SEG
-        mov es, ax
+        call es_things
         imul bx, di, 3
         mov ax, [es:bx + COMBATANT_CREATURE]
         call creature_sheet
@@ -3612,9 +3606,7 @@ expert_of:
         push es
         push ax
         mov ax, [bp + 0x10]
-        imul ax, ax, 0x47
-        les bx, [0x1661]
-        add bx, ax
+        call sheet_of_ax
         pop ax
         call expert_halves
         pop es
@@ -3675,9 +3667,7 @@ war_kit_of:
         push es
         push ax
         mov ax, [bp + 0x10]
-        imul ax, ax, 0x47
-        les bx, [0x1661]
-        add bx, ax
+        call sheet_of_ax
         pop ax
         call war_kit_halves
         pop es
@@ -3891,9 +3881,7 @@ probe_missile_line:
         push ax
         les bx, [bp - 6]        ; the creature, its sheet
         mov ax, [es:bx + 4]
-        imul ax, ax, 0x47
-        les bx, [0x1661]
-        add bx, ax
+        call sheet_of_ax
         pop ax
         test word [cs:rules], RULE_SPECIALIZE
         jz .own
@@ -3956,9 +3944,7 @@ probe_view_dam:
         mov es, [ss:di + 14]
         mov es, [es:bx - VIEW_DAM_WHO]
         mov ax, [es:0x25B]      ; the character on show, its sheet
-        imul ax, ax, 0x47
-        les bx, [0x1661]
-        add bx, ax
+        call sheet_of_ax
         push ax
         call kit_melee          ; (a Ravager's, a Brute's: the rule for kits being on)
         add [bp - 0x0E], ax
@@ -4145,9 +4131,7 @@ boots_ac:
         push cx
         push es
         mov cx, ax
-        mov ax, ds
-        add ax, THINGS_SEG
-        mov es, ax
+        call es_things
         mov bx, [bp + 6]
         cmp bx, MAP_COUNT
         jae .keep
@@ -6806,18 +6790,35 @@ kit_class_of_sheet:
         pop di
         ret
 
+; ES_THINGS: ES (and AX) the game's things' segment, DS + THINGS_SEG (the memory pass of
+; 2026-11-16: in place of the three instructions at each of its sites). Flags as the ADD's.
+es_things:
+        mov ax, ds
+        add ax, THINGS_SEG
+        mov es, ax
+        ret
+
+; SHEET_OF_AX: ES:BX the sheet of number AX (DS:[1661h] the sheets, 47h each), AX that x 47h (the
+; same memory pass: the lookup's three instructions at each of its sites). Flags as the ADD's.
+sheet_of_ax:
+        imul ax, ax, 0x47
+        les bx, [0x1661]
+        add bx, ax
+        ret
+
 ; CREATURE_SHEET: ES:BX the sheet of creature AX (its record's number). DS the game's; others kept.
 creature_sheet:
         push ax
+        call creature_sheet_ax
+        pop ax
+        ret
+; CREATURE_SHEET_AX: the same, AX its sheet's number x 47h (SHEET_OF_AX's). Flags as its ADD's.
+creature_sheet_ax:
         les bx, [CREATURES]
         imul ax, ax, 0x3A
         add bx, ax
         mov ax, [es:bx + 4]     ; (its sheet's number)
-        les bx, [0x1661]
-        imul ax, ax, 0x47
-        add bx, ax
-        pop ax
-        ret
+        jmp sheet_of_ax
 
 ; CR_IS: "call cr_is / db KIT_X": ZF set if creature AX (DS the game's) has kit KIT_X awake (KIT_IS,
 ; KIT_WHERE set), KIT_IS_B the same for sheet ES:BX. All registers kept.
@@ -6863,9 +6864,7 @@ kit_ac:
         push dx
         push es
         mov cx, ax
-        mov ax, ds
-        add ax, THINGS_SEG
-        mov es, ax
+        call es_things
         mov bx, [bp + 6]
         imul bx, bx, 3
         cmp byte [es:bx + THINGS], 2
@@ -6941,9 +6940,7 @@ kit_ac:
         jz .out
         push di
         mov di, [bp + 6]
-        mov ax, ds
-        add ax, THINGS_SEG
-        mov es, ax
+        call es_things
         mov [cs:r_things], ax
         call prot_scan
         pop di
@@ -7026,9 +7023,8 @@ war_hit:
         movzx si, byte [cs:si + kind_of_type]   ; (the kind + 1; 0 none)
         or si, si
         jz .out
-        les bx, [0x1661]
-        imul ax, [bp + 0x10], 0x47
-        add bx, ax
+        mov ax, [bp + 0x10]
+        call sheet_of_ax
         mov ax, SWASH_KINDS
         call kit_is_b
         db KIT_SWASHBUCKLER
@@ -7127,9 +7123,8 @@ kit_to_hit:
         push si
         push es
         mov dx, ax
-        les bx, [0x1661]
-        imul ax, [bp + 0x10], 0x47
-        add bx, ax
+        mov ax, [bp + 0x10]
+        call sheet_of_ax
         mov si, [bp + 0x14]
         call kit_melee
         add ax, dx
@@ -7141,9 +7136,8 @@ kit_to_hit:
         push bx
         push es
         push ax
-        les bx, [0x1661]
-        imul ax, [bp + 0x10], 0x47
-        add bx, ax
+        mov ax, [bp + 0x10]
+        call sheet_of_ax
         pop ax
         call kit_is_b           ; (a Ghetto Fighter 1 worse with anything but a dagger)
         db KIT_GHETTO
@@ -7212,9 +7206,8 @@ kit_attack_damage:
         push bx
         push si
         push es
-        les bx, [0x1661]
-        imul ax, [bp + 0x10], 0x47
-        add bx, ax
+        mov ax, [bp + 0x10]
+        call sheet_of_ax
         mov si, [bp + 0x14]
         call kit_melee
         add [bp - 0x12], ax
@@ -7263,9 +7256,8 @@ champ_sentinel db 0
 kit_champion:
         push bx
         push es
-        les bx, [0x1661]
-        imul ax, [bp + 0x10], 0x47
-        add bx, ax
+        mov ax, [bp + 0x10]
+        call sheet_of_ax
         mov byte [cs:champ_sentinel], 0
         call kit_is_b
         db KIT_CHAMPION
@@ -7345,9 +7337,8 @@ probe_thac0:
         sub cx, si
         mov [cs:thac0_game], cl ; (the game's, no kit: the creation screen's THAC0 applies its kit, CR_THAC0_BASE)
         mov byte [cs:thac0_seen], 1
-        les bx, [0x1661]
-        imul ax, [bp + 6], 0x47
-        add bx, ax
+        mov ax, [bp + 6]
+        call sheet_of_ax
         call kit_is_b
         db KIT_SCHOLAR
         jne .out
@@ -7374,9 +7365,7 @@ probe_slots:
         push cx
         push es
         mov cx, [bp - 2]
-        mov ax, ds
-        add ax, THINGS_SEG
-        mov es, ax
+        call es_things
         imul bx, [bp + 6], 3
         mov ax, [es:bx + COMBATANT_CREATURE]
         call creature_sheet     ; (each kit it has awake)
@@ -7470,9 +7459,7 @@ probe_slots:
         cmp byte [bp + 0x0A], 3
         ja .out
         imul bx, [bp + 6], 3
-        mov ax, ds
-        add ax, THINGS_SEG
-        mov es, ax
+        call es_things
         mov ax, [es:bx + COMBATANT_CREATURE]
         call robe_plus
         cmp ax, 2
@@ -7531,9 +7518,7 @@ kit_psp:
         push cx
         push es
         mov cx, ax
-        mov ax, ds
-        add ax, THINGS_SEG
-        mov es, ax
+        call es_things
         push bx
         imul bx, si, 3
         mov ax, [es:bx + COMBATANT_CREATURE]
@@ -7755,9 +7740,7 @@ probe_cure:
         jnz .out
         push bx
         push es
-        mov ax, ds
-        add ax, THINGS_SEG
-        mov es, ax
+        call es_things
         imul bx, [ss:di + 8], 3
         mov ax, [es:bx + COMBATANT_CREATURE]
         pop es
@@ -7908,9 +7891,7 @@ arc_level:
         push cx
         push es
         mov cx, ax
-        mov ax, ds
-        add ax, THINGS_SEG
-        mov es, ax
+        call es_things
         imul bx, [bp + 6], 3
         mov ax, [es:bx + COMBATANT_CREATURE]
         cmp ax, 3
@@ -7938,9 +7919,7 @@ sky_level:
         push cx
         push es
         mov cx, ax
-        mov ax, ds
-        add ax, THINGS_SEG
-        mov es, ax
+        call es_things
         imul bx, [bp + 6], 3
         mov ax, [es:bx + COMBATANT_CREATURE]
         cmp ax, 3
@@ -8033,9 +8012,7 @@ cb_is:
         mov di, sp
         mov si, [ss:di + 8]     ; (the byte after the call)
         inc word [ss:di + 8]
-        mov ax, ds
-        add ax, THINGS_SEG
-        mov es, ax
+        call es_things
         imul bx, [bp + 6], 3
         mov ax, [es:bx + COMBATANT_CREATURE]
         push ax
@@ -8059,13 +8036,7 @@ shinobi_level:
         mov ax, 0
         jne .out
         mov ax, bx
-        les bx, [CREATURES]
-        imul ax, ax, 0x3A
-        add bx, ax
-        mov ax, [es:bx + 4]
-        les bx, [0x1661]
-        imul ax, ax, 0x47
-        add bx, ax
+        call creature_sheet_ax
         call kit_level
         movzx ax, al
         call shinobi_cast
@@ -10210,9 +10181,7 @@ probe_ranger_cast:
         push bx
         push es
         push dx
-        mov ax, ds
-        add ax, THINGS_SEG
-        mov es, ax
+        call es_things
         imul bx, [bp + 6], 3
         mov ax, [es:bx + COMBATANT_CREATURE]
         pop dx
@@ -10245,9 +10214,7 @@ kit_save:
         push cx
         push es
         mov cx, ax
-        mov ax, ds
-        add ax, THINGS_SEG
-        mov es, ax
+        call es_things
         mov bx, di
         imul bx, bx, 3
         cmp byte [es:bx + THINGS], 2
@@ -11508,9 +11475,7 @@ probe_el_know:
         les bx, [CREATURES]
         add bx, ax
         mov ax, [es:bx + 4]
-        les bx, [0x1661]
-        imul ax, ax, 0x47
-        add bx, ax
+        call sheet_of_ax
         call el_second
         jz .healer
         movzx eax, al           ; (the second sphere's cleric bit: 4 the air cleric's)
@@ -11638,9 +11603,8 @@ probe_dual_ban:
         push es
         push di
         push edx
-        les bx, [0x1661]
-        imul ax, [bp + 6], 0x47
-        add bx, ax
+        mov ax, [bp + 6]
+        call sheet_of_ax
         movzx ecx, si           ; (ECX the class)
         mov ax, 1
         call kit_place          ; (each of its kits, asleep too)
@@ -11680,9 +11644,8 @@ dual_spheres:
         mov byte [cs:sph_healer], 0
         test word [cs:rules_hi], RULE_HI_KITS
         jz .set
-        les bx, [0x1661]
-        imul ax, [bp + 6], 0x47
-        add bx, ax
+        mov ax, [bp + 6]
+        call sheet_of_ax
         call kit_place          ; (each of its kits, asleep too)
         jc .set
 .place: call kit_at
@@ -11750,9 +11713,7 @@ sphere_barred:
 .air:   les di, [bp + 4]                ; (PROBE_SPHERE's return: the game's code)
         mov es, [es:di + SPH_WHO]
         mov ax, [es:0x25B]
-        imul ax, ax, 0x47
-        les bx, [0x1661]
-        add bx, ax
+        call sheet_of_ax
         call kit_place          ; (each of its kits, asleep too)
         jc .no
 .place: call kit_at
@@ -11871,13 +11832,7 @@ el_caster:
         db KIT_ELEMENTALIST
         jne .no
         mov ax, bx
-        les bx, [CREATURES]
-        imul ax, ax, 0x3A
-        add bx, ax
-        mov ax, [es:bx + 4]
-        les bx, [0x1661]
-        imul ax, ax, 0x47
-        add bx, ax
+        call creature_sheet_ax
         push ax
         call kit_class_of_sheet
         mov cl, al
@@ -13065,9 +13020,7 @@ harm_site:
         jz .store
         push bx
         push es
-        mov ax, ds
-        add ax, THINGS_SEG
-        mov es, ax
+        call es_things
         imul bx, si, 3
         mov ax, [es:bx + COMBATANT_CREATURE]
         les bx, [CREATURES]
@@ -13127,9 +13080,7 @@ av_cause:
         jb .find
         jmp .out
 .spell: push ax
-        mov ax, ds
-        add ax, THINGS_SEG
-        mov es, ax
+        call es_things
         imul bx, [cs:cast_who], 3
         mov ax, [es:bx + COMBATANT_CREATURE]
         call cr_is
@@ -14260,9 +14211,7 @@ combatant_creature:
         cmp ax, MAP_COUNT
         jae .none
         imul bx, ax, 3
-        mov ax, ds
-        add ax, THINGS_SEG
-        mov es, ax
+        call es_things
         cmp byte [es:bx + COMBATANT_CREATURE - 1], 2
         jne .none
         mov ax, [es:bx + COMBATANT_CREATURE]
@@ -15246,9 +15195,7 @@ tu_site:
         mov [cs:tu_target], si
         mov cx, [bp + 8]
         mov [cs:tu_caster], cx
-        mov ax, ds                      ; (and their creatures: a turning out of a fight starts one,
-        add ax, THINGS_SEG              ; which numbers the things afresh before the Loader reads
-        mov es, ax                      ; the record)
+        call es_things        ; (and their creatures: a turning out of a fight starts one, ; which numbers the things afresh before the Loader reads ; the record)
         imul bx, si, 3
         call tu_creature
         mov [cs:tu_target_c], ax
@@ -15851,9 +15798,7 @@ cell_heal:
         pusha
         xor cx, cx              ; (CX the Lifebinder's d4, 0 for anyone else)
         push es
-        mov ax, ds
-        add ax, THINGS_SEG
-        mov es, ax
+        call es_things
         imul bx, [bp + 8], 3
         mov ax, [es:bx + COMBATANT_CREATURE]
         pop es
@@ -16651,9 +16596,7 @@ rest_con:
         jbe .con
         mov cx, 25
 .con:   mov ax, [es:bx + 4]
-        imul ax, ax, 0x47
-        les bx, [0x1661]
-        add bx, ax
+        call sheet_of_ax
         mov ax, ds
         sub ax, LEVEL_HP_FROM_DS
         mov fs, ax
@@ -17464,9 +17407,7 @@ reach_hands:
         mov si, [es:bx]
         cmp si, NO_THING
         jae .next
-        mov ax, ds
-        add ax, THINGS_SEG
-        mov es, ax
+        call es_things
         imul si, si, 3
         cmp byte [es:si + THINGS], 1
         jne .next                       ; (not an item)
@@ -18363,9 +18304,7 @@ amulet_mr:
         pushad
         push es
         mov di, sp
-        mov ax, ds
-        add ax, THINGS_SEG
-        mov es, ax
+        call es_things
         imul bx, [bp + 6], 3
         mov ax, [es:bx + COMBATANT_CREATURE]
         mov bx, MR_AMULET
@@ -19478,7 +19417,8 @@ probe_dos_open:
         mov bx, copies
 .file:  mov cl, [cs:bx]         ; this copy's name length (0: no more)
         xor ch, ch
-        jcxz .no
+        test cx, cx
+        jz .no                  ; (no jcxz: too far)
         cmp ax, cx
         jb .next
         push ax
@@ -19515,6 +19455,14 @@ probe_dos_open:
 .next:  add bx, COPY_SIZE
         jmp .file
 .found: mov [cs:copy_at], bx
+        lea si, [bx + 1]        ; (its path: D:\ and the name, COPY_PATH)
+        mov di, copy_path + 3
+        mov cx, OBJ_NAME_LEN
+.path:  mov al, [cs:si]
+        mov [cs:di], al
+        inc si
+        inc di
+        loop .path
         pop di
         pop si
         pop cx
@@ -19526,8 +19474,7 @@ probe_dos_open:
         push dx
         push cs
         pop ds
-        mov dx, [cs:copy_at]
-        add dx, 1 + OBJ_NAME_LEN  ; its copy's path
+        mov dx, copy_path       ; its copy's path
         pushf
         call far [cs:old21]
         pop dx
@@ -19536,7 +19483,7 @@ probe_dos_open:
         pop word [cs:obj_scratch]  ; (POP keeps the flags: CF clear, AX the handle)
         push bx
         mov bx, [cs:copy_at]
-        mov bx, [cs:bx + 1 + OBJ_NAME_LEN + COPY_PATH]  ; (its flag: set to 1)
+        mov bx, [cs:bx + 1 + OBJ_NAME_LEN]  ; (its flag: set to 1)
         mov word [cs:bx], 1
         pop bx
         retf 2
@@ -19808,27 +19755,27 @@ resources_on dw 0               ; 1 once the game has opened D:\RESOURCE.GFF (PR
 scripts_on dw 0                 ; 1 once the game has opened D:\GPLDATA.GFF (Kalzith's conversation)
 region_on dw 0                  ; 1 once the game has opened D:\RGN29.GFF (Kalzith in the pens)
 others_on dw 0                  ; 1 once it has opened one of the other regions' copies
-; the files with copies: the name's length, the game's name (up to 12 letters), the copy's path,
-; the flag set when opened
-COPY_PATH equ 16
-COPY_SIZE equ 1 + OBJ_NAME_LEN + COPY_PATH + 2
-%macro COPY 3
+; the files with copies: the name's length, the game's name (up to 12 letters), the flag set when
+; opened. The copy's path is D:\ and the name (COPY_PATH, made as one is opened: the memory pass of
+; 2026-11-16, up to 2.17 each entry's own 16 bytes)
+COPY_SIZE equ 1 + OBJ_NAME_LEN + 2
+%macro COPY 2
         db %strlen(%1), %1
         times OBJ_NAME_LEN - %strlen(%1) db 0
-        db %2
-        times COPY_PATH - %strlen(%2) db 0
-        dw %3
+        dw %2
 %endmacro
+copy_path db 'D:\'
+        times OBJ_NAME_LEN + 1 db 0     ; (the name, NUL-ended even at 12 letters)
 copies:
-        COPY 'SEGOBJEX.GFF', 'D:\SEGOBJEX.GFF', objects_on
-        COPY 'RESOURCE.GFF', 'D:\RESOURCE.GFF', resources_on
-        COPY 'GPLDATA.GFF', 'D:\GPLDATA.GFF', scripts_on
-        COPY 'RGN29.GFF', 'D:\RGN29.GFF', region_on
-        COPY 'RGN1C.GFF', 'D:\RGN1C.GFF', others_on   ; (a Castle Guard of its own: worldgear.py)
-        COPY 'RGN1E.GFF', 'D:\RGN1E.GFF', others_on   ; (an Undermountain miner of its own)
-        COPY 'RGN08.GFF', 'D:\RGN08.GFF', others_on   ; (a Magera of their own, Drakejaw's)
-        COPY 'RGN28.GFF', 'D:\RGN28.GFF', others_on   ; (a skeleton of its own, Gutterward's)
-        COPY 'RGN06.GFF', 'D:\RGN06.GFF', others_on   ; (a thri-kreen of its own, Skycutter's)
+        COPY 'SEGOBJEX.GFF', objects_on
+        COPY 'RESOURCE.GFF', resources_on
+        COPY 'GPLDATA.GFF', scripts_on
+        COPY 'RGN29.GFF', region_on
+        COPY 'RGN1C.GFF', others_on   ; (a Castle Guard of its own: worldgear.py)
+        COPY 'RGN1E.GFF', others_on   ; (an Undermountain miner of its own)
+        COPY 'RGN08.GFF', others_on   ; (a Magera of their own, Drakejaw's)
+        COPY 'RGN28.GFF', others_on   ; (a skeleton of its own, Gutterward's)
+        COPY 'RGN06.GFF', others_on   ; (a thri-kreen of its own, Skycutter's)
         db 0
 
 ; NEW SPELLS (RULE_NEW_SPELLS): three wizard spells past the game's 196 (0-68 wizard, 69-137 priest,
@@ -23746,9 +23693,7 @@ probe_stealth:
         ; the game's own conditions: a thief (the sheet's word +12h, bit 400h), in melee
         ; ([BP+0Eh] 1), with a weapon whose type weighs 40 or less (the type's word +4)
         mov ax, [bp-0x12]
-        imul ax, ax, 0x47
-        les bx, [0x1661]
-        add bx, ax
+        call sheet_of_ax
         test word [es:bx+0x12], 0x400
         jz .done
         cmp word [bp+0x0E], 1
@@ -24481,9 +24426,7 @@ shadow_gone:
         push ax
         push si
         push es
-        mov ax, ds
-        add ax, THINGS_SEG
-        mov es, ax
+        call es_things
         imul si, bx, 3
         cmp byte [es:si + THINGS], 2
         jne .alive                      ; (not a creature)

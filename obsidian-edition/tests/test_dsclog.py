@@ -6461,7 +6461,7 @@ class KitTests(unittest.TestCase):
             kid = first_kit(bytes(sheet))
             for spell in (0, 2, 13, 40, 61, 82, 137, 138, 158, 159, 177, 300):
                 with self.subTest(cls=cls, kit=kit, spell=spell):
-                    self.call(rb"\x50\x53\x51\x06\x89\xc1\x8c\xd8", eax=spell, esi=3, edi=7)
+                    self.call(rb"\x50\x53\x51\x06\x89\xc1\xe8..\x89\xfb", eax=spell, esi=3, edi=7)
                     want = 3 + kits.save(kid, spell, kinds.get(spell, 0))
                     self.assertEqual(self.mu.reg_read(r.UC_X86_REG_SI), want & 0xFFFF)
         self.assertEqual(kits.save(kits.WANDERER, 13, kits.FIRE), 3)

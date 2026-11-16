@@ -48,6 +48,18 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
 ## Next pull request (not opened yet)
 
 **Changed**
+- **DSCLOG's room: a fourth memory pass** (the kit rebalance had taken the helper's segment from 960
+  bytes spare to 320, and upper memory once installed from 83 paragraphs to 43). It freed 304
+  bytes: two routines in place of sequences written out at each site, `ES_THINGS` (the things'
+  segment in ES, 23 sites) and `SHEET_OF_AX` (a sheet by its number, 19), and
+  `CREATURE_SHEET_AX` for two more; the table of the Loader's file copies keeps each name once and
+  makes its `D:\` path as the file is opened (`COPY_PATH`), not a 16-byte path an entry. Now 624
+  bytes of the segment spare and 62 paragraphs of upper memory ([DEVELOPMENT.md's
+  limits](obsidian-edition/DEVELOPMENT.md#the-limits)). Checked in the game
+  (playtest/logs/2026-11-16-memory-pass-4.md): the copies opened (`objects_on` 1), a fight (hiding,
+  a backstab, poison and its save, specialization), the see-through figure, View Character and
+  Effects. Tests: the byte patterns of `test_saves` and `test_shadow_gone`, and
+  `test_regions_opened` (the table's names). DSCLOG 70,464 bytes.
 - **A warrior's THAC0 with the kit's chosen weapon only** (the user's call, after The Complete
   Thief's Handbook's Swashbuckler): the Swashbuckler, Battle Mage, Crusader and Mind Warrior no
   longer have it with every weapon. `PROBE_THAC0` and `CR_THAC0_BASE` leave it out (the sheet's

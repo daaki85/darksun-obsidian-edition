@@ -558,22 +558,27 @@ the one place for the sizes; the sections after them name the symbols only.
 ### The limits
 
 Each fails the build when passed (a negative `times`). From the build of
-2026-11-11 for 2.17.0, with the psionic powers picked at creation (DSCLOG.EXE 70,128
-bytes: the 32-byte header, the segment's image of 64,576 and the tail's 5,520, `TAIL_BYTES`):
+2026-11-16 (the kit rebalance, after the fourth memory pass: DSCLOG.EXE 70,464 bytes: the
+32-byte header, the segment's image of 64,912 and the tail's 5,520, `TAIL_BYTES`):
 
 | Limit | Used | Room | Spare |
 |---|---|---|---|
-| [the helper's segment](#the-helpers-segment): `kept_end` (`resident_end` 63,584 + `AFTER_INSTALL` 992) | 64,576 bytes | 65,536 | 960 bytes |
+| [the helper's segment](#the-helpers-segment): `kept_end` (`resident_end` 63,920 + `AFTER_INSTALL` 992) | 64,912 bytes | 65,536 | 624 bytes |
 | [the far block](#the-far-block): `FAR_END` (its buffers from `FAR_RING`, 10h: 65,484 bytes) | 65,500 | 65,536 | 36 bytes |
-| upper memory as the helper loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,477 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,705 |
-| upper memory once installed: `UMB_KEPT` (the helper, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,099 paragraphs | 8,182 (`UMB_ROOM`) | 83 (1.3 KB) |
+| upper memory as the helper loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,498 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,684 |
+| upper memory once installed: `UMB_KEPT` (the helper, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,120 paragraphs | 8,182 (`UMB_ROOM`) | 62 (992 bytes) |
 
 To check them after a change, build a scratch copy with `[map all FILE]` as its
 first line (`nasm -f bin -I dos/ -o /tmp/x.exe COPY`, from `obsidian-edition/`)
 and read the symbols in the map. What each change took is in the
-[CHANGELOG](https://github.com/daaki85/darksun-obsidian-edition/blob/main/CHANGELOG.md); the two memory passes' steps, each checked in the
-game, are in [the 2026-11-08 log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-08-memory-pass.md)
-and [the 2026-11-09 log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-09-memory-pass-2.md).
+[CHANGELOG](https://github.com/daaki85/darksun-obsidian-edition/blob/main/CHANGELOG.md); the memory passes' steps, each checked in the
+game, are in the logs of [2026-11-08](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-08-memory-pass.md),
+[2026-11-09](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-09-memory-pass-2.md),
+[2026-11-10](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-10-memory-pass-3-and-new-cahulaks.md)
+and [2026-11-16](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-16-memory-pass-4.md).
+Repeated sequences worth a routine have one: `ES_THINGS` (the things' segment in ES),
+`SHEET_OF_AX` (a sheet by its number), `CREATURE_SHEET` / `CREATURE_SHEET_AX` (a creature's
+sheet): use them rather than writing the instructions out again.
 
 ### The helper's segment
 
