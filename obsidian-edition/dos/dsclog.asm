@@ -22055,12 +22055,13 @@ cr_weapons:
         jae .iret
         test word [cs:rules], RULE_SPECIALIZE
         jnz .on
+        call gear_mark                  ; (no weapon window: the Loader's kit and fuller gear still due)
         cmp si, [cs:psi_member]         ; (no weapons: the psionic powers alone, if due)
-        jne .iret
+        jne .hold
         cmp byte [cs:psi_due], 0
         jne .on
         cmp byte [cs:psi_keep], 0
-        je .iret
+        je .hold
 .on:    sti
         pushad
         push es
@@ -22094,7 +22095,31 @@ cr_weapons:
         call gear_hold                  ; (the Loader's gear in it before the game writes the roster)
         mov byte [cs:ed_on], 0
         jmp ovr_back             ; (the way back as the overlay manager left it)
+.hold:  sti                             ; (the BIOS timer for GEAR_HOLD's wait)
+        call gear_hold                  ; (the Loader's gear in it before the game writes the roster)
 .iret:  iret
+
+; GEAR_MARK: (CR_WEAPONS, weapon specialization off: no weapon window) new member SI named for the
+; Loader's creation gear (GEAR_WHO, GEAR_DUE), as CR_WEAPONS' .new does after the window: its kit
+; gear, class gear and fuller starting gear don't need weapon specialization (before, a character
+; made with the rule off went into the roster without them: GEAR_HOLD waited for nothing). Not an EDIT
+; that kept its race, classes and kit (ED_SAME: its gear its own). All registers kept.
+gear_mark:
+        push ax
+        push bx
+        push es
+        les bx, [LV_SHEETS]
+        imul ax, si, 0x47
+        add bx, ax
+        call ed_same
+        jnc .out
+        mov ax, si
+        mov [cs:gear_who], al
+        mov byte [cs:gear_due], 1
+.out:   pop es
+        pop bx
+        pop ax
+        ret
 
 ; GEAR_HOLD: (CR_WEAPONS' end) a new member just made (GEAR_DUE), the Loader's pass waited for (GEAR_DUE
 ; cleared), at most GEAR_HOLD_TICKS, with the Loader there (its LOADER_BEAT under LOADER_FRESH old;

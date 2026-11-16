@@ -3683,15 +3683,67 @@ class NewSpellTests(RuleTests):
     def test_creation_weapons_site(self):
         """CR_WEAPONS (DONE's "pop cx / push si / nop", 666DFh): the word under the INT's frame into
         CX and SI in its place, as the three bytes did; no weapon window with the rule off, or for
-        a member past the party's four (gamepatch's site number and DSCLOG's agree)."""
-        from dsloader import game, gamepatch
+        a member past the party's four (gamepatch's site number and DSCLOG's agree). With the rule
+        off a new member is still named for the Loader's creation gear (GEAR_MARK: GEAR_WHO, GEAR_DUE;
+        no Loader here, its LOADER_BEAT stale, so GEAR_HOLD doesn't wait); past the four, not."""
+        from dsloader import dicelog, game, gamepatch
         self.assertEqual(next(p for p in gamepatch.PATCHES if p.name == "cr_weapons").offset, 0x666DF)
-        for rules, si in ((0, 2), (game.RULE_SPECIALIZE, 5)):
-            self.rules(rules)
-            self.mu.mem_write(SS * 16 + 0x800, struct.pack("<H", 0x1234))
-            self.site(gamepatch.CR_WEAPONS, esi=si, ecx=0)
-            self.assertEqual(self.mu.reg_read(r.UC_X86_REG_CX), 0x1234)
-            self.assertEqual(struct.unpack("<H", self.mu.mem_read(SS * 16 + 0x800, 2))[0], si)
+        hdr = TSR * 16 + load_image().find(HDR_SIG)
+        self.mu.mem_write(0x46C, struct.pack("<H", 0x4000))
+        self.mu.mem_write(hdr + dicelog.TSR_LOADER_BEAT, struct.pack("<H", 0x4000 - 200))
+        for rules, si, marked in ((0, 2, True), (0, 3, True), (game.RULE_SPECIALIZE, 5, False),
+                                  (0, 6, False)):
+            with self.subTest(rules=rules, si=si):
+                self.rules(rules)
+                self.mu.mem_write(hdr + dicelog.TSR_GEAR_DUE, b"\0")
+                self.mu.mem_write(hdr + dicelog.TSR_GEAR_WHO, b"\xff")
+                self.mu.mem_write(SS * 16 + 0x800, struct.pack("<H", 0x1234))
+                self.site(gamepatch.CR_WEAPONS, esi=si, ecx=0)
+                self.assertEqual(self.mu.reg_read(r.UC_X86_REG_CX), 0x1234)
+                self.assertEqual(struct.unpack("<H", self.mu.mem_read(SS * 16 + 0x800, 2))[0], si)
+                self.assertEqual((self.mu.mem_read(hdr + dicelog.TSR_GEAR_DUE, 1)[0],
+                                  self.mu.mem_read(hdr + dicelog.TSR_GEAR_WHO, 1)[0]),
+                                 (1, si) if marked else (0, 0xFF))
+
+    def test_creation_gear_held_rule_off(self):
+        """CR_WEAPONS with weapon specialization off and the Loader there (LOADER_BEAT fresh): the
+        game's roster write after the site waits (GEAR_HOLD) until the Loader clears GEAR_DUE, its
+        kit and fuller starting gear in the character; an EDIT that kept its race, classes and kit
+        (ED_SAME) is neither named nor held."""
+        import re
+        from unicorn import UC_HOOK_MEM_READ
+        from dsloader import dicelog, gamepatch
+        image = load_image()
+        hdr = TSR * 16 + image.find(HDR_SIG)
+        due = hdr + dicelog.TSR_GEAR_DUE
+        state = {"reads": 0}
+
+        def tick(uc, access, address, size, value, data):  # (each read of the timer: a tick on; the
+            if address == 0x46C:                          #   Loader's pass done at the 4th)
+                state["reads"] += 1
+                uc.mem_write(0x46C, struct.pack("<H", struct.unpack("<H", uc.mem_read(0x46C, 2))[0] + 1))
+                if state["reads"] == 4:
+                    uc.mem_write(due, b"\0")
+        self.mu.hook_add(UC_HOOK_MEM_READ, tick, begin=0x46C, end=0x46D)
+        specs = struct.unpack("<H", re.search(KitTests.ED_KEEP, image, re.S).group(1))[0]
+        ed_on = TSR * 16 + specs - 10
+        self.rules(0)
+        for edit, want in ((0, (0, 1, 4)), (1, (0, 0xFF, 0))):
+            with self.subTest(edit=edit):
+                state["reads"] = 0
+                self.mu.mem_write(ed_on, bytes((edit,)))  # (ED_SAME: the sheet's all zero, as ED_*'s)
+                for at in (specs - 8, specs + 4, specs + 5):
+                    self.mu.mem_write(TSR * 16 + at, bytes(4 if at == specs - 8 else 1))
+                self.mu.mem_write(GAME_DS * 16 + 0x1661, struct.pack("<HH", 0, 0x9C00))
+                self.mu.mem_write(0x9C00 * 16, bytes(0x47 * 4))
+                self.mu.mem_write(0x46C, struct.pack("<H", 0x4000))
+                self.mu.mem_write(hdr + dicelog.TSR_LOADER_BEAT, struct.pack("<H", 0x4000 - 3))
+                self.mu.mem_write(due, b"\0")
+                self.mu.mem_write(hdr + dicelog.TSR_GEAR_WHO, b"\xff")
+                self.site(gamepatch.CR_WEAPONS, esi=1, ecx=0)
+                self.assertEqual((self.mu.mem_read(due, 1)[0], self.mu.mem_read(hdr + dicelog.TSR_GEAR_WHO, 1)[0],
+                                  state["reads"]), want)
+                self.mu.mem_write(ed_on, b"\0")
 
     def test_compares(self):
         """772BBh's "cmp dx,0C4h" (NS_CMP site 11): a new spell is below it as a wizard's while the
