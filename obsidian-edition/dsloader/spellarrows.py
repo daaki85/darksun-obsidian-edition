@@ -1,7 +1,9 @@
 """The Spellarcher's spell arrows (kits.py: the half-elf fighter/preserver's kit).
 
-Outside a fight, the USE screen gives a Spellarcher a button for each touch spell it knows (Burning
-Hands, Chill Touch and Shocking Grasp at 1st level, Vampiric Touch at 3rd), with Turn Undead's and
+Outside a fight, the USE screen gives a Spellarcher a button for each touch spell it knows (Chill
+Touch and Shocking Grasp at 1st level, Vampiric Touch at 3rd; the game's manual has each as a touch.
+Burning Hands is a cone from the caster, not a touch: its arrows are retired, never offered, its
+place in ARROWS kept so the others keep theirs, DSCLOG's ARROW_KNOWS), with Turn Undead's and
 Pick Pockets' (DSCLOG's PP_SHOW: in Turn Undead's place when no priest's element has it, then the
 slots beside it). Pressed, it comes here as an item used on the map does (dicelog's _answer_use:
 USE_ITEM ARROWS_BY and the member, USE_WHO the spell's place in ARROWS): a slot of that spell's
@@ -15,11 +17,16 @@ ARROWS_FORBID keeps anyone else from readying them, and as the game asks nothing
 a backpack, those another member is found carrying go back to the party's Spellarcher
 (`return_strays`).
 
+A Spellarcher starts with a Fine Bow (a bow of fine make, +1 to hit: The Complete Fighter's
+Handbook's; DSCLOG's FINE_HIT, no one else has one) and arrows by the touch spells it picked as it
+was made: STARTING of Chill Arrows for Chill Touch, of Shocking Arrows for Shocking Grasp, of each
+for both; with neither, STARTING plain arrows (`starting_gear`).
+
 An arrow casts its spell on what it hits, shot from a bow (DSCLOG's ARROW_HIT: the game casts only
 a bow's own spell; the arrow's, told by its name, takes its place), at the archer's caster level as
-the game reckons it for that spell: the Spellarcher's preserver level. The target saves against it
-as against the spell (Burning Hands halved, Chill Touch none), and against the arrows' Shocking
-Grasp and Vampiric Touch too, which the game's records give no save (SAVED: DSCLOG's ARROW_SAVE).
+the game reckons it for that spell: the Spellarcher's preserver level. The target saves only as
+the spell allows ("all normal saving throw attempts", Dragon #214): against Chill Touch, which a
+save stops; Shocking Grasp and Vampiric Touch allow none.
 """
 
 import struct
@@ -37,17 +44,15 @@ class Arrow(NamedTuple):
 
 
 ARROWS = (
-    Arrow(1, "Burning Hands", 0x16C, 1),
+    Arrow(1, "Burning Hands", 0x16C, 1),  # (retired: never offered, RETIRED)
     Arrow(3, "Chill Touch", 0x16D, 1),
     Arrow(10, "Shocking Grasp", 0x16E, 1),
     Arrow(39, "Vampiric Touch", 0x16F, 3),
 )
-# the arrows' spells whose records allow no save (Shocking Grasp, Vampiric Touch): an arrow's cast
-# of them allows one, a save against spells, as Burning Hands and Chill Touch have (DSCLOG's
-# ARROW_SAVE: bit 0 of the record's save byte for that cast alone)
-SAVED = (10, 39)
+RETIRED = frozenset((1,))  # (Burning Hands: a cone, not a touch; DSCLOG's ARROW_KNOWS offers it never)
 NAMES = {0x16C: b"Burning Arrows", 0x16D: b"Chill Arrows", 0x16E: b"Shocking Arrows", 0x16F: b"Vampiric Arrows"}
 ARROW_NAMES = {a.name for a in ARROWS}
+FINE_BOW = b"Fine Bow"  # the Spellarcher's bow (game.FINE_BOW_NAME: +1 to hit, DSCLOG's FINE_HIT)
 # their pictures (icons.py: the game's Arrows', tinted for each spell), objects 2614-2621
 PICTURES = {0x16C: 0x10000 - 2614, 0x16D: 0x10000 - 2616, 0x16E: 0x10000 - 2618, 0x16F: 0x10000 - 2620}
 ARROWS_A_SLOT = 1     # an arrow for each slot used
@@ -71,6 +76,65 @@ def arrows_item(arrow: Arrow, count: int) -> bytes:
     struct.pack_into("<H", rec, weaponchoice.ITEM_VALUE, 0)
     struct.pack_into("<H", rec, game.ITEM_NAME, arrow.name)
     return bytes(rec)
+
+
+STARTING = 24  # a new Spellarcher's arrows: a stack of each touch spell's it picked, else plain ones
+
+
+def is_plain_arrows(rec: bytes) -> bool:
+    return len(rec) >= game.ITEM_SIZE and struct.unpack_from("<H", rec, game.ITEM_TYPE)[0] == weaponchoice.ARROWS[1] \
+        and struct.unpack_from("<H", rec, game.ITEM_NAME)[0] == weaponchoice.ARROWS[2]
+
+
+def starting_gear(gd: GameData, member: int, sheet: bytes, read) -> List[str]:
+    """A new Spellarcher's Fine Bow and arrows (the module's notes), once: none if it has its Fine
+    Bow already. Its bow (the weapon rules' bow, or a plain one given) is made the Fine Bow; plain
+    arrows it has go, for STARTING of each touch spell's it knows; knowing neither, it has STARTING
+    plain ones. Lines for the log."""
+    from . import ring, specialize, startgear
+    owned = list(gd._worn(member))
+    if any(struct.unpack_from("<H", item, game.ITEM_NAME)[0] == game.FINE_BOW_NAME for _, item, _ in owned):
+        return []
+    who, out = gd.creature_name(member), []
+    items = game.far_pointer(gd.guest, gd.ds, game.ITEMS_PTR)
+    bow_kind = specialize.KINDS.index("bow")
+    bow = next(((i, item) for i, item, _ in owned
+                if specialize.kind_of(struct.unpack_from("<H", item, game.ITEM_TYPE)[0]) == bow_kind), None)
+    if bow is not None:
+        rec = bytearray(bow[1])
+        struct.pack_into("<H", rec, game.ITEM_NAME, game.FINE_BOW_NAME)
+        gd.guest.write(items + bow[0] * game.ITEM_SIZE, bytes(rec))
+    else:
+        plain = startgear._weapon(gd, sheet, bow_kind, read)
+        if plain is None:
+            return []
+        rec = bytearray(plain[0])
+        struct.pack_into("<H", rec, game.ITEM_NAME, game.FINE_BOW_NAME)
+        empty = not any(item[game.ITEM_SLOT] == weaponchoice.MISSILE_SLOT for _, item, _ in owned)
+        if not npcitems.add_to(gd, member, bytes(rec), weaponchoice.MISSILE_SLOT if empty else None):
+            return []
+    out.append(f"{who} starts with a Fine Bow (+1 to hit): a Spellarcher's")
+    picks = [a for a in ARROWS if a.spell not in RETIRED and knows(gd, member, a.spell)]
+    plain = [(i, item) for i, item, _ in gd._worn(member) if is_plain_arrows(item)]
+    if picks:
+        for index, _ in plain:
+            ring.unlink(gd, ring.Items(gd), index, "a Spellarcher's starting arrows", empty=True)
+        for arrow in picks:
+            quiver = not any(item[game.ITEM_SLOT] == weaponchoice.AMMO_SLOT for _, item, _ in gd._worn(member))
+            if npcitems.add_to(gd, member, arrows_item(arrow, STARTING), weaponchoice.AMMO_SLOT if quiver else None):
+                out.append(f"{who} starts with {STARTING} {NAMES[arrow.name].decode().lower()}"
+                           f"{' in the quiver' if quiver else ' in the pack'}: {arrow.spell_name} picked")
+    elif plain:
+        gd.guest.write(items + plain[0][0] * game.ITEM_SIZE + weaponchoice.ITEM_COUNT, struct.pack("<H", STARTING))
+        out.append(f"{who} starts with {STARTING} arrows: no touch spell picked")
+    else:
+        quiver = not any(item[game.ITEM_SLOT] == weaponchoice.AMMO_SLOT for _, item, _ in gd._worn(member))
+        rec = bytearray(weaponchoice.arrows(TEMPLATE))
+        struct.pack_into("<H", rec, weaponchoice.ITEM_COUNT, STARTING)
+        if npcitems.add_to(gd, member, bytes(rec), weaponchoice.AMMO_SLOT if quiver else None):
+            out.append(f"{who} starts with {STARTING} arrows: no touch spell picked")
+    weaponchoice.bow_ahead(gd, member)
+    return out
 
 
 def item_address(gd: GameData, index: int) -> int:
@@ -112,7 +176,7 @@ class SpellArrows:
             return pickpocket.Attempt("No spell arrows can be made now.", [])
         arrow = ARROWS[row]
         who = gd.creature_name(member)
-        if not is_spellarcher(gd, member) or not knows(gd, member, arrow.spell):
+        if arrow.spell in RETIRED or not is_spellarcher(gd, member) or not knows(gd, member, arrow.spell):
             return pickpocket.Attempt(f"{who} can't weave {arrow.spell_name} into arrows.", [])
         if gd.no_spells(member):  # (a multiclass preserver in armour casts nothing: restrict.no_spells)
             return pickpocket.Attempt(f"{who} can't weave spell arrows in armour.", [])

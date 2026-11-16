@@ -49,14 +49,12 @@ TEXTS: Dict[int, str] = {
     PICK_SPIN: "PICK POCKETS:  The next person clicked on has their pockets tried by this thief. "
                "If it fails, the thief tries to slip away unseen. Not in a fight.",
     # (the arrows' too: seven lines fill the box)
-    PICK_SPIN + 1: "BURNING ARROWS:  Weaves Burning Hands into 5 arrows a level in the empty quiver, for a 1st-level slot; each "
-                   "casts it on a hit. Gone at a rest. Not in a fight.",
-    PICK_SPIN + 2: "CHILL ARROWS:  Weaves Chill Touch into 5 arrows a level in the empty quiver, for a 1st-level slot; each "
-                   "casts it on a hit. Gone at a rest. Not in a fight.",
-    PICK_SPIN + 3: "SHOCKING ARROWS:  Weaves Shocking Grasp into 5 arrows a level in the empty quiver, for a 1st-level slot; each "
-                   "casts it on a hit. Gone at a rest. Not in a fight.",
-    PICK_SPIN + 4: "VAMPIRIC ARROWS:  Weaves Vampiric Touch into 5 arrows a level in the empty quiver, for a 3rd-level slot; each "
-                   "casts it on a hit. Gone at a rest. Not in a fight.",
+    PICK_SPIN + 2: "CHILL ARROWS:  Weaves Chill Touch into an arrow for a 1st-level slot; it casts it on a hit, "
+                   "a save stops it. 24 a stack; they last until shot. Not in a fight.",
+    PICK_SPIN + 3: "SHOCKING ARROWS:  Weaves Shocking Grasp into an arrow for a 1st-level slot; it casts it on a "
+                   "hit, no save. 24 a stack; they last until shot. Not in a fight.",
+    PICK_SPIN + 4: "VAMPIRIC ARROWS:  Weaves Vampiric Touch into an arrow for a 3rd-level slot; it casts it on a "
+                   "hit, no save. 24 a stack; they last until shot. Not in a fight.",
 }
 
 

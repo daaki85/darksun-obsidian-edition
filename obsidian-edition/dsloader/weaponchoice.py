@@ -19,7 +19,8 @@ weapon the kit forbids becomes one it allows (a Shinobi's long sword a short swo
 great axe, a Seeker's of its sphere's material), a shield it forbids is taken away (a Ravager's),
 an off-hand or missile weapon it forbids goes to the backpack (a Brute's club, a fire Seeker's
 bow), an Arena Champion's off-hand club becomes a
-shield, and a Battle Mage's quarterstaff its chosen weapon spec's weapon.
+shield, a Battle Mage's quarterstaff its chosen weapon spec's weapon, and a Spellarcher has its
+Fine Bow and arrows (spellarrows.starting_gear).
 """
 
 import struct
@@ -425,6 +426,9 @@ def kit_gear(gd) -> List[str]:
                 if typ[0] & 0x01 and restrict.kit_forbids(sheet, type_, typ) \
                         and ring.unlink(gd, ring.Items(gd), item_index, "kit gear", empty=True):
                     out.append(f"{who}'s {name(item)} is left behind: a Brute fights with two-handed weapons only")
+        if kid == kits.SPELLARCHER:  # (its Fine Bow, and arrows by the touch spells it picked)
+            from . import spellarrows
+            out += spellarrows.starting_gear(gd, member, sheet, read)
         owned = list(gd._worn(member))
         out += _kit_second_weapon(gd, member, sheet, kid, chosen, owned, read)
         if kid == kits.POISONER:

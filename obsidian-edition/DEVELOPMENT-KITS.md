@@ -191,6 +191,7 @@ emulated tests hold the helper to it:
 | to hit with a missile | Military Scout | `PROBE_ATTACKS` (`KIT_TO_HIT`) |
 | a hit's poison | Poisoner | `PROBE_POISON` |
 | an arrow's plus | Spellarcher | `PROBE_ARROW` |
+| the Fine Bow's +1 to hit | Spellarcher | `FINE_HIT` (`PROBE_ATTACKS`), `IB_MATERIAL` |
 | a priest spell's level | Spirit Caller, Wasteland Seer | `PROBE_SPELL_LEVEL` |
 | saves | Myrmidon, Sentinel, Wanderer | `PROBE_RING_SAVE` |
 | a spell's damage | Wanderer | `WANDER_DMG` |
@@ -354,6 +355,17 @@ How each is done:
   (58992h) and its +1/+2/+3 damage kinds take where better than the bow's (581C4h). The shooter is
   `WHOSE_TURN`'s combatant; `kits.arrow_plus`. The weapon spec: `KINDS_ALLOWED` gives a Spellarcher
   the bow only, the one weapon spec the window after DONE offers it.
+- **The Fine Bow.** Spellarcher (its starting bow, The Complete Fighter's Handbook's fine quality: +1
+  to hit, not magic). `weaponchoice.kit_gear` calls `spellarrows.starting_gear` for a new
+  Spellarcher: its bow (the weapon rules' bow, or a plain one) is renamed Fine Bow (name 173h,
+  `game.FINE_BOW_NAME`, DSCLOG's 50th extra name), and arrows go in by the touch spells it knows
+  (the game's known table, `spellarrows.knows`): 24 Chill Arrows for Chill Touch, 24 Shocking
+  Arrows for Shocking Grasp, both stacks for both (the first in the quiver), the plain arrows taken
+  away; with neither, 24 plain ones. Once: none if it has its Fine Bow. `FINE_HIT`, in
+  `PROBE_ATTACKS` after `WAR_HIT`, takes 1 off the attack's THAC0 when the item at `[BP+12h]` is
+  named Fine Bow (whatever the rules); `IB_MATERIAL` shows its item box "Hit +1"; the Loader's THAC0
+  for each weapon (`game.weapon_hits`) and the dice log's THAC0 line have it as "+1 fine". Bows
+  never break and take no material penalty (their type's flag 80h), so nothing else is needed.
 - **A priest spell's level.** Spirit Caller, Wasteland Seer (2 more under the open sky, 1 less under
   a roof, no less than 1). Where: `PROBE_SPELL_LEVEL`'s `SKY_LEVEL` (`kits.sky_level`): the level a
   spell's duration and damage take, not the levels it may cast.

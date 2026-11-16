@@ -108,6 +108,22 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   Myrmidon of an older save keeps its two. Checked in the game (playtest/logs/2026-11-15-kit-rebalance-checks.md,
   with every other kit changed on this branch). Tests: `test_myrmidon_polearm`, `test_myrmidon_polearm_second`,
   `test_myrmidon_two_weapons`, `KindsAllowedTests`.
+- **The Spellarcher: no Burning Arrows, saves as the spells', a Fine Bow and arrows to start** (the
+  user's design, after the game's manual and The Complete Fighter's Handbook): **Burning Hands**, a
+  cone from the caster in the manual, is not a touch, so it makes no arrows (`ARROW_KNOWS` skips the
+  first of `ARROW_SPELLS`, its place kept so the Loader's `USE_WHO` stays; `spellarrows.RETIRED`,
+  and `SpellArrows.make` refuses it); Chill Touch, a touch in the manual, keeps its arrows. An
+  arrow's target saves only as against the spell ("all normal saving throw attempts"): against
+  Chill Touch, not Shocking Grasp or Vampiric Touch (`ARROW_SAVE` and `spellarrows.SAVED`, added
+  earlier on this branch, gone). A new Spellarcher has a **Fine Bow** (name 173h, DSCLOG's 50th
+  extra name: `NAMES_EXTRA` 50): **+1 to hit**, not magic (`FINE_HIT` in `PROBE_ATTACKS`; its item
+  box "Hit +1", `IB_MATERIAL`; "+1 fine" in `game.weapon_hits` and the dice log's THAC0 line), and
+  **24 Chill or Shocking Arrows** for the touch spells it picked as it was made (24 of each for
+  both, no plain arrows), else 24 plain arrows (`spellarrows.starting_gear`, from
+  `weaponchoice.kit_gear`; startgear's bow is the Battle Dancer's alone now). The arrow buttons'
+  texts say a save stops Chill Touch, and none the others. Tests: `test_spellarrows`'
+  `StartingGearTests` and `test_burning_hands_retired`, `test_dsclog`'s `test_fine_bow`,
+  `test_item_box_material`, `test_spell_arrows` and `NamesTests`.
 - **The Spellarcher, after *Dragon* #214's "The Complete Half-Elf"** (the user's design): a spell slot makes
   **one** spell arrow (was 5 a preserver level); one stack of each spell, 24 at most, the arrow
   joining it wherever it is (a new stack in the quiver if empty, else the pack; a full stack takes
@@ -173,9 +189,6 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   one discipline, so a Lifebinder may have it): `CELL_SITE` (`kits.CELL_MORE`); the dice log shows
   "1d4 = 4, +1d4 = 3 (Lifebinder)"; the Healer's and Rescuer's 1 more (`kits.CELL_PLUS`, as their cures
   1 more a die: "1d4 = 3, +1 (Healer)"). Tests: `test_cell_lifebinder`, `test_manual_lines`.
-- **The Spellarcher's arrows: a save against Shocking Grasp and Vampiric Touch too** (the user's
-  call; their records allow none, Burning Hands' and Chill Touch's do): `ARROW_SAVE` sets the record's
-  save bit for a spell arrow's cast alone (`spellarrows.SAVED`). Test: `test_spell_arrows`.
 - **The Wild Fury's check at −4 again** (the user's call, after trying it without): `WILD_CHECK` −4.
 - **The Shinobi's spells** are said to be its own short list (21), not every preserver spell.
 - **The Wayfinder: its own +2 initiative, no penalty when down** (the user's call): `PROBE_INIT`

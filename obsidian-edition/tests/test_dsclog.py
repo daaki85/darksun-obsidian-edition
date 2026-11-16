@@ -1694,6 +1694,19 @@ class SpecializeTests(unittest.TestCase):
         self.assertEqual(self.attack(3, self.AXE, **glad)[1:3], (15, 3))
         self.assertEqual(self.attack(2, self.BOW, missile=True, **glad)[1:3], (15, 3))
 
+    def test_fine_bow(self):
+        """FINE_HIT (PROBE_ATTACKS): the Spellarcher's Fine Bow (the item at [BP+12h] named
+        game.FINE_BOW_NAME) 1 better to hit, not magic (no damage); another item, or none, nothing."""
+        bow = bytearray(0x15)
+        struct.pack_into("<H", bow, 0x12, game.FINE_BOW_NAME)
+        self.mu.mem_write(self.ITEMS * 16 + 4 * 0x15, bytes(bow))
+        for item, rules, want in ((4, game.RULE_KITS, (14, 3)), (4, 0, (14, 3)), (3, game.RULE_KITS, (15, 3)),
+                                  (0x270F, game.RULE_KITS, (15, 3))):
+            with self.subTest(item=item, rules=rules):
+                self.mu.mem_write(SS * 16 + BP + 0x12, struct.pack("<H", item))
+                self.assertEqual(self.attack(2, self.BOW, missile=True, rules=rules)[1:3], want)
+        self.mu.mem_write(SS * 16 + BP + 0x12, struct.pack("<H", 0x270F))
+
     def test_kit_shot(self):
         """PROBE_ATTACKS marks a party member's shot or throw in the header's +360 (KIT_SHOT: bit N
         for member N, set for a missile, cleared for melee) for PROBE_POISON; a monster's nothing."""
@@ -2147,6 +2160,23 @@ class SpecializeTests(unittest.TestCase):
                 dx = mu.reg_read(r.UC_X86_REG_DX)
                 got = bytes(mu.mem_read(TSR * 16 + dx, 8)).split(b"\0")[0].decode() if dx else None
                 self.assertEqual(got, want)
+        # the Spellarcher's Fine Bow (wood, no plus): "Hit +1" (FINE_HIT's), not wood's -3
+        typ = bytearray(0x14)
+        typ[8], typ[0x0D] = 0x80, 1
+        mu.mem_write(self.SHEETS * 16, bytes(typ))
+        item = bytearray(0x15)
+        struct.pack_into("<H", item, 0x12, game.FINE_BOW_NAME)
+        mu.mem_write(items * 16 + 2 * 0x15, bytes(item))
+        mu.mem_write(SS * 16 + 0x7F4, struct.pack("<H", 0xFFF0))
+        for name, value in dict(cs=TSR, ds=self.DS, ss=SS, esp=0x7F4, ebp=BP, eflags=IF | 2, eax=0x1234,
+                                ebx=0, es=self.SHEETS).items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+        mu.emu_start(TSR * 16 + at, 0, count=200)
+        self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_IP, r.UC_X86_REG_SP, r.UC_X86_REG_AX,
+                                                   r.UC_X86_REG_BX, r.UC_X86_REG_ES)],
+                         [0xFFF1, 0x7F6, 0x1234, 0, self.SHEETS])
+        dx = mu.reg_read(r.UC_X86_REG_DX)
+        self.assertEqual(bytes(mu.mem_read(TSR * 16 + dx, 8)).split(b"\0")[0], b"Hit +1")
 
     def test_off_hand_attacks(self):
         """With the rule for two weapons (AD&D's), a weapon in the off hand (the item at [BP+12h], in
@@ -5142,7 +5172,7 @@ class NamesTests(unittest.TestCase):
         self.mu = mu = Uc(UC_ARCH_X86, UC_MODE_16)
         mu.mem_map(0, 0x100000)
         mu.mem_write(TSR * 16, image)
-        size = image.find(bytes.fromhex("8146fcc904" "8356fe00"))  # 49 names of 25 bytes: 4C9h
+        size = image.find(bytes.fromhex("8146fce204" "8356fe00"))  # 50 names of 25 bytes: 4E2h
         fill = fill_probes(image)[0]
         self.assertGreater(min(size, fill), 0)
         mu.mem_write(VEC_NAMES_SIZE * 4, struct.pack("<HH", size, TSR))
@@ -5161,7 +5191,7 @@ class NamesTests(unittest.TestCase):
 
     def test_room(self):
         """In place of "push dword 1": the chunk's size (the dword at [BP-4]) gets the room."""
-        for size, want in ((8050, 9275), (0xFF00, 0xFF00 + 1225)):  # (49 names of 25 bytes)
+        for size, want in ((8050, 9300), (0xFF00, 0xFF00 + 1250)):  # (50 names of 25 bytes)
             self.mu.mem_write(SS * 16 + BP - 4, struct.pack("<I", size))
             self.assertEqual(self.interrupt(VEC_NAMES_SIZE), 0x7FC)
             self.assertEqual(struct.unpack("<II", self.mu.mem_read(SS * 16 + 0x7FC, 4) +
@@ -6646,8 +6676,8 @@ class KitTests(unittest.TestCase):
         """ARROW_HIT and ARROW_SPELL (58B63h, 58B78h: the weapon attack routine's test of the
         weapon's spell, +0Fh, and its taking it): a shot from a bow with spell arrows (their name,
         kept by PROBE_ARROW) casts the arrows' spell when a Spellarcher shot it; plain arrows, a
-        melee hit or a sling, the weapon's own; anyone else's shot, none (spellarrows.py). A spell
-        arrow's Shocking Grasp or Vampiric Touch allows a save (ARROW_SAVE at CAST_SITE)."""
+        melee hit or a sling, the weapon's own; anyone else's shot, none (spellarrows.py). The cast's
+        save is the spell's own: none against Shocking Grasp or Vampiric Touch (no ARROW_SAVE since 2.18)."""
         from dsloader import gamepatch, spellarrows
         from dsloader.gamepatch import VEC_ARROW
         image, mu = load_image(), self.mu
@@ -6691,21 +6721,19 @@ class KitTests(unittest.TestCase):
             self.assertEqual((sp, mu.reg_read(r.UC_X86_REG_AX)), (0x7F0 - 4, spell))
             return struct.unpack("<HH", mu.mem_read(SS * 16 + sp, 4))
         recs = ((self.DS - (0x4356 - 0x3CB4)) & 0xFFFF) * 16 + 0x30
-        for spell in spellarrows.SAVED:  # (their records allow no save: the game's 0A0h)
+        no_save = (10, 39)  # (Shocking Grasp's and Vampiric Touch's records allow no save: the game's 0A0h)
+        for spell in no_save:
             mu.mem_write(recs + spell * 0x20 + 0x1F, b"\xa0")
 
-        def cast(spell):  # (CAST_SITE, the cast's start: the record's save byte for it after)
+        def cast(spell):  # (CAST_SITE, the cast's start: the records' save bytes after)
             mu.mem_write(SS * 16 + BP + 6, struct.pack("<HHH", 7, 8, spell))
             run(bytes((0xCD, gamepatch.VEC_CR_SPELLS, gamepatch.CAST_SITE)), 0x6C0)
-            return [mu.mem_read(recs + s * 0x20 + 0x1F, 1)[0] for s in spellarrows.SAVED]
+            return [mu.mem_read(recs + s * 0x20 + 0x1F, 1)[0] for s in no_save]
         for arrow in spellarrows.ARROWS:
             with self.subTest(arrow=arrow.spell_name):
                 self.assertEqual(hit(arrow.name), (arrow.spell + 1, True))
                 self.assertEqual(cast_level(arrow.spell), (arrow.spell, 3))  # (the preserver level, not 6)
-                # a save against a spell arrow's Shocking Grasp or Vampiric Touch (its record's bit 0
-                # for the cast), as against Burning Hands' and Chill Touch's own
-                self.assertEqual(cast(arrow.spell), [0xA1 if s == arrow.spell else 0xA0 for s in spellarrows.SAVED])
-                self.assertEqual(cast(arrow.spell), [0xA0, 0xA0])  # (cast by hand next: as the game has it)
+                self.assertEqual(cast(arrow.spell), [0xA0, 0xA0])  # (no save given: the spell's own)
         hit(0x36, own=0x28)
         self.assertEqual(cast_level(0x27), (0x27, 6))  # (a bow's own spell: the game's level 6)
         chill = spellarrows.ARROWS[1].name

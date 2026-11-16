@@ -424,7 +424,8 @@ A plain weapon of a weaker material shows its to-hit penalty there: "Hit -3"
 for wood, "Hit -1" for bone, "Hit -2" for stone and obsidian (Dark Sun's, as the
 game's attack takes it; the damage line above already has the material's
 damage off). Not for a weapon with a plus, nor for those the game spares
-(clubs, staves, the chatkcha), nor for metal.
+(clubs, staves, the chatkcha), nor for metal. The Spellarcher's Fine Bow shows "Hit +1" ([its
+kit](KITS.md#multiclass-kits)).
 
 ![A Stone Dagger's item box in the game: "Stone Dagger", "1D4-1/1D3-1" (with creature size on: a dagger does less to a large target), "Hit -2"](docs/hit-line-box.png)
 

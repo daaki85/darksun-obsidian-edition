@@ -1071,6 +1071,11 @@ class SpellRules(NamedTuple):
     doubled_for: str = ""  # the damage kind that doubles it: "fire", "cold" or "electricity"
 
 
+# the Spellarcher's Fine Bow (spellarrows.py): a bow of fine make, +1 to hit, not magic (DSCLOG's FINE_HIT)
+FINE_BOW_NAME = 0x173
+FINE_TO_HIT = 1
+
+
 class Weapon(NamedTuple):
     name: str
     count: int
@@ -2261,6 +2266,8 @@ class GameData:
                 parts.append((f"{kits.name(war_kid)} (a warrior's THAC0)", war))
             if creature in self.wild:  # (DSCLOG's WILD_TO_HIT: a Wild Fury, or Gerakis, whatever the check)
                 parts.append(("Wild Fighting", kits.WILD_TO_HIT))
+            if struct.unpack_from("<H", item, ITEM_NAME)[0] == FINE_BOW_NAME:  # (DSCLOG's FINE_HIT)
+                parts.append(("fine", FINE_TO_HIT))
             if self.rules & RULE_SPECIALIZE:  # (weapon specialization: DSCLOG's PROBE_ATTACKS)
                 from . import specialize
                 item_type = struct.unpack_from("<H", item, ITEM_TYPE)[0]  # (KIND stays the weapon kind)
@@ -2696,6 +2703,13 @@ class GameData:
             return None
         return Weapon(self.item_name(struct.unpack_from("<H", rec, ITEM_NAME)[0]), typ[0x0D], typ[0x0C], struct.unpack("b", typ[0x0E:0x0F])[0],
                       struct.unpack("b", rec[0x14:0x15])[0], typ[0x08] & 0x0F, bool(typ[0x08] & 0x80))
+
+    def is_fine_bow(self, item: Optional[int]) -> bool:
+        """Whether item number ITEM is the Spellarcher's Fine Bow (DSCLOG's FINE_HIT: +1 to hit)."""
+        if item is None or not 0 <= item < NO_ITEM:
+            return False
+        rec = self.guest.read(far_pointer(self.guest, self.ds, ITEMS_PTR) + item * ITEM_SIZE, ITEM_SIZE)
+        return len(rec) >= ITEM_SIZE and struct.unpack_from("<H", rec, ITEM_NAME)[0] == FINE_BOW_NAME
 
     def weapon_name(self, w: Weapon) -> str:
         material = MATERIALS[w.material] + " " if w.material < len(MATERIALS) and w.material != 4 else ""

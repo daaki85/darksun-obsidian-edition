@@ -3098,9 +3098,12 @@ class DiceLog:
                 f"{needs} ({chance}%), hits AC {thac0 - d20}, target AC {ac} -> {'HIT' if hit else 'miss'}")
         skill = self.weapon_skill(attacker, item_type)
         kit_name, kit_hit, _ = self._kit_attack(attacker, item_type, mode, target_combatant)
+        kit_parts = [(kit_name, kit_hit)] if kit_hit else []
+        if weapon and g.is_fine_bow(item):  # (the Spellarcher's Fine Bow: DSCLOG's FINE_HIT, with the kits')
+            kit_parts.append(("fine", game.FINE_TO_HIT))
         breakdown = self._thac0_breakdown(e, thac0, attacker, attacker_combatant, target_combatant, weapon, mode, item_type,
                                           (specialize.SKILL_NAMES.get(skill, ""), specialize.to_hit(skill)),
-                                          [(kit_name, kit_hit)] if kit_hit else [])
+                                          kit_parts)
         out = [head, "    " + breakdown]
         if held:
             out.append(f"    {held}: hit automatically, for normal damage (AD&D's held target)")

@@ -174,7 +174,7 @@ A few of them:
 - **Ravager:** fights without a shield or missile weapons, with a natural AC that hardens from 7 to 3 as it levels.
 - **Battle Dancer:** dances as each fight starts, a roll against DEX at −4: +1 to hit, damage and AC for a few rounds, or −1 if it stumbles. Long swords and bows only, and no shield.
 - **Military Scout:** better at stealth, traps and climbing under the open sky, with +2 initiative and +1 to hit with bows and slings there, and its hiding isn't halved by the sun; worse under a roof, and it never backstabs.
-- **Spellarcher:** weaves the touch spells it knows into arrows, as the Spellarcher of *Dragon* #214's "The Complete Half-Elf" does: a button on the USE screen for each, a spell slot for one arrow that casts its spell on what it hits at the archer's preserver level. One stack of each spell, of 24 at most; they last until shot, and only a Spellarcher carries them. Its spell arrows are +1 from 5th preserver level and +2 from 9th. It wears no armour, helm or shield. What an arrow hits saves against its spell, Shocking Grasp and Vampiric Touch too. Making them plays the spell's own cast sound.
+- **Spellarcher:** weaves the touch spells it knows into arrows, as the Spellarcher of *Dragon* #214's "The Complete Half-Elf" does: a button on the USE screen for each, a spell slot for one arrow that casts its spell on what it hits at the archer's preserver level. One stack of each spell, of 24 at most; they last until shot, and only a Spellarcher carries them. Its spell arrows are +1 from 5th preserver level and +2 from 9th. It wears no armour, helm or shield. What an arrow hits saves as against the spell itself (Chill Touch; none against Shocking Grasp or Vampiric Touch). Burning Hands is a cone, not a touch: no arrows. It starts with a Fine Bow (+1 to hit) and 24 arrows of each touch spell it picked as it was made (Chill or Shocking), else 24 plain arrows. Making them plays the spell's own cast sound.
 - **Wild Fury:** Wild Fighting as each fight starts, a roll against CON at −4: −3 to hit and AC 3 worse for the fight whatever the roll, and with it passed one more attack a round in melee and +3 damage, as *The Complete Barbarian's Handbook* has it.
 - **Wayfinder:** the whole party acts a little quicker while it stands (+1 initiative), the Wayfinder itself quicker still (+3), and nothing is lost when it falls.
 - **Healer, Lifebinder:** better healing (the Lifebinder's Cell Adjustment a d4 more, the Healer's 1 more), and they never know the harming spells (the Cause Wounds spells, Cause Disease, Poison, Slay Living, Harm).
@@ -287,7 +287,8 @@ Where each is found is in [ITEMS](https://github.com/daaki85/darksun-obsidian-ed
 - **[New]** **Tome of Understanding**: read it for +1 WIS for good.
 - **[New]** **Kalzith's six scrolls**: Shield, Burning Hands, Blur, Cat's Grace (with the new spells on), Lightning Bolt and Haste, spells the game has no scroll of.
 - **[New]** **Defilers' scrolls**: a defiler in a fight may carry a scroll of a preserver spell, one time in 20, found on its body.
-- **[New]** **Burning, Chill, Shocking and Vampiric Arrows**: a Spellarcher's own, woven from its touch spells, one a slot; each casts its spell on what it hits, and they last until shot.
+- **[New]** **Chill, Shocking and Vampiric Arrows**: a Spellarcher's own, woven from its touch spells, one a slot; each casts its spell on what it hits, and they last until shot.
+- **[New]** **Fine Bow**: a Spellarcher's own from the start, a bow of fine make, +1 to hit.
 
 **Mundane items**
 

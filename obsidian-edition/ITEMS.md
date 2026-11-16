@@ -93,12 +93,12 @@ Belt of Might making STR at least 24.
 | ![](docs/items/chatkcha-plus1.png) | Obsidian | chatkcha | Chatkcha +1 | +1, Produce Fire | the Guardian |
 | ![](docs/items/bow-plus2.png) | Wooden | bow | Bow +2 | +2 | a skeleton in the Upper Castle |
 | ![](docs/items/phrains-bow.png) | Wooden | bow | Phrain's Bow | +1, Acid Arrow | a reward in the party's hut in Teaquetzl, once Gedron joins the alliance (with Arrows +2, a scroll and an orange) |
+| ![](docs/items/bow.png) | Wooden | bow | ***Fine Bow*** | a bow of fine make: +1 to hit, not magic (The Complete Fighter's Handbook's fine quality; the inventory's "Hit +1") | a [Spellarcher](KITS.md#multiclass-kits)'s, as it is made; no one else's, and sold by no one |
 | ![](docs/items/dunesong.png) | Wooden | bow | ***Dunesong*** | a bow +1, which the Bowyer's archery target counts as the game's own bows | sold by the **Bowyer** |
 | ![](docs/items/arrows-plus3.png) | Wooden | arrows | Arrows +3, +2, +1 | | +3 in chests; +2 from the Bowyer's archery target and Teaquetzl's rewards; +1 Kel, the Elven Leader and a bag in the slave pens |
-| ![](docs/items/burning-arrows.png) | Wooden | arrows | ***Burning Arrows*** | cast Burning Hands on what they hit (a save as the spell's; +1 from the Spellarcher's 5th preserver level, +2 from 9th) | made by a [Spellarcher](KITS.md#multiclass-kits) (its arrow buttons, one a spell slot), and carried by a Spellarcher only; worth nothing, they last until shot |
-| ![](docs/items/chill-arrows.png) | Wooden | arrows | ***Chill Arrows*** | cast Chill Touch on what they hit (a save as the spell's; +1 from the Spellarcher's 5th preserver level, +2 from 9th) | the same |
-| ![](docs/items/shocking-arrows.png) | Wooden | arrows | ***Shocking Arrows*** | cast Shocking Grasp on what they hit (a save as the spell's; +1 from the Spellarcher's 5th preserver level, +2 from 9th) | the same |
-| ![](docs/items/vampiric-arrows.png) | Wooden | arrows | ***Vampiric Arrows*** | cast Vampiric Touch on what they hit (a save as the spell's; +1 from the Spellarcher's 5th preserver level, +2 from 9th) | the same |
+| ![](docs/items/chill-arrows.png) | Wooden | arrows | ***Chill Arrows*** | cast Chill Touch on what they hit (a save stops it, as the spell's; +1 from the Spellarcher's 5th preserver level, +2 from 9th) | made by a [Spellarcher](KITS.md#multiclass-kits) (its arrow buttons, one a spell slot; 24 to start with if it picked the spell as it was made), and carried by a Spellarcher only; worth nothing, they last until shot |
+| ![](docs/items/shocking-arrows.png) | Wooden | arrows | ***Shocking Arrows*** | cast Shocking Grasp on what they hit (no save, as the spell's; +1 from the Spellarcher's 5th preserver level, +2 from 9th) | the same |
+| ![](docs/items/vampiric-arrows.png) | Wooden | arrows | ***Vampiric Arrows*** | cast Vampiric Touch on what they hit (no save, as the spell's; +1 from the Spellarcher's 5th preserver level, +2 from 9th) | the same |
 
 **By weapon spec**, for [weapon
 specialization](KITS.md#weapon-specialization), in the weapon window's order:

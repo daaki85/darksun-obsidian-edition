@@ -136,10 +136,19 @@ class SpellArrowsTests(unittest.TestCase):
             arrows = spellarrows.SpellArrows()
             a, b, c, ahead, add = self.patched()
             with self.subTest(quiver=quiver), a, b, c, ahead as ahead, add as add:
-                done = arrows.make(gd, 0, 0)  # (Burning Hands)
-                self.assertIn("makes one of the burning arrows in the pack (1 of 24 now)", done.log[0])
+                done = arrows.make(gd, 0, 2)  # (Shocking Grasp)
+                self.assertIn("makes one of the shocking arrows in the pack (1 of 24 now)", done.log[0])
                 self.assertIsNone(add.call_args[0][3])  # (a backpack cell)
                 ahead.assert_not_called()
+
+    def test_burning_hands_retired(self):
+        """Burning Hands is a cone, not a touch: no arrows of it, whatever is asked (DSCLOG never offers it)."""
+        gd = FakeGame()
+        a, b, c, ahead, add = self.patched()
+        with a, b, c, ahead, add as add:
+            self.assertIn("can't weave Burning Hands", spellarrows.SpellArrows().make(gd, 0, 0).text)
+            add.assert_not_called()
+        self.assertEqual(gd.written, [])
 
     def test_make_in_armour(self):
         """In armour a Spellarcher casts nothing (restrict.no_spells), so it weaves no arrows: the
@@ -220,3 +229,67 @@ class StrayTests(unittest.TestCase):
         with mock.patch.object(spellarrows, "is_spellarcher", lambda gd_, m: False), \
                 mock.patch.object(spellarrows, "inventory_up", lambda gd_: False):
             self.assertEqual(spellarrows.return_strays(gd), [])
+
+
+class StartingGearTests(unittest.TestCase):
+    """A new Spellarcher's Fine Bow and arrows by the touch spells it picked (starting_gear)."""
+    BOW_TYPE = 1  # (the game's Bow: specialize's bow kind)
+
+    def run_it(self, known, items):
+        """(the items after, the log) for a Spellarcher knowing KNOWN, with ITEMS (index: record)."""
+        gd = mock.Mock()
+        gd.creature_name = lambda m: "Daaki"
+        gd._worn = lambda m: [(i, bytes(rec), b"") for i, rec in sorted(items.items())]
+        gd.guest.write = lambda at, data: items[(at - 0x50000) // game.ITEM_SIZE].__setitem__(
+            slice((at - 0x50000) % game.ITEM_SIZE, (at - 0x50000) % game.ITEM_SIZE + len(data)), data)
+
+        def add_to(gd_, m, rec, slot=None):
+            new = bytearray(rec)
+            new[game.ITEM_SLOT] = slot if slot is not None else 20
+            items[max(items, default=0) + 1] = new
+            return True
+
+        def unlink(gd_, it, index, why, empty=False):
+            del items[index]
+            return True
+        bow = bytearray(game.ITEM_SIZE)
+        struct.pack_into("<H", bow, game.ITEM_TYPE, self.BOW_TYPE)
+        with mock.patch.object(game, "far_pointer", return_value=0x50000), \
+                mock.patch.object(spellarrows, "knows", lambda gd_, m, s: s in known), \
+                mock.patch.object(spellarrows.npcitems, "add_to", add_to), \
+                mock.patch("dsloader.ring.unlink", unlink), mock.patch("dsloader.ring.Items"), \
+                mock.patch("dsloader.startgear._weapon", return_value=(bytes(bow), None)), \
+                mock.patch.object(weaponchoice, "bow_ahead"):
+            log = spellarrows.starting_gear(gd, 0, b"", None)
+        return items, log
+
+    def stacks(self, items):
+        return sorted((struct.unpack_from("<H", r, game.ITEM_NAME)[0], struct.unpack_from("<H", r, 2)[0],
+                       r[game.ITEM_SLOT]) for r in items.values())
+
+    def test_by_the_picks(self):
+        chill, shock = spellarrows.ARROWS[1].name, spellarrows.ARROWS[2].name
+        fine, quiver, missile = game.FINE_BOW_NAME, weaponchoice.AMMO_SLOT, weaponchoice.MISSILE_SLOT
+        for known, want in (({10}, [(shock, 24, quiver)]), ({3}, [(chill, 24, quiver)]),
+                            ({3, 10}, [(chill, 24, quiver), (shock, 24, 20)]),
+                            ({1}, [(0x36, 24, quiver)]), (set(), [(0x36, 24, quiver)])):
+            with self.subTest(known=known):
+                items, log = self.run_it(known, {})
+                self.assertEqual([s for s in self.stacks(items) if s[0] != fine], sorted(want))
+                self.assertEqual([s[2] for s in self.stacks(items) if s[0] == fine], [missile])
+                self.assertIn("Fine Bow", log[0])
+                self.assertEqual(self.run_it(known, items)[1], [])  # (once: it has its Fine Bow)
+
+    def test_the_weapon_rules_bow(self):
+        """The bow and arrows the weapon rules gave (a bow chosen): the bow made the Fine Bow, the plain
+        arrows gone for the spell's, or made STARTING."""
+        for known in ({10}, set()):
+            bow, arrows = bytearray(game.ITEM_SIZE), bytearray(weaponchoice.arrows(spellarrows.TEMPLATE))
+            struct.pack_into("<H", bow, game.ITEM_TYPE, self.BOW_TYPE)
+            bow[game.ITEM_SLOT], arrows[game.ITEM_SLOT] = weaponchoice.MISSILE_SLOT, weaponchoice.AMMO_SLOT
+            with self.subTest(known=known):
+                items, _ = self.run_it(known, {1: bow, 2: arrows})
+                self.assertEqual(struct.unpack_from("<H", items[1], game.ITEM_NAME)[0], game.FINE_BOW_NAME)
+                name = spellarrows.ARROWS[2].name if known else 0x36
+                self.assertEqual([s for s in self.stacks(items) if s[0] != game.FINE_BOW_NAME],
+                                 [(name, 24, weaponchoice.AMMO_SLOT)])

@@ -2592,7 +2592,7 @@ arrow_level:
         movzx ax, cl
         iret
 arrow_lvl    dw 0
-arrow_spells db 1, 3, 10, 39    ; Burning Hands, Chill Touch, Shocking Grasp, Vampiric Touch
+arrow_spells db 1, 3, 10, 39    ; Burning Hands (retired: ARROW_KNOWS), Chill Touch, Shocking Grasp, Vampiric Touch
 
 ; PROBE_UNLOOK: INT VEC_UNLOOK replaces "mov word [0844h],270Fh" (6 bytes: INT + 4 NOPs) at the
 ; end of the routine that closes the Look box (the game forgets whom it was looking at). Does
@@ -3405,6 +3405,8 @@ probe_attacks:
         call kit_to_hit         ; (a Ravager's, a Brute's, an Arena Champion's)
         sub [bp + 0x0A], ax
         call war_hit            ; (a warrior THAC0 kit's, with its chosen weapon)
+        sub [bp + 0x0A], ax
+        call fine_hit           ; (the Fine Bow's +1)
         sub [bp + 0x0A], ax
         call kit_extra          ; (a Battle Dancer's dance, a Wilderness Avenger's against undead)
         sub [bp + 0x0A], ax
@@ -15018,48 +15020,11 @@ th_cast:
         mov [cs:th_level], al
         xor al, al
         xchg al, [cs:th_weapon]
-        call arrow_save                 ; (a spell arrow's Shocking Grasp or Vampiric Touch: a save)
         xor al, 1
         mov [cs:th_armed], al
         mov word [cs:tu_more], 0        ; (TURN_SITE's D*: the cast's own)
         pop ax
         ret
-
-; ARROW_SAVE: for the cast TH_CAST has (AL 1 for a weapon's spell on a hit; [BP+0Ah] the spell),
-; the save allowed (bit 0 of the record's save byte, +1Fh) for a spell arrow's (ARROW_HIT's
-; ARROW_CAST) Shocking Grasp or Vampiric Touch (ARROW_SAVES), whose records allow none: monsters
-; save against the arrows' spells as against Burning Hands' and Chill Touch's (a save against
-; spells); any other cast of them as the game has it (the bit clear again). All registers kept.
-arrow_save:
-        cmp byte [cs:seg_moved], 0
-        je .ret
-        pusha
-        push es
-        mov dl, al
-        and dl, [cs:arrow_cast]         ; (DL 1: a spell arrow's cast)
-        mov ax, ds
-        sub ax, SPELLS_FROM_DS
-        mov es, ax
-        mov si, arrow_saves
-.next:  movzx bx, byte [cs:si]
-        shl bx, 5
-        and byte [es:bx + SPELL_RECS + 0x1F], 0xFE
-        or dl, dl
-        jz .on
-        mov ax, [bp + 0x0A]
-        cmp al, [cs:si]
-        jne .on
-        or ah, ah
-        jnz .on
-        or byte [es:bx + SPELL_RECS + 0x1F], 1
-.on:    inc si
-        cmp si, arrow_saves + ARROW_SAVES
-        jb .next
-        pop es
-        popa
-.ret:   ret
-arrow_saves db 10, 39                   ; (Shocking Grasp, Vampiric Touch: spellarrows.SAVED)
-ARROW_SAVES equ $ - arrow_saves
 
 th_missiles db 18, 53, 75, 111, 180, 33          ; Acid Arrow, Turn Pebble to Boulder, Magical Stone, Condense, spines,
                                                  ;   Minute Meteors
@@ -22544,10 +22509,14 @@ arrows_ask:
 .done:  ret
 
 ; ARROW_KNOWS: CF set if party member AX (0-3) is a Spellarcher who knows the touch spell of
-; ARROW_SPELLS' CLth (the game's known table). DS the game's; all registers kept.
+; ARROW_SPELLS' CLth (the game's known table); never the first, Burning Hands (a cone, not a touch:
+; its arrows are retired, the slot kept so the others keep their places). DS the game's; all
+; registers kept.
 arrow_knows:
         cmp ax, 4
         jae .no
+        or cl, cl
+        jz .no                  ; (Burning Hands: no arrows)
         push bx
         push es
         push ds
@@ -23180,7 +23149,7 @@ ns_fist:
 NAMES_OWN    equ 0x142
 NAME_SIZE    equ 25
 NAME_KEPT    equ 16                 ; (EXTRA_NAMES' entries: 15 letters at most, as the game's own, and a NUL)
-NAMES_EXTRA  equ 49
+NAMES_EXTRA  equ 50
 NAMES_PTR    equ 0x166D         ; DS: far pointer to the name table
 
 ; PROBE_NAMES_SIZE: INT VEC_NAMES_SIZE replaces "push dword 1" (3 bytes: INT + NOP) just before
@@ -28020,6 +27989,28 @@ ib_charges:
         pop ax
 .ret:   ret
 
+; FINE_HIT: AX 1 if the weapon of PROBE_ATTACKS' attack (its item, [BP+12h]) is a Fine Bow (named
+; FINE_BOW_NAME: the Spellarcher's starting bow, The Complete Fighter's Handbook's fine quality),
+; else 0: +1 to hit, not magical (no plus: it hurts nothing a plain bow can't). Others kept.
+FINE_BOW_NAME equ NAMES_OWN + 49
+fine_hit:
+        push bx
+        push es
+        xor ax, ax
+        mov bx, [bp + 0x12]
+        cmp bx, 0x270F
+        jae .out                ; (no weapon)
+        imul bx, bx, 0x15
+        les ax, [ITEMS]
+        add bx, ax
+        xor ax, ax
+        cmp word [es:bx + 0x12], FINE_BOW_NAME
+        jne .out
+        inc ax
+.out:   pop es
+        pop bx
+        ret
+
 ; IB_MATERIAL: DX IB_HIT_TEXT with the to-hit penalty of PROBE_ITEM_BOX's item ([BP+6]; ES:BX its
 ; type's record) if it is a weapon (its type's dice, +0Dh, not 0) of a weaker material with no plus
 ; (the item's +14h): the type not marked 80h (clubs, staves) nor 40h (no material), its material (+8, low nibble) wood -3,
@@ -28030,6 +28021,18 @@ ib_material:
         cmp byte [es:bx + 0x0D], 0
         je .ret
         push ax
+        push bx
+        push es
+        les bx, [0x165D]                ; (the Fine Bow: "Hit +1", FINE_HIT's)
+        imul dx, [bp + 6], 0x15
+        add bx, dx
+        xor dx, dx
+        cmp word [es:bx + 0x12], FINE_BOW_NAME
+        jne .plain
+        mov dx, ib_fine
+        jmp .out
+.plain: pop es
+        pop bx
         push bx
         push es
         mov al, [es:bx + 8]
@@ -28054,6 +28057,7 @@ ib_material:
 .ret:   ret
 
 ib_hit_by  db '3', '1', '2', '2'      ; (wood, bone, stone, obsidian)
+ib_fine    db 'Hit +1', 0
 ib_hit_text db 'Hit -'
 ib_hit_num  db '0', 0
 ib_draw    dd 0
@@ -29369,7 +29373,8 @@ extra_names:
         db "Emberlash", 0               ; (the magic cahulaks of dsloader/worldgear.py: an obsidian
                                         ; cahulaks +1,
         db "Ironwhirl", 0               ; a metal cahulaks +2)
-        times NAMES_EXTRA - 49 db 0     ; (empty names, if any)
+        db "Fine Bow", 0                ; (the Spellarcher's: FINE_BOW_NAME, weaponchoice.FINE_BOW)
+        times NAMES_EXTRA - 50 db 0     ; (empty names, if any)
 ; SEG_MOVE's two tables of the game's: the stack's 60h bytes then the monster kinds', and the pictures'
 ; table with its new entries; whole paragraphs, zeros till the game's are copied in
         align 16, db 0

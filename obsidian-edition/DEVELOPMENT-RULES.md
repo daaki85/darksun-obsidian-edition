@@ -1754,14 +1754,16 @@ backstab step, the round's count read from the attack's frame,
 **The buttons.** Outside a fight, `PP_SHOW` gives a Spellarcher
 (`KIT_SPELLARCHER` awake) a button in the USE screen's ability row for each
 touch spell it knows (`ARROW_KNOWS`: the game's known table, `ARROW_SPELLS`:
-Burning Hands, Chill Touch, Shocking Grasp, Vampiric Touch), as it gives a thief
+Chill Touch, Shocking Grasp, Vampiric Touch; its first place, Burning Hands, is
+never offered since 2.18, a cone and not a touch, and kept so the others keep
+their places, `spellarrows.RETIRED`), as it gives a thief
 Pick Pockets: the first where a priest's Turn Undead is (APFM 2BEFh), unless a
 thief's purse or a priest's element has it, the rest in the row's spare places
 to its right (2BE7h-2BEAh, `PP_EXTRAS`: each drawn with Turn Undead's frame and
 handler, its icon loaded and let go of by the game's routines, `PP_CLOSE`
 letting go of them all as the screen closes). Kind 2-5 (`PP_ARROWS`+N), icons
 ICON 3049-3052 (`icons.arrow_spell_icon`: the touch spell's tile, the hand taken
-off, an arrow in its lines), names BURNING ARROWS and so on (`PP_TEXT`),
+off, an arrow in its lines), names CHILL ARROWS and so on (`PP_TEXT`),
 descriptions by `PP_INFO` (each under the description box's 195 bytes). Let go
 of, the screen closes as for the thief's, and `PP_ARM` goes to `ARROWS_ARM`:
 nothing readied, then `ARROWS_ASK` in a frame the overlay manager can fix up,
@@ -1796,10 +1798,9 @@ routine keeps the arrows' plus) also keeps their name (`AMMO_NAME`); `ARROW_HIT`
 (`NS_IMAGE+28`, over "cmp byte es:[bx+0Fh],0") gives a shot from a bow ([BP+16h]
 above 1, a bow's type at [BP+14h]) with spell arrows their spell instead, when a
 Spellarcher shot them (`PROBE_ARROW`'s `AMMO_ARCHER`), and `ARROW_SPELL`
-(`NS_IMAGE+29`, over "mov cl,es:[bx+0Fh]") hands it on. The target saves against it as
-against the spell; `ARROW_SAVE`, from `CAST_SITE`'s `TH_CAST`, sets bit 0 of Shocking Grasp's and
-Vampiric Touch's records' save byte (+1Fh: 0A0h, no save, made 0A1h, a save against spells) for a
-spell arrow's cast and clears it for any other (`spellarrows.SAVED`). The arrows hold no spell
+(`NS_IMAGE+29`, over "mov cl,es:[bx+0Fh]") hands it on. The target saves as against
+the spell (its record's save byte: Chill Touch's a save, Shocking Grasp's and Vampiric Touch's
+none; a branch's `ARROW_SAVE` gave those two one, taken out before release). The arrows hold no spell
 themselves, so nothing else in the game (the USE screen's items, breaking, acid)
 sees one. Only a Spellarcher carries them: `ARROWS_FORBID`, in `PROBE_CAN_USE`
 (whatever the rules), refuses spell arrows (the equip routine's item, its
