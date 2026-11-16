@@ -1987,7 +1987,7 @@ and the game is as it was.
 
 ![The descriptions on the USE screen (right-click a spell): Cat's Grace's paw, Erdlu Claw's scratches, Fogbolt's cloud](docs/new-spells.png)
 
-![More descriptions: Reflected Image's hand mirror, Spook's ghost, Friends' heart and Fogbolt's grey cloud](docs/new-spells-2.png)
+![More descriptions: Reflected Image's hand mirror, Spook's ghost and Friends' heart](docs/new-spells-2.png)
 
 ![The Effects screen with Cat's Grace and Erdlu Claw on Daaki, the claw's name below](docs/new-spells-effects.png)
 
