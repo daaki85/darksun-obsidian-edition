@@ -108,6 +108,12 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   Myrmidon of an older save keeps its two. Checked in the game (playtest/logs/2026-11-15-kit-rebalance-checks.md,
   with every other kit changed on this branch). Tests: `test_myrmidon_polearm`, `test_myrmidon_polearm_second`,
   `test_myrmidon_two_weapons`, `KindsAllowedTests`.
+- **DSCLOG's room: a fifth memory pass** (96 bytes): `NS_FLAGS_IRET` keeps the six-instruction way
+  back of 14 sites once (each a jump to it), `FINE_ITEM` the Fine Bow's name look-up for `FINE_HIT`
+  and `IB_MATERIAL`, and the never-shown "BURNING ARROWS" is gone. 688 bytes of the segment spare,
+  65 paragraphs of upper memory once installed. Code audit: one comment fixed (the Fine Bow's name is
+  `spellarrows.FINE_BOW`). Checked in the game (playtest/logs/2026-11-16-memory-pass-5.md): the Fine
+  Bow's box and shot, Entangle, the DUAL window. DSCLOG 70,416 bytes.
 - **CHOOSE A SPELL's icons centred** (the user's report): the game fills its window's 21 places
   (WIND 17500) middle five columns first, then the right-hand column, then the left, so past 15
   spells (the game's own 4th level, 16; the 1st with the new spells, 18) the grid sat right of

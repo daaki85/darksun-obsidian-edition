@@ -597,15 +597,15 @@ the one place for the sizes; the sections after them name the symbols only.
 ### The limits
 
 Each fails the build when passed (a negative `times`). From the build of
-2026-11-16 (the kit rebalance, after the fourth memory pass: DSCLOG.EXE 70,464 bytes: the
-32-byte header, the segment's image of 64,912 and the tail's 5,520, `TAIL_BYTES`):
+2026-11-16 (the kit rebalance, after the fifth memory pass: DSCLOG.EXE 70,416 bytes: the
+32-byte header, the segment's image of 64,848 and the tail's 5,536, `TAIL_BYTES`):
 
 | Limit | Used | Room | Spare |
 |---|---|---|---|
-| [the helper's segment](#the-helpers-segment): `kept_end` (`resident_end` 63,920 + `AFTER_INSTALL` 992) | 64,912 bytes | 65,536 | 624 bytes |
+| [the helper's segment](#the-helpers-segment): `kept_end` (`resident_end` 63,856 + `AFTER_INSTALL` 992) | 64,848 bytes | 65,536 | 688 bytes |
 | [the far block](#the-far-block): `FAR_END` (its buffers from `FAR_RING`, 10h: 65,484 bytes) | 65,500 | 65,536 | 36 bytes |
 | upper memory as the helper loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,498 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,684 |
-| upper memory once installed: `UMB_KEPT` (the helper, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,120 paragraphs | 8,182 (`UMB_ROOM`) | 62 (992 bytes) |
+| upper memory once installed: `UMB_KEPT` (the helper, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,117 paragraphs | 8,182 (`UMB_ROOM`) | 65 (1,040 bytes) |
 
 To check them after a change, build a scratch copy with `[map all FILE]` as its
 first line (`nasm -f bin -I dos/ -o /tmp/x.exe COPY`, from `obsidian-edition/`)
@@ -614,7 +614,8 @@ and read the symbols in the map. What each change took is in the
 game, are in the logs of [2026-11-08](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-08-memory-pass.md),
 [2026-11-09](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-09-memory-pass-2.md),
 [2026-11-10](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-10-memory-pass-3-and-new-cahulaks.md)
-and [2026-11-16](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-16-memory-pass-4.md).
+[2026-11-16](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-16-memory-pass-4.md)
+and [the fifth, also 2026-11-16](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-16-memory-pass-5.md).
 
 ### The helper's segment
 

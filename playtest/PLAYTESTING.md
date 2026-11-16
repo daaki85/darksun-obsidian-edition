@@ -928,7 +928,8 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
   Energy Containment 194, Life Draining 212, Cell Adjustment 230), the icon, the target's portrait.
   A failed power check costs 2 PSP and logs "psionic power check fails"; try again.
 - **Spell arrows** (a Spellarcher): the USE screen on it shows, under its spells, a button for each
-  touch spell it knows (Burning red, Shocking blue: 157,147 and 176,147 with those two); a slow
+  touch spell it knows (Chill light blue, Shocking blue: 157,147 and 176,147 with those two; no
+  Burning Hands button since 2026-11-16); a slow
   press makes one arrow ("makes one of the shocking arrows in the pack (1 of 24 now)") and **closes
   the screen** (an Escape after it opens EXIT: SAVE GAME?). With wooden arrows in the quiver the
   new stack goes to the pack: swap them in the inventory (quiver 66,26, a backpack cell).

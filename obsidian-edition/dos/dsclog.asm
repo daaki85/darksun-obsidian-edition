@@ -12850,12 +12850,7 @@ wander_dmg:
         or word [ss:di + NS_DI], 6
 .test:  mov ax, [ss:di + NS_DI]
         test [bp + 0x0C], ax
-        pushf
-        pop ax
-        call ns_flags
-        pop es
-        popad
-        iret
+        jmp ns_flags_iret
 
 ; AV_GRANT: "test es:[bx+19Dh],edx" (5E499h; 6 bytes: the INT, the site's number and 3 NOPs) in
 ; the routine giving a priest the spells of its spheres (5E401h: [BP+6] the character, SI the spell,
@@ -12883,12 +12878,7 @@ av_grant:
         db KIT_LIFEBINDER
         jmp .flags
 .given: or sp, sp               ; (ZF clear)
-.flags: pushf
-        pop ax
-        call ns_flags
-        pop es
-        popad
-        iret
+.flags: jmp ns_flags_iret
 
 ; REQ_SITE: "mov bx,[bp+6] / dec bx" (7FF42h; 4 bytes: the INT, the site's number and a NOP) in the
 ; routine running a script's REQUEST (command 22h; 7FF30h, a jump table of 20 at its CS:177h):
@@ -13316,12 +13306,7 @@ acid_rounds:
 .neg:   neg eax
         mov [bp + 0x0E], eax
 .test:  cmp dword [bp + 0x0E], PERMANENT_DUR
-        pushf
-        pop ax
-        call ns_flags
-        pop es
-        popad
-        iret
+        jmp ns_flags_iret
 
 ; ACID_BURN: "mov si,[bp+6]" (78982h; 3 bytes: the INT and the site's number) at the start of
 ; Acid's burn (7897Bh: [BP+6] the creature, [BP+8] the effect): noted (ACID_BURNING), the move made.
@@ -14426,12 +14411,7 @@ acid_round:
         call ww_pass                    ; each creature in a Whirlwind: its damage, and its save
         mov di, sp
         cmp word [0x55A], 0
-        pushf
-        pop ax
-        call ns_flags
-        pop es
-        popad
-        iret
+        jmp ns_flags_iret
 
 ; BURN_PASS: for ACID_ROUND (SS:BX+34 the INT's way back), in order of their numbers, each creature
 ; with Acid's charges, each spending one through 76803h (SUN_PASS 0); or each Sunstroke holds
@@ -15860,12 +15840,7 @@ dual_level:
         inc ax
 .cmp:   cmp [es:bx + 0x24], al
 dual_flags:
-        pushf
-        pop ax
-        call ns_flags
-        pop es
-        popad
-        iret
+        jmp ns_flags_iret
 
 ; DUAL_PRIMES (gamepatch "dual_old_prime", "dual_new_prime"): the DUAL window's class test (86E94h:
 ; SI the member, DI the class offered), "cmp byte [es:bx+22h],0Fh" (86EFCh; ES:BX the creature plus
@@ -16030,12 +16005,7 @@ tari_bite:
         pop ax
 .flags: mov di, sp
         cmp ax, 1
-        pushf
-        pop ax
-        call ns_flags
-        pop es
-        popad
-        iret
+        jmp ns_flags_iret
 
 ; DJINN_TURN: PROBE_MOVE's end, at the start of a creature's turn in a fight (57566h: DI the combatant,
 ; SI its creature): a djinn (kind 39) with the monsters as the manual describes them (MANUAL_ON), at its
@@ -18047,12 +18017,7 @@ aim_site:
         mov word [cs:kind], KIND_AIM
         call record
 .test:  cmp word [ss:di + NS_DX], -1
-        pushf
-        pop ax
-        call ns_flags
-        pop es
-        popad
-        iret
+        jmp ns_flags_iret
 
 ; ADND_NEEDED: CX = AD&D's save against acid for item BX (DS the game's): its material's
 ; number, less its plus, less 1 for a magical power. Keeps every other register.
@@ -18280,12 +18245,7 @@ amulet_mr:
         jz .test
         add word [bp - 0x0C], AMULET_PERCENT
 .test:  cmp word [bp - 0x0C], 0
-        pushf
-        pop ax
-        call ns_flags
-        pop es
-        popad
-        iret
+        jmp ns_flags_iret
 
 ; RULES (set by the Loader, from its Options): a helm counts AC 1, ... (2, once boots'
 ; movement in a fight: unused, free for a rule)
@@ -20270,6 +20230,17 @@ ns_flags:
         popf
         ret
 
+; NS_FLAGS_IRET: a site's way back with AX's flags in its frame (NS_FLAGS: PUSHAD, then ES, DI
+; the frame), the flags of the jump to it: their ES and registers popped, IRET (14 sites jump here,
+; each had the six instructions: the fifth memory pass).
+ns_flags_iret:
+        pushf
+        pop ax
+        call ns_flags
+        pop es
+        popad
+        iret
+
 ; NS_KNOWS: CF set if party member AX (its thing) knows new spell CL (0 to NS_COUNT - 1): its
 ; sheet's bit (NS_SHEET_KNOWS). DS the game's; all registers kept.
 ns_knows:
@@ -20935,12 +20906,7 @@ ns_cmp:
         cmp al, dl
         jmp .flags
 .word:  cmp ax, dx
-.flags: pushf
-        pop ax
-        call ns_flags
-        pop es
-        popad
-        iret
+.flags: jmp ns_flags_iret
 
 ; NS_KNOWN: "cmp si,4" (5DD04h; 3 bytes: the site's number after the INT) at the start of the
 ; routine (500:48h) giving the far address of thing SI's byte for spell DX (low four bits not 0:
@@ -21098,12 +21064,7 @@ ns_image:
         xor dx, dx
 .cmp:   mov ax, [ss:di + NS_AX]
         cmp ax, dx
-        pushf
-        pop ax
-        call ns_flags
-        pop es
-        popad
-        iret
+        jmp ns_flags_iret
 
 ; IMAGE_CHANCE: DX the chance (percent) of an image of thing AX taking a blow or a spell: 75, 50
 ; for Reflected Image's (with RULE_NEW_SPELLS). DS the game's; the others kept.
@@ -21380,12 +21341,7 @@ scroll_use:
         or al, 1                ; (ZF clear)
         jmp .flags
 .zero:  xor ax, ax              ; (ZF set)
-.flags: pushf
-        pop ax
-        call ns_flags
-        pop es
-        popad
-        iret
+.flags: jmp ns_flags_iret
 
 ARMOR_EFFECT equ 2             ; (the game's Armor, Improved AC)
 
@@ -21506,12 +21462,7 @@ shop_loop:
         mov di, sp
         call shine_turn
         cmp word [SHINE_SCREEN], 1
-        pushf
-        pop ax
-        call ns_flags
-        pop es
-        popad
-        iret
+        jmp ns_flags_iret
 
 ; SHINE_TURN: the colour cycles turned if the timer asked and a character's screen is open. DS the
 ; game's; AX, BP and the flags not kept.
@@ -22547,8 +22498,7 @@ arrow_knows:
         ret
 
 arrows_which db 0
-arrows_names dw arrows_n0, arrows_n1, arrows_n2, arrows_n3
-arrows_n0    db "BURNING ARROWS", 0
+arrows_names dw arrows_n1, arrows_n1, arrows_n2, arrows_n3 ; (the first, Burning Arrows, never shown: ARROW_KNOWS)
 arrows_n1    db "CHILL ARROWS", 0
 arrows_n2    db "SHOCKING ARROWS", 0
 arrows_n3    db "VAMPIRIC ARROWS", 0
@@ -23078,12 +23028,7 @@ ns_hit:
         jz .test
         add word [ss:di + NS_SI], 2
 .test:  test byte [bp - 8], 0x80
-        pushf
-        pop ax
-        call ns_flags
-        pop es
-        popad
-        iret
+        jmp ns_flags_iret
 
 ; NS_FIST: "cmp word [bp-0Ch],0" (58226h; 4 bytes: the site's number and a NOP after the INT) in the
 ; melee attack routine (58019h: SI the attacker; [BP-2] the weapon's item, -1 for none: a natural
@@ -23133,12 +23078,7 @@ ns_fist:
         and word [bp - 0x14], ~DMG_CRUSHING
         or word [bp - 0x14], DMG_SLASHING
 .test:  cmp word [bp - 0x0C], 0
-        pushf
-        pop ax
-        call ns_flags
-        pop es
-        popad
-        iret
+        jmp ns_flags_iret
 
 ; NAMES: the game's name table (GPLDATA's NAME chunk: 322 names of 25 bytes, which items name
 ; by number) gets NAMES_EXTRA more, for the Loader's own items (the Ring of Protection, the
@@ -27994,22 +27934,32 @@ ib_charges:
 ; else 0: +1 to hit, not magical (no plus: it hurts nothing a plain bow can't). Others kept.
 FINE_BOW_NAME equ NAMES_OWN + 49
 fine_hit:
-        push bx
-        push es
         xor ax, ax
-        mov bx, [bp + 0x12]
-        cmp bx, 0x270F
+        cmp word [bp + 0x12], 0x270F
         jae .out                ; (no weapon)
-        imul bx, bx, 0x15
-        les ax, [ITEMS]
-        add bx, ax
-        xor ax, ax
-        cmp word [es:bx + 0x12], FINE_BOW_NAME
+        push word [bp + 0x12]
+        call fine_item
         jne .out
         inc ax
-.out:   pop es
+.out:   ret
+
+; FINE_ITEM: ZF set if the item whose number is on the stack (taken off it) is named FINE_BOW_NAME.
+; All registers kept.
+fine_item:
+        push bp
+        mov bp, sp
+        push bx
+        push es
+        les bx, [ITEMS]
+        push ax
+        imul ax, [bp + 4], 0x15
+        add bx, ax
+        pop ax
+        cmp word [es:bx + 0x12], FINE_BOW_NAME
+        pop es
         pop bx
-        ret
+        pop bp
+        ret 2
 
 ; IB_MATERIAL: DX IB_HIT_TEXT with the to-hit penalty of PROBE_ITEM_BOX's item ([BP+6]; ES:BX its
 ; type's record) if it is a weapon (its type's dice, +0Dh, not 0) of a weaker material with no plus
@@ -28023,19 +27973,12 @@ ib_material:
         push ax
         push bx
         push es
-        les bx, [0x165D]                ; (the Fine Bow: "Hit +1", FINE_HIT's)
-        imul dx, [bp + 6], 0x15
-        add bx, dx
-        xor dx, dx
-        cmp word [es:bx + 0x12], FINE_BOW_NAME
+        push word [bp + 6]              ; (the Fine Bow: "Hit +1", FINE_HIT's)
+        call fine_item
         jne .plain
         mov dx, ib_fine
         jmp .out
-.plain: pop es
-        pop bx
-        push bx
-        push es
-        mov al, [es:bx + 8]
+.plain: mov al, [es:bx + 8]
         test al, 0x80 | 0x40
         jnz .out                        ; (a club's, a staff's; 40h: no material)
         and al, 0x0F
@@ -29373,7 +29316,7 @@ extra_names:
         db "Emberlash", 0               ; (the magic cahulaks of dsloader/worldgear.py: an obsidian
                                         ; cahulaks +1,
         db "Ironwhirl", 0               ; a metal cahulaks +2)
-        db "Fine Bow", 0                ; (the Spellarcher's: FINE_BOW_NAME, weaponchoice.FINE_BOW)
+        db "Fine Bow", 0                ; (the Spellarcher's: FINE_BOW_NAME, spellarrows.FINE_BOW)
         times NAMES_EXTRA - 50 db 0     ; (empty names, if any)
 ; SEG_MOVE's two tables of the game's: the stack's 60h bytes then the monster kinds', and the pictures'
 ; table with its new entries; whole paragraphs, zeros till the game's are copied in
