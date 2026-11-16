@@ -50,7 +50,9 @@ merges: then make it again from `origin/main` and put any unmerged commits on to
 
 **Branch names.** A cloud session is handed a random branch name (`claude/eloquent-bohr-g8rr37`,
 `ccr-7f9f358f-nn0os3`). Don't use it: this rule is the user's standing permission to push to a
-branch named after the task instead. Before the first commit, make `claude/<task>`, where `<task>`
+branch named after the task instead. Before the first commit or push, make `claude/<task>` (never
+push the random name: a session can make branches but not delete them, so it would be left behind
+for the user to delete by hand), where `<task>`
 is two to five lowercase words joined by hyphens saying what the work is (`claude/class-outfits`,
 `claude/opends-report`, `claude/gear-mark-roster`); check `git ls-remote origin` that it is free,
 else add `-2`. Commit and push there, and say the name in the first reply. If the user names a
