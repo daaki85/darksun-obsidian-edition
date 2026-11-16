@@ -1909,19 +1909,12 @@ without).
 
 ## Quality of life
 
-**On the game's screens:**
-
-| Change | What it does |
-|---|---|
-| **Combat log** | **L** on the map shows every roll in the game, at the least, in short or in detail, and **L** again hides it: in a fight, or after one to check a thief's roll or a new level's hit points. A panel at the map's lower right: its scrollbar reads back, **-** and **+** collapse it or open it up with filters. Out of a fight its top line says how long the game has run (`Day 47, 14:20`), and around the arena how many arena fights the party has had. |
-| **Names over figures** | A spell's name floats over its caster as it's cast, "Miss" over anyone an attack misses, and "Armor: 7 left" (or "Mirror Image: 2 left", "Armor ends") when a spell that lasts a number of uses loses one. |
-| **THAC0, saves and thief skills on screen** | The inventory screen shows THAC0, all five saves, THAC0 with each weapon, DEX's adjustments and a thief's skills; View Character shows the saves, each labelled, MOVE and THAC0, and for a character of several classes which class goes up next. |
-| **Spell slots on the USE screen** | Spells left of each level, and the most after resting. |
-| **The Look box** | In a fight, a monster's hit points, AC, THAC0, alignment, magic resistance and chief defence; closing the box tells the rest. |
-| **Item boxes** | A wand's or other charged item's charges left; a plain weapon's to-hit (`Hit -1` for bone); with creature size, a weapon's damage against large targets too (`1D8-1/1D12-1`); a cloak's, boots' or belt's bonus to thief skills (`Hide +10`, `Silent +10`, `Pick +5, Lock +5`). |
-| **The Effects screen** | Names each kit (a Shinobi's with its chance to read a scroll) and weapon spec, a page at a time when there are many; with the pointer on the icon of a spell that lasts a number of uses, the uses left: IMPROVED AC (10 CHARGES), MIRROR IMAGES (3 CHARGES); for Enlarge how much more the weapon's dice give (ENLARGED (+90% DICE)), and for Barkskin, Flesh Armor and Magical Vestments the armour AC they give (BARKSKIN (AC 3)). A magic item's power (Shadowseeker's Detect Invisibility) lasts while the item is readied and shows no charges. |
-| **What a scroll says** | Reading a scroll on the inventory screen, the line under the paper doll gives the result: YOU LEARN THE SPELL, YOU CAN NOT READ THE SCROLL... *Without the mod:* nothing showed there. |
-| **New characters' thief skills** (a bug fixed) | A character not yet played shows its thief skills. *Without the mod:* they showed as 0. |
+**On the game's screens** the mod shows what the game kept hidden: every roll in the combat log
+(**L** on the map), names over figures (a spell cast, "Miss", "Armor: 7 left", the arrows left),
+THAC0, all five saves and thief skills on the inventory and View Character screens, spell slots on
+the USE screen, a monster's hit points and defences in the Look box, charges and to-hit in item
+boxes, and the kit, weapon specs and spells' uses left on the Effects screen. Each is in [the
+features page](FEATURES.md#always-on).
 
 **Controls:**
 
@@ -1938,30 +1931,15 @@ without).
 | **The pointer's start and speed** | The pointer starts in the middle of the screen, stays where you leave it as screens change (the intro, menus, loading), moves as far up and down as across, and in a window as fast as your desktop's pointer. *Without the mod:* it starts at the right edge, moves half as far up and down, and in a window three times as fast as your desktop's pointer. |
 | **Spells on the Effects screen** (a bug fixed) | A stray click on a spell's icon no longer ends the spell. A psionic power's icon still ends the power, which is how you stop one. |
 
-**Saves and characters:**
+**Saves and characters:** 40 saves, four pages of ten (**PAGE 1** to **PAGE 4**, or **PgUp** and
+**PgDn**), and 29 characters in the roster ([more saves and characters](FEATURES.md#more-saves-and-characters)).
 
-| Change | What it does |
-|---|---|
-| **40 saves** | Four pages of ten in the save and load window (**PAGE 1** to **PAGE 4**, or **PgUp** and **PgDn**). *Without the mod:* 10. |
-| **29 characters on disk** | The roster keeps 29 characters made with CREATE CHARACTERS. *Without the mod:* 19. |
-| **DELETE in the roster** (a bug fixed) | Deletes the character you chose. *Without the mod:* with the list scrolled, it deleted another one. |
-
-**Running the game.** On the map, figures show what they wear, cast shadows
-and raise dust, a thief or ranger hidden in shadows and anyone invisible are
-drawn see-through, and elves have pointed ears. DOSBox runs the game faster than
-GOG's settings and skips a picture rather than slowing the party down. The game
-window can be its own size, two, three (the default) or four times that, or full
-screen. The manual check
-never comes. If the game crashes or freezes, or an item vanishes for no
-ordinary reason, the Loader saves a report to send. The README has the details:
-[running it](README.md#running-it-windows) and [reports](README.md#crash-freeze-and-item-reports).
-
-**In the Loader's window**, the dice log shows every roll with what it needed
-and where each bonus came from. Other tabs show each character's sheet, the
-dialogue, and every spell's dice, saves and duration. Every save is also
-copied under the name you gave it in the game. The README has
-[the Loader's window](README.md#the-loaders-window) in full, and [the dice log, line by
-line](DICE-LOG.md) what each of its lines means.
+**Running the game** (figures in what they wear, shadows, dust, see-through hiders, the game
+window's size, steady pace, crash and freeze reports) and **the Loader's window** (the dice log, the
+characters' sheets, the dialogue, every spell's dice) are in the README: [running
+it](README.md#running-it-windows), [the Loader's window](README.md#the-loaders-window) and
+[reports](README.md#crash-freeze-and-item-reports); [the dice log, line by line](DICE-LOG.md) says
+what each of its lines means.
 
 ## Worth knowing
 
