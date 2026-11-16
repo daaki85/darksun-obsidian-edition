@@ -299,7 +299,7 @@ the old bugs from happening, but what a bug already did stays in the save:
   cosmos spells when the game is loaded (the dice log says so). A thri-kreen
   druid/fighter Wasteland Seer has no kit now: the kit is a
   druid/fighter/psionicist's. A human with a kit for each of several classes
-  keeps them all (one a character is for characters made now); a Myrmidon keeps
+  keeps them all (from now on a change of class adds no second kit); a Myrmidon keeps
   the two weapon specs it chose; a Healer or Lifebinder has the harming spells
   taken away when the game is loaded.
 - **Thieves' Tools** from an earlier version (Mirlon's or Kel's) do nothing: a

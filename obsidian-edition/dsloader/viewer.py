@@ -398,7 +398,8 @@ class Viewer:
         # names floating over figures on the map for a moment (labels.py)
         self.floating_names = tk.BooleanVar(value=bool(settings.get("floating_names", True)))
         ttk.Checkbutton(in_game, text="Names over figures: a spell's name over its caster, \"Miss\" over whoever an "
-                        "attack missed, and a used charge (\"Armor: 7 left\") over its owner",
+                        "attack missed, a used charge (\"Armor: 7 left\") over its owner, and the arrows left over a party "
+                        "archer after each shot",
                         variable=self.floating_names, command=self._options_changed).pack(anchor="w")
         rules = section("rules", "Rule changes")
         # in three groups, as FEATURES.md has them
@@ -514,7 +515,7 @@ class Viewer:
 
         self.roll_store = tk.BooleanVar(value=settings.get("roll_store", True) is not False)
         ttk.Checkbutton(custom, text="STORE and RECALL on the creation screen: keep a roll, try the die again, "
-                        "and bring the kept roll back (from the next start)", variable=self.roll_store,
+                        "and bring the kept roll back; from the next start", variable=self.roll_store,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.starting_gear = tk.BooleanVar(value=bool(settings.get("starting_gear", True)))
         ttk.Checkbutton(custom, text="Fuller starting gear: new characters (and the game's own party) also get a weapon "
@@ -543,11 +544,11 @@ class Viewer:
         looks = section("on_screen", "Graphics")
         self.elf_looks = tk.BooleanVar(value=settings.get("elf_looks", True) is not False)
         ttk.Checkbutton(looks, text="Elves have pointed ears, and half-elves figures of their own instead of the "
-                        "humans' (from the next start)",
+                        "humans'; from the next start",
                         variable=self.elf_looks, command=self._options_changed).pack(anchor="w")
         self.cilla_elf = tk.BooleanVar(value=settings.get("cilla_elf", True) is not False)
         ttk.Checkbutton(looks, text="Cilla, an elf in the game's own party, drawn as an elf (the game gives her "
-                        "the half-elf woman's figure; from the next start)", variable=self.cilla_elf,
+                        "the half-elf woman's figure); from the next start", variable=self.cilla_elf,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.show_gear = tk.BooleanVar(value=bool(settings.get("show_gear", True)))
         ttk.Checkbutton(looks, text="What the party wears, drawn on their figures (weapons, armour, helms, "
@@ -581,7 +582,7 @@ class Viewer:
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.camera_still = tk.BooleanVar(value=settings.get("camera_still", True) is not False)
         ttk.Checkbutton(controls, text="The view in fights: it moves to a figure only when the figure walks off the screen "
-                        "(the game's follows it near the edges; from the next start)", variable=self.camera_still,
+                        "(the game's follows it near the edges); from the next start", variable=self.camera_still,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.scene_pointer = tk.BooleanVar(value=settings.get("scene_pointer", True) is not False)
         ttk.Checkbutton(controls, text="The pointer in scenes: shown in the intro and the game's other scenes, and a click skips "
@@ -658,7 +659,7 @@ class Viewer:
                                  parent=self.root)
             return
         self._save_settings({wotrart.SETTING: folder})
-        self.wotr_status.set(self._wotr_status() + " (From the next start of the game.)")
+        self.wotr_status.set(self._wotr_status() + " From the next start.")
 
     def _saves_game_dir(self) -> Optional[str]:
         game_dir = self._game_dir or launch.find_game_dir()
@@ -755,7 +756,7 @@ class Viewer:
         self.game_speed.set(str(launch.DEFAULT_SPEED))
         self._options_changed(every=True)
         self._speed_chosen()
-        self.status.set("Options set back to their defaults (a switch marked \"from the next start\" applies when the game is next started).")
+        self.status.set("Options set back to their defaults (a switch marked \"from the next start\" applies from the next start).")
 
     def _sections_changed(self) -> None:
         """Remember which of the Options tab's sections are open."""
@@ -882,7 +883,7 @@ class Viewer:
                 self.status.set(f"Not connected: {e}")
             self.next_try = time.monotonic() + RETRY_SECONDS
             return
-        self.status.set(f"Connected to the game (DOSBox, process {self.guest.proc.pid})")
+        self.status.set(f"Connected to the game (process {self.guest.proc.pid})")
 
     def start_game(self) -> None:
         """Start Shattered Lands with the dice log, as "Start Game with Dice Log.bat" does; the
@@ -1054,7 +1055,7 @@ class Viewer:
         self._drop_guest()
         self.ds = None
         self._release_game()
-        self.status.set(f"Disconnected ({err}). Waiting for DOSBox...")
+        self.status.set(f"Disconnected ({err}). Waiting for the game...")
         self.dice_status.set("Waiting for the game...")
         self.next_try = time.monotonic() + RETRY_SECONDS
 
@@ -1277,14 +1278,14 @@ class Viewer:
         scale = WINDOW_CHOICES[self.window_choice.get()]
         if self._save_settings({"fullscreen": True} if scale is None else
                                {"fullscreen": False, "window_scale": scale}):
-            self.status.set(f"Game window: {self.window_choice.get()}, from the next time you start the game "
+            self.status.set(f"Game window: {self.window_choice.get()}, from the next start "
                             "(Alt+Enter switches full screen while playing).")
 
     def _speed_chosen(self) -> None:
         """Remember the game's speed; it applies the next time the game is started."""
         value = self.game_speed.get()
         if self._save_settings({"cycles": value if value == launch.GOG_SPEED else int(value)}):
-            self.status.set("Game speed: from the next time you start the game.")
+            self.status.set("Game speed: from the next start.")
 
     def _option_values(self) -> dict:
         """Every switch of the Options tab as the tab shows it: {settings key: value}."""

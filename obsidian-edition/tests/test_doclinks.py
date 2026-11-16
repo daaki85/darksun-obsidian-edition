@@ -100,6 +100,7 @@ class DocLinkTests(unittest.TestCase):
                 for h in re.findall(r"^## (.+)$", f.read(), re.M):
                     if h != "Contents":
                         explained[h] = f"{page}#{slug(h)}"
+        explained["Kits"] = "DEVELOPMENT-KITS.md"  # (the rules' "Kits" is a stub: the kits have their own page)
         self.assertGreater(len(explained), 60)
         missing = [heading for page in ("README.md", "FEATURES.md", "ITEMS.md", "KITS.md",
                                         "GAME-BUGS.md", "HOW-THE-GAME-WORKS.md")

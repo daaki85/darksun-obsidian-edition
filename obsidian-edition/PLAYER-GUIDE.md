@@ -13,9 +13,8 @@ they are).
 Everything here is the mod with its **default options**, which is how the
 Loader starts. Nearly every rule change has a switch on the Loader's **Options** tab
 ([at a glance](#the-options-tab-at-a-glance): each switch, its default and when it
-takes effect); the exceptions, always on, are the
-keys (T, S, M, U, I), the fixes to the game's own bugs and AD&D's two-weapon
-penalties. Where it helps to know what a
+takes effect); the exceptions, always on, are listed
+[at its end](#the-options-tab-at-a-glance). Where it helps to know what a
 switch changes, a **Without the mod** note says what the game does with it off.
 The [features page](FEATURES.md) has every rule in full detail, and the
 [Kits](KITS.md) page each kit's numbers: the guide links to their tables.
@@ -105,7 +104,7 @@ life](#quality-of-life).
 On the main menu choose **CREATE CHARACTERS**, right-click an empty slot and
 choose **NEW**, then set race, classes, sphere and alignment, roll, and press
 **DONE**. [Choosing a kit](KITS.md#choosing-a-kit) walks through the panel,
-the mod's **KIT** page among it (the **KITS** button). After DONE a warrior picks its weapon specs
+the mod's **KIT** page among it (the **KITS** button). After DONE a warrior (and a Swashbuckler) picks its weapon specs
 ([weapon specialization](#weapon-specialization-and-attacks)), as a preserver
 picks its spells, and every character then picks its psionic powers
 ([features](FEATURES.md#psionic-powers-at-creation)). A party has one to four characters, all good or neutral.
@@ -258,10 +257,9 @@ with **DUAL** on a portrait's right-click menu when:
 
 The new class starts at 1st level. The old class stops rising, and what it
 gives (its hit points, THAC0, saves, weapon specs and kit) **sleeps until the
-new class's level passes the old one's**; then both count. A human keeps the
-kit it has and takes no other; one with none may take a kit for the new class
-([kits](#kits)). Some kits rule out
-classes a human could change to ([kits](#kits)).
+new class's level passes the old one's**; then both count. A human keeps its kit and takes no
+other; one with none may take one for the new class, and some kits rule out
+classes ([kits](#kits)).
 
 The change starts the new class at 0 XP, and any XP past the old level's need
 is lost: change as soon as the level you want comes. How far the new class can
@@ -273,12 +271,12 @@ then rise: [XP left over at the top](#xp-left-over-at-the-top).
 |---|---|---|---|---|---|---|
 | [Fighter](#fighter) | d10 | STR | all | any | any | Myrmidon, Sentinel, Ravager |
 | [Gladiator](#gladiator) | d10 | STR | all | any | any | Arena Champion, Twin-blade, Brute |
-| [Ranger](#ranger) | d10 | STR, DEX, WIS | not dwarf, mul | any (two weapons without penalty in light only) | any | Stalker, Seeker, Justifier |
-| [Thief](#thief) | d6 | DEX | not half-giant, thri-kreen | light (with another class: heavier, without thief skills) | any | Assassin, Swashbuckler, Shinobi |
-| [Preserver](#preserver) | d4 | INT | elf, half-elf, human | none | daggers, staves, slings | Arcanist, Scholar, Battle Mage |
-| [Cleric](#cleric) | d8 | WIS | all | any | its sphere's | Healer, Crusader, Elementalist |
-| [Druid](#druid) | d8 | WIS, CHA | half-elf, halfling, human, mul, thri-kreen | none | any but great axes | Grove Warden, Wanderer, Lifebinder |
-| [Psionicist](#psionicist) | d6 | CON, WIS | all | light | small weapons | Mind Warrior, Mind Bender, Kineticist |
+| [Ranger](#ranger) | d10 | STR, DEX, WIS | not dwarf, mul | any (two weapons without penalty in light only) | any | Stalker, Justifier, Seeker |
+| [Thief](#thief) | d6 | DEX | not half-giant, thri-kreen | light (with another class: heavier, without thief skills) | any | Swashbuckler, Assassin, Shinobi |
+| [Preserver](#preserver) | d4 | INT | elf, half-elf, human | none | daggers, staves, slings | Scholar, Battle Mage, Arcanist |
+| [Cleric](#cleric) | d8 | WIS | all | any | its sphere's | Elementalist, Healer, Crusader |
+| [Druid](#druid) | d8 | WIS, CHA | half-elf, halfling, human, mul, thri-kreen | none | any but great axes | Grove Warden, Lifebinder, Wanderer |
+| [Psionicist](#psionicist) | d6 | CON, WIS | all | light | small weapons | Mind Bender, Mind Warrior, Kineticist |
 
 The [THAC0](#thac0-by-level) and [experience](#experience-and-levels) tables
 cover every class; [new items](#new-items) lists what the mod adds to find.
@@ -322,7 +320,7 @@ the strictest winning:
   warrior's armour, losing its thief skills, or its spells, while it does. So
   is a human cleric who became a thief: the cleric's armour, without thief
   skills.
-- A ranger may always use a bow.
+- A ranger may always use a bow (a Seeker only where its sphere allows one).
 - A human who changed class is held by its new class (but for the warrior's
   or cleric's armour above), and may use the weapon specs it specialized in
   once its old class wakes.
@@ -373,8 +371,8 @@ as a weapon of their own choosing,
 but years of obeying orders leave their minds open to anyone who barks them,
 and they wait for the order to strike.
 
-*Sentinel.* Caravan guards and city-gate wardens who live behind their shields,
-first to see the raiders coming and last to give ground. They trust bone and
+*Sentinel.* Caravan guards and city-gate wardens who live behind their shields
+and are lost without one, last to give ground. They trust bone and
 obsidian over sorcery, and spells bite them harder for it.
 
 *Ravager.* Raiders of the wastes who fight half-naked under the crimson sun,
@@ -487,7 +485,7 @@ the open sky to strike from behind, and a little priest magic late on.
 - Hit dice rolled twice; levels up to the [XP cap](#experience-and-levels).
 
 **Weapons and armour.** Everything; any multiclass ranger keeps the bow
-whatever its other classes allow.
+whatever its other classes allow (a Seeker: its sphere's weapons).
 
 **Kits.**
 
@@ -860,11 +858,11 @@ A character takes a kit, or none, when it is made, on the creation panel's
 numbers and starting gear; the class sections above, and the multiclass kits
 below, say who takes each kit on Athas.
 
-- The **Myrmidon** is given the polearm as its second weapon spec, and the **Battle Mage**,
-  **Crusader** and **Mind Warrior** their one (a melee weapon; a thri-kreen
-  Mind Warrior may take the chatkcha), the **Swashbuckler** its weapon of choice
-  (long sword, dagger or short sword), in the weapon window after DONE, and the **Elementalist** its second sphere on the CLERICAL SPHERE
-  list.
+- After DONE, on the weapon window, the **Myrmidon** picks its first weapon spec as any fighter
+  does and is given the polearm as its second; the **Battle Mage**, **Crusader** and **Mind
+  Warrior** pick their one (a melee weapon; a thri-kreen Mind Warrior may take the chatkcha), and
+  the **Swashbuckler** its weapon of choice (long sword, dagger or short sword). The
+  **Elementalist** picks its second sphere on the CLERICAL SPHERE list.
 - A kit belongs to its class: a human who changes class keeps it, asleep until
   the new class's level passes the old. **One kit a character:** a human with a
   kit takes no other when it changes class; one with none may take one for
@@ -908,11 +906,12 @@ guide acts that little bit quicker, the guide quickest of all.
 *Spellarcher* (half-elf fighter/preserver). Half-elf freedom fighters who
 weave a little magic into every arrow. The technique is a secret, and the bow
 is all they train with, and they wear no armour. A Spellarcher starts with a
-Fine Bow (+1 to hit) and arrows of the touch spells it picked. Outside a fight,
+Fine Bow (+1 to hit, not magic) and 24 arrows of each touch spell it picked (24 plain arrows if
+neither). Outside a fight,
 it can spend a spell slot to weave one of its touch spells (Chill Touch,
 Shocking Grasp, Vampiric Touch) into an arrow that casts the spell on what it
-hits; the arrows last until shot, a stack of each spell of up to 24
-([how](KITS.md#multiclass-kits)).
+hits; the arrows last until shot, a stack of each spell of up to 24, and what one hits saves only
+as the spell allows (against Chill Touch, not the others) ([how](KITS.md#multiclass-kits)).
 
 *Titan Mind* (half-giant fighter/psionicist). Half-giants who turned the Way
 inward, to their own great bodies; other minds remain a puzzle to them.
@@ -985,7 +984,8 @@ ranger level). 3/2 means one attack one round and two the next.
 | a **Battle Mage**, any other weapon | 1 | 1 | 2 | 2 | 1 | 1 |
 
 For the three kits the level is their own class's. Their chosen weapon spec
-is a melee weapon. (With weapon specialization off, a Crusader or Mind Warrior
+is a melee weapon (a thri-kreen Mind Warrior's may be the chatkcha), and each of the three has a
+warrior's THAC0 with it alone (with weapon specialization off, with any of its kit's weapons). (With weapon specialization off, a Crusader or Mind Warrior
 has a warrior's 3/2 from 7th level with any melee weapon instead.) The
 **Swashbuckler** picks a weapon of choice (long sword, dagger or short sword):
 a warrior's THAC0 with it, no specialization's bonus or attacks. With [two weapons](#two-weapons), the off hand attacks
@@ -2038,7 +2038,7 @@ penalties.
 | ... in short: each roll, what it needed and the damage | chosen | at once | [The combat log in the game](FEATURES.md#the-combat-log-in-the-game) |
 | ... in detail, as in the log | | at once | [The combat log in the game](FEATURES.md#the-combat-log-in-the-game) |
 | What hurts a monster (the Look box): Look at one in a fight for its hit points, AC, THAC0 and defences; closing the box shows the rest in a window | on | at once | [What hurts a monster](FEATURES.md#what-hurts-a-monster-the-look-box) |
-| Names over figures: a spell's name over its caster, "Miss" over whoever an attack missed, and a used charge ("Armor: 7 left") over its owner | on | at once | [Names over figures](FEATURES.md#names-over-figures) |
+| Names over figures: a spell's name over its caster, "Miss" over whoever an attack missed, a used charge ("Armor: 7 left") over its owner, and the arrows left over a party archer after each shot | on | at once | [Names over figures](FEATURES.md#names-over-figures) |
 
 **Rule changes: Characters**
 
@@ -2084,7 +2084,7 @@ penalties.
 |---|---|---|---|
 | Weapon specialization: fighters and gladiators specialize, fighters on to mastery and grand mastery, rangers and the Battle Mage, Crusader and Mind Warrior take expertise, the Swashbuckler a weapon of choice (chosen after DONE and at a level up) | on | at once (picked after DONE; a warrior made before picks at its next level gained) | [Weapon specialization](FEATURES.md#weapon-specialization); [in full](KITS.md#weapon-specialization) |
 | Kits: three for each class and some for multiclass characters, one a character, each giving something and costing something (chosen on the creation panel's KIT page, or after DUAL by a human with none) | on | new characters | [Kits](FEATURES.md#kits); [every kit](KITS.md) |
-| STORE and RECALL on the creation screen: keep a roll, try the die again, and bring the kept roll back (from the next start) | on | next start | [STORE and RECALL](FEATURES.md#store-and-recall-on-the-creation-screen) |
+| STORE and RECALL on the creation screen: keep a roll, try the die again, and bring the kept roll back; from the next start | on | next start | [STORE and RECALL](FEATURES.md#store-and-recall-on-the-creation-screen) |
 | Fuller starting gear: new characters (and the game's own party) also get a weapon they can use, a sling, and leather armour where they may wear it | on | new characters (the game's own party: in a new game) | [Fuller starting gear](FEATURES.md#fuller-starting-gear) |
 
 **Expanded features**
@@ -2120,8 +2120,8 @@ once.")
 
 | Loader label | Default | Takes effect | Details |
 |---|---|---|---|
-| Elves have pointed ears, and half-elves figures of their own instead of the humans' (from the next start) | on | next start | [Elves and half-elves](FEATURES.md#elves-and-half-elves) |
-| Cilla, an elf in the game's own party, drawn as an elf (the game gives her the half-elf woman's figure; from the next start) | on | next start (ticked, also in a game already begun, from the next area or load) | [Elves and half-elves](FEATURES.md#elves-and-half-elves) |
+| Elves have pointed ears, and half-elves figures of their own instead of the humans'; from the next start | on | next start | [Elves and half-elves](FEATURES.md#elves-and-half-elves) |
+| Cilla, an elf in the game's own party, drawn as an elf (the game gives her the half-elf woman's figure); from the next start | on | next start (ticked, also in a game already begun, from the next area or load) | [Elves and half-elves](FEATURES.md#elves-and-half-elves) |
 | What the party wears, drawn on their figures (weapons, armour, helms, cloaks, boots, belts) | on | at once | [What the party wears](FEATURES.md#what-the-party-wears) |
 | Shadows under the figures (soft, on the floor) | on | at once | [Shadows](FEATURES.md#shadows) |
 | Dust raised behind the feet of anyone walking on sand or dirt | on | at once | [Dust](FEATURES.md#dust) |
@@ -2135,7 +2135,7 @@ once.")
 | A red ring on the ground in a fight: ... none | | at once | [Choosing an enemy](FEATURES.md#choosing-an-enemy-tab-enter-and-the-rings) |
 | A red ring on the ground in a fight: ... under the enemy chosen with Tab | chosen | at once | [Choosing an enemy](FEATURES.md#choosing-an-enemy-tab-enter-and-the-rings) |
 | Scrolling the map: press the mouse wheel and move | on | at once | [Scrolling the map](FEATURES.md#scrolling-the-map) |
-| The view in fights: it moves to a figure only when the figure walks off the screen (the game's follows it near the edges; from the next start) | on | next start | [The view in fights](FEATURES.md#the-view-in-fights) |
+| The view in fights: it moves to a figure only when the figure walks off the screen (the game's follows it near the edges); from the next start | on | next start | [The view in fights](FEATURES.md#the-view-in-fights) |
 | The pointer in scenes: shown in the intro and the game's other scenes, and a click skips a scene as a key does; from the next start | on | next start | [The pointer in scenes](FEATURES.md#the-pointer-in-scenes-and-where-it-starts) |
 | Where the pointer starts: in the middle of the screen, moving as far up and down as across, and in a window as fast as the desktop's pointer; from the next start | on | next start | [Where it starts](FEATURES.md#the-pointer-in-scenes-and-where-it-starts) |
 | The whole party in view as a game starts or loads and after each fight, as the 5 key does; from the next start | on | next start | [The whole party in view](FEATURES.md#the-whole-party-in-view) |
