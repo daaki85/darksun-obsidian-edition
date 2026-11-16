@@ -1970,6 +1970,9 @@ line](DICE-LOG.md) what each of its lines means.
 - **Area spells catch the caster and the party.** Aim fireballs and clouds
   away from your own.
 - **Act before you are hit if you mean to cast** ([why](#initiative)).
+- **Watch the quiver.** After a party archer's shot the arrows left float over it ("Arrows: 17
+  left", "Out of arrows"); one that runs dry in the middle of its shots keeps its turn, to walk,
+  fight hand to hand or end it ([names over figures](FEATURES.md#names-over-figures)).
 - **Someone Out Cold takes the most a spell's dice can do,** with no save.
 - **Two weapons cost to-hit** unless your DEX is high or you are a ranger,
   Twin-blade or Battle Dancer in light armour, and the off hand attacks only

@@ -302,7 +302,10 @@ the old bugs from happening, but what a bug already did stays in the save:
 - **Kits from earlier versions:** a Healer keeps its sphere and is given the
   cosmos spells when the game is loaded (the dice log says so). A thri-kreen
   druid/fighter Wasteland Seer has no kit now: the kit is a
-  druid/fighter/psionicist's.
+  druid/fighter/psionicist's. A human with a kit for each of several classes
+  keeps them all (one a character is for characters made now); a Myrmidon keeps
+  the two weapon specs it chose; a Healer or Lifebinder has the harming spells
+  taken away when the game is loaded.
 - **Thieves' Tools** from an earlier version (Mirlon's or Kel's) do nothing: a
   thief picks pockets with the Pick Pockets button.
 - **Most PSP:** a character's may go up once, the next time the game works it
@@ -578,7 +581,7 @@ finding more rolls worth labelling.
 
 ## Accessibility
 
-The Loader aims at the AODA's standard for software people read, WCAG 2.0
+The Loader aims at Ontario's accessibility standard (the AODA's) for software people read, WCAG 2.0
 level AA:
 
 - **Contrast:** every colour used for text has at least 4.5:1 contrast with

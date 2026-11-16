@@ -271,7 +271,9 @@ the old class at 15 or more, the new at 17 or more, on the creature's scores
 as the game reads them). Each sets the flags for the game's own jump after it.
 The old class is the sheet's first, as the game's (a second change checks the
 first class's level and primes, the game's way). Checked by the emulator
-(`test_group4`'s `test_dual_level`, `test_dual_primes`).
+(`test_group4`'s `test_dual_level`, `test_dual_primes`). The classes a kit bars, and the sphere
+menu after CLERIC, DRUID or RANGER, are the kits' ([Where each effect goes](#where-each-effect-goes):
+`PROBE_DUAL_BAN`, `DUAL_SPHERES`, `PROBE_SPHERE` and its `SPHERE_BARRED`).
 
 ## Ages and magical aging
 
@@ -2085,6 +2087,38 @@ to the screen: after a roll it never stopped, in 2.13.0 either) RECALL jumped in
 and DOSBox stopped ("DynrecCore: illegal option"). Checked in DOSBox: STORE,
 the die, RECALL twice, the scores, hit points, PSP and age put back each time.
 
+## New characters and the roster write
+
+What the Loader gives a character made on the creation screen (its weapon specs' defaults and
+starting weapon, `weaponchoice.finish_new`; `class_gear`; its kit's gear, `kit_gear`; [fuller
+starting gear](#fuller-starting-gear), `startgear.fill`; its age) has to be in it before the
+game writes it to the roster (CHARSAVE.GFF), which it does at DONE's end, after the weapon window
+and the psionic powers (66E3h: 668C3h): else a character ADDed in a later session has the game's
+gear alone. The handshake, DSCLOG's header fields with the Loader's names:
+
+- `GEAR_DUE` (+1830, `TSR_GEAR_DUE`): set by `CR_WEAPONS` for a new member (after the weapon
+  window's picks; with weapon specialization off, with no window, by `GEAR_MARK`; not for an EDIT
+  that kept its race, classes and kit, `ED_SAME`); the dice log's `_gear_due` gives the gear at
+  once and clears it, but leaves it set while the weapon window is up (`TSR_CREATING`: the gear
+  waits for the specs).
+- `GEAR_WHO` (+1867, `TSR_GEAR_WHO`): the new member's sheet index. The game keeps a character
+  being made Okay, not New, until after the roster's write, so `game.being_new` counts this one New
+  for `finish_new`, `class_gear`, `kit_gear` and `fill`.
+- `GEAR_GIVEN` (+1831): the members whose items the pass changed, for `GEAR_WAIT` (PROBE_VIEW's,
+  VIEW CHARACTER) to draw the screen again with them; `GEAR_HOLD` clears it once the gear is in.
+- `LOADER_BEAT` (+1865, `TSR_LOADER_BEAT`): the BIOS timer at the Loader's last beat, written by
+  the dice log's stats thread every quarter second (`BEAT_STEP`): how DSCLOG tells the Loader is
+  there (STATS aren't kept on the creation screen).
+- `GEAR_HOLD`, at `CR_WEAPONS`' end, before the roster write: with `GEAR_DUE` set and the beat
+  fresh (`LOADER_FRESH`, about five seconds), waits until `GEAR_DUE` is cleared, at most about
+  ten seconds (`GEAR_HOLD_TICKS`); with no Loader, on at once (the game's gear). `GEAR_WAIT` does
+  the same on VIEW CHARACTER, a second at most, leaving `GEAR_DUE` set on a timeout.
+- The Myrmidon's polearm spec is DSCLOG's own (`MYRM_POLEARM`, at DONE), so it is in the roster's
+  copy with or without the Loader.
+
+Checked in the game: playtest/logs/2026-11-15-kit-rebalance-checks.md part 7 and
+2026-11-16-roster-gear.md (characters ADDed after a restart with their gear).
+
 ## Fuller starting gear
 
 ([In the features page](FEATURES.md#fuller-starting-gear).)
@@ -2094,22 +2128,8 @@ the die, RECALL twice, the scores, hit points, PSP and age put back each time.
 switch, a Python-only one as `pickpockets` is: `launch.SWITCH_DEFAULTS`,
 `DiceLog.starting_gear`), for each party member whose status is New and who
 has items (the game gives a character its gear when DONE is clicked; before
-that it has none). A character DONE has just made reads Okay to the game until
-after it has written the roster's copy, so DSCLOG names it (`GEAR_WHO`, header
-+1867, its sheet index, with `GEAR_DUE`) and `game.being_new` counts it New for
-`finish_new`, `class_gear`, `kit_gear` and `fill`. **The roster's copy**: the
-game writes it at DONE's end, after the weapon window and the psionic powers;
-DSCLOG's `GEAR_HOLD` holds that write until the Loader has cleared `GEAR_DUE`
-(at most about ten seconds, and only with the Loader there: its heartbeat,
-`LOADER_BEAT` at +1865, which the dice log's stats thread writes every quarter
-second), and the Loader leaves `GEAR_DUE` set while the weapon window is up
-(the gear waits for the specs), as `GEAR_WAIT` (VIEW CHARACTER's) does on its
-own one-second timeout. With weapon specialization off there is no weapon
-window, and `CR_WEAPONS`' `GEAR_MARK` names the character (`GEAR_WHO`,
-`GEAR_DUE`) before `GEAR_HOLD`, as its weapon window's way does after the
-picks; an EDIT that kept its race, classes and kit (`ED_SAME`) is not named.
-So a character ADDed in a later session has the Loader's gear, the rule on or
-off. What a character "can use" (`can_use`) is the game's class
+that it has none; one being made counts too: [New characters and the roster
+write](#new-characters-and-the-roster-write)). What a character "can use" (`can_use`) is the game's class
 lists (or `restrict.kit_allows`) and, with the class restrictions on,
 `restrict.usable`; never what `restrict.kit_forbids`. In order:
 

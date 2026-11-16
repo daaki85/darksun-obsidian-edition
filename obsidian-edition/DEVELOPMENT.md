@@ -101,7 +101,10 @@ signature (`DSCLOGva` now: after Z, lowercase) goes up whenever the helper and
 the Loader must change together (`HDR_SIG` in `dsloader/dicelog.py`), so a
 Loader never talks to an older helper.
 
-The post-game check that keeps an error on screen for the crash report, and
+The creation screen's least scores routine is assembled into `gamepatch.py`'s
+`least_scores` patch bytes from `dos/least_scores.asm` and its table
+`dos/least_scores_table.inc` (`test_least_scores` and `test_audit_builds` check the bytes
+match). The post-game check that keeps an error on screen for the crash report, and
 the program that moves upper memory down before the helper loads, are built the
 same way:
 
@@ -154,8 +157,18 @@ creature's size from `sizes.py` and whether it can be tangled from
 
 ### Tests
 
+From `obsidian-edition/`:
+
 ```
 python -m unittest discover -s tests
+```
+
+With the game's files (the Loader's patched copies are made from them; a game folder such as the
+one `setup_game.sh` installs for playtesting):
+
+```
+G=/path/to/game; DSUN_GPLDATA=$G/GPLDATA.GFF DSUN_OBJECTS=$G/SEGOBJEX.GFF \
+    DSUN_RESOURCE=$G/RESOURCE.GFF python -m unittest discover -s tests
 ```
 
 Some tests need more, and are skipped without it (each skip says what it
@@ -338,7 +351,8 @@ Every roll in the game goes through one function, Borland C++'s `rand()`.
 
    The helper also hooks:
    - DOS's `INT 21h`, to open the launcher's copies of `SEGOBJEX.GFF`,
-     `RESOURCE.GFF`, `GPLDATA.GFF` and some regions' files (for the [new
+     `RESOURCE.GFF`, `GPLDATA.GFF` and some regions' files (its table `copies`: each name once,
+     the copy's `D:\` path made in `COPY_PATH` as the file is opened) (for the [new
      items](FEATURES.md#new-items), [Kalzith](FEATURES.md#kalzith),
      [Semyon](FEATURES.md#semyon) and [no manual
      check](FEATURES.md#no-manual-check)), and to keep what the game last wrote
@@ -405,6 +419,30 @@ Limitations:
 - Weapon breaking was checked against the game's code, and the check's rolls
   were seen in play, but no weapon happened to break during testing; the
   game's own "is broken !" message is logged either way.
+
+### The helper's header
+
+The fields the Loader and the helper share are the helper's header, from `hdr:` in
+`dos/dsclog.asm`: the signature (`HDR_SIG`, `DSCLOGva`), then one field a line, each commented
+with its offset (`+1830`, `+1867` ...) and what it holds. That source is the layout's one home.
+The Loader finds the header by its signature in DOSBox's memory (16-aligned) and names each field
+it uses `TSR_*`, in the module that uses it (`dicelog.py`, `kits.py`, `ghost.py`, `freeze.py`,
+`cahulaks.py` ...). New fields go at the end, so the offsets of the rest never move (the latest:
+`GEAR_WHO`, +1867); a change that both sides must make together takes the signature up.
+
+### Adding a probe or a site
+
+1. In `dsloader/gamepatch.py`, a `Patch(name, offset, original, replacement)` in `PATCHES`: the
+   DSUN.EXE file offset, the bytes there, and an `INT` the same length (`_interrupt(VEC_X, n)`,
+   NOPs after it), or, with every vector taken, a site of the shared one (`_site(X_SITE, n)`: the
+   `INT`, the site's number, NOPs). Keep the game's far calls and their relocations where they
+   are.
+2. In `dos/dsclog.asm`: a new vector's handler in `ALL_VECTORS` (`vector VEC_X, probe_x`), or a
+   site's routine in `site_tab` (`site X_SITE, x_site`, in number order: the build fails
+   otherwise), with the number as an `equ` beside the Python constant of the same name. Say in
+   the routine's comment what it replaces, at which address, and what it keeps.
+3. A test in `tests/test_dsclog.py` that runs it in the emulator (`run_vector` or a site run),
+   then a check in the game with the build in place (playtest's `buildcheck.py`).
 
 ## What is known
 
