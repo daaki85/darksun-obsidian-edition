@@ -95,6 +95,7 @@ schedules and diffs a log made or used.
 | [2026-11-16](2026-11-16-audit-fixes.md) | The kit rebalance's code audit, fixed |
 | [2026-11-16](2026-11-16-doc-pictures.md) | The documentation review's pictures |
 | [2026-11-16](2026-11-16-doc-review-2.md) | The second documentation review's pictures and checks |
+| [2026-11-16](2026-11-16-journal.md) | The journal: Kurzak's speeches kept, a save's id read back after a load, a branch from an older save |
 | [2026-11-16](2026-11-16-memory-pass-4.md) | DSCLOG memory pass 4, checked in DOSBox |
 | [2026-11-16](2026-11-16-memory-pass-5.md) | Code audit and DSCLOG memory pass 5 |
 | [2026-11-16](2026-11-16-pre-merge-checks.md) | Checks before the 2.18.0 pull request |

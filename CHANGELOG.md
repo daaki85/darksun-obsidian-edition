@@ -17,6 +17,9 @@ under "## Unreleased (branch `obsidian-edition`)
 
 **New**
 - **Tanelyv's chest piece shines** as its arm and leg pieces do (#106).
+- **A journal** (the Loader's new **Journal** tab): every talk with the reply chosen, every reward
+  and message, under the game's day and area, kept on disk (`Journal/`) and following the saves
+  (its newest entry's id in the game's global numbers 198 and 199).
 
 **Changed**
 - **Fewer switches** (#110), for a simpler Options tab and the mod's rules as meant: the combat

@@ -1960,8 +1960,9 @@ view, the view in fights, the pointer, and spells on the Effects screen ([contro
 **Graphics** (figures in what they wear, shadows, dust, see-through hiders) are in
 [Features: graphics](FEATURES.md#graphics), and **steady pace** in [Features: game
 speed](FEATURES.md#game-speed). **Running the game** (the game window's size, crash and freeze
-reports) and **the Loader's window** (the dice log, the characters' sheets, the dialogue, every
-spell's dice) are in the README: [running it](README.md#running-it-windows), [the Loader's
+reports) and **the Loader's window** (the dice log, the characters' sheets, the dialogue, the
+[journal](README.md#the-journal-tab) that keeps what was said and every reward and follows your
+saves, every spell's dice) are in the README: [running it](README.md#running-it-windows), [the Loader's
 window](README.md#the-loaders-window) and [reports](README.md#crash-freeze-and-item-reports); [the
 dice log, line by line](DICE-LOG.md) says what each of its lines means.
 
@@ -2154,6 +2155,7 @@ The Loader's other settings are outside the Options tab, and **Restore defaults*
 | **Speakers' names** | the Dialogue tab (**Name speaker...**, or a right-click on a name) | learned from the talk | remembered (`settings.json`) |
 | **Which Options sections are open** | the Options tab (a section's header) | all closed | remembered (`settings.json`) |
 | **Show** and **Only spells the party has a caster level for** | the Spells tab | all, off | for this session |
+| **Keep a journal** | the Journal tab | on | remembered (`settings.json`) |
 
 What each does: [the Loader's window](README.md#the-loaders-window) and [the dice
 log](README.md#the-dice-log).

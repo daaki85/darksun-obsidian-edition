@@ -28,7 +28,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple
 
-from . import aging, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, journal, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory, WriteRefused
@@ -641,6 +641,7 @@ class DiceLog:
         self._errors_said: set = set()  # (the kinds of error a pass has written once: _error_once)
         self._effects: Optional[Counter] = None
         self._party: Optional[bytes] = None
+        self.journal: Optional[journal.Journal] = None  # (the Loader's journal, if it keeps one: journal.py)
         self._party_changed_at = 0.0
         self._party_clock: Optional[int] = None  # (the game's clock at _party_check's last look: back means a game loaded)
         self._aging_at: Optional[Tuple[bytes, int, tuple]] = None  # (natural aging: the last look's party, clock, count and years)
@@ -1015,6 +1016,10 @@ class DiceLog:
         self.arena_ring = settings.get("new_items", True) is not False  # (with the new items)
         self.starting_gear = bool(settings.get("starting_gear", True))
         self.floating_names = bool(settings.get("floating_names", True))
+        if settings.get("journal", True) is False:  # (the Journal tab's switch)
+            self.journal = None
+        elif self.journal is None:
+            self.journal = journal.Journal()
         self.combat_log_level = combat_log_level(settings)
         if settings.get("combat_log_size") in combatlog.SIZES:
             self._panel.resize(settings["combat_log_size"])
@@ -1277,6 +1282,9 @@ class DiceLog:
 
     def detach(self) -> None:
         self.rand_addr = None
+        if self.journal is not None:  # (the game gone or started again: its numbers looked at afresh)
+            self.journal.reset()
+            self.journal.flush()
 
     def close(self) -> None:
         """Done with: the stats thread stops (answer_stats_in_background), and the mouse wheel's
@@ -1287,6 +1295,8 @@ class DiceLog:
         if self._wheel is not None:
             self._wheel.stop()
             self._wheel = None
+        if self.journal is not None:
+            self.journal.close()
 
     # ---- reading ----------------------------------------------------------------
 
@@ -1553,6 +1563,7 @@ class DiceLog:
                 out += step(lambda: self._arena_ring(now))
                 out += step(lambda: self._drawn(now))
                 step(self._kalzith_sold_out)
+                step(self._journal_sync)
                 out += step(self._learn_lines)
                 step(lambda: self._dress_now(now))
                 out += step(lambda: self.itemwatch.check(self.game, now, self._settings))
@@ -1578,16 +1589,47 @@ class DiceLog:
     def _take_text(self, now: float) -> List[str]:
         """The messages DSCLOG copied (lines), and the dialogue (kept for take_dialogue)."""
         out: List[str] = []
+        said = len(self._dialogue)
+        messages: List[str] = []
         for rec in self.text.poll():
             if rec.kind == KIND_MESSAGE:
                 if rec.text.strip():
-                    out.append(f"Message: {' '.join(rec.text.split())}")
+                    messages.append(" ".join(rec.text.split()))
+                    out.append(f"Message: {messages[-1]}")
             else:
                 self._follow_talk(rec)
                 self._dialogue += self._not_ours(self.dialogue.add(rec, now))
         self._dialogue += self._not_ours(self.dialogue.idle(now))
         self._dialogue += self._not_ours(self._reply_choice(now))
+        if self.journal is not None and (messages or len(self._dialogue) > said):
+            self._journal_note(self._dialogue[said:], messages)
         return out
+
+    def _journal_note(self, talk: Sequence[DialogueEntry], messages: Sequence[str]) -> None:
+        """What was just said and shown, into the journal, with the game's clock and region now.
+        (Within a pass the talk goes before the message boxes: the order between them isn't kept.)"""
+        try:
+            clock, region = self.game.game_time(), self.game.region()
+        except (struct.error, IndexError, ValueError, OSError):
+            clock, region = None, None
+        for entry in talk:
+            if entry.chosen:
+                self.journal.add(journal.CHOSEN, entry.chosen, clock, region)
+            else:
+                self.journal.add(journal.TALK, entry.text, clock, region, entry.portrait,
+                                 self.speaker(entry.portrait) if entry.portrait is not None else "",
+                                 entry.replies, entry.title)
+        for text in messages:
+            kind = journal.kind_of_message(text)
+            if kind is not None:
+                self.journal.add(kind, text, clock, region)
+
+    def _journal_sync(self) -> None:
+        """The journal's look at the id the game's numbers hold (journal.Journal.sync): a game
+        loaded shows its own journal. Not while a game is loading (_after_rolls)."""
+        if self.journal is not None:
+            self.journal.sync(lambda: journal.read_head(self.game), lambda head: journal.write_head(self.game, head),
+                              self.game.game_time())
 
     def _item_watches(self) -> List[str]:
         """The watches that move items: each waits for a later pass while the game changes its

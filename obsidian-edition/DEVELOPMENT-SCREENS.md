@@ -5,6 +5,7 @@
 ## Contents
 
 - [The Dialogue tab](#the-dialogue-tab)
+- [The Journal tab](#the-journal-tab)
 - [The combat log in the game](#the-combat-log-in-the-game)
   - [What the game allows](#what-the-game-allows)
   - [The panel](#the-panel)
@@ -51,6 +52,73 @@ name only when its speaker stands within 4 squares of the party
 one, and once taught "Trustee"). Several faces taking turns teach nothing.
 Portrait 119's `The Announcer` isn't replaced by a learned name (he calls out
 mid-fight, when the game's last script ran on a fighter).
+
+## The Journal tab
+
+([In the README](README.md#the-journal-tab).)
+
+`dsloader/journal.py`. The dice log hands the journal each dialogue entry as it
+is made (after `_not_ours`, so not the log's own turn summaries), the reply
+chosen, and each message box (`DiceLog._journal_note`), with the game's clock
+and region read then. A message box is a reward if it says "receives N
+experience points", and left out if it is one of the game's notices (SAVING
+GAME, GAME SAVED, CAN'T SAVE DURING COMBAT). Within one pass the talk goes
+before the message boxes; the order between them isn't kept.
+
+**The file.** `Journal/journal.jsonl`, a line of JSON for each entry, only ever
+added to: `id`, `parent` (the entry before it in that game; 0 for a game's
+first), `kind` (`talk`, `chosen`, `message`, `reward`), `clock` (game seconds),
+`region`, `portrait`, `speaker` (the name as known when it was said; the tab
+shows the name as known now), `text`, `replies`, `title`. A game's journal is
+the chain from its newest entry back through the parents, so one file holds
+every game and every branch. A line that isn't an entry is passed over; a file
+that can't be written keeps its entries in memory for the next try.
+
+**Following the saves.** The newest entry's id is kept in the game's global
+numbers 198 and 199 (low word, high word: `journal.NUMBERS`; [the game's
+numbers](DEVELOPMENT-INTERNALS.md#the-loaders-game-flags)), at the far
+pointer DS:1356h, which the game saves whole (`SAVE` chunk 30, 400 bytes, 200
+words) and loads back. The game's scripts read and set numbers 0-136 only
+(`ScriptNumbersTests`, with `DSUN_GPLDATA`), and 137-199 are zero in every
+save in `playtest/saves`. Every quarter second, not while a game is loading
+(`_journal_sync`, with the party's watches), `Journal.sync` reads the id:
+
+- the one last written: nothing to do, or the chain's new head is written;
+- another, read twice running (`STEADY`: a game being loaded may show one for
+  a moment): a game was loaded or begun, and its chain is shown (`_follow`,
+  `changed` counted so the tab draws it again). An id no entry has (the file
+  lost) gives an empty journal whose new ids start past it, so an id a save
+  holds is never given to another entry;
+- none (the pointer null, as in the arena outside a script's run): nothing,
+  and entries added meanwhile have ids the game doesn't hold yet. A save made
+  then holds the older id; when it is loaded, and that id is on the chain shown
+  till then, the entries after it whose clock is no later than the loaded
+  game's are kept as its own.
+
+Before the first id is read (the Loader just started), entries wait (up to
+500) and join the game's chain when it is known; until then the tab shows the
+chain last added to. `DiceLog.detach` (the game gone or started again) has
+the id looked at afresh (`reset`). At the title the numbers read zero, an
+empty journal; the game's own comes back when its save is loaded, and nothing
+is written to the file until something is said.
+
+**The tab** (`Viewer._build_journal`, `_journal_tick` after each dice pass):
+new entries are added at the end (`journal.rows`: a heading where the day or
+the region changes, then the speaker, the text, the replies, the answer under
+them); the whole is drawn again when the chain became another or the Show box
+or the words wanted changed. With either set, each new entry draws the whole
+again (`journal.chosen` keeps an answer with its talk). The switch is `journal`
+in `settings.json` (**Keep a journal**, on the tab); the windowless starts keep
+the journal too.
+
+Region names: `journal.REGIONS` has the slave pens and the arena; the others
+are to be added as play reaches them.
+
+Tests: `tests/test_journal.py` (entries kept and read again, a save loaded showing its own chain,
+a branch played from it, entries from while the numbers were away, a lost file, the tab on a real
+window, and with `DSUN_GPLDATA` no script using the journal's numbers). Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-16-journal.md)
+(Kurzak's speeches recorded; a save holding an older id loaded, its id read back from the game,
+and the talk after it filed as a branch).
 
 ## The combat log in the game
 

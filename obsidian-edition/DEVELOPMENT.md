@@ -220,11 +220,11 @@ to trust when a test file is added):
 - **NASM**: the rebuild checks (`test_audit_builds`, `test_header_offsets`, `test_least_scores`,
   `test_dsclog_drawing`, `test_scroll_interrupts`, `test_interrupt_hygiene`).
 - **tkinter**: the window's tests (`test_theme`, `test_partyview`, `test_find`,
-  `test_viewer_options`, and `test_compiles`' window part; `test_viewer_settings` also needs a
+  `test_viewer_options`, `test_journal`'s tab, and `test_compiles`' window part; `test_viewer_settings` also needs a
   display, so run it under `xvfb-run` on a machine without one). Linux's Python often lacks it.
 - **The game's files**, named by environment variables: `DSUN_GPLDATA` (its `GPLDATA.GFF`:
   `test_scriptnumbers`, `test_scriptfixes`, `test_pehtuclchest`, `test_champions`,
-  `test_audit_flags`, `test_sounds`, which reads the `RESOURCE.GFF` beside it, and `test_reach` and
+  `test_audit_flags`, `test_journal` (no script uses the journal's numbers), `test_sounds`, which reads the `RESOURCE.GFF` beside it, and `test_reach` and
   `test_stinkpots`, which read the `DSUN.EXE` beside it), `DSUN_OBJECTS` (its `SEGOBJEX.GFF`, with
   `GPLDATA.GFF` beside it: `test_figures`, `test_pehtuclchest`, `test_worldgear`,
   `test_audit_objects`, `test_cahulaks`, `test_sizenames`, `test_icons`, `test_scriptfixes`,
@@ -345,6 +345,7 @@ and the section that explains it. INTERNALS, RULES, KITS, CONTENT and SCREENS ar
 | `gamepatch.py` | the patched game, DSUNLOG.EXE: `PATCHES` | [INTERNALS: the dice log](DEVELOPMENT-INTERNALS.md#how-the-dice-log-works) |
 | `dicelog.py` | the dice log: reads DSCLOG's ring and labels each roll; each pass's steps | [INTERNALS: the dice log](DEVELOPMENT-INTERNALS.md#how-the-dice-log-works) |
 | `textlog.py` | the dialogue and message boxes DSCLOG copies | [SCREENS: the Dialogue tab](DEVELOPMENT-SCREENS.md#the-dialogue-tab) |
+| `journal.py` | the journal: what was said and done in a game, kept on disk and following the game's saves | [SCREENS: the Journal tab](DEVELOPMENT-SCREENS.md#the-journal-tab) |
 | `guestmem.py` | finds DOSBox's guest memory in its process | [INTERNALS: reading and writing memory](DEVELOPMENT-INTERNALS.md#reading-and-writing-memory) |
 | `process.py` | reads, writes and pauses another process's memory (Windows, Linux) | [INTERNALS: reading and writing memory](DEVELOPMENT-INTERNALS.md#reading-and-writing-memory) |
 | `itemgate.py` | the Loader's item-list writes, only while the game leaves the lists be | [INTERNALS: the item gate](DEVELOPMENT-INTERNALS.md#the-item-gate) |

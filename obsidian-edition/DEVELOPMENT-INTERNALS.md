@@ -804,3 +804,8 @@ flag is in range and none is shared.
 `tests/test_audit_flags.py` finds them without the list: every module constant from 756
 up, Alagorn's overflow flags with them, and with `DSUN_GPLDATA` the flags the scripts copy
 sets or reads.
+
+**The game's numbers.** A save also keeps 200 global numbers (`SAVE` chunk 30, 400 bytes; read
+with var 87h, set with var 7). The scripts use 0-136; the Loader uses **198 and 199** for the
+journal's place ([the Journal tab](DEVELOPMENT-SCREENS.md#the-journal-tab);
+`tests/test_journal.py` checks no script uses them). 137-197 are free.

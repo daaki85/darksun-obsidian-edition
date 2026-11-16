@@ -24,7 +24,7 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 from tkinter import font as tkfont
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
-from . import __version__, art, combatlog, dicelog, ledger, freeze, game, kits, launch, manual, namedsaves, partyview, rings, spellbook, theme, values
+from . import __version__, art, combatlog, dicelog, journal, ledger, freeze, game, kits, launch, manual, namedsaves, partyview, rings, spellbook, theme, values
 from .dicelog import DiceLog, DiceLogError
 from .guestmem import GuestMemory
 from .layout import Layout
@@ -35,6 +35,9 @@ SAVES_EVERY = 3.0  # seconds between looks at the game's saves (namedsaves.py)
 DICE_MS = 50
 RETRY_SECONDS = 2.0
 MAX_LOG_LINES = 3000
+# the Journal tab's Show box: its choices and the kinds of entry each shows (None: all)
+JOURNAL_SHOWS = (("Everything", None), ("Talk", (journal.TALK,)),
+                 ("Rewards", (journal.REWARD,)), ("Rewards and messages", (journal.REWARD, journal.MESSAGE)))
 HIGHLIGHT_SECONDS = 3.0
 HEX_PREFIX = 17  # width of "+0040  0012a3f0  "
 MAX_HITS = 500
@@ -253,6 +256,7 @@ class Viewer:
         self._last_portrait: Optional[int] = None
         self.talk_text.tag_bind("speaker", "<Button-3>", self._speaker_clicked)
         self._find_bar(talk_find, self.talk_text, talk)
+        self._build_journal(tabs, launch.load_settings())
         # Ctrl+F: the find box of the log tab shown
         self.root.bind_all("<Control-f>", lambda _e: self._focus_find(tabs))
         self.root.bind_all("<Control-F>", lambda _e: self._focus_find(tabs))
@@ -938,6 +942,10 @@ class Viewer:
                 self.dice.close()
         except Exception:
             pass
+        try:
+            self.journal.close()
+        except Exception:
+            pass
         launch.release_game()
         self.root.destroy()
 
@@ -1047,6 +1055,7 @@ class Viewer:
                 self.dice.starting_gear = self.starting_gear.get()
                 self.dice.combat_log_level = self.combat_log_level.get()
                 self.dice.floating_names = self.floating_names.get()
+                self.dice.journal = self.journal if self.keep_journal.get() else None
                 self.dice.game_dir = launch.find_game_dir()
                 self.dice.ring_mode = self.ring_mode.get()
                 self.dice.vulture_on = self.content_vars["vulture"].get()
@@ -1087,6 +1096,7 @@ class Viewer:
         talk = self.dice.take_dialogue()
         if talk:
             self._append_dialogue(talk)
+        self._journal_tick()
 
     def _round_text(self) -> str:
         """The round in progress, in initiative order: who acts now, who is still to come."""
@@ -1224,6 +1234,131 @@ class Viewer:
         else:
             self.dice.speaker_names.pop(portrait, None)
         self._rename_portrait(portrait)
+
+    # ---- the journal (journal.py) ------------------------------------------------
+
+    def _build_journal(self, tabs: ttk.Notebook, settings: dict) -> None:
+        """The Journal tab: the game's journal (what was said, the replies chosen, rewards and
+        messages, under each day and area), kept on disk and following the game's saves."""
+        self.journal = journal.Journal()
+        self._journal_drawn = (-1, None, None)  # (journal.changed, the kinds shown, the words wanted) as drawn
+        self._journal_place = (None, None)  # the day and region of the last entry drawn
+        page = ttk.Frame(tabs, padding=6)
+        tabs.add(page, text="Journal", underline=0)
+        row = ttk.Frame(page)
+        row.pack(fill="x")
+        self.keep_journal = tk.BooleanVar(value=settings.get("journal", True) is not False)
+        ttk.Checkbutton(row, text="Keep a journal", variable=self.keep_journal,
+                        command=self._journal_switched).pack(side="left")
+        ttk.Button(row, text="Save...", command=lambda: self.save_text(self.journal_text, "journal")).pack(side="right")
+        ttk.Button(row, text="Open the folder", command=self._open_journal_folder).pack(side="right", padx=4)
+        pick = ttk.Frame(page)
+        pick.pack(fill="x", pady=(4, 0))
+        ttk.Label(pick, text="Show:").pack(side="left")
+        self.journal_kind = tk.StringVar(value=JOURNAL_SHOWS[0][0])
+        kinds = ttk.Combobox(pick, textvariable=self.journal_kind, state="readonly", width=22,
+                             values=[label for label, _ in JOURNAL_SHOWS])
+        kinds.pack(side="left", padx=(4, 12))
+        kinds.bind("<<ComboboxSelected>>", lambda _e: self._journal_tick())
+        ttk.Label(pick, text="Only entries with:").pack(side="left")
+        self.journal_wanted = tk.StringVar()
+        ttk.Entry(pick, textvariable=self.journal_wanted, width=18).pack(side="left", padx=(4, 0))
+        self.journal_wanted.trace_add("write", lambda *_a: self._journal_tick())
+        self.journal_count = tk.StringVar()
+        ttk.Label(pick, textvariable=self.journal_count).pack(side="left", padx=(8, 0))
+        find = ttk.Frame(page)
+        find.pack(fill="x", pady=(4, 0))
+        box = ttk.Frame(page)
+        box.pack(fill="both", expand=True, pady=(6, 0))
+        self.journal_text = tk.Text(box, wrap="word", height=20, font="TkTextFont")
+        theme.style_text(self.journal_text)
+        self.journal_text.configure(foreground=theme.AMBER)
+        scroll = ttk.Scrollbar(box, command=self.journal_text.yview)
+        self.journal_text.configure(yscrollcommand=scroll.set)
+        scroll.pack(side="right", fill="y")
+        self.journal_text.pack(side="left", fill="both", expand=True)
+        self._follow_end(self.journal_text, scroll)
+        self.journal_text.tag_configure("day", font=theme.fonts()[1], foreground=theme.SAND)
+        self.journal_text.tag_configure("speaker", font=theme.fonts()[1], foreground=theme.YELLOW)
+        self.journal_text.tag_configure("reply", foreground=theme.PALE)
+        self.journal_text.tag_configure("chosen", foreground=theme.GREEN)
+        self.journal_text.tag_configure("reward", foreground=theme.GREEN)
+        self.journal_text.tag_configure("message", foreground=theme.PALE)
+        self._find_bar(find, self.journal_text, page)
+        self._journal_tick()
+
+    def _journal_switched(self) -> None:
+        on = self.keep_journal.get()
+        if self._save_settings({"journal": on}):
+            self.status.set("The journal is kept from now on." if on else
+                            "The journal is no longer kept; what it holds stays.")
+        if self.dice is not None:
+            self.dice.journal = self.journal if on else None
+            if on:
+                self.journal.reset()
+
+    def _open_journal_folder(self) -> None:
+        try:
+            os.makedirs(journal.FOLDER, exist_ok=True)
+            if sys.platform == "win32":
+                os.startfile(journal.FOLDER)  # type: ignore[attr-defined]
+            else:
+                subprocess.Popen(["xdg-open", journal.FOLDER])
+        except OSError as e:
+            messagebox.showerror("The journal", f"Its folder could not be opened:\n{e}", parent=self.root)
+
+    def _journal_speaker(self, entry) -> str:
+        """Who said an entry: the portrait's name as known now, else as it was when said."""
+        if entry.portrait and self.dice is not None:
+            name = self.dice.speaker(entry.portrait)
+            if not name.startswith("Portrait "):
+                return name
+        return entry.speaker
+
+    def _journal_tick(self) -> None:
+        """The Journal tab kept up: new entries added at its end; drawn again when the game's
+        journal became another (a save loaded) or what to show was changed."""
+        kinds = dict(JOURNAL_SHOWS).get(self.journal_kind.get())
+        wanted = self.journal_wanted.get().strip()
+        state = (self.journal.changed, self.journal_kind.get(), wanted)
+        text = self.journal_text
+        if state != self._journal_drawn:
+            self._journal_drawn = state
+            self.journal.take_added()
+            entries = self.journal.shown()
+            shown = journal.chosen(entries, kinds, wanted)
+            text.delete("1.0", "end")
+            self._journal_place = (None, None)
+            self._journal_insert(shown)
+            total = sum(1 for e in entries if e.kind != journal.CHOSEN)
+            some = sum(1 for e in shown if e.kind != journal.CHOSEN)
+            self.journal_count.set(f"{some} of {total}" if (kinds is not None or wanted) else
+                                   (f"{total} entr{'y' if total == 1 else 'ies'}" if total else "Nothing yet"))
+            text.see("end")
+            return
+        added = self.journal.take_added()
+        if not added:
+            return
+        if kinds is not None or wanted:  # (a choice of entries: looked at whole, a reply with its talk)
+            self._journal_drawn = (-1, None, None)
+            self._journal_tick()
+            return
+        self._journal_insert(added)
+        total = sum(1 for e in self.journal.shown() if e.kind != journal.CHOSEN)
+        self.journal_count.set(f"{total} entr{'y' if total == 1 else 'ies'}")
+        if self._following.get(text, True):
+            text.see("end")
+
+    def _journal_insert(self, entries) -> None:
+        text = self.journal_text
+        made = journal.rows(entries, self._journal_speaker, self._journal_place)
+        if made and made[0][0] == "chosen" and text.get("end-2c", "end-1c") == "\n" and text.index("end-1c") != "1.0":
+            text.delete("end-2c")  # (an answer to the replies above: into the gap under them)
+        for kind, line in made:
+            text.insert("end", line + "\n", () if kind in ("gap", "text") else (kind,))
+        for entry in entries:
+            if journal.place(entry) != (None, None):
+                self._journal_place = journal.place(entry)
 
     def _rename_portrait(self, portrait: int) -> None:
         """Show a portrait's current name on every line already shown from it."""

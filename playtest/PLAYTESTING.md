@@ -196,6 +196,20 @@ game's data: it is one player's account.
   QUIT on the EXIT menu ends DOSBox.
 - **The save name field keeps the slot's old name**: typing goes in front of it (KURZAK DOORPENS),
   and Backspace from the start does nothing: press End, then Backspace enough times, then type.
+- **The SAVE screen's EXIT** is at (253, 66): it closes the screen without saving and the game
+  goes on (no quit to DOS).
+- **A save with other values in it, without saving after a memory edit**: change a copy of a
+  save's file in the work folder and load that (never a file in `saves/`). The journal's test
+  put an id in global numbers 198-199 that way: find `SAVE` chunk 30's 400 bytes in the file
+  (`read_gff`, then `bytes.find`), `struct.pack_into` at word 198, copy it with the set's
+  `CHARSAVE.GFF` and `DARKSAVE.GFF` into the game folder, then the steps of `loadsave.sh` from
+  `start.sh` on. The load puts the file's numbers in memory (read back with
+  `dsloader.journal.read_head(gd)`).
+- **The game's global numbers** (far pointer DS:1356h) were in memory in 20 reads of 20 in the
+  pens, out of a fight.
+- **The journal** writes `obsidian-edition/Journal/journal.jsonl` while the dice log runs
+  (`start.sh`'s too): delete it before a test that counts its entries. `follow.py 29` from
+  `pens-after-arena` makes Kurzak's two speeches at his stop, two entries.
 - A save made in DOSBox loads on the recompiled program and the other way round ([the recompiled
   program](RESEARCH.md#the-recompiled-program-as-the-target)).
 

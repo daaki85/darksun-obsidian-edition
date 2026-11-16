@@ -47,6 +47,7 @@ which loads the mod with your options.
   - [The Characters tab](#the-characters-tab)
   - [The Spells tab](#the-spells-tab)
   - [The Dialogue tab](#the-dialogue-tab)
+  - [The Journal tab](#the-journal-tab)
   - [The dice log](#the-dice-log)
 - [Accessibility](#accessibility)
 - [Updating](#updating)
@@ -67,6 +68,8 @@ Loader's **Options** tab ([each switch, its default and when it counts](PLAYER-G
 
 - **Shows what the game keeps hidden.** Every roll as it happens, with what it
   needed and where each bonus came from ([the dice log](#the-dice-log)); a
+  journal of everything said and every reward, which follows your saves ([the
+  Journal tab](#the-journal-tab)); a
   combat log over the map, names over figures and the Look box ([In the
   game](FEATURES.md#in-the-game)); THAC0, saves, thief skills, spell slots and
   charges on the game's own screens ([Always on](FEATURES.md#always-on)).
@@ -265,7 +268,7 @@ game again) and **Help** (this manual, in your browser) along the top. The party
 **Characters** tab (Alt+C): a card for each character, laid out like the game's View Character
 screen ([The Characters tab](#the-characters-tab)).
 
-The other side has the **Dice log**, **Dialogue** and **Spells** tabs (below) and **Options**
+The other side has the **Dice log**, **Dialogue**, **Journal** and **Spells** tabs (below) and **Options**
 (Alt+O) with the Loader's switches, in sections that open and close: click a section's heading (or
 Tab to it and press Space or Enter) to open it, ▸ when closed and ▾ when open. Which sections are
 open is remembered. Everything there applies in games started from the Loader or its `.bat` files;
@@ -382,6 +385,33 @@ run time (GPLDATA.GFF and RESOURCE.GFF in the install folder the Loader
 remembers); nothing from the game is copied into the Loader. Without the game
 installed the window uses its own lettering and no portraits.
 
+### The Journal tab
+
+The Dialogue tab shows what was said since the Loader was started. The **Journal** keeps it:
+everything said to the party, the replies offered and the one you chose, every reward ("Cilla
+receives 200 experience points!") and every other message the game showed, each under the game's
+day and the area it happened in. It is written to disk as you play (the `Journal` folder beside
+the Loader), so it is there the next time, for every game you play.
+
+**It follows your saves.** Load an older save and the journal shows what had happened up to that
+save, no more; play on another way and that game has a journal of its own from there, while the
+first is still there for its own saves. A new game begins an empty one. (The journal's place is
+kept in the save itself, in two of the game's numbers its scripts don't use. A save made without
+the Loader, or before the journal, has none: its journal begins when it is loaded.)
+
+- **Show:** everything, talk only, rewards, or rewards and messages.
+- **Only entries with:** type a word or a name (any case) and only the entries holding it are
+  shown, a talk with its answer; the count beside it says how many. The **Find** box under it marks
+  words in what is shown, as on the other tabs.
+- **Save...** writes what is shown to a text file. **Open the folder** opens the `Journal` folder,
+  where `journal.jsonl` holds every game's entries.
+- **Keep a journal** (ticked unless you clear it) switches it off and on. Switched off, nothing is
+  written, to the file or to your saves; what the journal holds stays.
+
+An area the Loader has no name for yet is shown by its number ("Area 1Fh"). The game started
+without the Loader's window (`Play Dark Sun (in-game rolls).bat`) keeps the journal too.
+([How it works](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#the-journal-tab).)
+
 ### The dice log
 
 ![The Loader during the arena's opening show, in the readable layout: the Characters tab with the game's own party (Gerakis's Features: Wild Fighting and his age; K'ratchek's chatkcha 5/2 attacks a round and her open sky spells and psionics), and the dice log's last rounds: the Defiler's Cone of Cold on the Rampager (its magic resistance and its save for half), round 11's initiative, each attack with its outcome first, the d20 and the AC in columns and the working under it, the Defiler's death, the party's PSP back, and the fight's summary](docs/dicelog.png)
@@ -433,7 +463,7 @@ level AA:
   The Options tab's longer lines wrap to the window rather than run out of it.
 - **Keyboard:** Tab and Shift+Tab move between controls, and the one with the
   keyboard focus is outlined in yellow. **Ctrl+Tab** switches tabs, as do
-  **Alt+L** (Dice log), **Alt+I** (Dialogue), **Alt+S** (Spells), **Alt+M**
+  **Alt+L** (Dice log), **Alt+I** (Dialogue), **Alt+J** (Journal), **Alt+S** (Spells), **Alt+M**
   (Memory tools) and **Alt+O** (Options), and on the party side **Alt+C**
   (Characters) and **Alt+A** (All fields).
 - **In the game,** Tab and Enter choose and attack an enemy in a fight with no
@@ -445,7 +475,7 @@ level AA:
   game uses a small font of the Loader's (8 pixels a line; its header, buttons and filters in the game's); the
   same lines are in the Dice log tab at any text size.
 - **Screen readers:** tkinter's windows are not read well by screen readers.
-  **Save...** on the Dice log and Dialogue tabs writes the log to a text file,
+  **Save...** on the Dice log, Dialogue and Journal tabs writes the log to a text file,
   and `py -3-64 -m dsloader dicelog` prints the same log (dialogue included) in
   a command prompt, which screen readers do read.
 
@@ -485,6 +515,7 @@ saves and characters:
 | `settings.json` | your options, and what the Loader remembers (who has had their pockets picked, speakers' names); if it is ever damaged, it is kept as `settings.json.bad` and the defaults used |
 | `crash-logs` | crash, freeze and item reports |
 | `Named saves` | a copy of each save under the name you gave it, made while the Loader's window is open: one a slot, replaced when the game saves over that slot (not a backup history), and the `Replaced -` copies a restore keeps |
+| `Journal` | the journal: everything said and every reward, for every game played ([the Journal tab](#the-journal-tab)) |
 | `dosbox_dicelog.conf` | DOSBox's settings for the game the Loader starts, written at each start |
 | `play.log` | what went wrong, when the game was started with `Play Dark Sun (in-game rolls).bat` |
 | `dos` | the Loader's helpers, and the patched copy of the game (`DSUNLOG.EXE`) with copies of its data |
