@@ -26,7 +26,9 @@ and every party figure can wear it, in all its pictures (15 walking, 14 fighting
     the human woman's pictures): they are made here the same way and dressed like the rest, and
     the elves keep the pointed ears the Loader draws.
 
-The pictures are judged and finished with three tools beside this one: outfitfixes.py (corrections
+The pictures are judged and finished with the tools beside this one: outfitparts.py (what each
+pixel of a figure is taken for: where a fault begins), outfitcompare.py (each outfit beside the
+game's own picture, and what changed part by part), outfitbench.py (a frame large, in numbers), outfitfixes.py (corrections
 by hand to single frames, kept as text and laid on each time the pictures are made), outfitcheck.py (every frame checked by rule, the worst listed and drawn large) and outfitreview.py (a page where they move as in the
 game, to mark the frames that look wrong).
 
@@ -102,31 +104,53 @@ class Figure:
             rows = self.rows(cb, f)
             p = figures.own(self.maker, f, bool(cb), rows, self.model).parts if self.maker else sp.parts(rows, self.model, f, bool(cb))
             p = shouldered(p, rows, self.model)
-            if cb and f == 11:
-                p = self.turned(p, rows)
+            if cb and f in (10, 11):
+                p = self.turned(p, rows, f)
             self._parts[(cb, f)] = p
         return self._parts[(cb, f)]
 
-    def turned(self, p, rows: Rows):
-        """The parts of fighting frame 11 (the bow drawn "from the side": the figure is turned to
-        the viewer, and spriteparts takes the bow's tip for the head). The head is the top of the
-        picture without the bow's colours, as wide as the figure's head standing; the shoulders the row at
-        its foot; the waist as spriteparts puts it; seen from the front."""
-        body = [[None if c in BOW else c for c in r] for r in rows]  # (without the bow's golden browns)
-        ys = [y for y, r in enumerate(body) if sum(c is not None for c in r) >= 2]
-        stand = self.parts(0, 0)
-        if not ys or not stand.head:
+    def turned(self, p, rows: Rows, f: int):
+        """The parts of the bow's fighting frames 10 (from behind) and 11 ("from the side": the
+        figure is turned to the viewer), where spriteparts takes the bow's tip or the raised hand
+        for the head. The head is found by the figure's own head as it stands (from behind for
+        frame 10, from the front for 11): laid over the frame wherever it fits in the upper two
+        thirds, it is where the most pixels are of the same kind (hair, skin, black, other)
+        under it, nearer the top between equals. The shoulders are the row at its foot, the
+        waist as spriteparts puts it; frame 11 is seen from the front."""
+        view = 1 if f == 10 else 0
+        stand, standing = self.parts(0, view), self.rows(0, view)
+        if not (stand.head and stand.shoulders):
             return p
-        top = ys[0]
-        xs = [x for y in range(top, min(top + 3, len(body))) for x, c in enumerate(body[y]) if c is not None]
-        mid = sorted(xs)[len(xs) // 2]
-        half = (stand.head.right - stand.head.left) / 2
-        left, right = int(round(mid - half)), int(round(mid + half))
-        neck = min(len(body) - 1, top + sp.HEAD_ROWS[self.model][0])
-        row = [x for x, c in enumerate(body[neck]) if c is not None] or [left, right]
-        hair = {(x, y) for y in range(top, neck) for x in range(max(0, left - 1), min(len(body[0]), right + 2))
-                if rows[y][x] in self.hair and rows[y][x] not in SKINC and abs(x - mid) <= half + 1}
-        return p._replace(facing=sp.FRONT, head=sp.Head(top, left, right, top + stand.head.brow - stand.head.top),
+        hairc = self.hair - SKINC
+
+        def kind(c, bow=False):
+            if c is None or (bow and c in BOW and c not in hairc):
+                return 0
+            return 1 if c in hairc else 2 if c in SKINC else 3 if c == 254 else 4
+        h, neck0 = stand.head, stand.shoulders[0]
+        patch = [(x - h.left, y - h.top, kind(standing[y][x])) for y in range(h.top, neck0)
+                 for x in range(h.left, h.right + 1) if 0 <= x < len(standing[0]) and standing[y][x] is not None]
+        if not patch:
+            return p
+        best = None
+        for top in range(0, max(1, (2 * len(rows)) // 3)):
+            for left in range(-2, len(rows[0]) - (h.right - h.left) + 2):
+                score = 0.0
+                for dx, dy, k in patch:
+                    x, y = left + dx, top + dy
+                    got = kind(rows[y][x], True) if 0 <= y < len(rows) and 0 <= x < len(rows[0]) else 0
+                    score += 1.0 if got == k else 0.5 if got and k in (1, 3) and got in (1, 3) else -0.5 if not got else 0.0
+                score -= 0.05 * top
+                if best is None or score > best[0]:
+                    best = (score, top, left)
+        _, top, left = best
+        right = left + h.right - h.left
+        facing = sp.FRONT if f == 11 else p.facing
+        neck = min(len(rows) - 1, top + neck0 - h.top)
+        row = [x for x, c in enumerate(rows[neck]) if c is not None and c not in BOW] or [left, right]
+        hair = {(x, y) for y in range(top, neck) for x in range(max(0, left - 1), min(len(rows[0]), right + 2))
+                if rows[y][x] in hairc}
+        return p._replace(facing=facing, head=sp.Head(top, left, right, top + h.brow - h.top),
                           hair=hair, shoulders=(neck, min(row), max(row)),
                           waist=neck + round((p.bottom - neck) * 0.42))
 
@@ -163,8 +187,8 @@ class Outfit(NamedTuple):
 
 
 OUTFITS: Dict[int, Outfit] = {o.npc: o for o in (
-    Outfit("Warrior", 1252, None, frozenset(), False, False,  # (a leather jerkin and kilt, bare arms and shins)
-           (204, 129, 128, 205, 180), None, 0, (204, 129, 128, 205, 180), (204, 129, 128, 205), True, 0.45, True),
+    Outfit("Warrior", 1252, None, frozenset(), False, False,  # (a jerkin and kilt of dark leather, darker than any skin; bare arms and shins)
+           (129, 204, 203, 128, 205), None, 0, (129, 204, 203, 128, 205), (129, 204, 203, 128), True, 0.45, True),
     Outfit("Thief", 630, (69, 188, 53, 189, 54, 190, 55), frozenset((53, 54, 55, 56, 188, 189, 190, 191)), True, False,
            (69, 210, 49, 24, 50), None, 0, (69, 210, 70, 194, 50), (69, 48, 210, 49), True),
     Outfit("Priest", 1563, (129, 202, 195, 163, 76, 32, 77),
