@@ -556,7 +556,7 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
 - **A multiclass character on the creation screen**: a click on the big portrait (40,60) steps
   through the portraits, and with them the race and sex (one click went from a human to a dwarf:
   read the sheet's +18h). Then click the classes (CLERIC 250,13). The **CLERICAL SPHERE** list is in
-  the lower window (AIR 235,105, EARTH 113, FIRE 121, WATER 129): while one sphere is chosen the
+  the lower window (AIR 240,105, EARTH 113, FIRE 121, WATER 129): while one sphere is chosen the
   others are greyed and take no click, so click the chosen one off first. DONE (279,183) opens the
   weapon window (PICK A WEAPON SPECIALTY, or OF EXPERTISE for a ranger, Battle Mage, Crusader or Mind Warrior; at a level up too): icons 33 apart from (72,46), three rows; the cahulaks
   are the second row's last (245,78). A click there closes it and the dice log gives the start
@@ -625,7 +625,7 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   **DROP and ADD**: on VIEW CHARACTER a right-click on a slot opens its menu just right of it (the
   second slot's, 120,52: NEW/EDIT 165,57, ADD/DROP 165,66; the fourth's, 120,110: 166,117 and
   166,125); DROP asks YES (the first row); the last member can't be dropped ("LAST ONE: CAN'T
-  DROP", OKAY). ADD lists the roster, the newest first (scroll with the arrow at 219,146; a name,
+  DROP", OKAY). ADD lists the roster (scroll with the arrow at 219,146; a name,
   then ADD 252,46). A dropped character's record stays in memory (`sheetinfo.py` still lists it).
   **The roster keeps the character as the game wrote it at DONE**, and DSCLOG holds that write
   (GEAR_HOLD) for the Loader's creation gear, so a character ADDed in a later session has it, with
@@ -642,9 +642,8 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   (117,140); the count beside it; EXIT (202,140), then EXIT at YOU HAVE MORE (140,91). The last
   pick closes it. Each member's known powers: `python3 powers.py` (selector 2F0h's segment,
   +77h + member x 22h + power, bits 3-7). A discipline at creation: P-KINESIS (250,106), P-METAB (250,114),
-  TELEPATHY (250,122); click the chosen one off first. DROP (125,66 on a member's menu, then YES)
-  refuses the last member; ADD (112,66 on an empty slot's menu) lists the roster (a name, then ADD
-  252,46).
+  TELEPATHY (250,122); click the chosen one off first. DROP and ADD: [the roster](#the-creation-screen)
+  above (the menu at the slot + (46, 5) and + (46, 14)).
 - **The DUAL window** (dual-classing, logs/2026-11-09-group-4.md): the inventory screen (I), a
   right-click on a portrait (Cermak 20,104 in pens-fire-count4) opens EDIT NAME / DROP / DUAL
   (CANCEL in DUAL's place when it isn't offered); DUAL at 90,145; the classes greyed or white (zoom
@@ -1488,7 +1487,8 @@ The way to the grate, from the scripts and the region file, and the cluebook:
   266 at 1264,848 is gone or flag 317 is set; otherwise "presses the button, but nothing happens".)
 - The grate, object 1234 at map (46, 86) (square 2, 5), the far northwest; walking onto squares
   3-4, 5-6 (map 48-79, 80-111) runs its menu (137:29Bh): Pick the lock / Rip it open / Hack the
-  lock off. From `saves/grate-user` (Cromwell leading, beside it): `walkto.py 60 100`, then the Y
+  lock off (Pick the lock only with a thief in the party: without one the keys shift, 1 rip, 2 hack,
+  as saves/README.md has it). From `saves/grate-user` (Cromwell leading, beside it): `walkto.py 60 100`, then the Y
   key, then the reply's number key (`xdotool key --window <DOSBox's window> 2`). The weapon search
   runs as the menu is made, before the question. Hack is offered for the first melee weapon in
   either hand; `itemedit.py 0 2 slot=3` then `itemedit.py 0 3 slot=2` (just after loading) puts

@@ -490,8 +490,9 @@ How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#no-manual-check).
 
 ## Rule changes
 
-Twenty-five changes that bring the game's own rules closer to AD&D, each with its
-own box in the Options tab's **Rule changes** section, grouped there as they
+Changes that bring the game's own rules closer to AD&D, each with a box in the
+Options tab's **Rule changes** section (but [two weapons](#two-weapons), always
+on), grouped there as they
 are here: [characters](#characters), [weapons and armour](#weapons-and-armour)
 and [magic](#magic). All are on by default,
 and they take effect in games started from the Loader or its `.bat` files
@@ -554,15 +555,15 @@ allows; in armour that isn't light, every **thief skill is 0** (the inventory
 screen's PICK to CLMB, the Characters tab's "none in armour that isn't light")
 and it can't **backstab** (nor hide in shadows to backstab). A human warrior who
 was a thief is the same. The Assassin, Shinobi, Shadowblade and Poisoner
-wear light armour only, even while a human's kit is asleep after a change of
-class, and the Spellarcher none at all ([Kits](KITS.md)).
+wear light armour only (an Assassin's or Shinobi's limit sleeps with the kit
+after a change of class), and the Spellarcher none at all ([Kits](KITS.md)).
 
 A human who has changed class is held by the class it has now; another race by
 all of its classes. A ranger turned cleric uses both spheres' weapons, and a
 warrior who dual-classed uses the weapons it specialized in once the new
 class's level passes the old (a fighter's, gladiator's or ranger's chosen
-weapon specs, and a ranger's bow). A ranger's bow is always its own: a fire
-ranger/cleric, whose fire sphere allows only obsidian weapons, may still use
+weapon specs, and a ranger's bow). A ranger's bow is always its own (not a
+Seeker's, which has its sphere's weapons): a fire ranger/cleric, whose fire sphere allows only obsidian weapons, may still use
 bows. Cloaks, the Cloak of Protection among them, aren't armour: any class may
 wear one.
 
@@ -876,8 +877,7 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#level-cap-by-xp).
 
 #### Two weapons
 
-Always on (its Options switch went in 2.18: a settings file's old choice is
-passed over), a character with a melee weapon in each hand
+Always on: a character with a melee weapon in each hand
 attacks at −2 with the main (right) hand and −4 with the off (left) hand, plus
 the DEX reaction adjustment (the table under
 [Initiative](HOW-THE-GAME-WORKS.md#initiative)). That can bring the penalty to 0
@@ -933,14 +933,11 @@ rules describe them: one head in each hand. With **Weapon traits** ticked
 (on unless unticked):
 
 - **A head in each hand.** The wielder attacks one more time a round, with the
-  off head, under the [two-weapon](#two-weapons) penalties whether that box is
-  ticked or not: −2 for the main head's swings, −4 for the off head's (the
+  off head, under the [two-weapon](#two-weapons) penalties: −2 for the main head's swings, −4 for the off head's (the
   round's last swing), DEX's reaction adjustment added and never better than 0.
   Rangers in light armour (a Justifier in any) take none, and a Ghetto Fighter
-  0 and −2, as with two weapons. Twin-blades and Battle Dancers can't hold
-  cahulaks at all: a Twin-blade's kit forbids two-handed weapons (for the
-  cahulaks a half-giant's too), and a Battle Dancer's allows only long swords
-  and bows.
+  0 and −2, as with two weapons; a Twin-blade in light armour none. A Battle
+  Dancer can't hold them (long swords and bows only), nor a Brute.
   The inventory's damage line counts the extra attack.
 - **The tangle.** A hit that does damage tangles the target unless it saves
   against petrification (its own number, a d20): a tangled foe loses its next
@@ -1311,7 +1308,7 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#enlarge-multiplies-the
 #### Spells and psionics as the manual describes them
 
 Twenty-four of the manual's spells and two psionic powers whose saves, times,
-damage or effects part from the manual (pp. 29-44), set as the manual has them
+damage or effects part from the manual (pp. 30-86: the bestiary, spells and psionics), set as the manual has them
 (and the mod's Cat's Grace by the Tome of Magic's dice; the mod's Heal cures
 Feeblemind), a priest's Turn Undead by AD&D's turning table, a monster's level
 for its saves, and seven monsters' powers as the manual describes them
@@ -1459,7 +1456,7 @@ fitted to these choices, come with them.
 
 | Box on the Options tab | What it adds |
 |---|---|
-| [Weapon specialization](#weapon-specialization) | fighters and gladiators specialize in weapon types, fighters on to mastery and grand mastery, rangers take expertise (and every ranger the bow); specialists and rangers shoot missiles faster; other weapons at a warrior's plain rate (missiles faster from 7th level) |
+| [Weapon specialization](#weapon-specialization) | fighters and gladiators specialize in weapon types, fighters on to mastery and grand mastery, rangers take expertise (and every ranger but a Seeker the bow); specialists and rangers shoot missiles faster; other weapons at a warrior's plain rate (missiles faster from 7th level) |
 | [Kits](#kits) | a character of one class takes one of three kits for its class, or none; a few races' pairs of classes (and one set of three) have kits of their own |
 | [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen) | a roll kept on the creation screen, to bring back after trying the die again |
 | [Fuller starting gear](#fuller-starting-gear) | new characters get more plain gear: a weapon in hand they can use, a sling, leather armour, and a Stalker, Assassin or Shinobi a cloak |
@@ -1470,7 +1467,7 @@ With **Weapon specialization** ticked, fighters, gladiators and rangers train
 in chosen weapon specs (weapon types), as in AD&D: a fighter specializes in
 one (+1 to hit, +2 damage), on to mastery at 5th level and grand mastery at
 9th; a gladiator in two, a third at 6th level and a fourth at 9th; a ranger
-has expertise in one and the bow. With a chosen weapon spec a warrior keeps
+has expertise in one and the bow (a Seeker only if it chooses it). With a chosen weapon spec a warrior keeps
 the game's attacks a round and shoots missiles faster; with any other weapon
 it has AD&D's plain rate. Each warrior picks after DONE on the creation screen
 and starts with a plain weapon of its pick. A thri-kreen throws a chatkcha once
@@ -2002,14 +1999,15 @@ Ten 6th-level priest spells, after AD&D's and Wake of the Ravager's (numbers
 202-211). A cleric or druid gets them at 11th level, with AD&D's spell slots:
 one 6th-level slot at 11th and two at 12th. Under the XP cap a druid can reach
 12th, a cleric only 11th, so only a druid gets the second slot. Like the 4th and 5th-level common spells, the cosmos
-ones are for druids and a Healer cleric; each element's are for the clerics
+ones are for druids and a Healer cleric (never the harming ones for a Healer:
+the Cause spells, Poison, Slay Living, Harm); each element's are for the clerics
 and druids of that sphere (an Elementalist's second sphere counts). They come
 with the **New spells** switch, as the wizard spells do, and with
 **AD&D's class tables** for the slots.
 
-A Healer made before the kit had the cosmos (Obsidian Edition 2.5.0 and
-earlier) is given its cosmos spells when the game is loaded, and the dice log
-says so.
+A Healer from an older save is given its cosmos spells when the game is loaded,
+and a Healer or Lifebinder made before has the harming spells taken away; the
+dice log says so.
 
 | Spell | Who | Cast on | Does |
 |---|---|---|---|

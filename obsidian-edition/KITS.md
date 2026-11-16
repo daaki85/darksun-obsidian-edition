@@ -10,7 +10,7 @@ its class when it is made, or none (the class as it is). A few pairs of classes
 kits](#multiclass-kits)). Each gives something and costs something. The game's
 own party gets features of its own ([The game's own
 party](FEATURES.md#the-games-own-party)). A human who changes class may take a
-kit for the new class too ([Changing class](#changing-class)).
+kit for the new class if it has none yet ([Changing class](#changing-class)).
 
 Each class has a table of its three kits: what each gives and costs, what a
 new character starts with ([Starting gear](#starting-gear)), and what else to
@@ -107,7 +107,7 @@ backpack.
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
 | **Elementalist** | a second sphere: its spells (cast at its cleric level, known from the start) and its weapons as well as its own sphere's | spell slots a level behind (a 7th-level Elementalist has a 6th-level cleric's), but at least 1 at each spell level a cleric of its level casts (1 at 1st level) | the cleric's gear | the second sphere is chosen on the CLERICAL SPHERE list after the kit is taken (or on the kit menu after DUAL) |
-| **Healer** | the **sphere of the cosmos**: the spells every druid casts and no cleric, known from the start and cast at its cleric level (4th level: Abjure, Cloak of Bravery, Cloak of Fear, Cure and Cause Serious Wounds, Free Action, Neutralize Poison, Poison, Protection from Evil 10' Radius; 5th: Cure and Cause Critical Wounds, Dispel Evil, Raise Dead, Slay Living; 6th, with the new priest spells: Heal, Harm, Restore Youth); Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3), and Cell Adjustment (a psychometabolism power, if it took that discipline at creation) 1 more | **the water sphere only**; **never knows the harming spells**: Cause Light, Serious and Critical Wounds, Cause Disease, Poison, Slay Living, Harm; no weapon in the off hand (a shield is fine) | the cleric's gear (its club in hand, with fuller starting gear) | taken on the KIT page with WATER marked ([Choosing a kit](#choosing-a-kit)); after DUAL, offered to a water cleric only, and not to one who was a ranger of air, earth or fire; a Healer who changes class to a ranger is a water one (the sphere menu says WATER ONLY); can't go with the Twin-blade |
+| **Healer** | the **sphere of the cosmos**: the spells every druid casts and no cleric, known from the start and cast at its cleric level but the harming ones (4th level: Abjure, Cloak of Bravery, Cloak of Fear, Cure Serious Wounds, Free Action, Neutralize Poison, Protection from Evil 10' Radius; 5th: Cure Critical Wounds, Dispel Evil, Raise Dead; 6th, with the new priest spells: Heal, Restore Youth); Cure Light, Serious and Critical Wounds heal 1 more a die (+1, +2, +3), and Cell Adjustment (a psychometabolism power, if it took that discipline at creation) 1 more | **the water sphere only**; **never knows the harming spells**: Cause Light, Serious and Critical Wounds, Cause Disease, Poison, Slay Living, Harm; no weapon in the off hand (a shield is fine) | the cleric's gear (its club in hand, with fuller starting gear) | taken on the KIT page with WATER marked ([Choosing a kit](#choosing-a-kit)); after DUAL, offered to a water cleric only, and not to one who was a ranger of air, earth or fire; a Healer who changes class to a ranger is a water one (the sphere menu says WATER ONLY); can't go with the Twin-blade |
 | **Crusader** | a warrior's THAC0 (21 less its level) with its **chosen weapon spec** only (without weapon specialization, with its weapon kinds: any melee weapon); a warrior's extra attacks in melee, **3/2 a round from 7th level**, without weapon specialization (with it, its chosen weapon spec's expertise is its extra attacks, with that weapon alone); with weapon specialization, expertise in one melee weapon spec of its choice (of those its class can use) at **3/2 attacks a round, 2 from 7th level** | one fewer spell slot at each spell level (none at 1st level) | the cleric's gear | its weapon spec is chosen on the weapon window after DONE (the long sword, or its sphere's first, for an EXIT); can't dual to fighter, gladiator or ranger; can't go with the Swashbuckler, Battle Mage or Mind Warrior |
 
 ## Druid kits
@@ -320,14 +320,14 @@ menu asks for it, **KIT: NONE** at the top, then the new class's kits; click
 one, or the top row for none. A kit that can't go with the character's other
 classes (below) is left off the menu. A new **Elementalist** then picks its
 second sphere on the same menu (**SPHERE 2: NONE**, then the three other
-spheres). The kit sleeps and wakes with its own class. (Up to 2.17 a human
-could take a kit for each class it had, up to three.)
+spheres). The kit sleeps and wakes with its own class.
 
 ![The KIT menu after DUAL: a Battle Mage turned thief, offered Swashbuckler and Assassin (not the Shinobi)](docs/dual-kit-menu.png)
 
-The Effects screen lists the kits, oldest first, a line each (the longer names
-shortened as on the KIT page, `(ASLEEP)` after one that sleeps; a Shinobi's
-with its read languages under it, `READ LANG. 40%`), then the weapon specs.
+The Effects screen names the kit (a longer name shortened as on the KIT page,
+`(ASLEEP)` after one that sleeps; a Shinobi's with its read languages under it,
+`READ LANG. 35%`; a character of an older save may have several, oldest first),
+then the weapon specs.
 Its lower panel has room for five lines: when there are more, it shows four and
 **MORE: CLICK HERE** under them, and a click on the panel shows the next page
 (a weapon spec's heading again at the top of a page that goes on with its
@@ -379,14 +379,15 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#kits).
 ## Weapon specialization
 
 With **Weapon specialization** ticked, fighters, gladiators and rangers train
-in chosen weapon specs (weapon types), as in AD&D. **Every ranger starts
-with expertise in the bow**, on top of the weapon spec it chooses.
+in chosen weapon specs (weapon types), as in AD&D. **Every ranger but a
+Seeker starts with expertise in the bow**, on top of the weapon spec it chooses
+(a Seeker has it only by choosing the bow, where its sphere allows one).
 
 | Who | Chooses | With a weapon of a chosen weapon spec |
 |---|---|---|
 | **Fighter** (one class or more) | 1 weapon spec | specialized: +1 to hit, +2 damage; **mastery** from 5th fighter level (+3 to hit, +3 damage); **grand mastery** from 9th (the same, the damage die the next greater die size against every target, as Player's Option: Combat & Tactics has it: a long sword 1d10, and 1d20 for its 1d12 against a large target: [every weapon's](#grand-masterys-damage); and one more attack a round) |
 | **Gladiator** | 2 weapon specs at creation, a 3rd at 6th level and a 4th at 9th | specialized in each: +1 to hit, +2 damage |
-| **Ranger** (one class or more) | **the bow from the start**, and 1 weapon spec (any but the bow) | expertise: the game's attacks a round in melee, a specialist's rate of fire with a missile weapon, no other bonus |
+| **Ranger** (one class or more) | **the bow from the start**, and 1 weapon spec (any but the bow); a Seeker 1 of its sphere's, the bow among them | expertise: the game's attacks a round in melee, a specialist's rate of fire with a missile weapon, no other bonus |
 
 The game already gives every fighter, gladiator and ranger the specialist's
 attacks in melee (3/2 a round, 2 from 7th level). With the rule, a warrior
@@ -417,7 +418,7 @@ fighter, gladiator and ranger levels; a warrior class goes no higher than
 |---|---|---|---|---|---|---|---|
 | none | non-warriors: clerics, druids, preservers, psionicists, thieves | 1 | 1 | 2 | 2 | 1 | 1 |
 | not a chosen weapon spec | any warrior | 1 | 3/2 | 2 | 3 | 1 | 3/2 |
-| expertise | a ranger: every bow, and its chosen weapon spec (a [Justifier](#ranger-kits)'s chosen weapon spec is specialized); a [Battle Mage](#preserver-kits), [Crusader](#cleric-kits) or [Mind Warrior](#psionicist-kits): its chosen weapon spec (melee only, but a thri-kreen Mind Warrior's chatkcha; by its own class's level, a chatkcha by its warrior level) | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
+| expertise | a ranger: every bow (a Seeker only by choosing it), and its chosen weapon spec (a [Justifier](#ranger-kits)'s chosen weapon spec is specialized); a [Battle Mage](#preserver-kits), [Crusader](#cleric-kits) or [Mind Warrior](#psionicist-kits): its chosen weapon spec (melee only, but a thri-kreen Mind Warrior's chatkcha; by its own class's level, a chatkcha by its warrior level) | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
 | specialized | a fighter's or gladiator's chosen weapon spec | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
 | mastery | a fighter's chosen weapon spec, from 5th level | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
 | grand mastery | a fighter's chosen weapon spec, from 9th level | | 3 | | 5 | | 3 |
@@ -493,7 +494,7 @@ use, in any material. The rest are greyed:
 
 | A warrior (fighter, gladiator or ranger)… | Weapon specs it can choose | Starts with |
 |---|---|---|
-| …of one class, or with thief, preserver or druid | all sixteen (a ranger all but the bow) | the game's bone long sword |
+| …of one class, or with thief, preserver or druid | all sixteen (a ranger all but the bow; a Seeker its sphere's, the bow among them where the sphere allows) | the game's bone long sword |
 | …with psionicist (small weapons) | club, dagger, short sword, mace, chatkcha, bow, sling | a wooden club |
 | …with air cleric (missile and thrown weapons, daggers, cahulaks) | dagger, cahulaks, chatkcha, bow, sling, staff sling | an obsidian dagger |
 | …with earth cleric (stone, obsidian, metal, wood) | long sword, club, dagger, short sword, mace, axe, great axe, pick, quarterstaff, polearm, cahulaks, chatkcha, bow (the polearm in the mod's metal, the cahulaks in its obsidian or metal) | an obsidian long sword |
@@ -501,8 +502,8 @@ use, in any material. The rest are greyed:
 | …with water cleric (bone, wood) | long sword, club, dagger, short sword, mace, axe, great axe, quarterstaff, polearm, gythka, cahulaks, bow | the game's bone long sword |
 
 (The starting weapon is for the weapon spec picked first; [Starting weapons](#starting-weapons) has the
-rest. A ranger never has the bow to choose: its expertise with the bow comes
-anyway.)
+rest. A ranger but a Seeker never has the bow to choose: its expertise with the bow
+comes anyway.)
 
 **EXIT** leaves picks unmade, and the Loader picks them (a Myrmidon's second is
 the polearm whatever is picked): the kit's weapon (a
@@ -567,7 +568,7 @@ round with each weapon ready, a missile weapon's its own (**Attacks: 3/2 a
 round with Long Sword, 1 with Axe, 3 with Bow**); and the dice log names it on
 each attack (`+1 specialized`, `+3 grand mastery`,
 `(d10 for d8: grand mastery)`; against a large target `(1d20 for 1d8: a large target, grand mastery)`). Both lists end with a ranger's bow, which
-every ranger is an expert with, chosen or not; and View Character, as the game
+every ranger but a Seeker is an expert with, chosen or not; and View Character, as the game
 has it, gives a character's melee rate whatever weapon is ready.
 
 ![The Effects screen: Daaki, a 9th-level fighter, GRAND MASTER OF LONG SWORD](docs/effects-weapons.png)

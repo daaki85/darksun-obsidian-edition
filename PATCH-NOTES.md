@@ -58,7 +58,7 @@ The full catalogue follows, by part of the game.
 **Weapon specialization**
 
 - **[New]** Fighters specialize in one weapon spec, a kind of weapon such as the long sword (+1 to hit, +2 damage, 3/2 attacks a round), with **mastery** at 5th level (+3, +3) and **grand mastery** at 9th (the damage die one size up against every target, as in *Player's Option: Combat & Tactics*: a long sword 1d10, and 1d20 against a large foe; and one more attack).
-- **[New]** Gladiators specialize in two weapon specs, a third at 6th level and a fourth at 9th. Rangers gain expertise with the bow and one other weapon spec. The Battle Mage, Crusader and Mind Warrior kits gain expertise with one melee weapon spec of their choice (3/2 attacks a round, 2 from 7th level). Their weapon window asks for a weapon of expertise, a specialist's for a specialty.
+- **[New]** Gladiators specialize in two weapon specs, a third at 6th level and a fourth at 9th. Rangers gain expertise with the bow (a Seeker only if it chooses the bow) and one other weapon spec. The Battle Mage, Crusader and Mind Warrior kits gain expertise with one melee weapon spec of their choice (3/2 attacks a round, 2 from 7th level). Their weapon window asks for a weapon of expertise, a specialist's for a specialty.
 - **[Fixed]** Warriors attack at AD&D's plain rate with weapons outside their specializations *(was 3/2 with any weapon)*. Specialists shoot missiles faster.
 - **[Changed]** Every thri-kreen, foes too, throws a chatkcha once more a round, AD&D's 2/1 for its own weapon *(was at the weapon's rate, like anyone)*; a thri-kreen Mind Warrior may take the chatkcha as its weapon spec.
 - **[New]** The weapons spells make count for specialization: the Flame Blade as a long sword, Shillelagh as a club, Spiritual Hammer as a mace.
@@ -124,18 +124,18 @@ The full catalogue follows, by part of the game.
 
 **Kits**
 
-- **[New]** Each class has three kits, chosen at character creation. Each gives something and costs something. A human who changes class can take one for each class, up to three.
+- **[New]** Each class has three kits, chosen at character creation. Each gives something and costs something. A character has one kit at most: a human who changes class keeps its kit (one with none may take one for the new class).
 
 | Class | Kits |
 |---|---|
+| Cleric | Elementalist, Healer, Crusader |
+| Druid | Grove Warden, Lifebinder, Wanderer |
 | Fighter | Myrmidon, Sentinel, Ravager |
 | Gladiator | Arena Champion, Twin-blade, Brute |
-| Ranger | Stalker, Seeker, Justifier |
-| Thief | Assassin, Swashbuckler, Shinobi |
-| Preserver | Arcanist, Scholar, Battle Mage |
-| Cleric | Healer, Crusader, Elementalist |
-| Druid | Grove Warden, Wanderer, Lifebinder |
-| Psionicist | Mind Warrior, Mind Bender, Kineticist |
+| Preserver | Scholar, Battle Mage, Arcanist |
+| Psionicist | Mind Bender, Mind Warrior, Kineticist |
+| Ranger | Stalker, Justifier, Seeker |
+| Thief | Swashbuckler, Assassin, Shinobi |
 
 - **[New]** Thirteen kits for two (or, for one, three) classes taken at once, each for one race only:
 
@@ -156,13 +156,17 @@ The full catalogue follows, by part of the game.
 A few of them:
 
 - **Myrmidon:** its second weapon spec is the polearm, the battle line's weapon; its first is chosen as any fighter's, and both go on to mastery and grand mastery.
-- **One kit a character:** a human who changes class keeps its kit and takes no other (one with none may take one for the new class).
 - **Arcanist:** its preserver spells cast a level higher (duration and damage), for a d3 hit die.
-- **Scholar:** learns a spell more at each level up (and one more for each level at creation), for 1 worse to hit, with its touch spells too *(was a spell slot more at each spell level as well)*.
+- **Scholar:** learns a spell more at each level up (and one more for each level at creation), for 1 worse to hit, with every spell that rolls to hit too (its touch spells, Acid Arrow, Minute Meteors, Turn Pebble to Boulder) *(was a spell slot more at each spell level as well)*.
 - **Healer:** a water cleric only, given the sphere of the cosmos: the spells only druids had, Cure Serious and Critical Wounds, Raise Dead and Neutralize Poison among them, each cure healing 1 more a die.
 - **Assassin:** a backstab one step deadlier (×3 at 1st level up to ×6 from 13th), for −15 to picking pockets and locks.
 - **Wilderness Avenger:** +1 to hit and damage against anything, and Cause Wounds spells doing 1 more a die, for no healing spells at all.
-- **Rescuer:** cures heal 1 more a die and +2 movement in a fight, for no shield and only +1 from behind.
+- **Rescuer:** cures heal 1 more a die (Cell Adjustment 1 more too) and +2 movement in a fight, for no shield and only +1 from behind.
+- **Sentinel:** AC 2 better with a shield, for −1 to hit in melee without one *(was +2 initiative as well)*.
+- **Twin-blade, Brute:** the Twin-blade fights with cahulaks at no penalty in light armour; the Brute, two-handed weapons only, may not hold them, nor change class to an air cleric (whose only two-handed weapon they are).
+- **Seeker, Grove Warden:** fight with their sphere's weapons, as a cleric of that sphere, the bow too where the sphere allows it; the Seeker has no ranger's bow expertise unless the bow is its chosen weapon *(was no metal weapons for the Grove Warden; the Seeker always had the bow)*.
+- **Justifier:** its chosen weapon is specialized, the bow staying at a ranger's expertise unless it is the one chosen.
+- **Assassin, Shinobi:** light armour only, a limit that sleeps with the kit after a change of class *(was for good)*.
 - **Poisoner:** each melee weapon's first hit in a fight poisons (a save or 10 damage), for a dagger or short sword spec only.
 - **Battle Mage:** a warrior's THAC0 with its chosen weapon, leather armour it can cast in, expertise with that weapon, and spells that still go off after being hit.
 - **Swashbuckler, Crusader, Mind Warrior:** a warrior's THAC0 with the kit's chosen weapon only (the Swashbuckler's a long sword, dagger or short sword, as *The Complete Thief's Handbook*'s weapon of choice; its bad luck takes 0 to 25 off each thief skill roll, rolled each time). With weapon specialization, the Crusader's and Mind Warrior's extra attacks are their chosen weapon's alone. The Mind Warrior has a fifth fewer PSP *(was a tenth)*.
@@ -173,7 +177,7 @@ A few of them:
 - **Spellarcher:** weaves the touch spells it knows into arrows, as *The Complete Book of Elves*'s Spellarcher does: a button on the USE screen for each, a spell slot for one arrow that casts its spell on what it hits at the archer's preserver level. One stack of each spell, of 24 at most; they last until shot, and only a Spellarcher carries them. Its spell arrows are +1 from 5th preserver level and +2 from 9th. It wears no armour, helm or shield. What an arrow hits saves against its spell, Shocking Grasp and Vampiric Touch too. Making them plays the spell's own cast sound.
 - **Wild Fury:** Wild Fighting as each fight starts, a roll against CON at −4: −3 to hit and AC 3 worse for the fight whatever the roll, and with it passed one more attack a round in melee and +3 damage, as *The Complete Barbarian's Handbook* has it.
 - **Wayfinder:** the whole party acts a little quicker while it stands (+1 initiative), the Wayfinder itself quicker still (+3), and nothing is lost when it falls.
-- **Healer, Lifebinder:** better healing, and they never know the harming spells (the Cause Wounds spells, Cause Disease, Poison, Slay Living, Harm).
+- **Healer, Lifebinder:** better healing (the Lifebinder's Cell Adjustment a d4 more, the Healer's 1 more), and they never know the harming spells (the Cause Wounds spells, Cause Disease, Poison, Slay Living, Harm).
 - **[New]** The game's own party has features of its own: Gerakis fights wild (as a Wild Fury does), K'ratchek casts and uses psionics as a Wasteland Seer does, Cilla hides as well in the sun as out of it (her feature, the Elven Shadow-walker), and Cermak is an Arcanist.
 
 > *Developers' Notes: Each kit is built into the game's own code, so it works everywhere the game checks: THAC0, spell slots, hit dice, PSP costs, attacks a round and what you may hold. The player's guide has all 37, with a short description of who takes each one on Athas.*
@@ -202,7 +206,7 @@ A few of them:
 | Spell | Who | What it does |
 |---|---|---|
 | **Heal** | druids, Healer clerics | every wound healed, disease and blindness cured |
-| **Harm** | druids, Healer clerics | leaves a creature 1d4 hit points, no save |
+| **Harm** | druids | leaves a creature 1d4 hit points, no save |
 | **Restore Youth** | druids, Healer clerics | takes back a year of magical aging (Haste's) a caster level, after a system shock roll |
 | **Blade Barrier** | air | a wall: 8d8 to each creature in it, a save for none |
 | **Wall of Thorns** | earth | a wall: 8 plus the creature's AC to each creature in it |
@@ -412,6 +416,7 @@ The main fixes are below; every bug of the original game the mod mends, with wha
 - **[Fixed]** **Psionic Blast**'s wounds are imagined (its victim believes it has lost most of its hit points), but the game took them for good. Now a party member gets them back as the fight ends, and until then a blow that would kill them only knocks them out; they wake with the hit points back.
 - **[Fixed]** Thief skills no longer drop for holding a weapon. The game's equipment penalty looked at the hands, quiver and legs, and never at the armour worn.
 - **[Fixed]** **DELETE** in the character roster deleted the wrong character when the list was scrolled.
+- **[Fixed]** A character made with the mod and added again from the roster (**ADD**) in a later session had lost its weapon specialization picks, its kit's gear and its fuller starting gear: the game wrote it to the roster before the mod's changes. Now they are in the roster's copy.
 - **[Fixed]** A character not yet played showed 0 in every thief skill.
 - **[Fixed]** **Kurzak's door** could stand open but still bar the way: the party couldn't step into the doorway, and Legcrusher, sent to fetch them, stood still for good. Now the doorway opens as the door shows it.
 - **[Fixed]** Once the party has killed **Legcrusher**, **Kurzak** no longer calls for him when they're late for a fight, nor greets them as if he'd brought them, nor speaks of him as still about when asked (Dinos neither): he wonders where his monster trainer has got to.
@@ -440,7 +445,7 @@ The main fixes are below; every bug of the original game the mod mends, with wha
 - **[Fixed]** A preserver or psionicist with another class couldn't claim to have scried the **haystack** or read the man's thoughts, and the cave guide told even a dwarf or halfling to "go bother someone your own size". **Dagolar's slime book** counted a fighter's or an air cleric's training as magical but not an earth, fire or water cleric's or a druid's: now any cleric, druid, preserver or psionicist can read it.
 - **[Fixed]** Cilla, an elf in the ready-made party, was drawn with the half-elf woman's figure; she looks like an elf now (a switch keeps the game's figure).
 
-**Rules the game got wrong** are fixed too. Each is tagged **[Fixed]** under its own heading above and has a switch, on by default, for anyone who wants the game's own rule: the saving throws against spells and the doubled d20 against fire, cold and electricity, two weapons, warriors' attacks, acid on armour and held targets (Combat); class restrictions, multiclass hit points, the class tables, rangers' spells, dual-classing, preservers' learning from scrolls, CON's regeneration and poison saves (Classes and Kits); spells, psionics and monsters as the manual describes them (Turn Undead by AD&D's table with them), spells rolling to hit and Enlarge's dice (Magic and Psionics); and thief skills and backstabs (Improved Thieving). The other rule changes are the mod's own choices, not corrections, and stay **[Changed]** or **[New]**: helms' AC, resting, the XP level cap, hit dice rolled twice, creation scores as rolled, half-giants' two-handed weapons, creature size, weapon traits (cahulaks, the staff sling's stinkpots, polearm reach), a thri-kreen's extra chatkcha throw, and ages.
+**Rules the game got wrong** are fixed too. Each is tagged **[Fixed]** under its own heading above and has a switch, on by default, for anyone who wants the game's own rule: the saving throws against spells and the doubled d20 against fire, cold and electricity, warriors' attacks, acid on armour and held targets (Combat); class restrictions, multiclass hit points, the class tables, rangers' spells, dual-classing, preservers' learning from scrolls, CON's regeneration and poison saves (Classes and Kits); spells, psionics and monsters as the manual describes them (Turn Undead by AD&D's table with them), spells rolling to hit and Enlarge's dice (Magic and Psionics); and thief skills and backstabs (Improved Thieving). The two-weapon rules (Combat) are always on. The other rule changes are the mod's own choices, not corrections, and stay **[Changed]** or **[New]**: helms' AC, resting, the XP level cap, hit dice rolled twice, creation scores as rolled, half-giants' two-handed weapons, creature size, weapon traits (cahulaks, the staff sling's stinkpots, polearm reach), a thri-kreen's extra chatkcha throw, and ages.
 
 ## Your Saved Games
 

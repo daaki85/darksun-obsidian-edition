@@ -59,7 +59,7 @@ BLUNT = frozenset((1, 4, 8, 14, 15))
 # a Shinobi's: dagger, short sword, quarterstaff, chatkcha, bow, sling, staff sling
 SHINOBI_KINDS = frozenset((2, 3, 8, 12, 13, 14, 15))
 SHINOBI = KIT_IDS["Shinobi"]
-BOW = 13  # (the bow's weapon kind: a Seeker keeps it whatever its sphere)
+BOW = 13  # (the bow's weapon kind: every ranger's expertise but a Seeker's, whose sphere decides)
 # an Elementalist's second sphere: the low three bits of the sheet's byte SPHERE2, 0 none, else the
 # sphere (0 air, 1 earth, 2 fire, 3 water) + 1 (DSCLOG's SPHERE2; the bits above it are the new spells
 # known, game.NEW_KNOWN)

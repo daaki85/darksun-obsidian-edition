@@ -111,9 +111,11 @@ page](https://github.com/daaki85/darksun-obsidian-edition/issues).
   code; none of its code is used), and the
   [OpenDS](https://github.com/VirInvictus/opends) project's notes and fixes to
   the game's scripts.
-- **Rules:** AD&D 2nd Edition's *Player's Handbook*, *Demihuman Deities* and
-  *The Complete Ranger's Handbook*, where the mod's rule changes and the
-  Seeker's and Justifier's tables come from; Baldur's Gate, for keeping a
+- **Rules:** AD&D 2nd Edition's *Player's Handbook*, *Demihuman Deities*,
+  *Player's Option: Combat & Tactics* and *Skills & Powers*, and the
+  *Complete* handbooks (*Ranger's*, *Fighter's*, *Thief's* and *Barbarian's*,
+  the *Book of Elves* and the *Book of Dwarves*), where the mod's rule changes
+  and its kits come from; Baldur's Gate, for keeping a
   creation roll (STORE and RECALL) and Charisma's shop prices.
 - **Tools:** [DOSBox](https://www.dosbox.com/), [NASM](https://www.nasm.us/),
   [Python](https://www.python.org/) and

@@ -69,7 +69,7 @@ Eight families of changes. Most have a switch on the Loader's **Options** tab
   combat log over the map, names over figures and the Look box ([In the
   game](FEATURES.md#in-the-game)); THAC0, saves, thief skills, spell slots and
   charges on the game's own screens ([Always on](FEATURES.md#always-on)).
-- **Brings the rules closer to AD&D.** Twenty-four switches for characters,
+- **Brings the rules closer to AD&D.** Twenty-three switches for characters,
   weapons and armour, and magic, from class restrictions and levels past 9th
   to creature size and spell saves ([Rule changes](FEATURES.md#rule-changes);
   in play, [the player's guide](PLAYER-GUIDE.md)).
@@ -398,7 +398,7 @@ of the tab, sets them all back (after asking). In a
 window too small to show the open sections, the tab scrolls (scrollbar, mouse
 wheel, or arrow and page keys once it has the focus).
 
-![The Options tab with Rule changes (twenty-four switches, in three groups: Characters, Weapons and armour, Magic) and New content open, the other sections closed](docs/options.png)
+![The Options tab with Rule changes (twenty-three switches, in three groups: Characters, Weapons and armour, Magic) and New content open, the other sections closed](docs/options.png)
 
 ### The Characters tab
 

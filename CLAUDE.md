@@ -15,8 +15,9 @@
 This is what must survive a compacted chat; `playtest/PLAYTESTING.md` has the rest and wins where
 they differ.
 
-- **Set-up**: run the tools from `playtest/`, `export DISPLAY=:55`, and set `PLAYTEST_WORK` to a
-  scratch folder (the guide's `$WORK`; type `$PLAYTEST_WORK` in a shell). The game is
+- **Set-up**: run the tools from `playtest/`, `export DISPLAY=:55`, and `export
+  PLAYTEST_WORK=/tmp/playtest` (the guide's `$WORK`; the default, which the shared DOSBox lock
+  assumes). The game is
   `$PLAYTEST_WORK/inst`, from `setup_game.sh`; `start.sh` starts Xvfb, DOSBox with the Loader's
   patched game and the dice log (`$PLAYTEST_WORK/dice.txt`); `sh loadsave.sh NAME` loads a save
   from `playtest/saves/` (`pens-after-arena` the usual start, `fountain-user` for a fight, spell or
@@ -32,7 +33,10 @@ they differ.
   and nothing from it is ever committed here.
 - **The window must be 320x240** (`xdotool getwindowgeometry`): at 960x720 every pixel check
   (message boxes, CHOOSE A SPELL) fails and the loops stall.
-- **DOSBox dies when the session sits idle**: after any pause, check `pgrep -x dosbox` and reload.
+- **DOSBox dies when the session sits idle**, and a worker restart takes Xvfb too: after any pause,
+  check `pgrep -x dosbox` and `pgrep -x Xvfb`, restart what is gone and reload.
+- **Never cut steps out of a bigger script with sed** (its header may restart the game): use the
+  small tools.
 - **Press Escape only with a screen or menu up** (with nothing open it brings EXIT: SAVE GAME?), and
   **never save after a memory edit** made for a test.
 - **Story fights go through `fightout.sh`**; never `killfoes.py` in a fight a script waits on (the

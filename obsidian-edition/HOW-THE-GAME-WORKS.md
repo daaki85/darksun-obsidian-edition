@@ -129,9 +129,9 @@ alike, is adjusted by the DEX table used for initiative with its sign flipped
 and never below 0, and rangers are left out. That comes to a **bonus** of +6 at
 DEX 1, +4 at 2, +3 at 3, +2 at 4 and +1 at 5, and nothing at DEX 6 and up, so
 in practice there is no off-hand penalty at all: both weapons hit as well as a
-single one would. The log names it, e.g. `+2 two weapons at DEX 4`. It looks
-like a sign slip: AD&D uses the same DEX adjustment to make two-weapon
-fighting *harder* at low DEX.
+single one would. It looks like a sign slip: AD&D uses the same DEX adjustment to make two-weapon
+fighting *harder* at low DEX. The mod always uses AD&D's rule instead ([Two
+weapons](FEATURES.md#two-weapons)).
 
 ## Attacks from behind and backstabs
 
@@ -333,8 +333,8 @@ AD&D rules, the log follows the game.
 **Damage.** Each spell's record gives its dice: base dice plus dice (and a flat
 bonus) for each step of caster level, counted up to level 10. So Fireball and
 Lightning Bolt do at most 10d6, and Burning Hands 1d3 + 2 a level. A save halves
-the damage, or stops it all for spells such as Chill Touch. A creature that is
-Out Cold gets no save and takes the most the dice can do.
+the damage, or stops it all for spells such as Chill Touch. A helpless creature
+(Out Cold or Paralyzed) gets no save and takes the most the dice can do.
 
 **No spell misses.** The game rolls no attack for a spell: Acid Arrow, Turn
 Pebble to Boulder, Magical Stone, Condense and the touch spells (Chill Touch,
@@ -442,7 +442,7 @@ on by default, which changes wizard spells and psionic powers too: its table lis
 | Bless | +1 to hit; not on anyone next to a monster; 6 rounds | +1 to hit and +1 on saves; not on anyone next to an enemy (the patched game measures that from where each stands); cancels Curse; 6 rounds | the effect |
 | Cause Fear | flees 1d4 rounds; save | Afraid for 1 round a level on a failed save; undead immune; Cloak of Bravery +4 (with the patched game) | the save and the effect |
 | Cause Light Wounds | 1d8 | 1d8, no save | the roll and the HP lost |
-| Cure Light Wounds | heals 1d8 | heals 1d8 (Healer kit +1) | the roll and the HP regained |
+| Cure Light Wounds | heals 1d8 | heals 1d8 | the roll and the HP regained |
 | Curse | −1 to hit; not next to the party; 6 rounds | −1 to hit, no save; cancels Bless; 6 rounds | the effect |
 | Entangle | moves very slowly; save for half; 1 turn a level | Stuck (can't move at all) on a failed save, for 1 round | the save and the effect |
 | Invisibility to Undead | undead ignore the warded creature; 6 rounds | until it attacks or casts at an enemy; +4 on saves against an undead caster's spells aimed at it | the effect |
@@ -477,7 +477,7 @@ on by default, which changes wizard spells and psionic powers too: its table lis
 | Cloak of Bravery | +4 on saves against fear, once | ends fear; the next fear fails and ends it; +4 against fear spells (with the patched game) | the effect |
 | Cloak of Fear | the first who hits it must save or flee, once | the first who hits it has Cause Fear cast on them | the effect, then the Cause Fear |
 | Condense | 3d6 | 3d6 crushing, no save | the roll and the HP lost |
-| Cure Serious Wounds | heals 3–17 | heals 2d8+1 (Healer kit +1 a die) | the roll and the HP regained |
+| Cure Serious Wounds | heals 3–17 | heals 2d8+1 | the roll and the HP regained |
 | Cause Serious Wounds | 3–17 | 2d9 in the game; 2d8+1 with the patched game | the roll and the HP lost |
 | Dehydrate | 2d6 + 1 a level | the same, no save | the roll and the HP lost |
 | Dust Cloud | blocks sight and missiles | a cloud on the ground; its record has no damage or effect | the cast |
@@ -490,7 +490,7 @@ on by default, which changes wizard spells and psionic powers too: its table lis
 | Protection from Lightning | +4 on saves, half damage | +4 on saves against lightning spells, and half a spell's damage that is all electricity | as Resist Fire |
 | Cause Critical Wounds | 6–27 | 3d9 in the game; 3d8+3 with the patched game | the roll and the HP lost |
 | Conjure Elemental (four) | 1 turn a level | summons one for 10 + 1 a level rounds | the summoning |
-| Cure Critical Wounds | heals 6–27 | heals 3d8+3 (Healer kit +1 a die) | the roll and the HP regained |
+| Cure Critical Wounds | heals 6–27 | heals 3d8+3 | the roll and the HP regained |
 | Deflection | small missiles miss | missile attacks miss it | the effect |
 | Dispel Evil | AC −7 against summoned evil creatures, which save when hit | AC −7 against evil; no save for the creature | the effect |
 | Flame Strike | 6d8; save for half | the same, fire | the save, roll and HP |
@@ -500,6 +500,8 @@ on by default, which changes wizard spells and psionic powers too: its table lis
 | Raise Dead | by CON and how long dead; −1 CON; 1 HP | always works on someone dead who isn't an elf: −1 CON, 1 HP | the HP and the CON change |
 | Slay Living | dies on a failed save, 3–17 if saved | HP + 10 damage on a failed save against paralysis/poison/death; half of 4d8 (2–16) if saved, as the Loader's description now says | the save and the damage |
 | Wall of Fire | fire to those passing through | 4d4 + 1 a level fire, no save | the roll and the HP lost |
+
+Kits that heal more (the Healer, Lifebinder, Rescuer) are on [the kits page](KITS.md).
 
 ### Turn Undead
 
@@ -737,7 +739,7 @@ How it is done: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#spells-and-psionics-
 
 ### The monsters as the manual describes them
 
-Where the manual (pp. 33-52) gives a monster a power its record hasn't, or the record
+Where the manual (pp. 30-54, the bestiary) gives a monster a power its record hasn't, or the record
 a power the manual hasn't:
 
 | Monster | The game | As the manual |

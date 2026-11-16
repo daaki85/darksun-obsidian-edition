@@ -14,7 +14,8 @@ Everything here is the mod with its **default options**, which is how the
 Loader starts. Nearly every rule change has a switch on the Loader's **Options** tab
 ([at a glance](#the-options-tab-at-a-glance): each switch, its default and when it
 takes effect); the exceptions, always on, are the
-keys (T, S, M, U, I), the fixes to the game's own bugs and the footman's pick. Where it helps to know what a
+keys (T, S, M, U, I), the fixes to the game's own bugs and AD&D's two-weapon
+penalties. Where it helps to know what a
 switch changes, a **Without the mod** note says what the game does with it off.
 The [features page](FEATURES.md) has every rule in full detail, and the
 [Kits](KITS.md) page each kit's numbers: the guide links to their tables. The Loader's **Help**
@@ -103,7 +104,7 @@ life](#quality-of-life).
 On the main menu choose **CREATE CHARACTERS**, right-click an empty slot and
 choose **NEW**, then set race, classes, sphere and alignment, roll, and press
 **DONE**. [Choosing a kit](KITS.md#choosing-a-kit) walks through the panel,
-the mod's **KITS** page among it. After DONE a warrior picks its weapon specs
+the mod's **KIT** page among it (the **KITS** button). After DONE a warrior picks its weapon specs
 ([weapon specialization](#weapon-specialization-and-attacks)), as a preserver
 picks its spells, and every character then picks its psionic powers
 ([features](FEATURES.md#psionic-powers-at-creation)). A party has one to four characters, all good or neutral.
@@ -256,8 +257,9 @@ with **DUAL** on a portrait's right-click menu when:
 
 The new class starts at 1st level. The old class stops rising, and what it
 gives (its hit points, THAC0, saves, weapon specs and kit) **sleeps until the
-new class's level passes the old one's**; then both count. The new class can
-take a kit of its own, so a human may end up with three. Some kits rule out
+new class's level passes the old one's**; then both count. A human keeps the
+kit it has and takes no other; one with none may take a kit for the new class
+([kits](#kits)). Some kits rule out
 classes a human could change to ([kits](#kits)).
 
 The change starts the new class at 0 XP, and any XP past the old level's need
@@ -555,7 +557,8 @@ silk), and of shields only leather ones (the game's own rule), with another
 class only if that class allows shields. A thief with a warrior or cleric
 class, or a human once a warrior, may wear heavier armour that class allows,
 but has no thief skills and no backstab while it does; an Assassin or Shinobi
-never may, even after changing class.
+may not while its kit is awake (the limit sleeps with the kit after a change of
+class).
 
 **Kits.**
 
@@ -691,7 +694,7 @@ has the most, air and fire the fewest.
 *Healer.* Water priests who answer to the needs of the dying more than to the
 temples. They pray to the cosmos as well as to water, so they have the cures
 and other spells only druids are given, Cure Serious and Critical Wounds and
-Raise Dead among them, but no other element answers them, not even if they
+Raise Dead among them (never the harming ones), but no other element answers them, not even if they
 take up another calling: a Healer who becomes a ranger serves water.
 They keep a free hand for the work and won't fill it with a weapon.
 
@@ -770,7 +773,8 @@ but they rarely stop long enough to armour themselves properly.
 
 *Lifebinder.* Druids devoted to the life in what defilers have left behind,
 mending wounds as they would mend a dying field. They fight only with blunt
-weapons, which wound without spilling blood.
+weapons, which wound without spilling blood, and never learn the spells that
+harm.
 
 Each kit's gains, costs and starting gear:
 [Druid kits](KITS.md#druid-kits) on the Kits page.
@@ -786,8 +790,8 @@ Each kit's gains, costs and starting gear:
   ([which](KITS.md#kits-that-rule-out-classes-and-each-other)).
 
 **Magic weapons.** Every one but Great Axe +3 and Headsman\*. A **Grove
-Warden** none of the metal ones (Dragonsbane, El's Drinker, Greenbright\*,
-Shadowseeker\*, Dag's Dagger, Galefang\*, Soulcrusher, Axe +1, Linebreaker\*, Ironwhirl\*);
+Warden** only those its sphere allows, as a cleric of that sphere ([what each
+class may use](#what-each-class-may-use));
 a **Lifebinder** only Mace +2, Blackmace +1, the three quarterstaffs,
 Gutterknot\* +1, the slings and Windlash\*.
 
@@ -857,7 +861,8 @@ below, say who takes each kit on Athas.
 
 - The **Myrmidon** is given the polearm as its second weapon spec, and the **Battle Mage**,
   **Crusader** and **Mind Warrior** their one (a melee weapon; a thri-kreen
-  Mind Warrior may take the chatkcha), in the weapon window after DONE, and the **Elementalist** its second sphere on the CLERICAL SPHERE
+  Mind Warrior may take the chatkcha), the **Swashbuckler** its weapon of choice
+  (long sword, dagger or short sword), in the weapon window after DONE, and the **Elementalist** its second sphere on the CLERICAL SPHERE
   list.
 - A kit belongs to its class: a human who changes class keeps it, asleep until
   the new class's level passes the old. **One kit a character:** a human with a
@@ -973,12 +978,15 @@ ranger level). 3/2 means one attack one round and two the next.
 | grand mastery (9th level on) | | 3 | | 5 | | 3 |
 | a **Crusader** or **Mind Warrior** (by its cleric or psionicist level), its chosen weapon spec | 3/2 | 2 | | | | |
 | a thri-kreen **Mind Warrior**, the chatkcha as its chosen weapon spec (by its fighter, gladiator or ranger level, if any) | | | | | 3/2 | 2 |
-| a **Crusader** or **Mind Warrior**, any other weapon | 1 | 3/2 | 2 | 2 | 1 | 1 |
+| a **Crusader** or **Mind Warrior**, any other weapon | 1 | 1 | 2 | 2 | 1 | 1 |
 | a **Battle Mage** (by its preserver level), its chosen weapon spec | 3/2 | 2 | | | | |
 | a **Battle Mage**, any other weapon | 1 | 1 | 2 | 2 | 1 | 1 |
 
 For the three kits the level is their own class's. Their chosen weapon spec
-is a melee weapon. With [two weapons](#two-weapons), the off hand attacks
+is a melee weapon. (With weapon specialization off, a Crusader or Mind Warrior
+has a warrior's 3/2 from 7th level with any melee weapon instead.) The
+**Swashbuckler** picks a weapon of choice (long sword, dagger or short sword):
+a warrior's THAC0 with it, no specialization's bonus or attacks. With [two weapons](#two-weapons), the off hand attacks
 once a round whatever the rate. A thri-kreen throws a chatkcha once more a round
 than the table says (AD&D's 2/1 for the thri-kreen's own weapon).
 
@@ -1576,7 +1584,9 @@ limits:
 
 **Priests' spells.** Every cleric, druid and ranger has the common ones of the
 levels it can cast; druids alone (and a cleric with the Healer kit) have the
-common 4th and 5th-level ones; and each has its own element's.
+common 4th and 5th-level ones; and each has its own element's. A Healer or
+Lifebinder never knows the harming ones: the Cause spells, Cause Disease,
+Poison, Slay Living and Harm.
 
 | Level | Every priest | Druids only |
 |---|---|---|
@@ -2031,8 +2041,9 @@ Some changes have no switch and are always on: the keys **T** and **Shift+T**
 (looting), **S** (selling), **M**, **U** and **I**
 ([controls](FEATURES.md#controls)), what the game's own screens show
 ([always on](FEATURES.md#always-on)), the fixes to [the game's own
-bugs](GAME-BUGS.md) and the footman's pick's 1d6+1 ([creature
-size](FEATURES.md#creature-size)).
+bugs](GAME-BUGS.md), the footman's pick's 1d6+1 ([creature
+size](FEATURES.md#creature-size)) and AD&D's [two-weapon](#two-weapons)
+penalties.
 
 **In the game**
 

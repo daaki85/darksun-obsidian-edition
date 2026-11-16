@@ -176,8 +176,9 @@ memory fixes in [DEVELOPMENT.md](DEVELOPMENT.md#room-in-the-helper), and the row
 ## Rules it got wrong, with a switch
 
 Most of the [rule changes](FEATURES.md#rule-changes) put right a rule the game gets wrong: it
-departs from its own manual, from itself, or from the Player's Handbook it follows. Each has a
-switch on the Options tab, on by default, so the game's own rule is still there to go back to. (The
+departs from its own manual, from itself, or from the Player's Handbook it follows. Each but
+two weapons (always on) has a switch on the Options tab, on by default, so the game's own rule is
+still there to go back to. (The
 rule changes that are the mod's own choices, not corrections, are left out: helms' AC, resting, the
 XP level cap, hit dice, creation scores, half-giants' weapons, creature size, weapon traits (cahulaks, stinkpots, polearm reach) and ages.)
 
@@ -185,7 +186,7 @@ XP level cap, hit dice, creation scores, half-giants' weapons, creature size, we
 |---|---|---|---|
 | Saves against spells | Petrification or polymorph for almost every spell | The save against spells | [Saving throws against spells](FEATURES.md#spells-saved-against-with-the-spell-save) |
 | Fire, cold and electricity | The save's d20 doubled (70% to save a Fireball where 35% is due), which the manual and AD&D don't have | DEX's adjustment | [Saving throws against spells](FEATURES.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20) |
-| Spells, psionics and monsters | Saves, times, damage and effects that part from its own manual (pp. 29-44) | As the manual has them | [As the manual describes them](FEATURES.md#spells-and-psionics-as-the-manual-describes-them) |
+| Spells, psionics and monsters | Saves, times, damage and effects that part from its own manual (pp. 30-86: the bestiary, spells and psionics) | As the manual has them | [As the manual describes them](FEATURES.md#spells-and-psionics-as-the-manual-describes-them) |
 | Turn Undead | A d20 against a number of its own, a row too easy for 2- and 3-HD undead and a row too hard for 5 HD; a success destroys, there is no fleeing, and a priest may try the same undead as often as they like | AD&D's turning table: undead turned flee for 3d4 rounds, D destroys, D* destroys more of the kind, "---" no chance; a priest who fails can't try that undead again that fight ([the table](HOW-THE-GAME-WORKS.md#adds-turning-table)) | [As the manual describes them](FEATURES.md#spells-and-psionics-as-the-manual-describes-them) (it goes with the spells' switch) |
 | Missile and touch spells | Every one lands, every time | They roll to hit ("as if fired by a fighter") | [Spells roll to hit](FEATURES.md#spells-roll-to-hit) |
 | Enlarge | Grows the whole hit, STR's bonus and magic's too, rounded down | The weapon's dice grow, rounded up; STR, class and magic aren't altered (Player's Handbook p. 173) | [Enlarge](FEATURES.md#enlarge-multiplies-the-weapons-dice-only) |
@@ -196,7 +197,7 @@ XP level cap, hit dice, creation scores, half-giants' weapons, creature size, we
 | Multiclass hit points | CON's bonus once a level | CON's bonus on every hit die, the total shared | [Multiclass hit points](FEATURES.md#multiclass-hit-points) |
 | Class tables | Priests' THAC0 a level early, short spell slots, a little too little XP for 2nd level | AD&D's tables | [AD&D's class tables](FEATURES.md#adds-class-tables) |
 | CON 20 and up | A hit point back every 5 minutes at any CON; CON's adjustment on a dwarf's or halfling's poison save | AD&D's rate (one an hour at CON 20, one every 10 minutes at 25); the racial bonus only | [CON as in AD&D](FEATURES.md#con-as-in-add) |
-| Two weapons | No penalty (a small bonus at DEX 5 or less), the full rate in each hand | -2 and -4, DEX's adjustment, one attack with the off hand | [Two weapons](FEATURES.md#two-weapons) |
+| Two weapons | No penalty (a small bonus at DEX 5 or less), the full rate in each hand | -2 and -4, DEX's adjustment, one attack with the off hand (always on: no switch) | [Two weapons](FEATURES.md#two-weapons) |
 | Warriors' attacks | 3/2 with any weapon | The plain rate outside a specialization | [Weapon specialization](FEATURES.md#weapon-specialization) |
 | Held and Out Cold targets | A roll to hit as ever, and double damage | A hit automatically, for normal damage | [Held targets](FEATURES.md#held-targets) |
 | Acid on armour | The item destroyed outright | Each item saves by its material | [Items saving against acid](FEATURES.md#items-saving-against-acid) |
