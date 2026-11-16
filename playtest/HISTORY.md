@@ -330,3 +330,11 @@ file name. The others, by the day they were found:
   its GIF; bodies under the party's figures and Caps Lock; the grate's Hack for the first melee
   weapon in either hand; the installers' public links removed; Kurzak's door barred on the walk
   map (`doorwatch.py`); psionic powers picked at creation, DROP and ADD from the roster.
+
+## The outfit prototype's first look in the game (2026-11-16)
+
+The class-outfit pictures (`prototypes/outfits.py`) were first put into each party object's own
+pair of pictures in the Loader's copy of SEGOBJEX.GFF, and the game, run without the Loader so
+that it would not dress the figures again, drew the party as ever: without the Loader the game
+draws the figure's own picture (2095...), not the pair. `outfitgame.py` writes both. The log:
+logs/2026-11-16-outfit-look.md.

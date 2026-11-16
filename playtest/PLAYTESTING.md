@@ -1090,6 +1090,29 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
   icons are loaded through the same cache and let go once drawn, so at 300 slots they are free for
   reuse. PIC_REUSE searches round from after the last slot it reused ([why](HISTORY.md#slot-reuse-and-the-inventorys-icons)).
 
+## The outfit prototype in the game (outfitgame.py)
+
+- `prototypes/outfits.py`'s pictures are not the Loader's: to see them in the game they are put
+  into the Loader's copy of SEGOBJEX.GFF between the Loader writing it and DOSBox opening it, and
+  the game is run with no Loader attached (it would dress the figures again):
+  `PT_NO_LOADER=1 PT_AFTER_PREPARE="python3 outfitgame.py 300=Mage,305=Thief,308=Priest" sh
+  loadsave.sh pens-after-arena` (`all=Warrior` for every figure). `start.sh` runs
+  `PT_AFTER_PREPARE` in `playtest/` after `prepare_patched_game`, and with `PT_NO_LOADER` stops
+  before the dice log (so `dice.txt` is not written and nothing of the Loader's runs).
+  loadsave.sh shows only start.sh's last line: send the command's output to a file to read it.
+- **With no Loader attached the game draws a party member from the game's own picture of its
+  figure** (the human man's 2095/2096...), not from the object's own pair in the copy (2450 and
+  on, `sprites.picture_ids`): pictures put only into the pair don't show. outfitgame.py writes
+  both, so everyone of that figure wears the outfit (Kurzak, a half-giant, has a picture of his
+  own and doesn't).
+- `pens-after-arena`'s party: a human man (object 300), an elf woman (Cilla, 305), a half-giant
+  man (308) and a thri-kreen (313).
+- A picture 8 pixels wider each side and taller than the game's own draws in its place without
+  being cut (it stands on its bottom edge, its middle on the figure's): nothing under the feet.
+- A click on a wall shows the no-walk pointer and moves nobody: click the floor.
+- Grabbing a walk: `import -window $W` every quarter second from half a second after the click;
+  the party crosses the hall in about two seconds, so most grabs are of it standing.
+
 ## Frame rate and cycles (framerate.py)
 
 `python3 framerate.py 20` walks the party back and forth (screen 40,104 to 280,104, a click every
