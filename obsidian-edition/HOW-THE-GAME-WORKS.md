@@ -10,9 +10,7 @@ play. The dice log shows each as it happens, and the [rule
 changes](FEATURES.md#rule-changes) change some of it. Several findings were
 first pointed out by the notes of
 [yuan-ti](https://github.com/CalvinRodo/yuan-ti), CalvinRodo's new engine for
-the game, and checked here in the game's own code. One section is the mod's own: the detail of
-[Spells and psionics as the manual describes
-them](#spells-and-psionics-as-the-manual-describes-them), beside the game's spells and powers.
+the game, and checked here in the game's own code.
 
 ## Contents
 
@@ -116,9 +114,7 @@ the most its dice can do, which a helpless target takes instead.
 With [Held targets as in AD&D](FEATURES.md#held-targets) ticked (the default) the mod has such a
 blow hit automatically for normal damage instead, as AD&D's 2nd edition does.
 
-The dice log shows the blow's x2 (`x2 Paralyzed: a helpless target takes double`), and a
-Poisoner's hit on a helpless target, whose poison has no save to show, as `is poisoned by the
-hit: Poison (10 damage), no saving throw (Paralyzed)`, followed by the 10 when it lands.
+The dice log shows the blow's x2 (`x2 Paralyzed: a helpless target takes double`).
 
 ## The game's two weapons
 

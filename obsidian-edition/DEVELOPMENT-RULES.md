@@ -1931,6 +1931,17 @@ How each of these is done:
   takes it back (`EL_CLICK`: the sheet's kit byte `KIT_OPEN`, the click the game's); after DUAL,
   `DK_BANNED` leaves it off the menu for a cleric not of water (`kits.dual_kit_banned`).
 
+The pairs `KIT_PAIRS` bars, from when a human could take a kit for each class (up to 2.17; a
+character has one kit now, so they meet only in older saves' characters):
+
+| Kit | Can't go with | Why |
+|---|---|---|
+| Arena Champion, Sentinel | Shinobi, Twin-blade, Ravager | one needs a shield, the other forbids it (the Ravager's AC too) |
+| Twin-blade | Healer | two weapons, and an off hand free of them |
+| Brute | Shinobi, Lifebinder | a two-handed weapon, and weapons that can't be one |
+| Ravager | Grove Warden | each has an AC of its own that betters with level: one on top of the other would stack |
+| Swashbuckler, Crusader, Battle Mage, Mind Warrior | each other | each gives a warrior's THAC0: two would be one wasted |
+
 Every kit also needs its Python side: the Characters tab and the in-game
 THAC0 and saves (`game.py`), the dice log's lines, and tests that hold the
 helper's code (emulated) to the Python.

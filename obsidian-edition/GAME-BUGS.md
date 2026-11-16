@@ -39,7 +39,7 @@ memory fixes in [DEVELOPMENT.md](DEVELOPMENT.md#room-in-the-helper), and the row
 
 ### Wrong numbers
 
-| | The game | With the Loader |
+| Bug | The game | With the Loader |
 |---|---|---|
 | **Cause Serious and Critical Wounds** | 2d9 and 3d9 (the Cure spells heal AD&D's 2d8+1 and 3d8+3) | 2d8+1 and 3d8+3 |
 | **Slay Living**'s description | Said a creature that saves takes 3 to 17 | Says 2 to 16 (half of 4d8), what the game does |
@@ -47,7 +47,7 @@ memory fixes in [DEVELOPMENT.md](DEVELOPMENT.md#room-in-the-helper), and the row
 
 ### Saving throws
 
-| | The game | With the Loader |
+| Bug | The game | With the Loader |
 |---|---|---|
 | **Negative Plane Protection** | Saved as against Vampiric Touch, which allows no save, so it never stopped anything | A save against paralysis, poison and death, as AD&D's against death magic: saved, the undead's touch is stopped and it takes 2d6 |
 | **Scare**'s save | No one saved, of any level (a 7th-level fighter was Scared): its record allowed no save, so the save code's rules for it never ran; and those asked for an elf or half-elf priest as one creature of both races | 6th level and up always save, as the game's code means; below 6th level creatures can't save (whatever the Options: the fix below makes "can't save" fail), but an elf or half-elf priest saves as usual |
@@ -56,7 +56,7 @@ memory fixes in [DEVELOPMENT.md](DEVELOPMENT.md#room-in-the-helper), and the row
 
 ### Effects that did the wrong thing
 
-| | The game | With the Loader |
+| Bug | The game | With the Loader |
 |---|---|---|
 | **Mirror Image** (and Reflected Image) | The images stopped no weapon blow, and took a spell for one creature three times in four whoever cast it: Armor cast on oneself was lost, an image with it | Each hit, and each foe's spell for one creature, strikes an image three times in four (Reflected Image's half the time); your own side's spells always get through ([how long it lasts](HOW-THE-GAME-WORKS.md#spells-and-effects)) |
 | **Armor** | A charge used each time any spell or blow landed on the wearer, as well as for the damage: two for each hit, and one for a friend's Bless | One charge for each damaging hit |
@@ -72,7 +72,7 @@ memory fixes in [DEVELOPMENT.md](DEVELOPMENT.md#room-in-the-helper), and the row
 
 ### Sides and blows
 
-| | The game | With the Loader |
+| Bug | The game | With the Loader |
 |---|---|---|
 | A **berserk** or **confused** party member | Could end it fighting for the monsters' side: their side is rolled each turn, and only a charm's end put it back | Back on their own side when it ends |
 | **Missiles from behind** | An arrow or a sling stone counted as from behind by the target's facing, at any distance: +2 to hit, and the target's DEX and shield lost, for a whole room's width (a ranger's three arrows each) | Only melee is from behind by the target's facing; a missile counts so only as a hidden archer's shot, "unseen" ([hiding in shadows](FEATURES.md#hiding-in-shadows-to-backstab)) |
@@ -82,7 +82,7 @@ memory fixes in [DEVELOPMENT.md](DEVELOPMENT.md#room-in-the-helper), and the row
 
 ### Who turns up, and how
 
-| | The game | With the Loader |
+| Bug | The game | With the Loader |
 |---|---|---|
 | The game's **people's weapons and armour** | Carried in their packs until each one's first action in a fight: until then AC 10, armour unworn, no weapon in the Look box; anyone hit before acting (an opening blow, a backstab, the first round) met no armour | Worn and in hand as they come on the map, as the game puts them on: the best weapon in the main hand, a shield or a second weapon in the other, a bow and its arrows, armour and a helm. The mod also puts on a cloak, a belt, boots, an amulet and up to two rings, which the game never did. Each counts by the same rules as the party's |
 | **Random monsters** (a vanishing body, a survivor's warning) | How many came was worked out from the wrong monster's strength, and in seven regions the last monster on the list divided by 0, which ended the game ("Divide error") | Worked out from the monster that comes: 1 to 6, fewer of the strong ones |
@@ -90,7 +90,7 @@ memory fixes in [DEVELOPMENT.md](DEVELOPMENT.md#room-in-the-helper), and the row
 
 ### Resting
 
-| | The game | With the Loader |
+| Bug | The game | With the Loader |
 |---|---|---|
 | **Resting while poisoned** with a druid of 7th level or more | The druid's free Neutralize Poison at the rest was cast after the rest had already looked at who was poisoned, so the poisoned member died anyway (and a disease cured at a rest gave STR back only at the next) | The free cures come first: a 7th-level druid's cure saves the poisoned member, and STR comes back the rest a disease is cured ([resting](HOW-THE-GAME-WORKS.md#resting)) |
 
@@ -98,7 +98,7 @@ memory fixes in [DEVELOPMENT.md](DEVELOPMENT.md#room-in-the-helper), and the row
 
 ### Making and keeping characters
 
-| | The game | With the Loader |
+| Bug | The game | With the Loader |
 |---|---|---|
 | **DELETE** in the roster | Deleted the character in the row clicked counting from the top of the list, not from the top of what was shown, so with the list scrolled down another character was deleted | Deletes the one chosen ([how](DEVELOPMENT-SCREENS.md#more-characters)) |
 | The **creation screen's least scores** | The class's prime requisite raised to 17 and every other score to 9 to 14, against the manual: a fighter's STR never below 17, a thief's CHA never below 9, while a druid's CHA, a ranger's STR and DEX and a psionicist's CON had no minimum of their own | The manual's: cleric WIS 9; druid WIS 12, CHA 15; fighter STR 9; gladiator STR 13, DEX 12, CON 15; preserver INT 9; psionicist CON 11, INT 12, WIS 15; ranger STR 13, DEX 13, CON 14, WIS 14; thief DEX 9; a multiclass character the highest of their classes' ([character creation](HOW-THE-GAME-WORKS.md#character-creation)) |
@@ -106,7 +106,7 @@ memory fixes in [DEVELOPMENT.md](DEVELOPMENT.md#room-in-the-helper), and the row
 
 ### Thief skills
 
-| | The game | With the Loader |
+| Bug | The game | With the Loader |
 |---|---|---|
 | A **New** character's thief skills | A character made with CREATE CHARACTERS is New until the game starts, when the game makes it Okay; the game's tests for Okay left New out, so a New thief's skills all showed 0 on the inventory screen | The patched game and the Loader count New as Okay wherever they test for Okay; the status under the portrait still reads New, and the game still makes New characters Okay when it starts |
 | **Thief skills**' equipment penalty | Taken for anything in the hands, quiver or leg slot (a weapon held cost 5 to 10 points), never for the armour worn | None ([how the game works out thief skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)) |
@@ -114,7 +114,7 @@ memory fixes in [DEVELOPMENT.md](DEVELOPMENT.md#room-in-the-helper), and the row
 
 ### Items
 
-| | The game | With the Loader |
+| Bug | The game | With the Loader |
 |---|---|---|
 | Items that raise or lower an **ability score** | Changed the score wherever they were, the backpack too, so one carried did as much as one worn | Only while worn ([how](DEVELOPMENT-CONTENT.md#worn-items-the-gladiators-armour-and-psionic-blast)) |
 | The **gladiator's armour optimisation** (AC 1 better a 5 gladiator levels) | Given with no armour on, where Dark Sun gives it to armour worn | Only with armour on (arms, legs, head or chest; not a shield, bracers or a robe) |
@@ -128,7 +128,7 @@ memory fixes in [DEVELOPMENT.md](DEVELOPMENT.md#room-in-the-helper), and the row
 
 ### Numbers and pointers on screen
 
-| | The game | With the Loader |
+| Bug | The game | With the Loader |
 |---|---|---|
 | **View Character's DAM line** with a wooden, bone, stone or obsidian weapon | One or two more than the attack does: it left out the weaker material's damage (2 for wood, 1 for the others, on a weapon with no plus), which the inventory's line and the attack take off | The same as the inventory's and the attack's |
 | The **DAM lines** of a **hasted** or **slowed** character (the inventory screen, View Character) | The attacks a round as if neither: a fight's attack doubles them for Haste and halves them for Slow, but the lines never did, and the inventory's showed half an attack a round (Slow's) as one | Twice, or half, as the attack has them (`3x1D8+13` hasted, `0.5x1D8+6` slowed), as on the Loader's Characters tab |
@@ -138,7 +138,7 @@ memory fixes in [DEVELOPMENT.md](DEVELOPMENT.md#room-in-the-helper), and the row
 
 ### Pictures and memory
 
-| | The game | With the Loader |
+| Bug | The game | With the Loader |
 |---|---|---|
 | **Graphics disappearing in a busy area** (SSI's note 2712 for Wake of the Ravager, the same engine) | The game keeps 300 picture slots for walls, doors, figures and items lying about, and gives none back until the next area: once a visit had used 300 (items of many kinds dropped, bodies, spells, new monsters), a new picture got no slot and wasn't drawn: an item on the ground, a body, a figure, a doorway | Once all 300 are taken, a slot holding a picture nothing uses now (out of memory, named by no wall or thing on the map) is reused, its picture put where it fits in the store (a different limit from the picture store [the party's outfits](FEATURES.md#what-the-party-wears) fill) ([how](DEVELOPMENT-CONTENT.md#graphics-disappearing-in-a-busy-area)) |
 | A magic item's **glow in a shop** | Stood still: a shop runs its own loop, which never turned the colours that make it shine | Shines, as on the map and in the inventory |
@@ -148,7 +148,7 @@ memory fixes in [DEVELOPMENT.md](DEVELOPMENT.md#room-in-the-helper), and the row
 
 ### Scripts that stuck, or ran twice
 
-| | The game | With the Loader |
+| Bug | The game | With the Loader |
 |---|---|---|
 | **The Trustee** in the slave pens | His rounds' two pauses took their corner from numbers other scripts in the pens change, so he could set off for a spot that doesn't exist and stay busy ("I'd love to talk more...") for good. And his key, picked in his talk by a thief with no room for it, fell at his feet: after each step of his rounds he went back for it ("There it is!") without picking it up, and stalled the same way | The pauses keep a corner of their own, and his busy line starts his rounds again, so one already stuck walks on once talked to; the key stays where it lies, for the party to pick up, and he says the busy line once and walks on; and a save made while he (or anyone on rounds of their own) walked no longer leaves him standing when loaded |
 | **Kurzak's door** in the slave pens (the entryway to his stop) | It could stand open, both its leaves drawn open, while the map the walkers use still had its doorway shut: the party couldn't step in, and Legcrusher, sent to fetch them, stood still for good (a user's save) | Once its leaves have stood open over a shut doorway for 10 seconds of game time, out of a fight, the doorway opens on that map too; in that save Legcrusher walked through at once |
@@ -165,7 +165,7 @@ memory fixes in [DEVELOPMENT.md](DEVELOPMENT.md#room-in-the-helper), and the row
 
 ### Who is talking: class, race and sex
 
-| | The game | With the Loader |
+| Bug | The game | With the Loader |
 |---|---|---|
 | A **ranger tracking** at the Wagon Train's bodies | The check looked for the ranger's flag where the character's record isn't, so found no ranger; it tested a ranger's level as a bit of its class; and the d20 had to beat the score, not come under it: "You cannot interpret the tracks surrounding the body" | A ranger reads the tracks on a d20 under its score (WIS, more at higher ranger levels), for XP |
 | A **multi-class preserver or psionicist** talking about the haystack | The talk tested the class as the whole class word, so only a single-class one could answer "Being a powerful magician, I scried it" or "I can read your very thoughts" | Any preserver or psionicist |
@@ -182,7 +182,7 @@ still there to go back to. (The
 rule changes that are the mod's own choices, not corrections, are left out: helms' AC, resting, the
 XP level cap, hit dice, creation scores, half-giants' weapons, creature size, weapon traits (cahulaks, stinkpots, polearm reach) and ages.)
 
-| Rule | The game | The rulebook | Switch |
+| Rule | The game | As it should be | Switch |
 |---|---|---|---|
 | Saves against spells | Petrification or polymorph for almost every spell | The save against spells | [Saving throws against spells](FEATURES.md#spells-saved-against-with-the-spell-save) |
 | Fire, cold and electricity | The save's d20 doubled (70% to save a Fireball where 35% is due), which the manual and AD&D don't have | DEX's adjustment | [Saving throws against spells](FEATURES.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20) |

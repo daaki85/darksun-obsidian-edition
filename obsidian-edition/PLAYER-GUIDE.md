@@ -18,8 +18,7 @@ keys (T, S, M, U, I), the fixes to the game's own bugs and AD&D's two-weapon
 penalties. Where it helps to know what a
 switch changes, a **Without the mod** note says what the game does with it off.
 The [features page](FEATURES.md) has every rule in full detail, and the
-[Kits](KITS.md) page each kit's numbers: the guide links to their tables. The Loader's **Help**
-button opens the manual: this guide and the other pages as web pages, in the `manual` folder.
+[Kits](KITS.md) page each kit's numbers: the guide links to their tables.
 
 ## Contents
 
@@ -80,6 +79,8 @@ button opens the manual: this guide and the other pages as web pages, in the `ma
    chosen when a character is made. The game's own four, used when you make
    none, are given weapon specs to suit them, and with kits on, a kit or
    features of their own (see [Multiclass kits](#multiclass-kits)).
+4. Before the first fight, skim [Worth knowing](#worth-knowing): the few things that cost a
+   party dearly when learnt the hard way.
 
 Already playing? Saves made before the mod load and play with its fixes and
 rules, but kits, fuller starting gear and much of the new content come with a

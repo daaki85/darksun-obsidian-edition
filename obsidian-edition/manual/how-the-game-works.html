@@ -16,7 +16,7 @@
   <div class="eyebrow">Dark Sun: Shattered Lands · Obsidian Edition</div>
   <h1>How the game works</h1>
   <div class="intro"><p><em>Part of Obsidian Edition's documentation: the original game's own rules, for the curious, and the detail of one rule change (<a href="#spells-and-psionics-as-the-manual-describes-them">Spells and psionics as the manual describes them</a>). <a href="index.html">The README</a> is about the mod.</em></p>
-<p>What the game does that its manual doesn't say, from its code and checked in play. The dice log shows each as it happens, and the <a href="features.html#rule-changes">rule changes</a> change some of it. Several findings were first pointed out by the notes of <a href="https://github.com/CalvinRodo/yuan-ti">yuan-ti</a>, CalvinRodo's new engine for the game, and checked here in the game's own code. One section is the mod's own: the detail of <a href="#spells-and-psionics-as-the-manual-describes-them">Spells and psionics as the manual describes them</a>, beside the game's spells and powers.</p></div>
+<p>What the game does that its manual doesn't say, from its code and checked in play. The dice log shows each as it happens, and the <a href="features.html#rule-changes">rule changes</a> change some of it. Several findings were first pointed out by the notes of <a href="https://github.com/CalvinRodo/yuan-ti">yuan-ti</a>, CalvinRodo's new engine for the game, and checked here in the game's own code.</p></div>
 </header>
 <div class="wrap">
   <nav class="index" id="contents" aria-label="Contents">
@@ -42,7 +42,7 @@
 <h2 id="helpless-targets-take-double">Helpless targets take double</h2>
 <p>A creature that is <strong>Paralyzed</strong> (Hold Person, Hold Monster, a sand howler's gaze, Blood Flow...) or <strong>Out Cold</strong> takes <strong>double damage from every weapon blow</strong> that hits it, and makes no saving throw at all: it fails each one without a roll. The game's attack routine hands its damage routine two numbers, the damage and twice the damage, and the damage routine takes the second when its target is helpless; the save routine fails a helpless target before rolling. The x2 comes after a backstab's multiple (a backstab x3 on a held target is x6) and before Biofeedback's 2 off. The blow still has to hit: the d20 is rolled as ever (a held target is no easier to hit), and the manual says nothing of any of it. A spell's damage comes with its own second number, the most its dice can do, which a helpless target takes instead.</p>
 <p>With <a href="features.html#held-targets">Held targets as in AD&amp;D</a> ticked (the default) the mod has such a blow hit automatically for normal damage instead, as AD&amp;D's 2nd edition does.</p>
-<p>The dice log shows the blow's x2 (<code>x2 Paralyzed: a helpless target takes double</code>), and a Poisoner's hit on a helpless target, whose poison has no save to show, as <code>is poisoned by the hit: Poison (10 damage), no saving throw (Paralyzed)</code>, followed by the 10 when it lands.</p>
+<p>The dice log shows the blow's x2 (<code>x2 Paralyzed: a helpless target takes double</code>).</p>
 </section>
 <section>
 <h2 id="the-games-two-weapons">The game's two weapons</h2>
