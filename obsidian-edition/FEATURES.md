@@ -366,7 +366,7 @@ points:
 
 - **THAC0**, right of the hit points: `THAC0: M18 R19`, M for melee and R for
   ranged, the character's THAC0 as its classes and kit stand (a Scholar's 1
-  worse, a Battle Mage's a warrior's...) less STR's to-hit adjustment (M) and
+  worse; a kit's warrior THAC0 counts only with its chosen weapon, so not here) less STR's to-hit adjustment (M) and
   DEX's missile adjustment (R), so a click on STR or DEX shows at once what it
   does to them. No weapon is counted (none is held yet, and weapon specs are
   picked after DONE): it is the inventory's THAC0 before the weapon's own
@@ -507,7 +507,8 @@ and [spells roll to hit](#spells-roll-to-hit).
 Most of these put right a rule the game gets wrong (it departs from its own manual, from itself or from
 the Player's Handbook), and count among [the game's bugs](GAME-BUGS.md#rules-it-got-wrong-with-a-switch),
 with the switch to go back. The rest are the mod's own choices: helms' AC, resting, the XP level cap, hit dice,
-creation scores, half-giants' weapons, creature size, cahulaks and ages.
+creation scores, half-giants' weapons, creature size, weapon traits (cahulaks, stinkpots, polearm
+reach), rings and cloaks of protection, and ages.
 
 ### Characters
 
@@ -1460,7 +1461,7 @@ fitted to these choices, come with them.
 | [Weapon specialization](#weapon-specialization) | fighters and gladiators specialize in weapon types, fighters on to mastery and grand mastery, rangers take expertise (and every ranger but a Seeker the bow); specialists and rangers shoot missiles faster; other weapons at a warrior's plain rate (missiles faster from 7th level) |
 | [Kits](#kits) | a character of one class takes one of three kits for its class, or none; a few races' pairs of classes (and one set of three) have kits of their own |
 | [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen) | a roll kept on the creation screen, to bring back after trying the die again |
-| [Fuller starting gear](#fuller-starting-gear) | new characters get more plain gear: a weapon in hand they can use, a sling, leather armour, and a Stalker, Assassin or Shinobi a cloak |
+| [Fuller starting gear](#fuller-starting-gear) | new characters get more plain gear: a weapon in hand they can use, a sling (a Battle Dancer a bow and arrows), leather armour, and a Stalker, Assassin or Shinobi a cloak |
 
 ### Weapon specialization
 
@@ -1500,7 +1501,7 @@ specs](KITS.md):
 The game's own party gets features of its own
 ([The game's own party](#the-games-own-party)).
 
-How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#kits).
+How it works: [DEVELOPMENT-KITS.md](DEVELOPMENT-KITS.md).
 
 ### STORE and RECALL on the creation screen
 
@@ -1537,7 +1538,7 @@ specs and kits have changed theirs, and the dice log lists it
   short sword, a fire cleric an obsidian mace, and an air cleric an obsidian
   dagger.
 - **A missile weapon.** A sling in the missile slot for one with no bow or
-  sling; an earth or fire cleric, who can't use one, an obsidian chatkcha in
+  sling (a Battle Dancer a bow and arrows: [its kit](KITS.md#multiclass-kits)); an earth or fire cleric, who can't use one, an obsidian chatkcha in
   the backpack (a water cleric neither).
 - **Leather armour** in its empty chest, arm and leg places, where it may wear
   it: a thief, gladiator, ranger, psionicist, cleric or Battle Mage goes out
@@ -1568,7 +1569,8 @@ clicked on the creation screen, in place of the ones the game handed out by
 its starting level: two 1st-level spells at 1st level (where the game gives
 Grease and Magic Missile), four at 2nd (the game adds Shield and Wall of
 Fog), and four 1st-level and two 2nd-level at 3rd (the game adds Fog Cloud and
-Mirror Image). A multiclass preserver picks too.
+Mirror Image). A multiclass preserver picks too, and a [Scholar](KITS.md#preserver-kits) one
+more for each level.
 
 **EXIT** on CHOOSE A SPELL (then EXIT again at "YOU HAVEN'T CHOSEN") ends the
 picking, at creation and on changing class: the spells still to pick are the

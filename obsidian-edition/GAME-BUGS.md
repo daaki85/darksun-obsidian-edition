@@ -177,11 +177,11 @@ memory fixes in [DEVELOPMENT.md](DEVELOPMENT.md#room-in-the-helper), and the row
 ## Rules it got wrong, with a switch
 
 Most of the [rule changes](FEATURES.md#rule-changes) put right a rule the game gets wrong: it
-departs from its own manual, from itself, or from the Player's Handbook it follows. Each but
-two weapons (always on) has a switch on the Options tab, on by default, so the game's own rule is
+departs from its own manual, from itself, or from the Player's Handbook it follows. Each, apart
+from two weapons (always on), has a switch on the Options tab, on by default, so the game's own rule is
 still there to go back to. (The
 rule changes that are the mod's own choices, not corrections, are left out: helms' AC, resting, the
-XP level cap, hit dice, creation scores, half-giants' weapons, creature size, weapon traits (cahulaks, stinkpots, polearm reach) and ages.)
+XP level cap, hit dice, creation scores, half-giants' weapons, creature size, weapon traits (cahulaks, stinkpots, polearm reach), rings and cloaks of protection, and ages.)
 
 | Rule | The game | As it should be | Switch |
 |---|---|---|---|

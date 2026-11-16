@@ -93,12 +93,11 @@ Belt of Might making STR at least 24.
 | ![](docs/items/chatkcha-plus1.png) | Obsidian | chatkcha | Chatkcha +1 | +1, Produce Fire | the Guardian |
 | ![](docs/items/bow-plus2.png) | Wooden | bow | Bow +2 | +2 | a skeleton in the Upper Castle |
 | ![](docs/items/phrains-bow.png) | Wooden | bow | Phrain's Bow | +1, Acid Arrow | a reward in the party's hut in Teaquetzl, once Gedron joins the alliance (with Arrows +2, a scroll and an orange) |
-| ![](docs/items/bow.png) | Wooden | bow | ***Fine Bow*** | a bow of fine make: +1 to hit, not magic (The Complete Fighter's Handbook's fine quality; the inventory's "Hit +1") | a [Spellarcher](KITS.md#multiclass-kits)'s, as it is made; no one else's, and sold by no one |
 | ![](docs/items/dunesong.png) | Wooden | bow | ***Dunesong*** | a bow +1, which the Bowyer's archery target counts as the game's own bows | sold by the **Bowyer** |
 | ![](docs/items/arrows-plus3.png) | Wooden | arrows | Arrows +3, +2, +1 | | +3 in chests; +2 from the Bowyer's archery target and Teaquetzl's rewards; +1 Kel, the Elven Leader and a bag in the slave pens |
 | ![](docs/items/chill-arrows.png) | Wooden | arrows | ***Chill Arrows*** | cast Chill Touch on what they hit (a save stops it, as the spell's; +1 from the Spellarcher's 5th preserver level, +2 from 9th) | made by a [Spellarcher](KITS.md#multiclass-kits) (its arrow buttons, one a spell slot; 24 to start with if it picked the spell as it was made), and carried by a Spellarcher only; worth nothing, they last until shot |
 | ![](docs/items/shocking-arrows.png) | Wooden | arrows | ***Shocking Arrows*** | cast Shocking Grasp on what they hit (no save, as the spell's; +1 from the Spellarcher's 5th preserver level, +2 from 9th) | the same |
-| ![](docs/items/vampiric-arrows.png) | Wooden | arrows | ***Vampiric Arrows*** | cast Vampiric Touch on what they hit (no save, as the spell's; +1 from the Spellarcher's 5th preserver level, +2 from 9th) | the same |
+| ![](docs/items/vampiric-arrows.png) | Wooden | arrows | ***Vampiric Arrows*** | cast Vampiric Touch on what they hit (no save, as the spell's; +1 from the Spellarcher's 5th preserver level, +2 from 9th) | made by a Spellarcher as the others (none to start with: a 3rd-level spell), and carried by a Spellarcher only |
 
 **By weapon spec**, for [weapon
 specialization](KITS.md#weapon-specialization), in the weapon window's order:
@@ -252,7 +251,7 @@ Springs; Deepbiter is its magic one.
 | ![](docs/items/metal-cahulaks.png) | cahulaks | metal | Weapon Merchant | the arena's champions (the mul) | **new**: the game's cahulaks, in metal; earth and air clerics may use them |
 | ![](docs/items/obsidian-cahulaks.png) | cahulaks | obsidian | Jark | Scar | **new**: the game's cahulaks, in obsidian: earth, fire and air clerics may use them; an earth or fire cleric-warrior's starting cahulaks |
 | ![](docs/items/chatkcha.png) | chatkcha | obsidian | Jark, Bowyer | — |  |
-| ![](docs/items/bow.png) | bow | wood | Jark, Kel, Bowyer | Wyvern Master, Ranger, Arant, Castle Guard, Guard, Arant's Guard, Arena Guard, Caravan Guard, Slaver Guard, Elven Leader, Uzoma, Drajian Guard, Army Commander, Elite Guard, Village Hero, a chest in the Upper Castle, a chest, a chest in Dagolar's tunnels, the arena's champions (the elf), Arant's lazy guard (the mod's) |  |
+| ![](docs/items/bow.png) | bow | wood | Jark, Kel, Bowyer | Wyvern Master, Ranger, Arant, Castle Guard, Guard, Arant's Guard, Arena Guard, Caravan Guard, Slaver Guard, Elven Leader, Uzoma, Drajian Guard, Army Commander, Elite Guard, Village Hero, a chest in the Upper Castle, a chest, a chest in Dagolar's tunnels, the arena's champions (the elf), Arant's lazy guard (the mod's) | ***Fine Bow***: a bow of fine make, +1 to hit, not magic (The Complete Fighter's Handbook's fine quality; its item box's "Hit +1"), a [Spellarcher](KITS.md#multiclass-kits)'s as it is made, sold by no one |
 | ![](docs/items/sling.png) | sling | leather | Bowyer | Mehtar, Renegade, Silt Runner, a chest in the slave pens, a bag in the slave pens, the arena's champions (the halfling) |  |
 | ![](docs/items/staff-sling.png) | staff sling | leather | Jark, Bowyer | — | throws stinkpots with [the rule](FEATURES.md#staff-sling-stinkpots): 1d3 (the game's 1d4), and a target hit saves against poison or is nauseated, −2 to hit for 1d3+1 rounds |
 
