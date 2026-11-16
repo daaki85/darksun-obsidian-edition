@@ -69,12 +69,12 @@ where the saves go](obsidian-edition/README.md#updating-backups-saved-games-and-
 
 ## What's new
 
-**Obsidian Edition 2.17.1** is out ([release notes](release-notes/v2.17.1.md)):
-corrections to the documentation after an audit of 2.17.0. 2.17.0
-brought psionic powers picked when a character is made, the player's manual
-as linked web pages in the download (Help opens it), a pocket barred until a
-level only when the thief is caught, a ranger asked for a weapon of expertise,
-Kalzith's new past, and Kurzak's door no longer barring the way.
+**Obsidian Edition 2.18.0** is out ([release notes](release-notes/v2.18.0.md)):
+the kits rebalanced, each closer to its source book (one kit a character; a warrior's THAC0 with
+the chosen weapon only; the Arcanist, Scholar, Myrmidon, Poisoner, Sentinel, Wayfinder and others
+changed), the Spellarcher remade after *Dragon* #214 with a Fine Bow and arrows from the start, an
+archer's arrows left over its head and its turn kept when the quiver runs dry, and CHOOSE A SPELL's
+icons centred.
 
 What earlier releases brought is in their own notes, in
 [`release-notes`](release-notes).
