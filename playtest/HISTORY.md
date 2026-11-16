@@ -363,3 +363,11 @@ steps skipped it. With DSCLOG naming the character (GEAR_WHO) and holding the ro
 gear. Along the way: a worker restart killed Xvfb and DOSBox (restart both); clicks at the main
 menu did nothing until the mouse was captured (the guide's note); a kit row ignored its click
 because NO KIT was still marked; BackSpace in the name field does nothing (Delete does).
+
+2026-11-16 (logs/2026-11-16-roster-gear.md): a review of that fix found it only for weapon
+specialization on: with the rule off, CR_WEAPONS returned before naming the character, and kit and
+fuller starting gear still missed the roster. DSCLOG's GEAR_MARK names it there too. A Swashbuckler
+made with the rule off (Arm and Leg Armor from the Loader) and a Myrmidon with it on (the bone
+polearm in the backpack, the sling, specs long sword and polearm) were each ADDed after a restart
+with all of it. A worker restart between DONE and the ADD killed Xvfb and DOSBox again, which here
+served as the restart; the main menu took about 30 s after the title clicks.

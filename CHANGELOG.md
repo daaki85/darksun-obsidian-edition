@@ -193,7 +193,15 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   for its gear (up to about ten seconds). Checked in the game
   (playtest/logs/2026-11-15-kit-rebalance-checks.md part 7): two fighters, slots 1 and 2, given a
   short sword and sling, and a bow, arrows and short sword, ADDed after a restart with them. Tests:
-  `test_gear_hold`, `test_gear_due`, `test_being_new`. DSCLOG 70,640 bytes.
+  `test_gear_hold`, `test_gear_due`, `test_being_new`. With weapon specialization off,
+  `CR_WEAPONS` returned before naming the character, so `GEAR_HOLD` waited for nothing and the kit
+  gear and fuller starting gear (which need no weapon specialization) still missed the roster: the
+  new `GEAR_MARK` names it there too (not an EDIT that kept its race, classes and kit), and
+  `GEAR_HOLD` holds the write. Checked in the game (playtest/logs/2026-11-16-roster-gear.md): a
+  Swashbuckler made with the rule off, and the Myrmidon of the kit checks (long sword picked, the
+  bone polearm in the backpack, the sling), each ADDed after a restart with all of it and, the
+  Myrmidon, both weapon specs. Tests: `test_creation_weapons_site`,
+  `test_creation_gear_held_rule_off`. DSCLOG 70,688 bytes.
 - **An archer's turn lost with its last arrow** (the game's bug, the user's report): the weapon
   attack routine (5883Ah) cuts a shot's attacks ([BP-8]) to the arrows left (5899Ah; "Out of ammo"
   with none) and, once that many are made, writes 63h to the attacker's +181h (58C45h), which ends

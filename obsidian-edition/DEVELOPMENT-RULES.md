@@ -2099,8 +2099,12 @@ DSCLOG's `GEAR_HOLD` holds that write until the Loader has cleared `GEAR_DUE`
 `LOADER_BEAT` at +1865, which the dice log's stats thread writes every quarter
 second), and the Loader leaves `GEAR_DUE` set while the weapon window is up
 (the gear waits for the specs), as `GEAR_WAIT` (VIEW CHARACTER's) does on its
-own one-second timeout. So a character ADDed in a later session has the
-Loader's gear. What a character "can use" (`can_use`) is the game's class
+own one-second timeout. With weapon specialization off there is no weapon
+window, and `CR_WEAPONS`' `GEAR_MARK` names the character (`GEAR_WHO`,
+`GEAR_DUE`) before `GEAR_HOLD`, as its weapon window's way does after the
+picks; an EDIT that kept its race, classes and kit (`ED_SAME`) is not named.
+So a character ADDed in a later session has the Loader's gear, the rule on or
+off. What a character "can use" (`can_use`) is the game's class
 lists (or `restrict.kit_allows`) and, with the class restrictions on,
 `restrict.usable`; never what `restrict.kit_forbids`. In order:
 

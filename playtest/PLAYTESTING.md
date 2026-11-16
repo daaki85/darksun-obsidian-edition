@@ -607,10 +607,15 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   166,125); DROP asks YES (the first row); the last member can't be dropped ("LAST ONE: CAN'T
   DROP", OKAY). ADD lists the roster, the newest first (scroll with the arrow at 219,146; a name,
   then ADD 252,46). A dropped character's record stays in memory (`sheetinfo.py` still lists it).
-  **The roster keeps the character as the game wrote it at DONE**: what the Loader gives after
-  (`kinds_for`'s defaults, kit gear, fuller starting gear) is in memory only, and a character ADDed
-  in a later session has the game's own gear (the Myrmidon's polearm spec is DSCLOG's, written at
-  DONE: MYRM_POLEARM).
+  **The roster keeps the character as the game wrote it at DONE**, and DSCLOG holds that write
+  (GEAR_HOLD) for the Loader's creation gear, so a character ADDed in a later session has it, with
+  weapon specialization on or off (logs/2026-11-16-roster-gear.md). The list seen 2026-11-16: the
+  game's five (Garn, Aticus, Seneca, Deestan, Shandra), then the new ones at y 100, 111 (Myrmroll,
+  made second, above Swashroll): read the shot, not "the newest first". A check with a rule off:
+  set the key in `obsidian-edition/settings.json` (`"weapon_specialization": false`) before
+  `start.sh`, which keeps the other keys; take it out again after.
+- **The main menu after a fresh start** comes about 30 s after the two title clicks (2026-11-16): a
+  CREATE CHARACTERS click before it does nothing; shoot, then click again.
 - **Psionic powers at creation** (logs/2026-11-11-psionic-picks.md): after DONE (and a warrior's
   weapon window) PICK A PSIONIC POWER opens: icons from (123,62), 17 apart, five to a row (the
   list closes up after each pick: clicking (123,62) again takes the next); the discipline button
