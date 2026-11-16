@@ -4,7 +4,8 @@ Loader's is changed, and the copy is written afresh at the next start.
 
 A party member's figure is object 300 + the figure picked at creation (the Loader's copy gives
 each its own pair of pictures: sprites.picture_ids). OBJECT=OUTFIT replaces that object's walking
-and fighting pictures with the outfit's (Warrior, Thief, Priest, Mage; `all=Mage` for every one),
+and fighting pictures with the outfit's (Warrior, Thief, Priest, Mage; `all=Mage` for every one;
+`preset:Mage` for the gear-system preset of prototypes/presets.py instead),
 corrections by hand laid on, and the game's own pictures of that figure
 with them (with no Loader attached the game draws those: everyone of that figure wears the outfit). Run it between the Loader writing its copies and DOSBox opening
 them, and with no Loader attached (it would dress the figures again):
@@ -53,6 +54,17 @@ def main(argv):
         key = key_of(game, obj)
         if key is None:
             print(f"object {obj}: no figure to dress (a thri-kreen, or not in the game)")
+            continue
+        if outfit.lower().startswith("preset:"):  # (the gear's own drawing in a class's colours: prototypes/presets.py)
+            import presets
+            name = outfit.split(":")[1].lower()
+            i = next(n for n, p in enumerate(presets.PRESETS) if p.name.lower() == name)
+            pics = sprites.Pictures(game.chunks)
+            for k, chunk in enumerate(presets.pictures(pics, obj, i)):
+                added[("BMP ", sprites.picture_ids(obj)[k])] = chunk
+                if isinstance(key, int):
+                    added[("BMP ", key + k)] = chunk
+            print(f"object {obj}: {dict(O.FIGURES)[key]} in the {name} preset")
             continue
         walk, fight = game.full(key, npcs[outfit.lower()])
         for k, (pid, frames, top) in enumerate(zip(sprites.picture_ids(obj), (walk, fight), (4, 0))):

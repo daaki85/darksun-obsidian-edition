@@ -1105,6 +1105,8 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
   on, `sprites.picture_ids`): pictures put only into the pair don't show. outfitgame.py writes
   both, so everyone of that figure wears the outfit (Kurzak, a half-giant, has a picture of his
   own and doesn't).
+- `OBJECT=preset:CLASS` puts in `prototypes/presets.py`'s picture instead: the class as a preset of
+  the Loader's own gear drawing (clothes recoloured, boots, the fitted cloak), to compare.
 - `pens-after-arena`'s party: a human man (object 300), an elf woman (Cilla, 305), a half-giant
   man (308) and a thri-kreen (313).
 - A picture 8 pixels wider each side and taller than the game's own draws in its place without
