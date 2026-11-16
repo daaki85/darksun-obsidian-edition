@@ -393,7 +393,7 @@ class Viewer:
         # the game's Look box, on a monster in a fight: what hurts it, then all of it in a window
         self.monster_info = tk.BooleanVar(value=bool(settings.get("monster_info", True)))
         ttk.Checkbutton(in_game, text="What hurts a monster (the Look box): Look at one in a fight for its hit points, AC, "
-                        "THAC0 and defences, and the rest as the box closes",
+                        "THAC0 and defences; closing the box shows the rest in a window",
                         variable=self.monster_info, command=self._options_changed).pack(anchor="w", pady=(4, 0))
         # names floating over figures on the map for a moment (labels.py)
         self.floating_names = tk.BooleanVar(value=bool(settings.get("floating_names", True)))
@@ -485,14 +485,16 @@ class Viewer:
                 ("rest_heal", "magic", "Resting as in AD&D: priests and psionicists heal the party with what they have "
                                        "left, then each heals 3 hit points plus CON's bonus (the game fills them all)"),
                 ("weapon_specialization", None, "Weapon specialization: fighters and gladiators specialize, fighters on "
-                                                "to mastery and grand mastery, rangers take expertise (chosen after DONE "
-                                                "and at a level up)"),
-                ("kits", None, "Kits: three for each class and some for multiclass characters, each giving something "
-                               "and costing something (chosen on the creation panel's KIT page)"),
+                                                "to mastery and grand mastery, rangers and the Battle Mage, Crusader and "
+                                                "Mind Warrior take expertise, the Swashbuckler a weapon of choice "
+                                                "(chosen after DONE and at a level up)"),
+                ("kits", None, "Kits: three for each class and some for multiclass characters, one a character, each "
+                               "giving something and costing something (chosen on the creation panel's KIT "
+                               "page, or after DUAL by a human with none)"),
                 ("cha_prices", None, "Shops as in AD&D: the leader's CHA lowers what shops ask, shops pay 60%, and "
                                      "merchants keep the magical items sold them, to buy back"),
                 ("thief_table", None, "Thieves as in AD&D: thief skills from AD&D's table, a backstab multiplying the "
-                                      "weapon's dice only, a failed lock, or a pocket the thief was caught at, tried again only a level later"),
+                                      "weapon's dice only, a lock it failed, or a pocket it was caught at, tried again only a level later"),
                 ("stealth", None, "Hiding in shadows to backstab: thieves hide in shadows and move silently to backstab, "
                                   "rangers to attack from behind"),
                 ("new_spells", None, "New spells: six for wizards (Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, "
@@ -521,7 +523,7 @@ class Viewer:
 
         self.content_vars: Dict[str, tk.BooleanVar] = {}
         for key, text in (
-                ("kalzith", "Kalzith, a defiler slave in the slave pens who sells arcane scrolls (new games)"),
+                ("kalzith", "Kalzith, a defiler slave in the slave pens who sells arcane scrolls"),
                 ("semyon", "Semyon in the slave pens after he leaves the arena, and breaking out with Scar"),
                 ("vulture", "The cooked vulture: Dinos cooks it for the party (XP and a full rest)"),
                 ("defiler_scrolls", "Defilers' scrolls: a defiler in a fight carries a scroll of a random "
@@ -590,8 +592,8 @@ class Viewer:
                         "across, and in a window as fast as the desktop's pointer; from the next start",
                         variable=self.mouse_start, command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.party_spread = tk.BooleanVar(value=settings.get("party_spread", True) is not False)
-        ttk.Checkbutton(controls, text="The whole party in view as a game starts or loads and after each fight, as 5 "
-                        "does; from the next start",
+        ttk.Checkbutton(controls, text="The whole party in view as a game starts or loads and after each fight, as the 5 "
+                        "key does; from the next start",
                         variable=self.party_spread, command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.effects_kept = tk.BooleanVar(value=settings.get("effects_kept", True) is not False)
         ttk.Checkbutton(controls, text="Spells on the Effects screen: a click on a spell's icon leaves it on (the game "
@@ -880,8 +882,7 @@ class Viewer:
                 self.status.set(f"Not connected: {e}")
             self.next_try = time.monotonic() + RETRY_SECONDS
             return
-        self.status.set(f"Connected to DOSBox pid {self.guest.proc.pid}, "
-                        f"guest RAM {self.guest.size // (1024 * 1024)} MB at host {self.guest.base:#x}")
+        self.status.set(f"Connected to the game (DOSBox, process {self.guest.proc.pid})")
 
     def start_game(self) -> None:
         """Start Shattered Lands with the dice log, as "Start Game with Dice Log.bat" does; the
@@ -1117,7 +1118,7 @@ class Viewer:
             except OSError:
                 made = []
             if made:
-                self.status.set("Save copied: " + ", ".join(made))
+                self.status.set("Save copied to Named saves: " + ", ".join(made))
 
     def _auto_locate(self) -> None:
         """For Shattered Lands, point the party slots at the game's own tables."""

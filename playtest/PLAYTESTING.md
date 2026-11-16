@@ -1289,13 +1289,17 @@ and the faster drawing's: [HISTORY.md](HISTORY.md#frame-rate-measurements).
   (Triple), pick it in the box (the list opens below it; Triple is the third line): that writes
   `window_scale` 3 to settings.json, so set it back to 1 afterwards (`launch.save_settings`) or the
   next start.sh run's checks fail. The status line then says "from the next time you start the
-  game" in place of "Connected to DOSBox".
+  game" in place of "Connected to the game".
   **The window Loader holds `game.lock`** (logs/2026-11-10-loader-shots-and-chatkcha-line.md):
   - start.sh's text dice log, started beside the window, exits at once. `dice.txt` stays empty, and
     nothing sets the new game's own features (no WILD FIGHTING on the Effects screen).
   - To fix it: kill the window by pid first.
   - A tall picture of the Options tab needs a screen taller than the window: Xvfb `-screen 0
-    1400x3400x24`, then `xdotool windowsize W 1320 3300`.
+    1400x3400x24`, then `xdotool windowsize W 1320 3300` (`xdotool search --onlyvisible --name .`
+    finds the window: its title, "Dark Sun Obsidian Edition Loader ..."). The Options tab at
+    (1061,132); a section's header toggles it (Rule changes at 720,260 with all closed); the
+    picture is x 608-1314 from y 116 to under Restore defaults (2026-11-16: 706x1964, saved as a
+    256-colour PNG).
 - **The load window** (`docs/save-pages.png`): a save's name is its STXT chunk
   (`namedsaves.NAME_CHUNK`), a fixed field padded with zeros, so ten saves with plain names are the
   kept saves copied to `$PLAYTEST_WORK/inst/SAVE01-10.SAV` with that field rewritten in place

@@ -955,7 +955,7 @@ EXIT leaves the rest to the mod: the kit's own weapon (a Ghetto Fighter's
 dagger), a thri-kreen's chatkcha, else the long sword (a gladiator's second the
 club).
 
-![The level-up window: a picture of each weapon spec, the pointer on the dagger and SPECIALIZE IN / DAGGER under them, the specs this fire cleric/fighter can't use greyed](docs/weapon-picker.png)
+![The level-up window: a picture of each weapon spec, the pointer on the dagger and SPECIALIZE IN / DAGGER under them, the specs this fighter/fire cleric can't use greyed](docs/weapon-picker.png)
 
 | Who | Chooses | With a chosen weapon spec |
 |---|---|---|
@@ -2057,7 +2057,7 @@ penalties.
 | ... at the least: what came of each attack and spell | | at once | [The combat log in the game](FEATURES.md#the-combat-log-in-the-game) |
 | ... in short: each roll, what it needed and the damage | chosen | at once | [The combat log in the game](FEATURES.md#the-combat-log-in-the-game) |
 | ... in detail, as in the log | | at once | [The combat log in the game](FEATURES.md#the-combat-log-in-the-game) |
-| What hurts a monster (the Look box): Look at one in a fight for its hit points, AC, THAC0 and defences, and the rest as the box closes | on | at once | [What hurts a monster](FEATURES.md#what-hurts-a-monster-the-look-box) |
+| What hurts a monster (the Look box): Look at one in a fight for its hit points, AC, THAC0 and defences; closing the box shows the rest in a window | on | at once | [What hurts a monster](FEATURES.md#what-hurts-a-monster-the-look-box) |
 | Names over figures: a spell's name over its caster, "Miss" over whoever an attack missed, and a used charge ("Armor: 7 left") over its owner | on | at once | [Names over figures](FEATURES.md#names-over-figures) |
 
 **Rule changes: Characters**
@@ -2102,8 +2102,8 @@ penalties.
 
 | Loader label | Default | Takes effect | Details |
 |---|---|---|---|
-| Weapon specialization: fighters and gladiators specialize, fighters on to mastery and grand mastery, rangers take expertise (chosen after DONE and at a level up) | on | at once (picked after DONE; a warrior made before picks at its next level gained) | [Weapon specialization](FEATURES.md#weapon-specialization); [in full](KITS.md#weapon-specialization) |
-| Kits: three for each class and some for multiclass characters, each giving something and costing something (chosen on the creation panel's KIT page) | on | new characters | [Kits](FEATURES.md#kits); [every kit](KITS.md) |
+| Weapon specialization: fighters and gladiators specialize, fighters on to mastery and grand mastery, rangers and the Battle Mage, Crusader and Mind Warrior take expertise, the Swashbuckler a weapon of choice (chosen after DONE and at a level up) | on | at once (picked after DONE; a warrior made before picks at its next level gained) | [Weapon specialization](FEATURES.md#weapon-specialization); [in full](KITS.md#weapon-specialization) |
+| Kits: three for each class and some for multiclass characters, one a character, each giving something and costing something (chosen on the creation panel's KIT page, or after DUAL by a human with none) | on | new characters | [Kits](FEATURES.md#kits); [every kit](KITS.md) |
 | STORE and RECALL on the creation screen: keep a roll, try the die again, and bring the kept roll back (from the next start) | on | next start | [STORE and RECALL](FEATURES.md#store-and-recall-on-the-creation-screen) |
 | Fuller starting gear: new characters (and the game's own party) also get a weapon they can use, a sling, and leather armour where they may wear it | on | new characters (the game's own party: in a new game) | [Fuller starting gear](FEATURES.md#fuller-starting-gear) |
 
@@ -2117,7 +2117,7 @@ penalties.
 
 | Loader label | Default | Takes effect | Details |
 |---|---|---|---|
-| Thieves as in AD&D: thief skills from AD&D's table, a backstab multiplying the weapon's dice only, a failed lock, or a pocket the thief was caught at, tried again only a level later | on | at once | [Thief skills from AD&D's table](FEATURES.md#thief-skills-from-adds-table) |
+| Thieves as in AD&D: thief skills from AD&D's table, a backstab multiplying the weapon's dice only, a lock it failed, or a pocket it was caught at, tried again only a level later | on | at once | [Thief skills from AD&D's table](FEATURES.md#thief-skills-from-adds-table) |
 | Hiding in shadows to backstab: thieves hide in shadows and move silently to backstab, rangers to attack from behind | on | at once | [Hiding in shadows to backstab](FEATURES.md#hiding-in-shadows-to-backstab) |
 | ... a worn cloak adds 10 to hiding, worn boots 10 to moving silently, a worn belt 5 to picking pockets and opening locks | on | at once | [Hiding in shadows to backstab](FEATURES.md#hiding-in-shadows-to-backstab) |
 | Picking pockets: a thief's Pick Pockets button on the USE screen, then a click on anyone in sight (not in a fight), until caught | on | at once | [Picking pockets](FEATURES.md#picking-pockets) |
@@ -2130,7 +2130,7 @@ once.")
 | Loader label | Default | Takes effect | Details |
 |---|---|---|---|
 | New spells: six for wizards (Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook and Friends) and ten 6th-level priest spells (Heal, Harm, Blade Barrier...) | on | at once | [New wizard spells](FEATURES.md#new-wizard-spells); [6th-level priest spells](FEATURES.md#6th-level-priest-spells) |
-| Kalzith, a defiler slave in the slave pens who sells arcane scrolls (new games) | on | first visit (the slave pens) | [Kalzith](FEATURES.md#kalzith) (spoilers) |
+| Kalzith, a defiler slave in the slave pens who sells arcane scrolls | on | first visit (the slave pens) | [Kalzith](FEATURES.md#kalzith) (spoilers) |
 | Semyon in the slave pens after he leaves the arena, and breaking out with Scar | on | first visit (the slave pens) | [Semyon](FEATURES.md#semyon) (spoilers) |
 | The cooked vulture: Dinos cooks it for the party (XP and a full rest) | on | next start | [The cooked vulture](FEATURES.md#the-cooked-vulture) (spoilers) |
 | Defilers' scrolls: a defiler in a fight carries a scroll of a random preserver spell one time in 20, dropped where it dies | on | at once | [Defilers' scrolls](FEATURES.md#defilers-scrolls) (spoilers) |
@@ -2158,7 +2158,7 @@ once.")
 | The view in fights: it moves to a figure only when the figure walks off the screen (the game's follows it near the edges; from the next start) | on | next start | [The view in fights](FEATURES.md#the-view-in-fights) |
 | The pointer in scenes: shown in the intro and the game's other scenes, and a click skips a scene as a key does; from the next start | on | next start | [The pointer in scenes](FEATURES.md#the-pointer-in-scenes-and-where-it-starts) |
 | Where the pointer starts: in the middle of the screen, moving as far up and down as across, and in a window as fast as the desktop's pointer; from the next start | on | next start | [Where it starts](FEATURES.md#the-pointer-in-scenes-and-where-it-starts) |
-| The whole party in view as a game starts or loads and after each fight, as 5 does; from the next start | on | next start | [The whole party in view](FEATURES.md#the-whole-party-in-view) |
+| The whole party in view as a game starts or loads and after each fight, as the 5 key does; from the next start | on | next start | [The whole party in view](FEATURES.md#the-whole-party-in-view) |
 | Spells on the Effects screen: a click on a spell's icon leaves it on (the game ends it; psionic powers can still be stopped); from the next start | on | next start | [Spells on the Effects screen](FEATURES.md#spells-on-the-effects-screen) |
 
 **Game speed (from the next start)**

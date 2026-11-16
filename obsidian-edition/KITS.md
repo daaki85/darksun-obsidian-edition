@@ -322,7 +322,7 @@ classes (below) is left off the menu. A new **Elementalist** then picks its
 second sphere on the same menu (**SPHERE 2: NONE**, then the three other
 spheres). The kit sleeps and wakes with its own class.
 
-![The KIT menu after DUAL: a Battle Mage turned thief, offered Swashbuckler and Assassin (not the Shinobi)](docs/dual-kit-menu.png)
+![The KIT menu after DUAL for a human with no kit yet: a preserver turned thief, offered Swashbuckler and Assassin (not the Shinobi)](docs/dual-kit-menu.png)
 
 The Effects screen names the kit (a longer name shortened as on the KIT page,
 `(ASLEEP)` after one that sleeps; a Shinobi's with its read languages under it,
@@ -333,7 +333,7 @@ Its lower panel has room for five lines: when there are more, it shows four and
 (a weapon spec's heading again at the top of a page that goes on with its
 weapons), the first again after the last:
 
-![The Effects screen, a page at a time: a Mind Bender psionicist who became a Twin-blade gladiator, then an Assassin thief, with four weapon specs](docs/effects-pages.png)
+![The Effects screen, a page at a time, for a character of an older save with three kits (one a character now): a Mind Bender psionicist who became a Twin-blade gladiator, then an Assassin thief, with four weapon specs](docs/effects-pages.png)
 
 ![The Effects screen for Xan, a Shinobi: "KIT: SHINOBI" and under it "READ LANG. 35%", the chance to read a scroll](docs/effects-shinobi.png)
 

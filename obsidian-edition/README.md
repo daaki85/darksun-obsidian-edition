@@ -476,7 +476,7 @@ text, with the replies offered numbered underneath (and the list's title,
 such as "Answer Yes or No", above them), and then the one you picked:
 `You chose: No`.
 
-![The Dialogue tab at the start of a new game: the Announcer, with his portrait, introducing the Defiler's show and calling the gladiators into the arena; the Characters tab beside it with Gerakis's and K'ratchek's ages and their features](docs/dialogue.png)
+![The Dialogue tab at the arena's opening show: the Announcer, with his portrait, introducing the Defiler's show and calling the gladiators into the arena; the Characters tab beside it with Gerakis's and K'ratchek's ages and their features](docs/dialogue.png)
 
 **Who's speaking.** The game's dialogue window has only a portrait, never a
 name, so a speaker shows as `Portrait 57` until the log learns its name from
