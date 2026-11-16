@@ -585,6 +585,16 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   +14h-+17h) in memory to see the limit. Take the item off and put it back on in the inventory: a
   barred one gives "CANNOT USE THIS ITEM". A heavy armour for a test: a worn chest item's type set
   to 12 in memory.
+- **A level-up for a test** (logs/2026-11-15-kit-rebalance-checks.md part 10): write the sheet's
+  XP (+0, a dword) just short of the next level (`tables.xp_needed(row, level)`: a preserver's 5th
+  20,000), then a kill in a fight: the level comes during the next turns, and `fightout.sh` answers
+  CHOOSE A SPELL with `levelup.sh` (count its "picked a spell" lines). A loop of `levelup.sh` until it
+  fails counts the picks of one screen.
+- **DUAL in memory**: the DUAL window greys a class by the creature record's scores (+22h), not the
+  sheet's: raise one with `foeset.py C int=18`. A member with a kit is asked for none (clear the
+  sheet's +43h to see the kit menu: its title "KIT: NONE", the class's kits as rows, a barred one
+  left out). The DUAL menu (EDIT NAME / DROP / DUAL) opens at different heights: shoot it first
+  (DUAL at 90,145 or 90,97).
 - **A name at creation** (2026-11-15): click the name (40,128), press **Delete** 16 times
   (BackSpace does nothing; typing goes in front of the old name), type it, Return.
 - **The Loader's gear and the roster** (logs/2026-11-15-kit-rebalance-checks.md part 7): start

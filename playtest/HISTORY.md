@@ -383,3 +383,12 @@ shut). The same session: untilturn.sh stalled on a member with no Move whose END
 screen's left (toturn.sh presses E instead), and chestuse.sh's press on Pehtucl's chest opened the
 USE screen: `pointer.py look`, the press at (163,70) and the look box's third button worked.
 
+## The level-up and DUAL checks (2026-11-16)
+
+The Arcanist's and the Scholar's level-up and DUAL were played from `fountain-user` (log part 10).
+DOSBox and Xvfb had died again while the session sat idle. Lessons: the DUAL window's scores are the
+creature record's (raising INT on the sheet did nothing); `toturn.sh`'s E with no END menu up opened
+the Effects screen once (Seneca's Tab chose a foe out of reach, so Return did nothing), and closing
+it left the view at the map's corner: Tab moved it to the foe, `scroll.py` brought it back, and
+`passuntil.sh` (a click on the figure for the END menu) passed the turns cleanly.
+

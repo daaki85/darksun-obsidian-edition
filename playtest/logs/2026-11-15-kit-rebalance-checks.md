@@ -273,38 +273,4 @@ In the fight:
 - New tool: `toturn.sh N` plays the party's turns to member N's, pressing E when a member's turn
   stays up after Tab + Return (its END menu was at the screen's left this time, where a fixed pixel
   test missed it; `untilturn.sh` kept pressing Tab there).
-- Not played: the Arcanist's casting a level higher and the Scholar's extra spell at a level up or
-  DUAL (CHOOSE A SPELL at creation was played in part 1); the emulator tests cover them.
-
-## Summary
-
-| Kit | What was checked | Result |
-|---|---|---|
-| Myrmidon | one pick, polearm greyed, bow lit; polearm spec and item; -2 initiative; roster copy (after the fix) | PASS |
-| Seeker (fire) | bow greyed, obsidian kinds lit; bow to the backpack | PASS |
-| Scholar | 9 spells at creation (7 + 2); no slot more; THAC0 21; Chill Touch and Acid Arrow at its THAC0 | PASS |
-| Healer | no harming spells; Cell Adjustment +1 | PASS |
-| Lifebinder | no harming spells; Cell Adjustment +1d4 | PASS |
-| Twin-blade | cahulaks offered and allowed | PASS |
-| Brute | cahulaks greyed; +2 with the great axe | PASS |
-| Swashbuckler | long sword, dagger, short sword only; bad luck on its rolls (-7, -14) | PASS |
-| Wayfinder | +2 its own, +1 the party | PASS |
-| Sentinel | AC +2 with a shield; no initiative; -1 without a shield | PASS |
-| Wild Fury | CON - 4 check; -3 / +3 / 1 more attack / AC 3 worse | PASS |
-| Spellarcher | bow only; armour left behind; arrow made; save against its Shocking Grasp arrow | PASS |
-| (any) | the Loader's creation gear in the roster's copy, ADDed after a restart (part 7) | PASS |
-| Justifier | chosen long sword specialized, bow at expertise (part 8) | PASS |
-| Seeker (air) | only its sphere's weapons offered, the bow among them; bow expertise only from the pick | PASS |
-| Twin-blade | cahulaks in a fight: no two-weapon penalty | PASS |
-| Assassin | heavy armour worn while asleep after a class change, refused once awake | PASS |
-| Crusader | 2 attacks a round at 7th level with the chosen weapon, 3/2 at 6th | PASS |
-| Mind Warrior | 2 attacks a round at 7th level with the chosen weapon | PASS |
-| Swashbuckler | bad luck on a lock and a trap (-15, -19); warrior THAC0 with its chosen blade | PASS |
-| Shinobi | heavy armour worn asleep after a class change, refused awake | PASS |
-| Brute | no air cleric by DUAL (a bug: closing the sphere menu made one; fixed, part 9) | PASS after the fix |
-| Battle Mage | warrior THAC0 with its chosen weapon | PASS |
-| Grove Warden | a weapon its sphere bars refused (with none of its weapon specs) | PASS |
-| (any) | no second kit after DUAL | PASS |
-
-Not played: the Arcanist's level higher and the Scholar's spell at a level up or DUAL; the
-emulator tests cover them.
+- Every kit changed on this branch has now been played.
