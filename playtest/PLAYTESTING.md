@@ -569,6 +569,12 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   (240,106) is marked and must be clicked off before a kit (the first kit 240,114) takes a click;
   the kit is the sheet's +43h (1-3). The Battle Dancer's weapon window has only the long sword
   (72,46) and the bow in use. `python3 carried.py NAME` lists what the new character holds.
+- **A kit's rules on a member in memory** (logs/2026-11-15-kit-rebalance-checks.md part 8):
+  `kitset.py MEMBER CLASS LEVEL KIT` (a Crusader 7: `1 1 7 3`; a Mind Warrior: `1 12 7 2`) also sets
+  the sheet's +2Ah, the attacks a round the game reads (set at creation and level-up: a warrior's 3
+  left there keeps 3/2 whatever the class). Before the fight, or at least before the member's next
+  attack. `fountain-user`'s Jenna (long sword spec, two long swords) is a good subject: count the
+  main hand's lines ("with Bone Long Sword") each round. Never save after.
 - **A name at creation** (2026-11-15): click the name (40,128), press **Delete** 16 times
   (BackSpace does nothing; typing goes in front of the old name), type it, Return.
 - **The Loader's gear and the roster** (logs/2026-11-15-kit-rebalance-checks.md part 7): start

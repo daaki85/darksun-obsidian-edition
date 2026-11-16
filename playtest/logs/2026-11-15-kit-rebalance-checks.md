@@ -233,6 +233,11 @@ In the fight:
   hand's one), "+4 Crusader (a warrior's THAC0)"; at level 6 (`kitset.py 1 1 6 3`): 2 then 1 (3/2)
   and +3. **PASS.** The first try, in the arena with Rick, stayed 3/2 at "7th level": the game reads
   attacks a round from the sheet's +2Ah (a ranger's 3), so `kitset.py` sets it to a cleric's 2.
+- **Mind Warrior** (2026-11-16, after two worker restarts: Jenna made psionicist 7, kit 2,
+  `kitset.py 1 12 7 2`, before the ambush): round 1 and round 2 each 2 main-hand attacks (and the
+  off hand's one), "+4 Mind Warrior (a warrior's THAC0)". **PASS.** (The first try ended with the
+  fight before her second turn; the next one stalled on Ester with no Move and her END menu up:
+  `untilturn.sh` keeps pressing Tab there; E with that menu up ended her turn.)
 - The arena's extra wave (staying after the Announcer) defeated that party: a 3rd-level party with
   memory edits loses to it.
 
@@ -251,8 +256,13 @@ In the fight:
 | Wild Fury | CON - 4 check; -3 / +3 / 1 more attack / AC 3 worse | PASS |
 | Spellarcher | bow only; armour left behind; arrow made; save against its Shocking Grasp arrow | PASS |
 | (any) | the Loader's creation gear in the roster's copy, ADDed after a restart (part 7) | PASS |
+| Justifier | chosen long sword specialized, bow at expertise (part 8) | PASS |
+| Seeker (air) | only its sphere's weapons offered, the bow among them; bow expertise only from the pick | PASS |
+| Twin-blade | cahulaks in a fight: no two-weapon penalty | PASS |
+| Assassin | heavy armour worn while asleep after a class change, refused once awake | PASS |
+| Crusader | 2 attacks a round at 7th level with the chosen weapon, 3/2 at 6th | PASS |
+| Mind Warrior | 2 attacks a round at 7th level with the chosen weapon | PASS |
 
-Not played: the Justifier (its bow's expertise), the Crusader and Mind Warrior (extra attacks at
-7th level), a non-fire Seeker's bow on the weapon window, the Assassin's and Shinobi's light armour
-asleep after a change of class, the Swashbuckler's bad luck on one of the game's own rolls (a lock),
-the Twin-blade's cahulaks with no penalty in a fight; the emulator tests cover them.
+Not played: the Swashbuckler's bad luck on one of the game's own rolls (a lock; its luck on a
+pocket was seen in part 4), the Shinobi's armour asleep (the same code as the Assassin's); the
+emulator tests cover them.
