@@ -69,6 +69,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `openshop.sh` | from the "selling junk" save (saves/selling-junk-user), Kalzith's shop: the eye on him (his figure's square found from memory: his feet less 16), Talk, 1, the box clicked through, 1, the box. |
 | `orderwatch.py SECONDS` | fight_on and whose turn, with each new dice-log line, timed every 10 ms (which came first: a blow or the fight's start). |
 | `outfitcycle.py MEMBER SLOT N [SECONDS]` | changes MEMBER's outfit N times, as fillcache.py does (the slot byte, +11h, of the item it has in SLOT set to 50, no place, and back), waiting each time for the Loader to dress the figure (its copy of SEGOBJEX.GFF... |
+| `pacerec.sh on\|off OUT.mkv` | a recording for docs/steady-pace.gif: pens-after-arena, steady pace on or off, the party walked east and back, recorded at 70 frames a second from the X display (the DOSBox window at 0,0, 320x240) |
 | `panel.sh hide\|show` | the combat log panel (bottom right) hidden or shown, by its frame's pixel at 140,150 in the 320x240 window grab (140,125 in the 320x200 capture; |
 | `party.py` | each party member's classes and levels, the gladiator flag, the scores the game uses now (the creature record's), and every item with its slot, +0Eh and +0Fh (ability bytes) |
 | `passmiss.sh` | in a fight, the party's turns passed through each member's END menu (memberpos.py, E) until a foe misses (the dice log's "-> miss"), then the view dragged and shots taken (missdrag.png, missafter.png). |

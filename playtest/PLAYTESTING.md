@@ -1326,6 +1326,14 @@ and the faster drawing's: [HISTORY.md](HISTORY.md#frame-rate-measurements).
   320x240 (4:3) and gave 1 MB; Ctrl+Alt+F5, DOSBox's video capture, wrote no file. From a fresh
   load of `fountain-user` the first turns stay near the camera after `scroll.py -60 -80`; later a
   member out of movement gets the END menu over the panel (E ends the turn).
+- **`docs/steady-pace.gif`** (logs/2026-11-16-doc-pictures.md): `PT_CYCLES=20000 sh pacerec.sh off
+  $WORK/off.mkv`, then `... on $WORK/on.mkv` (each: the setting written, start.sh, pens-after-arena,
+  the panel hidden, ffmpeg's x11grab at 70 frames a second for 13 s, clicks east and back; it stops
+  itself with `-t`: a `timeout` kill leaves the file unreadable). Then both side by side at half
+  speed: `ffmpeg -ss 0.8 -t 10 -i off.mkv -ss 0.8 -t 10 -i on.mkv -filter_complex
+  "[0:v]pad=324:240:0:0[a];[a][1:v]hstack,setpts=2*PTS,split[s0][s1];[s0]palettegen=max_colors=128:stats_mode=diff[p];[s1][p]paletteuse=dither=none:diff_mode=rectangle"
+  -r 35 out.gif` (about 500 KB). Take `steady_pace` out of settings.json after. At 35,000 cycles
+  the two sides look alike: record at 20,000.
 - A spell's description box and the doc panels of spells: [casting
   spells](#casting-spells-for-a-test).
 

@@ -333,7 +333,7 @@ Its lower panel has room for five lines: when there are more, it shows four and
 (a weapon spec's heading again at the top of a page that goes on with its
 weapons), the first again after the last:
 
-![The Effects screen, a page at a time, for a character of an older save with three kits (one a character now): a Mind Bender psionicist who became a Twin-blade gladiator, then an Assassin thief, with four weapon specs](docs/effects-pages.png)
+![The Effects screen, a page at a time: a Twin-blade gladiator with four weapon specs, KIT: TWIN-BLADE, SPECIALIZED IN, the long sword and club, MORE: CLICK HERE; then SPECIALIZED IN again, the dagger and short sword](docs/effects-pages.png)
 
 ![The Effects screen for Xan, a Shinobi: "KIT: SHINOBI" and under it "READ LANG. 35%", the chance to read a scroll](docs/effects-shinobi.png)
 

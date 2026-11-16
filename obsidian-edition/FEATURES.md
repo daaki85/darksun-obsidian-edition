@@ -2752,14 +2752,12 @@ rather than a slower walk. Fights draw every frame, as the game does.
 | 20,000 cycles, steady pace on | 15.5 | 112 |
 | 35,000 cycles, steady pace on | 18.9 | 141 |
 
-![The whole party walking back and forth in the slave pens, the same clicks on both sides: with steady pace off on the left and on on the right, where the party gets to each spot sooner](docs/steady-pace.gif)
+![The whole party walking east and back in the slave pens, the same clicks on both sides, at 20,000 cycles: steady pace off on the left, on on the right](docs/steady-pace.gif)
 
-*The same save and the same clicks, recorded from the game at 70 frames a
-second and played here at half speed (a GIF can't show 70 a second), every
-frame kept. On the right the party reaches each spot sooner, in bigger steps.
-Recorded before steady pace kept the game's own schedule and before the
-cheaper drawing: it left more pictures out then, so the steps on the right
-are bigger than they are now (the table above has today's figures).*
+*The same save and the same clicks at 20,000 cycles, recorded from the game at 70 frames a second
+and played here at half speed, every frame kept. The difference is small: on the right the party
+walks about a tenth quicker (the table's 103 against 112). At the default 35,000 cycles nearly every
+picture is drawn either way.*
 
 The Loader also gives DOSBox more of the computer's time: 35,000 cycles a
 millisecond by default, where GOG's settings give 7,000. On the Options tab
