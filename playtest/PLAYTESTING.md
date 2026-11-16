@@ -625,7 +625,12 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   PSIONICS** (240,138, in the KITS button's place on the kit page) shows the disciplines (P-KINESIS
   250,106, P-METAB 114, TELEPATHY 122; click the marked one off first), VIEW SPHERES back.
   **CHOOSE A SPELL at creation**: icons 6 a row, about 18 apart from (122,71), rows 22 apart (a
-  click at 99,72 lands beside them and does nothing); the list closes up after each pick; LEVEL 1
+  click at 99,72 lands beside them and does nothing); the list closes up after each pick; the
+  icons are in spell-number order (Armor, Burning Hands, Charm Person, Chill Touch, Color Spray...;
+  Shield and Shocking Grasp the 10th and 11th, (176,93) once one before them is taken): pick one at a
+  time and read `known.py M` after each, since the number of picks goes by INT (a half-elf
+  fighter/preserver 2/2: four at INT 16-17, two at INT 15) and a click past the last pick lands in
+  the weapon window (logs/2026-11-16-spellarcher-fine-bow.md); LEVEL 1
   turns LEVEL 2 for a 3rd-level preserver's 2nd-level picks. **P-METAB's 14 powers** are powers 6-19
   in order (Animal Affinity first): Cell Adjustment the 8th, second row third (157,79).
   **DROP and ADD**: on VIEW CHARACTER a right-click on a slot opens its menu just right of it (the
@@ -642,6 +647,16 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   `start.sh`, which keeps the other keys; take it out again after.
 - **The main menu after a fresh start** comes about 30 s after the two title clicks (2026-11-16): a
   CREATE CHARACTERS click before it does nothing; shoot, then click again.
+- **A party made on the creation screen into a fight**: Escape on VIEW CHARACTER goes back to the
+  main menu (the made characters stay), and **S** there is START GAME; then topartyfight.sh's steps
+  from the message boxes on (typed, not cut from it: its first clicks are for the title, and (160,
+  120) on the main menu is near EXIT TO DOS). Four fresh 2nd-level characters lose the arena's
+  first wave to Tab + Return ("YOUR PARTY HAS BEEN DEFEATED"): check a USE screen at the gate, and
+  take a shot from `tofight.sh` instead (logs/2026-11-16-spellarcher-fine-bow.md).
+- **The Loader's gear on the stand-in**: a character left a while on the creation screen with its
+  kit marked (renaming it, say) gets a gear pass then (dice log "starts with ..." lines before its
+  picks): the game replaces that gear at DONE and the pass after DONE gives the real one. Read the
+  last "starts with" lines, and `carried.py`.
 - **Psionic powers at creation** (logs/2026-11-11-psionic-picks.md): after DONE (and a warrior's
   weapon window) PICK A PSIONIC POWER opens: icons from (123,62), 17 apart, five to a row (the
   list closes up after each pick: clicking (123,62) again takes the next); the discipline button
@@ -873,6 +888,9 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   passes to Ester's turn; the Templar is at screen (240,144). `ammodump.py` prints the archers' item
   records. **The floating arrow count** (the quiver's) shows for about a second in `shot.sh` grabs half a second
   apart (crop round the figure and montage them).
+- **A named weapon for a shot**: an item's name entry (+12h) written in memory changes what the
+  dice log and DSCLOG see by name (the Spellarcher's Fine Bow, 173h, on Ester's bow, item 10 in
+  `tofight.sh`'s fight: "+1 fine" in the THAC0 line); write the old name back after.
 - **A shot with a weapon put in memory** (logs/2026-11-10-stinkpots.md): a missile-slot weapon
   replaced by another type (the scratch `setitem.py ITEM TYPE` in that log: a SEGOBJEX record,
   link, flags and slot kept) shoots on the member's turn with `pointer.py attack` and a click on the

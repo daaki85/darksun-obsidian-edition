@@ -123,7 +123,11 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   `weaponchoice.kit_gear`; startgear's bow is the Battle Dancer's alone now). The arrow buttons'
   texts say a save stops Chill Touch, and none the others. Tests: `test_spellarrows`'
   `StartingGearTests` and `test_burning_hands_retired`, `test_dsclog`'s `test_fine_bow`,
-  `test_item_box_material`, `test_spell_arrows` and `NamesTests`.
+  `test_item_box_material`, `test_spell_arrows` and `NamesTests`. Checked in the game
+  (playtest/logs/2026-11-16-spellarcher-fine-bow.md): Spellarchers made with Shocking Grasp, with
+  Chill Touch and Shocking Grasp, and with neither (their arrows as above, the Fine Bow in the
+  missile slot, "Hit +1" in its box, "T16" on its weapon line); the USE screen with no Burning
+  Arrows button for one knowing Burning Hands; a shot with "+1 fine" in the THAC0 line.
 - **The Spellarcher, after *Dragon* #214's "The Complete Half-Elf"** (the user's design): a spell slot makes
   **one** spell arrow (was 5 a preserver level); one stack of each spell, 24 at most, the arrow
   joining it wherever it is (a new stack in the quiver if empty, else the pack; a full stack takes

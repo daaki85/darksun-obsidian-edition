@@ -406,3 +406,14 @@ round left the screen still and the pointer stuck at DS:A133h while the game's c
 on: `compare -metric AE` of two shots 5 s apart gave 0, and clicks did nothing. A restart was the
 way out; DSCLOG no longer makes that call there.
 
+
+## The Spellarcher's Fine Bow and starting arrows (2026-11-16)
+
+Four half-elf fighter/preserver Spellarchers made from CREATE CHARACTERS
+(logs/2026-11-16-spellarcher-fine-bow.md). CHOOSE A SPELL came before the weapon window, so the
+Loader's kit gear (after the window) saw the picks. A third character, at INT 15, had two picks, not
+four: the third click meant for CHOOSE A SPELL took Shocking Grasp's place after the list closed up,
+and the fourth landed on the weapon window. Two of the four got a gear pass while their creation
+screen was still up (the stand-in record is New), its lines in the dice log before the picks; the
+game threw that gear away at DONE. The party of fresh characters then lost the arena's first wave
+in melee, so the Fine Bow's shot was taken from `tofight.sh` with Ester's bow renamed in memory.
