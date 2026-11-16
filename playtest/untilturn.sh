@@ -1,6 +1,6 @@
 #!/bin/sh
+# untilturn.sh NAME: play party turns (Tab + Return) until NAME's turn comes, messages clicked away.
 # PARTY="A|B|C|D" (the party's names, an extended regex) names whose turns are played; the others' turns are waited out
-# untilturn.sh NAME: play party turns (Tab + Return) until NAME's turn comes, messages clicked away
 PT0=$(cd "$(dirname "$0")" && pwd); . "$PT0/env.sh"; PT=$PT0
 W=$(timeout 10 xdotool search $WINQ | head -1)
 n=$(wc -l < $WORK/dice.txt); first=1

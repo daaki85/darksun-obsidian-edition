@@ -82,6 +82,14 @@ the step forward) ends in the arena's first fight (region 2Ah), party at about (
   the look pointer.
 - The pens' cell doors (2141-2164) have USE (script 138) and ATTACK handlers ("This door is too
   strong to bash open" for the cells').
+- **Kurzak's door** (logs/2026-11-11-doorway-blocked.md): the entryway, squares 99,33-34 (99,34 is
+  the one that shuts); its leaves objects 2145 and 2146: map record +12h bit 08h open (20h or 10h
+  shut), +17h the frame (07h the spiked gate, 04h open). It is the only way between Kurzak's stop
+  and the pens' south passages. The game's call opens it; `doorwatch.py SECONDS` (background) prints
+  the square, Kurzak and Legcrusher at each change. If the leaves are open and the square shut, the
+  Loader's `kurzakdoor.py` opens the square after 10 game seconds ("Kurzak's door: open, but its
+  doorway was barred on the map; opened"). **A door action (22h, 2) is no way to open a door from
+  a script line**: put before Kurzak's line it shut the open door.
 
 ### The way west, the stalker pen and the grate
 
@@ -155,14 +163,6 @@ The way to the grate, from the scripts and the region file, and the cluebook:
   and the call script then never calls, until the party talks to a guard carrying routine 753
   (objects 55, 260, 261; MAS 29 makes them).
 
-- **Kurzak's door** (logs/2026-11-11-doorway-blocked.md): the entryway, squares 99,33-34 (99,34 is
-  the one that shuts); its leaves objects 2145 and 2146: map record +12h bit 08h open (20h or 10h
-  shut), +17h the frame (07h the spiked gate, 04h open). It is the only way between Kurzak's stop
-  and the pens' south passages. The game's call opens it; `doorwatch.py SECONDS` (background) prints
-  the square, Kurzak and Legcrusher at each change. If the leaves are open and the square shut, the
-  Loader's `kurzakdoor.py` opens the square after 10 game seconds ("Kurzak's door: open, but its
-  doorway was barred on the map; opened"). **A door action (22h, 2) is no way to open a door from
-  a script line**: put before Kurzak's line it shut the open door.
 
 ### Into the arena from the pens
 
@@ -222,3 +222,7 @@ The user's idea (2026-11-10): resting might one day cost water, which would need
 sale or to find in every part of the game. Whenever a play reaches a new area, note in the test log
 and here where water, jugs or waterskins are (a shop, a well, a body, a chest), with the region and
 map position. Nothing is built for it yet.
+
+- The slave pens (29h): a fountain at about square (68,94), where Pehtucl's ambush and Legcrusher's
+  fetching take place (`fountain-user`, `legcrusher-fountain-user`); whether it gives water is
+  unchecked.

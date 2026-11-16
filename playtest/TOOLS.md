@@ -53,7 +53,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `itemlists.py` | each party member's three item lists (+08h worn, +0Ah held weapons, +0Ch the backpack) as (item, slot byte, type). |
 | `killfoes.py` | kill every foe in memory (aging.kill), not the arena's prisoners. |
 | `kinds.py [CREATURE=KIND ...]` | a creature record's monster kind (+16h: 0 people; |
-| `kitset.py MEMBER CLASS LEVEL KITBYTE` | the member made a single-class character of CLASS (the sheet's class number) at LEVEL with kit KITBYTE (1-3, the class's kits in kitpages.KITS order), and a non-warrior's attack rate (+2Ah 2: the game reads attacks a... |
+| `kitset.py MEMBER CLASS LEVEL KITBYTE` | the member made a single-class character of CLASS (the sheet's class number) at LEVEL with kit KITBYTE (0 none, 1-3 the class's kits in kitpages.KITS order), and a non-warrior's attack rate (+2Ah 2: the game reads... |
 | `known.py MEMBER` | the spells party member MEMBER knows (the known table, low four bits), by number and name |
 | `leasts.sh (on the creation screen; ROWS="y ..." to pick rows)` | for each score's square, a right click (lower) then the least the game worked out, then a left click back |
 | `leavearena.sh` | right after "Go back to the pens" (arenawaves.sh), before the arena's patience runs out (a few actions): each step first clicks away any message (a box blocks drags as well as clicks), then drags the view (scroll.py,... |
@@ -127,7 +127,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `toturn.sh N` | the party's turns played until member N's (state.py's turn): Tab + Return for each member, and E when the same member's turn is still up after that (no Move left: its END menu, wherever the game puts it, waits; |
 | `turnsetup.py MEMBER LEVEL [COMBATANT=HD ...]` | memory only, never save after (2026-11-09). |
 | `turnwatch.py MEMBER SECONDS` | polls whose turn it is and the member's turn bytes every 5 ms, printing each change with its time: +181h attacks made this round (63h = spent, the turn ends), +1ABh attack commands, +1D5h, +5Bh (the segment DS -... |
-| `untilturn.sh` | PARTY="A\|B\|C\|D" (the party's names, an extended regex) names whose turns are played; |
+| `untilturn.sh NAME` | play party turns (Tab + Return) until NAME's turn comes, messages clicked away. |
 | `viewto.py X Y` | drag the view (scroll.py, the middle button) until map point X, Y is near the screen's centre, so a far spot can be clicked: the party then walks there by itself, finding its own way (it does over a whole region, if... |
 | `walkprobe.py N X Y DIR [SECS]` | a click at screen X, Y (game pixels), then for SECS seconds (default 6) as often as it can: party member N's map position, whose turn it is (the game's word), DSCLOG's STEALTH word (header +204: bit N set while N is... |
 | `walktime.py N X Y [DIR]` | a click at screen X, Y (game pixels), then party member N's map position every 50 ms until it has stood still for 1.5 s: each step's time (the walking pace), and with DIR a window grab at each step (DIR/wNN.png) |

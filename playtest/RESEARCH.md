@@ -3,7 +3,7 @@
 Part of the playtest guide ([PLAYTESTING.md](PLAYTESTING.md): read its startup procedure before any
 in-game test). These recipes are for finding out how the game works rather than for checking a
 change: its sounds, the see-through figures, the picture store, frame rate and cycles, its scripts,
-the recompiled program and Wake of the Ravager. Tools: [TOOLS.md](TOOLS.md).
+the unchanged game, the recompiled program and Wake of the Ravager. Tools: [TOOLS.md](TOOLS.md).
 
 ## Sounds
 
@@ -187,6 +187,29 @@ and the faster drawing's: [HISTORY.md](HISTORY.md#frame-rate-measurements).
   master script; GPLI 1 is the index of named routines (id, offset, script: 2-byte words).
 - **The inventory's input** (for anyone trying a click there by hand): the game takes clicks from
   its queue of events, never INT 33h's position; what was tried is in [HISTORY.md](HISTORY.md#the-inventorys-input).
+
+## The unchanged game
+
+For a comparison with the game as it shipped (no DSCLOG, no Loader, no dice log;
+logs/2026-11-16-spell-grid.md):
+
+- **Starting it**: a DOSBox config of the Loader's settings with its own autoexec: `sed
+  '/^\[autoexec\]/,$d' ../obsidian-edition/dosbox_dicelog.conf > $WORK/plain.conf`, then append
+  `[autoexec]`, `mount c ".."`, `c:`, `DSUN.EXE`, `exit`. Kill any DOSBox (by pid), then from
+  `$DS_GAME/DOSBOX`: `setsid dosbox -conf ../__support/app/dosbox_darksun.conf -conf $WORK/plain.conf
+  &`. The game folder's files are the originals (the Loader writes its copies to
+  `obsidian-edition/dos/`). **Not `start.sh` or `loadsave.sh`**: they start the Loader's game.
+- **Its intro plays**: two title clicks, then Escape a few times, then the main menu.
+- **A save**: copy `saves/NAME/*` into the game folder, then LOAD SAVED GAME (170,109), the slot
+  (100,46), LOAD (253,46). A save made with the mod loads.
+- **What works**: `click.py`, `creationscores.py`, `sheetinfo.py`, `shotinfo.py`, `hp.py` and the
+  memory tools. Not: `buildcheck.py`, the dice log and its readers, and Tab's target (`fightout.sh`,
+  `toturn.sh`): attack with `pointer.py attack` and a click on the foe.
+- **It differs at creation**: a new preserver gets no CHOOSE A SPELL (the mod's); the window shows
+  at a level-up.
+- **A screen's layout**: read its WIND chunk in the game's RESOURCE.GFF against the Loader's copy
+  in `obsidian-edition/dos/` (`dsloader.gff.read_gff`; a window's places are 30-byte items from
+  +105h: the tag at +4, the id at +8, x and y at +0Ch).
 
 ## The recompiled program as the target
 

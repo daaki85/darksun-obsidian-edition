@@ -2,7 +2,7 @@
 
 This is Claude's own guide to driving Dark Sun: Shattered Lands in a headless DOSBox, so that an
 in-game test (a fix seen working, a screenshot for the docs) doesn't stall. Every rule here comes
-from a test that got stuck. It lives in the repository, at the root and outside `obsidian-edition/`
+from a test that got stuck. It lives in the repository, in `playtest/`, outside `obsidian-edition/`
 (so it never ships in a release zip), because the scratch folder and everything in it is lost when
 the container is reclaimed: an earlier version of this guide and its tools were lost that way.
 
@@ -160,8 +160,7 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
 
 `sh guard_start.sh`, then a Monitor on `$WORK/guard.log` (grep `STUCK|GONE`, with `tail -n0 -F` so
 old lines don't fire) for the whole test. Stop it (`kill $(cat $WORK/guard.pid)`) before going
-idle. The log keeps earlier runs' lines (once, GONE lines from a watchdog started without a display,
-two hours before): read the times before believing one. A level-up screen shows as STUCK
+idle. The log keeps earlier runs' lines: read the times before believing one. A level-up screen shows as STUCK
 ([level-ups](#controls)).
 
 ## 5. Loading and saving
@@ -180,6 +179,10 @@ two hours before): read the times before believing one. A level-up screen shows 
 - A save made in DOSBox loads on the recompiled program and the other way round ([the recompiled
   program](RESEARCH.md#the-recompiled-program-as-the-target)).
 
+**Water**: whenever a play reaches a new area, note in the test log and in [ROUTE.md's water
+section](ROUTE.md#water-for-resting-an-idea-for-later) where water, jugs or waterskins are (CLAUDE.md
+asks for it).
+
 ## 6. After a play
 
 **After every play, add everything learned to this guide** (the user's standing instruction,
@@ -196,8 +199,7 @@ commit and push. Do it at each stop, not only at the end: a pause can lose the c
    anchor (assert one match, or cut at the last one): a cut at the first of two like lines once lost
    a test log's last parts.
 
-**Other sessions push to this branch too** (a Dark Sun Recompiled session once changed the kit
-while another played): `git fetch origin obsidian-edition` and `git rebase origin/obsidian-edition`
+**Other sessions push to this branch too**: `git fetch origin obsidian-edition` and `git rebase origin/obsidian-edition`
 before every push, read what changed in `playtest/`, and keep both sessions' lessons. The kit
 drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
 
@@ -253,11 +255,10 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
 - **Running changed Loader code in a running game**: restart only the dice log (kill its pid; then
   `python3 -u -m dsloader dicelog >> $PLAYTEST_WORK/dice.txt` from obsidian-edition, setsid nohup;
   or `python3 -u -m dsloader dicelog --pid ... >> $PLAYTEST_WORK/dice.txt`, naming the game's process).
-- **Comparing two builds' memory**: put the old `DSCLOG.EXE` in `obsidian-edition/dos/` for one
-  `loadsave.sh`, run `memaudit.py`, then put the new one back and `cmp` it with a fresh build;
-  don't do it while the unit tests run (they read `dos/DSCLOG.EXE`). The old build for a comparison:
-  `git show HEAD:obsidian-edition/dos/DSCLOG.EXE` into a scratch file, copied into `dos/` for one
-  `loadsave.sh`, then the new one put back (`cmp` it with a fresh build).
+- **Comparing two builds' memory**: `git show HEAD:obsidian-edition/dos/DSCLOG.EXE > SCRATCH` (the
+  old build), copy it into `obsidian-edition/dos/` for one `loadsave.sh`, run `memaudit.py`, then put
+  the new one back and `cmp` it with a fresh build; not while the unit tests run (they read
+  `dos/DSCLOG.EXE`).
 - **A failing tests/test_dsclog.py is slow** (each failing emulation runs to its count): 323 tests
   took 7 s passing and over 20 minutes failing (2026-11-08), so a test run that drags means
   failures, not a slow machine.
@@ -310,7 +311,8 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   there is END TURN; E with no menu up opens the Effects screen).
 - **Level-up screens block everything**: CHOOSE A SPELL (a preserver's
   new level, mid-fight) waits for a spell's icon to be clicked; the watchdog reports it as STUCK.
-  `levelup.sh` finds it (its scroll's rollers) and clicks the first spell (125, 90); fightout.sh
+  `levelup.sh` finds it (its scroll's rollers) and clicks the first spell (113, 71: the grid of
+  [CHOOSE A SPELL at creation](#the-creation-screen)); fightout.sh
   runs it each turn. PICK A PSIONIC POWER (a psionicist's level) isn't levelup.sh's: click a red
   power's icon (about 158, 62), then FINISHED (112, 139).
 - **The combat log panel covers the bottom right** (x 135+, y 120+): a click there lands on the
@@ -480,9 +482,8 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   `give` adds the defilers' scrolls (`defilerscrolls.scroll`). Never save after. live.py's `gd` has
   no rules set, so `gd.kit_ids` reads []: use `kitpages.kits_of(gd.sheet(m))`.
 - **A Spellarcher for a test**: a sheet made a half-elf (+18h 4) fighter/preserver (+21h 9, 11)
-  with kit byte +43h 1, and `spellsetup.py M=5 10 1 3 39`; the arrow buttons are the USE screen's
-  row under SPELLS LEFT (157,147 the first; a slow press), not the top row (the spells). **A press
-  shuts the USE screen**: an Escape after it opens EXIT: SAVE GAME? (CANCEL at 140,116). `trap-user`'s
+  with kit byte +43h 1, and `spellsetup.py M=5 10 1 3 39`; the arrow buttons: [spell
+  arrows](#casting-spells-for-a-test). `trap-user`'s
   Lex is a Spellarcher (Shocking Grasp; logs/2026-11-14-quiver-turn.md part 5).
 - **A thief in memory**: `thief.py N LEVEL` / `thief.py N off`.
 - **An XP award by hand**: the dice log's tracker sees an award only as each sheet's XP going up, so
@@ -490,11 +491,13 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   `aging.sheet_address`) stands in for a kill's to check what follows an award (the prime
   requisite bonus). Then restart the dice log to run changed Loader code ([builds, the Loader and
   the tests](#builds-the-loader-and-the-tests)).
-- **View Character**: the inventory's first bottom icon (168,187) (in the creation screen's VIEW
-  CHARACTER the icons are at y 171: [the creation screen](#the-creation-screen); the Effects screen
-  is the one at 243,187; the portraits there at 65/112, 55/110). It shows each member's EXP and the
+- **View Character**: the inventory's first bottom icon (168,187); on it the icons are at y 171
+  (view, inventory, cast, effects at x 52, 76, 100, 122), in play as on the creation screen, and
+  the Effects page's MORE: CLICK HERE is a click on the panel (220,135) (the inventory's own Effects
+  icon is 243,187; the portraits there at 65/112, 55/110). It shows each member's EXP and the
   next level's need with its class letter ("EXP:4487 (5000 Pr)"): a quick check of the XP tables
-  (AD&D's when the header's rules_hi, +270, has 8, RULE_HI_TABLES).
+  (AD&D's when the header's rules_hi, +270, has 8, RULE_HI_TABLES). For inventory or DUAL pictures
+  use `pens-after-arena`: in `fountain-user` the ambush starts on loading.
 - **The leader**: the inventory screen's small face button left of each portrait (the first of the
   two; the lit one is the leader's): Cilla's at (7, 152), the others' 44 higher each (from the
   manual's "Leader" button).
@@ -553,9 +556,10 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
 
 ## The creation screen
 
-- **At the main menu the mouse may not be captured yet** (2026-11-11): `click.py` reads the pointer
-  stuck at (160,100) and clicks do nothing. `xdotool windowfocus W`, then
-  `xdotool mousemove --window W 160 30 click 1`, and it follows.
+- **The main menu**: it comes about 30 s after the two title clicks (a CREATE CHARACTERS click
+  before it does nothing: shoot, then click). If `click.py` reads the pointer stuck at (160,100) and
+  clicks do nothing, the mouse isn't captured yet: `xdotool windowfocus W`, then `xdotool mousemove
+  --window W 160 30 click 1`, and it follows.
 - **The creation screen** (logs/2026-11-08-creation-least.md): the main menu's CREATE CHARACTERS
   (165,92) opens VIEW CHARACTER (its bottom icons: view character, inventory, cast, effects at x 52,
   76, 100, 122, y 171; RETURN TO GAME 266,172 goes back to the menu); right-click an empty slot
@@ -564,33 +568,76 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   the clicks, not the number: right-click lowers by 1, left-click raises, kept between the least
   (DS:4994h, just worked out for that score by 67399h) and the most (DS:4992h), going round past
   either (with the as-rolled rule a round trip upward is cut to what's spare). `leasts.sh` reads
-  each score's least (`creationscores.py`). A class: click its name (x 250; cleric 13, druid 21,
-  fighter 29, gladiator 37, preserver 45, psionicist 53, ranger 61, thief 69); a human's class must
-  be clicked off before another is chosen (a click on a second class does nothing). The race text
-  and the small figure at the top don't change the race (the figure rolled a new character); a race
-  and classes can be set in memory for a check (the creation sheet at the far pointer DS:119Ch:
-  race +18h, classes +21h, 1-8 as the list). EXIT (278,160) leaves without keeping the character.
+  each score's least (`creationscores.py`). EXIT (278,160) leaves without keeping the character.
   **The pointers stay set afterwards**: DS:119Ch then points at the party's first sheet and
   DS:11A0h at the creature table, in play too (null only in a game loaded first); on the screen the
   record is straight after the sheet (`gd.creating()`). While the screen is up the party's first
   slot carries the character's name on a stand-in sheet (XP 4,000, scores 10) whose XP moves with
-  the class.
-- **A multiclass character on the creation screen**: a click on the big portrait (40,60) steps
-  through the portraits, and with them the race and sex (one click went from a human to a dwarf:
-  read the sheet's +18h). Then click the classes (CLERIC 250,13). The **CLERICAL SPHERE** list is in
-  the lower window (AIR 240,105, EARTH 113, FIRE 121, WATER 129): while one sphere is chosen the
-  others are greyed and take no click, so click the chosen one off first. DONE (279,183) opens the
-  weapon window (PICK A WEAPON SPECIALTY, or OF EXPERTISE for a ranger, Battle Mage, Crusader or Mind Warrior; at a level up too): icons 33 apart from (72,46), three rows; the cahulaks
-  are the second row's last (245,78). A click there closes it and the dice log gives the start
-  weapon ("starts with a plain obsidian cahulaks ... in place of the bone long sword"). The
-  inventory is the second bottom icon (76,172).
-- **A kit at creation** (2026-11-12, an elf fire cleric/fighter Battle Dancer): the big portrait
-  (40,60) steps the race (read the sheet's +18h after each click: human 1, dwarf 2, elf 3; two
-  clicks a race); CLERIC (250,13) adds the class and the CLERICAL SPHERE list (AIR 240,105 is
-  chosen first: click it off, then FIRE 240,121); KITS (232,138) opens the kit page, where NO KIT
-  (240,106) is marked and must be clicked off before a kit (the first kit 240,114) takes a click;
-  the kit is the sheet's +43h (1-3). The Battle Dancer's weapon window has only the long sword
-  (72,46) and the bow in use. `python3 carried.py NAME` lists what the new character holds.
+  the class; the Loader gives it no gear (only the character DONE makes).
+- **The race**: the big portrait (40,60) steps through the portraits, and with them the race and
+  sex: read the sheet's +18h after each click (two clicks a race: 1 human, 2 dwarf, 3 elf, 4
+  half-elf ... 7 mul). The race text and the small figure at the top don't change it (the figure
+  rolls a new character). A race and classes can also be set in memory for a check (the creation
+  sheet at the far pointer DS:119Ch: race +18h, classes +21h).
+- **The classes**: click a name (x 250; cleric 13, druid 21, fighter 29, gladiator 37, preserver
+  45, psionicist 53, ranger 61, thief 69); a human's class must be clicked off before another is
+  chosen. The class list's numbers on the creation sheet (+21h) are the list's (1 cleric ... 7
+  ranger, 8 thief), not the game's; DONE turns them into the game's (a fire ranger 15).
+- **A priest's sphere and a psionic discipline**: the **CLERICAL SPHERE** list is in the lower
+  window (AIR 240,105, EARTH 113, FIRE 121, WATER 129; AIR is marked first); **VIEW PSIONICS**
+  (240,138, in the KITS button's place on the kit page) shows the disciplines (P-KINESIS 250,106,
+  P-METAB 114, TELEPATHY 122), VIEW SPHERES back. In both, while one is marked the others are greyed
+  and take no click: click the marked one off first.
+- **A kit** (logs/2026-11-15-kit-rebalance-checks.md): KITS (232,138) opens the kit page, where NO
+  KIT (240,106) is marked and must be clicked off before a kit takes a click; the class's three kits
+  are at y 114, 122, 130 (fighter: Myrmidon, Sentinel, Ravager; gladiator: Champion, Twin-blade,
+  Brute; ranger: Stalker, Justifier, Seeker; thief: Swashbuckler, Assassin, Shinobi; preserver:
+  Scholar, Battle Mage, Arcanist; cleric: Elementalist, Healer, Crusader, the Healer offered with
+  WATER marked; druid: Warden, Lifebinder, Wanderer); a multiclass race's own kit is the only row (a
+  mul druid/fighter: WILD FURY; a dwarf fighter/thief: G-FIGHTER, WAYFINDER). The kit is the sheet's
+  +43h (1-3). `sheetinfo.py` lists each member's classes, kits and weapon specs by name; `known.py
+  M` its spells; `canuse.py M TYPE...` the kit rules for item types; `carried.py NAME` what it holds.
+- **A name**: click the name (40,128), press **Delete** 16 times (BackSpace does nothing; typing
+  goes in front of the old name), type it, Return.
+- **CHOOSE A SPELL at creation** (a preserver, after DONE): the icons are 6 a row, filled row by row
+  (the Loader's `dsloader/spellgrid.py`), 19 apart from (113,71), rows 20 apart: the Nth spell from 0
+  at x 113 + 19 x (N mod 6), y 71 + 20 x (N div 6). They are in spell-number order (Armor, Burning
+  Hands, Charm Person, Chill Touch, Color Spray...; Shield and Shocking Grasp the 10th and 11th:
+  Shocking Grasp alone first at (189,91)), and the list closes up after each pick. Pick one at a
+  time and read `known.py M` after each: the number of picks goes by INT (a half-elf
+  fighter/preserver 2/2: four at INT 16-17, two at INT 15), and a click past the last pick lands in
+  the weapon window. LEVEL 1 turns LEVEL 2 for a 3rd-level preserver's 2nd-level picks.
+- **The weapon window** (after CHOOSE A SPELL, at DONE; PICK A WEAPON SPECIALTY, or OF EXPERTISE for
+  a ranger, Battle Mage, Crusader or Mind Warrior; at a level up too): icons 33 apart from (72,46),
+  three rows; the cahulaks are the second row's last (245,78), the bow the third row's second
+  (105,112). A click closes it and the dice log gives the start weapon ("starts with a plain
+  obsidian cahulaks ... in place of the bone long sword"). A Battle Dancer's has only the long
+  sword (72,46) and the bow in use, a Spellarcher's the bow alone.
+- **Psionic powers at creation** (logs/2026-11-11-psionic-picks.md): after the weapon window PICK A
+  PSIONIC POWER opens: icons from (123,62), 17 apart, five to a row (the list closes up after each
+  pick: clicking (123,62) again takes the next); the discipline button (117,140); the count beside
+  it; EXIT (202,140), then EXIT at YOU HAVE MORE (140,91). The last pick closes it. Each member's
+  known powers: `python3 powers.py` (selector 2F0h's segment, +77h + member x 22h + power, bits
+  3-7). **P-METAB's 14 powers** are powers 6-19 in order (Animal Affinity first): Cell Adjustment
+  the 8th, second row third (157,79).
+- **DROP, ADD and the roster**: on VIEW CHARACTER a right-click on a slot opens its menu just right
+  of it, at the slot + (46,5) and + (46,14) (the second slot's, 120,52: NEW/EDIT 165,57, ADD/DROP
+  165,66; the fourth's, 120,110: 166,117 and 166,125); DROP asks YES (the first row); the last
+  member can't be dropped ("LAST ONE: CAN'T DROP", OKAY). ADD (112,66 from the first slot) lists
+  the roster (rows y 45 + 11n, scroll with the arrow at 219,146; the game's five first, Garn,
+  Aticus, Seneca, Deestan, Shandra, then the made ones, not always newest last: read the shot), a
+  name, then ADD (252,46); EXIT (252,66). A dropped character's record stays in memory
+  (`sheetinfo.py` still lists it).
+- **The Loader's gear and the roster** (logs/2026-11-15-kit-rebalance-checks.md part 7,
+  logs/2026-11-16-roster-gear.md): the roster keeps the character as the game wrote it at DONE, and
+  DSCLOG holds that write (GEAR_HOLD) for the Loader's creation gear, so a character ADDed in a later
+  session has it, with weapon specialization on or off. To check: start `timeout 115 python3
+  gearpoll.py > $WORK/gearpoll.log &` just before DONE; the dice log's "starts with ..." lines must
+  come before `charsave_written=True` (the roster write, after the psionic powers). To see the
+  roster's copy: restart (start.sh, title, CREATE CHARACTERS), ADD it, then list its items with
+  `gd.party_items()` (live.py). A check with a rule off: set the key in
+  `obsidian-edition/settings.json` (`"weapon_specialization": false`) before `start.sh`, which keeps
+  the other keys; take it out again after.
 - **The DUAL sphere menu** (logs/2026-11-15-kit-rebalance-checks.md part 9): after CLERIC, DRUID or
   RANGER on the DUAL window, a menu whose title row is "SPHERE: AIR" (no click there), EARTH
   (140,92), FIRE (140,104), WATER (140,116), and a close button (210,116). **The game makes the
@@ -601,78 +648,12 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   +14h-+17h) in memory to see the limit. Take the item off and put it back on in the inventory: a
   barred one gives "CANNOT USE THIS ITEM". A heavy armour for a test: a worn chest item's type set
   to 12 in memory.
-- **A name at creation** (2026-11-15): click the name (40,128), press **Delete** 16 times
-  (BackSpace does nothing; typing goes in front of the old name), type it, Return.
-- **The Loader's gear and the roster** (logs/2026-11-15-kit-rebalance-checks.md part 7): start
-  `timeout 115 python3 gearpoll.py > $WORK/gearpoll.log &` just before DONE; the dice log's
-  "starts with ..." lines must come before `charsave_written=True` (the roster write, after the
-  four psionic powers). To see the roster's copy: restart (start.sh, title, CREATE CHARACTERS),
-  right-click an empty slot, ADD (112,66), click the name in the list (rows y 45 + 11n; the last
-  made is not always last: read the shot), ADD (252,46), EXIT (252,66), then list its items with
-  `gd.party_items()` (live.py).
-- **Every kit at creation** (logs/2026-11-15-kit-rebalance-checks.md): the KITS page's rows are
-  NO KIT (240,106), then the class's three kits at y 114, 122, 130 (fighter: Myrmidon, Sentinel,
-  Ravager; gladiator: Champion, Twin-blade, Brute; ranger: Stalker, Justifier, Seeker; thief:
-  Swashbuckler, Assassin, Shinobi; preserver: Scholar, Battle Mage, Arcanist; cleric: Elementalist,
-  Healer, Crusader, the Healer offered with WATER marked; druid: Warden, Lifebinder, Wanderer); a
-  multiclass race's own kit is the only row (a mul druid/fighter: WILD FURY; a dwarf fighter/thief:
-  G-FIGHTER, WAYFINDER). The class list's numbers on the creation sheet (+21h) are the list's (1
-  cleric ... 7 ranger, 8 thief), not the game's; DONE turns them into the game's (a fire ranger 15).
-  `python3 sheetinfo.py` lists each member's classes, kits and weapon specs by name; `known.py M`
-  its spells; `canuse.py M TYPE...` the kit rules for item types. **The race**: the big portrait
-  (40,60), read the sheet's +18h after each click (two clicks a race; 1 human ... 4 half-elf, 7
-  mul). **A priest's discipline**: a cleric's or druid's panel shows its spheres; **VIEW
-  PSIONICS** (240,138, in the KITS button's place on the kit page) shows the disciplines (P-KINESIS
-  250,106, P-METAB 114, TELEPATHY 122; click the marked one off first), VIEW SPHERES back.
-  **CHOOSE A SPELL at creation**: since 2026-11-16 (`spellgrid.py`) the icons are 6 a row, filled
-  row by row, 19 apart from (113,71), rows 20 apart (Nth spell from 0: x 113 + 19 x (N mod 6), y 71
-  + 20 x (N div 6)); before, the game's order (five middle columns from (122,71), then a right-hand
-  one). The list closes up after each pick; the icons are in spell-number order (Armor, Burning
-  Hands, Charm Person, Chill Touch, Color Spray...; Shield and Shocking Grasp the 10th and 11th:
-  Shocking Grasp alone first at (189,91)). Pick one at a
-  time and read `known.py M` after each, since the number of picks goes by INT (a half-elf
-  fighter/preserver 2/2: four at INT 16-17, two at INT 15) and a click past the last pick lands in
-  the weapon window (logs/2026-11-16-spellarcher-fine-bow.md); LEVEL 1
-  turns LEVEL 2 for a 3rd-level preserver's 2nd-level picks. **P-METAB's 14 powers** are powers 6-19
-  in order (Animal Affinity first): Cell Adjustment the 8th, second row third (157,79).
-  **DROP and ADD**: on VIEW CHARACTER a right-click on a slot opens its menu just right of it (the
-  second slot's, 120,52: NEW/EDIT 165,57, ADD/DROP 165,66; the fourth's, 120,110: 166,117 and
-  166,125); DROP asks YES (the first row); the last member can't be dropped ("LAST ONE: CAN'T
-  DROP", OKAY). ADD lists the roster (scroll with the arrow at 219,146; a name,
-  then ADD 252,46). A dropped character's record stays in memory (`sheetinfo.py` still lists it).
-  **The roster keeps the character as the game wrote it at DONE**, and DSCLOG holds that write
-  (GEAR_HOLD) for the Loader's creation gear, so a character ADDed in a later session has it, with
-  weapon specialization on or off (logs/2026-11-16-roster-gear.md). The list seen 2026-11-16: the
-  game's five (Garn, Aticus, Seneca, Deestan, Shandra), then the new ones at y 100, 111 (Myrmroll,
-  made second, above Swashroll): read the shot, not "the newest first". A check with a rule off:
-  set the key in `obsidian-edition/settings.json` (`"weapon_specialization": false`) before
-  `start.sh`, which keeps the other keys; take it out again after.
-- **The main menu after a fresh start** comes about 30 s after the two title clicks (2026-11-16): a
-  CREATE CHARACTERS click before it does nothing; shoot, then click again.
-- **The unchanged game, for a comparison** (2026-11-16): a DOSBox config like the Loader's
-  (`dosbox_dicelog.conf` to its `[autoexec]`) whose autoexec mounts C at `..` and runs `DSUN.EXE`
-  (the game folder's files are the originals; the Loader writes its copies to `obsidian-edition/dos`).
-  Its intro plays: Escape a few times. click.py, creationscores.py and the memory tools work on it;
-  Tab doesn't pick a target (the mod's), and **a new preserver gets no CHOOSE A SPELL at creation**
-  (the mod's): its window shows at a level-up. To compare a screen's layout, read its WIND chunk
-  in the game's RESOURCE.GFF against the Loader's copy (`dsloader.gff.read_gff`).
 - **A party made on the creation screen into a fight**: Escape on VIEW CHARACTER goes back to the
   main menu (the made characters stay), and **S** there is START GAME; then topartyfight.sh's steps
-  from the message boxes on (typed, not cut from it: its first clicks are for the title, and (160,
-  120) on the main menu is near EXIT TO DOS). Four fresh 2nd-level characters lose the arena's
-  first wave to Tab + Return ("YOUR PARTY HAS BEEN DEFEATED"): check a USE screen at the gate, and
-  take a shot from `tofight.sh` instead (logs/2026-11-16-spellarcher-fine-bow.md).
-- **The Loader's gear on the creation screen**: none until DONE (since 2026-11-16: the screen's
-  stand-in, a New record, is passed over); up to then a character left a while there with its kit
-  marked got a pass early too, its lines before the picks.
-- **Psionic powers at creation** (logs/2026-11-11-psionic-picks.md): after DONE (and a warrior's
-  weapon window) PICK A PSIONIC POWER opens: icons from (123,62), 17 apart, five to a row (the
-  list closes up after each pick: clicking (123,62) again takes the next); the discipline button
-  (117,140); the count beside it; EXIT (202,140), then EXIT at YOU HAVE MORE (140,91). The last
-  pick closes it. Each member's known powers: `python3 powers.py` (selector 2F0h's segment,
-  +77h + member x 22h + power, bits 3-7). A discipline at creation: P-KINESIS (250,106), P-METAB (250,114),
-  TELEPATHY (250,122); click the chosen one off first. DROP and ADD: [the roster](#the-creation-screen)
-  above (the menu at the slot + (46, 5) and + (46, 14)).
+  from the message boxes on (typed, not cut from it: its first clicks are for the title, and
+  (160,120) on the main menu is near EXIT TO DOS). Four fresh 2nd-level characters lose the arena's
+  first wave to Tab + Return: check a USE screen at the gate, and take a shot from `tofight.sh`
+  instead (logs/2026-11-16-spellarcher-fine-bow.md).
 - **The DUAL window** (dual-classing, logs/2026-11-09-group-4.md): the inventory screen (I), a
   right-click on a portrait (Cermak 20,104 in pens-fire-count4) opens EDIT NAME / DROP / DUAL
   (CANCEL in DUAL's place when it isn't offered); DUAL at 90,145; the classes greyed or white (zoom
@@ -896,9 +877,11 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   passes to Ester's turn; the Templar is at screen (240,144). `ammodump.py` prints the archers' item
   records. **The floating arrow count** (the quiver's) shows for about a second in `shot.sh` grabs half a second
   apart (crop round the figure and montage them).
-- **A named weapon for a shot**: an item's name entry (+12h) written in memory changes what the
-  dice log and DSCLOG see by name (the Spellarcher's Fine Bow, 173h, on Ester's bow, item 10 in
-  `tofight.sh`'s fight: "+1 fine" in the THAC0 line); write the old name back after.
+- **A named weapon for a shot**: write an item's name entry (+12h) in memory: the dice log, DSCLOG,
+  the item box and the inventory's weapon line all follow it (the Spellarcher's Fine Bow, 173h: "+1
+  fine" in the THAC0 line, "Hit +1" in its box). In `fountain-user` Ester's bow is item 10 and Lex's
+  item 36, both name 2. Write the old entry back; never save after. (Also [a magic item for a look
+  at its box](#pictures-for-the-docs).)
 - **A shot with a weapon put in memory** (logs/2026-11-10-stinkpots.md): a missile-slot weapon
   replaced by another type (the scratch `setitem.py ITEM TYPE` in that log: a SEGOBJEX record,
   link, flags and slot kept) shoots on the member's turn with `pointer.py attack` and a click on the
@@ -971,10 +954,10 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
   Self spells (Minor Spell Turning) cast at the icon's click.
 - **Crossed-out icons**: a caster hit just before its turn ("YOU WERE HIT" in the bar) has every
   icon crossed for that turn; plain again the next round. Clicks on them do nothing, and RETURN TO
-  GAME then a map click walks the caster instead. A caster shot before his turn once couldn't cast
-  though his icons weren't crossed: the next round's cast worked. Archers doing it turn after turn:
+  GAME then a map click walks the caster instead. A caster hit before its turn can also fail to
+  cast with its icons plain: try again the next round. Archers doing it turn after turn:
   [paralyze them](#foes-in-a-test-fight).
-- **Cancelling an aim**: a right-click while aiming cancels, and passed the turn (twice). **Escape
+- **Cancelling an aim**: a right-click while aiming cancels, and passes the turn. **Escape
   while aiming** cancels the aim but opens EXIT GAME? (CANCEL 125,116), and that CANCEL leaves the
   aim up (the next map click casts at it). Escape on the USE screen is safer. Hold Person's pointer
   stays up for its next target after a cast.
@@ -1048,7 +1031,7 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
   range), and a click inside it took all four. A turned undead walks off and doesn't attack (the
   Guard ran north off the screen). A human with a cleric class added in memory is priest level 0
   to the game (Jenna). The party's places (DS:669Dh + 32n) were right. Kalzith's pen (`route.py
-  1592 584`, then `route.py 1560 860`) puts the party beside him for a turning, and the aiming box
+  1592 584`, then `route.py 1560 880`) puts the party beside him for a turning, and the aiming box
   reaches him there (the guards west of Kurzak's stop are behind a wall: "no line of sight").
 - **A spell's description box**: U, a member's portrait (Cermak 66,108), then right-click a spell's
   icon (from 177,59, about 14 apart); in a fight the same on the USE screen (Fire Shield's and Cat's

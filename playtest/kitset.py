@@ -1,5 +1,5 @@
 # kitset.py MEMBER CLASS LEVEL KITBYTE: the member made a single-class character of CLASS (the sheet's
-# class number) at LEVEL with kit KITBYTE (1-3, the class's kits in kitpages.KITS order), and a
+# class number) at LEVEL with kit KITBYTE (0 none, 1-3 the class's kits in kitpages.KITS order), and a
 # non-warrior's attack rate (+2Ah 2: the game reads attacks a round from there, set at creation and
 # level-up, so a warrior's 3 left in place keeps the old rate). Memory only: never save after.
 import os,sys,struct;__file__=os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), 'live.py');exec(open(__file__).read())

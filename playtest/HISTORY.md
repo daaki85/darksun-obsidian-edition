@@ -10,8 +10,8 @@ superseded approach would clutter a recipe.
 
 - The first version of the guide and its tools lived in the scratch folder and were lost when the
   container was reclaimed; the guide was written again into the repository on 2026-11-01
-  (logs/2026-11-01-sewer-grate.md: "Stopped here to write the playing guide"), with the tools, at
-  the root and outside `obsidian-edition/`.
+  (logs/2026-11-01-sewer-grate.md: "Stopped here to write the playing guide"), with the tools, in
+  `playtest/`, outside `obsidian-edition/`.
 - None of the saves came with the game (2026-11-01): every one in `playtest/saves/` was made in a
   play. Replaying the arena took most of a day, hence the rule to save at every milestone.
 - The user's standing instruction to add everything learned to the guide after every play dates
@@ -344,6 +344,15 @@ file name. The others, by the day they were found:
   map (`doorwatch.py`); psionic powers picked at creation, DROP and ADD from the roster.
 - **2026-11-12**: a kit chosen at creation (NO KIT clicked off first), a fire cleric/fighter Battle
   Dancer's starting gear.
+- **2026-11-14**: an archer's shots and its turn (`turnwatch.py`, the attacks byte +181h); arrows set
+  before a fight; readying arrows in a fight; `tofight.sh`; the floating arrow count.
+- **2026-11-15**: every kit at creation and the KITS page's rows; a name at creation (Delete, not
+  BackSpace); the Loader's gear and the roster (`gearpoll.py`); the DUAL sphere menu; `kitset.py`,
+  `canuse.py`, `sheetinfo.py`'s kits; a level-up for a test (XP just short, then a kill).
+- **2026-11-16**: the main menu's 30 s after a fresh start; the roster's order (the game's five
+  first); a party made on the creation screen into a fight; CHOOSE A SPELL's picks by INT and its new
+  grid (`spellgrid.py`); a named weapon for a shot; the unchanged game for a comparison; View
+  Character's icons in play and the Effects page's MORE; `levelup.sh` on the first icon (113,71).
 
 
 ## The roster and the Loader's creation gear (2026-11-15)
