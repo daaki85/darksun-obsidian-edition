@@ -212,7 +212,29 @@ In the fight:
   20.79 s; Gripsure (Okay, ADDed) untouched. Restarted, ADDed: Wooden Bow, Wooden Arrows, Bone
   Short Sword, armour and shield. **PASS.**
 
-## Summary
+## Part 8: the kits not yet played (2026-11-15/16)
+
+- **Justifier** (human ranger 3, "Rick th'Untamed"): the weapon window reads PICK A WEAPON
+  SPECIALTY, the bow greyed (it has the bow already); the long sword picked; Effects: "KIT:
+  JUSTIFIER / SPECIALIZED IN LONG SWORD / EXPERT IN BOW". **PASS.**
+- **Seeker, air** (human ranger 3, "Aticus"; AIR is the ranger's sphere unless changed): PICK A
+  WEAPON OF EXPERTISE with only dagger, cahulaks, chatkcha, bow, sling and staff sling lit; the bow
+  picked; Effects "EXPERT IN BOW" (from the pick alone); gear: Wooden Bow and Arrows, an obsidian
+  dagger in place of the long sword ("a Seeker can't use it"). **PASS.**
+- **Twin-blade** (human gladiator 3, "Twinny", cahulaks and short sword picked; leather armour), in
+  the arena's first fight: "THAC0 18, -1 bone, +1 specialized = 18" on both cahulaks attacks, no
+  two-weapon penalty; the tangle save after each hit. **PASS.**
+- **Assassin asleep after a class change** (memory: Bowtest made thief 3 turned fighter 1, the
+  Assassin kit on the thief class, `dualset.py`-style; a heavy chest armour type, 12, on its chest
+  item): asleep, the armour taken off and put back on (AC 6 to 4); with fighter 4 over thief 3 (kit
+  awake) the same move: "CANNOT USE THIS ITEM". `canuse.py`: allowed / kit forbids. **PASS.**
+- **Crusader** (memory: Jenna of `fountain-user` made cleric 7, kit 3, `kitset.py 1 1 7 3`, her
+  long sword spec her chosen weapon; the ambush): two rounds of 2 main-hand attacks (and her off
+  hand's one), "+4 Crusader (a warrior's THAC0)"; at level 6 (`kitset.py 1 1 6 3`): 2 then 1 (3/2)
+  and +3. **PASS.** The first try, in the arena with Rick, stayed 3/2 at "7th level": the game reads
+  attacks a round from the sheet's +2Ah (a ranger's 3), so `kitset.py` sets it to a cleric's 2.
+- The arena's extra wave (staying after the Announcer) defeated that party: a 3rd-level party with
+  memory edits loses to it.
 
 | Kit | What was checked | Result |
 |---|---|---|
