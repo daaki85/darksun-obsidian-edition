@@ -108,6 +108,19 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   Myrmidon of an older save keeps its two. Checked in the game (playtest/logs/2026-11-15-kit-rebalance-checks.md,
   with every other kit changed on this branch). Tests: `test_myrmidon_polearm`, `test_myrmidon_polearm_second`,
   `test_myrmidon_two_weapons`, `KindsAllowedTests`.
+- **CHOOSE A SPELL's icons centred** (the user's report): the game fills its window's 21 places
+  (WIND 17500) middle five columns first, then the right-hand column, then the left, so past 15
+  spells (the game's own 4th level, 16; the 1st with the new spells, 18) the grid sat right of
+  centre. Compared with the unchanged game (its window the same; at creation the unchanged game
+  offers no picks). The Loader's RESOURCE.GFF has the first 18 places six to a row, filled row by row,
+  centred (`spellgrid.py`, from `icons.py`). Tests: `test_spellgrid`. Checked in the game: a
+  Spellarcher's 1st-level picks in the new grid, a click on Shocking Grasp's new place taking it.
+- **No Loader gear on the creation screen's stand-in**: a character left a while on the creation
+  screen with its kit marked had its gear given then too (the dice log's "starts with ..." lines
+  before its spell picks), and again after DONE; the game threw the first away. `game.being_new`
+  now passes over a New record while the creation screen is up (`GameData.creating`), only the one
+  DONE made (`making`). Test: `test_dicelog`'s `test_being_new`. Checked in the game: a Spellarcher
+  renamed and left 25 s with its kit marked, no gear lines until after DONE, then once.
 - **The Spellarcher: no Burning Arrows, saves as the spells', a Fine Bow and arrows to start** (the
   user's design, after the game's manual and The Complete Fighter's Handbook): **Burning Hands**, a
   cone from the caster in the manual, is not a touch, so it makes no arrows (`ARROW_KNOWS` skips the

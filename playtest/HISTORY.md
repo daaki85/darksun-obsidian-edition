@@ -417,3 +417,12 @@ and the fourth landed on the weapon window. Two of the four got a gear pass whil
 screen was still up (the stand-in record is New), its lines in the dice log before the picks; the
 game threw that gear away at DONE. The party of fresh characters then lost the arena's first wave
 in melee, so the Fine Bow's shot was taken from `tofight.sh` with Ester's bow renamed in memory.
+
+## CHOOSE A SPELL's grid and the unchanged game (2026-11-16)
+
+The user saw the spell icons sit right of centre. The unchanged game (its own DSUN.EXE in DOSBox,
+no DSCLOG or Loader) gives a new preserver no CHOOSE A SPELL, so its window was read from the
+game's RESOURCE.GFF instead (WIND 17500, the same as the Loader's copy then): 21 places in seven
+columns, filled middle five first, then the right-hand column. A level-up in the unchanged game
+from fountain-user (Lex's XP to 4,999, the Templar killed by Jenna) didn't come before the party,
+passing its turns, was beaten.

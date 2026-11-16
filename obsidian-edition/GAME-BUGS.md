@@ -135,6 +135,7 @@ memory fixes in [DEVELOPMENT.md](DEVELOPMENT.md#room-in-the-helper), and the row
 | **What a scroll says** on the inventory screen | YOU LEARN THE SPELL, YOU CAN NOT READ THE SCROLL and the rest were written to the line under the paper doll but never reached the screen | Shown there, until the pointer is on something else ([what a scroll says](FEATURES.md#what-a-scroll-says)) |
 | An archer's **pointer** after a shot | Showed "can't shoot" once any shot of the round was made (one that killed its target, say), though the click still shot the shots left | Shows "can't" only once every shot of the round is made |
 | A magic item's power on the **Effects screen** (Shadowseeker's Detect Invisibility) | Said "(15 CHARGES)": the game adds an item's power as it does a permanent effect, leaving a stray value in the charges byte, and showed charges unless the spell's own time was permanent | Charges show only for a spell that lasts a number of uses or a timed effect, as Armor's |
+| **CHOOSE A SPELL**'s icons with more than 15 spells on offer (the game's own 4th level has 16; with the new spells the 1st has 18) | The 16th to 18th went in a seventh column on the right while the matching one on the left stayed empty, so the grid sat right of centre | Six to a row, filled row by row and centred |
 
 ### Pictures and memory
 

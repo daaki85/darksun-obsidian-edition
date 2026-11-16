@@ -2021,6 +2021,10 @@ class NewLinesTests(unittest.TestCase):
         self.assertTrue(game.being_new(SimpleNamespace(making=2), bytes(rec)))
         rec[game.CREATURE_STATUS] = game.STATUS_NEW
         self.assertTrue(game.being_new(SimpleNamespace(making=None), bytes(rec)))
+        # the creation screen up: its New stand-in isn't, the one DONE made is
+        self.assertFalse(game.being_new(SimpleNamespace(making=None, creating=lambda: True), bytes(rec)))
+        self.assertTrue(game.being_new(SimpleNamespace(making=None, creating=lambda: False), bytes(rec)))
+        self.assertTrue(game.being_new(SimpleNamespace(making=2, creating=lambda: True), bytes(rec)))
         log = make_game()
         m = log.guest.mem
         m[HDR + dicelog.TSR_GEAR_DUE], m[HDR + dicelog.TSR_GEAR_WHO] = 1, 2

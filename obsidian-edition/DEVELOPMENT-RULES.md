@@ -58,6 +58,7 @@
 - [Thief skills from AD&D's table](#thief-skills-from-adds-table)
 - [Hiding in shadows to backstab](#hiding-in-shadows-to-backstab)
   - [A backstab multiplies the weapon's dice only](#a-backstab-multiplies-the-weapons-dice-only)
+- [CHOOSE A SPELL's grid](#choose-a-spells-grid)
 - [Spell arrows](#spell-arrows)
 - [Picking pockets](#picking-pockets)
 
@@ -1746,6 +1747,18 @@ backstab step, the round's count read from the attack's frame,
 `parent_local(-0x14)`). Tests: test_dsclog's `test_backstab_dice`,
 `test_backstab_first_attack_only`, `test_assassin_backstab`; test_dicelog's
 `test_backstab_multiplies_the_damage`, `test_enlarge_before_the_backstab`.
+
+## CHOOSE A SPELL's grid
+
+([The game's bugs](GAME-BUGS.md); `spellgrid.py`.) The window (WIND 17500 in RESOURCE.GFF) has 21
+places for the spells on offer, APFM 2BCDh-2BE1h, which the routine (85560h) fills in that order:
+the first 15 are the middle five of seven columns, row by row (x 47 to 123, y 24, 44, 64), the next
+three the right-hand column (142), the last three the left-hand one (28). Past 15 spells the grid
+sat right of centre: the game's 4th level has 16 wizard spells, and with the new spells the 1st has
+18 (seen 2026-11-16, compared with the window in the unchanged game's RESOURCE.GFF, the same). The
+Loader's copy of RESOURCE.GFF (`icons.py`'s chunks) has the first 18 places six to a row, 19 apart,
+filled row by row and centred where the seven columns were (x 38 to 133); no level offers more, and
+the last three stay as they are. The routine and its clicks are the game's: only the places move.
 
 ## Spell arrows
 

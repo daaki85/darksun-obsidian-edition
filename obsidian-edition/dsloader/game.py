@@ -1053,11 +1053,20 @@ def being_new(gd, rec: bytes) -> bool:
     """A party member's creature record a New character's: not yet played, or the one the creation
     screen's DONE just made (GD.making, its sheet index, from DSCLOG's GEAR_WHO), which the game
     keeps Okay until after it has written the roster's copy (the Loader's creation gear, given only
-    to New characters, came too late for that copy up to 2.17)."""
-    if rec[CREATURE_STATUS] == STATUS_NEW:
-        return True
+    to New characters, came too late for that copy up to 2.17). While the creation screen is up
+    (GD.creating) only that one: the New record there is the screen's stand-in, whose gear the game
+    replaces at DONE (it was fitted out too, its lines in the dice log before the spell picks, up to
+    2.17)."""
     making = getattr(gd, "making", None)
-    return making is not None and struct.unpack_from("<H", rec, CREATURE_SHEET_INDEX)[0] == making
+    if making is not None and struct.unpack_from("<H", rec, CREATURE_SHEET_INDEX)[0] == making:
+        return True
+    if rec[CREATURE_STATUS] != STATUS_NEW:
+        return False
+    creating = getattr(gd, "creating", None)
+    try:
+        return not (callable(creating) and creating() is True)
+    except (struct.error, IndexError, ValueError, AttributeError, TypeError):
+        return True
 
 
 # The spell's damage kinds (its flags word): the saving throw doubles the d20 against fire,

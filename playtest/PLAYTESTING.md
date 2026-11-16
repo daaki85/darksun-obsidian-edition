@@ -624,10 +624,12 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   mul). **A priest's discipline**: a cleric's or druid's panel shows its spheres; **VIEW
   PSIONICS** (240,138, in the KITS button's place on the kit page) shows the disciplines (P-KINESIS
   250,106, P-METAB 114, TELEPATHY 122; click the marked one off first), VIEW SPHERES back.
-  **CHOOSE A SPELL at creation**: icons 6 a row, about 18 apart from (122,71), rows 22 apart (a
-  click at 99,72 lands beside them and does nothing); the list closes up after each pick; the
-  icons are in spell-number order (Armor, Burning Hands, Charm Person, Chill Touch, Color Spray...;
-  Shield and Shocking Grasp the 10th and 11th, (176,93) once one before them is taken): pick one at a
+  **CHOOSE A SPELL at creation**: since 2026-11-16 (`spellgrid.py`) the icons are 6 a row, filled
+  row by row, 19 apart from (113,71), rows 20 apart (Nth spell from 0: x 113 + 19 x (N mod 6), y 71
+  + 20 x (N div 6)); before, the game's order (five middle columns from (122,71), then a right-hand
+  one). The list closes up after each pick; the icons are in spell-number order (Armor, Burning
+  Hands, Charm Person, Chill Touch, Color Spray...; Shield and Shocking Grasp the 10th and 11th:
+  Shocking Grasp alone first at (189,91)). Pick one at a
   time and read `known.py M` after each, since the number of picks goes by INT (a half-elf
   fighter/preserver 2/2: four at INT 16-17, two at INT 15) and a click past the last pick lands in
   the weapon window (logs/2026-11-16-spellarcher-fine-bow.md); LEVEL 1
@@ -647,16 +649,22 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   `start.sh`, which keeps the other keys; take it out again after.
 - **The main menu after a fresh start** comes about 30 s after the two title clicks (2026-11-16): a
   CREATE CHARACTERS click before it does nothing; shoot, then click again.
+- **The unchanged game, for a comparison** (2026-11-16): a DOSBox config like the Loader's
+  (`dosbox_dicelog.conf` to its `[autoexec]`) whose autoexec mounts C at `..` and runs `DSUN.EXE`
+  (the game folder's files are the originals; the Loader writes its copies to `obsidian-edition/dos`).
+  Its intro plays: Escape a few times. click.py, creationscores.py and the memory tools work on it;
+  Tab doesn't pick a target (the mod's), and **a new preserver gets no CHOOSE A SPELL at creation**
+  (the mod's): its window shows at a level-up. To compare a screen's layout, read its WIND chunk
+  in the game's RESOURCE.GFF against the Loader's copy (`dsloader.gff.read_gff`).
 - **A party made on the creation screen into a fight**: Escape on VIEW CHARACTER goes back to the
   main menu (the made characters stay), and **S** there is START GAME; then topartyfight.sh's steps
   from the message boxes on (typed, not cut from it: its first clicks are for the title, and (160,
   120) on the main menu is near EXIT TO DOS). Four fresh 2nd-level characters lose the arena's
   first wave to Tab + Return ("YOUR PARTY HAS BEEN DEFEATED"): check a USE screen at the gate, and
   take a shot from `tofight.sh` instead (logs/2026-11-16-spellarcher-fine-bow.md).
-- **The Loader's gear on the stand-in**: a character left a while on the creation screen with its
-  kit marked (renaming it, say) gets a gear pass then (dice log "starts with ..." lines before its
-  picks): the game replaces that gear at DONE and the pass after DONE gives the real one. Read the
-  last "starts with" lines, and `carried.py`.
+- **The Loader's gear on the creation screen**: none until DONE (since 2026-11-16: the screen's
+  stand-in, a New record, is passed over); up to then a character left a while there with its kit
+  marked got a pass early too, its lines before the picks.
 - **Psionic powers at creation** (logs/2026-11-11-psionic-picks.md): after DONE (and a warrior's
   weapon window) PICK A PSIONIC POWER opens: icons from (123,62), 17 apart, five to a row (the
   list closes up after each pick: clicking (123,62) again takes the next); the discipline button
