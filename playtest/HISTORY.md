@@ -371,3 +371,15 @@ made with the rule off (Arm and Leg Armor from the Loader) and a Myrmidon with i
 polearm in the backpack, the sling, specs long sword and polearm) were each ADDed after a restart
 with all of it. A worker restart between DONE and the ADD killed Xvfb and DOSBox again, which here
 served as the restart; the main menu took about 30 s after the title clicks.
+
+## The Brute who became an air cleric (2026-11-16)
+
+Checking the kits' DUAL bans in the game (logs/2026-11-15-kit-rebalance-checks.md part 9): a Brute
+may not change class to air cleric, and DSCLOG greyed that class, but the DUAL window has one CLERIC
+row for all four spheres, lit while any is allowed, and the game's sphere menu after it makes its
+title row, or the menu closed, the air class. Cermak, a Brute in memory, became an air cleric by
+closing the menu. DSCLOG's PROBE_SPHERE now refuses a barred class there (no change, the window
+shut). The same session: untilturn.sh stalled on a member with no Move whose END menu was at the
+screen's left (toturn.sh presses E instead), and chestuse.sh's press on Pehtucl's chest opened the
+USE screen: `pointer.py look`, the press at (163,70) and the look box's third button worked.
+

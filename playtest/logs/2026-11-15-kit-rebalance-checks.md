@@ -241,6 +241,43 @@ In the fight:
 - The arena's extra wave (staying after the Announcer) defeated that party: a 3rd-level party with
   memory edits loses to it.
 
+## Part 9: the Swashbuckler's lock, and the rest (2026-11-16)
+
+- **Swashbuckler's bad luck on a lock** (`pens-new-chest`, `shut.py`, the chest as the guide has it;
+  Gerakis made a Swashbuckler thief 5 in memory, `kitset.py 0 17 5 1` then `thief.py 0 5`): the
+  chest's trap roll "find/remove traps 28 = 40 thief level 5 - 19 Swashbuckler's bad luck + 7
+  equipment" (failed: the needle), the lock "open locks 27 = 42 thief level 5 - 15 Swashbuckler's
+  bad luck" (d100 2: opened). Cilla (a thief, no kit) rolled the trap too, with no bad luck. Two
+  different amounts, each within 0-25. **PASS.**
+- **Shinobi asleep after a class change** (Gerakis in memory: human, thief 5 turned fighter 1, kit 3
+  on the thief class; his chest armour's type 12, heavy): asleep, taken off and put back on (AC 7 to
+  5); fighter 6, awake: "CANNOT USE THIS ITEM". **PASS.**
+- **Brute and air cleric: a bug found and fixed.** Cermak made a Brute (gladiator 3, `kitset.py 2 10
+  3 3`): DUAL (portrait 20,104 right-click, DUAL 90,145) shows CLERIC lit (earth, fire and water are
+  open to it), and its sphere menu has the title row "SPHERE: AIR", then EARTH, FIRE, WATER. The
+  title row takes no click; the menu's close (210,116) made him an **air cleric** (classes [1, 10]):
+  the game makes any answer but a row the air class. Fixed in DSCLOG (`PROBE_SPHERE`'s
+  `SPHERE_BARRED`). On the new build (buildcheck OK): the close changed nothing (gladiator 3, the
+  window shut); EARTH (140,92) made him an earth cleric ([2, 10]). **PASS.**
+- **One kit a character after DUAL**: that change of class to earth cleric asked for no kit (Brute
+  his only kit). **PASS.**
+- **Swashbuckler's warrior THAC0** (`fountain-user`, Jenna a Swashbuckler thief 7 in memory, her
+  long sword spec the chosen weapon): "+4 Swashbuckler (a warrior's THAC0)". **PASS.**
+- **Battle Mage's warrior THAC0** (Jenna a Battle Mage preserver 7, `kitset.py 1 11 7 2`): "+4
+  Battle Mage (a warrior's THAC0)" with her chosen long sword. **PASS.** (Its attacks a round go
+  through the Crusader's code, checked in part 8.)
+- **Grove Warden's sphere weapons** (Jenna an air druid Grove Warden 7, `kitset.py 1 5 7 1`): her
+  long sword went back into her hand while she had a long sword spec (a kind a character specialized
+  in is never barred by its kit); with her specs cleared in memory: "CANNOT USE THIS ITEM".
+  **PASS.**
+- New tool: `toturn.sh N` plays the party's turns to member N's, pressing E when a member's turn
+  stays up after Tab + Return (its END menu was at the screen's left this time, where a fixed pixel
+  test missed it; `untilturn.sh` kept pressing Tab there).
+- Not played: the Arcanist's casting a level higher and the Scholar's extra spell at a level up or
+  DUAL (CHOOSE A SPELL at creation was played in part 1); the emulator tests cover them.
+
+## Summary
+
 | Kit | What was checked | Result |
 |---|---|---|
 | Myrmidon | one pick, polearm greyed, bow lit; polearm spec and item; -2 initiative; roster copy (after the fix) | PASS |
@@ -262,7 +299,12 @@ In the fight:
 | Assassin | heavy armour worn while asleep after a class change, refused once awake | PASS |
 | Crusader | 2 attacks a round at 7th level with the chosen weapon, 3/2 at 6th | PASS |
 | Mind Warrior | 2 attacks a round at 7th level with the chosen weapon | PASS |
+| Swashbuckler | bad luck on a lock and a trap (-15, -19); warrior THAC0 with its chosen blade | PASS |
+| Shinobi | heavy armour worn asleep after a class change, refused awake | PASS |
+| Brute | no air cleric by DUAL (a bug: closing the sphere menu made one; fixed, part 9) | PASS after the fix |
+| Battle Mage | warrior THAC0 with its chosen weapon | PASS |
+| Grove Warden | a weapon its sphere bars refused (with none of its weapon specs) | PASS |
+| (any) | no second kit after DUAL | PASS |
 
-Not played: the Swashbuckler's bad luck on one of the game's own rolls (a lock; its luck on a
-pocket was seen in part 4), the Shinobi's armour asleep (the same code as the Assassin's); the
+Not played: the Arcanist's level higher and the Scholar's spell at a level up or DUAL; the
 emulator tests cover them.

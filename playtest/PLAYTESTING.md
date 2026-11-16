@@ -575,6 +575,16 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   left there keeps 3/2 whatever the class). Before the fight, or at least before the member's next
   attack. `fountain-user`'s Jenna (long sword spec, two long swords) is a good subject: count the
   main hand's lines ("with Bone Long Sword") each round. Never save after.
+- **The DUAL sphere menu** (logs/2026-11-15-kit-rebalance-checks.md part 9): after CLERIC, DRUID or
+  RANGER on the DUAL window, a menu whose title row is "SPHERE: AIR" (no click there), EARTH
+  (140,92), FIRE (140,104), WATER (140,116), and a close button (210,116). **The game makes the
+  close the air class and changes the member** (a real change: only on a test save or in memory);
+  for a class the member's kit bars (a Brute's air cleric) DSCLOG makes it no change.
+- **A kit's limits on items**: a weapon kind the character specialized in is never barred by its
+  kit (a Grove Warden with a long sword spec keeps its long sword): clear the specs (sheet
+  +14h-+17h) in memory to see the limit. Take the item off and put it back on in the inventory: a
+  barred one gives "CANNOT USE THIS ITEM". A heavy armour for a test: a worn chest item's type set
+  to 12 in memory.
 - **A name at creation** (2026-11-15): click the name (40,128), press **Delete** 16 times
   (BackSpace does nothing; typing goes in front of the old name), type it, Return.
 - **The Loader's gear and the roster** (logs/2026-11-15-kit-rebalance-checks.md part 7): start
@@ -746,7 +756,9 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
    red "can't" pointer and the turn passed. A shot test needs a clear line, a target in range, and
    a readied missile weapon with ammunition in the missile slot. [A shot with a weapon put in
    memory](#weapons-and-rules-in-a-fight).
-8. **Playing the party's turns to a member's**: `PARTY="A|B|C|D" sh untilturn.sh NAME` (Tab +
+8. **Playing the party's turns to a member's**: `sh toturn.sh N` (2026-11-16: Tab + Return, and E
+   when the same member's turn stays up, its END menu wherever the game put it), or
+   `PARTY="A|B|C|D" sh untilturn.sh NAME` (Tab +
    Return for each named member's turn, messages clicked away, the foes' turns waited out) stops at
    NAME's turn; `stepfight.sh` from the arena gate clicks south until the fight is on.
    **Passing one member's turn**: `memberpos.py N` gives its figure on the screen; a click there
