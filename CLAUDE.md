@@ -42,9 +42,11 @@ they differ.
 - **Story fights go through `fightout.sh`**; never `killfoes.py` in a fight a script waits on (the
   scripts miss the kills).
 - Everything else (reading the game, controls, walking and doors, talk, fights, spells, inventory
-  and shops, pictures for the docs, the recompiled program as the target) is in the guide's
-  [recipes](playtest/PLAYTESTING.md#recipes); the route through the story (new game, arena, slave
-  pens, Kurzak's call, back to the arena) is its [route](playtest/PLAYTESTING.md#the-route-through-the-story).
+  and shops, pictures for the docs) is in the guide's [recipes](playtest/PLAYTESTING.md#recipes);
+  the route through the story (new game, arena, slave pens, Kurzak's call, back to the arena) is in
+  [ROUTE.md](playtest/ROUTE.md), the research recipes (sounds, the picture store, frame rate, the
+  game's scripts, the recompiled program as the target, Wake of the Ravager) in
+  [RESEARCH.md](playtest/RESEARCH.md), and every tool in [TOOLS.md](playtest/TOOLS.md).
 
 **Git.** The repository is `daaki85/darksun-obsidian-edition` (was `milenkovicdarko`: if `git remote -v`
 still shows that, `git remote set-url origin https://github.com/daaki85/darksun-obsidian-edition.git`).
