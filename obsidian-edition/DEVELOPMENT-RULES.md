@@ -1,6 +1,6 @@
 # Development: the rules
 
-*Part of the [development notes](DEVELOPMENT.md). How each rule change, the character customization (weapon specs, kits, the starting gear) and the improved thieving are done: where the patched game calls the helper (DSCLOG), and what the Loader reads and writes. Most headings name the section of a player's page they explain (the [features page](FEATURES.md), the [README](README.md), [items](ITEMS.md), [kits](KITS.md), [bugs fixed](GAME-BUGS.md), [how the game works](HOW-THE-GAME-WORKS.md), [the dice log](DICE-LOG.md)); the rest, a part of one or a note of their own, say which at their start.*
+*Part of the [development notes](DEVELOPMENT.md). How each rule change, the character customization (weapon specs, the starting gear; the kits on [their own page](DEVELOPMENT-KITS.md)) and the improved thieving are done: where the patched game calls the helper (DSCLOG), and what the Loader reads and writes. Most headings name the section of a player's page they explain (the [features page](FEATURES.md), the [README](README.md), [items](ITEMS.md), [kits](KITS.md), [bugs fixed](GAME-BUGS.md), [how the game works](HOW-THE-GAME-WORKS.md), [the dice log](DICE-LOG.md)); the rest, a part of one or a note of their own, say which at their start.*
 
 ## Contents
 
@@ -51,14 +51,15 @@
 - [Psionic powers at creation](#psionic-powers-at-creation)
 - [Level cap by XP](#level-cap-by-xp)
 - [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen)
+- [New characters and the roster write](#new-characters-and-the-roster-write)
 - [Fuller starting gear](#fuller-starting-gear)
 - [The game's own party](#the-games-own-party)
 - [The leader's CHA at shops](#the-leaders-cha-at-shops)
 - [Buying back magical items](#buying-back-magical-items)
 - [Thief skills from AD&D's table](#thief-skills-from-adds-table)
+  - [A lock or a pocket failed: another try a level later](#a-lock-or-a-pocket-failed-another-try-a-level-later)
 - [Hiding in shadows to backstab](#hiding-in-shadows-to-backstab)
   - [A backstab multiplies the weapon's dice only](#a-backstab-multiplies-the-weapons-dice-only)
-- [CHOOSE A SPELL's grid](#choose-a-spells-grid)
 - [Spell arrows](#spell-arrows)
 - [Picking pockets](#picking-pockets)
 
@@ -1427,7 +1428,7 @@ its copy of `DSUN.EXE` (`gamepatch.ROLL_STORE`, as `EFFECTS_KEPT`).
 
 The buttons: the creation screen is window 3011 in `RESOURCE.GFF`, its buttons
 the die (7DAh), EXIT (80Ah), DONE (7D0h) and the rest. In the Loader's copy
-(`dsloader/rollstore.py`) it has two more, STORE (8A0h) and RECALL (8A1h),
+(`dsloader/rollstore.py`) it has two more, STORE (8B0h) and RECALL (8B1h),
 under the hit points and PSP, after its own items (the name box, an `EBOX`,
 among them). Their pictures are the game's carved stone buttons: a blank cut
 from DELETE's bevel and face, and letters taken from SAVE, LOAD, DROP and
@@ -1478,7 +1479,9 @@ gear alone. The handshake, DSCLOG's header fields with the Loader's names:
   waits for the specs).
 - `GEAR_WHO` (+1867, `TSR_GEAR_WHO`): the new member's sheet index. The game keeps a character
   being made Okay, not New, until after the roster's write, so `game.being_new` counts this one New
-  for `finish_new`, `class_gear`, `kit_gear` and `fill`.
+  for `finish_new`, `class_gear`, `kit_gear` and `fill`. While the creation screen is up
+  (`GameData.creating`) only that one counts: the other New record there is the screen's stand-in,
+  whose items the game replaces at DONE, so it gets none (`test_dicelog`'s `test_being_new`).
 - `GEAR_GIVEN` (+1831): the members whose items the pass changed, for `GEAR_WAIT` (PROBE_VIEW's,
   VIEW CHARACTER) to draw the screen again with them; `GEAR_HOLD` clears it once the gear is in.
 - `LOADER_BEAT` (+1865, `TSR_LOADER_BEAT`): the BIOS timer at the Loader's last beat, written by
@@ -1748,18 +1751,6 @@ backstab step, the round's count read from the attack's frame,
 `test_backstab_first_attack_only`, `test_assassin_backstab`; test_dicelog's
 `test_backstab_multiplies_the_damage`, `test_enlarge_before_the_backstab`.
 
-## CHOOSE A SPELL's grid
-
-([The game's bugs](GAME-BUGS.md); `spellgrid.py`.) The window (WIND 17500 in RESOURCE.GFF) has 21
-places for the spells on offer, APFM 2BCDh-2BE1h, which the routine (85560h) fills in that order:
-the first 15 are the middle five of seven columns, row by row (x 47 to 123, y 24, 44, 64), the next
-three the right-hand column (142), the last three the left-hand one (28). Past 15 spells the grid
-sat right of centre: the game's 4th level has 16 wizard spells, and with the new spells the 1st has
-18 (seen 2026-11-16, compared with the window in the unchanged game's RESOURCE.GFF, the same). The
-Loader's copy of RESOURCE.GFF (`icons.py`'s chunks) has the first 18 places six to a row, 19 apart,
-filled row by row and centred where the seven columns were (x 38 to 133); no level offers more, and
-the last three stay as they are. The routine and its clicks are the game's: only the places move.
-
 ## Spell arrows
 
 ([In the kits page](KITS.md#multiclass-kits): the Spellarcher; `spellarrows.py`.)
@@ -1793,11 +1784,10 @@ most: the arrow joins that spell's stack wherever it is (its count up by one; a
 full stack takes none and uses no slot); with none, a new stack of the game's
 Arrows (type 62) goes in the quiver when it is empty (`npcitems.add_to` with the
 ammunition slot; `weaponchoice.bow_ahead` then puts the bow ahead of it in the
-list), else in a backpack cell. The stack is named Burning, Chill, Shocking or
-Vampiric Arrows (names 16Ch-16Fh), their pictures objects 2614-2621 (the Arrows'
+list), else in a backpack cell. The stack is named Chill, Shocking or
+Vampiric Arrows (names 16Dh-16Fh; 16Ch, Burning, kept unused), their pictures objects 2614-2621 (the Arrows'
 icon, its heads in the spell's colours), value 0. They last until shot: nothing
-takes them away at a rest (up to 2.17 they faded, and the quiver kept them: 5 a
-preserver level made a stack). They are readied and put away as any arrows.
+takes them away at a rest. They are readied and put away as any arrows.
 
 **The hit.** The weapon attack routine (5883Ah) casts only the weapon's own
 spell on a hit (its item's +0Fh, the spell + 1, at 58B63h; cast by 598:89h with
@@ -1813,17 +1803,18 @@ above 1, a bow's type at [BP+14h]) with spell arrows their spell instead, when a
 Spellarcher shot them (`PROBE_ARROW`'s `AMMO_ARCHER`), and `ARROW_SPELL`
 (`NS_IMAGE+29`, over "mov cl,es:[bx+0Fh]") hands it on. The target saves as against
 the spell (its record's save byte: Chill Touch's a save, Shocking Grasp's and Vampiric Touch's
-none; a branch's `ARROW_SAVE` gave those two one, taken out before release). The arrows hold no spell
+none). The arrows hold no spell
 themselves, so nothing else in the game (the USE screen's items, breaking, acid)
 sees one. Only a Spellarcher carries them: `ARROWS_FORBID`, in `PROBE_CAN_USE`
 (whatever the rules), refuses spell arrows (the equip routine's item, its
 `[BP+6]`) to anyone else; the game asks nothing of an item put in a backpack, so the Loader
 (`spellarrows.return_strays`, out of fights with the inventory shut: `INVENTORY_SLOTS`) takes any
 another member carries back to the party's Spellarcher. The four spells' records pass the
-routine's own test (+30h's low bits 2, not 1). Checked in the game (up to 2.17's rules):
-Burning and Chill Arrows buttons for a Spellarcher knowing both (one in Turn Undead's
-place, one beside it), their names and descriptions, a click on each making arrows with
-a 1st-level slot used, and Chill Touch cast on a hit with them. Arrows put in the
+routine's own test (+30h's low bits 2, not 1). Checked in the game (playtest/logs/2026-11-16-spellarcher-fine-bow.md): no Burning
+Arrows button for a Spellarcher knowing Burning Hands, Chill and Shocking Arrows buttons for one
+knowing both, the starting arrows by the picks, and a shot with Shocking Arrows casting Shocking
+Grasp. A new Spellarcher's Fine Bow and starting arrows (`spellarrows.starting_gear`) and the
+arrows' plus are in [the kits' notes](DEVELOPMENT-KITS.md#where-each-effect-goes). Arrows put in the
 ammunition slot by memory writes during a fight are not shot (the game keeps its own
 list of what each combatant has readied): they're made outside fights only.
 

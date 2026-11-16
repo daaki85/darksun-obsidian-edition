@@ -4,6 +4,15 @@
 How each kit is done: where the patched game calls the helper (DSCLOG) and what the Loader reads
 and writes. The player's page is [Kits](KITS.md).*
 
+## Contents
+
+- [The kits](#the-kits)
+- [The kit's byte](#the-kits-byte)
+- [Choosing one](#choosing-one)
+- [Multiclass kits](#multiclass-kits)
+- [Where each effect goes](#where-each-effect-goes)
+- [How they're checked](#how-theyre-checked)
+
 ## The kits
 
 What each kit gives and costs is in [the Kits page](KITS.md).
@@ -30,9 +39,9 @@ No kit is the kit page's first row, and what a new character has.
 Sheet `+43h`: zero in every sheet of the saves and saved characters at hand
 (176), and nothing in DSUN.EXE reads or writes it (no `es:[bx+43h]` access of
 any kind), as with the weapon specs' `+14h` to `+17h`, which saves and the
-roster keep. `+45h` is the same, if a second byte is needed (the Arcanist's
-CON change used it, once, before that became its d3). 0: no kit; 1 to 3 the
-class's kits.
+roster keep. `+45h` is the Elementalist's second sphere (`SPHERE2`, [below](#where-each-effect-goes)).
+In `+43h`, two bits a class place (0: no kit; 1 to 3 the class's kits), 40h `OWN_BIT`, 80h
+Friends known, FFh `KIT_OPEN` (DEVELOPMENT.md's sheet table has the same).
 
 ## Choosing one
 
@@ -230,8 +239,7 @@ How each is done:
 - **Spells learnt.** Scholar: one more at each level up (`PROBE_LV_PICK`'s `LV_SCHOLAR`: the game's
   CHOOSE A SPELL once before its own), one more for each level at creation (`KIT_MADE` in
   `PROBE_CR_SPELLS`' count) and on changing class to preserver (`PROBE_DUAL_SPELLS`). Up to 2.17 a
-  slot more at each spell level too; on this branch it was tried as a sure scroll learning, then as
-  INT's bonus slots, before this.
+  slot more at each spell level too.
 - **Spell slots.** Battle Mage (−1 wizard), Crusader (−1 priest), Seeker and
   Justifier (their priest tables, `SEEKER_SLOTS`, by ranger level, in place of the game's),
   Elementalist (a level behind, `PROBE_SLOT_LEVEL`; but at least 1 at a spell level its own cleric
@@ -356,13 +364,13 @@ How each is done:
   `WHOSE_TURN`'s combatant; `kits.arrow_plus`. The weapon spec: `KINDS_ALLOWED` gives a Spellarcher
   the bow only, the one weapon spec the window after DONE offers it.
 - **The Fine Bow.** Spellarcher (its starting bow, The Complete Fighter's Handbook's fine quality: +1
-  to hit, not magic). `weaponchoice.kit_gear` calls `spellarrows.starting_gear` for a new
+  to hit, not magic; the spell arrows themselves: [Spell arrows](DEVELOPMENT-RULES.md#spell-arrows)). `weaponchoice.kit_gear` calls `spellarrows.starting_gear` for a new
   Spellarcher: its bow (the weapon rules' bow, or a plain one) is renamed Fine Bow (name 173h,
   `game.FINE_BOW_NAME`, DSCLOG's 50th extra name), and arrows go in by the touch spells it knows
   (the game's known table, `spellarrows.knows`): 24 Chill Arrows for Chill Touch, 24 Shocking
   Arrows for Shocking Grasp, both stacks for both (the first in the quiver), the plain arrows taken
   away; with neither, 24 plain ones. Once: none if it has its Fine Bow. `FINE_HIT`, in
-  `PROBE_ATTACKS` after `WAR_HIT`, takes 1 off the attack's THAC0 when the item at `[BP+12h]` is
+  `PROBE_ATTACKS` after `WAR_HIT` (both it and `IB_MATERIAL` look the name up through `FINE_ITEM`), takes 1 off the attack's THAC0 when the item at `[BP+12h]` is
   named Fine Bow (whatever the rules); `IB_MATERIAL` shows its item box "Hit +1"; the Loader's THAC0
   for each weapon (`game.weapon_hits`) and the dice log's THAC0 line have it as "+1 fine". Bows
   never break and take no material penalty (their type's flag 80h), so nothing else is needed.
@@ -455,7 +463,7 @@ How each is done:
   the sheet). The creation screen's range (the least and most hit points it allows, `DS:[4998h]` and
   `[4996h]`, worked out with the rolls by 655D6h): `PROBE_CR_DIE` (`INT A3h`, new: `mov
   al,es:[bx+14Ah]`, 65677h, the die from its table by creation class). `kits.hit_die`.
-- **Max PSP.** Mind Warrior (a fifth fewer, rounded down: `kits.MIND_PSP`; a tenth up to 2.17). Where: at a level up: `PROBE_MAX_PSP`
+- **Max PSP.** Mind Warrior (a fifth fewer, rounded down: `kits.MIND_PSP`). Where: at a level up: `PROBE_MAX_PSP`
   (`INT A4h`, new: `les bx,[bp-8]`, 8748Fh, the sum in SI before it goes in the sheet, in the
   routine at 873B2h, which the level-up check runs for every party member, and a game's start too;
   first `PSP_SCORES` puts the game's CON, INT and WIS bonuses right: WIS read through `DS:11A0h`,
@@ -498,7 +506,7 @@ whose masks meet its:
 | a new preserver's spells, at creation | every preserver | `PROBE_CR_SPELLS`, `PICK_SPELLS`, `PICK_FILL` |
 | sound numbers on the sheet | every character | `PROBE_SOUND_42`, `PROBE_SOUND_44` |
 | a kit for a dual-classing human's new class | every kit | `PROBE_DUAL_KIT` |
-| starting gear fitted to the kit | Ravager, Brute, Shinobi, Seeker, Shadowblade, Ghetto Fighter, Rescuer, Arena Champion, Poisoner, Battle Mage, Battle Dancer, Myrmidon | `weaponchoice.kit_gear` |
+| starting gear fitted to the kit | Ravager, Brute, Shinobi, Seeker, Shadowblade, Ghetto Fighter, Rescuer, Arena Champion, Poisoner, Battle Mage, Battle Dancer, Myrmidon, Spellarcher | `weaponchoice.kit_gear`, `spellarrows.starting_gear` |
 | caster level, a spell's level | Elementalist, Healer | `PROBE_EL_CAST`, `PROBE_EL_LEVEL` |
 | weapons | Elementalist | `CLASS_FORBIDS`, `KINDS_ALLOWED` |
 | choosing it | Elementalist, Healer | `EL_CLICK`, `PROBE_WP_CLASS`, `KIT_ROW` |
@@ -589,12 +597,13 @@ How each of these is done:
   walks and patches (`push cs / push ip / push bp / mov bp,sp`, as `PROBE_LV_PICK`), and read back
   from it after.
 - **Starting gear fitted to the kit.** Ravager, Brute, Shinobi, Seeker (a forbidden hand item),
-  Shadowblade, Ghetto Fighter, Rescuer (the shield left behind), Arena Champion (a shield), Ghetto
-  Fighter (a dagger in hand: `_ghetto_dagger`), Poisoner (one of its weapon spec in each hand, the
+  Shadowblade, Rescuer (the shield left behind), Arena Champion (a shield), Ghetto Fighter (the
+  shield left behind, a dagger in hand: `_ghetto_dagger`), Poisoner (one of its weapon spec in each hand, the
   dagger or the short sword: `_poisoner_daggers`), Battle Mage (its weapon spec's weapon), Battle
   Dancer (a second long sword in the left hand in place of the shield, `_kit_second_weapon`, and a
   bow and arrows, with fuller starting gear: `startgear.py`); Myrmidon (its second weapon spec's
-  weapon, the polearm, in the backpack). Where: the game
+  weapon, the polearm, in the backpack); Spellarcher (its armour, helm and shield left behind; a Fine
+  Bow and arrows by its picks: [the Fine Bow](#where-each-effect-goes)). Where: the game
   gives a new character its class's gear when DONE is clicked (the README's table, seen in play).
   The dice log's `weaponchoice.kit_gear` (after `finish_new`, with the rule for kits; New characters
   only), for a hand's item `restrict.kit_forbids` forbids (the off hand as such): a weapon in the

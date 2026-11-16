@@ -30,6 +30,7 @@
 - [The view in fights](#the-view-in-fights)
 - [The pointer in scenes, and where it starts](#the-pointer-in-scenes-and-where-it-starts)
 - [Spells on the Effects screen](#spells-on-the-effects-screen)
+- [CHOOSE A SPELL's grid](#choose-a-spells-grid)
 - [More saves](#more-saves)
 - [More characters](#more-characters)
 - [Game speed](#game-speed)
@@ -310,6 +311,10 @@ dice log running:
 
 ([In the features page](FEATURES.md#names-over-figures).)
 
+- **The quiver's count.** After each party shot the dice log floats "Arrows: N left" (the quiver's
+  count) or "Out of arrows" over the archer (`quiver.py` through `labels.py`, in the charges' blue
+  and priority; none with names over figures off). The turn kept when the quiver runs dry: [An
+  archer's last arrow](DEVELOPMENT-CONTENT.md#an-archers-last-arrow-and-a-dry-quiver).
 - **What starts one.** A spell's cast: `CAST_SITE` (INT 98h and its site
   number over `mov cx,[bp+6]` at 772AAh, the start of the routine at 772A5h
   that casts a spell or a power, the game's `598:89h`: `[BP+6]` the caster's
@@ -361,7 +366,7 @@ dice log running:
   taken off and the view drawn again whole (`VIEW_AGAIN`); the timer doesn't
   put labels while the view isn't where the main loop last saw it.
 - **Memory.** The first two slots and the code cost about 1.5 KB of the helper's
-  upper memory (the ring went from 74 entries to 66 for it); the other two,
+  upper memory; the other two,
   720 bytes, fit in the room left.
 - **Measured** in DOSBox, a fight in the slave pens with every attack made to
   miss, a slot watcher grabbing the screen as each label came: "Miss" was in
@@ -418,7 +423,7 @@ SUM ([Scores and hit points as
 rolled](DEVELOPMENT-RULES.md#scores-and-hit-points-as-rolled)), STORE and
 RECALL ([STORE and
 RECALL](DEVELOPMENT-RULES.md#store-and-recall-on-the-creation-screen)), KITS
-([Kits](DEVELOPMENT-RULES.md#kits)), and the THAC0, below. The THAC0 shares the
+([Choosing one](DEVELOPMENT-KITS.md#choosing-one)), and the THAC0, below. The THAC0 shares the
 age's sites (`CR_AGE`, `CR_AGE_CON`, `CR_NAME`, `CR_OPEN`), named in the age's
 section.
 
@@ -810,6 +815,18 @@ is left on: two jumps in the screen's click handler (DSUN.EXE 7F226h and
 7F236h, the patches `effects_click_low` and `effects_click_high`) go to its way
 out instead of to the routine ending an effect. A psionic power's (spells 8Ah-ABh) still ends, as stopping it there is
 how a power is dropped.
+
+## CHOOSE A SPELL's grid
+
+([In the bugs fixed](GAME-BUGS.md#numbers-and-pointers-on-screen); `spellgrid.py`.) The window (WIND 17500 in RESOURCE.GFF) has 21
+places for the spells on offer, APFM 2BCDh-2BE1h, which the routine (85560h) fills in that order:
+the first 15 are the middle five of seven columns, row by row (x 47 to 123, y 24, 44, 64), the next
+three the right-hand column (142), the last three the left-hand one (28). Past 15 spells the grid
+sat right of centre: the game's 4th level has 16 wizard spells, and with the new spells the 1st has
+18 (seen 2026-11-16, compared with the window in the unchanged game's RESOURCE.GFF, the same). The
+Loader's copy of RESOURCE.GFF (`icons.py`'s chunks) has the first 18 places six to a row, 19 apart,
+filled row by row and centred where the seven columns were (x 38 to 133); no level offers more, and
+the last three stay as they are. The routine and its clicks are the game's: only the places move.
 
 ## More saves
 

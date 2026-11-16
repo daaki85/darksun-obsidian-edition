@@ -14,6 +14,7 @@ DSCLOG's routines and variables are named in capitals on these pages
 - [Building and testing](#building-and-testing)
   - [The folders](#the-folders)
   - [Build](#build)
+    - [Generated pages](#generated-pages)
   - [Tests](#tests)
   - [Making a release](#making-a-release)
   - [From a command prompt](#from-a-command-prompt)
@@ -21,6 +22,8 @@ DSCLOG's routines and variables are named in capitals on these pages
   - [Mapping memory](#mapping-memory)
   - [Command-line mapping tools](#command-line-mapping-tools)
 - [How the dice log works](#how-the-dice-log-works)
+  - [The helper's header](#the-helpers-header)
+  - [Adding a probe or a site](#adding-a-probe-or-a-site)
 - [What is known](#what-is-known)
 - [Room in the helper](#room-in-the-helper)
   - [Where DOSBox's memory is](#where-dosboxs-memory-is)
@@ -589,7 +592,7 @@ the one place for the sizes; the sections after them name the symbols only.
 | Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (the unmodded game's 57 KB) |
 | C000h-C7FFh | 32 KB | the video BIOS (ROM) |
 | C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
-| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 69.1 KB (70,720 bytes with its PSP and its tail, (10h + `KEPT_PARAS`) paragraphs), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, and the rest free. **Measured 2026-11-16** (`playtest/memaudit.py`, in Pehtucl's ambush, DSCLOG.EXE 70,496 bytes): 29,616 bytes free in one piece, between the overlay buffer and the see-through tables, and nothing between the helper and the overlay buffer |
+| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 69.0 KB (70,640 bytes with its PSP and its tail, (10h + `KEPT_PARAS`) paragraphs), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, and the rest free. **Measured 2026-11-16** (`playtest/memaudit.py`, in Pehtucl's ambush, DSCLOG.EXE 70,496 bytes): 29,616 bytes free in one piece, between the overlay buffer and the see-through tables, and nothing between the helper and the overlay buffer |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
 | 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's [far block](#the-far-block), 65,484 bytes, 36 free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
@@ -604,7 +607,7 @@ Each fails the build when passed (a negative `times`). From the build of
 |---|---|---|---|
 | [the helper's segment](#the-helpers-segment): `kept_end` (`resident_end` 63,856 + `AFTER_INSTALL` 992) | 64,848 bytes | 65,536 | 688 bytes |
 | [the far block](#the-far-block): `FAR_END` (its buffers from `FAR_RING`, 10h: 65,484 bytes) | 65,500 | 65,536 | 36 bytes |
-| upper memory as the helper loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,498 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,684 |
+| upper memory as the helper loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,495 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,687 |
 | upper memory once installed: `UMB_KEPT` (the helper, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,117 paragraphs | 8,182 (`UMB_ROOM`) | 65 (1,040 bytes) |
 
 To check them after a change, build a scratch copy with `[map all FILE]` as its
@@ -628,9 +631,9 @@ nothing needs while installing are laid over the install code (declared with
 and `slots_text`, `box_text`, `ns_scratch`, `shadow_tab`, `ef_text`; 992 bytes):
 `KEEP` zeroes them before its first DOS call and keeps memory to the tail's end
 (`KeepTests`). The segment holds whichever is longer, the install code or
-`AFTER_INSTALL`; the install code is the shorter (974 bytes: the vectors set
+`AFTER_INSTALL`; the install code is the shorter (959 bytes: the vectors set
 from a table, `ALL_VECTORS`, each vector's byte and its handler's offset), so
-the image is made up to `AFTER_INSTALL`'s size with zeros (18 bytes at
+the image is made up to `AFTER_INSTALL`'s size with zeros (33 bytes at
 present). SEG_MOVE's two tables of the game's (`seg_space`, `area_space`) and
 the tables only one routine reads (the AD&D XP, slot, thief and DEX tables,
 the kits' names) are in the tail, read through `tail_seg`.
@@ -656,7 +659,8 @@ leaves. The ways to free the segment:
 - **code written once**: shared by many handlers (`OVR_BACK`, the way back
   through the overlay manager's frame; `SHEET_CLASSES`; `ES_THINGS`, the things' segment in ES;
   `SHEET_OF_AX`, a sheet by its number; `CREATURE_SHEET` / `CREATURE_SHEET_AX`, a creature's
-  sheet: use them rather than writing the instructions out again; the sites after
+  sheet; `NS_FLAGS_IRET`, a site's way back with AX's flags in its frame; `FINE_ITEM`, the Fine
+  Bow's name look-up: use them rather than writing the instructions out again; the sites after
   `VEC_CR_SPELLS`'s INT through one table of a word a site, `SITE_TAB`), and
   tables packed (the rings' outlines a quarter each, mirrored by
   `RING_POINTS`; the AD&D XP table as words of 50 XP; the extra item names
@@ -961,7 +965,7 @@ sets or reads.
 
 ## How each part works
 
-How each part of the [features page](FEATURES.md) and the [README](README.md) is done, on three pages of its own:
+How each part of the [features page](FEATURES.md) and the [README](README.md) is done, on four pages of its own:
 
 - [What the game and the Loader show](DEVELOPMENT-SCREENS.md) (its Contents lists each section)
 - [The rules](DEVELOPMENT-RULES.md) (its Contents lists each section)
