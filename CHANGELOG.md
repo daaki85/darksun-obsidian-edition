@@ -108,6 +108,20 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   Myrmidon of an older save keeps its two. Checked in the game (playtest/logs/2026-11-15-kit-rebalance-checks.md,
   with every other kit changed on this branch). Tests: `test_myrmidon_polearm`, `test_myrmidon_polearm_second`,
   `test_myrmidon_two_weapons`, `KindsAllowedTests`.
+- **A second documentation review** (five read-only reviews: player pages and the Loader's wording,
+  the reference pages, the developer pages, the playtest kit, the pictures): every kit changed since
+  2.17 marked "(was ...)" in the patch notes, the Spellarcher's line shortened, the Loader's items in
+  order and the mod's own fixes apart; a kit's warrior THAC0 where it shows (not the creation
+  screen's), the Swashbuckler's pick, the Fine Bow with the mundane bows, the Spellarcher's dice-log
+  lines; the developer pages' sizes after pass 5, STORE and RECALL's ids (8B0h, 8B1h), the stand-in
+  rule, the quiver's write-up, the spell grid with the screens, contents lists; the playtest guide's
+  creation section regrouped, the unchanged game in RESEARCH.md, `levelup.sh` on the first icon
+  (113,71: it clicked the 7th place since the grid changed). The Loader says "from the next start"
+  one way, "Connected to the game (process N)" for DOSBox or the recompiled program, and Names over
+  figures says it covers the arrows left. Pictures retaken: dicelog, dialogue, viewer (the status
+  line), kalzith-body (his Ashen Robe); new-spells-2 without Fogbolt's box, shown in new-spells
+  already. Test: `test_doclinks` maps the features page's Kits to DEVELOPMENT-KITS.md. Checked in
+  the game (playtest/logs/2026-11-16-doc-review-2.md): levelup.sh at a real level-up.
 - **DSCLOG's room: a fifth memory pass** (96 bytes): `NS_FLAGS_IRET` keeps the six-instruction way
   back of 14 sites once (each a jump to it), `FINE_ITEM` the Fine Bow's name look-up for `FINE_HIT`
   and `IB_MATERIAL`, and the never-shown "BURNING ARROWS" is gone. 688 bytes of the segment spare,

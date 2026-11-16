@@ -2227,7 +2227,7 @@ Attacked, he turns on the party as the pens' other slaves do, and only the
 guards near him join the fight. If he dies, Dinos and the Trustee speak of him
 as dead; after the party's escape he is gone from the pens with everyone else.
 
-![Kalzith's body opened in the game: a Scroll, the Cloak and the Quarterstaff](docs/kalzith-body.png)
+![Kalzith's body opened in the game: a Scroll, the Quarterstaff, the Cloak and the Ashen Robe](docs/kalzith-body.png)
 
 How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#kalzith).
 
