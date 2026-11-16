@@ -1139,7 +1139,7 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
   --window W X Y click 1`): Memory tools (950,132), name box (735,199), Search (913,199), the hit
   (700,268), Assign (956,235), All fields (161,132), a byte (995,499). The Game window list is a
   separate window (`import -window` shows it black): Triple is its third line (600,132 on the
-  screen); it writes `window_scale` 3, so copy settings.json back afterwards. From the program's
+  screen); it writes `window_scale` 3, so copy settings.json back afterwards. Picking it there can leave a black patch and a window that takes no more clicks: then kill both by pid, start `FAKEPTY.COM` first and the window after it (it reads Triple from settings.json and connects at once), and do the clicks within ~10 s. From the program's
   start to the shot in about 9 s: Sadira 21/30.
 - **The practice program** (`tests/make_fake_party.py`, for `docs/viewer.png`): run `dosbox
   FAKEPTY.COM` in a scratch folder, then the window; Sadira loses 1 HP a second and her byte wraps
