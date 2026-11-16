@@ -16,7 +16,8 @@ from the tail (2026-11-09, after #88) that is the helper's 64 KB segment's part 
 Releases before 2.12.2 give the release's line as a **Release** bullet; from 2.12.2 on it is the
 entry's first line.
 
-Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
+Releases, newest first: [2.18.0](#pull-request-95-merged-2026-11-16) (#95),
+[2.17.1](#pull-request-94-merged-2026-11-11) (#94),
 [2.17.0](#pull-request-93-merged-2026-11-11) (#93),
 [2.16.1](#pull-request-91-merged-2026-11-11) (#91),
 [2.16.0](#pull-request-90-merged-2026-11-11) (#90),
@@ -45,7 +46,7 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
 [1.1.0](#pull-request-18-merged-2026-10-06) (#18), [1.0.0](#pull-request-12-merged-2026-10-02)
 (#12).
 
-## Next pull request (not opened yet)
+## Pull request #95 ([merged 2026-11-16](https://github.com/daaki85/darksun-obsidian-edition/pull/95))
 
 **Changed**
 - **DSCLOG's room: a fourth memory pass** (the kit rebalance had taken the helper's segment from 960
