@@ -273,4 +273,71 @@ In the fight:
 - New tool: `toturn.sh N` plays the party's turns to member N's, pressing E when a member's turn
   stays up after Tab + Return (its END menu was at the screen's left this time, where a fixed pixel
   test missed it; `untilturn.sh` kept pressing Tab there).
-- Every kit changed on this branch has now been played.
+- Not played then (part 10 does): the Arcanist's casting a level higher and the Scholar's extra spell at a level up or
+  DUAL (CHOOSE A SPELL at creation was played in part 1); the emulator tests cover them.
+
+## Part 10: the Arcanist and the Scholar's level-up and DUAL (2026-11-16)
+
+From `fountain-user`, the ambush (after another idle shutdown: Xvfb and DOSBox restarted).
+- **Arcanist** (Lex made a preserver 4 Arcanist, `kitset.py 0 11 4 3`, `spellsetup.py 0=4 8`): Magic
+  Missile at the Templar (free): "3d4 ... (1d4+1 for each 2 caster levels (counting +1)): 3", 14
+  rolled and 14 taken: 3 missiles, a 5th-level caster's; Lex as a plain preserver 4 (part 11) fired
+  2. **PASS.** (The "counting +1" is Magic Missile's own formula, (level + 1) / 2 missiles, not the
+  kit's level.) At a held (Paralyzed) target the damage taken was 15 both times (9 and 11 rolled):
+  3d4+3's most, the game's rule for a helpless target (FEATURES.md); the dice log didn't say so
+  (fixed: part 11).
+- **Scholar at a level up** (Lex made a preserver 4 Scholar, `kitset.py 0 11 4 1`, XP 19,990 in
+  memory; the Templar killed, Lex +385): the level came during `fightout.sh`'s turns, "Lex is now a
+  5th level Preserver", and CHOOSE A SPELL took **two** picks (`levelup.sh` twice: Hold Person and
+  Hold Undead learnt), a preserver's one and the Scholar's one more. **PASS.**
+- **Scholar on DUAL** (Jenna, human ranger 3: her kit byte cleared and INT 18 in the creature record,
+  `foeset.py 1 int=18`, as the DUAL window reads the record's scores, not the sheet's): DUAL,
+  PRESERVER, the kit menu "KIT: NONE / SCHOLAR / ARCANIST" (no Battle Mage: it bars the warrior
+  classes she has), SCHOLAR; CHOOSE A SPELL took **three** picks (a new preserver's 2 and the
+  Scholar's one more); classes [11, 16], levels [1, 3], the Scholar on the preserver class, awake.
+  **PASS.**
+
+## Part 11: the dice log's damage on a held target (2026-11-16)
+
+The fix for part 10's 9-rolled, 15-taken line: the dice log names a Paralyzed target's damage as the
+most the dice can do, as it did for one Out Cold. From `fountain-user` (`spellsetup.py 0=4 8`, the
+Templar 25 held with `foeset.py 25 eff=34`), Lex a plain preserver 4: "Magic Missile damage: 2d4 =
+[4 + 2] +2 = 8 (... : 2)", then "Templar takes 10 from Magic Missile (Paralyzed: the most the dice
+can do), now 31/41 HP". **PASS.** Two missiles at preserver 4 without the kit (the Arcanist's 3 in
+part 10). The view jumped to the map's corner after a missed aiming click (two Templars: `foepos.py`'s
+first column, the combatant, tells them apart); a loop of `scroll.py` drags until the target is on
+the screen brought it back, the aim still up.
+
+## Summary
+
+| Kit | What was checked | Result |
+|---|---|---|
+| Myrmidon | one pick, polearm greyed, bow lit; polearm spec and item; -2 initiative; roster copy (after the fix) | PASS |
+| Seeker (fire) | bow greyed, obsidian kinds lit; bow to the backpack | PASS |
+| Scholar | 9 spells at creation (7 + 2); no slot more; THAC0 21; Chill Touch and Acid Arrow at its THAC0 | PASS |
+| Healer | no harming spells; Cell Adjustment +1 | PASS |
+| Lifebinder | no harming spells; Cell Adjustment +1d4 | PASS |
+| Twin-blade | cahulaks offered and allowed | PASS |
+| Brute | cahulaks greyed; +2 with the great axe | PASS |
+| Swashbuckler | long sword, dagger, short sword only; bad luck on its rolls (-7, -14) | PASS |
+| Wayfinder | +2 its own, +1 the party | PASS |
+| Sentinel | AC +2 with a shield; no initiative; -1 without a shield | PASS |
+| Wild Fury | CON - 4 check; -3 / +3 / 1 more attack / AC 3 worse | PASS |
+| Spellarcher | bow only; armour left behind; arrow made; save against its Shocking Grasp arrow | PASS |
+| (any) | the Loader's creation gear in the roster's copy, ADDed after a restart (part 7) | PASS |
+| Justifier | chosen long sword specialized, bow at expertise (part 8) | PASS |
+| Seeker (air) | only its sphere's weapons offered, the bow among them; bow expertise only from the pick | PASS |
+| Twin-blade | cahulaks in a fight: no two-weapon penalty | PASS |
+| Assassin | heavy armour worn while asleep after a class change, refused once awake | PASS |
+| Crusader | 2 attacks a round at 7th level with the chosen weapon, 3/2 at 6th | PASS |
+| Mind Warrior | 2 attacks a round at 7th level with the chosen weapon | PASS |
+| Swashbuckler | bad luck on a lock and a trap (-15, -19); warrior THAC0 with its chosen blade | PASS |
+| Shinobi | heavy armour worn asleep after a class change, refused awake | PASS |
+| Brute | no air cleric by DUAL (a bug: closing the sphere menu made one; fixed, part 9) | PASS after the fix |
+| Battle Mage | warrior THAC0 with its chosen weapon | PASS |
+| Grove Warden | a weapon its sphere bars refused (with none of its weapon specs) | PASS |
+| (any) | no second kit after DUAL | PASS |
+| Arcanist | Magic Missile at a level higher (3 missiles at preserver 4, 2 without the kit) | PASS |
+| Scholar | two spells at a level up; three on DUAL to preserver | PASS |
+
+Every kit changed on this branch has now been played.
