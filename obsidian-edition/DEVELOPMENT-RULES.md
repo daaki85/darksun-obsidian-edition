@@ -1772,7 +1772,7 @@ words (`PICK_TEXT`) are.
 
 **The Loader** (`SpellArrows.make`) takes a slot of the touch spell's level from
 the wizard slots left (`SLOTS_LEFT`; none left, it says so) for one arrow
-(`ARROWS_A_SLOT`, as *The Complete Book of Elves*'s Spellarcher casts a spell onto
+(`ARROWS_A_SLOT`, as the Spellarcher of *Dragon* #214's "The Complete Half-Elf" casts a spell onto
 an arrow). The Spellarcher keeps one stack of each spell, `STACK_MOST` (24) at
 most: the arrow joins that spell's stack wherever it is (its count up by one; a
 full stack takes none and uses no slot); with none, a new stack of the game's

@@ -4323,7 +4323,7 @@ kit_forbids:
 ; since 2.18) keeps its character to light armour (an Assassin, Shinobi, Shadowblade or Poisoner:
 ; kits.LIGHT_KITS) and item type DX is armour that isn't light (leather, or of no material; not a
 ; shield); or, a Spellarcher (BARE: kits.BARE_KITS), if DX is armour, a helm or a shield at all,
-; as the Complete Book of Elves's Spellarcher wears none (bracers, robes and a cloak of protection
+; as Dragon #214's "The Complete Half-Elf" has the Spellarcher wear none (bracers, robes and a cloak of protection
 ; aren't armour: BRACERS_AX, BARE_CLOAK). All registers kept.
 BARE_CLOAK equ 8                ; (the item type's +9: worn as a cloak)
 kit_light:

@@ -114,8 +114,9 @@ page](https://github.com/daaki85/darksun-obsidian-edition/issues).
 - **Rules:** AD&D 2nd Edition's *Player's Handbook*, *Demihuman Deities*,
   *Player's Option: Combat & Tactics* and *Skills & Powers*, and the
   *Complete* handbooks (*Ranger's*, *Fighter's*, *Thief's* and *Barbarian's*,
-  the *Book of Elves* and the *Book of Dwarves*), where the mod's rule changes
-  and its kits come from; Baldur's Gate, for keeping a
+  the *Book of Dwarves*), and *Dragon* #214's "The Complete Half-Elf" (the
+  half-elves' Spellarcher, Shadowblade, Military Scout, Wilderness Avenger and Rescuer),
+  where the mod's rule changes and its kits come from; Baldur's Gate, for keeping a
   creation roll (STORE and RECALL) and Charisma's shop prices.
 - **Tools:** [DOSBox](https://www.dosbox.com/), [NASM](https://www.nasm.us/),
   [Python](https://www.python.org/) and

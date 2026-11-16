@@ -108,7 +108,7 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   Myrmidon of an older save keeps its two. Checked in the game (playtest/logs/2026-11-15-kit-rebalance-checks.md,
   with every other kit changed on this branch). Tests: `test_myrmidon_polearm`, `test_myrmidon_polearm_second`,
   `test_myrmidon_two_weapons`, `KindsAllowedTests`.
-- **The Spellarcher, after The Complete Book of Elves** (the user's design): a spell slot makes
+- **The Spellarcher, after *Dragon* #214's "The Complete Half-Elf"** (the user's design): a spell slot makes
   **one** spell arrow (was 5 a preserver level); one stack of each spell, 24 at most, the arrow
   joining it wherever it is (a new stack in the quiver if empty, else the pack; a full stack takes
   none, no slot used); the arrows **last until shot** (no fading at a rest: the rest hook,

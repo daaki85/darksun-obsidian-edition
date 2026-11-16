@@ -5,7 +5,7 @@ Hands, Chill Touch and Shocking Grasp at 1st level, Vampiric Touch at 3rd), with
 Pick Pockets' (DSCLOG's PP_SHOW: in Turn Undead's place when no priest's element has it, then the
 slots beside it). Pressed, it comes here as an item used on the map does (dicelog's _answer_use:
 USE_ITEM ARROWS_BY and the member, USE_WHO the spell's place in ARROWS): a slot of that spell's
-level is used up for ARROWS_A_SLOT arrow, as the Complete Book of Elves's Spellarcher casts one
+level is used up for ARROWS_A_SLOT arrow, as Dragon #214's "The Complete Half-Elf" has the Spellarcher cast one
 spell onto one arrow. The Spellarcher keeps one stack of each spell's arrows, of STACK_MOST at
 most: the arrow joins that spell's stack wherever it is (the quiver or the pack); with none, a new
 stack goes in the quiver if it is empty, else in the pack. A full stack takes no more (no slot

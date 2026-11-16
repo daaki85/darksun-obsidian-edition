@@ -786,8 +786,8 @@ def forbids_off_hand(kid: int, typ: bytes) -> bool:
 # the kits held to light armour (DSCLOG's KIT_LIGHT), while awake: asleep after a change of class,
 # the limit sleeps with the kit (up to 2.18's first changes, kept)
 LIGHT_KITS = frozenset((ASSASSIN, SHINOBI, SHADOWBLADE, POISONER))
-# the kits that wear no armour, helm or shield at all (DSCLOG's KIT_LIGHT, its BARE): the Complete
-# Book of Elves's Spellarcher; bracers, robes and a cloak of protection aren't armour
+# the kits that wear no armour, helm or shield at all (DSCLOG's KIT_LIGHT, its BARE): Dragon
+# #214's "The Complete Half-Elf" Spellarcher; bracers, robes and a cloak of protection aren't armour
 BARE_KITS = frozenset((SPELLARCHER,))
 
 
