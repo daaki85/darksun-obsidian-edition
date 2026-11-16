@@ -14,7 +14,8 @@ play](#6-after-a-play)). How things were found, the incidents behind the rules a
 given up are in [HISTORY.md](HISTORY.md), by topic and with dates; a recipe links to its part where
 the story helps.
 
-The tools are in this folder. Each finds its own paths (`env.sh`, `paths.py`): the repository,
+The tools are in this folder, each listed with what it does in [TOOLS.md](TOOLS.md) (made from
+their own headers by `tools_index.py`). Each finds its own paths (`env.sh`, `paths.py`): the repository,
 a work folder for screenshots and logs (`PLAYTEST_WORK`, default `/tmp/playtest`) and the
 extracted game (`DS_GAME`, default `$PLAYTEST_WORK/inst`). Nothing in the work folder is kept.
 In this guide `$WORK` is that work folder: `env.sh` sets `WORK` from `PLAYTEST_WORK` for the
@@ -188,7 +189,10 @@ commit and push. Do it at each stop, not only at the end: a pause can lose the c
 1. Stop the watchdog; restore anything raised in memory.
 2. Send the test log; copy it to `playtest/logs/` and commit.
 3. Add any new kind of stall to this guide (where it belongs, or a numbered rule in [Fights](#fights)
-   for a fight stall, with the test), and any new tool to this folder, then commit and push both.
+   for a fight stall, with the test), and any new tool to this folder (a header comment saying what
+   it does, then `python3 tools_index.py`), then commit and push both. Edit these files at a unique
+   anchor (assert one match, or cut at the last one): a cut at the first of two like lines once lost
+   a test log's last parts.
 
 **Other sessions push to this branch too** (a Dark Sun Recompiled session once changed the kit
 while another played): `git fetch origin obsidian-edition` and `git rebase origin/obsidian-edition`
@@ -528,6 +532,22 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   "?"](HISTORY.md#turn-undeads-unnamed-target)). DSCLOG's per-fight tables are in the far block:
   TU_FAILED at FFFF0h + FD10h (a byte a combatant, bit N priest N), SWEPT (FF18h) and DJ_DONE
   (FF59h), a bit a combatant.
+- **A kit's rules on a member in memory** (logs/2026-11-15-kit-rebalance-checks.md part 8):
+  `kitset.py MEMBER CLASS LEVEL KIT` (a Crusader 7: `1 1 7 3`; a Mind Warrior: `1 12 7 2`) also sets
+  the sheet's +2Ah, the attacks a round the game reads (set at creation and level-up: a warrior's 3
+  left there keeps 3/2 whatever the class). Before the fight, or at least before the member's next
+  attack. `fountain-user`'s Jenna (long sword spec, two long swords) is a good subject: count the
+  main hand's lines ("with Bone Long Sword") each round. Never save after.
+- **A level-up for a test** (logs/2026-11-15-kit-rebalance-checks.md part 10): write the sheet's
+  XP (+0, a dword) just short of the next level (`tables.xp_needed(row, level)`: a preserver's 5th
+  20,000), then a kill in a fight: the level comes during the next turns, and `fightout.sh` answers
+  CHOOSE A SPELL with `levelup.sh` (count its "picked a spell" lines). A loop of `levelup.sh` until it
+  fails counts the picks of one screen.
+- **DUAL in memory**: the DUAL window greys a class by the creature record's scores (+22h), not the
+  sheet's: raise one with `foeset.py C int=18`. A member with a kit is asked for none (clear the
+  sheet's +43h to see the kit menu: its title "KIT: NONE", the class's kits as rows, a barred one
+  left out). The DUAL menu (EDIT NAME / DROP / DUAL) opens at different heights: shoot it first
+  (DUAL at 90,145 or 90,97).
 
 ## The creation screen
 
@@ -569,12 +589,6 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   (240,106) is marked and must be clicked off before a kit (the first kit 240,114) takes a click;
   the kit is the sheet's +43h (1-3). The Battle Dancer's weapon window has only the long sword
   (72,46) and the bow in use. `python3 carried.py NAME` lists what the new character holds.
-- **A kit's rules on a member in memory** (logs/2026-11-15-kit-rebalance-checks.md part 8):
-  `kitset.py MEMBER CLASS LEVEL KIT` (a Crusader 7: `1 1 7 3`; a Mind Warrior: `1 12 7 2`) also sets
-  the sheet's +2Ah, the attacks a round the game reads (set at creation and level-up: a warrior's 3
-  left there keeps 3/2 whatever the class). Before the fight, or at least before the member's next
-  attack. `fountain-user`'s Jenna (long sword spec, two long swords) is a good subject: count the
-  main hand's lines ("with Bone Long Sword") each round. Never save after.
 - **The DUAL sphere menu** (logs/2026-11-15-kit-rebalance-checks.md part 9): after CLERIC, DRUID or
   RANGER on the DUAL window, a menu whose title row is "SPHERE: AIR" (no click there), EARTH
   (140,92), FIRE (140,104), WATER (140,116), and a close button (210,116). **The game makes the
@@ -585,16 +599,6 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
   +14h-+17h) in memory to see the limit. Take the item off and put it back on in the inventory: a
   barred one gives "CANNOT USE THIS ITEM". A heavy armour for a test: a worn chest item's type set
   to 12 in memory.
-- **A level-up for a test** (logs/2026-11-15-kit-rebalance-checks.md part 10): write the sheet's
-  XP (+0, a dword) just short of the next level (`tables.xp_needed(row, level)`: a preserver's 5th
-  20,000), then a kill in a fight: the level comes during the next turns, and `fightout.sh` answers
-  CHOOSE A SPELL with `levelup.sh` (count its "picked a spell" lines). A loop of `levelup.sh` until it
-  fails counts the picks of one screen.
-- **DUAL in memory**: the DUAL window greys a class by the creature record's scores (+22h), not the
-  sheet's: raise one with `foeset.py C int=18`. A member with a kit is asked for none (clear the
-  sheet's +43h to see the kit menu: its title "KIT: NONE", the class's kits as rows, a barred one
-  left out). The DUAL menu (EDIT NAME / DROP / DUAL) opens at different heights: shoot it first
-  (DUAL at 90,145 or 90,97).
 - **A name at creation** (2026-11-15): click the name (40,128), press **Delete** 16 times
   (BackSpace does nothing; typing goes in front of the old name), type it, Return.
 - **The Loader's gear and the roster** (logs/2026-11-15-kit-rebalance-checks.md part 7): start
@@ -747,8 +751,7 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
 5. **Movement**: a member with no Move left can't reach anyone; a click then opens its END menu or
    does nothing ("Move : 0"). **Move running out doesn't pass the turn**: the walk stops and END
    <NAME>'S MOVE opens and waits. For a test that needs reach, raise its Move in memory first (the
-   old movekeeper.py did; rebuild it when needed: the combat record's movement, see
-   dsloader/game.py), and restore it after; never save the game while it's raised.
+   turn's movement word below), and restore it after; never save the game while it's raised.
    **Where the turn's movement is** (logs/2026-11-09-boots-of-speed.md): a word a creature
    at segment DS - (4356h - 37BDh), +22Bh + creature x 2 (Move x 10, set as its turn starts: 57566h,
    DSCLOG's PROBE_MOVE); the END menu shows what is left ("Move : 12").
@@ -759,35 +762,26 @@ drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`).
    strikes (with its melee weapon, or bare-handed with none), even from afar. To shoot: on its
    turn `pointer.py attack`, then a click on the foe's figure 10 pixels above its feet (`foepos.py`
    lists each living foe's place on the screen), the archer not next to that foe (2026-11-15: a
-   Spellarcher beside a Slig shot the Screamer Beetle two squares off). Before that it was thought
-   unreliable: Enter is a left click on the enemy: with Move left the member walks up
-   and fights hand to hand; with Move 0 the END menu opens; in Attack mode a far target showed the
-   red "can't" pointer and the turn passed. A shot test needs a clear line, a target in range, and
+   Spellarcher beside a Slig shot the Screamer Beetle two squares off). Enter is a left click on
+   the enemy (with Move left the member walks up and fights hand to hand). A shot test needs a clear line, a target in range, and
    a readied missile weapon with ammunition in the missile slot. [A shot with a weapon put in
    memory](#weapons-and-rules-in-a-fight).
-8. **Playing the party's turns to a member's**: `sh toturn.sh N` (2026-11-16: Tab + Return, and E
-   when the same member's turn stays up, its END menu wherever the game put it), or
-   `PARTY="A|B|C|D" sh untilturn.sh NAME` (Tab +
-   Return for each named member's turn, messages clicked away, the foes' turns waited out) stops at
-   NAME's turn; `stepfight.sh` from the arena gate clicks south until the fight is on.
-   **Passing one member's turn**: `memberpos.py N` gives its figure on the screen; a click there
-   opens its END menu, and E in that menu ends the turn. E with no menu up opens the Effects screen,
-   and closing that (Escape) left the view at the map's corner (camera 0,0): drag it back with
-   `scroll.py` (about 216 x 72 map units for each -216 -96 drag). A member off the screen
-   (memberpos gives y below 0) can't be clicked: drag the view first. Tab + Return didn't end
-   Gerakis's turn (his weapons' reach); the END menu does. **`passuntil.sh N`** passes turns until
-   member N's by the END menu (checked by its pixels, never E blind: E for a member with no menu,
-   Jenna with Free Action, opened the Effects screen; its icon at 100,171 goes back to USE); it
-   stops with "member N off screen", and **`passn.sh N`** passes N party turns the same way,
-   dragging the view to each member first (the ambush's party stood 200 map units apart).
-   `passto.sh N` passes the party's turns to member N's, opening each END menu by a click above the
-   figure, checked by the screen changing, before E; its clicks above a figure walked Lex off alone
-   once, and its "END menu opened" test counts changed pixels, so the combat log panel's new lines
-   can pass it (with the panel up it pressed E with no menu and opened the Effects screen): hide the
-   panel for passto.sh, or use fightout.sh. A Stuck or Paralyzed member's turn opens with its END
-   menu up: E ends it, Escape closes it to act (USE then opens). A turn passed can come straight
-   back (her END TURN was the round's last but one; round 2 opened with her and a new hide roll):
-   check the round order in the dice log.
+8. **Playing the party's turns to a member's.** Which tool:
+
+   | Tool | Does | Use it for | Watch out |
+   |---|---|---|---|
+   | `passuntil.sh N` | passes turns to member N's through each END menu (a click on the figure, the menu checked by its pixels, then E) | the safe default when the party should only wait | stops "member N off screen": drag the view first (`scroll.py`) |
+   | `toturn.sh N` | Tab + Return for each member's turn, E when a turn stays up (no Move) | getting to N with the party fighting | E with no END menu opens the Effects screen (closing it leaves the view at the map's corner) |
+   | `PARTY="A\|B\|C\|D" sh untilturn.sh NAME` | Tab + Return for the named members, messages clicked, foes waited out | the same, by name | keeps pressing Tab on a member with no Move left |
+   | `passn.sh N` | passes N party turns by the END menu, dragging the view to each member | a party spread out | as passuntil.sh |
+   | `fightout.sh` | finishes a story fight (foes at 1 HP, E for a member with no Move) | ending a fight the scripts watch | not for a fight whose foes must live |
+
+   By hand: `memberpos.py N` gives a member's figure on the screen; a click there opens its END
+   menu, and E in that menu ends the turn (E with no menu opens the Effects screen). A Stuck or
+   Paralyzed member's turn opens with its END menu up: E ends it, Escape closes it to act. A turn
+   passed can come straight back (the round's last but one, then first in the next): check the round
+   order in the dice log. `stepfight.sh` from the arena gate clicks south until the fight is on. The
+   incidents behind these notes are in [HISTORY.md](HISTORY.md).
 9. **"target AC" in the dice log** is the AC the game uses for an attack: check it against
    `gd.counted_ac` (`acs.py`) whenever the foes seem to hit too often. A test fight that
    goes badly: `healparty.py` puts the party's hit points back in memory (never save after).
@@ -1036,9 +1030,6 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
   wizard spell is known by a bit of the sheet's +45h (`game.NEW_KNOWN`: Erdlu Claw 20h), which a
   scratch write can set for a shot (the sheet from SHEETS_PTR and the creature's +4 index). Doc
   panels like `new-spells.png` are crops of `shot.sh`'s 320x200 picture scaled 2.09 (304x188 each).
-- **A hang** (fixed): a kill made by DSCLOG's own far call of 4E0:61h inside a lasting cloud's round
-  left the screen still and the pointer stuck at DS:A133h while the game's clock (DS:11D6h) ran on:
-  `compare -metric AE` of two shots 5 s apart gave 0, and clicks did nothing. Restart.
 
 ### foeset.py, saves, touch spells and powers
 
@@ -1196,8 +1187,8 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
   the store's end and whether the figure is drawn each time; `randout.py N [SEED]` puts random items
   of member 0 on and off. `fillcache.py MEMBER SLOT UNTIL` fills the slots fast by toggling a worn
   item's slot byte, the Loader dressing each time (memory edit, never save), but it waits for the
-  count to grow, so since the fix it stalls (4 s a change). A test that needs the store full (the
-  old vanishing figures) now needs a picture loaded anew some other way.
+  count to grow, which the store's reuse stopped: it stalls (4 s a change) and is of no use now. A
+  test that needs the store full needs a picture loaded anew some other way.
 - **Lots of items on the ground** (logs/2026-11-09-picture-slot-reuse.md): `giveitems.py MEMBER N
   [FIRST]` gives items of different objects (each its own picture) into free backpack cells in
   memory (12 cells: then "no room"); `groundfill.sh CYCLES [FIRST]` gives Gerakis 12 and DROPs each
@@ -1221,7 +1212,7 @@ only); these found from a symbol map of the helper as built; the main loop's pas
 clock and the game's clock (96 a second) against real time; the leader's map units a second
 **while walking** (the waits at a target left out); and DOSBox's CPU. `PT_CYCLES=N sh start.sh` (or
 before loadsave.sh) sets DOSBox's cycles; settings are changed with `launch.save_settings` before
-loading (the scripts were /tmp/playtest/matrix*.sh: see the log of 2026-11-08).
+loading (the log of 2026-11-08).
 Its walk clicks are at y 104: from `fountain-user` after its fight they land in the fountain and
 nobody walks (0 map units/s), so measure from another save.
 

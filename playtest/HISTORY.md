@@ -397,5 +397,12 @@ it left the view at the map's corner: Tab moved it to the foe, `scroll.py` broug
 A script editing logs/2026-11-15-kit-rebalance-checks.md cut the file at the first "Not played: the
 Arcanist" it found, meaning the summary's last line, but part 9 had a line starting the same way:
 part 10 and the summary table were lost in a commit and put back in the next from the version
-before it. Cut or replace at a unique anchor (rindex, or assert one match) when editing these logs.
+before it (the rule now in the guide's "After a play").
+
+## A hang in a lasting cloud (fixed)
+
+Moved from the guide: a kill made by DSCLOG's own far call of 4E0:61h inside a lasting cloud's
+round left the screen still and the pointer stuck at DS:A133h while the game's clock (DS:11D6h) ran
+on: `compare -metric AE` of two shots 5 s apart gave 0, and clicks did nothing. A restart was the
+way out; DSCLOG no longer makes that call there.
 

@@ -614,9 +614,6 @@ game, are in the logs of [2026-11-08](https://github.com/daaki85/darksun-obsidia
 [2026-11-09](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-09-memory-pass-2.md),
 [2026-11-10](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-10-memory-pass-3-and-new-cahulaks.md)
 and [2026-11-16](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-16-memory-pass-4.md).
-Repeated sequences worth a routine have one: `ES_THINGS` (the things' segment in ES),
-`SHEET_OF_AX` (a sheet by its number), `CREATURE_SHEET` / `CREATURE_SHEET_AX` (a creature's
-sheet): use them rather than writing the instructions out again.
 
 ### The helper's segment
 
@@ -655,7 +652,9 @@ leaves. The ways to free the segment:
   whole run, so a table they read costs nothing to move there (`cs:` becomes
   `fs:`);
 - **code written once**: shared by many handlers (`OVR_BACK`, the way back
-  through the overlay manager's frame; `SHEET_CLASSES`; the sites after
+  through the overlay manager's frame; `SHEET_CLASSES`; `ES_THINGS`, the things' segment in ES;
+  `SHEET_OF_AX`, a sheet by its number; `CREATURE_SHEET` / `CREATURE_SHEET_AX`, a creature's
+  sheet: use them rather than writing the instructions out again; the sites after
   `VEC_CR_SPELLS`'s INT through one table of a word a site, `SITE_TAB`), and
   tables packed (the rings' outlines a quarter each, mirrored by
   `RING_POINTS`; the AD&D XP table as words of 50 XP; the extra item names

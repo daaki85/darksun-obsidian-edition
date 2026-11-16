@@ -1635,9 +1635,8 @@ How each is done:
   queued one dropped (8991Bh): `PROBE_HIT_ROUND` (`INT ADh`, new) doesn't mark a Battle Mage.
 - **A wizard spell cast a level higher.** Arcanist (its preserver spells' duration and damage, the
   new wizard spells too; not the spell levels it may cast). Where: `PROBE_SPELL_LEVEL`'s `ARC_LEVEL`
-  (`kits.arc_level`), as the Spirit Caller's `SKY_LEVEL`. Up to 2.17 an Arcanist cast two preserver
-  spells a turn in a fight (`PROBE_CAST_MARK`, `PROBE_CAST_DONE`, `PROBE_END_TURN` and
-  `PROBE_ROUND_MARK`, vectors 93h-96h, all gone).
+  (`kits.arc_level`), as the Spirit Caller's `SKY_LEVEL`. (Vectors 93h-96h are free: the
+  Arcanist's two spells a turn of earlier versions used them.)
 - **THAC0.** Scholar (1 worse). Swashbuckler, Crusader, Battle Mage, Mind Warrior: a warrior's (21
   less the kit's level, where better) with the kit's chosen weapon spec alone (without weapon
   specialization, its kinds), on the attack: `WAR_HIT` in `PROBE_ATTACKS`, from the creature's
@@ -1683,7 +1682,7 @@ How each is done:
   Swashbuckler (its bad luck: a d26 less 1, 0 to `BAD_LUCK` 25, off each roll, from the game's
   rand() seed, kept in the header's `BAD_LUCK` and `BAD_LUCK_WHO`, +1862, for the dice log;
   `kits.bad_luck` for the Loader's own rolls, pickpocket.py and stealth.py; the skills shown,
-  `thief_skills_now`, without it; up to 2.17 a flat −5, at first −10). Where: `PROBE_BELT` (the
+  `thief_skills_now`, without it). Where: `PROBE_BELT` (the
   thief skill routine's end, the chance a roll is held against: `KIT_SKILL`, no lower than 0).
 - **From behind, backstab.** Military Scout (a backstab taken back: `[BP-24h]` cleared, its 2 to hit
   with it), Rescuer (from behind +1, not +2); Assassin (a backstab's multiplier one more, x3 to x6:
@@ -1692,12 +1691,10 @@ How each is done:
   rule's; the backstab flag is pushed for the attack after it (DSUN.EXE 5838Ah).
 - **Initiative in a fight.** Wayfinder (Path-finder: each party member 1 more while a Wayfinder of
   the party is New or Okay, `PATH_UP`, and the Wayfinder's own 2 more, `WAYFINDER_INIT`,
-  `kits.WAYFINDER_INITIATIVE`; up to 2.17 its Move too, and 1 less for the party while one was
-  down, `PATH_DOWN`, gone). Where: `PROBE_INIT`; `GameData.path_finder`.
+  `kits.WAYFINDER_INITIATIVE`). Where: `PROBE_INIT`; `GameData.path_finder`.
 - **Shields.** Shadowblade, Ghetto Fighter, Rescuer. Where: `KIT_FORBIDS` (`kits.forbids`).
 - **Light armour only.** Assassin, Shinobi, Shadowblade, Poisoner (awake only: asleep after a change
-  of class the limit sleeps with the kit, `KIT_FORBIDS` testing `KIT_AWAKE` first; up to 2.17
-  asleep too); the Spellarcher no armour, helm or shield at all (`BARE`: bracers, robes and a cloak of protection aren't armour; `kits.BARE_KITS`), and its class's armour left behind at creation (`weaponchoice.kit_gear`). Where:
+  of class the limit sleeps with the kit, `KIT_FORBIDS` testing `KIT_AWAKE` first); the Spellarcher no armour, helm or shield at all (`BARE`: bracers, robes and a cloak of protection aren't armour; `kits.BARE_KITS`), and its class's armour left behind at creation (`weaponchoice.kit_gear`). Where:
   `KIT_LIGHT` (`kits.LIGHT_KITS`).
 - **Hiding, moving silently.** Stalker, Assassin and Military Scout (not halved in daylight:
   `kits.not_halved_by_sun`), Wilderness Avenger (a ranger's, 5 a level of its best class),
@@ -1709,8 +1706,7 @@ How each is done:
   Dancer (no shield; `kit_dancer`: long sword and bow kinds), Shadowblade, Ghetto Fighter and
   Rescuer (no shield), Seeker and Grove Warden (its sphere's weapons, as a cleric's: `SPHERE_ALLOWS`
   with `CU_*` set from the item type, `KF_SPHERE` the kit's class less 1, mod 4: the ranger's or
-  druid's, the bow too; up to 2.17 the Seeker kept the bow whatever its sphere, and the Grove
-  Warden had no metal weapons instead; a Seeker has no ranger's bow expertise either,
+  druid's, the bow too; a Seeker has no ranger's bow expertise either,
   `SPEC_OF_SHEET`'s `.rbow` path passing it over, `specialize._skill`); the Twin-blade the
   cahulaks, two-handed as they are, and the Brute not (`KF_CAHULAKS`, `kits.forbids`' `cahulaks`:
   the type in `game.CAHULAKS_TYPES`). A missile weapon the kit forbids goes into the backpack at
@@ -1727,8 +1723,7 @@ How each is done:
 - **Weapon specs.** Myrmidon (two, both to grand mastery: the first its own, any but the polearm,
   `KINDS_ALLOWED`'s `MYRM_POLEARM`, `restrict.allowed_kinds`; the second the polearm, given by the
   Loader, `weaponchoice.kinds_for`, `kits.POLEARM`, and by DSCLOG's `MYRM_POLEARM` at DONE, after
-  the weapon window: the game writes the roster's copy then, before the Loader's changes; up to 2.17
-  both chosen, melee only), Brute (no missile spec), Battle
+  the weapon window: the game writes the roster's copy then, before the Loader's changes), Brute (no missile spec), Battle
   Mage (one, of `KIT_BM_KINDS`: expertise), Spellarcher (the bow only), Poisoner (the dagger or
   short sword only: `KIT_POISON_KINDS`), Crusader and Mind Warrior (one, of its class's melee kinds:
   `KIT_MELEE_KINDS`; a thri-kreen Mind Warrior the chatkcha too, `KIT_KREEN_KINDS`, the race byte
@@ -1741,7 +1736,7 @@ How each is done:
   type: expertise, 3/2, 2 from 7th preserver level); Crusader and Mind Warrior (a warrior's extra
   attacks in melee, 3/2 from 7th level of the kit's class (2 from 13th, past the level cap), without
   weapon specialization: with it, `WAR_KIT_HALVES` gives none and the chosen weapon spec's
-  expertise is the kit's extra attacks; up to 2.17 with it on too). Where: `EXPERT_HALVES` where `PROBE_ATTACKS`, `PROBE_DAM_LINE` and
+  expertise is the kit's extra attacks). Where: `EXPERT_HALVES` where `PROBE_ATTACKS`, `PROBE_DAM_LINE` and
   `PROBE_VIEW_DAM` leave a non-warrior's (2 halves or fewer) alone; `specialize.expert_attacks`.
   `WAR_KIT_HALVES` in the same three probes, after the rest (`WAR_KIT_OF` in `PROBE_ATTACKS`, not
   for a missile: `[BP+16h]` above 1, or in View Character a type's `+0` bit 2);
