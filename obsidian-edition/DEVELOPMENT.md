@@ -40,6 +40,7 @@ DSCLOG's routines and variables are named in capitals on these pages
 - [How each part works](#how-each-part-works)
   - [What the game and the Loader show](DEVELOPMENT-SCREENS.md)
   - [The rules](DEVELOPMENT-RULES.md)
+  - [The kits](DEVELOPMENT-KITS.md)
   - [Spells, items, people, graphics and the game's bugs](DEVELOPMENT-CONTENT.md)
 
 ## Building and testing
@@ -963,4 +964,5 @@ How each part of the [features page](FEATURES.md) and the [README](README.md) is
 
 - [What the game and the Loader show](DEVELOPMENT-SCREENS.md) (its Contents lists each section)
 - [The rules](DEVELOPMENT-RULES.md) (its Contents lists each section)
+- [The kits](DEVELOPMENT-KITS.md) (its sections: the kits, the kit's byte, choosing one, multiclass kits, where each effect goes, how they're checked)
 - [Spells, items, people, graphics and the game's bugs](DEVELOPMENT-CONTENT.md) (its Contents lists each section)

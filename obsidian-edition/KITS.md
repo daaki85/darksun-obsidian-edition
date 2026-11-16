@@ -132,6 +132,8 @@ A psionicist starts with a club, bow and arrows, leather chest armour.
 
 ## Multiclass kits
 
+([How they work](DEVELOPMENT-KITS.md#multiclass-kits).)
+
 A character of two or three classes taken at once may take a kit if its race
 and classes have one, and only that race may: a dwarf fighter/thief has the
 Ghetto Fighter and Wayfinder, a half-elf fighter/thief the Shadowblade and
