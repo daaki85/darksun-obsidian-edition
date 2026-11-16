@@ -1387,7 +1387,8 @@ class DiceLog:
             try:
                 rec = g.creature(attacker)
                 own = struct.unpack("b", rec[game.CREATURE_THAC0:game.CREATURE_THAC0 + 1])[0]
-                kid, war = kits.war_hit(g.sheet(attacker), kind, own, bool(self.rules & game.RULE_SPECIALIZE))
+                kid, war = kits.war_hit(g.sheet(attacker), kind, own, bool(self.rules & game.RULE_SPECIALIZE),
+                                           bool(self.rules & game.RULE_KITS))
             except (struct.error, IndexError, ValueError, AttributeError, TypeError):
                 kid, war = 0, 0
             if war:
@@ -2724,10 +2725,8 @@ class DiceLog:
             self._fight_seen, self._out_of_fight = False, None
         danced = self._dances.round(g, self.tsr_hdr, number, start=start)
         danced += self._wild.round(g, self.tsr_hdr, number, start=start)
-        if start:  # (a Poisoner's doses: each weapon poisons once a fight)
-            self._poison_doses = set()
-            if self.tsr_hdr is not None:
-                self.guest.write(self.tsr_hdr + kits.TSR_POISON_USED, b"\x00")
+        if start:  # (a Poisoner's doses: each weapon poisons once a fight; DSCLOG clears its own,
+            self._poison_doses = set()  #   POISON_USED, at the first round: ACID_ROUND)
         self.round_order = [(combatant, name, score) for score, _, _, _, combatant, name in rows]
         self._acted = set()
         # a new round: its first turn is a new turn even for whoever had the last one (a thief
@@ -3437,8 +3436,12 @@ class DiceLog:
             self._hit(target, total, now)
         line = f"{g.creature_name(attacker)} hits {g.combatant_name(e.glob[0])} for {total}: {steps}"
         out = ["  " + line]
-        if helpless and mode is not None and mode <= 1 and attacker < game.PARTY_SIZE \
-                and kits.POISONER in g.kit_ids(attacker) and self._poison_dose(attacker, e.parent_arg(0x12)):
+        # (a Poisoner's melee hit uses that hand's dose whatever the target: DSCLOG's PROBE_POISON;
+        # up to 2.17 only a helpless target's hit was counted, so a held foe's later hit with the
+        # same weapon was logged as poisoned)
+        dosed = mode is not None and mode <= 1 and attacker < game.PARTY_SIZE \
+            and kits.POISONER in g.kit_ids(attacker) and self._poison_dose(attacker, e.parent_arg(0x12))
+        if helpless and dosed:
             # a Poisoner's melee hit queues the monsters' poison (DSCLOG's PROBE_POISON: each hand's
             # weapon's first hit in a fight), whose save a helpless target doesn't roll (79B0Ch): no save
             # line, so it is named here, and its HP fall, landing after the round's next swing at

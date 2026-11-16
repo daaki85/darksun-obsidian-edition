@@ -68,8 +68,8 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   THAC0 with a weapon of the kit's chosen weapon spec (with weapon specialization; without it the
   kit's kinds: `SWASH_KINDS`, `KIT_BM_KINDS`, melee). The Swashbuckler picks its weapon of choice
   on the weapon window after DONE (`LV_DUE` one, `KINDS_ALLOWED` the long sword, dagger and short
-  sword; no specialization's bonus or attacks: a thief's chosen kind is plain), and its thief
-  skills are −5 (was −10). The Loader's THAC0 for each weapon (`game.weapon_hits`) and the dice
+  sword; no specialization's bonus or attacks: a thief's chosen kind is plain); its thief skills'
+  −10 went too, for bad luck (below). The Loader's THAC0 for each weapon (`game.weapon_hits`) and the dice
   log (`_kit_attack`) show it as "Swashbuckler (a warrior's THAC0)" (`kits.war_hit`). Tests:
   `test_dsclog`'s `test_war_hit`, `test_thac0`, `test_thac0_line`, `test_swashbuckler`.
 - **The Scholar: a spell more learnt, no slot more** (the user's call, after trying a sure scroll
@@ -125,8 +125,8 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   (`QuiverTests` gone), `test_kits`' `SpellarcherBareTests`, `test_dicelog`'s rest test.
   KITS.md, the player's guide, ITEMS.md, DICE-LOG.md, FEATURES.md, DEVELOPMENT-RULES.md and the
   patch notes say so. DSCLOG 70,256 bytes.
-- **The Wayfinder: +1 initiative only** (the user's call): its Move +2 is gone (`KIT_MOVE`'s path
-  block, the viewer's line); downed, it costs the party only its −1 initiative. Test:
+- **The Wayfinder: initiative only** (the user's call): its Move +2 is gone (`KIT_MOVE`'s path
+  block, the viewer's line); its initiative as below (its own +2, no penalty when down). Test:
   `test_scout_and_path_finder`.
 - **The Sentinel: no initiative, −1 to hit without a shield** (the user's call): its +2 initiative
   is gone (`PROBE_INIT`); `KIT_CHAMPION` now takes a Sentinel's melee attack without a shield in a
@@ -164,7 +164,7 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   sphere's weapons, the bow among them where the sphere allows one (`KINDS_ALLOWED`,
   `restrict.allowed_kinds`: no other ranger is offered the bow). Tests: `test_seeker`,
   `test_seeker_bow`, `test_ranger_expertise`, `KindsAllowedTests`.
-- **The Swashbuckler: bad luck** (the user's call, in place of −5 to every skill): each thief skill
+- **The Swashbuckler: bad luck** (the user's call, in place of a flat penalty to every skill): each thief skill
   roll 0 to 25 worse, rolled each time: the game's (`PROBE_BELT`, a d26 less 1 from the game's seed,
   kept in the header's `BAD_LUCK`, +1862, and `BAD_LUCK_WHO` for the dice log's line, "-N
   Swashbuckler's bad luck") and the Loader's (`kits.bad_luck`: pickpocket.py, stealth.py). The
@@ -191,6 +191,25 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   `test_avenger_spells`, `AvengerHealTests.test_healer_and_lifebinder`.
 
 **Fixed**
+- **A code audit of the branch** (its findings, each fixed):
+  - The dice log counted a Poisoner's dose only on a helpless target's hit, so after a weapon had
+    poisoned an awake foe, its next hit on the same foe, held, was logged "poisoned by the hit"
+    though DSCLOG poisons once a weapon a fight: every melee hit counts now (`_poison_dose`).
+    Test: `test_poisoner_on_a_helpless_target`.
+  - A Poisoner's `POISON_USED` (+1860) was cleared by the dice log at the first round's line, a pass
+    after the round began at times (a first hit before it poisoned twice), and never without the
+    dice log: DSCLOG clears it itself at a fight's first round (`ACID_ROUND`).
+  - The Loader's figures (`game.weapon_hits`, the dice log's THAC0 line) gave the Swashbuckler's,
+    Battle Mage's, Crusader's and Mind Warrior's warrior THAC0 with the rule for kits off, which
+    DSCLOG doesn't: `kits.war_hit` takes the rule (`kits_on`). Test: `test_war_hit`.
+  - `MYRM_POLEARM` put the polearm in a Myrmidon's second spec slot with nothing in the first (the
+    weapon window closed without a pick): without the Loader, `LV_DUE` would then take it for the
+    one pick and never ask. It waits for a first now (the Loader fills both). Test:
+    `test_myrmidon_polearm`.
+  - `GEAR_GIVEN` was left set once `GEAR_HOLD` had the gear in, and the Loader ORs into it: a
+    needless redraw later. `GEAR_HOLD` clears it. Test: `test_gear_hold`.
+  - Left as it is: the dice log reads the Swashbuckler's bad luck (`BAD_LUCK`, the last roll's)
+    when it reads the roll, so two thief rolls in one pass show the second's luck on both.
 - **The dice log's damage on a held target** (found in the kit checks): a Paralyzed creature takes
   a spell's most (the game's rule, as for one Out Cold), but the dice log said so only for Out Cold,
   so a held Arena Guard's "takes 15 from Magic Missile" stood under a roll of 9 with no word why.

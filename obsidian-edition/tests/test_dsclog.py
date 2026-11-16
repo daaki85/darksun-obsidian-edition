@@ -1749,6 +1749,7 @@ class SpecializeTests(unittest.TestCase):
         self.assertEqual(kits.war_hit(bytes(sheet), 0, 16, True), (kits.SWASHBUCKLER, 4))
         self.assertEqual(kits.war_hit(bytes(sheet), 5, 16, True), (kits.SWASHBUCKLER, 0))
         self.assertEqual(kits.war_hit(bytes(sheet), 2, 16, False), (kits.SWASHBUCKLER, 4))
+        self.assertEqual(kits.war_hit(bytes(sheet), 0, 16, True, kits_on=False), (0, 0))  # (the rule off)
         self.assertEqual(kits.war_hit(bytes(sheet), 5, 16, False), (kits.SWASHBUCKLER, 0))
         self.assertEqual(kits.war_hit(bytes(sheet), None, 16, True), (0, 0))
 
@@ -6717,8 +6718,8 @@ class KitTests(unittest.TestCase):
     def test_myrmidon_polearm(self):
         """MYRM_POLEARM (CR_WEAPONS, at DONE after the weapon window): a new Myrmidon's second weapon
         spec slot the polearm (kits.POLEARM + 1) when empty, in the sheet the game keeps, so the
-        roster's copy has it; its first, or a second already there, kept; another kit's, or the kits
-        off, untouched."""
+        roster's copy has it; its first, or a second already there, kept; with no first (none
+        picked) none, left for the Loader; another kit's, or the kits off, untouched."""
         import re
         from dsloader import kits
         at = re.search(rb"\x60\x06\xc4\x1e\x61\x16\x6b\xc6\x47\x01\xc3\xe8..\x0d", self.image, re.S).start()
@@ -6726,7 +6727,7 @@ class KitTests(unittest.TestCase):
         hdr = TSR * 16 + self.image.find(HDR_SIG)
         self.mu.mem_write(TSR * 16 + 0xFFF0, bytes((0xF4,)))
         for rules, kit, first, second, want in ((game.RULE_KITS, 1, 1, 0, [1, kits.POLEARM + 1]),
-                                                (game.RULE_KITS, 1, 0, 0, [0, kits.POLEARM + 1]),
+                                                (game.RULE_KITS, 1, 0, 0, [0, 0]),
                                                 (game.RULE_KITS, 1, 1, 6, [1, 6]),
                                                 (game.RULE_KITS, 2, 1, 0, [1, 0]),
                                                 (0, 1, 1, 0, [1, 0])):
@@ -6791,6 +6792,11 @@ class KitTests(unittest.TestCase):
         self.assertLess(reads, 186)
         self.assertEqual(run(1, None, beat_age=200), (1, 1))  # (no Loader: on at once, the game's gear)
         self.assertEqual(run(1, None, beat_age=91), (1, 1))
+        given = due + 1  # (GEAR_GIVEN: cleared once the gear is in, no redraw due; kept while due)
+        for clear_at, beat_age, want in ((5, 3, 0), (None, 200, 1)):
+            self.mu.mem_write(given, b"\x01")
+            run(1, clear_at, beat_age)
+            self.assertEqual(self.mu.mem_read(given, 1)[0], want)
 
     def test_scout_and_path_finder(self):
         """A Military Scout's 2 more initiative and 1 to hit with a bow or sling under the open sky

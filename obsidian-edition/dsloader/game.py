@@ -2255,7 +2255,8 @@ class GameData:
                     + kits.ghetto_to_hit(kid, kind)
                 if kit:
                     parts.append((kits.name(kid), kit))
-            war_kid, war = kits.war_hit(self.sheet(creature), kind, base, bool(self.rules & RULE_SPECIALIZE))
+            war_kid, war = kits.war_hit(self.sheet(creature), kind, base, bool(self.rules & RULE_SPECIALIZE),
+                                         bool(self.rules & RULE_KITS))
             if war:  # (DSCLOG's WAR_HIT: a warrior's THAC0 with the kit's chosen weapon)
                 parts.append((f"{kits.name(war_kid)} (a warrior's THAC0)", war))
             if creature in self.wild:  # (DSCLOG's WILD_TO_HIT: a Wild Fury, or Gerakis, whatever the check)

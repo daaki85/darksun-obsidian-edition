@@ -700,6 +700,12 @@ class HelplessTests(unittest.TestCase):
         with mock.patch.object(log.game, "kit_ids", lambda m: [kits.POISONER] if m == 0 else []):
             self.assertEqual(len(self.hit(log, now=1.0)), 1)  # (not helpless: the game rolls the save)
             set_effects(log, [(0x29, 2, game.PARALYZED_EFFECT)])
+            # (that hit used the weapon's dose, as DSCLOG counts it: held now, no poison named; up to
+            # 2.17 the dice log counted only a helpless target's hits and named one here)
+            self.assertEqual(len(self.hit(log, now=1.5)), 1)
+            struct.pack_into("<h", log.guest.mem, stalker, 100)
+            log.hp_changes(1.6)
+            log._poison_doses.clear()  # (a new fight)
             lines = self.hit(log, now=2.0)
             self.assertEqual(lines[1], "  Mountain Stalker is poisoned by the hit: Poison (10 damage), no saving throw "
                                        "(Paralyzed)")

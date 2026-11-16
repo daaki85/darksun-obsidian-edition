@@ -263,15 +263,17 @@ def war_kinds(kid: int) -> frozenset:
     return {SWASHBUCKLER: SWASHBUCKLER_KINDS, BATTLE_MAGE: BATTLE_MAGE_KINDS}.get(kid, MELEE_KINDS)
 
 
-def war_hit(sheet: bytes, kind: Optional[int], own_thac0: int, specialization: bool) -> Tuple[int, int]:
+def war_hit(sheet: bytes, kind: Optional[int], own_thac0: int, specialization: bool,
+            kits_on: bool = True) -> Tuple[int, int]:
     """(kit, what it adds to hit) for a weapon of KIND (None: none) in the hands of the character of
     SHEET, its THAC0 OWN_THAC0 (its classes'), as DSCLOG's WAR_HIT: a Swashbuckler's, Battle Mage's,
     Crusader's or Mind Warrior's warrior THAC0 (21 less the kit's class level, 1 at best) where
     better, with its chosen weapon spec alone (SPECIALIZATION on), or with the kit's kinds (off:
     war_kinds); (0, 0) otherwise. The Complete Thief's Handbook's Swashbuckler has a fighter's
-    THAC0 with its weapon of choice only."""
+    THAC0 with its weapon of choice only. KITS_ON: the rule for kits (off: none, as DSCLOG's KIT_IS
+    finds none; up to 2.17 the Loader's figures gave the bonus anyway)."""
     from . import game, kitpages
-    if kind is None:
+    if kind is None or not kits_on:
         return 0, 0
     found = [(kid, place) for kid, place, awake in kitpages.kits_of(sheet) if awake and kid in WARRIOR_THAC0]
     for kid in (SWASHBUCKLER, BATTLE_MAGE, CRUSADER, MIND_WARRIOR):  # (DSCLOG's order)

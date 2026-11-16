@@ -453,8 +453,8 @@ sell_member dw 0                ; +1854 ... the party member on show then
 sell_merchant dw 0              ; +1856 ... to the shop's merchant (DS:179Ch)
 shop_at    dw 0                 ; +1858 the BIOS tick of the shop's loop's last pass (SHOP_LOOP)
 poison_used db 0                ; +1860 a Poisoner's weapons that have poisoned this fight (PROBE_POISON):
-                                ;      bit N party member N's main hand, bit N + 4 its off hand; the
-                                ;      Loader clears it as each fight starts (poisoner.py's FIGHT_START)
+                                ;      bit N party member N's main hand, bit N + 4 its off hand;
+                                ;      DSCLOG clears it at a fight's first round (ACID_ROUND; the Loader did, up to 2.17)
 kit_off    db 0                 ; +1861 bit N: party member N's last melee attack with its left hand's
                                 ;      weapon (NOTE_SHOT, from PROBE_ATTACKS: PROBE_POISON's hand)
 bad_luck   db 0                 ; +1862 a Swashbuckler's bad luck on its last thief skill roll (PROBE_BELT:
@@ -14402,6 +14402,8 @@ acid_round:
         mov bx, sp                      ; (BX+34: the INT's way back, its IP then CS)
         cmp word [0x55A], 0
         je .marks
+        mov byte [cs:poison_used], 0    ; (a fight's first round: each Poisoner's weapon poisons again;
+                                        ;   up to 2.17 the dice log cleared it, a pass late at times)
         push cx                         ; (a fight's first round: no SWEPT left from another)
         push di
         push es
@@ -22151,13 +22153,18 @@ gear_hold:
         sub ax, bx
         cmp ax, GEAR_HOLD_TICKS
         jb .wait
-.out:   pop es
+.out:   cmp byte [cs:gear_due], 0
+        jne .left
+        mov byte [cs:gear_given], 0     ; (the gear in before VIEW CHARACTER is first drawn: no
+.left:  pop es                          ;   redraw due, GEAR_WAIT's, later; the Loader ORs into it)
         pop bx
         pop ax
 .ret:   ret
 
 ; MYRM_POLEARM: for new member SI, a Myrmidon (its kit on the sheet, LV_SHEETS), the polearm put in
-; its second weapon spec slot (SPEC_SET slot 1, MYRM_POLEARM + 1) when that is empty: here at DONE,
+; its second weapon spec slot (SPEC_SET slot 1, MYRM_POLEARM + 1) when that is empty and the first
+; holds its pick (none picked, the weapon window closed: the Loader's kinds_for fills both, else
+; LV_DUE would take the polearm for its one pick and never ask it): here at DONE,
 ; so the roster's copy the game writes then has it (the Loader's weaponchoice.kinds_for, after,
 ; came too late for it: a Myrmidon added again from the roster had lost it). All registers kept.
 myrm_polearm:
@@ -22169,7 +22176,11 @@ myrm_polearm:
         call kit_is_b
         db KIT_MYRMIDON
         jne .out
-        mov si, 1
+        xor si, si
+        call spec_get
+        or ax, ax
+        jz .out                 ; (no pick in the first: left for the Loader)
+        inc si
         call spec_get
         or ax, ax
         jnz .out
