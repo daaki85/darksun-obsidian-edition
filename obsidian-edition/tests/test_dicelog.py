@@ -1243,6 +1243,29 @@ class SaveTests(unittest.TestCase):
         self.assertEqual(log.hp_changes(1.5), ["  Mountain Stalker takes 6 from Fireball "
                                                "(Out Cold: the most the dice can do), now 24 HP"])
 
+    def test_paralyzed_takes_the_most(self):
+        """A Paralyzed target's spell damage: the most the dice can do, said as for one Out Cold
+        (a held Arena Guard's 15 from Magic Missile, 9 rolled, 2026-11-16)."""
+        from unittest import mock
+        log = make_game()
+        m = log.guest.mem
+        stalker = CREATURES + STALKER * game.CREATURE_SIZE
+        struct.pack_into("<h", m, stalker, 30)
+        with mock.patch.object(log.game, "helpless", return_value="Paralyzed"):
+            log.hp_changes(0.5)
+            e = entry(raw_for(3, 6), dicelog.DICE_SITE, words(0, 0, 1, 6), words(0, 0, FIREBALL, 3),
+                      parent_code=dicelog.SPELL_DAMAGE_RETURN)
+            log.describe(e, now=1.0)
+            struct.pack_into("<h", m, stalker, 24)
+            self.assertEqual(log.hp_changes(1.5), ["  Mountain Stalker takes 6 from Fireball "
+                                                   "(Paralyzed: the most the dice can do), now 24 HP"])
+        with mock.patch.object(log.game, "helpless", return_value="Out Cold"):  # (knocked out by it: not before)
+            e = entry(raw_for(3, 6), dicelog.DICE_SITE, words(0, 0, 1, 6), words(0, 0, FIREBALL, 3),
+                      parent_code=dicelog.SPELL_DAMAGE_RETURN)
+            log.describe(e, now=2.0)
+            struct.pack_into("<h", m, stalker, 21)
+            self.assertEqual(log.hp_changes(2.5), ["  Mountain Stalker takes 3 from Fireball, now 21 HP"])
+
     def test_confusion(self):
         log = make_game()
         e = entry(raw_for(8, 10), dicelog.DICE_SITE, words(0, 0, 1, 10), words(0, 0, 0x29),

@@ -179,6 +179,13 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   `test_avenger_spells`, `AvengerHealTests.test_healer_and_lifebinder`.
 
 **Fixed**
+- **The dice log's damage on a held target** (found in the kit checks): a Paralyzed creature takes
+  a spell's most (the game's rule, as for one Out Cold), but the dice log said so only for Out Cold,
+  so a held Arena Guard's "takes 15 from Magic Missile" stood under a roll of 9 with no word why.
+  The line now says `(Paralyzed: the most the dice can do)` too (`_paralyzed`, `game.helpless`).
+  Checked in the game (playtest/logs/2026-11-15-kit-rebalance-checks.md part 11): a held Templar,
+  8 rolled, "takes 10 from Magic Missile (Paralyzed: the most the dice can do)". Test:
+  `test_paralyzed_takes_the_most`.
 - **A Brute could still change class to air cleric** (found in the game): the DUAL window greys
   only whole classes, so CLERIC stayed open for earth, fire and water, and the game's sphere menu
   makes its title row, or the menu closed, the air class. `PROBE_SPHERE` now checks the class the

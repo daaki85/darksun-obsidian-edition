@@ -2072,6 +2072,15 @@ class DiceLog:
         except (struct.error, IndexError, ValueError, TypeError, AttributeError):
             return None
 
+    def _paralyzed(self, combatant: int) -> Optional[str]:
+        """"Paralyzed" if COMBATANT is (game.helpless's effect: a spell's damage on it the most its
+        dice can do), else None; Out Cold is hp_changes' own, as it was before the blow."""
+        try:
+            why = self.game.helpless(combatant)
+        except (struct.error, IndexError, ValueError, TypeError, AttributeError):
+            return None
+        return why if why and why != "Out Cold" else None
+
     def hp_changes(self, now: float) -> List[str]:
         """Every combatant's HP going down or up, with what's left (the game never shows a
         monster's HP). Put down to a spell while one is being cast (the damage after saves,
@@ -2122,8 +2131,11 @@ class DiceLog:
                 reason = self._weapon_reason(index) or "a protection or resistance took it"
                 out.append(f"  {who} takes none of the {rolled} damage: {reason}")
             if now <= self._spell_until and before - hp > hit:
-                # the game's damage code gives a creature that was Out Cold the most the dice can do
-                out_cold = " (Out Cold: the most the dice can do)" if was_out_cold else ""
+                # the game's damage code gives a helpless creature (Out Cold before the blow, or
+                # Paralyzed) the most the dice can do (up to 2.17 said only for one Out Cold: a held
+                # foe's 15 from Magic Missile read as the 9 rolled)
+                why = "Out Cold" if was_out_cold else self._paralyzed(combatant)
+                out_cold = f" ({why}: the most the dice can do)" if why else ""
                 also = f" and {hit} from the hit" if hit else ""
                 spell_id, spell_name = self._damage_source(before - hp - hit)
                 halved = g.damage_halved_by(combatant, spell_id) if spell_id is not None else None
