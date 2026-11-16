@@ -12,6 +12,13 @@ trigger, Mindhome award, Legcrusher guards, Linara, hermit/ranger, the Darkhold 
 Trustee, and the engine-bug catalog they relayed *from* us (OpenDS records it as unverified). Nothing to
 take there.
 
+**Correction (same day):** CHANGELOG.md (2.x, "yuan-ti's v0.1.52 repairs", about line 1472) already
+records that the Mindhome's "Have you killed the spiders yet?", the Hound Necklace killing prisoners,
+Alhena and the army count were *looked at and left*. My first search only covered the `.md` files in
+`obsidian-edition/`, `reports/` and `research_notes/`, so it missed that entry: those four are a
+decision already taken, not gaps. The CHANGELOG doesn't say why. Nothing in it or in the docs
+mentions the elven leader's goodbye or the Keldar/Dagolar clones, so those two are still open.
+
 ## 2. Checklist: their rows we do not have yet
 
 From `docs/ds1-sweep-triage-2026-10-07.md` (their numbering). "In GAME-BUGS" = a keyword search of our
@@ -19,16 +26,16 @@ docs found it described; the four marked **traced** are section 3.
 
 | Row | Bug | In GAME-BUGS | Status |
 |---|---|---|---|
-| 3.2(2) | Alhena never appears at the campfire (post-war) | no | **traced**, confirmed |
+| 3.2(2) | Alhena never appears at the campfire (post-war) | looked at and left (CHANGELOG) | **traced**, confirmed; the decision stands unless the user reopens it |
 | 3.2(6) | Elven slaver leader: "Goodbye" goes to the slave pen | no | **traced**, confirmed, site differs from theirs |
-| 3.2(10) | Hound Necklace kills the prisoner outright | no | **traced**, confirmed |
+| 3.2(10) | Hound Necklace kills the prisoner outright | looked at and left (CHANGELOG) | **traced**, confirmed; decision stands |
 | 3.2(11) | Keldar fight clones Dagolar at the party's tile | no | **traced**, confirmed, one site of theirs wrong |
 | 3.2(8) | Swiftbite chest wiped by the Teaquetzl alliance rewards (rewards cloned at fixed tiles, GPL-183@0xe3e, GPL-184) | no | not traced |
 | 3.2(9) | Wyrm Temple Magera spawner clones at the party's arrival tile, second counter GPL-162@0xde5 | no | not traced (they want a runtime capture) |
 | 3.2(14) | Slaver-camp alarm is one global flag pair (GF20 / gnum91, GPL-137@0x1084) | partly (Pehtucl's ambush is ours, a different site) | not traced |
-| 3.2(4) | Mindhome re-ask half: GPL-204@0xb2/0xd2 never reads GF695 | award half only | not traced; neither project has it |
+| 3.2(4) | Mindhome re-ask half: GPL-204@0xb2/0xd2 never reads GF695 | award half fixed; re-ask looked at and left (CHANGELOG) | decision stands |
 | 3.1(5) | Final battle: a stage cleared too fast breaks the next | left out on purpose (see DEVELOPMENT-CONTENT) | nothing to do: the game clock makes the gate wait its window |
-| 3.1(6) | "Army still gathering": failure flags 179/182 never cleared | no | they decline to patch (it invents behaviour); same for us unless wanted |
+| 3.1(6) | "Army still gathering": failure flags 179/182 never cleared | looked at and left (CHANGELOG, "the army count") | they decline to patch (it invents behaviour); same for us unless wanted |
 
 Rows they close as engine-side or "no static site" (messenger's scroll, ally leaving early, enemies not
 loading, ghost slot, save mid-event, stat gear while carried) need nothing from us; the engine-side ones
@@ -99,10 +106,11 @@ before shipping.
 
 ## 4. Recommended order
 
-1. Alhena, then the elven leader's goodbye: both are plain script repairs with a clear intent.
-2. Keldar/Dagolar: after a look at the map at (16,24).
-3. Hound Necklace: a rule switch, if the user wants it.
-4. Trace Swiftbite, Magera and the alarm only if the user wants them.
+1. The two that are really open: the elven leader's goodbye (4FAh) and Keldar/Dagolar (393h, 442h; look
+   at the map at (16,24) first).
+2. Alhena, Hound Necklace, Mindhome re-ask, army count: already looked at and left; reopen only if the
+   reason for leaving them no longer holds.
+3. Swiftbite, Magera and the slaver-camp alarm are untraced; trace only if wanted.
 
 ## 5. For the recompile
 
