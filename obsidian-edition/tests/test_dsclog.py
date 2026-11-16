@@ -7604,6 +7604,46 @@ class KitTests(unittest.TestCase):
         self.assertTrue(kits.dual_kit_banned(kits.HEALER, [15], [], 4))
         self.assertFalse(kits.dual_kit_banned(kits.HEALER, [16], [], 4))
 
+    def test_sphere_barred(self):
+        """PROBE_SPHERE: the sphere menu after DUAL (SI the air class, AX the row: the title or a
+        closed menu air, 1-3 earth, fire, water) on as the game has it, but for a class the member's
+        kit bars (a Brute's air cleric: kits.dual_banned), back to the window's close after a change
+        (86B68h, SPH_ABORT before the return), no change made. The member: the word at 25Bh of the
+        segment the code's "mov ax,0348h" names (SPH_WHO past the return). Registers kept."""
+        from dsloader import kits
+        from dsloader.gamepatch import VEC_SPHERE
+        if not getattr(self, "hooked", False):
+            self.mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
+            self.hooked = True
+        at = install_at(self.image, VEC_SPHERE)
+        self.mu.mem_write(VEC_SPHERE * 4, struct.pack("<HH", struct.unpack_from("<H", self.image, at + 4)[0], TSR))
+        site, who_seg, stop = 0x700, 0x7400, 0x7F0
+        back = site + 2  # (the return: the NOP)
+        abort = back - (0x86BC5 - 0x86B68)
+        jmp = lambda frm, dl: bytes((0xB2, dl, 0xE9)) + struct.pack("<h", stop - (frm + 5))
+        self.mu.mem_write(CALLER * 16 + site, bytes((0xCD, VEC_SPHERE, 0x90)) + jmp(site + 3, 1))
+        self.mu.mem_write(CALLER * 16 + abort, jmp(abort, 2))
+        self.mu.mem_write(CALLER * 16 + back + (0x86BDC - 0x86BC5), struct.pack("<H", who_seg))
+        self.mu.mem_write(who_seg * 16 + 0x25B, struct.pack("<H", 2))
+        self.mu.mem_write(CALLER * 16 + stop, b"\x90")
+        self.rules(game.RULE_KITS)
+        for cls, kit in ((10, 3), (10, 1), (13, 3)):
+            sheet = self.dual_sheet([cls], [3], kit, member=2)
+            kid = any_kit(sheet)
+            for air, row in ((1, 0), (1, 1), (1, 3), (1, 0xFFFF), (5, 0), (13, 0)):
+                with self.subTest(cls=cls, kit=kit, air=air, row=row):
+                    new = air + row if 1 <= row <= 3 else air
+                    for name, value in dict(cs=CALLER, ds=self.DS, ss=SS, esp=0x7FC, ebp=BP, eflags=IF | 2,
+                                            eax=row, esi=air, ebx=0x2222, edx=0, es=0x6666).items():
+                        self.mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+                    self.mu.emu_start(CALLER * 16 + site, CALLER * 16 + stop, count=20000)
+                    self.assertEqual(self.mu.reg_read(r.UC_X86_REG_DL), 2 if kits.dual_banned(kid, new) else 1)
+                    self.assertEqual([self.mu.reg_read(x) for x in (r.UC_X86_REG_AX, r.UC_X86_REG_SI,
+                                      r.UC_X86_REG_BX, r.UC_X86_REG_ES, r.UC_X86_REG_SP)],
+                                     [row, air, 0x2222, 0x6666, 0x7FC])
+        self.assertTrue(kits.dual_banned(kits.BRUTE, 1))
+        self.assertFalse(kits.dual_banned(kits.BRUTE, 5))
+
     def picker_sheet(self, cls, kit, level):
         from dsloader import kitpages
         sheet = bytearray(game.SHEET_SIZE)

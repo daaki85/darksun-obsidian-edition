@@ -1855,7 +1855,12 @@ How each of these is done:
   classes is allowed; the element is then picked on the game's three-choice menu, 86BBBh: its title
   the air row, DS:30A5h, then earth, fire and water, AX 0 to 3 added to the row's first class. For a
   Healer `DUAL_SPHERES`, called by `PROBE_DUAL_BAN`, makes that menu WATER ONLY, no other row, and
-  `PROBE_SPHERE`, `INT FFh` over the `cmp ax,1` after it, 86BC3h, makes its answer water; checked in
+  `PROBE_SPHERE`, `INT FFh` over the `cmp ax,1` after it, 86BC3h, makes its answer water. The game
+  makes any answer but 1-3 (the title, or the menu closed) the air class and changes the member at
+  once: for a class a kit of the member bars there (a Brute's air cleric, its cleric row open for
+  earth, fire and water), `PROBE_SPHERE`'s `SPHERE_BARRED` sends it to the window's close after a
+  change (86B68h) with no change made, so closing the menu cancels (the member from 348h:25Bh, the
+  segment read from the code after the return); checked in
   the game: a water-cleric Healer to ranger, a water ranger; a fire ranger to water cleric, no
   Healer on the KIT menu): `PROBE_DUAL_BAN` (`INT 9Dh`, new: the `or ax,ax` after the call, 866FFh;
   its flags back to the JZ with `RETF 2`) answers no for a class one of its kits bars (each

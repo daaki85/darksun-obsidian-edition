@@ -179,6 +179,14 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
   `test_avenger_spells`, `AvengerHealTests.test_healer_and_lifebinder`.
 
 **Fixed**
+- **A Brute could still change class to air cleric** (found in the game): the DUAL window greys
+  only whole classes, so CLERIC stayed open for earth, fire and water, and the game's sphere menu
+  makes its title row, or the menu closed, the air class. `PROBE_SPHERE` now checks the class the
+  answer makes against the member's kits (`SPHERE_BARRED`, `KIT_BANS`) and, for a barred one, sends
+  the game to the window's close (86B68h) with no change; EARTH, FIRE and WATER as before. Checked
+  in the game (playtest/logs/2026-11-15-kit-rebalance-checks.md part 9): before, Cermak (a Brute in
+  memory) became an air cleric on closing the menu; after, no change, and EARTH made him an earth
+  cleric. Test: `test_sphere_barred`. DSCLOG 70,768 bytes.
 - **A new character ADDed in a later session lost the Loader's creation gear** (found in the kit
   checks: a Myrmidon's polearm, a Swashbuckler's armour, a fighter's chosen weapon in place of the
   bone long sword). The game writes the character to the roster (CHARSAVE.GFF) at the end of DONE,

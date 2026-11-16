@@ -11709,15 +11709,68 @@ dual_spheres:
 ; PROBE_SPHERE: INT VEC_SPHERE replaces "cmp ax,1" (3 bytes: INT + NOP; DSUN.EXE 86BC3h) after the
 ; sphere menu that follows DUAL to a cleric, druid or ranger (AX the row picked: the title air, 1
 ; earth, 2 fire, 3 water): for a Healer (SPH_HEALER: the menu was WATER ONLY) water, whatever the row.
-; Then the compare, its flags back to the JZ (RETF 2).
+; The game makes any other answer (the title, or the menu closed) the air class (SI) and changes
+; the member to it: a class one of the member's kits bars there (KIT_BANS: a Brute's air cleric,
+; the cleric row lit for its other spheres) is made no change, back to the window's close after a
+; change (SPH_ABORT), so closing the menu cancels (up to 2.17 a Brute became an air cleric, the
+; ban only greying whole classes). The member: the word at 348h:25Bh (relocated: the segment from
+; the code, SPH_WHO past the return), as the game passes it. Then the compare, its flags back to
+; the JZ (RETF 2).
 SPH_WATER_ROW equ 3
+SPH_ABORT equ 0x86BC5 - 0x86B68         ; (the return, less the window's close after a change)
+SPH_WHO   equ 0x86BDC - 0x86BC5         ; ("mov ax,0348h" operand, past the return)
 probe_sphere:
         sti
         cmp byte [cs:sph_healer], 0
-        je .cmp
+        je .ban
         mov ax, SPH_WATER_ROW
+.ban:   call sphere_barred
+        jnc .cmp
+        push bp
+        mov bp, sp
+        sub word [bp + 2], SPH_ABORT    ; (no change: the window closed as after one)
+        pop bp
 .cmp:   cmp ax, 1
         retf 2
+
+; SPHERE_BARRED: (PROBE_SPHERE: [SP+2] its return) CF set if the class the sphere menu's answer AX
+; makes (SI, the air class, plus AX for 1-3) is one a kit of the member bars (KIT_BANS, asleep
+; too). DS the game's; all registers kept.
+sphere_barred:
+        push bp
+        mov bp, sp
+        pushad
+        push es
+        movzx ecx, si
+        cmp ax, 1
+        jb .air
+        cmp ax, 3
+        ja .air
+        add cx, ax
+.air:   les di, [bp + 4]                ; (PROBE_SPHERE's return: the game's code)
+        mov es, [es:di + SPH_WHO]
+        mov ax, [es:0x25B]
+        imul ax, ax, 0x47
+        les bx, [0x1661]
+        add bx, ax
+        call kit_place          ; (each of its kits, asleep too)
+        jc .no
+.place: call kit_at
+        call kit_bans
+        bt edx, ecx
+        jc .yes
+        dec di
+        jns .place
+.no:    pop es
+        popad
+        pop bp
+        clc
+        ret
+.yes:   pop es
+        popad
+        pop bp
+        stc
+        ret
 
 ; KIT_BANS: EDX the classes (bit n: class n, 1-17) kit AL bars a human from having as well
 ; (DUAL_BANS; 0 for none, or no kit). Others kept.

@@ -357,7 +357,7 @@ become the other, and a druid must be true neutral, a ranger good.
 | Shinobi | preserver | its own wizard slot table would take the new class's slots' place |
 | Swashbuckler, Crusader, Battle Mage, Mind Warrior | fighter, gladiator, ranger | a warrior's THAC0 is already their kit's |
 | Arena Champion, Sentinel | druid, preserver | their gift needs a shield, which those classes can't hold |
-| Brute | psionicist, air cleric | it needs a two-handed melee weapon, and a psionicist can use none, nor an air cleric (its only one, the cahulaks, a Brute can't use) |
+| Brute | psionicist, air cleric | it needs a two-handed melee weapon, and a psionicist can use none, nor an air cleric (its only one, the cahulaks, a Brute can't use); CLERIC stays open on the DUAL window for earth, fire and water, and the sphere menu's AIR (or closing the menu) changes nothing |
 | Stalker | thief | its +15 to hiding would add to a thief's own skills |
 | Grove Warden | gladiator | its AC would add to a gladiator's own, which betters with level too |
 | Healer | ranger of air, earth or fire | its sphere is water's only (after DUAL to a ranger, the sphere menu offers WATER ONLY) |
