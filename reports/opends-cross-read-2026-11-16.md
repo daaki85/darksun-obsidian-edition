@@ -79,6 +79,10 @@ Open question for the user: she is meant to appear; I haven't looked at what she
 
 ### 3.2 Elven slaver leader (GPL 46)
 
+**Outcome (2026-11-17): kept, reworded.** The first menu is called from 313h; its other three replies return
+to the caller (the templar's accusation, then the second menu); Goodbye alone jumped to the arrest. The repair
+makes it return too: it does not "end the talk". Medium confidence: the shape of the script, not proof.
+
 Confirmed, but **at a different menu than OpenDS names**. They say three replies of the menu at 58Dh go to
 898h (2200), the "Guards! Take these strangers to the slave pen!" scene. In our file:
 
@@ -100,6 +104,10 @@ don't touch.
 
 ### 3.3 Hound Necklace (GPL 55)
 
+**Outcome (2026-11-17): deliberate; repair taken out.** The 1000 damage follows the script's own "The necklace
+you are wearing glows! The prisoner's life force drains away.", and the walkthrough says to take the
+necklaces off before talking to the prisoners.
+
 Confirmed as OpenDS describes. At 155h a search of the party for item 2019 worn (`... -2019 ... 8`), and if
 found, 16Eh prints "The necklace you are wearing glows! The prisoner's life force drains away.", then
 at **1C6h** `0B (var 137,39) (n 1000)` (their "p damage": 1000 points to the prisoner, object 137/39),
@@ -109,6 +117,11 @@ would get a switch (our Rules tab), off by default, like our other balance rules
 "prisoners": I did not check which prisoners the script serves.
 
 ### 3.4 Keldar fight drags in Dagolar (GPL 48)
+
+**Outcome (2026-11-17): OpenDS misread it; repair taken out.** `137/33` and `137/34` are the square of the
+object the preceding `09` located (`09 137/39`: the creature the blow was aimed at), not the party's. The
+script removes that creature and puts Dagolar in its place: the disguise reveal. See the CHANGELOG. The
+trace below is left as written, including its wrong reading.
 
 Confirmed, with a correction. Dagolar (object -26) is cloned at four sites: 393h and 442h at the
 party's own tile (`137/33`, `137/34`), and 47Eh and 48Fh at the fixed tile (16,24). OpenDS lists

@@ -229,7 +229,7 @@ OBJECTS = os.environ.get("DSUN_OBJECTS")
 
 @unittest.skipUnless(GPLDATA and os.path.isfile(GPLDATA), "needs the game's GPLDATA.GFF (DSUN_GPLDATA)")
 class OpenDSTriageTests(unittest.TestCase):
-    """Three repairs from OpenDS's triage, in the Loader's copy of the scripts (the whole
+    """One repair from OpenDS's triage, in the Loader's copy of the scripts (the whole
     pipeline's, so the Elven Leader's cloak in the same script is there too)."""
 
     @classmethod
@@ -260,23 +260,6 @@ class OpenDSTriageTests(unittest.TestCase):
         self.assertGreater(len(cloaked), len(self.game[("GPL ", 46)]))
         after = next(o for o in gpl.decode(cloaked, self.types) if o.at == 0x4FA).args[0]["replies"]
         self.assertEqual(after[3]["goto"][1], 0x583)
-
-    def test_keldar_makes_dagolar_in_the_sanctum(self):
-        for script_at in (0x393, 0x442):
-            was = next(o for o in self.ops(48, True) if o.at == script_at)
-            now = next(o for o in self.ops(48) if o.at == script_at)
-            self.assertEqual(was.args[2:4], [("var", 137, 33), ("var", 137, 34)])
-            self.assertEqual(now.args[2:4], [("n", 16), ("n", 24)])
-            self.assertEqual(now.args[:2], was.args[:2])  # still Dagolar (-26), one of him
-        for at in (0x47E, 0x48F):  # the game's own sanctum clones are as they were
-            self.assertEqual(next(o for o in self.ops(48) if o.at == at).args[2:4], [("n", 16), ("n", 24)])
-        self.assertEqual(len(self.out[("GPL ", 48)]), len(self.game[("GPL ", 48)]))
-
-    def test_hound_necklace_wounds(self):
-        was = next(o for o in self.ops(55, True) if o.at == 0x1C6)
-        now = next(o for o in self.ops(55) if o.at == 0x1C6)
-        self.assertEqual((was.args, now.args), ([("var", 137, 39), ("n", 1000)], [("var", 137, 39), ("n", 5)]))
-        self.assertEqual(len(self.out[("GPL ", 55)]), len(self.game[("GPL ", 55)]))
 
 
 @unittest.skipUnless(GPLDATA and os.path.isfile(GPLDATA) and OBJECTS and os.path.isfile(OBJECTS),

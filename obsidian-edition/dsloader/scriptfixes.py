@@ -291,23 +291,13 @@ REPAIRS = (
     Repair(137, 0xFB5, _FOUNTAIN_WAS, _FOUNTAIN_NOW,
            "the fountain's roar masks a guard's yell in the passage before it too"),
     # From OpenDS's triage (docs/ds1-sweep-triage-2026-10-07.md), each site checked in the game's file:
-    # The elven slavers' leader (script 46): the first menu's "Sorry to bother you. Goodbye." went to
-    # 898h, "Guards! Take these strangers to the slave pen!" and the consent question. Now to 583h,
-    # the return that ends the talk, as the replies that end it otherwise do
+    # The elven slavers' leader (script 46): the first menu ("Who are you?", called from 313h) has
+    # "Join us", "hire on" and "purchase slaves", which all return to the caller (the templar's
+    # accusation, then the second menu at 58Dh); "Sorry to bother you. Goodbye." alone jumped to 898h,
+    # "Guards! Take these strangers to the slave pen!" and the consent question, skipping the
+    # accusation. Now to 583h, the menu routine's own return, as the others come back
     Repair(46, 0x57E, bytes.fromhex("0898"), bytes.fromhex("0583"),
-           "the elven slavers' leader: Goodbye ends the talk, it doesn't send the party to the slave pen"),
-    # The fight with Keldar (script 48): the reveal made Dagolar at the party's own square (the fields
-    # 33 and 34 of the one acting, at 393h and 442h) wherever the party stood; the script's other two
-    # clones of him (47Eh, 48Fh) are at (16, 24), the sanctum, as now
-    *(Repair(48, at, bytes.fromhex("2591001a8f01" "89218922" "8f068f00"),
-             bytes.fromhex("2591001a8f01" "8f108f18" "8f068f00"),
-             "Keldar's reveal makes Dagolar in his sanctum, not on the party's square")
-      for at in (0x393, 0x442)),
-    # The Hound Necklaces (script 55 at 1C6h): a prisoner spoken to by a party member wearing one was
-    # killed outright (damage 1000). Now 5 points, a wound the prisoner can survive (a balance choice
-    # of the Loader's; OpenDS leaves the value open)
-    Repair(55, 0x1C6, bytes.fromhex("0b8927" "03e8"), bytes.fromhex("0b8927" "0005"),
-           "a Hound Necklace wounds the prisoner who is spoken to, it doesn't kill him"),
+           "the elven slavers' leader: Goodbye returns as the other replies do, it doesn't arrest the party"),
 )
 
 
