@@ -52,7 +52,7 @@ class ManualPagesTests(unittest.TestCase):
         """The ten pages, the start page first, each from its Markdown, each with the bar of all ten
         (itself marked) and its own index; the spoiler pages marked so in the bar."""
         self.assertEqual(manual.PAGES[0][0], "index.html")
-        self.assertEqual(len(manual.PAGES), 11)
+        self.assertEqual(len(manual.PAGES), 12)
         for page, source, name, _ in manual.PAGES:
             self.assertTrue(os.path.exists(os.path.join(manual.ROOT, source)), source)
             html = self.pages[page]
@@ -64,7 +64,7 @@ class ManualPagesTests(unittest.TestCase):
                 self.assertIn('<nav class="index" id="contents"', html)
                 self.assertIn(f'<link rel="stylesheet" href="{manual.CSS}">', html)
         bar = self.pages["index.html"]
-        for page in ("items.html", "creatures.html"):
+        for page in ("items.html", "creatures.html", "people.html"):
             self.assertRegex(bar, re.escape(f'href="{page}"') + r'>[^<]+</a> <span class="spoil">\(spoilers\)')
         self.assertRegex(bar, r'href="game-bugs.html">[^<]+</a> <span class="spoil">\(some spoilers\)')
         for page in ("items.html", "game-bugs.html"):  # (the pages' own warnings, at their top)

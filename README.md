@@ -28,13 +28,16 @@ default and when it takes effect](obsidian-edition/PLAYER-GUIDE.md#the-options-t
   (open `manual/index.html`, or press the Loader's **Help** button)
 - [The player's guide](obsidian-edition/PLAYER-GUIDE.md), without spoilers, with a
   [glossary](obsidian-edition/PLAYER-GUIDE.md#glossary) of THAC0, AC, PSP and the rest
-- [Features and rules](obsidian-edition/FEATURES.md): what the game shows, every rule and addition
+- [Features and rules](obsidian-edition/FEATURES.md): every switch of the Options tab and every
+  change with none, one short entry each
 - [Kits](obsidian-edition/KITS.md): every kit's gains, costs and starting gear
 - [Weapon specs](obsidian-edition/WEAPON-SPECS.md): weapon specialization, who picks what, and the
   attacks a round
 - [Items](obsidian-edition/ITEMS.md) (spoilers): every item and where it is
 - [Creatures](obsidian-edition/CREATURES.md) (spoilers): every one, its size, and whether cahulaks
   can tangle it
+- [People](obsidian-edition/PEOPLE.md) (spoilers): the mod's new people and scenes in the slave pens
+  and the arena
 - [The game's bugs, fixed](obsidian-edition/GAME-BUGS.md) (some spoilers): every bug of the
   original game the mod mends
 - [The dice log, line by line](obsidian-edition/DICE-LOG.md): how to read it, and every kind of line
