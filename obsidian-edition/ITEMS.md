@@ -18,7 +18,7 @@ then more on the mod's own items; last, each item's chance [against acid](#items
 - [Every mundane weapon](#every-mundane-weapon)
 - [Every mundane armour piece](#every-mundane-armour-piece)
 - [The mod's new items](#the-mods-new-items): [prices](#prices), [the Warden's Plate](#the-wardens-plate),
-  [bracers of defense](#bracers-of-defense), [robes](#robes), [icons and names](#icons-and-names),
+  [Bracers of Defense](#bracers-of-defense), [robes](#robes), [icons and names](#icons-and-names),
   [Alagorn's stories](#alagorns-stories), [Pehtucl's chest](#pehtucls-chest)
 - [Items against acid](#items-against-acid): [chest](#chest), [arms and legs](#arms-and-legs),
   [weapons](#weapons-held)
@@ -42,67 +42,67 @@ Belt of Might making STR at least 24.
 
 ### Weapons
 
-By material, then type:
+By material, then weapon spec ([by weapon spec](#by-weapon-spec) lists them by type alone):
 
-| Icon | Material | Type | Item | Bonus / power | Where |
-|---|---|---|---|---|---|
-| ![](docs/items/swiftbite.png) | Bone | long sword | Swiftbite | +2 | a reward in the party's house in Teaquetzl, when the party agrees to gather allies (with Arrows +2, a lemon and grapes) |
-| ![](docs/items/draketooth.png) | Bone | long sword | Draketooth | +1, STR +3 | on a platform in the Wyrm School |
-| ![](docs/items/hornblade.png) | Bone | long sword | Hornblade | +1 | Kalinin's reward |
-| ![](docs/items/hayneedle.png) | Bone | dagger | ***Hayneedle*** | a bone dagger +1: a water cleric can wield it | hidden in **Merzol**'s haystack in the slave pens, with his sack of ceramic pieces |
-| ![](docs/items/stillwater.png) | Bone | short sword | ***Stillwater*** | a bone short sword +1: a **psionicist** can wield it, alone or with a water cleric | in the chest **Chaya** gives as her apology |
-| ![](docs/items/mace-plus2.png) | Bone | mace | Mace +2 | +2 | a weapon rack in the Subterranean Temple, with the Storm Ring |
-| ![](docs/items/drakejaw.png) | Bone | axe | ***Drakejaw*** | a bone axe +1 (1d8+1): a water cleric can wield it | carried by one of the **Magera** guarding the wagon's prisoners |
-| ![](docs/items/polearm-plus1.png) | Bone | polearm | Polearm +1 | +1; its reach as any polearm's, with [the rule](FEATURES.md#polearm-reach) | carried by **Seref**, the Draj agent at the Elven Caravan, and by the Seref met on the road with his Drajian Guards and daggorans (his script makes a copy of him there). Placed by the mod: the game defines it but never places or gives it (the cluebook says the Elven Caravan) |
-| ![](docs/items/thornwall.png) | Bone | polearm | ***Thornwall*** | a bone polearm +1; its reach as any polearm's, with [the rule](FEATURES.md#polearm-reach) | on the slave pens' **weapon rack**, once **Semyon**, in his pen, has told of the weapon shipment ("Seen anything useful?") |
-| ![](docs/items/gythka-plus3.png) | Bone | gythka | Gythka +3 | +3 | carried by **Hototo**, chief of the White Sand Outlaws who burst from the sand (fought if the talk goes wrong; the mod's); and the arena's [1000th trip](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights), King Tectuktitlay's gift |
-| ![](docs/items/gythka-plus2.png) | Bone | gythka | ***Gythka +2*** | the game's Gythka +1, made +2 | the **Elven Leader**'s gift, after the fight with his men (he carries it too) |
-| ![](docs/items/kreenfang.png) | Bone | gythka | ***Kreenfang*** | a gythka +1 (2d4+1) | carried by the **Tohr-kreen** leading the champions in the arena, after **Scar** is killed ([the champions' bout](FEATURES.md#the-champions-bout)) |
-| ![](docs/items/cahulaks-plus2.png) | Bone | cahulaks | ***Cahulaks +2*** | +2; casts Cause Light Wounds on a hit (the game's Cahulaks +1, made +2); its blades glow blue | the Elven Caravan's buried chest (Kel's caravan), with the Boots of Elvenkind |
-| ![](docs/items/cahulaks-plus1.png) | Bone | cahulaks | ***Cahulaks +1*** | +1; its blades glow in fire colours | carried by **Legcrusher**, the pens' half-giant monster trainer, in place of his two clubs (the mod's) |
-| ![](docs/items/dragonsbane.png) | Metal | long sword | Dragonsbane | +4 | Kraxis' sword, taken from his body after the final battle against Draj's army |
-| ![](docs/items/els-drinker.png) | Metal | long sword | El's Drinker | +2, Vampiric Touch | the safe in Gedron, with 2,000 ceramic pieces; and the arena's [1000th trip](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights), King Tectuktitlay's gift |
-| ![](docs/items/dags-dagger.png) | Metal | dagger | Dag's Dagger | +3, CHA +1 | Dagolar |
-| ![](docs/items/galefang.png) | Metal | dagger | ***Galefang*** | a metal dagger +2 an **air cleric** can wield | carried by the **Rogue Shaman**, with his Shaman Followers |
-| ![](docs/items/greenbright.png) | Metal | short sword | ***Greenbright*** | a metal short sword +2 | carried by **Arant**, who holds the captured gladiators |
-| ![](docs/items/shadowseeker.png) | Metal | short sword | ***Shadowseeker*** | a short sword +1 (1d6+1): whoever wields it, in either hand, sees the invisible | wielded by **Kurzak**, the pens' guard leader; a thief can lift it (200 XP, once a game) |
-| ![](docs/items/soulcrusher.png) | Metal | axe | Soulcrusher | +1 | Kel |
-| ![](docs/items/axe-plus1.png) | Metal | axe | Axe +1 | +1 | hidden in a sewer hole in the Tari's warrens; or made at Teaquetzl's forge from the Meteor Metal and the Metal Rod |
-| ![](docs/items/great-axe-plus3.png) | Metal | great axe | Great Axe +3 | +3 (the game gave its type no material: metal with the Loader) | the Army Commander |
-| ![](docs/items/headsman.png) | Metal | great axe | ***Headsman*** | a metal great axe +2 | in the arena **Announcer**'s stash, with his Stoneskin scroll, rings and gems |
-| ![](docs/items/linebreaker.png) | Metal | polearm | ***Linebreaker*** | a metal polearm +2; its reach as any polearm's, with [the rule](FEATURES.md#polearm-reach) | carried by the **Troop Leader** |
-| ![](docs/items/ironwhirl.png) | Metal | cahulaks | ***Ironwhirl*** | a metal cahulaks +2 (two-handed); its blades' greys all burn in fire colours | on the **weapon rack** of the Subterranean Temple beneath Teaquetzl, with the Mace +2 and a metal axe |
-| ![](docs/items/dark-flame.png) | Obsidian | long sword | Dark Flame | +2, Burning Hands | the Lower Castle's chest |
-| ![](docs/items/bloodwrath.png) | Obsidian | long sword | Bloodwrath | +1 | Pehtucl, the pens' templar |
-| ![](docs/items/flame-blade.png) | Obsidian | long sword | ***Flame Blade*** | an obsidian long sword +1 (1d8+1) whose blade burns what it hits: the fire clerics' Focus Heat, 2d6 fire damage to the creature hit (a save for half), as the game's Dark Flame casts Burning Hands. Obsidian, so a fire (or earth) cleric can wield it | carried by the **Templar** of the Hot Springs (the one with the Drake Shield) |
-| ![](docs/items/terror-blade.png) | Obsidian | dagger | Terror Blade | +2, poison | made in the Wyrm School: pour the terror blossom extract into the mixing bowl, then dip a stone dagger in it (the cluebook says obsidian; the game takes stone) |
-| ![](docs/items/nightsliver.png) | Obsidian | dagger | ***Nightsliver*** | an obsidian dagger +2: a fire or earth cleric can wield it | carried by the **Hermit** of the Lava Rift, in place of his stone dagger |
-| ![](docs/items/mindshard.png) | Obsidian | short sword | ***Mindshard*** | an obsidian short sword +1: a **psionicist** can wield it, alone or with a fire or earth cleric | carried by **Maris**; a thief can lift it (200 XP, once a game) |
-| ![](docs/items/blackmace.png) | Obsidian | mace | Blackmace | +1, Shocking Grasp | the Shadow King |
-| ![](docs/items/glasshewer.png) | Obsidian | axe | ***Glasshewer*** | an obsidian axe +2 (1d8+2): a fire or earth cleric can wield it | carried by the **Templar** of the elven slavers' camp (the one with the Chain Arm Armor) |
-| ![](docs/items/emberlash.png) | Obsidian | cahulaks | ***Emberlash*** | an obsidian cahulaks +1 (two-handed): an earth, fire or air cleric can wield it | wielded by **Uzoma**, leader of the Drajian patrol met west of the Hot Springs once its templar is gone (fought if the party turns on his patrol) |
-| ![](docs/items/deepbiter.png) | Stone | pick | ***Deepbiter*** | a stone pick +1 (the game has no magic pick) | carried by one of the **Undermountain folk** (the miners) |
-| ![](docs/items/gutterknot.png) | Wooden | club | ***Gutterknot*** | a club +1 (the game has no magic club) | carried by **Churrr** in the warrens; a thief can lift it (200 XP, once a game) |
-| ![](docs/items/quarterstaff-plus2.png) | Wooden | quarterstaff | Quarterstaff +2 | +2 | Maris |
-| ![](docs/items/balks-staff.png) | Wooden | quarterstaff | Balk's Staff | +1, Slow | Balkazar |
-| ![](docs/items/parting-staff.png) | Wooden | quarterstaff | Parting Staff | +1 | hidden in a sewer hole in the Tari's warrens, the high warren elders' treasure (the Skull Elder objects if he sees it taken) |
+| Icon | Material | Item | Bonus / power | Where |
+|---|---|---|---|---|
+| ![](docs/items/swiftbite.png) | Bone | Swiftbite | +2 | a reward in the party's house in Teaquetzl, when the party agrees to gather allies (with Arrows +2, a lemon and grapes) |
+| ![](docs/items/draketooth.png) | Bone | Draketooth | +1, STR +3 | on a platform in the Wyrm School |
+| ![](docs/items/hornblade.png) | Bone | Hornblade | +1 | Kalinin's reward |
+| ![](docs/items/hayneedle.png) | Bone | ***Hayneedle*** | a bone dagger +1: a water cleric can wield it | hidden in **Merzol**'s haystack in the slave pens, with his sack of ceramic pieces |
+| ![](docs/items/stillwater.png) | Bone | ***Stillwater*** | a bone short sword +1: a **psionicist** can wield it, alone or with a water cleric | in the chest **Chaya** gives as her apology |
+| ![](docs/items/mace-plus2.png) | Bone | Mace +2 | +2 | a weapon rack in the Subterranean Temple beneath Teaquetzl, with a metal axe |
+| ![](docs/items/drakejaw.png) | Bone | ***Drakejaw*** | a bone axe +1 (1d8+1): a water cleric can wield it | carried by one of the **Magera** guarding the wagon's prisoners |
+| ![](docs/items/polearm-plus1.png) | Bone | Polearm +1 | +1; its reach as any polearm's, with [the rule](FEATURES.md#polearm-reach) | carried by **Seref**, the Draj agent at the Elven Caravan, and by the Seref met on the road with his Drajian Guards and daggorans (his script makes a copy of him there). Placed by the mod: the game defines it but never places or gives it (the cluebook says the Elven Caravan) |
+| ![](docs/items/thornwall.png) | Bone | ***Thornwall*** | a bone polearm +1; its reach as any polearm's, with [the rule](FEATURES.md#polearm-reach) | on the slave pens' **weapon rack**, once **Semyon**, in his pen, has told of the weapon shipment ("Seen anything useful?") |
+| ![](docs/items/gythka-plus3.png) | Bone | Gythka +3 | +3 | carried by **Hototo**, chief of the White Sand Outlaws who burst from the sand (fought if the talk goes wrong; the mod's); and the arena's [1000th trip](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights), King Tectuktitlay's gift |
+| ![](docs/items/gythka-plus2.png) | Bone | ***Gythka +2*** | the game's Gythka +1, made +2 | the **Elven Leader**'s gift, after the fight with his men (he carries it too) |
+| ![](docs/items/kreenfang.png) | Bone | ***Kreenfang*** | a gythka +1 (2d4+1) | carried by the **Tohr-kreen** leading the champions in the arena, after **Scar** is killed ([the champions' bout](FEATURES.md#the-champions-bout)) |
+| ![](docs/items/cahulaks-plus2.png) | Bone | ***Cahulaks +2*** | +2; casts Cause Light Wounds on a hit (the game's Cahulaks +1, made +2); its blades glow blue | the Elven Caravan's buried chest (Kel's caravan), with the Boots of Elvenkind |
+| ![](docs/items/cahulaks-plus1.png) | Bone | ***Cahulaks +1*** | +1; its blades glow in fire colours | carried by **Legcrusher**, the pens' half-giant monster trainer, in place of his two clubs (the mod's) |
+| ![](docs/items/dragonsbane.png) | Metal | Dragonsbane | +4 | Kraxis' sword, taken from his body after the final battle against Draj's army |
+| ![](docs/items/els-drinker.png) | Metal | El's Drinker | +2, Vampiric Touch | the safe in Gedron, with 2,000 ceramic pieces; and the arena's [1000th trip](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights), King Tectuktitlay's gift |
+| ![](docs/items/dags-dagger.png) | Metal | Dag's Dagger | +3, CHA +1 | Dagolar |
+| ![](docs/items/galefang.png) | Metal | ***Galefang*** | a metal dagger +2 an **air cleric** can wield | carried by the **Rogue Shaman**, with his Shaman Followers |
+| ![](docs/items/greenbright.png) | Metal | ***Greenbright*** | a metal short sword +2 | carried by **Arant**, who holds the captured gladiators |
+| ![](docs/items/shadowseeker.png) | Metal | ***Shadowseeker*** | a short sword +1 (1d6+1): whoever wields it, in either hand, sees the invisible | wielded by **Kurzak**, the pens' guard leader; a thief can lift it (200 XP, once a game) |
+| ![](docs/items/soulcrusher.png) | Metal | Soulcrusher | +1 | Kel |
+| ![](docs/items/axe-plus1.png) | Metal | Axe +1 | +1 | hidden in a sewer hole in the Tari's warrens; or made at Teaquetzl's forge from the Meteor Metal and the Metal Rod |
+| ![](docs/items/great-axe-plus3.png) | Metal | Great Axe +3 | +3 (the game gave its type no material: metal with the Loader) | the Army Commander |
+| ![](docs/items/headsman.png) | Metal | ***Headsman*** | a metal great axe +2 | in the arena **Announcer**'s stash, with his Stoneskin scroll, rings and gems |
+| ![](docs/items/linebreaker.png) | Metal | ***Linebreaker*** | a metal polearm +2; its reach as any polearm's, with [the rule](FEATURES.md#polearm-reach) | carried by the **Troop Leader** |
+| ![](docs/items/ironwhirl.png) | Metal | ***Ironwhirl*** | a metal cahulaks +2 (two-handed); its blades' greys all burn in fire colours | on the **weapon rack** of the Subterranean Temple beneath Teaquetzl, with the Mace +2 and a metal axe |
+| ![](docs/items/dark-flame.png) | Obsidian | Dark Flame | +2, Burning Hands | the Lower Castle's chest |
+| ![](docs/items/bloodwrath.png) | Obsidian | Bloodwrath | +1 | Pehtucl, the pens' templar |
+| ![](docs/items/flame-blade.png) | Obsidian | ***Flame Blade*** | an obsidian long sword +1 (1d8+1) whose blade burns what it hits: the fire clerics' Focus Heat, 2d6 fire damage to the creature hit (a save for half), as the game's Dark Flame casts Burning Hands. Obsidian, so a fire (or earth) cleric can wield it | carried by the **Templar** of the Hot Springs (the one with the Drake Shield) |
+| ![](docs/items/terror-blade.png) | Obsidian | Terror Blade | +2, poison | made in the Wyrm School: pour the terror blossom extract into the mixing bowl, then dip a stone dagger in it (the cluebook says obsidian; the game takes stone) |
+| ![](docs/items/nightsliver.png) | Obsidian | ***Nightsliver*** | an obsidian dagger +2: a fire or earth cleric can wield it | carried by the **Hermit** of the Lava Rift, in place of his stone dagger |
+| ![](docs/items/mindshard.png) | Obsidian | ***Mindshard*** | an obsidian short sword +1: a **psionicist** can wield it, alone or with a fire or earth cleric | carried by **Maris**; a thief can lift it (200 XP, once a game) |
+| ![](docs/items/blackmace.png) | Obsidian | Blackmace | +1, Shocking Grasp | the Shadow King |
+| ![](docs/items/glasshewer.png) | Obsidian | ***Glasshewer*** | an obsidian axe +2 (1d8+2): a fire or earth cleric can wield it | carried by the **Templar** of the elven slavers' camp (the one with the Chain Arm Armor) |
+| ![](docs/items/emberlash.png) | Obsidian | ***Emberlash*** | an obsidian cahulaks +1 (two-handed): an earth, fire or air cleric can wield it | wielded by **Uzoma**, leader of the Drajian patrol met west of the Hot Springs once its templar is gone (fought if the party turns on his patrol) |
+| ![](docs/items/deepbiter.png) | Stone | ***Deepbiter*** | a stone pick +1 (the game has no magic pick) | carried by one of the **Undermountain folk** (the miners) |
+| ![](docs/items/gutterknot.png) | Wooden | ***Gutterknot*** | a club +1 (the game has no magic club) | carried by **Churrr** in the warrens; a thief can lift it (200 XP, once a game) |
+| ![](docs/items/quarterstaff-plus2.png) | Wooden | Quarterstaff +2 | +2 | Maris |
+| ![](docs/items/balks-staff.png) | Wooden | Balk's Staff | +1, Slow | Balkazar |
+| ![](docs/items/parting-staff.png) | Wooden | Parting Staff | +1 | hidden in a sewer hole in the Tari's warrens, the high warren elders' treasure (the Skull Elder objects if he sees it taken) |
 
 ### Missile weapons and ammunition
 
-| Icon | Material | Type | Item | Bonus / power | Where |
-|---|---|---|---|---|---|
-| ![](docs/items/sling-plus2.png) | Leather | sling | Sling +2 | +2 | Chaya, and her apology chest |
-| ![](docs/items/sling-plus1.png) | Leather | sling | Sling +1 | +1 | a chest |
-| ![](docs/items/windlash.png) | Leather | staff sling | ***Windlash*** | a staff sling +1 (the game has no magic staff sling); its stinkpots as any staff sling's, with [the rule](FEATURES.md#staff-sling-stinkpots) | sold by the **Bowyer** |
-| ![](docs/items/skycutter.png) | Obsidian | chatkcha | ***Skycutter*** | a chatkcha +2 | carried by one of the **thri-kreen** hunting the Gemfields |
-| ![](docs/items/chatkcha-plus1.png) | Obsidian | chatkcha | Chatkcha +1 | +1, Produce Fire | the Guardian |
-| ![](docs/items/bow-plus2.png) | Wooden | bow | Bow +2 | +2 | a skeleton in the Upper Castle |
-| ![](docs/items/phrains-bow.png) | Wooden | bow | Phrain's Bow | +1, Acid Arrow | a reward in the party's hut in Teaquetzl, once Gedron joins the alliance (with Arrows +2, a scroll and an orange) |
-| ![](docs/items/dunesong.png) | Wooden | bow | ***Dunesong*** | a bow +1, which the Bowyer's archery target counts as the game's own bows | sold by the **Bowyer** |
-| ![](docs/items/arrows-plus3.png) | Wooden | arrows | Arrows +3, +2, +1 | +3, +2, +1 | +3 in chests; +2 from the Bowyer's archery target and Teaquetzl's rewards; +1 Kel, the Elven Leader and a bag in the slave pens |
-| ![](docs/items/chill-arrows.png) | Wooden | arrows | ***Chill Arrows*** | cast Chill Touch on what they hit (a save stops it, as the spell's; +1 from the Spellarcher's 5th preserver level, +2 from 9th) | made by a [Spellarcher](KITS.md#multiclass-kits) (its arrow buttons, one a spell slot; 24 to start with if it picked the spell as it was made), and carried by a Spellarcher only; worth nothing, they last until shot |
-| ![](docs/items/shocking-arrows.png) | Wooden | arrows | ***Shocking Arrows*** | cast Shocking Grasp on what they hit (no save, as the spell's; +1 from the Spellarcher's 5th preserver level, +2 from 9th) | the same |
-| ![](docs/items/vampiric-arrows.png) | Wooden | arrows | ***Vampiric Arrows*** | cast Vampiric Touch on what they hit (no save, as the spell's; +1 from the Spellarcher's 5th preserver level, +2 from 9th) | made by a Spellarcher as the others (none to start with: a 3rd-level spell), and carried by a Spellarcher only |
+| Icon | Material | Item | Bonus / power | Where |
+|---|---|---|---|---|
+| ![](docs/items/sling-plus2.png) | Leather | Sling +2 | +2 | Chaya, and her apology chest |
+| ![](docs/items/sling-plus1.png) | Leather | Sling +1 | +1 | a chest in the Subterranean Temple beneath Teaquetzl, with the Storm Ring |
+| ![](docs/items/windlash.png) | Leather | ***Windlash*** | a staff sling +1 (the game has no magic staff sling); its stinkpots as any staff sling's, with [the rule](FEATURES.md#staff-sling-stinkpots) | sold by the **Bowyer** |
+| ![](docs/items/skycutter.png) | Obsidian | ***Skycutter*** | a chatkcha +2 | carried by one of the **thri-kreen** hunting the Gemfields |
+| ![](docs/items/chatkcha-plus1.png) | Obsidian | Chatkcha +1 | +1, Produce Fire | the Guardian |
+| ![](docs/items/bow-plus2.png) | Wooden | Bow +2 | +2 | a skeleton in the Upper Castle |
+| ![](docs/items/phrains-bow.png) | Wooden | Phrain's Bow | +1, Acid Arrow | a reward in the party's hut in Teaquetzl, once Gedron joins the alliance (with Arrows +2, a scroll and an orange) |
+| ![](docs/items/dunesong.png) | Wooden | ***Dunesong*** | a bow +1, which the Bowyer's archery target counts as the game's own bows | sold by the **Bowyer** |
+| ![](docs/items/arrows-plus3.png) | Wooden | Arrows +3, +2, +1 | +3, +2, +1 | +3 in two chests in the slave pens (one with the Scale Chest Armor) and with the Helm of Might; +2 from the Bowyer's archery target and Teaquetzl's rewards; +1 Kel, the Elven Leader and a bag in the slave pens |
+| ![](docs/items/chill-arrows.png) | Wooden | ***Chill Arrows*** | cast Chill Touch on what they hit (a save stops it, as the spell's; +1 from the Spellarcher's 5th preserver level, +2 from 9th) | made by a [Spellarcher](KITS.md#spellarcher) (its arrow buttons, one a spell slot; 24 to start with if it picked the spell as it was made), and carried by a Spellarcher only; worth nothing, they last until shot |
+| ![](docs/items/shocking-arrows.png) | Wooden | ***Shocking Arrows*** | cast Shocking Grasp on what they hit (no save, as the spell's; +1 from the Spellarcher's 5th preserver level, +2 from 9th) | the same |
+| ![](docs/items/vampiric-arrows.png) | Wooden | ***Vampiric Arrows*** | cast Vampiric Touch on what they hit (no save, as the spell's; +1 from the Spellarcher's 5th preserver level, +2 from 9th) | made by a Spellarcher as the others (none to start with: a 3rd-level spell), and carried by a Spellarcher only |
 
 ### By weapon spec
 
@@ -154,7 +154,7 @@ For [weapon specialization](WEAPON-SPECS.md), in the weapon window's order:
 | Icon | Material | Item | Bonus / power | Where |
 |---|---|---|---|---|
 | ![](docs/items/helm-of-might.png) | Leather | Helm of Might | STR +1 | a reward in the party's hut in Teaquetzl, once Cedrilte joins the alliance (with Arrows +3, a bracelet and a pear) |
-| ![](docs/items/leather-helm.png) | Leather | Leather helm +1 | +1 | a chest |
+| ![](docs/items/leather-helm.png) | Leather | Leather helm +1 | +1 | a chest in the Subterranean Temple beneath Teaquetzl |
 | ![](docs/items/helm-of-contemplation.png) | Metal | Helm of Contemplation | Gaze Reflection | the Warren Chief |
 | ![](docs/items/wardens-helm.png) | Metal | ***Warden's Helm*** | the game's metal helm +1: Cloak of Bravery on its wearer while worn | on **Dagolar**'s body (the one carrying Dag's Dagger) |
 | ![](docs/items/arrowbane.png) | none (not armour) | ***Arrowbane*** | a silver circlet: Protection from Normal Missiles on its wearer while worn (normal arrows, sling stones and chatkchas can't hurt them); worn on the head, not armour | sold by **Kel** |
@@ -177,7 +177,7 @@ Worn in a hand, in this game.
 
 | Icon | Slot | Item | Bonus / power | Where |
 |---|---|---|---|---|
-| ![](docs/items/bracers-of-defense.png) | Arms | ***Bracers of Defense*** | AC for those wearing no armour: [bracers of defense](#bracers-of-defense) | **Mikquetzl** (AC 6, in his pack), **Wyrmias** (AC 5), **Balkazar** (AC 4), **Dagolar** (AC 2, the one carrying Dag's Dagger) |
+| ![](docs/items/bracers-of-defense.png) | Arms | ***Bracers of Defense*** | AC for those wearing no armour: [Bracers of Defense](#bracers-of-defense) | **Mikquetzl** (AC 6, in his pack), **Wyrmias** (AC 5), **Balkazar** (AC 4), **Dagolar** (AC 2, the one carrying Dag's Dagger) |
 | ![](docs/items/ashen-robe.png) | Chest | ***Ashen Robe*** | +1 AC; +1 on saves against spells | worn by **Kalzith**, who sells it with his scrolls, and left with his body if he's killed ([Robes](#robes)) |
 | ![](docs/items/veiled-robe.png) | Chest | ***Veiled Robe*** | +2 AC; +1 on every save; a wizard slot more at spell levels 1-3 | sold by **Kel** ([Robes](#robes)) |
 | ![](docs/items/belt-of-might.png) | Waist | Belt of Might | STR at least 24 | on the ground in the Wyrm School |
@@ -187,7 +187,7 @@ Worn in a hand, in this game.
 | ![](docs/items/boots-of-elvenkind.png) | Feet | ***Boots of Elvenkind*** | soft boots: [silent](FEATURES.md#hiding-in-shadows-to-backstab), with hiding to backstab on; thieves and rangers only | the Elven Caravan's buried chest (Kel's caravan), with the Cahulaks +2 |
 | ![](docs/items/boots-of-speed.png) | Feet | ***Boots of Speed*** | in a fight, the wearer's movement doubled (the speed of a fast horse: Move 24 to a human's 12) and AC 2 better while it can move (not Stuck, Paralyzed or Slowed); anyone may wear them; not out of a fight | carried by **Dagger**, chief of the White Sand Outlaws, whose band comes for the blank-eyed slave (fought if the party keeps the slave from him) |
 | ![](docs/items/living-cloak.png) | Cloak | Living Cloak | Inertial Barrier | Dagolar |
-| ![](docs/items/cloak-of-protection-plus1.png) | Cloak | ***Cloak of Protection +1*** | +1 AC and +1 on every saving throw, from the cloak slot | in [Pehtucl's chest](#pehtucls-chest), beside the slave pens' head templar: locked and trapped. In a game saved before 2.14.0 that has been to the pens, he wears the cloak instead, and the chest is the plain one |
+| ![](docs/items/cloak-of-protection-plus1.png) | Cloak | ***Cloak of Protection +1*** | +1 AC and +1 on every saving throw, from the cloak slot | in [Pehtucl's chest](#pehtucls-chest), beside the slave pens' head templar: locked and trapped. |
 | ![](docs/items/cloak-of-elvenkind.png) | Cloak | ***Cloak of Elvenkind*** | a grey cloak: [all but invisible](FEATURES.md#hiding-in-shadows-to-backstab) in a fight, with hiding to backstab on; thieves and rangers only | the **Elven Leader**'s gift with his Gythka +2, after the fight with his men: "And take this cloak, woven by my own tribe for our best runners..." (left on the ground by him when it can't be carried, as the Gythka is) |
 | ![](docs/items/silver-necklace.png) | Neck | Silver Necklace | Biofeedback | appears in the Lower Castle when Tara is destroyed with the Wind Potion (with Tynan's heart) |
 | ![](docs/items/amulet-of-magic-resistance.png) | Neck | ***Amulet of Magic Resistance*** | 15% magic resistance, added to the wearer's own (as from Mind Bar); it never shatters | sold by **Kel** |
@@ -197,8 +197,8 @@ Worn in a hand, in this game.
 | ![](docs/items/light-of-dawn.png) | Finger | Light of Dawn | Dismissal | on the ground, in Balkazar's region |
 | ![](docs/items/steadfast-ring.png) | Finger | Steadfast Ring | CON +3 | Laussa's gift, once the party has found her a new tribe (Ssovan's) and isn't greedy: she gives it in the Nazca Lines, after moving there |
 | ![](docs/items/ring-of-insight.png) | Finger | Ring of Insight | WIS +2 | the spirit Tanelyv's gift in the Wyrm Temple, once the Blind One and the slaves he offered to heal are healed (or with his armour, if Balkazar dies first) |
-| ![](docs/items/els-ring.png) | Finger | El's Ring | DEX +3 | on the ground |
-| ![](docs/items/storm-ring.png) | Finger | Storm Ring | Ice Storm | a chest |
+| ![](docs/items/els-ring.png) | Finger | El's Ring | DEX +3 | on the ground in the Ssurran Ruins |
+| ![](docs/items/storm-ring.png) | Finger | Storm Ring | Ice Storm | a chest in the Subterranean Temple beneath Teaquetzl, with the Sling +1 |
 | ![](docs/items/wind-ring.png) | Finger | Wind Ring | Protection from Normal Missiles | the Wyvern Master |
 | ![](docs/items/ring-of-protection-plus1.png) ![](docs/items/pehtucls-ring-of-protection-plus1.png) | Finger | ***Ring of Protection +1*** (two) | +1 AC and +1 on every saving throw | one on the arena's Tied-up Prisoner: free him, then look at his body (the game's script says there's nothing; the Loader finds a ring sewn into his loincloth, 50 XP to whoever searched); the other worn by **Pehtucl**, the slave pens' head templar (in the south-west corner, with the Obsidian Bloodwrath); a thief can lift it from his finger |
 
@@ -208,7 +208,7 @@ Worn in a hand, in this game.
 |---|---|---|---|
 | ![](docs/items/orb-of-knowledge.png) | Orb of Knowledge (held) | no spell; used, it shows what became of Llod, and crumbles (the cluebook; Alagorn: "watch the one it's tuned to") | on the ground in the Palace Ruins |
 | ![](docs/items/dagolars-wand.png) | Dagolar's Wand | Control Body | Dagolar |
-| ![](docs/items/wand-of-missiles.png) | Wand of Missiles | Magic Missile | a chest |
+| ![](docs/items/wand-of-missiles.png) | Wand of Missiles | Magic Missile | a chest in Dagolar's tunnels, with a scroll and a Project Force bracelet |
 | ![](docs/items/derths-wand.png) | Derth's Wand | Lightning Bolt | Notaku's payment in the Red Sands Plateau for a terror bloom |
 | ![](docs/items/wildwynd-wand.png) | Wildwynd Wand | Confusion | dropped by Queen Cheee-smak-tunk! of the dark spiders in Undermountain (Darkhold) when she is defeated |
 | ![](docs/items/wand-of-metal-detection.png) | Wand of Metal Detection ("Metal Detection" in the game) | detects metal (25 charges) | the sage's gift in the Red Sands Plateau, after he identifies the party's magic items (with an obelisk gem) |
@@ -220,46 +220,48 @@ Worn in a hand, in this game.
 
 Every plain weapon in a game with the new items, the game's and the mod's,
 by type and material: who sells it and who carries it (by the names the game
-gives them; many are of a kind, such as every Renegade or Tari). The **Weapon
+gives them; many are of a kind, such as every Renegade or Tari). **new** in Notes
+marks the mod's. The **Weapon
 Merchant** and the **Bowyer** are in Teaquetzl, **Jark** and **Kel** in the Elven
 Caravan (Kel's caravan). The game's plain stone pick is a
 [starting weapon](WEAPON-SPECS.md#starting-weapons), and two lie in the Hot
 Springs; Deepbiter is its magic one.
 
-| Icon | Type | Material | Sold by | Carried by, or found in | The mod's |
+| Icon | Type | Material | Sold by | Carried by, or found in | Notes |
 |---|---|---|---|---|---|
-| ![](docs/items/bone-long-sword.png) | long sword | bone | Jark, Weapon Merchant | Ranger, Templar, Chaero, Castle Guard, Arant's Guard, Warrior, Dagolar Guard, Caravan Guard, Guard, Lt. Kwerin, Slaver Guard, Messenger, Visitor, Renegade, Silt Runner, the White Sand Outlaws (Slave Hunters, Hototo, Dagger) and Arant's lazy guard (the mod's) |  |
-| ![](docs/items/metal-long-sword.png) | long sword | metal | Weapon Merchant | Uskuye, Elven Leader, Elite Guard, Village Hero, a chest in the warrens |  |
-| ![](docs/items/obsidian-long-sword.png) | long sword | obsidian | Jark, Weapon Merchant | Wyvern Master, Arant, Keldar, Kurzak, Guard, Chaya, Uskuye, Arena Guard, Caravan Master, Chahl, Mayor of Gedron, Merzol, Drajian Guard, Council Member, Templar, the arena's champions (the elf) |  |
-| ![](docs/items/club.png) | club | wood | Weapon Merchant | Warren Chief, Churrr, Tari, Skull Guardian, Worshipper, Low Warren Thug, Gladiator, Wild Mul, Guard, a dead body in the arena, a chest, a weapon rack; "Striker", a plain club, on the ground in the Lower Castle |  |
+| ![](docs/items/bone-long-sword.png) | long sword | bone | Jark, Weapon Merchant | Ranger, Templar, Chaero, Castle Guard, Arant's Guard, Warrior, Dagolar Guard, Caravan Guard, Guard, Lt. Kwerin, Slaver Guard, Messenger, Visitor, Renegade, Silt Runner, the White Sand Outlaws (Slave Hunters, Hototo, Dagger) and Arant's lazy guard (the mod's) | — |
+| ![](docs/items/metal-long-sword.png) | long sword | metal | Weapon Merchant | Uskuye, Elven Leader, Elite Guard, Village Hero, a chest in the warrens | — |
+| ![](docs/items/obsidian-long-sword.png) | long sword | obsidian | Jark, Weapon Merchant | Wyvern Master, Arant, Keldar, Kurzak, Guard, Chaya, Uskuye, Arena Guard, Caravan Master, Chahl, Mayor of Gedron, Merzol, Drajian Guard, Council Member, Templar, the arena's champions (the elf) | — |
+| ![](docs/items/club.png) | club | wood | Weapon Merchant | Warren Chief, Churrr, Tari, Skull Guardian, Worshipper, Low Warren Thug, Gladiator, Wild Mul, Guard, a dead body in the arena, a chest in the Wyrm Belly, a weapon rack in the Subterranean Temple; "Striker", a plain club, on the ground in the Lower Castle | — |
 | ![](docs/items/bone-dagger.png) | dagger | bone | Jark, Weapon Merchant | Defiler, the arena's champions (the defiler) | **new**: 1d4: the only dagger a water cleric can use; a water cleric's starting dagger |
 | ![](docs/items/metal-dagger.png) | dagger | metal | — | Tobrian | **new**: the game's dagger, in metal |
-| ![](docs/items/obsidian-dagger.png) | dagger | obsidian | — | Defiler, Notaku |  |
-| ![](docs/items/stone-dagger.png) | dagger | stone | Jark, Weapon Merchant | Balkazar, Dagolar, Wyrmias, Tobrian, Villager, Linara, Maris, a chest in Dagolar's tunnels, on the ground in the Wyrm School (the Hermit's is Nightsliver with the mod), the final battle's Psionicist (the mod's) |  |
+| ![](docs/items/obsidian-dagger.png) | dagger | obsidian | — | Defiler, Notaku | — |
+| ![](docs/items/stone-dagger.png) | dagger | stone | Jark, Weapon Merchant | Balkazar, Dagolar, Wyrmias, Tobrian, Villager, Linara, Maris, a chest in Dagolar's tunnels, on the ground in the Wyrm School (the Hermit's is Nightsliver with the mod), the final battle's Psionicist (the mod's) | — |
 | ![](docs/items/bone-short-sword.png) | short sword | bone | Jark, Weapon Merchant | Renegade, the arena's champions (the halfling) | **new**: 1d6 |
 | ![](docs/items/metal-short-sword.png) | short sword | metal | Weapon Merchant | — | **new**: 1d6: Shadowseeker without the plus |
 | ![](docs/items/obsidian-short-sword.png) | short sword | obsidian | Jark, Weapon Merchant | Chaero | **new**: 1d6 |
-| ![](docs/items/bone-mace.png) | mace | bone | Jark, Weapon Merchant | Wyvern Master, Krikor, Templar, a chest, a chest in Dagolar's tunnels |  |
+| ![](docs/items/bone-mace.png) | mace | bone | Jark, Weapon Merchant | Wyvern Master, Krikor, Templar, a chest in the Wyrm Belly, a chest in Dagolar's tunnels | — |
 | ![](docs/items/metal-mace.png) | mace | metal | — | Templar | **new**: the game's mace, in metal |
 | ![](docs/items/obsidian-mace.png) | mace | obsidian | Jark, Weapon Merchant | Tari | **new**: the game's Mace (1d6+1), in obsidian (its only obsidian mace is Blackmace) |
 | ![](docs/items/bone-axe.png) | axe | bone | Jark, Weapon Merchant | Wild Mul | **new**: 1d8; weighs 30, so not HEAVY: it goes in either hand with another weapon, and [backstabs](HOW-THE-GAME-WORKS.md#attacks-from-behind-and-backstabs) |
-| ![](docs/items/metal-axe.png) | axe | metal | — | Slaver Guard, Uzoma, a weapon rack in the Lower Castle, a weapon rack, a weapon rack in the slave pens |  |
+| ![](docs/items/metal-axe.png) | axe | metal | — | Slaver Guard, Uzoma, a weapon rack in the Lower Castle, a weapon rack in the Subterranean Temple, a weapon rack in the slave pens | — |
 | ![](docs/items/obsidian-axe.png) | axe | obsidian | Weapon Merchant | Merzol | **new**: 1d8; 30, as the bone axe |
 | ![](docs/items/bone-great-axe.png) | great axe | bone | Jark, Weapon Merchant | Wild Mul, Scar's henchmen | **new**: 1d10, two-handed; lighter than metal (and breaks as bone does); a warrior's starting great axe |
 | ![](docs/items/metal-great-axe.png) | great axe | metal | Weapon Merchant | the arena's champions (the half-giant) | **new**: the game's great axe, in metal |
 | ![](docs/items/obsidian-great-axe.png) | great axe | obsidian | Jark, Weapon Merchant | — | **new**: 1d10, two-handed; a fire or earth cleric's starting great axe |
 | ![](docs/items/metal-pick.png) | pick | metal | Weapon Merchant | — | **new**: the game's pick, in metal; 1d6+1, the footman's pick (2d4 against a large target with [Creature size](FEATURES.md#creature-size)) |
 | ![](docs/items/stone-pick.png) | pick | stone | — | on the ground in the Hot Springs (two); a starting weapon | 1d6+1, the footman's pick (the game's 1d4+1); 2d4 against a large target with [Creature size](FEATURES.md#creature-size) |
-| ![](docs/items/quarterstaff.png) | quarterstaff | wood | Jark, Weapon Merchant | Mikquetzl, Troop Leader, Dakaren, Dagolar, Wyrmias, Hermit, Father Garyn, Notaku, a weapon rack in the Lower Castle, a skeleton in the Undermountain, a chest, a weapon rack in the slave pens |  |
+| ![](docs/items/quarterstaff.png) | quarterstaff | wood | Jark, Weapon Merchant | Mikquetzl, Troop Leader, Dakaren, Dagolar, Wyrmias, Hermit, Father Garyn, Notaku, a weapon rack in the Lower Castle, a skeleton in the Undermountain, a chest, a weapon rack in the slave pens | — |
 | ![](docs/items/bone-polearm.png) | polearm | bone | Weapon Merchant | a weapon rack in the Lower Castle, a weapon rack in the slave pens | reaches two squares with [the rule](FEATURES.md#polearm-reach), held with no other weapon (a shield is fine) |
 | ![](docs/items/metal-polearm.png) | polearm | metal | — | Castle Guard | **new**: the game's polearm, in metal; an earth cleric's starting polearm; reaches two squares with [the rule](FEATURES.md#polearm-reach), as the bone one |
-| ![](docs/items/gythka.png) | gythka | bone | Jark, Weapon Merchant | Guardian, the arena's Tohr-kreen (the mod's: its picture holds one) |  |
-| ![](docs/items/cahulaks.png) | cahulaks | bone | Weapon Merchant | the dead body by the arena's stone arch, in place of the game's plain gythka (the mod's, with the champions' bout) |  |
+| ![](docs/items/gythka.png) | gythka | bone | Jark, Weapon Merchant | Guardian, the arena's Tohr-kreen (the mod's: its picture holds one) | — |
+| ![](docs/items/cahulaks.png) | cahulaks | bone | Weapon Merchant | the dead body by the arena's stone arch, in place of the game's plain gythka (the mod's, with the champions' bout) | — |
 | ![](docs/items/metal-cahulaks.png) | cahulaks | metal | Weapon Merchant | the arena's champions (the mul) | **new**: the game's cahulaks, in metal; earth and air clerics may use them |
 | ![](docs/items/obsidian-cahulaks.png) | cahulaks | obsidian | Jark | Scar | **new**: the game's cahulaks, in obsidian: earth, fire and air clerics may use them; an earth or fire cleric-warrior's starting cahulaks |
-| ![](docs/items/chatkcha.png) | chatkcha | obsidian | Jark, Bowyer | — |  |
-| ![](docs/items/bow.png) | bow | wood | Jark, Kel, Bowyer | Wyvern Master, Ranger, Arant, Castle Guard, Guard, Arant's Guard, Arena Guard, Caravan Guard, Slaver Guard, Elven Leader, Uzoma, Drajian Guard, Army Commander, Elite Guard, Village Hero, a chest in the Upper Castle, a chest, a chest in Dagolar's tunnels, the arena's champions (the elf), Arant's lazy guard (the mod's) | ***Fine Bow***: a bow of fine make, +1 to hit, not magic (The Complete Fighter's Handbook's fine quality; its item box's "Hit +1"), a [Spellarcher](KITS.md#multiclass-kits)'s as it is made, sold by no one |
-| ![](docs/items/sling.png) | sling | leather | Bowyer | Mehtar, Renegade, Silt Runner, a chest in the slave pens, a bag in the slave pens, the arena's champions (the halfling) |  |
+| ![](docs/items/chatkcha.png) | chatkcha | obsidian | Jark, Bowyer | — | — |
+| ![](docs/items/bow.png) | bow | wood | Jark, Kel, Bowyer | Wyvern Master, Ranger, Arant, Castle Guard, Guard, Arant's Guard, Arena Guard, Caravan Guard, Slaver Guard, Elven Leader, Uzoma, Drajian Guard, Army Commander, Elite Guard, Village Hero, a chest in the Upper Castle, a chest in the Wyrm Belly, a chest in Dagolar's tunnels, the arena's champions (the elf), Arant's lazy guard (the mod's) | — |
+| ![](docs/items/bow.png) | bow (***Fine Bow***) | wood | — | a [Spellarcher](KITS.md#spellarcher), as it is made | **new**: a bow of fine make, +1 to hit, not magic (The Complete Fighter's Handbook's fine quality; its item box's "Hit +1") |
+| ![](docs/items/sling.png) | sling | leather | Bowyer | Mehtar, Renegade, Silt Runner, a chest in the slave pens, a bag in the slave pens, the arena's champions (the halfling) | — |
 | ![](docs/items/staff-sling.png) | staff sling | leather | Jark, Bowyer | — | throws stinkpots with [the rule](FEATURES.md#staff-sling-stinkpots): 1d3 (the game's 1d4), and a target hit saves against poison or is nauseated, −2 to hit for 1d3+1 rounds |
 
 ## Every mundane armour piece
@@ -269,27 +271,27 @@ items, as the weapons above: who sells it and who carries it. Ring, brigandine
 and scale armour are bone on Athas. **AC better by** is what each piece takes
 off AC 10 (the game's own numbers; a character's AC adds up its pieces).
 
-| Worn on | Material | Item | AC better by | Sold by | Carried by, or found in | The mod's |
+| Worn on | Material | Item | AC better by | Sold by | Carried by, or found in | Notes |
 |---|---|---|---|---|---|---|
-| Chest | leather | Leather Chest Armor | 1 | Jark, Armor Merchant | Warren Chief, Churrr, Krikor, Ranger, Kurzak, Chaero, Castle Guard, Guard, Tari, Skull Guardian, Worshipper, Low Warren Thug, Arant's Guard, Scar, Scar's henchmen (the mod's), Arena Guard, Warrior, Dagolar Guard, Tobrian, Caravan Guard, Lt. Kwerin, Mayor of Gedron, Slaver Guard, Merzol, Messenger, Visitor, Drajian Guard, Council Member, Notaku, Renegade, Wild Mul, Village Hero, Kalinin, the arena's champions (the halfling, the elf), the White Sand Outlaws, Arant's lazy guard (the mod's) |  |
-| Chest | bone | Ring Chest Armor | 1 | Armor Merchant | Mikquetzl, Uzoma |  |
-| Chest | bone | Brigandine Chest Armor | 2 | Jark, Armor Merchant | Arant, Keldar, Templar, Chaya, Caravan Master, Chahl, Father Garyn, Elven Leader |  |
-| Chest | bone | Scale Chest Armor | 2 | Jark | Templar, Uskuye, Elite Guard, a chest in the slave pens, the arena's champions (the half-giant, the mul) |  |
-| Chest | metal | Chain Chest Armor | 2 | — | Shadow King, Army Commander, a skeleton in the Undermountain |  |
-| Arms | leather | Leather Arm Armor | 1 | Armor Merchant | Churrr, Krikor, Ranger, Kurzak, Chaero, Castle Guard, Guard, Arant's Guard, Scar, Scar's henchmen (the mod's), Arena Guard, Warrior, Dagolar Guard, Tobrian, Caravan Guard, Lt. Kwerin, Mayor of Gedron, Slaver Guard, Merzol, Messenger, Visitor, Notaku, Village Hero, Kalinin, the arena's champions (the halfling, the elf), Hototo, Dagger, Arant's lazy guard (the mod's) |  |
-| Arms | bone | Ring Arm Armor | 1 | Armor Merchant | Wyvern Master, Mikquetzl |  |
-| Arms | bone | Brigandine Arm Armor | 1 | Armor Merchant | Keldar, Templar, Chaya, Caravan Master, Chahl, Elven Leader, Gladiator, Uzoma |  |
+| Chest | leather | Leather Chest Armor | 1 | Jark, Armor Merchant | Warren Chief, Churrr, Krikor, Ranger, Kurzak, Chaero, Castle Guard, Guard, Tari, Skull Guardian, Worshipper, Low Warren Thug, Arant's Guard, Scar, Scar's henchmen (the mod's), Arena Guard, Warrior, Dagolar Guard, Tobrian, Caravan Guard, Lt. Kwerin, Mayor of Gedron, Slaver Guard, Merzol, Messenger, Visitor, Drajian Guard, Council Member, Notaku, Renegade, Wild Mul, Village Hero, Kalinin, the arena's champions (the halfling, the elf), the White Sand Outlaws, Arant's lazy guard (the mod's) | — |
+| Chest | bone | Ring Chest Armor | 1 | Armor Merchant | Mikquetzl, Uzoma | — |
+| Chest | bone | Brigandine Chest Armor | 2 | Jark, Armor Merchant | Arant, Keldar, Templar, Chaya, Caravan Master, Chahl, Father Garyn, Elven Leader | — |
+| Chest | bone | Scale Chest Armor | 2 | Jark | Templar, Uskuye, Elite Guard, a chest in the slave pens, the arena's champions (the half-giant, the mul) | — |
+| Chest | metal | Chain Chest Armor | 2 | — | Shadow King, Army Commander, a skeleton in the Undermountain | — |
+| Arms | leather | Leather Arm Armor | 1 | Armor Merchant | Churrr, Krikor, Ranger, Kurzak, Chaero, Castle Guard, Guard, Arant's Guard, Scar, Scar's henchmen (the mod's), Arena Guard, Warrior, Dagolar Guard, Tobrian, Caravan Guard, Lt. Kwerin, Mayor of Gedron, Slaver Guard, Merzol, Messenger, Visitor, Notaku, Village Hero, Kalinin, the arena's champions (the halfling, the elf), Hototo, Dagger, Arant's lazy guard (the mod's) | — |
+| Arms | bone | Ring Arm Armor | 1 | Armor Merchant | Wyvern Master, Mikquetzl | — |
+| Arms | bone | Brigandine Arm Armor | 1 | Armor Merchant | Keldar, Templar, Chaya, Caravan Master, Chahl, Elven Leader, Gladiator, Uzoma | — |
 | Arms | bone | Scale Arm Armor | 1 | Jark | Uskuye, Elite Guard, a chest in the slave pens, the arena's champions (the half-giant, the mul) | **new** placement |
-| Arms | metal | Chain Arm Armor | 2 | — | Templar, Army Commander, a chest in the Undermountain |  |
-| Legs | leather | Leather Leg Armor | 1 | Armor Merchant | Warren Chief, Churrr, Ranger, Skull Guardian, Worshipper, Mayor of Gedron, Council Member, Notaku, Village Hero, a chest in the Upper Castle, the arena's champions (the halfling, the elf), Scar (the mod's) |  |
-| Legs | bone | Ring Leg Armor | 1 | Jark, Armor Merchant | Mikquetzl |  |
-| Legs | bone | Brigandine Leg Armor | 1 | Jark, Armor Merchant | Keldar, Templar, Chaya, Caravan Master, Chahl, Elven Leader |  |
+| Arms | metal | Chain Arm Armor | 2 | — | Templar, Army Commander, a chest in the Undermountain | — |
+| Legs | leather | Leather Leg Armor | 1 | Armor Merchant | Warren Chief, Churrr, Ranger, Skull Guardian, Worshipper, Mayor of Gedron, Council Member, Notaku, Village Hero, a chest in the Upper Castle, the arena's champions (the halfling, the elf), Scar (the mod's) | — |
+| Legs | bone | Ring Leg Armor | 1 | Jark, Armor Merchant | Mikquetzl | — |
+| Legs | bone | Brigandine Leg Armor | 1 | Jark, Armor Merchant | Keldar, Templar, Chaya, Caravan Master, Chahl, Elven Leader | — |
 | Legs | bone | Scale Leg Armor | 1 | Jark | Uskuye, Elite Guard, a chest in the slave pens, the arena's champions (the half-giant, the mul) | **new** placement |
-| Legs | metal | Chain Leg Armor | 1 | Armor Merchant | Army Commander, a skeleton in the Upper Castle |  |
+| Legs | metal | Chain Leg Armor | 1 | Armor Merchant | Army Commander, a skeleton in the Upper Castle | — |
 | Head | leather | Helm | 0 (1 with [Helms give AC 1](FEATURES.md#helms-give-ac-1)) | Armor Merchant, Kel (who sells it as Dapartea's Helm) | Kurzak, a chest in the Upper Castle, a chest in the slave pens, a bag in the slave pens, the arena's champions (the halfling, the elf), Scar (the mod's) | **new** placement |
 | Head | bone | Bone Helm | 0 (1 with [Helms give AC 1](FEATURES.md#helms-give-ac-1)) | — | a chest in the slave pens, the arena's champions (the half-giant, the mul) | **new**: the bone scale set's helm |
-| Hand | wood | Shield | 1 | — | Wyvern Master, Arant, Chaya, Elven Leader, Templar, a chest in the slave pens |  |
-| Hand | leather | Shield | 1 | — | Keldar, Templar, Caravan Master, Gladiator, the arena's champions (the half-giant, the halfling, the elf) |  |
+| Hand | wood | Shield | 1 | — | Wyvern Master, Arant, Chaya, Elven Leader, Templar, a chest in the slave pens | — |
+| Hand | leather | Shield | 1 | — | Keldar, Templar, Caravan Master, Gladiator, the arena's champions (the half-giant, the halfling, the elf) | — |
 
 The game has the bone scale set but places only its chest piece. The mod puts
 the arm and leg pieces and a Bone Helm of its own
@@ -309,23 +311,35 @@ tables above.
 Prices follow the game's own (a price can't go past 65,535; the game's
 dearest, the Wand of Missiles, is 65,000):
 
-| Items | Price |
+| Item | Price |
 |---|---|
 | Magic melee weapons, and Dunesong | 20,800 a plus (41,600 for a +2; a +1 with a spell 22,000; the game's Bow +2 is 50,800) |
-| Legcrusher's Cahulaks +1; the Cahulaks +2 | 11,600 (the game's Cahulaks +1's); 32,400 (that, +20,800 for the plus more) |
-| Windlash; Skycutter | 2,800 (as the game's Sling +1); 3,500 (as its Sling +2) |
+| Cahulaks +1 (Legcrusher's) | 11,600 (the game's Cahulaks +1's) |
+| Cahulaks +2 | 32,400 (the Cahulaks +1's, and 20,800 for the plus more) |
+| Windlash | 2,800 (as the game's Sling +1) |
+| Skycutter | 3,500 (as the game's Sling +2) |
 | Plain metal weapons | 50 to 300 (metal cahulaks 200) |
 | Plain obsidian cahulaks | 15 (bone 10, as the other obsidian weapons dearer than bone) |
-| Bracers of defense | 5,000 a point of AC |
-| Rings and Cloak of Protection | 15,000 |
-| Inixhide; the Ashen Robe | 6,000 |
+| Bracers of Defense | 5,000 a point of AC |
+| Ring of Protection +1 | 15,000 |
+| Cloak of Protection +1 | 15,000 |
+| Inixhide | 6,000 |
+| Ashen Robe | 6,000 |
 | Veiled Robe | 40,000 |
-| Cloak and Boots of Elvenkind | 25,000 and 20,000 |
+| Cloak of Elvenkind | 25,000 |
+| Boots of Elvenkind | 20,000 |
 | Boots of Speed | 20,000 (as the game's Serpent Boots) |
-| Warden's Arms and Legs; Chest; Helm | 27,000 each; 36,000; 30,000 |
-| Arrowbane; Sunking Crown | 30,000; 40,000 |
-| Girdle of Back Defense; Golden Girdle of Urnst; Amulet of Magic Resistance | 25,000; 20,000; 35,000 |
-| Gutterward; Ironbulwark | 25,000; 65,000 (the game's Drake Shield +1 is 25,400, El's Shield +2 50,200) |
+| Warden's Chest | 36,000 |
+| Warden's Arms | 27,000 |
+| Warden's Legs | 27,000 |
+| Warden's Helm | 30,000 |
+| Arrowbane | 30,000 |
+| Sunking Crown | 40,000 |
+| Girdle of Back Defense | 25,000 |
+| Golden Girdle of Urnst | 20,000 |
+| Amulet of Magic Resistance | 35,000 |
+| Gutterward | 25,000 (the game's Drake Shield +1 is 25,400) |
+| Ironbulwark | 65,000 (the game's El's Shield +2 is 50,200) |
 | Tome of Understanding | 43,500 (AD&D's) |
 
 ![The Tome of Understanding's box in the game: a night-steel book with a fiery emblem, 43500, Tome/Understand, and the icon to click](docs/tome.png)
@@ -343,10 +357,10 @@ wear the game's chain (no single-class thieves), and kept from more with
 [class restrictions](FEATURES.md#class-restrictions). **Grey's Scale**'s arm and leg
 armour is AC 3 each (the game's is 2).
 
-### Bracers of defense
+### Bracers of Defense
 
 A preserver can't cast in armour (with [class
-restrictions](FEATURES.md#class-restrictions)), so the mod adds AD&D's bracers of defense
+restrictions](FEATURES.md#class-restrictions)), so the mod adds AD&D's Bracers of Defense
 ([where](#every-magic-item)). They are worn on the arms, in the arm armour's place, and
 give the AC their name says: AC 6 is 4 better than no armour, AC 2 is 8 better.
 As in AD&D they give nothing while armour is worn: on the arms, legs or chest,

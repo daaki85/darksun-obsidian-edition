@@ -185,8 +185,10 @@ python -m dsloader.doccreatures GAME_FOLDER   # CREATURES.md and docs/creatures/
 first, so it is there with the mod's icons) and the game's palette; it says which icons it
 couldn't draw (a new item needs its line in `docicons.ICONS`: [New
 items](DEVELOPMENT-CONTENT.md#new-items)). `doccreatures` reads the game's `SEGOBJEX.GFF` and
-palette, and takes each creature's size from `sizes.py` and whether it can be tangled from
-`cahulaks.why_not`: run it again after changing either.
+palette, and takes each creature's size from `sizes.py`, whether it can be tangled from
+`cahulaks.why_not`, and where a name more than one kind of creature has is met from
+`doccreatures.NOTES` (found from the regions' ETAB and named as the cluebook names the regions): run
+it again after changing any of them. (CREATURES.md itself says nothing of how it is made.)
 
 ## Tests
 
