@@ -342,6 +342,7 @@ and the section that explains it. INTERNALS, RULES, KITS, CONTENT and SCREENS ar
 | `__init__.py` | the package, its `__version__` | [Making a release](#making-a-release) |
 | `__main__.py` | the command line, `python -m dsloader <command>` | [From a command prompt](#from-a-command-prompt) |
 | `launch.py` | starts the GOG release in DOSBox with the dice log: the config, the copies, the crash report | [INTERNALS: crash report](DEVELOPMENT-INTERNALS.md#the-crash-report) |
+| `midiout.py` | the music device: where DOSBox sends the game's General MIDI music (the picture's lines are `launch.display_lines`) | [SCREENS: picture and music](DEVELOPMENT-SCREENS.md#picture-and-music) |
 | `gamepatch.py` | the patched game, DSUNLOG.EXE: `PATCHES` | [INTERNALS: the dice log](DEVELOPMENT-INTERNALS.md#how-the-dice-log-works) |
 | `dicelog.py` | the dice log: reads DSCLOG's ring and labels each roll; each pass's steps | [INTERNALS: the dice log](DEVELOPMENT-INTERNALS.md#how-the-dice-log-works) |
 | `textlog.py` | the dialogue and message boxes DSCLOG copies | [SCREENS: the Dialogue tab](DEVELOPMENT-SCREENS.md#the-dialogue-tab) |

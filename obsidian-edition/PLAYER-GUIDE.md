@@ -1959,7 +1959,9 @@ view, the view in fights, the pointer, and spells on the Effects screen ([contro
 
 **Graphics** (figures in what they wear, shadows, dust, see-through hiders) are in
 [Features: graphics](FEATURES.md#graphics), and **steady pace** in [Features: game
-speed](FEATURES.md#game-speed). **Running the game** (the game window's size, crash and freeze
+speed](FEATURES.md#game-speed); scanlines or hard-edged pixels for the game window, and another
+MIDI device for the music, in [Features: picture and music](FEATURES.md#picture-and-music).
+**Running the game** (the game window's size, crash and freeze
 reports) and **the Loader's window** (the dice log, the characters' sheets, the dialogue, the
 [journal](README.md#the-journal-tab) that keeps what was said and every reward and follows your
 saves, every spell's dice) are in the README: [running it](README.md#running-it-windows), [the Loader's
@@ -2130,6 +2132,13 @@ once.")
 |---|---|---|---|
 | GOG's own (walking can be choppy with shadows and dust) / Faster: for an older PC (fewer pictures a second with the whole party in view) / Fastest: the whole party walks at full speed, nearly every picture shown (the default) | Fastest | next start | [Game speed](FEATURES.md#game-speed) |
 | Steady pace: walking at full speed on the map whatever is drawn (a picture skipped rather than the party slowed) | on | next start | [Game speed](FEATURES.md#game-speed) |
+
+**Picture and music (from the next start)**
+
+| Loader label | Default | Takes effect | Details |
+|---|---|---|---|
+| Plain: every pixel of the game as a block (the default) / Scanlines: a black line under each row of the picture, as on an old monitor / TV: a dimmed line under each row of the picture, softer than scanlines / Sharp: hard-edged pixels at any size, the stretching left unsmoothed (DOSBox's OpenGL) | Plain | next start | [Picture and music](FEATURES.md#picture-and-music) |
+| Music device | Windows' default | next start | a MIDI device of Windows' to play the game's music, by name: [Picture and music](FEATURES.md#picture-and-music) |
 
 **Wake of the Ravager (optional)** and **Saves**
 

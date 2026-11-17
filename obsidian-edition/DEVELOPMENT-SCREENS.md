@@ -32,6 +32,7 @@
 - [More saves](#more-saves)
 - [More characters](#more-characters)
 - [Game speed](#game-speed)
+- [Picture and music](#picture-and-music)
 
 ## The Dialogue tab
 
@@ -980,3 +981,90 @@ pixels, not by a shadow's 72 and 44.
 A walker now raises a puff every 6 pixels, as meant. Before, the clock's tick
 was added in place of the distance, so it raised one nearly every pass. A
 walker off the view raises none.
+
+## Picture and music
+
+([In the features page](FEATURES.md#picture-and-music).)
+
+Both are lines in the configuration the Loader writes over GOG's
+(`launch.write_conf`: `dosbox_dicelog.conf`, read after GOG's
+`dosbox_darksun.conf`), from `picture` and `midi_device` in `settings.json`.
+What follows is DOSBox 0.74's source (GOG ships it beside its DOSBox:
+`src/gui/render.cpp`, `sdlmain.cpp`, `midi.cpp`, `midi_win32.h`).
+
+**The picture** (`launch.display_lines`, `launch.picture`). The game's mode
+13h is 320x200 with both sides doubled by the VGA, so DOSBox applies the
+`scaler` without "forced". GOG's settings are `output=ddraw`, `aspect=true`,
+`fullresolution=desktop`: a scaler makes the picture 2 or 3 times 320x200 and
+the output stretches it to 4:3 (and in full screen to the desktop).
+
+| Game window | Plain | Scanlines, TV | Sharp |
+|---|---|---|---|
+| Single | `scaler=none` | plain | plain |
+| Double, Triple | `scaler=normal2x`, `normal3x` | `scaler=scan2x`, `scan3x`; `tv2x`, `tv3x` | `output=openglnb`, `windowresolution=640x480` or `960x720`, the plain scaler |
+| Quadruple | `output=opengl`, `windowresolution=1280x960`, `scaler=normal2x` | the same with `scan2x` or `tv2x` | the same with `output=openglnb` |
+| Full screen | nothing (GOG's own) | `scaler=scan3x`, `tv3x` | `output=openglnb` |
+
+- 0.74 has scan and tv scalers at 2x and 3x only (`render.cpp`: any other size
+  falls to the normal one), so Quadruple doubles the 2x one in OpenGL.
+- The scan and tv scalers have no 8-bit output (`GFX_RGBONLY`); DirectDraw,
+  OpenGL and a plain surface all take them at the desktop's depth.
+- `openglnb` is `opengl` with the texture's filter `GL_NEAREST`
+  (`sdl.opengl.bilinear` false). With a `windowresolution` DOSBox opens the
+  window at that size (`GFX_SetupSurfaceScaled`), and OpenGL does the aspect
+  correction that a plain surface gets from the scaler's line table. The
+  plain scaler is kept so that where OpenGL fails (`goto dosurface`) the
+  window still opens at its size, with the plain picture.
+- A stored `picture` the window hasn't (any at Single) or that isn't one of
+  the four is the plain one: the playtest kit's 320x240 window stays `scaler=none` whatever is stored.
+- The window's size is the same for every picture, so the mouse's
+  `sensitivity` (100 over the scale: [the pointer in scenes, and where it
+  starts](#the-pointer-in-scenes-and-where-it-starts)) is too.
+
+Seen on Linux's DOSBox 0.74-3, which has no DirectDraw and takes its plain
+surface for GOG's `output=ddraw` (Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-17-picture-music.md)):
+
+- Every window opens at its size with every picture (640x480, 960x720,
+  1280x960; 320x240 at Single whatever is asked), and OpenGL takes both
+  outputs.
+- Scanlines at Triple: each game row is two lit lines and a black one, and
+  the aspect correction repeats the black line under three rows in five
+  (rows of 3 or 4 screen lines). At Double a lit line and one or two black.
+- TV at Triple: each row's lines at full, about five eighths and about a
+  third of the brightness, the last repeated where the row is 4 lines.
+- Sharp at Triple is the same picture as Plain there (the surface's own line
+  table is unsmoothed too); at Quadruple the rows are 4 or 5 lines of one
+  colour where Plain blends them; in full screen it fills the screen's
+  height at 4:3 with rows of 5 or 6 lines (1080 high).
+- Scanlines at Quadruple: OpenGL smooths the doubled picture, the dark lines
+  4.8 screen lines apart, some a full black line and some two half-dark ones.
+- Full screen with the plain surface isn't stretched at all on Linux (the
+  picture sits unscaled on a black screen: only the OpenGL outputs scale
+  there), so Scanlines and TV in full screen, which keep GOG's DirectDraw
+  output, are for Windows to show. The same goes for how DirectDraw smooths
+  its stretch in a window.
+- In the game at Triple (the slave pens, `playtest/picstart.sh`) the window
+  was 960x720 with each of the four pictures and the pointer moved the same
+  with each: 28 game pixels across for 90 of the hand's, 23 down for 90.
+
+**The music device** (`midiout.py`). GOG's `[midi]` section is
+`mpu401=intelligent`, `mididevice=default`, `midiconfig=` empty. On Windows
+0.74's only MIDI handler is `win32`: with `midiconfig` empty it opens the MIDI
+Mapper (`midiOutOpen(MIDI_MAPPER)`); with a number in it, that device
+(`midiOutOpen(number)`), counted as `midiOutGetDevCaps` counts them. A number
+with no device is not an error to it: nothing is opened, the handler reports
+success, and the game has no music. So the Loader writes `[midi]`,
+`midiconfig=N` for a device chosen and nothing for the default, and reads the
+devices' names itself to show them: `midiout.devices` calls winmm's
+`midiOutGetNumDevs` and `midiOutGetDevCapsW` through ctypes (no package
+needed; `MIDIOUTCAPSW` is 84 bytes, the name 32 UTF-16 units). Where there is
+no winmm the window has a field in place of the list. A Linux DOSBox reads
+`midiconfig` as an ALSA sequencer port ("client:port", `midi_alsa.h`), so the
+field takes that too; anything else stored (`midiout.parse`) is the default.
+The game's choice of score (General MIDI, MT-32 or the PC speaker, in its
+`SOUND.CFG`) is not touched.
+
+Tests: `tests/test_launch.py` (the picture's lines for every window), `tests/test_midiout.py` (the
+stored choice read, anything unknown the default; DOSBox's `[midi]` lines; Windows' device names
+read through a stand-in for winmm; the Loader's list) and `tests/test_viewer_options.py` (the
+window's two choices).

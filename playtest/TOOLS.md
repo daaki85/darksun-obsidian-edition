@@ -78,6 +78,9 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `passuntil.sh N [MAX]` | pass party turns until member N's: a click ON the figure (memberpos.py), the END menu checked by its grey pixels in a shot (over 1300; |
 | `pastblock.py save\|cmp FILE` | the 4 KB past GHOST's block (GHOST_SEG + 885 paragraphs), kept or compared |
 | `paths.py` | the same paths as env.sh, for the Python tools |
+| `picmove.py DX DY` | move the hand DX, DY screen pixels (xdotool, relative: DOSBox has the mouse) and print how far the game's pointer (DS:A133, game pixels) went. |
+| `picpattern.sh WHERE:SCALE:PICTURE ...` | the Loader's display settings (launch.display_lines) tried in a DOSBox of its own, without the game and without the DOSBox lock: a 33-byte program puts a pattern on the game's screen mode (13h, 320x200) and waits. |
+| `picstart.sh PICTURE [SCALE] [OUT_DIR]` | the game started with one of the Loader's pictures (plain, scanlines, tv, sharp) in a window SCALE times the game's (default 3), NOT the kit's 320x240 start: pens-after-arena loaded by the pointer (click.py), then... |
 | `picstore.py [check\|dump SLOT\|stale]` | the game's picture store (the 741,376 bytes behind memory handle DS:4C33h) as the Loader can reach it (2026-11-09, logs/2026-11-09-picture-store.md). |
 | `pixmatch.py X Y R G B [X Y R G B ...]` | exit 0 if every named pixel of a fresh 320x240 window grab is that colour, within 3 a channel and one row up or down. |
 | `playsound.py N` | have DSCLOG play sound N from the map's main loop (its header's SOUND_REQ, +1822): a game sound (0-130) or one of the mod's (140, 141). |

@@ -9,7 +9,7 @@ the container is reclaimed: an earlier version of this guide and its tools were 
 **How to use it.** Read [the startup procedure](#startup-procedure) in full before every in-game
 test and follow it in order. Then read the [recipes](#recipes) for the job in hand, [the
 route](ROUTE.md) (its own page) when the party has to get somewhere, and [the research
-recipes](RESEARCH.md) (memory edits for a test, sounds, the picture store, frame rate, the game's
+recipes](RESEARCH.md) (memory edits for a test, sounds, the picture store, frame rate, the picture and the music device, the game's
 scripts, the recompiled program, Wake of the Ravager) when a test needs memory written or the game
 looked into. **Add to it after every play** ([after a play](#3-after-a-play)). How things were
 found, the incidents behind the rules and the approaches given up are in [HISTORY.md](HISTORY.md),

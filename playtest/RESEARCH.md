@@ -3,7 +3,7 @@
 Part of the playtest guide ([PLAYTESTING.md](PLAYTESTING.md): read its startup procedure before any
 in-game test). These recipes are for writing the game's memory for a test and for finding out how
 the game works rather than for checking a change: the game's records and memory edits, its sounds,
-the see-through figures, the picture store, frame rate and cycles, its scripts, the unchanged game,
+the see-through figures, the picture store, frame rate and cycles, the picture and the music device, its scripts, the unchanged game,
 the recompiled program and Wake of the Ravager. Tools: [TOOLS.md](TOOLS.md).
 
 ## Memory edits for a test
@@ -452,6 +452,44 @@ EXE back and `cmp` it afterwards.
 
 The measurements (pens-after-arena, the whole party walking, 2026-11-08), the old steady pace's
 and the faster drawing's: [HISTORY.md](HISTORY.md#frame-rate-measurements).
+
+## The picture and the music device (picstart.sh, picpattern.sh)
+
+The Loader's **Picture** (plain, scanlines, tv, sharp: `launch.display_lines`) and **Music device**
+(`midiout.py`) are DOSBox settings, so most of a check needs no game
+(logs/2026-11-17-picture-music.md).
+
+- **Without the game or the lock: `sh picpattern.sh win:3:scanlines win:4:sharp full:3:sharp`.** A
+  DOSBox of its own shows a pattern in the game's screen mode (13h) with the Loader's display lines
+  for a window (`win`) or full screen (`full`), a scale and a picture; it prints the settings, the
+  window's size and any complaint of DOSBox's, and grabs the window (the whole screen for `full`)
+  to `$WORK/picpattern/`. It runs on its own display (`:57`, 1920x1080, so the 1280x960 window and
+  full screen fit, which `:55`'s 1024x768 can't show) and under another process name (a copy of
+  the program called `dbpat`), so it never disturbs a play: `live.py` attaches to the newest process
+  named dosbox, and `start.sh` kills every one. **A second DOSBox under its own name would be taken
+  for the game by every tool of every agent.** Its window's class is the program's name (`xdotool
+  search --class dbpat`).
+- **In the game: `sh picstart.sh PICTURE [SCALE] [OUT_DIR]`**, under the lock. A start of its own
+  (not the kit's 320x240): `pens-after-arena` loaded with `click.py` alone, which works at any
+  scale because it moves the hand until the game's pointer reads the place; then the window's
+  size, `picmove.py DX DY` (the hand moved, how far the pointer went), a grab (`import -window`)
+  and DOSBox's log. It writes `window_scale` 1 and the plain picture back to settings.json as soon
+  as the configuration is written, so a run cut short still leaves the kit's settings. About 75 s
+  a picture.
+- **The kit's own start never changes with the picture**: at `window_scale` 1 the Loader writes
+  `scaler=none` whatever `picture` is stored (`tests/test_launch.py`).
+- **What Linux's DOSBox 0.74-3 can and can't show.** It has no DirectDraw: GOG's `output=ddraw`
+  is refused ("not a valid value... reset to surface") and the plain surface used. Windows open at
+  their sizes with every picture, and OpenGL (`opengl`, `openglnb`) works under Xvfb. Full screen
+  with the surface output is not stretched (the picture sits unscaled, and partly off the screen
+  under Xvfb), so only Sharp's full screen can be judged here; Scanlines and TV in full screen, and
+  how DirectDraw smooths a window's stretch, are for the owner's Windows.
+- **Reading a grab for scanlines**: sum a column's pixels down the picture (`PIL`): at Triple a
+  game row reads lit, lit, black, with the black line twice under three rows in five (the aspect
+  correction's line table); TV reads full, about 5/8, about 1/3.
+- **The music device can't be heard here**: the container has no ALSA sequencer ("ALSA:Can't open
+  sequencer", then "MIDI:Opened device:none" in `dosbox.log`), and the Windows device list
+  (`midiout.devices`, winmm) is None off Windows. The unit tests use a stand-in for winmm.
 
 ## Scripts and the game's code
 

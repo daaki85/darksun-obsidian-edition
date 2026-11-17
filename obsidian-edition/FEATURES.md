@@ -11,9 +11,9 @@ it (or says **Always on**: most of the rule changes, the combat log, the thievin
 the controls have no switch), and links to the rules ("Rules:", in the player's guide and the
 reference pages) and to how it is made ("How it works:", the developer pages on GitHub).
 
-**Every switch is on by default.** The three choices of more than one have defaults of their own:
-the combat log's level is **in short**, the red ring is **under the enemy chosen with Tab**, and the
-game speed is **Fastest**. The switches count in games started from the Loader or its `.bat` files
+**Every switch is on by default.** The choices of more than one have defaults of their own:
+the combat log's level is **in short**, the red ring is **under the enemy chosen with Tab**, the
+game speed is **Fastest**, the picture is **Plain** and the music device is **Windows' default**. The switches count in games started from the Loader or its `.bat` files
 (**Play Dark Sun (in-game rolls)** uses the Options as last set), most at once; one whose label says
 "from the next start" waits until the game is started again. Untick one and the game's own way is
 back. What is always on can't be turned off: a settings file from before, with one of those
@@ -29,6 +29,7 @@ window are in the [README](README.md).
 - [More character customization](#more-character-customization)
 - [New content](#new-content)
 - [Game speed](#game-speed)
+- [Picture and music](#picture-and-music)
 - [Wake of the Ravager](#wake-of-the-ravager)
 - [Saves](#saves)
 - Always on, their switches gone: [Expanded features](#expanded-features), [Graphics](#graphics),
@@ -733,6 +734,55 @@ quicker.*
 What each speed asks of the computer: [suggested system
 requirements](README.md#suggested-system-requirements). How it works, with the measurements:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#game-speed).
+
+## Picture and music
+
+Two choices for DOSBox (the DOSBox 0.74 that comes with GOG's game), in the Options tab's **Picture
+and music** section, both from the next start.
+
+**Picture**: how DOSBox draws the game's 320x200 picture larger, in a [game
+window](README.md#every-time-you-play) of twice the game's size or more and in full screen. A
+**Single** window is always plain; the window's size and the pointer's speed are the same with
+every picture.
+
+| Picture | What you see |
+|---|---|
+| **Plain** (the default) | Every pixel of the game as a block of one colour. |
+| **Scanlines** | A black line under each row of the picture, as an old monitor showed it. The picture is darker for it: at Double half of it is black, at Triple and in full screen a third. |
+| **TV** | Each row fades downwards instead of ending in a black line: softer than scanlines, and darker than plain. |
+| **Sharp** | Hard-edged pixels at any size: DOSBox stretches the picture to its window (and to the whole screen in full screen) without smoothing it. Drawn with OpenGL; if your graphics driver doesn't take to that, DOSBox falls back to its plain drawing by itself. |
+
+![The party in the slave pens in a Triple window, the same spot three times: Plain on the left, every pixel a block; Scanlines in the middle, a black line under each row; TV on the right, each row fading downwards, the whole darker](docs/picture-modes.png)
+
+*Plain, Scanlines and TV in a Triple window (a part of it, at its own size). Sharp looks like Plain
+at this size.*
+
+DOSBox has Scanlines and TV at twice and three times the game's size only, so a Quadruple window
+shows the twice-size one doubled and smoothed, and full screen stretches the three-times one to
+your screen (on a screen whose height isn't a multiple of the game's rows the lines can't all be the
+same thickness). Sharp is plainest to see at Quadruple and in full screen, where DOSBox smooths the
+plain picture as it stretches it.
+
+**Music device**: where DOSBox sends the game's music. The game writes its music as General MIDI
+notes, and GOG's DOSBox has no synthesizer of its own: it hands the notes to Windows, which plays
+them on its default MIDI device (the "Microsoft GS Wavetable Synth", unless you have set another).
+If you have installed another MIDI device (a software synthesizer that plays a soundfont, a driver
+that imitates a Roland MT-32, a real sound module on a MIDI port), the list names it and you can
+pick it. The Loader comes with none and doesn't change Windows' settings: it only tells DOSBox which
+of Windows' devices to use. If the device you chose isn't there the next time (unplugged, or its
+program not running), the list says so, and the game would play without music until you choose
+again: DOSBox doesn't fall back by itself. The game still sends its General MIDI score whatever
+the device (on an MT-32 that is the wrong set of instruments; the game's own MT-32 score is chosen
+in its sound setup, which the Loader leaves alone), and sound effects and speech don't go to this
+device. Where the Loader can't read Windows' list (it runs on Linux, say, with the game's DOSBox
+under Wine), there is a field for the device's number in place of the list, 0 the first; a Linux
+DOSBox takes an ALSA port there, such as `128:0`. Empty is the default.
+
+**Switches** (Picture and music, from the next start): *Plain: every pixel of the game as a block
+(the default)*, *Scanlines: a black line under each row of the picture, as on an old monitor*, *TV: a
+dimmed line under each row of the picture, softer than scanlines* or *Sharp: hard-edged pixels at
+any size, the stretching left unsmoothed (DOSBox's OpenGL)*; and *Music device*. How it works:
+[DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#picture-and-music).
 
 ## Wake of the Ravager
 

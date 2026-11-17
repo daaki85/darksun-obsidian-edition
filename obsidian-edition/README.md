@@ -95,7 +95,8 @@ Loader's **Options** tab ([each switch, its default and when it counts](PLAYER-G
   that shine ([Graphics](FEATURES.md#graphics)).
 - **Quality of life.** Better [controls](FEATURES.md#controls), [more saves and
   characters](FEATURES.md#saves), a [game
-  speed](FEATURES.md#game-speed) setting, [crash, freeze and item
+  speed](FEATURES.md#game-speed) setting, a choice of [picture and music
+  device](FEATURES.md#picture-and-music), [crash, freeze and item
   reports](#crash-freeze-and-item-reports) and [no manual
   check](FEATURES.md#no-manual-check).
 - **Fixes the game's bugs.** Dozens of them, always on, from spells that never did
@@ -204,6 +205,11 @@ window** at the top of the Loader picks **Single**, **Double**, **Triple**,
 and full screen while playing. Quadruple has DOSBox stretch its window with
 OpenGL; if your graphics driver doesn't take to that, pick Triple.
 
+On the Options tab, **Picture and music** has two more choices for DOSBox, also from the next
+start: the **Picture** (Plain, Scanlines, TV or Sharp) and the **Music device** (Windows' default,
+or another MIDI device you have installed, such as a software synthesizer with a soundfont):
+[Picture and music](FEATURES.md#picture-and-music).
+
 Load your game. The party's stats fill in by themselves, and rolls appear in
 the **Dice log** tab as they happen.
 
@@ -278,8 +284,9 @@ switch with its default and when it counts, and links each to its page in
 [Features and rules](FEATURES.md); its **Wake of the Ravager (optional)** section is for the
 6th-level priest spells' icons and pictures ([Requirements](#requirements)).
 
-Every switch is on by default, and the three choices start at the red ring
-under the chosen enemy, the game speed Fastest and the combat log in short;
+Every switch is on by default, and the choices start at the red ring
+under the chosen enemy, the game speed Fastest, the combat log in short, the
+picture Plain and the music device Windows' default;
 all are remembered for next time. The rest of the mod is always on, with no
 switch: most of the rule changes, the combat log, weapon specialization, the
 thieving, the graphics and the controls. **Restore defaults**, at the bottom

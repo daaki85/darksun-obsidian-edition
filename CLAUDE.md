@@ -40,6 +40,8 @@ And always:
   guide's rule 10).
 - **Never cut steps out of a bigger script with sed** (its header may restart the game): use the
   small tools.
+- **A second DOSBox must run under another name** (a copy of the program, as `picpattern.sh`'s
+  `dbpat`): the tools attach to the newest process named dosbox and `start.sh` kills them all.
 - **Press Escape only with a screen or menu up** (with nothing open it brings EXIT: SAVE GAME?), and
   **never save after a memory edit** made for a test.
 - **The look pointer pauses the game**: while the eye is up nothing happens (no call, no alarm,
@@ -51,7 +53,7 @@ And always:
   and shops, pictures for the docs) is in the guide's [recipes](playtest/PLAYTESTING.md#recipes);
   the route through the story (new game, arena, slave pens, Kurzak's call, back to the arena) is in
   [ROUTE.md](playtest/ROUTE.md), the research recipes (memory edits for a test, sounds, the picture
-  store, frame rate, the game's scripts, the recompiled program as the target, Wake of the Ravager)
+  store, frame rate, the picture and the music device, the game's scripts, the recompiled program as the target, Wake of the Ravager)
   in [RESEARCH.md](playtest/RESEARCH.md), and every tool in [TOOLS.md](playtest/TOOLS.md).
 
 **Git.** The repository is `daaki85/darksun-obsidian-edition`. Work on a `claude/<task>` branch

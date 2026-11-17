@@ -623,6 +623,89 @@ class LaunchTests(unittest.TestCase):
             launch.load_settings = saved
         self.assertLess(lines.index("fullscreen=false"), lines.index("[autoexec]"))
 
+    def test_the_picture(self):
+        """Scanlines and TV are DOSBox 0.74's scan and tv scalers in the plain one's place (2x, 3x;
+        2x in the four-times window, 3x in full screen); Sharp its unfiltered OpenGL output with
+        the window's size given. The window's size and the mouse's sensitivity are the plain
+        picture's at every size; the single-size window (the playtest kit's) is always plain, and
+        so is a picture the Loader doesn't know."""
+        def lines(scale, picture, **more):
+            return launch.display_lines({"window_scale": scale, "picture": picture, **more})
+        plain = {scale: lines(scale, "plain") for scale in launch.WINDOW_SCALES}
+        for scale in launch.WINDOW_SCALES:  # (no picture named: the plain one, as before there was a choice)
+            self.assertEqual(launch.display_lines({"window_scale": scale}), plain[scale])
+        self.assertEqual(plain[1], ["[sdl]", "fullscreen=false", "autolock=true", "sensitivity=100",
+                                    "[render]", "aspect=true", "scaler=none", ""])
+        self.assertEqual(plain[4], ["[sdl]", "fullscreen=false", "autolock=true", "sensitivity=25", "output=opengl",
+                                    "windowresolution=1280x960", "[render]", "aspect=true", "scaler=normal2x", ""])
+        for picture in launch.PICTURES + ("crt", "", None, 3, ["tv"]):
+            self.assertEqual(lines(1, picture), plain[1], picture)
+        for picture in ("crt", "", None, 3, ["tv"], "SCANLINES"):
+            for scale in (2, 3, 4):
+                self.assertEqual(lines(scale, picture), plain[scale], picture)
+            self.assertEqual(lines(3, picture, fullscreen=True), [], picture)
+        # scanlines and tv: the scaler alone changes
+        for picture, scaler in (("scanlines", "scan"), ("tv", "tv")):
+            for scale, by in ((2, 2), (3, 3), (4, 2)):
+                self.assertEqual(lines(scale, picture),
+                                 [f"scaler={scaler}{by}x" if line.startswith("scaler=") else line
+                                  for line in plain[scale]], (picture, scale))
+            self.assertEqual(lines(3, picture, fullscreen=True), ["[render]", f"scaler={scaler}3x", ""])
+        # sharp: openglnb, the window's size given, the plain scaler kept
+        self.assertEqual(lines(2, "sharp"), ["[sdl]", "fullscreen=false", "autolock=true", "sensitivity=50",
+                                             "output=openglnb", "windowresolution=640x480",
+                                             "[render]", "aspect=true", "scaler=normal2x", ""])
+        self.assertEqual(lines(3, "sharp"), ["[sdl]", "fullscreen=false", "autolock=true", "sensitivity=33",
+                                             "output=openglnb", "windowresolution=960x720",
+                                             "[render]", "aspect=true", "scaler=normal3x", ""])
+        self.assertEqual(lines(4, "sharp"), [line.replace("output=opengl", "output=openglnb") for line in plain[4]])
+        self.assertEqual(lines(3, "sharp", fullscreen=True), ["[sdl]", "output=openglnb", ""])
+        self.assertEqual(lines(3, "sharp", mouse_start=False), lines(3, "sharp"))  # (the mouse: always on now)
+        # every scaler and output named is one DOSBox 0.74 has (render.cpp, sdlmain.cpp)
+        for scale in launch.WINDOW_SCALES:
+            for picture in launch.PICTURES:
+                for full in (False, True):
+                    for line in lines(scale, picture, fullscreen=full):
+                        if line.startswith("scaler="):
+                            self.assertIn(line[7:], ("none", "normal2x", "normal3x", "scan2x", "scan3x", "tv2x", "tv3x"))
+                        if line.startswith("output="):
+                            self.assertIn(line[7:], ("opengl", "openglnb"))
+        # which pictures a window has, and the one used
+        self.assertEqual(launch.pictures({"window_scale": 1}), ("plain",))
+        self.assertEqual(launch.pictures({"window_scale": 1, "fullscreen": True}), launch.PICTURES)
+        self.assertEqual(launch.pictures({}), launch.PICTURES)
+        self.assertEqual(launch.picture({"picture": "tv"}), "tv")
+        self.assertEqual(launch.picture({"picture": "tv", "window_scale": 1}), "plain")
+        self.assertEqual(launch.picture({}), "plain")
+        self.assertEqual(launch.effective_switches({"picture": "tv", "window_scale": 1})["picture"], "plain")
+        self.assertEqual(launch.effective_switches({"picture": "sharp"})["picture"], "sharp")
+
+    def test_the_configuration_written_for_the_picture_and_the_music_device(self):
+        """write_conf: the picture's lines and the music device's `[midi]` section ahead of the
+        autoexec; neither for the defaults."""
+        def conf(settings):
+            with tempfile.TemporaryDirectory() as d:
+                game = make_game(d, cloud_saves=False)
+                with open(launch.write_conf(game, os.path.join(d, "test.conf"), settings=settings), newline="") as f:
+                    return f.read().split("\r\n")
+        usual = conf({})
+        self.assertNotIn("[midi]", usual)
+        self.assertEqual(conf({"picture": "plain", "midi_device": "default"}), usual)
+        self.assertEqual(conf({"picture": "holo", "midi_device": "the loud one"}), usual)
+        lines = conf({"picture": "scanlines", "midi_device": 2})
+        self.assertIn("scaler=scan3x", lines)
+        at = lines.index("[midi]")
+        self.assertEqual(lines[at:at + 3], ["[midi]", "midiconfig=2", ""])
+        self.assertLess(at, lines.index("[autoexec]"))
+        self.assertLess(lines.index("[cpu]"), at)
+        self.assertEqual([line for line in lines if line not in usual],
+                         ["scaler=scan3x", "[midi]", "midiconfig=2"])
+        lines = conf({"fullscreen": True, "picture": "sharp", "midi_device": "128:0"})
+        self.assertEqual(lines[:3], ["[sdl]", "output=openglnb", ""])
+        self.assertIn("midiconfig=128:0", lines)
+        self.assertEqual(launch.effective_switches({"midi_device": 3})["midi_device"], 3)
+        self.assertEqual(launch.effective_switches({"midi_device": -1})["midi_device"], "default")
+
     def test_without_the_dice_log_it_runs_the_game_as_usual(self):
         with tempfile.TemporaryDirectory() as d:
             game = make_game(d, cloud_saves=False)

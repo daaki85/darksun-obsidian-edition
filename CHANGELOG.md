@@ -20,6 +20,9 @@ under "## Unreleased (branch `obsidian-edition`)
 - **A journal** (the Loader's new **Journal** tab): every talk with the reply chosen, every reward
   and message, under the game's day and area, kept on disk (`Journal/`) and following the saves
   (its newest entry's id in the game's global numbers 198 and 199).
+- **Picture and music device** (Options, from the next start): Plain, Scanlines, TV or Sharp for
+  the game's picture (DOSBox 0.74's scalers and `openglnb`), and the music sent to any MIDI
+  device of Windows'. Seen on Linux only; the music device not heard.
 
 **Changed**
 - **Fewer switches** (#110), for a simpler Options tab and the mod's rules as meant: the combat

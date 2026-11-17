@@ -521,6 +521,9 @@ index](logs/README.md), by date.
   `chestuse.sh` as ROUTE.md describes it, `setitem.py` added; the combat log's buttons measured,
   `chestuse.sh` run (and given the answer to Bash it open?), `setitem.py` run, the look box's
   picture retaken on the pens' Zombie, Escape not closing a Look box.
+  The picture and the music device: `picpattern.sh` (a DOSBox under another name, so no tool takes
+  it for the game), `picstart.sh`; Linux's DOSBox has no DirectDraw and doesn't stretch its full
+  screen without OpenGL; no MIDI in the container (logs/2026-11-17-picture-music.md).
 - **2026-11-18**: the colour cycler's green and violet runs seen turning in the inventory
   (Greenbright); `setitem.py obj=` and `rec=`; Tanelyv's chest piece found as object 2004; the
   Searing Blade's name whole in the box, label and dice log (logs/2026-11-18-item-glows.md).

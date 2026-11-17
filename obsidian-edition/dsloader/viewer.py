@@ -24,7 +24,7 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 from tkinter import font as tkfont
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
-from . import __version__, art, combatlog, dicelog, journal, ledger, freeze, game, kits, launch, manual, namedsaves, partyview, rings, spellbook, theme, values
+from . import __version__, art, combatlog, dicelog, journal, ledger, freeze, game, kits, launch, manual, midiout, namedsaves, partyview, rings, spellbook, theme, values
 from .dicelog import DiceLog, DiceLogError
 from .guestmem import GuestMemory
 from .layout import Layout
@@ -478,6 +478,43 @@ class Viewer:
         ttk.Checkbutton(pace, text="Steady pace: walking at full speed on the map whatever is drawn (a picture skipped "
                         "rather than the party slowed)", variable=self.steady_pace,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
+        # how DOSBox draws the game larger, and where it sends the music (launch.display_lines, midiout.py)
+        look = section("picture", "Picture and music (from the next start)")
+        chosen = settings.get("picture", launch.DEFAULT_PICTURE)
+        self.picture = tk.StringVar(value=chosen if chosen in launch.PICTURES else launch.DEFAULT_PICTURE)
+        for value, text in ((launch.PLAIN, "Plain: every pixel of the game as a block (the default)"),
+                            (launch.SCANLINES, "Scanlines: a black line under each row of the picture, as on an "
+                                               "old monitor"),
+                            (launch.TV, "TV: a dimmed line under each row of the picture, softer than scanlines"),
+                            (launch.SHARP, "Sharp: hard-edged pixels at any size, the stretching left unsmoothed "
+                                           "(DOSBox's OpenGL)")):
+            ttk.Radiobutton(look, text=text, value=value, variable=self.picture,
+                            command=self._picture_chosen).pack(anchor="w")
+        ttk.Label(look, text="A Single game window is always plain: there is nothing to draw larger.",
+                  style="Status.TLabel").pack(anchor="w", pady=(2, 0))
+        music = ttk.Frame(look)
+        music.pack(anchor="w", fill="x", pady=(8, 0))
+        ttk.Label(music, text="Music device").pack(side="left")
+        device = midiout.setting(settings)
+        self.midi_names = midiout.devices()  # (Windows' MIDI outputs by name; None where they can't be read)
+        if self.midi_names is None:
+            self.midi_device = tk.StringVar(value="" if device == midiout.DEFAULT else str(device))
+            self.midi_box: tk.Widget = ttk.Entry(music, textvariable=self.midi_device, width=8)
+            hint = ("Empty for the default. Else a device's number as Windows counts them, from 0 (their names "
+                    "can't be read here), or for a Linux DOSBox an ALSA port such as 128:0.")
+        else:
+            self.midi_device = tk.StringVar(value=midiout.label(device, self.midi_names))
+            self.midi_box = ttk.Combobox(music, textvariable=self.midi_device, state="readonly", width=44,
+                                         values=midiout.labels(self.midi_names, device))
+            self.midi_box.bind("<<ComboboxSelected>>", lambda _e: self._midi_chosen())
+            hint = ("Windows' default, or one of its MIDI devices: a software synthesizer with a soundfont, or an "
+                    "MT-32 driver, that you have installed.")
+        self.midi_box.pack(side="left", padx=(6, 0))
+        self.midi_box.bind("<Return>", lambda _e: self._midi_chosen())
+        self.midi_box.bind("<FocusOut>", lambda _e: self._midi_chosen())
+        about_midi = ttk.Label(look, text=hint, style="Status.TLabel", wraplength=460, justify="left")
+        about_midi.pack(anchor="w", pady=(2, 0))
+        look.bind("<Configure>", lambda e: about_midi.configure(wraplength=max(200, e.width - 20)), add="+")
         # Wake of the Ravager, for the 6th-level priest spells' icons and pictures (wotrart.py)
         ravager = section("ravager", "Wake of the Ravager (optional)")
         self.wotr_status = tk.StringVar(value=self._wotr_status())
@@ -611,6 +648,8 @@ class Viewer:
         self.combat_log_level.set(dicelog.combat_log_level({}))
         self.ring_mode.set(rings.mode({}))
         self.game_speed.set(str(launch.DEFAULT_SPEED))
+        self.picture.set(launch.DEFAULT_PICTURE)
+        self._show_midi(midiout.DEFAULT)
         self._options_changed(every=True)
         self._speed_chosen()
         self.status.set("Options set back to their defaults (a switch marked \"from the next start\" applies from the next start).")
@@ -1130,8 +1169,10 @@ class Viewer:
         scale = WINDOW_CHOICES[self.window_choice.get()]
         if self._save_settings({"fullscreen": True} if scale is None else
                                {"fullscreen": False, "window_scale": scale}):
+            plain = (" The picture is plain in a Single window."
+                     if scale == 1 and self.picture.get() != launch.PLAIN else "")
             self.status.set(f"Game window: {self.window_choice.get()}, from the next start "
-                            "(Alt+Enter switches full screen while playing).")
+                            f"(Alt+Enter switches full screen while playing).{plain}")
 
     def _speed_chosen(self) -> None:
         """Remember the game's speed; it applies the next time the game is started."""
@@ -1139,11 +1180,52 @@ class Viewer:
         if self._save_settings({"cycles": value if value == launch.GOG_SPEED else int(value)}):
             self.status.set("Game speed: from the next start.")
 
+    def _picture_chosen(self) -> None:
+        """Remember the picture; it applies the next time the game is started. In a Single window
+        there is only the plain one, and the status line says so."""
+        self._options_changed()
+        if self._options_shown.get("picture") != self.picture.get():
+            return  # (not saved: the status line says why)
+        if self.picture.get() != launch.PLAIN and WINDOW_CHOICES[self.window_choice.get()] == 1:
+            self.status.set("Picture: remembered, but a Single game window is always plain; pick a larger "
+                            "Game window (or Full screen) to see it.")
+        else:
+            self.status.set("Picture: from the next start.")
+
+    def _midi_value(self) -> Optional[midiout.Device]:
+        """The music device the box shows; None when what was typed is no device."""
+        return midiout.from_label(self.midi_device.get())
+
+    def _show_midi(self, device: midiout.Device) -> None:
+        """DEVICE in the music device's box (a list of names on Windows, a field elsewhere)."""
+        if self.midi_names is None:
+            self.midi_device.set("" if device == midiout.DEFAULT else str(device))
+        else:
+            self.midi_box.configure(values=midiout.labels(self.midi_names, device))
+            self.midi_device.set(midiout.label(device, self.midi_names))
+
+    def _midi_chosen(self) -> None:
+        """Remember the music device; it applies the next time the game is started. Something
+        typed that is no device is not kept: the box goes back to the one remembered."""
+        device = self._midi_value()
+        if device is None:
+            self._show_midi(self._options_shown.get(midiout.SETTING, midiout.DEFAULT))
+            self.status.set("Music device: a number (0 is Windows' first device), an ALSA port such as 128:0, "
+                            "or empty for the default.")
+            return
+        if device != self._options_shown.get(midiout.SETTING):
+            self._options_changed()
+            self.status.set("Music device: from the next start.")
+
     def _option_values(self) -> dict:
         """Every switch of the Options tab as the tab shows it: {settings key: value}."""
         values = {"monster_info": self.monster_info.get(), "floating_names": self.floating_names.get(),
                   "combat_log_level": self.combat_log_level.get(), "starting_gear": self.starting_gear.get(),
-                  "rings": self.ring_mode.get(), "steady_pace": self.steady_pace.get()}
+                  "rings": self.ring_mode.get(), "steady_pace": self.steady_pace.get(),
+                  "picture": self.picture.get()}
+        device = self._midi_value()  # (something typed that is no device: the one remembered stays)
+        values[midiout.SETTING] = getattr(self, "_options_shown", {}).get(
+            midiout.SETTING, midiout.DEFAULT) if device is None else device
         values.update({key: var.get() for key, var in self.content_vars.items()})
         values.update({key: var.get() for key, var in self.rule_vars.items()})
         return values
