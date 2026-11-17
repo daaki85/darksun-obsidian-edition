@@ -271,7 +271,7 @@ python -m dsloader processes                     # is DOSBox found?
 After `launch` or `play`, `--window-scale 1` to `4`, `--fullscreen` or
 `--windowed` choose the game's window as **Game window** does, and
 `--recompiled PROGRAM` runs Dark Sun Recompiled in place of DOSBox from then on (`--dosbox` goes
-back: [the README](README.md#other-ways-to-start)). `--game-dir` names the
+back: [the README](README.md#dark-sun-recompiled)). `--game-dir` names the
 game's folder (for `launch`, `play` and `checks`; remembered after the first
 time). `dicelog --all` also shows the rolls the log can't label (as **Show
 unlabelled rolls**), and `dicelog --raw` records every `rand()` call, not just

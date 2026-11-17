@@ -1,13 +1,32 @@
 # The dice log, line by line
 
-*Part of Obsidian Edition's documentation, from the [README](README.md#the-dice-log): every kind
-of line the Loader's dice log writes, and what it means. How to read and search the log is in the
-README.*
+*Part of Obsidian Edition's documentation, from the [README](README.md#the-dice-log): how to read
+the Loader's dice log, and every kind of line it writes, with what it means. Finding a line and the
+log's boxes are in the README.*
 
-The lines below are the log as it is written: what **Save...** writes, and what the window shows
-with **Readable layout** unticked. With it ticked (the default) the window lays the same lines out
-outcome first, the roll and HP in columns, the working dimmed under each ([the readable
-layout](README.md#the-dice-log)).
+**The readable layout** (**Readable layout**, above the log, ticked: the default) puts each event on
+a line of its own with what came of it first, `● Seneca hits Arena Guard for 11 — backstab, Bone
+Hayneedle +1`, then in columns at the right the HP it left (`19/30 (−11)`, marked `!` and coral when
+a party member is down to a third) and the roll (`d20 15 vs 4+ (85%) · AC 8`). Under it, smaller
+and dim, the working: the to-hit sum against the target's AC with the lowest AC the roll would have
+hit, the damage dice, a save's line in full, each initiative score. A party member's line has a
+filled pip, a monster's a hollow one; a round starts with a rule and its order, a turn with `▸` and
+the name. The outcome's colour is the party's view of it: sky blue for good (the party hits, a
+monster fails its save), coral for bad (a monster hits, a party member fails), dim for a miss or a
+monster's save, gold for a kill. **Show details** hides the working. A fight's summary is shown as
+the fight's close, every member's line shown.
+
+**Reading the lines as written.** The lines below are the log as it is written: what **Save...**
+writes, what the crash and freeze reports hold, and what the window shows with **Readable layout**
+unticked. Lines at the left edge are the events: a round starting, whose turn it is, attack rolls,
+saves, spells, kills. Lines indented two spaces are their results (damage, HP left); lines indented
+four spaces are the details: the sums behind a THAC0, a save's modifiers, the initiative scores.
+Untick **Show details**, above the log, to hide the details and keep the rest; they come back when
+it's ticked again. In the window, each kind has its colour (hits green, misses grey, damage amber,
+saves blue, turns sand, rounds underlined with a gap above), and the words say the same thing
+([accessibility](README.md#accessibility)). Names stand out in bold: each party member in a colour
+of their own (cyan, magenta, peach and white, by place in the party) and every monster and other
+creature in red, so who acts and who is hit can be followed down the log.
 
 ## Contents
 
