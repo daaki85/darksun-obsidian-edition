@@ -240,7 +240,7 @@ The dice log gets the same lines (`Look: ...`). Untick **What hurts
 a monster (the Look box)** on the Options tab to turn this
 off.
 
-![The Look box on a Screamer Beetle in the arena: LEVEL: 3, then HP 15/15 AC 2 and THAC0 17 AL TN added](docs/look-box.png)
+![The Look box on a Zombie in the slave pens: LEVEL: 2, then HP 10/10 AC 8, THAC0 19 AL TN and IMM POISON added](docs/look-box.png)
 
 The arena's first monsters have no magic resistance or special defences, so
 their box shows just the numbers and the alignment.
