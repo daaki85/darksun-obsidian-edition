@@ -326,6 +326,18 @@ Chill Touch once PROBE_ARROW let anyone not in the party cast them: seen with ev
 champion Paralyzed and the party's turns passed, the elf's two shots at Cermak, one save failed
 (STR 19 -> 18), one saved. The HP lines put the first Chill Touch's 3 on the second arrow's hit.
 
+## The chance to hit: three numbers that were off
+
+2026-11-17 (logs/2026-11-17-hit-chance.md). The first predictions held against the fountain's
+swings were off three times, each a thing the code read from DSUN.EXE alone couldn't show: the
+Templar's Ring of Protection (DSCLOG has the game count a ring's plus), the order of the swings
+(the item list's, so Seneca's left-hand Hayneedle was the backstab, not her Shadowseeker), and a
+hidden thief's second weapon, 2 worse than a plain swing because the attack set's flags stay up
+from the first weapon and DSCLOG's `STAB_FIRST` takes back a backstab the swing never had. All
+three were put in the prediction and the game loaded again: every number then agreed. The lock
+was lost twice to a pause that killed DOSBox and every holder; and a click on bare floor, meant
+only to move the pointer off the panel, walked Lex 4 Move.
+
 ## The combat log panel's buttons
 
 2026-11-11 to 2026-11-16: the guide had two sets of coordinates for the level chip (262 or 268;

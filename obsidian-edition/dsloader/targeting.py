@@ -9,7 +9,7 @@ answering with it whatever stands in front.
 
 import math
 import struct
-from typing import List, Optional
+from typing import Callable, List, Optional
 
 from . import game
 
@@ -55,8 +55,10 @@ class Targeting:
         gd.guest.write(tsr_hdr + TSR_PAN, struct.pack("<HH", (px + dx) & 0xFFFF, (py + dy) & 0xFFFF))
         return True
 
-    def update(self, gd, tsr_hdr: int, on: bool, enemies: List[int]) -> List[str]:
-        """Keep DSCLOG's targeting up; returns lines for the log (an enemy chosen)."""
+    def update(self, gd, tsr_hdr: int, on: bool, enemies: List[int], chance: Optional[Callable[[int, int], str]] = None) -> List[str]:
+        """Keep DSCLOG's targeting up; returns lines for the log (an enemy chosen). CHANCE(turn,
+        chosen): what the one whose turn it is needs to hit the chosen one, as text for the line
+        (hitchance.line; "" or None for nothing)."""
         guest = gd.guest
         turn = gd.whose_turn() if gd.in_combat() else None
         active = bool(on and turn is not None and turn < game.PARTY_SIZE and enemies)
@@ -83,8 +85,9 @@ class Targeting:
             if index is not None:
                 rec = gd.creature(index)
                 hp = struct.unpack_from("<h", rec, 0)[0] if len(rec) >= 2 else None
+                needs = chance(turn, self.chosen) if chance is not None else ""
                 out.append(f"Chosen with Tab: {gd.creature_name(index)}" + (f" ({hp} HP)" if hp is not None else "")
-                           + " - Enter attacks it")
+                           + (f", {needs}" if needs else "") + " - Enter attacks it")
         if self.chosen is not None and self.chosen not in enemies:
             self.chosen = None
         guest.write(tsr_hdr + TSR_TARGET, struct.pack("<H", NONE if self.chosen is None else self.chosen))

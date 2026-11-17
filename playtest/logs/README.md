@@ -103,6 +103,7 @@ schedules and diffs a log made or used.
 | [2026-11-16](2026-11-16-spell-grid.md) | CHOOSE A SPELL's grid, and no gear on the creation screen's stand-in |
 | [2026-11-16](2026-11-16-spellarcher-fine-bow.md) | The Spellarcher's Fine Bow and starting arrows, Burning Arrows retired |
 | [2026-11-17](2026-11-17-ingame-doc-checks.md) | The look box's picture retaken (the pens' Zombie), the combat log's buttons measured, `chestuse.sh` and `setitem.py` run |
+| [2026-11-17](2026-11-17-hit-chance.md) | The chance to hit shown before the swing, held against the fountain's swings: three corrections (a ring's plus, the swing order, a hidden thief's second weapon), then every number agreed |
 | [2026-11-17](2026-11-17-picture-music.md) | The picture (Plain, Scanlines, TV, Sharp) at every window size on a test pattern and at Triple in the game; what Linux's DOSBox can't show; no MIDI in the container |
 | [2026-11-18](2026-11-18-champions-gear.md) | The champions' bout's new gear: the elf's Fine Bow (+1, +4 DEX) and Chill Arrows (no spell from a non-party archer), DEX 22's AC and initiative, the halfling's staff sling, the defiler's bracers (AC 2); all on their bodies after |
 | [2026-11-18](2026-11-18-item-glows.md) | Greenbright's green shimmer, the Searing Blade's name in the box, label and dice log, an old Flame Blade mended, Tanelyv's chest piece's shine |

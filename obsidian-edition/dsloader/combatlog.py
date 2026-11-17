@@ -280,11 +280,15 @@ def _side(text: str, names: Dict[str, str]) -> Optional[str]:
     return None
 
 
-def header(status: Optional[dict]) -> str:
+def header(status: Optional[dict], chance: str = "") -> str:
     """The panel's top line from DiceLog.round_status: "Round 2: Gerakis, then Cermak, Cilla" (who
-    is acting, then who is still to)."""
+    is acting, then who is still to). CHANCE: what the one acting needs to hit the enemy chosen
+    with Tab (hitchance.brief, "Needs 14+ (35%)"), the whole line while one is chosen: the header
+    has no room for both (the round's line is back when the turn passes)."""
     if not status:
         return ""
+    if chance and status.get("now"):
+        return chance
     now = status["now"][0] if status.get("now") else ""
     nxt = ", ".join(name for name, _ in status.get("next", []))
     who = f"{now}, then {nxt}" if now and nxt else now or (f"then {nxt}" if nxt else "")

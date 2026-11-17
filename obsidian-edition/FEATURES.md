@@ -40,7 +40,7 @@ window are in the [README](README.md).
 
 What the game shows when it is started from the Loader: the Options tab's **In the game** section
 (the combat log, always on, with its level; the red ring's choice, under [choosing an
-enemy](#choosing-an-enemy-tab-enter-and-the-rings); and two switches). More the game's screens
+enemy](#choosing-an-enemy-tab-enter-and-the-rings); and the switches below). More the game's screens
 show, with no switch: [always on](#always-on).
 
 ### The combat log in the game
@@ -120,6 +120,21 @@ walk, fight hand to hand or end it.
 missed, a used charge ("Armor: 7 left") over its owner, and the arrows left over a party archer
 after each shot*. How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#names-over-figures).
+
+### The chance to hit before the swing
+
+With an enemy chosen with Tab, the Loader says what the party member whose turn it is must roll on
+the d20 to hit it, and the chance, before anything is swung: on the dice log's line that names the
+enemy (`Chosen with Tab: Guard (50 HP), needs 14+ (35%) - Enter attacks it`) and in the combat log's
+header, in place of the round's line while the enemy is chosen (`Needs 14+ (35%)`). It is the
+number the dice log shows for the attack itself, worked out the way the game does: THAC0 with the
+weapon less the enemy's AC as it counts against this attacker. Each weapon is named where they
+differ, and both numbers are given where the swing may come from behind.
+
+**Switch:** *The chance to hit: with an enemy chosen with Tab, what the d20 must show to hit it and
+the chance, in the dice log and the combat log's header*. Rules: [the chance shown before the
+swing](PLAYER-GUIDE.md#the-chance-shown-before-the-swing). How it works:
+[DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#the-chance-to-hit-before-the-swing).
 
 ## Rule changes
 

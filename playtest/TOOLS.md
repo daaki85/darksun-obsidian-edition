@@ -48,6 +48,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `groundfill.sh CYCLES [FIRST_TYPE]` | fill the ground with items (2026-11-09, the picture-cache test). |
 | `guard_start.sh` | the watchdog. Every 20 s: GONE if DOSBox has quit; |
 | `healparty.py` | each party member's hit points to their sheet's most (memory only: never save after) |
+| `hitcheck.py [ATTACKER]` | the chance to hit before the swing (dsloader/hitchance.py), read-only: for whoever's turn it is (or combatant ATTACKER) against every enemy, what the Loader would say on the "Chosen with Tab" line (without the dice... |
 | `hp.py HP` | every combatant past the party (index 4 and up) to HP hit points, its sheet's most too. |
 | `itemedit.py MEMBER SLOT [slot=N] [e=N] [f=N]` | show (and change) the item party member MEMBER has in slot SLOT: its slot byte (+11h), +0Eh (an ability item's amount) and +0Fh (its ability byte, FAh-FFh STR-CHA, or a spell). |
 | `itemlists.py` | each party member's three item lists (+08h worn, +0Ah held weapons, +0Ch the backpack) as (item, slot byte, type). |
@@ -121,6 +122,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `state.py` | one line of the game's state: fight (fight_on, whose turn), region, the leader's map position, the camera, and the flags named on the command line (state.py 11 505) |
 | `stepfight.sh` | from the arena gate, clicks south until the fight is on (topartyfight.sh's last loop) |
 | `symread.py` | Read DSCLOG variables by name in the running game: `python3 symread.py NAME [NAME...]` (each's first 4 bytes, hex), from a symbol map of obsidian-edition/dos/dsclog.asm as built (the tree's DSCLOG.EXE). |
+| `tabhit.sh [TABS [nohit]]` | the chance to hit before the swing against the swing itself. |
 | `teleport.py X Y CX CY` | the party (map objects 0-3) put at map X, Y and the camera at CX, CY, in memory (DS:669Dh + 32n, DS:1178h); |
 | `thief.py MEMBER LEVEL \| MEMBER off` | a party member made a thief of LEVEL in memory (class 17 in a free class place of the sheet, its level, the thief flag 400h), or no thief (off). |
 | `thingsfree.py [LABEL]` | the game's dynamic things (objects 320-519, handed out from a free list). |

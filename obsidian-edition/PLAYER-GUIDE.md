@@ -45,6 +45,7 @@ weapon specialization's: the guide links to their tables.
   - [Hitting](#hitting)
   - [Two weapons](#two-weapons)
   - [From behind, and backstabs](#from-behind-and-backstabs)
+  - [The chance shown before the swing](#the-chance-shown-before-the-swing)
   - [Hiding in shadows](#hiding-in-shadows)
   - [Saving throws](#saving-throws)
   - [Monsters](#monsters)
@@ -1149,6 +1150,35 @@ attacks at the character's full rate.
   after. *Without the mod:* the whole damage, STR included, is multiplied, on
   the round's first two attacks.
 
+### The chance shown before the swing
+
+With an enemy chosen with **Tab** ([the chance to hit before the
+swing](FEATURES.md#the-chance-to-hit-before-the-swing)), the dice log's line and the combat log's
+header say what the member whose turn it is must roll, and the chance: `needs 14+ (35%)`. A 20
+always hits and a 1 always misses, so the chance is never above 95% or below 5%.
+
+- **Which weapon.** Next to the enemy it is the weapon in hand (each of two, named, when their
+  numbers differ). Farther off, Enter walks the member up to fight hand to hand, and the attack
+  pointer shoots: both are given, `Bone Long Sword needs 14+ (35%); Short Bow needs 12+ (45%)`.
+  They are listed in the order the game swings them (often the left hand's first), and the header
+  gives the first.
+- **From behind.** Next to the enemy the Loader knows whether the attack is [from
+  behind](#from-behind-and-backstabs) and says so: `needs 10+ (55%) from behind`, `a backstab` for a
+  thief's. Farther off it depends on where the walk ends, so both numbers are given: `needs 14+
+  (35%), from behind 10+ (55%)` (in the header `14+ 35%, behind 10+`). An enemy nobody has attacked
+  yet this round turns to face its first attacker, so only the first number is given; and a shot is
+  never from behind, except a hidden archer's (`unseen`).
+- **A hidden thief** ([hiding in shadows](#hiding-in-shadows)) attacks from behind wherever it
+  stands, and the number is the backstab's.
+- **A held enemy** (Paralyzed or Out Cold): `hits whatever the roll (Paralyzed)`.
+
+What it can't know: the number is for things as they stand when Tab is pressed (the header's
+follows them while the enemy stays chosen); a spell cast or an effect ending before the swing
+changes it. An enemy's AC is counted from the game's own rules and its rings of protection; what
+else the mod's rules add to it (a kit's AC, a cloak of protection, the Boots of Speed) is known from
+the first attack on that enemy in the fight on, so before it the number can be off by that much
+for an enemy that has one of them. The swing's own line in the dice log is always the game's.
+
 ### Hiding in shadows
 
 A thief or ranger whose turn comes in a fight **with no enemy in the eight
@@ -1951,7 +1981,7 @@ features page](FEATURES.md#always-on).
 | **M**, **U** and **I** | **M** on the map opens the overhead map (the game's **O**), and **M** again closes it. **U** and **I** close the USE and inventory screens when pressed again (and still switch from one to the other). *Without the mod:* only **O** opens the map, and **U** and **I** only switch. |
 
 The mod's other controls are always on too: Tab and Enter to choose and attack an enemy (the red
-ring under it has a choice on the Options tab), scrolling with the mouse wheel, the whole party in
+ring under it, and the chance to hit it shown before the swing, are on the Options tab), scrolling with the mouse wheel, the whole party in
 view, the view in fights, the pointer, and spells on the Effects screen ([controls](FEATURES.md#controls)).
 
 **Saves and characters:** 40 saves, four pages of ten (**PAGE 1** to **PAGE 4**, or **PgUp** and
@@ -2096,6 +2126,7 @@ A settings file from an older Loader with one of these unticked has it on all th
 | What hurts a monster (the Look box): Look at one in a fight for its hit points, AC, THAC0 and defences; closing the box shows the rest in a window | on | at once | [What hurts a monster](FEATURES.md#what-hurts-a-monster-the-look-box) |
 | Names over figures: a spell's name over its caster, "Miss" over whoever an attack missed, a used charge ("Armor: 7 left") over its owner, and the arrows left over a party archer after each shot | on | at once | [Names over figures](FEATURES.md#names-over-figures) |
 | A red ring on the ground in a fight: ... none / ... under the enemy chosen with Tab | under the enemy | at once | [Choosing an enemy](FEATURES.md#choosing-an-enemy-tab-enter-and-the-rings) |
+| The chance to hit: with an enemy chosen with Tab, what the d20 must show to hit it and the chance, in the dice log and the combat log's header | on | at once | [The chance to hit before the swing](FEATURES.md#the-chance-to-hit-before-the-swing) |
 
 **Rule changes**
 

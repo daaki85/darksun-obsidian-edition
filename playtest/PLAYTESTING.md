@@ -69,7 +69,10 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
     /tmp/playtest/dosbox.lock`, held for the whole session by a background `flock ... -c 'while [ -e
     HELDFILE ]; do sleep 2; done'` (each Bash call is a new shell, so `exec 9>` doesn't last);
     removing HELDFILE releases it. A DOSBox found running that this session didn't start isn't
-    restarted: play in it (`loadsave.sh` would kill it).
+    restarted: play in it (`loadsave.sh` would kill it). **After a pause every flock holder is gone
+    with DOSBox**, and their marker files stay (`*.held`, `*.locked` in the work folder): check
+    `pgrep -a flock`, not the files. Wait for a busy lock with one `flock -w 1500`, never a polling
+    loop.
 
 ## 2. The checklist
 
@@ -792,6 +795,32 @@ game's data: it is one player's account.
   shot with a weapon put in memory with `setitem.py`, melee reach, grand mastery, a rule by size):
   [items in memory](RESEARCH.md#items-in-memory) and [fights and foes in
   memory](RESEARCH.md#fights-and-foes-in-memory).
+
+### The chance to hit against the swing
+
+- **The chance to hit against the swing** (logs/2026-11-17-hit-chance.md): from `fountain-user`
+  (nobody held, so the d20 counts), on a party turn `sh tabhit.sh` presses Tab, prints the dice
+  log's `Chosen with Tab` line (the Loader's prediction), presses Return and prints the attack's
+  lines (`needs N+`, THAC0 and the target's AC); `tabhit.sh 1 nohit` only chooses. `python3
+  hitcheck.py [ATTACKER]` prints what a number is made of for every enemy (the squares between,
+  the target's facing, the AC from the front and from behind, THAC0 by weapon); it is not the
+  session's Loader, so it has no dance, Wild Fighting or AC gap (Ester read 1 off there while the
+  Loader agreed with the game). The fountain's party: Lex 0 (short sword, bow), Jenna 1 (two long
+  swords, bow; hides as a Stalker), Ester 2 (two bone long swords, bow; a Battle Dancer), Seneca 3
+  (Shadowseeker +1, Hayneedle +1, sling; hides). The Templar there wears a Ring of Protection +1
+  (AC 4, 5 from behind) and bone brigandine; the Guards are AC 10.
+- **What the fountain's fight showed of the game's attack**: the weapons swing in the order of the
+  creature's item list (the left hand's often first: Seneca's Hayneedle, Jenna's obsidian sword),
+  and that first one is the backstab; a hidden thief's second weapon is "from behind" by the
+  first's flags only (the AC from behind, THAC0 2 worse than a plain swing with Thieves as in
+  AD&D); a target's facing (a byte a creature at +5Bh of the round's segment, FFh for none) is the
+  way to its round's first attacker, 0 north and on clockwise.
+- **A shot on a turn where Tab was pressed**: Tab scrolls the view to the chosen enemy by DSCLOG's
+  pan, which `state.py`'s camera doesn't show, so a click worked out from the camera misses. Take
+  a grab (`shot.sh`, the panel hidden with `panel.sh hide`: it covers the bottom right) and click
+  the figure about 8 pixels above its ring, with `pointer.py attack X Y` first (X, Y bare floor).
+  **Move the pointer with `xdotool mousemove`, never with a click on the floor**: with the walk
+  arrow a click walks the member and spends its Move.
 
 ## Casting spells for a test
 

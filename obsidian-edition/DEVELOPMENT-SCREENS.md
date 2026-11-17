@@ -22,6 +22,7 @@
 - [Looting a body: T and Shift+T](#looting-a-body-t-and-shiftt)
 - [Selling plain gear: S](#selling-plain-gear-s)
 - [Choosing an enemy: Tab, Enter and the rings](#choosing-an-enemy-tab-enter-and-the-rings)
+- [The chance to hit before the swing](#the-chance-to-hit-before-the-swing)
 - [Scrolling the map](#scrolling-the-map)
 - [M, U and I: open a screen, close it again](#m-u-and-i-open-a-screen-close-it-again)
 - [The whole party in view](#the-whole-party-in-view)
@@ -655,6 +656,92 @@ Enter, DSCLOG puts the pointer at the enemy's feet and gives the game a left
 click there, from the main loop, while the routine that finds what is under the
 pointer (`DSUN.EXE` 25B52h, `INT DBh`) answers with the chosen enemy for half a
 second, whatever stands in front of it.
+
+## The chance to hit before the swing
+
+([In the features page](FEATURES.md#the-chance-to-hit-before-the-swing).)
+
+`dsloader/hitchance.py`, all in the Loader: nothing is asked of DSCLOG and nothing is written to
+the game. `predict(gd, attacker, target, rules, hidden, ac_gap)` reads what the game's attack set
+(`DSUN.EXE` 58019h) reads and gives a `Swing` for each weapon that would swing; `line` words them
+for the dice log's `Chosen with Tab` line (`targeting.update`'s `chance`), `brief` for the panel's
+header (`combatlog.header`'s `chance`, the whole header while an enemy is chosen: its room is 103
+pixels of the game's font, which `Round 2: Gerakis` nearly fills; `DiceLog._chance_brief` works it
+out afresh every half second). The setting is `hit_chance` (`DiceLog.hit_chance`).
+
+What the game's code does, and the Loader after it:
+
+- **THAC0** before the target counts: `GameData.weapon_hits` (with `unarmed=True` a member with only
+  a bow gets its fists for melee). The target's part, from 5B8:EDh (7C3E9h) and DSCLOG's
+  `PROBE_STEALTH`: its Blur 2 worse, its Fogbolt 2 better, the Golden Girdle of Urnst 3 worse for a
+  sword in melee.
+- **AC**: `GameData.attack_ac(target, attacker, rear)`, the game's routine (58DD3h) and its effects'
+  part (5B8:F2h, 7C557h) read from the code. The sheet's base (+27h) and the worn pieces whose type
+  counts (+0Fh 80h): those on the arms, legs and chest (the item's +11h 0, 6, 9) are the armour the
+  spells stand in for, the rest is added after; a shield (the type's word +0, bit 4) isn't counted
+  from behind; a fifth of a gladiator's level in armour. Then the effects, on the target unless
+  said: Spirit Armor (56) armour 4 at worst, else Improved AC (2) 6; Barkskin (57) 6 less a quarter
+  of its level; Shielded (46) 4, not from behind; Magical Vestments (60) 5, 1 better each 3 levels
+  above 5; Flesh Armor (59) 10 less its level; the DEX adjustment (508:6Bh), not from behind;
+  Displacement (58) 2 better; Dispelling evil (52) 7 better against an attacker of race 14 (7AF65h);
+  Blind (8) and Slowed (47) 4 worse each; Prot Evil (38) 2 better against an evil attacker (the
+  sheet's +1Ah 3, 6 or 9); 4 better when the attacker can't see it (7BD4Bh: the attacker Blind, or
+  the target Invisible, 23, or Invisible to Undead, 24, against the undead, unless the attacker has
+  Detect Invis, 15); Biofeedback (4) 1 better. Not read: 7BD4Bh's first test of the target (5C0:20h
+  with 1Bh), which makes it seen.
+- **What DSCLOG adds to the AC**: a ring of protection's plus is counted (`PROBE_RING_AC`: every
+  ring's, or with AD&D's protection rule the better one's and none over magical armour; the
+  Templar's ring at the fountain was the first prediction's 1 off). The rest (`KIT_AC`,
+  `PROBE_RING_AC`'s cloak, bracers and robe, `BOOTS_AC`) isn't worked out again in the Loader: at each AC the game works out (`DiceLog._ac`, DSCLOG's `PROBE_AC`
+  record) the dice log keeps the game's figure less `attack_ac`'s for the same attacker and side
+  (`DiceLog.ac_gap`, forgotten with the fight as `last_ac` is), and `predict` adds it. So an enemy
+  with one of those is counted right from the first attack on it.
+- **Which weapon**: the picker (5900Ah: [BP+6] the last weapon taken, -2 at first, [BP+8] the
+  creature's item list, [BP+0Ch] the distance, [BP+0Eh] the count it returns) takes the items in
+  hand (their record's +2 1, and 58FBFh answering 4Eh) whose type's range (+0Ah) is 1 when the
+  distance is 1 or less, and above 1 when it is more; with none, the attack set swings the natural
+  attacks (58127h). The distance is the caller's: a click on a foe attacks at once at 1 or less and
+  walks up otherwise (1B123h), the attack pointer shoots (1B730h). So next to the target the melee
+  weapons are given, farther off those and the missile weapon if its range reaches
+  (`hitchance.squares`, the game's distance between footprints).
+- **The facing** is a byte a creature at +5Bh of the round's segment (the one with the initiative
+  scores, `game.INITIATIVE_SEG`; `game.FACING_OFF`, `GameData.facing`), below 0 while it faces
+  nowhere. The attack set (5826Fh on) asks 96C:009Bh (0EB5Bh; "30:9Bh" in the overlay's code on
+  disk, see below) for the direction from the target's square to the attacker's (the feet,
+  `DS:669Dh` + 32 x thing, over 16): with `DS:01F8h` 1 (as the game starts) one of eight, by the
+  signs of the two differences alone through the table at 3779:0000h (0 north, 1 north-east, and
+  on clockwise to 7 north-west; straight north, east, south or west only when the other difference
+  is 0), else one of four (0, 2, 4, 6: the nearer). With no facing yet it stores that
+  direction (5834Eh: the target turns to its attacker) and the attack is from the front; otherwise
+  the attack is from behind when the facing is that direction + 4 (5881Eh, modulo 8): the attacker
+  stands opposite where the target faces. Not for an object (its thing's kind 1). From behind:
+  [BP-1Ah] set, THAC0 2 less; a backstab ([BP-24h], 2 more) for a thief (the sheet's +12h, 400h)
+  in melee with a weapon whose type weighs 40 or less (+4). `predict` gives the answer next to the
+  target (`hitchance.way`, `WAYS`), both numbers farther off, and never from behind for a missile
+  (DSCLOG's `MISSILE_REAR`) or a target facing nowhere. DSCLOG's changes after the game's are
+  followed: a hidden one's attack from behind (`STEALTH`, read from the header at
+  `stealth.TSR_STEALTH`), the Girdle of Back Defense (`ITEM_REAR`), a thief in heavy armour
+  (`THIEF_REAR`), a Military Scout's and a Rescuer's (`KIT_REAR`), and only the round's first
+  attack a backstab with Thieves as in AD&D (`STAB_FIRST`).
+- **The order of the swings** is the creature's items' own (the picker walks the list): the left
+  hand's weapon often first (Seneca's Hayneedle before her Shadowseeker, Jenna's obsidian sword
+  before her bone one: `WeaponHit.order`), and that one is the backstab.
+- **A hidden one's second weapon** (seen at the fountain, 2026-11-17): the attack set's flags
+  [BP-1Ah] and [BP-24h] are cleared once, at its start (58036h), and DSCLOG's `STEALTH` bit is
+  used up by the first weapon, so for the second the game lowers nothing (by the facing it is in
+  front) but the flags are still up: the AC is the one from behind, the log says "from behind",
+  and `STAB_FIRST`, finding the backstab flag up on a later attack of the round, adds back a 2
+  that was never taken off. Seneca's Shadowseeker needed 12 where a plain swing needed 10 and a
+  true one from behind 8. `predict` gives what the game does.
+- **Segments in an overlay's code on disk** aren't the program's: the far calls and `mov ax,
+  seg` of the overlay code in DSUN.EXE hold a segment's place in the table at file 46770h (8 bytes
+  a segment, the first word its segment from the program's start), so `30h` is 096Ch, `0A0h`
+  1A0Ah, `2E0h` 37BDh (the round's segment), `360h` 3972h (the things), `390h` 3BF6h (the
+  effects), and `4E0h`, `508h`, `5B8h` the overlays' stub segments 41BEh, 41F1h, 42ABh.
+- **The d20**: a 20 hits and a 1 misses whatever is needed (589E9h), so `chance` is 5 to 95; with
+  the held-target rule a Paralyzed or Out Cold target is hit on any roll (`HELD_HIT`).
+
+Tests: `tests/test_hitchance.py`. Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-17-hit-chance.md).
 
 ## Scrolling the map
 

@@ -230,7 +230,7 @@ to trust when a test file is added):
   `test_audit_objects`, `test_cahulaks`, `test_sizenames`, `test_icons`, `test_scriptfixes`,
   `test_group4`, which falls back to `/tmp/playtest/inst/SEGOBJEX.GFF`, the playtest kit's game)
   and `DSUN_RESOURCE` (its `RESOURCE.GFF`: `test_kitpages`, `test_spelltexts_fit`,
-  `test_spellgrid`).
+  `test_spellgrid`, `test_hitchance`'s header fit).
 
 The **Obsidian Edition tests** workflow (`.github/workflows/tests.yml`) runs them on Windows, with
 unicorn 2.1.4 and NASM 2.16.01, on every push to `obsidian-edition` and every pull request that
@@ -472,6 +472,7 @@ and the section that explains it. INTERNALS, RULES, KITS, CONTENT and SCREENS ar
 | Module | What it does | Section |
 |---|---|---|
 | `targeting.py` | Tab and Enter: choosing an enemy and attacking it | [SCREENS: choosing an enemy](DEVELOPMENT-SCREENS.md#choosing-an-enemy-tab-enter-and-the-rings) |
+| `hitchance.py` | the chance to hit shown before the swing, worked out as the game's attack does | [SCREENS: the chance to hit](DEVELOPMENT-SCREENS.md#the-chance-to-hit-before-the-swing) |
 | `scrolling.py` | scrolling the map with the mouse | [SCREENS: scrolling the map](DEVELOPMENT-SCREENS.md#scrolling-the-map) |
 | `wheel.py` | the mouse wheel, for the combat log's panel | [SCREENS: the combat log](DEVELOPMENT-SCREENS.md#the-panel) |
 | `loot.py` | T and Shift+T: looting a body in one go | [SCREENS: looting](DEVELOPMENT-SCREENS.md#looting-a-body-t-and-shiftt) |

@@ -28,7 +28,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple
 
-from . import aging, journal, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, hitchance, journal, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory, WriteRefused
@@ -334,6 +334,7 @@ POLL_FAILS = 25  # passes in a row whose ring read wrong before still_patched ha
 DESTROYED_WAIT = 3.0  # seconds a creature destroyed outright may take to show its HP fall
 POISON_WAIT = 3.0  # seconds a Poisoner's poison on a helpless target may take to land (queued: about 0.5)
 FIGHT_GAP = 120  # game seconds without a new round after which the fight is over
+CHANCE_EVERY = 0.5  # seconds between the header's chance to hit being worked out afresh (hitchance.py)
 # seconds (of ours) the game's fight flag stays down, once seen up in the fight, before the fight
 # counts as over: the game clears it as a fight ends and between the arena's waves (and it is
 # still clear as round 1's initiative is rolled, before it was ever up: that doesn't count)
@@ -505,7 +506,7 @@ def _new_fight(log) -> None:
     worked out for one in an earlier fight isn't this one's (the party's stay theirs)."""
     log._round = 0
     log._recent_damage.clear()  # (an earlier fight's rolls named this one's damage: "from Shocking Grasp")
-    for remembered in (log.last_ac, log.ac_detail):
+    for remembered in (log.last_ac, log.ac_detail, getattr(log, "ac_gap", {})):
         for index in [i for i in remembered if i >= game.PARTY_SIZE]:
             del remembered[index]
 
@@ -580,6 +581,9 @@ class DiceLog:
         self._big = cahulaks.Big()
         self._large = sizes.Large()
         self.use_targeting = True  # Tab chooses an enemy in a fight, Enter attacks it (targeting.py)
+        self.hit_chance = True  # what the d20 must show to hit the chosen enemy (hitchance.py)
+        self.ac_gap: Dict[int, int] = {}  # creature index -> the game's AC for it less attack_ac's, when last attacked
+        self._chance_seen: Tuple[Optional[tuple], float, str] = (None, 0.0, "")  # (the header's, kept a moment)
         self._targeting = targeting.Targeting()
         self.scroll_map = True  # the map scrolled by dragging with the wheel pressed (scrolling.py)
         self._scrolling = scrolling.Scrolling()
@@ -1028,6 +1032,7 @@ class DiceLog:
         self.vulture_on = bool(settings.get("vulture", True))
         self.defiler_scrolls = settings.get("defiler_scrolls", True) is not False
         self.ring_mode = rings.mode(settings)
+        self.hit_chance = settings.get("hit_chance", True) is not False
         self.load_picked(settings.get("pickpocketed", []), known=picked_known)
         self.rules = game.rules_from_settings(settings)
 
@@ -1055,6 +1060,38 @@ class DiceLog:
                 self.guest.write(table + 2 * game.SPELL_KIND, struct.pack("<H", save))
             if self.game is not None:
                 self.game.set_dodge(bool(rules & game.RULE_NO_DOUBLE))
+
+    def _swings(self, attacker: int, target: int) -> List["hitchance.Swing"]:
+        """What combatant ATTACKER needs to hit combatant TARGET (hitchance.predict), with the
+        switch for it on: the rules as they are, the attacker hidden in shadows or not (DSCLOG's
+        STEALTH), and what the game's AC for the target was above the Loader's count of it when
+        it was last attacked (ac_gap: DSCLOG's part, a kit's and such)."""
+        if not self.hit_chance or self.tsr_hdr is None:
+            return []
+        try:
+            hidden = struct.unpack("<H", self.guest.read(self.tsr_hdr + stealth.TSR_STEALTH, 2))[0] >> attacker & 1 \
+                if attacker < game.PARTY_SIZE else 0
+            index = self.game.combatant_creature(target)
+            gap = self.ac_gap.get(index, 0) if index is not None and self.monster_ac(index) is not None else 0
+            return hitchance.predict(self.game, attacker, target, self.rules, bool(hidden), gap)
+        except (struct.error, IndexError, ValueError):
+            return []
+
+    def _chance_brief(self, now: float) -> str:
+        """For the panel's header: what whoever's turn it is needs to hit the enemy chosen with Tab
+        (hitchance.brief), worked out afresh every CHANCE_EVERY seconds while one is chosen."""
+        chosen = self._targeting.chosen
+        try:
+            turn = self.game.whose_turn()
+        except (struct.error, IndexError, ValueError):
+            return ""
+        if chosen is None or turn is None or turn >= game.PARTY_SIZE or not self.hit_chance:
+            return ""
+        key, at, text = self._chance_seen
+        if key != (turn, chosen) or not 0 <= now - at < CHANCE_EVERY:
+            text = hitchance.brief(self._swings(turn, chosen))
+            self._chance_seen = ((turn, chosen), now, text)
+        return text
 
     def monster_ac(self, index: int) -> Optional[int]:
         """The AC the game last computed for creature INDEX, if it was this creature's: a fight
@@ -1854,7 +1891,8 @@ class DiceLog:
             self._labels.on = self.floating_names
             self._labels.tick(self.game.guest, self.tsr_hdr, now)
             foes = rings.enemies(self.game)
-            out = self._targeting.update(self.game, self.tsr_hdr, self.use_targeting, foes)
+            out = self._targeting.update(self.game, self.tsr_hdr, self.use_targeting, foes,
+                                         lambda turn, chosen: hitchance.line(self._swings(turn, chosen)))
             self._rings.update(self.game, self.tsr_hdr, self.ring_mode != rings.OFF, self._shadows.palettes,
                                self._targeting.chosen)
             self._dust.update(self.game, self.tsr_hdr, self.show_dust, self._shadows.palettes)
@@ -1941,7 +1979,7 @@ class DiceLog:
                 name = self.game.creature_name(index)
                 if index >= game.PARTY_SIZE and name and not name.startswith("creature "):
                     self._fight_monsters.add(name)
-            top = combatlog.header(self.round_status())
+            top = combatlog.header(self.round_status(), self._chance_brief(now))
         names.update({m: "monster" for m in self._fight_monsters if m not in names})
         in_arena = False  # (between fights in the arena: its count in the header; elsewhere the time)
         if on and not fighting:
@@ -4517,6 +4555,10 @@ class DiceLog:
         if index is not None:
             self.last_ac[index] = ac
             self._ac_whose[index] = self.game.creature_name(index)
+            attacker = self.game.combatant_creature(e.arg(8)) if e.arg(8) is not None else None
+            counted = self.game.attack_ac(index, attacker, bool(rear))
+            if counted is not None:  # (what DSCLOG added to the game's: hitchance.py)
+                self.ac_gap[index] = ac - counted
             sheet, rec = self.game.sheet(index), self.game.creature(index)
             armour = e.local(-6)
             if len(sheet) >= game.SHEET_SIZE and len(rec) >= game.CREATURE_SIZE and armour is not None:

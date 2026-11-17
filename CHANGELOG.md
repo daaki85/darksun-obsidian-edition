@@ -23,6 +23,9 @@ under "## Unreleased (branch `obsidian-edition`)
 - **Picture and music device** (Options, from the next start): Plain, Scanlines, TV or Sharp for
   the game's picture (DOSBox 0.74's scalers and `openglnb`), and the music sent to any MIDI
   device of Windows'. Seen on Linux only; the music device not heard.
+- **The chance to hit before the swing**: with an enemy chosen with Tab, what the d20 must show
+  and the chance, on the dice log's line and in the combat log's header, worked out as the game's
+  attack does (`hitchance.py`; DSCLOG unchanged).
 
 **Changed**
 - **Fewer switches** (#110), for a simpler Options tab and the mod's rules as meant: the combat

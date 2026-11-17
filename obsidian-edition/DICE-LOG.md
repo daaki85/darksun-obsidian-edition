@@ -57,7 +57,7 @@ creature in red, so who acts and who is hit can be followed down the log.
 | `    Paralyzed: hit automatically, for normal damage (AD&D's held target)` | A held or Out Cold target hit whatever the d20, with [Held targets as in AD&D](FEATURES.md#held-targets). |
 | `Mistra dances: d20 = 3, needs 18 or less (DEX 22 -4) -> +1 to hit, damage and AC for 15 rounds` | A Battle Dancer's dance as a fight starts. |
 | `Mistra dances: d20 = 20, needs 18 or less (DEX 22 -4) -> stumbles: -1 to hit, damage and AC for 3 rounds (d8 = 3)` | A dance that failed, and its rounds (a d8). |
-| `Chosen with Tab: Guard (50 HP) - Enter attacks it` | An enemy chosen with Tab in a fight (see [Choosing an enemy](FEATURES.md#choosing-an-enemy-tab-enter-and-the-rings)). |
+| `Chosen with Tab: Guard (50 HP), needs 14+ (35%) - Enter attacks it` | An enemy chosen with Tab in a fight (see [Choosing an enemy](FEATURES.md#choosing-an-enemy-tab-enter-and-the-rings)), and what the member whose turn it is must roll to hit it ([the chance shown before the swing](PLAYER-GUIDE.md#the-chance-shown-before-the-swing)): `from behind 10+ (55%)` after it where that depends on where the member walks to, each weapon named when they differ, `hits whatever the roll (Paralyzed)` for a held enemy. |
 | `Look: Mountain Stalker: HP 38/60, AC 4, THAC0 11, chaotic evil.` | A monster looked at in a fight: what the [Look box](FEATURES.md#what-hurts-a-monster-the-look-box) shows of it, and on the lines below its defences and what its hits do, as the game's window shows them on closing the box. |
 
 **The lines above, in more detail.**
