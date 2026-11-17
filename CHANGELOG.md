@@ -67,8 +67,13 @@ Releases, newest first (2.12.0 and older in the archive):
   left as the game has them; the evidence, and what was taken from OpenDS (checked to 2026-11-13), are
   in [the cross-read](reports/opends-cross-read-2026-11-16.md#6-the-changelogs-account-2026-11-17).
 
+**Changed**
+- **The release zip** leaves out the developer pages, the tests and `docs/viewer.png` (`export-ignore`); the manual links to them at the release's tag (#97).
+
 **Docs**
-- **The player's entry points reordered** (the documentation proposal's part 4): the folder README
+- **The change records** (#98): the patch notes shortened, each release's notes take its version news, and the CHANGELOG's older entries archived (`CHANGELOG-archive.md`) and its labels made New, Changed, Fixed, Docs and Dev.
+- **The developer pages restructured**: `DEVELOPMENT.md` the entry point (architecture, glossary, requirements, a map of every module, a contributor checklist, one Unverified list, acknowledgements), the rest in a new `DEVELOPMENT-INTERNALS.md`; sections moved to where they belong, "Verified: log" links for the accounts of play, and version narratives dropped (the history is in the CHANGELOG, its archive and git).
+- **The player's entry points reordered** (#101): the folder README
   runs requirements, setup (backing up saves now a step), play, Dark Sun Recompiled in a section of
   its own, the Loader's window, updating, compatibility in two sentences, uninstalling (the one copy
   of what the mod changes on your computer), troubleshooting; reading the dice log and its colours
@@ -76,6 +81,9 @@ Releases, newest first (2.12.0 and older in the archive):
   player's guide says the multiclass and kit notes once for all classes, has one "Magic weapons by
   class" table (the earth cleric's list gains the Great Axe +3, metal since 2.14.1), Equipment's
   topics as headings, one Options row per radio group and an "Elsewhere in the Loader" table.
+
+**Dev**
+- `dsloader/guidepage.py` (the manual's old name) taken out; the combat log's design brief archived in `reports/archive/`, the rest-order prototype moved to `playtest/logs/files/`.
 
 ## Pull request #96 ([merged 2026-11-17](https://github.com/daaki85/darksun-obsidian-edition/pull/96))
 
@@ -98,7 +106,7 @@ Obsidian Edition 2.18.0 ([release notes](release-notes/v2.18.0.md)).
   `CREATURE_SHEET_AX` for two more; the table of the Loader's file copies keeps each name once and
   makes its `D:\` path as the file is opened (`COPY_PATH`), not a 16-byte path an entry. Now 624
   bytes of the segment spare and 62 paragraphs of upper memory ([DEVELOPMENT.md's
-  limits](obsidian-edition/DEVELOPMENT.md#the-limits)). Checked in the game
+  limits](obsidian-edition/DEVELOPMENT-INTERNALS.md#the-limits)). Checked in the game
   (playtest/logs/2026-11-16-memory-pass-4.md): the copies opened (`objects_on` 1), a fight (hiding,
   a backstab, poison and its save, specialization), the see-through figure, View Character and
   Effects. Tests: the byte patterns of `test_saves` and `test_shadow_gone`, and
@@ -1120,7 +1128,7 @@ In short:
   computers.
 
 **Changed: DSCLOG's room**
-- **The helper's room** ([DEVELOPMENT.md's limits](obsidian-edition/DEVELOPMENT.md#the-limits)): the
+- **The helper's room** ([DEVELOPMENT.md's limits](obsidian-edition/DEVELOPMENT-INTERNALS.md#the-limits)): the
   cheaper drawing made the helper 944 bytes bigger and its far block 2 KB, and the new rules and
   items took more. Three memory passes made room:
   - The first freed 3,136 bytes of the segment and 190 paragraphs of upper memory: the colour, ring
