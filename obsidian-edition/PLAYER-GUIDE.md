@@ -93,8 +93,8 @@ The pointer has three modes, changed with a right-click: **Walk**, **Attack**
 and **Look**; a left-click acts. Look at someone to **Talk**, at a thing to
 **Use** or **Pick Up** it, and at a monster in a fight to see its hit points,
 AC and defences. Resting at a fire ring fills PSP and spell slots; with the
-mod's [Resting as in AD&D](#resting) the party's priests first cure the party with the
-spells they have left, and each member heals 3 hit points plus CON's bonus a
+mod's [Resting as in AD&D](#resting) the party's priests and psionicists first cure the party with the
+spells and powers they have left, and each member heals 3 hit points plus CON's bonus a
 night, not all of them.
 What the mod adds to the game's screens and controls is under [Quality of
 life](#quality-of-life).
@@ -104,7 +104,7 @@ life](#quality-of-life).
 On the main menu choose **CREATE CHARACTERS**, right-click an empty slot and
 choose **NEW**, then set race, classes, sphere and alignment, roll, and press
 **DONE**. [Choosing a kit](KITS.md#choosing-a-kit) walks through the panel,
-the mod's **KIT** page among it (the **KITS** button). After DONE a warrior (and a Swashbuckler) picks its weapon specs
+the mod's **KIT** page among it (the **KITS** button). After DONE a warrior (and a Swashbuckler, Battle Mage, Crusader or Mind Warrior) picks its weapon specs
 ([weapon specialization](#weapon-specialization-and-attacks)), as a preserver
 picks its spells, and every character then picks its psionic powers
 ([features](FEATURES.md#psionic-powers-at-creation)). A party has one to four characters, all good or neutral.
@@ -575,7 +575,7 @@ may go a little or a lot worse (0 to 25 off, rolled each time).
 spells beside their knives. Their masters teach them only what they need, so
 a scroll is theirs only if they can make out its script, and they travel light.
 The Effects screen (Current Spell Effects) shows a Shinobi's chance to read a
-scroll under its kit ([the Effects screen's kit line](KITS.md#changing-class)).
+scroll under its kit ([the Effects screen's kit line](KITS.md#the-kits-in-play)).
 
 Each kit's gains, costs and starting gear: [Thief kits](KITS.md#thief-kits),
 and the Shinobi's slots by level in
@@ -618,7 +618,7 @@ character hit in a round [can't cast](#initiative)), and choose its spells well.
 - Six **new spells**: Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image,
   Spook and Friends.
 - With another class it may wear that class's armour but **can't cast in
-  it**. **Bracers of defense** and the mod's two **robes** give AC without
+  it**. **Bracers of Defense** and the mod's two **robes** give AC without
   being armour.
 - Hit dice rolled twice; levels up to the [XP cap](#experience-and-levels).
 
@@ -1816,7 +1816,7 @@ Loader's Characters tab shows the AC of the last attack and what made it.
 save, by AD&D's rules: two rings don't add up; a ring gives no AC with magical
 armour (its saves still count); a cloak does nothing with magical or metal
 armour or a shield. A cloak isn't armour: any class may wear one, druids too.
-**Bracers of defense** give their AC (6, 5, 4 or 2), and the mod's two
+**Bracers of Defense** give their AC (6, 5, 4 or 2), and the mod's two
 **robes** their plus, only with no armour worn, and a preserver casts in
 either. These are rare finds.
 
@@ -1931,17 +1931,18 @@ features page](FEATURES.md#always-on).
 | **A steady view in fights** | The view no longer drifts after each figure walking near the screen's edge in a fight; it moves only to bring back one that has walked off the screen. *Without the mod:* it follows them. |
 | **The pointer in scenes** | The game's pointer shows in the intro, its logos and the game's other scenes, and a click skips a scene as a key does. *Without the mod:* no pointer there, and only a key skips. |
 | **The pointer's start and speed** | The pointer starts in the middle of the screen, stays where you leave it as screens change (the intro, menus, loading), moves as far up and down as across, and in a window as fast as your desktop's pointer. *Without the mod:* it starts at the right edge, moves half as far up and down, and in a window three times as fast as your desktop's pointer. |
-| **Spells on the Effects screen** (a bug fixed) | A stray click on a spell's icon no longer ends the spell. A psionic power's icon still ends the power, which is how you stop one. |
+| **Spells on the Effects screen** | A stray click on a spell's icon no longer ends the spell. A psionic power's icon still ends the power, which is how you stop one. |
 
 **Saves and characters:** 40 saves, four pages of ten (**PAGE 1** to **PAGE 4**, or **PgUp** and
 **PgDn**), and 29 characters in the roster ([more saves and characters](FEATURES.md#more-saves-and-characters)).
 
-**Running the game** (figures in what they wear, shadows, dust, see-through hiders, the game
-window's size, steady pace, crash and freeze reports) and **the Loader's window** (the dice log, the
-characters' sheets, the dialogue, every spell's dice) are in the README: [running
-it](README.md#running-it-windows), [the Loader's window](README.md#the-loaders-window) and
-[reports](README.md#crash-freeze-and-item-reports); [the dice log, line by line](DICE-LOG.md) says
-what each of its lines means.
+**Graphics** (figures in what they wear, shadows, dust, see-through hiders) are in
+[Features: graphics](FEATURES.md#graphics), and **steady pace** in [Features: game
+speed](FEATURES.md#game-speed). **Running the game** (the game window's size, crash and freeze
+reports) and **the Loader's window** (the dice log, the characters' sheets, the dialogue, every
+spell's dice) are in the README: [running it](README.md#running-it-windows), [the Loader's
+window](README.md#the-loaders-window) and [reports](README.md#crash-freeze-and-item-reports); [the
+dice log, line by line](DICE-LOG.md) says what each of its lines means.
 
 ## Worth knowing
 
@@ -2008,7 +2009,9 @@ what each of its lines means.
 Every switch on the Loader's **Options** tab, in the tab's order and under its
 sections, with the words the Loader gives it. They count in games started from
 the Loader or its `.bat` files. **Restore defaults**, at the bottom of the tab,
-sets every switch back to the default below.
+sets every switch back to the default below; it leaves the Wake of the Ravager folder, the
+**Game window** and **Text size** at the top of the window, and the boxes on the Dice log tab, as
+they are.
 
 **Takes effect** says when a change counts:
 
@@ -2021,13 +2024,17 @@ sets every switch back to the default below.
   yet. A saved game keeps what it already has (people met, items given); a new
   game has it all.
 
-Some changes have no switch and are always on: the keys **T** and **Shift+T**
+Some changes have no switch and are always on, among them: the keys **T** and **Shift+T**
 (looting), **S** (selling), **M**, **U** and **I**
 ([controls](FEATURES.md#controls)), what the game's own screens show
 ([always on](FEATURES.md#always-on)), the fixes to [the game's own
 bugs](GAME-BUGS.md), the footman's pick's 1d6+1 ([creature
-size](FEATURES.md#creature-size)) and AD&D's [two-weapon](#two-weapons)
-penalties.
+size](FEATURES.md#creature-size)), AD&D's [two-weapon](#two-weapons)
+penalties, the [magic items' icons](FEATURES.md#magic-items-icons) and [spells on the
+ground](FEATURES.md#spells-on-the-ground), [40 saves and 29
+characters](FEATURES.md#more-saves-and-characters), and the picks at **DONE**: [preservers' first
+spells](FEATURES.md#preservers-first-spells) and [psionic powers](FEATURES.md#psionic-powers-at-creation).
+[Features](FEATURES.md) has them all.
 
 **In the game**
 
@@ -2060,7 +2067,7 @@ penalties.
 |---|---|---|---|
 | Half-giants' two-handed weapons: a half-giant wields one in one hand, a shield or a light weapon in the other | on | at once | [Half-giants' two-handed weapons](FEATURES.md#half-giants-two-handed-weapons) |
 | Weapon traits: the cahulaks' extra attack and tangle, the staff sling's stinkpots, and a polearm's reach of two squares | on | at once | [Weapon traits](FEATURES.md#weapon-traits) |
-| Creature size as in AD&D: large targets take AD&D's large weapon dice, and Hold Person and Charm Person have no effect on them | on | at once (Hold Person's and Charm Person's descriptions: next start) | [Creature size](FEATURES.md#creature-size) |
+| Creature size as in AD&D: large targets take AD&D's large weapon dice, and Hold Person and Charm Person have no effect on them | on | at once (the two spells' descriptions in the game change from the next start) | [Creature size](FEATURES.md#creature-size) |
 | Held targets as in AD&D: a blow on a Paralyzed or Out Cold creature hits automatically, for normal damage (the game rolls, and doubles it) | on | at once | [Held targets](FEATURES.md#held-targets) |
 | Rings and cloaks of protection as in AD&D: only the better ring counts, a ring gives no AC with magical armour, a cloak none with magical or metal armour or a shield | on | at once | [Rings and cloaks of protection](FEATURES.md#rings-and-cloaks-of-protection) |
 | Helms give AC 1 (the game's helms give none) | on | at once | [Helms give AC 1](FEATURES.md#helms-give-ac-1) |
@@ -2121,7 +2128,7 @@ once.")
 | Loader label | Default | Takes effect | Details |
 |---|---|---|---|
 | Elves have pointed ears, and half-elves figures of their own instead of the humans'; from the next start | on | next start | [Elves and half-elves](FEATURES.md#elves-and-half-elves) |
-| Cilla, an elf in the game's own party, drawn as an elf (the game gives her the half-elf woman's figure); from the next start | on | next start (ticked, also in a game already begun, from the next area or load) | [Elves and half-elves](FEATURES.md#elves-and-half-elves) |
+| Cilla, an elf in the game's own party, drawn as an elf (the game gives her the half-elf woman's figure); from the next start | on | next start (in a game already begun, from the next area or load after it; unticked, a game where she already has the elf's figure keeps it) | [Elves and half-elves](FEATURES.md#elves-and-half-elves) |
 | What the party wears, drawn on their figures (weapons, armour, helms, cloaks, boots, belts) | on | at once | [What the party wears](FEATURES.md#what-the-party-wears) |
 | Shadows under the figures (soft, on the floor) | on | at once | [Shadows](FEATURES.md#shadows) |
 | Dust raised behind the feet of anyone walking on sand or dirt | on | at once | [Dust](FEATURES.md#dust) |

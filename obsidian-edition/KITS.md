@@ -52,7 +52,7 @@ armour.
 
 | Kit | Gives | Costs | Starts with | Also |
 |---|---|---|---|---|
-| **Myrmidon** | with weapon specialization, a second weapon spec at 1st level, **the polearm** (+1 to hit, +2 damage, 3/2 attacks a round; its reach of two squares with the weapon traits rule), its first chosen as any fighter's; both weapon specs go on to **mastery at 5th level** (+3 to hit, +3 damage) and **grand mastery at 9th** (+3, +3, the damage die the next greater die size, against large targets too, and one more attack a round) | its second weapon spec the polearm, not a choice; −4 on saves against charms (Charm Person, Charm Monster, Charm Person or Mammal, Domination, Mass Domination); initiative 2 worse | the fighter's gear, and a plain polearm in the backpack | its first weapon spec is picked on the weapon window after DONE (any a fighter may take but the polearm); a Myrmidon of an older save keeps the second it chose |
+| **Myrmidon** | with weapon specialization, a second weapon spec at 1st level, **the polearm** (+1 to hit, +2 damage, 3/2 attacks a round; its reach of two squares with the weapon traits rule), its first chosen as any fighter's; both weapon specs go on to **mastery at 5th level** (+3 to hit, +3 damage) and **grand mastery at 9th** (+3, +3, the damage die the next greater die size, against large targets too, and one more attack a round) | its second weapon spec the polearm, not a choice; −4 on saves against charms (Charm Person, Charm Monster, Charm Person or Mammal, Domination (spell and power), Mass Domination); initiative 2 worse | the fighter's gear, and a plain polearm in the backpack | its first weapon spec is picked on the weapon window after DONE (any a fighter may take but the polearm); a Myrmidon of an older save keeps the second it chose |
 | **Sentinel** | AC 2 better with a shield in a hand, from 1st level | −1 on saves against wizards' and priests' spells; −1 to hit in melee without a shield | the fighter's gear | can't dual to druid or preserver|
 | **Ravager** | +1 to hit and damage in melee; a base AC by level: **7 at 1st-2nd, 6 at 3rd-4th, 5 at 5th-6th, 4 at 7th-8th, 3 at 9th-10th**, armour bettering it as usual | no missile or thrown weapons (cahulaks are allowed: the game doesn't throw them); no shield; leather armour or none | the fighter's gear, with a second of its weapon in place of the shield (none if the weapon takes both hands) | the dice log shows its bonus as `+1 Ravager`|
 
@@ -135,10 +135,8 @@ A psionicist starts with a club, bow and arrows, leather chest armour.
 ([How they work](DEVELOPMENT-KITS.md#multiclass-kits).)
 
 A character of two or three classes taken at once may take a kit if its race
-and classes have one, and only that race may: a dwarf fighter/thief has the
-Ghetto Fighter and Wayfinder, a half-elf fighter/thief the Shadowblade and
-Military Scout, a halfling fighter/thief the Poisoner, a thri-kreen
-druid/fighter/psionicist (all three) the Wasteland Seer. "Under the open sky"
+and classes have one, and only that race may: the table's second column says
+which. "Under the open sky"
 means an outdoor map, or open ground outside the buildings on a city map.
 
 | Kit | Race and classes | Gives | Costs | Starts with | Also |
@@ -247,7 +245,8 @@ more on top.
   the round ([the rule](PLAYER-GUIDE.md#initiative)).
 
 The Effects screen names the kit (a longer name shortened as on the KIT page,
-`(ASLEEP)` after one that sleeps; a Shinobi's with its read languages under it,
+`(ASLEEP)` after one that sleeps: [changing class](#changing-class) says
+when; a Shinobi's with its read languages under it,
 `READ LANG. 35%`; a character of an older save may have several, oldest first),
 then the weapon specs.
 Its lower panel has room for five lines: when there are more, it shows four and
@@ -339,8 +338,6 @@ second sphere on the same menu (**SPHERE 2: NONE**, then the three other
 spheres). The kit sleeps and wakes with its own class.
 
 ![The KIT menu after DUAL for a human with no kit yet: a preserver turned thief, offered Swashbuckler and Assassin (not the Shinobi)](docs/dual-kit-menu.png)
-
-A kit that sleeps shows `(ASLEEP)` after its name on the Effects screen ([the kits in play](#the-kits-in-play)).
 
 With **Weapon specialization** ticked, a human who becomes a fighter,
 gladiator or ranger (or a Battle Mage, Crusader, Mind Warrior or Swashbuckler) then picks the

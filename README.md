@@ -12,6 +12,9 @@ default and when it takes effect](obsidian-edition/PLAYER-GUIDE.md#the-options-t
 
 ## Getting started
 
+You need Windows, the GOG release of the game and a 64-bit Python (the Loader offers to install
+it): [Requirements](obsidian-edition/README.md#requirements).
+
 1. Download the latest release from the
    [Releases page](https://github.com/daaki85/darksun-obsidian-edition/releases)
    (`Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>.zip`) and unzip it

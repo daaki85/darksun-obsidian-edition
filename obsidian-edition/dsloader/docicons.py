@@ -15,10 +15,12 @@ from . import art, gff, icons
 
 ZOOM = 2
 LEDGER = {name: number for name, _, number, _, _ in icons.ICONS}
+# a Loader item's picture under another name: the metal Short Sword, as the other metal weapons are
+RENAMED = {"Short Sword": "metal-short-sword"}
 
 ICONS: Dict[str, int] = {
     # the Loader's (icons.py)
-    **{name.lower().replace("'", "").replace(" ", "-").replace("+", "plus"): number
+    **{RENAMED.get(name, name.lower().replace("'", "").replace(" ", "-").replace("+", "plus")): number
        for name, number in LEDGER.items()},
     "bone-scale-arm-armor": 1034, "bone-scale-leg-armor": 1035,
     "tome-of-understanding": 1446, "kalzith-scroll": 1440, "gythka-plus2": 2534,

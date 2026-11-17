@@ -10,15 +10,18 @@ then more on the mod's own items; last, each item's chance [against acid](#items
 
 ## Contents
 
-- [Every magic item](#every-magic-item): weapons, missile weapons, by weapon
-  spec, body armour, arm and leg armour, head, shields and gloves, other worn
-  items, held items
+- [Every magic item](#every-magic-item): [weapons](#weapons), [missile
+  weapons](#missile-weapons-and-ammunition), [by weapon spec](#by-weapon-spec), [body
+  armour](#body-armour), [arm and leg armour](#arm-and-leg-armour), [head](#head), [shields and
+  gloves](#shields-and-gloves), [other worn items](#other-worn-items), [held
+  items](#held-or-used-from-the-pack)
 - [Every mundane weapon](#every-mundane-weapon)
 - [Every mundane armour piece](#every-mundane-armour-piece)
 - [The mod's new items](#the-mods-new-items): [prices](#prices), [the Warden's Plate](#the-wardens-plate),
   [bracers of defense](#bracers-of-defense), [robes](#robes), [icons and names](#icons-and-names),
   [Alagorn's stories](#alagorns-stories), [Pehtucl's chest](#pehtucls-chest)
-- [Items against acid](#items-against-acid): chest, arms and legs, weapons
+- [Items against acid](#items-against-acid): [chest](#chest), [arms and legs](#arms-and-legs),
+  [weapons](#weapons-held)
 
 ## Every magic item
 
@@ -37,7 +40,9 @@ score (Draketooth, Dag's Dagger, the Helm and Belt of Might, El's Ring, the
 Steadfast Ring and the Ring of Insight) do it while worn, the
 Belt of Might making STR at least 24.
 
-**Weapons**, by material, then type:
+### Weapons
+
+By material, then type:
 
 | Icon | Material | Type | Item | Bonus / power | Where |
 |---|---|---|---|---|---|
@@ -82,7 +87,7 @@ Belt of Might making STR at least 24.
 | ![](docs/items/balks-staff.png) | Wooden | quarterstaff | Balk's Staff | +1, Slow | Balkazar |
 | ![](docs/items/parting-staff.png) | Wooden | quarterstaff | Parting Staff | +1 | hidden in a sewer hole in the Tari's warrens, the high warren elders' treasure (the Skull Elder objects if he sees it taken) |
 
-**Missile weapons and ammunition:**
+### Missile weapons and ammunition
 
 | Icon | Material | Type | Item | Bonus / power | Where |
 |---|---|---|---|---|---|
@@ -94,13 +99,14 @@ Belt of Might making STR at least 24.
 | ![](docs/items/bow-plus2.png) | Wooden | bow | Bow +2 | +2 | a skeleton in the Upper Castle |
 | ![](docs/items/phrains-bow.png) | Wooden | bow | Phrain's Bow | +1, Acid Arrow | a reward in the party's hut in Teaquetzl, once Gedron joins the alliance (with Arrows +2, a scroll and an orange) |
 | ![](docs/items/dunesong.png) | Wooden | bow | ***Dunesong*** | a bow +1, which the Bowyer's archery target counts as the game's own bows | sold by the **Bowyer** |
-| ![](docs/items/arrows-plus3.png) | Wooden | arrows | Arrows +3, +2, +1 | | +3 in chests; +2 from the Bowyer's archery target and Teaquetzl's rewards; +1 Kel, the Elven Leader and a bag in the slave pens |
+| ![](docs/items/arrows-plus3.png) | Wooden | arrows | Arrows +3, +2, +1 | +3, +2, +1 | +3 in chests; +2 from the Bowyer's archery target and Teaquetzl's rewards; +1 Kel, the Elven Leader and a bag in the slave pens |
 | ![](docs/items/chill-arrows.png) | Wooden | arrows | ***Chill Arrows*** | cast Chill Touch on what they hit (a save stops it, as the spell's; +1 from the Spellarcher's 5th preserver level, +2 from 9th) | made by a [Spellarcher](KITS.md#multiclass-kits) (its arrow buttons, one a spell slot; 24 to start with if it picked the spell as it was made), and carried by a Spellarcher only; worth nothing, they last until shot |
 | ![](docs/items/shocking-arrows.png) | Wooden | arrows | ***Shocking Arrows*** | cast Shocking Grasp on what they hit (no save, as the spell's; +1 from the Spellarcher's 5th preserver level, +2 from 9th) | the same |
 | ![](docs/items/vampiric-arrows.png) | Wooden | arrows | ***Vampiric Arrows*** | cast Vampiric Touch on what they hit (no save, as the spell's; +1 from the Spellarcher's 5th preserver level, +2 from 9th) | made by a Spellarcher as the others (none to start with: a 3rd-level spell), and carried by a Spellarcher only |
 
-**By weapon spec**, for [weapon
-specialization](KITS.md#weapon-specialization), in the weapon window's order:
+### By weapon spec
+
+For [weapon specialization](KITS.md#weapon-specialization), in the weapon window's order:
 
 | Weapon spec | Magic weapons |
 |---|---|
@@ -121,7 +127,7 @@ specialization](KITS.md#weapon-specialization), in the weapon window's order:
 | Sling | Sling +2, Sling +1 |
 | Staff sling | ***Windlash*** +1 |
 
-**Body armour:**
+### Body armour
 
 | Icon | Material | Item | Bonus / power | Where |
 |---|---|---|---|---|
@@ -129,9 +135,10 @@ specialization](KITS.md#weapon-specialization), in the weapon window's order:
 | ![](docs/items/drake-armor.png) | Leather | Drake Armor | +1, Resist Cold | the Wyvern Master |
 | ![](docs/items/inixhide.png) | Leather | ***Inixhide*** | Leather Chest Armor +1: the leather's AC, +1 | worn by **Legcrusher**, the pens' half-giant |
 | ![](docs/items/wardens-chest.png) | Metal | ***Warden's Chest*** | plate chest armour +1 (AC 3, +1): Resist Fire on its wearer while worn | on **Balkazar**'s body |
+| | Metal | Tanelyv's Armor | no plus (AC 4 better: the chain chest's is 2) | the spirit Tanelyv's gift in the Wyrm Temple (with the arm and leg pieces), once Balkazar is dead |
 | ![](docs/items/silk-armor.png) | none | Silk Armor | +2 | the Outcast's gift in Undermountain, once the party has ended the curse, unless it has killed the dark spiders of Darkhold |
 
-**Arm and leg armour:**
+### Arm and leg armour
 
 | Icon | Slot | Material | Item | Bonus / power | Where |
 |---|---|---|---|---|---|
@@ -142,20 +149,20 @@ specialization](KITS.md#weapon-specialization), in the weapon window's order:
 | ![](docs/items/wardens-legs.png) | Legs | Metal | ***Warden's Legs*** | plate leg armour +1 (AC 2, +1) | the Wagon Train's chest, in magera country |
 | ![](docs/items/greys-scale-legs.png) | Legs | Metal | Grey's Scale | no plus (AC 3 with the Loader) | Arant |
 
-Tanelyv's Armor also has a chest piece, metal, with no plus (AC 4 better: the chain chest's is 2).
-
-**Head:**
+### Head
 
 | Icon | Material | Item | Bonus / power | Where |
 |---|---|---|---|---|
 | ![](docs/items/helm-of-might.png) | Leather | Helm of Might | STR +1 | a reward in the party's hut in Teaquetzl, once Cedrilte joins the alliance (with Arrows +3, a bracelet and a pear) |
-| ![](docs/items/leather-helm.png) | Leather | Leather helm +1 | | a chest |
+| ![](docs/items/leather-helm.png) | Leather | Leather helm +1 | +1 | a chest |
 | ![](docs/items/helm-of-contemplation.png) | Metal | Helm of Contemplation | Gaze Reflection | the Warren Chief |
 | ![](docs/items/wardens-helm.png) | Metal | ***Warden's Helm*** | the game's metal helm +1: Cloak of Bravery on its wearer while worn | on **Dagolar**'s body (the one carrying Dag's Dagger) |
 | ![](docs/items/arrowbane.png) | none (not armour) | ***Arrowbane*** | a silver circlet: Protection from Normal Missiles on its wearer while worn (normal arrows, sling stones and chatkchas can't hurt them); worn on the head, not armour | sold by **Kel** |
 | ![](docs/items/sunking-crown.png) | none (not armour) | ***Sunking Crown*** | a gold crown: Protection from Evil on its wearer while worn; worn on the head, not armour | worn by **Keldar**, the templar of Dagolar's tunnels |
 
-**Shields and gloves** (worn in a hand, in this game):
+### Shields and gloves
+
+Worn in a hand, in this game.
 
 | Icon | Material | Item | Bonus / power | Where |
 |---|---|---|---|---|
@@ -166,7 +173,7 @@ Tanelyv's Armor also has a chest piece, metal, with no plus (AC 4 better: the ch
 | ![](docs/items/chameleon-gloves.png) | Leather | Chameleon Gloves | blind whoever they touch | Mikquetzl |
 | ![](docs/items/quicksilver-gauntlets.png) | Leather | Quicksilver Glove | a weapon (1d6+2): every hit casts Detonate on the target, 1d10 with no save, and may destroy its most fragile worn item | the Palace Ruins: the Genie's gift, if Cragg lives and you wish for help against Draj |
 
-**Other worn items:**
+### Other worn items
 
 | Icon | Slot | Item | Bonus / power | Where |
 |---|---|---|---|---|
@@ -195,7 +202,7 @@ Tanelyv's Armor also has a chest piece, metal, with no plus (AC 4 better: the ch
 | ![](docs/items/wind-ring.png) | Finger | Wind Ring | Protection from Normal Missiles | the Wyvern Master |
 | ![](docs/items/ring-of-protection-plus1.png) ![](docs/items/pehtucls-ring-of-protection-plus1.png) | Finger | ***Ring of Protection +1*** (two) | +1 AC and +1 on every saving throw | one on the arena's Tied-up Prisoner: free him, then look at his body (the game's script says there's nothing; the Loader finds a ring sewn into his loincloth, 50 XP to whoever searched); the other worn by **Pehtucl**, the slave pens' head templar (in the south-west corner, with the Obsidian Bloodwrath); a thief can lift it from his finger |
 
-**Held, or used from the pack:**
+### Held, or used from the pack
 
 | Icon | Item | Power | Where |
 |---|---|---|---|
@@ -230,7 +237,7 @@ Springs; Deepbiter is its magic one.
 | ![](docs/items/obsidian-dagger.png) | dagger | obsidian | — | Defiler, Notaku |  |
 | ![](docs/items/stone-dagger.png) | dagger | stone | Jark, Weapon Merchant | Balkazar, Dagolar, Wyrmias, Tobrian, Villager, Linara, Maris, a chest in Dagolar's tunnels, on the ground in the Wyrm School (the Hermit's is Nightsliver with the mod), the final battle's Psionicist (the mod's) |  |
 | ![](docs/items/bone-short-sword.png) | short sword | bone | Jark, Weapon Merchant | Renegade, the arena's champions (the halfling) | **new**: 1d6 |
-| ![](docs/items/short-sword.png) | short sword | metal | Weapon Merchant | — | **new**: 1d6: Shadowseeker without the plus |
+| ![](docs/items/metal-short-sword.png) | short sword | metal | Weapon Merchant | — | **new**: 1d6: Shadowseeker without the plus |
 | ![](docs/items/obsidian-short-sword.png) | short sword | obsidian | Jark, Weapon Merchant | Chaero | **new**: 1d6 |
 | ![](docs/items/bone-mace.png) | mace | bone | Jark, Weapon Merchant | Wyvern Master, Krikor, Templar, a chest, a chest in Dagolar's tunnels |  |
 | ![](docs/items/metal-mace.png) | mace | metal | — | Templar | **new**: the game's mace, in metal |
@@ -434,7 +441,7 @@ shields, cloaks, boots, belts, rings and amulets never are. A worn piece with
 no magical power is lost at once in the game (0%); one with a power never is
 (100%).
 
-**Chest:**
+### Chest
 
 | Item | Saved in the game | Saved with the rule |
 |---|---|---|
@@ -448,7 +455,9 @@ no magical power is lost at once in the game (0%); one with a power never is
 | ***Ashen Robe*** (cloth, +1) | 0% | 50% (needs 11) |
 | ***Veiled Robe*** (cloth, +2) | 0% | 55% (needs 10) |
 
-**Arms and legs** (each piece on its own, as the chest):
+### Arms and legs
+
+Each piece on its own, as the chest.
 
 | Item | Saved in the game | Saved with the rule |
 |---|---|---|
@@ -462,7 +471,9 @@ no magical power is lost at once in the game (0%); one with a power never is
 | ***Bracers of Defense*** AC 4 (+6) | 0% | 75% (needs 6) |
 | ***Bracers of Defense*** AC 2 (+8) | 0% | 85% (needs 4) |
 
-**Weapons** (the first melee weapon held), by material, the game's and the
+### Weapons held
+
+The first melee weapon held, by material, the game's and the
 mod's. A weapon's spell (Dark Flame's Burning Hands) is a magical power. Only a
 melee weapon is ever taken: chatkchas (the Chatkcha +1, ***Skycutter***),
 slings and bows never are:
