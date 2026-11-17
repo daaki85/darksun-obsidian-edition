@@ -19,7 +19,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `camera.py [X Y]` | read the camera (the view's top-left, DS:1178h), or set it to X, Y (map units) to look somewhere the view won't scroll to by itself (it does not follow the leader everywhere) |
 | `canuse.py MEMBER TYPE...` | whether the kit rules (restrict.kit_forbids) let party member MEMBER use each item type, and pick it as a weapon spec |
 | `carried.py NAME` | what the creature named NAME carries, list by list: item, name as the game shows it, type, slot, value, plus, name entry and the +02h word (2026-11-11: guavas named "Brgnd.Chst Armor"). |
-| `chestuse.sh` | uses Pehtucl's chest from a square beside it (ROUTE.md, Pehtucl's chest): the eye set with pointer.py look, a slow press on the chest (163,70), its look box's third button (236,101), then the walk arrow back. |
+| `chestuse.sh [y\|n]` | uses Pehtucl's chest from a square beside it (ROUTE.md, Pehtucl's chest): the eye set with pointer.py look, a slow press on the chest (163,70), its look box's third button (236,101), then the walk arrow back. |
 | `click.py X Y [left\|right\|none]` | move the game's pointer to game pixel X,Y (320x200) and click. |
 | `creationscores.py` | the creation screen's scores, classes and race, and the least and most the game last worked out |
 | `dacwatch.py SECONDS` | DSCLOG's copy of the palette (TSR_DAC) watched: each change, hashed whole and for colours 16-223 only. |
