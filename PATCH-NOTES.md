@@ -122,7 +122,7 @@ Each change is tagged. **[Fixed]** is a bug of the game, or a rule it got wrong 
 - **[New]** More of **Semyon**'s story, and Thornwall on the slave pens' weapon rack once he has told it ([Semyon](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#semyon)).
 - **[New]** **Pehtucl's chest**, locked and trapped, holds a Cloak of Protection +1.
 - **[New]** A last arena bout: once Scar dies, six champions from a distant arena come to test the new king ([the champions' bout](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#the-champions-bout)).
-- **[New]** Legcrusher, sent for a party out by the fountain, finds the cells empty and attacks alone *(was his warning, as if they were in the cells)* ([Legcrusher](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#legcrusher-at-the-fountain)).
+- **[New]** Legcrusher, sent for a party out by the fountain, finds the cells empty and attacks alone *(was his warning, as if they were in the cells)* ([Legcrusher](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/PEOPLE.md#legcrusher-at-the-fountain)).
 - **[New]** A use for the cooked vulture: share it with the pens' cook for a full rest and 100 XP each ([the vulture](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#the-cooked-vulture)).
 - **[Fixed]** Every thri-kreen leaves a thri-kreen's body *(was a human's Dead Body)*.
 - **[New]** Merchants give the leader a discount for high CHA, 5% at 18 to 40% at 25 ([CHA at shops](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#the-leaders-cha-at-shops)).

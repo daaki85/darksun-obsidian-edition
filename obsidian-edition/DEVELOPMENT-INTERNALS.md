@@ -59,7 +59,7 @@ Every roll in the game goes through one function, Borland C++'s `rand()`.
      New character counting as Okay ([more characters](FEATURES.md#more-characters));
    - Enter loading only a save that is there ([more saves](FEATURES.md#more-saves));
    - a script buffer of 11,776 bytes rather than 10,000 (for [Dinos and the
-     Trustee](FEATURES.md#what-dinos-and-the-trustee-say-about-them));
+     Trustee](PEOPLE.md#what-dinos-and-the-trustee-say-about-them));
    - data files looked for in the current folder rather than next to the program.
 
    DSCLOG also hooks:

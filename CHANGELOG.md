@@ -87,6 +87,14 @@ Releases, newest first (2.12.0 and older in the archive):
   Slave and Worker is met), the dice log's tables one example a row, the rules the game got wrong
   moved from GAME-BUGS to FEATURES, How the game works retitled with its code addresses left to
   DEVELOPMENT-RULES, and the player pages' links to the developer pages made GitHub links.
+- **Features and rules a catalogue, and a People page**: FEATURES.md (2,878 → about 1,280 lines)
+  has one short entry per Options switch, in the tab's order, then Saves and Always on, each with its
+  switch's words and "Rules:" and "How it works:" links; its rule tables moved to the player's guide
+  (ages, picking pockets in detail, the 6th-level spells' details), the spells-as-the-manual table to
+  How the game works, the frame-rate measurements and implementation notes to the DEVELOPMENT pages,
+  Legcrusher's fix to GAME-BUGS; the story (Kalzith, Semyon, Dinos and the Trustee, the champions,
+  the vulture, Legcrusher) to a new spoiler page, PEOPLE.md (`people.html` in the manual). Player
+  pages may no longer link to a DEVELOPMENT page relatively (`test_doclinks`).
 
 **Dev**
 - `dsloader/guidepage.py` (the manual's old name) taken out; the combat log's design brief archived in `reports/archive/`, the rest-order prototype moved to `playtest/logs/files/`.
