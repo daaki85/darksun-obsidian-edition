@@ -12,12 +12,22 @@ trigger, Mindhome award, Legcrusher guards, Linara, hermit/ranger, the Darkhold 
 Trustee, and the engine-bug catalog they relayed *from* us (OpenDS records it as unverified). Nothing to
 take there.
 
-**Correction (same day):** CHANGELOG.md (2.x, "yuan-ti's v0.1.52 repairs", about line 1472) already
-records that the Mindhome's "Have you killed the spiders yet?", the Hound Necklace killing prisoners,
-Alhena and the army count were *looked at and left*. My first search only covered the `.md` files in
-`obsidian-edition/`, `reports/` and `research_notes/`, so it missed that entry: those four are a
-decision already taken, not gaps. The CHANGELOG doesn't say why. Nothing in it or in the docs
-mentions the elven leader's goodbye or the Keldar/Dagolar clones, so those two are still open.
+**Correction (2026-11-17, second check):** the four are already decided, and with reasons. Commit
+`7cfeee6` (2026-11-01, "Script repairs from yuan-ti v0.1.52") says, in the CHANGELOG entry it added:
+"Looked at and left: the Mindhome's 'Have you killed the spiders yet?' while they live (their own lines
+want them dead in every case), the Hound Necklace killing prisoners (its scripted effect), Alhena
+(there unless the caravan was made hostile), the army count (a failure marker never lowers it)."
+So Alhena's exit on GF123 is the game's way of saying the party made the caravan hostile; OpenDS's
+"every normal endgame has GF123 set" is what that session judged wrong, and my section 3.1 below
+repeated their reading without checking what sets the flag. The walkthrough (kibbitz) also tells the
+player to take the Hound Necklaces off before talking to the prisoners, so that one is a known hazard
+with a known workaround, and it says the Keldar fight "sometimes triggers Dagolar and his ten
+slimes". My first correction missed all this because I only searched the working tree; the reasons
+are in git history (`git log -S`).
+
+Still not in any file, commit or branch (searched all of them): the elven leader's "Goodbye" going to the
+arrest (4FAh), and the Dagolar clone sites in GPL 48 as a *repair*. The Keldar one is arguably covered by
+the walkthrough's "sometimes", so treat both as unconfirmed bugs, not gaps.
 
 ## 2. Checklist: their rows we do not have yet
 
@@ -45,7 +55,7 @@ are in the Loader's memory fixes or out of reach.
 
 ### 3.1 Alhena never appears (GPL 28, GPL 21, GPL 62)
 
-Confirmed. GF123 (`gflag 123`) is set in one place, GPL 21 at 28Ah (`16 1 gflag123`, behind a test at 278h
+Structure confirmed (but see the correction: the game's intent is that Alhena is absent when the caravan was made hostile, so this is probably not a bug). GF123 (`gflag 123`) is set in one place, GPL 21 at 28Ah (`16 1 gflag123`, behind a test at 278h
 that exits when it is already set), and cleared nowhere (a sweep of every script for writes to it finds
 only that one). GF138 is set in one place, GPL 62 at 1685h (their "after the final battle"). GPL 28 at
 298h tests `GF123 == 1` and exits; everything after it, including the GF138 test at 2C2h and the
