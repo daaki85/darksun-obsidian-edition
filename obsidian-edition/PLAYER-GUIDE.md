@@ -201,6 +201,43 @@ costs a year, after a system shock roll by CON that a character can fail and
 die (85% to survive at CON 13, 99% from 18); **Restore Youth** gives magical
 years back. *Without the mod:* no ages, and Haste costs nothing.
 
+| Race | Starting age | Middle age | Old age | Venerable | Most it lives |
+|---|---|---|---|---|---|
+| Human | 15 + 1d8 | 40 | 53 | 80 | 80 + 2d20 |
+| Dwarf | 25 + 4d6 | 100 | 133 | 200 | 200 + 3d20 |
+| Elf | 15 + 3d4 | 50 | 67 | 100 | 100 + 2d20 |
+| Half-elf | 15 + 2d4 | 45 | 60 | 90 | 90 + 2d20 |
+| Half-giant | 20 + 5d4 | 60 | 80 | 120 | 120 + 1d100 |
+| Halfling | 25 + 3d6 | 45 | 60 | 90 | 90 + 4d12 |
+| Mul | 15 + 1d6 | 40 | 53 | 80 | 80 + 1d10 |
+| Thri-kreen | 6 | – | – | 25 | 25 + 1d10 |
+
+- **The scores change** on reaching each age, once and for good, adding up:
+  middle age −1 STR and CON, +1 INT and WIS; old age −2 STR and DEX, −1 CON,
+  +1 WIS; venerable −1 STR, DEX and CON, +1 INT and WIS. A thri-kreen has only
+  a venerable age, and loses 1 STR and 1 DEX there. At the most its race lives
+  (its own roll, kept secret) a character dies of old age.
+- **The starting age** is rolled on the creation screen with each roll of the
+  die and each choice of race, sex or class, and kept at DONE; the game's own
+  party, or a character made before ages, gets its roll the first time the
+  Loader sees it (the dice log says so: `Cermak is 22 (a human: 15 + 1d8 = [7]);
+  middle-aged at 40.`).
+- **A year passes each 365 days** of the game's own clock, from the start of
+  the game (`A year has passed: Cermak is 23.`): a party that rests 5000 times
+  is only 5 to 9 years older. The years counted are kept in the save, so a
+  loaded game shows the ages as they were, and none is counted twice or missed
+  (one that passes in the arena counts as the party leaves it).
+- **Haste** makes each creature it hastes roll **system shock** (85% at CON 13,
+  88% at 14, 90% at 15, 95% at 16, 97% at 17, 99% at 18 to 24, 100% at 25) or
+  die; a party member who survives is a year older. Monsters have no ages: for
+  them it is the roll alone. A thri-kreen, venerable at 25, feels it most.
+- **Grey hair:** iron grey streaks when middle-aged, grey when old, white when
+  venerable, on the map with what the party wears on (a helm or cloak over the
+  hair is left as it is; dwarves, muls and thri-kreen have no hair to grey).
+- The age shows on the creation screen, the inventory panel (`AGE: 23`) and
+  the Loader's Characters tab, with the category and the next age to come
+  (`Age: 45, middle-aged; old at 53`).
+
 ### More than one class
 
 **Multiclass (any race but human).** A character takes two or three classes at
@@ -315,6 +352,13 @@ the strictest winning:
 - A human who changed class is held by its new class (but for the warrior's
   or cleric's armour above), and may use the weapon specs it specialized in
   once its old class wakes.
+- A thief of any kind holds only leather shields, with the rule or without:
+  the game's own lists leave thieves out of the wooden shield, and the mod's
+  metal one.
+- A new character starts without the weapons, armour and shields its classes
+  can't use: the Loader leaves them behind and says so in the dice log
+  (`Yilballa's Chest Armor is left behind: their classes can't use it`), and
+  one left without a weapon gets one with fuller starting gear.
 
 *Without the mod:* an item was allowed if **any** of the character's classes
 allowed it, and a preserver with another class cast in armour.
@@ -887,6 +931,17 @@ at 0 XP). XP keeps counting past the cap. The highest levels:
 
 *Without the mod:* every class stops at 9th.
 
+Past 9th everything is the game's own, which it had all along: its XP tables
+go on to 20th (with AD&D's off, druids by a table of their own), and THAC0,
+saves, spell slots and thief skills are worked out from the level ([hit
+points](#hit-points), [THAC0](#thac0-by-level), [spell slots](#spell-slots)). A
+gladiator's armour optimizing goes on (AC 2 better at 10th). A preserver still
+picks a spell on CHOOSE A SPELL at each level, offered from spell level (class
+level + 1) / 2 down but no higher than 5th; a psionicist picks a power (two at
+odd levels and 4th). Spell damage that grows with the caster's level stops at level
+10. The level up is the game's usual one, and View Character stops showing the
+next level's XP at the cap.
+
 AD&D's tables:
 
 | To reach level | Fighter | Gladiator, ranger | Thief | Preserver | Cleric | Druid | Psionicist |
@@ -989,8 +1044,9 @@ XP past 9th's need is left over, and a human who changes class loses it.
   21-22 and 4 with CON 23 or more.
 - CON 20 or more gives a party member hit points back by themselves, one an
   hour at CON 20, 50 minutes at 21, 40 at 22, 30 at 23, 20 at 24 and 10 at
-  25 ([CON as in AD&D](FEATURES.md#con-as-in-add)). *Without the mod:* one
-  every 5 minutes at any of them.
+  25 ([CON as in AD&D](FEATURES.md#con-as-in-add)); minutes short of the next
+  one count towards it later (`Gerakis regenerates 1 HP (CON 22), now 12/54
+  HP`). *Without the mod:* one every 5 minutes at any of them.
 - Two [kits](#kits) change the die: a **Battle Mage** rolls a d6, an **Arcanist** a d3.
 - **CON's bonus** comes with every level: for a fighter, gladiator or ranger
   +1 at CON 15, +2 at 16, +3 at 17, +4 at 18, +5 at 19-20, +6 at 21-23 and +7 at
@@ -1103,7 +1159,11 @@ means no hiding: get clear first (a Shadowblade tries anyway).
 
 - Thieves' hiding is **halved in daylight** (under the open sky; not an
   Assassin's, a Military Scout's or Cilla's); rangers' is halved indoors
-  instead.
+  instead. Open desert and rock, the villages' open ground and the arena are
+  under the open sky; the slave pens, the sewers, the lava caverns and other
+  underground or roofed places aren't. Where buildings stand on open ground,
+  it goes by the floor under the hider: in a building it is out of the sun, in
+  a roofless ruin it isn't.
 - A worn cloak adds 10 to hiding in shadows and worn boots 10 to moving
   silently, up to 95. A worn belt adds 5 to a thief's picking pockets and
   opening locks. The inventory screen's thief skills count them.
@@ -1232,8 +1292,34 @@ and the same race and DEX adjustments.
     gained a level; another thief may try at once).
 
   When nothing worth taking is left, the thief takes 2 to 5 ceramic pieces
-  from the purse for each thief level, and that is the last try on them. A
-  cleric/thief has both buttons outside fights, the purse beside Turn Undead.
+  from the purse for each thief level (a 4th-level thief 8 to 20), and that is
+  the last try on them. A cleric/thief has both buttons outside fights, the
+  purse beside Turn Undead; in a fight, Turn Undead alone.
+
+  In more detail:
+  - **What can be lifted:** something weighing 10 or less (a bag or arrows are
+    10, a helm 15, a long sword 30) that isn't worn on the body (armour, a belt,
+    boots, a helm, a cloak), wherever its owner keeps it: a dagger, a ring, an
+    amulet, a gem, food. Keys stay, as scripts may look for them. Three weapons
+    some of the game's people carry can be lifted whatever their weight
+    ([Items](ITEMS.md#every-magic-item) says which, with spoilers): each is
+    worth 200 XP to the thief once a game, given as a quest's is, with its
+    sound (split among a multiclass thief's classes; sold and lifted back, it
+    is worth nothing more). Anything else lifted, or the coins, comes with a
+    purse's jingle.
+  - **When there is no try:** a thief whose backpack is full can't try
+    ("Daaki's backpack is full."): nothing is rolled, and it doesn't count. A
+    right click on the map that changes the pointer puts the try away. The
+    Trustee is left to his own conversation, where the game's one pocket is.
+  - **Who remembers:** the Loader keeps who has caught a thief, or been
+    emptied of coins, for this party, by the time on the game's clock: load a
+    game saved before the try and the clock goes back past it, so the try is
+    forgotten and that person can be tried again. A caught thief's dice log
+    line says why it can't try yet (the person "remembers Daaki, and keeps a
+    close hand on their purse").
+  - The game's message window and the dice log say what happened:
+    `Daaki picks Kurzak's pocket: d100 = 71, needs 63 or less -> failed`, then
+    `Daaki moves silently to get away: d100 = 12, needs 55 or less -> success`.
 - **Read languages** is rolled only when a Shinobi reads a scroll.
 
 *Without the mod:* the game's own chances, which run much higher (a base of its
@@ -1359,14 +1445,22 @@ limits:
   the caster's own, and DEX's missile adjustment), and so does a touch spell
   cast at an enemy (Chill Touch, Shocking Grasp, Vampiric Touch, the Cause
   Wounds spells, Cause Disease, Poison), with STR's. A 20 always hits, a 1
-  always misses, and a miss does nothing: "Miss" floats over the target.
-  Monsters' spines roll too. *Without the mod:* they always landed.
+  always misses, and a miss does nothing (no damage, no Acid burning on, no
+  effect; the dice log shows the damage roll that was lost): "Miss" floats
+  over the target. The roll is the game's own for an attack: the target's AC
+  as the game works it out for a blow (armour, DEX, Shield, Blur), with Bless,
+  Prayer, Curse and the rest, and for a monster the game's difficulty setting.
+  A touch spell on one's own side lands as before, and a spell from a weapon's
+  hit (a spell arrow, a magical weapon) doesn't roll again. Monsters' spines
+  roll too. Magic Missile, Flame Arrow (neither the manual nor AD&D gives its
+  bolts an attack roll), areas, cones and psionic powers are left as they
+  are. *Without the mod:* they always landed.
 - **Spells and psionics as the manual describes them** (a rule change, on by
   default): twenty-four spells and two psionic powers, and seven monsters, as the manual
   has them (Solid Fog for a few rounds, not the whole fight; Hold Undead only
   on undead of the caster's level or lower; Strength by class; shadows that
-  drain STR; the list is in [the features
-  page](FEATURES.md#spells-and-psionics-as-the-manual-describes-them)).
+  drain STR; the list is in [How the game
+  works](HOW-THE-GAME-WORKS.md#the-spells-and-powers-it-changes)).
 - **Turn Undead**, the cleric's button on the USE screen, follows AD&D's
   turning table (with the manual's spells): it tries each undead in its area,
   one at a time; by the undead's hit dice and the cleric's level, a d20 turns it
@@ -1412,19 +1506,22 @@ limits:
     caster level. Unarmed attacks, a thri-kreen's claws but not its bite, do
     1d6+1 where that's better, are +1 to hit and count as a +1 magical edged
     weapon (a thri-kreen's claws and bite cut even without it). With Body Weaponry or
-    Animal Affinity, their dice are +1 (2d4+1, 1d10+1).
+    Animal Affinity, their dice are +1 (2d4+1, 1d10+1); those powers, as the
+    game has them, change only the first of a creature's natural attacks.
   - **Fogbolt** (1st level): a dark grey bolt of clinging fog at one creature
     in a clear line, for 2d4 rounds unless it saves: −3 to its attacks, +2 to
     attacks on it.
   - **Reflected Image** (1st level, on the caster): one image, which a hit or a
     foe's spell strikes half the time instead of the caster, and which then
-    vanishes. It and Mirror Image replace each other; Dispel Magic ends it.
+    vanishes (Mirror Image's images are struck three times in four). It and
+    Mirror Image replace each other; Dispel Magic ends it.
   - **Spook** (1st level): one creature flees in fear for 3 rounds unless it
     saves, at −1 for every 2 caster levels (at most −6). Undead aren't
-    affected; magic resistance applies.
-  - **Friends** (1st level, on the caster): CHA + 2d4 (at most 25) for 1d4
-    rounds and 1 a caster level, for better prices. Casting it again replaces
+    affected; magic resistance applies, and Cloak of Bravery gives +4 against
     it.
+  - **Friends** (1st level, on the caster): CHA + 2d4 (at most 25) for 1d4
+    rounds and 1 a caster level, for better prices when the party leader casts
+    it. Casting it again replaces it; a CHA of 25 already is left as it is.
 
 ### Spell lists
 
@@ -1467,29 +1564,41 @@ An Elementalist has its second sphere's column too.
 **The 6th-level spells** are the mod's, for priests of 11th level and up (with
 AD&D's class tables and the **New spells** switch on):
 
-- **Heal** (touch): every wound healed, disease and blindness cured.
-- **Harm** (touch): the creature is left 1d4 hit points; no save.
-- **Restore Youth** (touch): takes back a year of magical aging (from Haste)
-  a caster level, never below the creature's true age (its age without magic's
-  years). It must survive a
-  system shock first.
-- **Blade Barrier** and **Wall of Thorns**: a wall that does 8d8 (blades, a
-  save for none) or 8 plus the creature's AC (thorns, no save: the less
-  armour, the worse) to each creature in it or passing through: circling
-  blades or a tangle of thorns. Mind where you put it: it hurts your party too.
-- **Sunstroke**: one creature collapses, helpless, for 2 rounds a level unless
-  it saves, and the heat burns it for 1d4 at the start of each round.
-- **Fire Seeds**: four seeds of 2d8 burst together where you aim, a save for
-  half.
-- **Heartseeker**: one creature saves against death or dies; if it saves, it
-  takes 2 to 16.
+- **Heal** (touch): every wound healed, disease and blindness cured (and,
+  with the manual's spells, Feeblemind).
+- **Harm** (touch): the creature is left 1d4 hit points, a helpless one too;
+  no save. It also leaves the creature Diseased, as in AD&D, which here only
+  keeps a STR lowered by something else from coming back.
+- **Restore Youth** (touch; the mod's, the reverse of AD&D's Age Creature):
+  takes back a year of magical aging (from Haste) a caster level, never below
+  the creature's true age (its starting age and the game's years). It must
+  survive a system shock first; one with no magical years rolls nothing. It
+  needs the **Ages and magical aging** rule, and does nothing to a monster.
+- **Blade Barrier** and **Wall of Thorns**: a wall that does 8d8 (blades,
+  edged, a save for none) or 8 plus the creature's AC (thorns, no save: the
+  less armour, the worse; a party member's AC as the game last worked it out
+  when something attacked them, anyone else's from armour, shield, DEX and a
+  gladiator's levels, not spells) to each creature in it or passing through:
+  circling blades or a tangle of thorns. Any number can stand at once. Mind
+  where you put it: it hurts your party too.
+- **Sunstroke**: one creature collapses, helpless as Hold Person holds, for 2
+  rounds a level unless it saves, and the heat burns it for 1d4 fire at the
+  start of each round (a fire resistance counts), until the paralysis ends or
+  is cured.
+- **Fire Seeds**: four seeds of 2d8 burst together where you aim, one burst of
+  8d8 rather than one by one, a save for half.
+- **Heartseeker**: a spell of death, not an arrow: one creature saves against
+  death or dies; if it saves, it takes half of 4d8, as from Slay Living.
 - **Water of Life** (touch): the creature's wounds pass to the caster, who
   keeps at least 5 hit points.
-- **Whirlwind**: a turning funnel of dust that stays a round a caster level:
-  2d8 to each creature in it at the start of each round (and as it is cast), a
-  save for half; one that fails is swept off its feet and loses its next turn.
-  Nothing can be shot or cast through it. Keep your own people out of it: it
-  strikes them too, and anyone knocked out in it.
+- **Whirlwind**: a turning funnel of dust that stays where it is cast a round
+  a caster level. At the start of each round, before anyone acts, and as it is
+  cast, it does 2d8 crushing to each creature in it, a save for half; one that
+  fails is swept off its feet and loses its turn (that round's if it hasn't
+  acted yet, else the next), without being helpless. Walking into it does
+  nothing until the next round starts. Nothing can be shot or cast through it.
+  Keep your own people out of it: it strikes them too, and anyone knocked out
+  in it.
 
 ### Status effects
 
@@ -1529,7 +1638,10 @@ AD&D's does:
    Poison on the Poisoned, Cure Blindness on the Blind, Cure Disease on the
    Diseased (when no cleric or druid of 5th level would cure it free), then
    Cure Light, Serious and Critical Wounds and Heal on the most wounded, the
-   cure that fits what the night won't heal. So a 4th-level slot kept back
+   cure that fits what the night won't heal (Cure Light for a wound of 4 or
+   more, Serious 10, Critical 16, Heal 30, else the smallest left). A priest
+   casts only if it can (Okay, not feebleminded, paralysed, charmed or barred
+   from spells). So a 4th-level slot kept back
    keeps a poisoned friend alive.
 2. **Then psionicists' Cell Adjustment** (5 PSP each: 1d4 HP and a disease
    cured), on the Diseased, then the wounded, while their PSP last.
@@ -1537,6 +1649,9 @@ AD&D's does:
    hit point bonus** (its bonus a level, [hit points](#hit-points): a warrior's
    in full, +1 at CON 15 up to +7, anyone else's at most +2), up to its most. CON 20 or more also regenerates through the
    8 hours.
+
+Slots and PSP still fill to the most, STR still comes back, the 8 hours pass,
+and a script's full rest is as the game has it.
 
 So rest more than once to heal a badly hurt party with no priest, or keep cure
 spells back for the night. The dice log shows each: `At rest: Seneca casts Cure
@@ -1711,9 +1826,10 @@ Loader's Characters tab shows the AC of the last attack and what made it.
 ### Protection
 
 Rings and cloaks of protection give +1 AC and +1 on every
-save, by AD&D's rules: two rings don't add up; a ring gives no AC with magical
-armour (its saves still count); a cloak does nothing with magical or metal
-armour or a shield. A cloak isn't armour: any class may wear one, druids too.
+save, by AD&D's rules: two rings don't add up (the better counts, the left
+hand's if they're equal); a ring gives no AC with magical armour (its saves
+still count); a cloak does nothing with magical or metal armour or a shield
+(leather, bone and plain helms are fine), and still adds to a ring. A cloak isn't armour: any class may wear one, druids too.
 **Bracers of Defense** give their AC (6, 5, 4 or 2), and the mod's two
 **robes** their plus, only with no armour worn, and a preserver casts in
 either. These are rare finds.
@@ -1722,8 +1838,9 @@ either. These are rare finds.
 
 Some monsters' acid or corroding touch can destroy worn armour or a
 held weapon. Each item gets a saving throw by its material: wood 8, bone 11,
-stone and obsidian 5, metal 13, leather 10, cloth 12, less its plus (a weapon
-uses the game's own number where that's easier). *Without the mod:* plain
+stone and obsidian 5, metal 13, leather 10, cloth 12, less its plus and 1
+more for a magical power (any item uses the game's own number where that's
+easier). At most one piece of armour is lost to a hit. *Without the mod:* plain
 armour is destroyed outright.
 
 ### New items
@@ -1831,7 +1948,7 @@ wheel, the whole party in view, the view in fights, the pointer, spells on the E
 under **Controls** in [the Options tab at a glance](#the-options-tab-at-a-glance).
 
 **Saves and characters:** 40 saves, four pages of ten (**PAGE 1** to **PAGE 4**, or **PgUp** and
-**PgDn**), and 29 characters in the roster ([more saves and characters](FEATURES.md#more-saves-and-characters)).
+**PgDn**), and 29 characters in the roster ([more saves and characters](FEATURES.md#saves)).
 
 **Graphics** (figures in what they wear, shadows, dust, see-through hiders) are in
 [Features: graphics](FEATURES.md#graphics), and **steady pace** in [Features: game
@@ -1929,7 +2046,7 @@ bugs](GAME-BUGS.md), the footman's pick's 1d6+1 ([creature
 size](FEATURES.md#creature-size)), AD&D's [two-weapon](#two-weapons)
 penalties, the [magic items' icons](FEATURES.md#magic-items-icons) and [spells on the
 ground](FEATURES.md#spells-on-the-ground), [40 saves and 29
-characters](FEATURES.md#more-saves-and-characters), and the picks at **DONE**: [preservers' first
+characters](FEATURES.md#saves), and the picks at **DONE**: [preservers' first
 spells](FEATURES.md#preservers-first-spells) and [psionic powers](FEATURES.md#psionic-powers-at-creation).
 [Features](FEATURES.md) has them all.
 

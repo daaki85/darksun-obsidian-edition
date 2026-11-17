@@ -88,9 +88,9 @@ class DocLinkTests(unittest.TestCase):
         """The release zip holds the obsidian-edition folder alone, less what its .gitattributes marks
         export-ignore (the developer pages, tests/, docs/viewer.png): the shipped pages' relative
         links never leave it (what is outside goes by its GitHub address), and the GitHub links to
-        files of the repository name files that are there. A shipped page's relative link to a
-        developer page is let be: the manual, the zip's readable copy, sends it to GitHub at the
-        release's tag."""
+        files of the repository name files that are there. A developer page (DEVELOPMENT*.md) is
+        left out of the zip, so a shipped page links to it by its GitHub address too, never
+        relatively (the manual sends that address to the release's tag)."""
         self.assertEqual(export_ignored(), ["/DEVELOPMENT*.md", "/tests", "docs/viewer.png"])
         bad = []
         base = re.compile(r"https://github\.com/daaki85/darksun-obsidian-edition/blob/(?:main|v[0-9.]+)/")
@@ -111,7 +111,7 @@ class DocLinkTests(unittest.TestCase):
                             dest = os.path.normpath(os.path.join(os.path.dirname(path), target.partition("#")[0]))
                             if not dest.startswith(HERE + os.sep) and dest != HERE:
                                 bad.append(f"{rel}:{n} {target} (outside the zip)")
-                            elif not ships(dest) and not re.match(r"DEVELOPMENT[A-Z-]*\.md$", os.path.basename(dest)):
+                            elif not ships(dest):
                                 bad.append(f"{rel}:{n} {target} (left out of the zip)")
         self.assertEqual(bad, [])
 
@@ -130,7 +130,7 @@ class DocLinkTests(unittest.TestCase):
                         explained[h] = f"{page}#{slug(h)}"
         explained["Kits"] = "DEVELOPMENT-KITS.md"  # (the rules' "Kits" is a stub: the kits have their own page)
         self.assertGreater(len(explained), 60)
-        missing = [heading for page in ("README.md", "FEATURES.md", "ITEMS.md", "KITS.md",
+        missing = [heading for page in ("README.md", "FEATURES.md", "ITEMS.md", "KITS.md", "PEOPLE.md",
                                         "GAME-BUGS.md", "HOW-THE-GAME-WORKS.md")
                    for heading, body in sections(os.path.join(HERE, page))
                    if heading in explained and explained[heading] not in body]

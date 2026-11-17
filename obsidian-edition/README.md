@@ -17,11 +17,13 @@ which loads the mod with your options.
   manual, in the `manual` folder: open `manual/index.html`, or press the
   Loader's **Help** button.
 - **Everything in detail:** the contents below, and
-  - [features and rules](FEATURES.md): what the game shows, every rule and addition;
+  - [features and rules](FEATURES.md): every switch of the Options tab and every change with none,
+    one short entry each;
   - [kits](KITS.md): every kit's gains, costs and starting gear;
   - [weapon specs](WEAPON-SPECS.md): weapon specialization, who picks what, and the attacks a round;
   - [items](ITEMS.md) (spoilers): every item and where it is;
   - [creatures](CREATURES.md) (spoilers): every one, its size, and whether cahulaks can tangle it;
+  - [people](PEOPLE.md) (spoilers): the mod's new people and scenes in the slave pens and the arena;
   - [the game's bugs, fixed](GAME-BUGS.md) (some spoilers): every bug of the original game the mod mends;
   - [the dice log, line by line](DICE-LOG.md): how to read it, and every kind of line;
   - [how the game works, and the manual's rules](HOW-THE-GAME-WORKS.md), from its code;
@@ -87,7 +89,7 @@ Eight families of changes. Most have a switch on the Loader's **Options** tab
   figures, elves and half-elves of their own look, and magic items' icons
   that shine ([Graphics](FEATURES.md#graphics)).
 - **Quality of life.** Better [controls](FEATURES.md#controls), [more saves and
-  characters](FEATURES.md#more-saves-and-characters), a [game
+  characters](FEATURES.md#saves), a [game
   speed](FEATURES.md#game-speed) setting, [crash, freeze and item
   reports](#crash-freeze-and-item-reports) and [no manual
   check](FEATURES.md#no-manual-check).

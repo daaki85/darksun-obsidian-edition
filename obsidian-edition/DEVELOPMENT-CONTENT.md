@@ -1122,7 +1122,7 @@ time the party is in the pens, the Loader puts his six scrolls among his
 things (from the game's free list, as for
 [the arena's ring](FEATURES.md#new-items)), once a game. If he is killed, the
 Loader marks it (flag 772) and the others speak of him as dead (see
-[Dinos and the Trustee](FEATURES.md#what-dinos-and-the-trustee-say-about-them));
+[Dinos and the Trustee](PEOPLE.md#what-dinos-and-the-trustee-say-about-them));
 after the party's escape he is gone from the pens with everyone else.
 
 With his scrolls the Loader gives him his gear, worn (`kalzith.gear`, flag
@@ -1197,7 +1197,7 @@ in that crate." (shown with 756 and 758 set).
 
 ## What Dinos and the Trustee say about them
 
-([In the features page](FEATURES.md#what-dinos-and-the-trustee-say-about-them).)
+([In the features page](PEOPLE.md#what-dinos-and-the-trustee-say-about-them).)
 
 How: in the Loader's copy of `GPLDATA.GFF`, their scripts (139 and 146) keep
 every byte where it was, since the game's jumps go to fixed places. Two
@@ -1339,7 +1339,7 @@ out, over the red of the Dead Body's blood). Verified: [log](https://github.com/
 How: in the Loader's copy of `GPLDATA.GFF`, Dinos's talk (script 139) has the
 question in its first menu (a copy of the game's with the question added, as
 for the questions about Kalzith and Semyon, see
-[Dinos and the Trustee](FEATURES.md#what-dinos-and-the-trustee-say-about-them)),
+[Dinos and the Trustee](PEOPLE.md#what-dinos-and-the-trustee-say-about-them)),
 shown while the game's own test says someone in the party carries the cooked
 vulture (33h, as the campfire's script asks about the plucked one; the game's
 object A4Ch), the test being the question's own condition in the menu. Chosen,
