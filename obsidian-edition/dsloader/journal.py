@@ -32,7 +32,9 @@ NUMBERS = (198, 199)  # the game's global numbers the head's id is kept in (low 
 NUMBER_COUNT = 200  # the numbers a save keeps (SAVE chunk 30, 400 bytes)
 TALK, CHOSEN, MESSAGE, REWARD = "talk", "chosen", "message", "reward"
 KINDS = (TALK, CHOSEN, MESSAGE, REWARD)
-_REWARD = re.compile(r"\breceives? \d+ experience points?\b", re.I)
+# a reward's message: the game's routine's ("... receives 200 experience points!") and the ones
+# some scripts word themselves ("The party gains 4,000 exp!", "you earn 6,000 EXP!")
+_REWARD = re.compile(r"\b(receives?|gains?|earns?)\b[^.!?]*?\b\d[\d,]*\s*(experience|exp)\b", re.I)
 # message boxes that say nothing of the story (the game's own notices)
 _NOTICES = re.compile(r"^(saving game|game saved|loading game|can't save during combat|disk space low)", re.I)
 # the regions with a name (the rest: "Area 1Fh"); playtest/PLAYTESTING.md's route

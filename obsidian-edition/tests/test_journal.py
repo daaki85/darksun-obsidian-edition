@@ -224,7 +224,11 @@ class ShowTests(unittest.TestCase):
     def test_message_kinds(self):
         self.assertEqual(journal.kind_of_message("Cilla receives 200 experience points!"), REWARD)
         self.assertEqual(journal.kind_of_message("Each party member receives 1 experience point!"), REWARD)
+        for own in ("Congratulations! The party gains 12,000 experience!", "For destroying it, you earn 6,000 EXP!",
+                    "Congratulations! The Party earns 2000 Exp!", "Each party member receives 5,000 experience points."):
+            self.assertEqual(journal.kind_of_message(own), REWARD, own)  # (the awards some scripts word themselves)
         self.assertEqual(journal.kind_of_message("The door is locked."), MESSAGE)
+        self.assertEqual(journal.kind_of_message("Dinos earns his keep. He has 20 years of experience."), MESSAGE)
         for notice in ("GAME SAVED", "SAVING GAME", "CAN'T SAVE DURING COMBAT", "  "):
             self.assertIsNone(journal.kind_of_message(notice))
 

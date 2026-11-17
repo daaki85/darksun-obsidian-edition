@@ -28,7 +28,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple
 
-from . import aging, quicksave, hitchance, journal, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, quests, quicksave, hitchance, journal, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory, WriteRefused
@@ -648,6 +648,7 @@ class DiceLog:
         self._effects: Optional[Counter] = None
         self._party: Optional[bytes] = None
         self.journal: Optional[journal.Journal] = None  # (the Loader's journal, if it keeps one: journal.py)
+        self.quest_state: Optional[quests.State] = None  # (the game's flags and numbers as last read: _quest_look)
         self._party_changed_at = 0.0
         self._party_clock: Optional[int] = None  # (the game's clock at _party_check's last look: back means a game loaded)
         self._aging_at: Optional[Tuple[bytes, int, tuple]] = None  # (natural aging: the last look's party, clock, count and years)
@@ -1323,6 +1324,7 @@ class DiceLog:
 
     def detach(self) -> None:
         self.rand_addr = None
+        self.quest_state = None  # (the next game's flags are read afresh)
         if self.journal is not None:  # (the game gone or started again: its numbers looked at afresh)
             self.journal.reset()
             self.journal.flush()
@@ -1606,6 +1608,7 @@ class DiceLog:
                 out += step(lambda: self._drawn(now))
                 step(self._kalzith_sold_out)
                 step(self._journal_sync)
+                step(self._quest_look)
                 out += step(self._learn_lines)
                 step(lambda: self._dress_now(now))
                 out += step(lambda: self.itemwatch.check(self.game, now, self._settings))
@@ -1685,6 +1688,14 @@ class DiceLog:
         if self.journal is not None:
             self.journal.sync(lambda: journal.read_head(self.game), lambda head: journal.write_head(self.game, head),
                               self.game.game_time())
+
+    def _quest_look(self) -> None:
+        """The game's flags and numbers read for the Journal tab's quests (quests.py), with the
+        journal's look and not while a game is loading. Their pointer is null at times (the arena
+        outside a script's run): the last reading is kept then."""
+        state = quests.read_state(self.game)
+        if state is not None:
+            self.quest_state = state
 
     def _item_watches(self) -> List[str]:
         """The watches that move items: each waits for a later pass while the game changes its

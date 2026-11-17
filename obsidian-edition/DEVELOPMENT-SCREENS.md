@@ -6,6 +6,7 @@
 
 - [The Dialogue tab](#the-dialogue-tab)
 - [The Journal tab](#the-journal-tab)
+  - [The quests](#the-quests)
 - [The combat log in the game](#the-combat-log-in-the-game)
   - [What the game allows](#what-the-game-allows)
   - [The panel](#the-panel)
@@ -117,11 +118,130 @@ the journal too.
 Region names: `journal.REGIONS` has the slave pens and the arena; the others
 are to be added as play reaches them.
 
+A message box is a reward (`journal.kind_of_message`) when it says someone
+receives, gains or earns a number of experience (or "exp"): the game's routine
+says "... receives N experience points!", and the 34 awards the scripts give
+themselves are worded each their own way ("The party gains 4,000 exp!").
+
 Tests: `tests/test_journal.py` (entries kept and read again, a save loaded showing its own chain,
 a branch played from it, entries from while the numbers were away, a lost file, the tab on a real
 window, and with `DSUN_GPLDATA` no script using the journal's numbers). Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-16-journal.md)
 (Kurzak's speeches recorded; a save holding an older id loaded, its id read back from the game,
 and the talk after it filed as a branch).
+
+### The quests
+
+`dsloader/quests.py` (the table, and what is open or finished) and
+`dsloader/questdraft.py` (the tool that drafts it). The Show box's last
+choice, **Quests**, draws the list in the journal's own text
+(`Viewer._journal_tick`, `quests.rows`), the count beside it saying how many
+are open and finished.
+
+**What the game keeps.** No quest log: its scripts keep the story in 808
+global flags (a bit each at the far pointer DS:1352h, `SAVE` chunk 29: read
+in a script with variable 8Dh, set with destination 13) and 200 global numbers
+(DS:1356h, `SAVE` chunk 30). A deed is rewarded in one of two ways:
+
+- script 74's routines, at 135 for each party member and at 171 for one
+  person, the amount put in number 16 first: 57 calls in 40 scripts, 78,510 XP
+  counting the amount set last before each (three calls choose between two
+  amounts, one gives what the party gave), saying "... receives N experience
+  points!";
+- the script itself (command 21h: who, how many), with words of its own: 34
+  places.
+
+**The table.** `QUESTS`, each a `Quest`: a name, the area or person it
+belongs to, `told` (shown while it is open: only what the party was told
+when it was given), `ended` (shown once finished), its `given` and `done`
+conditions (`F(n)`: flag n set; `N(n, v)`: number n at v or more), `steps`
+(an open quest's progress, "2 of 3"), a `reward` (the regions, the amount,
+each party member or one) for a quest finished when the journal holds that
+message, the rewards it was read from (`sites`: script and offset), and how
+sure it is:
+
+- `HIGH`: the done flag (or number) is set within 12 commands
+  (`questdraft.NEAR`) of a reward in the script named, and no script clears
+  it;
+- `MEDIUM`: the done condition was read by hand to lie on the reward's way
+  but further off (a comment says where), or the quest is finished by its
+  reward's message alone.
+
+`quests.status`: finished when any `done` holds or the reward is among the
+journal's reward entries of the chain shown (so it goes back with a load, as
+the chain does); open when not finished and any `given` holds; else not known
+and not listed. A quest with no `given` shows only once finished. 45 quests:
+39 from the rewards of the game's routine (49 of the 57 calls), 2 from
+scripts' own awards (two more such awards end quests of the 39: the chief's
+daughter and the alliance), 4 of the mod's own (Semyon's shipment, the
+champions' bout, the cooked vulture, the arena's ring: the modules' own
+flags). `LEFT_OUT` lists the other 8 calls with the reason for each. The
+words are the project's own: with the game's scripts at hand,
+`NoGameTextTests` checks no line of the table holds a line of theirs.
+
+**Telling a reward by its message.** Ten quests have a `reward`: eight keep
+no flag at all, the temple's is far from its reward, and Kalinin's is cleared
+by the last battle. The journal's reward entry gives the region, the amount
+and whether it was each party member's or one person's; `SCRIPT_REGIONS`
+says which regions' master scripts start each script with a reward (`MAS n`
+is region n's; directly or through one other script), and the test holds
+each such quest to a message no other reward of the routine could give in
+its regions. A reward given while the journal was off, or its file lost,
+isn't seen: the quest is then not listed.
+
+**Flags the table must not use.** Script 74 at 251 clears flags 5, 8, 9, 11,
+13, 70 and 316-320, and is run as a region is entered: each region uses them
+for its own passing state (317 and 318 are set beside two rewards). Flags
+65, 267 and 268 (an ally's word given) are cleared by the last battle's
+script 62.
+
+**Reading the game.** With the journal's look, every quarter second and not
+while a game is loading, `DiceLog._quest_look` reads the 101 bytes of flags
+and the 400 of numbers (`quests.read_state`) and keeps the reading
+(`quest_state`); while the flags' pointer is null (the arena outside a
+script's run) the last one stays, until the game is gone or started again
+(`DiceLog.detach` forgets it: the next game's is read afresh). The tab asks
+for it at each pass.
+
+**Without the game.** The viewer writes the reading to `Journal/quests.json`
+with the journal's head at that moment, when it changed, every five seconds
+at most, and at closing (`_quests_keep`). With no game attached (or none read
+yet) the tab shows that reading under a line saying so, if its head is an
+entry of the chain shown (or both are empty: a new game); otherwise the
+reading is some other game's, and the tab shows only what the journal's own
+rewards tell, under a line saying that. The reading is not kept per save: one
+file, the last game read.
+
+**Adding a quest.**
+
+1. `python -m dsloader.questdraft GPLDATA.GFF -o /somewhere/outside/draft.txt`
+   (never into the repository: the draft holds the game's text). For each
+   reward it gives the script and offset, the amount, whose it is, the flags
+   and numbers set within 12 commands, the flags the script sets and tests
+   before it with the other scripts that use them, and the text around it.
+   `--flag N` lists every place a flag is set or tested with the text there;
+   `--script N` one script's rewards. `playtest/dec.py` shows the commands.
+2. Read the script around the reward: which flag is set on every way to it
+   and nowhere else (done), which is set when the task is given (given: often
+   in another script, found with `--flag` on the flags the reward's script
+   tests), and that neither is a scratch flag or cleared later.
+3. Write the entry in your own words, `told` with nothing the party hasn't
+   heard by then, and take the call out of `LEFT_OUT` if it was there.
+4. `tests/test_quests.py` with `DSUN_GPLDATA` says whether the flags are
+   where the entry claims; a reward told by its message needs its script in
+   `SCRIPT_REGIONS`.
+
+Tests: `tests/test_quests.py` (the table's shape; open and finished from flags, numbers, steps
+and the journal's rewards; nothing shown of a quest not given; the reading from memory and from
+every save in `playtest/saves`; the last reading kept on disk; the tab on a real window; and with
+`DSUN_GPLDATA` the table held to the scripts: each done flag set beside a reward in its script,
+each given flag set by the game, none a region's scratch flag, all 57 rewards of the game's
+routine in a quest or in the list left out, a reward told by its message alone unlike any other
+in its region, the draft tool's output, and no line of the table one of the game's).
+
+Not done yet: the other 29 of the scripts' own awards (allies joining, the
+strongholds' ends), and "given" flags for most quests (of the game's, only
+Gilal, the chief's daughter, the temple, Notaku's three errands and the
+alliance have one): the rest show under Finished only.
 
 ## The combat log in the game
 

@@ -1997,8 +1997,9 @@ speed](FEATURES.md#game-speed); scanlines or hard-edged pixels for the game wind
 MIDI device for the music, in [Features: picture and music](FEATURES.md#picture-and-music).
 **Running the game** (the game window's size, crash and freeze
 reports) and **the Loader's window** (the dice log, the characters' sheets, the dialogue, the
-[journal](README.md#the-journal-tab) that keeps what was said and every reward and follows your
-saves, every spell's dice) are in the README: [running it](README.md#running-it-windows), [the Loader's
+[journal](README.md#the-journal-tab) that keeps what was said and every reward, follows your
+saves and lists your quests, open and finished, without naming one you haven't been given, every
+spell's dice) are in the README: [running it](README.md#running-it-windows), [the Loader's
 window](README.md#the-loaders-window) and [reports](README.md#crash-freeze-and-item-reports); [the
 dice log, line by line](DICE-LOG.md) says what each of its lines means.
 

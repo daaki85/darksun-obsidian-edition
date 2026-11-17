@@ -817,3 +817,8 @@ sets or reads.
 with var 87h, set with var 7). The scripts use 0-136; the Loader uses **198 and 199** for the
 journal's place ([the Journal tab](DEVELOPMENT-SCREENS.md#the-journal-tab);
 `tests/test_journal.py` checks no script uses them). 137-197 are free.
+
+**Reading them for the quests.** The Journal tab's quest list reads the game's own flags
+(0-755) and numbers, and the Loader's flags above, without changing any
+([the quests](DEVELOPMENT-SCREENS.md#the-quests): `dsloader/quests.py`). A Loader flag that
+begins or ends something the player would call a quest belongs in its table too.

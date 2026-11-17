@@ -408,7 +408,7 @@ first is still there for its own saves. A new game begins an empty one. (The jou
 kept in the save itself, in two of the game's numbers its scripts don't use. A save made without
 the Loader, or before the journal, has none: its journal begins when it is loaded.)
 
-- **Show:** everything, talk only, rewards, or rewards and messages.
+- **Show:** everything, talk only, rewards, rewards and messages, or **Quests** (below).
 - **Only entries with:** type a word or a name (any case) and only the entries holding it are
   shown, a talk with its answer; the count beside it says how many. The **Find** box under it marks
   words in what is shown, as on the other tabs.
@@ -416,6 +416,28 @@ the Loader, or before the journal, has none: its journal begins when it is loade
   where `journal.jsonl` holds every game's entries.
 - **Keep a journal** (ticked unless you clear it) switches it off and on. Switched off, nothing is
   written, to the file or to your saves; what the journal holds stays.
+
+**Quests.** Choose **Quests** in the Show box and the tab lists the quests of the game you are
+playing: the **open** ones first, each with its name, where it belongs and what you were told when
+it was given, then the **finished** ones with how they ended. The count beside the box says how
+many of each ("2 open, 5 finished"). The game itself keeps no such list; the Loader reads it from
+the game's own record of the story as you play, so it is right for the save you loaded, and goes
+back when you load an older one.
+
+- **No spoilers.** A quest is listed only once your party has it. An open quest says what you were
+  told and nothing of how it ends; a quest you haven't met isn't there at all.
+- Many deeds have no one asking for them (a hidden door found, a prisoner given water): those
+  appear under Finished once done. A quest with several parts says how far it has come ("Done so
+  far: 2 of 3").
+- **Only entries with:** narrows the list to the quests whose name, place or words hold what you
+  type.
+- The list covers the quests the game rewards with experience that the mod could tell apart for
+  certain (45 so far, the mod's own among them), not every errand in the game. A few leave no mark
+  in the game but their reward's message: those are finished when the journal holds that message,
+  so they need the journal kept while you play.
+- **Without the game running**, the tab shows the quests as the Loader last read them, and says
+  so, if the journal shown is the one it was reading then. Otherwise it can only show the quests
+  whose reward the journal itself holds, and says that instead.
 
 An area the Loader has no name for yet is shown by its number ("Area 1Fh"). The game started
 without the Loader's window (`Play Dark Sun (in-game rolls).bat`) keeps the journal too.
@@ -524,7 +546,7 @@ saves and characters:
 | `settings.json` | your options, and what the Loader remembers (who has had their pockets picked, speakers' names); if it is ever damaged, it is kept as `settings.json.bad` and the defaults used |
 | `crash-logs` | crash, freeze and item reports |
 | `Named saves` | a copy of each save under the name you gave it, made while the Loader's window is open: one a slot, replaced when the game saves over that slot (not a backup history), and the `Replaced -` copies a restore keeps |
-| `Journal` | the journal: everything said and every reward, for every game played ([the Journal tab](#the-journal-tab)) |
+| `Journal` | the journal: everything said and every reward, for every game played, and the quests as last read from the game ([the Journal tab](#the-journal-tab)) |
 | `dosbox_dicelog.conf` | DOSBox's settings for the game the Loader starts, written at each start |
 | `play.log` | what went wrong, when the game was started with `Play Dark Sun (in-game rolls).bat` |
 | `dos` | the Loader's helpers, and the patched copy of the game (`DSUNLOG.EXE`) with copies of its data |

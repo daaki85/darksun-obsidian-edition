@@ -24,7 +24,7 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 from tkinter import font as tkfont
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
-from . import __version__, art, combatlog, dicelog, journal, ledger, freeze, game, kits, launch, manual, midiout, namedsaves, partyview, rings, spellbook, theme, values
+from . import __version__, art, combatlog, dicelog, journal, ledger, freeze, game, kits, launch, manual, midiout, namedsaves, partyview, quests, rings, spellbook, theme, values
 from .dicelog import DiceLog, DiceLogError
 from .guestmem import GuestMemory
 from .layout import Layout
@@ -38,6 +38,11 @@ MAX_LOG_LINES = 3000
 # the Journal tab's Show box: its choices and the kinds of entry each shows (None: all)
 JOURNAL_SHOWS = (("Everything", None), ("Talk", (journal.TALK,)),
                  ("Rewards", (journal.REWARD,)), ("Rewards and messages", (journal.REWARD, journal.MESSAGE)))
+JOURNAL_QUESTS = "Quests"  # the Show box's last choice: the game's quests in place of the entries (quests.py)
+QUESTS_KEPT_EVERY = 5.0  # seconds between writings of the quests' last reading (quests.save_snapshot)
+QUESTS_AS_READ = "The game can't be read just now: these are the quests as the Loader last read them from it."
+QUESTS_UNREAD = ("The game's flags have not been read for this journal: only the quests whose rewards "
+                 "the journal holds are shown.")
 HIGHLIGHT_SECONDS = 3.0
 HEX_PREFIX = 17  # width of "+0040  0012a3f0  "
 MAX_HITS = 500
@@ -997,6 +1002,7 @@ class Viewer:
         except Exception:
             pass
         try:
+            self._quests_keep(now=True)
             self.journal.close()
         except Exception:
             pass
@@ -1347,6 +1353,7 @@ class Viewer:
         self.journal = journal.Journal()
         self._journal_drawn = (-1, None, None)  # (journal.changed, the kinds shown, the words wanted) as drawn
         self._journal_place = (None, None)  # the day and region of the last entry drawn
+        self._quests_kept = (None, None, 0.0)  # the quests' reading last written: (the head, the reading, when)
         page = ttk.Frame(tabs, padding=6)
         tabs.add(page, text="Journal", underline=0)
         row = ttk.Frame(page)
@@ -1361,7 +1368,7 @@ class Viewer:
         ttk.Label(pick, text="Show:").pack(side="left")
         self.journal_kind = tk.StringVar(value=JOURNAL_SHOWS[0][0])
         kinds = ttk.Combobox(pick, textvariable=self.journal_kind, state="readonly", width=22,
-                             values=[label for label, _ in JOURNAL_SHOWS])
+                             values=[label for label, _ in JOURNAL_SHOWS] + [JOURNAL_QUESTS])
         kinds.pack(side="left", padx=(4, 12))
         kinds.bind("<<ComboboxSelected>>", lambda _e: self._journal_tick())
         ttk.Label(pick, text="Only entries with:").pack(side="left")
@@ -1388,6 +1395,7 @@ class Viewer:
         self.journal_text.tag_configure("chosen", foreground=theme.GREEN)
         self.journal_text.tag_configure("reward", foreground=theme.GREEN)
         self.journal_text.tag_configure("message", foreground=theme.PALE)
+        self.journal_text.tag_configure("note", foreground=theme.PALE)
         self._find_bar(find, self.journal_text, page)
         self._journal_tick()
 
@@ -1424,8 +1432,22 @@ class Viewer:
         journal became another (a save loaded) or what to show was changed."""
         kinds = dict(JOURNAL_SHOWS).get(self.journal_kind.get())
         wanted = self.journal_wanted.get().strip()
-        state = (self.journal.changed, self.journal_kind.get(), wanted)
         text = self.journal_text
+        self._quests_keep()
+        if self.journal_kind.get() == JOURNAL_QUESTS:
+            self.journal.take_added()
+            reading, note = self._quests_reading()
+            made, open_, finished = quests.rows(reading, quests.rewards_of(self.journal.shown()), wanted, note)
+            state = ("quests", made)
+            if state != self._journal_drawn:
+                self._journal_drawn = state
+                text.delete("1.0", "end")
+                for kind, line in made:
+                    text.insert("end", line + "\n", () if kind in ("gap", "text") else (kind,))
+                self.journal_count.set(quests.count_text(open_, finished))
+                text.see("1.0")
+            return
+        state = (self.journal.changed, self.journal_kind.get(), wanted)
         if state != self._journal_drawn:
             self._journal_drawn = state
             self.journal.take_added()
@@ -1452,6 +1474,40 @@ class Viewer:
         self.journal_count.set(f"{total} entr{'y' if total == 1 else 'ies'}")
         if self._following.get(text, True):
             text.see("end")
+
+    def _quests_live(self):
+        """The game's flags and numbers as the dice log last read them (quests.State), or None
+        with no game attached or before its first reading."""
+        dice = self.dice
+        return dice.quest_state if dice is not None and dice.attached else None
+
+    def _quests_reading(self):
+        """(the reading the quests are shown from, a note for the top of the list): the game's
+        own while it runs; without it the last one written (quests.save_snapshot), if the
+        journal shown is the one it was made in (its head is an entry of the chain shown, or
+        both are empty); else none, and only the journal's own rewards tell of quests."""
+        live = self._quests_live()
+        if live is not None:
+            return live, ""
+        kept = quests.load_snapshot(quests.snapshot_path(self.journal.path))
+        if kept is not None:
+            shown = self.journal.shown()
+            if kept[0] in {entry.id for entry in shown} or (kept[0] == 0 and not shown):
+                return kept[1], QUESTS_AS_READ
+        return None, QUESTS_UNREAD
+
+    def _quests_keep(self, now: bool = False) -> None:
+        """The game's reading written for the next time the Loader runs without the game (with
+        the journal's head it was made at), when it changed, every few seconds at most."""
+        live, head = self._quests_live(), self.journal.head
+        if live is None or head is None:
+            return
+        kept_head, kept, at = self._quests_kept
+        clock = time.monotonic()
+        if (head, live) == (kept_head, kept) or (not now and kept is not None and clock - at < QUESTS_KEPT_EVERY):
+            return
+        if quests.save_snapshot(quests.snapshot_path(self.journal.path), head, live):
+            self._quests_kept = (head, live, clock)
 
     def _journal_insert(self, entries) -> None:
         text = self.journal_text

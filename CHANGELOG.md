@@ -30,6 +30,8 @@ under "## Unreleased (branch `obsidian-edition`)
   saves, and the game saves by itself after an area change and a fight, all on a fifth page of the
   save window, QUICK (`quicksave.py`; DSCLOG's `QS_KEY` and `SAVE_TICK`, four header fields from
   +1878, signature `DSCLOGvd`).
+- **Quests on the Journal tab**: open and finished, read from the script flags and numbers the
+  story is kept in (45 quests: `quests.py`; `questdraft.py` drafts the table for developers).
 
 **Changed**
 - **Fewer switches** (#110), for a simpler Options tab and the mod's rules as meant: the combat
