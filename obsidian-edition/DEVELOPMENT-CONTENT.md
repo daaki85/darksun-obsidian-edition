@@ -28,6 +28,7 @@
 - [Dust](#dust)
 - [See-through figures](#see-through-figures)
 - [Sounds for hiding and picking pockets](#sounds-for-hiding-and-picking-pockets)
+- [An archer's last arrow and a dry quiver](#an-archers-last-arrow-and-a-dry-quiver)
 
 ## The game's script bugs
 
@@ -1594,7 +1595,7 @@ The game finds a sound through its table of 181 (3A98:08A2h, 6 bytes each: its k
 pointer to a 12-byte descriptor naming the BVOC); only 0-130 are digital, so a BVOC numbered past
 them isn't played by its number. DSCLOG's `PLAY_SOUND` lends itself entry 131 or 132 for the
 call (one for each sound: the game keeps the last clip it loaded under an entry), as a digital
-one with a descriptor of its own, and puts the entry back. Two words at the header's end ask for
+one with a descriptor of its own, and puts the entry back. Two header words ask for
 them: `SOUND_REQ` (+1822: played from the map's main loop, `SOUND_TICK`) and `PICK_SOUND` (+1824:
 played with the pick's text, `GIVE_XP`). A Spellarcher making spell arrows hears the spell's own
 cast sound (its spell record's +0Fh, `spellarrows.cast_sound`), through `SOUND_REQ` too. Seen in
@@ -1602,3 +1603,20 @@ DOSBox (2026-11-05, its output recorded with `PT_AUDIO` and matched with the cli
 0.997): both on request, in either order and after one of the game's, entries 131 and 132 as the
 game had them afterwards, and from a real pick and a real hide. Tests: `test_sounds.py`,
 `UseItemTests.test_sound_tick`, `test_pick_sound`.
+
+## An archer's last arrow and a dry quiver
+
+([In the bugs fixed](GAME-BUGS.md#sides-and-blows).)
+
+The weapon attack routine (5883Ah) cuts a shot's attacks ([BP-8]) to the arrows left (5899Ah; "Out
+of ammo" with none) and, once that many are made, writes 63h to the attacker's +181h (58C45h),
+which ends the turn (5844Eh). A kill with attacks left lets anyone go on (the caller's loop), so an
+archer that killed with its last arrow lost a turn any other kill keeps. `AMMO_CAP` (5899Ah) keeps
+the round's attacks before the cut, and `AMMO_TURN` (58C38h) compares a party member's attacks made
+with them, so the turn goes on after such a kill; monsters as the game has them. A party member whose
+volley its quiver cut short also keeps its turn against a target still standing: the `AMMO_OKAY`
+sites (5843Fh, 584A4h, 5850Eh) make the attack command's "target still Okay" tests answer "fallen"
+for it, `NEW_AS_OKAY`'s jbe/ja kept in the same patches. The count over the archer: [the quiver's
+count](DEVELOPMENT-SCREENS.md#names-over-figures). Checked in the game
+(playtest/logs/2026-11-14-quiver-turn.md). Tests: `test_quiver.py`, `test_gamepatch`'s
+`test_new_counts_as_okay`.

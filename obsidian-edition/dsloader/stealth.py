@@ -212,6 +212,9 @@ def turn(gd: GameData, combatant: int, roll: Callable[[], int], gear: bool = Tru
         need, why = elven, f"Cloak of Elvenkind, {'under the open sky' if sun else 'under a roof'}"
     if enemy:
         why += f"; a Shadowblade, with {enemy} beside them"
+    luck = kits.bad_luck(gd.kit_ids(creature))
+    if kits.SWASHBUCKLER in gd.kit_ids(creature):  # (its bad luck, rolled each time: kits.bad_luck)
+        need, why = max(0, need - luck), f"{why}; - {luck}, a Swashbuckler's bad luck"
     d100 = roll()
     hidden = d100 <= need
     lines = [f"{who} hides in shadows: d100 = {d100}, needs {need} or less ({why}) -> "
@@ -226,6 +229,9 @@ def turn(gd: GameData, combatant: int, roll: Callable[[], int], gear: bool = Tru
         extra, note = worn_bonus(gd, creature, game.FOOT, BOOTS_QUIET, "boots") if gear else (0, "")
         boots = f" ({quiet}{note})" if extra else ""
         quiet = max(quiet, min(MOST, quiet + extra))
+    if kits.SWASHBUCKLER in gd.kit_ids(creature):
+        luck = kits.bad_luck(gd.kit_ids(creature))
+        boots, quiet = f"{boots} (- {luck}, a Swashbuckler's bad luck)", max(0, quiet - luck)
     d100 = roll()
     unheard = d100 <= quiet
     stabs = all(kits.backstabs(k) for k in gd.kit_ids(creature))  # (a Military Scout never backstabs)

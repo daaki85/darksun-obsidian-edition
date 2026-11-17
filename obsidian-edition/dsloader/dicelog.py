@@ -26,9 +26,9 @@ import threading
 import time
 from collections import Counter, deque
 from dataclasses import dataclass
-from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Tuple
+from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple
 
-from . import aging, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory
@@ -62,6 +62,8 @@ RING_MOST = 1024  # (DSCLOG's ring has 63 entries: a header giving far more read
 WRITING = 0xFFFF  # an entry's seq while DSCLOG writes it (a real seq too, once in 65,536: poll)
 TSR_RING_SEG = 268  # the ring's segment (past the image, so it takes none of DSCLOG's 64 KB)
 TSR_GEAR_DUE, TSR_GEAR_GIVEN = 1830, 1831  # (DSCLOG's GEAR_WAIT: a new member's gear due; whose was given)
+TSR_LOADER_BEAT = 1865  # (the BIOS timer at the Loader's last pass: DSCLOG's GEAR_HOLD, _beat)
+TSR_GEAR_WHO = 1867  # (the sheet index of the character DONE just made, FFh none: DSCLOG's GEAR_WHO)
 TSR_CREATING = 361  # 1 while DSCLOG's weapon window asks a character being made for its weapon specs (CR_WEAPONS)
 TSR_READ_LANG = 362  # each party member's chance to read languages, kept with STATS (DSCLOG's SHINOBI_READ)
 TSR_LEARN_READ = 366  # a Shinobi's try at a scroll: the d100 to read it and the chance (intlearn.py)
@@ -232,7 +234,7 @@ KIND_HEAT = 10  # DSCLOG's HEAT_SITE: Sunstroke's heat on a creature: raw = the 
 KIND_SWEPT = 11  # DSCLOG's SWEPT_MARK: Whirlwind's damage on a creature that failed its save: raw = it
 # DSCLOG's SPELL_HIT: a missile or hostile touch spell's attack roll (the rule "spells roll to hit"):
 # raw = the d20; its frame +6 the caster, +8 the target (combatants), +0Ah the spell, +0Ch the THAC0
-# (Acid Arrow's 21 - the cast's level), +0Eh the game's to-hit adjustments, +10h the STR or DEX part
+# (Acid Arrow's 21 - the cast's level, a Scholar's 1 more), +0Eh the game's to-hit adjustments, +10h the STR or DEX part
 # of them, +12h a monster's difficulty, +14h the target's AC, +16h the d20, +18h 1 a touch, 2 a
 # missile, +1Ah 1 for a hit
 KIND_TOHIT = 12
@@ -316,6 +318,7 @@ EFFECT_INTERVAL = 0.25  # seconds between looks at the active effects
 RING_INTERVAL = 3.0  # seconds between looks for the arena's Ring +1
 STATS_ANSWER_STEP = 0.001  # seconds between the stats thread's looks at DSCLOG's requests
 STATS_ANSWER_IDLE = 0.5  # ... while the game isn't attached, or a look failed
+BEAT_STEP = 0.25  # seconds between the Loader's heartbeats (LOADER_BEAT), from the stats thread
 ITEMS_STILL_WAIT = 0.06  # seconds the game's free lists are watched for, before the Loader changes item lists
 NEAR_SPEAKER = 4 * 16  # map units: a speaker beside the party (a talk without replies: _follow_talk)
 LOAD_SETTLE = 3.0  # seconds after the party changes (a game was loaded) when effects are not news
@@ -363,6 +366,9 @@ def error_key(err: BaseException) -> Tuple[str, str, int]:
     frames = traceback.extract_tb(err.__traceback__)
     where = frames[-1] if frames else None
     return (type(err).__name__, where.filename if where else "", where.lineno or 0 if where else 0)
+
+POISON_OFF_SLOT = 10  # (an item's slot +11h: the left hand; DSCLOG's)
+
 
 class DiceLogError(Exception):
     pass
@@ -551,6 +557,8 @@ class DiceLog:
         self.floating_names = True  # spells' names over their casters, "Miss" over the missed (labels.py)
         self._panel = combatlog.Panel()
         self._labels = labels.Labels()  # names floating over figures: a spell's, a miss (labels.py)
+        self._poison_doses: Set[int] = set()  # (a Poisoner's weapons that poisoned this fight: member, + 4 the off hand)
+        self._quiver_kind: Dict[int, bytes] = {}  # each party archer's last quiver stack (quiver.py: "Out of arrows")
         self._labels_font_tried = False
         self.combat_log_level = combatlog.SHORT  # ... its lines in short, in detail or the results only
         self._fight_at: Optional[float] = None  # ... when a fight was last seen (its last lines go in too)
@@ -617,8 +625,7 @@ class DiceLog:
         self._dances = dance.Dances()  # (the Battle Dancers' dances, round by round)
         self._wild = wild.WildFights()  # (the Wild Furies' Wild Fighting, fight by fight)
         self._blast = psiblast.BlastWatch()  # (Psionic Blast's imagined wounds, given back as a fight ends)
-        self._arrows = spellarrows.SpellArrows()  # (the Spellarchers' spell arrows, made and faded)
-        self._rest_due = False  # (a rest seen: the spell arrows fade in the next pass)
+        self._arrows = spellarrows.SpellArrows()  # (the Spellarchers' spell arrows, made)
         self._kit_check = 0.0  # (when KIT_OUTDOORS was last brought up to date)
         self._out_of_fight: Optional[float] = None  # (since when the game's fight flag is down)
         self._fight_seen = False  # (the flag seen up since the dances and Wild Fighting were rolled)
@@ -987,21 +994,6 @@ class DiceLog:
             locks.write(self.game, self.tsr_hdr, data[1])
             self._locks_written = data
 
-    def _arrows_pass(self) -> List[str]:
-        """The Spellarchers' spell arrows: after a rest, every one fades (spellarrows.py)."""
-        if self.tsr_hdr is None:
-            return []
-        out: List[str] = []
-        try:
-            if self._rest_due:
-                out = self._arrows.rest(self.game)
-                self._rest_due = False
-        except itemgate.ItemsBusy:
-            pass  # (tried again in the next pass)
-        except (struct.error, IndexError, ValueError):
-            pass
-        return out
-
     def set_monster_info(self, on: bool) -> None:
         """Have the game's Look box (in a fight) say what hurts a monster, and then show all of it."""
         self.monster_info = on
@@ -1194,6 +1186,10 @@ class DiceLog:
         with self._stats_lock:
             if self.tsr_hdr is None or self.rand_addr is None:
                 return
+            now = time.monotonic()
+            if now - getattr(self, "_beat_at", 0.0) >= BEAT_STEP:  # (the heartbeat: GEAR_HOLD, _beat)
+                self._beat_at = now
+                self._beat()
             req = self.guest.read(self.tsr_hdr + TSR_STATS_REQ, 2)
             if req != self.guest.read(self.tsr_hdr + TSR_STATS_REPLY, 2):
                 self._write_stats_now()
@@ -1387,12 +1383,22 @@ class DiceLog:
             if weapon or hit or dam or more:
                 names.append(kits.name(kid) + (" under the open sky" if kid == kits.SCOUT else ""))
                 to_hit, damage = to_hit + weapon + hit + more, damage + weapon + dam + more
+        if attacker is not None and mode is not None and item_type is not None:  # (DSCLOG's WAR_HIT)
+            try:
+                rec = g.creature(attacker)
+                own = struct.unpack("b", rec[game.CREATURE_THAC0:game.CREATURE_THAC0 + 1])[0]
+                kid, war = kits.war_hit(g.sheet(attacker), kind, own, bool(self.rules & game.RULE_SPECIALIZE),
+                                           bool(self.rules & game.RULE_KITS))
+            except (struct.error, IndexError, ValueError, AttributeError, TypeError):
+                kid, war = 0, 0
+            if war:
+                names.append(f"{kits.name(kid)} (a warrior's THAC0)")
+                to_hit += war
         if attacker in g.wild and mode is not None:  # (DSCLOG's WILD_*: a Wild Fury's, or Gerakis's own)
             names.append("Wild Fighting")
+            to_hit += kits.WILD_TO_HIT  # (whatever the check)
             if g.wild[attacker]:
                 damage += kits.WILD_DAMAGE
-            else:
-                to_hit += kits.WILD_TO_HIT
         return " and ".join(names), to_hit, damage
 
     def lines(self, show_all: bool = False, now: Optional[float] = None) -> List[str]:
@@ -1508,7 +1514,6 @@ class DiceLog:
         step(self._answer_stats)
         out += step(self._answer_use)
         out += step(self._gear_due)
-        out += step(self._arrows_pass)
         out += step(self._loot_pass)
         out += step(self._sell_pass)
         step(self._locks_pass)
@@ -1649,11 +1654,21 @@ class DiceLog:
             itemgate.release(self.game)
         return out
 
+    def _beat(self) -> None:
+        """The BIOS timer into DSCLOG's LOADER_BEAT, every BEAT_STEP from the stats thread (the main
+        pass isn't run often enough on the creation screen): the Loader is there (GEAR_HOLD waits for
+        its gear pass at the creation screen's DONE, so the roster's copy of a new character has it)."""
+        if self.tsr_hdr is not None:
+            self.guest.write(self.tsr_hdr + TSR_LOADER_BEAT, self.guest.read(BIOS_TIMER, 2))
+
     def _gear_due(self) -> List[str]:
         """A new member just made (DSCLOG's GEAR_DUE, at DONE): new characters' gear given now, not
         at the next RING_INTERVAL, while VIEW CHARACTER waits to be shown (GEAR_WAIT); then the
         members whose items changed (GEAR_GIVEN, for it to draw the screen again) and the flag
-        cleared. The game's item lists moving: the next pass."""
+        cleared. The game's item lists moving: the next pass. DSCLOG's weapon window up (the new
+        character's gear waits for its specs): GEAR_DUE left set, for the pass after it, and for
+        GEAR_HOLD, which keeps the game from writing the roster's copy until then (up to 2.17
+        cleared at once, and a character ADDed in a later session came back with the game's gear)."""
         if self.tsr_hdr is None or not self.guest.read(self.tsr_hdr + TSR_GEAR_DUE, 1)[0]:
             return []
         out: List[str] = []
@@ -1665,16 +1680,21 @@ class DiceLog:
                 mine.setdefault(i.member, set()).add((i.index, i.record))
             return {m: frozenset(v) for m, v in mine.items()}
         before = items()
+        who = self.guest.read(self.tsr_hdr + TSR_GEAR_WHO, 1)[0]
+        self.game.making = None if who == 0xFF else who  # (still Okay to the game: game.being_new)
         try:
             still = self._new_gear(out)
         finally:
+            self.game.making = None
             itemgate.release(self.game)
         if not still:
             return out
         after = items()
         given = sum(1 << m for m in range(game.PARTY_SIZE) if before.get(m) != after.get(m))
+        given |= self.guest.read(self.tsr_hdr + TSR_GEAR_GIVEN, 1)[0]  # (a pass before the window's end)
         self.guest.write(self.tsr_hdr + TSR_GEAR_GIVEN, bytes((given,)))
-        self.guest.write(self.tsr_hdr + TSR_GEAR_DUE, b"\0")
+        if not self._weapons_asked():
+            self.guest.write(self.tsr_hdr + TSR_GEAR_DUE, b"\0")
         return out
 
     def _new_gear(self, out: List[str]) -> bool:
@@ -1695,6 +1715,7 @@ class DiceLog:
                     out += weaponchoice.kit_gear(self.game)
                 for member in range(game.PARTY_SIZE):  # (and a Wilderness Avenger's healing spells)
                     out += kits.cosmos_spells(self.game, member) + kits.avenger_heals(self.game, member)
+                out += spellarrows.return_strays(self.game)  # (spell arrows only a Spellarcher carries)
             if self.starting_gear and new_ok:  # (new characters' starting gear filled out)
                 out += startgear.fill(self.game)
             out += defaultparty.ready(self.game, self.rules, self._party_done, self.starting_gear)  # (the game's own party, once)
@@ -2052,6 +2073,15 @@ class DiceLog:
         except (struct.error, IndexError, ValueError, TypeError, AttributeError):
             return None
 
+    def _paralyzed(self, combatant: int) -> Optional[str]:
+        """"Paralyzed" if COMBATANT is (game.helpless's effect: a spell's damage on it the most its
+        dice can do), else None; Out Cold is hp_changes' own, as it was before the blow."""
+        try:
+            why = self.game.helpless(combatant)
+        except (struct.error, IndexError, ValueError, TypeError, AttributeError):
+            return None
+        return why if why and why != "Out Cold" else None
+
     def hp_changes(self, now: float) -> List[str]:
         """Every combatant's HP going down or up, with what's left (the game never shows a
         monster's HP). Put down to a spell while one is being cast (the damage after saves,
@@ -2102,8 +2132,11 @@ class DiceLog:
                 reason = self._weapon_reason(index) or "a protection or resistance took it"
                 out.append(f"  {who} takes none of the {rolled} damage: {reason}")
             if now <= self._spell_until and before - hp > hit:
-                # the game's damage code gives a creature that was Out Cold the most the dice can do
-                out_cold = " (Out Cold: the most the dice can do)" if was_out_cold else ""
+                # the game's damage code gives a helpless creature (Out Cold before the blow, or
+                # Paralyzed) the most the dice can do (up to 2.17 said only for one Out Cold: a held
+                # foe's 15 from Magic Missile read as the 9 rolled)
+                why = "Out Cold" if was_out_cold else self._paralyzed(combatant)
+                out_cold = f" ({why}: the most the dice can do)" if why else ""
                 also = f" and {hit} from the hit" if hit else ""
                 spell_id, spell_name = self._damage_source(before - hp - hit)
                 halved = g.damage_halved_by(combatant, spell_id) if spell_id is not None else None
@@ -2670,8 +2703,7 @@ class DiceLog:
                     parts.append((kits.initiative(kid, outdoors), kits.name(kid) + (
                         " under the open sky" if kid == kits.SCOUT else "")))
             if index < game.PARTY_SIZE and path is None:  # (the same for the whole party: once a round)
-                path = (kits.PATH_INITIATIVE, "Wayfinder's Path-finder") if g.path_finder() else \
-                    (-kits.PATH_INITIATIVE, "Wayfinder down") if g.path_lost() else ()
+                path = (kits.PATH_INITIATIVE, "Wayfinder's Path-finder") if g.path_finder() else ()
             if index < game.PARTY_SIZE and path:
                 parts.append(path)
             score = INITIATIVE_BASE + roll + sum(v for v, _ in parts)
@@ -2693,6 +2725,8 @@ class DiceLog:
             self._fight_seen, self._out_of_fight = False, None
         danced = self._dances.round(g, self.tsr_hdr, number, start=start)
         danced += self._wild.round(g, self.tsr_hdr, number, start=start)
+        if start:  # (a Poisoner's doses: each weapon poisons once a fight; DSCLOG clears its own,
+            self._poison_doses = set()  #   POISON_USED, at the first round: ACID_ROUND)
         self.round_order = [(combatant, name, score) for score, _, _, _, combatant, name in rows]
         self._acted = set()
         # a new round: its first turn is a new turn even for whoever had the last one (a thief
@@ -2751,6 +2785,7 @@ class DiceLog:
             out = self.flush(now, force=True) + self._attack(e)
             if len(out) >= 2 and out[-2].endswith("-> miss"):
                 self._float(e.glob[0], labels.MISS, labels.MISS_INK, now)
+            self._arrows_left(e, now)
             return out
         if code.startswith(DICE_SITE):
             return self._dice_roll(e, show_all, now)
@@ -2792,7 +2827,10 @@ class DiceLog:
         name = g.spell_name(spell)
         note = " (natural 20)" if d20 == 20 else " (natural 1)" if d20 == 1 else ""
         needs = ("hits on anything but a 1" if need <= 2 else "only a 20 hits" if need > 20 else f"needs {need}+")
-        base = f"THAC0 {thac0}" + (" (a fighter's of the caster's level)" if spell == ACID_ARROW_SPELL else "")
+        creature = g.combatant_creature(caster)
+        scholar = spell == ACID_ARROW_SPELL and creature is not None and kits.SCHOLAR in g.kit_ids(creature)
+        base = f"THAC0 {thac0}" + ((" (a fighter's of the caster's level, a Scholar's 1 worse)" if scholar
+                                    else " (a fighter's of the caster's level)") if spell == ACID_ARROW_SPELL else "")
         own = METEORS_TO_HIT if spell == MINUTE_METEORS_SPELL else 0
         parts = [(("STR" if kind == 1 else "DEX"), part), (name, own), ("spells", bonus - part - own),
                  ("difficulty", difficulty)]
@@ -2829,8 +2867,18 @@ class DiceLog:
                 self._destroyed[creature] = "slain by Cloudkill"
             return [f"Cloudkill: {name} dies ({band}; its level for saves {a})"]
         if e.raw == MANUAL_CELL:
-            cured = f", and {name} is cured of disease" if c else ""
-            return [f"Cell Adjustment: 1d4 = {b} -> {name} healed {b} HP{cured}"]
+            cured = f", and {name} is cured of disease" if (c or 0) & 0xFF else ""
+            more = (c or 0) >> 8  # (the user's kit's more: DSCLOG's CELL_SITE, kits.CELL_MORE, CELL_PLUS)
+            user = self.game.combatant_creature(a) if a is not None else None
+            kids = self.game.kit_ids(user) if user is not None else []
+            if more and kits.LIFEBINDER in kids:
+                dice = f"1d4 = {b - more}, +1d4 = {more} (Lifebinder)"
+            elif more:
+                kit = next((kits.name(k) for k in kids if k in (kits.HEALER, kits.RESCUER)), "kit")
+                dice = f"1d4 = {b - more}, +{more} ({kit})"
+            else:
+                dice = f"1d4 = {b}"
+            return [f"Cell Adjustment: {dice} -> {name} healed {b} HP{cured}"]
         if e.raw == MANUAL_RAINBOW:
             return [f"    {name} takes {a} damage: Rainbow Pattern's hold on it ends"]
         if e.raw == MANUAL_FEEBLE:
@@ -2912,6 +2960,18 @@ class DiceLog:
         took = (f"an image is struck instead, the {what} lost" if roll <= chance else f"the {what} gets through")
         return f"{head}, {chance} or less strikes an image -> {took}"
 
+    def _bad_luck(self, creature: int) -> int:
+        """The bad luck DSCLOG's PROBE_BELT last took off a Swashbuckler's thief skill roll (the
+        header's TSR_BAD_LUCK), if it was CREATURE's; else 0."""
+        from . import kits
+        if self.tsr_hdr is None or kits.SWASHBUCKLER not in self.game.kit_ids(creature):
+            return 0
+        try:
+            luck, who = struct.unpack("<BH", self.guest.read(self.tsr_hdr + kits.TSR_BAD_LUCK, 3))
+        except (struct.error, ValueError, OSError):
+            return 0
+        return luck if who == creature else 0
+
     def _thief_skill(self, e: Entry) -> List[str]:
         """A thief skill check (the game's routine at 803B8h): d100 under the skill's chance plus
         the situation's bonus. Its arguments are (character, skill, bonus); [BP-2] the chance.
@@ -2944,13 +3004,16 @@ class DiceLog:
         outdoors = self.game.outdoors(creature)
         kid = next((k for k in self.game.kit_ids(creature) if kits.thief_skill(k, skill, outdoors)), 0)
         kit = kits.thief_skill(kid, skill, outdoors)
-        if kit and chance == 0:  # (no less than 0: what the kit took off can't be told apart)
-            kit = 0
-        rest = chance - bonus - kit - sum(n for _, n in parts)
+        luck = self._bad_luck(creature)  # (a Swashbuckler's, rolled by DSCLOG's PROBE_BELT for this roll)
+        if (kit or luck) and chance == 0:  # (no less than 0: what the kit took off can't be told apart)
+            kit = luck = 0
+        rest = chance - bonus - kit + luck - sum(n for _, n in parts)
         steps = [f"{n}" if what == "base" else f"{n} {what}" if not i else f"{signed(n)} {what}"
                  for i, (what, n) in enumerate(parts)]
         if kit:
             steps.append(f"{signed(kit)} {kits.name(kid)}")
+        if luck:
+            steps.append(f"-{luck} Swashbuckler's bad luck")
         capped = self.game.rules & game.RULE_THIEF_TABLE and rest < 0 and chance - bonus == game.THIEF_MOST
         if bonus:
             steps.append(f"{signed(bonus)} this attempt")
@@ -2959,6 +3022,22 @@ class DiceLog:
         if capped:  # (DSCLOG's PROBE_BELT: AD&D's most, the equipment penalty, if any, within it)
             steps.append(f"(at most {game.THIEF_MOST})")
         return [head, f"    {name} {chance} = " + " ".join(steps).replace(" +", " + ").replace(" -", " - ")]
+
+    def _arrows_left(self, e: Entry, now: float) -> None:
+        """After a party member's shot (mode above 1): the arrows it has left floating over it
+        (quiver.py), in the charges' blue, as Armor's "7 left"."""
+        attacker, mode, combatant = e.arg(0x0E), e.arg(0x16), e.arg(0x18)
+        if mode is None or mode <= 1 or attacker is None or not 0 <= attacker < game.PARTY_SIZE:
+            return
+        try:
+            found = quiver.quiver(self.game, attacker)
+            if found is not None:
+                self._quiver_kind[attacker] = found[1]
+            text = quiver.left_label(self.game, attacker, self._quiver_kind.get(attacker))
+        except (struct.error, IndexError, ValueError):
+            return
+        if text:
+            self._float(combatant, text, labels.CHARGE_INK, now, priority=1)
 
     def _float(self, thing: Optional[int], text: str, colour, now: float, priority: int = 0) -> None:
         """TEXT floating over combatant THING for a moment (labels.py), with the switch on."""
@@ -3019,9 +3098,12 @@ class DiceLog:
                 f"{needs} ({chance}%), hits AC {thac0 - d20}, target AC {ac} -> {'HIT' if hit else 'miss'}")
         skill = self.weapon_skill(attacker, item_type)
         kit_name, kit_hit, _ = self._kit_attack(attacker, item_type, mode, target_combatant)
+        kit_parts = [(kit_name, kit_hit)] if kit_hit else []
+        if weapon and g.is_fine_bow(item):  # (the Spellarcher's Fine Bow: DSCLOG's FINE_HIT, with the kits')
+            kit_parts.append(("fine", game.FINE_TO_HIT))
         breakdown = self._thac0_breakdown(e, thac0, attacker, attacker_combatant, target_combatant, weapon, mode, item_type,
                                           (specialize.SKILL_NAMES.get(skill, ""), specialize.to_hit(skill)),
-                                          [(kit_name, kit_hit)] if kit_hit else [])
+                                          kit_parts)
         out = [head, "    " + breakdown]
         if held:
             out.append(f"    {held}: hit automatically, for normal damage (AD&D's held target)")
@@ -3357,16 +3439,37 @@ class DiceLog:
             self._hit(target, total, now)
         line = f"{g.creature_name(attacker)} hits {g.combatant_name(e.glob[0])} for {total}: {steps}"
         out = ["  " + line]
-        if helpless and mode is not None and mode <= 1 and attacker < game.PARTY_SIZE \
-                and kits.POISONER in g.kit_ids(attacker):
-            # a Poisoner's melee hit queues the monsters' poison (DSCLOG's PROBE_POISON), whose save a
-            # helpless target doesn't roll (79B0Ch): no save line, so it is named here, and its HP fall,
-            # landing after the round's next swing at times, is put down to it (_poison_taken)
+        # (a Poisoner's melee hit uses that hand's dose whatever the target: DSCLOG's PROBE_POISON;
+        # up to 2.17 only a helpless target's hit was counted, so a held foe's later hit with the
+        # same weapon was logged as poisoned)
+        dosed = mode is not None and mode <= 1 and attacker < game.PARTY_SIZE \
+            and kits.POISONER in g.kit_ids(attacker) and self._poison_dose(attacker, e.parent_arg(0x12))
+        if helpless and dosed:
+            # a Poisoner's melee hit queues the monsters' poison (DSCLOG's PROBE_POISON: each hand's
+            # weapon's first hit in a fight), whose save a helpless target doesn't roll (79B0Ch): no save
+            # line, so it is named here, and its HP fall, landing after the round's next swing at
+            # times, is put down to it (_poison_taken)
             if target is not None:
                 self._poison_due.setdefault(target, []).append(now)
             out.append(f"  {g.combatant_name(e.glob[0])} is poisoned by the hit: {g.spell_name(kits.POISON_POWER)}, "
                        f"no saving throw ({helpless})")
         return out
+
+    def _poison_dose(self, member: int, item: Optional[int]) -> bool:
+        """Whether a Poisoner's melee hit with ITEM poisons, as DSCLOG's PROBE_POISON has it: that
+        hand's weapon (the left hand's, its slot 10, or the right's) not used yet this fight; marked
+        used."""
+        hand = 0
+        if item is not None and 0 <= item < game.NO_ITEM:
+            try:
+                rec = self.game.guest.read(spellarrows.item_address(self.game, item), game.ITEM_SIZE)
+                hand = 4 if len(rec) > game.ITEM_SLOT and rec[game.ITEM_SLOT] == POISON_OFF_SLOT else 0
+            except (struct.error, IndexError, ValueError):
+                pass
+        if member + hand in self._poison_doses:
+            return False
+        self._poison_doses.add(member + hand)
+        return True
 
     def _enlarge_level(self, combatant: Optional[int]) -> int:
         """The level Enlarge counts at on COMBATANT: each Enlarge on them at its caster's level
@@ -3560,8 +3663,6 @@ class DiceLog:
         """A script's REQUEST (DSCLOG's REQ_SITE), named; the everyday ones only with "Show
         unlabelled rolls"."""
         number = e.raw & 0xFFFF
-        if number in spellarrows.REST_REQUESTS:
-            self._rest_due = True  # (the spell arrows fade)
         if number not in REQUESTS_SHOWN and not show_all:
             return []
         name = REQUEST_NAMES.get(number, "an unknown request")

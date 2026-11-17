@@ -393,12 +393,13 @@ class Viewer:
         # the game's Look box, on a monster in a fight: what hurts it, then all of it in a window
         self.monster_info = tk.BooleanVar(value=bool(settings.get("monster_info", True)))
         ttk.Checkbutton(in_game, text="What hurts a monster (the Look box): Look at one in a fight for its hit points, AC, "
-                        "THAC0 and defences, and the rest as the box closes",
+                        "THAC0 and defences; closing the box shows the rest in a window",
                         variable=self.monster_info, command=self._options_changed).pack(anchor="w", pady=(4, 0))
         # names floating over figures on the map for a moment (labels.py)
         self.floating_names = tk.BooleanVar(value=bool(settings.get("floating_names", True)))
         ttk.Checkbutton(in_game, text="Names over figures: a spell's name over its caster, \"Miss\" over whoever an "
-                        "attack missed, and a used charge (\"Armor: 7 left\") over its owner",
+                        "attack missed, a used charge (\"Armor: 7 left\") over its owner, and the arrows left over a party "
+                        "archer after each shot",
                         variable=self.floating_names, command=self._options_changed).pack(anchor="w")
         rules = section("rules", "Rule changes")
         # in three groups, as FEATURES.md has them
@@ -456,8 +457,6 @@ class Viewer:
                                              "level, with the manual's prime requisites for both classes"),
                 ("level_10", "characters", "Level cap by XP: levels past 9th, up to 749,999 XP (shared by a "
                                            "multiclass character's classes)"),
-                ("two_weapons", "arms", "Two weapons: -2 main hand, -4 off hand, DEX's reaction adjustment added; "
-                                        "the off hand attacks once a round"),
                 ("half_giant_hands", "arms", "Half-giants' two-handed weapons: a half-giant wields one in one hand, a "
                                              "shield or a light weapon in the other"),
                 ("cahulaks", "arms", "Weapon traits: the cahulaks' extra attack and tangle, the staff sling's "
@@ -487,14 +486,16 @@ class Viewer:
                 ("rest_heal", "magic", "Resting as in AD&D: priests and psionicists heal the party with what they have "
                                        "left, then each heals 3 hit points plus CON's bonus (the game fills them all)"),
                 ("weapon_specialization", None, "Weapon specialization: fighters and gladiators specialize, fighters on "
-                                                "to mastery and grand mastery, rangers take expertise (chosen after DONE "
-                                                "and at a level up)"),
-                ("kits", None, "Kits: three for each class and some for multiclass characters, each giving something "
-                               "and costing something (chosen on the creation panel's KIT page)"),
+                                                "to mastery and grand mastery, rangers and the Battle Mage, Crusader and "
+                                                "Mind Warrior take expertise, the Swashbuckler a weapon of choice "
+                                                "(chosen after DONE and at a level up)"),
+                ("kits", None, "Kits: three for each class and some for multiclass characters, one a character, each "
+                               "giving something and costing something (chosen on the creation panel's KIT "
+                               "page, or after DUAL by a human with none)"),
                 ("cha_prices", None, "Shops as in AD&D: the leader's CHA lowers what shops ask, shops pay 60%, and "
                                      "merchants keep the magical items sold them, to buy back"),
                 ("thief_table", None, "Thieves as in AD&D: thief skills from AD&D's table, a backstab multiplying the "
-                                      "weapon's dice only, a failed lock, or a pocket the thief was caught at, tried again only a level later"),
+                                      "weapon's dice only, a lock it failed, or a pocket it was caught at, tried again only a level later"),
                 ("stealth", None, "Hiding in shadows to backstab: thieves hide in shadows and move silently to backstab, "
                                   "rangers to attack from behind"),
                 ("new_spells", None, "New spells: six for wizards (Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, "
@@ -514,7 +515,7 @@ class Viewer:
 
         self.roll_store = tk.BooleanVar(value=settings.get("roll_store", True) is not False)
         ttk.Checkbutton(custom, text="STORE and RECALL on the creation screen: keep a roll, try the die again, "
-                        "and bring the kept roll back (from the next start)", variable=self.roll_store,
+                        "and bring the kept roll back; from the next start", variable=self.roll_store,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.starting_gear = tk.BooleanVar(value=bool(settings.get("starting_gear", True)))
         ttk.Checkbutton(custom, text="Fuller starting gear: new characters (and the game's own party) also get a weapon "
@@ -523,7 +524,7 @@ class Viewer:
 
         self.content_vars: Dict[str, tk.BooleanVar] = {}
         for key, text in (
-                ("kalzith", "Kalzith, a defiler slave in the slave pens who sells arcane scrolls (new games)"),
+                ("kalzith", "Kalzith, a defiler slave in the slave pens who sells arcane scrolls"),
                 ("semyon", "Semyon in the slave pens after he leaves the arena, and breaking out with Scar"),
                 ("vulture", "The cooked vulture: Dinos cooks it for the party (XP and a full rest)"),
                 ("defiler_scrolls", "Defilers' scrolls: a defiler in a fight carries a scroll of a random "
@@ -543,11 +544,11 @@ class Viewer:
         looks = section("on_screen", "Graphics")
         self.elf_looks = tk.BooleanVar(value=settings.get("elf_looks", True) is not False)
         ttk.Checkbutton(looks, text="Elves have pointed ears, and half-elves figures of their own instead of the "
-                        "humans' (from the next start)",
+                        "humans'; from the next start",
                         variable=self.elf_looks, command=self._options_changed).pack(anchor="w")
         self.cilla_elf = tk.BooleanVar(value=settings.get("cilla_elf", True) is not False)
         ttk.Checkbutton(looks, text="Cilla, an elf in the game's own party, drawn as an elf (the game gives her "
-                        "the half-elf woman's figure; from the next start)", variable=self.cilla_elf,
+                        "the half-elf woman's figure); from the next start", variable=self.cilla_elf,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.show_gear = tk.BooleanVar(value=bool(settings.get("show_gear", True)))
         ttk.Checkbutton(looks, text="What the party wears, drawn on their figures (weapons, armour, helms, "
@@ -581,7 +582,7 @@ class Viewer:
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.camera_still = tk.BooleanVar(value=settings.get("camera_still", True) is not False)
         ttk.Checkbutton(controls, text="The view in fights: it moves to a figure only when the figure walks off the screen "
-                        "(the game's follows it near the edges; from the next start)", variable=self.camera_still,
+                        "(the game's follows it near the edges); from the next start", variable=self.camera_still,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.scene_pointer = tk.BooleanVar(value=settings.get("scene_pointer", True) is not False)
         ttk.Checkbutton(controls, text="The pointer in scenes: shown in the intro and the game's other scenes, and a click skips "
@@ -592,8 +593,8 @@ class Viewer:
                         "across, and in a window as fast as the desktop's pointer; from the next start",
                         variable=self.mouse_start, command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.party_spread = tk.BooleanVar(value=settings.get("party_spread", True) is not False)
-        ttk.Checkbutton(controls, text="The whole party in view as a game starts or loads and after each fight, as 5 "
-                        "does; from the next start",
+        ttk.Checkbutton(controls, text="The whole party in view as a game starts or loads and after each fight, as the 5 "
+                        "key does; from the next start",
                         variable=self.party_spread, command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.effects_kept = tk.BooleanVar(value=settings.get("effects_kept", True) is not False)
         ttk.Checkbutton(controls, text="Spells on the Effects screen: a click on a spell's icon leaves it on (the game "
@@ -658,7 +659,7 @@ class Viewer:
                                  parent=self.root)
             return
         self._save_settings({wotrart.SETTING: folder})
-        self.wotr_status.set(self._wotr_status() + " (From the next start of the game.)")
+        self.wotr_status.set(self._wotr_status() + " From the next start.")
 
     def _saves_game_dir(self) -> Optional[str]:
         game_dir = self._game_dir or launch.find_game_dir()
@@ -755,7 +756,7 @@ class Viewer:
         self.game_speed.set(str(launch.DEFAULT_SPEED))
         self._options_changed(every=True)
         self._speed_chosen()
-        self.status.set("Options set back to their defaults (a switch marked \"from the next start\" applies when the game is next started).")
+        self.status.set("Options set back to their defaults (a switch marked \"from the next start\" applies from the next start).")
 
     def _sections_changed(self) -> None:
         """Remember which of the Options tab's sections are open."""
@@ -882,8 +883,7 @@ class Viewer:
                 self.status.set(f"Not connected: {e}")
             self.next_try = time.monotonic() + RETRY_SECONDS
             return
-        self.status.set(f"Connected to DOSBox pid {self.guest.proc.pid}, "
-                        f"guest RAM {self.guest.size // (1024 * 1024)} MB at host {self.guest.base:#x}")
+        self.status.set(f"Connected to the game (process {self.guest.proc.pid})")
 
     def start_game(self) -> None:
         """Start Shattered Lands with the dice log, as "Start Game with Dice Log.bat" does; the
@@ -1055,7 +1055,7 @@ class Viewer:
         self._drop_guest()
         self.ds = None
         self._release_game()
-        self.status.set(f"Disconnected ({err}). Waiting for DOSBox...")
+        self.status.set(f"Disconnected ({err}). Waiting for the game...")
         self.dice_status.set("Waiting for the game...")
         self.next_try = time.monotonic() + RETRY_SECONDS
 
@@ -1119,7 +1119,7 @@ class Viewer:
             except OSError:
                 made = []
             if made:
-                self.status.set("Save copied: " + ", ".join(made))
+                self.status.set("Save copied to Named saves: " + ", ".join(made))
 
     def _auto_locate(self) -> None:
         """For Shattered Lands, point the party slots at the game's own tables."""
@@ -1278,14 +1278,14 @@ class Viewer:
         scale = WINDOW_CHOICES[self.window_choice.get()]
         if self._save_settings({"fullscreen": True} if scale is None else
                                {"fullscreen": False, "window_scale": scale}):
-            self.status.set(f"Game window: {self.window_choice.get()}, from the next time you start the game "
+            self.status.set(f"Game window: {self.window_choice.get()}, from the next start "
                             "(Alt+Enter switches full screen while playing).")
 
     def _speed_chosen(self) -> None:
         """Remember the game's speed; it applies the next time the game is started."""
         value = self.game_speed.get()
         if self._save_settings({"cycles": value if value == launch.GOG_SPEED else int(value)}):
-            self.status.set("Game speed: from the next time you start the game.")
+            self.status.set("Game speed: from the next start.")
 
     def _option_values(self) -> dict:
         """Every switch of the Options tab as the tab shows it: {settings key: value}."""
@@ -1846,11 +1846,6 @@ class Viewer:
                 kit = gd.kit(index) if known and index < game.PARTY_SIZE else None
                 kit_move = sum(kits.move(k) for k in gd.kit_ids(index)) if kit else 0
                 move_why = [kit] if kit_move else []
-                if known and index < game.PARTY_SIZE:  # (DSCLOG's KIT_MOVE: a Wayfinder's, the party's)
-                    path = kits.PATH_MOVE if gd.path_finder() else -kits.PATH_MOVE if gd.path_lost() else 0
-                    if path:
-                        kit_move += path
-                        move_why.append("Path-finder" if path > 0 else "Wayfinder down")
             except (struct.error, IndexError, ValueError):
                 weapons, no_spells, kit, kit_move, move_why = [], False, None, 0, []
             age = None

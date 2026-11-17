@@ -127,12 +127,12 @@ class DefaultPartyTests(unittest.TestCase):
         self.assertEqual((gd.left(0, 1), gd.left(0, 2)), (1, 0))  # (the Arcanist has no slot more)
         self.assertEqual(dp.set_kit(gd, 0, "Cermak"), [])
         self.assertEqual(gd.left(0, 1), 1)
-        # a kit with a slot more (a Scholar's) adds it to those left, not a free one if one was cast
+        # a Scholar at this INT gives no slot more (its bonus slots go by INT from 16): those left as they were
         gd = Gd(bytes(cermak))
         before = dp._most_slots(gd, 0)
         gd.guest.write(gd.at + kitpages.KIT_BYTE, bytes([kitpages.kit_byte(gd.sheet(0), 0, kitpages.KITS[5].index("Scholar") + 1)]))
         dp._add_slots(gd, 0, before)
-        self.assertEqual(gd.left(0, 1), 1)
+        self.assertEqual(gd.left(0, 1), 0)
 
         # Cilla's own feature: the kit byte's OWN_BIT, her (no) kits as they were; once
         cilla = bytearray(sheet(3, (11, 6, 17)))

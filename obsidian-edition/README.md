@@ -20,8 +20,6 @@ which loads the mod with your options.
   - [features and rules](FEATURES.md): what the game shows, every rule and addition;
   - [kits and weapon specs](KITS.md): every kit's gains, costs and starting gear, and weapon
     specialization;
-  - [Weapon specialization and damage](KITS.md#weapon-specialization): attacks a round, grand
-    mastery's damage dice, choosing at creation and at a level gained, starting weapons;
   - [items](ITEMS.md) (spoilers): every item and where it is;
   - [creatures](CREATURES.md) (spoilers): every one, its size, and whether cahulaks can tangle it;
   - [the game's bugs, fixed](GAME-BUGS.md) (some spoilers): every bug of the original game the mod mends;
@@ -69,7 +67,7 @@ Eight families of changes. Most have a switch on the Loader's **Options** tab
   combat log over the map, names over figures and the Look box ([In the
   game](FEATURES.md#in-the-game)); THAC0, saves, thief skills, spell slots and
   charges on the game's own screens ([Always on](FEATURES.md#always-on)).
-- **Brings the rules closer to AD&D.** Twenty-four switches for characters,
+- **Brings the rules closer to AD&D.** Twenty-three switches for characters,
   weapons and armour, and magic, from class restrictions and levels past 9th
   to creature size and spell saves ([Rule changes](FEATURES.md#rule-changes);
   in play, [the player's guide](PLAYER-GUIDE.md)).
@@ -97,11 +95,9 @@ Eight families of changes. Most have a switch on the Loader's **Options** tab
   what they say to the scripts' broken checks, and the rules it got wrong
   ([The game's bugs, fixed](GAME-BUGS.md)).
 
-**What it changes on your computer.** The game's own files are never modified:
-the Loader runs a patched copy of the game from its own folder, and writes to
-the game folder only your saves and characters. Every file it writes, and how to
-update or back up, and what happens to your saves: [Updating, backups, saved
-games and the Loader's files](#updating-backups-saved-games-and-the-loaders-files).
+**What it changes on your computer:** the game's own files never; the game folder gets only your
+saves and characters ([Updating, backups, saved games and the Loader's
+files](#updating-backups-saved-games-and-the-loaders-files)).
 
 ## Requirements
 
@@ -286,7 +282,8 @@ Strength, Dispel Magic and the rest, from the next spell cast). The fixes stop
 the old bugs from happening, but what a bug already did stays in the save:
 
 - **A save isn't for an older version** where a release changed what a save
-  holds: 2.13.0, 2.13.2, 2.14.0 and 2.15.0 (its new items) did, so a save made
+  holds: 2.13.0, 2.13.2, 2.14.0, 2.15.0 (its new items) and 2.18.0 (the
+  Spellarcher's Fine Bow, a name 2.17 doesn't have) did, so a save made
   with one of them or later doesn't load in the versions before it (a 2.14.1
   save still loads in 2.14.0). Older saves load in newer versions as they are:
   a character keeps its age, and its roll is put on its sheet when the game is
@@ -302,31 +299,20 @@ the old bugs from happening, but what a bug already did stays in the save:
 - **Kits from earlier versions:** a Healer keeps its sphere and is given the
   cosmos spells when the game is loaded (the dice log says so). A thri-kreen
   druid/fighter Wasteland Seer has no kit now: the kit is a
-  druid/fighter/psionicist's.
+  druid/fighter/psionicist's. A human with a kit for each of several classes
+  keeps them all (from now on a change of class adds no second kit); a Myrmidon keeps
+  the two weapon specs it chose; a Healer or Lifebinder has the harming spells
+  taken away when the game is loaded.
 - **Thieves' Tools** from an earlier version (Mirlon's or Kel's) do nothing: a
   thief picks pockets with the Pick Pockets button.
 - **Most PSP:** a character's may go up once, the next time the game works it
   out (a level up, or a game starting): the game's own bonuses for CON, INT and
   WIS are counted right now, and the most only ever rises.
-- **Thornwall in an older save:** in a save from 1.2.0 to 2.5.0 that has
-  already been to the slave pens, the weapon rack is gone, so Thornwall never
-  comes onto it (a new game has the rack). In a save from 2.13.4 or earlier that has already been to
-  the arena, Thornwall is already on the rack (it now comes only after
-  Semyon's tip).
-- **Kreenfang:** in a save from 2.13.4 or earlier that has already been to the
-  arena, it is likely still on the dead body by the stone arch, and the
-  champions' Tohr-kreen brings another.
-- **Pehtucl's locked chest** comes with a new game: in a save that has already
-  been to the slave pens he still wears the Cloak of Protection, and the chest
-  is the plain one.
-- **A save made with an earlier version while Kalzith was switched off** (or
-  when the Loader couldn't make its copy of the game's objects): in the slave
-  pens, talking to Semyon may start Kalzith's conversation instead (the Loader
-  now numbers its conversations the same whatever the switches). There's no
-  undoing it in that save. One made with Kalzith on, the default, is
-  unaffected.
-- **A new game whose arena fight never began** (no announcer, and walking said
-  NO PATH FROM HERE: a 2.4.0 bug) can't be mended: start a new one.
+- **New items and people in an older save:** some placed by 2.13.4 or earlier (Thornwall on the
+  pens' weapon rack, Kreenfang, Pehtucl's locked chest) may be where an older version put them, or
+  missing, in a save that has already been to those areas; a new game has them as described. A save
+  made while Kalzith was switched off may start Kalzith's conversation when talking to Semyon, and
+  an arena fight that never began in a 2.4.0 game can't be mended: start a new one.
 
 A new game is still the way to see all of the mod: kits, STORE and RECALL and
 fuller starting gear come with characters made with it, and much of the new
@@ -364,7 +350,7 @@ only by the mod's patched game.
 The window has the party on one side and the logs and tools on the other, with
 **Start the game**, the game window's size, the text size, **Freeze report**
 (see [reports](#crash-freeze-and-item-reports)), **Reconnect** (to find the
-game again) and **Help** (the manual, in your browser: these pages as web pages, from the `manual` folder, at its start page, this one) along the top. The party pane has two tabs:
+game again) and **Help** (this manual, in your browser) along the top. The party pane has two tabs:
 
 - **Characters** (Alt+C): a card for each character, laid out like the game's
   View Character screen ([The Characters tab](#the-characters-tab)).
@@ -398,7 +384,7 @@ of the tab, sets them all back (after asking). In a
 window too small to show the open sections, the tab scrolls (scrollbar, mouse
 wheel, or arrow and page keys once it has the focus).
 
-![The Options tab with Rule changes (twenty-four switches, in three groups: Characters, Weapons and armour, Magic) and New content open, the other sections closed](docs/options.png)
+![The Options tab with Rule changes (twenty-three switches, in three groups: Characters, Weapons and armour, Magic) and New content open, the other sections closed](docs/options.png)
 
 ### The Characters tab
 
@@ -491,7 +477,7 @@ text, with the replies offered numbered underneath (and the list's title,
 such as "Answer Yes or No", above them), and then the one you picked:
 `You chose: No`.
 
-![The Dialogue tab at the start of a new game: the Announcer, with his portrait, introducing the Defiler's show and calling the gladiators into the arena; the Characters tab beside it with Gerakis's and K'ratchek's ages and their features](docs/dialogue.png)
+![The Dialogue tab at the arena's opening show: the Announcer, with his portrait, introducing the Defiler's show and calling the gladiators into the arena; the Characters tab beside it with Gerakis's and K'ratchek's ages and their features](docs/dialogue.png)
 
 **Who's speaking.** The game's dialogue window has only a portrait, never a
 name, so a speaker shows as `Portrait 57` until the log learns its name from
@@ -513,7 +499,7 @@ installed the window uses its own lettering and no portraits.
 
 ## The dice log
 
-![The Loader during the arena's opening show, in the readable layout: the Characters tab with the game's own party (Gerakis's Features: Wild Fighting and his age; K'ratchek's chatkcha 5/2 attacks a round and her open sky spells and psionics), and the dice log's last rounds: each attack with its outcome first, the d20 and the AC in columns and the working under it, round 5's initiative, the Rampager's two hits and its acid (the Defiler's save made), the Defiler's death, the party's PSP back, and the fight's summary](docs/dicelog.png)
+![The Loader during the arena's opening show, in the readable layout: the Characters tab with the game's own party (Gerakis's Features: Wild Fighting and his age; K'ratchek's chatkcha 5/2 attacks a round and her open sky spells and psionics), and the dice log's last rounds: the Defiler's Cone of Cold on the Rampager (its magic resistance and its save for half), round 11's initiative, each attack with its outcome first, the d20 and the AC in columns and the working under it, the Defiler's death, the party's PSP back, and the fight's summary](docs/dicelog.png)
 
 **Finding something.** Type a word in **Find** above the log (Ctrl+F puts
 you there) and press Enter: every match lights up, the log jumps to the first,
@@ -578,7 +564,7 @@ finding more rolls worth labelling.
 
 ## Accessibility
 
-The Loader aims at the AODA's standard for software people read, WCAG 2.0
+The Loader aims at Ontario's accessibility standard (the AODA's) for software people read, WCAG 2.0
 level AA:
 
 - **Contrast:** every colour used for text has at least 4.5:1 contrast with
@@ -601,7 +587,7 @@ level AA:
 - **The game's font** is only used for the window's title: it's a 9-pixel
   bitmap font, fine enlarged as a heading but harder to read than ordinary
   text, so everything else is in the system's fonts. The combat log in the
-  game uses a small font of the Loader's (8 pixels a line) (its header, buttons and filters in the game's); the
+  game uses a small font of the Loader's (8 pixels a line; its header, buttons and filters in the game's); the
   same lines are in the Dice log tab at any text size.
 - **Screen readers:** tkinter's windows are not read well by screen readers.
   **Save...** on the Dice log and Dialogue tabs writes the log to a text file,
@@ -646,14 +632,9 @@ doing help (see [Reporting a problem](#reporting-a-problem)):
   writes a crash report; load the last save to go on. (Listed since 2.5.0;
   its cause isn't known yet.)
 - **In a long session, figures can vanish from the screen and the game then
-  freeze.** Three causes are fixed: one in 2.7.0; the Loader's new outfits
-  filling the game's picture store after many changes of gear in one area
-  (the Loader now reuses the store's room: [what the party
-  wears](FEATURES.md#what-the-party-wears)); and the game's own 300 picture
-  slots running out in a busy area, so that items, bodies, figures and
-  doorways stopped being drawn (a slot nothing uses is now reused: [the
-  game's bugs](GAME-BUGS.md#screens-and-memory)). If it still happens, press
-  **Freeze report** on the Loader before closing DOSBox. (Reported in 2.6.0.)
+  freeze** (much rarer now: three causes are fixed, [the game's
+  bugs](GAME-BUGS.md#screens-and-memory)). If it happens, press **Freeze report** on the Loader
+  before closing DOSBox.
 
 ### Crash, freeze and item reports
 

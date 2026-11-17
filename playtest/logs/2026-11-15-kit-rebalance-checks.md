@@ -1,0 +1,343 @@
+# In-game checks of the kit rebalance (2026-11-15)
+
+Branch `kit-rebalance`, DSCLOG built from the branch (buildcheck.py: every changed routine the same
+in memory as dos/DSCLOG.EXE: kinds_allowed, probe_belt, cell_heal, lv_due, arrow_save, th_cast,
+probe_init, kit_forbids, av_know, av_harm, lv_scholar, probe_cr_spells, probe_slots, kf_cahulaks;
+129 vectors at their handlers).
+
+## Part 1: character creation
+
+### Myrmidon (human fighter 3, "Swat") — PASS
+
+- KITS page: NO KIT clicked off, MYRMIDON taken.
+- DONE: PICK A WEAPON SPECIALTY. Every kind lit but the **polearm** (greyed: second row, fourth);
+  the **bow lit** (any fighter's pick now). One pick (the long sword) **closed the window** (one
+  due, not two).
+- Dice log: "Swat starts with a plain bone polearm in the backpack too: a Myrmidon's second weapon spec".
+- Sheet: weapon specs **long sword, polearm**; Bone Polearm (type 19) in the backpack; the game's
+  shield, sling and long sword as before.
+
+### Seeker, fire (human ranger 3, "Jaardoon") — PASS
+
+- Ranger, CLERICAL SPHERE: AIR clicked off, FIRE on; KITS: SEEKER (the fourth row).
+- DONE: PICK A WEAPON OF EXPERTISE. Lit: long sword, dagger, short sword, mace, axe, great axe,
+  cahulaks, chatkcha (the kinds with an obsidian weapon). **Greyed: the bow**, club, pick,
+  quarterstaff, polearm, gythka, sling, staff sling.
+- Sheet: class 15 (fire ranger), Seeker, weapon spec the long sword.
+- Gear: the **Wooden Bow in the backpack** (slot 14), its arrows still in the quiver.
+- Noted, not from this change: the game's **bone** long sword stays in hand. A kit never forbids a
+  weapon of a kind it specialized in ("a weapon spec is a weapon learnt for good"), so a fire
+  Seeker who picks the long sword may wield any long sword. (The dice log's hit point line said
+  "Ranger (air)": the dice were rolled while AIR was still marked.)
+
+### Scholar (human preserver 3, "Hamonde", INT 19) — PASS
+
+- KITS: SCHOLAR. DONE: CHOOSE A SPELL (its first icon at about 120,74; a click at 99,72 lands
+  beside the icons and does nothing).
+- Picks counted from shots: **seven at LEVEL 1, then two at LEVEL 2** (the plain preserver 3's
+  4 + 2, and the Scholar's one more for each of its 3 levels), then the psionic powers.
+- Known in memory: Armor, Burning Hands, Charm Person, Chill Touch, Color Spray, Enlarge, Gaze
+  Reflection (1st), Blur, Detect Invisibility (2nd): **9**.
+- Slots 2 / 1 / 0 (`max_spell_slots`): a plain preserver 3's, **no slot more** at INT 19.
+
+### Healer (human water cleric 3, "Aticus") — PASS
+
+- Cleric, CLERICAL SPHERE: AIR off, WATER on; KITS: HEALER (third row; offered with WATER marked).
+- Known priest spells after DONE: **none of the harming ones**: no Cause Light Wounds (72), Cause
+  Disease (97), Cause Serious Wounds (113), Poison (119), Cause Critical Wounds (128), Slay Living
+  (136). Its cosmos spells there: Abjure, Cloak of Bravery, Cloak of Fear, Free Action, Neutralize
+  Poison, Prot'n from Evil 10' Rad., Cure Critical Wounds, Dispel Evil, Raise Dead; its cures; Blood
+  Flow. (Harm: 6th level, past its 3rd.)
+- Its psionic discipline was psychokinesis (a cleric's panel shows the spheres, not the
+  disciplines: VIEW PSIONICS switches), so no Cell Adjustment to try here.
+
+### Twin-blade (human gladiator 3, "JohnBoy") — PASS
+
+- KITS: TWIN-BLADE (second row). DONE: PICK A WEAPON SPECIALTY: **the cahulaks lit** (second row,
+  last); greyed: great axe, quarterstaff, polearm, gythka, bow, staff sling (two-handed).
+- Picked the long sword, then the cahulaks (237,79): weapon specs **long sword, cahulaks**.
+- The Loader's rule on the live sheet (`restrict.kit_forbids`): the cahulaks of bone (21), metal
+  (146) and obsidian (147) allowed, also as a spec pick; the great axe (2) forbidden.
+
+### Healer and Lifebinder with psychometabolism (the user's ask) — PASS at creation
+
+- A cleric's or druid's creation panel shows its spheres; **VIEW PSIONICS** (240,138, in the KITS
+  window's place) switches to the disciplines: P-KINESIS (250,106) clicked off, **P-METAB**
+  (250,114) on; VIEW SPHERES switches back.
+- PICK A PSIONIC POWER for P-METAB: 14 icons, powers 6-19 in order (Animal Affinity first); **Cell
+  Adjustment is the 8th**, second row third (157,79).
+- **Healer** "Killer" (human water cleric 3): powers Animal Affinity, Energy Containment, Life
+  Draining, **Cell Adjustment**; harming spells known: none; its cosmos spells there.
+- **Lifebinder** "Halton" (human air druid 3): the same four powers, **Cell Adjustment** among them;
+  priest spells known: no Cause Light (72), Cause Disease (97), Cause Serious (113), Poison (119),
+  Cause Critical (128), Slay Living (136); the druid's own cosmos spells there (Abjure, Free Action,
+  Neutralize Poison, Cure Critical Wounds, Raise Dead...).
+- (A dropped character's record stays in memory: `sheetinfo.py` still listed Aticus after DROP, and
+  a right-click on the slot opened ADD, the slot empty.)
+
+## Part 2: Cell Adjustment in play (the party at the arena gate, region 2Ah, out of a fight)
+
+The party Swat (Myrmidon), Killer (Healer), Hamonde (Scholar), Halton (Lifebinder); START GAME
+(`S` at the main menu), the opening's boxes clicked through to "Step forward". Swat's HP set to 3 in
+memory (`setmem.py hp=0:3`; put back to 21 after: never saved). U opens the USE screen; a portrait
+picks the user, the kind button (150,171) CLERIC -> PSIONIC; Cell Adjustment the fourth icon
+(230,59), then the target's portrait (Swat 66,62).
+
+- **Healer** — PASS: "Killer uses Cell Adjustment: power check d20 = 11, needs 11 or less -> it
+  works" / "**Cell Adjustment: 1d4 = 1, +1 (Healer) -> Swat healed 2 HP**" / "Swat now 5/21 HP (+2)".
+  (The first try's check failed: d20 18, the 2 PSP a failure costs.)
+- **Lifebinder** — PASS: "Halton uses Cell Adjustment: power check d20 = 3, needs 16 or less -> it
+  works" / "**Cell Adjustment: 1d4 = 1, +1d4 = 4 (Lifebinder) -> Swat healed 5 HP**" / "Swat now
+  10/21 HP (+5)".
+- Scholar's THAC0: the creature's +1Fh is **21** (a preserver 3's 20, 1 worse); View Character
+  shows 20 (STR 17's +1 taken off), as the creation screen did.
+
+## Part 3: a second party
+
+### Brute (human gladiator 3) — PASS
+
+- KITS: BRUTE (fourth row). DONE: PICK A WEAPON SPECIALTY: lit only the great axe, quarterstaff,
+  polearm and gythka; **the cahulaks greyed** (second row, last), as every one-handed kind and the
+  missile ones.
+
+### Swashbuckler (human thief 3, "Celos") — PASS at creation
+
+- KITS: SWASHBUCKLER (first). DONE: PICK A WEAPON SPECIALTY lit **only the long sword, dagger and
+  short sword**. Picked the short sword: "Celos starts with a plain bone short sword for the weapon
+  specialization chosen, in place of the bone long sword".
+
+### Wayfinder (dwarf fighter/thief 2/2, "Morbad th'Worst") — made
+
+- The big portrait (40,60) stepped the race to a dwarf (race 2); THIEF added (multiclass); KITS:
+  G-FIGHTER, WAYFINDER (second). Long sword spec. (Its initiative: in the fight below.)
+
+The party for the fight: Finster (Brute: great axe, polearm), Celos (Swashbuckler), Morbad
+(Wayfinder), Hamonde (Scholar, from the roster: ADD, the list scrolled with its down arrow 219,146,
+the name, ADD 252,46). (A party's last member can't be dropped: "LAST ONE: CAN'T DROP".)
+
+## Part 4: the arena's first fight (Finster, Celos, Morbad, Hamonde)
+
+START GAME, the opening, the step forward (`/tmp/playtest/startfight.sh`, topartyfight.sh's
+steps); party turns by Tab + Return.
+
+- **Wayfinder** — PASS: every round, "Morbad th'Worst 32 = 20 + 7 (0-9 roll) +2 DEX **+2 Wayfinder
+  +1 Wayfinder's Path-finder**", every other member "+1 Wayfinder's Path-finder"; the totals the
+  game's own (no "other" part), so DSCLOG's PROBE_INIT gave the same.
+- **Swashbuckler bad luck** (the Loader's stealth roll at its turn) — PASS: "Celos hides in
+  shadows: d100 = 59, needs 10 or less (35, halved in daylight; **- 7, a Swashbuckler's bad luck**)"
+  and a round later "needs 3 or less (35, halved in daylight; **- 14**, ...)": a new amount each roll.
+  Its attack: "THAC0 19, -1 bone, +1 Swashbuckler (a warrior's THAC0) = 19" with its short sword.
+- **Brute** — PASS: "Finster attacks Slig with Bone Great Axe (1d10) ... THAC0 18, +3 STR, -1 bone,
+  +1 specialized, **+2 Brute** = 13", the hit "1d10 = [10] -1 bone +2 specialized **+2 Brute** +7
+  STR 19".
+- **Scholar, a touch spell** — PASS: "Hamonde's Chill Touch at Slig: touch attack d20 = 4, needs
+  17+ (20%) (**THAC0 21**, +1 STR; target AC 3)".
+- **Scholar, Acid Arrow** (taught in memory for the test: the known byte, never saved) — PASS:
+  "Hamonde's Acid Arrow at Slig: attack d20 = 6, needs 15+ (30%) (**THAC0 19 (a fighter's of the
+  caster's level, a Scholar's 1 worse)**, +1 DEX; target AC 3)": a fighter 3's 18, 1 worse.
+- Driving notes: a touch spell from afar says "too far away" and keeps the aim; a right-click
+  cancelled it and passed the turn; a walk click that lands on a foe attacks it (Hamonde's staff).
+
+## Part 5: a third party in the arena (Aticus, Deestan, Halton, Swat)
+
+Made: **Sentinel** "Aticus" (human fighter 3, long sword), **Wild Fury** "Deestan" (mul
+fighter/druid 2/2: the portrait stepped to race 7, DRUID added; KITS shows only WILD FURY),
+**Spellarcher** "Halton" (half-elf fighter/preserver 2/2: race 4, PRESERVER added). The
+Spellarcher's spells: CHOOSE A SPELL's icons are 6 a row, about 18 apart from (122,71), rows 22
+apart; the list closes up after each pick (the first click took Shield, the same place then
+Shocking Grasp). Its weapon window: **everything greyed but the bow**; "Halton's Arm Armor / Leg
+Armor is left behind: a Spellarcher can't wear it", "Halton's Shield is left behind".
+
+At the gate, out of the fight:
+- **Spell arrow** — the USE screen on Halton (U, its portrait): under its spells, a red (Burning)
+  and a blue (Shocking) button; a slow press on the blue one (176,147): "Halton makes one of the
+  shocking arrows in the pack (1 of 24 now): a 1st-level slot used ..." (the quiver held its wooden
+  arrows: the new stack went to the pack). Swapped in the inventory (I, Halton's portrait 22,118:
+  quiver 66,26 to a backpack cell, the Shocking Arrows to the quiver). (The arrow button closes the
+  USE screen: an Escape after it opened EXIT: SAVE GAME?; CANCEL 125,116.)
+- **Sentinel's AC** — its shield taken off (left hand 173,92 to the backpack): AC on the inventory
+  panel **0 -> 3** (the shield's 1 and the Sentinel's 2 gone).
+
+In the fight:
+- **Wild Fury** — PASS: "Deestan fights wild: d20 = 9, **needs 15 or less (CON 19 -4)** -> 1 more
+  attack a round and +3 damage, -3 to hit and AC 3 worse for the fight"; its attacks "-3 Wild
+  Fighting" on to hit, "+3 Wild Fighting" on damage, two a round; a Slig needed 7+ on its AC 10.
+- **Sentinel** — PASS: initiative "Aticus 28 = 20 + 6 (0-9 roll) +2 DEX" (**no Sentinel part**);
+  without a shield "THAC0 18, -1 bone, +1 specialized, **-1 Sentinel** = 19".
+- **Myrmidon**: initiative "Swat 20 = 20 + 0 (0-9 roll) +2 DEX -2 Myrmidon".
+- **Spellarcher's arrow save** — PASS: shot at the Screamer Beetle (`pointer.py attack`, a click on
+  its figure 10 px above the feet: Tab + Return walks an archer up and punches, the bow unused with a
+  foe beside it): "Halton attacks Screamer Beetle with Wooden Bow (1d8) ... HIT" / "Shocking Grasp
+  damage: 1d8 = [3] +2 = 5" / "**Screamer Beetle's saving throw vs Shocking Grasp from Halton
+  (spell)**: d20 = 11, needs 16 (25% to save) -> failed: full damage, 5". Then Shocking Grasp cast
+  by hand at a Slig (its touch attack missed, so no save line either way); the spell records' save
+  bytes after it: Burning Hands 0xA1, Chill Touch 0xA1, **Shocking Grasp 0xA0, Vampiric Touch 0xA0**
+  (no save, as the game has them: ARROW_SAVE cleared the bit for the hand cast).
+
+## Part 6: a bug found, fixed and checked — the Myrmidon's polearm lost in the roster
+
+- Swat, re-added from the roster in a later session (ADD), had weapon specs **long sword only**,
+  and none of the Loader's gear (the polearm, the sling): the game writes a new character to the
+  roster at DONE, and the Loader's changes (`weaponchoice.kinds_for`, `kit_gear`, `startgear`) come
+  after, in memory only. Picks made on the weapon window survive (DSCLOG writes them during DONE).
+- Fix: DSCLOG's new **MYRM_POLEARM**, from CR_WEAPONS right after the weapon window, puts the
+  polearm in a new Myrmidon's second weapon spec slot (test: `test_myrmidon_polearm`).
+- Checked on the new build (buildcheck: myrm_polearm, cr_weapons the same): a Myrmidon made (the
+  bow picked) had "bow, polearm"; DOSBox restarted, the character ADDed from the roster: **"bow,
+  polearm"** kept.
+- Still open then (older than this branch, every kit and class): the Loader's creation gear (a
+  Myrmidon's polearm item, the bow and arrows of a bow spec, fuller starting gear, a Spellarcher's
+  armour left behind...) isn't in the roster's copy; a character added again later has the game's
+  own gear. Fixed in part 7.
+
+## Part 7: the Loader's creation gear in the roster's copy
+
+- Timed with `gearpoll.py` from DONE: GEAR_DUE set, the weapon window (lv_creating), the dice log's
+  gear lines and CHARSAVE.GFF's write. Three causes found, one after another:
+  1. `GEAR_WAIT` (VIEW CHARACTER's) cleared GEAR_DUE whenever STATS weren't fresh, and on the
+     creation screen they never are: `GEAR_HOLD` (new, before the roster write) then waited for
+     nothing. Both now test the Loader's heartbeat (+1865, the stats thread's, every 0.25 s; age 1-5
+     ticks seen), and GEAR_WAIT leaves GEAR_DUE set on its timeout.
+  2. The Loader cleared GEAR_DUE in a pass while the weapon window was up, giving nothing (the gear
+     waits for the specs). Now it leaves it set until the window is gone.
+  3. A plain fighter (Holdfast, slot 1) still got nothing: its creature reads **Okay**, not New, all
+     through DONE, and the Loader's gear steps take only New ones (an earlier Swashbuckler in slot 3
+     got its gear only because that slot's record was left New). DSCLOG now names the character
+     (`GEAR_WHO`, +1867, its sheet index) and `game.being_new` counts it.
+- Gripsure (human fighter, slot 1, short sword picked): gear_due at 10.41 s, "starts with a plain
+  bone short sword" and "more gear: Sling" at 10.51 s, CHARSAVE.GFF written at 30.09 s (after the
+  four powers). DOSBox restarted, ADDed: Bone Short Sword in hand, Leather Sling, the leather
+  armour and shield. **PASS.**
+- Bowtest (human fighter, slot 2, bow picked), Gripsure in slot 1: gear at 10.47 s, written at
+  20.79 s; Gripsure (Okay, ADDed) untouched. Restarted, ADDed: Wooden Bow, Wooden Arrows, Bone
+  Short Sword, armour and shield. **PASS.**
+
+## Part 8: the kits not yet played (2026-11-15/16)
+
+- **Justifier** (human ranger 3, "Rick th'Untamed"): the weapon window reads PICK A WEAPON
+  SPECIALTY, the bow greyed (it has the bow already); the long sword picked; Effects: "KIT:
+  JUSTIFIER / SPECIALIZED IN LONG SWORD / EXPERT IN BOW". **PASS.**
+- **Seeker, air** (human ranger 3, "Aticus"; AIR is the ranger's sphere unless changed): PICK A
+  WEAPON OF EXPERTISE with only dagger, cahulaks, chatkcha, bow, sling and staff sling lit; the bow
+  picked; Effects "EXPERT IN BOW" (from the pick alone); gear: Wooden Bow and Arrows, an obsidian
+  dagger in place of the long sword ("a Seeker can't use it"). **PASS.**
+- **Twin-blade** (human gladiator 3, "Twinny", cahulaks and short sword picked; leather armour), in
+  the arena's first fight: "THAC0 18, -1 bone, +1 specialized = 18" on both cahulaks attacks, no
+  two-weapon penalty; the tangle save after each hit. **PASS.**
+- **Assassin asleep after a class change** (memory: Bowtest made thief 3 turned fighter 1, the
+  Assassin kit on the thief class, `dualset.py`-style; a heavy chest armour type, 12, on its chest
+  item): asleep, the armour taken off and put back on (AC 6 to 4); with fighter 4 over thief 3 (kit
+  awake) the same move: "CANNOT USE THIS ITEM". `canuse.py`: allowed / kit forbids. **PASS.**
+- **Crusader** (memory: Jenna of `fountain-user` made cleric 7, kit 3, `kitset.py 1 1 7 3`, her
+  long sword spec her chosen weapon; the ambush): two rounds of 2 main-hand attacks (and her off
+  hand's one), "+4 Crusader (a warrior's THAC0)"; at level 6 (`kitset.py 1 1 6 3`): 2 then 1 (3/2)
+  and +3. **PASS.** The first try, in the arena with Rick, stayed 3/2 at "7th level": the game reads
+  attacks a round from the sheet's +2Ah (a ranger's 3), so `kitset.py` sets it to a cleric's 2.
+- **Mind Warrior** (2026-11-16, after two worker restarts: Jenna made psionicist 7, kit 2,
+  `kitset.py 1 12 7 2`, before the ambush): round 1 and round 2 each 2 main-hand attacks (and the
+  off hand's one), "+4 Mind Warrior (a warrior's THAC0)". **PASS.** (The first try ended with the
+  fight before her second turn; the next one stalled on Ester with no Move and her END menu up:
+  `untilturn.sh` keeps pressing Tab there; E with that menu up ended her turn.)
+- The arena's extra wave (staying after the Announcer) defeated that party: a 3rd-level party with
+  memory edits loses to it.
+
+## Part 9: the Swashbuckler's lock, and the rest (2026-11-16)
+
+- **Swashbuckler's bad luck on a lock** (`pens-new-chest`, `shut.py`, the chest as the guide has it;
+  Gerakis made a Swashbuckler thief 5 in memory, `kitset.py 0 17 5 1` then `thief.py 0 5`): the
+  chest's trap roll "find/remove traps 28 = 40 thief level 5 - 19 Swashbuckler's bad luck + 7
+  equipment" (failed: the needle), the lock "open locks 27 = 42 thief level 5 - 15 Swashbuckler's
+  bad luck" (d100 2: opened). Cilla (a thief, no kit) rolled the trap too, with no bad luck. Two
+  different amounts, each within 0-25. **PASS.**
+- **Shinobi asleep after a class change** (Gerakis in memory: human, thief 5 turned fighter 1, kit 3
+  on the thief class; his chest armour's type 12, heavy): asleep, taken off and put back on (AC 7 to
+  5); fighter 6, awake: "CANNOT USE THIS ITEM". **PASS.**
+- **Brute and air cleric: a bug found and fixed.** Cermak made a Brute (gladiator 3, `kitset.py 2 10
+  3 3`): DUAL (portrait 20,104 right-click, DUAL 90,145) shows CLERIC lit (earth, fire and water are
+  open to it), and its sphere menu has the title row "SPHERE: AIR", then EARTH, FIRE, WATER. The
+  title row takes no click; the menu's close (210,116) made him an **air cleric** (classes [1, 10]):
+  the game makes any answer but a row the air class. Fixed in DSCLOG (`PROBE_SPHERE`'s
+  `SPHERE_BARRED`). On the new build (buildcheck OK): the close changed nothing (gladiator 3, the
+  window shut); EARTH (140,92) made him an earth cleric ([2, 10]). **PASS.**
+- **One kit a character after DUAL**: that change of class to earth cleric asked for no kit (Brute
+  his only kit). **PASS.**
+- **Swashbuckler's warrior THAC0** (`fountain-user`, Jenna a Swashbuckler thief 7 in memory, her
+  long sword spec the chosen weapon): "+4 Swashbuckler (a warrior's THAC0)". **PASS.**
+- **Battle Mage's warrior THAC0** (Jenna a Battle Mage preserver 7, `kitset.py 1 11 7 2`): "+4
+  Battle Mage (a warrior's THAC0)" with her chosen long sword. **PASS.** (Its attacks a round go
+  through the Crusader's code, checked in part 8.)
+- **Grove Warden's sphere weapons** (Jenna an air druid Grove Warden 7, `kitset.py 1 5 7 1`): her
+  long sword went back into her hand while she had a long sword spec (a kind a character specialized
+  in is never barred by its kit); with her specs cleared in memory: "CANNOT USE THIS ITEM".
+  **PASS.**
+- New tool: `toturn.sh N` plays the party's turns to member N's, pressing E when a member's turn
+  stays up after Tab + Return (its END menu was at the screen's left this time, where a fixed pixel
+  test missed it; `untilturn.sh` kept pressing Tab there).
+- Not played then (part 10 does): the Arcanist's casting a level higher and the Scholar's extra spell at a level up or
+  DUAL (CHOOSE A SPELL at creation was played in part 1); the emulator tests cover them.
+
+## Part 10: the Arcanist and the Scholar's level-up and DUAL (2026-11-16)
+
+From `fountain-user`, the ambush (after another idle shutdown: Xvfb and DOSBox restarted).
+- **Arcanist** (Lex made a preserver 4 Arcanist, `kitset.py 0 11 4 3`, `spellsetup.py 0=4 8`): Magic
+  Missile at the Templar (free): "3d4 ... (1d4+1 for each 2 caster levels (counting +1)): 3", 14
+  rolled and 14 taken: 3 missiles, a 5th-level caster's; Lex as a plain preserver 4 (part 11) fired
+  2. **PASS.** (The "counting +1" is Magic Missile's own formula, (level + 1) / 2 missiles, not the
+  kit's level.) At a held (Paralyzed) target the damage taken was 15 both times (9 and 11 rolled):
+  3d4+3's most, the game's rule for a helpless target (FEATURES.md); the dice log didn't say so
+  (fixed: part 11).
+- **Scholar at a level up** (Lex made a preserver 4 Scholar, `kitset.py 0 11 4 1`, XP 19,990 in
+  memory; the Templar killed, Lex +385): the level came during `fightout.sh`'s turns, "Lex is now a
+  5th level Preserver", and CHOOSE A SPELL took **two** picks (`levelup.sh` twice: Hold Person and
+  Hold Undead learnt), a preserver's one and the Scholar's one more. **PASS.**
+- **Scholar on DUAL** (Jenna, human ranger 3: her kit byte cleared and INT 18 in the creature record,
+  `foeset.py 1 int=18`, as the DUAL window reads the record's scores, not the sheet's): DUAL,
+  PRESERVER, the kit menu "KIT: NONE / SCHOLAR / ARCANIST" (no Battle Mage: it bars the warrior
+  classes she has), SCHOLAR; CHOOSE A SPELL took **three** picks (a new preserver's 2 and the
+  Scholar's one more); classes [11, 16], levels [1, 3], the Scholar on the preserver class, awake.
+  **PASS.**
+
+## Part 11: the dice log's damage on a held target (2026-11-16)
+
+The fix for part 10's 9-rolled, 15-taken line: the dice log names a Paralyzed target's damage as the
+most the dice can do, as it did for one Out Cold. From `fountain-user` (`spellsetup.py 0=4 8`, the
+Templar 25 held with `foeset.py 25 eff=34`), Lex a plain preserver 4: "Magic Missile damage: 2d4 =
+[4 + 2] +2 = 8 (... : 2)", then "Templar takes 10 from Magic Missile (Paralyzed: the most the dice
+can do), now 31/41 HP". **PASS.** Two missiles at preserver 4 without the kit (the Arcanist's 3 in
+part 10). The view jumped to the map's corner after a missed aiming click (two Templars: `foepos.py`'s
+first column, the combatant, tells them apart); a loop of `scroll.py` drags until the target is on
+the screen brought it back, the aim still up.
+
+## Summary
+
+| Kit | What was checked | Result |
+|---|---|---|
+| Myrmidon | one pick, polearm greyed, bow lit; polearm spec and item; -2 initiative; roster copy (after the fix) | PASS |
+| Seeker (fire) | bow greyed, obsidian kinds lit; bow to the backpack | PASS |
+| Scholar | 9 spells at creation (7 + 2); no slot more; THAC0 21; Chill Touch and Acid Arrow at its THAC0 | PASS |
+| Healer | no harming spells; Cell Adjustment +1 | PASS |
+| Lifebinder | no harming spells; Cell Adjustment +1d4 | PASS |
+| Twin-blade | cahulaks offered and allowed | PASS |
+| Brute | cahulaks greyed; +2 with the great axe | PASS |
+| Swashbuckler | long sword, dagger, short sword only; bad luck on its rolls (-7, -14) | PASS |
+| Wayfinder | +2 its own, +1 the party | PASS |
+| Sentinel | AC +2 with a shield; no initiative; -1 without a shield | PASS |
+| Wild Fury | CON - 4 check; -3 / +3 / 1 more attack / AC 3 worse | PASS |
+| Spellarcher | bow only; armour left behind; arrow made; save against its Shocking Grasp arrow | PASS |
+| (any) | the Loader's creation gear in the roster's copy, ADDed after a restart (part 7) | PASS |
+| Justifier | chosen long sword specialized, bow at expertise (part 8) | PASS |
+| Seeker (air) | only its sphere's weapons offered, the bow among them; bow expertise only from the pick | PASS |
+| Twin-blade | cahulaks in a fight: no two-weapon penalty | PASS |
+| Assassin | heavy armour worn while asleep after a class change, refused once awake | PASS |
+| Crusader | 2 attacks a round at 7th level with the chosen weapon, 3/2 at 6th | PASS |
+| Mind Warrior | 2 attacks a round at 7th level with the chosen weapon | PASS |
+| Swashbuckler | bad luck on a lock and a trap (-15, -19); warrior THAC0 with its chosen blade | PASS |
+| Shinobi | heavy armour worn asleep after a class change, refused awake | PASS |
+| Brute | no air cleric by DUAL (a bug: closing the sphere menu made one; fixed, part 9) | PASS after the fix |
+| Battle Mage | warrior THAC0 with its chosen weapon | PASS |
+| Grove Warden | a weapon its sphere bars refused (with none of its weapon specs) | PASS |
+| (any) | no second kit after DUAL | PASS |
+| Arcanist | Magic Missile at a level higher (3 missiles at preserver 4, 2 without the kit) | PASS |
+| Scholar | two spells at a level up; three on DUAL to preserver | PASS |
+
+Every kit changed on this branch has now been played.

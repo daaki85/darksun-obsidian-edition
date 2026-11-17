@@ -14,6 +14,7 @@ DSCLOG's routines and variables are named in capitals on these pages
 - [Building and testing](#building-and-testing)
   - [The folders](#the-folders)
   - [Build](#build)
+    - [Generated pages](#generated-pages)
   - [Tests](#tests)
   - [Making a release](#making-a-release)
   - [From a command prompt](#from-a-command-prompt)
@@ -21,6 +22,8 @@ DSCLOG's routines and variables are named in capitals on these pages
   - [Mapping memory](#mapping-memory)
   - [Command-line mapping tools](#command-line-mapping-tools)
 - [How the dice log works](#how-the-dice-log-works)
+  - [The helper's header](#the-helpers-header)
+  - [Adding a probe or a site](#adding-a-probe-or-a-site)
 - [What is known](#what-is-known)
 - [Room in the helper](#room-in-the-helper)
   - [Where DOSBox's memory is](#where-dosboxs-memory-is)
@@ -40,6 +43,7 @@ DSCLOG's routines and variables are named in capitals on these pages
 - [How each part works](#how-each-part-works)
   - [What the game and the Loader show](DEVELOPMENT-SCREENS.md)
   - [The rules](DEVELOPMENT-RULES.md)
+  - [The kits](DEVELOPMENT-KITS.md)
   - [Spells, items, people, graphics and the game's bugs](DEVELOPMENT-CONTENT.md)
 
 ## Building and testing
@@ -101,7 +105,10 @@ signature (`DSCLOGva` now: after Z, lowercase) goes up whenever the helper and
 the Loader must change together (`HDR_SIG` in `dsloader/dicelog.py`), so a
 Loader never talks to an older helper.
 
-The post-game check that keeps an error on screen for the crash report, and
+The creation screen's least scores routine is assembled into `gamepatch.py`'s
+`least_scores` patch bytes from `dos/least_scores.asm` and its table
+`dos/least_scores_table.inc` (`test_least_scores` and `test_audit_builds` check the bytes
+match). The post-game check that keeps an error on screen for the crash report, and
 the program that moves upper memory down before the helper loads, are built the
 same way:
 
@@ -154,8 +161,18 @@ creature's size from `sizes.py` and whether it can be tangled from
 
 ### Tests
 
+From `obsidian-edition/`:
+
 ```
 python -m unittest discover -s tests
+```
+
+With the game's files (the Loader's patched copies are made from them; a game folder such as the
+one `setup_game.sh` installs for playtesting):
+
+```
+G=/path/to/game; DSUN_GPLDATA=$G/GPLDATA.GFF DSUN_OBJECTS=$G/SEGOBJEX.GFF \
+    DSUN_RESOURCE=$G/RESOURCE.GFF python -m unittest discover -s tests
 ```
 
 Some tests need more, and are skipped without it (each skip says what it
@@ -338,7 +355,8 @@ Every roll in the game goes through one function, Borland C++'s `rand()`.
 
    The helper also hooks:
    - DOS's `INT 21h`, to open the launcher's copies of `SEGOBJEX.GFF`,
-     `RESOURCE.GFF`, `GPLDATA.GFF` and some regions' files (for the [new
+     `RESOURCE.GFF`, `GPLDATA.GFF` and some regions' files (its table `copies`: each name once,
+     the copy's `D:\` path made in `COPY_PATH` as the file is opened) (for the [new
      items](FEATURES.md#new-items), [Kalzith](FEATURES.md#kalzith),
      [Semyon](FEATURES.md#semyon) and [no manual
      check](FEATURES.md#no-manual-check)), and to keep what the game last wrote
@@ -405,6 +423,30 @@ Limitations:
 - Weapon breaking was checked against the game's code, and the check's rolls
   were seen in play, but no weapon happened to break during testing; the
   game's own "is broken !" message is logged either way.
+
+### The helper's header
+
+The fields the Loader and the helper share are the helper's header, from `hdr:` in
+`dos/dsclog.asm`: the signature (`HDR_SIG`, `DSCLOGva`), then one field a line, each commented
+with its offset (`+1830`, `+1867` ...) and what it holds. That source is the layout's one home.
+The Loader finds the header by its signature in DOSBox's memory (16-aligned) and names each field
+it uses `TSR_*`, in the module that uses it (`dicelog.py`, `kits.py`, `ghost.py`, `freeze.py`,
+`cahulaks.py` ...). New fields go at the end, so the offsets of the rest never move (the latest:
+`GEAR_WHO`, +1867); a change that both sides must make together takes the signature up.
+
+### Adding a probe or a site
+
+1. In `dsloader/gamepatch.py`, a `Patch(name, offset, original, replacement)` in `PATCHES`: the
+   DSUN.EXE file offset, the bytes there, and an `INT` the same length (`_interrupt(VEC_X, n)`,
+   NOPs after it), or, with every vector taken, a site of the shared one (`_site(X_SITE, n)`: the
+   `INT`, the site's number, NOPs). Keep the game's far calls and their relocations where they
+   are.
+2. In `dos/dsclog.asm`: a new vector's handler in `ALL_VECTORS` (`vector VEC_X, probe_x`), or a
+   site's routine in `site_tab` (`site X_SITE, x_site`, in number order: the build fails
+   otherwise), with the number as an `equ` beside the Python constant of the same name. Say in
+   the routine's comment what it replaces, at which address, and what it keeps.
+3. A test in `tests/test_dsclog.py` that runs it in the emulator (`run_vector` or a site run),
+   then a check in the game with the build in place (playtest's `buildcheck.py`).
 
 ## What is known
 
@@ -550,7 +592,7 @@ the one place for the sizes; the sections after them name the symbols only.
 | Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (the unmodded game's 57 KB) |
 | C000h-C7FFh | 32 KB | the video BIOS (ROM) |
 | C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
-| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 68.0 KB (69,584 bytes with its PSP and its tail, (10h + `KEPT_PARAS`) paragraphs), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, and the rest free. **Measured 2026-11-10** (`playtest/memaudit.py`, in Pehtucl's ambush): 32,256 bytes free in one piece, and nothing between the helper and the overlay buffer (KEEP's resize, fixed that day; 288 bytes were left there before) |
+| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): the helper 69.0 KB (70,640 bytes with its PSP and its tail, (10h + `KEPT_PARAS`) paragraphs), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, and the rest free. **Measured 2026-11-16** (`playtest/memaudit.py`, in Pehtucl's ambush, DSCLOG.EXE 70,496 bytes): 29,616 bytes free in one piece, between the overlay buffer and the see-through tables, and nothing between the helper and the overlay buffer |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
 | 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): the helper's [far block](#the-far-block), 65,484 bytes, 36 free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
@@ -558,22 +600,25 @@ the one place for the sizes; the sections after them name the symbols only.
 ### The limits
 
 Each fails the build when passed (a negative `times`). From the build of
-2026-11-11 for 2.17.0, with the psionic powers picked at creation (DSCLOG.EXE 70,128
-bytes: the 32-byte header, the segment's image of 64,576 and the tail's 5,520, `TAIL_BYTES`):
+2026-11-16 (the kit rebalance, after the fifth memory pass: DSCLOG.EXE 70,416 bytes: the
+32-byte header, the segment's image of 64,848 and the tail's 5,536, `TAIL_BYTES`):
 
 | Limit | Used | Room | Spare |
 |---|---|---|---|
-| [the helper's segment](#the-helpers-segment): `kept_end` (`resident_end` 63,584 + `AFTER_INSTALL` 992) | 64,576 bytes | 65,536 | 960 bytes |
+| [the helper's segment](#the-helpers-segment): `kept_end` (`resident_end` 63,856 + `AFTER_INSTALL` 992) | 64,848 bytes | 65,536 | 688 bytes |
 | [the far block](#the-far-block): `FAR_END` (its buffers from `FAR_RING`, 10h: 65,484 bytes) | 65,500 | 65,536 | 36 bytes |
-| upper memory as the helper loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,477 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,705 |
-| upper memory once installed: `UMB_KEPT` (the helper, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,099 paragraphs | 8,182 (`UMB_ROOM`) | 83 (1.3 KB) |
+| upper memory as the helper loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,495 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,687 |
+| upper memory once installed: `UMB_KEPT` (the helper, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,117 paragraphs | 8,182 (`UMB_ROOM`) | 65 (1,040 bytes) |
 
 To check them after a change, build a scratch copy with `[map all FILE]` as its
 first line (`nasm -f bin -I dos/ -o /tmp/x.exe COPY`, from `obsidian-edition/`)
 and read the symbols in the map. What each change took is in the
-[CHANGELOG](https://github.com/daaki85/darksun-obsidian-edition/blob/main/CHANGELOG.md); the two memory passes' steps, each checked in the
-game, are in [the 2026-11-08 log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-08-memory-pass.md)
-and [the 2026-11-09 log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-09-memory-pass-2.md).
+[CHANGELOG](https://github.com/daaki85/darksun-obsidian-edition/blob/main/CHANGELOG.md); the memory passes' steps, each checked in the
+game, are in the logs of [2026-11-08](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-08-memory-pass.md),
+[2026-11-09](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-09-memory-pass-2.md),
+[2026-11-10](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-10-memory-pass-3-and-new-cahulaks.md)
+[2026-11-16](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-16-memory-pass-4.md)
+and [the fifth, also 2026-11-16](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-16-memory-pass-5.md).
 
 ### The helper's segment
 
@@ -586,9 +631,9 @@ nothing needs while installing are laid over the install code (declared with
 and `slots_text`, `box_text`, `ns_scratch`, `shadow_tab`, `ef_text`; 992 bytes):
 `KEEP` zeroes them before its first DOS call and keeps memory to the tail's end
 (`KeepTests`). The segment holds whichever is longer, the install code or
-`AFTER_INSTALL`; the install code is the shorter (974 bytes: the vectors set
+`AFTER_INSTALL`; the install code is the shorter (959 bytes: the vectors set
 from a table, `ALL_VECTORS`, each vector's byte and its handler's offset), so
-the image is made up to `AFTER_INSTALL`'s size with zeros (18 bytes at
+the image is made up to `AFTER_INSTALL`'s size with zeros (33 bytes at
 present). SEG_MOVE's two tables of the game's (`seg_space`, `area_space`) and
 the tables only one routine reads (the AD&D XP, slot, thief and DEX tables,
 the kits' names) are in the tail, read through `tail_seg`.
@@ -612,7 +657,10 @@ leaves. The ways to free the segment:
   whole run, so a table they read costs nothing to move there (`cs:` becomes
   `fs:`);
 - **code written once**: shared by many handlers (`OVR_BACK`, the way back
-  through the overlay manager's frame; `SHEET_CLASSES`; the sites after
+  through the overlay manager's frame; `SHEET_CLASSES`; `ES_THINGS`, the things' segment in ES;
+  `SHEET_OF_AX`, a sheet by its number; `CREATURE_SHEET` / `CREATURE_SHEET_AX`, a creature's
+  sheet; `NS_FLAGS_IRET`, a site's way back with AX's flags in its frame; `FINE_ITEM`, the Fine
+  Bow's name look-up: use them rather than writing the instructions out again; the sites after
   `VEC_CR_SPELLS`'s INT through one table of a word a site, `SITE_TAB`), and
   tables packed (the rings' outlines a quarter each, mirrored by
   `RING_POINTS`; the AD&D XP table as words of 50 XP; the extra item names
@@ -917,8 +965,9 @@ sets or reads.
 
 ## How each part works
 
-How each part of the [features page](FEATURES.md) and the [README](README.md) is done, on three pages of its own:
+How each part of the [features page](FEATURES.md) and the [README](README.md) is done, on four pages of its own:
 
 - [What the game and the Loader show](DEVELOPMENT-SCREENS.md) (its Contents lists each section)
 - [The rules](DEVELOPMENT-RULES.md) (its Contents lists each section)
+- [The kits](DEVELOPMENT-KITS.md) (its sections: the kits, the kit's byte, choosing one, multiclass kits, where each effect goes, how they're checked)
 - [Spells, items, people, graphics and the game's bugs](DEVELOPMENT-CONTENT.md) (its Contents lists each section)

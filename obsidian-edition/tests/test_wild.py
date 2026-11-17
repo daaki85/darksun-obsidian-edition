@@ -50,20 +50,21 @@ class FakeGd:
 
 class WildTests(unittest.TestCase):
     def test_passed(self):
-        """d20 = 12 against CON 18 - 4: passed, its bit N + 4 set (1 more attack, 3 more damage), for the
-        fight; cleared as it ends."""
+        """d20 = 12 against CON 18 - 4: passed, its bits N (3 worse to hit, AC 3 worse) and N + 4 (1 more
+        attack, 3 more damage) set, for the fight; cleared as it ends."""
         gd, w = FakeGd(), wild.WildFights()
         out = w.round(gd, HDR, 1, lambda a, b: 12)
         self.assertEqual(out, ["Mul fights wild: d20 = 12, needs 14 or less (CON 18 -4) -> 1 more attack a round "
-                               "and +3 damage for the fight"])
-        self.assertEqual((gd.wild, gd.bits()), ({2: True}, 0x40))
+                               "and +3 damage, -3 to hit and AC 3 worse for the fight"])
+        self.assertEqual((gd.wild, gd.bits()), ({2: True}, 0x44))
         self.assertEqual(w.round(gd, HDR, 2), [])
-        self.assertEqual(gd.bits(), 0x40)
+        self.assertEqual(gd.bits(), 0x44)
         w.stop(gd, HDR)
         self.assertEqual((gd.wild, gd.bits()), ({}, 0))
 
     def test_failed(self):
-        """d20 = 15 against CON 18 - 4 (passed without the -4): failed, its bit N set (3 worse to hit, AC 3 worse)."""
+        """d20 = 15 against CON 18 - 4 (passed without the -4): failed, its bit N alone set (3 worse to hit,
+        AC 3 worse, and none of the gains)."""
         gd, w = FakeGd(), wild.WildFights()
         out = w.round(gd, HDR, 1, lambda a, b: 15)
         self.assertEqual(out, ["Mul fights wild: d20 = 15, needs 14 or less (CON 18 -4) -> fails: -3 to hit and AC "
@@ -76,7 +77,7 @@ class WildTests(unittest.TestCase):
         w.round(gd, HDR, 1, lambda a, b: 19)
         w.stop(gd, HDR)
         out = w.round(gd, HDR, 1, lambda a, b: 12)
-        self.assertEqual((len(out), gd.wild, gd.bits()), (1, {2: True}, 0x40))
+        self.assertEqual((len(out), gd.wild, gd.bits()), (1, {2: True}, 0x44))
 
     def test_unseen_end(self):
         """A new fight's first round with the last one's end unseen: the last fight's result dropped,
@@ -100,15 +101,15 @@ class WildTests(unittest.TestCase):
         self.assertEqual(gd.wild, {2: True})
 
     def test_logged_without_a_kit(self):
-        """The dice log credits Wild Fighting to whoever fights wild, Gerakis too (no kit): +3 damage
-        with the check passed, -3 to hit with it failed, as DSCLOG adds them (WILD_*); the game's
+        """The dice log credits Wild Fighting to whoever fights wild, Gerakis too (no kit): -3 to hit
+        whatever the check, and +3 damage with it passed, as DSCLOG adds them (WILD_*); the game's
         damage bonus was put down to the weapon."""
         from types import SimpleNamespace
         from dsloader import dicelog
         g = SimpleNamespace(wild={0: True, 1: False}, dance={}, kit_ids=lambda m: [])
         log = SimpleNamespace(game=g)
         attack = lambda who, mode=1: dicelog.DiceLog._kit_attack(log, who, 81, mode)
-        self.assertEqual(attack(0), ("Wild Fighting", 0, kits.WILD_DAMAGE))
+        self.assertEqual(attack(0), ("Wild Fighting", kits.WILD_TO_HIT, kits.WILD_DAMAGE))
         self.assertEqual(attack(1), ("Wild Fighting", kits.WILD_TO_HIT, 0))
         self.assertEqual(attack(2), ("", 0, 0))
         self.assertEqual(attack(0, None), ("", 0, 0))

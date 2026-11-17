@@ -89,16 +89,18 @@ class DocLinkTests(unittest.TestCase):
         self.assertEqual(bad, [])
 
     def test_readme_links_how_it_works(self):
-        """The development pages on how each part works (DEVELOPMENT-SCREENS, -RULES and -CONTENT)
+        """The development pages on how each part works (DEVELOPMENT-SCREENS, -RULES, -KITS and -CONTENT)
         name sections of the README, the features page and the pages split from it (items, kits, the
         game's bugs, how the game works) by their headings; each such section links to its
         explanation, on the page that has it."""
         explained = {}
-        for page in ("DEVELOPMENT-SCREENS.md", "DEVELOPMENT-RULES.md", "DEVELOPMENT-CONTENT.md"):
+        for page in ("DEVELOPMENT-SCREENS.md", "DEVELOPMENT-RULES.md", "DEVELOPMENT-KITS.md",
+                     "DEVELOPMENT-CONTENT.md"):
             with open(os.path.join(HERE, page), encoding="utf-8") as f:
                 for h in re.findall(r"^## (.+)$", f.read(), re.M):
                     if h != "Contents":
                         explained[h] = f"{page}#{slug(h)}"
+        explained["Kits"] = "DEVELOPMENT-KITS.md"  # (the rules' "Kits" is a stub: the kits have their own page)
         self.assertGreater(len(explained), 60)
         missing = [heading for page in ("README.md", "FEATURES.md", "ITEMS.md", "KITS.md",
                                         "GAME-BUGS.md", "HOW-THE-GAME-WORKS.md")

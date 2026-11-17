@@ -75,10 +75,10 @@ class ViewerSettingsTests(unittest.TestCase):
         self.assertTrue(v._options_unread)
         self.assertTrue(v.show_dust.get())  # (the defaults shown...)
         self.assertIn("shows the defaults", v.status.get())
-        v.rule_vars["two_weapons"].set(False)  # (...and one switch changed once the file can be read)
+        v.rule_vars["spell_save"].set(False)  # (...and one switch changed once the file can be read)
         v._options_changed()
         settings = self.saved()
-        self.assertIs(settings["two_weapons"], False)
+        self.assertIs(settings["spell_save"], False)
         self.assertEqual((settings["dust"], settings["shadows"], settings["helm_ac"], settings["game_dir"]),
                          (False, False, False, "C:\\GOG"))  # (the player's other choices kept)
 

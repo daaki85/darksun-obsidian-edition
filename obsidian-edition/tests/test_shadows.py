@@ -103,7 +103,7 @@ class ShadowGoneTests(unittest.TestCase):
         here = os.path.dirname(__file__)
         with open(os.path.join(here, "..", "dos", "DSCLOG.EXE"), "rb") as f:
             image = f.read()[32:]
-        at = image.find(bytes.fromhex("50560 68cd8".replace(" ", "")))
+        at = image.find(bytes.fromhex("505606e8"))
         self.assertGreater(at, 0)
         tsr, ds, ss, creatures = 0x1000, 0x5000, 0x9000, 0x7000
         things_seg = (ds + 0x3972 - 0x4356) & 0xFFFF
