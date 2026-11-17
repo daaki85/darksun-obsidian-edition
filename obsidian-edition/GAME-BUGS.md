@@ -9,7 +9,7 @@ a switch, are [further down](#rules-it-got-wrong-with-a-switch). The script bugs
 Loader's copy of the game's scripts; many were found by yuan-ti and the OpenDS project
 ([credits](https://github.com/daaki85/darksun-obsidian-edition#credits)). How the fixes work:
 [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md) (the script bugs, the spells, worn items), the
-memory fixes in [DEVELOPMENT.md](DEVELOPMENT.md#room-in-the-helper), and the rows' own links.
+memory fixes in [DEVELOPMENT-INTERNALS.md](DEVELOPMENT-INTERNALS.md#room-and-memory), and the rows' own links.
 
 ## Contents
 
