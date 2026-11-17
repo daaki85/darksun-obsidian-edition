@@ -29,15 +29,16 @@ default and when it takes effect](obsidian-edition/PLAYER-GUIDE.md#the-options-t
 - [The player's guide](obsidian-edition/PLAYER-GUIDE.md), without spoilers, with a
   [glossary](obsidian-edition/PLAYER-GUIDE.md#glossary) of THAC0, AC, PSP and the rest
 - [Features and rules](obsidian-edition/FEATURES.md): what the game shows, every rule and addition
-- [Kits and weapon specs](obsidian-edition/KITS.md): every kit's gains, costs and starting gear,
-  and weapon specialization
+- [Kits](obsidian-edition/KITS.md): every kit's gains, costs and starting gear
+- [Weapon specs](obsidian-edition/WEAPON-SPECS.md): weapon specialization, who picks what, and the
+  attacks a round
 - [Items](obsidian-edition/ITEMS.md) (spoilers): every item and where it is
 - [Creatures](obsidian-edition/CREATURES.md) (spoilers): every one, its size, and whether cahulaks
   can tangle it
 - [The game's bugs, fixed](obsidian-edition/GAME-BUGS.md) (some spoilers): every bug of the
   original game the mod mends
 - [The dice log, line by line](obsidian-edition/DICE-LOG.md): how to read it, and every kind of line
-- [How the original game works](obsidian-edition/HOW-THE-GAME-WORKS.md), from its code
+- [How the game works, and the manual's rules](obsidian-edition/HOW-THE-GAME-WORKS.md), from its code
 - [The patch notes](PATCH-NOTES.md): what the mod adds and changes from the original game, and its
   main bug fixes, in one page to share
 - For developers, [the development notes](obsidian-edition/DEVELOPMENT.md) and the

@@ -643,7 +643,7 @@ THAC0 and saves (`game.py`), the dice log's lines, and tests that hold DSCLOG's 
 
 ## Spell arrows
 
-([In the kits page](KITS.md#multiclass-kits): the Spellarcher; `spellarrows.py`.)
+([In the kits page](KITS.md#spellarcher): the Spellarcher; `spellarrows.py`.)
 
 **The buttons.** Outside a fight, `PP_SHOW` gives a Spellarcher
 (`KIT_SPELLARCHER` awake) a button in the USE screen's ability row for each

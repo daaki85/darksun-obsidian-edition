@@ -16,7 +16,8 @@ Options tab at a glance](#the-options-tab-at-a-glance), at the end, gives each s
 when it takes effect, and lists the changes that are always on. Where it helps to know what a
 switch changes, a **Without the mod** note says what the game does with it off.
 The [features page](FEATURES.md) has every rule in full detail, and the
-[Kits](KITS.md) page each kit's numbers: the guide links to their tables.
+[Kits](KITS.md) page each kit's numbers, and the [Weapon specs](WEAPON-SPECS.md) page
+weapon specialization's: the guide links to their tables.
 
 ## Contents
 
@@ -744,8 +745,8 @@ below, say who takes each kit on Athas.
 - After DONE, on the weapon window, the **Myrmidon** picks its first weapon spec as any fighter
   does and is given the polearm as its second; the **Battle Mage**, **Crusader** and **Mind
   Warrior** pick their one (a melee weapon; a thri-kreen Mind Warrior may take the chatkcha), and
-  the **Swashbuckler** its weapon of choice (long sword, dagger or short sword). The
-  **Elementalist** picks its second sphere on the CLERICAL SPHERE list.
+  the **Swashbuckler** its weapon of choice (long sword, dagger or short sword)
+  ([who picks what](WEAPON-SPECS.md#who-picks-what)). The **Elementalist** picks its second sphere on the CLERICAL SPHERE list.
 - A kit belongs to its class: a human who changes class keeps it, asleep until
   the new class's level passes the old. **One kit a character:** a human with a
   kit takes no other when it changes class; one with none may take one for
@@ -794,7 +795,7 @@ neither). Outside a fight,
 it can spend a spell slot to weave one of its touch spells (Chill Touch,
 Shocking Grasp, Vampiric Touch) into an arrow that casts the spell on what it
 hits; the arrows last until shot, a stack of each spell of up to 24, and what one hits saves only
-as the spell allows (against Chill Touch, not the others) ([how](KITS.md#multiclass-kits)).
+as the spell allows (against Chill Touch, not the others) ([how](KITS.md#spellarcher)).
 
 *Titan Mind* (half-giant fighter/psionicist). Half-giants who turned the Way
 inward, to their own great bodies; other minds remain a puzzle to them.
@@ -833,47 +834,17 @@ Warriors train in **weapon specs**: kinds of weapon, whatever their material
 (a bone, obsidian or metal long sword is the long sword spec alike). Pick
 them in a window of weapon pictures that comes up after **DONE** on the
 creation screen, and again at a level up that brings another (point at one for
-its name; those you can't pick are greyed).
-EXIT leaves the rest to the mod: the kit's own weapon (a Ghetto Fighter's
-dagger), a thri-kreen's chatkcha, else the long sword (a gladiator's second the
-club).
+its name; those you can't pick are greyed); EXIT leaves the rest to the mod.
+A fighter specializes in one (+1 to hit, +2 damage), on to mastery at 5th level
+and grand mastery at 9th; a gladiator in two, a third at 6th level and a fourth
+at 9th; a ranger has expertise with the bow and one more. With a chosen weapon
+spec a warrior keeps 3/2 attacks a round in melee (2 from 7th level) and shoots
+faster; with any other weapon it attacks once a round until 7th level. The
+Battle Mage, Crusader, Mind Warrior and Swashbuckler pick one too.
 
-![The level-up window: a picture of each weapon spec, the pointer on the dagger and SPECIALIZE IN / DAGGER under them, the specs this fighter/fire cleric can't use greyed](docs/weapon-picker.png)
-
-| Who | Chooses | With a chosen weapon spec |
-|---|---|---|
-| Fighter | 1 weapon spec | specialized: +1 to hit, +2 damage; **mastery** from 5th level: +3 to hit, +3 damage; **grand mastery** from 9th: the same, the damage die the next size up (against large targets too) and one more attack a round |
-| Gladiator | 2 weapon specs, a 3rd at 6th level, a 4th at 9th | specialized in each: +1 to hit, +2 damage |
-| Ranger | the bow, and 1 weapon spec | expertise: a specialist's attacks, no other bonus |
-
-The sixteen weapon specs: long sword, club, dagger, short sword, mace, axe,
-great axe, pick, quarterstaff, polearm, gythka, cahulaks, chatkcha, bow, sling
-and staff sling. A warrior with another class chooses only weapon specs that
-class lets it use.
-
-**Attacks a round**, by the warrior's level (its best fighter, gladiator or
-ranger level). 3/2 means one attack one round and two the next.
-
-| With the weapon | Melee, 1-6 | Melee, 7-10 | Bow, 1-6 | Bow, 7-10 | Sling, staff sling, chatkcha (a thri-kreen's chatkcha +1), 1-6 | 7-10 |
-|---|---|---|---|---|---|---|
-| anyone who isn't a warrior | 1 | 1 | 2 | 2 | 1 | 1 |
-| a warrior, a weapon spec it hasn't chosen | 1 | 3/2 | 2 | 3 | 1 | 3/2 |
-| a chosen weapon spec (specialized, mastery, expertise) | 3/2 | 2 | 3 | 4 | 3/2 | 2 |
-| grand mastery (9th level on) | | 3 | | 5 | | 3 |
-| a **Crusader** or **Mind Warrior** (by its cleric or psionicist level), its chosen weapon spec | 3/2 | 2 | | | | |
-| a thri-kreen **Mind Warrior**, the chatkcha as its chosen weapon spec (by its fighter, gladiator or ranger level, if any) | | | | | 3/2 | 2 |
-| a **Crusader** or **Mind Warrior**, any other weapon | 1 | 1 | 2 | 2 | 1 | 1 |
-| a **Battle Mage** (by its preserver level), its chosen weapon spec | 3/2 | 2 | | | | |
-| a **Battle Mage**, any other weapon | 1 | 1 | 2 | 2 | 1 | 1 |
-
-For the three kits the level is their own class's. Their chosen weapon spec
-is a melee weapon (a thri-kreen Mind Warrior's may be the chatkcha), and each of the three has a
-warrior's THAC0 with it alone (with weapon specialization off, with any of its kit's weapons). (With weapon specialization off, a Crusader or Mind Warrior
-has a warrior's 3/2 from 7th level with any melee weapon instead.) The
-**Swashbuckler** picks a weapon of choice (long sword, dagger or short sword):
-a warrior's THAC0 with it, no specialization's bonus or attacks. With [two weapons](#two-weapons), the off hand attacks
-once a round whatever the rate. A thri-kreen throws a chatkcha once more a round
-than the table says (AD&D's 2/1 for the thri-kreen's own weapon).
+Who picks what, the sixteen weapon specs, the attacks a round with every kind of
+weapon, grand mastery's dice and the starting weapons: [Weapon
+specs](WEAPON-SPECS.md).
 
 *Without the mod:* every warrior has 3/2 attacks a round in melee (2 from 7th
 level) with any weapon, and no other bonus; missile weapons shoot at the
@@ -1724,8 +1695,8 @@ Skycutter\* +2, Chatkcha +1.
 | Preserver | Hornblade +1 (a bone long sword the game lets preservers use), Dag's Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Hayneedle\* +1, Quarterstaff +2, Balk's Staff +1, Parting Staff +1, Sling +2, Sling +1, Windlash\* +1 | **Battle Mage:** also those of its chosen weapon spec |
 | Cleric of air | every dagger (Dag's Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Hayneedle\* +1), Bow +2, Phrain's Bow +1, Dunesong\* +1, Sling +2, Sling +1, Windlash\* +1, Skycutter\* +2, Chatkcha +1, Ironwhirl\* +2, Cahulaks +2\*, Emberlash\* +1, Cahulaks +1\* | **Elementalist:** its second sphere's too |
 | Cleric of earth | Dragonsbane +4, El's Drinker +2, Dark Flame +2, Bloodwrath +1, Flame Blade\* +1, Greenbright\* +2, Shadowseeker\* +1, Mindshard\* +1, Dag's Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Glasshewer\* +2, Soulcrusher +1, Axe +1, Great Axe +3, Headsman\* +2, Linebreaker\* +2, Blackmace +1, the three quarterstaffs, Gutterknot\* +1, Deepbiter\* +1, Ironwhirl\* +2, Emberlash\* +1, Bow +2, Phrain's Bow +1, Dunesong\* +1, Skycutter\* +2, Chatkcha +1 | **Elementalist:** its second sphere's too |
-| Cleric of fire | Dark Flame +2, Bloodwrath +1, Flame Blade\* +1, Mindshard\* +1, Nightsliver\* +2, Glasshewer\* +2, Blackmace +1, Emberlash\* +1, Skycutter\* +2, Chatkcha +1 | **Elementalist:** its second sphere's too |
-| Cleric of water | Stillwater\* +1, Hayneedle\* +1, Drakejaw\* +1, Gythka +3, Gythka +2\*, Kreenfang\* +1, Polearm +1, Thornwall\* +1, Mace +2, the three quarterstaffs, Gutterknot\* +1, Cahulaks +2\*, Cahulaks +1\*, Bow +2, Phrain's Bow +1, Dunesong\* +1 | **Elementalist:** its second sphere's too |
+| Cleric of fire | Dark Flame +2, Bloodwrath +1, Flame Blade\* +1, Mindshard\* +1, Nightsliver\* +2, Glasshewer\* +2, Blackmace +1, Emberlash\* +1, Skycutter\* +2, Chatkcha +1 (not the obsidian Terror Blade: the game's own lists keep it from fire clerics) | **Elementalist:** its second sphere's too |
+| Cleric of water | Stillwater\* +1, Hayneedle\* +1, Drakejaw\* +1, Gythka +3, Gythka +2\*, Kreenfang\* +1, Polearm +1, Thornwall\* +1, Mace +2, the three quarterstaffs, Gutterknot\* +1, Cahulaks +2\*, Cahulaks +1\*, Bow +2, Phrain's Bow +1, Dunesong\* +1 (not the bone Swiftbite, Draketooth or Hornblade: the game's own lists keep them from water clerics) | **Elementalist:** its second sphere's too |
 | Druid | every one but Great Axe +3 and Headsman\* | **Grove Warden:** only those its sphere allows, as a cleric of that sphere. **Lifebinder:** only Mace +2, Blackmace +1, the three quarterstaffs, Gutterknot\* +1, the slings and Windlash\* |
 | Psionicist | Mindshard\* +1, Stillwater\* +1, Dag's Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Hayneedle\* +1, Gutterknot\* +1, Bow +2, Phrain's Bow +1, Dunesong\* +1, Skycutter\* +2, Chatkcha +1; with a cleric class, only those its sphere allows too (Mindshard with fire or earth, Stillwater with water) | — |
 
@@ -2013,7 +1984,7 @@ spells](FEATURES.md#preservers-first-spells) and [psionic powers](FEATURES.md#ps
 
 | Loader label | Default | Takes effect | Details |
 |---|---|---|---|
-| Weapon specialization: fighters and gladiators specialize, fighters on to mastery and grand mastery, rangers and the Battle Mage, Crusader and Mind Warrior take expertise, the Swashbuckler a weapon of choice (chosen after DONE and at a level up) | on | at once (picked after DONE; a warrior made before picks at its next level gained) | [Weapon specialization](FEATURES.md#weapon-specialization); [in full](KITS.md#weapon-specialization) |
+| Weapon specialization: fighters and gladiators specialize, fighters on to mastery and grand mastery, rangers and the Battle Mage, Crusader and Mind Warrior take expertise, the Swashbuckler a weapon of choice (chosen after DONE and at a level up) | on | at once (picked after DONE; a warrior made before picks at its next level gained) | [Weapon specialization](FEATURES.md#weapon-specialization); [in full](WEAPON-SPECS.md) |
 | Kits: three for each class and some for multiclass characters, one a character, each giving something and costing something (chosen on the creation panel's KIT page, or after DUAL by a human with none) | on | new characters | [Kits](FEATURES.md#kits); [every kit](KITS.md) |
 | STORE and RECALL on the creation screen: keep a roll, try the die again, and bring the kept roll back; from the next start | on | next start | [STORE and RECALL](FEATURES.md#store-and-recall-on-the-creation-screen) |
 | Fuller starting gear: new characters (and the game's own party) also get a weapon they can use, a sling, and leather armour where they may wear it | on | new characters (the game's own party: in a new game) | [Fuller starting gear](FEATURES.md#fuller-starting-gear) |

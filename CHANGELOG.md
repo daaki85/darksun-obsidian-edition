@@ -81,6 +81,12 @@ Releases, newest first (2.12.0 and older in the archive):
   player's guide says the multiclass and kit notes once for all classes, has one "Magic weapons by
   class" table (the earth cleric's list gains the Great Axe +3, metal since 2.14.1), Equipment's
   topics as headings, one Options row per radio group and an "Elsewhere in the Loader" table.
+- **One home for the kits, items and reference pages**: weapon specialization a page of its own
+  (`WEAPON-SPECS.md`, in the manual), the kits' tables a line a kit with a section each, Items' chests
+  given their places and a price a row, Creatures' generated tables trimmed (with where each Guard,
+  Slave and Worker is met), the dice log's tables one example a row, the rules the game got wrong
+  moved from GAME-BUGS to FEATURES, How the game works retitled with its code addresses left to
+  DEVELOPMENT-RULES, and the player pages' links to the developer pages made GitHub links.
 
 **Dev**
 - `dsloader/guidepage.py` (the manual's old name) taken out; the combat log's design brief archived in `reports/archive/`, the rest-order prototype moved to `playtest/logs/files/`.
@@ -776,7 +782,7 @@ bytes of the segment (68,592 bytes before it).
 - docs/options.png retaken: the Options tab with the merged switches (Weapon traits, Saving throws
   against spells, Shops and Thieves as in AD&D), Rule changes and New content open; 706 x 2473.
 - KITS: a table of every weapon spec's dice, man-sized and large, with and without grand mastery
-  ([Grand mastery's damage](obsidian-edition/KITS.md#grand-masterys-damage); `GrandMasteryTableTests`
+  ([Grand mastery's damage](obsidian-edition/WEAPON-SPECS.md#grand-masterys-damage); `GrandMasteryTableTests`
   keeps it in step with `sizes.LARGE_DICE` and `specialize.next_die`). The staff sling's row is its
   stinkpot's: 1d3, 1d4 under grand mastery.
 - The stinkpots in FEATURES ([Staff sling stinkpots](obsidian-edition/FEATURES.md#staff-sling-stinkpots)),

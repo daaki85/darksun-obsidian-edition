@@ -29,6 +29,7 @@ running the game, the Loader's window and its dice log are in the
   - [What a scroll says](#what-a-scroll-says)
   - [No manual check](#no-manual-check)
 - [Rule changes](#rule-changes)
+  - [Rules the game got wrong](#rules-the-game-got-wrong)
   - [Characters](#characters)
     - [Class restrictions](#class-restrictions)
     - [Multiclass hit points](#multiclass-hit-points)
@@ -62,7 +63,7 @@ running the game, the Loader's window and its dice log are in the
     - [Resting as in AD&D](#resting-as-in-add)
 - [More character customization](#more-character-customization)
   - [Weapon specialization](#weapon-specialization)
-  - [Kits](#kits) (a page of its own: [Kits and weapon specs](KITS.md))
+  - [Kits](#kits) (a page of its own: [Kits](KITS.md); the weapon specs: [Weapon specs](WEAPON-SPECS.md))
   - [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen)
   - [Fuller starting gear](#fuller-starting-gear)
   - [Preservers' first spells](#preservers-first-spells)
@@ -383,7 +384,7 @@ points:
 - **KITS**, at the end of the disciplines' or spheres' panel
   ([choosing a kit](KITS.md#choosing-a-kit)); after DONE, the weapon window
   for a warrior's weapon specs
-  ([weapon specialization](KITS.md#choosing-at-creation)).
+  ([weapon specialization](WEAPON-SPECS.md#choosing-at-creation)).
 
 A picture of it: [STORE and RECALL](#store-and-recall-on-the-creation-screen).
 How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#the-creation-screen).
@@ -505,10 +506,43 @@ and [spells roll to hit](#spells-roll-to-hit).
 [How the game works](HOW-THE-GAME-WORKS.md) has what the game does without them.
 
 Most of these put right a rule the game gets wrong (it departs from its own manual, from itself or from
-the Player's Handbook), and count among [the game's bugs](GAME-BUGS.md#rules-it-got-wrong-with-a-switch),
-with the switch to go back. The rest are the mod's own choices: helms' AC, resting, the XP level cap, hit dice,
-creation scores, half-giants' weapons, creature size, weapon traits (cahulaks, stinkpots, polearm
-reach), rings and cloaks of protection, and ages.
+the Player's Handbook): [below](#rules-the-game-got-wrong), with the switch to go back. The rest are the
+mod's own choices: helms' AC, resting, the XP level cap, hit dice, creation scores, half-giants'
+weapons, creature size, weapon traits (cahulaks, stinkpots, polearm reach), rings and cloaks of
+protection, and ages.
+
+### Rules the game got wrong
+
+**Corrects the game:** each of these rule changes puts right a rule the game gets wrong, and is
+one of [the game's bugs](GAME-BUGS.md#rules-it-got-wrong-with-a-switch) that the mod mends with a
+switch (on by default) rather than for good. Each has a box on the Options tab but two weapons,
+which is always on.
+
+| Rule | The game | As it should be | Switch |
+|---|---|---|---|
+| Saves against spells | Petrification or polymorph for almost every spell | The save against spells | [Spells saved against with the spell save](#spells-saved-against-with-the-spell-save) |
+| Fire, cold and electricity | The save's d20 doubled (70% to save a Fireball where 35% is due), which the manual and AD&D don't have | DEX's adjustment | [Fire, cold and electricity: DEX instead of a doubled d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20) |
+| Spells, psionics and monsters | Saves, times, damage and effects that part from its own manual (pp. 30-86: the bestiary, spells and psionics) | As the manual has them | [As the manual describes them](#spells-and-psionics-as-the-manual-describes-them) |
+| Turn Undead | A d20 against a number of its own, a row too easy for 2- and 3-HD undead and a row too hard for 5 HD; a success destroys, there is no fleeing, and a priest may try the same undead as often as they like | AD&D's turning table: undead turned flee for 3d4 rounds, D destroys, D* destroys more of the kind, "---" no chance; a priest who fails can't try that undead again that fight ([the table](HOW-THE-GAME-WORKS.md#adds-turning-table)) | [As the manual describes them](#spells-and-psionics-as-the-manual-describes-them) (it goes with the spells' switch) |
+| Missile and touch spells | Every one lands, every time | They roll to hit ("as if fired by a fighter") | [Spells roll to hit](#spells-roll-to-hit) |
+| Enlarge | Grows the whole hit, STR's bonus and magic's too, rounded down | The weapon's dice grow, rounded up; STR, class and magic aren't altered (Player's Handbook p. 173) | [Enlarge](#enlarge-multiplies-the-weapons-dice-only) |
+| A ranger's spells | Spell levels by its level less 7, but duration and damage by its whole level | Level less 7 for all | [Rangers' casting level](#rangers-casting-level) |
+| Preservers' spells | Any spell learnt from any scroll, every spell known | INT's chance to learn, and its most spells of each level | [Preservers' INT](#preservers-int) |
+| Dual-classing | From 2nd level, one prime requisite a class | From 3rd level, every prime requisite (the game's manual, pp. 12 and 22-26) | [Dual-classing](#dual-classing-as-the-manual-has-it) |
+| Class restrictions | Any one class allowing an item is enough | The strictest class wins | [Class restrictions](#class-restrictions) |
+| Multiclass hit points | CON's bonus once a level | CON's bonus on every hit die, the total shared | [Multiclass hit points](#multiclass-hit-points) |
+| Class tables | Priests' THAC0 a level early, short spell slots, a little too little XP for 2nd level | AD&D's tables | [AD&D's class tables](#adds-class-tables) |
+| CON 20 and up | A hit point back every 5 minutes at any CON; CON's adjustment on a dwarf's or halfling's poison save | AD&D's rate (one an hour at CON 20, one every 10 minutes at 25); the racial bonus only | [CON as in AD&D](#con-as-in-add) |
+| Two weapons | No penalty (a small bonus at DEX 5 or less), the full rate in each hand | -2 and -4, DEX's adjustment, one attack with the off hand (always on: no switch) | [Two weapons](#two-weapons) |
+| Warriors' attacks | 3/2 with any weapon | The plain rate outside a specialization | [Weapon specialization](#weapon-specialization) |
+| Held and Out Cold targets | A roll to hit as ever, and double damage | A hit automatically, for normal damage | [Held targets](#held-targets) |
+| Acid on armour | The item destroyed outright | Each item saves by its material | [Items saving against acid](#items-saving-against-acid) |
+| Thief skills and backstabs | Skills too high (a 3rd-level elf with move silently 66); a backstab multiplied STR's bonus too | The Player's Handbook's table; a backstab multiplies the weapon's dice only | [Thieves as in AD&D](#thief-skills-from-adds-table) |
+
+Two of the game's bugs are mended by a switch of their own: Cilla's figure (the game gives the elf
+the half-elf woman's; see [Elves and half-elves](#elves-and-half-elves)), and a click on a
+spell's icon on the Effects screen ending it ([Spells on the Effects
+screen](#spells-on-the-effects-screen)).
 
 ### Characters
 
@@ -973,7 +1007,7 @@ is one:
 
 - **Damage 1d3** crushing, against any size (the game's staff sling 1d4). The inventory's and the
   item box's damage lines say 1D3; a grand master's die is the next size, 1d4
-  ([Grand mastery's damage](KITS.md#grand-masterys-damage)).
+  ([Grand mastery's damage](WEAPON-SPECS.md#grand-masterys-damage)).
 - **The fumes.** A hit that does damage makes the target save against poison (paralysis, poison or
   death: the game's own saving throw, as against a monster's poisoned hit, with every bonus the game
   gives it; a held or sleeping target fails). On a failure it is **Nauseated** for 1d3+1 rounds:
@@ -1286,7 +1320,7 @@ with it, rounded down. AD&D's Enlarge makes the creature and what it carries
 bigger, and the Player's Handbook (p. 173) says what that does to a blow: "damage rolls
 increase proportionately with size" (its example: 6 x 1.6 = 9.6, rounded up to 10), and
 "bonuses due to Strength, class, and magic are not altered". The game gets all three wrong, so
-it is one of the [game's bugs](GAME-BUGS.md#rules-it-got-wrong-with-a-switch). With **Enlarge
+it is one of the [rules the game got wrong](#rules-the-game-got-wrong). With **Enlarge
 multiplies the weapon's dice only** ticked only the weapon's dice grow, rounded up, and the rest
 is added after. The dice log
 shows it:
@@ -1474,8 +1508,8 @@ the game's attacks a round and shoots missiles faster; with any other weapon
 it has AD&D's plain rate. Each warrior picks after DONE on the creation screen
 and starts with a plain weapon of its pick. A thri-kreen throws a chatkcha once
 more a round, whatever the rule. The attacks a round, the choices,
-the starting weapons and where it shows are on the kits page: [Weapon
-specialization](KITS.md#weapon-specialization).
+the starting weapons and where it shows are on a page of their own: [Weapon
+specs](WEAPON-SPECS.md).
 
 How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#weapon-specialization).
 
@@ -1624,7 +1658,7 @@ elf's figure, with its own switch: see
 | Character | With weapon specialization | With class restrictions | With kits |
 |---|---|---|---|
 | **Gerakis**, half-giant gladiator | specializes in the long sword and the gythka; with [half-giants' two-handed weapons](#half-giants-two-handed-weapons), his club is a bone gythka, a two-handed weapon beside his long sword | | **Wild Fighting**, as a [Wild Fury](KITS.md#multiclass-kits) has it, as each fight starts |
-| **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | | casts and uses psionics as a [Wasteland Seer](KITS.md#multiclass-kits) does (druid spells 2 levels higher under the open sky, 1 lower under a roof; psionic powers 2 PSP less under the open sky, 1 more under a roof); her chatkcha's one throw more a round is every thri-kreen's (5/2 a round, specialized; [Weapon specialization](KITS.md#weapon-specialization)), not hers alone |
+| **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | | casts and uses psionics as a [Wasteland Seer](KITS.md#multiclass-kits) does (druid spells 2 levels higher under the open sky, 1 lower under a roof; psionic powers 2 PSP less under the open sky, 1 more under a roof); her chatkcha's one throw more a round is every thri-kreen's (5/2 a round, specialized; [Weapon specialization](WEAPON-SPECS.md)), not hers alone |
 | **Cermak**, human preserver, once a gladiator | specializes in the long sword and the axe, which count once his gladiator levels do again (when his preserver level passes them) | | an **Arcanist**, the kit of his preserver class: his preserver spells cast a level higher |
 | **Cilla**, elf preserver, druid and thief | | no leather armour (a druid wears none), and she knows the **Armor** spell in its place | an **Elven Shadow-walker** (her own feature): with the [stealth rule](#hiding-in-shadows-to-backstab), her hiding in shadows is never halved in daylight |
 
@@ -2156,7 +2190,7 @@ off its poisoned needle (2d6 poison). How, in
 [Items](ITEMS.md#pehtucls-chest). A new game only.
 
 The bone and obsidian weapons are also new characters' starting weapons with
-[weapon specialization](KITS.md#starting-weapons), each in a material the
+[weapon specialization](WEAPON-SPECS.md#starting-weapons), each in a material the
 character can use. Dunesong, the bow +1 the Bowyer sells, counts at his
 archery target as the game's own bows do ([the target's
 rules](HOW-THE-GAME-WORKS.md#the-bowyers-archery-target)).

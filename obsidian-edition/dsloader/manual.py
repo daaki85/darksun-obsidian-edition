@@ -49,11 +49,12 @@ PAGES = (
     ("player-guide.html", "obsidian-edition/PLAYER-GUIDE.md", "Player's guide", ""),
     ("features.html", "obsidian-edition/FEATURES.md", "Features and rules", ""),
     ("kits.html", "obsidian-edition/KITS.md", "Kits", ""),
+    ("weapon-specs.html", "obsidian-edition/WEAPON-SPECS.md", "Weapon specs", ""),
     ("items.html", "obsidian-edition/ITEMS.md", "Items", "spoilers"),
     ("creatures.html", "obsidian-edition/CREATURES.md", "Creatures", "spoilers"),
     ("game-bugs.html", "obsidian-edition/GAME-BUGS.md", "The game's bugs, fixed", "some spoilers"),
     ("dice-log.html", "obsidian-edition/DICE-LOG.md", "The dice log", ""),
-    ("how-the-game-works.html", "obsidian-edition/HOW-THE-GAME-WORKS.md", "How the original game works", ""),
+    ("how-the-game-works.html", "obsidian-edition/HOW-THE-GAME-WORKS.md", "How the game works, and the manual's rules", ""),
     ("changes.html", "PATCH-NOTES.md", "Changes from the original game", ""),
 )
 BY_SOURCE = {source: page for page, source, _, _ in PAGES}

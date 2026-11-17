@@ -52,7 +52,7 @@ class ManualPagesTests(unittest.TestCase):
         """The ten pages, the start page first, each from its Markdown, each with the bar of all ten
         (itself marked) and its own index; the spoiler pages marked so in the bar."""
         self.assertEqual(manual.PAGES[0][0], "index.html")
-        self.assertEqual(len(manual.PAGES), 10)
+        self.assertEqual(len(manual.PAGES), 11)
         for page, source, name, _ in manual.PAGES:
             self.assertTrue(os.path.exists(os.path.join(manual.ROOT, source)), source)
             html = self.pages[page]
