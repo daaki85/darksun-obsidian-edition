@@ -67,6 +67,16 @@ Releases, newest first (2.12.0 and older in the archive):
   left as the game has them; the evidence, and what was taken from OpenDS (checked to 2026-11-13), are
   in [the cross-read](reports/opends-cross-read-2026-11-16.md#6-the-changelogs-account-2026-11-17).
 
+**Docs**
+- **The player's entry points reordered** (the documentation proposal's part 4): the folder README
+  runs requirements, setup (backing up saves now a step), play, Dark Sun Recompiled in a section of
+  its own, the Loader's window, updating, compatibility in two sentences, uninstalling (the one copy
+  of what the mod changes on your computer), troubleshooting; reading the dice log and its colours
+  moved to DICE-LOG.md; the root README a pitch, three steps, one docs list and the credits. The
+  player's guide says the multiclass and kit notes once for all classes, has one "Magic weapons by
+  class" table (the earth cleric's list gains the Great Axe +3, metal since 2.14.1), Equipment's
+  topics as headings, one Options row per radio group and an "Elsewhere in the Loader" table.
+
 ## Pull request #96 ([merged 2026-11-17](https://github.com/daaki85/darksun-obsidian-edition/pull/96))
 
 No release: nothing in `obsidian-edition/` changed.
