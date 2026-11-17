@@ -1,5 +1,7 @@
 # Readability, legibility and accessibility principles for a game's scrolling text / combat log
 
+*Status: archived. A source note (readability and accessibility) for [the combat log design research](../combat-log-design-research.md).*
+
 Method note (read first): in this session WebFetch could not reach learn.microsoft.com, devdocs.xbox.com or gameaccessibilityguidelines.com (DNS blocked by the session's network policy). Findings below therefore come from search-result snippets of those primary pages plus secondary sources. Where a figure was not confirmed from a primary page in this session it is marked **[unverified here]**. Figures that are long-standing published standards (WCAG thresholds) are cited to the W3C page, but the page text itself was not re-fetched.
 
 ## 1. What GAG, Xbox Accessibility Guidelines (XAG 101/102/103) and WCAG say that applies to a text log

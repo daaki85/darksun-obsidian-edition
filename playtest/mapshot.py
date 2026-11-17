@@ -1,5 +1,5 @@
 # mapshot.py OUT.png [W H]: a picture of the whole region the party is in, W x H map units (default
-# 1920 x 1536), made by dragging the view across it (scroll.py) and pasting each 320x200 capture
+# 1920 x 1536). It is made by dragging the view across it (scroll.py) and pasting each 320x200 capture
 # (shot.sh) at its camera, the top bar and anything below y 180 left out. One map unit is a pixel,
 # so a point's map position is its pixel in the picture: plan walks on it (the party crosses a few
 # hundred units a click; a far click says NO PATH FROM HERE). Takes some minutes; no box may be up.

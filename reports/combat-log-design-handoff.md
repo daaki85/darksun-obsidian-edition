@@ -1,12 +1,13 @@
 # Handoff: a scrolling combat log inside the game (Obsidian Edition)
 
-*Archived: the design brief for the combat log as planned before 2.3.0, kept as a record. Where it
-differs from the README (the mouse wheel scrolls the panel, L shows it at any time), the README is
-right; "the Ledger" is the Loader's old name.*
+*Status: archived, and built (see "Status (built)" below). The design brief for the combat log as
+planned before 2.3.0, kept as a record. Where it differs from the README (the mouse wheel scrolls
+the panel, L shows it at any time), the README is right; "the Ledger" is the Loader's old name. The
+research behind it: [archive/combat-log-design-research.md](archive/combat-log-design-research.md).
+It stays here, not in `archive/`, because the Loader's DEVELOPMENT-SCREENS.md and `combatlog.py`
+name this path.*
 
-*From Claude Design, kept as received (design only). The three mock-up images it names
-(`1-in-game-concept.png`, `2-panel-states.png`, `3-line-types-and-behaviour.png`) were shared
-as screenshots in the conversation and are not in this folder yet.*
+*From Claude Design, kept as received (design only).*
 
 **Status (built):** Stages 0 to 5 are in (the panel, its lines, scrolling, the sizes, level chip, filters and L); see DEVELOPMENT-SCREENS.md, "The combat log in the game", for what was built and how it differs (the header reads "Round 2: Gerakis, then Cermak", the panel is 78 rows docked, and End, PgUp and PgDn stay the game's). Not built: keeping the panel up under game windows, and clicking a name to centre the view. Since pull request #48 L shows and hides the panel at any time (it no longer opens in each fight by itself), with the rolls made out of fights in it too; a strip below the map, the game's screen made 22 rows taller and the log always shown, was built as the other choice and later taken out for the room it took in the helper. The header's `L` key hint is built, as a button that hides the panel as L does. The turn pop-up this brief keeps beside the panel was removed after: the panel shows the same rolls without stopping the game.
 

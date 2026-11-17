@@ -1,4 +1,4 @@
-# rolog.py [--d20]: a read-only dice log beside the session's own Loader (2026-11-08): the Loader's
+# rolog.py [--d20]: a read-only dice log beside the session's own Loader (2026-11-08). The Loader's
 # describe() and hp_changes() on DSCLOG's entries, from this checkout's dsloader, writing nothing to
 # the game (no attach(): it writes DSCLOG's seed, filters and switches; floating names off). For trying
 # changed dice-log code on a DOSBox whose own Loader isn't yours to restart: two full Loaders would

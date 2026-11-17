@@ -1,6 +1,6 @@
-# toalarm.sh: from pens-after-scar (loaded here, DOSBox's sound recorded to $WORK/audio.raw), Cilla's
-# thief level raised to 12 in memory (she hides at 95: never save after), then through Kurzak's
-# entryway and the east passage to the fire room (1896, 856). Then restalarm.sh.
+# toalarm.sh: from pens-after-scar to the fire room (1896, 856), through Kurzak's entryway and the
+# east passage. It loads the save (DOSBox's sound recorded to $WORK/audio.raw) and raises Cilla's
+# thief level to 12 in memory (she hides at 95: never save after). Then restalarm.sh.
 . "$(dirname "$0")/env.sh"; cd "$PT"
 export PT_AUDIO=$WORK/audio.raw
 rm -f $PT_AUDIO

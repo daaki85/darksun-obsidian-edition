@@ -1,5 +1,7 @@
 # Combat logs in classic dice-driven CRPGs (Gold Box, Infinity Engine, NWN 1/2, ToEE, KOTOR, Dark Sun)
 
+*Status: archived. A source note (classic dice CRPGs) for [the combat log design research](../combat-log-design-research.md).*
+
 **Method note (read first).** This session's network allowed web *search* but blocked page *fetches* for almost every relevant host: forums.beamdog.com, gog.com, steamcommunity.com, rpgcodex.net, *.fandom.com, beforeiplay.com, crpgaddict.blogspot.com and wish-goldbox.readthedocs.io all failed with "host not allowed". Only github.com could be fetched. So every finding below comes from search-engine snippets and summaries of the cited pages, not from reading the pages in full. Quotes are as the search tool returned them. Treat the exact wording as likely but not checked against the page. A follow-up pass with those hosts allowed should check the quotes and fill the gaps (especially the Gold Box message strings and the exact NWN line).
 
 ## 1. Line grammar: narrative vs math-first (quoted examples)
@@ -93,10 +95,10 @@ The recurring complaints are missing information (the target number, absent roll
 The Gold Box games had a narrow message column, about 16 characters wide (columns 23-38), shared with the character panel. They managed pacing with a player-set message delay (Speed: Faster/Slower) instead of scrollback: messages overwrite each other in one place. Reviewers and DOSBox players complain that messages flash past.
 
 ### Cited Findings
-- Reference card: in combat, choose Done > Speed, then F to speed up or S to slow down. The card says the setting controls "the amount of time messages remain on the screen". — [SSI Pool of Radiance reference card (MOCAGH)](https://mocagh.org/ssi/pool-refcard.pdf)
+- Reference card: in combat, choose Done > Speed, then F to speed up or S to slow down. The card says the setting controls "the amount of time messages remain on the screen". — SSI's Pool of Radiance reference card (a scan at MOCAGH; the link is left out, as it is a copy of the game's own printed material)
 - Manual: "If you are having trouble reading messages before they disappear, use the Slower command." — [Gold Box wiki, Pool of Radiance/Manual](https://goldbox.fandom.com/wiki/Pool_of_Radiance/Manual)
 - Conflicting account: an Aminet doc file says the speed setting changes the wait between each word typed, not how long the message stays, and calls it a kludge (Amiga version). — [Aminet PoolOfRadiance.txt](https://sunsite2.icm.edu.pl/packages/aminet/docs/rview/PoolOfRadiance.txt)
-- Reviewer complaint: output messages "all appear in the same space and always overwrite each other" (so there is no scrollback). — [math.uh.edu Pool of Radiance review text](https://www.math.uh.edu/~barrett/data/software/games/PoolOfRadiance)
+- Reviewer complaint: output messages "all appear in the same space and always overwrite each other" (so there is no scrollback). — a Pool of Radiance review text at math.uh.edu (the link is left out: it sits in a software directory that may hold game files)
 - The wish tool documents a delay between a message and the clear that follows it, "in units of about a third of a second". — [wish-goldbox docs](https://wish-goldbox.readthedocs.io/en/latest/api/generated/automap.combatlog.html) (snippet)
 - DOSBox: "the DOSBox cycle speed is way too high to see combat messages on the screen". A player suggests text "(usually) scrolls at an alright pace at 1000 cycles". — [Gold Box Games forums](https://forums.goldbox.games/index.php?topic=4431.0); [GOG "text scrolls too fast PoR"](https://gog.com/forum/forgotten_realms_collection/text_scrolls_too_fast_por)
 - Krynn series players raise the same battle-speed issue. — [GOG "champions of krynn battle speed"](https://gog.com/forum/dungeons_dragons_krynn_series/champions_of_krynn_battle_speed)

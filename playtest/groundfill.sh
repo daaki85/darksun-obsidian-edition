@@ -1,5 +1,5 @@
-# groundfill.sh CYCLES [FIRST_TYPE]: fill the ground with items (2026-11-09, the picture-cache test):
-# each cycle gives Gerakis (member 0) 12 plain items of new types in memory (giveitems.py), opens
+# groundfill.sh CYCLES [FIRST_TYPE]: fill the ground with items (2026-11-09, the picture-cache test).
+# Each cycle gives Gerakis (member 0) 12 plain items of new types in memory (giveitems.py), opens
 # the inventory and DROPs each, closes it, waits for the game to draw them, and prints slotcount.py.
 # Starts and ends on the map with nothing open. Memory only: never save after.
 cd "$(dirname "$0")"

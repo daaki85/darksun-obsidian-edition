@@ -1,5 +1,5 @@
 # addeffect.py OWNER EFFECT [SPELL] [CHARGES]: give combatant OWNER (0-3 the party) the effect EFFECT
-# (35 Poisoned, 13 Diseased, 34 Paralyzed...) in memory, untimed: a 10-byte record put into the game's
+# (35 Poisoned, 13 Diseased, 34 Paralyzed...) in memory, untimed. A 10-byte record goes into the game's
 # effect table (load segment + 3BF6h:0106h, DS:1E24h the count) where the game keeps it, in rising
 # owner order (76A99h finds an owner's first record by a binary search on +0), after the owner's
 # other records. +0 owner, +2 caster (the owner), +4 the spell (default 0), +6 the effect, +7 the

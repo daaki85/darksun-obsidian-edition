@@ -1,6 +1,6 @@
 #!/bin/sh
-# leavearena.sh: right after "Go back to the pens" (arenawaves.sh), before the arena's patience runs
-# out (a few actions): each step first clicks away any message (a box blocks drags as well as
+# leavearena.sh: takes the party from the arena to the pens, right after "Go back to the pens" (arenawaves.sh), before the arena's patience runs
+# out (a few actions). Each step first clicks away any message (a box blocks drags as well as
 # clicks), then drags the view (scroll.py, the middle button; at most 150 pixels a drag) until the
 # ground inside the wall, between the bones and the gate (488, 232), is on screen, and clicks it:
 # the party finds its own way in (the user's way, 2026-11-01). Then the gate strip (488, 184):

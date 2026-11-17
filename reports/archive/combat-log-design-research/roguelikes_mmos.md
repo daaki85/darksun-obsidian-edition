@@ -1,5 +1,7 @@
 # Combat message design in roguelikes and MMOs
 
+*Status: archived. A source note (roguelikes and MMOs) for [the combat log design research](../combat-log-design-research.md).*
+
 Scope: concrete techniques that roguelikes (DCSS, NetHack, Brogue, Cogmind, Caves of Qud, Dwarf Fortress) and MMOs (WoW and its add-ons, FFXIV, GW2) use to keep a fast stream of combat messages readable, and what carries over to a turn-based dice log (plain text widget) and a 320x200 in-game panel.
 
 Source note: this session's network allowed only raw.githubusercontent.com plus web search. gridsagegames.com, indiedb.com, reddit mirrors, steamcommunity.com, dwarffortresswiki.org, warcraft.wiki.gg and wiki.cavesofqud.com could not be fetched. So the DCSS, NetHack and Brogue facts below come from their primary sources (options guide, default settings files, Guidebook, game source code), read in full. The Cogmind, DF, Qud, WoW, FFXIV and GW2 facts come from search-result snippets of the cited pages. Treat quotes from those snippets as close but unverified, and re-check them against the page before quoting them in a published report.

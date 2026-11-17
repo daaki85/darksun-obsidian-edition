@@ -1,4 +1,4 @@
-# memaudit.py: DOS memory now: the chain from the game's block (each block, owner, size), the upper memory chain from
+# memaudit.py: DOS memory now: every block, its owner and size, and DSCLOG's header figures. The chain from the game's block (each block, owner, size), the upper memory chain from
 # 9FFFh (DSCLOG, the overlay buffer, the see-through tables, the music buffer, free), the game's heap and DSCLOG's header figures.
 # memaudit.py: DOS's memory chain from the first MCB DOSBox makes (scanned for), every block's owner and size;
 # the game's heap; the HMA (DSCLOG's far block); DSCLOG's header figures; the map's flag.

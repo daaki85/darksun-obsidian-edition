@@ -1,5 +1,5 @@
 # walkprobe.py N X Y DIR [SECS]: a click at screen X, Y (game pixels), then for SECS seconds (default 6)
-# as often as it can: party member N's map position, whose turn it is (the game's word), DSCLOG's
+# as often as it can, a sample of the walk. Each sample: party member N's map position, whose turn it is (the game's word), DSCLOG's
 # STEALTH word (header +204: bit N set while N is hidden, so drawn see-through) and a window grab
 # (DIR/pNNN.png, 320x240). Prints one line a sample: the time from the click, the grab, the position,
 # the turn and STEALTH, so each frame can be set against the turn passing.

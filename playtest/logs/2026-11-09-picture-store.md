@@ -110,7 +110,7 @@ STALE cells.
 no store write at all) already covers toggles (a weapon in and out of the hand); the free-cell write
 covers the rest. HEAD's `_room_for` stays as the last guard.
 
-## Recommended (for whoever puts it in the mod: the prototype's diff is 2026-11-09-picture-store.diff)
+## Recommended (for whoever puts it in the mod: the prototype's diff is files/2026-11-09-picture-store.diff)
 
 Loader-side only, in `dsloader/sprites.py`; no DSCLOG change:
 - `Store`: the handle (DS:4C33h), the handle table (DS:47FAh), the cached directory (DS:42D2h), the

@@ -1,4 +1,4 @@
-# outfitcycle.py MEMBER SLOT N [SECONDS]: changes MEMBER's outfit N times, as fillcache.py does (the
+# outfitcycle.py MEMBER SLOT N [SECONDS]: changes MEMBER's outfit N times and prints the picture store after each. As fillcache.py does (the
 # slot byte, +11h, of the item it has in SLOT set to 50, no place, and back), waiting each time for
 # the Loader to dress the figure (its copy of SEGOBJEX.GFF written: obsidian-edition/dos/, beside
 # this kit; at most SECONDS, default 4), then prints the game's picture slots taken (DS:1F84h), the
