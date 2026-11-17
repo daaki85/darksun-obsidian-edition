@@ -3,9 +3,7 @@
 *Status: archived, and built (see "Status (built)" below). The design brief for the combat log as
 planned before 2.3.0, kept as a record. Where it differs from the README (the mouse wheel scrolls
 the panel, L shows it at any time), the README is right; "the Ledger" is the Loader's old name. The
-research behind it: [archive/combat-log-design-research.md](archive/combat-log-design-research.md).
-It stays here, not in `archive/`, because the Loader's DEVELOPMENT-SCREENS.md and `combatlog.py`
-name this path.*
+research behind it: [combat-log-design-research.md](combat-log-design-research.md).*
 
 *From Claude Design, kept as received (design only).*
 

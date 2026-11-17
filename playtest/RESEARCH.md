@@ -29,7 +29,7 @@ raised before stopping.
   (classes, flags, scores, items) are the tools.
 - **A class in memory** (logs/2026-11-10-air-cleric-gythka-shadows.md): a member's sheet at the far
   pointer DS:1661h + (creature +4) x 47h; classes +21h, levels +24h, flags +12h (the offsets: [the
-  sheet's table](../obsidian-edition/DEVELOPMENT.md#what-is-known)). Then take a held item out and
+  sheet's table](../obsidian-edition/DEVELOPMENT-INTERNALS.md#whats-known-of-the-save-and-records)). Then take a held item out and
   put it back (two clicks on its place in the inventory) to run the game's can-use check: "CANNOT
   USE THIS ITEM" when refused. A class can be tried for a picture too: the sheet's class byte
   (`SHEET_CLASSES`, 13 a ranger) and its flags (0200h a ranger, 0040h a gladiator). **party.py's
@@ -39,7 +39,7 @@ raised before stopping.
   name (`cahulaks.big_table`) follow within a pass.
 - **An item type's record**: `gd.item_type_record(item)` through live.py reads an item's 20-byte
   type record; its fields (material codes, damage dice) are in [the item types'
-  table](../obsidian-edition/DEVELOPMENT.md#what-is-known).
+  table](../obsidian-edition/DEVELOPMENT-INTERNALS.md#whats-known-of-the-save-and-records).
 - **A creature's level / hit dice** (logs/2026-11-08-touch-level-and-hd.md): every creature has a
   47h-byte sheet (`gd.sheet(creature)`; race +18h, classes +21h, levels +24h). The game's level of a
   combatant (508h:2Ah, 5E85Fh) is +24h for a human, else the best level of a class that is set, so a
@@ -363,7 +363,7 @@ raised before stopping.
   DOS memory after the game, more while the inventory or USE screen is open); `dacwatch.py SECONDS`
   shows DSCLOG's palette copy changing (every 30 s where the game cycles colours); `ghostwatch.py
   SECONDS` counts samples with GHOST_ON 0. The current figures are in [where DOSBox's memory
-  is](../obsidian-edition/DEVELOPMENT.md#where-dosboxs-memory-is); the history is in
+  is](../obsidian-edition/DEVELOPMENT-INTERNALS.md#where-dosboxs-memory-is); the history is in
   logs/2026-11-08-memory-pass.md and logs/2026-11-09-memory-pass-2.md. Comparing builds: [builds,
   the Loader and the tests](PLAYTESTING.md#builds-the-loader-and-the-tests).
 - **The picture store** (logs/2026-11-09-missing-figures.md): the game's store (741,376 bytes,

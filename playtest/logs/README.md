@@ -110,7 +110,4 @@ schedules and diffs a log made or used.
 | [2026-11-08-steady-pace-runs.sh](files/2026-11-08-steady-pace-runs.sh) | The steady pace's `framerate.py` runs at each cycles setting ([HISTORY](../HISTORY.md#frame-rate-measurements)) |
 | [2026-11-08-steady-pace-schedule.txt](files/2026-11-08-steady-pace-schedule.txt) | Those runs' output, one line a setting |
 | [2026-11-09-picture-store.diff](files/2026-11-09-picture-store.diff) | The prototype of [the picture-store fix](2026-11-09-picture-store.md) |
-
-`2026-11-09-rest-order.asm`, the rest's "cures first" order tried in the overlay buffer
-([the rest and poison](2026-11-09-rest-poison.md), `restfixmem.py`), stays beside the logs: the
-Loader's `dsloader/gamepatch.py` names it at this path.
+| [2026-11-09-rest-order.asm](files/2026-11-09-rest-order.asm) | The rest's "cures first" order tried in the overlay buffer ([the rest and poison](2026-11-09-rest-poison.md), `restfixmem.py`); the Loader's `dsloader/gamepatch.py` names it in a comment |

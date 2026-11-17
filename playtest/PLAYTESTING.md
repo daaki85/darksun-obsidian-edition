@@ -105,8 +105,8 @@ Run these in order, from `playtest/`, at the start of every test and again after
      [the story](HISTORY.md#two-probes-on-one-vector-target-ac-255)) and checks the tail's segment
      and data. Compare code, not the whole image: the variables in it differ once the game runs.
      To do it by hand, take the offsets from [the helper's
-     segment](../obsidian-edition/DEVELOPMENT.md#the-helpers-segment) and [the far
-     block](../obsidian-edition/DEVELOPMENT.md#the-far-block): a tool reading the far block's data
+     segment](../obsidian-edition/DEVELOPMENT-INTERNALS.md#dsclogs-segment) and [the far
+     block](../obsidian-edition/DEVELOPMENT-INTERNALS.md#the-far-block): a tool reading the far block's data
      at the helper's segment reads stale bytes. `ghostchk.py` shows the see-through block is there.
    - For a script change, decode the built copy (`GPLDATA=../obsidian-edition/dos/GPLDATA.GFF
      python3 dec.py SCRIPT LO HI`) and check the change is there before trusting anything seen in

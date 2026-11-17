@@ -10,7 +10,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import guidepage, manual  # noqa: E402
+from dsloader import manual  # noqa: E402
 
 HERE = manual.HERE
 MADE = "the manual is behind its Markdown: run python -m dsloader.manual (in obsidian-edition)"
@@ -145,11 +145,6 @@ class HelpButtonTests(unittest.TestCase):
         self.assertIsInstance(value, ast.Attribute)
         self.assertEqual((value.value.id, value.attr), ("manual", "START"))
         self.assertFalse(os.path.exists(os.path.join(HERE, "player-guide.html")))  # (now in manual/)
-
-    def test_old_name(self):
-        """python -m dsloader.guidepage still writes the manual."""
-        self.assertIs(guidepage.write, manual.write)
-        self.assertTrue(callable(guidepage.main))
 
 
 class MarkdownTests(unittest.TestCase):

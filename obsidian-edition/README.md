@@ -276,7 +276,7 @@ wheel, or arrow and page keys once it has the focus).
 ![The Options tab with Rule changes (twenty-three switches, in three groups: Characters, Weapons and armour, Magic) and New content open, the other sections closed](docs/options.png)
 
 The **All fields** and **Memory tools** tabs are for mapping the game's memory
-([DEVELOPMENT.md](DEVELOPMENT.md#mapping-memory)).
+([DEVELOPMENT-INTERNALS.md](DEVELOPMENT-INTERNALS.md#mapping-memory)).
 
 ### The Characters tab
 
@@ -489,7 +489,7 @@ saves and characters:
 | `dosbox_dicelog.conf` | DOSBox's settings for the game the Loader starts, written at each start |
 | `play.log` | what went wrong, when the game was started with `Play Dark Sun (in-game rolls).bat` |
 | `dos` | the Loader's helpers, and the patched copy of the game (`DSUNLOG.EXE`) with copies of its data |
-| `layouts`, `.dsloader-search.json` | only from the Memory tools ([DEVELOPMENT.md](DEVELOPMENT.md#mapping-memory)) |
+| `layouts`, `.dsloader-search.json` | only from the Memory tools ([DEVELOPMENT-INTERNALS.md](DEVELOPMENT-INTERNALS.md#mapping-memory)) |
 | the game folder | your saves (page 1 in the game's own `SAVE` files, pages 2 to 4 as `SAVB`, `SAVC` and `SAVD`) and characters in `CHARSAVE.GFF` |
 
 Page 1's saves (`SAVE*`) and `CHARSAVE.GFF` load in the original game as long as they hold none of

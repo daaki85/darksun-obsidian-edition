@@ -493,7 +493,7 @@ PATCHES = (
     # (near calls, no fixups) moved ahead of the read, their nops dropped: the loop's jump (80984h)
     # goes to the casts (80768h), which end with a jump to the read (80758h), which goes on past
     # them (80765h: "jmp 807EDh"). A disease cured at a rest gives STR back that rest too
-    # (playtest/logs/2026-11-09-rest-order.asm)
+    # (playtest/logs/files/2026-11-09-rest-order.asm)
     Patch("rest_cures_first", 0x80765, bytes.fromhex(
         "837ef0057c368a46f050ff76ea566a60900ee8280283c4088a46f050ff76ea566a67900ee8160283c4088a46f050ff76ea"
         "566a69900ee8040283c408837eee057c308a46ee5057566a60900ee8ee0183c4088a46ee5057566a67900ee8de0183c408"

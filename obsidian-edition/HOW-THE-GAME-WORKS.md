@@ -912,7 +912,7 @@ mummified rat, in a wardrobe a butterfly, a spider and 15 coins. Its "nothing"
 check comes first, so they never happen: the only scorpion a junk pile gives is
 the one dodged on 2, which does no harm.
 
-How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#searching-junk-hay-and-wardrobes).
+How it works: [DEVELOPMENT-INTERNALS.md](DEVELOPMENT-INTERNALS.md#searching-junk-hay-and-wardrobes).
 
 ## The Bowyer's archery target
 
@@ -936,7 +936,7 @@ So a centre from 14 squares needs DEX 17 or more: at DEX 21 a roll of 4 or
 less (5 in 21), at DEX 18 a 1 or less (2 in 21), at DEX 17 a 0. Each shot is in
 the dice log with the distances and what it needed.
 
-How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#the-bowyers-archery-target).
+How it works: [DEVELOPMENT-INTERNALS.md](DEVELOPMENT-INTERNALS.md#the-bowyers-archery-target).
 
 ## The arena's count of fights
 

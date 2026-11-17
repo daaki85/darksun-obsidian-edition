@@ -1,13 +1,10 @@
-# Development: what the game and the Loader show
+# Development: screens, controls and saves
 
-*Part of the [development notes](DEVELOPMENT.md). How the game's own screens show more (the combat log, names over figures, THAC0 and saves, the Look box, charges), what the Loader's tabs read, and the controls, saves and game speed: where the patched game calls the helper (DSCLOG), and what the Loader reads and writes. Most headings name the section of a player's page they explain (the [features page](FEATURES.md), the [README](README.md), [items](ITEMS.md), [kits](KITS.md), [bugs fixed](GAME-BUGS.md), [how the game works](HOW-THE-GAME-WORKS.md), [the dice log](DICE-LOG.md)); the rest, a part of one or a note of their own, say which at their start.*
+*Part of the [development notes](DEVELOPMENT.md). How the game's own screens show more (the combat log, names over figures, THAC0 and saves, the Look box, charges), what the Loader's tabs read, and the controls, saves and game speed: where the patched game calls DSCLOG, and what the Loader reads and writes. How the dice log labels the rolls outside fights (searches, the Bowyer's target, the scripts' ability checks) is in [the internals](DEVELOPMENT-INTERNALS.md#labelling-rolls). Most headings name the section of a player's page they explain (the [features page](FEATURES.md), the [README](README.md), [items](ITEMS.md), [kits](KITS.md), [bugs fixed](GAME-BUGS.md), [how the game works](HOW-THE-GAME-WORKS.md), [the dice log](DICE-LOG.md)); the rest, a part of one or a note of their own, say which at their start.*
 
 ## Contents
 
 - [The Dialogue tab](#the-dialogue-tab)
-- [Searching junk, hay and wardrobes](#searching-junk-hay-and-wardrobes)
-- [The Bowyer's archery target](#the-bowyers-archery-target)
-- [Ability checks in the scripts' conditions](#ability-checks-in-the-scripts-conditions)
 - [The combat log in the game](#the-combat-log-in-the-game)
   - [What the game allows](#what-the-game-allows)
   - [The panel](#the-panel)
@@ -55,63 +52,6 @@ one, and once taught "Trustee"). Several faces taking turns teach nothing.
 Portrait 119's `The Announcer` isn't replaced by a learned name (he calls out
 mid-fight, when the game's last script ran on a fighter).
 
-## Searching junk, hay and wardrobes
-
-([In How the game
-works](HOW-THE-GAME-WORKS.md#searching-junk-hay-and-wardrobes).)
-
-How: the scripts' random command has a routine of its own in the game; the
-patched game has DSCLOG look in there (`INT D3h`), which records the roll, its
-range, where the running script is (which tells the three searches and their
-damage rolls apart) and the three counts (`dsloader/searches.py`). Tested in
-play: a haystack search in the slave pens logged
-`0-10 = 7, an old, soiled loincloth (the party's 2nd find of 6 in hay)`, as
-the game's own message said.
-
-## The Bowyer's archery target
-
-([In How the game works](HOW-THE-GAME-WORKS.md#the-bowyers-archery-target).)
-
-Shooting at the target in Teaquetzl runs script 178 (with a bow in hand: the
-script counts objects 1017, 1039 and 30007, the bow, the Bow +2 and Phrain's
-Bow, into variables 1 to 3, added up at 40Dh; the Loader's copy jumps from
-there to code added at the script's end, which counts Dunesong, 2594, into
-variable 5, adds the four and jumps back to 41Ah, so nothing in the script
-moves: `bowyer.with_dunesong`): its distance command (80h)
-gives the archer's distance from the target (object 1314) in squares, as the
-game's distance routine (DSUN.EXE DD8Ch) counts them: the least n, from its
-estimate, with n * n + n at least dx * dx + dy * dy (map squares, the map
-things' 16ths of a square at DS:669Dh shifted by 4). Under 5 is a bull's eye
-with no roll; otherwise a random 0-20 under DEX - distance / 2 (2 if DEX is under
-the distance) hits, under by 10 or more is the centre, which from more than 13
-squares with the Bowyer (object 283) within 25 gives 6 Arrows +2, once (flag
-642). `dsloader/bowyer.py` writes the shot's line from the random command
-PROBE_SCRIPT_RAND records (position 57Fh, script 178's alone), the archer the one
-whose turn it is, the distances worked out the same way from where they stand.
-
-## Ability checks in the scripts' conditions
-
-([In the dice log's page](DICE-LOG.md#checks-thief-skills-and-searches).)
-
-Some scripts test an ability without the ability check command: a condition
-compares the random command with a field of the character acting (fields 23 to
-28, STR to CHA), as Chahl's `random(19) <= CHA` when asked about his scars
-(script 181), the chains a strong character breaks (76) or a secret door an
-intelligent one spots (69, `INT - 10`). `dsloader/scriptchecks.py` finds every
-such condition in the Loader's copy of GPLDATA.GFF (15 of them; 14 in the game's own) by the position
-DSCLOG records past its random command (as the searches are told apart; a
-position two scripts share is left out), and the dice log evaluates the
-condition with the roll and the score of whoever's turn it is (outside a fight
-the leader, the character acting): `Daaki CHA check: 0-19 = 15, always made
-(CHA 20) -> success`. Which way the condition goes is the one the ability
-favours (the score 25 with the lowest roll). Tested in play with Chahl.
-
-The [thief skill checks and trap triggers](HOW-THE-GAME-WORKS.md#where-the-game-rolls-thief-skills)
-(13 skill checks, 50 trap triggers in 16 scripts) are all there are: every
-script in the game's GPLDATA.GFF decodes with `dsloader/gpl.py`, and
-`gpl.checks` finds them in every one (`python -m dsloader checks` lists them,
-with the 3 ability checks the ability check command makes).
-
 ## The combat log in the game
 
 ([In the features page](FEATURES.md#the-combat-log-in-the-game).)
@@ -119,7 +59,7 @@ with the 3 ability checks the ability check command makes).
 ### What the game allows
 
 What was measured before the panel was built (Stage 0 of
-[the design brief](https://github.com/daaki85/darksun-obsidian-edition/blob/main/reports/combat-log-design-handoff.md)), with the patched game and the
+[the design brief](https://github.com/daaki85/darksun-obsidian-edition/blob/main/reports/archive/combat-log-design-handoff.md)), with the patched game and the
 dice log running:
 
 - **Pages.** The game keeps a table of pages at `0980:0004` (DSUN.EXE
@@ -149,9 +89,8 @@ dice log running:
 - **Font.** The game's text font is RESOURCE.GFF's FONT 100, 9 pixels high
   with its shadow (`art.py`): a panel 67 pixels high holds a header and 6
   lines.
-- **Memory.** With GOG's settings (`ems=true`) EMS's page frame leaves the
-  helper too little upper memory, so the launcher turns EMS off: [EMS
-  off](DEVELOPMENT.md#ems-off) (the game's memory layer then uses XMS; without
+- **Memory.** With GOG's settings (`ems=true`) EMS's page frame leaves DSCLOG too little upper memory, so the Loader turns EMS off: [EMS
+  off](DEVELOPMENT-INTERNALS.md#ems-off) (the game's memory layer then uses XMS; without
   EMS it loaded a save, walked the pens, opened a conversation and a shop, and
   played the arena's opening fight to the end without a fault: a check, not a
   whole game).
@@ -160,9 +99,9 @@ dice log running:
 
 - **Where it lives.** The Loader draws the panel's picture (`combatlog.py`:
   180 × 78 palette indices in the area's own colours, matched to the palette
-  DSCLOG last read) into the helper's far block, beside the dice log's ring
+  DSCLOG last read) into DSCLOG's far block, beside the dice log's ring
   (`FAR_PANEL`; its segment `panel_seg`, header `+328`: [the far
-  block](DEVELOPMENT.md#the-far-block)).
+  block](DEVELOPMENT-INTERNALS.md#the-far-block)).
 - **Putting it on screen.** DSCLOG copies the picture into the screen on show,
   a plane at a time (`PANEL_BLIT`, its height kept on the screen; the Loader
   stores each row as its four planes' bytes in turn, `combatlog.planar`, so a
@@ -281,7 +220,7 @@ dice log running:
   under it first. Collapsed is 15 rows (the newest line in the header), docked
   78 (7 lines), expanded 130 (12 lines and the filters' row). The lines are in a font of
   the Loader's (`smallfont.py`: the X11 misc-fixed 5x7 glyphs, public domain,
-  with the game's shadow, 8 pixels a line; the 4x6 through 2.15.0); the header, the buttons and the
+  with the game's shadow, 8 pixels a line); the header, the buttons and the
   filters stay in the game's. The header's level chip
   and - / + buttons, and the filters, are pressed through `PANEL_MOUSE` as the
   scrollbar is. **L** (`INT 16h`, `our_key`, while the panel is on screen:
@@ -329,7 +268,7 @@ dice log running:
   its ink with a dark edge a pixel round it (the colours nearest gold or
   light grey and near black in the palette DSCLOG last read), as two one-bit
   masks of 16 bytes a row (128 pixels; longer names shortened word by word,
-  then cut) and 11 rows. They go into one of four slots in the helper's tail
+  then cut) and 11 rows. They go into one of four slots in DSCLOG's tail
   (the header's `+1834` its segment, `+1838` their offset; `LBL_SIZE` 360
   bytes each: the label's number, width, height, how far above
   the feet, the two colours, the map thing, the masks), the number written
@@ -365,7 +304,7 @@ dice log running:
   has scrolled, the game's scrolling has copied any label with it, so all are
   taken off and the view drawn again whole (`VIEW_AGAIN`); the timer doesn't
   put labels while the view isn't where the main loop last saw it.
-- **Memory.** The first two slots and the code cost about 1.5 KB of the helper's
+- **Memory.** The first two slots and the code cost about 1.5 KB of DSCLOG's
   upper memory; the other two,
   720 bytes, fit in the room left.
 - **Measured** in DOSBox, a fight in the slave pens with every attack made to
@@ -377,17 +316,17 @@ dice log running:
 
 ([In the features page](FEATURES.md#thac0-saves-and-thief-skills).)
 
-How: the patched game calls the helper (`INT 65h`) just after the panel's
-weapon lines; the helper prints the lines with the game's own text routine,
+How: the patched game calls DSCLOG (`INT 65h`) just after the panel's
+weapon lines; DSCLOG prints the lines with the game's own text routine,
 whose address, like the selected character, it reads from the game's code
 around the patch (overlays move, so nothing is fixed in advance). The View
 Character screen does the same through `INT F3h`, called once it has drawn the
 character's two panels (the saves under the item icons; MOVE, the creature
 record's +1Bh, and THAC0 at x D8h on HP's and PSI's lines, 7Fh and 86h, clear
 of HP's value at its longest), and the routine that lists the weapons through
-`INT FAh` after each one. The Loader keeps the numbers in the helper's memory,
-with the time it last did: older than 5 seconds, the helper shows the sheet's
-numbers instead. Before a screen is drawn, the helper asks the Loader to
+`INT FAh` after each one. The Loader keeps the numbers in DSCLOG's memory,
+with the time it last did: older than 5 seconds, DSCLOG shows the sheet's
+numbers instead. Before a screen is drawn, DSCLOG asks the Loader to
 update them and waits for its answer, half a second at most (`STATS_SYNC`:
 `stats_req`, `stats_reply`). The game stands still while it waits, its
 pointer too, so the Loader answers from a thread of its own
@@ -409,14 +348,14 @@ own drawing (a faster game speed shortens it). Nothing else in the game changes.
 
 Which class levels up next, on View Character: the game looks up the XP for
 each class's next level in its tables and shows the lowest. Where it adds the
-closing bracket, the helper (`INT D2h`) finds which classes that number
+closing bracket, DSCLOG (`INT D2h`) finds which classes that number
 belongs to and adds their letters first.
 
 ## The creation screen
 
 ([In the features page](FEATURES.md#the-creation-screen).)
 
-What the creation screen gains is drawn by the helper with the game's own text
+What the creation screen gains is drawn by DSCLOG with the game's own text
 routine, each where the game draws nothing of its own: the AGE ([The age on
 the creation screen](DEVELOPMENT-RULES.md#the-age-on-the-creation-screen)),
 SUM ([Scores and hit points as
@@ -450,11 +389,7 @@ DEX redraws neither, so `RL_SUM` (the scores' redraw) puts the hit points' box
 back itself (`CR_BOX_PUT`, the far call's operand and the saved backgrounds'
 segment read from the overlay's code beside its site, as `CR_NAME` does for
 PSP's), draws the hit points again (`CR_PAIR_DRAW`, shared with PSP's) and the
-THAC0. Checked in DOSBox: THAC0 18 with STR 17 and DEX 15 `M17 R18`; DEX 18
-after a roll `R16`; STR 18 `M16` at once; a click on the hit points and on CON
-keep the line; a 3rd-level preserver `M19 R20`, a Scholar `M20 R21`, a Battle
-Mage `M17 R18` (the line and the age back after its hit points are rolled
-again). Tests: `test_thac0_line`.
+THAC0. Verified in play (no log kept). Tests: `test_thac0_line`.
 
 ## Spell slots on the USE screen
 
@@ -533,16 +468,16 @@ does.
 
 ([In the features page](FEATURES.md#what-hurts-a-monster-the-look-box).)
 
-How: the patched game calls the helper (`INT F5h`; INT 66h-6Fh can't be used:
+How: the patched game calls DSCLOG (`INT F5h`; INT 66h-6Fh can't be used:
 the game calls those itself, looking for sound drivers) where the box has
-drawn its first status rows; the helper asks the Loader and waits a moment for
+drawn its first status rows; DSCLOG asks the Loader and waits a moment for
 its answer, and prints the lines with the game's text routine. `INT F6h`, at
 the end of the routine that closes the box, shows the whole description.
 
 The AC is the one `PROBE_AC` last recorded for the creature
 (`DiceLog.monster_ac`: the game works an AC out only for an attack, and keeps
 none). Before any attack on it, `GameData.counted_ac` counts it as the game's
-AC routine (58DD3h) does, as `THORNS_AC` does in the helper: the sheet's base
+AC routine (58DD3h) does, as `THORNS_AC` does in DSCLOG: the sheet's base
 (+27h, 10 for an armed man), less each worn item's plus and its type's AC
 (types with +0Fh 80h, in the worn item list, +8), a fifth of a
 gladiator's level and the DEX adjustment; the effects' part (Armor,
@@ -922,7 +857,7 @@ starts the schedule afresh; the debt is held between -1.5 and 16 ticks.
 To count the pictures the game shows, read DSCLOG's `flip_count` (header
 +1832, counted at each flip); `pace_ran`, `pace_lost` and `pace_skipped` count
 the steps run, the steps lost and the frames left undrawn (`playtest/framerate.py`
-finds them by a symbol map of the helper as built).
+finds them by a symbol map of DSCLOG as built).
 
 The Loader's drawing is as cheap as it can be without looking any different:
 a shadow is darkened a plane of the video memory at a time (the graphics

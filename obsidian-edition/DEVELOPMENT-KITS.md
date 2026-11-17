@@ -1,8 +1,7 @@
 # Development: the kits
 
-*Part of the [development notes](DEVELOPMENT.md), split from [the rules](DEVELOPMENT-RULES.md#kits).
-How each kit is done: where the patched game calls the helper (DSCLOG) and what the Loader reads
-and writes. The player's page is [Kits](KITS.md).*
+*Part of the [development notes](DEVELOPMENT.md). How each kit is done: where the patched game calls
+DSCLOG and what the Loader reads and writes. The player's page is [Kits](KITS.md).*
 
 ## Contents
 
@@ -11,11 +10,17 @@ and writes. The player's page is [Kits](KITS.md).*
 - [Choosing one](#choosing-one)
 - [Multiclass kits](#multiclass-kits)
 - [Where each effect goes](#where-each-effect-goes)
+- [Spell arrows](#spell-arrows)
 - [How they're checked](#how-theyre-checked)
 
 ## The kits
 
-What each kit gives and costs is in [the Kits page](KITS.md).
+What each kit gives and costs is in [the Kits page](KITS.md). A kit is chosen for a class when a
+character is made, or by a human with none when it changes class (one kit a character): three for
+each class, or none (the class as it is). The **Kits** switch on the Options tab
+(`game.RULE_KITS`, bit 0 of DSCLOG's second rules word, `RULES_HI` at the header's +270) switches
+them all off.
+
 Two kits have tables of their own.
 
 The Seeker's and the Justifier's tables are AD&D's (*The Complete Ranger's
@@ -112,7 +117,7 @@ label (118:618h, its far address read from that call in the handler; the
 window DS:[11A4h]: background, then the screen's contents, 7E620h, which
 draws the cells and `PROBE_EF_ROWS`), and leaves the handler (7EDF5h). Any
 other drawing shows the first page. The redraw is overlay code reached from
-the helper, so the INT's way back is in a frame the overlay manager can patch,
+DSCLOG, so the INT's way back is in a frame the overlay manager can patch,
 as for `PROBE_LV_PICK`. Calling 7E620h alone draws the contents without the
 background: the pages' text lands on top of each other.
 
@@ -143,7 +148,7 @@ KITS's own `889h`, so `WP_CLICK` passes button numbers up to the last group's
 (`8A8h`) to `wp_page_button`; STORE and RECALL are `8B0h` and `8B1h`, past
 them.
 
-The Loader writes two things to the helper's header for these kits: at `+350`
+The Loader writes two things to DSCLOG's header for these kits: at `+350`
 (`KIT_OUTDOORS`) a bit for each party member under the open sky (an outdoor map,
 or a square not of a building's floor: `stealth.daylight`), once a second; at
 `+351` to `+354` (`KIT_DANCE`) each member's Battle Dancer's dance, +1, −1 or 0,
@@ -174,50 +179,47 @@ class's place in `KIT_WHERE` for `KIT_LEVEL` and `KIT_CLASS_OF_SHEET`. Rules
 that several kits touch (AC, THAC0, slots, saves, to hit and damage, cures)
 take each kit's part in turn. Each effect has its twin in `kits.py`, which the
 Loader and the dice log use (once for each kit in `kitpages.kit_ids`), and
-emulated tests hold the helper to it:
+emulated tests hold DSCLOG to it. Each effect, where it goes in the game (the
+bullets after the table name the kits):
 
-| Effect | Kits | Probe |
-|---|---|---|
-| damage with a weapon | Ravager, Brute, Ghetto Fighter, Battle Dancer and Wilderness Avenger, Arena Champion, Wild Fury | `PROBE_SPEC_DAMAGE`, `PROBE_DAM_LINE`, `PROBE_VIEW_DAM` |
-| to hit | Ravager, Brute, Ghetto Fighter, Arena Champion, Battle Dancer, Wilderness Avenger, Wild Fury | `PROBE_ATTACKS` (`KIT_TO_HIT`) |
-| AC | Ravager, Wanderer, Sentinel and Arena Champion, Grove Warden, Battle Dancer, Wild Fury | `PROBE_AC` (`KIT_AC`) |
-| movement | Stalker, Rescuer | `PROBE_MOVE` |
-| spell slots | Battle Mage, Crusader, Seeker and Justifier, Elementalist | `PROBE_SLOTS`, `PROBE_SLOT_LEVEL` |
-| spells learnt | Scholar | `PROBE_LV_PICK` (`LV_SCHOLAR`), `KIT_MADE` in `PROBE_CR_SPELLS`, `PROBE_DUAL_SPELLS` |
-| a power's PSP | Mind Bender, Kineticist, Titan Mind, Wasteland Seer | `PROBE_PSP_USE`, `PROBE_PSP_TABLE`, `PROBE_PSP_DEFENCE` |
-| a cure's healing | Healer, Lifebinder, Rescuer | `PROBE_CURE` |
-| a spell's damage | Wilderness Avenger | `AV_CAUSE`, `HARM_SITE` |
-| healing spells never known | Wilderness Avenger | `PROBE_EL_KNOW` (`AV_KNOW`), `AV_GRANT` |
-| harming spells never known | Healer, Lifebinder | `PROBE_EL_KNOW` (`AV_KNOW`'s `AV_HARM`), `AV_GRANT`, `NS_PRIEST_KNOWS` |
-| casting level | Seeker, Justifier, Shinobi | `PROBE_RANGER_CAST`, `PROBE_CAST_LEVEL`, `PROBE_SPELL_LEVEL` |
-| wizard spells for a thief | Shinobi | `PROBE_SLOTS`, `PROBE_PICK_ANY`, `PROBE_PICK_LIST` |
-| a power's PSP to keep it up | Mind Bender, Kineticist, Titan Mind, Wasteland Seer | `PROBE_PSP_KEEP`, `PROBE_PSP_KEEP_DX` |
-| the off hand | Healer, Battle Mage | `PROBE_CAN_USE` (`KIT_FORBIDS`) |
-| casting though hit | Battle Mage | `PROBE_HIT_ROUND` |
-| a wizard spell's level, 1 more | Arcanist | `PROBE_SPELL_LEVEL`'s `ARC_LEVEL` |
-| THAC0 | Scholar (a warrior's: Swashbuckler, Crusader, Battle Mage, Mind Warrior, `WAR_HIT`) | `PROBE_THAC0` |
-| initiative | Military Scout, Myrmidon | `PROBE_INIT` |
-| to hit with a missile | Military Scout | `PROBE_ATTACKS` (`KIT_TO_HIT`) |
-| a hit's poison | Poisoner | `PROBE_POISON` |
-| an arrow's plus | Spellarcher | `PROBE_ARROW` |
-| the Fine Bow's +1 to hit | Spellarcher | `FINE_HIT` (`PROBE_ATTACKS`), `IB_MATERIAL` |
-| a priest spell's level | Spirit Caller, Wasteland Seer | `PROBE_SPELL_LEVEL` |
-| saves | Myrmidon, Sentinel, Wanderer | `PROBE_RING_SAVE` |
-| a spell's damage | Wanderer | `WANDER_DMG` |
-| thief skills | Assassin, Swashbuckler, Shadowblade, Ghetto Fighter, Wayfinder, Military Scout | `PROBE_BELT` |
-| from behind, backstab | Military Scout, Rescuer, Assassin | `PROBE_STEALTH` (`KIT_REAR`) |
-| initiative in a fight | Wayfinder | `PROBE_INIT` |
-| shields | Shadowblade, Ghetto Fighter, Rescuer | `KIT_FORBIDS` |
-| light armour only; no armour at all | Assassin, Shinobi, Shadowblade, Poisoner; Spellarcher | `KIT_LIGHT` (its `BARE`) |
-| hiding, moving silently | Stalker, Assassin and Military Scout, Wilderness Avenger, Shadowblade | `stealth.py` |
-| the two-weapon penalty | Twin-blade, Battle Dancer, Justifier, Ghetto Fighter | `PROBE_TWO`, `RG_TWO` |
-| gear allowed | Ravager, Twin-blade, Brute, Stalker, Grove Warden, Lifebinder, Shinobi, Battle Dancer, Shadowblade, Ghetto Fighter and Rescuer, Seeker | `PROBE_CAN_USE`, `KINDS_ALLOWED` |
-| skill with a weapon | Justifier | `SPEC_OF_SHEET` |
-| weapon specs | Myrmidon, Brute, Battle Mage, Spellarcher, Poisoner, Crusader and Mind Warrior | `SPEC_OF_SHEET`, `KINDS_ALLOWED`, `LV_DUE` |
-| attacks a round | Wild Fury, Battle Mage, Crusader and Mind Warrior | `EXPERT_HALVES`, `WAR_KIT_HALVES` |
-| gear the kit allows | Battle Mage, Battle Dancer | `PROBE_CAN_USE` (`KIT_ALLOWS`) |
-| hit die | Battle Mage, Arcanist | `PROBE_HIT_DIE`, `PROBE_CR_DIE` |
-| max PSP | Mind Warrior | `PROBE_MAX_PSP`, `PROBE_CR_PSP` |
+| Effect | Probe |
+|---|---|
+| damage with a weapon | `PROBE_SPEC_DAMAGE`, `PROBE_DAM_LINE`, `PROBE_VIEW_DAM` |
+| to hit | `PROBE_ATTACKS` (`KIT_TO_HIT`) |
+| AC | `PROBE_AC` (`KIT_AC`) |
+| movement | `PROBE_MOVE` |
+| spell slots | `PROBE_SLOTS`, `PROBE_SLOT_LEVEL` |
+| spells learnt | `PROBE_LV_PICK` (`LV_SCHOLAR`), `KIT_MADE` in `PROBE_CR_SPELLS`, `PROBE_DUAL_SPELLS` |
+| a power's PSP | `PROBE_PSP_USE`, `PROBE_PSP_TABLE`, `PROBE_PSP_DEFENCE` |
+| a cure's healing | `PROBE_CURE` |
+| a spell's damage | `AV_CAUSE`, `HARM_SITE`, `WANDER_DMG` |
+| healing spells never known | `PROBE_EL_KNOW` (`AV_KNOW`), `AV_GRANT` |
+| harming spells never known | `PROBE_EL_KNOW` (`AV_KNOW`'s `AV_HARM`), `AV_GRANT`, `NS_PRIEST_KNOWS` |
+| casting level | `PROBE_RANGER_CAST`, `PROBE_CAST_LEVEL`, `PROBE_SPELL_LEVEL` |
+| wizard spells for a thief | `PROBE_SLOTS`, `PROBE_PICK_ANY`, `PROBE_PICK_LIST` |
+| a power's PSP to keep it up | `PROBE_PSP_KEEP`, `PROBE_PSP_KEEP_DX` |
+| the off hand | `PROBE_CAN_USE` (`KIT_FORBIDS`) |
+| casting though hit | `PROBE_HIT_ROUND` |
+| a wizard spell's level, 1 more | `PROBE_SPELL_LEVEL`'s `ARC_LEVEL` |
+| THAC0 | `PROBE_THAC0`; a warrior's, `WAR_HIT` |
+| initiative | `PROBE_INIT` |
+| to hit with a missile | `PROBE_ATTACKS` (`KIT_TO_HIT`) |
+| a hit's poison | `PROBE_POISON` |
+| an arrow's plus | `PROBE_ARROW` |
+| the Fine Bow's +1 to hit | `FINE_HIT` (`PROBE_ATTACKS`), `IB_MATERIAL` |
+| a priest spell's level | `PROBE_SPELL_LEVEL` |
+| saves | `PROBE_RING_SAVE` |
+| thief skills | `PROBE_BELT` |
+| from behind, backstab | `PROBE_STEALTH` (`KIT_REAR`) |
+| shields | `KIT_FORBIDS` |
+| light armour only; no armour at all | `KIT_LIGHT` (its `BARE`) |
+| hiding, moving silently | `stealth.py` |
+| the two-weapon penalty | `PROBE_TWO`, `RG_TWO` |
+| gear forbidden or allowed | `PROBE_CAN_USE`, `KINDS_ALLOWED` (`KIT_FORBIDS`, `KIT_ALLOWS`) |
+| weapon specs and skill | `SPEC_OF_SHEET`, `KINDS_ALLOWED`, `LV_DUE` |
+| attacks a round | `EXPERT_HALVES`, `WAR_KIT_HALVES` |
+| hit die | `PROBE_HIT_DIE`, `PROBE_CR_DIE` |
+| max PSP | `PROBE_MAX_PSP`, `PROBE_CR_PSP` |
 
 How each is done:
 
@@ -238,8 +240,7 @@ How each is done:
 - **Movement.** Stalker, Rescuer (2 more). Where: `PROBE_MOVE` (`KIT_MOVE`).
 - **Spells learnt.** Scholar: one more at each level up (`PROBE_LV_PICK`'s `LV_SCHOLAR`: the game's
   CHOOSE A SPELL once before its own), one more for each level at creation (`KIT_MADE` in
-  `PROBE_CR_SPELLS`' count) and on changing class to preserver (`PROBE_DUAL_SPELLS`). Up to 2.17 a
-  slot more at each spell level too.
+  `PROBE_CR_SPELLS`' count) and on changing class to preserver (`PROBE_DUAL_SPELLS`).
 - **Spell slots.** Battle Mage (−1 wizard), Crusader (−1 priest), Seeker and
   Justifier (their priest tables, `SEEKER_SLOTS`, by ranger level, in place of the game's),
   Elementalist (a level behind, `PROBE_SLOT_LEVEL`; but at least 1 at a spell level its own cleric
@@ -272,7 +273,10 @@ How each is done:
   has rolled it, DI the spell; a helpless target's at `[BP-14h]`) and `HARM_SITE` (761A9h, the
   one-target routine's, `[BP-8]`): when `CAST_SITE` last saw that spell cast by an Avenger
   (`CAST_WHO`, `CAST_SPELL`), the bonus on the damage and on a helpless target's; the dice log's
-  `_harm_bonus`, by the last `KIND_CAST`.
+  `_harm_bonus`, by the last `KIND_CAST`. And the Wanderer (half of a spell all fire or all cold, as Resist Fire and Resist
+  Cold). Where: `WANDER_DMG` (an `NS_IMAGE` site: "test [bp+0Ch],di" at DSUN.EXE 7B56Fh, in the
+  routine giving the share of a spell's damage a creature takes, 7B492h, where DI holds the kinds
+  its effects guard it from; fire and cold added for a Wanderer); `GameData.damage_halved_by`.
 - **Healing spells never known.** Wilderness Avenger (Cure Light, Serious, Critical Wounds, Blood
   Flow; Heal and Water of Life). Where: `AV_HEAL`'s list in `PROBE_EL_KNOW` (`AV_KNOW`: as a
   character is made, the spell its place in the table / 7; a level up marks none) and `AV_GRANT`
@@ -331,8 +335,7 @@ How each is done:
   queued one dropped (8991Bh): `PROBE_HIT_ROUND` (`INT ADh`, new) doesn't mark a Battle Mage.
 - **A wizard spell cast a level higher.** Arcanist (its preserver spells' duration and damage, the
   new wizard spells too; not the spell levels it may cast). Where: `PROBE_SPELL_LEVEL`'s `ARC_LEVEL`
-  (`kits.arc_level`), as the Spirit Caller's `SKY_LEVEL`. (Vectors 93h-96h are free: the
-  Arcanist's two spells a turn of earlier versions used them.)
+  (`kits.arc_level`), as the Spirit Caller's `SKY_LEVEL`. (Vectors 93h-96h are free.)
 - **THAC0.** Scholar (1 worse). Swashbuckler, Crusader, Battle Mage, Mind Warrior: a warrior's (21
   less the kit's level, where better) with the kit's chosen weapon spec alone (without weapon
   specialization, its kinds), on the attack: `WAR_HIT` in `PROBE_ATTACKS`, from the creature's
@@ -340,7 +343,9 @@ How each is done:
   THAC0 routine, `mov ax,14h / sub ax,si` at DSUN.EXE 876BBh, which every write of a creature's
   THAC0, `+1Fh`, uses: on making a character, 66CE0h, and at a level up, 86D7Eh and 87A91h).
 - **Initiative.** Military Scout (its `KIT_OUTDOORS` bit); Myrmidon (2 less). Where:
-  `PROBE_INIT` (`INT B8h`, new: the round's 20 added at DSUN.EXE 5750Eh).
+  `PROBE_INIT` (`INT B8h`, new: the round's 20 added at DSUN.EXE 5750Eh). And the Wayfinder (Path-finder: each party member 1 more while a Wayfinder of
+  the party is New or Okay, `PATH_UP`, and the Wayfinder's own 2 more, `WAYFINDER_INIT`,
+  `kits.WAYFINDER_INITIATIVE`). Where: `PROBE_INIT`; `GameData.path_finder`.
 - **To hit with a missile.** Military Scout (a bow, sling or staff sling, its `KIT_OUTDOORS` bit).
   Where: `KIT_TO_HIT` in `PROBE_ATTACKS` (`kits.missile_to_hit`).
 - **A hit's poison.** Poisoner (each hand's melee weapon's first hit in a fight: `POISON_USED`, the
@@ -364,7 +369,7 @@ How each is done:
   `WHOSE_TURN`'s combatant; `kits.arrow_plus`. The weapon spec: `KINDS_ALLOWED` gives a Spellarcher
   the bow only, the one weapon spec the window after DONE offers it.
 - **The Fine Bow.** Spellarcher (its starting bow, The Complete Fighter's Handbook's fine quality: +1
-  to hit, not magic; the spell arrows themselves: [Spell arrows](DEVELOPMENT-RULES.md#spell-arrows)). `weaponchoice.kit_gear` calls `spellarrows.starting_gear` for a new
+  to hit, not magic; the spell arrows themselves: [Spell arrows](#spell-arrows)). `weaponchoice.kit_gear` calls `spellarrows.starting_gear` for a new
   Spellarcher: its bow (the weapon rules' bow, or a plain one) is renamed Fine Bow (name 173h,
   `game.FINE_BOW_NAME`, DSCLOG's 50th extra name), and arrows go in by the touch spells it knows
   (the game's known table, `spellarrows.knows`): 24 Chill Arrows for Chill Touch, 24 Shocking
@@ -380,10 +385,6 @@ How each is done:
 - **Saves.** Myrmidon (charms), Sentinel (spells, 0-137), Wanderer (fire and cold: the spell
   record's `+1Ah`, 2 or 4, as the game's Resist Fire and Resist Cold read it). Where:
   `PROBE_RING_SAVE` (the modifier routine's start: `KIT_SAVE`).
-- **A spell's damage.** Wanderer (half of a spell all fire or all cold, as Resist Fire and Resist
-  Cold). Where: `WANDER_DMG` (an `NS_IMAGE` site: "test [bp+0Ch],di" at DSUN.EXE 7B56Fh, in the
-  routine giving the share of a spell's damage a creature takes, 7B492h, where DI holds the kinds
-  its effects guard it from; fire and cold added for a Wanderer); `GameData.damage_halved_by`.
 - **Thief skills.** Assassin (pick pockets, open locks), Shadowblade, Ghetto Fighter, Wayfinder
   (`KIT_SKILLS`, a signed byte a skill), Military Scout (+10 or −5 by its `KIT_OUTDOORS` bit),
   Swashbuckler (its bad luck: a d26 less 1, 0 to `BAD_LUCK` 25, off each roll, from the game's
@@ -396,9 +397,6 @@ How each is done:
   `STAB_TIMES`, `kits.backstab_times`). Where: `PROBE_STEALTH`'s `KIT_REAR` (`kits.backstabs`,
   `kits.rear_to_hit`), after the game's own setting of `[BP-1Ah]` and `[BP-24h]` and the stealth
   rule's; the backstab flag is pushed for the attack after it (DSUN.EXE 5838Ah).
-- **Initiative in a fight.** Wayfinder (Path-finder: each party member 1 more while a Wayfinder of
-  the party is New or Okay, `PATH_UP`, and the Wayfinder's own 2 more, `WAYFINDER_INIT`,
-  `kits.WAYFINDER_INITIATIVE`). Where: `PROBE_INIT`; `GameData.path_finder`.
 - **Shields.** Shadowblade, Ghetto Fighter, Rescuer. Where: `KIT_FORBIDS` (`kits.forbids`).
 - **Light armour only.** Assassin, Shinobi, Shadowblade, Poisoner (awake only: asleep after a change
   of class the limit sleeps with the kit, `KIT_FORBIDS` testing `KIT_AWAKE` first); the Spellarcher no armour, helm or shield at all (`BARE`: bracers, robes and a cloak of protection aren't armour; `kits.BARE_KITS`), and its class's armour left behind at creation (`weaponchoice.kit_gear`). Where:
@@ -409,7 +407,7 @@ How each is done:
   `GameData.ranger_skill_parts`).
 - **The two-weapon penalty.** Twin-blade, Battle Dancer (in light armour: `HEAVY_WORN`); Justifier
   (in any armour); Ghetto Fighter (2 less in each hand). Where: `PROBE_TWO`; `RG_TWO`.
-- **Gear allowed.** Ravager, Twin-blade, Brute, Stalker, Grove Warden, Lifebinder, Shinobi, Battle
+- **Gear forbidden or allowed.** Forbidden: Ravager, Twin-blade, Brute, Stalker, Grove Warden, Lifebinder, Shinobi, Battle
   Dancer (no shield; `kit_dancer`: long sword and bow kinds), Shadowblade, Ghetto Fighter and
   Rescuer (no shield), Seeker and Grove Warden (its sphere's weapons, as a cleric's: `SPHERE_ALLOWS`
   with `CU_*` set from the item type, `KF_SPHERE` the kit's class less 1, mod 4: the ranger's or
@@ -422,12 +420,16 @@ How each is done:
   specialize in the long sword whatever its cleric's sphere), whatever the class restrictions. For
   an EXIT on the weapon window after DONE, `weaponchoice.kinds_for` makes a Ghetto Fighter's or
   Poisoner's spec the dagger and a Battle Dancer's the long sword, if allowed (`kits.default_kind`);
-  `weaponchoice._ghetto_dagger` puts a dagger in a Ghetto Fighter's hand.
-- **Skill with a weapon.** Justifier (expertise with its chosen weapon type becomes
-  specialization; the bow, not chosen, stays every ranger's expertise: up to 2.17 it was
-  specialized too). Where: `SPEC_OF_SHEET`'s end: `SPEC_EXPERT` made `SPEC_SPECIAL` for a
-  Justifier, the ranger's bow path (`.rbow`) jumping past it; `specialize.skill`.
-- **Weapon specs.** Myrmidon (two, both to grand mastery: the first its own, any but the polearm,
+  `weaponchoice._ghetto_dagger` puts a dagger in a Ghetto Fighter's hand. Allowed past the class:
+  Battle Mage (its chosen weapon type's weapons, with weapon
+  specialization; light armour); Battle Dancer (long swords and bows, `kit_dancer`, whatever its
+  cleric's sphere). Where: `KIT_ALLOWS` in `PROBE_CAN_USE`: an item the game's class mask refuses is
+  let through (AX 1), and the class restrictions pass it; `KIT_FORBIDS` still holds (nothing in a
+  Battle Mage's off hand). `kits.allows`, `restrict.kit_allows`. The game has no armour rule for a
+  single class's spells, so it casts in that armour.
+- **Weapon specs and skill.** Justifier (expertise with its chosen weapon type becomes
+  specialization; the bow, not chosen, stays every ranger's expertise). Where: `SPEC_OF_SHEET`'s end: `SPEC_EXPERT` made `SPEC_SPECIAL` for a
+  Justifier, the ranger's bow path (`.rbow`) jumping past it; `specialize.skill`. Myrmidon (two, both to grand mastery: the first its own, any but the polearm,
   `KINDS_ALLOWED`'s `MYRM_POLEARM`, `restrict.allowed_kinds`; the second the polearm, given by the
   Loader, `weaponchoice.kinds_for`, `kits.POLEARM`, and by DSCLOG's `MYRM_POLEARM` at DONE, after
   the weapon window: the game writes the roster's copy then, before the Loader's changes), Brute (no missile spec), Battle
@@ -447,16 +449,7 @@ How each is done:
   `PROBE_VIEW_DAM` leave a non-warrior's (2 halves or fewer) alone; `specialize.expert_attacks`.
   `WAR_KIT_HALVES` in the same three probes, after the rest (`WAR_KIT_OF` in `PROBE_ATTACKS`, not
   for a missile: `[BP+16h]` above 1, or in View Character a type's `+0` bit 2);
-  `kits.warrior_attacks`, which `GameData.weapon_hits` gives the party view. Checked in the game:
-  the DAM lines 1.5× for a 7th-level Crusader and Mind Warrior, 2× at 13th, 1× at 6th and for a Mind
-  Bender; in a fight a 7th-level Crusader with a club in each hand attacked 1+1 and 2+2 in turn
-  before the off hand's cap (see [Two weapons](DEVELOPMENT-RULES.md#two-weapons)).
-- **Gear the kit allows.** Battle Mage (its chosen weapon type's weapons, with weapon
-  specialization; light armour); Battle Dancer (long swords and bows, `kit_dancer`, whatever its
-  cleric's sphere). Where: `KIT_ALLOWS` in `PROBE_CAN_USE`: an item the game's class mask refuses is
-  let through (AX 1), and the class restrictions pass it; `KIT_FORBIDS` still holds (nothing in a
-  Battle Mage's off hand). `kits.allows`, `restrict.kit_allows`. The game has no armour rule for a
-  single class's spells, so it casts in that armour.
+  `kits.warrior_attacks`, which `GameData.weapon_hits` gives the party view. Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-15-kit-rebalance-checks.md).
 - **Hit die.** Battle Mage (d6), Arcanist (d3). Where: a level's die: `PROBE_HIT_DIE` (`INT A5h`,
   new: `mov al,es:[bx+0]`, 87308h, the die read from the class's hit point group in the routine
   rolling a level's hit points, 87250h, which both a level up and the creation screen call; `[BP-4]`
@@ -549,7 +542,7 @@ How each of these is done:
 - **Classes barred to a dual-classing human.** Seeker, Justifier (cleric); Shinobi (preserver);
   Swashbuckler, Crusader, Battle Mage, Mind Warrior (fighter, gladiator, ranger); Arena Champion,
   Sentinel (druid, preserver: no shield); Brute (psionicist, air cleric: no two-handed melee
-  weapon it may use, the cahulaks not one for it since 2.18); Stalker (thief: its hiding on a thief's own); Grove Warden (gladiator: its AC on a
+  weapon it may use, the cahulaks not one for it); Stalker (thief: its hiding on a thief's own); Grove Warden (gladiator: its AC on a
   gladiator's own); Healer (the rangers of air, earth and fire: water's sphere only; the game
   already keeps a priest from the other priest class, and a ranger, who must be good, from the
   druid, who must be neutral, so `DUAL_BANS`' clerics and druids there and the Seeker's and
@@ -604,7 +597,7 @@ How each of these is done:
   bow and arrows, with fuller starting gear: `startgear.py`); Myrmidon (its second weapon spec's
   weapon, the polearm, in the backpack); Spellarcher (its armour, helm and shield left behind; a Fine
   Bow and arrows by its picks: [the Fine Bow](#where-each-effect-goes)). Where: the game
-  gives a new character its class's gear when DONE is clicked (the README's table, seen in play).
+  gives a new character its class's gear when DONE is clicked (the README's table).
   The dice log's `weaponchoice.kit_gear` (after `finish_new`, with the rule for kits; New characters
   only), for a hand's item `restrict.kit_forbids` forbids (the off hand as such): a weapon in the
   right hand becomes a plain one (`plain_weapon`) of the first kind it may use and the kit allows,
@@ -646,13 +639,90 @@ character has one kit now, so they meet only in older saves' characters):
 | Swashbuckler, Crusader, Battle Mage, Mind Warrior | each other | each gives a warrior's THAC0: two would be one wasted |
 
 Every kit also needs its Python side: the Characters tab and the in-game
-THAC0 and saves (`game.py`), the dice log's lines, and tests that hold the
-helper's code (emulated) to the Python.
+THAC0 and saves (`game.py`), the dice log's lines, and tests that hold DSCLOG's code (emulated) to the Python.
+
+## Spell arrows
+
+([In the kits page](KITS.md#multiclass-kits): the Spellarcher; `spellarrows.py`.)
+
+**The buttons.** Outside a fight, `PP_SHOW` gives a Spellarcher
+(`KIT_SPELLARCHER` awake) a button in the USE screen's ability row for each
+touch spell it knows (`ARROW_KNOWS`: the game's known table, `ARROW_SPELLS`:
+Chill Touch, Shocking Grasp, Vampiric Touch; its first place, Burning Hands, is
+never offered, a cone and not a touch, and kept so the others keep
+their places, `spellarrows.RETIRED`), as it gives a thief
+Pick Pockets: the first where a priest's Turn Undead is (APFM 2BEFh), unless a
+thief's purse or a priest's element has it, the rest in the row's spare places
+to its right (2BE7h-2BEAh, `PP_EXTRAS`: each drawn with Turn Undead's frame and
+handler, its icon loaded and let go of by the game's routines, `PP_CLOSE`
+letting go of them all as the screen closes). Kind 2-5 (`PP_ARROWS`+N), icons
+ICON 3049-3052 (`icons.arrow_spell_icon`: the touch spell's tile, the hand taken
+off, an arrow in its lines), names CHILL ARROWS and so on (`PP_TEXT`),
+descriptions by `PP_INFO` (each under the description box's 195 bytes). Let go
+of, the screen closes as for the thief's, and `PP_ARM` goes to `ARROWS_ARM`:
+nothing readied, then `ARROWS_ASK` in a frame the overlay manager can fix up,
+which hands the click to the Loader as an item used on the map is (`USE_ITEM`
+`ARROWS_BY` FE00h and the member, `USE_WHO` the spell's place). Made, the Loader
+answers with no text and nothing is shown; refused (not known, no slot), its
+words (`PICK_TEXT`) are.
+
+**The Loader** (`SpellArrows.make`) takes a slot of the touch spell's level from
+the wizard slots left (`SLOTS_LEFT`; none left, it says so) for one arrow
+(`ARROWS_A_SLOT`, as the Spellarcher of *Dragon* #214's "The Complete Half-Elf" casts a spell onto
+an arrow). The Spellarcher keeps one stack of each spell, `STACK_MOST` (24) at
+most: the arrow joins that spell's stack wherever it is (its count up by one; a
+full stack takes none and uses no slot); with none, a new stack of the game's
+Arrows (type 62) goes in the quiver when it is empty (`npcitems.add_to` with the
+ammunition slot; `weaponchoice.bow_ahead` then puts the bow ahead of it in the
+list), else in a backpack cell. The stack is named Chill, Shocking or
+Vampiric Arrows (names 16Dh-16Fh; 16Ch, Burning, kept unused), their pictures objects 2614-2621 (the Arrows'
+icon, its heads in the spell's colours), value 0. They last until shot: nothing
+takes them away at a rest. They are readied and put away as any arrows.
+
+**The hit.** The weapon attack routine (5883Ah) casts only the weapon's own
+spell on a hit (its item's +0Fh, the spell + 1, at 58B63h; cast by 598:89h with
+the attacker as the caster and level 6 pushed for every weapon's spell, at 58BE6h:
+`push 6 / mov al,cl / mov ah,0 / push ax`). `ARROW_LEVEL` (`NS_IMAGE+47`, over
+those 7 bytes) keeps 6 for a weapon's own spell and gives a spell arrow's (`ARROW_HIT`
+sets `ARROW_CAST`) the archer's preserver level (DI the attacker: class 11 among the
+sheet's +21h-23h, its level from +24h-26h, at least 1), moving the INT's frame down
+4 bytes to put the two words under it. `PROBE_ARROW` (58D27h, where the ammunition
+routine keeps the arrows' plus) also keeps their name (`AMMO_NAME`); `ARROW_HIT`
+(`NS_IMAGE+28`, over "cmp byte es:[bx+0Fh],0") gives a shot from a bow ([BP+16h]
+above 1, a bow's type at [BP+14h]) with spell arrows their spell instead, when a
+Spellarcher shot them (`PROBE_ARROW`'s `AMMO_ARCHER`), and `ARROW_SPELL`
+(`NS_IMAGE+29`, over "mov cl,es:[bx+0Fh]") hands it on. The target saves as against
+the spell (its record's save byte: Chill Touch's a save, Shocking Grasp's and Vampiric Touch's
+none). The arrows hold no spell
+themselves, so nothing else in the game (the USE screen's items, breaking, acid)
+sees one. Only a Spellarcher carries them: `ARROWS_FORBID`, in `PROBE_CAN_USE`
+(whatever the rules), refuses spell arrows (the equip routine's item, its
+`[BP+6]`) to anyone else; the game asks nothing of an item put in a backpack, so the Loader
+(`spellarrows.return_strays`, out of fights with the inventory shut: `INVENTORY_SLOTS`) takes any
+another member carries back to the party's Spellarcher. The four spells' records pass the
+routine's own test (+30h's low bits 2, not 1). Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-16-spellarcher-fine-bow.md). A new Spellarcher's Fine Bow and starting arrows (`spellarrows.starting_gear`) and the
+arrows' plus are in [where each effect goes](#where-each-effect-goes). Arrows put in the
+ammunition slot by memory writes during a fight are not shot (the game keeps its own
+list of what each combatant has readied): they're made outside fights only.
 
 ## How they're checked
 
-Each kit's helper code is held to its Python by emulated tests
-(`tests/test_dsclog.py` runs the helper's routines in a CPU emulator), and
-each was played in the game: the creation screen's KIT page and hit dice, the
-level ups (Shinobi spells, Seeker slots), the KIT menu after DUAL
-with its bans, and the Effects screen's pages.
+Each kit's DSCLOG code is held to its Python by emulated tests (unicorn), the Python by its own:
+
+- `tests/test_dsclog.py`: `KitTests` (the kit page's windows, the Effects screen's kit lines, two
+  kits' AC, the Ravager's AC, the Wanderer's damage, the Avenger's spells), and the kits' cases in
+  `SpecializeTests` (to hit, damage, attacks, `KIT_SHOT`, Wild Fury), `CanUseTests` (gear, spell
+  arrows), `BeltTests` (thief skills, the Swashbuckler), `StealthTests`, `LevelPickTests` (the
+  Shinobi's spells), `NewSpellTests` (the Lifebinder's Cell Adjustment) and `WornTests` (the Arena
+  Champion).
+- `tests/test_kits.py`: `KitEffectTests`, `CosmosSpellTests`, `AvengerHealTests`, `BruteBanTests`,
+  `DualBansInHelperTests` (`DUAL_BANS` against `kits.DUAL_BANS`) and `SpellarcherBareTests`.
+- `tests/test_kitpages.py`: `KitPageTests` and `DormantKitTests` (a kit asleep after DUAL).
+- `tests/test_dance.py` (`DanceTests`), `tests/test_wild.py` (`WildTests`),
+  `tests/test_spellarrows.py` (`SpellArrowsTests`, `StrayTests`, `StartingGearTests`,
+  `CastSoundTests`), `tests/test_restrict.py`'s `ForbiddingKitTests` and
+  `tests/test_specialize.py`'s `KitGearTests` (starting gear fitted to the kit).
+
+Each was also played in the game: the creation screen's KIT page and hit dice, the level ups
+(Shinobi spells, Seeker slots), the KIT menu after DUAL with its bans, and the Effects screen's
+pages. Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-15-kit-rebalance-checks.md).
