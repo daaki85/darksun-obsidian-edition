@@ -147,7 +147,7 @@ before, after) rather than against an older table: runs of one build agreed with
 second, so a difference of 1 is real. A loaded game's first framerate.py run is as good as later
 ones. `framerate.py` takes the symbols from `obsidian-edition/dos/dsclog.asm`; for another build's
 EXE in `dos/`, set `DSCLOG_ASM` to that build's source, or it reads the wrong counters. The script
-is logs/2026-11-08-drawing-savings-runs.sh (results in logs/2026-11-08-drawing-savings.md); put the
+is logs/files/2026-11-08-drawing-savings-runs.sh (results in logs/2026-11-08-drawing-savings.md); put the
 EXE back and `cmp` it afterwards.
 
 The measurements (pens-after-arena, the whole party walking, 2026-11-08), the old steady pace's
