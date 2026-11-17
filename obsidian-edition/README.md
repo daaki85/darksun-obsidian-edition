@@ -18,13 +18,13 @@ which loads the mod with your options.
   Loader's **Help** button.
 - **Everything in detail:** the contents below, and
   - [features and rules](FEATURES.md): what the game shows, every rule and addition;
-  - [kits and weapon specs](KITS.md): every kit's gains, costs and starting gear, and weapon
-    specialization;
+  - [kits](KITS.md): every kit's gains, costs and starting gear;
+  - [weapon specs](WEAPON-SPECS.md): weapon specialization, who picks what, and the attacks a round;
   - [items](ITEMS.md) (spoilers): every item and where it is;
   - [creatures](CREATURES.md) (spoilers): every one, its size, and whether cahulaks can tangle it;
   - [the game's bugs, fixed](GAME-BUGS.md) (some spoilers): every bug of the original game the mod mends;
   - [the dice log, line by line](DICE-LOG.md): how to read it, and every kind of line;
-  - [how the original game works](HOW-THE-GAME-WORKS.md), from its code;
+  - [how the game works, and the manual's rules](HOW-THE-GAME-WORKS.md), from its code;
   - [the patch notes](https://github.com/daaki85/darksun-obsidian-edition/blob/main/PATCH-NOTES.md):
     what the mod adds and changes from the original game, and its main bug fixes; also in the
     release's folder as a web page, `patch-notes.html`, with a button that copies them for a forum;
@@ -74,7 +74,7 @@ Eight families of changes. Most have a switch on the Loader's **Options** tab
 - **More ways to build a character.** Weapon specialization, kits for every
   class and for some multiclass characters, STORE and RECALL, fuller starting
   gear ([More character customization](FEATURES.md#more-character-customization);
-  every kit in [Kits and weapon specs](KITS.md)).
+  every kit in [Kits](KITS.md), and the weapon specs in [Weapon specs](WEAPON-SPECS.md)).
 - **Expanded play.** Thieves with AD&D's skills who hide in shadows and pick
   pockets; the leader's CHA at shops and magical items to buy back ([Expanded
   features](FEATURES.md#expanded-features)).

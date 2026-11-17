@@ -776,7 +776,7 @@ bytes of the segment (68,592 bytes before it).
 - docs/options.png retaken: the Options tab with the merged switches (Weapon traits, Saving throws
   against spells, Shops and Thieves as in AD&D), Rule changes and New content open; 706 x 2473.
 - KITS: a table of every weapon spec's dice, man-sized and large, with and without grand mastery
-  ([Grand mastery's damage](obsidian-edition/KITS.md#grand-masterys-damage); `GrandMasteryTableTests`
+  ([Grand mastery's damage](obsidian-edition/WEAPON-SPECS.md#grand-masterys-damage); `GrandMasteryTableTests`
   keeps it in step with `sizes.LARGE_DICE` and `specialize.next_die`). The staff sling's row is its
   stinkpot's: 1d3, 1d4 under grand mastery.
 - The stinkpots in FEATURES ([Staff sling stinkpots](obsidian-edition/FEATURES.md#staff-sling-stinkpots)),

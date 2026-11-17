@@ -814,14 +814,14 @@ class NextDieTests(unittest.TestCase):
 
 class GrandMasteryTableTests(unittest.TestCase):
     def test_kits_table(self):
-        """KITS.md's grand mastery table: a row for each weapon spec, in specialize.KINDS' order; its
+        """WEAPON-SPECS.md's grand mastery table: a row for each weapon spec, in specialize.KINDS' order; its
         large dice sizes.LARGE_DICE's (the small ones where it has none), and both grand mastery
         columns those a die larger (specialize.next_die); the staff sling's the stinkpot's 1d3."""
         import re
         from dsloader import sizes, specialize as sp
-        with open(os.path.join(os.path.dirname(__file__), "..", "KITS.md"), encoding="utf-8") as f:
+        with open(os.path.join(os.path.dirname(__file__), "..", "WEAPON-SPECS.md"), encoding="utf-8") as f:
             text = f.read()
-        block = text[text.index("### Grand mastery's damage"):text.index("### Choosing at creation")]
+        block = text[text.index("## Grand mastery's damage"):text.index("## Choosing at creation")]
         rows = [[c.strip() for c in line.strip("|").split("|")] for line in block.splitlines()
                 if line.startswith("| ") and not line.startswith("| Weapon spec")]
         self.assertEqual([r[0] for r in rows], list(sp.KINDS))

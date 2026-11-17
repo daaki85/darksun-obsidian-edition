@@ -106,7 +106,7 @@ By material, then type:
 
 ### By weapon spec
 
-For [weapon specialization](KITS.md#weapon-specialization), in the weapon window's order:
+For [weapon specialization](WEAPON-SPECS.md), in the weapon window's order:
 
 | Weapon spec | Magic weapons |
 |---|---|
@@ -223,7 +223,7 @@ by type and material: who sells it and who carries it (by the names the game
 gives them; many are of a kind, such as every Renegade or Tari). The **Weapon
 Merchant** and the **Bowyer** are in Teaquetzl, **Jark** and **Kel** in the Elven
 Caravan (Kel's caravan). The game's plain stone pick is a
-[starting weapon](KITS.md#starting-weapons), and two lie in the Hot
+[starting weapon](WEAPON-SPECS.md#starting-weapons), and two lie in the Hot
 Springs; Deepbiter is its magic one.
 
 | Icon | Type | Material | Sold by | Carried by, or found in | The mod's |

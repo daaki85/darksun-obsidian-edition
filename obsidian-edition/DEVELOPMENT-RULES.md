@@ -1181,8 +1181,8 @@ tests/test_group4.py.
 
 ## Weapon specialization
 
-([In the features page](FEATURES.md#weapon-specialization); in full on [the kits
-page](KITS.md#weapon-specialization).)
+([In the features page](FEATURES.md#weapon-specialization); in full on [the weapon specs
+page](WEAPON-SPECS.md).)
 
 How: the chosen weapon types are kept in four bytes of each character's own
 record that the game never uses (+14h to +17h), so saves and the

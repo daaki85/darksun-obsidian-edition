@@ -62,7 +62,7 @@ running the game, the Loader's window and its dice log are in the
     - [Resting as in AD&D](#resting-as-in-add)
 - [More character customization](#more-character-customization)
   - [Weapon specialization](#weapon-specialization)
-  - [Kits](#kits) (a page of its own: [Kits and weapon specs](KITS.md))
+  - [Kits](#kits) (a page of its own: [Kits](KITS.md); the weapon specs: [Weapon specs](WEAPON-SPECS.md))
   - [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen)
   - [Fuller starting gear](#fuller-starting-gear)
   - [Preservers' first spells](#preservers-first-spells)
@@ -383,7 +383,7 @@ points:
 - **KITS**, at the end of the disciplines' or spheres' panel
   ([choosing a kit](KITS.md#choosing-a-kit)); after DONE, the weapon window
   for a warrior's weapon specs
-  ([weapon specialization](KITS.md#choosing-at-creation)).
+  ([weapon specialization](WEAPON-SPECS.md#choosing-at-creation)).
 
 A picture of it: [STORE and RECALL](#store-and-recall-on-the-creation-screen).
 How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#the-creation-screen).
@@ -973,7 +973,7 @@ is one:
 
 - **Damage 1d3** crushing, against any size (the game's staff sling 1d4). The inventory's and the
   item box's damage lines say 1D3; a grand master's die is the next size, 1d4
-  ([Grand mastery's damage](KITS.md#grand-masterys-damage)).
+  ([Grand mastery's damage](WEAPON-SPECS.md#grand-masterys-damage)).
 - **The fumes.** A hit that does damage makes the target save against poison (paralysis, poison or
   death: the game's own saving throw, as against a monster's poisoned hit, with every bonus the game
   gives it; a held or sleeping target fails). On a failure it is **Nauseated** for 1d3+1 rounds:
@@ -1474,8 +1474,8 @@ the game's attacks a round and shoots missiles faster; with any other weapon
 it has AD&D's plain rate. Each warrior picks after DONE on the creation screen
 and starts with a plain weapon of its pick. A thri-kreen throws a chatkcha once
 more a round, whatever the rule. The attacks a round, the choices,
-the starting weapons and where it shows are on the kits page: [Weapon
-specialization](KITS.md#weapon-specialization).
+the starting weapons and where it shows are on a page of their own: [Weapon
+specs](WEAPON-SPECS.md).
 
 How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#weapon-specialization).
 
@@ -1624,7 +1624,7 @@ elf's figure, with its own switch: see
 | Character | With weapon specialization | With class restrictions | With kits |
 |---|---|---|---|
 | **Gerakis**, half-giant gladiator | specializes in the long sword and the gythka; with [half-giants' two-handed weapons](#half-giants-two-handed-weapons), his club is a bone gythka, a two-handed weapon beside his long sword | | **Wild Fighting**, as a [Wild Fury](KITS.md#multiclass-kits) has it, as each fight starts |
-| **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | | casts and uses psionics as a [Wasteland Seer](KITS.md#multiclass-kits) does (druid spells 2 levels higher under the open sky, 1 lower under a roof; psionic powers 2 PSP less under the open sky, 1 more under a roof); her chatkcha's one throw more a round is every thri-kreen's (5/2 a round, specialized; [Weapon specialization](KITS.md#weapon-specialization)), not hers alone |
+| **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | | casts and uses psionics as a [Wasteland Seer](KITS.md#multiclass-kits) does (druid spells 2 levels higher under the open sky, 1 lower under a roof; psionic powers 2 PSP less under the open sky, 1 more under a roof); her chatkcha's one throw more a round is every thri-kreen's (5/2 a round, specialized; [Weapon specialization](WEAPON-SPECS.md)), not hers alone |
 | **Cermak**, human preserver, once a gladiator | specializes in the long sword and the axe, which count once his gladiator levels do again (when his preserver level passes them) | | an **Arcanist**, the kit of his preserver class: his preserver spells cast a level higher |
 | **Cilla**, elf preserver, druid and thief | | no leather armour (a druid wears none), and she knows the **Armor** spell in its place | an **Elven Shadow-walker** (her own feature): with the [stealth rule](#hiding-in-shadows-to-backstab), her hiding in shadows is never halved in daylight |
 
@@ -2156,7 +2156,7 @@ off its poisoned needle (2d6 poison). How, in
 [Items](ITEMS.md#pehtucls-chest). A new game only.
 
 The bone and obsidian weapons are also new characters' starting weapons with
-[weapon specialization](KITS.md#starting-weapons), each in a material the
+[weapon specialization](WEAPON-SPECS.md#starting-weapons), each in a material the
 character can use. Dunesong, the bow +1 the Bowyer sells, counts at his
 archery target as the game's own bows do ([the target's
 rules](HOW-THE-GAME-WORKS.md#the-bowyers-archery-target)).
