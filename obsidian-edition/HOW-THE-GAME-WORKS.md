@@ -1,9 +1,10 @@
-# How the game works
+# How the game works, and the manual's rules
 
 *Part of Obsidian Edition's documentation: the original game's own rules, for
 the curious, and the detail of one rule change ([Spells and psionics as the
 manual describes them](#spells-and-psionics-as-the-manual-describes-them)).
-[The README](README.md) is about the mod.*
+[The README](README.md) is about the mod. Where in the game's code each of these is, and how the
+Loader patches it: [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md).*
 
 What the game does that its manual doesn't say, from its code and checked in
 play. The dice log shows each as it happens, and the [rule
@@ -237,7 +238,7 @@ Spells with rules of their own: creatures of 6th level or lower can't save
 against Cloudkill; against Chaos only warriors (fighters, gladiators and
 rangers) can; against Dismissal the target adds its level and takes away the
 caster's. But "can't save" is −100 on the save, and the game compares the total
-with the number needed unsigned (79BBAh), so a total such as −85 reads as 171
+with the number needed unsigned ([where](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#the-saves-and-the-other-spells-and-psionics)), so a total such as −85 reads as 171
 and the creature **always saves** (seen in DOSBox: Arena Guards "unable to
 save" took half Cloudkill's damage). The patched game's compare is signed, so
 "can't save" fails, even on a natural 20 (which the game took as a save before
@@ -336,8 +337,8 @@ the damage, or stops it all for spells such as Chill Touch. A helpless creature
 Pebble to Boulder, Magical Stone, Condense and the touch spells (Chill Touch,
 Shocking Grasp, Vampiric Touch, the Cause spells, Poison) always land, whatever
 the target's AC. Its code has a place for a to-hit test (the routine applying a
-spell to its target calls one for the missile spells, 78BA0h), but the routine
-there always answers "hit". With the Options tab's [Spells roll to
+spell to its target calls one for the missile spells: [where](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#spells-roll-to-hit)), but
+the routine there always answers "hit". With the Options tab's [Spells roll to
 hit](FEATURES.md#spells-roll-to-hit) ticked (the default) they roll against
 the target's AC as a weapon does.
 
@@ -425,77 +426,78 @@ What the game's records and code do with each cleric spell, next to the manual
 (pages 68–78). "Save" is the game's petrification/polymorph save unless named
 (the spell save with the [rule
 change](FEATURES.md#spells-saved-against-with-the-spell-save)); durations are in
-rounds (a turn is ten). The log column is what the dice log shows for it; every
-effect line also says what the effect does.
+rounds (a turn is ten). The dice log shows each as it works: its dice (damage or healing), the save,
+and the effect it puts on or ends, every effect line saying what the effect does; where it shows
+more, the row says so ("the log: ...").
 
 (The rows below are the game's own spells. Six of them, Bestow Curse, Blood Flow, Cause Fear,
 Quicksand's save, Ironskin and Free Action, are set as the manual has them by the rule change [Spells
 and psionics as the manual describes them](FEATURES.md#spells-and-psionics-as-the-manual-describes-them),
 on by default, which changes wizard spells and psionic powers too: its table lists them all.)
 
-| Spell | The manual | The game | The log |
-|---|---|---|---|
-| Bless | +1 to hit; not on anyone next to a monster; 6 rounds | +1 to hit and +1 on saves; not on anyone next to an enemy (the patched game measures that from where each stands); cancels Curse; 6 rounds | the effect |
-| Cause Fear | flees 1d4 rounds; save | Afraid for 1 round a level on a failed save; undead immune; Cloak of Bravery +4 (with the patched game) | the save and the effect |
-| Cause Light Wounds | 1d8 | 1d8, no save | the roll and the HP lost |
-| Cure Light Wounds | heals 1d8 | heals 1d8 | the roll and the HP regained |
-| Curse | −1 to hit; not next to the party; 6 rounds | −1 to hit, no save; cancels Bless; 6 rounds | the effect |
-| Entangle | moves very slowly; save for half; 1 turn a level | Stuck (can't move at all) on a failed save, for 1 round | the save and the effect |
-| Invisibility to Undead | undead ignore the warded creature; 6 rounds | until it attacks or casts at an enemy; +4 on saves against an undead caster's spells aimed at it | the effect |
-| Magical Stone | three stones, 1d4 each, 2d8 against undead | three stones, 1d4 crushing each (seen in DOSBox), no save; its record has nothing more against undead | the roll and the HP lost |
-| Protection from Evil | AC and saves +2 against evil; 3 rounds a level | AC −2, +2 on saves against an evil caster; 3 rounds a level | the effect |
-| Remove Fear | ends fear | ends Afraid | the effect ending |
-| Shillelagh | a magical club in hand | a Shillelagh in an empty hand (a weapon held: "Failed, weapon in hand"); 4 + 1 a level rounds | the effect |
-| Aid | as Bless, and 1d8 extra HP | Blessed and 1d8 extra HP; 1 + 1 a level rounds | the 1d8 and the effects |
-| Barkskin | base AC 6, 1 better per 4 levels; +1 on saves | the same | the effect |
-| Charm Person or Mammal | fights for the cleric; save; combat only | Charmed on a failed save | the save and the effect |
-| Dust Devil | a dust devil fights for the cleric; 2 rounds a level | summons one, 2 rounds a level (none answers in the arena) | the summoning |
-| Find Traps | traps found; 3 turns | Detect Traps: anyone finds traps for certain; 3 turns | the effect |
-| Flame Blade | a blade of fire, 1d4+6; 4 rounds + 1 per 2 levels | a Flame Blade in an empty hand, as Shillelagh | the effect |
-| Hold Person | rigid; 2 rounds a level; save | Paralyzed on a failed save, 2 rounds a level | the save and the effect |
-| Resist Fire, Resist Cold | half damage, +3 on saves; 1 round a level | +3 on saves against fire (cold) spells, and half the damage of a spell that is all fire (cold) | the effect, and "(halved: ...)" on the damage |
-| Spiritual Hammer | a hammer that hits +1 monsters | a Spiritual Hammer in an empty hand, as Shillelagh; 3 + 1 a level rounds | the effect |
-| Bestow Curse | −4 on attacks and saves; save; permanent | Cursed: −1 to hit only, no save; its record gives no duration (it stays until dispelled); Remove Curse doesn't end it | the effect |
-| Cause Blindness or Deafness | blind or deaf; save | Blind (AC 4 worse, −2 initiative, no spells needing sight) on a failed save, until cured | the save and the effect |
-| Cause Disease | saps STR and HP; save | Diseased on a failed save: nothing is lowered; a STR something else lowered stays down until it is cured | the save and the effect |
-| Conjure Lesser Elemental (four) | 1 turn + 1 round a level | summons one, 10 + 1 a level rounds | the summoning |
-| Cure Blindness or Deafness, Cure Disease | cure them | end Blind, Diseased | the effect ending |
-| Dispel Magic | removes spells | each effect separately, d100 at or under 50 + 5 x the dispeller's level − 5 x the effect's caster level (the levels of every effect of that kind on the target, usually one); can't touch Biofeedback, Diseased, Feeblemind, Synaptic Static, Mind Bar, Poisoned, Graft Weapon, No spell use, Stuck, nor any effect past 73 (it looks at 0 to 73 only: the mod's Friends, 74, and a stinkpot's Nauseated, 75) | each d100 |
-| Magical Vestments | AC 5, 1 better per 3 levels above 5; 5 rounds a level | the same | the effect |
-| Negative Plane Protection | stops one draining attack by undead | the game's own never worked; the patched game: a save against paralysis/poison/death stops one, and the undead takes 2d6 | the save and the effect |
-| Prayer | +1 to hit and saves for friends, −1 for foes; 1 round a level | the same | the effect, and each save's ±1 |
-| Protection from Fire | +3 on saves, half damage | as Resist Fire, lasting 1 turn a level | as Resist Fire |
-| Remove Curse | ends Bestow Curse; unreadies cursed items | puts a lowered STR back to the score; ends no curse | the STR change |
-| Remove Paralysis | ends paralysis and slow | ends Paralyzed and Slowed | the effects ending |
-| Summon Insects | a cloud: 4 a round, AC 2 worse, −2 to hit | summons a creature for 1 round a level | the summoning |
-| Abjure | sends extraplanar creatures home | d20 of 11 − caster level + the target's level or more, then a summoned creature is sent away (1000 damage) | the d20 and the result |
-| Blood Flow | heals 2d6, or stuns an enemy up to 4 rounds; save | heals its own side 2d6; anyone else is Paralyzed for 1d4 rounds, no save, and takes no damage | the roll, or the effect |
-| Cloak of Bravery | +4 on saves against fear, once | ends fear; the next fear fails and ends it; +4 against fear spells (with the patched game) | the effect |
-| Cloak of Fear | the first who hits it must save or flee, once | the first who hits it has Cause Fear cast on them | the effect, then the Cause Fear |
-| Condense | 3d6 | 3d6 crushing, no save | the roll and the HP lost |
-| Cure Serious Wounds | heals 3–17 | heals 2d8+1 | the roll and the HP regained |
-| Cause Serious Wounds | 3–17 | 2d9 in the game; 2d8+1 with the patched game | the roll and the HP lost |
-| Dehydrate | 2d6 + 1 a level | the same, no save | the roll and the HP lost |
-| Dust Cloud | blocks sight and missiles | a cloud on the ground; its record has no damage or effect | the cast |
-| Focus Heat | 2d6 + 1 a level; save for half | the same, fire (the save's d20 doubled, or DEX with the rule change) | the save, roll and HP |
-| Free Action | breaks slow, hold and webs | ends Paralyzed and Slowed when cast; then can't be Paralyzed, Slowed or Stuck, 1 turn a level | the effect |
-| Neutralize Poison | ends poison | ends Poisoned | the effect ending |
-| Poison | save or die | Poisoned on a failed save against paralysis/poison/death: no harm in a fight, but 1000 damage once time passes out of one (a rest) before it's cured | the save and the effect |
-| Produce Fire | 2–5 in a 12' square | 1d6 fire, no save | the roll and the HP lost |
-| Protection from Evil 10' Radius | +2 AC and saves for the target and friends beside it | each round, Protection from Evil for that round on its side close by; 1 turn a level | the effect |
-| Protection from Lightning | +4 on saves, half damage | +4 on saves against lightning spells, and half a spell's damage that is all electricity | as Resist Fire |
-| Cause Critical Wounds | 6–27 | 3d9 in the game; 3d8+3 with the patched game | the roll and the HP lost |
-| Conjure Elemental (four) | 1 turn a level | summons one for 10 + 1 a level rounds | the summoning |
-| Cure Critical Wounds | heals 6–27 | heals 3d8+3 | the roll and the HP regained |
-| Deflection | small missiles miss | missile attacks miss it | the effect |
-| Dispel Evil | AC −7 against summoned evil creatures, which save when hit | AC −7 against evil; no save for the creature | the effect |
-| Flame Strike | 6d8; save for half | the same, fire | the save, roll and HP |
-| Insect Plague | 1 a round, blocks sight, no spellcasting | Afraid on a failed save, 2 rounds a level, and no spells for a round; no damage | the save and the effects |
-| Ironskin | immune to weapons | 1d6 blows stopped | the effect |
-| Quicksand | sinks and is held; 1 turn + 1 round a level | Stuck on a failed save, for 1 round | the save and the effect |
-| Raise Dead | by CON and how long dead; −1 CON; 1 HP | always works on someone dead who isn't an elf: −1 CON, 1 HP | the HP and the CON change |
-| Slay Living | dies on a failed save, 3–17 if saved | HP + 10 damage on a failed save against paralysis/poison/death; half of 4d8 (2–16) if saved, as the Loader's description now says | the save and the damage |
-| Wall of Fire | fire to those passing through | 4d4 + 1 a level fire, no save | the roll and the HP lost |
+| Spell | The manual | The game |
+|---|---|---|
+| Bless | +1 to hit; not on anyone next to a monster; 6 rounds | +1 to hit and +1 on saves; not on anyone next to an enemy (the patched game measures that from where each stands); cancels Curse; 6 rounds |
+| Cause Fear | flees 1d4 rounds; save | Afraid for 1 round a level on a failed save; undead immune; Cloak of Bravery +4 (with the patched game) |
+| Cause Light Wounds | 1d8 | 1d8, no save |
+| Cure Light Wounds | heals 1d8 | heals 1d8 |
+| Curse | −1 to hit; not next to the party; 6 rounds | −1 to hit, no save; cancels Bless; 6 rounds |
+| Entangle | moves very slowly; save for half; 1 turn a level | Stuck (can't move at all) on a failed save, for 1 round |
+| Invisibility to Undead | undead ignore the warded creature; 6 rounds | until it attacks or casts at an enemy; +4 on saves against an undead caster's spells aimed at it |
+| Magical Stone | three stones, 1d4 each, 2d8 against undead | three stones, 1d4 crushing each (seen in DOSBox), no save; its record has nothing more against undead |
+| Protection from Evil | AC and saves +2 against evil; 3 rounds a level | AC −2, +2 on saves against an evil caster; 3 rounds a level |
+| Remove Fear | ends fear | ends Afraid |
+| Shillelagh | a magical club in hand | a Shillelagh in an empty hand (a weapon held: "Failed, weapon in hand"); 4 + 1 a level rounds |
+| Aid | as Bless, and 1d8 extra HP | Blessed and 1d8 extra HP; 1 + 1 a level rounds; the log: the 1d8 and the effects |
+| Barkskin | base AC 6, 1 better per 4 levels; +1 on saves | the same |
+| Charm Person or Mammal | fights for the cleric; save; combat only | Charmed on a failed save |
+| Dust Devil | a dust devil fights for the cleric; 2 rounds a level | summons one, 2 rounds a level (none answers in the arena) |
+| Find Traps | traps found; 3 turns | Detect Traps: anyone finds traps for certain; 3 turns |
+| Flame Blade | a blade of fire, 1d4+6; 4 rounds + 1 per 2 levels | a Flame Blade in an empty hand, as Shillelagh |
+| Hold Person | rigid; 2 rounds a level; save | Paralyzed on a failed save, 2 rounds a level |
+| Resist Fire, Resist Cold | half damage, +3 on saves; 1 round a level | +3 on saves against fire (cold) spells, and half the damage of a spell that is all fire (cold); the log: the effect, and "(halved: ...)" on the damage |
+| Spiritual Hammer | a hammer that hits +1 monsters | a Spiritual Hammer in an empty hand, as Shillelagh; 3 + 1 a level rounds |
+| Bestow Curse | −4 on attacks and saves; save; permanent | Cursed: −1 to hit only, no save; its record gives no duration (it stays until dispelled); Remove Curse doesn't end it |
+| Cause Blindness or Deafness | blind or deaf; save | Blind (AC 4 worse, −2 initiative, no spells needing sight) on a failed save, until cured |
+| Cause Disease | saps STR and HP; save | Diseased on a failed save: nothing is lowered; a STR something else lowered stays down until it is cured |
+| Conjure Lesser Elemental (four) | 1 turn + 1 round a level | summons one, 10 + 1 a level rounds |
+| Cure Blindness or Deafness, Cure Disease | cure them | end Blind, Diseased |
+| Dispel Magic | removes spells | each effect separately, d100 at or under 50 + 5 x the dispeller's level − 5 x the effect's caster level (the levels of every effect of that kind on the target, usually one); can't touch Biofeedback, Diseased, Feeblemind, Synaptic Static, Mind Bar, Poisoned, Graft Weapon, No spell use, Stuck, nor any effect past 73 (it looks at 0 to 73 only: the mod's Friends, 74, and a stinkpot's Nauseated, 75); the log: each d100 |
+| Magical Vestments | AC 5, 1 better per 3 levels above 5; 5 rounds a level | the same |
+| Negative Plane Protection | stops one draining attack by undead | the game's own never worked; the patched game: a save against paralysis/poison/death stops one, and the undead takes 2d6 |
+| Prayer | +1 to hit and saves for friends, −1 for foes; 1 round a level | the same; the log: the effect, and each save's ±1 |
+| Protection from Fire | +3 on saves, half damage | as Resist Fire, lasting 1 turn a level; the log: as Resist Fire |
+| Remove Curse | ends Bestow Curse; unreadies cursed items | puts a lowered STR back to the score; ends no curse; the log: the STR change |
+| Remove Paralysis | ends paralysis and slow | ends Paralyzed and Slowed |
+| Summon Insects | a cloud: 4 a round, AC 2 worse, −2 to hit | summons a creature for 1 round a level |
+| Abjure | sends extraplanar creatures home | d20 of 11 − caster level + the target's level or more, then a summoned creature is sent away (1000 damage); the log: the d20 and the result |
+| Blood Flow | heals 2d6, or stuns an enemy up to 4 rounds; save | heals its own side 2d6; anyone else is Paralyzed for 1d4 rounds, no save, and takes no damage; the log: the roll, or the effect |
+| Cloak of Bravery | +4 on saves against fear, once | ends fear; the next fear fails and ends it; +4 against fear spells (with the patched game) |
+| Cloak of Fear | the first who hits it must save or flee, once | the first who hits it has Cause Fear cast on them; the log: the effect, then the Cause Fear |
+| Condense | 3d6 | 3d6 crushing, no save |
+| Cure Serious Wounds | heals 3–17 | heals 2d8+1 |
+| Cause Serious Wounds | 3–17 | 2d9 in the game; 2d8+1 with the patched game |
+| Dehydrate | 2d6 + 1 a level | the same, no save |
+| Dust Cloud | blocks sight and missiles | a cloud on the ground; its record has no damage or effect |
+| Focus Heat | 2d6 + 1 a level; save for half | the same, fire (the save's d20 doubled, or DEX with the rule change) |
+| Free Action | breaks slow, hold and webs | ends Paralyzed and Slowed when cast; then can't be Paralyzed, Slowed or Stuck, 1 turn a level |
+| Neutralize Poison | ends poison | ends Poisoned |
+| Poison | save or die | Poisoned on a failed save against paralysis/poison/death: no harm in a fight, but 1000 damage once time passes out of one (a rest) before it's cured |
+| Produce Fire | 2–5 in a 12' square | 1d6 fire, no save |
+| Protection from Evil 10' Radius | +2 AC and saves for the target and friends beside it | each round, Protection from Evil for that round on its side close by; 1 turn a level |
+| Protection from Lightning | +4 on saves, half damage | +4 on saves against lightning spells, and half a spell's damage that is all electricity; the log: as Resist Fire |
+| Cause Critical Wounds | 6–27 | 3d9 in the game; 3d8+3 with the patched game |
+| Conjure Elemental (four) | 1 turn a level | summons one for 10 + 1 a level rounds |
+| Cure Critical Wounds | heals 6–27 | heals 3d8+3 |
+| Deflection | small missiles miss | missile attacks miss it |
+| Dispel Evil | AC −7 against summoned evil creatures, which save when hit | AC −7 against evil; no save for the creature |
+| Flame Strike | 6d8; save for half | the same, fire |
+| Insect Plague | 1 a round, blocks sight, no spellcasting | Afraid on a failed save, 2 rounds a level, and no spells for a round; no damage |
+| Ironskin | immune to weapons | 1d6 blows stopped |
+| Quicksand | sinks and is held; 1 turn + 1 round a level | Stuck on a failed save, for 1 round |
+| Raise Dead | by CON and how long dead; −1 CON; 1 HP | always works on someone dead who isn't an elf: −1 CON, 1 HP; the log: the HP and the CON change |
+| Slay Living | dies on a failed save, 3–17 if saved | HP + 10 damage on a failed save against paralysis/poison/death; half of 4d8 (2–16) if saved, as the Loader's description now says |
+| Wall of Fire | fire to those passing through | 4d4 + 1 a level fire, no save |
 
 Kits that heal more (the Healer, Lifebinder, Rescuer) are on [the kits page](KITS.md).
 
@@ -528,17 +530,17 @@ Against AD&D's turning table (2nd edition), the steps of 3 are the same, but:
   of the kind destroyed) is one.
 - AD&D's levels 12-13 share a column; the game gives level 13 the 14+ one (one easier).
 
-The game's undead (their sheets in SEGOBJEX.GFF): Zombie, Convert and Tara's Follower 2 HD, Shadow 3 or
+The game's undead (their sheets in the game's data): Zombie, Convert and Tara's Follower 2 HD, Shadow 3 or
 6, Skull Elder 4, Shadow Guard, Shadow King, Shadow Prince, Shadow Worker, Aposs, Cragg, Tanelyv,
 Tristram and Tynan 6. A 3rd-level cleric needs 7 against a Zombie and a 20 against the 6 HD ones (a 1st or 2nd
 level cleric can't turn those at all).
 
 The dice log shows each try: `Seneca turns Zombie: d20 = 12, needs 7+ (priest level 3 vs 2 HD) ->
-destroyed` (code: DSUN.EXE 7ADB7h, the number at 7AE01h-7AE48h, the d20 at 7AE4Dh).
+destroyed` ([where in the code](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#turn-undead-minute-meteors-and-flame-arrow)).
 
 **With "Spells and psionics as the manual describes them"** (the default) all of the above is the game's rule
 only with the box unticked. Ticked, the mod takes over where the game works out its number
-(7AE01h) and uses AD&D's turning table instead ([below](#adds-turning-table)). How it fits the game: a
+and uses AD&D's turning table instead ([below](#adds-turning-table)). How it fits the game: a
 turned undead is made Afraid with the effect Cause Fear gives (the game's own way of adding it
 would refuse it to the undead, who are immune to fear spells); a priest who failed against an
 undead and tries it again ends the try at once, the turn spent, with no roll; the failures are forgotten when the next fight's first
@@ -649,7 +651,7 @@ also logs the power check and the PSP spent; a power with a save logs the save.
 | Life Draining | drains up to 6 HP as extra HP for an hour | 1d6 damage, the same as extra HP for the user | the drain roll and the HP |
 | Absorb Disease | takes the target's disease to cure it | takes the disease (the mod's fix: the game also gave 1d6 STR) | the effect |
 | Adrenalin Control | STR + 1 to 6 | STR + 1d6, at most 24 (with the manual's spells not added to Strength's: the bigger counts) | the 1d6 and the STR |
-| Biofeedback | damage −2 and AC −1 | AC −1, and 2 off each blow and any other crushing, edged or pointed damage (79BF9h), leaving 0 of a blow of 2 or less (with the manual's spells at least 1) | "AC −1", and `-2 Biofeedback` on a hit's line |
+| Biofeedback | damage −2 and AC −1 | AC −1, and 2 off each blow and any other crushing, edged or pointed damage, leaving 0 of a blow of 2 or less (with the manual's spells at least 1) | "AC −1", and `-2 Biofeedback` on a hit's line |
 | Body Weaponry | the arm as a wood or steel weapon | unarmed attacks 2d4 | the effect |
 | Cell Adjustment | heals wounds, cures diseases | heals 2 HP (with the manual's spells 1d4); its record cures disease (Diseased removed) | the HP regained; with the manual's spells the 1d4 and the cure |
 | Displacement | attacks miss the image; AC −2 | AC −2 | the effect |
@@ -680,7 +682,7 @@ below 11, below 16, and up). Defence modes cost nothing to keep up.
 This section is the mod's, not the game's: the detail of the rule change [Spells and psionics as the manual describes
 them](FEATURES.md#spells-and-psionics-as-the-manual-describes-them), on by default, whose table there
 lists each spell and power it changes. Its Turn Undead is [above](#adds-turning-table).
-How it is done: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#spells-and-psionics-as-the-manual-describes-them).
+How it is done: [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#spells-and-psionics-as-the-manual-describes-them).
 
 ### Each spell in more detail
 
@@ -873,8 +875,8 @@ fights ([backstabs](FEATURES.md#hiding-in-shadows-to-backstab)), and read
 languages when a [Shinobi](KITS.md#thief-kits) reads a scroll. The scripts also
 make 3 ability checks (a d20 under the ability): CHA twice and STR once.
 
-`python -m dsloader checks` lists them all with the script's text around
-each (spoilers).
+The Loader's developer tools list them all with the script's text around each (spoilers:
+[DEVELOPMENT-INTERNALS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-INTERNALS.md#ability-checks-in-the-scripts-conditions)).
 
 (The Loader's [Characters tab](README.md#the-characters-tab) shows each
 thief's chances as they stand.)
@@ -912,7 +914,7 @@ mummified rat, in a wardrobe a butterfly, a spider and 15 coins. Its "nothing"
 check comes first, so they never happen: the only scorpion a junk pile gives is
 the one dodged on 2, which does no harm.
 
-How it works: [DEVELOPMENT-INTERNALS.md](DEVELOPMENT-INTERNALS.md#searching-junk-hay-and-wardrobes).
+How it works: [DEVELOPMENT-INTERNALS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-INTERNALS.md#searching-junk-hay-and-wardrobes).
 
 ## The Bowyer's archery target
 
@@ -936,7 +938,7 @@ So a centre from 14 squares needs DEX 17 or more: at DEX 21 a roll of 4 or
 less (5 in 21), at DEX 18 a 1 or less (2 in 21), at DEX 17 a 0. Each shot is in
 the dice log with the distances and what it needed.
 
-How it works: [DEVELOPMENT-INTERNALS.md](DEVELOPMENT-INTERNALS.md#the-bowyers-archery-target).
+How it works: [DEVELOPMENT-INTERNALS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-INTERNALS.md#the-bowyers-archery-target).
 
 ## The arena's count of fights
 

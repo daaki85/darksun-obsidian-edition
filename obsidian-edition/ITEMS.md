@@ -371,7 +371,7 @@ them, a thief wears them, and a ring or cloak of protection still counts. In the
 game they are **BRACERS/DEFNS** with their plus (Bracers/Defns+4 is AC 6),
 priced 5,000 a point of AC.
 
-How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#bracers-of-defense).
+How it works: [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#bracers-of-defense).
 
 ### Robes
 
@@ -392,7 +392,7 @@ Where they are: [Every magic item](#every-magic-item).
 The dice log and the Loader name a robe among a save's modifiers, and the
 Spells tab counts the Veiled Robe's slots. Alagorn tells both their stories.
 
-How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#robes).
+How it works: [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#robes).
 
 ### Icons and names
 
@@ -442,7 +442,7 @@ the party's best at find/remove traps may still spot it in time (or Detect
 Traps), else it does 2d6 poison damage to the one who sprang it. Once open, it stays open. It comes with a new game, with
 **New items, magical and mundane** on.
 
-How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#pehtucls-chest).
+How it works: [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#pehtucls-chest).
 
 ## Items against acid
 

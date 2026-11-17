@@ -8,8 +8,8 @@ The patched game mends these whatever the Options tab says. The rules the game g
 a switch, are [further down](#rules-it-got-wrong-with-a-switch). The script bugs are mended in the
 Loader's copy of the game's scripts; many were found by yuan-ti and the OpenDS project
 ([credits](https://github.com/daaki85/darksun-obsidian-edition#credits)). How the fixes work:
-[DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md) (the script bugs, the spells, worn items), the
-memory fixes in [DEVELOPMENT-INTERNALS.md](DEVELOPMENT-INTERNALS.md#room-and-memory), and the rows' own links.
+[DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md) (the script bugs, the spells, worn items), the
+memory fixes in [DEVELOPMENT-INTERNALS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-INTERNALS.md#room-and-memory), and the rows' own links.
 
 ## Contents
 
@@ -64,7 +64,7 @@ memory fixes in [DEVELOPMENT-INTERNALS.md](DEVELOPMENT-INTERNALS.md#room-and-mem
 | **Absorb Disease** (the psionic power) | Also gave the psionicist 1d6 STR, as Strength does, and the STR alone when there was no disease to take | Takes the disease only |
 | **Bless** and **Aid** | Left out those of the caster's side with an enemy beside them, but measured it from the wrong place, so the wrong ones were left out | Measured from where each stands |
 | **Acid Arrow** | After the hit its acid never burned again: its time was a timer that only ended it, and nothing spent it a round at a time | 2d4 acid at the start of each round it lasts (a round for each started minute of its time: four for an 11th-level caster) |
-| **Psionic Blast** on a party member | Its imagined wounds (down to a fifth of its hit points) were real and stayed | Given back as the fight ends; until then a blow that would kill it knocks it out instead, and one knocked out wakes with them (the dice log says so; [how](DEVELOPMENT-CONTENT.md#worn-items-the-gladiators-armour-and-psionic-blast)) |
+| **Psionic Blast** on a party member | Its imagined wounds (down to a fifth of its hit points) were real and stayed | Given back as the fight ends; until then a blow that would kill it knocks it out instead, and one knocked out wakes with them (the dice log says so; [how](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#worn-items-the-gladiators-armour-and-psionic-blast)) |
 | **Walls** cast by monsters | The computer aimed both ends of a wall at the same spot, so its walls were a single point | Across the line of fire, four cells long |
 
 ## Fights
@@ -99,7 +99,7 @@ memory fixes in [DEVELOPMENT-INTERNALS.md](DEVELOPMENT-INTERNALS.md#room-and-mem
 
 | Bug | The game | With the Loader |
 |---|---|---|
-| **DELETE** in the roster | Deleted the character in the row clicked counting from the top of the list, not from the top of what was shown, so with the list scrolled down another character was deleted | Deletes the one chosen ([how](DEVELOPMENT-SCREENS.md#more-characters)) |
+| **DELETE** in the roster | Deleted the character in the row clicked counting from the top of the list, not from the top of what was shown, so with the list scrolled down another character was deleted | Deletes the one chosen ([how](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#more-characters)) |
 | The **creation screen's least scores** | The class's prime requisite raised to 17 and every other score to 9 to 14, against the manual: a fighter's STR never below 17, a thief's CHA never below 9, while a druid's CHA, a ranger's STR and DEX and a psionicist's CON had no minimum of their own | The manual's: each class's, and a multiclass character the highest of its classes' ([the minimums, class by class](HOW-THE-GAME-WORKS.md#character-creation)) |
 | **XP for high prime requisites** | None, though the manual promises 10% more XP to a class whose prime requisites are all 16 or more | 10% more of every award for each such class, divided by a multiclass character's classes (one XP for them all); a human's class followed now. The Loader adds it as each award comes, so it needs the Loader following the game ([Experience and levels](PLAYER-GUIDE.md#experience-and-levels)) |
 
@@ -115,13 +115,13 @@ memory fixes in [DEVELOPMENT-INTERNALS.md](DEVELOPMENT-INTERNALS.md#room-and-mem
 
 | Bug | The game | With the Loader |
 |---|---|---|
-| Items that raise or lower an **ability score** | Changed the score wherever they were, the backpack too, so one carried did as much as one worn | Only while worn ([how](DEVELOPMENT-CONTENT.md#worn-items-the-gladiators-armour-and-psionic-blast)) |
+| Items that raise or lower an **ability score** | Changed the score wherever they were, the backpack too, so one carried did as much as one worn | Only while worn ([how](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#worn-items-the-gladiators-armour-and-psionic-blast)) |
 | The **gladiator's armour optimisation** (AC 1 better a 5 gladiator levels) | Given with no armour on, where Dark Sun gives it to armour worn | Only with armour on (arms, legs, head or chest; not a shield, bracers or a robe) |
 | **Alagorn's stories** of the Quicksilver Glove and the Helm of Contemplation | Told of what neither does: gauntlets that graft a weapon to the hand, and a shield of thought against all psionic attacks | The glove's name as the game has it and what it does (Detonate on every hit); the helm as Gaze Reflection ([Alagorn's stories](ITEMS.md#alagorns-stories)) |
 | The game's **Sling +1** | A blank icon (its picture is missing from the game's data) | The Sling's, with a glow |
 | The game's **Great Axe +3** (the Army Commander's) | Its type had no material, as a ring's: its name showed none, and no sphere's cleric could wield it | Metal, as its icon's grey and teal head and its weight have it: "Metal Great Axe +3" |
 | The game's **Quicksilver Glove** | Its type had no material, which the game read as wood: it fought at -3 to hit and -2 damage | Leather, as the Chameleon Gloves are: "Leather Quicksilver Glove", 1D6+2 |
-| The **air cleric's daggers** | None: no dagger in the game listed the air cleric among those who may use it, though its sphere allows daggers | Every dagger lists it ([how](DEVELOPMENT-CONTENT.md#new-items)) |
+| The **air cleric's daggers** | None: no dagger in the game listed the air cleric among those who may use it, though its sphere allows daggers | Every dagger lists it ([how](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#new-items)) |
 
 ## Screens and memory
 
@@ -134,13 +134,13 @@ memory fixes in [DEVELOPMENT-INTERNALS.md](DEVELOPMENT-INTERNALS.md#room-and-mem
 | **What a scroll says** on the inventory screen | YOU LEARN THE SPELL, YOU CAN NOT READ THE SCROLL and the rest were written to the line under the paper doll but never reached the screen | Shown there, until the pointer is on something else ([what a scroll says](FEATURES.md#what-a-scroll-says)) |
 | An archer's **pointer** after a shot | Showed "can't shoot" once any shot of the round was made (one that killed its target, say), though the click still shot the shots left | Shows "can't" only once every shot of the round is made |
 | A magic item's power on the **Effects screen** (Shadowseeker's Detect Invisibility) | Said "(15 CHARGES)": the game adds an item's power as it does a permanent effect, leaving a stray value in the charges byte, and showed charges unless the spell's own time was permanent | Charges show only for a spell that lasts a number of uses or a timed effect, as Armor's |
-| **CHOOSE A SPELL**'s icons with more than 15 spells on offer (the game's own 4th level has 16; with the new spells the 1st has 18) | The 16th to 18th went in a seventh column on the right while the matching one on the left stayed empty, so the grid sat right of centre | Six to a row, filled row by row and centred ([how](DEVELOPMENT-SCREENS.md#choose-a-spells-grid)) |
+| **CHOOSE A SPELL**'s icons with more than 15 spells on offer (the game's own 4th level has 16; with the new spells the 1st has 18) | The 16th to 18th went in a seventh column on the right while the matching one on the left stayed empty, so the grid sat right of centre | Six to a row, filled row by row and centred ([how](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#choose-a-spells-grid)) |
 
 ### Pictures and memory
 
 | Bug | The game | With the Loader |
 |---|---|---|
-| **Graphics disappearing in a busy area** (SSI's note 2712 for Wake of the Ravager, the same engine) | The game keeps 300 picture slots for walls, doors, figures and items lying about, and gives none back until the next area: once a visit had used 300 (items of many kinds dropped, bodies, spells, new monsters), a new picture got no slot and wasn't drawn: an item on the ground, a body, a figure, a doorway | Once all 300 are taken, a slot holding a picture nothing uses now (out of memory, named by no wall or thing on the map) is reused, its picture put where it fits in the store (a different limit from the picture store [the party's outfits](FEATURES.md#what-the-party-wears) fill) ([how](DEVELOPMENT-CONTENT.md#graphics-disappearing-in-a-busy-area)) |
+| **Graphics disappearing in a busy area** (SSI's note 2712 for Wake of the Ravager, the same engine) | The game keeps 300 picture slots for walls, doors, figures and items lying about, and gives none back until the next area: once a visit had used 300 (items of many kinds dropped, bodies, spells, new monsters), a new picture got no slot and wasn't drawn: an item on the ground, a body, a figure, a doorway | Once all 300 are taken, a slot holding a picture nothing uses now (out of memory, named by no wall or thing on the map) is reused, its picture put where it fits in the store (a different limit from the picture store [the party's outfits](FEATURES.md#what-the-party-wears) fill) ([how](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#graphics-disappearing-in-a-busy-area)) |
 | A magic item's **glow in a shop** | Stood still: a shop runs its own loop, which never turned the colours that make it shine | Shines, as on the map and in the inventory |
 | **"Out of memory in OEOpenGraph"** in a long session | The map needs a large block of memory each time it comes back (after the USE screen, a talk, a menu), and with the map up the game had little more than that to spare, so it could stop | Part of the game's code and its music buffer kept in upper memory, so there is much more to spare, and a warning in the dice log if it runs low (`Memory is running low: ...`) ([crash, freeze and item reports](README.md#crash-freeze-and-item-reports)) |
 

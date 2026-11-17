@@ -28,7 +28,7 @@ which loads the mod with your options.
   - [the patch notes](https://github.com/daaki85/darksun-obsidian-edition/blob/main/PATCH-NOTES.md):
     what the mod adds and changes from the original game, and its main bug fixes; also in the
     release's folder as a web page, `patch-notes.html`, with a button that copies them for a forum;
-  - for developers, [the development notes](DEVELOPMENT.md).
+  - for developers, [the development notes](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT.md).
 
 ## Contents
 
@@ -172,7 +172,7 @@ slows instead of speeding up: choose the next setting down.
 unzipped from a download. Press **Run** the first time: the Loader then takes the download mark off
 the files in its own folder, so it asks only once (or tick **Unblock** in the zip's Properties
 before unzipping). The `.bat` files and the Python in `dsloader` are plain text, and so are the
-sources of the three small DOS programs in `dos` ([DEVELOPMENT.md](DEVELOPMENT.md)).
+sources of the three small DOS programs in `dos` ([DEVELOPMENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT.md)).
 
 ### Every time you play
 
@@ -276,7 +276,7 @@ wheel, or arrow and page keys once it has the focus).
 ![The Options tab with Rule changes (twenty-three switches, in three groups: Characters, Weapons and armour, Magic) and New content open, the other sections closed](docs/options.png)
 
 The **All fields** and **Memory tools** tabs are for mapping the game's memory
-([DEVELOPMENT-INTERNALS.md](DEVELOPMENT-INTERNALS.md#mapping-memory)).
+([DEVELOPMENT-INTERNALS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-INTERNALS.md#mapping-memory)).
 
 ### The Characters tab
 
@@ -380,7 +380,7 @@ and replaces the number on every line, the ones already shown included; leave
 it empty to go back to the number. Names are kept in `settings.json`, and the
 command-line log uses them too. Portrait 119 is `The Announcer`, as the game
 calls him. Text shown without a face (the emblem instead) is `Narration`.
-([How names are learned](DEVELOPMENT-SCREENS.md#the-dialogue-tab).)
+([How names are learned](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#the-dialogue-tab).)
 
 Each entry shows the speaker's portrait, as the game's own dialogue window
 does. Portraits and the title's lettering are read from your installed game at
@@ -489,7 +489,7 @@ saves and characters:
 | `dosbox_dicelog.conf` | DOSBox's settings for the game the Loader starts, written at each start |
 | `play.log` | what went wrong, when the game was started with `Play Dark Sun (in-game rolls).bat` |
 | `dos` | the Loader's helpers, and the patched copy of the game (`DSUNLOG.EXE`) with copies of its data |
-| `layouts`, `.dsloader-search.json` | only from the Memory tools ([DEVELOPMENT-INTERNALS.md](DEVELOPMENT-INTERNALS.md#mapping-memory)) |
+| `layouts`, `.dsloader-search.json` | only from the Memory tools ([DEVELOPMENT-INTERNALS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-INTERNALS.md#mapping-memory)) |
 | the game folder | your saves (page 1 in the game's own `SAVE` files, pages 2 to 4 as `SAVB`, `SAVC` and `SAVD`) and characters in `CHARSAVE.GFF` |
 
 Page 1's saves (`SAVE*`) and `CHARSAVE.GFF` load in the original game as long as they hold none of
