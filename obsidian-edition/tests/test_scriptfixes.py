@@ -229,7 +229,7 @@ OBJECTS = os.environ.get("DSUN_OBJECTS")
 
 @unittest.skipUnless(GPLDATA and os.path.isfile(GPLDATA), "needs the game's GPLDATA.GFF (DSUN_GPLDATA)")
 class OpenDSTriageTests(unittest.TestCase):
-    """The four repairs from OpenDS's triage, in the Loader's copy of the scripts (the whole
+    """Three repairs from OpenDS's triage, in the Loader's copy of the scripts (the whole
     pipeline's, so the Elven Leader's cloak in the same script is there too)."""
 
     @classmethod
@@ -271,19 +271,6 @@ class OpenDSTriageTests(unittest.TestCase):
         for at in (0x47E, 0x48F):  # the game's own sanctum clones are as they were
             self.assertEqual(next(o for o in self.ops(48) if o.at == at).args[2:4], [("n", 16), ("n", 24)])
         self.assertEqual(len(self.out[("GPL ", 48)]), len(self.game[("GPL ", 48)]))
-
-    def test_alhena_leaves_only_before_the_war_is_won(self):
-        ops = self.ops(28)
-        at = {o.at: o for o in ops}
-        self.assertEqual(at[0x298].code, sf.JUMP)
-        detour = [o for o in ops if o.at >= at[0x298].args[0][1]]
-        test = detour[0]
-        self.assertEqual(test.code, sf.TEST)
-        self.assertEqual(test.args[0][1], ["(", ("var", 141, 123), "==", ("n", 1), ")", "and",
-                                          "(", ("var", 141, 138), "==", ("n", 0), ")"])
-        self.assertEqual([o.code for o in detour[1:3]], [sf.IF, sf.EXIT])
-        self.assertEqual(detour[1].args, [("n", 0x2A2)])  # false: on, to the post-war part as before
-        self.assertEqual(at[0x2A2].code, sf.ENDIF)
 
     def test_hound_necklace_wounds(self):
         was = next(o for o in self.ops(55, True) if o.at == 0x1C6)

@@ -48,7 +48,7 @@ Releases, newest first: [2.18.0](#pull-request-95-merged-2026-11-16) (#95),
 
 ## Unreleased (branch `obsidian-edition`)
 
-- **Four more script repairs, from OpenDS's triage** (`dsloader/scriptfixes.py`, tests
+- **Three more script repairs, from OpenDS's triage** (`dsloader/scriptfixes.py`, tests
   `OpenDSTriageTests`; each site checked in the game's file, **none seen in play yet**):
   - The elven slavers' leader (script 46): the first menu's "Sorry to bother you. Goodbye." went to the
     arrest ("Guards! Take these strangers to the slave pen!"); now it ends the talk (the return at 583h).
@@ -56,10 +56,18 @@ Releases, newest first: [2.18.0](#pull-request-95-merged-2026-11-16) (#95),
   - Keldar's reveal (script 48, 393h and 442h) made Dagolar on the party's own square; now in his
     sanctum at (16, 24), as the script's other two clones of him (so he and the ten slimes no longer
     arrive where the party stands). The sanctum tile's map has not been looked at yet.
-  - Alhena (script 28 at 298h): the caravan's arrival script left when flag 123 (the caravan raided)
-    was set, before the post-war part that makes her; now only while flag 138 (the final battle won) is 0.
-    **This reverses the 2026-11-01 decision** (7cfeee6: "there unless the caravan was made hostile"):
-    whether she should be there after a raid is a story question, not decided by the data.
+  - **Alhena: tried and taken out again.** A repair made her arrive after a raid (script 28 at 298h tested
+    flag 123 and flag 138); it is not in. Flag 123 is the wagon train's alarm, not a story flag: it is set
+    in one place only, GPL 21 at 28Ah (entry 650), which also makes object -105 three times (at the party's
+    square, (50,50) and (100,85)) and calls a routine on each of the camp's people that is there. Entry 650 is
+    called from GPL 21 ("Help!", "Murder! Fire!"), GPL 24 (428h) and GPL 28 itself (480h, after a guard's "You
+    were told to leave!"), and entry 431h of GPL 21 is the attack trigger on five of the camp's people (GPL
+    21's own, -104 in 24, -203 in 28, -205 in 30, -210 in 34). Only GPL 21 to 36, the wagon train (Jark's
+    wagon, Madame Larissa, Tobrian, the wagon master, the fire circle), and MAS 26 (region 26, RGN1A) read
+    it; no other camp's script does (the other scripts that seem to name GPL 21, in MAS 11, 13, 41, 42 and
+    43, name it as a coordinate: their entry numbers are not commands in GPL 21). So she is not there
+    once the party has been turned on by the wagon train, as 7cfeee6 had it; the flag is never cleared, so
+    one alarm keeps her out for good, which may be meant. From the scripts only: not seen in play.
   - The Hound Necklaces (script 55 at 1C6h) killed any prisoner spoken to (damage 1000); now 5 points.
     The 5 is the Loader's own choice (OpenDS leaves the value open; the walkthrough's advice to take the
     necklaces off first still holds for the prisoner's hit points).

@@ -303,15 +303,6 @@ REPAIRS = (
              bytes.fromhex("2591001a8f01" "8f108f18" "8f068f00"),
              "Keldar's reveal makes Dagolar in his sanctum, not on the party's square")
       for at in (0x393, 0x442)),
-    # Alhena (script 28 at 298h): the caravan's arrival script left at once when flag 123 (the caravan
-    # was raided: GPL 21 sets it, nothing clears it) was set, before the post-war part (flag 138, set
-    # when the final battle is won) that registers her sight trigger and makes her. Now it leaves
-    # only while 138 is still 0
-    Repair(28, 0x298, bytes.fromhex("188d7bd78f01" "3e02a2" "31"),
-           gpl.encode_op((TEST, [("expr", ["(", ("var", 141, 123), "==", ("n", 1), ")", "and",
-                                           "(", ("var", 141, 138), "==", ("n", 0), ")"])]))
-           + bytes.fromhex("3e02a2" "31"),
-           "Alhena comes to the caravan's camp after the war even when the caravan was raided"),
     # The Hound Necklaces (script 55 at 1C6h): a prisoner spoken to by a party member wearing one was
     # killed outright (damage 1000). Now 5 points, a wound the prisoner can survive (a balance choice
     # of the Loader's; OpenDS leaves the value open)

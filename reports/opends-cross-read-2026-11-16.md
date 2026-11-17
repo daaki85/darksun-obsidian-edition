@@ -55,6 +55,11 @@ are in the Loader's memory fixes or out of reach.
 
 ### 3.1 Alhena never appears (GPL 28, GPL 21, GPL 62)
 
+**Outcome (2026-11-17): not a bug, repair taken out.** Flag 123 is the wagon train's alarm: set only by
+GPL 21 entry 650 (28Ah), called from GPL 21, 24 and 28 (480h, after "You were told to leave!"), read
+only by GPL 21 to 36 (the whole wagon train) and MAS 26 (region 26). No other camp sets or reads it.
+Details in the CHANGELOG's Unreleased entry. The trace below is left as written.
+
 Structure confirmed (but see the correction: the game's intent is that Alhena is absent when the caravan was made hostile, so this is probably not a bug). GF123 (`gflag 123`) is set in one place, GPL 21 at 28Ah (`16 1 gflag123`, behind a test at 278h
 that exits when it is already set), and cleared nowhere (a sweep of every script for writes to it finds
 only that one). GF138 is set in one place, GPL 62 at 1685h (their "after the final battle"). GPL 28 at
