@@ -1,5 +1,7 @@
 # Combat log and roll presentation in modern CRPGs and tactics games
 
+*Status: archived. A source note (modern CRPGs and tactics games) for [the combat log design research](../combat-log-design-research.md).*
+
 Research conditions (read first): in this session only web *search* worked; every page fetch failed
 because the hosts are outside the session's allowed network (forums.obsidian.net,
 steamcommunity.com, forum.owlcatgames.com all returned ENOTFOUND). So the findings below rest on
