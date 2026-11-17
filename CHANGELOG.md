@@ -46,6 +46,28 @@ Releases, newest first: [2.18.0](#pull-request-95-merged-2026-11-16) (#95),
 [1.1.0](#pull-request-18-merged-2026-10-06) (#18), [1.0.0](#pull-request-12-merged-2026-10-02)
 (#12).
 
+## Unreleased (branch `obsidian-edition`)
+
+- **Four more script repairs, from OpenDS's triage** (`dsloader/scriptfixes.py`, tests
+  `OpenDSTriageTests`; each site checked in the game's file, **none seen in play yet**):
+  - The elven slavers' leader (script 46): the first menu's "Sorry to bother you. Goodbye." went to the
+    arrest ("Guards! Take these strangers to the slave pen!"); now it ends the talk (the return at 583h).
+    The second menu's two replies that reach the arrest are the game's, as they may be meant.
+  - Keldar's reveal (script 48, 393h and 442h) made Dagolar on the party's own square; now in his
+    sanctum at (16, 24), as the script's other two clones of him (so he and the ten slimes no longer
+    arrive where the party stands). The sanctum tile's map has not been looked at yet.
+  - Alhena (script 28 at 298h): the caravan's arrival script left when flag 123 (the caravan raided)
+    was set, before the post-war part that makes her; now only while flag 138 (the final battle won) is 0.
+    **This reverses the 2026-11-01 decision** (7cfeee6: "there unless the caravan was made hostile"):
+    whether she should be there after a raid is a story question, not decided by the data.
+  - The Hound Necklaces (script 55 at 1C6h) killed any prisoner spoken to (damage 1000); now 5 points.
+    The 5 is the Loader's own choice (OpenDS leaves the value open; the walkthrough's advice to take the
+    necklaces off first still holds for the prisoner's hit points).
+  - Not done: the Mindhome's re-ask and the army count (their meaning in the scripts is unclear: no
+    safe edit found), the Swiftbite chest, the Wyrm Temple Magera spawner and the slaver camp's alarm
+    (OpenDS itself wants a play capture for the last two; the first moves six clone tiles whose map has
+    not been checked).
+
 ## Pull request #95 ([merged 2026-11-16](https://github.com/daaki85/darksun-obsidian-edition/pull/95))
 
 **Changed**

@@ -227,6 +227,71 @@ if __name__ == "__main__":
 OBJECTS = os.environ.get("DSUN_OBJECTS")
 
 
+@unittest.skipUnless(GPLDATA and os.path.isfile(GPLDATA), "needs the game's GPLDATA.GFF (DSUN_GPLDATA)")
+class OpenDSTriageTests(unittest.TestCase):
+    """The four repairs from OpenDS's triage, in the Loader's copy of the scripts (the whole
+    pipeline's, so the Elven Leader's cloak in the same script is there too)."""
+
+    @classmethod
+    def setUpClass(cls):
+        from dsloader import kalzith
+        with open(GPLDATA, "rb") as f:
+            data = f.read()
+        cls.game, cls.types = gpl.load_scripts(data)
+        cls.out = kalzith.script_chunks(data)
+
+    def ops(self, script, game=False):
+        return gpl.decode((self.game if game else self.out)[("GPL ", script)], self.types)
+
+    def test_elven_leader_goodbye_returns(self):
+        was = next(o for o in self.ops(46, True) if o.at == 0x4FA).args[0]["replies"]
+        now = next(o for o in self.ops(46) if o.at == 0x4FA).args[0]["replies"]
+        self.assertEqual([r["goto"][1] for r in was], [0x637, 0x6C2, 0x756, 0x898])
+        self.assertEqual([r["goto"][1] for r in now], [0x637, 0x6C2, 0x756, 0x583])
+        self.assertEqual(next(o for o in self.ops(46) if o.at == 0x583).code, 0x15)  # a return
+        self.assertEqual(now[3]["text"], was[3]["text"])
+        # the other menu's replies that reach the arrest are the game's
+        other = next(o for o in self.ops(46) if o.at == 0x58D).args[0]["replies"]
+        self.assertEqual([r["goto"][1] for r in other], [0x927, 0x898, 0x898, 0xB30])
+        # and with the Elven Leader's cloak on, its code after the script's end is there too
+        from dsloader import kalzith
+        with open(GPLDATA, "rb") as f:
+            cloaked = kalzith.script_chunks(f.read(), cloak=True)[("GPL ", 46)]
+        self.assertGreater(len(cloaked), len(self.game[("GPL ", 46)]))
+        after = next(o for o in gpl.decode(cloaked, self.types) if o.at == 0x4FA).args[0]["replies"]
+        self.assertEqual(after[3]["goto"][1], 0x583)
+
+    def test_keldar_makes_dagolar_in_the_sanctum(self):
+        for script_at in (0x393, 0x442):
+            was = next(o for o in self.ops(48, True) if o.at == script_at)
+            now = next(o for o in self.ops(48) if o.at == script_at)
+            self.assertEqual(was.args[2:4], [("var", 137, 33), ("var", 137, 34)])
+            self.assertEqual(now.args[2:4], [("n", 16), ("n", 24)])
+            self.assertEqual(now.args[:2], was.args[:2])  # still Dagolar (-26), one of him
+        for at in (0x47E, 0x48F):  # the game's own sanctum clones are as they were
+            self.assertEqual(next(o for o in self.ops(48) if o.at == at).args[2:4], [("n", 16), ("n", 24)])
+        self.assertEqual(len(self.out[("GPL ", 48)]), len(self.game[("GPL ", 48)]))
+
+    def test_alhena_leaves_only_before_the_war_is_won(self):
+        ops = self.ops(28)
+        at = {o.at: o for o in ops}
+        self.assertEqual(at[0x298].code, sf.JUMP)
+        detour = [o for o in ops if o.at >= at[0x298].args[0][1]]
+        test = detour[0]
+        self.assertEqual(test.code, sf.TEST)
+        self.assertEqual(test.args[0][1], ["(", ("var", 141, 123), "==", ("n", 1), ")", "and",
+                                          "(", ("var", 141, 138), "==", ("n", 0), ")"])
+        self.assertEqual([o.code for o in detour[1:3]], [sf.IF, sf.EXIT])
+        self.assertEqual(detour[1].args, [("n", 0x2A2)])  # false: on, to the post-war part as before
+        self.assertEqual(at[0x2A2].code, sf.ENDIF)
+
+    def test_hound_necklace_wounds(self):
+        was = next(o for o in self.ops(55, True) if o.at == 0x1C6)
+        now = next(o for o in self.ops(55) if o.at == 0x1C6)
+        self.assertEqual((was.args, now.args), ([("var", 137, 39), ("n", 1000)], [("var", 137, 39), ("n", 5)]))
+        self.assertEqual(len(self.out[("GPL ", 55)]), len(self.game[("GPL ", 55)]))
+
+
 @unittest.skipUnless(GPLDATA and os.path.isfile(GPLDATA) and OBJECTS and os.path.isfile(OBJECTS),
                      "needs the game's GPLDATA.GFF and SEGOBJEX.GFF (DSUN_GPLDATA, DSUN_OBJECTS)")
 class NotMeleeTests(unittest.TestCase):

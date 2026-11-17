@@ -47,6 +47,13 @@ fourth OpenDS repair, starting the final battle's stages without their pause,
 is left out (yuan-ti keeps it off too: with the game's clock running the stage
 gate waits its window out). Not seen in play yet: all are past the slave pens.
 
+Four more, from OpenDS's triage and **unplayed**: script 46's first menu's Goodbye jumps to the
+return at 583h, not the arrest at 898h (a same-length edit of the reply's jump word at 57Eh); script
+48's two clones of Dagolar at the party's square (393h, 442h) take the numbers 16 and 24 in place of
+the fields 33 and 34 (same length: the game's own clones at 47Eh and 48Fh are written that way);
+script 28 at 298h tests flag 123 and flag 138 (a detour: the test grows); script 55 at 1C6h damages the
+prisoner 5, not 1000. The CHANGELOG's Unreleased section says what is left undone, and why.
+
 Checks that read a character's own field (race 20, sex 21, the flags word 17)
 straight from the active member's object (8025h, or the actor's, 8026h), whose
 record, the combat record, holds none of them, so they read 0. The game's own

@@ -290,6 +290,33 @@ REPAIRS = (
            "Pehtucl's ambush: only the guards he calls hunt the party, not every guard in the pens"),
     Repair(137, 0xFB5, _FOUNTAIN_WAS, _FOUNTAIN_NOW,
            "the fountain's roar masks a guard's yell in the passage before it too"),
+    # From OpenDS's triage (docs/ds1-sweep-triage-2026-10-07.md), each site checked in the game's file:
+    # The elven slavers' leader (script 46): the first menu's "Sorry to bother you. Goodbye." went to
+    # 898h, "Guards! Take these strangers to the slave pen!" and the consent question. Now to 583h,
+    # the return that ends the talk, as the replies that end it otherwise do
+    Repair(46, 0x57E, bytes.fromhex("0898"), bytes.fromhex("0583"),
+           "the elven slavers' leader: Goodbye ends the talk, it doesn't send the party to the slave pen"),
+    # The fight with Keldar (script 48): the reveal made Dagolar at the party's own square (the fields
+    # 33 and 34 of the one acting, at 393h and 442h) wherever the party stood; the script's other two
+    # clones of him (47Eh, 48Fh) are at (16, 24), the sanctum, as now
+    *(Repair(48, at, bytes.fromhex("2591001a8f01" "89218922" "8f068f00"),
+             bytes.fromhex("2591001a8f01" "8f108f18" "8f068f00"),
+             "Keldar's reveal makes Dagolar in his sanctum, not on the party's square")
+      for at in (0x393, 0x442)),
+    # Alhena (script 28 at 298h): the caravan's arrival script left at once when flag 123 (the caravan
+    # was raided: GPL 21 sets it, nothing clears it) was set, before the post-war part (flag 138, set
+    # when the final battle is won) that registers her sight trigger and makes her. Now it leaves
+    # only while 138 is still 0
+    Repair(28, 0x298, bytes.fromhex("188d7bd78f01" "3e02a2" "31"),
+           gpl.encode_op((TEST, [("expr", ["(", ("var", 141, 123), "==", ("n", 1), ")", "and",
+                                           "(", ("var", 141, 138), "==", ("n", 0), ")"])]))
+           + bytes.fromhex("3e02a2" "31"),
+           "Alhena comes to the caravan's camp after the war even when the caravan was raided"),
+    # The Hound Necklaces (script 55 at 1C6h): a prisoner spoken to by a party member wearing one was
+    # killed outright (damage 1000). Now 5 points, a wound the prisoner can survive (a balance choice
+    # of the Loader's; OpenDS leaves the value open)
+    Repair(55, 0x1C6, bytes.fromhex("0b8927" "03e8"), bytes.fromhex("0b8927" "0005"),
+           "a Hound Necklace wounds the prisoner who is spoken to, it doesn't kill him"),
 )
 
 

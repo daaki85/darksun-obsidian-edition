@@ -163,6 +163,10 @@ memory fixes in [DEVELOPMENT.md](DEVELOPMENT.md#room-in-the-helper), and the row
 | The **Rebel Mindhome** in Undermountain | Once the party had killed the four spiders, every talk to the Mindhome's leader gave the thanks and its 5000 XP again | The 5000 XP comes once |
 | The **messenger in region 9** (the men who burst from the sand, after the elves leave) | Came only if the party left the region and came back after the elves had gone, so a party that stayed never met him | He comes once the elves have left |
 | The **Draj serf** led to region 10 | One left more than 14 squares behind stayed in region 38 without his orders, and talking to him again ran the whole deal and gave a second obelisk gem | He comes along however far behind |
+| The elven slavers' **leader**, asked "Who are you?" | "Sorry to bother you. Goodbye." was answered with "Guards! Take these strangers to the slave pen!" and a question whether the party consents | Goodbye ends the talk (the two replies of his next question that lead to the arrest are the game's) |
+| **Keldar's** fight, when the party's blows reveal Dagolar | He was made on the party's own square, wherever it stood, and his ten slimes after | He and the slimes appear in his sanctum, as the script's own other clones of him do |
+| **Alhena** at the caravan's camp after the war | Not there if the caravan had been raided: the arrival script left at once, before the part that makes her | She comes once the war is won, raided or not |
+| The **Hound Necklaces** in the Door of Eyes' guards' room | A prisoner spoken to by a party member wearing one was killed outright (1000 damage) | He takes 5 points of damage: wounded, not dead |
 
 ### Who is talking: class, race and sex
 
