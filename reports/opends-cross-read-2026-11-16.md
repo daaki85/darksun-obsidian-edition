@@ -145,3 +145,59 @@ before shipping.
 `tools/syms.py` (darksun-recompiled) names lifted functions from `tools/ovr-map/syms/<game>.toml`. See
 that repository's `docs/DESIGN.md`. Besides names, `docs/dispatch-table-ds1.md`, `docs/dsun-exe-re.md` and
 `docs/engine-quirks.md` in OpenDS are the readings of the same code the recompile lifts.
+
+## 6. The changelog's account (2026-11-17)
+
+What the CHANGELOG's Unreleased section said of the repairs tried from this cross-read, moved here
+when the CHANGELOG was shortened (the CHANGELOG keeps a line for the elven leader's repair, the one
+that stayed).
+
+- **One more script repair, from OpenDS's triage; three others tried and left out** (`dsloader/scriptfixes.py`, tests
+  `OpenDSTriageTests`; each site checked in the game's file, **none seen in play yet**):
+  - The elven slavers' leader (script 46): his first menu ("Who are you?", called at 313h) has four replies:
+    "Join us", "hire on" and "purchase slaves" return to the caller, which has the templar accuse the party
+    ("These slaves escaped from the slave pens in Draj!") and puts the second menu (58Dh); "Sorry to bother
+    you. Goodbye." alone jumped to the arrest ("Guards! Take these strangers to the slave pen!", then "Do you
+    consent to go?": yes is captured, no is a fight), skipping the accusation. Now it returns to the caller
+    as the others do (583h, the routine's own return), so the accusation and the second menu follow; the
+    second menu's replies that reach the arrest are the game's. A judgement from the script's shape, not
+    proof of what the authors meant: the least certain of the repairs here.
+  - **Alhena: tried and taken out again.** A repair made her arrive after a raid (script 28 at 298h tested
+    flag 123 and flag 138); it is not in. Flag 123 is the wagon train's alarm, not a story flag: it is set
+    in one place only, GPL 21 at 28Ah (entry 650), which also makes object -105 three times (at the party's
+    square, (50,50) and (100,85)) and calls a routine on each of the camp's people that is there. Entry 650 is
+    called from GPL 21 ("Help!", "Murder! Fire!"), GPL 24 (428h) and GPL 28 itself (480h, after a guard's "You
+    were told to leave!"), and entry 431h of GPL 21 is the attack trigger on five of the camp's people (GPL
+    21's own, -104 in 24, -203 in 28, -205 in 30, -210 in 34). Only GPL 21 to 36, the wagon train (Jark's
+    wagon, Madame Larissa, Tobrian, the wagon master, the fire circle), and MAS 26 (region 26, RGN1A) read
+    it; no other camp's script does (the other scripts that seem to name GPL 21, in MAS 11, 13, 41, 42 and
+    43, name it as a coordinate: their entry numbers are not commands in GPL 21). So she is not there
+    once the party has been turned on by the wagon train, as 7cfeee6 had it; the flag is never cleared, so
+    one alarm keeps her out for good, which may be meant. From the scripts only: not seen in play.
+  - **Keldar and Dagolar: tried and taken out.** OpenDS says the reveal in script 48 makes Dagolar "at the
+    party's tile" (393h, 442h: `25 -26 ... 137/33, 137/34`). It doesn't: 137/33 and 34 are the square of the
+    object located by the `09` just before (as in elvenleader.py's "where 09h puts him"), here `09 137/39`,
+    the creature the party's blow was aimed at, which the script removes (`5E`) and replaces with Dagolar in
+    the same place ("Foolish guards! You have foiled my deception!", "Dagolar turns to you."). That is the
+    game's disguise reveal, as worldgear.py says of Jake and Mow. A repair sending him to (16, 24) would have
+    moved him off the creature it replaces. The clones at (16, 24) (47Eh, 48Fh) are another branch. Not a bug
+    in the script; why it happens only sometimes (the walkthrough: "positioning after combat") is the x < 22,
+    y < 34 test at 118h and 201h of where the creature stood.
+  - **The Hound Necklaces (script 55 at 1C6h): tried and taken out.** A prisoner spoken to by a party member
+    wearing one is damaged 1000: after "The necklace you are wearing glows! The prisoner's life force drains
+    away." The words are the script's own and the walkthrough tells the player to take the necklaces off
+    first, so the death is the game's trap, not a slip; the 5 points I tried were my own number.
+  - Not done: the Mindhome's re-ask and the army count (their meaning in the scripts is unclear: no
+    safe edit found), the Swiftbite chest, the Wyrm Temple Magera spawner and the slaver camp's alarm
+    (OpenDS itself wants a play capture for the last two; the first moves six clone tiles whose map has
+    not been checked).
+- **OpenDS checked to 2026-11-13** (`fe35c52`; the check before was to 2026-11-03, `c25a547`).
+  Since then it has had: `darkfix-ds1` 0.1.4 and 0.2.0-beta.1 (the six yuan-ti repairs: halfling race,
+  tracking, grate, messenger, Mindhome award, serf; all in the Edition already, taken from yuan-ti, and
+  its beta ships them disabled and untested), the detour design for repairs that change a script's
+  length (the one `scriptfixes.py` already uses), the GPLX object-field map, a cross-read that records
+  our engine-bug catalog and dice-log oracle as relayed and unverified, and `ovr-carve` 0.1.0 and
+  `ovr-map` 0.4.0 (for decompiling DSUN.EXE's overlays; the recompile uses its symbol catalogue,
+  `tools/syms.py` in darksun-recompiled). Taken from it now: the elven leader's goodbye. Looked into and
+  left as the game has them: Alhena, Keldar and Dagolar, the Hound Necklaces (above). Not done: above.
+  The triage rows are in `reports/opends-cross-read-2026-11-16.md`.
