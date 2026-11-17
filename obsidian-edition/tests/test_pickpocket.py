@@ -235,6 +235,26 @@ class PickTests(unittest.TestCase):
         self.assertEqual(result.text, "Dag lifts Bag from Guard unnoticed.")
 
 
+class BadLuckTests(unittest.TestCase):
+    def test_swashbuckler(self):
+        """A Swashbuckler's bad luck on the Loader's own rolls (kits.bad_luck, 0 to 25 each time): taken
+        off the chance, no less than 0, and said; anyone else's chance as it is."""
+        from unittest import mock
+        from dsloader import kits, pickpocket
+
+        class Gd:
+            def __init__(self, kids):
+                self.kids = kids
+
+            def kit_ids(self, member):
+                return self.kids
+        with mock.patch("random.randint", lambda a, b: 17):
+            self.assertEqual(pickpocket._luck(Gd([kits.SWASHBUCKLER]), 0, 40),
+                             (23, " (40 - 17, a Swashbuckler's bad luck)"))
+            self.assertEqual(pickpocket._luck(Gd([kits.SWASHBUCKLER]), 0, 10)[0], 0)
+            self.assertEqual(pickpocket._luck(Gd([kits.ASSASSIN]), 0, 40), (40, ""))
+
+
 if __name__ == "__main__":
     unittest.main()
 

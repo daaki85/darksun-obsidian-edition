@@ -15,8 +15,9 @@
 This is what must survive a compacted chat; `playtest/PLAYTESTING.md` has the rest and wins where
 they differ.
 
-- **Set-up**: run the tools from `playtest/`, `export DISPLAY=:55`, and set `PLAYTEST_WORK` to a
-  scratch folder (the guide's `$WORK`; type `$PLAYTEST_WORK` in a shell). The game is
+- **Set-up**: run the tools from `playtest/`, `export DISPLAY=:55`, and `export
+  PLAYTEST_WORK=/tmp/playtest` (the guide's `$WORK`; the default, which the shared DOSBox lock
+  assumes). The game is
   `$PLAYTEST_WORK/inst`, from `setup_game.sh`; `start.sh` starts Xvfb, DOSBox with the Loader's
   patched game and the dice log (`$PLAYTEST_WORK/dice.txt`); `sh loadsave.sh NAME` loads a save
   from `playtest/saves/` (`pens-after-arena` the usual start, `fountain-user` for a fight, spell or
@@ -32,21 +33,36 @@ they differ.
   and nothing from it is ever committed here.
 - **The window must be 320x240** (`xdotool getwindowgeometry`): at 960x720 every pixel check
   (message boxes, CHOOSE A SPELL) fails and the loops stall.
-- **DOSBox dies when the session sits idle**: after any pause, check `pgrep -x dosbox` and reload.
+- **DOSBox dies when the session sits idle**, and a worker restart takes Xvfb too: after any pause,
+  check `pgrep -x dosbox` and `pgrep -x Xvfb`, restart what is gone and reload.
+- **Never cut steps out of a bigger script with sed** (its header may restart the game): use the
+  small tools.
 - **Press Escape only with a screen or menu up** (with nothing open it brings EXIT: SAVE GAME?), and
   **never save after a memory edit** made for a test.
 - **Story fights go through `fightout.sh`**; never `killfoes.py` in a fight a script waits on (the
   scripts miss the kills).
 - Everything else (reading the game, controls, walking and doors, talk, fights, spells, inventory
-  and shops, pictures for the docs, the recompiled program as the target) is in the guide's
-  [recipes](playtest/PLAYTESTING.md#recipes); the route through the story (new game, arena, slave
-  pens, Kurzak's call, back to the arena) is its [route](playtest/PLAYTESTING.md#the-route-through-the-story).
+  and shops, pictures for the docs) is in the guide's [recipes](playtest/PLAYTESTING.md#recipes);
+  the route through the story (new game, arena, slave pens, Kurzak's call, back to the arena) is in
+  [ROUTE.md](playtest/ROUTE.md), the research recipes (sounds, the picture store, frame rate, the
+  game's scripts, the recompiled program as the target, Wake of the Ravager) in
+  [RESEARCH.md](playtest/RESEARCH.md), and every tool in [TOOLS.md](playtest/TOOLS.md).
 
 **Git.** The repository is `daaki85/darksun-obsidian-edition` (was `milenkovicdarko`: if `git remote -v`
 still shows that, `git remote set-url origin https://github.com/daaki85/darksun-obsidian-edition.git`).
 Other sessions push to `obsidian-edition` too: fetch and rebase onto
 `origin/obsidian-edition` before every push. GitHub deletes the branch when its pull request
 merges: then make it again from `origin/main` and put any unmerged commits on top.
+
+**Branch names.** A cloud session is handed a random branch name (`claude/eloquent-bohr-g8rr37`,
+`ccr-7f9f358f-nn0os3`). Don't use it: this rule is the user's standing permission to push to a
+branch named after the task instead. Before the first commit or push, make `claude/<task>` (never
+push the random name: a session can make branches but not delete them, so it would be left behind
+for the user to delete by hand), where `<task>`
+is two to five lowercase words joined by hyphens saying what the work is (`claude/class-outfits`,
+`claude/opends-report`, `claude/gear-mark-roster`); check `git ls-remote origin` that it is free,
+else add `-2`. Commit and push there, and say the name in the first reply. If the user names a
+branch, or the work continues an existing branch, use that one.
 
 **Shell.** Never `pkill -f` or `pgrep -f | kill` a pattern your own command line contains: it
 kills your shell. Kill by pid, in a command of its own. Long runs go in the background with a

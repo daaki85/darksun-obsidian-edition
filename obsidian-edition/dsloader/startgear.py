@@ -13,8 +13,8 @@ the Loader:
   can use (a fire cleric's obsidian mace, an air cleric's obsidian dagger);
 - with the class restrictions, leaves a multiclass preserver's armour out (it can't cast in it;
   the shield stays);
-- gives a sling for the missile slot to one with no missile weapon (a Battle Dancer or Spellarcher a bow and
-  arrows; a fire or earth cleric, who can't use one, a chatkcha of its material for the backpack);
+- gives a sling for the missile slot to one with no missile weapon (a Battle Dancer a bow and
+  arrows; a Spellarcher has its Fine Bow already, spellarrows.starting_gear; a fire or earth cleric, who can't use one, a chatkcha of its material for the backpack);
 - fills its empty chest, arm and leg slots with leather armour, where it may wear it (not a
   multiclass preserver, for its spells);
 - gives a Stalker, Assassin or Shinobi a plain cloak.
@@ -89,7 +89,7 @@ def fill(gd) -> List[str]:
     out: List[str] = []
     for member in range(game.PARTY_SIZE):
         rec = gd.creature(member)
-        if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME] or rec[game.CREATURE_STATUS] != game.STATUS_NEW:
+        if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME] or not game.being_new(gd, rec):
             continue
         out += fill_member(gd, member)
     return out
@@ -157,11 +157,12 @@ def fill_member(gd, member: int) -> List[str]:
                     give(new[0], RIGHT, " (in hand)")
                     break
 
-    # a missile weapon (a Battle Dancer's or Spellarcher's the bow, with arrows: kits.DANCER_KINDS)
+    # a missile weapon (a Battle Dancer's the bow, with arrows: kits.DANCER_KINDS; a Spellarcher has its
+    # Fine Bow from the kit rules, spellarrows.starting_gear)
     if not any(specialize.kind_of(_type(item)) in weaponchoice.MISSILE_KINDS for _, item, _ in mine()):
         from . import kitpages
         dancer = bool(game.RULES_IN_FORCE & game.RULE_KITS) \
-            and bool({kits.BATTLE_DANCER, kits.SPELLARCHER} & set(kitpages.kit_ids(sheet)))
+            and kits.BATTLE_DANCER in kitpages.kit_ids(sheet)
         bow = _weapon(gd, sheet, KIND("bow"), read) if dancer else None
         sling = _weapon(gd, sheet, KIND("sling"), read)
         if bow is not None:

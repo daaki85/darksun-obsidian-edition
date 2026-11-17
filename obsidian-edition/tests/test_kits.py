@@ -31,7 +31,9 @@ class KitEffectTests(unittest.TestCase):
         self.assertEqual((kits.ac(kits.CHAMPION, True), kits.ac(kits.CHAMPION, False)), (-1, 0))
         self.assertEqual([kits.champion(kits.CHAMPION, s, m) for s in (True, False) for m in (True, False)],
                          [(1, 1), (0, 0), (-1, 0), (0, 0)])
-        self.assertEqual(kits.champion(kits.SENTINEL, False, True), (0, 0))
+        self.assertEqual([kits.champion(kits.SENTINEL, s, m) for s in (True, False) for m in (True, False)],
+                         [(0, 0), (0, 0), (-1, 0), (0, 0)])  # (a Sentinel: -1 without its shield, in melee)
+        self.assertEqual((kits.initiative(kits.SENTINEL), kits.initiative(kits.MYRMIDON)), (0, -2))
 
     def test_sentinel(self):
         self.assertEqual((kits.ac(kits.SENTINEL, True), kits.ac(kits.SENTINEL, False)), (-2, 0))
@@ -41,7 +43,8 @@ class KitEffectTests(unittest.TestCase):
         self.assertEqual((kits.melee(0, True), kits.ac(0, True), kits.move(0), kits.name(0)), (0, 0, 0, ""))
 
     def test_seeker(self):
-        """A Seeker's sphere weapons, as a cleric's of that sphere, but the bow whatever the sphere."""
+        """A Seeker's sphere weapons, as a cleric's of that sphere, the bow too (a wooden one: not for
+        fire)."""
         def weapon(flags, mat):
             t = bytearray(0x14)
             t[0], t[8] = flags, mat
@@ -50,9 +53,15 @@ class KitEffectTests(unittest.TestCase):
         obsidian_sword, bone_sword, bow = weapon(kits.MELEE, 3), weapon(kits.MELEE, 1), weapon(kits.MISSILE, 0)
         self.assertEqual([kits.forbids(S, obsidian_sword, 0, False, sphere=s) for s in range(4)], [True, False, False, True])
         self.assertEqual([kits.forbids(S, bone_sword, 0, False, sphere=s) for s in range(4)], [True, True, True, False])
-        self.assertEqual([kits.forbids(S, bow, kits.BOW, False, sphere=s) for s in range(4)], [False] * 4)
+        self.assertEqual([kits.forbids(S, bow, kits.BOW, False, sphere=s) for s in range(4)], [False, False, True, False])
         self.assertFalse(kits.forbids(S, weapon(kits.MELEE, 3), 2, False, sphere=0))  # (air: a dagger)
         self.assertFalse(kits.forbids(kits.JUSTIFIER, bone_sword, 0, False, sphere=2))
+        # a Grove Warden: its druid sphere's weapons, the bow too (a wooden one: not for fire)
+        W = kits.GROVE_WARDEN
+        self.assertEqual([kits.forbids(W, obsidian_sword, 0, False, sphere=s) for s in range(4)], [True, False, False, True])
+        self.assertEqual([kits.forbids(W, bone_sword, 0, False, sphere=s) for s in range(4)], [True, True, True, False])
+        self.assertEqual([kits.forbids(W, bow, kits.BOW, False, sphere=s) for s in range(4)], [False, False, True, False])
+        self.assertFalse(kits.forbids(W, weapon(kits.MELEE, 3), None, False, sphere=2))  # (no kind: as the game has it)
 
     def test_forbids(self):
         def typ(flags=0, kinds=0, mat=0x40):
@@ -164,16 +173,37 @@ class AvengerHealTests(unittest.TestCase):
         self.assertEqual(written, {1071: bytes((0,)), 1112: bytes((0x20,))})  # (Cause Light Wounds, 72, kept)
         self.assertEqual(lines, ["Asha, a Wilderness Avenger, knows no healing spells: spell 71, spell 112 taken away"])
 
+    def test_healer_and_lifebinder(self):
+        """A Healer or Lifebinder (one made with 2.17 or earlier) has the harming spells it knows
+        (NO_HARM) marked not known; its cures kept."""
+        for kid, name in ((kits.HEALER, "Healer"), (kits.LIFEBINDER, "Lifebinder")):
+            lines, written = self.make(kid)
+            self.assertEqual(written, {1072: bytes((0,))})  # (Cause Light Wounds; Cure Light, 71, kept)
+            self.assertEqual(lines, [f"Asha, a {name}, knows no harming spells: spell 72 taken away"])
+
     def test_not_an_avenger(self):
-        self.assertEqual(self.make(kits.HEALER), ([], {}))
+        self.assertEqual(self.make(kits.GROVE_WARDEN), ([], {}))
 
 
 class BruteBanTests(unittest.TestCase):
-    def test_brute_may_dual_to_air_cleric(self):
-        """A Brute needs a two-handed melee weapon: a psionicist has none, an air cleric the cahulaks."""
+    def test_brute_no_air_cleric(self):
+        """A Brute needs a two-handed melee weapon: a psionicist has none, nor an air cleric now the
+        cahulaks are none for a Brute (2.18); the other clerics have."""
         from dsloader import kits
         self.assertTrue(kits.dual_banned(kits.BRUTE, 12))
-        self.assertFalse(kits.dual_banned(kits.BRUTE, 1))
+        self.assertTrue(kits.dual_banned(kits.BRUTE, 1))
+        self.assertFalse(any(kits.dual_banned(kits.BRUTE, c) for c in (2, 3, 4)))
+
+    def test_cahulaks(self):
+        """The cahulaks (a blade in each hand): a Twin-blade's own, two-handed as they are; not a
+        Brute's (no +2 for each head)."""
+        from dsloader import kits
+        cah = bytearray(0x14)
+        cah[0], cah[0x0F] = kits.MELEE, kits.TWO_HANDED
+        self.assertFalse(kits.forbids(kits.TWIN_BLADE, bytes(cah), 5, False, cahulaks=True))
+        self.assertTrue(kits.forbids(kits.TWIN_BLADE, bytes(cah), 5, False))  # (another two-handed weapon)
+        self.assertTrue(kits.forbids(kits.BRUTE, bytes(cah), 5, False, cahulaks=True))
+        self.assertFalse(kits.forbids(kits.BRUTE, bytes(cah), 5, False))
 
 
 class DualBansInHelperTests(unittest.TestCase):
@@ -200,3 +230,27 @@ class DualBansInHelperTests(unittest.TestCase):
             mask = value(bans_line[3:])
             table[value(kit_line[3:])] = frozenset(c for c in range(1, 18) if mask >> c & 1)
         self.assertEqual(table, dict(kits.DUAL_BANS))
+
+
+class SpellarcherBareTests(unittest.TestCase):
+    def test_no_armour(self):
+        """A Spellarcher (kits.BARE_KITS) wears no armour, helm or shield at all, leather too; bracers
+        of defense, a robe and a cloak of protection aren't armour (DSCLOG's KIT_LIGHT, its BARE)."""
+        from dsloader import kits
+
+        def typ(flags=0, material=0, worn=0, kinds=0x80, classes=b"\xff\xff"):
+            t = bytearray(0x14)
+            t[0], t[8], t[9], t[0x0F] = flags, material, worn, kinds
+            t[0x10:0x12] = classes
+            return bytes(t)
+        leather_chest, metal_chest = typ(material=5, worn=1), typ(material=4, worn=1)
+        helm, shield = typ(material=1, worn=7), typ(flags=0x04, material=0, worn=0)
+        bracers, robe = typ(material=0x40, worn=3), typ(material=0x40, worn=1, classes=b"\x90\x01")
+        cloak, bow = typ(material=0x40, worn=8), typ(flags=0x02, kinds=0)
+        for t, no in ((leather_chest, True), (metal_chest, True), (helm, True), (shield, True),
+                      (bracers, False), (robe, False), (cloak, False), (bow, False)):
+            with self.subTest(t=t.hex()):
+                self.assertEqual(kits.light_only(kits.SPELLARCHER, t), no)
+        self.assertFalse(kits.light_only(kits.SHADOWBLADE, leather_chest))  # (light armour: as before)
+        self.assertTrue(kits.light_only(kits.SHADOWBLADE, metal_chest))
+        self.assertNotIn(kits.SPELLARCHER, kits.LIGHT_KITS)

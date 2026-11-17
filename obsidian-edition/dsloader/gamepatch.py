@@ -78,7 +78,6 @@ VEC_HIT_DIE, VEC_MAX_PSP, VEC_CR_DIE, VEC_CR_PSP = 0xA5, 0xA4, 0xA3, 0xA2
 VEC_EL_GRANT, VEC_EL_CAST, VEC_EL_LEVEL, VEC_EL_KNOW = 0xA1, 0xA0, 0x9F, 0x9E
 VEC_DUAL_BAN, VEC_DUAL_SPELLS, VEC_SOUND_42, VEC_SOUND_44, VEC_DUAL_KIT = 0x9D, 0x9C, 0x9B, 0x9A, 0x99
 VEC_CR_SPELLS, VEC_EF_CLICK = 0x98, 0x97
-VEC_CAST_MARK, VEC_ROUND_MARK, VEC_CAST_DONE, VEC_END_TURN = 0x96, 0x95, 0x94, 0x93
 VEC_LEARN_SAID, VEC_LEARN_REFUSED = 0x92, 0x91
 VEC_XP, VEC_PRIEST_THAC0, VEC_ADND_SLOTS = 0x90, 0x8F, 0x8E
 VEC_POINTER = 0xF1
@@ -94,7 +93,6 @@ VEC_HEAP = 0xCB
 VEC_FLIP = 0x8B
 VEC_PACE_PASS, VEC_PACE_DRAW = 0x83, 0x82
 VEC_WORN = 0x81
-VEC_TAKE = 0xF7
 VEC_SPHERE = 0xFF
 # the game's data segment (4356h) in DSUN.EXE: after the 5400h-byte header
 DS_FILE = 0x5400 + 0x4356 * 16
@@ -224,6 +222,12 @@ REACH_SITE = NS_IMAGE + 111
 LOCK_SITE = NS_IMAGE + 112
 # (a new member's psionic powers picked, not the game's table's: DSCLOG's PSI_GRANT, PSI_LIST, PSI_CYCLE)
 PSI_GRANT_SITE, PSI_LIST_SITE, PSI_CYCLE_SITE = NS_IMAGE + 113, NS_IMAGE + 114, NS_IMAGE + 115
+# (a party member's shot cut to the arrows left keeps its turn while attacks are left: DSCLOG's
+# AMMO_CAP and AMMO_TURN, the game's bug)
+AMMO_CAP_SITE, AMMO_TURN_SITE = NS_IMAGE + 116, NS_IMAGE + 117
+# (the attack command's tests of its target still Okay: as fallen for that member, the turn its own)
+# (with NEW_AS_OKAY's jbe/ja after them, in the same patch: those three are left out of its own)
+AMMO_OK_SITES = ((0x5843F, NS_IMAGE + 118), (0x584A4, NS_IMAGE + 119), (0x5850E, NS_IMAGE + 120))
 # the monster kinds' table (DSUN.EXE, the load segment's 3E45h: monsters.MONSTER_KINDS_SEG): a kind's
 # properties (a dword), its resistance class (a byte), a class's damage kinds (four words) and percents
 KINDS_FILE = 0x5400 + 0x3E45 * 16
@@ -1104,7 +1108,7 @@ PATCHES = (
     # Justifier's 9 (kits.spell_class_level)
     Patch("ranger_level", 0x5E3B8, bytes.fromhex("268a4724"), _interrupt(VEC_RANGER_LEVEL, 4)),
     # A kit's hit die (the Battle Mage's d6, the Arcanist's d3) where a level's die is taken from
-    # the class's group, and the Mind Warrior's a tenth fewer PSP where a level up sets them; at
+    # the class's group, and the Mind Warrior's a fifth fewer PSP where a level up sets them; at
     # creation, the die for the most hit points a new character can have, and the end of the
     # routine working out its PSP
     Patch("hit_die", 0x87308, bytes.fromhex("268a870000"), _interrupt(VEC_HIT_DIE, 5)),
@@ -1132,13 +1136,6 @@ PATCHES = (
           _interrupt(VEC_DUAL_SPELLS, 22)),
     # A click on the Effects screen's lower panel shows the next page of the kits and weapon kinds
     Patch("ef_click", 0x7EC9E, bytes.fromhex("8b7608"), _interrupt(VEC_EF_CLICK, 3)),
-    # An Arcanist's first preserver spell of its turn in a fight leaves it free to cast again: where
-    # casting marks the caster, where a turn's start clears the mark, where finishing a cast asks
-    # whether in a fight, and in the fight's routine that ends a turn
-    Patch("cast_mark", 0x845F0, bytes.fromhex("26c687af0001"), _interrupt(VEC_CAST_MARK, 6)),
-    Patch("round_mark", 0x57621, bytes.fromhex("26c684af0000"), _interrupt(VEC_ROUND_MARK, 6)),
-    Patch("cast_done", 0x722AF, bytes.fromhex("26833e190000"), _interrupt(VEC_CAST_DONE, 6)),
-    Patch("end_turn", 0x5925D, bytes.fromhex("8b7608"), _interrupt(VEC_END_TURN, 3)),
     # A scroll's spell: the message once taught (a failed INT roll takes it back) and once refused
     # (a spell level full for the reader's INT)
     Patch("learn_said", 0x8B712, bytes.fromhex("1e68f133"), _interrupt(VEC_LEARN_SAID, 4)),
@@ -1185,10 +1182,15 @@ PATCHES = (
     # the routine finding a missile weapon's ammunition, where it keeps the ammunition's plus:
     # mov es:[0006h],al (DSCLOG makes a Spellarcher's arrows 1 better, at least +1)
     Patch("arrow", 0x58D27, bytes.fromhex("26a20600"), _interrupt(VEC_ARROW, 4)),
-    # the routine saying whether an item may be taken from an inventory slot, where it found none
-    # of the spells that keep a weapon in the hand: jz to its yes (DSCLOG keeps a Spellarcher's
-    # spell arrows in the quiver as those spells keep their weapons)
-    Patch("take", 0x6F4B0, bytes.fromhex("7424"), _interrupt(VEC_TAKE, 2)),
+    # the weapon attack routine: a shot's attacks cut to the arrows left (mov [bp-8],dx), and the
+    # attacks made compared with the round's as it ends (cmp ax,[bp-8]): a party member whose
+    # quiver runs dry keeps its turn while attacks are left (DSCLOG's AMMO_CAP, AMMO_TURN)
+    Patch("ammo_cap", 0x5899A, bytes.fromhex("8956f8"), _site(AMMO_CAP_SITE, 3)),
+    Patch("ammo_turn", 0x58C38, bytes.fromhex("3b46f8"), _site(AMMO_TURN_SITE, 3)),
+    # the attack command's tests of its target still Okay after the attacks (cmp byte es:[bx+1Ch],1):
+    # for that member, as fallen, so its turn goes on to ready arrows (DSCLOG's AMMO_OKAY)
+    *(Patch(f"ammo_okay_{n}", offset, _OKAY_TEST + bytes((jump,)), _site(site, 5) + bytes((_OKAY_JUMPS[jump],)))
+      for n, ((offset, site), jump) in enumerate(zip(AMMO_OK_SITES, (0x74, 0x75, 0x74)), 1)),
     # the sphere menu after DUAL to a cleric, druid or ranger, its answer compared: cmp ax,1 (DSCLOG
     # makes it WATER ONLY for a Healer, when the DUAL window opens, and its answer water)
     Patch("sphere", 0x86BC3, bytes.fromhex("3d0100"), _interrupt(VEC_SPHERE, 3)),
@@ -1313,7 +1315,8 @@ PATCHES = (
           bytes.fromhex("c706814b2e5c"  # mov word [4B81h], ".\"
                         "be834b"  # mov si, 4B83h
                         "eb14")),  # jmp to mov byte [si],0
-    *(_new_as_okay(offset, jump) for offset, jump in NEW_AS_OKAY),
+    *(_new_as_okay(offset, jump) for offset, jump in NEW_AS_OKAY
+      if offset not in {o for o, _ in AMMO_OK_SITES}),  # (those three: ammo_okay_*)
 )
 
 

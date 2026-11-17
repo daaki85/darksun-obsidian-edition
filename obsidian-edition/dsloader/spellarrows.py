@@ -1,26 +1,36 @@
 """The Spellarcher's spell arrows (kits.py: the half-elf fighter/preserver's kit).
 
-Outside a fight, the USE screen gives a Spellarcher a button for each touch spell it knows (Burning
-Hands, Chill Touch and Shocking Grasp at 1st level, Vampiric Touch at 3rd), with Turn Undead's and
+Outside a fight, the USE screen gives a Spellarcher a button for each touch spell it knows (Chill
+Touch and Shocking Grasp at 1st level, Vampiric Touch at 3rd; the game's manual has each as a touch.
+Burning Hands is a cone from the caster, not a touch: its arrows are retired, never offered, its
+place in ARROWS kept so the others keep theirs, DSCLOG's ARROW_KNOWS), with Turn Undead's and
 Pick Pockets' (DSCLOG's PP_SHOW: in Turn Undead's place when no priest's element has it, then the
 slots beside it). Pressed, it comes here as an item used on the map does (dicelog's _answer_use:
-USE_ITEM ARROWS_BY and the member, USE_WHO the spell's place in ARROWS): with the Spellarcher's
-quiver empty, a slot of that spell's level is used up and a stack of ARROWS_PER_LEVEL arrows for
-each of its preserver levels goes in the quiver, worth nothing (no merchant pays for them); with
-the same spell's arrows in it, as many more are added to them (to MOST_ARROWS); with anything
-else in the quiver, nothing is made. Slots are the only limit. The arrows stay in the quiver
-until shot or faded, as a Flame Blade stays in the hand (DSCLOG's PROBE_TAKE and QUIVER_KEPT).
+USE_ITEM ARROWS_BY and the member, USE_WHO the spell's place in ARROWS): a slot of that spell's
+level is used up for ARROWS_A_SLOT arrow, as Dragon #214's "The Complete Half-Elf" has the Spellarcher cast one
+spell onto one arrow. The Spellarcher keeps one stack of each spell's arrows, of STACK_MOST at
+most: the arrow joins that spell's stack wherever it is (the quiver or the pack); with none, a new
+stack goes in the quiver if it is empty, else in the pack. A full stack takes no more (no slot
+used). The arrows are worth nothing (no merchant pays for them), last until shot (no fading at a
+rest), may be readied and put away as any arrows, and only a Spellarcher may carry them: DSCLOG's
+ARROWS_FORBID keeps anyone else from readying them, and as the game asks nothing of an item put in
+a backpack, those another member is found carrying go back to the party's Spellarcher
+(`return_strays`).
 
-At a rest (the game's own, from its menu or a script, as at a fire ring; a script's other rest
-request; or the vulture meal) every spell arrow left anywhere fades (`vanish`).
+A Spellarcher starts with a Fine Bow (a bow of fine make, +1 to hit: The Complete Fighter's
+Handbook's; DSCLOG's FINE_HIT, no one else has one) and arrows by the touch spells it picked as it
+was made: STARTING of Chill Arrows for Chill Touch, of Shocking Arrows for Shocking Grasp, of each
+for both; with neither, STARTING plain arrows (`starting_gear`).
 
 An arrow casts its spell on what it hits, shot from a bow (DSCLOG's ARROW_HIT: the game casts only
 a bow's own spell; the arrow's, told by its name, takes its place), at the archer's caster level as
-the game reckons it for that spell: the Spellarcher's preserver level.
+the game reckons it for that spell: the Spellarcher's preserver level. The target saves only as
+the spell allows ("all normal saving throw attempts", Dragon #214): against Chill Touch, which a
+save stops; Shocking Grasp and Vampiric Touch allow none.
 """
 
 import struct
-from typing import Dict, List, NamedTuple, Set
+from typing import List, NamedTuple
 
 from . import game, kits, npcitems, pickpocket, ring, weaponchoice
 from .game import GameData
@@ -34,22 +44,23 @@ class Arrow(NamedTuple):
 
 
 ARROWS = (
-    Arrow(1, "Burning Hands", 0x16C, 1),
+    Arrow(1, "Burning Hands", 0x16C, 1),  # (retired: never offered, RETIRED)
     Arrow(3, "Chill Touch", 0x16D, 1),
     Arrow(10, "Shocking Grasp", 0x16E, 1),
     Arrow(39, "Vampiric Touch", 0x16F, 3),
 )
+RETIRED = frozenset((1,))  # (Burning Hands: a cone, not a touch; DSCLOG's ARROW_KNOWS offers it never)
 NAMES = {0x16C: b"Burning Arrows", 0x16D: b"Chill Arrows", 0x16E: b"Shocking Arrows", 0x16F: b"Vampiric Arrows"}
 ARROW_NAMES = {a.name for a in ARROWS}
+FINE_BOW = b"Fine Bow"  # the Spellarcher's bow (game.FINE_BOW_NAME: +1 to hit, DSCLOG's FINE_HIT)
 # their pictures (icons.py: the game's Arrows', tinted for each spell), objects 2614-2621
 PICTURES = {0x16C: 0x10000 - 2614, 0x16D: 0x10000 - 2616, 0x16E: 0x10000 - 2618, 0x16F: 0x10000 - 2620}
-ARROWS_PER_LEVEL = 5
-MOST_ARROWS = 0xFFFF  # (a stack's count: the item's word)
+ARROWS_A_SLOT = 1     # an arrow for each slot used
+STACK_MOST = 24       # a spell's stack, at most
 ARROWS_TYPE = weaponchoice.ARROWS[1]  # (the game's Arrows)
 TEMPLATE = npcitems._item("0cfc000000002d000000510000000000" "04ff1c0000")  # (worldgear's)
 ARROWS_BY = 0xFE00      # USE_ITEM for an arrow button's click (DSCLOG's ARROWS_BY): the member its low byte
 KNOWN_FROM_DS, KNOWN_OFF, KNOWN_STRIDE = 0x4356 - 0x3800, 0x168, 0x8A  # (DSCLOG's KNOWN_*)
-REST_REQUESTS = (0, 1, 4)  # a REQUEST that rests the party (dicelog.REQUEST_NAMES; 0 the game's rest, DSCLOG's REST_SITE)
 NOT_IN_A_FIGHT = "Spell arrows can't be made in a fight."
 
 
@@ -65,6 +76,65 @@ def arrows_item(arrow: Arrow, count: int) -> bytes:
     struct.pack_into("<H", rec, weaponchoice.ITEM_VALUE, 0)
     struct.pack_into("<H", rec, game.ITEM_NAME, arrow.name)
     return bytes(rec)
+
+
+STARTING = 24  # a new Spellarcher's arrows: a stack of each touch spell's it picked, else plain ones
+
+
+def is_plain_arrows(rec: bytes) -> bool:
+    return len(rec) >= game.ITEM_SIZE and struct.unpack_from("<H", rec, game.ITEM_TYPE)[0] == weaponchoice.ARROWS[1] \
+        and struct.unpack_from("<H", rec, game.ITEM_NAME)[0] == weaponchoice.ARROWS[2]
+
+
+def starting_gear(gd: GameData, member: int, sheet: bytes, read) -> List[str]:
+    """A new Spellarcher's Fine Bow and arrows (the module's notes), once: none if it has its Fine
+    Bow already. Its bow (the weapon rules' bow, or a plain one given) is made the Fine Bow; plain
+    arrows it has go, for STARTING of each touch spell's it knows; knowing neither, it has STARTING
+    plain ones. Lines for the log."""
+    from . import ring, specialize, startgear
+    owned = list(gd._worn(member))
+    if any(struct.unpack_from("<H", item, game.ITEM_NAME)[0] == game.FINE_BOW_NAME for _, item, _ in owned):
+        return []
+    who, out = gd.creature_name(member), []
+    items = game.far_pointer(gd.guest, gd.ds, game.ITEMS_PTR)
+    bow_kind = specialize.KINDS.index("bow")
+    bow = next(((i, item) for i, item, _ in owned
+                if specialize.kind_of(struct.unpack_from("<H", item, game.ITEM_TYPE)[0]) == bow_kind), None)
+    if bow is not None:
+        rec = bytearray(bow[1])
+        struct.pack_into("<H", rec, game.ITEM_NAME, game.FINE_BOW_NAME)
+        gd.guest.write(items + bow[0] * game.ITEM_SIZE, bytes(rec))
+    else:
+        plain = startgear._weapon(gd, sheet, bow_kind, read)
+        if plain is None:
+            return []
+        rec = bytearray(plain[0])
+        struct.pack_into("<H", rec, game.ITEM_NAME, game.FINE_BOW_NAME)
+        empty = not any(item[game.ITEM_SLOT] == weaponchoice.MISSILE_SLOT for _, item, _ in owned)
+        if not npcitems.add_to(gd, member, bytes(rec), weaponchoice.MISSILE_SLOT if empty else None):
+            return []
+    out.append(f"{who} starts with a Fine Bow (+1 to hit): a Spellarcher's")
+    picks = [a for a in ARROWS if a.spell not in RETIRED and knows(gd, member, a.spell)]
+    plain = [(i, item) for i, item, _ in gd._worn(member) if is_plain_arrows(item)]
+    if picks:
+        for index, _ in plain:
+            ring.unlink(gd, ring.Items(gd), index, "a Spellarcher's starting arrows", empty=True)
+        for arrow in picks:
+            quiver = not any(item[game.ITEM_SLOT] == weaponchoice.AMMO_SLOT for _, item, _ in gd._worn(member))
+            if npcitems.add_to(gd, member, arrows_item(arrow, STARTING), weaponchoice.AMMO_SLOT if quiver else None):
+                out.append(f"{who} starts with {STARTING} {NAMES[arrow.name].decode().lower()}"
+                           f"{' in the quiver' if quiver else ' in the pack'}: {arrow.spell_name} picked")
+    elif plain:
+        gd.guest.write(items + plain[0][0] * game.ITEM_SIZE + weaponchoice.ITEM_COUNT, struct.pack("<H", STARTING))
+        out.append(f"{who} starts with {STARTING} arrows: no touch spell picked")
+    else:
+        quiver = not any(item[game.ITEM_SLOT] == weaponchoice.AMMO_SLOT for _, item, _ in gd._worn(member))
+        rec = bytearray(weaponchoice.arrows(TEMPLATE))
+        struct.pack_into("<H", rec, weaponchoice.ITEM_COUNT, STARTING)
+        if npcitems.add_to(gd, member, bytes(rec), weaponchoice.AMMO_SLOT if quiver else None):
+            out.append(f"{who} starts with {STARTING} arrows: no touch spell picked")
+    weaponchoice.bow_ahead(gd, member)
+    return out
 
 
 def item_address(gd: GameData, index: int) -> int:
@@ -100,73 +170,89 @@ def cast_sound(gd: GameData, row: int) -> int:
 
 class SpellArrows:
     def make(self, gd: GameData, member: int, row: int) -> "pickpocket.Attempt":
-        """Party member MEMBER's button for ARROWS[ROW]: a slot used and the arrows in its empty quiver
-        (no text: the game shows none), or why not."""
+        """Party member MEMBER's button for ARROWS[ROW]: a slot used for an arrow, on the spell's stack
+        or a new one (no text: the game shows none), or why not."""
         if not 0 <= row < len(ARROWS) or not 0 <= member < game.PARTY_SIZE:
             return pickpocket.Attempt("No spell arrows can be made now.", [])
         arrow = ARROWS[row]
         who = gd.creature_name(member)
-        if not is_spellarcher(gd, member) or not knows(gd, member, arrow.spell):
+        if arrow.spell in RETIRED or not is_spellarcher(gd, member) or not knows(gd, member, arrow.spell):
             return pickpocket.Attempt(f"{who} can't weave {arrow.spell_name} into arrows.", [])
         if gd.no_spells(member):  # (a multiclass preserver in armour casts nothing: restrict.no_spells)
             return pickpocket.Attempt(f"{who} can't weave spell arrows in armour.", [])
+        name = NAMES[arrow.name].decode().lower()
+        stack = next(((index, item) for index, item, _ in gd._worn(member)
+                      if struct.unpack_from("<H", item, game.ITEM_NAME)[0] == arrow.name), None)
+        had = struct.unpack_from("<H", stack[1], weaponchoice.ITEM_COUNT)[0] if stack is not None else 0
+        if had + ARROWS_A_SLOT > STACK_MOST:
+            return pickpocket.Attempt(f"{who}'s {name} are a full stack ({STACK_MOST}).", [])
         if slots_left(gd, member, arrow.level) <= 0:
             return pickpocket.Attempt(f"{who} has no {_nth(arrow.level)}-level spell left for "
                                       f"{arrow.spell_name}'s arrows.", [])
-        name = NAMES[arrow.name].decode().lower()
-        quiver = next(((index, item) for index, item, _ in gd._worn(member)
-                       if item[game.ITEM_SLOT] == weaponchoice.AMMO_SLOT), None)
-        if quiver is not None and struct.unpack_from("<H", quiver[1], game.ITEM_NAME)[0] != arrow.name:
-            return pickpocket.Attempt(f"{who}'s quiver must be empty, or hold {name}, to weave "
-                                      f"{arrow.spell_name} into arrows.", [])
-        level = gd.class_level(member, game.PRESERVER)
-        count = ARROWS_PER_LEVEL * max(level, 1)
-        had = 0
-        if quiver is not None:  # (the same spell's: as many more on the stack)
-            had = struct.unpack_from("<H", quiver[1], weaponchoice.ITEM_COUNT)[0]
-            if had + count > MOST_ARROWS:
-                return pickpocket.Attempt(f"{who}'s quiver holds no more {name}.", [])
-            gd.guest.write(item_address(gd, quiver[0]) + weaponchoice.ITEM_COUNT, struct.pack("<H", had + count))
+        where = ""
+        if stack is not None:  # (the spell's own stack, wherever it is)
+            gd.guest.write(item_address(gd, stack[0]) + weaponchoice.ITEM_COUNT,
+                           struct.pack("<H", had + ARROWS_A_SLOT))
         else:
-            if not npcitems.add_to(gd, member, arrows_item(arrow, count), weaponchoice.AMMO_SLOT):
+            empty = not any(item[game.ITEM_SLOT] == weaponchoice.AMMO_SLOT for _, item, _ in gd._worn(member))
+            if not npcitems.add_to(gd, member, arrows_item(arrow, ARROWS_A_SLOT),
+                                   weaponchoice.AMMO_SLOT if empty else None):
                 return pickpocket.Attempt("No spell arrows can be made now.", [])
-            weaponchoice.bow_ahead(gd, member)
+            if empty:
+                weaponchoice.bow_ahead(gd, member)
+            where = " in the quiver" if empty else " in the pack"
         at = gd.ds * 16 + game.SLOTS_LEFT["Wizard"] + member * game.SLOTS_STRIDE + arrow.level
         gd.guest.write(at, bytes((slots_left(gd, member, arrow.level) - 1,)))
-        now = f", {had + count} in the quiver now" if had else ""
-        log = f"{who} makes {count} {name} ({ARROWS_PER_LEVEL} a preserver level, {level}){now}: a " \
-              f"{_nth(arrow.level)}-level slot used; each casts {arrow.spell_name} on what it hits; " \
-              f"they stay in the quiver until shot, and fade at the next rest"
+        total = had + ARROWS_A_SLOT
+        log = f"{who} makes one of the {name}{where} ({total} of {STACK_MOST} now): a " \
+              f"{_nth(arrow.level)}-level slot used; it casts {arrow.spell_name} on what it hits, " \
+              f"and lasts until shot"
         return pickpocket.Attempt("", [log])  # (no window: only a refusal is shown)
-
-    def rest(self, gd: GameData) -> List[str]:
-        """The party rested: every spell arrow fades."""
-        return vanish(gd)
 
 
 def _nth(level: int) -> str:
     return {1: "1st", 2: "2nd", 3: "3rd"}.get(level, f"{level}th")
 
 
-def vanish(gd: GameData) -> List[str]:
-    """Every spell arrow, wherever it is, given back to the game's free list: lines for the log."""
-    party_lists: Set[int] = set()
+INVENTORY_SLOTS = 0x540C  # DS: the inventory screen's slot table, a far pointer (null with no inventory up)
+
+
+def inventory_up(gd: GameData) -> bool:
+    """Whether the game's inventory screen is up (it writes its copy of the items back as it shuts)."""
+    return gd.guest.read(gd.ds * 16 + INVENTORY_SLOTS, 4) != bytes(4)
+
+
+def return_strays(gd: GameData) -> List[str]:
+    """Spell arrows a party member who isn't a Spellarcher carries (the game asks nothing of an item
+    put in a backpack) go back to the party's Spellarcher: onto its stack of that spell where the two
+    come to STACK_MOST or fewer, else into its pack as they are. Out of fights, the inventory shut;
+    left where they are with no Spellarcher in the party, or no room in its pack. Lines for the log."""
+    if gd.in_combat() or inventory_up(gd):
+        return []
+    archers = [m for m in range(game.PARTY_SIZE) if is_spellarcher(gd, m)]
+    if not archers:
+        return []
+    to, out = archers[0], []
     for member in range(game.PARTY_SIZE):
-        rec = gd.creature(member)
-        if len(rec) >= game.CREATURE_SIZE:
-            party_lists.update(struct.unpack_from("<h", rec, o)[0] for o in game.CREATURE_ITEM_LISTS)
-    counts: Dict[int, int] = {}
-    stuck: Set[int] = set()  # (a container's only item, left: the game's containers aren't empty)
-    for _ in range(ring.THING_COUNT):  # (one at a time: each unlink changes the lists)
-        it = ring.Items(gd)
-        found = next(((thing, index, rec) for thing in range(ring.THING_COUNT)
-                      for index, rec in it.chain(thing, inside=False) if is_arrow(rec) and index not in stuck), None)
-        if found is None:
-            break
-        thing, index, rec = found
-        name = struct.unpack_from("<H", rec, game.ITEM_NAME)[0]
-        if not ring.unlink(gd, it, index, "spell arrows faded at a rest", empty=thing in party_lists):
-            stuck.add(index)
+        if member in archers or len(gd.creature(member)) < game.CREATURE_SIZE:
             continue
-        counts[name] = counts.get(name, 0) + struct.unpack_from("<H", rec, weaponchoice.ITEM_COUNT)[0]
-    return [f"The {NAMES[name].decode().lower()} fade with the rest ({count})" for name, count in counts.items()]
+        for index, rec, _ in list(gd._worn(member)):
+            if not is_arrow(rec):
+                continue
+            name = struct.unpack_from("<H", rec, game.ITEM_NAME)[0]
+            count = struct.unpack_from("<H", rec, weaponchoice.ITEM_COUNT)[0]
+            label = NAMES.get(name, b"spell arrows").decode().lower()
+            stack = next(((i, item) for i, item, _ in gd._worn(to)
+                          if struct.unpack_from("<H", item, game.ITEM_NAME)[0] == name), None)
+            had = struct.unpack_from("<H", stack[1], weaponchoice.ITEM_COUNT)[0] if stack is not None else 0
+            if stack is not None and had + count <= STACK_MOST:
+                if not ring.unlink(gd, ring.Items(gd), index, "spell arrows back to the Spellarcher", empty=True):
+                    continue
+                gd.guest.write(item_address(gd, stack[0]) + weaponchoice.ITEM_COUNT, struct.pack("<H", had + count))
+            elif npcitems.add_to(gd, to, bytes(rec)):
+                ring.unlink(gd, ring.Items(gd), index, "spell arrows back to the Spellarcher", empty=True)
+            else:
+                continue
+            out.append(f"The {label} go back to {gd.creature_name(to)} from {gd.creature_name(member)}: "
+                       f"only a Spellarcher carries them ({count})")
+    return out
