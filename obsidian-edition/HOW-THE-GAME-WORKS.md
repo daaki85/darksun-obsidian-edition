@@ -779,12 +779,14 @@ manual says, or the change would make a different spell rather than fix one:
 | Biofeedback | damage −2 | −2 from blows and any crushing, edged or pointed damage, not from fire or other spells |
 
 What else the manual and the game disagree on, and why the rest is left:
-[spells against the manual](https://github.com/daaki85/darksun-obsidian-edition/blob/obsidian-edition/reports/spells-against-the-manual.md)
+[spells against the manual](https://github.com/daaki85/darksun-obsidian-edition/blob/main/reports/spells-against-the-manual.md)
 (a report in the repository).
 
 ## How the game works out thief skills
 
-The game never shows thief skills, but it rolls them: for traps, and for the
+Without the mod the game never shows thief skills (the mod shows them on [the
+inventory screen's panel](FEATURES.md#thac0-saves-and-thief-skills) and the Loader's Characters
+tab), but it rolls them: for traps, and for the
 locks, walls and so on its scripts ask for (see
 [Where the game rolls thief skills](#where-the-game-rolls-thief-skills)). The
 game gives the skills no names; its eight are AD&D's in AD&D's order (pick
@@ -900,13 +902,15 @@ and after 6 every wardrobe is empty.
 
 | Search | Roll | Finds nothing on | What the rolls find |
 |---|---|---|---|
-| Junk pile | 0-14 | 0-1, or after 6 finds in junk | 2 a scorpion bite, dodged; 3 a scrap of paper ("Watch out for the..."); 4 a dead rat; 5 stale bread; 6 a piece of a grainpot; 7 a rat's bite (0-4 damage); 8 magic fruit; 9 wood for a club; 10 a drawing of a four-armed statue; 11 trinkets with a gem; 12 dung; 13 arrows; 14 magic fruit |
+| Junk pile | 0-14 | 0-1, or after 6 finds in junk | 2 a scorpion that strikes and is dodged (no damage); 3 a scrap of paper ("Watch out for the..."); 4 a dead rat; 5 stale bread; 6 a piece of a grainpot; 7 a rat's bite (0-4 damage); 8 magic fruit; 9 wood for a club; 10 a drawing of a four-armed statue; 11 trinkets with a gem; 12 dung; 13 arrows; 14 magic fruit |
 | Haystack | 0-10 | 0-2, or after 6 finds in hay | 3 a bone needle; 4 a piece of a pot; 5 a rat's bite (0-4 damage); 6 a table leg for a club; 7 a soiled loincloth; 8 15 ceramic coins; 9 a bug; 10 a small gem |
 | Wardrobe | 0-10 | 0-2 (after 6 searches, empty) | 3 a rat's bite (0-4 damage); 4 a piece of a pot; 5 "Gareth the scribe was here."; 6 magic fruit; 7 a falling pot (0-5 damage); 8 a small gem; 9 a falling pot that misses; 10 "Don't trust Pehtucl." |
 
-The script also has outcomes for the rolls that find nothing (a scorpion's bite
-in junk, a skull in hay, coins in a wardrobe...), but its "nothing" check comes
-first, so they never happen.
+The script also has outcomes for the rolls that find nothing: in junk a
+scorpion's bite (0-4 damage) on 0 and a rodent on 1, in hay dung, a skull and a
+mummified rat, in a wardrobe a butterfly, a spider and 15 coins. Its "nothing"
+check comes first, so they never happen: the only scorpion a junk pile gives is
+the one dodged on 2, which does no harm.
 
 How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#searching-junk-hay-and-wardrobes).
 

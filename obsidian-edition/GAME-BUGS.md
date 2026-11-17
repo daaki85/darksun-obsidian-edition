@@ -109,7 +109,7 @@ memory fixes in [DEVELOPMENT.md](DEVELOPMENT.md#room-in-the-helper), and the row
 | Bug | The game | With the Loader |
 |---|---|---|
 | A **New** character's thief skills | A character made with CREATE CHARACTERS is New until the game starts, when the game makes it Okay; the game's tests for Okay left New out, so a New thief's skills all showed 0 on the inventory screen | The patched game and the Loader count New as Okay wherever they test for Okay; the status under the portrait still reads New, and the game still makes New characters Okay when it starts |
-| **Thief skills**' equipment penalty | Taken for anything in the hands, quiver or leg slot (a weapon held cost 5 to 10 points), never for the armour worn | None ([how the game works out thief skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)) |
+| **Thief skills**' equipment penalty | Taken for anything in the hands, quiver or leg slot (a weapon held cost 5 to 10 points), never for the armour worn | None, in the game the Loader patches, whatever the switches (the dice log's `-5 equipment` and the like shows only for a game that still takes it: [how the game works out thief skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)) |
 | A thief skill rolled **for the whole party** (a trap going off, hearing the men by the wagon) | Meant for the member with the best chance, but the pick compared the wrong way round, so the first party member always rolled | The member with the best chance rolls ([where the game rolls them](HOW-THE-GAME-WORKS.md#where-the-game-rolls-thief-skills)) |
 
 ### Items
@@ -186,8 +186,8 @@ XP level cap, hit dice, creation scores, half-giants' weapons, creature size, we
 
 | Rule | The game | As it should be | Switch |
 |---|---|---|---|
-| Saves against spells | Petrification or polymorph for almost every spell | The save against spells | [Saving throws against spells](FEATURES.md#spells-saved-against-with-the-spell-save) |
-| Fire, cold and electricity | The save's d20 doubled (70% to save a Fireball where 35% is due), which the manual and AD&D don't have | DEX's adjustment | [Saving throws against spells](FEATURES.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20) |
+| Saves against spells | Petrification or polymorph for almost every spell | The save against spells | [Spells saved against with the spell save](FEATURES.md#spells-saved-against-with-the-spell-save) |
+| Fire, cold and electricity | The save's d20 doubled (70% to save a Fireball where 35% is due), which the manual and AD&D don't have | DEX's adjustment | [Fire, cold and electricity: DEX instead of a doubled d20](FEATURES.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20) |
 | Spells, psionics and monsters | Saves, times, damage and effects that part from its own manual (pp. 30-86: the bestiary, spells and psionics) | As the manual has them | [As the manual describes them](FEATURES.md#spells-and-psionics-as-the-manual-describes-them) |
 | Turn Undead | A d20 against a number of its own, a row too easy for 2- and 3-HD undead and a row too hard for 5 HD; a success destroys, there is no fleeing, and a priest may try the same undead as often as they like | AD&D's turning table: undead turned flee for 3d4 rounds, D destroys, D* destroys more of the kind, "---" no chance; a priest who fails can't try that undead again that fight ([the table](HOW-THE-GAME-WORKS.md#adds-turning-table)) | [As the manual describes them](FEATURES.md#spells-and-psionics-as-the-manual-describes-them) (it goes with the spells' switch) |
 | Missile and touch spells | Every one lands, every time | They roll to hit ("as if fired by a fighter") | [Spells roll to hit](FEATURES.md#spells-roll-to-hit) |

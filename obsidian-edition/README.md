@@ -55,6 +55,7 @@ which loads the mod with your options.
   - [Known issues](#known-issues)
   - [Crash, freeze and item reports](#crash-freeze-and-item-reports)
   - [Reporting a problem](#reporting-a-problem)
+- [Version, licence and credits](#version-licence-and-credits)
 
 ## What it does
 
@@ -91,7 +92,7 @@ Eight families of changes. Most have a switch on the Loader's **Options** tab
   speed](FEATURES.md#game-speed) setting, [crash, freeze and item
   reports](#crash-freeze-and-item-reports) and [no manual
   check](FEATURES.md#no-manual-check).
-- **Fixes the game's bugs.** Some fifty, always on, from spells that never did
+- **Fixes the game's bugs.** Dozens of them, always on, from spells that never did
   what they say to the scripts' broken checks, and the rules it got wrong
   ([The game's bugs, fixed](GAME-BUGS.md)).
 
@@ -111,7 +112,10 @@ files](#updating-backups-saved-games-and-the-loaders-files)).
 - **Linux**: the dice log and the Loader's window can follow a DOSBox you
   start yourself, if you can read other processes' memory (root, or
   `kernel.yama.ptrace_scope=0`); the `.bat` files, **Start the game** and the
-  Python install are Windows only. macOS isn't supported.
+  Python install are Windows only. The Loader's window is
+  `python3 -m dsloader view`, run in this folder; it needs tkinter, which some
+  distributions package apart from Python (on Debian and Ubuntu,
+  `python3-tk`). macOS isn't supported.
 - **Wake of the Ravager** (optional; GOG sells it with Shattered Lands): the
   [6th-level priest spells](FEATURES.md#6th-level-priest-spells) use its icons
   and pictures, read from your copy as the game starts; without it they have
@@ -153,8 +157,9 @@ slows instead of speeding up: choose the next setting down.
    checks for a 64-bit Python 3.8 or later. If there is none, it asks
    whether to install it with Windows' own package manager (winget): that
    downloads the official, signed installer from python.org, for your user
-   only, with no administrator rights. Answer **Y**, and when it's done, start
-   the `.bat` file again. (If you'd rather do it yourself, or winget isn't
+   only, with no administrator rights. Answer **Y**: when it's done, the `.bat`
+   file carries on by itself; only if it says "Python is installed, but this
+   window doesn't know yet", close it and start the `.bat` file again. (If you'd rather do it yourself, or winget isn't
    there, install the 64-bit Python from <https://www.python.org/downloads/>
    and tick **"Add python.exe to PATH"** on the installer's first screen.)
 
@@ -214,8 +219,11 @@ If anything goes wrong it says so in a message box and writes the details to
 `play.log`. Only one Loader (a window, or the in-game rolls) can start or follow the
 game at a time: a second one says which has it and leaves the game alone.
 
-**Checking a save file:** drag a `SAVEnn.SAV` file from the game folder onto
-**`Show Save.bat`** to see the party it holds.
+**Checking a save file:** drag a save file onto **`Show Save.bat`** to see the
+party it holds: `SAVE01.SAV` to `SAVE10.SAV` (page 1), or pages 2 to 4's
+`SAVB01.SAV`, `SAVC01.SAV`, `SAVD01.SAV` and so on, from the game folder, or
+from its `cloud_saves` folder if it has one (GOG's DOSBox keeps the saves
+there).
 
 **With Dark Sun Recompiled instead of DOSBox:** the game translated into a
 program of its own ([daaki85/darksun-recompiled](https://github.com/daaki85/darksun-recompiled)),
@@ -622,6 +630,18 @@ level AA:
 - **The Loader shows no party or rolls:** check that Python is the 64-bit one
   ([Requirements](#requirements)) and that the game was started from the
   Loader or one of its `.bat` files.
+- **Python is installed, but the `.bat` file says it isn't.** The `.bat` files
+  take only a 64-bit Python 3.8 or later with tkinter (the window toolkit:
+  python.org's installer's "tcl/tk and IDLE", on by default). A 32-bit
+  Python, an older one, or one installed without tkinter counts as none: install
+  the 64-bit one from python.org beside it, keeping the installer's defaults.
+- **The Loader starts the wrong copy of the game** (you moved it, or have
+  two): it remembers the game folder from the first time. Name another once, in
+  a command prompt opened in this folder:
+  `python -m dsloader launch --game-dir "D:\Games\Dark Sun Shattered Lands"`
+  (the folder that holds `DSUN.EXE`; it is remembered from then on). Or delete
+  the `"game_dir"` entry from `settings.json` in this folder, and the Loader
+  looks in GOG's usual folders again and asks if it can't find the game.
 
 ### Known issues
 
@@ -635,6 +655,10 @@ doing help (see [Reporting a problem](#reporting-a-problem)):
   freeze** (much rarer now: three causes are fixed, [the game's
   bugs](GAME-BUGS.md#screens-and-memory)). If it happens, press **Freeze report** on the Loader
   before closing DOSBox.
+- **Out of memory.** The game has little memory to spare, and in a long
+  session it can run out ("Out of memory in OEOpenGraph"). The Loader watches
+  it, and if it gets low with the map up, the dice log says so: save and
+  restart the game soon, as a fresh start has all of it back.
 
 ### Crash, freeze and item reports
 
@@ -655,11 +679,6 @@ it anywhere public.
 | **Crash** (`crash-2026-10-04-213012.txt`) | the game stops with an error, or DOSBox closes while the game still runs | how DOSBox closed (its exit code), what the game left on the screen and the message it last wrote, with the calls that led to it; how long the game ran and the game speed; DOSBox's own `stdout.txt` and `stderr.txt`, if it wrote them; any writes into the game the Loader refused as unsafe; the game's memory at the last reading and at its lowest |
 | **Freeze** (`freeze-2026-10-16-213012.zip`) | you press **Freeze report** | where the game was running for the last few seconds (the helper notes it about 4 times a second), whether the game's timer and the map still move, the helper's own state, and a copy of the game's memory (about 1 MB: the party, the map and the fight, nothing outside DOSBox) |
 | **Item** (`item-2026-10-18-213012.txt`) | an item vanishes from the party | the item, who had it and where, what its record in the game's item table says now (freed, or reused for another item), the game's time, the region, whether a fight was on and whose turn, the item's record when last seen and now, and its type's record, and the owner's and the party's items |
-
-**Memory running low.** The game has little memory to spare, and in a long
-session it can run out ("Out of memory in OEOpenGraph"). The Loader watches it,
-and if it gets low with the map up, the dice log says so: save and restart the
-game soon, as a fresh start has all of it back.
 
 **A crash.** When the game stops with an error (such as "Null pointer
 assignment"), DOSBox waits with the game's message on screen ("The game
@@ -700,3 +719,21 @@ page](https://github.com/daaki85/darksun-obsidian-edition/issues), saying what
 you were doing, the version (the Loader's title bar), and attaching the crash,
 freeze or item report if there is one (all three are in `crash-logs`). A save
 from just before it happened helps most of all.
+
+## Version, licence and credits
+
+**Version:** the Loader's title bar shows it, and the release's folder is named for it
+(`Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>`). What each version changed is in its
+release notes, on [the Releases page](https://github.com/daaki85/darksun-obsidian-edition/releases).
+
+**Licence:** Obsidian Edition's own code and documentation are free software under the GNU General
+Public License v3.0 (`LICENSE`, in this folder). That doesn't extend to the game's own art shown in
+these pages, which isn't the project's to license. Obsidian Edition is a fan project, not affiliated
+with or endorsed by the owners of Dark Sun or Dungeons & Dragons, whose names and trademarks are
+theirs, and it includes none of the game's files: you need your own copy of the GOG release.
+
+**Credits:** the code and documentation were written by Claude, Anthropic's AI model, in Claude
+Code, under the direction and testing of daaki85. The game is Dark Sun: Shattered Lands (1993), by
+Strategic Simulations, Inc., under licence from TSR, Inc.; the Dark Sun setting was created by Troy
+Denning and Timothy B. Brown. The research, rules and tools the mod draws on are credited in full on
+[the project's page](https://github.com/daaki85/darksun-obsidian-edition#credits).

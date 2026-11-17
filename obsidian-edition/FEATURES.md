@@ -329,8 +329,8 @@ change.
   or its caster (WIS against mind spells, Protection from Fire, a doubled d20
   against fire...) is left out; the dice log shows it on each save. A 1 always
   fails and a 20 always saves, so they show between 2 and 20.
-- **Thief skills**: as they stand (with no equipment penalty in games started
-  with the dice log: see [How the game works out thief
+- **Thief skills**: as they stand (with no equipment penalty: the game the
+  Loader patches takes none; see [How the game works out thief
   skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills)), at most
   95 with [AD&D's table](#thief-skills-from-adds-table), 0 for a
   skill an effect rules out or when the thief isn't Okay (New counts as Okay),
@@ -371,7 +371,7 @@ points:
   does to them. No weapon is counted (none is held yet, and weapon specs are
   picked after DONE): it is the inventory's THAC0 before the weapon's own
   parts.
-- **AGE**, above RECALL, with [ages](#ages-and-magical-aging) on
+- **AGE**, beside the PSP line (under THAC0), with [ages](#ages-and-magical-aging) on
   (`AGE: 23`): the age the character will start at, Table 7's dice rolled again
   with each roll of the die and each choice of race, sex or class. A click on a
   score keeps it, STORE and RECALL keep it with the roll, and EDIT on a party
@@ -1459,7 +1459,7 @@ fitted to these choices, come with them.
 | Box on the Options tab | What it adds |
 |---|---|
 | [Weapon specialization](#weapon-specialization) | fighters and gladiators specialize in weapon types, fighters on to mastery and grand mastery, rangers take expertise (and every ranger but a Seeker the bow); specialists and rangers shoot missiles faster; other weapons at a warrior's plain rate (missiles faster from 7th level) |
-| [Kits](#kits) | a character of one class takes one of three kits for its class, or none; a few races' pairs of classes (and one set of three) have kits of their own |
+| [Kits](#kits) | a character of one class takes one of three kits for its class, or none; a few races' pairs of classes (and one set of three) have kits of their own; a human with no kit yet may take one for its new class after DUAL |
 | [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen) | a roll kept on the creation screen, to bring back after trying the die again |
 | [Fuller starting gear](#fuller-starting-gear) | new characters get more plain gear: a weapon in hand they can use, a sling (a Battle Dancer a bow and arrows), leather armour, and a Stalker, Assassin or Shinobi a cloak |
 
@@ -1482,7 +1482,8 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#weapon-specialization)
 ### Kits
 
 With **Kits** ticked, a character may take a kit when it is made, on the
-creation panel's **KIT** page. Who may take which, and every kit's gains, costs,
+creation panel's **KIT** page, and a human with no kit yet may take one for its new class right
+after **DUAL** ([changing class](KITS.md#changing-class)). Who may take which, and every kit's gains, costs,
 starting gear and rules, are on a page of their own, [Kits and weapon
 specs](KITS.md):
 
@@ -1512,7 +1513,7 @@ scores and what the die's total allows (the `SUM:` line), the hit points and
 the PSP, and the age (with [Ages](#ages-and-magical-aging) on). So a good roll can be stored and the die tried again; if nothing
 better comes, RECALL puts the stored one back, AC and damage with it.
 
-![The creation screen with STORE and RECALL under the hit points and PSP, a stored roll recalled: SUM:102/102, 19/19 hit points with THAC0: M16 R16 beside them, AGE: 17 above RECALL; KITS below the psionic disciplines](docs/creation-store-recall.png)
+![The creation screen with STORE and RECALL under the hit points and PSP, a stored roll recalled: SUM:102/102, 19/19 hit points with THAC0: M16 R16 beside them, 27/27 PSP under them with AGE: 17 beside it; KITS below the psionic disciplines](docs/creation-store-recall.png)
 
 Changing the race, sex, classes or kit forgets the stored roll (its hit
 points were rolled for those), even if they are changed back: RECALL then
@@ -1787,10 +1788,10 @@ hiding certain, Fire Shield and Mirror Image rule it out).
 gives rangers no thief skills, so the Loader uses AD&D's ranger table, by
 ranger level, with the race's and DEX's adjustments as for a thief:
 
-| Ranger level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
-|---|---|---|---|---|---|---|---|---|---|---|
-| Hide in shadows | 10 | 15 | 20 | 25 | 31 | 37 | 43 | 49 | 56 | 63 |
-| Move silently | 15 | 21 | 27 | 33 | 40 | 47 | 55 | 62 | 70 | 78 |
+| Ranger level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Hide in shadows | 10 | 15 | 20 | 25 | 31 | 37 | 43 | 49 | 56 | 63 | 70 | 77 | 85 |
+| Move silently | 15 | 21 | 27 | 33 | 40 | 47 | 55 | 62 | 70 | 78 | 86 | 94 | 99 |
 
 The light works the other way round for these outdoorsmen: the **full chance
 under the open sky, half indoors** (the same maps and floors as for thieves).
@@ -1799,6 +1800,11 @@ count, but it is never a backstab. Armour doesn't matter, nor does what they
 hold. The Characters tab shows a ranger's two chances (**Ranger skills now**),
 and the game's inventory screen shows them where a thief's `SLNT` and `HIDE`
 go. Someone with thief levels hides as a thief.
+
+A **Wilderness Avenger** (the half-elf druid/fighter [kit](KITS.md#multiclass-kits)) hides and
+moves silently as a ranger does (the full chance under the open sky, half indoors), but at 5 a level of
+its best class (25 at 5th level) in place of the table, with its race's and DEX's adjustments; its
+hiding gives an attack from behind, never a backstab.
 
 ```
 Semyon hides in shadows: d100 = 15, needs 63 or less (63, a ranger under the open sky) -> hidden
@@ -2502,7 +2508,7 @@ store is a different limit from the game's 300 picture slots, which [the bugs
 fixed](GAME-BUGS.md#screens-and-memory) also see to: "Graphics disappearing in a busy
 area".)
 
-![Gerakis on the sand, drawn with the gear he carries](docs/gear.png)
+![Gerakis on the slave pens' tiled floor, drawn with the gear he carries: a sword in his hand, leather straps across his chest](docs/gear.png)
 
 ![Gerakis standing in the arena in magic gear: sparks shimmer over his armour, and the edge of the weapon at his hip glints](docs/magic-glint.gif)
 
@@ -2832,7 +2838,7 @@ How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#more-characters).
 
 ## The game's bugs, fixed
 
-The patched game also mends some fifty of the game's own bugs, whatever the Options tab says:
+The patched game also mends dozens of the game's own bugs, whatever the Options tab says:
 spells that never did what they say, fights, screens, and people and quests that could stall.
 They have a page of their own, grouped by kind: [The game's bugs, fixed](GAME-BUGS.md) (some
 spoilers).
