@@ -330,13 +330,16 @@ game's data: it is one player's account.
   120), and a figure under it can't be clicked: drag the view (`scroll.py -96 0`) first. Out of a
   fight the panel shows only after `L`. More on the panel's buttons: [the combat log's doc
   pictures](#pictures-for-the-docs).
-- **The panel's buttons**: the expanded panel's filter chips are at y 87 (All 148, Party about
-  175); a filter chosen stays (Party leaves out the foes' attacks). The docked panel's **+** is at
-  (311,129), the expanded one's **-** at (296,74) (not 311). The level button: (262,129) docked
-  and (262,74) expanded, a click going Detail, Least, Short, Detail; but a click on the expanded
-  panel's chip at 292,74 docks the panel instead, and the docked panel's chip at 268,129 cycles
-  Detail -> Least -> Short (the two sets of coordinates disagree: to measure in the game). The
-  panel remembers its size and level across loads. The mouse wheel doesn't reach it under DOSBox;
+- **The panel's buttons** (measured 2026-11-17, logs/2026-11-17-ingame-doc-checks.md): the
+  header's buttons are on the same x docked and expanded, at y 122-131 docked (centre 127) and
+  70-79 expanded (centre 74): **L** 245-254 (hides the panel, as the key does), the level chip
+  256-290 (centre 273: a click goes Least -> Short -> Detail -> Least), **-** 292-300 (296) and
+  **+** 302-310 (306; the expanded panel has none). A press anywhere right of 292 in the header
+  row resizes: left of 302 smaller, else bigger. The expanded panel's filter chips are at y 84-92
+  (All 142-157, Party 160-193, Damage 196-237, Saves 240-274); a filter chosen stays (Party leaves
+  out the foes' attacks). The panel remembers its size and level across loads (the settings'
+  `combat_log_level`, `combat_log_size`; `combatlog.level_rect`, `key_rect`, `filter_rects` give
+  the rectangles, x + 136 and y + the panel's top). The mouse wheel doesn't reach it under DOSBox;
   a click on the scrollbar's track above the handle (309,140) pages up.
 
 ## Walking, the view and doors
@@ -422,7 +425,9 @@ game's data: it is one player's account.
   `gd.combatants()`, his place at DS:669Dh + 32n), and when he is on screen and near, `pointer.py
   look`: the eye pauses the game, so he stops. A slow press on his figure (about 12 pixels above
   his feet; a red eye means bare floor) opens the Look box; its first button (left, about 188,158
-  when the box is low) talks. A YES/NO question first: Y or N.
+  when the box is low) talks. Escape doesn't close a creature's Look box: its fourth button (the
+  plain rectangle at its bottom right, about 245,115 for a box at 171-263, 49-124) does, and the
+  mod's whole description of a monster then comes in the dialogue window (Continue, 24,157). A YES/NO question first: Y or N.
 - **The Trustee's pocket** (his talk's "(PICK THE TRUSTEE'S POCKETS)"): offered only if the one
   talking is a thief, within 4 squares of him as the talk opens, and the key isn't stolen (flag 55;
   script 146 at 884h-8ABh): a talk opened from the Look box across a room has no such line. "You
@@ -592,8 +597,11 @@ game's data: it is one player's account.
   carries, with name numbers).
 - **A lock barred until a level** (logs/2026-11-11-lock-retry.md): Pehtucl's chest with a
   1st-level thief (`thief.py 0 1`) fails easily; a second use reads "failed this lock at this thief
-  level", and `thief.py 0 2` lets it roll again. `chestuse.sh` sets the eye with `pointer.py look`
-  (after a use the eye is still up) and presses the chest at (163,70). If the eye shows red over the
+  level", and `thief.py 0 2` lets it roll again. `chestuse.sh [y|n]` sets the eye with `pointer.py look`
+  and presses the chest at (163,70), then its look box's USE; a non-thief's "Bash it open?" takes
+  the right-clicks that put the walk arrow back, so give the answer (y or n): the script presses
+  it, clicks the messages after it away and puts the arrow back (without one it leaves the
+  question and the eye up, and says so). If the eye shows red over the
   chest, `pointer.py walk` then `look` again. The chest itself: [Pehtucl's
   chest](ROUTE.md#pehtucls-chest).
 - **The pens' weapon rack** (logs/2026-11-11-semyon-rack.md): `rackcheck.py` shows it (object
@@ -871,6 +879,12 @@ tools, and where each is described:
 ## Pictures for the docs
 
 - **A magic item for a look at its box**: [items in memory](RESEARCH.md#items-in-memory).
+- **`docs/look-box.png`** (logs/2026-11-17-ingame-doc-checks.md): the pens' Zombie (creature 21,
+  map 1272,856, a room west of Kurzak's), the one creature in the saves' pens with a defence line
+  (IMM POISON); none there has magic resistance (`monsters.monster_lines` for each creature shows
+  what its box will say). From `pens-kurzak-door`, `teleport.py 1200 864 1112 756` (memory: never
+  save after), `pointer.py look`, a slow press on it (160,88); the box is x 171-263, y 49-124:
+  `convert -crop 98x82+168+46 +repage -scale 200%` (196x164).
 - **The inventory panel's picture**: I opens the inventory; the panel is `shot.sh`'s x 230-319, y
   0-199, scaled 2x (`convert -crop 90x200+230+0 +repage -scale 200%`). A class can be tried in
   memory ([a class in memory](RESEARCH.md#the-party-and-the-maps-people)); never save after.

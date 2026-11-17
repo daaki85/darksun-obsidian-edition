@@ -269,7 +269,13 @@ from before 2.14.0, where the chest was the game's plain one.
 
 2026-11-16: `chestuse.sh`'s two blind right-clicks and its press at (161,72) opened the USE screen;
 `pointer.py look`, the press at (163,70) and the look box's third button worked, and the script
-does that since (2026-11-17, not yet run in the game).
+does that since. 2026-11-17 (logs/2026-11-17-ingame-doc-checks.md), its first run in the game
+(`pens-new-chest`, `shut.py`, teleport and the two walks): the look box "Chest" and its USE brought
+"The chest is locked. Gerakis doesn't know how to pick the lock. Bash it open?", but the question
+took the right-clicks of the script's last `pointer.py walk`, so the eye stayed up (the game
+paused, rule 9). The script now takes the answer (y or n), presses it, clicks the messages after it
+away and then puts the arrow back: `chestuse.sh n` and `chestuse.sh y` ("Gerakis smashes at the
+lock, making a lot of noise but little else.") both ended with the walk arrow.
 
 ## Fights and the turn tools
 
@@ -301,6 +307,14 @@ starts.
 
 2026-11-15: a Spellarcher beside a Slig shot the Screamer Beetle two squares off: a bow is used
 only against a foe not beside the archer.
+
+## The combat log panel's buttons
+
+2026-11-11 to 2026-11-16: the guide had two sets of coordinates for the level chip (262 or 268;
+"the chip at 292,74 docks the panel"). 2026-11-17 (logs/2026-11-17-ingame-doc-checks.md), measured
+in zoomed shots and each clicked: both were right in part. The chip is 256-290 docked and
+expanded, so 262 and 268 are both on it; 292 is the - button's left edge, which docks an expanded
+panel. The guide now has the one set, as `combatlog.level_rect` draws it.
 
 ## The LEVEL button that stuck
 
@@ -405,6 +419,9 @@ scores are the creature record's (raising INT on the sheet did nothing); the tur
 
 ## Pictures for the docs
 
+- `docs/look-box.png` (2026-11-17): the picture had only a Screamer Beetle's HP/AC and THAC0/AL
+  lines; no creature with magic resistance was in reach of the saves (all of the pens' creatures
+  read with `monsters.monster_lines`), so it was retaken on the pens' Zombie (IMM POISON).
 - Checking a figure's glow (2026-11-09): a red patch at Gerakis's feet was taken for the pointer,
   and his boots for missing: the pointer's animation changes pixels too, so move it off first.
 - The Loader's own window (2026-11-07): keys typed with DOSBox focused reached the game (the letters
@@ -474,4 +491,6 @@ index](logs/README.md), by date.
   Character's icons in play and the Effects page's MORE; `levelup.sh` on the first icon (113,71);
   the Spellarcher's Burning Hands arrow button gone.
 - **2026-11-17**: the guide reorganised (one startup checklist; memory edits in RESEARCH.md);
-  `chestuse.sh` as ROUTE.md describes it, `setitem.py` added.
+  `chestuse.sh` as ROUTE.md describes it, `setitem.py` added; the combat log's buttons measured,
+  `chestuse.sh` run (and given the answer to Bash it open?), `setitem.py` run, the look box's
+  picture retaken on the pens' Zombie, Escape not closing a Look box.

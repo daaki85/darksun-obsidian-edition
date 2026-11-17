@@ -205,7 +205,7 @@ The way to the grate, from the scripts and the region file, and the cluebook:
   it: `teleport.py 200 1432 40 1322`, walkto (216, 1440), then (184, 1400), a square west of it
   (from (120, 1464) the script says "You must be next to the chest"; standing on it, a figure takes
   the click); `pointer.py look`, a slow press on it (163, 70), the look box's third button (236, 101)
-  (`chestuse.sh`). `thief.py N LEVEL` / `thief.py N off` makes a thief in memory. The chest's look
+  (`chestuse.sh [y|n]`: the answer to a non-thief's "Bash it open?"; checked 2026-11-17). `thief.py N LEVEL` / `thief.py N off` makes a thief in memory. The chest's look
   box: first button closes, second **moves the chest**, third uses it. The game's trap objects:
   +0Fh is the trap's descriptor (d6, reach, damage kind), DSUN.EXE 80A11h. Retrying a lock:
   [a lock barred until a level](PLAYTESTING.md#inventory-looting-selling-and-shops).

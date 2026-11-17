@@ -148,7 +148,9 @@ raised before stopping.
   Return on the member's turn (`passuntil.sh N`).
 - **A shot with a weapon put in memory** (logs/2026-11-10-stinkpots.md): a missile-slot weapon
   replaced by another type (`setitem.py ITEM TYPE`: Lex's bow, item 36, made the Leather Staff
-  Sling, type 0) shoots on the member's turn with `pointer.py attack` and a click on the foe's
+  Sling, type 0; run again 2026-11-17 in `fountain-user` before the speech: `itemlists.py` showed
+  `(36, 2, 1)` before and `(36, 2, 0)` after, the item box "2 handed Leather Staff Sling 1D3", and
+  Lex's shot "attacks Templar with Leather Staff Sling (1d3)" with a stinkpot's save after it) shoots on the member's turn with `pointer.py attack` and a click on the foe's
   figure, about 10 pixels above its feet (DS:669Dh + 32 x combatant, less the camera); beside the
   figure the pointer shows the red "can't" sign and nothing happens.
 - **A named weapon for a shot**: write an item's name entry (+12h) in memory: the dice log, DSCLOG,
