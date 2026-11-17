@@ -54,6 +54,16 @@ Other sessions push to `obsidian-edition` too: fetch and rebase onto
 `origin/obsidian-edition` before every push. GitHub deletes the branch when its pull request
 merges: then make it again from `origin/main` and put any unmerged commits on top.
 
+**Branch names.** A cloud session is handed a random branch name (`claude/eloquent-bohr-g8rr37`,
+`ccr-7f9f358f-nn0os3`). Don't use it: this rule is the user's standing permission to push to a
+branch named after the task instead. Before the first commit or push, make `claude/<task>` (never
+push the random name: a session can make branches but not delete them, so it would be left behind
+for the user to delete by hand), where `<task>`
+is two to five lowercase words joined by hyphens saying what the work is (`claude/class-outfits`,
+`claude/opends-report`, `claude/gear-mark-roster`); check `git ls-remote origin` that it is free,
+else add `-2`. Commit and push there, and say the name in the first reply. If the user names a
+branch, or the work continues an existing branch, use that one.
+
 **Shell.** Never `pkill -f` or `pgrep -f | kill` a pattern your own command line contains: it
 kills your shell. Kill by pid, in a command of its own. Long runs go in the background with a
 Monitor, and every step gets a `timeout`. Share DOSBox between agents with
