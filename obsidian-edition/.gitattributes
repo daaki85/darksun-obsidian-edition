@@ -1,1 +1,8 @@
 *.bat text eol=crlf
+
+# Left out of the release zip (git archive, .github/workflows/release.yml): the developers' pages,
+# the tests and the developers' picture of the Loader. They stay in the repository, where the
+# manual's and the player pages' links to them go (GitHub, at the release's tag).
+/DEVELOPMENT*.md export-ignore
+/tests export-ignore
+docs/viewer.png export-ignore

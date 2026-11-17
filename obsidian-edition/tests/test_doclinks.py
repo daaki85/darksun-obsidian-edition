@@ -2,6 +2,7 @@
 features page section that DEVELOPMENT.md explains links to its explanation."""
 
 import collections
+import fnmatch
 import glob
 import os
 import re
@@ -16,6 +17,22 @@ def slug(heading: str) -> str:
     heading = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", heading)  # (a link: its text, as GitHub's anchor has it)
     text = re.sub(r"[*`_]", "", heading).strip().lower()
     return re.sub(r"[^\w\- ]", "", text).replace(" ", "-")
+
+
+def export_ignored() -> list:
+    """The patterns obsidian-edition/.gitattributes leaves out of the release zip (export-ignore)."""
+    with open(os.path.join(HERE, ".gitattributes"), encoding="utf-8") as f:
+        return [line.split()[0] for line in f if re.match(r"^[^#\s]\S*\s.*\bexport-ignore\b", line)]
+
+
+def ships(path: str) -> bool:
+    """Whether the file at PATH (in obsidian-edition) goes into the release zip."""
+    rel = os.path.relpath(path, HERE).replace(os.sep, "/")
+    for pattern in export_ignored():
+        name = pattern.lstrip("/")
+        if fnmatch.fnmatchcase(rel, name) or rel.startswith(name + "/"):
+            return False
+    return True
 
 
 def anchors(path: str) -> set:
@@ -68,24 +85,34 @@ class DocLinkTests(unittest.TestCase):
         self.assertEqual(bad, [])
 
     def test_shipped_pages_stay_in_the_zip(self):
-        """The release zip holds the obsidian-edition folder alone: its pages' relative links never
-        leave it (what is outside goes by its GitHub address), and the GitHub links to files of the
-        repository name files that are there."""
+        """The release zip holds the obsidian-edition folder alone, less what its .gitattributes marks
+        export-ignore (the developer pages, tests/, docs/viewer.png): the shipped pages' relative
+        links never leave it (what is outside goes by its GitHub address), and the GitHub links to
+        files of the repository name files that are there. A shipped page's relative link to a
+        developer page is let be: the manual, the zip's readable copy, sends it to GitHub at the
+        release's tag."""
+        self.assertEqual(export_ignored(), ["/DEVELOPMENT*.md", "/tests", "docs/viewer.png"])
         bad = []
-        base = "https://github.com/daaki85/darksun-obsidian-edition/blob/main/"
-        for path in glob.glob(os.path.join(HERE, "*.md")) + glob.glob(os.path.join(HERE, "docs", "**", "*.md"), recursive=True):
+        base = re.compile(r"https://github\.com/daaki85/darksun-obsidian-edition/blob/(?:main|v[0-9.]+)/")
+        pages = glob.glob(os.path.join(HERE, "*.md")) + glob.glob(os.path.join(HERE, "docs", "**", "*.md"), recursive=True)
+        for path in pages:
+            if not ships(path):
+                continue
             with open(path, encoding="utf-8") as f:
                 for n, line in enumerate(f, 1):
                     for target in re.findall(r"\]\(([^)\s]+)\)", line):
                         rel = os.path.relpath(path, REPO)
-                        if target.startswith(base):
-                            name = target[len(base):].partition("#")[0]
+                        github = base.match(target)
+                        if github:
+                            name = target[github.end():].partition("#")[0]
                             if name and not os.path.exists(os.path.join(REPO, name)):
                                 bad.append(f"{rel}:{n} {target} (no such file in the repository)")
                         elif not target.startswith(("http", "mailto", "#")):
                             dest = os.path.normpath(os.path.join(os.path.dirname(path), target.partition("#")[0]))
                             if not dest.startswith(HERE + os.sep) and dest != HERE:
                                 bad.append(f"{rel}:{n} {target} (outside the zip)")
+                            elif not ships(dest) and not re.match(r"DEVELOPMENT[A-Z-]*\.md$", os.path.basename(dest)):
+                                bad.append(f"{rel}:{n} {target} (left out of the zip)")
         self.assertEqual(bad, [])
 
     def test_readme_links_how_it_works(self):

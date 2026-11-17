@@ -217,7 +217,21 @@ class MarkdownTests(unittest.TestCase):
         notes = manual.linker("PATCH-NOTES.md")
         self.assertEqual(notes("patch-notes.html"), "changes.html")
         self.assertEqual(notes("obsidian-edition/KITS.md"), "kits.html")
-        self.assertEqual(manual.href("KITS.md#x"), manual.DOCS + "KITS.md#x")  # (outside the manual)
+        self.assertEqual(to(manual.MAIN + "PATCH-NOTES.md"), "changes.html")  # (the Markdown's own addresses)
+        self.assertEqual(to(manual.MAIN + "obsidian-edition/DEVELOPMENT.md#x"), manual.DOCS + "DEVELOPMENT.md#x")
+        self.assertEqual(to(manual.MAIN + "CHANGELOG.md"), manual.BLOB + "CHANGELOG.md")
+        # (the root's patch-notes.html, published from main, keeps main's addresses)
+        self.assertEqual(manual.href("KITS.md#x"), manual.MAIN + "obsidian-edition/KITS.md#x")
+
+    def test_github_links_at_the_release(self):
+        """The manual's GitHub links are to its release's tag (blob/v and __version__), so a zip's
+        manual links the files as they were in that version; none is to main."""
+        from dsloader import __version__
+        self.assertEqual(manual.BLOB, f"{manual.REPO}/blob/v{__version__}/")
+        self.assertEqual(manual.MAIN, f"{manual.REPO}/blob/main/")
+        for page, _, _, _ in manual.PAGES:
+            with open(os.path.join(manual.MANUAL, page), encoding="utf-8") as f:
+                self.assertNotIn("/blob/main/", f.read(), page)
 
 
 if __name__ == "__main__":
