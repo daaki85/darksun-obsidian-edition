@@ -15,8 +15,8 @@ its GitHub address at the release's tag (blob/v and __version__, so a zip's link
 the Markdown's own blob/main addresses are read as the repository's files too). Headings have GitHub's anchors, a repeated one with -1, -2..., so the
 Markdown's own links keep working.
 
-`python -m dsloader.manual` (or `python -m dsloader.guidepage`, its older name) writes the whole
-manual; tests/test_manual.py checks each page is up to date and that its links all land.
+`python -m dsloader.manual` writes the whole manual; tests/test_manual.py checks each page is up to
+date and that its links all land.
 
 The Markdown the pages use: headings, paragraphs, lists (nested, numbered, loose, with tables,
 pictures, code and paragraphs inside, and lazy continuation lines), tables (with pictures, and \\|
