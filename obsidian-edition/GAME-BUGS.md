@@ -32,7 +32,6 @@ memory fixes in [DEVELOPMENT-INTERNALS.md](DEVELOPMENT-INTERNALS.md#room-and-mem
   - [Scripts that stuck, or ran twice](#scripts-that-stuck-or-ran-twice)
   - [Who is talking: class, race and sex](#who-is-talking-class-race-and-sex)
 - [Rules it got wrong, with a switch](#rules-it-got-wrong-with-a-switch)
-- [Two more, with a switch](#two-more-with-a-switch)
 - [Saved games](#saved-games)
 
 ## Spells and psionics
@@ -101,7 +100,7 @@ memory fixes in [DEVELOPMENT-INTERNALS.md](DEVELOPMENT-INTERNALS.md#room-and-mem
 | Bug | The game | With the Loader |
 |---|---|---|
 | **DELETE** in the roster | Deleted the character in the row clicked counting from the top of the list, not from the top of what was shown, so with the list scrolled down another character was deleted | Deletes the one chosen ([how](DEVELOPMENT-SCREENS.md#more-characters)) |
-| The **creation screen's least scores** | The class's prime requisite raised to 17 and every other score to 9 to 14, against the manual: a fighter's STR never below 17, a thief's CHA never below 9, while a druid's CHA, a ranger's STR and DEX and a psionicist's CON had no minimum of their own | The manual's: cleric WIS 9; druid WIS 12, CHA 15; fighter STR 9; gladiator STR 13, DEX 12, CON 15; preserver INT 9; psionicist CON 11, INT 12, WIS 15; ranger STR 13, DEX 13, CON 14, WIS 14; thief DEX 9; a multiclass character the highest of their classes' ([character creation](HOW-THE-GAME-WORKS.md#character-creation)) |
+| The **creation screen's least scores** | The class's prime requisite raised to 17 and every other score to 9 to 14, against the manual: a fighter's STR never below 17, a thief's CHA never below 9, while a druid's CHA, a ranger's STR and DEX and a psionicist's CON had no minimum of their own | The manual's: each class's, and a multiclass character the highest of its classes' ([the minimums, class by class](HOW-THE-GAME-WORKS.md#character-creation)) |
 | **XP for high prime requisites** | None, though the manual promises 10% more XP to a class whose prime requisites are all 16 or more | 10% more of every award for each such class, divided by a multiclass character's classes (one XP for them all); a human's class followed now. The Loader adds it as each award comes, so it needs the Loader following the game ([Experience and levels](PLAYER-GUIDE.md#experience-and-levels)) |
 
 ### Thief skills
@@ -177,40 +176,11 @@ memory fixes in [DEVELOPMENT-INTERNALS.md](DEVELOPMENT-INTERNALS.md#room-and-mem
 
 ## Rules it got wrong, with a switch
 
-Most of the [rule changes](FEATURES.md#rule-changes) put right a rule the game gets wrong: it
-departs from its own manual, from itself, or from the Player's Handbook it follows. Each, apart
-from two weapons (always on), has a switch on the Options tab, on by default, so the game's own rule is
-still there to go back to. (The
-rule changes that are the mod's own choices, not corrections, are left out: helms' AC, resting, the
-XP level cap, hit dice, creation scores, half-giants' weapons, creature size, weapon traits (cahulaks, stinkpots, polearm reach), rings and cloaks of protection, and ages.)
-
-| Rule | The game | As it should be | Switch |
-|---|---|---|---|
-| Saves against spells | Petrification or polymorph for almost every spell | The save against spells | [Spells saved against with the spell save](FEATURES.md#spells-saved-against-with-the-spell-save) |
-| Fire, cold and electricity | The save's d20 doubled (70% to save a Fireball where 35% is due), which the manual and AD&D don't have | DEX's adjustment | [Fire, cold and electricity: DEX instead of a doubled d20](FEATURES.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20) |
-| Spells, psionics and monsters | Saves, times, damage and effects that part from its own manual (pp. 30-86: the bestiary, spells and psionics) | As the manual has them | [As the manual describes them](FEATURES.md#spells-and-psionics-as-the-manual-describes-them) |
-| Turn Undead | A d20 against a number of its own, a row too easy for 2- and 3-HD undead and a row too hard for 5 HD; a success destroys, there is no fleeing, and a priest may try the same undead as often as they like | AD&D's turning table: undead turned flee for 3d4 rounds, D destroys, D* destroys more of the kind, "---" no chance; a priest who fails can't try that undead again that fight ([the table](HOW-THE-GAME-WORKS.md#adds-turning-table)) | [As the manual describes them](FEATURES.md#spells-and-psionics-as-the-manual-describes-them) (it goes with the spells' switch) |
-| Missile and touch spells | Every one lands, every time | They roll to hit ("as if fired by a fighter") | [Spells roll to hit](FEATURES.md#spells-roll-to-hit) |
-| Enlarge | Grows the whole hit, STR's bonus and magic's too, rounded down | The weapon's dice grow, rounded up; STR, class and magic aren't altered (Player's Handbook p. 173) | [Enlarge](FEATURES.md#enlarge-multiplies-the-weapons-dice-only) |
-| A ranger's spells | Spell levels by its level less 7, but duration and damage by its whole level | Level less 7 for all | [Rangers' casting level](FEATURES.md#rangers-casting-level) |
-| Preservers' spells | Any spell learnt from any scroll, every spell known | INT's chance to learn, and its most spells of each level | [Preservers' INT](FEATURES.md#preservers-int) |
-| Dual-classing | From 2nd level, one prime requisite a class | From 3rd level, every prime requisite (the game's manual, pp. 12 and 22-26) | [Dual-classing](FEATURES.md#dual-classing-as-the-manual-has-it) |
-| Class restrictions | Any one class allowing an item is enough | The strictest class wins | [Class restrictions](FEATURES.md#class-restrictions) |
-| Multiclass hit points | CON's bonus once a level | CON's bonus on every hit die, the total shared | [Multiclass hit points](FEATURES.md#multiclass-hit-points) |
-| Class tables | Priests' THAC0 a level early, short spell slots, a little too little XP for 2nd level | AD&D's tables | [AD&D's class tables](FEATURES.md#adds-class-tables) |
-| CON 20 and up | A hit point back every 5 minutes at any CON; CON's adjustment on a dwarf's or halfling's poison save | AD&D's rate (one an hour at CON 20, one every 10 minutes at 25); the racial bonus only | [CON as in AD&D](FEATURES.md#con-as-in-add) |
-| Two weapons | No penalty (a small bonus at DEX 5 or less), the full rate in each hand | -2 and -4, DEX's adjustment, one attack with the off hand (always on: no switch) | [Two weapons](FEATURES.md#two-weapons) |
-| Warriors' attacks | 3/2 with any weapon | The plain rate outside a specialization | [Weapon specialization](FEATURES.md#weapon-specialization) |
-| Held and Out Cold targets | A roll to hit as ever, and double damage | A hit automatically, for normal damage | [Held targets](FEATURES.md#held-targets) |
-| Acid on armour | The item destroyed outright | Each item saves by its material | [Items saving against acid](FEATURES.md#items-saving-against-acid) |
-| Thief skills and backstabs | Skills too high (a 3rd-level elf with move silently 66); a backstab multiplied STR's bonus too | The Player's Handbook's table; a backstab multiplies the weapon's dice only | [Thieves as in AD&D](FEATURES.md#thief-skills-from-adds-table) |
-
-## Two more, with a switch
-
-Two of the game's bugs are mended by a switch of their own: Cilla's figure (the game gives the elf
-the half-elf woman's; see [Elves and half-elves](FEATURES.md#elves-and-half-elves)), and a click on a
-spell's icon on the Effects screen ending it ([Spells on the Effects
-screen](FEATURES.md#spells-on-the-effects-screen)).
+Most of the mod's [rule changes](FEATURES.md#rule-changes) put right a rule the game gets wrong, and
+two of its bugs (Cilla's figure, a click on a spell's icon on the Effects screen) are mended by a
+switch of their own. Each switch is on by default, so the game's own rule is still there to go back
+to: they are listed with the rule changes, as [rules the game got
+wrong](FEATURES.md#rules-the-game-got-wrong).
 
 ## Saved games
 
