@@ -23,7 +23,7 @@ which loads the mod with your options.
   - [items](ITEMS.md) (spoilers): every item and where it is;
   - [creatures](CREATURES.md) (spoilers): every one, its size, and whether cahulaks can tangle it;
   - [the game's bugs, fixed](GAME-BUGS.md) (some spoilers): every bug of the original game the mod mends;
-  - [the dice log, line by line](DICE-LOG.md);
+  - [the dice log, line by line](DICE-LOG.md): how to read it, and every kind of line;
   - [how the original game works](HOW-THE-GAME-WORKS.md), from its code;
   - [the patch notes](https://github.com/daaki85/darksun-obsidian-edition/blob/main/PATCH-NOTES.md):
     what the mod adds and changes from the original game, and its main bug fixes; also in the
@@ -39,17 +39,16 @@ which loads the mod with your options.
   - [One-time setup](#one-time-setup)
   - [Every time you play](#every-time-you-play)
   - [Other ways to start](#other-ways-to-start)
-  - [Updating, backups, saved games and the Loader's
-    files](#updating-backups-saved-games-and-the-loaders-files):
-    [updating](#updating), [backing up your saves](#backing-up-your-saves),
-    [compatibility with older saves](#compatibility-with-older-saves), [what
-    the Loader writes](#what-the-loader-writes), [uninstalling](#uninstalling)
+- [Dark Sun Recompiled](#dark-sun-recompiled)
 - [The Loader's window](#the-loaders-window)
   - [The Characters tab](#the-characters-tab)
   - [The Spells tab](#the-spells-tab)
   - [The Dialogue tab](#the-dialogue-tab)
-- [The dice log](#the-dice-log)
+  - [The dice log](#the-dice-log)
 - [Accessibility](#accessibility)
+- [Updating](#updating)
+- [Compatibility with older saves](#compatibility-with-older-saves)
+- [Uninstalling](#uninstalling)
 - [When something goes wrong](#when-something-goes-wrong)
   - [Troubleshooting](#troubleshooting)
   - [Known issues](#known-issues)
@@ -96,9 +95,8 @@ Eight families of changes. Most have a switch on the Loader's **Options** tab
   what they say to the scripts' broken checks, and the rules it got wrong
   ([The game's bugs, fixed](GAME-BUGS.md)).
 
-**What it changes on your computer:** the game's own files never; the game folder gets only your
-saves and characters ([Updating, backups, saved games and the Loader's
-files](#updating-backups-saved-games-and-the-loaders-files)).
+**What it changes on your computer:** the game's own files never ([Uninstalling](#uninstalling)
+says what the mod writes, and where).
 
 ## Requirements
 
@@ -162,20 +160,19 @@ slows instead of speeding up: choose the next setting down.
    window doesn't know yet", close it and start the `.bat` file again. (If you'd rather do it yourself, or winget isn't
    there, install the 64-bit Python from <https://www.python.org/downloads/>
    and tick **"Add python.exe to PATH"** on the installer's first screen.)
+3. **Back up your saves.** Before the first game with the mod, copy the save files (`SAVE*`, and
+   `SAVB*`, `SAVC*` and `SAVD*` once you have them) and `CHARSAVE.GFF` somewhere safe: from the
+   game folder's `cloud_saves` folder if it has one (the game reads its saves from there first),
+   else from the game folder. The Loader never changes the game's own files, but your saves are
+   written by the patched game: one with the new items ticked can hold item types the original game
+   doesn't have, so load such a save with the Loader. To go back to the original game, start it the
+   GOG way and load a save from before the mod.
 
-**"Open File - Security Warning"** ("The publisher could not be verified"):
-Windows asks this for any `.bat` file unzipped from a download, since a `.bat`
-file can't be signed. To skip it altogether, before unzipping right-click the
-zip, choose **Properties**, tick **Unblock** and press **OK**. Otherwise press
-**Run** the first time: the Loader then takes the download mark off the files
-in its own folder (what that Unblock box does, and nothing outside the
-folder), so the other `.bat` files start without asking.
-
-Nothing in the download is a packaged program to trust: the `.bat` files and
-the Python code in `dsloader` are plain text, and so is the source of the
-three built files, small DOS programs DOSBox loads (`dos\dsclog.asm` builds
-`dos\DSCLOG.EXE`; `gameend.asm` and `umbplus.asm` the two `.COM` files beside
-them).
+**"Open File - Security Warning"** ("The publisher could not be verified") comes up for any `.bat`
+unzipped from a download. Press **Run** the first time: the Loader then takes the download mark off
+the files in its own folder, so it asks only once (or tick **Unblock** in the zip's Properties
+before unzipping). The `.bat` files and the Python in `dsloader` are plain text, and so are the
+sources of the three small DOS programs in `dos` ([DEVELOPMENT.md](DEVELOPMENT.md)).
 
 ### Every time you play
 
@@ -205,10 +202,11 @@ the **Dice log** tab as they happen.
 ### Other ways to start
 
 **Game and Loader in one double-click:** **`Start Game with Dice Log.bat`**
-starts the game with the dice log and opens the Loader next to it, with the
-options as you last set them on the Options tab. With the game started the
-normal way instead (GOG's own shortcut), the Loader still shows the party, but
-the dice log will say the game was started without it.
+starts the game and opens the Loader next to it, with the options as you last
+set them on the Options tab (every way of starting from this folder keeps the
+dice log). With the game started the normal way instead (GOG's own shortcut),
+the Loader still shows the party, but the dice log will say the game was
+started without it.
 
 **Just the game, with the in-game additions, no Loader window:** double-click
 **`Play Dark Sun (in-game rolls).bat`**. The dice log runs unseen and stops
@@ -225,165 +223,48 @@ party it holds: `SAVE01.SAV` to `SAVE10.SAV` (page 1), or pages 2 to 4's
 from its `cloud_saves` folder if it has one (GOG's DOSBox keeps the saves
 there).
 
-**With Dark Sun Recompiled instead of DOSBox:** the game translated into a
-program of its own ([daaki85/darksun-recompiled](https://github.com/daaki85/darksun-recompiled)),
-with the mod's patched game and helper built in. Unzip its
-`darksun-recompiled-windows-x64.zip` into this folder (so that
-`recompiled\dsun.exe` is here, or `dsun.exe` itself) or into its own
-`darksun-recompiled...` folder next to this one, and the Loader starts that
-program instead of DOSBox from then on,
-the dice log and the Loader's window attached as usual. As the game starts,
-the dice log says which one runs (`... in DOSBox` or `... as Dark Sun Recompiled`
-and where it is). The game's own `DSUN.EXE` is never taken for it, even with
-this folder in the game's. A program elsewhere is named once, in a command
-prompt opened in this folder:
+**Without DOSBox:** see [Dark Sun Recompiled](#dark-sun-recompiled).
+
+## Dark Sun Recompiled
+
+[Dark Sun Recompiled](https://github.com/daaki85/darksun-recompiled) is the game translated into a
+program of its own, with the mod's patched game and helper built in. Unzip its
+`darksun-recompiled-windows-x64.zip` into this folder (so that `recompiled\dsun.exe`, or `dsun.exe`
+itself, is here) or into its own `darksun-recompiled...` folder next to this one, and the Loader
+starts it instead of DOSBox from then on, with the dice log and the Loader's window as usual; the
+dice log says which one runs as the game starts. The game's own `DSUN.EXE` is never taken for it.
+A program elsewhere is named once, in a command prompt opened in this folder (the second line goes
+back to DOSBox):
 
 ```
 python -m dsloader launch --recompiled "C:\path\to\dsun.exe"
 python -m dsloader launch --dosbox
 ```
 
-The second line goes back to DOSBox (and stays there until `--recompiled`
-again). The program reads the game's data files from the GOG folder and
-the mod's `dos` folder as it would in DOSBox, and keeps its memory images
-(`build\ds1o`) next to itself. DOSBox's own settings (the window's size,
-full screen, the CPU speed, `UMBPLUS.COM`) don't apply to it. The program
-started on its own (double-clicked) finds this folder too, when it is in or
-beside it, and offers "Shattered Lands with the Obsidian Edition" among
-its choices, once the Loader has prepared the `dos` folder (the first
-start through the Loader does that).
-
-### Updating, backups, saved games and the Loader's files
-
-#### Updating
-
-Unzip the new release into a folder of its own and copy two
-things from the old folder into it: `settings.json` (your options) and the
-**Named saves** folder (each save's copy under its name, and the `Replaced -`
-copies a restore keeps, which may be the only copy left of a save). Your saves
-and characters are in the game folder (or its `cloud_saves` folder, where GOG
-keeps them when it has one), so nothing else needs moving. Then delete the old
-folder.
-
-#### Backing up your saves
-
-**Back up your saves first.** Before the first game with the mod, copy the
-save files (`SAVE*`, and `SAVB*`, `SAVC*` and `SAVD*` once you have them) and
-`CHARSAVE.GFF` somewhere safe: from the game folder's `cloud_saves` folder if
-it has one (the game reads its saves from there first), else from the game
-folder. The Loader never
-changes the game's own files, but your saves are written by the patched game:
-one with the new items ticked can hold item types the original game doesn't
-have, so load such a save with the Loader. To go back to the original game,
-start it the GOG way and load a save from before the mod.
-
-#### Compatibility with older saves
-
-Read this when you carry on a game saved with the original game or an earlier
-version of the mod; for a new game none of it matters.
-
-**Your saved games.** A save from the original game, or an earlier version
-of the mod, loads and plays with every fix and rule change from the moment it
-is loaded: they're in the patched game and the Loader, not in the save, so
-effects already running follow them too (images, Armor's charges, Share
-Strength, Dispel Magic and the rest, from the next spell cast). The fixes stop
-the old bugs from happening, but what a bug already did stays in the save:
-
-- **A save isn't for an older version** where a release changed what a save
-  holds: 2.13.0, 2.13.2, 2.14.0, 2.15.0 (its new items) and 2.18.0 (the
-  Spellarcher's Fine Bow, a name 2.17 doesn't have) did, so a save made
-  with one of them or later doesn't load in the versions before it (a 2.14.1
-  save still loads in 2.14.0). Older saves load in newer versions as they are:
-  a character keeps its age, and its roll is put on its sheet when the game is
-  loaded.
-- **Share Strength and Dispel Magic:** a character who kept Share Strength's
-  strength after the power ended still has it (it shows on their Effects
-  screen): load a save from before the power was used to be rid of it. One
-  silenced by the preserver's Dispel Magic ("No spell use") casts again once it
-  wears off.
-- **Ages:** with ages on, each character in a save, the game's own party too,
-  is given a starting age the first time the Loader sees them (the dice log
-  shows the roll).
-- **Kits from earlier versions:** a Healer keeps its sphere and is given the
-  cosmos spells when the game is loaded (the dice log says so). A thri-kreen
-  druid/fighter Wasteland Seer has no kit now: the kit is a
-  druid/fighter/psionicist's. A human with a kit for each of several classes
-  keeps them all (from now on a change of class adds no second kit); a Myrmidon keeps
-  the two weapon specs it chose; a Healer or Lifebinder has the harming spells
-  taken away when the game is loaded.
-- **Thieves' Tools** from an earlier version (Mirlon's or Kel's) do nothing: a
-  thief picks pockets with the Pick Pockets button.
-- **Most PSP:** a character's may go up once, the next time the game works it
-  out (a level up, or a game starting): the game's own bonuses for CON, INT and
-  WIS are counted right now, and the most only ever rises.
-- **New items and people in an older save:** some placed by 2.13.4 or earlier (Thornwall on the
-  pens' weapon rack, Kreenfang, Pehtucl's locked chest) may be where an older version put them, or
-  missing, in a save that has already been to those areas; a new game has them as described. A save
-  made while Kalzith was switched off may start Kalzith's conversation when talking to Semyon, and
-  an arena fight that never began in a 2.4.0 game can't be mended: start a new one.
-
-A new game is still the way to see all of the mod: kits, STORE and RECALL and
-fuller starting gear come with characters made with it, and much of the new
-content (Kalzith, Semyon, the vulture, the new items in the slave pens) is in
-the game's first areas. The new and changed gear the game's people carry and
-its chests hold comes only in areas the save hasn't been to: where the party
-has been, they keep what they had. A save from the original game has no kits,
-and what it has already been through stays as it was.
-
-#### What the Loader writes
-
-All in its own folder (beside `Start Obsidian Edition.bat`) but the saves:
-
-| File or folder | What it holds |
-|---|---|
-| `settings.json` | your options, and what the Loader remembers (who has had their pockets picked, speakers' names); if it is ever damaged, it is kept as `settings.json.bad` and the defaults used |
-| `crash-logs` | crash, freeze and item reports |
-| `Named saves` | a copy of each save under the name you gave it |
-| `dosbox_dicelog.conf` | DOSBox's settings for the game the Loader starts, written at each start |
-| `play.log` | what went wrong, when the game was started with `Play Dark Sun (in-game rolls).bat` |
-| `dos` | the Loader's helpers, and the patched copy of the game (`DSUNLOG.EXE`) with copies of its data |
-| `layouts`, `.dsloader-search.json` | only from the Memory tools: a layout you save there, and a memory search's results |
-| the game folder | your saves (page 1 in the game's own `SAVE` files, pages 2 to 4 as `SAVB`, `SAVC` and `SAVD`) and characters in `CHARSAVE.GFF` |
-
-#### Uninstalling
-
-Delete the Loader's folder. Nothing of the mod is left in
-the game folder but your saves and characters: page 1's saves (`SAVE*`) and
-`CHARSAVE.GFF` load in the original game as long as they hold none of the
-new items (see above); the extra pages (`SAVB*`, `SAVC*`, `SAVD*`) are read
-only by the mod's patched game.
+It reads the game's data from the GOG folder and the mod's `dos` folder, and keeps its memory images
+(`build\ds1o`) next to itself; DOSBox's own settings (the window's size, full screen, the speed)
+don't apply to it. Double-clicked on its own, in or beside this folder, it offers "Shattered Lands
+with the Obsidian Edition" once the Loader has prepared the `dos` folder (the first start through
+the Loader does that).
 
 ## The Loader's window
 
 The window has the party on one side and the logs and tools on the other, with
 **Start the game**, the game window's size, the text size, **Freeze report**
 (see [reports](#crash-freeze-and-item-reports)), **Reconnect** (to find the
-game again) and **Help** (this manual, in your browser) along the top. The party pane has two tabs:
+game again) and **Help** (this manual, in your browser) along the top. The party pane has the
+**Characters** tab (Alt+C): a card for each character, laid out like the game's View Character
+screen ([The Characters tab](#the-characters-tab)).
 
-- **Characters** (Alt+C): a card for each character, laid out like the game's
-  View Character screen ([The Characters tab](#the-characters-tab)).
-- **All fields** (Alt+A): every field the layout maps, in a table, with rows
-  of its own for the AC in a fight and what it's made of, THAC0 with each
-  weapon and the saves now, and at the end the spell slots, thief skills and
-  equipment.
-
-The other side has the **Dice log**, **Dialogue** and **Spells** tabs (below),
-**Memory tools** (for mapping the game's memory, with **Save layout** and
-**Reload layout**: see [DEVELOPMENT.md](DEVELOPMENT.md#mapping-memory)), and
-**Options** (Alt+O) with the Loader's switches, in sections that open and
-close: click a section's heading (or Tab to it and press Space or Enter) to
-open it, ▸ when closed and ▾ when open. Which sections are open is remembered.
-Everything there applies in games started from the Loader or its `.bat` files; a switch that says
-"from the next start" waits until the game is started again. The sections are
-[In the game](FEATURES.md#in-the-game), [Rule changes](FEATURES.md#rule-changes), [More
-character customization](FEATURES.md#more-character-customization), [Expanded
-features](FEATURES.md#expanded-features), [New content](FEATURES.md#new-content),
-[Graphics](FEATURES.md#graphics), [Controls](FEATURES.md#controls), [Game
-speed](FEATURES.md#game-speed), **Wake of the Ravager (optional)** (where it is,
-for the 6th-level priest spells' icons and pictures: [Requirements](#requirements))
-and **Saves** ([Saves under their names](FEATURES.md#saves-under-their-names)).
-[The Options tab at a glance](PLAYER-GUIDE.md#the-options-tab-at-a-glance), in
-the player's guide, lists every switch with its default and when it counts.
+The other side has the **Dice log**, **Dialogue** and **Spells** tabs (below) and **Options**
+(Alt+O) with the Loader's switches, in sections that open and close: click a section's heading (or
+Tab to it and press Space or Enter) to open it, ▸ when closed and ▾ when open. Which sections are
+open is remembered. Everything there applies in games started from the Loader or its `.bat` files;
+a switch that says "from the next start" waits until the game is started again. [The Options tab
+at a glance](PLAYER-GUIDE.md#the-options-tab-at-a-glance), in the player's guide, lists every
+switch with its default and when it counts, and links each to its page in
+[Features and rules](FEATURES.md); its **Wake of the Ravager (optional)** section is for the
+6th-level priest spells' icons and pictures ([Requirements](#requirements)).
 
 Every switch is on by default, and the three choices start at the red ring
 under the chosen enemy, the game speed Fastest and the combat log in short;
@@ -393,6 +274,9 @@ window too small to show the open sections, the tab scrolls (scrollbar, mouse
 wheel, or arrow and page keys once it has the focus).
 
 ![The Options tab with Rule changes (twenty-three switches, in three groups: Characters, Weapons and armour, Magic) and New content open, the other sections closed](docs/options.png)
+
+The **All fields** and **Memory tools** tabs are for mapping the game's memory
+([DEVELOPMENT.md](DEVELOPMENT.md#mapping-memory)).
 
 ### The Characters tab
 
@@ -504,10 +388,28 @@ run time (GPLDATA.GFF and RESOURCE.GFF in the install folder the Loader
 remembers); nothing from the game is copied into the Loader. Without the game
 installed the window uses its own lettering and no portraits.
 
-
-## The dice log
+### The dice log
 
 ![The Loader during the arena's opening show, in the readable layout: the Characters tab with the game's own party (Gerakis's Features: Wild Fighting and his age; K'ratchek's chatkcha 5/2 attacks a round and her open sky spells and psionics), and the dice log's last rounds: the Defiler's Cone of Cold on the Rampager (its magic resistance and its save for half), round 11's initiative, each attack with its outcome first, the d20 and the AC in columns and the working under it, the Defiler's death, the party's PSP back, and the fight's summary](docs/dicelog.png)
+
+Every roll the game makes appears here as it happens, with what it needed and where each bonus
+came from. **Readable layout** (above the log; on unless unticked, and remembered) puts what came
+of each event first, with the HP it left and the roll in columns at the right and the working dim
+under it:
+
+```
+● Seneca hits Arena Guard for 11 — backstab, Bone Hayneedle +1      19/30 (−11)   d20 15 vs 4+ (85%) · AC 8
+```
+
+**Show details** hides the working; **Show unlabelled rolls** adds everything else the game
+randomises, as raw numbers, for finding rolls worth labelling. As a fight ends, the log sums it up:
+`Fight over: 3 rounds, 4 kills; the party dealt 61 damage and took 19`, then a line for each
+member, `Seneca: 2 of 2 attacks hit, 30 dealt, 1 kill`.
+
+![One fight in the readable layout, the working shown (above) and hidden (below): Seneca's backstab and poison on an Arena Guard, then the Guards' swings at Lex and Jenna](docs/dicelog-readable.png)
+
+How to read it (the colours, the lines as written, the summary's rules) and every kind of line,
+with an example: [The dice log, line by line](DICE-LOG.md).
 
 **Finding something.** Type a word in **Find** above the log (Ctrl+F puts
 you there) and press Enter: every match lights up, the log jumps to the first,
@@ -517,58 +419,9 @@ way; Escape clears it. Case doesn't matter, and hidden details aren't searched
 (tick **Show details** to include them). While you're looking at a match the
 log stays put as new lines come in. The Dialogue tab has the same box.
 
-**The readable layout** (on unless **Readable layout**, above the log, is
-unticked; remembered): each event on a line of its own with what came of it
-first, `● Seneca hits Arena Guard for 11 — backstab, Bone Hayneedle +1`, then
-in columns at the right the HP it left (`19/30 (−11)`, marked `!` and coral
-when a party member is down to a third) and the roll (`d20 15 vs 4+ (85%) · AC
-8`). Under it, smaller and dim, the working: the to-hit sum against the
-target's AC with the lowest AC the roll would have hit, the damage dice, a
-save's line in full, each initiative score. A party member's line has a filled
-pip, a monster's a hollow one; a round starts with a rule and its order, a turn
-with `▸` and the name. The outcome's colour is the party's view of it: sky
-blue for good (the party hits, a monster fails its save), coral for bad (a
-monster hits, a party member fails), dim for a miss or a monster's save, gold
-for a kill. **Show details** hides the working as before. The log's own lines
-are kept as written: unticking the layout shows them again, and **Save...**
-and the crash and freeze reports use them.
-
-**A fight's summary.** As a fight ends (the game's fight flag down for 2
-seconds; each arena wave gets its own) the log sums it up: `Fight over: 3
-rounds, 4 kills; the party dealt 61 damage and took 19`, then a line for each
-member, `Seneca: 2 of 2 attacks hit, 30 dealt, 1 kill`. A kill goes to whoever
-hurt the creature last, a spell's damage to its caster, Magic Missile's too
-(only the party's own spells count). The readable layout shows it as the fight's
-close, every member's line shown.
-
-![One fight in the readable layout, the working shown (above) and hidden (below): Seneca's backstab and poison on an Arena Guard, then the Guards' swings at Lex and Jenna](docs/dicelog-readable.png)
-
-**Reading the lines as written.** Lines at the left edge are the events: a round
-starting, whose turn it is, attack rolls, saves, spells, kills. Lines indented
-two spaces are their results (damage, HP left); lines indented four spaces are
-the details: the sums behind a THAC0, a save's modifiers, the initiative
-scores. Untick **Show details**, above the log, to hide the details and keep
-the rest; they come back when it's ticked again. In the window, each kind has
-its colour (hits green, misses grey, damage amber, saves blue, turns sand,
-rounds underlined with a gap above), and the words say the same thing
-([accessibility](#accessibility)). Names stand out in bold: each party
-member in a colour of their own (cyan, magenta, peach and white, by place in
-the party) and every monster and other creature in red, so who acts and who is
-hit can be followed down the log.
-
-**Every line, and what it means.** [The dice log, line by line](DICE-LOG.md):
-fights, spells and saves, checks and thief skills, hit points and levels, character creation
-and the rest, each kind of line with an example.
-
 The log keeps its newest line in view. Scroll up to read back and it stays
 where you are; scroll to the bottom again and it follows the new lines once
 more. The Dialogue tab does the same.
-
-**Show unlabelled rolls**, beside it, also lists everything else the game
-randomises (creatures wandering, animations and so on), as raw numbers with
-where in the game's code they came from, and each AC the game works out for an
-attack with its parts (base, armour, DEX, the rest). It's noisy, but useful for
-finding more rolls worth labelling.
 
 ## Accessibility
 
@@ -601,6 +454,47 @@ level AA:
   **Save...** on the Dice log and Dialogue tabs writes the log to a text file,
   and `python -m dsloader dicelog` prints the same log (dialogue included) in
   a command prompt, which screen readers do read.
+
+## Updating
+
+Unzip the new release into a folder of its own and copy two
+things from the old folder into it: `settings.json` (your options) and the
+**Named saves** folder (each save's copy under its name, and the `Replaced -`
+copies a restore keeps, which may be the only copy left of a save). Your saves
+and characters are in the game folder (or its `cloud_saves` folder, where GOG
+keeps them when it has one), so nothing else needs moving. Then delete the old
+folder.
+
+## Compatibility with older saves
+
+A save from the original game or an earlier version of the mod loads in this one and plays with
+every fix and rule change from the moment it is loaded (what an old bug already did stays in it),
+but kits, fuller starting gear and much of the new content come only with a new game, and new gear
+only in areas the save hasn't been to. A save made with a newer version may not load in an older
+one: one made with 2.18.0 or later doesn't load in 2.17 or earlier (each release that changed what
+a save holds says so in [its release
+notes](https://github.com/daaki85/darksun-obsidian-edition/releases), with what follows an older save).
+
+## Uninstalling
+
+Delete the Loader's folder. **What the mod changes on your computer:** the game's own files never;
+the Loader runs a patched copy of the game from its own folder, and writes only there, but for your
+saves and characters:
+
+| File or folder | What it holds |
+|---|---|
+| `settings.json` | your options, and what the Loader remembers (who has had their pockets picked, speakers' names); if it is ever damaged, it is kept as `settings.json.bad` and the defaults used |
+| `crash-logs` | crash, freeze and item reports |
+| `Named saves` | a copy of each save under the name you gave it |
+| `dosbox_dicelog.conf` | DOSBox's settings for the game the Loader starts, written at each start |
+| `play.log` | what went wrong, when the game was started with `Play Dark Sun (in-game rolls).bat` |
+| `dos` | the Loader's helpers, and the patched copy of the game (`DSUNLOG.EXE`) with copies of its data |
+| `layouts`, `.dsloader-search.json` | only from the Memory tools ([DEVELOPMENT.md](DEVELOPMENT.md#mapping-memory)) |
+| the game folder | your saves (page 1 in the game's own `SAVE` files, pages 2 to 4 as `SAVB`, `SAVC` and `SAVD`) and characters in `CHARSAVE.GFF` |
+
+Page 1's saves (`SAVE*`) and `CHARSAVE.GFF` load in the original game as long as they hold none of
+the new items ([back up your saves](#one-time-setup)); the extra pages (`SAVB*`, `SAVC*`, `SAVD*`)
+are read only by the mod's patched game.
 
 ## When something goes wrong
 

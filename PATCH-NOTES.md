@@ -158,7 +158,7 @@ Each change is tagged. **[Fixed]** is a bug of the game, or a rule it got wrong 
 - **[New]** **The dice log**: every roll as it happens, with what it needed, its chance and every bonus, a fight's summary at its end, and the game's own choices ([the dice log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DICE-LOG.md)).
 - **[New]** **Characters**, **Spells** and **Dialogue** tabs: each member's sheet with more than the game shows, every spell's numbers, and everything said ([Characters](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/README.md#the-characters-tab)).
 - **[New]** **Find** in the dice log and the dialogue (Ctrl+F).
-- **[New]** The Loader can run the game as **Dark Sun Recompiled**, where it is installed ([other ways to start](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/README.md#other-ways-to-start)).
+- **[New]** The Loader can run the game as **Dark Sun Recompiled**, where it is installed ([other ways to start](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/README.md#dark-sun-recompiled)).
 - **[New]** **Options**: nearly every change has a switch, all on by default but a few, and **Restore defaults** sets them back.
 - **[New]** **Accessibility**: text up to 2.5 times bigger, every control from the keyboard, 4.5:1 contrast, logs as text ([accessibility](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/README.md#accessibility)).
 - **[New]** **The manual in the download**, as web pages that link to each other; the Loader's **Help** button opens it.

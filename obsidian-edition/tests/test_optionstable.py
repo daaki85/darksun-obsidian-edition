@@ -1,6 +1,6 @@
 """The player's guide's Options tab at a glance (PLAYER-GUIDE.md): each row's Loader label is the
-Options tab's own text (viewer.py's strings, read without Tk), and every rule change and new
-content switch has its row."""
+Options tab's own text (viewer.py's strings, read without Tk; a radio group's choices in one row,
+separated by " / "), and every rule change and new content switch has its row."""
 
 import ast
 import os
@@ -40,8 +40,11 @@ def table_labels() -> list:
     with open(os.path.join(HERE, "PLAYER-GUIDE.md"), encoding="utf-8") as f:
         text = f.read()
     part = text.split("\n## The Options tab at a glance\n", 1)[1].split("\n## ", 1)[0]
+    part = part.split("\n### Elsewhere in the Loader\n", 1)[0]  # (the settings outside the tab)
     rows = [line for line in part.splitlines() if line.startswith("| ")]
-    return [cells(row)[0] for row in rows if not row.startswith("| Loader label |")]
+    # (a radio group is one row, its choices separated by " / ")
+    return [label for row in rows if not row.startswith("| Loader label |")
+            for label in cells(row)[0].split(" / ")]
 
 
 def cells(row: str) -> list:
@@ -72,6 +75,7 @@ class OptionsTableTests(unittest.TestCase):
     def test_takes_effect_given(self):
         with open(os.path.join(HERE, "PLAYER-GUIDE.md"), encoding="utf-8") as f:
             part = f.read().split("\n## The Options tab at a glance\n", 1)[1]
+        part = part.split("\n### Elsewhere in the Loader\n", 1)[0]
         for row in (line for line in part.splitlines() if line.startswith("| ") and "(a button)" not in line):
             if row.startswith("| Loader label |"):
                 continue

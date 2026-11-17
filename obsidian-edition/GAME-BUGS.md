@@ -217,4 +217,4 @@ screen](FEATURES.md#spells-on-the-effects-screen)).
 There's no need to start a new game for these: they're in
 the patched game, not in a save, so they work from the moment a game is
 loaded. What a bug already did stays in the save: [your saved
-games](README.md#updating-backups-saved-games-and-the-loaders-files) says what.
+games](README.md#compatibility-with-older-saves) says more.

@@ -12,75 +12,42 @@ default and when it takes effect](obsidian-edition/PLAYER-GUIDE.md#the-options-t
 
 ## Getting started
 
-You need Windows, the GOG release of the game and a 64-bit Python (the Loader offers to install
-it): [Requirements](obsidian-edition/README.md#requirements).
-
-1. Download the latest release from the
-   [Releases page](https://github.com/daaki85/darksun-obsidian-edition/releases)
-   (`Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>.zip`) and unzip it
-   anywhere. (Or this repository as it stands: **Code → Download ZIP**.)
-2. In the unzipped folder
-   (`Dark-Sun-Shattered-Lands-Obsidian-Edition-<version>`, or
-   `obsidian-edition` in a download of the repository), double-click
-   **`Start Obsidian Edition.bat`**. The first time, it offers to install
-   64-bit Python if you don't have it. If Windows shows "Open File - Security
-   Warning" (it does for any `.bat` from a download), press **Run**: the
-   Loader then unblocks its own files, so it asks only that once. (Or, before
-   unzipping, tick **Unblock** in the zip's Properties.)
-3. On the Loader's **Options** tab, pick the rule changes and additions you
-   want (they're remembered).
-4. Press **Start the game** at the top left. The game starts with your
-   options, and the Loader shows the party and the dice log as you play.
-
-(`Start Game with Dice Log.bat` starts the game and the Loader together in one
-double-click, with the options as last set.)
+1. Check the [requirements](obsidian-edition/README.md#requirements): Windows, the GOG release of
+   the game, and a 64-bit Python, which the Loader offers to install.
+2. Download the latest release from the
+   [Releases page](https://github.com/daaki85/darksun-obsidian-edition/releases) and unzip it
+   anywhere.
+3. Double-click **`Start Obsidian Edition.bat`**, pick your options and press **Start the game**
+   ([running it](obsidian-edition/README.md#running-it-windows), step by step).
 
 ## Documentation
 
-- The manual: the player's pages below as web pages that link to each other, in
-  the release's `manual` folder (start at `manual/index.html`); the Loader's **Help**
-  button opens it
-- [The player's guide](obsidian-edition/PLAYER-GUIDE.md): the rules, without
-  spoilers, a section for each class
-- [The full documentation](obsidian-edition/README.md): installing, running, the
-  Loader's window and the dice log
-- [Features and rules](obsidian-edition/FEATURES.md): what the game shows
-  (the combat log, the Look box, THAC0 and saves), and every rule change and
-  addition in detail, with its switch
-- [Kits](obsidian-edition/KITS.md): every kit's gains, costs and starting gear
-- [Items](obsidian-edition/ITEMS.md): every magic item, weapon and piece of armour,
-  with its icon and where it is (spoilers)
-- [Creatures](obsidian-edition/CREATURES.md): every creature, its size and
-  whether cahulaks can tangle it (spoilers)
-- [The game's bugs, fixed](obsidian-edition/GAME-BUGS.md): every bug of the
-  original game the mod mends, by kind (some spoilers)
-- [The dice log, line by line](obsidian-edition/DICE-LOG.md): every kind of line
-  the Loader's dice log writes, and what it means
-- [How the game works](obsidian-edition/HOW-THE-GAME-WORKS.md): the original
-  game's own rules, from its code
-- [Changes from the original game](PATCH-NOTES.md): what the mod adds and
-  changes, and its main bug fixes, in one page to share
-- [Changelog](CHANGELOG.md) and [development
-  notes](obsidian-edition/DEVELOPMENT.md): for developers and testers
-
-## What it changes on your computer
-
-The game's own files are never modified: the Loader runs a patched copy of the
-game from its own folder, and writes to the game folder only your saves and
-characters. To uninstall, delete the Loader's folder ([what stays behind, and
-where the saves go](obsidian-edition/README.md#updating-backups-saved-games-and-the-loaders-files)).
+- [The full documentation](obsidian-edition/README.md): installing, running, the Loader's window,
+  troubleshooting, and [what it changes on your computer](obsidian-edition/README.md#uninstalling)
+- The manual: these pages as web pages that link to each other, in the release's `manual` folder
+  (open `manual/index.html`, or press the Loader's **Help** button)
+- [The player's guide](obsidian-edition/PLAYER-GUIDE.md), without spoilers, with a
+  [glossary](obsidian-edition/PLAYER-GUIDE.md#glossary) of THAC0, AC, PSP and the rest
+- [Features and rules](obsidian-edition/FEATURES.md): what the game shows, every rule and addition
+- [Kits and weapon specs](obsidian-edition/KITS.md): every kit's gains, costs and starting gear,
+  and weapon specialization
+- [Items](obsidian-edition/ITEMS.md) (spoilers): every item and where it is
+- [Creatures](obsidian-edition/CREATURES.md) (spoilers): every one, its size, and whether cahulaks
+  can tangle it
+- [The game's bugs, fixed](obsidian-edition/GAME-BUGS.md) (some spoilers): every bug of the
+  original game the mod mends
+- [The dice log, line by line](obsidian-edition/DICE-LOG.md): how to read it, and every kind of line
+- [How the original game works](obsidian-edition/HOW-THE-GAME-WORKS.md), from its code
+- [The patch notes](PATCH-NOTES.md): what the mod adds and changes from the original game, and its
+  main bug fixes, in one page to share
+- For developers, [the development notes](obsidian-edition/DEVELOPMENT.md) and the
+  [changelog](CHANGELOG.md)
 
 ## What's new
 
-**Obsidian Edition 2.18.0** is out ([release notes](release-notes/v2.18.0.md)):
-the kits rebalanced, each closer to its source book (one kit a character; a warrior's THAC0 with
-the chosen weapon only; the Arcanist, Scholar, Myrmidon, Poisoner, Sentinel, Wayfinder and others
-changed), the Spellarcher remade after *Dragon* #214 with a Fine Bow and arrows from the start, an
-archer's arrows left over its head and its turn kept when the quiver runs dry, and CHOOSE A SPELL's
-icons centred.
-
-What earlier releases brought is in their own notes, in
-[`release-notes`](release-notes).
+**Obsidian Edition 2.18.0** is out: the kits rebalanced, each closer to its source book, and the
+Spellarcher remade ([release notes](release-notes/v2.18.0.md); earlier releases' in
+[`release-notes`](release-notes)).
 
 ## About
 
