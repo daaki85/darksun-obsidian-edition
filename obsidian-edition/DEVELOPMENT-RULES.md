@@ -508,6 +508,14 @@ swings made this round), [BP+0Ah] - [BP+0Ch] the d20 needed. With the rule
 
 ([In the features page](FEATURES.md#creature-size).)
 
+Where the dice come from: AD&D 2nd Edition's *Player's Handbook* weapons table, each weapon by the
+entry whose small and man-sized dice are the game's; the pick the footman's pick and the axe the
+battle axe of *Player's Option: Skills & Powers* (1d6+1/2d4 and 1d8/1d10: the game's pick was the
+horseman's, 1d4+1/1d4, and its 1d6+1 is the mod's, with no switch); the great axe the *Complete
+Book of Dwarves*' two-handed battle axe (1d10/2d8); the chatkcha, the gythka and the cahulaks from
+[a Dark Sun weapons guide](https://www.geocities.ws/danach.geo/guide_1.html), which also gives a
+thri-kreen's chatkcha its 2/1.
+
 How: the game keeps no size. The Loader's `sizes.py` gives each creature one
 (people by the sheet's race, the rest by name: `CREATURES.md`), and `sizes.Large`
 writes `LARGE_BITS`, a bit a combatant large or bigger, into DSCLOG's tail (its
@@ -606,6 +614,9 @@ The rule is **Weapon traits**, the cahulaks' switch (`RULE_CAHULAKS`, `RULE_HI_C
   spell's damage window opened), `-> failed: nauseated`. The to-hit breakdown names `Nauseated -2`
   (`game.HIT_EFFECTS`).
 
+Nauseated is fumes, not magic: Dispel Magic doesn't end it, as the game's Dispel Magic weighs only
+effects 0 to 73.
+
 Tests: tests/test_stinkpots.py (`StinkHitTests` runs the site in Unicorn with the game's routines
 stubbed, `StinkSidesTests`, `StinkEffectTests`, the dice log's lines).
 
@@ -697,6 +708,11 @@ changed go back to the game's.)
 ## Items saving against acid
 
 ([In the features page](FEATURES.md#items-saving-against-acid).)
+
+The game's own check for armour reads the byte that holds the item's power, not its plus: a piece
+with a power rolls a d20 against 10 less the power's number (which for every such armour in the
+game means it always comes through), and any other is destroyed without a roll, Tanelyv's Armor +2
+as surely as plain leather. A weapon is destroyed on a d20 under 8 less its plus.
 
 How: where the game works out the number a weapon's d20 must reach
 (`INT D6h`), where it skips the roll for armour with no magical power
@@ -1743,6 +1759,10 @@ of its own loaded (100h:4A4h) and let go of as the screen closes (`PP_CLOSE`,
 manager can fix up. The handler tells the two by its button ([BP+8]); another
 character on show takes the slot's handler off, and the game's redraw clears
 it. Verified in play (no log kept).
+
+Who has caught a thief, or given up their coins, the Loader keeps in `settings.json`, for this
+party, with the time on the game's clock of the try: a game loaded from before it has the clock
+behind that time, so the try is forgotten.
 
 ## Sounds for hiding and picking pockets
 

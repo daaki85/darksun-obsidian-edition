@@ -32,6 +32,7 @@ the game, and checked here in the game's own code.
   - [Each power against the manual](#each-power-against-the-manual)
 - [Spells and psionics as the manual describes them](#spells-and-psionics-as-the-manual-describes-them)
   (the mod's rule change)
+  - [The spells and powers it changes](#the-spells-and-powers-it-changes)
   - [Each spell in more detail](#each-spell-in-more-detail)
   - [The monsters as the manual describes them](#the-monsters-as-the-manual-describes-them)
   - [Known differences left as they are](#known-differences-left-as-they-are)
@@ -679,10 +680,60 @@ below 11, below 16, and up). Defence modes cost nothing to keep up.
 
 ## Spells and psionics as the manual describes them
 
-This section is the mod's, not the game's: the detail of the rule change [Spells and psionics as the manual describes
-them](FEATURES.md#spells-and-psionics-as-the-manual-describes-them), on by default, whose table there
-lists each spell and power it changes. Its Turn Undead is [above](#adds-turning-table).
-How it is done: [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#spells-and-psionics-as-the-manual-describes-them).
+This section is the mod's, not the game's: the rule change [Spells and psionics as the manual describes
+them](FEATURES.md#spells-and-psionics-as-the-manual-describes-them), on by default, from the next
+start. Twenty-four of the manual's spells and two psionic powers whose saves, times, damage or
+effects part from the manual (pp. 30-86: the bestiary, spells and psionics) are set as the manual
+has them (the mod's Cat's Grace by the Tome of Magic's dice; the mod's Heal cures Feeblemind), a
+priest's Turn Undead goes by AD&D's turning table ([above](#adds-turning-table)), a monster's level
+for its saves is its hit dice, and seven monsters' powers are as the manual describes them
+([below](#the-monsters-as-the-manual-describes-them)). Some spells are left as the game has them
+([known differences](#known-differences-left-as-they-are)). Unticked, they are the game's.
+How it works: [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#spells-and-psionics-as-the-manual-describes-them).
+
+### The spells and powers it changes
+
+| Spell | The game | As the manual |
+|---|---|---|
+| Bestow Curse | no saving throw | a save negates it |
+| Blood Flow | Paralyzed 1d4 rounds, no save | a save negates it |
+| Flaming Sphere | 2d4 fire, a save halves it | a save negates it |
+| Solid Fog | Stuck until removed | Stuck 1d3 rounds + 1 a caster level |
+| Minor Spell Turning | turns one spell, then never ends | turns 1st- to 3rd-level spells for 3 rounds a caster level |
+| Cause Fear | Afraid 1 round a caster level | Afraid 1d4 rounds |
+| Quicksand | Stuck while in it, a save allowed | Stuck while in it, no save |
+| Turn Pebble to Boulder | 6d6 (6-36) | 3d6+8 (11-26) |
+| Ironskin | 1d6 blows stopped | a blow stopped for each caster level |
+| Stinking Cloud | 1d6 rounds | 1d4+1 rounds |
+| Chaos | only warriors may save | warriors, and creatures of INT 21 or more or 4 or less |
+| Free Action | ends Paralyzed and Slowed only | also frees the Stuck: Web, Solid Fog, Quicksand, Entangle, Grease (a Poisoned creature stays Paralyzed, as in the game) |
+| Color Spray | every creature saves | only creatures of more levels than the caster save (the rest at -100: they can't, even on a natural 20, as against Chaos and Cloudkill) |
+| Hold Undead | any undead | only undead of no more levels (hit dice) than the caster's level; the rest are immune |
+| Minute Meteors | one blast of 1d4 a caster level (at most 10d4) | five globes of 1d4, each aimed and landing on its own (with [Spells roll to hit](FEATURES.md#spells-roll-to-hit), each rolls with +2) |
+| Flame Arrow | one blast of 5d6 for every five caster levels (10d6 at level 10) | a bolt of 1d6 + 4d6 fire (5d6) for every five caster levels, at least one, each aimed and landing on its own (AD&D's bolts; no attack roll, no save, as the manual) |
+| Fire Shield | the caster takes half damage from fire and cold spells | and saves at +2 against them (its description says so) |
+| Blur | attackers −2 to hit | and +1 on its creature's saves against spells |
+| Chill Touch | 1 STR off on a failed save, gone at once (the spell gives the effect no time); an undead takes the damage | 1 STR off (Weakened) for an hour; an undead takes no damage and is Afraid 1d4 rounds instead |
+| Cloudkill | 1d10 poison, a save at −2 halves it; creatures of 6th level or lower "can't save" (and so saved: [the game's saving throws](#the-games-saving-throws)) | under 4 levels (hit dice): dies, no save; 4 or 5: a failed save kills; 6 and up: the damage, a save halving it |
+| Feeblemind | INT and WIS 3, no spells; nothing cures it | no psionic powers either; Heal cures it, INT and WIS as they were |
+| Lower Resistance | magic resistance halved while it lasts | 30% + 1% a caster level off (at least 0); the cast's own check the same, the two not added up |
+| Strength | STR + 1d6 for anyone | 1d8 for a warrior (fighter, gladiator, ranger), 1d6 a priest, rogue or psionicist, 1d4 a wizard; a multiclass character's best; not added to Adrenalin Control's (the bigger counts) |
+| Cat's Grace (the mod's) | DEX + 1d6 for anyone | 1d8 a rogue, 1d6 a wizard, warrior or psionicist, 1d4 a priest (the Tome of Magic's); the best; two not added up |
+| Rainbow Pattern | Paralyzed 1d3 rounds, whatever happens to it | Paralyzed 1 round a caster level, ended by any damage to the creature |
+| Cell Adjustment (psionic) | heals 2 HP, cures disease | heals 1d4 HP, cures disease |
+| Biofeedback (psionic) | AC −1, and 2 off each blow (and other crushing, edged or pointed damage), leaving 0 of a blow of 2 or less | the same, but at least 1 left |
+| Turn Undead | a d20 against its own number: destroyed or nothing, as often as the priest likes | AD&D's turning table ([the table](#adds-turning-table)): turned undead flee, D destroys, D\* destroys more of the kind, and a priest who fails can't try that undead again in the fight |
+
+**A monster's level for saves.** A monster with no class (an elemental, a slaad, Mastyrial, the
+Rampager) had level 0 for its saves, so Cloudkill slew it whatever its size, Scare frightened it,
+and Dismissal's and Color Spray's level checks took it for the weakest there is: with the box
+ticked its level for saving throws is its hit dice (the game's level everywhere else is left as it
+was).
+
+**The saves that couldn't fail.** In the game a creature that "can't save" (Chaos for all but
+warriors, Cloudkill on the weak, Scare below 6th level, and this box's Color Spray) always saved.
+That is [a bug fixed](GAME-BUGS.md#spells-and-psionics), whether the box is ticked or not: "can't
+save" fails, even on a natural 20 ([what the game did](#the-games-saving-throws)).
 
 ### Each spell in more detail
 

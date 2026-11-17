@@ -185,7 +185,7 @@ Worn in a hand, in this game.
 | ![](docs/items/golden-girdle-of-urnst.png) | Waist | ***Golden Girdle of Urnst*** | AC 3 better against swords (long and short), in melee | carried by **Wyrmias**, with his bracers |
 | ![](docs/items/serpent-boots.png) | Feet | Serpent Boots | Displacement | a ceramic pot (the cluebook's broken jar) in the Lower Castle |
 | ![](docs/items/boots-of-elvenkind.png) | Feet | ***Boots of Elvenkind*** | soft boots: [silent](FEATURES.md#hiding-in-shadows-to-backstab), with hiding to backstab on; thieves and rangers only | the Elven Caravan's buried chest (Kel's caravan), with the Cahulaks +2 |
-| ![](docs/items/boots-of-speed.png) | Feet | ***Boots of Speed*** | in a fight, the wearer's movement doubled (the speed of a fast horse: Move 24 to a human's 12) and AC 2 better while it can move (not Stuck, Paralyzed or Slowed); anyone may wear them; not out of a fight | carried by **Dagger**, chief of the White Sand Outlaws, whose band comes for the blank-eyed slave (fought if the party keeps the slave from him) |
+| ![](docs/items/boots-of-speed.png) | Feet | ***Boots of Speed*** | in a fight, the wearer's movement doubled (the speed of a fast horse: Move 24 to a human's 12) and AC 2 better while it can move (not Stuck, Paralyzed or Slowed); anyone may wear them; not out of a fight (the DMG's slowing for weight, and rest after hours of running, are left out); like any boots, +10 to moving silently with the [stealth rule](FEATURES.md#hiding-in-shadows-to-backstab) | carried by **Dagger**, chief of the White Sand Outlaws, whose band comes for the blank-eyed slave (fought if the party keeps the slave from him) |
 | ![](docs/items/living-cloak.png) | Cloak | Living Cloak | Inertial Barrier | Dagolar |
 | ![](docs/items/cloak-of-protection-plus1.png) | Cloak | ***Cloak of Protection +1*** | +1 AC and +1 on every saving throw, from the cloak slot | in [Pehtucl's chest](#pehtucls-chest), beside the slave pens' head templar: locked and trapped. |
 | ![](docs/items/cloak-of-elvenkind.png) | Cloak | ***Cloak of Elvenkind*** | a grey cloak: [all but invisible](FEATURES.md#hiding-in-shadows-to-backstab) in a fight, with hiding to backstab on; thieves and rangers only | the **Elven Leader**'s gift with his Gythka +2, after the fight with his men: "And take this cloak, woven by my own tribe for our best runners..." (left on the ground by him when it can't be carried, as the Gythka is) |
@@ -226,6 +226,11 @@ Merchant** and the **Bowyer** are in Teaquetzl, **Jark** and **Kel** in the Elve
 Caravan (Kel's caravan). The game's plain stone pick is a
 [starting weapon](WEAPON-SPECS.md#starting-weapons), and two lie in the Hot
 Springs; Deepbiter is its magic one.
+
+Some of the people the party fights had nothing in hand in the game and struck bare-handed: Seref's
+Drajian Guards and the slave village's, the White Sand Outlaws, the Lower Castle's one unarmed
+Guard, Arant's lazy guard, the final battle's Psionicist and the arena's Tohr-kreen. With the new
+items each carries what the armed of their kind carry, or plain gear to match (in the table below).
 
 | Icon | Type | Material | Sold by | Carried by, or found in | Notes |
 |---|---|---|---|---|---|
@@ -289,7 +294,7 @@ off AC 10 (the game's own numbers; a character's AC adds up its pieces).
 | Legs | bone | Scale Leg Armor | 1 | Jark | Uskuye, Elite Guard, a chest in the slave pens, the arena's champions (the half-giant, the mul) | **new** placement |
 | Legs | metal | Chain Leg Armor | 1 | Armor Merchant | Army Commander, a skeleton in the Upper Castle | — |
 | Head | leather | Helm | 0 (1 with [Helms give AC 1](FEATURES.md#helms-give-ac-1)) | Armor Merchant, Kel (who sells it as Dapartea's Helm) | Kurzak, a chest in the Upper Castle, a chest in the slave pens, a bag in the slave pens, the arena's champions (the halfling, the elf), Scar (the mod's) | **new** placement |
-| Head | bone | Bone Helm | 0 (1 with [Helms give AC 1](FEATURES.md#helms-give-ac-1)) | — | a chest in the slave pens, the arena's champions (the half-giant, the mul) | **new**: the bone scale set's helm |
+| Head | bone | Bone Helm | 0 (1 with [Helms give AC 1](FEATURES.md#helms-give-ac-1)) | — | a chest in the slave pens, the arena's champions (the half-giant, the mul) | **new**: the bone scale set's helm, worn by those who can wear the armour (not thieves) |
 | Hand | wood | Shield | 1 | — | Wyvern Master, Arant, Chaya, Elven Leader, Templar, a chest in the slave pens | — |
 | Hand | leather | Shield | 1 | — | Keldar, Templar, Caravan Master, Gladiator, the arena's champions (the half-giant, the halfling, the elf) | — |
 
@@ -450,8 +455,14 @@ What each item's chance is against the Rampager's acid and the Babau's
 corroding touch, in the game and with
 [Items saving against acid as in AD&D](FEATURES.md#items-saving-against-acid)
 (the easier of the game's number and AD&D's by material). Only what is worn on
-the arms, legs or chest can be lost, and the melee weapon held: helms,
-shields, cloaks, boots, belts, rings and amulets never are. A worn piece with
+the arms, legs or chest can be lost, and the melee weapon held (the first in
+the character's list of held items with a melee reach: bows, slings and
+chatkchas never): helms, shields, cloaks, boots, belts, rings and amulets never
+are. The game checks on every such hit, whether or not the target's save
+against the attack succeeds, and at most one piece of armour is lost to a hit:
+the first that fails, in the character's list. With [the manual's
+monsters](HOW-THE-GAME-WORKS.md#the-monsters-as-the-manual-describes-them) the
+Babau has its deadly poison instead of the corroding touch. A worn piece with
 no magical power is lost at once in the game (0%); one with a power never is
 (100%).
 

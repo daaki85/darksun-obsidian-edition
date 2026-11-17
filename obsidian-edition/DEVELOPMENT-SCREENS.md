@@ -672,6 +672,9 @@ as is the map's own walking.
 
 ([In the features page](FEATURES.md#the-pointer-in-scenes-and-where-it-starts).)
 
+With DOSBox's `autolock`, as GOG's setup has it, the first click in the window only takes the
+mouse; the next one skips the scene.
+
 How: the scenes (the intro, its logos, the decree and the rest) are played by
 one routine (`DSUN.EXE` 568BEh, each piece through `660:20`), whose player
 asks the game's event queue between a piece's steps (`929F5h`); a key, DX 1,
@@ -813,7 +816,17 @@ A New character counts as Okay wherever the game tests for Okay: a jump each
 
 Measured in the slave pens with the whole party walking and everything on
 (`playtest/framerate.py`, which counts DSCLOG's page flips, the steps run and
-lost, and the leader's map units while walking):
+lost, and the leader's map units while walking), with the cheaper drawing of
+2026-11-08 below (playtest/logs/2026-11-08-drawing-savings.md; the features
+page's [steady pace GIF](FEATURES.md#game-speed) is from the same save):
+
+| Slave pens, whole party walking, everything on | Pictures a second | Steps lost a second (of 96) | Walking, map units a second |
+|---|---|---|---|
+| 20,000 cycles, steady pace off | 18.9 | | 103 |
+| 20,000 cycles, steady pace on | 15.5 | 25 | 112 |
+| 35,000 cycles, steady pace on | 18.9 | 14 | 141 |
+
+Before that drawing was made cheaper (the first measurements of steady pace):
 
 | | Pictures a second | Steps lost a second (of 96) | Walking, map units a second |
 |---|---|---|---|
