@@ -11,7 +11,8 @@ pages share), and has its own index of its sections and their subsections. A lin
 these pages goes to its HTML file with the same anchor (KITS.md#x is kits.html#x; the README is
 index.html; the patch notes, here or by their GitHub address, changes.html); a picture goes to
 ../docs/; a link to anything else of the repository (the development pages, the changelog) goes to
-its GitHub address. Headings have GitHub's anchors, a repeated one with -1, -2..., so the
+its GitHub address at the release's tag (blob/v and __version__, so a zip's links match its version;
+the Markdown's own blob/main addresses are read as the repository's files too). Headings have GitHub's anchors, a repeated one with -1, -2..., so the
 Markdown's own links keep working.
 
 `python -m dsloader.manual` (or `python -m dsloader.guidepage`, its older name) writes the whole
@@ -29,7 +30,7 @@ import os
 import re
 from typing import Callable, Dict, List, Optional, Tuple
 
-from . import pagefonts
+from . import __version__, pagefonts
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # obsidian-edition
 ROOT = os.path.dirname(HERE)  # the repository
@@ -38,7 +39,8 @@ START = os.path.join(MANUAL, "index.html")  # (what the Loader's Help button ope
 CSS = "manual.css"  # (the pages' shared style and fonts, beside them)
 STYLE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "pagestyle.css")
 REPO = "https://github.com/daaki85/darksun-obsidian-edition"
-BLOB = REPO + "/blob/main/"
+MAIN = REPO + "/blob/main/"  # (the Markdown's own GitHub links, and the root's patch-notes.html, published from main)
+BLOB = REPO + f"/blob/v{__version__}/"  # (the manual's: its release's tag, so a zip's links match its version)
 DOCS = BLOB + "obsidian-edition/"
 
 # (page, its Markdown from the repository's root, its name in the manual's bar, its spoiler mark)
@@ -102,7 +104,7 @@ def href(target: str) -> str:
     mod's Markdown pages (KITS.md#...) is GitHub's copy, whose headings' anchors a browser can follow
     (a local .md opens as plain text, or not at all); anchors, pictures and web addresses as they are."""
     if re.match(r"^[A-Z][A-Z0-9-]*\.md(#|$)", target):
-        return DOCS + target
+        return MAIN + "obsidian-edition/" + target
     return target
 
 
@@ -116,8 +118,9 @@ def linker(source: str) -> Callable[[str], str]:
             return target
         path, hashed, frag = target.partition("#")
         frag = hashed + frag
-        if path.startswith(BLOB):
-            rel = path[len(BLOB):]
+        github = next((b for b in (BLOB, MAIN) if path.startswith(b)), None)
+        if github:
+            rel = path[len(github):]
         elif re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*:", path):
             return target  # (any other web address, mailto)
         else:
@@ -126,8 +129,8 @@ def linker(source: str) -> Callable[[str], str]:
             return frag if BY_SOURCE[rel] == page and frag else BY_SOURCE[rel] + frag
         if rel == "patch-notes.html":  # (the root's page: the manual has the notes itself)
             return BY_SOURCE["PATCH-NOTES.md"] + frag
-        if path.startswith(BLOB):
-            return target
+        if github:
+            return BLOB + rel + frag  # (the release's own copy)
         if rel.startswith("obsidian-edition/") and not rel.endswith(".md") \
                 and os.path.exists(os.path.join(ROOT, rel)):
             return "../" + rel[len("obsidian-edition/"):] + frag  # (a picture, in the zip beside the manual)
