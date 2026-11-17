@@ -530,6 +530,15 @@ class Viewer:
         ttk.Button(ravager, text="Choose its folder...", command=self.choose_wotr).pack(anchor="w", pady=(4, 0))
         # the saves, a second time under their names in the game (namedsaves.py)
         kept = section("saves", "Saves")
+        # F5, F9 and the saves the game makes by itself, on the save window's QUICK page (quicksave.py)
+        self.quick_save = tk.BooleanVar(value=settings.get("quick_save", True) is not False)
+        ttk.Checkbutton(kept, text="Quick save and quick load: on the map, F5 saves at once on the QUICK page of the "
+                        "save window, and F9 opens the load window there", variable=self.quick_save,
+                        command=self._options_changed).pack(anchor="w")
+        self.autosave = tk.BooleanVar(value=settings.get("autosave", True) is not False)
+        ttk.Checkbutton(kept, text="Autosave: on coming into another area and after a fight, on the QUICK page of "
+                        "the save window", variable=self.autosave,
+                        command=self._options_changed).pack(anchor="w", pady=(4, 8))
         about = ttk.Label(kept, text="While this window is open, every save is copied, as the game writes it, into the Loader's \"Named "
                           "saves\" folder under the name it has in the game (\"Page 2 slot 05 - Before Scar's "
                           "battle.SAV\").", style="Status.TLabel", wraplength=460, justify="left")
@@ -649,7 +658,7 @@ class Viewer:
         for var in list(self.rule_vars.values()) + list(self.content_vars.values()):
             var.set(True)
         for var in (self.monster_info, self.floating_names, self.starting_gear, self.steady_pace,
-                    self.hit_chance):
+                    self.hit_chance, self.quick_save, self.autosave):
             var.set(True)
         self.combat_log_level.set(dicelog.combat_log_level({}))
         self.ring_mode.set(rings.mode({}))
@@ -1104,6 +1113,8 @@ class Viewer:
                 self.dice.game_dir = launch.find_game_dir()
                 self.dice.ring_mode = self.ring_mode.get()
                 self.dice.hit_chance = self.hit_chance.get()
+                self.dice.quicksave.keys = self.quick_save.get()
+                self.dice.quicksave.auto = self.autosave.get()
                 self.dice.vulture_on = self.content_vars["vulture"].get()
                 self.dice.defiler_scrolls = self.content_vars["defiler_scrolls"].get()
                 self.dice.set_rules(self._rules())
@@ -1229,7 +1240,8 @@ class Viewer:
         values = {"monster_info": self.monster_info.get(), "floating_names": self.floating_names.get(),
                   "combat_log_level": self.combat_log_level.get(), "starting_gear": self.starting_gear.get(),
                   "rings": self.ring_mode.get(), "steady_pace": self.steady_pace.get(),
-                  "hit_chance": self.hit_chance.get(), "picture": self.picture.get()}
+                  "hit_chance": self.hit_chance.get(), "quick_save": self.quick_save.get(),
+                  "autosave": self.autosave.get(), "picture": self.picture.get()}
         device = self._midi_value()  # (something typed that is no device: the one remembered stays)
         values[midiout.SETTING] = getattr(self, "_options_shown", {}).get(
             midiout.SETTING, midiout.DEFAULT) if device is None else device
@@ -1266,6 +1278,8 @@ class Viewer:
             self.dice.floating_names = self.floating_names.get()
             self.dice.ring_mode = self.ring_mode.get()
             self.dice.hit_chance = self.hit_chance.get()
+            self.dice.quicksave.keys = self.quick_save.get()
+            self.dice.quicksave.auto = self.autosave.get()
             self.dice.vulture_on = self.content_vars["vulture"].get()
             self.dice.defiler_scrolls = self.content_vars["defiler_scrolls"].get()
             self.dice.set_rules(self._rules())

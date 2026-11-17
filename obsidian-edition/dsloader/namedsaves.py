@@ -2,7 +2,8 @@
 
 The game keeps its saves as SAVE01.SAV to SAVE10.SAV, and with the Loader's four pages
 (savepages.py) SAVB, SAVC and SAVD01.SAV to 10.SAV too, in its folder or, with GOG's, in
-cloud_saves. Only the game's own list says which is which: the name typed for each is inside
+cloud_saves (the fifth page, QUICK, SAVQ: quicksave.py's quick saves and autosaves, is left out:
+its slots are written over in turn, so their copies would only come and go). Only the game's own list says which is which: the name typed for each is inside
 the file (its STXT chunk). The Loader copies each into its own folder NAMED, as "Page 2 slot 05 -
 Before Scar's battle.SAV", whenever the game writes one, one copy for each slot: a slot saved over
 has its copy replaced. A copy can be put back in a slot (to be loaded from the game's list) with
@@ -18,7 +19,7 @@ from .gff import GffError, read_gff
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 NAMED = os.path.join(HERE, "Named saves")
-PAGES = ("SAVE", "SAVB", "SAVC", "SAVD")  # page 1 (the game's own) to 4
+PAGES = ("SAVE", "SAVB", "SAVC", "SAVD")  # page 1 (the game's own) to 4 (not the QUICK page, SAVQ)
 SLOTS = 10
 NAME_CHUNK = ("STXT", 1)
 UNSAFE = re.compile(r'[<>:"/\\|?*\x00-\x1f]')  # (not in a Windows file name)

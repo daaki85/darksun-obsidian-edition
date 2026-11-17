@@ -191,15 +191,20 @@ with the 3 ability checks the ability check command makes).
 ## DSCLOG's header
 
 The fields the Loader and DSCLOG share are DSCLOG's header, from `hdr:` in
-`dos/dsclog.asm`: the signature (`HDR_SIG`, `DSCLOGvc`), then one field a line, each commented
+`dos/dsclog.asm`: the signature (`HDR_SIG`, `DSCLOGvd`), then one field a line, each commented
 with its offset (`+1830`, `+1867` ...) and what it holds. That source is the layout's one home.
 The Loader finds the header by its signature in DOSBox's memory (16-aligned) and names each field
 it uses `TSR_*`, in the module that uses it (`dicelog.py`, `kits.py`, `ghost.py`, `freeze.py`,
 `cahulaks.py` ...). New fields go at the end, so the offsets of the rest never move (the latest:
-`A20_LOST`, +1876); a change that both sides must make together takes the signature up
-(`DSCLOGvc` with `A20_LOST`, 2026-11-18). `test_header_offsets` builds DSCLOG with a symbol map and
-checks every field is at the offset its comment gives, and every `TSR_*` constant of the Loader's
-is a field's offset.
+quick save's `QS_KEYS` +1878, `QS_SEQ` +1882, `SAVE_REQ` +1886 and `SAVE_OFF` +1888, after
+`A20_LOST`, +1876; the next is +1890); a change that both sides must make together takes the
+signature up (`DSCLOGvd` with quick save, 2026-11-18: `vc` was also the signature of quick save's
+own branch, where its four fields began at +1868, the offsets `SOLD_ITEMS` and `A20_LOST` have
+here, so a Loader or a kit tool built there finds no helper of this one's). `test_header_offsets`
+builds DSCLOG with a symbol map and checks every field is at the offset its comment gives, every
+`TSR_*` constant of the Loader's is a field's offset, and the constants of the fields from +1860
+on each the field of its own name (`FIELDS_BY_NAME`: two branches' fields at the same offsets
+would pass the first two).
 
 ## Room and memory
 
@@ -221,22 +226,24 @@ the one place for the sizes; the sections after them name the symbols only.
 | Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (the unmodded game's 57 KB) |
 | C000h-C7FFh | 32 KB | the video BIOS (ROM) |
 | C800h-C9FFh | 8 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
-| CA00h-EFFFh | 152 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): DSCLOG 69.4 KB (71,104 bytes with its PSP and its tail, (10h + `KEPT_PARAS`) paragraphs), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, and the rest free. Measured with `playtest/memaudit.py` in the slave pens with the map open (`pens-after-arena`, this build): 25,136 bytes free in one piece, between the overlay buffer and the see-through tables, 144 bytes below DSCLOG (above DOSBox's tables) and nothing between DSCLOG and the overlay buffer ([log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-18-docs-review-2.md)) |
+| CA00h-EFFFh | 152 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): DSCLOG 69.7 KB (71,408 bytes with its PSP and its tail, (10h + `KEPT_PARAS`) paragraphs), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, and the rest free. Measured with `playtest/memaudit.py` in the slave pens with the map open (`pens-after-arena`, this build): 25,136 bytes free in one piece, between the overlay buffer and the see-through tables, 144 bytes below DSCLOG (above DOSBox's tables) and nothing between DSCLOG and the overlay buffer ([log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-18-docs-review-2.md)) |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
 | 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): DSCLOG's [far block](#the-far-block), 65,484 bytes, 36 free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
 
 ### The limits
 
-Each fails the build when passed (a negative `times`). For the committed `dos/DSCLOG.EXE`, 70,880
-bytes: the 32-byte header, the segment's image of 65,312 and the tail's 5,536 (`TAIL_BYTES`):
+Each fails the build when passed (a negative `times`). For the committed `dos/DSCLOG.EXE`, 71,184
+bytes: the 32-byte header, the segment's image of 65,504 and the tail's 5,648 (`TAIL_BYTES`;
+quick save took 192 bytes of the segment, for `QS_KEY`, `SAVE_TICK` and their header fields, and
+112 of the tail, `SAVE_TEXT`):
 
 | Limit | Used | Room | Spare |
 |---|---|---|---|
-| [DSCLOG's segment](#dsclogs-segment): `kept_end` (`resident_end` 64,320 + `AFTER_INSTALL` 992) | 65,312 bytes | 65,536 | 224 bytes |
+| [DSCLOG's segment](#dsclogs-segment): `kept_end` (`resident_end` 64,512 + `AFTER_INSTALL` 992) | 65,504 bytes | 65,536 | 32 bytes |
 | [the far block](#the-far-block): `FAR_END` (its buffers from `FAR_RING`, 10h: 65,484 bytes) | 65,500 | 65,536 | 36 bytes |
-| upper memory as DSCLOG loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,524 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,658 |
-| upper memory once installed: `UMB_KEPT` (DSCLOG, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,146 paragraphs | 8,182 (`UMB_ROOM`) | 36 (576 bytes) |
+| upper memory as DSCLOG loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,543 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,639 |
+| upper memory once installed: `UMB_KEPT` (DSCLOG, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,165 paragraphs | 8,182 (`UMB_ROOM`) | 17 (272 bytes) |
 | the Loader's item names: `NAMES_EXTRA` (counted from DSCLOG's list, `EXTRA_NAMES`; `names.EXTRA` the Loader's, `test_names` and `test_header_offsets` check they agree) | 50 names | 50 | 0: a new name makes the room (the game's name table 25 bytes longer a name) |
 
 To check them after a change, build a scratch copy with `[map all FILE]` as its
@@ -280,7 +287,8 @@ leaves. The ways to free the segment:
   reaches it through a segment register set to `[cs:tail_seg]` around
   each use, and a buffer the Loader keeps there has its offset in its header
   field (the Loader reads it at `tail_seg` x 16: LBL_SLOTS, +1838; TICKS, +356;
-  LARGE_BITS, +1842). It is real-mode memory, so the game can be handed a far
+  LARGE_BITS, +1842; SAVE_TEXT, +1878, the file and the name of a quick save, which the game's
+  save routine is handed as far pointers). It is real-mode memory, so the game can be handed a far
   pointer into it (the HMA is less safe for that);
 - **the far block** (the HMA, [below](#the-far-block)): FS, ES or DS set to
   `FAR_SEG` around a buffer's use; the drawing passes keep FS on it for their

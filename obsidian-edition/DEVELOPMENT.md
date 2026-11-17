@@ -135,7 +135,7 @@ nasm -f bin -o dos/DSCLOG.EXE dos/dsclog.asm
 ```
 
 The build fails if DSCLOG outgrows its 64 KB segment or the room it has in upper memory ([Room
-and memory](DEVELOPMENT-INTERNALS.md#room-and-memory)). The header's signature (`DSCLOGvc` now:
+and memory](DEVELOPMENT-INTERNALS.md#room-and-memory)). The header's signature (`DSCLOGvd` now:
 after Z, lowercase) goes up whenever DSCLOG and the Loader must change together (`HDR_SIG` in
 `dsloader/dicelog.py`), so a Loader never talks to an older DSCLOG.
 
@@ -216,7 +216,7 @@ to trust when a test file is added):
 - **unicorn**: the tests that run DSCLOG's interrupt handlers in a CPU emulator (`test_dsclog`,
   `test_gamepatch`, `test_shadows`, `test_dsclog_drawing`, `test_cahulaks`, `test_sizes`,
   `test_held`, `test_least_scores`, `test_manual_spells`, `test_manual_group3`, `test_group4`,
-  `test_interrupt_hygiene` among them).
+  `test_interrupt_hygiene`, `test_quicksave`'s `QS_KEY` and `SAVE_TICK` among them).
 - **NASM**: the rebuild checks (`test_audit_builds`, `test_header_offsets`, `test_least_scores`,
   `test_dsclog_drawing`, `test_scroll_interrupts`, `test_interrupt_hygiene`).
 - **tkinter**: the window's tests (`test_theme`, `test_partyview`, `test_find`,
@@ -477,7 +477,8 @@ and the section that explains it. INTERNALS, RULES, KITS, CONTENT and SCREENS ar
 | `wheel.py` | the mouse wheel, for the combat log's panel | [SCREENS: the combat log](DEVELOPMENT-SCREENS.md#the-panel) |
 | `loot.py` | T and Shift+T: looting a body in one go | [SCREENS: looting](DEVELOPMENT-SCREENS.md#looting-a-body-t-and-shiftt) |
 | `sell.py` | S: selling plain gear in one go | [SCREENS: selling](DEVELOPMENT-SCREENS.md#selling-plain-gear-s) |
-| `savepages.py` | PAGE 1 to PAGE 4 in the save window | [SCREENS: more saves](DEVELOPMENT-SCREENS.md#more-saves) |
+| `savepages.py` | PAGE 1 to PAGE 4 and QUICK in the save window | [SCREENS: more saves](DEVELOPMENT-SCREENS.md#more-saves) |
+| `quicksave.py` | quick save, quick load and autosave: the QUICK page that fills itself | [SCREENS: quick save](DEVELOPMENT-SCREENS.md#quick-save-quick-load-and-autosave) |
 | `viewer.py` | the Loader's window | [INTERNALS: practising without the game](DEVELOPMENT-INTERNALS.md#practising-without-the-game) |
 | `partyview.py` | the Characters tab's cards | [README](README.md#the-characters-tab) |
 | `spellbook.py` | the Spells tab: what each spell really does | [RULES: spells as the manual describes them](DEVELOPMENT-RULES.md#spells-and-psionics-as-the-manual-describes-them) |
@@ -527,7 +528,7 @@ table](DEVELOPMENT-INTERNALS.md#the-loaders-game-flags), and `tests/test_flagran
 (or `_ranges`); `test_audit_flags` finds it by itself.
 
 **A header field** (shared by DSCLOG and the Loader): add it at the end of `hdr:` in
-`dos/dsclog.asm` with its offset in the comment (`+1878` after `A20_LOST`'s `+1876`), so the
+`dos/dsclog.asm` with its offset in the comment (`+1890` after `SAVE_OFF`'s `+1888`), so the
 others never move; name it `TSR_*` in the module that reads it (`test_header_offsets` checks both:
 the field at the offset its comment says, the constant a field's offset). If both sides must change
 together, take the signature up (`sig` in `dsclog.asm` and `HDR_SIG` in `dicelog.py`). See

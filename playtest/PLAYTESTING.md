@@ -54,7 +54,10 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
 7. **Press Escape only with a menu or screen showing**: with nothing open it brings EXIT: SAVE
    GAME?, and a click after that can quit to DOS ([keys](#controls)).
 8. **Never save after a memory edit made for a test** (levels, HP, Move, spells taught, items or
-   classes written): restore anything raised in memory before saving or stopping.
+   classes written): restore anything raised in memory before saving or stopping. **The game now
+   saves by itself** (an autosave 4 seconds after an area change or a fight's end, F5 a quick
+   save): before a test that edits memory switch both off, or fight with `PT_NO_EDIT=1` ([quick
+   saves and autosaves](#loading-and-saving)).
 9. **The look pointer pauses the game** (the user's): while the eye is the pointer, the game's time
    doesn't run (no Kurzak's call, no alarm, nobody moving). Put the walk arrow back (`pointer.py
    walk`) as soon as a look or a rest is done; a wait with the eye up waits for nothing.
@@ -197,6 +200,49 @@ game's data: it is one player's account.
   with loadsave.sh. The slot is `SAVE01.SAV` in the game folder (85,680 bytes), with
   `CHARSAVE.GFF` and `DARKSAVE.GFF` written at the same time; keep all three (`saves/README.md`).
   QUIT on the EXIT menu ends DOSBox.
+- **F1 opens the SAVE window and the game goes on after it** (F2 the LOAD window, F3 quits, F4
+  music on and off: the game's own keys, on the map with nothing else up, not while a message box
+  is). No quit to DOS, so it is the way to save in the middle of a test: F1, a row (the first at
+  120, 46), the name, SAVE (253, 46), then a click for GAME SAVED. A key pressed with a message box
+  up is lost: `dismiss.sh` first, and look at a shot before clicking in the window (a click with
+  no window up walks the party).
+- **The window's page buttons** are at x 253: PAGE 1 at y 76-87, QUICK at 165 (drawn 18 under
+  their y in `savepages.PAGES`); rows are 11 apart from y 46 (row 5 at 90, row 7 at 112). The window opens on the
+  page last shown.
+- **Quick saves and autosaves** (`dsloader/quicksave.py`; the dice log does them, so `start.sh`'s
+  game has them): F5 on the map saves to `SAVQ01-05.SAV`, F9 opens the LOAD window on the QUICK
+  page (Return loads the newest), and an autosave goes to `SAVQ06-10.SAV` 4 seconds after an area
+  change or a fight's end. **They are saves of the game as it stands: none after a memory edit**
+  (rule 8), so before a test that edits memory switch them off (`"quick_save": false, "autosave":
+  false` in `obsidian-edition/settings.json` after `start.sh` has written it, then restart the dice
+  log), and fight with `PT_NO_EDIT=1 sh fightout.sh` (no foe's HP changed) when the autosave after
+  the fight is what is under test. `loadsave.sh` copies only `SAVE01.SAV`: the folder's `SAVQ*`
+  files stay from the last play (delete them for a test that counts them).
+  - `qsave.py SLOT [NAME]` asks DSCLOG for a save as the Loader does and times it; `qsave.py load`
+    opens the LOAD window; `qsave.py state` prints the keys, the counts, `SAVE_REQ`, the main
+    loop's count, DS:0BC9h (1 on the map, 2 with a window, a talk or a screen up) and the game's
+    memory; `qsave.py keys FFFF FFFF` gives the two keys back to the game (`3F00 4300` to DSCLOG).
+  - `loadquick.sh [ROW]` starts the game and loads a row of the QUICK page from the main menu,
+    with the folder's `CHARSAVE.GFF` and `DARKSAVE.GFF` as they are.
+  - `savediff.py A.SAV B.SAV [-v]` compares two saves chunk by chunk and prints each one's name
+    and journal id (`SAVE` 30, words 198-199).
+  - **Two saves of the same moment**: the look pointer up (`pointer.py look`: the clock stands
+    still), `qsave.py 1 NAME`, then F1 and a window save: they differ in `STXT 1` and six words of
+    `SAVE 1` only (the map objects' picture slots, which a window's opening lets go of).
+  - **A second game beside the shared one** (when the shared DOSBox is busy): a copy of the kit
+    and of `inst` in a scratch folder with the tree's `obsidian-edition` linked beside it, `env.sh`
+    and `paths.py` on display `:56`, and a `start.sh` that starts its own Xvfb, DOSBox copied
+    under another name (`dbq`, with `SDL_VIDEO_X11_WMCLASS=dosbox` so xdotool finds its window),
+    writes its pid to `$WORK/dsun.pid` (live.py reads it) and starts the dice log as `python3 -um
+    dsloader dicelog --pid PID` (not the command line the shared `start.sh` kills), stopping only
+    its own by their pid files.
+  - **Scar's trip from a save**: the arena's gate (488, 200); `viewto.py 500 380`, then clicks at
+    screen (144, 140) (the gap, to 488, 424) and (150, 185) (the platform, 488, 472) with the walk
+    arrow: the Announcer, then `fight_on 1`. After the bout: the "Go back to the pens" box, the
+    yes/no question (N), then the autosave; dawdling brings "These gladiators wish to fight
+    again!" and another bout.
+  - A save takes 0.34 s (the game stands still); a fight's save is refused (`qsave.py`: "refused: a
+    fight"), and with a talk or a window up the request waits (the map's loop doesn't run).
 - **The save name field keeps the slot's old name**: typing goes in front of it (KURZAK DOORPENS),
   and Backspace from the start does nothing: press End, then Backspace enough times, then type.
 - **The SAVE screen's EXIT** is at (253, 66): it closes the screen without saving and the game
@@ -325,6 +371,10 @@ game's data: it is one player's account.
   message box, but a click doesn't answer them: press **N** (or Y). One is waiting only while the
   dice log's last line is `    2. No` (answered, `    > No` follows): a check for "2. No" in the
   last few lines takes an old, answered one for a new one. `dismiss.sh` stops at one.
+- **The function keys on the map**: F1 the SAVE window, F2 LOAD, F3 quits (never press it), F4
+  music ("MUSIC OFF" / "MUSIC ON" messages), F5 the mod's quick save and F9 its quick load (the
+  game's own: F5 draws the view again, F9 breaks a camp; neither shows anything in the pens), F6,
+  F7, F8, F10, F11 and F12 nothing seen. DOSBox's own are Ctrl+F-keys.
 - **Keys**: Tab picks the nearest enemy and Return attacks it (the mod's keys, in a
   fight); L shows or hides the combat log panel; **E opens the Effects screen** (not "end turn");
   Escape closes a screen or menu that is open, and **opens EXIT: SAVE GAME? when nothing is**: a

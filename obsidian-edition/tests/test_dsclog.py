@@ -5593,10 +5593,13 @@ class SavePageTests(unittest.TestCase):
         self.run_at(self.KEY_AT, 0x12, 0x5100)
         self.run_at(self.KEY_AT, 0x12, 0x5100)
         self.assertEqual(self.page(), b"DD")
+        self.run_at(self.KEY_AT, 0x12, 0x5100)
+        self.assertEqual(self.page(), b"QQ")  # (the quick saves' and autosaves': quicksave.py)
         self.assertEqual(self.run_at(self.KEY_AT, 0x12, 0x5100), (self.KEY_END, 0x4321))  # (the last page)
-        self.assertEqual((self.page(), self.calls), (b"DD", {}))
+        self.assertEqual((self.page(), self.calls), (b"QQ", {}))
         self.assertEqual(self.run_at(self.KEY_AT, 0x12, 0x49E0), (self.DONE, 0x4321))  # PgUp, the grey key
-        self.assertEqual(self.page(), b"CC")
+        self.assertEqual(self.page(), b"DD")
+        self.run_at(self.KEY_AT, 0x12, 0x4900)
         self.run_at(self.KEY_AT, 0x12, 0x4900)
         self.run_at(self.KEY_AT, 0x12, 0x4900)
         self.assertEqual(self.page(), b"EE")
@@ -5605,18 +5608,18 @@ class SavePageTests(unittest.TestCase):
         self.assertEqual((self.page(), self.calls), (b"EE", {}))
 
     def test_buttons(self):
-        for button, page in ((0x818, b"DD"), (0x816, b"BB"), (0x817, b"CC"), (0x815, b"EE")):
+        for button, page in ((0x818, b"DD"), (0x819, b"QQ"), (0x816, b"BB"), (0x817, b"CC"), (0x815, b"EE")):
             self.assertEqual(self.run_at(self.CLICK_AT, 8, button), (self.DONE, 0))  # (the routine returns 0)
             self.assertEqual(self.page(), page)
         self.assertEqual(self.run_at(self.CLICK_AT, 8, 0x815), (self.CLICK_END, 0x4321))  # (the page shown)
-        self.assertEqual(self.run_at(self.CLICK_AT, 8, 0x819), (self.CLICK_END, 0x4321))  # another button
+        self.assertEqual(self.run_at(self.CLICK_AT, 8, 0x81A), (self.CLICK_END, 0x4321))  # another button
         self.assertEqual((self.page(), self.calls), (b"EE", {}))
 
     def test_loading_a_page_with_no_saves(self):
         self.mu.mem_write(self.SAVE * 16 + 0x4EA, struct.pack("<H", 1))  # the load window; no saves found
         self.assertEqual(self.run_at(self.KEY_AT, 0x12, 0x5100), (self.KEY_END, 0x4321))
         self.assertEqual(self.page(), b"EE")  # (back)
-        self.assertEqual(self.calls, {"scan": 4})  # (pages 2, 3 and 4 looked at)
+        self.assertEqual(self.calls, {"scan": 5})  # (pages 2, 3, 4 and QUICK looked at)
         # a button's page is shown even with none, its first row chosen (SAVE_LABEL greys LOAD)
         self.assertEqual(self.run_at(self.CLICK_AT, 8, 0x817), (self.DONE, 0))
         self.assertEqual(self.page(), b"CC")

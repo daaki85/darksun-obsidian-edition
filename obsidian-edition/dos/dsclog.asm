@@ -188,7 +188,7 @@ section image follows=mz vstart=0
 
 ; ---- header, found by the Loader via SIG (16-byte aligned) ----
 hdr:
-sig      db 'DSCLOGvc'          ; +0
+sig      db 'DSCLOGvd'          ; +0
 seq      dw 0                   ; +8   entries written so far (wraps at 65536)
 widx     dw 0                   ; +10  ring slot the next entry goes to
 nent     dw NENT                ; +12
@@ -471,6 +471,15 @@ a20_lost   dw 0                 ; +1876 times A20_CHECK found A20 off, the far b
                                 ;      reach, and turned it on again; 8000h added if it wouldn't come
                                 ;      on (the far block's segments then the ROM's: the dice log's
                                 ;      a20_line says so once)
+qs_keys    dw 0xFFFF, 0xFFFF    ; +1878 the Loader's: the quick save key and the quick load key, as
+                                ;      INT 16h gives them (FFFFh: none), taken on the map (QS_KEY) ...
+qs_seq     dw 0, 0              ; +1882 ... and counted, each in its word: the Loader acts
+save_req   dw 0                 ; +1886 the Loader sets 1 to have the game saved from the map's main
+                                ;      loop (SAVE_TICK: the file and the name in SAVE_TEXT), 2 to
+                                ;      have the game's LOAD window opened; 0 while DSCLOG is at it,
+                                ;      then 3 done, 4 the game's save failed, 5 not in a fight
+save_off   dw save_text         ; +1888 offset of SAVE_TEXT in the tail: the Loader's: the save's
+                                ;      file (SAVE_FILE bytes with its NUL), then its name
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -1560,6 +1569,59 @@ sheet_classes:
         and eax, 0x00FFFFFF
         ret
 
+; SAVE_TICK: from the map's main loop (PROBE_SCROLL, DS the game's), what the Loader asked for in
+; SAVE_REQ (quicksave.py), once: 1 the game saved by its own routine (the one its SAVE window
+; calls: an overlay's entry, save(far file, far name); it shows nothing), from the file and the name
+; the Loader wrote in SAVE_TEXT, but not in a fight (where the game refuses a save); 2 the game's
+; LOAD window opened (the Loader has made its page the quick saves'). SAVE_REQ is 0 while the
+; routine runs (a pass of this loop inside it asks nothing again), then what came of it. AX, BX,
+; CX, DX, ES changed.
+SAVE_SEG2  equ 0x4242           ; (DSUN.EXE segments, less the load segment) an overlay's entry:
+SAVE_ENTRY equ 0x0089           ;   save(far file, far name), 0 if it failed
+LOADW_SEG  equ 0x428A           ; the save window's overlay's entry that opens it to load a game
+LOADW_ENTRY equ 0x0020
+SAVE_FILE  equ 64               ; (SAVE_TEXT: the file's bytes, then the name's, SAVE_NAME)
+SAVE_NAME  equ 48               ; (the game writes 45 bytes of it)
+save_tick:
+        mov ax, [cs:save_req]
+        dec ax
+        cmp ax, 1
+        ja .ret                 ; (none, or an answer the Loader hasn't read yet)
+        mov word [cs:save_req], 0
+        jb .save
+        mov bx, LOADW_ENTRY
+        mov ax, LOADW_SEG - DGROUP_SEG
+        call .entry
+        call far [cs:sp_call]
+.done:  mov ax, 3
+.set:   mov [cs:save_req], ax
+.ret:   ret
+.save:  mov ax, ds
+        sub ax, FIGHT_FROM_DS
+        mov es, ax
+        mov ax, 5
+        cmp word [es:0x19], 0
+        jne .set
+        mov bx, SAVE_ENTRY
+        mov ax, SAVE_SEG2 - DGROUP_SEG
+        call .entry
+        mov ax, [cs:tail_seg]
+        push ax
+        push word save_text + SAVE_FILE
+        push ax
+        push word save_text
+        call far [cs:sp_call]
+        add sp, 8
+        or ax, ax
+        jnz .done
+        mov al, 4
+        jmp .set
+.entry: mov [cs:sp_call], bx    ; SP_CALL: the game's routine at AX (from its DS):BX
+        mov bx, ds
+        add ax, bx
+        mov [cs:sp_call + 2], ax
+        ret
+
 ; SOUND_TICK: from the map's main loop (PROBE_SCROLL, DS the game's), the sound the Loader asked
 ; for (SOUND_REQ), once. All registers kept.
 sound_tick:
@@ -1907,13 +1969,13 @@ probe_save_page:
 
 ; PROBE_SAVE_CLICK: INT VEC_SAVE_CLICK replaces "jmp <the end>" (3 bytes: INT + NOP; DSUN.EXE
 ; 74B9Fh), where the window's event routine leaves a click on a button it doesn't know: PAGE 1 to
-; PAGE 4 (savepages.py) show that page (then the routine's end returns 0, as for the game's own
+; PAGE 4 and QUICK (savepages.py) show that page (then the routine's end returns 0, as for the game's own
 ; buttons).
 SC_DONE    equ 0x74A21 - 0x74BA1 ; (DSUN.EXE, from the way back) the screen updated, then the end
 SC_IGNORE  equ 0x74DE5 - 0x74BA1 ; the end for the game's buttons
 SC_ID      equ 8                ; the button, at the routine's BP+8
-PAGE1_ID   equ 0x815            ; (PAGE 1 to PAGE 4: 815h to 818h)
-PAGES      equ 4
+PAGE1_ID   equ 0x815            ; (PAGE 1 to PAGE 4 and QUICK: 815h to 819h)
+PAGES      equ 5
 probe_save_click:
         push bp
         mov bp, sp
@@ -2060,7 +2122,8 @@ sp_button_id:                   ; (AX the button)
 sp_btn  dw BTN_OFF, 0           ; the game's routine for a button's state
 sp_call dd 0
 sp_was  db 0
-sp_letters db 'EBCD'            ; the pages' letters (SAVE??.SAV, SAVB, SAVC, SAVD)
+sp_letters db 'EBCDQ'           ; the pages' letters (SAVE??.SAV, SAVB, SAVC, SAVD; SAVQ: the quick
+                                ;   saves and autosaves, quicksave.py)
 sp_target db 0
 sp_step   db 0
 sp_done   dw 0                  ; where the event routine goes on: after the page changes,
@@ -2068,7 +2131,7 @@ sp_ignore dw 0                  ;   or not (from the way back)
 sp_zero   db 0                  ; 1: a click (the routine to return 0)
 
 ; SAVE_LABEL: (PROBE_WIN; EAX the window drawn, DS the game's) on the save/load window, the
-; button of the page shown (PAGE 1 to PAGE 4, savepages.py) out of use: so it shows which; and in
+; button of the page shown (PAGE 1 to PAGE 4 and QUICK, savepages.py) out of use: so it shows which; and in
 ; the load window, LOAD out of use while the row chosen has no save (an empty page's).
 save_label:
         pushad
@@ -25588,6 +25651,7 @@ probe_scroll:
         call whirl_tick
         popf
         call sound_tick
+        call save_tick
         call stink_sides                ; (the rule switched since: the staff sling's dice)
         call target_click
         pushf
@@ -27762,6 +27826,8 @@ overhead db 0                   ; ('m', 'u' or 'i': the screen its key opened, 0
 our_key:                                ; AX a key: CF set (and counted) if it is one of ours
         call loot_key
         call sell_key
+        call qs_key
+        jc qs_key.ret
         cmp ax, KEY_L
         je .l
         cmp ax, KEY_SHIFT_L
@@ -27797,6 +27863,33 @@ our_key:                                ; AX a key: CF set (and counted) if it i
         ret
 .no:    clc
         ret
+
+; QS_KEY: (OUR_KEY's) the Loader's quick save key or quick load key (QS_KEYS) with the map's main
+; loop run within the last BIOS tick or two (no window, talk or menu waiting on keys): counted in
+; its word of QS_SEQ, and CF set (taken from the game); else CF clear. Registers kept.
+qs_key:
+        push bx
+        push es
+        xor bx, bx
+        mov es, bx
+        cmp ax, [cs:qs_keys]
+        je .ours
+        mov bl, 2
+        cmp ax, [cs:qs_keys + 2]
+        jne .no
+.ours:  push ax
+        mov ax, [es:0x46C]      ; (the BIOS tick)
+        sub ax, [cs:map_tick]
+        cmp ax, L_FRESH
+        pop ax
+        ja .no
+        inc word [cs:qs_seq + bx]
+        stc
+        jmp .out
+.no:    clc
+.out:   pop es
+        pop bx
+.ret:   ret
 
 ; LOOT_KEY: (OUR_KEY's first) T or Shift+T with a container's window open (a body's, a chest's: the
 ; game's DS:05E6h its map thing, 9999 none) is made Escape, which closes the window, and, when the
@@ -29510,6 +29603,7 @@ extra_types_end:
         times -(extra_types_end - extra_types != TYPES_EXTRA * TYPE_SIZE) db 0 ; (a negative count: not TYPES_EXTRA)
 lbl_slots  times LBL_SLOTS * LBL_SIZE db 0 ; (the Loader's: LABELS, the header's +1838)
 large_bits times MAP_BITS + 1 db 0      ; (the Loader's: a bit a combatant large or bigger, SIZE, +1842)
+save_text  times SAVE_FILE + SAVE_NAME db 0 ; (the Loader's: SAVE_TICK's file and name, +1888)
 ticks      times TICK_SLOTS * TICK_SIZE db 0 ; (PROBE_TICK's, the Loader's to read: the header's +356)
 ; the names, numbered from NAMES_OWN (322): the Loader's items' (the same as the Loader's
 ; NAMES in dsloader/names.py), each NUL-terminated (PROBE_NAMES_FILL pads it to NAME_SIZE), and

@@ -59,6 +59,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `leasts.sh (on the creation screen; ROWS="y ..." to pick rows)` | for each score's square, a right click (lower) then the least the game worked out, then a left click back |
 | `leavearena.sh` | takes the party from the arena to the pens, right after "Go back to the pens" (arenawaves.sh), before the arena's patience runs out (a few actions). |
 | `levelup.sh` | if CHOOSE A SPELL is up (a preserver's level-up, mid-fight; |
+| `loadquick.sh [ROW]` | start the game (start.sh) and load a save of the QUICK page (SAVQnn.SAV, the quick saves and autosaves: dsloader/quicksave.py) that is in the game folder already, from the main menu: LOAD SAVED GAME (170, 109), the... |
 | `loadsave.sh NAME` | start the game (start.sh, or start_recomp.sh with PT_TARGET=recomp) with the save in saves/NAME copied into the game folder (as slot 1), and load it. |
 | `mapshot.py OUT.png [W H]` | a picture of the whole region the party is in, W x H map units (default 1920 x 1536). |
 | `markmember.py THING\|none CHANGED` | GHOST_TAB with only THING marked see-through (or none), and GH_CHANGED set to CHANGED (1: DSCLOG's GHOST_UNION draws the whole view at the next step). |
@@ -89,6 +90,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `pointer.py [walk\|look\|attack [X Y]]` | the map pointer's mode (DS:11B8h: 1 walk, 2 look (the eye: also talk, use), 4 attack; |
 | `poolfree.py [SECONDS]` | the game's picture memory (the blocks at DS:8E94h, 8 bytes each: +0 the bytes free in it (dword), +4 its far pointer; |
 | `powers.py` | each party member's known psionic powers (selector 2F0h's segment, +77h + member x 22h + power, bits 3-7: known), by name. |
+| `qsave.py SLOT [NAME] \| load \| state` | ask DSCLOG for a save by the game's own routine (SAVE_REQ, the header's +1876: dsloader/quicksave.py), as the Loader's quick save does, and say what came of it and how long it took (seconds of this machine's clock,... |
 | `rackcheck.py` | the slave pens' weapon rack (object 2599; |
 | `randout.py N [SEED]` | N random outfit changes for member 0: each time one of its worn items (slot under 12) taken off (slot byte +11h set to 50) or put back, waiting for the Loader's copy of SEGOBJEX.GFF to be written; |
 | `rec.py [FIRST LAST]` | the combat records (58 bytes) of creatures FIRST to LAST (default the party, 0-3), hex from +10h, to find a field by comparing what the screen shows |
@@ -97,6 +99,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `ringrest.sh` | rest at the fire room's ring in pens-fire-count4 (camera 1728,768: the ring at screen 203,88): the eye, a slow press on the ring, the walk arrow back (2026-11-09). |
 | `rolog.py [--d20]` | a read-only dice log beside the session's own Loader (2026-11-08). |
 | `route.py TX TY` | walk the party's leader to map position TX, TY over any distance: a path found on the region's walkability grid as the game has it now (live.py's live_map, DS:0556h; |
+| `savediff.py A.SAV B.SAV [-v]` | two saves (or any two GFF files) compared chunk by chunk (dsloader/gff.py's read_gff): the chunks only one has, and for each chunk both have that differs, its size in each and how many bytes differ (with -v, the... |
 | `scroll.py DX DY` | drag the map view with the middle mouse button by DX, DY game pixels (the user's advice, 2026-11-01): the way to see past walls, where the view won't scroll by itself. |
 | `scrolltest.py [shinobi] [give]` | member 0 made an 8th-level Shinobi (memory only: never save after) and the defilers' scrolls (defilerscrolls.scroll) given to members 0 and 2. |
 | `setarrows.py MEMBER N` | the member's quiver stack's count made N, in memory (never save after; |

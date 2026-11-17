@@ -31,6 +31,7 @@
 - [Spells on the Effects screen](#spells-on-the-effects-screen)
 - [CHOOSE A SPELL's grid](#choose-a-spells-grid)
 - [More saves](#more-saves)
+  - [Quick save, quick load and autosave](#quick-save-quick-load-and-autosave)
 - [More characters](#more-characters)
 - [Game speed](#game-speed)
 - [Picture and music](#picture-and-music)
@@ -940,12 +941,15 @@ away and the page's put in with the game's text font
 (`dsloader/savepages.py`; the buttons' own carved letters have no P, G or
 digits).
 
-The other pages are `SAVB`, `SAVC` and `SAVD`, not `SAVE11` on, so the game's own
+The other pages are `SAVB`, `SAVC`, `SAVD` and `SAVQ` (the QUICK page, DSCLOG's fifth letter:
+`PAGES`, `sp_letters`), not `SAVE11` on, so the game's own
 window never sees them: it puts each save it finds in the row its number names,
 with room for ten, and a `SAVE11.SAV` would be written past the end.
 
 Saves under their names (`dsloader/namedsaves.py`): every few seconds the
-Loader looks at the 40 slots' files (`cloud_saves` before the game folder, as
+Loader looks at the 40 slots' files of pages 1 to 4 (not the QUICK page's: its slots are written
+over in turn, each with the day and time in its name, so a copy of each would only come and go;
+`cloud_saves` before the game folder, as
 GOG's DOSBox mounts it over the folder), and copies one newer than its copy to
 `Named saves/` as `Page P slot NN - NAME.SAV`, the name from the save's
 `STXT 1` (up to its first NUL; characters Windows won't take become `_`). A
@@ -953,6 +957,93 @@ slot's copy under another name is removed. **Put a save in a slot...** copies
 a file back as `SAVE`/`SAVB`/`SAVC`/`SAVD` + the slot, through a temporary file,
 the slot's save first kept as `Replaced - Page P slot NN - NAME.SAV` (which
 `sync` doesn't match, so never removes).
+
+### Quick save, quick load and autosave
+
+([In the features page](FEATURES.md#quick-save-quick-load-and-autosave).) `dsloader/quicksave.py`
+holds the policy; DSCLOG has two small parts, `QS_KEY` and `SAVE_TICK`.
+
+**The game's own keys.** On the map the game reads F1 (the SAVE window, the game going on
+after), F2 (the LOAD window), F3 (quit), F4 (music on and off) and, from its key table at
+DSUN.EXE 1BC5Bh, F5, F6, F9 and F10. F5 (1B811h) draws the view again and nothing else; F9 (an
+overlay's entry, 810DCh) breaks the camp the game's rest routine at 80Fxxh makes (the party's
+creature records' +1Dh 4, a fire and bedrolls put on the map), and does nothing otherwise. Neither
+showed anything on the map in the pens. So F5 and F9 are the two keys, and while the party camps
+(+1Dh 4) the Loader gives both back to the game.
+
+**The keys.** The Loader writes the two keys into DSCLOG's header (`QS_KEYS`, +1868; FFFFh with
+the switch off, so they stay the game's). `QS_KEY` (from `OUR_KEY`, the INT 16h hook) takes one
+and counts it (`QS_SEQ`, +1872, a word each) only if the map's main loop ran within the last two
+BIOS ticks. That loop (`main()`'s, the one caller of the routine `PROBE_SCROLL` is in) doesn't
+run while a window, a talk, a screen or a menu is up (the game's DS:0BC9h is 2 then), nor on an
+enemy's turn.
+
+**A save.** The Loader writes the file (the game's save path, DS:4B81h, `.\` as the Loader starts
+it, then `SAVQnn.SAV`) and the name into `SAVE_TEXT` (112 bytes in the tail, its offset at +1878)
+and sets `SAVE_REQ` (+1876) to 1. `SAVE_TICK`, called from `PROBE_SCROLL`, sets it to 0, and
+unless a fight is on (the word at 377Eh:0019h, which the game's own menu tests: "CAN'T SAVE
+DURING COMBAT") calls the routine the SAVE window's wrapper calls, the overlay entry 4242h:0089h
+(DSUN.EXE 6912Dh, `save(far file, far name)`), through its stub as `GIVE_XP` calls its overlay;
+then leaves 3 (saved), 4 (the routine returned 0) or 5 (a fight). The routine writes the SAVE
+chunks and `STXT 1` into `DARKRUN.GFF` and copies it to the file; it shows nothing. The Loader
+gives up a request not taken within 6 seconds.
+
+What the window does besides, and why the direct call needs none of it (Verified:
+[log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-17-quick-save.md)):
+
+- opening the window (overlay 428Ah, 7452Dh) closes the item boxes (1587h:22BAh), stops the
+  map's drawing while the window is made (1587h:2CCBh, undone by 2C8Dh at the end) and sets the
+  pointer's shape (191Fh:0B36h, 4): all for the window;
+- the wrapper (7468Bh) shows SAVING GAME and GAME SAVED and, after the save, writes the 11-byte
+  `PREF` 100 chunk (music, sound and such) into **`CHARSAVE.GFF`**, not into the save; a load
+  reads it from there if it is there. `DARKSAVE.GFF` is written by neither.
+
+A save by the direct call and one by the window at the same game second (the look pointer up,
+which stops the clock) differ in the name and in six words of `SAVE 1` (the map objects' records,
+32 bytes each: the word at +15h of the four party members' and two more), which hold a picture's
+slot number while the map is open and the picture's own number (negative) while a window has it
+closed. Loading either gives the same game (the same places, clock and numbers, in the same
+session and from a fresh start), so a load makes those words again.
+
+**Safe moments.** `PROBE_SCROLL` is called only from the top of `main()`'s loop (1A947h), the same
+loop whose event dispatch reaches the game's own SAVE window: a save from there is made at a
+moment the player could have pressed F1. It is never inside a talk or a message box (their loops
+are nested and don't come back to it), and scripts that wait across passes of the loop (Kurzak's
+call, the escort to the fountain) are saved by the game's own save in the same state. Tried: a
+quick save with Kurzak's call pending, and autosaves after the fountain's ambush, on coming into
+the arena and after Scar's bout there (the arena's patience running), each loaded from a fresh
+start and played on: the call still stood, the Announcer and the bout began, the arena's next
+bout came.
+
+**Quick load.** The Loader pokes Q into the two file names (as DSCLOG's page buttons do), sets
+the window's chosen row (3BA7h:04E4h) to the newest save of the page, and sets `SAVE_REQ` to 2:
+`SAVE_TICK` calls the overlay entry that opens the LOAD window (428Ah:0020h, what F2 and the
+menus call). The load itself is the window's (Enter or LOAD). The window never opens on
+the QUICK page by itself: whenever it is shut (the map's loop running, DS:0BC9h 1) and the page's
+letter is Q, the Loader writes back the letter of pages 1 to 4 it saw last (`_page_back`), so a
+save made by hand doesn't land in a slot that is written over in turn. Seen in the game: an F1
+save after an F9 window had gone to `SAVQ01.SAV` before this.
+
+**Autosave.** The Loader asks for one when the region (DS:117Ch) has changed, or a fight has
+ended, and for 4 seconds since the map's loop has run with the game on the map (DS:0BC9h 1) and
+no fight; not while a game is loading (the dice log's `_party_check`: the party changed or the
+clock went back) and, after a fight, not within a minute of the last autosave. Slots 1-5 are the
+quick saves', 6-10 the autosaves': each kind takes its first empty slot, then its oldest file.
+
+**The disk.** The game's save shows "Disk Space Low !!!" in a box that waits for a click when
+DOS reports under about 2.7 MB free. DOSBox always reports 262 MB for a mounted folder
+(`localDrive::AllocationInfo`), so the box can't come up there; the real danger is the real
+disk, and the Loader asks for no save with under 4 MB free in the saves' folder, saying so.
+
+**Time and memory.** A save took 0.34 s from the request to the answer (five measured, 20,000
+cycles), the game standing still for it; the game's memory read the same before and after
+(95 KB of DOS memory free, `heapcheck`). What the two routines and their text cost DSCLOG:
+[the limits](DEVELOPMENT-INTERNALS.md#the-limits).
+
+Tests: `tests/test_quicksave.py` (the slots' rotation with the two kinds kept apart, the names,
+when an autosave is due: a new area, a fight over; not while a game loads, a window is up or the
+disk is nearly full; what is asked of DSCLOG and said; and DSCLOG's `QS_KEY` and `SAVE_TICK` in the
+emulator).
 
 ## More characters
 

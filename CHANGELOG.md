@@ -26,6 +26,10 @@ under "## Unreleased (branch `obsidian-edition`)
 - **The chance to hit before the swing**: with an enemy chosen with Tab, what the d20 must show
   and the chance, on the dice log's line and in the combat log's header, worked out as the game's
   attack does (`hitchance.py`; DSCLOG unchanged).
+- **Quick save, quick load and autosave**: F5 saves at once, F9 opens the load window on those
+  saves, and the game saves by itself after an area change and a fight, all on a fifth page of the
+  save window, QUICK (`quicksave.py`; DSCLOG's `QS_KEY` and `SAVE_TICK`, four header fields from
+  +1878, signature `DSCLOGvd`).
 
 **Changed**
 - **Fewer switches** (#110), for a simpler Options tab and the mod's rules as meant: the combat

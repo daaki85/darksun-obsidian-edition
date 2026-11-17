@@ -43,7 +43,8 @@ And always:
 - **A second DOSBox must run under another name** (a copy of the program, as `picpattern.sh`'s
   `dbpat`): the tools attach to the newest process named dosbox and `start.sh` kills them all.
 - **Press Escape only with a screen or menu up** (with nothing open it brings EXIT: SAVE GAME?), and
-  **never save after a memory edit** made for a test.
+  **never save after a memory edit** made for a test: the game autosaves after a fight and an area
+  change, so set `"autosave": false` and `"quick_save": false` first, or fight with `PT_NO_EDIT=1`.
 - **The look pointer pauses the game**: while the eye is up nothing happens (no call, no alarm,
   nobody moving), so a wait with it up waits for nothing. Put the walk arrow back (`pointer.py
   walk`) as soon as a look is done.

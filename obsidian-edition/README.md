@@ -93,7 +93,8 @@ Loader's **Options** tab ([each switch, its default and when it counts](PLAYER-G
 - **Graphics.** The party's gear on its figures, shadows, dust, see-through
   figures, elves and half-elves of their own look, and magic items' icons
   that shine ([Graphics](FEATURES.md#graphics)).
-- **Quality of life.** Better [controls](FEATURES.md#controls), [more saves and
+- **Quality of life.** Better [controls](FEATURES.md#controls), [quick saves and
+  autosaves](FEATURES.md#quick-save-quick-load-and-autosave), [more saves and
   characters](FEATURES.md#saves), a [game
   speed](FEATURES.md#game-speed) setting, a choice of [picture and music
   device](FEATURES.md#picture-and-music), [crash, freeze and item
@@ -170,7 +171,7 @@ slows instead of speeding up: choose the next setting down.
    there, install the 64-bit Python from <https://www.python.org/downloads/>
    and tick **"Add python.exe to PATH"** on the installer's first screen.)
 3. **Back up your saves.** Before the first game with the mod, copy the save files (`SAVE*`, and
-   `SAVB*`, `SAVC*` and `SAVD*` once you have them) and `CHARSAVE.GFF` somewhere safe: from the
+   `SAVB*`, `SAVC*`, `SAVD*` and `SAVQ*` once you have them) and `CHARSAVE.GFF` somewhere safe: from the
    game folder's `cloud_saves` folder if it has one (the game reads its saves from there first),
    else from the game folder. The Loader never changes the game's own files, but your saves are
    written by the patched game: one with the new items ticked can hold item types the original game
@@ -233,7 +234,8 @@ game at a time: a second one says which has it and leaves the game alone.
 
 **Checking a save file:** drag a save file onto **`Show Save.bat`** to see the
 party it holds: `SAVE01.SAV` to `SAVE10.SAV` (page 1), or pages 2 to 4's
-`SAVB01.SAV`, `SAVC01.SAV`, `SAVD01.SAV` and so on, from the game folder, or
+`SAVB01.SAV`, `SAVC01.SAV`, `SAVD01.SAV` and so on (the quick saves and autosaves are
+`SAVQ01.SAV` on), from the game folder, or
 from its `cloud_saves` folder if it has one (GOG's DOSBox keeps the saves
 there).
 
@@ -527,10 +529,10 @@ saves and characters:
 | `play.log` | what went wrong, when the game was started with `Play Dark Sun (in-game rolls).bat` |
 | `dos` | the Loader's helpers, and the patched copy of the game (`DSUNLOG.EXE`) with copies of its data |
 | `layouts`, `.dsloader-search.json` | only from the Memory tools ([DEVELOPMENT-INTERNALS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-INTERNALS.md#mapping-memory)) |
-| the game folder | your saves (page 1 in the game's own `SAVE` files, pages 2 to 4 as `SAVB`, `SAVC` and `SAVD`) and characters in `CHARSAVE.GFF` |
+| the game folder | your saves (page 1 in the game's own `SAVE` files, pages 2 to 4 as `SAVB`, `SAVC` and `SAVD`, the quick saves and autosaves as `SAVQ`) and characters in `CHARSAVE.GFF` |
 
 Page 1's saves (`SAVE*`) and `CHARSAVE.GFF` load in the original game as long as they hold none of
-the new items ([back up your saves](#one-time-setup)); the extra pages (`SAVB*`, `SAVC*`, `SAVD*`)
+the new items ([back up your saves](#one-time-setup)); the extra pages (`SAVB*`, `SAVC*`, `SAVD*`, `SAVQ*`)
 are read only by the mod's patched game.
 
 ## When something goes wrong

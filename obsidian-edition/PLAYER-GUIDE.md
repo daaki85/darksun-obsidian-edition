@@ -1982,10 +1982,14 @@ features page](FEATURES.md#always-on).
 
 The mod's other controls are always on too: Tab and Enter to choose and attack an enemy (the red
 ring under it, and the chance to hit it shown before the swing, are on the Options tab), scrolling with the mouse wheel, the whole party in
-view, the view in fights, the pointer, and spells on the Effects screen ([controls](FEATURES.md#controls)).
+view, the view in fights, the pointer, and spells on the Effects screen ([controls](FEATURES.md#controls)). Quick save and
+quick load with **F5** and **F9**, and autosave, have switches under **Saves** on the Options tab.
 
 **Saves and characters:** 40 saves, four pages of ten (**PAGE 1** to **PAGE 4**, or **PgUp** and
-**PgDn**), and 29 characters in the roster ([more saves and characters](FEATURES.md#saves)).
+**PgDn**), a fifth page, **QUICK**, for the quick saves (**F5**; **F9** loads) and the autosaves
+the game makes on coming into another area and after a fight, the last five of each kept ([quick
+save, quick load and autosave](FEATURES.md#quick-save-quick-load-and-autosave)), and 29 characters
+in the roster ([more saves and characters](FEATURES.md#saves)).
 
 **Graphics** (figures in what they wear, shadows, dust, see-through hiders) are in
 [Features: graphics](FEATURES.md#graphics), and **steady pace** in [Features: game
@@ -2176,6 +2180,8 @@ once.")
 | Loader label | Default | Takes effect | Details |
 |---|---|---|---|
 | Choose its folder... | found by itself where it can be | next start | where Wake of the Ravager is installed, for the new priest spells' icons and pictures: [Requirements](README.md#requirements) |
+| Quick save and quick load: on the map, F5 saves at once on the QUICK page of the save window, and F9 opens the load window there | on | at once | [Quick save, quick load and autosave](FEATURES.md#quick-save-quick-load-and-autosave) |
+| Autosave: on coming into another area and after a fight, on the QUICK page of the save window | on | at once | [Quick save, quick load and autosave](FEATURES.md#quick-save-quick-load-and-autosave) |
 | Open the folder | (a button) | | opens the Named saves folder: [Saves under their names](FEATURES.md#saves-under-their-names) |
 | Put a save in a slot... | (a button) | | puts a named save back in one of the game's slots: [Saves under their names](FEATURES.md#saves-under-their-names) |
 

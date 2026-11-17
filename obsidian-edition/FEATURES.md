@@ -811,22 +811,56 @@ it was found, and **Choose its folder...** points the Loader to it (from the nex
 
 ## Saves
 
-The Options tab's **Saves** section, and the room the Loader makes for more saves and characters
+The Options tab's **Saves** section (quick save and autosave, and the named saves), and the room the Loader makes for more saves and characters
 (always on).
 
 ### More saves
 
-The game's save and load window holds 10 saves; with the Loader it holds 40, on four pages of ten:
-the **PAGE 1** to **PAGE 4** buttons under EXIT, or **PgDn** and **PgUp**, show a page, and the
-window opens on the page last shown. In the load window an empty page shows with **LOAD** greyed.
+The game's save and load window holds 10 saves; with the Loader it holds 40, on four pages of ten,
+and a fifth page, **QUICK**, that fills itself ([quick save, quick load and
+autosave](#quick-save-quick-load-and-autosave)): the **PAGE 1** to **PAGE 4** and **QUICK** buttons
+under EXIT, or **PgDn** and **PgUp**, show a page, and the window opens on the page last shown
+(never on QUICK by itself). In the load window an empty page shows with **LOAD** greyed.
 Page 1 is the game's own `SAVE01.SAV` to `SAVE10.SAV` (in the game folder or GOG's `cloud_saves`);
-pages 2 to 4 are `SAVB..`, `SAVC..` and `SAVD..` beside them, which the game started without the
+pages 2 to 4 are `SAVB..`, `SAVC..` and `SAVD..` and the QUICK page `SAVQ..` beside them, which the game started without the
 Loader doesn't see.
 
 ![The load window on page 1 (left): the game's ten saves, and the PAGE 1 (greyed) to PAGE 4 buttons under LOAD and EXIT; and on an empty page 2 (right), with LOAD greyed](docs/save-pages.png)
 
 How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#more-saves).
+
+### Quick save, quick load and autosave
+
+On the map, **F5** saves the game at once: no window, no name to type. The game stands still for a
+third of a second, **Quick save** floats over the leader, and the dice log says which (`Quick save:
+"Quick - Day 3, 14:20" (the QUICK page, slot 2)`). **F9** opens the game's own LOAD window on those
+saves with the newest chosen: **Enter** (or LOAD) loads it. And the game saves by itself a few
+seconds after the party comes into another area (`Auto - Day 1, 16:31 - The arena`) and after a
+fight ends (`Auto - Day 1, 00:56 - after a fight`; at most one a minute, so the arena's waves don't
+fill the page).
+
+All of them are on a fifth page of the [save and load window](#more-saves), **QUICK** (the button
+under PAGE 4, or PgDn past page 4): its first five rows are the quick saves and the last five the
+autosaves. Each kind fills its empty rows and then writes over its oldest, so the last five of each
+are kept. They are saves like any other, and load in the game started without the Loader's window
+too.
+
+Nothing is saved in a fight (the game itself saves none there: F5 says so in the dice log), nor
+while a window, a talk, a screen or a menu is up, where F5 and F9 stay the game's keys; the game's
+own F1 (its SAVE window) and F2 (LOAD) work as always. A save you want to keep belongs on pages 1 to
+4, where nothing is written over: load the quick save and save it there. For the same reason the
+QUICK page's saves are not copied to [Named saves](#saves-under-their-names), and the save and load
+windows never open on the QUICK page by themselves: once the window is shut it is back on the page
+of 1 to 4 it showed last. With less than 4 MB free on the disk no quick save or autosave is made,
+and the dice log says so.
+
+**Switches:** *Quick save and quick load: on the map, F5 saves at once on the QUICK page of the save
+window, and F9 opens the load window there* (off, F5 and F9 are the game's own: F5 draws the view
+again, F9 breaks the camp of the game's rest, where the Loader leaves both to the game anyway) and
+*Autosave: on coming into another area and after a fight, on the QUICK page of the save window*.
+How it works:
+[DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#quick-save-quick-load-and-autosave).
 
 ### Saves under their names
 

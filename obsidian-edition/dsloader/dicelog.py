@@ -28,7 +28,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple
 
-from . import aging, hitchance, journal, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, quicksave, hitchance, journal, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory, WriteRefused
@@ -37,7 +37,7 @@ from .itemwatch import ItemWatch
 from .textlog import KIND_MESSAGE, KIND_PORTRAIT, KIND_SHOW_REPLIES, KIND_TEXT, Dialogue, DialogueEntry, TextBuffer
 from .tracker import PartyTracker
 
-HDR_SIG = b"DSCLOGvc"
+HDR_SIG = b"DSCLOGvd"
 TSR_HDR_OFF = 20  # DSCLOG's header: where it is in DSCLOG's segment
 # ... the party's spell slots, for the game's USE screen (PROBE_USE)
 TSR_SLOTS_OFF, SLOTS_SIZE = 148, 128
@@ -593,6 +593,8 @@ class DiceLog:
         self._sell_seen: Optional[Tuple[int, int]] = None  # (DSCLOG's header, SELL_SEQ as last acted on)
         self._sell_noticed: Optional[Tuple[int, int]] = None  # (SELL_SEQ new, the BIOS tick it was seen at)
         self._loot_seen: Optional[Tuple[int, int]] = None  # (DSCLOG's header, LOOT_SEQ as last acted on)
+        self.quicksave = quicksave.QuickSave()  # the quick save and quick load keys, the autosave (quicksave.py)
+        self._quick_dir: Optional[str] = None  # the game's folder, for it (found once)
         self._locks_written: Optional[Tuple[int, bytes]] = None  # (DSCLOG's header and LOCK_BARRED as last written)
         # ... and when, by the game's clock: one tried after the game being played was saved is
         # forgotten when that save is loaded (the clock goes back past it)
@@ -1033,6 +1035,8 @@ class DiceLog:
         self.defiler_scrolls = settings.get("defiler_scrolls", True) is not False
         self.ring_mode = rings.mode(settings)
         self.hit_chance = settings.get("hit_chance", True) is not False
+        self.quicksave.keys = settings.get("quick_save", True) is not False
+        self.quicksave.auto = settings.get("autosave", True) is not False
         self.load_picked(settings.get("pickpocketed", []), known=picked_known)
         self.rules = game.rules_from_settings(settings)
 
@@ -1594,6 +1598,7 @@ class DiceLog:
             except Exception as e:  # (unknown: the party's watches wait for a pass that can tell)
                 out += self._error_once(e)
                 loading = True
+            out += step(lambda: self._quick_pass(loading, now))
             if not loading:  # (not while a game is loading: its records are half-filled)
                 out += step(lambda: self.tracker.check(now))
                 out += step(self._item_watches)
@@ -1660,6 +1665,19 @@ class DiceLog:
             kind = journal.kind_of_message(text)
             if kind is not None:
                 self.journal.add(kind, text, clock, region)
+
+    def _quick_pass(self, loading: bool, now: float) -> List[str]:
+        """The quick save and quick load keys and the autosave (quicksave.py): its lines, and a word
+        floating over the leader when a save is made."""
+        from . import launch
+        if self._quick_dir is None:
+            self._quick_dir = launch.find_game_dir(self.game_dir) or ""
+        out = self.quicksave.tick(self.game, self.tsr_hdr, self._quick_dir, loading, now)
+        word, self.quicksave.label = self.quicksave.label, None
+        if word:
+            leader = self.game.whose_turn()
+            self._float(leader if leader is not None and leader < game.PARTY_SIZE else 0, word, labels.SPELL_INK, now)
+        return out
 
     def _journal_sync(self) -> None:
         """The journal's look at the id the game's numbers hold (journal.Journal.sync): a game

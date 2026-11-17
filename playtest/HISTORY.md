@@ -362,6 +362,27 @@ The game's save compare is unsigned (79BBAh), so every −100 ("cannot save") sa
 
 Two natural 20s in a row came up on one Guard's saves (2026-11-08); nothing wrong was found.
 
+## Quick saves (2026-11-17)
+
+The first plays of quick save, quick load and autosave ([the log](logs/2026-11-17-quick-save.md)).
+
+- **A key pressed with a message box up was lost, and the clicks after it walked the party.** F2
+  sent right after `follow.py` (Kurzak's speech still up) opened no window; the clicks meant for
+  PAGE 1, a row and LOAD landed on the map, the party walked off, and the "load" was read as done
+  (the clock and the journal's id said otherwise). Now: `dismiss.sh`, then the key, then a shot.
+- **The QUICK button missed.** A click at y 156 (its y in `savepages.PAGES`, 150, plus a little)
+  did nothing: the buttons are drawn 18 lower (165). PAGE 1 at 76 had worked only by its top edge.
+- **A window save landed on the QUICK page.** After F9's LOAD window the page stayed QUICK, so the
+  next F1 save went to `SAVQ01.SAV`, a slot the rotation writes over. The Loader now puts the
+  page back once the window is shut.
+- **The research's "590:20" was not a segment to call**: overlay code names other overlays' stubs
+  by numbers of its own. The stubs' real segments came from walking the stub table (file 47470h
+  on: `CD 3F`, the overlay's file offset, its size, its entries of 5 bytes): the save is
+  4242h:0089h, the save window's overlay 428Ah (20h LOAD, 25h SAVE).
+- **The session's pauses killed DOSBox twice** in the middle of the arena trip; the quick save
+  made with Kurzak's call pending was still in the game folder, and the trip went on from it
+  (`loadquick.sh`).
+
 ## Turn Undead's unnamed target
 
 A Turn Undead out of a fight starts one, and its line named the target "?" (the number had changed
