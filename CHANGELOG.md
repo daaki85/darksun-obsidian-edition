@@ -87,6 +87,16 @@ Releases, newest first: [2.18.0](#pull-request-95-merged-2026-11-16) (#95),
     safe edit found), the Swiftbite chest, the Wyrm Temple Magera spawner and the slaver camp's alarm
     (OpenDS itself wants a play capture for the last two; the first moves six clone tiles whose map has
     not been checked).
+- **OpenDS checked to 2026-11-13** (`fe35c52`; the check before was to 2026-11-03, `c25a547`).
+  Since then it has had: `darkfix-ds1` 0.1.4 and 0.2.0-beta.1 (the six yuan-ti repairs: halfling race,
+  tracking, grate, messenger, Mindhome award, serf; all in the Edition already, taken from yuan-ti, and
+  its beta ships them disabled and untested), the detour design for repairs that change a script's
+  length (the one `scriptfixes.py` already uses), the GPLX object-field map, a cross-read that records
+  our engine-bug catalog and dice-log oracle as relayed and unverified, and `ovr-carve` 0.1.0 and
+  `ovr-map` 0.4.0 (for decompiling DSUN.EXE's overlays; the recompile uses its symbol catalogue,
+  `tools/syms.py` in darksun-recompiled). Taken from it now: the elven leader's goodbye. Looked into and
+  left as the game has them: Alhena, Keldar and Dagolar, the Hound Necklaces (above). Not done: above.
+  The triage rows are in `reports/opends-cross-read-2026-11-16.md`.
 
 ## Pull request #95 ([merged 2026-11-16](https://github.com/daaki85/darksun-obsidian-edition/pull/95))
 
