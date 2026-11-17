@@ -212,6 +212,11 @@ long, and a "Miss" or a spell's name never pushes one out.
 
 ![An arena fight with Sligs: "Armor: 8 left" in light blue as a blow uses one of Armor's charges, and "Miss" beside it](docs/floating-charges.png)
 
+After a party archer's shot, the arrows left in its quiver float over it the same way, in the
+same light blue: "Arrows: 17 left" ("Stones" for a sling's), and "Out of arrows" at none. An
+archer whose quiver runs dry in the middle of its shots keeps its turn, to walk, fight hand to hand
+or end it; arrows readied by hand then shoot from its next turn.
+
 How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#names-over-figures).
 
 ### What hurts a monster (the Look box)
@@ -256,7 +261,7 @@ right-hand panel, drawn by the game's text routine so they look like the rest:
 
 ![The inventory screen's panel in the game: THAC0 and the saves at the top, then Cilla's age; her thief skills (move silently and hide in shadows among them) beside the abilities, her DEX reaction and defensive adjustments, a sling and a long sword](docs/inventory.png)
 
-![A ranger's panel: move silently and hide in shadows, for hiding to backstab, where a thief's go](docs/inventory-ranger.png)
+![A ranger's panel (Gerakis made a ranger for the picture): move silently and hide in shadows, for hiding to backstab, where a thief's go](docs/inventory-ranger.png)
 
 - above STR, **THAC0** and the five **saving throws**, with the usual AD&D
   short labels: `PPD` paralysis/poison/death, `RSW` rod/staff/wand, `PP`
@@ -305,8 +310,8 @@ another weapon shows at once. Spells start and end as time passes in the game, w
 doesn't while these screens are open; open the screen again to see such a
 change.
 
-- **THAC0**: the character's THAC0 (its classes' best, a kit's warrior THAC0
-  in it) less STR's to-hit adjustment (DEX's for a missile weapon), the
+- **THAC0**: the character's THAC0 (its classes' best; a kit's warrior THAC0
+  with its chosen weapon) less STR's to-hit adjustment (DEX's for a missile weapon), the
   weapon's plus (or, for a plain wooden, bone, stone or obsidian weapon, its
   material's penalty), its weapon spec's to-hit (specialization, mastery,
   expertise), a kit's (a Ravager's, a Brute's, an Arena Champion's...), the
@@ -361,7 +366,7 @@ points:
 
 - **THAC0**, right of the hit points: `THAC0: M18 R19`, M for melee and R for
   ranged, the character's THAC0 as its classes and kit stand (a Scholar's 1
-  worse, a Battle Mage's a warrior's...) less STR's to-hit adjustment (M) and
+  worse; a kit's warrior THAC0 counts only with its chosen weapon, so not here) less STR's to-hit adjustment (M) and
   DEX's missile adjustment (R), so a click on STR or DEX shows at once what it
   does to them. No weapon is counted (none is held yet, and weapon specs are
   picked after DONE): it is the inventory's THAC0 before the weapon's own
@@ -419,7 +424,8 @@ A plain weapon of a weaker material shows its to-hit penalty there: "Hit -3"
 for wood, "Hit -1" for bone, "Hit -2" for stone and obsidian (Dark Sun's, as the
 game's attack takes it; the damage line above already has the material's
 damage off). Not for a weapon with a plus, nor for those the game spares
-(clubs, staves, the chatkcha), nor for metal.
+(clubs, staves, the chatkcha), nor for metal. The Spellarcher's Fine Bow shows "Hit +1" ([its
+kit](KITS.md#multiclass-kits)).
 
 ![A Stone Dagger's item box in the game: "Stone Dagger", "1D4-1/1D3-1" (with creature size on: a dagger does less to a large target), "Hit -2"](docs/hit-line-box.png)
 
@@ -485,8 +491,9 @@ How it works: [DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#no-manual-check).
 
 ## Rule changes
 
-Twenty-five changes that bring the game's own rules closer to AD&D, each with its
-own box in the Options tab's **Rule changes** section, grouped there as they
+Changes that bring the game's own rules closer to AD&D, each with a box in the
+Options tab's **Rule changes** section (but [two weapons](#two-weapons), always
+on), grouped there as they
 are here: [characters](#characters), [weapons and armour](#weapons-and-armour)
 and [magic](#magic). All are on by default,
 and they take effect in games started from the Loader or its `.bat` files
@@ -500,7 +507,8 @@ and [spells roll to hit](#spells-roll-to-hit).
 Most of these put right a rule the game gets wrong (it departs from its own manual, from itself or from
 the Player's Handbook), and count among [the game's bugs](GAME-BUGS.md#rules-it-got-wrong-with-a-switch),
 with the switch to go back. The rest are the mod's own choices: helms' AC, resting, the XP level cap, hit dice,
-creation scores, half-giants' weapons, creature size, cahulaks and ages.
+creation scores, half-giants' weapons, creature size, weapon traits (cahulaks, stinkpots, polearm
+reach), rings and cloaks of protection, and ages.
 
 ### Characters
 
@@ -548,16 +556,16 @@ was a fighter, gladiator, ranger or cleric, may wear the armour its other class
 allows; in armour that isn't light, every **thief skill is 0** (the inventory
 screen's PICK to CLMB, the Characters tab's "none in armour that isn't light")
 and it can't **backstab** (nor hide in shadows to backstab). A human warrior who
-was a thief is the same. The Assassin, Shinobi, Shadowblade, Poisoner and
-Spellarcher wear light armour only, even while a human's kit is asleep after
-a change of class ([Kits](KITS.md)).
+was a thief is the same. The Assassin, Shinobi, Shadowblade and Poisoner
+wear light armour only (an Assassin's or Shinobi's limit sleeps with the kit
+after a change of class), and the Spellarcher none at all ([Kits](KITS.md)).
 
 A human who has changed class is held by the class it has now; another race by
 all of its classes. A ranger turned cleric uses both spheres' weapons, and a
 warrior who dual-classed uses the weapons it specialized in once the new
 class's level passes the old (a fighter's, gladiator's or ranger's chosen
-weapon specs, and a ranger's bow). A ranger's bow is always its own: a fire
-ranger/cleric, whose fire sphere allows only obsidian weapons, may still use
+weapon specs, and a ranger's bow). A ranger's bow is always its own (not a
+Seeker's, which has its sphere's weapons): a fire ranger/cleric, whose fire sphere allows only obsidian weapons, may still use
 bows. Cloaks, the Cloak of Protection among them, aren't armour: any class may
 wear one.
 
@@ -871,7 +879,7 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#level-cap-by-xp).
 
 #### Two weapons
 
-With **Two weapons** ticked, a character with a melee weapon in each hand
+Always on: a character with a melee weapon in each hand
 attacks at −2 with the main (right) hand and −4 with the off (left) hand, plus
 the DEX reaction adjustment (the table under
 [Initiative](HOW-THE-GAME-WORKS.md#initiative)). That can bring the penalty to 0
@@ -891,7 +899,7 @@ as do the THAC0 lines on the Characters tab and the inventory screen.
 The off hand attacks once a round, whoever holds it: extra attacks (a
 fighter's, gladiator's or ranger's 3/2 from the game, a specialist's,
 mastery's, the kits') are the main hand's alone. So a 7th-level Crusader
-with a club in each hand attacks 3/2 + 1 a round: 1 + 1 in one round, 2 + 1
+(without weapon specialization) with a club in each hand attacks 3/2 + 1 a round: 1 + 1 in one round, 2 + 1
 in the next. The game gives each hand the whole rate (1 + 1, then 2 + 2).
 The off hand's DAM lines (the inventory screen and View Character) show its
 one attack.
@@ -927,14 +935,11 @@ rules describe them: one head in each hand. With **Weapon traits** ticked
 (on unless unticked):
 
 - **A head in each hand.** The wielder attacks one more time a round, with the
-  off head, under the [two-weapon](#two-weapons) penalties whether that box is
-  ticked or not: −2 for the main head's swings, −4 for the off head's (the
+  off head, under the [two-weapon](#two-weapons) penalties: −2 for the main head's swings, −4 for the off head's (the
   round's last swing), DEX's reaction adjustment added and never better than 0.
   Rangers in light armour (a Justifier in any) take none, and a Ghetto Fighter
-  0 and −2, as with two weapons. Twin-blades and Battle Dancers can't hold
-  cahulaks at all: a Twin-blade's kit forbids two-handed weapons (for the
-  cahulaks a half-giant's too), and a Battle Dancer's allows only long swords
-  and bows.
+  0 and −2, as with two weapons; a Twin-blade in light armour none. A Battle
+  Dancer can't hold them (long swords and bows only), nor a Brute.
   The inventory's damage line counts the extra attack.
 - **The tangle.** A hit that does damage tangles the target unless it saves
   against petrification (its own number, a d20): a tangled foe loses its next
@@ -1305,7 +1310,7 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#enlarge-multiplies-the
 #### Spells and psionics as the manual describes them
 
 Twenty-four of the manual's spells and two psionic powers whose saves, times,
-damage or effects part from the manual (pp. 29-44), set as the manual has them
+damage or effects part from the manual (pp. 30-86: the bestiary, spells and psionics), set as the manual has them
 (and the mod's Cat's Grace by the Tome of Magic's dice; the mod's Heal cures
 Feeblemind), a priest's Turn Undead by AD&D's turning table, a monster's level
 for its saves, and seven monsters' powers as the manual describes them
@@ -1387,7 +1392,7 @@ does:
 
 | Spells | How they roll |
 |---|---|
-| Acid Arrow | as an arrow from a fighter of the caster's level: THAC0 21 less the caster level, with the caster's DEX missile adjustment (the manual's "as if fired by a fighter") |
+| Acid Arrow | as an arrow from a fighter of the caster's level: THAC0 21 less the caster level (a [Scholar](KITS.md#preserver-kits)'s 1 worse, as its own THAC0), with the caster's DEX missile adjustment (the manual's "as if fired by a fighter") |
 | Turn Pebble to Boulder, Magical Stone, Condense, and the spines some monsters shoot | the caster's own THAC0, with its DEX missile adjustment |
 | Minute Meteors | the caster's own THAC0, with its DEX missile adjustment and the spell's own +2 (the manual's), each globe its own roll (five globes with [Spells and psionics as the manual describes them](#spells-and-psionics-as-the-manual-describes-them)) |
 | Chill Touch, Shocking Grasp, Vampiric Touch, Cause Light, Serious and Critical Wounds, Cause Disease, Poison | a touch attack with the caster's own THAC0 and STR adjustment, only at a creature of another side (a foe, or a friend turned against it): on one's own side they land as before |
@@ -1453,10 +1458,10 @@ fitted to these choices, come with them.
 
 | Box on the Options tab | What it adds |
 |---|---|
-| [Weapon specialization](#weapon-specialization) | fighters and gladiators specialize in weapon types, fighters on to mastery and grand mastery, rangers take expertise (and every ranger the bow); specialists and rangers shoot missiles faster; other weapons at a warrior's plain rate (missiles faster from 7th level) |
+| [Weapon specialization](#weapon-specialization) | fighters and gladiators specialize in weapon types, fighters on to mastery and grand mastery, rangers take expertise (and every ranger but a Seeker the bow); specialists and rangers shoot missiles faster; other weapons at a warrior's plain rate (missiles faster from 7th level) |
 | [Kits](#kits) | a character of one class takes one of three kits for its class, or none; a few races' pairs of classes (and one set of three) have kits of their own |
 | [STORE and RECALL on the creation screen](#store-and-recall-on-the-creation-screen) | a roll kept on the creation screen, to bring back after trying the die again |
-| [Fuller starting gear](#fuller-starting-gear) | new characters get more plain gear: a weapon in hand they can use, a sling, leather armour, and a Stalker, Assassin or Shinobi a cloak |
+| [Fuller starting gear](#fuller-starting-gear) | new characters get more plain gear: a weapon in hand they can use, a sling (a Battle Dancer a bow and arrows), leather armour, and a Stalker, Assassin or Shinobi a cloak |
 
 ### Weapon specialization
 
@@ -1464,7 +1469,7 @@ With **Weapon specialization** ticked, fighters, gladiators and rangers train
 in chosen weapon specs (weapon types), as in AD&D: a fighter specializes in
 one (+1 to hit, +2 damage), on to mastery at 5th level and grand mastery at
 9th; a gladiator in two, a third at 6th level and a fourth at 9th; a ranger
-has expertise in one and the bow. With a chosen weapon spec a warrior keeps
+has expertise in one and the bow (a Seeker only if it chooses it). With a chosen weapon spec a warrior keeps
 the game's attacks a round and shoots missiles faster; with any other weapon
 it has AD&D's plain rate. Each warrior picks after DONE on the creation screen
 and starts with a plain weapon of its pick. A thri-kreen throws a chatkcha once
@@ -1496,7 +1501,7 @@ specs](KITS.md):
 The game's own party gets features of its own
 ([The game's own party](#the-games-own-party)).
 
-How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#kits).
+How it works: [DEVELOPMENT-KITS.md](DEVELOPMENT-KITS.md).
 
 ### STORE and RECALL on the creation screen
 
@@ -1533,7 +1538,7 @@ specs and kits have changed theirs, and the dice log lists it
   short sword, a fire cleric an obsidian mace, and an air cleric an obsidian
   dagger.
 - **A missile weapon.** A sling in the missile slot for one with no bow or
-  sling; an earth or fire cleric, who can't use one, an obsidian chatkcha in
+  sling (a Battle Dancer a bow and arrows: [its kit](KITS.md#multiclass-kits)); an earth or fire cleric, who can't use one, an obsidian chatkcha in
   the backpack (a water cleric neither).
 - **Leather armour** in its empty chest, arm and leg places, where it may wear
   it: a thief, gladiator, ranger, psionicist, cleric or Battle Mage goes out
@@ -1557,17 +1562,15 @@ How it works: [DEVELOPMENT-RULES.md](DEVELOPMENT-RULES.md#fuller-starting-gear).
 
 A human who becomes a preserver picks its first two spells on the game's
 **CHOOSE A SPELL** window, twice over, from the 1st-level ones (the game gave
-it Grease and Magic Missile), as a preserver picks one at each level up. If
-it takes the **Scholar** kit for its new preserver class, it picks a third,
-as a Scholar picks one more at each level up.
+it Grease and Magic Missile), as a preserver picks one at each level up.
 
 A new preserver picks its starting spells the same way when **DONE** is
 clicked on the creation screen, in place of the ones the game handed out by
 its starting level: two 1st-level spells at 1st level (where the game gives
 Grease and Magic Missile), four at 2nd (the game adds Shield and Wall of
 Fog), and four 1st-level and two 2nd-level at 3rd (the game adds Fog Cloud and
-Mirror Image). A Scholar picks one more for each level. A multiclass preserver
-picks too.
+Mirror Image). A multiclass preserver picks too, and a [Scholar](KITS.md#preserver-kits) one
+more for each level.
 
 **EXIT** on CHOOSE A SPELL (then EXIT again at "YOU HAVEN'T CHOSEN") ends the
 picking, at creation and on changing class: the spells still to pick are the
@@ -1621,7 +1624,7 @@ elf's figure, with its own switch: see
 |---|---|---|---|
 | **Gerakis**, half-giant gladiator | specializes in the long sword and the gythka; with [half-giants' two-handed weapons](#half-giants-two-handed-weapons), his club is a bone gythka, a two-handed weapon beside his long sword | | **Wild Fighting**, as a [Wild Fury](KITS.md#multiclass-kits) has it, as each fight starts |
 | **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | | casts and uses psionics as a [Wasteland Seer](KITS.md#multiclass-kits) does (druid spells 2 levels higher under the open sky, 1 lower under a roof; psionic powers 2 PSP less under the open sky, 1 more under a roof); her chatkcha's one throw more a round is every thri-kreen's (5/2 a round, specialized; [Weapon specialization](KITS.md#weapon-specialization)), not hers alone |
-| **Cermak**, human preserver, once a gladiator | specializes in the long sword and the axe, which count once his gladiator levels do again (when his preserver level passes them) | | an **Arcanist**, the kit of his preserver class: two preserver spells a turn in a fight |
+| **Cermak**, human preserver, once a gladiator | specializes in the long sword and the axe, which count once his gladiator levels do again (when his preserver level passes them) | | an **Arcanist**, the kit of his preserver class: his preserver spells cast a level higher |
 | **Cilla**, elf preserver, druid and thief | | no leather armour (a druid wears none), and she knows the **Armor** spell in its place | an **Elven Shadow-walker** (her own feature): with the [stealth rule](#hiding-in-shadows-to-backstab), her hiding in shadows is never halved in daylight |
 
 Gerakis's, K'ratchek's and Cilla's features are their own, not kits'. The Effects screen lists them (as it
@@ -1984,7 +1987,7 @@ and the game is as it was.
 
 ![The descriptions on the USE screen (right-click a spell): Cat's Grace's paw, Erdlu Claw's scratches, Fogbolt's cloud](docs/new-spells.png)
 
-![More descriptions: Reflected Image's hand mirror, Spook's ghost, Friends' heart and Fogbolt's grey cloud](docs/new-spells-2.png)
+![More descriptions: Reflected Image's hand mirror, Spook's ghost and Friends' heart](docs/new-spells-2.png)
 
 ![The Effects screen with Cat's Grace and Erdlu Claw on Daaki, the claw's name below](docs/new-spells-effects.png)
 
@@ -1999,14 +2002,15 @@ Ten 6th-level priest spells, after AD&D's and Wake of the Ravager's (numbers
 202-211). A cleric or druid gets them at 11th level, with AD&D's spell slots:
 one 6th-level slot at 11th and two at 12th. Under the XP cap a druid can reach
 12th, a cleric only 11th, so only a druid gets the second slot. Like the 4th and 5th-level common spells, the cosmos
-ones are for druids and a Healer cleric; each element's are for the clerics
+ones are for druids and a Healer cleric (never the harming ones for a Healer:
+the Cause spells, Poison, Slay Living, Harm); each element's are for the clerics
 and druids of that sphere (an Elementalist's second sphere counts). They come
 with the **New spells** switch, as the wizard spells do, and with
 **AD&D's class tables** for the slots.
 
-A Healer made before the kit had the cosmos (Obsidian Edition 2.5.0 and
-earlier) is given its cosmos spells when the game is loaded, and the dice log
-says so.
+A Healer from an older save is given its cosmos spells when the game is loaded,
+and a Healer or Lifebinder made before has the harming spells taken away; the
+dice log says so.
 
 | Spell | Who | Cast on | Does |
 |---|---|---|---|
@@ -2223,7 +2227,7 @@ Attacked, he turns on the party as the pens' other slaves do, and only the
 guards near him join the fight. If he dies, Dinos and the Trustee speak of him
 as dead; after the party's escape he is gone from the pens with everyone else.
 
-![Kalzith's body opened in the game: a Scroll, the Cloak and the Quarterstaff](docs/kalzith-body.png)
+![Kalzith's body opened in the game: a Scroll, the Quarterstaff, the Cloak and the Ashen Robe](docs/kalzith-body.png)
 
 How it works: [DEVELOPMENT-CONTENT.md](DEVELOPMENT-CONTENT.md#kalzith).
 
@@ -2751,14 +2755,12 @@ rather than a slower walk. Fights draw every frame, as the game does.
 | 20,000 cycles, steady pace on | 15.5 | 112 |
 | 35,000 cycles, steady pace on | 18.9 | 141 |
 
-![The whole party walking back and forth in the slave pens, the same clicks on both sides: with steady pace off on the left and on on the right, where the party gets to each spot sooner](docs/steady-pace.gif)
+![The whole party walking east and back in the slave pens, the same clicks on both sides, at 20,000 cycles: steady pace off on the left, on on the right](docs/steady-pace.gif)
 
-*The same save and the same clicks, recorded from the game at 70 frames a
-second and played here at half speed (a GIF can't show 70 a second), every
-frame kept. On the right the party reaches each spot sooner, in bigger steps.
-Recorded before steady pace kept the game's own schedule and before the
-cheaper drawing: it left more pictures out then, so the steps on the right
-are bigger than they are now (the table above has today's figures).*
+*The same save and the same clicks at 20,000 cycles, recorded from the game at 70 frames a second
+and played here at half speed, every frame kept. The difference is small: on the right the party
+walks about a tenth quicker (the table's 103 against 112). At the default 35,000 cycles nearly every
+picture is drawn either way.*
 
 The Loader also gives DOSBox more of the computer's time: 35,000 cycles a
 millisecond by default, where GOG's settings give 7,000. On the Options tab

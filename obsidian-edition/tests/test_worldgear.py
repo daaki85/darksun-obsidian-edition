@@ -403,12 +403,14 @@ class DataTests(unittest.TestCase):
 
     def test_regions_opened(self):
         """Every region file the Loader copies for a clone is one DSCLOG opens in the game's place
-        (its D:\ copy named in its table of copies): else the game reads its own."""
+        (named in its table of copies, its length first; the D:\ path is made from the name): else
+        the game reads its own."""
         exe = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos", "DSCLOG.EXE")
         with open(exe, "rb") as f:
             data = f.read()
         for region in worldgear.regions(worldgear.GIFTS + worldgear.MAGIC):
-            self.assertIn(b"D:\\" + worldgear.region_file(region).encode(), data, hex(region))
+            name = worldgear.region_file(region).encode()
+            self.assertIn(bytes((len(name),)) + name, data, hex(region))
 
     def test_in_place_of_one(self):
         """Thornwall on the pens' weapon rack (a thing, its number first in its record): a new

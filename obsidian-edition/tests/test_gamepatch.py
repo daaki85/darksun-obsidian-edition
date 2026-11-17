@@ -255,11 +255,14 @@ class GamePatchTests(unittest.TestCase):
         """Each of the game's "is it Okay" tests keeps its compare and turns its jz/jnz into
         jbe/ja, so that New (0) passes as Okay (1)."""
         okay = [p for p in gamepatch.PATCHES if p.name.startswith("new_okay_")]
-        self.assertEqual(len(okay), len(gamepatch.NEW_AS_OKAY))
-        for p in okay:
+        ammo = [p for p in gamepatch.PATCHES if p.name.startswith("ammo_okay_")]  # (three, with a site)
+        self.assertEqual(len(okay) + len(ammo), len(gamepatch.NEW_AS_OKAY))
+        self.assertEqual(sorted(p.offset for p in okay + ammo), sorted(o for o, _ in gamepatch.NEW_AS_OKAY))
+        for p in okay + ammo:
             self.assertEqual(p.original[:5], bytes.fromhex("26807f1c01"))
-            self.assertEqual(p.replacement[:5], p.original[:5])
             self.assertEqual(p.replacement[5], {0x74: 0x76, 0x75: 0x77}[p.original[5]])
+        for p in okay:
+            self.assertEqual(p.replacement[:5], p.original[:5])
         self.assertIn(0x802AC, [p.offset for p in okay])  # (the thief skills)
 
     def test_other_versions_are_refused(self):

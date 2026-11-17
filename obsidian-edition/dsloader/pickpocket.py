@@ -96,6 +96,16 @@ def thief_level(gd: GameData, member: int) -> int:
     return 1
 
 
+def _luck(gd: GameData, member: int, chance: int) -> Tuple[int, str]:
+    """CHANCE less a Swashbuckler's bad luck for this roll (kits.bad_luck), no less than 0, and
+    what the log says of it ("" for anyone else)."""
+    from . import kits
+    luck = kits.bad_luck(gd.kit_ids(member))
+    if kits.SWASHBUCKLER not in gd.kit_ids(member):
+        return chance, ""
+    return max(0, chance - luck), f" ({chance} - {luck}, a Swashbuckler's bad luck)"
+
+
 def _skill(gd: GameData, member: int, name: str) -> Optional[int]:
     return next((n for skill, n in gd.thief_skills_now(member) if skill == name), None)
 
@@ -310,8 +320,9 @@ def attempt(gd: GameData, tried: set, roll: Callable[[], int] = lambda: random.r
     if cell is None:
         return Attempt(f"{thief}'s backpack is full.", [])
     itemgate.hold(gd)  # (before the roll: the game busy with its lists, the try waits for the next look)
+    chance, luck = _luck(gd, leader, chance)
     d100 = roll()
-    lines = [f"{thief} picks {npc}'s pocket: d100 = {d100}, needs {chance} or less -> "
+    lines = [f"{thief} picks {npc}'s pocket: d100 = {d100}, needs {chance} or less{luck} -> "
              + ("success" if d100 <= chance else "failed")]
     if d100 <= chance:
         loot = _carried(gd, it, who)
@@ -344,9 +355,9 @@ def attempt(gd: GameData, tried: set, roll: Callable[[], int] = lambda: random.r
                 return Attempt(f"{seen} {reward}", lines, xp_to=leader, xp=SWORD_XP, lifted=True, paid=paid)
         lines.append("  " + text)
         return Attempt(text, lines, lifted=True)  # free to try again
-    quiet = _skill(gd, leader, "move silently") or 0
+    quiet, luck = _luck(gd, leader, _skill(gd, leader, "move silently") or 0)
     d100 = roll()
-    lines.append(f"  {thief} moves silently to get away: d100 = {d100}, needs {quiet} or less -> "
+    lines.append(f"  {thief} moves silently to get away: d100 = {d100}, needs {quiet} or less{luck} -> "
                  + ("success" if d100 <= quiet else "failed"))
     if d100 <= quiet:
         text = f"{thief} fumbles {npc}'s pockets, but slips away unnoticed."

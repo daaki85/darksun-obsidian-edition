@@ -16,7 +16,8 @@ from the tail (2026-11-09, after #88) that is the helper's 64 KB segment's part 
 Releases before 2.12.2 give the release's line as a **Release** bullet; from 2.12.2 on it is the
 entry's first line.
 
-Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
+Releases, newest first: [2.18.0](#pull-request-95-merged-2026-11-16) (#95),
+[2.17.1](#pull-request-94-merged-2026-11-11) (#94),
 [2.17.0](#pull-request-93-merged-2026-11-11) (#93),
 [2.16.1](#pull-request-91-merged-2026-11-11) (#91),
 [2.16.0](#pull-request-90-merged-2026-11-11) (#90),
@@ -44,6 +45,295 @@ Releases, newest first: [2.17.1](#pull-request-94-merged-2026-11-11) (#94),
 (#33), [1.2.0](#pull-request-30-merged-2026-10-08) (#30),
 [1.1.0](#pull-request-18-merged-2026-10-06) (#18), [1.0.0](#pull-request-12-merged-2026-10-02)
 (#12).
+
+## Pull request #95 ([merged 2026-11-16](https://github.com/daaki85/darksun-obsidian-edition/pull/95))
+
+**Changed**
+- **DSCLOG's room: a fourth memory pass** (the kit rebalance had taken the helper's segment from 960
+  bytes spare to 320, and upper memory once installed from 83 paragraphs to 43). It freed 304
+  bytes: two routines in place of sequences written out at each site, `ES_THINGS` (the things'
+  segment in ES, 23 sites) and `SHEET_OF_AX` (a sheet by its number, 19), and
+  `CREATURE_SHEET_AX` for two more; the table of the Loader's file copies keeps each name once and
+  makes its `D:\` path as the file is opened (`COPY_PATH`), not a 16-byte path an entry. Now 624
+  bytes of the segment spare and 62 paragraphs of upper memory ([DEVELOPMENT.md's
+  limits](obsidian-edition/DEVELOPMENT.md#the-limits)). Checked in the game
+  (playtest/logs/2026-11-16-memory-pass-4.md): the copies opened (`objects_on` 1), a fight (hiding,
+  a backstab, poison and its save, specialization), the see-through figure, View Character and
+  Effects. Tests: the byte patterns of `test_saves` and `test_shadow_gone`, and
+  `test_regions_opened` (the table's names). DSCLOG 70,464 bytes.
+- **A warrior's THAC0 with the kit's chosen weapon only** (the user's call, after The Complete
+  Thief's Handbook's Swashbuckler): the Swashbuckler, Battle Mage, Crusader and Mind Warrior no
+  longer have it with every weapon. `PROBE_THAC0` and `CR_THAC0_BASE` leave it out (the sheet's
+  THAC0 is the classes'), and the new `WAR_HIT`, in `PROBE_ATTACKS` after `KIT_TO_HIT`, takes the
+  creature's THAC0 (+1Fh) less a warrior's (21 less the kit's level, 1 at best) off the attack's
+  THAC0 with a weapon of the kit's chosen weapon spec (with weapon specialization; without it the
+  kit's kinds: `SWASH_KINDS`, `KIT_BM_KINDS`, melee). The Swashbuckler picks its weapon of choice
+  on the weapon window after DONE (`LV_DUE` one, `KINDS_ALLOWED` the long sword, dagger and short
+  sword; no specialization's bonus or attacks: a thief's chosen kind is plain); its thief skills'
+  −10 went too, for bad luck (below). The Loader's THAC0 for each weapon (`game.weapon_hits`) and the dice
+  log (`_kit_attack`) show it as "Swashbuckler (a warrior's THAC0)" (`kits.war_hit`). Tests:
+  `test_dsclog`'s `test_war_hit`, `test_thac0`, `test_thac0_line`, `test_swashbuckler`.
+- **The Scholar: a spell more learnt, no slot more** (the user's call, after trying a sure scroll
+  learning and INT's bonus slots on this branch): one more spell at each level up (`LV_SCHOLAR`), one
+  more for each level at creation (`KIT_MADE` in the picks) and on changing class to preserver
+  (`PROBE_DUAL_SPELLS`), as up to 2.17; its slot more at each spell level is gone (`PROBE_SLOTS`,
+  `kits.slots`), and it learns from scrolls as any preserver. Its −1 to hit stays, which its touch
+  spells, Minute Meteors and Turn Pebble to Boulder roll with, and Acid Arrow too: `SPELL_HIT` makes its
+  fighter's THAC0 1 worse for a Scholar (the dice log says so). Test: `test_spell_to_hit`. KITS.md's slot table has
+  no column for it. Tests: `test_scholar_picks_one_more`, `test_slots`, `test_int_learn`'s Scholar,
+  `test_slots`' `test_kits`.
+- **The Arcanist: its preserver spells cast a level higher** (the user's call, in place of two
+  spells a turn): `PROBE_SPELL_LEVEL`'s new `ARC_LEVEL` adds 1 to a party Arcanist's wizard spells'
+  level for their duration and damage (the new wizard spells, 196-201, too; `kits.arc_level`). The
+  two-spells probes are gone: `PROBE_CAST_MARK`, `PROBE_CAST_DONE`, `PROBE_END_TURN`,
+  `PROBE_ROUND_MARK` (vectors 93h-96h free again) and `ARC_HOLD`'s clearing in `PROBE_SCROLL`. Its
+  d3 hit die stays. Test: `test_arc_level` in place of `test_arcanist_second_spell`.
+- **The Poisoner: each melee weapon poisons once a fight** (the user's call, as a dose is used
+  up): `PROBE_POISON` poisons a party Poisoner's hit only if that hand's weapon hasn't this fight
+  (`POISON_USED`, a new header byte at +1860: bit N main hand, N + 4 off hand, cleared by the dice
+  log as each fight starts, `kits.TSR_POISON_USED`); the hand from `KIT_OFF` (+1861), which
+  `NOTE_SHOT` sets for a melee attack with the left hand's weapon (its item's +11h 10). Tests:
+  `test_poisoner`, `test_note_off_hand`; the dice log's "is poisoned by the hit" follows the same
+  doses (`_poison_dose`). Checked in the game (playtest/logs/2026-11-14-quiver-turn.md part 6).
+- **One kit a character** (the user's call): `DK_ASK` asks no kit after DUAL of a human that has a
+  kit already (the kit byte's places, its low six bits, not 0; not `KIT_OPEN`; the game's own
+  party's `OWN_BIT` isn't a kit); one with none is asked as before. KITS.md's kit pairs stand for
+  older saves' characters. Test: `test_dual_kit` rewritten.
+- **The Myrmidon: its second weapon spec the polearm** (the user's call, after *The Complete
+  Fighter's Handbook*'s military weapons; in place of melee specs only, tried first): a new
+  Myrmidon picks one weapon spec as any fighter (the bow too, not the polearm: `KINDS_ALLOWED`'s
+  `MYRM_POLEARM`, `restrict.allowed_kinds`), and the Loader gives it the polearm as its second
+  (DSCLOG's `MYRM_POLEARM` at DONE, after the weapon window, so the roster's copy the game writes then
+  has it, and `weaponchoice.kinds_for`, `kits.POLEARM`), both going on to mastery and grand mastery as before;
+  `LV_DUE` no longer asks for two. Its starting gear's plain polearm goes in the backpack. A
+  Myrmidon of an older save keeps its two. Checked in the game (playtest/logs/2026-11-15-kit-rebalance-checks.md,
+  with every other kit changed on this branch). Tests: `test_myrmidon_polearm`, `test_myrmidon_polearm_second`,
+  `test_myrmidon_two_weapons`, `KindsAllowedTests`.
+- **A second documentation review** (five read-only reviews: player pages and the Loader's wording,
+  the reference pages, the developer pages, the playtest kit, the pictures): every kit changed since
+  2.17 marked "(was ...)" in the patch notes, the Spellarcher's line shortened, the Loader's items in
+  order and the mod's own fixes apart; a kit's warrior THAC0 where it shows (not the creation
+  screen's), the Swashbuckler's pick, the Fine Bow with the mundane bows, the Spellarcher's dice-log
+  lines; the developer pages' sizes after pass 5, STORE and RECALL's ids (8B0h, 8B1h), the stand-in
+  rule, the quiver's write-up, the spell grid with the screens, contents lists; the playtest guide's
+  creation section regrouped, the unchanged game in RESEARCH.md, `levelup.sh` on the first icon
+  (113,71: it clicked the 7th place since the grid changed). The Loader says "from the next start"
+  one way, "Connected to the game (process N)" for DOSBox or the recompiled program, and Names over
+  figures says it covers the arrows left. Pictures retaken: dicelog, dialogue, viewer (the status
+  line), kalzith-body (his Ashen Robe); new-spells-2 without Fogbolt's box, shown in new-spells
+  already. Test: `test_doclinks` maps the features page's Kits to DEVELOPMENT-KITS.md. Checked in
+  the game (playtest/logs/2026-11-16-doc-review-2.md): levelup.sh at a real level-up.
+- **DSCLOG's room: a fifth memory pass** (96 bytes): `NS_FLAGS_IRET` keeps the six-instruction way
+  back of 14 sites once (each a jump to it), `FINE_ITEM` the Fine Bow's name look-up for `FINE_HIT`
+  and `IB_MATERIAL`, and the never-shown "BURNING ARROWS" is gone. 688 bytes of the segment spare,
+  65 paragraphs of upper memory once installed. Code audit: one comment fixed (the Fine Bow's name is
+  `spellarrows.FINE_BOW`). Checked in the game (playtest/logs/2026-11-16-memory-pass-5.md): the Fine
+  Bow's box and shot, Entangle, the DUAL window. DSCLOG 70,416 bytes.
+- **CHOOSE A SPELL's icons centred** (the user's report): the game fills its window's 21 places
+  (WIND 17500) middle five columns first, then the right-hand column, then the left, so past 15
+  spells (the game's own 4th level, 16; the 1st with the new spells, 18) the grid sat right of
+  centre. Compared with the unchanged game (its window the same; at creation the unchanged game
+  offers no picks). The Loader's RESOURCE.GFF has the first 18 places six to a row, filled row by row,
+  centred (`spellgrid.py`, from `icons.py`). Tests: `test_spellgrid`. Checked in the game: a
+  Spellarcher's 1st-level picks in the new grid, a click on Shocking Grasp's new place taking it.
+- **No Loader gear on the creation screen's stand-in**: a character left a while on the creation
+  screen with its kit marked had its gear given then too (the dice log's "starts with ..." lines
+  before its spell picks), and again after DONE; the game threw the first away. `game.being_new`
+  now passes over a New record while the creation screen is up (`GameData.creating`), only the one
+  DONE made (`making`). Test: `test_dicelog`'s `test_being_new`. Checked in the game: a Spellarcher
+  renamed and left 25 s with its kit marked, no gear lines until after DONE, then once.
+- **The Spellarcher: no Burning Arrows, saves as the spells', a Fine Bow and arrows to start** (the
+  user's design, after the game's manual and The Complete Fighter's Handbook): **Burning Hands**, a
+  cone from the caster in the manual, is not a touch, so it makes no arrows (`ARROW_KNOWS` skips the
+  first of `ARROW_SPELLS`, its place kept so the Loader's `USE_WHO` stays; `spellarrows.RETIRED`,
+  and `SpellArrows.make` refuses it); Chill Touch, a touch in the manual, keeps its arrows. An
+  arrow's target saves only as against the spell ("all normal saving throw attempts"): against
+  Chill Touch, not Shocking Grasp or Vampiric Touch (`ARROW_SAVE` and `spellarrows.SAVED`, added
+  earlier on this branch, gone). A new Spellarcher has a **Fine Bow** (name 173h, DSCLOG's 50th
+  extra name: `NAMES_EXTRA` 50): **+1 to hit**, not magic (`FINE_HIT` in `PROBE_ATTACKS`; its item
+  box "Hit +1", `IB_MATERIAL`; "+1 fine" in `game.weapon_hits` and the dice log's THAC0 line), and
+  **24 Chill or Shocking Arrows** for the touch spells it picked as it was made (24 of each for
+  both, no plain arrows), else 24 plain arrows (`spellarrows.starting_gear`, from
+  `weaponchoice.kit_gear`; startgear's bow is the Battle Dancer's alone now). The arrow buttons'
+  texts say a save stops Chill Touch, and none the others. Tests: `test_spellarrows`'
+  `StartingGearTests` and `test_burning_hands_retired`, `test_dsclog`'s `test_fine_bow`,
+  `test_item_box_material`, `test_spell_arrows` and `NamesTests`. Checked in the game
+  (playtest/logs/2026-11-16-spellarcher-fine-bow.md): Spellarchers made with Shocking Grasp, with
+  Chill Touch and Shocking Grasp, and with neither (their arrows as above, the Fine Bow in the
+  missile slot, "Hit +1" in its box, "T16" on its weapon line); the USE screen with no Burning
+  Arrows button for one knowing Burning Hands; a shot with "+1 fine" in the THAC0 line.
+- **The Spellarcher, after *Dragon* #214's "The Complete Half-Elf"** (the user's design): a spell slot makes
+  **one** spell arrow (was 5 a preserver level); one stack of each spell, 24 at most, the arrow
+  joining it wherever it is (a new stack in the quiver if empty, else the pack; a full stack takes
+  none, no slot used); the arrows **last until shot** (no fading at a rest: the rest hook,
+  `vanish` and `REST_REQUESTS` gone); the quiver no longer keeps them (`PROBE_TAKE`, its vector
+  F7h, `QUIVER_KEPT` and `QUIVER_LOCKED` gone, and the game patch `take`); only a Spellarcher
+  carries them (`ARROWS_FORBID` for readying; the game asks nothing of a backpack move, so
+  `spellarrows.return_strays` takes any another member is given back to the Spellarcher, out of
+  fights with the inventory shut); its plain arrows no longer 1 better: its
+  **spell arrows** are +1 from 5th preserver level and +2 from 9th (`PROBE_ARROW`'s
+  `ARROW_PLUS_NOW`, `kits.arrow_plus`); it wears **no armour, helm or shield** (`KIT_LIGHT`'s
+  `BARE`, `kits.BARE_KITS`; bracers, robes and a cloak of protection allowed), its class's armour
+  left behind at creation (`weaponchoice.kit_gear`). Tests rewritten: `test_spellarrows`,
+  `test_dsclog`'s `test_spellarcher_arrows` and `test_spell_arrows_spellarchers_only`
+  (`QuiverTests` gone), `test_kits`' `SpellarcherBareTests`, `test_dicelog`'s rest test.
+  KITS.md, the player's guide, ITEMS.md, DICE-LOG.md, FEATURES.md, DEVELOPMENT-RULES.md and the
+  patch notes say so. DSCLOG 70,256 bytes.
+- **The Wayfinder: initiative only** (the user's call): its Move +2 is gone (`KIT_MOVE`'s path
+  block, the viewer's line); its initiative as below (its own +2, no penalty when down). Test:
+  `test_scout_and_path_finder`.
+- **The Sentinel: no initiative, −1 to hit without a shield** (the user's call): its +2 initiative
+  is gone (`PROBE_INIT`); `KIT_CHAMPION` now takes a Sentinel's melee attack without a shield in a
+  hand 1 worse (`kits.champion`); its AC 2 better with one stays. Tests: `test_champion`,
+  `test_dsclog`'s Sentinel cases.
+- **The Grove Warden: its sphere's weapons** (the user's call, in place of no metal weapons):
+  `KIT_FORBIDS` gives the Grove Warden the Seeker's `SPHERE_ALLOWS` path (no bow kept),
+  `KF_SPHERE` now the kit's class less 1, mod 4 (a druid's sphere as a ranger's); `kits.forbids`.
+  Its kit gear is fitted as any kit's (`kit_gear`). Tests: `test_kits`' `test_seeker`,
+  `test_dsclog`'s `CanUseTests.test_kits` (a Warden of each sphere).
+- **The Crusader and Mind Warrior: their extra attacks with the chosen weapon alone** (the user's
+  call): with weapon specialization on, `WAR_KIT_HALVES` gives no warrior's 3/2 from 7th level
+  with every melee weapon; the chosen weapon spec's expertise (3/2, 2 from 7th) is the extra
+  attack (`kits.warrior_attacks`' `spec`). Without the rule, as before (their weapon kinds are any
+  melee weapon). Tests: `test_warrior_kits_attacks`, `test_war_kit_expertise`.
+- **The Mind Warrior: a fifth fewer PSP** (the user's call; was a tenth): `PROBE_MAX_PSP` and
+  `PROBE_CR_PSP` divide by 5 (`kits.MIND_PSP`). Tests: `test_max_psp`, `test_cr_psp`.
+- **The Justifier: its chosen weapon spec specialized, the bow at expertise** (the user's call):
+  `SPEC_OF_SHEET`'s ranger bow path (a bow not chosen) skips the Justifier's step up
+  (`specialize.skill` the same); a bow it chose is specialized. Test: `test_justifier`.
+- **Two weapons: always on** (the user's call, with the Twin-blade as it is): the Options switch
+  "Two weapons" is gone (`game.RULE_SETTINGS`, the viewer's list, the player's guide's table);
+  `game.RULES_ALWAYS` puts `RULE_TWO_WEAPONS` in every rules word, an older settings file's False
+  passed over. Test: `test_viewer_settings` uses another switch.
+- **The Twin-blade and the Brute: the cahulaks the Twin-blade's** (the user's call): `KIT_FORBIDS`
+  lets a Twin-blade hold them (a blade in each hand) and keeps a Brute from them (`KF_CAHULAKS`;
+  `kits.forbids`' `cahulaks`), so a Brute can't dual to air cleric either (`DUAL_BANS`, `dual_bans`:
+  no two-handed melee weapon it may use). In light armour a Twin-blade's cahulaks have no penalty
+  on either head (`PROBE_TWO` passes it over before `CAH_ADJUST`, as before). Tests: `test_kits`'
+  `test_cahulaks` and `test_brute_no_air_cleric`, `CanUseTests.test_kits`.
+- **The Seeker: no bow exception, no bow expertise** (the user's call): its bow follows its sphere
+  (a fire Seeker has none; `KIT_FORBIDS`, `kits.forbids`), and it has no ranger's bow expertise unless
+  the bow is its weapon spec (`SPEC_OF_SHEET`, `specialize._skill`). A forbidden missile weapon goes
+  into the backpack at creation (`weaponchoice.kit_gear`). The weapon window offers it only its
+  sphere's weapons, the bow among them where the sphere allows one (`KINDS_ALLOWED`,
+  `restrict.allowed_kinds`: no other ranger is offered the bow). Tests: `test_seeker`,
+  `test_seeker_bow`, `test_ranger_expertise`, `KindsAllowedTests`.
+- **The Swashbuckler: bad luck** (the user's call, in place of a flat penalty to every skill): each thief skill
+  roll 0 to 25 worse, rolled each time: the game's (`PROBE_BELT`, a d26 less 1 from the game's seed,
+  kept in the header's `BAD_LUCK`, +1862, and `BAD_LUCK_WHO` for the dice log's line, "-N
+  Swashbuckler's bad luck") and the Loader's (`kits.bad_luck`: pickpocket.py, stealth.py). The
+  skills shown are without it. Tests: `BeltTests.test_swashbuckler`, `BadLuckTests`.
+- **The Lifebinder: Cell Adjustment a d4 more** (the user's call: a non-psionicist picks four powers of
+  one discipline, so a Lifebinder may have it): `CELL_SITE` (`kits.CELL_MORE`); the dice log shows
+  "1d4 = 4, +1d4 = 3 (Lifebinder)"; the Healer's and Rescuer's 1 more (`kits.CELL_PLUS`, as their cures
+  1 more a die: "1d4 = 3, +1 (Healer)"). Tests: `test_cell_lifebinder`, `test_manual_lines`.
+- **The Wild Fury's check at −4 again** (the user's call, after trying it without): `WILD_CHECK` −4.
+- **The Shinobi's spells** are said to be its own short list (21), not every preserver spell.
+- **The Wayfinder: its own +2 initiative, no penalty when down** (the user's call): `PROBE_INIT`
+  adds a Wayfinder's own 2 (`WAYFINDER_INIT`, `kits.WAYFINDER_INITIATIVE`) to the party's Path-finder
+  1; `PATH_DOWN` and `GameData.path_lost` are gone. Test: `test_scout_and_path_finder`.
+- **The Assassin's and Shinobi's light armour sleeps with the kit** (the user's call): `KIT_FORBIDS`
+  tests `KIT_AWAKE` before `KIT_LIGHT`, and `restrict.kit_forbids` and `forbidding_kit` take only
+  awake kits'. Test: `CanUseTests.test_kits` (a human Assassin asleep, then awake).
+- **The Healer and Lifebinder never know the harming spells** (the user's call): Cause Light, Serious
+  and Critical Wounds, Cause Disease, Poison, Slay Living (`AV_HARM` in `AV_KNOW` and `AV_GRANT`) and
+  Harm (`NS_PRIEST_KNOWS`); `kits.NO_HARM`, `knows_heal`; the Healer's cosmos spells given by the
+  Loader leave them out, and one made before has them taken away (`kits.avenger_heals`). Tests:
+  `test_avenger_spells`, `AvengerHealTests.test_healer_and_lifebinder`.
+
+**Fixed**
+- **A code audit of the branch** (its findings, each fixed):
+  - The dice log counted a Poisoner's dose only on a helpless target's hit, so after a weapon had
+    poisoned an awake foe, its next hit on the same foe, held, was logged "poisoned by the hit"
+    though DSCLOG poisons once a weapon a fight: every melee hit counts now (`_poison_dose`).
+    Test: `test_poisoner_on_a_helpless_target`.
+  - A Poisoner's `POISON_USED` (+1860) was cleared by the dice log at the first round's line, a pass
+    after the round began at times (a first hit before it poisoned twice), and never without the
+    dice log: DSCLOG clears it itself at a fight's first round (`ACID_ROUND`).
+  - The Loader's figures (`game.weapon_hits`, the dice log's THAC0 line) gave the Swashbuckler's,
+    Battle Mage's, Crusader's and Mind Warrior's warrior THAC0 with the rule for kits off, which
+    DSCLOG doesn't: `kits.war_hit` takes the rule (`kits_on`). Test: `test_war_hit`.
+  - `MYRM_POLEARM` put the polearm in a Myrmidon's second spec slot with nothing in the first (the
+    weapon window closed without a pick): without the Loader, `LV_DUE` would then take it for the
+    one pick and never ask. It waits for a first now (the Loader fills both). Test:
+    `test_myrmidon_polearm`.
+  - `GEAR_GIVEN` was left set once `GEAR_HOLD` had the gear in, and the Loader ORs into it: a
+    needless redraw later. `GEAR_HOLD` clears it. Test: `test_gear_hold`.
+  - Left as it is: the dice log reads the Swashbuckler's bad luck (`BAD_LUCK`, the last roll's)
+    when it reads the roll, so two thief rolls in one pass show the second's luck on both.
+- **The dice log's damage on a held target** (found in the kit checks): a Paralyzed creature takes
+  a spell's most (the game's rule, as for one Out Cold), but the dice log said so only for Out Cold,
+  so a held Arena Guard's "takes 15 from Magic Missile" stood under a roll of 9 with no word why.
+  The line now says `(Paralyzed: the most the dice can do)` too (`_paralyzed`, `game.helpless`).
+  Checked in the game (playtest/logs/2026-11-15-kit-rebalance-checks.md part 11): a held Templar,
+  8 rolled, "takes 10 from Magic Missile (Paralyzed: the most the dice can do)". Test:
+  `test_paralyzed_takes_the_most`.
+- **A Brute could still change class to air cleric** (found in the game): the DUAL window greys
+  only whole classes, so CLERIC stayed open for earth, fire and water, and the game's sphere menu
+  makes its title row, or the menu closed, the air class. `PROBE_SPHERE` now checks the class the
+  answer makes against the member's kits (`SPHERE_BARRED`, `KIT_BANS`) and, for a barred one, sends
+  the game to the window's close (86B68h) with no change; EARTH, FIRE and WATER as before. Checked
+  in the game (playtest/logs/2026-11-15-kit-rebalance-checks.md part 9): before, Cermak (a Brute in
+  memory) became an air cleric on closing the menu; after, no change, and EARTH made him an earth
+  cleric. Test: `test_sphere_barred`. DSCLOG 70,768 bytes.
+- **A new character ADDed in a later session lost the Loader's creation gear** (found in the kit
+  checks: a Myrmidon's polearm, a Swashbuckler's armour, a fighter's chosen weapon in place of the
+  bone long sword). The game writes the character to the roster (CHARSAVE.GFF) at the end of DONE,
+  after the psionic powers; the Loader's gear came after it, in memory only, for three reasons:
+  the character reads Okay, not New, until after that write (`finish_new`, `class_gear`, `kit_gear`
+  and `startgear.fill` give only to New ones); the Loader cleared `GEAR_DUE` while DSCLOG's weapon
+  window was up, giving nothing; and `GEAR_WAIT` (VIEW CHARACTER's) cleared it when STATS weren't
+  fresh, which on the creation screen they never are. Now DSCLOG names the character (`GEAR_WHO`,
+  +1867; `game.being_new`), the Loader leaves `GEAR_DUE` set while the window is up, `GEAR_WAIT`
+  and the new `GEAR_HOLD` (at the end of `CR_WEAPONS`, before the roster write) test for the Loader
+  by its heartbeat (`LOADER_BEAT`, +1865, from the dice log's stats thread), and `GEAR_HOLD` waits
+  for its gear (up to about ten seconds). Checked in the game
+  (playtest/logs/2026-11-15-kit-rebalance-checks.md part 7): two fighters, slots 1 and 2, given a
+  short sword and sling, and a bow, arrows and short sword, ADDed after a restart with them. Tests:
+  `test_gear_hold`, `test_gear_due`, `test_being_new`. With weapon specialization off,
+  `CR_WEAPONS` returned before naming the character, so `GEAR_HOLD` waited for nothing and the kit
+  gear and fuller starting gear (which need no weapon specialization) still missed the roster: the
+  new `GEAR_MARK` names it there too (not an EDIT that kept its race, classes and kit), and
+  `GEAR_HOLD` holds the write. Checked in the game (playtest/logs/2026-11-16-roster-gear.md): a
+  Swashbuckler made with the rule off, and the Myrmidon of the kit checks (long sword picked, the
+  bone polearm in the backpack, the sling), each ADDed after a restart with all of it and, the
+  Myrmidon, both weapon specs. Tests: `test_creation_weapons_site`,
+  `test_creation_gear_held_rule_off`. DSCLOG 70,688 bytes.
+- **An archer's turn lost with its last arrow** (the game's bug, the user's report): the weapon
+  attack routine (5883Ah) cuts a shot's attacks ([BP-8]) to the arrows left (5899Ah; "Out of ammo"
+  with none) and, once that many are made, writes 63h to the attacker's +181h (58C45h), which ends
+  the turn (5844Eh). A kill with attacks left lets anyone go on (the caller's loop), so an archer
+  that killed with its last arrow lost a turn any other kill keeps. DSCLOG's new sites `AMMO_CAP`
+  (5899Ah: the round's attacks before the cut kept) and `AMMO_TURN` (58C38h: a party member's attacks
+  made compared with them) keep it; monsters as the game has them. Against a target still standing
+  the turn ends as before (the game's rule: an attack command spends the turn unless it kills).
+  Checked in the game (playtest/logs/2026-11-14-quiver-turn.md): Ester, one arrow and two shots,
+  killed the Templar and kept her turn (walked on); without the two patches the turn went to Jenna.
+  DSCLOG 70,208 bytes (+80).
+
+**New**
+- **An archer's arrows left, and its turn when the quiver runs dry** (the user's request):
+  `quiver.py`: after each party shot, "Arrows: N left" (the quiver's count) or "Out of arrows"
+  floats over the archer (labels.py, the charges' blue and priority). A party member whose volley
+  its quiver cut short keeps its turn against a target still standing: DSCLOG's `AMMO_OKAY` sites
+  (5843Fh, 584A4h, 5850Eh) make the attack command's "target still Okay" tests answer "fallen" for
+  it, NEW_AS_OKAY's jbe/ja kept in the same patches. A top-up of the quiver from the pack at each
+  turn's start was built and seen working (the log's part 4), then taken out at the user's word:
+  reloading stays the player's. Tests: `test_quiver.py`; `test_gamepatch`'s
+  `test_new_counts_as_okay` counts the three. DSCLOG 70,272 bytes.
+
+**Changed**
+- **Wild Fury's Wild Fighting is The Complete Barbarian's Handbook's again**: fighting wild is −3
+  to hit and AC 3 worse (no worse than 10) for the fight whatever the check, and a passed check
+  adds the extra melee attack and +3 damage on top; a failed one still gives the penalties alone.
+  Before, a passed check gave the gains with no penalty, which made the kit near free at a mul's
+  CON (70% to 95%). Gerakis's Wild Fighting, the same code, changes with it. The Loader (`wild.py`)
+  sets KIT_WILD's bit N for anyone fighting wild and bit N + 4 as well when the check passed;
+  DSCLOG already read the two bits apart, so only its comments changed (DSCLOG.EXE rebuilt
+  identical). The Loader's to-hit figures (`game.weapon_hits`) and the dice log (`_kit_attack`)
+  count the −3 either way. Tests: `test_wild.py`, `test_dsclog`'s `test_wild_fury` (bits 0x44:
+  +1 attack, −3 to hit, +3 damage) and `test_wild_ac`, `test_now`'s `test_unarmed_kits`.
+  KITS.md, DICE-LOG.md, DEVELOPMENT-RULES.md and the patch notes say so.
 
 ## Pull request #94 ([merged 2026-11-11](https://github.com/daaki85/darksun-obsidian-edition/pull/94))
 

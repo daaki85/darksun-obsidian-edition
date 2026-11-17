@@ -5,8 +5,8 @@ in DOSBox: rules closer to AD&D, kits, new spells, items and people, the
 party's gear drawn on the map, and every roll shown as it happens. You start
 the game with the **Dark Sun Obsidian Edition Loader**, which loads the mod
 with your options and keeps the full dice log while you play. Nearly every
-rule change and addition has a switch on the Loader's Options tab; the full
-list is in [What it does](obsidian-edition/README.md#what-it-does).
+rule change and addition has a switch on the Loader's Options tab ([each one, its
+default and when it takes effect](obsidian-edition/PLAYER-GUIDE.md#the-options-tab-at-a-glance)).
 
 ![Round 4 of Pehtucl's ambush at the slave pens' fountain: Jenna's turn, with the combat log over the map's lower right, in short and its small font, seven lines: the Arena Guard's hit points after each blow, Seneca's miss, and Jenna seen as she tries to hide in shadows](obsidian-edition/docs/combat-log.png)
 
@@ -69,12 +69,12 @@ where the saves go](obsidian-edition/README.md#updating-backups-saved-games-and-
 
 ## What's new
 
-**Obsidian Edition 2.17.1** is out ([release notes](release-notes/v2.17.1.md)):
-corrections to the documentation after an audit of 2.17.0. 2.17.0
-brought psionic powers picked when a character is made, the player's manual
-as linked web pages in the download (Help opens it), a pocket barred until a
-level only when the thief is caught, a ranger asked for a weapon of expertise,
-Kalzith's new past, and Kurzak's door no longer barring the way.
+**Obsidian Edition 2.18.0** is out ([release notes](release-notes/v2.18.0.md)):
+the kits rebalanced, each closer to its source book (one kit a character; a warrior's THAC0 with
+the chosen weapon only; the Arcanist, Scholar, Myrmidon, Poisoner, Sentinel, Wayfinder and others
+changed), the Spellarcher remade after *Dragon* #214 with a Fine Bow and arrows from the start, an
+archer's arrows left over its head and its turn kept when the quiver runs dry, and CHOOSE A SPELL's
+icons centred.
 
 What earlier releases brought is in their own notes, in
 [`release-notes`](release-notes).
@@ -111,9 +111,12 @@ page](https://github.com/daaki85/darksun-obsidian-edition/issues).
   code; none of its code is used), and the
   [OpenDS](https://github.com/VirInvictus/opends) project's notes and fixes to
   the game's scripts.
-- **Rules:** AD&D 2nd Edition's *Player's Handbook*, *Demihuman Deities* and
-  *The Complete Ranger's Handbook*, where the mod's rule changes and the
-  Seeker's and Justifier's tables come from; Baldur's Gate, for keeping a
+- **Rules:** AD&D 2nd Edition's *Player's Handbook*, *Demihuman Deities*,
+  *Player's Option: Combat & Tactics* and *Skills & Powers*, and the
+  *Complete* handbooks (*Ranger's*, *Fighter's*, *Thief's* and *Barbarian's*,
+  the *Book of Dwarves*), and *Dragon* #214's "The Complete Half-Elf" (the
+  half-elves' Spellarcher, Shadowblade, Military Scout, Wilderness Avenger and Rescuer),
+  where the mod's rule changes and its kits come from; Baldur's Gate, for keeping a
   creation roll (STORE and RECALL) and Charisma's shop prices.
 - **Tools:** [DOSBox](https://www.dosbox.com/), [NASM](https://www.nasm.us/),
   [Python](https://www.python.org/) and

@@ -1009,6 +1009,11 @@ def write_resources(source: str, dest: str, roll_store: bool = True, spells_manu
         added.update(kitpages.chunks(chunks))
     except (KeyError, ValueError, IndexError, StopIteration, struct.error):
         pass  # (no kit pages: no kits to choose)
+    from . import spellgrid
+    try:
+        added.update(spellgrid.chunks(chunks))
+    except (KeyError, ValueError, IndexError, struct.error):
+        pass  # (CHOOSE A SPELL's icons where the game has them)
     from . import rollstore
     try:
         if roll_store:

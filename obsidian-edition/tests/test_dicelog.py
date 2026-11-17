@@ -247,6 +247,12 @@ class AttackTests(unittest.TestCase):
         lines = log.describe(self.attack(18, 9, 4, 5, 9, after_f1=10, hit_bonus=1, m16=2))
         self.assertEqual(lines[1], "    THAC0 16, +6 STR, +1 weapon = 9")
 
+    def test_two_weapons_always_on(self):
+        """The two-weapons rule has no switch (2.18): on whatever the settings, an old False too."""
+        self.assertNotIn("two_weapons", dict(game.RULE_SETTINGS))
+        for settings in ({}, {"two_weapons": False}, {key: False for key, _ in game.RULE_SETTINGS}):
+            self.assertTrue(game.rules_from_settings(settings) & game.RULE_TWO_WEAPONS)
+
     def test_two_weapons_adnd(self):
         """With the Loader's rule: -2 main hand, -4 off hand, the DEX reaction adjustment
         (the game's initiative table) added, never above 0."""
@@ -672,6 +678,7 @@ class HelplessTests(unittest.TestCase):
             falls = []
             for now, hp in ((0.0, None), (0.05, 82), (0.45, 64), (0.9, None), (0.95, 46), (1.4, 28)):
                 if hp is None:
+                    log._poison_doses.clear()  # (each hit the other hand's weapon: its own dose)
                     self.hit(log, now=now)  # (for 18: 1d8 = [5] +1 weapon +12 STR 24)
                 else:
                     struct.pack_into("<h", log.guest.mem, stalker, hp)
@@ -681,9 +688,10 @@ class HelplessTests(unittest.TestCase):
                                  "  Mountain Stalker now 46 HP (-18)", poison.format(28)])
 
     def test_poisoner_on_a_helpless_target(self):
-        """A Poisoner's melee hit poisons (DSCLOG's PROBE_POISON); a helpless target rolls no save
-        (79B0Ch), so the poison is named with the hit and its 10 put down to it, though it lands after
-        the round's next swing (seen 2026-11-10: -18, then -10, then the second hit)."""
+        """A Poisoner's melee hit poisons (DSCLOG's PROBE_POISON: each hand's weapon's first hit in a
+        fight); a helpless target rolls no save (79B0Ch), so the poison is named with the hit and its
+        10 put down to it, though it lands after the round's next swing (seen 2026-11-10: -18, then
+        -10, then the second hit). The same weapon's next hit that fight names none."""
         from dsloader import kits
         log = make_game()
         stalker = CREATURES + STALKER * game.CREATURE_SIZE
@@ -692,12 +700,19 @@ class HelplessTests(unittest.TestCase):
         with mock.patch.object(log.game, "kit_ids", lambda m: [kits.POISONER] if m == 0 else []):
             self.assertEqual(len(self.hit(log, now=1.0)), 1)  # (not helpless: the game rolls the save)
             set_effects(log, [(0x29, 2, game.PARALYZED_EFFECT)])
+            # (that hit used the weapon's dose, as DSCLOG counts it: held now, no poison named; up to
+            # 2.17 the dice log counted only a helpless target's hits and named one here)
+            self.assertEqual(len(self.hit(log, now=1.5)), 1)
+            struct.pack_into("<h", log.guest.mem, stalker, 100)
+            log.hp_changes(1.6)
+            log._poison_doses.clear()  # (a new fight)
             lines = self.hit(log, now=2.0)
             self.assertEqual(lines[1], "  Mountain Stalker is poisoned by the hit: Poison (10 damage), no saving throw "
                                        "(Paralyzed)")
             hp = 100 - 18 - 36
             struct.pack_into("<h", log.guest.mem, stalker, hp)
             self.assertEqual(log.hp_changes(2.1), ["  Mountain Stalker now 46 HP (-54)"])
+            log._poison_doses.clear()  # (the next swing the off hand's: its own dose)
             self.hit(log, now=2.2)  # (the next swing, logged before the first poison lands)
             struct.pack_into("<h", log.guest.mem, stalker, hp - 10)
             self.assertEqual(log.hp_changes(2.4), ["  Mountain Stalker takes 10 from Poison (10 damage), now 36 HP"])
@@ -709,6 +724,7 @@ class HelplessTests(unittest.TestCase):
             self.assertEqual(log.hp_changes(3.2), ["  Mountain Stalker now -46 HP (-36)"])  # (the poison not yet)
             struct.pack_into("<h", log.guest.mem, stalker, -60)
             self.assertEqual(log.hp_changes(9.0), ["  Mountain Stalker now -60 HP (-14)"])  # (too late: not the poison)
+            self.assertEqual(len(self.hit(log, now=9.5)), 1)  # (that weapon's dose used this fight: no poison)
 
 
 class SaveTests(unittest.TestCase):
@@ -1034,14 +1050,13 @@ class SaveTests(unittest.TestCase):
         self.assertEqual(log.describe(e), [])
         self.assertEqual(log.describe(e, show_all=True), ["Script: a map cell blocked (request 10: 3, 40, 12)"])
 
-    def test_games_rest_fades_the_arrows(self):
-        """The game's own rest (DSCLOG's REST_SITE: request 0, each member's turn): no line, but
-        the spell arrows fade in the next pass, as for a script's rest request."""
+    def test_games_rest_leaves_the_arrows(self):
+        """The game's own rest (DSCLOG's REST_SITE: request 0, each member's turn): no line, and the
+        spell arrows stay (they last until shot)."""
         log = make_game()
-        self.assertFalse(log._rest_due)
         e = entry(0, frame=words(0, 0, 1, 0, 0, 0), kind=dicelog.KIND_REQUEST)
         self.assertEqual(log.describe(e), [])
-        self.assertTrue(log._rest_due)
+        self.assertFalse(hasattr(log, "_rest_due"))
 
     def test_spell_cast_floats_its_name(self):
         """A spell cast (DSCLOG's CAST_SITE: the caster at [BP+6], the spell its value): its name
@@ -1103,6 +1118,12 @@ class SaveTests(unittest.TestCase):
         e = entry(3, frame=frame(2, 40, dicelog.ACID_ARROW_SPELL, 14, 0, 0, 0, 12, 3, 2, 1), kind=dicelog.KIND_TOHIT)
         self.assertIn("(THAC0 14 (a fighter's of the caster's level); target AC 12) -> HIT", log.describe(e)[0])
         self.assertIn("hits on anything but a 1", log.describe(e)[0])
+        from unittest import mock
+        from dsloader import kits
+        with mock.patch.object(log.game, "kit_ids", lambda creature: [kits.SCHOLAR]):  # (a Scholar: DSCLOG's 1 worse)
+            e = entry(3, frame=frame(2, 40, dicelog.ACID_ARROW_SPELL, 15, 0, 0, 0, 12, 3, 2, 1), kind=dicelog.KIND_TOHIT)
+            self.assertIn("(THAC0 15 (a fighter's of the caster's level, a Scholar's 1 worse); target AC 12)",
+                          log.describe(e)[0])
 
     def test_wall_instead(self):
         """Wall of Thorns' damage (DSCLOG's THORNS_DAMAGE: the damage | the spell << 8, the
@@ -1227,6 +1248,29 @@ class SaveTests(unittest.TestCase):
         struct.pack_into("<h", m, stalker, 24)
         self.assertEqual(log.hp_changes(1.5), ["  Mountain Stalker takes 6 from Fireball "
                                                "(Out Cold: the most the dice can do), now 24 HP"])
+
+    def test_paralyzed_takes_the_most(self):
+        """A Paralyzed target's spell damage: the most the dice can do, said as for one Out Cold
+        (a held Arena Guard's 15 from Magic Missile, 9 rolled, 2026-11-16)."""
+        from unittest import mock
+        log = make_game()
+        m = log.guest.mem
+        stalker = CREATURES + STALKER * game.CREATURE_SIZE
+        struct.pack_into("<h", m, stalker, 30)
+        with mock.patch.object(log.game, "helpless", return_value="Paralyzed"):
+            log.hp_changes(0.5)
+            e = entry(raw_for(3, 6), dicelog.DICE_SITE, words(0, 0, 1, 6), words(0, 0, FIREBALL, 3),
+                      parent_code=dicelog.SPELL_DAMAGE_RETURN)
+            log.describe(e, now=1.0)
+            struct.pack_into("<h", m, stalker, 24)
+            self.assertEqual(log.hp_changes(1.5), ["  Mountain Stalker takes 6 from Fireball "
+                                                   "(Paralyzed: the most the dice can do), now 24 HP"])
+        with mock.patch.object(log.game, "helpless", return_value="Out Cold"):  # (knocked out by it: not before)
+            e = entry(raw_for(3, 6), dicelog.DICE_SITE, words(0, 0, 1, 6), words(0, 0, FIREBALL, 3),
+                      parent_code=dicelog.SPELL_DAMAGE_RETURN)
+            log.describe(e, now=2.0)
+            struct.pack_into("<h", m, stalker, 21)
+            self.assertEqual(log.hp_changes(2.5), ["  Mountain Stalker takes 3 from Fireball, now 21 HP"])
 
     def test_confusion(self):
         log = make_game()
@@ -1796,6 +1840,15 @@ class ManualGroup3Tests(unittest.TestCase):
         self.assertEqual(say(dicelog.MANUAL_CELL, 2, 3, 1),
                          ["Cell Adjustment: 1d4 = 3 -> Mountain Stalker healed 3 HP, and Mountain Stalker is cured of disease"])
         self.assertEqual(say(dicelog.MANUAL_CELL, 2, 4, 0), ["Cell Adjustment: 1d4 = 4 -> Mountain Stalker healed 4 HP"])
+        from unittest import mock
+        from dsloader import kits
+        with mock.patch.object(log.game, "kit_ids", lambda creature: [kits.LIFEBINDER]):
+            self.assertEqual(say(dicelog.MANUAL_CELL, 2, 7, 0x0301),  # (a Lifebinder's d4 more, 3, above the cure's byte)
+                             ["Cell Adjustment: 1d4 = 4, +1d4 = 3 (Lifebinder) -> Mountain Stalker healed 7 HP, and "
+                              "Mountain Stalker is cured of disease"])
+        with mock.patch.object(log.game, "kit_ids", lambda creature: [kits.HEALER]):
+            self.assertEqual(say(dicelog.MANUAL_CELL, 2, 4, 0x0100),  # (a Healer's 1 more)
+                             ["Cell Adjustment: 1d4 = 3, +1 (Healer) -> Mountain Stalker healed 4 HP"])
         self.assertEqual(say(dicelog.MANUAL_RAINBOW, 6, 0, 0),
                          ["    Mountain Stalker takes 6 damage: Rainbow Pattern's hold on it ends"])
         self.assertEqual(say(dicelog.MANUAL_FEEBLE, 2, 0, 0),
@@ -1943,6 +1996,44 @@ class NewLinesTests(unittest.TestCase):
                 mock.patch.object(log, "_new_gear", return_value=False):
             log._gear_due()
         self.assertEqual((m[HDR + dicelog.TSR_GEAR_DUE], m[HDR + dicelog.TSR_GEAR_GIVEN]), (1, 0))
+        # (the weapon window up: what changed kept in GEAR_GIVEN, GEAR_DUE left set for the pass after it)
+        m[HDR + dicelog.TSR_CREATING] = 1
+        lists = iter([seen(1), seen(2), seen(2), seen(2)])
+        with mock.patch.object(dicelog.names, "update", return_value=True), \
+                mock.patch.object(log.game, "party_items", side_effect=lambda: next(lists)), \
+                mock.patch.object(log, "_new_gear", return_value=True):
+            log._gear_due()
+            self.assertEqual((m[HDR + dicelog.TSR_GEAR_DUE], m[HDR + dicelog.TSR_GEAR_GIVEN]), (1, 1))
+            m[HDR + dicelog.TSR_CREATING] = 0
+            log._gear_due()  # (the window gone: nothing more changed, the earlier change still told)
+        self.assertEqual((m[HDR + dicelog.TSR_GEAR_DUE], m[HDR + dicelog.TSR_GEAR_GIVEN]), (0, 1))
+
+    def test_being_new(self):
+        """game.being_new: status New, or the sheet index DSCLOG's GEAR_WHO names (the character DONE
+        just made, still Okay to the game); _gear_due sets it for its pass only."""
+        from types import SimpleNamespace
+        from unittest import mock
+        rec = bytearray(game.CREATURE_SIZE)
+        rec[game.CREATURE_STATUS] = game.STATUS_OKAY
+        struct.pack_into("<H", rec, game.CREATURE_SHEET_INDEX, 2)
+        self.assertFalse(game.being_new(SimpleNamespace(), bytes(rec)))
+        self.assertFalse(game.being_new(SimpleNamespace(making=1), bytes(rec)))
+        self.assertTrue(game.being_new(SimpleNamespace(making=2), bytes(rec)))
+        rec[game.CREATURE_STATUS] = game.STATUS_NEW
+        self.assertTrue(game.being_new(SimpleNamespace(making=None), bytes(rec)))
+        # the creation screen up: its New stand-in isn't, the one DONE made is
+        self.assertFalse(game.being_new(SimpleNamespace(making=None, creating=lambda: True), bytes(rec)))
+        self.assertTrue(game.being_new(SimpleNamespace(making=None, creating=lambda: False), bytes(rec)))
+        self.assertTrue(game.being_new(SimpleNamespace(making=2, creating=lambda: True), bytes(rec)))
+        log = make_game()
+        m = log.guest.mem
+        m[HDR + dicelog.TSR_GEAR_DUE], m[HDR + dicelog.TSR_GEAR_WHO] = 1, 2
+        seen = []
+        with mock.patch.object(dicelog.names, "update", return_value=True), \
+                mock.patch.object(log.game, "party_items", return_value=[]), \
+                mock.patch.object(log, "_new_gear", side_effect=lambda out: seen.append(log.game.making) or True):
+            log._gear_due()
+        self.assertEqual((seen, log.game.making), ([2], None))
 
     def test_needle_avoided(self):
         """Pehtucl's chest's needle sprung (its narration) and a find/remove traps success within

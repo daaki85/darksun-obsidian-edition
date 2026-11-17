@@ -291,7 +291,7 @@ POWER_EFFECT_NAMES = {34: "Paralysing attack", 13: "Disease attack", 51: "Entang
                       35: "Poison attack"}
 POWER_KIND_NAMES = {"pointed": "piercing", "edged": "slashing"}  # (else the damage kind's own name)
 # the Options' setting for each, all on unless unticked
-RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("two_weapons", RULE_TWO_WEAPONS),
+RULE_SETTINGS = (("helm_ac", RULE_HELMS),
                  ("spell_save", RULE_SPELL_SAVE),
                  ("new_spells", RULE_NEW_SPELLS), ("stealth", RULE_STEALTH), ("level_10", RULE_LEVEL_10),
                  ("thief_table", RULE_THIEF_TABLE), ("half_giant_hands", RULE_HALF_GIANT),
@@ -472,8 +472,13 @@ def manual_die(spell: int, sheet: bytes) -> Tuple[int, str]:
     return (best, why) if best else (6, "")
 
 
+# the rule changes with no switch, always on: AD&D's two weapons (its "two_weapons" switch gone in
+# 2.18, the user's call: an older settings file's False is passed over)
+RULES_ALWAYS = RULE_TWO_WEAPONS
+
+
 def rules_from_settings(settings: dict) -> int:
-    return sum(bit for key, bit in RULE_SETTINGS if setting_on(settings, key))
+    return RULES_ALWAYS | sum(bit for key, bit in RULE_SETTINGS if setting_on(settings, key))
 
 
 def kind_to_save(kind: int, rules: int) -> int:
@@ -1044,6 +1049,26 @@ STATUS_NEW = 0  # not yet played (the game makes it Okay when the game starts)
 STATUS_ABLE = (STATUS_NEW, STATUS_OKAY)  # counted as Okay (the patched game's NEW_AS_OKAY)
 
 
+def being_new(gd, rec: bytes) -> bool:
+    """A party member's creature record a New character's: not yet played, or the one the creation
+    screen's DONE just made (GD.making, its sheet index, from DSCLOG's GEAR_WHO), which the game
+    keeps Okay until after it has written the roster's copy (the Loader's creation gear, given only
+    to New characters, came too late for that copy up to 2.17). While the creation screen is up
+    (GD.creating) only that one: the New record there is the screen's stand-in, whose gear the game
+    replaces at DONE (it was fitted out too, its lines in the dice log before the spell picks, up to
+    2.17)."""
+    making = getattr(gd, "making", None)
+    if making is not None and struct.unpack_from("<H", rec, CREATURE_SHEET_INDEX)[0] == making:
+        return True
+    if rec[CREATURE_STATUS] != STATUS_NEW:
+        return False
+    creating = getattr(gd, "creating", None)
+    try:
+        return not (callable(creating) and creating() is True)
+    except (struct.error, IndexError, ValueError, AttributeError, TypeError):
+        return True
+
+
 # The spell's damage kinds (its flags word): the saving throw doubles the d20 against fire,
 # cold and electricity, and no other kind
 DOUBLED_KINDS = {0x02: "fire", 0x04: "cold", 0x80: "electricity"}
@@ -1053,6 +1078,11 @@ class SpellRules(NamedTuple):
     doubles_roll: bool  # the saving throw's d20 counts double
     save_modifier: int  # added to every saving throw against the spell
     doubled_for: str = ""  # the damage kind that doubles it: "fire", "cold" or "electricity"
+
+
+# the Spellarcher's Fine Bow (spellarrows.py): a bow of fine make, +1 to hit, not magic (DSCLOG's FINE_HIT)
+FINE_BOW_NAME = 0x173
+FINE_TO_HIT = 1
 
 
 class Weapon(NamedTuple):
@@ -2239,8 +2269,14 @@ class GameData:
                     + kits.ghetto_to_hit(kid, kind)
                 if kit:
                     parts.append((kits.name(kid), kit))
-            if self.wild.get(creature) is False:  # (DSCLOG's WILD_TO_HIT: a Wild Fury, or Gerakis)
-                parts.append(("Wild Fighting failed", kits.WILD_TO_HIT))
+            war_kid, war = kits.war_hit(self.sheet(creature), kind, base, bool(self.rules & RULE_SPECIALIZE),
+                                         bool(self.rules & RULE_KITS))
+            if war:  # (DSCLOG's WAR_HIT: a warrior's THAC0 with the kit's chosen weapon)
+                parts.append((f"{kits.name(war_kid)} (a warrior's THAC0)", war))
+            if creature in self.wild:  # (DSCLOG's WILD_TO_HIT: a Wild Fury, or Gerakis, whatever the check)
+                parts.append(("Wild Fighting", kits.WILD_TO_HIT))
+            if struct.unpack_from("<H", item, ITEM_NAME)[0] == FINE_BOW_NAME:  # (DSCLOG's FINE_HIT)
+                parts.append(("fine", FINE_TO_HIT))
             if self.rules & RULE_SPECIALIZE:  # (weapon specialization: DSCLOG's PROBE_ATTACKS)
                 from . import specialize
                 item_type = struct.unpack_from("<H", item, ITEM_TYPE)[0]  # (KIND stays the weapon kind)
@@ -2253,8 +2289,9 @@ class GameData:
                     halves = specialize.expert_attacks(self.sheet(creature)[SHEET_ATTACKS], skill, self.sheet(creature))
             if not missile and self.rules & RULE_KITS:  # (a Crusader's or Mind Warrior's extra attacks)
                 have = self.sheet(creature)[SHEET_ATTACKS] if halves is None else halves
-                if kits.warrior_attacks(have, self.sheet(creature)) != have:
-                    halves = kits.warrior_attacks(have, self.sheet(creature))
+                spec = bool(self.rules & RULE_SPECIALIZE)
+                if kits.warrior_attacks(have, self.sheet(creature), spec) != have:
+                    halves = kits.warrior_attacks(have, self.sheet(creature), spec)
             sheet = self.sheet(creature)
             if missile and kind == kits.CHATKCHA and len(sheet) > SHEET_RACE and sheet[SHEET_RACE] == kits.THRI_KREEN:
                 # (a thri-kreen's chatkcha, 2/1 as in AD&D: DSCLOG's OWN_THROWS)
@@ -2284,8 +2321,8 @@ class GameData:
                 kit = kits.ghetto_to_hit(kid, None)
                 if kit:
                     parts.append((kits.name(kid), kit))
-            if self.wild.get(creature) is False:
-                parts.append(("Wild Fighting failed", kits.WILD_TO_HIT))
+            if creature in self.wild:
+                parts.append(("Wild Fighting", kits.WILD_TO_HIT))
             parts = [(why, n) for why, n in parts if n]
             out.append(WeaponHit(-1, -1, "unarmed", base - sum(n for _, n in parts), parts))
         return out
@@ -2448,21 +2485,9 @@ class GameData:
         from . import kits
         return kits.own_race(self.sheet(creature))
 
-    def path_lost(self) -> bool:
-        """No party member up is a Wayfinder, and one down (stunned to petrified; not Gone) is:
-        Path-finder lost, the party's 1 less (DSCLOG's PATH_DOWN)."""
-        from . import kits
-        if self.path_finder():
-            return False
-        for m in range(PARTY_SIZE):
-            rec = self.creature(m)
-            if len(rec) > CREATURE_STATUS and 2 <= rec[CREATURE_STATUS] <= 7 and kits.WAYFINDER in self.kit_ids(m):
-                return True
-        return False
-
     def path_finder(self) -> bool:
         """A party member up (New or Okay) is a Wayfinder: the party's Path-finder (DSCLOG's
-        PATH_UP: kits.PATH_MOVE, kits.PATH_INITIATIVE)."""
+        PATH_UP: kits.PATH_INITIATIVE)."""
         from . import kits
         for m in range(PARTY_SIZE):
             rec = self.creature(m)
@@ -2687,6 +2712,13 @@ class GameData:
             return None
         return Weapon(self.item_name(struct.unpack_from("<H", rec, ITEM_NAME)[0]), typ[0x0D], typ[0x0C], struct.unpack("b", typ[0x0E:0x0F])[0],
                       struct.unpack("b", rec[0x14:0x15])[0], typ[0x08] & 0x0F, bool(typ[0x08] & 0x80))
+
+    def is_fine_bow(self, item: Optional[int]) -> bool:
+        """Whether item number ITEM is the Spellarcher's Fine Bow (DSCLOG's FINE_HIT: +1 to hit)."""
+        if item is None or not 0 <= item < NO_ITEM:
+            return False
+        rec = self.guest.read(far_pointer(self.guest, self.ds, ITEMS_PTR) + item * ITEM_SIZE, ITEM_SIZE)
+        return len(rec) >= ITEM_SIZE and struct.unpack_from("<H", rec, ITEM_NAME)[0] == FINE_BOW_NAME
 
     def weapon_name(self, w: Weapon) -> str:
         material = MATERIALS[w.material] + " " if w.material < len(MATERIALS) and w.material != 4 else ""
