@@ -1,5 +1,5 @@
-# giveitems.py MEMBER N [FIRST]: memory only, never save after. Gives party member MEMBER up to N
-# items of different objects (SEGOBJEX.GFF's item records, each object once, from the FIRSTth on: each
+# giveitems.py MEMBER N [FIRST]: gives party member MEMBER up to N items of different objects in
+# memory (never save after). The items are of different objects (SEGOBJEX.GFF's item records, each object once, from the FIRSTth on: each
 # its own picture on the ground), into free backpack cells, the
 # way the Loader gives the arena's ring (ring.give_ring). For filling the ground with items (DROP) in
 # a test of the picture cache (2026-11-09, logs/2026-11-09-picture-slot-reuse.md).

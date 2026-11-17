@@ -1,4 +1,4 @@
-# figcheck.py [LABEL]: are the party's figures drawn? A window grab, then DSCLOG's VIEW_REDRAW
+# figcheck.py [LABEL]: whether the party's figures are drawn on the map. A window grab, then DSCLOG's VIEW_REDRAW
 # (header +242: the whole view drawn again, as the game does), a second grab, and for each member
 # the pixels changed in a box round its figure (feet at its map place less the camera; 24 x 40
 # game pixels above them). A figure missing before the redraw shows as a big count (hundreds);

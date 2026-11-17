@@ -1,5 +1,5 @@
-# passn.sh N: pass N party turns (passuntil.sh's way: a click on the member's figure, the END menu checked
-# by its grey pixels, E), the member's figure brought on screen with scroll.py first when the party
+# passn.sh N: pass N party turns, passuntil.sh's way (a click on the member's figure, the END menu checked
+# by its grey pixels, E). The member's figure is brought on screen with scroll.py first when the party
 # stands spread out (2026-11-09: in fountain-user's ambush passuntil.sh stopped "member 2 off screen").
 cd "$(dirname "$0")"; . ./env.sh
 W=$(xdotool search --class dosbox | head -1)

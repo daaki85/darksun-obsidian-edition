@@ -1,4 +1,5 @@
-# gearpoll.py: from DONE on the creation screen, each change of DSCLOG's GEAR_DUE (+1830) and lv_creating
+# gearpoll.py: watches the Loader's creation gear reach the roster, for 110 s. From DONE on the
+# creation screen, each change of DSCLOG's GEAR_DUE (+1830) and lv_creating
 # (+361, the weapon window up), the dice log's new lines, CHARSAVE.GFF written (the roster's copy) and
 # the Loader's heartbeat age (+1865, over 20 ticks: Loader gone), for 110 s. Start it just before DONE:
 # the gear lines must come before charsave_written (logs/2026-11-15-kit-rebalance-checks.md part 7).

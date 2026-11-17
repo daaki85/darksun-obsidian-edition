@@ -1,4 +1,4 @@
-# figwatch.py SECONDS [EVERY] [TAG]: passive watch for the party's figures (no writes): every EVERY
+# figwatch.py SECONDS [EVERY] [TAG]: passive watch for the party's figures (no writes). Every EVERY
 # seconds a window grab, the camera, each member's screen place and whether its thing is in the
 # draw list (its index, and OUTWIN when outside the last drawing's window, DS:57CAh-57C8h; inv: how
 # often y falls along; stale: entries whose thing's +1 isn't their index; b0 the thing's +0, 80h not
