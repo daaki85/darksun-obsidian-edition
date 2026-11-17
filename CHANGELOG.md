@@ -572,7 +572,7 @@ paragraphs (1,753 spare), `UMB_KEPT` 8,051 (131 spare). 2.16.0's: 69,344 and 1,7
     **Documentation** section (How the game works, moved out of The Loader), and a subtitle that no
     longer promises every change; the web page carries the note on unreleased changes.
   - The old combat log design handoff moved out of the shipped `docs/` to
-    `reports/combat-log-design-handoff.md`.
+    `reports/combat-log-design-handoff.md` (now `reports/archive/`).
   - The root README's What's new holds the current release only.
   - The playtest guide: a **Startup procedure** first (about 1,900 words, read in full), then
     **Recipes** by job and **The route through the story**; dated incidents moved to

@@ -119,7 +119,7 @@ with the 3 ability checks the ability check command makes).
 ### What the game allows
 
 What was measured before the panel was built (Stage 0 of
-[the design brief](https://github.com/daaki85/darksun-obsidian-edition/blob/main/reports/combat-log-design-handoff.md)), with the patched game and the
+[the design brief](https://github.com/daaki85/darksun-obsidian-edition/blob/main/reports/archive/combat-log-design-handoff.md)), with the patched game and the
 dice log running:
 
 - **Pages.** The game keeps a table of pages at `0980:0004` (DSUN.EXE
