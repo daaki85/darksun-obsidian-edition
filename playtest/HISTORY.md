@@ -368,6 +368,15 @@ in the inventory gives the shown member's portrait event 8: drawn again, and its
 opened (it then blocks every click; Escape posted after it didn't close it in step); **1-4** (the
 table at 6FDD0h + 1E3Bh) give event 7, which doesn't draw the shown member again.
 
+(2026-11-18, logs/2026-11-18-spell-arrows-info.md.) The item box's INFO: the first INFO clicks
+missed because the button was read off a full 320x200 shot at about (258,53); a zoomed crop showed
+it at (291,57), right of where it seemed. A Spellarcher made in memory by its race, classes and
+kit byte alone still showed NO ONE under the spell arrows' USEABLE BY: the sheet's class mask
+(+12h, still the preserver's 80h) failed the game's own test before DSCLOG's; with the fighter's
+20h added, "Cermak" showed. The first note, an extra row under the list (SPELLARCHERS ONLY, then
+SPELLARCHER ONLY), ran into the box's right frame (about 15 letters fit a row): the user chose the
+heading, SPELLARCHERS:, in USEABLE BY:'s place.
+
 ## The creation screen and the roster
 
 ### The roster and the Loader's creation gear
@@ -515,3 +524,5 @@ index](logs/README.md), by date.
 - **2026-11-18**: the colour cycler's green and violet runs seen turning in the inventory
   (Greenbright); `setitem.py obj=` and `rec=`; Tanelyv's chest piece found as object 2004; the
   Searing Blade's name whole in the box, label and dice log (logs/2026-11-18-item-glows.md).
+  The item box's INFO button and its USEABLE BY list; a Spellarcher in memory needs its class
+  mask (logs/2026-11-18-spell-arrows-info.md).

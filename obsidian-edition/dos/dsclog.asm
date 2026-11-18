@@ -17281,6 +17281,7 @@ AMMO_TURN_SITE equ NS_IMAGE + 117 ; 58C38h: the attacks spent: the turn over, or
 AMMO_OK1_SITE equ NS_IMAGE + 118  ; 5843Fh: the attack command's target still Okay? (AMMO_OKAY)
 AMMO_OK2_SITE equ NS_IMAGE + 119  ; 584A4h: the same, again (AMMO_OKAY)
 AMMO_OK3_SITE equ NS_IMAGE + 120  ; 5850Eh: the same, before the turn's end (AMMO_OKAY)
+INFO_HEAD_SITE equ NS_IMAGE + 121 ; 8C1E0h: the item box's INFO, its USEABLE BY: heading pushed (INFO_HEAD)
 REACH_1587   equ 0x4356 - 0x1587  ; (the callers' segments, less DS)
 REACH_1A0A   equ 0x4356 - 0x1A0A
 REACH_AI_RANGE equ 0x0DA7         ; (overlay 612Eh's ways back)
@@ -20859,6 +20860,7 @@ site_tab:
         site AMMO_OK1_SITE, ammo_okay
         site AMMO_OK2_SITE, ammo_okay
         site AMMO_OK3_SITE, ammo_okay
+        site INFO_HEAD_SITE, info_head
 SITE_COUNT equ ($ - site_tab) / 2
 
 ; NS_CMP: the compare of site RL_SITE (of NS_CMP_SITES), its flags into the INT's frame.
@@ -28026,6 +28028,54 @@ ib_quiet   db 'Silent +10', 0   ;   have them: HIDE, SLNT, PICK, LOCK; mixed cas
 ib_belt    db 'Pick +5, Lock +5', 0
 ib_elf_hide  db 'Hide 90-95%', 0    ; (the Cloak of Elvenkind's chance: stealth.py)
 ib_elf_quiet db 'Silent 95%', 0
+
+; INFO_HEAD: "push ds / push 3493h" (8C1E0h; 4 bytes: the INT, the site's number and a NOP) in the
+; routine that draws the item box's INFO (8C1B8h: its heading, USEABLE BY:, then the name of each
+; party member the can-use routine allows, PROBE_CAN_USE and its ARROWS_FORBID among it, else NO
+; ONE; [BP+6] the item): the heading's far pointer pushed, as the code would have, but for a
+; Spellarcher's spell arrows (named ARROW_NAME to +3: dsloader/spellarrows.py) SPELLARCHERS:, so the
+; list reads "SPELLARCHERS: / Cermak" or "SPELLARCHERS: / NO ONE". The INT's frame moved 4 bytes down.
+INFO_HEADING equ 0x3493         ; DS: USEABLE BY:
+info_head:
+        push ax
+        push bx
+        push es
+        les bx, [ITEMS]
+        imul ax, [bp + 6], 0x15
+        add bx, ax
+        mov ax, [es:bx + 0x12]
+        sub ax, ARROW_NAME
+        cmp ax, 4
+        mov ax, ds
+        mov bx, INFO_HEADING
+        jae .put
+        mov ax, cs
+        mov bx, info_head_text
+.put:   mov [cs:ih_seg], ax
+        mov [cs:ih_off], bx
+        pop es
+        pop bx
+        pop ax
+        sub sp, 4               ; the INT's frame 4 bytes down: the pointer under it
+        push bp
+        mov bp, sp
+        push ax
+        mov ax, [bp + 6]
+        mov [bp + 2], ax        ; (IP)
+        mov ax, [bp + 8]
+        mov [bp + 4], ax        ; (CS)
+        mov ax, [bp + 10]
+        mov [bp + 6], ax        ; (flags)
+        mov ax, [cs:ih_off]
+        mov [bp + 8], ax
+        mov ax, [cs:ih_seg]
+        mov [bp + 10], ax
+        pop ax
+        pop bp
+        iret
+ih_off dw 0
+ih_seg dw 0
+info_head_text db 'SPELLARCHERS:', 0
 
 ; PROBE_BELT: INT VEC_BELT replaces "mov ax,si" (2 bytes) at the end of the game's thief skill
 ; routine (DSUN.EXE 803B2h: SI the chance, armour and effects counted; DI the thief's object; the

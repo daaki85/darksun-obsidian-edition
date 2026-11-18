@@ -1920,7 +1920,7 @@ own Polearm +1, which it never placed, can be found now.
 | Tome of Understanding | read from the inventory as a scroll: +1 WIS for good (at most 25) |
 | Kalzith's six scrolls | Shield, Burning Hands, Blur, Cat's Grace (with the new spells on), Lightning Bolt and Haste, sold by Kalzith: spells the game has no scroll of |
 | Defilers' scrolls | a scroll of any preserver spell (the game's 69, and the new ones with the new spells on), carried by a defiler 1 time in 20 and found on its body; the arena's defiler in the champions' bout always has one, of Fogbolt, Spook or Reflected Image (of the game's own spells with the new spells off) |
-| Chill, Shocking and Vampiric Arrows | made only by a [Spellarcher](#multiclass-kits) from its own spells, one a slot; they last until shot, and only a Spellarcher carries them |
+| Chill, Shocking and Vampiric Arrows | made only by a [Spellarcher](#multiclass-kits) from its own spells, one a slot; they last until shot, and only a Spellarcher carries them (their item box's INFO lists the SPELLARCHERS:) |
 | Fine Bow | a Spellarcher's own bow from the start: +1 to hit, not magic |
 
 The game's own Grey's Scale arm and leg armour is AC 3 each with the mod (2

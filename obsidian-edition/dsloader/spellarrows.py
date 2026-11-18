@@ -15,7 +15,7 @@ used). The arrows are worth nothing (no merchant pays for them), last until shot
 rest), may be readied and put away as any arrows, and only a Spellarcher may carry them: DSCLOG's
 ARROWS_FORBID keeps anyone else from readying them, and as the game asks nothing of an item put in
 a backpack, those another member is found carrying go back to the party's Spellarcher
-(`return_strays`).
+(`return_strays`; with none in the party, out of the quiver into the pack).
 
 A Spellarcher starts with a Fine Bow (a bow of fine make, +1 to hit: The Complete Fighter's
 Handbook's; DSCLOG's FINE_HIT, no one else has one) and arrows by the touch spells it picked as it
@@ -243,14 +243,14 @@ def inventory_up(gd: GameData) -> bool:
 def return_strays(gd: GameData) -> List[str]:
     """Spell arrows a party member who isn't a Spellarcher carries (the game asks nothing of an item
     put in a backpack) go back to the party's Spellarcher: onto its stack of that spell where the two
-    come to STACK_MOST or fewer, else into its pack as they are. Out of fights, the inventory shut;
-    left where they are with no Spellarcher in the party, or no room in its pack. Lines for the log."""
+    come to STACK_MOST or fewer, else into its pack as they are. Those left with it (no Spellarcher in
+    the party, or no room in its pack) are taken out of its quiver into a backpack cell of its own, if
+    it has them readied (an old save, or a quiver filled before ARROWS_FORBID): only a Spellarcher
+    readies them. Out of fights, the inventory shut. Lines for the log."""
     if gd.in_combat() or inventory_up(gd):
         return []
     archers = [m for m in range(game.PARTY_SIZE) if is_spellarcher(gd, m)]
-    if not archers:
-        return []
-    to, out = archers[0], []
+    out = []
     for member in range(game.PARTY_SIZE):
         if member in archers or len(gd.creature(member)) < game.CREATURE_SIZE:
             continue
@@ -260,17 +260,29 @@ def return_strays(gd: GameData) -> List[str]:
             name = struct.unpack_from("<H", rec, game.ITEM_NAME)[0]
             count = struct.unpack_from("<H", rec, weaponchoice.ITEM_COUNT)[0]
             label = NAMES.get(name, b"spell arrows").decode().lower()
-            stack = next(((i, item) for i, item, _ in gd._worn(to)
-                          if struct.unpack_from("<H", item, game.ITEM_NAME)[0] == name), None)
-            had = struct.unpack_from("<H", stack[1], weaponchoice.ITEM_COUNT)[0] if stack is not None else 0
-            if stack is not None and had + count <= STACK_MOST:
-                if not ring.unlink(gd, ring.Items(gd), index, "spell arrows back to the Spellarcher", empty=True):
-                    continue
-                gd.guest.write(item_address(gd, stack[0]) + weaponchoice.ITEM_COUNT, struct.pack("<H", had + count))
-            elif npcitems.add_to(gd, to, bytes(rec)):
-                ring.unlink(gd, ring.Items(gd), index, "spell arrows back to the Spellarcher", empty=True)
-            else:
-                continue
-            out.append(f"The {label} go back to {gd.creature_name(to)} from {gd.creature_name(member)}: "
-                       f"only a Spellarcher carries them ({count})")
+            if archers and _to_archer(gd, archers[0], index, rec, name, count):
+                out.append(f"The {label} go back to {gd.creature_name(archers[0])} from {gd.creature_name(member)}: "
+                           f"only a Spellarcher carries them ({count})")
+            elif rec[game.ITEM_SLOT] == weaponchoice.AMMO_SLOT:
+                cell = pickpocket.free_cell(gd, ring.Items(gd), member)
+                if cell is not None and pickpocket.place(gd, member, index, cell):
+                    out.append(f"{gd.creature_name(member)}'s {label} are put away in the backpack: only a "
+                               f"Spellarcher readies them ({count})")
     return out
+
+
+def _to_archer(gd: GameData, to: int, index: int, rec: bytes, name: int, count: int) -> bool:
+    """Item INDEX, spell arrows (REC), onto Spellarcher TO's stack of the spell, or into its pack:
+    whether they went."""
+    stack = next(((i, item) for i, item, _ in gd._worn(to)
+                  if struct.unpack_from("<H", item, game.ITEM_NAME)[0] == name), None)
+    had = struct.unpack_from("<H", stack[1], weaponchoice.ITEM_COUNT)[0] if stack is not None else 0
+    if stack is not None and had + count <= STACK_MOST:
+        if not ring.unlink(gd, ring.Items(gd), index, "spell arrows back to the Spellarcher", empty=True):
+            return False
+        gd.guest.write(item_address(gd, stack[0]) + weaponchoice.ITEM_COUNT, struct.pack("<H", had + count))
+        return True
+    if npcitems.add_to(gd, to, bytes(rec)):
+        ring.unlink(gd, ring.Items(gd), index, "spell arrows back to the Spellarcher", empty=True)
+        return True
+    return False

@@ -491,7 +491,8 @@ against Shocking Grasp or Vampiric Touch. Shot from a bow, its spell arrows are
 **+1 from its 5th preserver level and +2 from its 9th**, so they hurt what only
 magic weapons hurt; its other arrows are as they are. Only a Spellarcher carries
 spell arrows (another party member can't ready them, and any it is given go back
-to the Spellarcher). Outside the party, anyone who shoots them is their archer too
+to the Spellarcher); their item box's INFO says so, its list headed SPELLARCHERS: in place
+of USEABLE BY:; with none in the party, any found readied go back in the pack. Outside the party, anyone who shoots them is their archer too
 (the arena's elf champion): they cast their spell on a hit, with its highest level
 in the preserver level's place. How: [Spell
 arrows](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-KITS.md#spell-arrows).
