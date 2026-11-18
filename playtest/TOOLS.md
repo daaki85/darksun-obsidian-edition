@@ -6,6 +6,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 |---|---|
 | `acs.py` | each combatant's AC as the game counts it (gd.counted_ac), to hold against the dice log's "target AC" |
 | `addeffect.py OWNER EFFECT [SPELL] [CHARGES]` | give combatant OWNER (0-3 the party) the effect EFFECT (35 Poisoned, 13 Diseased, 34 Paralyzed...) in memory, untimed. |
+| `altflag.py [latency N \| watch SECONDS]` | the BIOS's shift flags (0:0417h; Alt is bit 3, Ctrl bit 2, the Shifts bits 0 and 1), which the Loader reads for "show what can be used" (dsloader/usable.py). |
 | `ammodump.py` | Jenna's and Ester's quiver, bow and backpack item records (item number, list, address, the record in hex: count +2, link +4, type +0Ah, name +12h, plus +14h, slot +11h). |
 | `arenatrip.sh` | from pens-after-scar, rest in the fire room till Kurzak calls, answer at once, and count the game's free things (thingsfree.py) there and on arriving in the arena. |
 | `arenawaves.sh` | with the arena's first fight on, fight every wave (fightout.sh) and click away the messages between them, until the YES/NO question ("Yell something back at the Announcer?"), which it answers N. |
@@ -96,6 +97,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `rec.py [FIRST LAST]` | the combat records (58 bytes) of creatures FIRST to LAST (default the party, 0-3), hex from +10h, to find a field by comparing what the screen shows |
 | `restalarm.sh` | in the fire room (toalarm.sh), rest at the ring (map 1931, 856) with the look pointer until Kurzak calls, then wait there till his patience runs out: the alarm, and a fight with the guards. |
 | `restfixmem.py [check\|fix\|undo]` | the rest routine's pass 2 (DSUN.EXE 8066Dh, overlay 5E8h) in the overlay buffer, if loaded: `check` says which version is there (the game's: the effects read before the free cures; |
+| `ringall.py [N \| all \| still \| clear] [KIND]` | for measuring the rings' cost (framerate.py): a ring (DSCLOG's RING_TAB, kind 1) under every one of the game's things on the screen now, whatever it is (N: under the N nearest the screen's middle; |
 | `ringrest.sh` | rest at the fire room's ring in pens-fire-count4 (camera 1728,768: the ring at screen 203,88): the eye, a slow press on the ring, the walk arrow back (2026-11-09). |
 | `rolog.py [--d20]` | a read-only dice log beside the session's own Loader (2026-11-08). |
 | `route.py TX TY` | walk the party's leader to map position TX, TY over any distance: a path found on the region's walkability grid as the game has it now (live.py's live_map, DS:0556h; |
@@ -137,6 +139,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `turnsetup.py MEMBER LEVEL [COMBATANT=HD ...]` | memory only, never save after (2026-11-09). |
 | `turnwatch.py MEMBER SECONDS` | polls whose turn it is and the member's turn bytes every 5 ms, printing each change with its time. |
 | `untilturn.sh NAME` | play party turns (Tab + Return) until NAME's turn comes, messages clicked away. |
+| `usable.py [all]` | what the Loader would mark as usable while Alt is held (dsloader/usable.py): each thing's number, kind, name, map place and screen place, those in the view only unless "all"; |
 | `viewto.py X Y` | drag the view (scroll.py, the middle button) until map point X, Y is near the screen's centre, so a far spot can be clicked. |
 | `walkprobe.py N X Y DIR [SECS]` | a click at screen X, Y (game pixels), then for SECS seconds (default 6) as often as it can, a sample of the walk. |
 | `walktime.py N X Y [DIR]` | a click at screen X, Y (game pixels), then party member N's map position every 50 ms until it has stood still for 1.5 s: each step's time (the walking pace), and with DIR a window grab at each step (DIR/wNN.png) |

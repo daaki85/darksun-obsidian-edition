@@ -36,6 +36,11 @@ recipe: under its topic, with its date.
 twice on 2026-11-01, the second time with the rule already written: run the kill as its own
 command, by pid, and nothing else in it.
 
+**The lock nobody held** (2026-11-17): a session run as `flock LOCK sh script` started Xvfb through
+`start.sh`; Xvfb kept the lock's file open after the script ended, and the next sessions waited on
+it until `lslocks` named the pid. Xvfb is now started outside the lock. The same day an agent
+killed the shared display to free the lock: hence the rule to stop only what you started.
+
 ## The game's installer
 
 On 2026-11-11 the user's Drive copies of the GOG installers had been shared by link, and those links
@@ -85,6 +90,9 @@ every script in the built copy should decode.
 
 ## The pointer
 
+- **A click that moved nothing while another window was up** (2026-11-16): with a tkinter window
+  open on the same display for the Alt+Tab test, one `click.py` call left the game's pointer where
+  it was; with that window gone the same call worked. Close any other window before clicking.
 - The cycle (arrow, sword, eye, arrow) was checked on 2026-11-01; that only walkable ground takes a
   walking click is the user's (2026-11-01).
 - 2026-11-07: right-clicks guessed from shots left the sword up, hence `pointer.py`, which reads the
@@ -233,6 +241,15 @@ aside (`DSCLOG_ASM=` that source for framerate.py's symbols):
 | 20000, all on | 10.2 → 15.5 | 7.5 → 3.5 | 26 → 25 | 113 → 112 |
 | 20000, all on, steady pace off | 16.8 → 18.9 | 0 → 0 | (not counted) | 80 → 103 |
 | 35000, all on | 16.0 → 18.9 | 1.6 → 0.2 | 25 → 14 | 113 → 141 |
+
+### The rings for "show what can be used" (2026-11-16)
+
+logs/2026-11-17-show-usable.md. The first build marked every usable thing of the region (87 in
+the pens) and cost a walking party a tenth of its frames with a single ring in view; marking only
+the view's (and 16 pixels round it) and looking again when the view moves brought the rings'
+share down to a few percent, the names costing about as much again. Three framerate runs in a
+row gave 0 or odd numbers because each began where the last had ended (the view had followed
+the party to a wall): every run now starts from the same spot.
 
 ## The arena's first bout that didn't start
 

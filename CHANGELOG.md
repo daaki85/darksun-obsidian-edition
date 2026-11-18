@@ -32,6 +32,9 @@ under "## Unreleased (branch `obsidian-edition`)
   +1878, signature `DSCLOGvd`).
 - **Quests on the Journal tab**: open and finished, read from the script flags and numbers the
   story is kept in (45 quests: `quests.py`; `questdraft.py` drafts the table for developers).
+- **Showing what can be used**: hold Alt on the map, out of a fight, for a gold ring under every
+  door, container, body, item and person a click does something with, and the nearest ones' names
+  (`usable.py`; DSCLOG unchanged).
 
 **Changed**
 - **Fewer switches** (#110), for a simpler Options tab and the mod's rules as meant: the combat

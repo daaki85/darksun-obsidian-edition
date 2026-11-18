@@ -1104,7 +1104,7 @@ def dosbox_output(game_dir: str, since: float) -> Dict[str, str]:
 
 # The Options tab's switches and their defaults (what a key missing from settings.json means)
 SWITCH_DEFAULTS = {"monster_info": True, "floating_names": True, "starting_gear": True, "rings": "chosen",
-                   "hit_chance": True, "quick_save": True, "autosave": True,
+                   "hit_chance": True, "show_usable": True, "quick_save": True, "autosave": True,
                    "cycles": DEFAULT_SPEED, "picture": DEFAULT_PICTURE, midiout.SETTING: midiout.DEFAULT,
                    "combat_log_level": "short", "defiler_scrolls": True, NEW_ITEMS: True}  # (combatlog.SHORT, the panel's level unless chosen)
 

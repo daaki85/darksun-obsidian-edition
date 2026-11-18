@@ -24,6 +24,7 @@
 - [Selling plain gear: S](#selling-plain-gear-s)
 - [Choosing an enemy: Tab, Enter and the rings](#choosing-an-enemy-tab-enter-and-the-rings)
 - [The chance to hit before the swing](#the-chance-to-hit-before-the-swing)
+- [Showing what can be used: Alt](#showing-what-can-be-used-alt)
 - [Scrolling the map](#scrolling-the-map)
 - [M, U and I: open a screen, close it again](#m-u-and-i-open-a-screen-close-it-again)
 - [The whole party in view](#the-whole-party-in-view)
@@ -863,6 +864,85 @@ What the game's code does, and the Loader after it:
   the held-target rule a Paralyzed or Out Cold target is hit on any roll (`HELD_HIT`).
 
 Tests: `tests/test_hitchance.py`. Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-17-hit-chance.md).
+
+## Showing what can be used: Alt
+
+([In the features page](FEATURES.md#showing-what-can-be-used-alt).)
+
+The Loader's alone (`dsloader/usable.py`); DSCLOG has nothing new. It reuses two
+things the helper already draws for whatever the Loader names: the rings
+(`RING_PASS` rings every thing of the game's draw list whose byte in `RING_TAB`
+isn't 0, whatever the thing is and however many) and the four floating labels
+(placed over any thing in the draw list).
+
+- **The key.** The BIOS's shift flags, `0:0417h`, bit 3 (either Alt), read from
+  the game's memory every pass of the dice log (`DiceLog._usable_key`: 50 ms
+  apart in the window, less in the windowless logs), so the marks go up and
+  down within a pass of the key, not at the next of the quarter-second looks
+  that keep them up (`_drawn`, `_marks`). Alt alone sends the game no key.
+  DOSBox lets go of every key when its window loses the focus, so Alt+Tab
+  leaves no flag set (tried: the flag cleared as the focus went); as a backstop
+  Alt read as held for `STUCK_AFTER` (30 s) takes the marks down until it reads
+  clear again. Ctrl wasn't chosen: Ctrl with the function keys is DOSBox's
+  (Ctrl+F9 ends it).
+- **What is marked** (`usable.marks`), among the draw list's entries (far
+  pointer `DS:6690h`, count `DS:1F72h`: the whole region's) that are creatures
+  or items in the things table (`3972:0C36h`; the region's own scenery has
+  numbers past 519, and drawn things of kind 0, banners, have no record):
+  - a creature outside the party, alive: a person if a talk trigger names it,
+    else a foe if its side (`+1Dh`) is neither the party's nor 4 (neutral), else
+    nothing (in the pens Legcrusher and the Arena Guards are on side 2 and have
+    talk triggers, so the side alone doesn't tell);
+  - an item: a body (objects 1101 and 2666); a door (item types 17h and 72h,
+    the only two the game's objects use for doors, unless named a wall: the two
+    "Brick Wall" doors are secret); a container (its `+8` a list); anything a
+    use, look or use-with trigger names; anything that can be picked up (its
+    type's `+08h` without 20h: 60h is scenery).
+- **The triggers** are read where the game keeps them, not from the region's
+  MAS script, so those a script adds or clears as the story goes count too. One
+  table, 13 bytes a trigger, at the far pointer `DS:42CCh`: `+0` the place in
+  the script, `+2` the script, `+4` the object's id (the object number negated,
+  as the scripts write it), `+6` a use-with trigger's other id, `+0Bh` the
+  next one's index (FFFFh the last). The lists' heads are words in segment
+  `377Eh`: `+0Fh` talk, `+11h` attack, `+13h` look, `+15h` use, `+17h` use with.
+  `DSUN.EXE` 967Ah is the game's own "what can be done with this thing" (it
+  takes the thing's id, field 48h through `1A0A:0651h`, walks each list at
+  9720h and returns a bit for each that names it: 4 talk, 2 attack, 8 look, 10h
+  use, 20h use with); `usable.triggers` walks them the same way. A thing's id
+  is an item record's first word and a creature record's `+6`.
+- **The rings** (`rings.Rings.update`, which owns `RING_TAB` and its colour
+  table, `RED`): handed the marks' table, out of a fight it writes that (ring
+  kind 1) and a gold table (`rings.gold_table`: each colour's one clearly nearer
+  gold among the palette's, as the red one is made); with none, or in a fight
+  whatever is handed in, the Tab ring's table and the red one. The table and
+  colours first, `RINGS_ON` last, and the view drawn again. Only things in the
+  view or within 16 pixels of it are marked, and the marks are made again as
+  soon as the view has moved (`Usable.changed`): `RING_PASS` goes round every
+  marked thing's ring at each floor pass, on the screen or not.
+- **The names** (`labels.Labels.names`): the four named marks nearest the
+  pointer (`DS:A133h`), as standing labels of the lowest priority (`NAME`): they
+  take free slots only, give theirs up to a "Miss", a spell's name or a charge,
+  and stay while asked for whether or not the floating names are switched on. A
+  name's bottom row is 3 rows over the thing's picture (the map record's `+8`),
+  at most a man's 34.
+- **Measured** in DOSBox (the slave pens' hall, the party walking, 20 s runs
+  alternated): nothing marked 19.5 frames a second and 155 map units a second
+  walked; 3 marked and 2 names 18.0 and 131; Alt held with the switch off as
+  nothing marked. A first build that marked all 87 usable things of the region
+  cost as much with one ring on screen (16.5 and 120), which is why only the
+  view's are marked. A bounds test in `RING_PASS` before its points would take
+  most of the rings' share.
+- Switch: `show_usable` (on).
+
+Tests: `tests/test_usable.py` (what is marked on a made-up map: people, foes, doors, containers,
+bodies, items, things with a trigger; not the party, the dead, secret doors or scenery; the
+trigger lists walked; Alt's flag and a stuck one; the rings' table and colours shared with the
+Tab ring, gold out of a fight and red in one; the names' slots).
+
+Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-17-show-usable.md) (the marks in the pens and at the
+fountain, a fight beginning with Alt held, bodies after it, Alt+Tab and Alt+Enter leaving nothing
+stuck). Not seen: a door opened or a talk begun with Alt held, any region but the pens, GOG's
+DOSBox on Windows.
 
 ## Scrolling the map
 

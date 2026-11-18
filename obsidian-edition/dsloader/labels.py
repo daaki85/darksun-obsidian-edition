@@ -9,6 +9,9 @@ the game draws there. A label stays SHOW_FOR seconds; a new one takes the slot o
 figure, else a free one, else the oldest; but a charge used (PRIORITY, CHARGE_FOR seconds) is
 never replaced by a "Miss" or a spell's name while it shows. A slot is written with its number 0 first, so DSCLOG
 never puts a half-written one, then a new number for the new label.
+
+The same slots carry the names of things that can be used while Alt is held (usable.py; Labels.names):
+standing labels of the lowest priority, which take free slots only.
 """
 
 import struct
@@ -24,6 +27,7 @@ HEIGHT_MOST = 11        # (LBL_H_MOST)
 MASK = ROW * HEIGHT_MOST
 SIZE = 8 + 2 * MASK     # (LBL_SIZE)
 SHOW_FOR = 1.5          # seconds a label stays
+NAME, NAME_FOR = -1, 1.0  # a usable thing's name (usable.py): its priority, the least; seconds it outlasts its last asking
 CHARGE_FOR = 3.0        # ... a charge used ("Armor: 7 left"), which no "Miss" or spell's name replaces
 UP = 34                 # its bottom row this far above the figure's feet: over a man's head
 SPELL_INK = (255, 220, 90)
@@ -115,22 +119,53 @@ class Labels:
             if self._slots[n][3] > priority:
                 return
         n = same if same is not None else free if free is not None else n
+        self._put(guest, tsr_hdr, n, thing, text, colour, now + hold, priority, UP)
+
+    def _put(self, guest, tsr_hdr: int, n: int, thing: int, text: str, colour, until: float, priority: int,
+             up: int) -> None:
+        """Slot N written: its number 0 first, the new one last."""
         dac = _dac(guest, tsr_hdr)
         self._number = self._number % 255 + 1
         at = slots_at(guest, tsr_hdr) + n * SIZE
         guest.write(at, b"\0")
         data = slot_bytes(self._number, thing, masks(self.font, text), combatlog.nearest(dac, colour),
-                          combatlog.nearest(dac, EDGE))
+                          combatlog.nearest(dac, EDGE), up)
         guest.write(at + 1, data[1:])
         guest.write(at, data[:1])
-        self._slots[n] = (now + hold, thing, text, priority)
+        self._slots[n] = (until, thing, text, priority)
+
+    def names(self, guest, tsr_hdr: Optional[int], wanted, now: float) -> None:
+        """The standing names of things that can be used (usable.py): WANTED, (thing, text, colour,
+        how far above its feet) each, the first the most wanted, kept up while asked for (NAME_FOR
+        seconds past the last asking) and taken off when no longer among them. They are the least of
+        the labels (priority NAME): one takes a free slot only, never another label's nor another
+        name's, and gives its own up to any "Miss", spell's name or charge. Shown whether or not
+        the floating names are switched on (ON is theirs)."""
+        if tsr_hdr is None:
+            return
+        keep = {(thing, text) for thing, text, _, _ in wanted}
+        for n, s in enumerate(self._slots):
+            if s is not None and s[3] == NAME and (s[1], s[2]) not in keep:
+                guest.write(slots_at(guest, tsr_hdr) + n * SIZE, b"\0")
+                self._slots[n] = None
+        if self.font is None:
+            return
+        for thing, text, colour, up in wanted:
+            same = next((n for n, s in enumerate(self._slots) if s and s[1] == thing), None)
+            if same is not None:
+                if self._slots[same][3] == NAME:
+                    self._slots[same] = (now + NAME_FOR, thing, text, NAME)
+                continue  # (or another label over it: left)
+            free = next((n for n, s in enumerate(self._slots) if s is None), None)
+            if free is not None and text:
+                self._put(guest, tsr_hdr, free, thing, text, colour, now + NAME_FOR, NAME, up)
 
     def tick(self, guest, tsr_hdr: Optional[int], now: float) -> None:
-        """Labels whose time is up taken off (all of them, switched off)."""
+        """Labels whose time is up taken off (all of them but usable things' names, switched off)."""
         if tsr_hdr is None:
             return
         for n, s in enumerate(self._slots):
-            if s is not None and (now >= s[0] or not self.on):
+            if s is not None and (now >= s[0] or (not self.on and s[3] != NAME)):
                 guest.write(slots_at(guest, tsr_hdr) + n * SIZE, b"\0")
                 self._slots[n] = None
 

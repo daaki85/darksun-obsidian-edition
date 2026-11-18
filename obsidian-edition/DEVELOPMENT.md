@@ -463,7 +463,7 @@ and the section that explains it. INTERNALS, RULES, KITS, CONTENT and SCREENS ar
 | `dust.py` | dust raised by walking figures | [CONTENT: dust](DEVELOPMENT-CONTENT.md#dust) |
 | `ghost.py` | see-through figures | [CONTENT: see-through figures](DEVELOPMENT-CONTENT.md#see-through-figures) |
 | `labels.py` | names floating over figures | [SCREENS: names over figures](DEVELOPMENT-SCREENS.md#names-over-figures) |
-| `rings.py` | the ring under the enemy chosen with Tab | [SCREENS: choosing an enemy](DEVELOPMENT-SCREENS.md#choosing-an-enemy-tab-enter-and-the-rings) |
+| `rings.py` | the ring under the enemy chosen with Tab, and the gold ones under what can be used | [SCREENS: choosing an enemy](DEVELOPMENT-SCREENS.md#choosing-an-enemy-tab-enter-and-the-rings) |
 | `combatlog.py` | the combat log's panel in the game | [SCREENS: the combat log](DEVELOPMENT-SCREENS.md#the-panel) |
 | `smallfont.py` | the panel's small font | [SCREENS: the combat log](DEVELOPMENT-SCREENS.md#the-panel) |
 | `art.py` | the game's portraits and font, read from the installed game | [SCREENS: the combat log](DEVELOPMENT-SCREENS.md#what-the-game-allows) |
@@ -476,6 +476,7 @@ and the section that explains it. INTERNALS, RULES, KITS, CONTENT and SCREENS ar
 |---|---|---|
 | `targeting.py` | Tab and Enter: choosing an enemy and attacking it | [SCREENS: choosing an enemy](DEVELOPMENT-SCREENS.md#choosing-an-enemy-tab-enter-and-the-rings) |
 | `hitchance.py` | the chance to hit shown before the swing, worked out as the game's attack does | [SCREENS: the chance to hit](DEVELOPMENT-SCREENS.md#the-chance-to-hit-before-the-swing) |
+| `usable.py` | showing what can be used: while Alt is held, a ring under every door, container, body, item and person in view, and the nearest ones' names | [SCREENS: showing what can be used](DEVELOPMENT-SCREENS.md#showing-what-can-be-used-alt) |
 | `scrolling.py` | scrolling the map with the mouse | [SCREENS: scrolling the map](DEVELOPMENT-SCREENS.md#scrolling-the-map) |
 | `wheel.py` | the mouse wheel, for the combat log's panel | [SCREENS: the combat log](DEVELOPMENT-SCREENS.md#the-panel) |
 | `loot.py` | T and Shift+T: looting a body in one go | [SCREENS: looting](DEVELOPMENT-SCREENS.md#looting-a-body-t-and-shiftt) |

@@ -438,6 +438,16 @@ loading (the log of 2026-11-08).
 Its walk clicks are at y 104: from `fountain-user` after its fight they land in the fountain and
 nobody walks (0 map units/s), so measure from another save.
 
+**The rings' cost** (2026-11-16): `ringall.py [N | all | still | clear] [KIND]` puts a ring under
+every thing on the screen (still: all but the party) straight in DSCLOG's table, for a framerate
+run without the Loader's say; the Loader writes its own table only when it changes, so they stay
+until Alt or a fight's Tab ring. DSCLOG goes round every marked thing's ring at each floor pass,
+on the screen or not: 16 rings (4 under the walking party) took the walk from 155 to 122 map
+units a second, 87 marked across the region with one in view from 134 to 120, and a ring's
+thickness made no difference. Put the party back first (`walkto.py 1672 344`, `viewto.py 1672
+344` from `pens-after-arena`): a run started from wherever the last one ended walks into a wall
+or drags the view along, and its numbers aren't comparable (0 map units a second once).
+
 How the game paces walking: its timer (DSUN.EXE seg 1DF3:29E8h) sets DS:1F7Eh at each tick of
 the game's clock (DS:11D6h, 96 a second); the step (1DF3:26DCh) runs only with it set and clears
 it. A tick passed while a frame draws is a step lost.
@@ -523,6 +533,26 @@ The Loader's **Picture** (plain, scanlines, tv, sharp: `launch.display_lines`) a
   one scratch object (2Bh, 3923:35Fh).
 - **The pens' master script and named routines**: `KIND='MAS ' dec.py 29 0 140` decodes the pens'
   master script; GPLI 1 is the index of named routines (id, offset, script: 2-byte words).
+- **The triggers in memory** (which things have a talk, attack, look, use or use-with script: found
+  2026-11-16, logs/2026-11-17-show-usable.md): one table of 13-byte records at the far pointer
+  DS:42CCh (+0 the place in the script, +2 the script, +4 the object's id, the number negated as
+  the scripts write it, +6 a use-with's other id, +0Bh the next record's index, FFFFh the last),
+  the lists' heads words in segment 377Eh plus the load segment (+0Fh talk, +11h attack, +13h
+  look, +15h use, +17h use with; +09h the tile and box triggers). DSUN.EXE 967Ah is the game's own
+  "what can be done with this thing" (bits 4 talk, 2 attack, 8 look, 10h use, 20h use with). A
+  thing's id: an item record's first word, a creature record's +6. `dsloader.usable.triggers(gd)`
+  reads the lists; `usable.py` prints what the Loader would mark.
+- **Finding a table in memory from the scripts' numbers**: search the game's memory
+  (`g.read(0, 0x110000)`) for one record's words near each other (a trigger's place, script and
+  object from the MAS script), print the neighbourhood in the record's size, then look for a far
+  pointer to its start in the data segment and for the code that uses that pointer (capstone over
+  DSUN.EXE: the image starts at file 5400h; the relocation table gives every use of a segment).
+  **Never name a scratch script after a module of Python's** (`dis.py`, `types.py`: capstone and
+  live.py then import the script instead, "partially initialized module").
+- **The draw list's three sorts of entry** (`drawlist.py all`): things 0-519 that are creatures or
+  items; things 0-519 of kind 0 (drawn, no record: the pens' banners and braziers); and numbers
+  past 519 (the region's own scenery: 55135...). DSCLOG's rings and labels take the first two
+  only. The list holds the whole region (415 entries in the pens), not the view.
 - **The inventory's input** (for anyone trying a click there by hand): the game takes clicks from
   its queue of events, never INT 33h's position; what was tried is in [HISTORY.md](HISTORY.md#the-inventorys-input).
 

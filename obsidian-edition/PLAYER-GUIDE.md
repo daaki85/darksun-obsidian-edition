@@ -1981,7 +1981,8 @@ features page](FEATURES.md#always-on).
 | **M**, **U** and **I** | **M** on the map opens the overhead map (the game's **O**), and **M** again closes it. **U** and **I** close the USE and inventory screens when pressed again (and still switch from one to the other). *Without the mod:* only **O** opens the map, and **U** and **I** only switch. |
 
 The mod's other controls are always on too: Tab and Enter to choose and attack an enemy (the red
-ring under it, and the chance to hit it shown before the swing, are on the Options tab), scrolling with the mouse wheel, the whole party in
+ring under it, and the chance to hit it shown before the swing, are on the Options tab), **Alt** held to ring and name
+everything in view that can be used (a switch in the tab's **In the game** section), scrolling with the mouse wheel, the whole party in
 view, the view in fights, the pointer, and spells on the Effects screen ([controls](FEATURES.md#controls)). Quick save and
 quick load with **F5** and **F9**, and autosave, have switches under **Saves** on the Options tab.
 
@@ -2132,6 +2133,7 @@ A settings file from an older Loader with one of these unticked has it on all th
 | Names over figures: a spell's name over its caster, "Miss" over whoever an attack missed, a used charge ("Armor: 7 left") over its owner, and the arrows left over a party archer after each shot | on | at once | [Names over figures](FEATURES.md#names-over-figures) |
 | A red ring on the ground in a fight: ... none / ... under the enemy chosen with Tab | under the enemy | at once | [Choosing an enemy](FEATURES.md#choosing-an-enemy-tab-enter-and-the-rings) |
 | The chance to hit: with an enemy chosen with Tab, what the d20 must show to hit it and the chance, in the dice log and the combat log's header | on | at once | [The chance to hit before the swing](FEATURES.md#the-chance-to-hit-before-the-swing) |
+| Showing what can be used: hold Alt on the map, out of a fight | on | at once | [Showing what can be used](FEATURES.md#showing-what-can-be-used-alt) |
 
 **Rule changes**
 

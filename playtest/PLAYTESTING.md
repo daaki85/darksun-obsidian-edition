@@ -71,7 +71,14 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
 11. **A DOSBox shared with another agent**: run every play step under `flock
     /tmp/playtest/dosbox.lock`, held for the whole session by a background `flock ... -c 'while [ -e
     HELDFILE ]; do sleep 2; done'` (each Bash call is a new shell, so `exec 9>` doesn't last);
-    removing HELDFILE releases it. A DOSBox found running that this session didn't start isn't
+    removing HELDFILE releases it. **Everything `start.sh` starts inside the lock inherits it** (Xvfb,
+    DOSBox, the dice log: [an Xvfb left from a finished session held it for an
+    hour](HISTORY.md#the-shell); `lslocks` and `ls -l /proc/PID/fd` show who): start Xvfb before
+    taking the lock, and end a session by killing its DOSBox and dice log by pid. Stop only what
+    you started: never kill a process you can't prove is yours. With another agent's game running,
+    `PT_KEEP_OTHERS=1` keeps `start.sh` from killing every dice log and DOSBox (its own first line
+    does), and a game of your own beside it is [a second game](#loading-and-saving). A DOSBox found
+    running that this session didn't start isn't
     restarted: play in it (`loadsave.sh` would kill it). **After a pause every flock holder is gone
     with DOSBox**, and their marker files stay (`*.held`, `*.locked` in the work folder): check
     `pgrep -a flock`, not the files. Wait for a busy lock with one `flock -w 1500`, never a polling
@@ -361,6 +368,18 @@ game's data: it is one player's account.
   plain. Only walkable ground takes a walking click (the user): a click on a wall does nothing, and
   a walk tool clicking in eye mode looks at the floor and nothing moves. The look pointer pauses
   the game ([rule 9](#1-the-rules)).
+- **Alt, for "show what can be used"** (dsloader/usable.py): `xdotool keydown --window $W Alt_L`
+  holds it (the BIOS flag 0:0417h reads 08h at once) and `keyup` lets go; `altflag.py` prints the
+  flag and whether the marks are up, `altflag.py latency N` times them, `altflag.py watch SECONDS`
+  follows the flag, fight_on, the rings' table and colours and the label slots. **`shot.sh` takes
+  no picture while Alt is held** (Ctrl+F5 becomes Ctrl+Alt+F5, DOSBox's video capture, which
+  writes nothing), and the flag written in memory doesn't hold (DOSBox's BIOS cleared it within
+  half a second): hold the key and grab the window (`import -window`, scaled 200% for a doc picture: 640x480, the
+  window's shape; `-sample '320x200!'` drops rows through the names' letters). **With
+  Alt down, Tab and Return are Alt+Tab and Alt+Enter to the game** (and Alt+Enter is DOSBox's full
+  screen): no fight tool works with the key or the flag left down, so let go before `fightout.sh`.
+  DOSBox lets go of every key when its window loses the focus (`xdotool windowfocus` of another
+  window cleared the flag at once).
 - **Message boxes** (a speech box with a portrait at the top, or the grey message window) take a
   click to go away, and while one is up Tab, Return, map clicks and drags do nothing. `msgbox.sh`
   tells whether one is up; **click ON the box** (`boxclick.sh`: 160, 20): a click wherever the

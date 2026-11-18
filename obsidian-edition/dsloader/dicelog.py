@@ -28,7 +28,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple
 
-from . import aging, quests, quicksave, hitchance, journal, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, usable, quests, quicksave, hitchance, journal, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory, WriteRefused
@@ -584,6 +584,8 @@ class DiceLog:
         self.hit_chance = True  # what the d20 must show to hit the chosen enemy (hitchance.py)
         self.ac_gap: Dict[int, int] = {}  # creature index -> the game's AC for it less attack_ac's, when last attacked
         self._chance_seen: Tuple[Optional[tuple], float, str] = (None, 0.0, "")  # (the header's, kept a moment)
+        self.show_usable = True  # Alt held on the map marks what can be used (usable.py)
+        self._usable = usable.Usable()
         self._targeting = targeting.Targeting()
         self.scroll_map = True  # the map scrolled by dragging with the wheel pressed (scrolling.py)
         self._scrolling = scrolling.Scrolling()
@@ -730,6 +732,7 @@ class DiceLog:
         self._poll_fails = 0
         self._dust = dust.Dust()
         self._rings = rings.Rings()
+        self._usable = usable.Usable()
         self._big = cahulaks.Big()
         self._large = sizes.Large()
         self._targeting.forget()
@@ -1038,6 +1041,7 @@ class DiceLog:
         self.hit_chance = settings.get("hit_chance", True) is not False
         self.quicksave.keys = settings.get("quick_save", True) is not False
         self.quicksave.auto = settings.get("autosave", True) is not False
+        self.show_usable = settings.get("show_usable", True) is not False
         self.load_picked(settings.get("pickpocketed", []), known=picked_known)
         self.rules = game.rules_from_settings(settings)
 
@@ -1613,6 +1617,7 @@ class DiceLog:
                 step(lambda: self._dress_now(now))
                 out += step(lambda: self.itemwatch.check(self.game, now, self._settings))
         step(self._scroll)
+        step(lambda: self._usable_key(now), quiet=True)
         if self._initiative and now - self._initiative_at >= INITIATIVE_WAIT:
             out += step(self.initiative_lines)
         out += step(self.turn_lines)  # after the round's order and the last turn's XP
@@ -1915,15 +1920,14 @@ class DiceLog:
         try:
             self._shadows.update(self.game, self.tsr_hdr, self.show_shadows, now,
                                  needed=self.show_dust or self.ring_mode != rings.OFF or self.combat_log
-                                 or self.see_through)
+                                 or self.see_through or self.show_usable)
             self._update_panel(now)
             self._labels.on = self.floating_names
             self._labels.tick(self.game.guest, self.tsr_hdr, now)
             foes = rings.enemies(self.game)
             out = self._targeting.update(self.game, self.tsr_hdr, self.use_targeting, foes,
                                          lambda turn, chosen: hitchance.line(self._swings(turn, chosen)))
-            self._rings.update(self.game, self.tsr_hdr, self.ring_mode != rings.OFF, self._shadows.palettes,
-                               self._targeting.chosen)
+            self._marks(now)
             self._dust.update(self.game, self.tsr_hdr, self.show_dust, self._shadows.palettes)
             hdr = self.tsr_hdr
             self._ghosts.update(self.game, hdr, self.see_through, self._shadows.palettes,
@@ -1931,6 +1935,23 @@ class DiceLog:
         except (struct.error, IndexError, ValueError):
             return []
         return out
+
+    def _marks(self, now: float) -> None:
+        """The rings: under what can be used while Alt is held out of a fight (usable.py, with the
+        names of those nearest the pointer), else the Tab ring's (rings.py, which owns the table)."""
+        if self.show_usable and self._labels.font is None and not self._labels_font_tried:
+            self._labels_font_tried = True
+            self._labels.font = _game_font(self.game_dir)
+        table = self._usable.update(self.game, self.tsr_hdr, self.show_usable, now, self._labels)
+        self._rings.update(self.game, self.tsr_hdr, self.ring_mode != rings.OFF, self._shadows.palettes,
+                           self._targeting.chosen, table)
+
+    def _usable_key(self, now: float) -> None:
+        """Every pass: the marks put up or taken down as Alt is pressed or let go (and at a
+        fight's start), not at the next of _drawn's looks, a quarter of a second apart."""
+        if self.tsr_hdr is not None and self.game is not None and self._shadows.palettes \
+                and self._usable.changed(self.game, self.show_usable, now):
+            self._marks(now)
 
     def _panel_lines(self, lines: List[str], now: float) -> None:
         """A fight's lines into the combat log's panel (and those just after it: XP, the last kill);

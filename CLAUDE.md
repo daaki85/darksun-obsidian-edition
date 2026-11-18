@@ -76,7 +76,10 @@ branch, or the work continues an existing branch, use that one.
 **Shell.** Never `pkill -f` or `pgrep -f | kill` a pattern your own command line contains: it
 kills your shell. Kill by pid, in a command of its own. Long runs go in the background with a
 Monitor, and every step gets a `timeout`. Share DOSBox between agents with
-`flock /tmp/playtest/dosbox.lock`.
+`flock /tmp/playtest/dosbox.lock`; start Xvfb before taking the lock (what `start.sh` starts inside it
+keeps it), and end a session by killing its DOSBox and dice log by pid. Stop only what you
+started: never kill a process you can't prove is yours (an agent once killed the shared display
+to free the lock, 2026-11-17); if something else holds the lock, say so and wait.
 
 **Water.** Whenever a play reaches a new area, note in the test log and in [ROUTE.md's water
 section](playtest/ROUTE.md#water-for-resting-an-idea-for-later) where water, jugs or waterskins

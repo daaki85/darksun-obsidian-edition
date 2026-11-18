@@ -136,6 +136,33 @@ the chance, in the dice log and the combat log's header*. Rules: [the chance sho
 swing](PLAYER-GUIDE.md#the-chance-shown-before-the-swing). How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#the-chance-to-hit-before-the-swing).
 
+### Showing what can be used: Alt
+
+Hold **Alt** on the map, out of a fight: a gold ring appears on the ground under everything in view
+that a click does something with, and the four nearest the pointer have their names over them.
+Move the pointer and the names move to what is nearest it; let go of Alt and all of it is gone.
+
+![The slave pens' guard room with Alt held: gold rings under the bag, the chest, a door's leaf, the barred wardrobe and everyone in the room, and the names of the four nearest the pointer: Bag and Chest in pale gold, Templar and Guard in red](docs/show-usable.png)
+
+What gets a ring: **people to talk to**, their names in pale gold, and anyone else on another side
+than the party's (guards with nothing to say, monsters), named in red: there is nothing to do with
+them but fight; **doors**, each leaf (the look pointer opens and closes them); **chests, bags and
+other containers**, and **bodies**; **items lying on the ground**; and **things a script answers
+to** (a haystack that can be searched, a button, a lever, a fountain a pot can be filled at). Plain
+scenery gets nothing, nor does the party, and a secret door stays secret; a thing the game has no
+name for is ringed without one.
+
+Walking and clicking work as ever while Alt is held. In a fight Alt does nothing: the ring there is
+the red one under the enemy chosen with Tab, and a fight that starts while Alt is held takes the
+gold rings and the names away. The marks cost some speed while they are up (a walking party is
+about a sixth slower). Alt with another key is still what it was (Alt+Enter is DOSBox's full
+screen), and if Alt reads as held for 30 seconds on end the marks go until it is let go, so a key
+left "held" by switching windows can't leave them up.
+
+**Switch:** *Showing what can be used: hold Alt on the map, out of a fight*. How it works:
+[DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#showing-what-can-be-used-alt).
+
+
 ## Rule changes
 
 The game's rules brought closer to AD&D's, in three groups: [characters](#characters), [weapons and
