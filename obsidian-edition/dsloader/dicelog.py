@@ -1688,7 +1688,9 @@ class DiceLog:
         given = sum(1 << m for m in range(game.PARTY_SIZE) if before.get(m) != after.get(m))
         given |= self.guest.read(self.tsr_hdr + TSR_GEAR_GIVEN, 1)[0]  # (a pass before the window's end)
         self.guest.write(self.tsr_hdr + TSR_GEAR_GIVEN, bytes((given,)))
-        if not self._weapons_asked():
+        # (cleared only if GEAR_WHO still names the character worked on: another finished meanwhile
+        # keeps it set, its gear given in the next pass, not left the game's)
+        if not self._weapons_asked() and self.guest.read(self.tsr_hdr + TSR_GEAR_WHO, 1)[0] == who:
             self.guest.write(self.tsr_hdr + TSR_GEAR_DUE, b"\0")
         return out
 

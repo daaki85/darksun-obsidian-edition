@@ -71,6 +71,18 @@ Releases, newest first (2.12.0 and older in the archive):
 - **The Loader's item moves read the lists with the game held still:** the item gate checked only
   the free lists' heads, so an item the game moved between two lists during its wait (a drag, a
   GIVE) could have a list cut into another. Every change now reads the lists after the gate holds.
+- **The Elven Leader's Gythka +1 is no longer drawn as Kreenfang:** Kreenfang is known by its name too.
+- **A Ravager at kit level 0 has the table's first AC (7), as the dice log says,** not its last (3).
+- **A second new character's gear isn't skipped:** the gear pass clears its flag only if the
+  character it worked on is still the one named.
+- **On Windows, a file held a moment (a virus scan) no longer starts the game without the dice
+  log:** the Loader's copies are tried again for a moment, and flushed to the disk first.
+- **Settings changed by the window and by *Play Dark Sun (in-game rolls)* at once are both kept**
+  (a lock file beside settings.json).
+- **Smaller:** DSUN.EXE gone from the folder is said, not a crash; a hand-edited name key such as
+  "²" no longer breaks name look-ups; the `dicelog` command waits for DOSBox again and `play` says
+  an unreadable settings.json plainly; with Kalzith off, a failed scripts copy also says the pens'
+  gifts went with it.
 
 **Fixed: the scripts**
 - **The elven slavers' leader's Goodbye** (script 46, from OpenDS's triage; `scriptfixes.py`, tests

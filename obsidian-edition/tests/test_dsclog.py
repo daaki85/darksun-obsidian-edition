@@ -6358,13 +6358,14 @@ class KitTests(unittest.TestCase):
         the armour's improvement kept (kits.ac)."""
         from dsloader import kits
         self.rules(game.RULE_KITS)
-        for level in (1, 2, 3, 8, 9, 12, 17, 18, 20):
+        for level in (0, 1, 2, 3, 8, 9, 12, 17, 18, 20):
             for base in (10, 5, 0):
                 with self.subTest(level=level, base=base):
                     self.creature(9, 3, level=level, base=base)
                     self.assertEqual(self.kit_ac(), 10 + kits.ac(kits.RAVAGER, False, level, base))
-        self.creature(9, 3, level=1, base=10)
-        self.assertEqual(self.kit_ac(), 7)
+        for level in (0, 1):  # (level 0 as 1: the table's first, not its last, AC 3)
+            self.creature(9, 3, level=level, base=10)
+            self.assertEqual(self.kit_ac(), 7)
 
     def test_shield_ac(self):
         """KIT_AC with a shield in a hand and without: a Sentinel's 2, an Arena Champion's 1;

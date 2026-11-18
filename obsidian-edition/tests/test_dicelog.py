@@ -2027,6 +2027,25 @@ class NewLinesTests(unittest.TestCase):
             log._gear_due()  # (the window gone: nothing more changed, the earlier change still told)
         self.assertEqual((m[HDR + dicelog.TSR_GEAR_DUE], m[HDR + dicelog.TSR_GEAR_GIVEN]), (0, 1))
 
+    def test_gear_due_another_made_meanwhile(self):
+        """GEAR_DUE cleared only if GEAR_WHO still names the character the pass worked on: another
+        DONE meanwhile (GEAR_WHO changed) leaves it set, that one's gear given in the next pass."""
+        from unittest import mock
+        log = make_game()
+        m = log.guest.mem
+        m[HDR + dicelog.TSR_GEAR_DUE], m[HDR + dicelog.TSR_GEAR_WHO] = 1, 2
+
+        def gear(out):
+            m[HDR + dicelog.TSR_GEAR_WHO] = 3  # (the game's DONE for the next one, as the pass ran)
+            return True
+        with mock.patch.object(dicelog.names, "update", return_value=True), \
+                mock.patch.object(log.game, "party_items", return_value=[]), \
+                mock.patch.object(log, "_new_gear", side_effect=gear):
+            log._gear_due()
+            self.assertEqual(m[HDR + dicelog.TSR_GEAR_DUE], 1)
+            log._gear_due()  # (the next pass: GEAR_WHO 3 as it read it)
+        self.assertEqual(m[HDR + dicelog.TSR_GEAR_DUE], 0)
+
     def test_being_new(self):
         """game.being_new: status New, or the sheet index DSCLOG's GEAR_WHO names (the character DONE
         just made, still Okay to the game); _gear_due sets it for its pass only."""

@@ -163,7 +163,20 @@ def cmd_dicelog(args) -> None:
 
 
 def _follow(args) -> None:
-    """cmd_dicelog's work: the dice log printed as the game runs."""
+    """cmd_dicelog's work: the dice log printed as the game runs; DOSBox gone or unreadable
+    (ProcessError), said and waited for again, as the window does, not a bare error."""
+    import time
+    from .process import ProcessError
+    while True:
+        try:
+            _follow_once(args)
+            return
+        except ProcessError as e:
+            print(f"DOSBox can't be read any more ({e}). Waiting for it...", flush=True)
+            time.sleep(2)
+
+
+def _follow_once(args) -> None:
     import time
     from .dicelog import DiceLog
     from .dicelog import DiceLogError
@@ -253,7 +266,7 @@ def _game_dir(args) -> str:
             raise CliError("No game folder chosen.")
         if not launch.is_game_dir(game_dir):
             raise CliError(f"{game_dir} has no DSUN.EXE and DOSBOX folder; pick the GOG install folder.")
-    with launch.SETTINGS_LOCK:
+    with launch.SETTINGS_LOCK, launch._settings_file_lock():  # (another process's change kept)
         settings = launch.load_settings(strict=True)
         changed = dict(settings, game_dir=os.path.abspath(game_dir))
         if getattr(args, "window_scale", None):
@@ -380,6 +393,9 @@ def cmd_play(args) -> None:
             tell(f"{launch.closed_line(dosbox.returncode)}\n\n{saved}")
     except (CliError, launch.LaunchError) as e:
         tell(str(e))
+    except launch.SettingsUnreadable as e:  # (as the window says it: held by a backup or a scan)
+        tell(f"{e.strerror}: it may be held by a backup or a virus scan for a moment. Start the game again "
+             "in a little while.")
     except Exception:
         tell("Something went wrong; the details are in " + log_path)
         note(traceback.format_exc())

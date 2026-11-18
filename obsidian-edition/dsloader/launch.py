@@ -280,9 +280,68 @@ def save_settings(settings: dict) -> None:
                     pass
 
 
+SETTINGS_FILE_WAIT = 2.0  # seconds update_settings waits for another process's settings lock, at most
+_settings_file_held = threading.local()
+
+
+def _settings_file_lock():
+    """A lock on settings.lock beside settings.json, across processes (the window and `play` both
+    rewrite settings.json: a read and write of one, between the other's, lost the other's change).
+    Waited for up to SETTINGS_FILE_WAIT, then gone on without (as before); none where the folder
+    can't be written or the system can't lock. A context manager; again within it, nothing."""
+    import contextlib
+
+    @contextlib.contextmanager
+    def held():
+        if getattr(_settings_file_held, "depth", 0):
+            _settings_file_held.depth += 1
+            try:
+                yield
+            finally:
+                _settings_file_held.depth -= 1
+            return
+        try:
+            fd: Optional[int] = os.open(os.path.splitext(SETTINGS)[0] + ".lock", os.O_RDWR | os.O_CREAT, 0o644)
+        except OSError:
+            fd = None
+        taken = False
+        if fd is not None:
+            end = time.monotonic() + SETTINGS_FILE_WAIT
+            while True:
+                got = _lock_file(fd)
+                if got is not False or time.monotonic() >= end:
+                    taken = bool(got)
+                    break
+                time.sleep(0.02)
+        _settings_file_held.depth = 1
+        try:
+            yield
+        finally:
+            _settings_file_held.depth = 0
+            if fd is not None:
+                if taken:
+                    _unlock_file(fd)
+                os.close(fd)
+    return held()
+
+
+def _unlock_file(fd: int) -> None:
+    try:
+        if os.name == "nt":
+            import msvcrt
+            os.lseek(fd, _LOCK_AT, os.SEEK_SET)
+            msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+        else:
+            import fcntl
+            fcntl.flock(fd, fcntl.LOCK_UN)
+    except OSError:
+        pass
+
+
 def update_settings(changes: dict) -> dict:
-    """settings.json with CHANGES made, read and written as one step; the settings as saved."""
-    with SETTINGS_LOCK:
+    """settings.json with CHANGES made, read and written as one step (in this process, and against
+    another's: _settings_file_lock); the settings as saved."""
+    with SETTINGS_LOCK, _settings_file_lock():
         settings = load_settings(strict=True)
         settings.update(changes)
         save_settings(settings)
@@ -294,7 +353,7 @@ def _names(settings: dict, key: str) -> Dict[int, str]:
     names = settings.get(key, {})
     if not isinstance(names, dict):
         return {}
-    return {int(k): v for k, v in names.items() if str(k).isdigit() and isinstance(v, str) and v}
+    return {int(k): v for k, v in names.items() if str(k).isdecimal() and isinstance(v, str) and v}
 
 
 def _dict_in(settings: dict, key: str) -> dict:
@@ -518,8 +577,11 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
         | (frozenset() if on["party_spread"] else frozenset(gamepatch.PARTY_SPREAD))\
         | (frozenset() if on["spells_manual"] else frozenset(gamepatch.SPELLS_MANUAL))\
         | (frozenset() if on["spell_to_hit"] else frozenset(gamepatch.SPELL_TO_HIT))
+    source = _find_file(game_dir, "DSUN.EXE")
+    if source is None:  # (gone since the folder was picked: said, not a TypeError)
+        return f"{game_dir} has no DSUN.EXE"
     try:
-        gamepatch.write_patched(_find_file(game_dir, "DSUN.EXE"), os.path.join(DOS_DIR, PATCHED_EXE), skip)
+        gamepatch.write_patched(source, os.path.join(DOS_DIR, PATCHED_EXE), skip)
     except (gamepatch.PatchError, OSError) as e:
         return str(e)
     objects_ok, new_objects, kalzith_object = False, (), False
@@ -590,7 +652,11 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
             except FileNotFoundError:
                 pass  # (no region copy to take away)
     except (gff.GffError, OSError, KeyError, struct.error, ValueError, IndexError, gpl.ScriptError) as e:
-        LEFT_OUT.append(f"the new scripts: Kalzith, Semyon, the new people's talk ({kalzith.SCRIPTS_FILE}: {e})")
+        # (RGN29's copy goes with them, and with it the pens' gifts it held, Kalzith's copy or, with
+        # him off, the region's own: said too, not dropped unseen)
+        gifts_too = f"; with it the gifts placed in {kalzith.REGION_FILE}" if pens_clones else ""
+        LEFT_OUT.append(f"the new scripts: Kalzith, Semyon, the new people's talk ({kalzith.SCRIPTS_FILE}: {e})"
+                        + gifts_too)
         for name in (kalzith.SCRIPTS_FILE, kalzith.REGION_FILE):  # (all or nothing: the game's own)
             try:
                 os.remove(os.path.join(DOS_DIR, name))
@@ -1115,6 +1181,8 @@ def _launch(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optional[s
         os.path.join(game_dir, "__support", "app"), "dosbox_darksun.conf")
     if not dosbox_dir or not settings_conf:
         raise LaunchError(f"{game_dir} does not look like the GOG install of Shattered Lands")
+    if not _find_file(game_dir, "DSUN.EXE"):
+        raise LaunchError(f"{game_dir} has no DSUN.EXE; pick the GOG install folder")
     problem = prepare_patched_game(game_dir, settings)
     for old in (GAME_END, GAME_MESSAGE, GAME_OK):  # (the last game's)
         try:

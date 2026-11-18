@@ -309,6 +309,57 @@ class SettingsTests(unittest.TestCase):
         self.assertIs(got["settings"]["helms"], False)
         self.assertTrue(got["known"])
 
+    def test_dicelog_waits_for_dosbox_again(self):
+        """The dicelog command with DOSBox gone mid-run (ProcessError): said, and waited for again,
+        not the bare "error:" it ended with."""
+        from unittest import mock
+        from dsloader.process import ProcessError
+        said, made = [], []
+
+        class Stop(Exception):
+            pass
+
+        class Log:
+            def __init__(self, guest, record_everything=False):
+                made.append(1)
+
+            def answer_stats_in_background(self):
+                pass
+
+            def use_settings(self, settings, picked_known=True):
+                if len(made) == 2:
+                    raise Stop()
+
+            def attach(self):
+                raise ProcessError("DOSBox closed")
+
+            def detach(self):
+                pass
+        with mock.patch.object(cli, "connect", lambda args: object()), \
+                mock.patch("dsloader.dicelog.DiceLog", Log), mock.patch("time.sleep"), \
+                mock.patch("builtins.print", lambda *a, **k: said.append(" ".join(map(str, a)))):
+            with self.assertRaises(Stop):
+                cli._follow(argparse.Namespace(pid=None, host_base=None, raw=False, all=False))
+        self.assertEqual(len(made), 2)
+        self.assertTrue(any("DOSBox can't be read any more (DOSBox closed). Waiting" in line for line in said))
+
+    def test_play_says_settings_unreadable(self):
+        """Play Dark Sun (in-game rolls) with settings.json held elsewhere: said as the window says
+        it, not "Something went wrong"."""
+        import tempfile
+        from unittest import mock
+        said = []
+
+        def unreadable(args):
+            raise launch.SettingsUnreadable(13, "settings.json can't be read just now (in use)")
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(launch, "HERE", d), \
+                mock.patch.object(cli, "_game_dir", unreadable), \
+                mock.patch.dict(sys.modules, {"tkinter": None}), \
+                mock.patch("builtins.print", lambda *a, **k: said.append(" ".join(map(str, a)))):
+            cli.cmd_play(argparse.Namespace())
+        self.assertEqual(len(said), 1)
+        self.assertIn("settings.json can't be read just now (in use): it may be held by a backup", said[0])
+
     def test_a_second_unreadable_file_keeps_the_first(self):
         for text in ("{cut", "{also cut"):
             with open(launch.SETTINGS, "w") as f:

@@ -6922,7 +6922,9 @@ kit_ac:
         call kit_level
         movzx ax, al
         dec ax
-        cmp ax, RAVAGER_LEVELS - 1
+        jns .some               ; (level 0 as 1, as kits.ac: the table's first, not its last)
+        xor ax, ax
+.some:  cmp ax, RAVAGER_LEVELS - 1
         jbe .level
         mov ax, RAVAGER_LEVELS - 1
 .level: push si
