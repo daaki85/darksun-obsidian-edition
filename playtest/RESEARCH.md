@@ -204,8 +204,8 @@ raised before stopping.
   ruleshi=-16384` / `=16384` turns the size rule off and on.
 - **Held targets in memory**: with `held_hit` off, the game's damage routine (79BF9h) takes the
   attack's damage x2 for a Paralyzed or Out Cold target. A `setmem.py ruleshi=-32768` changes DSCLOG
-  but not the dice log's idea of the rules: turn the rule off in settings.json instead (the guide's
-  [foes in a test fight](PLAYTESTING.md#foes-in-a-test-fight)). To see a held target hit on any
+  but not the dice log's idea of the rules (settings.json can't turn it off since 2026-11-18: it is
+  always on, `game.ALWAYS_ON`; the guide's [foes in a test fight](PLAYTESTING.md#foes-in-a-test-fight)). To see a held target hit on any
   roll, write its sheet's base AC (+27h) -10 in memory: "only a 20 hits ... -> HIT".
 - **Seneca's poisoned weapons**: since 2.18 each weapon's first hit a fight is marked in the
   header's +1860, which `symread.py`-style reads show as 88h once both her hands have poisoned.

@@ -79,7 +79,7 @@ class SiteTests(unittest.TestCase):
             self.assertEqual(p.replacement, bytes((0xCD, 0x98, site, 0x90, 0x90)))
             self.assertNotIn(name, gamepatch.SPELLS_MANUAL)
         self.assertEqual(game.RULE_DUAL_CLASS >> 16, 2048)
-        self.assertIn(("dual_class", game.RULE_DUAL_CLASS), game.RULE_SETTINGS)
+        self.assertIn(("dual_class", game.RULE_DUAL_CLASS), game.RULE_SETTINGS_GONE)  # (always on: game.RULES_ALWAYS)
 
     def test_dual_level(self):
         """DUAL_LEVEL: "cmp byte [es:bx+24h],2" (the sheet's first level), 3 with RULE_HI_DUAL; the
@@ -389,7 +389,7 @@ class SiteTests(unittest.TestCase):
             self.assertEqual(p.replacement[:3], bytes((0xCD, 0x98, site)))
             self.assertNotIn(name, gamepatch.SPELLS_MANUAL)
         self.assertEqual(game.RULE_REST >> 16, 4096)
-        self.assertIn(("rest_heal", game.RULE_REST), game.RULE_SETTINGS)
+        self.assertIn(("rest_heal", game.RULE_REST), game.RULE_SETTINGS_GONE)  # (always on: game.RULES_ALWAYS)
 
     def party(self):
         """Four members, things 0-3 = creatures 0-3 = sheets 0-3: (status, HP, most, CON, class)."""

@@ -4,8 +4,8 @@
 **Spoilers:** some of these name places and people from later in the game, most of them under
 [People and quests](#people-and-quests).*
 
-The patched game mends these whatever the Options tab says. The rules the game got wrong, each with
-a switch, are [further down](#rules-it-got-wrong-with-a-switch). The script bugs are mended in the
+The patched game mends these whatever the Options tab says. The rules the game got wrong are
+[further down](#rules-it-got-wrong). The script bugs are mended in the
 Loader's copy of the game's scripts; many were found by yuan-ti and the OpenDS project
 ([credits](https://github.com/daaki85/darksun-obsidian-edition#credits)). How the fixes work:
 [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md) (the script bugs, the spells, worn items), the
@@ -31,7 +31,7 @@ memory fixes in [DEVELOPMENT-INTERNALS.md](https://github.com/daaki85/darksun-ob
 - [People and quests](#people-and-quests)
   - [Scripts that stuck, or ran twice](#scripts-that-stuck-or-ran-twice)
   - [Who is talking: class, race and sex](#who-is-talking-class-race-and-sex)
-- [Rules it got wrong, with a switch](#rules-it-got-wrong-with-a-switch)
+- [Rules it got wrong](#rules-it-got-wrong)
 - [Saved games](#saved-games)
 
 ## Spells and psionics
@@ -175,13 +175,12 @@ memory fixes in [DEVELOPMENT-INTERNALS.md](https://github.com/daaki85/darksun-ob
 | The cave guide's "Why don't you go bother someone **your own size**" | Asked "not a dwarf, or not a halfling?", true of everyone, so a dwarf or halfling heard it too | A dwarf or halfling is told to bother "someone else" |
 | Lines that depend on the **race or sex** of the one talking to someone | Read from the wrong record, so they always took the party's active member for a man of no race: a halfling was never greeted as a fellow halfling ("Oh, it is a relief to see a fellow halfling") nor named by race in the insult that follows, a woman was told "only a mad man would think of fighting Draj" and of "his purse", a thri-kreen never heard the bell the mastyrial hears near Demothi's camp, nor was told "your help" rather than "the help of any humanoid" | Each reads the active member's own race or sex |
 
-## Rules it got wrong, with a switch
+## Rules it got wrong
 
-Most of the mod's [rule changes](FEATURES.md#rule-changes) put right a rule the game gets wrong, and
-two of its bugs (Cilla's figure, a click on a spell's icon on the Effects screen) are mended by a
-switch of their own. Each switch is on by default, so the game's own rule is still there to go back
-to: they are listed with the rule changes, as [rules the game got
-wrong](FEATURES.md#rules-the-game-got-wrong).
+Most of the mod's [rule changes](FEATURES.md#rule-changes) put right a rule the game gets wrong: they
+are listed with the rule changes, as [rules the game got wrong](FEATURES.md#rules-the-game-got-wrong).
+Each is always on, with no switch, as are the mends of two more of its bugs: Cilla's figure, and a
+click on a spell's icon on the Effects screen ending the spell.
 
 ## Saved games
 

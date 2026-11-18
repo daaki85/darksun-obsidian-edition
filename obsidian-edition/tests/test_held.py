@@ -33,7 +33,7 @@ def load_tests(loader, tests, pattern):
 class LoaderTests(unittest.TestCase):
     def test_rule(self):
         self.assertEqual(game.RULE_HELD >> 16, RULE)
-        self.assertIn(("held_hit", game.RULE_HELD), game.RULE_SETTINGS)
+        self.assertIn(("held_hit", game.RULE_HELD), game.RULE_SETTINGS_GONE)  # (always on: game.RULES_ALWAYS)
         self.assertTrue(game.rules_from_settings({}) & game.RULE_HELD)  # (on unless unticked)
         self.assertEqual(game.PARALYZED_EFFECT, PARALYZED)
 

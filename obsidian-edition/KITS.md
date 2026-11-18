@@ -111,9 +111,8 @@ its long sword and club are its two weapons.
 Not the cahulaks: two blades, not one weapon in two hands (a half-giant may add a
 shield). It may use missile weapons, but not take one as its weapon spec, and a
 bow or staff sling, two-handed as it is, doesn't get the +2. **Starts with** a
-two-handed weapon (a bone great axe without weapon specialization); the club is
-left behind. Can't dual to psionicist or air cleric (neither has a two-handed
-melee weapon it may use).
+two-handed weapon of its weapon spec; the club is left behind. Can't dual to
+psionicist or air cleric (neither has a two-handed melee weapon it may use).
 
 ## Ranger kits
 
@@ -236,15 +235,13 @@ its level, 1 worse). **Starts with** the preserver's gear.
 
 #### Battle Mage
 
-A [warrior's THAC0](#a-warriors-thac0) with its **chosen weapon spec** only
-(without weapon specialization, with its weapon kinds: the one-handed melee ones
-below). With weapon specialization, expertise in one weapon spec of its choice
-(long sword, club, dagger, short sword, mace, axe or pick), whose weapons it may
+A [warrior's THAC0](#a-warriors-thac0) with its **chosen weapon spec** only.
+Expertise in one weapon spec of its choice (long sword, club, dagger, short
+sword, mace, axe or pick), whose weapons it may
 use as well as a preserver's own, at **3/2 attacks a round, 2 from 7th level**
 by its preserver level; with any other weapon it attacks as a preserver does
 ([Weapon specs](WEAPON-SPECS.md#attacks-a-round)). Its weapon spec is chosen on
-the weapon window after DONE (the long sword for an EXIT). Without weapon
-specialization it has no weapon spec, only a preserver's weapons.
+the weapon window after DONE (the long sword for an EXIT).
 
 A spell is still cast after being hit earlier in the round ([the
 rule](PLAYER-GUIDE.md#initiative)). It has a d6 hit die, and wears light armour
@@ -304,11 +301,8 @@ sphere menu says WATER ONLY).
 
 #### Crusader
 
-A [warrior's THAC0](#a-warriors-thac0) with its **chosen weapon spec** only
-(without weapon specialization, with its weapon kinds: any melee weapon). A
-warrior's extra attacks in melee, **3/2 a round from 7th level**, without weapon
-specialization; with it, expertise in one melee weapon spec of its choice (of
-those its class can use) at **3/2 attacks a round, 2 from 7th level**, its extra
+A [warrior's THAC0](#a-warriors-thac0) with its **chosen weapon spec** only, and
+expertise in one melee weapon spec of its choice (of those its class can use) at **3/2 attacks a round, 2 from 7th level**, its extra
 attacks with that weapon alone ([Weapon specs](WEAPON-SPECS.md#attacks-a-round)).
 Its weapon spec is chosen on the weapon window after DONE (the long sword, or its
 sphere's first, for an EXIT). One fewer spell slot at each spell level (none at
@@ -364,11 +358,8 @@ power with no upkeep still has none). **Starts with** the psionicist's gear.
 
 #### Mind Warrior
 
-A [warrior's THAC0](#a-warriors-thac0) with its **chosen weapon spec** only
-(without weapon specialization, with its weapon kinds: any melee weapon). A
-warrior's extra attacks in melee, **3/2 a round from 7th level**, without weapon
-specialization; with it, expertise in one melee weapon spec of its choice (of
-those its class can use; a thri-kreen the chatkcha too, at 3/2 throws a round, 2
+A [warrior's THAC0](#a-warriors-thac0) with its **chosen weapon spec** only, and
+expertise in one melee weapon spec of its choice (of those its class can use; a thri-kreen the chatkcha too, at 3/2 throws a round, 2
 from a warrior class's 7th level, and one more as every thri-kreen) at **3/2
 attacks a round, 2 from 7th level**, its extra attacks with that weapon alone
 ([Weapon specs](WEAPON-SPECS.md#attacks-a-round)). Its weapon spec is chosen on

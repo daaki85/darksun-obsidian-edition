@@ -637,7 +637,7 @@ way back is a fight's end, not 6's 0CE2h) set `SPREAD_DUE`; `SPREAD_TICK`, in
 `PANEL_TICK`, then calls 3109h itself on the map out of a fight, if the party is
 still one figure. (A 5 put in the BIOS's buffer waits there: the game reads
 keys only in its keyboard interrupt.) Switch: `gamepatch.PARTY_SPREAD`
-(`party_spread`, on).
+(`party_spread`, always on: [the switches always on](DEVELOPMENT-RULES.md#the-switches-always-on)).
 
 ## The view in fights
 
@@ -655,8 +655,8 @@ shows monsters' moves, `ES:19h` of segment `377Eh`). Found with `INT 3` put
 over the first byte of each routine in a test build of DSCLOG, which kept its
 callers' return addresses: in a fight the centring routine was never called,
 and every move of the view came from that call (returning to `1CA37h`), for
-party members walking as well as monsters. The patch (`camera_still`, a
-switch, `CAMERA`) rewrites that call's 54 bytes of set-up: while `IN_COMBAT`
+party members walking as well as monsters. The patch (`camera_still`, once a
+switch, always applied now, `CAMERA`) rewrites that call's 54 bytes of set-up: while `IN_COMBAT`
 (`DS:1168h`) is set (a fight, or the party spread out), the game's own on-screen test first, skipping the
 step while the figure is on the screen; the figure's spot pushed straight from
 its record (one `push dword`). The game's `mov ax,377Eh` stays at `CA15h`: DOS

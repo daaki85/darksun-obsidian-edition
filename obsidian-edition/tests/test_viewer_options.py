@@ -63,7 +63,9 @@ class OptionsTests(unittest.TestCase):
         v.ring_mode.set("off")
         v._options_changed()
         settings = self.saved()
-        self.assertEqual(launch.content(settings), {key: False for key in launch.CONTENT})
+        # (the switches gone from the tab, game.ALWAYS_ON: on whatever is saved; none of theirs written)
+        self.assertEqual(launch.content(settings), {key: key in game.ALWAYS_ON for key in launch.CONTENT})
+        self.assertFalse(set(settings) & game.ALWAYS_ON)
         for key, _ in game.RULE_SETTINGS:
             self.assertIs(settings.get(key), False, key)
         for key, default in launch.SWITCH_DEFAULTS.items():

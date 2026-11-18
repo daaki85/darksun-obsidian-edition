@@ -63,7 +63,7 @@ class ViewerSettingsTests(unittest.TestCase):
             return json.load(f)
 
     def test_an_unreadable_file_is_never_saved_over_with_the_defaults(self):
-        launch.save_settings({"dust": False, "shadows": False, "helm_ac": False, "game_dir": "C:\\GOG"})
+        launch.save_settings({"steady_pace": False, "monster_info": False, "helm_ac": False, "game_dir": "C:\\GOG"})
         real_open = builtins.open
 
         def locked(path, *args, **kwargs):
@@ -73,23 +73,23 @@ class ViewerSettingsTests(unittest.TestCase):
         with mock.patch("builtins.open", locked), mock.patch("time.sleep"):
             v = self.window()
         self.assertTrue(v._options_unread)
-        self.assertTrue(v.show_dust.get())  # (the defaults shown...)
+        self.assertTrue(v.steady_pace.get())  # (the defaults shown...)
         self.assertIn("shows the defaults", v.status.get())
-        v.rule_vars["spell_save"].set(False)  # (...and one switch changed once the file can be read)
+        v.rule_vars["best_hit_die"].set(False)  # (...and one switch changed once the file can be read)
         v._options_changed()
         settings = self.saved()
-        self.assertIs(settings["spell_save"], False)
-        self.assertEqual((settings["dust"], settings["shadows"], settings["helm_ac"], settings["game_dir"]),
+        self.assertIs(settings["best_hit_die"], False)
+        self.assertEqual((settings["steady_pace"], settings["monster_info"], settings["helm_ac"], settings["game_dir"]),
                          (False, False, False, "C:\\GOG"))  # (the player's other choices kept)
 
     def test_only_the_switch_changed_is_saved(self):
         """Another writer's change to another switch since the tab was read stays."""
         v = self.window()
-        launch.update_settings({"dust": False})
-        v.show_shadows.set(False)
+        launch.update_settings({"steady_pace": False})
+        v.monster_info.set(False)
         v._options_changed()
         settings = self.saved()
-        self.assertEqual((settings["dust"], settings["shadows"]), (False, False))
+        self.assertEqual((settings["steady_pace"], settings["monster_info"]), (False, False))
 
     def test_the_started_dosbox_attached_by_its_pid(self):
         asked = []

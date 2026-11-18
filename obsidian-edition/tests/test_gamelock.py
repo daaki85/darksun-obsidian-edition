@@ -203,8 +203,8 @@ class SettingsTests(unittest.TestCase):
             used.append(os.path.basename(src))
             return real(src, dst)
         with mock.patch("os.replace", replace):
-            launch.save_settings({"dust": False})
-            launch.save_settings({"dust": True})
+            launch.save_settings({"steady_pace": False})
+            launch.save_settings({"steady_pace": True})
         self.assertEqual(len(set(used)), 2)
         self.assertNotIn("settings.json.tmp", used)
         self.assertTrue(all(name.startswith("settings.json.") and name.endswith(".tmp") for name in used))
@@ -213,14 +213,14 @@ class SettingsTests(unittest.TestCase):
     def test_a_failed_write_leaves_no_temporary_file(self):
         with mock.patch("os.replace", side_effect=PermissionError(13, "in use")), mock.patch("time.sleep"):
             with self.assertRaises(PermissionError):
-                launch.save_settings({"dust": False})
+                launch.save_settings({"steady_pace": False})
         self.assertEqual(os.listdir(self.dir), [])
 
     def test_unreadable_is_not_missing(self):
         """Missing: no settings, strictly or not. There but held elsewhere: tried again, then a
         plain read gives none and a strict one raises SettingsUnreadable (an OSError)."""
         self.assertEqual(launch.load_settings(strict=True), {})
-        self.write({"dust": False})
+        self.write({"steady_pace": False})
         import builtins
         real_open = builtins.open
         tries = []
@@ -238,7 +238,7 @@ class SettingsTests(unittest.TestCase):
             self.assertIn("can't be read just now", caught.exception.strerror)
             with self.assertRaises(launch.LaunchError):  # (a launch never builds the copies from defaults)
                 launch.launch(self.dir)
-        self.assertIs(launch.load_settings()["dust"], False)
+        self.assertIs(launch.load_settings()["steady_pace"], False)
 
     def held(self):
         """settings.json held elsewhere (an antivirus, a backup) while the block runs."""
@@ -323,9 +323,9 @@ class SettingsTests(unittest.TestCase):
         """A string settings_version, speakers that aren't a dict, pickpocketed that isn't a list:
         read (the odd ones dropped), never raised at every start."""
         self.write({"settings_version": "2", "speakers": "Tarkon", "speakers_learned": [1, 2],
-                    "pickpocketed": 5, "dust": False})
+                    "pickpocketed": 5, "steady_pace": False})
         settings = launch.load_settings()
-        self.assertEqual(settings["dust"], False)
+        self.assertEqual(settings["steady_pace"], False)
         self.assertNotIn("speakers", settings)
         self.assertEqual(launch.speaker_names(), {})
         self.assertEqual(launch.learned_speakers(), {})
@@ -335,7 +335,7 @@ class SettingsTests(unittest.TestCase):
         self.assertEqual(launch.speaker_names(), {5: "Tarkon"})
         self.assertEqual(launch.learned_speakers(), {6: "Dinos"})
         self.write({"settings_version": "two", "combat_log": False})
-        self.assertEqual(launch.load_settings()["combat_log"], True)  # (version 1: upgraded)
+        self.assertEqual(launch.load_settings()["settings_version"], launch.SETTINGS_VERSION)  # (version 1: upgraded)
         self.write({"settings_version": 2, "pickpocketed": ["a@1", 7]})
         self.assertEqual(launch.pickpocketed(), ["a@1"])
 

@@ -291,20 +291,39 @@ POWER_EFFECT_NAMES = {34: "Paralysing attack", 13: "Disease attack", 51: "Entang
                       35: "Poison attack"}
 POWER_KIND_NAMES = {"pointed": "piercing", "edged": "slashing"}  # (else the damage kind's own name)
 # the Options' setting for each, all on unless unticked
-RULE_SETTINGS = (("helm_ac", RULE_HELMS),
-                 ("spell_save", RULE_SPELL_SAVE),
-                 ("new_spells", RULE_NEW_SPELLS), ("stealth", RULE_STEALTH), ("level_10", RULE_LEVEL_10),
-                 ("thief_table", RULE_THIEF_TABLE), ("half_giant_hands", RULE_HALF_GIANT),
-                 ("protection_rules", RULE_PROTECTION), ("item_saves", RULE_ITEM_SAVES),
-                 ("weapon_specialization", RULE_SPECIALIZE), ("class_restrictions", RULE_RESTRICT),
-                 ("multiclass_hp", RULE_MULTI_HP), ("best_hit_die", RULE_HP_BEST), ("kits", RULE_KITS),
-                 ("ranger_casting_level", RULE_RANGER_CAST), ("int_learning", RULE_INT_LEARN),
-                 ("adnd_tables", RULE_ADND_TABLES), ("cha_prices", RULE_CHA_PRICES),
-                 ("rolled_scores", RULE_ROLLED),
-                 ("aging", RULE_AGING),
-                 ("enlarge_dice", RULE_ENLARGE), ("con_adnd", RULE_CON),
-                 ("dual_class", RULE_DUAL_CLASS), ("rest_heal", RULE_REST), ("cahulaks", RULE_CAHULAKS),
-                 ("creature_size", RULE_SIZE), ("held_hit", RULE_HELD))
+RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("new_spells", RULE_NEW_SPELLS), ("half_giant_hands", RULE_HALF_GIANT),
+                 ("best_hit_die", RULE_HP_BEST), ("kits", RULE_KITS))
+# ... and the rule changes whose switches went from the Options tab (after 2.18, the owner's call:
+# fewer switches, the rules the mod is for kept on), always on (RULES_ALWAYS): an older settings
+# file's False for one is passed over (setting_on). Their off paths are still in DSCLOG and here.
+RULE_SETTINGS_GONE = (("spell_save", RULE_SPELL_SAVE), ("stealth", RULE_STEALTH), ("level_10", RULE_LEVEL_10),
+                      ("thief_table", RULE_THIEF_TABLE), ("protection_rules", RULE_PROTECTION),
+                      ("item_saves", RULE_ITEM_SAVES), ("weapon_specialization", RULE_SPECIALIZE),
+                      ("class_restrictions", RULE_RESTRICT), ("multiclass_hp", RULE_MULTI_HP),
+                      ("ranger_casting_level", RULE_RANGER_CAST), ("int_learning", RULE_INT_LEARN),
+                      ("adnd_tables", RULE_ADND_TABLES), ("cha_prices", RULE_CHA_PRICES),
+                      ("rolled_scores", RULE_ROLLED), ("aging", RULE_AGING), ("enlarge_dice", RULE_ENLARGE),
+                      ("con_adnd", RULE_CON), ("dual_class", RULE_DUAL_CLASS), ("rest_heal", RULE_REST),
+                      ("cahulaks", RULE_CAHULAKS), ("creature_size", RULE_SIZE), ("held_hit", RULE_HELD))
+# Every switch gone from the Options tab, the rule changes' and the others' (the combat log, the
+# game's copy's changes, the graphics, the controls ...): always on, whatever settings.json holds
+# (launch.load_settings drops them as it reads; setting_on, launch.content and the dice log take
+# them as on). The old names of some (merged into one of them, or renamed) go with them.
+ALWAYS_ON = frozenset([key for key, _ in RULE_SETTINGS_GONE] + [
+    "combat_log", "spells_manual", "spell_to_hit", "roll_store", "stealth_gear", "pickpockets",
+    "elf_looks", "cilla_elf", "show_gear", "shadows", "dust", "see_through", "targeting", "scroll_map",
+    "camera_still", "scene_pointer", "mouse_start", "party_spread", "effects_kept"])
+ALWAYS_ON_OLD_NAMES = ("no_doubled_save", "buyback", "backstab_dice", "two_weapons")
+
+
+def drop_always_on(settings: dict) -> dict:
+    """SETTINGS without the switches that are always on now (ALWAYS_ON) or their old names: an
+    older file's False for one can't turn it off."""
+    for key in ALWAYS_ON | frozenset(ALWAYS_ON_OLD_NAMES):
+        settings.pop(key, None)
+    return settings
+
+
 # The new spells (RULE_NEW_SPELLS; DSCLOG's NEW SPELLS): six wizard spells numbered after the game's
 # 196 (0-195), in records past its own (the 200h bytes after them, two small tables, moved into
 # DSCLOG at the game's start: its SEG_MOVE, SEGMENT_TABLE here); DSCLOG fills their records and rows
@@ -409,26 +428,12 @@ DOUBLED_FLAGS = 0x86
 
 # settings kept under an earlier name (the new spells' switch was Cat's Grace's alone)
 OLD_SETTING_NAMES = {"new_spells": "cats_grace"}
-# switches merged into another (after 2.15.0): an old file's half of a pair, if unticked, unticks the
-# merged switch (fold_merged, once: save_settings folds it in and drops the old key)
-MERGED_SETTINGS = {"no_doubled_save": "spell_save", "buyback": "cha_prices", "backstab_dice": "thief_table"}
-
-
-def fold_merged(settings: dict) -> dict:
-    """SETTINGS with each merged-away switch folded into the one it joined: unticked if either was
-    (a player who turned off half of a pair keeps the game's rule for both), the old key dropped."""
-    for old, new in MERGED_SETTINGS.items():
-        if old in settings:
-            if not settings.pop(old):
-                settings[new] = False
-    return settings
-
-
 def setting_on(settings: dict, key: str) -> bool:
-    """Whether rule switch KEY is ticked in SETTINGS: its value, an earlier name's, or a merged-away
-    half's untick (fold_merged); on by default."""
-    if any(not settings.get(old, True) for old, new in MERGED_SETTINGS.items() if new == key):
-        return False
+    """Whether rule switch KEY is ticked in SETTINGS: its value or an earlier name's; on by default.
+    A switch gone from the tab (ALWAYS_ON) is on whatever SETTINGS say (the merged-away halves of
+    2.15.0's, which once unticked the switch they joined, went with them)."""
+    if key in ALWAYS_ON:
+        return True
     return bool(settings.get(key, settings.get(OLD_SETTING_NAMES.get(key, key), True)))
 
 
@@ -473,8 +478,9 @@ def manual_die(spell: int, sheet: bytes) -> Tuple[int, str]:
 
 
 # the rule changes with no switch, always on: AD&D's two weapons (its "two_weapons" switch gone in
-# 2.18, the user's call: an older settings file's False is passed over)
-RULES_ALWAYS = RULE_TWO_WEAPONS
+# 2.18, the user's call: an older settings file's False is passed over), and those of
+# RULE_SETTINGS_GONE (their switches gone after 2.18, the owner's call)
+RULES_ALWAYS = RULE_TWO_WEAPONS | sum(bit for _, bit in RULE_SETTINGS_GONE)
 
 
 def rules_from_settings(settings: dict) -> int:

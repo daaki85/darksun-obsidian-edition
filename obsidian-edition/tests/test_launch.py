@@ -197,8 +197,14 @@ class LaunchTests(unittest.TestCase):
             off = {key: skip({key: False}) for key in launch.CONTENT}
         finally:
             gamepatch.write_patched = saved
+        # (the switches gone from the tab, game.ALWAYS_ON: their patches always in, whatever is saved)
+        always = {"EFFECTS_KEPT", "ROLL_STORE", "CAMERA", "SCENE_POINTER", "MOUSE_START", "PARTY_SPREAD",
+                  "SPELLS_MANUAL", "SPELL_TO_HIT"}
         for name, patches in switches.items():
             keys = [key for key, skipped in off.items() if set(patches) <= skipped]
+            if name in always:
+                self.assertEqual(keys, [], f"gamepatch.{name}: always on now")
+                continue
             self.assertTrue(keys, f"gamepatch.{name}: no Options key leaves it out")
         for key, skipped in off.items():  # (nothing else left out: only whole switches)
             self.assertTrue(all(set(patches) <= skipped or not set(patches) & skipped
@@ -260,20 +266,20 @@ class LaunchTests(unittest.TestCase):
         self.assertTrue(items["vulture"])
         self.assertTrue(all(launch.content({"world_magic": False, "pens_gear": False})[k] for k in launch.ITEM_PARTS))
 
-    def test_combat_log_on_unless_switched_off(self):
-        """The combat log in the game is on by default, in the switches and in the dice log."""
-        self.assertIs(launch.SWITCH_DEFAULTS["combat_log"], True)
-        self.assertTrue(launch.effective_switches({})["combat_log"])
-        self.assertFalse(launch.effective_switches({"combat_log": False})["combat_log"])
+    def test_combat_log_always_on(self):
+        """The combat log in the game has no switch now (game.ALWAYS_ON): an older settings file's
+        False is dropped as it is read, and the dice log has it on whatever the settings say."""
+        self.assertNotIn("combat_log", launch.SWITCH_DEFAULTS)
+        self.assertNotIn("combat_log", launch.effective_switches({"combat_log": False}))
+        self.assertIn("combat_log_level", launch.SWITCH_DEFAULTS)  # (its level kept)
 
-    def test_older_settings_get_the_combat_log_once(self):
-        """Settings saved before version 2 have the combat log turned on, once; then it is the player's."""
-        old = {"combat_log": False, "dust": False}
+    def test_older_settings_upgraded_once(self):
+        """Settings saved before version 2 are brought up to it once (the combat log then turned on:
+        it has no switch now, and the key is dropped as the file is read)."""
+        old = {"combat_log": False, "steady_pace": False}
         self.assertTrue(launch.upgrade_settings(old))
-        self.assertEqual(old, {"combat_log": True, "dust": False, "settings_version": launch.SETTINGS_VERSION})
-        old["combat_log"] = False  # (switched off again, and saved as version 2)
+        self.assertEqual(old["settings_version"], launch.SETTINGS_VERSION)
         self.assertFalse(launch.upgrade_settings(old))
-        self.assertFalse(old["combat_log"])
         self.assertFalse(launch.upgrade_settings({}))  # (no settings yet: the defaults)
         import json
         with tempfile.TemporaryDirectory() as d:
@@ -281,12 +287,73 @@ class LaunchTests(unittest.TestCase):
             launch.SETTINGS = os.path.join(d, "settings.json")
             try:
                 with open(launch.SETTINGS, "w") as f:
-                    json.dump({"combat_log": False}, f)
-                self.assertTrue(launch.load_settings()["combat_log"])
-                launch.save_settings(dict(launch.load_settings(), combat_log=False))
-                self.assertFalse(launch.load_settings()["combat_log"])
+                    json.dump({"combat_log": False, "steady_pace": False}, f)
+                self.assertEqual(launch.load_settings()["steady_pace"], False)
+                self.assertNotIn("combat_log", launch.load_settings())
             finally:
                 launch.SETTINGS = saved_path
+
+    def test_old_false_for_an_always_on_switch_is_passed_over(self):
+        """A settings.json from before the switches went, with some of them unticked (shadows, dust,
+        weapon specialization, thieves as in AD&D, spells rolling to hit, the merged-away halves),
+        still has every rule on: the keys are dropped as it is read, the dice log's switches are on,
+        the patched game leaves nothing of theirs out, and DSCLOG's rule bits (RULES, RULES_HI) all
+        set; a switch the tab keeps is still the player's."""
+        import json
+        from dsloader import dicelog, game, gamepatch
+        old = {key: False for key in game.ALWAYS_ON | frozenset(game.ALWAYS_ON_OLD_NAMES)}
+        old.update({"helm_ac": False, "steady_pace": False})
+        with tempfile.TemporaryDirectory() as d:
+            saved_path = launch.SETTINGS
+            launch.SETTINGS = os.path.join(d, "settings.json")
+            try:
+                with open(launch.SETTINGS, "w") as f:
+                    json.dump(old, f)
+                settings = launch.load_settings(strict=True)
+                launch.save_settings(settings)
+                with open(launch.SETTINGS) as f:
+                    written = json.load(f)
+            finally:
+                launch.SETTINGS = saved_path
+        for key in game.ALWAYS_ON:
+            self.assertNotIn(key, settings, key)
+            self.assertNotIn(key, written, key)
+            self.assertTrue(game.setting_on(old, key), key)  # (even unread: the raw file's False)
+        self.assertIs(settings["helm_ac"], False)
+        rules = game.rules_from_settings(old)
+        for key, bit in game.RULE_SETTINGS_GONE:
+            self.assertTrue(rules & bit, key)
+        self.assertTrue(rules & game.RULE_TWO_WEAPONS)
+        self.assertFalse(rules & game.RULE_HELMS)  # (its switch kept, unticked)
+        self.assertEqual(rules, game.rules_from_settings(settings))
+        self.assertEqual(game.rules_from_settings(old) | game.RULE_HELMS,
+                         game.rules_from_settings({}))
+        on = launch.content(old)
+        self.assertTrue(all(on[key] for key in launch.CONTENT if key in game.ALWAYS_ON))
+        self.assertFalse(on["steady_pace"])
+        log = dicelog.DiceLog(None)
+        log.use_settings(old)
+        for name in ("pickpockets", "show_gear", "show_shadows", "combat_log", "scroll_map", "show_dust",
+                     "see_through", "elf_looks", "cilla_elf", "stealth_gear", "use_targeting"):
+            self.assertIs(getattr(log, name), True, name)
+        self.assertEqual(log.rules, rules)
+        # (DSCLOG's two words, as set_rules writes them: every gone switch's bit in one or the other)
+        low, high = rules & 0xFFFF, rules >> 16 & 0xFFFF
+        self.assertEqual(low | high << 16, rules)
+        self.assertEqual(game.RULES_ALWAYS & ~(low | high << 16), 0)
+        skips = []
+        saved = gamepatch.write_patched
+
+        def write_patched(source, target, skip=frozenset()):
+            skips.append(frozenset(skip))
+            raise gamepatch.PatchError("not in a test")
+        gamepatch.write_patched = write_patched
+        try:
+            self.assertEqual(launch.prepare_patched_game("nowhere", old), "not in a test")
+        finally:
+            gamepatch.write_patched = saved
+        self.assertEqual(skips[-1], frozenset(gamepatch.STEADY_PACE))  # (only the kept switch's)
+        self.assertIn("sensitivity=33", launch.display_lines(old))  # (the pointer's speed: mouse_start)
 
     def test_settings_saved_whole_and_never_over_an_unreadable_file(self):
         """A save goes through settings.json.tmp, so no half-written file is left; an unreadable
@@ -297,7 +364,7 @@ class LaunchTests(unittest.TestCase):
             saved_path = launch.SETTINGS
             launch.SETTINGS = os.path.join(d, "settings.json")
             try:
-                launch.save_settings({"game_dir": "C:\\GOG", "dust": False})
+                launch.save_settings({"game_dir": "C:\\GOG", "steady_pace": False})
                 self.assertFalse(os.path.exists(launch.SETTINGS + ".tmp"))
                 launch.update_settings({"combat_log_level": "short"})
                 self.assertEqual(launch.load_settings()["game_dir"], "C:\\GOG")
@@ -307,9 +374,9 @@ class LaunchTests(unittest.TestCase):
                 self.assertEqual(launch.load_settings(), {})
                 with open(launch.SETTINGS + ".bad") as f:
                     self.assertIn("game_dir", f.read())
-                launch.update_settings({"dust": True})
+                launch.update_settings({"steady_pace": True})
                 with open(launch.SETTINGS) as f:
-                    self.assertEqual(json.load(f)["dust"], True)
+                    self.assertEqual(json.load(f)["steady_pace"], True)
             finally:
                 launch.SETTINGS = saved_path
 
@@ -400,8 +467,9 @@ class LaunchTests(unittest.TestCase):
                       "Null pointer assignment", text)
         self.assertIn("  vulture: False", text)
         self.assertIn("  cycles: 20000", text)
-        self.assertIn("  shadows: True", text)  # (not in the settings: its default)
-        self.assertIn("  stealth: True", text)
+        self.assertIn("  monster_info: True", text)  # (not in the settings: its default)
+        self.assertIn("  helm_ac: True", text)
+        self.assertNotIn("  shadows:", text)  # (always on now: no switch to report)
         self.assertNotIn("Games", text)  # (where the game is installed is left out)
         self.assertNotIn("Xan", text)  # (and the lists kept for the game, not switches)
         self.assertIn("2 bytes at 0x10 (low memory)", text)
@@ -483,7 +551,7 @@ class LaunchTests(unittest.TestCase):
         self.assertIn("sensitivity=50", launch.display_lines({"window_scale": 2}))
         self.assertIn("sensitivity=25", four)
         self.assertIn("sensitivity=100", launch.display_lines({"window_scale": 1}))
-        self.assertNotIn("sensitivity=33", launch.display_lines({"mouse_start": False}))
+        self.assertIn("sensitivity=33", launch.display_lines({"mouse_start": False}))  # (always on now)
         saved = launch.load_settings
         launch.load_settings = lambda: {}
         try:

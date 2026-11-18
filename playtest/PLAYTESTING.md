@@ -517,9 +517,14 @@ game's data: it is one player's account.
   gearpoll.py > $WORK/gearpoll.log &` just before DONE; the dice log's "starts with ..." lines must
   come before `charsave_written=True` (the roster write, after the psionic powers). To see the
   roster's copy: restart (start.sh, title, CREATE CHARACTERS), ADD it, then list its items with
-  `gd.party_items()` (live.py). A check with a rule off: set the key in
-  `obsidian-edition/settings.json` (`"weapon_specialization": false`) before `start.sh`, which keeps
-  the other keys; take it out again after.
+  `gd.party_items()` (live.py). A check with a rule off: only the switches the Options tab keeps
+  (`game.RULE_SETTINGS`: `helm_ac`, `best_hit_die`, `half_giant_hands`, `kits`, `new_spells`) can be
+  set off in `obsidian-edition/settings.json` before `start.sh`, which keeps the other keys; take
+  it out again after. **The rest are always on since 2026-11-18** (`game.ALWAYS_ON`: weapon
+  specialization, `held_hit`, `spell_to_hit`, shadows ...): the Loader drops their keys as it reads
+  the file (logs/2026-11-18-fewer-switches.md), so a rule off is a memory edit of DSCLOG's rules
+  words (`setmem.py ruleshi=-N` for `rules_hi`; the dice log keeps its own idea of the rules), never
+  saved after.
 - **The DUAL window** (dual-classing, logs/2026-11-09-group-4.md): the inventory screen (I), a
   right-click on a portrait (Cermak 20,104 in pens-fire-count4) opens EDIT NAME / DROP / DUAL
   (CANCEL in DUAL's place when it isn't offered; the menu opens at different heights: shoot it
@@ -707,9 +712,8 @@ game's data: it is one player's account.
 - **Held foes are hit automatically, for normal damage** (the rule `held_hit`, on by default,
   logs/2026-11-10-held-damage.md: the dice log's `Paralyzed: hit automatically` under the attack).
   With it off, the game's way: the d20 as ever and double damage (the hit line's `x2 Paralyzed`).
-  So a to-hit test needs a free target, or the rule off: `"held_hit": false` in
-  `obsidian-edition/settings.json` before `loadsave.sh` (the Loader writes the rules at the start),
-  and take it out after. **A Paralyzed target gets no save line from Hold Person** (it fails every
+  So a to-hit test needs a free target (the rule is always on since 2026-11-18: `"held_hit": false`
+  in settings.json is dropped; `setmem.py ruleshi=-32768` turns DSCLOG's off, not the dice log's). **A Paralyzed target gets no save line from Hold Person** (it fails every
   save; the game logs only "gives Paralyzed"): free it first (`addeffect.py del C 34`).
 - Seneca is a **Poisoner**: each of her weapons' first melee hit in a fight also poisons (10, no save
   for a held target: the log's `is poisoned by the hit` line), landing about 0.5 s later, after her
@@ -944,9 +948,11 @@ tools, and where each is described:
   - A tall picture of the Options tab needs a screen taller than the window: Xvfb `-screen 0
     1400x3400x24`, then `xdotool windowsize W 1320 3300` (`xdotool search --onlyvisible --name .`
     finds the window: its title, "Dark Sun Obsidian Edition Loader ..."). The Options tab at
-    (1061,132); a section's header toggles it (Rule changes at 720,260 with all closed); the
-    picture is x 608-1314 from y 116 to under Restore defaults (706x1964 on 2026-11-16, saved as
-    a 256-colour PNG).
+    (1061,132); a section's header toggles it (Rule changes at 720,260 with all closed), or
+    settings.json's `options_open` (a list of the sections' keys: `in_game`, `rules`, `custom`,
+    `new_content`, `speed`, `ravager`, `saves`) opens them as the window starts; the picture is x
+    608-1314 from y 116 to under Restore defaults (706x1964 on 2026-11-16; with every section open
+    and the fewer switches, 706x1536 on a 1400x2400 screen, 2026-11-18), saved as a 256-colour PNG.
 - **The load window** (`docs/save-pages.png`): a save's name is its STXT chunk
   (`namedsaves.NAME_CHUNK`), a fixed field padded with zeros, so ten saves with plain names are the
   kept saves copied to `$PLAYTEST_WORK/inst/SAVE01-10.SAV` with that field rewritten in place

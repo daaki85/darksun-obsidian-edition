@@ -350,45 +350,42 @@ class SettingsTests(unittest.TestCase):
 
     def test_every_rule_has_its_box(self):
         """Each of game.RULE_SETTINGS has a box with its text on the Options tab (viewer.py's
-        list, read without Tk), and each its own bit."""
+        list, read without Tk), and each its own bit; the rule changes always on now
+        (RULE_SETTINGS_GONE) have none, and their bits are all in RULES_ALWAYS."""
         import re
         with open(os.path.join(os.path.dirname(game.__file__), "viewer.py"), encoding="utf-8") as f:
             source = f.read()
         for key, _ in game.RULE_SETTINGS:
-            self.assertRegex(source, r'\(\s*"' + re.escape(key) + r'",\s*(?:None|"\w+"),\s*"', key)  # (its group, then its text)
-        bits = [bit for _, bit in game.RULE_SETTINGS]
+            self.assertRegex(source, r'\(\s*"' + re.escape(key) + r'",\s*"', key)  # (its key, then its text)
+        for key, bit in game.RULE_SETTINGS_GONE:
+            self.assertNotRegex(source, r'\(\s*"' + re.escape(key) + r'",\s*"', key)
+            self.assertTrue(game.RULES_ALWAYS & bit, key)
+            self.assertIn(key, game.ALWAYS_ON)
+        bits = [bit for _, bit in game.RULE_SETTINGS + game.RULE_SETTINGS_GONE]
         self.assertEqual(len(set(bits)), len(bits))
+        self.assertFalse(set(dict(game.RULE_SETTINGS)) & game.ALWAYS_ON)
+
     def test_merged_switches(self):
-        """A 2.15.0 settings file's merged-away halves: unticked, they untick the switch they joined
-        (game.setting_on, rules_from_settings), and fold_merged moves that over once, dropping the old
-        key, so a later tick of the merged switch counts."""
-        old = {"spell_save": True, "no_doubled_save": False, "cha_prices": True, "buyback": True,
-               "thief_table": True, "backstab_dice": False}
-        self.assertFalse(game.setting_on(old, "spell_save"))
-        self.assertTrue(game.setting_on(old, "cha_prices"))
-        self.assertFalse(game.setting_on(old, "thief_table"))
+        """A 2.15.0 settings file's merged-away halves (no_doubled_save, buyback, backstab_dice), and
+        the switches they joined, unticked: all passed over now, the switches always on."""
+        old = {"spell_save": False, "no_doubled_save": False, "cha_prices": False, "buyback": False,
+               "thief_table": False, "backstab_dice": False}
+        for key in ("spell_save", "cha_prices", "thief_table"):
+            self.assertTrue(game.setting_on(old, key), key)
         rules = game.rules_from_settings(old)
-        self.assertFalse(rules & game.RULE_SPELL_SAVE)
-        self.assertTrue(rules & game.RULE_BUYBACK)
-        self.assertFalse(rules & game.RULE_BACKSTAB)
-        folded = game.fold_merged(dict(old))
-        self.assertEqual(folded, {"spell_save": False, "cha_prices": True, "thief_table": False})
-        folded["spell_save"] = True  # (ticked again in the window)
-        self.assertTrue(game.setting_on(folded, "spell_save"))
+        for bit in (game.RULE_SPELL_SAVE, game.RULE_BUYBACK, game.RULE_BACKSTAB):
+            self.assertTrue(rules & bit, bit)
+        self.assertEqual(game.drop_always_on(dict(old)), {})
 
     def test_saved_options(self):
         log = dag()
         log.use_settings({"helm_ac": False, "new_items": False, "arena_ring": True, "spell_save": False})
         self.assertEqual((log.rules, log.arena_ring, log.monster_info),
-                         (game.RULE_TWO_WEAPONS | game.RULE_NEW_SPELLS
-                          | game.RULE_STEALTH | game.RULE_LEVEL_10 | game.RULE_THIEF_TABLE
-                          | game.RULE_HALF_GIANT | game.RULE_PROTECTION | game.RULE_ITEM_SAVES
-                          | game.RULE_SPECIALIZE | game.RULE_RESTRICT | game.RULE_MULTI_HP | game.RULE_HP_BEST
-                          | game.RULE_KITS | game.RULE_RANGER_CAST | game.RULE_INT_LEARN | game.RULE_ADND_TABLES | game.RULE_CHA_PRICES
-                          | game.RULE_ROLLED | game.RULE_BUYBACK | game.RULE_BACKSTAB | game.RULE_AGING
-                          | game.RULE_ENLARGE | game.RULE_CON | game.RULE_DUAL_CLASS
-                          | game.RULE_REST | game.RULE_CAHULAKS | game.RULE_SIZE
-                          | game.RULE_HELD | game.RULE_STINKPOTS, False, True))
+                         (game.RULES_ALWAYS | game.RULE_NEW_SPELLS | game.RULE_HALF_GIANT | game.RULE_HP_BEST
+                          | game.RULE_KITS, False, True))
+        self.assertTrue(log.rules & (game.RULE_TWO_WEAPONS | game.RULE_SPELL_SAVE | game.RULE_STEALTH
+                                     | game.RULE_STINKPOTS | game.RULE_HELD))
+        self.assertFalse(log.rules & game.RULE_HELMS)
 
 
 class SpeakerTests(unittest.TestCase):

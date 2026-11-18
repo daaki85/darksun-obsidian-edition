@@ -4,6 +4,7 @@
 
 ## Contents
 
+- [The switches always on](#the-switches-always-on)
 - [Class restrictions](#class-restrictions)
 - [Multiclass hit points](#multiclass-hit-points)
 - [Hit dice: the better of two](#hit-dice-the-better-of-two)
@@ -56,6 +57,39 @@
   - [A backstab multiplies the weapon's dice only](#a-backstab-multiplies-the-weapons-dice-only)
 - [Picking pockets](#picking-pockets)
 - [Sounds for hiding and picking pockets](#sounds-for-hiding-and-picking-pockets)
+
+## The switches always on
+
+(A note of its own, for every section below.) Most of the Options tab's switches went after 2.18
+(the owner's call: fewer switches), and what they switched is always on. `game.ALWAYS_ON` names their
+settings keys: the rule changes' (`game.RULE_SETTINGS_GONE`: `class_restrictions`, `multiclass_hp`,
+`rolled_scores`, `adnd_tables`, `con_adnd`, `aging`, `dual_class`, `level_10`, `cahulaks`,
+`creature_size`, `held_hit`, `protection_rules`, `item_saves`, `ranger_casting_level`,
+`int_learning`, `spell_save`, `enlarge_dice`, `rest_heal`, `weapon_specialization`, `cha_prices`,
+`thief_table`, `stealth`), and `combat_log`, `spells_manual`, `spell_to_hit`, `roll_store`,
+`stealth_gear`, `pickpockets`, `elf_looks`, `cilla_elf`, `show_gear`, `shadows`, `dust`,
+`see_through`, `targeting`, `scroll_map`, `camera_still`, `scene_pointer`, `mouse_start`,
+`party_spread` and `effects_kept`. The rule changes still switched are `game.RULE_SETTINGS`
+(`best_hit_die`, `half_giant_hands`, `helm_ac`, `kits`, `new_spells`).
+
+- `launch.load_settings` and `save_settings` drop those keys (`game.drop_always_on`, with the
+  old names `no_doubled_save`, `buyback`, `backstab_dice` and `two_weapons`), so an older
+  settings.json's `false` never reaches a reader.
+- Even unread, they count as on: `game.setting_on` answers True for them, `launch.content` gives
+  them True (so `prepare_patched_game` never skips `EFFECTS_KEPT`, `ROLL_STORE`, `CAMERA`,
+  `SCENE_POINTER`, `MOUSE_START`, `PARTY_SPREAD`, `SPELLS_MANUAL` or `SPELL_TO_HIT`), and
+  `DiceLog.use_settings` sets its switches (`show_shadows`, `use_targeting` ...) True.
+- DSCLOG is unchanged: `game.RULES_ALWAYS` puts each gone rule's bit in the rules words
+  (`RULES`, `RULES_HI`) whatever the settings, as it did `RULE_TWO_WEAPONS`.
+
+So where a section below says what happens "with the switch off" or "unticked", that is a path
+nothing now takes: in Python, the branches on those keys and `DiceLog` attributes; in DSCLOG, the
+77 tests of a gone rule's bit (`test [cs:rules]` / `[cs:rules_hi]` and the jump after it, about
+9 bytes each, some 700 bytes) and the game's-own-way code behind them, roughly 1 to 2 KB of
+DSCLOG's room in all; and `MANUAL_ON`'s tests, with `SPELLS_MANUAL` always in the copy. A later
+cleanup can take them out for the room (with a rebuild and the room figures in
+[DEVELOPMENT-INTERNALS.md](DEVELOPMENT-INTERNALS.md#room-and-memory)); `tests/test_launch.py`'s
+`test_old_false_for_an_always_on_switch_is_passed_over` pins the rest.
 
 ## Class restrictions
 
@@ -815,7 +849,7 @@ draws it blank.
 
 ([In the features page](FEATURES.md#spells-saved-against-with-the-spell-save).)
 
-Part of the switch Saving throws against spells (`spell_save`; `RULE_SPELL_SAVE` is `RULE_NO_DOUBLE`).
+Part of Saving throws against spells (`spell_save`, always on: [above](#the-switches-always-on); `RULE_SPELL_SAVE` is `RULE_NO_DOUBLE`).
 
 How: the Loader writes the game's own table that turns a spell's kind of save
 into one of the five (a table of words at DS:1E75h, read afresh for every
@@ -826,7 +860,7 @@ save), and puts it back when the rule is unticked.
 ([In the features
 page](FEATURES.md#fire-cold-and-electricity-dex-instead-of-a-doubled-d20).)
 
-Part of the switch Saving throws against spells (`spell_save`; `RULE_SPELL_SAVE` is `RULE_NO_DOUBLE`).
+Part of Saving throws against spells (`spell_save`, always on: [above](#the-switches-always-on); `RULE_SPELL_SAVE` is `RULE_NO_DOUBLE`).
 
 How: DSCLOG does the save's doubling (`INT F0h`) only while this rule is
 off, and the Loader marks the fire, cold and electricity spells with the game's
@@ -854,7 +888,7 @@ rather than DAMAGE (`EF_CHARGES`, `ef_enlarge_dice`). Verified in play (no log k
 ## Spells roll to hit
 
 ([In the features page](FEATURES.md#spells-roll-to-hit).) The Options tab's box
-is the settings key `spell_to_hit` (on unless `False`); off, `launch.py` leaves
+was the settings key `spell_to_hit`, always on now ([above](#the-switches-always-on)); off, `launch.py` left
 out `gamepatch.SPELL_TO_HIT`'s two patches and the game's copy has DSUN.EXE's
 bytes there.
 
@@ -956,8 +990,8 @@ a Dying member isn't healed (pass 2 leaves it). Tests: tests/test_group4.py (`te
 ## Spells and psionics as the manual describes them
 
 ([In the features page](FEATURES.md#spells-and-psionics-as-the-manual-describes-them).)
-One switch, `spells_manual` (on by default, from the next start): the patches
-in `gamepatch.SPELLS_MANUAL`; off, they are left out and the game's copy has
+Once a switch, `spells_manual`, always on now ([above](#the-switches-always-on)): the patches
+in `gamepatch.SPELLS_MANUAL`; off, they were left out and the game's copy has
 DSUN.EXE's bytes, and DSCLOG's code that runs either way tells it by
 `MANUAL_ON`. The points come from reports/spells-against-the-manual.md, which
 says what was done with each.
@@ -1392,7 +1426,7 @@ a 3rd-level gladiator, at 760,000, to 11th; an elf preserver/druid/thief at
 
 ([In the features page](FEATURES.md#store-and-recall-on-the-creation-screen).)
 
-With the `roll_store` switch off, the Loader leaves both out: the buttons from
+With the `roll_store` switch off (gone now: [always on](#the-switches-always-on)), the Loader left both out: the buttons from
 its copy of `RESOURCE.GFF` (`icons.write_resources`) and the click's patch from
 its copy of `DSUN.EXE` (`gamepatch.ROLL_STORE`, as `EFFECTS_KEPT`).
 
@@ -1469,7 +1503,7 @@ Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/pl
 
 `dsloader/startgear.py`'s `fill`, from the dice log after
 `weaponchoice.finish_new`, `class_gear` and `kit_gear` (the `starting_gear`
-switch, a Python-only one as `pickpockets` is: `launch.SWITCH_DEFAULTS`,
+switch, a Python-only one: `launch.SWITCH_DEFAULTS`,
 `DiceLog.starting_gear`), for each party member whose status is New and who
 has items (the game gives a character its gear when DONE is clicked; before
 that it has none; one being made counts too: [New characters and the roster
@@ -1671,7 +1705,7 @@ the first is a backstab.
 ### A backstab multiplies the weapon's dice only
 
 Part of the switch Thieves as in AD&D (`thief_table`; `game.RULE_BACKSTAB` names it,
-`RULE_THIEF_TABLE`; DSCLOG's `RULE_THIEF_TABLE` in `rules`; on unless unticked). The game's backstab multiplies the whole of a
+`RULE_THIEF_TABLE`; DSCLOG's `RULE_THIEF_TABLE` in `rules`; always on: [above](#the-switches-always-on)). The game's backstab multiplies the whole of a
 hit's damage, STR's bonus and the weapon's plus included (x2 to x5 by thief
 level, 595C4h); AD&D's multiplies the weapon's dice only, the rest added once,
 and only the round's first attack is one. Two `NS_IMAGE` sites in the attack

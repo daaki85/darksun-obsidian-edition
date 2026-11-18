@@ -50,7 +50,7 @@ class Gd:
 class LoaderTests(unittest.TestCase):
     def test_rule(self):
         self.assertEqual(game.RULE_SIZE >> 16, RULE)
-        self.assertIn(("creature_size", game.RULE_SIZE), game.RULE_SETTINGS)
+        self.assertIn(("creature_size", game.RULE_SIZE), game.RULE_SETTINGS_GONE)  # (always on: game.RULES_ALWAYS)
 
     def test_large_dice(self):
         """One entry a weapon kind; AD&D's large dice where they differ from its small ones."""

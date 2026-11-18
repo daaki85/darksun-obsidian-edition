@@ -63,7 +63,7 @@ class OptionsTableTests(unittest.TestCase):
     def test_labels_are_the_loaders(self):
         texts = viewer_texts()
         labels = table_labels()
-        self.assertGreater(len(labels), 50)
+        self.assertGreater(len(labels), 20)
         for label in labels:
             self.assertTrue(made_of(label, texts), label)
 

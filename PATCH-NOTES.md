@@ -2,7 +2,7 @@
 
 *A Dark Sun: Shattered Lands mod · Current version 2.18.0 · What the mod adds and changes, and its main bug fixes*
 
-Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. You start the game with the Loader, which loads the mod with your options and logs every roll as it happens. Nearly everything is switchable, the game's own files are never touched, and your saves stay where they are.
+Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. You start the game with the Loader, which loads the mod with your options and logs every roll as it happens. The new content and a few rules are switchable, the game's own files are never touched, and your saves stay where they are.
 
 **Download:** https://github.com/daaki85/darksun-obsidian-edition/releases/latest
 
@@ -18,9 +18,9 @@ Each release also has these notes as a web page, [`patch-notes.html`](https://gi
 - **The party as it is dressed.** The figures show the gear they wear, magic gear glows on them, and elves have pointed ears.
 - **Quicker play.** Keys to choose a target, loot a body and sell plain gear, 40 save slots, a faster default speed, and no copy protection.
 - **Bugs fixed.** The main fixes are under [Bug Fixes](#bug-fixes); every one, with what the game did, is in [the game's bugs, fixed](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/GAME-BUGS.md).
-- **Your choice.** Nearly every change has a switch in the Loader's Options. The game's own files are never touched, and saves made with the original game load (see [Your Saved Games](#your-saved-games)).
+- **Your choice.** The new content, and a few rules, have a switch in the Loader's Options; the rest is always on. The game's own files are never touched, and saves made with the original game load (see [Your Saved Games](#your-saved-games)).
 
-Each change is tagged. **[Fixed]** is a bug of the game, or a rule it got wrong against its own manual or AD&D: the rules have a switch, on by default, for anyone who wants the game's own back (the two-weapon rules are always on). **[Changed]** and **[New]** are the mod's own choices. Every change is told in full in [Features and rules](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md), which the links below go to.
+Each change is tagged. **[Fixed]** is a bug of the game, or a rule it got wrong against its own manual or AD&D: these are always on, with no switch. **[Changed]** and **[New]** are the mod's own choices. Every change is told in full in [Features and rules](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md), which the links below go to.
 
 ## In the Game's Screens
 
@@ -159,7 +159,7 @@ Each change is tagged. **[Fixed]** is a bug of the game, or a rule it got wrong 
 - **[New]** **Characters**, **Spells** and **Dialogue** tabs: each member's sheet with more than the game shows, every spell's numbers, and everything said ([Characters](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/README.md#the-characters-tab)).
 - **[New]** **Find** in the dice log and the dialogue (Ctrl+F).
 - **[New]** The Loader can run the game as **Dark Sun Recompiled**, where it is installed ([other ways to start](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/README.md#dark-sun-recompiled)).
-- **[New]** **Options**: nearly every change has a switch, all on by default but a few, and **Restore defaults** sets them back.
+- **[New]** **Options**: switches for the new content and a few rules (hit dice, half-giants' weapons, helms, kits, starting gear), the combat log's level and the red ring, all on by default, and **Restore defaults** sets them back; the rest of the mod is always on.
 - **[New]** **Accessibility**: text up to 2.5 times bigger, every control from the keyboard, 4.5:1 contrast, logs as text ([accessibility](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/README.md#accessibility)).
 - **[New]** **The manual in the download**, as web pages that link to each other; the Loader's **Help** button opens it.
 
@@ -210,7 +210,7 @@ The main fixes; every bug of the original game the mod mends, with what the game
 - **[Fixed]** **Alagorn** told two items wrong, and showed an empty clothes menu.
 - **[Fixed]** The **sewer grate**'s hack, a ranger's **tracking** at the Wagon Train, the **Rebel Mindhome**'s repeated award, the **messenger** and the **Draj serf** (found by yuan-ti and OpenDS).
 - **[Fixed]** Lines that depend on the speaker's **race, sex or class** read the wrong record; script bugs in **Darkhold**, the **Lava Rifts** and **Linara**'s talk.
-- **[Fixed]** Cilla, an elf, was drawn with the half-elf woman's figure (a switch keeps the game's).
+- **[Fixed]** Cilla, an elf, was drawn with the half-elf woman's figure.
 
 ## Your Saved Games
 
