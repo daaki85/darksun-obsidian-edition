@@ -8,7 +8,7 @@ exec(open(__file__).read())
 from dsloader import heapcheck
 mem = g.read(0, 0x110000)
 ls = gd.load_seg
-hdr = next(i for i in range(0, 0x100000, 16) if mem[i:i+8] == b'DSCLOGvb')
+hdr = next(i for i in range(0, 0x100000, 16) if mem[i:i+8] == b'DSCLOGvc')
 dseg = hdr // 16
 def w(a): return struct.unpack_from('<H', mem, a)[0]
 # first MCB: DOS's list of lists is at the segment in INT 21h... find by walking from a low MCB:
@@ -44,7 +44,7 @@ print('DSCLOG: far_seg %04X ring_seg %04X ovr_given %04X umb_need %d paras ghost
     hv(142), hv(268), hv(368), hv(372), hv(1826), hv(1828)))
 print('HMA test: FFFF:0010 vs 0:0 differ:', g.read(0xFFFF*16+0x10, 16) != g.read(0, 16))
 print('upper memory chain:')
-for start in (0x9FFF, 0xC900, 0xD000):
+for start in (0x9FFF, 0xCA00, 0xD000):
     if mem[start*16] in (0x4D, 0x5A):
         s = start
         for _ in range(64):

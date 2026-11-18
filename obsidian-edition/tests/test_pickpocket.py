@@ -43,7 +43,7 @@ class PickTests(unittest.TestCase):
         for typ, weight, worn in ((66, 10, 0), (45, 30, 5), (68, 1, 4)):
             struct.pack_into("<H", m, ITEM_TYPES + typ * game.ITEM_TYPE_SIZE + pickpocket.TYPE_WEIGHT, weight)
             m[ITEM_TYPES + typ * game.ITEM_TYPE_SIZE + pickpocket.TYPE_WORN] = worn
-        m[ITEM_TYPES + 66 * game.ITEM_TYPE_SIZE + 0x08] = game.NO_MATERIAL
+        m[ITEM_TYPES + 66 * game.ITEM_TYPE_SIZE + 0x08] = game.NO_MATERIAL_BIT
         for entry, text in ((20, b"Bag"), (21, b"Long Sword"), (22, b"Cell Key"), (23, b"Boots")):
             at = NAMES + 3 + entry * game.ITEM_NAME_SIZE
             m[at:at + len(text)] = text

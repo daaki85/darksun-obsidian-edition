@@ -598,7 +598,7 @@ the log names one by its record's effect (+19h, `game.POWER_EFFECT_NAMES`), else
 its damage's kind, else its number; a roll before a save against one that puts
 on an effect is its duration (`_power_lasts`).
 
-**Room for 199-201 (`SEG_MOVE`).** The 96 bytes after 195 aren't free: the
+**Room for 199-211 (`SEG_MOVE`).** The 96 bytes after 195 aren't free: the
 game's segment table (load + 4137h, 8 bytes a selector: segment, length) has
 selector 3B8h, a small stack of 60h bytes, there, and selector 3C0h the
 monster kinds table (192h bytes) right after. The overlay loader fixes up its
@@ -615,7 +615,7 @@ if the records outgrow the room, or the spell rows theirs (below), or the stack
 and the kinds table `seg_space`. (Negative Plane Protection's save had a copy
 of Vampiric Touch's record at 212, past the room, till 2026-11-18: it now uses
 Vampiric Touch's own, [above](#the-games-spells).) The stack had been written over records 196-198's room all along; with it
-moved, nothing writes there but DSCLOG. Spells 199-201 are set up, listed
+moved, nothing writes there but DSCLOG. Spells 199-211 are set up, listed
 and counted (`NS_NEW`, `NS_STATE`'s `NS_MOVED`) only once the move is done;
 `monsters.py` reads the kinds table's segment from the selector. The spell
 rows for 196 on run past the game's table (3FB9h:19Ch, 7 bytes each) into

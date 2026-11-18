@@ -129,7 +129,7 @@ RULE_SPELL_SAVE = RULE_NO_DOUBLE
 # hit) or be Nauseated (STINK_EFFECT: -2 to hit) for 1d3+1 rounds (DSCLOG's RULES bit 2, once boots'
 # movement, unused and free again: the stinkpots are the Weapon traits switch's, RULE_CAHULAKS: STINKPOTS)
 STAFF_SLING_TYPE, STINK_DICE, SLING_DICE = 0, (1, 3), (1, 4)
-STINK_EFFECT, STINK_TO_HIT, STINK_SAVE_POWER = 75, -2, 176
+STINK_EFFECT, STINK_TO_HIT_MOD, STINK_SAVE_POWER = 75, -2, 176  # (_MOD signed, as added: DSCLOG's STINK_TO_HIT is the 2 taken off)
 RULE_NEW_SPELLS = 32  # the new wizard spells (NEW_SPELLS)
 RULE_STEALTH = 64  # a thief hiding in shadows and moving silently backstabs (stealth.py)
 RULE_LEVEL_10 = 128  # an XP cap (XP_CAP, shared out) in place of the game's level cap of 9
@@ -517,7 +517,7 @@ FIGHT_STATE_FROM_DS, FIGHT_STATE_ON = 0x4356 - 0x377E, 0x19
 REGION = 0x117C  # DS word: the region the party is in
 POSITIONS = 0x669D  # DS: each map object's x, y (in 16ths of a square), 32 bytes apart; the party's leader is object 0
 THING_OBJECT = 0x6694 + 0x1A  # DS: each map object's object number, in the same 32-byte records
-MAP_THINGS = 0x140  # the map objects the game's distance command looks through
+MAP_THING_COUNT = 0x140  # the map objects the game's distance command looks through (DSCLOG's MAP_THINGS is their table, 6694h)
 # The party's money, in ceramic pieces (the inventory screen's bottom bar): a dword the game's
 # script command for giving money (0Ch) adds to
 MONEY_SEG, MONEY = 0x3781, 0x357
@@ -607,7 +607,7 @@ BROKEN_ITEM_TYPE = 0x6B  # what a broken weapon becomes
 DETONATE_BLAST = 195  # the effect Detonate puts on its target besides the power: 1d10, no save
 
 MATERIALS = ("Wooden", "Bone", "Stone", "Obsidian", "Metal", "Leather")
-NO_MATERIAL = 0x40  # in the type's material byte, with material 0: things with none (rings, bodies)
+NO_MATERIAL_BIT = 0x40  # in the type's material byte, with material 0: things with none (rings, bodies; DSCLOG's NO_MATERIAL, FFh, is CU_MAT's none)
 # Dark Sun's to-hit penalty for non-magical weapons of weaker materials (from the game's code)
 MATERIAL_TO_HIT = {0: -3, 1: -1, 2: -2, 3: -2}
 # ... and to damage (the game's attack and inventory line; checked in DOSBox: a wooden weapon 2 less,
@@ -863,7 +863,7 @@ SAVE_SHORT = ("PPD", "RSW", "PP", "BW", "SP")  # as the game's inventory screen 
 STR_TO_HIT, DEX_MISSILE = 0x7C2, 0x7DC  # DS: a byte per ability score
 STR_DAMAGE_TABLE = 0x7A8  # DS: the same, for melee damage (just before STR_TO_HIT)
 HIT_EFFECTS = ((7, 1), (12, -1), (47, -4), (49, 1), (FOG_EFFECT, -3),  # Blessed, Cursed, Slowed, Graft Weapon, Fogbolt
-               (STINK_EFFECT, STINK_TO_HIT))  # ... and the stinkpot's Nauseated (DSCLOG's NS_HIT)
+               (STINK_EFFECT, STINK_TO_HIT_MOD))  # ... and the stinkpot's Nauseated (DSCLOG's NS_HIT)
 WEAPON_HANDS = (EQUIP_SLOTS.index("right hand"), EQUIP_SLOTS.index("left hand"))
 MISSILE_SLOT = EQUIP_SLOTS.index("missile")
 
@@ -1290,8 +1290,8 @@ class GameData:
 
     def things_of(self, obj: int) -> List[int]:
         """The map objects of object OBJ, as the game's distance command finds them."""
-        data = self.guest.read(self.ds * 16 + THING_OBJECT, MAP_THINGS * 32)
-        return [i for i in range(MAP_THINGS) if struct.unpack_from("<h", data, i * 32)[0] == obj]
+        data = self.guest.read(self.ds * 16 + THING_OBJECT, MAP_THING_COUNT * 32)
+        return [i for i in range(MAP_THING_COUNT) if struct.unpack_from("<h", data, i * 32)[0] == obj]
 
     def item_type_record(self, item: bytes) -> bytes:
         types = far_pointer(self.guest, self.ds, ITEM_TYPES_PTR)
@@ -2063,7 +2063,7 @@ class GameData:
     def item_label(self, item: bytes, typ: bytes) -> str:
         """"Metal Long Sword +1": an item's material (when it has one), name and plus."""
         material = typ[0x08] & 0x0F if len(typ) == ITEM_TYPE_SIZE else len(MATERIALS)
-        if len(typ) == ITEM_TYPE_SIZE and typ[0x08] & NO_MATERIAL and not material:
+        if len(typ) == ITEM_TYPE_SIZE and typ[0x08] & NO_MATERIAL_BIT and not material:
             material = len(MATERIALS)  # a ring, a body...: no material to name
         plus = struct.unpack("b", item[ITEM_PLUS:ITEM_PLUS + 1])[0]
         name = self.item_name(struct.unpack_from("<H", item, ITEM_NAME)[0])
@@ -2296,7 +2296,7 @@ class GameData:
             if war:  # (DSCLOG's WAR_HIT: a warrior's THAC0 with the kit's chosen weapon)
                 parts.append((f"{kits.name(war_kid)} (a warrior's THAC0)", war))
             if creature in self.wild:  # (DSCLOG's WILD_TO_HIT: a Wild Fury, or Gerakis, whatever the check)
-                parts.append(("Wild Fighting", kits.WILD_TO_HIT))
+                parts.append(("Wild Fighting", kits.WILD_TO_HIT_MOD))
             if struct.unpack_from("<H", item, ITEM_NAME)[0] == FINE_BOW_NAME:  # (DSCLOG's FINE_HIT)
                 parts.append(("fine", FINE_TO_HIT))
             if self.rules & RULE_SPECIALIZE:  # (weapon specialization: DSCLOG's PROBE_ATTACKS)
@@ -2344,7 +2344,7 @@ class GameData:
                 if kit:
                     parts.append((kits.name(kid), kit))
             if creature in self.wild:
-                parts.append(("Wild Fighting", kits.WILD_TO_HIT))
+                parts.append(("Wild Fighting", kits.WILD_TO_HIT_MOD))
             parts = [(why, n) for why, n in parts if n]
             out.append(WeaponHit(-1, -1, "unarmed", base - sum(n for _, n in parts), parts))
         return out
@@ -2399,7 +2399,7 @@ class GameData:
         from . import kits, restrict
         slots = {EQUIP_SLOTS.index(s) for s in ("arm", "legs", "head", "chest")}
         return any(item[ITEM_SLOT] in slots and len(typ) > 0x0F and restrict.is_armour(typ)
-                   and typ[8] & 0x4F not in (kits.LEATHER, kits.NO_MATERIAL)
+                   and typ[8] & 0x4F not in (kits.LEATHER, kits.NO_MATERIAL_BIT)
                    for _, item, typ in self._worn(creature))
 
     def melee_weapon_in(self, creature: int, slot: int) -> bool:
@@ -2455,7 +2455,7 @@ class GameData:
         plus = struct.unpack("b", rec[ITEM_PLUS:ITEM_PLUS + 1])[0]
         power = struct.unpack("b", rec[ITEM_POWER:ITEM_POWER + 1])[0]
         material = typ[0x08] & 0x0F
-        if typ[0x08] & NO_MATERIAL and not material:
+        if typ[0x08] & NO_MATERIAL_BIT and not material:
             material = 6
         name, adnd = ACID_SAVES.get(material, ACID_SAVES[4])
         adnd -= plus + (1 if power else 0)

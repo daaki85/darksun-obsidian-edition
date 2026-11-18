@@ -8,7 +8,7 @@ exec(open(os.path.join(HERE, 'live.py')).read())
 from dsloader import game
 WORK = os.environ.get('PLAYTEST_WORK', '/tmp/playtest')
 mem = g.read(0, 0x110000)
-hdr = next(i for i in range(0, len(mem), 16) if mem[i:i + 8] == b'DSCLOGvb')
+hdr = next(i for i in range(0, len(mem), 16) if mem[i:i + 8] == b'DSCLOGvc')
 seg = struct.unpack('<H', g.read(hdr + 1826, 2))[0]
 TAB = seg * 16 + 8192 + 256
 def mark(thing, changed):

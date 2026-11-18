@@ -5,6 +5,7 @@ settings.json
 settings.json.tmp
 settings.json.*.tmp
 game.lock
+settings.lock
 settings.json.bad
 settings.json.bad-*
 dosbox_dicelog.conf

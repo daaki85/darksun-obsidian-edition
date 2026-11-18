@@ -44,7 +44,7 @@ The steps are told in full in [How the dice log works](DEVELOPMENT-INTERNALS.md#
    |    the DOSBox config: EMS off, then UMBPLUS.COM, then lh DSCLOG.EXE, then DSUNLOG.EXE, GAMEEND.COM
    v
  DOSBox 0.74 (GOG's)
-   |  UMBPLUS.COM     moves upper memory's start down to C900h
+   |  UMBPLUS.COM     moves upper memory's start down to CA00h
    |  DSCLOG.EXE      loads into upper memory and stays: its 64 KB segment, its tail, its far block (HMA)
    |  DSUNLOG.EXE     the game: each patched place calls DSCLOG (INT 60h-65h, 80h-FFh, sites of INT 98h);
    |                  DSCLOG also hooks INT 21h (the Loader's copies of files), 33h (mouse), 16h (keys)
@@ -135,7 +135,7 @@ nasm -f bin -o dos/DSCLOG.EXE dos/dsclog.asm
 ```
 
 The build fails if DSCLOG outgrows its 64 KB segment or the room it has in upper memory ([Room
-and memory](DEVELOPMENT-INTERNALS.md#room-and-memory)). The header's signature (`DSCLOGvb` now:
+and memory](DEVELOPMENT-INTERNALS.md#room-and-memory)). The header's signature (`DSCLOGvc` now:
 after Z, lowercase) goes up whenever DSCLOG and the Loader must change together (`HDR_SIG` in
 `dsloader/dicelog.py`), so a Loader never talks to an older DSCLOG.
 
@@ -152,12 +152,14 @@ nasm -f bin -o dos/UMBPLUS.COM dos/umbplus.asm
 
 The web pages are made from Markdown. Edit the Markdown, then run the module:
 
-- **The manual**, `manual/` (`python -m dsloader.manual`): ten pages, each from its Markdown, which
+- **The manual**, `manual/` (`python -m dsloader.manual`): twelve pages, each from its Markdown, which
   stays the source and reads the same on GitHub. `index.html`, the start page the Loader's
   **Help** button opens, is made from `README.md`; then `player-guide.html`, `features.html`,
-  `kits.html`, `items.html`, `creatures.html`, `game-bugs.html`, `dice-log.html`,
-  `how-the-game-works.html` and `changes.html` (`../PATCH-NOTES.md`, read by `patchnotes.py`).
-  `manual.PAGES` lists them. Each page has a bar of all ten (the spoiler pages marked) and an index
+  `kits.html`, `weapon-specs.html`, `items.html`, `creatures.html`, `people.html`,
+  `game-bugs.html`, `dice-log.html`, `how-the-game-works.html` and `changes.html`
+  (`../PATCH-NOTES.md`, read by `patchnotes.py`). `manual.PAGES` lists them (every player's page
+  of `obsidian-edition/`, the DEVELOPMENT pages aside: `test_manual` checks). Each page has a bar
+  of all twelve (the spoiler pages marked) and an index
   of its own sections; the pages share `manual/manual.css` (`pagestyle.css` and the fonts). The
   generator rewrites the links, not the Markdown: a link to another of the pages (`KITS.md#x`,
   `README.md`, `../PATCH-NOTES.md` or its GitHub address) goes to its HTML file with the same
@@ -213,10 +215,10 @@ to trust when a test file is added):
 
 - **unicorn**: the tests that run DSCLOG's interrupt handlers in a CPU emulator (`test_dsclog`,
   `test_gamepatch`, `test_shadows`, `test_dsclog_drawing`, `test_cahulaks`, `test_sizes`,
-  `test_held`, `test_least_scores`, `test_manual_spells`, `test_manual_group3`, `test_group4`
-  among them).
-- **NASM**: the rebuild checks (`test_audit_builds`, `test_least_scores`, `test_dsclog_drawing`,
-  `test_scroll_interrupts`).
+  `test_held`, `test_least_scores`, `test_manual_spells`, `test_manual_group3`, `test_group4`,
+  `test_interrupt_hygiene` among them).
+- **NASM**: the rebuild checks (`test_audit_builds`, `test_header_offsets`, `test_least_scores`,
+  `test_dsclog_drawing`, `test_scroll_interrupts`, `test_interrupt_hygiene`).
 - **tkinter**: the window's tests (`test_theme`, `test_partyview`, `test_find`,
   `test_viewer_options`, and `test_compiles`' window part; `test_viewer_settings` also needs a
   display, so run it under `xvfb-run` on a machine without one). Linux's Python often lacks it.
@@ -243,9 +245,11 @@ Tests that guard the whole project rather than one module:
 | `test_audit_objects` | each object and picture the Loader adds to its SEGOBJEX copy is made by one module only |
 | `test_scriptnumbers` | the Loader's scripts have a number each, their calls land inside them, and each fits the game's script buffer |
 | `test_dsclog`'s `test_fits_upper_memory` | what DSCLOG puts in upper memory fits the room DOSBox gives it |
+| `test_header_offsets` | every field of DSCLOG's header is at the offset its comment gives, in a fresh build; every `TSR_*` constant of the Loader's is a field's; the spell arrows' table and names are `spellarrows.ARROWS`' and the names' room `names.EXTRA` |
+| `test_interrupt_hygiene` | DSCLOG's handlers leave interrupts as their caller had them, INT 33h's handler forgotten when the game removes it, the timer's tick with the direction flag clear, the scenes' arrow off the screen during a latch copy, A20 turned on again |
 | `test_version` | the version is the same in `__init__.py`, the patch notes and the front page, and its release notes exist |
 | `test_release` | the Release workflow zips and publishes as below, and the patch notes' page's links work |
-| `test_manual`, `test_patchnotes` | the web pages are up to date with their Markdown, and their links work: each of the manual's lands on a file in the zip and an anchor its page has, with no link to a Markdown file and no id twice; Help opens the manual's start page |
+| `test_manual`, `test_patchnotes` | the web pages are up to date with their Markdown (every player's page of `obsidian-edition/` one of the manual's), and their links work: each of the manual's lands on a file in the zip and an anchor its page has, with no link to a Markdown file and no id twice; Help opens the manual's start page |
 
 The unit tests don't play the game. For anything DSCLOG or a script touches, check it in the game
 too: [the playtesting guide](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/PLAYTESTING.md)
@@ -276,11 +280,18 @@ Before it:
    source changed, and the web pages (`python -m dsloader.manual` and `python -m
    dsloader.patchnotes`) if their Markdown did; `test_manual` and `test_patchnotes` fail until they
    are.
-3. Check in the game anything DSCLOG or a script touches ([the playtesting
+3. Run the tests with the game's files too (they never run in CI: the game isn't in the
+   repository), from `obsidian-edition/`, the game folder `G` an unmodded GOG install (the
+   playtest kit's `setup_game.sh` makes one at `/tmp/playtest/inst`):
+   `DSUN_GPLDATA=$G/GPLDATA.GFF DSUN_OBJECTS=$G/SEGOBJEX.GFF DSUN_RESOURCE=$G/RESOURCE.GFF python -m
+   unittest discover -s tests`. 43 tests more run than without them (the number claims, the patched
+   copies, the script repairs against the real bytes); only the window's tests may be skipped then
+   (tkinter).
+4. Check in the game anything DSCLOG or a script touches ([the playtesting
    guide](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/PLAYTESTING.md)).
-4. Merge to `main`, then push the tag `v<version>`, or run the workflow by hand (Actions → Release
+5. Merge to `main`, then push the tag `v<version>`, or run the workflow by hand (Actions → Release
    → Run workflow), which makes the tag.
-5. Once the pull request is merged, rename the CHANGELOG's "## Unreleased (branch
+6. Once the pull request is merged, rename the CHANGELOG's "## Unreleased (branch
    `obsidian-edition`)" to "## Pull request #N (merged DATE)", with "merged DATE" a link to the
    pull request, as the other headings have it. Start a release's entry with the line "Obsidian
    Edition X", its release notes (`release-notes/vX.md`) linked after it in brackets, and use only the section labels New,
@@ -490,7 +501,15 @@ and the section that explains it. INTERNALS, RULES, KITS, CONTENT and SCREENS ar
    site's routine in `site_tab` (`site X_SITE, x_site`, in number order: the build fails
    otherwise), with the number as an `equ` beside the Python constant of the same name. Say in the
    routine's comment what it replaces, at which address, and what it keeps. Code in overlays that
-   can move needs its way back in a frame the overlay manager fixes up (`OVR_BACK`).
+   can move needs its way back in a frame the overlay manager fixes up (`OVR_BACK`). The INT turns
+   interrupts off: a handler that ends with `RETF 2` (keeping its flags for the caller) or calls
+   the game's code starts with `call if_frame`, which sets them as the caller had them (not `STI`:
+   DSCLOG's own drawing calls the game's routines with them off, `DRAW_MASKED`); one that ends
+   with `IRET` gets the caller's back anyway. Code that copies with string instructions from the
+   timer, the mouse or a site of the game's unknown state clears the direction flag first (`CLD`;
+   `PROBE_TICK`, `RECORD` and `STUB` do). A site's code reads `RL_SITE` before anything turns
+   interrupts on ([RL_SITES' comment](dos/dsclog.asm)).
+3. A test in `tests/test_dsclog.py` that runs it in the emulator (`run_vector` or a site run), a
 3. A test in `tests/test_dsclog.py` that runs it in the emulator (`run_vector` or a site run), a
    rebuild with NASM 2.16.01 within [the limits](DEVELOPMENT-INTERNALS.md#the-limits), then a check
    in the game with the build in place (the playtest kit's `buildcheck.py`).
@@ -501,8 +520,9 @@ table](DEVELOPMENT-INTERNALS.md#the-loaders-game-flags), and `tests/test_flagran
 (or `_ranges`); `test_audit_flags` finds it by itself.
 
 **A header field** (shared by DSCLOG and the Loader): add it at the end of `hdr:` in
-`dos/dsclog.asm` with its offset in the comment (`+1876` after `SOLD_ITEMS`' `+1868`), so the
-others never move; name it `TSR_*` in the module that reads it. If both sides must change
+`dos/dsclog.asm` with its offset in the comment (`+1878` after `A20_LOST`'s `+1876`), so the
+others never move; name it `TSR_*` in the module that reads it (`test_header_offsets` checks both:
+the field at the offset its comment says, the constant a field's offset). If both sides must change
 together, take the signature up (`sig` in `dsclog.asm` and `HDR_SIG` in `dicelog.py`). See
 [DSCLOG's header](DEVELOPMENT-INTERNALS.md#dsclogs-header).
 

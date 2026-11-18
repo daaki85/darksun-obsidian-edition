@@ -229,6 +229,7 @@ map position. Nothing is built for it yet.
 
 - The slave pens (29h): a fountain at about square (68,94), where Pehtucl's ambush and Legcrusher's
   fetching take place (`fountain-user`, `legcrusher-fountain-user`); whether it gives water is
-  unchecked.
+  unchecked. In `fountain-user` Lex carries a **Pot of Water** (item 104, type 60, value 1), so the
+  game has such an item (2026-11-18).
 - The arena (2Ah): no water, jug or waterskin seen on the platform or on the champions' bodies
   (2026-11-18).

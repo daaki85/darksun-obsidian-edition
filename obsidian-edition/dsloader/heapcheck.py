@@ -15,9 +15,15 @@ in a long game is unknown: the crash report gives the last sample and the sessio
 The Loader can't give the game memory back (every block is the game's), but it can say when to:
 with the map's view open (its flag, DS:1F82h, set) the spare memory, DOS's after the game and the
 heap's free blocks, below LOW_SPARE is a line in the dice log to save and restart soon (a new
-start has it all back); once more only after it has been above RECOVERED_SPARE again. And if the
+start has it all back); once more only after it has been above RECOVERED_SPARE again. Enough in
+all but none of it in one piece the map's size (the largest free piece, the heap's or DOS's,
+under MAP_BLOCK + MAP_MARGIN: the view can open again only in the place it gives back as it
+closes, if nothing takes that meanwhile) is a line of its own, as often (again once it has been
+MAP_MARGIN more). And if the
 overlay buffer isn't in upper memory (DSCLOG's header +368, OVR_GIVEN, 0), a line says so: no
-room there for it, the game about 33 KB the poorer."""
+room there for it, the game about 33 KB the poorer. And once if DSCLOG found A20 off (its header's
+A20_LOST: its buffers above 1 MB out of reach till it turned it on again), again if it then
+couldn't."""
 
 import struct
 from typing import List, NamedTuple, Optional
@@ -28,8 +34,11 @@ PSP_PARAS = 0x10  # (the game's PSP is the 256 bytes before its load segment; it
 MAP_OPEN = 0x1F82  # DS word: 1 while the map's view is open (OEOpenGraph's)
 TSR_OVR_GIVEN, TSR_UMB_NEED = 368, 372  # DSCLOG's header: the overlay buffer's segment in upper
 OVR_PARAS = 0x80E                       #   memory (0: not there); paragraphs it puts there
+TSR_A20_LOST = 1876  # ... times A20 was found off (A20_CHECK), 8000h added if it wouldn't come on again
+A20_STUCK = 0x8000
 UMB_ROOM = 0xF000 - 0xD00A  # paragraphs DOSBox's upper memory has from the helper's MCB on
 LOW_SPARE, RECOVERED_SPARE = 24 * 1024, 32 * 1024  # bytes spare with the map open
+MAP_MARGIN = 4 * 1024  # (the largest free piece under MAP_BLOCK + this: SPLIT_LINE's)
 
 
 class Memory(NamedTuple):
@@ -92,6 +101,8 @@ class Watch:
         self.lowest: Optional[Memory] = None
         self.overlay: Optional[int] = None  # the overlay buffer's segment in upper memory, 0 if not there
         self._warned = False
+        self._split_warned = False
+        self._a20_said = 0  # (A20_LOST as last told)
 
     def take(self, read, load_seg: int, ds: Optional[int] = None, hdr: Optional[int] = None) -> List[str]:
         """A sample (READ(address, size) -> bytes); the lines for the dice log it calls for."""
@@ -109,6 +120,14 @@ class Watch:
                 self.overlay = None
             if self.overlay == 0:
                 out.append(OVERLAY_LOW_LINE)
+        if hdr is not None:
+            try:
+                lost, = struct.unpack("<H", read(hdr + TSR_A20_LOST, 2))
+            except (OSError, struct.error):
+                lost = 0
+            if lost and (not self._a20_said or (lost & A20_STUCK and not self._a20_said & A20_STUCK)):
+                self._a20_said = lost
+                out.append(a20_line(lost))
         try:
             open_now = ds is not None and struct.unpack("<H", read(ds * 16 + MAP_OPEN, 2))[0] == 1
         except (OSError, struct.error):
@@ -119,6 +138,12 @@ class Watch:
             out.append(low_line(spare))
         elif spare >= RECOVERED_SPARE and open_now:
             self._warned = False
+        largest = max(m.largest, m.dos_largest)
+        if open_now and spare >= LOW_SPARE and largest < MAP_BLOCK + MAP_MARGIN and not self._split_warned:
+            self._split_warned = True
+            out.append(split_line(largest, spare))
+        elif open_now and largest >= MAP_BLOCK + 2 * MAP_MARGIN:
+            self._split_warned = False
         return out
 
     def lines(self) -> list:
@@ -139,6 +164,25 @@ OVERLAY_LOW_LINE = ("Memory: upper memory had no room for the game's overlay buf
 def low_line(spare: int) -> str:
     return (f"Memory is running low: {spare // 1024} KB spare with the map open. The game stops with "
             "\"Out of memory\" when it runs out: save and restart the game soon (a new start has it all back).")
+
+
+def a20_line(lost: int) -> str:
+    """What A20_LOST (DSCLOG's header) says: told the first time, and again if it then wouldn't
+    come on."""
+    if lost & A20_STUCK:
+        return ("Memory: the A20 line went off and wouldn't come on again, so DSCLOG can't reach its buffers "
+                "above 1 MB (the dice log's rolls, the shadows, the dust and the combat log's panel stop "
+                "working). Save and restart the game.")
+    return ("Memory: the A20 line was found off (something turned it off; nothing in the game does) and DSCLOG "
+            "turned it on again before using its buffers above 1 MB. If anything looks wrong, save and restart "
+            "the game.")
+
+
+def split_line(largest: int, spare: int) -> str:
+    return (f"Memory is in pieces: {spare // 1024} KB spare with the map open, but the largest piece is "
+            f"{largest:,} bytes, and the map's view takes {MAP_BLOCK:,} in one piece each time it opens (it "
+            "has only the place it gives back as it closes). If the game stops with \"Out of memory\", that "
+            "is why: save and restart the game soon (a new start has it all in one piece).")
 
 
 WATCH = Watch()  # (one game at a time: the dice log fills it, the crash report reads it)

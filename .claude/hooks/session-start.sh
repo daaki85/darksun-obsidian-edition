@@ -10,9 +10,15 @@ fi
 cd "${CLAUDE_PROJECT_DIR:-.}"
 branch="$(git symbolic-ref --short -q HEAD 2>/dev/null || echo "a detached HEAD")"
 
-# The handed names: ccr-<hex>-<6 chars>, or claude/<word>-<word>-<6 chars with a digit>.
-if [[ "$branch" =~ ^ccr- || "$branch" =~ ^claude/[a-z]+-[a-z]+-[a-z0-9]*[0-9][a-z0-9]*$ && ${#branch} -le 40 ]] \
-   && [[ ! "$branch" =~ ^claude/.*-[a-z]+$ ]]; then
+# The handed names: ccr-<hex>-<6 chars>, or claude/<word>-<word>-<6 letters and digits, a digit
+# among them> (claude/nice-curie-20v06k); a task's name with -2 on it (claude/class-outfits-2) isn't one.
+handed=false
+if [[ "$branch" =~ ^ccr-[0-9a-f]+-[a-z0-9]{6}$ ]]; then
+  handed=true
+elif [[ "$branch" =~ ^claude/[a-z]+-[a-z]+-([a-z0-9]{6})$ ]] && [[ "${BASH_REMATCH[1]}" =~ [0-9] ]]; then
+  handed=true
+fi
+if [[ "$handed" == true ]]; then
   state="The checkout is on \`$branch\`, which looks like the random name this session was handed: don't commit to it or push it."
 else
   state="The checkout is on \`$branch\`."

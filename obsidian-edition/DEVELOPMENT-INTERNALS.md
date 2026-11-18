@@ -192,13 +192,15 @@ with the 3 ability checks the ability check command makes).
 ## DSCLOG's header
 
 The fields the Loader and DSCLOG share are DSCLOG's header, from `hdr:` in
-`dos/dsclog.asm`: the signature (`HDR_SIG`, `DSCLOGvb`), then one field a line, each commented
+`dos/dsclog.asm`: the signature (`HDR_SIG`, `DSCLOGvc`), then one field a line, each commented
 with its offset (`+1830`, `+1867` ...) and what it holds. That source is the layout's one home.
 The Loader finds the header by its signature in DOSBox's memory (16-aligned) and names each field
 it uses `TSR_*`, in the module that uses it (`dicelog.py`, `kits.py`, `ghost.py`, `freeze.py`,
 `cahulaks.py` ...). New fields go at the end, so the offsets of the rest never move (the latest:
-`SOLD_ITEMS`, +1868); a change that both sides must make together takes the signature up
-(`DSCLOGvb` with `SOLD_ITEMS`, 2026-11-18).
+`A20_LOST`, +1876); a change that both sides must make together takes the signature up
+(`DSCLOGvc` with `A20_LOST`, 2026-11-18). `test_header_offsets` builds DSCLOG with a symbol map and
+checks every field is at the offset its comment gives, and every `TSR_*` constant of the Loader's
+is a field's offset.
 
 ## Room and memory
 
@@ -219,23 +221,24 @@ the one place for the sizes; the sections after them name the symbols only.
 |---|---|---|
 | Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (the unmodded game's 57 KB) |
 | C000h-C7FFh | 32 KB | the video BIOS (ROM) |
-| C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
-| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): DSCLOG 69.2 KB (70,848 bytes with its PSP and its tail, (10h + `KEPT_PARAS`) paragraphs), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, and the rest free. Measured with `playtest/memaudit.py` in Pehtucl's ambush: 29,616 bytes free in one piece, between the overlay buffer and the see-through tables, and nothing between DSCLOG and the overlay buffer ([log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-16-memory-pass-5.md)) |
+| C800h-C9FFh | 8 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
+| CA00h-EFFFh | 152 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): DSCLOG 69.4 KB (71,104 bytes with its PSP and its tail, (10h + `KEPT_PARAS`) paragraphs), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, and the rest free. Measured with `playtest/memaudit.py` in Pehtucl's ambush: 29,616 bytes free in one piece, between the overlay buffer and the see-through tables, and nothing between DSCLOG and the overlay buffer ([log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-16-memory-pass-5.md)) |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
 | 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): DSCLOG's [far block](#the-far-block), 65,484 bytes, 36 free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
 
 ### The limits
 
-Each fails the build when passed (a negative `times`). For the committed `dos/DSCLOG.EXE`, 70,624
-bytes: the 32-byte header, the segment's image of 65,056 and the tail's 5,536 (`TAIL_BYTES`):
+Each fails the build when passed (a negative `times`). For the committed `dos/DSCLOG.EXE`, 70,880
+bytes: the 32-byte header, the segment's image of 65,312 and the tail's 5,536 (`TAIL_BYTES`):
 
 | Limit | Used | Room | Spare |
 |---|---|---|---|
-| [DSCLOG's segment](#dsclogs-segment): `kept_end` (`resident_end` 64,064 + `AFTER_INSTALL` 992) | 65,056 bytes | 65,536 | 480 bytes |
+| [DSCLOG's segment](#dsclogs-segment): `kept_end` (`resident_end` 64,320 + `AFTER_INSTALL` 992) | 65,312 bytes | 65,536 | 224 bytes |
 | [the far block](#the-far-block): `FAR_END` (its buffers from `FAR_RING`, 10h: 65,484 bytes) | 65,500 | 65,536 | 36 bytes |
-| upper memory as DSCLOG loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,508 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,674 |
-| upper memory once installed: `UMB_KEPT` (DSCLOG, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,130 paragraphs | 8,182 (`UMB_ROOM`) | 52 (832 bytes) |
+| upper memory as DSCLOG loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,524 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,658 |
+| upper memory once installed: `UMB_KEPT` (DSCLOG, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,146 paragraphs | 8,182 (`UMB_ROOM`) | 36 (576 bytes) |
+| the Loader's item names: `NAMES_EXTRA` (counted from DSCLOG's list, `EXTRA_NAMES`; `names.EXTRA` the Loader's, `test_names` and `test_header_offsets` check they agree) | 50 names | 50 | 0: a new name makes the room (the game's name table 25 bytes longer a name) |
 
 To check them after a change, build a scratch copy with `[map all FILE]` as its
 first line (`nasm -f bin -I dos/ -o /tmp/x.exe COPY`, from `obsidian-edition/`)
@@ -259,9 +262,9 @@ nothing needs while installing are laid over the install code (declared with
 and `slots_text`, `box_text`, `ns_scratch`, `shadow_tab`, `ef_text`; 992 bytes):
 `KEEP` zeroes them before its first DOS call and keeps memory to the tail's end
 (`KeepTests`). The segment holds whichever is longer, the install code or
-`AFTER_INSTALL`; the install code is the shorter (959 bytes: the vectors set
+`AFTER_INSTALL`; the install code is the shorter (955 bytes: the vectors set
 from a table, `ALL_VECTORS`, each vector's byte and its handler's offset), so
-the image is made up to `AFTER_INSTALL`'s size with zeros (33 bytes at
+the image is made up to `AFTER_INSTALL`'s size with zeros (37 bytes at
 present). SEG_MOVE's two tables of the game's (`seg_space`, `area_space`) and
 the tables only one routine reads (the AD&D XP, slot, thief and DEX tables,
 the kits' names) are in the tail, read through `tail_seg`.
@@ -324,7 +327,12 @@ block, which the Loader reads at `far_seg` x 16 (DAC +238, RING_TAB +246, RED
 (FFFFh:0010h, A20 on): XMS gives it (function 01h), or, where XMS says there is
 none (DOSBox 0.74's answer, 90h: its XMS blocks start at 1 MB + 64 KB,
 `XMS_START`), it is used if all zero; A20 is turned on with XMS function 03h
-and checked (FFFFh:0010h no longer 0000h:0000h). The game never calls XMS's A20
+and checked (FFFFh:0010h no longer 0000h:0000h), and checked again on each pass of the map's main
+loop (`A20_CHECK`, from `PROBE_SCROLL`): with A20 off every write to the far block would land on
+the interrupt vectors and DOS, so, found off, it is turned on again (XMS's 03h) and counted
+(`A20_LOST`, the header's +1876, which the dice log reports once: `heapcheck.a20_line`); if it
+won't come on, the far block's segments are made the BIOS's ROM's (F000h, whose writes go nowhere)
+and `A20_LOST` gets 8000h. The game never calls XMS's A20
 or HMA functions (its XMS calls are 08h-0Dh), and no file DOSBox runs is
 EXEPACKed (the unpacker fails with A20 on below 64 KB). Without the HMA the
 block is a memory block of its own (upper memory, else conventional),
@@ -346,15 +354,19 @@ C800h-CFFFh is RAM too, and DOSBox's tables use only its first 192 paragraphs
 (at most a few more later: a program asking for more than 20 file handles,
 INT 21h AH=67h, takes some each time; the game does once, at DSUN.EXE 54F3h).
 `UMBPLUS.COM`, run by the Loader's config just before `lh d:\dsclog.exe`,
-moves the block's start to C900h: the system MCB at 9FFFh (owner 8, "SC") is
-cut to end there and a free block's MCB goes at C900h, reaching F000h as
+moves the block's start to CA00h: the system MCB at 9FFFh (owner 8, "SC") is
+cut to end there and a free block's MCB goes at CA00h, reaching F000h as
 before. It does so only if the chain is exactly DOSBox 0.74's (9FFFh 'M' to
-D000h, D000h 'Z' free to F000h) and C900h-CFFFh is all zero and keeps what is
-written to it; otherwise it changes nothing and DSCLOG loads at D00Ah. 63
+D000h, D000h 'Z' free to F000h) and CA00h-CFFFh is all zero and keeps what is
+written to it; otherwise it changes nothing and DSCLOG loads at D00Ah. 320
 paragraphs stay between DOSBox's tables and the block (the tables measured at
-C8C0h throughout a save in the arena, walking and fighting, DSCLOG at
-C90Ah). DSCLOG still has to fit D000h-EFFFh (`UMB_ROOM`), so it works where
-the block can't be moved.
+C8C0h throughout a save in the arena, walking and fighting). DOSBox hands its
+tables out up to D000h without knowing of the block, so the room is wide: up
+to 2.18.0 the block started at C900h, 64 paragraphs from them, which a CD
+mount, a program asking for many file handles or the game run twice in one
+DOSBox might have crossed. DSCLOG still has to fit D000h-EFFFh (`UMB_ROOM`),
+so it works where the block can't be moved, and with the block moved it has
+1,536 paragraphs (24 KB) more than that.
 
 ### EMS off
 
@@ -415,7 +427,11 @@ While the game runs, the Loader reads its memory every
 few seconds (`heapcheck.Watch`): with the map's view open (DS:1F82h set),
 below 24 KB spare (DOS's after the game and the heap's free blocks) the dice
 log says to save and restart soon, once until it has been back above 32 KB.
-Nothing can be given back to the game from outside: every block is its own.
+Enough spare but no free piece (the heap's or DOS's) of 60,000 bytes and 4 KB
+more is a line of its own (`split_line`: the view can open again only in the
+place it gives back as it closes), once until a piece has been 8 KB more than
+the map's block again. Nothing can be given back to the game from outside:
+every block is its own.
 
 How the ring, the text buffer and the rest shrank or moved to get here is in
 the CHANGELOG.

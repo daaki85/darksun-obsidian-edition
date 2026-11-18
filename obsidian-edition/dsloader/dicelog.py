@@ -37,7 +37,7 @@ from .itemwatch import ItemWatch
 from .textlog import KIND_MESSAGE, KIND_PORTRAIT, KIND_SHOW_REPLIES, KIND_TEXT, Dialogue, DialogueEntry, TextBuffer
 from .tracker import PartyTracker
 
-HDR_SIG = b"DSCLOGvb"
+HDR_SIG = b"DSCLOGvc"
 TSR_HDR_OFF = 20  # DSCLOG's header: where it is in DSCLOG's segment
 # ... the party's spell slots, for the game's USE screen (PROBE_USE)
 TSR_SLOTS_OFF, SLOTS_SIZE = 148, 128
@@ -1401,7 +1401,7 @@ class DiceLog:
                 to_hit += war
         if attacker in g.wild and mode is not None:  # (DSCLOG's WILD_*: a Wild Fury's, or Gerakis's own)
             names.append("Wild Fighting")
-            to_hit += kits.WILD_TO_HIT  # (whatever the check)
+            to_hit += kits.WILD_TO_HIT_MOD  # (whatever the check)
             if g.wild[attacker]:
                 damage += kits.WILD_DAMAGE
         return " and ".join(names), to_hit, damage
@@ -3184,8 +3184,8 @@ class DiceLog:
             parts.append(("target's Fogbolt", 2))
             situational -= 2
         if on(attacker_combatant, game.STINK_EFFECT):  # (a stinkpot's Nauseated: DSCLOG's NS_HIT)
-            parts.append((EFFECT_NAMES[game.STINK_EFFECT], game.STINK_TO_HIT))
-            situational -= game.STINK_TO_HIT
+            parts.append((EFFECT_NAMES[game.STINK_EFFECT], game.STINK_TO_HIT_MOD))
+            situational -= game.STINK_TO_HIT_MOD
         prayer = next((x for x in effects if x.owner == attacker_combatant and x.id == 73), None)
         if prayer:
             caster = g.combatant_creature(prayer.caster)

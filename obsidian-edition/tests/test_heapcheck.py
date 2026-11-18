@@ -100,10 +100,53 @@ class NoteTests(unittest.TestCase):
         self.spare(20)
         self.assertEqual(len(w.take(self.read, LOAD, self.DS, self.HDR)), 1)  # (said again)
 
+    def test_in_pieces_once_then_again_after_one_big_piece(self):
+        """Enough spare in all (40 KB) but no piece the map's 60,000 bytes and its margin: said once,
+        again only after a piece has been MAP_MARGIN bigger than that; not while memory is low, which
+        says it all."""
+        struct.pack_into("<H", self.m, self.HDR + heapcheck.TSR_OVR_GIVEN, 0xDE1F)
+        w = heapcheck.Watch()
+        self.spare(80)  # (a piece of 75 KB)
+        self.assertEqual(w.take(self.read, LOAD, self.DS, self.HDR), [])
+        self.spare(40)  # (the largest 35 KB)
+        lines = w.take(self.read, LOAD, self.DS, self.HDR)
+        self.assertEqual(lines, [heapcheck.split_line(40 * 1024 - 0x120 * 16, 40 * 1024)])
+        self.assertIn("the largest piece is 36,352 bytes", lines[0])
+        self.assertEqual(w.take(self.read, LOAD, self.DS, self.HDR), [])  # (said once)
+        self.spare(66)  # (a piece of 62,976 bytes: more than the map's block, less than two margins more)
+        w.take(self.read, LOAD, self.DS, self.HDR)
+        self.spare(40)
+        self.assertEqual(w.take(self.read, LOAD, self.DS, self.HDR), [])
+        self.spare(80)
+        w.take(self.read, LOAD, self.DS, self.HDR)
+        self.spare(40)
+        self.assertEqual(len(w.take(self.read, LOAD, self.DS, self.HDR)), 1)  # (said again)
+        self.spare(20)  # (low: that line only)
+        self.assertTrue(w.take(self.read, LOAD, self.DS, self.HDR)[0].startswith("Memory is running low"))
+
+    def test_a20_said_once_and_again_if_it_stays_off(self):
+        """DSCLOG's A20_LOST: found off and turned on again, said once (whatever the count after);
+        then off for good (8000h), said again."""
+        struct.pack_into("<H", self.m, self.HDR + heapcheck.TSR_OVR_GIVEN, 0xDE1F)
+        self.spare(80)
+        w = heapcheck.Watch()
+        self.assertEqual(w.take(self.read, LOAD, self.DS, self.HDR), [])
+        struct.pack_into("<H", self.m, self.HDR + heapcheck.TSR_A20_LOST, 1)
+        self.assertEqual(w.take(self.read, LOAD, self.DS, self.HDR), [heapcheck.a20_line(1)])
+        struct.pack_into("<H", self.m, self.HDR + heapcheck.TSR_A20_LOST, 3)
+        self.assertEqual(w.take(self.read, LOAD, self.DS, self.HDR), [])
+        struct.pack_into("<H", self.m, self.HDR + heapcheck.TSR_A20_LOST, 0x8004)
+        lines = w.take(self.read, LOAD, self.DS, self.HDR)
+        self.assertEqual(lines, [heapcheck.a20_line(0x8004)])
+        self.assertIn("wouldn't come on again", lines[0])
+        self.assertEqual(w.take(self.read, LOAD, self.DS, self.HDR), [])
+
     def test_not_while_the_map_is_closed(self):
         struct.pack_into("<H", self.m, self.HDR + heapcheck.TSR_OVR_GIVEN, 0xDE1F)
         self.map_open(False)
         self.spare(10)
+        self.assertEqual(heapcheck.Watch().take(self.read, LOAD, self.DS, self.HDR), [])
+        self.spare(40)  # (nor in pieces: the view gives its block back as it closes)
         self.assertEqual(heapcheck.Watch().take(self.read, LOAD, self.DS, self.HDR), [])
 
 if __name__ == "__main__":

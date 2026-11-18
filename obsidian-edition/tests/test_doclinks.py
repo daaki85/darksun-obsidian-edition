@@ -56,7 +56,7 @@ def sections(path: str):
 
 
 def doc_files():
-    out = [os.path.join(REPO, f) for f in ("README.md", "CHANGELOG.md", "PATCH-NOTES.md")]
+    out = [os.path.join(REPO, f) for f in ("README.md", "CHANGELOG.md", "CHANGELOG-archive.md", "PATCH-NOTES.md")]
     out += glob.glob(os.path.join(REPO, "release-notes", "*.md"))
     out += glob.glob(os.path.join(HERE, "*.md"))
     return [f for f in out if os.path.exists(f)]
