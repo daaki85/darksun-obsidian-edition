@@ -526,3 +526,6 @@ index](logs/README.md), by date.
   Searing Blade's name whole in the box, label and dice log (logs/2026-11-18-item-glows.md).
   The item box's INFO button and its USEABLE BY list; a Spellarcher in memory needs its class
   mask (logs/2026-11-18-spell-arrows-info.md).
+  Most switches always on: settings.json can't turn them off any more (its keys dropped as read),
+  so a rule off for a test is a memory edit of DSCLOG's rules words; settings.json's
+  `options_open` opens the Options tab's sections for a picture (logs/2026-11-18-fewer-switches.md).
