@@ -1285,8 +1285,22 @@ the Wild Mul 290; the Renegade 289, a halfling; an elven caravan guard 103; the
 Defiler 296), their records renumbered, named "Champion", their own items left
 out and their gear in (as the new items, after the person), their sheets their
 kinds' (the armour counting on top of their AC) but for DEX (`champions.DEX`:
-18, the half-giant 15; the mul and the halfling have 18 already). Their pictures
-are their kinds'.
+the Tohr-kreen, the halfling and the elf 22, the half-giant 15, the defiler 18; the mul has 18 already). The game's DEX
+tables (DS 7DCh missiles and initiative, 7F6h AC, a byte for each score 0-25; the Loader's and
+DSCLOG's reads go to 25 too) give 22 +4 and -5, AD&D's. Their pictures
+are their kinds'. The elf's bow is the Spellarcher's Fine Bow (`champions.fine_bow`: a plain bow
+with the name entry `game.FINE_BOW_NAME`, as `spellarrows.starting_gear` makes it); DSCLOG's
+`FINE_HIT` goes by the item's name alone, so its +1 to hit is the champion's too, and the bow is on
+the elf's body afterwards. Its arrows are 24 Chill Arrows (`champions.chill_arrows`,
+`spellarrows.arrows_item`): DSCLOG's `PROBE_ARROW` marks a shot a Spellarcher's (`AMMO_ARCHER`)
+only for a party member (combatant's creature 0-3) of that kit, and `ARROW_HIT` casts the arrows'
+spell only then, so the elf's are plain arrows (no Chill Touch, no plus). The halfling's missile
+weapon is the game's staff sling (type 0, `game.STAFF_SLING_TYPE`): in the missile slot, which the
+game never weighs against the hands, so its bone short sword and shield stay; the game's slings
+shoot with nothing in the ammunition slot. The defiler wears
+Bracers of Defense AC 6 on its arms (`worldgear.bracers(6)`, Mikquetzl's in `worldgear.MAGIC` until
+2026-11-18: a save that has been to his region keeps his, as the game made him there); it wears no
+armour or helm, so they count (`PROBE_RING_AC`, `INT F8h`, asks of any creature's worn items).
 
 The scripts: the arena's deaths (script 3) say "This makes ... king of the
 pens!" and set flag 19 only when a party member kills Scar (flag 19 is set at

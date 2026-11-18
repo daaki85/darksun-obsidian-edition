@@ -105,6 +105,10 @@ every script in the built copy should decode.
   from and caps it since.
 - 2026-11-07 (`ghostturn.py`): in the enemies' turns the view follows the one acting; in a fight the
   view barely drags.
+- 2026-11-18 (logs/2026-11-18-champions-gear.md): in the arena, a click at screen (160, 260), meant
+  for map (488, 420) with the camera at y 160, fell below the view: EXIT: SAVE GAME? came up over an
+  empty red view (camera 344, 1360). CANCEL and viewto.py brought it back; ROUTE.md's way onto the
+  platform now brings the view down first.
 
 ## Message boxes and YES/NO questions
 
