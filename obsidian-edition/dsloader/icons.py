@@ -1155,6 +1155,7 @@ OBSIDIAN_LONG_SWORD, SEARING_BLADE_NAME = 45, 0x156  # (the Searing Blade, world
 # long sword, the Flame Blade, up to 2.18.0, which a saved game's keeps until worldgear.mend_searing_blade)
 METAL_HELM_TYPE, WARDENS_HELM = 89, 0x153  # (the game's metal helm, the Helm of Contemplation's; its name)
 WOODEN_SHIELD_TYPE, GUTTERWARD = 16, 0x163  # (the game's wooden Shield; Gutterward's name: worldgear.py)
+THORNWALL = 0x160  # (Thornwall's name, worldgear.THORNWALL: a bone polearm +1)
 
 
 def which(rec: bytes) -> Optional[str]:
@@ -1237,7 +1238,7 @@ def which(rec: bytes) -> Optional[str]:
         return "Headsman"
     if kind == game.METAL_POLEARM_TYPE and plus == 2:
         return "Linebreaker"
-    if kind == 19 and plus == 1 and struct.unpack_from("<H", rec, game.ITEM_NAME)[0] == 0x160:
+    if kind == 19 and plus == 1 and struct.unpack_from("<H", rec, game.ITEM_NAME)[0] == THORNWALL:
         return "Thornwall"
     if kind == game.OBSIDIAN_CAHULAKS_TYPE and plus == 1:
         return "Emberlash"

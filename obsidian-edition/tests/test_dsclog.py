@@ -1786,8 +1786,8 @@ class SpecializeTests(unittest.TestCase):
         try:
             for bits, melee, missile in ((0, (3, 15, 3, 8), (15, 3)),
                                          (0x40, (3 + kits.WILD_HALVES, 15, 3 + kits.WILD_DAMAGE, 8), (15, 6)),
-                                         (0x04, (3, 15 - kits.WILD_TO_HIT, 3, 8), (18, 3)),
-                                         (0x44, (3 + kits.WILD_HALVES, 15 - kits.WILD_TO_HIT, 3 + kits.WILD_DAMAGE, 8),
+                                         (0x04, (3, 15 - kits.WILD_TO_HIT_MOD, 3, 8), (18, 3)),
+                                         (0x44, (3 + kits.WILD_HALVES, 15 - kits.WILD_TO_HIT_MOD, 3 + kits.WILD_DAMAGE, 8),
                                           (18, 6)),  # (passed, as the Loader sets it)
                                          (0xBB, (3, 15, 3, 8), (15, 3))):  # (members 0, 1 and 3's)
                 with self.subTest(bits=bits):

@@ -48,9 +48,18 @@ class ManualPagesTests(unittest.TestCase):
         extra = set(os.listdir(manual.MANUAL)) - {os.path.basename(p) for p in self.made}
         self.assertEqual(extra, set(), "files in manual/ the manual doesn't make")
 
+    def test_every_players_page_is_in_it(self):
+        """Every Markdown page of obsidian-edition but the developers' (DEVELOPMENT*.md, left out of
+        the release zip) is a page of the manual: one added and not listed in manual.PAGES would
+        ship as Markdown only, linked to on GitHub."""
+        sources = {source for _, source, _, _ in manual.PAGES}
+        for name in sorted(os.listdir(HERE)):
+            if name.endswith(".md") and not name.startswith("DEVELOPMENT"):
+                self.assertIn("obsidian-edition/" + name, sources, f"{name} has no page in manual.PAGES")
+
     def test_every_page(self):
-        """The ten pages, the start page first, each from its Markdown, each with the bar of all ten
-        (itself marked) and its own index; the spoiler pages marked so in the bar."""
+        """The twelve pages, the start page first, each from its Markdown, each with the bar of all
+        twelve (itself marked) and its own index; the spoiler pages marked so in the bar."""
         self.assertEqual(manual.PAGES[0][0], "index.html")
         self.assertEqual(len(manual.PAGES), 12)
         for page, source, name, _ in manual.PAGES:

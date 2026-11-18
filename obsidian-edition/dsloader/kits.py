@@ -53,7 +53,7 @@ GROVE_WARDEN, LIFEBINDER = KIT_IDS["Grove Warden"], KIT_IDS["Lifebinder"]
 WANDERER, ARCANIST = KIT_IDS["Wanderer"], KIT_IDS["Arcanist"]
 # the item type's +00h flags and +0Fh kind flags, +08h material (restrict.py's)
 MELEE, MISSILE, SHIELD, THROWN, TWO_HANDED, ARMOUR = 0x01, 0x02, 0x04, 0x10, 0x40, 0x80
-METAL, LEATHER, NO_MATERIAL = 4, 5, 0x40
+METAL, LEATHER, NO_MATERIAL_BIT = 4, 5, 0x40
 # a Lifebinder's weapon kinds (specialize.KINDS' numbers): club, mace, quarterstaff, sling, staff sling
 BLUNT = frozenset((1, 4, 8, 14, 15))
 # a Shinobi's: dagger, short sword, quarterstaff, chatkcha, bow, sling, staff sling
@@ -555,7 +555,7 @@ TSR_POISON_USED = 1860  # DSCLOG's header: bit N member N's main hand has poison
 # a Wild Fury's Wild Fighting (wild.py; DSCLOG's KIT_WILD): checked against CON - 4 as a fight starts,
 # for the fight. Whatever the check, 3 worse to hit and AC 3 worse (no worse than WILD_AC_MOST);
 # passed, also 1 more attack a round in melee (2 halves) and 3 more damage; every fight.
-WILD_TO_HIT, WILD_DAMAGE, WILD_HALVES, WILD_AC, WILD_AC_MOST = -3, 3, 2, 3, 10
+WILD_TO_HIT_MOD, WILD_DAMAGE, WILD_HALVES, WILD_AC, WILD_AC_MOST = -3, 3, 2, 3, 10  # (_MOD signed: DSCLOG's WILD_TO_HIT, 3)
 
 
 def wild_check(con: int, d20: int) -> bool:
@@ -775,7 +775,7 @@ def allows(kid: int, typ: bytes, kind: Optional[int], chosen: Optional[int], spe
         return False
     flags, kinds, mat = typ[0], typ[0x0F], typ[8] & 0x4F
     if kinds & ARMOUR:
-        return not flags & SHIELD and mat in (LEATHER, NO_MATERIAL)
+        return not flags & SHIELD and mat in (LEATHER, NO_MATERIAL_BIT)
     return specialize and kind is not None and kind == chosen
 
 
@@ -801,7 +801,7 @@ def light_only(kid: int, typ: bytes) -> bool:
         return bool(typ[0x0F] & ARMOUR) and not restrict.is_bracers(typ) and not restrict.is_robe(typ) \
             and typ[9] != restrict.CLOAK_SLOT
     return kid in LIGHT_KITS and bool(typ[0x0F] & ARMOUR) and not typ[0] & SHIELD \
-        and typ[8] & 0x4F not in (LEATHER, NO_MATERIAL)
+        and typ[8] & 0x4F not in (LEATHER, NO_MATERIAL_BIT)
 
 
 def forbids(kid: int, typ: bytes, kind: Optional[int], half_giant: bool, spec: bool = False,
@@ -822,7 +822,7 @@ def forbids(kid: int, typ: bytes, kind: Optional[int], half_giant: bool, spec: b
     weapon = bool(flags & (MELEE | MISSILE))
     if off_hand and forbids_off_hand(kid, typ):
         return True
-    light = not kinds & ARMOUR or bool(flags & SHIELD) or mat in (LEATHER, NO_MATERIAL)
+    light = not kinds & ARMOUR or bool(flags & SHIELD) or mat in (LEATHER, NO_MATERIAL_BIT)
     if kid == RAVAGER:
         return bool(flags & (SHIELD | MISSILE | THROWN)) or not light
     if kid == TWIN_BLADE:  # (the CAHULAKS, a blade in each hand, its own)
@@ -834,7 +834,7 @@ def forbids(kid: int, typ: bytes, kind: Optional[int], half_giant: bool, spec: b
             return not kinds & TWO_HANDED or cahulaks
         return bool(flags & MISSILE) and spec
     if kid == STALKER:
-        return bool(kinds & ARMOUR) and not flags & SHIELD and mat not in (LEATHER, NO_MATERIAL)
+        return bool(kinds & ARMOUR) and not flags & SHIELD and mat not in (LEATHER, NO_MATERIAL_BIT)
     if kid == GROVE_WARDEN:
         from . import restrict
         return weapon and kind is not None and not restrict.sphere_allows(sphere, typ, kind)
@@ -847,7 +847,7 @@ def forbids(kid: int, typ: bytes, kind: Optional[int], half_giant: bool, spec: b
         if flags & SHIELD:
             return True
         if kinds & ARMOUR:
-            return mat not in (LEATHER, NO_MATERIAL)
+            return mat not in (LEATHER, NO_MATERIAL_BIT)
         return kind is not None and kind not in SHINOBI_KINDS
     if kid == BATTLE_DANCER:
         return bool(flags & SHIELD) or kind is not None and kind not in DANCER_KINDS

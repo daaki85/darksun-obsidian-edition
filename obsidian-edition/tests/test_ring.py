@@ -136,7 +136,7 @@ class WornTests(unittest.TestCase):
         struct.pack_into("<h", m, CREATURES + 0x0C, 401)
         m[ITEMS + 70 * game.ITEM_SIZE:ITEMS + 71 * game.ITEM_SIZE] = ring.RING
         m[ITEMS + 70 * game.ITEM_SIZE + game.ITEM_SLOT] = game.FINGER
-        m[ITEM_TYPES + game.RING_TYPE * game.ITEM_TYPE_SIZE + 0x08] = game.NO_MATERIAL
+        m[ITEM_TYPES + game.RING_TYPE * game.ITEM_TYPE_SIZE + 0x08] = game.NO_MATERIAL_BIT
 
     def test_named(self):
         self.assertEqual(self.log.game.equipment(0), [("finger", "Ring/Protection +1")])
