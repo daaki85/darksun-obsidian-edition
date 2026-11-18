@@ -1,5 +1,5 @@
-"""The item box's INFO for a Spellarcher's spell arrows (DSCLOG's INFO_ONLY): SPELLARCHER ONLY under
-the game's USEABLE BY list, run in Unicorn at the game's bytes (gamepatch's info_only)."""
+"""The item box's INFO for a Spellarcher's spell arrows (DSCLOG's INFO_HEAD): the heading SPELLARCHERS:
+in place of the game's USEABLE BY:, run in Unicorn at the game's bytes (gamepatch's info_head)."""
 import os
 import struct
 import sys
@@ -13,64 +13,60 @@ from dsloader import gamepatch, spellarrows  # noqa: E402
 import test_cahulaks as tc  # noqa: E402
 import test_dsclog as td  # noqa: E402
 
-SS, BP = td.SS, td.BP
+SS, BP, CALLER, GAME_DS = td.SS, td.BP, td.CALLER, td.GAME_DS
+USEABLE_BY = 0x3493  # DS: the game's heading
 
 
 def load_tests(loader, tests, pattern):  # (only this file's: not the cahulaks', inherited, again)
     suite = unittest.TestSuite()
-    suite.addTests(InfoOnlyTests(name) for name in sorted(vars(InfoOnlyTests)) if name.startswith("test_"))
+    suite.addTests(InfoHeadTests(name) for name in sorted(vars(InfoHeadTests)) if name.startswith("test_"))
     return suite
 
 
 @unittest.skipIf(td.Uc is None, "unicorn not installed")
-class InfoOnlyTests(tc.CahulaksTests):
-    STUB = 0x7000  # the game's text routine here: counts its calls, keeps its y, x and text
-
-    def info(self, name, row=0x1B, names=1):
-        """INFO_ONLY for an item named NAME, the list's next row ROW, NAMES members drawn: (the text
-        routine's calls, its y, its x, the text drawn, AX after)."""
-        stub = self.STUB
-        # push bp / mov bp,sp / [bp+10h] y, [bp+0Eh] x, [bp+0Ah] the text's offset to cs:102h...
-        # / inc word cs:[100h] / pop bp / retf
-        self.mu.mem_write(stub * 16, bytes.fromhex(
-            "5589e5" "8b4610" "2ea30201" "8b460e" "2ea30401" "8b460a" "2ea30601" "8b460c" "2ea30801"
-            "2eff060001" "5d" "cb"))
-        self.mu.mem_write(stub * 16 + 0x100, bytes(10))
-        self.mu.mem_write(td.CALLER * 16 + self.at + 0x100 + 3 - 10, struct.pack("<HH", 0, stub))
+class InfoHeadTests(tc.CahulaksTests):
+    def head(self, name):
+        """INFO_HEAD for an item named NAME: (the far pointer it pushed, as a segment and an offset;
+        the text there; SP, BP, AX, BX after)."""
+        mu, r = self.mu, td.r
         self.mu.mem_write(tc.ITEMS * 16 + 5 * 0x15 + 0x12, struct.pack("<H", name))
-        self.frame(p6=5, p8=0x1234, pA=0x5678, m2=names)
-        self.assertEqual(self.where("info_only", (), esi=row, eax=0x9999), "end")
-        calls, y, x, off, seg = struct.unpack("<5H", self.mu.mem_read(stub * 16 + 0x100, 10))
-        text = bytes(self.mu.mem_read(seg * 16 + off, 24)).split(b"\0")[0].decode() if calls else None
-        return calls, y, x, text, self.mu.reg_read(td.r.UC_X86_REG_AX)
+        self.mu.mem_write(GAME_DS * 16 + USEABLE_BY, b"USEABLE BY:\0")
+        self.frame(p6=5)
+        p = tc.tg.patch("info_head")
+        self.at += 0x100
+        start = CALLER * 16 + self.at
+        mu.mem_write(start, p.replacement + b"\xf4")
+        for reg, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=td.IF | 2, eax=0x1111,
+                               ebx=0x2222, es=0x3333).items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + reg.upper()), value)
+        mu.emu_start(start, 0, count=200000)
+        self.assertEqual(mu.reg_read(r.UC_X86_REG_IP), self.at + len(p.replacement) + 1)
+        sp = mu.reg_read(r.UC_X86_REG_SP)
+        off, seg = struct.unpack("<HH", mu.mem_read(SS * 16 + sp, 4))
+        text = bytes(mu.mem_read(seg * 16 + off, 20)).split(b"\0")[0].decode()
+        return (seg, off, text, sp, mu.reg_read(r.UC_X86_REG_BP), mu.reg_read(r.UC_X86_REG_AX),
+                mu.reg_read(r.UC_X86_REG_BX), mu.reg_read(r.UC_X86_REG_ES))
 
     def test_patch(self):
-        p = tc.tg.patch("info_only")
-        self.assertEqual((p.offset, p.original.hex()), (0x8C282, "8b46fe"))
-        self.assertEqual(p.replacement, bytes((0xCD, 0x98, gamepatch.INFO_ONLY_SITE)))
+        p = tc.tg.patch("info_head")
+        self.assertEqual((p.offset, p.original.hex()), (0x8C1E0, "1e689334"))
+        self.assertEqual(p.replacement, bytes((0xCD, 0x98, gamepatch.INFO_HEAD_SITE, 0x90)))
 
     def test_spell_arrows(self):
-        """Each of the four spell arrows' names: SPELLARCHER ONLY in the list's next row, at x 0Dh, and
-        AX the names drawn ([BP-2]), as the game's own "mov ax,[bp-2]"."""
+        """Each of the four spell arrows' names: the heading SPELLARCHERS: (DSCLOG's own text), pushed
+        where the game pushes its far pointer, the registers kept."""
         for name in sorted(spellarrows.ARROW_NAMES):
             with self.subTest(name=hex(name)):
-                self.assertEqual(self.info(name), (1, 0x1B, 0x0D, "SPELLARCHER ONLY", 1))
-
-    def test_no_one(self):
-        """With no member allowed the game drew NO ONE in SI's row and left SI there: the line goes
-        under it."""
-        self.assertEqual(self.info(0x16D, row=0x13, names=0), (1, 0x1B, 0x0D, "SPELLARCHER ONLY", 0))
+                got = self.head(name)
+                self.assertEqual(got[2:], ("SPELLARCHERS:", 0x7FC, BP, 0x1111, 0x2222, 0x3333))
+                self.assertEqual(got[0], td.TSR)
 
     def test_other_items(self):
-        """Plain arrows (name 36h), the Fine Bow and anything else: nothing drawn, AX as the game's."""
+        """Plain arrows (name 36h), the names either side of the four, and anything else: the game's
+        own DS:3493h, USEABLE BY:."""
         for name in (0x36, spellarrows.ARROWS[0].name - 1, spellarrows.ARROWS[-1].name + 1, 2):
             with self.subTest(name=hex(name)):
-                self.assertEqual(self.info(name, names=2)[0::4], (0, 2))
-
-    def test_full_box(self):
-        """Four names drawn (the row of the box's INFO button next): nothing more."""
-        self.assertEqual(self.info(0x16D, row=0x0B + 8 * 5, names=4)[0::4], (0, 4))
-        self.assertEqual(self.info(0x16D, row=0x0B + 8 * 4, names=3)[:2], (1, 0x2B))
+                self.assertEqual(self.head(name)[:4], (GAME_DS, USEABLE_BY, "USEABLE BY:", 0x7FC))
 
 
 if __name__ == "__main__":

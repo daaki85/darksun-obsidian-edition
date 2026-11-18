@@ -17281,7 +17281,7 @@ AMMO_TURN_SITE equ NS_IMAGE + 117 ; 58C38h: the attacks spent: the turn over, or
 AMMO_OK1_SITE equ NS_IMAGE + 118  ; 5843Fh: the attack command's target still Okay? (AMMO_OKAY)
 AMMO_OK2_SITE equ NS_IMAGE + 119  ; 584A4h: the same, again (AMMO_OKAY)
 AMMO_OK3_SITE equ NS_IMAGE + 120  ; 5850Eh: the same, before the turn's end (AMMO_OKAY)
-INFO_ONLY_SITE equ NS_IMAGE + 121 ; 8C282h: the item box's INFO, its USEABLE BY list drawn (INFO_ONLY)
+INFO_HEAD_SITE equ NS_IMAGE + 121 ; 8C1E0h: the item box's INFO, its USEABLE BY: heading pushed (INFO_HEAD)
 REACH_1587   equ 0x4356 - 0x1587  ; (the callers' segments, less DS)
 REACH_1A0A   equ 0x4356 - 0x1A0A
 REACH_AI_RANGE equ 0x0DA7         ; (overlay 612Eh's ways back)
@@ -20860,7 +20860,7 @@ site_tab:
         site AMMO_OK1_SITE, ammo_okay
         site AMMO_OK2_SITE, ammo_okay
         site AMMO_OK3_SITE, ammo_okay
-        site INFO_ONLY_SITE, info_only
+        site INFO_HEAD_SITE, info_head
 SITE_COUNT equ ($ - site_tab) / 2
 
 ; NS_CMP: the compare of site RL_SITE (of NS_CMP_SITES), its flags into the INT's frame.
@@ -28029,50 +28029,53 @@ ib_belt    db 'Pick +5, Lock +5', 0
 ib_elf_hide  db 'Hide 90-95%', 0    ; (the Cloak of Elvenkind's chance: stealth.py)
 ib_elf_quiet db 'Silent 95%', 0
 
-; INFO_ONLY: "mov ax,[bp-2]" (8C282h; 3 bytes: the INT and the site's number) at the end of the
-; routine that draws the item box's INFO (8C1B8h: USEABLE BY: and the name of each party member
-; the can-use routine allows, PROBE_CAN_USE and its ARROWS_FORBID among it, else NO ONE; [BP+6]
-; the item, [BP+8] the box's window, SI the next row, but NO ONE's, [BP-2] the names drawn). For a
-; Spellarcher's spell arrows (named ARROW_NAME to +3: dsloader/spellarrows.py) SPELLARCHER ONLY in
-; the next row, with the routine's own text routine and place (x 0Dh), but not past INFO_LAST (four
-; names: the next row the box's INFO button's); then AX = [BP-2], as the code would have.
-INFO_DRAW equ 0x8C27B - 0x8C285 ; (DSUN.EXE) the text routine's far address in NO ONE's call, less
-                                ;   the way back
-INFO_LAST equ 0x0B + 8 * 4      ; (the header's row, 0Bh, and four rows of 8 after it)
-info_only:
-        sti                     ; (interrupts on while the game's text routine draws)
-        pushad
+; INFO_HEAD: "push ds / push 3493h" (8C1E0h; 4 bytes: the INT, the site's number and a NOP) in the
+; routine that draws the item box's INFO (8C1B8h: its heading, USEABLE BY:, then the name of each
+; party member the can-use routine allows, PROBE_CAN_USE and its ARROWS_FORBID among it, else NO
+; ONE; [BP+6] the item): the heading's far pointer pushed, as the code would have, but for a
+; Spellarcher's spell arrows (named ARROW_NAME to +3: dsloader/spellarrows.py) SPELLARCHERS:, so the
+; list reads "SPELLARCHERS: / Cermak" or "SPELLARCHERS: / NO ONE". The INT's frame moved 4 bytes down.
+INFO_HEADING equ 0x3493         ; DS: USEABLE BY:
+info_head:
+        push ax
+        push bx
         push es
-        cmp si, INFO_LAST
-        ja .out
         les bx, [ITEMS]
         imul ax, [bp + 6], 0x15
         add bx, ax
         mov ax, [es:bx + 0x12]
         sub ax, ARROW_NAME
         cmp ax, 4
-        jae .out
-        mov di, sp
-        les bx, [ss:di + 34]    ; the way back (after ES and the PUSHAD)
-        mov ecx, [es:bx + INFO_DRAW]
-        mov [cs:ib_draw], ecx
-        mov ax, si
-        cmp word [bp - 2], 0
-        jne .y
-        add ax, 8               ; (NO ONE drawn in SI's row, SI left as it was)
-.y:     push dword 0x00960081   ; (as the routine draws its lines)
-        push ax                 ; y
-        push word 0x0D          ; x
-        push cs
-        push word info_only_text
-        push dword [bp + 8]     ; the box's window
-        call far [cs:ib_draw]
-        add sp, 16
-.out:   pop es
-        popad
-        mov ax, [bp - 2]
+        mov ax, ds
+        mov bx, INFO_HEADING
+        jae .put
+        mov ax, cs
+        mov bx, info_head_text
+.put:   mov [cs:ih_seg], ax
+        mov [cs:ih_off], bx
+        pop es
+        pop bx
+        pop ax
+        sub sp, 4               ; the INT's frame 4 bytes down: the pointer under it
+        push bp
+        mov bp, sp
+        push ax
+        mov ax, [bp + 6]
+        mov [bp + 2], ax        ; (IP)
+        mov ax, [bp + 8]
+        mov [bp + 4], ax        ; (CS)
+        mov ax, [bp + 10]
+        mov [bp + 6], ax        ; (flags)
+        mov ax, [cs:ih_off]
+        mov [bp + 8], ax
+        mov ax, [cs:ih_seg]
+        mov [bp + 10], ax
+        pop ax
+        pop bp
         iret
-info_only_text db 'SPELLARCHER ONLY', 0
+ih_off dw 0
+ih_seg dw 0
+info_head_text db 'SPELLARCHERS:', 0
 
 ; PROBE_BELT: INT VEC_BELT replaces "mov ax,si" (2 bytes) at the end of the game's thief skill
 ; routine (DSUN.EXE 803B2h: SI the chance, armour and effects counted; DI the thief's object; the

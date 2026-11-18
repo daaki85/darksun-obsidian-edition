@@ -230,6 +230,29 @@ class StrayTests(unittest.TestCase):
                 mock.patch.object(spellarrows, "inventory_up", lambda gd_: False):
             self.assertEqual(spellarrows.return_strays(gd), [])
 
+    def test_out_of_the_quiver(self):
+        """With no Spellarcher in the party, spell arrows another member has readied (the ammunition
+        slot) go into a backpack cell of its own; those in its pack, and plain arrows, stay."""
+        shock, chill = spellarrows.ARROWS[2].name, spellarrows.ARROWS[1].name
+        gd = self.gd({1: {30: (shock, 7, weaponchoice.AMMO_SLOT), 31: (chill, 3, 20)},
+                      2: {40: (0x36, 9, weaponchoice.AMMO_SLOT)}})
+        placed = []
+        with mock.patch.object(spellarrows, "is_spellarcher", lambda gd_, m: False), \
+                mock.patch.object(spellarrows, "inventory_up", lambda gd_: False), \
+                mock.patch.object(spellarrows.ring, "Items", lambda gd_: None), \
+                mock.patch.object(spellarrows.pickpocket, "free_cell", lambda gd_, it, m: 22), \
+                mock.patch.object(spellarrows.pickpocket, "place",
+                                  lambda gd_, m, i, cell: placed.append((m, i, cell)) or True):
+            lines = spellarrows.return_strays(gd)
+        self.assertEqual(placed, [(1, 30, 22)])
+        self.assertEqual(lines, ["Jenna's shocking arrows are put away in the backpack: only a Spellarcher "
+                                 "readies them (7)"])
+        with mock.patch.object(spellarrows, "is_spellarcher", lambda gd_, m: False), \
+                mock.patch.object(spellarrows, "inventory_up", lambda gd_: False), \
+                mock.patch.object(spellarrows.ring, "Items", lambda gd_: None), \
+                mock.patch.object(spellarrows.pickpocket, "free_cell", lambda gd_, it, m: None):
+            self.assertEqual(spellarrows.return_strays(gd), [])  # (a full pack: left as they are)
+
 
 class StartingGearTests(unittest.TestCase):
     """A new Spellarcher's Fine Bow and arrows by the touch spells it picked (starting_gear)."""

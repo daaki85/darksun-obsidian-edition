@@ -228,9 +228,9 @@ AMMO_CAP_SITE, AMMO_TURN_SITE = NS_IMAGE + 116, NS_IMAGE + 117
 # (the attack command's tests of its target still Okay: as fallen for that member, the turn its own)
 # (with NEW_AS_OKAY's jbe/ja after them, in the same patch: those three are left out of its own)
 AMMO_OK_SITES = ((0x5843F, NS_IMAGE + 118), (0x584A4, NS_IMAGE + 119), (0x5850E, NS_IMAGE + 120))
-# (the item box's INFO, its USEABLE BY list drawn: a Spellarcher's spell arrows SPELLARCHER ONLY,
-# DSCLOG's INFO_ONLY)
-INFO_ONLY_SITE = NS_IMAGE + 121
+# (the item box's INFO, its USEABLE BY: heading: a Spellarcher's spell arrows SPELLARCHERS:,
+# DSCLOG's INFO_HEAD)
+INFO_HEAD_SITE = NS_IMAGE + 121
 # the monster kinds' table (DSUN.EXE, the load segment's 3E45h: monsters.MONSTER_KINDS_SEG): a kind's
 # properties (a dword), its resistance class (a byte), a class's damage kinds (four words) and percents
 KINDS_FILE = 0x5400 + 0x3E45 * 16
@@ -963,9 +963,9 @@ PATCHES = (
     Patch("hit", 0x25B52, bytes.fromhex("558bec83ec10"), _interrupt(VEC_HIT, 6)),
     # the end of the routine filling an item's box: a cloak's or boots' bonus to hiding, moving silently
     Patch("item_box", 0x8C1A1, bytes.fromhex("6a00"), _interrupt(VEC_ITEM_BOX, 2)),
-    # the end of the routine drawing the item box's INFO (USEABLE BY: and the members allowed):
-    # mov ax,[bp-2] (DSCLOG adds SPELLARCHER ONLY for a Spellarcher's spell arrows: INFO_ONLY)
-    Patch("info_only", 0x8C282, bytes.fromhex("8b46fe"), _site(INFO_ONLY_SITE, 3)),
+    # the routine drawing the item box's INFO (USEABLE BY: and the members allowed), its heading's
+    # far pointer pushed: push ds / push 3493h (DSCLOG's SPELLARCHERS: for spell arrows: INFO_HEAD)
+    Patch("info_head", 0x8C1E0, bytes.fromhex("1e689334"), _site(INFO_HEAD_SITE, 4)),
     # the end of the game's thief skill routine: mov ax,si (DSCLOG adds a worn belt's bonus to
     # picking pockets and opening locks)
     Patch("belt", 0x803B2, bytes.fromhex("8bc6"), _interrupt(VEC_BELT, 2)),
