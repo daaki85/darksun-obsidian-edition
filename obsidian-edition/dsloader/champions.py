@@ -11,8 +11,9 @@ Kreenfang (the arena's gythka +1, no longer on the dead body by the stone arch).
   the hands, so the shield and sword stay; it shoots with no ammunition, as the game's slings do), a bone short sword, full leather armour, a leather helm and a
   leather shield; an elven ranger (an elven caravan guard, 103) with a Fine Bow (the Spellarcher's:
   a plain bow named game.FINE_BOW_NAME, +1 to hit by DSCLOG's FINE_HIT) and 24 Chill Arrows (the
-  Spellarcher's: spellarrows.arrows_item; DSCLOG casts an arrow's spell only for a party
-  Spellarcher, PROBE_ARROW's AMMO_ARCHER, so the elf's shoot as plain arrows), an obsidian
+  Spellarcher's: spellarrows.arrows_item; DSCLOG casts a spell arrow's spell for anyone not in
+  the party, PROBE_ARROW's AMMO_ARCHER, so the elf's cast Chill Touch on a hit, at its highest
+  level, spellarrows.archer_level, which gives their plus too), an obsidian
   long sword and the same leather, helm and shield (the Tohr-kreen and the defiler wear none); a
   defiler (the arena's, 296) with a bone dagger, Bracers of Defense AC 6 (worldgear.bracers, worn
   on the arms: no armour to cancel them; Mikquetzl's until 2026-11-18) and one scroll, chosen as it comes on, of

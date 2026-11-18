@@ -536,7 +536,9 @@ SPELL_ARROW_LEVELS = (5, 9)  # a Spellarcher's preserver levels for its spell ar
 def arrow_plus(kid: int, plus: int, spell_arrow: bool = False, preserver_level: int = 0) -> int:
     """An arrow's plus as a character of kit KID shoots it from a bow (PROBE_ARROW): a Spellarcher's
     spell arrows (SPELL_ARROW) +1 from its 5th preserver level and +2 from its 9th (a cursed one's
-    minus counted as none), so they hurt what only magic weapons hurt; any other arrow as it is."""
+    minus counted as none), so they hurt what only magic weapons hurt; any other arrow as it is.
+    Anyone not in the party shoots them as a Spellarcher, its highest level for PRESERVER_LEVEL
+    (spellarrows.archer_level)."""
     if kid != SPELLARCHER or not spell_arrow:
         return plus
     best = max(plus, 0)
