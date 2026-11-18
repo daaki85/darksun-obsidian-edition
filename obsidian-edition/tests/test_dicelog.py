@@ -580,7 +580,7 @@ class HelplessTests(unittest.TestCase):
     def test_as_it_was_at_the_roll(self):
         """DSCLOG writes the target's state into the entry as the dice are rolled (+188, HELPLESS_OF):
         that is what counts, not the game's state when the entry is read (a blow that killed an Out Cold
-        target, a Hold ended, or one begun since: the audit). An entry without it (an older helper):
+        target, a Hold ended, or one begun since: the audit). An entry without it (an older DSCLOG):
         the game's state now."""
         mark = dicelog.Entry.HELD_MARK
         log = make_game()  # (nothing on the target now)
@@ -588,7 +588,7 @@ class HelplessTests(unittest.TestCase):
         self.assertIn("for 36: (1d8 = [5] +1 weapon +12 STR 24) x2 Out Cold", self.hit(log, state=mark | 2)[0])
         set_effects(log, [(0x29, 2, game.PARALYZED_EFFECT)])  # (held only after the roll)
         self.assertEqual(self.hit(log, state=mark)[0], "  Dag hits Mountain Stalker for 18: 1d8 = [5] +1 weapon +12 STR 24")
-        self.assertIn("x2 Paralyzed", self.hit(log, state=0)[0])  # (no word from the helper: as now)
+        self.assertIn("x2 Paralyzed", self.hit(log, state=0)[0])  # (no word from DSCLOG: as now)
 
     def test_paralyzed_takes_double(self):
         log = make_game()
@@ -668,7 +668,7 @@ class HelplessTests(unittest.TestCase):
     def test_poisoner_hit_as_big_as_the_poison(self):
         """A hit as big as the poison lands before its own poison (seen 2026-11-10, the rule on: falls of
         7, 10 the first poison, 10 the off hand's hit, 10 its poison): the hit's, then the poison's. (The
-        poison made 18 here, the helper's hit.)"""
+        poison made 18 here, DSCLOG's hit.)"""
         from dsloader import kits
         log = make_game()
         log.rules = game.RULE_HELD
@@ -1798,7 +1798,7 @@ class OtherTests(unittest.TestCase):
         self.assertEqual(log.describe(e), ["Dag tries to open locks: d100 = 24 -> failure (an effect stops it)"])
 
     def test_thief_skill_at_most(self):
-        """With RULE_THIEF_TABLE the helper keeps the chance to 95: the parts above it are shown
+        """With RULE_THIEF_TABLE DSCLOG keeps the chance to 95: the parts above it are shown
         with "(at most 95)", not as an equipment penalty."""
         log = make_game()
         m = log.guest.mem

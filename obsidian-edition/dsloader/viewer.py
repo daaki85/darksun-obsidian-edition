@@ -422,7 +422,8 @@ class Viewer:
         where = {"kits": custom, "new_spells": new}
         # one switch for each of game.RULE_SETTINGS
         self.rule_vars: Dict[str, tk.BooleanVar] = {}
-        # (in the order FEATURES.md has them, each opening with the name it has there)
+        # (in the order FEATURES.md has them, each opening with its name there; "New spells" stands for
+        # two headings, New wizard spells and 6th-level priest spells)
         for key, text in (
                 ("best_hit_die", "Hit dice: the better of two, each die rolled twice at creation and at every level "
                                  "(every character)"),

@@ -53,7 +53,7 @@
   armour nor a helm is worn), now that a preserver can't cast in armour: on three
   of the game's wizards, better the later they're met, and the arena's champion defiler (AC 6).
 
-All of them are in the game's data (dataitems.py): the launcher writes them into their people's
+All of them are in the game's data (dataitems.py): the Loader writes them into their people's
 and chests' objects in its copy of SEGOBJEX.GFF, by the Options tab's switches, so a new game
 has them where the game makes those people and chests. People of a kind who share an object
 (the Tari, Renegades, Wild Muls) each carry the item; one Castle Guard, one Undermountain miner

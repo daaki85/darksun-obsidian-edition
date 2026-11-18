@@ -243,7 +243,7 @@ class SpriteTests(unittest.TestCase):
         self.assertEqual(gd.guest.read(gd.ds * 16 + sprites.MAP_ENTRIES, 1)[0] & sprites.MAP_CHANGED, 0)
 
     def dressed_copy(self, d, figures=(0,)):
-        """A Dresser for FIGURES with a copy of SEGOBJEX (as the launcher writes it) in D."""
+        """A Dresser for FIGURES with a copy of SEGOBJEX (as the Loader writes it) in D."""
         from test_icons import ranged_gff
         chunks = game_chunks()
         data = ranged_gff({"OJFF": {300: chunks[("OJFF", 300)]},
@@ -644,7 +644,7 @@ class SpriteTests(unittest.TestCase):
             self.assertEqual(len(asked), 2)
 
     def test_copy_written_anew(self):
-        """The launcher writes the copy anew (plain) for the next game: the outfit written again."""
+        """The Loader writes the copy anew (plain) for the next game: the outfit written again."""
         outfits = [({"right": (SWORD, METAL)}, ())]
         worn, sprites.worn = sprites.worn, lambda gd, member, chunks=None: outfits[0]
         self.addCleanup(setattr, sprites, "worn", worn)

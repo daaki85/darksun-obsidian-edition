@@ -75,7 +75,7 @@ class FreezeTests(unittest.TestCase):
         self.assertIn("DSCLOG wasn't found in memory", text)
 
     def test_game_data_overwritten(self):
-        """The game's DS lost (its data segment overwritten): the helper is found by its signature
+        """The game's DS lost (its data segment overwritten): DSCLOG is found by its signature
         and the game's load segment from its DOS block, so the places still read as the game's."""
         mem, hdr = memory([(0x1A2 + 0x980, 0x70AB)] * 8)
         mem[hdr:hdr + len(freeze.HDR_SIG)] = freeze.HDR_SIG

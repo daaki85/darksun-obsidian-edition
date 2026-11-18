@@ -294,7 +294,7 @@ def cmd_launch(args) -> None:
 
 
 def cmd_play(args) -> None:
-    """Start the game with the helper and the in-game additions, with no window of our own:
+    """Start the game with DSCLOG and the in-game additions, with no window of our own:
     the dice log runs in the background (for each turn's rolls and the spell slots) until
     DOSBox closes. Problems are shown in a message box and written to play.log."""
     import time

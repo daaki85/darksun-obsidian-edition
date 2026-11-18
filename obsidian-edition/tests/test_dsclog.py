@@ -138,7 +138,7 @@ class HeaderTests(unittest.TestCase):
         self.assertEqual(tuple(image[hdr + 112:hdr + 117]), (VEC_RAND, VEC_SAVE, VEC_AC, VEC_TEXT, VEC_MSG))
 
     def test_fits_upper_memory(self):
-        """What the helper puts in upper memory (UMB_NEED, the header's +372: itself as loaded and
+        """What DSCLOG puts in upper memory (UMB_NEED, the header's +372: itself as loaded and
         the overlay buffer, with their MCBs) fits the room DOSBox gives it from
         its MCB at D00Ah to F000h, or the game's overlay buffer goes back into its heap."""
         from dsloader import heapcheck
@@ -147,7 +147,7 @@ class HeaderTests(unittest.TestCase):
         need, = struct.unpack_from("<H", image, hdr + heapcheck.TSR_UMB_NEED)
         self.assertGreater(need, heapcheck.OVR_PARAS)
         self.assertLessEqual(need, heapcheck.UMB_ROOM)
-        # (the helper as loaded is the whole image, its tail too, past the header's +1836 paragraphs)
+        # (DSCLOG as loaded is the whole image, its tail too, past the header's +1836 paragraphs)
         tail_paras, = struct.unpack_from("<H", image, hdr + 1836)
         self.assertGreater(len(image), tail_paras * 16)
         self.assertGreaterEqual((need - heapcheck.OVR_PARAS - 2 - 0x10) * 16, len(image) + 256)
@@ -350,7 +350,7 @@ class StubTests(unittest.TestCase):
 class GameMessageTests(unittest.TestCase):
     """DOS_WRITE and DOS_QUIT (PROBE_DOS_OPEN's AH=40h and 4Ch): the text written to the screen
     kept in the far block's FAR_MSG, and on an exit with a code other than 0 GAMEMSG.BIN written:
-    the header from the helper, the stack and the text from the far block (launch.game_message)."""
+    the header from DSCLOG, the stack and the text from the far block (launch.game_message)."""
     DOS, PSP = 0x8000, 0x2000
 
     def test_crash_report(self):
@@ -2189,7 +2189,7 @@ class SpecializeTests(unittest.TestCase):
 
     def test_off_hand_attacks(self):
         """With the rule for two weapons (AD&D's), a weapon in the off hand (the item at [BP+12h], in
-        slot 10: the helper's item 3) attacks once a round, the extra attacks the main hand's; a
+        slot 10: DSCLOG's item 3) attacks once a round, the extra attacks the main hand's; a
         missile weapon, the main hand or the rule off keep theirs (OFF_HAND_HALVES)."""
         two = 4
         for item, rules, missile, want in ((3, two | 4096, False, 2), (0x270F, two | 4096, False, 3),
@@ -3164,7 +3164,7 @@ class RuleTests(RingTests):
     def setUp(self):
         super().setUp()
         image = load_image()
-        def handler(vector):  # (the helper's install table: the vector, its handler)
+        def handler(vector):  # (DSCLOG's install table: the vector, its handler)
             at = install_at(image, vector)
             return struct.unpack_from("<H", image, at + 4)[0] if at > 0 else -1
         two, double = handler(VEC_TWO), handler(VEC_DOUBLE)
@@ -3534,7 +3534,7 @@ class RuleTests(RingTests):
         self.assertEqual(self.two_handed(5), True)
 
     def tu_info_at(self, image):
-        """The helper's TU_INFO (TSR's segment), from PROBE_SPELL_TEXT: three pops, "add sp,0Ch",
+        """DSCLOG's TU_INFO (TSR's segment), from PROBE_SPELL_TEXT: three pops, "add sp,0Ch",
         three pushes, then "mov byte [cs:tu_info],0" and IRET; and the probe's offset."""
         import re
         found = re.search(rb"(?:\x2e\x8f\x06..){3}\x83\xc4\x0c(?:\x2e\xff\x36..){3}\x2e\xc6\x06(..)\x00\xcf",
@@ -3560,7 +3560,7 @@ class RuleTests(RingTests):
 
     def chunk_id(self, limit=0x0100, kind=b"ICON", number=21000, info=0):
         """INT VEC_CHUNK_ID at the start of a chunk-loading routine (its [BP+6] chunk KIND, [BP+0Ah]
-        NUMBER), the game's stack limit (DS:9Ch) LIMIT, the helper's TU_INFO INFO: CF from the stack
+        NUMBER), the game's stack limit (DS:9Ch) LIMIT, DSCLOG's TU_INFO INFO: CF from the stack
         check, and the number the routine goes on with."""
         image = load_image()
         tu_info, _ = self.tu_info_at(image)
@@ -5984,7 +5984,7 @@ class KitTests(unittest.TestCase):
         setup()
         stack, kinds, moved = run()
         self.assertEqual((kinds - stack, moved), (6, 1))
-        self.assertTrue(TSR <= stack and (stack - TSR) * 16 + 0x200 <= len(self.image))  # (in the helper)
+        self.assertTrue(TSR <= stack and (stack - TSR) * 16 + 0x200 <= len(self.image))  # (in DSCLOG)
         self.assertEqual(bytes(mu.mem_read(stack * 16, 0x200)), data)
         seg, length = struct.unpack("<HH", mu.mem_read(table + 0x3A8, 4))
         self.assertEqual(length, 49 * 18)
@@ -7484,7 +7484,7 @@ class KitTests(unittest.TestCase):
                                                  [power * 8, regs["esi"], regs["edx"]])
 
     def run_vector(self, vector, code_len, **regs):
-        """INT VECTOR as run_int, its handler where the helper's install sets it (the vectors read
+        """INT VECTOR as run_int, its handler where DSCLOG's install sets it (the vectors read
         from the image's own install code: "mov ax,25xxh / mov dx,handler")."""
         at = install_at(self.image, vector)
         self.assertGreater(at, 0)

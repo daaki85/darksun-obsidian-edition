@@ -36,7 +36,7 @@ TSR_OVR_GIVEN, TSR_UMB_NEED = 368, 372  # DSCLOG's header: the overlay buffer's 
 OVR_PARAS = 0x80E                       #   memory (0: not there); paragraphs it puts there
 TSR_A20_LOST = 1876  # ... times A20 was found off (A20_CHECK), 8000h added if it wouldn't come on again
 A20_STUCK = 0x8000
-UMB_ROOM = 0xF000 - 0xD00A  # paragraphs DOSBox's upper memory has from the helper's MCB on
+UMB_ROOM = 0xF000 - 0xD00A  # paragraphs DOSBox's upper memory has from DSCLOG's MCB on
 LOW_SPARE, RECOVERED_SPARE = 24 * 1024, 32 * 1024  # bytes spare with the map open
 MAP_MARGIN = 4 * 1024  # (the largest free piece under MAP_BLOCK + this: SPLIT_LINE's)
 

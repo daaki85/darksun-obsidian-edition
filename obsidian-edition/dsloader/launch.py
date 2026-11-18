@@ -5,7 +5,7 @@ dosbox_darksun_single.conf (the [autoexec] that mounts the game and shows a
 small menu). We keep the first and replace the second with our own
 [autoexec], which also mounts the Loader's dos folder as D:, loads
 DSCLOG.EXE into upper memory, and runs DSUNLOG.EXE: a patched copy of the
-game (see gamepatch.py) that the launcher keeps in the dos folder. Nothing in
+game (see gamepatch.py) that the Loader keeps in the dos folder. Nothing in
 the game folder is changed.
 """
 
@@ -64,14 +64,14 @@ def is_game_dir(folder: str) -> bool:
 
 
 # Dark Sun Recompiled (github.com/daaki85/darksun-recompiled): the game translated into a program
-# of its own, with the mod's patched game and its helper built in. The Loader starts that program
+# of its own, with the mod's patched game and DSCLOG built in. The Loader starts that program
 # instead of DOSBox when it finds it: unzipped into this folder (a "recompiled" subfolder, or its
 # files here), or in its own "darksun-recompiled..." folder beside this one (a bare dsun.exe beside
 # this folder, in Downloads say, is never taken: it could be anything), or named in SETTINGS
 # ("recompiled"; `dsloader launch --recompiled <path>` remembers a path, `--dosbox` turns the
 # program off until `--recompiled` again). It is started with the game's folder (its data files;
 # the game is recognised by its DSUN.EXE) and the mod's dos folder as drive D (DSUNLOG.EXE and
-# the data files the helper replaces); it keeps its memory images (build/ds1o) beside itself.
+# the data files DSCLOG replaces); it keeps its memory images (build/ds1o) beside itself.
 RECOMPILED_EXE = "dsun.exe" if os.name == "nt" else "dsun"
 
 
@@ -478,8 +478,8 @@ def cpu_lines(settings: dict) -> List[str]:
 
 
 # GOG's dosbox_darksun.conf has EMS on, and DOSBox 0.74 then keeps EMS's 64 KB page frame in the
-# upper memory the helper loads into, leaving it 1 KB to spare; with EMS off the block is the
-# helper's (65 KB free). The game's memory layer takes XMS when there is no EMS.
+# upper memory DSCLOG loads into, leaving it 1 KB to spare; with EMS off the block is the
+# DSCLOG's (65 KB free). The game's memory layer takes XMS when there is no EMS.
 DOS_LINES = ["[dos]", "ems=false", ""]
 
 
@@ -488,14 +488,14 @@ def write_conf(game_dir: str, path: str = CONF, dice_log: bool = True, settings:
     SETTINGS: the saved ones if not given."""
     settings = load_settings() if settings is None else settings
     lines = display_lines(settings) + cpu_lines(settings)
-    if dice_log:  # (EMS's 64 KB page frame sits where the helper loads; the game takes XMS without it)
+    if dice_log:  # (EMS's 64 KB page frame sits where DSCLOG loads; the game takes XMS without it)
         lines += DOS_LINES
     lines += ["[autoexec]", "@echo off", "cls", 'mount c ".."']
     if os.path.isdir(os.path.join(game_dir, "cloud_saves")):
         lines.append(r'mount C "..\cloud_saves" -t overlay')  # where GOG keeps the saves
     lines += [f'mount d "{DOS_DIR}"', "c:"]
     # the game runs from C: (the game folder), where the patched copy looks for its files
-    # (UMBPLUS.COM first: DOSBox 0.74's upper memory from CA00h, not D000h, 24 KB more for the helper)
+    # (UMBPLUS.COM first: DOSBox 0.74's upper memory from CA00h, not D000h, 24 KB more for DSCLOG)
     lines += ["d:\\" + UMB_PLUS_COM.lower(), r"lh d:\dsclog.exe", "cls",
               "d:\\" + PATCHED_EXE.lower()] if dice_log else ["darksun"]
     # a game that stops with an error ("Null pointer assignment", "Stack overflow!") leaves its

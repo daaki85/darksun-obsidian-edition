@@ -4,7 +4,7 @@ spells' (SPIN the spell's number + 1, as the game's own: 197-202 the wizard spel
 the purse's and the spell arrows' (1001-1005: DSCLOG's PROBE_CHUNK_ID asks for 999 + TU_INFO in
 1000's place), and Slay Living's (137) put right; with the spells as the manual has them
 (MANUAL_TEXTS), those whose game text no longer says what they do (Fire Shield's, Strength's, Ironskin's...) and Cat's Grace's as they then work; with the creature size rule (SIZE_TEXTS), Hold and Charm Person's. They were DSCLOG's own text once; in the Loader's copy of RESOURCE.GFF they take
-no room in the helper. Each is under 195 bytes (the box reads it into 200, from its 5th byte)."""
+no room in DSCLOG. Each is under 195 bytes (the box reads it into 200, from its 5th byte)."""
 
 from typing import Dict, Tuple
 

@@ -285,7 +285,7 @@ class StinkSidesTests(td.TypesTests):
 
     def call(self):
         _, sym = tdd.build()
-        stub = TSR * 16 + 0xFFF0  # (a far stub in the helper's segment: a near call to it, RETF)
+        stub = TSR * 16 + 0xFFF0  # (a far stub in DSCLOG's segment: a near call to it, RETF)
         self.mu.mem_write(stub, b"\xe8" + struct.pack("<H", (sym["stink_sides"] - (0xFFF0 + 3)) & 0xFFFF) + b"\xcb")
         self.mu.mem_write(CALLER * 16 + 0x700, bytes((0x9A,)) + struct.pack("<HH", 0xFFF0, TSR) + b"\xf4")
         for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x800, ebp=BP, eflags=IF | 2, es=0x1234,

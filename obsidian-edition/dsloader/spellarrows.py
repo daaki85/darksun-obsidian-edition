@@ -15,7 +15,8 @@ used). The arrows are worth nothing (no merchant pays for them), last until shot
 rest), may be readied and put away as any arrows, and only a Spellarcher may carry them: DSCLOG's
 ARROWS_FORBID keeps anyone else from readying them, and as the game asks nothing of an item put in
 a backpack, those another member is found carrying go back to the party's Spellarcher
-(`return_strays`; with none in the party, out of the quiver into the pack).
+(`return_strays`; with none in the party, or no room in its pack, out of the quiver into the
+member's own pack).
 
 A Spellarcher starts with a Fine Bow (a bow of fine make, +1 to hit: The Complete Fighter's
 Handbook's; DSCLOG's FINE_HIT, no one else has one) and arrows by the touch spells it picked as it
