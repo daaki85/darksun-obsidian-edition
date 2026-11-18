@@ -183,6 +183,14 @@ cache and let go once drawn, so at 300 slots they are free for reuse: a search t
 slot 0 had the icons take one slot in turn (3,590 reuses in a cycle). PIC_REUSE now searches round
 from after the last slot it reused (2026-11-09, logs/2026-11-09-picture-slot-reuse.md).
 
+## The colours the game cycles
+
+icons.py long said the game cycles only water (11-15) and fire (224-255), so the Loader's icons
+of a green or violet tint shone with the water's blue (`shining`). The cycler's table (DSUN.EXE
+22F8h, set up at 1CECFh) has four runs, 1-5 green, 6-10 violet, 11-15 and 240-248, and all turn in
+the inventory: Greenbright's green blade, 16 pixels, had 13 of them change over four shots 0.4 s
+apart (2026-11-18, logs/2026-11-18-item-glows.md).
+
 ## Frame rate measurements
 
 Before 2026-11-08 `framerate.py` averaged the walking speed over the whole run (the waits at a
@@ -494,3 +502,6 @@ index](logs/README.md), by date.
   `chestuse.sh` as ROUTE.md describes it, `setitem.py` added; the combat log's buttons measured,
   `chestuse.sh` run (and given the answer to Bash it open?), `setitem.py` run, the look box's
   picture retaken on the pens' Zombie, Escape not closing a Look box.
+- **2026-11-18**: the colour cycler's green and violet runs seen turning in the inventory
+  (Greenbright); `setitem.py obj=` and `rec=`; Tanelyv's chest piece found as object 2004; the
+  Searing Blade's name whole in the box, label and dice log (logs/2026-11-18-item-glows.md).

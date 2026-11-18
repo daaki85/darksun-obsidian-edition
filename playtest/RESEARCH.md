@@ -118,6 +118,9 @@ raised before stopping.
 
 - **An item turned into another in memory** (a whole record but its link +4, flags +10h and slot
   +11h, so the price comes with it) shows in its box once the portrait is switched away and back.
+  `setitem.py ITEM obj=N` takes object N's own item record (Tanelyv's chest piece: `obj=2004`),
+  `rec=HEX` a whole record (one of the Loader's: `worldgear.SEARING_BLADE.hex()`)
+  (logs/2026-11-18-item-glows.md: a whole record's type and price show at once in the box).
   **An item record copied from the objects file needs +08h set to 270Fh** (no contents; the file
   has 0, which in memory names item 0, and then the inventory drew no icons at all, whatever the
   build). `setitem.py ITEM TYPE` does it with the game's first plain record of a type.

@@ -879,6 +879,13 @@ tools, and where each is described:
 ## Pictures for the docs
 
 - **A magic item for a look at its box**: [items in memory](RESEARCH.md#items-in-memory).
+- **An icon's shimmer** (logs/2026-11-18-item-glows.md): the game cycles four runs of the palette
+  in the inventory too (1-5 green, 6-10 violet, 11-15 the water's, 240-248 fire). Move the pointer
+  off (`click.py 280 190 none`), take four `shot.sh` captures 0.4 s apart, crop the cell
+  (`convert -crop 22x22+X+Y +repage -scale 800%`) and `+append` them; count the pixels of the
+  glow's hue that change. In `fountain-user`, items written with `setitem.py` before the ambush's
+  speech is clicked are in hand for the fight: Jenna (member 1; her slot-10 weapon at the
+  inventory's 173,92, her chest at 173,70), Seneca (member 3: the 4th portrait, 22,160).
 - **`docs/look-box.png`** (logs/2026-11-17-ingame-doc-checks.md): the pens' Zombie (creature 21,
   map 1272,856, a room west of Kurzak's), the one creature in the saves' pens with a defence line
   (IMM POISON); none there has magic resistance (`monsters.monster_lines` for each creature shows
