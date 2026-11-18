@@ -6697,8 +6697,10 @@ class KitTests(unittest.TestCase):
         self.rules(game.RULE_KITS)
         mu.mem_write(self.DS * 16 + 0x4979, struct.pack("<H", 7))  # (thing 7's turn: creature 2)
 
-        def hit(name, weapon_type=1, mode=2, own=0, archer=True):
-            self.creature(9, 1, index=2, level=3, second=11 if archer else 17, race=4)  # (a Spellarcher, or a Shadowblade)
+        def hit(name, weapon_type=1, mode=2, own=0, archer=True, index=2, classes=None, levels=None):
+            self.creature(9, 1, index=index, level=3, second=11 if archer else 17, race=4)  # (a Spellarcher, or a Shadowblade)
+            if classes:  # (another's classes and levels)
+                mu.mem_write(self.SHEET * 16 + index * 0x47 + 0x21, bytes(classes + levels))
             ammo = bytearray(0x15)
             struct.pack_into("<H", ammo, 0x12, name)
             mu.mem_write(self.ITEMS * 16 + 4 * 0x15, bytes(ammo))
@@ -6742,6 +6744,21 @@ class KitTests(unittest.TestCase):
         self.assertEqual(hit(chill, mode=1, own=2), (2, True))  # (a melee hit: the weapon's)
         self.assertEqual(hit(chill, weapon_type=64), (0, False))  # (from a sling)
         self.assertEqual(hit(chill, archer=False), (0, False))  # (not a Spellarcher's shot)
+        # anyone not in the party (creature 5, the arena's elf champion: a ranger, levels 4 and 7)
+        # casts its spell arrows' spell too, at its highest level; its plain arrows none
+        for arrow in spellarrows.ARROWS:
+            with self.subTest(arrow=arrow.spell_name, archer="not in the party"):
+                self.assertEqual(hit(arrow.name, index=5, classes=(2, 9, 0), levels=(4, 7, 0)), (arrow.spell + 1, True))
+                self.assertEqual(cast_level(arrow.spell), (arrow.spell, 7))  # (its highest level)
+                self.assertEqual(cast(arrow.spell), [0xA0, 0xA0])  # (the spell's own save: Chill Touch's)
+        hit(chill, index=5, classes=(9, 0, 0), levels=(0, 0, 0))
+        self.assertEqual(cast_level(3), (3, 1))  # (no level: at least 1)
+        self.assertEqual(hit(0x36, index=5, classes=(2, 0, 0), levels=(7, 0, 0)), (0, False))  # (plain arrows)
+        self.assertEqual(hit(0x36, index=5, own=0x28, classes=(2, 0, 0), levels=(7, 0, 0)), (0x28, True))
+        self.assertEqual(hit(chill, index=5, weapon_type=64, classes=(2, 0, 0), levels=(7, 0, 0)), (0, False))
+        hit(chill, index=5, own=0x28, classes=(2, 0, 0), levels=(7, 0, 0))
+        hit(0x36, index=5, own=0x28, classes=(2, 0, 0), levels=(7, 0, 0))
+        self.assertEqual(cast_level(0x27), (0x27, 6))  # (a bow's own spell: the game's level 6, whoever shoots)
 
     def test_myrmidon_polearm(self):
         """MYRM_POLEARM (CR_WEAPONS, at DONE after the weapon window): a new Myrmidon's second weapon
@@ -7021,11 +7038,23 @@ class KitTests(unittest.TestCase):
         self.assertEqual([kits.arrow_plus(kits.SPELLARCHER, p, True, 5) for p in (0, 1, 3, -1)], [1, 1, 3, 1])
         self.assertEqual(kits.arrow_plus(kits.SPELLARCHER, -1, True, 1), 0)
         self.assertEqual([kits.arrow_plus(kits.SPELLARCHER, p) for p in (0, 2, -1)], [0, 2, -1])  # (plain arrows)
-        mu.mem_write(things + 7 * 3, struct.pack("<Bh", 2, 5))  # (creature 5: not a party member)
-        self.creature(9, 1, index=5, second=11, race=4, level=9)
-        self.assertEqual(shot(0, 1, spell), 0)
-        self.creature(9, 1, index=2, second=17, race=4, level=9)  # (a Shadowblade)
+        # anyone not in the party (creature 5: the arena's elf champion) shoots them as a
+        # Spellarcher, at its highest level of whatever class (spellarrows.archer_level)
+        for classes, levels in (((9, 11, 0), (9, 9, 0)), ((9, 0, 0), (4, 0, 0)), ((9, 0, 0), (5, 0, 0)),
+                                ((2, 0, 0), (7, 0, 0)), ((9, 5, 0), (3, 6, 0)), ((9, 11, 12), (10, 2, 9))):
+            self.creature(9, 0, index=5, race=2)
+            mu.mem_write(self.SHEET * 16 + 5 * 0x47 + 0x21, bytes(classes + levels))
+            sheet = bytes(mu.mem_read(self.SHEET * 16 + 5 * 0x47, game.SHEET_SIZE))
+            level = spellarrows.archer_level(sheet, False)
+            self.assertEqual(level, max(levels))
+            for plus in (0, 1, 3, -1):
+                with self.subTest(classes=classes, levels=levels, plus=plus):
+                    self.assertEqual(shot(plus, 1, spell), kits.arrow_plus(kits.SPELLARCHER, plus, True, level))
+                    self.assertEqual(shot(plus, 1, plain), plus)  # (its plain arrows as they are)
+        self.assertEqual(spellarrows.archer_level(bytes(0x21) + bytes((9, 11, 0, 9, 4, 0)), True), 4)
+        self.creature(9, 1, index=2, second=17, race=4, level=9)  # (a Shadowblade: a party member, no Spellarcher)
         self.assertEqual(shot(2, 1, spell), 2)
+        self.assertEqual(shot(0, 1, spell), 0)
 
     def test_thac0(self):
         """PROBE_THAC0: 20 less SI, and kits.thac0 (the Scholar's 1 worse; the Swashbuckler's,

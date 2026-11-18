@@ -140,7 +140,7 @@ The first wave is six **champions** in place of the game's:
 | Half-giant | a metal great axe | full scale, a bone helm, a leather shield |
 | Mul gladiator | metal cahulaks | full scale, a bone helm |
 | Halfling | a staff sling, a bone short sword | full leather, a leather helm, a leather shield |
-| Elf | a **Fine Bow** (the Spellarcher's: +1 to hit, not magic) and 24 **Chill Arrows** (the Spellarcher's: only a Spellarcher's shot casts their spell, so the elf's hit as plain arrows), an obsidian long sword | full leather, a leather helm, a leather shield |
+| Elf | a **Fine Bow** (the Spellarcher's: +1 to hit, not magic) and 24 **Chill Arrows** (the Spellarcher's: they cast Chill Touch on what they hit, a save stopping it, at the elf's level 7, and are +1), an obsidian long sword | full leather, a leather helm, a leather shield |
 | Defiler | a bone dagger, and a scroll of Fogbolt, Spook or Reflected Image (chosen as the bout starts; of the game's own spells with the new spells off) | **Bracers of Defense** AC 6 (no armour to cancel them) |
 
 The Tohr-kreen, the halfling and the elf have DEX 22 (AC 5 better and +4 with missiles and to initiative, as AD&D's table has it). They fight with their weapons, the two archers shooting (the halfling's staff sling, two-handed, sits in the missile slot as the game's slings do, so its sword and shield stay, and needs no ammunition), and their armour counts on top of their

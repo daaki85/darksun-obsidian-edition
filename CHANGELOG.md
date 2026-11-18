@@ -73,6 +73,7 @@ Releases, newest first (2.12.0 and older in the archive):
   the water's shine, "Metal Tanelyv's Armor" in its box.
 
 **Changed**
+- **The elf champion's Chill Arrows chill:** spell arrows shot by anyone not in the party cast their spell on a hit (DSCLOG's `PROBE_ARROW`; a party member still needs the Spellarcher kit), at the archer's highest level, which gives their plus too (`ARCHER_LEVEL`: the elf's 7, Chill Touch at level 7, the arrows +1). DSCLOG 16 bytes smaller (704 spare). Seen in DOSBox: the elf's hits on Cermak, his saves against Chill Touch, a failed one 1 STR. The user's request.
 - **The Flame Blade is the Searing Blade,** an obsidian short sword +2 (was a long sword +1; 42,800),
   its Focus Heat burst and its place (the Hot Springs' Templar) kept, so the priest spell's Flame
   Blade alone has the name; a fire or earth cleric, a psionicist or a thief can wield it. A saved
@@ -84,7 +85,7 @@ Releases, newest first (2.12.0 and older in the archive):
   DOSBox), Mindshard violet, Stillwater and Hayneedle the water's blue, Windlash, Galefang and
   Skycutter the air's white and blue, and the Silk Armor, the Living Cloak and the Elvenkind cloak
   and boots green; the rest keep the fire. A wielder's figure glints in the same colours.
-- **The champions' bout**, the user's request: the halfling's sling is a staff sling, and the Tohr-kreen's, the halfling's and the elf's DEX 22; the elf's bow is now the Spellarcher's **Fine Bow** (+1 to hit, not magic), its arrows 24 **Chill Arrows** (shot by the champion, plain arrows: their spell is a party Spellarcher's alone); the defiler champion wears the **Bracers of Defense AC 6** that were Mikquetzl's (a save that has met him keeps his).
+- **The champions' bout**, the user's request: the halfling's sling is a staff sling, and the Tohr-kreen's, the halfling's and the elf's DEX 22; the elf's bow is now the Spellarcher's **Fine Bow** (+1 to hit, not magic), its arrows 24 **Chill Arrows** (they chill: above); the defiler champion wears the **Bracers of Defense AC 6** that were Mikquetzl's (a save that has met him keeps his).
 - **The release zip** leaves out the developer pages, the tests and `docs/viewer.png` (`export-ignore`); the manual links to them at the release's tag (#97).
 
 **Docs**

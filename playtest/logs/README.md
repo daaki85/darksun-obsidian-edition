@@ -104,6 +104,7 @@ schedules and diffs a log made or used.
 | [2026-11-17](2026-11-17-ingame-doc-checks.md) | The look box's picture retaken (the pens' Zombie), the combat log's buttons measured, `chestuse.sh` and `setitem.py` run |
 | [2026-11-18](2026-11-18-champions-gear.md) | The champions' bout's new gear: the elf's Fine Bow (+1, +4 DEX) and Chill Arrows (no spell from a non-party archer), DEX 22's AC and initiative, the halfling's staff sling, the defiler's bracers (AC 2); all on their bodies after |
 | [2026-11-18](2026-11-18-item-glows.md) | Greenbright's green shimmer, the Searing Blade's name in the box, label and dice log, an old Flame Blade mended, Tanelyv's chest piece's shine |
+| [2026-11-18](2026-11-18-champion-chill-arrows.md) | The elf champion's Chill Arrows cast Chill Touch on a hit (DSCLOG: anyone not in the party), at its fighter level 7, the arrows +1; Cermak's save, a failed one 1 STR (Weakened) |
 
 ## files/
 

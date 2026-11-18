@@ -2388,9 +2388,10 @@ probe_poison:
         iret
 pz_far  dd 0
 
-; ARROW_PLUS_NOW: AL, a spell arrow's plus (signed), made what it is for the Spellarcher whose turn
-; it is (WHOSE_TURN's combatant): the better of it (at least 0) and +1 from its SPELL_ARROW_PLUS1st
-; preserver level, +2 from its SPELL_ARROW_PLUS2th. DS the game's; others kept.
+; ARROW_PLUS_NOW: AL, a spell arrow's plus (signed), made what it is for the archer whose turn it
+; is (WHOSE_TURN's combatant, a Spellarcher or anyone not in the party): the better of it (at least
+; 0) and +1 from its SPELL_ARROW_PLUS1st level (ARCHER_LEVEL's), +2 from its SPELL_ARROW_PLUS2th.
+; DS the game's; others kept.
 arrow_plus_now:
         push bx
         push cx
@@ -2402,18 +2403,7 @@ arrow_plus_now:
         call es_things
         imul bx, [WHOSE_TURN], 3
         mov ax, [es:bx + COMBATANT_CREATURE]
-        call creature_sheet     ; (ES:BX its sheet)
-        xor ax, ax
-        cmp byte [es:bx + 0x21], PRESERVER_CLASS
-        jne .c2
-        mov al, [es:bx + 0x24]
-.c2:    cmp byte [es:bx + 0x22], PRESERVER_CLASS
-        jne .c3
-        mov al, [es:bx + 0x25]
-.c3:    cmp byte [es:bx + 0x23], PRESERVER_CLASS
-        jne .level
-        mov al, [es:bx + 0x26]
-.level: xor ah, ah
+        call archer_level
         cmp al, SPELL_ARROW_PLUS2
         jae .two
         cmp al, SPELL_ARROW_PLUS1
@@ -2431,14 +2421,44 @@ arrow_plus_now:
         pop bx
         ret
 
+; ARCHER_LEVEL: AX the level a spell arrow's archer, creature AX, shoots it at (its plus, its
+; spell's caster level): a party member's (a Spellarcher's) preserver level (class PRESERVER_CLASS
+; among its sheet's +21h-23h, its level from +24h-26h; 0 without), anyone else's highest level, of
+; whatever class (spellarrows.archer_level). ES:BX its sheet; DS the game's; others kept.
+archer_level:
+        push cx
+        push si
+        mov cx, ax
+        call creature_sheet
+        xor ax, ax
+        xor si, si
+.cls:   mov ah, [es:bx + si + 0x24]
+        cmp cx, 3
+        ja .any                 ; (not a party member: its highest level)
+        cmp byte [es:bx + si + 0x21], PRESERVER_CLASS
+        je .take
+        jmp short .next
+.any:   cmp ah, al
+        jbe .next
+.take:  mov al, ah
+.next:  inc si
+        cmp si, 3
+        jb .cls
+        xor ah, ah
+        pop si
+        pop cx
+        ret
+
 ; PROBE_ARROW: INT VEC_ARROW replaces "mov es:[0006h],al" (4 bytes: INT + 2 NOPs; DSUN.EXE 58D27h)
 ; in the routine that finds a missile weapon's ammunition (58C8Fh; [BP+0Ch] the weapon's item
 ; type), where it keeps the ammunition's plus (AL) for the shot's damage and magic (the game takes
 ; the better of the weapon's and the ammunition's plus for the hit's +1/+2/+3 damage kinds). For a
-; Spellarcher whose turn it is (WHOSE_TURN's combatant; kits.arrow_plus), its spell arrows (named
-; ARROW_NAME to +3) shot from a bow are +1 from its 5th preserver level and +2 from its 9th (a
-; cursed one's minus counted as none), so they hurt what only magic weapons hurt; other arrows as
-; they are.
+; Spellarcher whose turn it is (WHOSE_TURN's combatant; kits.arrow_plus), or anyone not in the
+; party (the arena's elf champion), its spell arrows (named ARROW_NAME to +3) shot from a bow are +1
+; from its 5th level and +2 from its 9th (ARCHER_LEVEL: a Spellarcher's preserver level, anyone
+; else's highest; a cursed one's minus counted as none), so they hurt what only magic weapons hurt,
+; and cast their spell on a hit (AMMO_ARCHER); other arrows as they are. A party member who isn't a
+; Spellarcher shoots them as plain arrows (none should have them: ARROWS_FORBID, return_strays).
 SPELL_ARROW_PLUS1 equ 5         ; (the preserver levels: kits.SPELL_ARROW_LEVELS)
 SPELL_ARROW_PLUS2 equ 9
 probe_arrow:
@@ -2466,8 +2486,10 @@ probe_arrow:
         mov ax, [es:bx + COMBATANT_CREATURE]
         pop es
         cmp ax, 3
-        ja .not                 ; (not a party member)
-        call cr_is
+        jbe .party
+        cmp ax, ax              ; (not a party member: its spell arrows cast, ZF set)
+        jmp short .not
+.party: call cr_is
         db KIT_SPELLARCHER
 .not:   pop ax
         jne .store
@@ -2485,15 +2507,16 @@ probe_arrow:
         iret
 
 ammo_name dw 0                  ; (PROBE_ARROW: the name of the ammunition last found)
-ammo_archer db 0                ; (and 1 if a Spellarcher shot it: only theirs cast their spell)
+ammo_archer db 0                ; (and 1 if a Spellarcher or anyone not in the party shot it: theirs cast)
 
 ; ARROW_HIT: "cmp byte es:[bx+0Fh],0" (58B63h; 5 bytes: the INT, the site's number and 2 NOPs)
 ; where the weapon attack routine (5883Ah) asks whether the weapon that hit (item SI, ES:BX) casts
 ; a spell (its +0Fh, the spell + 1), and ARROW_SPELL: "mov cl,es:[bx+0Fh]" (58B78h; 4 bytes) where
-; it takes it. For a shot from a bow ([BP+16h] above 1, [BP+14h] a bow's type) with a Spellarcher's
-; spell arrows (PROBE_ARROW's AMMO_NAME, ARROW_NAME on: dsloader/spellarrows.py), the arrows' spell
-; (ARROW_SPELLS) in place of the bow's. The game casts it on the target hit (598:89h) as its own
-; caster: at that caster's level for the spell (a Spellarcher's preserver level).
+; it takes it. For a shot from a bow ([BP+16h] above 1, [BP+14h] a bow's type) with spell arrows
+; (PROBE_ARROW's AMMO_NAME, ARROW_NAME on: dsloader/spellarrows.py) shot by a Spellarcher or by
+; anyone not in the party (AMMO_ARCHER), the arrows' spell (ARROW_SPELLS) in place of the bow's. The
+; game casts it on the target hit (598:89h) as its own caster: at ARCHER_LEVEL (a Spellarcher's
+; preserver level, anyone else's highest).
 ARROW_NAME  equ NAMES_OWN + 42
 arrow_hit:
         push ax
@@ -2512,7 +2535,7 @@ arrow_hit:
         cmp si, 4
         jae .set
         cmp byte [cs:ammo_archer], 0
-        je .set                 ; (not shot by a Spellarcher: no spell)
+        je .set                 ; (a party member's not a Spellarcher: no spell)
         mov al, [cs:si + arrow_spells]
         inc al
         mov byte [cs:arrow_cast], 1
@@ -2538,7 +2561,8 @@ arrow_cast   db 0               ; (1 when the hit's spell is a spell arrow's: AR
 ; ARROW_LEVEL: "push 6 / mov al,cl / mov ah,0 / push ax" (58BE6h; 7 bytes: the INT, the site's
 ; number and 4 NOPs), the level and the spell (CL) pushed for the cast of a weapon's spell on the
 ; target hit (598:89h): the game casts every weapon's spell at level 6. A spell arrow's (ARROW_HIT's
-; ARROW_CAST) at the archer's preserver level instead (the attacker's, combatant DI; at least 1).
+; ARROW_CAST) at the archer's level instead (ARCHER_LEVEL: the attacker's, combatant DI, a
+; Spellarcher's preserver level or a non-party archer's highest; at least 1).
 ; Both words go under the INT's frame, as the pushes would have left them; AX the spell, as
 ; theirs did.
 arrow_level:
@@ -2554,18 +2578,8 @@ arrow_level:
         call es_things
         imul bx, di, 3
         mov ax, [es:bx + COMBATANT_CREATURE]
-        call creature_sheet
-        xor ax, ax
-        cmp byte [es:bx + 0x21], PRESERVER_CLASS
-        jne .c2
-        mov al, [es:bx + 0x24]
-.c2:    cmp byte [es:bx + 0x22], PRESERVER_CLASS
-        jne .c3
-        mov al, [es:bx + 0x25]
-.c3:    cmp byte [es:bx + 0x23], PRESERVER_CLASS
-        jne .least
-        mov al, [es:bx + 0x26]
-.least: cmp ax, 1
+        call archer_level
+        cmp ax, 1
         jge .put
         mov ax, 1
 .put:   mov [cs:arrow_lvl], ax

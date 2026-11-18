@@ -27,6 +27,12 @@ a bow's own spell; the arrow's, told by its name, takes its place), at the arche
 the game reckons it for that spell: the Spellarcher's preserver level. The target saves only as
 the spell allows ("all normal saving throw attempts", Dragon #214): against Chill Touch, which a
 save stops; Shocking Grasp and Vampiric Touch allow none.
+
+Anyone not in the party who shoots them (the arena's elf champion: champions.py) is their archer
+too: its arrows cast their spell on a hit, and it shoots them as a Spellarcher does, with its
+highest level, of whatever class, in the preserver level's place (`archer_level`: the plus,
+kits.arrow_plus, and the cast's level; DSCLOG's ARCHER_LEVEL). In the party only a Spellarcher's
+cast: anyone else's shoot as plain arrows (none should have them, `return_strays`).
 """
 
 import struct
@@ -140,6 +146,18 @@ def starting_gear(gd: GameData, member: int, sheet: bytes, read) -> List[str]:
 def item_address(gd: GameData, index: int) -> int:
     """Where item INDEX's record is in the guest's memory."""
     return game.far_pointer(gd.guest, gd.ds, game.ITEMS_PTR) + index * game.ITEM_SIZE
+
+
+def archer_level(sheet: bytes, in_party: bool) -> int:
+    """The level a spell arrow's archer shoots it at (its plus, kits.arrow_plus, and the spell's
+    caster level, at least 1 for the cast; DSCLOG's ARCHER_LEVEL): a party member's (a
+    Spellarcher's) preserver level, 0 without one; anyone else's highest level, of whatever class."""
+    classes = sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3]
+    levels = sheet[game.SHEET_LEVELS:game.SHEET_LEVELS + 3]
+    if not in_party:
+        return max(levels)
+    found = [lv for cls, lv in zip(classes, levels) if cls == game.PRESERVER]
+    return found[-1] if found else 0
 
 
 def is_spellarcher(gd: GameData, member: int) -> bool:

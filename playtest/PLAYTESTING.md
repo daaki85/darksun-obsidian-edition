@@ -670,6 +670,14 @@ game's data: it is one player's account.
   combatant number `foeset.py` lists), then fightout.sh's loop without its `hp.py 1` and with
   `healparty.py` each pass: the party's Tab + Return kill the rest and then strike the one, each
   line its "target AC". Never save after.
+- **One foe's attacks on the party** (logs/2026-11-18-champion-chill-arrows.md): name the foes apart
+  as above (a loop over creatures 6-11 writing `game.CREATURE_NAME` through `live.py`'s `g.write`),
+  Paralyze every other foe (`foeset.py C eff=34`), the one wanted at 200 HP, then `passn.sh 1` and
+  `healparty.py` a pass at a time until the dice log has its "NAME attacks" lines: the elf champion
+  shot at Cermak on the third pass, 2 shots. In the champions' bout the elf is combatant 45
+  (creature 10, a level 7 fighter). **The dice log's HP lines can lag a hit** when two hits land
+  close together (a weapon's spell's damage put on the next arrow's line): add up the "hits for"
+  and spell damage lines, not the "now N/M HP" ones.
 - **Seeing foes attack, without killing them** (logs/2026-11-05-champions.md): not `fightout.sh` (it
   puts every foe at 1 HP); pass the party's turns instead (rule 8), stopping once the dice log has N
   more "attacks NAME" lines (`passmiss.sh` does it for a miss, then drags the view and takes a
