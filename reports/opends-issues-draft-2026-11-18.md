@@ -5,31 +5,35 @@ ask for an issue before a PR, and record new bugs in `docs/known-bugs.md`). Fact
 repository is GPL-3.0 and OpenDS is MIT, so no text is copied; no game data and nothing from the private
 installation-files repository goes with them.
 
-**Checked today** (2026-11-18) against the stock GOG 1.10 DS1 `DSUN.EXE` (611,408 bytes): the bytes quoted
+**Checked today** (2026-11-18; Issue 1's claimed crash did not survive the check, see there) against the stock GOG 1.10 DS1 `DSUN.EXE` (611,408 bytes): the bytes quoted
 below are at the file offsets given. They are *not* in the Wake of the Ravager `DSUN.EXE` at those offsets.
 **Credit line for each:** the Obsidian Edition (github.com/daaki85/darksun-obsidian-edition), a mod; the fix is
 ours, the finding is credited where it isn't.
 
 ---
 
-## Issue 1: DS1 random-monster encounters divide by zero in eight regions ("Divide error")
+## Issue 1: DS1 random-monster counts use the wrong slot's strength
 
 **Bug.** The random-monster request (REQUEST 8, routine at file `0x80BE4`) reads the region's record from
-`MONR` 1 of `RESOURCE.GFF` (42-byte records: region, then ten {OJFF, strength} slots). It searches the slots
-for the monster, then works out the count as 2 x the party's strength / the monster's strength (1 to 6). The
-search leaves SI one slot past the match, so the divide uses the *next* slot's strength: the next record's first
-OJFF after the tenth slot, and **0** after the last slot in records with seven or nine slots.
+`MONR` 1 of `RESOURCE.GFF` (42-byte records: region, then ten {OJFF, strength} slots; 29 records in the shipped
+file). It searches the slots for the monster, then works out the count as 2 x the party's strength / a strength,
+1 to 6. The search leaves SI one past the match (it increments before it stops), so the divisor is the *next*
+slot's strength, not the monster's own.
 
-**Where.** `idiv word es:[bx+4]` at file `0x80CD8`, bytes `26 f7 7f 04`. With a zero divisor DOS ends the game
-("Divide error"). By our reading of `MONR` 1 the regions with a short record are 6, 13, 14, 27, 39, 40, 44 and
-255.
+**Where.** `idiv word es:[bx+4]` at file `0x80CD8`, bytes `26 f7 7f 04`; with SI one past the match, `bx = record
++ 4 x SI`, so `[bx+4]` is the next slot's strength word. After the tenth slot it is the first word of the *next
+record*.
 
 **Fix (ours).** `[bx+4]` becomes `[bx+0]` (`26 f7 7f 00`): the matched slot's own strength. Same length, in place.
-The count is then worked out from the monster that comes.
 
-**Evidence.** From reading the code and the record layout, and a fix in the Loader; **we have not hit the crash
-in play**, so treat the region list as derived, not observed. This is a crash with a static anchor, which your
-3.3(5) "random crashes" row says it lacks.
+**What we could not confirm: a "Divide error".** The Edition's notes say this made the game stop with a
+division by zero in regions 6, 13, 14, 27, 39, 40, 44 and 255. Reading the shipped `MONR` 1 today, every strength
+is at least 1 and the empty slots are `(OJFF 0, strength 1)`, so the divisor after the last real slot is 1, not
+0; after a tenth-slot match it is the next record's first OJFF (nonzero in every record). A zero could come only
+from reading past the end of the chunk, which we have not shown. **Please don't record the crash**; the wrong
+count (a different monster's strength) is what the bytes support. We have not seen the crash in play either.
+
+---
 
 ## Issue 2: DS1 stat-boost gear counts anywhere it is carried (your 3.3(4)): the cause and a fix
 

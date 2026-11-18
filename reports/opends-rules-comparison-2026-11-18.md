@@ -121,3 +121,14 @@ stopping breath weapons (7A142h). The first two are fixed in the Edition; the th
    in the 38 absent rows already).
 
 Licence: our documents are GPL-3.0 and theirs MIT; facts in new words only.
+
+## Verification status (added 2026-11-18)
+
+Checked against the stock DS1 `DSUN.EXE` today, with the Loader's patches in mind: the rules block rows at 45F10
+and the class-to-group map at +0x10; the CON floor at +0x38; the XP table at 3E57C (compared with `tables.py`);
+the THAC0 routine at 87666 and the Loader's hook site at 876AB; 78BA0 (a frame returning 1); 79A89, 79BBA; the
+level-up routine at 87250 (a level rolls while it is at most the last die level) and the Loader's thief patches
+at 872DE and 87779 (the thief row is right: see above). **Not checked:** the spell-save map at DS:1E75h, the
+Turn Undead table, two-weapon penalties, the 3/2 attack rule, the Held-target rule, thief skill tables and the
+spell slots; they are as the Edition's notes state, and nothing in this report should be sent on until each has
+been read from the stock file the way the XP table was.

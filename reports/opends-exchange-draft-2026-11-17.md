@@ -97,7 +97,7 @@ segment number.
 
 Going through `GAME-BUGS.md` row by row against their docs (`reports/opends-bug-comparison-2026-11-18.md`)
 shows 66 rows, of which about 38 are absent from their catalogue and six answer an open row of theirs with a
-mechanism and a fix: random monsters' divide error (a crash with an address), the 300
+mechanism and a fix: random monsters' count from the wrong slot (the divide-by-zero the Edition's notes claim is not supported by the shipped data), the 300
 picture slots, ability items counting anywhere carried, the gladiator's AC, the fire elementals' swapped classes
 and Psionic Blast. This is likely worth more to them than items 1 to 5; send it first.
 
