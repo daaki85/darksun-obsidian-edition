@@ -48,7 +48,7 @@ class ObjectTests(unittest.TestCase):
                                    champions.SCALE_ARM, champions.SCALE_LEGS, champions.SLING_TYPE,
                                    champions.LEATHER_ARM, champions.LEATHER_LEGS, champions.LEATHER_HELM,
                                    champions.LEATHER_CHEST, champions.BOW_TYPE, champions.ARROWS_TYPE,
-                                   champions.LONG_SWORD_TYPE)]
+                                   champions.LONG_SWORD_TYPE, champions.STAFF_SLING_TYPE)]
         self.chunks = {("RDFF", 900): person(900, b"Merchant", items=stock)}
         for obj, base in champions.BASES.items():
             self.chunks[("RDFF", base)] = person(base, b"Kind %d" % base, items=[item(18)])
@@ -109,11 +109,21 @@ class ObjectTests(unittest.TestCase):
         self.assertIn((game.BRACERS_TYPE, champions.ARM), champions.SLOTS[champions.DEFILER])
         self.assertEqual({slot for _, slot in champions.SLOTS[champions.DEFILER]}, {champions.RIGHT, champions.ARM})
 
-    def test_elf_dex(self):
-        """The elf's DEX is 22, in its creature record and its sheet (the game's tables run to 25)."""
-        recs = dataitems.records(champions.object_chunks(self.chunks)[("RDFF", champions.ELF)])[0]
-        self.assertEqual(recs[0].data[game.CREATURE_ABILITIES + 1], 22)
-        self.assertEqual(recs[1].data[game.SHEET_ABILITIES + 1], 22)
+    def test_dex_22(self):
+        """The Tohr-kreen's, the halfling's and the elf's DEX is 22, in the creature record and the
+        sheet (the game's tables run to 25)."""
+        out = champions.object_chunks(self.chunks)
+        for obj in (champions.TOHR_KREEN, champions.HALFLING, champions.ELF):
+            recs = dataitems.records(out[("RDFF", obj)])[0]
+            self.assertEqual(recs[0].data[game.CREATURE_ABILITIES + 1], 22)
+            self.assertEqual(recs[1].data[game.SHEET_ABILITIES + 1], 22)
+
+    def test_halfling_staff_sling(self):
+        """The halfling's missile weapon is the game's staff sling (type 0), no plain sling."""
+        kinds = [struct.unpack_from("<H", r, game.ITEM_TYPE)[0]
+                 for r in dataitems.items_of(champions.object_chunks(self.chunks)[("RDFF", champions.HALFLING)])]
+        self.assertIn(game.STAFF_SLING_TYPE, kinds)
+        self.assertNotIn(champions.SLING_TYPE, kinds)
 
     def test_elf_chill_arrows(self):
         """The elf's arrows are 24 Chill Arrows, made as a Spellarcher's (spellarrows.arrows_item)."""

@@ -266,8 +266,8 @@ items each carries what the armed of their kind carry, or plain gear to match (i
 | ![](docs/items/chatkcha.png) | chatkcha | obsidian | Jark, Bowyer | — | — |
 | ![](docs/items/bow.png) | bow | wood | Jark, Kel, Bowyer | Wyvern Master, Ranger, Arant, Castle Guard, Guard, Arant's Guard, Arena Guard, Caravan Guard, Slaver Guard, Elven Leader, Uzoma, Drajian Guard, Army Commander, Elite Guard, Village Hero, a chest in the Upper Castle, a chest in the Wyrm Belly, a chest in Dagolar's tunnels, Arant's lazy guard (the mod's) | — |
 | ![](docs/items/bow.png) | bow (***Fine Bow***) | wood | — | a [Spellarcher](KITS.md#spellarcher), as it is made, and the elf champion in the arena's bout ([the champions' bout](FEATURES.md#the-champions-bout)) | **new**: a bow of fine make, +1 to hit, not magic (The Complete Fighter's Handbook's fine quality; its item box's "Hit +1") |
-| ![](docs/items/sling.png) | sling | leather | Bowyer | Mehtar, Renegade, Silt Runner, a chest in the slave pens, a bag in the slave pens, the arena's champions (the halfling) | — |
-| ![](docs/items/staff-sling.png) | staff sling | leather | Jark, Bowyer | — | throws stinkpots with [the rule](FEATURES.md#staff-sling-stinkpots): 1d3 (the game's 1d4), and a target hit saves against poison or is nauseated, −2 to hit for 1d3+1 rounds |
+| ![](docs/items/sling.png) | sling | leather | Bowyer | Mehtar, Renegade, Silt Runner, a chest in the slave pens, a bag in the slave pens | — |
+| ![](docs/items/staff-sling.png) | staff sling | leather | Jark, Bowyer | the arena's champions (the halfling) | throws stinkpots with [the rule](FEATURES.md#staff-sling-stinkpots): 1d3 (the game's 1d4), and a target hit saves against poison or is nauseated, −2 to hit for 1d3+1 rounds |
 
 ## Every mundane armour piece
 

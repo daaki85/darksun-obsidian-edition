@@ -7,7 +7,8 @@ Kreenfang (the arena's gythka +1, no longer on the dead body by the stone arch).
   its record: the Tohr-kreen (the arena's, 292) with Kreenfang; a half-giant (the arena's Guard,
   293) with a metal great axe, a leather shield and full scale armour and a bone helm; a mul
   gladiator (the Wild Mul, 290) with metal cahulaks (worldgear.METAL_CAHULAKS) and the same armour; a halfling renegade (the
-  Renegade, 289) with a sling, a bone short sword, full leather armour, a leather helm and a
+  Renegade, 289) with a staff sling (the game's, type 0: in the missile slot, which asks nothing of
+  the hands, so the shield and sword stay; it shoots with no ammunition, as the game's slings do), a bone short sword, full leather armour, a leather helm and a
   leather shield; an elven ranger (an elven caravan guard, 103) with a Fine Bow (the Spellarcher's:
   a plain bow named game.FINE_BOW_NAME, +1 to hit by DSCLOG's FINE_HIT) and 24 Chill Arrows (the
   Spellarcher's: spellarrows.arrows_item; DSCLOG casts an arrow's spell only for a party
@@ -63,6 +64,7 @@ LEATHER_ARM, LEATHER_LEGS, LEATHER_HELM, BONE_HELM = 0x07, 0x08, 0x05, game.BONE
 HELM = npcitems._item("03fc000000000500000005000000000004ff060000")
 BOW_TYPE, ARROWS_TYPE, SLING_TYPE, LONG_SWORD_TYPE = 0x01, 0x3E, 0x40, 0x2D
 BONE_SHORT_SWORD_TYPE, BONE_DAGGER_TYPE = game.BONE_SHORT_SWORD_TYPE, game.BONE_DAGGER_TYPE
+STAFF_SLING_TYPE = game.STAFF_SLING_TYPE  # (the halfling's: the game's Staff Sling)
 
 SCROLL_SPELLS = (game.FOG_SPELL, game.SPOOK_SPELL, game.REFLECT_SPELL)
 
@@ -118,7 +120,7 @@ def gear(chunks) -> Dict[int, List[Tuple[bytes, int]]]:
         MUL: [(worldgear.weapon(worldgear.METAL_CAHULAKS), RIGHT),
               (item(SCALE_CHEST), CHEST), (item(SCALE_ARM), ARM), (item(SCALE_LEGS), LEGS),
               (bonescale.HELM, HEAD)],
-        HALFLING: [(item(SLING_TYPE), MISSILE), (worldgear.weapon(worldgear.BONE_SHORT_SWORD), RIGHT),
+        HALFLING: [(item(STAFF_SLING_TYPE), MISSILE), (worldgear.weapon(worldgear.BONE_SHORT_SWORD), RIGHT),
                    (item(LEATHER_CHEST), CHEST), (item(LEATHER_ARM), ARM), (item(LEATHER_LEGS), LEGS),
                    (HELM, HEAD), (item(SHIELD_TYPE), LEFT)],
         ELF: [(fine_bow(item(BOW_TYPE)), MISSILE), (chill_arrows(), AMMO), (item(LONG_SWORD_TYPE), RIGHT),
@@ -139,9 +141,9 @@ def _without_items(rdff: bytes) -> bytes:
     return dataitems.chunk(recs[:first], end)
 
 
-# (the mul and the halfling keep their kinds' 18; the elf 22, the user's: the game's DEX tables run
-# to 25, DS 7DCh missiles and initiative +4, 7F6h AC -5 at 22)
-DEX = {TOHR_KREEN: 18, HALF_GIANT: 15, ELF: 22, DEFILER: 18}
+# (the mul keeps its kind's 18; the Tohr-kreen, the halfling and the elf 22, the user's: the game's
+# DEX tables run to 25, DS 7DCh missiles and initiative +4, 7F6h AC -5 at 22)
+DEX = {TOHR_KREEN: 22, HALF_GIANT: 15, HALFLING: 22, ELF: 22, DEFILER: 18}
 
 
 def _with_dex(rdff: bytes, dex: int) -> bytes:
@@ -217,7 +219,7 @@ SLOTS: Dict[int, Sequence[Tuple[int, int]]] = {
                  (SCALE_ARM, ARM), (SCALE_LEGS, LEGS), (BONE_HELM, HEAD)),
     MUL: ((game.METAL_CAHULAKS_TYPE, RIGHT), (SCALE_CHEST, CHEST), (SCALE_ARM, ARM),
           (SCALE_LEGS, LEGS), (BONE_HELM, HEAD)),
-    HALFLING: ((SLING_TYPE, MISSILE), (BONE_SHORT_SWORD_TYPE, RIGHT), (LEATHER_CHEST, CHEST),
+    HALFLING: ((STAFF_SLING_TYPE, MISSILE), (BONE_SHORT_SWORD_TYPE, RIGHT), (LEATHER_CHEST, CHEST),
                (LEATHER_ARM, ARM), (LEATHER_LEGS, LEGS), (LEATHER_HELM, HEAD), (SHIELD_TYPE, LEFT)),
     ELF: ((BOW_TYPE, MISSILE), (ARROWS_TYPE, AMMO), (LONG_SWORD_TYPE, RIGHT), (LEATHER_CHEST, CHEST),
           (LEATHER_ARM, ARM), (LEATHER_LEGS, LEGS), (LEATHER_HELM, HEAD), (SHIELD_TYPE, LEFT)),

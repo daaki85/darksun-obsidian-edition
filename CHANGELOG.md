@@ -84,7 +84,7 @@ Releases, newest first (2.12.0 and older in the archive):
   DOSBox), Mindshard violet, Stillwater and Hayneedle the water's blue, Windlash, Galefang and
   Skycutter the air's white and blue, and the Silk Armor, the Living Cloak and the Elvenkind cloak
   and boots green; the rest keep the fire. A wielder's figure glints in the same colours.
-- **The elf champion** (the champions' bout), the user's request: its bow is now the Spellarcher's **Fine Bow** (+1 to hit, not magic), its arrows 24 **Chill Arrows** (shot by the champion, plain arrows: their spell is a party Spellarcher's alone), and its DEX 22; the defiler champion wears the **Bracers of Defense AC 6** that were Mikquetzl's (a save that has met him keeps his).
+- **The champions' bout**, the user's request: the halfling's sling is a staff sling, and the Tohr-kreen's, the halfling's and the elf's DEX 22; the elf's bow is now the Spellarcher's **Fine Bow** (+1 to hit, not magic), its arrows 24 **Chill Arrows** (shot by the champion, plain arrows: their spell is a party Spellarcher's alone); the defiler champion wears the **Bracers of Defense AC 6** that were Mikquetzl's (a save that has met him keeps his).
 - **The release zip** leaves out the developer pages, the tests and `docs/viewer.png` (`export-ignore`); the manual links to them at the release's tag (#97).
 
 **Docs**
