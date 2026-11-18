@@ -44,6 +44,33 @@ most of these, and not the second.
 Count (18 rows): **1 relayed, 5 "data only" (the table is decoded, the deviation isn't recorded), 12 nothing.**
 (One row, thief skills and backstabs, carries two rules; counted as one, as FEATURES.md has it.)
 
+## Hit points on level-up (added 2026-11-18)
+
+This is row 11 above ("Multiclass hit points"), which deserves more than a line. What the code does, read from
+the stock DS1 `DSUN.EXE` today:
+
+- **The per-level gain** (routine at file `0x87250`): the class's group row (file `0x45F10` + 4 x group, "hit
+  die, last die level, flat gain") says a level rolls the die while the level is **at most** the last die level,
+  else takes the flat gain. The rows: priests (8, 9, 2), warriors (10, 9, 3), wizards (4, 10, 1), rogues (6, 9,
+  2); thieves and psionicists are both group 3 (the class-to-group map at `+0x10`). The roll is then raised to
+  the CON floor table at `+0x38` (1 up to CON 19, then 2, 3, 3, 4, 4, 4 for CON 20 to 25).
+- **The total** (`0x874B0`): rolled dice scaled by the levels now over the levels before any were lost, divided
+  by the number of classes, plus CON's bonus from the shared helper at `0x8757C`. For a multiclass character the
+  bonus is worked out from the warrior levels (capped at the last die level) at the full bonus and the highest
+  class's other capped levels at up to +2: in effect **once a level of the highest class, not on every die**, as
+  the Edition's notes put it. AD&D (Demihuman Deities) gives it on every die, into a total shared between the
+  classes. The Edition's switch does that (`INT CAh` at `0x87523`, `INT C9h` at `0x877DA`).
+- **What OpenDS has:** `rules-tables.md` decodes the same group rows (and notes the rogue row stops at 9, "not
+  2E's 10"), the CON floor and `base_hp` (calls the multiclass division explicit), but not that the CON bonus
+  is given once a level; its helper at `0x8757C` is described by the shape of the PSP formula.
+- **A discrepancy of ours to settle first.** The player's guide's hit point table has the thief rolling a d6 at
+  10th and taking +2 only past it. By the code the thief and the psionicist share one row, last die level 9, so a
+  thief takes the flat +2 *at* 10th, as the guide already says for the psionicist. The guide looks wrong for the
+  thief (an AD&D assumption: 2E's rogue rolls through 10th). Not played: a thief to 10th with the dice log would
+  settle it. Until then I would not send OpenDS a thief figure.
+- Before the Edition raised the level cap every class stopped at 9th, so none of these flat gains was ever seen in
+  the unmodded game; only the per-die rolls to 9th and the multiclass CON bonus were.
+
 ## The experience tables, checked today
 
 Game vs the AD&D table the mod uses (`tables.py`), the game's from the stock DS1 `DSUN.EXE` (611,408 bytes)
@@ -80,11 +107,12 @@ stopping breath weapons (7A142h). The first two are fixed in the Edition; the th
 1. **The comparison layer as one document**, not one issue per rule: "where the engine departs from its manual and
    the PHB, with the sites" for the rows marked "data only" (3, 5, 10, 12, 13): it would sit beside their
    `rules-tables.md`, which already says where each table is.
-2. **The 12 "nothing" rows** as a table of facts, each with its site (what the code does, the right rule, the
+2. **The level-up hit-point rows** (above) once the thief row is settled.
+3. **The 12 "nothing" rows** as a table of facts, each with its site (what the code does, the right rule, the
    address). Most need an address check against the image first; many sites are hooks in our helper, so the
    description of the rule is the part that transfers, not the patch.
-3. **The XP diff above**, which is a concrete, checkable result: eight lines, from the stock file.
-4. **Scare, "can't save" and Protection from Normal Missiles** as engine bugs with addresses (the first two are
+4. **The XP diff above**, which is a concrete, checkable result: eight lines, from the stock file.
+5. **Scare, "can't save" and Protection from Normal Missiles** as engine bugs with addresses (the first two are
    in the 38 absent rows already).
 
 Licence: our documents are GPL-3.0 and theirs MIT; facts in new words only.
