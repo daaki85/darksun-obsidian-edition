@@ -495,7 +495,7 @@ def write_conf(game_dir: str, path: str = CONF, dice_log: bool = True, settings:
         lines.append(r'mount C "..\cloud_saves" -t overlay')  # where GOG keeps the saves
     lines += [f'mount d "{DOS_DIR}"', "c:"]
     # the game runs from C: (the game folder), where the patched copy looks for its files
-    # (UMBPLUS.COM first: DOSBox 0.74's upper memory from C900h, not D000h, 28 KB more for the helper)
+    # (UMBPLUS.COM first: DOSBox 0.74's upper memory from CA00h, not D000h, 24 KB more for the helper)
     lines += ["d:\\" + UMB_PLUS_COM.lower(), r"lh d:\dsclog.exe", "cls",
               "d:\\" + PATCHED_EXE.lower()] if dice_log else ["darksun"]
     # a game that stops with an error ("Null pointer assignment", "Stack overflow!") leaves its

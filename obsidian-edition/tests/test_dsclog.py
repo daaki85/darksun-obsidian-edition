@@ -36,6 +36,7 @@ TSR, GAME_DS, SS, CALLER, PARENT, RAND = 0x1000, 0x3000, 0x4000, 0x5000, 0x6000,
 SEG_MOVED = 306  # the header's: SEG_MOVE has made the new spells' records' room
 RING_SEG = 0xC000  # where the tests put the far block, the ring in it (DSCLOG's install: the HMA)
 IF = 0x200  # the interrupt flag
+DF = 0x400  # the direction flag
 # CHOOSE A SPELL as the tests' stand-in (at its stub, DS + 430Ah - 4356h : 5Ch): the call counted at
 # DS:F000h, the spell levels on offer (preserver level 9, through PROBE_PICK_LEVEL) kept from DS:F002h,
 # and a spell (20h on) learnt by member 3, unless DS:F010h is set (EXIT: nothing learnt, not counted)
@@ -88,6 +89,14 @@ def fill_probes(image):
     import re
     return [m.start() - 15 for m in re.finditer(re.escape(bytes.fromhex("83c40c" "2eff36")), image)
             if image[m.start() + 18:m.start() + 20] == bytes.fromhex("09c0")]
+
+
+def if_framed(image, rest):
+    """The handler that starts with "call if_frame" (E8h and its distance) then REST, once in the
+    image: its offset, or -1 if none (the handlers that set interrupts as their caller had them)."""
+    import re
+    found = [m.start() for m in re.finditer(b"\xe8..(?=" + re.escape(rest) + b")", image, re.S)]
+    return found[0] if len(found) == 1 else -1
 
 
 def real_mode_interrupt(mu, intno, _):
@@ -186,7 +195,7 @@ class StubTests(unittest.TestCase):
             mu.reg_write(r.UC_X86_REG_EAX, 0xAAAA0000 | n)
             mu.reg_write(r.UC_X86_REG_ESI, 0x5151)
             mu.reg_write(r.UC_X86_REG_EDI, 0x7171)
-            mu.reg_write(r.UC_X86_REG_EFLAGS, IF | 2)
+            mu.reg_write(r.UC_X86_REG_EFLAGS, IF | 2 | (DF if n % 2 else 0))  # (the copies go up either way)
             mu.emu_start(CALLER * 16 + 0x10, CALLER * 16 + 0x10 + len(call))
             self.assertTrue(mu.reg_read(r.UC_X86_REG_EFLAGS) & IF)  # interrupts are back on
 
@@ -969,7 +978,7 @@ class WornTests(unittest.TestCase):
         self.mu = mu = Uc(UC_ARCH_X86, UC_MODE_16)
         mu.mem_map(0, 0x100000)
         mu.mem_write(TSR * 16, image)
-        at = image.find(bytes.fromhex("fb5589e5817e02c822"))
+        at = if_framed(image, bytes.fromhex("5589e5817e02c822"))
         self.assertGreater(at, 0)
         mu.mem_write(VEC_WORN * 4, struct.pack("<HH", at, TSR))
         mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
@@ -3360,7 +3369,7 @@ class RuleTests(RingTests):
         ES:BX the sheet (CLASSES, LEVELS, RACE) past its start by SLOT, whose class there is at LEVEL:
         (below the cap, at it), from the flags the game's JL and JZ read; AX and interrupts as they were."""
         image = load_image()
-        probe = image.find(bytes.fromhex("fb2ef606") + struct.pack("<H", self.RULES) + bytes([128]))
+        probe = if_framed(image, bytes.fromhex("2ef606") + struct.pack("<H", self.RULES) + bytes([128]))
         self.assertGreater(probe, 0)
         mu = self.mu
         mu.mem_write(VEC_LEVEL * 4, struct.pack("<HH", probe, TSR))
@@ -3489,7 +3498,7 @@ class RuleTests(RingTests):
         show (number 2, at the game's 0348h:25Bh) of RACE: ZF (the game's JE: not two-handed),
         with AX, BX and ES as they were."""
         image = load_image()
-        probe = image.find(bytes.fromhex("fb2ef706") + struct.pack("<HH", self.RULES, 512))
+        probe = if_framed(image, bytes.fromhex("2ef706") + struct.pack("<HH", self.RULES, 512))
         self.assertGreater(probe, 0)
         self.mu.mem_write(VEC_TWO_HANDED * 4, struct.pack("<HH", probe, TSR))
         who = (GAME_DS + 0x3931 - 0x4356) & 0xFFFF  # (as the running game has it: DS - 0A25h)
@@ -3555,7 +3564,7 @@ class RuleTests(RingTests):
         check, and the number the routine goes on with."""
         image = load_image()
         tu_info, _ = self.tu_info_at(image)
-        probe = image.find(bytes.fromhex("fb2e803e") + struct.pack("<H", tu_info - TSR * 16))
+        probe = if_framed(image, bytes.fromhex("2e803e") + struct.pack("<H", tu_info - TSR * 16))
         self.assertGreater(probe, 0)
         self.mu.mem_write(VEC_CHUNK_ID * 4, struct.pack("<HH", probe, TSR))
         self.mu.mem_write(GAME_DS * 16 + 0x9C, struct.pack("<H", limit))
@@ -3589,7 +3598,7 @@ class RuleTests(RingTests):
         [BP-4] a sheet whose second class (CX = 1) is CLS: whether the level is past the cap
         (the game's JNG not taken); DX and the sheet's ES:BX as they were."""
         image = load_image()
-        probe = image.find(bytes.fromhex("fb52268a5701"))
+        probe = if_framed(image, bytes.fromhex("52268a5701"))
         self.assertGreater(probe, 0)
         self.mu.mem_write(VEC_HD_CON * 4, struct.pack("<HH", probe, TSR))
         self.mu.mem_write(self.TYPES * 16 + 0x200, bytes([6, 9, 2, 6]))
@@ -5251,9 +5260,9 @@ class TickTests(unittest.TestCase):
         self.mu = mu = Uc(UC_ARCH_X86, UC_MODE_16)
         mu.mem_map(0, 0x100000)
         mu.mem_write(TSR * 16, image)
-        at = image.find(bytes.fromhex("5589e51e50538e5e04ff060400"))
+        at = image.find(bytes.fromhex("fc5589e51e50538e5e04ff060400"))
         self.assertGreater(at, 0)
-        self.assertEqual(image.count(bytes.fromhex("5589e51e50538e5e04ff060400")), 1)
+        self.assertEqual(image.count(bytes.fromhex("fc5589e51e50538e5e04ff060400")), 1)
         mu.mem_write(self.VEC_TICK * 4, struct.pack("<HH", at, TSR))
         mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
         self.hdr = TSR * 16 + image.find(HDR_SIG)

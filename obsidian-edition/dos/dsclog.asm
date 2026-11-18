@@ -188,7 +188,7 @@ section image follows=mz vstart=0
 
 ; ---- header, found by the Loader via SIG (16-byte aligned) ----
 hdr:
-sig      db 'DSCLOGvb'          ; +0
+sig      db 'DSCLOGvc'          ; +0
 seq      dw 0                   ; +8   entries written so far (wraps at 65536)
 widx     dw 0                   ; +10  ring slot the next entry goes to
 nent     dw NENT                ; +12
@@ -467,6 +467,10 @@ gear_who   db 0xFF              ; +1867 the sheet index of the character DONE ju
 sold_items times 4 dw 0xFFFF     ; +1868 SOLD_Q's items: each entry's, the first of its thing's list as it
                                 ;      was kept (SELL_KEEP), 0FFFFh once the Loader has seen to it
                                 ;      (buyback.py: the item moved only if still that thing's first)
+a20_lost   dw 0                 ; +1876 times A20_CHECK found A20 off, the far block (in the HMA) out of
+                                ;      reach, and turned it on again; 8000h added if it wouldn't come
+                                ;      on (the far block's segments then the ROM's: the dice log's
+                                ;      a20_line says so once)
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -506,6 +510,7 @@ int_rand:
         add sp, 4
         popf
 stub:
+        cld                     ; (RECORD's copies go up, whatever the caller left)
         push eax                ; rand() leaves the upper half of EAX alone; so do we
         push si
         mov si, sp              ; SS:SI+6 = return IP, SS:SI+8 = return CS
@@ -595,8 +600,9 @@ stub:
 ;   SS:SI+6 = the return address of the call being logged (IP, then CS)
 ;   BP      = the frame of the code that made that call
 ;   AX      = the value to store at +6;  [kind] = the entry kind
-; Keeps every register except the flags.
+; Keeps every register except the flags (the direction flag cleared: its copies go up).
 record:
+        cld
         push bx
         push cx
         push di
@@ -708,13 +714,32 @@ record:
         pop bx
         ret
 
+; IF_FRAME: interrupts on if the INT's caller had them on, off if it had them off (the caller's
+; flags in the INT's frame, at SP + 4 where it is called: first thing in a handler, or with the
+; frame back on top), the other flags kept. The INT turned them off; a handler that ends with
+; RETF 2 (its flags the caller's results) would leave them so, and one that runs the game's code
+; would run it with them off (the game's 120 Hz clock losing its ticks; a routine of the game's that
+; waits for the timer waiting for good), and a plain STI would turn them on where DSCLOG had them
+; off (its drawing: DRAW_MASKED).
+if_frame:
+        pushf
+        push bp
+        mov bp, sp              ; [BP+2] the flags now, +4 the way back, +6 the INT's IP, +8 CS, +10 flags
+        and byte [bp + 3], ~2
+        test byte [bp + 11], 2
+        jz .off
+        or byte [bp + 3], 2
+.off:   pop bp
+        popf
+        ret
+
 ; PROBE_SAVE: INT VEC_SAVE replaces "mov al,[bp-2] / cmp al,[bp-1]" (6 bytes:
 ; INT + 4 NOPs) at the end of the saving-throw function, where [bp-2] is the
 ; final total (d20 + modifiers) and [bp-1] the save value it must reach.
 ; Records both, then does the replaced instructions; RETF 2 keeps their flags. (Spook's save is
 ; worse for its caster's levels first: SPOOK_SAVE.)
 probe_save:
-        sti
+        call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
         call spook_save
         push si
         mov si, sp
@@ -740,7 +765,7 @@ probe_save:
 ; NOPs) at the end of the AC function. Does the replaced instructions and
 ; records the result: the AC the game uses for this attack.
 probe_ac:
-        sti
+        call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
         push si                 ; the game's SI is part of the AC
         mov ax, [bp-6]
         add ax, si
@@ -2274,11 +2299,19 @@ probe_look:
 ; 3925Ch), the first instruction of the game's timer handler (IRQ 0, the timer its own: the
 ; game's timers run from it). Does that, and every TICK_EVERY strikes notes where the game was
 ; (what the timer interrupted) in TICKS, for the Loader's freeze report: its CS:IP, flags, SS,
-; SP (before the interrupt), BP, DS and ES, and the strikes counted. Interrupts stay off.
+; SP (before the interrupt), BP, DS and ES, and the strikes counted. Interrupts stay off. The
+; direction flag cleared first (the game's handler clears it only after this; the IRET puts the
+; interrupted code's back): what runs from here (BOX_NUDGE, CP_FOLLOW, LABEL_STAMP) copies with
+; string instructions. BOX_NUDGE stays here, though it calls the game's mouse handler: the
+; inventory screen, where it is needed, runs none of DSCLOG's other code while it waits (the main
+; loop's PROBE_SCROLL doesn't run there, and the game reads INT 16h only from its own keyboard
+; interrupt), and the call is as the mouse driver's own: interrupts off, on the interrupted stack.
 TICK_EVERY equ 32
 TICK_SLOTS equ 16
 TICK_SIZE  equ 16
+        times -(TICK_SIZE != 16) db 0   ; (a negative count: the "shl bx,4" below takes a slot as 16 bytes)
 probe_tick:
+        cld
         push bp
         mov bp, sp              ; BP+2 this interrupt's frame (in the handler), BP+8 the timer's
         push ds
@@ -2343,6 +2376,7 @@ PZ_TO_END     equ 0x7A7C5 - 0x7A6DF   ; (from the INT's way back)
 PZ_TO_QUEUE   equ 0x790D2 - 0x7A6DF
 PZ_TO_LEVEL   equ 0x7A7AD - 0x7A6DF   ; (the far call's address)
 probe_poison:
+        call if_frame           ; (it calls the game: interrupts as the caller had them)
         push bp
         mov bp, sp              ; BP+2 the INT's way back, [BP] the routine's BP
         pushad
@@ -5263,7 +5297,7 @@ KO_RET      equ 0x194D                  ; (the death test's)
 KO_UNMADE   equ 10000                   ; (the damage routine's Disintegrate: status 8)
 FIRST_PACK  equ 14                      ; the first backpack slot
 probe_worn:
-        sti
+        call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
         push bp
         mov bp, sp
         cmp word [bp+2], WORN_AC_RET
@@ -6226,6 +6260,7 @@ probe_pk_title:
         iret
 
 probe_pk_fill:
+        call if_frame           ; (it calls the game: interrupts as the caller had them)
         xor di, di
         mov si, di
         cmp byte [cs:lv_mode], 0
@@ -8383,7 +8418,7 @@ DK_PSI     equ 0x57                     ; (in PICK_STUB's: the psionicists' pop-
 DK_X       equ 0x5C
 DK_Y       equ 0x47
 probe_dual_kit:
-        sti
+        call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
         pushad
         push es
         mov bx, sp              ; the interrupt frame at BX+34: IP, CS, flags
@@ -10569,7 +10604,7 @@ wp_classes:
         ret
 
 probe_wp_shown:
-        sti
+        call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
         cmp ax, 8
         je .ret
         call wp_rules
@@ -11487,7 +11522,7 @@ probe_el_level:
 ; (as kits.spell_spheres). The flags of the test go back to the JZ after (RETF 2: the interrupt's own
 ; dropped), interrupts on again.
 probe_el_know:
-        sti
+        call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
         push eax
         push ecx
         push bx
@@ -11615,7 +11650,7 @@ av_heal:
 ; the DUAL window (866C7h, for member [BP+6]) greys those it can't: AX 0 for a class one of its
 ; kits bars (KIT_AT, asleep too; KIT_BANS, kits.DUAL_BANS). The test's flags back to the JZ (RETF 2).
 probe_dual_ban:
-        sti
+        call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
         call dual_spheres
         or ax, ax
         jz .out
@@ -11705,7 +11740,7 @@ SPH_WATER_ROW equ 3
 SPH_ABORT equ 0x86BC5 - 0x86B68         ; (the return, less the window's close after a change)
 SPH_WHO   equ 0x86BDC - 0x86BC5         ; ("mov ax,0348h" operand, past the return)
 probe_sphere:
-        sti
+        call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
         cmp byte [cs:sph_healer], 0
         je .ban
         mov ax, SPH_WATER_ROW
@@ -12227,6 +12262,7 @@ probe_priest_thac0:
 ; alone (the routine called with the level 0); the others', and with the rule off, the game's.
 SLOT_CALL equ 0x5E4C2 - 0x5E242   ; the routine, from the INT's return
 probe_adnd_slots:
+        call if_frame           ; (it calls the game: interrupts as the caller had them)
         push bp
         mov bp, sp              ; +2 the INT's IP, +4 CS, +6 flags; +8 the class, +0Ah the
         push bx                 ; pointer, +0Ch the spell level
@@ -12311,7 +12347,8 @@ probe_adnd_slots:
         pop cx
         pop bx
         ret
-; AD&D's spell slots by level 1-12, spell levels 1-5: priests (clerics and druids), then wizards
+; (ADND_SLOTS, AD&D's spell slots by level 1-12, spell levels 1-5: priests (clerics and druids),
+; then wizards; in the tail, read through TAIL_SEG)
 SLOT_LEVELS equ 12
 
 ; The leader's CHA and shop prices (RULE_HI_CHA_PRICES; prices.py):
@@ -13574,6 +13611,8 @@ cp_follow:                              ; (the game's timer, while a scene plays
         test byte [cs:tick_count], 3    ;   with the pointer between its steps, 30 times a second,
         jnz .out                        ;   and drawn afresh 7 times, as a still scene fades in:
         pusha                           ;   the game sets its palette with interrupts off)
+        call vga_latched
+        jnz .same                       ; (the game copying through the latches: next time)
         test byte [cs:tick_count], 15
         jz .fresh
         mov ax, 3
@@ -13588,6 +13627,32 @@ cp_follow:                              ; (the game's timer, while a scene plays
 .fresh: call cp_draw
 .same:  popa
 .out:   ret
+; VGA_LATCHED: ZF clear while the game writes through the VGA's latches (the graphics controller in
+; write mode 1-3, or a bit mask other than FFh: a copy of the screen within video memory under way),
+; where a read of the screen from the timer (CP_PASS keeping what is under the arrow) would load
+; them anew and the game's next write put the arrow's pixels in its copy. The index register kept;
+; AX, DX changed.
+vga_latched:
+        mov dx, 0x3CE
+        in al, dx
+        push ax                         ; (the index the game had)
+        mov al, 5
+        out dx, al
+        inc dx
+        in al, dx
+        mov ah, al                      ; (the mode)
+        dec dx
+        mov al, 8
+        out dx, al
+        inc dx
+        in al, dx                       ; (the bit mask)
+        dec dx
+        and ah, 3
+        not al
+        or ah, al                       ; (ZF: write mode 0, every bit)
+        pop ax
+        out dx, al
+        ret
 cp_put:
         push es
         call cine_where
@@ -17298,6 +17363,7 @@ reach_rets   dw REACH_1587, 0x2B7A, REACH_1587, 0x0AC5, REACH_1587, 0x04B8, REAC
              dw REACH_1A0A, 0x3071, REACH_1A0A, 0x14A2
 REACH_RETS   equ ($ - reach_rets) / 4
 reach_site:
+        call if_frame           ; (it calls the game: interrupts as the caller had them)
         mov ax, [bp - 0x16]
         cmp ax, 2
         jne .out
@@ -18275,7 +18341,7 @@ RULE_TWO_WEAPONS equ 4
 ; (8: once the spell save's own, which the Loader alone acts on: free, the spell save now Saving throws
 ;   against spells with RULE_NO_DOUBLE)
 RULE_NO_DOUBLE equ 16
-RULE_NEW_SPELLS equ 32          ; three new wizard spells: Cat's Grace, Erdlu Claw, Fogbolt (NEW SPELLS)
+RULE_NEW_SPELLS equ 32          ; the sixteen new spells, wizards' and priests' (NEW SPELLS: NS_COUNT)
 RULE_STEALTH equ 64             ; (the Loader rolls the hiding and moving silently, and sets STEALTH)
 RULE_LEVEL_10 equ 128          ; class levels go up to 10, not 9
 RULE_THIEF_TABLE equ 256        ; Thieves as in AD&D: thief skills from AD&D's table and Dark Sun's DEX adjustments,
@@ -18449,7 +18515,7 @@ LV_UP_ROWS equ 0x87BE8 - 0x87B89 ; the level up's "mov ax,seg" immediates, back 
 LV_UP_XP   equ 0x87BE8 - 0x87BB0 ;   the class rows' table (+0CAh), the XP table's (+27Ch)
 LV_VIEW_XP equ 0x67D36 - 0x67D0A ; View Character's XP table's, on from the return
 probe_level:
-        sti
+        call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
         test byte [cs:rules], RULE_LEVEL_10
         jnz .cap
         cmp byte [es:bx+0x24], 9
@@ -18588,7 +18654,7 @@ probe_hd_roll:
 ; counts the levels CON's hit point bonus applies to: AL a class's level, ES:BX its group, the
 ; game's [BP-4] the sheet (far) and CX which of its classes. RETF 2 keeps the compare's flags.
 probe_hd_con:
-        sti
+        call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
         push dx
         mov dl, [es:bx+1]
         test byte [cs:rules], RULE_LEVEL_10
@@ -19229,7 +19295,7 @@ WHO_SEG equ USE_WHO_SEG          ; the segment of the character on show's number
                                 ; (the overlay's code says 0348h, which its loader relocates there)
 HALF_GIANT equ 5
 probe_two_handed:
-        sti
+        call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
         test word [cs:rules], RULE_HALF_GIANT
         jz .test
         push ax
@@ -19304,7 +19370,7 @@ probe_spell_text:
 ; (TU_INFO), its SPIN 1000 becomes 999 + TU_INFO (spelltexts.PICK_SPIN on). The stack check, with
 ; the routine's SP; RETF 2 keeps its flags.
 probe_chunk_id:
-        sti                     ; (RETF 2 keeps these flags: interrupts on, as the game had them)
+        call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
         cmp byte [cs:tu_info], TU_INFO_PICK
         jb .check
         cmp dword [bp + 6], 'SPIN'
@@ -19416,7 +19482,7 @@ probe_dos_open:
         pop cx
         pop bx
         pop ax
-        sti                     ; (RETF 2 keeps these flags: interrupts on, as the game had them)
+        call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
         push ax                 ; (the game's AX, for its own file if there's no copy)
         push ds
         push dx
@@ -20708,7 +20774,11 @@ SPRAY_SITE equ NS_IMAGE + 72    ; 79F83h: Color Spray unsaved by the caster's le
 HOLD_HD_SITE equ NS_IMAGE + 73  ; 7A345h: Hold Undead on undead of more levels than its caster: immune (HOLD_HD)
 ; RL_SITES: the site RL_SITE (the byte after VEC_CR_SPELLS's INT) to its code, all registers the
 ; game's: through SITE_TAB, a word for each site from RL_SCORE (1) on, but NS_CMP's (NS_CMP_COUNT of
-; them, all NS_CMP), past the last none (IRET).
+; them, all NS_CMP), past the last none (IRET). RL_SITE is one byte for every site, so it is the
+; site's own only while interrupts are still off from the INT: a site's code that needs it (NS_CMP,
+; NS_ENTRY) reads it first, before anything turns them on or calls the game (IF_FRAME, STI, a far
+; call), and keeps what it read; the mouse's or the timer's interrupt can run the game's code
+; through another site, which sets it anew. (The read here, into BX, is before all of that.)
 rl_sites:
         push bx
         movzx bx, byte [cs:rl_site]
@@ -20915,7 +20985,7 @@ ns_cmp:
         jmp .got
 .esbx:  add bx, [ss:di + 18]    ; (the game's BX)
         mov ax, [es:bx]
-.got:   cmp byte [cs:rl_site], NS_CMP_INFO
+.got:   cmp si, ns_cmp_sites + (NS_CMP_INFO - NS_CMP) * 5 ; (its site, as read first: RL_SITES)
         jne .new
         cmp byte [cs:tu_info], 0 ; (Turn Undead's box, or the purse's: as the game has it)
         jne .cmp
@@ -21552,6 +21622,7 @@ WALL_HALF  equ 32               ; (two cells: a wall four long)
 WALL_DIAG  equ 23               ; (WALL_HALF / sqrt(2))
 WALL_POS   equ 0x669D
 ns_wall:
+        call if_frame           ; (it calls the game: interrupts as the caller had them)
         sub sp, 8
         push bp
         mov bp, sp
@@ -21690,6 +21761,7 @@ HAND_SOME   equ 0                 ; (on as the game: the way back)
 HAND_DONE   equ 0x5F25C - 0x5ECDB ; (the routine's end, less the way back)
 FLAGS_MASK  equ 0x08D5          ; (OF, SF, ZF, AF, PF, CF)
 pp_show:
+        call if_frame           ; (it calls the game: interrupts as the caller had them)
         push bp
         mov bp, sp              ; [BP+6] the INT's flags
         pushad
@@ -21988,6 +22060,7 @@ pp_aim:                         ; PP_CALL aimed at the game's segment AX (less t
 ; PP_CLOSE: "cmp dword [30F4h],0" (88504h; 6 bytes) where the USE screen, closing (884B3h), lets go
 ; of Turn Undead's icon: the buttons beside it let go of too, its flags given back.
 pp_close:
+        call if_frame           ; (it calls the game: interrupts as the caller had them)
         push bp
         mov bp, sp
         pushad
@@ -23161,7 +23234,7 @@ ns_fist:
 NAMES_OWN    equ 0x142
 NAME_SIZE    equ 25
 NAME_KEPT    equ 16                 ; (EXTRA_NAMES' entries: 15 letters at most, as the game's own, and a NUL)
-NAMES_EXTRA  equ 50
+; (NAMES_EXTRA: the names in EXTRA_NAMES, counted there)
 NAMES_PTR    equ 0x166D         ; DS: far pointer to the name table
 
 ; PROBE_NAMES_SIZE: INT VEC_NAMES_SIZE replaces "push dword 1" (3 bytes: INT + NOP) just before
@@ -24960,6 +25033,10 @@ probe_ghost:
         pop word [cs:g_resume + 2]
         pop word [cs:g_resume_fl]
         add word [cs:g_resume], 3
+        test byte [cs:g_resume_fl + 1], 2 ; (interrupts on again if the caller had them on, as its
+        jz .masked                      ;   call ran: the figures are drawn every frame, and the
+        sti                             ;   game's clock lost its ticks; off in DSCLOG's own drawing)
+.masked:
         cmp word [cs:ghost_on], 0
         je .game
         cmp di, MAP_COUNT - 1
@@ -25385,7 +25462,9 @@ build_dark:
 ; if dragging it (the game has no use for that button).
 ;
 ; The game is told of the mouse's buttons by the mouse driver calling its handler (INT 33h, 0Ch).
-; INT33 puts MOUSE_EVENT in its place, which keeps the middle button from the game. The game's main loop reads where the pointer is (DSUN.EXE 1CAACh, the call to the
+; INT33 puts MOUSE_EVENT in its place, which keeps the middle button from the game, and forgets the
+; game's handler when the game takes it away (0Ch with CX 0) or resets the driver (00h, 21h), so
+; nothing of DSCLOG's (BOX_NUDGE, TARGET_CLICK) calls a handler that is gone. The game's main loop reads where the pointer is (DSUN.EXE 1CAACh, the call to the
 ; driver's 03h), to scroll the map when it is at the screen's edge; PROBE_SCROLL makes that call
 ; itself and, while dragging, has the game centre its view where the drag puts it (191F:0281h, as
 ; clicking on the overview map does: the view is then drawn again), and the pointer is kept off
@@ -25404,9 +25483,9 @@ SCROLL_MIDDLE equ 1             ; SCROLL_ON's bit: dragging with the wheel press
 
 int33:
         cmp ax, 0x0C
-        jne .chain
+        jne .reset
         or cx, cx
-        jz .chain                       ; (taking the handler away)
+        jz .gone                        ; (taking the handler away)
         mov [cs:game_handler], dx
         mov [cs:game_handler + 2], es
         mov [cs:game_mask], cx
@@ -25423,6 +25502,12 @@ int33:
         pop dx
         pop es
         iret
+.reset: or ax, ax                       ; (the driver reset, or its software reset: no handler
+        jz .gone                        ;   now, as the driver has it)
+        cmp ax, 0x21
+        jne .chain
+.gone:  mov dword [cs:game_handler], 0  ; (none: a pending nudge or Enter on an enemy calls none)
+        mov word [cs:game_mask], 0
 .chain: jmp far [cs:old33]
 
 mouse_event:                            ; AX = events, BX = buttons held, CX, DX = where
@@ -25494,6 +25579,7 @@ probe_scroll:
         jz .masked
         sti
 .masked:
+        call a20_check
         inc word [cs:main_ticks]
         mov byte [cs:va_done], 0        ; (the view not drawn again yet in this pass: VIEW_AGAIN)
         pushf
@@ -25590,6 +25676,53 @@ probe_scroll:
         push word [cs:s_resume + 2]
         push word [cs:s_resume]
         iret
+
+; A20_CHECK (PROBE_SCROLL, each pass of the map's main loop): with the far block in the HMA
+; (FAR_SEG FFFFh), A20 still on as FAR_INIT left it, FFFFh:0010h not 0000h:0000h (FAR_INIT's test:
+; a word turned over and back, interrupts off). Nothing in the game turns it off (its XMS calls are
+; 08h-0Dh), but with it off every write to the far block would land on the interrupt vectors and
+; DOS: found off, it is turned on again (XMS's 03h, as FAR_INIT) and counted (A20_LOST, for the
+; Loader to say once). If it won't come on, the far block's segments (FAR_SEG and the header's)
+; are made the BIOS's ROM's, F000h, whose writes go nowhere, and A20_LOST gets 8000h. All kept.
+a20_check:
+        cmp word [cs:far_seg], 0xFFFF
+        jne .ret
+        pushf
+        pusha
+        push ds
+        push es
+        call a20_on
+        je .out
+        inc word [cs:a20_lost]
+        cmp word [cs:xms + 2], 0
+        je .gone
+        mov ah, 3
+        call far [cs:xms]
+        call a20_on
+        je .out
+.gone:  or word [cs:a20_lost], 0x8000
+        mov ax, 0xF000
+        mov [cs:far_seg], ax
+        mov [cs:ring_seg], ax
+        mov [cs:panel_seg], ax
+        mov [cs:sc_seg], ax
+        mov [cs:tbuf_seg], ax
+.out:   pop es
+        pop ds
+        popa
+        popf
+.ret:   ret
+a20_on:                                 ; ZF set if A20 is on; AX, DS, ES changed, interrupts off
+        xor ax, ax
+        mov ds, ax
+        dec ax
+        mov es, ax
+        cli
+        mov ax, [ds:0]
+        not word [es:0x10]
+        cmp ax, [ds:0]
+        not word [es:0x10]              ; (NOT keeps the flags; interrupts back as A20_CHECK's POPF)
+        ret
 
 pan_to:                                 ; the view's top left to (AX, SI) as far as the map goes;
         cmp ax, 0                       ;   keeps CX, DX
@@ -26578,7 +26711,7 @@ panel_draw_around:
 ; is to go over it: the game takes its pointer off by putting back the map that was under it, over
 ; the panel. The stack check, with the routine's SP; RETF 2 keeps its flags. DS the game's.
 probe_pointer:
-        sti                     ; (RETF 2 keeps these flags: interrupts on, as the game had them)
+        call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
         mov [cs:pointer_ds], ds
         call pp_disarm
         call pointer_panel
@@ -27872,6 +28005,7 @@ ITEM_SPECIAL equ 0xF9           ; (spell bytes from here are the game's own effe
 TYPE_FRUIT   equ 60
 TYPE_SCENERY equ 0x60          ; (a type's +08h: doors, haystacks, walls...)
 probe_item_box:
+        call if_frame           ; (it calls the game: interrupts as the caller had them)
         pushad
         push es
         cmp si, 0x270F
@@ -28308,6 +28442,7 @@ h_resume   dd 0
 
 old33        dd 0
 game_handler dd 0
+xms        dd 0                 ; (XMS's entry, FAR_INIT's: A20_CHECK's too)
 game_mask    dw 0
 centre       dw CENTRE_OFF, 0
 s_resume     dd 0
@@ -28877,8 +29012,8 @@ FAR_PARAS  equ (FAR_END - FAR_RING + 15) / 16
 ; from the helper's MCB on. In it: the helper (PSP and the image as loaded, its install code and
 ; stack too) and the overlay buffer (OVR_RESERVE), each with its MCB. The build fails if they
 ; outgrow it: the overlay buffer would go back into the game's heap (33 KB less for the game).
-; (UMBPLUS.COM, run first, moves the block's start down to C900h where it can, 28 KB more; the
-; helper still has to fit without it.)
+; (UMBPLUS.COM, run first, moves the block's start down to CA00h where it can, 24 KB more; the
+; helper still has to fit without it, so UMB_ROOM is the limit either way.)
 UMB_ROOM equ 0xF000 - 0xD00A
 UMB_NEED equ (1 + 0x10 + (image_len + TAIL_BYTES + STACK + 15) / 16) + (1 + OVR_RESERVE)
         times -(UMB_NEED > UMB_ROOM) db 0   ; (a negative count: the helper no longer fits upper memory)
@@ -29059,7 +29194,6 @@ far_init:
         rep stosw
         clc
 .ret:   ret
-xms       dd 0
 hma_given db 0
 no_far  db 'DSCLOG: no memory for its buffers (63 KB). Not loaded.', 13, 10, '$'
 
@@ -29378,66 +29512,73 @@ lbl_slots  times LBL_SLOTS * LBL_SIZE db 0 ; (the Loader's: LABELS, the header's
 large_bits times MAP_BITS + 1 db 0      ; (the Loader's: a bit a combatant large or bigger, SIZE, +1842)
 ticks      times TICK_SLOTS * TICK_SIZE db 0 ; (PROBE_TICK's, the Loader's to read: the header's +356)
 ; the names, numbered from NAMES_OWN (322): the Loader's items' (the same as the Loader's
-; NAMES in dsloader/names.py), each NUL-terminated (PROBE_NAMES_FILL pads it to NAME_SIZE)
+; NAMES in dsloader/names.py), each NUL-terminated (PROBE_NAMES_FILL pads it to NAME_SIZE), and
+; counted: NAMES_EXTRA is how many (names.EXTRA the Loader's, which test_names checks)
+%assign NAMES_LISTED 0
+%macro xname 1
+        db %1, 0
+        times -(%strlen(%1) >= NAME_KEPT) db 0 ; (a negative count: 15 letters at most)
+%assign NAMES_LISTED NAMES_LISTED + 1
+%endmacro
 extra_names:
-        db "Ring/Protection", 0
-        db "Thieves' Tools", 0
-        db "Short Sword", 0             ; (Kurzak's, of type TYPES' first)
-        db "Cloak/Protectn", 0          ; (Pehtucl's, the game's way of shortening)
-        db "Ring/Protection", 0         ; (Pehtucl's ring: the arena's is the first; their icons differ)
-        db "Shadowseeker", 0            ; (Kurzak's Short Sword made +1: MAGIC_ARMS)
-        db "Kreenfang", 0               ; (the arena's Bone Gythka made +1)
-        db "Bracers/Defns", 0           ; (bracers of defense, short enough for their plus: BRACERS,
+        xname "Ring/Protection"
+        xname "Thieves' Tools"
+        xname "Short Sword"             ; (Kurzak's, of type TYPES' first)
+        xname "Cloak/Protectn"          ; (Pehtucl's, the game's way of shortening)
+        xname "Ring/Protection"         ; (Pehtucl's ring: the arena's is the first; their icons differ)
+        xname "Shadowseeker"            ; (Kurzak's Short Sword made +1: MAGIC_ARMS)
+        xname "Kreenfang"               ; (the arena's Bone Gythka made +1)
+        xname "Bracers/Defns"           ; (bracers of defense, short enough for their plus: BRACERS,
                                         ;   dsloader/worldgear.py)
-        db "Gutterknot", 0              ; (the magic weapons of dsloader/worldgear.py: a club +1,
-        db "Deepbiter", 0               ; a stone pick +1,
-        db "Windlash", 0                ; a staff sling +1,
-        db "Greenbright", 0             ; a metal short sword +2)
-        db "Arrowbane", 0               ; (the circlet and the crown of dsloader/worldgear.py)
-        db "Sunking Crown", 0
-        db "Warden's Chest", 0          ; (the Warden's Plate of dsloader/worldgear.py)
-        db "Warden's Arms", 0
-        db "Warden's Legs", 0
-        db "Warden's Helm", 0
-        db "Cloak/Elvenkind", 0         ; (the Cloak and Boots of Elvenkind)
-        db "Boots/Elvenkind", 0
-        db "Searing Blade", 0           ; (an obsidian short sword +2, Focus Heat on what it hits)
-        db "Tome/Understand", 0         ; (the Tome of Understanding: dsloader/tome.py)
-        db "Inixhide", 0                ; (Legcrusher's Leather Chest Armor +1: dsloader/npcitems.py)
-        db "Drakejaw", 0                ; (the magic axes of dsloader/worldgear.py: a bone axe +1,
-        db "Glasshewer", 0              ; an obsidian axe +2,
-        db "Headsman", 0                ; a metal great axe +2)
-        db "Galefang", 0                ; (more magic weapons of dsloader/worldgear.py: an air
+        xname "Gutterknot"              ; (the magic weapons of dsloader/worldgear.py: a club +1,
+        xname "Deepbiter"               ; a stone pick +1,
+        xname "Windlash"                ; a staff sling +1,
+        xname "Greenbright"             ; a metal short sword +2)
+        xname "Arrowbane"               ; (the circlet and the crown of dsloader/worldgear.py)
+        xname "Sunking Crown"
+        xname "Warden's Chest"          ; (the Warden's Plate of dsloader/worldgear.py)
+        xname "Warden's Arms"
+        xname "Warden's Legs"
+        xname "Warden's Helm"
+        xname "Cloak/Elvenkind"         ; (the Cloak and Boots of Elvenkind)
+        xname "Boots/Elvenkind"
+        xname "Searing Blade"           ; (an obsidian short sword +2, Focus Heat on what it hits)
+        xname "Tome/Understand"         ; (the Tome of Understanding: dsloader/tome.py)
+        xname "Inixhide"                ; (Legcrusher's Leather Chest Armor +1: dsloader/npcitems.py)
+        xname "Drakejaw"                ; (the magic axes of dsloader/worldgear.py: a bone axe +1,
+        xname "Glasshewer"              ; an obsidian axe +2,
+        xname "Headsman"                ; a metal great axe +2)
+        xname "Galefang"                ; (more magic weapons of dsloader/worldgear.py: an air
                                         ; cleric's dagger +2,
-        db "Mindshard", 0               ; an obsidian short sword +1,
-        db "Stillwater", 0              ; a bone short sword +1,
-        db "Linebreaker", 0             ; a metal polearm +2,
-        db "Thornwall", 0               ; a bone polearm +1)
-        db "Ashen Robe", 0              ; (the robes: dsloader/robes.py)
-        db "Veiled Robe", 0
-        db "Gutterward", 0              ; (the magic shields of dsloader/worldgear.py: a wooden
+        xname "Mindshard"               ; an obsidian short sword +1,
+        xname "Stillwater"              ; a bone short sword +1,
+        xname "Linebreaker"             ; a metal polearm +2,
+        xname "Thornwall"               ; a bone polearm +1)
+        xname "Ashen Robe"              ; (the robes: dsloader/robes.py)
+        xname "Veiled Robe"
+        xname "Gutterward"              ; (the magic shields of dsloader/worldgear.py: a wooden
                                         ; shield +1,
-        db "Ironbulwark", 0             ; a metal shield +3)
-        db "Hayneedle", 0               ; (the weapons for the kits with too few, dsloader/
+        xname "Ironbulwark"             ; a metal shield +3)
+        xname "Hayneedle"               ; (the weapons for the kits with too few, dsloader/
                                         ; worldgear.py: a bone dagger +1,
-        db "Nightsliver", 0             ; an obsidian dagger +2,
-        db "Dunesong", 0                ; a bow +1,
-        db "Skycutter", 0               ; a chatkcha +2)
-        db "Girdle/Back Def", 0         ; (the girdles and the amulet of
+        xname "Nightsliver"             ; an obsidian dagger +2,
+        xname "Dunesong"                ; a bow +1,
+        xname "Skycutter"               ; a chatkcha +2)
+        xname "Girdle/Back Def"         ; (the girdles and the amulet of
                                         ; dsloader/worldgear.py: 15 letters at most, as the
-        db "Girdle of Urnst", 0         ; game's own)
-        db "Amulet/MagicRes", 0
-        db "Burning Arrows", 0          ; (the Spellarcher's spell arrows, dsloader/
+        xname "Girdle of Urnst"         ; game's own)
+        xname "Amulet/MagicRes"
+        xname "Burning Arrows"          ; (the Spellarcher's spell arrows, dsloader/
                                         ; spellarrows.py: ARROW_NAME on)
-        db "Chill Arrows", 0
-        db "Shocking Arrows", 0
-        db "Vampiric Arrows", 0
-        db "Boots of Speed", 0          ; (the Boots of Speed: dsloader/worldgear.py, BOOTS_SPEED)
-        db "Emberlash", 0               ; (the magic cahulaks of dsloader/worldgear.py: an obsidian
+        xname "Chill Arrows"
+        xname "Shocking Arrows"
+        xname "Vampiric Arrows"
+        xname "Boots of Speed"          ; (the Boots of Speed: dsloader/worldgear.py, BOOTS_SPEED)
+        xname "Emberlash"               ; (the magic cahulaks of dsloader/worldgear.py: an obsidian
                                         ; cahulaks +1,
-        db "Ironwhirl", 0               ; a metal cahulaks +2)
-        db "Fine Bow", 0                ; (the Spellarcher's: FINE_BOW_NAME, spellarrows.FINE_BOW)
-        times NAMES_EXTRA - 50 db 0     ; (empty names, if any)
+        xname "Ironwhirl"               ; a metal cahulaks +2)
+        xname "Fine Bow"                ; (the Spellarcher's: FINE_BOW_NAME, spellarrows.FINE_BOW)
+NAMES_EXTRA  equ NAMES_LISTED           ; (the names above, counted: the room the game's table gets)
 ; SEG_MOVE's two tables of the game's: the stack's 60h bytes then the monster kinds', and the pictures'
 ; table with its new entries; whole paragraphs, zeros till the game's are copied in
         align 16, db 0

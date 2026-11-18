@@ -37,7 +37,7 @@ from .itemwatch import ItemWatch
 from .textlog import KIND_MESSAGE, KIND_PORTRAIT, KIND_SHOW_REPLIES, KIND_TEXT, Dialogue, DialogueEntry, TextBuffer
 from .tracker import PartyTracker
 
-HDR_SIG = b"DSCLOGvb"
+HDR_SIG = b"DSCLOGvc"
 TSR_HDR_OFF = 20  # DSCLOG's header: where it is in DSCLOG's segment
 # ... the party's spell slots, for the game's USE screen (PROBE_USE)
 TSR_SLOTS_OFF, SLOTS_SIZE = 148, 128
