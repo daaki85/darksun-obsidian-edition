@@ -560,6 +560,16 @@ the writes right after it. A write outside a pass (a tool's) has the lists
 looked at over the wait first, without pausing. The Loader lets the game go if
 it exits mid-pass (`atexit`).
 
+The gate's look sees the free lists' heads, the area and the tables' places, not an item the game
+moves between two lists in its wait (an inventory drag, a GIVE): a link read before the wait would
+then be written over the move, one list run into another (the code audit of 2026-11-18 found it
+in a simulation). So every change to the lists is worked out from what is read with the gate held:
+`ring.held` holds it, then reads the lists, and the helpers that write them (`ring.unlink`,
+`pickpocket.party_list`, `_take`, `_link`, `npcitems.add_to`, `buyback.to_pack`) read again that
+way whatever the caller passes in (`_take` checks that the item ahead of the one it takes out is
+still ahead of it, else nothing is written). A step that runs every pass (the spell arrows'
+strays, Semyon's Thornwall) first looks without the gate, and holds it only with something to do.
+
 Whatever can't be done twice takes the gate before it starts (`itemgate.hold`),
 so a refusal leaves nothing half done: Pick Pockets before its d100 (the request
 stays unanswered until a later pass), a defiler's scroll before its roll (the

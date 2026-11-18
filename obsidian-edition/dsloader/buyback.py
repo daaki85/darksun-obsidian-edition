@@ -35,7 +35,7 @@ def _items(it: ring.Items, first: int) -> List[int]:
     """The item numbers in a list from its FIRST (not into containers: they go with their bag)."""
     out: List[int] = []
     index = first
-    while 0 <= index < game.NO_ITEM and len(out) < ring.MAX_ITEMS and index not in out:
+    while 0 <= index < ring.ITEM_RECORDS and len(out) < ring.MAX_ITEMS and index not in out:
         out.append(index)
         index = struct.unpack_from("<h", it.item(index), game.ITEM_NEXT)[0]
     return out
@@ -54,7 +54,7 @@ def _empty(gd, it: ring.Items, thing: int) -> None:
 def to_pack(gd, creature: int, item: int) -> bool:
     """ITEM (out of any list) put first in the creature's last non-empty item list, or a new one, in
     a backpack cell of its own (or its own slot byte kept, the pack full)."""
-    it = ring.Items(gd)
+    it = ring.held(gd)
     lists = [struct.unpack_from("<h", gd.creature(creature), o)[0] for o in game.CREATURE_ITEM_LISTS]
     thing = next((t for t in reversed(lists) if 0 <= t < ring.THING_COUNT), None)
     if thing is None:
@@ -125,7 +125,7 @@ class Buyback:
         if not 0 <= thing < LAST_THING:
             return []
         kind, first = _thing(gd, it, thing)
-        if kind != game.THING_ITEM or not 0 <= first < itemgate.ITEM_RECORDS:
+        if kind != game.THING_ITEM or not 0 <= first < ring.ITEM_RECORDS:
             return []
         if item is not None and first != item:  # (another item on the pointer now: not the one sold)
             return []
@@ -142,8 +142,6 @@ class Buyback:
             if creature is not None and to_pack(gd, creature, index):
                 kept.append(name)
             else:  # (no merchant of the game's kind, or nowhere for it: gone, as the game has it)
-                gd.guest.write(it.items + index * game.ITEM_SIZE + game.ITEM_NEXT,
-                               struct.pack("<H", it.word(ring.FREE_ITEMS)))
-                gd.guest.write(gd.ds * 16 + ring.FREE_ITEMS, struct.pack("<H", index))
+                ring.free(gd, index, f"sold: {name}")
         self.kept += kept  # (for tests: the log says nothing, the shop's list shows it)
         return []

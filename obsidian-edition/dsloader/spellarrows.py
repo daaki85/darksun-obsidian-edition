@@ -101,6 +101,8 @@ def starting_gear(gd: GameData, member: int, sheet: bytes, read) -> List[str]:
     owned = list(gd._worn(member))
     if any(struct.unpack_from("<H", item, game.ITEM_NAME)[0] == game.FINE_BOW_NAME for _, item, _ in owned):
         return []
+    ring.held(gd)  # (the gate held before what is given and taken is read: ItemsBusy, a later pass)
+    owned = list(gd._worn(member))
     who, out = gd.creature_name(member), []
     items = game.far_pointer(gd.guest, gd.ds, game.ITEMS_PTR)
     bow_kind = specialize.KINDS.index("bow")
@@ -250,6 +252,14 @@ def return_strays(gd: GameData) -> List[str]:
     if gd.in_combat() or inventory_up(gd):
         return []
     archers = [m for m in range(game.PARTY_SIZE) if is_spellarcher(gd, m)]
+
+    def strays():
+        return any(m not in archers and len(gd.creature(m)) >= game.CREATURE_SIZE
+                   and any(is_arrow(rec) and (archers or rec[game.ITEM_SLOT] == weaponchoice.AMMO_SLOT)
+                           for _, rec, _ in gd._worn(m)) for m in range(game.PARTY_SIZE))
+    if not strays():  # (looked for without the gate: most passes, none)
+        return []
+    ring.held(gd)  # (then the gate held, and the lists read again from here on)
     out = []
     for member in range(game.PARTY_SIZE):
         if member in archers or len(gd.creature(member)) < game.CREATURE_SIZE:
@@ -282,7 +292,10 @@ def _to_archer(gd: GameData, to: int, index: int, rec: bytes, name: int, count: 
             return False
         gd.guest.write(item_address(gd, stack[0]) + weaponchoice.ITEM_COUNT, struct.pack("<H", had + count))
         return True
+    copy = ring.held(gd).word(ring.FREE_ITEMS)  # (the record add_to takes: the free list's first)
     if npcitems.add_to(gd, to, bytes(rec)):
-        ring.unlink(gd, ring.Items(gd), index, "spell arrows back to the Spellarcher", empty=True)
-        return True
+        if ring.unlink(gd, ring.Items(gd), index, "spell arrows back to the Spellarcher", empty=True):
+            return True
+        # (the arrows not taken from where they were: the copy taken back, not the arrows twice)
+        ring.unlink(gd, ring.Items(gd), copy, "spell arrows' copy, the arrows not moved", empty=True)
     return False

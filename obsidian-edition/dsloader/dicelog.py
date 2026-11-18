@@ -891,6 +891,8 @@ class DiceLog:
                 itemgate.hold(self.game)
                 if self.guest.read(self.tsr_hdr + TSR_USE_REPLY, 2) == seq:
                     return []
+                it = ring.Items(self.game)  # (the lists read again, held: ring.held)
+                kind, index = it.thing(thing) if 0 <= thing < ring.THING_COUNT else (None, None)
             if spellarrows.ARROWS_BY <= item < PICKED_BY:
                 taken = True
                 if self._fighting():

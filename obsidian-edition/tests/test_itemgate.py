@@ -219,6 +219,70 @@ class PassTests(unittest.TestCase):
         self.assertEqual(proc.mem[ITEMS], 7)
 
 
+class MovedDuringTheWaitTests(unittest.TestCase):
+    """The game moving an item between two lists during the gate's wait (an inventory drag, a
+    GIVE): none of the heads the gate looks at change, so it lets the writes go; a change worked
+    out from the lists as read before the wait would then cut a list into another (the audit's
+    auditwork-4/toctou.py). Every change to the lists reads them with the gate held (ring.held)."""
+
+    def setUp(self):
+        from dsloader import ring
+        self.proc, self.guest, self.gd, self.gate, _ = setup()
+        self.things = (self.gd.load_seg + game.COMBATANTS_SEG) * 16 + game.COMBATANTS_OFF
+        for t in range(ring.THING_COUNT):
+            self.proc.write(self.things + t * 3, bytes(3))
+        # thing 10: 1 -> 2 -> 3; thing 11: 5; the free list: 7
+        self.thing(10, 1), self.next(1, 2), self.next(2, 3), self.next(3, game.NO_ITEM)
+        self.thing(11, 5), self.next(5, game.NO_ITEM)
+        self.proc.write(DS * 16 + ring.FREE_ITEMS, struct.pack("<H", 7))
+        self.next(7, game.NO_ITEM)
+
+    def next(self, item, after):
+        self.proc.write(ITEMS + item * game.ITEM_SIZE + game.ITEM_NEXT, struct.pack("<h", after))
+
+    def thing(self, t, first):
+        self.proc.write(self.things + t * 3, struct.pack("<Bh", game.THING_ITEM, first))
+
+    def walk(self, first):
+        out, i = [], first
+        while 0 <= i < game.NO_ITEM and len(out) < 10:
+            out.append(i)
+            i = struct.unpack("<h", self.proc.read(ITEMS + i * game.ITEM_SIZE + game.ITEM_NEXT, 2))[0]
+        return out
+
+    def first(self, t):
+        return struct.unpack_from("<h", self.proc.read(self.things + t * 3, 3), 1)[0]
+
+    def drag(self):
+        """The game's move: item 2 to the head of thing 11 (the free lists' heads untouched)."""
+        self.next(1, 3), self.next(2, 5), self.thing(11, 2)
+
+    def test_unlink_after_a_move(self):
+        from dsloader import ring
+        self.gate.begin()
+        it = ring.Items(self.gd)  # (the caller's reads, as the pass began)
+        self.proc.on_pause = self.drag  # (as the gate pauses the game: its wait is over)
+        self.assertTrue(ring.unlink(self.gd, it, 3, "test"))
+        self.gate.end()
+        self.assertEqual(self.walk(self.first(10)), [1])
+        self.assertEqual(self.walk(self.first(11)), [2, 5])
+        self.assertEqual(self.walk(struct.unpack("<H", self.proc.read(DS * 16 + ring.FREE_ITEMS, 2))[0]), [3, 7])
+
+    def test_take_after_a_move(self):
+        """pickpocket._take with the item ahead of it read before the move: refused, nothing written."""
+        from dsloader import pickpocket, ring
+        creature = CREATURES + 5 * game.CREATURE_SIZE
+        self.proc.write(creature + game.CREATURE_ITEM_LISTS[0], struct.pack("<h", 10))
+        self.gate.begin()
+        it = ring.Items(self.gd)
+        self.proc.on_pause = self.drag
+        with self.assertRaises(ValueError):
+            pickpocket._take(self.gd, it, 5, 0, 3, 2)  # (3 after 2, as read before the move)
+        self.gate.end()
+        self.assertEqual(self.walk(self.first(10)), [1, 3])
+        self.assertEqual(self.walk(self.first(11)), [2, 5])
+
+
 class PutOffTests(unittest.TestCase):
     def test_buyback_kept_later(self):
         """A sold item the game's busy lists put off: kept in a later look, not passed over."""

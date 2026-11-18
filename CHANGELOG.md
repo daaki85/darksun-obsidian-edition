@@ -68,6 +68,9 @@ Releases, newest first (2.12.0 and older in the archive):
   for the buyback only while the Loader is there, else the game frees it as ever. The queue names
   the item, so one picked up since isn't given away, and sales left by a Loader that went away, or
   more than four at once, are seen to rather than dropped (DSCLOG's signature now `DSCLOGvb`).
+- **The Loader's item moves read the lists with the game held still:** the item gate checked only
+  the free lists' heads, so an item the game moved between two lists during its wait (a drag, a
+  GIVE) could have a list cut into another. Every change now reads the lists after the gate holds.
 
 **Fixed: the scripts**
 - **The elven slavers' leader's Goodbye** (script 46, from OpenDS's triage; `scriptfixes.py`, tests
