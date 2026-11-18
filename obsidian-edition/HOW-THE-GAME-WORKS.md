@@ -113,7 +113,7 @@ comes after a backstab's multiple (a backstab x3 on a held target is x6) and bef
 and the manual says nothing of any of it. A spell's damage comes with its own second number,
 the most its dice can do, which a helpless target takes instead.
 
-With [Held targets as in AD&D](FEATURES.md#held-targets) ticked (the default) the mod has such a
+With [Held targets as in AD&D](FEATURES.md#held-targets) the mod has such a
 blow hit automatically for normal damage instead, as AD&D's 2nd edition does.
 
 The dice log shows the blow's x2 (`x2 Paralyzed: a helpless target takes double`).
@@ -339,8 +339,8 @@ Pebble to Boulder, Magical Stone, Condense and the touch spells (Chill Touch,
 Shocking Grasp, Vampiric Touch, the Cause spells, Poison) always land, whatever
 the target's AC. Its code has a place for a to-hit test (the routine applying a
 spell to its target calls one for the missile spells: [where](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#spells-roll-to-hit)), but
-the routine there always answers "hit". With the Options tab's [Spells roll to
-hit](FEATURES.md#spells-roll-to-hit) ticked (the default) they roll against
+the routine there always answers "hit". With the mod's [spells roll to
+hit](FEATURES.md#spells-roll-to-hit) they roll against
 the target's AC as a weapon does.
 
 **Saves.** Almost every spell is saved against with petrification/polymorph,
@@ -539,8 +539,8 @@ level cleric can't turn those at all).
 The dice log shows each try: `Seneca turns Zombie: d20 = 12, needs 7+ (priest level 3 vs 2 HD) ->
 destroyed` ([where in the code](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#turn-undead-minute-meteors-and-flame-arrow)).
 
-**With "Spells and psionics as the manual describes them"** (the default) all of the above is the game's rule
-only with the box unticked. Ticked, the mod takes over where the game works out its number
+**With "Spells and psionics as the manual describes them"** (always on) all of the above is the game's rule
+without the mod. With it, the mod takes over where the game works out its number
 and uses AD&D's turning table instead ([below](#adds-turning-table)). How it fits the game: a
 turned undead is made Afraid with the effect Cause Fear gives (the game's own way of adding it
 would refuse it to the undead, who are immune to fear spells); a priest who failed against an
@@ -552,7 +552,7 @@ vs 2 HD, AD&D's table) -> turned: flees 3d4 = 7 rounds (Afraid)`).
 
 #### AD&D's turning table
 
-With the box ticked (the default) the game's routine looks up AD&D's table (2nd edition) by the
+With the mod the game's routine looks up AD&D's table (2nd edition) by the
 undead's hit dice and the priest's level:
 
 | Hit dice \ priest level | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10-11 | 12-13 | 14+ |
@@ -688,7 +688,7 @@ has them (the mod's Cat's Grace by the Tome of Magic's dice; the mod's Heal cure
 priest's Turn Undead goes by AD&D's turning table ([above](#adds-turning-table)), a monster's level
 for its saves is its hit dice, and seven monsters' powers are as the manual describes them
 ([below](#the-monsters-as-the-manual-describes-them)). Some spells are left as the game has them
-([known differences](#known-differences-left-as-they-are)). Unticked, they are the game's.
+([known differences](#known-differences-left-as-they-are)).
 How it works: [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#spells-and-psionics-as-the-manual-describes-them).
 
 ### The spells and powers it changes
@@ -726,13 +726,13 @@ How it works: [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian
 
 **A monster's level for saves.** A monster with no class (an elemental, a slaad, Mastyrial, the
 Rampager) had level 0 for its saves, so Cloudkill slew it whatever its size, Scare frightened it,
-and Dismissal's and Color Spray's level checks took it for the weakest there is: with the box
-ticked its level for saving throws is its hit dice (the game's level everywhere else is left as it
+and Dismissal's and Color Spray's level checks took it for the weakest there is: with the mod
+its level for saving throws is its hit dice (the game's level everywhere else is left as it
 was).
 
 **The saves that couldn't fail.** In the game a creature that "can't save" (Chaos for all but
-warriors, Cloudkill on the weak, Scare below 6th level, and this box's Color Spray) always saved.
-That is [a bug fixed](GAME-BUGS.md#spells-and-psionics), whether the box is ticked or not: "can't
+warriors, Cloudkill on the weak, Scare below 6th level, and the mod's Color Spray) always saved.
+That is [a bug fixed](GAME-BUGS.md#spells-and-psionics): "can't
 save" fails, even on a natural 20 ([what the game did](#the-games-saving-throws)).
 
 ### Each spell in more detail
@@ -758,7 +758,7 @@ save" fails, even on a natural 20 ([what the game did](#the-games-saving-throws)
   `Cloudkill: Guard dies (under 4 HD: no save; its level for saves 3)`.
   AD&D's bands are by hit dice (4+1, 6); the game's levels are whole numbers.
 - **Feeblemind**: the game already makes INT and WIS 3 while it lasts, and
-  they come back as they were when it ends; it stops spells. With the box it
+  they come back as they were when it ends; it stops spells. With the mod it
   stops psionic powers too (each fails its power
   check, costing half the PSP as any failed check does:
   `Seneca is feebleminded: Biofeedback can't be used (no psionics)`), and the
@@ -808,7 +808,7 @@ each: `Shadow drains 1 STR from Gerakis: Weakened for 2d4 = 5 turns (no save)`,
 disease`, `Djinn turns invisible (14 rounds) and makes 6 mirror images of
 itself`. The Styr, the Djinn and the Tari are made so in the Loader's copy of
 the game's objects, and in a saved game too, as they come on the map with the
-Loader running (and back as the game's with the box unticked).
+Loader running.
 
 ### Known differences left as they are
 
@@ -863,7 +863,7 @@ chance out as:
   penalty](GAME-BUGS.md#thief-skills).)
 - plus the situation's bonus or penalty (a hard lock, say).
 
-With **Thieves as in AD&D** ticked (see
+With **Thieves as in AD&D** (see
 [Thief skills from AD&D's table](FEATURES.md#thief-skills-from-adds-table)),
 the first two and the DEX part are AD&D's instead.
 

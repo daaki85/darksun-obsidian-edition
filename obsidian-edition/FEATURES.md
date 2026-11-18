@@ -4,17 +4,20 @@
 guide](PLAYER-GUIDE.md) has the rules and tables; this page is the catalogue.*
 
 Everything the mod changes and adds in the game, one short entry each, in the order of the Loader's
-**Options** tab and its sections, ending with **Saves**; then what is **always on**, with no switch,
-and the game's bugs it mends. Each entry says what it does, names its switch with the words the tab
-gives it, and links to the rules ("Rules:", in the player's guide and the reference pages) and to
-how it is made ("How it works:", the developer pages on GitHub).
+**Options** tab and its sections, ending with **Saves**; then the sections whose switches are gone,
+always on now (**Expanded features**, **Graphics**, **Controls**), what else is **always on**, and
+the game's bugs it mends. Each entry says what it does, names its switch with the words the tab gives
+it (or says **Always on**: most of the rule changes, the combat log, the thieving, the graphics and
+the controls have no switch), and links to the rules ("Rules:", in the player's guide and the
+reference pages) and to how it is made ("How it works:", the developer pages on GitHub).
 
 **Every switch is on by default.** The three choices of more than one have defaults of their own:
 the combat log's level is **in short**, the red ring is **under the enemy chosen with Tab**, and the
 game speed is **Fastest**. The switches count in games started from the Loader or its `.bat` files
 (**Play Dark Sun (in-game rolls)** uses the Options as last set), most at once; one whose label says
 "from the next start" waits until the game is started again. Untick one and the game's own way is
-back. When each takes effect, switch by switch: the player's guide's [Options tab at a
+back. What is always on can't be turned off: a settings file from before, with one of those
+unticked, has it on all the same. When each takes effect, switch by switch: the player's guide's [Options tab at a
 glance](PLAYER-GUIDE.md#the-options-tab-at-a-glance). Installing, running the game and the Loader's
 window are in the [README](README.md).
 
@@ -24,19 +27,20 @@ window are in the [README](README.md).
 - [Rule changes](#rule-changes): [rules the game got wrong](#rules-the-game-got-wrong),
   [characters](#characters), [weapons and armour](#weapons-and-armour), [magic](#magic)
 - [More character customization](#more-character-customization)
-- [Expanded features](#expanded-features)
 - [New content](#new-content)
-- [Graphics](#graphics)
-- [Controls](#controls)
 - [Game speed](#game-speed)
 - [Wake of the Ravager](#wake-of-the-ravager)
 - [Saves](#saves)
+- Always on, their switches gone: [Expanded features](#expanded-features), [Graphics](#graphics),
+  [Controls](#controls)
 - [Always on](#always-on), and [the game's bugs, fixed](#the-games-bugs-fixed)
 
 ## In the game
 
-What the game shows when it is started from the Loader: the switches in the Options tab's **In the
-game** section. More the game's screens show, with no switch: [always on](#always-on).
+What the game shows when it is started from the Loader: the Options tab's **In the game** section
+(the combat log, always on, with its level; the red ring's choice, under [choosing an
+enemy](#choosing-an-enemy-tab-enter-and-the-rings); and two switches). More the game's screens
+show, with no switch: [always on](#always-on).
 
 ### The combat log in the game
 
@@ -51,7 +55,8 @@ fights](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights) (`Arena fights: 4`) un
 escaped Draj. Out of fights the lines with a roll go in too (a thief's skills, a scroll learnt, a
 new level's hit points). It never waits for a click, and stays shown or hidden as you left it.
 
-**Switch:** *A combat log in the game: L on the map shows and hides it*, and how much it says: *...
+**Always on** (no switch). How much it says is the tab's choice, under *The combat log in the
+game (L on the map shows and hides it):* *...
 at the least: what came of each attack and spell* (`Rampager hits Defiler for 4`), *... in short:
 each roll, what it needed and the damage* (the default: `Rampager hits Defiler for 4 (20 vs 16+)`,
 the d20 and the roll it needed), or *... in detail, as in the log* (every line, each attack's THAC0
@@ -117,14 +122,13 @@ after each shot*. How it works:
 
 ## Rule changes
 
-The game's rules brought closer to AD&D's, in the Options tab's **Rule changes** section and its
-three groups: [characters](#characters), [weapons and armour](#weapons-and-armour) and
-[magic](#magic). [Two weapons](#two-weapons) has no switch. Untick one and the game's own rule is
-back at once, but for [spells and psionics as the manual describes
-them](#spells-and-psionics-as-the-manual-describes-them) and [spells roll to
-hit](#spells-roll-to-hit), which change the game's own copy as the Loader writes it, and so count
-from the next start. [How the game works](HOW-THE-GAME-WORKS.md) has what the game does without
-them, and the player's guide the rules with them.
+The game's rules brought closer to AD&D's, in three groups: [characters](#characters), [weapons and
+armour](#weapons-and-armour) and [magic](#magic). **Most are always on**, with no switch; three keep
+one in the Options tab's **Rule changes** section: [hit dice](#hit-dice-the-better-of-two),
+[half-giants' two-handed weapons](#half-giants-two-handed-weapons) and [helms give AC
+1](#helms-give-ac-1). Untick one and the game's own rule is back at once. [How the game
+works](HOW-THE-GAME-WORKS.md) has what the game does without them, and the player's guide the rules
+with them.
 
 Most put right a rule the game gets wrong ([below](#rules-the-game-got-wrong)). The rest are the
 mod's own choices: helms' AC, resting, the XP level cap, hit dice, creation scores, half-giants'
@@ -135,16 +139,14 @@ protection, and ages.
 
 **Corrects the game:** each of these rule changes puts right a rule the game gets wrong (it departs
 from its own manual, from itself or from the Player's Handbook), and is one of [the game's
-bugs](GAME-BUGS.md#rules-it-got-wrong-with-a-switch) that the mod mends with a switch
-rather than for good. Each has a box on the Options tab but two weapons, which is always
-on.
+bugs](GAME-BUGS.md#rules-it-got-wrong) that the mod mends. All are always on now, with no switch.
 
-| Rule | The game | As it should be | Switch |
+| Rule | The game | As it should be | Entry |
 |---|---|---|---|
 | Saves against spells | Petrification or polymorph for almost every spell | The save against spells | [Spells saved against with the spell save](#spells-saved-against-with-the-spell-save) |
 | Fire, cold and electricity | The save's d20 doubled (70% to save a Fireball where 35% is due), which the manual and AD&D don't have | DEX's adjustment | [Fire, cold and electricity: DEX instead of a doubled d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20) |
 | Spells, psionics and monsters | Saves, times, damage and effects that part from its own manual (pp. 30-86: the bestiary, spells and psionics) | As the manual has them | [As the manual describes them](#spells-and-psionics-as-the-manual-describes-them) |
-| Turn Undead | A d20 against a number of its own, a row too easy for 2- and 3-HD undead and a row too hard for 5 HD; a success destroys, there is no fleeing, and a priest may try the same undead as often as they like | AD&D's turning table: undead turned flee for 3d4 rounds, D destroys, D* destroys more of the kind, "---" no chance; a priest who fails can't try that undead again that fight ([the table](HOW-THE-GAME-WORKS.md#adds-turning-table)) | [As the manual describes them](#spells-and-psionics-as-the-manual-describes-them) (it goes with the spells' switch) |
+| Turn Undead | A d20 against a number of its own, a row too easy for 2- and 3-HD undead and a row too hard for 5 HD; a success destroys, there is no fleeing, and a priest may try the same undead as often as they like | AD&D's turning table: undead turned flee for 3d4 rounds, D destroys, D* destroys more of the kind, "---" no chance; a priest who fails can't try that undead again that fight ([the table](HOW-THE-GAME-WORKS.md#adds-turning-table)) | [As the manual describes them](#spells-and-psionics-as-the-manual-describes-them) (it goes with the spells) |
 | Missile and touch spells | Every one lands, every time | They roll to hit ("as if fired by a fighter") | [Spells roll to hit](#spells-roll-to-hit) |
 | Enlarge | Grows the whole hit, STR's bonus and magic's too, rounded down | The weapon's dice grow, rounded up; STR, class and magic aren't altered (Player's Handbook p. 173) | [Enlarge](#enlarge-multiplies-the-weapons-dice-only) |
 | A ranger's spells | Spell levels by its level less 7, but duration and damage by its whole level | Level less 7 for all | [Rangers' casting level](#rangers-casting-level) |
@@ -154,16 +156,15 @@ on.
 | Multiclass hit points | CON's bonus once a level | CON's bonus on every hit die, the total shared | [Multiclass hit points](#multiclass-hit-points) |
 | Class tables | Priests' THAC0 a level early, short spell slots, a little too little XP for 2nd level | AD&D's tables | [AD&D's class tables](#adds-class-tables) |
 | CON 20 and up | A hit point back every 5 minutes at any CON; CON's adjustment on a dwarf's or halfling's poison save | AD&D's rate (one an hour at CON 20, one every 10 minutes at 25); the racial bonus only | [CON as in AD&D](#con-as-in-add) |
-| Two weapons | No penalty (a small bonus at DEX 5 or less), the full rate in each hand | -2 and -4, DEX's adjustment, one attack with the off hand (always on: no switch) | [Two weapons](#two-weapons) |
+| Two weapons | No penalty (a small bonus at DEX 5 or less), the full rate in each hand | -2 and -4, DEX's adjustment, one attack with the off hand | [Two weapons](#two-weapons) |
 | Warriors' attacks | 3/2 with any weapon | The plain rate outside a specialization | [Weapon specialization](#weapon-specialization) |
 | Held and Out Cold targets | A roll to hit as ever, and double damage | A hit automatically, for normal damage | [Held targets](#held-targets) |
 | Acid on armour | The item destroyed outright | Each item saves by its material | [Items saving against acid](#items-saving-against-acid) |
 | Thief skills and backstabs | Skills too high (a 3rd-level elf with move silently 66); a backstab multiplied STR's bonus too | The Player's Handbook's table; a backstab multiplies the weapon's dice only | [Thieves as in AD&D](#thief-skills-from-adds-table) |
 
-Two of the game's bugs are mended by a switch of their own: Cilla's figure (the game gives the elf
-the half-elf woman's; see [Elves and half-elves](#elves-and-half-elves)), and a click on a spell's
-icon on the Effects screen ending it ([Spells on the Effects
-screen](#spells-on-the-effects-screen)).
+Two more of the game's bugs are mended for good too: Cilla's figure (the game gives the elf the
+half-elf woman's; see [Elves and half-elves](#elves-and-half-elves)), and a click on a spell's icon
+on the Effects screen ending it ([Spells on the Effects screen](#spells-on-the-effects-screen)).
 
 ### Characters
 
@@ -174,8 +175,7 @@ any one class allow an item. A multiclass preserver casts no spells in armour (t
 **NO SPELLS IN ARMOUR**), and a thief with another class has no thief skills or backstab in armour
 that isn't light; a new character starts without what its classes can't use.
 
-**Switch:** *Class restrictions on armour, shields and weapons, the strictest class winning; no
-spells or thief skills in armour for some multiclass characters*. Rules: [what each class may
+**Always on** (no switch). Rules: [what each class may
 use](PLAYER-GUIDE.md#what-each-class-may-use), the kits' own limits in [Kits](KITS.md). How it
 works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#class-restrictions).
@@ -188,8 +188,7 @@ Deities* (TSR, 1998) sets out AD&D's rule; the game gave it once a level of the 
 human who dual-classes isn't affected (`Gerrard's 4th Fighter level: hit points d10 = 8, +3 CON 17,
 into the total shared by 2 classes`).
 
-**Switch:** *Multiclass hit points as in AD&D: CON's bonus on every die, the total shared between
-the classes*. Rules: [hit points](PLAYER-GUIDE.md#hit-points). How it works:
+**Always on** (no switch). Rules: [hit points](PLAYER-GUIDE.md#hit-points). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#multiclass-hit-points).
 
 #### Hit dice: the better of two
@@ -210,8 +209,7 @@ another; **SUM** under CHR shows both totals, `SUM:99/101`), and the hit points 
 moving them by its bonus. The game let a click raise any score to its most and set the hit points
 anywhere the classes could roll.
 
-**Switch:** *Scores and hit points as rolled: on the creation screen the six scores add up to no
-more than the die gave, and the hit points can't be clicked*. Rules: [ability
+**Always on** (no switch). Rules: [ability
 scores](PLAYER-GUIDE.md#ability-scores). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#scores-and-hit-points-as-rolled).
 
@@ -222,8 +220,7 @@ need a little more for 2nd), priests' THAC0 (20, 20, 20, 18..., where the game i
 early) and clerics', druids' and preservers' spell slots (3 3 1 and 4 2 1 at 5th, where the game
 gives 3 2 1). The rest were AD&D's already; kits still change these tables.
 
-**Switch:** *AD&D's class tables: the XP each class needs, priests' THAC0, and clerics', druids' and
-preservers' spell slots by level*. Rules: [experience and
+**Always on** (no switch). Rules: [experience and
 levels](PLAYER-GUIDE.md#experience-and-levels), [THAC0 by level](PLAYER-GUIDE.md#thac0-by-level),
 [spell slots](PLAYER-GUIDE.md#spell-slots). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#adds-class-tables).
@@ -235,8 +232,7 @@ hour at CON 20 to one every 10 minutes at 25, where the game gave one every 5 mi
 CON. The same box leaves a dwarf's or halfling's racial bonus alone on paralysis/poison/death saves,
 where the game added CON's adjustment on top (a dwarf with CON 19 saves at +5, not +6).
 
-**Switch:** *CON as in AD&D: hit points back at AD&D's rate from CON 20, and no CON adjustment on
-top of dwarves' and halflings' racial bonus to poison saves*. Rules: [hit
+**Always on** (no switch). Rules: [hit
 points](PLAYER-GUIDE.md#hit-points), [saving throws](PLAYER-GUIDE.md#saving-throws). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#con-as-in-add).
 
@@ -248,8 +244,7 @@ lives. **Haste** ages a year, after a system shock roll to survive, as the AD&D 
 shows on the creation screen, the inventory panel and the Characters tab, and the hair greys on the
 map. The game keeps no ages.
 
-**Switch:** *Ages and magical aging: an age from Dark Sun's tables, scores changing as it rises, a
-year each 365 days of game time; Haste ages a year, with a system shock roll*. Rules:
+**Always on** (no switch). Rules:
 [ages](PLAYER-GUIDE.md#ages) (the tables). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#ages-and-magical-aging).
 
@@ -260,8 +255,7 @@ current class before you can dual class", p. 12), and **every** prime requisite 
 15 for the old class and 17 for the new. The game offered it from 2nd level and checked one score a
 class (WIS alone for a ranger, druid or psionicist).
 
-**Switch:** *Dual-classing as the manual has it: a human may change class from 3rd level, with the
-manual's prime requisites for both classes*. Rules: [more than one
+**Always on** (no switch). Rules: [more than one
 class](PLAYER-GUIDE.md#more-than-one-class), [prime requisites](PLAYER-GUIDE.md#ability-scores). How
 it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#dual-classing-as-the-manual-has-it).
@@ -273,8 +267,7 @@ more than **749,999 XP**, shared between a character's classes: the most that ke
 13th and a preserver from 12th, where it would cast 6th-level spells. Everything past 9th (hit
 points, THAC0, saves, spell slots, thief skills) is the game's own, which the cap kept out of reach.
 
-**Switch:** *Level cap by XP: levels past 9th, up to 749,999 XP (shared by a multiclass character's
-classes)*. Rules: [experience and levels](PLAYER-GUIDE.md#experience-and-levels), [XP left over at
+**Always on** (no switch). Rules: [experience and levels](PLAYER-GUIDE.md#experience-and-levels), [XP left over at
 the top](PLAYER-GUIDE.md#xp-left-over-at-the-top). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#level-cap-by-xp).
 
@@ -302,11 +295,10 @@ light weapon in the other*. Rules: [races](PLAYER-GUIDE.md#races). How it works:
 
 #### Weapon traits
 
-One switch gives weapons what AD&D's books give them and the game doesn't: the cahulaks their two
+The mod gives weapons what AD&D's books give them and the game doesn't: the cahulaks their two
 heads and their tangle, the staff sling its stinkpots, the polearm its reach.
 
-**Switch:** *Weapon traits: the cahulaks' extra attack and tangle, the staff sling's stinkpots, and
-a polearm's reach of two squares*.
+**Always on** (no switch).
 
 ##### Cahulaks
 
@@ -350,13 +342,12 @@ The game keeps no sizes; the mod gives each creature the size [the creatures' ta
 lists. A **large** target (a half-giant, a large monster, anyone Enlarged) takes AD&D's dice against
 large creatures (a long sword 1d12 for 1d8), and Hold Person, Charm Person and Charm Person or
 Mammal (on a person) don't take on it (`Guard is too big for Hold Person -> unaffected`). A weapon's
-item box shows both dice (`1D8-1/1D12-1`). Always on, whatever the switch: the pick does the
+item box shows both dice (`1D8-1/1D12-1`). The pick does the
 footman's pick's 1d6+1, where the game had the horseman's 1d4+1.
 
 ![A Bone Long Sword's item box: "Bone", "Long Sword", "1D8-1/1D12-1", "Hit -1"](docs/large-dice.png)
 
-**Switch:** *Creature size as in AD&D: large targets take AD&D's large weapon dice, and Hold Person
-and Charm Person have no effect on them*. Rules: [equipment](PLAYER-GUIDE.md#equipment) (every
+**Always on** (no switch). Rules: [equipment](PLAYER-GUIDE.md#equipment) (every
 weapon's dice), [size](PLAYER-GUIDE.md#size). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#creature-size)
 (and where the dice come from).
@@ -369,8 +360,7 @@ doubled the damage ([helpless targets take
 double](HOW-THE-GAME-WORKS.md#helpless-targets-take-double)). A Mirror Image can still take the
 blow.
 
-**Switch:** *Held targets as in AD&D: a blow on a Paralyzed or Out Cold creature hits automatically,
-for normal damage (the game rolls, and doubles it)*. Rules: [hitting](PLAYER-GUIDE.md#hitting). How
+**Always on** (no switch). Rules: [hitting](PLAYER-GUIDE.md#hitting). How
 it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#held-targets).
 
@@ -378,10 +368,9 @@ it works:
 
 The mod's two rings and cloak of protection ([new items](#new-items)), +1 to AC and saves, follow
 AD&D's rules: two rings don't add up, a ring gives no AC with magical armour, and a cloak does
-nothing with magical or metal armour or a shield. Unticked, every one counts in full.
+nothing with magical or metal armour or a shield.
 
-**Switch:** *Rings and cloaks of protection as in AD&D: only the better ring counts, a ring gives no
-AC with magical armour, a cloak none with magical or metal armour or a shield*. Rules:
+**Always on** (no switch). Rules:
 [protection](PLAYER-GUIDE.md#protection). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#rings-and-cloaks-of-protection).
 
@@ -401,8 +390,7 @@ outright in the game, plus or no plus. With the rule each item needs the easier 
 and AD&D's saving throw against acid by its material, less its plus (leather armour goes from 0% to
 55%), so no item is worse off. The dice log shows every check.
 
-**Switch:** *Items saving against acid as in AD&D, by material, a plus helping (the game destroys
-armour without a magical power outright)*. Rules: [acid](PLAYER-GUIDE.md#acid); every item's chance,
+**Always on** (no switch). Rules: [acid](PLAYER-GUIDE.md#acid); every item's chance,
 [items against acid](ITEMS.md#items-against-acid). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#items-saving-against-acid).
 
@@ -412,10 +400,9 @@ armour without a magical power outright)*. Rules: [acid](PLAYER-GUIDE.md#acid); 
 
 A ranger's spells last and do damage as cast at its level less 7, as the spell levels it may cast
 already count it (a 9th-level ranger's Protection from Evil lasts 6 rounds, not 27); the game took
-the whole ranger level. The Seeker and Justifier take off 5 and 9 instead, ticked or not.
+the whole ranger level. The Seeker and Justifier take off 5 and 9 instead.
 
-**Switch:** *Rangers' casting level: a ranger casts its spells at its level less 7 (the game uses
-the whole ranger level)*. Rules: [how spells work](PLAYER-GUIDE.md#how-spells-work). How it works:
+**Always on** (no switch). Rules: [how spells work](PLAYER-GUIDE.md#how-spells-work). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#rangers-casting-level).
 
 #### Preservers' INT
@@ -424,28 +411,26 @@ AD&D's table for INT holds: a chance to learn each spell from a scroll (35% at I
 a failed roll uses the scroll up) and a most of each spell level known (6 at INT 9 to all from 19).
 The game let a preserver learn any spell from any scroll, and know them all.
 
-**Switch:** *Preservers' INT: INT sets the chance to learn a spell from a scroll and the most spells
-known at each spell level*. Rules: [learning preserver
+**Always on** (no switch). Rules: [learning preserver
 spells](PLAYER-GUIDE.md#learning-preserver-spells). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#preservers-int).
 
 #### Spells saved against with the spell save
 
-One switch gives this and [DEX instead of a doubled
+This goes with [DEX instead of a doubled
 d20](#fire-cold-and-electricity-dex-instead-of-a-doubled-d20). Almost every spell is saved against
 with the spell save, where the game used petrification/polymorph; those marked for
 paralysis/poison/death (the poison clouds, Poison, Slay Living, the psionic attacks) keep it, as in
 AD&D. The dice log and the Spells tab name the save used.
 
-**Switch:** *Saving throws against spells: the spell save, and DEX's defensive adjustment against
-fire, cold and electricity in place of a doubled d20*. Rules: [saving
+**Always on** (no switch). Rules: [saving
 throws](PLAYER-GUIDE.md#saving-throws). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#spells-saved-against-with-the-spell-save).
 
 #### Fire, cold and electricity: DEX instead of a doubled d20
 
 The game doubles the save's d20 against these spells (and nine monsters' attacks), so most creatures
-shrug off a Fireball. With the same switch DEX's defensive adjustment is added instead, as AD&D does
+shrug off a Fireball. With the mod DEX's defensive adjustment is added instead, as AD&D does
 for what can be dodged: 35% to save a Fireball at DEX 12, where the doubled d20 gave 70%, and 60% at
 DEX 21 (`+5 DEX 21 dodging`). Rules: [saving throws](PLAYER-GUIDE.md#saving-throws) (the table). How
 it works:
@@ -461,8 +446,7 @@ rounded down. With [creature size](#creature-size) an Enlarged creature also cou
 Gerakis hits Screamer Beetle for 21: 1d8 = [4] -1 bone +2 specialized +3 Wild Fighting +12 STR 24 +1 Enlarge (the dice 4 x110% = 5, level 1)
 ```
 
-**Switch:** *Enlarge multiplies the weapon's dice only, STR and magic added after, as in AD&D (the
-game multiplies the whole damage)*. Rules: [how spells work](PLAYER-GUIDE.md#how-spells-work). How
+**Always on** (no switch). Rules: [how spells work](PLAYER-GUIDE.md#how-spells-work). How
 it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#enlarge-multiplies-the-weapons-dice-only).
 
@@ -473,10 +457,9 @@ are set as it has them (the mod's Cat's Grace by the Tome of Magic's dice); a pr
 Undead** goes by AD&D's turning table, turned undead fleeing; a classless monster saves by its hit
 dice, not as level 0; and seven monsters get a power the manual gives them or lose one it doesn't
 (the shadows drain STR, the Styr breathes fire, the Djinn turns invisible...). "Can't save" now
-failing is [a bug fixed](GAME-BUGS.md#spells-and-psionics), whatever the switch.
+failing is [a bug fixed](GAME-BUGS.md#spells-and-psionics).
 
-**Switch:** *Spells and psionics as the manual describes them: saves, times and damage, Turn Undead
-by AD&D's table, monsters' saves and powers; from the next start*. Rules: [spells and psionics as
+**Always on** (no switch). Rules: [spells and psionics as
 the manual describes them](HOW-THE-GAME-WORKS.md#spells-and-psionics-as-the-manual-describes-them)
 (every spell and monster it changes, and what is left as it is), [AD&D's turning
 table](HOW-THE-GAME-WORKS.md#adds-turning-table). How it works:
@@ -490,8 +473,7 @@ Touch, Shocking Grasp, Vampiric Touch, the Cause spells, Poison) roll a d20 agai
 as a weapon does, and a miss does nothing. The game landed them all, every time. Magic Missile,
 Flame Arrow, areas, cones and psionic powers are left as they are.
 
-**Switch:** *Spells roll to hit: missile spells, and touch spells on a foe, against the target's AC;
-from the next start*. Rules: [how spells work](PLAYER-GUIDE.md#how-spells-work). How it works:
+**Always on** (no switch). Rules: [how spells work](PLAYER-GUIDE.md#how-spells-work). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#spells-roll-to-hit).
 
 #### Resting as in AD&D
@@ -502,15 +484,17 @@ left on the party (Neutralize Poison, Cure Blindness, Cure Disease, then the cur
 wounded), the psionicists their Cell Adjustment, and then each member heals **3 hit points plus
 CON's bonus**: a middle way between AD&D's night and the game's full heal. Slots and PSP still fill.
 
-**Switch:** *Resting as in AD&D: priests and psionicists heal the party with what they have left,
-then each heals 3 hit points plus CON's bonus (the game fills them all)*. Rules:
+**Always on** (no switch). Rules:
 [resting](PLAYER-GUIDE.md#resting). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#resting-as-in-add).
 
 ## More character customization
 
-More choices for each character, in the Options tab's **More character customization** section. The
-picks every new character makes at DONE are [always on](#preservers-first-spells).
+More choices for each character. [Kits](#kits) and [fuller starting gear](#fuller-starting-gear)
+have switches, in the Options tab's **More character customization** section; [weapon
+specialization](#weapon-specialization) and [STORE and RECALL](#store-and-recall-on-the-creation-screen)
+are always on. The picks every new character makes at DONE are [always on](#preservers-first-spells)
+too.
 
 ### Weapon specialization
 
@@ -520,9 +504,7 @@ has expertise in one and the bow; three kits take expertise and the Swashbuckler
 With a chosen weapon spec a warrior keeps the game's attacks a round and shoots faster, with any
 other AD&D's plain rate. Each picks after DONE and starts with a plain weapon of its pick.
 
-**Switch:** *Weapon specialization: fighters and gladiators specialize, fighters on to mastery and
-grand mastery, rangers and the Battle Mage, Crusader and Mind Warrior take expertise, the
-Swashbuckler a weapon of choice (chosen after DONE and at a level up)*. Rules: [Weapon
+**Always on** (no switch). Rules: [Weapon
 specs](WEAPON-SPECS.md). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#weapon-specialization).
 
@@ -547,8 +529,7 @@ Baldur's Gate. Changing the race, sex, classes or kit forgets it.
 
 ![The creation screen with STORE and RECALL under the hit points and PSP, a stored roll recalled: SUM:102/102, 19/19 hit points with THAC0: M16 R16 beside them, 27/27 PSP under them with AGE: 17 beside it; KITS below the psionic disciplines](docs/creation-store-recall.png)
 
-**Switch:** *STORE and RECALL on the creation screen: keep a roll, try the die again, and bring the
-kept roll back; from the next start*. Rules: [ability scores](PLAYER-GUIDE.md#ability-scores). How
+**Always on** (no switch). Rules: [ability scores](PLAYER-GUIDE.md#ability-scores). How
 it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#store-and-recall-on-the-creation-screen).
 
@@ -581,7 +562,7 @@ those in the first moments of a new game, and says so in the dice log:
 The features are their own, not kits', and show where kits do. Cermak keeps his gear and hit points
 (the Arcanist's d3 counts from his next level); with fuller starting gear Gerakis gets a sling and
 leather chest and leg armour, the others nothing more. Cermak and Cilla keep the game's starting
-spells. Cilla's elf figure has [a switch of its own](#elves-and-half-elves).
+spells. Cilla is drawn as the elf she is: [elves and half-elves](#elves-and-half-elves).
 
 ![The USE screen in the game: Cilla's 1st-level mage spells, the first named ARMOR in the bar below, WIZ 2/2, and her Pick Pockets purse under the spell counts](docs/default-party-armor.png)
 
@@ -589,89 +570,6 @@ spells. Cilla's elf figure has [a switch of its own](#elves-and-half-elves).
 
 How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#the-games-own-party).
-
-## Expanded features
-
-New things to do in play, in the Options tab's **Expanded features** section and its **Improved
-thieving** group.
-
-### The leader's CHA at shops
-
-The party leader's CHA lowers what shops ask, 5% from CHA 18 to 40% at 25, and shops pay **60%** of
-an item's price, so nothing can be bought and sold back at a profit; the game asked and paid the
-full price whoever traded. [Friends](#new-wizard-spells) raises the leader's CHA for a while.
-
-**Switch:** *Shops as in AD&D: the leader's CHA lowers what shops ask, shops pay 60%, and merchants
-keep the magical items sold them, to buy back* (one switch with [buying
-back](#buying-back-magical-items)). Rules: [ability scores](PLAYER-GUIDE.md#ability-scores) (CHA's
-table). How it works:
-[DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#the-leaders-cha-at-shops).
-
-### Buying back magical items
-
-The game destroys whatever the party sells. With the same switch a magical item sold (a plus or a
-power) goes into the merchant's pack, offered at its price less the CHA discount, to be bought back;
-anything else is gone. How it works:
-[DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#buying-back-magical-items).
-
-### Improved thieving
-
-Skills by the Player's Handbook's table, hiding and moving silently to backstab (rangers to attack
-from behind), a cloak, boots and belt that help, and pockets to pick: the switches under **Improved
-thieving**. Rules: [thieves' skills and picking
-pockets](PLAYER-GUIDE.md#thieves-skills-and-picking-pockets), [hiding in
-shadows](PLAYER-GUIDE.md#hiding-in-shadows).
-
-#### Thief skills from AD&D's table
-
-A skill is AD&D's average for the thief level plus the race's and DEX's adjustments, at most 95,
-where the game's came out high (a 3rd-level elf with move silently 66). A backstab multiplies the
-weapon's dice only, STR and the plus added once after, on the round's first attack. A lock the thief
-failed, or a pocket it was caught at, waits for a thief level gained (*Player's Option: Skills &
-Powers*); another thief may try at once.
-
-**Switch:** *Thieves as in AD&D: thief skills from AD&D's table, a backstab multiplying the weapon's
-dice only, a lock it failed, or a pocket it was caught at, tried again only a level later*. Rules:
-[thieves' skills](PLAYER-GUIDE.md#thieves-skills-and-picking-pockets),
-[backstabs](PLAYER-GUIDE.md#from-behind-and-backstabs); the game's, [how the game works out thief
-skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills). How it works:
-[DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#thief-skills-from-adds-table).
-
-#### Hiding in shadows to backstab
-
-A thief whose turn comes in a fight with no enemy beside it tries to hide in shadows, then to move
-silently; with both, its next attack that turn is from behind, a backstab with a weapon that can.
-Thieves' hiding is halved in daylight; rangers hide too, for an attack from behind, halved indoors.
-The game never rolled hide in shadows. A worn cloak, boots and belt help, by a switch of their own.
-
-```
-Tezral hides in shadows: d100 = 21, needs 27 or less (54, halved in daylight) -> hidden
-  Tezral moves silently: d100 = 30, needs 54 or less -> unheard: their next attack this turn is from behind (a backstab with a weapon that can)
-```
-
-![Item boxes in the game: a Leather Belt's "Pick +5, Lock +5", Leather Boots' "Silent +10" and a Leather Cloak's "Hide +10", each at 24](docs/gear-boxes.png)
-
-![Item boxes in the game: the Cloak of Elvenkind's "Hide 90-95%", 25,000; the Boots of Elvenkind's "Silent 95%", 20,000](docs/elvenkind.png)
-
-**Switches:** *Hiding in shadows to backstab: thieves hide in shadows and move silently to backstab,
-rangers to attack from behind*, and *... a worn cloak adds 10 to hiding, worn boots 10 to moving
-silently, a worn belt 5 to picking pockets and opening locks* (plain ones cost 24; the [Cloak and
-Boots of Elvenkind](ITEMS.md#other-worn-items) do more, whatever the switch). Rules: [hiding in
-shadows](PLAYER-GUIDE.md#hiding-in-shadows), the kits that hide their own way in [Kits](KITS.md).
-How it works:
-[DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#hiding-in-shadows-to-backstab).
-
-#### Picking pockets
-
-A thief's **Pick Pockets** button (a purse, where a priest's Turn Undead is on the USE screen), then
-a click on anyone in sight, not in a fight: made, one small thing goes into its backpack (or coins,
-the last try); failed, a move silently roll to slip away, else caught. The game has one pocket to
-pick, in the Trustee's talk. Three weapons some people carry are worth 200 XP each to lift.
-
-**Switch:** *Picking pockets: a thief's Pick Pockets button on the USE screen, then a click on
-anyone in sight (not in a fight), until caught*. Rules: [thieves' skills and picking
-pockets](PLAYER-GUIDE.md#thieves-skills-and-picking-pockets). How it works:
-[DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#picking-pockets).
 
 ## New content
 
@@ -807,177 +705,6 @@ armoured as the party is. It comes once. The bout: [People: the champions'
 bout](PEOPLE.md#the-champions-bout) (spoilers). How it works:
 [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#the-champions-bout).
 
-## Graphics
-
-What the mod draws on the game's map, in the Options tab's **Graphics** section. The magic items'
-icons and the spells on the ground are [always on](#magic-items-icons).
-
-### Elves and half-elves
-
-Elves have pointed ears, walking and fighting, beside any helm. Half-elves have their own look (the
-game draws them with the human pictures), from the game's pictures in the colours the party's
-figures use: the man built like the elf man, a little broader, fair-haired in a leather jerkin and
-green trousers; the woman a little slimmer than the human woman, golden hair in a bun, a purple
-cloak and red boots. Anything worn is drawn over these in its own colours. Cilla, in the game's own
-party, is an elf the game gives the half-elf woman's figure: with her switch she has the elf
-woman's, in a new game and in one already begun (from the next area or load), whatever the switch
-above.
-
-![Humans (top), elves (middle) and half-elves (bottom), men on the left and women on the right, walking: the elves with pointed ears; the half-elf man fair-haired in a leather jerkin and green trousers, the half-elf woman with her golden hair in a bun, pointed ears, a purple cloak and red boots](docs/half-elves.png)
-
-**Switches:** *Elves have pointed ears, and half-elves figures of their own instead of the humans';
-from the next start* and *Cilla, an elf in the game's own party, drawn as an elf (the game gives her
-the half-elf woman's figure); from the next start* (unticked, a game where she already has the elf's
-keeps it). How it works:
-[DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#elves-and-half-elves).
-
-### What the party wears
-
-The game draws each race and sex the same whatever they carry; the Loader keeps the artist's
-pictures and adds the gear, frame by frame, walking and fighting, changing as soon as the gear does:
-
-| Worn | Shown |
-|---|---|
-| **Weapons and shields** | each weapon type its shape (dagger, sword, club, mace, axe, polearm, gythka, staff, a round shield) in its material's colours (wood, ivory bone, stone, obsidian, metal); worn at the belt or carried upright while walking, in the hands and swung in a fight, the shield on the arm |
-| **Bows and slings** | the bow and quiver on the back (the game draws the bow when shooting), a sling or chatkcha at the hip |
-| **Armour** | the character's own clothing recoloured toward its material, shade for shade: the chest piece above the waist, arm pieces at the wrists, leg pieces below the waist; on figures drawn mostly bare (the mul, the dwarf man) only straps and loincloth, so little shows |
-| **Helms** | a circlet at the brow: a feather on leather, a dark stone on iron, low spikes on bone |
-| **Cloaks** | the human woman's cloak, fitted to the wearer, under the hair, in the cloak's colours; from the front it hangs behind |
-| **Boots and belts** | the feet and the waist recoloured (Boots of Elvenkind in soft green) |
-| **Magic** | the spells' weapons whole in the game's animated colours (Flame Blade, Shillelagh, Spiritual Hammer); any other magic weapon or shield glints along its edge, and magic armour, cloaks, helms, boots and belts have a scatter of sparks, in its icon's colour |
-| **Age** | with [ages](#ages-and-magical-aging) on, the hair greys |
-
-A thri-kreen shows only weapons and shields; two party members of the same race and sex each show
-their own. New outfits go into room the game's picture store already has, so gear can be changed as
-often as you like in one area (without that, 30 to 60 changes filled the store and figures vanished
-until the next area; [the game's own limit of 300 picture slots](GAME-BUGS.md#pictures-and-memory)
-is a bug mended apart).
-
-![Gerakis on the slave pens' tiled floor, drawn with the gear he carries: a sword in his hand, leather straps across his chest](docs/gear.png)
-
-![Gerakis standing in the arena in magic gear: sparks shimmer over his armour, and the edge of the weapon at his hip glints](docs/magic-glint.gif)
-
-**Switch:** *What the party wears, drawn on their figures (weapons, armour, helms, cloaks, boots,
-belts)*. How it works:
-[DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#what-the-party-wears)
-(and where the picture store can't be reached, on Dark Sun Recompiled).
-
-### Shadows
-
-Every living figure on the map (the party, the people, the monsters; not the dead, nor items) casts
-a soft see-through shadow on the floor, its outline laid long toward the lower right, as the walls'
-own shadows fall. They are drawn on the floor first, so a shadow never covers a figure or a wall.
-
-![The arena without shadows (left) and with them (right): each figure's outline darkened on the sand behind it, the sand's colours kept](docs/shadows.png)
-
-**Switch:** *Shadows under the figures (soft, on the floor)*. How it works:
-[DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#shadows).
-
-### Dust
-
-Anyone walking on sand or dirt raises little puffs of dust behind their feet, which spread, rise a
-little and fade in about a second, behind the walls and figures.
-
-![The party walking across the arena's sand: puffs of dust behind them, spreading and fading](docs/dust.png)
-
-**Switch:** *Dust raised behind the feet of anyone walking on sand or dirt*. How it works:
-[DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#dust).
-
-### See-through figures
-
-A thief or ranger [hidden in shadows](#hiding-in-shadows-to-backstab) and unheard in a fight, and
-anyone invisible (the Invisibility spells; among the game's foes only the psurlons), is drawn half
-see-through, the floor, a wall or a shadow showing through. The hidden thief turns solid with the
-attack that gives it away, or as the turn ends. An invisible enemy is drawn solid while one of the
-party detects invisibility (the spell, or [Shadowseeker](ITEMS.md#every-magic-item) readied). The
-game draws the invisible like anyone else; being unseen only makes them harder to hit (4 worse) and
-better at saving against a spell aimed at them, for whoever can't detect invisibility.
-
-![Gerakis in the slave pens drawn as ever (left) and see-through (right): the floor, the wall below and his shadow show through him](docs/see-through.png)
-
-**Switch:** *See-through figures: a thief or ranger hidden in shadows, and anyone invisible (an
-invisible enemy solid while one of the party detects invisibility)*. How it works:
-[DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#see-through-figures).
-
-## Controls
-
-The mouse and keys in the game, in the Options tab's **Controls** section. The keys with no switch
-(T, S, M, U and I) are [always on](#looting-a-body-t-and-shiftt).
-
-### Choosing an enemy: Tab, Enter and the rings
-
-In a fight, on a party member's turn, **Tab** chooses an enemy, the nearest first, then the next
-(**Shift+Tab** goes back): a red ring on the ground marks it, the view scrolls to it if it is out of
-sight, and the log names it. **Enter** then attacks it, as clicking on it does (walking up first
-when it is out of reach), even where another figure stands in front of it: attacking without aiming
-the mouse at all.
-
-![An arena fight, the Xorn chosen with Tab and the red ring under it](docs/rings.png)
-
-**Switches:** *Choosing an enemy: in a fight, Tab (Shift+Tab back) chooses one and Enter attacks it,
-even behind someone*, and *A red ring on the ground in a fight:* *... none* or *... under the enemy
-chosen with Tab* (the default). How it works:
-[DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#choosing-an-enemy-tab-enter-and-the-rings).
-
-### Scrolling the map
-
-Press the mouse wheel on the map and move the mouse: the map moves with the pointer, as if dragged,
-in fights too. The game still scrolls when the pointer touches the screen's edge, and brings the
-view back to whoever's turn it is. The view can't be zoomed: the game draws a 320 by 200 screen at
-one scale, built into its drawing code.
-
-**Switch:** *Scrolling the map: press the mouse wheel and move*. How it works:
-[DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#scrolling-the-map).
-
-### The view in fights
-
-The game moved the view after a figure walking in a fight as soon as it came near the screen's edge,
-a step at a time, so the view drifted after every figure that walked. Now it moves only once the
-figure has walked off the screen, to bring it back. Out of fights the view follows the party as the
-game has it.
-
-**Switch:** *The view in fights: it moves to a figure only when the figure walks off the screen (the
-game's follows it near the edges); from the next start*. How it works:
-[DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#the-view-in-fights).
-
-### The pointer in scenes, and where it starts
-
-The game shows no pointer in its intro and other scenes (the logos, the king's decree, the arena
-gate), and only a key skips them; now the game's own pointer follows the mouse there, and a click
-skips a scene as a key does (between a scene's steps, so a long still picture plays to its end). The
-game also left the pointer at the screen's right edge, moving half as far up and down as across; now
-it starts in the middle, stays where you leave it from one screen to the next, moves as far each
-way, and in a window as fast as your desktop's pointer, fine enough to place an item where you mean.
-
-![The game's pointer in the SSI logo before the intro, and on the king's decree that opens a new game](docs/scene-pointer.png)
-
-**Switches:** *The pointer in scenes: shown in the intro and the game's other scenes, and a click
-skips a scene as a key does; from the next start* and *Where the pointer starts: in the middle of
-the screen, moving as far up and down as across, and in a window as fast as the desktop's pointer;
-from the next start*. How it works:
-[DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#the-pointer-in-scenes-and-where-it-starts).
-
-### The whole party in view
-
-The game shows the party on the map as one figure, the leader, until you press **5**, and gathers it
-back after every fight and in saves made that way. With the switch a game starts and loads with the
-whole party in view, and stays so after a fight. **6** still gathers the party into the leader,
-until the next fight or load.
-
-**Switch:** *The whole party in view as a game starts or loads and after each fight, as the 5 key
-does; from the next start*. How it works:
-[DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#the-whole-party-in-view).
-
-### Spells on the Effects screen
-
-On the Effects screen, a click on an effect's icon ends it in the game, so a stray click loses a
-spell. With the switch a click leaves a spell on; a psionic power still ends, as that is how a power
-is stopped. What else the screen shows: [the Effects screen](#the-effects-screen).
-
-**Switch:** *Spells on the Effects screen: a click on a spell's icon leaves it on (the game ends it;
-psionic powers can still be stopped); from the next start*. How it works:
-[DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#spells-on-the-effects-screen).
-
 ## Game speed
 
 The Loader's two speeds give DOSBox more of the computer's time than GOG's settings (7,000 cycles a
@@ -1060,6 +787,242 @@ fixes DELETE in a scrolled roster and New characters' thief skills ([bugs
 fixed](GAME-BUGS.md#making-and-keeping-characters)). How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#more-characters).
 
+## Expanded features
+
+New things to do in play, **always on** (the Options tab's **Expanded features** section, and its
+**Improved thieving** group, are gone).
+
+### The leader's CHA at shops
+
+The party leader's CHA lowers what shops ask, 5% from CHA 18 to 40% at 25, and shops pay **60%** of
+an item's price, so nothing can be bought and sold back at a profit; the game asked and paid the
+full price whoever traded. [Friends](#new-wizard-spells) raises the leader's CHA for a while.
+
+**Always on** (no switch), with [buying back](#buying-back-magical-items). Rules: [ability scores](PLAYER-GUIDE.md#ability-scores) (CHA's
+table). How it works:
+[DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#the-leaders-cha-at-shops).
+
+### Buying back magical items
+
+The game destroys whatever the party sells. With the mod a magical item sold (a plus or a
+power) goes into the merchant's pack, offered at its price less the CHA discount, to be bought back;
+anything else is gone. How it works:
+[DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#buying-back-magical-items).
+
+### Improved thieving
+
+Skills by the Player's Handbook's table, hiding and moving silently to backstab (rangers to attack
+from behind), a cloak, boots and belt that help, and pockets to pick, all always on. Rules: [thieves' skills and picking
+pockets](PLAYER-GUIDE.md#thieves-skills-and-picking-pockets), [hiding in
+shadows](PLAYER-GUIDE.md#hiding-in-shadows).
+
+#### Thief skills from AD&D's table
+
+A skill is AD&D's average for the thief level plus the race's and DEX's adjustments, at most 95,
+where the game's came out high (a 3rd-level elf with move silently 66). A backstab multiplies the
+weapon's dice only, STR and the plus added once after, on the round's first attack. A lock the thief
+failed, or a pocket it was caught at, waits for a thief level gained (*Player's Option: Skills &
+Powers*); another thief may try at once.
+
+**Always on** (no switch). Rules:
+[thieves' skills](PLAYER-GUIDE.md#thieves-skills-and-picking-pockets),
+[backstabs](PLAYER-GUIDE.md#from-behind-and-backstabs); the game's, [how the game works out thief
+skills](HOW-THE-GAME-WORKS.md#how-the-game-works-out-thief-skills). How it works:
+[DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#thief-skills-from-adds-table).
+
+#### Hiding in shadows to backstab
+
+A thief whose turn comes in a fight with no enemy beside it tries to hide in shadows, then to move
+silently; with both, its next attack that turn is from behind, a backstab with a weapon that can.
+Thieves' hiding is halved in daylight; rangers hide too, for an attack from behind, halved indoors.
+The game never rolled hide in shadows. A worn cloak, boots and belt help.
+
+```
+Tezral hides in shadows: d100 = 21, needs 27 or less (54, halved in daylight) -> hidden
+  Tezral moves silently: d100 = 30, needs 54 or less -> unheard: their next attack this turn is from behind (a backstab with a weapon that can)
+```
+
+![Item boxes in the game: a Leather Belt's "Pick +5, Lock +5", Leather Boots' "Silent +10" and a Leather Cloak's "Hide +10", each at 24](docs/gear-boxes.png)
+
+![Item boxes in the game: the Cloak of Elvenkind's "Hide 90-95%", 25,000; the Boots of Elvenkind's "Silent 95%", 20,000](docs/elvenkind.png)
+
+**Always on** (no switch), with what worn gear adds: a cloak 10 to hiding, boots 10 to moving
+silently, a belt 5 to picking pockets and opening locks (plain ones cost 24; the [Cloak and Boots of
+Elvenkind](ITEMS.md#other-worn-items) do more). Rules: [hiding in
+shadows](PLAYER-GUIDE.md#hiding-in-shadows), the kits that hide their own way in [Kits](KITS.md).
+How it works:
+[DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#hiding-in-shadows-to-backstab).
+
+#### Picking pockets
+
+A thief's **Pick Pockets** button (a purse, where a priest's Turn Undead is on the USE screen), then
+a click on anyone in sight, not in a fight: made, one small thing goes into its backpack (or coins,
+the last try); failed, a move silently roll to slip away, else caught. The game has one pocket to
+pick, in the Trustee's talk. Three weapons some people carry are worth 200 XP each to lift.
+
+**Always on** (no switch). Rules: [thieves' skills and picking
+pockets](PLAYER-GUIDE.md#thieves-skills-and-picking-pockets). How it works:
+[DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#picking-pockets).
+
+## Graphics
+
+What the mod draws on the game's map, **always on** (the Options tab's **Graphics** section is
+gone). The magic items' icons and the spells on the ground are [always on](#magic-items-icons) too.
+
+### Elves and half-elves
+
+Elves have pointed ears, walking and fighting, beside any helm. Half-elves have their own look (the
+game draws them with the human pictures), from the game's pictures in the colours the party's
+figures use: the man built like the elf man, a little broader, fair-haired in a leather jerkin and
+green trousers; the woman a little slimmer than the human woman, golden hair in a bun, a purple
+cloak and red boots. Anything worn is drawn over these in its own colours. Cilla, in the game's own
+party, is an elf the game gives the half-elf woman's figure: with the mod she has the elf
+woman's, in a new game and in one already begun (from the next area or load).
+
+![Humans (top), elves (middle) and half-elves (bottom), men on the left and women on the right, walking: the elves with pointed ears; the half-elf man fair-haired in a leather jerkin and green trousers, the half-elf woman with her golden hair in a bun, pointed ears, a purple cloak and red boots](docs/half-elves.png)
+
+**Always on** (no switch), both. How it works:
+[DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#elves-and-half-elves).
+
+### What the party wears
+
+The game draws each race and sex the same whatever they carry; the Loader keeps the artist's
+pictures and adds the gear, frame by frame, walking and fighting, changing as soon as the gear does:
+
+| Worn | Shown |
+|---|---|
+| **Weapons and shields** | each weapon type its shape (dagger, sword, club, mace, axe, polearm, gythka, staff, a round shield) in its material's colours (wood, ivory bone, stone, obsidian, metal); worn at the belt or carried upright while walking, in the hands and swung in a fight, the shield on the arm |
+| **Bows and slings** | the bow and quiver on the back (the game draws the bow when shooting), a sling or chatkcha at the hip |
+| **Armour** | the character's own clothing recoloured toward its material, shade for shade: the chest piece above the waist, arm pieces at the wrists, leg pieces below the waist; on figures drawn mostly bare (the mul, the dwarf man) only straps and loincloth, so little shows |
+| **Helms** | a circlet at the brow: a feather on leather, a dark stone on iron, low spikes on bone |
+| **Cloaks** | the human woman's cloak, fitted to the wearer, under the hair, in the cloak's colours; from the front it hangs behind |
+| **Boots and belts** | the feet and the waist recoloured (Boots of Elvenkind in soft green) |
+| **Magic** | the spells' weapons whole in the game's animated colours (Flame Blade, Shillelagh, Spiritual Hammer); any other magic weapon or shield glints along its edge, and magic armour, cloaks, helms, boots and belts have a scatter of sparks, in its icon's colour |
+| **Age** | with [ages](#ages-and-magical-aging) on, the hair greys |
+
+A thri-kreen shows only weapons and shields; two party members of the same race and sex each show
+their own. New outfits go into room the game's picture store already has, so gear can be changed as
+often as you like in one area (without that, 30 to 60 changes filled the store and figures vanished
+until the next area; [the game's own limit of 300 picture slots](GAME-BUGS.md#pictures-and-memory)
+is a bug mended apart).
+
+![Gerakis on the slave pens' tiled floor, drawn with the gear he carries: a sword in his hand, leather straps across his chest](docs/gear.png)
+
+![Gerakis standing in the arena in magic gear: sparks shimmer over his armour, and the edge of the weapon at his hip glints](docs/magic-glint.gif)
+
+**Always on** (no switch). How it works:
+[DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#what-the-party-wears)
+(and where the picture store can't be reached, on Dark Sun Recompiled).
+
+### Shadows
+
+Every living figure on the map (the party, the people, the monsters; not the dead, nor items) casts
+a soft see-through shadow on the floor, its outline laid long toward the lower right, as the walls'
+own shadows fall. They are drawn on the floor first, so a shadow never covers a figure or a wall.
+
+![The arena without shadows (left) and with them (right): each figure's outline darkened on the sand behind it, the sand's colours kept](docs/shadows.png)
+
+**Always on** (no switch). How it works:
+[DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#shadows).
+
+### Dust
+
+Anyone walking on sand or dirt raises little puffs of dust behind their feet, which spread, rise a
+little and fade in about a second, behind the walls and figures.
+
+![The party walking across the arena's sand: puffs of dust behind them, spreading and fading](docs/dust.png)
+
+**Always on** (no switch). How it works:
+[DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#dust).
+
+### See-through figures
+
+A thief or ranger [hidden in shadows](#hiding-in-shadows-to-backstab) and unheard in a fight, and
+anyone invisible (the Invisibility spells; among the game's foes only the psurlons), is drawn half
+see-through, the floor, a wall or a shadow showing through. The hidden thief turns solid with the
+attack that gives it away, or as the turn ends. An invisible enemy is drawn solid while one of the
+party detects invisibility (the spell, or [Shadowseeker](ITEMS.md#every-magic-item) readied). The
+game draws the invisible like anyone else; being unseen only makes them harder to hit (4 worse) and
+better at saving against a spell aimed at them, for whoever can't detect invisibility.
+
+![Gerakis in the slave pens drawn as ever (left) and see-through (right): the floor, the wall below and his shadow show through him](docs/see-through.png)
+
+**Always on** (no switch). How it works:
+[DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#see-through-figures).
+
+## Controls
+
+The mouse and keys in the game, **always on** (the Options tab's **Controls** section is gone; the
+red ring's choice is in its **In the game** section). The keys T, S, M, U and I are [always
+on](#looting-a-body-t-and-shiftt) too.
+
+### Choosing an enemy: Tab, Enter and the rings
+
+In a fight, on a party member's turn, **Tab** chooses an enemy, the nearest first, then the next
+(**Shift+Tab** goes back): a red ring on the ground marks it, the view scrolls to it if it is out of
+sight, and the log names it. **Enter** then attacks it, as clicking on it does (walking up first
+when it is out of reach), even where another figure stands in front of it: attacking without aiming
+the mouse at all.
+
+![An arena fight, the Xorn chosen with Tab and the red ring under it](docs/rings.png)
+
+**Always on** (no switch); the ring has a choice in the tab's **In the game** section: *A red
+ring on the ground in a fight:* *... none* or *... under the enemy chosen with Tab* (the default). How it works:
+[DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#choosing-an-enemy-tab-enter-and-the-rings).
+
+### Scrolling the map
+
+Press the mouse wheel on the map and move the mouse: the map moves with the pointer, as if dragged,
+in fights too. The game still scrolls when the pointer touches the screen's edge, and brings the
+view back to whoever's turn it is. The view can't be zoomed: the game draws a 320 by 200 screen at
+one scale, built into its drawing code.
+
+**Always on** (no switch). How it works:
+[DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#scrolling-the-map).
+
+### The view in fights
+
+The game moved the view after a figure walking in a fight as soon as it came near the screen's edge,
+a step at a time, so the view drifted after every figure that walked. Now it moves only once the
+figure has walked off the screen, to bring it back. Out of fights the view follows the party as the
+game has it.
+
+**Always on** (no switch). How it works:
+[DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#the-view-in-fights).
+
+### The pointer in scenes, and where it starts
+
+The game shows no pointer in its intro and other scenes (the logos, the king's decree, the arena
+gate), and only a key skips them; now the game's own pointer follows the mouse there, and a click
+skips a scene as a key does (between a scene's steps, so a long still picture plays to its end). The
+game also left the pointer at the screen's right edge, moving half as far up and down as across; now
+it starts in the middle, stays where you leave it from one screen to the next, moves as far each
+way, and in a window as fast as your desktop's pointer, fine enough to place an item where you mean.
+
+![The game's pointer in the SSI logo before the intro, and on the king's decree that opens a new game](docs/scene-pointer.png)
+
+**Always on** (no switch), both. How it works:
+[DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#the-pointer-in-scenes-and-where-it-starts).
+
+### The whole party in view
+
+The game shows the party on the map as one figure, the leader, until you press **5**, and gathers it
+back after every fight and in saves made that way. With the mod a game starts and loads with the
+whole party in view, and stays so after a fight. **6** still gathers the party into the leader,
+until the next fight or load.
+
+**Always on** (no switch). How it works:
+[DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#the-whole-party-in-view).
+
+### Spells on the Effects screen
+
+On the Effects screen, a click on an effect's icon ends it in the game, so a stray click loses a
+spell. With the mod a click leaves a spell on; a psionic power still ends, as that is how a power
+is stopped. What else the screen shows: [the Effects screen](#the-effects-screen).
+
+**Always on** (no switch). How it works:
+[DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#spells-on-the-effects-screen).
+
 ## Always on
 
 What the mod does with no switch, in games started from the Loader or its `.bat` files: more on the
@@ -1068,12 +1031,19 @@ items' icons and the spells on the ground; and the game's bugs mended. Elsewhere
 [two-weapon](#two-weapons) penalties, the pick's [footman's dice](#creature-size) and [Legcrusher at
 the fountain](GAME-BUGS.md#scripts-that-stuck-or-ran-twice).
 
+The switches gone from the Options tab are always on too, each in its own entry above: [the combat
+log in the game](#the-combat-log-in-the-game), most [rule changes](#rule-changes) (all but hit dice,
+half-giants' two-handed weapons and helms' AC), [weapon specialization](#weapon-specialization),
+[STORE and RECALL](#store-and-recall-on-the-creation-screen), and all of [expanded
+features](#expanded-features), [graphics](#graphics) and [controls](#controls) (the red ring keeps
+its choice).
+
 ### THAC0, saves and thief skills
 
 The inventory screen's right-hand panel shows, in the game's own lettering: above STR the **THAC0**
 and the five **saving throws** (`PPD`, `RSW`, `PP`, `BW`, `SP`); each weapon's THAC0 at the end of
 its damage line (`T14`); for a character with thief levels six **thief skills** (`PICK`, `LOCK`,
-`TRAP`, `SLNT`, `HIDE`, `CLMB`), and for a ranger, with hiding on, its `SLNT` and `HIDE`; DEX's
+`TRAP`, `SLNT`, `HIDE`, `CLMB`), and for a ranger its `SLNT` and `HIDE`; DEX's
 **reaction adjustment** (`REAC +4`) and **defensive adjustment** (`DEF -5`); and with
 [ages](#ages-and-magical-aging) the **AGE**. **View Character** gets the saves under the item icons,
 and **MOVE** and **THAC0** beside HP and PSI. For a character of several classes, its experience

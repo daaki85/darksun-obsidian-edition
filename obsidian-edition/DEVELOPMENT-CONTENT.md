@@ -1508,7 +1508,7 @@ Gear is drawn on them by what their own colours can't tell `spritegear`
   the same place in the human woman's frame, but not her purple wristbands,
   and a belt isn't drawn over it from behind.
 
-With the switch off (`elf_looks`, `sprites.Pictures(looks=False)`), or if the
+With the switch off (`elf_looks`, always on now: [the switches always on](DEVELOPMENT-RULES.md#the-switches-always-on); `sprites.Pictures(looks=False)`), or if the
 palette or the pictures they are made from are missing, or making them fails,
 a half-elf is the human figure recoloured (`halfelf.py`), as before, and elves
 have no ears. The switch counts when the Loader writes the copy; the Loader
@@ -1523,7 +1523,7 @@ the Loader then swaps for its own as for anyone). In a game begun without the
 copy, the Loader writes the figure into the running game's creature table, and
 the game draws her as an elf from its next area or load
 (`defaultparty.figure_chunks`, `defaultparty.elf_figure`), both only with the
-`cilla_elf` switch on.
+`cilla_elf` setting on (always, now).
 
 ## Shadows
 

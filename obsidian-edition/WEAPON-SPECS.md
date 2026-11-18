@@ -88,9 +88,6 @@ and Mind Warrior go by their own class's level. 3/2 means one attack one round a
 
 - A **thri-kreen** throws a chatkcha once more a round than the table says, whatever the rule (2
   instead of 1: AD&D's 2/1 for the thri-kreen's own weapon).
-- With weapon specialization **off**, a Crusader or Mind Warrior has a warrior's 3/2 from 7th level
-  with any melee weapon instead, and the three kits' warrior's THAC0 counts with any of their kit's
-  weapons.
 - With [two weapons](PLAYER-GUIDE.md#two-weapons), the off hand attacks once a round whatever the
   rate.
 - In a fight **Haste** doubles all of these and **Slow** halves them, rounded down (and a slowed
@@ -101,8 +98,7 @@ and Mind Warrior go by their own class's level. 3/2 means one attack one round a
 A fighter's grand mastery (9th level, its chosen weapon spec) makes the weapon's damage dice the
 next greater die size, against every target, as Player's Option: Combat & Tactics has it: d2,
 d3, d4, d6, d8, d10, d12, d20, each die of the weapon (a gythka's 2d4 2d6). Against a large
-target the step is made on the weapon's large dice, with **Creature size as in AD&D** ticked; with
-it unticked every target takes the small dice. The table gives each weapon spec's plain weapon's
+target the step is made on the weapon's large dice ([creature size](FEATURES.md#creature-size)). The table gives each weapon spec's plain weapon's
 dice (the game's own, or the Loader's for the kinds the game has none of); a weapon's plus, a
 weak material's penalty, STR and mastery's +3 damage add as ever.
 
@@ -127,8 +123,7 @@ weak material's penalty, STR and mastery's +3 damage add as ever.
 
 A bow's, sling's or staff sling's dice are the weapon's own, as the game rolls them for a shot (a
 bow 1d8 with the game's arrows); missile weapons have no large dice of their own. The staff sling's
-are its stinkpot's, 1d3, with [Weapon traits](FEATURES.md#weapon-traits) ticked;
-unticked, the game's 1d4 (1d6 under grand mastery). The dice log shows
+are its stinkpot's, 1d3 ([weapon traits](FEATURES.md#weapon-traits)), 1d4 under grand mastery. The dice log shows
 the step on each hit: `(d10 for d8: grand mastery)`, and against a large target `(1d20 for 1d8: a
 large target, grand mastery)`.
 

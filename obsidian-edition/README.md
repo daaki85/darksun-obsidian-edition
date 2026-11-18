@@ -60,8 +60,8 @@ which loads the mod with your options.
 
 ## What it does
 
-Eight families of changes. Most have a switch on the Loader's **Options** tab
-([each switch, its default and when it counts](PLAYER-GUIDE.md#the-options-tab-at-a-glance));
+Eight families of changes. Most are always on; the new content and a few others have a switch on the
+Loader's **Options** tab ([each switch, its default and when it counts](PLAYER-GUIDE.md#the-options-tab-at-a-glance));
 [Features and rules](FEATURES.md) has every one in full.
 
 - **Shows what the game keeps hidden.** Every roll as it happens, with what it
@@ -69,9 +69,10 @@ Eight families of changes. Most have a switch on the Loader's **Options** tab
   combat log over the map, names over figures and the Look box ([In the
   game](FEATURES.md#in-the-game)); THAC0, saves, thief skills, spell slots and
   charges on the game's own screens ([Always on](FEATURES.md#always-on)).
-- **Brings the rules closer to AD&D.** Twenty-three switches for characters,
-  weapons and armour, and magic, from class restrictions and levels past 9th
-  to creature size and spell saves ([Rule changes](FEATURES.md#rule-changes);
+- **Brings the rules closer to AD&D.** Over twenty rule changes for
+  characters, weapons and armour, and magic, from class restrictions and levels
+  past 9th to creature size and spell saves, all always on but three with a
+  switch (hit dice, half-giants' weapons, helms) ([Rule changes](FEATURES.md#rule-changes);
   in play, [the player's guide](PLAYER-GUIDE.md)).
 - **More ways to build a character.** Weapon specialization, kits for every
   class and for some multiclass characters, STORE and RECALL, fuller starting
@@ -270,12 +271,14 @@ switch with its default and when it counts, and links each to its page in
 
 Every switch is on by default, and the three choices start at the red ring
 under the chosen enemy, the game speed Fastest and the combat log in short;
-all are remembered for next time. **Restore defaults**, at the bottom
+all are remembered for next time. The rest of the mod is always on, with no
+switch: most of the rule changes, the combat log, weapon specialization, the
+thieving, the graphics and the controls. **Restore defaults**, at the bottom
 of the tab, sets them all back (after asking). In a
 window too small to show the open sections, the tab scrolls (scrollbar, mouse
 wheel, or arrow and page keys once it has the focus).
 
-![The Options tab with Rule changes (twenty-three switches, in three groups: Characters, Weapons and armour, Magic) and New content open, the other sections closed](docs/options.png)
+![The Options tab with every section open: In the game (the combat log's level, the Look box, names over figures, the red ring), Rule changes (three switches: hit dice, half-giants' two-handed weapons, helms), More character customization (kits, fuller starting gear), New content, Game speed, Wake of the Ravager and Saves](docs/options.png)
 
 The **All fields** and **Memory tools** tabs are for mapping the game's memory
 ([DEVELOPMENT-INTERNALS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-INTERNALS.md#mapping-memory)).

@@ -73,6 +73,11 @@ Releases, newest first (2.12.0 and older in the archive):
   the water's shine, "Metal Tanelyv's Armor" in its box.
 
 **Changed**
+- **Fewer switches,** the owner's call (a simpler Options tab, the mod's rules as meant): the combat
+  log, all rule changes but hit dice, half-giants' weapons and helms, weapon specialization, STORE
+  and RECALL, the shops and thieving, the graphics and the controls are always on, their boxes gone
+  (the red ring and the combat log's level keep their choices); an older settings file's False for
+  one is passed over.
 - **Spell arrows' item box says who may use them:** INFO (right-click the arrows, then INFO) heads its list SPELLARCHERS: in place of USEABLE BY: for Chill, Shocking, Vampiric (and the retired Burning) Arrows (DSCLOG's `INFO_HEAD`, the heading's pointer at 8C1E0h). With no Spellarcher in the party, spell arrows another member has readied (an old save) go back in its pack (`spellarrows.return_strays`). DSCLOG 112 bytes bigger (592 spare; upper memory 59 paragraphs spare). Seen in DOSBox: "SPELLARCHERS: / NO ONE", "SPELLARCHERS: / Cermak", plain arrows' USEABLE BY: as before; CANNOT USE THIS ITEM for a non-Spellarcher's quiver (dragged, through a portrait, split). The user's request.
 - **The elf champion's Chill Arrows chill:** spell arrows shot by anyone not in the party cast their spell on a hit (DSCLOG's `PROBE_ARROW`; a party member still needs the Spellarcher kit), at the archer's highest level, which gives their plus too (`ARCHER_LEVEL`: the elf's 7, Chill Touch at level 7, the arrows +1). DSCLOG 16 bytes smaller (704 spare). Seen in DOSBox: the elf's hits on Cermak, his saves against Chill Touch, a failed one 1 STR. The user's request.
 - **The Flame Blade is the Searing Blade,** an obsidian short sword +2 (was a long sword +1; 42,800),
