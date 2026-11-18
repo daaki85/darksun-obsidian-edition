@@ -224,7 +224,8 @@ game's data: it is one player's account.
 - `live.py` (exec'd by the Python tools) gives `g` (memory), `ds`, `gd` (dsloader's GameData);
   `CAMERA` (DS:1178h) and `POINTER` (DS:A133h). A script outside `playtest/` that execs it needs
   `sys.path.insert(0, PLAYTEST)` and `__file__` set to live.py's path first. `symread.py NAME...`
-  reads DSCLOG's variables in the running game by name. **`rec.py [FIRST LAST]`**: creatures'
+  reads DSCLOG's variables in the running game by name; it prints each as its first four bytes in
+  memory order, not a number (`game_mask 7f008102` is the word 007Fh, `a20_lost 000083c4` is 0). **`rec.py [FIRST LAST]`**: creatures'
   combat records in hex, to find a field. More of the game's memory: [memory edits for a
   test](#memory-edits-for-a-test).
 - **The parts of an AC**: run the dice log with `--all` (kill its process by pid, then `python3 -u
@@ -312,6 +313,11 @@ game's data: it is one player's account.
   Escape closes a screen or menu that is open, and **opens EXIT: SAVE GAME? when nothing is**: a
   click after that can quit to DOS. Press Escape only with a menu or screen showing. I opens the
   inventory, U the USE screen.
+- **The pointer in a scene** (logs/2026-11-18-audit-fixes-2.md): START GAME's first scene, the
+  king's decree, shows DSCLOG's arrow; `xdotool mousemove_relative -- 25 8` moves it (click.py
+  reads the game's pointer, which a scene doesn't move), shots 0.7 s apart show it following. The
+  decree is a still picture and plays to its end whatever is clicked; the arena's speech after it
+  takes a click.
 - **Ending a turn by hand**: [Fights rule 8](#fights) (a click ON the figure opens its END menu, E
   there is END TURN; E with no menu up opens the Effects screen).
 - **Level-up screens block everything**: CHOOSE A SPELL (a preserver's new level, mid-fight) waits
