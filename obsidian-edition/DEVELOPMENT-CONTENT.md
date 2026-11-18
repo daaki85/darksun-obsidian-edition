@@ -1292,9 +1292,11 @@ are their kinds'. The elf's bow is the Spellarcher's Fine Bow (`champions.fine_b
 with the name entry `game.FINE_BOW_NAME`, as `spellarrows.starting_gear` makes it); DSCLOG's
 `FINE_HIT` goes by the item's name alone, so its +1 to hit is the champion's too, and the bow is on
 the elf's body afterwards. Its arrows are 24 Chill Arrows (`champions.chill_arrows`,
-`spellarrows.arrows_item`): DSCLOG's `PROBE_ARROW` marks a shot a Spellarcher's (`AMMO_ARCHER`)
-only for a party member (combatant's creature 0-3) of that kit, and `ARROW_HIT` casts the arrows'
-spell only then, so the elf's are plain arrows (no Chill Touch, no plus). The halfling's missile
+`spellarrows.arrows_item`): DSCLOG's `PROBE_ARROW` marks a shot one whose spell arrows cast
+(`AMMO_ARCHER`) for anyone not in the party (combatant's creature above 3) and, in the party, for a
+Spellarcher, and `ARROW_HIT` casts the arrows' spell then, so the elf's cast Chill Touch on a hit
+(the spell's save; a failed one takes 1 STR, Weakened), at its highest level, which also gives the
+arrows their plus (`ARCHER_LEVEL`, `spellarrows.archer_level`: +1 from 5th, +2 from 9th). The halfling's missile
 weapon is the game's staff sling (type 0, `game.STAFF_SLING_TYPE`): in the missile slot, which the
 game never weighs against the hands, so its bone short sword and shield stay; the game's slings
 shoot with nothing in the ammunition slot. The defiler wears

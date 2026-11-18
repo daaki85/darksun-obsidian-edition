@@ -684,13 +684,15 @@ spell on a hit (its item's +0Fh, the spell + 1, at 58B63h; cast by 598:89h with
 the attacker as the caster and level 6 pushed for every weapon's spell, at 58BE6h:
 `push 6 / mov al,cl / mov ah,0 / push ax`). `ARROW_LEVEL` (`NS_IMAGE+47`, over
 those 7 bytes) keeps 6 for a weapon's own spell and gives a spell arrow's (`ARROW_HIT`
-sets `ARROW_CAST`) the archer's preserver level (DI the attacker: class 11 among the
-sheet's +21h-23h, its level from +24h-26h, at least 1), moving the INT's frame down
+sets `ARROW_CAST`) the archer's level (`ARCHER_LEVEL`, DI the attacker: a party Spellarcher's
+preserver level, class 11 among the sheet's +21h-23h, its level from +24h-26h; anyone else's
+highest level of the three; at least 1), moving the INT's frame down
 4 bytes to put the two words under it. `PROBE_ARROW` (58D27h, where the ammunition
 routine keeps the arrows' plus) also keeps their name (`AMMO_NAME`); `ARROW_HIT`
 (`NS_IMAGE+28`, over "cmp byte es:[bx+0Fh],0") gives a shot from a bow ([BP+16h]
 above 1, a bow's type at [BP+14h]) with spell arrows their spell instead, when a
-Spellarcher shot them (`PROBE_ARROW`'s `AMMO_ARCHER`), and `ARROW_SPELL`
+Spellarcher or anyone not in the party (the arena's elf champion: its creature above 3) shot them
+(`PROBE_ARROW`'s `AMMO_ARCHER`; a party member of another kit shoots them as plain arrows), and `ARROW_SPELL`
 (`NS_IMAGE+29`, over "mov cl,es:[bx+0Fh]") hands it on. The target saves as against
 the spell (its record's save byte: Chill Touch's a save, Shocking Grasp's and Vampiric Touch's
 none). The arrows hold no spell
@@ -700,8 +702,12 @@ sees one. Only a Spellarcher carries them: `ARROWS_FORBID`, in `PROBE_CAN_USE`
 `[BP+6]`) to anyone else; the game asks nothing of an item put in a backpack, so the Loader
 (`spellarrows.return_strays`, out of fights with the inventory shut: `INVENTORY_SLOTS`) takes any
 another member carries back to the party's Spellarcher. The four spells' records pass the
-routine's own test (+30h's low bits 2, not 1). Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-16-spellarcher-fine-bow.md). A new Spellarcher's Fine Bow and starting arrows (`spellarrows.starting_gear`) and the
-arrows' plus are in [where each effect goes](#where-each-effect-goes). Arrows put in the
+routine's own test (+30h's low bits 2, not 1). Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-16-spellarcher-fine-bow.md). A non-party archer shoots them as a Spellarcher
+does, its highest level of any class in the preserver level's place, for the cast's level and the
+arrows' plus (`ARCHER_LEVEL`, shared by `ARROW_LEVEL` and `ARROW_PLUS_NOW`;
+`spellarrows.archer_level`): the elf champion's Chill Arrows cast Chill Touch on a party member
+they hit, its save and its STR loss as the spell's (verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-18-champion-chill-arrows.md)). A new Spellarcher's Fine Bow and starting
+arrows (`spellarrows.starting_gear`) and the arrows' plus are in [where each effect goes](#where-each-effect-goes). Arrows put in the
 ammunition slot by memory writes during a fight are not shot (the game keeps its own
 list of what each combatant has readied): they're made outside fights only.
 
