@@ -604,12 +604,22 @@ game's data: it is one player's account.
   shuts it. **Bodies under the party's figures can't be clicked** (a look click there opens the
   member's Effects screen): walk the party aside first. `bodyitems.py` lists what each dead body
   on the map holds (name, type, plus, power, value). `xdotool key --window W Caps_Lock` sets the
-  BIOS's Caps Lock flag (0:0417h 40h) for a test (logs/2026-11-11-caps-lock-loot.md).
+  BIOS's Caps Lock flag (0:0417h 40h) for a test (logs/2026-11-11-caps-lock-loot.md). **T shuts the
+  window itself**: no Escape after it (with nothing open that brings EXIT: SAVE GAME?; CANCEL
+  140,115) (logs/2026-11-18-audit-fixes-1.md).
 - **Selling with S** (logs/2026-11-11-selling.md): Kalzith's shop (his look box's first button Talk
   at 163,86; 1, then 1 "Show us what you have"); S on the shop sells the plain gear of the member on
   show (the game's 3931h:25Bh; a portrait click changes it). Kalzith moves: zoom a shot to find him.
   The game's SELL: an item on the pointer, SELL 265,63, TAKE IT 140,91. Backpack cells on the shop
   screen run down two columns (193,26 and 211,26, 18 apart).
+- **The buyback with and without the Loader** (logs/2026-11-18-audit-fixes-1.md): an item on the
+  pointer is DS:179Eh's thing 523 (`ring.Items(gd).things + 523 * 3`); a magic item sold with the
+  Loader goes to Kalzith's pack (DSCLOG's queue at the header's +308/+310, its items at +1868,
+  0FFFFh once the Loader has seen to it), bought back it comes onto the pointer (click a cell to put
+  it down). **No Loader for a test**: kill the dice log's pid (`pgrep -f '^python3 -u -m
+  dsloade[r] dicelog'`), wait over 5 s (DSCLOG's LOADER_FRESH), sell; start it again as start.sh
+  does (`setsid nohup python3 -u -m dsloader dicelog >> $WORK/dice.txt` from `obsidian-edition/`).
+  Money for a test: `gd.add_money(N)` through live.py (never saved).
 - **Shop and pocket tools**: `openshop.sh` (Kalzith's shop from `selling-junk-user`, finding him
   from memory), `pocket.sh X Y NAME` ([picking a pocket](#talking)), `carried.py NAME` (what someone
   carries, with name numbers).

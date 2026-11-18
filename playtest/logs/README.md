@@ -107,6 +107,7 @@ schedules and diffs a log made or used.
 | [2026-11-18](2026-11-18-champion-chill-arrows.md) | The elf champion's Chill Arrows cast Chill Touch on a hit (DSCLOG: anyone not in the party), at its fighter level 7, the arrows +1; Cermak's save, a failed one 1 STR (Weakened) |
 | [2026-11-18](2026-11-18-fewer-switches.md) | The switches now always on, with an old settings.json unticking them: the keys dropped, DSCLOG's rules words all set (helms' kept switch off), shadows, dust, the combat log, Tab's ring, Acid Arrow rolling to hit, specialization, hiding with the cloak and boots, AD&D's thief table; `docs/options.png` retaken |
 | [2026-11-18](2026-11-18-spell-arrows-info.md) | The item box's INFO for spell arrows: headed SPELLARCHERS: (DSCLOG's INFO_HEAD; an extra SPELLARCHER ONLY row first, too wide), with no Spellarcher (NO ONE) and with one (Cermak); plain arrows' list as before; every way to ready them refused for a non-Spellarcher, readied ones put back in the pack |
+| [2026-11-18](2026-11-18-audit-fixes-1.md) | The code audit's fixes, groups 1-3: a magic item sold with the Loader (to the merchant, bought back) and with its dice log stopped (freed as the game does, not lost); a pickpocket, a T loot of Pehtucl's body and a new character's gear with the item gate held before the lists are read (no record in two places); Negative Plane Protection by the emulated tests |
 
 ## files/
 
