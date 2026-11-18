@@ -710,8 +710,8 @@ INFO (8C1B8h: its heading, USEABLE BY:, then each member the game's can-use rout
 `ARROWS_FORBID` already leaves out all but a Spellarcher, else NO ONE) says so too: `INFO_HEAD`
 (`NS_IMAGE+121`, over "push ds / push 3493h", 8C1E0h, the heading's far pointer) pushes DSCLOG's
 SPELLARCHERS: instead for the four names (the INT's frame moved 4 bytes down), so the list reads
-"SPELLARCHERS: / Cermak" or "SPELLARCHERS: / NO ONE", in the top row whatever the names below
-(an extra row, SPELLARCHER ONLY, touched the box's frame); `tests/test_arrowinfo.py`. Seen in
+"SPELLARCHERS: / Cermak" or "SPELLARCHERS: / NO ONE", in the top row whatever the names below;
+`tests/test_arrowinfo.py`. Seen in
 DOSBox: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-18-spell-arrows-info.md). The four spells' records pass the
 routine's own test (+30h's low bits 2, not 1). Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-16-spellarcher-fine-bow.md). A non-party archer shoots them as a Spellarcher
 does, its highest level of any class in the preserver level's place, for the cast's level and the
