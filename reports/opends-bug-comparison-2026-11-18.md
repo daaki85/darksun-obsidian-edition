@@ -7,11 +7,13 @@ their docs, not a mechanical diff, and a row marked absent means I found no desc
 
 **Counts:** 11 rows OpenDS already has from us (relayed through yuan-ti, recorded there as
 unverified); 11 are script repairs that are OpenDS's, yuan-ti's or both (or, for the Legcrusher and elven-leader rows,
-ours where they have the row but no fix); 7 are the same bug as an open row of theirs, where we have a mechanism and
-a fix they lack; **37 are absent from their catalogue**. The catalogue is theirs to keep, so
+ours where they have the row but no fix); 6 are the same bug as an open row of theirs, where we have a mechanism and
+a fix they lack; **38 are absent from their catalogue**. The catalogue is theirs to keep, so
 this is a list of what they might want, not a claim they are missing it.
 
-## The seven that answer an open row of theirs (the most useful to send)
+## The six that answer an open row of theirs (the most useful to send)
+
+**Correction (2026-11-18):** an earlier version listed seven. The seventh, row 47 ("Out of memory in OEOpenGraph"), is not a bug of the original game: release-notes/v2.6.0.md says that with the mod only about 53 KB were left for the 60,000-byte block, against 57 KB in the original game. It is the mod's own memory use, so it is not offered to OpenDS (and it does not answer their random-crashes row).
 
 Addresses are from our DEVELOPMENT docs (file offsets in GOG 1.10's DSUN.EXE where marked "file"; the
 others are segment:offset or overlay offsets as those docs write them). Re-check an address against the
@@ -22,9 +24,6 @@ image before sending it; I did not today.
   past the match, so `idiv word es:[bx+4]` at 80CD8h divides by the *next* slot's strength: 0 after the last
   slot of the records with nine or seven, in regions 6, 13, 14, 27, 39, 40, 44 and 255: "Divide error", the game
   ends. Our fix reads `[bx+0]`. (DEVELOPMENT-CONTENT, "Random monsters".) A real crash with an anchor.
-- **Row 47, "Out of memory in OEOpenGraph"** (same row): the map needs a large block each time it comes back
-  (after the USE screen, a talk, a menu) and has little more than that to spare in a long session. Another
-  crash with an anchor (DEVELOPMENT-INTERNALS, "Room and memory").
 - **Row 45, graphics disappearing** (their 2.2 "doorway / item graphics disappearance", deferred, and 3.3(1) the
   Gem Fields item ceiling): the game keeps every picture it loads in a table of **300 slots** and a store of a
   fixed **741,376 bytes**, appends a slot for each picture number it hasn't got and gives neither back until an
@@ -33,8 +32,8 @@ image before sending it; I did not today.
 - **Row 32, stat-boost gear** (their 3.3(4), "grant keyed to possession, strip keyed to slot removal"): the
   mechanism is that the ability routine counts every listed item's score wherever it is carried: `mov
   al,es:[bx+0Fh]` at 7B8ABh. We make it count only an item in a worn slot. **Seen in play** (2026-11-01, dice log:
-  DEX 15 -> 17 on putting a sling with +2 DEX in the worn missile slot, back to 15 in the backpack): the one
-  fix of the seven with a play log.
+  DEX 15 -> 17 on putting a sling with +2 DEX in the worn missile slot, back to 15 in the backpack): one of those
+  with a play log (the gladiator's and the picture slots' have one too).
 - **Row 33, the gladiator's AC** (their 3.4 "engine recompute 0x4E0:0x7F / ovr46 family"): the optimisation
   at file 58F86h (`or es:[bx+12h],40h`) is given with no armour on; we make it count only with armour (arms,
   legs, head or chest). Seen in play 2026-11-01 (Cermak, no armour, AC 6, not 4).
@@ -108,7 +107,7 @@ image before sending it; I did not today.
 | 44 | CHOOSE A SPELL's icons with more than 15 spells on offer (the game's own 4th lev | absent |
 | 45 | Graphics disappearing in a busy area (SSI's note 2712 for Wake of the Ravager, t | same bug, open there |
 | 46 | A magic item's glow in a shop | absent |
-| 47 | "Out of memory in OEOpenGraph" in a long session | same bug, open there |
+| 47 | "Out of memory in OEOpenGraph" in a long session | absent (and mod-induced, see the correction above) |
 | 48 | The Trustee in the slave pens | relayed |
 | 49 | Kurzak's door in the slave pens (the entryway to his stop) | absent |
 | 50 | Alagorn's clothes when the party carries none | absent |
@@ -132,8 +131,8 @@ image before sending it; I did not today.
 ## How to send it
 
 OpenDS's CONTRIBUTING says new bugs are recorded in `docs/known-bugs.md` before (or instead of) fixing, and
-asks for an issue before a PR. The seven above are one issue each, or a single PR adding a section to their
-known-bugs for "found and fixed by the Obsidian Edition". The other 37 would be one table. Two
+asks for an issue before a PR. The six above are one issue each, or a single PR adding a section to their
+known-bugs for "found and fixed by the Obsidian Edition". The other 38 would be one table. Two
 cautions: this repository's documents are GPL-3.0 and theirs are MIT, so what goes out is facts in new words,
 not our text, unless the owner says otherwise; and nothing from the private installation-files repository
 (game data, the walkthrough) goes with it.
