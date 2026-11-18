@@ -128,7 +128,7 @@ def set_kinds(gd: GameData, member: int, name: str) -> List[str]:
     if not PARTY[name].kinds or any(game.spec_kinds(sheet)):
         return []
     index = struct.unpack_from("<H", gd.creature(member), game.CREATURE_SHEET_INDEX)[0]
-    sheets = game.far_pointer(gd.guest, gd.ds, game.SHEETS_PTR)
+    sheets = game.table_pointer(gd.guest, gd.ds, game.SHEETS_PTR)
     gd.guest.write(sheets + index * game.SHEET_SIZE + game.SPEC_SLOTS, game.respecced(sheet, want))
     kinds = " and the ".join(PARTY[name].kinds)
     return [f"{name} specializes in the {kinds}."]
@@ -173,7 +173,7 @@ def set_kit(gd: GameData, member: int, name: str) -> List[str]:
         return []
     kit = kitpages.KITS[5].index("Arcanist") + 1
     index = struct.unpack_from("<H", gd.creature(member), game.CREATURE_SHEET_INDEX)[0]
-    sheets = game.far_pointer(gd.guest, gd.ds, game.SHEETS_PTR)
+    sheets = game.table_pointer(gd.guest, gd.ds, game.SHEETS_PTR)
     before = _most_slots(gd, member)
     gd.guest.write(sheets + index * game.SHEET_SIZE + kitpages.KIT_BYTE, bytes([kitpages.kit_byte(sheet, 0, kit)]))
     _add_slots(gd, member, before)
@@ -213,13 +213,13 @@ def set_own(gd: GameData, member: int, name: str) -> List[str]:
         return []
     byte = (0 if byte == kits.KIT_OPEN else byte) | kits.OWN_BIT
     index = struct.unpack_from("<H", gd.creature(member), game.CREATURE_SHEET_INDEX)[0]
-    sheets = game.far_pointer(gd.guest, gd.ds, game.SHEETS_PTR)
+    sheets = game.table_pointer(gd.guest, gd.ds, game.SHEETS_PTR)
     gd.guest.write(sheets + index * game.SHEET_SIZE + kitpages.KIT_BYTE, bytes([byte]))
     return [OWN_LINES[name]]
 
 
 def learn(gd: GameData, member: int, name: str, spell: int = ARMOR) -> List[str]:
-    known = game.far_pointer(gd.guest, gd.ds, KNOWN_SPELLS_PTR) + member * KNOWN_STRIDE + spell
+    known = game.table_pointer(gd.guest, gd.ds, KNOWN_SPELLS_PTR) + member * KNOWN_STRIDE + spell
     if gd.guest.read(known, 1) == b"\x01":
         return []
     gd.guest.write(known, b"\x01")

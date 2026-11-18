@@ -83,6 +83,13 @@ Releases, newest first (2.12.0 and older in the archive):
   "²" no longer breaks name look-ups; the `dicelog` command waits for DOSBox again and `play` says
   an unreadable settings.json plainly; with Kalzith off, a failed scripts copy also says the pens'
   gifts went with it.
+- **Item lists hardened:** an item index past the table is a torn read, not a write 200 KB away;
+  a give that fails puts the record back (the Ring +1, a lifted item); spell arrows that can't be
+  taken from where they were have their copy taken back; no write through a table pointer that
+  reads null; a write the low-memory guard refuses raises, so its step is dropped whole; nothing
+  written after the game restarts in the same DOSBox; the item gate lets the game go after each
+  step; Kalzith's loot is marked done only once his scrolls are gone, a lone one on the ground
+  too; a champion's gear that can't be placed is tried three more times, not every pass.
 
 **Fixed: the scripts**
 - **The elven slavers' leader's Goodbye** (script 46, from OpenDS's triage; `scriptfixes.py`, tests

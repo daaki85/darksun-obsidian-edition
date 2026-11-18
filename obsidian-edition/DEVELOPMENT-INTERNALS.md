@@ -520,8 +520,16 @@ The Loader never writes over the start of memory (`guestmem.LOW_MEMORY`, below
 of the game's data segment (`game.NULL_AREA`), which its C runtime checks at
 exit ("Null pointer assignment"). Such a write could only come from a pointer
 the game has left empty for a moment (`0:offset`). `GuestMemory.write` refuses
-it and notes it in `GuestMemory.refused` (the last 200, for a crash report),
-and the dice log tells it once.
+it, notes it in `GuestMemory.refused` (the last 200, for a crash report) and raises
+`WriteRefused`, so that a change of two writes or more isn't left half made: the dice
+log's step drops it whole (`_step`) and tells it once. A write the Loader works out
+from a table's far pointer (the character sheets', the creatures', the known spells')
+takes the pointer through `game.table_pointer`, which raises `TableGone` while it reads
+null (an area loading), the step then tried again in a later pass: a null pointer plus
+a sheet index of 22 or more passes the 600h guard. Each pass, and each write of the
+stats thread, first looks that the game and DSCLOG it attached to are still there
+(`DiceLog._same_game`): after a restart inside the same DOSBox nothing is written
+through the old data segment or header before the window's own check attaches again.
 
 ### The item gate
 
@@ -553,7 +561,8 @@ and creature tables' pointers. The pass's first such write waits until
 (`ProcessMemory.suspend`: SIGSTOP on Linux, waiting until each thread shows
 stopped, about 1.5 ms; `NtSuspendProcess` on Windows), and reads the same
 things again. All as they were: the writes go ahead with the game held still,
-until the block ends (`itemgate.release`) or the pass does. Anything changed:
+until the block ends (`itemgate.release`: each step of the pass is one, `_step`
+lets the game go after it) or the pass does. Anything changed:
 `ItemsBusy` (a `ValueError`), none of the pass's item writes are made, and the
 next pass tries again. A process that can't be paused gets the same look with
 the writes right after it. A write outside a pass (a tool's) has the lists

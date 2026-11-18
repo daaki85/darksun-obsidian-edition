@@ -103,6 +103,9 @@ def make_game():
         m[NAMES + 3 + entry * 25:NAMES + 3 + entry * 25 + len(name)] = name
     log = DiceLog(guest)
     log.rand_addr = LOAD_SEG * 16 + dicelog.RAND_IP
+    # (the patched game, as still_patched looks for it before every pass)
+    m[log.rand_addr:log.rand_addr + 2] = dicelog.RAND_PATCHED
+    m[DS * 16 + game.BORLAND_SIG_OFFSET:DS * 16 + game.BORLAND_SIG_OFFSET + len(game.BORLAND_SIG)] = game.BORLAND_SIG
     log.tsr_hdr = HDR
     log.last_seq = 0
     log.game = game.GameData(guest, DS)
@@ -1728,6 +1731,7 @@ class OtherTests(unittest.TestCase):
         m[HDR:HDR + 8] = dicelog.HDR_SIG
         m[DS * 16 + game.BORLAND_SIG_OFFSET:DS * 16 + game.BORLAND_SIG_OFFSET + len(game.BORLAND_SIG)] = \
             game.BORLAND_SIG
+        m[log.rand_addr:log.rand_addr + 2] = b"\x8b\xec"  # (the plain game's rand())
         fresh = DiceLog(log.guest)
         with self.assertRaisesRegex(dicelog.DiceLogError, "without the dice log"):
             fresh.attach()
@@ -1736,6 +1740,34 @@ class OtherTests(unittest.TestCase):
         self.assertTrue(fresh.still_patched())
         m[log.rand_addr] = 0x8B  # the game was restarted without it
         self.assertFalse(fresh.still_patched())
+
+    def test_each_step_lets_the_game_go(self):
+        """Each step of a pass a block of writes: the item gate let go after it (itemgate.release),
+        whatever it gave or raised, not held (DOSBox paused) to the pass's end."""
+        from unittest import mock
+        log = make_game()
+        with mock.patch.object(dicelog.itemgate, "release") as release:
+            log._step(lambda: ["a line"])
+            log._step(lambda: (_ for _ in ()).throw(dicelog.itemgate.ItemsBusy("busy")))
+            log._step(lambda: (_ for _ in ()).throw(KeyError("x")))
+        self.assertEqual(release.call_count, 3)
+
+    def test_no_pass_after_the_game_restarts(self):
+        """The game restarted inside the same DOSBox (its rand() plain, or DSCLOG's header gone):
+        no pass, and the stats thread writes nothing, before the callers attach again (passes
+        through the old data segment and header went on for a couple of seconds)."""
+        log = make_game()
+        m = log.guest.mem
+        m[log.rand_addr] = 0x8B
+        log._records_now = lambda: self.fail("a pass made")
+        self.assertEqual(log.lines(), [])
+        m[log.rand_addr] = 0xCD
+        m[HDR] = 0
+        self.assertEqual(log.lines(), [])
+        log._beat_at, beat = 0.0, bytes(m[HDR + dicelog.TSR_LOADER_BEAT:HDR + dicelog.TSR_LOADER_BEAT + 2])
+        m[0x46C:0x46E] = b"\x34\x12"
+        log._answer_stats()
+        self.assertEqual(bytes(m[HDR + dicelog.TSR_LOADER_BEAT:HDR + dicelog.TSR_LOADER_BEAT + 2]), beat)
 
     def test_ability_check(self):
         log = make_game()

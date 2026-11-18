@@ -719,7 +719,7 @@ def cosmos_spells(gd, member: int) -> List[str]:
         return []
     base = (gd.load_seg + game.SPELL_SPHERES_SEG) * 16 + game.SPELL_SPHERES_OFF
     masks = gd.guest.read(base, (PRIEST_SPELLS.stop) * game.SPELL_SPHERES_SIZE)
-    known_at = game.far_pointer(gd.guest, gd.ds, KNOWN_SPELLS_PTR) + member * (game.SPELL_COUNT + 1)
+    known_at = game.table_pointer(gd.guest, gd.ds, KNOWN_SPELLS_PTR) + member * (game.SPELL_COUNT + 1)
     known = gd.guest.read(known_at, game.SPELL_COUNT + 1)
     learnt = []
     for spell in PRIEST_SPELLS:
@@ -750,7 +750,7 @@ def avenger_heals(gd, member: int) -> List[str]:
     if kid is None:
         return []
     barred, what = (AVENGER_NO_HEAL, "healing") if kid == AVENGER else (NO_HARM, "harming")
-    known_at = game.far_pointer(gd.guest, gd.ds, KNOWN_SPELLS_PTR) + member * (game.SPELL_COUNT + 1)
+    known_at = game.table_pointer(gd.guest, gd.ds, KNOWN_SPELLS_PTR) + member * (game.SPELL_COUNT + 1)
     known = gd.guest.read(known_at, game.SPELL_COUNT + 1)
     gone = []
     for spell in sorted(s for s in barred if s < len(known)):

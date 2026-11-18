@@ -799,6 +799,20 @@ def far_pointer(guest: GuestMemory, ds: int, offset: int) -> int:
     return seg * 16 + off
 
 
+class TableGone(ValueError):
+    """A table's far pointer reads null (the game rebuilding it, as an area loads): a write through
+    it would land in DOS's own memory, past the low-memory guard for an index far enough in. The
+    dice log's step is tried again in a later pass (dicelog's _step)."""
+
+
+def table_pointer(guest: GuestMemory, ds: int, offset: int) -> int:
+    """far_pointer for a table the Loader writes through: TableGone if it reads null."""
+    at = far_pointer(guest, ds, offset)
+    if not at:
+        raise TableGone(f"the table at DS:{offset:04X}h isn't there just now")
+    return at
+
+
 def party_records(guest: GuestMemory, ds: int) -> List[Tuple[Optional[int], Optional[int]]]:
     """(creature record, character sheet) addresses for each party slot."""
     creatures = far_pointer(guest, ds, CREATURES_PTR)

@@ -42,7 +42,7 @@ import random
 import struct
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
-from . import dataitems, game, gpl, itemgate, kalzith, npcitems, pickpocket, ring
+from . import dataitems, game, gpl, itemgate, kalzith, npcitems, people, pickpocket, ring
 
 # Objects of the Loader's own (2563 is never one: worldgear.NOT_AN_OBJECT)
 TOHR_KREEN, HALF_GIANT, MUL, HALFLING, ELF, DEFILER = range(2660, 2666)
@@ -241,14 +241,16 @@ class Gear:
 
     def __init__(self):
         self.done: set = set()  # (creature, name, object) equipped, while in the arena
+        self.tries: Dict[tuple, int] = {}  # (those equipped and tried again for gear left unplaced)
 
     def reset(self) -> None:
         """Forget who was equipped (a game loaded: its champions are made again)."""
         self.done.clear()
+        self.tries.clear()
 
     def watch(self, gd, new_spells: bool = True, choose: Optional[Callable[[Sequence[int]], int]] = None) -> List[str]:
         if gd.region() != ARENA:
-            self.done.clear()
+            self.reset()
             return []
         choose = choose or random.choice
         table = gd.creatures(SEEN)
@@ -260,8 +262,12 @@ class Gear:
                 continue
             name = rec[game.CREATURE_NAME:game.CREATURE_NAME + 16].split(b"\0", 1)[0]
             key = (index, name, obj)
-            if key in self.done and not self._unplaced(gd, index, obj):
-                continue
+            if key in self.done:
+                # (gear still in the pack: tried again, as people.py's TRIES passes, then left as it
+                # is; with no list to be had for it every pass held the game still for nothing)
+                if self.tries.get(key, 0) >= people.TRIES or not self._unplaced(gd, index, obj):
+                    continue
+                self.tries[key] = self.tries.get(key, 0) + 1
             if struct.unpack_from("<h", rec, 0)[0] <= 0 or rec[game.CREATURE_STATUS] in DEAD_STATUS:
                 continue
             itemgate.hold(gd)

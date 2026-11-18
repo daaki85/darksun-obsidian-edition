@@ -31,7 +31,7 @@ from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, 
 from . import aging, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
-from .guestmem import GuestMemory
+from .guestmem import GuestMemory, WriteRefused
 from .process import ProcessError
 from .itemwatch import ItemWatch
 from .textlog import KIND_MESSAGE, KIND_PORTRAIT, KIND_SHOW_REPLIES, KIND_TEXT, Dialogue, DialogueEntry, TextBuffer
@@ -1184,9 +1184,10 @@ class DiceLog:
             now = time.monotonic()
             if now - getattr(self, "_beat_at", 0.0) >= BEAT_STEP:  # (the heartbeat: GEAR_HOLD, _beat)
                 self._beat_at = now
-                self._beat()
+                if self._same_game():  # (not through the header of a game since restarted)
+                    self._beat()
             req = self.guest.read(self.tsr_hdr + TSR_STATS_REQ, 2)
-            if req != self.guest.read(self.tsr_hdr + TSR_STATS_REPLY, 2):
+            if req != self.guest.read(self.tsr_hdr + TSR_STATS_REPLY, 2) and self._same_game():
                 self._write_stats_now()
                 self.guest.write(self.tsr_hdr + TSR_STATS_REPLY, req)
 
@@ -1261,9 +1262,18 @@ class DiceLog:
         """False when the game has quit or been replaced by an unpatched one, when DSCLOG's header
         is gone from its place, or when its ring has read wrong for POLL_FAILS passes in a row
         (the callers then attach again, which finds the header afresh)."""
+        return self._same_game() and self._poll_fails < POLL_FAILS
+
+    def _same_game(self) -> bool:
+        """The game and DSCLOG attached to still there, where they were (still_patched less the
+        ring's reads): looked at before every pass and every write of the stats thread, so that
+        after the game restarts inside the same DOSBox nothing is written through the old data
+        segment or header before the callers' own check (every couple of seconds) attaches again."""
+        if self.rand_addr is None or self.tsr_hdr is None or self.game is None:
+            return False
         sig = self.guest.read(self.game.ds * 16 + game.BORLAND_SIG_OFFSET, len(game.BORLAND_SIG))
         return sig == game.BORLAND_SIG and self.guest.read(self.rand_addr, 2) == RAND_PATCHED \
-            and self.guest.read(self.tsr_hdr, len(HDR_SIG)) == HDR_SIG and self._poll_fails < POLL_FAILS
+            and self.guest.read(self.tsr_hdr, len(HDR_SIG)) == HDR_SIG
 
     def detach(self) -> None:
         self.rand_addr = None
@@ -1399,7 +1409,10 @@ class DiceLog:
     def lines(self, show_all: bool = False, now: Optional[float] = None) -> List[str]:
         """Everything new since the last call, as log lines. Call it every few tens of ms. Its
         changes to the game's item lists are made only if the game left them be all the while
-        (itemgate.py: the pass begins before anything is read, and ends with DOSBox running on)."""
+        (itemgate.py: the pass begins before anything is read, and ends with DOSBox running on).
+        None while the game or DSCLOG it was attached to is gone (_same_game: the callers attach again)."""
+        if not self._same_game():
+            return []
         gate = getattr(self.guest, "item_gate", None)
         if gate is not None:
             gate.begin()
@@ -1488,9 +1501,16 @@ class DiceLog:
         for memory read while the game has it half made (struct.error, IndexError, ValueError);
         either way the pass's next steps go on (one failing step once stopped all after it)."""
         try:
+            return self._step_run(fn, quiet)
+        finally:  # (each step a block of writes: the game let go after it, not held to the pass's end)
+            if self.game is not None:
+                itemgate.release(self.game)
+
+    def _step_run(self, fn: Callable[[], object], quiet: bool) -> List[str]:
+        try:
             got = fn()
-        except itemgate.ItemsBusy:
-            return []
+        except (itemgate.ItemsBusy, WriteRefused, game.TableGone):  # (a refused write: noted, and told
+            return []                                                #   by _tail; a table not there: later)
         except ProcessError:
             raise
         except (struct.error, IndexError, ValueError) as e:
