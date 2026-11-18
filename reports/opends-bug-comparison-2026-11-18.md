@@ -25,7 +25,13 @@ image before sending it; I did not today.
   bytes today). The Edition's notes add that this divides by zero in regions 6, 13, 14, 27, 39, 40, 44 and 255
   ("Divide error"). **The shipped data does not show that**: every strength in `MONR` 1 is at least 1 and the empty
   slots are (0, 1), so the divisor there is 1. Only the wrong-monster count is supported; do not offer the crash
-  as an anchor for their random-crashes row until it is shown. (The Edition's public notes, GAME-BUGS.md among
+  as an anchor for their random-crashes row until it is shown. **This is "not shown", not "not real".** I ran the
+  routine's divisor logic over the shipped data (every real slot of the 29 records as the match, 270 cases): no zero
+  and no read past the end of the chunk. The claim entered the Edition on 2026-10-23 (commit 5d68715, a code-reading
+  change with no play log; the crash is not in `playtest/logs/`). It could still be real if the chunk in memory
+  differs from the file, if another path reaches the divide, or if my reading of the slot layout is off (I did
+  disassemble the loop: `bx = record + 4 x SI`, SI one past the match). What would settle it: read the loaded
+  `MONR` chunk in DOSBox (the playtest memory tools) and, better, force a random-monster request in region 6. (The Edition's public notes, GAME-BUGS.md among
   them, carry the divide-by-zero claim; that is the user's to decide.)
 - **Row 45, graphics disappearing** (their 2.2 "doorway / item graphics disappearance", deferred, and 3.3(1) the
   Gem Fields item ceiling): the game keeps every picture it loads in a table of **300 slots** and a store of a
