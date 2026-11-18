@@ -664,6 +664,12 @@ game's data: it is one player's account.
 
 ### Foes in a test fight
 
+- **One foe's AC or attacks out of several** (logs/2026-11-18-champions-gear.md): name the foes
+  apart in memory (the creature record's name, `game.CREATURE_NAME`, 16 bytes: the champions are
+  all "Champion"), put the others at 1 HP and the one wanted at 200 (`foeset.py C hp=N`, by the
+  combatant number `foeset.py` lists), then fightout.sh's loop without its `hp.py 1` and with
+  `healparty.py` each pass: the party's Tab + Return kill the rest and then strike the one, each
+  line its "target AC". Never save after.
 - **Seeing foes attack, without killing them** (logs/2026-11-05-champions.md): not `fightout.sh` (it
   puts every foe at 1 HP); pass the party's turns instead (rule 8), stopping once the dice log has N
   more "attacks NAME" lines (`passmiss.sh` does it for a miss, then drags the view and takes a
