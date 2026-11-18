@@ -1,16 +1,26 @@
-# setitem.py ITEM TYPE: makes item ITEM (its number in the item table) a plain item of type TYPE in
+# setitem.py ITEM TYPE|obj=N|rec=HEX: makes item ITEM (its number in the item table) a plain item of type TYPE in
 # memory. It takes the game's first plain record of that type from SEGOBJEX.GFF, keeping the item's
 # link (+4), flags (+10h) and slot (+11h); +08h 270Fh, +0Ch cleared. Memory only: never save after. Write it with
 # the inventory closed (logs/2026-11-10-stinkpots.md: Lex's bow, item 36, made a staff sling, type 0).
+# obj=N takes object N's own item record instead (SEGOBJEX's RDFF N, its first: Tanelyv's chest piece
+# is obj=2004), and rec=HEX a whole record (one of the Loader's: `worldgear.SEARING_BLADE.hex()`)
+# (logs/2026-11-17-item-glows.md).
 import os, sys, struct
 PT = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, PT)
 exec(open(os.path.join(PT, 'live.py')).read())
 from dsloader import game, gff, champions
-item, kind = int(sys.argv[1], 0), int(sys.argv[2], 0)
+item, what = int(sys.argv[1], 0), sys.argv[2]
 chunks = gff.read_gff(open(os.path.join(GAME, 'SEGOBJEX.GFF'), 'rb').read())
-rec = champions.game_item(chunks, kind)
-if rec is None:
-    print('no plain item of type', kind, 'in SEGOBJEX.GFF'); sys.exit(1)
+if what.startswith('rec='):
+    rec = bytes.fromhex(what[4:])
+elif what.startswith('obj='):
+    from dsloader import worldgear
+    rec = worldgear.game_object_item(chunks, int(what[4:], 0))
+else:
+    rec = champions.game_item(chunks, int(what, 0))
+if rec is None or len(rec) != game.ITEM_SIZE:
+    print('no item record for', what, 'in SEGOBJEX.GFF'); sys.exit(1)
+kind = struct.unpack_from('<H', rec, game.ITEM_TYPE)[0]
 at = game.far_pointer(g, ds, game.ITEMS_PTR) + item * game.ITEM_SIZE
 old = g.read(at, game.ITEM_SIZE)
 new = bytearray(rec)

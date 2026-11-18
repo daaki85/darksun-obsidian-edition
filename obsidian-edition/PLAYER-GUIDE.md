@@ -1791,8 +1791,8 @@ one of its classes allows. Those the mod adds or changes are marked \* ([new
 items](#new-items) says what they are).
 
 **Every magic weapon,** by weapon spec: long swords Dragonsbane +4, Swiftbite +2, El's Drinker +2,
-Dark Flame +2, Draketooth +1, Hornblade +1, Bloodwrath +1, Flame Blade\* +1; short swords
-Greenbright\* +2, Shadowseeker\* +1, Mindshard\* +1, Stillwater\* +1; daggers Dag's Dagger +3,
+Dark Flame +2, Draketooth +1, Hornblade +1, Bloodwrath +1; short swords
+Greenbright\* +2, Searing Blade\* +2, Shadowseeker\* +1, Mindshard\* +1, Stillwater\* +1; daggers Dag's Dagger +3,
 Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Hayneedle\* +1; axes Glasshewer\* +2, Drakejaw\*
 +1, Soulcrusher +1, Axe +1; great axes Great Axe +3, Headsman\* +2; gythkas Gythka +3, Gythka +2\*,
 Kreenfang\* +1; polearms Linebreaker\* +2, Polearm +1, Thornwall\* +1; maces Mace +2, Blackmace +1;
@@ -1806,14 +1806,14 @@ Skycutter\* +2, Chatkcha +1.
 | Fighter | every one | **Ravager:** none of the bows, slings, Windlash\*, chatkchas or Dag's Dagger (thrown) |
 | Gladiator | every one | **Twin-blade:** none of the two-handed ones (great axes, gythkas, polearms, quarterstaffs, bows, staff sling), but the cahulaks, a blade in each hand. **Brute:** in melee only Great Axe +3, Headsman\*, the gythkas, the polearms and the quarterstaffs (not the cahulaks); any missile weapon |
 | Ranger | every one | **Seeker:** only its sphere's, bows too: air, the daggers, the cahulaks, bows, slings, Windlash\*, the chatkchas; earth, the metal, obsidian, stone and wooden ones (wooden bows; no bone, no slings); fire, the obsidian ones alone (no bow); water, the bone and wooden ones. It has no ranger's expertise with the bow either, unless the bow is its weapon spec |
-| Thief | every one | **Shinobi:** only Greenbright\*, Shadowseeker\*, Mindshard\*, Stillwater\*, Dag's Dagger, Terror Blade, Galefang\*, Nightsliver\*, Hayneedle\*, the quarterstaffs, bows, slings, Windlash\* and the chatkchas |
+| Thief | every one | **Shinobi:** only Greenbright\*, Searing Blade\*, Shadowseeker\*, Mindshard\*, Stillwater\*, Dag's Dagger, Terror Blade, Galefang\*, Nightsliver\*, Hayneedle\*, the quarterstaffs, bows, slings, Windlash\* and the chatkchas |
 | Preserver | Hornblade +1 (a bone long sword the game lets preservers use), Dag's Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Hayneedle\* +1, Quarterstaff +2, Balk's Staff +1, Parting Staff +1, Sling +2, Sling +1, Windlash\* +1 | **Battle Mage:** also those of its chosen weapon spec |
 | Cleric of air | every dagger (Dag's Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Hayneedle\* +1), Bow +2, Phrain's Bow +1, Dunesong\* +1, Sling +2, Sling +1, Windlash\* +1, Skycutter\* +2, Chatkcha +1, Ironwhirl\* +2, Cahulaks +2\*, Emberlash\* +1, Cahulaks +1\* | **Elementalist:** its second sphere's too |
-| Cleric of earth | Dragonsbane +4, El's Drinker +2, Dark Flame +2, Bloodwrath +1, Flame Blade\* +1, Greenbright\* +2, Shadowseeker\* +1, Mindshard\* +1, Dag's Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Glasshewer\* +2, Soulcrusher +1, Axe +1, Great Axe +3, Headsman\* +2, Linebreaker\* +2, Blackmace +1, the three quarterstaffs, Gutterknot\* +1, Deepbiter\* +1, Ironwhirl\* +2, Emberlash\* +1, Bow +2, Phrain's Bow +1, Dunesong\* +1, Skycutter\* +2, Chatkcha +1 | **Elementalist:** its second sphere's too |
-| Cleric of fire | Dark Flame +2, Bloodwrath +1, Flame Blade\* +1, Mindshard\* +1, Nightsliver\* +2, Glasshewer\* +2, Blackmace +1, Emberlash\* +1, Skycutter\* +2, Chatkcha +1 (not the obsidian Terror Blade: the game's own lists keep it from fire clerics) | **Elementalist:** its second sphere's too |
+| Cleric of earth | Dragonsbane +4, El's Drinker +2, Dark Flame +2, Bloodwrath +1, Greenbright\* +2, Searing Blade\* +2, Shadowseeker\* +1, Mindshard\* +1, Dag's Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Glasshewer\* +2, Soulcrusher +1, Axe +1, Great Axe +3, Headsman\* +2, Linebreaker\* +2, Blackmace +1, the three quarterstaffs, Gutterknot\* +1, Deepbiter\* +1, Ironwhirl\* +2, Emberlash\* +1, Bow +2, Phrain's Bow +1, Dunesong\* +1, Skycutter\* +2, Chatkcha +1 | **Elementalist:** its second sphere's too |
+| Cleric of fire | Dark Flame +2, Bloodwrath +1, Searing Blade\* +2, Mindshard\* +1, Nightsliver\* +2, Glasshewer\* +2, Blackmace +1, Emberlash\* +1, Skycutter\* +2, Chatkcha +1 (not the obsidian Terror Blade: the game's own lists keep it from fire clerics) | **Elementalist:** its second sphere's too |
 | Cleric of water | Stillwater\* +1, Hayneedle\* +1, Drakejaw\* +1, Gythka +3, Gythka +2\*, Kreenfang\* +1, Polearm +1, Thornwall\* +1, Mace +2, the three quarterstaffs, Gutterknot\* +1, Cahulaks +2\*, Cahulaks +1\*, Bow +2, Phrain's Bow +1, Dunesong\* +1 (not the bone Swiftbite, Draketooth or Hornblade: the game's own lists keep them from water clerics) | **Elementalist:** its second sphere's too |
 | Druid | every one but Great Axe +3 and Headsman\* | **Grove Warden:** only those its sphere allows, as a cleric of that sphere. **Lifebinder:** only Mace +2, Blackmace +1, the three quarterstaffs, Gutterknot\* +1, the slings and Windlash\* |
-| Psionicist | Mindshard\* +1, Stillwater\* +1, Dag's Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Hayneedle\* +1, Gutterknot\* +1, Bow +2, Phrain's Bow +1, Dunesong\* +1, Skycutter\* +2, Chatkcha +1; with a cleric class, only those its sphere allows too (Mindshard with fire or earth, Stillwater with water) | — |
+| Psionicist | Searing Blade\* +2, Mindshard\* +1, Stillwater\* +1, Dag's Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Hayneedle\* +1, Gutterknot\* +1, Bow +2, Phrain's Bow +1, Dunesong\* +1, Skycutter\* +2, Chatkcha +1; with a cleric class, only those its sphere allows too (the Searing Blade and Mindshard with fire or earth, Stillwater with water) | — |
 
 ### Armour
 
@@ -1871,8 +1871,8 @@ chosen type, often one of these.
 
 | Item | What it is |
 |---|---|
-| Flame Blade | obsidian long sword +1 whose blade burns what it hits: 2d6 fire damage, a save for half |
 | Greenbright | metal short sword +2 |
+| Searing Blade | obsidian short sword +2 whose blade burns what it hits: 2d6 fire damage, a save for half |
 | Shadowseeker | metal short sword +1: its wielder sees the invisible |
 | Mindshard | obsidian short sword +1 |
 | Stillwater | bone short sword +1 |

@@ -67,7 +67,23 @@ Releases, newest first (2.12.0 and older in the archive):
   left as the game has them; the evidence, and what was taken from OpenDS (checked to 2026-11-13), are
   in [the cross-read](reports/opends-cross-read-2026-11-16.md#6-the-changelogs-account-2026-11-17).
 
+**New**
+- **Tanelyv's chest piece shines** as its arm and leg pieces do (its object, 2004, made by the Wyrm
+  Temple's script 161, in `icons.SHINE`; its icon in ITEMS.md). Seen in DOSBox: the chain picture with
+  the water's shine, "Metal Tanelyv's Armor" in its box.
+
 **Changed**
+- **The Flame Blade is the Searing Blade,** an obsidian short sword +2 (was a long sword +1; 42,800),
+  its Focus Heat burst and its place (the Hot Springs' Templar) kept, so the priest spell's Flame
+  Blade alone has the name; a fire or earth cleric, a psionicist or a thief can wield it. A saved
+  game's is made the Searing Blade as the dice log runs (`worldgear.mend_searing_blade`). Seen in
+  DOSBox: "+2 Searing Blade" whole in the item box and the weapon line, "Obsidian Searing Blade +2"
+  in the dice log, an old Flame Blade remade in a pass.
+- **Magic items glow in the colours their stories call for:** the game's colour cycler turns green
+  (1-5) and violet (6-10) too, not only water and fire, so Greenbright shimmers green (seen in
+  DOSBox), Mindshard violet, Stillwater and Hayneedle the water's blue, Windlash, Galefang and
+  Skycutter the air's white and blue, and the Silk Armor, the Living Cloak and the Elvenkind cloak
+  and boots green; the rest keep the fire. A wielder's figure glints in the same colours.
 - **The release zip** leaves out the developer pages, the tests and `docs/viewer.png` (`export-ignore`); the manual links to them at the release's tag (#97).
 
 **Docs**

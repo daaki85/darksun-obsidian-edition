@@ -1251,11 +1251,14 @@ inventory, or **I** on USE, switches to the other, as in the game. How it works:
 ### Magic items' icons
 
 The game makes most of its magic items' icons shine in the inventory, a shop and on the ground, but
-left some still. The Loader gives 19 of them the shine of the others: the Parting Staff, the
+left some still. The Loader gives 20 of them the shine of the others: the Parting Staff, the
 Chameleon Gloves, the Hornblade, the Cahulaks +1 (now Legcrusher's), Dag's Dagger, the Terror Blade,
-Blackmace, the Shimmer, Drake and Silk Armor, Tanelyv's and Grey's arm and leg pieces, the Living
+Blackmace, the Shimmer, Drake and Silk Armor, Tanelyv's three pieces, Grey's arm and leg pieces, the Living
 Cloak, the Golden Torque, Light of Dawn, El's Ring and the Orb of Knowledge (the three that shared a
-plain item's picture get one of their own). The Loader's own magic items shine too. How it works:
+plain item's picture get one of their own; the Silk Armor and the Living Cloak shimmer green). The
+Loader's own magic items shine too, a magic weapon in the fire's colours as the game's own unless
+its story calls for another the game animates: water's blue (Stillwater, Hayneedle), the air's
+white and blue (Windlash, Galefang, Skycutter), violet (Mindshard) or green (Greenbright). How it works:
 [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#new-items).
 
 ### Spells on the ground

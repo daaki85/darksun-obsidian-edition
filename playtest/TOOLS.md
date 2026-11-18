@@ -97,7 +97,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `scrolltest.py [shinobi] [give]` | member 0 made an 8th-level Shinobi (memory only: never save after) and the defilers' scrolls (defilerscrolls.scroll) given to members 0 and 2. |
 | `setarrows.py MEMBER N` | the member's quiver stack's count made N, in memory (never save after; |
 | `setcount.py [N]` | read (and with N, write) the arena's visit count, the game's number 12 (4: the next trip is Scar's). |
-| `setitem.py ITEM TYPE` | makes item ITEM (its number in the item table) a plain item of type TYPE in memory. |
+| `setitem.py ITEM TYPE\|obj=N\|rec=HEX` | makes item ITEM (its number in the item table) a plain item of type TYPE in memory. |
 | `setmem.py [hp=M:V psp=M:V status=M:V ruleshi=+N\|-N power=M:P slots=M:L:N]` | the party's HP, PSP and status (creature +0, +2, +1Ch), DSCLOG's rules_hi (the header's +270: +N sets bits, -N clears them; |
 | `setpic.py THING PICTURE` | a map thing drawn with another walking picture (memory only, never save) |
 | `setup_game.sh` | the game for testing, in $GAME: the GOG installer extracted with innoextract. |

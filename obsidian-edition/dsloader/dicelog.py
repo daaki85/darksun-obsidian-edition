@@ -1754,6 +1754,7 @@ class DiceLog:
         if left:
             out.append("Kalzith leaves: " + ", ".join(left))
         quiet(self._mend_scrolls)
+        quiet(lambda: worldgear.mend_searing_blade(self.game))  # (a saved game's Flame Blade, as it is now)
         quiet(lambda: tools.repaint(self.game))  # (sets of Thieves' Tools an earlier version gave: their name and picture)
         out += quiet(lambda: [stuckwalk.stopped_line(name) for name in self.walkers.check(self.game)])
         out += quiet(lambda: [kurzakdoor.opened_line()] if self.kurzak_door.check(self.game) else [])

@@ -29281,7 +29281,7 @@ extra_names:
         db "Warden's Helm", 0
         db "Cloak/Elvenkind", 0         ; (the Cloak and Boots of Elvenkind)
         db "Boots/Elvenkind", 0
-        db "Flame Blade", 0             ; (an obsidian long sword +1, Focus Heat on what it hits)
+        db "Searing Blade", 0           ; (an obsidian short sword +2, Focus Heat on what it hits)
         db "Tome/Understand", 0         ; (the Tome of Understanding: dsloader/tome.py)
         db "Inixhide", 0                ; (Legcrusher's Leather Chest Armor +1: dsloader/npcitems.py)
         db "Drakejaw", 0                ; (the magic axes of dsloader/worldgear.py: a bone axe +1,
