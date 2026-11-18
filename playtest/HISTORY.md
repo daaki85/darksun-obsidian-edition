@@ -321,6 +321,21 @@ lock, making a lot of noise but little else.") both ended with the walk arrow.
   the view at the map's corner: Tab moved it to the foe, `scroll.py` brought it back, and
   `passuntil.sh` (a click on the figure for the END menu) passed the turns cleanly.
 
+- 2026-11-18 (logs/2026-11-18-squares-in-reach.md), walking a member square by square for the
+  squares in reach:
+  - A first sweep read every walk a square late: a walk the Move ran out on stayed the member's,
+    and once the "can walk" bit was put back in memory the game went on with it from where F10
+    had put the member. The tools now forget it with the edit.
+  - Waiting 1.2 s of stillness right after the click took the wait before a walk begins for its
+    end: wait for the place to change first.
+  - A sweep's click on the square north of the Templar was a click on him: the member walked up
+    and attacked, and the turn passed to the next member in the middle of the sweep.
+  - F10 after the Move was all spent gave the points back and no walk: read as a tool's failure
+    until the flags showed bit 0 still off (the game's own slip).
+  - A helper pass written before the branch was reorganised was taken out again and put back on
+    the integrated base (the signature `vc` to `vd`): the design kept in the log, with its lines,
+    made that an hour's work.
+
 ## An archer's turn and the quiver
 
 2026-11-14: the user reported an archer's turn ending as its quiver ran dry. The code addresses in
@@ -594,6 +609,11 @@ index](logs/README.md), by date.
   An item box opened by a right-click in the inventory closes by itself about a second after the
   pointer moves off it; `docs/elvenkind.png`'s crops found by matching pixels (the boots' at
   +173+95, not the +183+95 an earlier log gave) (logs/2026-11-18-docs-review-2.md).
+- **2026-11-18**: the game's rules of movement in a fight (10 and 14, a step begun with 10,
+  diagonal steps first, corners cut, enemies hold nobody), F10 and its limit, DSUN.EXE's overlay
+  stubs, the party's squares at DS:0546h, the view dragged in a fight, and the walk tools
+  (`movestate.py`, `squarewalk.py`, `squaresweep.py`, `squarecost.py`)
+  (logs/2026-11-18-squares-in-reach.md).
 - **2026-11-18** (the integration): the six additions of 2026-11-16/17 (journal, picture and music,
   chance to hit, quick save, quests, showing what can be used) rebased onto the reorganised branch
   and checked together in a private game: the helper's signature `DSCLOGvc`, quick save's header

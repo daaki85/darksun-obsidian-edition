@@ -42,6 +42,7 @@ weapon specialization's: the guide links to their tables.
   - [THAC0 by level](#thac0-by-level)
 - [Fighting](#fighting)
   - [Initiative](#initiative)
+  - [Moving in a fight](#moving-in-a-fight)
   - [Hitting](#hitting)
   - [Two weapons](#two-weapons)
   - [From behind, and backstabs](#from-behind-and-backstabs)
@@ -1095,6 +1096,26 @@ A character hit in a round can't cast a spell until the next round: the game
 won't let it choose a spell, and drops one chosen before the hit. The Battle
 Mage isn't stopped.
 
+### Moving in a fight
+
+Each round a character has **ten movement points for each point of Move** (the
+name box shows what is left, in Move); Hasted doubles them, Slowed halves
+them. A step costs **10 straight, 14 diagonally**. With fewer than 10 left the
+walk is over.
+
+- **The squares still in reach are marked** with small crosses on the
+  floor ([squares in reach](FEATURES.md#squares-in-reach)): a marked square is
+  one click away (behind a wall the farthest may take two: click a nearer one
+  first).
+- Nobody walks through anybody, allies included; corners can be cut.
+- Walking past an enemy costs nothing and brings no free blow.
+- **F10 takes a move back** (the game's own key): the character stands where
+  its turn began, with its movement. Use it before the last step: once the
+  movement is all spent F10 puts the character back but it can't walk again
+  that turn.
+
+The detail: [how the game works](HOW-THE-GAME-WORKS.md#moving-in-a-fight).
+
 ### Hitting
 
 An attack hits on **d20 ≥ THAC0 − the target's AC**. A 20 always hits and a 1
@@ -1981,8 +2002,8 @@ features page](FEATURES.md#always-on).
 | **M**, **U** and **I** | **M** on the map opens the overhead map (the game's **O**), and **M** again closes it. **U** and **I** close the USE and inventory screens when pressed again (and still switch from one to the other). *Without the mod:* only **O** opens the map, and **U** and **I** only switch. |
 
 The mod's other controls are always on too: Tab and Enter to choose and attack an enemy (the red
-ring under it, and the chance to hit it shown before the swing, are on the Options tab), **Alt** held to ring and name
-everything in view that can be used (a switch in the tab's **In the game** section), scrolling with the mouse wheel, the whole party in
+ring under it, and the chance to hit it shown before the swing, are on the Options tab), the squares in reach marked on a party member's turn and **Alt** held to ring and name
+everything in view that can be used (switches in the tab's **In the game** section), scrolling with the mouse wheel, the whole party in
 view, the view in fights, the pointer, and spells on the Effects screen ([controls](FEATURES.md#controls)). Quick save and
 quick load with **F5** and **F9**, and autosave, have switches under **Saves** on the Options tab.
 
@@ -2133,6 +2154,7 @@ A settings file from an older Loader with one of these unticked has it on all th
 | Names over figures: a spell's name over its caster, "Miss" over whoever an attack missed, a used charge ("Armor: 7 left") over its owner, and the arrows left over a party archer after each shot | on | at once | [Names over figures](FEATURES.md#names-over-figures) |
 | A red ring on the ground in a fight: ... none / ... under the enemy chosen with Tab | under the enemy | at once | [Choosing an enemy](FEATURES.md#choosing-an-enemy-tab-enter-and-the-rings) |
 | The chance to hit: with an enemy chosen with Tab, what the d20 must show to hit it and the chance, in the dice log and the combat log's header | on | at once | [The chance to hit before the swing](FEATURES.md#the-chance-to-hit-before-the-swing) |
+| Squares in reach: in a fight, a small cross on each square the party member whose turn it is can still walk to | on | at once | [Squares in reach](FEATURES.md#squares-in-reach) |
 | Showing what can be used: hold Alt on the map, out of a fight | on | at once | [Showing what can be used](FEATURES.md#showing-what-can-be-used-alt) |
 
 **Rule changes**

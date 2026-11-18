@@ -236,6 +236,11 @@ game's data: it is one player's account.
   - **Two saves of the same moment**: the look pointer up (`pointer.py look`: the clock stands
     still), `qsave.py 1 NAME`, then F1 and a window save: they differ in `STXT 1` and six words of
     `SAVE 1` only (the map objects' picture slots, which a window's opening lets go of).
+  - **A second game's kit made again after every change** (logs/2026-11-18-squares-in-reach.md):
+    a small script that copies the tree's `playtest/` afresh, changes the display in `env.sh` and
+    `paths.py`, puts the copy's own `start.sh` back and links `obsidian-edition`; and one that
+    starts only its dice log again with a setting changed (by its pid file), to compare a switch
+    on and off in one game.
   - **A second game beside the shared one** (when the shared DOSBox is busy): a copy of the kit
     and of `inst` in a scratch folder with the tree's `obsidian-edition` linked beside it, `env.sh`
     and `paths.py` on display `:56`, and a `start.sh` that starts its own Xvfb, DOSBox copied
@@ -459,9 +464,11 @@ game's data: it is one player's account.
   nothing, and the view later jumped. Clear boxes first.
 - **In the enemies' turns the view follows the one acting** (`ghostturn.py`): a test that needs a
   still view through an enemy turn (a figure redrawn or not) can't rely on it; the move redraws the
-  whole view by itself. **In a fight the view barely drags**: two drags of 150 moved the camera
-  from (1728, 768) to (1712, 832); the party's figures stayed on the screen. Drag out of a fight to
-  put a figure off the view.
+  whole view by itself. **In a fight the view barely drags** in one place: two drags of 150 moved
+  the camera from (1728, 768) to (1712, 832); the party's figures stayed on the screen. Drag out
+  of a fight to put a figure off the view. On a party member's turn at the fountain and in the
+  arena `viewto.py` did drag it, 100 to 200 map units, and the view moved by itself when a member
+  walked out of it (logs/2026-11-18-squares-in-reach.md).
 - **The walkability grid**: each region has one, 128 x 98 squares of 16 map units (GMAP in
   RGNxx.GFF): 0 floor, 192 walls, 64 things (furniture, a button on a wall), 1-31 and 64-95 wall
   edges and doorways. The game's live copy (far pointer at **DS:0556h**, `live_map()` in live.py)
@@ -755,6 +762,29 @@ game's data: it is one player's account.
    <NAME>'S MOVE opens and waits. For a test that needs reach, raise its Move in memory first ([the
    turn's movement word](RESEARCH.md#fights-and-foes-in-memory)), and restore it after; never save
    the game while it's raised. The END menu shows what is left ("Move : 12").
+   **Walking a member square by square** (logs/2026-11-18-squares-in-reach.md): `movestate.py`
+   prints whose turn it is, its square, points and flags and the walk map round it with the
+   Loader's marks; `squarewalk.py COL ROW [POINTS]` clicks a square's middle and says where the
+   member stopped; `squaresweep.py POINTS [edge|out|all][here]` tries the marks' rim (or the free
+   squares just outside, or all) a walk each; `squarecost.py` times a walk for the marks' cost.
+   - **F10 takes the move back** (the game's own key, with no menu up: Escape closes the END
+     menu first): the member stands where its turn began with its points. After the last step it
+     gives the points back but not the walk (bit 0 of the turn's flags stays off): put the bit
+     back in memory for a test (`squarewalk.py` with POINTS does).
+   - **A walk the Move ran out on stays the member's**, and with the bit put back in memory the
+     game goes on with it from wherever F10 put the member, so the next click's walk is mixed with
+     it: forget it with the edit (FFh at 3972:0377h + thing x 1Ch, 0 at 3972:08AAh + thing x
+     13h; the two tools do). In play the bit never comes back in a turn.
+   - **A click on the square behind a figure is a click on the figure** (its END menu, or an
+     attack on a foe that ends the turn): a walk test leaves out the two squares north of anyone.
+   - **A walk can begin a second or two after the click**: wait for the member's place to change
+     before waiting for it to stand still.
+   - **The view** follows a member that walks out of it ([dragging it in a
+     fight](#walking-the-view-and-doors)); the party's squares on the walk map are
+     DS:0546h (x, y a member; 129, 99 for one with none, as the leader at the ambush's start,
+     whose square others can then walk onto).
+   - From `fountain-user`: a two-square doorway at squares (53-54, 78) and a one-square one at
+     (45, 82-83), north-west of the fountain's corridor; nobody stands near them.
 6. **Spells**: USE (24,17), the level page (LEVEL at 196,171), the icon, then the target; check
    the dice log for the spell's line before going on. The detail: [Casting spells for a
    test](#casting-spells-for-a-test).

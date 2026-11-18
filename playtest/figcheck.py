@@ -14,7 +14,7 @@ def grab(p):
     subprocess.run(['import', '-window', W, p], check=True)
     return Image.open(p).convert('RGB')
 mem = g.read(0xC0000, 0x40000)
-hdr = 0xC0000 + next(i for i in range(0, len(mem), 16) if mem[i:i + 8] == b'DSCLOGvd')
+hdr = 0xC0000 + next(i for i in range(0, len(mem), 16) if mem[i:i + 8] == b'DSCLOGve')
 a = grab(f'{WORK}/fc-{label}-a.png')
 cx, cy = struct.unpack('<hh', g.read(ds * 16 + CAMERA, 4))
 g.write(hdr + 242, struct.pack('<H', 1))

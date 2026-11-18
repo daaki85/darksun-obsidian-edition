@@ -24,6 +24,7 @@
 - [Selling plain gear: S](#selling-plain-gear-s)
 - [Choosing an enemy: Tab, Enter and the rings](#choosing-an-enemy-tab-enter-and-the-rings)
 - [The chance to hit before the swing](#the-chance-to-hit-before-the-swing)
+- [Squares in reach](#squares-in-reach)
 - [Showing what can be used: Alt](#showing-what-can-be-used-alt)
 - [Scrolling the map](#scrolling-the-map)
 - [M, U and I: open a screen, close it again](#m-u-and-i-open-a-screen-close-it-again)
@@ -865,6 +866,80 @@ What the game's code does, and the Loader after it:
 
 Tests: `tests/test_hitchance.py`. Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-17-hit-chance.md).
 
+## Squares in reach
+
+([In the features page](FEATURES.md#squares-in-reach).)
+
+How: the Loader works out where the party member whose turn it is can still walk
+(`dsloader/squares.py`, from `DiceLog._drawn`, four times a second) and DSCLOG marks those
+squares in the floor pass.
+
+- **The Loader's side.** `mover`: in a fight, the party member whose turn it is (`whose_turn` under
+  4), its square (its thing's place / 16), its movement points (a word a creature at 37BD:022Bh)
+  and bit 0 of its turn's flags (37BD:01D5h, "can still walk": without it the points count as 0).
+  `reach` on the game's live walk map (the far pointer DS:0556h, 128 x 98 bytes): the squares whose
+  shortest way (`costs`: Dijkstra, 10 a straight step and 14 a diagonal one, a square with bit 40h
+  barred, corners cut) costs no more than the points, and the squares of a clear diagonal run whose
+  last step is begun with 10 or more. `bitmap` makes DSCLOG's `SQ_MAP` of them, 32 x 32 squares
+  with the member in the middle (kept on the map at its edges): a Move of 15 fits; the far squares
+  of a hasted walker's reach are left unmarked. `Squares.update` writes it (with `SQUARES_ON` 0
+  around the write) and asks for the view to be drawn again (`shadows.redraw`) when it changes;
+  while the member walks the marks are left as they were until two looks running find it on the
+  same square with the same points, as each change has the whole view drawn again. LIGHT is made
+  as the dust makes it (`dust.light_table`) when the palette is read again, and the shadows'
+  upkeep is asked for with the switch on (`needed`). Out of a party member's turn `SQUARES_ON` is
+  0; a DSCLOG met with it left on by another Loader is told so.
+- **DSCLOG's side** (`TINT_PASS`, called before `RING_PASS` in `SHADOW_PASS`, so the Tab ring is
+  drawn over the marks and both under the figures): for each set bit of `SQ_MAP` (with the
+  header's `SQUARES_ON`, +1890, set) the square's middle on the screen (square
+  x 16 + 8 less the camera) goes to `RING_POINTS` with `SQ_DOTS`, a quarter of a cross five pixels
+  each way, mirrored as the rings' quarters are, and `RING_PX` lightens each pixel four times
+  (`R_KIND` 3) through LIGHT: `RING_PX` takes its table from the word `R_TAB`, `FAR_RED` but for
+  this pass. LIGHT has a lighter colour only for what the dust takes for ground (sand, dirt, the
+  pens' paving); a pixel of any other colour is darkened four times through DARK, the shadows'
+  table, instead (`RING_PX`'s `.none`, at a pixel's first look only), so a floor the dust has no
+  colours for still shows its crosses, dark ones (seen in the game only with LIGHT emptied in
+  memory: the pens' and the arena's floors are all ground to the dust). Things drawn over the
+  floor (a rug, the arena's stone platform) are drawn after the pass and cover the crosses under
+  them. A row or a square whose cross is all outside what is
+  being drawn (a walker's rectangle) is passed over before `RING_DOT` tests its pixels.
+- **Where it is kept.** DSCLOG's segment and upper memory had no room left for the pass and its
+  map ([the limits](DEVELOPMENT-INTERNALS.md#the-limits)). `TINT_PASS` in the segment is a test of
+  `SQUARES_ON` and a call; the loop is `TINT_FAR`, code in DSCLOG's tail run through `TAIL_CALL`
+  ([DSCLOG's segment](DEVELOPMENT-INTERNALS.md#dsclogs-segment)), which reaches the segment's
+  variables through GS and `RING_POINTS` through a far entry (`RING_POINTS_FAR`). `SQ_MAP` (130
+  bytes) is in DSCLOG's own PSP, the 100h bytes before its header, at 5Ch (`squares.SQ_MAP_PSP`):
+  the room DOS keeps for a program's FCBs and command line, which nothing reads once DSCLOG has
+  stayed resident, so the map costs no upper memory. The Loader writes it at the header's address
+  less 100h plus 5Ch.
+  `FLOOR_ENTER` takes `SQUARES_ON` beside the shadows', the dust's and the rings' switches.
+- **Why one click's reach and not the bare rule.** By the game's rule ([moving in a
+  fight](HOW-THE-GAME-WORKS.md#moving-in-a-fight)) a square is in reach when a square beside it
+  is reached with 10 points to spare, but the game's own route takes its diagonal steps first, so
+  only an all-diagonal way ends on a step begun with 10 to 13: marked by the bare rule, a rim of
+  squares would each be a step out of a click's reach, and that click spends the whole Move.
+  What is left: the game's route round a wall can cost more than the shortest way (8 points
+  more seen, through a doorway off the straight line), so the last cross or two behind a wall can
+  take two clicks. The game's route finder (segment 8BBh, 0DFB0h-0EAC1h: a straight run, the
+  barred stretches walked round along their edges, then straightened) is not played out.
+- **What the game has** (file offsets): the round's start gives each combatant its points
+  (57566h, Move x 10, then doubled or halved); the walker's step (1BFB6h) asks the flags
+  (41BE:008Eh, 590B2h) and then takes the step's cost from the table at DS:055Ch (59106h: under
+  10 left, the points zeroed and bit 0 cleared); a square is barred by bit 40h of its byte
+  (142F:00DCh, 197CCh), over a wide figure's whole footprint (2067Bh); the path finder tests only
+  the square stepped into (0E711h); F10 in a fight (the key table at 1BC5Bh, 4400h to 1B83Ah)
+  puts the member back where its turn began (DS:4966h, 4968h) with its points (DS:4964h), but not
+  its flags' bit 0.
+- **The cost** (measured in Pehtucl's ambush, a member walked back and forth along a row,
+  `playtest/squarecost.py`, on and off in turn): 154 map units a second with the marks against
+  157 without with 250 points in memory (the whole bitmap marked), 157 against 160 with a real
+  120; a frame a second. Before the pass passed over what is outside the clip, and with the marks
+  made again at every step, the same walk was 131 against 156.
+
+Tests: `tests/test_squares.py` (the rules on a made-up walk map, the bitmap, the upkeep),
+`tests/test_squares_drawing.py` (`TINT_PASS` in the emulator: the crosses, the clip, the rings'
+red kept). Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-18-squares-in-reach.md).
+
 ## Showing what can be used: Alt
 
 ([In the features page](FEATURES.md#showing-what-can-be-used-alt).)
@@ -1171,16 +1246,17 @@ creature records' +1Dh 4, a fire and bedrolls put on the map), and does nothing 
 showed anything on the map in the pens. So F5 and F9 are the two keys, and while the party camps
 (+1Dh 4) the Loader gives both back to the game.
 
-**The keys.** The Loader writes the two keys into DSCLOG's header (`QS_KEYS`, +1868; FFFFh with
+**The keys.** The Loader writes the two keys into DSCLOG's header (`QS_KEYS`, +1878; FFFFh with
 the switch off, so they stay the game's). `QS_KEY` (from `OUR_KEY`, the INT 16h hook) takes one
-and counts it (`QS_SEQ`, +1872, a word each) only if the map's main loop ran within the last two
+and counts it (`QS_SEQ`, +1882, a word each) only if the map's main loop ran within the last two
 BIOS ticks. That loop (`main()`'s, the one caller of the routine `PROBE_SCROLL` is in) doesn't
 run while a window, a talk, a screen or a menu is up (the game's DS:0BC9h is 2 then), nor on an
 enemy's turn.
 
 **A save.** The Loader writes the file (the game's save path, DS:4B81h, `.\` as the Loader starts
-it, then `SAVQnn.SAV`) and the name into `SAVE_TEXT` (112 bytes in the tail, its offset at +1878)
-and sets `SAVE_REQ` (+1876) to 1. `SAVE_TICK`, called from `PROBE_SCROLL`, sets it to 0, and
+it, then `SAVQnn.SAV`) and the name into `SAVE_TEXT` (112 bytes in the tail, its offset at +1888)
+and sets `SAVE_REQ` (+1886) to 1. `SAVE_TICK`, called from `PROBE_SCROLL` (its work is `SAVE_FAR`'s,
+code in the tail run through `TAIL_CALL`: [DSCLOG's segment](DEVELOPMENT-INTERNALS.md#dsclogs-segment)), sets it to 0, and
 unless a fight is on (the word at 377Eh:0019h, which the game's own menu tests: "CAN'T SAVE
 DURING COMBAT") calls the routine the SAVE window's wrapper calls, the overlay entry 4242h:0089h
 (DSUN.EXE 6912Dh, `save(far file, far name)`), through its stub as `GIVE_XP` calls its overlay;

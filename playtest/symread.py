@@ -20,6 +20,6 @@ for line in listing.split('Section image')[1].split('---- Section')[0].splitline
 exe = open(os.path.join(DOS, 'DSCLOG.EXE'), 'rb').read()
 image = exe[struct.unpack_from('<H', exe, 8)[0] * 16:]
 mem = g.read(0, 0x110000)
-base = mem.find(b'DSCLOGvd') - image.find(b'DSCLOGvd')
+base = mem.find(b'DSCLOGve') - image.find(b'DSCLOGve')
 for name in sys.argv[1:]:
     print(name, mem[base + sym[name]:base + sym[name] + 4].hex())

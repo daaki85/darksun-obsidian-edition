@@ -67,6 +67,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `memaudit.py` | DOS memory now: every block, its owner and size, and DSCLOG's header figures. |
 | `memberpos.py N` | party member N's figure on screen, to click (its feet x, and y - 12), from its map position and the camera; |
 | `memsample.py [LABEL]` | one line of the game's memory: the map's flag, the heap, its free blocks, DOS memory free after the game. |
+| `movestate.py [R]` | in a fight, whose turn it is, its square, the movement points it has left (37BD:022Bh + creature x 2) and its turn's flags (37BD:01D5h; |
 | `msgbox.sh` | exit 0 if a message waits for a click: the speech box with a portrait at the top (its frame's pixel at 60,3 is 154,154,178) or the grey message window (113,113,138 at 200,50). |
 | `npcgear.py` | every creature on the map now (the game's things that are creatures), with the items in its three lists: +08h worn, +0Ah held (what the Look box lists and the game fights with), +0Ch backpack. |
 | `openshop.sh` | from the "selling junk" save (saves/selling-junk-user), Kalzith's shop: the eye on him (his figure's square found from memory: his feet less 16), Talk, 1, the box clicked through, 1, the box. |
@@ -91,7 +92,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `pointer.py [walk\|look\|attack [X Y]]` | the map pointer's mode (DS:11B8h: 1 walk, 2 look (the eye: also talk, use), 4 attack; |
 | `poolfree.py [SECONDS]` | the game's picture memory (the blocks at DS:8E94h, 8 bytes each: +0 the bytes free in it (dword), +4 its far pointer; |
 | `powers.py` | each party member's known psionic powers (selector 2F0h's segment, +77h + member x 22h + power, bits 3-7: known), by name. |
-| `qsave.py SLOT [NAME] \| load \| state` | ask DSCLOG for a save by the game's own routine (SAVE_REQ, the header's +1876: dsloader/quicksave.py), as the Loader's quick save does, and say what came of it and how long it took (seconds of this machine's clock,... |
+| `qsave.py SLOT [NAME] \| load \| state` | ask DSCLOG for a save by the game's own routine (SAVE_REQ, the header's +1886: dsloader/quicksave.py), as the Loader's quick save does, and say what came of it and how long it took (seconds of this machine's clock,... |
 | `rackcheck.py` | the slave pens' weapon rack (object 2599; |
 | `randout.py N [SEED]` | N random outfit changes for member 0: each time one of its worn items (slot under 12) taken off (slot byte +11h set to 50) or put back, waiting for the Loader's copy of SEGOBJEX.GFF to be written; |
 | `rec.py [FIRST LAST]` | the combat records (58 bytes) of creatures FIRST to LAST (default the party, 0-3), hex from +10h, to find a field by comparing what the screen shows |
@@ -122,6 +123,9 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `slotcount.py [LABEL]` | one line: the leader's place, the game's picture slots taken (of 300), the store's end (of 741,376), how many are in memory and STALE, and with DSCLOG's PIC_REUSE how many slots it has reused. |
 | `soundmatch.py RAW START END WAV...` | in DOSBox's recorded output (RAW: 16-bit stereo at 44100 Hz, from start.sh with PT_AUDIO set; |
 | `spellsetup.py [MEMBER=LEVEL ...] [hp=N] [SPELL ...]` | teaches each MEMBER the spells, fills its slots and sets its casting classes to LEVEL, in memory (never save after). |
+| `squarecost.py LEGS COL1 ROW COL2 [POINTS]` | what a walk costs in a fight, for the squares in reach: on a party member's turn it walks the member along row ROW between columns COL1 and COL2, LEGS times, its points set to POINTS (250) before each leg (a test's... |
+| `squaresweep.py POINTS [all\|edge\|out][here] [MAX]` | the Loader's squares in reach (dsloader/squares.py) against the game, on a party member's turn in a fight, from where its turn began. |
+| `squarewalk.py COL ROW [POINTS]` | on a party member's turn in a fight, click the middle of walk-map square COL,ROW with whatever pointer is up (pointer.py walk first) and say where the member stopped and what movement it has left. |
 | `start.sh` | Xvfb :55, the Loader's patched game in DOSBox as the Loader starts it (the repository's current code: rebuild = restart), and the Loader's dice log ($WORK/dice.txt). |
 | `start_recomp.sh` | the game on Dark Sun Recompiled ($DSUN, its build of the mod) instead of DOSBox, with the Loader's patched game prepared as start.sh does and the dice log attached. |
 | `state.py` | one line of the game's state: fight (fight_on, whose turn), region, the leader's map position, the camera, and the flags named on the command line (state.py 11 505) |

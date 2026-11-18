@@ -136,6 +136,32 @@ the chance, in the dice log and the combat log's header*. Rules: [the chance sho
 swing](PLAYER-GUIDE.md#the-chance-shown-before-the-swing). How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#the-chance-to-hit-before-the-swing).
 
+### Squares in reach
+
+In a fight, on a party member's turn, every square that member can still walk to this turn has a
+small cross on the floor: a light one on sand, dirt and paving, a dark one on a floor of other
+colours. The crosses follow the turn: fewer as the member walks and its
+movement is spent, none once it is spent, and the next member's as the turn passes. They are drawn
+on the floor, so figures and walls stand on them, and a square a figure stands on (an ally's too)
+has none: nobody walks through anybody. What lies on the floor covers them as well: a square under
+a rug or the arena's stone platform can be walked on but shows no cross.
+
+![Seneca's turn, half her movement spent: light crosses on the squares she can still reach, round the wall's corner too; the Templar, chosen with Tab, stands outside them in his red ring](docs/squares-in-reach.png)
+
+A marked square is one a single click walks to. The game counts 10 for a step straight and 14 for
+a diagonal one out of ten times the Move the name box shows, and the crosses are counted the same
+way, by the shortest way round walls, through doorways and past whoever stands in the way ([moving
+in a fight](PLAYER-GUIDE.md#moving-in-a-fight)). **One limit:** where a wall or a doorway makes
+the game go round, its own way can cost a little more than the shortest, so the farthest crosses
+behind a wall may be a step out of one click's reach: click a nearer cross first, then the far
+one. Walking past an enemy costs nothing more, and a click on an enemy's figure is still an
+attack, not a walk. **F10**, the game's own key, takes a move back while some of it is left.
+
+**Switch:** *Squares in reach: in a fight, a small cross on each square the party member whose turn
+it is can still walk to*. Rules: [moving in a fight](HOW-THE-GAME-WORKS.md#moving-in-a-fight). How it works:
+[DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#squares-in-reach).
+
+
 ### Showing what can be used: Alt
 
 Hold **Alt** on the map, out of a fight: a gold ring appears on the ground under everything in view

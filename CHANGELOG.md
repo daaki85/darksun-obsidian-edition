@@ -35,6 +35,12 @@ under "## Unreleased (branch `obsidian-edition`)
 - **Showing what can be used**: hold Alt on the map, out of a fight, for a gold ring under every
   door, container, body, item and person a click does something with, and the nearest ones' names
   (`usable.py`; DSCLOG unchanged).
+- **Squares in reach**: on a party member's turn a small cross on every square one click can
+  still walk to, by the game's own rules of movement (`squares.py`, DSCLOG's `TINT_PASS`; header
+  field `SQUARES_ON` +1890, signature `DSCLOGve`). **DSCLOG's room**: #112 left 224 bytes of the
+  segment and 36 paragraphs of upper memory, less than quick save and the squares needed, so their
+  two long routines run from the tail (`TAIL_CALL`: code in the tail is new) and the squares' map
+  lies in DSCLOG's own PSP: 71,440 bytes, 48 bytes and 1 paragraph left.
 
 **Changed**
 - **Fewer switches** (#110), for a simpler Options tab and the mod's rules as meant: the combat

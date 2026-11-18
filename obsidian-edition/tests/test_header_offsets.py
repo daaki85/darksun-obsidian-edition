@@ -29,7 +29,7 @@ _built = {}
 FIELDS_BY_NAME = {"TSR_POISON_USED": "poison_used", "TSR_BAD_LUCK": "bad_luck", "TSR_LOADER_BEAT": "loader_beat",
                   "TSR_GEAR_WHO": "gear_who", "TSR_A20_LOST": "a20_lost",
                   "TSR_QS_KEYS": "qs_keys", "TSR_QS_SEQ": "qs_seq", "TSR_SAVE_REQ": "save_req",
-                  "TSR_SAVE_OFF": "save_off"}
+                  "TSR_SAVE_OFF": "save_off", "TSR_SQUARES_ON": "squares_on"}
 
 
 def symbols():

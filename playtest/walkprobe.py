@@ -12,7 +12,7 @@ n, X, Y = map(int, sys.argv[1:4]); out = sys.argv[4]
 secs = float(sys.argv[5]) if len(sys.argv) > 5 else 6.0
 os.makedirs(out, exist_ok=True)
 mem = g.read(0, 0x110000)
-hdr = next(i for i in range(0, len(mem), 16) if mem[i:i + 8] == b'DSCLOGvd')
+hdr = next(i for i in range(0, len(mem), 16) if mem[i:i + 8] == b'DSCLOGve')
 def sample():
     x, y = struct.unpack('<HH', g.read(ds * 16 + game.POSITIONS + n * 32, 4))
     st = struct.unpack('<H', g.read(hdr + 204, 2))[0]

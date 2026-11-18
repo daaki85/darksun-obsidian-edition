@@ -28,7 +28,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple
 
-from . import aging, usable, quests, quicksave, hitchance, journal, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, usable, quests, quicksave, hitchance, journal, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, squares, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory, WriteRefused
@@ -37,7 +37,7 @@ from .itemwatch import ItemWatch
 from .textlog import KIND_MESSAGE, KIND_PORTRAIT, KIND_SHOW_REPLIES, KIND_TEXT, Dialogue, DialogueEntry, TextBuffer
 from .tracker import PartyTracker
 
-HDR_SIG = b"DSCLOGvd"
+HDR_SIG = b"DSCLOGve"
 TSR_HDR_OFF = 20  # DSCLOG's header: where it is in DSCLOG's segment
 # ... the party's spell slots, for the game's USE screen (PROBE_USE)
 TSR_SLOTS_OFF, SLOTS_SIZE = 148, 128
@@ -578,6 +578,8 @@ class DiceLog:
         self._dust = dust.Dust()
         self.ring_mode = rings.ONLY_CHOSEN  # a ring in a fight: off, or the chosen enemy's (rings.py)
         self._rings = rings.Rings()
+        self.show_squares = True  # the squares a party member can still walk to, marked in a fight (squares.py)
+        self._squares = squares.Squares()
         self._big = cahulaks.Big()
         self._large = sizes.Large()
         self.use_targeting = True  # Tab chooses an enemy in a fight, Enter attacks it (targeting.py)
@@ -732,6 +734,7 @@ class DiceLog:
         self._poll_fails = 0
         self._dust = dust.Dust()
         self._rings = rings.Rings()
+        self._squares = squares.Squares()
         self._usable = usable.Usable()
         self._big = cahulaks.Big()
         self._large = sizes.Large()
@@ -1039,6 +1042,7 @@ class DiceLog:
         self.defiler_scrolls = settings.get("defiler_scrolls", True) is not False
         self.ring_mode = rings.mode(settings)
         self.hit_chance = settings.get("hit_chance", True) is not False
+        self.show_squares = settings.get("squares", True) is not False
         self.quicksave.keys = settings.get("quick_save", True) is not False
         self.quicksave.auto = settings.get("autosave", True) is not False
         self.show_usable = settings.get("show_usable", True) is not False
@@ -1920,7 +1924,7 @@ class DiceLog:
         try:
             self._shadows.update(self.game, self.tsr_hdr, self.show_shadows, now,
                                  needed=self.show_dust or self.ring_mode != rings.OFF or self.combat_log
-                                 or self.see_through or self.show_usable)
+                                 or self.see_through or self.show_usable or self.show_squares)
             self._update_panel(now)
             self._labels.on = self.floating_names
             self._labels.tick(self.game.guest, self.tsr_hdr, now)
@@ -1929,6 +1933,7 @@ class DiceLog:
                                          lambda turn, chosen: hitchance.line(self._swings(turn, chosen)))
             self._marks(now)
             self._dust.update(self.game, self.tsr_hdr, self.show_dust, self._shadows.palettes)
+            self._squares.update(self.game, self.tsr_hdr, self.show_squares, self._shadows.palettes)
             hdr = self.tsr_hdr
             self._ghosts.update(self.game, hdr, self.see_through, self._shadows.palettes,
                                 lambda: shadows.redraw(self.game, hdr))

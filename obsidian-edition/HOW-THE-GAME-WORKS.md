@@ -17,6 +17,7 @@ the game, and checked here in the game's own code.
 
 - [Character creation](#character-creation)
 - [Initiative](#initiative)
+- [Moving in a fight](#moving-in-a-fight)
 - [No critical hits](#no-critical-hits)
 - [Helpless targets take double](#helpless-targets-take-double)
 - [The game's two weapons](#the-games-two-weapons)
@@ -91,6 +92,45 @@ The DEX adjustment has its own table: −6 at DEX 1, −4 at 2, −3 at 3, −2 
 highest score acts first; a second roll, 0-199, decides between equal scores
 (the log shows it only for those). Choosing Wait lowers the character's score
 to 10 (or by one, if it's 10 or less already) so they act later in the round.
+
+## Moving in a fight
+
+From the game's code, and walked in the game square by square
+([the log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-18-squares-in-reach.md)):
+
+- **Movement points.** As a round starts every combatant gets ten points for
+  each point of Move (twice as many Hasted, half Slowed). The name box's "Move"
+  is what is left of them, divided by ten.
+- **A step costs 10 straight and 14 diagonally**, and the fight is on a grid of
+  squares 16 pixels a side. A step is taken whenever 10 points or more are
+  left, whatever it costs; after a step that leaves fewer than 10 the rest is
+  gone and the walk is over (the END menu opens). So a diagonal step can be
+  the last one with only 10 to 13 points left.
+- **The way to a click** runs straight at it, its diagonal steps first and its
+  straight ones after. Where something bars it, the way follows that thing's
+  edge round and is then straightened, which can cost more than the shortest
+  way: a walk through a doorway two squares off the straight line cost 8
+  points more than the shortest, begun with a diagonal step the wrong way.
+  Because the diagonal steps come first,
+  the last step is a straight one, and its 10 points must be there, unless the
+  whole way is diagonal: with 60 points a square six west and one north (64 by
+  the count) is not reached by one click, though a click on the square before
+  it and then one on it would get there.
+- **What bars a square**: walls, shut doors, furniture and every figure, the
+  party's own included (nobody walks through anybody). A diagonal step needs
+  only the square stepped into to be free, so corners are cut, between two
+  figures too.
+- **Enemies don't hold a walker.** Walking past one costs nothing more and
+  stops nothing; there are no free blows at someone walking away. A click on an
+  enemy's figure walks up to it and attacks.
+- **F10 takes the move back**: on a party member's turn it puts the member
+  where its turn began, with the points it had. It works while some movement
+  is left. Once the last step is taken F10 still puts the member back, and the
+  name box shows the Move again, but no click walks it (the game gives the
+  points back without the leave to walk).
+
+With the Loader the squares one click reaches are marked on the floor
+([squares in reach](FEATURES.md#squares-in-reach)).
 
 ## No critical hits
 

@@ -421,6 +421,11 @@ class Viewer:
         ttk.Checkbutton(in_game, text="The chance to hit: with an enemy chosen with Tab, what the d20 must show to hit "
                         "it and the chance, in the dice log and the combat log's header",
                         variable=self.hit_chance, command=self._options_changed).pack(anchor="w", pady=(4, 0))
+        # the squares the party member whose turn it is can still walk to (squares.py)
+        self.show_squares = tk.BooleanVar(value=settings.get("squares", True) is not False)
+        ttk.Checkbutton(in_game, text="Squares in reach: in a fight, a small cross on each square the party member "
+                        "whose turn it is can still walk to", variable=self.show_squares,
+                        command=self._options_changed).pack(anchor="w", pady=(4, 0))
         # gold rings and names for what a click does something with, while Alt is held (usable.py)
         self.show_usable = tk.BooleanVar(value=settings.get("show_usable", True) is not False)
         ttk.Checkbutton(in_game, text="Showing what can be used: hold Alt on the map, out of a fight",
@@ -667,7 +672,7 @@ class Viewer:
         for var in list(self.rule_vars.values()) + list(self.content_vars.values()):
             var.set(True)
         for var in (self.monster_info, self.floating_names, self.starting_gear, self.steady_pace,
-                    self.hit_chance, self.show_usable, self.quick_save, self.autosave):
+                    self.hit_chance, self.show_squares, self.show_usable, self.quick_save, self.autosave):
             var.set(True)
         self.combat_log_level.set(dicelog.combat_log_level({}))
         self.ring_mode.set(rings.mode({}))
@@ -1123,6 +1128,7 @@ class Viewer:
                 self.dice.game_dir = launch.find_game_dir()
                 self.dice.ring_mode = self.ring_mode.get()
                 self.dice.hit_chance = self.hit_chance.get()
+                self.dice.show_squares = self.show_squares.get()
                 self.dice.show_usable = self.show_usable.get()
                 self.dice.quicksave.keys = self.quick_save.get()
                 self.dice.quicksave.auto = self.autosave.get()
@@ -1251,7 +1257,7 @@ class Viewer:
         values = {"monster_info": self.monster_info.get(), "floating_names": self.floating_names.get(),
                   "combat_log_level": self.combat_log_level.get(), "starting_gear": self.starting_gear.get(),
                   "rings": self.ring_mode.get(), "steady_pace": self.steady_pace.get(),
-                  "hit_chance": self.hit_chance.get(), "show_usable": self.show_usable.get(), "quick_save": self.quick_save.get(),
+                  "hit_chance": self.hit_chance.get(), "squares": self.show_squares.get(), "show_usable": self.show_usable.get(), "quick_save": self.quick_save.get(),
                   "autosave": self.autosave.get(), "picture": self.picture.get()}
         device = self._midi_value()  # (something typed that is no device: the one remembered stays)
         values[midiout.SETTING] = getattr(self, "_options_shown", {}).get(
@@ -1289,6 +1295,7 @@ class Viewer:
             self.dice.floating_names = self.floating_names.get()
             self.dice.ring_mode = self.ring_mode.get()
             self.dice.hit_chance = self.hit_chance.get()
+            self.dice.show_squares = self.show_squares.get()
             self.dice.show_usable = self.show_usable.get()
             self.dice.quicksave.keys = self.quick_save.get()
             self.dice.quicksave.auto = self.autosave.get()

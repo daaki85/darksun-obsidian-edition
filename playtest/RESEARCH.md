@@ -178,7 +178,14 @@ raised before stopping.
 
 - **Where the turn's movement is** (logs/2026-11-09-boots-of-speed.md): a word a creature at
   segment DS - (4356h - 37BDh), +22Bh + creature x 2 (Move x 10, set as its turn starts: 57566h,
-  DSCLOG's PROBE_MOVE).
+  DSCLOG's PROBE_MOVE). **The turn's flags** are a word a creature at +1D5h there (3FFh as the
+  round starts; bit 0: can still walk, cleared with the last step, 59106h), and a walk's next
+  step a byte a thing at 3972:0377h + thing x 1Ch (FFh: none). DS:4964h-4968h keep the points and
+  the place the turn began with, for F10 (logs/2026-11-18-squares-in-reach.md).
+- **DSUN.EXE's overlays** (the same log): the root ends at file 52EA0h (`FBOV`); each overlay has
+  a stub segment in the root (41A6h and up: `CD 3F`, the overlay's place and size, then 5 bytes
+  an entry: `CD 3F`, the routine's offset), so a far call to 41BE:0093h is the combat overlay's
+  (56CC0h-5A031h) routine at 59106h. A routine no far call names is reached this way.
 - **An archer's turn bytes** (logs/2026-11-14-quiver-turn.md; `turnwatch.py`): at segment
   DS - (4356h - 37BDh), a byte a combatant: **+181h** the attacks made this round (63h: spent, the turn ends;
   set back to 0 as it does), **+1ABh** the attack commands.

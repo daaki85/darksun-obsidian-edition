@@ -135,7 +135,7 @@ nasm -f bin -o dos/DSCLOG.EXE dos/dsclog.asm
 ```
 
 The build fails if DSCLOG outgrows its 64 KB segment or the room it has in upper memory ([Room
-and memory](DEVELOPMENT-INTERNALS.md#room-and-memory)). The header's signature (`DSCLOGvd` now:
+and memory](DEVELOPMENT-INTERNALS.md#room-and-memory)). The header's signature (`DSCLOGve` now:
 after Z, lowercase) goes up whenever DSCLOG and the Loader must change together (`HDR_SIG` in
 `dsloader/dicelog.py`), so a Loader never talks to an older DSCLOG.
 
@@ -214,11 +214,11 @@ Some tests need more, and are skipped without it (each skip says what it needs, 
 to trust when a test file is added):
 
 - **unicorn**: the tests that run DSCLOG's interrupt handlers in a CPU emulator (`test_dsclog`,
-  `test_gamepatch`, `test_shadows`, `test_dsclog_drawing`, `test_cahulaks`, `test_sizes`,
+  `test_gamepatch`, `test_shadows`, `test_dsclog_drawing`, `test_squares_drawing`, `test_cahulaks`, `test_sizes`,
   `test_held`, `test_least_scores`, `test_manual_spells`, `test_manual_group3`, `test_group4`,
-  `test_interrupt_hygiene`, `test_quicksave`'s `QS_KEY` and `SAVE_TICK` among them).
+  `test_interrupt_hygiene`, `test_squares_drawing`, `test_quicksave`'s `QS_KEY` and `SAVE_TICK` among them).
 - **NASM**: the rebuild checks (`test_audit_builds`, `test_header_offsets`, `test_least_scores`,
-  `test_dsclog_drawing`, `test_scroll_interrupts`, `test_interrupt_hygiene`).
+  `test_dsclog_drawing`, `test_squares_drawing`, `test_scroll_interrupts`, `test_interrupt_hygiene`).
 - **tkinter**: the window's tests (`test_theme`, `test_partyview`, `test_find`,
   `test_viewer_options`, `test_journal`'s and `test_quests`' tab, and `test_compiles`' window part; `test_viewer_settings` also needs a
   display, so run it under `xvfb-run` on a machine without one). Linux's Python often lacks it.
@@ -476,6 +476,7 @@ and the section that explains it. INTERNALS, RULES, KITS, CONTENT and SCREENS ar
 |---|---|---|
 | `targeting.py` | Tab and Enter: choosing an enemy and attacking it | [SCREENS: choosing an enemy](DEVELOPMENT-SCREENS.md#choosing-an-enemy-tab-enter-and-the-rings) |
 | `hitchance.py` | the chance to hit shown before the swing, worked out as the game's attack does | [SCREENS: the chance to hit](DEVELOPMENT-SCREENS.md#the-chance-to-hit-before-the-swing) |
+| `squares.py` | squares in reach: in a fight, a mark on each square the party member whose turn it is can still walk to, counted by the game's rules | [SCREENS: squares in reach](DEVELOPMENT-SCREENS.md#squares-in-reach) |
 | `usable.py` | showing what can be used: while Alt is held, a ring under every door, container, body, item and person in view, and the nearest ones' names | [SCREENS: showing what can be used](DEVELOPMENT-SCREENS.md#showing-what-can-be-used-alt) |
 | `scrolling.py` | scrolling the map with the mouse | [SCREENS: scrolling the map](DEVELOPMENT-SCREENS.md#scrolling-the-map) |
 | `wheel.py` | the mouse wheel, for the combat log's panel | [SCREENS: the combat log](DEVELOPMENT-SCREENS.md#the-panel) |
@@ -532,7 +533,7 @@ table](DEVELOPMENT-INTERNALS.md#the-loaders-game-flags), and `tests/test_flagran
 (or `_ranges`); `test_audit_flags` finds it by itself.
 
 **A header field** (shared by DSCLOG and the Loader): add it at the end of `hdr:` in
-`dos/dsclog.asm` with its offset in the comment (`+1890` after `SAVE_OFF`'s `+1888`), so the
+`dos/dsclog.asm` with its offset in the comment (`+1892` after `SQUARES_ON`'s `+1890`), so the
 others never move; name it `TSR_*` in the module that reads it (`test_header_offsets` checks both:
 the field at the offset its comment says, the constant a field's offset). If both sides must change
 together, take the signature up (`sig` in `dsclog.asm` and `HDR_SIG` in `dicelog.py`). See
