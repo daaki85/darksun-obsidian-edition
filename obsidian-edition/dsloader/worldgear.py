@@ -22,11 +22,14 @@
   rangers; their stealth: stealth.py): the cloak the Elven Leader's gift with his Gythka (+2: his
   script gives it: elvenleader.py), the boots in the buried chest of Kel's caravan, with the
   Cahulaks +1.
-- The Flame Blade, an obsidian long sword +1 (fire clerics can wield it) whose blade burns what it
-  hits, as the game's Dark Flame does with Burning Hands: Focus Heat, the fire clerics' spell, cast
-  as a weapon's spells are, at caster level 0: 2d6 of fire to the one hit, a save for half (AD&D's
-  flame blade: 1d6 of fire; the game's Produce Fire, 1d6, sets the ground alight and burns friends
-  standing there): in the pack of the Hot Springs' Templar (the one with the Drake Shield).
+- The Searing Blade, an obsidian short sword +2 (fire and earth clerics, psionicists and thieves
+  can wield it) whose blade burns what it hits, as the game's Dark Flame does with Burning Hands:
+  Focus Heat, the fire clerics' spell, cast as a weapon's spells are, at caster level 0: 2d6 of
+  fire to the one hit, a save for half (AD&D's flame blade: 1d6 of fire; the game's Produce Fire,
+  1d6, sets the ground alight and burns friends standing there): in the pack of the Hot Springs'
+  Templar (the one with the Drake Shield). It was the Flame Blade, an obsidian long sword +1, up to
+  2.18.0 (the user's choice, 2026-11-17: the priest spell's weapon has that name); a saved game's
+  is made the Searing Blade as the game runs (mend_searing_blade).
 - The magic axes: Drakejaw, a bone axe +1, on one of the Magera guarding the wagon's prisoners;
   Glasshewer, an obsidian axe +2, on the elven slavers' Templar; Headsman, a metal great axe +2,
   in the arena Announcer's stash. And the Elven Leader's Gythka +1 made +2.
@@ -246,7 +249,7 @@ NAMES.update({EMBERLASH: b"Emberlash", IRONWHIRL: b"Ironwhirl"})
 OBSIDIAN_CAHULAKS_1 = ((game.OBSIDIAN_CAHULAKS_TYPE, EMBERLASH, 0x10000 - 2676, PLUS_VALUE), 1)
 METAL_CAHULAKS_2 = ((game.METAL_CAHULAKS_TYPE, IRONWHIRL, 0x10000 - 2678, 2 * PLUS_VALUE), 2)
 UZOMA, TEMPLE_RACK, TEMPLE = 196, 2252, 0x2D
-FLAME_BLADE_NAME, OBSIDIAN_LONG_SWORD, FOCUS_HEAT = 0x156, 45, 116
+SEARING_BLADE_NAME, OBSIDIAN_LONG_SWORD, FOCUS_HEAT = 0x156, 45, 116
 from . import robes  # noqa: E402 (the robes: the Veiled Robe sold by Kel)
 VEILED_ROBE = armour(game.ROBE_TYPE, robes.VEILED, robes.PICTURE_VEILED, robes.VEILED_VALUE, plus=robes.VEILED_PLUS)
 # the magic shields, priced as the game's (the Drake Shield +1 25,400, El's Shield +2 50,200): 25,000
@@ -258,7 +261,7 @@ WOODEN_SHIELD_1 = armour(WOODEN_SHIELD_TYPE, GUTTERWARD, 0x10000 - 2586, 25000)
 METAL_SHIELD_3 = armour(game.METAL_SHIELD_TYPE, IRONBULWARK, 0x10000 - 2588, 65000, plus=3)
 WARRENS, WARRENS_SKELETON, SKELETON = 0x28, 85, 2266  # (the skeleton at 1913, 577; object 2266 is shared)
 GUARDIAN, BALKAZARS = 216, 0x0D  # (the Guardian of Balkazar's fortress, with the Chatkcha +1)
-NAMES[FLAME_BLADE_NAME] = b"Flame Blade"
+NAMES[SEARING_BLADE_NAME] = b"Searing Blade"
 # the girdles and the amulet (15 letters at most, as the game's own names; the Loader's
 # screens give the whole: FULL_NAMES): the Girdle of Back Defense (no attack from behind or
 # backstab against its wearer: DSCLOG's ITEM_REAR), the Golden Girdle of Urnst (3 better AC against
@@ -287,8 +290,36 @@ def magic_weapon(spec: Tuple[int, int, int, int], plus: int, spell: int) -> byte
     return bytes(rec)
 
 
-# priced as Shadowseeker (a plus and a spell: 22,000)
-FLAME_BLADE = magic_weapon((OBSIDIAN_LONG_SWORD, FLAME_BLADE_NAME, 0x10000 - 2550, 22000), 1, FOCUS_HEAT)  # the Elven Leader's gift (the game's own: its own name, not Kreenfang)
+# priced as Shadowseeker (a plus and a spell: 22,000), 20,800 a plus more
+SEARING_BLADE_VALUE = 2 * PLUS_VALUE + 1200
+SEARING_BLADE = magic_weapon((game.OBSIDIAN_SHORT_SWORD_TYPE, SEARING_BLADE_NAME, 0x10000 - 2550, SEARING_BLADE_VALUE),
+                             2, FOCUS_HEAT)
+
+
+def is_old_flame_blade(rec: bytes) -> bool:
+    """The Flame Blade of a game begun with 2.18.0 or earlier: an obsidian long sword of the Searing Blade's name."""
+    return len(rec) >= game.ITEM_SIZE and struct.unpack_from("<H", rec, game.ITEM_TYPE)[0] == OBSIDIAN_LONG_SWORD \
+        and struct.unpack_from("<H", rec, game.ITEM_NAME)[0] == SEARING_BLADE_NAME
+
+
+def mend_searing_blade(gd) -> int:
+    """A saved game's Flame Blade (an obsidian long sword +1, up to 2.18.0), wherever it is in the
+    region (carried, in a container, on the ground: each pass, as kalzith.mend), made the Searing
+    Blade: its type the obsidian short sword, +2, at its price now (its name, picture and Focus
+    Heat are already the Searing Blade's). How many were."""
+    from . import ring
+    it = ring.Items(gd)
+    done = set()
+    for thing in range(ring.THING_COUNT):
+        for index, rec in it.chain(thing):
+            if index in done or not is_old_flame_blade(rec):
+                continue
+            done.add(index)
+            at = it.items + index * game.ITEM_SIZE
+            gd.guest.write(at + game.ITEM_TYPE, struct.pack("<H", game.OBSIDIAN_SHORT_SWORD_TYPE))
+            gd.guest.write(at + game.ITEM_PLUS, bytes([2]))
+            gd.guest.write(at + weaponchoice.ITEM_VALUE, struct.pack("<H", SEARING_BLADE_VALUE))
+    return len(done)
 
 
 class Gift(NamedTuple):
@@ -379,8 +410,8 @@ MAGIC: Tuple[Gift, ...] = (
     # the Boots of Elvenkind in the caravan's buried chest (made by the dig's script); the cloak
     # is the Elven Leader's gift (his script: elvenleader.py)
     Gift("Buried chest", (ELVEN_BOOTS,), (CARAVAN_CHEST,), 0x1A),
-    # the Flame Blade on the Hot Springs' Templar
-    Gift("Templar", (FLAME_BLADE,), (34,), 0x23),
+    # the Searing Blade on the Hot Springs' Templar
+    Gift("Templar", (SEARING_BLADE,), (34,), 0x23),
     # the axes: Drakejaw on one of the Magera guarding the wagon's prisoners (five of them there, with
     # four more elsewhere, share an object), Glasshewer on the elven slavers' Templar (with his Chain
     # Arm Armor), Headsman in the arena Announcer's stash

@@ -74,9 +74,9 @@ By material, then weapon spec ([by weapon spec](#by-weapon-spec) lists them by t
 | ![](docs/items/ironwhirl.png) | Metal | ***Ironwhirl*** | a metal cahulaks +2 (two-handed); its blades' greys all burn in fire colours | on the **weapon rack** of the Subterranean Temple beneath Teaquetzl, with the Mace +2 and a metal axe |
 | ![](docs/items/dark-flame.png) | Obsidian | Dark Flame | +2, Burning Hands | the Lower Castle's chest |
 | ![](docs/items/bloodwrath.png) | Obsidian | Bloodwrath | +1 | Pehtucl, the pens' templar |
-| ![](docs/items/flame-blade.png) | Obsidian | ***Flame Blade*** | an obsidian long sword +1 (1d8+1) whose blade burns what it hits: the fire clerics' Focus Heat, 2d6 fire damage to the creature hit (a save for half), as the game's Dark Flame casts Burning Hands. Obsidian, so a fire (or earth) cleric can wield it | carried by the **Templar** of the Hot Springs (the one with the Drake Shield) |
 | ![](docs/items/terror-blade.png) | Obsidian | Terror Blade | +2, poison | made in the Wyrm School: pour the terror blossom extract into the mixing bowl, then dip a stone dagger in it (the cluebook says obsidian; the game takes stone) |
 | ![](docs/items/nightsliver.png) | Obsidian | ***Nightsliver*** | an obsidian dagger +2: a fire or earth cleric can wield it | carried by the **Hermit** of the Lava Rift, in place of his stone dagger |
+| ![](docs/items/searing-blade.png) | Obsidian | ***Searing Blade*** | an obsidian short sword +2 (1d6+2) whose blade burns what it hits: the fire clerics' Focus Heat, 2d6 fire damage to the creature hit (a save for half), as the game's Dark Flame casts Burning Hands. Obsidian, so a fire or earth cleric can wield it, and a short sword, so a psionicist or a thief too (until 2.18.0 the Flame Blade, an obsidian long sword +1: a saved game's is made the Searing Blade) | carried by the **Templar** of the Hot Springs (the one with the Drake Shield) |
 | ![](docs/items/mindshard.png) | Obsidian | ***Mindshard*** | an obsidian short sword +1: a **psionicist** can wield it, alone or with a fire or earth cleric | carried by **Maris**; a thief can lift it (200 XP, once a game) |
 | ![](docs/items/blackmace.png) | Obsidian | Blackmace | +1, Shocking Grasp | the Shadow King |
 | ![](docs/items/glasshewer.png) | Obsidian | ***Glasshewer*** | an obsidian axe +2 (1d8+2): a fire or earth cleric can wield it | carried by the **Templar** of the elven slavers' camp (the one with the Chain Arm Armor) |
@@ -110,10 +110,10 @@ For [weapon specialization](WEAPON-SPECS.md), in the weapon window's order:
 
 | Weapon spec | Magic weapons |
 |---|---|
-| Long sword | Dragonsbane +4, Swiftbite +2, El's Drinker +2, Dark Flame +2, Draketooth +1, Hornblade +1, Bloodwrath +1, ***Flame Blade*** +1 |
+| Long sword | Dragonsbane +4, Swiftbite +2, El's Drinker +2, Dark Flame +2, Draketooth +1, Hornblade +1, Bloodwrath +1 |
 | Club | ***Gutterknot*** +1 |
 | Dagger | Dag's Dagger +3, Terror Blade +2, ***Galefang*** +2, ***Nightsliver*** +2, ***Hayneedle*** +1 |
-| Short sword | ***Greenbright*** +2, ***Shadowseeker*** +1, ***Mindshard*** +1, ***Stillwater*** +1 |
+| Short sword | ***Greenbright*** +2, ***Searing Blade*** +2, ***Shadowseeker*** +1, ***Mindshard*** +1, ***Stillwater*** +1 |
 | Mace | Mace +2, Blackmace +1 |
 | Axe | ***Glasshewer*** +2, ***Drakejaw*** +1, Soulcrusher +1, Axe +1 |
 | Great axe | Great Axe +3, ***Headsman*** +2 |
@@ -135,7 +135,7 @@ For [weapon specialization](WEAPON-SPECS.md), in the weapon window's order:
 | ![](docs/items/drake-armor.png) | Leather | Drake Armor | +1, Resist Cold | the Wyvern Master |
 | ![](docs/items/inixhide.png) | Leather | ***Inixhide*** | Leather Chest Armor +1: the leather's AC, +1 | worn by **Legcrusher**, the pens' half-giant |
 | ![](docs/items/wardens-chest.png) | Metal | ***Warden's Chest*** | plate chest armour +1 (AC 3, +1): Resist Fire on its wearer while worn | on **Balkazar**'s body |
-| | Metal | Tanelyv's Armor | no plus (AC 4 better: the chain chest's is 2) | the spirit Tanelyv's gift in the Wyrm Temple (with the arm and leg pieces), once Balkazar is dead |
+| ![](docs/items/tanelyvs-chest-armor.png) | Metal | Tanelyv's Armor | no plus (AC 4 better: the chain chest's is 2) | the spirit Tanelyv's gift in the Wyrm Temple (with the arm and leg pieces), once Balkazar is dead |
 | ![](docs/items/silk-armor.png) | none | Silk Armor | +2 | the Outcast's gift in Undermountain, once the party has ended the curse, unless it has killed the dark spiders of Darkhold |
 
 ### Arm and leg armour
@@ -318,7 +318,7 @@ dearest, the Wand of Missiles, is 65,000):
 
 | Item | Price |
 |---|---|
-| Magic melee weapons, and Dunesong | 20,800 a plus (41,600 for a +2; a +1 with a spell 22,000; the game's Bow +2 is 50,800) |
+| Magic melee weapons, and Dunesong | 20,800 a plus (41,600 for a +2; a +1 with a spell 22,000, the Searing Blade, +2 with one, 42,800; the game's Bow +2 is 50,800) |
 | Cahulaks +1 (Legcrusher's) | 11,600 (the game's Cahulaks +1's) |
 | Cahulaks +2 | 32,400 (the Cahulaks +1's, and 20,800 for the plus more) |
 | Windlash | 2,800 (as the game's Sling +1) |
@@ -403,8 +403,12 @@ How it works: [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidi
 
 Each of the mod's magic items has an icon of its own (in the [tables above](#every-magic-item)), made
 from the plain item's the way the game makes its magic items' (a few pixels in
-the colours it cycles like fire); dropped on the map they look like the plain
-item. The game's names are at most 15 letters, so the rings are
+the colours it cycles, which shimmer: fire for a magic weapon, as the game's own,
+unless its story says otherwise: the water's blue for Stillwater and Hayneedle,
+the air's white and blue for Windlash, Galefang and Skycutter, violet for
+Mindshard, green for Greenbright; the Silk Armor, the Living Cloak and the
+Elvenkind cloak and boots shimmer green); dropped on the map they look like their
+icons, and a magic weapon glints on its wielder's figure in the same colours. The game's names are at most 15 letters, so the rings are
 **RING/PROTECTION** and the cloak **Cloak/Protectn**; the Loader's screens and
 the log give them in full. As with its own items, the game puts the material
 first: **Leather Inixhide**, **Metal +1 Shadowseeker** in the item box.
@@ -517,9 +521,9 @@ slings and bows never are:
 | Metal +3: Dag's Dagger, Great Axe +3 | 80% | 80% (the game's: needs 5) |
 | Metal +4: Dragonsbane | 85% | 85% (the game's: needs 4) |
 | Obsidian +1: Bloodwrath, ***Mindshard***, ***Emberlash*** | 70% | 85% (needs 4) |
-| Obsidian +1 with a power: Blackmace, ***Flame Blade*** | 70% | 90% (needs 3) |
+| Obsidian +1 with a power: Blackmace | 70% | 90% (needs 3) |
 | Obsidian +2: ***Nightsliver***, ***Glasshewer*** | 75% | 90% (needs 3) |
-| Obsidian +2 with a power: Dark Flame, Terror Blade (Poison) | 75% | 95% (needs 2) |
+| Obsidian +2 with a power: Dark Flame, Terror Blade (Poison), ***Searing Blade*** (Focus Heat) | 75% | 95% (needs 2) |
 | Stone +1: ***Deepbiter*** | 70% | 85% (needs 4) |
 | Wooden +1: Parting Staff, ***Gutterknot*** | 70% | 70% (needs 7) |
 | Wooden +1 with a power: Balk's Staff | 70% | 75% (needs 6) |

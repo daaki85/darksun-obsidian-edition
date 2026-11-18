@@ -916,7 +916,13 @@ Springs, made once its templar is gone), in his pack with his metal axe (the
 Loader's people readying puts the cahulaks, the better weapon, in his hands:
 `people.py`); Ironwhirl (a metal cahulaks +2) on the Subterranean Temple's
 weapon rack (2252, entity 62 of `RGN2D.GFF`), with the game's Mace +2 and metal
-axe. An object can only have so many
+axe. The Searing Blade (an obsidian short sword +2, name 0x156, its picture
+object 2550) is in the Hot Springs' Templar's pack (object 34); up to 2.18.0 it
+was the Flame Blade, an obsidian long sword +1 (type 45) of the same name entry
+and picture, so a saved game's keeps its new name and icon and the dice log
+makes it the Searing Blade wherever it lies in the region it is in (its type,
+plus and price: `worldgear.mend_searing_blade`, each pass, as Kalzith's scrolls
+are mended). An object can only have so many
 records: the routine that reads them (DSUN.EXE 68000h) keeps a 6-byte entry for
 each in a table on its stack, 80 of them, and gives up on an object with 80 or
 more; the code that makes a region's people (244D3h) then frees the person's
@@ -965,10 +971,17 @@ ground draw the game's own (a dropped item lies there with its icon; the Loader
 drew the Polearm 22 pixels everywhere till 2026-11-09, and the weapon specs'
 picker still draws it so, `weaponpages.POLEARM_FIT`). Its icons of the game's
 own magic items that stood still (`icons.SHINE`: the Parting Staff, the
-Chameleon Gloves, the Hornblade... 19 of them) have every other pixel of their
+Chameleon Gloves, the Hornblade... 20 of them) have every other pixel of their
 metal, gems or leather in the colours the game cycles in the inventory (water
 11-15, fire 240-248; the Silk Armor's and the Living Cloak's greens in a leaf's
-shades), as its other magic items' icons do. Three share their picture with a
+shades and the cycled green, 1-5), as its other magic items' icons do. The
+cycler's four runs (1-5 green, 6-10 violet, 11-15 water, 240-248 fire) all turn
+in the inventory, so the Loader's own items glow in the one their stories call
+for (`icons.GREEN`, `MIND`, `WATER`, `SKY`: the water's with white; fire for any
+other magic weapon), and a wielder's figure glints in the same
+(`spritegear.glow_for`). Tanelyv's chest piece is object 2004 (its item names
+picture −2004; the Wyrm Temple's script 161 makes it with the arm and leg
+pieces, 1362 and 1363), its icon 2248 its own, so it shines in place as they do. Three share their picture with a
 plain item (Cahulaks +1 with the cahulaks, Light of Dawn and El's Ring with the
 plain ring), so theirs is a new picture (BMP 2653-2655, their OJFF's +0Ch
 pointed to it), and the plain ones keep the still one. An
