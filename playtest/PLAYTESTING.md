@@ -582,7 +582,10 @@ game's data: it is one player's account.
   memory**: the sheet's race half-elf (+18h 4), classes fighter and preserver (+21h 9, 11), the kit
   byte 1, **and the class mask (+12h) with the fighter's bit (20h)**: the game tests that mask
   before DSCLOG's kit checks, and a preserver's alone (80h) bars arrows. A spell arrows' stack put in
-  a non-Spellarcher's pack goes to the Spellarcher as the inventory shuts (`return_strays`).
+  a non-Spellarcher's pack goes to the Spellarcher as the inventory shuts (`return_strays`); with
+  no Spellarcher, ones it has readied go back in its pack. **SPLIT** (205,147): press it with
+  nothing on the pointer, then click a stack: a stack comes onto the pointer
+  (logs/2026-11-18-spell-arrows-info.md).
 - **Items changed in memory** (an item turned into another, a held item rewritten, an item's icon,
   a figure's glow and outfit): `itemedit.py`, `setitem.py`, `sprites.worn` and the item records'
   fields, in [items in memory](RESEARCH.md#items-in-memory).

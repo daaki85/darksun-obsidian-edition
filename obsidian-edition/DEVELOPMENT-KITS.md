@@ -701,13 +701,18 @@ sees one. Only a Spellarcher carries them: `ARROWS_FORBID`, in `PROBE_CAN_USE`
 (whatever the rules), refuses spell arrows (the equip routine's item, its
 `[BP+6]`) to anyone else; the game asks nothing of an item put in a backpack, so the Loader
 (`spellarrows.return_strays`, out of fights with the inventory shut: `INVENTORY_SLOTS`) takes any
-another member carries back to the party's Spellarcher. The item box's INFO (8C1B8h: USEABLE BY: and each
-member the game's can-use routine allows, so `ARROWS_FORBID` already leaves out all but a
-Spellarcher, NO ONE if none) says so too: `INFO_ONLY` (`NS_IMAGE+121`, over the routine's last
-"mov ax,[bp-2]", 8C282h) draws SPELLARCHER ONLY for the four names in the list's next row (under
-NO ONE, which the game draws without moving its row on), with the routine's own text routine (its
-far address from NO ONE's call) and place, none after four names (the next row is the INFO
-button's); `tests/test_arrowinfo.py`. Seen in DOSBox: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-18-spell-arrows-info.md). The four spells' records pass the
+another member carries back to the party's Spellarcher; with none in the party, those another member
+has readied (an old save; the ammunition slot) go into a backpack cell of its own (`pickpocket.place`),
+so no one but a Spellarcher ever has them readied. Seen refused in DOSBox (CANNOT USE THIS ITEM):
+a stack dragged to a non-Spellarcher's quiver, to another member's through its portrait, and part
+of one after SPLIT; the T loot (`loot.py`) puts what it takes in backpack cells only. The item box's
+INFO (8C1B8h: its heading, USEABLE BY:, then each member the game's can-use routine allows, so
+`ARROWS_FORBID` already leaves out all but a Spellarcher, else NO ONE) says so too: `INFO_HEAD`
+(`NS_IMAGE+121`, over "push ds / push 3493h", 8C1E0h, the heading's far pointer) pushes DSCLOG's
+SPELLARCHERS: instead for the four names (the INT's frame moved 4 bytes down), so the list reads
+"SPELLARCHERS: / Cermak" or "SPELLARCHERS: / NO ONE", in the top row whatever the names below
+(an extra row, SPELLARCHER ONLY, touched the box's frame); `tests/test_arrowinfo.py`. Seen in
+DOSBox: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-18-spell-arrows-info.md). The four spells' records pass the
 routine's own test (+30h's low bits 2, not 1). Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-16-spellarcher-fine-bow.md). A non-party archer shoots them as a Spellarcher
 does, its highest level of any class in the preserver level's place, for the cast's level and the
 arrows' plus (`ARCHER_LEVEL`, shared by `ARROW_LEVEL` and `ARROW_PLUS_NOW`;

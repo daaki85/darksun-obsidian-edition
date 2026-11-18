@@ -373,7 +373,9 @@ missed because the button was read off a full 320x200 shot at about (258,53); a 
 it at (291,57), right of where it seemed. A Spellarcher made in memory by its race, classes and
 kit byte alone still showed NO ONE under the spell arrows' USEABLE BY: the sheet's class mask
 (+12h, still the preserver's 80h) failed the game's own test before DSCLOG's; with the fighter's
-20h added, "Cermak" showed.
+20h added, "Cermak" showed. The first note, an extra row under the list (SPELLARCHERS ONLY, then
+SPELLARCHER ONLY), ran into the box's right frame (about 15 letters fit a row): the user chose the
+heading, SPELLARCHERS:, in USEABLE BY:'s place.
 
 ## The creation screen and the roster
 

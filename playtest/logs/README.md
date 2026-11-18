@@ -105,7 +105,7 @@ schedules and diffs a log made or used.
 | [2026-11-18](2026-11-18-champions-gear.md) | The champions' bout's new gear: the elf's Fine Bow (+1, +4 DEX) and Chill Arrows (no spell from a non-party archer), DEX 22's AC and initiative, the halfling's staff sling, the defiler's bracers (AC 2); all on their bodies after |
 | [2026-11-18](2026-11-18-item-glows.md) | Greenbright's green shimmer, the Searing Blade's name in the box, label and dice log, an old Flame Blade mended, Tanelyv's chest piece's shine |
 | [2026-11-18](2026-11-18-champion-chill-arrows.md) | The elf champion's Chill Arrows cast Chill Touch on a hit (DSCLOG: anyone not in the party), at its fighter level 7, the arrows +1; Cermak's save, a failed one 1 STR (Weakened) |
-| [2026-11-18](2026-11-18-spell-arrows-info.md) | The item box's INFO for spell arrows: SPELLARCHER ONLY under USEABLE BY (DSCLOG's INFO_ONLY), with no Spellarcher (NO ONE) and with one (Cermak); plain arrows' and a sword's lists as before |
+| [2026-11-18](2026-11-18-spell-arrows-info.md) | The item box's INFO for spell arrows: headed SPELLARCHERS: (DSCLOG's INFO_HEAD; an extra SPELLARCHER ONLY row first, too wide), with no Spellarcher (NO ONE) and with one (Cermak); plain arrows' list as before; every way to ready them refused for a non-Spellarcher, readied ones put back in the pack |
 
 ## files/
 
