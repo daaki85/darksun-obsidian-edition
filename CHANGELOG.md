@@ -59,6 +59,16 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**Fixed** (the code audit of 2026-11-18, `reports/code-memory-audit.md` on its branch)
+- **Negative Plane Protection's save no longer writes past the new spells' records:** its copy of
+  Vampiric Touch's record went 32 bytes past their room, over a game segment and picture slot 0.
+  The save now uses Vampiric Touch's own record, its save byte set for that call only; build
+  asserts tie the records, the spell rows and the moved tables to their room.
+- **A magical item sold with the Loader's window closed is no longer lost:** DSCLOG keeps it back
+  for the buyback only while the Loader is there, else the game frees it as ever. The queue names
+  the item, so one picked up since isn't given away, and sales left by a Loader that went away, or
+  more than four at once, are seen to rather than dropped (DSCLOG's signature now `DSCLOGvb`).
+
 **Fixed: the scripts**
 - **The elven slavers' leader's Goodbye** (script 46, from OpenDS's triage; `scriptfixes.py`, tests
   `OpenDSTriageTests`; not yet seen in play): "Sorry to bother you. Goodbye." alone went straight to

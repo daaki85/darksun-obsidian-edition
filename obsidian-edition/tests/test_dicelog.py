@@ -1590,6 +1590,25 @@ class SaveTests(unittest.TestCase):
         self.assertEqual(log.game.save_modifiers(0x29, 0, HOLD_PERSON, game.PPD_SAVE),
                          [(1, "Blessed"), (5, "dwarf CON 19")])
 
+    def test_npp_save_named(self):
+        """Negative Plane Protection's save, which DSCLOG makes (NS_NPP) as against Vampiric Touch's
+        record (27h) with a save allowed: named the protection's when the save's way back is in
+        DSCLOG's segment, its d20 and its probe both; one against 27h from the game's code isn't."""
+        log = make_game()
+        log.game.spell_name = lambda spell: {game.NPP_SAVE_RECORD: "Negative Plane Protection"}.get(spell, f"spell {spell}")
+        ours = TSR_SEG - 0x10000  # (DSCLOG's segment, as words() packs it: signed)
+        roll = self.save_roll(log, 13, spell=game.NPP_TOUCH)
+        roll.parent = words(0x1234, ours, 0x29, 0, game.NPP_TOUCH)
+        self.assertEqual(log.describe(roll, now=1.0), [])
+        probe = entry((14 << 8) | 15, frame=words(0x1234, ours, 0x29, 0, game.NPP_TOUCH),
+                      locals_=locals_at(0x10, m6=5), kind=KIND_SAVE, bp=0xFD00)
+        line, = log.describe(probe)
+        self.assertIn("saving throw vs Negative Plane Protection from Dag", line)
+        probe = entry((14 << 8) | 15, frame=words(0x1234, 0x0598, 0x29, 0, game.NPP_TOUCH),
+                      locals_=locals_at(0x10, m6=5), kind=KIND_SAVE, bp=0xFD00)
+        line, = log.describe(probe)
+        self.assertIn("saving throw vs spell 39 from Dag", line)
+
     def test_natural_20(self):
         """A natural 20 goes on to the probe (gamepatch's save_natural): it saves (DSCLOG's SAVE_SUM made
         the total the number needed), unless the save can't be made (the -100's)."""

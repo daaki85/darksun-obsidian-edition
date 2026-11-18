@@ -4363,31 +4363,40 @@ class NewSpellTests(RuleTests):
 
     def test_npp_save(self):
         """NS_NPP (7A7E9h, "add sp,4 / push 6 / push 27h", the charge's two arguments still on the
-        stack): they become the save's, 6 and the record: Vampiric Touch's (27h) until the records
-        have room, then NPP_SAVE (0D3h, past the new spells), Vampiric Touch's record copied with a save allowed (21h)."""
+        stack): the save made through its stub (5B8:2Fh) with the game's arguments (SI, DI, 27h, 6),
+        Vampiric Touch's own record's save byte made 21h for the call only; then on at 7A7F9h with
+        the two arguments taken off and AX the save's. Nothing is written past the records' room
+        (record 212, where a copy had gone, is left alone), with the room made or not."""
         from dsloader import gamepatch
         mu = self.mu
         records = ((GAME_DS - (0x4356 - 0x3CB4)) & 0xFFFF) * 16 + 0x30
         touch = bytes(range(0x1F)) + bytes((0xA0,))
         mu.mem_write(records + 0x27 * 0x20, touch)
-        mu.mem_write(records + 0xD4 * 0x20, bytes(0x20))
+        past = bytes(range(0x40, 0x60))
+        mu.mem_write(records + 0xD4 * 0x20, past)
+        stub = ((GAME_DS - (0x4356 - 0x42AB)) & 0xFFFF) * 16 + 0x2F
+        # the save's stand-in: its arguments kept at DS:600h, AX the record's save byte, its level above
+        mu.mem_write(stub, bytes.fromhex(
+            "558bec0653" "8b5e06891e0006" "8b5e08891e0206" "8b5e0a891e0406"
+            "8cd82da2068ec0" "c1e305" "268a474f" "8a660c" "5b075dcb"))
         def save():
             self.at += 0x20
             start = CALLER * 16 + self.at
             mu.mem_write(start, bytes((0xCD, 0x98, gamepatch.NS_NPP)) + b"\x90" * 4)
             mu.mem_write(SS * 16 + 0x7FC, struct.pack("<HH", 0x1234, 0x2A))
-            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x7FC, ebp=BP, eflags=IF | 2).items():
+            for name, value in dict(cs=CALLER, ds=GAME_DS, ss=SS, esp=0x7FC, ebp=BP, eflags=IF | 2,
+                                    esi=0x0005, edi=0x0007, eax=0x9999).items():
                 mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
-            mu.emu_start(start, start + 3)
-            self.assertEqual(mu.reg_read(r.UC_X86_REG_SP), 0x7FC)
-            return struct.unpack("<HH", bytes(mu.mem_read(SS * 16 + 0x7FC, 4)))
-        self.moved(0)
-        self.assertEqual(save(), (0x27, 6))
-        self.assertEqual(bytes(mu.mem_read(records + 0xD4 * 0x20, 0x20)), bytes(0x20))
-        self.moved(1)
-        self.assertEqual(save(), (0xD4, 6))
-        self.assertEqual(bytes(mu.mem_read(records + 0xD4 * 0x20, 0x20)), touch[:0x1F] + bytes((0x21,)))
-        self.assertEqual(bytes(mu.mem_read(records + 0x27 * 0x20, 0x20)), touch)
+            mu.emu_start(start, start + 3 + (0x7A7F9 - 0x7A7EC))
+            self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_SP, r.UC_X86_REG_BP, r.UC_X86_REG_SI,
+                                                       r.UC_X86_REG_DI, r.UC_X86_REG_CS)],
+                             [0x800, BP, 5, 7, CALLER])
+            return mu.reg_read(r.UC_X86_REG_AX), struct.unpack("<3H", bytes(mu.mem_read(GAME_DS * 16 + 0x600, 6)))
+        for moved in (0, 1):
+            self.moved(moved)
+            self.assertEqual(save(), (0x0621, (5, 7, 0x27)))
+            self.assertEqual(bytes(mu.mem_read(records + 0x27 * 0x20, 0x20)), touch)
+            self.assertEqual(bytes(mu.mem_read(records + 0xD4 * 0x20, 0x20)), past)
 
     def test_script_request(self):
         """REQ_SITE (7FF42h, "mov bx,[bp+6] / dec bx" in the REQUEST routine): the request recorded
@@ -4920,8 +4929,10 @@ class NewSpellTests(RuleTests):
     def test_sell_keep(self):
         """A shop freeing the thing holding an item sold ("push word [179Eh]", SELL_KEEP): with the
         buyback (Shops as in AD&D, RULE_HI_CHA_PRICES) and a magical item (a plus or a power), 270Fh pushed in its place
-        and the thing and the merchant (DS:179Ch) queued in the header (+308 counted, +310 the
-        entries); anything else, or the rule off, the thing pushed."""
+        and the thing, the merchant (DS:179Ch) and the list's first item queued in the header (+308
+        counted, +310 the entries, +1868 their items), with the Loader there (its heartbeat, +1865,
+        under LOADER_FRESH old); anything else, the rule off or no Loader, the thing pushed (freed as
+        the game does: the item was lost)."""
         from dsloader import gamepatch
         hdr = TSR * 16 + load_image().find(HDR_SIG)
         GAME_DS = 0x3800  # (the things table 9E4h paragraphs below DS: clear of DSCLOG's image)
@@ -4948,12 +4959,21 @@ class NewSpellTests(RuleTests):
             pushed, = struct.unpack("<H", mu.mem_read(SS * 16 + 0x7FE, 2))
             return pushed, struct.unpack("<H", mu.mem_read(hdr + 308, 2))[0]
         self.mu.mem_write(hdr + 308, struct.pack("<H", 0))
+        self.mu.mem_write(hdr + 1868, struct.pack("<4H", *[0xFFFF] * 4))
+        self.mu.mem_write(0x46C, struct.pack("<H", 5000))  # (the BIOS timer)
+        self.mu.mem_write(hdr + 1865, struct.pack("<H", 5000 - 90))  # (the Loader's beat: fresh)
         self.assertEqual(sell(1, 0, 64), (0x270F, 1))
         self.assertEqual(struct.unpack("<HH", self.mu.mem_read(hdr + 310, 4)), (330, 77))
         self.assertEqual(sell(0, 3, 64), (0x270F, 2))  # (a power: a wand, a scroll...)
+        self.assertEqual(struct.unpack("<4H", self.mu.mem_read(hdr + 1868, 8)), (5, 5, 0xFFFF, 0xFFFF))
         self.assertEqual(sell(0, 0, 64), (330, 2))  # (nothing magical: freed)
         self.assertEqual(sell(-1, 0, 64), (330, 2))  # (cursed: no plus)
         self.assertEqual(sell(2, 0, 0), (330, 2))  # (the rule off)
+        self.mu.mem_write(hdr + 1865, struct.pack("<H", 5000 - 91))  # (no beat for five seconds:
+        self.assertEqual(sell(1, 0, 64), (330, 2))                   #   no Loader, freed)
+        self.mu.mem_write(hdr + 1865, struct.pack("<H", 0))
+        self.assertEqual(sell(1, 0, 64), (330, 2))
+        self.assertEqual(struct.unpack("<4H", self.mu.mem_read(hdr + 1868, 8)), (5, 5, 0xFFFF, 0xFFFF))
 
     def test_reflect_entry(self):
         """Where the game finds an effect's entry by its number times 6 (NS_ENTRY: the Effects

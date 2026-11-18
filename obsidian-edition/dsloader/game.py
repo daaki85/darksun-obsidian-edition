@@ -360,8 +360,10 @@ PRIEST6_MASKS = {HEAL_SPELL: COSMOS_MASK, HARM_SPELL: COSMOS_MASK, BLADE_SPELL: 
                  RESTORE_YOUTH_SPELL: COSMOS_MASK}
 PRIEST6_LEVEL = 6
 NEW_SPELLS_END = 212  # (past the last)
-# Negative Plane Protection's save, as the patched game makes it (DSCLOG's NS_NPP): Vampiric Touch's
-# record copied to the records' room past the new spells, a save against death allowed
+# Negative Plane Protection's save, as the patched game makes it (DSCLOG's NS_NPP): against Vampiric
+# Touch's record, its save byte made one against death for the call, from DSCLOG's code; the log
+# names it by this number, which no record has (the records' room ends with Restore Youth's)
+NPP_TOUCH = 0x27
 NPP_SAVE_RECORD = 212
 STRENGTH_SPELL, GRACE_EFFECT, CLAW_EFFECT, FOG_EFFECT = 23, 54, 6, 27
 AFFINITY_EFFECT, BODY_WEAPONRY_EFFECT = 61, 62  # (the first natural attack at least 1d10; 2d4: 7B71Bh)

@@ -3,11 +3,15 @@
 The game destroys whatever the party sells: once the shop has paid (83CCAh on), it empties the
 item list of the thing holding it (0A0h:1C94h, at 83D9Eh), its items back on the free list. That
 thing is the pointer's (DS:179Eh, 523: one of the few past the 520 objects), so it is never
-freed, only emptied. With the rule on, DSCLOG lets a magical item (a plus, or a power: rings,
-wands, scrolls...) through without emptying it, and queues the thing and the shop's merchant
-(SOLD_Q, SOLD_SEQ); here the item is put in that merchant's pack, where the shop lists it (the
-shop sells whatever its merchant carries), at its own price, and the thing's list emptied as the
-game would have. Anything else sold is gone, as in the game.
+freed, only emptied. With the rule on and the Loader there (its heartbeat fresh: without it nothing
+would take the item off the pointer, and it is freed as the game does), DSCLOG lets a magical item
+(a plus, or a power: rings, wands, scrolls...) through without emptying it, and queues the thing,
+the shop's merchant and the list's first item (SOLD_Q, SOLD_ITEMS, SOLD_SEQ); here the items are
+put in that merchant's pack, where the shop lists it (the shop sells whatever its merchant
+carries), at their own price, and the thing's list emptied as the game would have; each entry is
+then marked seen to (its item DONE), so that one left by a Loader that went away is seen to by the
+next. Only while the thing's list still starts with that item (another picked up meanwhile is left
+where it is). Anything else sold is gone, as in the game.
 """
 
 import struct
@@ -16,6 +20,8 @@ from typing import List, Optional
 from . import game, itemgate, npcitems, pickpocket, ring
 
 SOLD_SEQ, SOLD_Q, SOLD_SLOTS = 308, 310, 4  # (DSCLOG's header)
+SOLD_ITEMS = 1868  # (each entry's item, DSCLOG's SOLD_ITEMS: DONE once the Loader has seen to it)
+DONE = 0xFFFF
 PERSON, MAX_CREATURES = 2, 512  # (an object's kind for a creature, as GameData.combatants reads them)
 LAST_THING = ring.THING_COUNT + 4  # (the things table's few past the 520 objects: the pointer's, 523)
 
@@ -70,26 +76,48 @@ def to_pack(gd, creature: int, item: int) -> bool:
 
 class Buyback:
     def __init__(self):
-        self.seen: Optional[int] = None  # (SOLD_SEQ as last looked at)
+        self.seen: Optional[int] = None  # (SOLD_SEQ as last looked at, every entry seen to then)
         self.kept: List[str] = []  # (the items kept, by name)
 
     def watch(self, gd, hdr: Optional[int]) -> List[str]:
-        """Each item DSCLOG has kept since the last look: into its merchant's pack. No lines for the log."""
+        """Each sale DSCLOG has queued that no Loader has seen to yet, oldest first: its items into
+        its merchant's pack. Looked at when SOLD_SEQ moves, and at the first look (a sale left by
+        a Loader that went away). No lines for the log."""
         if hdr is None:
             return []
         seq = struct.unpack("<H", gd.guest.read(hdr + SOLD_SEQ, 2))[0]
-        if self.seen is None or not 0 <= (seq - self.seen) % 0x10000 <= SOLD_SLOTS:
-            self.seen = seq  # (the first look, or too many missed: only those from now on)
+        if seq == self.seen:
             return []
-        out: List[str] = []
-        while self.seen != seq:
-            slot = self.seen % SOLD_SLOTS
-            thing, merchant = struct.unpack("<HH", gd.guest.read(hdr + SOLD_Q + slot * 4, 4))
-            out += self.keep(gd, thing, merchant)  # (ItemsBusy: kept in a later pass)
-            self.seen = (self.seen + 1) % 0x10000
-        return out
+        if all(item == DONE for item in struct.unpack(f"<{SOLD_SLOTS}H", gd.guest.read(hdr + SOLD_ITEMS, 2 * SOLD_SLOTS))):
+            self.seen = seq
+            return []
+        # (the gate held before the queue and the lists are read: the game held still till the
+        # items are moved, and if it is busy with its lists, ItemsBusy and nothing done yet: a later pass)
+        itemgate.hold(gd)
+        try:
+            seq = struct.unpack("<H", gd.guest.read(hdr + SOLD_SEQ, 2))[0]
+            items = struct.unpack(f"<{SOLD_SLOTS}H", gd.guest.read(hdr + SOLD_ITEMS, 2 * SOLD_SLOTS))
+            for k in range(SOLD_SLOTS):
+                slot = (seq + k) % SOLD_SLOTS  # (SEQ's own slot the oldest: the next to be written)
+                if items[slot] == DONE:
+                    continue
+                thing, merchant = struct.unpack("<HH", gd.guest.read(hdr + SOLD_Q + slot * 4, 4))
+                busy = False
+                try:
+                    self.keep(gd, thing, merchant, items[slot])
+                except itemgate.ItemsBusy:  # (nothing moved: this one and those after, a later pass)
+                    busy = True
+                    raise
+                finally:  # (else seen to, even a sale that failed part way: not tried every pass)
+                    if not busy:
+                        gd.guest.write(hdr + SOLD_ITEMS + slot * 2, struct.pack("<H", DONE))
+            self.seen = seq
+        finally:
+            itemgate.release(gd)
+        return []
 
-    def keep(self, gd, thing: int, merchant: int) -> List[str]:
+    def keep(self, gd, thing: int, merchant: int, item: Optional[int] = None) -> List[str]:
+        """THING's items into MERCHANT's pack, if its list still starts with ITEM (None: any)."""
         # (before anything is moved: the game busy with its lists, ItemsBusy and the sale tried
         # again in a later pass, not the thing emptied and its items left in no list)
         itemgate.hold(gd)
@@ -97,7 +125,9 @@ class Buyback:
         if not 0 <= thing < LAST_THING:
             return []
         kind, first = _thing(gd, it, thing)
-        if kind != game.THING_ITEM or not 0 <= first < game.NO_ITEM:
+        if kind != game.THING_ITEM or not 0 <= first < itemgate.ITEM_RECORDS:
+            return []
+        if item is not None and first != item:  # (another item on the pointer now: not the one sold)
             return []
         items = _items(it, first)
         names = [gd.item_name(struct.unpack_from("<H", it.item(i), game.ITEM_NAME)[0]) for i in items]

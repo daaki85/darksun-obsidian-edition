@@ -192,12 +192,13 @@ with the 3 ability checks the ability check command makes).
 ## DSCLOG's header
 
 The fields the Loader and DSCLOG share are DSCLOG's header, from `hdr:` in
-`dos/dsclog.asm`: the signature (`HDR_SIG`, `DSCLOGva`), then one field a line, each commented
+`dos/dsclog.asm`: the signature (`HDR_SIG`, `DSCLOGvb`), then one field a line, each commented
 with its offset (`+1830`, `+1867` ...) and what it holds. That source is the layout's one home.
 The Loader finds the header by its signature in DOSBox's memory (16-aligned) and names each field
 it uses `TSR_*`, in the module that uses it (`dicelog.py`, `kits.py`, `ghost.py`, `freeze.py`,
 `cahulaks.py` ...). New fields go at the end, so the offsets of the rest never move (the latest:
-`GEAR_WHO`, +1867); a change that both sides must make together takes the signature up.
+`SOLD_ITEMS`, +1868); a change that both sides must make together takes the signature up
+(`DSCLOGvb` with `SOLD_ITEMS`, 2026-11-18).
 
 ## Room and memory
 

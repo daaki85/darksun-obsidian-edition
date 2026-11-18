@@ -23,7 +23,7 @@ try:
         subprocess.run(['nasm', '-f', 'bin', '-I', dos + '/', '-o', out, src], check=True)
         sym = next(int(l.split()[1], 16) for l in open(mp).read().split('Section image')[1].splitlines()
                    if len(l.split()) == 3 and l.split()[2] == 'pf_count')
-    hdr = next(a for a in range(0xC0000, 0xF0000, 16) if g.read(a, 8) == b'DSCLOGva')
+    hdr = next(a for a in range(0xC0000, 0xF0000, 16) if g.read(a, 8) == b'DSCLOGvb')
     reused = struct.unpack('<H', g.read(hdr + sym, 2))[0]
 except Exception as e:
     reused = f'? ({e})'

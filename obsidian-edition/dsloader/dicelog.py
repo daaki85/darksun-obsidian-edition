@@ -37,7 +37,7 @@ from .itemwatch import ItemWatch
 from .textlog import KIND_MESSAGE, KIND_PORTRAIT, KIND_SHOW_REPLIES, KIND_TEXT, Dialogue, DialogueEntry, TextBuffer
 from .tracker import PartyTracker
 
-HDR_SIG = b"DSCLOGva"
+HDR_SIG = b"DSCLOGvb"
 TSR_HDR_OFF = 20  # DSCLOG's header: where it is in DSCLOG's segment
 # ... the party's spell slots, for the game's USE screen (PROBE_USE)
 TSR_SLOTS_OFF, SLOTS_SIZE = 148, 128
@@ -4120,6 +4120,7 @@ class DiceLog:
         save_natural)."""
         natural = scaled(e.raw, 20) + 1
         spell, target, caster = e.parent_arg(0x0A), e.parent_arg(6), e.parent_arg(8)
+        spell = self._npp_save(spell, e.parent)
         if not self._stink_save(target, spell):  # (a stinkpot's: no spell's damage to follow)
             self._spell_cast(spell, now)
         needed = e.parent_locals[0x28 - 1]
@@ -4130,10 +4131,20 @@ class DiceLog:
         self._save_rolls[(e.ss, e.parent_bp)] = natural
         return pending
 
+    def _npp_save(self, spell: Optional[int], frame: bytes) -> Optional[int]:
+        """Negative Plane Protection's save (game.NPP_SAVE_RECORD) for one against Vampiric Touch
+        that DSCLOG made (NS_NPP: the save routine's way back, at FRAME's start, in DSCLOG's
+        segment, whose start is its header's); else SPELL."""
+        if spell == game.NPP_TOUCH and len(frame) >= 4 and self.tsr_hdr is not None \
+                and struct.unpack_from("<H", frame, 2)[0] == self.tsr_hdr >> 4:
+            return game.NPP_SAVE_RECORD
+        return spell
+
     def _save(self, e: Entry) -> List[str]:
         total, needed = e.raw & 0xFF, e.raw >> 8
         natural = self._save_rolls.pop((e.ss, e.bp), None)
         spell, target, caster = e.arg(0x0A), e.arg(6), e.arg(8)
+        spell = self._npp_save(spell, e.frame)
         return self._flush_spell(spell) + [
             self._save_line(target, caster, spell, e.local(-6), natural, total, needed)]
 

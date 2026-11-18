@@ -231,15 +231,19 @@ class PutOffTests(unittest.TestCase):
             def read(self, addr, n):
                 return bytes(self.mem.get(addr + i, 0) for i in range(n))
 
+            def write(self, addr, data):
+                self.mem.update((addr + i, b) for i, b in enumerate(data))
+
         g = Guest()
         hdr = 0x1000
         gd = type("G", (), {"guest": g})()
         b = buyback.Buyback()
         b.seen = 0
         g.mem[hdr + buyback.SOLD_SEQ] = 1
+        g.write(hdr + buyback.SOLD_ITEMS, struct.pack("<4H", 40, *[buyback.DONE] * 3))
         calls = []
 
-        def keep(gd_, thing, merchant):
+        def keep(gd_, thing, merchant, item):
             calls.append(thing)
             if len(calls) == 1:
                 raise itemgate.ItemsBusy("busy")
@@ -250,6 +254,7 @@ class PutOffTests(unittest.TestCase):
         self.assertEqual(b.seen, 0)
         b.watch(gd, hdr)
         self.assertEqual((b.seen, len(calls)), (1, 2))
+        self.assertEqual(g.read(hdr + buyback.SOLD_ITEMS, 2), b"\xff\xff")  # (seen to)
 
 
 if __name__ == "__main__":

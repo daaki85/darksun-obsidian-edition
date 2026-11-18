@@ -3,7 +3,7 @@ import os, sys, struct
 PT = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, PT)
 exec(open(os.path.join(PT, 'live.py')).read())
 mem = g.read(0xC0000, 0x30000)
-hdr = 0xC0000 + next(i for i in range(0, len(mem), 16) if mem[i:i + 8] == b'DSCLOGva')
+hdr = 0xC0000 + next(i for i in range(0, len(mem), 16) if mem[i:i + 8] == b'DSCLOGvb')
 seg, = struct.unpack('<H', g.read(hdr + 1826, 2))
 end = (seg + 885) * 16
 now = g.read(end, 4096)

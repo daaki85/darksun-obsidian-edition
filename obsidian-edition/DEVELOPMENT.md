@@ -135,7 +135,7 @@ nasm -f bin -o dos/DSCLOG.EXE dos/dsclog.asm
 ```
 
 The build fails if DSCLOG outgrows its 64 KB segment or the room it has in upper memory ([Room
-and memory](DEVELOPMENT-INTERNALS.md#room-and-memory)). The header's signature (`DSCLOGva` now:
+and memory](DEVELOPMENT-INTERNALS.md#room-and-memory)). The header's signature (`DSCLOGvb` now:
 after Z, lowercase) goes up whenever DSCLOG and the Loader must change together (`HDR_SIG` in
 `dsloader/dicelog.py`), so a Loader never talks to an older DSCLOG.
 
@@ -501,7 +501,7 @@ table](DEVELOPMENT-INTERNALS.md#the-loaders-game-flags), and `tests/test_flagran
 (or `_ranges`); `test_audit_flags` finds it by itself.
 
 **A header field** (shared by DSCLOG and the Loader): add it at the end of `hdr:` in
-`dos/dsclog.asm` with its offset in the comment (`+1868` after `GEAR_WHO`'s `+1867`), so the
+`dos/dsclog.asm` with its offset in the comment (`+1876` after `SOLD_ITEMS`' `+1868`), so the
 others never move; name it `TSR_*` in the module that reads it. If both sides must change
 together, take the signature up (`sig` in `dsclog.asm` and `HDR_SIG` in `dicelog.py`). See
 [DSCLOG's header](DEVELOPMENT-INTERNALS.md#dsclogs-header).
