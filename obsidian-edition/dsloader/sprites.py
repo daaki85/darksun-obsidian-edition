@@ -386,7 +386,7 @@ def new_room(chunks, new: Dict[Tuple[str, int], bytes], looks: bool = True) -> D
     return out
 
 
-# The mod's magic items whose magic is the helper's or the Loader's, not a plus or a spell power: by
+# The mod's magic items whose magic is DSCLOG's or the Loader's, not a plus or a spell power: by
 # their types (the Boots of Speed, the Cloak and Boots of Elvenkind, the girdles, the amulet)
 MAGIC_TYPES = frozenset((game.SPEED_BOOTS_TYPE, game.ELVEN_CLOAK_TYPE, game.ELVEN_BOOTS_TYPE,
                          game.BACK_GIRDLE_TYPE, game.URNST_GIRDLE_TYPE, game.MR_AMULET_TYPE))
@@ -499,7 +499,7 @@ class Dresser:
             return None
 
     def _check_copy(self) -> bool:
-        """The copy's index read (again, if the launcher has written it anew since: then what it
+        """The copy's index read (again, if the Loader has written it anew since: then what it
         shows is plain). Whether there is a copy to dress."""
         import os
         from .gff import GffError, index_places, rooms

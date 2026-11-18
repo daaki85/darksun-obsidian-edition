@@ -1,5 +1,7 @@
 # Our fixed-bug list against OpenDS's catalogue (2026-11-18)
 
+*Status: done, research; nothing sent to OpenDS. Its corrections are acted on in the Edition's pages: the random monsters' divide by zero and "Out of memory in OEOpenGraph" are no longer called the game's bugs.*
+
 Every row of `obsidian-edition/GAME-BUGS.md` (66 rows, the games' own bugs the Edition fixes),
 set against OpenDS at `fe35c52` (`docs/known-bugs.md`, `docs/ds1-sweep-triage-2026-10-07.md`,
 `docs/community-crossread-2026-11-13.md`, `ds1-patch/`, `CREDITS.md`). The match is by my reading of

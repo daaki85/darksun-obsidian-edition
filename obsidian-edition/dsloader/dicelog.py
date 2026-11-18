@@ -1,7 +1,7 @@
 """Dice log: shows the rolls Shattered Lands makes behind the scenes.
 
 How it works:
-  * The launcher runs DSUNLOG.EXE, a copy of the game whose rand() and two
+  * The Loader runs DSUNLOG.EXE, a copy of the game whose rand() and two
     "probe" places (the end of the saving throw and of the AC calculation)
     start with INT instructions (see gamepatch.py).
   * DSCLOG.EXE (see dos/dsclog.asm), loaded before the game, answers those
@@ -394,7 +394,7 @@ class Entry:
     kind: int  # KIND_ROLL, KIND_SAVE or KIND_AC
     extra: int = 0  # KIND_SAVE: the segment of the game's spell table
     target_state: int = 0  # the attack's target as the entry was made (DSCLOG's HELPLESS_OF): HELD_MARK
-    #                        plus 1 Paralyzed or 2 Out Cold; 0 from a helper that doesn't write it
+    #                        plus 1 Paralyzed or 2 Out Cold; 0 from a DSCLOG that doesn't write it
 
     SIZE = 192
     HELD_MARK = 0x8000
@@ -402,7 +402,7 @@ class Entry:
 
     def helpless(self) -> Optional[str]:
         """Why the attack's target was helpless as the dice were rolled (Paralyzed, Out Cold), or
-        None; Ellipsis when the entry doesn't say (an older helper): then ask the game now."""
+        None; Ellipsis when the entry doesn't say (an older DSCLOG): then ask the game now."""
         if not self.target_state & self.HELD_MARK:
             return ...
         return self.HELD_STATES.get(self.target_state & 0xFF)
@@ -696,15 +696,15 @@ class DiceLog:
         hdr = next((m.start() for m in re.finditer(re.escape(HDR_SIG), low) if m.start() % 16 == 0), None)
         if hdr is None:
             if re.search(rb"DSCLOGv[0-9A-Za-z]", low):
-                raise DiceLogError("An older DSCLOG is loaded. Restart the game with 'Start Game with Dice Log.bat'.")
-            raise DiceLogError("DSCLOG is not loaded. Start the game with 'Start Game with Dice Log.bat'.")
+                raise DiceLogError("An older DSCLOG is loaded. Close the game and start it again from the Loader (Start the game).")
+            raise DiceLogError("DSCLOG is not loaded. Start the game from the Loader (Start the game).")
         ds = game.find_data_segment(self.guest, low)
         if ds is None:
             raise DiceLogError("Shattered Lands is not running yet.")
         rand_addr = (ds - game.DGROUP) * 16 + RAND_IP
         if low[rand_addr:rand_addr + 2] != RAND_PATCHED:
             raise DiceLogError("The game was started without the dice log. "
-                               "Restart it with 'Start Game with Dice Log.bat'.")
+                               "Close it and start it again from the Loader (Start the game).")
         with self._stats_lock:  # (the stats thread sees the new DSCLOG and game together)
             self.tsr_hdr, self.rand_addr = hdr, rand_addr
             self.guest.write(hdr + 22, struct.pack("<5H", SEED, TARGET_GLOBAL, 0, 0, 0))

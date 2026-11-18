@@ -4,7 +4,7 @@
 # the inventory closed (logs/2026-11-10-stinkpots.md: Lex's bow, item 36, made a staff sling, type 0).
 # obj=N takes object N's own item record instead (SEGOBJEX's RDFF N, its first: Tanelyv's chest piece
 # is obj=2004), and rec=HEX a whole record (one of the Loader's: `worldgear.SEARING_BLADE.hex()`)
-# (logs/2026-11-17-item-glows.md).
+# (logs/2026-11-18-item-glows.md).
 import os, sys, struct
 PT = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, PT)
 exec(open(os.path.join(PT, 'live.py')).read())

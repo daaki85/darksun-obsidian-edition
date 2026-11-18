@@ -185,7 +185,7 @@ class LaunchTests(unittest.TestCase):
         self.assertIn(r'mount C "..\cloud_saves" -t overlay', lines)
         self.assertIn(f'mount d "{launch.DOS_DIR}"', lines)
         self.assertLess(lines.index(r"lh d:\dsclog.exe"), lines.index(r"d:\dsunlog.exe"))
-        # upper memory moved down to CA00h just before the helper loads into it
+        # upper memory moved down to CA00h just before DSCLOG loads into it
         self.assertEqual(lines.index(r"d:\umbplus.com"), lines.index(r"lh d:\dsclog.exe") - 1)
         self.assertTrue(os.path.isfile(os.path.join(launch.DOS_DIR, launch.UMB_PLUS_COM)))
         self.assertLess(lines.index("c:"), lines.index(r"d:\dsunlog.exe"))  # run from the game folder
@@ -193,7 +193,7 @@ class LaunchTests(unittest.TestCase):
         # a game stopping with an error leaves its message up, saved for the crash report
         self.assertEqual(lines.index(r"d:\gameend.com"), lines.index(r"d:\dsunlog.exe") + 1)
         self.assertTrue(os.path.isfile(os.path.join(launch.DOS_DIR, launch.GAME_END_COM)))
-        # EMS off, so the helper has the upper memory block EMS's page frame would take
+        # EMS off, so DSCLOG has the upper memory block EMS's page frame would take
         self.assertLess(lines.index("ems=false"), lines.index("[autoexec]"))
         self.assertEqual(lines[lines.index("ems=false") - 1], "[dos]")
 

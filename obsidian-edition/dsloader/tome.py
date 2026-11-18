@@ -11,7 +11,7 @@ box's icon can't be clicked at all.)
 The tome is such a scroll (object TOME_OBJECT, in the scrolls' numbers), its spell byte one past
 TOME_SPELL. DSCLOG's PROBE_TOME, where the game would show that message, raises the reader's
 WIS by one (in the sheet and the creature record; at most 25) and goes on as for a power taught:
-the game uses the tome up and shows the helper's message ("Cilla reads the tome: WIS 19.").
+the game uses the tome up and shows DSCLOG's message ("Cilla reads the tome: WIS 19.").
 
 Its object and pictures, in the Loader's copy of SEGOBJEX: object TOME_OBJECT, the game's
 scroll's (1400: the box's icon is clicked only for an object of a scroll's kind, +4) with an icon

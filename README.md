@@ -13,7 +13,7 @@ default and when it takes effect](obsidian-edition/PLAYER-GUIDE.md#the-options-t
 ## Getting started
 
 1. Check the [requirements](obsidian-edition/README.md#requirements): Windows, the GOG release of
-   the game, and a 64-bit Python, which the Loader offers to install.
+   the game, and a 64-bit Python, which the `.bat` files offer to install.
 2. Download the latest release from the
    [Releases page](https://github.com/daaki85/darksun-obsidian-edition/releases) and unzip it
    anywhere.
@@ -23,27 +23,16 @@ default and when it takes effect](obsidian-edition/PLAYER-GUIDE.md#the-options-t
 ## Documentation
 
 - [The full documentation](obsidian-edition/README.md): installing, running, the Loader's window,
-  troubleshooting, and [what it changes on your computer](obsidian-edition/README.md#uninstalling)
-- The manual: these pages as web pages that link to each other, in the release's `manual` folder
-  (open `manual/index.html`, or press the Loader's **Help** button)
+  troubleshooting, and [the full list of pages](obsidian-edition/README.md) (features, kits,
+  items, creatures, the dice log and more)
 - [The player's guide](obsidian-edition/PLAYER-GUIDE.md), without spoilers, with a
   [glossary](obsidian-edition/PLAYER-GUIDE.md#glossary) of THAC0, AC, PSP and the rest
 - [Features and rules](obsidian-edition/FEATURES.md): every switch of the Options tab and every
-  change with none, one short entry each
-- [Kits](obsidian-edition/KITS.md): every kit's gains, costs and starting gear
-- [Weapon specs](obsidian-edition/WEAPON-SPECS.md): weapon specialization, who picks what, and the
-  attacks a round
-- [Items](obsidian-edition/ITEMS.md) (spoilers): every item and where it is
-- [Creatures](obsidian-edition/CREATURES.md) (spoilers): every one, its size, and whether cahulaks
-  can tangle it
-- [People](obsidian-edition/PEOPLE.md) (spoilers): the mod's new people and scenes in the slave pens
-  and the arena
-- [The game's bugs, fixed](obsidian-edition/GAME-BUGS.md) (some spoilers): every bug of the
-  original game the mod mends
-- [The dice log, line by line](obsidian-edition/DICE-LOG.md): how to read it, and every kind of line
-- [How the game works, and the manual's rules](obsidian-edition/HOW-THE-GAME-WORKS.md), from its code
-- [The patch notes](PATCH-NOTES.md): what the mod adds and changes from the original game, and its
-  main bug fixes, in one page to share
+  change with none
+- [The patch notes](PATCH-NOTES.md): what the mod adds and changes from the original game, in one
+  page to share
+- The manual: these pages as web pages, in the release's `manual` folder (open
+  `manual/index.html`, or press the Loader's **Help** button)
 - For developers, [the development notes](obsidian-edition/DEVELOPMENT.md) and the
   [changelog](CHANGELOG.md)
 

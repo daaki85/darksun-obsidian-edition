@@ -239,7 +239,7 @@ class CahulaksTests(tg.SiteTests):
         self.item(4, CAH)
         self.item(7, 81)
         at = self.sym["off_hand_halves"]
-        stub = TSR * 16 + 0xFFF0  # (a far stub in the helper's segment: a near call to it, RETF)
+        stub = TSR * 16 + 0xFFF0  # (a far stub in DSCLOG's segment: a near call to it, RETF)
         self.mu.mem_write(stub, bytes((0xE8,)) + struct.pack("<H", (at - (0xFFF0 + 3)) & 0xFFFF) + b"\xcb")
         for rules, item, halves, want in ((RULE, 4, 2, 4), (RULE, 4, 3, 5), (RULE, 7, 2, 2), (0, 4, 2, 2)):
             self.rules_hi(rules)

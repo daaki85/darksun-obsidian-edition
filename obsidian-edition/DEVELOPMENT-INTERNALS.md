@@ -21,7 +21,6 @@ glossary](DEVELOPMENT.md#glossary).*
   - [The game's overlay buffer](#the-games-overlay-buffer)
   - [The game's blocks kept for good](#the-games-blocks-kept-for-good)
   - [Low memory in play](#low-memory-in-play)
-  - [The CHANGELOG's older sizes](#the-changelogs-older-sizes)
 - [Crash, freeze and item-watch reports](#crash-freeze-and-item-watch-reports)
   - [The crash report](#the-crash-report)
   - [The freeze report](#the-freeze-report)
@@ -222,7 +221,7 @@ the one place for the sizes; the sections after them name the symbols only.
 | Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (the unmodded game's 57 KB) |
 | C000h-C7FFh | 32 KB | the video BIOS (ROM) |
 | C800h-C9FFh | 8 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
-| CA00h-EFFFh | 152 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): DSCLOG 69.4 KB (71,104 bytes with its PSP and its tail, (10h + `KEPT_PARAS`) paragraphs), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, and the rest free. Measured with `playtest/memaudit.py` in Pehtucl's ambush: 29,616 bytes free in one piece, between the overlay buffer and the see-through tables, and nothing between DSCLOG and the overlay buffer ([log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-16-memory-pass-5.md)) |
+| CA00h-EFFFh | 152 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): DSCLOG 69.4 KB (71,104 bytes with its PSP and its tail, (10h + `KEPT_PARAS`) paragraphs), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, and the rest free. Measured with `playtest/memaudit.py` in the slave pens with the map open (`pens-after-arena`, this build): 25,136 bytes free in one piece, between the overlay buffer and the see-through tables, 144 bytes below DSCLOG (above DOSBox's tables) and nothing between DSCLOG and the overlay buffer ([log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-18-docs-review-2.md)) |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
 | 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): DSCLOG's [far block](#the-far-block), 65,484 bytes, 36 free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
@@ -434,19 +433,8 @@ the map's block again. Nothing can be given back to the game from outside:
 every block is its own.
 
 How the ring, the text buffer and the rest shrank or moved to get here is in
-the CHANGELOG.
-
-### The CHANGELOG's older sizes
-
-A note on the CHANGELOG's older DSCLOG sizes: up to #84 the figure called its "image" may be the
-file's, DSCLOG.EXE (#83's 63,680 and #84's 64,320 are the files' sizes; the image is the file less
-its 32-byte header), and the spare room beside it, up to #85, is counted from that figure. #85
-names the file's size as such; from #86 on, both are given. The "image" here is the file less its
-header: from the tail (2026-11-09, after #88) that is DSCLOG's 64 KB segment's part (`image_len`)
-and the tail together, and the spare room is the segment's. (Those entries, #83 to #88, are in the
-[CHANGELOG](https://github.com/daaki85/darksun-obsidian-edition/blob/main/CHANGELOG.md) itself; its
-[archive](https://github.com/daaki85/darksun-obsidian-edition/blob/main/CHANGELOG-archive.md) holds
-#73 and older.)
+the [CHANGELOG](https://github.com/daaki85/darksun-obsidian-edition/blob/main/CHANGELOG.md) (with a
+note at #88 on how its older entries count DSCLOG's sizes).
 
 ## Crash, freeze and item-watch reports
 

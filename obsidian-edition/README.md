@@ -29,7 +29,8 @@ which loads the mod with your options.
   - [how the game works, and the manual's rules](HOW-THE-GAME-WORKS.md), from its code;
   - [the patch notes](https://github.com/daaki85/darksun-obsidian-edition/blob/main/PATCH-NOTES.md):
     what the mod adds and changes from the original game, and its main bug fixes; also in the
-    release's folder as a web page, `patch-notes.html`, with a button that copies them for a forum;
+    release's folder as a page of the manual, `manual/changes.html`, and beside the zip on the
+    Releases page as `patch-notes.html`, with a button that copies them for a forum;
   - for developers, [the development notes](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT.md).
 
 ## Contents
@@ -104,16 +105,17 @@ says what the mod writes, and where).
 ## Requirements
 
 - **Windows** and the **GOG release** of Dark Sun: Shattered Lands (its
-  `DSUN.EXE` is 611,408 bytes; with another version the Loader starts the game
-  without the dice log and says why). The Loader runs it in the DOSBox that
+  `DSUN.EXE` is 611,408 bytes; with another version the Loader starts the
+  original game, without the mod, and says why). The Loader runs it in the DOSBox that
   comes with the GOG release.
 - **64-bit Python 3.8+** (32-bit Python can't read 64-bit DOSBox's memory),
   with no extra packages. The `.bat` files offer to install it
   ([One-time setup](#one-time-setup)).
-- **Linux**: the dice log and the Loader's window can follow a DOSBox you
-  start yourself, if you can read other processes' memory (root, or
-  `kernel.yama.ptrace_scope=0`); the `.bat` files, **Start the game** and the
-  Python install are Windows only. The Loader's window is
+- **Linux**: the Loader's window can show the party of a DOSBox you start
+  yourself, if you can read other processes' memory (root, or
+  `kernel.yama.ptrace_scope=0`); the dice log can't follow it (it needs DSCLOG and
+  the patched game, which only **Start the game** prepares). The `.bat` files,
+  **Start the game** and the Python install are Windows only. The Loader's window is
   `python3 -m dsloader view`, run in this folder; it needs tkinter, which some
   distributions package apart from Python (on Debian and Ubuntu,
   `python3-tk`). macOS isn't supported.
@@ -240,9 +242,13 @@ A program elsewhere is named once, in a command prompt opened in this folder (th
 back to DOSBox):
 
 ```
-python -m dsloader launch --recompiled "C:\path\to\dsun.exe"
-python -m dsloader launch --dosbox
+py -3-64 -m dsloader launch --recompiled "C:\path\to\dsun.exe"
+py -3-64 -m dsloader launch --dosbox
 ```
+
+(`py -3-64` runs the 64-bit Python, as the `.bat` files do; a plain `python` can be a 32-bit one
+installed beside it and first on the path, which can't follow the game. These pages' other
+commands are typed the same way.)
 
 It reads the game's data from the GOG folder and the mod's `dos` folder, and keeps its memory images
 (`build\ds1o`) next to itself; DOSBox's own settings (the window's size, full screen, the speed)
@@ -302,41 +308,24 @@ and use the arrow and Page keys):
   a fight: Stalker)`) and attacks, with each weapon where specialization changes
   them (`Attacks: 5/2 a round with Obsidian Chatkcha`); the kits (`Kit: Wild
   Fury`; for the game's own party, its features: `Features: Wild Fighting`), and the weapon specs with
-  their rank (`Weapons: long sword (specialized)`); with [ages](FEATURES.md#ages-and-magical-aging)
-  on, their age, its category and the next to come (`Age: 45, middle-aged;
+  their rank (`Weapons: long sword (specialized)`); their [age](FEATURES.md#ages-and-magical-aging), its category and the next to come (`Age: 45, middle-aged;
   old at 53`);
 - what they wear and hold, by the game's own slot names ("Right hand: Bone
   Long Sword"; "Carried" for the backpack), with each item's material and
   plus;
 - last, spell slots for spellcasters (see below), thief skills for thieves,
-  and for rangers, with hiding to backstab on, their chances to hide and move
-  silently (`Ranger skills now`).
+  and for rangers their chances to hide and move silently (`Ranger skills
+  now`).
 
 What some of its lines mean:
 
 **Spell slots.** `Priest spells left: 1st 5/5, 2nd 3/3, 3rd 2/2` means five
 first-level priest spells can still be cast out of five, and so on. Casting a
-spell uses one slot of its level, and resting fills them again. Wizard slots
-belong to preservers; priest slots belong to clerics, druids and rangers. A
-multiclass character's classes add up, for example a druid/preserver has both.
-The "most" is worked out the way the game does it when it refills them (its
-tables are read from memory):
-- Preservers: from their level only.
-- Clerics and druids: from their level plus a WIS bonus.
-- Rangers: from their level only, with their first slot at level 8.
-
-With [AD&D's class tables](FEATURES.md#adds-class-tables) on (the default),
-clerics', druids' and preservers' come from AD&D's tables instead. Some
-[kits](FEATURES.md#kits) have more or fewer, and the [Veiled
-Robe](ITEMS.md#every-magic-item) adds a wizard slot at spell levels 1 to 3.
-
-The game's WIS bonus doesn't depend on level, so it gives a 2nd-level druid
-with WIS 19 slots at the 2nd to 4th levels too, though a druid that level
-casts only 1st-level spells. Those aren't shown (here or in the game): only
-the spell levels the character's class levels reach, as in AD&D, where the WIS
-bonus counts only at levels the priest can cast. For a human dual-class
-character, a later class counts only while its level is below the first
-class's.
+spell uses one slot of its level, and resting fills them again. The "most" is
+worked out as the game does it when it refills them, with the mod's tables
+(AD&D's, a cleric's or druid's WIS bonus, kits, the Veiled Robe), and only the
+spell levels the character's class levels reach are shown: how many each class
+has, [spell slots](PLAYER-GUIDE.md#spell-slots).
 
 **AC.** The AC shown (**Current AC** on All fields) is the one the game last
 used for each character in a fight (armour, DEX and spells included), and the
@@ -457,7 +446,7 @@ level AA:
   same lines are in the Dice log tab at any text size.
 - **Screen readers:** tkinter's windows are not read well by screen readers.
   **Save...** on the Dice log and Dialogue tabs writes the log to a text file,
-  and `python -m dsloader dicelog` prints the same log (dialogue included) in
+  and `py -3-64 -m dsloader dicelog` prints the same log (dialogue included) in
   a command prompt, which screen readers do read.
 
 ## Updating
@@ -470,8 +459,10 @@ copies are made only while the Loader's window is open, one a slot: they are not
 a backup history, as the game saving over a slot replaces that slot's copy (keep
 a save you want to go back to in a slot of its own, or copy it elsewhere). Your saves
 and characters are in the game folder (or its `cloud_saves` folder, where GOG
-keeps them when it has one), so nothing else needs moving. Then delete the old
-folder.
+keeps them when it has one), so nothing else needs moving. If you unzipped
+[Dark Sun Recompiled](#dark-sun-recompiled) into the old folder, move it into the
+new one too (or into its own `darksun-recompiled...` folder beside it), or the
+Loader goes back to DOSBox. Then delete the old folder.
 
 ## Compatibility with older saves
 
@@ -540,10 +531,19 @@ are read only by the mod's patched game.
 - **The Loader starts the wrong copy of the game** (you moved it, or have
   two): it remembers the game folder from the first time. Name another once, in
   a command prompt opened in this folder:
-  `python -m dsloader launch --game-dir "D:\Games\Dark Sun Shattered Lands"`
+  `py -3-64 -m dsloader launch --game-dir "D:\Games\Dark Sun Shattered Lands"`
   (the folder that holds `DSUN.EXE`; it is remembered from then on). Or delete
   the `"game_dir"` entry from `settings.json` in this folder, and the Loader
   looks in GOG's usual folders again and asks if it can't find the game.
+- **"Started without ..."** as the game starts: the Loader couldn't make one of
+  its copies of the game's files (the new items, Kalzith, the script repairs), and
+  says which and why. The game runs on its own file there, and a save made
+  meanwhile may not load once the copy is back: put the cause right (often a
+  file of the game's missing or held by another program) and start the game
+  again.
+- **"settings.json can't be read just now ...: it may be held by a backup or a
+  virus scan for a moment"**: the Loader couldn't read your options just then, and changed
+  nothing in them. Start the game again in a little while.
 
 ### Known issues
 
@@ -557,8 +557,12 @@ doing help (see [Reporting a problem](#reporting-a-problem)):
   freeze** (much rarer now: three causes are fixed, [the game's
   bugs](GAME-BUGS.md#screens-and-memory)). If it happens, press **Freeze report** on the Loader
   before closing DOSBox.
-- **Out of memory.** The game has little memory to spare, and in a long
-  session it can run out ("Out of memory in OEOpenGraph"). The Loader watches
+- **Out of memory.** The game has little memory to spare, and the mod needs
+  some of it, so in a long session it can run out ("Out of memory in
+  OEOpenGraph": the map needs 60,000 bytes in one piece each time it comes
+  back). Part of the game's code and its music buffer are kept in upper memory
+  to leave more room (about 97 KB with the map up; the original game had 57 KB,
+  and with the mod's first additions only 53 KB were left). The Loader watches
   it, and if it gets low with the map up, the dice log says so: save and
   restart the game soon, as a fresh start has all of it back.
 

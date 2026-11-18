@@ -1050,8 +1050,7 @@ interrupt's way back to one of those three places, or the routine's end
   `NS_BLOW`'s), out through `ovr_back`;
 - under the number: the failure's way, and the priest's bit (combatants 0-7) set
   in TU_FAILED (the far block's `FAR_TU`: a byte a target, every combatant up
-  to `MAP_COUNT`, 520, since people the Loader adds are numbered past 256; 64
-  before 2026-11-09), which a later try by the same priest finds first: the
+  to `MAP_COUNT`, 520, since people the Loader adds are numbered past 256), which a later try by the same priest finds first: the
   routine's end, no roll. `FAR_TU` lies before SWEPT and DJ_DONE (`FAR_SWEPT`,
   `FAR_DJ`, a bit a combatant) and is cleared with them at a fight's first round
   (`acid_round`, DS:55Ah set), and alone by a turning out of a fight (`pp_fighting`);
@@ -1676,9 +1675,8 @@ at this thief level"). Verified: [log](https://github.com/daaki85/darksun-obsidi
 tests/test_locks.py. **Pockets:** a thief caught (the pick and the move silently both
 failed) is remembered as `pickpocket.caught_key` (the person's key, the thief and its thief level),
 and that thief is refused until its thief level is higher (the game's message in the story: "Kurzak
-remembers Daaki, and keeps a close hand on their purse."; the reason in the dice log alone). One who
-fumbled but slipped away unnoticed may try again at once (the user's rule, 2026-11-11; until then a
-fumble barred the thief too, and the message named the level, which the user found too metagame). Tests: tests/test_pickpocket.py's `test_caught_with_thieves_as_in_add`,
+remembers Daaki, and keeps a close hand on their purse.", which doesn't name the level; the reason
+in the dice log alone). One who fumbled but slipped away unnoticed may try again at once. Tests: tests/test_pickpocket.py's `test_caught_with_thieves_as_in_add`,
 `test_slips_away_with_thieves_as_in_add`.
 
 ## Hiding in shadows to backstab

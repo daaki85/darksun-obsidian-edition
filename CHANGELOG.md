@@ -13,180 +13,76 @@ and the DEVELOPMENT pages, and research in `reports/`. The longer entries below
 were written before this rule and are kept as they are.
 
 **Headings.** Work on the branch `obsidian-edition` not yet merged to `main` is
-under "## Unreleased (branch `obsidian-edition`)"; when its pull request is
-merged, that heading becomes "## Pull request #N (merged DATE)", with "merged
-DATE" a link to the pull request. A release's entry starts with the line
-"Obsidian Edition X", its release notes linked after it in brackets.
-
-**Sections**, each a bold line: **New**, **Changed**, **Fixed**, **Docs** (the
-documentation) and **Dev** (tests, tools, the playtest kit, the build). A label
-may name the part it is about (**Fixed: the game**, **Fixed: DSCLOG**) or say
-where the changes came from, in brackets.
-
-Releases, newest first (2.12.0 and older in the archive):
-[2.18.0](#pull-request-95-merged-2026-11-16) (#95), [2.17.1](#pull-request-94-merged-2026-11-11)
-(#94), [2.17.0](#pull-request-93-merged-2026-11-11) (#93),
-[2.16.1](#pull-request-91-merged-2026-11-11) (#91), [2.16.0](#pull-request-90-merged-2026-11-11)
-(#90), [2.15.0](#pull-request-89-merged-2026-11-10) (#89),
-[2.14.1](#pull-request-88-merged-2026-11-08) (#88), [2.14.0](#pull-request-87-merged-2026-11-07)
-(#86 and #87), [2.13.4](#pull-request-85-merged-2026-11-02) (#85),
-[2.13.3](#pull-request-84-merged-2026-10-31) (#84), [2.13.2](#pull-request-83-merged-2026-10-30)
-(#83), [2.13.1](#pull-request-82-merged-2026-10-30) (#82),
-[2.13.0](#pull-request-81-merged-2026-10-30) (#81), [2.12.5](#pull-request-80-merged-2026-10-30)
-(#80), [2.12.4](#pull-request-79-merged-2026-10-29) (#79),
-[2.12.3](#pull-request-76-merged-2026-10-29) (#76), [2.12.2](#pull-request-75-merged-2026-10-29)
-(#75), [2.12.1](#pull-request-74-merged-2026-10-27) (#74),
-[2.12.0](CHANGELOG-archive.md#pull-request-73-merged-2026-10-27) (#73),
-[2.11.0](CHANGELOG-archive.md#pull-request-69-merged-2026-10-26) (#69),
-[2.10.0](CHANGELOG-archive.md#pull-request-67-merged-2026-10-26) (#67),
-[2.9.0](CHANGELOG-archive.md#pull-request-63-merged-2026-10-26) (#63),
-[2.8.0](CHANGELOG-archive.md#pull-request-61-merged-2026-10-25) (#61),
-[2.7.2](CHANGELOG-archive.md#pull-request-59-merged-2026-10-24) (#59),
-[2.7.1](CHANGELOG-archive.md#pull-request-58-merged-2026-10-23) (#58),
-[2.7.0](CHANGELOG-archive.md#pull-request-56-merged-2026-10-23) (#56),
-[2.6.0](CHANGELOG-archive.md#pull-request-54-merged-2026-10-21) (#54),
-[2.5.0](CHANGELOG-archive.md#pull-request-51-merged-2026-10-19) (#51),
-[2.4.0](CHANGELOG-archive.md#pull-request-50-merged-2026-10-16) (#50),
-[2.3.0](CHANGELOG-archive.md#pull-request-47-merged-2026-10-15) (#47),
-[2.2.1](CHANGELOG-archive.md#pull-request-43-merged-2026-10-14) (#43),
-[2.2.0](CHANGELOG-archive.md#pull-request-42-merged-2026-10-14) (#42),
-[2.1.1](CHANGELOG-archive.md#pull-request-37-merged-2026-10-10) (#37),
-[2.1.0](CHANGELOG-archive.md#pull-request-36-merged-2026-10-09) (#36),
-[2.0.0](CHANGELOG-archive.md#pull-request-33-merged-2026-10-09) (#33),
-[1.2.0](CHANGELOG-archive.md#pull-request-30-merged-2026-10-08) (#30),
-[1.1.0](CHANGELOG-archive.md#pull-request-18-merged-2026-10-06) (#18),
-[1.0.0](CHANGELOG-archive.md#pull-request-12-merged-2026-10-02) (#12).
-
-## Unreleased (branch `obsidian-edition`)
-
-**Fixed** (the code audit of 2026-11-18, `reports/code-memory-audit.md` on its branch)
-- **Negative Plane Protection's save no longer writes past the new spells' records:** its copy of
-  Vampiric Touch's record went 32 bytes past their room, over a game segment and picture slot 0.
-  The save now uses Vampiric Touch's own record, its save byte set for that call only; build
-  asserts tie the records, the spell rows and the moved tables to their room.
-- **A magical item sold with the Loader's window closed is no longer lost:** DSCLOG keeps it back
-  for the buyback only while the Loader is there, else the game frees it as ever. The queue names
-  the item, so one picked up since isn't given away, and sales left by a Loader that went away, or
-  more than four at once, are seen to rather than dropped (DSCLOG's signature now `DSCLOGvb`).
-- **The Loader's item moves read the lists with the game held still:** the item gate checked only
-  the free lists' heads, so an item the game moved between two lists during its wait (a drag, a
-  GIVE) could have a list cut into another. Every change now reads the lists after the gate holds.
-- **The Elven Leader's Gythka +1 is no longer drawn as Kreenfang:** Kreenfang is known by its name too.
-- **A Ravager at kit level 0 has the table's first AC (7), as the dice log says,** not its last (3).
-- **A second new character's gear isn't skipped:** the gear pass clears its flag only if the
-  character it worked on is still the one named.
-- **On Windows, a file held a moment (a virus scan) no longer starts the game without the dice
-  log:** the Loader's copies are tried again for a moment, and flushed to the disk first.
-- **Settings changed by the window and by *Play Dark Sun (in-game rolls)* at once are both kept**
-  (a lock file beside settings.json).
-- **Smaller:** DSUN.EXE gone from the folder is said, not a crash; a hand-edited name key such as
-  "²" no longer breaks name look-ups; the `dicelog` command waits for DOSBox again and `play` says
-  an unreadable settings.json plainly; with Kalzith off, a failed scripts copy also says the pens'
-  gifts went with it.
-- **Item lists hardened:** an item index past the table is a torn read, not a write 200 KB away;
-  a give that fails puts the record back (the Ring +1, a lifted item); spell arrows that can't be
-  taken from where they were have their copy taken back; no write through a table pointer that
-  reads null; a write the low-memory guard refuses raises, so its step is dropped whole; nothing
-  written after the game restarts in the same DOSBox; the item gate lets the game go after each
-  step; Kalzith's loot is marked done only once his scrolls are gone, a lone one on the ground
-  too; a champion's gear that can't be placed is tried three more times, not every pass.
-
-**Fixed: DSCLOG** (the code audit, part 2: its interrupt hygiene and memory margins)
-- **Interrupts as the game had them:** DSCLOG's handlers that return their flags to the game, or
-  run the game's own code (the figures drawn every frame, the item box, the USE screen's buttons,
-  the AI's walls, the slots, the level-up window, a polearm's reach, a Poisoner's hit), set
-  interrupts as their caller had them, not always on and not left off (the game's clock lost its
-  ticks).
-- **The timer's tick and the dice's record clear the direction flag** before they copy.
-- **The game's mouse handler forgotten when the game removes it** or resets the driver, so a
-  pending call can't reach a handler that is gone.
-- **The scenes' arrow pointer leaves the screen alone while the game copies within video memory**
-  (it could have put its pixels in the copy).
-- **A20 checked each pass of the main loop:** found off, it is turned on again and the dice log
-  says so once, rather than DSCLOG's buffers above 1 MB being written over the interrupt vectors.
-  DSCLOG's signature now `DSCLOGvc`.
-- **Upper memory moved down to CA00h, not C900h:** five times the room between DOSBox's own tables
-  and DSCLOG.
-- **Memory in pieces is said too:** with enough spare in all but no piece the map's view needs,
-  the dice log says to save and restart soon.
-
-**Fixed: the scripts**
-- **The elven slavers' leader's Goodbye** (script 46, from OpenDS's triage; `scriptfixes.py`, tests
-  `OpenDSTriageTests`; not yet seen in play): "Sorry to bother you. Goodbye." alone went straight to
-  the arrest, skipping the templar's accusation; it now returns to the caller as the menu's other
-  replies do. Three other OpenDS rows (Alhena, Keldar and Dagolar, the Hound Necklaces) were tried and
-  left as the game has them; the evidence, and what was taken from OpenDS (checked to 2026-11-13), are
-  in [the cross-read](reports/opends-cross-read-2026-11-16.md#6-the-changelogs-account-2026-11-17).
+under "## Unreleased (branch `obsidian-edition`)
 
 **New**
-- **Tanelyv's chest piece shines** as its arm and leg pieces do (its object, 2004, made by the Wyrm
-  Temple's script 161, in `icons.SHINE`; its icon in ITEMS.md). Seen in DOSBox: the chain picture with
-  the water's shine, "Metal Tanelyv's Armor" in its box.
+- **Tanelyv's chest piece shines** as its arm and leg pieces do (#106).
 
 **Changed**
-- **Fewer switches,** the owner's call (a simpler Options tab, the mod's rules as meant): the combat
-  log, all rule changes but hit dice, half-giants' weapons and helms, weapon specialization, STORE
-  and RECALL, the shops and thieving, the graphics and the controls are always on, their boxes gone
-  (the red ring and the combat log's level keep their choices); an older settings file's False for
-  one is passed over.
-- **Spell arrows' item box says who may use them:** INFO (right-click the arrows, then INFO) heads its list SPELLARCHERS: in place of USEABLE BY: for Chill, Shocking, Vampiric (and the retired Burning) Arrows (DSCLOG's `INFO_HEAD`, the heading's pointer at 8C1E0h). With no Spellarcher in the party, spell arrows another member has readied (an old save) go back in its pack (`spellarrows.return_strays`). DSCLOG 112 bytes bigger (592 spare; upper memory 59 paragraphs spare). Seen in DOSBox: "SPELLARCHERS: / NO ONE", "SPELLARCHERS: / Cermak", plain arrows' USEABLE BY: as before; CANNOT USE THIS ITEM for a non-Spellarcher's quiver (dragged, through a portrait, split). The user's request.
-- **The elf champion's Chill Arrows chill:** spell arrows shot by anyone not in the party cast their spell on a hit (DSCLOG's `PROBE_ARROW`; a party member still needs the Spellarcher kit), at the archer's highest level, which gives their plus too (`ARCHER_LEVEL`: the elf's 7, Chill Touch at level 7, the arrows +1). DSCLOG 16 bytes smaller (704 spare). Seen in DOSBox: the elf's hits on Cermak, his saves against Chill Touch, a failed one 1 STR. The user's request.
-- **The Flame Blade is the Searing Blade,** an obsidian short sword +2 (was a long sword +1; 42,800),
-  its Focus Heat burst and its place (the Hot Springs' Templar) kept, so the priest spell's Flame
-  Blade alone has the name; a fire or earth cleric, a psionicist or a thief can wield it. A saved
-  game's is made the Searing Blade as the dice log runs (`worldgear.mend_searing_blade`). Seen in
-  DOSBox: "+2 Searing Blade" whole in the item box and the weapon line, "Obsidian Searing Blade +2"
-  in the dice log, an old Flame Blade remade in a pass.
-- **Magic items glow in the colours their stories call for:** the game's colour cycler turns green
-  (1-5) and violet (6-10) too, not only water and fire, so Greenbright shimmers green (seen in
-  DOSBox), Mindshard violet, Stillwater and Hayneedle the water's blue, Windlash, Galefang and
-  Skycutter the air's white and blue, and the Silk Armor, the Living Cloak and the Elvenkind cloak
-  and boots green; the rest keep the fire. A wielder's figure glints in the same colours.
-- **The champions' bout**, the user's request: the halfling's sling is a staff sling, and the Tohr-kreen's, the halfling's and the elf's DEX 22; the elf's bow is now the Spellarcher's **Fine Bow** (+1 to hit, not magic), its arrows 24 **Chill Arrows** (they chill: above); the defiler champion wears the **Bracers of Defense AC 6** that were Mikquetzl's (a save that has met him keeps his).
-- **The release zip** leaves out the developer pages, the tests and `docs/viewer.png` (`export-ignore`); the manual links to them at the release's tag (#97).
+- **Fewer switches** (#110), for a simpler Options tab and the mod's rules as meant: the combat
+  log, the rule changes but hit dice, half-giants' weapons and helms, weapon specialization, STORE
+  and RECALL, the shops and thieving, the graphics and the controls are always on; an older
+  settings file's False for one is passed over.
+- **Spell arrows' item box heads its list SPELLARCHERS:** (#109), and with no Spellarcher in the
+  party, spell arrows another member has readied (an old save) go back into its pack.
+- **Spell arrows shot by anyone outside the party cast their spell** (#108), at the archer's
+  highest level, so the elf champion's Chill Arrows chill as a Spellarcher's do.
+- **The champions' bout** (#107): the halfling's staff sling, DEX 22 for the Tohr-kreen, the
+  halfling and the elf, the elf's Fine Bow and 24 Chill Arrows, and the defiler in the Bracers of
+  Defense AC 6 that were Mikquetzl's.
+- **The Flame Blade is the Searing Blade** (#106), an obsidian short sword +2, so the priest
+  spell's weapon alone has the name; a saved game's is remade as the dice log runs.
+- **Magic items glow in the colours their stories call for** (#106): the game's colour cycler turns
+  green and violet too, not only water and fire (Greenbright green, Mindshard violet).
+- **The release zip** leaves out the developer pages, the tests and `docs/viewer.png`; the manual
+  links to them at the release's tag (#97).
+
+**Fixed**
+- **The code audit, part 1** (#111): Negative Plane Protection's save no longer writes past the new
+  spells' records; a magical item sold with the Loader's window closed is no longer lost; the
+  Loader moves items only with the game held still, so no list is cut into another.
+- **Smaller, from the same audit** (#111): the Elven Leader's Gythka +1 isn't drawn as Kreenfang; a
+  Ravager at kit level 0 has the table's first AC; a second new character's gear isn't skipped; a
+  file held a moment by a virus scan no longer starts the game without the dice log; settings
+  changed by two Loaders at once are both kept; the item lists' writes hardened.
+- **DSCLOG's interrupt handling and memory margins** (#112): its handlers leave interrupts as the
+  game had them (the game's clock lost ticks), copies clear the direction flag, a removed mouse
+  handler is forgotten, A20 is turned on again if found off, upper memory starts at CA00h for more
+  room beside DOSBox's tables, and memory in pieces is warned of too.
+- **The elven slavers' leader's Goodbye** no longer goes straight to the arrest, from OpenDS's
+  triage (no pull request: committed to the branch).
 
 **Docs**
-- **Named saves aren't a backup history** (README): the copies are made while the Loader's window
-  is open, one a slot, and the game saving over a slot replaces its copy.
-- **DSCLOG's room and kept block** recomputed for this build (DEVELOPMENT-INTERNALS), and the new
-  spells' room named 199-211 (DEVELOPMENT-CONTENT).
-- **The change records** (#98): the patch notes shortened, each release's notes take its version news, and the CHANGELOG's older entries archived (`CHANGELOG-archive.md`) and its labels made New, Changed, Fixed, Docs and Dev.
-- **The developer pages restructured**: `DEVELOPMENT.md` the entry point (architecture, glossary, requirements, a map of every module, a contributor checklist, one Unverified list, acknowledgements), the rest in a new `DEVELOPMENT-INTERNALS.md`; sections moved to where they belong, "Verified: log" links for the accounts of play, and version narratives dropped (the history is in the CHANGELOG, its archive and git).
-- **The player's entry points reordered** (#101): the folder README
-  runs requirements, setup (backing up saves now a step), play, Dark Sun Recompiled in a section of
-  its own, the Loader's window, updating, compatibility in two sentences, uninstalling (the one copy
-  of what the mod changes on your computer), troubleshooting; reading the dice log and its colours
-  moved to DICE-LOG.md; the root README a pitch, three steps, one docs list and the credits. The
-  player's guide says the multiclass and kit notes once for all classes, has one "Magic weapons by
-  class" table (the earth cleric's list gains the Great Axe +3, metal since 2.14.1), Equipment's
-  topics as headings, one Options row per radio group and an "Elsewhere in the Loader" table.
-- **One home for the kits, items and reference pages**: weapon specialization a page of its own
-  (`WEAPON-SPECS.md`, in the manual), the kits' tables a line a kit with a section each, Items' chests
-  given their places and a price a row, Creatures' generated tables trimmed (with where each Guard,
-  Slave and Worker is met), the dice log's tables one example a row, the rules the game got wrong
-  moved from GAME-BUGS to FEATURES, How the game works retitled with its code addresses left to
-  DEVELOPMENT-RULES, and the player pages' links to the developer pages made GitHub links.
-- **Features and rules a catalogue, and a People page**: FEATURES.md (2,878 → about 1,280 lines)
-  has one short entry per Options switch, in the tab's order, then Saves and Always on, each with its
-  switch's words and "Rules:" and "How it works:" links; its rule tables moved to the player's guide
-  (ages, picking pockets in detail, the 6th-level spells' details), the spells-as-the-manual table to
-  How the game works, the frame-rate measurements and implementation notes to the DEVELOPMENT pages,
-  Legcrusher's fix to GAME-BUGS; the story (Kalzith, Semyon, Dinos and the Trustee, the champions,
-  the vulture, Legcrusher) to a new spoiler page, PEOPLE.md (`people.html` in the manual). Player
-  pages may no longer link to a DEVELOPMENT page relatively (`test_doclinks`).
+- **The change records** (#98): shorter patch notes, each release's news in its notes, the
+  CHANGELOG's older entries archived and its labels made New, Changed, Fixed, Docs and Dev.
+- **The player pages' small fixes** (#100): troubleshooting for a Python the `.bat` files don't
+  take and for the wrong game folder, Linux's window, every save name Show Save takes, the
+  README's version, licence and credits, lighter GIFs.
+- **The player's entry points reordered** (#101): the folder README in the order a player needs
+  it, the root README a pitch and three steps, the guide's shared notes said once.
+- **The developer pages restructured** (#102): `DEVELOPMENT.md` the entry point (architecture,
+  glossary, a map of every module, a contributor checklist), the rest in `DEVELOPMENT-INTERNALS.md`.
+- **In-game checks of the pages** (#103): the look box's picture retaken, with a creature's
+  defence line; the combat log's buttons measured for the playtest guide.
+- **One home for each reference** (#104): weapon specialization a page of its own, the kits a line
+  and a section each, a place for every item, each rule said in one page.
+- **Features a catalogue, and a People page** (#105): FEATURES.md one short entry for each switch,
+  in the Options tab's order; the story's people on a spoiler page of their own.
+- **Named saves aren't a backup history**, and DSCLOG's room recomputed for this build (#112).
+- **The second documentation review's fixes** (#113): the multiclass rule as the code has it,
+  rules now always on no longer written as switches, the random monsters' divide by zero and "Out
+  of memory in OEOpenGraph" out of the game's bugs, more troubleshooting, the Elvenkind picture
+  retaken; this section sorted and numbered; `.gitattributes` and `.gitignore` out of the zip.
 
 **Dev**
-- **The code audit's tests** (part 2): every field of DSCLOG's header at its offset and every
-  `TSR_*` constant a field's (`test_header_offsets`, which also pins the spell arrows' table and
-  the names' room); DSCLOG's interrupt handling in the emulator (`test_interrupt_hygiene`); the
-  Loader's names within DSCLOG's room, and icons' and pickpocket's name entries theirs; every
-  player's page in the manual; `CHANGELOG-archive.md` link-checked. DSCLOG counts its item names
-  (`NAMES_EXTRA`) and asserts its tick records' size. Python constants that shared a name with a
-  different DSCLOG one renamed (`TSR_TSIZE`, `NO_MATERIAL_BIT`, `WILD_TO_HIT_MOD`,
-  `STINK_TO_HIT_MOD`, `MAP_THING_COUNT`).
-- **A release step runs the tests with the game's files** (DEVELOPMENT.md, Making a release).
-- **The start-up hook** no longer takes a task's branch with `-2` on it for a handed random name.
-- `dsloader/guidepage.py` (the manual's old name) taken out; the combat log's design brief archived in `reports/archive/`, the rest-order prototype moved to `playtest/logs/files/`.
+- **The playtest kit** (#99): one startup checklist, the memory edits in RESEARCH, HISTORY by
+  topic, the logs indexed, finished reports archived.
+- **The code audit's tests** (#112): DSCLOG's header fields at their offsets, its interrupt
+  handling in the emulator, the Loader's names within DSCLOG's room, every player's page in the
+  manual; a release step runs the tests with the game's files; the start-up hook no longer takes
+  a branch with `-2` on it for a session's handed random name.
+- **Tidying** (#102): `dsloader/guidepage.py` taken out, the combat log's design brief archived,
+  the rest-order prototype moved to `playtest/logs/files/`.
 
 ## Pull request #96 ([merged 2026-11-17](https://github.com/daaki85/darksun-obsidian-edition/pull/96))
 
@@ -1483,6 +1379,14 @@ failed before)
   and the see-through tables') join the worker thread now (`ghost.Ghosts` keeps it).
 
 ## Pull request #88 ([merged 2026-11-08](https://github.com/daaki85/darksun-obsidian-edition/pull/88))
+
+*A note on the DSCLOG sizes in #83 to #88:* up to #84 the figure called its "image" may be the
+file's, DSCLOG.EXE (#83's 63,680 and #84's 64,320 are the files' sizes; the image is the file less
+its 32-byte header), and the spare room beside it, up to #85, is counted from that figure. #85
+names the file's size as such; from #86 on, both are given. The "image" in
+[DEVELOPMENT-INTERNALS](obsidian-edition/DEVELOPMENT-INTERNALS.md#room-and-memory) is the file
+less its header: from the tail (2026-11-09, after #88) that is DSCLOG's 64 KB segment's part
+(`image_len`) and the tail together, and the spare room is the segment's.
 
 Obsidian Edition 2.14.1 ([release notes](release-notes/v2.14.1.md)).
 

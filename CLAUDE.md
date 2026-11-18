@@ -18,7 +18,8 @@ they differ. In the order of [the guide's checklist](playtest/PLAYTESTING.md#2-t
    PLAYTEST_WORK=/tmp/playtest` (the guide's `$WORK`; the default, which the shared DOSBox lock
    assumes). The game is `$PLAYTEST_WORK/inst`, from `setup_game.sh`. **DOSBox dies when the
    session sits idle**, and a worker restart takes Xvfb too: after any pause, check `pgrep -x
-   dosbox` and `pgrep -x Xvfb`, restart what is gone and reload.
+   dosbox` and `pgrep -x Xvfb`, restart what is gone (a lost Xvfb by hand: `setsid nohup Xvfb :55
+   -screen 0 1024x768x24 &`) and reload.
 2. **`sh start.sh`** starts Xvfb, DOSBox with the Loader's patched game and the dice log
    (`$PLAYTEST_WORK/dice.txt`).
 3. **`sh loadsave.sh NAME`** (it runs start.sh itself) loads a save from `playtest/saves/`
@@ -64,10 +65,9 @@ deletes `obsidian-edition` when its pull request into `main` merges: then make i
 `ccr-7f9f358f-nn0os3`). Don't use it: this rule is the user's standing permission to push to a
 branch named after the task instead. Before the first commit or push, make `claude/<task>` (never
 push the random name: a session can make branches but not delete them, so it would be left behind
-for the user to delete by hand), where `<task>`
-is two to five lowercase words joined by hyphens saying what the work is (`claude/class-outfits`,
-`claude/opends-report`, `claude/gear-mark-roster`); check `git ls-remote origin` that it is free,
-else add `-2`. Commit and push there, and say the name in the first reply. If the user names a
+for the user to delete by hand), where `<task>` is two to five lowercase words joined by hyphens
+saying what the work is (`claude/class-outfits`, `claude/opends-report`, `claude/gear-mark-roster`);
+check `git ls-remote origin` that it is free, else add `-2`. Commit and push there, and say the name in the first reply. If the user names a
 branch, or the work continues an existing branch, use that one.
 
 **Shell.** Never `pkill -f` or `pgrep -f | kill` a pattern your own command line contains: it

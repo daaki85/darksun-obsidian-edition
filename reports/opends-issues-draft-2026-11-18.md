@@ -1,5 +1,7 @@
 # Six issue texts for OpenDS (draft, 2026-11-18)
 
+*Status: drafts, nothing posted yet.*
+
 Nothing here has been posted. Each issue stands alone and is written for github.com/VirInvictus/opends (they
 ask for an issue before a PR, and record new bugs in `docs/known-bugs.md`). Facts only, in new words: this
 repository is GPL-3.0 and OpenDS is MIT, so no text is copied; no game data and nothing from the private

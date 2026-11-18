@@ -25,7 +25,7 @@ does. A named item's glow follows its story (alagorn.py): fire for a magic weapo
 own, unless its story is of water (WATER), the air (SKY: the water's blues and white), the mind
 (MIND) or the Green Age (GREEN).
 
-The game reads object pictures from SEGOBJEX.GFF. The game folder is never changed: the launcher
+The game reads object pictures from SEGOBJEX.GFF. The game folder is never changed: the Loader
 writes a copy of that file next to the patched game (the dos folder, D: in DOSBox) with an
 object added for each of these icons, and DSCLOG has the game open the copy instead (its INT
 21h hook, PROBE_DOS_OPEN).

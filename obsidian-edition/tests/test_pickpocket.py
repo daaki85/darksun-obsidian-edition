@@ -299,7 +299,7 @@ class ToolsTests(unittest.TestCase):
 
 class SwitchTests(unittest.TestCase):
     def test_switch(self):
-        """The helper's switch: items used on the map asked about (bit 0) either way, the Pick
+        """DSCLOG's switch: items used on the map asked about (bit 0) either way, the Pick
         Pockets button (bit 1) with picking pockets on."""
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
         from test_dicelog import HDR, make_game

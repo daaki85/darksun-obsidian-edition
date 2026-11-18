@@ -139,7 +139,7 @@ protection, and ages.
 
 **Corrects the game:** each of these rule changes puts right a rule the game gets wrong (it departs
 from its own manual, from itself or from the Player's Handbook), and is one of [the game's
-bugs](GAME-BUGS.md#rules-it-got-wrong) that the mod mends. All are always on now, with no switch.
+bugs](GAME-BUGS.md) that the mod mends. All are always on now, with no switch.
 
 | Rule | The game | As it should be | Entry |
 |---|---|---|---|
@@ -385,8 +385,8 @@ the helms in [Items](ITEMS.md#head). How it works:
 
 #### Items saving against acid
 
-The Rampager's acid and the Babau's corroding touch destroy worn armour without a magical power
-outright in the game, plus or no plus. With the rule each item needs the easier of the game's number
+The Rampager's acid and the Babau's corroding touch destroy worn armour, or a held weapon, without a
+magical power outright in the game, plus or no plus. With the rule each item needs the easier of the game's number
 and AD&D's saving throw against acid by its material, less its plus (leather armour goes from 0% to
 55%), so no item is worse off. The dice log shows every check.
 
@@ -548,11 +548,12 @@ How it works:
 
 ### The game's own party
 
-START GAME with no party made plays the game's own four, made before these choices existed. With
-weapon specialization, kits, class restrictions and fuller starting gear on, the Loader fits them to
-those in the first moments of a new game, and says so in the dice log:
+START GAME with no party made plays the game's own four, made before these choices existed. The
+Loader fits them to weapon specialization and class restrictions (always on), and to kits and
+fuller starting gear when those are on, in the first moments of a new game, and says so in the dice
+log:
 
-| Character | With weapon specialization | With class restrictions | With kits |
+| Character | Weapon specialization | Class restrictions | With kits |
 |---|---|---|---|
 | **Gerakis**, half-giant gladiator | specializes in the long sword and the gythka; with [half-giants' two-handed weapons](#half-giants-two-handed-weapons), his club is a bone gythka, a two-handed weapon beside his long sword | | **Wild Fighting**, as a [Wild Fury](KITS.md#multiclass-kits) has it, as each fight starts |
 | **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | | casts and uses psionics as a [Wasteland Seer](KITS.md#multiclass-kits) does (druid spells 2 levels higher under the open sky, 1 lower under a roof; psionic powers 2 PSP less under the open sky, 1 more under a roof); her chatkcha's one throw more a round is every thri-kreen's (5/2 a round, specialized; [Weapon specialization](WEAPON-SPECS.md)), not hers alone |
@@ -844,11 +845,11 @@ Tezral hides in shadows: d100 = 21, needs 27 or less (54, halved in daylight) ->
 
 ![Item boxes in the game: a Leather Belt's "Pick +5, Lock +5", Leather Boots' "Silent +10" and a Leather Cloak's "Hide +10", each at 24](docs/gear-boxes.png)
 
-![Item boxes in the game: the Cloak of Elvenkind's "Hide 90-95%", 25,000; the Boots of Elvenkind's "Silent 95%", 20,000](docs/elvenkind.png)
+![Item boxes in the game: the Cloak of Elvenkind's "Hide 90-95%", 25,000; the Boots of Elvenkind's "Silent 95%", 20,000; both icons shimmering green](docs/elvenkind.png)
 
 **Always on** (no switch), with what worn gear adds: a cloak 10 to hiding, boots 10 to moving
 silently, a belt 5 to picking pockets and opening locks (plain ones cost 24; the [Cloak and Boots of
-Elvenkind](ITEMS.md#other-worn-items) do more). Rules: [hiding in
+Elvenkind](ITEMS.md#other-worn-items) do more: [their numbers](PLAYER-GUIDE.md#hiding-in-shadows)). Rules: [hiding in
 shadows](PLAYER-GUIDE.md#hiding-in-shadows), the kits that hide their own way in [Kits](KITS.md).
 How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#hiding-in-shadows-to-backstab).
@@ -1026,7 +1027,7 @@ is stopped. What else the screen shows: [the Effects screen](#the-effects-screen
 ## Always on
 
 What the mod does with no switch, in games started from the Loader or its `.bat` files: more on the
-game's own screens, in its own lettering and windows; the picks at creation; three keys; the magic
+game's own screens, in its own lettering and windows; the picks at creation; its keys (T, S, M, U and I); the magic
 items' icons and the spells on the ground; and the game's bugs mended. Elsewhere: the
 [two-weapon](#two-weapons) penalties, the pick's [footman's dice](#creature-size) and [Legcrusher at
 the fountain](GAME-BUGS.md#scripts-that-stuck-or-ran-twice).
@@ -1176,7 +1177,7 @@ two 1st-level spells at 1st level, four at 2nd, four 1st-level and two 2nd-level
 multiclass preserver too, and a [Scholar](KITS.md#preserver-kits) one more each level. A human who
 becomes a preserver picks its first two the same way. **EXIT** (twice) ends the picking, the rest
 being the game's own in its order; the character is already saved, so EXIT can't take you back.
-Rules: [learning preserver spells](PLAYER-GUIDE.md#learning-preserver-spells). How it works:
+Rules: [the preserver](PLAYER-GUIDE.md#preserver), [learning preserver spells](PLAYER-GUIDE.md#learning-preserver-spells). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#preservers-first-spells).
 
 ### Psionic powers at creation
@@ -1186,7 +1187,7 @@ window, where the game always handed out the same ones: anyone not a psionicist 
 its chosen discipline's, a psionicist as many as the game gave for its starting level (4 at 1st, 5
 at 2nd, 10 at 3rd) from all three. Everyone still knows **Mind Blank**. **EXIT** (twice) leaves the
 rest to the game's own; **EDIT** on a member that keeps its classes, race, kit and discipline keeps
-its powers, and the game's own party keeps the game's. Rules: [psionics](PLAYER-GUIDE.md#psionics).
+its powers, and the game's own party keeps the game's. Rules: [the psionicist](PLAYER-GUIDE.md#psionicist), [psionics](PLAYER-GUIDE.md#psionics).
 How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#psionic-powers-at-creation).
 
@@ -1234,8 +1235,9 @@ white and blue (Windlash, Galefang, Skycutter), violet (Mindshard) or green (Gre
 ### Spells on the ground
 
 With the new spells, the [6th-level priest spells](#6th-level-priest-spells) that stay on the map
-have pictures of their own: Blade Barrier's ring of circling blades, Wall of Thorns' tangle, Fire
-Seeds' burst, and Whirlwind's funnel of dust, which turns as you watch.
+have pictures of their own: Blade Barrier's ring of circling blades and Wall of Thorns' tangle
+(from [Wake of the Ravager](#wake-of-the-ravager); without it, the game's fire wall recoloured),
+Fire Seeds' burst, and Whirlwind's funnel of dust, which turns as you watch.
 
 ![Whirlwind in the arena: a tall grey funnel of dust turning over the sligs as the party fights beside it, the damage it does each round](docs/whirlwind.gif)
 
@@ -1247,3 +1249,8 @@ How it works:
 The patched game also mends dozens of the game's own bugs, whatever the Options tab says: spells
 that never did what they say, fights, screens, and people and quests that could stall. They have a
 page of their own, grouped by kind: [The game's bugs, fixed](GAME-BUGS.md) (some spoilers).
+
+With the game's people wearing their weapons and armour from the start (one of those fixes: [who
+turns up](GAME-BUGS.md#who-turns-up-and-how)), the mod also puts on what else they carry to wear: a
+cloak, a belt, boots, an amulet and up to two rings, which the game never did. Each counts by the
+same rules as the party's.

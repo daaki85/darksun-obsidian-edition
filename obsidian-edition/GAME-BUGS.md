@@ -83,8 +83,8 @@ memory fixes in [DEVELOPMENT-INTERNALS.md](https://github.com/daaki85/darksun-ob
 
 | Bug | The game | With the Loader |
 |---|---|---|
-| The game's **people's weapons and armour** | Carried in their packs until each one's first action in a fight: until then AC 10, armour unworn, no weapon in the Look box; anyone hit before acting (an opening blow, a backstab, the first round) met no armour | Worn and in hand as they come on the map, as the game puts them on: the best weapon in the main hand, a shield or a second weapon in the other, a bow and its arrows, armour and a helm. The mod also puts on a cloak, a belt, boots, an amulet and up to two rings, which the game never did. Each counts by the same rules as the party's |
-| **Random monsters** (a vanishing body, a survivor's warning) | How many came was worked out from the wrong monster's strength, and in seven regions the last monster on the list divided by 0, which ended the game ("Divide error") | Worked out from the monster that comes: 1 to 6, fewer of the strong ones |
+| The game's **people's weapons and armour** | Carried in their packs until each one's first action in a fight: until then AC 10, armour unworn, no weapon in the Look box; anyone hit before acting (an opening blow, a backstab, the first round) met no armour | Worn and in hand as they come on the map, as the game puts them on: the best weapon in the main hand, a shield or a second weapon in the other, a bow and its arrows, armour and a helm. Each counts by the same rules as the party's (and what else the mod puts on them: [the people's other gear](FEATURES.md#the-games-bugs-fixed)) |
+| **Random monsters** (a vanishing body, a survivor's warning) | How many came was worked out from the wrong monster's strength: the next one on the region's list | Worked out from the monster that comes: 1 to 6, fewer of the strong ones |
 | A fight's **music** | An attack that starts a fight asks for the music level the region gives its creature, but read it with the wrong step, so every creature but the region's first got another's level | The creature's own level (found by yuan-ti) |
 
 ### Resting
@@ -116,7 +116,7 @@ memory fixes in [DEVELOPMENT-INTERNALS.md](https://github.com/daaki85/darksun-ob
 | Bug | The game | With the Loader |
 |---|---|---|
 | Items that raise or lower an **ability score** | Changed the score wherever they were, the backpack too, so one carried did as much as one worn | Only while worn ([how](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#worn-items-the-gladiators-armour-and-psionic-blast)) |
-| The **gladiator's armour optimisation** (AC 1 better a 5 gladiator levels) | Given with no armour on, where Dark Sun gives it to armour worn | Only with armour on (arms, legs, head or chest; not a shield, bracers or a robe) |
+| The **gladiator's armour optimisation** (AC 1 better for each 5 gladiator levels) | Given with no armour on, where Dark Sun gives it to armour worn | Only with armour on (arms, legs, head or chest; not a shield, bracers or a robe) |
 | **Alagorn's stories** of the Quicksilver Glove and the Helm of Contemplation | Told of what neither does: gauntlets that graft a weapon to the hand, and a shield of thought against all psionic attacks | The glove's name as the game has it and what it does (Detonate on every hit); the helm as Gaze Reflection ([Alagorn's stories](ITEMS.md#alagorns-stories)) |
 | The game's **Sling +1** | A blank icon (its picture is missing from the game's data) | The Sling's, with a glow |
 | The game's **Great Axe +3** (the Army Commander's) | Its type had no material, as a ring's: its name showed none, and no sphere's cleric could wield it | Metal, as its icon's grey and teal head and its weight have it: "Metal Great Axe +3" |
@@ -142,7 +142,6 @@ memory fixes in [DEVELOPMENT-INTERNALS.md](https://github.com/daaki85/darksun-ob
 |---|---|---|
 | **Graphics disappearing in a busy area** (SSI's note 2712 for Wake of the Ravager, the same engine) | The game keeps 300 picture slots for walls, doors, figures and items lying about, and gives none back until the next area: once a visit had used 300 (items of many kinds dropped, bodies, spells, new monsters), a new picture got no slot and wasn't drawn: an item on the ground, a body, a figure, a doorway | Once all 300 are taken, a slot holding a picture nothing uses now (out of memory, named by no wall or thing on the map) is reused, its picture put where it fits in the store (a different limit from the picture store [the party's outfits](FEATURES.md#what-the-party-wears) fill) ([how](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#graphics-disappearing-in-a-busy-area)) |
 | A magic item's **glow in a shop** | Stood still: a shop runs its own loop, which never turned the colours that make it shine | Shines, as on the map and in the inventory |
-| **"Out of memory in OEOpenGraph"** in a long session | The map needs a large block of memory each time it comes back (after the USE screen, a talk, a menu), and with the map up the game had little more than that to spare, so it could stop | Part of the game's code and its music buffer kept in upper memory, so there is much more to spare, and a warning in the dice log if it runs low (`Memory is running low: ...`) ([crash, freeze and item reports](README.md#crash-freeze-and-item-reports)) |
 
 ## People and quests
 

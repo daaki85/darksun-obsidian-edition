@@ -57,9 +57,9 @@ By material, then weapon spec ([by weapon spec](#by-weapon-spec) lists them by t
 | ![](docs/items/thornwall.png) | Bone | ***Thornwall*** | a bone polearm +1; its reach as any polearm's, with [the rule](FEATURES.md#polearm-reach) | on the slave pens' **weapon rack**, once **Semyon**, in his pen, has told of the weapon shipment ("Seen anything useful?") |
 | ![](docs/items/gythka-plus3.png) | Bone | Gythka +3 | +3 | carried by **Hototo**, chief of the White Sand Outlaws who burst from the sand (fought if the talk goes wrong; the mod's); and the arena's [1000th trip](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights), King Tectuktitlay's gift |
 | ![](docs/items/gythka-plus2.png) | Bone | ***Gythka +2*** | the game's Gythka +1, made +2 | the **Elven Leader**'s gift, after the fight with his men (he carries it too) |
-| ![](docs/items/kreenfang.png) | Bone | ***Kreenfang*** | a gythka +1 (2d4+1) | carried by the **Tohr-kreen** leading the champions in the arena, after **Scar** is killed ([the champions' bout](FEATURES.md#the-champions-bout)) |
-| ![](docs/items/cahulaks-plus2.png) | Bone | ***Cahulaks +2*** | +2; casts Cause Light Wounds on a hit (the game's Cahulaks +1, made +2); its blades glow blue | the Elven Caravan's buried chest (Kel's caravan), with the Boots of Elvenkind |
-| ![](docs/items/cahulaks-plus1.png) | Bone | ***Cahulaks +1*** | +1; its blades glow in fire colours | carried by **Legcrusher**, the pens' half-giant monster trainer, in place of his two clubs (the mod's) |
+| ![](docs/items/kreenfang.png) | Bone | ***Kreenfang*** | a gythka +1 (2d4+1) | carried by the **Tohr-kreen** leading the champions in the arena, after **Scar** is killed ([the champions' bout](PEOPLE.md#the-champions-bout)) |
+| ![](docs/items/cahulaks-plus2.png) | Bone | ***Cahulaks +2*** | +2; casts Cause Light Wounds on a hit (the game's Cahulaks +1, made +2) | the Elven Caravan's buried chest (Kel's caravan), with the Boots of Elvenkind |
+| ![](docs/items/cahulaks-plus1.png) | Bone | ***Cahulaks +1*** | +1 | carried by **Legcrusher**, the pens' half-giant monster trainer, in place of his two clubs (the mod's) |
 | ![](docs/items/dragonsbane.png) | Metal | Dragonsbane | +4 | Kraxis' sword, taken from his body after the final battle against Draj's army |
 | ![](docs/items/els-drinker.png) | Metal | El's Drinker | +2, Vampiric Touch | the safe in Gedron, with 2,000 ceramic pieces; and the arena's [1000th trip](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights), King Tectuktitlay's gift |
 | ![](docs/items/dags-dagger.png) | Metal | Dag's Dagger | +3, CHA +1 | Dagolar |
@@ -71,12 +71,12 @@ By material, then weapon spec ([by weapon spec](#by-weapon-spec) lists them by t
 | ![](docs/items/great-axe-plus3.png) | Metal | Great Axe +3 | +3 (the game gave its type no material: metal with the Loader) | the Army Commander |
 | ![](docs/items/headsman.png) | Metal | ***Headsman*** | a metal great axe +2 | in the arena **Announcer**'s stash, with his Stoneskin scroll, rings and gems |
 | ![](docs/items/linebreaker.png) | Metal | ***Linebreaker*** | a metal polearm +2; its reach as any polearm's, with [the rule](FEATURES.md#polearm-reach) | carried by the **Troop Leader** |
-| ![](docs/items/ironwhirl.png) | Metal | ***Ironwhirl*** | a metal cahulaks +2 (two-handed); its blades' greys all burn in fire colours | on the **weapon rack** of the Subterranean Temple beneath Teaquetzl, with the Mace +2 and a metal axe |
+| ![](docs/items/ironwhirl.png) | Metal | ***Ironwhirl*** | a metal cahulaks +2 (two-handed) | on the **weapon rack** of the Subterranean Temple beneath Teaquetzl, with the Mace +2 and a metal axe |
 | ![](docs/items/dark-flame.png) | Obsidian | Dark Flame | +2, Burning Hands | the Lower Castle's chest |
 | ![](docs/items/bloodwrath.png) | Obsidian | Bloodwrath | +1 | Pehtucl, the pens' templar |
 | ![](docs/items/terror-blade.png) | Obsidian | Terror Blade | +2, poison | made in the Wyrm School: pour the terror blossom extract into the mixing bowl, then dip a stone dagger in it (the cluebook says obsidian; the game takes stone) |
 | ![](docs/items/nightsliver.png) | Obsidian | ***Nightsliver*** | an obsidian dagger +2: a fire or earth cleric can wield it | carried by the **Hermit** of the Lava Rift, in place of his stone dagger |
-| ![](docs/items/searing-blade.png) | Obsidian | ***Searing Blade*** | an obsidian short sword +2 (1d6+2) whose blade burns what it hits: the fire clerics' Focus Heat, 2d6 fire damage to the creature hit (a save for half), as the game's Dark Flame casts Burning Hands. Obsidian, so a fire or earth cleric can wield it, and a short sword, so a psionicist or a thief too (until 2.18.0 the Flame Blade, an obsidian long sword +1: a saved game's is made the Searing Blade) | carried by the **Templar** of the Hot Springs (the one with the Drake Shield) |
+| ![](docs/items/searing-blade.png) | Obsidian | ***Searing Blade*** | an obsidian short sword +2 (1d6+2) whose blade burns what it hits: the fire clerics' Focus Heat, 2d6 fire damage to the creature hit (a save for half), as the game's Dark Flame casts Burning Hands. Obsidian, so a fire or earth cleric can wield it, and a short sword, so a psionicist or a thief too (an older save's Flame Blade becomes the Searing Blade) | carried by the **Templar** of the Hot Springs (the one with the Drake Shield) |
 | ![](docs/items/mindshard.png) | Obsidian | ***Mindshard*** | an obsidian short sword +1: a **psionicist** can wield it, alone or with a fire or earth cleric | carried by **Maris**; a thief can lift it (200 XP, once a game) |
 | ![](docs/items/blackmace.png) | Obsidian | Blackmace | +1, Shocking Grasp | the Shadow King |
 | ![](docs/items/glasshewer.png) | Obsidian | ***Glasshewer*** | an obsidian axe +2 (1d8+2): a fire or earth cleric can wield it | carried by the **Templar** of the elven slavers' camp (the one with the Chain Arm Armor) |
@@ -100,9 +100,14 @@ By material, then weapon spec ([by weapon spec](#by-weapon-spec) lists them by t
 | ![](docs/items/phrains-bow.png) | Wooden | Phrain's Bow | +1, Acid Arrow | a reward in the party's hut in Teaquetzl, once Gedron joins the alliance (with Arrows +2, a scroll and an orange) |
 | ![](docs/items/dunesong.png) | Wooden | ***Dunesong*** | a bow +1, which the Bowyer's archery target counts as the game's own bows | sold by the **Bowyer** |
 | ![](docs/items/arrows-plus3.png) | Wooden | Arrows +3, +2, +1 | +3, +2, +1 | +3 in two chests in the slave pens (one with the Scale Chest Armor) and with the Helm of Might; +2 from the Bowyer's archery target and Teaquetzl's rewards; +1 Kel, the Elven Leader and a bag in the slave pens |
-| ![](docs/items/chill-arrows.png) | Wooden | ***Chill Arrows*** | cast Chill Touch on what they hit (a save stops it, as the spell's; +1 from the Spellarcher's 5th preserver level, +2 from 9th; shot by anyone not in the party, its highest level counts) | made by a [Spellarcher](KITS.md#spellarcher) (its arrow buttons, one a spell slot; 24 to start with if it picked the spell as it was made), and the elf champion's in the arena's bout ([the champions' bout](FEATURES.md#the-champions-bout): shot by it, they chill), and carried by a Spellarcher only (their item box's INFO heads its list "SPELLARCHERS:"); worth nothing, they last until shot |
-| ![](docs/items/shocking-arrows.png) | Wooden | ***Shocking Arrows*** | cast Shocking Grasp on what they hit (no save, as the spell's; +1 from the Spellarcher's 5th preserver level, +2 from 9th) | made by a Spellarcher as the Chill Arrows (24 to start with if it picked the spell), and carried by a Spellarcher only (their item box's INFO heads its list "SPELLARCHERS:"); worth nothing, they last until shot |
-| ![](docs/items/vampiric-arrows.png) | Wooden | ***Vampiric Arrows*** | cast Vampiric Touch on what they hit (no save, as the spell's; +1 from the Spellarcher's 5th preserver level, +2 from 9th) | made by a Spellarcher as the others (none to start with: a 3rd-level spell), and carried by a Spellarcher only (their item box's INFO heads its list "SPELLARCHERS:") |
+| ![](docs/items/chill-arrows.png) | Wooden | ***Chill Arrows*** | cast Chill Touch on what they hit (a save stops it, as the spell's) | made by a [Spellarcher](KITS.md#spellarcher) (its arrow buttons, one a spell slot; 24 to start with if it picked the spell as it was made), and the elf champion's in the arena's bout ([the champions' bout](PEOPLE.md#the-champions-bout): shot by it, they chill) |
+| ![](docs/items/shocking-arrows.png) | Wooden | ***Shocking Arrows*** | cast Shocking Grasp on what they hit (no save, as the spell's) | made by a Spellarcher as the Chill Arrows (24 to start with if it picked the spell) |
+| ![](docs/items/vampiric-arrows.png) | Wooden | ***Vampiric Arrows*** | cast Vampiric Touch on what they hit (no save, as the spell's) | made by a Spellarcher as the others (none to start with: a 3rd-level spell) |
+
+The three spell arrows are +1 from the Spellarcher's 5th preserver level and +2 from its 9th (shot
+by anyone not in the party, its highest level counts); only a Spellarcher carries them (their item
+box's INFO heads its list "SPELLARCHERS:"); they are worth nothing and last until shot
+([Spellarcher](KITS.md#spellarcher)).
 
 ### By weapon spec
 
@@ -154,7 +159,7 @@ For [weapon specialization](WEAPON-SPECS.md), in the weapon window's order:
 | Icon | Material | Item | Bonus / power | Where |
 |---|---|---|---|---|
 | ![](docs/items/helm-of-might.png) | Leather | Helm of Might | STR +1 | a reward in the party's hut in Teaquetzl, once Cedrilte joins the alliance (with Arrows +3, a bracelet and a pear) |
-| ![](docs/items/leather-helm.png) | Leather | Leather helm +1 | +1 | a chest in the Subterranean Temple beneath Teaquetzl |
+| ![](docs/items/leather-helm.png) | Leather | Leather Helm +1 | +1 | a chest in the Subterranean Temple beneath Teaquetzl |
 | ![](docs/items/helm-of-contemplation.png) | Metal | Helm of Contemplation | Gaze Reflection | the Warren Chief |
 | ![](docs/items/wardens-helm.png) | Metal | ***Warden's Helm*** | the game's metal helm +1: Cloak of Bravery on its wearer while worn | on **Dagolar**'s body (the one carrying Dag's Dagger) |
 | ![](docs/items/arrowbane.png) | none (not armour) | ***Arrowbane*** | a silver circlet: Protection from Normal Missiles on its wearer while worn (normal arrows, sling stones and chatkchas can't hurt them); worn on the head, not armour | sold by **Kel** |
@@ -184,11 +189,11 @@ Worn in a hand, in this game.
 | ![](docs/items/girdle-of-back-defense.png) | Waist | ***Girdle of Back Defense*** | no enemy gets the +2 to hit for attacking its wearer from behind, nor a thief's backstab | carried by the **Troop Leader**, with Linebreaker |
 | ![](docs/items/golden-girdle-of-urnst.png) | Waist | ***Golden Girdle of Urnst*** | AC 3 better against swords (long and short), in melee | carried by **Wyrmias**, with his bracers |
 | ![](docs/items/serpent-boots.png) | Feet | Serpent Boots | Displacement | a ceramic pot (the cluebook's broken jar) in the Lower Castle |
-| ![](docs/items/boots-of-elvenkind.png) | Feet | ***Boots of Elvenkind*** | soft boots: [silent](FEATURES.md#hiding-in-shadows-to-backstab), with hiding to backstab on; thieves and rangers only | the Elven Caravan's buried chest (Kel's caravan), with the Cahulaks +2 |
+| ![](docs/items/boots-of-elvenkind.png) | Feet | ***Boots of Elvenkind*** | soft boots: [silent](PLAYER-GUIDE.md#hiding-in-shadows) (moving silently at 95 at least); thieves and rangers only | the Elven Caravan's buried chest (Kel's caravan), with the Cahulaks +2 |
 | ![](docs/items/boots-of-speed.png) | Feet | ***Boots of Speed*** | in a fight, the wearer's movement doubled (the speed of a fast horse: Move 24 to a human's 12) and AC 2 better while it can move (not Stuck, Paralyzed or Slowed); anyone may wear them; not out of a fight (the DMG's slowing for weight, and rest after hours of running, are left out); like any boots, +10 to moving silently with the [stealth rule](FEATURES.md#hiding-in-shadows-to-backstab) | carried by **Dagger**, chief of the White Sand Outlaws, whose band comes for the blank-eyed slave (fought if the party keeps the slave from him) |
 | ![](docs/items/living-cloak.png) | Cloak | Living Cloak | Inertial Barrier | Dagolar |
-| ![](docs/items/cloak-of-protection-plus1.png) | Cloak | ***Cloak of Protection +1*** | +1 AC and +1 on every saving throw, from the cloak slot | in [Pehtucl's chest](#pehtucls-chest), beside the slave pens' head templar: locked and trapped. |
-| ![](docs/items/cloak-of-elvenkind.png) | Cloak | ***Cloak of Elvenkind*** | a grey cloak: [all but invisible](FEATURES.md#hiding-in-shadows-to-backstab) in a fight, with hiding to backstab on; thieves and rangers only | the **Elven Leader**'s gift with his Gythka +2, after the fight with his men: "And take this cloak, woven by my own tribe for our best runners..." (left on the ground by him when it can't be carried, as the Gythka is) |
+| ![](docs/items/cloak-of-protection-plus1.png) | Cloak | ***Cloak of Protection +1*** | +1 AC and +1 on every saving throw, from the cloak slot | in [Pehtucl's chest](#pehtucls-chest), beside the slave pens' head templar: locked and trapped |
+| ![](docs/items/cloak-of-elvenkind.png) | Cloak | ***Cloak of Elvenkind*** | a grey cloak: [all but invisible](PLAYER-GUIDE.md#hiding-in-shadows) in a fight (hiding at 95 under the open sky, 90 under a roof, whatever the light); thieves and rangers only | the **Elven Leader**'s gift with his Gythka +2, after the fight with his men: "And take this cloak, woven by my own tribe for our best runners..." (left on the ground by him when it can't be carried, as the Gythka is) |
 | ![](docs/items/silver-necklace.png) | Neck | Silver Necklace | Biofeedback | appears in the Lower Castle when Tara is destroyed with the Wind Potion (with Tynan's heart) |
 | ![](docs/items/amulet-of-magic-resistance.png) | Neck | ***Amulet of Magic Resistance*** | 15% magic resistance, added to the wearer's own (as from Mind Bar); it never shatters | sold by **Kel** |
 | ![](docs/items/obsidian-necklace.png) | Neck | Obsidian Necklace | Disintegrate | the Troop Leader |
@@ -265,7 +270,7 @@ items each carries what the armed of their kind carry, or plain gear to match (i
 | ![](docs/items/obsidian-cahulaks.png) | cahulaks | obsidian | Jark | Scar | **new**: the game's cahulaks, in obsidian: earth, fire and air clerics may use them; an earth or fire cleric-warrior's starting cahulaks |
 | ![](docs/items/chatkcha.png) | chatkcha | obsidian | Jark, Bowyer | — | — |
 | ![](docs/items/bow.png) | bow | wood | Jark, Kel, Bowyer | Wyvern Master, Ranger, Arant, Castle Guard, Guard, Arant's Guard, Arena Guard, Caravan Guard, Slaver Guard, Elven Leader, Uzoma, Drajian Guard, Army Commander, Elite Guard, Village Hero, a chest in the Upper Castle, a chest in the Wyrm Belly, a chest in Dagolar's tunnels, Arant's lazy guard (the mod's) | — |
-| ![](docs/items/bow.png) | bow (***Fine Bow***) | wood | — | a [Spellarcher](KITS.md#spellarcher), as it is made, and the elf champion in the arena's bout ([the champions' bout](FEATURES.md#the-champions-bout)) | **new**: a bow of fine make, +1 to hit, not magic (The Complete Fighter's Handbook's fine quality; its item box's "Hit +1") |
+| ![](docs/items/bow.png) | bow (***Fine Bow***) | wood | — | a [Spellarcher](KITS.md#spellarcher), as it is made, and the elf champion in the arena's bout ([the champions' bout](PEOPLE.md#the-champions-bout)) | **new**: a bow of fine make, +1 to hit, not magic (The Complete Fighter's Handbook's fine quality; its item box's "Hit +1") |
 | ![](docs/items/sling.png) | sling | leather | Bowyer | Mehtar, Renegade, Silt Runner, a chest in the slave pens, a bag in the slave pens | — |
 | ![](docs/items/staff-sling.png) | staff sling | leather | Jark, Bowyer | the arena's champions (the halfling) | throws stinkpots with [the rule](FEATURES.md#staff-sling-stinkpots): 1d3 (the game's 1d4), and a target hit saves against poison or is nauseated, −2 to hit for 1d3+1 rounds |
 
@@ -373,8 +378,8 @@ or a helm (bone, leather or metal, magical or not). A shield, rings and cloaks
 of protection, and the mod's circlet and crown (worn on the head, but not
 armour) go with them. They aren't armour to anything else: a preserver casts in
 them, a thief wears them, and a ring or cloak of protection still counts. In the
-game they are **BRACERS/DEFNS** with their plus (Bracers/Defns+4 is AC 6),
-priced 5,000 a point of AC.
+game they are **BRACERS/DEFNS** with their plus (Bracers/Defns+4 is AC 6);
+their price: [Prices](#prices).
 
 How it works: [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#bracers-of-defense).
 
@@ -387,12 +392,12 @@ the arms, legs or head, and it isn't armour to anything else: a preserver
 casts in it, and a ring or cloak of protection still counts. Bracers go with
 it.
 
-| Icon | Robe | What it does | Price |
-|---|---|---|---|
-| ![](docs/items/ashen-robe.png) | **Ashen Robe** (+1) | AC 1 better; +1 on saves against wizards' and priests' spells | 6,000 |
-| ![](docs/items/veiled-robe.png) | **Veiled Robe** (+2), a robe of the Veiled Alliance | AC 2 better; +1 on every save; a wizard spell slot more at spell levels 1, 2 and 3 where the wearer has any | 40,000 |
+| Icon | Robe | What it does |
+|---|---|---|
+| ![](docs/items/ashen-robe.png) | **Ashen Robe** (+1) | AC 1 better; +1 on saves against wizards' and priests' spells |
+| ![](docs/items/veiled-robe.png) | **Veiled Robe** (+2), a robe of the Veiled Alliance | AC 2 better; +1 on every save; a wizard spell slot more at spell levels 1, 2 and 3 where the wearer has any |
 
-Where they are: [Every magic item](#every-magic-item).
+Where they are: [Every magic item](#every-magic-item); their prices: [Prices](#prices).
 
 The dice log and the Loader name a robe among a save's modifiers, and the
 Spells tab counts the Veiled Robe's slots. Alagorn tells both their stories.
@@ -406,8 +411,12 @@ from the plain item's the way the game makes its magic items' (a few pixels in
 the colours it cycles, which shimmer: fire for a magic weapon, as the game's own,
 unless its story says otherwise: the water's blue for Stillwater and Hayneedle,
 the air's white and blue for Windlash, Galefang and Skycutter, violet for
-Mindshard, green for Greenbright; the Silk Armor, the Living Cloak and the
-Elvenkind cloak and boots shimmer green); dropped on the map they look like their
+Mindshard, green for Greenbright, the water's blue in every pixel of the Cahulaks +2's
+blades, night steel's dark blue-greys for Shadowseeker's blade; the Cahulaks +1's and Emberlash's
+blades burn in the fire colours every other pixel, Ironwhirl's in every pixel of their greys; the
+Silk Armor, the Living Cloak and the Elvenkind cloak and boots shimmer green; and the spell arrows'
+heads take their spell's colours: Chill Touch's icy white and blue, Shocking Grasp's gold and
+white, Vampiric Touch's violet); dropped on the map they look like their
 icons, and a magic weapon glints on its wielder's figure in the same colours. The game's names are at most 15 letters, so the rings are
 **RING/PROTECTION** and the cloak **Cloak/Protectn**; the Loader's screens and
 the log give them in full. As with its own items, the game puts the material
@@ -422,7 +431,8 @@ first: **Leather Inixhide**, **Metal +1 Shadowseeker** in the item box.
 **Alagorn**, the wizard of the Painted Badlands who identifies magic items,
 tells the story of every one of the mod's magic items in [Every magic
 item](#every-magic-item) but the plain Gythka +2, the Cahulaks +1 and +2, the
-Boots of Speed, the two girdles and the Amulet of Magic Resistance when
+Boots of Speed, the two girdles, the Amulet of Magic Resistance, the spell
+arrows and Kalzith's scrolls when
 the party carries it, in the menu the game would put it in (swords, weapons,
 rings, armor, shields, clothes or other items), before "Nothing". As with the
 game's own, one story for each kind: the four pairs of bracers share one, and

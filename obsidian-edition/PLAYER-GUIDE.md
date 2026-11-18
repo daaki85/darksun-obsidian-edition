@@ -6,7 +6,7 @@ levels, with the tables you need.
 
 It is **spoiler-free**: no places, people or quests past the opening arena but
 those the Loader's Options tab names (the slave pens, Kalzith, Semyon, Dinos's
-cooked vulture and Scar, in the labels [at the end](#the-options-tab-at-a-glance)),
+cooked vulture, Scar and the champions' bout, in the labels [at the end](#the-options-tab-at-a-glance)),
 and no word of where any item is found (the mod's new items are listed by what
 they are).
 
@@ -296,7 +296,7 @@ then rise: [XP left over at the top](#xp-left-over-at-the-top).
 | [Gladiator](#gladiator) | d10 | STR | all | any | any | Arena Champion, Twin-blade, Brute |
 | [Ranger](#ranger) | d10 | STR, DEX, WIS | not dwarf, mul | any (two weapons without penalty in light only) | any | Stalker, Justifier, Seeker |
 | [Thief](#thief) | d6 | DEX | not half-giant, thri-kreen | light (with another class: heavier, without thief skills) | any | Swashbuckler, Assassin, Shinobi |
-| [Preserver](#preserver) | d4 | INT | elf, half-elf, human | none | daggers, staves, slings | Scholar, Battle Mage, Arcanist |
+| [Preserver](#preserver) | d4 | INT | elf, half-elf, human | none | daggers, quarterstaffs, slings and staff slings | Scholar, Battle Mage, Arcanist |
 | [Cleric](#cleric) | d8 | WIS | all | any | its sphere's | Elementalist, Healer, Crusader |
 | [Druid](#druid) | d8 | WIS, CHA | half-elf, halfling, human, mul, thri-kreen | none | any but great axes | Grove Warden, Lifebinder, Wanderer |
 | [Psionicist](#psionicist) | d6 | CON, WIS | all | light | small weapons | Mind Bender, Mind Warrior, Kineticist |
@@ -327,15 +327,15 @@ armour it can't use in the backpack.
 
 ### What each class may use
 
-A character may use an item only if **every** one of its classes allows it,
-the strictest winning:
+The game's own lists still need only one of a character's classes; on top of
+them, the mod's limits below apply to every class, the strictest winning:
 
 | Class | Armour and helms | Shields | Weapons |
 |---|---|---|---|
 | Psionicist, whatever its other classes | light only (leather, hide, silk) | none alone; leather with a fighter, gladiator, ranger or cleric class | daggers, bone and obsidian short swords, clubs, chatkchas, bows; with another class, also the maces, metal short sword and slings its lists allow |
 | Thief | light only; with a warrior or cleric class, as that class allows, but no thief skills in heavier armour | leather ones only; with another class, only if that class is fighter, gladiator, ranger or cleric | as its classes allow |
-| Preserver, one class | none | none | a preserver's |
-| Druid | none | none | any but great axes |
+| Preserver, one class | none | none | as the game's lists allow: a preserver's |
+| Druid | none | none | as the game's lists allow: any but great axes |
 | Cleric | any | any | air: missile and thrown weapons, daggers, cahulaks; earth: stone, obsidian, metal, wood; fire: obsidian; water: bone, wood |
 
 - A preserver with another class may wear what that class allows, but casts
@@ -868,10 +868,10 @@ Each kit's gains, costs and starting gear:
 **The game's own party** (START GAME with no party made), with kits on: Cermak
 is an Arcanist, and the other three are given a feature of their own, not a
 kit's. Gerakis fights wild, as a Wild Fury does; K'ratchek's spells and psionics
-are stronger under the open sky, as a Wasteland Seer's are (her chatkcha's
-2 throws a round are every thri-kreen's: AD&D's 2/1);
+are stronger under the open sky, as a Wasteland Seer's are;
 Cilla's hiding is never halved in daylight, as an Assassin's isn't (the dice
-log calls her an Elven Shadow-walker).
+log calls her an Elven Shadow-walker). What each is given, and her chatkcha's
+throws: [the game's own party](FEATURES.md#the-games-own-party).
 
 ## Weapon specialization and attacks
 
@@ -1168,6 +1168,10 @@ means no hiding: get clear first (a Shadowblade tries anyway).
 - A worn cloak adds 10 to hiding in shadows and worn boots 10 to moving
   silently, up to 95. A worn belt adds 5 to a thief's picking pockets and
   opening locks. The inventory screen's thief skills count them.
+- The **Cloak of Elvenkind** makes its wearer all but invisible: it hides at
+  95 under the open sky and 90 under a roof, never halved by the light (or
+  with its own chance, if that is better). The **Boots of Elvenkind** make it
+  silent: it moves silently at 95 at least. Thieves and rangers only.
 
 *Without the mod:* thieves backstab only a target that has turned to face
 someone else, and no one hides in a fight.
@@ -1363,8 +1367,8 @@ slot at 10th, as in AD&D.
 
 **Clerics and druids** have more for WIS, the game's own rule (the bonus
 slots at 1st, 2nd, 3rd... spell level). They count only at spell levels the
-class level reaches, and the 6th-level ones only with AD&D's class tables,
-which bring the 6th-level slots:
+class level reaches, the 6th-level ones too (AD&D's class tables bring the
+6th-level slots):
 
 | WIS | 1st | 2nd | 3rd | 4th | 5th | 6th |
 |---|---|---|---|---|---|---|
@@ -1787,8 +1791,9 @@ on, the bow shoots. *Without the mod:* a polearm strikes only an adjacent foe.
 ### Magic weapons by class
 
 The magic weapons each class can wield, by the rules in [what each class may
-use](#what-each-class-may-use): a character of several classes only those every
-one of its classes allows. Those the mod adds or changes are marked \* ([new
+use](#what-each-class-may-use). A character of several classes may wield those
+any of its classes may, less what any class's limits forbid (a cleric's sphere,
+a psionicist's weapons). Those the mod adds or changes are marked \* ([new
 items](#new-items) says what they are).
 
 **Every magic weapon,** by weapon spec: long swords Dragonsbane +4, Swiftbite +2, El's Drinker +2,
@@ -1814,7 +1819,8 @@ Skycutter\* +2, Chatkcha +1.
 | Cleric of fire | Dark Flame +2, Bloodwrath +1, Searing Blade\* +2, Mindshard\* +1, Nightsliver\* +2, Glasshewer\* +2, Blackmace +1, Emberlash\* +1, Skycutter\* +2, Chatkcha +1 (not the obsidian Terror Blade: the game's own lists keep it from fire clerics) | **Elementalist:** its second sphere's too |
 | Cleric of water | Stillwater\* +1, Hayneedle\* +1, Drakejaw\* +1, Gythka +3, Gythka +2\*, Kreenfang\* +1, Polearm +1, Thornwall\* +1, Mace +2, the three quarterstaffs, Gutterknot\* +1, Cahulaks +2\*, Cahulaks +1\*, Bow +2, Phrain's Bow +1, Dunesong\* +1 (not the bone Swiftbite, Draketooth or Hornblade: the game's own lists keep them from water clerics) | **Elementalist:** its second sphere's too |
 | Druid | every one but Great Axe +3 and Headsman\* | **Grove Warden:** only those its sphere allows, as a cleric of that sphere. **Lifebinder:** only Mace +2, Blackmace +1, the three quarterstaffs, Gutterknot\* +1, the slings and Windlash\* |
-| Psionicist | Searing Blade\* +2, Mindshard\* +1, Stillwater\* +1, Dag's Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Hayneedle\* +1, Gutterknot\* +1, Bow +2, Phrain's Bow +1, Dunesong\* +1, Skycutter\* +2, Chatkcha +1; with a cleric class, only those its sphere allows too (the Searing Blade and Mindshard with fire or earth, Stillwater with water) | — |
+| Psionicist | Searing Blade\* +2, Mindshard\* +1, Stillwater\* +1, Dag's Dagger +3, Terror Blade +2, Galefang\* +2, Nightsliver\* +2, Hayneedle\* +1, Gutterknot\* +1, Bow +2, Phrain's Bow +1, Dunesong\* +1, Skycutter\* +2, Chatkcha +1; with a fighter, gladiator, ranger or thief class, also Greenbright\* +2, Shadowseeker\* +1, Mace +2, Blackmace +1, Sling +2 and Sling +1, its other class's lists allowing them; with a cleric class, only those its sphere allows too (the Searing Blade and Mindshard with fire or earth, Stillwater with water) | — |
+| Cleric with a fighter class | its sphere's, as a cleric of that sphere, and those the game's lists keep from that sphere's clerics alone (the Terror Blade with fire; Swiftbite, Draketooth and Hornblade with water) | **Battle Dancer** (an elf cleric/fighter): only the long swords and bows, whatever its sphere: Dragonsbane +4, Swiftbite +2, El's Drinker +2, Dark Flame +2, Draketooth +1, Hornblade +1, Bloodwrath +1, Bow +2, Phrain's Bow +1, Dunesong\* +1 |
 
 ### Armour
 
@@ -2100,7 +2106,7 @@ A settings file from an older Loader with one of these unticked has it on all th
 
 | Loader label | Default | Takes effect | Details |
 |---|---|---|---|
-| Kits: three for each class and some for multiclass characters, one a character, each giving something and costing something (chosen on the creation panel's KIT page, or after DUAL by a human with none) | on | new characters | [Kits](FEATURES.md#kits); [every kit](KITS.md) |
+| Kits: three for each class and some for multiclass characters, one a character, each giving something and costing something (chosen on the creation panel's KIT page, or after DUAL by a human with none) | on | new characters, and a human's DUAL | [Kits](FEATURES.md#kits); [every kit](KITS.md) |
 | Fuller starting gear: new characters (and the game's own party) also get a weapon they can use, a sling, and leather armour where they may wear it | on | new characters (the game's own party: in a new game) | [Fuller starting gear](FEATURES.md#fuller-starting-gear) |
 
 **New content** (the tab's note: "People, a quest, an arena bout and items:
@@ -2143,6 +2149,11 @@ The Loader's other settings are outside the Options tab, and **Restore defaults*
 | **Readable layout** | above the dice log | on | remembered (`settings.json`) |
 | **Show details (the sums behind each roll)** | above the dice log | on | for this session |
 | **Show unlabelled rolls** | above the dice log | off | for this session |
+| **The game folder** | asked for at the first **Start the game** when it isn't in GOG's usual folders, or `--game-dir` ([troubleshooting](README.md#troubleshooting)) | found in GOG's usual folders | remembered (`settings.json`) |
+| **Dark Sun Recompiled or DOSBox** | found in or beside this folder, or `--recompiled` and `--dosbox` ([Dark Sun Recompiled](README.md#dark-sun-recompiled)) | DOSBox, unless Recompiled is found | looked for at each start; a choice made with `--recompiled` or `--dosbox` remembered (`settings.json`) |
+| **Speakers' names** | the Dialogue tab (**Name speaker...**, or a right-click on a name) | learned from the talk | remembered (`settings.json`) |
+| **Which Options sections are open** | the Options tab (a section's header) | all closed | remembered (`settings.json`) |
+| **Show** and **Only spells the party has a caster level for** | the Spells tab | all, off | for this session |
 
 What each does: [the Loader's window](README.md#the-loaders-window) and [the dice
 log](README.md#the-dice-log).

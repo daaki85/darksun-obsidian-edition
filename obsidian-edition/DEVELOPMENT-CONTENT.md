@@ -260,10 +260,11 @@ after the `ns_list_` patches):
   `RESOURCE.GFF`, 42-byte records {region, 10 x {OJFF, strength}}. With a ≠ 0
   the count is 2 x the party's strength / the monster's, 1 to 6, but the slot
   search leaves SI one past the match and "idiv word es:[bx+4]" (80CD8h) reads
-  the next slot's strength: the next record's first OJFF after the tenth, and 0
-  after the last in the records with nine or seven (regions 6, 13, 14, 27, 39,
-  40, 44 and 255), a "Divide error" that ends the game. `monster_count` makes
-  it [bx+0], the match's own.
+  the next slot's strength: the next record's first OJFF after the tenth, and an
+  empty slot's after the last in the records with nine or seven (regions 6, 13,
+  14, 27, 39, 40, 44 and 255). No zero divisor: in the shipped data every
+  strength is at least 1 and the empty slots are (0, 1), so the count is only
+  wrong. `monster_count` makes it [bx+0], the match's own.
 - **Resting kills the Poisoned after the cure** (the rest, 8066Dh, overlay 5E8h; its one caller
   62C2Ch, a fire ring, mode 0). Pass 2 takes each member's effects as a bitset (598:25h = 76944h,
   at 8075Dh, into [BP-0Ah]), then casts the free cures (809A2h -> 5B8:20h: Cure Disease, Remove
@@ -751,7 +752,7 @@ and its area's entry, DS:1E26h of them; the game keeps the list as it applies
 the areas, so the creatures stay listed while the hits are sent back), at the
 first Whirlwind thing's level. A save failed there marks the creature
 (`SWEPT_MARK`: SWEPT, the far block's `FAR_SWEPT`, a bit a combatant up to
-`MAP_COUNT`, 520; 64 combatants before 2026-11-09), and `PROBE_MOVE` takes that
+`MAP_COUNT`, 520), and `PROBE_MOVE` takes that
 round's turn. A save failed as it is
 cast takes the creature's turn at once if it has yet to act (`SWEPT_NOW`: not
 the one whose turn it is, its initiative not the -1 the game gives one that has
@@ -975,9 +976,8 @@ wand's charges) sat at the edge. DSCLOG's `BOX_PICS` (gamepatch `box_picture_ite
 `box_picture_object`, always applied) has the box's picture routine (8C2F1h, the
 box's alone) load the copy (8C344h: an item's own picture number, +0Ch; 8C384h: its
 object's icon, which it then keeps in the item as it is). The inventory and the
-ground draw the game's own (a dropped item lies there with its icon; the Loader
-drew the Polearm 22 pixels everywhere till 2026-11-09, and the weapon specs'
-picker still draws it so, `weaponpages.POLEARM_FIT`). Its icons of the game's
+ground draw the game's own (a dropped item lies there with its icon; the weapon
+specs' picker draws the Polearm 22 pixels, `weaponpages.POLEARM_FIT`). Its icons of the game's
 own magic items that stood still (`icons.SHINE`: the Parting Staff, the
 Chameleon Gloves, the Hornblade... 20 of them) have every other pixel of their
 metal, gems or leather in the colours the game cycles in the inventory (water
@@ -1308,8 +1308,8 @@ arrows their plus (`ARCHER_LEVEL`, `spellarrows.archer_level`: +1 from 5th, +2 f
 weapon is the game's staff sling (type 0, `game.STAFF_SLING_TYPE`): in the missile slot, which the
 game never weighs against the hands, so its bone short sword and shield stay; the game's slings
 shoot with nothing in the ammunition slot. The defiler wears
-Bracers of Defense AC 6 on its arms (`worldgear.bracers(6)`, Mikquetzl's in `worldgear.MAGIC` until
-2026-11-18: a save that has been to his region keeps his, as the game made him there); it wears no
+Bracers of Defense AC 6 on its arms (`worldgear.bracers(6)`; a save that has been to Mikquetzl's
+region keeps his pair, as the game made him there with it); it wears no
 armour or helm, so they count (`PROBE_RING_AC`, `INT F8h`, asks of any creature's worn items).
 
 The scripts: the arena's deaths (script 3) say "This makes ... king of the
@@ -1328,7 +1328,7 @@ speech, and put the six in (each a group of one: the wave's own subroutine at
 9301 with its locals 12 and 13, as the game's waves do) and set 807 (FOUGHT);
 else they do what the game did. What a jump leaves of a longer command is
 filled with one-byte commands (`gpl.put_jumps`, with `gpl.FILL`, 61h, as every module's jumps
-are now: eleven scripts once didn't decode after Semyon's and others' jumps), so the script still
+are), so the script still
 decodes (the Loader's other
 changes read it); and the longer script must still fit the game's script buffer
 (`pensasks.LONGEST`), as the Loader's other script changes must.
@@ -1348,8 +1348,9 @@ worn list went from AC 3 to -2 against the party's attacks.
 `champions.Gear` (each pass of the dice log, in the arena) moves each living
 champion's items, by type, to its slot (`pickpocket.place`, as the inventory
 screen would), once; the defiler gets its scroll first (into its backpack, while
-it still has one), a random one of `SCROLL_SPELLS` (the game's wizard spells
-without the new ones).
+it still has one), a random one of `SCROLL_SPELLS` (Fogbolt, Spook and
+Reflected Image) with the new spells on, else one of the game's wizard spells
+(`defilerscrolls.spells`).
 
 The body: the game makes a Dead Body (object 1101, a container) where a
 creature carrying something dies, and puts its things in it (DSUN.EXE 59412h,
@@ -1360,9 +1361,7 @@ object itself is swapped: `gamepatch`'s `champion_body` makes the push INT
 81h (`PROBE_WORN`, told apart by its return address 2754h), "push 0FFFFh",
 "push ax", and DSCLOG answers 2666 (`champions.BODY`) when the dying map
 object ([BP+6]) is a thri-kreen (its sheet's race, +18h, 8), any of them, and
-the game has the Loader's objects (`OBJECTS_ON`), else 1101. (Till 2026-11-11
-only the Tohr-kreen champion, by its object number: the arena's thri-kreen died
-as a human's Dead Body, the user's report.) The body is in the Loader's
+the game has the Loader's objects (`OBJECTS_ON`), else 1101. The body is in the Loader's
 SEGOBJEX copy whatever the switches (`champions.body_chunks`, from
 `worldgear.data_chunks`). Verified in play (no log kept). Object 2666 is a copy of 1101 (its record renumbered) with a picture
 of its own, 2666 (`bodyart.py`: the Tohr-kreen's frame 8 turned on its side,

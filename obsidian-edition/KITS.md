@@ -58,9 +58,8 @@ With weapon specialization, a second weapon spec at 1st level, **the polearm**
 (+1 to hit, +2 damage, 3/2 attacks a round; its reach of two squares with the
 weapon traits rule), its first chosen as any fighter's on the weapon window
 after DONE (any a fighter may take but the polearm). Both weapon specs go on to
-**mastery at 5th level** (+3 to hit, +3 damage) and **grand mastery at 9th**
-(+3, +3, the damage die the next greater die size, against large targets too,
-and one more attack a round: [Weapon specs](WEAPON-SPECS.md#who-picks-what)).
+**mastery at 5th level** and **grand mastery at 9th** (what each gives: [Weapon
+specs](WEAPON-SPECS.md#who-picks-what)).
 Its second weapon spec is the polearm, not a choice; a Myrmidon of an older save
 keeps the second it chose. The charms it saves at −4 against: Charm Person,
 Charm Monster, Charm Person or Mammal, Domination (spell and power), Mass
@@ -238,9 +237,9 @@ its level, 1 worse). **Starts with** the preserver's gear.
 A [warrior's THAC0](#a-warriors-thac0) with its **chosen weapon spec** only.
 Expertise in one weapon spec of its choice (long sword, club, dagger, short
 sword, mace, axe or pick), whose weapons it may
-use as well as a preserver's own, at **3/2 attacks a round, 2 from 7th level**
-by its preserver level; with any other weapon it attacks as a preserver does
-([Weapon specs](WEAPON-SPECS.md#attacks-a-round)). Its weapon spec is chosen on
+use as well as a preserver's own, with **an expert's attacks a round** by its
+preserver level; with any other weapon it attacks as a preserver does (the
+numbers: [Weapon specs](WEAPON-SPECS.md#attacks-a-round)). Its weapon spec is chosen on
 the weapon window after DONE (the long sword for an EXIT).
 
 A spell is still cast after being hit earlier in the round ([the
@@ -302,8 +301,9 @@ sphere menu says WATER ONLY).
 #### Crusader
 
 A [warrior's THAC0](#a-warriors-thac0) with its **chosen weapon spec** only, and
-expertise in one melee weapon spec of its choice (of those its class can use) at **3/2 attacks a round, 2 from 7th level**, its extra
-attacks with that weapon alone ([Weapon specs](WEAPON-SPECS.md#attacks-a-round)).
+expertise in one melee weapon spec of its choice (of those its class can use): **an expert's
+attacks a round**, the extra ones with that weapon alone (the numbers: [Weapon
+specs](WEAPON-SPECS.md#attacks-a-round)).
 Its weapon spec is chosen on the weapon window after DONE (the long sword, or its
 sphere's first, for an EXIT). One fewer spell slot at each spell level (none at
 1st level). **Starts with** the cleric's gear. Can't dual to fighter, gladiator
@@ -359,10 +359,9 @@ power with no upkeep still has none). **Starts with** the psionicist's gear.
 #### Mind Warrior
 
 A [warrior's THAC0](#a-warriors-thac0) with its **chosen weapon spec** only, and
-expertise in one melee weapon spec of its choice (of those its class can use; a thri-kreen the chatkcha too, at 3/2 throws a round, 2
-from a warrior class's 7th level, and one more as every thri-kreen) at **3/2
-attacks a round, 2 from 7th level**, its extra attacks with that weapon alone
-([Weapon specs](WEAPON-SPECS.md#attacks-a-round)). Its weapon spec is chosen on
+expertise in one melee weapon spec of its choice (of those its class can use; a thri-kreen the
+chatkcha too, with one throw more as every thri-kreen): **an expert's attacks a round**, the extra
+ones with that weapon alone (the numbers: [Weapon specs](WEAPON-SPECS.md#attacks-a-round)). Its weapon spec is chosen on
 the weapon window after DONE (the club for an EXIT; a thri-kreen's the chatkcha).
 
 Its PSP are a fifth fewer, the fifth rounded down (25 becomes 20), and stay so
@@ -386,7 +385,7 @@ means an outdoor map, or open ground outside the buildings on a city map.
 |---|---|---|---|
 | [Battle Dancer](#battle-dancer) | elf cleric/fighter | a dance as each fight starts: at best +1 to hit, damage and AC for some rounds; two weapons in light armour | long swords and bows only; no shield; −1 to hit, damage and AC for 1d8 rounds when it stumbles |
 | [Shadowblade](#shadowblade) | half-elf fighter/thief | +10 hide in shadows, +5 move silently; hides even beside an enemy | −10 pick pockets; no shield; light armour only |
-| [Military Scout](#military-scout) | half-elf fighter/thief | under the open sky, +10 to four thief skills, +2 initiative, +1 to hit with a bow or sling | under a roof, −5 to the same skills; never backstabs |
+| [Military Scout](#military-scout) | half-elf fighter/thief | under the open sky, +10 to four thief skills, +2 initiative, +1 to hit with a bow, sling or staff sling | under a roof, −5 to the same skills; never backstabs |
 | [Wilderness Avenger](#wilderness-avenger) | half-elf druid/fighter | +1 to hit and damage; the cause wounds spells stronger; hides and moves silently | no healing spells |
 | [Rescuer](#rescuer) | half-elf cleric/ranger | cures heal 1 more a die; +2 movement in a fight | from behind, +1 to hit, not +2; no shield |
 | [Ghetto Fighter](#ghetto-fighter) | dwarf fighter/thief | +1 to hit and damage with a dagger, two daggers more easily; +5 pick pockets and hide in shadows | −5 find/remove traps; −1 to hit with anything but a dagger; no shield |

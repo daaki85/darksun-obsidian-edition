@@ -178,8 +178,7 @@ The way to the grate, from the scripts and the region file, and the cluebook:
   map (488, 420) until `fight_on 1` (two). With the camera at y 256 map y 420 is off the view
   (screen y 164 is fine, y 260 is not): after the gap's click, `viewto.py 504 360` (camera about
   344, 280) and clicks at screen (144, 145). A click below the view (screen y 200 and more)
-  opened EXIT: SAVE GAME? over an empty red view (camera 344, 1360): CANCEL, then viewto.py
-  (2026-11-18). `setcount.py 4` makes the next trip Scar's.
+  opens EXIT: SAVE GAME? over an empty red view (camera 344, 1360): CANCEL, then viewto.py. `setcount.py 4` makes the next trip Scar's.
 
 ### Kalzith
 

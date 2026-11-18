@@ -19,7 +19,7 @@ instruction that DSCLOG.EXE answers (see dos/dsclog.asm):
 
 A last change lets the copy live outside the game folder: the game looks for
 its data files in the folder its EXE is in, and the copy looks in the current
-folder instead (the launcher runs it from the game folder).
+folder instead (the Loader runs it from the game folder).
 
 Patching the file rather than the running game means the patches are in place
 before the game runs, including in overlays each time they are loaded. The
@@ -485,9 +485,9 @@ PATCHES = (
     Patch("shots_left", 0x1D657, bytes.fromhex("2680bc8101007505"), bytes.fromhex("2680bc8101637d05")),
     # ... and how many of a random monster come (REQUEST 8, 80BE4h; GPL 99 and 106): 2 x the
     # party's strength / the monster's, but its search left SI one past the slot found, so the
-    # next slot's strength (the last slot's: the next record's first OJFF), and an empty one (the
-    # slot after the last in regions 6, 13, 14, 27, 39, 40, 44 and 255) divided by 0 ("Divide error",
-    # back to DOS). "idiv word es:[bx+4]" made [bx+0]: the slot found's own
+    # next slot's strength (the last slot's: the next record's first OJFF; after the last in regions
+    # 6, 13, 14, 27, 39, 40, 44 and 255 an empty slot's, (0, 1) in the shipped data: a wrong count,
+    # not a divide by 0). "idiv word es:[bx+4]" made [bx+0]: the slot found's own
     Patch("monster_count", 0x80CD8, bytes.fromhex("26f77f04"), bytes.fromhex("26f77f00")),
     # ... and the rest (8066Dh) killed the Poisoned even after the free Neutralize Poison of a druid of
     # 7th level or more: its pass 2 took each member's effects as a bitset (598:25h, 76944h, at

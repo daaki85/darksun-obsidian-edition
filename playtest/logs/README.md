@@ -109,6 +109,7 @@ schedules and diffs a log made or used.
 | [2026-11-18](2026-11-18-spell-arrows-info.md) | The item box's INFO for spell arrows: headed SPELLARCHERS: (DSCLOG's INFO_HEAD; an extra SPELLARCHER ONLY row first, too wide), with no Spellarcher (NO ONE) and with one (Cermak); plain arrows' list as before; every way to ready them refused for a non-Spellarcher, readied ones put back in the pack |
 | [2026-11-18](2026-11-18-audit-fixes-1.md) | The code audit's fixes, groups 1-3: a magic item sold with the Loader (to the merchant, bought back) and with its dice log stopped (freed as the game does, not lost); a pickpocket, a T loot of Pehtucl's body and a new character's gear with the item gate held before the lists are read (no record in two places); Negative Plane Protection by the emulated tests |
 | [2026-11-18](2026-11-18-audit-fixes-2.md) | The code audit's fixes, groups 4-6 (DSCLOG's interrupt handling, UMBPLUS at CA00h, A20, heapcheck): a smoke test of the decree scene's arrow, `fountain-user`'s ambush with Tab and Enter and the combat log, a scroll read from its box (the nudge), INFO, the map's pointer and drags, the creation screen; upper memory from CA00h measured |
+| [2026-11-18](2026-11-18-docs-review-2.md) | `docs/elvenkind.png` retaken: the Cloak and Boots of Elvenkind's boxes with their green shimmer (set in memory on Gerakis), the old crops found by matching; upper memory's free piece measured, 25,136 bytes |
 
 ## files/
 

@@ -80,7 +80,7 @@ Run these in order, from `playtest/`, at the start of every test and again after
    `command -v dosbox` and `$PLAYTEST_WORK/inst/DSUN.EXE`; if either is missing, set the container
    up first ([setting up a container](#setting-up-a-container)). **DOSBox dies when the session
    sits idle**, and a worker restart of the session takes Xvfb with it: after any pause (waiting on
-   the user), `pgrep -x dosbox` and `pgrep -a Xvfb` before the next step. A Xvfb gone isn't
+   the user), `pgrep -x dosbox` and `pgrep -x Xvfb` before the next step. A Xvfb gone isn't
    restarted by start.sh run in the background (every xdotool call: "Can't open display"): `setsid
    nohup Xvfb :55 -screen 0 1024x768x24 &` by hand. Don't leave a test half-done across a pause
    expecting it to be there.
@@ -141,8 +141,8 @@ push. Do it at each stop, not only at the end: a pause can lose the container.
    push both. Edit these files at a unique anchor (assert one match, or cut at the last one): a cut
    at the first of two like lines [once lost a test log's last
    parts](HISTORY.md#the-guide-and-the-kit).
-5. **Other sessions push to this branch too**: `git fetch origin obsidian-edition` and `git rebase
-   origin/obsidian-edition` before every push, read what changed in `playtest/`, and keep both
+5. **Other sessions push to `obsidian-edition` too**: `git fetch origin obsidian-edition` and `git
+   rebase origin/obsidian-edition` before every push, read what changed in `playtest/`, and keep both
    sessions' lessons.
 
 # Recipes
@@ -594,7 +594,7 @@ game's data: it is one player's account.
   byte 1, **and the class mask (+12h) with the fighter's bit (20h)**: the game tests that mask
   before DSCLOG's kit checks, and a preserver's alone (80h) bars arrows. A spell arrows' stack put in
   a non-Spellarcher's pack goes to the Spellarcher as the inventory shuts (`return_strays`); with
-  no Spellarcher, ones it has readied go back in its pack. **SPLIT** (205,147): press it with
+  no Spellarcher, or no room in its pack, ones it has readied go back in its own pack. **SPLIT** (205,147): press it with
   nothing on the pointer, then click a stack: a stack comes onto the pointer
   (logs/2026-11-18-spell-arrows-info.md).
 - **Items changed in memory** (an item turned into another, a held item rewritten, an item's icon,
@@ -684,7 +684,7 @@ game's data: it is one player's account.
    | `toturn.sh N` | Tab + Return for each member's turn, E when a turn stays up (no Move) | getting to N with the party fighting | E with no END menu opens the Effects screen (closing it leaves the view at the map's corner) |
    | `PARTY="A\|B\|C\|D" sh untilturn.sh NAME` | Tab + Return for the named members, messages clicked, foes waited out | the same, by name | keeps pressing Tab on a member with no Move left |
    | `passn.sh N` | passes N party turns by the END menu, dragging the view to each member | a party spread out | as passuntil.sh |
-   | `fightout.sh` | finishes a story fight (foes at 1 HP, E for a member with no Move) | ending a fight the scripts watch | not for a fight whose foes must live |
+   | `fightout.sh` | finishes a story fight (foes at 1 HP, E for a member with no Move) | ending a fight the scripts watch | not for a fight whose foes must live (but `KEEP_HP=1`: their HP kept; `HEAL=1` heals the party each pass) |
 
    By hand: `memberpos.py N` gives a member's figure on the screen; a click there opens its END
    menu, and E in that menu ends the turn (E with no menu opens the Effects screen). A Stuck or
@@ -701,8 +701,8 @@ game's data: it is one player's account.
 - **One foe's AC or attacks out of several** (logs/2026-11-18-champions-gear.md): name the foes
   apart in memory (the creature record's name, `game.CREATURE_NAME`, 16 bytes: the champions are
   all "Champion"), put the others at 1 HP and the one wanted at 200 (`foeset.py C hp=N`, by the
-  combatant number `foeset.py` lists), then fightout.sh's loop without its `hp.py 1` and with
-  `healparty.py` each pass: the party's Tab + Return kill the rest and then strike the one, each
+  combatant number `foeset.py` lists), then `KEEP_HP=1 HEAL=1 sh fightout.sh` (the foes' HP kept,
+  the party healed each pass): the party's Tab + Return kill the rest and then strike the one, each
   line its "target AC". Never save after.
 - **One foe's attacks on the party** (logs/2026-11-18-champion-chill-arrows.md): name the foes apart
   as above (a loop over creatures 6-11 writing `game.CREATURE_NAME` through `live.py`'s `g.write`),
@@ -939,6 +939,13 @@ tools, and where each is described:
   what its box will say). From `pens-kurzak-door`, `teleport.py 1200 864 1112 756` (memory: never
   save after), `pointer.py look`, a slow press on it (160,88); the box is x 171-263, y 49-124:
   `convert -crop 98x82+168+46 +repage -scale 200%` (196x164).
+- **`docs/elvenkind.png`** (logs/2026-11-18-docs-review-2.md): from `pens-after-arena`,
+  Gerakis's Arm Armor (item 25) made the boots (`setitem.py 25 rec=` with
+  `worldgear.ELVEN_BOOTS.hex()`, its slot byte +11h set to 13) or the cloak (`ELVEN_CLOAK`, slot
+  12), the inventory open, a right-click on the feet place (174,147) or the cloak place (174,48),
+  the pointer off and a `shot.sh` at once: **an item box closes on its own about a second after
+  the pointer leaves it**, so only the first capture has it. Crops: the cloak's box 93x66 at
+  +184+18, the boots' 112x66 at +173+95, each 200%, side by side, a black row under (410x133).
 - **The inventory panel's picture**: I opens the inventory; the panel is `shot.sh`'s x 230-319, y
   0-199, scaled 2x (`convert -crop 90x200+230+0 +repage -scale 200%`). A class can be tried in
   memory ([a class in memory](RESEARCH.md#the-party-and-the-maps-people)); never save after.

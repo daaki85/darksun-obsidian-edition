@@ -615,7 +615,7 @@ def bad_luck(kids, rng=None) -> int:
 
 
 def thief_skill(kid: int, skill: int, outdoors: bool = False) -> int:
-    """Added to a thief skill (game.THIEF_SKILLS' numbers; the helper's KIT_SKILL): SKILLS' (an
+    """Added to a thief skill (game.THIEF_SKILLS' numbers; DSCLOG's KIT_SKILL): SKILLS' (an
     Assassin's -15 to pick pockets and open locks, a Shadowblade's, Ghetto Fighter's and
     Wayfinder's; a Swashbuckler's none here: its bad luck is rolled each time, bad_luck); a Military Scout's +10 to finding traps,
     moving silently, hiding and climbing under the open sky (OUTDOORS), -5 under a roof."""
