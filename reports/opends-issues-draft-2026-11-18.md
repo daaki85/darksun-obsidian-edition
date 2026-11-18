@@ -63,7 +63,7 @@ this is the test itself.
 shield, bracers or a robe). A hook in our helper.
 
 **Evidence: seen in play** (2026-11-01): a 10th-level gladiator with no armour, DEX 18 (-4), was hit at target AC 6,
-so no bonus; with arm, leg and chest armour the bonus applied (the Loader's count: AC 4 from 6).
+so no bonus; a gladiator in arm, leg and chest armour was hit at 6, and at 8 with its gladiator flag cleared in memory: the bonus (2) is given in armour. (The flag edit is a test device.)
 
 ## Issue 4: DS1 fire elementals' resistance classes are swapped against the clue book (your 3.4)
 
