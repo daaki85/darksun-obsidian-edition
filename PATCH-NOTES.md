@@ -112,8 +112,8 @@ Each change is tagged. **[Fixed]** is a bug of the game, or a rule it got wrong 
 - **[New]** Twenty-two new magic weapons, each with its own icon and most with a story from the game's item sage, from Greenbright to Skycutter ([where each is](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/ITEMS.md#every-magic-item)).
 - **[Changed]** The Elven Leader's gift is a **Gythka +2** *(was +1)*; the elven caravan's buried cahulaks are **Cahulaks +2** *(was +1)*; the game's unplaced **Polearm +1** is in the world.
 - **[New]** Magic armour and worn items: Bracers of Defense, the Ashen and Veiled Robes, the Warden's Plate, Inixhide, rings and a cloak of protection, Elvenkind cloak and boots, Boots of Speed, Arrowbane, the Sunking Crown, two girdles, an Amulet of Magic Resistance and two shields.
-- **[New]** Other magic: a Tome of Understanding, Kalzith's six scrolls, defilers' scrolls, a Spellarcher's spell arrows and Fine Bow ([new items](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#new-items)).
-- **[New]** The plain weapons the game never had, sold by merchants: short swords, axes, great axes, daggers, maces, a metal pick and polearm, metal and obsidian cahulaks.
+- **[New]** Other magic: a Tome of Understanding, Kalzith's six scrolls, defilers' scrolls and a Spellarcher's spell arrows ([new items](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#new-items)).
+- **[New]** The plain weapons the game never had, sold by merchants: short swords, axes, great axes, daggers, maces, a metal pick and polearm, metal and obsidian cahulaks; and a Spellarcher's Fine Bow, +1 to hit but not magic.
 - **[Changed]** The game's bone scale armour set is complete, and its unplaced leather helm is worn by Kurzak and Scar.
 
 ## World
@@ -132,7 +132,7 @@ Each change is tagged. **[Fixed]** is a bug of the game, or a rule it got wrong 
 ## Graphics
 
 - **[New]** The party's figures show the weapons, shields, armour, helms and cloaks they wear, walking and fighting ([what the party wears](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#what-the-party-wears)).
-- **[New]** Magic gear glows on the figures, in the colour nearest the item's icon, and nineteen of the game's still magic icons shimmer ([icons](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#magic-items-icons)).
+- **[New]** Magic gear glows on the figures, in the colour nearest the item's icon, and twenty of the game's still magic icons shimmer ([icons](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#magic-items-icons)).
 - **[New]** Elves have pointed ears, half-elves no longer look like humans, and with ages on, hair greys ([elves and half-elves](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#elves-and-half-elves)).
 - **[New]** Every figure casts a soft shadow, walkers kick up dust, and the hidden and invisible are drawn half see-through ([shadows](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#shadows)).
 - **[New]** The 6th-level priest spells that stay on the map have pictures of their own, some from Wake of the Ravager when installed ([spells on the ground](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#spells-on-the-ground)).
@@ -148,6 +148,7 @@ Each change is tagged. **[Fixed]** is a bug of the game, or a rule it got wrong 
 - **[Changed]** The pointer shows in the intro and scenes, starts in the middle, keeps its place and moves at the desktop's speed ([the pointer](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#the-pointer-in-scenes-and-where-it-starts)).
 - **[Changed]** 40 save slots on four pages *(was 10)*, each kept under its name too, and 29 stored characters *(was 19)* ([more saves](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#more-saves)).
 - **[Changed]** The game runs faster than with GOG's settings, Fastest by default, and the party keeps its walking pace with shadows and dust on ([game speed](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#game-speed)).
+- **[Changed]** More memory to spare with the map up, for the mod's own needs: about 97 KB *(the original game: 57 KB)*, with part of the game's code and its music buffer in upper memory, so a long session is less likely to stop with "Out of memory in OEOpenGraph".
 - **[New]** Crash, freeze and item reports, and a warning in the dice log before memory runs out ([reports](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/README.md#crash-freeze-and-item-reports)).
 - **[New]** The game's window at its own size, double, triple or quadruple, or full screen.
 - **[Changed]** No more copy protection: the dragon asking for a word from the manual never comes ([no manual check](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#no-manual-check)).
@@ -185,7 +186,7 @@ The main fixes; every bug of the original game the mod mends, with what the game
 - **[Fixed]** A **berserk** or **confused** party member could be left fighting for the monsters.
 - **[Fixed]** A **thri-kreen**'s claws and bite crushed, so some creatures were safe from it; the **fire elementals**' resistances were the wrong way round.
 - **[Fixed]** Monsters' **walls** came out a single point; an **arrow** counted as from behind by the target's facing, at any distance.
-- **[Fixed]** **Random monsters** came in numbers from the wrong monster, and could crash the game ("Divide error"); a fight's **music** took the wrong level.
+- **[Fixed]** **Random monsters** came in numbers from the wrong monster; a fight's **music** took the wrong level.
 
 **Characters and items**
 
@@ -199,7 +200,6 @@ The main fixes; every bug of the original game the mod mends, with what the game
 
 **Screens and memory**
 
-- **[Fixed]** **"Out of memory in OEOpenGraph"** in a long session: about 97 KB to spare now with the map up (the original game: 57 KB).
 - **[Fixed]** In a busy area things stopped being drawn: the game's 300 picture slots are now reused.
 - **[Fixed]** **CHOOSE A SPELL** set its icons off-centre above 15 spells; the Effects screen showed stray charges; magic items stood still in a **shop**.
 

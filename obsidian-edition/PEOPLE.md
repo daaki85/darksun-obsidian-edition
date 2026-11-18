@@ -140,15 +140,19 @@ The first wave is six **champions** in place of the game's:
 | Half-giant | a metal great axe | full scale, a bone helm, a leather shield |
 | Mul gladiator | metal cahulaks | full scale, a bone helm |
 | Halfling | a staff sling, a bone short sword | full leather, a leather helm, a leather shield |
-| Elf | a **Fine Bow** (the Spellarcher's: +1 to hit, not magic) and 24 **Chill Arrows** (the Spellarcher's: they cast Chill Touch on what they hit, a save stopping it, at the elf's level 7, and are +1), an obsidian long sword | full leather, a leather helm, a leather shield |
+| Elf | a **Fine Bow** and 24 **Chill Arrows**, the Spellarcher's ([items](ITEMS.md#missile-weapons-and-ammunition): the arrows cast Chill Touch, here at the elf's level 7), an obsidian long sword | full leather, a leather helm, a leather shield |
 | Defiler | a bone dagger, and a scroll of Fogbolt, Spook or Reflected Image (chosen as the bout starts; of the game's own spells with the new spells off) | **Bracers of Defense** AC 6 (no armour to cancel them) |
 
-The Tohr-kreen, the halfling and the elf have DEX 22 (AC 5 better and +4 with missiles and to initiative, as AD&D's table has it). They fight with their weapons, the two archers shooting (the halfling's staff sling, two-handed, sits in the missile slot as the game's slings do, so its sword and shield stay, and needs no ammunition), and their armour counts on top of their
-kinds' AC, as the party's does (and the game's own people's: [their gear is
-worn](GAME-BUGS.md#who-turns-up-and-how) from the start too). What they carry is on their bodies
-afterwards; the Tohr-kreen falls as a dead Tohr-kreen of its own (as every thri-kreen now does),
-Kreenfang in it (and the elf's Fine Bow and the Chill Arrows it didn't shoot in the elf's, the defiler's Bracers of Defense in its: a party can have them early, the arrows for a Spellarcher alone). The bout comes once. A party that breaks out with Scar instead, or leaves the pens
-another way, doesn't meet them.
+The Tohr-kreen, the halfling and the elf have DEX 22 (AC 5 better and +4 with missiles and to
+initiative, as AD&D's table has it). They fight with their weapons, the two archers shooting (the
+halfling's staff sling, two-handed, sits in the missile slot as the game's slings do, so its sword
+and shield stay, and needs no ammunition), and their armour counts on top of their kinds' AC, as the
+party's does (and the game's own people's: [their gear is worn](GAME-BUGS.md#who-turns-up-and-how)
+from the start too). What they carry is on their bodies afterwards; the Tohr-kreen falls as a dead
+Tohr-kreen of its own (as every thri-kreen now does), Kreenfang in it (and the elf's Fine Bow and
+the Chill Arrows it didn't shoot in the elf's, the defiler's Bracers of Defense in its: a party can
+have them early, the arrows for a Spellarcher alone). The bout comes once. A party that breaks out
+with Scar instead, or leaves the pens another way, doesn't meet them.
 
 How it works: [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#the-champions-bout).
 
