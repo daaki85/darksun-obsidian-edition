@@ -103,6 +103,9 @@ def make_game():
         m[NAMES + 3 + entry * 25:NAMES + 3 + entry * 25 + len(name)] = name
     log = DiceLog(guest)
     log.rand_addr = LOAD_SEG * 16 + dicelog.RAND_IP
+    # (the patched game, as still_patched looks for it before every pass)
+    m[log.rand_addr:log.rand_addr + 2] = dicelog.RAND_PATCHED
+    m[DS * 16 + game.BORLAND_SIG_OFFSET:DS * 16 + game.BORLAND_SIG_OFFSET + len(game.BORLAND_SIG)] = game.BORLAND_SIG
     log.tsr_hdr = HDR
     log.last_seq = 0
     log.game = game.GameData(guest, DS)
@@ -1590,6 +1593,25 @@ class SaveTests(unittest.TestCase):
         self.assertEqual(log.game.save_modifiers(0x29, 0, HOLD_PERSON, game.PPD_SAVE),
                          [(1, "Blessed"), (5, "dwarf CON 19")])
 
+    def test_npp_save_named(self):
+        """Negative Plane Protection's save, which DSCLOG makes (NS_NPP) as against Vampiric Touch's
+        record (27h) with a save allowed: named the protection's when the save's way back is in
+        DSCLOG's segment, its d20 and its probe both; one against 27h from the game's code isn't."""
+        log = make_game()
+        log.game.spell_name = lambda spell: {game.NPP_SAVE_RECORD: "Negative Plane Protection"}.get(spell, f"spell {spell}")
+        ours = TSR_SEG - 0x10000  # (DSCLOG's segment, as words() packs it: signed)
+        roll = self.save_roll(log, 13, spell=game.NPP_TOUCH)
+        roll.parent = words(0x1234, ours, 0x29, 0, game.NPP_TOUCH)
+        self.assertEqual(log.describe(roll, now=1.0), [])
+        probe = entry((14 << 8) | 15, frame=words(0x1234, ours, 0x29, 0, game.NPP_TOUCH),
+                      locals_=locals_at(0x10, m6=5), kind=KIND_SAVE, bp=0xFD00)
+        line, = log.describe(probe)
+        self.assertIn("saving throw vs Negative Plane Protection from Dag", line)
+        probe = entry((14 << 8) | 15, frame=words(0x1234, 0x0598, 0x29, 0, game.NPP_TOUCH),
+                      locals_=locals_at(0x10, m6=5), kind=KIND_SAVE, bp=0xFD00)
+        line, = log.describe(probe)
+        self.assertIn("saving throw vs spell 39 from Dag", line)
+
     def test_natural_20(self):
         """A natural 20 goes on to the probe (gamepatch's save_natural): it saves (DSCLOG's SAVE_SUM made
         the total the number needed), unless the save can't be made (the -100's)."""
@@ -1709,6 +1731,7 @@ class OtherTests(unittest.TestCase):
         m[HDR:HDR + 8] = dicelog.HDR_SIG
         m[DS * 16 + game.BORLAND_SIG_OFFSET:DS * 16 + game.BORLAND_SIG_OFFSET + len(game.BORLAND_SIG)] = \
             game.BORLAND_SIG
+        m[log.rand_addr:log.rand_addr + 2] = b"\x8b\xec"  # (the plain game's rand())
         fresh = DiceLog(log.guest)
         with self.assertRaisesRegex(dicelog.DiceLogError, "without the dice log"):
             fresh.attach()
@@ -1717,6 +1740,34 @@ class OtherTests(unittest.TestCase):
         self.assertTrue(fresh.still_patched())
         m[log.rand_addr] = 0x8B  # the game was restarted without it
         self.assertFalse(fresh.still_patched())
+
+    def test_each_step_lets_the_game_go(self):
+        """Each step of a pass a block of writes: the item gate let go after it (itemgate.release),
+        whatever it gave or raised, not held (DOSBox paused) to the pass's end."""
+        from unittest import mock
+        log = make_game()
+        with mock.patch.object(dicelog.itemgate, "release") as release:
+            log._step(lambda: ["a line"])
+            log._step(lambda: (_ for _ in ()).throw(dicelog.itemgate.ItemsBusy("busy")))
+            log._step(lambda: (_ for _ in ()).throw(KeyError("x")))
+        self.assertEqual(release.call_count, 3)
+
+    def test_no_pass_after_the_game_restarts(self):
+        """The game restarted inside the same DOSBox (its rand() plain, or DSCLOG's header gone):
+        no pass, and the stats thread writes nothing, before the callers attach again (passes
+        through the old data segment and header went on for a couple of seconds)."""
+        log = make_game()
+        m = log.guest.mem
+        m[log.rand_addr] = 0x8B
+        log._records_now = lambda: self.fail("a pass made")
+        self.assertEqual(log.lines(), [])
+        m[log.rand_addr] = 0xCD
+        m[HDR] = 0
+        self.assertEqual(log.lines(), [])
+        log._beat_at, beat = 0.0, bytes(m[HDR + dicelog.TSR_LOADER_BEAT:HDR + dicelog.TSR_LOADER_BEAT + 2])
+        m[0x46C:0x46E] = b"\x34\x12"
+        log._answer_stats()
+        self.assertEqual(bytes(m[HDR + dicelog.TSR_LOADER_BEAT:HDR + dicelog.TSR_LOADER_BEAT + 2]), beat)
 
     def test_ability_check(self):
         log = make_game()
@@ -2007,6 +2058,25 @@ class NewLinesTests(unittest.TestCase):
             m[HDR + dicelog.TSR_CREATING] = 0
             log._gear_due()  # (the window gone: nothing more changed, the earlier change still told)
         self.assertEqual((m[HDR + dicelog.TSR_GEAR_DUE], m[HDR + dicelog.TSR_GEAR_GIVEN]), (0, 1))
+
+    def test_gear_due_another_made_meanwhile(self):
+        """GEAR_DUE cleared only if GEAR_WHO still names the character the pass worked on: another
+        DONE meanwhile (GEAR_WHO changed) leaves it set, that one's gear given in the next pass."""
+        from unittest import mock
+        log = make_game()
+        m = log.guest.mem
+        m[HDR + dicelog.TSR_GEAR_DUE], m[HDR + dicelog.TSR_GEAR_WHO] = 1, 2
+
+        def gear(out):
+            m[HDR + dicelog.TSR_GEAR_WHO] = 3  # (the game's DONE for the next one, as the pass ran)
+            return True
+        with mock.patch.object(dicelog.names, "update", return_value=True), \
+                mock.patch.object(log.game, "party_items", return_value=[]), \
+                mock.patch.object(log, "_new_gear", side_effect=gear):
+            log._gear_due()
+            self.assertEqual(m[HDR + dicelog.TSR_GEAR_DUE], 1)
+            log._gear_due()  # (the next pass: GEAR_WHO 3 as it read it)
+        self.assertEqual(m[HDR + dicelog.TSR_GEAR_DUE], 0)
 
     def test_being_new(self):
         """game.being_new: status New, or the sheet index DSCLOG's GEAR_WHO names (the character DONE

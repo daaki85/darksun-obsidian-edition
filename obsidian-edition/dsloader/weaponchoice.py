@@ -236,7 +236,7 @@ def finish_new(gd) -> List[str]:
     lines for the log."""
     from . import npcitems, pickpocket
     out: List[str] = []
-    sheets = game.far_pointer(gd.guest, gd.ds, game.SHEETS_PTR)
+    sheets = game.table_pointer(gd.guest, gd.ds, game.SHEETS_PTR)
     items = game.far_pointer(gd.guest, gd.ds, game.ITEMS_PTR)
     for member in range(game.PARTY_SIZE):
         rec = gd.creature(member)
@@ -293,7 +293,7 @@ def class_gear(gd) -> List[str]:
     what it may not wear in the backpack, where it would only weigh."""
     from . import kitpages, ring
     out: List[str] = []
-    sheets = game.far_pointer(gd.guest, gd.ds, game.SHEETS_PTR)
+    sheets = game.table_pointer(gd.guest, gd.ds, game.SHEETS_PTR)
     types = game.far_pointer(gd.guest, gd.ds, game.ITEM_TYPES_PTR)
     read = lambda t: gd.guest.read(types + t * game.ITEM_TYPE_SIZE, game.ITEM_TYPE_SIZE)
     for member in range(game.PARTY_SIZE):
@@ -350,7 +350,7 @@ def kit_gear(gd) -> List[str]:
     for the log. A change is made where the gear doesn't fit, so made once."""
     from . import kitpages, kits, pickpocket, ring
     out: List[str] = []
-    sheets = game.far_pointer(gd.guest, gd.ds, game.SHEETS_PTR)
+    sheets = game.table_pointer(gd.guest, gd.ds, game.SHEETS_PTR)
     items = game.far_pointer(gd.guest, gd.ds, game.ITEMS_PTR)
     types = game.far_pointer(gd.guest, gd.ds, game.ITEM_TYPES_PTR)
     read = lambda t: gd.guest.read(types + t * game.ITEM_TYPE_SIZE, game.ITEM_TYPE_SIZE)

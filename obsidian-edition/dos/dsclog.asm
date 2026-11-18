@@ -188,7 +188,7 @@ section image follows=mz vstart=0
 
 ; ---- header, found by the Loader via SIG (16-byte aligned) ----
 hdr:
-sig      db 'DSCLOGva'          ; +0
+sig      db 'DSCLOGvb'          ; +0
 seq      dw 0                   ; +8   entries written so far (wraps at 65536)
 widx     dw 0                   ; +10  ring slot the next entry goes to
 nent     dw NENT                ; +12
@@ -464,6 +464,9 @@ loader_beat dw 0                ; +1865 the BIOS timer at the Loader's last pass
                                 ;      test of the Loader there (STATS aren't kept on the creation screen)
 gear_who   db 0xFF              ; +1867 the sheet index of the character DONE just made (with GEAR_DUE):
                                 ;      the game keeps it Okay, not New, till after the roster's write
+sold_items times 4 dw 0xFFFF     ; +1868 SOLD_Q's items: each entry's, the first of its thing's list as it
+                                ;      was kept (SELL_KEEP), 0FFFFh once the Loader has seen to it
+                                ;      (buyback.py: the item moved only if still that thing's first)
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -6919,7 +6922,9 @@ kit_ac:
         call kit_level
         movzx ax, al
         dec ax
-        cmp ax, RAVAGER_LEVELS - 1
+        jns .some               ; (level 0 as 1, as kits.ac: the table's first, not its last)
+        xor ax, ax
+.some:  cmp ax, RAVAGER_LEVELS - 1
         jbe .level
         mov ax, RAVAGER_LEVELS - 1
 .level: push si
@@ -9850,6 +9855,7 @@ LEARN_UNREAD equ 3                      ; (a Shinobi: the scroll not read, SHINO
 LEARN_NOT_ITS equ 4                     ; (a Shinobi: not one of its spells)
 SPELL_LEVELS_SEG equ 0x3FB9 - 0x4356    ; the spells' table (7 bytes a spell): its segment less DS's ...
 SPELL_LEVELS equ 0x19C                  ; ... and each spell's level there
+SPELL_ROWS_ROOM equ (0x4010 - 0x3FB9) * 16 + 0x357 ; (the rows' room in it: the game's data at 4010h:357h)
 learn_msg    db 0                       ; (LEARN_FAILED or LEARN_FULL: the game's message to change)
 int_learn:
         or ax, ax
@@ -19582,6 +19588,8 @@ SEG_RECORDS  equ 0x3CB4
 SEG_STACK    equ 0x3E3F
 SEG_KINDS    equ 0x3E45
 SEG_BYTES    equ 0x200
+KINDS_BYTES  equ 0x192          ; (the monster kinds' table: SEG_SPACE holds the stack and it)
+        times -((SEG_KINDS - SEG_STACK) * 16 + KINDS_BYTES > SEG_BYTES) db 0
 ; ... and the game's table of the pictures spells leave on the ground (selector 3A8h, 3C81h: 18 bytes
 ; an entry, its spell first (the damage each round the walls deal is that spell's), then a byte
 ; whose low 4 bits tell what it does (3: a wall, 1: a picture alone), then the object at +3; a
@@ -19640,7 +19648,7 @@ seg_move:
         lea ax, [bx + 0x10 + SEG_KINDS]
         cmp [es:SEL_KINDS], ax
         jne .out
-        cmp word [es:SEL_KINDS + 2], 0x192
+        cmp word [es:SEL_KINDS + 2], KINDS_BYTES
         jne .out
         lea ax, [bx + 0x10 + SEG_AREAS]
         cmp [es:SEL_AREAS], ax
@@ -19720,10 +19728,10 @@ copies:
         COPY 'RGN06.GFF', others_on   ; (a thri-kreen of its own, Skycutter's)
         db 0
 
-; NEW SPELLS (RULE_NEW_SPELLS): three wizard spells past the game's 196 (0-68 wizard, 69-137 priest,
-; 138-171 psionic powers, 172-195 monsters' powers): Cat's Grace (196, 2nd level), Erdlu Claw (197,
-; 1st) and Fogbolt (198, 1st). Their records are the three after the game's, a block of 96 bytes the
-; game zeroes and never uses (its segment 3E3Fh; from 199 on is live data), and their rows in the
+; NEW SPELLS (RULE_NEW_SPELLS): sixteen spells past the game's 196 (0-68 wizard, 69-137 priest,
+; 138-171 psionic powers, 172-195 monsters' powers), the first Cat's Grace (196, 2nd level), Erdlu
+; Claw (197, 1st) and Fogbolt (198, 1st). Their records are the sixteen after the game's, the 200h
+; bytes from its segment 3E3Fh that SEG_MOVE frees (the build fails with more), and their rows in the
 ; table of spell levels (7 bytes each) are past its own too. NS_SETUP fills those in while the rule
 ; is on (and empties them while it's off): a row with the level and a wizard's mask, a record from
 ; another spell's (Strength's, Enlarge's, Charm Person's), and each one's effect's name and icon.
@@ -19796,6 +19804,11 @@ NS_ICON      equ 21000          ; a spell's icon: ICON 21000 + its number (RESOU
 NS_SHEET     equ 0x45           ; the sheet's byte with most of the bits that say it knows them
 SPHERE2_MASK equ 0x07           ;   (its low three bits the Elementalist's second sphere, 0-4)
 SPELL_RECS   equ 0x30           ; the spell records (DS - SPELLS_FROM_DS: 20h each from here)
+        ; (the new spells' records fill SEG_MOVE's room, from where the game's end: the build fails
+        ; with one more, as for the room the spell rows have before the game's data at 4010h:357h)
+        times -(SPELL_RECS + NS_FIRST * 0x20 != (SEG_STACK - SEG_RECORDS) * 16) db 0
+        times -(SPELL_RECS + (NS_FIRST + NS_COUNT) * 0x20 > (SEG_STACK - SEG_RECORDS) * 16 + SEG_BYTES) db 0
+        times -(SPELL_LEVELS + (NS_FIRST + NS_COUNT) * 7 > SPELL_ROWS_ROOM) db 0
 FLIGHTS      equ 0              ; before them the 16 flights a record's +10h names (3 bytes each:
 MISSILE_FLIGHT equ 4            ;   the object flying, a byte): Magic Missile's, and place 15,
 FOG_FLIGHT   equ 15             ;   which no record names, Fogbolt's (object FOG_BOLT, in the
@@ -21381,41 +21394,68 @@ ns_hold:
 .out:   pop bp
         iret
 ; NS_NPP: "add sp,4 / push 6 / push 27h" (7A7E9h; 7 bytes) where an undead's negative-energy
-; attack meets Negative Plane Protection on its target (7A7C5h): the charge's two arguments still
-; pushed are made the save's (6 and the record), the save then made by the game (79A71h; the
-; protection stops the attack and hurts the undead if saved). The game saved as against Vampiric
-; Touch (27h), whose record allows no save, so the protection never worked: once the records have
-; room (SEG_MOVED), as against NPP_SAVE, Vampiric Touch's record copied with a save against
-; paralysis, poison and death allowed (21h at +1Fh), AD&D's save against death magic.
+; attack meets Negative Plane Protection on its target (7A7C5h), before the game's save (79A71h,
+; called at 7A7F3h as against Vampiric Touch, 27h: the protection stops the attack and hurts the
+; undead if saved). Vampiric Touch's record allows no save, so the protection never worked. The save
+; is made here instead, through its stub (5B8:2Fh) in a frame the overlay manager can fix up, with
+; the same arguments (the target SI, DI, 27h, 6), Vampiric Touch's own record's save byte (+1Fh)
+; made 21h (a save against paralysis, poison and death allowed, AD&D's save against death magic)
+; for the call only and put back as it returns; then on at 7A7F9h ("or ax,ax"), the charge's two
+; arguments taken off and AX the save's, as the game's "add sp,4" and "add sp,8" leave them. The
+; Loader names a save against 27h whose way back is DSCLOG's this protection's (NPP_SAVE_RECORD).
+; (A copy of the record past the new spells' had been written past SEG_MOVE's room till 2026-11-18.)
 NPP_TOUCH equ 0x27
-NPP_SAVE  equ NS_FIRST + NS_COUNT ; (NS_END: past the new spells, the last of the records' room, no list's)
 NPP_SAVE_BYTE equ 0x21
+NPP_LEVEL equ 6
+NPP_ON    equ 0x7A7F9 - 0x7A7EC ; (past the game's call and its "add sp,8", less the way back)
 ns_npp:
-        push bp
-        mov bp, sp
-        mov word [bp + 10], 6
-        mov word [bp + 8], NPP_TOUCH
-        cmp byte [cs:seg_moved], 0
-        je .out
-        push ds
+        sti
+        pushad
         push es
-        pusha
+        mov bx, sp
+        add word [ss:bx + 34], NPP_ON   ; (before the call: the overlay manager may trap the way back)
         mov ax, ds
         sub ax, SPELLS_FROM_DS
-        mov ds, ax
         mov es, ax
-        mov si, SPELL_RECS + NPP_TOUCH * 0x20
-        mov di, SPELL_RECS + NPP_SAVE * 0x20
-        mov cx, 0x10
-        cld
-        rep movsw
-        mov byte [es:SPELL_RECS + NPP_SAVE * 0x20 + 0x1F], NPP_SAVE_BYTE
-        popa
+        mov [cs:npp_records], ax
+        mov al, NPP_SAVE_BYTE
+        xchg al, [es:SPELL_RECS + NPP_TOUCH * 0x20 + 0x1F]
+        mov [cs:npp_kept], al
+        push word [ss:bx + 36]
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        push word NPP_LEVEL
+        push word NPP_TOUCH
+        push di
+        push si
+        th_far TH_STUB_5B8, 0x2F        ; (the save: AX 1 saved)
+        add sp, 8
+        mov es, [cs:npp_records]
+        mov cl, [cs:npp_kept]
+        mov [es:SPELL_RECS + NPP_TOUCH * 0x20 + 0x1F], cl
+        pop bp
+        pop cx                  ; the way back, as the overlay manager has left it
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 30], ax    ; (AX the save's, in PUSHAD's)
+        mov [ss:bx + 34], cx
+        mov [ss:bx + 36], dx
         pop es
-        pop ds
-        mov word [bp + 8], NPP_SAVE
-.out:   pop bp
+        popad
+        push bp                 ; the INT's frame moved up over the charge's two arguments
+        mov bp, sp
+        push word [bp + 6]
+        pop word [bp + 10]
+        push word [bp + 4]
+        pop word [bp + 8]
+        push word [bp + 2]
+        pop word [bp + 6]
+        pop bp
+        add sp, 4
         iret
+npp_records dw 0
+npp_kept    db 0
 
 ; NS_SIDE: "jmp 788BBh" (78785h; 3 bytes) in the routine ending an effect on a thing (7872Fh), where
 ; the effect isn't one of the six it has a case for (8053:08A3h). Berserk (3) and Confused (11)
@@ -22644,12 +22684,16 @@ sell_price:
 
 ; SELL_KEEP: "push word [179Eh]" (83D9Eh; 4 bytes: the site's number and a NOP after the INT) where
 ; a shop has paid for the item the party sold and empties the item list of the thing holding it,
-; the pointer's (0A0h:1C94h, which does nothing for 270Fh). With RULE_HI_CHA_PRICES (Shops as in AD&D) and a magical item (a plus, +14h, or a power,
-; +0Fh: rings, wands, scrolls...), 270Fh is pushed in its place and the thing and the merchant
-; (DS:179Ch) queued (SOLD_Q, SOLD_SEQ) for the Loader, which puts the item in the merchant's pack,
-; where the shop lists it; any other item is pushed and freed as the game does. The push: the
-; registers kept and the interrupt's frame moved down a word, the word under them.
-SOLD_SLOTS   equ 4              ; (SOLD_Q's room: 4 entries in the header)
+; the pointer's (0A0h:1C94h, which does nothing for 270Fh). With RULE_HI_CHA_PRICES (Shops as in
+; AD&D), the Loader there (its LOADER_BEAT under LOADER_FRESH old, as for GEAR_HOLD: without it
+; nothing would take the item from the pointer, and it was lost till 2026-11-18) and a magical item
+; (a plus, +14h, or a power, +0Fh: rings, wands, scrolls...), 270Fh is pushed in its place and the
+; thing, the merchant (DS:179Ch) and the list's first item queued (SOLD_Q, SOLD_ITEMS, SOLD_SEQ)
+; for the Loader, which puts the item in the merchant's pack, where the shop lists it; any other
+; item is pushed and freed as the game does. The push: the registers kept and the interrupt's
+; frame moved down a word, the word under them.
+SOLD_SLOTS   equ 4              ; (SOLD_Q's room: 4 entries in the header, and SOLD_ITEMS' 4)
+        times -(SOLD_SLOTS != 4) db 0
 SOLD_THING   equ 0x179E         ; DS: the thing holding the item sold ...
 SHOP_MERCHANT equ 0x179C        ; ... and the shop's merchant
 ITEM_PLUS_AT equ 0x14
@@ -22673,16 +22717,28 @@ sell_keep:
         mov ax, [es:bx + THINGS + 1]    ;   ... its first)
         cmp ax, NO_THING
         jae .push
+        push ax
         les bx, [ITEMS]
         imul ax, ax, 0x15
         add bx, ax
+        pop ax
         cmp byte [es:bx + ITEM_PLUS_AT], 0
-        jg .keep
+        jg .beat
         cmp byte [es:bx + ITEM_POWER_AT], 0
         je .push
-.keep:  mov bx, [cs:sold_seq]
+.beat:  push ax
+        xor ax, ax
+        mov es, ax
+        mov ax, [es:0x46C]              ; (the BIOS timer)
+        sub ax, [cs:loader_beat]
+        cmp ax, LOADER_FRESH
+        pop ax
+        jae .push                       ; (no Loader: freed, as the game does)
+        mov bx, [cs:sold_seq]
         and bx, SOLD_SLOTS - 1
-        shl bx, 2
+        shl bx, 1
+        mov [cs:bx + sold_items], ax
+        shl bx, 1
         mov [cs:bx + sold_q], cx
         mov ax, [SHOP_MERCHANT]
         mov [cs:bx + sold_q + 2], ax

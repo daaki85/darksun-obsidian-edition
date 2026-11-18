@@ -59,6 +59,38 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**Fixed** (the code audit of 2026-11-18, `reports/code-memory-audit.md` on its branch)
+- **Negative Plane Protection's save no longer writes past the new spells' records:** its copy of
+  Vampiric Touch's record went 32 bytes past their room, over a game segment and picture slot 0.
+  The save now uses Vampiric Touch's own record, its save byte set for that call only; build
+  asserts tie the records, the spell rows and the moved tables to their room.
+- **A magical item sold with the Loader's window closed is no longer lost:** DSCLOG keeps it back
+  for the buyback only while the Loader is there, else the game frees it as ever. The queue names
+  the item, so one picked up since isn't given away, and sales left by a Loader that went away, or
+  more than four at once, are seen to rather than dropped (DSCLOG's signature now `DSCLOGvb`).
+- **The Loader's item moves read the lists with the game held still:** the item gate checked only
+  the free lists' heads, so an item the game moved between two lists during its wait (a drag, a
+  GIVE) could have a list cut into another. Every change now reads the lists after the gate holds.
+- **The Elven Leader's Gythka +1 is no longer drawn as Kreenfang:** Kreenfang is known by its name too.
+- **A Ravager at kit level 0 has the table's first AC (7), as the dice log says,** not its last (3).
+- **A second new character's gear isn't skipped:** the gear pass clears its flag only if the
+  character it worked on is still the one named.
+- **On Windows, a file held a moment (a virus scan) no longer starts the game without the dice
+  log:** the Loader's copies are tried again for a moment, and flushed to the disk first.
+- **Settings changed by the window and by *Play Dark Sun (in-game rolls)* at once are both kept**
+  (a lock file beside settings.json).
+- **Smaller:** DSUN.EXE gone from the folder is said, not a crash; a hand-edited name key such as
+  "²" no longer breaks name look-ups; the `dicelog` command waits for DOSBox again and `play` says
+  an unreadable settings.json plainly; with Kalzith off, a failed scripts copy also says the pens'
+  gifts went with it.
+- **Item lists hardened:** an item index past the table is a torn read, not a write 200 KB away;
+  a give that fails puts the record back (the Ring +1, a lifted item); spell arrows that can't be
+  taken from where they were have their copy taken back; no write through a table pointer that
+  reads null; a write the low-memory guard refuses raises, so its step is dropped whole; nothing
+  written after the game restarts in the same DOSBox; the item gate lets the game go after each
+  step; Kalzith's loot is marked done only once his scrolls are gone, a lone one on the ground
+  too; a champion's gear that can't be placed is tried three more times, not every pass.
+
 **Fixed: the scripts**
 - **The elven slavers' leader's Goodbye** (script 46, from OpenDS's triage; `scriptfixes.py`, tests
   `OpenDSTriageTests`; not yet seen in play): "Sorry to bother you. Goodbye." alone went straight to

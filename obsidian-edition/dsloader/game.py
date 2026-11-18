@@ -360,8 +360,10 @@ PRIEST6_MASKS = {HEAL_SPELL: COSMOS_MASK, HARM_SPELL: COSMOS_MASK, BLADE_SPELL: 
                  RESTORE_YOUTH_SPELL: COSMOS_MASK}
 PRIEST6_LEVEL = 6
 NEW_SPELLS_END = 212  # (past the last)
-# Negative Plane Protection's save, as the patched game makes it (DSCLOG's NS_NPP): Vampiric Touch's
-# record copied to the records' room past the new spells, a save against death allowed
+# Negative Plane Protection's save, as the patched game makes it (DSCLOG's NS_NPP): against Vampiric
+# Touch's record, its save byte made one against death for the call, from DSCLOG's code; the log
+# names it by this number, which no record has (the records' room ends with Restore Youth's)
+NPP_TOUCH = 0x27
 NPP_SAVE_RECORD = 212
 STRENGTH_SPELL, GRACE_EFFECT, CLAW_EFFECT, FOG_EFFECT = 23, 54, 6, 27
 AFFINITY_EFFECT, BODY_WEAPONRY_EFFECT = 61, 62  # (the first natural attack at least 1d10; 2d4: 7B71Bh)
@@ -795,6 +797,20 @@ def plain_name(raw: bytes) -> bool:
 def far_pointer(guest: GuestMemory, ds: int, offset: int) -> int:
     off, seg = struct.unpack("<HH", guest.read(ds * 16 + offset, 4))
     return seg * 16 + off
+
+
+class TableGone(ValueError):
+    """A table's far pointer reads null (the game rebuilding it, as an area loads): a write through
+    it would land in DOS's own memory, past the low-memory guard for an index far enough in. The
+    dice log's step is tried again in a later pass (dicelog's _step)."""
+
+
+def table_pointer(guest: GuestMemory, ds: int, offset: int) -> int:
+    """far_pointer for a table the Loader writes through: TableGone if it reads null."""
+    at = far_pointer(guest, ds, offset)
+    if not at:
+        raise TableGone(f"the table at DS:{offset:04X}h isn't there just now")
+    return at
 
 
 def party_records(guest: GuestMemory, ds: int) -> List[Tuple[Optional[int], Optional[int]]]:

@@ -112,6 +112,29 @@ class LaunchTests(unittest.TestCase):
             self.assertFalse(launch.is_game_dir(d))
             self.assertEqual(launch.find_game_dir(game), game)
 
+    def test_names_hand_edited_keys(self):
+        """A hand-edited portrait key that is a digit to str.isdigit but no number to int ("²") is
+        passed over, not a ValueError that broke every name look-up."""
+        self.assertEqual(launch._names({"k": {"5": "Tarkon", "\u00b2": "x", "a": "y", "7": ""}}, "k"), {5: "Tarkon"})
+
+    def dsun_only(self) -> str:
+        """A folder with an empty DSUN.EXE alone (gamepatch.write_patched mocked: no more needed)."""
+        d = tempfile.mkdtemp()
+        self.addCleanup(lambda: __import__("shutil").rmtree(d, ignore_errors=True))
+        open(os.path.join(d, "DSUN.EXE"), "w").close()
+        return d
+
+    def test_dsun_exe_gone(self):
+        """DSUN.EXE gone from the folder since it was picked: a clear refusal in DOSBox's way and
+        the recompiled program's, and prepare_patched_game says why (it gave a TypeError)."""
+        with tempfile.TemporaryDirectory() as d:
+            game = make_game(d, cloud_saves=False)
+            os.remove(launch._find_file(game, "DSUN.EXE"))
+            with self.assertRaises(launch.LaunchError) as raised:
+                launch._launch(game, {"recompiled": False})
+            self.assertIn("has no DSUN.EXE", str(raised.exception))
+            self.assertIn("has no DSUN.EXE", launch.prepare_patched_game(game, {}))
+
     def test_settings_not_the_loaders_kept_aside(self):
         """A settings.json that is JSON but not an object (a list, a number) is read as none and
         kept aside as settings.json.bad, as an unreadable one is, so the next save loses nothing."""
@@ -191,7 +214,7 @@ class LaunchTests(unittest.TestCase):
         gamepatch.write_patched = write_patched
         try:
             def skip(settings):
-                self.assertEqual(launch.prepare_patched_game("nowhere", settings), "not in a test")
+                self.assertEqual(launch.prepare_patched_game(self.dsun_only(), settings), "not in a test")
                 return skips[-1]
             self.assertEqual(skip({}), frozenset())
             off = {key: skip({key: False}) for key in launch.CONTENT}
@@ -349,7 +372,7 @@ class LaunchTests(unittest.TestCase):
             raise gamepatch.PatchError("not in a test")
         gamepatch.write_patched = write_patched
         try:
-            self.assertEqual(launch.prepare_patched_game("nowhere", old), "not in a test")
+            self.assertEqual(launch.prepare_patched_game(self.dsun_only(), old), "not in a test")
         finally:
             gamepatch.write_patched = saved
         self.assertEqual(skips[-1], frozenset(gamepatch.STEADY_PACE))  # (only the kept switch's)
@@ -377,6 +400,43 @@ class LaunchTests(unittest.TestCase):
                 launch.update_settings({"steady_pace": True})
                 with open(launch.SETTINGS) as f:
                     self.assertEqual(json.load(f)["steady_pace"], True)
+            finally:
+                launch.SETTINGS = saved_path
+
+    @unittest.skipIf(os.name == "nt", "the other process's lock taken with fcntl")
+    def test_settings_changed_by_another_process_kept(self):
+        """Another process (the window, `play`) changing settings.json under its lock as this one
+        updates it: this one waits for the lock, so both changes are kept (each read and wrote the
+        whole file: the later one's lost the other's)."""
+        import json
+        import subprocess
+        import sys
+        import time as _time
+        with tempfile.TemporaryDirectory() as d:
+            saved_path = launch.SETTINGS
+            launch.SETTINGS = os.path.join(d, "settings.json")
+            try:
+                launch.save_settings({"game_dir": "C:\\GOG"})
+                lock, ready = os.path.join(d, "settings.lock"), os.path.join(d, "ready")
+                other = subprocess.Popen([sys.executable, "-c", (
+                    "import fcntl, json, os, sys, time\n"
+                    "fd = os.open(sys.argv[1], os.O_RDWR | os.O_CREAT)\n"
+                    "fcntl.flock(fd, fcntl.LOCK_EX)\n"
+                    "s = json.load(open(sys.argv[2]))\n"
+                    "open(sys.argv[3], 'w').close()\n"
+                    "time.sleep(0.4)\n"
+                    "s['pickpocketed'] = ['x@1']\n"
+                    "json.dump(s, open(sys.argv[2], 'w'))\n"), lock, launch.SETTINGS, ready])
+                try:
+                    end = _time.monotonic() + 10
+                    while not os.path.exists(ready) and _time.monotonic() < end:
+                        _time.sleep(0.01)
+                    launch.update_settings({"combat_log_level": "short"})
+                finally:
+                    other.wait(10)
+                with open(launch.SETTINGS) as f:
+                    got = json.load(f)
+                self.assertEqual((got.get("pickpocketed"), got.get("combat_log_level")), (["x@1"], "short"))
             finally:
                 launch.SETTINGS = saved_path
 

@@ -40,6 +40,14 @@ class BuybackTests(unittest.TestCase):
         self.gd.item_name = lambda n: "Ring +1"
         self.gd.creature_name = lambda c: "Kel"
         struct.pack_into("<HHH", m, HDR + buyback.SOLD_SEQ, 0, 0, 0)
+        struct.pack_into("<4H", m, HDR + buyback.SOLD_ITEMS, *[buyback.DONE] * 4)
+
+    def sell(self, seq, thing=SOLD, merchant=MERCHANT, item=40):
+        """DSCLOG's SELL_KEEP: the sale SEQ - 1 queued (its thing, merchant and item), SOLD_SEQ SEQ."""
+        slot = (seq - 1) % buyback.SOLD_SLOTS
+        struct.pack_into("<HH", self.m, HDR + buyback.SOLD_Q + slot * 4, thing, merchant)
+        struct.pack_into("<H", self.m, HDR + buyback.SOLD_ITEMS + slot * 2, item)
+        struct.pack_into("<H", self.m, HDR + buyback.SOLD_SEQ, seq)
 
     def test_busy_before_anything_moved(self):
         """The game busy with its lists as a sale is kept (ItemsBusy): nothing moved yet, the
@@ -49,7 +57,7 @@ class BuybackTests(unittest.TestCase):
         from dsloader import itemgate
         b = buyback.Buyback()
         b.watch(self.gd, HDR)
-        struct.pack_into("<HHH", self.m, HDR + buyback.SOLD_SEQ, 1, SOLD, MERCHANT)
+        self.sell(1, SOLD, MERCHANT)
         before = bytes(self.m[THINGS + SOLD * 3:THINGS + SOLD * 3 + 3])
         with mock.patch.object(itemgate, "hold", side_effect=itemgate.ItemsBusy("busy")):
             with self.assertRaises(itemgate.ItemsBusy):
@@ -73,8 +81,8 @@ class BuybackTests(unittest.TestCase):
         """Into the merchant's list, first, in a backpack cell; the pointer's thing zeroed, as the
         game leaves it with nothing held (not put on the free list), the free lists untouched."""
         b = buyback.Buyback()
-        self.assertEqual(b.watch(self.gd, HDR), [])  # (the first look: from now on)
-        struct.pack_into("<HHH", self.m, HDR + buyback.SOLD_SEQ, 1, SOLD, MERCHANT)
+        self.assertEqual(b.watch(self.gd, HDR), [])  # (the first look: nothing queued)
+        self.sell(1, SOLD, MERCHANT)
         self.assertEqual(b.watch(self.gd, HDR), [])  # (nothing in the log)
         self.assertEqual(b.kept, ["Ring +1"])
         self.assertEqual(self.chain(BAG), [40, 41])
@@ -89,7 +97,7 @@ class BuybackTests(unittest.TestCase):
         struct.pack_into("<Bh", self.m, THINGS + SOLD * 3, 0, 0)
         b = buyback.Buyback()
         b.watch(self.gd, HDR)
-        struct.pack_into("<HHH", self.m, HDR + buyback.SOLD_SEQ, 1, 330, MERCHANT)
+        self.sell(1, 330, MERCHANT)
         b.watch(self.gd, HDR)
         self.assertEqual(self.chain(BAG), [40, 41])
         self.assertEqual(ring.Items(self.gd).thing(330), (game.THING_ITEM, game.NO_ITEM))
@@ -98,7 +106,7 @@ class BuybackTests(unittest.TestCase):
         """A thing number past the table's few spare ones: left alone."""
         b = buyback.Buyback()
         b.watch(self.gd, HDR)
-        struct.pack_into("<HHH", self.m, HDR + buyback.SOLD_SEQ, 1, buyback.LAST_THING, MERCHANT)
+        self.sell(1, buyback.LAST_THING, MERCHANT)
         b.watch(self.gd, HDR)
         self.assertEqual(self.chain(BAG), [41])
 
@@ -106,11 +114,42 @@ class BuybackTests(unittest.TestCase):
         """Sold to no creature: gone, as the game has it (the record freed, the thing emptied)."""
         b = buyback.Buyback()
         b.watch(self.gd, HDR)
-        struct.pack_into("<HHH", self.m, HDR + buyback.SOLD_SEQ, 1, SOLD, 499)
+        self.sell(1, SOLD, 499)
         self.assertEqual(b.watch(self.gd, HDR), [])
         self.assertEqual(self.chain(BAG), [41])
         self.assertEqual(struct.unpack_from("<H", self.m, DS * 16 + ring.FREE_ITEMS)[0], 40)
         self.assertEqual(bytes(self.m[THINGS + SOLD * 3:THINGS + SOLD * 3 + 3]), bytes(3))
+
+    def test_another_item_on_the_pointer(self):
+        """The pointer's thing holding another item by the time the Loader looks (picked up after the
+        sale): left where it is, not given to the merchant; the sale seen to all the same."""
+        b = buyback.Buyback()
+        b.watch(self.gd, HDR)
+        self.sell(1, item=39)
+        b.watch(self.gd, HDR)
+        self.assertEqual(self.chain(BAG), [41])
+        self.assertEqual(struct.unpack_from("<Bh", self.m, THINGS + SOLD * 3), (game.THING_ITEM, 40))
+        self.assertEqual(struct.unpack_from("<H", self.m, HDR + buyback.SOLD_ITEMS)[0], buyback.DONE)
+
+    def test_left_by_another_loader(self):
+        """A sale queued and not seen to when this Loader first looks (another went away, or the
+        window opened again): seen to now, not dropped."""
+        self.sell(1)
+        b = buyback.Buyback()
+        b.watch(self.gd, HDR)
+        self.assertEqual(self.chain(BAG), [40, 41])
+        self.assertEqual(b.kept, ["Ring +1"])
+
+    def test_more_than_the_queue_holds(self):
+        """More sales than SOLD_SLOTS since the last look: those the queue still holds are seen to
+        (the oldest first), not the whole queue dropped."""
+        b = buyback.Buyback()
+        b.watch(self.gd, HDR)
+        for seq in range(1, 6):  # (five sales; the first's entry written over by the fifth's, 40)
+            self.sell(seq, item=40 if seq == 5 else 0x123)
+        b.watch(self.gd, HDR)
+        self.assertEqual(self.chain(BAG), [40, 41])
+        self.assertEqual(struct.unpack_from("<4H", self.m, HDR + buyback.SOLD_ITEMS), (buyback.DONE,) * 4)
 
 
 class UnlinkTests(unittest.TestCase):

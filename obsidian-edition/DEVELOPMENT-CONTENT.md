@@ -199,11 +199,15 @@ after the `ns_list_` patches):
   (element 100h) on a creature under it (7A7C5h) uses a charge, then the
   target saves (79A71h) as against Vampiric Touch (27h), whose record allows
   no save (+1Fh bit 0), so it never stopped anything. DSCLOG's `NS_NPP`
-  (replacing "add sp,4 / push 6 / push 27h" at 7A7E9h) makes the charge's two
-  arguments, still on the stack, the save's: 6 and, once the records have room
-  (SEG_MOVED), record 212 (`NPP_SAVE`, past the new spells), Vampiric Touch's
-  copied with a save against paralysis, poison and death allowed (21h). Saved,
-  the game stops the touch and gives the undead 2d6.
+  (replacing "add sp,4 / push 6 / push 27h" at 7A7E9h) makes the save itself,
+  through its stub (5B8:2Fh) with the game's arguments, Vampiric Touch's own
+  record's save byte made 21h (a save against paralysis, poison and death) for
+  that call only and put back as it returns, and goes on at 7A7F9h with the
+  charge's two arguments taken off and AX the save's. Saved, the game stops the
+  touch and gives the undead 2d6. The dice log names a save against 27h made
+  from DSCLOG's code the protection's (`game.NPP_SAVE_RECORD`). (Till
+  2026-11-18 the save used a copy of the record at 212, past the new spells'
+  room: [New spells](#new-spells-wizard-and-6th-level-priest).)
 - **Acid** (effect 1, Acid Arrow's): the game spends an effect's charges
   (the entry's +8) through 76803h, which calls the effect's handler (for Acid
   7897Bh: 2d4 acid, the damage named Acid Arrow) and takes the entry out at
@@ -586,8 +590,8 @@ command a jump to code after the script's end that sets the corner before it
 
 **Numbers.** The game's spells are 0-68 wizard, 69-137 priest, 138-171 psionic
 powers and 172-195 monsters' powers. Its table of 32-byte records (from the load
-segment + 3E3Fh) has 96 bytes after 195, room for 196-198, then the monster
-kinds table (3E45h). Cat's Grace is 196, Erdlu Claw 197, Fogbolt 198, Reflected
+segment + 3CB4h, at 30h) ends with 195's at 3E3Fh, where 96 bytes follow (room
+for 196-198), then the monster kinds table (3E45h). Cat's Grace is 196, Erdlu Claw 197, Fogbolt 198, Reflected
 Image 199, Spook 200, Friends 201, and the 6th-level priest spells 202-211.
 The game names none of the monsters' powers:
 the log names one by its record's effect (+19h, `game.POWER_EFFECT_NAMES`), else
@@ -603,10 +607,14 @@ the table's own entries are the only relocations to the two segments. So at
 the first file open (`INT 21h AH=3Dh`) while DSUNLOG runs, DSCLOG (its PSP
 from `AH=62h`, the load segment 10h past it) checks both entries, copies the
 200h bytes from 3E3Fh to `seg_space` in its tail (`tail_seg`) and points the
-two selectors there (`seg_moved`, the header's +306). The records then run to
-212, the room's last whole record (it ends at 3E5E0h, the room at 3E5E2h),
-which Negative Plane Protection's save record (`NPP_SAVE`) fills; another new
-spell needs room made first (that record moved elsewhere, say). The stack had been written over records 196-198's room all along; with it
+two selectors there (`seg_moved`, the header's +306). The room is then the
+200h bytes from 3E3F0h to 3E5F0h, exactly records 196-211: Restore Youth's
+fills its end, and the game's segment 3E5Fh and its pictures' table (3E60h)
+follow, so another new spell needs room made elsewhere first. The build fails
+if the records outgrow the room, or the spell rows theirs (below), or the stack
+and the kinds table `seg_space`. (Negative Plane Protection's save had a copy
+of Vampiric Touch's record at 212, past the room, till 2026-11-18: it now uses
+Vampiric Touch's own, [above](#the-games-spells).) The stack had been written over records 196-198's room all along; with it
 moved, nothing writes there but DSCLOG. Spells 199-201 are set up, listed
 and counted (`NS_NEW`, `NS_STATE`'s `NS_MOVED`) only once the move is done;
 `monsters.py` reads the kinds table's segment from the selector. The spell

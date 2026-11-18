@@ -1159,9 +1159,10 @@ WOODEN_SHIELD_TYPE, GUTTERWARD = 16, 0x163  # (the game's wooden Shield; Gutterw
 
 def which(rec: bytes) -> Optional[str]:
     """Which of the Loader's items an item record is, if one: the Short Sword (Shadowseeker once +1) and the
-    Cloak by their types, the rings by their names and plus, Inixhide (Leather Chest Armor +1) and Kreenfang (the Gythka
-    +1) by their types and plus (the game has no gythka with a plus)."""
-    from . import game, npcitems, ring
+    Cloak by their types, the rings by their names and plus, Inixhide (Leather Chest Armor +1) by its type and plus,
+    and Kreenfang by its type, plus and name entry (arms.GYTHKA_NAME: the Elven Leader carries a plain-named Gythka
+    +1, made +2 only with world magic on)."""
+    from . import arms, game, npcitems, ring
     if len(rec) < game.ITEM_SIZE:
         return None
     kind, = struct.unpack_from("<H", rec, game.ITEM_TYPE)
@@ -1246,8 +1247,8 @@ def which(rec: bytes) -> Optional[str]:
         return METAL_TYPES[kind]
     if plus == 1 and kind in MAGIC_KINDS:
         return MAGIC_KINDS[kind]
-    if kind == game.GYTHKA_TYPE and plus == 1:
-        return "Kreenfang"
+    if kind == game.GYTHKA_TYPE and plus == 1 and struct.unpack_from("<H", rec, game.ITEM_NAME)[0] == arms.GYTHKA_NAME:
+        return "Kreenfang"  # (by its name too: the Elven Leader's Gythka +1, +2 only with world magic, isn't)
     if kind == game.CLOAK_TYPE:
         return "Cloak of Protection +1"
     if ring.is_ring(rec) and plus == 1:

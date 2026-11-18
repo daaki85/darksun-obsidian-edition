@@ -28,7 +28,7 @@ does the slave-pen items (npcitems); the game's shop screen (24h) sells what he 
 import struct
 from typing import Callable, Dict, List, Optional, Tuple
 
-from . import game, gff, gpl, itemgate
+from . import game, gff, gpl
 from .gff import read_gff
 
 OBJECT = 1000  # (no object of the game's has it. Past the game's object table, 520 long: the
@@ -768,20 +768,27 @@ def loot(gd, choose: Callable = None) -> List[str]:
     from . import ring
     if not gd.flag(DIED) or gd.flag(LOOTED):
         return []
-    itemgate.hold(gd)  # (before LOOTED: the game busy with its lists, looted in a later pass)
-    it = ring.Items(gd)
+    it = ring.held(gd)  # (before LOOTED: the game busy with its lists, looted in a later pass)
     held = _held_by_party(gd, it)
     mine = {-(SCROLL_OBJECT + k): name for k, (_, name, _) in enumerate(SCROLLS)}
     left = {index: mine[struct.unpack_from("<h", rec, ITEM_OBJECT)[0]]
             for thing in range(ring.THING_COUNT) for index, rec in it.chain(thing)
             if struct.unpack_from("<h", rec, ITEM_OBJECT)[0] in mine and index not in held}
-    gd.set_flag(LOOTED)
     if not left:
+        gd.set_flag(LOOTED)
         return []  # (all bought)
+    # (the thing each lies in, and which things are a container's contents: a scroll alone in a
+    # list taken out of it, the list left empty, unless that list is a bag's or a chest's)
+    where = {index: thing for thing in range(ring.THING_COUNT) for index, _ in it.chain(thing, inside=False)}
+    contents = {struct.unpack_from("<H", rec, ring.ITEM_CONTENTS)[0]
+                for thing in range(ring.THING_COUNT) for _, rec in it.chain(thing)}
     keep = (choose or random.choice)(sorted(left))
-    for index in sorted(left):
-        if index != keep:
-            ring.unlink(gd, ring.Items(gd), index, "given back (Kalzith's)")
+    gone = all(ring.unlink(gd, ring.Items(gd), index, "given back (Kalzith's)",
+                           empty=where.get(index) not in contents)
+               for index in sorted(left) if index != keep)
+    if not gone:  # (one couldn't be taken away: LOOTED not set, the rest tried again in a later pass)
+        return []
+    gd.set_flag(LOOTED)
     return [f"Scroll of {left[keep]}"]
 
 

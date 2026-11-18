@@ -16,7 +16,7 @@ is in the dice log, with the purse's sound."""
 import struct
 from typing import Dict, List, Optional, Tuple
 
-from . import game, itemgate, pickpocket, ring
+from . import game, pickpocket, ring
 from .game import GameData
 
 TSR_LOOT_SEQ, TSR_LOOT_THING, TSR_LOOT_MODE = 1846, 1848, 1850  # in DSCLOG's header
@@ -85,12 +85,13 @@ def _takers(gd: GameData) -> List[int]:
 def take(gd: GameData, thing: int, mode: int) -> Tuple[List[str], bool]:
     """Container THING's things into the party's backpacks (mode ALL or NO_PLAIN_WEAPONS): the dice
     log's lines, and whether anything was taken."""
-    it = ring.Items(gd)
+    # (the gate held before the lists are read: the game busy with them, ItemsBusy, tried again in
+    # a later pass; what is moved worked out from them as they are with the game held still)
+    it = ring.held(gd)
     found = _contents(gd, it, thing)
     if found is None:
         return [], False
     container, contents = found
-    itemgate.hold(gd)  # (the game busy with its lists: ItemsBusy, tried again in a later pass)
     items = [i for i, _ in it.chain(contents, inside=False)]
     names = {i: gd.item_label(rec, gd.item_type_record(rec)) for i, rec in it.chain(contents, inside=False)}
     plan: Dict[int, Tuple[int, int]] = {}  # item: (member, cell)

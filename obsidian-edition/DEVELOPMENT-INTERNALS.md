@@ -192,12 +192,13 @@ with the 3 ability checks the ability check command makes).
 ## DSCLOG's header
 
 The fields the Loader and DSCLOG share are DSCLOG's header, from `hdr:` in
-`dos/dsclog.asm`: the signature (`HDR_SIG`, `DSCLOGva`), then one field a line, each commented
+`dos/dsclog.asm`: the signature (`HDR_SIG`, `DSCLOGvb`), then one field a line, each commented
 with its offset (`+1830`, `+1867` ...) and what it holds. That source is the layout's one home.
 The Loader finds the header by its signature in DOSBox's memory (16-aligned) and names each field
 it uses `TSR_*`, in the module that uses it (`dicelog.py`, `kits.py`, `ghost.py`, `freeze.py`,
 `cahulaks.py` ...). New fields go at the end, so the offsets of the rest never move (the latest:
-`GEAR_WHO`, +1867); a change that both sides must make together takes the signature up.
+`SOLD_ITEMS`, +1868); a change that both sides must make together takes the signature up
+(`DSCLOGvb` with `SOLD_ITEMS`, 2026-11-18).
 
 ## Room and memory
 
@@ -219,22 +220,22 @@ the one place for the sizes; the sections after them name the symbols only.
 | Conventional (0-9FFFh) | 640 KB | DOS and the shell 8 KB; the game the rest: 97 KB free with the map open (the unmodded game's 57 KB) |
 | C000h-C7FFh | 32 KB | the video BIOS (ROM) |
 | C800h-C8FFh | 4 KB | DOSBox's own tables (`DOS_PRIVATE_SEGMENT`, handed out from C800h up: to C8C0h with the game running) |
-| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): DSCLOG 69.0 KB (70,624 bytes with its PSP and its tail, (10h + `KEPT_PARAS`) paragraphs), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, and the rest free. Measured with `playtest/memaudit.py` in Pehtucl's ambush: 29,616 bytes free in one piece, between the overlay buffer and the see-through tables, and nothing between DSCLOG and the overlay buffer ([log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-16-memory-pass-5.md)) |
+| C900h-EFFFh | 156 KB | upper memory, with `UMBPLUS.COM` (else D000h-EFFFh, 128 KB): DSCLOG 69.2 KB (70,848 bytes with its PSP and its tail, (10h + `KEPT_PARAS`) paragraphs), the game's overlay buffer 32.2 KB, the game's music buffer 11.7 KB, the see-through figures' tables 13.8 KB, and the rest free. Measured with `playtest/memaudit.py` in Pehtucl's ambush: 29,616 bytes free in one piece, between the overlay buffer and the see-through tables, and nothing between DSCLOG and the overlay buffer ([log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-16-memory-pass-5.md)) |
 | F000h-FFFFh | 64 KB | the BIOS (ROM) |
 | 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): DSCLOG's [far block](#the-far-block), 65,484 bytes, 36 free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
 
 ### The limits
 
-Each fails the build when passed (a negative `times`). For the committed `dos/DSCLOG.EXE`, 70,512
-bytes: the 32-byte header, the segment's image of 64,944 and the tail's 5,536 (`TAIL_BYTES`):
+Each fails the build when passed (a negative `times`). For the committed `dos/DSCLOG.EXE`, 70,624
+bytes: the 32-byte header, the segment's image of 65,056 and the tail's 5,536 (`TAIL_BYTES`):
 
 | Limit | Used | Room | Spare |
 |---|---|---|---|
-| [DSCLOG's segment](#dsclogs-segment): `kept_end` (`resident_end` 63,952 + `AFTER_INSTALL` 992) | 64,944 bytes | 65,536 | 592 bytes |
+| [DSCLOG's segment](#dsclogs-segment): `kept_end` (`resident_end` 64,064 + `AFTER_INSTALL` 992) | 65,056 bytes | 65,536 | 480 bytes |
 | [the far block](#the-far-block): `FAR_END` (its buffers from `FAR_RING`, 10h: 65,484 bytes) | 65,500 | 65,536 | 36 bytes |
-| upper memory as DSCLOG loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,501 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,681 |
-| upper memory once installed: `UMB_KEPT` (DSCLOG, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,123 paragraphs | 8,182 (`UMB_ROOM`) | 59 (944 bytes) |
+| upper memory as DSCLOG loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,508 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,674 |
+| upper memory once installed: `UMB_KEPT` (DSCLOG, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,130 paragraphs | 8,182 (`UMB_ROOM`) | 52 (832 bytes) |
 
 To check them after a change, build a scratch copy with `[map all FILE]` as its
 first line (`nasm -f bin -I dos/ -o /tmp/x.exe COPY`, from `obsidian-edition/`)
@@ -519,8 +520,16 @@ The Loader never writes over the start of memory (`guestmem.LOW_MEMORY`, below
 of the game's data segment (`game.NULL_AREA`), which its C runtime checks at
 exit ("Null pointer assignment"). Such a write could only come from a pointer
 the game has left empty for a moment (`0:offset`). `GuestMemory.write` refuses
-it and notes it in `GuestMemory.refused` (the last 200, for a crash report),
-and the dice log tells it once.
+it, notes it in `GuestMemory.refused` (the last 200, for a crash report) and raises
+`WriteRefused`, so that a change of two writes or more isn't left half made: the dice
+log's step drops it whole (`_step`) and tells it once. A write the Loader works out
+from a table's far pointer (the character sheets', the creatures', the known spells')
+takes the pointer through `game.table_pointer`, which raises `TableGone` while it reads
+null (an area loading), the step then tried again in a later pass: a null pointer plus
+a sheet index of 22 or more passes the 600h guard. Each pass, and each write of the
+stats thread, first looks that the game and DSCLOG it attached to are still there
+(`DiceLog._same_game`): after a restart inside the same DOSBox nothing is written
+through the old data segment or header before the window's own check attaches again.
 
 ### The item gate
 
@@ -552,12 +561,23 @@ and creature tables' pointers. The pass's first such write waits until
 (`ProcessMemory.suspend`: SIGSTOP on Linux, waiting until each thread shows
 stopped, about 1.5 ms; `NtSuspendProcess` on Windows), and reads the same
 things again. All as they were: the writes go ahead with the game held still,
-until the block ends (`itemgate.release`) or the pass does. Anything changed:
+until the block ends (`itemgate.release`: each step of the pass is one, `_step`
+lets the game go after it) or the pass does. Anything changed:
 `ItemsBusy` (a `ValueError`), none of the pass's item writes are made, and the
 next pass tries again. A process that can't be paused gets the same look with
 the writes right after it. A write outside a pass (a tool's) has the lists
 looked at over the wait first, without pausing. The Loader lets the game go if
 it exits mid-pass (`atexit`).
+
+The gate's look sees the free lists' heads, the area and the tables' places, not an item the game
+moves between two lists in its wait (an inventory drag, a GIVE): a link read before the wait would
+then be written over the move, one list run into another (the code audit of 2026-11-18 found it
+in a simulation). So every change to the lists is worked out from what is read with the gate held:
+`ring.held` holds it, then reads the lists, and the helpers that write them (`ring.unlink`,
+`pickpocket.party_list`, `_take`, `_link`, `npcitems.add_to`, `buyback.to_pack`) read again that
+way whatever the caller passes in (`_take` checks that the item ahead of the one it takes out is
+still ahead of it, else nothing is written). A step that runs every pass (the spell arrows'
+strays, Semyon's Thornwall) first looks without the gate, and holds it only with something to do.
 
 Whatever can't be done twice takes the gate before it starts (`itemgate.hold`),
 so a refusal leaves nothing half done: Pick Pockets before its d100 (the request

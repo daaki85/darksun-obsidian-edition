@@ -31,7 +31,7 @@ def symbols(*names):  # (their offsets from the header, from a symbol map of the
 SKIPPED, FLIPS, RAN, LOST = symbols("pace_skipped", "flip_count", "pace_ran", "pace_lost")
 hdr = None
 for at in range(0xC0000, 0xF0000, 16):
-    if g.read(at, 8) == b"DSCLOGva":
+    if g.read(at, 8) == b"DSCLOGvb":
         hdr = at; break
 assert hdr, "no DSCLOG header"
 def snap():

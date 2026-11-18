@@ -8,7 +8,7 @@ exec(open(__file__).read())
 from dsloader import heapcheck
 mem = g.read(0, 0x110000)
 ls = gd.load_seg
-hdr = next(i for i in range(0, 0x100000, 16) if mem[i:i+8] == b'DSCLOGva')
+hdr = next(i for i in range(0, 0x100000, 16) if mem[i:i+8] == b'DSCLOGvb')
 dseg = hdr // 16
 def w(a): return struct.unpack_from('<H', mem, a)[0]
 # first MCB: DOS's list of lists is at the segment in INT 21h... find by walking from a low MCB:

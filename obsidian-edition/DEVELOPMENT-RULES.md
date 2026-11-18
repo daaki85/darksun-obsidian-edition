@@ -1618,14 +1618,21 @@ pointer's (`DS:179Eh`, 523: one of the few past the 520 objects), never freed:
 with nothing held the game has it all zeros (kind 0). `SELL_KEEP` (an `INT 98h`
 site over the push, with Shops as in AD&D, `RULE_HI_CHA_PRICES`, the second rules word's 16:
 `game.RULE_BUYBACK` names it) looks at the thing's first item (things table, kind 1) and,
-for one with a plus (`+14h` above 0) or a power (`+0Fh`), pushes 270Fh in its
+for one with a plus (`+14h` above 0) or a power (`+0Fh`), with the Loader there
+(its heartbeat, `LOADER_BEAT` +1865, under `LOADER_FRESH` old, as for
+`GEAR_HOLD`: with the Loader's window closed nothing would take the item off the
+pointer, and up to 2.18 it was lost; now it is freed as the game does), pushes 270Fh in its
 place (the registers kept, the interrupt's frame moved down a word, the word
-under it) and queues the thing and the shop's merchant (`DS:179Ch`, the object
+under it) and queues the thing, the shop's merchant (`DS:179Ch`, the object
 whose item lists the shop's list is built from at 8347Ah: Kalzith's map object,
-229, a person, creature 33) in the header (`SOLD_SEQ` +308 counted, `SOLD_Q`
-+310, four entries). The Loader (`buyback.py`, every quarter of a second) puts
-each queued item first in the merchant's last item list (a new one if it has
-none; a backpack cell of its own) and zeroes the pointer's thing, as the game
+229, a person, creature 33) and the item in the header (`SOLD_SEQ` +308 counted, `SOLD_Q`
++310, four entries, `SOLD_ITEMS` +1868 their items). The Loader (`buyback.py`, every quarter of a second,
+the item gate held before it reads the queue) puts
+each queued item, if the thing's list still starts with it (not one picked up
+since), first in the merchant's last item list (a new one if it has
+none; a backpack cell of its own), marks the entry seen to (its item 0FFFFh:
+one left by a Loader that went away is seen to by the next, and a queue that
+went round more than four times has what it still holds seen to) and zeroes the pointer's thing, as the game
 leaves it (left a list, even an empty one, the inventory screen picks nothing up
 after); a merchant that isn't a person (none known) has the item freed as the
 game would. Bought back, it costs its price less the CHA discount, at least 60%:

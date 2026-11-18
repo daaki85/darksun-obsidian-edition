@@ -223,6 +223,18 @@ class GearTests(unittest.TestCase):
         self.assertEqual((worn, held, pack), ([(champions.SCALE_CHEST, champions.CHEST)],
                                               [(game.METAL_CAHULAKS_TYPE, champions.RIGHT)], []))
 
+    def test_unplaced_tried_a_few_times(self):
+        """Gear that can't be placed (no list to be had for it): tried again people.TRIES passes,
+        then left in the pack, not tried (and the game held still for it) every pass for good."""
+        from unittest import mock
+        from dsloader import people
+        self.make(champions.MUL, [game.METAL_CAHULAKS_TYPE])
+        gear = champions.Gear()
+        with mock.patch.object(champions.Gear, "equip") as equip:
+            for _ in range(people.TRIES + 5):
+                gear.watch(self.gd)
+        self.assertEqual(equip.call_count, 1 + people.TRIES)
+
     def test_not_a_champion(self):
         self.make(champions.MUL, [game.BONE_AXE_TYPE])
         struct.pack_into("<h", self.m, self.base + champions.CREATURE_OBJECT, -290)

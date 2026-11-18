@@ -191,13 +191,13 @@ class StrayTests(unittest.TestCase):
         gd.inventory = inventory
         return gd
 
-    def run_it(self, gd):
+    def run_it(self, gd, unlinks=True):
         written, added, removed = [], [], []
         with mock.patch.object(spellarrows, "is_spellarcher", lambda gd_, m: m == 0), \
                 mock.patch.object(spellarrows, "inventory_up", lambda gd_: gd.inventory), \
                 mock.patch.object(spellarrows, "item_address", lambda gd_, i: i * 100), \
-                mock.patch.object(spellarrows.ring, "Items", lambda gd_: None), \
-                mock.patch.object(spellarrows.ring, "unlink", lambda gd_, it, i, what, empty=False: removed.append(i) or True), \
+                mock.patch.object(spellarrows.ring, "Items", lambda gd_: mock.Mock(word=lambda at: 99)), \
+                mock.patch.object(spellarrows.ring, "unlink", lambda gd_, it, i, what, empty=False: removed.append(i) or unlinks), \
                 mock.patch.object(spellarrows.npcitems, "add_to", lambda gd_, m, rec, slot=None: added.append(m) or True):
             gd.guest.write = lambda at, data: written.append((at // 100, struct.unpack("<H", data)[0]))
             lines = spellarrows.return_strays(gd)
@@ -218,6 +218,15 @@ class StrayTests(unittest.TestCase):
         gd = self.gd({0: {5: (shock, 20, 1)}, 1: {30: (shock, 7, 20)}})
         lines, written, added, removed = self.run_it(gd)
         self.assertEqual((written, added, removed), ([], [0], [30]))
+
+    def test_copy_taken_back(self):
+        """The arrows copied into the Spellarcher's pack but not taken from where they were (the
+        unlink refused): the copy (the free list's first, 99, as add_to took it) taken back, not
+        the arrows left twice."""
+        shock = spellarrows.ARROWS[2].name
+        gd = self.gd({0: {5: (shock, 20, 1)}, 1: {30: (shock, 7, 20)}})
+        lines, written, added, removed = self.run_it(gd, unlinks=False)
+        self.assertEqual((lines, added, removed), ([], [0], [30, 99]))
 
     def test_left_be(self):
         """Nothing in a fight, with the inventory up, or with no Spellarcher in the party."""

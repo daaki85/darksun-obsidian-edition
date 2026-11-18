@@ -31,13 +31,13 @@ from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, 
 from . import aging, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
-from .guestmem import GuestMemory
+from .guestmem import GuestMemory, WriteRefused
 from .process import ProcessError
 from .itemwatch import ItemWatch
 from .textlog import KIND_MESSAGE, KIND_PORTRAIT, KIND_SHOW_REPLIES, KIND_TEXT, Dialogue, DialogueEntry, TextBuffer
 from .tracker import PartyTracker
 
-HDR_SIG = b"DSCLOGva"
+HDR_SIG = b"DSCLOGvb"
 TSR_HDR_OFF = 20  # DSCLOG's header: where it is in DSCLOG's segment
 # ... the party's spell slots, for the game's USE screen (PROBE_USE)
 TSR_SLOTS_OFF, SLOTS_SIZE = 148, 128
@@ -891,6 +891,8 @@ class DiceLog:
                 itemgate.hold(self.game)
                 if self.guest.read(self.tsr_hdr + TSR_USE_REPLY, 2) == seq:
                     return []
+                it = ring.Items(self.game)  # (the lists read again, held: ring.held)
+                kind, index = it.thing(thing) if 0 <= thing < ring.THING_COUNT else (None, None)
             if spellarrows.ARROWS_BY <= item < PICKED_BY:
                 taken = True
                 if self._fighting():
@@ -1182,9 +1184,10 @@ class DiceLog:
             now = time.monotonic()
             if now - getattr(self, "_beat_at", 0.0) >= BEAT_STEP:  # (the heartbeat: GEAR_HOLD, _beat)
                 self._beat_at = now
-                self._beat()
+                if self._same_game():  # (not through the header of a game since restarted)
+                    self._beat()
             req = self.guest.read(self.tsr_hdr + TSR_STATS_REQ, 2)
-            if req != self.guest.read(self.tsr_hdr + TSR_STATS_REPLY, 2):
+            if req != self.guest.read(self.tsr_hdr + TSR_STATS_REPLY, 2) and self._same_game():
                 self._write_stats_now()
                 self.guest.write(self.tsr_hdr + TSR_STATS_REPLY, req)
 
@@ -1259,9 +1262,18 @@ class DiceLog:
         """False when the game has quit or been replaced by an unpatched one, when DSCLOG's header
         is gone from its place, or when its ring has read wrong for POLL_FAILS passes in a row
         (the callers then attach again, which finds the header afresh)."""
+        return self._same_game() and self._poll_fails < POLL_FAILS
+
+    def _same_game(self) -> bool:
+        """The game and DSCLOG attached to still there, where they were (still_patched less the
+        ring's reads): looked at before every pass and every write of the stats thread, so that
+        after the game restarts inside the same DOSBox nothing is written through the old data
+        segment or header before the callers' own check (every couple of seconds) attaches again."""
+        if self.rand_addr is None or self.tsr_hdr is None or self.game is None:
+            return False
         sig = self.guest.read(self.game.ds * 16 + game.BORLAND_SIG_OFFSET, len(game.BORLAND_SIG))
         return sig == game.BORLAND_SIG and self.guest.read(self.rand_addr, 2) == RAND_PATCHED \
-            and self.guest.read(self.tsr_hdr, len(HDR_SIG)) == HDR_SIG and self._poll_fails < POLL_FAILS
+            and self.guest.read(self.tsr_hdr, len(HDR_SIG)) == HDR_SIG
 
     def detach(self) -> None:
         self.rand_addr = None
@@ -1397,7 +1409,10 @@ class DiceLog:
     def lines(self, show_all: bool = False, now: Optional[float] = None) -> List[str]:
         """Everything new since the last call, as log lines. Call it every few tens of ms. Its
         changes to the game's item lists are made only if the game left them be all the while
-        (itemgate.py: the pass begins before anything is read, and ends with DOSBox running on)."""
+        (itemgate.py: the pass begins before anything is read, and ends with DOSBox running on).
+        None while the game or DSCLOG it was attached to is gone (_same_game: the callers attach again)."""
+        if not self._same_game():
+            return []
         gate = getattr(self.guest, "item_gate", None)
         if gate is not None:
             gate.begin()
@@ -1486,9 +1501,16 @@ class DiceLog:
         for memory read while the game has it half made (struct.error, IndexError, ValueError);
         either way the pass's next steps go on (one failing step once stopped all after it)."""
         try:
+            return self._step_run(fn, quiet)
+        finally:  # (each step a block of writes: the game let go after it, not held to the pass's end)
+            if self.game is not None:
+                itemgate.release(self.game)
+
+    def _step_run(self, fn: Callable[[], object], quiet: bool) -> List[str]:
+        try:
             got = fn()
-        except itemgate.ItemsBusy:
-            return []
+        except (itemgate.ItemsBusy, WriteRefused, game.TableGone):  # (a refused write: noted, and told
+            return []                                                #   by _tail; a table not there: later)
         except ProcessError:
             raise
         except (struct.error, IndexError, ValueError) as e:
@@ -1686,7 +1708,9 @@ class DiceLog:
         given = sum(1 << m for m in range(game.PARTY_SIZE) if before.get(m) != after.get(m))
         given |= self.guest.read(self.tsr_hdr + TSR_GEAR_GIVEN, 1)[0]  # (a pass before the window's end)
         self.guest.write(self.tsr_hdr + TSR_GEAR_GIVEN, bytes((given,)))
-        if not self._weapons_asked():
+        # (cleared only if GEAR_WHO still names the character worked on: another finished meanwhile
+        # keeps it set, its gear given in the next pass, not left the game's)
+        if not self._weapons_asked() and self.guest.read(self.tsr_hdr + TSR_GEAR_WHO, 1)[0] == who:
             self.guest.write(self.tsr_hdr + TSR_GEAR_DUE, b"\0")
         return out
 
@@ -4120,6 +4144,7 @@ class DiceLog:
         save_natural)."""
         natural = scaled(e.raw, 20) + 1
         spell, target, caster = e.parent_arg(0x0A), e.parent_arg(6), e.parent_arg(8)
+        spell = self._npp_save(spell, e.parent)
         if not self._stink_save(target, spell):  # (a stinkpot's: no spell's damage to follow)
             self._spell_cast(spell, now)
         needed = e.parent_locals[0x28 - 1]
@@ -4130,10 +4155,20 @@ class DiceLog:
         self._save_rolls[(e.ss, e.parent_bp)] = natural
         return pending
 
+    def _npp_save(self, spell: Optional[int], frame: bytes) -> Optional[int]:
+        """Negative Plane Protection's save (game.NPP_SAVE_RECORD) for one against Vampiric Touch
+        that DSCLOG made (NS_NPP: the save routine's way back, at FRAME's start, in DSCLOG's
+        segment, whose start is its header's); else SPELL."""
+        if spell == game.NPP_TOUCH and len(frame) >= 4 and self.tsr_hdr is not None \
+                and struct.unpack_from("<H", frame, 2)[0] == self.tsr_hdr >> 4:
+            return game.NPP_SAVE_RECORD
+        return spell
+
     def _save(self, e: Entry) -> List[str]:
         total, needed = e.raw & 0xFF, e.raw >> 8
         natural = self._save_rolls.pop((e.ss, e.bp), None)
         spell, target, caster = e.arg(0x0A), e.arg(6), e.arg(8)
+        spell = self._npp_save(spell, e.frame)
         return self._flush_spell(spell) + [
             self._save_line(target, caster, spell, e.local(-6), natural, total, needed)]
 

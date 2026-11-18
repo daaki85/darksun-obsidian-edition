@@ -529,3 +529,7 @@ index](logs/README.md), by date.
   Most switches always on: settings.json can't turn them off any more (its keys dropped as read),
   so a rule off for a test is a memory edit of DSCLOG's rules words; settings.json's
   `options_open` opens the Options tab's sections for a picture (logs/2026-11-18-fewer-switches.md).
+  DSCLOG's signature went to `DSCLOGvb` (the sold items' queue names its items): every playtest
+  tool that looks for the header by it changed with it. The buyback with the Loader's dice log
+  stopped (its pid killed, 7 s past LOADER_FRESH) frees the item as the game does; T shuts the loot
+  window itself, so an Escape after it opened EXIT: SAVE GAME? (logs/2026-11-18-audit-fixes-1.md).

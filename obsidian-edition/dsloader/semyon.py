@@ -308,27 +308,35 @@ def ship(gd) -> bool:
     from . import game, icons, ring, worldgear
     if gd.region() != PENS or not gd.flag(TOLD) or gd.flag(SHIPPED):
         return False
-    it = ring.Items(gd)
-    rack, rack_item = None, None
-    for thing in gd.things_of(worldgear.PENS_RACK_OBJECT):
-        kind, first = it.thing(thing)
-        if kind == game.THING_ITEM and 0 <= first < game.NO_ITEM:
-            rec = it.item(first)
-            if struct.unpack_from("<H", rec, game.ITEM_TYPE)[0] == worldgear.RACK_TYPE:
-                rack, rack_item = rec, first
-                break
-    if rack is None:
-        return False  # (not made yet: the party is far from it)
-    for thing in range(ring.THING_COUNT):
-        for _, rec in it.chain(thing):
-            if struct.unpack_from("<H", rec, game.ITEM_NAME)[0] == worldgear.THORNWALL:
-                gd.set_flag(SHIPPED)
-                return False
-    rec = rack
+
+    def rack_of(it):
+        """The rack's item number and record, or None (not made yet, or a Thornwall already: SHIPPED)."""
+        for thing in gd.things_of(worldgear.PENS_RACK_OBJECT):
+            kind, first = it.thing(thing)
+            if kind == game.THING_ITEM and 0 <= first < ring.ITEM_RECORDS:
+                rec = it.item(first)
+                if struct.unpack_from("<H", rec, game.ITEM_TYPE)[0] == worldgear.RACK_TYPE:
+                    break
+        else:
+            return None  # (not made yet: the party is far from it)
+        for thing in range(ring.THING_COUNT):
+            for _, rec2 in it.chain(thing):
+                if struct.unpack_from("<H", rec2, game.ITEM_NAME)[0] == worldgear.THORNWALL:
+                    gd.set_flag(SHIPPED)
+                    return None
+        if it.word(ring.FREE_ITEMS) >= ring.ITEM_RECORDS or not it.spare_items():
+            return None
+        return first, rec
+
+    if rack_of(ring.Items(gd)) is None:  # (looked for without the gate: most passes, nothing to do)
+        return False
+    it = ring.held(gd)  # (then the gate held and all read again, what is written worked out from that)
+    found = rack_of(it)
+    if found is None:
+        return False
+    rack_item, rec = found
     contents, = struct.unpack_from("<H", rec, ring.ITEM_CONTENTS)
     item = it.word(ring.FREE_ITEMS)
-    if item >= game.NO_ITEM or not it.spare_items():
-        return False
     if not 0 <= contents < ring.THING_COUNT:  # (emptied by the party: no list of contents left)
         contents = _new_contents(gd, it, rack_item)
         if contents is None:

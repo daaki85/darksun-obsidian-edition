@@ -12,6 +12,7 @@ Layout, as seen in Shattered Lands saves:
 
 import os
 import struct
+import time
 from typing import Dict, List, Tuple
 
 Chunks = Dict[Tuple[str, int], bytes]
@@ -146,15 +147,30 @@ def rooms(data: bytes, ctype: str) -> Dict[int, int]:
     return out
 
 
+REPLACE_TRIES, REPLACE_WAIT = 5, 0.05
+
+
 def write_atomic(dest: str, data: bytes) -> None:
     """DATA written to DEST whole or not at all: into DEST.tmp, then put in its place. A write
     that fails (a full disk; on Windows DEST held open by the game or an antivirus) leaves no
-    .tmp behind (a copy's is megabytes) and DEST as it was."""
+    .tmp behind (a copy's is megabytes) and DEST as it was. Flushed to the disk before it is put in
+    place, and put in place again after a moment (5 tries, 50 ms apart, as launch.save_settings)
+    when Windows refuses it: a virus scan holding the last DSUNLOG.EXE for a moment had the game
+    start without the dice log."""
     tmp = dest + ".tmp"
     try:
         with open(tmp, "wb") as f:
             f.write(data)
-        os.replace(tmp, dest)
+            f.flush()
+            os.fsync(f.fileno())
+        for attempt in range(REPLACE_TRIES):
+            try:
+                os.replace(tmp, dest)
+                break
+            except PermissionError:
+                if attempt == REPLACE_TRIES - 1:
+                    raise
+                time.sleep(REPLACE_WAIT)
     finally:
         if os.path.exists(tmp):
             try:

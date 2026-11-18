@@ -140,7 +140,7 @@ def dice_text(count: int, sides: int, faces: List[int]) -> str:
 
 def sheet_address(gd: "game.GameData", member: int) -> int:
     index = struct.unpack_from("<H", gd.creature(member), game.CREATURE_SHEET_INDEX)[0]
-    return game.far_pointer(gd.guest, gd.ds, game.SHEETS_PTR) + index * game.SHEET_SIZE
+    return game.table_pointer(gd.guest, gd.ds, game.SHEETS_PTR) + index * game.SHEET_SIZE
 
 
 def start_age(sheet: bytes, name: str) -> Optional[int]:
@@ -291,7 +291,7 @@ def _changed(gd: "game.GameData", member: int, race: int, before: int, after: in
     out = [line]
     delta = changes(race, before, after)
     if delta:
-        creature = game.far_pointer(gd.guest, gd.ds, game.CREATURES_PTR) + member * game.CREATURE_SIZE
+        creature = game.table_pointer(gd.guest, gd.ds, game.CREATURES_PTR) + member * game.CREATURE_SIZE
         parts = []
         for ability, n in sorted(delta.items()):
             for base, off in ((at, game.SHEET_ABILITIES), (creature, game.CREATURE_ABILITIES)):
@@ -313,7 +313,7 @@ def kill(gd: "game.GameData", creature: int) -> None:
     """Creature record CREATURE (its number) dead (old age, a failed system shock): no hit points,
     the game's dead status."""
     from . import kalzith
-    at = game.far_pointer(gd.guest, gd.ds, game.CREATURES_PTR) + creature * game.CREATURE_SIZE
+    at = game.table_pointer(gd.guest, gd.ds, game.CREATURES_PTR) + creature * game.CREATURE_SIZE
     gd.guest.write(at, struct.pack("<h", 0))
     gd.guest.write(at + game.CREATURE_STATUS, bytes([kalzith.DEAD_STATUS[1]]))
 
