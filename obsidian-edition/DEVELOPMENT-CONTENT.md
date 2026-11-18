@@ -1294,7 +1294,10 @@ with the name entry `game.FINE_BOW_NAME`, as `spellarrows.starting_gear` makes i
 the elf's body afterwards. Its arrows are 24 Chill Arrows (`champions.chill_arrows`,
 `spellarrows.arrows_item`): DSCLOG's `PROBE_ARROW` marks a shot a Spellarcher's (`AMMO_ARCHER`)
 only for a party member (combatant's creature 0-3) of that kit, and `ARROW_HIT` casts the arrows'
-spell only then, so the elf's are plain arrows (no Chill Touch, no plus).
+spell only then, so the elf's are plain arrows (no Chill Touch, no plus). The defiler wears
+Bracers of Defense AC 6 on its arms (`worldgear.bracers(6)`, Mikquetzl's in `worldgear.MAGIC` until
+2026-11-18: a save that has been to his region keeps his, as the game made him there); it wears no
+armour or helm, so they count (`PROBE_RING_AC`, `INT F8h`, asks of any creature's worn items).
 
 The scripts: the arena's deaths (script 3) say "This makes ... king of the
 pens!" and set flag 19 only when a party member kills Scar (flag 19 is set at

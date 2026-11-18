@@ -13,7 +13,8 @@ Kreenfang (the arena's gythka +1, no longer on the dead body by the stone arch).
   Spellarcher's: spellarrows.arrows_item; DSCLOG casts an arrow's spell only for a party
   Spellarcher, PROBE_ARROW's AMMO_ARCHER, so the elf's shoot as plain arrows), an obsidian
   long sword and the same leather, helm and shield (the Tohr-kreen and the defiler wear none); a
-  defiler (the arena's, 296) with a bone dagger and one scroll, chosen as it comes on, of
+  defiler (the arena's, 296) with a bone dagger, Bracers of Defense AC 6 (worldgear.bracers, worn
+  on the arms: no armour to cancel them; Mikquetzl's until 2026-11-18) and one scroll, chosen as it comes on, of
   Fogbolt, Spook or Reflected Image (the new spells; without them, of the game's own spells).
 - Worn and wielded: the game makes a person's items in its backpack list (+0Ch), puts them on at
   its first action in a fight (people.py does it as it comes on the map), and fights with
@@ -123,7 +124,7 @@ def gear(chunks) -> Dict[int, List[Tuple[bytes, int]]]:
         ELF: [(fine_bow(item(BOW_TYPE)), MISSILE), (chill_arrows(), AMMO), (item(LONG_SWORD_TYPE), RIGHT),
               (item(LEATHER_CHEST), CHEST), (item(LEATHER_ARM), ARM), (item(LEATHER_LEGS), LEGS),
               (HELM, HEAD), (item(SHIELD_TYPE), LEFT)],
-        DEFILER: [(worldgear.weapon(worldgear.BONE_DAGGER), RIGHT)],
+        DEFILER: [(worldgear.weapon(worldgear.BONE_DAGGER), RIGHT), (worldgear.bracers(6), ARM)],
     }
     missing = [obj for obj, items in out.items() if any(rec is None for rec, _ in items)]
     if missing:
@@ -220,7 +221,7 @@ SLOTS: Dict[int, Sequence[Tuple[int, int]]] = {
                (LEATHER_ARM, ARM), (LEATHER_LEGS, LEGS), (LEATHER_HELM, HEAD), (SHIELD_TYPE, LEFT)),
     ELF: ((BOW_TYPE, MISSILE), (ARROWS_TYPE, AMMO), (LONG_SWORD_TYPE, RIGHT), (LEATHER_CHEST, CHEST),
           (LEATHER_ARM, ARM), (LEATHER_LEGS, LEGS), (LEATHER_HELM, HEAD), (SHIELD_TYPE, LEFT)),
-    DEFILER: ((BONE_DAGGER_TYPE, RIGHT),),
+    DEFILER: ((BONE_DAGGER_TYPE, RIGHT), (game.BRACERS_TYPE, ARM)),
 }
 
 

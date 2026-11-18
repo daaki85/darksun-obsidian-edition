@@ -81,9 +81,11 @@ class WorldGearTests(unittest.TestCase):
         self.assertEqual(worldgear.STAFF_SLING_1[0][3], 2800)
 
     def test_bracers(self):
-        """AC 6, 5, 4 and 2, as a plus of 10 - AC, worn on the arms; the Loader's icon and name."""
+        """AC 5, 4 and 2, as a plus of 10 - AC, worn on the arms; the Loader's icon and name (AC 6 the
+        champions' defiler's, test_champions; no longer Mikquetzl's)."""
         acs = {}
-        for name in ("Mikquetzl", "Wyrmias", "Balkazar", "Dagolar"):
+        self.assertFalse([g for g in worldgear.MAGIC if g.name == "Mikquetzl"])
+        for name in ("Wyrmias", "Balkazar", "Dagolar"):
             g = gift(name)
             rec = g.items[0]  # (Wyrmias has the Golden Girdle of Urnst too)
             self.assertEqual(icons.which(rec), "Bracers of Defense")
@@ -91,7 +93,7 @@ class WorldGearTests(unittest.TestCase):
             self.assertEqual(struct.unpack_from("<H", rec, game.ITEM_NAME)[0], worldgear.BRACERS_NAME)
             acs[name] = 10 - rec[game.ITEM_PLUS]
             self.assertEqual(struct.unpack_from("<H", rec, 6)[0], 5000 * rec[game.ITEM_PLUS])
-        self.assertEqual(acs, {"Mikquetzl": 6, "Wyrmias": 5, "Balkazar": 4, "Dagolar": 2})
+        self.assertEqual(acs, {"Wyrmias": 5, "Balkazar": 4, "Dagolar": 2})
         self.assertEqual(names.NAMES[worldgear.BRACERS_NAME], b"Bracers/Defns")
 
     def test_head_items(self):

@@ -177,7 +177,7 @@ Worn in a hand, in this game.
 
 | Icon | Slot | Item | Bonus / power | Where |
 |---|---|---|---|---|
-| ![](docs/items/bracers-of-defense.png) | Arms | ***Bracers of Defense*** | AC for those wearing no armour: [Bracers of Defense](#bracers-of-defense) | **Mikquetzl** (AC 6, in his pack), **Wyrmias** (AC 5), **Balkazar** (AC 4), **Dagolar** (AC 2, the one carrying Dag's Dagger) |
+| ![](docs/items/bracers-of-defense.png) | Arms | ***Bracers of Defense*** | AC for those wearing no armour: [Bracers of Defense](#bracers-of-defense) | worn by the defiler in the arena's champions' bout (AC 6: [the champions' bout](FEATURES.md#the-champions-bout)), **Wyrmias** (AC 5), **Balkazar** (AC 4), **Dagolar** (AC 2, the one carrying Dag's Dagger) |
 | ![](docs/items/ashen-robe.png) | Chest | ***Ashen Robe*** | +1 AC; +1 on saves against spells | worn by **Kalzith**, who sells it with his scrolls, and left with his body if he's killed ([Robes](#robes)) |
 | ![](docs/items/veiled-robe.png) | Chest | ***Veiled Robe*** | +2 AC; +1 on every save; a wizard slot more at spell levels 1-3 | sold by **Kel** ([Robes](#robes)) |
 | ![](docs/items/belt-of-might.png) | Waist | Belt of Might | STR at least 24 | on the ground in the Wyrm School |

@@ -50,8 +50,8 @@
   metal shield +3 (DSCLOG's type: the game has no metal shield), carried by the Guardian of
   Balkazar's fortress.
 - Bracers of defense (DSCLOG's BRACERS type, worn on the arms: their plus counts for AC while neither
-  armour nor a helm is worn), now that a preserver can't cast in armour: on four
-  of the game's wizards, better the later they're met.
+  armour nor a helm is worn), now that a preserver can't cast in armour: on three
+  of the game's wizards, better the later they're met, and the arena's champion defiler (AC 6).
 
 All of them are in the game's data (dataitems.py): the launcher writes them into their people's
 and chests' objects in its copy of SEGOBJEX.GFF, by the Options tab's switches, so a new game
@@ -388,8 +388,8 @@ MAGIC: Tuple[Gift, ...] = (
     Gift("Undermt Folk", (weapon(*PICK_1),), (51,), 0x1E, clone=(169, 2561)),  # (one of the four miners)
     Gift("Churrr", (weapon(*CLUB_1),), (9,), 0x28),  # (the warrens' fighter, with his club)
     Gift("Arant", (weapon(*SHORT_SWORD_2),), (22,), 0x04),  # (the gladiators' captor, Silt Sea Summoning)
-    # bracers of defense on the wizards
-    Gift("Mikquetzl", (bracers(6),), (10,), 0x28),
+    # bracers of defense on the wizards (AC 6, Mikquetzl's till 2026-11-18, the champions' defiler's:
+    # champions.py)
     Gift("Wyrmias", (bracers(5), URNST_GIRDLE_ITEM), (WYRMIAS,), 0x03),
     Gift("Balkazar", (bracers(4),), (BALKAZAR,), 0x0D),
     Gift("Dagolar", (bracers(2),), (DAGOLAR,)),

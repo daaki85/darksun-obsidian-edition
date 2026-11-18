@@ -96,6 +96,19 @@ class ObjectTests(unittest.TestCase):
         self.assertEqual(bow, champions.fine_bow(item(champions.BOW_TYPE)))
         self.assertIsNone(champions.fine_bow(None))
 
+    def test_defiler_bracers(self):
+        """The defiler wears Bracers of Defense AC 6 on its arms (worldgear.bracers), and no armour."""
+        from dsloader import worldgear
+        items = dataitems.items_of(champions.object_chunks(self.chunks)[("RDFF", champions.DEFILER)])
+        bracers = [r for r in items if struct.unpack_from("<H", r, game.ITEM_TYPE)[0] == game.BRACERS_TYPE]
+        self.assertEqual(len(bracers), 1)
+        rec, want = bracers[0], worldgear.bracers(6)
+        for at in (0, game.ITEM_NAME, 6):  # (its picture, name and value as worldgear's)
+            self.assertEqual(rec[at:at + 2], want[at:at + 2])
+        self.assertEqual(10 - rec[game.ITEM_PLUS], 6)
+        self.assertIn((game.BRACERS_TYPE, champions.ARM), champions.SLOTS[champions.DEFILER])
+        self.assertEqual({slot for _, slot in champions.SLOTS[champions.DEFILER]}, {champions.RIGHT, champions.ARM})
+
     def test_elf_dex(self):
         """The elf's DEX is 22, in its creature record and its sheet (the game's tables run to 25)."""
         recs = dataitems.records(champions.object_chunks(self.chunks)[("RDFF", champions.ELF)])[0]
