@@ -573,6 +573,16 @@ game's data: it is one player's account.
   line under the paper doll and in the dice log ("X reads the scroll of Y: ..."). The dice log
   doesn't repeat a `Message:` line the same as the last one, so look for the "reads the scroll"
   line.
+- **The item box's INFO** (logs/2026-11-18-spell-arrows-info.md): its one button, at the box's
+  bottom right (a pack's first cell: about 291,57, or 289,54 for a box with a price line; the right
+  hand's: 160,115; zoom the box to find it), toggles the box to the game's "USEABLE BY:" list (the
+  party members the can-use routine, DSCLOG's `PROBE_CAN_USE` with it, allows; else NO ONE); a
+  second click, or one outside the button, shuts the box. A click just after the box opens can be
+  lost: point (`click.py X Y none`), wait a second, then click. **A Spellarcher for a test in
+  memory**: the sheet's race half-elf (+18h 4), classes fighter and preserver (+21h 9, 11), the kit
+  byte 1, **and the class mask (+12h) with the fighter's bit (20h)**: the game tests that mask
+  before DSCLOG's kit checks, and a preserver's alone (80h) bars arrows. A spell arrows' stack put in
+  a non-Spellarcher's pack goes to the Spellarcher as the inventory shuts (`return_strays`).
 - **Items changed in memory** (an item turned into another, a held item rewritten, an item's icon,
   a figure's glow and outfit): `itemedit.py`, `setitem.py`, `sprites.worn` and the item records'
   fields, in [items in memory](RESEARCH.md#items-in-memory).

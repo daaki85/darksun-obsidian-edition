@@ -226,15 +226,15 @@ the one place for the sizes; the sections after them name the symbols only.
 
 ### The limits
 
-Each fails the build when passed (a negative `times`). For the committed `dos/DSCLOG.EXE`, 70,400
-bytes: the 32-byte header, the segment's image of 64,832 and the tail's 5,536 (`TAIL_BYTES`):
+Each fails the build when passed (a negative `times`). For the committed `dos/DSCLOG.EXE`, 70,512
+bytes: the 32-byte header, the segment's image of 64,944 and the tail's 5,536 (`TAIL_BYTES`):
 
 | Limit | Used | Room | Spare |
 |---|---|---|---|
-| [DSCLOG's segment](#dsclogs-segment): `kept_end` (`resident_end` 63,840 + `AFTER_INSTALL` 992) | 64,832 bytes | 65,536 | 704 bytes |
+| [DSCLOG's segment](#dsclogs-segment): `kept_end` (`resident_end` 63,952 + `AFTER_INSTALL` 992) | 64,944 bytes | 65,536 | 592 bytes |
 | [the far block](#the-far-block): `FAR_END` (its buffers from `FAR_RING`, 10h: 65,484 bytes) | 65,500 | 65,536 | 36 bytes |
-| upper memory as DSCLOG loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,494 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,688 |
-| upper memory once installed: `UMB_KEPT` (DSCLOG, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,116 paragraphs | 8,182 (`UMB_ROOM`) | 66 (1,056 bytes) |
+| upper memory as DSCLOG loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,501 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,681 |
+| upper memory once installed: `UMB_KEPT` (DSCLOG, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,123 paragraphs | 8,182 (`UMB_ROOM`) | 59 (944 bytes) |
 
 To check them after a change, build a scratch copy with `[map all FILE]` as its
 first line (`nasm -f bin -I dos/ -o /tmp/x.exe COPY`, from `obsidian-edition/`)
