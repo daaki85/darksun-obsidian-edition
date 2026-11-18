@@ -1,5 +1,7 @@
 # Rule corrections against OpenDS (2026-11-18)
 
+*Status: done, research for the exchange with OpenDS; nothing sent to them.*
+
 The first comparison (`opends-bug-comparison-2026-11-18.md`) covered `GAME-BUGS.md`, the bugs. The mod's
 other large body of corrections is the rules: the rows of FEATURES.md's "Rules the game got wrong" table
 (each with a switch), the report `spells-against-the-manual.md`, and the class tables. This is the same

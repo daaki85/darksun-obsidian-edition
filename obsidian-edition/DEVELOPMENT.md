@@ -76,8 +76,8 @@ The steps are told in full in [How the dice log works](DEVELOPMENT-INTERNALS.md#
   files are never changed.
 - **Probe**: a patched place in DSUNLOG.EXE that calls DSCLOG through an interrupt vector of its
   own (`PROBE_X`, `VEC_X`).
-- **Site**: a patched place that shares a vector (`INT 98h` and others) with a site number after
-  the `INT`; DSCLOG finds the routine in `site_tab`.
+- **Site**: a patched place that shares a vector (`INT 98h`, `VEC_CR_SPELLS`) with a site number
+  after the `INT`; DSCLOG finds the routine in `site_tab`.
 - **The far block**: DSCLOG's big buffers (the dice ring, the text buffer, the panel's picture,
   the shadows' tables), in the HMA above 1 MB: [the far block](DEVELOPMENT-INTERNALS.md#the-far-block).
 - **The tail**: the part of `DSCLOG.EXE` after its 64 KB segment, loaded and kept with it, for
@@ -118,7 +118,7 @@ The steps are told in full in [How the dice log works](DEVELOPMENT-INTERNALS.md#
 | `tests/` | the unit tests, and `make_fake_party.py` for [practising without the game](DEVELOPMENT-INTERNALS.md#practising-without-the-game) (not in the release zip) |
 | `docs/` | the screenshots the documentation shows; `docs/items/`, the item icons (`docicons.py`), and `docs/creatures/`, the creatures' figures (`doccreatures.py`) ([Generated pages](#generated-pages)) |
 | `*.bat` | what players double-click: `Start Obsidian Edition.bat` runs `view`, `Start Game with Dice Log.bat` `launch`, `Play Dark Sun (in-game rolls).bat` `play` (no console), `Show Save.bat` `save` on the file dropped on it |
-| `README.md`, `PLAYER-GUIDE.md`, `FEATURES.md`, `KITS.md`, `ITEMS.md`, `CREATURES.md`, `GAME-BUGS.md`, `DICE-LOG.md`, `HOW-THE-GAME-WORKS.md` | the player's pages (made into the manual's web pages; `CREATURES.md` by `doccreatures.py`) |
+| `README.md`, `PLAYER-GUIDE.md`, `FEATURES.md`, `KITS.md`, `WEAPON-SPECS.md`, `ITEMS.md`, `PEOPLE.md`, `CREATURES.md`, `GAME-BUGS.md`, `DICE-LOG.md`, `HOW-THE-GAME-WORKS.md` | the player's pages (made into the manual's web pages; `CREATURES.md` by `doccreatures.py`) |
 | `DEVELOPMENT*.md` | these pages (not in the release zip) |
 | `manual/` | the manual: the player's pages and the patch notes as web pages, made by `manual.py` ([Build](#build)); the Loader's **Help** opens `manual/index.html` |
 | `../PATCH-NOTES.md`, `../patch-notes.html`, `../CHANGELOG.md`, `../CHANGELOG-archive.md`, `../release-notes/` | the repository's root: the patch notes and their web page, the record of every pull request (#73 and older in the archive), and each release's notes |
@@ -224,11 +224,13 @@ to trust when a test file is added):
   display, so run it under `xvfb-run` on a machine without one). Linux's Python often lacks it.
 - **The game's files**, named by environment variables: `DSUN_GPLDATA` (its `GPLDATA.GFF`:
   `test_scriptnumbers`, `test_scriptfixes`, `test_pehtuclchest`, `test_champions`,
-  `test_audit_flags`, and `test_sounds`, which reads the `RESOURCE.GFF` beside it), `DSUN_OBJECTS`
-  (its `SEGOBJEX.GFF`, with `GPLDATA.GFF` beside it: `test_figures`, `test_pehtuclchest`,
-  `test_worldgear`, `test_audit_objects`, `test_cahulaks`, `test_sizenames`, `test_group4`, which
-  falls back to `/tmp/playtest/inst/SEGOBJEX.GFF`, the playtest kit's game) and `DSUN_RESOURCE`
-  (its `RESOURCE.GFF`: `test_kitpages`, `test_spelltexts_fit`).
+  `test_audit_flags`, `test_sounds`, which reads the `RESOURCE.GFF` beside it, and `test_reach` and
+  `test_stinkpots`, which read the `DSUN.EXE` beside it), `DSUN_OBJECTS` (its `SEGOBJEX.GFF`, with
+  `GPLDATA.GFF` beside it: `test_figures`, `test_pehtuclchest`, `test_worldgear`,
+  `test_audit_objects`, `test_cahulaks`, `test_sizenames`, `test_icons`, `test_scriptfixes`,
+  `test_group4`, which falls back to `/tmp/playtest/inst/SEGOBJEX.GFF`, the playtest kit's game)
+  and `DSUN_RESOURCE` (its `RESOURCE.GFF`: `test_kitpages`, `test_spelltexts_fit`,
+  `test_spellgrid`).
 
 The **Obsidian Edition tests** workflow (`.github/workflows/tests.yml`) runs them on Windows, with
 unicorn 2.1.4 and NASM 2.16.01, on every push to `obsidian-edition` and every pull request that
@@ -265,7 +267,8 @@ archive` (so only what is committed goes in), and publishes the zip and `../patc
 The release zip is the `obsidian-edition` folder as `git archive` makes it, less what
 `obsidian-edition/.gitattributes` marks `export-ignore`: the developer pages (`DEVELOPMENT*.md`),
 `tests/` and `docs/viewer.png`, which stay in the repository and are linked from the manual at the
-release's tag. It holds the player's pages, the manual (whose `changes.html` is the zip's copy of
+release's tag (and from the Markdown pages at `main`), and git's own `.gitattributes` and
+`.gitignore`. It holds the player's pages, the manual (whose `changes.html` is the zip's copy of
 the patch notes), the Loader, `dos/`, `layouts/`, `docs/` and the .bat files. The top-level
 `patch-notes.html` is not in the zip; it is attached to the release as an asset of its own.
 
@@ -289,15 +292,16 @@ Before it:
    (tkinter).
 4. Check in the game anything DSCLOG or a script touches ([the playtesting
    guide](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/PLAYTESTING.md)).
-5. Merge to `main`, then push the tag `v<version>`, or run the workflow by hand (Actions → Release
+5. As the last commit before the merge, rename the CHANGELOG's "## Unreleased (branch
+   `obsidian-edition`)" to "## Pull request #N (merged DATE)", with the release pull request's
+   number, the day it is merged, and "merged DATE" a link to the pull request, as the other headings
+   have it (2.17.1 and 2.18.0 were done so). Start a release's entry with the line "Obsidian
+   Edition X", its release notes (`release-notes/vX.md`) linked after it in brackets, and use only
+   the section labels New, Changed, Fixed, Docs and Dev. Point the release's link in the list of
+   releases at the top of the CHANGELOG to the new heading's anchor (`#pull-request-N-merged-DATE`;
+   `test_doclinks` fails otherwise).
+6. Merge to `main`, then push the tag `v<version>`, or run the workflow by hand (Actions → Release
    → Run workflow), which makes the tag.
-6. Once the pull request is merged, rename the CHANGELOG's "## Unreleased (branch
-   `obsidian-edition`)" to "## Pull request #N (merged DATE)", with "merged DATE" a link to the
-   pull request, as the other headings have it. Start a release's entry with the line "Obsidian
-   Edition X", its release notes (`release-notes/vX.md`) linked after it in brackets, and use only the section labels New,
-   Changed, Fixed, Docs and Dev. Point the release's link in the list of releases at the top of
-   the CHANGELOG to the new heading's anchor (`#pull-request-N-merged-DATE`; `test_doclinks` fails
-   otherwise).
 
 The zip's pages link to what stays outside it (the root's patch notes, CHANGELOG and release
 notes, these pages) by their GitHub address.

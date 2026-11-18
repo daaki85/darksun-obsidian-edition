@@ -882,7 +882,7 @@ with only the room gear needs round the figure while walking (6 pixels at the
 sides, 2 above; 10 in a fight), since the game draws a walking figure's whole
 picture at every step.
 
-The drawing was made cheaper again on 2026-11-08, with the same picture
+The drawing's savings, with the same picture
 (`tests/test_dsclog_drawing.py` runs it over a scene of figures against an
 emulated VGA, checks every screen against the one drawn before the change, and
 counts the instructions; DOSBox charges about a cycle each). A figure's shadow

@@ -1,5 +1,7 @@
 # OpenDS cross-read, 2026-11-16
 
+*Status: done, and acted on: the elven slavers' leader's Goodbye repaired (`scriptfixes.py`), the other rows left as the game has them, for the reasons below.*
+
 What the OpenDS project (`VirInvictus/opends`, read at `fe35c52`, 2026-11-13) has that we can use,
 checked against our current scripts (`GPLDATA.GFF` of the GOG 1.10 install; read with
 `dsloader/gpl.py`). Offsets are script offsets, as in `scriptfixes.py`. Nothing here is played

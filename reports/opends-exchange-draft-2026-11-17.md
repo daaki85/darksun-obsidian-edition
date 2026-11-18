@@ -1,5 +1,7 @@
 # What we can give OpenDS back: drafts (2026-11-17)
 
+*Status: drafts, nothing sent; in part superseded by [the six issue texts](opends-issues-draft-2026-11-18.md).*
+
 Nothing here has been sent. Each item is a draft for an issue at github.com/VirInvictus/opends (their
 CONTRIBUTING asks for issues first, and the beta QA packet asks for `beta QA: <site> <pass/fail>`). The
 owner decides what is posted, and from which account.
