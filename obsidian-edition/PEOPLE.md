@@ -140,14 +140,14 @@ The first wave is six **champions** in place of the game's:
 | Half-giant | a metal great axe | full scale, a bone helm, a leather shield |
 | Mul gladiator | metal cahulaks | full scale, a bone helm |
 | Halfling | a sling, a bone short sword | full leather, a leather helm, a leather shield |
-| Elf | a bow and arrows, an obsidian long sword | full leather, a leather helm, a leather shield |
+| Elf | a **Fine Bow** (the Spellarcher's: +1 to hit, not magic) and 24 **Chill Arrows** (the Spellarcher's: only a Spellarcher's shot casts their spell, so the elf's hit as plain arrows), an obsidian long sword | full leather, a leather helm, a leather shield |
 | Defiler | a bone dagger, and a scroll of Fogbolt, Spook or Reflected Image (chosen as the bout starts; of the game's own spells with the new spells off) | none |
 
-They fight with their weapons, the two archers shooting, and their armour counts on top of their
+The elf has DEX 22 (AC 5 better and +4 with missiles and to initiative, as AD&D's table has it). They fight with their weapons, the two archers shooting, and their armour counts on top of their
 kinds' AC, as the party's does (and the game's own people's: [their gear is
 worn](GAME-BUGS.md#who-turns-up-and-how) from the start too). What they carry is on their bodies
 afterwards; the Tohr-kreen falls as a dead Tohr-kreen of its own (as every thri-kreen now does),
-Kreenfang in it. The bout comes once. A party that breaks out with Scar instead, or leaves the pens
+Kreenfang in it (and the elf's Fine Bow and the Chill Arrows it didn't shoot in the elf's: a party can have them early, the arrows for a Spellarcher alone). The bout comes once. A party that breaks out with Scar instead, or leaves the pens
 another way, doesn't meet them.
 
 How it works: [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#the-champions-bout).

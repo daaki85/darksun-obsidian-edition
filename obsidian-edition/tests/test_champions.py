@@ -84,6 +84,37 @@ class ObjectTests(unittest.TestCase):
         body = out[("RDFF", champions.BODY)]
         self.assertEqual(struct.unpack_from("<h", body, dataitems.HEADER.size)[0], -champions.BODY)
 
+    def test_elf_fine_bow(self):
+        """The elf's bow is the Spellarcher's Fine Bow: a plain bow named FINE_BOW_NAME, no plus."""
+        out = champions.object_chunks(self.chunks)
+        bows = [r for r in dataitems.items_of(out[("RDFF", champions.ELF)])
+                if struct.unpack_from("<H", r, game.ITEM_TYPE)[0] == champions.BOW_TYPE]
+        self.assertEqual(len(bows), 1)
+        bow, = bows
+        self.assertEqual(struct.unpack_from("<H", bow, game.ITEM_NAME)[0], game.FINE_BOW_NAME)
+        self.assertEqual((bow[game.ITEM_PLUS], bow[game.ITEM_POWER]), (0, 0))
+        self.assertEqual(bow, champions.fine_bow(item(champions.BOW_TYPE)))
+        self.assertIsNone(champions.fine_bow(None))
+
+    def test_elf_dex(self):
+        """The elf's DEX is 22, in its creature record and its sheet (the game's tables run to 25)."""
+        recs = dataitems.records(champions.object_chunks(self.chunks)[("RDFF", champions.ELF)])[0]
+        self.assertEqual(recs[0].data[game.CREATURE_ABILITIES + 1], 22)
+        self.assertEqual(recs[1].data[game.SHEET_ABILITIES + 1], 22)
+
+    def test_elf_chill_arrows(self):
+        """The elf's arrows are 24 Chill Arrows, made as a Spellarcher's (spellarrows.arrows_item)."""
+        from dsloader import spellarrows, weaponchoice
+        out = champions.object_chunks(self.chunks)
+        arrows = [r for r in dataitems.items_of(out[("RDFF", champions.ELF)])
+                  if struct.unpack_from("<H", r, game.ITEM_TYPE)[0] == champions.ARROWS_TYPE]
+        self.assertEqual(len(arrows), 1)
+        rec, = arrows
+        self.assertEqual(struct.unpack_from("<H", rec, game.ITEM_NAME)[0], 0x16D)
+        self.assertEqual(struct.unpack_from("<H", rec, weaponchoice.ITEM_COUNT)[0], 24)
+        self.assertEqual(struct.unpack_from("<H", rec, weaponchoice.ITEM_PICTURE)[0], spellarrows.PICTURES[0x16D])
+        self.assertTrue(spellarrows.is_arrow(rec))
+
     def test_numbers_taken(self):
         self.chunks[("OJFF", champions.ELF)] = b"x"
         with self.assertRaises(KeyError):

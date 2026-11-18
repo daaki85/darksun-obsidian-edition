@@ -8,7 +8,10 @@ Kreenfang (the arena's gythka +1, no longer on the dead body by the stone arch).
   293) with a metal great axe, a leather shield and full scale armour and a bone helm; a mul
   gladiator (the Wild Mul, 290) with metal cahulaks (worldgear.METAL_CAHULAKS) and the same armour; a halfling renegade (the
   Renegade, 289) with a sling, a bone short sword, full leather armour, a leather helm and a
-  leather shield; an elven ranger (an elven caravan guard, 103) with a bow and arrows, an obsidian
+  leather shield; an elven ranger (an elven caravan guard, 103) with a Fine Bow (the Spellarcher's:
+  a plain bow named game.FINE_BOW_NAME, +1 to hit by DSCLOG's FINE_HIT) and 24 Chill Arrows (the
+  Spellarcher's: spellarrows.arrows_item; DSCLOG casts an arrow's spell only for a party
+  Spellarcher, PROBE_ARROW's AMMO_ARCHER, so the elf's shoot as plain arrows), an obsidian
   long sword and the same leather, helm and shield (the Tohr-kreen and the defiler wear none); a
   defiler (the arena's, 296) with a bone dagger and one scroll, chosen as it comes on, of
   Fogbolt, Spook or Reflected Image (the new spells; without them, of the game's own spells).
@@ -84,6 +87,23 @@ def game_item(chunks, kind: int) -> Optional[bytes]:
     return None
 
 
+def fine_bow(rec: Optional[bytes]) -> Optional[bytes]:
+    """A plain bow made the Fine Bow, as a Spellarcher's is (spellarrows.starting_gear): its name
+    entry game.FINE_BOW_NAME, nothing else changed (DSCLOG's FINE_HIT goes by the name alone)."""
+    if rec is None:
+        return None
+    out = bytearray(rec)
+    struct.pack_into("<H", out, game.ITEM_NAME, game.FINE_BOW_NAME)
+    return bytes(out)
+
+
+def chill_arrows() -> bytes:
+    """The elf's arrows: a Spellarcher's stack of Chill Arrows (spellarrows.STARTING of them)."""
+    from . import spellarrows
+    chill = next(a for a in spellarrows.ARROWS if a.spell_name == "Chill Touch")
+    return spellarrows.arrows_item(chill, spellarrows.STARTING)
+
+
 def gear(chunks) -> Dict[int, List[Tuple[bytes, int]]]:
     """Each champion's items, as (item record, the slot it is worn or held in)."""
     from . import arms, bonescale, worldgear
@@ -100,7 +120,7 @@ def gear(chunks) -> Dict[int, List[Tuple[bytes, int]]]:
         HALFLING: [(item(SLING_TYPE), MISSILE), (worldgear.weapon(worldgear.BONE_SHORT_SWORD), RIGHT),
                    (item(LEATHER_CHEST), CHEST), (item(LEATHER_ARM), ARM), (item(LEATHER_LEGS), LEGS),
                    (HELM, HEAD), (item(SHIELD_TYPE), LEFT)],
-        ELF: [(item(BOW_TYPE), MISSILE), (item(ARROWS_TYPE), AMMO), (item(LONG_SWORD_TYPE), RIGHT),
+        ELF: [(fine_bow(item(BOW_TYPE)), MISSILE), (chill_arrows(), AMMO), (item(LONG_SWORD_TYPE), RIGHT),
               (item(LEATHER_CHEST), CHEST), (item(LEATHER_ARM), ARM), (item(LEATHER_LEGS), LEGS),
               (HELM, HEAD), (item(SHIELD_TYPE), LEFT)],
         DEFILER: [(worldgear.weapon(worldgear.BONE_DAGGER), RIGHT)],
@@ -118,7 +138,9 @@ def _without_items(rdff: bytes) -> bytes:
     return dataitems.chunk(recs[:first], end)
 
 
-DEX = {TOHR_KREEN: 18, HALF_GIANT: 15, ELF: 18, DEFILER: 18}  # (the mul and the halfling keep their kinds' 18)
+# (the mul and the halfling keep their kinds' 18; the elf 22, the user's: the game's DEX tables run
+# to 25, DS 7DCh missiles and initiative +4, 7F6h AC -5 at 22)
+DEX = {TOHR_KREEN: 18, HALF_GIANT: 15, ELF: 22, DEFILER: 18}
 
 
 def _with_dex(rdff: bytes, dex: int) -> bytes:
