@@ -36,7 +36,7 @@ def load_tests(loader, tests, pattern):  # (only this file's: not group 4's, inh
 class LoaderTests(unittest.TestCase):
     def test_rule(self):
         self.assertEqual(game.RULE_CAHULAKS >> 16, RULE)
-        self.assertIn(("cahulaks", game.RULE_CAHULAKS), game.RULE_SETTINGS)
+        self.assertIn(("cahulaks", game.RULE_CAHULAKS), game.RULE_SETTINGS_GONE)  # (always on: game.RULES_ALWAYS)
 
     def test_big_table(self):
         """A bit for each combatant that can't be tangled: too big by sizes.py (by race and name: the

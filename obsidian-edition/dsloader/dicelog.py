@@ -1006,28 +1006,21 @@ class DiceLog:
         saved file (it couldn't be read), so its pockets list isn't either (load_picked)."""
         self._settings = settings
         self.monster_info = bool(settings.get("monster_info", True))
+        # (the switches gone from the Options tab, game.ALWAYS_ON: on whatever the settings say)
+        self.pickpockets = self.show_gear = self.show_shadows = self.combat_log = self.scroll_map = True
+        self.show_dust = self.see_through = self.elf_looks = self.cilla_elf = self.stealth_gear = True
+        self.use_targeting = True
         self.arena_ring = settings.get("new_items", True) is not False  # (with the new items)
-        self.pickpockets = bool(settings.get("pickpockets", True))
-        self.show_gear = bool(settings.get("show_gear", True))
         self.starting_gear = bool(settings.get("starting_gear", True))
-        self.show_shadows = bool(settings.get("shadows", True))
-        self.combat_log = bool(settings.get("combat_log", True))
         self.floating_names = bool(settings.get("floating_names", True))
         self.combat_log_level = combat_log_level(settings)
         if settings.get("combat_log_size") in combatlog.SIZES:
             self._panel.resize(settings["combat_log_size"])
         self._panel.open = settings.get("combat_log_open") is True  # (hidden till L)
         self.game_dir = settings.get("game_dir") or self.game_dir
-        self.scroll_map = bool(settings.get("scroll_map", True))
-        self.show_dust = bool(settings.get("dust", True))
-        self.see_through = settings.get("see_through", True) is not False
-        self.elf_looks = settings.get("elf_looks", True) is not False
-        self.cilla_elf = settings.get("cilla_elf", True) is not False
         self.vulture_on = bool(settings.get("vulture", True))
         self.defiler_scrolls = settings.get("defiler_scrolls", True) is not False
-        self.stealth_gear = bool(settings.get("stealth_gear", True))
         self.ring_mode = rings.mode(settings)
-        self.use_targeting = bool(settings.get("targeting", True))
         self.load_picked(settings.get("pickpocketed", []), known=picked_known)
         self.rules = game.rules_from_settings(settings)
 

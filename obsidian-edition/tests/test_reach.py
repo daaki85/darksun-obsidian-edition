@@ -53,7 +53,7 @@ class LoaderTests(unittest.TestCase):
         self.assertEqual((p.offset, p.original.hex()), (0x2211F, "8b46ea"))
         self.assertEqual(p.replacement, bytes((0xCD, 0x98, gamepatch.REACH_SITE)))
         self.assertEqual(gamepatch.REACH_SITE, gamepatch.NS_IMAGE + 111)
-        self.assertIn(("cahulaks", game.RULE_CAHULAKS), game.RULE_SETTINGS)
+        self.assertIn(("cahulaks", game.RULE_CAHULAKS), game.RULE_SETTINGS_GONE)  # (always on: game.RULES_ALWAYS)
 
     def test_polearm_kind(self):
         """The polearms are kind_of_type's 10 (the kind + 1), and no other type is."""

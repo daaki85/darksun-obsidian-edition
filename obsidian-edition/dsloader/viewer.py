@@ -381,9 +381,8 @@ class Viewer:
         options.bind("<Configure>", lambda e: [ttk.Style().configure(
             kind, wraplength=max(200, e.width - 60)) for kind in ("TCheckbutton", "TRadiobutton")], add="+")
         # the combat log's panel over the map, shown and hidden with L (combatlog.py), at a level of its own
-        self.combat_log = tk.BooleanVar(value=bool(settings.get("combat_log", True)))
-        ttk.Checkbutton(in_game, text="A combat log in the game: L on the map shows and hides it",
-                        variable=self.combat_log, command=self._options_changed).pack(anchor="w")
+        # (always there: its switch gone, game.ALWAYS_ON)
+        ttk.Label(in_game, text="The combat log in the game (L on the map shows and hides it):").pack(anchor="w")
         self.combat_log_level = tk.StringVar(value=dicelog.combat_log_level(settings))
         for value, text in ((combatlog.MINIMAL, "... at the least: what came of each attack and spell"),
                             (combatlog.SHORT, "... in short: each roll, what it needed and the damage"),
@@ -401,24 +400,16 @@ class Viewer:
                         "attack missed, a used charge (\"Armor: 7 left\") over its owner, and the arrows left over a party "
                         "archer after each shot",
                         variable=self.floating_names, command=self._options_changed).pack(anchor="w")
+        # the red ring under the enemy chosen with Tab (rings.py; choosing one is always on: targeting.py)
+        self.ring_mode = tk.StringVar(value=rings.mode(settings))
+        ttk.Label(in_game, text="A red ring on the ground in a fight:").pack(anchor="w", pady=(4, 0))
+        for value, text in ((rings.OFF, "... none"),
+                            (rings.ONLY_CHOSEN, "... under the enemy chosen with Tab")):
+            ttk.Radiobutton(in_game, text=text, value=value, variable=self.ring_mode,
+                            command=self._options_changed).pack(anchor="w", padx=(20, 0))
+        # the rule changes that keep a switch (game.RULE_SETTINGS; the rest are always on: game.ALWAYS_ON)
         rules = section("rules", "Rule changes")
-        # in three groups, as FEATURES.md has them
-        rule_groups = {}
-        for group, title in (("characters", "Characters"), ("arms", "Weapons and armour"), ("magic", "Magic")):
-            frame = ttk.Frame(rules)
-            ttk.Label(frame, text=title, style="Status.TLabel").pack(anchor="w")
-            frame.pack(anchor="w", fill="x", pady=(8 if rule_groups else 0, 0))
-            rule_groups[group] = frame
-        # the spells' records as the manual has them (gamepatch.SPELLS_MANUAL), and missile and hostile
-        # touch spells rolling to hit (gamepatch.SPELL_TO_HIT): content switches (the game's copy is
-        # written with them), with their boxes among the rule changes below
-        self.spells_manual = tk.BooleanVar(value=settings.get("spells_manual", True) is not False)
-        self.spell_to_hit = tk.BooleanVar(value=settings.get("spell_to_hit", True) is not False)
         custom = section("custom", "More character customization")
-        features = section("features", "Expanded features")
-        # the thief's rules and picking pockets together, as the guide's Thieves section has them
-        thieves = ttk.Frame(features)
-        ttk.Label(thieves, text="Improved thieving", style="Status.TLabel").pack(anchor="w")
         # the Loader's own content: people, a quest and items in the game, and the new spells. Some
         # are written into the game's files when it is started; what a save already has stays
         new = section("new_content", "New content")
@@ -428,95 +419,26 @@ class Viewer:
                   wraplength=460).pack(anchor="w")
         options.bind("<Configure>", lambda e, label=new.winfo_children()[-1]: label.configure(
             wraplength=max(200, e.width - 60)), add="+")
-        where = {"weapon_specialization": custom, "kits": custom, "cha_prices": features,
-                 "thief_table": thieves, "stealth": thieves, "new_spells": new}
+        where = {"kits": custom, "new_spells": new}
         # one switch for each of game.RULE_SETTINGS
         self.rule_vars: Dict[str, tk.BooleanVar] = {}
-        self.stealth_gear = tk.BooleanVar(value=settings.get("stealth_gear", True) is not False)
-        # (in the order FEATURES.md has them, each opening with the name it has there: the rule
-        # changes in their three groups, then the rest in their sections)
-        own_vars = {"spells_manual": self.spells_manual, "spell_to_hit": self.spell_to_hit}
-        for key, group, text in (
-                ("class_restrictions", "characters", "Class restrictions on armour, shields and weapons, the strictest class "
-                                                     "winning; no spells or thief skills in armour for some multiclass "
-                                                     "characters"),
-                ("multiclass_hp", "characters", "Multiclass hit points as in AD&D: CON's bonus on every die, the total "
-                                                "shared between the classes"),
-                ("best_hit_die", "characters", "Hit dice: the better of two, each die rolled twice at creation and at "
-                                               "every level (every character)"),
-                ("rolled_scores", "characters", "Scores and hit points as rolled: on the creation screen the six scores "
-                                                "add up to no more than the die gave, and the hit points can't be clicked"),
-                ("adnd_tables", "characters", "AD&D's class tables: the XP each class needs, priests' THAC0, and "
-                                              "clerics', druids' and preservers' spell slots by level"),
-                ("con_adnd", "characters", "CON as in AD&D: hit points back at AD&D's rate from CON 20, and no CON "
-                                           "adjustment on top of dwarves' and halflings' racial bonus to poison saves"),
-                ("aging", "characters", "Ages and magical aging: an age from Dark Sun's tables, scores changing as it "
-                                        "rises, a year each 365 days of game time; Haste ages a year, with a system "
-                                        "shock roll"),
-                ("dual_class", "characters", "Dual-classing as the manual has it: a human may change class from 3rd "
-                                             "level, with the manual's prime requisites for both classes"),
-                ("level_10", "characters", "Level cap by XP: levels past 9th, up to 749,999 XP (shared by a "
-                                           "multiclass character's classes)"),
-                ("half_giant_hands", "arms", "Half-giants' two-handed weapons: a half-giant wields one in one hand, a "
-                                             "shield or a light weapon in the other"),
-                ("cahulaks", "arms", "Weapon traits: the cahulaks' extra attack and tangle, the staff sling's "
-                                     "stinkpots, and a polearm's reach of two squares"),
-                ("creature_size", "arms", "Creature size as in AD&D: large targets take AD&D's large weapon dice, and "
-                                          "Hold Person and Charm Person have no effect on them"),
-                ("held_hit", "arms", "Held targets as in AD&D: a blow on a Paralyzed or Out Cold creature hits "
-                                     "automatically, for normal damage (the game rolls, and doubles it)"),
-                ("protection_rules", "arms", "Rings and cloaks of protection as in AD&D: only the better ring counts, "
-                                             "a ring gives no AC with magical armour, a cloak none with magical or "
-                                             "metal armour or a shield"),
-                ("helm_ac", "arms", "Helms give AC 1 (the game's helms give none)"),
-                ("item_saves", "arms", "Items saving against acid as in AD&D, by material, a plus helping (the game "
-                                       "destroys armour without a magical power outright)"),
-                ("ranger_casting_level", "magic", "Rangers' casting level: a ranger casts its spells at its level less 7 "
-                                                  "(the game uses the whole ranger level)"),
-                ("int_learning", "magic", "Preservers' INT: INT sets the chance to learn a spell from a scroll and the "
-                                          "most spells known at each spell level"),
-                ("spell_save", "magic", "Saving throws against spells: the spell save, and DEX's defensive adjustment "
-                                        "against fire, cold and electricity in place of a doubled d20"),
-                ("enlarge_dice", "magic", "Enlarge multiplies the weapon's dice only, STR and magic added after, as in "
-                                          "AD&D (the game multiplies the whole damage)"),
-                ("spells_manual", "magic", "Spells and psionics as the manual describes them: saves, times and damage, "
-                                           "Turn Undead by AD&D's table, monsters' saves and powers; from the next start"),
-                ("spell_to_hit", "magic", "Spells roll to hit: missile spells, and touch spells on a foe, against the "
-                                          "target's AC; from the next start"),
-                ("rest_heal", "magic", "Resting as in AD&D: priests and psionicists heal the party with what they have "
-                                       "left, then each heals 3 hit points plus CON's bonus (the game fills them all)"),
-                ("weapon_specialization", None, "Weapon specialization: fighters and gladiators specialize, fighters on "
-                                                "to mastery and grand mastery, rangers and the Battle Mage, Crusader and "
-                                                "Mind Warrior take expertise, the Swashbuckler a weapon of choice "
-                                                "(chosen after DONE and at a level up)"),
-                ("kits", None, "Kits: three for each class and some for multiclass characters, one a character, each "
-                               "giving something and costing something (chosen on the creation panel's KIT "
-                               "page, or after DUAL by a human with none)"),
-                ("cha_prices", None, "Shops as in AD&D: the leader's CHA lowers what shops ask, shops pay 60%, and "
-                                     "merchants keep the magical items sold them, to buy back"),
-                ("thief_table", None, "Thieves as in AD&D: thief skills from AD&D's table, a backstab multiplying the "
-                                      "weapon's dice only, a lock it failed, or a pocket it was caught at, tried again only a level later"),
-                ("stealth", None, "Hiding in shadows to backstab: thieves hide in shadows and move silently to backstab, "
-                                  "rangers to attack from behind"),
-                ("new_spells", None, "New spells: six for wizards (Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, "
-                                     "Spook and Friends) and ten 6th-level priest spells (Heal, Harm, Blade Barrier...)")):
-            if key in own_vars:
-                var = own_vars[key]
-            else:
-                var = self.rule_vars[key] = tk.BooleanVar(
-                    value=game.setting_on(settings, key))
-            parent = rule_groups[group] if group else where.get(key, rules)
+        # (in the order FEATURES.md has them, each opening with the name it has there)
+        for key, text in (
+                ("best_hit_die", "Hit dice: the better of two, each die rolled twice at creation and at every level "
+                                 "(every character)"),
+                ("half_giant_hands", "Half-giants' two-handed weapons: a half-giant wields one in one hand, a shield "
+                                     "or a light weapon in the other"),
+                ("helm_ac", "Helms give AC 1 (the game's helms give none)"),
+                ("kits", "Kits: three for each class and some for multiclass characters, one a character, each "
+                         "giving something and costing something (chosen on the creation panel's KIT "
+                         "page, or after DUAL by a human with none)"),
+                ("new_spells", "New spells: six for wizards (Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, "
+                               "Spook and Friends) and ten 6th-level priest spells (Heal, Harm, Blade Barrier...)")):
+            var = self.rule_vars[key] = tk.BooleanVar(value=game.setting_on(settings, key))
+            parent = where.get(key, rules)
             ttk.Checkbutton(parent, text=text, variable=var,
                             command=self._options_changed).pack(anchor="w", pady=(4 if parent.winfo_children()[:-1] else 0, 0))
-            if key == "stealth":  # (under it: what worn gear adds)
-                ttk.Checkbutton(thieves, text="... a worn cloak adds 10 to hiding, worn boots 10 to moving silently, "
-                                            "a worn belt 5 to picking pockets and opening locks",
-                                variable=self.stealth_gear, command=self._options_changed).pack(anchor="w", padx=(20, 0))
 
-        self.roll_store = tk.BooleanVar(value=settings.get("roll_store", True) is not False)
-        ttk.Checkbutton(custom, text="STORE and RECALL on the creation screen: keep a roll, try the die again, "
-                        "and bring the kept roll back; from the next start", variable=self.roll_store,
-                        command=self._options_changed).pack(anchor="w", pady=(4, 0))
         self.starting_gear = tk.BooleanVar(value=bool(settings.get("starting_gear", True)))
         ttk.Checkbutton(custom, text="Fuller starting gear: new characters (and the game's own party) also get a weapon "
                         "they can use, a sling, and leather armour where they may wear it",
@@ -534,72 +456,6 @@ class Viewer:
             self.content_vars[key] = tk.BooleanVar(value=settings.get(key, True) is not False)
             ttk.Checkbutton(new, text=text, variable=self.content_vars[key],
                             command=self._options_changed).pack(anchor="w", pady=(4, 0))
-        self.pickpockets = tk.BooleanVar(value=bool(settings.get("pickpockets", True)))
-        ttk.Checkbutton(thieves, text="Picking pockets: a thief's Pick Pockets button on the USE screen, then a "
-                        "click on anyone in sight (not in a fight), until caught", variable=self.pickpockets,
-                        command=self._options_changed).pack(anchor="w", pady=(4, 0))
-        thieves.pack(anchor="w", fill="x", pady=(8, 0))
-
-        # how the game looks
-        looks = section("on_screen", "Graphics")
-        self.elf_looks = tk.BooleanVar(value=settings.get("elf_looks", True) is not False)
-        ttk.Checkbutton(looks, text="Elves have pointed ears, and half-elves figures of their own instead of the "
-                        "humans'; from the next start",
-                        variable=self.elf_looks, command=self._options_changed).pack(anchor="w")
-        self.cilla_elf = tk.BooleanVar(value=settings.get("cilla_elf", True) is not False)
-        ttk.Checkbutton(looks, text="Cilla, an elf in the game's own party, drawn as an elf (the game gives her "
-                        "the half-elf woman's figure); from the next start", variable=self.cilla_elf,
-                        command=self._options_changed).pack(anchor="w", pady=(4, 0))
-        self.show_gear = tk.BooleanVar(value=bool(settings.get("show_gear", True)))
-        ttk.Checkbutton(looks, text="What the party wears, drawn on their figures (weapons, armour, helms, "
-                        "cloaks, boots, belts)", variable=self.show_gear,
-                        command=self._options_changed).pack(anchor="w", pady=(4, 0))
-        self.show_shadows = tk.BooleanVar(value=bool(settings.get("shadows", True)))
-        ttk.Checkbutton(looks, text="Shadows under the figures (soft, on the floor)",
-                        variable=self.show_shadows, command=self._options_changed).pack(anchor="w", pady=(4, 0))
-        self.show_dust = tk.BooleanVar(value=bool(settings.get("dust", True)))
-        ttk.Checkbutton(looks, text="Dust raised behind the feet of anyone walking on sand or dirt",
-                        variable=self.show_dust, command=self._options_changed).pack(anchor="w", pady=(4, 0))
-        self.see_through = tk.BooleanVar(value=settings.get("see_through", True) is not False)
-        ttk.Checkbutton(looks, text="See-through figures: a thief or ranger hidden in shadows, and anyone invisible (an "
-                        "invisible enemy solid while one of the party detects invisibility)",
-                        variable=self.see_through, command=self._options_changed).pack(anchor="w", pady=(4, 0))
-
-        # the mouse and keys in the game
-        controls = section("controls", "Controls")
-        self.use_targeting = tk.BooleanVar(value=bool(settings.get("targeting", True)))
-        ttk.Checkbutton(controls, text="Choosing an enemy: in a fight, Tab (Shift+Tab back) chooses one and Enter attacks it, "
-                        "even behind someone", variable=self.use_targeting,
-                        command=self._options_changed).pack(anchor="w")
-        self.ring_mode = tk.StringVar(value=rings.mode(settings))
-        ttk.Label(controls, text="A red ring on the ground in a fight:").pack(anchor="w", pady=(4, 0))
-        for value, text in ((rings.OFF, "... none"),
-                            (rings.ONLY_CHOSEN, "... under the enemy chosen with Tab")):
-            ttk.Radiobutton(controls, text=text, value=value, variable=self.ring_mode,
-                            command=self._options_changed).pack(anchor="w", padx=(20, 0))
-        self.scroll_map = tk.BooleanVar(value=bool(settings.get("scroll_map", True)))
-        ttk.Checkbutton(controls, text="Scrolling the map: press the mouse wheel and move", variable=self.scroll_map,
-                        command=self._options_changed).pack(anchor="w", pady=(4, 0))
-        self.camera_still = tk.BooleanVar(value=settings.get("camera_still", True) is not False)
-        ttk.Checkbutton(controls, text="The view in fights: it moves to a figure only when the figure walks off the screen "
-                        "(the game's follows it near the edges); from the next start", variable=self.camera_still,
-                        command=self._options_changed).pack(anchor="w", pady=(4, 0))
-        self.scene_pointer = tk.BooleanVar(value=settings.get("scene_pointer", True) is not False)
-        ttk.Checkbutton(controls, text="The pointer in scenes: shown in the intro and the game's other scenes, and a click skips "
-                        "a scene as a key does; from the next start", variable=self.scene_pointer,
-                        command=self._options_changed).pack(anchor="w", pady=(4, 0))
-        self.mouse_start = tk.BooleanVar(value=settings.get("mouse_start", True) is not False)
-        ttk.Checkbutton(controls, text="Where the pointer starts: in the middle of the screen, moving as far up and down as "
-                        "across, and in a window as fast as the desktop's pointer; from the next start",
-                        variable=self.mouse_start, command=self._options_changed).pack(anchor="w", pady=(4, 0))
-        self.party_spread = tk.BooleanVar(value=settings.get("party_spread", True) is not False)
-        ttk.Checkbutton(controls, text="The whole party in view as a game starts or loads and after each fight, as the 5 "
-                        "key does; from the next start",
-                        variable=self.party_spread, command=self._options_changed).pack(anchor="w", pady=(4, 0))
-        self.effects_kept = tk.BooleanVar(value=settings.get("effects_kept", True) is not False)
-        ttk.Checkbutton(controls, text="Spells on the Effects screen: a click on a spell's icon leaves it on (the game "
-                        "ends it; psionic powers can still be stopped); from the next start",
-                        variable=self.effects_kept, command=self._options_changed).pack(anchor="w", pady=(4, 0))
 
         # the game's speed (DOSBox's CPU)
         pace = section("speed", "Game speed (from the next start)")
@@ -745,12 +601,8 @@ class Viewer:
             return
         for var in list(self.rule_vars.values()) + list(self.content_vars.values()):
             var.set(True)
-        for var in (self.monster_info, self.floating_names, self.stealth_gear, self.pickpockets, self.roll_store, self.elf_looks, self.cilla_elf,
-                    self.starting_gear, self.show_gear, self.show_shadows, self.show_dust, self.see_through, self.use_targeting,
-                    self.scroll_map, self.effects_kept, self.camera_still, self.scene_pointer, self.mouse_start,
-                    self.steady_pace, self.party_spread, self.spells_manual, self.spell_to_hit):
+        for var in (self.monster_info, self.floating_names, self.starting_gear, self.steady_pace):
             var.set(True)
-        self.combat_log.set(True)
         self.combat_log_level.set(dicelog.combat_log_level({}))
         self.ring_mode.set(rings.mode({}))
         self.game_speed.set(str(launch.DEFAULT_SPEED))
@@ -1191,24 +1043,13 @@ class Viewer:
                 self.dice.learned_speakers = launch.learned_speakers()
                 self.dice.monster_info = self.monster_info.get()
                 self.dice.arena_ring = self.content_vars[launch.NEW_ITEMS].get()
-                self.dice.pickpockets = self.pickpockets.get()
-                self.dice.show_gear = self.show_gear.get()
                 self.dice.starting_gear = self.starting_gear.get()
-                self.dice.show_shadows = self.show_shadows.get()
-                self.dice.combat_log = self.combat_log.get()
                 self.dice.combat_log_level = self.combat_log_level.get()
                 self.dice.floating_names = self.floating_names.get()
                 self.dice.game_dir = launch.find_game_dir()
-                self.dice.show_dust = self.show_dust.get()
-                self.dice.see_through = self.see_through.get()
-                self.dice.elf_looks = self.elf_looks.get()
-                self.dice.cilla_elf = self.cilla_elf.get()
                 self.dice.ring_mode = self.ring_mode.get()
-                self.dice.use_targeting = self.use_targeting.get()
-                self.dice.scroll_map = self.scroll_map.get()
                 self.dice.vulture_on = self.content_vars["vulture"].get()
                 self.dice.defiler_scrolls = self.content_vars["defiler_scrolls"].get()
-                self.dice.stealth_gear = self.stealth_gear.get()
                 self.dice.set_rules(self._rules())
             try:  # (one Loader at a time follows the game: two would both make its changes)
                 launch.hold_game("the Loader's window")
@@ -1290,18 +1131,8 @@ class Viewer:
     def _option_values(self) -> dict:
         """Every switch of the Options tab as the tab shows it: {settings key: value}."""
         values = {"monster_info": self.monster_info.get(), "floating_names": self.floating_names.get(),
-                  "combat_log": self.combat_log.get(), "combat_log_level": self.combat_log_level.get(),
-                  "pickpockets": self.pickpockets.get(), "show_gear": self.show_gear.get(),
-                  "starting_gear": self.starting_gear.get(), "shadows": self.show_shadows.get(),
-                  "dust": self.show_dust.get(), "see_through": self.see_through.get(),
-                  "elf_looks": self.elf_looks.get(), "cilla_elf": self.cilla_elf.get(),
-                  "rings": self.ring_mode.get(), "targeting": self.use_targeting.get(),
-                  "scroll_map": self.scroll_map.get(), "effects_kept": self.effects_kept.get(),
-                  "stealth_gear": self.stealth_gear.get(), "roll_store": self.roll_store.get(),
-                  "camera_still": self.camera_still.get(), "scene_pointer": self.scene_pointer.get(),
-                  "mouse_start": self.mouse_start.get(), "steady_pace": self.steady_pace.get(),
-                  "party_spread": self.party_spread.get(), "spells_manual": self.spells_manual.get(),
-                  "spell_to_hit": self.spell_to_hit.get()}
+                  "combat_log_level": self.combat_log_level.get(), "starting_gear": self.starting_gear.get(),
+                  "rings": self.ring_mode.get(), "steady_pace": self.steady_pace.get()}
         values.update({key: var.get() for key, var in self.content_vars.items()})
         values.update({key: var.get() for key, var in self.rule_vars.items()})
         return values
@@ -1330,22 +1161,12 @@ class Viewer:
             self.dice._settings = settings  # (the item reports' switches, as now)
             self.dice.set_monster_info(self.monster_info.get())
             self.dice.arena_ring = self.content_vars[launch.NEW_ITEMS].get()
-            self.dice.set_pickpockets(self.pickpockets.get())
-            self.dice.show_gear = self.show_gear.get()
             self.dice.starting_gear = self.starting_gear.get()
-            self.dice.show_shadows = self.show_shadows.get()
-            self.dice.show_dust = self.show_dust.get()
-            self.dice.see_through = self.see_through.get()
-            self.dice.combat_log = self.combat_log.get()
             self.dice.combat_log_level = self.combat_log_level.get()
             self.dice.floating_names = self.floating_names.get()
             self.dice.ring_mode = self.ring_mode.get()
-            self.dice.use_targeting = self.use_targeting.get()
-            self.dice.scroll_map = self.scroll_map.get()
             self.dice.vulture_on = self.content_vars["vulture"].get()
             self.dice.defiler_scrolls = self.content_vars["defiler_scrolls"].get()
-            self.dice.stealth_gear = self.stealth_gear.get()
-            self.dice.cilla_elf = self.cilla_elf.get()
             self.dice.set_rules(self._rules())
 
     def _rules(self) -> int:

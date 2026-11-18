@@ -217,7 +217,7 @@ class GamePatchTests(unittest.TestCase):
         self.assertEqual(changed, [0x78BA3, 0x78BA4, 0x78BA5, 0x7A15A, 0x7A15B, 0x7A15C])
         self.assertIn("spell_to_hit", launch.CONTENT)
         self.assertEqual(launch.content({})["spell_to_hit"], True)
-        self.assertEqual(launch.content({"spell_to_hit": False})["spell_to_hit"], False)
+        self.assertEqual(launch.content({"spell_to_hit": False})["spell_to_hit"], True)  # (always on now: game.ALWAYS_ON)
         asm = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos", "dsclog.asm")
         with open(asm, encoding="utf-8") as f:
             text = f.read()

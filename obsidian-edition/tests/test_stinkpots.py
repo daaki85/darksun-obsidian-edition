@@ -45,10 +45,10 @@ class LoaderTests(unittest.TestCase):
         cahulaks' traits, on unless unticked; bit 2 of the rules (boots' movement once) free again."""
         self.assertEqual(game.RULE_STINKPOTS, game.RULE_CAHULAKS)
         self.assertEqual(game.RULE_CAHULAKS >> 16, RULE)
-        self.assertIn(("cahulaks", game.RULE_CAHULAKS), game.RULE_SETTINGS)
+        self.assertIn(("cahulaks", game.RULE_CAHULAKS), game.RULE_SETTINGS_GONE)  # (always on: game.RULES_ALWAYS)
         self.assertNotIn("stinkpots", dict(game.RULE_SETTINGS))
         self.assertTrue(game.rules_from_settings({}) & game.RULE_STINKPOTS)
-        self.assertFalse(game.rules_from_settings({"cahulaks": False}) & game.RULE_STINKPOTS)
+        self.assertTrue(game.rules_from_settings({"cahulaks": False}) & game.RULE_STINKPOTS)  # (always on now)
         self.assertFalse(any(bit & 2 for _, bit in game.RULE_SETTINGS))
 
     def test_effect(self):

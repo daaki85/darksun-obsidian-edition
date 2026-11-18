@@ -215,6 +215,8 @@ def load_settings(strict: bool = False, tries: int = SETTINGS_TRIES) -> dict:
             _keep_aside()
             return {}
         _drop_misshapen(settings)
+        from . import game
+        game.drop_always_on(settings)  # (a switch now always on: an older file's False passed over)
         if upgrade_settings(settings):
             try:
                 save_settings(settings)
@@ -252,7 +254,7 @@ def save_settings(settings: dict) -> None:
     """Written whole or not at all: into a temporary file of this write's own (two Loaders, or the
     window and `play`, never share one), then put in settings.json's place."""
     from . import game
-    game.fold_merged(settings)  # (a merged-away switch's untick kept in the one it joined)
+    game.drop_always_on(settings)  # (a switch now always on isn't kept: game.ALWAYS_ON)
     settings["settings_version"] = SETTINGS_VERSION
     with SETTINGS_LOCK:
         fd, tmp = tempfile.mkstemp(prefix=os.path.basename(SETTINGS) + ".", suffix=".tmp",
@@ -383,7 +385,7 @@ def display_lines(settings: dict) -> List[str]:
     scale = settings.get("window_scale", DEFAULT_SCALE)
     scale = scale if scale in WINDOW_SCALES else DEFAULT_SCALE
     sdl = ["[sdl]", "fullscreen=false"]
-    if settings.get("mouse_start", True) is not False:
+    if content(settings)["mouse_start"]:  # (always on now: game.ALWAYS_ON)
         sdl += ["autolock=true", f"sensitivity={round(100 / scale)}"]  # (captured: uncaptured,
         # DOSBox reads the desktop pointer's place in the window, which the sensitivity would scale)
     if scale == 4:
@@ -473,9 +475,11 @@ ITEM_PARTS, NEW_ITEMS = ("pens_gear", "magic_arms", "world_gear", "world_magic",
 
 def content(settings: dict) -> dict:
     """{key: on} for each of CONTENT (on unless the settings say False; the new items' parts as
-    NEW_ITEMS is)."""
+    NEW_ITEMS is; those now always on, game.ALWAYS_ON, on whatever the settings say)."""
+    from . import game
     items = settings.get(NEW_ITEMS, True) is not False
-    return {key: items if key in ITEM_PARTS else settings.get(key, True) is not False for key in CONTENT}
+    return {key: True if key in game.ALWAYS_ON else items if key in ITEM_PARTS
+            else settings.get(key, True) is not False for key in CONTENT}
 
 
 # what the last prepare_patched_game couldn't make, each "PART (FILE: why)": the game then runs with the
@@ -503,7 +507,8 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
     del alagorn.LEFT_OUT[:]  # (an earlier start's: its scripts written only with some switches on)
     chosen = load_settings(strict=True) if settings is None else settings
     on = content(chosen)
-    size_rule = chosen.get("creature_size", True) is not False  # (Hold and Charm Person's texts)
+    from . import game
+    size_rule = game.setting_on(chosen, "creature_size")  # (Hold and Charm Person's texts: always on now)
     skip = (frozenset() if on["effects_kept"] else frozenset(gamepatch.EFFECTS_KEPT)) \
         | (frozenset() if on["roll_store"] else frozenset(gamepatch.ROLL_STORE)) \
         | (frozenset() if on["camera_still"] else frozenset(gamepatch.CAMERA)) \
@@ -989,17 +994,15 @@ def dosbox_output(game_dir: str, since: float) -> Dict[str, str]:
 
 
 # The Options tab's switches and their defaults (what a key missing from settings.json means)
-SWITCH_DEFAULTS = {"monster_info": True, "floating_names": True, "pickpockets": True,
-                   "show_gear": True, "starting_gear": True, "shadows": True, "dust": True, "see_through": True, "rings": "chosen", "combat_log": True,
-                   "targeting": True, "scroll_map": True, "cycles": DEFAULT_SPEED,
-                   "combat_log_level": "short", "defiler_scrolls": True, NEW_ITEMS: True}  # (combatlog.SHORT, the panel's level unless chosen)
+SWITCH_DEFAULTS = {"monster_info": True, "floating_names": True, "starting_gear": True, "rings": "chosen",
+                   "cycles": DEFAULT_SPEED, "combat_log_level": "short", "defiler_scrolls": True, NEW_ITEMS: True}  # (combatlog.SHORT, the panel's level unless chosen)
 
 
 def effective_switches(settings: dict) -> Dict[str, object]:
     """Every switch as the Loader uses it: as set, else its default (rule changes and content: on)."""
     from . import game
     out: Dict[str, object] = {key: settings.get(key, default) for key, default in SWITCH_DEFAULTS.items()}
-    out.update(content(settings))
+    out.update({key: on for key, on in content(settings).items() if key not in game.ALWAYS_ON})
     out.update({key: game.setting_on(settings, key)
                 for key, _ in game.RULE_SETTINGS})  # (as game.rules_from_settings reads them)
     from . import dicelog, rings
