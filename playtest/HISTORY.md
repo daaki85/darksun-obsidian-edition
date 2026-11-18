@@ -320,6 +320,12 @@ starts.
 2026-11-15: a Spellarcher beside a Slig shot the Screamer Beetle two squares off: a bow is used
 only against a foe not beside the archer.
 
+2026-11-18 (logs/2026-11-18-champion-chill-arrows.md): the elf champion's Chill Arrows, plain
+arrows in #107's check (DSCLOG cast a spell arrow's spell for a party Spellarcher only), cast
+Chill Touch once PROBE_ARROW let anyone not in the party cast them: seen with every other
+champion Paralyzed and the party's turns passed, the elf's two shots at Cermak, one save failed
+(STR 19 -> 18), one saved. The HP lines put the first Chill Touch's 3 on the second arrow's hit.
+
 ## The combat log panel's buttons
 
 2026-11-11 to 2026-11-16: the guide had two sets of coordinates for the level chip (262 or 268;
