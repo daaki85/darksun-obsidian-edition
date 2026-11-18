@@ -93,7 +93,15 @@ field would help consumers. The mapping we use: resident row, linear = load segm
 header size; overlay row, linear = the module's load segment x 16 + offset, with the module index as their
 segment number.
 
-## 6. Offers, if they want them
+## 6. Our fixed-bug list as input to their catalogue (the bigger give-back)
+
+Going through `GAME-BUGS.md` row by row against their docs (`reports/opends-bug-comparison-2026-11-18.md`)
+shows 66 rows, of which about 37 are absent from their catalogue and seven answer an open row of theirs with a
+mechanism and a fix: random monsters' divide error (a crash with an address), the OEOpenGraph memory stop, the 300
+picture slots, ability items counting anywhere carried, the gladiator's AC, the fire elementals' swapped classes
+and Psionic Blast. This is likely worth more to them than items 1 to 5; send it first.
+
+## 7. Offers, if they want them
 
 - **Our verification status of the engine-bug catalog they relay** (their community-crossread §1, "pending our own
   verification"): seen in play with the dice log: ability items counted only when worn and the gladiator's
