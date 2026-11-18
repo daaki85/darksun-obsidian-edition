@@ -63,11 +63,16 @@ the stock DS1 `DSUN.EXE` today:
 - **What OpenDS has:** `rules-tables.md` decodes the same group rows (and notes the rogue row stops at 9, "not
   2E's 10"), the CON floor and `base_hp` (calls the multiclass division explicit), but not that the CON bonus
   is given once a level; its helper at `0x8757C` is described by the shape of the PSP formula.
-- **A discrepancy of ours to settle first.** The player's guide's hit point table has the thief rolling a d6 at
-  10th and taking +2 only past it. By the code the thief and the psionicist share one row, last die level 9, so a
-  thief takes the flat +2 *at* 10th, as the guide already says for the psionicist. The guide looks wrong for the
-  thief (an AD&D assumption: 2E's rogue rolls through 10th). Not played: a thief to 10th with the dice log would
-  settle it. Until then I would not send OpenDS a thief figure.
+- **The thief row is right, and the mod makes it so.** (An earlier version of this section called the player's
+  guide's thief row wrong. That was my mistake: I read the stock rows and did not look for the Loader's patch.)
+  The game keeps one "dice up to this level" for thieves and psionicists together (9; after it +2 a level), but an
+  AD&D thief rolls a d6 up to 10th and a psionicist stops at 9th. With the level-10 rule (`RULE_LEVEL_10`), two
+  hooks in DSCLOG raise the thief's last die level to 10 where it matters: `PROBE_HD_ROLL` at file `0x872DE`
+  (`mov al,es:[bx+1]`, where a new level's hit points are a roll or the fixed gain) and `PROBE_HD_CON` at
+  `0x87779` (`cmp al,es:[bx+1]`, where CON's bonus is counted). So the guide's table (thief d6 at 10th, +2 past it;
+  psionicist +2 at 10th) is the mod's behaviour. This is a fact OpenDS half has already ("rogue d6 to L9, not
+  2E's 10"): what they lack is that thieves and psionicists share the row, so correcting the thief means splitting
+  them, and the two sites.
 - Before the Edition raised the level cap every class stopped at 9th, so none of these flat gains was ever seen in
   the unmodded game; only the per-die rolls to 9th and the multiclass CON bonus were.
 
@@ -107,7 +112,7 @@ stopping breath weapons (7A142h). The first two are fixed in the Edition; the th
 1. **The comparison layer as one document**, not one issue per rule: "where the engine departs from its manual and
    the PHB, with the sites" for the rows marked "data only" (3, 5, 10, 12, 13): it would sit beside their
    `rules-tables.md`, which already says where each table is.
-2. **The level-up hit-point rows** (above) once the thief row is settled.
+2. **The level-up hit-point rows** (above): the CON bonus given once a level, and the thief/psionicist shared row with its two sites.
 3. **The 12 "nothing" rows** as a table of facts, each with its site (what the code does, the right rule, the
    address). Most need an address check against the image first; many sites are hooks in our helper, so the
    description of the rule is the part that transfers, not the patch.
