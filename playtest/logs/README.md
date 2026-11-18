@@ -117,6 +117,7 @@ schedules and diffs a log made or used.
 | [2026-11-18](2026-11-18-audit-fixes-2.md) | The code audit's fixes, groups 4-6 (DSCLOG's interrupt handling, UMBPLUS at CA00h, A20, heapcheck): a smoke test of the decree scene's arrow, `fountain-user`'s ambush with Tab and Enter and the combat log, a scroll read from its box (the nudge), INFO, the map's pointer and drags, the creation screen; upper memory from CA00h measured |
 | [2026-11-18](2026-11-18-docs-review-2.md) | `docs/elvenkind.png` retaken: the Cloak and Boots of Elvenkind's boxes with their green shimmer (set in memory on Gerakis), the old crops found by matching; upper memory's free piece measured, 25,136 bytes |
 | [2026-11-18](2026-11-18-integration.md) | The journal, picture and music, chance to hit, quick save, quests and showing what can be used on the current branch, checked together in a private game: the merged DSCLOG (`DSCLOGvc`), an autosave, F5 and F9, Alt's marks, the item glows and the Poisoner beside them, memory |
+| [2026-11-18](2026-11-18-hit-chance-hover.md) | The chance to hit under the pointer: the game's own word for the thing under the pointer (DS:0BCBh) and its finder read from DSUN.EXE, the label against eight swings at the fountain (walk arrow, attack pointer, next to the enemy, a hidden thief's backstab), overlapping guards, "Miss" over the hovered enemy, the panel, the cost; labels taken off that came back in a still scene, and the view drawn again for them |
 
 ## files/
 

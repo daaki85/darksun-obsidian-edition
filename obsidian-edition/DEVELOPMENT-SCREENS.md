@@ -24,6 +24,7 @@
 - [Selling plain gear: S](#selling-plain-gear-s)
 - [Choosing an enemy: Tab, Enter and the rings](#choosing-an-enemy-tab-enter-and-the-rings)
 - [The chance to hit before the swing](#the-chance-to-hit-before-the-swing)
+  - [Under the pointer](#under-the-pointer)
 - [Squares in reach](#squares-in-reach)
 - [Showing what can be used: Alt](#showing-what-can-be-used-alt)
 - [Scrolling the map](#scrolling-the-map)
@@ -468,7 +469,13 @@ dice log running:
   0 first and last of all, so DSCLOG never takes a half-written one. A label
   stays 1.5 seconds, a charge used 3 (`CHARGE_FOR`); a new one takes the slot
   of one over the same figure, else a free one, else the oldest, but a "Miss"
-  or spell's name never takes a charge's (its priority).
+  or spell's name never takes a charge's (its priority). Below them all are the
+  standing labels, which take free slots only: the names of what can be used
+  ([Alt](#showing-what-can-be-used-alt)) and the chance to hit [under the
+  pointer](#under-the-pointer). When a label is taken off, moved or reworded
+  the dice log has the view drawn again (`Labels.took_off`: what DSCLOG draws
+  over the old place didn't stay in a still scene), and a new Loader empties
+  the slots an earlier one left filled.
 - **DSCLOG's side** (`LABEL_*`). The map is drawn straight into the screen on
   show, and figures are drawn again as they move, swing and take damage, by
   routines that weren't all hooked in the first trial (a label over melee was
@@ -865,6 +872,72 @@ What the game's code does, and the Loader after it:
   the held-target rule a Paralyzed or Out Cold target is hit on any roll (`HELD_HIT`).
 
 Tests: `tests/test_hitchance.py`. Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-17-hit-chance.md).
+
+### Under the pointer
+
+`dsloader/hover.py`, the Loader's alone again: a label's slot is all it writes. Setting `hit_hover`
+(`DiceLog.hit_hover`), its own: it works with `hit_chance` and "Names over figures" off.
+
+- **Which enemy: the game's own answer.** Every pass of the map's loop the game lights up the
+  thing under the pointer (`DSUN.EXE` 1E126h, called with 270Fh for "the pointer's": it colours a
+  creature by its side, +1Dh, and of the items only a body, object 1101, and blinks it, the thing
+  lit in `DS:0BD1h`, the state in `DS:0BCDh`). It keeps the thing in **`DS:0BCBh`** (FFFFh: none),
+  from the finder a click uses too (25B52h, DSCLOG's `PROBE_HIT`: camera x, y, pointer x, y; the
+  draw list from its last entry, the front, down to the first in the view; a thing drawn, map
+  record +0 bit 10h, with a picture, +0Fh not FFFFh, whose box holds the pointer, left +3 less the
+  camera, top +5 less the camera less the signed byte +0Dh, width +12h, height +13h; then, on the
+  map, the first whose picture has a pixel there, 147D:0166h, mirrored for a draw-list entry's +5
+  bit 80h). So the label goes over what a click would act on: the figure in front where two
+  overlap, nothing between a big figure's legs, nothing where an ally stands in front. Seen in
+  every pointer mode. After the pointer has moved on, the word is the thing lit before for a pass
+  (1E2C2h puts it back to take the light off), so `hover.target` believes it only with the
+  pointer inside that thing's box (`hover.inside`, the finder's own test), among `rings.enemies`
+  (as `_drawn` last found them), and `Hover.update` only when two looks running agree or the
+  enemy is the one already labelled; a label up outlasts its enemy's last look by `LINGER` (0.2 s).
+- **When.** A fight on, a party member's turn (`whose_turn` under 4), the map up (`DS:0BC9h` 1: 2
+  with a window, a menu, the END menu, a talk), the pointer's mode (`DS:11B8h`) 1 walk, 2 look or 4
+  attack, and the pointer not on the combat log's panel (the header's `TSR_PANEL_ON` and
+  `TSR_PANEL_TOP`: the finder knows nothing of the panel and answers with the enemy behind it).
+  The turn passing takes the label off in the same pass.
+- **One number** (`hover.swing`, from `predict`'s swings in the game's order; a label is 128
+  pixels): next to the enemy the first melee weapon. Farther off the click decides. The walk
+  arrow's (1B0E9h: at a distance above 1 the member walks up) is the first melee weapon's, and the
+  eye shows that too. The attack pointer's (1B67Bh on: with a line of sight, 898:00A4h, the attack
+  at the distance between them, so the picker takes the missile weapon) is the shot's when
+  `predict` has one (its range reaches) and the quiver holds something (`quiver.quiver`; with
+  none the game walks the member up), else the melee number. Not read: the line of sight (a
+  blocked shot's click does nothing, the label still shows), and which weapons have already swung
+  this turn (after a kill that keeps the turn, Seneca's label was her Hayneedle's 12+ and the
+  swing left her Shadowseeker's 11+).
+- **The words** (`hitchance.over`): `12+ (45%)`; next to the enemy `Behind 10+ (55%)`, `Backstab 8+
+  (65%)`, `Unseen 10+ (55%)`; where the walk decides `14+ (35%), behind 10+` (`, backstab 8+`: 125
+  pixels at its widest in the game's font); a held target with the rule `Hits`.
+- **The label** (`Labels.hover`): one standing label of the lowest priority (`HOVER`, below the
+  usable names' `NAME`), kept up `HOVER_FOR` past its last asking. It takes a free slot only and
+  waits while another label is over its figure; `Labels.show` gives its slot to a "Miss", a
+  spell's name or a charge over that figure, or to any of them when no slot is free. Asked for
+  again with the same text it writes nothing.
+- **The pass** (`DiceLog._hover_pass`, every pass beside `_usable_key`): with the pointer off every
+  enemy, four small reads (9 microseconds measured); resting on one, 16; the prediction is made
+  again only when the attacker, the enemy, the pointer's mode or either one's feet changed, or
+  `AGAIN` (0.5 s) has passed (755 microseconds).
+- **A label taken off was left on the screen** (found here, with "Miss" as with this label): in a
+  still scene DSCLOG's `LABEL_ERASE` showed for one frame and the label was back until something
+  else drew the view. `Labels.took_off` now tells the dice log when a label has been taken off,
+  moved or reworded, and it has the view drawn again (`shadows.redraw`, `DiceLog._labels_gone`):
+  the label is gone 0.2 s after the pointer leaves and stays gone. And a Loader stopped with a
+  label up left its slot filled for good: `Labels.tick` empties the slots that aren't its own
+  once, at its first look (`Labels.attached` for a game newly attached).
+- **Measured** (the fountain's fight, a still scene, 10 s each): the pointer on a guard with the
+  label, 23.9 frames shown a second and 933 passes of the map's loop; the same with the switch
+  off (the game's own blinking of the figure), 24.1 and 23.9 frames, 2,018 and 2,054 passes; the
+  pointer away, no frames (nothing drawn) and 3,168 passes either way. So the frames are the
+  same, and the passes a label costs are DSCLOG's upkeep of any label.
+
+Tests: `tests/test_hover.py` (the box and the game's word believed inside it; the swing by the
+pointer's mode; every text within a label's width in the game's font; "Miss" and charges before
+it, no write for the same text; two looks, the linger, the turn, the map, the panel; the switch
+with the other two off; the view asked for again). Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-18-hit-chance-hover.md).
 
 ## Squares in reach
 

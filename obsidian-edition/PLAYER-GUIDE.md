@@ -1175,7 +1175,8 @@ attacks at the character's full rate.
 
 With an enemy chosen with **Tab** ([the chance to hit before the
 swing](FEATURES.md#the-chance-to-hit-before-the-swing)), the dice log's line and the combat log's
-header say what the member whose turn it is must roll, and the chance: `needs 14+ (35%)`. A 20
+header say what the member whose turn it is must roll, and the chance: `needs 14+ (35%)`; with the
+pointer resting on an enemy, the number floats over it (under the pointer, below). A 20
 always hits and a 1 always misses, so the chance is never above 95% or below 5%.
 
 - **Which weapon.** Next to the enemy it is the weapon in hand (each of two, named, when their
@@ -1193,9 +1194,28 @@ always hits and a 1 always misses, so the chance is never above 95% or below 5%.
   stands, and the number is the backstab's.
 - **A held enemy** (Paralyzed or Out Cold): `hits whatever the roll (Paralyzed)`.
 
+**Under the pointer.** The same number floats over an enemy while the game's pointer rests on it,
+on a party member's turn: `12+ (45%)`. It follows the pointer from enemy to enemy and goes when
+the pointer leaves, the turn passes, or a menu or window opens. It shows the enemy a click there
+would attack: where figures overlap, the one in front, and nothing where an ally stands in front.
+
+- **One weapon**, the first a click would swing. Next to the enemy, the first weapon in hand
+  (often the left hand's). Farther off, the pointer decides as it does for the click: the walk
+  arrow walks the member up to fight hand to hand, so the number is the first melee weapon's (the
+  eye, whose click only looks, shows that one too); the attack pointer shoots, so the number is
+  the missile weapon's when it reaches the enemy and the quiver isn't empty.
+- **From behind.** Next to the enemy: `Behind 10+ (55%)`, `Backstab 8+ (65%)` (a hidden archer's
+  shot: `Unseen 10+ (55%)`). Farther off, where the walk decides: `14+ (35%), behind 10+`.
+- **A held enemy**: `Hits`.
+- "Miss", a spell's name and a spell's charges take its place over the same figure while they
+  show, and it comes back after them. It doesn't show through the combat log's panel.
+- The dice log's `Chosen with Tab` line still gives every weapon; the pointer writes no line.
+
 What it can't know: the number is for things as they stand when Tab is pressed (the header's
-follows them while the enemy stays chosen); a spell cast or an effect ending before the swing
-changes it. An enemy's AC is counted from the game's own rules and its rings of protection; what
+follows them while the enemy stays chosen, the pointer's while it rests there); a spell cast or an
+effect ending before the swing changes it. After a kill that leaves the member its turn, the
+weapons it has already swung that turn are still counted, so the pointer's number can be the
+first weapon's when only the second is left to swing. An enemy's AC is counted from the game's own rules and its rings of protection; what
 else the mod's rules add to it (a kit's AC, a cloak of protection, the Boots of Speed) is known from
 the first attack on that enemy in the fight on, so before it the number can be off by that much
 for an enemy that has one of them. The swing's own line in the dice log is always the game's.
@@ -2002,7 +2022,7 @@ features page](FEATURES.md#always-on).
 | **M**, **U** and **I** | **M** on the map opens the overhead map (the game's **O**), and **M** again closes it. **U** and **I** close the USE and inventory screens when pressed again (and still switch from one to the other). *Without the mod:* only **O** opens the map, and **U** and **I** only switch. |
 
 The mod's other controls are always on too: Tab and Enter to choose and attack an enemy (the red
-ring under it, and the chance to hit it shown before the swing, are on the Options tab), the squares in reach marked on a party member's turn and **Alt** held to ring and name
+ring under it, and the chance to hit it shown before the swing and under the pointer, are on the Options tab), the squares in reach marked on a party member's turn and **Alt** held to ring and name
 everything in view that can be used (switches in the tab's **In the game** section), scrolling with the mouse wheel, the whole party in
 view, the view in fights, the pointer, and spells on the Effects screen ([controls](FEATURES.md#controls)). Quick save and
 quick load with **F5** and **F9**, and autosave, have switches under **Saves** on the Options tab.
@@ -2154,6 +2174,7 @@ A settings file from an older Loader with one of these unticked has it on all th
 | Names over figures: a spell's name over its caster, "Miss" over whoever an attack missed, a used charge ("Armor: 7 left") over its owner, and the arrows left over a party archer after each shot | on | at once | [Names over figures](FEATURES.md#names-over-figures) |
 | A red ring on the ground in a fight: ... none / ... under the enemy chosen with Tab | under the enemy | at once | [Choosing an enemy](FEATURES.md#choosing-an-enemy-tab-enter-and-the-rings) |
 | The chance to hit: with an enemy chosen with Tab, what the d20 must show to hit it and the chance, in the dice log and the combat log's header | on | at once | [The chance to hit before the swing](FEATURES.md#the-chance-to-hit-before-the-swing) |
+| The chance to hit under the pointer: in a fight, with the pointer over an enemy, what the d20 must show and the chance float over it | on | at once | [The chance to hit before the swing](FEATURES.md#the-chance-to-hit-before-the-swing) |
 | Squares in reach: in a fight, a small cross on each square the party member whose turn it is can still walk to | on | at once | [Squares in reach](FEATURES.md#squares-in-reach) |
 | Showing what can be used: hold Alt on the map, out of a fight | on | at once | [Showing what can be used](FEATURES.md#showing-what-can-be-used-alt) |
 

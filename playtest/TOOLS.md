@@ -50,6 +50,9 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `guard_start.sh` | the watchdog. Every 20 s: GONE if DOSBox has quit; |
 | `healparty.py` | each party member's hit points to their sheet's most (memory only: never save after) |
 | `hitcheck.py [ATTACKER]` | the chance to hit before the swing (dsloader/hitchance.py), read-only: for whoever's turn it is (or combatant ATTACKER) against every enemy, what the Loader would say on the "Chosen with Tab" line (without the dice... |
+| `hovercost.py SECONDS \| loader` | what the chance to hit under the pointer (dsloader/hover.py) costs. |
+| `hoverhit.sh C [attack]` | the chance to hit under the pointer against the swing itself. |
+| `hoverlabel.py [X Y \| foe C] [watch SECONDS]` | the chance to hit under the pointer (dsloader/hover.py) as the game has it: moves the pointer (no click) to game pixel X, Y, or onto enemy combatant C's figure (10 pixels above its feet), then prints the pointer, its... |
 | `hp.py HP` | every combatant past the party (index 4 and up) to HP hit points, its sheet's most too. |
 | `itemedit.py MEMBER SLOT [slot=N] [e=N] [f=N]` | show (and change) the item party member MEMBER has in slot SLOT: its slot byte (+11h), +0Eh (an ability item's amount) and +0Fh (its ability byte, FAh-FFh STR-CHA, or a spell). |
 | `itemlists.py` | each party member's three item lists (+08h worn, +0Ah held weapons, +0Ch the backpack) as (item, slot byte, type). |

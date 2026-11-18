@@ -204,3 +204,17 @@ def brief(swings: List[Swing]) -> str:
         return f"Backstab: {_short(s.need)} {chance(s.need)}%"
     head = {"from behind": "Behind:", "unseen": "Unseen:"}.get(s.how, "Needs")
     return f"{head} {_short(s.need)} ({chance(s.need)}%)"
+
+
+def over(s: Swing) -> str:
+    """For the label over the enemy under the pointer (hover.py), one swing's, within a label's
+    128 pixels of the game's font: "12+ (45%)"; next to the enemy and behind it "Behind 10+
+    (55%)" ("Backstab 8+ (65%)", "Unseen 10+ (55%)"); where the walk decides "14+ (35%), behind
+    10+" (", backstab 8+"); a held target's, with the rule for it, "Hits"."""
+    if s.auto:
+        return "Hits"
+    head = {"a backstab": "Backstab ", "from behind": "Behind ", "unseen": "Unseen "}.get(s.how, "")
+    text = f"{head}{_short(s.need)} ({chance(s.need)}%)"
+    if s.behind is not None:
+        text += f", {'backstab' if s.behind_how == 'a backstab' else 'behind'} {_short(s.behind)}"
+    return text

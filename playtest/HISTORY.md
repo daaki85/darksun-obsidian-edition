@@ -370,6 +370,18 @@ three were put in the prediction and the game loaded again: every number then ag
 was lost twice to a pause that killed DOSBox and every holder; and a click on bare floor, meant
 only to move the pointer off the panel, walked Lex 4 Move.
 
+## The chance to hit under the pointer: the label that came back
+
+2026-11-18 (logs/2026-11-18-hit-chance-hover.md). The label showed over the right enemy at once,
+but grabs taken half a second after the pointer had left still had it, though the Loader's slot
+was empty and DSCLOG's state said not shown. Window grabs every 30 ms showed the erase for one
+frame and the label back for good; the same happened to a "Miss" put from a script, with the
+squares in reach on or off. A whole-view redraw cleared it, so the Loader asks for one whenever a
+label goes or changes. Two more from the same play: the first probe put the pointer at x 318 and
+the view scrolled away (the figures were then looked for where the old camera had them); and a
+dice log killed while the label was up left it standing over the guard for the next one, which
+knew nothing of it.
+
 ## The combat log panel's buttons
 
 2026-11-11 to 2026-11-16: the guide had two sets of coordinates for the level chip (262 or 268;

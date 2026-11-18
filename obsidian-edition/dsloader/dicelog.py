@@ -28,7 +28,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple
 
-from . import aging, usable, quests, quicksave, hitchance, journal, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, squares, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, usable, hover, quests, quicksave, hitchance, journal, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, squares, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory, WriteRefused
@@ -588,6 +588,9 @@ class DiceLog:
         self._chance_seen: Tuple[Optional[tuple], float, str] = (None, 0.0, "")  # (the header's, kept a moment)
         self.show_usable = True  # Alt held on the map marks what can be used (usable.py)
         self._usable = usable.Usable()
+        self.hit_hover = True  # the chance to hit over the enemy under the pointer (hover.py)
+        self._hover = hover.Hover()
+        self._foes: List[int] = []  # the fight's enemies as _drawn last found them (rings.enemies)
         self._targeting = targeting.Targeting()
         self.scroll_map = True  # the map scrolled by dragging with the wheel pressed (scrolling.py)
         self._scrolling = scrolling.Scrolling()
@@ -736,6 +739,9 @@ class DiceLog:
         self._rings = rings.Rings()
         self._squares = squares.Squares()
         self._usable = usable.Usable()
+        self._hover = hover.Hover()
+        self._foes = []
+        self._labels.attached()
         self._big = cahulaks.Big()
         self._large = sizes.Large()
         self._targeting.forget()
@@ -1046,6 +1052,7 @@ class DiceLog:
         self.quicksave.keys = settings.get("quick_save", True) is not False
         self.quicksave.auto = settings.get("autosave", True) is not False
         self.show_usable = settings.get("show_usable", True) is not False
+        self.hit_hover = settings.get("hit_hover", True) is not False
         self.load_picked(settings.get("pickpocketed", []), known=picked_known)
         self.rules = game.rules_from_settings(settings)
 
@@ -1079,7 +1086,11 @@ class DiceLog:
         switch for it on: the rules as they are, the attacker hidden in shadows or not (DSCLOG's
         STEALTH), and what the game's AC for the target was above the Loader's count of it when
         it was last attacked (ac_gap: DSCLOG's part, a kit's and such)."""
-        if not self.hit_chance or self.tsr_hdr is None:
+        return self._predict(attacker, target) if self.hit_chance else []
+
+    def _predict(self, attacker: int, target: int) -> List["hitchance.Swing"]:
+        """_swings, whatever its switch (the pointer's label has its own: hit_hover)."""
+        if self.tsr_hdr is None:
             return []
         try:
             hidden = struct.unpack("<H", self.guest.read(self.tsr_hdr + stealth.TSR_STEALTH, 2))[0] >> attacker & 1 \
@@ -1622,6 +1633,7 @@ class DiceLog:
                 out += step(lambda: self.itemwatch.check(self.game, now, self._settings))
         step(self._scroll)
         step(lambda: self._usable_key(now), quiet=True)
+        step(lambda: self._hover_pass(now), quiet=True)
         if self._initiative and now - self._initiative_at >= INITIATIVE_WAIT:
             out += step(self.initiative_lines)
         out += step(self.turn_lines)  # after the round's order and the last turn's XP
@@ -1928,7 +1940,8 @@ class DiceLog:
             self._update_panel(now)
             self._labels.on = self.floating_names
             self._labels.tick(self.game.guest, self.tsr_hdr, now)
-            foes = rings.enemies(self.game)
+            self._labels_gone()
+            foes = self._foes = rings.enemies(self.game)
             out = self._targeting.update(self.game, self.tsr_hdr, self.use_targeting, foes,
                                          lambda turn, chosen: hitchance.line(self._swings(turn, chosen)))
             self._marks(now)
@@ -1957,6 +1970,25 @@ class DiceLog:
         if self.tsr_hdr is not None and self.game is not None and self._shadows.palettes \
                 and self._usable.changed(self.game, self.show_usable, now):
             self._marks(now)
+
+    def _hover_pass(self, now: float) -> None:
+        """Every pass: the chance to hit over the enemy the game's pointer is on, in a fight on a
+        party member's turn (hover.py); the label follows the pointer within a pass or two, not
+        at _drawn's next look."""
+        if self.tsr_hdr is None or self.game is None:
+            return
+        if self.hit_hover and self._labels.font is None and not self._labels_font_tried:
+            self._labels_font_tried = True
+            self._labels.font = _game_font(self.game_dir)
+        self._hover.update(self.game, self.tsr_hdr, self.hit_hover, now, self._labels,
+                           lambda: self._foes, self._predict)
+        self._labels_gone()
+
+    def _labels_gone(self) -> None:
+        """The view drawn again once a label has been taken off or changed (Labels.took_off: what
+        DSCLOG has drawn over its old place doesn't stay in a still scene)."""
+        if self._labels.took_off() and self.tsr_hdr is not None:
+            shadows.redraw(self.game, self.tsr_hdr)
 
     def _panel_lines(self, lines: List[str], now: float) -> None:
         """A fight's lines into the combat log's panel (and those just after it: XP, the last kill);

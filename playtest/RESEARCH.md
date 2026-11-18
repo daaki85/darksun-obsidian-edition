@@ -510,6 +510,19 @@ The Loader's **Picture** (plain, scanlines, tv, sharp: `launch.display_lines`) a
 
 ## Scripts and the game's code
 
+- **What is under the pointer** (logs/2026-11-18-hit-chance-hover.md): **DS:0BCBh** is the thing
+  the game last found under its pointer on the map (FFFFh: none), from the finder a click uses
+  (25B52h: the front figure with a pixel there); the routine that keeps it (1E126h) lights the
+  thing up, the one lit in DS:0BD1h, and puts that one back in DS:0BCBh for a pass after the
+  pointer has moved on. DS:0BC9h is 1 with the map up and 2 with a menu (the END menu too), a
+  window or a talk; DS:11B8h the pointer's mode (1 walk, 2 look, 4 attack; the game puts the walk
+  arrow back as each member's turn begins). A map thing's picture box: left at +3, top at +5 less
+  the signed byte +0Dh, width +12h, height +13h of its record (DS:6694h + 32 x thing).
+- **A floating label taken off in a still scene comes back** a frame after DSCLOG erases it, until
+  the view is drawn again (window grabs every 30 ms count its ink: `import -window`, the pixels
+  near the label's colour). The Loader asks for the view again itself now (`Labels.took_off`); a
+  test that writes a slot by hand must do the same (`shadows.redraw(gd, hdr)`).
+
 - **The docs' code addresses (5883Ah and the like) are DSUN.EXE file offsets**, the patches'
   (`gamepatch.Patch`'s offset), not linear addresses in memory: most of the fight code is an
   overlay, so memory there reads zeros or other code. Disassemble the file (capstone, 16-bit, the

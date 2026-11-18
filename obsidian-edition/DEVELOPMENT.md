@@ -231,7 +231,7 @@ to trust when a test file is added):
   `test_audit_objects`, `test_cahulaks`, `test_sizenames`, `test_icons`, `test_scriptfixes`,
   `test_group4`, which falls back to `/tmp/playtest/inst/SEGOBJEX.GFF`, the playtest kit's game)
   and `DSUN_RESOURCE` (its `RESOURCE.GFF`: `test_kitpages`, `test_spelltexts_fit`,
-  `test_spellgrid`, `test_hitchance`'s header fit).
+  `test_spellgrid`, `test_hitchance`'s header fit, `test_hover`'s label fit).
 
 The **Obsidian Edition tests** workflow (`.github/workflows/tests.yml`) runs them on Windows, with
 unicorn 2.1.4 and NASM 2.16.01, on every push to `obsidian-edition` and every pull request that
@@ -476,6 +476,7 @@ and the section that explains it. INTERNALS, RULES, KITS, CONTENT and SCREENS ar
 |---|---|---|
 | `targeting.py` | Tab and Enter: choosing an enemy and attacking it | [SCREENS: choosing an enemy](DEVELOPMENT-SCREENS.md#choosing-an-enemy-tab-enter-and-the-rings) |
 | `hitchance.py` | the chance to hit shown before the swing, worked out as the game's attack does | [SCREENS: the chance to hit](DEVELOPMENT-SCREENS.md#the-chance-to-hit-before-the-swing) |
+| `hover.py` | the chance to hit floating over the enemy under the game's pointer, on a party member's turn | [SCREENS: under the pointer](DEVELOPMENT-SCREENS.md#under-the-pointer) |
 | `squares.py` | squares in reach: in a fight, a mark on each square the party member whose turn it is can still walk to, counted by the game's rules | [SCREENS: squares in reach](DEVELOPMENT-SCREENS.md#squares-in-reach) |
 | `usable.py` | showing what can be used: while Alt is held, a ring under every door, container, body, item and person in view, and the nearest ones' names | [SCREENS: showing what can be used](DEVELOPMENT-SCREENS.md#showing-what-can-be-used-alt) |
 | `scrolling.py` | scrolling the map with the mouse | [SCREENS: scrolling the map](DEVELOPMENT-SCREENS.md#scrolling-the-map) |

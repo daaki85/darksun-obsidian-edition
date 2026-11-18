@@ -925,6 +925,31 @@ game's data: it is one player's account.
   **Move the pointer with `xdotool mousemove`, never with a click on the floor**: with the walk
   arrow a click walks the member and spends its Move.
 
+### The chance to hit under the pointer
+
+- **The label against the swing** (logs/2026-11-18-hit-chance-hover.md): from `fountain-user` on a
+  party turn, `sh hoverhit.sh C [attack]` puts the pointer on enemy combatant C's figure (the walk
+  arrow, or the attack pointer), prints the label the Loader floats over it (`hoverlabel.py`,
+  which reads the text back from DSCLOG's slot by its ink mask), clicks and prints the attack's
+  lines. `hoverlabel.py X Y` or `foe C` only moves the pointer and reads; `watch SECONDS` prints
+  the slots whenever they change (a label going, "Miss" taking its place, flicker), started in the
+  background just before a click. `hovercost.py SECONDS` counts the map's loop passes and the
+  frames shown, `hovercost.py loader` times the Loader's look.
+- **Where to point**: `foepos.py`'s place (10 pixels above the feet) is the front figure's where
+  two overlap (the game's finder takes the first picture with a pixel there, from the front): a
+  back one's head is 22 to 25 pixels above its feet. Between a half-giant's legs there is nothing.
+  The thing the game has under the pointer is DS:0BCBh (`hoverlabel.py` prints it).
+- **Never bring the pointer to the screen's edge** (x 318 scrolled the view 480 units in one
+  probe, and every place worked out from the camera was then wrong): drag the view back with
+  `scroll.py`, the pointer in the middle first.
+- **After restarting the dice log in a fight** its Loader has not seen the round's dance, Wild
+  Fighting or the AC gaps: a Battle Dancer's number is 1 off until her next dance. Compare on
+  another member, or wait a round.
+- **A click that walks a member out of Move** opens END <NAME>'S MOVE (no label then: a menu is
+  up); Escape closes it and a click on a foe next to the member still attacks.
+- `panel.sh hide` can print "panel hidden" with the panel up and empty: look at a shot, and press L
+  by hand (`xdotool key --window W l`).
+
 ## Casting spells for a test
 
 From `fountain-user` clicked into Pehtucl's ambush (logs/2026-11-08-manual-spells.md):

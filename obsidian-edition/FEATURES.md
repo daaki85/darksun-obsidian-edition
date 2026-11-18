@@ -131,8 +131,18 @@ number the dice log shows for the attack itself, worked out the way the game doe
 weapon less the enemy's AC as it counts against this attacker. Each weapon is named where they
 differ, and both numbers are given where the swing may come from behind.
 
-**Switch:** *The chance to hit: with an enemy chosen with Tab, what the d20 must show to hit it and
-the chance, in the dice log and the combat log's header*. Rules: [the chance shown before the
+**Under the pointer.** On a party member's turn, rest the game's pointer on an enemy and the same
+number floats over it, as "Miss" does: `12+ (45%)`. It goes when the pointer leaves the enemy or
+the turn passes. A label is narrow, so it gives one weapon, the one a click would swing first:
+next to the enemy the first weapon in hand; farther off the walk-up's with the walk arrow (or the
+eye) and the shot's with the attack pointer. Tab's choice is left alone: the pointer changes
+neither the ring nor the combat log's header.
+
+![Jenna's turn, the pointer on an Arena Guard at the corridor's end: "13+ (40%)" floats over the guard](docs/hit-chance-hover.png)
+
+**Switches:** *The chance to hit: with an enemy chosen with Tab, what the d20 must show to hit it and
+the chance, in the dice log and the combat log's header*, and *The chance to hit under the pointer:
+in a fight, with the pointer over an enemy, what the d20 must show and the chance float over it*. Rules: [the chance shown before the
 swing](PLAYER-GUIDE.md#the-chance-shown-before-the-swing). How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#the-chance-to-hit-before-the-swing).
 

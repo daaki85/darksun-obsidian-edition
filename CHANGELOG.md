@@ -41,6 +41,8 @@ under "## Unreleased (branch `obsidian-edition`)
   segment and 36 paragraphs of upper memory, less than quick save and the squares needed, so their
   two long routines run from the tail (`TAIL_CALL`: code in the tail is new) and the squares' map
   lies in DSCLOG's own PSP: 71,440 bytes, 48 bytes and 1 paragraph left.
+- **The chance to hit under the pointer**: on a party member's turn the roll needed and the chance
+  float over the enemy the game's pointer rests on (`hover.py`; DSCLOG unchanged).
 
 **Changed**
 - **Fewer switches** (#110), for a simpler Options tab and the mod's rules as meant: the combat
