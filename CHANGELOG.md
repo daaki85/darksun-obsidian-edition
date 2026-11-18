@@ -91,6 +91,25 @@ Releases, newest first (2.12.0 and older in the archive):
   step; Kalzith's loot is marked done only once his scrolls are gone, a lone one on the ground
   too; a champion's gear that can't be placed is tried three more times, not every pass.
 
+**Fixed: DSCLOG** (the code audit, part 2: its interrupt hygiene and memory margins)
+- **Interrupts as the game had them:** DSCLOG's handlers that return their flags to the game, or
+  run the game's own code (the figures drawn every frame, the item box, the USE screen's buttons,
+  the AI's walls, the slots, the level-up window, a polearm's reach, a Poisoner's hit), set
+  interrupts as their caller had them, not always on and not left off (the game's clock lost its
+  ticks).
+- **The timer's tick and the dice's record clear the direction flag** before they copy.
+- **The game's mouse handler forgotten when the game removes it** or resets the driver, so a
+  pending call can't reach a handler that is gone.
+- **The scenes' arrow pointer leaves the screen alone while the game copies within video memory**
+  (it could have put its pixels in the copy).
+- **A20 checked each pass of the main loop:** found off, it is turned on again and the dice log
+  says so once, rather than DSCLOG's buffers above 1 MB being written over the interrupt vectors.
+  DSCLOG's signature now `DSCLOGvc`.
+- **Upper memory moved down to CA00h, not C900h:** five times the room between DOSBox's own tables
+  and DSCLOG.
+- **Memory in pieces is said too:** with enough spare in all but no piece the map's view needs,
+  the dice log says to save and restart soon.
+
 **Fixed: the scripts**
 - **The elven slavers' leader's Goodbye** (script 46, from OpenDS's triage; `scriptfixes.py`, tests
   `OpenDSTriageTests`; not yet seen in play): "Sorry to bother you. Goodbye." alone went straight to
@@ -127,6 +146,10 @@ Releases, newest first (2.12.0 and older in the archive):
 - **The release zip** leaves out the developer pages, the tests and `docs/viewer.png` (`export-ignore`); the manual links to them at the release's tag (#97).
 
 **Docs**
+- **Named saves aren't a backup history** (README): the copies are made while the Loader's window
+  is open, one a slot, and the game saving over a slot replaces its copy.
+- **DSCLOG's room and kept block** recomputed for this build (DEVELOPMENT-INTERNALS), and the new
+  spells' room named 199-211 (DEVELOPMENT-CONTENT).
 - **The change records** (#98): the patch notes shortened, each release's notes take its version news, and the CHANGELOG's older entries archived (`CHANGELOG-archive.md`) and its labels made New, Changed, Fixed, Docs and Dev.
 - **The developer pages restructured**: `DEVELOPMENT.md` the entry point (architecture, glossary, requirements, a map of every module, a contributor checklist, one Unverified list, acknowledgements), the rest in a new `DEVELOPMENT-INTERNALS.md`; sections moved to where they belong, "Verified: log" links for the accounts of play, and version narratives dropped (the history is in the CHANGELOG, its archive and git).
 - **The player's entry points reordered** (#101): the folder README
@@ -153,6 +176,16 @@ Releases, newest first (2.12.0 and older in the archive):
   pages may no longer link to a DEVELOPMENT page relatively (`test_doclinks`).
 
 **Dev**
+- **The code audit's tests** (part 2): every field of DSCLOG's header at its offset and every
+  `TSR_*` constant a field's (`test_header_offsets`, which also pins the spell arrows' table and
+  the names' room); DSCLOG's interrupt handling in the emulator (`test_interrupt_hygiene`); the
+  Loader's names within DSCLOG's room, and icons' and pickpocket's name entries theirs; every
+  player's page in the manual; `CHANGELOG-archive.md` link-checked. DSCLOG counts its item names
+  (`NAMES_EXTRA`) and asserts its tick records' size. Python constants that shared a name with a
+  different DSCLOG one renamed (`TSR_TSIZE`, `NO_MATERIAL_BIT`, `WILD_TO_HIT_MOD`,
+  `STINK_TO_HIT_MOD`, `MAP_THING_COUNT`).
+- **A release step runs the tests with the game's files** (DEVELOPMENT.md, Making a release).
+- **The start-up hook** no longer takes a task's branch with `-2` on it for a handed random name.
 - `dsloader/guidepage.py` (the manual's old name) taken out; the combat log's design brief archived in `reports/archive/`, the rest-order prototype moved to `playtest/logs/files/`.
 
 ## Pull request #96 ([merged 2026-11-17](https://github.com/daaki85/darksun-obsidian-edition/pull/96))

@@ -465,7 +465,10 @@ level AA:
 Unzip the new release into a folder of its own and copy two
 things from the old folder into it: `settings.json` (your options) and the
 **Named saves** folder (each save's copy under its name, and the `Replaced -`
-copies a restore keeps, which may be the only copy left of a save). Your saves
+copies a restore keeps, which may be the only copy left of a save). The named
+copies are made only while the Loader's window is open, one a slot: they are not
+a backup history, as the game saving over a slot replaces that slot's copy (keep
+a save you want to go back to in a slot of its own, or copy it elsewhere). Your saves
 and characters are in the game folder (or its `cloud_saves` folder, where GOG
 keeps them when it has one), so nothing else needs moving. Then delete the old
 folder.
@@ -490,7 +493,7 @@ saves and characters:
 |---|---|
 | `settings.json` | your options, and what the Loader remembers (who has had their pockets picked, speakers' names); if it is ever damaged, it is kept as `settings.json.bad` and the defaults used |
 | `crash-logs` | crash, freeze and item reports |
-| `Named saves` | a copy of each save under the name you gave it |
+| `Named saves` | a copy of each save under the name you gave it, made while the Loader's window is open: one a slot, replaced when the game saves over that slot (not a backup history), and the `Replaced -` copies a restore keeps |
 | `dosbox_dicelog.conf` | DOSBox's settings for the game the Loader starts, written at each start |
 | `play.log` | what went wrong, when the game was started with `Play Dark Sun (in-game rolls).bat` |
 | `dos` | the Loader's helpers, and the patched copy of the game (`DSUNLOG.EXE`) with copies of its data |
