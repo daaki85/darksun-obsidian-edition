@@ -242,7 +242,11 @@ game's data: it is one player's account.
     under another name (`dbq`, with `SDL_VIDEO_X11_WMCLASS=dosbox` so xdotool finds its window),
     writes its pid to `$WORK/dsun.pid` (live.py reads it) and starts the dice log as `python3 -um
     dsloader dicelog --pid PID` (not the command line the shared `start.sh` kills), stopping only
-    its own by their pid files.
+    its own by their pid files. Run a tool there through a wrapper that sets `PLAYTEST_WORK` and
+    `DISPLAY` and changes to the copy's `playtest/` (logs/2026-11-18-integration.md: `:60`,
+    `dbint`). `pgrep -a dosbox` also lists another agent's `dosbox-x`; `pgrep -x` tells them apart.
+    `framerate.py` and the tools that look for a window of class `dosbox` on `:55` are the shared
+    game's: in a copy, change the display in `env.sh` and `paths.py` only.
   - **Scar's trip from a save**: the arena's gate (488, 200); `viewto.py 500 380`, then clicks at
     screen (144, 140) (the gap, to 488, 424) and (150, 185) (the platform, 488, 472) with the walk
     arrow: the Announcer, then `fight_on 1`. After the bout: the "Go back to the pens" box, the

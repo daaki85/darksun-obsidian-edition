@@ -594,3 +594,8 @@ index](logs/README.md), by date.
   An item box opened by a right-click in the inventory closes by itself about a second after the
   pointer moves off it; `docs/elvenkind.png`'s crops found by matching pixels (the boots' at
   +173+95, not the +183+95 an earlier log gave) (logs/2026-11-18-docs-review-2.md).
+- **2026-11-18** (the integration): the six additions of 2026-11-16/17 (journal, picture and music,
+  chance to hit, quick save, quests, showing what can be used) rebased onto the reorganised branch
+  and checked together in a private game: the helper's signature `DSCLOGvc`, quick save's header
+  fields moved to +1868, 29,424 bytes of upper memory free in one piece
+  (logs/2026-11-18-integration.md).
