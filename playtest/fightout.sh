@@ -4,11 +4,16 @@
 # A member with no Move left gets END TURN (E). A waiting message is clicked away first (msgbox.sh: Tab/Return do nothing under one). Never
 # Escape: with no menu up it opens EXIT GAME?. Enemies act alone. DONE when fight_on is 0, else
 # STUCK with a screenshot. The arena sends several waves: run it again while a new fight starts.
+# KEEP_HP=1 leaves the foes' hit points as they are (no hp.py 1: a foe set apart with foeset.py
+# keeps its 200), and HEAL=1 puts the party's hit points back (healparty.py) each pass: together
+# they let the party strike one foe again and again (its "target AC" lines). Both are memory
+# edits for a test: never save after them.
 . "$(dirname "$0")/env.sh"
 W=$(timeout 5 xdotool search $WINQ | head -1)
 case "$(timeout 20 python3 "$PT/state.py")" in "fight_on 0"*) echo "NO FIGHT ON"; exit 2;; esac
-timeout 20 python3 "$PT/hp.py" 1 >/dev/null
+[ "${KEEP_HP:-0}" = 1 ] || timeout 20 python3 "$PT/hp.py" 1 >/dev/null
 for i in $(seq 1 ${1:-40}); do
+  [ "${HEAL:-0}" = 1 ] && timeout 20 python3 "$PT/healparty.py" >/dev/null
   f=$(timeout 20 python3 "$PT/state.py")
   case "$f" in "fight_on 0"*) echo "DONE after $i: $f"; exit 0;; esac
   if sh "$PT/levelup.sh"; then continue; fi

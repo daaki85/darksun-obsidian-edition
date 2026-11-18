@@ -533,3 +533,11 @@ index](logs/README.md), by date.
   tool that looks for the header by it changed with it. The buyback with the Loader's dice log
   stopped (its pid killed, 7 s past LOADER_FRESH) frees the item as the game does; T shuts the loot
   window itself, so an Escape after it opened EXIT: SAVE GAME? (logs/2026-11-18-audit-fixes-1.md).
+  The champions' bout: one foe's AC read by naming the foes apart in memory, the rest at 1 HP and
+  the one at 200, then fightout.sh's loop with the foes' HP kept and the party healed each pass
+  (now `KEEP_HP=1 HEAL=1`); one foe's attacks by Paralyzing the others and passing turns; the dice
+  log's HP lines lag a hit when two land close together; a click below the view opened EXIT: SAVE
+  GAME? (logs/2026-11-18-champions-gear.md, logs/2026-11-18-champion-chill-arrows.md).
+  An item box opened by a right-click in the inventory closes by itself about a second after the
+  pointer moves off it; `docs/elvenkind.png`'s crops found by matching pixels (the boots' at
+  +173+95, not the +183+95 an earlier log gave) (logs/2026-11-18-docs-review-2.md).
