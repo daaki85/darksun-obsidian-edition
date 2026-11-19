@@ -272,6 +272,12 @@ come with me to the Veiled Alliance!" over the map. It runs with `ems=false` and
 **`dosmem.py [PID]`** reads the memory of any DOSBox (no helper needed): both MCB chains, the
 program's far heap (load + 0FE7h in SL, **+ 135Bh** in WotR) and DOS memory after it.
 
+**The Loader's way** (the port, `dsloader/ravager.py`): `RAV_LOADER=1 sh ravstart.sh FOLDER` makes the
+Loader's copies (DSUNLOG2.EXE, RESOURC2.GFF in the mod's dos folder) and starts DSUNLOG2.EXE from D:
+(the mod's folder) with the game as C: and the CD as **F:**: the game finds its CD through MSCDEX
+whatever its letter (2026-11-19: to Tyr with the CD on F:, as on D:). The copy reads its data from the
+current folder (C:) by its "path" patch (DS:44F2h, SL's 4B81h).
+
 **Driving it** (2026-11-19, logs/2026-11-19-ravager-fixes-2.md): `sh ravstart.sh [FOLDER]` starts
 it to Tyr with no mouse (Shift twice, **S** on the menu is START GAME, 80 s). The game is 320x200
 shown at 640x480: **game y = window y / 2.4**. Its pointer is DS:A109h (x) and A10Bh (y) (SL's

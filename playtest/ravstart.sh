@@ -4,7 +4,8 @@
 # on the menu is START GAME, then the narrated cinematic (about 60 s, no skip). D: is the CD's data
 # track alone (a cue it writes: Linux's DOSBox can't take GOG's game.ins, its music .ogg). Its pid in
 # $WORK/rav.pid, its config $WORK/rav.conf. `RAV_UMB=1` runs it as the mod would (EMS off,
-# UMBPLUS.COM first). Kills nothing: stop an earlier one first. About 90 s.
+# UMBPLUS.COM first). `RAV_LOADER=1` starts it as the Loader does: dsloader.ravager's
+# copies (DSUNLOG2.EXE, RESOURC2.GFF) in the mod's dos folder, run from E: with the game as C:. Kills nothing: stop an earlier one first. About 90 s.
 . "$(dirname "$0")/env.sh"
 F=${1:-$WORK/rav}
 [ -f "$F/DSUN.EXE" ] || { echo "no $F/DSUN.EXE (setup_ravager.sh)"; exit 1; }
@@ -14,9 +15,21 @@ C=$WORK/rav.conf
 grep -v "^#" "$F/__support/app/dosbox_darksun2.conf" | sed '/^\[autoexec\]/,$d' |
   sed 's/^output=.*/output=surface/; s/^fullscreen=.*/fullscreen=false/; s/^nosound=.*/nosound=true/' > "$C"
 [ -n "$RAV_UMB" ] && sed -i 's/^ems=true/ems=false/' "$C"
+if [ -n "$RAV_LOADER" ]; then   # the Loader's way: its copies (dsloader.ravager) and its autoexec
+  sed -i '/^\[dos\]/,$d' "$C"
+  python3 - "$F" "$REPO/obsidian-edition/dos" >> "$C" <<'PY' || exit 1
+import sys, os
+sys.path.insert(0, os.path.join(sys.argv[2], '..'))
+from dsloader import ravager
+problem = ravager.prepare(sys.argv[1], sys.argv[2], {})
+if problem: sys.exit('ravager.prepare: ' + problem)
+print('\n'.join(ravager.conf_lines(sys.argv[1], sys.argv[2], cd=os.path.join(sys.argv[1], 'data.cue'))))
+PY
+else
 { echo "[autoexec]"; echo "mount c $F"; echo "imgmount d $F/data.cue -t iso"
   [ -n "$RAV_UMB" ] && { echo "mount e $REPO/obsidian-edition/dos"; echo 'e:\umbplus.com'; }
   echo "c:"; echo "DSUN -W0 -L"; } >> "$C"
+fi
 pgrep -x Xvfb >/dev/null || { setsid nohup Xvfb :55 -screen 0 1024x768x24 >/dev/null 2>&1 & sleep 2; }
 setsid nohup dosbox -conf "$C" > "$WORK/rav-dosbox.log" 2>&1 &
 echo $! > "$WORK/rav.pid"; sleep 6

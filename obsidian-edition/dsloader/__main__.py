@@ -265,9 +265,23 @@ def _game_dir(args) -> str:
     return os.path.abspath(game_dir)
 
 
+def _ravager_dir(args) -> Optional[str]:
+    """With --ravager: Wake of the Ravager's folder (given, chosen on the Options tab, or found);
+    None without it."""
+    if not getattr(args, "ravager", None):
+        return None
+    from . import launch, ravager
+    given = None if args.ravager is True else args.ravager
+    folder = ravager.find_dir(launch.load_settings().get("game_dir"), given)
+    if folder is None:
+        raise CliError(f"Wake of the Ravager (GOG 1.1, DSUN.EXE {ravager.WOTR_SIZE:,} bytes) isn't "
+                       f"{'in ' + given if given else 'found'}: give its folder, --ravager FOLDER.")
+    return folder
+
+
 def cmd_launch(args) -> None:
     from . import launch
-    game_dir = _game_dir(args)
+    game_dir = _ravager_dir(args) or _game_dir(args)
     dosbox, problem = launch.launch(game_dir, "the Loader's window")
     print(launch.started_line(game_dir))
     if launch.left_out_line():
@@ -406,6 +420,8 @@ def main(argv=None) -> int:
 
     s = sub.add_parser("launch", parents=[common], help="start the game with the dice log helper, then the Loader's window")
     s.add_argument("--game-dir", help="the game's install folder (remembered after the first time)")
+    s.add_argument("--ravager", nargs="?", const=True, metavar="FOLDER",
+                   help="start Wake of the Ravager with the mod's fixes ported so far (its folder found, or FOLDER)")
     s.add_argument("--layout", default=DEFAULT_LAYOUT, help="layout JSON file")
     s.add_argument("--window-scale", type=int, choices=(1, 2, 3, 4),
                    help="DOSBox's window: 3 (the default) is three times the game's 320x200, 2 twice, 4 four times "
