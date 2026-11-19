@@ -104,7 +104,8 @@ class NamedSavesTests(unittest.TestCase):
         self.assertEqual(namedsaves.restore(copy, self.game, 1, 4, self.named), "Trustee")
         self.assertEqual(namedsaves.slot_name(self.game, 1, 4), "Trustee")
         kept = os.path.join(self.named, "Replaced - Page 1 slot 04 - Old one.SAV")
-        self.assertEqual(namedsaves.save_name(open(kept, "rb").read()), "Old one")
+        with open(kept, "rb") as f:
+            self.assertEqual(namedsaves.save_name(f.read()), "Old one")
         self.put(self.game, "SAVE04.SAV", save("Old one"), 950)
         namedsaves.restore(copy, self.game, 1, 4, self.named)
         self.assertTrue(os.path.isfile(kept[:-4] + " (2).SAV"))
@@ -115,6 +116,30 @@ class NamedSavesTests(unittest.TestCase):
         self.put(self.tmp.name, "x.SAV", b"nothing", 1000)
         with self.assertRaises(ValueError):
             namedsaves.restore(bad, self.game, 1, 1)
+
+    def test_failed_replace_leaves_no_tmp(self):
+        """A replace Windows refuses (an antivirus holding the slot) is tried again; one that never
+        goes leaves no .tmp, in the game's save folder or the named saves' folder."""
+        from unittest import mock
+        copy = os.path.join(self.tmp.name, "x.SAV")
+        self.put(self.tmp.name, "x.SAV", save("Trustee"), 1000)
+        real, calls = os.replace, []
+
+        def held_once(src, dst):
+            calls.append(dst)
+            if len(calls) == 1:
+                raise PermissionError(13, "held by a scan")
+            return real(src, dst)
+        with mock.patch("os.replace", side_effect=held_once), mock.patch("time.sleep"):
+            self.assertEqual(namedsaves.restore(copy, self.game, 1, 2), "Trustee")
+        self.assertEqual(namedsaves.slot_name(self.game, 1, 2), "Trustee")
+        with mock.patch("os.replace", side_effect=PermissionError(13, "held")), mock.patch("time.sleep"):
+            with self.assertRaises(PermissionError):
+                namedsaves.restore(copy, self.game, 1, 3)
+            self.assertEqual(namedsaves.sync(self.game, self.named), [])
+        left = [f for d in (self.game, self.named) if os.path.isdir(d)
+                for _, _, files in os.walk(d) for f in files if f.endswith(".tmp")]
+        self.assertEqual(left, [])
 
 
 if __name__ == "__main__":

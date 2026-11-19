@@ -379,6 +379,14 @@ class WriteAtomicTests(unittest.TestCase):
                 gff.write_atomic(dest, Full())
             self.assertEqual(os.listdir(d), ["SEGOBJEX.GFF"])
 
+            used = []  # (each write's temporary file its own: two writers never share one)
+            with mock.patch("os.replace", side_effect=lambda src, dst: used.append(src) or real(src, dst)):
+                gff.write_atomic(dest, b"four")
+                gff.write_atomic(dest, b"five")
+            self.assertEqual(len(set(used)), 2)
+            self.assertNotIn(dest + ".tmp", used)
+            self.assertEqual(os.listdir(d), ["SEGOBJEX.GFF"])
+
 
 OBJECTS = os.environ.get("DSUN_OBJECTS")
 

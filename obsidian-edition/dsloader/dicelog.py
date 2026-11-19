@@ -39,6 +39,7 @@ from .tracker import PartyTracker
 
 HDR_SIG = b"DSCLOGvc"
 TSR_HDR_OFF = 20  # DSCLOG's header: where it is in DSCLOG's segment
+TSR_SEQ, TSR_SEED_OFF, TSR_NFILT = 8, 22, 32  # entries written; the seed's offset (and what follows); filters in use
 # ... the party's spell slots, for the game's USE screen (PROBE_USE)
 TSR_SLOTS_OFF, SLOTS_SIZE = 148, 128
 SLOT_LIST = {"Wizard": 1, "Priest": 2}  # the USE screen's list on show (DS:4AE8h + the member): 1 MAGE, 2 CLERIC, 3 PSIONIC
@@ -696,7 +697,7 @@ class DiceLog:
                                "Close it and start it again from the Loader (Start the game).")
         with self._stats_lock:  # (the stats thread sees the new DSCLOG and game together)
             self.tsr_hdr, self.rand_addr = hdr, rand_addr
-            self.guest.write(hdr + 22, struct.pack("<5H", SEED, TARGET_GLOBAL, 0, 0, 0))
+            self.guest.write(hdr + TSR_SEED_OFF, struct.pack("<5H", SEED, TARGET_GLOBAL, 0, 0, 0))
             self.game = GameData(self.guest, ds)
             if hasattr(self.guest, "item_gate"):  # (the gate is this game's: GameData makes one only
                 old = self.guest.item_gate          # for a guest that has none, so a game started
@@ -732,7 +733,7 @@ class DiceLog:
         self.set_pickpockets()
         self._look_seq = struct.unpack("<H", self.guest.read(hdr + TSR_LOOK_SEQ, 2))[0]
         self._swap_seq = struct.unpack("<H", self.guest.read(hdr + TSR_SWAP_SEQ, 2))[0]
-        self.last_seq = struct.unpack("<H", self.guest.read(hdr + 8, 2))[0]
+        self.last_seq = struct.unpack("<H", self.guest.read(hdr + TSR_SEQ, 2))[0]
         self._effects = None
         self._forget_partial_rolls()
         icons.COPY_OPEN = False  # (a game started anew: its copy not open until DSCLOG says so)
@@ -754,7 +755,7 @@ class DiceLog:
         if self.tsr_hdr is not None:
             filters = () if record_everything else FILTERS
             packed = b"".join(bytes([len(f)]) + f.ljust(8, b"\0") for f in filters)
-            self.guest.write(self.tsr_hdr + 32, struct.pack("<H", len(filters)) + packed)
+            self.guest.write(self.tsr_hdr + TSR_NFILT, struct.pack("<H", len(filters)) + packed)
 
     def set_pickpockets(self) -> None:
         """A thief's Pick Pockets button on the USE screen (always: its switch went after 2.18), and

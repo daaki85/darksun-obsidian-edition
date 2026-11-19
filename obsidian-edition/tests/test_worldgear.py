@@ -441,7 +441,7 @@ class DataTests(unittest.TestCase):
         self.assertLess(74 + 3 * max(added.values()), gamepatch.RECORDS_MOST)
 
     def test_regions_opened(self):
-        """Every region file the Loader copies for a clone is one DSCLOG opens in the game's place
+        r"""Every region file the Loader copies for a clone is one DSCLOG opens in the game's place
         (named in its table of copies, its length first; the D:\ path is made from the name): else
         the game reads its own."""
         exe = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos", "DSCLOG.EXE")
