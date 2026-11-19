@@ -319,8 +319,8 @@ def attempt(gd: GameData, tried: set, roll: Callable[[], int] = lambda: random.r
     if key in tried:
         return Attempt(f"{npc} keeps a close hand on their purse now: {thief} won't get another chance.", [])
     level = thief_level(gd, leader)
-    caught = caught_key(key, thief, level) if gd.rules & game.RULE_THIEF_TABLE else None
-    if caught is not None and caught in tried:
+    caught = caught_key(key, thief, level)  # (Thieves as in AD&D, always on)
+    if caught in tried:
         text = f"{npc} remembers {thief}, and keeps a close hand on their purse."
         return Attempt(text, [f"{text} ({thief} was caught at this thief level: another try once a "
                               "level is gained, with Thieves as in AD&D)"])
@@ -376,10 +376,8 @@ def attempt(gd: GameData, tried: set, roll: Callable[[], int] = lambda: random.r
         text = f"{thief} fumbles {npc}'s pockets, but slips away unnoticed."
         lines.append("  " + text)
         return Attempt(text, lines)  # (no key: free to try again)
-    if caught is not None:  # (Thieves as in AD&D: this thief again once a level is gained, others now)
-        text = f"{npc} catches {thief}'s hand!"
-        lines += ["  " + text, f"  ({thief} may try {npc} again once a thief level is gained)"]
-        return Attempt(text, lines, caught)
-    text = f"{npc} catches {thief}'s hand! {npc} will be too wary for {thief} to try again."
-    lines.append("  " + text)
-    return Attempt(text, lines, key)
+    # (Thieves as in AD&D: this thief again once a level is gained, others now; the game's "too wary
+    # to try again" went with the switch)
+    text = f"{npc} catches {thief}'s hand!"
+    lines += ["  " + text, f"  ({thief} may try {npc} again once a thief level is gained)"]
+    return Attempt(text, lines, caught)

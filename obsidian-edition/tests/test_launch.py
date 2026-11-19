@@ -358,7 +358,7 @@ class LaunchTests(unittest.TestCase):
         log.use_settings(old)
         for name in ("pickpockets", "show_gear", "show_shadows", "combat_log", "scroll_map", "show_dust",
                      "see_through", "elf_looks", "cilla_elf", "stealth_gear", "use_targeting"):
-            self.assertIs(getattr(log, name), True, name)
+            self.assertFalse(hasattr(log, name), name)  # (no switch of the dice log's left for them)
         self.assertEqual(log.rules, rules)
         # (DSCLOG's two words, as set_rules writes them: every gone switch's bit in one or the other)
         low, high = rules & 0xFFFF, rules >> 16 & 0xFFFF

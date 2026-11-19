@@ -986,14 +986,13 @@ def objects_beside(path: str) -> Optional[gff.Chunks]:
         return None
 
 
-def write_resources(source: str, dest: str, roll_store: bool = True, spells_manual: bool = True,
-                    creature_size: bool = True) -> None:
+def write_resources(source: str, dest: str) -> None:
     """The game's RESOURCE.GFF (SOURCE, only read) with the new spells' icons, the Pick Pockets
     button's, the descriptions of both and of the spell arrows (spelltexts.py), the save/load
-    window's PAGE 1 to PAGE 4 buttons (savepages.py), the mod's sounds (sounds.py) and, with
-    ROLL_STORE, the creation screen's STORE and RECALL (rollstore.py), to DEST; with SPELLS_MANUAL, the
-    descriptions of the spells the manual's way (spelltexts.MANUAL_TEXTS); with CREATURE_SIZE, Hold and
-    Charm Person's saying they don't take on a large target (spelltexts.SIZE_TEXTS)."""
+    window's PAGE 1 to PAGE 4 buttons (savepages.py), the mod's sounds (sounds.py) and the creation
+    screen's STORE and RECALL (rollstore.py), to DEST; the descriptions of the spells the manual's way
+    (spelltexts.MANUAL_TEXTS), and Hold and Charm Person's saying they don't take on a large target
+    (spelltexts.SIZE_TEXTS): their switches went after 2.18, always on."""
     with open(source, "rb") as f:
         data = f.read()
     chunks = gff.read_gff(data)
@@ -1007,7 +1006,7 @@ def write_resources(source: str, dest: str, roll_store: bool = True, spells_manu
              **{("ICON", icon): encode(arrow_spell_icon(decode(chunks[("ICON", 21000 + touch)]), *how))
                 for icon, (touch, *how) in ARROW_BUTTONS.items()}}
     from . import spelltexts
-    added.update(spelltexts.chunks(spells_manual, creature_size))
+    added.update(spelltexts.chunks(True, True))
     from . import sounds  # the hiding's and the picked pocket's sounds (BVOC chunks past the game's)
     added.update(sounds.chunks())
     from . import art, game, wotrart  # the 6th-level priest spells' (Wake of the Ravager's, else tinted ones)
@@ -1038,8 +1037,7 @@ def write_resources(source: str, dest: str, roll_store: bool = True, spells_manu
         pass  # (CHOOSE A SPELL's icons where the game has them)
     from . import rollstore
     try:
-        if roll_store:
-            added.update(rollstore.chunks(chunks))
+        added.update(rollstore.chunks(chunks))
     except (KeyError, ValueError, IndexError, struct.error):
         pass  # (no STORE and RECALL: the creation screen as the game has it)
     out = with_chunks(data, added)
@@ -1077,9 +1075,8 @@ def write_objects(source: str, dest: str, on: Optional[Dict[str, bool]] = None) 
     room: Dict[Tuple[str, int], int] = {}
     _palette(source)
     try:  # (the party's own sprites, for what they wear: room after each to be dressed in place)
-        looks = (on or {}).get("elf_looks", True) is not False  # (elves' ears, half-elves' figures)
-        pictures = sprites.new_chunks(chunks, looks)
-        room = sprites.new_room(chunks, pictures, looks)
+        pictures = sprites.new_chunks(chunks)  # (elves' ears, half-elves' figures)
+        room = sprites.new_room(chunks, pictures)
         added.update(pictures)
     except (KeyError, ValueError, IndexError, struct.error):
         pass
@@ -1108,11 +1105,9 @@ def write_objects(source: str, dest: str, on: Optional[Dict[str, bool]] = None) 
     items = worldgear.data_chunks(chunks, on or {})
     added.update(items)
     from . import defaultparty
-    if (on or {}).get("cilla_elf", True) is not False:  # (Cilla, an elf, drawn as one)
-        added.update(defaultparty.figure_chunks(chunks, {**chunks, **added}))
+    added.update(defaultparty.figure_chunks(chunks, {**chunks, **added}))  # (Cilla, an elf, drawn as one)
     from . import monsters  # (the Styr, the Djinn and the Tari as the manual describes them)
-    if (on or {}).get("spells_manual", True) is not False:
-        added.update(monsters.object_chunks({**chunks, **added}))
+    added.update(monsters.object_chunks({**chunks, **added}))
     out = with_chunks(data, added, room)
     gff.write_atomic(dest, out)  # (no .tmp left by a failed write)
     return True, tuple(sorted(n for (k, n) in items if k == "RDFF" and ("RDFF", n) not in chunks)), \
