@@ -4,9 +4,9 @@ Obsidian Edition is a mod for **Dark Sun: Shattered Lands** (the GOG release)
 in DOSBox: rules closer to AD&D, kits, new spells, items and people, the
 party's gear drawn on the map, and every roll shown as it happens. You start
 the game with the **Dark Sun Obsidian Edition Loader**, which loads the mod
-with your options and keeps the full dice log while you play. Nearly every
-rule change and addition has a switch on the Loader's Options tab ([each one, its
-default and when it takes effect](obsidian-edition/PLAYER-GUIDE.md#the-options-tab-at-a-glance)).
+with your options and keeps the full dice log while you play. Most of it is
+always on; the new content and a few rules have a switch on the Loader's Options
+tab ([each one, its default and when it takes effect](obsidian-edition/PLAYER-GUIDE.md#the-options-tab-at-a-glance)).
 
 ![Round 4 of Pehtucl's ambush at the slave pens' fountain: Jenna's turn, with the combat log over the map's lower right, in short and its small font, seven lines: the Arena Guard's hit points after each blow, Seneca's miss, and Jenna seen as she tries to hide in shadows](obsidian-edition/docs/combat-log.png)
 
@@ -23,7 +23,7 @@ default and when it takes effect](obsidian-edition/PLAYER-GUIDE.md#the-options-t
 ## Documentation
 
 - [The full documentation](obsidian-edition/README.md): installing, running, the Loader's window,
-  troubleshooting, and [the full list of pages](obsidian-edition/README.md) (features, kits,
+  troubleshooting, and [the full list of pages](obsidian-edition/README.md#contents) (features, kits,
   items, creatures, the dice log and more)
 - [The player's guide](obsidian-edition/PLAYER-GUIDE.md), without spoilers, with a
   [glossary](obsidian-edition/PLAYER-GUIDE.md#glossary) of THAC0, AC, PSP and the rest

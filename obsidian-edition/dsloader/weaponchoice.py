@@ -435,7 +435,7 @@ def kit_gear(gd) -> List[str]:
             out += _poisoner_daggers(gd, member, sheet, read, chosen)
         if kid == kits.GHETTO:
             out += _ghetto_dagger(gd, member, sheet, read)
-        if kid == kits.BATTLE_MAGE and chosen and gd.rules & game.RULE_SPECIALIZE \
+        if kid == kits.BATTLE_MAGE and chosen \
                 and not any(specialize.kind_of(struct.unpack_from("<H", i, game.ITEM_TYPE)[0]) == chosen[0]
                             for _, i, _ in owned):
             for item_index, item, _ in owned:
@@ -463,7 +463,7 @@ def _kit_second_weapon(gd, member: int, sheet: bytes, kid: int, chosen: List[int
     kind_of = lambda item: specialize.kind_of(struct.unpack_from("<H", item, game.ITEM_TYPE)[0])
     hand = next((item for _, item, _ in owned if item[game.ITEM_SLOT] == right), None)
     who = gd.creature_name(member)
-    if kid == kits.MYRMIDON and len(chosen) > 1 and gd.rules & game.RULE_SPECIALIZE and hand is not None:
+    if kid == kits.MYRMIDON and len(chosen) > 1 and hand is not None:
         if any(kind_of(item) == chosen[1] for _, item, _ in owned):
             return []
         new = start_weapon(sheet, [chosen[1] + 1], read)

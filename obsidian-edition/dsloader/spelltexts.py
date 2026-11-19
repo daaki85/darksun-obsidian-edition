@@ -90,7 +90,7 @@ MANUAL_TEXTS: Dict[int, str] = {
     152: "CELL ADJUSTMENT:  Heals 1 to 4 pts of damage and cures diseases.",
 }
 
-# With "Creature size as in AD&D" (game.RULE_SIZE): the person spells don't take on a large target
+# Creature size as in AD&D (game.RULE_SIZE): the person spells don't take on a large target
 SIZE_TEXTS: Dict[int, str] = {
     31: "HOLD PERSON:  May paralyze targets of character types (human, dwarf, etc.) no bigger than "
         "man-sized: not half-giants. You can aim at up to 4 targets.",
@@ -103,8 +103,8 @@ SIZE_TEXTS: Dict[int, str] = {
 }
 
 
-def chunks(manual: bool = False, size: bool = False) -> Dict[Tuple[str, int], bytes]:
-    """The SPIN chunks, in the game's form: the text and CR LF (MANUAL: with the spells as the manual
-    has them, MANUAL_TEXTS' in their places; SIZE: with the creature size rule, SIZE_TEXTS')."""
-    texts = {**TEXTS, **(MANUAL_TEXTS if manual else {}), **(SIZE_TEXTS if size else {})}
+def chunks() -> Dict[Tuple[str, int], bytes]:
+    """The SPIN chunks, in the game's form: the text and CR LF (with the spells as the manual has
+    them, MANUAL_TEXTS' in their places, and the creature size rule's SIZE_TEXTS')."""
+    texts = {**TEXTS, **MANUAL_TEXTS, **SIZE_TEXTS}
     return {("SPIN", n): text.encode("ascii") + b"\r\n" for n, text in texts.items()}

@@ -30,7 +30,7 @@ from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, 
 
 from . import aging, keywatch, moveback, usable, hover, quests, quicksave, hitchance, journal, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, squares, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
-                   EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
+                   MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory, WriteRefused
 from .process import ProcessError
 from .itemwatch import ItemWatch
@@ -39,6 +39,7 @@ from .tracker import PartyTracker
 
 HDR_SIG = b"DSCLOGve"
 TSR_HDR_OFF = 20  # DSCLOG's header: where it is in DSCLOG's segment
+TSR_SEQ, TSR_SEED_OFF, TSR_NFILT = 8, 22, 32  # entries written; the seed's offset (and what follows); filters in use
 # ... the party's spell slots, for the game's USE screen (PROBE_USE)
 TSR_SLOTS_OFF, SLOTS_SIZE = 148, 128
 SLOT_LIST = {"Wizard": 1, "Priest": 2}  # the USE screen's list on show (DS:4AE8h + the member): 1 MAGE, 2 CLERIC, 3 PSIONIC
@@ -447,10 +448,10 @@ def hit_chance(need: int) -> int:
     return 5 * sum(1 for d in range(1, 21) if d == 20 or (d != 1 and d >= need))
 
 
-def save_chance(needed: int, doubled: bool) -> int:
-    """The chance (percent) that a d20 (doubled for some spells) reaches `needed` after the rest
-    is added; a natural 20 always saves and a natural 1 always fails."""
-    wins = sum(1 for d in range(1, 21) if d == 20 or (d != 1 and (d * 2 if doubled else d) >= needed))
+def save_chance(needed: int) -> int:
+    """The chance (percent) that a d20 reaches `needed` after the rest is added; a natural 20
+    always saves and a natural 1 always fails."""
+    wins = sum(1 for d in range(1, 21) if d == 20 or (d != 1 and d >= needed))
     return wins * 5
 
 
@@ -608,7 +609,7 @@ class DiceLog:
         self._mended_in: Optional[int] = None  # the area Kalzith's scrolls were last mended in
         self._party_done: set = set()  # the game's own party's changes made (defaultparty.py)
         self._swap_seq = 0  # DSCLOG's text swaps seen (the arena ring's search, ring.py)
-        self.rules = 0  # RULE_HELMS ...: rule changes DSCLOG makes (set_rules)
+        self.rules = game.RULES_ALWAYS  # RULE_HELMS ...: rule changes DSCLOG makes (set_rules; the always-on ones from the start)
         self.stealth_roll: Callable[[], int] = lambda: random.randint(1, 100)  # hiding, moving silently
         self._ring_check = 0.0
         self._main_ticks: Optional[int] = None  # DSCLOG's count of the map's main loop, last read
@@ -715,7 +716,7 @@ class DiceLog:
                                "Close it and start it again from the Loader (Start the game).")
         with self._stats_lock:  # (the stats thread sees the new DSCLOG and game together)
             self.tsr_hdr, self.rand_addr = hdr, rand_addr
-            self.guest.write(hdr + 22, struct.pack("<5H", SEED, TARGET_GLOBAL, 0, 0, 0))
+            self.guest.write(hdr + TSR_SEED_OFF, struct.pack("<5H", SEED, TARGET_GLOBAL, 0, 0, 0))
             self.game = GameData(self.guest, ds)
             if hasattr(self.guest, "item_gate"):  # (the gate is this game's: GameData makes one only
                 old = self.guest.item_gate          # for a guest that has none, so a game started
@@ -758,7 +759,7 @@ class DiceLog:
         self.set_pickpockets()
         self._look_seq = struct.unpack("<H", self.guest.read(hdr + TSR_LOOK_SEQ, 2))[0]
         self._swap_seq = struct.unpack("<H", self.guest.read(hdr + TSR_SWAP_SEQ, 2))[0]
-        self.last_seq = struct.unpack("<H", self.guest.read(hdr + 8, 2))[0]
+        self.last_seq = struct.unpack("<H", self.guest.read(hdr + TSR_SEQ, 2))[0]
         self._effects = None
         self._forget_partial_rolls()
         icons.COPY_OPEN = False  # (a game started anew: its copy not open until DSCLOG says so)
@@ -780,7 +781,7 @@ class DiceLog:
         if self.tsr_hdr is not None:
             filters = () if record_everything else FILTERS
             packed = b"".join(bytes([len(f)]) + f.ljust(8, b"\0") for f in filters)
-            self.guest.write(self.tsr_hdr + 32, struct.pack("<H", len(filters)) + packed)
+            self.guest.write(self.tsr_hdr + TSR_NFILT, struct.pack("<H", len(filters)) + packed)
 
     def set_pickpockets(self) -> None:
         """A thief's Pick Pockets button on the USE screen (always: its switch went after 2.18), and
@@ -1066,7 +1067,7 @@ class DiceLog:
             # (only over the game's own table: kind 5 is petrification/polymorph or, so far, the spell save)
             if table is not None and struct.unpack("<5H", self.guest.read(table, 10)) == game.KIND_TO_SAVE[:5] \
                     and struct.unpack("<H", self.guest.read(table + 2 * game.SPELL_KIND, 2))[0] in (3, 5):
-                save = game.kind_to_save(game.SPELL_KIND, rules)
+                save = game.kind_to_save(game.SPELL_KIND)
                 self.guest.write(table + 2 * game.SPELL_KIND, struct.pack("<H", save))
             if self.game is not None:
                 self.game.set_dodge(True)  # (RULE_NO_DOUBLE, always on)
@@ -1087,7 +1088,7 @@ class DiceLog:
                 if attacker < game.PARTY_SIZE else 0
             index = self.game.combatant_creature(target)
             gap = self.ac_gap.get(index, 0) if index is not None and self.monster_ac(index) is not None else 0
-            return hitchance.predict(self.game, attacker, target, self.rules, bool(hidden), gap)
+            return hitchance.predict(self.game, attacker, target, bool(hidden), gap)
         except (struct.error, IndexError, ValueError):
             return []
 
@@ -1202,7 +1203,7 @@ class DiceLog:
         out += struct.pack("<3H", *([h.item for h in weapons] + [game.NO_ITEM] * (3 - len(weapons))))
         out += struct.pack("<3b", *([clamp(h.thac0) for h in weapons] + [0] * (3 - len(weapons))))
         thief = g.thief_skills_now(member, game.PANEL_SKILLS)
-        ranger = g.ranger_skills_now(member) if self.rules & game.RULE_STEALTH and not thief else []
+        ranger = g.ranger_skills_now(member) if not thief else []
         if len(thief) == 6:
             out += struct.pack("<B6B", 1, *(n for _, n in thief))
         elif len(ranger) == 2:  # move silently and hide in shadows, in a thief's places
@@ -1213,7 +1214,7 @@ class DiceLog:
         armour = g.armour_spells_ac(member)
         out += struct.pack("<3b", *(max(-127, min(127, armour[e])) if e in armour else -128
                                     for e in (game.EFFECT_BARKSKIN, game.EFFECT_FLESH_ARMOR, game.EFFECT_VESTMENTS)))
-        age = aging.age_of(g.sheet(member)) if self.rules & game.RULE_AGING else None
+        age = aging.age_of(g.sheet(member))
         if age is None:
             out += bytes(6)
         else:
@@ -1231,12 +1232,13 @@ class DiceLog:
             return 0
         return max(0, min(100, skills[0][1])) if skills else 0
 
-    def _answer_stats(self) -> None:
+    def _answer_stats(self) -> bool:
         """A game screen is about to show THAC0 and the saves: bring them up to date first (the
-        game waits for this, so an item just put on counts)."""
+        game waits for this, so an item just put on counts). False while no game is attached
+        (nothing to look at: the stats thread then takes its idle step)."""
         with self._stats_lock:
             if self.tsr_hdr is None or self.rand_addr is None:
-                return
+                return False
             now = time.monotonic()
             if now - getattr(self, "_beat_at", 0.0) >= BEAT_STEP:  # (the heartbeat: GEAR_HOLD, _beat)
                 self._beat_at = now
@@ -1246,6 +1248,7 @@ class DiceLog:
             if req != self.guest.read(self.tsr_hdr + TSR_STATS_REPLY, 2) and self._same_game():
                 self._write_stats_now()
                 self.guest.write(self.tsr_hdr + TSR_STATS_REPLY, req)
+            return True
 
     def answer_stats_in_background(self) -> None:
         """Answer DSCLOG's requests for fresh STATS from a thread of their own, within a
@@ -1258,9 +1261,8 @@ class DiceLog:
         def run() -> None:
             step = STATS_ANSWER_STEP
             while not self._stats_stop.wait(step):
-                try:
-                    self._answer_stats()
-                    step = STATS_ANSWER_STEP
+                try:  # (unattached: the idle step, not a look every millisecond)
+                    step = STATS_ANSWER_STEP if self._answer_stats() else STATS_ANSWER_IDLE
                 except Exception:  # (DOSBox gone or restarting: the main loop attaches again)
                     step = STATS_ANSWER_IDLE
         self._stats_thread = threading.Thread(target=run, name="stats", daemon=True)
@@ -1454,8 +1456,7 @@ class DiceLog:
             try:
                 rec = g.creature(attacker)
                 own = struct.unpack("b", rec[game.CREATURE_THAC0:game.CREATURE_THAC0 + 1])[0]
-                kid, war = kits.war_hit(g.sheet(attacker), kind, own, bool(self.rules & game.RULE_SPECIALIZE),
-                                           bool(self.rules & game.RULE_KITS))
+                kid, war = kits.war_hit(g.sheet(attacker), kind, own, True, bool(self.rules & game.RULE_KITS))
             except (struct.error, IndexError, ValueError, AttributeError, TypeError):
                 kid, war = 0, 0
             if war:
@@ -1716,8 +1717,7 @@ class DiceLog:
         out: List[str] = []
         new_spells = bool(self.rules & game.RULE_NEW_SPELLS)
         try:
-            if self.rules & game.RULE_BUYBACK:  # (a magical item sold: into its merchant's pack)
-                out += self._step(lambda: self.buyback.watch(self.game, self.tsr_hdr))
+            out += self._step(lambda: self.buyback.watch(self.game, self.tsr_hdr))  # (a magical item sold: into its merchant's pack)
             if self.defiler_scrolls:  # (a defiler in a fight may carry a scroll: defilerscrolls.py)
                 out += self._step(lambda: self.defilers.watch(self.game, new_spells))
             # (the champions' gear to where it is worn and held: champions.py)
@@ -1843,10 +1843,9 @@ class DiceLog:
             # A new character's gear waits while DSCLOG's weapon window is up after DONE: its weapon
             # specs decide its weapon, and the steps after build on that weapon, in this order.
             new_ok = not self._weapons_asked()
-            if self.rules & game.RULE_SPECIALIZE and new_ok:  # (new characters' weapon kinds and starting weapon:
-                out += weaponchoice.finish_new(self.game)  #   the long sword made a club before a psionicist's classes leave it behind)
-            if self.rules & game.RULE_RESTRICT and new_ok:  # (new characters' gear their classes can't use: left behind)
-                out += weaponchoice.class_gear(self.game)
+            if new_ok:  # (new characters' weapon kinds and starting weapon: the long sword made a club
+                out += weaponchoice.finish_new(self.game)  #   before a psionicist's classes leave it behind;
+                out += weaponchoice.class_gear(self.game)  #   then the gear their classes can't use, left behind)
             if self.rules & game.RULE_KITS:  # (new characters' starting gear fitted to their kits; a
                 if new_ok:  #   Healer's cosmos spells, one made by an earlier version)
                     out += weaponchoice.kit_gear(self.game)
@@ -1856,10 +1855,9 @@ class DiceLog:
             if self.starting_gear and new_ok:  # (new characters' starting gear filled out)
                 out += startgear.fill(self.game)
             out += defaultparty.ready(self.game, self.rules, self._party_done, self.starting_gear)  # (the game's own party, once)
-            if self.rules & game.RULE_AGING and new_ok:  # (a starting age for each who has none)
+            if new_ok:  # (a starting age for each who has none)
                 out += aging.give_ages(self.game)
-            if self.rules & game.RULE_AGING:  # (a year of the game's clock: each a year older)
-                out += self._natural_aging()
+            out += self._natural_aging()  # (a year of the game's clock: each a year older)
             if not self.game.in_combat():  # (items an earlier version put in the wrong list)
                 out += pickpocket.mend_lists(self.game)
             itemgate.release(self.game)
@@ -2731,7 +2729,7 @@ class DiceLog:
                 out.append(f"{name} on {targets}{rule}")
             else:
                 out.append(f"{self._name(caster)} gives {name} to {targets}{rule}")
-            if eid == game.HASTED_EFFECT and self.rules & game.RULE_AGING:  # (Haste's magical aging)
+            if eid == game.HASTED_EFFECT:  # (Haste's magical aging)
                 for owner in owners:
                     creature = self.game.combatant_creature(owner)
                     if creature is not None:
@@ -2989,7 +2987,7 @@ class DiceLog:
             name = "Turn Undead" if e.raw == TURN_UNDEAD_SPELL else self.game.spell_name(e.raw)
             self._float(e.arg(6), name, labels.SPELL_INK, now)
             self._tally.cast(self._name(e.arg(6)), name)  # (its damage the caster's: Magic Missile's)
-            if e.raw == game.RESTORE_YOUTH_SPELL and self.rules & game.RULE_AGING:  # (its years: aging.restore)
+            if e.raw == game.RESTORE_YOUTH_SPELL:  # (its years: aging.restore)
                 caster, target = self.game.combatant_creature(e.arg(6)), self.game.combatant_creature(e.arg(8))
                 if caster is not None and target is not None:
                     level = self.game.effect_caster_level(caster, e.raw) or 1
@@ -3284,7 +3282,7 @@ class DiceLog:
         need = thac0 - ac
         hit = d20 == 20 or (d20 != 1 and d20 >= need)
         # AD&D's held target (RULE_HELD, DSCLOG's HELD_HIT): a Paralyzed or Out Cold one is hit whatever the d20
-        held = self._helpless(e) if self.rules & game.RULE_HELD else None
+        held = self._helpless(e)
         hit = hit or bool(held)
         note = " (natural 20)" if d20 == 20 else " (natural 1)" if d20 == 1 else ""
 
@@ -3325,8 +3323,8 @@ class DiceLog:
         return out
 
     def weapon_skill(self, attacker: Optional[int], item_type: Optional[int]) -> int:
-        """A creature's weapon specialization skill with a weapon (specialize.skill), with the rule on."""
-        if attacker is None or not self.game.rules & game.RULE_SPECIALIZE:
+        """A creature's weapon specialization skill with a weapon (specialize.skill)."""
+        if attacker is None:
             return specialize.NONE
         sheet = self.game.sheet(attacker)
         return specialize.skill(sheet, item_type) if len(sheet) >= game.SHEET_SIZE else specialize.NONE
@@ -3345,7 +3343,7 @@ class DiceLog:
         # the cahulaks' rule (DSCLOG's CAHULAKS): each swing the main head's penalty, in the setup's
         # bonus; the off head's swing (the round's last) its more added to [BP+0Ah] after it
         heads = None
-        if mode is not None and mode <= 1 and item_type in game.CAHULAKS_TYPES and g.rules & game.RULE_CAHULAKS:
+        if mode is not None and mode <= 1 and item_type in game.CAHULAKS_TYPES:
             heads = (g.two_weapons(attacker, 0, "main"), g.two_weapons(attacker, 0, "off"))
         expected = None if None in (after_f1, hit_bonus) else after_f1 - hit_bonus - skill[1] - sum(v for _, v in kit)
         off_head = bool(heads) and expected is not None and heads[0][1] != heads[1][1] \
@@ -3542,7 +3540,7 @@ class DiceLog:
                     total += kits.cure_bonus(kid, spell, outdoors)
                     kit = f" {signed(kits.cure_bonus(kid, spell, outdoors))} {kits.name(kid)}"
                 elif kits.cure_die(kid, spell):
-                    kit = f" + 1d{kits.cure_die(kid, spell)} {kits.name(kid)} (the helper's roll)"
+                    kit = f" + 1d{kits.cure_die(kid, spell)} {kits.name(kid)} (the kit's die)"
                 return self.flush(now, force=True) + [
                     f"{self.game.spell_name(spell)}: {count}d{sides} = [" + " + ".join(map(str, faces)) + "]"
                     + (f" {signed(handler)}" if handler else "") + kit + (f" = {total}" if "1d" not in kit else "")]
@@ -3585,7 +3583,7 @@ class DiceLog:
         own_dice = (weapon.count, weapon.sides) if weapon and weapon.sides else None
         if own_dice and grand and (count, sides) == (own_dice[0], specialize.next_die(own_dice[1])):
             steps += f" (d{sides} for d{own_dice[1]}: grand mastery)"
-        elif own_dice and self.rules & game.RULE_SIZE and (count, sides) != own_dice:  # (DSCLOG's SIZE_DICE)
+        elif own_dice and (count, sides) != own_dice:  # (DSCLOG's SIZE_DICE)
             large = e.parent_arg(0x14) != sizes.SHILLELAGH_TYPE
             steps += f" ({count}d{sides} for {own_dice[0]}d{own_dice[1]}: " \
                 + (("a large target, grand mastery)" if grand else "a large target)") if large
@@ -3601,13 +3599,13 @@ class DiceLog:
             if str_bonus:
                 steps += f" {signed(str_bonus)} STR {strength}"
                 total += str_bonus
-            # Enlarge (DSUN 7C211h, with the STR bonus): +10% a level of the spell, the levels of
-            # every Enlarge on the attacker added up (598:52h), 32-bit and rounded down; with
-            # RULE_ENLARGE only the weapon's dice, rounded up, the rest added once (DSCLOG's ENL_SITE)
+            # Enlarge: +10% a level of the spell, the levels of every Enlarge on the attacker added
+            # up (598:52h), on the weapon's dice only, rounded up, the rest added once (RULE_ENLARGE,
+            # DSCLOG's ENL_SITE); with no dice the game's (DSUN 7C211h): the whole, rounded down
             level = self._enlarge_level(e.parent_arg(0x18))
             if level:
                 percent = 100 + 10 * level
-                if self.rules & game.RULE_ENLARGE and dice > 0:
+                if dice > 0:
                     enlarged = -(-dice * percent // 100)
                     total += enlarged - dice
                     steps += f" +{enlarged - dice} Enlarge (the dice {dice} x{percent}% = {enlarged}, level {level})"
@@ -3615,33 +3613,24 @@ class DiceLog:
                 else:  # (32-bit idiv: toward 0)
                     total = int(total * percent / 100)
                     steps = f"({steps}) x{percent}% Enlarge (level {level})"
-        # a backstab (a thief attacking from right behind, see the THAC0 line) multiplies all of
-        # that on the attacker's first two attacks of the round: x2, x3 from thief level 5, x4 from
-        # 9, x5 from 13; with RULE_BACKSTAB only the weapon's dice, the rest added once, and on the
-        # first attack only (DSCLOG's STAB_TIMES). The attack's frame: [BP+1Eh] backstab, [BP+20h]
-        # from behind, [BP-14h] the attacks already made this round
+        # a backstab (a thief attacking from right behind, see the THAC0 line) multiplies the
+        # weapon's dice, the rest added once, on the attacker's first attack of the round: x2, x3
+        # from thief level 5, x4 from 9, x5 from 13 (RULE_BACKSTAB, DSCLOG's STAB_TIMES; the game
+        # multiplies all of it, on the first two attacks). The attack's frame: [BP+1Eh] backstab,
+        # [BP+20h] from behind, [BP-14h] the attacks already made this round
         backstab, rear, made = e.parent_arg(0x1E), e.parent_arg(0x20), e.parent_local(-0x14)
-        most = 0 if self.rules & game.RULE_BACKSTAB else 1
-        if backstab and rear and made is not None and made <= most:
+        if backstab and rear and made is not None and made <= 0:
             sheet = g.sheet(attacker)
             thief = [sheet[game.SHEET_LEVELS + i] for i in range(3) if sheet[game.SHEET_CLASSES + i] == THIEF]
             times = min(2 + (max(thief[0], 1) - 1) // 4, 5) if thief else 2
             if attacker < game.PARTY_SIZE:  # (an Assassin's one more: DSCLOG's STAB_TIMES)
                 times = max(kits.backstab_times(k, times) for k in g.kit_ids(attacker) or [0])
-            if self.rules & game.RULE_BACKSTAB:
-                more = (times - 1) * dice
-                total += more
-                steps += f" +{more} backstab (the dice {dice} x{times} = {dice * times})"
-            else:
-                total *= times
-                steps = f"({steps}) x{times} backstab"
-        # a held (Paralyzed) or Out Cold target takes double: the attack routine hands the game's
-        # damage call its damage x2 too (58B0Dh, "shl ax,1"), which 79BF9h takes for a helpless target;
-        # with RULE_HELD (DSCLOG's HELD_DAMAGE) the damage as it is, AD&D's
+            more = (times - 1) * dice
+            total += more
+            steps += f" +{more} backstab (the dice {dice} x{times} = {dice * times})"
+        # a held (Paralyzed) or Out Cold target takes the damage as it is, AD&D's (RULE_HELD, DSCLOG's
+        # HELD_DAMAGE; the game doubles it: the attack routine's x2 at 58B0Dh, "shl ax,1")
         helpless = self._helpless(e)
-        if helpless and total > 0 and not self.rules & game.RULE_HELD:
-            total *= game.HELPLESS_TIMES
-            steps = f"({steps}) x{game.HELPLESS_TIMES} {helpless}: a helpless target takes double"
         if total > 0 and any(x.owner == e.glob[0] and x.id == game.BIOFEEDBACK_EFFECT for x in g.effects()):
             # (the game's own 2 off a blow, 79BF9h, leaving none of 2 or less; at least 1 with the
             # spells as the manual has them: DSCLOG's BIO_SITE)
@@ -3951,13 +3940,10 @@ class DiceLog:
                 adnd += ", -1 for its power"
             if save.adnd != base:
                 adnd = f"{save.adnd} ({adnd})"
-            if g.rules & game.RULE_ITEM_SAVES:
-                if save.own is not None and needed == save.own and save.own <= save.adnd:
-                    why = f" (the game's; AD&D's: {adnd})"
-                else:
-                    why = f" (AD&D's, {adnd}; the game's: {own})"
+            if save.own is not None and needed == save.own and save.own <= save.adnd:
+                why = f" (the game's; AD&D's: {adnd})"
             else:
-                why = " (the game's)"
+                why = f" (AD&D's, {adnd}; the game's: {own})"
         need = f"needs {needed}" if needed > 1 else "safe whatever the roll"
         return [f"{head}: d20 = {roll}, {need}{why} -> {'CORRODED' if corroded else 'safe'}"]
 
@@ -4040,7 +4026,7 @@ class DiceLog:
             gained *= 2
             text += f", doubled for a half-giant = {gained}"
         classes = game.class_share(sheet)
-        if self.game.rules & game.RULE_MULTI_HP and classes > 1:  # (DSCLOG's CON_SHARE)
+        if classes > 1:  # (DSCLOG's CON_SHARE)
             per = self.game.con_per_die(sheet, con)
             text += f", {signed(per)} CON {con}, into the total shared by {classes} classes"
         cls_name = game.CLASS_NAMES.get(cls, f"class {cls}")
@@ -4201,7 +4187,7 @@ class DiceLog:
             steps = f"({steps}) x2 half-giant"
         steps += f" = {rolled}"
         classes = game.class_share(sheet)
-        multi = bool(g.rules & game.RULE_MULTI_HP) and classes > 1
+        multi = classes > 1
         con = self._creation_con if self._creation_con is not None \
             else g.creature(index)[CREATURE_ABILITIES + 2]
         levels = {}
@@ -4613,16 +4599,13 @@ class DiceLog:
         if natural == 20:  # (DSCLOG's SAVE_SUM: made at least the number needed)
             return f"{who}: d20 = 20 (natural 20) -> {result(spell, True)}"
         if total > 100:
-            if g.rules & game.RULE_SIZE and sizes.spared(g, spell, target):
+            if sizes.spared(g, spell, target):
                 return f"{who}: {g.combatant_name(target)} is too big for {g.spell_name(spell)} -> unaffected"
             return f"{who}: not needed (saves automatically) -> saved"
         rules = g.spell_rules(spell)
         steps, rolled = "d20", None
         if natural is not None:
             steps, rolled = f"d20 = {natural}", natural
-            if rules and rules.doubles_roll:
-                rolled = natural * 2
-                steps += f", doubled against {rules.doubled_for} = {rolled}"
             parts = []
             if rules and rules.save_modifier:
                 parts.append(f"{signed(rules.save_modifier)} spell")
@@ -4642,8 +4625,7 @@ class DiceLog:
             steps += f" total {total}"
         chance = ""
         if natural is not None:
-            doubled = bool(rules and rules.doubles_roll)
-            chance = f" ({save_chance(needed - (total - (rolled or 0)), doubled)}% to save)"
+            chance = f" ({save_chance(needed - (total - (rolled or 0)))}% to save)"
         return f"{who}: {steps}, needs {needed}{chance} -> {result(spell, total >= needed)}"
 
     def _save_result(self, spell: int, saved: bool) -> str:

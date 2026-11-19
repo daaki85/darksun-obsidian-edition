@@ -60,14 +60,10 @@ def _type(rec: bytes) -> int:
 
 def can_use(gd, sheet: bytes, type_: int, typ: bytes) -> bool:
     """Whether the character can use an item type: the game's class lists (or its kit allowing it)
-    and, the class restrictions in force, theirs; never what its kit forbids."""
+    and the class restrictions (restrict.usable); never what its kit forbids."""
     if len(typ) < game.ITEM_TYPE_SIZE:
         return False
-    if gd.rules & game.RULE_RESTRICT:
-        return restrict.usable(sheet, type_, typ)
-    flags = int.from_bytes(sheet[game.SHEET_FLAGS:game.SHEET_FLAGS + 2], "little")
-    lets = int.from_bytes(typ[restrict.TYPE_CLASSES:restrict.TYPE_CLASSES + 2], "little") & flags
-    return (bool(lets) or restrict.kit_allows(sheet, type_, typ)) and not restrict.kit_forbids(sheet, type_, typ)
+    return restrict.usable(sheet, type_, typ)
 
 
 def preserver_bare(sheet: bytes) -> bool:
@@ -131,7 +127,7 @@ def fill_member(gd, member: int) -> List[str]:
         return True
 
     # a multiclass preserver's armour left out
-    if gd.rules & game.RULE_RESTRICT and preserver_bare(sheet):
+    if preserver_bare(sheet):
         for item_index, item, _ in owned:
             if restrict.is_armour(read(_type(item))) \
                     and ring.unlink(gd, ring.Items(gd), item_index, "starting gear", empty=True):
@@ -177,7 +173,7 @@ def fill_member(gd, member: int) -> List[str]:
                 give(chatkcha[0], None)
 
     # leather armour, and a cloak for the kits that hide
-    wear = [] if gd.rules & game.RULE_RESTRICT and preserver_bare(sheet) else list(LEATHER)
+    wear = [] if preserver_bare(sheet) else list(LEATHER)
     from . import kitpages
     if game.RULES_IN_FORCE & game.RULE_KITS and set(kitpages.kit_ids(sheet)) & CLOAK_KITS:
         wear.append((SLOT("cloak"), CLOAK))

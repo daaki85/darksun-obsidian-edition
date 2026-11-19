@@ -77,9 +77,10 @@ class AgedTests(unittest.TestCase):
         self.assertEqual(greyhair.look(2061, halfelf.MAN), halfelf.MAN)
         self.assertEqual(greyhair.look(2095, 300), 2095)
 
-    def test_stage_needs_the_rule(self):
+    def test_stage_without_sheets(self):
+        """A stand-in game with no sheets to read: young (0)."""
         class G:
-            rules = 0
+            pass
         self.assertEqual(greyhair.stage_of(G(), 0), 0)
 
 

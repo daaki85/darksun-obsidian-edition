@@ -25,8 +25,9 @@ they differ. In the order of [the guide's checklist](playtest/PLAYTESTING.md#2-t
 3. **`sh loadsave.sh NAME`** (it runs start.sh itself) loads a save from `playtest/saves/`
    (`pens-after-arena` the usual start, `fountain-user` for a fight, spell or rule test;
    `saves/README.md` lists them).
-4. **The window must be 320x240** (`xdotool getwindowgeometry`): at 960x720 every pixel check
-   (message boxes, CHOOSE A SPELL) fails and the loops stall.
+4. **The window must be 320x240** (`xdotool getwindowgeometry`): the tools that read a raw grab at
+   the game's coordinates (figcheck.py, walkprobe.py and the like) read the wrong pixels at 960x720
+   (pixmatch.py's checks sample down, so they would pass).
 5. **Check the build under test is in place** (`buildcheck.py`, `dec.py`).
 6. **Start the watchdog** (`guard_start.sh` and a Monitor on `guard.log`).
 7. **Keep a test log the user can read**, and send it as it fills.
@@ -79,7 +80,9 @@ Monitor, and every step gets a `timeout`. Share DOSBox between agents with
 `flock /tmp/playtest/dosbox.lock`; start Xvfb before taking the lock (what `start.sh` starts inside it
 keeps it), and end a session by killing its DOSBox and dice log by pid. Stop only what you
 started: never kill a process you can't prove is yours (an agent once killed the shared display
-to free the lock, 2026-11-17); if something else holds the lock, say so and wait.
+to free the lock, 2026-11-17); if something else holds the lock, say so and wait. A session's own
+`flock` waits on its own background lock holder: with the holder running, don't take the lock again
+in a step.
 
 **Water.** Whenever a play reaches a new area, note in the test log and in [ROUTE.md's water
 section](playtest/ROUTE.md#water-for-resting-an-idea-for-later) where water, jugs or waterskins

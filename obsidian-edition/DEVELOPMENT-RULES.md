@@ -106,16 +106,19 @@ the pictures); `DiceLog`'s switch attributes (`pickpockets`, `show_gear`, `show_
 now (`ProtectionRuleTests.test_rule_bit_clear`, `StealthTests.test_rule_bit_clear`,
 `SpecializeTests.test_rule_bit_clear` ...): the bit clear changes nothing.
 
+In the Loader's reference models too (the final code audit's fixes): `DiceLog.rules` and
+`game.RULES_IN_FORCE` start at `RULES_ALWAYS`, and `GameData`'s and the dice log's branches on a gone
+rule's bit went with their tests of the game's way (the game's thief sums, the rings, two weapons,
+the doubled d20, the whole damage backstabbed, a held target's x2 ...); `spelltexts.chunks` has no
+arguments, `launch.CONTENT` no always-on key.
+
 **What stays switchable**: the five rules of `game.RULE_SETTINGS` (`RULE_HELMS`, `RULE_HALF_GIANT`,
 `RULE_HP_BEST`, `RULE_NEW_SPELLS`, `RULE_HI_KITS`), DSCLOG's tests of them kept, and Steady pace's
-patches. **What stays in the code although unreached in play**: `GameData`'s own branches on a gone
-rule's bit (the game's thief sums, the rings, two weapons ...: the reference model many tests drive
-with explicit rules, never without the bits in the Loader, `rules_from_settings`),
-`spelltexts.chunks`' MANUAL and SIZE arguments, `kits.warrior_attacks`' `spec=False`, the header's
-`PICK_ON` and `SKILLS_ON` bits (always all set by the Loader now, but their zero also means "no
-Loader yet"). So where a section below says what happens "with the switch off" or "unticked", that
-is the game's own way, which DSCLOG no longer has; `tests/test_launch.py`'s
-`test_old_false_for_an_always_on_switch_is_passed_over` pins the rest.
+patches. **What stays in the code although unreached in play**: the kits' functions' `spec` and
+`adnd` arguments (`kits.war_hit`, `warrior_attacks`, `allows`, `slots`: their tests drive both), the
+header's `PICK_ON` and `SKILLS_ON` bits (always all set by the Loader now, but their zero also means
+"no Loader yet"). Where a section below names the game's way, it is the game's, for comparison;
+`tests/test_launch.py`'s `test_old_false_for_an_always_on_switch_is_passed_over` pins the rest.
 
 ## Class restrictions
 
@@ -170,7 +173,7 @@ character of more than one class: (total + bonus × dice) / classes less
 total / classes, the dice each class's levels up to its group's last that
 rolls one (the game's table, `+group × 4 + 1`), the bonus the table's
 warrior bonus (`+52h` + CON) if a class is in the warrior group, else at most
-+2. One class, a human, or the rule off: the game's own.
++2. One class, or a human: the game's own.
 
 ## Hit dice: the better of two
 
@@ -269,7 +272,7 @@ the priest group (CX 0), 2 x (level - 1) / 3. `PROBE_ADND_SLOTS` (`INT 8Eh`)
 replaces `nop / push cs / call 5E4C2h` (5E240h): for a cleric, druid or
 preserver it calls the routine with the level byte 0 (WIS's part alone; the
 routine keeps only SI, DI and BP, so the probe keeps the rest) and adds
-`ADND_SLOTS`; anyone else, or with the rule off, the routine as it was.
+`ADND_SLOTS`; anyone else, the routine as it was.
 
 ## CON as in AD&D
 
@@ -308,10 +311,9 @@ or more (86EFCh); the new class's 17 or more (86F31h); the third class slot
 already has; a ranger good, a druid true neutral. The game's table has one
 ability a class (a ranger's, druid's and psionicist's WIS).
 
-`RULE_HI_DUAL` (`game.RULE_DUAL_CLASS`) is DSCLOG's, so the five compares are
-sites in every game's copy, each doing the game's own compare with the rule
-off: `DUAL_LEVEL` (`dual_level_menu`, `dual_level_view`, `dual_level_window`:
-`cmp byte [es:bx+24h],2`, 3 with the rule) and `DUAL_PRIMES` (`dual_old_prime`,
+`RULE_HI_DUAL` (`game.RULE_DUAL_CLASS`, always on) is DSCLOG's; the five compares are
+sites in every game's copy: `DUAL_LEVEL` (`dual_level_menu`, `dual_level_view`, `dual_level_window`:
+the game's `cmp byte [es:bx+24h],2`, 3 with the rule) and `DUAL_PRIMES` (`dual_old_prime`,
 `dual_new_prime`: with the rule every prime requisite of the class,
 `DUAL_PRIMES_OF`'s bits, the manual's as `tracker.PRIME_REQUISITES` has them,
 the old class at 15 or more, the new at 17 or more, on the creature's scores
@@ -470,7 +472,7 @@ thri-kreen's antennae greyed were tried and left out). Verified in play (no log 
 
 ([In the features page](FEATURES.md#two-weapons).) Always on: `game.RULES_ALWAYS`
 puts `RULE_TWO_WEAPONS` in the rules word whatever the settings (its switch is gone); DSCLOG
-still tests the bit.
+doesn't test the bit (its two weapons are always AD&D's).
 
 How: the game reads the attacker's DEX adjustment when it works out the
 two-weapon adjustment; DSCLOG takes over from there (`INT FEh`) and gives
@@ -621,12 +623,12 @@ ax,[bp-4] / shl ax,1 / push ax"), twice the damage: what a helpless target takes
 effect) has bit 34, Paralyzed, at its +4's bit 2, or its creature's +1Ch is 3, Out Cold; the save
 routine (79A71h) fails such a target before rolling (79B0Ch, the same test).
 
-With the rule (`RULE_HELD`, DSCLOG's `RULE_HI_HELD` 8000h, the Loader's `held_hit`), two sites,
-both the game's with it off (`gamepatch` "held_hit" and "held_damage"):
+The mod's rule (`RULE_HELD`, DSCLOG's `RULE_HI_HELD` 8000h, always on), two sites (`gamepatch`
+"held_hit" and "held_damage"):
 - `HELD_HIT` (589E9h; 4 bytes): the game's compare made in the handler and its ZF put in the INT's
   frame for the JE after it, set too when `HELD_NOW` finds the attack's target (DS:494Ah) Paralyzed
   (`NS_HAS`, effect 34) or Out Cold (its creature's +1Ch): the hit, whatever the d20.
-- `HELD_DAMAGE` (58B0Dh; 5 bytes): AX the damage, doubled only without the rule.
+- `HELD_DAMAGE` (58B0Dh; 5 bytes): AX the damage, not doubled (the game's doubles it).
 
 `HELD_NOW` and the dice log share one test (`HELPLESS_OF`): each ring entry keeps the attack's
 target's state at the roll at +188 (8000h, plus 1 Paralyzed or 2 Out Cold), read by
@@ -643,7 +645,7 @@ The rule is **Weapon traits**, the cahulaks' switch (`RULE_CAHULAKS`, `RULE_HI_C
 `cahulaks`; `game.RULE_STINKPOTS` names it too); DSCLOG's `STINKPOTS`; no new patch in the game:
 
 - **The dice.** The staff sling is item type 0 (IT1R's first record, `020008001400fa00...`: missile
-  only, crushing, 1d4 at +0Ch/+0Dh). `STINK_SIDES` writes its sides, 3 with the rule and 4 without, in
+  only, crushing, 1d4 at +0Ch/+0Dh). `STINK_SIDES` writes its sides, 3 (the game's 4), in
   the table the game read (`TYPES_FILL`, which notes it in `types_ptr`) and again at each pass of the
   main loop (`PROBE_SCROLL`), so a switch takes at once; only over a 3 or a 4, only while DS:1669h
   still points there. The game's attack, the item box, the inventory and View Character all read that
@@ -879,7 +881,7 @@ Part of Saving throws against spells (`spell_save`, always on: [above](#the-swit
 
 How: the Loader writes the game's own table that turns a spell's kind of save
 into one of the five (a table of words at DS:1E75h, read afresh for every
-save), and puts it back when the rule is unticked.
+save): the spell kind's entry the spell save (`set_rules`, `game.kind_to_save`).
 
 ## Fire, cold and electricity: DEX instead of a doubled d20
 
@@ -977,8 +979,8 @@ Acid off, then for an Okay member HP = the sheet's most (808AFh), PSP = the most
 the sheet unless Diseased, and kills the Poisoned (1000 damage, 80963h); then 8 x 3600 seconds on
 the clock (5A8:57h).
 
-`RULE_HI_REST` (`game.RULE_REST`, the Loader's `rest_heal`) is DSCLOG's, so both sites are in every
-game's copy, each the game's own instruction with the rule off or in mode 1:
+`RULE_HI_REST` (`game.RULE_REST`, always on) is DSCLOG's; both sites are in every game's copy,
+each the game's own instruction in mode 1:
 
 - `REST_PRE` (`rest_spells`, 80675h, `mov word [bp-10h],0`: the rest's first move, before any slot
   fills; not 806A0h's far call, whose segment word the overlay manager writes): with the rule, mode 0
@@ -1089,8 +1091,9 @@ interrupt's way back to one of those three places, or the routine's end
   rounds and the D\*'s count left (dicelog's `_turn_manual`; `rec_frame`, which
   `th_hit` uses too, pushes such a frame and records it).
 
-The game's d20 at 7AE4Dh is never reached with the switch on, so the old dice
-log line (`TURN_ROLL_RETURN`, `_overlay_turn`) is only the switch-off one.
+The game's d20 at 7AE4Dh is never reached (the manual's spells are always in
+the copy), so the old dice log line (`TURN_ROLL_RETURN`, `_overlay_turn`) is
+never written.
 
 **Minute Meteors** (33): `meteors_count` makes its record's +0 06h 16h (bits
 2-7 the casts a cast makes, as Magical Stone's 0Eh is three: five), and
@@ -1736,13 +1739,12 @@ the first is a backstab.
 
 ### A backstab multiplies the weapon's dice only
 
-Part of the switch Thieves as in AD&D (`thief_table`; `game.RULE_BACKSTAB` names it,
-`RULE_THIEF_TABLE`; DSCLOG's `RULE_THIEF_TABLE` in `rules`; always on: [above](#the-switches-always-on)). The game's backstab multiplies the whole of a
+Part of Thieves as in AD&D (`thief_table`; `game.RULE_BACKSTAB` names it, `RULE_THIEF_TABLE`;
+always on: [above](#the-switches-always-on)). The game's backstab multiplies the whole of a
 hit's damage, STR's bonus and the weapon's plus included (x2 to x5 by thief
 level, 595C4h); AD&D's multiplies the weapon's dice only, the rest added once,
 and only the round's first attack is one. Two `NS_IMAGE` sites in the attack
-routine (5883Ah), applied whatever the switch, the rule's bit read at the
-time:
+routine (5883Ah):
 
 - `STAB_ROLL` (`STAB_SITE`, 58A29h, `cmp word [bp+16h],1`, 4 bytes), just after
   the damage's roll: the dice's own sum (the damage less what the routine added
@@ -1753,27 +1755,38 @@ time:
   enlarged ones).
 - `STAB_TIMES` (`TIMES_SITE`, 58A80h, the game's `push ax / mov ax,[bp-4] / pop
   dx / imul dx / mov [bp-4],ax`, 10 bytes, AX the multiplier): an Assassin's
-  multiplier one more first (a party member, `kits.backstab_times`, rule or
-  not); then with the rule, on the round's first attack (`[BP-14h]` 0) and a
-  hit, the kept dice added again once for each time past the first; on the
-  second, no multiplying at all; without the rule, or the dice not known, the
-  game's multiplying of the whole.
+  multiplier one more first (a party member, `kits.backstab_times`); then on
+  the round's first attack (`[BP-14h]` 0) and a hit, the kept dice added again
+  once for each time past the first; on the second, no multiplying at all; the
+  dice not known, the game's multiplying of the whole.
 
 The round's count `STAB_TIMES` reads leaves the off-hand swing out, so a thief
 with three attacks (two weapons and a weapon spec's extra) had the third
 multiplied after a first that missed: `STAB_FIRST` (in `PROBE_STEALTH`,
-with the rule, a party member only) keeps each member's last attack by the
+a party member only) keeps each member's last attack by the
 game's clock (the dword through DS:9B72h's far pointer, a round at a time in a
 fight, `STAB_CLOCK`), and a later attack at the same clock has its backstab
 taken back (`[BP-24h]` cleared, its +2 to hit off THAC0 `[BP-20h]`); from
 behind stays.
 
-The dice log's damage line says which: `+10 backstab (the dice 5 x3 = 15)`
-with the rule, `(1d8 = [5] +12 STR 24) x3 backstab` without (`dicelog`'s
-backstab step, the round's count read from the attack's frame,
+The attack routine (58019h) sets from behind and backstab (`[BP-1Ah]`,
+`[BP-24h]`) once a call but runs all of a round's attacks in it, loading
+`[BP-20h]` with the creature's THAC0 again for each and taking the 2s off only
+when this attack is from behind (the target's facing, 582D0h): a flag left
+from an earlier attack (a hidden thief's backstab) stayed set with no +2 on the
+later one, and `STAB_FIRST` then gave back a 2 it hadn't had (Seneca's
+Shadowseeker after her Hayneedle's backstab: THAC0 17 for 15, the target's DEX
+and shield not counted, the dice log's `-2 STR` for her +2;
+playtest/logs/2026-11-19-backstab-str-line.md). `REAR_FRESH`, first in
+`PROBE_STEALTH`, clears a flag the game didn't pay for this time: the
+creature's THAC0 (+1Fh) less `[BP-20h]` under 2, no from behind; under 4, no
+backstab. Test: test_dsclog's `test_later_attack_flags_its_own`.
+
+The dice log's damage line says it: `+10 backstab (the dice 5 x3 = 15)`
+(`dicelog`'s backstab step, the round's count read from the attack's frame,
 `parent_local(-0x14)`). Tests: test_dsclog's `test_backstab_dice`,
 `test_backstab_first_attack_only`, `test_assassin_backstab`; test_dicelog's
-`test_backstab_multiplies_the_damage`, `test_enlarge_before_the_backstab`.
+`test_dice_only`, `test_enlarge_before_the_backstab`.
 
 ## Picking pockets
 

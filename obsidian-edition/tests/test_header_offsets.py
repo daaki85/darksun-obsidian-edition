@@ -1,6 +1,6 @@
 """DSCLOG's header against the Loader, read from a fresh build's symbol map: every field's offset as
 its comment in dsclog.asm gives it (the "+N" the Loader's TSR_* constants are copied from), every
-TSR_* constant of the Loader's modules the offset of a field, and the tables the two keep alike:
+TSR_* constant of the Loader's modules the offset of its own field, and the tables the two keep alike:
 the spell arrows' spells and names (DSCLOG's ARROW_SPELLS and ARROW_NAME, spellarrows.ARROWS).
 
 Skipped without nasm, unless DSUN_REQUIRE_NASM is set (the workflows set it), as test_audit_builds."""
@@ -94,6 +94,19 @@ def loader_constants():
     return out
 
 
+# The TSR_* constants whose field has another name: {constant: field}.
+ALIASES = {
+    "TSR_ATTACK": "attack_seq", "TSR_BACK": "back_seq", "TSR_BIG": "big_off", "TSR_BLAST": "blast_hp",
+    "TSR_BUILD": "dark_build", "TSR_CREATING": "lv_creating", "TSR_DAC": "dac_off",
+    "TSR_DANCE": "kit_dance", "TSR_KEYS": "panel_keys", "TSR_LABELS": "lbl_off",
+    "TSR_LARGE": "large_off", "TSR_LEARN": "learn_seq", "TSR_LIGHT": "light_off",
+    "TSR_MOUSE": "panel_mx", "TSR_ON": "shadows_on", "TSR_PAN": "pan_x", "TSR_RED": "red_off",
+    "TSR_RING_TAB": "ring_tab_off", "TSR_TAB": "tab_seq", "TSR_TABLE": "shadow_tab_off",
+    "TSR_TARGET": "hit_target", "TSR_TRIES": "rl_tries", "TSR_TRIES_SEQ": "rl_seq",
+    "TSR_WILD": "kit_wild",
+}
+
+
 class HeaderTests(unittest.TestCase):
     def setUp(self):
         if shutil.which("nasm"):
@@ -114,13 +127,19 @@ class HeaderTests(unittest.TestCase):
         self.assertEqual(offsets, sorted(set(offsets)))
 
     def test_loader_constants_name_fields(self):
-        """Every TSR_* constant of the Loader's is the offset of one of the header's fields (a field
-        moved or a constant mistyped would read another field)."""
-        at = {said for _, said in header_fields()}
+        """Every TSR_* constant of the Loader's is the offset of its own field: TSR_NAME the field
+        "name" (lower case), or the field ALIASES gives it (a field moved or a constant naming the
+        wrong field would read another field)."""
+        at = dict(header_fields())
         found = loader_constants()
         self.assertGreater(len(found), 100)
-        stray = [f"{module} {name} = {value}" for module, name, value in found if value not in at]
+        stray = []
+        for module, name, value in found:
+            field = ALIASES.get(name, name[4:].lower())
+            if at.get(field) != value:
+                stray.append(f"{module} {name} = {value}: {field} is at +{at.get(field)}")
         self.assertEqual(stray, [])
+        self.assertEqual(sorted(set(ALIASES) - {name for _, name, _ in found}), [])  # (none stale)
 
     def test_same_name_same_field(self):
         """A TSR_* name used in more than one module is the same field in each."""

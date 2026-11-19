@@ -517,8 +517,8 @@ class LoaderTests(unittest.TestCase):
         self.assertEqual(game.manual_die(148, sheet(9, 0, 0)), (6, ""))
 
     def test_texts(self):
-        plain, manual = spelltexts.chunks(False), spelltexts.chunks(True)
-        self.assertNotIn(("SPIN", 45), plain)
+        manual = spelltexts.chunks()
+        self.assertNotIn(45, spelltexts.TEXTS)
         self.assertIn(b"+2", manual[("SPIN", 45)])
         self.assertIn(b"1 to 8", manual[("SPIN", 197)])
         self.assertTrue(all(len(t) + 2 < 195 for t in spelltexts.MANUAL_TEXTS.values()))

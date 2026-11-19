@@ -19,6 +19,7 @@ from typing import Optional
 from . import game, shadows
 
 TSR_RINGS_ON, TSR_RING_TAB, TSR_RED = 244, 246, 248  # DSCLOG's header (RING_TAB's and RED's offsets in its far block)
+TSR_DAC = 238  # (DAC's offset in its far block, as dust.py)
 TSR_FAR_SEG = 142  # (its far block's segment)
 TSR_HDR_OFF = 20
 THINGS = 520
@@ -143,7 +144,7 @@ class Rings:
         fresh = bool((palettes != self._palettes or tint is not self._tint) and palettes)
         if fresh:
             red_off, = struct.unpack("<H", guest.read(tsr_hdr + TSR_RED, 2))
-            dac_off, = struct.unpack("<H", guest.read(tsr_hdr + 238, 2))  # (DSCLOG's DAC, as dust.py)
+            dac_off, = struct.unpack("<H", guest.read(tsr_hdr + TSR_DAC, 2))
             guest.write(far + red_off, tint(guest.read(far + dac_off, 768)))
             if tint is not self._tint and self._table and any(self._table):
                 self._table = None  # (rings in the other tint: the view drawn again)

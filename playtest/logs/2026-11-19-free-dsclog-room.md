@@ -43,7 +43,8 @@ One line looked odd in the new build: Seneca's second attack after a backstab,
 (her STR's +2 shown as -2: 4 off). The old build gives the very same:
 `Seneca attacks Guard from behind with Shadowseeker +1 (1d6+1): d20 = 2, needs 7+ (70%), hits AC 15, target AC 10 -> miss`
 `    THAC0 19, +2 from behind, -2 STR, +1 weapon, +1 specialized = 17`, so it isn't this change's
-(STAB_FIRST's backstab taken back from a later attack; left for its own look). The new build put back after.
+(STAB_FIRST's backstab taken back from a later attack; left for its own look: found and fixed in
+[2026-11-19-backstab-str-line.md](2026-11-19-backstab-str-line.md), the first swing's flags left for the round's later ones). The new build put back after.
 
 ## 2. The inventory (`pens-after-arena`): class restrictions
 

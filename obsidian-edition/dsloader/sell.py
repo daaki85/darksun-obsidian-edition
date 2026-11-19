@@ -62,10 +62,8 @@ def plain_gear(gd: GameData, rec: bytes) -> bool:
 
 
 def price(gd: GameData, rec: bytes) -> int:
-    """What the shop pays for REC, as the game's (and DSCLOG's SELL_PRICE) works it out."""
-    value = struct.unpack_from("<H", rec, VALUE)[0]
-    if gd.rules & game.RULE_CHA_PRICES:  # (Shops as in AD&D)
-        value = prices.sell_price(value)
+    """What the shop pays for REC, as DSCLOG's SELL_PRICE works it out (Shops as in AD&D: 60%)."""
+    value = prices.sell_price(struct.unpack_from("<H", rec, VALUE)[0])
     typ = gd.item_type_record(rec)
     if len(typ) > restrict.TYPE_KIND_FLAGS and typ[restrict.TYPE_KIND_FLAGS] & STACKS:
         value *= struct.unpack_from("<H", rec, COUNT)[0]  # (as stored, as the game's 83D6Bh)

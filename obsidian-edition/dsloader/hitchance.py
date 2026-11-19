@@ -19,10 +19,11 @@ attack set (58019h) reads, in the order it does.
   an attacker in the square opposite is behind it. Facing nowhere yet, the first attacker is in
   front. Next to the target the answer is known; farther off (the member walks up, and where it
   ends isn't known) both numbers are given. A missile is never from behind by the facing
-  (DSCLOG's MISSILE_REAR), a hidden thief's attack always is (its backstab by the game's
-  conditions, DSCLOG's PROBE_STEALTH), and a Girdle of Back Defense takes both back.
+  (DSCLOG's MISSILE_REAR), a hidden thief's first attack always is (its backstab by the game's
+  conditions, DSCLOG's PROBE_STEALTH), and a Girdle of Back Defense takes both back. A hidden
+  one's later swings in the round are judged as anyone's (DSCLOG's REAR_FRESH, #116).
 - A 20 always hits and a 1 always misses (dicelog.hit_chance); a held target is hit whatever the
-  roll with the rule for it (RULE_HELD).
+  roll (AD&D's held target, RULE_HELD, always on).
 """
 
 import struct
@@ -89,10 +90,10 @@ def _on(effects, combatant: int, effect: int) -> bool:
     return any(e.owner == combatant and e.id == effect for e in effects)
 
 
-def predict(gd, attacker: int, target: int, rules: int = 0, hidden: bool = False, ac_gap: int = 0) -> List[Swing]:
+def predict(gd, attacker: int, target: int, hidden: bool = False, ac_gap: int = 0) -> List[Swing]:
     """What combatant ATTACKER (a party member) needs to hit combatant TARGET with each weapon it
-    would swing, as things stand. RULES the rules on (game.RULE_*), HIDDEN the attacker hidden in
-    shadows (its next attack from behind), AC_GAP what the game's AC for the target was above
+    would swing, as things stand, with the rules always on (game.RULES_ALWAYS: Thieves as in AD&D,
+    the held target). HIDDEN the attacker hidden in shadows (its next attack from behind), AC_GAP what the game's AC for the target was above
     GameData.attack_ac's the last time it was attacked (0 for one not attacked yet). [] when
     either isn't a creature."""
     me, it = gd.combatant_creature(attacker), gd.combatant_creature(target)
@@ -115,7 +116,7 @@ def predict(gd, attacker: int, target: int, rules: int = 0, hidden: bool = False
     rear_hit = min((kits.rear_to_hit(k) for k in kids), default=kits.REAR)
     guarded = gd.wears_type(it, game.BACK_GIRDLE_TYPE, WAIST_SLOT)  # (a Girdle of Back Defense)
     facing = gd.facing(it)
-    held = gd.helpless(target) if rules & game.RULE_HELD else None
+    held = gd.helpless(target)
     out = []
     for n, h in enumerate(swings):
         missile = h.slot == game.MISSILE_SLOT
@@ -124,28 +125,22 @@ def predict(gd, attacker: int, target: int, rules: int = 0, hidden: bool = False
                 and gd.wears_type(it, game.URNST_GIRDLE_TYPE, WAIST_SLOT):
             thac0 += worldgear.URNST_AC
         # a backstab by the game's conditions (58314h: a thief, in melee, the weapon's weight) and
-        # DSCLOG's (THIEF_REAR: not in heavy armour; KIT_REAR: not a Military Scout; STAB_FIRST: with
-        # Thieves as in AD&D only the round's first attack)
+        # DSCLOG's (THIEF_REAR: not in heavy armour; KIT_REAR: not a Military Scout; STAB_FIRST:
+        # Thieves as in AD&D, always on, only the round's first attack)
         stab = bool(thief) and not missile and h.type >= 0 and h.weight <= STAB_WEIGHT \
-            and not gd.thief_heavy(me) and all(kits.backstabs(k) for k in kids) \
-            and not (n and rules & game.RULE_THIEF_TABLE)
+            and not gd.thief_heavy(me) and all(kits.backstabs(k) for k in kids) and not n
         rear_thac0 = thac0 - rear_hit - (BACKSTAB if stab else 0)
         behind_how = "a backstab" if stab else "unseen" if missile else "from behind"
-        if hidden and n and not missile:
-            # a hidden one's second weapon (seen in the game, 2026-11-17: Seneca's Shadowseeker after
-            # her Hayneedle's backstab needed 12 where 8 was expected): the attack set's from-behind
-            # and backstab flags stay up from the first weapon (set once, 58036h), so the AC is the
-            # one from behind, but THAC0 isn't lowered again (DSCLOG's STEALTH bit is used up and the
-            # facing says in front), and with Thieves as in AD&D STAB_FIRST takes back a backstab's
-            # 2 that this swing never had: 2 worse
-            first_stab = out and out[0].how == "a backstab"
-            rear_thac0, behind_how = thac0 + (BACKSTAB if first_stab and rules & game.RULE_THIEF_TABLE else 0), "from behind"
         behind = rear_thac0 - (back + ac_gap)
         plain = Swing(h.name, missile, thac0 - (front + ac_gap), auto=held, thac0=thac0, ac=front + ac_gap)
         rear = Swing(h.name, missile, behind, behind_how, auto=held, thac0=rear_thac0, ac=back + ac_gap)
         if guarded:
             out.append(plain)
-        elif hidden:
+        elif hidden and (not n or missile):
+            # (hidden: the first swing, or the shot, from behind; a later melee swing in the round
+            # as anyone's, by the facing: DSCLOG's REAR_FRESH, #116. Before it, Seneca's
+            # Shadowseeker after her Hayneedle's backstab kept the first's flags: 2 worse to hit
+            # than a plain swing, yet the AC from behind; 2026-11-17)
             out.append(rear)
         elif missile or facing is None:
             out.append(plain)

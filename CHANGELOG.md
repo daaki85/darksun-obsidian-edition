@@ -87,7 +87,8 @@ Obsidian Edition 2.19.0 ([release notes](release-notes/v2.19.0.md)).
   segment and 36 paragraphs of upper memory, less than quick save and the squares needed, so their
   two long routines run from the tail (`TAIL_CALL`: code in the tail is new) and the squares' map
   lies in DSCLOG's own PSP (71,440 bytes then, 48 bytes and 1 paragraph left). With the room #115
-  freed: 70,256 bytes, 1,232 bytes of the segment and 75 paragraphs of upper memory left.
+  freed and #116's 48 bytes: 70,304 bytes, 1,184 bytes of the segment and 72 paragraphs of upper
+  memory left.
 - **The chance to hit under the pointer**: on a party member's turn the roll needed and the chance
   float over the enemy the game's pointer rests on (`hover.py`; DSCLOG unchanged).
 - **R hides and shows the squares in reach**, the owner's request: on the map in a fight, kept in
@@ -143,10 +144,16 @@ Obsidian Edition 2.19.0 ([release notes](release-notes/v2.19.0.md)).
 - **The elven slavers' leader's Goodbye** no longer goes straight to the arrest, from OpenDS's
   triage (no pull request: committed to the branch).
 - **The Characters tab with a game attached** stayed empty since "Fewer switches" (`KeyError:
-  'stealth'`): `viewer.py` still asked for two switches gone from the tab. Found with the Loader's
-  window on a running game; `test_switch_names`.
-- **This page's top** (the headings' and sections' notes, the list of releases and the Unreleased
-  heading), lost in #113's rewrite, is back.
+  'stealth'`): `viewer.py` still asked for a switch gone from the tab. Found with the Loader's
+  window on a running game and fixed alike by #115 and this branch (one fix kept);
+  `test_switch_names`.
+- **A thief's later attacks in a round after a backstab** are judged on their own (#116): they
+  were 2 worse to hit and still counted as from behind, the target's DEX and shield ignored.
+- **Three older Loader bugs** (#118): the dice
+  log no longer gives the character being made an age of its own after each roll of the creation
+  screen's die (it now says the screen's AGE once, at DONE); on Linux a DOSBox the Loader's window
+  didn't start is seen to close (it said "Connected" on), and a reload no longer logs "Loader error
+  in the party table" from the closed game's empty memory.
 
 **Docs**
 - **The change records** (#98): shorter patch notes, each release's news in its notes, the
@@ -169,6 +176,9 @@ Obsidian Edition 2.19.0 ([release notes](release-notes/v2.19.0.md)).
   rules now always on no longer written as switches, the random monsters' divide by zero and "Out
   of memory in OEOpenGraph" out of the game's bugs, more troubleshooting, the Elvenkind picture
   retaken; this section sorted and numbered; `.gitattributes` and `.gitignore` out of the zip.
+- **The final documentation review's fixes** (#117): the CHANGELOG's header back, the multiclass rule, always-on rules no
+  longer written as switches, the removed off paths out of the developer pages, the dice log's
+  picture retaken.
 
 **Dev**
 - **The playtest kit** (#99): one startup checklist, the memory edits in RESEARCH, HISTORY by
@@ -179,14 +189,16 @@ Obsidian Edition 2.19.0 ([release notes](release-notes/v2.19.0.md)).
   a branch with `-2` on it for a session's handed random name.
 - **Tidying** (#102): `dsloader/guidepage.py` taken out, the combat log's design brief archived,
   the rest-order prototype moved to `playtest/logs/files/`.
-- **DSCLOG's room freed** (no pull request yet: branch `claude/free-dsclog-room`): the off paths of
+- **DSCLOG's room freed** (#115): the off paths of
   the switches always on since #110 taken out of DSCLOG (their rules' tests, the game's ways behind
   them, `MANUAL_ON`) and of the Loader, about 1.1 KB freed for what comes next; the rules switched
   still are kept.
-
-## Pull request #96 ([merged 2026-11-17](https://github.com/daaki85/darksun-obsidian-edition/pull/96))
-
-No release: nothing in `obsidian-edition/` changed.
+- **The final code audit's fixes** (#117): the
+  Loader's rules start at the always-on ones and its dead off-branches are gone, the header test
+  ties each constant to its own field, temporary files are each writer's own and never left behind.
+- **The last audit's two small items** (#118): the
+  stats thread takes its idle step while no game is attached (it looked every millisecond), and
+  `crash-logs` keeps the newest 20 freeze reports. Tests for these and the three bugs above.
 - **`dsloader/questdraft.py` is left out of the release zip**; `test_release` checks the zip and that
   no module that ships imports it.
 - **DSCLOG's header fields by name** (`test_header_offsets`): two branches had added fields at the
@@ -195,6 +207,10 @@ No release: nothing in `obsidian-edition/` changed.
   `usable.py`, `squarewalk.py`, `hoverlabel.py`, `gamekeys.py` and more), `PT_NO_EDIT=1` for a
   fight and an arena trip with no memory edit, the game's key tables, the Loader's window on a
   second display.
+
+## Pull request #96 ([merged 2026-11-17](https://github.com/daaki85/darksun-obsidian-edition/pull/96))
+
+No release: nothing in `obsidian-edition/` changed.
 
 **Dev**
 - **Session branches named after the task** (CLAUDE.md): a cloud session makes `claude/<task>` before

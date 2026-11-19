@@ -245,15 +245,14 @@ def ready(gd: GameData, rules: int, done: Set[Tuple[str, str]], starting_gear: b
         if not name:
             continue
         steps = []
-        if rules & game.RULE_SPECIALIZE:
-            steps.append(("kinds", set_kinds))
-            if name == "Gerakis" and rules & game.RULE_HALF_GIANT:
-                steps.append(("gythka", club_to_gythka))
+        steps.append(("kinds", set_kinds))
+        if name == "Gerakis" and rules & game.RULE_HALF_GIANT:
+            steps.append(("gythka", club_to_gythka))
         if name == "Cermak" and rules & game.RULE_KITS:
             steps.append(("kit", set_kit))
         if name in OWN_LINES and rules & game.RULE_KITS:
             steps.append(("own", set_own))
-        if name == "Cilla" and rules & game.RULE_RESTRICT:
+        if name == "Cilla":
             steps += [("armour", take_armour), ("armor spell", learn)]
         if starting_gear:
             steps.append(("gear", gear))

@@ -26,7 +26,6 @@ before the game runs, including in overlays each time they are loaded. The
 original DSUN.EXE is only read.
 """
 
-import os
 import struct
 from typing import NamedTuple
 

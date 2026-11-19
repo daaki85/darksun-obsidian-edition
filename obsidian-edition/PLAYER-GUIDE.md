@@ -266,13 +266,13 @@ neutral, a ranger good), or fighter and ranger.
 **Dual class (humans only).** A human has one class, and can change to another
 with **DUAL** on a portrait's right-click menu when:
 
-- it is **3rd level or more** (as the manual says; 2nd with the rule change
-  [dual-classing as the manual has it](FEATURES.md#dual-classing-as-the-manual-has-it) off) and has
+- it is **3rd level or more** (as the manual says: [dual-classing as the manual has
+  it](FEATURES.md#dual-classing-as-the-manual-has-it); the game's own let a 2nd-level one) and has
   changed class at most once before;
 - **every prime requisite of its current class is 15 or more**, and **every
   one of the new class's 17 or more** (the table below: a ranger's STR, DEX
-  and WIS, a druid's WIS and CHA, a psionicist's CON and WIS); with the rule
-  off, the game's one score a class (STR for fighters and gladiators, WIS for
+  and WIS, a druid's WIS and CHA, a psionicist's CON and WIS; the game's own
+  asked for one score a class: STR for fighters and gladiators, WIS for
   clerics, druids, psionicists and rangers, INT for preservers, DEX for
   thieves);
 - the new class is of **another group** than every class it has had: priests
@@ -355,7 +355,7 @@ them, the mod's limits below apply to every class, the strictest winning:
 - A human who changed class is held by its new class (but for the warrior's
   or cleric's armour above), and may use the weapon specs it specialized in
   once its old class wakes.
-- A thief of any kind holds only leather shields, with the rule or without:
+- A thief of any kind holds only leather shields, as in the game too:
   the game's own lists leave thieves out of the wooden shield, and the mod's
   metal one.
 - A new character starts without the weapons, armour and shields its classes
@@ -935,7 +935,7 @@ at 0 XP). XP keeps counting past the cap. The highest levels:
 *Without the mod:* every class stops at 9th.
 
 Past 9th everything is the game's own, which it had all along: its XP tables
-go on to 20th (with AD&D's off, druids by a table of their own), and THAC0,
+go on to 20th, and THAC0,
 saves, spell slots and thief skills are worked out from the level ([hit
 points](#hit-points), [THAC0](#thac0-by-level), [spell slots](#spell-slots)). A
 gladiator's armour optimizing goes on (AC 2 better at 10th). A preserver still
@@ -1021,10 +1021,7 @@ Two or three classes share the cap (374,999 or 249,999 each):
 | Druid | 12 | 74,999 | 11 | 49,999 |
 | Psionicist | 9 | 174,999 | 9 | 49,999 |
 
-With the game's own XP tables (AD&D's off), a gladiator has the fighter's
-numbers (249,999 left over), and a druid needs 675,000 for 11th and 900,000
-for 12th, so stops at 11th with 74,999 left over (10th with two or three
-classes: 249,999 or 124,999). *Without the mod:* every class stops at 9th, all
+*Without the mod:* every class stops at 9th, all
 XP past 9th's need is left over, and a human who changes class loses it.
 
 ### Hit points
@@ -1518,7 +1515,7 @@ limits:
   large target (a half-giant, a large monster, anyone Enlarged), with no save;
   Charm Person or Mammal still charms a large beast ([size](#size)).
   *Without the mod:* the game keeps no sizes.
-- **Spells roll to hit** (a rule change, on by default). The missile spells,
+- **Spells roll to hit** (a rule change, always on). The missile spells,
   Acid Arrow, Turn Pebble to Boulder, Magical Stone, Condense and each of Minute
   Meteors' five globes (at +2), roll a d20 against the target's AC as a weapon
   would (Acid Arrow with a fighter's THAC0 of the caster's level, the rest with
@@ -1535,8 +1532,8 @@ limits:
   roll too. Magic Missile, Flame Arrow (neither the manual nor AD&D gives its
   bolts an attack roll), areas, cones and psionic powers are left as they
   are. *Without the mod:* they always landed.
-- **Spells and psionics as the manual describes them** (a rule change, on by
-  default): twenty-four spells and two psionic powers, and seven monsters, as the manual
+- **Spells and psionics as the manual describes them** (a rule change, always
+  on): twenty-four spells and two psionic powers, and seven monsters, as the manual
   has them (Solid Fog for a few rounds, not the whole fight; Hold Undead only
   on undead of the caster's level or lower; Strength by class; shadows that
   drain STR; the list is in [How the game
@@ -1642,7 +1639,7 @@ Poison, Slay Living and Harm.
 An Elementalist has its second sphere's column too.
 
 **The 6th-level spells** are the mod's, for priests of 11th level and up (with
-AD&D's class tables and the **New spells** switch on):
+the **New spells** switch on):
 
 - **Heal** (touch): every wound healed, disease and blindness cured (and,
   with the manual's spells, Feeblemind).
@@ -1685,7 +1682,7 @@ AD&D's class tables and the **New spells** switch on):
 | Effect | Does |
 |---|---|
 | Blessed / Cursed | +1 / −1 to hit (Bless also +1 on saves); they cancel each other |
-| Hasted / Slowed | Hasted: double movement and attacks, +2 initiative; with ages on, a system shock roll and a year older. Slowed: half, loses every other turn, −4 to hit, AC 4 worse, −2 initiative |
+| Hasted / Slowed | Hasted: double movement and attacks, +2 initiative; a system shock roll and a year older. Slowed: half, loses every other turn, −4 to hit, AC 4 worse, −2 initiative |
 | Paralyzed | no turns; fails every save; every blow hits it |
 | Stuck (Grease, Web, Entangle and the like) | can't move; Free Action stops it |
 | Tangled ([cahulaks](#cahulaks)) | loses its next turn: no movement, no attack |
@@ -1710,7 +1707,7 @@ Okay casts Cure Disease, Remove Curse and Remove Paralysis on everyone, a
 druid of 7th or more Neutralize Poison too. Anyone still **Poisoned** when the
 rest ends dies.
 
-With **Resting as in AD&D** (a rule change, on by default), the rest heals as
+With **Resting as in AD&D** (a rule change, always on), the rest heals as
 AD&D's does:
 
 1. **The priests' spells first.** Before the slots fill again, each priest who

@@ -170,9 +170,9 @@ class PredictTests(unittest.TestCase):
 
     def test_hidden_ones_second_weapon(self):
         """The game swings the weapons in its item list's order, and a hidden thief's second one
-        is from behind only by the flags the first left up: the AC from behind, THAC0 not lowered,
-        and with Thieves as in AD&D 2 worse (STAB_FIRST takes back a backstab it never had):
-        Seneca's Shadowseeker at the fountain, 2026-11-17."""
+        is a plain swing (DSCLOG's REAR_FRESH, #116: before it, the first's flags stayed up, the AC
+        from behind and THAC0 2 worse: Seneca's Shadowseeker at the fountain, 2026-11-17), or from
+        behind by the target's facing, with no backstab (STAB_FIRST)."""
         log = fight()
         m = log.guest.mem
         struct.pack_into("<H", m, SHEETS + game.SHEET_FLAGS, hitchance.THIEF_FLAG)
@@ -182,11 +182,13 @@ class PredictTests(unittest.TestCase):
         struct.pack_into("<Bh", m, THINGS + 40 * 3, game.THING_ITEM, 6)  # (the left hand's the first of his items)
         struct.pack_into("<h", m, ITEMS + 6 * game.ITEM_SIZE + game.ITEM_NEXT, 5)
         struct.pack_into("<h", m, ITEMS + 5 * game.ITEM_SIZE + game.ITEM_NEXT, game.NO_ITEM)
-        got = hitchance.predict(log.game, 0, FOE, hidden=True, rules=game.RULE_THIEF_TABLE)
-        self.assertEqual([(s.weapon, s.need, s.how, s.thac0, s.ac) for s in got],
-                         [("Metal Long Sword", 2, "a backstab", 6, 4), ("Metal Long Sword +1", 7, "from behind", 11, 4)])
         got = hitchance.predict(log.game, 0, FOE, hidden=True)
-        self.assertEqual([(s.need, s.how) for s in got], [(2, "a backstab"), (5, "from behind")])
+        self.assertEqual([(s.weapon, s.need, s.how, s.thac0, s.ac) for s in got],
+                         [("Metal Long Sword", 2, "a backstab", 6, 4), ("Metal Long Sword +1", 7, "", 9, 2)])
+        m[FACING] = (hitchance.way(log.game, FOE, 0) + 4) % 8  # (the target's back to him)
+        got = hitchance.predict(log.game, 0, FOE, hidden=True)
+        self.assertEqual([(s.weapon, s.need, s.how, s.thac0, s.ac) for s in got],
+                         [("Metal Long Sword", 2, "a backstab", 6, 4), ("Metal Long Sword +1", 3, "from behind", 7, 4)])
 
     def test_hidden_archer_unseen(self):
         log = fight(near=False)
@@ -209,13 +211,13 @@ class PredictTests(unittest.TestCase):
             self.assertEqual(needs(log)[0][1], 10)
 
     def test_a_held_target(self):
-        """With the rule for a held target, a Paralyzed one is hit whatever the roll."""
+        """AD&D's held target (always on): a Paralyzed one is hit whatever the roll."""
         log = fight()
+        self.assertEqual(hitchance.line(hitchance.predict(log.game, 0, FOE)), "needs 7+ (70%)")
         set_effects(log, [(FOE, 0, game.PARALYZED_EFFECT)])
-        swings = hitchance.predict(log.game, 0, FOE, rules=game.RULE_HELD)
+        swings = hitchance.predict(log.game, 0, FOE)
         self.assertEqual(hitchance.line(swings), "hits whatever the roll (Paralyzed)")
         self.assertEqual(hitchance.brief(swings), "Hits (Paralyzed)")
-        self.assertEqual(hitchance.line(hitchance.predict(log.game, 0, FOE)), "needs 7+ (70%)")
 
     def test_what_the_game_added_to_the_ac(self):
         """AC_GAP: what the game's AC for the target was above the Loader's count when last attacked."""
@@ -289,11 +291,9 @@ class AttackAcTests(unittest.TestCase):
     def test_a_ring_of_protection(self):
         """A ring's plus counts (DSCLOG's PROBE_RING_AC: the Templar's Ring of Protection +1 at the
         fountain, AC 4 in the game where the armour alone made 5, 2026-11-17); with AD&D's
-        protection rule not over magical armour."""
+        protection rule (always on) not over magical armour."""
         wear(self.log, STALKER, 60, 30, game.RING_TYPE, game.FINGERS[0], plus=1)
         self.log.guest.mem[ITEM_TYPES + game.RING_TYPE * game.ITEM_TYPE_SIZE + 0x0F] = 0
-        self.assertEqual(self.ac(), 1)
-        self.g.rules = game.RULE_PROTECTION
         self.assertEqual(self.ac(), 1)
         m = self.log.guest.mem
         struct.pack_into("<h", m, ITEMS + 30 * game.ITEM_SIZE + game.ITEM_NEXT, 31)  # (and magical chest armour)
@@ -303,8 +303,6 @@ class AttackAcTests(unittest.TestCase):
         m[at + game.ITEM_SLOT], m[at + game.ITEM_PLUS] = game.EQUIP_SLOTS.index("chest"), 1
         m[ITEM_TYPES + 40 * game.ITEM_TYPE_SIZE + 0x0F], m[ITEM_TYPES + 40 * game.ITEM_TYPE_SIZE + 0x12] = 0x80, 2
         self.assertEqual(self.ac(), -1)  # (4, the armour 2 and its +1, DEX -2: the ring not counted)
-        self.g.rules = 0
-        self.assertEqual(self.ac(), -2)
 
     def test_facing(self):
         self.assertIsNone(self.g.facing(STALKER))

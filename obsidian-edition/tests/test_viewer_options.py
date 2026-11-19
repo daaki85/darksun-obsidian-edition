@@ -70,8 +70,8 @@ class OptionsTests(unittest.TestCase):
         v._show_midi(2)
         v._options_changed()
         settings = self.saved()
-        # (the switches gone from the tab, game.ALWAYS_ON: on whatever is saved; none of theirs written)
-        self.assertEqual(launch.content(settings), {key: key in game.ALWAYS_ON for key in launch.CONTENT})
+        # (every switch off; the game changes with no switch, game.ALWAYS_ON, none of theirs written)
+        self.assertEqual(launch.content(settings), {key: False for key in launch.CONTENT})
         self.assertFalse(set(settings) & game.ALWAYS_ON)
         for key, _ in game.RULE_SETTINGS:
             self.assertIs(settings.get(key), False, key)

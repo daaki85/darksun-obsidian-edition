@@ -373,8 +373,8 @@ dice log running:
   panel unchanged (at most once a BIOS tick), is `PANEL_DRAW_AROUND`: the
   panel without the pointer's box (`PB_SKIP` in `PANEL_BLIT`), so the pointer
   stays on screen.
-- **On and off.** The Loader sets `panel_on` (`+326`) in a fight with the
-  switch on; off, or the Loader silent for 5 seconds (`stats_stamp`, which it
+- **On and off.** The Loader sets `panel_on` (`+326`) while the panel is to be
+  shown (in and out of fights: `combatlog.py`); cleared, or the Loader silent for 5 seconds (`stats_stamp`, which it
   writes about once a second), DSCLOG has the view drawn again without it.
 - **The game's windows.** A figure's menu, a question or EXIT GAME are shown
   on the other screen, the view drawn there again first: the panel is not on
@@ -863,13 +863,13 @@ What the game's code does, and the Loader after it:
 - **The order of the swings** is the creature's items' own (the picker walks the list): the left
   hand's weapon often first (Seneca's Hayneedle before her Shadowseeker, Jenna's obsidian sword
   before her bone one: `WeaponHit.order`), and that one is the backstab.
-- **A hidden one's second weapon** (seen at the fountain, 2026-11-17): the attack set's flags
-  [BP-1Ah] and [BP-24h] are cleared once, at its start (58036h), and DSCLOG's `STEALTH` bit is
-  used up by the first weapon, so for the second the game lowers nothing (by the facing it is in
-  front) but the flags are still up: the AC is the one from behind, the log says "from behind",
-  and `STAB_FIRST`, finding the backstab flag up on a later attack of the round, adds back a 2
-  that was never taken off. Seneca's Shadowseeker needed 12 where a plain swing needed 10 and a
-  true one from behind 8. `predict` gives what the game does.
+- **A hidden one's second weapon**: the attack set's flags [BP-1Ah] and [BP-24h] are cleared
+  once, at its start (58036h), and DSCLOG's `STEALTH` bit is used up by the first weapon, so for
+  the second the game lowers nothing (by the facing it is in front). Until #116 the flags stayed
+  up: the AC from behind, the log's "from behind", and `STAB_FIRST` adding back a 2 never taken
+  off (Seneca's Shadowseeker at the fountain, 2026-11-17, needed 12 where a plain swing needed 10).
+  DSCLOG's `REAR_FRESH` now clears a flag the swing didn't pay for, so the second swing is a plain
+  one, or from behind (no backstab) by the target's facing; `predict` gives that.
 - **Segments in an overlay's code on disk** aren't the program's: the far calls and `mov ax,
   seg` of the overlay code in DSUN.EXE hold a segment's place in the table at file 46770h (8 bytes
   a segment, the first word its segment from the program's start), so `30h` is 096Ch, `0A0h`
@@ -1314,7 +1314,7 @@ report's records (32 to 16, taken half as often).
 ([In the features page](FEATURES.md#spells-on-the-effects-screen).)
 
 A click on an effect's icon on the Effects screen ends it in the game; with the
-switch on (`gamepatch.EFFECTS_KEPT`, from the next start), a spell's effect
+mod (`gamepatch.EFFECTS_KEPT`, always in the game's copy), a spell's effect
 is left on: two jumps in the screen's click handler (DSUN.EXE 7F226h and
 7F236h, the patches `effects_click_low` and `effects_click_high`) go to its way
 out instead of to the routine ending an effect. A psionic power's (spells 8Ah-ABh) still ends, as stopping it there is

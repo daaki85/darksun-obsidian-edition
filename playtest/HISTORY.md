@@ -162,6 +162,9 @@ The kit has driven Dark Sun Recompiled since 2026-11-01.
   had moved.
 - 2026-11-19: in Kalzith's shop a leader changed on the shop screen didn't change the prices (drawn
   as it opened), and Escape there chose his Farewell, after which `openshop.sh` failed.
+- 2026-11-19 (logs/2026-11-19-final-audit-fixes.md): `gff.write_atomic` moved to `mkstemp` for a
+  temporary name of its own, and the game's copies in `dos/` came out mode 0600 (mkstemp's), seen in
+  `ls -l` during the play; they are set 0644 before being put in place now.
 
 ## Two probes on one vector: target AC 255
 
@@ -333,6 +336,12 @@ lock, making a lot of noise but little else.") both ended with the walk arrow.
   screen once (Seneca's Tab chose a foe out of reach, so Return did nothing), and closing it left
   the view at the map's corner: Tab moved it to the foe, `scroll.py` brought it back, and
   `passuntil.sh` (a click on the figure for the END menu) passed the turns cleanly.
+- 2026-11-19 (logs/2026-11-19-backstab-str-line.md): the same again, `toturn.sh 3` ran out its
+  timeout on Ester's turn with Tab cycling foes out of reach, and its E opened the Effects screen;
+  Escape closed it with the view at the map's corner (camera 1728,0: `passuntil.sh` stopped
+  "member 2 off screen"). `viewto.py 1112 1512` (the leader) brought it back, then `passuntil.sh 3`
+  went on. A reload from fountain-user six times over (the hide and the move both had to pass
+  for a backstab) ran cleanly each time.
 
 - 2026-11-18 (logs/2026-11-18-squares-in-reach.md), walking a member square by square for the
   squares in reach:
@@ -379,7 +388,10 @@ Templar's Ring of Protection (DSCLOG has the game count a ring's plus), the orde
 (the item list's, so Seneca's left-hand Hayneedle was the backstab, not her Shadowseeker), and a
 hidden thief's second weapon, 2 worse than a plain swing because the attack set's flags stay up
 from the first weapon and DSCLOG's `STAB_FIRST` takes back a backstab the swing never had. All
-three were put in the prediction and the game loaded again: every number then agreed. The lock
+three were put in the prediction and the game loaded again: every number then agreed. (The third
+was a fault of the game's and DSCLOG's, fixed by #116's `REAR_FRESH` on 2026-11-19; when the 2.19.0
+branch took that in, the prediction's second swing became a plain one, or from behind by the
+facing.) The lock
 was lost twice to a pause that killed DOSBox and every holder; and a click on bare floor, meant
 only to move the pointer off the panel, walked Lex 4 Move.
 
@@ -543,6 +555,14 @@ scores are the creature record's (raising INT on the sheet did nothing); the tur
   and his boots for missing: the pointer's animation changes pixels too, so move it off first.
 - The Loader's own window (2026-11-07): keys typed with DOSBox focused reached the game (the letters
   toggled its animations): focus the Loader before typing.
+- The window attached to the kit's game (2026-11-19): a first backstab loop passed turns in a
+  running fight for twenty rounds while the free Templar killed Seneca (no hiding, no backstab); a
+  reload a try, with Reconnect each time, found one in two loads.
+
+- The window's "Connected" after DOSBox ended (2026-11-19, logs/2026-11-19-older-loader-bugs.md):
+  on Linux a read of `/proc/PID/mem` for a process that has ended returns nothing and raises
+  nothing, so a window attached to a DOSBox it hadn't started never saw it go, and its party table
+  failed on the empty reads at each kit reload; the Loader's reads now raise then.
 
 ## When things were learned
 

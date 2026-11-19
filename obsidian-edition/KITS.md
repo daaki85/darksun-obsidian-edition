@@ -201,8 +201,8 @@ armour too.
 It learns one spell at each level up from 6th, from its own 21 (a 4th-level one
 at a level up from 13th, with its slot, or sooner from a scroll, to cast from
 13th); and one of its own from a scroll too, if it first reads it (a d100 against
-its **read languages**) and then, with the rule for INT on, learns it (INT's
-chance): a failed roll uses the scroll up. No spell but its own from a scroll.
+its **read languages**) and then learns it ([INT's
+chance](FEATURES.md#preservers-int)): a failed roll uses the scroll up. No spell but its own from a scroll.
 
 Its weapons: dagger, short sword, quarterstaff, chatkcha, sling, staff sling and
 bow only; light armour only (the limit sleeps with the kit after a change of
@@ -435,8 +435,8 @@ the dice log's numbers follow where it stands.
 +1 to hit and damage against anything, melee or missile; Cause Light, Serious and
 Critical Wounds do 1 more a die (+1, +2, +3). It hides in shadows and moves
 silently as a ranger does, but at 5 a level of its best class (lower than a
-ranger's table), with its race's and DEX's adjustments; with the stealth rule, its
-hiding gives an attack from behind (+2 to hit), never a backstab, as a ranger's
+ranger's table), with its race's and DEX's adjustments; its
+[hiding](FEATURES.md#hiding-in-shadows-to-backstab) gives an attack from behind (+2 to hit), never a backstab, as a ranger's
 does. **No healing spells**: it never knows Cure Light, Serious or Critical
 Wounds, Blood Flow, Heal or Water of Life.
 
@@ -659,7 +659,7 @@ Elementalist adds its second sphere's weapons to its own's:
 ## Kits' spell slots
 
 The kits that change spell slots, by the level of the kit's class (spells of
-1st to 6th level), with [AD&D's class tables](FEATURES.md#adds-class-tables) on,
+1st to 6th level), with [AD&D's class tables](FEATURES.md#adds-class-tables),
 to the highest level each class reaches under the
 [XP cap](FEATURES.md#level-cap-by-xp) (a preserver and a cleric 11th, a ranger
 10th, a thief 13th). — means no slot yet at that level, n/a that the class
@@ -737,7 +737,7 @@ spheres). The kit sleeps and wakes with its own class.
 
 ![The KIT menu after DUAL for a human with no kit yet: a preserver turned thief, offered Swashbuckler and Assassin (not the Shinobi)](docs/dual-kit-menu.png)
 
-With **Weapon specialization** ticked, a human who becomes a fighter, gladiator
+With [weapon specialization](WEAPON-SPECS.md), a human who becomes a fighter, gladiator
 or ranger (or a Battle Mage, Crusader, Mind Warrior or Swashbuckler) then picks
 the weapon specs it is due ([Changing class](WEAPON-SPECS.md#changing-class) on
 the weapon specs page).
