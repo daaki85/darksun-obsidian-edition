@@ -252,6 +252,11 @@ game's data: it is one player's account.
     `dbint`). `pgrep -a dosbox` also lists another agent's `dosbox-x`; `pgrep -x` tells them apart.
     `framerate.py` and the tools that look for a window of class `dosbox` on `:55` are the shared
     game's: in a copy, change the display in `env.sh` and `paths.py` only.
+  - **The arena with no memory edit** (for the autosave on an area change): `PT_NO_EDIT=1 sh
+    arenatrip.sh` from `pens-after-scar` (toalarm.sh then leaves Cilla's thief level alone; the
+    rests, the call and the walk went the same, 2026-11-18): "Autosave: "Auto - Day 2, 17:01 - The
+    arena" (the QUICK page, slot 6)" 4 s after arriving; `loadquick.sh 6` loads it from a fresh
+    start, and the walk onto the platform starts the champions' bout.
   - **Scar's trip from a save**: the arena's gate (488, 200); `viewto.py 500 380`, then clicks at
     screen (144, 140) (the gap, to 488, 424) and (150, 185) (the platform, 488, 472) with the walk
     arrow: the Announcer, then `fight_on 1`. After the bout: the "Go back to the pens" box, the
@@ -355,6 +360,16 @@ game's data: it is one player's account.
 - **A DSCLOG routine tried on the live state**: snapshot `g.read(0, 0x110000)` into Unicorn, CS the
   helper's segment (the header, found by its signature `dicelog.HDR_SIG`, less its offset in the
   image), DS the game's, a HLT for the return.
+- **The Loader's own window with the game** (logs/2026-11-18-modernisation-features.md): stop the
+  dice log (one Loader follows a game), then `DISPLAY=:77 /usr/bin/python3.12 -m dsloader view`
+  from obsidian-edition on **a second Xvfb** (`Xvfb :77 -screen 0 1280x1024x24`): the Loader reads
+  the game through DOSBox's process, so its window needs neither DOSBox's display nor its mouse
+  (no Ctrl+F10), and it connects by itself ("Connected to the game (process N)"). `import -window
+  root` on that display for a picture; `xdotool mousemove X Y click 1` for its tabs (Journal at
+  828,132; the Show box at 775,200, its Quests row 99 below). The window tests' display can be
+  the same one. **`start.sh` starts no Xvfb when any Xvfb is running** (`pgrep -x Xvfb`): with
+  `:77` up, start `:55` by hand first. Look at the Characters tab once: an error there shows as
+  a line in the dice log's pane ("Loader error in the party table") and only with a game attached.
 - **The Loader window's Help**: in this container `gio` takes the URL and finds no browser, so
   nothing opens; the status line names the guide either way.
 - The kit drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`): [the
@@ -403,6 +418,21 @@ game's data: it is one player's account.
   music ("MUSIC OFF" / "MUSIC ON" messages), F5 the mod's quick save and F9 its quick load (the
   game's own: F5 draws the view again, F9 breaks a camp; neither shows anything in the pens), F6,
   F7, F8, F10, F11 and F12 nothing seen. DOSBox's own are Ctrl+F-keys.
+- **The game's own keys on the map** (read from its three key tables, logs/2026-11-18-modernisation-features.md;
+  the table with what each does is HOW-THE-GAME-WORKS.md's "The game's keys"): the root's table at
+  DSUN.EXE 1BC5Bh (26 keys: 1-6, P, N, Space, F5, F6, F9, F10, Home, End, the arrows, PgUp, PgDn,
+  Alt+F1, Alt+F2, Alt+F4); the map overlay's (4272h, file 71C1Bh, 33 keys: Esc, 1-4, =, Tab, Q, W,
+  T, A, S, G, H, Alt+X, Ctrl+C, M, ?, Space, F1-F6), where **A and F6 switch animations on and
+  off** and S, T, M and ? do something only with DS:11B0h non-zero (never in play); and its
+  letters' jump table (71BE3h, c to v: C, E, I, U, V the screens, O and P one routine). **Free
+  letters: B, D, F, J, K, L, R, X, Z** (the mod has L and R). `gamekeys.py` prints the tables
+  (and `gamekeys.py dis START` disassembles a handler); an overlay's routine is found from its
+  stub (the stub segment's dword at +4, plus 52EB0h, plus the entry's offset).
+- **R in a fight hides and shows the squares in reach** (the Loader reads it from the BIOS keyboard
+  buffer, 0040:001Ah-003Dh: `xdotool key r` works; the game does nothing with it): the dice log's
+  line "Squares in reach: hidden (R shows them)", "Squares hidden" over the member, and
+  `squares_shown` in settings.json, which **stays as the last test left it**: check it before a
+  test that looks for the crosses.
 - **Keys**: Tab picks the nearest enemy and Return attacks it (the mod's keys, in a
   fight); L shows or hides the combat log panel; **E opens the Effects screen** (not "end turn");
   Escape closes a screen or menu that is open, and **opens EXIT: SAVE GAME? when nothing is**: a
@@ -424,7 +454,8 @@ game's data: it is one player's account.
 - **The combat log panel covers the bottom right** (x 135+, y 120+): a click there lands on the
   panel, not the map, and a party member's figure under it can't be clicked (its END menu). Hide it
   before walking near it (the party's first step into the arena, for one, is right above it) with
-  `sh panel.sh hide|show`, which checks the panel's pixel before pressing L (L alone toggles, and
+  `sh panel.sh hide|show` (on the map only: with a window, a screen or a member's END menu up the
+  Loader puts the panel away, and it reads "hidden" though L's choice is "shown"), which checks the panel's pixel before pressing L (L alone toggles, and
   can leave it the wrong way round). `panel.sh` reads a docked panel's frame pixel (140,150), so
   it reads "hidden" when the panel is expanded (its check is for the small panel): look at a shot,
   and press L yourself. Expanded, the panel covers the screen's right half from y 68 (docked from y
@@ -768,9 +799,16 @@ game's data: it is one player's account.
    member stopped; `squaresweep.py POINTS [edge|out|all][here]` tries the marks' rim (or the free
    squares just outside, or all) a walk each; `squarecost.py` times a walk for the marks' cost.
    - **F10 takes the move back** (the game's own key, with no menu up: Escape closes the END
-     menu first): the member stands where its turn began with its points. After the last step it
-     gives the points back but not the walk (bit 0 of the turn's flags stays off): put the bit
-     back in memory for a test (`squarewalk.py` with POINTS does).
+     menu first): the member stands where its turn began with its points. After the last step
+     the game gives the points back but not the walk (bit 0 of the turn's flags stays off); the
+     Loader's mend (`move_back`, dsloader/moveback.py) sets the bit within a pass or two when its
+     dice log saw the last step (its line "F10: NAME's move taken back (can walk again)"), so a
+     dice log restarted in the middle of a turn mends nothing that turn. `squarewalk.py` with
+     POINTS puts the bit back itself.
+   - **An attack ends the member's turn, unless it kills** (turnwatch.py: +181h back at 0, +1ABh
+     1, the flags as they were, the turn still its own; a second swing of the same command can
+     end it all the same: Jenna's did, Ester's didn't). For "walked out, killed, F10": a foe on
+     the last step's next square at 1 HP (`foeset.py C hp=1`, autosave off), Tab + Return, F10.
    - **A walk the Move ran out on stays the member's**, and with the bit put back in memory the
      game goes on with it from wherever F10 put the member, so the next click's walk is mixed with
      it: forget it with the edit (FFh at 3972:0377h + thing x 1Ch, 0 at 3972:08AAh + thing x

@@ -1,7 +1,8 @@
 *.bat text eol=crlf
 
 # Left out of the release zip (git archive, .github/workflows/release.yml): the developers' pages,
-# the tests, the developers' picture of the Loader, and git's own two files. They stay in the
+# the tests, the developers' picture of the Loader, the developers' tool that drafts the quest
+# table (nothing the Loader runs imports it), and git's own two files. They stay in the
 # repository, where the links to them go by their GitHub address: the manual's at the release's
 # tag, the Markdown pages' at main.
 /DEVELOPMENT*.md export-ignore
@@ -9,3 +10,4 @@
 docs/viewer.png export-ignore
 /.gitattributes export-ignore
 /.gitignore export-ignore
+/dsloader/questdraft.py export-ignore

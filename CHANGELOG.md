@@ -13,7 +13,51 @@ and the DEVELOPMENT pages, and research in `reports/`. The longer entries below
 were written before this rule and are kept as they are.
 
 **Headings.** Work on the branch `obsidian-edition` not yet merged to `main` is
-under "## Unreleased (branch `obsidian-edition`)
+under "## Unreleased (branch `obsidian-edition`)"; when its pull request is
+merged, that heading becomes "## Pull request #N (merged DATE)", with "merged
+DATE" a link to the pull request. A release's entry starts with the line
+"Obsidian Edition X", its release notes linked after it in brackets.
+
+**Sections**, each a bold line: **New**, **Changed**, **Fixed**, **Docs** (the
+documentation) and **Dev** (tests, tools, the playtest kit, the build). A label
+may name the part it is about (**Fixed: the game**, **Fixed: DSCLOG**) or say
+where the changes came from, in brackets.
+
+Releases, newest first (2.12.0 and older in the archive):
+[2.18.0](#pull-request-95-merged-2026-11-16) (#95), [2.17.1](#pull-request-94-merged-2026-11-11)
+(#94), [2.17.0](#pull-request-93-merged-2026-11-11) (#93),
+[2.16.1](#pull-request-91-merged-2026-11-11) (#91), [2.16.0](#pull-request-90-merged-2026-11-11)
+(#90), [2.15.0](#pull-request-89-merged-2026-11-10) (#89),
+[2.14.1](#pull-request-88-merged-2026-11-08) (#88), [2.14.0](#pull-request-87-merged-2026-11-07)
+(#86 and #87), [2.13.4](#pull-request-85-merged-2026-11-02) (#85),
+[2.13.3](#pull-request-84-merged-2026-10-31) (#84), [2.13.2](#pull-request-83-merged-2026-10-30)
+(#83), [2.13.1](#pull-request-82-merged-2026-10-30) (#82),
+[2.13.0](#pull-request-81-merged-2026-10-30) (#81), [2.12.5](#pull-request-80-merged-2026-10-30)
+(#80), [2.12.4](#pull-request-79-merged-2026-10-29) (#79),
+[2.12.3](#pull-request-76-merged-2026-10-29) (#76), [2.12.2](#pull-request-75-merged-2026-10-29)
+(#75), [2.12.1](#pull-request-74-merged-2026-10-27) (#74),
+[2.12.0](CHANGELOG-archive.md#pull-request-73-merged-2026-10-27) (#73),
+[2.11.0](CHANGELOG-archive.md#pull-request-69-merged-2026-10-26) (#69),
+[2.10.0](CHANGELOG-archive.md#pull-request-67-merged-2026-10-26) (#67),
+[2.9.0](CHANGELOG-archive.md#pull-request-63-merged-2026-10-26) (#63),
+[2.8.0](CHANGELOG-archive.md#pull-request-61-merged-2026-10-25) (#61),
+[2.7.2](CHANGELOG-archive.md#pull-request-59-merged-2026-10-24) (#59),
+[2.7.1](CHANGELOG-archive.md#pull-request-58-merged-2026-10-23) (#58),
+[2.7.0](CHANGELOG-archive.md#pull-request-56-merged-2026-10-23) (#56),
+[2.6.0](CHANGELOG-archive.md#pull-request-54-merged-2026-10-21) (#54),
+[2.5.0](CHANGELOG-archive.md#pull-request-51-merged-2026-10-19) (#51),
+[2.4.0](CHANGELOG-archive.md#pull-request-50-merged-2026-10-16) (#50),
+[2.3.0](CHANGELOG-archive.md#pull-request-47-merged-2026-10-15) (#47),
+[2.2.1](CHANGELOG-archive.md#pull-request-43-merged-2026-10-14) (#43),
+[2.2.0](CHANGELOG-archive.md#pull-request-42-merged-2026-10-14) (#42),
+[2.1.1](CHANGELOG-archive.md#pull-request-37-merged-2026-10-10) (#37),
+[2.1.0](CHANGELOG-archive.md#pull-request-36-merged-2026-10-09) (#36),
+[2.0.0](CHANGELOG-archive.md#pull-request-33-merged-2026-10-09) (#33),
+[1.2.0](CHANGELOG-archive.md#pull-request-30-merged-2026-10-08) (#30),
+[1.1.0](CHANGELOG-archive.md#pull-request-18-merged-2026-10-06) (#18),
+[1.0.0](CHANGELOG-archive.md#pull-request-12-merged-2026-10-02) (#12).
+
+## Unreleased (branch `obsidian-edition`)
 
 **New**
 - **Tanelyv's chest piece shines** as its arm and leg pieces do (#106).
@@ -43,6 +87,15 @@ under "## Unreleased (branch `obsidian-edition`)
   lies in DSCLOG's own PSP: 71,440 bytes, 48 bytes and 1 paragraph left.
 - **The chance to hit under the pointer**: on a party member's turn the roll needed and the chance
   float over the enemy the game's pointer rests on (`hover.py`; DSCLOG unchanged).
+- **R hides and shows the squares in reach**, the owner's request: on the map in a fight, kept in
+  `squares_shown`, said in the dice log and over the member. Read from the BIOS keyboard buffer
+  (`keywatch.py`), so DSCLOG is unchanged; R is in none of the game's key tables (A, which the
+  owner named, toggles the game's animations: every key the game binds is now in
+  HOW-THE-GAME-WORKS.md).
+- **F10 takes a whole move back**, the owner's request (`moveback.py`; DSCLOG unchanged): after the
+  last step the game's F10 put a member back unable to walk; the Loader gives the walk back when
+  it has seen the last step and then F10's doing in one turn, never after an attack (one that
+  kills leaves the member its turn: seen in the game). Switch `move_back`.
 
 **Changed**
 - **Fewer switches** (#110), for a simpler Options tab and the mod's rules as meant: the combat
@@ -62,6 +115,15 @@ under "## Unreleased (branch `obsidian-edition`)
   green and violet too, not only water and fire (Greenbright green, Mindshard violet).
 - **The release zip** leaves out the developer pages, the tests and `docs/viewer.png`; the manual
   links to them at the release's tag (#97).
+- **The chance under the pointer shows nothing with the look pointer**, whose click only looks (the
+  owner's request).
+- **The combat log's panel is put away while the map is not the screen** (the owner's report: it
+  covered the save and load windows' QUICK button and list), and comes back with the map.
+- **The Loader's tabs show their names whole** ("Dice lo", "Journa" with six tabs): the divider
+  leaves the right-hand pane the width the names need. Seen on Linux only, where they were whole
+  before too.
+- **The new switches** are in the Options tab's In the game section (the chance to hit, the squares,
+  F10, Alt) and Saves (quick save, autosave), "Fewer switches" having taken the Controls section.
 
 **Fixed**
 - **The code audit, part 1** (#111): Negative Plane Protection's save no longer writes past the new
@@ -77,6 +139,11 @@ under "## Unreleased (branch `obsidian-edition`)
   room beside DOSBox's tables, and memory in pieces is warned of too.
 - **The elven slavers' leader's Goodbye** no longer goes straight to the arrest, from OpenDS's
   triage (no pull request: committed to the branch).
+- **The Characters tab with a game attached** stayed empty since "Fewer switches" (`KeyError:
+  'stealth'`): `viewer.py` still asked for two switches gone from the tab. Found with the Loader's
+  window on a running game; `test_switch_names`.
+- **This page's top** (the headings' and sections' notes, the list of releases and the Unreleased
+  heading), lost in #113's rewrite, is back.
 
 **Docs**
 - **The change records** (#98): shorter patch notes, each release's news in its notes, the
@@ -113,6 +180,14 @@ under "## Unreleased (branch `obsidian-edition`)
 ## Pull request #96 ([merged 2026-11-17](https://github.com/daaki85/darksun-obsidian-edition/pull/96))
 
 No release: nothing in `obsidian-edition/` changed.
+- **`dsloader/questdraft.py` is left out of the release zip**; `test_release` checks the zip and that
+  no module that ships imports it.
+- **DSCLOG's header fields by name** (`test_header_offsets`): two branches had added fields at the
+  same offsets under one signature, and every constant still named a field.
+- **The playtest kit**: tools for the additions (`picpattern.sh`, `tabhit.sh`, `qsave.py`,
+  `usable.py`, `squarewalk.py`, `hoverlabel.py`, `gamekeys.py` and more), `PT_NO_EDIT=1` for a
+  fight and an arena trip with no memory edit, the game's key tables, the Loader's window on a
+  second display.
 
 **Dev**
 - **Session branches named after the task** (CLAUDE.md): a cloud session makes `claude/<task>` before

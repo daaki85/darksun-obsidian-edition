@@ -102,7 +102,8 @@ class WhichEnemy(unittest.TestCase):
         self.assertIsNone(hover.target(gd, hover.look(gd), [FOE]))
         point(log, 170, 120, on_map=2)  # (a menu up)
         self.assertIsNone(hover.target(gd, hover.look(gd), [FOE]))
-        for mode, shown in ((hover.WALK, True), (hover.LOOK, True), (hover.ATTACK, True), (3, False), (5, False)):
+        # the walk arrow and the sword; not the eye (a click there only looks), nor any other mode
+        for mode, shown in ((hover.WALK, True), (hover.LOOK, False), (hover.ATTACK, True), (3, False), (5, False)):
             point(log, 170, 120, mode=mode)
             self.assertEqual(hover.target(gd, hover.look(gd), [FOE]) == FOE, shown, mode)
 
@@ -114,7 +115,6 @@ class WhichSwing(unittest.TestCase):
         bow = hitchance.Swing("Bow", True, 9)
         self.assertIs(hover.swing([sword, knife], hover.WALK, True), sword)  # (next to it: the first swung)
         self.assertIs(hover.swing([sword, knife, bow], hover.WALK, True), sword)  # (the walk arrow walks up)
-        self.assertIs(hover.swing([sword, knife, bow], hover.LOOK, True), sword)
         self.assertIs(hover.swing([sword, knife, bow], hover.ATTACK, True), bow)  # (the attack pointer shoots)
         self.assertIs(hover.swing([sword, knife, bow], hover.ATTACK, False), sword)  # (an empty quiver)
         self.assertIs(hover.swing([sword, knife], hover.ATTACK, True), sword)  # (out of the bow's range)

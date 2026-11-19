@@ -28,7 +28,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple
 
-from . import aging, usable, hover, quests, quicksave, hitchance, journal, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, squares, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, keywatch, moveback, usable, hover, quests, quicksave, hitchance, journal, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, squares, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    EFFECT_RULES, MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory, WriteRefused
@@ -579,7 +579,11 @@ class DiceLog:
         self.ring_mode = rings.ONLY_CHOSEN  # a ring in a fight: off, or the chosen enemy's (rings.py)
         self._rings = rings.Rings()
         self.show_squares = True  # the squares a party member can still walk to, marked in a fight (squares.py)
+        self.squares_shown = True  # ... shown, or hidden with R in a fight (the settings' squares_shown)
         self._squares = squares.Squares()
+        self._keys = keywatch.KeyWatch()  # the keys pressed, for R (keywatch.py)
+        self.move_back = True  # F10 after the last step: the move taken back can be walked again (moveback.py)
+        self._move_back = moveback.MoveBack()
         self._big = cahulaks.Big()
         self._large = sizes.Large()
         self.use_targeting = True  # Tab chooses an enemy in a fight, Enter attacks it (targeting.py)
@@ -738,6 +742,8 @@ class DiceLog:
         self._dust = dust.Dust()
         self._rings = rings.Rings()
         self._squares = squares.Squares()
+        self._keys.forget()
+        self._move_back = moveback.MoveBack()
         self._usable = usable.Usable()
         self._hover = hover.Hover()
         self._foes = []
@@ -1049,6 +1055,8 @@ class DiceLog:
         self.ring_mode = rings.mode(settings)
         self.hit_chance = settings.get("hit_chance", True) is not False
         self.show_squares = settings.get("squares", True) is not False
+        self.squares_shown = settings.get("squares_shown", True) is not False
+        self.move_back = settings.get("move_back", True) is not False
         self.quicksave.keys = settings.get("quick_save", True) is not False
         self.quicksave.auto = settings.get("autosave", True) is not False
         self.show_usable = settings.get("show_usable", True) is not False
@@ -1634,6 +1642,8 @@ class DiceLog:
         step(self._scroll)
         step(lambda: self._usable_key(now), quiet=True)
         step(lambda: self._hover_pass(now), quiet=True)
+        out += step(lambda: self._squares_key(now), quiet=True)
+        out += step(self._move_back_pass, quiet=True)
         if self._initiative and now - self._initiative_at >= INITIATIVE_WAIT:
             out += step(self.initiative_lines)
         out += step(self.turn_lines)  # after the round's order and the last turn's XP
@@ -1946,7 +1956,8 @@ class DiceLog:
                                          lambda turn, chosen: hitchance.line(self._swings(turn, chosen)))
             self._marks(now)
             self._dust.update(self.game, self.tsr_hdr, self.show_dust, self._shadows.palettes)
-            self._squares.update(self.game, self.tsr_hdr, self.show_squares, self._shadows.palettes)
+            self._squares.update(self.game, self.tsr_hdr, self.show_squares and self.squares_shown,
+                                 self._shadows.palettes)
             hdr = self.tsr_hdr
             self._ghosts.update(self.game, hdr, self.see_through, self._shadows.palettes,
                                 lambda: shadows.redraw(self.game, hdr))
@@ -1970,6 +1981,38 @@ class DiceLog:
         if self.tsr_hdr is not None and self.game is not None and self._shadows.palettes \
                 and self._usable.changed(self.game, self.show_usable, now):
             self._marks(now)
+
+    def _squares_key(self, now: float) -> List[str]:
+        """Every pass: R on the map in a fight shows or hides the squares in reach (the Options
+        tab's switch on), as L does the combat log's panel: remembered (the settings'
+        squares_shown), said in the dice log and over the member whose turn it is. The key is
+        read from the BIOS keyboard buffer (keywatch.py): the game has no use for R."""
+        if self.game is None:
+            return []
+        pressed = [key for key in self._keys.take(self.game.guest)
+                   if key in (keywatch.KEY_R, keywatch.KEY_SHIFT_R)]
+        if not pressed or not self.show_squares or self.tsr_hdr is None:
+            return []
+        if self.game._word(quicksave.SCREEN_IS) != quicksave.ON_MAP or not self.game.in_combat():
+            return []
+        if len(pressed) % 2 == 0:  # (pressed twice between two looks: as it was)
+            return []
+        self.squares_shown = not self.squares_shown
+        _remember({"squares_shown": self.squares_shown})
+        self._squares.update(self.game, self.tsr_hdr, self.squares_shown, self._shadows.palettes)
+        turn = self.game.whose_turn()
+        self._float(turn if turn is not None and turn < game.PARTY_SIZE else 0,
+                    "Squares shown" if self.squares_shown else "Squares hidden", labels.SPELL_INK, now)
+        return ["Squares in reach: shown (R hides them)" if self.squares_shown
+                else "Squares in reach: hidden (R shows them)"]
+
+    def _move_back_pass(self) -> List[str]:
+        """Every pass: a move taken back with F10 after its last step can be walked again
+        (moveback.py); the squares in reach are marked again at their next look."""
+        if self.game is None:
+            return []
+        line = self._move_back.update(self.game, self.move_back)
+        return [line] if line else []
 
     def _hover_pass(self, now: float) -> None:
         """Every pass: the chance to hit over the enemy the game's pointer is on, in a fight on a
@@ -2041,6 +2084,14 @@ class DiceLog:
         except (struct.error, IndexError, ValueError):
             pass
 
+    def _map_up(self) -> bool:
+        """The map is the screen, with no window, screen, menu or talk over it (the game's
+        DS:0BC9h is 1)."""
+        try:
+            return self.game._word(quicksave.SCREEN_IS) == quicksave.ON_MAP
+        except (struct.error, IndexError, ValueError):
+            return True
+
     def _update_panel(self, now: float) -> None:
         """The combat log: the panel over the map while shown (L shows and hides it); in a fight with who acts and who is next in the header, the newest
         lines again when a fight starts."""
@@ -2050,7 +2101,9 @@ class DiceLog:
                 self._fight_monsters = set()  # (a new fight)
                 self._panel.first = None
             self._fight_at = now
-        on = self.combat_log and self._panel.open
+        # (shown only while the map is the screen: over a window, a screen or a talk DSCLOG would
+        # draw it on top, as it did over the save and load windows; back when the map is)
+        on = self.combat_log and self._panel.open and self._map_up()
         top, names = "", {}
         if on:
             if not self._font_tried:

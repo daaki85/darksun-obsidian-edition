@@ -453,6 +453,8 @@ class HelperTests(unittest.TestCase):
         uc.reg_write(r.UC_X86_REG_AX, self.result)
         uc.reg_write(r.UC_X86_REG_BX, 0xDEAD)  # (the game's routines keep neither BX nor ES)
         uc.reg_write(r.UC_X86_REG_ES, 0xBEEF)
+        self.ran_in = uc.reg_read(r.UC_X86_REG_GS)  # (GS under the game's routine: DSCLOG's segment, SAVE_FAR's)
+        uc.reg_write(r.UC_X86_REG_GS, 0x6666)  # (... and nothing says the game, or a handler under it, keeps GS)
 
     def field(self, field, n=2):
         return bytes(self.scene.mu.mem_read(TSR * 16 + self.hdr + field, n))
@@ -467,10 +469,31 @@ class HelperTests(unittest.TestCase):
         self.scene.mu.mem_write(tail * 16 + off, file.ljust(q.SAVE_FILE, b"\0") + name.ljust(q.SAVE_NAME, b"\0"))
 
     def tick(self):
-        self.scene.call("save_tick", esi=0x1111, edi=0x2222)
+        self.scene.call("save_tick", esi=0x1111, edi=0x2222, gs=0x7777)
         mu = self.scene.mu
-        self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_SI, r.UC_X86_REG_DI, r.UC_X86_REG_DS, r.UC_X86_REG_SP)],
-                         [0x1111, 0x2222, GAME_DS, 0x7F2])
+        self.assertEqual([mu.reg_read(x) for x in (r.UC_X86_REG_SI, r.UC_X86_REG_DI, r.UC_X86_REG_DS, r.UC_X86_REG_SP,
+                                                   r.UC_X86_REG_GS)],
+                         [0x1111, 0x2222, GAME_DS, 0x7F2, 0x7777])  # (GS the caller's again: TAIL_CALL)
+
+    def test_the_work_is_in_the_tail(self):
+        """SAVE_TICK in the segment is a test and a call: its work (SAVE_FAR) and TINT_PASS's
+        (TINT_FAR) are code in the tail, past the segment's 64 KB, run through TAIL_CALL with GS
+        DSCLOG's segment; the answer is written to DSCLOG's SAVE_REQ though the game's routine
+        changed GS."""
+        import test_header_offsets
+        sym = test_header_offsets.symbols()
+        tail_paras = struct.unpack_from("<H", self.scene.image, self.hdr + 1836)[0]
+        tail_len = len(self.scene.image) - tail_paras * 16
+        for name in ("save_far", "tint_far"):
+            self.assertLess(sym[name], tail_len, name)  # (an offset in the tail)
+            self.assertNotIn(name, self.scene.sym)  # (not a label of the segment's)
+        self.assertEqual(tail_len % 16, 0)  # (KEPT_PARAS counts whole paragraphs: the code's end is kept)
+        self.assertLess(self.scene.sym["tail_call"] - self.scene.sym["save_tick"], 0x20)  # (the stub is short)
+        self.write_text(b"SAVQ01.SAV", b"x")
+        self.req(q.REQ_SAVE)
+        self.tick()
+        self.assertEqual(self.ran_in, TSR)
+        self.assertEqual(self.req(), q.DONE)
 
     def test_header(self):
         """The fields where quicksave.py reads them; no key until the Loader sets them; SAVE_TEXT

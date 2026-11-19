@@ -251,7 +251,7 @@ Tests that guard the whole project rather than one module:
 | `test_header_offsets` | every field of DSCLOG's header is at the offset its comment gives, in a fresh build; every `TSR_*` constant of the Loader's is a field's; the spell arrows' table and names are `spellarrows.ARROWS`' and the names' room `names.EXTRA` |
 | `test_interrupt_hygiene` | DSCLOG's handlers leave interrupts as their caller had them, INT 33h's handler forgotten when the game removes it, the timer's tick with the direction flag clear, the scenes' arrow off the screen during a latch copy, A20 turned on again |
 | `test_version` | the version is the same in `__init__.py`, the patch notes and the front page, and its release notes exist |
-| `test_release` | the Release workflow zips and publishes as below, and the patch notes' page's links work |
+| `test_release` | the Release workflow zips and publishes as below, what the zip leaves out (and that nothing shipped imports it), and the patch notes' page's links work |
 | `test_manual`, `test_patchnotes` | the web pages are up to date with their Markdown (every player's page of `obsidian-edition/` one of the manual's), and their links work: each of the manual's lands on a file in the zip and an anchor its page has, with no link to a Markdown file and no id twice; Help opens the manual's start page |
 
 The unit tests don't play the game. For anything DSCLOG or a script touches, check it in the game
@@ -267,8 +267,9 @@ archive` (so only what is committed goes in), and publishes the zip and `../patc
 
 The release zip is the `obsidian-edition` folder as `git archive` makes it, less what
 `obsidian-edition/.gitattributes` marks `export-ignore`: the developer pages (`DEVELOPMENT*.md`),
-`tests/` and `docs/viewer.png`, which stay in the repository and are linked from the manual at the
-release's tag (and from the Markdown pages at `main`), and git's own `.gitattributes` and
+`tests/`, `docs/viewer.png` and the developers' tool `dsloader/questdraft.py` (no module that ships
+imports it: `test_release` checks), which stay in the repository and are linked from the manual at
+the release's tag (and from the Markdown pages at `main`), and git's own `.gitattributes` and
 `.gitignore`. It holds the player's pages, the manual (whose `changes.html` is the zip's copy of
 the patch notes), the Loader, `dos/`, `layouts/`, `docs/` and the .bat files. The top-level
 `patch-notes.html` is not in the zip; it is attached to the release as an asset of its own.
@@ -349,7 +350,7 @@ and the section that explains it. INTERNALS, RULES, KITS, CONTENT and SCREENS ar
 | `textlog.py` | the dialogue and message boxes DSCLOG copies | [SCREENS: the Dialogue tab](DEVELOPMENT-SCREENS.md#the-dialogue-tab) |
 | `journal.py` | the journal: what was said and done in a game, kept on disk and following the game's saves | [SCREENS: the Journal tab](DEVELOPMENT-SCREENS.md#the-journal-tab) |
 | `quests.py` | the game's quests, for the Journal tab: which are open and which are finished in the game being played | [SCREENS: the quests](DEVELOPMENT-SCREENS.md#the-quests) |
-| `questdraft.py` | a draft of the quest table, read from the game's scripts: for developers (`python -m dsloader.questdraft`) | [SCREENS: the quests](DEVELOPMENT-SCREENS.md#the-quests) |
+| `questdraft.py` | a draft of the quest table, read from the game's scripts: for developers (`python -m dsloader.questdraft`; not in the release zip) | [SCREENS: the quests](DEVELOPMENT-SCREENS.md#the-quests) |
 | `guestmem.py` | finds DOSBox's guest memory in its process | [INTERNALS: reading and writing memory](DEVELOPMENT-INTERNALS.md#reading-and-writing-memory) |
 | `process.py` | reads, writes and pauses another process's memory (Windows, Linux) | [INTERNALS: reading and writing memory](DEVELOPMENT-INTERNALS.md#reading-and-writing-memory) |
 | `itemgate.py` | the Loader's item-list writes, only while the game leaves the lists be | [INTERNALS: the item gate](DEVELOPMENT-INTERNALS.md#the-item-gate) |
@@ -478,6 +479,8 @@ and the section that explains it. INTERNALS, RULES, KITS, CONTENT and SCREENS ar
 | `hitchance.py` | the chance to hit shown before the swing, worked out as the game's attack does | [SCREENS: the chance to hit](DEVELOPMENT-SCREENS.md#the-chance-to-hit-before-the-swing) |
 | `hover.py` | the chance to hit floating over the enemy under the game's pointer, on a party member's turn | [SCREENS: under the pointer](DEVELOPMENT-SCREENS.md#under-the-pointer) |
 | `squares.py` | squares in reach: in a fight, a mark on each square the party member whose turn it is can still walk to, counted by the game's rules | [SCREENS: squares in reach](DEVELOPMENT-SCREENS.md#squares-in-reach) |
+| `keywatch.py` | the keys pressed in the game, read from the BIOS keyboard buffer: R, which shows and hides the squares in reach, at no cost to DSCLOG | [SCREENS: squares in reach](DEVELOPMENT-SCREENS.md#squares-in-reach) |
+| `moveback.py` | F10 after the last step: the move taken back can be walked again | [SCREENS: F10 takes a whole move back](DEVELOPMENT-SCREENS.md#f10-takes-a-whole-move-back) |
 | `usable.py` | showing what can be used: while Alt is held, a ring under every door, container, body, item and person in view, and the nearest ones' names | [SCREENS: showing what can be used](DEVELOPMENT-SCREENS.md#showing-what-can-be-used-alt) |
 | `scrolling.py` | scrolling the map with the mouse | [SCREENS: scrolling the map](DEVELOPMENT-SCREENS.md#scrolling-the-map) |
 | `wheel.py` | the mouse wheel, for the combat log's panel | [SCREENS: the combat log](DEVELOPMENT-SCREENS.md#the-panel) |

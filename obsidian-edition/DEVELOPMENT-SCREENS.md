@@ -26,6 +26,7 @@
 - [The chance to hit before the swing](#the-chance-to-hit-before-the-swing)
   - [Under the pointer](#under-the-pointer)
 - [Squares in reach](#squares-in-reach)
+- [F10 takes a whole move back](#f10-takes-a-whole-move-back)
 - [Showing what can be used: Alt](#showing-what-can-be-used-alt)
 - [Scrolling the map](#scrolling-the-map)
 - [M, U and I: open a screen, close it again](#m-u-and-i-open-a-screen-close-it-again)
@@ -291,6 +292,12 @@ dice log running:
 
 ### The panel
 
+- **Only while the map is the screen.** `DiceLog._update_panel` asks for the panel
+  (`TSR_PANEL_ON`) only with the game's `DS:0BC9h` at 1 (`_map_up`): with a window, a screen, a
+  menu or a talk up (2) it is taken off, and put back when the map is the screen again;
+  `combat_log_open` is untouched, so L's choice stays. Before, DSCLOG drew it on top of whatever
+  was up: over the save and load windows' QUICK button and list (the owner's report), and where
+  a member's END menu opens.
 - **Where it lives.** The Loader draws the panel's picture (`combatlog.py`:
   180 × 78 palette indices in the area's own colours, matched to the palette
   DSCLOG last read) into DSCLOG's far block, beside the dice log's ring
@@ -895,8 +902,8 @@ Tests: `tests/test_hitchance.py`. Verified: [log](https://github.com/daaki85/dar
   (as `_drawn` last found them), and `Hover.update` only when two looks running agree or the
   enemy is the one already labelled; a label up outlasts its enemy's last look by `LINGER` (0.2 s).
 - **When.** A fight on, a party member's turn (`whose_turn` under 4), the map up (`DS:0BC9h` 1: 2
-  with a window, a menu, the END menu, a talk), the pointer's mode (`DS:11B8h`) 1 walk, 2 look or 4
-  attack, and the pointer not on the combat log's panel (the header's `TSR_PANEL_ON` and
+  with a window, a menu, the END menu, a talk), the pointer's mode (`DS:11B8h`) 1 walk or 4
+  attack (not 2, the eye: a click there only looks, so there is nothing to foretell), and the pointer not on the combat log's panel (the header's `TSR_PANEL_ON` and
   `TSR_PANEL_TOP`: the finder knows nothing of the panel and answers with the enemy behind it).
   The turn passing takes the label off in the same pass.
 - **One number** (`hover.swing`, from `predict`'s swings in the game's order; a label is 128
@@ -1009,9 +1016,63 @@ squares in the floor pass.
   120; a frame a second. Before the pass passed over what is outside the clip, and with the marks
   made again at every step, the same walk was 131 against 156.
 
+- **R shows and hides them** (`DiceLog._squares_key`, every pass): with the switch on (`squares`),
+  the map up (`DS:0BC9h` 1) and a fight on, R or Shift+R flips `squares_shown` (settings.json,
+  on by default), DSCLOG's marks are written at once, a line goes to the dice log and a word
+  floats over the member whose turn it is (`_float`: with "Names over figures" on). The marks are
+  drawn while both `squares` and `squares_shown` are on. **The key costs DSCLOG nothing**
+  (`dsloader/keywatch.py`): DOSBox's keyboard handler puts every key into the BIOS keyboard
+  buffer in the game's memory (sixteen words from 0040:001Eh, the tail at 0040:001Ch), and the
+  game reads its keys through INT 16h, which leaves the words where they were; the keys pressed
+  since the last look are the words between the tail then and the tail now. The Loader only
+  looks, so the key reaches the game as well: R is in none of the game's key tables ([the game's
+  keys](HOW-THE-GAME-WORKS.md#the-games-keys): the map's and the fight's at DSUN.EXE 1BC5Bh, 26
+  keys; the map's second at 71C1Bh, overlay 4272h, 33 keys; and its letters' jump table at
+  71BE3h, c to v), and pressed in the game it did nothing to see. A key the game does use is
+  counted by DSCLOG instead and taken from the game (L, T, S, F5, F9). Two presses between two
+  looks leave things as they were.
+
 Tests: `tests/test_squares.py` (the rules on a made-up walk map, the bitmap, the upkeep),
 `tests/test_squares_drawing.py` (`TINT_PASS` in the emulator: the crosses, the clip, the rings'
-red kept). Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-18-squares-in-reach.md).
+red kept), `tests/test_keywatch.py` (the buffer's keys, and R). Verified:
+[log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-18-squares-in-reach.md),
+R and the PSP's map: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-18-modernisation-features.md).
+
+## F10 takes a whole move back
+
+([In the features page](FEATURES.md#f10-takes-a-whole-move-back).)
+
+`dsloader/moveback.py`, the Loader's alone (`DiceLog._move_back_pass`, every pass; setting
+`move_back`). The game's F10 (DSUN.EXE 1B83Ah, key 4400h of the table at 1BC5Bh) acts with a
+fight on (the word at 377Eh:0019h neither 0 nor 1), a party member's turn (`DS:4979h` under 4) and
+the member standing still (1BF9Dh: bit 20h of its map record's first byte, `DS:6694h` + member x
+20h): it places the member on the turn's first square (`DS:4968h` x, `DS:4966h` y) and writes the
+turn's points (`DS:4964h`) into the creature's movement word (37BDh:022Bh). The three words are
+kept by 1E4D6h as a member's turn comes up. It restores nothing else: not the attacks made, and
+not bit 0 of the turn's flags (37BDh:01D5h, "can walk"), which the step that leaves under 10
+points clears with the points (591BCh).
+
+Everything in DSUN.EXE that takes the bit away, found by its instructions' bytes: 591BCh (the
+last step: the points zeroed too); 786CBh (an effect, numbers 22h and 33h, on a party member:
+the points untouched); and the whole word zeroed at 1C090h and 78637h (the turn over or lost),
+or set to 2 at 58093h. So the Loader sets the bit again only after it has seen, in one turn of one
+party member and in this order: the flags with the bit; then the same flags without it and the
+points 0; then, the flags still those, the points equal to `DS:4964h` (10 or more), the member on
+the turn's first square and standing still. It also forgets the walk the points ran out on (FFh at
+3972h:0377h + thing x 1Ch, 0 at 3972h:08AAh + thing x 13h), which the game would otherwise go on
+with from the square F10 put the member on.
+
+**Never after an attack**: either of two bytes of the creature's ends it for the turn, the swings
+made (37BDh:0181h) or the attack commands given (37BDh:01ABh). The first alone is not enough: an
+attack ends the member's turn (the flags zeroed), but one that kills leaves the turn, with the
+swings' count back at 0 and the commands' at 1, and F10 then still puts the member back with its
+points. The first version of the mend read only the swings' count and gave the walk there (seen
+in the game, and mended before anything was committed as finished).
+
+Tests: `tests/test_moveback.py`. Verified:
+[log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-18-modernisation-features.md)
+(F10 with movement left: the game's, nothing written; after the last step: walks again; after a
+kill made on the last step's square: put back by the game, no walk).
 
 ## Showing what can be used: Alt
 

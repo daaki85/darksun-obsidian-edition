@@ -23,6 +23,26 @@ def archived(treeish: str) -> list:
 
 
 @unittest.skipUnless(os.path.exists(WORKFLOW), "the repository's root")
+def importers_of(module: str) -> list:
+    """The Loader's modules that import MODULE of dsloader (a module left out of the zip must
+    have none: the Loader would not start)."""
+    import ast
+    out = []
+    folder = os.path.join(HERE, "dsloader")
+    for name in sorted(os.listdir(folder)):
+        if not name.endswith(".py") or name == module + ".py":
+            continue
+        with open(os.path.join(folder, name), encoding="utf-8") as f:
+            tree = ast.parse(f.read())
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and (node.module or "").split(".")[-1] == module:
+                out.append(name)
+            elif isinstance(node, (ast.Import, ast.ImportFrom)) and any(a.name.split(".")[-1] == module
+                                                                         for a in node.names):
+                out.append(name)
+    return out
+
+
 class ReleaseTests(unittest.TestCase):
     def test_patch_notes_page_in_the_release(self):
         """The workflow zips the folder alone (the patch notes' page no longer added to it: the zip's
@@ -46,14 +66,18 @@ class ReleaseTests(unittest.TestCase):
     @unittest.skipUnless(os.path.exists(os.path.join(ROOT, ".git")), "a git checkout")
     def test_what_the_zip_holds(self):
         """git archive of the committed folder (the workflow's form) leaves out the developer pages,
-        tests/ and docs/viewer.png, and keeps the player's pages, the manual, the Loader and the .bat
-        files."""
+        tests/, docs/viewer.png and the developers' tool dsloader/questdraft.py, and keeps the
+        player's pages, the manual, the Loader and the .bat files. No module that ships imports
+        one that doesn't."""
         try:
             names = archived("HEAD:obsidian-edition")
         except (OSError, subprocess.CalledProcessError) as e:
             self.skipTest(f"git archive: {e}")
-        left = [n for n in names if re.match(r"(DEVELOPMENT[A-Z-]*\.md|tests/|docs/viewer\.png)", n)]
+        left = [n for n in names
+                if re.match(r"(DEVELOPMENT[A-Z-]*\.md|tests/|docs/viewer\.png|dsloader/questdraft\.py)", n)]
         self.assertEqual(left, [])
+        self.assertIn("dsloader/quests.py", names)  # (the quest table itself ships)
+        self.assertEqual(importers_of("questdraft"), [])
         for kept in ("README.md", "PLAYER-GUIDE.md", "FEATURES.md", "KITS.md", "manual/index.html",
                      "manual/changes.html", "manual/manual.css", "dsloader/__init__.py", "dsloader/viewer.py",
                      "Start Obsidian Edition.bat", "LICENSE"):

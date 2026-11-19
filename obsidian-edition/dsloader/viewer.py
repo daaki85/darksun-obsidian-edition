@@ -64,6 +64,15 @@ def _query_bytes(text: str) -> bytes:
 # the game window's sizes (DOSBox scales the game's 320x200, with the aspect corrected)
 WINDOW_CHOICES = {"Single (320x240)": 1, "Double (640x480)": 2, "Triple (960x720)": 3, "Quadruple (1280x960)": 4, "Full screen": None}
 
+def tabs_width(tabs: "ttk.Notebook") -> int:
+    """The width TABS needs to show every tab's name whole, in the tabs' own font: each name with
+    its padding and border (theme.TAB_PADDING, TAB_EDGES), and the row's margins."""
+    style = ttk.Style(tabs)
+    font = tkfont.Font(root=tabs, font=style.lookup("TNotebook.Tab", "font") or "TkDefaultFont")
+    each = 2 * theme.TAB_PADDING[0] + theme.TAB_EDGES
+    return sum(font.measure(tabs.tab(tab, "text")) + each for tab in tabs.tabs()) + 24
+
+
 class Viewer:
     def __init__(self, root: tk.Tk, layout: Layout, connect: Callable[[], GuestMemory],
                  connect_pid: Optional[Callable[[int], GuestMemory]] = None, dosbox=None):
@@ -161,7 +170,7 @@ class Viewer:
         across.pack(side="bottom", fill="x")
         self.table.pack(fill="both", expand=True)
 
-        tabs = ttk.Notebook(panes)
+        self.tabs = tabs = ttk.Notebook(panes)
         panes.add(tabs, weight=1)
         tabs.enable_traversal()  # Ctrl+Tab between tabs, Alt + the underlined letter
 
@@ -429,8 +438,13 @@ class Viewer:
         # the squares the party member whose turn it is can still walk to (squares.py)
         self.show_squares = tk.BooleanVar(value=settings.get("squares", True) is not False)
         ttk.Checkbutton(in_game, text="Squares in reach: in a fight, a small cross on each square the party member "
-                        "whose turn it is can still walk to", variable=self.show_squares,
-                        command=self._options_changed).pack(anchor="w", pady=(4, 0))
+                        "whose turn it is can still walk to (R in a fight hides and shows them)",
+                        variable=self.show_squares, command=self._options_changed).pack(anchor="w", pady=(4, 0))
+        # F10 after the last step: the move taken back can be walked again (moveback.py)
+        self.move_back = tk.BooleanVar(value=settings.get("move_back", True) is not False)
+        ttk.Checkbutton(in_game, text="F10 takes a whole move back: after the last step too, the party member can "
+                        "walk again (the game's F10 puts it back but lets it walk no more)",
+                        variable=self.move_back, command=self._options_changed).pack(anchor="w", pady=(4, 0))
         # gold rings and names for what a click does something with, while Alt is held (usable.py)
         self.show_usable = tk.BooleanVar(value=settings.get("show_usable", True) is not False)
         ttk.Checkbutton(in_game, text="Showing what can be used: hold Alt on the map, out of a fight",
@@ -677,7 +691,7 @@ class Viewer:
         for var in list(self.rule_vars.values()) + list(self.content_vars.values()):
             var.set(True)
         for var in (self.monster_info, self.floating_names, self.starting_gear, self.steady_pace,
-                    self.hit_chance, self.hit_hover, self.show_squares, self.show_usable, self.quick_save, self.autosave):
+                    self.hit_chance, self.hit_hover, self.show_squares, self.move_back, self.show_usable, self.quick_save, self.autosave):
             var.set(True)
         self.combat_log_level.set(dicelog.combat_log_level({}))
         self.ring_mode.set(rings.mode({}))
@@ -742,7 +756,9 @@ class Viewer:
         if width < 200:  # not laid out yet (a slow start): placing the divider now would hide the party
             self.root.after(200, self._fit_party)
             return
-        right = self.tools_tab.winfo_reqwidth() + 16  # (the widest rows of buttons, the memory tools')
+        # (the widest rows of buttons, the memory tools', and every tab's name whole: a notebook
+        # narrower than its tabs cuts each name short, "Dice lo", "Journa")
+        right = max(self.tools_tab.winfo_reqwidth() + 16, tabs_width(self.tabs))
         place = min(wanted, int(width * 0.55), max(width - right, width // 3))
         if self.panes.sashpos(0, place) < place // 2:  # the panes weren't ready after all: again soon
             self.root.after(200, self._fit_party)
@@ -1135,6 +1151,7 @@ class Viewer:
                 self.dice.hit_chance = self.hit_chance.get()
                 self.dice.hit_hover = self.hit_hover.get()
                 self.dice.show_squares = self.show_squares.get()
+                self.dice.move_back = self.move_back.get()
                 self.dice.show_usable = self.show_usable.get()
                 self.dice.quicksave.keys = self.quick_save.get()
                 self.dice.quicksave.auto = self.autosave.get()
@@ -1263,7 +1280,7 @@ class Viewer:
         values = {"monster_info": self.monster_info.get(), "floating_names": self.floating_names.get(),
                   "combat_log_level": self.combat_log_level.get(), "starting_gear": self.starting_gear.get(),
                   "rings": self.ring_mode.get(), "steady_pace": self.steady_pace.get(),
-                  "hit_chance": self.hit_chance.get(), "hit_hover": self.hit_hover.get(), "squares": self.show_squares.get(), "show_usable": self.show_usable.get(), "quick_save": self.quick_save.get(),
+                  "hit_chance": self.hit_chance.get(), "hit_hover": self.hit_hover.get(), "squares": self.show_squares.get(), "move_back": self.move_back.get(), "show_usable": self.show_usable.get(), "quick_save": self.quick_save.get(),
                   "autosave": self.autosave.get(), "picture": self.picture.get()}
         device = self._midi_value()  # (something typed that is no device: the one remembered stays)
         values[midiout.SETTING] = getattr(self, "_options_shown", {}).get(
@@ -1303,6 +1320,7 @@ class Viewer:
             self.dice.hit_chance = self.hit_chance.get()
             self.dice.hit_hover = self.hit_hover.get()
             self.dice.show_squares = self.show_squares.get()
+            self.dice.move_back = self.move_back.get()
             self.dice.show_usable = self.show_usable.get()
             self.dice.quicksave.keys = self.quick_save.get()
             self.dice.quicksave.auto = self.autosave.get()
@@ -1966,7 +1984,7 @@ class Viewer:
             label = "Thief skills now"
             if known and thief and index < game.PARTY_SIZE and gd.thief_heavy(index):
                 label = "Thief skills now (none in armour that isn't light)"
-            if known and not thief and self.rule_vars["stealth"].get():  # a ranger's, for the stealth rule
+            if known and not thief:  # a ranger's, for the stealth rule (always on now: game.ALWAYS_ON)
                 thief, label = gd.ranger_skills_now(index), "Ranger skills now"
             # (before the game loads its item tables, at the menu or creating characters, items read
             # as noise: no equipment then, and attacks from the sheet alone)
@@ -1986,7 +2004,7 @@ class Viewer:
             except (struct.error, IndexError, ValueError):
                 weapons, no_spells, kit, kit_move, move_why = [], False, None, 0, []
             age = None
-            if known and index < game.PARTY_SIZE and self.rule_vars["aging"].get():
+            if known and index < game.PARTY_SIZE:  # (the ages' rule: always on now)
                 from . import aging
                 try:
                     age = aging.describe(gd.sheet(index))

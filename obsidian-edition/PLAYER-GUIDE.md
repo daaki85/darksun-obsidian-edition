@@ -1109,10 +1109,13 @@ walk is over.
   first).
 - Nobody walks through anybody, allies included; corners can be cut.
 - Walking past an enemy costs nothing and brings no free blow.
+- **R hides the crosses and shows them again**; the choice is kept.
 - **F10 takes a move back** (the game's own key): the character stands where
-  its turn began, with its movement. Use it before the last step: once the
-  movement is all spent F10 puts the character back but it can't walk again
-  that turn.
+  its turn began, with its movement, and can walk again, after the last step
+  too ([F10 takes a whole move back](FEATURES.md#f10-takes-a-whole-move-back)).
+  *Without the mod:* once the movement is all spent F10 puts the character
+  back but it can't walk again that turn. An attack is never taken back, and
+  after one F10 gives no walk.
 
 The detail: [how the game works](HOW-THE-GAME-WORKS.md#moving-in-a-fight).
 
@@ -1201,9 +1204,10 @@ would attack: where figures overlap, the one in front, and nothing where an ally
 
 - **One weapon**, the first a click would swing. Next to the enemy, the first weapon in hand
   (often the left hand's). Farther off, the pointer decides as it does for the click: the walk
-  arrow walks the member up to fight hand to hand, so the number is the first melee weapon's (the
-  eye, whose click only looks, shows that one too); the attack pointer shoots, so the number is
-  the missile weapon's when it reaches the enemy and the quiver isn't empty.
+  arrow walks the member up to fight hand to hand, so the number is the first melee weapon's; the
+  attack pointer shoots, so the number is the missile weapon's when it reaches the enemy and the
+  quiver isn't empty. With the look pointer (the eye) there is no number: a click there only
+  looks.
 - **From behind.** Next to the enemy: `Behind 10+ (55%)`, `Backstab 8+ (65%)` (a hidden archer's
   shot: `Unseen 10+ (55%)`). Farther off, where the walk decides: `14+ (35%), behind 10+`.
 - **A held enemy**: `Hits`.
@@ -2175,7 +2179,8 @@ A settings file from an older Loader with one of these unticked has it on all th
 | A red ring on the ground in a fight: ... none / ... under the enemy chosen with Tab | under the enemy | at once | [Choosing an enemy](FEATURES.md#choosing-an-enemy-tab-enter-and-the-rings) |
 | The chance to hit: with an enemy chosen with Tab, what the d20 must show to hit it and the chance, in the dice log and the combat log's header | on | at once | [The chance to hit before the swing](FEATURES.md#the-chance-to-hit-before-the-swing) |
 | The chance to hit under the pointer: in a fight, with the pointer over an enemy, what the d20 must show and the chance float over it | on | at once | [The chance to hit before the swing](FEATURES.md#the-chance-to-hit-before-the-swing) |
-| Squares in reach: in a fight, a small cross on each square the party member whose turn it is can still walk to | on | at once | [Squares in reach](FEATURES.md#squares-in-reach) |
+| Squares in reach: in a fight, a small cross on each square the party member whose turn it is can still walk to (R in a fight hides and shows them) | on | at once | [Squares in reach](FEATURES.md#squares-in-reach) |
+| F10 takes a whole move back: after the last step too, the party member can walk again (the game's F10 puts it back but lets it walk no more) | on | at once | [F10 takes a whole move back](FEATURES.md#f10-takes-a-whole-move-back) |
 | Showing what can be used: hold Alt on the map, out of a fight | on | at once | [Showing what can be used](FEATURES.md#showing-what-can-be-used-alt) |
 
 **Rule changes**

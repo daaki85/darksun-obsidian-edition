@@ -55,6 +55,9 @@ act (`Round 2: Gerakis, then Cermak, Cilla`); out of one it says how long the ga
 fights](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights) (`Arena fights: 4`) until the party has
 escaped Draj. Out of fights the lines with a roll go in too (a thief's skills, a scroll learnt, a
 new level's hit points). It never waits for a click, and stays shown or hidden as you left it.
+While a window, a screen, a menu or a talk is up (the save and load windows, the inventory, a
+member's END menu) the panel is put away, so it never covers them, and it is back when the map
+is.
 
 **Always on** (no switch). How much it says is the tab's choice, under *The combat log in the
 game (L on the map shows and hides it):* *...
@@ -134,9 +137,10 @@ differ, and both numbers are given where the swing may come from behind.
 **Under the pointer.** On a party member's turn, rest the game's pointer on an enemy and the same
 number floats over it, as "Miss" does: `12+ (45%)`. It goes when the pointer leaves the enemy or
 the turn passes. A label is narrow, so it gives one weapon, the one a click would swing first:
-next to the enemy the first weapon in hand; farther off the walk-up's with the walk arrow (or the
-eye) and the shot's with the attack pointer. Tab's choice is left alone: the pointer changes
-neither the ring nor the combat log's header.
+next to the enemy the first weapon in hand; farther off the walk-up's with the walk arrow and the
+shot's with the attack pointer. With the look pointer (the eye) nothing shows: a click there only
+looks. Tab's choice is left alone: the pointer changes neither the ring nor the combat log's
+header.
 
 ![Jenna's turn, the pointer on an Arena Guard at the corridor's end: "13+ (40%)" floats over the guard](docs/hit-chance-hover.png)
 
@@ -165,11 +169,32 @@ in a fight](PLAYER-GUIDE.md#moving-in-a-fight)). **One limit:** where a wall or 
 the game go round, its own way can cost a little more than the shortest, so the farthest crosses
 behind a wall may be a step out of one click's reach: click a nearer cross first, then the far
 one. Walking past an enemy costs nothing more, and a click on an enemy's figure is still an
-attack, not a walk. **F10**, the game's own key, takes a move back while some of it is left.
+attack, not a walk. **F10**, the game's own key, takes a move back ([below](#f10-takes-a-whole-move-back)).
+
+**R hides the crosses and shows them again**, on the map in a fight, as L does the combat log: the
+dice log says which (`Squares in reach: hidden (R shows them)`), "Squares hidden" or "Squares
+shown" floats over the member whose turn it is (with [names over figures](#names-over-figures)
+on), and the choice is remembered for the next fight and the next start. The game has no use for R
+on the map. With the switch off there are no crosses and R does nothing.
 
 **Switch:** *Squares in reach: in a fight, a small cross on each square the party member whose turn
-it is can still walk to*. Rules: [moving in a fight](HOW-THE-GAME-WORKS.md#moving-in-a-fight). How it works:
+it is can still walk to (R in a fight hides and shows them)*. Rules: [moving in a fight](HOW-THE-GAME-WORKS.md#moving-in-a-fight). How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#squares-in-reach).
+
+### F10 takes a whole move back
+
+In a fight **F10**, the game's own key, takes a party member's move back: the member stands where
+its turn began, with the movement it had. In the game that works only while some movement is left:
+after the last step F10 still puts the member back, and the name box shows its Move again, but no
+click walks it ([moving in a fight](HOW-THE-GAME-WORKS.md#moving-in-a-fight)). With the Loader the
+member can walk again then too, and the dice log says so (`F10: Ester's move taken back (can walk
+again)`). Nothing else changes: an attack is not taken back, and after an attack (one that kills
+can leave the member its turn) F10 gives no walk.
+
+**Switch:** *F10 takes a whole move back: after the last step too, the party member can walk again
+(the game's F10 puts it back but lets it walk no more)*. Rules: [moving in a
+fight](PLAYER-GUIDE.md#moving-in-a-fight). How it works:
+[DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#f10-takes-a-whole-move-back).
 
 
 ### Showing what can be used: Alt

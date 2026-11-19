@@ -16,11 +16,11 @@ same figure takes its place and it never takes theirs).
   map record's left, top, width and height) and when two looks running agree (Hover.update).
 - Which number, one (a label is 128 pixels): the weapon a click would swing first, as
   hitchance.predict orders them. Next to the enemy the first melee weapon. Farther off the pointer
-  decides, as it does for the click: the walk arrow (and the eye, whose click only looks) gives
-  the walk-up melee number, the attack pointer (the sword) the shot when the missile weapon reaches
-  and its quiver isn't empty, else the melee number too.
+  decides, as it does for the click: the walk arrow gives the walk-up melee number, the attack
+  pointer (the sword) the shot when the missile weapon reaches and its quiver isn't empty, else
+  the melee number too. With the eye up nothing shows: a click there only looks.
 - When: a fight on, a party member's turn, the map up with no window, menu or talk over it
-  (DS:0BC9h 1), the pointer in one of those three modes (DS:11B8h) and not on the combat log's
+  (DS:0BC9h 1), the pointer the walk arrow or the sword (DS:11B8h) and not on the combat log's
   panel (the game's finder knows nothing of the panel: it answers with the enemy behind it, and
   a click there is the panel's).
 - The cost: a pass with the pointer off every enemy reads four small pieces of the game's memory;
@@ -89,7 +89,7 @@ def inside(record: bytes, camera: Tuple[int, int], pointer: Tuple[int, int]) -> 
 def target(gd, seen: Look, enemies: Sequence[int]) -> Optional[int]:
     """The enemy under the pointer: the thing the game found there, if it is one of ENEMIES and the
     pointer is inside its picture (so not the one lit before the pointer moved away)."""
-    if not seen.on_map or seen.mode not in (WALK, LOOK, ATTACK) or seen.under not in enemies:
+    if not seen.on_map or seen.mode not in (WALK, ATTACK) or seen.under not in enemies:
         return None
     record = gd.guest.read(gd.ds * 16 + targeting.MAP_THINGS + seen.under * targeting.MAP_THING_SIZE,
                            targeting.MAP_THING_SIZE)

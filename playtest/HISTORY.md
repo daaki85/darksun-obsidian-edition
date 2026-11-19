@@ -40,6 +40,10 @@ command, by pid, and nothing else in it.
 `start.sh`; Xvfb kept the lock's file open after the script ended, and the next sessions waited on
 it until `lslocks` named the pid. Xvfb is now started outside the lock. The same day an agent
 killed the shared display to free the lock: hence the rule to stop only what you started.
+- **2026-11-18**: DOSBox killed in place of the dice log. Their two pids had been written to two
+  files and printed with one `cat *.pid`, which lists by file name (dice.pid before dosbox.pid),
+  and were read in the order they had been written. The game and the fight in it were lost; the
+  save was loaded again. Kill a pid only after `ps -o pid,args -p PID` has named it.
 
 ## The game's installer
 
@@ -631,3 +635,9 @@ index](logs/README.md), by date.
   and checked together in a private game: the helper's signature `DSCLOGvc`, quick save's header
   fields moved to +1868, 29,424 bytes of upper memory free in one piece
   (logs/2026-11-18-integration.md).
+- **2026-11-18** (the features, 2.19.0's checks): the stack on #112's helper, which had 224 bytes
+  and 36 paragraphs left: two routines moved into the tail and the squares' map into the PSP;
+  the game's three key tables read (A and F6 the animations; R free); R, F10's mend (an attack
+  that kills leaves the turn, +1ABh counts the commands), the panel under windows; the arena
+  reached with no memory edit and its autosave loaded; the Loader's window on a second display,
+  where the Characters tab's KeyError showed (logs/2026-11-18-modernisation-features.md).

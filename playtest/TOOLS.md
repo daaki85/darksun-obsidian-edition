@@ -40,6 +40,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `foeset.py` | foeset.py [COMBATANT [race=R] [cls=A,B,C] [lv=A,B,C] [mr=N] [hp=N] [int=N] [eff=ID[:SPELL[:AMOUNT]]] ...]: memory only, never save after (2026-11-09, logs/2026-11-09-group-3.md). |
 | `follow.py OBJECT [ROUNDS]` | keep the party within a few squares of a map object that walks (an escort). |
 | `framerate.py SECONDS [X1 X2 Y]` | walks the party back and forth between screen points (X1,Y) and (X2,Y) for SECONDS and reports the frame rate, a second at a time and in all. |
+| `gamekeys.py [dis START [LEN]]` | the keys the game itself acts on with the map up, read from DSUN.EXE ($DS_GAME): the root's table at 1BC5Bh (26 keys, then their handlers), the map overlay's at 71C1Bh (overlay 4272h: 33 keys) and that overlay's jump... |
 | `gearpoll.py` | watches the Loader's creation gear reach the roster, for 110 s. |
 | `ghostchk.py [THING...]` | DSCLOG's see-through figures: its block (GHOST_SEG), GHOST_ON, the first REP and BLEND bytes and GHOST_TAB; |
 | `ghostclear.py [TRIALS]` | whether GHOST_UNION clears a see-through mark within an enemy turn. |
