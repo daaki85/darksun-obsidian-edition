@@ -482,10 +482,15 @@ game's data: it is one player's account.
   what's spare). `leasts.sh` reads each score's least (`creationscores.py`). EXIT (278,160) leaves
   without keeping the character. The screen's memory (its sheet, the least and most, the stand-in
   sheet): [the creation screen in memory](RESEARCH.md#creation-and-levels).
-- **AGE against the dice log's age line** (logs/2026-11-19-final-audit-fixes.md): after a new roll
-  (the die, 155,97) the screen's AGE and the Loader's `NAME is N (a human: 15 + 1d8 = [k])` can
-  differ (AGE 19, 21, 22 for 23, 23, 20), with origin's Loader too: not yet looked into; read the
-  screen's for what DSCLOG draws.
+- **AGE and the dice log** (logs/2026-11-19-older-loader-bugs.md): the screen's AGE (155,97 rolls
+  the die, AGE under THAC0: crop a shot at `80x10+150+176` and scale it 300% to read it) is the age
+  the character keeps (DSCLOG's roll, put in its sheet at DONE). The dice log gives no age while the
+  screen is up, and at DONE `NAME is N (a human: 15 + 1d8 = k, as the creation screen rolled)`.
+  Before the fix (origin up to 2026-11-19) it gave the screen's stand-in an age of its own each roll
+  (`NAME is N (... = [k])`), which disagreed. The stand-in is a party slot (`gd.creating()` True;
+  the first character's in member 0, the second's in member 1) that starts with the creation
+  sheet's last age bytes. `sheetinfo.py`, or `aging.age_of(gd.sheet(M))` through live.py, reads
+  the age kept.
 - **The race**: the big portrait (40,60) steps through the portraits, and with them the race and
   sex: read the sheet's +18h after each click (two clicks a race: 1 human, 2 dwarf, 3 elf, 4
   half-elf ... 7 mul). The race text and the small figure at the top don't change it (the figure
@@ -1046,9 +1051,18 @@ tools, and where each is described:
   details** ticked, and again unticked (its box at 438,240), one crop above the other.
 - **The window's Start the game in the container** (the same log): it runs `prepare_patched_game`
   (the copies rewritten, a check of `write_atomic`), then stops at GOG's `DOSBox.exe`, a Windows
-  program ("[Errno 13] Permission denied", a message box: OK at 1000,470). Click Reconnect first
-  when the game it was attached to was killed: attached by Reconnect, it doesn't notice the DOSBox
-  going ("Connected to the game" stays) and Start does nothing while it thinks so.
+  program ("[Errno 13] Permission denied", a message box: OK at 1000,470). A game it was attached
+  to that is killed is seen within a few seconds since 2026-11-19 (`Disconnected (process N has
+  ended). Waiting for the game...`); before, attached by Reconnect, it said "Connected to the game"
+  on and Start did nothing (logs/2026-11-19-older-loader-bugs.md).
+- **The window across a kit reload** (the same log): `loadsave.sh` is a new DOSBox (start.sh's
+  `pkill -9 -x dosbox`; the game has no load without a restart here), so the window shows
+  `Disconnected (process N has ended)` for a few seconds, then attaches to the new one by itself,
+  through the title and the load: no Reconnect needed (still kill start.sh's text dice log by pid,
+  or two Loaders follow the game when the window's folder isn't the kit's). An old Loader's window
+  (origin before 2026-11-19) needs `kill -9` to show its stale "Connected" and the party table's
+  `unpack requires a buffer of 4 bytes (game.py:798)`; a plain `kill` let DOSBox's own exit give a
+  read error, which it did notice.
 - **The party view's thief skills**: the Characters tab, the mouse wheel over the cards (25 clicks
   of button 5) to reach the fourth; a thief's card ends `Thief skills now: pick pockets 72%, ...`.
 - **The load window** (`docs/save-pages.png`): a save's name is its STXT chunk

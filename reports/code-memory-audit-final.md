@@ -7,7 +7,7 @@ driving both. R1: the four literal offsets in code made constants, the docstring
 left as text. R3: the copies also set 0644 (mkstemp's are 0600). C1: `wp_redraw` gone, the room
 unchanged (the image is padded to the paragraph). C6: `theme.py`'s re-exports were already marked
 `# noqa`. The two still open from the last audit (the stats thread's idle step, `crash-logs/`) are
-not in this list and stay open. Below is the audit as it was made, findings only. The code audited is `claude/final-code-audit`, made from
+not in this list; they were fixed after, on `claude/older-loader-bugs` (their status lines below). Below is the audit as it was made, findings only. The code audited is `claude/final-code-audit`, made from
 `origin/claude/backstab-str-line` at `f1f8972`: `origin/obsidian-edition` (#110 to #115) plus the
 unmerged REAR_FRESH backstab fix. Line numbers are at that commit. The previous audit is
 `reports/code-memory-audit.md` on `origin/claude/code-memory-audit`; its fixes are #111 and #112.*
@@ -257,8 +257,14 @@ REAR_FRESH's 48. The backstab commit updated the limits table below it but not t
   `_answer_stats` returns without raising when `tsr_hdr` is None (`dicelog.py:1164-1165`), so
   `STATS_ANSWER_IDLE` (`dicelog.py:1191`, used only on an exception) never applies. **Fix:** return a flag, and take the idle
   step when unattached.
+  *Status: fixed on branch `claude/older-loader-bugs` (2026-11-19): `_answer_stats` returns False
+  while unattached, and the thread then waits `STATS_ANSWER_IDLE`
+  (`test_stats_thread_idles_while_unattached`).*
 - `crash-logs/` is never pruned: freeze reports are about 1 MB each (`freeze.py:150`).
   **Fix:** keep the newest 20.
+  *Status: fixed on branch `claude/older-loader-bugs` (2026-11-19): `freeze.write_report` keeps the
+  newest `KEEP_REPORTS` (20) `freeze-*.zip` and removes the older; the crash reports' text (a few
+  KB each) and anything else in the folder are left (`test_old_reports_pruned`).*
 
 ### Checked and found clean
 

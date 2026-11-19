@@ -732,7 +732,8 @@ class Viewer:
                 self.guest = self.connect()
         except Exception as e:  # shown to the user, who can fix it and retry
             self.guest = None
-            if not quiet or not self.status.get().startswith("Not connected"):
+            if not quiet or not self.status.get().startswith(("Not connected", "Disconnected")):
+                # (a quiet try after the game was lost: "Disconnected (why)" stays up)
                 self.status.set(f"Not connected: {e}")
             self.next_try = time.monotonic() + RETRY_SECONDS
             return

@@ -1158,12 +1158,13 @@ class DiceLog:
             return 0
         return max(0, min(100, skills[0][1])) if skills else 0
 
-    def _answer_stats(self) -> None:
+    def _answer_stats(self) -> bool:
         """A game screen is about to show THAC0 and the saves: bring them up to date first (the
-        game waits for this, so an item just put on counts)."""
+        game waits for this, so an item just put on counts). False while no game is attached
+        (nothing to look at: the stats thread then takes its idle step)."""
         with self._stats_lock:
             if self.tsr_hdr is None or self.rand_addr is None:
-                return
+                return False
             now = time.monotonic()
             if now - getattr(self, "_beat_at", 0.0) >= BEAT_STEP:  # (the heartbeat: GEAR_HOLD, _beat)
                 self._beat_at = now
@@ -1173,6 +1174,7 @@ class DiceLog:
             if req != self.guest.read(self.tsr_hdr + TSR_STATS_REPLY, 2) and self._same_game():
                 self._write_stats_now()
                 self.guest.write(self.tsr_hdr + TSR_STATS_REPLY, req)
+            return True
 
     def answer_stats_in_background(self) -> None:
         """Answer DSCLOG's requests for fresh STATS from a thread of their own, within a
@@ -1185,9 +1187,8 @@ class DiceLog:
         def run() -> None:
             step = STATS_ANSWER_STEP
             while not self._stats_stop.wait(step):
-                try:
-                    self._answer_stats()
-                    step = STATS_ANSWER_STEP
+                try:  # (unattached: the idle step, not a look every millisecond)
+                    step = STATS_ANSWER_STEP if self._answer_stats() else STATS_ANSWER_IDLE
                 except Exception:  # (DOSBox gone or restarting: the main loop attaches again)
                     step = STATS_ANSWER_IDLE
         self._stats_thread = threading.Thread(target=run, name="stats", daemon=True)

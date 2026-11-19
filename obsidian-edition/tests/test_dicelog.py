@@ -1673,6 +1673,31 @@ class OtherTests(unittest.TestCase):
         log._stats_thread.join(30)
         self.assertFalse(log._stats_thread.is_alive())
 
+    def test_stats_thread_idles_while_unattached(self):
+        """No game attached (no DSCLOG header): the stats thread takes its idle step between looks,
+        not one every millisecond (_answer_stats returned without raising, so the idle step, only
+        for an error, never applied)."""
+        from unittest import mock
+        log = make_game()
+        log.tsr_hdr = None
+        self.assertFalse(log._answer_stats())
+        steps = []
+        looked = threading.Event()
+
+        def wait(step):  # (the stop event's wait: the step asked for noted, two looks then stop)
+            steps.append(step)
+            if len(steps) >= 3:
+                looked.set()
+                return True
+            return False
+        with mock.patch.object(log._stats_stop, "wait", side_effect=wait):
+            log.answer_stats_in_background()
+            self.assertTrue(looked.wait(30))
+            log._stats_thread.join(30)
+        self.assertEqual(steps, [dicelog.STATS_ANSWER_STEP, dicelog.STATS_ANSWER_IDLE, dicelog.STATS_ANSWER_IDLE])
+        log = make_game()  # (attached: a look every millisecond)
+        self.assertTrue(log._answer_stats())
+
     def test_attach_needs_the_patched_game(self):
         log = make_game()
         m = log.guest.mem
