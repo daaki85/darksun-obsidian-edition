@@ -5309,7 +5309,7 @@ class TickTests(unittest.TestCase):
 @unittest.skipIf(Uc is None, "unicorn not installed")
 class StealthTests(unittest.TestCase):
     """A hidden thief's attack (RULE_STEALTH, 64): from behind, a backstab when it can be."""
-    SHEETS, TYPES = 0x8000, 0x9000
+    SHEETS, TYPES, CREATURES = 0x8000, 0x9000, 0xA000
 
     def setUp(self):
         self.image = image = load_image()
@@ -5317,14 +5317,17 @@ class StealthTests(unittest.TestCase):
         mu.mem_map(0, 0x100000)
         mu.mem_write(TSR * 16, image)
         self.hdr = TSR * 16 + image.find(HDR_SIG)
-        import re  # (its three pops, "mov byte [cs:st_now],0" and "cmp si,3")
-        at = re.search(rb"(?:\x2e\x8f\x06..){3}\x2e\xc6\x06..\x00\x83\xfe\x03", image, re.S).start()
+        import re  # (its three pops, "call rear_fresh", "mov byte [cs:st_now],0" and "cmp si,3")
+        at = re.search(rb"(?:\x2e\x8f\x06..){3}\xe8..\x2e\xc6\x06..\x00\x83\xfe\x03", image, re.S).start()
         self.assertGreater(at, 0)
         mu.mem_write(VEC_STEALTH * 4, struct.pack("<HH", at, TSR))
         mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
         mu.mem_write(GAME_DS * 16 + 0x1661, struct.pack("<HH", 0, self.SHEETS))
         mu.mem_write(GAME_DS * 16 + 0x1669, struct.pack("<HH", 0, self.TYPES))
         mu.mem_write(TSR * 16 + 170, struct.pack("<H", 64))
+        # the attacker's creature ([BP-0Eh], 7) and its THAC0, 15 (REAR_FRESH's: what the game took off)
+        mu.mem_write(GAME_DS * 16 + 0x1665, struct.pack("<HH", 0, self.CREATURES))
+        mu.mem_write(self.CREATURES * 16 + 7 * 0x3A + 0x1F, bytes((15,)))
         # the game's clock (STAB_FIRST's): each attack a new round unless a test keeps it
         self.clock, self.new_rounds = 0xC000, True
         mu.mem_write(GAME_DS * 16 + 0x9B72, struct.pack("<HH", 0, self.clock))
@@ -5346,7 +5349,7 @@ class StealthTests(unittest.TestCase):
         mu.mem_write(self.hdr + 204, struct.pack("<HH", hidden, 0))
         mu.mem_write(self.SHEETS * 16 + 5 * 0x47 + 0x12, struct.pack("<H", 0x400 if thief else 0))
         mu.mem_write(self.TYPES * 16 + 7 * 0x14 + 4, struct.pack("<H", weight))
-        for offset, value in ((-0x12, 5), (-4, getattr(self, "weapon_type", 7)), (-0x1A, behind), (-0x24, stab), (-0x20, thac0),
+        for offset, value in ((-0x12, 5), (-0x0E, 7), (-4, getattr(self, "weapon_type", 7)), (-0x1A, behind), (-0x24, stab), (-0x20, thac0),
                               (-0x1C, target_object), (0x0E, melee)):
             self.word(offset, value)
         mu.mem_write(CALLER * 16 + 0x600, bytes((0xCD, VEC_STEALTH, 0x90)))
@@ -5414,6 +5417,24 @@ class StealthTests(unittest.TestCase):
         self.assertEqual(self.attack(attacker=0x29, **game_stab)[:3], (1, 1, 11))
         mu.mem_write(clock * 16, struct.pack("<I", 660))  # the next round
         self.assertEqual(self.attack(**game_stab)[:3], (1, 1, 11))
+
+    def test_later_attack_flags_its_own(self):
+        """REAR_FRESH: the attack routine sets from behind and backstab ([BP-1Ah], [BP-24h]) once a
+        call but runs a round's attacks in it, [BP-20h] the creature's THAC0 again each time: a flag
+        left from an earlier attack, its 2 to hit not taken off this one, is cleared, not paid back
+        (Seneca's Shadowseeker after a backstab with her Hayneedle: THAC0 19 +2 STR = 17, not 15;
+        logs/2026-11-19-backstab-str-line.md). A flag the game paid for this time stays."""
+        mu, clock = self.mu, self.clock
+        self.new_rounds = False
+        mu.mem_write(clock * 16, struct.pack("<I", 600))
+        self.assertEqual(self.attack()[:3], (1, 1, 11))  # hidden: the round's first, a backstab
+        left = dict(behind=1, stab=1, hidden=0)
+        self.assertEqual(self.attack(thac0=15, **left)[:3], (0, 0, 15))  # neither this time
+        self.assertEqual(self.attack(thac0=13, **left)[:3], (1, 0, 13))  # from behind only (a heavier weapon)
+        self.assertEqual(self.attack(thac0=11, **left)[:3], (1, 0, 13))  # both: STAB_FIRST's, as before
+        mu.mem_write(clock * 16, struct.pack("<I", 660))  # the next round
+        self.assertEqual(self.attack(thac0=15, **left)[:3], (0, 0, 15))  # (no backstab's damage for nothing)
+        self.assertEqual(self.attack(hidden=0, behind=1, thac0=15, target_object=1)[:3], (0, 0, 15))
 
     def girdle(self, item_type, weapon_type=7):
         """Creature 6 (the target) wearing an item of ITEM_TYPE at the waist (none: 0), the

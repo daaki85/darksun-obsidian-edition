@@ -23383,6 +23383,7 @@ probe_stealth:
         pop word [cs:s_ip]
         pop word [cs:s_cs]
         pop word [cs:s_fl]
+        call rear_fresh
         mov byte [cs:st_now], 0
         cmp si, 3
         ja .push
@@ -23434,6 +23435,37 @@ s_ip    dw 0
 s_cs    dw 0
 s_fl    dw 0
 st_now  db 0                    ; (1 while PROBE_STEALTH runs for a hidden one's attack)
+
+; REAR_FRESH: first in PROBE_STEALTH, each attack's from behind and backstab its own. The routine
+; sets [BP-1Ah] and [BP-24h] once a call (58036h, 58040h) but runs all of a round's attacks in it
+; (the loop from 58113h, [BP-20h] the creature's THAC0 again each time), and sets them, with their
+; 2 to hit each, only when this attack is from behind: a flag left from an earlier attack (a hidden
+; thief's backstab, Seneca's Hayneedle, then her Shadowseeker swings) had no +2 on this one, and the
+; probes after (STAB_FIRST, THIEF_REAR, KIT_REAR, ITEM_REAR) gave back 2 they hadn't had: THAC0 2
+; worse than a plain attack's (17 for 15), yet from behind: the target's DEX and shield not counted. The game's own code took 0, 2 or 4 off the
+; THAC0 (the creature's +1Fh, [BP-0Eh] its creature) this time: a flag it didn't pay for cleared.
+; All registers kept.
+rear_fresh:
+        push ax
+        push bx
+        push es
+        mov ax, [bp-0x0E]
+        imul ax, ax, 0x3A
+        les bx, [CREATURES]
+        add bx, ax
+        mov al, [es:bx+0x1F]
+        cbw
+        sub ax, [bp-0x20]               ; (what the game's from behind and backstab took off)
+        cmp ax, 2
+        jge .stab
+        mov word [bp-0x1A], 0
+.stab:  cmp ax, 4
+        jge .out
+        mov word [bp-0x24], 0
+.out:   pop es
+        pop bx
+        pop ax
+        ret
 
 ; MISSILE_REAR: in PROBE_STEALTH, first after the stealth rule: a missile ([BP+0Eh] not 1, melee) is
 ; from behind only as a hidden archer's shot (the stealth rule's: unseen, the target's DEX and
