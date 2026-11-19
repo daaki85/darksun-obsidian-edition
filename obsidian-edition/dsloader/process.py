@@ -355,7 +355,7 @@ def process_running(pid: int) -> bool:
 # the mapping go when the game ends (close), and removes the file before each start.
 MEMORY_FILE_ENV = "DSLOADER_MEMORY_FILE"  # the file's path: the Loader then uses it, not a process (the playtest kit's)
 MEMORY_PID_ENV = "DSLOADER_MEMORY_PID"    # DOSBox-X's pid, if known: to hold it still (itemgate.py) and see it close
-ALIVE_EVERY = 0.5  # seconds between looks at whether DOSBox-X still runs (a file reads on after it has gone)
+ALIVE_EVERY = 0.1  # seconds between the fuller looks at whether DOSBox-X still runs (a file reads on after it has gone)
 
 
 def memory_file() -> str:
@@ -406,11 +406,18 @@ class FileMemory:
         a closed process's memory is."""
         if not self.pid:
             return
+        if sys.platform != "win32":  # (asked at every read: a signal that sends nothing, a microsecond)
+            try:
+                os.kill(self.pid, 0)
+            except ProcessLookupError:
+                raise ProcessError(f"DOSBox-X (process {self.pid}) has closed") from None
+            except OSError:
+                pass  # (someone else's: there)
         now = time.monotonic()
         if now - self._checked < ALIVE_EVERY:
             return
         self._checked = now
-        if not process_running(self.pid):
+        if not process_running(self.pid):  # (ended and not yet collected by its parent, too; Windows' whole check)
             raise ProcessError(f"DOSBox-X (process {self.pid}) has closed")
 
     def read(self, addr: int, size: int) -> bytes:

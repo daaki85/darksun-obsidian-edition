@@ -231,6 +231,201 @@ engine. **Experiment**: one picture of each new mode at 3x, checking the pointer
 find the BIOS date and the helper's header, read one dice-log line, and write one byte the game
 then acts on (the dynamic core may cache code the Loader patches).
 
+## DOSBox-X: what was found
+
+The experiment of section 8, run on 2026-11-18 (Linux; DOSBox-X 2026.10.01, SDL2, built from
+source in 6 minutes). Everything measured is in
+[the log](../playtest/logs/2026-11-18-dosbox-x.md). The experiment's own branch was not merged;
+its code was carried into the engine built from it the next day ([what was built](#dosbox-x-what-was-built),
+below), and this section is kept as the experiment wrote it.
+
+**Verdict: viable, with these changes.** The mod ran under DOSBox-X with the game's memory in
+a shared file and no access to DOSBox-X's process: the helper loaded high and took the HMA, the
+game had 2 KB less conventional memory than on 0.74, the dice log attached through the file,
+read the party, wrote to it and printed Kurzak's speeches, a quick save asked for through the
+file was made, and the playtest kit drove the game unchanged. Nothing in the helper has to
+change. One risk the research named turned out to exist already on 0.74 (code patched from
+outside on a dynamic core), and one was new (the file is cut and made again at each start).
+
+**The configuration that worked** (whole, nothing of GOG's; `dosboxx.conf_lines` writes it):
+
+```
+[sdl]      fullscreen=false  output=surface  showmenu=false  autolock=true  autolock_feedback=none
+           middle_unlock=none  clip_mouse_button=none  sensitivity=100  windowresolution=original
+[dosbox]   machine=svga_s3  memsize=32  memory file=PATH  quit warning=false
+           fastbioslogo=true  startbanner=false
+[render]   aspect=true  scaler=none  doublescan=false
+[cpu]      core=dynamic  cputype=auto  cycles=fixed 42000
+[sblaster] sbtype=sb16  sbbase=220  irq=5  dma=1  hdma=5
+[midi]     mpu401=intelligent  mididevice=none | fluidsynth (fluid.soundfont=FILE)
+[dos]      xms=true  ems=false  umb=true  minimum mcb free=100  kernel allocation in umb=true
+[config]   dos=umb
+[autoexec] mount c GAME; mount d DOS_DIR; c:; d:\umbplus.com; lh d:\dsclog.exe; d:\dsunlog.exe;
+           d:\gameend.com; exit
+```
+
+started as `dosbox-x -conf FILE -nopromptfolder -nomenu -fastlaunch`. Why each line is there:
+
+| Setting | Without it |
+|---|---|
+| `memory file=PATH` | (the point) 32 MB, sparse, made at start; tmpfs and a disk folder both work |
+| `irq=5` | DOSBox-X's default is 7: the game stops, "DSP Detect Fail" |
+| `dos=umb` (not `high, umb`) | DOS takes the HMA; the helper's far block goes into upper memory and the game's overlay and music buffers and the see-through tables into its 640 KB |
+| `minimum mcb free=100`, `kernel allocation in umb=true` | the game loads at 0824h, not 0224h: 26.7 KB less conventional memory than on 0.74 (72 KB free with the map open, not 97) |
+| `ems=false` | as on 0.74 (not tried with it on) |
+| `middle_unlock=none`, `clip_mouse_button=none`, `autolock=true` | the middle button unlocks the mouse: no map drag |
+| `doublescan=false`, `aspect=true`, `scaler=none` | a 640x480 window for scale 1 |
+| `cycles=fixed 42000` on `core=dynamic` | 35,000 walks 13% slower than 0.74's 35,000; 42,000 matches it (18.6 frames a second, 143 map units a second, the same steps run and lost) |
+
+**What was found, experiment by experiment**
+
+1. The unmodded game starts with a configuration of our own; the file is `memsize` bytes, is the
+   guest's RAM from offset 0 (BIOS date, interrupt table), on tmpfs and on ext4.
+2. `guestmem.locate` finds it unchanged through a file backend (one region, base 0); reads are
+   live. No pid is needed, except to hold the game still for the item lists' gate (a signal).
+3. The helper loads into upper memory at CC4Bh (DOSBox-X's block is CC00h-F000h, 144 KB: 16 KB
+   more than plain 0.74's, 12 KB less than 0.74 with `UMBPLUS.COM`, which does nothing here),
+   takes the HMA through XMS, and the game's buffers follow it into upper memory. With the two
+   `[dos]` lines the game has 96,928 bytes free with the map open (0.74: 99,008).
+4. The dice log attaches, repairs two items (writes) and prints dialogue. No fight was played.
+5. Data written through the file is acted on at once on every core. **Code** written through
+   the file is acted on at once on `core=normal`; on the dynamic cores, code that has already
+   run can go on running as it was (the game's own code did; a tight loop did; the helper's
+   did not). **DOSBox 0.74's dynamic core, the mod's engine today, does the same through
+   process memory** (stale in the helper and in the game), so the mod cannot depend on it now
+   and the memory file adds no risk here.
+6. Speed: the table in the log. `core=normal` costs about twice the host CPU for the same pace.
+7. FluidSynth loaded a soundfont and rendered the title's music (to a file: no sound device
+   here); it plays through its own sound driver, not DOSBox-X's mixer. `openglpp` scales 5x6
+   in a 1600x1200 window (whole pixels, 4:3) and 3x3 in 960x720 (not 4:3); a CRT shader file
+   loads with `output=opengl`.
+
+**What the Loader would need**
+
+- **An engine choice** (`settings.json`: `engine` "gog" or "dosbox-x", `dosbox_x` its path),
+  as `recompiled` is chosen today: `launch._launch` branches, `is_game_dir` accepts a game
+  folder without `DOSBOX/DOSBox.exe` when DOSBox-X is the engine.
+- **A memory backend**: `FileMemory` beside `ProcessMemory` (60 lines, written; `pread` and
+  `pwrite`, not a mapping: DOSBox-X truncates the file at each start and a mapping read then
+  would kill the Loader). `connect` takes the file when the engine is DOSBox-X; the viewer's
+  status line and `reconnect` (`guest.proc.pid`) need the pid from the process the Loader
+  started. The Loader names the file itself (the temp folder, or `/dev/shm`), one per game
+  started, and deletes it when DOSBox-X ends (DOSBox-X leaves it).
+- **Conf writing**: `dosboxx.conf_lines` as the start; the display, scale, picture, speed and
+  music settings each need their DOSBox-X spelling (`display_lines`, `cpu_lines`,
+  `midiout.conf_lines` are 0.74's), and the cycles a table per engine and core (42,000 and
+  about 22,000 for `dynamic` on x86; `dynamic_rec` differs). `conf_encoding`'s code page rule
+  and the overlay mount for `cloud_saves` were not tried.
+- **Process finding**: none with the file. `find_dosbox_processes` already matches `dosbox-x`
+  by name, which matters only without the file.
+- **Helper layout**: nothing. Optional: teach `UMBPLUS.COM` DOSBox-X's chain (12 KB).
+- **The crash and freeze reports** read DOSBox's `stdout.txt`/`stderr.txt` and exit codes as
+  0.74 on Windows gives them: to be looked at for DOSBox-X (it logs to stdout; `log console`
+  puts the game's last DOS text there, which `GAMEEND.COM` does today).
+
+**Risks**
+
+- **Windows and macOS were not run.** The memory file is mapped by different code on Windows
+  (`CreateFileMapping`); whether a second program may open the file for reading and writing
+  there while DOSBox-X holds it, and whether file reads see the mapping's pages at once (they
+  do on Linux and should on macOS, one page cache), must be tried first. On Windows the Loader
+  keeps 0.74 and process memory anyway; the file matters for macOS and sandboxed Linux.
+- **The option is young** (2025.01.01) and its source comments say an interface for other
+  programs is unfinished ("there needs to be an API here to flush modified pages"). Packaged
+  DOSBox-X on a player's system may be older than it (Ubuntu 24.04's is): the Loader must check
+  the version, and say so.
+- **Code patched from outside on a dynamic core** (above). If a feature ever needs it: the
+  helper makes the write, or that engine runs `core=normal`.
+- **The file on a disk** is written back by the system as the game changes memory; keep it on
+  tmpfs or the temp folder. It holds the whole game's memory, readable by the player's user
+  only (mode 0600).
+- **Speed is per engine, per core, per version**: a DOSBox-X update can move the pace.
+- A long play, fights, rests and region changes under DOSBox-X were not played.
+
+**Effort**: the engine choice, the backend wired through the viewer, the conf writer with the
+Options tab's settings, tests and a play check on Linux: about a release's worth beside other
+work (the experiment's code is perhaps a third of it). Soundfont choice and whole-number
+scaling are then settings in that conf. macOS needs someone with a Mac. The Steam Deck needs
+a DOSBox-X new enough inside or beside its sandbox, which this did not look at.
+
+**Build first**: (1) on Windows and on a Mac, the 30-line check that a second program can read
+and write the memory file while DOSBox-X runs (`playtest/codeloop.py` is nearly that); (2) then
+the engine choice with `FileMemory` and the conf writer on Linux, behind a setting, 0.74 staying
+the default.
+
+## DOSBox-X: what was built
+
+2026-11-19, from the experiment above: DOSBox-X as an optional engine, chosen on the Loader's
+Options tab, GOG's DOSBox 0.74 the default and untouched. The player's page is [the
+engine](../obsidian-edition/FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x), how it works
+[DEVELOPMENT-SCREENS](../obsidian-edition/DEVELOPMENT-SCREENS.md#the-engine-gogs-dosbox-or-dosbox-x),
+the play [the log](../playtest/logs/2026-11-19-dosbox-x-engine.md).
+
+**Against the experiment's list**
+
+- The engine choice, the memory backend through `connect`, the window, `play` and `dicelog`,
+  the conf writer for every Options setting, the version check, process finding, the crash
+  report: built, with tests (`tests/test_dosboxx.py`, `tests/test_filememory.py`).
+- The memory file has one name for each Loader folder (`obsidian-edition-<hash>.mem`, in
+  `/dev/shm` on Linux, else the temp folder), not one per start: the Loader finds its game's file
+  again after it is closed and opened, and a file left behind is the next start's to remove. The
+  file and the game's pid are noted in `game.lock`.
+- A file reads on after DOSBox-X has gone, so the backend watches the pid; a short read (the
+  file cut at a start) is an error, not an empty answer.
+- The Windows way is a mapping of the file, not file reads (see below); the experiment's "must
+  be tried first" check is `playtest/dosboxx_memtest.py`, for the owner to run.
+
+**What the play found that the experiment hadn't** (each now in the configuration)
+
+- **`sensitivity` takes two numbers.** One alone is the pointer's speed across only: in a Triple
+  window the pointer went three times too fast down the screen. The experiment played at Single
+  size, where 100 is right either way.
+- **`normal3x` and `normal4x` draw nothing on the surface output** (an empty grey window with
+  this game; `normal2x`, `scan3x`, `tv3x` draw): Plain at Triple and Quadruple goes through
+  `openglnb`.
+- **"GOG's own" speed is the normal core at 8,000**, Faster the dynamic core at 22,000, Fastest
+  42,000 (the experiment's guess for Faster and its number for Fastest held).
+- Full screen switches only under a window manager (seen with openbox: the picture 4:3, black
+  at the sides of a wide screen).
+- DOSBox-X takes a second or more to close; the Loader's "the game is still running" refusal
+  held until it had.
+
+**Played** (Linux, DOSBox-X 2026.10.01, through the Loader's own start: `play`, `launch.launch`
+with the `dicelog` command, and the window): the build and the memory as the experiment found
+them, quick save and quick load by their keys, Alt's marks, two rests and Kurzak's call, the walk
+from the pens into the arena with its autosave, loaded again, the fountain ambush with every
+kind of dice-log line, Tab's and the pointer's chance to hit, squares in reach and R, F10, the
+combat log's panel, the Loader's window with the Journal and the quests, twenty minutes without
+a stop, the game ended and the file removed, DOSBox-X killed and the report. The log says what
+was seen of each, and what wasn't.
+
+**Windows, from DOSBox-X's source** (`src/hardware/memory.cpp`; not run). The file is opened with
+`CreateFile(GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, OPEN_ALWAYS)`, cut
+with `SetEndOfFile`, marked sparse, sized, and mapped with `CreateFileMapping(file, NULL,
+PAGE_READWRITE, size, NULL)`: the mapping has no name. So:
+
+- a second program can open the **file** (sharing read and write, as Python's `os.open` does),
+  not the mapping object;
+- it can't delete the file while DOSBox-X runs (no `FILE_SHARE_DELETE`);
+- `ReadFile`/`WriteFile` on the file are not promised to agree with DOSBox-X's view (Microsoft's
+  documentation promises coherence between **views** of one local file, from any mapping
+  object, not between a view and file I/O), and Python has no `pread` there: the Loader maps the
+  file itself (`mmap`);
+- while the Loader's mapping is open the file can't be cut (`ERROR_USER_MAPPED_FILE`), and
+  DOSBox-X's start would then get no memory file (`alloc_mem_file` returns false: it runs on
+  with ordinary memory, and the Loader would wait for ever): the Loader closes its mapping when
+  the game ends and removes the file before each start, refusing the start if it can't.
+
+**Still untested**: Windows and macOS altogether (the script first); a packaged or sandboxed
+DOSBox-X (a Flatpak's sandbox may not share `/dev/shm` or the temp folder with the Loader:
+`dosbox_x_memory_dir` in `settings.json` names another folder); the Steam Deck; sound heard by
+a person, and FluidSynth with a sound device; a real graphics card and vsync; MT-32;
+`dynamic_rec` (ARM) speeds; DOSBox-X versions other than 2026.10.01.
+
+**Left for later, by decision**: pixel-perfect scaling (`openglpp`) and CRT shaders (they fit
+none of the four windows and four pictures as they stand: a setting of their own); MT-32;
+teaching `UMBPLUS.COM` DOSBox-X's chain (10 KB of upper memory, not needed today).
+
 ## 9. Wake of the Ravager
 
 **Measured, the two installs side by side**

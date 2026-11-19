@@ -232,6 +232,28 @@ the one place for the sizes; the sections after them name the symbols only.
 | 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): DSCLOG's [far block](#the-far-block), 65,484 bytes, 36 free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
 
+**Under DOSBox-X** ([the other engine](DEVELOPMENT-SCREENS.md#the-engine-gogs-dosbox-or-dosbox-x);
+2026.10.01, with the Loader's configuration for it) the same things are in nearly the same places,
+and DSCLOG is unchanged. Measured with `playtest/memaudit.py` in the slave pens with the map open,
+beside 0.74 ([the experiment's log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-18-dosbox-x.md),
+and again on the engine as built, 2026-11-19):
+
+| | DOSBox 0.74 | DOSBox-X |
+|---|---|---|
+| The game's load segment | 01A2h | 0224h (0824h with DOSBox-X's own defaults: `minimum mcb free`, `kernel allocation in umb`) |
+| Free after the game, map open | 99,008 bytes | 96,928 bytes |
+| DOSBox's own tables | C800h-C9FFh | C800h-CBFFh (DOS's structures are kept there too) |
+| Upper memory | CA00h-EFFFh, 152 KB, with `UMBPLUS.COM` | CC00h-EFFFh, 144 KB (`UMBPLUS.COM` changes nothing: the chain isn't 0.74's) |
+| DSCLOG | at the block's start, CA00h | from CC4Bh; 1,168 bytes free below it |
+| The game's overlay buffer | after DSCLOG | DD84h |
+| The see-through tables, the music buffer | E99Bh, ED11h | the same |
+| Free upper memory in one piece | about 26 KB | 16,496 bytes |
+| The far block | the HMA (`FAR_SEG` FFFFh) | the HMA, given `[config] dos=umb` (DOSBox-X's default puts DOS there) |
+| The guest's RAM, for the Loader | a block in DOSBox's process | a file (`memory file=`), offset = guest address |
+
+So DSCLOG's needs (`UMB_NEED`, sized for D00Ah-F000h) fit with about 10 KB less to spare than on
+0.74 with `UMBPLUS.COM`, and the game has 2 KB less conventional memory.
+
 ### The limits
 
 Each fails the build when passed (a negative `times`). For the committed `dos/DSCLOG.EXE`, 70,304
@@ -494,6 +516,12 @@ Loader removes it (with `GAMEEND.TXT` and `GAMEMSG.BIN`) as it starts DOSBox:
 DOSBox closing with no error noted and no `GAMEOK.TXT` means the game was cut
 off while it ran (`launch.CUT_OFF`), and that is a crash report too.
 
+With DOSBox-X as the engine the same files are written (the autoexec is the same), the report's
+first line names DOSBox-X (`launch.closed_line`; on Linux a DOSBox killed or crashed has a
+negative exit code, told as "ended by signal N"), and in place of GOG's DOSBox's `stdout.txt` and
+`stderr.txt` the report has the end of `dosbox-x/dosbox-x.log`, what DOSBox-X printed
+(`launch.dosbox_output`).
+
 ### The freeze report
 
 The game's timer handler (IRQ 0, DSUN.EXE 3925Ch, the game's own from its
@@ -553,6 +581,39 @@ guest memory. If detection fails on an unusual DOSBox build, you can pass the
 block's host address with `--host-base`. `guestmem.py` finds the block, `process.py` reads and
 writes the process's memory (and pauses it, for [the item gate](#the-item-gate)), and
 `GuestMemory` puts the two together.
+
+**A game in DOSBox-X is read through a file instead** ([the engine](DEVELOPMENT-SCREENS.md#the-engine-gogs-dosbox-or-dosbox-x)).
+DOSBox-X 2025.01.01 and later can keep the emulated PC's RAM in a file (`[dosbox] memory
+file=PATH`), which it maps shared: the file is the guest's memory, guest address 0 at offset 0.
+`process.FileMemory` is that file behind `ProcessMemory`'s interface (one region, base 0), so
+`guestmem.locate` finds it by the same BIOS date and interrupt table and everything above it is
+unchanged. No access to DOSBox-X's process is needed: on Linux no root and no
+`kernel.yama.ptrace_scope` setting.
+
+- **Linux and macOS: `pread` and `pwrite` on the file, not a mapping.** DOSBox-X cuts the file
+  to nothing and makes it again each time it starts (`ftruncate`), and a mapping read at that
+  moment would kill the Loader (SIGBUS); a `pread` then comes back short, which `FileMemory`
+  raises as a `ProcessError`, as a read of a closed process is. The kernel keeps one copy of a
+  file's pages for a mapping and for `read`/`write`, so both sides see each other's bytes at
+  once. Windows has no `pread` and makes no such promise: there `FileMemory` maps the file
+  (untested; [the engine's section](DEVELOPMENT-SCREENS.md#the-engine-gogs-dosbox-or-dosbox-x)
+  has why).
+- **A file reads on after DOSBox-X has gone**, unchanged for ever. So `FileMemory` is given
+  DOSBox-X's pid and looks every half second (`ALIVE_EVERY`) whether it still runs
+  (`process.process_running`: a process ended but not yet collected by its parent doesn't); once
+  it doesn't, the next read or write is a `ProcessError`, and the Loader's window says
+  "Disconnected" as it does for 0.74.
+- **The item gate holds the game still by its pid**: `SIGSTOP` and `SIGCONT`
+  (`process.stop_process`, waiting until every thread has stopped, as for 0.74); on Windows
+  `NtSuspendProcess` on a handle opened for that alone. A signal needs no access to memory, and
+  the file takes the Loader's writes while DOSBox-X stands still.
+- **Data written is acted on at once; code that has already run may not be**, on a dynamic
+  core: the bytes in memory are the new ones and DOSBox goes on running its translation of the
+  old. That is as true of 0.74 through process memory (`playtest/codepatch.py`: the helper's
+  code and the game's both ran on unchanged there), so nothing the Loader does depends on it;
+  the Loader's writes are data (the game's records, DSCLOG's header and tables).
+- The playtest kit can name a file outright: `DSLOADER_MEMORY_FILE` (and `DSLOADER_MEMORY_PID`)
+  in the environment make every command use it.
 
 The Loader never writes over the start of memory (`guestmem.LOW_MEMORY`, below
 600h: the interrupt vectors, the BIOS's and DOS's data) or the first 40h bytes

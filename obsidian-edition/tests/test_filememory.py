@@ -101,10 +101,22 @@ class FileMemoryTests(unittest.TestCase):
         saved = process.process_running
         self.addCleanup(lambda: setattr(process, "process_running", saved))
         process.process_running = lambda pid: asked.append(pid) or True
-        proc = self.memory(4242)
+        proc = self.memory(os.getpid())
         for _ in range(50):
             proc.read(0, 4)
-        self.assertEqual(asked, [4242])
+        self.assertEqual(asked, [os.getpid()])
+
+    @unittest.skipIf(sys.platform == "win32", "a signal: not Windows")
+    def test_a_collected_process_is_seen_at_the_very_next_read(self):
+        child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"])
+        proc = self.memory(child.pid)
+        proc.read(0, 4)
+        child.kill()
+        child.wait()
+        with self.assertRaises(ProcessError):  # (no half second of reading what the game left behind)
+            proc.read(0, 4)
+        with self.assertRaises(ProcessError):
+            proc.write(0x3000, b"x")
 
     @unittest.skipIf(sys.platform == "win32", "a signal: not Windows")
     def test_suspend_and_resume_are_the_process_by_its_pid(self):

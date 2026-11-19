@@ -399,6 +399,73 @@ game's data: it is one player's account.
 - The kit drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`): [the
   recompiled program](RESEARCH.md#the-recompiled-program-as-the-target).
 
+## A game in DOSBox-X
+
+The Options tab's other engine (`dsloader/dosboxx.py`; logs/2026-11-18-dosbox-x.md, the
+experiment, and logs/2026-11-19-dosbox-x-engine.md, the engine as built). It is always **a game
+of its own beside the shared one**: its own display and work folder, never `:55` or
+`/tmp/playtest`. `PT_DISPLAY` names the display for every tool (`env.sh`, `paths.py`; default
+`:55`), `PLAYTEST_WORK` the work folder, whose `inst` is a copy of the shared game folder (36 MB).
+
+- **DOSBox-X itself**: 2025.01.01 or later (Ubuntu 24.04's package is 2024.03.01: too old).
+  Built here from the project's GitHub source in 6 minutes (`apt-get install libsdl2-dev
+  libfluidsynth-dev libgl-dev libxkbfile-dev libxrandr-dev libasound2-dev libsdl2-net-dev`, then
+  `./autogen.sh && ./configure --enable-sdl2 && make -j4`; the program is `src/dosbox-x`). It is
+  lost with the container: build it again.
+- **`PT_DISPLAY=:59 PLAYTEST_WORK=DIR sh start_dosboxx.sh /path/to/dosbox-x [name=value ...]`**
+  starts the mod in DOSBox-X with the Loader's own configuration for it (window single, no quick
+  saves or autosaves), an Xvfb on that display if there is none (1600x1000), and the dice log
+  (`$WORK/dice.txt`). `PT_SAVE=NAME` loads a save as `loadsave.sh` does. `cycles=N`,
+  `core=normal`, `window_scale=3`, `picture=tv`, `fullscreen=true`, `soundfont=FILE` after the
+  program change the configuration. It stops only the DOSBox-X and dice log it started before
+  (pid files in the work folder).
+- **How the tools find a DOSBox-X game**: by its pid in `$PLAYTEST_WORK/dsun.pid` (`live.py`
+  reads it before looking for the newest process named dosbox; the start script writes it). The
+  Loader's `connect` then reads that DOSBox-X's memory file, named in the configuration its
+  command line gives (`dosboxx.process_memory_file`), or in the Loader's `game.lock` for a game
+  the Loader started. So each shell needs only `PT_DISPLAY` and `PLAYTEST_WORK`; state, click,
+  walkto, route, follow, scroll, memaudit, buildcheck, qsave, framerate, altflag, tabhit,
+  hoverlabel, squarewalk, movestate, foepos, panel, dismiss, fightout and toarena all ran
+  unchanged. `DSLOADER_MEMORY_FILE` (and `DSLOADER_MEMORY_PID`) in the environment name a file
+  outright.
+- **A game the Loader itself started** (its window's Start the game, `launch`, `play`, or
+  `launch.launch()` from a script): `sh dbxadopt.sh` writes its pid from `obsidian-edition/game.lock`
+  into `dsun.pid` and moves the window to 0,0. With `play` or the window there is no
+  `$WORK/dice.txt` (the dice log is inside the Loader), and the tools that read it (dismiss.sh's
+  question check, toarena.sh, fightout.sh's waits) want one: start the game with a few lines of
+  Python that call `launch.launch(game_dir, "a test")` and then `launch.release_game()` (the game
+  runs on and `game.lock` keeps its pid and memory file), and then `python3 -u -m dsloader dicelog
+  > $WORK/dice.txt` with no `--pid` (it finds the game by the lock file's memory line).
+- **The Loader refuses a start while the last game still runs** ("The game started from this
+  Obsidian Edition folder earlier is still running"): DOSBox-X takes a second or two to close
+  after `kill`, so wait four seconds, or for the pid to go, before the next start (a start one
+  second after the kill failed twice, 2026-11-19).
+- **The menu's clicks want the title past**: two clicks, then 15 seconds, before LOAD SAVED GAME
+  (12 was too short once, and the clicks landed on the menu as it came up).
+- **`shot.sh` doesn't work** (it presses 0.74's Ctrl+F5 and looks in GOG's capture folder): `import
+  -window root -crop 320x240+0+0 +repage OUT.png` on the game's display, the window at 0,0.
+  A grab taken as the pointer moves can show its arrow twice.
+- **`start.sh`, `loadsave.sh` and everything that calls them (toalarm.sh, arenatrip.sh,
+  loadquick.sh, picstart.sh) are the shared game's**: they kill every process named dosbox. For a
+  trip, load the save yourself and run the steps after the loadsave line.
+- **DOSBox 0.74 beside it, for a comparison**: a copy of `/usr/bin/dosbox` under another name
+  (`db74`), started with GOG's configuration and the Loader's (`launch.write_conf` with `engine`
+  "gog"), `SDL_VIDEO_X11_WMCLASS=dosbox`, its pid in `dsun.pid`, the dice log with `--pid`. One
+  game at a time in one work folder: both engines share `obsidian-edition/dos`.
+- **Full screen needs a window manager**: on a bare Xvfb SDL2 says "switched to full screen
+  mode" and the window stays 640x400. `apt-get install openbox`, `DISPLAY=:58 openbox &` on an
+  Xvfb of the size wanted (1280x720 shows the black bars of a wide screen).
+- **The pointer's speed in a larger window**: with the mouse captured, `xdotool
+  mousemove_relative 60 60` and the game's pointer (DS:A133h) before and after: 20 across and 16
+  down in a Triple window on both engines.
+- **`dosboxx_memtest.py /path/to/dosbox-x`** needs no game: it starts DOSBox-X with a memory
+  file and a 26-byte DOS program and says whether a second program reads and writes the file (by
+  file reads and by a mapping), whether DOSBox-X can be held still, and whether a write to code
+  is acted on. It is the check for Windows and macOS (its header has the owner's instructions);
+  on Linux it passes.
+- **`codepatch.py [SECONDS] [game]`**: is a write to code acted on at once (the helper's own
+  counter, or the game's main loop).
+
 ## Controls
 
 - **Clicks**: `python3 click.py X Y [left|right|none]` in game pixels (320x200). DOSBox captures

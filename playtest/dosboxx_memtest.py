@@ -145,7 +145,6 @@ def hold(pid):
 
 def main(argv):
     if len(argv) < 2:
-        print(__doc__ or "usage: python dosboxx_memtest.py PATH-TO-DOSBOX-X [normal]")
         print("usage: python dosboxx_memtest.py PATH-TO-DOSBOX-X [normal]   (the instructions are at the top of this file)")
         return 2
     program = argv[1]

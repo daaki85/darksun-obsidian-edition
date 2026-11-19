@@ -158,6 +158,7 @@ Each change is tagged. **[Fixed]** is a bug of the game, or a rule it got wrong 
 - **[New]** Crash, freeze and item reports, and a warning in the dice log before memory runs out ([reports](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/README.md#crash-freeze-and-item-reports)).
 - **[New]** The game's window at its own size, double, triple or quadruple, or full screen.
 - **[New]** **The picture**: plain, scanlines, TV or hard-edged pixels at any size; and **the music** sent to any MIDI device of Windows' (a soundfont synthesizer, an MT-32 driver) ([picture and music](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#picture-and-music)).
+- **[New]** **DOSBox-X as the engine** (experimental, played on Linux only so far): the game in your own copy of DOSBox-X in place of GOG's DOSBox 0.74, chosen on the Options tab. On Linux the whole mod then runs without root, and the music can play through a soundfont file of yours. GOG's DOSBox stays the default ([the engine](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x)).
 - **[Changed]** No more copy protection: the dragon asking for a word from the manual never comes ([no manual check](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#no-manual-check)).
 
 ## The Loader

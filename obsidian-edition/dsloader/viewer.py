@@ -972,6 +972,11 @@ class Viewer:
         note = launch.game_end_note()
         if code != 0 or note:
             self._crash_report(code, note)
+        if self.guest is not None and getattr(self.guest.proc, "by_file", False):
+            # (a game in DOSBox-X: its memory file reads on after it, unchanged, where a closed
+            # process's memory can't be read at all: let go of it now, so nothing more is read
+            # from what the game left behind, and the file goes at once)
+            self._disconnected(ProcessError(f"{launch.engine_name()} has closed"))
         self._start_state()
 
     def _crash_report(self, code: int, note) -> None:
