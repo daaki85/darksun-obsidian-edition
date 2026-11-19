@@ -257,3 +257,23 @@ at +1Bh; the XP table is RESOURCE.GFF's DATA 1000 (8 rows of 20 words, in hundre
 `lcall 5C8:20` with 3E8h); much of the code is in overlays, so a far call's segment isn't a place in
 the file. Its level-up (95860h on) caps XP at the table's entry 3 levels past each class's own, then
 raises a class under 15 (2026-11-08: no race limits, whatever its README says).
+
+## Zooming the view (VGA tests, 2026-11-19)
+
+The question was whether DOSBox can zoom the map. The programs are in `playtest/vga/` (README
+there). They ran in DOSBox 0.74-3 on Xvfb :77, with no game.
+
+- **Zooming in with the hardware is out.** DOSBox doubles rows (CR09) but ignores the halved dot
+  clock (SR01 bit 3), so pixels can't be doubled across.
+- **The game's mode stops at 256 KB.** In mode X, DOSBox ignores the S3 bank (CR6A) and wraps
+  writes. A 640-wide mode X screen does show (CRTC widened), but 640x400 would fill all 256 KB.
+- **The way past it: the S3's 8-bit display with the game's drawing.** With CR31 bit 3 and CR3A
+  bit 4 set, DOSBox shows the video memory as a plain 8-bit picture. A mode X page is stored in
+  that same layout, so the game's picture shows right (CR13=40 for 320 bytes a row; the CRTC's
+  width and doubling still need tuning: the first try showed 640x400 with two copies). The
+  game's plane-by-plane drawing still works in that state. Writes with CR6A=4 land past 256 KB
+  (the page at 0 is untouched), and CR69=4 shows them. Seen up to 2 MB: CR69 repeats every 8.
+- **Not yet known**: what a frame's copy of the live page into a larger picture costs (two
+  banks, so through conventional memory); GOG's DOSBox build and its `machine` (the Loader's
+  conf can set `svga_s3`); what the game's mode sets do to these registers (each one resets
+  them: the helper must set them again).
