@@ -29,6 +29,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `doorpath.py TC TR` | the shortest way from the leader to square (TC, TR) on the live grid, through closed doors too (live 192+ where the region file has a doorway); |
 | `doors.py` | the closed doors and gates on the edge of the area the party can reach now: squares the live grid blocks (192 and up) where the region file's grid has a doorway (below 192). |
 | `doorwatch.py SECONDS` | Kurzak's door and the two who use it, printed at each change (every half second): the live walk map's square 99,34 (0 open, 192 shut, 96 someone in it), and Kurzak's and Legcrusher's map places with their orders... |
+| `dosmem.py [PID]` | DOS memory in any running DOSBox, no helper needed (so either game, modded or not, or Wake of the Ravager): every block of the conventional chain and the upper memory chain (owner's name, size), the largest free... |
 | `drawlist.py [all]` | the game's draw list (far pointer DS:6690h, count DS:1F72h; |
 | `dsword.py ADDR [VALUE]` | the game's DS word at ADDR (hex), or set it (memory only). |
 | `effects.py` | every active effect (owner, caster, effect id), its charges and game seconds left (60 a round), as the Loader reads them. |

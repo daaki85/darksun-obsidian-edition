@@ -131,6 +131,25 @@ So about half the sites have a likely twin, and even those must each be read and
 hand: a twin with different record offsets needs its helper code changed too. The other half
 sit in code WotR rewrote, or in its 49 overlays, which are laid out otherwise.
 
+**Memory: room enough** (measured 2026-11-19, `playtest/logs/2026-11-19-ravager-memory.md`).
+The helper lives in upper memory with the game's overlay buffer, its music buffer and the
+see-through figures' tables, and the game needs one free 60,000-byte piece each time the map opens.
+Both games unmodded, with the map open, in the mod's DOSBox setup (EMS off, `UMBPLUS.COM` first):
+
+| | Shattered Lands (the arena) | WotR (Tyr) |
+|---|---|---|
+| Conventional memory free after the game | 59,072 bytes | 64,192 bytes |
+| Free in the game's own heap | none | 48,656 bytes, one piece |
+| Upper memory free | 159,728 bytes | 159,728 bytes |
+| Overlay buffer (twice the largest overlay) | 32,992 bytes | about 2.4 KB more (largest overlay 16,732 against 15,537) |
+
+WotR runs without EMS (its memory layer takes XMS), `UMBPLUS.COM` gives it the same 156 KB of
+upper memory, and it leaves about 110 KB spare in the 640 KB against SL's 57 KB. A helper of
+DSCLOG's size with WotR's buffers would fit with room over. What stays tight is the helper's own
+64 KB segment (688 bytes spare): one helper for both games would need room for a second table of
+addresses, so a WotR helper would be its own build. Not yet checked: whether WotR has a music
+buffer (its music is CD audio), and memory deeper into the game than its opening scene.
+
 **What WotR already has.** Some of the mod's reasons to exist are fixed or done in WotR itself:
 levels past SL's caps, 6th-level priest spells (the mod borrows their pictures already), the
 "graphics disappear" limit noted in WotR's own README (the same picture store the mod enlarged).

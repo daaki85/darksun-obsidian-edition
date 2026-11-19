@@ -112,7 +112,7 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
    -i caravan`): where things are, who sells what, quest steps and talk choices ("2-4-2"), region by
    region. Someone else's work: never commit it (the repository is public). Weigh it with the game's
    data: it is one player's account.
-8. **Wake of the Ravager**, the sequel, for comparing (its code, data and README; nothing in the
+8. **Wake of the Ravager**, the sequel, for comparing (its code, data and README; it plays in DOSBox by [its recipe](RESEARCH.md#wake-of-the-ravager); nothing in the
    kit plays it): `sh setup_ravager.sh`, the user's GOG installer (from the private repository, as the
    game's, or put at `$WORK/dl/rav.exe`), into `$WORK/rav`. What's known of its program: [Wake of the
    Ravager](RESEARCH.md#wake-of-the-ravager).

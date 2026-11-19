@@ -258,6 +258,20 @@ at +1Bh; the XP table is RESOURCE.GFF's DATA 1000 (8 rows of 20 words, in hundre
 the file. Its level-up (95860h on) caps XP at the table's entry 3 levels past each class's own, then
 raises a class under 15 (2026-11-08: no race limits, whatever its README says).
 
+**Playing it in DOSBox** (2026-11-19, logs/2026-11-19-ravager-memory.md): GOG's settings are in
+`__support/app/dosbox_darksun2.conf` (memsize 16, cycles fixed 15000, XMS, EMS and upper memory
+on); it runs as `DSUN -W0 -L` (RAVAGER.BAT) from its folder as C:, with `CHARSAVE.GFF` and
+`DARKSAVE.GFF` copied in from `__support/save` as SL's are. The CD is D:: Linux's DOSBox 0.74 can't
+take GOG's `game.ins` (its music tracks are .ogg files), so mount a cue of the data track alone
+(`FILE "game.gog" BINARY` / `TRACK 01 MODE2/2352` / `INDEX 01 00:00:00`) with `imgmount d data.cue
+-t iso`; the music is then silent, nothing else missing. Shift held a second skips the intro (the
+menu at 6 s). Its window is 640x480 (SVGA). **The first click only captures the mouse**: click once
+anywhere harmless, then `xdotool mousemove_relative`, checking with a grab (START GAME at window
+310,170). START GAME, the narrated cinematic (about 60 s, no skip), then Tyr: "Hurry! You must
+come with me to the Veiled Alliance!" over the map. It runs with `ems=false` and `UMBPLUS.COM` too.
+**`dosmem.py [PID]`** reads the memory of any DOSBox (no helper needed): both MCB chains, the
+program's far heap (load + 0FE7h in SL, **+ 135Bh** in WotR) and DOS memory after it.
+
 **Its transfer program, CHARTRAN.EXE** (2026-11-19; the study in
 [reports/wake-of-the-ravager.md](../reports/wake-of-the-ravager.md)): `sh chartran.sh SAVE.SAV OUTDIR
 DEBUG` runs it in a headless DOSBox of its own (its own config: `C:\DSUN` holds the save as
