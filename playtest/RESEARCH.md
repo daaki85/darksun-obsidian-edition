@@ -272,6 +272,14 @@ come with me to the Veiled Alliance!" over the map. It runs with `ems=false` and
 **`dosmem.py [PID]`** reads the memory of any DOSBox (no helper needed): both MCB chains, the
 program's far heap (load + 0FE7h in SL, **+ 135Bh** in WotR) and DOS memory after it.
 
+**Its spells, and the fixes carried over** (2026-11-19, logs/2026-11-19-ravager-fixes.md): no
+spell table in its program; each spell is `RESOURCE.GFF`'s `DATA` 0-319, 73 bytes (SL's 32-byte
+record, then the name and an 8-letter short name), read one at a time as the spell is used
+(choosing Bless on USE loaded `DATA` 115 whole; nothing else held). In Tyr: Return pages a talk,
+the number keys pick a reply, the top-left icon opens USE, a right click cancels a spell's aim.
+**`ravfixes.py [OUT]`** makes a copy of the sequel (`$WORK/ravfix`) with the mod's fixes that
+carry over unchanged: five of the program's at their twins' offsets, the spell records' by name.
+
 **Its transfer program, CHARTRAN.EXE** (2026-11-19; the study in
 [reports/wake-of-the-ravager.md](../reports/wake-of-the-ravager.md)): `sh chartran.sh SAVE.SAV OUTDIR
 DEBUG` runs it in a headless DOSBox of its own (its own config: `C:\DSUN` holds the save as

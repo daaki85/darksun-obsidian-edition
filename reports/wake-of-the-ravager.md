@@ -155,6 +155,55 @@ levels past SL's caps, 6th-level priest spells (the mod borrows their pictures a
 "graphics disappear" limit noted in WotR's own README (the same picture store the mod enlarged).
 A WotR edition would not need those.
 
+### Carrying the fixes over: first tests
+
+Begun 2026-11-19 (`playtest/logs/2026-11-19-ravager-fixes.md`). Each patch's 48 bytes in SL's
+program were matched against WotR's, then read side by side (disassembled) where they matched.
+A fix carries over **unchanged** when the code round it is the same, the bytes it replaces are
+there, no relocated word is hit and it calls nothing in the helper.
+
+**The program's bug fixes.** 17 patches have a clear twin with their bytes intact and make no call
+to the helper. Read side by side:
+
+| Fix ([GAME-BUGS.md](../obsidian-edition/GAME-BUGS.md)) | Patch | WotR | Verdict |
+|---|---|---|---|
+| A thief skill rolled for the whole party went to the first member | `party_best` | 8C60Eh, the same code | **carries over unchanged**; applied and in memory |
+| Random monsters: the wrong monster's strength, a divide by 0 | `monster_count` | 8D3FBh, the same code | **carries over unchanged**; applied and in memory |
+| Thief skills' equipment penalty (a weapon in hand, not the armour) | `thief_slots` | 49C90h, the same table | **carries over unchanged**; applied and in memory |
+| The DAM line of a slowed character | `dam_half` | 7B1E8h, the same code | **carries over unchanged**; applied and in memory |
+| The view's second page freed unset: "Null pointer assignment" | `page_free` | 28412h, the same test and target | **carries over unchanged**; applied (its overlay not loaded in the test) |
+| Share Strength ending on the wrong one | `power_end_*` (3) | 61A91h, the same logic | needs WotR's address of one game variable (SL's DS:1E24h) |
+| Armor using a charge for any spell or blow | `armor_charge` | 84B7Eh, but it tests another flag (20h, not 4) | **differs**: read WotR's code before touching it |
+
+Of the program's other fixes, those that call the helper (107 with an intact twin) wait on a WotR
+helper. The rest have no clear twin and must be found by hand: the saving throw's unsigned compare
+(`save_signed`, "can't save" always saving), Negative Plane Protection's save, the fight music,
+Mirror Image and the rest.
+
+**The spell records' fixes.** WotR has no spell table in its program: each spell is a `DATA`
+chunk of `RESOURCE.GFF` (0-319, 73 bytes: SL's 32-byte record, then its name twice), read when
+the spell is used. Matched by name, field by field:
+
+| | Bug fixes | Fixes under "Spells as the manual describes them" |
+|---|---|---|
+| Still in WotR, the same bytes | Cause Serious and Critical Wounds' 2d9 and 3d9; Scare's save; the Cloak of Bravery's fear mark on Scare, Fear, Cause Fear and Insect Plague | Blood Flow, Flaming Sphere, Solid Fog (2), Minor Spell Turning (2), Cause Fear's time, Quicksand, Iron Skin's per level, Pebble to Boulder, Minute Meteors (2), Flaming Arrow, Chill Touch, Rainbow Pattern, Stinking Cloud |
+| Fixed by SSI | Dispel Magic's "No spell use" | Bestow Curse's save |
+| Changed otherwise | | Iron Skin's charges (66h, not SL's 61h) |
+| Not matched | the fire elementals and the other monsters' records (7) | |
+
+So 23 of them carry over as data edits to `RESOURCE.GFF`. `playtest/ravfixes.py` makes a copy of
+WotR with the five program fixes and these 23. It plays as the original does: the intro, START
+GAME, the cinematic and Tyr. In memory, four fixed sites are in the program and no original
+copy, and choosing Bless on the USE screen loaded its record whole from `RESOURCE.GFF`. That is
+the path every fixed record takes. No fix was yet seen at work in play: that needs a cast of a
+fixed spell (none of the opening party has one), a whole-party thief roll or a random encounter.
+
+**What this means for a WotR edition.** The bug fixes split three ways: data fixes (the spell
+records, by name: the easiest), plain code fixes with identical twins (applied as they are, at
+WotR's offsets), and the rest, which need the helper or WotR's code read by hand. The Loader
+already writes patched copies of SL's files. Doing the same for WotR's `DSUN.EXE` and
+`RESOURCE.GFF` would bring the first two groups with no helper at all.
+
 ### Three ways to go
 
 1. **A full DOSBox port** (the mod as it stands, again for WotR): the 454 sites found and

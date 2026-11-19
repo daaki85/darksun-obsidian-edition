@@ -89,6 +89,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `powers.py` | each party member's known psionic powers (selector 2F0h's segment, +77h + member x 22h + power, bits 3-7: known), by name. |
 | `rackcheck.py` | the slave pens' weapon rack (object 2599; |
 | `randout.py N [SEED]` | N random outfit changes for member 0: each time one of its worn items (slot under 12) taken off (slot byte +11h set to 50) or put back, waiting for the Loader's copy of SEGOBJEX.GFF to be written; |
+| `ravfixes.py [OUT]` | a copy of Wake of the Ravager ($RAV, default $WORK/rav) in OUT (default $WORK/ravfix, hard links but for the two files changed) with the mod's bug fixes that carry over unchanged: five of DSUN.EXE's (gamepatch.py's... |
 | `rec.py [FIRST LAST]` | the combat records (58 bytes) of creatures FIRST to LAST (default the party, 0-3), hex from +10h, to find a field by comparing what the screen shows |
 | `restalarm.sh` | in the fire room (toalarm.sh), rest at the ring (map 1931, 856) with the look pointer until Kurzak calls, then wait there till his patience runs out: the alarm, and a fight with the guards. |
 | `restfixmem.py [check\|fix\|undo]` | the rest routine's pass 2 (DSUN.EXE 8066Dh, overlay 5E8h) in the overlay buffer, if loaded: `check` says which version is there (the game's: the effects read before the free cures; |
