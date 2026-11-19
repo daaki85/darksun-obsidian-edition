@@ -2943,7 +2943,7 @@ WS_MELEE   equ 0xFFFE           ; WS_TYPE: any melee weapon
 ; PROBE_RING_AC: INT VEC_RING_AC replaces "mov al,es:[bx+0Fh] / cbw" (5 bytes: INT + 3 NOPs)
 ; in the AC function, where ES:BX is a worn item's type, CX its number, DX the item and DI the
 ; creature's thing; bit 80h of AX says the type counts for AC (the plus less the type's AC).
-; Does that, counting rings too. With RULE_PROTECTION, AD&D's: a ring of protection betters
+; Does that, counting rings too, as AD&D has it (RULE_PROTECTION, always on): a ring of protection betters
 ; AC only without magical armour, and of two rings only the better (the left hand's if they're
 ; equal); a cloak of protection (the second of TYPES) counts only without magical or metal
 ; armour and without a shield (PROT_SCAN).
@@ -2953,8 +2953,6 @@ probe_ring_ac:
         cmp cx, RING_TYPE
         jne .cloak
         or al, 0x80
-        test word [cs:rules], RULE_PROTECTION
-        jz .done
         call prot_here
         jc .done
         test byte [cs:p_flags], P_MAGIC_ARMOUR
@@ -3001,8 +2999,6 @@ probe_ring_ac:
         cmp cx, ax
         jne .other
         pop ax
-        test word [cs:rules], RULE_PROTECTION
-        jz .done
         call prot_here
         jc .done
         test byte [cs:p_flags], P_MAGIC_ARMOUR | P_METAL_ARMOUR | P_SHIELD
@@ -3104,35 +3100,8 @@ probe_ring_save:
 
 ring_plus:                      ; DS = the game's, AX = the things table's segment, DI = a
         mov [cs:r_things], ax   ; creature's thing: SI += the pluses of the rings it wears
-        test word [cs:rules], RULE_PROTECTION
-        jnz .rules
-        mov es, ax
-        mov bx, di
-        imul bx, bx, 3
-        cmp byte [es:bx+THINGS], 2
-        jne .done               ; not a creature
-        mov ax, [es:bx+THINGS+1]
-        mov [cs:r_who], ax
-        mov word [cs:ws_slot], FINGER
-        mov word [cs:ws_type], RING_TYPE
-        call worn_scan
-        add si, [cs:ws_plus]
-        mov ax, [cs:r_who]
-        mov word [cs:ws_slot], FINGER2
-        call worn_scan
-        add si, [cs:ws_plus]
-.cloak: mov ax, [cs:types_first]  ; and a cloak of protection's (the second of TYPES), worn
-        or ax, ax
-        jz .done
-        inc ax
-        mov [cs:ws_type], ax
-        mov word [cs:ws_slot], CLOAK
-        mov ax, [cs:r_who]
-        call worn_scan
-        add si, [cs:ws_plus]
-.done:  ret
-.rules: call prot_scan          ; RULE_PROTECTION: the better ring only, whatever the armour;
-        jc .done                ; the cloak only without magical or metal armour or a shield
+        call prot_scan          ; (AD&D's: the better ring only, whatever the armour;
+        jc .done                ; the cloak only without magical or metal armour or a shield)
         mov al, [cs:p_ring]
         cmp al, [cs:p_ring2]
         jge .ring
@@ -3146,7 +3115,16 @@ ring_plus:                      ; DS = the game's, AX = the things table's segme
         imul bx, bx, 3
         mov ax, [es:bx+THINGS+1]
         mov [cs:r_who], ax
-        jmp .cloak
+        mov ax, [cs:types_first]  ; and a cloak of protection's (the second of TYPES), worn
+        or ax, ax
+        jz .done
+        inc ax
+        mov [cs:ws_type], ax
+        mov word [cs:ws_slot], CLOAK
+        mov ax, [cs:r_who]
+        call worn_scan
+        add si, [cs:ws_plus]
+.done:  ret
 
 ; PROT_HERE: (called from PROBE_RING_AC, its INT's return address at SP+2) PROT_SCAN for the
 ; AC routine's creature DI, the things table's segment being in its "mov ax,<segment>" A8h

@@ -1150,7 +1150,7 @@ class RingTests(unittest.TestCase):
         return mu.reg_read(r.UC_X86_REG_SI)
 
     def test_saves_count_worn_rings(self):
-        self.assertEqual(self.save(3), 3)  # items 4 and 7 (+1, +2); item 5 is only carried
+        self.assertEqual(self.save(3), 2)  # items 4 and 7 (+1, +2): AD&D's, the better only; item 5 is only carried
 
     def test_saves_not_a_creature(self):
         self.assertEqual(self.save(10), 0)
@@ -1206,7 +1206,7 @@ class ProtectionRuleTests(RingTests):
     protection lost to magical or metal armour (helms too) or a shield."""
     RULES, TYPES_FIRST = 170, 212  # the header's words
     CLOAK = 116  # (the second of DSCLOG's types, the first being 115)
-    # (RingTests' own are the game's way, without the rule)
+    # (RingTests' own are without the setup's armour and helms)
     test_saves_count_worn_rings = test_saves_count_a_cloak_of_protection = test_ac_counts_rings = None
 
     def setUp(self):
@@ -1250,10 +1250,11 @@ class ProtectionRuleTests(RingTests):
         self.assertEqual((self.counts(4, 102), self.counts(7, 102)), (True, False))
         self.assertEqual(self.save(3), 1)
 
-    def test_rule_off(self):
+    def test_rule_bit_clear(self):
+        """The rule always on: its bit clear in RULES changes nothing (the better ring only)."""
         self.mu.mem_write(TSR * 16 + load_image().find(HDR_SIG) + self.RULES, struct.pack("<H", 0))
-        self.assertEqual((self.counts(4, 102), self.counts(7, 102)), (True, True))
-        self.assertEqual(self.save(3), 3)
+        self.assertEqual((self.counts(4, 102), self.counts(7, 102)), (False, True))
+        self.assertEqual(self.save(3), 2)
 
     def test_ring_ac_lost_to_magical_armour(self):
         self.wear(5, 6, 9, 1)  # leather chest armour +1 worn
@@ -1279,7 +1280,7 @@ class BracersTests(ProtectionRuleTests):
     counts for AC without armour on the arms, legs, head or chest, with or without RULE_PROTECTION,
     and they aren't armour to a ring's or cloak's rule."""
     BRACERS = 123
-    test_the_better_ring = test_rule_off = test_ring_ac_lost_to_magical_armour = test_cloak = None
+    test_the_better_ring = test_rule_bit_clear = test_ring_ac_lost_to_magical_armour = test_cloak = None
 
     def setUp(self):
         super().setUp()
