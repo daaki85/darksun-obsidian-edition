@@ -25,6 +25,12 @@ from dsloader import names, spellarrows  # noqa: E402
 
 _built = {}
 
+# The Loader's constant for each field from POISON_USED (+1860) on, by the field's own label
+FIELDS_BY_NAME = {"TSR_POISON_USED": "poison_used", "TSR_BAD_LUCK": "bad_luck", "TSR_LOADER_BEAT": "loader_beat",
+                  "TSR_GEAR_WHO": "gear_who", "TSR_A20_LOST": "a20_lost",
+                  "TSR_QS_KEYS": "qs_keys", "TSR_QS_SEQ": "qs_seq", "TSR_SAVE_REQ": "save_req",
+                  "TSR_SAVE_OFF": "save_off", "TSR_SQUARES_ON": "squares_on"}
+
 
 def symbols():
     """{name: value} for every label (its offset in DSCLOG's segment) and EQU of a build of
@@ -141,6 +147,19 @@ class HeaderTests(unittest.TestCase):
         for module, name, value in loader_constants():
             seen.setdefault(name, set()).add(value)
         self.assertEqual({name: values for name, values in seen.items() if len(values) > 1}, {})
+
+    def test_named_constants_are_their_own_fields(self):
+        """The constants of the fields at the header's end, each against the field of its own name
+        (two branches once added fields at the same offsets, and every constant still named a
+        field: the other branch's)."""
+        sym = symbols()
+        found = {name: value for _, name, value in loader_constants()}
+        for name, field in FIELDS_BY_NAME.items():
+            self.assertIn(name, found)
+            self.assertEqual(found[name], sym[field] - sym["hdr"], (name, field))
+        last = max(said for _, said in header_fields())
+        self.assertEqual(last, max(sym[field] - sym["hdr"] for field in FIELDS_BY_NAME.values()),
+                         "a field after the last one named here: add it to FIELDS_BY_NAME")
 
     def test_spell_arrows(self):
         """DSCLOG's ARROW_SPELLS (the spell each kind of spell arrow casts, in order) and ARROW_NAME

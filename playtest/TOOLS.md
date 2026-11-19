@@ -6,6 +6,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 |---|---|
 | `acs.py` | each combatant's AC as the game counts it (gd.counted_ac), to hold against the dice log's "target AC" |
 | `addeffect.py OWNER EFFECT [SPELL] [CHARGES]` | give combatant OWNER (0-3 the party) the effect EFFECT (35 Poisoned, 13 Diseased, 34 Paralyzed...) in memory, untimed. |
+| `altflag.py [latency N \| watch SECONDS]` | the BIOS's shift flags (0:0417h; Alt is bit 3, Ctrl bit 2, the Shifts bits 0 and 1), which the Loader reads for "show what can be used" (dsloader/usable.py). |
 | `ammodump.py` | Jenna's and Ester's quiver, bow and backpack item records (item number, list, address, the record in hex: count +2, link +4, type +0Ah, name +12h, plus +14h, slot +11h). |
 | `arenatrip.sh` | from pens-after-scar, rest in the fire room till Kurzak calls, answer at once, and count the game's free things (thingsfree.py) there and on arriving in the arena. |
 | `arenawaves.sh` | with the arena's first fight on, fight every wave (fightout.sh) and click away the messages between them, until the YES/NO question ("Yell something back at the Announcer?"), which it answers N. |
@@ -39,6 +40,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `foeset.py` | foeset.py [COMBATANT [race=R] [cls=A,B,C] [lv=A,B,C] [mr=N] [hp=N] [int=N] [eff=ID[:SPELL[:AMOUNT]]] ...]: memory only, never save after (2026-11-09, logs/2026-11-09-group-3.md). |
 | `follow.py OBJECT [ROUNDS]` | keep the party within a few squares of a map object that walks (an escort). |
 | `framerate.py SECONDS [X1 X2 Y]` | walks the party back and forth between screen points (X1,Y) and (X2,Y) for SECONDS and reports the frame rate, a second at a time and in all. |
+| `gamekeys.py [dis START [LEN]]` | the keys the game itself acts on with the map up, read from DSUN.EXE ($DS_GAME): the root's table at 1BC5Bh (26 keys, then their handlers), the map overlay's at 71C1Bh (overlay 4272h: 33 keys) and that overlay's jump... |
 | `gearpoll.py` | watches the Loader's creation gear reach the roster, for 110 s. |
 | `ghostchk.py [THING...]` | DSCLOG's see-through figures: its block (GHOST_SEG), GHOST_ON, the first REP and BLEND bytes and GHOST_TAB; |
 | `ghostclear.py [TRIALS]` | whether GHOST_UNION clears a see-through mark within an enemy turn. |
@@ -48,6 +50,10 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `groundfill.sh CYCLES [FIRST_TYPE]` | fill the ground with items (2026-11-09, the picture-cache test). |
 | `guard_start.sh` | the watchdog. Every 20 s: GONE if DOSBox has quit; |
 | `healparty.py` | each party member's hit points to their sheet's most (memory only: never save after) |
+| `hitcheck.py [ATTACKER]` | the chance to hit before the swing (dsloader/hitchance.py), read-only: for whoever's turn it is (or combatant ATTACKER) against every enemy, what the Loader would say on the "Chosen with Tab" line (without the dice... |
+| `hovercost.py SECONDS \| loader` | what the chance to hit under the pointer (dsloader/hover.py) costs. |
+| `hoverhit.sh C [attack]` | the chance to hit under the pointer against the swing itself. |
+| `hoverlabel.py [X Y \| foe C] [watch SECONDS]` | the chance to hit under the pointer (dsloader/hover.py) as the game has it: moves the pointer (no click) to game pixel X, Y, or onto enemy combatant C's figure (10 pixels above its feet), then prints the pointer, its... |
 | `hp.py HP` | every combatant past the party (index 4 and up) to HP hit points, its sheet's most too. |
 | `itemedit.py MEMBER SLOT [slot=N] [e=N] [f=N]` | show (and change) the item party member MEMBER has in slot SLOT: its slot byte (+11h), +0Eh (an ability item's amount) and +0Fh (its ability byte, FAh-FFh STR-CHA, or a spell). |
 | `itemlists.py` | each party member's three item lists (+08h worn, +0Ah held weapons, +0Ch the backpack) as (item, slot byte, type). |
@@ -58,12 +64,14 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `leasts.sh (on the creation screen; ROWS="y ..." to pick rows)` | for each score's square, a right click (lower) then the least the game worked out, then a left click back |
 | `leavearena.sh` | takes the party from the arena to the pens, right after "Go back to the pens" (arenawaves.sh), before the arena's patience runs out (a few actions). |
 | `levelup.sh` | if CHOOSE A SPELL is up (a preserver's level-up, mid-fight; |
+| `loadquick.sh [ROW]` | start the game (start.sh) and load a save of the QUICK page (SAVQnn.SAV, the quick saves and autosaves: dsloader/quicksave.py) that is in the game folder already, from the main menu: LOAD SAVED GAME (170, 109), the... |
 | `loadsave.sh NAME` | start the game (start.sh, or start_recomp.sh with PT_TARGET=recomp) with the save in saves/NAME copied into the game folder (as slot 1), and load it. |
 | `mapshot.py OUT.png [W H]` | a picture of the whole region the party is in, W x H map units (default 1920 x 1536). |
 | `markmember.py THING\|none CHANGED` | GHOST_TAB with only THING marked see-through (or none), and GH_CHANGED set to CHANGED (1: DSCLOG's GHOST_UNION draws the whole view at the next step). |
 | `memaudit.py` | DOS memory now: every block, its owner and size, and DSCLOG's header figures. |
 | `memberpos.py N` | party member N's figure on screen, to click (its feet x, and y - 12), from its map position and the camera; |
 | `memsample.py [LABEL]` | one line of the game's memory: the map's flag, the heap, its free blocks, DOS memory free after the game. |
+| `movestate.py [R]` | in a fight, whose turn it is, its square, the movement points it has left (37BD:022Bh + creature x 2) and its turn's flags (37BD:01D5h; |
 | `msgbox.sh` | exit 0 if a message waits for a click: the speech box with a portrait at the top (its frame's pixel at 60,3 is 154,154,178) or the grey message window (113,113,138 at 200,50). |
 | `npcgear.py` | every creature on the map now (the game's things that are creatures), with the items in its three lists: +08h worn, +0Ah held (what the Look box lists and the game fights with), +0Ch backpack. |
 | `openshop.sh` | from the "selling junk" save (saves/selling-junk-user), Kalzith's shop: the eye on him (his figure's square found from memory: his feet less 16), Talk, 1, the box clicked through, 1, the box. |
@@ -78,6 +86,9 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `passuntil.sh N [MAX]` | pass party turns until member N's: a click ON the figure (memberpos.py), the END menu checked by its grey pixels in a shot (over 1300; |
 | `pastblock.py save\|cmp FILE` | the 4 KB past GHOST's block (GHOST_SEG + 885 paragraphs), kept or compared |
 | `paths.py` | the same paths as env.sh, for the Python tools |
+| `picmove.py DX DY` | move the hand DX, DY screen pixels (xdotool, relative: DOSBox has the mouse) and print how far the game's pointer (DS:A133, game pixels) went. |
+| `picpattern.sh WHERE:SCALE:PICTURE ...` | the Loader's display settings (launch.display_lines) tried in a DOSBox of its own, without the game and without the DOSBox lock: a 33-byte program puts a pattern on the game's screen mode (13h, 320x200) and waits. |
+| `picstart.sh PICTURE [SCALE] [OUT_DIR]` | the game started with one of the Loader's pictures (plain, scanlines, tv, sharp) in a window SCALE times the game's (default 3), NOT the kit's 320x240 start: pens-after-arena loaded by the pointer (click.py), then... |
 | `picstore.py [check\|dump SLOT\|stale]` | the game's picture store (the 741,376 bytes behind memory handle DS:4C33h) as the Loader can reach it (2026-11-09, logs/2026-11-09-picture-store.md). |
 | `pixmatch.py X Y R G B [X Y R G B ...]` | exit 0 if every named pixel of a fresh 320x240 window grab is that colour, within 3 a channel and one row up or down. |
 | `playsound.py N` | have DSCLOG play sound N from the map's main loop (its header's SOUND_REQ, +1822): a game sound (0-130) or one of the mod's (140, 141). |
@@ -85,14 +96,17 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `pointer.py [walk\|look\|attack [X Y]]` | the map pointer's mode (DS:11B8h: 1 walk, 2 look (the eye: also talk, use), 4 attack; |
 | `poolfree.py [SECONDS]` | the game's picture memory (the blocks at DS:8E94h, 8 bytes each: +0 the bytes free in it (dword), +4 its far pointer; |
 | `powers.py` | each party member's known psionic powers (selector 2F0h's segment, +77h + member x 22h + power, bits 3-7: known), by name. |
+| `qsave.py SLOT [NAME] \| load \| state` | ask DSCLOG for a save by the game's own routine (SAVE_REQ, the header's +1886: dsloader/quicksave.py), as the Loader's quick save does, and say what came of it and how long it took (seconds of this machine's clock,... |
 | `rackcheck.py` | the slave pens' weapon rack (object 2599; |
 | `randout.py N [SEED]` | N random outfit changes for member 0: each time one of its worn items (slot under 12) taken off (slot byte +11h set to 50) or put back, waiting for the Loader's copy of SEGOBJEX.GFF to be written; |
 | `rec.py [FIRST LAST]` | the combat records (58 bytes) of creatures FIRST to LAST (default the party, 0-3), hex from +10h, to find a field by comparing what the screen shows |
 | `restalarm.sh` | in the fire room (toalarm.sh), rest at the ring (map 1931, 856) with the look pointer until Kurzak calls, then wait there till his patience runs out: the alarm, and a fight with the guards. |
 | `restfixmem.py [check\|fix\|undo]` | the rest routine's pass 2 (DSUN.EXE 8066Dh, overlay 5E8h) in the overlay buffer, if loaded: `check` says which version is there (the game's: the effects read before the free cures; |
+| `ringall.py [N \| all \| still \| clear] [KIND]` | for measuring the rings' cost (framerate.py): a ring (DSCLOG's RING_TAB, kind 1) under every one of the game's things on the screen now, whatever it is (N: under the N nearest the screen's middle; |
 | `ringrest.sh` | rest at the fire room's ring in pens-fire-count4 (camera 1728,768: the ring at screen 203,88): the eye, a slow press on the ring, the walk arrow back (2026-11-09). |
 | `rolog.py [--d20]` | a read-only dice log beside the session's own Loader (2026-11-08). |
 | `route.py TX TY` | walk the party's leader to map position TX, TY over any distance: a path found on the region's walkability grid as the game has it now (live.py's live_map, DS:0556h; |
+| `savediff.py A.SAV B.SAV [-v]` | two saves (or any two GFF files) compared chunk by chunk (dsloader/gff.py's read_gff): the chunks only one has, and for each chunk both have that differs, its size in each and how many bytes differ (with -v, the... |
 | `scroll.py DX DY` | drag the map view with the middle mouse button by DX, DY game pixels (the user's advice, 2026-11-01): the way to see past walls, where the view won't scroll by itself. |
 | `scrolltest.py [shinobi] [give]` | member 0 made an 8th-level Shinobi (memory only: never save after) and the defilers' scrolls (defilerscrolls.scroll) given to members 0 and 2. |
 | `setarrows.py MEMBER N` | the member's quiver stack's count made N, in memory (never save after; |
@@ -113,11 +127,15 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `slotcount.py [LABEL]` | one line: the leader's place, the game's picture slots taken (of 300), the store's end (of 741,376), how many are in memory and STALE, and with DSCLOG's PIC_REUSE how many slots it has reused. |
 | `soundmatch.py RAW START END WAV...` | in DOSBox's recorded output (RAW: 16-bit stereo at 44100 Hz, from start.sh with PT_AUDIO set; |
 | `spellsetup.py [MEMBER=LEVEL ...] [hp=N] [SPELL ...]` | teaches each MEMBER the spells, fills its slots and sets its casting classes to LEVEL, in memory (never save after). |
+| `squarecost.py LEGS COL1 ROW COL2 [POINTS]` | what a walk costs in a fight, for the squares in reach: on a party member's turn it walks the member along row ROW between columns COL1 and COL2, LEGS times, its points set to POINTS (250) before each leg (a test's... |
+| `squaresweep.py POINTS [all\|edge\|out][here] [MAX]` | the Loader's squares in reach (dsloader/squares.py) against the game, on a party member's turn in a fight, from where its turn began. |
+| `squarewalk.py COL ROW [POINTS]` | on a party member's turn in a fight, click the middle of walk-map square COL,ROW with whatever pointer is up (pointer.py walk first) and say where the member stopped and what movement it has left. |
 | `start.sh` | Xvfb :55, the Loader's patched game in DOSBox as the Loader starts it (the repository's current code: rebuild = restart), and the Loader's dice log ($WORK/dice.txt). |
 | `start_recomp.sh` | the game on Dark Sun Recompiled ($DSUN, its build of the mod) instead of DOSBox, with the Loader's patched game prepared as start.sh does and the dice log attached. |
 | `state.py` | one line of the game's state: fight (fight_on, whose turn), region, the leader's map position, the camera, and the flags named on the command line (state.py 11 505) |
 | `stepfight.sh` | from the arena gate, clicks south until the fight is on (topartyfight.sh's last loop) |
 | `symread.py` | Read DSCLOG variables by name in the running game: `python3 symread.py NAME [NAME...]` (each's first 4 bytes, hex), from a symbol map of obsidian-edition/dos/dsclog.asm as built (the tree's DSCLOG.EXE). |
+| `tabhit.sh [TABS [nohit]]` | the chance to hit before the swing against the swing itself. |
 | `teleport.py X Y CX CY` | the party (map objects 0-3) put at map X, Y and the camera at CX, CY, in memory (DS:669Dh + 32n, DS:1178h); |
 | `thief.py MEMBER LEVEL \| MEMBER off` | a party member made a thief of LEVEL in memory (class 17 in a free class place of the sheet, its level, the thief flag 400h), or no thief (off). |
 | `thingsfree.py [LABEL]` | the game's dynamic things (objects 320-519, handed out from a free list). |
@@ -129,6 +147,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `turnsetup.py MEMBER LEVEL [COMBATANT=HD ...]` | memory only, never save after (2026-11-09). |
 | `turnwatch.py MEMBER SECONDS` | polls whose turn it is and the member's turn bytes every 5 ms, printing each change with its time. |
 | `untilturn.sh NAME` | play party turns (Tab + Return) until NAME's turn comes, messages clicked away. |
+| `usable.py [all]` | what the Loader would mark as usable while Alt is held (dsloader/usable.py): each thing's number, kind, name, map place and screen place, those in the view only unless "all"; |
 | `viewto.py X Y` | drag the view (scroll.py, the middle button) until map point X, Y is near the screen's centre, so a far spot can be clicked. |
 | `walkprobe.py N X Y DIR [SECS]` | a click at screen X, Y (game pixels), then for SECS seconds (default 6) as often as it can, a sample of the walk. |
 | `walktime.py N X Y [DIR]` | a click at screen X, Y (game pixels), then party member N's map position every 50 ms until it has stood still for 1.5 s: each step's time (the walking pace), and with DIR a window grab at each step (DIR/wNN.png) |

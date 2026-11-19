@@ -59,8 +59,47 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+Obsidian Edition 2.19.0 ([release notes](release-notes/v2.19.0.md)).
+
 **New**
 - **Tanelyv's chest piece shines** as its arm and leg pieces do (#106).
+- **A journal** (the Loader's new **Journal** tab): every talk with the reply chosen, every reward
+  and message, under the game's day and area, kept on disk (`Journal/`) and following the saves
+  (its newest entry's id in the game's global numbers 198 and 199).
+- **Picture and music device** (Options, from the next start): Plain, Scanlines, TV or Sharp for
+  the game's picture (DOSBox 0.74's scalers and `openglnb`), and the music sent to any MIDI
+  device of Windows'. Seen on Linux only; the music device not heard.
+- **The chance to hit before the swing**: with an enemy chosen with Tab, what the d20 must show
+  and the chance, on the dice log's line and in the combat log's header, worked out as the game's
+  attack does (`hitchance.py`; DSCLOG unchanged).
+- **Quick save, quick load and autosave**: F5 saves at once, F9 opens the load window on those
+  saves, and the game saves by itself after an area change and a fight, all on a fifth page of the
+  save window, QUICK (`quicksave.py`; DSCLOG's `QS_KEY` and `SAVE_TICK`, four header fields from
+  +1878, signature `DSCLOGvd`).
+- **Quests on the Journal tab**: open and finished, read from the script flags and numbers the
+  story is kept in (45 quests: `quests.py`; `questdraft.py` drafts the table for developers).
+- **Showing what can be used**: hold Alt on the map, out of a fight, for a gold ring under every
+  door, container, body, item and person a click does something with, and the nearest ones' names
+  (`usable.py`; DSCLOG unchanged).
+- **Squares in reach**: on a party member's turn a small cross on every square one click can
+  still walk to, by the game's own rules of movement (`squares.py`, DSCLOG's `TINT_PASS`; header
+  field `SQUARES_ON` +1890, signature `DSCLOGve`). **DSCLOG's room**: #112 left 224 bytes of the
+  segment and 36 paragraphs of upper memory, less than quick save and the squares needed, so their
+  two long routines run from the tail (`TAIL_CALL`: code in the tail is new) and the squares' map
+  lies in DSCLOG's own PSP (71,440 bytes then, 48 bytes and 1 paragraph left). With the room #115
+  freed and #116's 48 bytes: 70,304 bytes, 1,184 bytes of the segment and 72 paragraphs of upper
+  memory left.
+- **The chance to hit under the pointer**: on a party member's turn the roll needed and the chance
+  float over the enemy the game's pointer rests on (`hover.py`; DSCLOG unchanged).
+- **R hides and shows the squares in reach**, the owner's request: on the map in a fight, kept in
+  `squares_shown`, said in the dice log and over the member. Read from the BIOS keyboard buffer
+  (`keywatch.py`), so DSCLOG is unchanged; R is in none of the game's key tables (A, which the
+  owner named, toggles the game's animations: every key the game binds is now in
+  HOW-THE-GAME-WORKS.md).
+- **F10 takes a whole move back**, the owner's request (`moveback.py`; DSCLOG unchanged): after the
+  last step the game's F10 put a member back unable to walk; the Loader gives the walk back when
+  it has seen the last step and then F10's doing in one turn, never after an attack (one that
+  kills leaves the member its turn: seen in the game). Switch `move_back`.
 
 **Changed**
 - **Fewer switches** (#110), for a simpler Options tab and the mod's rules as meant: the combat
@@ -80,6 +119,15 @@ Releases, newest first (2.12.0 and older in the archive):
   green and violet too, not only water and fire (Greenbright green, Mindshard violet).
 - **The release zip** leaves out the developer pages, the tests and `docs/viewer.png`; the manual
   links to them at the release's tag (#97).
+- **The chance under the pointer shows nothing with the look pointer**, whose click only looks (the
+  owner's request).
+- **The combat log's panel is put away while the map is not the screen** (the owner's report: it
+  covered the save and load windows' QUICK button and list), and comes back with the map.
+- **The Loader's tabs show their names whole** ("Dice lo", "Journa" with six tabs): the divider
+  leaves the right-hand pane the width the names need. Seen on Linux only, where they were whole
+  before too.
+- **The new switches** are in the Options tab's In the game section (the chance to hit, the squares,
+  F10, Alt) and Saves (quick save, autosave), "Fewer switches" having taken the Controls section.
 
 **Fixed**
 - **The code audit, part 1** (#111): Negative Plane Protection's save no longer writes past the new
@@ -95,9 +143,13 @@ Releases, newest first (2.12.0 and older in the archive):
   room beside DOSBox's tables, and memory in pieces is warned of too.
 - **The elven slavers' leader's Goodbye** no longer goes straight to the arrest, from OpenDS's
   triage (no pull request: committed to the branch).
+- **The Characters tab with a game attached** stayed empty since "Fewer switches" (`KeyError:
+  'stealth'`): `viewer.py` still asked for a switch gone from the tab. Found with the Loader's
+  window on a running game and fixed alike by #115 and this branch (one fix kept);
+  `test_switch_names`.
 - **A thief's later attacks in a round after a backstab** are judged on their own (#116): they
   were 2 worse to hit and still counted as from behind, the target's DEX and shield ignored.
-- **Three older Loader bugs** (no pull request yet: branch `claude/older-loader-bugs`): the dice
+- **Three older Loader bugs** (#118): the dice
   log no longer gives the character being made an age of its own after each roll of the creation
   screen's die (it now says the screen's AGE once, at DONE); on Linux a DOSBox the Loader's window
   didn't start is seen to close (it said "Connected" on), and a reload no longer logs "Loader error
@@ -124,8 +176,7 @@ Releases, newest first (2.12.0 and older in the archive):
   rules now always on no longer written as switches, the random monsters' divide by zero and "Out
   of memory in OEOpenGraph" out of the game's bugs, more troubleshooting, the Elvenkind picture
   retaken; this section sorted and numbered; `.gitattributes` and `.gitignore` out of the zip.
-- **The final documentation review's fixes** (no pull request yet: branch
-  `claude/final-audit-fixes`): the CHANGELOG's header back, the multiclass rule, always-on rules no
+- **The final documentation review's fixes** (#117): the CHANGELOG's header back, the multiclass rule, always-on rules no
   longer written as switches, the removed off paths out of the developer pages, the dice log's
   picture retaken.
 
@@ -142,12 +193,20 @@ Releases, newest first (2.12.0 and older in the archive):
   the switches always on since #110 taken out of DSCLOG (their rules' tests, the game's ways behind
   them, `MANUAL_ON`) and of the Loader, about 1.1 KB freed for what comes next; the rules switched
   still are kept.
-- **The final code audit's fixes** (no pull request yet: branch `claude/final-audit-fixes`): the
+- **The final code audit's fixes** (#117): the
   Loader's rules start at the always-on ones and its dead off-branches are gone, the header test
   ties each constant to its own field, temporary files are each writer's own and never left behind.
-- **The last audit's two small items** (no pull request yet: branch `claude/older-loader-bugs`): the
+- **The last audit's two small items** (#118): the
   stats thread takes its idle step while no game is attached (it looked every millisecond), and
   `crash-logs` keeps the newest 20 freeze reports. Tests for these and the three bugs above.
+- **`dsloader/questdraft.py` is left out of the release zip**; `test_release` checks the zip and that
+  no module that ships imports it.
+- **DSCLOG's header fields by name** (`test_header_offsets`): two branches had added fields at the
+  same offsets under one signature, and every constant still named a field.
+- **The playtest kit**: tools for the additions (`picpattern.sh`, `tabhit.sh`, `qsave.py`,
+  `usable.py`, `squarewalk.py`, `hoverlabel.py`, `gamekeys.py` and more), `PT_NO_EDIT=1` for a
+  fight and an arena trip with no memory edit, the game's key tables, the Loader's window on a
+  second display.
 
 ## Pull request #96 ([merged 2026-11-17](https://github.com/daaki85/darksun-obsidian-edition/pull/96))
 

@@ -541,6 +541,7 @@ EVENT_QUEUE, EVENT_COUNT, EVENT_SIZE, EVENT_EFFECT_ENDS = 0x2FBE, 0x2FC6, 0x11, 
 # Each round, per creature (4 bytes each): the initiative score (-1 once it has
 # acted) and the 0-199 roll that breaks ties
 INITIATIVE_SEG, INITIATIVE_OFF = 0x37BD, 0xD9
+FACING_OFF = 0x5B  # the same segment: a byte a creature, the way it faces for an attack from behind
 # Wizard and cleric spells, 7 bytes each from id 1: level, ..., DS offset of the name (+5)
 SPELL_INFO_OFF, SPELL_INFO_SIZE, SPELL_COUNT = 0x3FD33, 7, 137
 SPELL_FIRST = 0  # Armor, the first wizard spell: spells are 0 to SPELL_COUNT (Old One-Eye's scroll is 0's)
@@ -854,6 +855,10 @@ HALVING_EFFECTS = ((EFFECT_PROT_FIRE, 0x02), (EFFECT_PROT_COLD, 0x04), (EFFECT_P
                    (EFFECT_FIRE_SHIELD, 0x06))
 EFFECT_SAVE_PENALTY, EFFECT_SPIRIT_ARMOR, EFFECT_BARKSKIN, EFFECT_PRAYER = 45, 56, 57, 73
 EFFECT_FLESH_ARMOR, EFFECT_VESTMENTS = 59, 60
+# the others the game's AC routine counts (7C557h: GameData.attack_ac)
+EFFECT_IMPROVED_AC, EFFECT_BIOFEEDBACK, EFFECT_SHIELDED, EFFECT_DISPEL_EVIL, EFFECT_DISPLACEMENT = 2, 4, 46, 52, 58
+DISPEL_EVIL_RACE = 14  # (the sheet's race Dispelling evil's 7 counts against: 7AF65h)
+BODY_ARMOUR_SLOTS = tuple(EQUIP_SLOTS.index(s) for s in ("arm", "legs", "chest"))  # (the armour the spells stand in for)
 EFFECT_BRAVE = 9  # (Cloak of Bravery: +4 against a spell flagged FEAR_CATEGORY, a charge used)
 FEAR_CATEGORY = 0x100  # (a record's +11h word: the patched game's fear spells, gamepatch brave_fear_*)
 SHEET_SAVES = 0x37  # the five saves, in SAVE_NAMES order
@@ -890,6 +895,10 @@ class WeaponHit(NamedTuple):
     halves: Optional[int] = None  # a missile weapon's attacks a round, in halves (its own, not the
     # character's), or a Battle Mage's with its chosen weapon spec, a Crusader's or Mind Warrior's
     # from 7th level, or the off hand's one a round (the rule for two weapons)
+    type: int = -1  # its item type's number (-1 unarmed)
+    weight: int = 0  # its type's weight (the type's word +4: a backstab's weapon weighs 40 or less)
+    range: int = 1  # its type's range in squares (+0Ah: above 1 a missile weapon's)
+    order: int = 0  # its place among the creature's items: the game's attack swings in this order
 
 
 class ItemSave(NamedTuple):
@@ -2219,10 +2228,11 @@ class GameData:
             out.append(SaveNow(base, min(20, max(2, base - sum(n for n, _ in parts))), parts))
         return out
 
-    def weapon_hits(self, creature: int) -> List[WeaponHit]:
+    def weapon_hits(self, creature: int, unarmed: bool = False) -> List[WeaponHit]:
         """THAC0 with each weapon the creature has ready (right hand, left hand, missile), as the
         game's attack works it out before the target is known (not from behind or backstabbing,
-        nor the target's Blur); unarmed (item -1) when it has none."""
+        nor the target's Blur); unarmed (item -1) when it has none, and with UNARMED when it has
+        none for melee (a bow alone: hand to hand it fights with its fists, hitchance.py)."""
         rec = self.creature(creature)
         if len(rec) < CREATURE_SIZE:
             return []
@@ -2239,10 +2249,12 @@ class GameData:
         table = lambda off, score: struct.unpack("b", self.guest.read(self.ds * 16 + off + score, 1))[0] \
             if score < 26 else 0
         weapons = []
-        for index, item, typ in self._worn(creature):
+        places = {}
+        for place, (index, item, typ) in enumerate(self._worn(creature)):
             slot = item[ITEM_SLOT]
             if slot in WEAPON_HANDS + (MISSILE_SLOT,) and typ[0x0C] and typ[0x0D]:  # it has damage dice
                 weapons.append((index, item, typ, slot))
+                places[index] = place
         two_weapons = all(self.melee_weapon_in(creature, hand) for hand in WEAPON_HANDS)
         out = []
         order = {WEAPON_HANDS[0]: 0, WEAPON_HANDS[1]: 1, MISSILE_SLOT: 2}
@@ -2312,8 +2324,9 @@ class GameData:
                 halves = have * 2 if HASTED_EFFECT in ids else have // 2
             parts = [(why, n) for why, n in parts if n]
             out.append(WeaponHit(index, slot, self.item_label(item, typ), base - sum(n for _, n in parts), parts,
-                                 skill, halves))
-        if not out:
+                                 skill, halves, struct.unpack_from("<H", item, ITEM_TYPE)[0],
+                                 struct.unpack_from("<H", typ, 4)[0], typ[0x0A], places[index]))
+        if not out or unarmed and all(h.slot == MISSILE_SLOT for h in out):
             parts = [("STR", table(STR_TO_HIT, strength))] + common
             if self.rules & RULE_NEW_SPELLS and CLAW_EFFECT in ids:
                 parts.append((EFFECT_NAMES[CLAW_EFFECT], 1))  # (DSCLOG's NS_FIST)
@@ -2579,6 +2592,96 @@ class GameData:
                     else struct.unpack_from("b", typ, 0x12)[0]
                 ac -= struct.unpack_from("b", item, ITEM_PLUS)[0] + type_ac
         return ac
+
+    def attack_ac(self, target: int, attacker: Optional[int] = None, rear: bool = False) -> Optional[int]:
+        """The AC of creature TARGET against an attack by creature ATTACKER, as the game's AC
+        routine (58DD3h) and its effects' part (7C557h) work it out, read from their code: the
+        sheet's base and the armour on the arms, legs and chest (which the armour spells stand in
+        for where they are better: Spirit Armor 4, Improved AC 6, Barkskin, Shielded 4 from the
+        front, Magical Vestments, Flesh Armor), the other worn pieces (a shield not from behind:
+        REAR), a fifth of a gladiator's level in armour, the DEX adjustment (not from behind),
+        Displacement 2 better, Dispelling evil 7 better against race 14, Blind and Slowed 4 worse
+        each, Prot Evil 2 better against an evil attacker, 4 better when the attacker can't see it
+        (Blind, or the target Invisible without Detect Invis), Biofeedback 1 better. And a ring
+        of protection's plus as DSCLOG's PROBE_RING_AC has the game count it (RULE_PROTECTION,
+        always on: the better ring only, and none over magical armour). Without the rest of what DSCLOG adds
+        (a kit's, a cloak of protection, bracers, a robe, the Boots of Speed, Wild Fighting: the
+        dice log knows those once the target has been attacked, hitchance.py).
+        None without a record and sheet."""
+        rec, sheet = self.creature(target), self.sheet(target)
+        if len(rec) < CREATURE_SIZE or len(sheet) < SHEET_SIZE:
+            return None
+        armour, other = struct.unpack_from("b", sheet, SHEET_BASE_AC)[0], 0
+        rings = []
+        for _, item, typ in self._worn(target, CREATURE_ITEM_LISTS[:1]):
+            kind = struct.unpack_from("<H", item, ITEM_TYPE)[0]
+            if kind == RING_TYPE:  # (DSCLOG's PROBE_RING_AC has the game count a ring's plus)
+                rings.append((struct.unpack_from("b", item, ITEM_PLUS)[0], item[ITEM_SLOT]))
+                continue
+            if kind >= NO_ITEM or not typ[0x0F] & 0x80 or rear and typ[0] & TYPE_SHIELD:
+                continue
+            type_ac = (1 if self.rules & RULE_HELMS else 0) if kind in HELM_TYPES \
+                else struct.unpack_from("b", typ, 0x12)[0]  # (a helm's: as counted_ac)
+            part = struct.unpack_from("b", item, ITEM_PLUS)[0] + type_ac
+            if item[ITEM_SLOT] in BODY_ARMOUR_SLOTS:
+                armour -= part
+            else:
+                other -= part
+        if struct.unpack_from("<H", sheet, SHEET_FLAGS)[0] & SHEET_FLAG_GLADIATOR and self.armour_worn(target):
+            for n in range(3):
+                if sheet[SHEET_CLASSES + n] == GLADIATOR_CLASS:
+                    level = sheet[SHEET_LEVELS + n]
+                    if n and sheet[SHEET_RACE] == HUMAN and sheet[SHEET_LEVELS] <= level:
+                        level = 0
+                    other -= level // 5
+                    break
+        if not any(item[ITEM_SLOT] in ARMOUR_SLOTS and typ[0x0F] & 0x80 and struct.unpack_from("b", item, ITEM_PLUS)[0] > 0
+                     and struct.unpack_from("<H", item, ITEM_TYPE)[0] not in (BRACERS_TYPE, ROBE_TYPE)
+                     for _, item, typ in self._worn(target)):
+            # (AD&D's: no ring over magical armour, and of two only the better)
+            other -= max((plus for plus, slot in rings if slot in FINGERS and plus > 0), default=0)
+        effects = self.effects()
+        mine = {e.id for e in self._mine(target, effects)}
+        theirs = {e.id for e in self._mine(attacker, effects)} if attacker is not None else set()
+        foe = self.sheet(attacker) if attacker is not None else b""
+        foe = foe if len(foe) >= SHEET_SIZE else bytes(SHEET_SIZE)
+        level = lambda effect: self.effect_level(target, effect) or 0
+        more = 0 if rear else self.dex_ac(rec[CREATURE_ABILITIES + 1])
+        if EFFECT_SPIRIT_ARMOR in mine:
+            armour = min(armour, 4)
+        elif EFFECT_IMPROVED_AC in mine:
+            armour = min(armour, 6)
+        if EFFECT_BARKSKIN in mine:
+            armour = min(armour, 6 - level(EFFECT_BARKSKIN) // 4)
+        if EFFECT_SHIELDED in mine and not rear:
+            armour = min(armour, 4)
+        if EFFECT_VESTMENTS in mine:
+            n = level(EFFECT_VESTMENTS)
+            armour = min(armour, 5 - ((n - 5) // 3 if n > 5 else 0))
+        if EFFECT_FLESH_ARMOR in mine:
+            armour = min(armour, 10 - level(EFFECT_FLESH_ARMOR))
+        if EFFECT_DISPLACEMENT in mine:
+            more -= 2
+        if EFFECT_DISPEL_EVIL in mine and foe[SHEET_RACE] == DISPEL_EVIL_RACE:
+            more -= 7
+        more += 4 * (EFFECT_BLIND in mine) + 4 * (SLOWED_EFFECT in mine)
+        if EFFECT_PROT_EVIL in mine and foe[0x1A] in EVIL_ALIGNMENTS:
+            more -= 2
+        if EFFECT_BLIND in theirs or EFFECT_DETECT_INVIS not in theirs and (
+                EFFECT_INVISIBLE in mine or EFFECT_INVIS_UNDEAD in mine and foe[SHEET_RACE] == UNDEAD):
+            more -= 4  # (the attacker can't see it: 7BD4Bh)
+        if EFFECT_BIOFEEDBACK in mine:
+            more -= 1
+        return armour + other + more
+
+    def facing(self, creature: int) -> Optional[int]:
+        """The way a creature faces for an attack from behind (the attack set's, 582DEh: a byte a
+        creature at FACING_OFF in the round's segment): one of eight directions, turned to its
+        attacker by the first attack on it in a round; None while it faces nowhere (below 0: the
+        round's start, so its first attacker is never behind it)."""
+        at = (self.load_seg + INITIATIVE_SEG) * 16 + FACING_OFF + creature
+        way = struct.unpack("b", self.guest.read(at, 1))[0]
+        return way if 0 <= way < 8 else None
 
     def dex_ac(self, dex: int) -> int:
         """The game's AC adjustment for a DEX score."""

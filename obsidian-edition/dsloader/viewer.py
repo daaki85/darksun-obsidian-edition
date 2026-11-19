@@ -24,7 +24,7 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 from tkinter import font as tkfont
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
-from . import __version__, art, combatlog, dicelog, ledger, freeze, game, kits, launch, manual, namedsaves, partyview, rings, spellbook, theme, values
+from . import __version__, art, combatlog, dicelog, journal, ledger, freeze, game, kits, launch, manual, midiout, namedsaves, partyview, quests, rings, spellbook, theme, values
 from .dicelog import DiceLog, DiceLogError
 from .guestmem import GuestMemory
 from .layout import Layout
@@ -35,6 +35,14 @@ SAVES_EVERY = 3.0  # seconds between looks at the game's saves (namedsaves.py)
 DICE_MS = 50
 RETRY_SECONDS = 2.0
 MAX_LOG_LINES = 3000
+# the Journal tab's Show box: its choices and the kinds of entry each shows (None: all)
+JOURNAL_SHOWS = (("Everything", None), ("Talk", (journal.TALK,)),
+                 ("Rewards", (journal.REWARD,)), ("Rewards and messages", (journal.REWARD, journal.MESSAGE)))
+JOURNAL_QUESTS = "Quests"  # the Show box's last choice: the game's quests in place of the entries (quests.py)
+QUESTS_KEPT_EVERY = 5.0  # seconds between writings of the quests' last reading (quests.save_snapshot)
+QUESTS_AS_READ = "The game can't be read just now: these are the quests as the Loader last read them from it."
+QUESTS_UNREAD = ("The game's flags have not been read for this journal: only the quests whose rewards "
+                 "the journal holds are shown.")
 HIGHLIGHT_SECONDS = 3.0
 HEX_PREFIX = 17  # width of "+0040  0012a3f0  "
 MAX_HITS = 500
@@ -55,6 +63,15 @@ def _query_bytes(text: str) -> bytes:
 
 # the game window's sizes (DOSBox scales the game's 320x200, with the aspect corrected)
 WINDOW_CHOICES = {"Single (320x240)": 1, "Double (640x480)": 2, "Triple (960x720)": 3, "Quadruple (1280x960)": 4, "Full screen": None}
+
+def tabs_width(tabs: "ttk.Notebook") -> int:
+    """The width TABS needs to show every tab's name whole, in the tabs' own font: each name with
+    its padding and border (theme.TAB_PADDING, TAB_EDGES), and the row's margins."""
+    style = ttk.Style(tabs)
+    font = tkfont.Font(root=tabs, font=style.lookup("TNotebook.Tab", "font") or "TkDefaultFont")
+    each = 2 * theme.TAB_PADDING[0] + theme.TAB_EDGES
+    return sum(font.measure(tabs.tab(tab, "text")) + each for tab in tabs.tabs()) + 24
+
 
 class Viewer:
     def __init__(self, root: tk.Tk, layout: Layout, connect: Callable[[], GuestMemory],
@@ -153,7 +170,7 @@ class Viewer:
         across.pack(side="bottom", fill="x")
         self.table.pack(fill="both", expand=True)
 
-        tabs = ttk.Notebook(panes)
+        self.tabs = tabs = ttk.Notebook(panes)
         panes.add(tabs, weight=1)
         tabs.enable_traversal()  # Ctrl+Tab between tabs, Alt + the underlined letter
 
@@ -253,6 +270,7 @@ class Viewer:
         self._last_portrait: Optional[int] = None
         self.talk_text.tag_bind("speaker", "<Button-3>", self._speaker_clicked)
         self._find_bar(talk_find, self.talk_text, talk)
+        self._build_journal(tabs, launch.load_settings())
         # Ctrl+F: the find box of the log tab shown
         self.root.bind_all("<Control-f>", lambda _e: self._focus_find(tabs))
         self.root.bind_all("<Control-F>", lambda _e: self._focus_find(tabs))
@@ -407,6 +425,30 @@ class Viewer:
                             (rings.ONLY_CHOSEN, "... under the enemy chosen with Tab")):
             ttk.Radiobutton(in_game, text=text, value=value, variable=self.ring_mode,
                             command=self._options_changed).pack(anchor="w", padx=(20, 0))
+        # what the d20 must show to hit the chosen enemy (hitchance.py)
+        self.hit_chance = tk.BooleanVar(value=settings.get("hit_chance", True) is not False)
+        ttk.Checkbutton(in_game, text="The chance to hit: with an enemy chosen with Tab, what the d20 must show to hit "
+                        "it and the chance, in the dice log and the combat log's header",
+                        variable=self.hit_chance, command=self._options_changed).pack(anchor="w", pady=(4, 0))
+        # ... and over the enemy the game's pointer is on (hover.py)
+        self.hit_hover = tk.BooleanVar(value=settings.get("hit_hover", True) is not False)
+        ttk.Checkbutton(in_game, text="The chance to hit under the pointer: in a fight, with the pointer over an enemy, "
+                        "what the d20 must show and the chance float over it",
+                        variable=self.hit_hover, command=self._options_changed).pack(anchor="w", pady=(4, 0))
+        # the squares the party member whose turn it is can still walk to (squares.py)
+        self.show_squares = tk.BooleanVar(value=settings.get("squares", True) is not False)
+        ttk.Checkbutton(in_game, text="Squares in reach: in a fight, a small cross on each square the party member "
+                        "whose turn it is can still walk to (R in a fight hides and shows them)",
+                        variable=self.show_squares, command=self._options_changed).pack(anchor="w", pady=(4, 0))
+        # F10 after the last step: the move taken back can be walked again (moveback.py)
+        self.move_back = tk.BooleanVar(value=settings.get("move_back", True) is not False)
+        ttk.Checkbutton(in_game, text="F10 takes a whole move back: after the last step too, the party member can "
+                        "walk again (the game's F10 puts it back but lets it walk no more)",
+                        variable=self.move_back, command=self._options_changed).pack(anchor="w", pady=(4, 0))
+        # gold rings and names for what a click does something with, while Alt is held (usable.py)
+        self.show_usable = tk.BooleanVar(value=settings.get("show_usable", True) is not False)
+        ttk.Checkbutton(in_game, text="Showing what can be used: hold Alt on the map, out of a fight",
+                        variable=self.show_usable, command=self._options_changed).pack(anchor="w", pady=(4, 0))
         # the rule changes that keep a switch (game.RULE_SETTINGS; the rest are always on: game.ALWAYS_ON)
         rules = section("rules", "Rule changes")
         custom = section("custom", "More character customization")
@@ -474,6 +516,43 @@ class Viewer:
         ttk.Checkbutton(pace, text="Steady pace: walking at full speed on the map whatever is drawn (a picture skipped "
                         "rather than the party slowed)", variable=self.steady_pace,
                         command=self._options_changed).pack(anchor="w", pady=(4, 0))
+        # how DOSBox draws the game larger, and where it sends the music (launch.display_lines, midiout.py)
+        look = section("picture", "Picture and music (from the next start)")
+        chosen = settings.get("picture", launch.DEFAULT_PICTURE)
+        self.picture = tk.StringVar(value=chosen if chosen in launch.PICTURES else launch.DEFAULT_PICTURE)
+        for value, text in ((launch.PLAIN, "Plain: every pixel of the game as a block (the default)"),
+                            (launch.SCANLINES, "Scanlines: a black line under each row of the picture, as on an "
+                                               "old monitor"),
+                            (launch.TV, "TV: a dimmed line under each row of the picture, softer than scanlines"),
+                            (launch.SHARP, "Sharp: hard-edged pixels at any size, the stretching left unsmoothed "
+                                           "(DOSBox's OpenGL)")):
+            ttk.Radiobutton(look, text=text, value=value, variable=self.picture,
+                            command=self._picture_chosen).pack(anchor="w")
+        ttk.Label(look, text="A Single game window is always plain: there is nothing to draw larger.",
+                  style="Status.TLabel").pack(anchor="w", pady=(2, 0))
+        music = ttk.Frame(look)
+        music.pack(anchor="w", fill="x", pady=(8, 0))
+        ttk.Label(music, text="Music device").pack(side="left")
+        device = midiout.setting(settings)
+        self.midi_names = midiout.devices()  # (Windows' MIDI outputs by name; None where they can't be read)
+        if self.midi_names is None:
+            self.midi_device = tk.StringVar(value="" if device == midiout.DEFAULT else str(device))
+            self.midi_box: tk.Widget = ttk.Entry(music, textvariable=self.midi_device, width=8)
+            hint = ("Empty for the default. Else a device's number as Windows counts them, from 0 (their names "
+                    "can't be read here), or for a Linux DOSBox an ALSA port such as 128:0.")
+        else:
+            self.midi_device = tk.StringVar(value=midiout.label(device, self.midi_names))
+            self.midi_box = ttk.Combobox(music, textvariable=self.midi_device, state="readonly", width=44,
+                                         values=midiout.labels(self.midi_names, device))
+            self.midi_box.bind("<<ComboboxSelected>>", lambda _e: self._midi_chosen())
+            hint = ("Windows' default, or one of its MIDI devices: a software synthesizer with a soundfont, or an "
+                    "MT-32 driver, that you have installed.")
+        self.midi_box.pack(side="left", padx=(6, 0))
+        self.midi_box.bind("<Return>", lambda _e: self._midi_chosen())
+        self.midi_box.bind("<FocusOut>", lambda _e: self._midi_chosen())
+        about_midi = ttk.Label(look, text=hint, style="Status.TLabel", wraplength=460, justify="left")
+        about_midi.pack(anchor="w", pady=(2, 0))
+        look.bind("<Configure>", lambda e: about_midi.configure(wraplength=max(200, e.width - 20)), add="+")
         # Wake of the Ravager, for the 6th-level priest spells' icons and pictures (wotrart.py)
         ravager = section("ravager", "Wake of the Ravager (optional)")
         self.wotr_status = tk.StringVar(value=self._wotr_status())
@@ -484,6 +563,15 @@ class Viewer:
         ttk.Button(ravager, text="Choose its folder...", command=self.choose_wotr).pack(anchor="w", pady=(4, 0))
         # the saves, a second time under their names in the game (namedsaves.py)
         kept = section("saves", "Saves")
+        # F5, F9 and the saves the game makes by itself, on the save window's QUICK page (quicksave.py)
+        self.quick_save = tk.BooleanVar(value=settings.get("quick_save", True) is not False)
+        ttk.Checkbutton(kept, text="Quick save and quick load: on the map, F5 saves at once on the QUICK page of the "
+                        "save window, and F9 opens the load window there", variable=self.quick_save,
+                        command=self._options_changed).pack(anchor="w")
+        self.autosave = tk.BooleanVar(value=settings.get("autosave", True) is not False)
+        ttk.Checkbutton(kept, text="Autosave: on coming into another area and after a fight, on the QUICK page of "
+                        "the save window", variable=self.autosave,
+                        command=self._options_changed).pack(anchor="w", pady=(4, 8))
         about = ttk.Label(kept, text="While this window is open, every save is copied, as the game writes it, into the Loader's \"Named "
                           "saves\" folder under the name it has in the game (\"Page 2 slot 05 - Before Scar's "
                           "battle.SAV\").", style="Status.TLabel", wraplength=460, justify="left")
@@ -602,11 +690,14 @@ class Viewer:
             return
         for var in list(self.rule_vars.values()) + list(self.content_vars.values()):
             var.set(True)
-        for var in (self.monster_info, self.floating_names, self.starting_gear, self.steady_pace):
+        for var in (self.monster_info, self.floating_names, self.starting_gear, self.steady_pace,
+                    self.hit_chance, self.hit_hover, self.show_squares, self.move_back, self.show_usable, self.quick_save, self.autosave):
             var.set(True)
         self.combat_log_level.set(dicelog.combat_log_level({}))
         self.ring_mode.set(rings.mode({}))
         self.game_speed.set(str(launch.DEFAULT_SPEED))
+        self.picture.set(launch.DEFAULT_PICTURE)
+        self._show_midi(midiout.DEFAULT)
         self._options_changed(every=True)
         self._speed_chosen()
         self.status.set("Options set back to their defaults (a switch marked \"from the next start\" applies from the next start).")
@@ -665,7 +756,9 @@ class Viewer:
         if width < 200:  # not laid out yet (a slow start): placing the divider now would hide the party
             self.root.after(200, self._fit_party)
             return
-        right = self.tools_tab.winfo_reqwidth() + 16  # (the widest rows of buttons, the memory tools')
+        # (the widest rows of buttons, the memory tools', and every tab's name whole: a notebook
+        # narrower than its tabs cuts each name short, "Dice lo", "Journa")
+        right = max(self.tools_tab.winfo_reqwidth() + 16, tabs_width(self.tabs))
         place = min(wanted, int(width * 0.55), max(width - right, width // 3))
         if self.panes.sashpos(0, place) < place // 2:  # the panes weren't ready after all: again soon
             self.root.after(200, self._fit_party)
@@ -939,6 +1032,11 @@ class Viewer:
                 self.dice.close()
         except Exception:
             pass
+        try:
+            self._quests_keep(now=True)
+            self.journal.close()
+        except Exception:
+            pass
         launch.release_game()
         self.root.destroy()
 
@@ -1048,8 +1146,16 @@ class Viewer:
                 self.dice.starting_gear = self.starting_gear.get()
                 self.dice.combat_log_level = self.combat_log_level.get()
                 self.dice.floating_names = self.floating_names.get()
+                self.dice.journal = self.journal if self.keep_journal.get() else None
                 self.dice.game_dir = launch.find_game_dir()
                 self.dice.ring_mode = self.ring_mode.get()
+                self.dice.hit_chance = self.hit_chance.get()
+                self.dice.hit_hover = self.hit_hover.get()
+                self.dice.show_squares = self.show_squares.get()
+                self.dice.move_back = self.move_back.get()
+                self.dice.show_usable = self.show_usable.get()
+                self.dice.quicksave.keys = self.quick_save.get()
+                self.dice.quicksave.auto = self.autosave.get()
                 self.dice.vulture_on = self.content_vars["vulture"].get()
                 self.dice.defiler_scrolls = self.content_vars["defiler_scrolls"].get()
                 self.dice.set_rules(self._rules())
@@ -1088,6 +1194,7 @@ class Viewer:
         talk = self.dice.take_dialogue()
         if talk:
             self._append_dialogue(talk)
+        self._journal_tick()
 
     def _round_text(self) -> str:
         """The round in progress, in initiative order: who acts now, who is still to come."""
@@ -1121,8 +1228,10 @@ class Viewer:
         scale = WINDOW_CHOICES[self.window_choice.get()]
         if self._save_settings({"fullscreen": True} if scale is None else
                                {"fullscreen": False, "window_scale": scale}):
+            plain = (" The picture is plain in a Single window."
+                     if scale == 1 and self.picture.get() != launch.PLAIN else "")
             self.status.set(f"Game window: {self.window_choice.get()}, from the next start "
-                            "(Alt+Enter switches full screen while playing).")
+                            f"(Alt+Enter switches full screen while playing).{plain}")
 
     def _speed_chosen(self) -> None:
         """Remember the game's speed; it applies the next time the game is started."""
@@ -1130,11 +1239,53 @@ class Viewer:
         if self._save_settings({"cycles": value if value == launch.GOG_SPEED else int(value)}):
             self.status.set("Game speed: from the next start.")
 
+    def _picture_chosen(self) -> None:
+        """Remember the picture; it applies the next time the game is started. In a Single window
+        there is only the plain one, and the status line says so."""
+        self._options_changed()
+        if self._options_shown.get("picture") != self.picture.get():
+            return  # (not saved: the status line says why)
+        if self.picture.get() != launch.PLAIN and WINDOW_CHOICES[self.window_choice.get()] == 1:
+            self.status.set("Picture: remembered, but a Single game window is always plain; pick a larger "
+                            "Game window (or Full screen) to see it.")
+        else:
+            self.status.set("Picture: from the next start.")
+
+    def _midi_value(self) -> Optional[midiout.Device]:
+        """The music device the box shows; None when what was typed is no device."""
+        return midiout.from_label(self.midi_device.get())
+
+    def _show_midi(self, device: midiout.Device) -> None:
+        """DEVICE in the music device's box (a list of names on Windows, a field elsewhere)."""
+        if self.midi_names is None:
+            self.midi_device.set("" if device == midiout.DEFAULT else str(device))
+        else:
+            self.midi_box.configure(values=midiout.labels(self.midi_names, device))
+            self.midi_device.set(midiout.label(device, self.midi_names))
+
+    def _midi_chosen(self) -> None:
+        """Remember the music device; it applies the next time the game is started. Something
+        typed that is no device is not kept: the box goes back to the one remembered."""
+        device = self._midi_value()
+        if device is None:
+            self._show_midi(self._options_shown.get(midiout.SETTING, midiout.DEFAULT))
+            self.status.set("Music device: a number (0 is Windows' first device), an ALSA port such as 128:0, "
+                            "or empty for the default.")
+            return
+        if device != self._options_shown.get(midiout.SETTING):
+            self._options_changed()
+            self.status.set("Music device: from the next start.")
+
     def _option_values(self) -> dict:
         """Every switch of the Options tab as the tab shows it: {settings key: value}."""
         values = {"monster_info": self.monster_info.get(), "floating_names": self.floating_names.get(),
                   "combat_log_level": self.combat_log_level.get(), "starting_gear": self.starting_gear.get(),
-                  "rings": self.ring_mode.get(), "steady_pace": self.steady_pace.get()}
+                  "rings": self.ring_mode.get(), "steady_pace": self.steady_pace.get(),
+                  "hit_chance": self.hit_chance.get(), "hit_hover": self.hit_hover.get(), "squares": self.show_squares.get(), "move_back": self.move_back.get(), "show_usable": self.show_usable.get(), "quick_save": self.quick_save.get(),
+                  "autosave": self.autosave.get(), "picture": self.picture.get()}
+        device = self._midi_value()  # (something typed that is no device: the one remembered stays)
+        values[midiout.SETTING] = getattr(self, "_options_shown", {}).get(
+            midiout.SETTING, midiout.DEFAULT) if device is None else device
         values.update({key: var.get() for key, var in self.content_vars.items()})
         values.update({key: var.get() for key, var in self.rule_vars.items()})
         return values
@@ -1167,6 +1318,13 @@ class Viewer:
             self.dice.combat_log_level = self.combat_log_level.get()
             self.dice.floating_names = self.floating_names.get()
             self.dice.ring_mode = self.ring_mode.get()
+            self.dice.hit_chance = self.hit_chance.get()
+            self.dice.hit_hover = self.hit_hover.get()
+            self.dice.show_squares = self.show_squares.get()
+            self.dice.move_back = self.move_back.get()
+            self.dice.show_usable = self.show_usable.get()
+            self.dice.quicksave.keys = self.quick_save.get()
+            self.dice.quicksave.auto = self.autosave.get()
             self.dice.vulture_on = self.content_vars["vulture"].get()
             self.dice.defiler_scrolls = self.content_vars["defiler_scrolls"].get()
             self.dice.set_rules(self._rules())
@@ -1225,6 +1383,181 @@ class Viewer:
         else:
             self.dice.speaker_names.pop(portrait, None)
         self._rename_portrait(portrait)
+
+    # ---- the journal (journal.py) ------------------------------------------------
+
+    def _build_journal(self, tabs: ttk.Notebook, settings: dict) -> None:
+        """The Journal tab: the game's journal (what was said, the replies chosen, rewards and
+        messages, under each day and area), kept on disk and following the game's saves."""
+        self.journal = journal.Journal()
+        self._journal_drawn = (-1, None, None)  # (journal.changed, the kinds shown, the words wanted) as drawn
+        self._journal_place = (None, None)  # the day and region of the last entry drawn
+        self._quests_kept = (None, None, 0.0)  # the quests' reading last written: (the head, the reading, when)
+        page = ttk.Frame(tabs, padding=6)
+        tabs.add(page, text="Journal", underline=0)
+        row = ttk.Frame(page)
+        row.pack(fill="x")
+        self.keep_journal = tk.BooleanVar(value=settings.get("journal", True) is not False)
+        ttk.Checkbutton(row, text="Keep a journal", variable=self.keep_journal,
+                        command=self._journal_switched).pack(side="left")
+        ttk.Button(row, text="Save...", command=lambda: self.save_text(self.journal_text, "journal")).pack(side="right")
+        ttk.Button(row, text="Open the folder", command=self._open_journal_folder).pack(side="right", padx=4)
+        pick = ttk.Frame(page)
+        pick.pack(fill="x", pady=(4, 0))
+        ttk.Label(pick, text="Show:").pack(side="left")
+        self.journal_kind = tk.StringVar(value=JOURNAL_SHOWS[0][0])
+        kinds = ttk.Combobox(pick, textvariable=self.journal_kind, state="readonly", width=22,
+                             values=[label for label, _ in JOURNAL_SHOWS] + [JOURNAL_QUESTS])
+        kinds.pack(side="left", padx=(4, 12))
+        kinds.bind("<<ComboboxSelected>>", lambda _e: self._journal_tick())
+        ttk.Label(pick, text="Only entries with:").pack(side="left")
+        self.journal_wanted = tk.StringVar()
+        ttk.Entry(pick, textvariable=self.journal_wanted, width=18).pack(side="left", padx=(4, 0))
+        self.journal_wanted.trace_add("write", lambda *_a: self._journal_tick())
+        self.journal_count = tk.StringVar()
+        ttk.Label(pick, textvariable=self.journal_count).pack(side="left", padx=(8, 0))
+        find = ttk.Frame(page)
+        find.pack(fill="x", pady=(4, 0))
+        box = ttk.Frame(page)
+        box.pack(fill="both", expand=True, pady=(6, 0))
+        self.journal_text = tk.Text(box, wrap="word", height=20, font="TkTextFont")
+        theme.style_text(self.journal_text)
+        self.journal_text.configure(foreground=theme.AMBER)
+        scroll = ttk.Scrollbar(box, command=self.journal_text.yview)
+        self.journal_text.configure(yscrollcommand=scroll.set)
+        scroll.pack(side="right", fill="y")
+        self.journal_text.pack(side="left", fill="both", expand=True)
+        self._follow_end(self.journal_text, scroll)
+        self.journal_text.tag_configure("day", font=theme.fonts()[1], foreground=theme.SAND)
+        self.journal_text.tag_configure("speaker", font=theme.fonts()[1], foreground=theme.YELLOW)
+        self.journal_text.tag_configure("reply", foreground=theme.PALE)
+        self.journal_text.tag_configure("chosen", foreground=theme.GREEN)
+        self.journal_text.tag_configure("reward", foreground=theme.GREEN)
+        self.journal_text.tag_configure("message", foreground=theme.PALE)
+        self.journal_text.tag_configure("note", foreground=theme.PALE)
+        self._find_bar(find, self.journal_text, page)
+        self._journal_tick()
+
+    def _journal_switched(self) -> None:
+        on = self.keep_journal.get()
+        if self._save_settings({"journal": on}):
+            self.status.set("The journal is kept from now on." if on else
+                            "The journal is no longer kept; what it holds stays.")
+        if self.dice is not None:
+            self.dice.journal = self.journal if on else None
+            if on:
+                self.journal.reset()
+
+    def _open_journal_folder(self) -> None:
+        try:
+            os.makedirs(journal.FOLDER, exist_ok=True)
+            if sys.platform == "win32":
+                os.startfile(journal.FOLDER)  # type: ignore[attr-defined]
+            else:
+                subprocess.Popen(["xdg-open", journal.FOLDER])
+        except OSError as e:
+            messagebox.showerror("The journal", f"Its folder could not be opened:\n{e}", parent=self.root)
+
+    def _journal_speaker(self, entry) -> str:
+        """Who said an entry: the portrait's name as known now, else as it was when said."""
+        if entry.portrait and self.dice is not None:
+            name = self.dice.speaker(entry.portrait)
+            if not name.startswith("Portrait "):
+                return name
+        return entry.speaker
+
+    def _journal_tick(self) -> None:
+        """The Journal tab kept up: new entries added at its end; drawn again when the game's
+        journal became another (a save loaded) or what to show was changed."""
+        kinds = dict(JOURNAL_SHOWS).get(self.journal_kind.get())
+        wanted = self.journal_wanted.get().strip()
+        text = self.journal_text
+        self._quests_keep()
+        if self.journal_kind.get() == JOURNAL_QUESTS:
+            self.journal.take_added()
+            reading, note = self._quests_reading()
+            made, open_, finished = quests.rows(reading, quests.rewards_of(self.journal.shown()), wanted, note)
+            state = ("quests", made)
+            if state != self._journal_drawn:
+                self._journal_drawn = state
+                text.delete("1.0", "end")
+                for kind, line in made:
+                    text.insert("end", line + "\n", () if kind in ("gap", "text") else (kind,))
+                self.journal_count.set(quests.count_text(open_, finished))
+                text.see("1.0")
+            return
+        state = (self.journal.changed, self.journal_kind.get(), wanted)
+        if state != self._journal_drawn:
+            self._journal_drawn = state
+            self.journal.take_added()
+            entries = self.journal.shown()
+            shown = journal.chosen(entries, kinds, wanted)
+            text.delete("1.0", "end")
+            self._journal_place = (None, None)
+            self._journal_insert(shown)
+            total = sum(1 for e in entries if e.kind != journal.CHOSEN)
+            some = sum(1 for e in shown if e.kind != journal.CHOSEN)
+            self.journal_count.set(f"{some} of {total}" if (kinds is not None or wanted) else
+                                   (f"{total} entr{'y' if total == 1 else 'ies'}" if total else "Nothing yet"))
+            text.see("end")
+            return
+        added = self.journal.take_added()
+        if not added:
+            return
+        if kinds is not None or wanted:  # (a choice of entries: looked at whole, a reply with its talk)
+            self._journal_drawn = (-1, None, None)
+            self._journal_tick()
+            return
+        self._journal_insert(added)
+        total = sum(1 for e in self.journal.shown() if e.kind != journal.CHOSEN)
+        self.journal_count.set(f"{total} entr{'y' if total == 1 else 'ies'}")
+        if self._following.get(text, True):
+            text.see("end")
+
+    def _quests_live(self):
+        """The game's flags and numbers as the dice log last read them (quests.State), or None
+        with no game attached or before its first reading."""
+        dice = self.dice
+        return dice.quest_state if dice is not None and dice.attached else None
+
+    def _quests_reading(self):
+        """(the reading the quests are shown from, a note for the top of the list): the game's
+        own while it runs; without it the last one written (quests.save_snapshot), if the
+        journal shown is the one it was made in (its head is an entry of the chain shown, or
+        both are empty); else none, and only the journal's own rewards tell of quests."""
+        live = self._quests_live()
+        if live is not None:
+            return live, ""
+        kept = quests.load_snapshot(quests.snapshot_path(self.journal.path))
+        if kept is not None:
+            shown = self.journal.shown()
+            if kept[0] in {entry.id for entry in shown} or (kept[0] == 0 and not shown):
+                return kept[1], QUESTS_AS_READ
+        return None, QUESTS_UNREAD
+
+    def _quests_keep(self, now: bool = False) -> None:
+        """The game's reading written for the next time the Loader runs without the game (with
+        the journal's head it was made at), when it changed, every few seconds at most."""
+        live, head = self._quests_live(), self.journal.head
+        if live is None or head is None:
+            return
+        kept_head, kept, at = self._quests_kept
+        clock = time.monotonic()
+        if (head, live) == (kept_head, kept) or (not now and kept is not None and clock - at < QUESTS_KEPT_EVERY):
+            return
+        if quests.save_snapshot(quests.snapshot_path(self.journal.path), head, live):
+            self._quests_kept = (head, live, clock)
+
+    def _journal_insert(self, entries) -> None:
+        text = self.journal_text
+        made = journal.rows(entries, self._journal_speaker, self._journal_place)
+        if made and made[0][0] == "chosen" and text.get("end-2c", "end-1c") == "\n" and text.index("end-1c") != "1.0":
+            text.delete("end-2c")  # (an answer to the replies above: into the gap under them)
+        for kind, line in made:
+            text.insert("end", line + "\n", () if kind in ("gap", "text") else (kind,))
+        for entry in entries:
+            if journal.place(entry) != (None, None):
+                self._journal_place = journal.place(entry)
 
     def _rename_portrait(self, portrait: int) -> None:
         """Show a portrait's current name on every line already shown from it."""

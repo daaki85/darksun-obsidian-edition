@@ -38,8 +38,9 @@ tab ([each one, its default and when it takes effect](obsidian-edition/PLAYER-GU
 
 ## What's new
 
-**Obsidian Edition 2.18.0** is out: the kits rebalanced, each closer to its source book, and the
-Spellarcher remade ([release notes](release-notes/v2.18.0.md); earlier releases' in
+**Obsidian Edition 2.19.0** is out: the chance to hit shown before the swing, the squares a
+character can still walk to, quick saves and autosaves, a journal with the quests, Alt to show what
+can be used, and fewer switches ([release notes](release-notes/v2.19.0.md); earlier releases' in
 [`release-notes`](release-notes)).
 
 ## About

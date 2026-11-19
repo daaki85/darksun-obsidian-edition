@@ -19,7 +19,7 @@ import threading
 import time
 from typing import Dict, Iterator, List, Optional, Tuple
 
-from . import champions, gamepatch, gff, gpl, icons, kalzith, scenepointer, tome, worldgear
+from . import champions, gamepatch, gff, gpl, icons, kalzith, midiout, scenepointer, tome, worldgear
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOS_DIR = os.path.join(HERE, "dos")
@@ -426,6 +426,34 @@ SCALERS = {2: "normal2x", 3: "normal3x"}
 DEFAULT_SCALE = 3
 WINDOW_SCALES = (1, 2, 3, 4)
 
+# The picture: how DOSBox 0.74 draws the game's 320x200 larger (its render.cpp and sdlmain.cpp).
+# PLAIN is each pixel as a block (`normal2x`, `normal3x`). SCANLINES and TV are 0.74's `scan` and
+# `tv` scalers, which leave the last line of each game row black (scan) or dimmed (tv); they come
+# at 2x and 3x only. SHARP is 0.74's unfiltered OpenGL output (`openglnb`): whatever stretching is
+# left to DOSBox's output (the aspect correction, the four-times window, full screen up to the
+# desktop's size) is done without the smoothing GOG's DirectDraw output or `opengl` give it.
+PLAIN, SCANLINES, TV, SHARP = "plain", "scanlines", "tv", "sharp"
+PICTURES = (PLAIN, SCANLINES, TV, SHARP)
+DEFAULT_PICTURE = PLAIN
+LINE_SCALERS = {SCANLINES: "scan", TV: "tv"}  # (scan2x, scan3x; tv2x, tv3x: 0.74 has no 4x of any)
+FULL_SCREEN_LINES = 3  # (full screen: the 3x one, its dark line a third of a row, not half)
+
+
+def pictures(settings: dict) -> Tuple[str, ...]:
+    """The pictures there are for the settings' window: every one in full screen and in a window
+    of twice the game's size or more; in the single-size window (320x240, nothing scaled) only the
+    plain one."""
+    if settings.get("fullscreen"):
+        return PICTURES
+    return (PLAIN,) if settings.get("window_scale", DEFAULT_SCALE) == 1 else PICTURES
+
+
+def picture(settings: dict) -> str:
+    """The picture DOSBox is asked for: the settings' `picture` if the window has it, else the
+    plain one (also for a `picture` the Loader doesn't know)."""
+    chosen = settings.get("picture", DEFAULT_PICTURE)
+    return chosen if isinstance(chosen, str) and chosen in pictures(settings) else DEFAULT_PICTURE
+
 
 def display_lines(settings: dict) -> List[str]:
     """DOSBox's display, over GOG's settings (full screen): a window, by default three times the
@@ -433,23 +461,38 @@ def display_lines(settings: dict) -> List[str]:
     twice, 4 four times, 1 leaves it at 320x240; `fullscreen` true keeps GOG's full screen.
     Alt+Enter switches either way in DOSBox. DOSBox 0.74 has no 4x scaler, so four times is
     DOSBox scaling the window itself, which needs its OpenGL output.
+    `picture` (picture()) changes how it is drawn larger. Scanlines and TV put 0.74's scan or tv
+    scaler in the plain one's place: 2x or 3x as the window's, 2x in the four-times window (which
+    OpenGL then doubles), 3x in full screen (GOG's output stretching it to the desktop). Sharp
+    makes the output `openglnb`, with the window's size given so that OpenGL does the aspect
+    correction (the plain scaler stays, so a driver without OpenGL, where DOSBox falls back to its
+    plain surface, still opens the window at its size).
     With the pointer's start and speed (`mouse_start`, on unless switched off) the mouse's
     `sensitivity` is 100 over the scale: DOSBox moves the captured game's pointer a game pixel for
     each pixel the hand moves on the desktop, SCALE screen pixels in the window, so this makes it
     move as the desktop's pointer does (DSCLOG's MOUSE_RATIO allows for the taller pixels); the
-    mouse is captured on a click (`autolock`, as GOG has it)."""
+    mouse is captured on a click (`autolock`, as GOG has it). The picture changes none of that:
+    the window's size is the same for each."""
+    look = picture(settings)
     if settings.get("fullscreen"):
+        if look == SHARP:
+            return ["[sdl]", "output=openglnb", ""]
+        if look in LINE_SCALERS:
+            return ["[render]", f"scaler={LINE_SCALERS[look]}{FULL_SCREEN_LINES}x", ""]
         return []
     scale = settings.get("window_scale", DEFAULT_SCALE)
     scale = scale if scale in WINDOW_SCALES else DEFAULT_SCALE
     sdl = ["[sdl]", "fullscreen=false"]
     sdl += ["autolock=true", f"sensitivity={round(100 / scale)}"]  # (the pointer where it starts, mouse_start:
     # captured, as uncaptured DOSBox reads the desktop pointer's place in the window, which the sensitivity would scale)
-    if scale == 4:
-        return sdl + ["output=opengl", "windowresolution=1280x960", "[render]",
-                      "aspect=true", "scaler=normal2x", ""]
-    return sdl + ["[render]", "aspect=true",
-                  "scaler=" + ("none" if scale == 1 else SCALERS[scale]), ""]
+    if scale == 1:
+        return sdl + ["[render]", "aspect=true", "scaler=none", ""]
+    by = 2 if scale == 4 else scale  # (the scaler's share of it)
+    scaler = f"{LINE_SCALERS[look]}{by}x" if look in LINE_SCALERS else SCALERS[by]
+    if scale == 4 or look == SHARP:
+        sdl += ["output=" + ("openglnb" if look == SHARP else "opengl"),
+                f"windowresolution={320 * scale}x{240 * scale}"]
+    return sdl + ["[render]", "aspect=true", "scaler=" + scaler, ""]
 
 
 # The game's speed: DOSBox's emulated CPU (fixed cycles: instructions a millisecond). The game
@@ -485,7 +528,7 @@ def write_conf(game_dir: str, path: str = CONF, dice_log: bool = True, settings:
     """Our replacement for dosbox_darksun_single.conf. Without the dice log it just runs the game.
     SETTINGS: the saved ones if not given."""
     settings = load_settings() if settings is None else settings
-    lines = display_lines(settings) + cpu_lines(settings)
+    lines = display_lines(settings) + cpu_lines(settings) + midiout.conf_lines(settings)
     if dice_log:  # (EMS's 64 KB page frame sits where DSCLOG loads; the game takes XMS without it)
         lines += DOS_LINES
     lines += ["[autoexec]", "@echo off", "cls", 'mount c ".."']
@@ -1048,7 +1091,9 @@ def dosbox_output(game_dir: str, since: float) -> Dict[str, str]:
 
 # The Options tab's switches and their defaults (what a key missing from settings.json means)
 SWITCH_DEFAULTS = {"monster_info": True, "floating_names": True, "starting_gear": True, "rings": "chosen",
-                   "cycles": DEFAULT_SPEED, "combat_log_level": "short", "defiler_scrolls": True, NEW_ITEMS: True}  # (combatlog.SHORT, the panel's level unless chosen)
+                   "hit_chance": True, "hit_hover": True, "squares": True, "move_back": True, "show_usable": True, "quick_save": True, "autosave": True,
+                   "cycles": DEFAULT_SPEED, "picture": DEFAULT_PICTURE, midiout.SETTING: midiout.DEFAULT,
+                   "combat_log_level": "short", "defiler_scrolls": True, NEW_ITEMS: True}  # (combatlog.SHORT, the panel's level unless chosen)
 
 
 def effective_switches(settings: dict) -> Dict[str, object]:
@@ -1061,6 +1106,8 @@ def effective_switches(settings: dict) -> Dict[str, object]:
     from . import dicelog, rings
     out["rings"] = rings.mode(settings)  # (an older "all" is the chosen enemy's now)
     out["combat_log_level"] = dicelog.combat_log_level(settings)
+    out["picture"] = picture(settings)  # (as DOSBox is asked for it: plain where the window has no other)
+    out[midiout.SETTING] = midiout.setting(settings)
     return out
 
 

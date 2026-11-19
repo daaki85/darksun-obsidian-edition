@@ -17,6 +17,8 @@ the game, and checked here in the game's own code.
 
 - [Character creation](#character-creation)
 - [Initiative](#initiative)
+- [Moving in a fight](#moving-in-a-fight)
+- [The game's keys](#the-games-keys)
 - [No critical hits](#no-critical-hits)
 - [Helpless targets take double](#helpless-targets-take-double)
 - [The game's two weapons](#the-games-two-weapons)
@@ -91,6 +93,90 @@ The DEX adjustment has its own table: −6 at DEX 1, −4 at 2, −3 at 3, −2 
 highest score acts first; a second roll, 0-199, decides between equal scores
 (the log shows it only for those). Choosing Wait lowers the character's score
 to 10 (or by one, if it's 10 or less already) so they act later in the round.
+
+## Moving in a fight
+
+From the game's code, and walked in the game square by square
+([the log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-18-squares-in-reach.md)):
+
+- **Movement points.** As a round starts every combatant gets ten points for
+  each point of Move (twice as many Hasted, half Slowed). The name box's "Move"
+  is what is left of them, divided by ten.
+- **A step costs 10 straight and 14 diagonally**, and the fight is on a grid of
+  squares 16 pixels a side. A step is taken whenever 10 points or more are
+  left, whatever it costs; after a step that leaves fewer than 10 the rest is
+  gone and the walk is over (the END menu opens). So a diagonal step can be
+  the last one with only 10 to 13 points left.
+- **The way to a click** runs straight at it, its diagonal steps first and its
+  straight ones after. Where something bars it, the way follows that thing's
+  edge round and is then straightened, which can cost more than the shortest
+  way: a walk through a doorway two squares off the straight line cost 8
+  points more than the shortest, begun with a diagonal step the wrong way.
+  Because the diagonal steps come first,
+  the last step is a straight one, and its 10 points must be there, unless the
+  whole way is diagonal: with 60 points a square six west and one north (64 by
+  the count) is not reached by one click, though a click on the square before
+  it and then one on it would get there.
+- **What bars a square**: walls, shut doors, furniture and every figure, the
+  party's own included (nobody walks through anybody). A diagonal step needs
+  only the square stepped into to be free, so corners are cut, between two
+  figures too.
+- **Enemies don't hold a walker.** Walking past one costs nothing more and
+  stops nothing; there are no free blows at someone walking away. A click on an
+  enemy's figure walks up to it and attacks.
+- **F10 takes the move back**: on a party member's turn it puts the member
+  where its turn began, with the points it had. It works while some movement
+  is left. Once the last step is taken F10 still puts the member back, and the
+  name box shows the Move again, but no click walks it (the game gives the
+  points back without the leave to walk). It gives back the place and the
+  points and nothing else: an attack made stays made. An attack ends the
+  member's turn, unless it kills: then the turn goes on, and F10 puts the
+  member back as before.
+
+With the Loader the squares one click reaches are marked on the floor
+([squares in reach](FEATURES.md#squares-in-reach)), and a move taken back
+after its last step can be walked again ([F10 takes a whole move
+back](FEATURES.md#f10-takes-a-whole-move-back)).
+
+## The game's keys
+
+Every key the game itself acts on with the map up, in a fight and out of one: which keys they
+are is read from the game's three key tables (so these are the keys the mod must leave alone, or
+take with care); what each does is as the game's manual lists its hot keys, but where this page
+says otherwise. Letters count the same with Shift or Caps Lock.
+
+| Key | What the game does |
+|---|---|
+| **A**, **F6** | animations on and off (a message says which) |
+| **C**, **U** | the Cast Spells / Use Psionics screen |
+| **E** | the Effects screen |
+| **I** | the inventory |
+| **V** | the View Character screen |
+| **O** | the overhead map |
+| **G** | in a fight: the member on Guard |
+| **W** | in a fight: the member Waits |
+| **Q** | in a fight: ends the member's turn |
+| **N**, **P** | in a fight: the next and the previous opponent |
+| **H** | the view centred on the leader |
+| **1** to **4** | that character leads; **5** every party member shown while walking, **6** the leader alone |
+| **Space** | in a fight: computer control off |
+| **Tab** | the game menu |
+| **Esc** | closes what is open; with nothing open, EXIT: SAVE GAME? |
+| **Y**, **N** | answer a yes or no question |
+| **F1**, **F2**, **F3**, **F4**, **F5** | save, load, quit, music on and off; F5 draws the view again (the manual says sound effects) |
+| **F9** | breaks the camp of a rest |
+| **F10** | in a fight: takes the member's move back ([moving in a fight](#moving-in-a-fight)) |
+| the arrows, **Home**, **End**, **PgUp**, **PgDn** | move the view |
+| **Alt+X**, **Ctrl+C** | quit |
+| **Alt+F1**, **Alt+F2**, **Alt+F4**, **=** | in the game's tables; what they do was not looked into |
+| **S**, **T**, **M**, **?** | in the game's tables too, but each does nothing unless a word inside the game is set (the developers' own keys, it seems: the word is never set in play) |
+
+The other letters (**B**, **D**, **F**, **J**, **K**, **L**, **R**, **X**, **Z**) do nothing in the
+game. The mod uses **L** (the combat log) and **R** (the squares in reach) on the map; **T** and
+**S** only with a body's window or a shop's screen open and **M**, **U** and **I** as [the
+features page](FEATURES.md#always-on) tells; **Tab**, **Shift+Tab** and **Enter** in a fight in
+place of the game's menu key; and **F5** and **F9** for quick saves where the game's own do
+nothing to see.
 
 ## No critical hits
 

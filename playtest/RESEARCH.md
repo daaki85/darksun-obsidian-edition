@@ -3,7 +3,7 @@
 Part of the playtest guide ([PLAYTESTING.md](PLAYTESTING.md): read its startup procedure before any
 in-game test). These recipes are for writing the game's memory for a test and for finding out how
 the game works rather than for checking a change: the game's records and memory edits, its sounds,
-the see-through figures, the picture store, frame rate and cycles, its scripts, the unchanged game,
+the see-through figures, the picture store, frame rate and cycles, the picture and the music device, its scripts, the unchanged game,
 the recompiled program and Wake of the Ravager. Tools: [TOOLS.md](TOOLS.md).
 
 ## Memory edits for a test
@@ -178,7 +178,14 @@ raised before stopping.
 
 - **Where the turn's movement is** (logs/2026-11-09-boots-of-speed.md): a word a creature at
   segment DS - (4356h - 37BDh), +22Bh + creature x 2 (Move x 10, set as its turn starts: 57566h,
-  DSCLOG's PROBE_MOVE).
+  DSCLOG's PROBE_MOVE). **The turn's flags** are a word a creature at +1D5h there (3FFh as the
+  round starts; bit 0: can still walk, cleared with the last step, 59106h), and a walk's next
+  step a byte a thing at 3972:0377h + thing x 1Ch (FFh: none). DS:4964h-4968h keep the points and
+  the place the turn began with, for F10 (logs/2026-11-18-squares-in-reach.md).
+- **DSUN.EXE's overlays** (the same log): the root ends at file 52EA0h (`FBOV`); each overlay has
+  a stub segment in the root (41A6h and up: `CD 3F`, the overlay's place and size, then 5 bytes
+  an entry: `CD 3F`, the routine's offset), so a far call to 41BE:0093h is the combat overlay's
+  (56CC0h-5A031h) routine at 59106h. A routine no far call names is reached this way.
 - **The melee attack routine** (58019h in DSUN.EXE's file; logs/2026-11-19-backstab-str-line.md):
   one call plays all of a member's round (the loop from 58113h, [BP-22h] the attack's number).
   [BP-1Ah] (from behind) and [BP-24h] (backstab) are cleared once at its start; [BP-20h] is the
@@ -446,6 +453,16 @@ loading (the log of 2026-11-08).
 Its walk clicks are at y 104: from `fountain-user` after its fight they land in the fountain and
 nobody walks (0 map units/s), so measure from another save.
 
+**The rings' cost** (2026-11-16): `ringall.py [N | all | still | clear] [KIND]` puts a ring under
+every thing on the screen (still: all but the party) straight in DSCLOG's table, for a framerate
+run without the Loader's say; the Loader writes its own table only when it changes, so they stay
+until Alt or a fight's Tab ring. DSCLOG goes round every marked thing's ring at each floor pass,
+on the screen or not: 16 rings (4 under the walking party) took the walk from 155 to 122 map
+units a second, 87 marked across the region with one in view from 134 to 120, and a ring's
+thickness made no difference. Put the party back first (`walkto.py 1672 344`, `viewto.py 1672
+344` from `pens-after-arena`): a run started from wherever the last one ended walks into a wall
+or drags the view along, and its numbers aren't comparable (0 map units a second once).
+
 How the game paces walking: its timer (DSUN.EXE seg 1DF3:29E8h) sets DS:1F7Eh at each tick of
 the game's clock (DS:11D6h, 96 a second); the step (1DF3:26DCh) runs only with it set and clears
 it. A tick passed while a frame draws is a step lost.
@@ -461,7 +478,58 @@ EXE back and `cmp` it afterwards.
 The measurements (pens-after-arena, the whole party walking, 2026-11-08), the old steady pace's
 and the faster drawing's: [HISTORY.md](HISTORY.md#frame-rate-measurements).
 
+## The picture and the music device (picstart.sh, picpattern.sh)
+
+The Loader's **Picture** (plain, scanlines, tv, sharp: `launch.display_lines`) and **Music device**
+(`midiout.py`) are DOSBox settings, so most of a check needs no game
+(logs/2026-11-17-picture-music.md).
+
+- **Without the game or the lock: `sh picpattern.sh win:3:scanlines win:4:sharp full:3:sharp`.** A
+  DOSBox of its own shows a pattern in the game's screen mode (13h) with the Loader's display lines
+  for a window (`win`) or full screen (`full`), a scale and a picture; it prints the settings, the
+  window's size and any complaint of DOSBox's, and grabs the window (the whole screen for `full`)
+  to `$WORK/picpattern/`. It runs on its own display (`:57`, 1920x1080, so the 1280x960 window and
+  full screen fit, which `:55`'s 1024x768 can't show) and under another process name (a copy of
+  the program called `dbpat`), so it never disturbs a play: `live.py` attaches to the newest process
+  named dosbox, and `start.sh` kills every one. **A second DOSBox under its own name would be taken
+  for the game by every tool of every agent.** Its window's class is the program's name (`xdotool
+  search --class dbpat`).
+- **In the game: `sh picstart.sh PICTURE [SCALE] [OUT_DIR]`**, under the lock. A start of its own
+  (not the kit's 320x240): `pens-after-arena` loaded with `click.py` alone, which works at any
+  scale because it moves the hand until the game's pointer reads the place; then the window's
+  size, `picmove.py DX DY` (the hand moved, how far the pointer went), a grab (`import -window`)
+  and DOSBox's log. It writes `window_scale` 1 and the plain picture back to settings.json as soon
+  as the configuration is written, so a run cut short still leaves the kit's settings. About 75 s
+  a picture.
+- **The kit's own start never changes with the picture**: at `window_scale` 1 the Loader writes
+  `scaler=none` whatever `picture` is stored (`tests/test_launch.py`).
+- **What Linux's DOSBox 0.74-3 can and can't show.** It has no DirectDraw: GOG's `output=ddraw`
+  is refused ("not a valid value... reset to surface") and the plain surface used. Windows open at
+  their sizes with every picture, and OpenGL (`opengl`, `openglnb`) works under Xvfb. Full screen
+  with the surface output is not stretched (the picture sits unscaled, and partly off the screen
+  under Xvfb), so only Sharp's full screen can be judged here; Scanlines and TV in full screen, and
+  how DirectDraw smooths a window's stretch, are for the owner's Windows.
+- **Reading a grab for scanlines**: sum a column's pixels down the picture (`PIL`): at Triple a
+  game row reads lit, lit, black, with the black line twice under three rows in five (the aspect
+  correction's line table); TV reads full, about 5/8, about 1/3.
+- **The music device can't be heard here**: the container has no ALSA sequencer ("ALSA:Can't open
+  sequencer", then "MIDI:Opened device:none" in `dosbox.log`), and the Windows device list
+  (`midiout.devices`, winmm) is None off Windows. The unit tests use a stand-in for winmm.
+
 ## Scripts and the game's code
+
+- **What is under the pointer** (logs/2026-11-18-hit-chance-hover.md): **DS:0BCBh** is the thing
+  the game last found under its pointer on the map (FFFFh: none), from the finder a click uses
+  (25B52h: the front figure with a pixel there); the routine that keeps it (1E126h) lights the
+  thing up, the one lit in DS:0BD1h, and puts that one back in DS:0BCBh for a pass after the
+  pointer has moved on. DS:0BC9h is 1 with the map up and 2 with a menu (the END menu too), a
+  window or a talk; DS:11B8h the pointer's mode (1 walk, 2 look, 4 attack; the game puts the walk
+  arrow back as each member's turn begins). A map thing's picture box: left at +3, top at +5 less
+  the signed byte +0Dh, width +12h, height +13h of its record (DS:6694h + 32 x thing).
+- **A floating label taken off in a still scene comes back** a frame after DSCLOG erases it, until
+  the view is drawn again (window grabs every 30 ms count its ink: `import -window`, the pixels
+  near the label's colour). The Loader asks for the view again itself now (`Labels.took_off`); a
+  test that writes a slot by hand must do the same (`shadows.redraw(gd, hdr)`).
 
 - **The docs' code addresses (5883Ah and the like) are DSUN.EXE file offsets**, the patches'
   (`gamepatch.Patch`'s offset), not linear addresses in memory: most of the fight code is an
@@ -493,6 +561,26 @@ and the faster drawing's: [HISTORY.md](HISTORY.md#frame-rate-measurements).
   one scratch object (2Bh, 3923:35Fh).
 - **The pens' master script and named routines**: `KIND='MAS ' dec.py 29 0 140` decodes the pens'
   master script; GPLI 1 is the index of named routines (id, offset, script: 2-byte words).
+- **The triggers in memory** (which things have a talk, attack, look, use or use-with script: found
+  2026-11-16, logs/2026-11-17-show-usable.md): one table of 13-byte records at the far pointer
+  DS:42CCh (+0 the place in the script, +2 the script, +4 the object's id, the number negated as
+  the scripts write it, +6 a use-with's other id, +0Bh the next record's index, FFFFh the last),
+  the lists' heads words in segment 377Eh plus the load segment (+0Fh talk, +11h attack, +13h
+  look, +15h use, +17h use with; +09h the tile and box triggers). DSUN.EXE 967Ah is the game's own
+  "what can be done with this thing" (bits 4 talk, 2 attack, 8 look, 10h use, 20h use with). A
+  thing's id: an item record's first word, a creature record's +6. `dsloader.usable.triggers(gd)`
+  reads the lists; `usable.py` prints what the Loader would mark.
+- **Finding a table in memory from the scripts' numbers**: search the game's memory
+  (`g.read(0, 0x110000)`) for one record's words near each other (a trigger's place, script and
+  object from the MAS script), print the neighbourhood in the record's size, then look for a far
+  pointer to its start in the data segment and for the code that uses that pointer (capstone over
+  DSUN.EXE: the image starts at file 5400h; the relocation table gives every use of a segment).
+  **Never name a scratch script after a module of Python's** (`dis.py`, `types.py`: capstone and
+  live.py then import the script instead, "partially initialized module").
+- **The draw list's three sorts of entry** (`drawlist.py all`): things 0-519 that are creatures or
+  items; things 0-519 of kind 0 (drawn, no record: the pens' banners and braziers); and numbers
+  past 519 (the region's own scenery: 55135...). DSCLOG's rings and labels take the first two
+  only. The list holds the whole region (415 entries in the pens), not the view.
 - **The inventory's input** (for anyone trying a click there by hand): the game takes clicks from
   its queue of events, never INT 33h's position; what was tried is in [HISTORY.md](HISTORY.md#the-inventorys-input).
 

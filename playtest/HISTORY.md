@@ -36,6 +36,15 @@ recipe: under its topic, with its date.
 twice on 2026-11-01, the second time with the rule already written: run the kill as its own
 command, by pid, and nothing else in it.
 
+**The lock nobody held** (2026-11-17): a session run as `flock LOCK sh script` started Xvfb through
+`start.sh`; Xvfb kept the lock's file open after the script ended, and the next sessions waited on
+it until `lslocks` named the pid. Xvfb is now started outside the lock. The same day an agent
+killed the shared display to free the lock: hence the rule to stop only what you started.
+- **2026-11-18**: DOSBox killed in place of the dice log. Their two pids had been written to two
+  files and printed with one `cat *.pid`, which lists by file name (dice.pid before dosbox.pid),
+  and were read in the order they had been written. The game and the fight in it were lost; the
+  save was loaded again. Kill a pid only after `ps -o pid,args -p PID` has named it.
+
 ## The game's installer
 
 On 2026-11-11 the user's Drive copies of the GOG installers had been shared by link, and those links
@@ -85,6 +94,9 @@ every script in the built copy should decode.
 
 ## The pointer
 
+- **A click that moved nothing while another window was up** (2026-11-16): with a tkinter window
+  open on the same display for the Alt+Tab test, one `click.py` call left the game's pointer where
+  it was; with that window gone the same call worked. Close any other window before clicking.
 - The cycle (arrow, sword, eye, arrow) was checked on 2026-11-01; that only walkable ground takes a
   walking click is the user's (2026-11-01).
 - 2026-11-07: right-clicks guessed from shots left the sword up, hence `pointer.py`, which reads the
@@ -246,6 +258,15 @@ aside (`DSCLOG_ASM=` that source for framerate.py's symbols):
 | 20000, all on, steady pace off | 16.8 → 18.9 | 0 → 0 | (not counted) | 80 → 103 |
 | 35000, all on | 16.0 → 18.9 | 1.6 → 0.2 | 25 → 14 | 113 → 141 |
 
+### The rings for "show what can be used" (2026-11-16)
+
+logs/2026-11-17-show-usable.md. The first build marked every usable thing of the region (87 in
+the pens) and cost a walking party a tenth of its frames with a single ring in view; marking only
+the view's (and 16 pixels round it) and looking again when the view moves brought the rings'
+share down to a few percent, the names costing about as much again. Three framerate runs in a
+row gave 0 or odd numbers because each began where the last had ended (the view had followed
+the party to a wall): every run now starts from the same spot.
+
 ## The arena's first bout that didn't start
 
 2026-11-02: topartyfight.sh ended "NO FIGHT" at (488, 232), and 60-odd more clicks south and walks
@@ -322,6 +343,21 @@ lock, making a lot of noise but little else.") both ended with the walk arrow.
   went on. A reload from fountain-user six times over (the hide and the move both had to pass
   for a backstab) ran cleanly each time.
 
+- 2026-11-18 (logs/2026-11-18-squares-in-reach.md), walking a member square by square for the
+  squares in reach:
+  - A first sweep read every walk a square late: a walk the Move ran out on stayed the member's,
+    and once the "can walk" bit was put back in memory the game went on with it from where F10
+    had put the member. The tools now forget it with the edit.
+  - Waiting 1.2 s of stillness right after the click took the wait before a walk begins for its
+    end: wait for the place to change first.
+  - A sweep's click on the square north of the Templar was a click on him: the member walked up
+    and attacked, and the turn passed to the next member in the middle of the sweep.
+  - F10 after the Move was all spent gave the points back and no walk: read as a tool's failure
+    until the flags showed bit 0 still off (the game's own slip).
+  - A helper pass written before the branch was reorganised was taken out again and put back on
+    the integrated base (the signature `vc` to `vd`): the design kept in the log, with its lines,
+    made that an hour's work.
+
 ## An archer's turn and the quiver
 
 2026-11-14: the user reported an archer's turn ending as its quiver ran dry. The code addresses in
@@ -343,6 +379,33 @@ arrows in #107's check (DSCLOG cast a spell arrow's spell for a party Spellarche
 Chill Touch once PROBE_ARROW let anyone not in the party cast them: seen with every other
 champion Paralyzed and the party's turns passed, the elf's two shots at Cermak, one save failed
 (STR 19 -> 18), one saved. The HP lines put the first Chill Touch's 3 on the second arrow's hit.
+
+## The chance to hit: three numbers that were off
+
+2026-11-17 (logs/2026-11-17-hit-chance.md). The first predictions held against the fountain's
+swings were off three times, each a thing the code read from DSUN.EXE alone couldn't show: the
+Templar's Ring of Protection (DSCLOG has the game count a ring's plus), the order of the swings
+(the item list's, so Seneca's left-hand Hayneedle was the backstab, not her Shadowseeker), and a
+hidden thief's second weapon, 2 worse than a plain swing because the attack set's flags stay up
+from the first weapon and DSCLOG's `STAB_FIRST` takes back a backstab the swing never had. All
+three were put in the prediction and the game loaded again: every number then agreed. (The third
+was a fault of the game's and DSCLOG's, fixed by #116's `REAR_FRESH` on 2026-11-19; when the 2.19.0
+branch took that in, the prediction's second swing became a plain one, or from behind by the
+facing.) The lock
+was lost twice to a pause that killed DOSBox and every holder; and a click on bare floor, meant
+only to move the pointer off the panel, walked Lex 4 Move.
+
+## The chance to hit under the pointer: the label that came back
+
+2026-11-18 (logs/2026-11-18-hit-chance-hover.md). The label showed over the right enemy at once,
+but grabs taken half a second after the pointer had left still had it, though the Loader's slot
+was empty and DSCLOG's state said not shown. Window grabs every 30 ms showed the erase for one
+frame and the label back for good; the same happened to a "Miss" put from a script, with the
+squares in reach on or off. A whole-view redraw cleared it, so the Loader asks for one whenever a
+label goes or changes. Two more from the same play: the first probe put the pointer at x 318 and
+the view scrolled away (the figures were then looked for where the old camera had them); and a
+dice log killed while the label was up left it standing over the guard for the next one, which
+knew nothing of it.
 
 ## The combat log panel's buttons
 
@@ -367,6 +430,27 @@ The game's save compare is unsigned (79BBAh), so every −100 ("cannot save") sa
 2026-11-09).
 
 Two natural 20s in a row came up on one Guard's saves (2026-11-08); nothing wrong was found.
+
+## Quick saves (2026-11-17)
+
+The first plays of quick save, quick load and autosave ([the log](logs/2026-11-17-quick-save.md)).
+
+- **A key pressed with a message box up was lost, and the clicks after it walked the party.** F2
+  sent right after `follow.py` (Kurzak's speech still up) opened no window; the clicks meant for
+  PAGE 1, a row and LOAD landed on the map, the party walked off, and the "load" was read as done
+  (the clock and the journal's id said otherwise). Now: `dismiss.sh`, then the key, then a shot.
+- **The QUICK button missed.** A click at y 156 (its y in `savepages.PAGES`, 150, plus a little)
+  did nothing: the buttons are drawn 18 lower (165). PAGE 1 at 76 had worked only by its top edge.
+- **A window save landed on the QUICK page.** After F9's LOAD window the page stayed QUICK, so the
+  next F1 save went to `SAVQ01.SAV`, a slot the rotation writes over. The Loader now puts the
+  page back once the window is shut.
+- **The research's "590:20" was not a segment to call**: overlay code names other overlays' stubs
+  by numbers of its own. The stubs' real segments came from walking the stub table (file 47470h
+  on: `CD 3F`, the overlay's file offset, its size, its entries of 5 bytes): the save is
+  4242h:0089h, the save window's overlay 428Ah (20h LOAD, 25h SAVE).
+- **The session's pauses killed DOSBox twice** in the middle of the arena trip; the quick save
+  made with Kurzak's call pending was still in the game folder, and the trip went on from it
+  (`loadquick.sh`).
 
 ## Turn Undead's unnamed target
 
@@ -547,6 +631,9 @@ index](logs/README.md), by date.
   `chestuse.sh` as ROUTE.md describes it, `setitem.py` added; the combat log's buttons measured,
   `chestuse.sh` run (and given the answer to Bash it open?), `setitem.py` run, the look box's
   picture retaken on the pens' Zombie, Escape not closing a Look box.
+  The picture and the music device: `picpattern.sh` (a DOSBox under another name, so no tool takes
+  it for the game), `picstart.sh`; Linux's DOSBox has no DirectDraw and doesn't stretch its full
+  screen without OpenGL; no MIDI in the container (logs/2026-11-17-picture-music.md).
 - **2026-11-18**: the colour cycler's green and violet runs seen turning in the inventory
   (Greenbright); `setitem.py obj=` and `rec=`; Tanelyv's chest piece found as object 2004; the
   Searing Blade's name whole in the box, label and dice log (logs/2026-11-18-item-glows.md).
@@ -567,3 +654,19 @@ index](logs/README.md), by date.
   An item box opened by a right-click in the inventory closes by itself about a second after the
   pointer moves off it; `docs/elvenkind.png`'s crops found by matching pixels (the boots' at
   +173+95, not the +183+95 an earlier log gave) (logs/2026-11-18-docs-review-2.md).
+- **2026-11-18**: the game's rules of movement in a fight (10 and 14, a step begun with 10,
+  diagonal steps first, corners cut, enemies hold nobody), F10 and its limit, DSUN.EXE's overlay
+  stubs, the party's squares at DS:0546h, the view dragged in a fight, and the walk tools
+  (`movestate.py`, `squarewalk.py`, `squaresweep.py`, `squarecost.py`)
+  (logs/2026-11-18-squares-in-reach.md).
+- **2026-11-18** (the integration): the six additions of 2026-11-16/17 (journal, picture and music,
+  chance to hit, quick save, quests, showing what can be used) rebased onto the reorganised branch
+  and checked together in a private game: the helper's signature `DSCLOGvc`, quick save's header
+  fields moved to +1868, 29,424 bytes of upper memory free in one piece
+  (logs/2026-11-18-integration.md).
+- **2026-11-18** (the features, 2.19.0's checks): the stack on #112's helper, which had 224 bytes
+  and 36 paragraphs left: two routines moved into the tail and the squares' map into the PSP;
+  the game's three key tables read (A and F6 the animations; R free); R, F10's mend (an attack
+  that kills leaves the turn, +1ABh counts the commands), the panel under windows; the arena
+  reached with no memory edit and its autosave loaded; the Loader's window on a second display,
+  where the Characters tab's KeyError showed (logs/2026-11-18-modernisation-features.md).

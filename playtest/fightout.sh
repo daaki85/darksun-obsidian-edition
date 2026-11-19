@@ -11,7 +11,9 @@
 . "$(dirname "$0")/env.sh"
 W=$(timeout 5 xdotool search $WINQ | head -1)
 case "$(timeout 20 python3 "$PT/state.py")" in "fight_on 0"*) echo "NO FIGHT ON"; exit 2;; esac
-[ "${KEEP_HP:-0}" = 1 ] || timeout 20 python3 "$PT/hp.py" 1 >/dev/null
+# PT_NO_EDIT=1 (or KEEP_HP=1): the fight fought as it is (no foe's HP changed), for a test whose
+# game is saved afterwards (the autosave when a fight ends: never save after a memory edit)
+[ "${KEEP_HP:-0}" = 1 ] || [ -n "$PT_NO_EDIT" ] || timeout 20 python3 "$PT/hp.py" 1 >/dev/null
 for i in $(seq 1 ${1:-40}); do
   [ "${HEAL:-0}" = 1 ] && timeout 20 python3 "$PT/healparty.py" >/dev/null
   f=$(timeout 20 python3 "$PT/state.py")

@@ -9,7 +9,7 @@ the container is reclaimed: an earlier version of this guide and its tools were 
 **How to use it.** Read [the startup procedure](#startup-procedure) in full before every in-game
 test and follow it in order. Then read the [recipes](#recipes) for the job in hand, [the
 route](ROUTE.md) (its own page) when the party has to get somewhere, and [the research
-recipes](RESEARCH.md) (memory edits for a test, sounds, the picture store, frame rate, the game's
+recipes](RESEARCH.md) (memory edits for a test, sounds, the picture store, frame rate, the picture and the music device, the game's
 scripts, the recompiled program, Wake of the Ravager) when a test needs memory written or the game
 looked into. **Add to it after every play** ([after a play](#3-after-a-play)). How things were
 found, the incidents behind the rules and the approaches given up are in [HISTORY.md](HISTORY.md),
@@ -54,7 +54,10 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
 7. **Press Escape only with a menu or screen showing**: with nothing open it brings EXIT: SAVE
    GAME?, and a click after that can quit to DOS ([keys](#controls)).
 8. **Never save after a memory edit made for a test** (levels, HP, Move, spells taught, items or
-   classes written): restore anything raised in memory before saving or stopping.
+   classes written): restore anything raised in memory before saving or stopping. **The game now
+   saves by itself** (an autosave 4 seconds after an area change or a fight's end, F5 a quick
+   save): before a test that edits memory switch both off, or fight with `PT_NO_EDIT=1` ([quick
+   saves and autosaves](#loading-and-saving)).
 9. **The look pointer pauses the game** (the user's): while the eye is the pointer, the game's time
    doesn't run (no Kurzak's call, no alarm, nobody moving). Put the walk arrow back (`pointer.py
    walk`) as soon as a look or a rest is done; a wait with the eye up waits for nothing.
@@ -68,11 +71,21 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
 11. **A DOSBox shared with another agent**: run every play step under `flock
     /tmp/playtest/dosbox.lock`, held for the whole session by a background `flock ... -c 'while [ -e
     HELDFILE ]; do sleep 2; done'` (each Bash call is a new shell, so `exec 9>` doesn't last);
-    removing HELDFILE releases it. A DOSBox found running that this session didn't start isn't
-    restarted: play in it (`loadsave.sh` would kill it). **With that holder running, don't take the
-    lock again in a step** (`flock /tmp/playtest/dosbox.lock -c ...`): it is another open of the
-    file, so it waits for the holder, this session's own, until its `timeout` (200 s lost,
-    2026-11-19); the holder already keeps other agents out, so the steps run without it.
+    removing HELDFILE releases it. **Everything `start.sh` starts inside the lock inherits it** (Xvfb,
+    DOSBox, the dice log: [an Xvfb left from a finished session held it for an
+    hour](HISTORY.md#the-shell); `lslocks` and `ls -l /proc/PID/fd` show who): start Xvfb before
+    taking the lock, and end a session by killing its DOSBox and dice log by pid. Stop only what
+    you started: never kill a process you can't prove is yours. With another agent's game running,
+    `PT_KEEP_OTHERS=1` keeps `start.sh` from killing every dice log and DOSBox (its own first line
+    does), and a game of your own beside it is [a second game](#loading-and-saving). A DOSBox found
+    running that this session didn't start isn't
+    restarted: play in it (`loadsave.sh` would kill it). **After a pause every flock holder is gone
+    with DOSBox**, and their marker files stay (`*.held`, `*.locked` in the work folder): check
+    `pgrep -a flock`, not the files. Wait for a busy lock with one `flock -w 1500`, never a polling
+    loop. **With that holder running, don't take the lock again in a step** (`flock
+    /tmp/playtest/dosbox.lock -c ...`): it is another open of the file, so it waits for the holder,
+    this session's own, until its `timeout` (200 s lost, 2026-11-19); the holder already keeps other
+    agents out, so the steps run without it.
 
 ## 2. The checklist
 
@@ -199,8 +212,79 @@ game's data: it is one player's account.
   with loadsave.sh. The slot is `SAVE01.SAV` in the game folder (85,680 bytes), with
   `CHARSAVE.GFF` and `DARKSAVE.GFF` written at the same time; keep all three (`saves/README.md`).
   QUIT on the EXIT menu ends DOSBox.
+- **F1 opens the SAVE window and the game goes on after it** (F2 the LOAD window, F3 quits, F4
+  music on and off: the game's own keys, on the map with nothing else up, not while a message box
+  is). No quit to DOS, so it is the way to save in the middle of a test: F1, a row (the first at
+  120, 46), the name, SAVE (253, 46), then a click for GAME SAVED. A key pressed with a message box
+  up is lost: `dismiss.sh` first, and look at a shot before clicking in the window (a click with
+  no window up walks the party).
+- **The window's page buttons** are at x 253: PAGE 1 at y 76-87, QUICK at 165 (drawn 18 under
+  their y in `savepages.PAGES`); rows are 11 apart from y 46 (row 5 at 90, row 7 at 112). The window opens on the
+  page last shown.
+- **Quick saves and autosaves** (`dsloader/quicksave.py`; the dice log does them, so `start.sh`'s
+  game has them): F5 on the map saves to `SAVQ01-05.SAV`, F9 opens the LOAD window on the QUICK
+  page (Return loads the newest), and an autosave goes to `SAVQ06-10.SAV` 4 seconds after an area
+  change or a fight's end. **They are saves of the game as it stands: none after a memory edit**
+  (rule 8), so before a test that edits memory switch them off (`"quick_save": false, "autosave":
+  false` in `obsidian-edition/settings.json` after `start.sh` has written it, then restart the dice
+  log), and fight with `PT_NO_EDIT=1 sh fightout.sh` (no foe's HP changed) when the autosave after
+  the fight is what is under test. `loadsave.sh` copies only `SAVE01.SAV`: the folder's `SAVQ*`
+  files stay from the last play (delete them for a test that counts them).
+  - `qsave.py SLOT [NAME]` asks DSCLOG for a save as the Loader does and times it; `qsave.py load`
+    opens the LOAD window; `qsave.py state` prints the keys, the counts, `SAVE_REQ`, the main
+    loop's count, DS:0BC9h (1 on the map, 2 with a window, a talk or a screen up) and the game's
+    memory; `qsave.py keys FFFF FFFF` gives the two keys back to the game (`3F00 4300` to DSCLOG).
+  - `loadquick.sh [ROW]` starts the game and loads a row of the QUICK page from the main menu,
+    with the folder's `CHARSAVE.GFF` and `DARKSAVE.GFF` as they are.
+  - `savediff.py A.SAV B.SAV [-v]` compares two saves chunk by chunk and prints each one's name
+    and journal id (`SAVE` 30, words 198-199).
+  - **Two saves of the same moment**: the look pointer up (`pointer.py look`: the clock stands
+    still), `qsave.py 1 NAME`, then F1 and a window save: they differ in `STXT 1` and six words of
+    `SAVE 1` only (the map objects' picture slots, which a window's opening lets go of).
+  - **A second game's kit made again after every change** (logs/2026-11-18-squares-in-reach.md):
+    a small script that copies the tree's `playtest/` afresh, changes the display in `env.sh` and
+    `paths.py`, puts the copy's own `start.sh` back and links `obsidian-edition`; and one that
+    starts only its dice log again with a setting changed (by its pid file), to compare a switch
+    on and off in one game.
+  - **A second game beside the shared one** (when the shared DOSBox is busy): a copy of the kit
+    and of `inst` in a scratch folder with the tree's `obsidian-edition` linked beside it, `env.sh`
+    and `paths.py` on display `:56`, and a `start.sh` that starts its own Xvfb, DOSBox copied
+    under another name (`dbq`, with `SDL_VIDEO_X11_WMCLASS=dosbox` so xdotool finds its window),
+    writes its pid to `$WORK/dsun.pid` (live.py reads it) and starts the dice log as `python3 -um
+    dsloader dicelog --pid PID` (not the command line the shared `start.sh` kills), stopping only
+    its own by their pid files. Run a tool there through a wrapper that sets `PLAYTEST_WORK` and
+    `DISPLAY` and changes to the copy's `playtest/` (logs/2026-11-18-integration.md: `:60`,
+    `dbint`). `pgrep -a dosbox` also lists another agent's `dosbox-x`; `pgrep -x` tells them apart.
+    `framerate.py` and the tools that look for a window of class `dosbox` on `:55` are the shared
+    game's: in a copy, change the display in `env.sh` and `paths.py` only.
+  - **The arena with no memory edit** (for the autosave on an area change): `PT_NO_EDIT=1 sh
+    arenatrip.sh` from `pens-after-scar` (toalarm.sh then leaves Cilla's thief level alone; the
+    rests, the call and the walk went the same, 2026-11-18): "Autosave: "Auto - Day 2, 17:01 - The
+    arena" (the QUICK page, slot 6)" 4 s after arriving; `loadquick.sh 6` loads it from a fresh
+    start, and the walk onto the platform starts the champions' bout.
+  - **Scar's trip from a save**: the arena's gate (488, 200); `viewto.py 500 380`, then clicks at
+    screen (144, 140) (the gap, to 488, 424) and (150, 185) (the platform, 488, 472) with the walk
+    arrow: the Announcer, then `fight_on 1`. After the bout: the "Go back to the pens" box, the
+    yes/no question (N), then the autosave; dawdling brings "These gladiators wish to fight
+    again!" and another bout.
+  - A save takes 0.34 s (the game stands still); a fight's save is refused (`qsave.py`: "refused: a
+    fight"), and with a talk or a window up the request waits (the map's loop doesn't run).
 - **The save name field keeps the slot's old name**: typing goes in front of it (KURZAK DOORPENS),
   and Backspace from the start does nothing: press End, then Backspace enough times, then type.
+- **The SAVE screen's EXIT** is at (253, 66): it closes the screen without saving and the game
+  goes on (no quit to DOS).
+- **A save with other values in it, without saving after a memory edit**: change a copy of a
+  save's file in the work folder and load that (never a file in `saves/`). The journal's test
+  put an id in global numbers 198-199 that way: find `SAVE` chunk 30's 400 bytes in the file
+  (`read_gff`, then `bytes.find`), `struct.pack_into` at word 198, copy it with the set's
+  `CHARSAVE.GFF` and `DARKSAVE.GFF` into the game folder, then the steps of `loadsave.sh` from
+  `start.sh` on. The load puts the file's numbers in memory (read back with
+  `dsloader.journal.read_head(gd)`).
+- **The game's global numbers** (far pointer DS:1356h) were in memory in 20 reads of 20 in the
+  pens, out of a fight.
+- **The journal** writes `obsidian-edition/Journal/journal.jsonl` while the dice log runs
+  (`start.sh`'s too): delete it before a test that counts its entries. `follow.py 29` from
+  `pens-after-arena` makes Kurzak's two speeches at his stop, two entries.
 - A save made in DOSBox loads on the recompiled program and the other way round ([the recompiled
   program](RESEARCH.md#the-recompiled-program-as-the-target)).
 
@@ -272,12 +356,17 @@ game's data: it is one player's account.
   the map open, in `fountain-user`'s ambush (ten combatants), with a USE screen up, 0.4 s into a
   spell's picture (Ester's Curse, below), with Kalzith's shop up (`openshop.sh`) and after it:
   upper memory never moved (its free piece 26,256 bytes at E330h with this build, 144 bytes at
-  CA00h), and the conventional memory's free piece was 99,008 bytes with the map open, 134,848 with
+  CA00h; with 2.19.0's quick save and squares merged in, 25,712 bytes at E352h), and the conventional memory's free piece was 99,008 bytes with the map open, 134,848 with
   the USE screen, 124,608 with the shop, 100,032 with the map open again after it. Read the free
   piece, not the heap's own free (the game's heap reads 0 KB free with the map open: the map has it).
 - **Another session editing the helper**: before a DOSBox run with the repository's Loader,
   assemble `dos/dsclog.asm` to a scratch file and `cmp` it with `dos/DSCLOG.EXE`: the same, and the
   tree's build is fine to run.
+- **The whole suite with nothing skipped** (2026-11-19, logs/2026-11-19-merge-2.19-update.md):
+  `/usr/local/bin/python3` has unicorn and capstone but no tkinter, `/usr/bin/python3.12` tkinter
+  but not them: `python3.12 -m pip install --break-system-packages unicorn capstone` once, then
+  `DISPLAY=:55 python3.12 -W error -m unittest discover -s tests` with the game's files below runs
+  all of it (2,185 tests, 0 skipped, at the 2.19.0 merge).
 - **The unit tests with the game's files** run more: `DSUN_GPLDATA=$G/GPLDATA.GFF
   DSUN_OBJECTS=$G/SEGOBJEX.GFF DSUN_RESOURCE=$G/RESOURCE.GFF` (`G=$PLAYTEST_WORK/inst`). With them
   set, only the tests that need tkinter (or a display) are skipped ([the
@@ -293,6 +382,18 @@ game's data: it is one player's account.
 - **A DSCLOG routine tried on the live state**: snapshot `g.read(0, 0x110000)` into Unicorn, CS the
   helper's segment (the header, found by its signature `dicelog.HDR_SIG`, less its offset in the
   image), DS the game's, a HLT for the return.
+- **The Loader's own window with the game** (logs/2026-11-18-modernisation-features.md): stop the
+  dice log (one Loader follows a game), then `DISPLAY=:77 /usr/bin/python3.12 -m dsloader view`
+  from obsidian-edition on **a second Xvfb** (`Xvfb :77 -screen 0 1280x1024x24`): the Loader reads
+  the game through DOSBox's process, so its window needs neither DOSBox's display nor its mouse
+  (no Ctrl+F10), and it connects by itself ("Connected to the game (process N)"). `import -window
+  root` on that display for a picture; `xdotool mousemove X Y click 1` for its tabs (Journal at
+  828,132; the Show box at 775,200, its Quests row 99 below). The window tests' display can be
+  the same one. A DOSBox killed under a window that attached by itself shows
+  "Disconnected (Read at ... failed: [Errno 5] Input/output error). Waiting for the game..." (the
+  Reconnect path says "process N has ended"); either way no party table error. **`start.sh` starts no Xvfb when any Xvfb is running** (`pgrep -x Xvfb`): with
+  `:77` up, start `:55` by hand first. Look at the Characters tab once: an error there shows as
+  a line in the dice log's pane ("Loader error in the party table") and only with a game attached.
 - **The Loader window's Help**: in this container `gio` takes the URL and finds no browser, so
   nothing opens; the status line names the guide either way.
 - The kit drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`): [the
@@ -315,6 +416,18 @@ game's data: it is one player's account.
   plain. Only walkable ground takes a walking click (the user): a click on a wall does nothing, and
   a walk tool clicking in eye mode looks at the floor and nothing moves. The look pointer pauses
   the game ([rule 9](#1-the-rules)).
+- **Alt, for "show what can be used"** (dsloader/usable.py): `xdotool keydown --window $W Alt_L`
+  holds it (the BIOS flag 0:0417h reads 08h at once) and `keyup` lets go; `altflag.py` prints the
+  flag and whether the marks are up, `altflag.py latency N` times them, `altflag.py watch SECONDS`
+  follows the flag, fight_on, the rings' table and colours and the label slots. **`shot.sh` takes
+  no picture while Alt is held** (Ctrl+F5 becomes Ctrl+Alt+F5, DOSBox's video capture, which
+  writes nothing), and the flag written in memory doesn't hold (DOSBox's BIOS cleared it within
+  half a second): hold the key and grab the window (`import -window`, scaled 200% for a doc picture: 640x480, the
+  window's shape; `-sample '320x200!'` drops rows through the names' letters). **With
+  Alt down, Tab and Return are Alt+Tab and Alt+Enter to the game** (and Alt+Enter is DOSBox's full
+  screen): no fight tool works with the key or the flag left down, so let go before `fightout.sh`.
+  DOSBox lets go of every key when its window loses the focus (`xdotool windowfocus` of another
+  window cleared the flag at once).
 - **Message boxes** (a speech box with a portrait at the top, or the grey message window) take a
   click to go away, and while one is up Tab, Return, map clicks and drags do nothing. `msgbox.sh`
   tells whether one is up; **click ON the box** (`boxclick.sh`: 160, 20): a click wherever the
@@ -325,6 +438,25 @@ game's data: it is one player's account.
   message box, but a click doesn't answer them: press **N** (or Y). One is waiting only while the
   dice log's last line is `    2. No` (answered, `    > No` follows): a check for "2. No" in the
   last few lines takes an old, answered one for a new one. `dismiss.sh` stops at one.
+- **The function keys on the map**: F1 the SAVE window, F2 LOAD, F3 quits (never press it), F4
+  music ("MUSIC OFF" / "MUSIC ON" messages), F5 the mod's quick save and F9 its quick load (the
+  game's own: F5 draws the view again, F9 breaks a camp; neither shows anything in the pens), F6,
+  F7, F8, F10, F11 and F12 nothing seen. DOSBox's own are Ctrl+F-keys.
+- **The game's own keys on the map** (read from its three key tables, logs/2026-11-18-modernisation-features.md;
+  the table with what each does is HOW-THE-GAME-WORKS.md's "The game's keys"): the root's table at
+  DSUN.EXE 1BC5Bh (26 keys: 1-6, P, N, Space, F5, F6, F9, F10, Home, End, the arrows, PgUp, PgDn,
+  Alt+F1, Alt+F2, Alt+F4); the map overlay's (4272h, file 71C1Bh, 33 keys: Esc, 1-4, =, Tab, Q, W,
+  T, A, S, G, H, Alt+X, Ctrl+C, M, ?, Space, F1-F6), where **A and F6 switch animations on and
+  off** and S, T, M and ? do something only with DS:11B0h non-zero (never in play); and its
+  letters' jump table (71BE3h, c to v: C, E, I, U, V the screens, O and P one routine). **Free
+  letters: B, D, F, J, K, L, R, X, Z** (the mod has L and R). `gamekeys.py` prints the tables
+  (and `gamekeys.py dis START` disassembles a handler); an overlay's routine is found from its
+  stub (the stub segment's dword at +4, plus 52EB0h, plus the entry's offset).
+- **R in a fight hides and shows the squares in reach** (the Loader reads it from the BIOS keyboard
+  buffer, 0040:001Ah-003Dh: `xdotool key r` works; the game does nothing with it): the dice log's
+  line "Squares in reach: hidden (R shows them)", "Squares hidden" over the member, and
+  `squares_shown` in settings.json, which **stays as the last test left it**: check it before a
+  test that looks for the crosses.
 - **Keys**: Tab picks the nearest enemy and Return attacks it (the mod's keys, in a
   fight); L shows or hides the combat log panel; **E opens the Effects screen** (not "end turn");
   Escape closes a screen or menu that is open, and **opens EXIT: SAVE GAME? when nothing is**: a
@@ -346,7 +478,8 @@ game's data: it is one player's account.
 - **The combat log panel covers the bottom right** (x 135+, y 120+): a click there lands on the
   panel, not the map, and a party member's figure under it can't be clicked (its END menu). Hide it
   before walking near it (the party's first step into the arena, for one, is right above it) with
-  `sh panel.sh hide|show`, which checks the panel's pixel before pressing L (L alone toggles, and
+  `sh panel.sh hide|show` (on the map only: with a window, a screen or a member's END menu up the
+  Loader puts the panel away, and it reads "hidden" though L's choice is "shown"), which checks the panel's pixel before pressing L (L alone toggles, and
   can leave it the wrong way round). `panel.sh` reads a docked panel's frame pixel (140,150), so
   it reads "hidden" when the panel is expanded (its check is for the small panel): look at a shot,
   and press L yourself. Expanded, the panel covers the screen's right half from y 68 (docked from y
@@ -386,9 +519,11 @@ game's data: it is one player's account.
   nothing, and the view later jumped. Clear boxes first.
 - **In the enemies' turns the view follows the one acting** (`ghostturn.py`): a test that needs a
   still view through an enemy turn (a figure redrawn or not) can't rely on it; the move redraws the
-  whole view by itself. **In a fight the view barely drags**: two drags of 150 moved the camera
-  from (1728, 768) to (1712, 832); the party's figures stayed on the screen. Drag out of a fight to
-  put a figure off the view.
+  whole view by itself. **In a fight the view barely drags** in one place: two drags of 150 moved
+  the camera from (1728, 768) to (1712, 832); the party's figures stayed on the screen. Drag out
+  of a fight to put a figure off the view. On a party member's turn at the fountain and in the
+  arena `viewto.py` did drag it, 100 to 200 map units, and the view moved by itself when a member
+  walked out of it (logs/2026-11-18-squares-in-reach.md).
 - **The walkability grid**: each region has one, 128 x 98 squares of 16 map units (GMAP in
   RGNxx.GFF): 0 floor, 192 walls, 64 things (furniture, a button on a wall), 1-31 and 64-95 wall
   edges and doorways. The game's live copy (far pointer at **DS:0556h**, `live_map()` in live.py)
@@ -698,6 +833,36 @@ game's data: it is one player's account.
    <NAME>'S MOVE opens and waits. For a test that needs reach, raise its Move in memory first ([the
    turn's movement word](RESEARCH.md#fights-and-foes-in-memory)), and restore it after; never save
    the game while it's raised. The END menu shows what is left ("Move : 12").
+   **Walking a member square by square** (logs/2026-11-18-squares-in-reach.md): `movestate.py`
+   prints whose turn it is, its square, points and flags and the walk map round it with the
+   Loader's marks; `squarewalk.py COL ROW [POINTS]` clicks a square's middle and says where the
+   member stopped; `squaresweep.py POINTS [edge|out|all][here]` tries the marks' rim (or the free
+   squares just outside, or all) a walk each; `squarecost.py` times a walk for the marks' cost.
+   - **F10 takes the move back** (the game's own key, with no menu up: Escape closes the END
+     menu first): the member stands where its turn began with its points. After the last step
+     the game gives the points back but not the walk (bit 0 of the turn's flags stays off); the
+     Loader's mend (`move_back`, dsloader/moveback.py) sets the bit within a pass or two when its
+     dice log saw the last step (its line "F10: NAME's move taken back (can walk again)"), so a
+     dice log restarted in the middle of a turn mends nothing that turn. `squarewalk.py` with
+     POINTS puts the bit back itself.
+   - **An attack ends the member's turn, unless it kills** (turnwatch.py: +181h back at 0, +1ABh
+     1, the flags as they were, the turn still its own; a second swing of the same command can
+     end it all the same: Jenna's did, Ester's didn't). For "walked out, killed, F10": a foe on
+     the last step's next square at 1 HP (`foeset.py C hp=1`, autosave off), Tab + Return, F10.
+   - **A walk the Move ran out on stays the member's**, and with the bit put back in memory the
+     game goes on with it from wherever F10 put the member, so the next click's walk is mixed with
+     it: forget it with the edit (FFh at 3972:0377h + thing x 1Ch, 0 at 3972:08AAh + thing x
+     13h; the two tools do). In play the bit never comes back in a turn.
+   - **A click on the square behind a figure is a click on the figure** (its END menu, or an
+     attack on a foe that ends the turn): a walk test leaves out the two squares north of anyone.
+   - **A walk can begin a second or two after the click**: wait for the member's place to change
+     before waiting for it to stand still.
+   - **The view** follows a member that walks out of it ([dragging it in a
+     fight](#walking-the-view-and-doors)); the party's squares on the walk map are
+     DS:0546h (x, y a member; 129, 99 for one with none, as the leader at the ambush's start,
+     whose square others can then walk onto).
+   - From `fountain-user`: a two-square doorway at squares (53-54, 78) and a one-square one at
+     (45, 82-83), north-west of the fountain's corridor; nobody stands near them.
 6. **Spells**: USE (24,17), the level page (LEVEL at 196,171), the icon, then the target; check
    the dice log for the spell's line before going on. The detail: [Casting spells for a
    test](#casting-spells-for-a-test).
@@ -828,6 +993,57 @@ game's data: it is one player's account.
   shot with a weapon put in memory with `setitem.py`, melee reach, grand mastery, a rule by size):
   [items in memory](RESEARCH.md#items-in-memory) and [fights and foes in
   memory](RESEARCH.md#fights-and-foes-in-memory).
+
+### The chance to hit against the swing
+
+- **The chance to hit against the swing** (logs/2026-11-17-hit-chance.md): from `fountain-user`
+  (nobody held, so the d20 counts), on a party turn `sh tabhit.sh` presses Tab, prints the dice
+  log's `Chosen with Tab` line (the Loader's prediction), presses Return and prints the attack's
+  lines (`needs N+`, THAC0 and the target's AC); `tabhit.sh 1 nohit` only chooses. `python3
+  hitcheck.py [ATTACKER]` prints what a number is made of for every enemy (the squares between,
+  the target's facing, the AC from the front and from behind, THAC0 by weapon); it is not the
+  session's Loader, so it has no dance, Wild Fighting or AC gap (Ester read 1 off there while the
+  Loader agreed with the game). The fountain's party: Lex 0 (short sword, bow), Jenna 1 (two long
+  swords, bow; hides as a Stalker), Ester 2 (two bone long swords, bow; a Battle Dancer), Seneca 3
+  (Shadowseeker +1, Hayneedle +1, sling; hides). The Templar there wears a Ring of Protection +1
+  (AC 4, 5 from behind) and bone brigandine; the Guards are AC 10.
+- **What the fountain's fight showed of the game's attack**: the weapons swing in the order of the
+  creature's item list (the left hand's often first: Seneca's Hayneedle, Jenna's obsidian sword),
+  and that first one is the backstab; a hidden thief's second weapon was "from behind" by the
+  first's flags only (the AC from behind, THAC0 2 worse than a plain swing) until #116's
+  `REAR_FRESH`, which judges each swing on its own; a target's facing (a byte a creature at +5Bh of the round's segment, FFh for none) is the
+  way to its round's first attacker, 0 north and on clockwise.
+- **A shot on a turn where Tab was pressed**: Tab scrolls the view to the chosen enemy by DSCLOG's
+  pan, which `state.py`'s camera doesn't show, so a click worked out from the camera misses. Take
+  a grab (`shot.sh`, the panel hidden with `panel.sh hide`: it covers the bottom right) and click
+  the figure about 8 pixels above its ring, with `pointer.py attack X Y` first (X, Y bare floor).
+  **Move the pointer with `xdotool mousemove`, never with a click on the floor**: with the walk
+  arrow a click walks the member and spends its Move.
+
+### The chance to hit under the pointer
+
+- **The label against the swing** (logs/2026-11-18-hit-chance-hover.md): from `fountain-user` on a
+  party turn, `sh hoverhit.sh C [attack]` puts the pointer on enemy combatant C's figure (the walk
+  arrow, or the attack pointer), prints the label the Loader floats over it (`hoverlabel.py`,
+  which reads the text back from DSCLOG's slot by its ink mask), clicks and prints the attack's
+  lines. `hoverlabel.py X Y` or `foe C` only moves the pointer and reads; `watch SECONDS` prints
+  the slots whenever they change (a label going, "Miss" taking its place, flicker), started in the
+  background just before a click. `hovercost.py SECONDS` counts the map's loop passes and the
+  frames shown, `hovercost.py loader` times the Loader's look.
+- **Where to point**: `foepos.py`'s place (10 pixels above the feet) is the front figure's where
+  two overlap (the game's finder takes the first picture with a pixel there, from the front): a
+  back one's head is 22 to 25 pixels above its feet. Between a half-giant's legs there is nothing.
+  The thing the game has under the pointer is DS:0BCBh (`hoverlabel.py` prints it).
+- **Never bring the pointer to the screen's edge** (x 318 scrolled the view 480 units in one
+  probe, and every place worked out from the camera was then wrong): drag the view back with
+  `scroll.py`, the pointer in the middle first.
+- **After restarting the dice log in a fight** its Loader has not seen the round's dance, Wild
+  Fighting or the AC gaps: a Battle Dancer's number is 1 off until her next dance. Compare on
+  another member, or wait a round.
+- **A click that walks a member out of Move** opens END <NAME>'S MOVE (no label then: a menu is
+  up); Escape closes it and a click on a foe next to the member still attacks.
+- `panel.sh hide` can print "panel hidden" with the panel up and empty: look at a shot, and press L
+  by hand (`xdotool key --window W l`).
 
 ## Casting spells for a test
 

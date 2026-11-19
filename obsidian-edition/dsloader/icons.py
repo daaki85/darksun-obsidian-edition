@@ -989,7 +989,7 @@ def objects_beside(path: str) -> Optional[gff.Chunks]:
 def write_resources(source: str, dest: str) -> None:
     """The game's RESOURCE.GFF (SOURCE, only read) with the new spells' icons, the Pick Pockets
     button's, the descriptions of both and of the spell arrows (spelltexts.py), the save/load
-    window's PAGE 1 to PAGE 4 buttons (savepages.py), the mod's sounds (sounds.py) and the creation
+    window's PAGE 1 to PAGE 4 and QUICK buttons (savepages.py), the mod's sounds (sounds.py) and the creation
     screen's STORE and RECALL (rollstore.py), to DEST; the descriptions of the spells the manual's way
     (spelltexts.MANUAL_TEXTS), and Hold and Charm Person's saying they don't take on a large target
     (spelltexts.SIZE_TEXTS): their switches went after 2.18, always on."""

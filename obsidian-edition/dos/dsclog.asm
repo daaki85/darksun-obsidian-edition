@@ -188,7 +188,7 @@ section image follows=mz vstart=0
 
 ; ---- header, found by the Loader via SIG (16-byte aligned) ----
 hdr:
-sig      db 'DSCLOGvc'          ; +0
+sig      db 'DSCLOGve'          ; +0
 seq      dw 0                   ; +8   entries written so far (wraps at 65536)
 widx     dw 0                   ; +10  ring slot the next entry goes to
 nent     dw NENT                ; +12
@@ -471,6 +471,19 @@ a20_lost   dw 0                 ; +1876 times A20_CHECK found A20 off, the far b
                                 ;      reach, and turned it on again; 8000h added if it wouldn't come
                                 ;      on (the far block's segments then the ROM's: the dice log's
                                 ;      a20_line says so once)
+qs_keys    dw 0xFFFF, 0xFFFF    ; +1878 the Loader's: the quick save key and the quick load key, as
+                                ;      INT 16h gives them (FFFFh: none), taken on the map (QS_KEY) ...
+qs_seq     dw 0, 0              ; +1882 ... and counted, each in its word: the Loader acts
+save_req   dw 0                 ; +1886 the Loader sets 1 to have the game saved from the map's main
+                                ;      loop (SAVE_TICK: the file and the name in SAVE_TEXT), 2 to
+                                ;      have the game's LOAD window opened; 0 while DSCLOG is at it,
+                                ;      then 3 done, 4 the game's save failed, 5 not in a fight
+save_off   dw save_text         ; +1888 offset of SAVE_TEXT in the tail: the Loader's: the save's
+                                ;      file (SAVE_FILE bytes with its NUL), then its name
+squares_on dw 0                 ; +1890 the Loader sets 1 to have the squares SQ_MAP marks drawn on
+                                ;      the floor (SQUARES; squares.py: where the party member
+                                ;      whose turn it is in a fight can still walk). SQ_MAP is in
+                                ;      DSCLOG's PSP (the 100h bytes before this header), at SQ_MAP
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -1560,6 +1573,42 @@ sheet_classes:
         and eax, 0x00FFFFFF
         ret
 
+; SAVE_TICK: from the map's main loop (PROBE_SCROLL, DS the game's), what the Loader asked for in
+; SAVE_REQ (quicksave.py), once: 1 the game saved by its own routine (the one its SAVE window
+; calls: an overlay's entry, save(far file, far name); it shows nothing), from the file and the name
+; the Loader wrote in SAVE_TEXT, but not in a fight (where the game refuses a save); 2 the game's
+; LOAD window opened (the Loader has made its page the quick saves'). SAVE_REQ is 0 while the
+; routine runs (a pass of this loop inside it asks nothing again), then what came of it. AX, BX,
+; CX, DX, ES changed. The work is SAVE_FAR's, in the tail (TAIL_CALL).
+SAVE_SEG2  equ 0x4242           ; (DSUN.EXE segments, less the load segment) an overlay's entry:
+SAVE_ENTRY equ 0x0089           ;   save(far file, far name), 0 if it failed
+LOADW_SEG  equ 0x428A           ; the save window's overlay's entry that opens it to load a game
+LOADW_ENTRY equ 0x0020
+SAVE_FILE  equ 64               ; (SAVE_TEXT: the file's bytes, then the name's, SAVE_NAME)
+SAVE_NAME  equ 48               ; (the game writes 45 bytes of it)
+save_tick:
+        cmp word [cs:save_req], 0
+        je .ret
+        mov ax, save_far
+        call tail_call
+.ret:   ret
+
+; TAIL_CALL: the tail's routine at AX run: code kept in the tail (after its tables: SAVE_FAR,
+; TINT_FAR), out of this segment's 64 KB. The routine runs with CS the tail's and GS this segment
+; (this segment's variables are "gs:" there, the tail's own tables "cs:"), and ends with RETF. GS
+; kept; the rest as the routine leaves it.
+tail_call:
+        push gs
+        push cs
+        pop gs
+        push cs
+        push word .back
+        push word [cs:tail_seg]
+        push ax
+        retf
+.back:  pop gs
+        ret
+
 ; SOUND_TICK: from the map's main loop (PROBE_SCROLL, DS the game's), the sound the Loader asked
 ; for (SOUND_REQ), once. All registers kept.
 sound_tick:
@@ -1907,13 +1956,13 @@ probe_save_page:
 
 ; PROBE_SAVE_CLICK: INT VEC_SAVE_CLICK replaces "jmp <the end>" (3 bytes: INT + NOP; DSUN.EXE
 ; 74B9Fh), where the window's event routine leaves a click on a button it doesn't know: PAGE 1 to
-; PAGE 4 (savepages.py) show that page (then the routine's end returns 0, as for the game's own
+; PAGE 4 and QUICK (savepages.py) show that page (then the routine's end returns 0, as for the game's own
 ; buttons).
 SC_DONE    equ 0x74A21 - 0x74BA1 ; (DSUN.EXE, from the way back) the screen updated, then the end
 SC_IGNORE  equ 0x74DE5 - 0x74BA1 ; the end for the game's buttons
 SC_ID      equ 8                ; the button, at the routine's BP+8
-PAGE1_ID   equ 0x815            ; (PAGE 1 to PAGE 4: 815h to 818h)
-PAGES      equ 4
+PAGE1_ID   equ 0x815            ; (PAGE 1 to PAGE 4 and QUICK: 815h to 819h)
+PAGES      equ 5
 probe_save_click:
         push bp
         mov bp, sp
@@ -2060,7 +2109,8 @@ sp_button_id:                   ; (AX the button)
 sp_btn  dw BTN_OFF, 0           ; the game's routine for a button's state
 sp_call dd 0
 sp_was  db 0
-sp_letters db 'EBCD'            ; the pages' letters (SAVE??.SAV, SAVB, SAVC, SAVD)
+sp_letters db 'EBCDQ'           ; the pages' letters (SAVE??.SAV, SAVB, SAVC, SAVD; SAVQ: the quick
+                                ;   saves and autosaves, quicksave.py)
 sp_target db 0
 sp_step   db 0
 sp_done   dw 0                  ; where the event routine goes on: after the page changes,
@@ -2068,7 +2118,7 @@ sp_ignore dw 0                  ;   or not (from the way back)
 sp_zero   db 0                  ; 1: a click (the routine to return 0)
 
 ; SAVE_LABEL: (PROBE_WIN; EAX the window drawn, DS the game's) on the save/load window, the
-; button of the page shown (PAGE 1 to PAGE 4, savepages.py) out of use: so it shows which; and in
+; button of the page shown (PAGE 1 to PAGE 4 and QUICK, savepages.py) out of use: so it shows which; and in
 ; the load window, LOAD out of use while the row chosen has no save (an empty page's).
 save_label:
         pushad
@@ -23991,6 +24041,8 @@ floor_enter:
         jne .on
         cmp word [cs:dust_on], 0
         jne .on
+        cmp word [cs:squares_on], 0
+        jne .on
         cmp word [cs:rings_on], 0
         je .plain
 .on:    cmp byte [cs:floor_busy], 0
@@ -24144,7 +24196,8 @@ shadow_pass:
         pop cx
 .tnext: add di, 8
         loop .thing
-.dust:  call ring_pass
+.dust:  call tint_pass
+        call ring_pass
         call dust_pass
 .none:  pop fs
         call vga_restore
@@ -25260,6 +25313,7 @@ probe_scroll:
         call whirl_tick
         popf
         call sound_tick
+        call save_tick
         call stink_sides                ; (the rule switched since: the staff sling's dice)
         call target_click
         pushf
@@ -27122,6 +27176,34 @@ t_sy       dw 0
                                 ;   FAR_LAST_Y, a word each; how far it has walked, FAR_WALKED)
                                 ; (LIGHT and the puffs: the far block's FAR_LIGHT and FAR_PUFFS)
 
+; SQUARES (SQUARES_ON): a small light cross (five pixels each way) on the floor in the middle of each of the walk map's
+; squares the Loader marks in SQ_MAP (where the party member whose turn it is in a
+; fight can still walk, squares.py), drawn in the floor pass before the rings, by their routines
+; (RING_POINTS, RING_PX), the ground lightened four times through LIGHT (the dust's table) and
+; what isn't ground to the dust (a stone floor) darkened four times through DARK (the shadows').
+; SQ_MAP is the Loader's: the column and the row (a byte each) of the walk map's square its first
+; bit is for, then SQ_SIDE rows of SQ_SIDE bits, the leftmost square a row's bit 0. It lies in
+; DSCLOG's own PSP (CS - 10h), in the room DOS keeps there for a program's two FCBs and its
+; command line (5Ch to FFh): kept with DSCLOG, of no use to DOS once DSCLOG has stayed resident
+; (no program runs from this PSP again), so the map costs no upper memory. KEEP's stack was
+; there (what it left is not cleared: the Loader writes the whole map before SQUARES_ON is 1).
+SQ_SIDE    equ 32               ; SQ_MAP: its origin's column and row, then SQ_SIDE x SQ_SIDE bits
+SQ_MAP     equ 0x5C             ; ... its offset in the PSP (squares.py's SQ_MAP_PSP)
+SQ_MAP_BYTES equ 2 + SQ_SIDE * SQ_SIDE / 8
+        times -(SQ_MAP + SQ_MAP_BYTES > 0x100) db 0 ; (a negative count: past the PSP's end)
+tint_pass:
+        cmp word [cs:squares_on], 0
+        je .ret
+        mov ax, tint_far                ; (the work is TINT_FAR's, in the tail: TAIL_CALL)
+        call tail_call
+.ret:   ret
+ring_points_far:                        ; (TINT_FAR's way to RING_POINTS)
+        call ring_points
+        retf
+SQ_REACH   equ 2                ; how far the cross reaches from the square's middle
+SQ_DOTS    equ 5                ; (a quarter of the cross, as the rings': RING_POINTS mirrors it)
+sq_dots    db 0 << 3 | 0, 1 << 3 | 0, 2 << 3 | 0, 0 << 3 | 1, 0 << 3 | 2
+
 ; RINGS (RINGS_ON): a ring on the ground under each thing RING_TAB marks (the Loader marks the
 ; enemy chosen with Tab in a fight, kind 2), drawn in the floor pass as the shadows are, so the
 ; figure stands in it, the ground's colours reddened through RED (made by the Loader from the
@@ -27228,20 +27310,27 @@ ring_px:                                ; redden screen x BX on the row at ROW_A
         shr bx, 2
         add bx, [cs:row_at]
         mov es, [cs:v_seg]
+        mov si, bx                      ; the pixel's place (SI is RING_DOT's to lose)
+        movzx di, byte [es:si]          ; its colour
+        mov bx, [cs:r_tab]              ; (RED, or TINT_PASS's LIGHT)
         xor ax, ax
-        mov al, [es:bx]
         mov cl, [cs:r_kind]
         inc cl                          ; (reddened twice, the chosen one three times)
-.again: mov di, ax
-        mov ah, [fs:FAR_RED + di]
-        or ah, ah
-        jz .put
-        mov al, ah
-        xor ah, ah
+.again: mov al, [fs:bx + di]
+        or al, al
+        jz .none
+        mov di, ax
         dec cl
         jnz .again
-.put:   mov [es:bx], al
+.put:   mov ax, di
+        mov [es:si], al
         ret
+.none:  cmp cl, [cs:r_kind]             ; no colour that way. At the first look, where LIGHT
+        jbe .put                        ;   has none (a colour that isn't the ground's: stone),
+        cmp bx, FAR_LIGHT               ;   a mark is darkened through the shadows' DARK
+        jne .put                        ;   instead, as many times
+        mov bx, FAR_DARK
+        jmp .again
 
 RING_OUTER equ 20                ; (a quarter of each ring: RING_POINTS mirrors them)
 RING_INNER equ 18
@@ -27250,6 +27339,7 @@ ring_outer db 0 << 3 | 6, 1 << 3 | 6, 2 << 3 | 6, 3 << 3 | 6, 4 << 3 | 6, 5 << 3
 ring_inner db 0 << 3 | 5, 1 << 3 | 5, 2 << 3 | 5, 3 << 3 | 5, 4 << 3 | 5, 5 << 3 | 4, 5 << 3 | 5, 6 << 3 | 4, 7 << 3 | 4, 8 << 3 | 4, 9 << 3 | 3, 9 << 3 | 4, 10 << 3 | 2, 10 << 3 | 3, 11 << 3 | 1, 11 << 3 | 2, 12 << 3 | 0, 12 << 3 | 1
 ring_extra db 0 << 3 | 7, 1 << 3 | 7, 2 << 3 | 7, 3 << 3 | 7, 4 << 3 | 7, 5 << 3 | 6, 5 << 3 | 7, 6 << 3 | 6, 7 << 3 | 6, 8 << 3 | 6, 9 << 3 | 5, 9 << 3 | 6, 10 << 3 | 5, 11 << 3 | 4, 11 << 3 | 5, 12 << 3 | 3, 12 << 3 | 4, 13 << 3 | 2, 13 << 3 | 3, 14 << 3 | 0, 14 << 3 | 1, 14 << 3 | 2
 r_kind     db 0
+r_tab      dw FAR_RED           ; the far block's table RING_PX changes a colour through
 r_fx       dw 0
 r_fy       dw 0
 r_qx       dw 0
@@ -27434,6 +27524,8 @@ overhead db 0                   ; ('m', 'u' or 'i': the screen its key opened, 0
 our_key:                                ; AX a key: CF set (and counted) if it is one of ours
         call loot_key
         call sell_key
+        call qs_key
+        jc qs_key.ret
         cmp ax, KEY_L
         je .l
         cmp ax, KEY_SHIFT_L
@@ -27469,6 +27561,33 @@ our_key:                                ; AX a key: CF set (and counted) if it i
         ret
 .no:    clc
         ret
+
+; QS_KEY: (OUR_KEY's) the Loader's quick save key or quick load key (QS_KEYS) with the map's main
+; loop run within the last BIOS tick or two (no window, talk or menu waiting on keys): counted in
+; its word of QS_SEQ, and CF set (taken from the game); else CF clear. Registers kept.
+qs_key:
+        push bx
+        push es
+        xor bx, bx
+        mov es, bx
+        cmp ax, [cs:qs_keys]
+        je .ours
+        mov bl, 2
+        cmp ax, [cs:qs_keys + 2]
+        jne .no
+.ours:  push ax
+        mov ax, [es:0x46C]      ; (the BIOS tick)
+        sub ax, [cs:map_tick]
+        cmp ax, L_FRESH
+        pop ax
+        ja .no
+        inc word [cs:qs_seq + bx]
+        stc
+        jmp .out
+.no:    clc
+.out:   pop es
+        pop bx
+.ret:   ret
 
 ; LOOT_KEY: (OUR_KEY's first) T or Shift+T with a container's window open (a body's, a chest's: the
 ; game's DS:05E6h its map thing, 9999 none) is made Escape, which closes the window, and, when the
@@ -29178,6 +29297,7 @@ extra_types_end:
         times -(extra_types_end - extra_types != TYPES_EXTRA * TYPE_SIZE) db 0 ; (a negative count: not TYPES_EXTRA)
 lbl_slots  times LBL_SLOTS * LBL_SIZE db 0 ; (the Loader's: LABELS, the header's +1838)
 large_bits times MAP_BITS + 1 db 0      ; (the Loader's: a bit a combatant large or bigger, SIZE, +1842)
+save_text  times SAVE_FILE + SAVE_NAME db 0 ; (the Loader's: SAVE_TICK's file and name, +1888)
 ticks      times TICK_SLOTS * TICK_SIZE db 0 ; (PROBE_TICK's, the Loader's to read: the header's +356)
 ; the names, numbered from NAMES_OWN (322): the Loader's items' (the same as the Loader's
 ; NAMES in dsloader/names.py), each NUL-terminated (PROBE_NAMES_FILL pads it to NAME_SIZE), and
@@ -29315,6 +29435,104 @@ dex_table:
         db 25, 27, 15, 25, 20
         db 27, 30, 17, 30, 22
         align 16, db 0
+; the tail's code (TAIL_CALL)
+; SAVE_FAR: SAVE_TICK's work (from TAIL_CALL: GS DSCLOG's segment, DS the game's). GS is kept on the
+; stack over the game's routines (the game, and DSCLOG's handlers under it, may change it).
+save_far:
+        mov ax, [gs:save_req]
+        dec ax
+        cmp ax, 1
+        ja .ret                 ; (none, or an answer the Loader hasn't read yet)
+        mov word [gs:save_req], 0
+        push gs                 ; (MOV and PUSH keep the flags)
+        jb .save
+        mov bx, LOADW_ENTRY
+        mov ax, LOADW_SEG - DGROUP_SEG
+        call .entry
+        call far [gs:sp_call]
+.done:  mov ax, 3
+.set:   pop gs
+        mov [gs:save_req], ax
+.ret:   retf
+.save:  mov ax, ds
+        sub ax, FIGHT_FROM_DS
+        mov es, ax
+        mov ax, 5
+        cmp word [es:0x19], 0
+        jne .set
+        mov bx, SAVE_ENTRY
+        mov ax, SAVE_SEG2 - DGROUP_SEG
+        call .entry
+        push cs                 ; (the tail)
+        push word save_text + SAVE_FILE
+        push cs
+        push word save_text
+        call far [gs:sp_call]
+        add sp, 8
+        or ax, ax
+        jnz .done
+        mov al, 4
+        jmp .set
+.entry: mov [gs:sp_call], bx    ; SP_CALL: the game's routine at AX (from its DS):BX
+        mov bx, ds
+        add ax, bx
+        mov [gs:sp_call + 2], ax
+        ret
+
+; TINT_FAR: TINT_PASS's work (from TAIL_CALL: GS DSCLOG's segment, FS the far block).
+tint_far:
+        mov byte [gs:r_kind], 3         ; (lightened four times)
+        mov word [gs:r_tab], FAR_LIGHT
+        xor di, di                      ; the row
+.row:   mov ax, gs
+        sub ax, 0x10
+        mov ds, ax                      ; (the PSP)
+        movzx ax, byte [SQ_MAP + 1]
+        add ax, di
+        shl ax, 4
+        add ax, 8
+        sub ax, [gs:cam_y]              ; its squares' middle, on the screen
+        mov [gs:r_fy], ax
+        add ax, SQ_REACH
+        cmp ax, [gs:clip_y0]            ; (a row or a square whose cross is all outside what is
+        jl .rnext                       ;   being drawn is passed over: a walker's rectangle is
+        sub ax, 2 * SQ_REACH            ;   small, and RING_DOT would test every pixel)
+        cmp ax, [gs:clip_y1]
+        jg .rnext
+        mov bx, di
+        shl bx, 2
+        mov edx, [bx + SQ_MAP + 2]      ; the row's bits
+        movzx si, byte [SQ_MAP]
+        shl si, 4
+        add si, 8
+        sub si, [gs:cam_x]              ; the middle of the row's first square
+.col:   shr edx, 1
+        jnc .next
+        lea ax, [si + SQ_REACH]
+        cmp ax, [gs:clip_x0]
+        jl .next
+        lea ax, [si - SQ_REACH]
+        cmp ax, [gs:clip_x1]
+        jg .next
+        mov [gs:r_fx], si
+        pusha                           ; (EDX's upper half is kept: RING_POINTS is 16-bit code)
+        mov si, sq_dots
+        mov cx, SQ_DOTS
+        push cs                         ; (RING_POINTS, in DSCLOG's segment: RING_POINTS_FAR)
+        push word .back
+        push gs
+        push word ring_points_far
+        retf
+.back:  popa
+.next:  add si, 16
+        or edx, edx
+        jnz .col
+.rnext: inc di
+        cmp di, SQ_SIDE
+        jb .row
+        mov word [gs:r_tab], FAR_RED
+        retf
+        align 16, db 0          ; (KEPT_PARAS counts whole paragraphs)
 tail_end:
 TAIL_BYTES equ tail_end - tail_start
 KEPT_PARAS equ (image_len + TAIL_BYTES) / 16    ; (what KEEP keeps after the PSP: the image to the

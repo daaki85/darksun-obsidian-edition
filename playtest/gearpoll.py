@@ -5,7 +5,7 @@
 # the gear lines must come before charsave_written (logs/2026-11-15-kit-rebalance-checks.md part 7).
 import os,sys,time,struct;__file__=os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), 'live.py');exec(open(__file__).read())
 W = os.environ.get('PLAYTEST_WORK', '/tmp/playtest').rstrip('/') + '/'
-hdr=next(i for i in range(0xA0000,0x100000,16) if g.read(i,8)==b'DSCLOGvc')
+hdr=next(i for i in range(0xA0000,0x100000,16) if g.read(i,8)==b'DSCLOGve')
 last=None; t0=time.time(); n0=sum(1 for _ in open(''+W+'dice.txt')); m0=os.path.getmtime(''+W+'inst/CHARSAVE.GFF')
 while time.time()-t0<110:
     bios=struct.unpack('<H',g.read(0x46C,2))[0]; beat=struct.unpack('<H',g.read(hdr+1865,2))[0]

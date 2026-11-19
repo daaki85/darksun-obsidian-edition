@@ -86,13 +86,14 @@ class DocLinkTests(unittest.TestCase):
 
     def test_shipped_pages_stay_in_the_zip(self):
         """The release zip holds the obsidian-edition folder alone, less what its .gitattributes marks
-        export-ignore (the developer pages, tests/, docs/viewer.png, .gitattributes, .gitignore): the shipped pages' relative
+        export-ignore (the developer pages, tests/, docs/viewer.png, .gitattributes, .gitignore, the quest
+        table's drafting tool): the shipped pages' relative
         links never leave it (what is outside goes by its GitHub address), and the GitHub links to
         files of the repository name files that are there. A developer page (DEVELOPMENT*.md) is
         left out of the zip, so a shipped page links to it by its GitHub address too, never
         relatively (the manual sends that address to the release's tag)."""
         self.assertEqual(export_ignored(), ["/DEVELOPMENT*.md", "/tests", "docs/viewer.png", "/.gitattributes",
-                                            "/.gitignore"])
+                                            "/.gitignore", "/dsloader/questdraft.py"])
         bad = []
         base = re.compile(r"https://github\.com/daaki85/darksun-obsidian-edition/blob/(?:main|v[0-9.]+)/")
         pages = glob.glob(os.path.join(HERE, "*.md")) + glob.glob(os.path.join(HERE, "docs", "**", "*.md"), recursive=True)

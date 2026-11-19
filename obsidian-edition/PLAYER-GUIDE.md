@@ -42,9 +42,11 @@ weapon specialization's: the guide links to their tables.
   - [THAC0 by level](#thac0-by-level)
 - [Fighting](#fighting)
   - [Initiative](#initiative)
+  - [Moving in a fight](#moving-in-a-fight)
   - [Hitting](#hitting)
   - [Two weapons](#two-weapons)
   - [From behind, and backstabs](#from-behind-and-backstabs)
+  - [The chance shown before the swing](#the-chance-shown-before-the-swing)
   - [Hiding in shadows](#hiding-in-shadows)
   - [Saving throws](#saving-throws)
   - [Monsters](#monsters)
@@ -1091,6 +1093,29 @@ A character hit in a round can't cast a spell until the next round: the game
 won't let it choose a spell, and drops one chosen before the hit. The Battle
 Mage isn't stopped.
 
+### Moving in a fight
+
+Each round a character has **ten movement points for each point of Move** (the
+name box shows what is left, in Move); Hasted doubles them, Slowed halves
+them. A step costs **10 straight, 14 diagonally**. With fewer than 10 left the
+walk is over.
+
+- **The squares still in reach are marked** with small crosses on the
+  floor ([squares in reach](FEATURES.md#squares-in-reach)): a marked square is
+  one click away (behind a wall the farthest may take two: click a nearer one
+  first).
+- Nobody walks through anybody, allies included; corners can be cut.
+- Walking past an enemy costs nothing and brings no free blow.
+- **R hides the crosses and shows them again**; the choice is kept.
+- **F10 takes a move back** (the game's own key): the character stands where
+  its turn began, with its movement, and can walk again, after the last step
+  too ([F10 takes a whole move back](FEATURES.md#f10-takes-a-whole-move-back)).
+  *Without the mod:* once the movement is all spent F10 puts the character
+  back but it can't walk again that turn. An attack is never taken back, and
+  after one F10 gives no walk.
+
+The detail: [how the game works](HOW-THE-GAME-WORKS.md#moving-in-a-fight).
+
 ### Hitting
 
 An attack hits on **d20 ≥ THAC0 − the target's AC**. A 20 always hits and a 1
@@ -1145,6 +1170,56 @@ attacks at the character's full rate.
   Assassin's one step more); STR's bonus and the weapon's plus are added once
   after. *Without the mod:* the whole damage, STR included, is multiplied, on
   the round's first two attacks.
+
+### The chance shown before the swing
+
+With an enemy chosen with **Tab** ([the chance to hit before the
+swing](FEATURES.md#the-chance-to-hit-before-the-swing)), the dice log's line and the combat log's
+header say what the member whose turn it is must roll, and the chance: `needs 14+ (35%)`; with the
+pointer resting on an enemy, the number floats over it (under the pointer, below). A 20
+always hits and a 1 always misses, so the chance is never above 95% or below 5%.
+
+- **Which weapon.** Next to the enemy it is the weapon in hand (each of two, named, when their
+  numbers differ). Farther off, Enter walks the member up to fight hand to hand, and the attack
+  pointer shoots: both are given, `Bone Long Sword needs 14+ (35%); Short Bow needs 12+ (45%)`.
+  They are listed in the order the game swings them (often the left hand's first), and the header
+  gives the first.
+- **From behind.** Next to the enemy the Loader knows whether the attack is [from
+  behind](#from-behind-and-backstabs) and says so: `needs 10+ (55%) from behind`, `a backstab` for a
+  thief's. Farther off it depends on where the walk ends, so both numbers are given: `needs 14+
+  (35%), from behind 10+ (55%)` (in the header `14+ 35%, behind 10+`). An enemy nobody has attacked
+  yet this round turns to face its first attacker, so only the first number is given; and a shot is
+  never from behind, except a hidden archer's (`unseen`).
+- **A hidden thief** ([hiding in shadows](#hiding-in-shadows)) attacks from behind wherever it
+  stands, and the number is the backstab's.
+- **A held enemy** (Paralyzed or Out Cold): `hits whatever the roll (Paralyzed)`.
+
+**Under the pointer.** The same number floats over an enemy while the game's pointer rests on it,
+on a party member's turn: `12+ (45%)`. It follows the pointer from enemy to enemy and goes when
+the pointer leaves, the turn passes, or a menu or window opens. It shows the enemy a click there
+would attack: where figures overlap, the one in front, and nothing where an ally stands in front.
+
+- **One weapon**, the first a click would swing. Next to the enemy, the first weapon in hand
+  (often the left hand's). Farther off, the pointer decides as it does for the click: the walk
+  arrow walks the member up to fight hand to hand, so the number is the first melee weapon's; the
+  attack pointer shoots, so the number is the missile weapon's when it reaches the enemy and the
+  quiver isn't empty. With the look pointer (the eye) there is no number: a click there only
+  looks.
+- **From behind.** Next to the enemy: `Behind 10+ (55%)`, `Backstab 8+ (65%)` (a hidden archer's
+  shot: `Unseen 10+ (55%)`). Farther off, where the walk decides: `14+ (35%), behind 10+`.
+- **A held enemy**: `Hits`.
+- "Miss", a spell's name and a spell's charges take its place over the same figure while they
+  show, and it comes back after them. It doesn't show through the combat log's panel.
+- The dice log's `Chosen with Tab` line still gives every weapon; the pointer writes no line.
+
+What it can't know: the number is for things as they stand when Tab is pressed (the header's
+follows them while the enemy stays chosen, the pointer's while it rests there); a spell cast or an
+effect ending before the swing changes it. After a kill that leaves the member its turn, the
+weapons it has already swung that turn are still counted, so the pointer's number can be the
+first weapon's when only the second is left to swing. An enemy's AC is counted from the game's own rules and its rings of protection; what
+else the mod's rules add to it (a kit's AC, a cloak of protection, the Boots of Speed) is known from
+the first attack on that enemy in the fight on, so before it the number can be off by that much
+for an enemy that has one of them. The swing's own line in the dice log is always the game's.
 
 ### Hiding in shadows
 
@@ -1948,16 +2023,25 @@ features page](FEATURES.md#always-on).
 | **M**, **U** and **I** | **M** on the map opens the overhead map (the game's **O**), and **M** again closes it. **U** and **I** close the USE and inventory screens when pressed again (and still switch from one to the other). *Without the mod:* only **O** opens the map, and **U** and **I** only switch. |
 
 The mod's other controls are always on too: Tab and Enter to choose and attack an enemy (the red
-ring under it has a choice on the Options tab), scrolling with the mouse wheel, the whole party in
-view, the view in fights, the pointer, and spells on the Effects screen ([controls](FEATURES.md#controls)).
+ring under it, and the chance to hit it shown before the swing and under the pointer, are on the Options tab), the squares in reach marked on a party member's turn and **Alt** held to ring and name
+everything in view that can be used (switches in the tab's **In the game** section), scrolling with the mouse wheel, the whole party in
+view, the view in fights, the pointer, and spells on the Effects screen ([controls](FEATURES.md#controls)). Quick save and
+quick load with **F5** and **F9**, and autosave, have switches under **Saves** on the Options tab.
 
 **Saves and characters:** 40 saves, four pages of ten (**PAGE 1** to **PAGE 4**, or **PgUp** and
-**PgDn**), and 29 characters in the roster ([more saves and characters](FEATURES.md#saves)).
+**PgDn**), a fifth page, **QUICK**, for the quick saves (**F5**; **F9** loads) and the autosaves
+the game makes on coming into another area and after a fight, the last five of each kept ([quick
+save, quick load and autosave](FEATURES.md#quick-save-quick-load-and-autosave)), and 29 characters
+in the roster ([more saves and characters](FEATURES.md#saves)).
 
 **Graphics** (figures in what they wear, shadows, dust, see-through hiders) are in
 [Features: graphics](FEATURES.md#graphics), and **steady pace** in [Features: game
-speed](FEATURES.md#game-speed). **Running the game** (the game window's size, crash and freeze
-reports) and **the Loader's window** (the dice log, the characters' sheets, the dialogue, every
+speed](FEATURES.md#game-speed); scanlines or hard-edged pixels for the game window, and another
+MIDI device for the music, in [Features: picture and music](FEATURES.md#picture-and-music).
+**Running the game** (the game window's size, crash and freeze
+reports) and **the Loader's window** (the dice log, the characters' sheets, the dialogue, the
+[journal](README.md#the-journal-tab) that keeps what was said and every reward, follows your
+saves and lists your quests, open and finished, without naming one you haven't been given, every
 spell's dice) are in the README: [running it](README.md#running-it-windows), [the Loader's
 window](README.md#the-loaders-window) and [reports](README.md#crash-freeze-and-item-reports); [the
 dice log, line by line](DICE-LOG.md) says what each of its lines means.
@@ -2090,6 +2174,11 @@ A settings file from an older Loader with one of these unticked has it on all th
 | What hurts a monster (the Look box): Look at one in a fight for its hit points, AC, THAC0 and defences; closing the box shows the rest in a window | on | at once | [What hurts a monster](FEATURES.md#what-hurts-a-monster-the-look-box) |
 | Names over figures: a spell's name over its caster, "Miss" over whoever an attack missed, a used charge ("Armor: 7 left") over its owner, and the arrows left over a party archer after each shot | on | at once | [Names over figures](FEATURES.md#names-over-figures) |
 | A red ring on the ground in a fight: ... none / ... under the enemy chosen with Tab | under the enemy | at once | [Choosing an enemy](FEATURES.md#choosing-an-enemy-tab-enter-and-the-rings) |
+| The chance to hit: with an enemy chosen with Tab, what the d20 must show to hit it and the chance, in the dice log and the combat log's header | on | at once | [The chance to hit before the swing](FEATURES.md#the-chance-to-hit-before-the-swing) |
+| The chance to hit under the pointer: in a fight, with the pointer over an enemy, what the d20 must show and the chance float over it | on | at once | [The chance to hit before the swing](FEATURES.md#the-chance-to-hit-before-the-swing) |
+| Squares in reach: in a fight, a small cross on each square the party member whose turn it is can still walk to (R in a fight hides and shows them) | on | at once | [Squares in reach](FEATURES.md#squares-in-reach) |
+| F10 takes a whole move back: after the last step too, the party member can walk again (the game's F10 puts it back but lets it walk no more) | on | at once | [F10 takes a whole move back](FEATURES.md#f10-takes-a-whole-move-back) |
+| Showing what can be used: hold Alt on the map, out of a fight | on | at once | [Showing what can be used](FEATURES.md#showing-what-can-be-used-alt) |
 
 **Rule changes**
 
@@ -2127,11 +2216,20 @@ once.")
 | GOG's own (walking can be choppy with shadows and dust) / Faster: for an older PC (fewer pictures a second with the whole party in view) / Fastest: the whole party walks at full speed, nearly every picture shown (the default) | Fastest | next start | [Game speed](FEATURES.md#game-speed) |
 | Steady pace: walking at full speed on the map whatever is drawn (a picture skipped rather than the party slowed) | on | next start | [Game speed](FEATURES.md#game-speed) |
 
+**Picture and music (from the next start)**
+
+| Loader label | Default | Takes effect | Details |
+|---|---|---|---|
+| Plain: every pixel of the game as a block (the default) / Scanlines: a black line under each row of the picture, as on an old monitor / TV: a dimmed line under each row of the picture, softer than scanlines / Sharp: hard-edged pixels at any size, the stretching left unsmoothed (DOSBox's OpenGL) | Plain | next start | [Picture and music](FEATURES.md#picture-and-music) |
+| Music device | Windows' default | next start | a MIDI device of Windows' to play the game's music, by name: [Picture and music](FEATURES.md#picture-and-music) |
+
 **Wake of the Ravager (optional)** and **Saves**
 
 | Loader label | Default | Takes effect | Details |
 |---|---|---|---|
 | Choose its folder... | found by itself where it can be | next start | where Wake of the Ravager is installed, for the new priest spells' icons and pictures: [Requirements](README.md#requirements) |
+| Quick save and quick load: on the map, F5 saves at once on the QUICK page of the save window, and F9 opens the load window there | on | at once | [Quick save, quick load and autosave](FEATURES.md#quick-save-quick-load-and-autosave) |
+| Autosave: on coming into another area and after a fight, on the QUICK page of the save window | on | at once | [Quick save, quick load and autosave](FEATURES.md#quick-save-quick-load-and-autosave) |
 | Open the folder | (a button) | | opens the Named saves folder: [Saves under their names](FEATURES.md#saves-under-their-names) |
 | Put a save in a slot... | (a button) | | puts a named save back in one of the game's slots: [Saves under their names](FEATURES.md#saves-under-their-names) |
 
@@ -2151,6 +2249,7 @@ The Loader's other settings are outside the Options tab, and **Restore defaults*
 | **Speakers' names** | the Dialogue tab (**Name speaker...**, or a right-click on a name) | learned from the talk | remembered (`settings.json`) |
 | **Which Options sections are open** | the Options tab (a section's header) | all closed | remembered (`settings.json`) |
 | **Show** and **Only spells the party has a caster level for** | the Spells tab | all, off | for this session |
+| **Keep a journal** | the Journal tab | on | remembered (`settings.json`) |
 
 What each does: [the Loader's window](README.md#the-loaders-window) and [the dice
 log](README.md#the-dice-log).

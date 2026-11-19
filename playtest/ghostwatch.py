@@ -4,7 +4,7 @@ import os; PT = os.path.dirname(os.path.abspath(sys.argv[0])); sys.path.insert(0
 exec(open(__file__).read())
 from dsloader import ghost
 mem = g.read(0, 0x110000)
-hdr = next(i for i in range(0, 0x100000, 16) if mem[i:i+8] == b'DSCLOGvc')
+hdr = next(i for i in range(0, 0x100000, 16) if mem[i:i+8] == b'DSCLOGve')
 far = struct.unpack('<H', g.read(hdr + ghost.TSR_FAR_SEG, 2))[0] * 16  # (DAC: the far block's, since 2026-11-08)
 t0 = time.time(); zeros = samples = 0; last = None; dacs = set()
 while time.time() - t0 < float(sys.argv[1]):

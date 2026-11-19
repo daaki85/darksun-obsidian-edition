@@ -1,12 +1,12 @@
 # Obsidian Edition: Changes from the Original Game
 
-*A Dark Sun: Shattered Lands mod · Current version 2.18.0 · What the mod adds and changes, and its main bug fixes*
+*A Dark Sun: Shattered Lands mod · Current version 2.19.0 · What the mod adds and changes, and its main bug fixes*
 
 Obsidian Edition is a free mod for the GOG release of Dark Sun: Shattered Lands. It shows the rolls the game keeps hidden, brings its rules closer to AD&D 2nd Edition, adds kits, weapons, magic items and people to Athas, dresses the party in what they wear, and fixes bugs left over since 1993. You start the game with the Loader, which loads the mod with your options and logs every roll as it happens. The new content and a few rules are switchable, the game's own files are never touched, and your saves stay where they are.
 
 **Download:** https://github.com/daaki85/darksun-obsidian-edition/releases/latest
 
-*These notes describe version 2.18.0, and on GitHub any later change not yet in a release; the [changelog](https://github.com/daaki85/darksun-obsidian-edition/blob/main/CHANGELOG.md) says which pull request brought each one, and each version's [release notes](https://github.com/daaki85/darksun-obsidian-edition/tree/main/release-notes) what it changed from the one before.*
+*These notes describe version 2.19.0, and on GitHub any later change not yet in a release; the [changelog](https://github.com/daaki85/darksun-obsidian-edition/blob/main/CHANGELOG.md) says which pull request brought each one, and each version's [release notes](https://github.com/daaki85/darksun-obsidian-edition/tree/main/release-notes) what it changed from the one before.*
 
 Each release also has these notes as a web page, [`patch-notes.html`](https://github.com/daaki85/darksun-obsidian-edition/releases/latest/download/patch-notes.html), with a button that copies them as Markdown for forums.
 
@@ -16,7 +16,7 @@ Each release also has these notes as a web page, [`patch-notes.html`](https://gi
 - **Rules closer to AD&D 2nd Edition.** Saving throws, weapon specialization, two weapons, thief skills, class restrictions and the class tables as the books have them; spells, psionics and monsters as the manual describes them.
 - **More to choose and find.** Three kits for each class ([every kit](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/KITS.md)), twenty-two new magic weapons and more new magic and plain items ([every item, and where it is](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/ITEMS.md)), and new people and an arena bout in the game's first areas.
 - **The party as it is dressed.** The figures show the gear they wear, magic gear glows on them, and elves have pointed ears.
-- **Quicker play.** Keys to choose a target, loot a body and sell plain gear, 40 save slots, a faster default speed, and no copy protection.
+- **Quicker play.** Keys to choose a target, loot a body and sell plain gear, quick saves and autosaves, 40 save slots, a faster default speed, and no copy protection.
 - **Bugs fixed.** The main fixes are under [Bug Fixes](#bug-fixes); every one, with what the game did, is in [the game's bugs, fixed](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/GAME-BUGS.md).
 - **Your choice.** The new content, and a few rules, have a switch in the Loader's Options; the rest is always on. The game's own files are never touched, and saves made with the original game load (see [Your Saved Games](#your-saved-games)).
 
@@ -27,6 +27,9 @@ Each change is tagged. **[Fixed]** is a bug of the game, or a rule it got wrong 
 - **[New]** A combat log in the game: **L** on the map shows every roll in the Loader's colours, at one of three levels of detail, in a panel that scrolls back, shrinks to a line or filters ([the combat log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#the-combat-log-in-the-game)).
 - **[New]** Out of a fight, the panel's top line shows the game's time, `Day 47, 14:20`, or in the arena how many arena fights the party has had.
 - **[New]** Names over figures: a spell's name over its caster, "Miss" over anyone missed, "Armor: 7 left" as a spell's charge is used, "Arrows: 17 left" over an archer ([names over figures](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#names-over-figures)).
+- **[New]** **The chance to hit, before the swing**: with an enemy chosen with Tab, the dice log and the combat log's header say what the d20 must show and the chance (`needs 14+ (35%)`); rest the pointer on an enemy and the number floats over it ([the chance to hit](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#the-chance-to-hit-before-the-swing)).
+- **[New]** **Squares in reach**: on a party member's turn a small cross marks every square one click can still walk to, counted by the game's own rules; **R** hides and shows them ([squares in reach](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#squares-in-reach)).
+- **[New]** **Hold Alt** on the map, out of a fight: a gold ring under every door, chest, body, item and person in view that a click does something with, and the names of those nearest the pointer ([showing what can be used](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#showing-what-can-be-used-alt)).
 - **[New]** The inventory screen and View Character show THAC0, all five saves, the THAC0 with each weapon, DEX's adjustments, a thief's skills and the age ([THAC0, saves and thief skills](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#thac0-saves-and-thief-skills)).
 - **[New]** The creation screen shows the THAC0 (`THAC0: M18 R19`), changing with STR, DEX and the kit, and the starting age ([the creation screen](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#the-creation-screen)).
 - **[New]** The USE screen shows the spell slots left at the level on show, and the most you get after resting ([spell slots](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#spell-slots-on-the-use-screen)).
@@ -144,6 +147,8 @@ Each change is tagged. **[Fixed]** is a bug of the game, or a rule it got wrong 
 - **[New]** **T** takes everything from a body or chest, **Shift+T** all but plain weapons *(was a click and a drop each)* ([looting](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#looting-a-body-t-and-shiftt)).
 - **[New]** **S** in a shop sells the plain gear in the backpack on show *(was a click each)* ([selling](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#selling-plain-gear-s)).
 - **[New]** **M** opens and closes the overhead map; **U** and **I** close the USE and inventory screens.
+- **[New]** **F5** saves at once, with no window, and **F9** opens the load window on those saves; the game also **saves by itself** on coming into another area and after a fight. All on a fifth page of the save window, **QUICK**, which keeps the last five of each ([quick save and autosave](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#quick-save-quick-load-and-autosave)).
+- **[Changed]** **F10**, the game's key that takes a move back in a fight, gives the walk back after the last step too *(was the character put back, unable to walk)* ([F10](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#f10-takes-a-whole-move-back)).
 - **[Changed]** A game starts and loads with the whole party on the map, and stays so after a fight *(was the leader alone)* ([the whole party](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#the-whole-party-in-view)).
 - **[Changed]** In a fight the view stays put while a figure walks *(was following each one near the edge)*.
 - **[Changed]** The pointer shows in the intro and scenes, starts in the middle, keeps its place and moves at the desktop's speed ([the pointer](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#the-pointer-in-scenes-and-where-it-starts)).
@@ -152,6 +157,7 @@ Each change is tagged. **[Fixed]** is a bug of the game, or a rule it got wrong 
 - **[Changed]** More memory to spare with the map up, for the mod's own needs: about 97 KB *(the original game: 57 KB)*, with part of the game's code and its music buffer in upper memory, so a long session is less likely to stop with "Out of memory in OEOpenGraph".
 - **[New]** Crash, freeze and item reports, and a warning in the dice log before memory runs out ([reports](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/README.md#crash-freeze-and-item-reports)).
 - **[New]** The game's window at its own size, double, triple or quadruple, or full screen.
+- **[New]** **The picture**: plain, scanlines, TV or hard-edged pixels at any size; and **the music** sent to any MIDI device of Windows' (a soundfont synthesizer, an MT-32 driver) ([picture and music](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#picture-and-music)).
 - **[Changed]** No more copy protection: the dragon asking for a word from the manual never comes ([no manual check](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#no-manual-check)).
 
 ## The Loader
@@ -159,6 +165,7 @@ Each change is tagged. **[Fixed]** is a bug of the game, or a rule it got wrong 
 - **[New]** The Loader starts the game with the mod and your options, and stays open while you play ([the Loader's window](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/README.md#the-loaders-window)).
 - **[New]** **The dice log**: every roll as it happens, with what it needed, its chance and every bonus, a fight's summary at its end, and the game's own choices ([the dice log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DICE-LOG.md)).
 - **[New]** **Characters**, **Spells** and **Dialogue** tabs: each member's sheet with more than the game shows, every spell's numbers, and everything said ([Characters](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/README.md#the-characters-tab)).
+- **[New]** **The Journal tab**: everything said and every reward, by day and area, kept on disk and following the save you load; and **Quests**, open and finished, read from the game's own flags ([the Journal tab](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/README.md#the-journal-tab)).
 - **[New]** **Find** in the dice log and the dialogue (Ctrl+F).
 - **[New]** The Loader can run the game as **Dark Sun Recompiled**, where it is installed ([other ways to start](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/README.md#dark-sun-recompiled)).
 - **[New]** **Options**: switches for the new content and a few rules (hit dice, half-giants' weapons, helms, kits, starting gear), the combat log's level and the red ring, all on by default, and **Restore defaults** sets them back; the rest of the mod is always on.

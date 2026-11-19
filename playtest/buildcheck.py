@@ -35,7 +35,7 @@ exe = open(os.path.join(DOS, 'DSCLOG.EXE'), 'rb').read()
 image = exe[struct.unpack_from('<H', exe, 8)[0] * 16:]
 tail_paras, = struct.unpack_from('<H', image, 1836)
 mem = g.read(0, 0x110000)
-hdr = next(i for i in range(0xA0000, 0x100000, 16) if mem[i:i + 8] == b'DSCLOGvc')
+hdr = next(i for i in range(0xA0000, 0x100000, 16) if mem[i:i + 8] == b'DSCLOGve')
 seg = hdr // 16
 w = lambda a: struct.unpack_from('<H', mem, a)[0]
 tail_seg = w(hdr + 1834)

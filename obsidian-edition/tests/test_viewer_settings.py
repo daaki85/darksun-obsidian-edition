@@ -51,6 +51,28 @@ class ViewerSettingsTests(unittest.TestCase):
             self.addCleanup(patcher.stop)
         self.addCleanup(launch.release_game)
 
+    def test_the_tabs_names_show_whole(self):
+        """Six tabs, each with its Alt letter, and the divider placed so the right-hand pane is at
+        least as wide as their names need (a narrower notebook cuts every name short: "Dice lo",
+        "Journa"), at the window's default size and at its smallest."""
+        from tkinter import font as tkfont
+        v = self.window()
+        names = [v.tabs.tab(t, "text") for t in v.tabs.tabs()]
+        self.assertEqual(names, ["Dice log", "Dialogue", "Journal", "Spells", "Memory tools", "Options"])
+        letters = [name[int(v.tabs.tab(t, "underline"))].lower() for name, t in zip(names, v.tabs.tabs())]
+        self.assertEqual(letters, ["l", "i", "j", "s", "m", "o"])  # (Alt+L, Alt+I, Alt+J, Alt+S, Alt+M, Alt+O)
+        need = viewer.tabs_width(v.tabs)
+        font = tkfont.Font(root=self.root, font=viewer.ttk.Style(self.root).lookup("TNotebook.Tab", "font"))
+        self.assertGreaterEqual(need, sum(font.measure(n) + 2 * viewer.theme.TAB_PADDING[0] for n in names))
+        for width in (1320, 1080):
+            placed = []
+            with mock.patch.object(v.panes, "winfo_width", lambda: width), \
+                    mock.patch.object(v.panes, "sashpos", lambda i, at: placed.append(at) or at):
+                v._fit_party()
+            self.assertEqual(len(placed), 1)
+            self.assertGreaterEqual(width - placed[0], need, width)
+            self.assertGreaterEqual(width - placed[0], v.tools_tab.winfo_reqwidth(), width)
+
     def window(self, **kwargs):
         def no_game():
             raise OSError("no game in a test")

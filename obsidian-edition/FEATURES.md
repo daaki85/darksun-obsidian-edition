@@ -11,9 +11,9 @@ it (or says **Always on**: most of the rule changes, the combat log, the thievin
 the controls have no switch), and links to the rules ("Rules:", in the player's guide and the
 reference pages) and to how it is made ("How it works:", the developer pages on GitHub).
 
-**Every switch is on by default.** The three choices of more than one have defaults of their own:
-the combat log's level is **in short**, the red ring is **under the enemy chosen with Tab**, and the
-game speed is **Fastest**. The switches count in games started from the Loader or its `.bat` files
+**Every switch is on by default.** The choices of more than one have defaults of their own:
+the combat log's level is **in short**, the red ring is **under the enemy chosen with Tab**, the
+game speed is **Fastest**, the picture is **Plain** and the music device is **Windows' default**. The switches count in games started from the Loader or its `.bat` files
 (**Play Dark Sun (in-game rolls)** uses the Options as last set), most at once; one whose label says
 "from the next start" waits until the game is started again. Untick one and the game's own way is
 back. What is always on can't be turned off: a settings file from before, with one of those
@@ -29,6 +29,7 @@ window are in the [README](README.md).
 - [More character customization](#more-character-customization)
 - [New content](#new-content)
 - [Game speed](#game-speed)
+- [Picture and music](#picture-and-music)
 - [Wake of the Ravager](#wake-of-the-ravager)
 - [Saves](#saves)
 - Always on: [Expanded features](#expanded-features), [Graphics](#graphics),
@@ -39,7 +40,7 @@ window are in the [README](README.md).
 
 What the game shows when it is started from the Loader: the Options tab's **In the game** section
 (the combat log, always on, with its level; the red ring's choice, under [choosing an
-enemy](#choosing-an-enemy-tab-enter-and-the-rings); and two switches). More the game's screens
+enemy](#choosing-an-enemy-tab-enter-and-the-rings); and the switches below). More the game's screens
 show, with no switch: [always on](#always-on).
 
 ### The combat log in the game
@@ -54,6 +55,9 @@ act (`Round 2: Gerakis, then Cermak, Cilla`); out of one it says how long the ga
 fights](HOW-THE-GAME-WORKS.md#the-arenas-count-of-fights) (`Arena fights: 4`) until the party has
 escaped Draj. Out of fights the lines with a roll go in too (a thief's skills, a scroll learnt, a
 new level's hit points). It never waits for a click, and stays shown or hidden as you left it.
+While a window, a screen, a menu or a talk is up (the save and load windows, the inventory, a
+member's END menu) the panel is put away, so it never covers them, and it is back when the map
+is.
 
 **Always on** (no switch). How much it says is the tab's choice, under *The combat log in the
 game (L on the map shows and hides it):* *...
@@ -119,6 +123,106 @@ walk, fight hand to hand or end it.
 missed, a used charge ("Armor: 7 left") over its owner, and the arrows left over a party archer
 after each shot*. How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#names-over-figures).
+
+### The chance to hit before the swing
+
+With an enemy chosen with Tab, the Loader says what the party member whose turn it is must roll on
+the d20 to hit it, and the chance, before anything is swung: on the dice log's line that names the
+enemy (`Chosen with Tab: Guard (50 HP), needs 14+ (35%) - Enter attacks it`) and in the combat log's
+header, in place of the round's line while the enemy is chosen (`Needs 14+ (35%)`). It is the
+number the dice log shows for the attack itself, worked out the way the game does: THAC0 with the
+weapon less the enemy's AC as it counts against this attacker. Each weapon is named where they
+differ, and both numbers are given where the swing may come from behind.
+
+**Under the pointer.** On a party member's turn, rest the game's pointer on an enemy and the same
+number floats over it, as "Miss" does: `12+ (45%)`. It goes when the pointer leaves the enemy or
+the turn passes. A label is narrow, so it gives one weapon, the one a click would swing first:
+next to the enemy the first weapon in hand; farther off the walk-up's with the walk arrow and the
+shot's with the attack pointer. With the look pointer (the eye) nothing shows: a click there only
+looks. Tab's choice is left alone: the pointer changes neither the ring nor the combat log's
+header.
+
+![Jenna's turn, the pointer on an Arena Guard at the corridor's end: "13+ (40%)" floats over the guard](docs/hit-chance-hover.png)
+
+**Switches:** *The chance to hit: with an enemy chosen with Tab, what the d20 must show to hit it and
+the chance, in the dice log and the combat log's header*, and *The chance to hit under the pointer:
+in a fight, with the pointer over an enemy, what the d20 must show and the chance float over it*. Rules: [the chance shown before the
+swing](PLAYER-GUIDE.md#the-chance-shown-before-the-swing). How it works:
+[DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#the-chance-to-hit-before-the-swing).
+
+### Squares in reach
+
+In a fight, on a party member's turn, every square that member can still walk to this turn has a
+small cross on the floor: a light one on sand, dirt and paving, a dark one on a floor of other
+colours. The crosses follow the turn: fewer as the member walks and its
+movement is spent, none once it is spent, and the next member's as the turn passes. They are drawn
+on the floor, so figures and walls stand on them, and a square a figure stands on (an ally's too)
+has none: nobody walks through anybody. What lies on the floor covers them as well: a square under
+a rug or the arena's stone platform can be walked on but shows no cross.
+
+![Seneca's turn, half her movement spent: light crosses on the squares she can still reach, round the wall's corner too; the Templar, chosen with Tab, stands outside them in his red ring](docs/squares-in-reach.png)
+
+A marked square is one a single click walks to. The game counts 10 for a step straight and 14 for
+a diagonal one out of ten times the Move the name box shows, and the crosses are counted the same
+way, by the shortest way round walls, through doorways and past whoever stands in the way ([moving
+in a fight](PLAYER-GUIDE.md#moving-in-a-fight)). **One limit:** where a wall or a doorway makes
+the game go round, its own way can cost a little more than the shortest, so the farthest crosses
+behind a wall may be a step out of one click's reach: click a nearer cross first, then the far
+one. Walking past an enemy costs nothing more, and a click on an enemy's figure is still an
+attack, not a walk. **F10**, the game's own key, takes a move back ([below](#f10-takes-a-whole-move-back)).
+
+**R hides the crosses and shows them again**, on the map in a fight, as L does the combat log: the
+dice log says which (`Squares in reach: hidden (R shows them)`), "Squares hidden" or "Squares
+shown" floats over the member whose turn it is (with [names over figures](#names-over-figures)
+on), and the choice is remembered for the next fight and the next start. The game has no use for R
+on the map. With the switch off there are no crosses and R does nothing.
+
+**Switch:** *Squares in reach: in a fight, a small cross on each square the party member whose turn
+it is can still walk to (R in a fight hides and shows them)*. Rules: [moving in a fight](HOW-THE-GAME-WORKS.md#moving-in-a-fight). How it works:
+[DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#squares-in-reach).
+
+### F10 takes a whole move back
+
+In a fight **F10**, the game's own key, takes a party member's move back: the member stands where
+its turn began, with the movement it had. In the game that works only while some movement is left:
+after the last step F10 still puts the member back, and the name box shows its Move again, but no
+click walks it ([moving in a fight](HOW-THE-GAME-WORKS.md#moving-in-a-fight)). With the Loader the
+member can walk again then too, and the dice log says so (`F10: Ester's move taken back (can walk
+again)`). Nothing else changes: an attack is not taken back, and after an attack (one that kills
+can leave the member its turn) F10 gives no walk.
+
+**Switch:** *F10 takes a whole move back: after the last step too, the party member can walk again
+(the game's F10 puts it back but lets it walk no more)*. Rules: [moving in a
+fight](PLAYER-GUIDE.md#moving-in-a-fight). How it works:
+[DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#f10-takes-a-whole-move-back).
+
+
+### Showing what can be used: Alt
+
+Hold **Alt** on the map, out of a fight: a gold ring appears on the ground under everything in view
+that a click does something with, and the four nearest the pointer have their names over them.
+Move the pointer and the names move to what is nearest it; let go of Alt and all of it is gone.
+
+![The slave pens' guard room with Alt held: gold rings under the bag, the chest, a door's leaf, the barred wardrobe and everyone in the room, and the names of the four nearest the pointer: Bag and Chest in pale gold, Templar and Guard in red](docs/show-usable.png)
+
+What gets a ring: **people to talk to**, their names in pale gold, and anyone else on another side
+than the party's (guards with nothing to say, monsters), named in red: there is nothing to do with
+them but fight; **doors**, each leaf (the look pointer opens and closes them); **chests, bags and
+other containers**, and **bodies**; **items lying on the ground**; and **things a script answers
+to** (a haystack that can be searched, a button, a lever, a fountain a pot can be filled at). Plain
+scenery gets nothing, nor does the party, and a secret door stays secret; a thing the game has no
+name for is ringed without one.
+
+Walking and clicking work as ever while Alt is held. In a fight Alt does nothing: the ring there is
+the red one under the enemy chosen with Tab, and a fight that starts while Alt is held takes the
+gold rings and the names away. The marks cost some speed while they are up (a walking party is
+about a sixth slower). Alt with another key is still what it was (Alt+Enter is DOSBox's full
+screen), and if Alt reads as held for 30 seconds on end the marks go until it is let go, so a key
+left "held" by switching windows can't leave them up.
+
+**Switch:** *Showing what can be used: hold Alt on the map, out of a fight*. How it works:
+[DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#showing-what-can-be-used-alt).
+
 
 ## Rule changes
 
@@ -734,6 +838,55 @@ What each speed asks of the computer: [suggested system
 requirements](README.md#suggested-system-requirements). How it works, with the measurements:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#game-speed).
 
+## Picture and music
+
+Two choices for DOSBox (the DOSBox 0.74 that comes with GOG's game), in the Options tab's **Picture
+and music** section, both from the next start.
+
+**Picture**: how DOSBox draws the game's 320x200 picture larger, in a [game
+window](README.md#every-time-you-play) of twice the game's size or more and in full screen. A
+**Single** window is always plain; the window's size and the pointer's speed are the same with
+every picture.
+
+| Picture | What you see |
+|---|---|
+| **Plain** (the default) | Every pixel of the game as a block of one colour. |
+| **Scanlines** | A black line under each row of the picture, as an old monitor showed it. The picture is darker for it: at Double half of it is black, at Triple and in full screen a third. |
+| **TV** | Each row fades downwards instead of ending in a black line: softer than scanlines, and darker than plain. |
+| **Sharp** | Hard-edged pixels at any size: DOSBox stretches the picture to its window (and to the whole screen in full screen) without smoothing it. Drawn with OpenGL; if your graphics driver doesn't take to that, DOSBox falls back to its plain drawing by itself. |
+
+![The party in the slave pens in a Triple window, the same spot three times: Plain on the left, every pixel a block; Scanlines in the middle, a black line under each row; TV on the right, each row fading downwards, the whole darker](docs/picture-modes.png)
+
+*Plain, Scanlines and TV in a Triple window (a part of it, at its own size). Sharp looks like Plain
+at this size.*
+
+DOSBox has Scanlines and TV at twice and three times the game's size only, so a Quadruple window
+shows the twice-size one doubled and smoothed, and full screen stretches the three-times one to
+your screen (on a screen whose height isn't a multiple of the game's rows the lines can't all be the
+same thickness). Sharp is plainest to see at Quadruple and in full screen, where DOSBox smooths the
+plain picture as it stretches it.
+
+**Music device**: where DOSBox sends the game's music. The game writes its music as General MIDI
+notes, and GOG's DOSBox has no synthesizer of its own: it hands the notes to Windows, which plays
+them on its default MIDI device (the "Microsoft GS Wavetable Synth", unless you have set another).
+If you have installed another MIDI device (a software synthesizer that plays a soundfont, a driver
+that imitates a Roland MT-32, a real sound module on a MIDI port), the list names it and you can
+pick it. The Loader comes with none and doesn't change Windows' settings: it only tells DOSBox which
+of Windows' devices to use. If the device you chose isn't there the next time (unplugged, or its
+program not running), the list says so, and the game would play without music until you choose
+again: DOSBox doesn't fall back by itself. The game still sends its General MIDI score whatever
+the device (on an MT-32 that is the wrong set of instruments; the game's own MT-32 score is chosen
+in its sound setup, which the Loader leaves alone), and sound effects and speech don't go to this
+device. Where the Loader can't read Windows' list (it runs on Linux, say, with the game's DOSBox
+under Wine), there is a field for the device's number in place of the list, 0 the first; a Linux
+DOSBox takes an ALSA port there, such as `128:0`. Empty is the default.
+
+**Switches** (Picture and music, from the next start): *Plain: every pixel of the game as a block
+(the default)*, *Scanlines: a black line under each row of the picture, as on an old monitor*, *TV: a
+dimmed line under each row of the picture, softer than scanlines* or *Sharp: hard-edged pixels at
+any size, the stretching left unsmoothed (DOSBox's OpenGL)*; and *Music device*. How it works:
+[DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#picture-and-music).
+
 ## Wake of the Ravager
 
 The [6th-level priest spells](#6th-level-priest-spells) take their icons, and Blade Barrier and Wall
@@ -746,22 +899,56 @@ it was found, and **Choose its folder...** points the Loader to it (from the nex
 
 ## Saves
 
-The Options tab's **Saves** section, and the room the Loader makes for more saves and characters
+The Options tab's **Saves** section (quick save and autosave, and the named saves), and the room the Loader makes for more saves and characters
 (always on).
 
 ### More saves
 
-The game's save and load window holds 10 saves; with the Loader it holds 40, on four pages of ten:
-the **PAGE 1** to **PAGE 4** buttons under EXIT, or **PgDn** and **PgUp**, show a page, and the
-window opens on the page last shown. In the load window an empty page shows with **LOAD** greyed.
+The game's save and load window holds 10 saves; with the Loader it holds 40, on four pages of ten,
+and a fifth page, **QUICK**, that fills itself ([quick save, quick load and
+autosave](#quick-save-quick-load-and-autosave)): the **PAGE 1** to **PAGE 4** and **QUICK** buttons
+under EXIT, or **PgDn** and **PgUp**, show a page, and the window opens on the page last shown
+(never on QUICK by itself). In the load window an empty page shows with **LOAD** greyed.
 Page 1 is the game's own `SAVE01.SAV` to `SAVE10.SAV` (in the game folder or GOG's `cloud_saves`);
-pages 2 to 4 are `SAVB..`, `SAVC..` and `SAVD..` beside them, which the game started without the
+pages 2 to 4 are `SAVB..`, `SAVC..` and `SAVD..` and the QUICK page `SAVQ..` beside them, which the game started without the
 Loader doesn't see.
 
 ![The load window on page 1 (left): the game's ten saves, and the PAGE 1 (greyed) to PAGE 4 buttons under LOAD and EXIT; and on an empty page 2 (right), with LOAD greyed](docs/save-pages.png)
 
 How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#more-saves).
+
+### Quick save, quick load and autosave
+
+On the map, **F5** saves the game at once: no window, no name to type. The game stands still for a
+third of a second, **Quick save** floats over the leader, and the dice log says which (`Quick save:
+"Quick - Day 3, 14:20" (the QUICK page, slot 2)`). **F9** opens the game's own LOAD window on those
+saves with the newest chosen: **Enter** (or LOAD) loads it. And the game saves by itself a few
+seconds after the party comes into another area (`Auto - Day 1, 16:31 - The arena`) and after a
+fight ends (`Auto - Day 1, 00:56 - after a fight`; at most one a minute, so the arena's waves don't
+fill the page).
+
+All of them are on a fifth page of the [save and load window](#more-saves), **QUICK** (the button
+under PAGE 4, or PgDn past page 4): its first five rows are the quick saves and the last five the
+autosaves. Each kind fills its empty rows and then writes over its oldest, so the last five of each
+are kept. They are saves like any other, and load in the game started without the Loader's window
+too.
+
+Nothing is saved in a fight (the game itself saves none there: F5 says so in the dice log), nor
+while a window, a talk, a screen or a menu is up, where F5 and F9 stay the game's keys; the game's
+own F1 (its SAVE window) and F2 (LOAD) work as always. A save you want to keep belongs on pages 1 to
+4, where nothing is written over: load the quick save and save it there. For the same reason the
+QUICK page's saves are not copied to [Named saves](#saves-under-their-names), and the save and load
+windows never open on the QUICK page by themselves: once the window is shut it is back on the page
+of 1 to 4 it showed last. With less than 4 MB free on the disk no quick save or autosave is made,
+and the dice log says so.
+
+**Switches:** *Quick save and quick load: on the map, F5 saves at once on the QUICK page of the save
+window, and F9 opens the load window there* (off, F5 and F9 are the game's own: F5 draws the view
+again, F9 breaks the camp of the game's rest, where the Loader leaves both to the game anyway) and
+*Autosave: on coming into another area and after a fight, on the QUICK page of the save window*.
+How it works:
+[DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#quick-save-quick-load-and-autosave).
 
 ### Saves under their names
 

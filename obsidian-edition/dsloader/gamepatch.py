@@ -977,7 +977,7 @@ PATCHES = (
     # new game)
     Patch("save_enter", 0x74E28, bytes.fromhex("0d1c"), bytes.fromhex("ffff")),
     # ... and where a click on a button it doesn't know goes to its end: jmp (DSCLOG: PAGE 1 to
-    # PAGE 4, savepages.py)
+    # PAGE 4 and QUICK, savepages.py)
     Patch("save_click", 0x74B9F, bytes.fromhex("e94302"), _interrupt(VEC_SAVE_CLICK, 3)),
     # the game's thief skill check (803B8h): its chance, "mov [bp-2],ax" at 803D3h: a lock the thief
     # failed at the thief level it has now is out of reach (DSCLOG's LOCK_SITE; the Loader's locks.py)

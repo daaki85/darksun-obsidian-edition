@@ -28,7 +28,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple
 
-from . import aging, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, keywatch, moveback, usable, hover, quests, quicksave, hitchance, journal, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, squares, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, CREATURE_ABILITIES, CREATURE_SIDE, CREATURE_THAC0, EFFECT_NAMES,
                    MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory, WriteRefused
@@ -37,7 +37,7 @@ from .itemwatch import ItemWatch
 from .textlog import KIND_MESSAGE, KIND_PORTRAIT, KIND_SHOW_REPLIES, KIND_TEXT, Dialogue, DialogueEntry, TextBuffer
 from .tracker import PartyTracker
 
-HDR_SIG = b"DSCLOGvc"
+HDR_SIG = b"DSCLOGve"
 TSR_HDR_OFF = 20  # DSCLOG's header: where it is in DSCLOG's segment
 TSR_SEQ, TSR_SEED_OFF, TSR_NFILT = 8, 22, 32  # entries written; the seed's offset (and what follows); filters in use
 # ... the party's spell slots, for the game's USE screen (PROBE_USE)
@@ -335,6 +335,7 @@ POLL_FAILS = 25  # passes in a row whose ring read wrong before still_patched ha
 DESTROYED_WAIT = 3.0  # seconds a creature destroyed outright may take to show its HP fall
 POISON_WAIT = 3.0  # seconds a Poisoner's poison on a helpless target may take to land (queued: about 0.5)
 FIGHT_GAP = 120  # game seconds without a new round after which the fight is over
+CHANCE_EVERY = 0.5  # seconds between the header's chance to hit being worked out afresh (hitchance.py)
 # seconds (of ours) the game's fight flag stays down, once seen up in the fight, before the fight
 # counts as over: the game clears it as a fight ends and between the arena's waves (and it is
 # still clear as round 1's initiative is rolled, before it was ever up: that doesn't count)
@@ -506,7 +507,7 @@ def _new_fight(log) -> None:
     worked out for one in an earlier fight isn't this one's (the party's stay theirs)."""
     log._round = 0
     log._recent_damage.clear()  # (an earlier fight's rolls named this one's damage: "from Shocking Grasp")
-    for remembered in (log.last_ac, log.ac_detail):
+    for remembered in (log.last_ac, log.ac_detail, getattr(log, "ac_gap", {})):
         for index in [i for i in remembered if i >= game.PARTY_SIZE]:
             del remembered[index]
 
@@ -569,8 +570,22 @@ class DiceLog:
         self._dust = dust.Dust()  # dust raised by walkers on sand and dirt (dust.py)
         self.ring_mode = rings.ONLY_CHOSEN  # a ring in a fight: off, or the chosen enemy's (rings.py)
         self._rings = rings.Rings()
+        self.show_squares = True  # the squares a party member can still walk to, marked in a fight (squares.py)
+        self.squares_shown = True  # ... shown, or hidden with R in a fight (the settings' squares_shown)
+        self._squares = squares.Squares()
+        self._keys = keywatch.KeyWatch()  # the keys pressed, for R (keywatch.py)
+        self.move_back = True  # F10 after the last step: the move taken back can be walked again (moveback.py)
+        self._move_back = moveback.MoveBack()
         self._big = cahulaks.Big()
         self._large = sizes.Large()
+        self.hit_chance = True  # what the d20 must show to hit the chosen enemy (hitchance.py)
+        self.ac_gap: Dict[int, int] = {}  # creature index -> the game's AC for it less attack_ac's, when last attacked
+        self._chance_seen: Tuple[Optional[tuple], float, str] = (None, 0.0, "")  # (the header's, kept a moment)
+        self.show_usable = True  # Alt held on the map marks what can be used (usable.py)
+        self._usable = usable.Usable()
+        self.hit_hover = True  # the chance to hit over the enemy under the pointer (hover.py)
+        self._hover = hover.Hover()
+        self._foes: List[int] = []  # the fight's enemies as _drawn last found them (rings.enemies)
         self._targeting = targeting.Targeting()  # Tab chooses an enemy in a fight, Enter attacks it (targeting.py)
         self._scrolling = scrolling.Scrolling()  # the map scrolled by dragging with the wheel pressed (scrolling.py)
         self._dresser: Optional[sprites.Dresser] = None
@@ -579,6 +594,8 @@ class DiceLog:
         self._sell_seen: Optional[Tuple[int, int]] = None  # (DSCLOG's header, SELL_SEQ as last acted on)
         self._sell_noticed: Optional[Tuple[int, int]] = None  # (SELL_SEQ new, the BIOS tick it was seen at)
         self._loot_seen: Optional[Tuple[int, int]] = None  # (DSCLOG's header, LOOT_SEQ as last acted on)
+        self.quicksave = quicksave.QuickSave()  # the quick save and quick load keys, the autosave (quicksave.py)
+        self._quick_dir: Optional[str] = None  # the game's folder, for it (found once)
         self._locks_written: Optional[Tuple[int, bytes]] = None  # (DSCLOG's header and LOCK_BARRED as last written)
         # ... and when, by the game's clock: one tried after the game being played was saved is
         # forgotten when that save is loaded (the clock goes back past it)
@@ -631,6 +648,8 @@ class DiceLog:
         self._errors_said: set = set()  # (the kinds of error a pass has written once: _error_once)
         self._effects: Optional[Counter] = None
         self._party: Optional[bytes] = None
+        self.journal: Optional[journal.Journal] = None  # (the Loader's journal, if it keeps one: journal.py)
+        self.quest_state: Optional[quests.State] = None  # (the game's flags and numbers as last read: _quest_look)
         self._party_changed_at = 0.0
         self._party_clock: Optional[int] = None  # (the game's clock at _party_check's last look: back means a game loaded)
         self._aging_at: Optional[Tuple[bytes, int, tuple]] = None  # (natural aging: the last look's party, clock, count and years)
@@ -712,6 +731,13 @@ class DiceLog:
         self._poll_fails = 0
         self._dust = dust.Dust()
         self._rings = rings.Rings()
+        self._squares = squares.Squares()
+        self._keys.forget()
+        self._move_back = moveback.MoveBack()
+        self._usable = usable.Usable()
+        self._hover = hover.Hover()
+        self._foes = []
+        self._labels.attached()
         self._big = cahulaks.Big()
         self._large = sizes.Large()
         self._targeting.forget()
@@ -1000,6 +1026,10 @@ class DiceLog:
         self.arena_ring = settings.get("new_items", True) is not False  # (with the new items)
         self.starting_gear = bool(settings.get("starting_gear", True))
         self.floating_names = bool(settings.get("floating_names", True))
+        if settings.get("journal", True) is False:  # (the Journal tab's switch)
+            self.journal = None
+        elif self.journal is None:
+            self.journal = journal.Journal()
         self.combat_log_level = combat_log_level(settings)
         if settings.get("combat_log_size") in combatlog.SIZES:
             self._panel.resize(settings["combat_log_size"])
@@ -1008,6 +1038,14 @@ class DiceLog:
         self.vulture_on = bool(settings.get("vulture", True))
         self.defiler_scrolls = settings.get("defiler_scrolls", True) is not False
         self.ring_mode = rings.mode(settings)
+        self.hit_chance = settings.get("hit_chance", True) is not False
+        self.show_squares = settings.get("squares", True) is not False
+        self.squares_shown = settings.get("squares_shown", True) is not False
+        self.move_back = settings.get("move_back", True) is not False
+        self.quicksave.keys = settings.get("quick_save", True) is not False
+        self.quicksave.auto = settings.get("autosave", True) is not False
+        self.show_usable = settings.get("show_usable", True) is not False
+        self.hit_hover = settings.get("hit_hover", True) is not False
         self.load_picked(settings.get("pickpocketed", []), known=picked_known)
         self.rules = game.rules_from_settings(settings)
 
@@ -1033,6 +1071,42 @@ class DiceLog:
                 self.guest.write(table + 2 * game.SPELL_KIND, struct.pack("<H", save))
             if self.game is not None:
                 self.game.set_dodge(True)  # (RULE_NO_DOUBLE, always on)
+
+    def _swings(self, attacker: int, target: int) -> List["hitchance.Swing"]:
+        """What combatant ATTACKER needs to hit combatant TARGET (hitchance.predict), with the
+        switch for it on: the rules as they are, the attacker hidden in shadows or not (DSCLOG's
+        STEALTH), and what the game's AC for the target was above the Loader's count of it when
+        it was last attacked (ac_gap: DSCLOG's part, a kit's and such)."""
+        return self._predict(attacker, target) if self.hit_chance else []
+
+    def _predict(self, attacker: int, target: int) -> List["hitchance.Swing"]:
+        """_swings, whatever its switch (the pointer's label has its own: hit_hover)."""
+        if self.tsr_hdr is None:
+            return []
+        try:
+            hidden = struct.unpack("<H", self.guest.read(self.tsr_hdr + stealth.TSR_STEALTH, 2))[0] >> attacker & 1 \
+                if attacker < game.PARTY_SIZE else 0
+            index = self.game.combatant_creature(target)
+            gap = self.ac_gap.get(index, 0) if index is not None and self.monster_ac(index) is not None else 0
+            return hitchance.predict(self.game, attacker, target, bool(hidden), gap)
+        except (struct.error, IndexError, ValueError):
+            return []
+
+    def _chance_brief(self, now: float) -> str:
+        """For the panel's header: what whoever's turn it is needs to hit the enemy chosen with Tab
+        (hitchance.brief), worked out afresh every CHANCE_EVERY seconds while one is chosen."""
+        chosen = self._targeting.chosen
+        try:
+            turn = self.game.whose_turn()
+        except (struct.error, IndexError, ValueError):
+            return ""
+        if chosen is None or turn is None or turn >= game.PARTY_SIZE or not self.hit_chance:
+            return ""
+        key, at, text = self._chance_seen
+        if key != (turn, chosen) or not 0 <= now - at < CHANCE_EVERY:
+            text = hitchance.brief(self._swings(turn, chosen))
+            self._chance_seen = ((turn, chosen), now, text)
+        return text
 
     def monster_ac(self, index: int) -> Optional[int]:
         """The AC the game last computed for creature INDEX, if it was this creature's: a fight
@@ -1261,6 +1335,10 @@ class DiceLog:
 
     def detach(self) -> None:
         self.rand_addr = None
+        self.quest_state = None  # (the next game's flags are read afresh)
+        if self.journal is not None:  # (the game gone or started again: its numbers looked at afresh)
+            self.journal.reset()
+            self.journal.flush()
 
     def close(self) -> None:
         """Done with: the stats thread stops (answer_stats_in_background), and the mouse wheel's
@@ -1271,6 +1349,8 @@ class DiceLog:
         if self._wheel is not None:
             self._wheel.stop()
             self._wheel = None
+        if self.journal is not None:
+            self.journal.close()
 
     # ---- reading ----------------------------------------------------------------
 
@@ -1530,16 +1610,23 @@ class DiceLog:
             except Exception as e:  # (unknown: the party's watches wait for a pass that can tell)
                 out += self._error_once(e)
                 loading = True
+            out += step(lambda: self._quick_pass(loading, now))
             if not loading:  # (not while a game is loading: its records are half-filled)
                 out += step(lambda: self.tracker.check(now))
                 out += step(self._item_watches)
                 out += step(lambda: self._arena_ring(now))
                 out += step(lambda: self._drawn(now))
                 step(self._kalzith_sold_out)
+                step(self._journal_sync)
+                step(self._quest_look)
                 out += step(self._learn_lines)
                 step(lambda: self._dress_now(now))
                 out += step(lambda: self.itemwatch.check(self.game, now, self._settings))
         step(self._scroll)
+        step(lambda: self._usable_key(now), quiet=True)
+        step(lambda: self._hover_pass(now), quiet=True)
+        out += step(lambda: self._squares_key(now), quiet=True)
+        out += step(self._move_back_pass, quiet=True)
         if self._initiative and now - self._initiative_at >= INITIATIVE_WAIT:
             out += step(self.initiative_lines)
         out += step(self.turn_lines)  # after the round's order and the last turn's XP
@@ -1561,16 +1648,68 @@ class DiceLog:
     def _take_text(self, now: float) -> List[str]:
         """The messages DSCLOG copied (lines), and the dialogue (kept for take_dialogue)."""
         out: List[str] = []
+        said = len(self._dialogue)
+        messages: List[str] = []
         for rec in self.text.poll():
             if rec.kind == KIND_MESSAGE:
                 if rec.text.strip():
-                    out.append(f"Message: {' '.join(rec.text.split())}")
+                    messages.append(" ".join(rec.text.split()))
+                    out.append(f"Message: {messages[-1]}")
             else:
                 self._follow_talk(rec)
                 self._dialogue += self._not_ours(self.dialogue.add(rec, now))
         self._dialogue += self._not_ours(self.dialogue.idle(now))
         self._dialogue += self._not_ours(self._reply_choice(now))
+        if self.journal is not None and (messages or len(self._dialogue) > said):
+            self._journal_note(self._dialogue[said:], messages)
         return out
+
+    def _journal_note(self, talk: Sequence[DialogueEntry], messages: Sequence[str]) -> None:
+        """What was just said and shown, into the journal, with the game's clock and region now.
+        (Within a pass the talk goes before the message boxes: the order between them isn't kept.)"""
+        try:
+            clock, region = self.game.game_time(), self.game.region()
+        except (struct.error, IndexError, ValueError, OSError):
+            clock, region = None, None
+        for entry in talk:
+            if entry.chosen:
+                self.journal.add(journal.CHOSEN, entry.chosen, clock, region)
+            else:
+                self.journal.add(journal.TALK, entry.text, clock, region, entry.portrait,
+                                 self.speaker(entry.portrait) if entry.portrait is not None else "",
+                                 entry.replies, entry.title)
+        for text in messages:
+            kind = journal.kind_of_message(text)
+            if kind is not None:
+                self.journal.add(kind, text, clock, region)
+
+    def _quick_pass(self, loading: bool, now: float) -> List[str]:
+        """The quick save and quick load keys and the autosave (quicksave.py): its lines, and a word
+        floating over the leader when a save is made."""
+        from . import launch
+        if self._quick_dir is None:
+            self._quick_dir = launch.find_game_dir(self.game_dir) or ""
+        out = self.quicksave.tick(self.game, self.tsr_hdr, self._quick_dir, loading, now)
+        word, self.quicksave.label = self.quicksave.label, None
+        if word:
+            leader = self.game.whose_turn()
+            self._float(leader if leader is not None and leader < game.PARTY_SIZE else 0, word, labels.SPELL_INK, now)
+        return out
+
+    def _journal_sync(self) -> None:
+        """The journal's look at the id the game's numbers hold (journal.Journal.sync): a game
+        loaded shows its own journal. Not while a game is loading (_after_rolls)."""
+        if self.journal is not None:
+            self.journal.sync(lambda: journal.read_head(self.game), lambda head: journal.write_head(self.game, head),
+                              self.game.game_time())
+
+    def _quest_look(self) -> None:
+        """The game's flags and numbers read for the Journal tab's quests (quests.py), with the
+        journal's look and not while a game is loading. Their pointer is null at times (the arena
+        outside a script's run): the last reading is kept then."""
+        state = quests.read_state(self.game)
+        if state is not None:
+            self.quest_state = state
 
     def _item_watches(self) -> List[str]:
         """The watches that move items: each waits for a later pass while the game changes its
@@ -1787,17 +1926,88 @@ class DiceLog:
             self._update_panel(now)
             self._labels.on = self.floating_names
             self._labels.tick(self.game.guest, self.tsr_hdr, now)
-            foes = rings.enemies(self.game)
-            out = self._targeting.update(self.game, self.tsr_hdr, True, foes)
-            self._rings.update(self.game, self.tsr_hdr, self.ring_mode != rings.OFF, self._shadows.palettes,
-                               self._targeting.chosen)
+            self._labels_gone()
+            foes = self._foes = rings.enemies(self.game)
+            out = self._targeting.update(self.game, self.tsr_hdr, True, foes,
+                                         lambda turn, chosen: hitchance.line(self._swings(turn, chosen)))
+            self._marks(now)
             self._dust.update(self.game, self.tsr_hdr, True, self._shadows.palettes)
+            self._squares.update(self.game, self.tsr_hdr, self.show_squares and self.squares_shown,
+                                 self._shadows.palettes)
             hdr = self.tsr_hdr
             self._ghosts.update(self.game, hdr, True, self._shadows.palettes,
                                 lambda: shadows.redraw(self.game, hdr))
         except (struct.error, IndexError, ValueError):
             return []
         return out
+
+    def _marks(self, now: float) -> None:
+        """The rings: under what can be used while Alt is held out of a fight (usable.py, with the
+        names of those nearest the pointer), else the Tab ring's (rings.py, which owns the table)."""
+        if self.show_usable and self._labels.font is None and not self._labels_font_tried:
+            self._labels_font_tried = True
+            self._labels.font = _game_font(self.game_dir)
+        table = self._usable.update(self.game, self.tsr_hdr, self.show_usable, now, self._labels)
+        self._rings.update(self.game, self.tsr_hdr, self.ring_mode != rings.OFF, self._shadows.palettes,
+                           self._targeting.chosen, table)
+
+    def _usable_key(self, now: float) -> None:
+        """Every pass: the marks put up or taken down as Alt is pressed or let go (and at a
+        fight's start), not at the next of _drawn's looks, a quarter of a second apart."""
+        if self.tsr_hdr is not None and self.game is not None and self._shadows.palettes \
+                and self._usable.changed(self.game, self.show_usable, now):
+            self._marks(now)
+
+    def _squares_key(self, now: float) -> List[str]:
+        """Every pass: R on the map in a fight shows or hides the squares in reach (the Options
+        tab's switch on), as L does the combat log's panel: remembered (the settings'
+        squares_shown), said in the dice log and over the member whose turn it is. The key is
+        read from the BIOS keyboard buffer (keywatch.py): the game has no use for R."""
+        if self.game is None:
+            return []
+        pressed = [key for key in self._keys.take(self.game.guest)
+                   if key in (keywatch.KEY_R, keywatch.KEY_SHIFT_R)]
+        if not pressed or not self.show_squares or self.tsr_hdr is None:
+            return []
+        if self.game._word(quicksave.SCREEN_IS) != quicksave.ON_MAP or not self.game.in_combat():
+            return []
+        if len(pressed) % 2 == 0:  # (pressed twice between two looks: as it was)
+            return []
+        self.squares_shown = not self.squares_shown
+        _remember({"squares_shown": self.squares_shown})
+        self._squares.update(self.game, self.tsr_hdr, self.squares_shown, self._shadows.palettes)
+        turn = self.game.whose_turn()
+        self._float(turn if turn is not None and turn < game.PARTY_SIZE else 0,
+                    "Squares shown" if self.squares_shown else "Squares hidden", labels.SPELL_INK, now)
+        return ["Squares in reach: shown (R hides them)" if self.squares_shown
+                else "Squares in reach: hidden (R shows them)"]
+
+    def _move_back_pass(self) -> List[str]:
+        """Every pass: a move taken back with F10 after its last step can be walked again
+        (moveback.py); the squares in reach are marked again at their next look."""
+        if self.game is None:
+            return []
+        line = self._move_back.update(self.game, self.move_back)
+        return [line] if line else []
+
+    def _hover_pass(self, now: float) -> None:
+        """Every pass: the chance to hit over the enemy the game's pointer is on, in a fight on a
+        party member's turn (hover.py); the label follows the pointer within a pass or two, not
+        at _drawn's next look."""
+        if self.tsr_hdr is None or self.game is None:
+            return
+        if self.hit_hover and self._labels.font is None and not self._labels_font_tried:
+            self._labels_font_tried = True
+            self._labels.font = _game_font(self.game_dir)
+        self._hover.update(self.game, self.tsr_hdr, self.hit_hover, now, self._labels,
+                           lambda: self._foes, self._predict)
+        self._labels_gone()
+
+    def _labels_gone(self) -> None:
+        """The view drawn again once a label has been taken off or changed (Labels.took_off: what
+        DSCLOG has drawn over its old place doesn't stay in a still scene)."""
+        if self._labels.took_off() and self.tsr_hdr is not None:
+            shadows.redraw(self.game, self.tsr_hdr)
 
     def _panel_lines(self, lines: List[str], now: float) -> None:
         """A fight's lines into the combat log's panel (and those just after it: XP, the last kill);
@@ -1850,6 +2060,14 @@ class DiceLog:
         except (struct.error, IndexError, ValueError):
             pass
 
+    def _map_up(self) -> bool:
+        """The map is the screen, with no window, screen, menu or talk over it (the game's
+        DS:0BC9h is 1)."""
+        try:
+            return self.game._word(quicksave.SCREEN_IS) == quicksave.ON_MAP
+        except (struct.error, IndexError, ValueError):
+            return True
+
     def _update_panel(self, now: float) -> None:
         """The combat log: the panel over the map while shown (L shows and hides it); in a fight with who acts and who is next in the header, the newest
         lines again when a fight starts."""
@@ -1859,7 +2077,9 @@ class DiceLog:
                 self._fight_monsters = set()  # (a new fight)
                 self._panel.first = None
             self._fight_at = now
-        on = self._panel.open
+        # (shown only while the map is the screen: over a window, a screen or a talk DSCLOG would
+        # draw it on top, as it did over the save and load windows; back when the map is)
+        on = self._panel.open and self._map_up()
         top, names = "", {}
         if on:
             if not self._font_tried:
@@ -1875,7 +2095,7 @@ class DiceLog:
                 name = self.game.creature_name(index)
                 if index >= game.PARTY_SIZE and name and not name.startswith("creature "):
                     self._fight_monsters.add(name)
-            top = combatlog.header(self.round_status())
+            top = combatlog.header(self.round_status(), self._chance_brief(now))
         names.update({m: "monster" for m in self._fight_monsters if m not in names})
         in_arena = False  # (between fights in the arena: its count in the header; elsewhere the time)
         if on and not fighting:
@@ -4434,6 +4654,10 @@ class DiceLog:
         if index is not None:
             self.last_ac[index] = ac
             self._ac_whose[index] = self.game.creature_name(index)
+            attacker = self.game.combatant_creature(e.arg(8)) if e.arg(8) is not None else None
+            counted = self.game.attack_ac(index, attacker, bool(rear))
+            if counted is not None:  # (what DSCLOG added to the game's: hitchance.py)
+                self.ac_gap[index] = ac - counted
             sheet, rec = self.game.sheet(index), self.game.creature(index)
             armour = e.local(-6)
             if len(sheet) >= game.SHEET_SIZE and len(rec) >= game.CREATURE_SIZE and armour is not None:

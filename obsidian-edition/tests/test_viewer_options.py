@@ -1,6 +1,6 @@
 """The Options tab's switches (viewer.Viewer._options_changed, restore_defaults) on a real Loader
 window: every switch the Loader reads (launch.CONTENT, game.RULE_SETTINGS, launch.SWITCH_DEFAULTS)
-saved when one changes, and set back by Restore defaults; and the Help button, which opens the
+saved when one changes, and set back by Restore defaults; the picture and the music device; and the Help button, which opens the
 player's guide. Needs tkinter and a display (else skipped:
 run under xvfb-run for it)."""
 
@@ -39,6 +39,11 @@ class OptionsTests(unittest.TestCase):
         self.addCleanup(lambda: (setattr(launch, "SETTINGS", saved[0]), setattr(launch, "find_game_dir", saved[1])))
         launch.SETTINGS = os.path.join(d, "settings.json")
         launch.find_game_dir = lambda: None
+        # (the music devices as where they can't be read, a field to type in, whatever this
+        # computer has: on Windows the real list has "Microsoft GS Wavetable Synth")
+        devices = viewer.midiout.devices
+        self.addCleanup(lambda: setattr(viewer.midiout, "devices", devices))
+        viewer.midiout.devices = lambda: None
 
         def no_game():
             raise OSError("no game in a test")
@@ -61,6 +66,8 @@ class OptionsTests(unittest.TestCase):
             var.set(False)
         v.combat_log_level.set("detail")
         v.ring_mode.set("off")
+        v.picture.set("tv")
+        v._show_midi(2)
         v._options_changed()
         settings = self.saved()
         # (every switch off; the game changes with no switch, game.ALWAYS_ON, none of theirs written)
@@ -75,6 +82,7 @@ class OptionsTests(unittest.TestCase):
             if default is True:
                 self.assertIs(settings[key], False, key)
         self.assertEqual((settings["combat_log_level"], settings["rings"]), ("detail", "off"))
+        self.assertEqual((settings["picture"], settings["midi_device"]), ("tv", 2))
         asked = viewer.messagebox.askyesno
         viewer.messagebox.askyesno = lambda *a, **k: True
         try:
@@ -89,6 +97,88 @@ class OptionsTests(unittest.TestCase):
         for key, default in launch.SWITCH_DEFAULTS.items():
             self.assertEqual(settings.get(key), default, key)
         self.assertEqual(launch.effective_switches(settings), launch.effective_switches({}))
+
+    def test_picture_and_music_device(self):
+        """The picture and the music device (Picture and music): each saved as it is chosen, in
+        settings.json as launch.display_lines and midiout.conf_lines read them; a music device
+        typed that is none is not kept; and stored values the Loader doesn't know are shown, and
+        used, as the defaults."""
+        v = self.viewer
+        self.assertEqual((v.picture.get(), v._midi_value()), ("plain", "default"))
+        self.assertIsNone(v.midi_names)  # (not read here, setUp: a field to type in)
+        v.picture.set("scanlines")
+        v._picture_chosen()
+        self.assertEqual(self.saved()["picture"], "scanlines")
+        self.assertIn("scaler=scan3x", launch.display_lines(self.saved()))
+        self.assertIn("next start", v.status.get())
+        v.window_choice.set("Single (320x240)")
+        v._window_chosen()
+        self.assertIn("plain in a Single window", v.status.get())
+        self.assertEqual(self.saved()["picture"], "scanlines")  # (kept for a larger window)
+        self.assertIn("scaler=none", launch.display_lines(self.saved()))
+        v.picture.set("sharp")
+        v._picture_chosen()
+        self.assertIn("always plain", v.status.get())
+        v.window_choice.set("Full screen")
+        v._window_chosen()
+        self.assertEqual(launch.display_lines(self.saved()), ["[sdl]", "output=openglnb", ""])
+        for typed, stored in (("3", 3), ("128:0", "128:0"), ("", "default"), (" 1 ", 1)):
+            v.midi_device.set(typed)
+            v._midi_chosen()
+            self.assertEqual(self.saved()["midi_device"], stored, typed)
+            self.assertEqual(launch.midiout.setting(self.saved()), stored)
+        v.midi_device.set("the loud one")
+        v._midi_chosen()
+        self.assertEqual(self.saved()["midi_device"], 1)
+        self.assertEqual(v.midi_device.get(), "1")  # (back to the one remembered)
+        self.assertIn("a number", v.status.get())
+        v.midi_device.set("nonsense")  # (still in the field as another switch is changed: not saved)
+        v.monster_info.set(False)
+        v._options_changed()
+        self.assertEqual(self.saved()["midi_device"], 1)
+
+    def test_picture_and_music_device_as_stored(self):
+        """A window opened on stored choices shows them; on ones it doesn't know, the defaults,
+        and leaves the file as it is until something is chosen. With Windows' device names read,
+        the music device is a list of them."""
+        def window(settings, names=None):
+            with open(launch.SETTINGS, "w") as f:
+                json.dump(settings, f)
+            real = viewer.midiout.devices
+            viewer.midiout.devices = lambda: names
+            try:
+                root = tk.Toplevel(self.root)
+                self.addCleanup(root.destroy)
+                return viewer.Viewer(root, Layout.load(LAYOUT), lambda: (_ for _ in ()).throw(OSError("no game")))
+            finally:
+                viewer.midiout.devices = real
+        v = window({"picture": "tv", "midi_device": "128:0"})
+        self.assertEqual((v.picture.get(), v.midi_device.get(), v._midi_value()), ("tv", "128:0", "128:0"))
+        v = window({"picture": "hologram", "midi_device": "the loud one"})
+        self.assertEqual((v.picture.get(), v.midi_device.get(), v._midi_value()), ("plain", "", "default"))
+        v.monster_info.set(False)
+        v._options_changed()
+        self.assertEqual((self.saved()["picture"], self.saved()["midi_device"]), ("hologram", "the loud one"))
+        self.assertEqual(launch.effective_switches(self.saved())["picture"], "plain")
+        names = ["Microsoft GS Wavetable Synth", "A soundfont synth"]
+        v = window({"midi_device": 1}, names)
+        self.assertEqual(v.midi_device.get(), "1: A soundfont synth")
+        self.assertEqual(list(v.midi_box.cget("values")), ["Windows' default", "0: Microsoft GS Wavetable Synth",
+                                                           "1: A soundfont synth"])
+        v.midi_device.set("0: Microsoft GS Wavetable Synth")
+        v._midi_chosen()
+        self.assertEqual(self.saved()["midi_device"], 0)
+        v = window({"midi_device": 4}, names)  # (a device that isn't there now)
+        self.assertEqual(v.midi_device.get(), "4: (no such device now: no music)")
+        self.assertEqual(v._midi_value(), 4)
+        asked = viewer.messagebox.askyesno
+        viewer.messagebox.askyesno = lambda *a, **k: True
+        try:
+            v.restore_defaults()
+        finally:
+            viewer.messagebox.askyesno = asked
+        self.assertEqual((v.midi_device.get(), self.saved()["midi_device"], self.saved()["picture"]),
+                         ("Windows' default", "default", "plain"))
 
     def test_help_opens_the_manual(self):
         """Help, at the top of the window, opens the manual's start page (manual/index.html, beside

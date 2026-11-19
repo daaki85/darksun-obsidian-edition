@@ -525,6 +525,31 @@ if __name__ == "__main__":
     unittest.main()
 
 
+class OnlyOnTheMapTests(unittest.TestCase):
+    def test_put_away_while_the_map_is_not_the_screen(self):
+        """The panel is asked for only while the map is the screen (the game's DS:0BC9h is 1): a
+        window, a screen, a menu or a talk (2) takes it off (it was drawn over the save and load
+        windows), and it is back with the map; L's choice (open) is left as it was."""
+        import struct
+        from test_now import dag
+        from test_dicelog import DS
+        from dsloader import quicksave
+        log = dag()
+        log.combat_log, log._panel.open, log._font_tried = True, True, True
+        g = log.game
+        g.in_combat, g.region, g.number, g.game_time = (lambda: False), (lambda: 0x29), (lambda n: None), (lambda: 0)
+        asked = []
+        log._panel.update = lambda gd, hdr, on, *rest: asked.append(bool(on))
+        for screen, shown in ((1, True), (2, False), (3, False), (0, False), (1, True)):
+            struct.pack_into("<H", log.guest.mem, DS * 16 + quicksave.SCREEN_IS, screen)
+            log._update_panel(0.0)
+            self.assertEqual(asked[-1], shown, screen)
+            self.assertTrue(log._panel.open)
+        log._panel.open = False  # (hidden with L: not shown on the map either)
+        log._update_panel(0.0)
+        self.assertFalse(asked[-1])
+
+
 class ArenaHeaderTests(unittest.TestCase):
     def test_arena_count_only_once_known(self):
         """The dice log's header out of a fight: in the arena the count of arena fights once the
@@ -532,6 +557,7 @@ class ArenaHeaderTests(unittest.TestCase):
         from test_now import dag
         log = dag()
         log._panel.open, log._font_tried = True, True
+        log._map_up = lambda: True
         g = log.game
         region, number = [0x2A], [None]
         g.in_combat, g.region, g.number = (lambda: False), (lambda: region[0]), (lambda n: number[0])

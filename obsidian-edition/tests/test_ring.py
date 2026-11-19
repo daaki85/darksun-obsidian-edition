@@ -227,6 +227,7 @@ class FlagsTests(unittest.TestCase):
                 seen.append(args[-2:])
 
         log._panel, log._font_tried = Panel(), True
+        log._map_up = lambda: True
         log.tsr_hdr = log.tsr_hdr or 0x100
         struct.pack_into("<I", m, DS * 16 + game.NUMBERS_PTR, 0)
         log._update_panel(0.0)

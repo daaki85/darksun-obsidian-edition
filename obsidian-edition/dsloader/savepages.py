@@ -1,8 +1,9 @@
-"""PAGE 1 to PAGE 4 buttons in the save/load window (DSCLOG's PROBE_SAVE_PAGE).
+"""PAGE 1 to PAGE 4 and QUICK buttons in the save/load window (DSCLOG's PROBE_SAVE_PAGE).
 
 The game's save/load window (WIND 3009 in RESOURCE.GFF) shows ten saves. DSCLOG shows them on
-four pages (the game's own SAVE01.SAV to SAVE10.SAV, then SAVB, SAVC and SAVD01.SAV to 10.SAV),
-for PgUp and PgDn or a click on PAGE 1 to PAGE 4.
+five pages (the game's own SAVE01.SAV to SAVE10.SAV, then SAVB, SAVC and SAVD01.SAV to 10.SAV,
+and SAVQ01.SAV to 10.SAV, the quick saves and autosaves: quicksave.py), for PgUp and PgDn or a
+click on PAGE 1 to PAGE 4 or QUICK.
 The buttons are the game's kind: a button (BUTN) placed in the window, under EXIT, and its four
 pictures (ICON: as it is, the pointer over it, out of use, pressed) made from EXIT's, its letters
 taken away and the page's put in, in the game's text font (FONT 100: the buttons' own carved
@@ -19,7 +20,8 @@ from .art import FONT_INK, FONT_SHADOW, Font, decode_frame
 WINDOW = 3009  # the save/load window
 EXIT = 0x80A  # its EXIT button, whose pictures the new ones are made from
 PAGES = ((0x815, "PAGE 1", 70), (0x816, "PAGE 2", 90), (0x817, "PAGE 3", 110),  # (id, text, y):
-         (0x818, "PAGE 4", 130))  # under EXIT (y 50), 20 apart as LOAD/SAVE (30) and EXIT are
+         (0x818, "PAGE 4", 130), (0x819, "QUICK", 150))  # under EXIT (y 50), 20 apart as LOAD/SAVE
+                                                         # (30) and EXIT are
 BUTTON_X = 231
 FONT_ID = 100
 WIND_COUNT = 243  # the window's word: how many items it has

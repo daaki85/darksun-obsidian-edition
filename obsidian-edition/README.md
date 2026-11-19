@@ -47,6 +47,7 @@ which loads the mod with your options.
   - [The Characters tab](#the-characters-tab)
   - [The Spells tab](#the-spells-tab)
   - [The Dialogue tab](#the-dialogue-tab)
+  - [The Journal tab](#the-journal-tab)
   - [The dice log](#the-dice-log)
 - [Accessibility](#accessibility)
 - [Updating](#updating)
@@ -67,6 +68,8 @@ Loader's **Options** tab ([each switch, its default and when it counts](PLAYER-G
 
 - **Shows what the game keeps hidden.** Every roll as it happens, with what it
   needed and where each bonus came from ([the dice log](#the-dice-log)); a
+  journal of everything said and every reward, which follows your saves ([the
+  Journal tab](#the-journal-tab)); a
   combat log over the map, names over figures and the Look box ([In the
   game](FEATURES.md#in-the-game)); THAC0, saves, thief skills, spell slots and
   charges on the game's own screens ([Always on](FEATURES.md#always-on)).
@@ -90,9 +93,11 @@ Loader's **Options** tab ([each switch, its default and when it counts](PLAYER-G
 - **Graphics.** The party's gear on its figures, shadows, dust, see-through
   figures, elves and half-elves of their own look, and magic items' icons
   that shine ([Graphics](FEATURES.md#graphics)).
-- **Quality of life.** Better [controls](FEATURES.md#controls), [more saves and
+- **Quality of life.** Better [controls](FEATURES.md#controls), [quick saves and
+  autosaves](FEATURES.md#quick-save-quick-load-and-autosave), [more saves and
   characters](FEATURES.md#saves), a [game
-  speed](FEATURES.md#game-speed) setting, [crash, freeze and item
+  speed](FEATURES.md#game-speed) setting, a choice of [picture and music
+  device](FEATURES.md#picture-and-music), [crash, freeze and item
   reports](#crash-freeze-and-item-reports) and [no manual
   check](FEATURES.md#no-manual-check).
 - **Fixes the game's bugs.** Dozens of them, always on, from spells that never did
@@ -166,7 +171,7 @@ slows instead of speeding up: choose the next setting down.
    there, install the 64-bit Python from <https://www.python.org/downloads/>
    and tick **"Add python.exe to PATH"** on the installer's first screen.)
 3. **Back up your saves.** Before the first game with the mod, copy the save files (`SAVE*`, and
-   `SAVB*`, `SAVC*` and `SAVD*` once you have them) and `CHARSAVE.GFF` somewhere safe: from the
+   `SAVB*`, `SAVC*`, `SAVD*` and `SAVQ*` once you have them) and `CHARSAVE.GFF` somewhere safe: from the
    game folder's `cloud_saves` folder if it has one (the game reads its saves from there first),
    else from the game folder. The Loader never changes the game's own files, but your saves are
    written by the patched game: one with the new items ticked can hold item types the original game
@@ -201,6 +206,11 @@ window** at the top of the Loader picks **Single**, **Double**, **Triple**,
 and full screen while playing. Quadruple has DOSBox stretch its window with
 OpenGL; if your graphics driver doesn't take to that, pick Triple.
 
+On the Options tab, **Picture and music** has two more choices for DOSBox, also from the next
+start: the **Picture** (Plain, Scanlines, TV or Sharp) and the **Music device** (Windows' default,
+or another MIDI device you have installed, such as a software synthesizer with a soundfont):
+[Picture and music](FEATURES.md#picture-and-music).
+
 Load your game. The party's stats fill in by themselves, and rolls appear in
 the **Dice log** tab as they happen.
 
@@ -224,7 +234,8 @@ game at a time: a second one says which has it and leaves the game alone.
 
 **Checking a save file:** drag a save file onto **`Show Save.bat`** to see the
 party it holds: `SAVE01.SAV` to `SAVE10.SAV` (page 1), or pages 2 to 4's
-`SAVB01.SAV`, `SAVC01.SAV`, `SAVD01.SAV` and so on, from the game folder, or
+`SAVB01.SAV`, `SAVC01.SAV`, `SAVD01.SAV` and so on (the quick saves and autosaves are
+`SAVQ01.SAV` on), from the game folder, or
 from its `cloud_saves` folder if it has one (GOG's DOSBox keeps the saves
 there).
 
@@ -265,7 +276,7 @@ game again) and **Help** (this manual, in your browser) along the top. The party
 **Characters** tab (Alt+C): a card for each character, laid out like the game's View Character
 screen ([The Characters tab](#the-characters-tab)).
 
-The other side has the **Dice log**, **Dialogue** and **Spells** tabs (below) and **Options**
+The other side has the **Dice log**, **Dialogue**, **Journal** and **Spells** tabs (below) and **Options**
 (Alt+O) with the Loader's switches, in sections that open and close: click a section's heading (or
 Tab to it and press Space or Enter) to open it, ▸ when closed and ▾ when open. Which sections are
 open is remembered. Everything there applies in games started from the Loader or its `.bat` files;
@@ -275,8 +286,9 @@ switch with its default and when it counts, and links each to its page in
 [Features and rules](FEATURES.md); its **Wake of the Ravager (optional)** section is for the
 6th-level priest spells' icons and pictures ([Requirements](#requirements)).
 
-Every switch is on by default, and the three choices start at the red ring
-under the chosen enemy, the game speed Fastest and the combat log in short;
+Every switch is on by default, and the choices start at the red ring
+under the chosen enemy, the game speed Fastest, the combat log in short, the
+picture Plain and the music device Windows' default;
 all are remembered for next time. The rest of the mod is always on, with no
 switch: most of the rule changes, the combat log, weapon specialization, the
 thieving, the graphics and the controls. **Restore defaults**, at the bottom
@@ -382,6 +394,55 @@ run time (GPLDATA.GFF and RESOURCE.GFF in the install folder the Loader
 remembers); nothing from the game is copied into the Loader. Without the game
 installed the window uses its own lettering and no portraits.
 
+### The Journal tab
+
+The Dialogue tab shows what was said since the Loader was started. The **Journal** keeps it:
+everything said to the party, the replies offered and the one you chose, every reward ("Cilla
+receives 200 experience points!") and every other message the game showed, each under the game's
+day and the area it happened in. It is written to disk as you play (the `Journal` folder beside
+the Loader), so it is there the next time, for every game you play.
+
+**It follows your saves.** Load an older save and the journal shows what had happened up to that
+save, no more; play on another way and that game has a journal of its own from there, while the
+first is still there for its own saves. A new game begins an empty one. (The journal's place is
+kept in the save itself, in two of the game's numbers its scripts don't use. A save made without
+the Loader, or before the journal, has none: its journal begins when it is loaded.)
+
+- **Show:** everything, talk only, rewards, rewards and messages, or **Quests** (below).
+- **Only entries with:** type a word or a name (any case) and only the entries holding it are
+  shown, a talk with its answer; the count beside it says how many. The **Find** box under it marks
+  words in what is shown, as on the other tabs.
+- **Save...** writes what is shown to a text file. **Open the folder** opens the `Journal` folder,
+  where `journal.jsonl` holds every game's entries.
+- **Keep a journal** (ticked unless you clear it) switches it off and on. Switched off, nothing is
+  written, to the file or to your saves; what the journal holds stays.
+
+**Quests.** Choose **Quests** in the Show box and the tab lists the quests of the game you are
+playing: the **open** ones first, each with its name, where it belongs and what you were told when
+it was given, then the **finished** ones with how they ended. The count beside the box says how
+many of each ("2 open, 5 finished"). The game itself keeps no such list; the Loader reads it from
+the game's own record of the story as you play, so it is right for the save you loaded, and goes
+back when you load an older one.
+
+- **No spoilers.** A quest is listed only once your party has it. An open quest says what you were
+  told and nothing of how it ends; a quest you haven't met isn't there at all.
+- Many deeds have no one asking for them (a hidden door found, a prisoner given water): those
+  appear under Finished once done. A quest with several parts says how far it has come ("Done so
+  far: 2 of 3").
+- **Only entries with:** narrows the list to the quests whose name, place or words hold what you
+  type.
+- The list covers the quests the game rewards with experience that the mod could tell apart for
+  certain (45 so far, the mod's own among them), not every errand in the game. A few leave no mark
+  in the game but their reward's message: those are finished when the journal holds that message,
+  so they need the journal kept while you play.
+- **Without the game running**, the tab shows the quests as the Loader last read them, and says
+  so, if the journal shown is the one it was reading then. Otherwise it can only show the quests
+  whose reward the journal itself holds, and says that instead.
+
+An area the Loader has no name for yet is shown by its number ("Area 1Fh"). The game started
+without the Loader's window (`Play Dark Sun (in-game rolls).bat`) keeps the journal too.
+([How it works](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#the-journal-tab).)
+
 ### The dice log
 
 ![The Loader during the arena's opening show, in the readable layout: the Characters tab with the game's own party (Gerakis's Features: Wild Fighting and his age; K'ratchek's chatkcha 5/2 attacks a round and her open sky spells and psionics), and the dice log's last rounds: the Defiler's Cone of Cold on the Rampager (its magic resistance and its save for half), round 11's initiative, each attack with its outcome first, the d20 and the AC in columns and the working under it, the Defiler's death, the party's PSP back, and the fight's summary](docs/dicelog.png)
@@ -433,7 +494,7 @@ level AA:
   The Options tab's longer lines wrap to the window rather than run out of it.
 - **Keyboard:** Tab and Shift+Tab move between controls, and the one with the
   keyboard focus is outlined in yellow. **Ctrl+Tab** switches tabs, as do
-  **Alt+L** (Dice log), **Alt+I** (Dialogue), **Alt+S** (Spells), **Alt+M**
+  **Alt+L** (Dice log), **Alt+I** (Dialogue), **Alt+J** (Journal), **Alt+S** (Spells), **Alt+M**
   (Memory tools) and **Alt+O** (Options), and on the party side **Alt+C**
   (Characters) and **Alt+A** (All fields).
 - **In the game,** Tab and Enter choose and attack an enemy in a fight with no
@@ -445,7 +506,7 @@ level AA:
   game uses a small font of the Loader's (8 pixels a line; its header, buttons and filters in the game's); the
   same lines are in the Dice log tab at any text size.
 - **Screen readers:** tkinter's windows are not read well by screen readers.
-  **Save...** on the Dice log and Dialogue tabs writes the log to a text file,
+  **Save...** on the Dice log, Dialogue and Journal tabs writes the log to a text file,
   and `py -3-64 -m dsloader dicelog` prints the same log (dialogue included) in
   a command prompt, which screen readers do read.
 
@@ -485,14 +546,15 @@ saves and characters:
 | `settings.json` | your options, and what the Loader remembers (who has had their pockets picked, speakers' names); if it is ever damaged, it is kept as `settings.json.bad` and the defaults used |
 | `crash-logs` | crash, freeze and item reports |
 | `Named saves` | a copy of each save under the name you gave it, made while the Loader's window is open: one a slot, replaced when the game saves over that slot (not a backup history), and the `Replaced -` copies a restore keeps |
+| `Journal` | the journal: everything said and every reward, for every game played, and the quests as last read from the game ([the Journal tab](#the-journal-tab)) |
 | `dosbox_dicelog.conf` | DOSBox's settings for the game the Loader starts, written at each start |
 | `play.log` | what went wrong, when the game was started with `Play Dark Sun (in-game rolls).bat` |
 | `dos` | the Loader's helpers, and the patched copy of the game (`DSUNLOG.EXE`) with copies of its data |
 | `layouts`, `.dsloader-search.json` | only from the Memory tools ([DEVELOPMENT-INTERNALS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-INTERNALS.md#mapping-memory)) |
-| the game folder | your saves (page 1 in the game's own `SAVE` files, pages 2 to 4 as `SAVB`, `SAVC` and `SAVD`) and characters in `CHARSAVE.GFF` |
+| the game folder | your saves (page 1 in the game's own `SAVE` files, pages 2 to 4 as `SAVB`, `SAVC` and `SAVD`, the quick saves and autosaves as `SAVQ`) and characters in `CHARSAVE.GFF` |
 
 Page 1's saves (`SAVE*`) and `CHARSAVE.GFF` load in the original game as long as they hold none of
-the new items ([back up your saves](#one-time-setup)); the extra pages (`SAVB*`, `SAVC*`, `SAVD*`)
+the new items ([back up your saves](#one-time-setup)); the extra pages (`SAVB*`, `SAVC*`, `SAVD*`, `SAVQ*`)
 are read only by the mod's patched game.
 
 ## When something goes wrong

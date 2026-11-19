@@ -39,6 +39,16 @@ class NamedSavesTests(unittest.TestCase):
         self.assertEqual(namedsaves.save_name(save("Before Scar's battle")), "Before Scar's battle")
         self.assertIsNone(namedsaves.save_name(b"not a save"))
 
+    def test_the_quick_page_is_not_copied(self):
+        """SAVQnn.SAV, the quick saves and autosaves (quicksave.py), are written over in turn: no
+        copy of them is kept, and none can be put back there."""
+        self.put(self.game, "SAVQ03.SAV", save("Quick - Day 3, 14:20"), 1000)
+        self.put(self.game, "SAVE02.SAV", save("Before Dinos"), 1000)
+        self.assertEqual(namedsaves.sync(self.game, self.named), ["Page 1 slot 02 - Before Dinos.SAV"])
+        self.assertEqual(os.listdir(self.named), ["Page 1 slot 02 - Before Dinos.SAV"])
+        with self.assertRaises(ValueError):
+            namedsaves.restore(os.path.join(self.game, "SAVE02.SAV"), self.game, 5, 1, self.named)
+
     def test_slot_files(self):
         self.assertEqual(namedsaves.slot_file(1, 10), "SAVE10.SAV")
         self.assertEqual(namedsaves.slot_file(2, 1), "SAVB01.SAV")

@@ -135,7 +135,7 @@ nasm -f bin -o dos/DSCLOG.EXE dos/dsclog.asm
 ```
 
 The build fails if DSCLOG outgrows its 64 KB segment or the room it has in upper memory ([Room
-and memory](DEVELOPMENT-INTERNALS.md#room-and-memory)). The header's signature (`DSCLOGvc` now:
+and memory](DEVELOPMENT-INTERNALS.md#room-and-memory)). The header's signature (`DSCLOGve` now:
 after Z, lowercase) goes up whenever DSCLOG and the Loader must change together (`HDR_SIG` in
 `dsloader/dicelog.py`), so a Loader never talks to an older DSCLOG.
 
@@ -214,23 +214,24 @@ Some tests need more, and are skipped without it (each skip says what it needs, 
 to trust when a test file is added):
 
 - **unicorn**: the tests that run DSCLOG's interrupt handlers in a CPU emulator (`test_dsclog`,
-  `test_gamepatch`, `test_shadows`, `test_dsclog_drawing`, `test_cahulaks`, `test_sizes`,
+  `test_gamepatch`, `test_shadows`, `test_dsclog_drawing`, `test_squares_drawing`, `test_cahulaks`, `test_sizes`,
   `test_held`, `test_least_scores`, `test_manual_spells`, `test_manual_group3`, `test_group4`,
-  `test_interrupt_hygiene` among them).
+  `test_interrupt_hygiene`, `test_squares_drawing`, `test_quicksave`'s `QS_KEY` and `SAVE_TICK` among them).
 - **NASM**: the rebuild checks (`test_audit_builds`, `test_header_offsets`, `test_least_scores`,
-  `test_dsclog_drawing`, `test_scroll_interrupts`, `test_interrupt_hygiene`).
+  `test_dsclog_drawing`, `test_squares_drawing`, `test_scroll_interrupts`, `test_interrupt_hygiene`).
 - **tkinter**: the window's tests (`test_theme`, `test_partyview`, `test_find`,
-  `test_viewer_options`, and `test_compiles`' window part; `test_viewer_settings` also needs a
+  `test_viewer_options`, `test_journal`'s and `test_quests`' tab, and `test_compiles`' window part; `test_viewer_settings` also needs a
   display, so run it under `xvfb-run` on a machine without one). Linux's Python often lacks it.
 - **The game's files**, named by environment variables: `DSUN_GPLDATA` (its `GPLDATA.GFF`:
   `test_scriptnumbers`, `test_scriptfixes`, `test_pehtuclchest`, `test_champions`,
-  `test_audit_flags`, `test_sounds`, which reads the `RESOURCE.GFF` beside it, and `test_reach` and
+  `test_audit_flags`, `test_journal` (no script uses the journal's numbers), `test_quests` (the quest table held to
+  the scripts), `test_sounds`, which reads the `RESOURCE.GFF` beside it, and `test_reach` and
   `test_stinkpots`, which read the `DSUN.EXE` beside it), `DSUN_OBJECTS` (its `SEGOBJEX.GFF`, with
   `GPLDATA.GFF` beside it: `test_figures`, `test_pehtuclchest`, `test_worldgear`,
   `test_audit_objects`, `test_cahulaks`, `test_sizenames`, `test_icons`, `test_scriptfixes`,
   `test_group4`, which falls back to `/tmp/playtest/inst/SEGOBJEX.GFF`, the playtest kit's game)
   and `DSUN_RESOURCE` (its `RESOURCE.GFF`: `test_kitpages`, `test_spelltexts_fit`,
-  `test_spellgrid`).
+  `test_spellgrid`, `test_hitchance`'s header fit, `test_hover`'s label fit).
 
 The **Obsidian Edition tests** workflow (`.github/workflows/tests.yml`) runs them on Windows, with
 unicorn 2.1.4 and NASM 2.16.01, on every push to `obsidian-edition` and every pull request that
@@ -250,7 +251,7 @@ Tests that guard the whole project rather than one module:
 | `test_header_offsets` | every field of DSCLOG's header is at the offset its comment gives, in a fresh build; every `TSR_*` constant of the Loader's is a field's; the spell arrows' table and names are `spellarrows.ARROWS`' and the names' room `names.EXTRA` |
 | `test_interrupt_hygiene` | DSCLOG's handlers leave interrupts as their caller had them, INT 33h's handler forgotten when the game removes it, the timer's tick with the direction flag clear, the scenes' arrow off the screen during a latch copy, A20 turned on again |
 | `test_version` | the version is the same in `__init__.py`, the patch notes and the front page, and its release notes exist |
-| `test_release` | the Release workflow zips and publishes as below, and the patch notes' page's links work |
+| `test_release` | the Release workflow zips and publishes as below, what the zip leaves out (and that nothing shipped imports it), and the patch notes' page's links work |
 | `test_manual`, `test_patchnotes` | the web pages are up to date with their Markdown (every player's page of `obsidian-edition/` one of the manual's), and their links work: each of the manual's lands on a file in the zip and an anchor its page has, with no link to a Markdown file and no id twice; Help opens the manual's start page |
 
 The unit tests don't play the game. For anything DSCLOG or a script touches, check it in the game
@@ -266,8 +267,9 @@ archive` (so only what is committed goes in), and publishes the zip and `../patc
 
 The release zip is the `obsidian-edition` folder as `git archive` makes it, less what
 `obsidian-edition/.gitattributes` marks `export-ignore`: the developer pages (`DEVELOPMENT*.md`),
-`tests/` and `docs/viewer.png`, which stay in the repository and are linked from the manual at the
-release's tag (and from the Markdown pages at `main`), and git's own `.gitattributes` and
+`tests/`, `docs/viewer.png` and the developers' tool `dsloader/questdraft.py` (no module that ships
+imports it: `test_release` checks), which stay in the repository and are linked from the manual at
+the release's tag (and from the Markdown pages at `main`), and git's own `.gitattributes` and
 `.gitignore`. It holds the player's pages, the manual (whose `changes.html` is the zip's copy of
 the patch notes), the Loader, `dos/`, `layouts/`, `docs/` and the .bat files. The top-level
 `patch-notes.html` is not in the zip; it is attached to the release as an asset of its own.
@@ -342,9 +344,13 @@ and the section that explains it. INTERNALS, RULES, KITS, CONTENT and SCREENS ar
 | `__init__.py` | the package, its `__version__` | [Making a release](#making-a-release) |
 | `__main__.py` | the command line, `python -m dsloader <command>` | [From a command prompt](#from-a-command-prompt) |
 | `launch.py` | starts the GOG release in DOSBox with the dice log: the config, the copies, the crash report | [INTERNALS: crash report](DEVELOPMENT-INTERNALS.md#the-crash-report) |
+| `midiout.py` | the music device: where DOSBox sends the game's General MIDI music (the picture's lines are `launch.display_lines`) | [SCREENS: picture and music](DEVELOPMENT-SCREENS.md#picture-and-music) |
 | `gamepatch.py` | the patched game, DSUNLOG.EXE: `PATCHES` | [INTERNALS: the dice log](DEVELOPMENT-INTERNALS.md#how-the-dice-log-works) |
 | `dicelog.py` | the dice log: reads DSCLOG's ring and labels each roll; each pass's steps | [INTERNALS: the dice log](DEVELOPMENT-INTERNALS.md#how-the-dice-log-works) |
 | `textlog.py` | the dialogue and message boxes DSCLOG copies | [SCREENS: the Dialogue tab](DEVELOPMENT-SCREENS.md#the-dialogue-tab) |
+| `journal.py` | the journal: what was said and done in a game, kept on disk and following the game's saves | [SCREENS: the Journal tab](DEVELOPMENT-SCREENS.md#the-journal-tab) |
+| `quests.py` | the game's quests, for the Journal tab: which are open and which are finished in the game being played | [SCREENS: the quests](DEVELOPMENT-SCREENS.md#the-quests) |
+| `questdraft.py` | a draft of the quest table, read from the game's scripts: for developers (`python -m dsloader.questdraft`; not in the release zip) | [SCREENS: the quests](DEVELOPMENT-SCREENS.md#the-quests) |
 | `guestmem.py` | finds DOSBox's guest memory in its process | [INTERNALS: reading and writing memory](DEVELOPMENT-INTERNALS.md#reading-and-writing-memory) |
 | `process.py` | reads, writes and pauses another process's memory (Windows, Linux) | [INTERNALS: reading and writing memory](DEVELOPMENT-INTERNALS.md#reading-and-writing-memory) |
 | `itemgate.py` | the Loader's item-list writes, only while the game leaves the lists be | [INTERNALS: the item gate](DEVELOPMENT-INTERNALS.md#the-item-gate) |
@@ -458,7 +464,7 @@ and the section that explains it. INTERNALS, RULES, KITS, CONTENT and SCREENS ar
 | `dust.py` | dust raised by walking figures | [CONTENT: dust](DEVELOPMENT-CONTENT.md#dust) |
 | `ghost.py` | see-through figures | [CONTENT: see-through figures](DEVELOPMENT-CONTENT.md#see-through-figures) |
 | `labels.py` | names floating over figures | [SCREENS: names over figures](DEVELOPMENT-SCREENS.md#names-over-figures) |
-| `rings.py` | the ring under the enemy chosen with Tab | [SCREENS: choosing an enemy](DEVELOPMENT-SCREENS.md#choosing-an-enemy-tab-enter-and-the-rings) |
+| `rings.py` | the ring under the enemy chosen with Tab, and the gold ones under what can be used | [SCREENS: choosing an enemy](DEVELOPMENT-SCREENS.md#choosing-an-enemy-tab-enter-and-the-rings) |
 | `combatlog.py` | the combat log's panel in the game | [SCREENS: the combat log](DEVELOPMENT-SCREENS.md#the-panel) |
 | `smallfont.py` | the panel's small font | [SCREENS: the combat log](DEVELOPMENT-SCREENS.md#the-panel) |
 | `art.py` | the game's portraits and font, read from the installed game | [SCREENS: the combat log](DEVELOPMENT-SCREENS.md#what-the-game-allows) |
@@ -470,11 +476,18 @@ and the section that explains it. INTERNALS, RULES, KITS, CONTENT and SCREENS ar
 | Module | What it does | Section |
 |---|---|---|
 | `targeting.py` | Tab and Enter: choosing an enemy and attacking it | [SCREENS: choosing an enemy](DEVELOPMENT-SCREENS.md#choosing-an-enemy-tab-enter-and-the-rings) |
+| `hitchance.py` | the chance to hit shown before the swing, worked out as the game's attack does | [SCREENS: the chance to hit](DEVELOPMENT-SCREENS.md#the-chance-to-hit-before-the-swing) |
+| `hover.py` | the chance to hit floating over the enemy under the game's pointer, on a party member's turn | [SCREENS: under the pointer](DEVELOPMENT-SCREENS.md#under-the-pointer) |
+| `squares.py` | squares in reach: in a fight, a mark on each square the party member whose turn it is can still walk to, counted by the game's rules | [SCREENS: squares in reach](DEVELOPMENT-SCREENS.md#squares-in-reach) |
+| `keywatch.py` | the keys pressed in the game, read from the BIOS keyboard buffer: R, which shows and hides the squares in reach, at no cost to DSCLOG | [SCREENS: squares in reach](DEVELOPMENT-SCREENS.md#squares-in-reach) |
+| `moveback.py` | F10 after the last step: the move taken back can be walked again | [SCREENS: F10 takes a whole move back](DEVELOPMENT-SCREENS.md#f10-takes-a-whole-move-back) |
+| `usable.py` | showing what can be used: while Alt is held, a ring under every door, container, body, item and person in view, and the nearest ones' names | [SCREENS: showing what can be used](DEVELOPMENT-SCREENS.md#showing-what-can-be-used-alt) |
 | `scrolling.py` | scrolling the map with the mouse | [SCREENS: scrolling the map](DEVELOPMENT-SCREENS.md#scrolling-the-map) |
 | `wheel.py` | the mouse wheel, for the combat log's panel | [SCREENS: the combat log](DEVELOPMENT-SCREENS.md#the-panel) |
 | `loot.py` | T and Shift+T: looting a body in one go | [SCREENS: looting](DEVELOPMENT-SCREENS.md#looting-a-body-t-and-shiftt) |
 | `sell.py` | S: selling plain gear in one go | [SCREENS: selling](DEVELOPMENT-SCREENS.md#selling-plain-gear-s) |
-| `savepages.py` | PAGE 1 to PAGE 4 in the save window | [SCREENS: more saves](DEVELOPMENT-SCREENS.md#more-saves) |
+| `savepages.py` | PAGE 1 to PAGE 4 and QUICK in the save window | [SCREENS: more saves](DEVELOPMENT-SCREENS.md#more-saves) |
+| `quicksave.py` | quick save, quick load and autosave: the QUICK page that fills itself | [SCREENS: quick save](DEVELOPMENT-SCREENS.md#quick-save-quick-load-and-autosave) |
 | `viewer.py` | the Loader's window | [INTERNALS: practising without the game](DEVELOPMENT-INTERNALS.md#practising-without-the-game) |
 | `partyview.py` | the Characters tab's cards | [README](README.md#the-characters-tab) |
 | `spellbook.py` | the Spells tab: what each spell really does | [RULES: spells as the manual describes them](DEVELOPMENT-RULES.md#spells-and-psionics-as-the-manual-describes-them) |
@@ -524,7 +537,7 @@ table](DEVELOPMENT-INTERNALS.md#the-loaders-game-flags), and `tests/test_flagran
 (or `_ranges`); `test_audit_flags` finds it by itself.
 
 **A header field** (shared by DSCLOG and the Loader): add it at the end of `hdr:` in
-`dos/dsclog.asm` with its offset in the comment (`+1878` after `A20_LOST`'s `+1876`), so the
+`dos/dsclog.asm` with its offset in the comment (`+1892` after `SQUARES_ON`'s `+1890`), so the
 others never move; name it `TSR_*` in the module that reads it (`test_header_offsets` checks both:
 the field at the offset its comment says, the constant a field's offset). If both sides must change
 together, take the signature up (`sig` in `dsclog.asm` and `HDR_SIG` in `dicelog.py`). See
