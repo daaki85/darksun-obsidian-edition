@@ -146,9 +146,12 @@ def _last_lines(text: str, count: int) -> str:
     return "\n".join(text.rstrip().splitlines()[-count:]) or "(empty)"
 
 
+KEEP_REPORTS = 20  # the freeze reports kept in crash-logs (about 1 MB each): the newest, the rest removed
+
+
 def write_report(folder: str, now: float, text: str, memory: bytes) -> str:
     """Save the report and the memory as crash-logs/freeze-YYYY-MM-DD-HHMMSS.zip (a number after
-    it if there is one already); returns its path."""
+    it if there is one already), the older ones past KEEP_REPORTS removed (prune); returns its path."""
     os.makedirs(folder, exist_ok=True)
     stem = os.path.join(folder, time.strftime("freeze-%Y-%m-%d-%H%M%S", time.localtime(now)))
     path, n = stem + ".zip", 1
@@ -158,7 +161,26 @@ def write_report(folder: str, now: float, text: str, memory: bytes) -> str:
     with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
         z.writestr("freeze-report.txt", text)
         z.writestr("memory.bin", memory)
+    prune(folder, path)
     return path
+
+
+def prune(folder: str, kept: str, keep: int = KEEP_REPORTS) -> None:
+    """The freeze reports in FOLDER past the newest KEEP removed (by time written, then name; KEPT,
+    the one just written, never). Only the Loader's own freeze-*.zip: the crash reports' text, a
+    few KB each, and anything else there left alone. One that can't be removed (held open): left."""
+    def when(name: str):
+        try:
+            return os.path.getmtime(os.path.join(folder, name)), name
+        except OSError:
+            return 0.0, name
+    names = [n for n in os.listdir(folder) if n.startswith("freeze-") and n.endswith(".zip")
+             and os.path.join(folder, n) != kept]
+    for name in sorted(names, key=when, reverse=True)[max(0, keep - 1):]:
+        try:
+            os.remove(os.path.join(folder, name))
+        except OSError:
+            pass
 
 
 def freeze_report(read: Callable[[int, int], bytes], hdr: Optional[int], ds: Optional[int], version: str,
