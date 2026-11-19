@@ -3661,14 +3661,12 @@ expert_halves:
         inc ax
 .ret:   ret
 
-; OFF_HAND_HALVES: AX the attacks a round (halves) with item BX, a melee weapon: with RULE_TWO_WEAPONS
-; (AD&D's two weapons), no more than one a round (2 halves) in the off hand (its slot OFF_HAND_SLOT),
+; OFF_HAND_HALVES: AX the attacks a round (halves) with item BX, a melee weapon: AD&D's two
+; weapons (RULE_TWO_WEAPONS, always on), no more than one a round (2 halves) in the off hand (its slot OFF_HAND_SLOT),
 ; whoever wields it; the extra attacks are the main hand's. DS the game's; others kept.
 OFF_HAND_SLOT equ 10
 off_hand_halves:
         call cah_more           ; (the cahulaks: the off head's one more a round)
-        test byte [cs:rules], RULE_TWO_WEAPONS
-        jz .ret
         cmp ax, 2
         jbe .ret
         cmp bx, 0x270F
@@ -4171,7 +4169,7 @@ frame_speed:
 ; 6EF34h) in the routine that says whether a character may equip an item (its "Cannot use this
 ; item" when not; its only caller, the equip routine): AX the item type's mask of the classes that
 ; may use it, ES:BX the character's sheet, its +12h a bit for each of its classes, DX the item
-; type. With RULE_RESTRICT, an item the game allows that the character's classes keep it from
+; type. An item the game allows that the character's classes keep it from
 ; (CLASS_FORBIDS) is not allowed either. The kit's own (KIT_ALLOWS) are allowed whatever the
 ; game's lists and the restrictions; the kit's limits (KIT_FORBIDS) hold over everything.
 probe_can_use:
@@ -4191,8 +4189,6 @@ probe_can_use:
         call kit_forbids
         mov byte [cs:kf_off_hand], 0
         jc .no
-        test word [cs:rules], RULE_RESTRICT
-        jz .done
         call kit_allows         ; (the kit's own: whatever the classes' restrictions)
         jc .done
         call class_forbids
@@ -5110,7 +5106,7 @@ cu_others  dw 0
 ; psionic power), and so does a spell queued in a fight: the character the test's first argument
 ; (the "push dx" before its call, under the interrupt frame: DX itself is the test's to change,
 ; and was, so the check once looked at someone else), AX not 0 if it can't (its "No spell use"
-; effect). With RULE_RESTRICT, a multiclass preserver can't either while it wears armour, a helm
+; effect). A multiclass preserver can't either while it wears armour, a helm
 ; too (ARMOUR_WORN; a shield doesn't count); nor can a human who has been a preserver and a
 ; fighter, gladiator or ranger, in either order (CLASS_AND_WARRIOR).
 PRESERVER_CLASS equ 11
@@ -5134,8 +5130,6 @@ probe_no_cast:
         pop bp
         or ax, ax
         jnz .done
-        test word [cs:rules], RULE_RESTRICT
-        jz .done
         push bx
         push cx
         push dx
@@ -8647,8 +8641,6 @@ rg_two:
         and word [ss:di + 38], ~0x40
         test word [es:bx + 0x12], 0x200
         jz .plain
-        test byte [cs:rules], RULE_TWO_WEAPONS
-        jz .out
         call kit_is_b           ; (a Justifier: none in any armour; kits.py)
         db KIT_JUSTIFIER
         je .out
@@ -12328,15 +12320,9 @@ probe_xp_next:
         jz .next
         cmp si, 8
         ja .next
-        mov cl, 9               ; at the level cap (as PROBE_LEVEL): next
-        test byte [cs:rules], RULE_LEVEL_10
-        jz .nine
-        call level_room
+        call level_room         ; at the level cap (as PROBE_LEVEL): next
         jnc .next
-        jmp .below
-.nine:  cmp al, cl
-        je .next
-.below: mov ch, al
+        mov ch, al
         imul ax, si, 40
         push si
         movzx si, ch
@@ -12625,7 +12611,7 @@ probe_script_rand:
 ; the first melee weapon held; 7ABC4h, the first worn arm, leg or chest piece that fails):
 ; a weapon on a d20 under 8 less its plus; armour with no magical power (the item's +0Fh, as
 ; the game's weapon breaking reads it) at once, without a roll, else on a d20 under 10 less
-; that byte. With RULE_ITEM_SAVES the item needs the lower (the easier) of the game's number
+; that byte. The item needs (RULE_ITEM_SAVES, always on) the lower (the easier) of the game's number
 ; and AD&D's save against acid for its material (the DMG's table: wood 8, bone 11, metal 13,
 ; leather 10, cloth 12; glass's 5 for stone and obsidian), less its plus, and 1 less again
 ; for a magical power. Each check is recorded (kind KIND_ITEM: the d20 in the low byte, the
@@ -12647,8 +12633,6 @@ probe_item_weapon:
         mov di, si
         imul di, di, 0x0A
         mov bx, [bp+di-0x320]
-        test word [cs:rules], RULE_ITEM_SAVES
-        jz .log
         call adnd_needed
         cmp cx, dx
         jge .log
@@ -12658,34 +12642,14 @@ probe_item_weapon:
 
 ; PROBE_ITEM_SKIP: INT VEC_ITEM_SKIP replaces "cmp word [bp-2],0" (4 bytes: INT + 2 NOPs;
 ; 7AC45h) before the game's "jz <destroyed>": [BP-2] the armour's magical power, SI its entry
-; in the list at BP-322h (the item at BP-31Eh + SI*0Ah). ZF as the game's (destroyed without a
-; roll, recorded so), or with RULE_ITEM_SAVES clear: it rolls.
+; in the list at BP-322h (the item at BP-31Eh + SI*0Ah). ZF clear: it rolls (RULE_ITEM_SAVES,
+; always on; the game's destroyed without a roll gone with its switch).
 probe_item_skip:
         push bp
         mov bp, sp
         and word [bp+6], ~0x40          ; (the flags IRET takes back)
         pop bp
-        test word [cs:rules], RULE_ITEM_SAVES
-        jnz .roll
-        cmp word [bp-2], 0
-        jne .roll
-        push bp
-        mov bp, sp
-        or word [bp+6], 0x40
-        pop bp
-        push si
-        push ax
-        push bx
-        push cx
-        push di
-        mov di, si
-        imul di, di, 0x0A
-        mov bx, [bp+di-0x31E]
-        xor ax, ax                      ; no roll
-        mov dx, 21                      ; (any d20 is under it)
-        mov cx, ITEM_ARMOUR
-        jmp item_record
-.roll:  iret
+        iret
 
 ; PROBE_ITEM_ARMOUR: INT VEC_ITEM_ARMOUR replaces "mov dx,0Ah / sub dx,[bp-2]" (6 bytes: INT
 ; + 4 NOPs; 7AC59h), AX the d20, [BP-2] the armour's magical power, SI as for PROBE_ITEM_SKIP.
@@ -12704,8 +12668,6 @@ probe_item_armour:
 .game:  mov di, si
         imul di, di, 0x0A
         mov bx, [bp+di-0x31E]
-        test word [cs:rules], RULE_ITEM_SAVES
-        jz .log
         call adnd_needed
         cmp cx, dx
         jge .log
@@ -14473,9 +14435,7 @@ stab_times:
         pop ax
         jne .rule
         inc ax                          ; (an Assassin: one more)
-.rule:  test word [cs:rules], RULE_THIEF_TABLE ; (Thieves as in AD&D: the backstab's dice too)
-        jz .whole
-        cmp word [bp - 0x14], 0
+.rule:  cmp word [bp - 0x14], 0            ; (Thieves as in AD&D: the backstab's dice too)
         je .first
         mov ax, 1                       ; (the round's second attack: no backstab, as in AD&D)
         jmp .whole
@@ -16541,12 +16501,8 @@ save_sum:
         mov byte [cs:sv_nat], 1
         cmp ax, 40
         je .sum
-        cmp ax, 20
-        jne .not
-        test word [bp - 0x20], 0x86
-        jz .sum
-        test byte [cs:rules], RULE_NO_DOUBLE ; (no doubling: PROBE_DOUBLE)
-        jnz .sum
+        cmp ax, 20              ; (against fire, cold or electricity too: never doubled, PROBE_DOUBLE)
+        je .sum
 .not:   mov byte [cs:sv_nat], 0
 .sum:   add ax, cx
         call size_spared        ; (the creature size rule: Hold and Charm Person, a large target)
@@ -18264,24 +18220,14 @@ probe_move:
 ; bytes: INT + 8 NOPs) in the routine that gives an attack's to-hit adjustment for two weapons
 ; ready, after the call that reads the attacker's DEX in the game's initiative table (AX), for
 ; a non-ranger; [BP+0Ah] is the attack's item, CX the attacker's object. Leaves the
-; adjustment in DX: the game's, -AX and no less than 0; with RULE_TWO_WEAPONS, AD&D's: -2 (the
+; adjustment in DX: AD&D's (RULE_TWO_WEAPONS, always on): -2 (the
 ; item in the right hand) or -4 (in the left) plus AX (the same numbers as the reaction
 ; adjustment), no more than 0, and only with a melee weapon in the other hand too (else 0:
 ; a two-handed weapon, a shield, a sling or bow in the missile slot don't count).
 RIGHT_HAND equ 3
 LEFT_HAND  equ 10
 probe_two:
-        test byte [cs:rules], RULE_TWO_WEAPONS
-        jnz .rule
-        call two_cahulaks       ; (the cahulaks' rule: AD&D's numbers for them, whatever this one)
-        je .rule
-        neg ax
-        mov dx, ax
-        or dx, dx
-        jge .done
-        xor dx, dx
-.done:  iret
-.rule:  push bx
+        push bx
         push es
         push cx
         mov [cs:t_adjust], ax
@@ -18355,18 +18301,15 @@ t_base   dw 0
 t_adjust dw 0
 
 ; PROBE_DOUBLE: INT VEC_DOUBLE replaces "shl al,1" (2 bytes), where the saving throw doubles
-; its d20 against fire, cold and electricity spells; not with RULE_NO_DOUBLE.
+; its d20 against fire, cold and electricity spells: never (RULE_NO_DOUBLE, always on).
 probe_double:
-        test byte [cs:rules], RULE_NO_DOUBLE
-        jnz .done
-        shl al, 1
-.done:  iret
+        iret
 
 ; PROBE_LEVEL: INT VEC_LEVEL replaces "cmp byte es:[bx+24h],9" (5 bytes: INT + 3 NOPs) in the
 ; two places the game holds a class level (ES:BX+24h, a sheet's, BX past its start by the class's
 ; slot) against its cap of 9: where a character goes up a level (87BE6h, the slot DI; on while
 ; below it: JL) and where View Character shows the XP for the next level (67D08h, the slot DX, its
-; copy of the sheet; none at it: JE). With RULE_LEVEL_10 the cap is XP_CAP's share (LEVEL_ROOM):
+; copy of the sheet; none at it: JE). The cap is (RULE_LEVEL_10, always on) XP_CAP's share (LEVEL_ROOM):
 ; the game's XP tables, hit points, THAC0, saves, spell slots and thief skills all go on past 9
 ; (the tables have 20 levels, the rest are formulas). The flags as the compare's: below the cap
 ; as "cmp 0,1", at it as "cmp 9,9". RETF 2 keeps them.
@@ -18377,11 +18320,7 @@ LV_UP_XP   equ 0x87BE8 - 0x87BB0 ;   the class rows' table (+0CAh), the XP table
 LV_VIEW_XP equ 0x67D36 - 0x67D0A ; View Character's XP table's, on from the return
 probe_level:
         call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
-        test byte [cs:rules], RULE_LEVEL_10
-        jnz .cap
-        cmp byte [es:bx+0x24], 9
-        retf 2
-.cap:   pushad
+        pushad
         push fs
         push gs
         mov bp, sp
@@ -18495,15 +18434,13 @@ level_room:
 
 ; A thief's hit dice. The game keeps one "dice up to this level" for thieves and psionicists
 ; together (9: after it, +2 a level), but an AD&D thief rolls a d6 up to 10th (a psionicist
-; stops at 9th). With RULE_LEVEL_10 a thief's goes to 10, in the two places it counts.
+; stops at 9th). A thief's goes to 10 (RULE_LEVEL_10, always on), in the two places it counts.
 THIEF_CLASS equ 17
 ; PROBE_HD_ROLL: INT VEC_HD_ROLL replaces "mov al,es:[bx+1]" (5 bytes: INT + 3 NOPs) where a new
 ; level's hit points are a roll or the fixed gain: ES:BX the class's hit point group, the
 ; game's [BP+8] the class.
 probe_hd_roll:
         mov al, [es:bx+1]
-        test byte [cs:rules], RULE_LEVEL_10
-        jz .done
         cmp al, 9
         jne .done
         cmp word [bp+8], THIEF_CLASS
@@ -18518,8 +18455,6 @@ probe_hd_con:
         call if_frame           ; (interrupts as the caller had them: RETF 2 keeps these flags)
         push dx
         mov dl, [es:bx+1]
-        test byte [cs:rules], RULE_LEVEL_10
-        jz .cmp
         cmp dl, 9
         jne .cmp
         push es
@@ -18961,8 +18896,6 @@ LEVEL_HP_FROM_DS equ 0x4356 - 0x40B1    ; the game's hit point table: +group x 4
 LEVEL_HP_CON equ 0x52                   ;   level, then a fixed gain), +10h + class: its group
 WARRIOR_GROUP equ 1
 con_share:
-        test word [cs:rules], RULE_MULTI_HP
-        jz .ret
         push bx
         push cx
         push dx
@@ -19081,14 +19014,12 @@ class_share:
 ; "mov ax,si / shl ax,2 / add dx,ax / mov si,dx" (9 bytes) in the game's thief skill routine,
 ; where DX is the skill's base plus the race's adjustment, SI the thief level, ES:0 the game's
 ; thief tables (the base at +skill), and the game's [BP+8] the skill, [BP-0Ch] DEX. Without
-; RULE_THIEF_TABLE (or a thief level), the game's sum (SI = DX + 4 a level), CF clear: on to
-; the game's DEX formula. With it, SI = AD&D's average for the level (THIEF_TABLE, levels past
+; a thief level, the game's sum (SI = DX + 4 a level), CF clear: on to
+; the game's DEX formula. With one, SI = AD&D's average for the level (THIEF_TABLE, levels past
 ; 13 as 13) + the race's adjustment + Dark Sun's DEX adjustment (DEX_TABLE, DEX 9-22), CF set:
 ; past the game's DEX formula, to its armour and effects (dsloader/game.py does the same sums).
 probe_thief_skill:
         sti
-        test word [cs:rules], RULE_THIEF_TABLE
-        jz .game
         cmp si, 1
         jl .game
         push ax
@@ -23562,8 +23493,6 @@ probe_stealth:
         pop word [cs:s_cs]
         pop word [cs:s_fl]
         mov byte [cs:st_now], 0
-        test byte [cs:rules], RULE_STEALTH
-        jz .push
         cmp si, 3
         ja .push
         btr word [cs:stealth], si
@@ -23631,7 +23560,7 @@ missile_rear:
         add word [bp - 0x20], 2
 .ret:   ret
 
-; STAB_FIRST: in PROBE_STEALTH (SI the attacker, a creature; DS the game's), with RULE_THIEF_TABLE (Thieves as in AD&D):
+; STAB_FIRST: in PROBE_STEALTH (SI the attacker, a creature; DS the game's), Thieves as in AD&D:
 ; only a party member's first attack of a round is a backstab, as in AD&D. The game's own test
 ; (58A71h) lets two through and the round's count STAB_TIMES read ([BP-14h]) leaves the off-hand
 ; swing out, so a thief with three attacks (two weapons and a weapon spec's extra) had the third
@@ -23640,8 +23569,6 @@ missile_rear:
 ; same clock has its backstab taken back ([BP-24h] cleared, its +2 to hit off THAC0 [BP-20h]);
 ; from behind stays as it is. All registers kept.
 stab_first:
-        test word [cs:rules], RULE_THIEF_TABLE ; (Thieves as in AD&D: the backstab's dice too)
-        jz .ret
         cmp si, 3
         ja .ret
         push eax
@@ -28165,9 +28092,7 @@ probe_belt:
         call thief_heavy
         jnc .most
         xor dx, dx
-.most:  test word [cs:rules], RULE_THIEF_TABLE
-        jz .chance
-        cmp dx, THIEF_MOST
+.most:  cmp dx, THIEF_MOST
         jle .chance
         mov dx, THIEF_MOST
 .chance:
@@ -28178,13 +28103,11 @@ probe_belt:
         pop bx
 .out:   iret
 
-; THIEF_HEAVY: carry set if, with RULE_RESTRICT, creature AX (DS the game's) has a thief class and
+; THIEF_HEAVY: carry set if creature AX (DS the game's) has a thief class and
 ; wears armour that isn't light (HEAVY_WORN): a multiclass thief, or a human thief once a warrior
 ; (or a warrior once a thief), may wear it, but loses its thief skills and backstab in it
 ; (restrict.thief_heavy). All registers kept.
 thief_heavy:
-        test word [cs:rules], RULE_RESTRICT
-        jz .no
         pusha
         push es
         call creature_sheet

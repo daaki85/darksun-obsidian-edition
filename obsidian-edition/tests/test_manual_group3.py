@@ -386,8 +386,8 @@ class Group3Tests(unittest.TestCase):
                 (40, 0x80, 100, 5, 115, 0),  # (a doubled natural 20 and +100: 110, then the bonus)
                 (38, 0x80, 100, 0, 110, 0),  # (a doubled 19 and +100: kept, not read as -118)
                 (10, 0, -100, 0, -90, 0),    # (no natural 20)
-                (20, 0x80, -10, 0, 10, 0),   # (a doubled 10: no natural 20)
-                (20, 0x80, -10, 0, 14, 16)):  # (... but with RULE_NO_DOUBLE, 16, a natural 20 not doubled)
+                (20, 0x80, -10, 0, 14, 0),   # (RULE_NO_DOUBLE always on, its bit clear too: a natural 20 not doubled)
+                (20, 0x80, -10, 0, 14, 16)):
             self.mu.mem_write(TSR * 16 + self.hdr_off + 170, struct.pack("<H", rules))
             self.frame(m2=(d20 & 0xFF) | 14 << 8, m20=flags)
             self.assertEqual(self.run_site("save_sum", eax=mods & 0xFF), 8)

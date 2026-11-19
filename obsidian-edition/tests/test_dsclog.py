@@ -2195,10 +2195,10 @@ class SpecializeTests(unittest.TestCase):
     def test_off_hand_attacks(self):
         """With the rule for two weapons (AD&D's), a weapon in the off hand (the item at [BP+12h], in
         slot 10: DSCLOG's item 3) attacks once a round, the extra attacks the main hand's; a
-        missile weapon, the main hand or the rule off keep theirs (OFF_HAND_HALVES)."""
+        missile weapon or the main hand keep theirs (OFF_HAND_HALVES); the rule's bit clear the same."""
         two = 4
         for item, rules, missile, want in ((3, two | 4096, False, 2), (0x270F, two | 4096, False, 3),
-                                           (3, 4096, False, 3), (3, two, False, 2), (3, two | 4096, True, 3)):
+                                           (3, 4096, False, 2), (3, two, False, 2), (3, two | 4096, True, 3)):
             with self.subTest(item=item, rules=rules, missile=missile):
                 self.setUp()
                 self.mu.mem_write(SS * 16 + BP + 0x12, struct.pack("<H", item))
@@ -2420,7 +2420,7 @@ class CanUseTests(unittest.TestCase):
             for spec in (game.RULE_SPECIALIZE, 0):
                 for restrict_rule in (game.RULE_RESTRICT, 0):
                     rules = spec | restrict_rule
-                    game.RULES_IN_FORCE = rules | game.RULE_KITS | game.RULE_SPECIALIZE  # (DSCLOG's always on)
+                    game.RULES_IN_FORCE = rules | game.RULE_KITS | game.RULE_SPECIALIZE | game.RULE_RESTRICT  # (DSCLOG's always on)
                     for kit, chosen in ((2, 1), (2, 6), (2, 0), (1, 1)):
                         s = bytearray(test_restrict.sheet(11))
                         s[0x43], s[0x14] = kit, chosen
@@ -2709,7 +2709,7 @@ class NoCastTests(unittest.TestCase):
         self.assertEqual(self.no_cast(sheet(11, 9, race=game.HUMAN), [(6, chest)]), 1)  # (a fighter once)
         self.assertEqual(self.no_cast(sheet(9, 11, race=game.HUMAN), [(6, chest)]), 1)  # (a preserver once)
         self.assertEqual(self.no_cast(sheet(11, 1, race=game.HUMAN), [(6, chest)]), 0)  # (a cleric once)
-        self.assertEqual(self.no_cast(sheet(9, 11), [(6, chest)], rules=0), 0)
+        self.assertEqual(self.no_cast(sheet(9, 11), [(6, chest)], rules=0), 1)  # (the rule always on: its bit clear too)
         self.assertEqual(self.no_cast(sheet(9, 17), [(6, chest)], ax=1), 1)  # (the game's own reasons)
 
 
@@ -2784,7 +2784,7 @@ class MultiHpTests(unittest.TestCase):
                     with self.subTest(sheet=list(s[0x21:0x24]), levels=list(s[0x24:0x27]),
                                       base=s[game.SHEET_HP_BASE], con=con, rules=rules):
                         game_own = 7  # (the game's own, which one class keeps)
-                        share = game.con_share(s, bonus, self.GROUPS, self.LAST_DIE) if rules else None
+                        share = game.con_share(s, bonus, self.GROUPS, self.LAST_DIE)  # (the bit clear or set)
                         share = game_own if share is None else share
                         out = self.run_probe(VEC_MC_CON, s, con, rules, eax=game_own, edi=50)
                         self.assertEqual(out["di"], (50 + share) & 0xFFFF)
@@ -3057,7 +3057,7 @@ class XpNextTests(unittest.TestCase):
 @unittest.skipIf(Uc is None, "unicorn is not installed")
 class ItemSaveTests(unittest.TestCase):
     """The acid's and corroding touch's item checks (PROBE_ITEM_*): the number a d20 needs, the
-    game's or (RULE_ITEM_SAVES) the easier of it and AD&D's, and each check recorded."""
+    easier of the game's and AD&D's (RULE_ITEM_SAVES, always on), and each check recorded."""
     ITEMS, TYPES = 0xA000, 0xB000
     RULES = 170
     # item: (type, material, plus, power)
@@ -3072,7 +3072,7 @@ class ItemSaveTests(unittest.TestCase):
         self.hdr_off = struct.unpack_from("<H", image, 20)[0]
         self.ring = struct.unpack_from("<H", image, 16)[0]
         for vec, head in ((VEC_ITEM_WEAPON, "5650535157ba08002b56fe"), (VEC_ITEM_ARMOUR, "5650535157ba0a002b56fe"),
-                          (VEC_ITEM_SKIP, "5589e5836606bf5d2ef706")):
+                          (VEC_ITEM_SKIP, "5589e5836606bf5dcf")):
             at = image.find(bytes.fromhex(head))
             self.assertGreater(at, 0, head)
             mu.mem_write(vec * 4, struct.pack("<HH", at, TSR))
@@ -3127,9 +3127,10 @@ class ItemSaveTests(unittest.TestCase):
     def armour(self, item, roll=10):
         return self.run_int(VEC_ITEM_ARMOUR, item, self.GEAR[item][3], roll, True)
 
-    def test_weapons_the_games(self):
+    def test_weapons_bit_clear(self):
+        """The rule always on: its bit clear in RULES the same (obsidian AD&D's 5), each recorded."""
         self.rules(0)
-        for item, want in ((7, 8), (8, 7), (9, 8)):
+        for item, want in ((7, 8), (8, 7), (9, 5)):
             dx, _, e = self.weapon(item, 12)
             self.assertEqual(dx, want, item)
             self.assertEqual((e.kind, e.raw, e.extra, e.arg(6), e.parent_arg(0x0E)), (4, 12 | want << 8, item, 3, 187))
@@ -3139,17 +3140,14 @@ class ItemSaveTests(unittest.TestCase):
         self.rules(2048)
         self.assertEqual([self.weapon(item)[0] for item in (7, 8, 9)], [8, 7, 5])
 
-    def test_armour_the_games(self):
-        """No magical power: destroyed without a roll (ZF set, recorded with no d20); with one,
-        10 less it (Drake Armor's 89: never)."""
+    def test_armour_bit_clear(self):
+        """The rule always on: its bit clear the same: armour with no magical power rolls too (the
+        game's destroyed without a roll gone with the switch); Drake Armor's 89 never."""
         self.rules(0)
-        for item in (4, 5, 10):
-            dx, zf, e = self.run_int(VEC_ITEM_SKIP, item, 0, 0x1234, True)
-            self.assertTrue(zf, item)
-            self.assertEqual((e.kind, e.raw & 0xFF, e.extra), (4, 0, 0x8000 | item))
-        dx, zf, e = self.run_int(VEC_ITEM_SKIP, 6, 89, 0x1234, True)
-        self.assertEqual((zf, e), (False, None))
-        self.assertEqual(self.armour(6)[0], 10 - 89)
+        for item in (4, 5, 6, 10):
+            dx, zf, e = self.run_int(VEC_ITEM_SKIP, item, self.GEAR[item][3], 0x1234, True)
+            self.assertEqual((zf, e), (False, None), item)
+        self.assertEqual([self.armour(item)[0] for item in (4, 5, 6, 10)], [10, 13, 10 - 89, 10])
 
     def test_armour_the_easier(self):
         """Leather 10, metal 13, cloth +2 10; Drake Armor keeps the game's (never)."""
@@ -3205,10 +3203,13 @@ class RuleTests(RingTests):
             rec[0x11] = slot
             self.mu.mem_write(self.ITEMS * 16 + item * 21, bytes(rec))
 
-    def test_two_weapons_the_games(self):
+    def test_two_weapons_bit_clear(self):
+        """AD&D's two weapons always (the game's way, the DEX adjustment's bonus alone, gone with
+        the switch): the rule's bit clear in RULES changes nothing."""
         self.rules(0)
         self.hands()
-        self.assertEqual([self.two(adj, 4) for adj in (-6, -1, 0, 3)], [6, 1, 0, 0])
+        self.assertEqual([self.two(adj, 4) for adj in (-3, 0, 1, 2, 5)], [-5, -2, -1, 0, 0])
+        self.assertEqual([self.two(adj, 7) for adj in (-3, 0, 2, 3, 4, 5)], [-7, -4, -2, -1, 0, 0])
 
     def test_two_weapons_adnd(self):
         """A weapon in each hand: item 4 in the right (main), item 7 in the left (off)."""
@@ -3239,13 +3240,13 @@ class RuleTests(RingTests):
             self.rules(4)
             self.assertEqual(self.two(0, 4), 0)  # (nothing in the other hand: none, as ever)
             self.rules(0)
-            self.assertEqual(self.two(-6, 4), 6)  # (the game's)
+            self.assertEqual(self.two(-6, 4), 0)  # (the two-weapon rule's bit clear: the same)
         finally:
             self.mu.mem_write(rules_hi, struct.pack("<H", 0))
 
     def test_twin_blade(self):
-        """A Twin-blade (kits on): no AD&D two-weapon penalty, as kits.py's; the game's own bonus
-        without the rule kept."""
+        """A Twin-blade (kits on): no AD&D two-weapon penalty, as kits.py's (the rule's bit clear
+        too)."""
         self.hands()
         seg, off = struct.unpack("<HH", self.mu.mem_read(GAME_DS * 16 + 0x1665, 4))[::-1]
         sheets = 0xB800
@@ -3259,7 +3260,7 @@ class RuleTests(RingTests):
             self.rules(4)
             self.assertEqual([self.two(adj, 4) for adj in (-3, 0)] + [self.two(adj, 7) for adj in (-3, 0)], [0] * 4)
             self.rules(0)
-            self.assertEqual(self.two(-6, 4), 6)
+            self.assertEqual(self.two(-6, 4), 0)
             self.rules(4)
             self.body_armour(4)  # metal on the chest: AD&D's penalties, as anyone's
             self.assertEqual([self.two(0, 4), self.two(0, 7)], [-2, -4])
@@ -3307,7 +3308,8 @@ class RuleTests(RingTests):
     def test_ranger_light_armour(self):
         """RG_TWO, where the game asks whether the attacker is a ranger (sheet flag 200h), its
         "jnz" to no adjustment after it: ZF clear for a ranger, set for anyone else; with the
-        two-weapon rule, a ranger in armour that isn't light (metal) gets ZF set, as anyone."""
+        two-weapon rule (always on: its bit clear too), a ranger in armour that isn't light (metal)
+        gets ZF set, as anyone."""
         image = load_image()
         from dsloader import gamepatch
         VEC_CR_SPELLS = gamepatch.VEC_CR_SPELLS
@@ -3336,7 +3338,7 @@ class RuleTests(RingTests):
 
         self.assertEqual([zf(0x200, 0), zf(0x200, 4), zf(0x40, 4), zf(0, 0)], [False, False, True, True])
         self.assertEqual([zf(0x200, 4, 4), zf(0x200, 0, 4), zf(0x200, 4, 5), zf(0x200, 4, 0x40)],
-                         [True, False, False, False])
+                         [True, True, False, False])
         # a Justifier (kits on; the ranger's second kit) in metal: none still, with kits off the rule's
         hdr = TSR * 16 + load_image().find(HDR_SIG)
         self.mu.mem_write(sheet * 16 + 0x21, bytes((13, 0, 0)))
@@ -3362,7 +3364,8 @@ class RuleTests(RingTests):
             self.assertEqual([self.two(adj, 4) for adj in (-3, 0)], [0, 0], (right, left))
 
     def test_doubled_save(self):
-        for rules, want in ((0, 14), (16, 7)):
+        """Never doubled (Saving throws against spells, always on): the bit clear or set."""
+        for rules, want in ((0, 7), (16, 7)):
             self.rules(rules)
             self.run_at(bytes((0xCD, VEC_DOUBLE)), eax=7)
             self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AL), want)
@@ -3375,7 +3378,7 @@ class RuleTests(RingTests):
         ES:BX the sheet (CLASSES, LEVELS, RACE) past its start by SLOT, whose class there is at LEVEL:
         (below the cap, at it), from the flags the game's JL and JZ read; AX and interrupts as they were."""
         image = load_image()
-        probe = if_framed(image, bytes.fromhex("2ef606") + struct.pack("<H", self.RULES) + bytes([128]))
+        probe = if_framed(image, bytes.fromhex("66600fa00fa8"))  # (pushad, push fs, push gs)
         self.assertGreater(probe, 0)
         mu = self.mu
         mu.mem_write(VEC_LEVEL * 4, struct.pack("<HH", probe, TSR))
@@ -3411,14 +3414,13 @@ class RuleTests(RingTests):
         return bool(flags & 0x80) != bool(flags & 0x800), bool(flags & 0x40)
 
     def test_level_cap(self):
-        """The game's cap of 9; with rule 128 the XP cap (749,999, AD&D's XP with RULES_HI 8): a
-        class rises while its next level needs no more than its share."""
+        """The XP cap (749,999, AD&D's XP with RULES_HI 8), rule 128 always on (its bit clear too;
+        the game's cap of 9 gone with the switch): a class rises while its next level needs no more
+        than its share."""
         below, at = (True, False), (False, True)
-        self.rules(0)
-        self.assertEqual([self.level(n) for n in (1, 8, 9)], [below, below, at])
-        self.rules(128)
         self.mu.mem_write(TSR * 16 + self.RULES + 100, struct.pack("<H", 8))  # (RULES_HI: AD&D's tables)
-        for view in (False, True):
+        for view, rules in ((False, 128), (True, 128), (False, 0), (True, 0)):
+            self.rules(rules)
             druid, cleric = (2, 1) if view else (5, 1)
             fighter, gladiator = (3, 4) if view else (9, 10)
             with self.subTest(view=view):
@@ -3438,7 +3440,7 @@ class RuleTests(RingTests):
         """INT VEC_HD_ROLL with ES:BX a hit point group whose dice go up to LEVELS and the
         game's [BP+8] the class: the levels that roll dice, in AL."""
         image = load_image()
-        probe = image.find(bytes.fromhex("268a4701") + bytes.fromhex("2ef606") + struct.pack("<H", self.RULES))
+        probe = image.find(bytes.fromhex("268a4701") + bytes.fromhex("3c09"))
         self.assertGreater(probe, 0)
         self.mu.mem_write(VEC_HD_ROLL * 4, struct.pack("<HH", probe, TSR))
         self.mu.mem_write(self.TYPES * 16 + 0x200, bytes([6, levels, 2, 6]))
@@ -3448,9 +3450,10 @@ class RuleTests(RingTests):
         return self.mu.reg_read(r.UC_X86_REG_AL)
 
     def test_thief_hit_dice(self):
-        """A thief (17) rolls up to 10th with rule 128; a psionicist (12) still stops at 9th."""
+        """A thief (17) rolls up to 10th with rule 128 (always on: its bit clear too); a psionicist
+        (12) still stops at 9th."""
         self.rules(0)
-        self.assertEqual([self.hit_dice(c) for c in (17, 12)], [9, 9])
+        self.assertEqual([self.hit_dice(c) for c in (17, 12)], [10, 9])
         self.rules(128)
         self.assertEqual([self.hit_dice(c) for c in (17, 12)], [10, 9])
         self.assertEqual(self.hit_dice(17, levels=10), 10)  # (a preserver's group: as it was)
@@ -3460,7 +3463,7 @@ class RuleTests(RingTests):
         ES:0), SI the thief level, the game's [BP+8] the skill and [BP-0Ch] DEX: (SI, CF), with
         DX and ES as they were."""
         image = load_image()
-        probe = image.find(bytes.fromhex("fb2ef706") + struct.pack("<HH", self.RULES, 256))
+        probe = image.find(bytes.fromhex("fb83fe01"))  # (sti; cmp si,1)
         self.assertGreater(probe, 0)
         self.mu.mem_write(VEC_THIEF_SKILL * 4, struct.pack("<HH", probe, TSR))
         self.mu.mem_write(self.TYPES * 16, bytes([28, 18, 13, 28, 18, 23, 78, 252]))  # the game's bases
@@ -3472,10 +3475,10 @@ class RuleTests(RingTests):
         return self.mu.reg_read(r.UC_X86_REG_SI), self.mu.reg_read(r.UC_X86_REG_EFLAGS) & 1
 
     def test_thief_skills(self):
-        """The game's sum without rule 256 (on to its DEX formula); with it, AD&D's table, the race
-        and Dark Sun's DEX adjustment (past the game's formula). Azil: 3rd level elf, DEX 22."""
+        """AD&D's table, the race and Dark Sun's DEX adjustment (past the game's formula), rule 256
+        always on (its bit clear too). Azil: 3rd level elf, DEX 22."""
         self.rules(0)
-        self.assertEqual(self.thief_skill(1, 3, 22, 18 - 5), (13 + 12, 0))  # open locks
+        self.assertEqual(self.thief_skill(1, 3, 22, 18 - 5), (33 - 5 + 30, 1))  # open locks
         self.rules(256)
         self.assertEqual(self.thief_skill(0, 3, 22, 28 + 5), (40 + 5 + 27, 1))  # pick pockets
         self.assertEqual(self.thief_skill(1, 3, 22, 18 - 5), (33 - 5 + 30, 1))
@@ -3618,8 +3621,8 @@ class RuleTests(RingTests):
         return not (flags & 0x40 or bool(flags & 0x80) != bool(flags & 0x800))
 
     def test_thief_con_levels(self):
-        self.rules(0)
-        self.assertEqual([self.con_levels(17, n) for n in (9, 10)], [False, True])
+        self.rules(0)  # (rule 128 always on: its bit clear the same)
+        self.assertEqual([self.con_levels(c, n) for c, n in ((17, 9), (17, 10), (12, 10))], [False, False, True])
         self.rules(128)
         self.assertEqual([self.con_levels(c, n) for c, n in ((17, 9), (17, 10), (12, 10))], [False, False, True])
 
@@ -4569,9 +4572,9 @@ class NewSpellTests(RuleTests):
     def test_backstab_dice(self):
         """STAB_ROLL (58A29h, AX the damage rolled, [BP-12h] what it added to the dice) keeps the
         dice's sum and returns "cmp word [bp+16h],1"'s flags; STAB_TIMES (58A80h, AX the
-        multiplier, [BP-4] the damage): with RULE_THIEF_TABLE (Thieves as in AD&D) the dice added again for each
-        time past the first, else the whole multiplied; a miss (0) stays 0; an Assassin's multiplier
-        one more (kits.backstab_times)."""
+        multiplier, [BP-4] the damage): Thieves as in AD&D (always on: its bit clear too), the dice
+        added again for each time past the first; a miss (0) stays 0; an Assassin's multiplier one
+        more (kits.backstab_times)."""
         from dsloader import gamepatch, kits
         mu = self.mu
         patches = {p.name: p for p in gamepatch.PATCHES}
@@ -4596,10 +4599,10 @@ class NewSpellTests(RuleTests):
             return struct.unpack("<h", mu.mem_read(SS * 16 + BP - 4, 2))[0], flags
         # 1d8 rolled 5, -1 bone: 4; +12 STR: 16; x3
         self.assertEqual(stab(128, 4, -1, 16, 3)[0], 26)  # (5 x 3 - 1 + 12)
-        self.assertEqual(stab(0, 4, -1, 16, 3)[0], 48)
+        self.assertEqual(stab(0, 4, -1, 16, 3)[0], 26)
         self.assertEqual(stab(128, 4, -1, 0, 3)[0], 0)
         self.assertEqual(stab(128, 4, -1, 16, 3, made=1)[0], 16)  # (the round's second attack: AD&D's one)
-        self.assertEqual(stab(0, 4, -1, 16, 3, made=1)[0], 48)  # (the game's: its first two)
+        self.assertEqual(stab(0, 4, -1, 16, 3, made=1)[0], 16)
         self.assertEqual(stab(128, 4, -1, 16, 3, mode=1)[1] & 0x40, 0x40)  # (melee: ZF)
         self.assertEqual(stab(128, 4, -1, 16, 3, mode=2)[1] & 0x40, 0)
         self.assertEqual([kits.backstab_times(k, 5) for k in (kits.ASSASSIN, kits.SWASHBUCKLER, 0)], [6, 5, 5])
@@ -5312,13 +5315,17 @@ class StealthTests(unittest.TestCase):
         mu.mem_map(0, 0x100000)
         mu.mem_write(TSR * 16, image)
         self.hdr = TSR * 16 + image.find(HDR_SIG)
-        at = image.find(bytes.fromhex("2ef606") + struct.pack("<H", 170) + bytes([64]))
+        import re  # (its three pops, "mov byte [cs:st_now],0" and "cmp si,3")
+        at = re.search(rb"(?:\x2e\x8f\x06..){3}\x2e\xc6\x06..\x00\x83\xfe\x03", image, re.S).start()
         self.assertGreater(at, 0)
-        mu.mem_write(VEC_STEALTH * 4, struct.pack("<HH", at - 21, TSR))  # (its three pops and "mov byte [cs:st_now],0" before it)
+        mu.mem_write(VEC_STEALTH * 4, struct.pack("<HH", at, TSR))
         mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
         mu.mem_write(GAME_DS * 16 + 0x1661, struct.pack("<HH", 0, self.SHEETS))
         mu.mem_write(GAME_DS * 16 + 0x1669, struct.pack("<HH", 0, self.TYPES))
         mu.mem_write(TSR * 16 + 170, struct.pack("<H", 64))
+        # the game's clock (STAB_FIRST's): each attack a new round unless a test keeps it
+        self.clock, self.new_rounds = 0xC000, True
+        mu.mem_write(GAME_DS * 16 + 0x9B72, struct.pack("<HH", 0, self.clock))
 
     def word(self, offset, value=None):
         at = SS * 16 + (BP + offset) % 0x10000
@@ -5332,6 +5339,8 @@ class StealthTests(unittest.TestCase):
         weapon of type 7 ([BP-4]): ([BP-1Ah], [BP-24h], [BP-20h], what was pushed, STEALTH,
         STEALTH_USED)."""
         mu = self.mu
+        if self.new_rounds:
+            mu.mem_write(self.clock * 16, struct.pack("<I", struct.unpack("<I", mu.mem_read(self.clock * 16, 4))[0] + 60))
         mu.mem_write(self.hdr + 204, struct.pack("<HH", hidden, 0))
         mu.mem_write(self.SHEETS * 16 + 5 * 0x47 + 0x12, struct.pack("<H", 0x400 if thief else 0))
         mu.mem_write(self.TYPES * 16 + 7 * 0x14 + 4, struct.pack("<H", weight))
@@ -5370,9 +5379,10 @@ class StealthTests(unittest.TestCase):
         """Attacking an object (no back): nothing, but the hiding is over."""
         self.assertEqual(self.attack(target_object=1), (0, 0, 15, 0, 0, 1))
 
-    def test_rule_off(self):
+    def test_rule_bit_clear(self):
+        """The rule always on: its bit clear in RULES changes nothing."""
         self.mu.mem_write(TSR * 16 + 170, struct.pack("<H", 0))
-        self.assertEqual(self.attack(), (0, 0, 15, 0, 0b0100, 0))
+        self.assertEqual(self.attack(), (1, 1, 11, 1, 0, 1))
 
     def test_missile_from_behind_only_unseen(self):
         """MISSILE_REAR: a missile is from behind only as a hidden archer's shot (unseen: +2, the
@@ -5385,14 +5395,13 @@ class StealthTests(unittest.TestCase):
         self.assertEqual(self.attack(melee=2, behind=1, thac0=13, hidden=0)[:3], (0, 0, 15))
 
     def test_backstab_first_attack_only(self):
-        """STAB_FIRST (RULE_THIEF_TABLE, Thieves as in AD&D): a party member's later attacks in the same round (the
+        """STAB_FIRST (Thieves as in AD&D, always on): a party member's later attacks in the same round (the
         game's clock unchanged) are no backstab, the +2 taken back, whatever the game said; from
         behind stays. Another member's first is one; the next round's first is one again; a
         creature not in the party is left to the game. (A thief with two weapons and a weapon
         spec's extra attack had the third, the off-hand one, multiplied after a first that missed.)"""
-        mu, clock = self.mu, 0xC000
-        mu.mem_write(self.hdr + 170, struct.pack("<H", struct.unpack("<H", mu.mem_read(self.hdr + 170, 2))[0] | 256))  # (Thieves as in AD&D: the backstab rule)
-        mu.mem_write(GAME_DS * 16 + 0x9B72, struct.pack("<HH", 0, clock))
+        mu, clock = self.mu, self.clock
+        self.new_rounds = False
         mu.mem_write(clock * 16, struct.pack("<I", 600))
         self.assertEqual(self.attack()[:3], (1, 1, 11))  # hidden: the round's first, a backstab
         game_stab = dict(behind=1, stab=1, thac0=11, hidden=0)
