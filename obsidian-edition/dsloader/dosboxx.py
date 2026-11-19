@@ -250,14 +250,23 @@ def display(settings: dict, look: str) -> Tuple[List[str], List[str]]:
     """The [sdl] and [render] lines for the settings' window and the picture LOOK (launch.picture:
     plain where the window has no other). The same four sizes and four pictures as on 0.74:
 
-    - a window: 320x240 times `window_scale`. Plain is DOSBox-X's normal2x to normal4x scaler on
-      its plain surface output (it has a 4x, which 0.74 lacks, so the four-times window needs no
-      OpenGL here); Scanlines and TV are its scan and tv scalers, 2x or 3x as the window's, and in
-      the four-times window 2x doubled by the unfiltered OpenGL output; Sharp is that output
-      (`openglnb`) stretching the game's own 320x200 to the window, nothing smoothed.
-    - full screen at the desktop's size, through OpenGL (the surface output doesn't stretch):
-      Plain `opengl` (smoothed, as GOG's own full screen is) over normal3x, Scanlines and TV the
-      3x scaler under it, Sharp `openglnb`.
+    - a window: 320x240 times `window_scale`. Plain is DOSBox-X's normal2x, normal3x or normal4x
+      scaler (it has a 4x, which 0.74 lacks): twice on its plain surface output, three and four
+      times through its unfiltered OpenGL output (`openglnb`), because on the surface output
+      normal3x and normal4x drew this game as an empty grey window (DOSBox-X 2026.10.01, SDL2,
+      Linux; scan3x and tv3x draw there). Scanlines and TV are its scan and tv scalers, 2x or 3x
+      as the window's on the surface output, and in the four-times window 2x doubled by
+      `openglnb`. Sharp is `openglnb` stretching the game's own 320x200 to the window, nothing
+      smoothed; with every pixel a block either way, it differs from Plain only in which rows
+      the 200 lines are made 240 by.
+    - full screen at the desktop's size, through OpenGL (the surface output doesn't stretch),
+      the picture kept 4:3 with black at the sides of a wider screen: Plain `opengl` (smoothed,
+      as GOG's own full screen is) over normal3x, Scanlines and TV the 3x scaler under it, Sharp
+      `openglnb`.
+
+    Not offered yet: DOSBox-X's pixel-perfect output (`openglpp`: whole multiples only, so 4:3
+    just at 1600x1200, 5x6, which none of the four windows is) and its CRT shaders (`glshader`:
+    files that come with DOSBox-X's packages, not with every build).
 
     `aspect=true` keeps the picture 4:3 as on 0.74, and `doublescan=false` keeps the 320x200 mode
     from being handed on as 640x400 (the window would be twice the size asked for). The mouse is
@@ -269,7 +278,7 @@ def display(settings: dict, look: str) -> Tuple[List[str], List[str]]:
            "clip_mouse_button=none"]
     render = ["aspect=true", "doublescan=false"]
     if settings.get("fullscreen"):
-        sdl += ["fullscreen=true", "fullresolution=desktop", "sensitivity=100",
+        sdl += ["fullscreen=true", "fullresolution=desktop", "sensitivity=100,100",
                 "output=" + ("openglnb" if look == SHARP else "opengl")]
         if look == SHARP:
             render.append("scaler=none")
@@ -278,7 +287,8 @@ def display(settings: dict, look: str) -> Tuple[List[str], List[str]]:
         return sdl, render
     scale = settings.get("window_scale", DEFAULT_SCALE)
     scale = scale if scale in WINDOW_SCALES and not isinstance(scale, bool) else DEFAULT_SCALE
-    sdl += ["fullscreen=false", f"sensitivity={round(100 / scale)}"]
+    speed_ = round(100 / scale)
+    sdl += ["fullscreen=false", f"sensitivity={speed_},{speed_}"]  # (across, down: one number alone is across only)
     size = f"windowresolution={320 * scale}x{240 * scale}"
     if scale == 1:
         sdl += ["output=surface", "windowresolution=original"]
@@ -291,7 +301,7 @@ def display(settings: dict, look: str) -> Tuple[List[str], List[str]]:
         sdl += ["output=openglnb", size] if scale == 4 else ["output=surface", "windowresolution=original"]
         render.append(f"scaler={LINE_SCALERS[look]}{by}x")
     else:
-        sdl += ["output=surface", "windowresolution=original"]
+        sdl += ["output=surface", "windowresolution=original"] if scale == 2 else ["output=openglnb", size]
         render.append(f"scaler=normal{scale}x")
     return sdl, render
 

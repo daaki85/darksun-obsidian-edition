@@ -67,9 +67,11 @@ class OptionsTests(unittest.TestCase):
         v.combat_log_level.set("detail")
         v.ring_mode.set("off")
         v.picture.set("tv")
+        v.engine.set("dosbox-x")
         v._show_midi(2)
         v._options_changed()
         settings = self.saved()
+        self.assertEqual(settings["engine"], "dosbox-x")
         # (every switch off; the game changes with no switch, game.ALWAYS_ON, none of theirs written)
         self.assertEqual(launch.content(settings), {key: False for key in launch.CONTENT})
         self.assertFalse(set(settings) & game.ALWAYS_ON)
@@ -97,6 +99,86 @@ class OptionsTests(unittest.TestCase):
         for key, default in launch.SWITCH_DEFAULTS.items():
             self.assertEqual(settings.get(key), default, key)
         self.assertEqual(launch.effective_switches(settings), launch.effective_switches({}))
+
+    def test_engine(self):
+        """The engine (Engine, from the next start): GOG's DOSBox unless DOSBox-X is chosen; the
+        DOSBox-X program asked for, its version said, one too old for the memory file refused and
+        not kept; the soundfont file; Restore defaults back to GOG's with the program remembered."""
+        v = self.viewer
+        dosboxx = viewer.dosboxx
+        self.assertEqual(v.engine.get(), "gog")
+        self.assertIn("engine", v.sections)
+        d = os.path.dirname(launch.SETTINGS)
+        old, new = os.path.join(d, "old-dosbox-x"), os.path.join(d, "dosbox-x")
+        with open(old, "wb") as f:
+            f.write(b"dosbox-x-2024.03.01.conf")
+        with open(new, "wb") as f:
+            f.write(b"dosbox-x-2026.10.01.conf")
+        saved = viewer.filedialog.askopenfilename, viewer.messagebox.showerror, viewer.messagebox.askyesno
+        self.addCleanup(lambda: (setattr(viewer.filedialog, "askopenfilename", saved[0]),
+                                 setattr(viewer.messagebox, "showerror", saved[1]),
+                                 setattr(viewer.messagebox, "askyesno", saved[2])))
+        errors = []
+        viewer.messagebox.showerror = lambda title, text, **k: errors.append(text)
+        # DOSBox-X chosen with no program yet: remembered, and the status says it can't start
+        v.engine.set("dosbox-x")
+        v._engine_chosen()
+        self.assertEqual(self.saved()["engine"], "dosbox-x")
+        self.assertIn("can't start yet", v.status.get())
+        self.assertIsNotNone(dosboxx.problem(self.saved()))
+        # one too old: said, and not kept
+        viewer.filedialog.askopenfilename = lambda **k: old
+        v.choose_dosbox_x()
+        self.assertEqual(len(errors), 1)
+        self.assertIn("too old", errors[0])
+        self.assertNotIn("dosbox_x_path", self.saved())
+        # a new one: kept, its version shown
+        viewer.filedialog.askopenfilename = lambda **k: new
+        v.choose_dosbox_x()
+        self.assertEqual(self.saved()["dosbox_x_path"], new)
+        self.assertIn("2026.10.01", v.dosbox_x_status.get())
+        self.assertIn("new enough", v.dosbox_x_status.get())
+        self.assertIsNone(dosboxx.problem(self.saved()))
+        self.assertEqual(launch.effective_switches(self.saved())["engine"], "dosbox-x")
+        # nothing chosen in the dialog: nothing changed
+        viewer.filedialog.askopenfilename = lambda **k: ""
+        v.choose_dosbox_x()
+        self.assertEqual(self.saved()["dosbox_x_path"], new)
+        # the full screen keys named for the engine
+        v.window_choice.set("Double (640x480)")
+        v._window_chosen()
+        self.assertIn("F12 and F", v.status.get())
+        # the soundfont file
+        font = os.path.join(d, "gm.sf2")
+        open(font, "wb").close()
+        viewer.filedialog.askopenfilename = lambda **k: font
+        v.choose_soundfont()
+        self.assertEqual(self.saved()["soundfont"], font)
+        self.assertIn("gm.sf2", v.soundfont_status.get())
+        self.assertIn(f"fluid.soundfont={font}", dosboxx.midi_lines(self.saved()))
+        v.no_soundfont()
+        self.assertEqual(self.saved()["soundfont"], "")
+        self.assertIn("mididevice=default", dosboxx.midi_lines(self.saved()))
+        # back to GOG's
+        v.engine.set("gog")
+        v._engine_chosen()
+        self.assertEqual(self.saved()["engine"], "gog")
+        self.assertIn("GOG's DOSBox", v.status.get())
+        v._window_chosen()
+        self.assertIn("Alt+Enter", v.status.get())
+        v.engine.set("dosbox-x")
+        v._engine_chosen()
+        viewer.messagebox.askyesno = lambda *a, **k: True
+        v.restore_defaults()
+        self.assertEqual((v.engine.get(), self.saved()["engine"]), ("gog", "gog"))
+        self.assertEqual(self.saved()["dosbox_x_path"], new)  # (the program stays remembered)
+
+    def test_a_stored_engine_the_loader_doesnt_know_is_gogs(self):
+        with open(launch.SETTINGS, "w") as f:
+            json.dump({"engine": "dosbox-y", "dosbox_x_path": 7, "soundfont": ["x"]}, f)
+        v = viewer.Viewer(self.root, Layout.load(LAYOUT), lambda: (_ for _ in ()).throw(OSError("no game")))
+        self.assertEqual(v.engine.get(), "gog")
+        self.assertEqual((v.dosbox_x_path, v.soundfont), ("", ""))
 
     def test_picture_and_music_device(self):
         """The picture and the music device (Picture and music): each saved as it is chosen, in

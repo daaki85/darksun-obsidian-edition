@@ -2209,6 +2209,13 @@ once.")
 | Defilers' scrolls: a defiler in a fight carries a scroll of a random preserver spell one time in 20, dropped where it dies | on | at once | [Defilers' scrolls](FEATURES.md#defilers-scrolls) (spoilers) |
 | New items, magical and mundane: weapons, armour and other gear on the game's people, in its shops and chests, and the champions' arena bout after Scar's death | on | first visit (each item's area) | [New items](FEATURES.md#new-items) (spoilers); this guide's [New items](#new-items) |
 
+**Engine (from the next start)**
+
+| Loader label | Default | Takes effect | Details |
+|---|---|---|---|
+| GOG's DOSBox 0.74, which comes with the game (the default) / DOSBox-X, your own copy of it: new, and tested on Linux only so far | GOG's DOSBox | next start | what runs the game: [The engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x) |
+| Choose the DOSBox-X program... | (a button) | | where your DOSBox-X is (2025.01.01 or later; nothing is downloaded); the tab then says its version: [The engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x) |
+
 **Game speed (from the next start)**
 
 | Loader label | Default | Takes effect | Details |
@@ -2222,6 +2229,7 @@ once.")
 |---|---|---|---|
 | Plain: every pixel of the game as a block (the default) / Scanlines: a black line under each row of the picture, as on an old monitor / TV: a dimmed line under each row of the picture, softer than scanlines / Sharp: hard-edged pixels at any size, the stretching left unsmoothed (DOSBox's OpenGL) | Plain | next start | [Picture and music](FEATURES.md#picture-and-music) |
 | Music device | Windows' default | next start | a MIDI device of Windows' to play the game's music, by name: [Picture and music](FEATURES.md#picture-and-music) |
+| Choose a soundfont file... | (a button) | | with DOSBox-X as the engine, the soundfont (a `.sf2` file of your own) its built-in synthesizer plays the music through; **No soundfont** forgets it: [The engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x) |
 
 **Wake of the Ravager (optional)** and **Saves**
 
