@@ -149,6 +149,7 @@ def rooms(data: bytes, ctype: str) -> Dict[int, int]:
 
 
 REPLACE_TRIES, REPLACE_WAIT = 5, 0.05
+COPY_MODE = 0o644  # (a copy of the game's files: as open() makes one with the usual umask)
 
 
 def replace_retried(tmp: str, dest: str) -> None:
@@ -170,7 +171,8 @@ def write_atomic(dest: str, data: bytes) -> None:
     it (two writers of one copy, the window and `play`, never share one), then put in its place
     (replace_retried). A write that fails (a full disk; on Windows DEST held open by the game or an
     antivirus) leaves no temporary file behind (a copy's is megabytes) and DEST as it was. Flushed
-    to the disk before it is put in place."""
+    to the disk before it is put in place, readable by all as an ordinary file is (mkstemp's own
+    file is the owner's alone)."""
     fd, tmp = tempfile.mkstemp(prefix=os.path.basename(dest) + ".", suffix=".tmp",
                                dir=os.path.dirname(dest) or ".")
     try:
@@ -178,6 +180,7 @@ def write_atomic(dest: str, data: bytes) -> None:
             f.write(data)
             f.flush()
             os.fsync(f.fileno())
+        os.chmod(tmp, COPY_MODE)
         replace_retried(tmp, dest)
     finally:
         if os.path.exists(tmp):

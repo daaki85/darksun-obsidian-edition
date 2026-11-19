@@ -400,7 +400,7 @@ randomises, as raw numbers, for finding rolls worth labelling. As a fight ends, 
 `Fight over: 3 rounds, 4 kills; the party dealt 61 damage and took 19`, then a line for each
 member, `Seneca: 2 of 2 attacks hit, 30 dealt, 1 kill`.
 
-![One fight in the readable layout, the working shown (above) and hidden (below): Seneca's backstab and poison on an Arena Guard, then the Guards' swings at Lex and Jenna](docs/dicelog-readable.png)
+![Seneca's turn in the readable layout, the working shown (above) and hidden (below): hidden and unheard, her backstab on a Templar and her two later swings, the poison saved against, then Jenna's hiding](docs/dicelog-readable.png)
 
 How to read it (the colours, the lines as written, the summary's rules) and every kind of line,
 with an example: [The dice log, line by line](DICE-LOG.md).
