@@ -1,15 +1,18 @@
-# ravfixes.py [OUT]: a copy of Wake of the Ravager ($RAV, default $WORK/rav) in OUT (default $WORK/ravfix,
+# ravfixes.py [OUT] [--skip=NAME,...]: a copy of Wake of the Ravager ($RAV, default $WORK/rav) in OUT (default $WORK/ravfix,
 # hard links but for the two files changed and those the game writes) with the mod's bug fixes that carry over unchanged:
 # five of DSUN.EXE's (gamepatch.py's own bytes, at their twins' offsets in the sequel's program: each
 # checked to hold the patch's original bytes and no relocated word) and the spell records' (RESOURCE.GFF's
 # DATA 0-319, 73 bytes a spell, whose first 32 are Shattered Lands' record: the same field fixed,
-# only where the sequel's record still holds the original bytes). Prints what it did. Run from playtest/.
+# only where the sequel's record still holds the original bytes). --skip leaves those fixes out (a
+# test's control: --skip=save_signed). Prints what it did. Run from playtest/.
 import os, sys, struct, shutil
 PT = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, os.path.join(PT, '..', 'obsidian-edition'))
 from dsloader import gamepatch as gp, game
 from dsloader.gff import read_gff, index_places
 WORK = os.environ.get('PLAYTEST_WORK', '/tmp/playtest')
-RAV = os.environ.get('RAV', os.path.join(WORK, 'rav')); OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(WORK, 'ravfix')
+RAV = os.environ.get('RAV', os.path.join(WORK, 'rav')); args = [a for a in sys.argv[1:] if not a.startswith('--skip=')]
+SKIP = {s for a in sys.argv[1:] if a.startswith('--skip=') for s in a[7:].split(',')}  # fixes left out (a test's control)
+OUT = args[0] if args else os.path.join(WORK, 'ravfix')
 SL = os.path.join(os.environ.get('DS_GAME', os.path.join(WORK, 'inst')), 'DSUN.EXE')
 # the program's fixes: the patch, and its twin's offset in the sequel's DSUN.EXE (GOG 1.1, 634,416
 # bytes), found by byte likeness and read side by side (reports/wake-of-the-ravager.md)
@@ -28,6 +31,7 @@ exe = bytearray(open(os.path.join(RAV, 'DSUN.EXE'), 'rb').read())
 assert len(exe) == 634416, 'not GOG 1.1 Wake of the Ravager'
 rel = gp.relocated(bytes(exe))
 for name, at in EXE_FIXES.items():
+    if name in SKIP: print('DSUN.EXE %-14s left out' % name); continue
     p = P[name]
     assert exe[at:at + len(p.original)] == p.original, name
     assert not set(range(at, at + len(p.original))) & rel, name
@@ -40,6 +44,7 @@ OWN_FIXES = {
     'save_signed': (0x66EAC, '7203', '7c03'),
 }
 for name, (at, old, new) in OWN_FIXES.items():
+    if name in SKIP: print('DSUN.EXE %-14s left out' % name); continue
     old, new = bytes.fromhex(old), bytes.fromhex(new)
     assert exe[at:at + len(old)] == old and not set(range(at, at + len(old))) & rel, name
     exe[at:at + len(old)] = new
@@ -58,7 +63,7 @@ for i in range(320):
 ALIAS = {'IRONSKIN': 'IRON SKIN', 'TURN PEBBLE INTO BOULDER': 'PEBBLE TO BOULDER', 'FLAME ARROW': 'FLAMING ARROW'}
 done = []
 for p in gp.PATCHES:
-    if not SPELL_TABLE <= p.offset < SPELL_TABLE + 138 * 32: continue
+    if not SPELL_TABLE <= p.offset < SPELL_TABLE + 138 * 32 or p.name in SKIP: continue
     idx, fld = divmod(p.offset - SPELL_TABLE, 32)
     n = sl_name(idx); w = by_name.get(ALIAS.get(n, n))
     if w is None: print('RESOURCE  %-24s %-24s no such spell' % (p.name, n)); continue
@@ -71,4 +76,4 @@ for p in gp.PATCHES:
     print('RESOURCE  %-24s %-24s DATA %3d +%02Xh %s -> %s' % (p.name, n, w, fld, p.original.hex(), p.replacement.hex()))
 os.unlink(os.path.join(OUT, 'RESOURCE.GFF')); open(os.path.join(OUT, 'RESOURCE.GFF'), 'wb').write(res)
 assert read_gff(bytes(res)).keys() == chunks.keys()
-print('%d program fixes, %d spell fixes, in %s' % (len(EXE_FIXES) + len(OWN_FIXES), len(done), OUT))
+print('%d program fixes, %d spell fixes, in %s' % (len(set(EXE_FIXES) - SKIP) + len(set(OWN_FIXES) - SKIP), len(done), OUT))

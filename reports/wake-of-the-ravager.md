@@ -228,8 +228,19 @@ then cast it in the Draxans' ambush with party members of 6th and 7th level in i
 as it is, Scare's record allows no save: **Thy'rokh (6th level) was Afraid** and ran. In the fixed
 copy (the record's save bit and the signed compare), the same cast left **every member Okay**:
 6th level and up always save. Neither outcome has a roll in it, so the difference is the fixes'.
-Still to see: a "can't save" failing below 6th level (a low-level target), a fixed spell's
-damage or time, a whole-party thief roll and a random encounter.
+**And "can't save" below 6th level** (`playtest/logs/2026-11-19-ravager-cant-save.md`): Gerakis
+made 3rd level in memory for the test, then Scare over him and members of 6th and 7th. With every
+fix he was **Afraid** and the others Okay; in a copy with Scare's record fixed but **not** the
+signed compare, he was **Okay**: his "can't save" (-100) was read unsigned as a huge total, a
+save. So the compare found by hand is needed, and works:
+
+| | 3rd level | 6th and 7th level |
+|---|---|---|
+| WotR as it is (no save allowed) | scared | Afraid |
+| Scare's record fixed, the compare not | Okay ("can't save" saved) | Okay |
+| Both fixed | **Afraid** | Okay |
+
+Still to see: a fixed spell's damage or time, a whole-party thief roll and a random encounter.
 
 **What this means for a WotR edition.** The bug fixes split three ways: data fixes (the spell
 records, by name: the easiest), plain code fixes with identical twins (applied as they are, at

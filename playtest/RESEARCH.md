@@ -301,8 +301,13 @@ previous foe, 1-4 the leader; Esc with nothing up quits. `ravfight.py until N` e
 until member N's (the order varies run to run). A caster hit this round has every icon crossed out.
 **Spells known**: a 15-byte bitset a member (bit n, spell n; wizard spells only), the roster's `SPST`
 chunk; Ar'anda's at 3F3DCh after START GAME (a set bit is offered on USE at once: a test edit, never
-saved). An area spell's reach shows as a ring of dots round the aim. A creature record's +18h is 60h
-while Afraid.
+saved). An area spell's reach shows as a ring of dots round the aim (on bare floor or a foe, not on a
+party figure). A creature record's +18h is 60h while Afraid. **Spell slots**: DS:446Ah + 22h a
+member, wizard casts left by level, the priest's 0Bh on: a cast went off if its level's count
+dropped (logs/2026-11-19-ravager-cant-save.md). **A creature's level** for the saves (1987:154 in
+build_image's image): a human's first level (sheet +1Eh), else the best of its class levels. In the
+file, an overlay's far call names an overlay-manager selector (98h), not a segment: follow it in
+the image.
 
 **Its spells, and the fixes carried over** (2026-11-19, logs/2026-11-19-ravager-fixes.md): no
 spell table in its program; each spell is `RESOURCE.GFF`'s `DATA` 0-319, 73 bytes (SL's 32-byte
