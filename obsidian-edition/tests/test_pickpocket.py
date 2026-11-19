@@ -19,7 +19,7 @@ CLUB, SWORD, KEY, BOOTS = 80, 81, 82, 83
 
 class PickTests(unittest.TestCase):
     def setUp(self):
-        """Dag, a 4th level thief (pick pockets 11, move silently 16 with his sword in hand),
+        """Dag, a 4th level thief (pick pockets 40, move silently 33 with his sword in hand),
         leads, talking to a Guard (creature 5) who has a bag (item 80, type 66: weight 10, worn
         nowhere), a long sword (81, type 45: weight 30, in a hand) and a key (82); then boots
         (83, type 68: weight 1, on the feet)."""
@@ -75,7 +75,7 @@ class PickTests(unittest.TestCase):
         self.assertEqual(result.text, "Dag lifts Bag from Guard unnoticed.")
         self.assertEqual(self.guard_items(), [SWORD, KEY, BOOTS])
         self.assertEqual(self.dag_items()[0], (CLUB, 14))
-        self.assertIn("d100 = 11, needs 11 or less -> success", result.log[0])
+        self.assertIn("d100 = 11, needs 40 or less -> success", result.log[0])
         self.assertIsNone(result.key)
         self.assertTrue(result.lifted)  # (the purse's sound)
         money = self.log.game.money()
@@ -172,11 +172,11 @@ class PickTests(unittest.TestCase):
     def test_caught(self):
         """Caught: the game's rules (the rules' bits clear) gate another try by the thief's level all
         the same (Thieves as in AD&D, always on)."""
-        result = self.attempt(12, 17)  # pick pockets 11, move silently 16
+        result = self.attempt(41, 34)  # pick pockets 40, move silently 33
         self.assertFalse(result.lifted)
         self.assertEqual(result.text, "Guard catches Dag's hand!")
         self.assertEqual(self.guard_items(), [CLUB, SWORD, KEY, BOOTS])
-        self.assertIn("moves silently to get away: d100 = 17, needs 16 or less -> failed", result.log[1])
+        self.assertIn("moves silently to get away: d100 = 34, needs 33 or less -> failed", result.log[1])
         self.tried.add(result.key)  # (as the dice log does)
         self.assertEqual(self.attempt(1).text, "Guard remembers Dag, and keeps a close hand on their purse.")
 

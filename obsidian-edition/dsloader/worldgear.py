@@ -707,7 +707,6 @@ def region_file(region: int) -> str:
 
 def write_region(source: str, dest: str, region: int, gifts: Sequence[Gift]) -> None:
     """The game's region file (SOURCE, only read) with GIFTS' clones in it, to DEST."""
-    import os
     from .gff import read_gff
     from .icons import with_chunks
     with open(source, "rb") as f:

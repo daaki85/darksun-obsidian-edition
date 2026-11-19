@@ -1,4 +1,4 @@
-"""Class restrictions (the Options tab's rule): what a character's classes keep it from equipping,
+"""Class restrictions (a rule change, always on): what a character's classes keep it from equipping,
 on top of the game's own class lists (each item type's mask of the classes that may use it, of
 which one of the character's classes is enough). The strictest class wins. DSCLOG's
 PROBE_CAN_USE does this in the game; this is its model, for the tests and the Loader.
@@ -204,7 +204,7 @@ def kit_allows(sheet: bytes, item_type: int, typ: bytes) -> bool:
     kind = specialize.kind_of(item_type) if is_weapon(typ) else None
     first = game.spec_kinds(sheet)[0]
     chosen = first - 1 if first else None
-    return any(kits.allows(kid, typ, kind, chosen, bool(game.RULES_IN_FORCE & game.RULE_SPECIALIZE))
+    return any(kits.allows(kid, typ, kind, chosen, True)
                for kid in kitpages.kit_ids(sheet))
 
 

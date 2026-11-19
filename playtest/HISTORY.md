@@ -150,6 +150,9 @@ The kit has driven Dark Sun Recompiled since 2026-11-01.
   had moved.
 - 2026-11-19: in Kalzith's shop a leader changed on the shop screen didn't change the prices (drawn
   as it opened), and Escape there chose his Farewell, after which `openshop.sh` failed.
+- 2026-11-19 (logs/2026-11-19-final-audit-fixes.md): `gff.write_atomic` moved to `mkstemp` for a
+  temporary name of its own, and the game's copies in `dos/` came out mode 0600 (mkstemp's), seen in
+  `ls -l` during the play; they are set 0644 before being put in place now.
 
 ## Two probes on one vector: target AC 255
 
@@ -468,6 +471,9 @@ scores are the creature record's (raising INT on the sheet did nothing); the tur
   and his boots for missing: the pointer's animation changes pixels too, so move it off first.
 - The Loader's own window (2026-11-07): keys typed with DOSBox focused reached the game (the letters
   toggled its animations): focus the Loader before typing.
+- The window attached to the kit's game (2026-11-19): a first backstab loop passed turns in a
+  running fight for twenty rounds while the free Templar killed Seneca (no hiding, no backstab); a
+  reload a try, with Reconnect each time, found one in two loads.
 
 ## When things were learned
 

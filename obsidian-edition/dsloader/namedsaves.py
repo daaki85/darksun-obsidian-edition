@@ -14,7 +14,7 @@ import re
 import shutil
 from typing import Dict, List, Optional, Tuple
 
-from .gff import GffError, read_gff
+from .gff import GffError, read_gff, replace_retried
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 NAMED = os.path.join(HERE, "Named saves")
@@ -133,18 +133,20 @@ def sync(game_dir: str, folder: str = NAMED) -> List[str]:
                 except OSError:
                     pass
                 continue
+            tmp = os.path.join(folder, target + ".tmp")
             try:
                 os.makedirs(folder, exist_ok=True)
-                tmp = os.path.join(folder, target + ".tmp")
                 with open(tmp, "wb") as f:
                     f.write(data)
                 os.utime(tmp, (stamp, stamp))
-                os.replace(tmp, os.path.join(folder, target))
+                replace_retried(tmp, os.path.join(folder, target))
                 for old in existing:
                     if os.path.normcase(old) != os.path.normcase(target):
                         os.remove(os.path.join(folder, old))
             except OSError:
                 continue
+            finally:
+                _drop(tmp)
             made.append(target)
     return made
 
@@ -169,8 +171,8 @@ def restore(copy: str, game_dir: str, page: int, slot: int, folder: str = NAMED)
     """A named copy (or any save file) put in the game's PAGE and SLOT, to be loaded from its list.
     The slot's save, if any, is kept first in FOLDER (replaced_name; "(2)" and on if that is taken):
     the slot's own named copy is replaced at the next sync, as for any slot saved over. Written
-    through a temporary file, so a failure leaves the slot as it was. Its name in the game.
-    ValueError if it isn't a save."""
+    through a temporary file, so a failure leaves the slot as it was and no temporary file. Its
+    name in the game. ValueError if it isn't a save."""
     with open(copy, "rb") as f:
         data = f.read()
     name = save_name(data)
@@ -191,7 +193,19 @@ def restore(copy: str, game_dir: str, page: int, slot: int, folder: str = NAMED)
             shutil.copy2(old, os.path.join(folder, kept))
     path = os.path.join(saves_dir(game_dir), slot_file(page, slot))
     tmp = path + ".tmp"
-    with open(tmp, "wb") as f:
-        f.write(data)
-    os.replace(tmp, path)
+    try:
+        with open(tmp, "wb") as f:
+            f.write(data)
+        replace_retried(tmp, path)
+    finally:
+        _drop(tmp)
     return name
+
+
+def _drop(tmp: str) -> None:
+    """A temporary file not put in place removed, so a failed replace leaves none behind."""
+    if os.path.exists(tmp):
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass

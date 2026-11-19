@@ -1,6 +1,6 @@
 # setmem.py [hp=M:V psp=M:V status=M:V ruleshi=+N|-N power=M:P slots=M:L:N]: the party's HP, PSP and
 # status (creature +0, +2, +1Ch), DSCLOG's rules_hi (the header's +270: +N sets bits, -N clears them;
-# 2048 dual-classing, 4096 resting), a psionic power known (P from 138: 13 Cell Adjustment; its byte at
+# only 1, the kits, is still read: the always-on rules' bits change nothing since 2026-11-19), a psionic power known (P from 138: 13 Cell Adjustment; its byte at
 # selector 2F0h +77h + 22h x member, 8), a priest slot count (DS:4B11h + 1Eh x member + level); then
 # each member's HP, PSP, status, STR, CON and priest slots. Memory only: never save after
 # (2026-11-09, logs/2026-11-09-group-4.md).

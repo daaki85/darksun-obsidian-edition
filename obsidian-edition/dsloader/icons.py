@@ -1006,7 +1006,7 @@ def write_resources(source: str, dest: str) -> None:
              **{("ICON", icon): encode(arrow_spell_icon(decode(chunks[("ICON", 21000 + touch)]), *how))
                 for icon, (touch, *how) in ARROW_BUTTONS.items()}}
     from . import spelltexts
-    added.update(spelltexts.chunks(True, True))
+    added.update(spelltexts.chunks())
     from . import sounds  # the hiding's and the picked pocket's sounds (BVOC chunks past the game's)
     added.update(sounds.chunks())
     from . import art, game, wotrart  # the 6th-level priest spells' (Wake of the Ravager's, else tinted ones)

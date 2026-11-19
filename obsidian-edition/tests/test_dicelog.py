@@ -4,7 +4,6 @@ import os
 import struct
 import sys
 import threading
-import time
 import unittest
 from unittest import mock
 
@@ -233,23 +232,6 @@ class AttackTests(unittest.TestCase):
         lines = log.describe(self.attack(18, 9, 4, 5, club, after_f1=10, hit_bonus=1))
         self.assertNotIn("Urnst", lines[1])
 
-    def test_two_weapons(self):
-        log = make_game()
-        m = log.guest.mem
-        dex = CREATURES + game.CREATURE_ABILITIES + 1
-        # DEX 15 with two weapons ready: nothing changes
-        m[dex] = 15
-        lines = log.describe(self.attack(18, 9, 4, 5, 9, after_f1=10, hit_bonus=1, m16=2))
-        self.assertEqual(lines[1], "    THAC0 16, +6 STR, +1 weapon = 9")
-        # DEX 4: the game's table gives -2, which it turns into +2
-        m[dex], m[DS * 16 + game.DEX_INITIATIVE + 4] = 4, 0xFE
-        lines = log.describe(self.attack(18, 7, 4, 5, 9, after_f1=10, hit_bonus=3, m16=2))
-        self.assertEqual(lines[1], "    THAC0 16, +6 STR, +1 weapon, +2 two weapons at DEX 4 = 7")
-        # a ranger gets nothing either way (the rest shows as unexplained)
-        struct.pack_into("<H", m, SHEETS + game.SHEET_FLAGS, game.SHEET_FLAG_RANGER)
-        lines = log.describe(self.attack(18, 9, 4, 5, 9, after_f1=10, hit_bonus=1, m16=2))
-        self.assertEqual(lines[1], "    THAC0 16, +6 STR, +1 weapon = 9")
-
     def test_two_weapons_always_on(self):
         """The two-weapons rule has no switch (2.18): on whatever the settings, an old False too."""
         self.assertNotIn("two_weapons", dict(game.RULE_SETTINGS))
@@ -261,7 +243,7 @@ class AttackTests(unittest.TestCase):
         (the game's initiative table) added, never above 0."""
         log = make_game()
         log.set_rules(game.RULE_TWO_WEAPONS)
-        self.addCleanup(setattr, game, "RULES_IN_FORCE", 0)
+        self.addCleanup(setattr, game, "RULES_IN_FORCE", game.RULES_ALWAYS)
         m = log.guest.mem
         dex = CREATURES + game.CREATURE_ABILITIES + 1
         m[dex], m[DS * 16 + game.DEX_INITIATIVE + 17] = 17, 2
@@ -288,7 +270,7 @@ class AttackTests(unittest.TestCase):
         chest piece (item 7, type 12) brings AD&D's; leather takes it away again."""
         log = make_game()
         log.set_rules(game.RULE_TWO_WEAPONS)
-        self.addCleanup(setattr, game, "RULES_IN_FORCE", 0)
+        self.addCleanup(setattr, game, "RULES_IN_FORCE", game.RULES_ALWAYS)
         m = log.guest.mem
         dex = CREATURES + game.CREATURE_ABILITIES + 1
         m[dex], m[DS * 16 + game.DEX_INITIATIVE + 17] = 17, 2
@@ -478,17 +460,6 @@ class SlotsForTheGameTests(unittest.TestCase):
 
 
 class BackstabTests(unittest.TestCase):
-    def test_backstab_multiplies_the_damage(self):
-        log = make_game()
-        sheet = SHEETS + 0 * game.SHEET_SIZE  # make Dag a 6th level thief
-        log.guest.mem[sheet + game.SHEET_CLASSES + 1], log.guest.mem[sheet + game.SHEET_LEVELS + 1] = 17, 6
-        # the attack's frame: ... [BP+16h] melee, [BP+1Eh] backstab, [BP+20h] from behind;
-        # [BP-0Ah] attacks made this round
-        parent = words(0, 0, 0, 0, 10, 4, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1)
-        e = entry(raw_for(5, 8), dicelog.DICE_SITE, words(0, 0, 1, 8, 0), parent, (0x29, 0, 0, 0),
-                  parent_code=dicelog.WEAPON_DAMAGE_RETURN, parent_locals=locals_at(0x28, ma=1))
-        self.assertEqual(log.describe(e), ["  Dag hits Mountain Stalker for 51: (1d8 = [5] +12 STR 24) x3 backstab"])
-
     def test_enlarge_before_the_backstab(self):
         log = make_game()
         sheet = SHEETS + 0 * game.SHEET_SIZE
@@ -504,37 +475,35 @@ class BackstabTests(unittest.TestCase):
         parent = words(0, 0, 0, 0, 10, 4, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1)
         e = entry(raw_for(5, 8), dicelog.DICE_SITE, words(0, 0, 1, 8, 0), parent, (0x29, 0, 0, 0),
                   parent_code=dicelog.WEAPON_DAMAGE_RETURN, parent_locals=locals_at(0x28, ma=1))
-        # (5 + 12) x 140% = 23.8, rounded down; then x3
-        self.assertEqual(log.describe(e), ["  Dag hits Mountain Stalker for 69: ((1d8 = [5] +12 STR 24) x140% Enlarge "
-                                           "(level 4)) x3 backstab"])
+        # the levels added up (4): the dice 5 x140% = 7, rounded up; x3 backstab, then STR once
+        self.assertEqual(log.describe(e), ["  Dag hits Mountain Stalker for 33: 1d8 = [5] +12 STR 24 +2 Enlarge (the "
+                                           "dice 5 x140% = 7, level 4) +14 backstab (the dice 7 x3 = 21)"])
 
     def test_enlarge_dice_only(self):
-        """RULE_ENLARGE (DSCLOG's ENL_SITE): the dice x140%, rounded up, STR added once; with
-        RULE_BACKSTAB too, the backstab multiplies the enlarged dice."""
-        def hit(rules):
+        """RULE_ENLARGE (DSCLOG's ENL_SITE): the dice x140%, rounded up, STR added once; the
+        backstab (RULE_BACKSTAB) multiplies the enlarged dice; with no backstab, the Enlarge alone."""
+        def hit(stab=1):
             log = make_game()
-            log.rules = rules
             sheet = SHEETS + 0 * game.SHEET_SIZE
             log.guest.mem[sheet + game.SHEET_CLASSES + 1], log.guest.mem[sheet + game.SHEET_LEVELS + 1] = 17, 6
             log.game.effect_spells = lambda: [(game.Effect(0, 5, game.ENLARGE_EFFECT), 30)]
             creature_of = log.game.combatant_creature
             log.game.combatant_creature = lambda c: c if c == 5 else creature_of(c)
             log.game.effect_caster_level = lambda creature, spell: 4
-            parent = words(0, 0, 0, 0, 10, 4, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1)
+            parent = words(0, 0, 0, 0, 10, 4, 0, 0, 0, 0, 1, 0, 0, 0, stab, stab)
             e = entry(raw_for(5, 8), dicelog.DICE_SITE, words(0, 0, 1, 8, 0), parent, (0x29, 0, 0, 0),
                       parent_code=dicelog.WEAPON_DAMAGE_RETURN, parent_locals=locals_at(0x28, ma=1))
             return log.describe(e)
-        # 5 x 140% = 7, + 12 STR = 19; x3 backstab the game's way (19 x 3 = 57)
-        self.assertEqual(hit(game.RULE_ENLARGE), ["  Dag hits Mountain Stalker for 57: (1d8 = [5] +12 STR 24 "
-                                                  "+2 Enlarge (the dice 5 x140% = 7, level 4)) x3 backstab"])
+        # 5 x 140% = 7, + 12 STR = 19
+        self.assertEqual(hit(0), ["  Dag hits Mountain Stalker for 19: 1d8 = [5] +12 STR 24 "
+                                  "+2 Enlarge (the dice 5 x140% = 7, level 4)"])
         # the enlarged 7 x3 = 21, + 12 STR = 33
-        self.assertEqual(hit(game.RULE_ENLARGE | game.RULE_BACKSTAB),
+        self.assertEqual(hit(),
                          ["  Dag hits Mountain Stalker for 33: 1d8 = [5] +12 STR 24 +2 Enlarge (the dice 5 x140% = 7, "
                           "level 4) +14 backstab (the dice 7 x3 = 21)"])
 
-    def backstab(self, level, rules, made=0):
+    def backstab(self, level, made=0):
         log = make_game()
-        log.rules = rules
         sheet = SHEETS + 0 * game.SHEET_SIZE
         log.guest.mem[sheet + game.SHEET_CLASSES + 1], log.guest.mem[sheet + game.SHEET_LEVELS + 1] = 17, level
         parent = words(0, 0, 0, 0, 10, 4, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1)
@@ -543,39 +512,40 @@ class BackstabTests(unittest.TestCase):
         return log.describe(e)
 
     def test_the_rounds_second_attack(self):
-        """The game multiplies the round's first two attacks ([BP-14h] at most 1); with RULE_BACKSTAB
-        only the first, as in AD&D (DSCLOG's STAB_TIMES); none from the third."""
-        self.assertEqual(self.backstab(6, 0, made=1),
-                         ["  Dag hits Mountain Stalker for 51: (1d8 = [5] +12 STR 24) x3 backstab"])
-        self.assertEqual(self.backstab(6, game.RULE_BACKSTAB, made=1),
-                         ["  Dag hits Mountain Stalker for 17: 1d8 = [5] +12 STR 24"])
-        self.assertEqual(self.backstab(6, 0, made=2), ["  Dag hits Mountain Stalker for 17: 1d8 = [5] +12 STR 24"])
+        """Only the round's first attack ([BP-14h] 0) is multiplied, as in AD&D (RULE_BACKSTAB,
+        DSCLOG's STAB_TIMES; the game's took the first two)."""
+        self.assertEqual(self.backstab(6, made=1), ["  Dag hits Mountain Stalker for 17: 1d8 = [5] +12 STR 24"])
+        self.assertEqual(self.backstab(6, made=2), ["  Dag hits Mountain Stalker for 17: 1d8 = [5] +12 STR 24"])
 
     def test_dice_only(self):
         """RULE_BACKSTAB (DSCLOG's STAB_TIMES): the dice multiplied, STR added once."""
-        self.assertEqual(self.backstab(6, game.RULE_BACKSTAB),
+        self.assertEqual(self.backstab(6),
                          ["  Dag hits Mountain Stalker for 27: 1d8 = [5] +12 STR 24 +10 backstab (the dice 5 x3 = 15)"])
 
     def test_times_by_level(self):
         """x4 at thief levels 9 to 12, x5 from 13 (the game's 595C4h, as AD&D's table)."""
-        self.assertIn("+15 backstab (the dice 5 x4 = 20)", self.backstab(12, game.RULE_BACKSTAB)[0])
-        self.assertIn("+20 backstab (the dice 5 x5 = 25)", self.backstab(13, game.RULE_BACKSTAB)[0])
-        self.assertIn("x5 backstab", self.backstab(14, 0)[0])
+        self.assertIn("+15 backstab (the dice 5 x4 = 20)", self.backstab(12)[0])
+        self.assertIn("+20 backstab (the dice 5 x5 = 25)", self.backstab(13)[0])
+        self.assertIn("+20 backstab (the dice 5 x5 = 25)", self.backstab(14)[0])
 
 
 class HelplessTests(unittest.TestCase):
-    """A weapon's blow on a held (Paralyzed) or Out Cold target: the attack routine hands the game's
-    damage call its damage x2 (58B0Dh), which 79BF9h takes for a helpless target (the effects'
-    bitset's bit 34, or the creature's +1Ch 3). Seen 2026-11-10: a hit for 13 took 26."""
+    """A weapon's blow on a held (Paralyzed) or Out Cold target (the effects' bitset's bit 34, or the
+    creature's +1Ch 3): hit whatever the d20, for normal damage, AD&D's held target (RULE_HELD,
+    DSCLOG's HELD_HIT and HELD_DAMAGE; the game's attack routine doubles it, 58B0Dh: seen
+    2026-11-10, a hit for 13 took 26)."""
+
+    @staticmethod
+    def blow(stab=False, state=0):
+        parent = words(0, 0, 0, 0, 10, 4, 0, 0, 5, 7, 1, 0, 0, 0, int(stab), int(stab))
+        return entry(raw_for(5, 8), dicelog.DICE_SITE, words(0, 0, 1, 8, 1), parent, (0x29, 0, 0, 0),
+                     parent_code=dicelog.WEAPON_DAMAGE_RETURN, parent_locals=locals_at(0x28, m14=0), target_state=state)
 
     def hit(self, log, stab=False, now=0.0, state=0):
         if stab:
             sheet = SHEETS + 0 * game.SHEET_SIZE  # (Dag a 6th-level thief: x3)
             log.guest.mem[sheet + game.SHEET_CLASSES + 1], log.guest.mem[sheet + game.SHEET_LEVELS + 1] = 17, 6
-        parent = words(0, 0, 0, 0, 10, 4, 0, 0, 5, 7, 1, 0, 0, 0, int(stab), int(stab))
-        e = entry(raw_for(5, 8), dicelog.DICE_SITE, words(0, 0, 1, 8, 1), parent, (0x29, 0, 0, 0),
-                  parent_code=dicelog.WEAPON_DAMAGE_RETURN, parent_locals=locals_at(0x28, m14=0), target_state=state)
-        return log.describe(e, now=now)
+        return log.describe(self.blow(stab, state), now=now)
 
     def test_as_it_was_at_the_roll(self):
         """DSCLOG writes the target's state into the entry as the dice are rolled (+188, HELPLESS_OF):
@@ -584,35 +554,26 @@ class HelplessTests(unittest.TestCase):
         the game's state now."""
         mark = dicelog.Entry.HELD_MARK
         log = make_game()  # (nothing on the target now)
-        self.assertIn("for 36: (1d8 = [5] +1 weapon +12 STR 24) x2 Paralyzed", self.hit(log, state=mark | 1)[0])
-        self.assertIn("for 36: (1d8 = [5] +1 weapon +12 STR 24) x2 Out Cold", self.hit(log, state=mark | 2)[0])
+        self.assertEqual(log._helpless(self.blow(state=mark | 1)), "Paralyzed")
+        self.assertEqual(log._helpless(self.blow(state=mark | 2)), "Out Cold")
         set_effects(log, [(0x29, 2, game.PARALYZED_EFFECT)])  # (held only after the roll)
-        self.assertEqual(self.hit(log, state=mark)[0], "  Dag hits Mountain Stalker for 18: 1d8 = [5] +1 weapon +12 STR 24")
-        self.assertIn("x2 Paralyzed", self.hit(log, state=0)[0])  # (no word from DSCLOG: as now)
+        self.assertIsNone(log._helpless(self.blow(state=mark)))
+        self.assertEqual(log._helpless(self.blow(state=0)), "Paralyzed")  # (no word from DSCLOG: as now)
 
-    def test_paralyzed_takes_double(self):
-        log = make_game()
-        self.assertEqual(self.hit(log), ["  Dag hits Mountain Stalker for 18: 1d8 = [5] +1 weapon +12 STR 24"])
-        set_effects(log, [(0x29, 2, game.PARALYZED_EFFECT)])
-        self.assertEqual(self.hit(log), ["  Dag hits Mountain Stalker for 36: (1d8 = [5] +1 weapon +12 STR 24) "
-                                         "x2 Paralyzed: a helpless target takes double"])
-        set_effects(log, [(0, 2, game.PARALYZED_EFFECT)])  # (the attacker held: not the target)
-        self.assertEqual(self.hit(log)[0], "  Dag hits Mountain Stalker for 18: 1d8 = [5] +1 weapon +12 STR 24")
-
-    def test_out_cold_takes_double(self):
+    def test_out_cold(self):
         log = make_game()
         log.guest.mem[CREATURES + STALKER * game.CREATURE_SIZE + game.CREATURE_STATUS] = game.OUT_COLD
         self.assertEqual(log.game.helpless(0x29), "Out Cold")
-        self.assertIn("for 36: (1d8 = [5] +1 weapon +12 STR 24) x2 Out Cold", self.hit(log)[0])
+        self.assertEqual(self.hit(log), ["  Dag hits Mountain Stalker for 18: 1d8 = [5] +1 weapon +12 STR 24"])
 
     def test_after_the_backstab_before_biofeedback(self):
-        """The backstab's multiple is in the damage the attack routine doubles; Biofeedback's 2 comes
-        off after (79C83h, on what 79BF9h took)."""
+        """A held target's backstab: the dice multiplied, no x2; Biofeedback's 2 comes off after
+        (79C83h, on what 79BF9h took)."""
         log = make_game()
         set_effects(log, [(0x29, 2, game.PARALYZED_EFFECT), (0x29, 0x29, game.BIOFEEDBACK_EFFECT)])
         self.assertEqual(self.hit(log, stab=True),
-                         ["  Dag hits Mountain Stalker for 106: ((1d8 = [5] +1 weapon +12 STR 24) x3 backstab) "
-                          "x2 Paralyzed: a helpless target takes double -2 Biofeedback"])
+                         ["  Dag hits Mountain Stalker for 26: 1d8 = [5] +1 weapon +12 STR 24 +10 backstab "
+                          "(the dice 5 x3 = 15) -2 Biofeedback"])
 
     def test_a_fall_before_its_roll_is_read(self):
         """A hit's damage applied between a pass's reading of the ring and of HP: the pass's records
@@ -631,37 +592,34 @@ class HelplessTests(unittest.TestCase):
         self.assertEqual(log.hp_changes(1.2 + dicelog.HIT_WAIT), [])  # (no "none of the damage")
 
     def test_the_hp_fall_matches(self):
-        """The doubled damage is what the target's HP is matched against: no "resisted" note."""
+        """A held target's damage, as it is, is what its HP is matched against: no "resisted" note."""
         log = make_game()
         stalker = CREATURES + STALKER * game.CREATURE_SIZE
         struct.pack_into("<h", log.guest.mem, stalker, 50)
         log.hp_changes(0.5)
         set_effects(log, [(0x29, 2, game.PARALYZED_EFFECT)])
         self.hit(log, now=1.0)
-        struct.pack_into("<h", log.guest.mem, stalker, 14)
-        self.assertEqual(log.hp_changes(1.2), ["  Mountain Stalker now 14 HP (-36)"])
+        struct.pack_into("<h", log.guest.mem, stalker, 32)
+        self.assertEqual(log.hp_changes(1.2), ["  Mountain Stalker now 32 HP (-18)"])
 
     def test_held_rule_normal_damage(self):
-        """With RULE_HELD (DSCLOG's HELD_DAMAGE) the damage as rolled: no x2."""
+        """RULE_HELD (DSCLOG's HELD_DAMAGE): the damage as rolled, no x2."""
         log = make_game()
-        log.rules = game.RULE_HELD
         set_effects(log, [(0x29, 2, game.PARALYZED_EFFECT)])
         self.assertEqual(self.hit(log), ["  Dag hits Mountain Stalker for 18: 1d8 = [5] +1 weapon +12 STR 24"])
 
     def test_held_rule_hits_automatically(self):
-        """With RULE_HELD (DSCLOG's HELD_HIT) a helpless target is hit whatever the d20, said under the
-        attack; without the rule, or on a target not helpless, the d20 as ever."""
+        """RULE_HELD (DSCLOG's HELD_HIT): a helpless target is hit whatever the d20, said under the
+        attack; on a target not helpless, the d20 as ever."""
         attack = AttackTests.attack
-        for rules, effects, d20, want in ((game.RULE_HELD, [(0x29, 2, game.PARALYZED_EFFECT)], 1, "HIT"),
-                                          (game.RULE_HELD, [(0x29, 2, game.PARALYZED_EFFECT)], 18, "HIT"),
-                                          (0, [(0x29, 2, game.PARALYZED_EFFECT)], 1, "miss"),
-                                          (game.RULE_HELD, [], 1, "miss")):
+        for effects, d20, want in (([(0x29, 2, game.PARALYZED_EFFECT)], 1, "HIT"),
+                                   ([(0x29, 2, game.PARALYZED_EFFECT)], 18, "HIT"),
+                                   ([], 1, "miss")):
             log = make_game()
-            log.rules = rules
             set_effects(log, effects)
             lines = log.describe(attack(self, d20, 8, 4, 5, 9, after_f1=9, hit_bonus=1))
-            self.assertTrue(lines[0].endswith(f"target AC 4 -> {want}"), (rules, effects, d20, lines[0]))
-            held = rules and effects
+            self.assertTrue(lines[0].endswith(f"target AC 4 -> {want}"), (effects, d20, lines[0]))
+            held = bool(effects)
             self.assertEqual(lines[2:], ["    Paralyzed: hit automatically, for normal damage (AD&D's held target)"]
                              if held else [])
 
@@ -671,7 +629,6 @@ class HelplessTests(unittest.TestCase):
         poison made 18 here, DSCLOG's hit.)"""
         from dsloader import kits
         log = make_game()
-        log.rules = game.RULE_HELD
         stalker = CREATURES + STALKER * game.CREATURE_SIZE
         struct.pack_into("<h", log.guest.mem, stalker, 100)
         log.hp_changes(0.1)
@@ -712,21 +669,21 @@ class HelplessTests(unittest.TestCase):
             lines = self.hit(log, now=2.0)
             self.assertEqual(lines[1], "  Mountain Stalker is poisoned by the hit: Poison (10 damage), no saving throw "
                                        "(Paralyzed)")
-            hp = 100 - 18 - 36
+            hp = 100 - 18 - 18
             struct.pack_into("<h", log.guest.mem, stalker, hp)
-            self.assertEqual(log.hp_changes(2.1), ["  Mountain Stalker now 46 HP (-54)"])
+            self.assertEqual(log.hp_changes(2.1), ["  Mountain Stalker now 64 HP (-36)"])
             log._poison_doses.clear()  # (the next swing the off hand's: its own dose)
             self.hit(log, now=2.2)  # (the next swing, logged before the first poison lands)
             struct.pack_into("<h", log.guest.mem, stalker, hp - 10)
-            self.assertEqual(log.hp_changes(2.4), ["  Mountain Stalker takes 10 from Poison (10 damage), now 36 HP"])
-            struct.pack_into("<h", log.guest.mem, stalker, hp - 10 - 36 - 10)  # (the hit and its poison at once)
+            self.assertEqual(log.hp_changes(2.4), ["  Mountain Stalker takes 10 from Poison (10 damage), now 54 HP"])
+            struct.pack_into("<h", log.guest.mem, stalker, hp - 10 - 18 - 10)  # (the hit and its poison at once)
             self.assertEqual(log.hp_changes(2.8),
-                             ["  Mountain Stalker takes 10 from Poison (10 damage) and 36 from the hit, now -10 HP"])
+                             ["  Mountain Stalker takes 10 from Poison (10 damage) and 18 from the hit, now 26 HP"])
             self.hit(log, now=3.0)
-            struct.pack_into("<h", log.guest.mem, stalker, hp - 10 - 36 - 10 - 36)
-            self.assertEqual(log.hp_changes(3.2), ["  Mountain Stalker now -46 HP (-36)"])  # (the poison not yet)
-            struct.pack_into("<h", log.guest.mem, stalker, -60)
-            self.assertEqual(log.hp_changes(9.0), ["  Mountain Stalker now -60 HP (-14)"])  # (too late: not the poison)
+            struct.pack_into("<h", log.guest.mem, stalker, hp - 10 - 18 - 10 - 18)
+            self.assertEqual(log.hp_changes(3.2), ["  Mountain Stalker now 8 HP (-18)"])  # (the poison not yet)
+            struct.pack_into("<h", log.guest.mem, stalker, -6)
+            self.assertEqual(log.hp_changes(9.0), ["  Mountain Stalker now -6 HP (-14)"])  # (too late: not the poison)
             self.assertEqual(len(self.hit(log, now=9.5)), 1)  # (that weapon's dose used this fight: no poison)
 
 
@@ -782,17 +739,17 @@ class SaveTests(unittest.TestCase):
                       parent_code=dicelog.SPELL_DAMAGE_RETURN) for f in (6, 5, 4)]
         for d in dice:
             log.describe(d, now=1.0)
-        log.describe(self.save_roll(log, 9, spell=FIREBALL), now=1.1)
-        self.assertEqual(log.describe(self.probe(18, needed=14, spell=FIREBALL)),
-                         ["Mountain Stalker's saving throw vs Fireball from Dag (spell): d20 = 9, doubled against fire = 18, "
-                          "needs 14 (70% to save) -> saved: half damage, 7 of 15"])
+        log.describe(self.save_roll(log, 14, spell=FIREBALL), now=1.1)
+        self.assertEqual(log.describe(self.probe(14, needed=14, spell=FIREBALL)),
+                         ["Mountain Stalker's saving throw vs Fireball from Dag (spell): d20 = 14, "
+                          "needs 14 (35% to save) -> saved: half damage, 7 of 15"])
 
     def test_save_not_doubled_with_the_rule(self):
         """With the Loader's rule (always on) the game doesn't double the d20, and neither does the
         log; the target's DEX defensive adjustment counts instead (DEX 16: +2)."""
         log = make_game()
         log.set_rules(game.RULE_NO_DOUBLE)
-        self.addCleanup(setattr, game, "RULES_IN_FORCE", 0)
+        self.addCleanup(setattr, game, "RULES_IN_FORCE", game.RULES_ALWAYS)
         self.damage_formula(log, FIREBALL, 0x20, 0x01, 0x06)
         for f in (6, 5, 4):
             log.describe(entry(raw_for(f, 6), dicelog.DICE_SITE, words(0, 0, 3, 6), words(0, 0, FIREBALL, 3),
@@ -1558,13 +1515,6 @@ class SaveTests(unittest.TestCase):
                          ["  Mountain Stalker now 23 HP (-7: 7 of the 14 rolled, non-magical weapons do half)"])
         self.assertEqual(log.unhurt(1.2 + dicelog.HIT_WAIT, force=True), [])
 
-    def test_doubled_roll(self):
-        log = make_game()
-        log.describe(self.save_roll(log, 7, spell=FIREBALL))
-        self.assertEqual(log.describe(self.probe(14, needed=15, spell=FIREBALL)),
-                         ["Mountain Stalker's saving throw vs Fireball from Dag (spell): d20 = 7, doubled against fire "
-                          "= 14, needs 15 (65% to save) -> failed"])
-
     def test_modifiers_name_the_effects_that_count(self):
         log = make_game()
         set_effects(log, [(0x29, 0, 7), (0x29, 0, 58)])  # Blessed (saves), Displacement (AC only)
@@ -1579,17 +1529,15 @@ class SaveTests(unittest.TestCase):
         log = make_game()
         set_effects(log, [(0x29, 0, 40), (0x29, 0, 7)])  # Prot Fire, Blessed
         log.describe(self.save_roll(log, 7, spell=FIREBALL))
-        self.assertEqual(log.describe(self.probe(18, needed=15, spell=FIREBALL)),
-                         ["Mountain Stalker's saving throw vs Fireball from Dag (spell): d20 = 7, doubled against fire "
-                          "= 14 +1 Blessed +3 Prot Fire = 18, needs 15 (75% to save) -> saved"])
-        # paralysis/poison/death: a dwarf's CON counts twice over
+        self.assertEqual(log.describe(self.probe(11, needed=15, spell=FIREBALL)),
+                         ["Mountain Stalker's saving throw vs Fireball from Dag (spell): d20 = 7 +1 Blessed +3 Prot Fire "
+                          "= 11, needs 15 (50% to save) -> failed"])
+        # paralysis/poison/death: a dwarf's CON, the racial bonus only (AD&D's, RULE_CON: not the
+        # game's CON table on top of it)
         m = log.guest.mem
         m[SHEETS + STALKER * game.SHEET_SIZE + game.SHEET_RACE] = game.DWARF
         m[CREATURES + STALKER * game.CREATURE_SIZE + game.CREATURE_ABILITIES + 2] = 19
         m[DS * 16 + game.SAVE_CON + 19] = 1
-        self.assertEqual(log.game.save_modifiers(0x29, 0, HOLD_PERSON, game.PPD_SAVE),
-                         [(1, "Blessed"), (5, "dwarf CON 19"), (1, "CON 19")])
-        log.game.rules |= game.RULE_CON  # (AD&D's: the racial bonus only)
         self.assertEqual(log.game.save_modifiers(0x29, 0, HOLD_PERSON, game.PPD_SAVE),
                          [(1, "Blessed"), (5, "dwarf CON 19")])
 
@@ -1779,20 +1727,17 @@ class OtherTests(unittest.TestCase):
         self.assertEqual(log.describe(e), ["Daaki DEX check: d20 = 14, needs 14 or less (DEX 16 -2) -> success"])
 
     def test_thief_skill(self):
-        """Dag as a 4th level half-giant thief with DEX 16 opening a lock with a -10 for this lock:
-        the game's chance was 24, so 5 went on armour."""
+        """Dag as a 4th level half-giant thief with DEX 16 opening a lock with a -10 for this lock
+        (AD&D's 37 for the level, +5 for DEX): the chance was 24, so 8 went on armour."""
         log = make_game()
         m = log.guest.mem
-        table = (LOAD_SEG + game.THIEF_TABLE_SEG) * 16
-        m[table + game.THIEF_BASE + 1] = 18
-        m[table + game.THIEF_DEX_LOW + 1], m[table + game.THIEF_DEX_HIGH + 1], m[table + game.THIEF_DEX_TOP + 1] = 11, 15, 20
         sheet = SHEETS
         m[sheet + game.SHEET_CLASSES + 1], m[sheet + game.SHEET_LEVELS + 1] = game.THIEF, 4
         m[CREATURES + game.CREATURE_ABILITIES + 1] = 16
         e = entry(1223, dicelog.PERCENT_SITE, words(0, 0, 0, 1, 0, -10), locals_=locals_at(0x10, m2=24))
         self.assertEqual(log.describe(e), ["Dag tries to open locks: d100 = 24, needs 24 or less -> success",
-                                           "    open locks 24 = 18 + 16 thief level 4 + 5 DEX 16 - 10 this attempt "
-                                           "- 5 equipment"])
+                                           "    open locks 24 = 37 thief level 4 + 5 DEX 16 - 10 this attempt "
+                                           "- 8 equipment"])
         # an effect (Blind, Afraid...) takes 1000 off
         e = entry(1223, dicelog.PERCENT_SITE, words(0, 0, 0, 1, 0, 0), locals_=locals_at(0x10, m2=-961))
         self.assertEqual(log.describe(e), ["Dag tries to open locks: d100 = 24 -> failure (an effect stops it)"])
@@ -2681,17 +2626,6 @@ class CreationTests(unittest.TestCase):
             "Character creation: the six scores add up to 73"])
         self.assertEqual(log.lines(now=3.0), [])  # (once)
 
-    def test_hit_points(self):
-        log = make_creation()
-        for cls, sides, level, face in ((9, 10, 1, 10), (9, 10, 2, 5), (17, 6, 1, 3), (17, 6, 2, 6)):
-            e = entry(raw_for(face, sides), dicelog.DICE_SITE, words(0, 0, 1, sides),
-                      words(dicelog.CREATION_HP_CALLER, 0x54FA, 1, cls, level), parent_code=dicelog.LEVEL_HP_RETURN)
-            self.assertEqual(log.describe(e), [])
-        # (24 / 2 classes) + CON 17's +3 for each of the Fighter's 2 levels
-        self.assertEqual(log.creation_hp_lines(),
-                         ["Character creation, hit points 18: Fighter d10 per level: 10 + 5; Thief d6 per level: "
-                          "3 + 6 = 24, / 2 classes = 12, +6 CON 17 = 18"])
-
     def test_hit_points_against_the_game(self):
         """A hit point roll missed: the game's own total, with the rolls that were caught."""
         log = make_creation()
@@ -2702,8 +2636,8 @@ class CreationTests(unittest.TestCase):
         struct.pack_into("<h", log.guest.mem, CREATION + game.SHEET_MAX_HP, 21)
         self.assertEqual(log.creation_hp_lines(),
                          ["Character creation, hit points 21 (some of its rolls came too fast to record; those "
-                          "caught: Fighter d10 per level: 10; Thief d6 per level: 3 + 6 = 19, / 2 classes = 9 "
-                          "(rounded down), +5 CON 17 = 14)"])
+                          "caught: Fighter d10 per level: 10; Thief d6 per level: 3 + 6 = 19, +3 CON 17 on each of "
+                          "3 dice = 28, / 2 classes = 14)"])
 
     def test_hit_points_shared(self):
         """RULE_MULTI_HP: as Demihuman Deities, CON's bonus (a warrior's, the character having a warrior
@@ -2732,7 +2666,7 @@ class CreationTests(unittest.TestCase):
         self.assertEqual(log.creation_hp_lines(),
                          ["Character creation, hit points 18: Fighter d10 per level: 10 (the better of 2 and 10) + "
                           "5 (the better of 5 and 1); Thief d6 per level: 3 (the better of 3 and 3) + "
-                          "6 (the better of 1 and 6) = 24, / 2 classes = 12, +6 CON 17 = 18"])
+                          "6 (the better of 1 and 6) = 24, +3 CON 17 on each of 4 dice = 36, / 2 classes = 18"])
 
     def test_random_name(self):
         log = make_creation()

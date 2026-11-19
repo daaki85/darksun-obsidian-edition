@@ -1,6 +1,6 @@
 # Documentation: proposed changes (2026-11-17)
 
-*Status: a proposal, nothing done. It turns [the review](docs-review.md) into changes: the target
+*Status: acted on (#100 to #105). It turns [the review](docs-review.md) into changes: the target
 layout, what moves where, what each page keeps, the tooling that has to change with it, and the
 order to do it in. Section and line references are the review's.*
 

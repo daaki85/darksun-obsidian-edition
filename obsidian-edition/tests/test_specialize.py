@@ -117,7 +117,6 @@ class SpecializationsTests(unittest.TestCase):
         bow = specialize.KINDS.index("bow")
         self.assertEqual(self.gd(sheet((bow,), classes=(13, 0, 0))).specializations(0), [("bow", "expertise")])
         self.assertEqual(self.gd(sheet((0,), levels=(9, 0, 0))).specializations(0), [("long sword", "grand mastery")])
-        self.assertEqual(self.gd(s, rules=0).specializations(0), [])
         self.assertEqual(self.gd(sheet((), classes=(1, 0, 0))).specializations(0), [])   # none chosen: no bow line
         self.assertEqual(self.gd(sheet((), classes=(9, 0, 0))).specializations(0), [])
 
@@ -276,7 +275,7 @@ class NewCharacterTests(unittest.TestCase):
             game.RULES_IN_FORCE = game.RULE_KITS
             self.assertEqual(weaponchoice.kinds_for(bytes(s)), [kits.DAGGER + 1, 0, 0, 0])
             self.assertEqual(weaponchoice.kinds_for(bytes(s), [0, 4]), [1, 0, 0, 0])
-            game.RULES_IN_FORCE = 0
+            game.RULES_IN_FORCE = game.RULES_ALWAYS
             self.assertEqual(weaponchoice.kinds_for(bytes(s)), [1, 0, 0, 0])
         finally:
             game.RULES_IN_FORCE = old
@@ -781,8 +780,6 @@ class KitGearTests(FinishNewTests):
         from dsloader import weaponchoice
         right, left = self.character(11, 2, ("axe",))
         self.give(3, 0x04, right)  # (the quarterstaff)
-        self.assertEqual(weaponchoice.kit_gear(self.gd), [])  # (weapon specialization off: no spec)
-        self.gd.rules = game.RULE_SPECIALIZE
         weaponchoice.kit_gear(self.gd)
         self.assertEqual(self.item(0), (weaponchoice.PLAIN[specialize.KINDS.index("axe")][0], right))
 

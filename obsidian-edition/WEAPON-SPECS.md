@@ -5,7 +5,7 @@
 which weapon spec and when, the attacks a round, and grand mastery's dice. The
 [kits](KITS.md) that pick a weapon spec of their own have their other rules on their page.*
 
-With **Weapon specialization** ticked, fighters, gladiators and rangers train in chosen **weapon
+With the mod (always on), fighters, gladiators and rangers train in chosen **weapon
 specs** (weapon types, whatever their material), as in AD&D, and a few kits pick one too. *Without
 the mod:* every warrior has 3/2 attacks a round in melee (2 from 7th level) with any weapon, and
 no other bonus; missile weapons shoot at the weapon's own rate for everyone.

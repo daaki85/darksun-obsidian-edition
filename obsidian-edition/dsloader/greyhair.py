@@ -149,15 +149,13 @@ def aged(rows: Rows, hair: Set[Point], key: int, stage: int, pad: int) -> Rows:
 
 
 def stage_of(gd, member: int) -> int:
-    """A party member's age category (0 young, or none: the rule off, no age given yet)."""
+    """A party member's age category (0 young, or none: no age given yet)."""
     from . import aging, game
-    if not getattr(gd, "rules", 0) & game.RULE_AGING:
-        return 0
     try:
         sheet = gd.sheet(member)
         age = aging.age_of(sheet)
         return aging.category(sheet[game.SHEET_RACE], age) if age is not None else 0
-    except (IndexError, ValueError, KeyError):
+    except (IndexError, ValueError, KeyError, AttributeError):  # (AttributeError: a stand-in game with no sheets)
         return 0
 
 

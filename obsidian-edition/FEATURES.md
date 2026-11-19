@@ -4,8 +4,8 @@
 guide](PLAYER-GUIDE.md) has the rules and tables; this page is the catalogue.*
 
 Everything the mod changes and adds in the game, one short entry each, in the order of the Loader's
-**Options** tab and its sections, ending with **Saves**; then the sections whose switches are gone,
-always on now (**Expanded features**, **Graphics**, **Controls**), what else is **always on**, and
+**Options** tab and its sections, ending with **Saves**; then the sections that are always on
+(**Expanded features**, **Graphics**, **Controls**), what else is **always on**, and
 the game's bugs it mends. Each entry says what it does, names its switch with the words the tab gives
 it (or says **Always on**: most of the rule changes, the combat log, the thieving, the graphics and
 the controls have no switch), and links to the rules ("Rules:", in the player's guide and the
@@ -31,7 +31,7 @@ window are in the [README](README.md).
 - [Game speed](#game-speed)
 - [Wake of the Ravager](#wake-of-the-ravager)
 - [Saves](#saves)
-- Always on, their switches gone: [Expanded features](#expanded-features), [Graphics](#graphics),
+- Always on: [Expanded features](#expanded-features), [Graphics](#graphics),
   [Controls](#controls)
 - [Always on](#always-on), and [the game's bugs, fixed](#the-games-bugs-fixed)
 
@@ -152,7 +152,7 @@ bugs](GAME-BUGS.md) that the mod mends. All are always on now, with no switch.
 | A ranger's spells | Spell levels by its level less 7, but duration and damage by its whole level | Level less 7 for all | [Rangers' casting level](#rangers-casting-level) |
 | Preservers' spells | Any spell learnt from any scroll, every spell known | INT's chance to learn, and its most spells of each level | [Preservers' INT](#preservers-int) |
 | Dual-classing | From 2nd level, one prime requisite a class | From 3rd level, every prime requisite (the game's manual, pp. 12 and 22-26) | [Dual-classing](#dual-classing-as-the-manual-has-it) |
-| Class restrictions | Any one class allowing an item is enough | The strictest class wins | [Class restrictions](#class-restrictions) |
+| Class restrictions | The game's item lists, one class allowing an item enough | Those lists as they are, and AD&D's limits for every class, the strictest winning | [Class restrictions](#class-restrictions) |
 | Multiclass hit points | CON's bonus once a level | CON's bonus on every hit die, the total shared | [Multiclass hit points](#multiclass-hit-points) |
 | Class tables | Priests' THAC0 a level early, short spell slots, a little too little XP for 2nd level | AD&D's tables | [AD&D's class tables](#adds-class-tables) |
 | CON 20 and up | A hit point back every 5 minutes at any CON; CON's adjustment on a dwarf's or halfling's poison save | AD&D's rate (one an hour at CON 20, one every 10 minutes at 25); the racial bonus only | [CON as in AD&D](#con-as-in-add) |
@@ -170,8 +170,8 @@ on the Effects screen ending it ([Spells on the Effects screen](#spells-on-the-e
 
 #### Class restrictions
 
-Each class's limits on armour, shields and weapons hold, the strictest winning, where the game let
-any one class allow an item. A multiclass preserver casts no spells in armour (the USE screen says
+The game's own item lists still need only one of a character's classes; on top of them, each
+class's limits on armour, shields and weapons hold for every class, the strictest winning. A multiclass preserver casts no spells in armour (the USE screen says
 **NO SPELLS IN ARMOUR**), and a thief with another class has no thief skills or backstab in armour
 that isn't light; a new character starts without what its classes can't use.
 
@@ -558,7 +558,7 @@ log:
 | **Gerakis**, half-giant gladiator | specializes in the long sword and the gythka; with [half-giants' two-handed weapons](#half-giants-two-handed-weapons), his club is a bone gythka, a two-handed weapon beside his long sword | | **Wild Fighting**, as a [Wild Fury](KITS.md#multiclass-kits) has it, as each fight starts |
 | **K'ratchek**, thri-kreen fighter, druid and psionicist | specializes in the chatkcha, her only weapon | | casts and uses psionics as a [Wasteland Seer](KITS.md#multiclass-kits) does (druid spells 2 levels higher under the open sky, 1 lower under a roof; psionic powers 2 PSP less under the open sky, 1 more under a roof); her chatkcha's one throw more a round is every thri-kreen's (5/2 a round, specialized; [Weapon specialization](WEAPON-SPECS.md)), not hers alone |
 | **Cermak**, human preserver, once a gladiator | specializes in the long sword and the axe, which count once his gladiator levels do again (when his preserver level passes them) | | an **Arcanist**, the kit of his preserver class: his preserver spells cast a level higher |
-| **Cilla**, elf preserver, druid and thief | | no leather armour (a druid wears none), and she knows the **Armor** spell in its place | an **Elven Shadow-walker** (her own feature): with the [stealth rule](#hiding-in-shadows-to-backstab), her hiding in shadows is never halved in daylight |
+| **Cilla**, elf preserver, druid and thief | | no leather armour (a druid wears none), and she knows the **Armor** spell in its place | an **Elven Shadow-walker** (her own feature): her [hiding in shadows](#hiding-in-shadows-to-backstab) is never halved in daylight |
 
 The features are their own, not kits', and show where kits do. Cermak keeps his gear and hit points
 (the Arcanist's d3 counts from his next level); with fuller starting gear Gerakis gets a sling and
@@ -790,8 +790,7 @@ fixed](GAME-BUGS.md#making-and-keeping-characters)). How it works:
 
 ## Expanded features
 
-New things to do in play, **always on** (the Options tab's **Expanded features** section, and its
-**Improved thieving** group, are gone).
+New things to do in play, **always on**.
 
 ### The leader's CHA at shops
 
@@ -867,8 +866,7 @@ pockets](PLAYER-GUIDE.md#thieves-skills-and-picking-pockets). How it works:
 
 ## Graphics
 
-What the mod draws on the game's map, **always on** (the Options tab's **Graphics** section is
-gone). The magic items' icons and the spells on the ground are [always on](#magic-items-icons) too.
+What the mod draws on the game's map, **always on**. The magic items' icons and the spells on the ground are [always on](#magic-items-icons) too.
 
 ### Elves and half-elves
 
@@ -899,7 +897,7 @@ pictures and adds the gear, frame by frame, walking and fighting, changing as so
 | **Cloaks** | the human woman's cloak, fitted to the wearer, under the hair, in the cloak's colours; from the front it hangs behind |
 | **Boots and belts** | the feet and the waist recoloured (Boots of Elvenkind in soft green) |
 | **Magic** | the spells' weapons whole in the game's animated colours (Flame Blade, Shillelagh, Spiritual Hammer); any other magic weapon or shield glints along its edge, and magic armour, cloaks, helms, boots and belts have a scatter of sparks, in its icon's colour |
-| **Age** | with [ages](#ages-and-magical-aging) on, the hair greys |
+| **Age** | the hair greys with [age](#ages-and-magical-aging) |
 
 A thri-kreen shows only weapons and shields; two party members of the same race and sex each show
 their own. New outfits go into room the game's picture store already has, so gear can be changed as
@@ -953,8 +951,8 @@ better at saving against a spell aimed at them, for whoever can't detect invisib
 
 ## Controls
 
-The mouse and keys in the game, **always on** (the Options tab's **Controls** section is gone; the
-red ring's choice is in its **In the game** section). The keys T, S, M, U and I are [always
+The mouse and keys in the game, **always on** (the red ring's choice is in the Options tab's **In
+the game** section). The keys T, S, M, U and I are [always
 on](#looting-a-body-t-and-shiftt) too.
 
 ### Choosing an enemy: Tab, Enter and the rings
@@ -1032,7 +1030,7 @@ items' icons and the spells on the ground; and the game's bugs mended. Elsewhere
 [two-weapon](#two-weapons) penalties, the pick's [footman's dice](#creature-size) and [Legcrusher at
 the fountain](GAME-BUGS.md#scripts-that-stuck-or-ran-twice).
 
-The switches gone from the Options tab are always on too, each in its own entry above: [the combat
+These are always on too, each in its own entry above: [the combat
 log in the game](#the-combat-log-in-the-game), most [rule changes](#rule-changes) (all but hit dice,
 half-giants' two-handed weapons and helms' AC), [weapon specialization](#weapon-specialization),
 [STORE and RECALL](#store-and-recall-on-the-creation-screen), and all of [expanded
@@ -1093,7 +1091,7 @@ back. How it works:
 Beside the game's own scores and hit points the character creation screen shows: **THAC0** right of
 the hit points (`THAC0: M18 R19`, melee with STR's to-hit adjustment and ranged with DEX's, as the
 classes and kit stand, no weapon counted), so a click on STR or DEX shows at once what it does;
-**AGE** under it with [ages](#ages-and-magical-aging) on; **SUM** under CHR ([scores as
+**AGE** under it ([ages](#ages-and-magical-aging)); **SUM** under CHR ([scores as
 rolled](#scores-and-hit-points-as-rolled)); **STORE** and **RECALL**
 ([above](#store-and-recall-on-the-creation-screen), with its picture); and **KITS** at the end of
 the disciplines' or spheres' panel ([choosing a kit](KITS.md#choosing-a-kit)). After DONE comes the
@@ -1125,7 +1123,7 @@ Bow "Hit +1".
 
 ![The Wand of Missiles' item box in the game: 65000 coins, "Wand of Missiles", "Charges: 50"](docs/wand-charges.png)
 
-![A Stone Dagger's item box in the game: "Stone Dagger", "1D4-1/1D3-1" (with creature size on: a dagger does less to a large target), "Hit -2"](docs/hit-line-box.png)
+![A Stone Dagger's item box in the game: "Stone Dagger", "1D4-1/1D3-1" (a dagger does less to a large target: creature size), "Hit -2"](docs/hit-line-box.png)
 
 Rules: [weaker materials](PLAYER-GUIDE.md#what-each-class-may-use). How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#charges-in-item-boxes).

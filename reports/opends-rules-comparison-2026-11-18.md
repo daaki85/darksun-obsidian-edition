@@ -4,7 +4,7 @@
 
 The first comparison (`opends-bug-comparison-2026-11-18.md`) covered `GAME-BUGS.md`, the bugs. The mod's
 other large body of corrections is the rules: the rows of FEATURES.md's "Rules the game got wrong" table
-(each with a switch), the report `spells-against-the-manual.md`, and the class tables. This is the same
+(each with a switch then), the report `spells-against-the-manual.md`, and the class tables. This is the same
 exercise for them. Match by my reading of OpenDS at `fe35c52`; "nothing" means I found no description.
 
 ## What OpenDS has

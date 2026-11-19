@@ -207,12 +207,13 @@ raised before stopping.
 - **A rule by size in a fight** (logs/2026-11-10-creature-size.md): from `fountain-user`, every foe
   Paralyzed (`foeset.py C eff=34`) and its sheet made a half-giant (`foeset.py C race=5`: large by
   race; the Guards there, Legcrusher's kind, are half-giants already), then Tab + Return on party
-  turns: the dice log's damage line says "(1d12 for 1d8: a large target)". `setmem.py
-  ruleshi=-16384` / `=16384` turns the size rule off and on.
-- **Held targets in memory**: with `held_hit` off, the game's damage routine (79BF9h) takes the
-  attack's damage x2 for a Paralyzed or Out Cold target. A `setmem.py ruleshi=-32768` changes DSCLOG
-  but not the dice log's idea of the rules (settings.json can't turn it off since 2026-11-18: it is
-  always on, `game.ALWAYS_ON`; the guide's [foes in a test fight](PLAYTESTING.md#foes-in-a-test-fight)). To see a held target hit on any
+  turns: the dice log's damage line says "(1d12 for 1d8: a large target)". The rule has no off
+  side since 2026-11-19 (a `setmem.py ruleshi=-N` changes nothing: [the
+  guide](PLAYTESTING.md#builds-the-loader-and-the-tests)); for the game's way, an older build.
+- **Held targets in memory**: the game's damage routine (79BF9h) takes the attack's damage x2 for
+  a Paralyzed or Out Cold target; DSCLOG's HELD_DAMAGE hands it the damage as it is, always (no
+  setting or memory edit turns it off since 2026-11-19; for the game's way, an older build; the
+  guide's [foes in a test fight](PLAYTESTING.md#foes-in-a-test-fight)). To see a held target hit on any
   roll, write its sheet's base AC (+27h) -10 in memory: "only a 20 hits ... -> HIT".
 - **Seneca's poisoned weapons**: since 2.18 each weapon's first hit a fight is marked in the
   header's +1860, which `symread.py`-style reads show as 88h once both her hands have poisoned.
@@ -309,8 +310,8 @@ raised before stopping.
   sheet's: raise one with `foeset.py C int=18`. `sheetscore.py M lv=N con=N ...` sets the first
   level and the creature's scores (what the window reads). A member with a kit is asked for none
   (clear the sheet's +43h to see the kit menu: its title "KIT: NONE", the class's kits as rows, a
-  barred one left out). `setmem.py ruleshi=-2048` turns the rule off in DSCLOG's header for a
-  comparison (the Loader writes the rules only when they change).
+  barred one left out). The rule has no off side since 2026-11-19 (`setmem.py ruleshi=-N` changes
+  nothing); for the game's DUAL, an older build.
 
 ## Sounds
 

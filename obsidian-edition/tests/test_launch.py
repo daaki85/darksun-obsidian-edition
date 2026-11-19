@@ -352,7 +352,7 @@ class LaunchTests(unittest.TestCase):
         self.assertEqual(game.rules_from_settings(old) | game.RULE_HELMS,
                          game.rules_from_settings({}))
         on = launch.content(old)
-        self.assertTrue(all(on[key] for key in launch.CONTENT if key in game.ALWAYS_ON))
+        self.assertFalse(set(launch.CONTENT) & game.ALWAYS_ON)  # (no always-on key read)
         self.assertFalse(on["steady_pace"])
         log = dicelog.DiceLog(None)
         log.use_settings(old)

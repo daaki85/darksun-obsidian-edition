@@ -69,7 +69,10 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
     /tmp/playtest/dosbox.lock`, held for the whole session by a background `flock ... -c 'while [ -e
     HELDFILE ]; do sleep 2; done'` (each Bash call is a new shell, so `exec 9>` doesn't last);
     removing HELDFILE releases it. A DOSBox found running that this session didn't start isn't
-    restarted: play in it (`loadsave.sh` would kill it).
+    restarted: play in it (`loadsave.sh` would kill it). **With that holder running, don't take the
+    lock again in a step** (`flock /tmp/playtest/dosbox.lock -c ...`): it is another open of the
+    file, so it waits for the holder, this session's own, until its `timeout` (200 s lost,
+    2026-11-19); the holder already keeps other agents out, so the steps run without it.
 
 ## 2. The checklist
 
@@ -93,10 +96,12 @@ Run these in order, from `playtest/`, at the start of every test and again after
    prints `state.py` once loaded.
 4. **Check the window is 320x240** (`xdotool getwindowgeometry`). The window is 640x400 until a
    save is loaded; with no `obsidian-edition/settings.json` the Loader's default is 960x720
-   (window_scale 3), and every pixel check (msgbox.sh, levelup.sh, panel.sh) then fails, so message
-   boxes and CHOOSE A SPELL go unseen and the loops stall ([as they
-   did](HISTORY.md#the-window-size-and-pixel-checks)). start.sh sets `window_scale` 1, and
-   pixmatch.py samples a bigger grab down to 320x240 first.
+   (window_scale 3). start.sh sets `window_scale` 1. The pixel checks (msgbox.sh, levelup.sh,
+   panel.sh) go through pixmatch.py, which samples a bigger grab down to 320x240 first; what needs
+   320x240 is the tools that read a raw grab at the game's coordinates (figcheck.py, walkprobe.py,
+   figwatch.py, ghostturn.py), which at 960x720 read the wrong pixels (before pixmatch.py sampled down,
+   message boxes and CHOOSE A SPELL went unseen that way and the loops stalled: [the
+   story](HISTORY.md#the-window-size-and-pixel-checks)).
 5. **Check the build under test is in place** (after every restart: memory edits are lost on any
    restart). The game runs `obsidian-edition/dos/` (GPLDATA.GFF, DSUN.EXE's patched copy...).
    - For a DSCLOG change, **`python3 buildcheck.py`**: it compares 40 bytes of a set of routines in
@@ -263,6 +268,13 @@ game's data: it is one player's account.
   old build), copy it into `obsidian-edition/dos/` for one `loadsave.sh`, run `memaudit.py`, then
   put the new one back and `cmp` it with a fresh build; not while the unit tests run (they read
   `dos/DSCLOG.EXE`).
+- **Memory at the hungry moments** (logs/2026-11-19-final-audit-memory.md): `memaudit.py` run with
+  the map open, in `fountain-user`'s ambush (ten combatants), with a USE screen up, 0.4 s into a
+  spell's picture (Ester's Curse, below), with Kalzith's shop up (`openshop.sh`) and after it:
+  upper memory never moved (its free piece 26,256 bytes at E330h with this build, 144 bytes at
+  CA00h), and the conventional memory's free piece was 99,008 bytes with the map open, 134,848 with
+  the USE screen, 124,608 with the shop, 100,032 with the map open again after it. Read the free
+  piece, not the heap's own free (the game's heap reads 0 KB free with the map open: the map has it).
 - **Another session editing the helper**: before a DOSBox run with the repository's Loader,
   assemble `dos/dsclog.asm` to a scratch file and `cmp` it with `dos/DSCLOG.EXE`: the same, and the
   tree's build is fine to run.
@@ -470,6 +482,10 @@ game's data: it is one player's account.
   what's spare). `leasts.sh` reads each score's least (`creationscores.py`). EXIT (278,160) leaves
   without keeping the character. The screen's memory (its sheet, the least and most, the stand-in
   sheet): [the creation screen in memory](RESEARCH.md#creation-and-levels).
+- **AGE against the dice log's age line** (logs/2026-11-19-final-audit-fixes.md): after a new roll
+  (the die, 155,97) the screen's AGE and the Loader's `NAME is N (a human: 15 + 1d8 = [k])` can
+  differ (AGE 19, 21, 22 for 23, 23, 20), with origin's Loader too: not yet looked into; read the
+  screen's for what DSCLOG draws.
 - **The race**: the big portrait (40,60) steps through the portraits, and with them the race and
   sex: read the sheet's +18h after each click (two clicks a race: 1 human, 2 dwarf, 3 elf, 4
   half-elf ... 7 mul). The race text and the small figure at the top don't change it (the figure
@@ -524,7 +540,7 @@ game's data: it is one player's account.
 - **The Loader's gear and the roster** (logs/2026-11-15-kit-rebalance-checks.md part 7,
   logs/2026-11-16-roster-gear.md): the roster keeps the character as the game wrote it at DONE, and
   DSCLOG holds that write (GEAR_HOLD) for the Loader's creation gear, so a character ADDed in a later
-  session has it, with weapon specialization on or off. To check: start `timeout 115 python3
+  session has it. To check: start `timeout 115 python3
   gearpoll.py > $WORK/gearpoll.log &` just before DONE; the dice log's "starts with ..." lines must
   come before `charsave_written=True` (the roster write, after the psionic powers). To see the
   roster's copy: restart (start.sh, title, CREATE CHARACTERS), ADD it, then list its items with
@@ -577,7 +593,7 @@ game's data: it is one player's account.
   the Effects page's MORE: CLICK HERE is a click on the panel (220,135) (the inventory's own Effects
   icon is 243,187; the portraits there at 65/112, 55/110). It shows each member's EXP and the
   next level's need with its class letter ("EXP:4487 (5000 Pr)"): a quick check of the XP tables
-  (AD&D's when the header's rules_hi, +270, has 8, RULE_HI_TABLES). For inventory or DUAL pictures
+  (AD&D's, always). For inventory or DUAL pictures
   use `pens-after-arena`: in `fountain-user` the ambush starts on loading.
 - **The leader**: the inventory screen's small face button left of each portrait (the first of the
   two; the lit one is the leader's): Cilla's at (7, 152), the others' 44 higher each (from the
@@ -810,6 +826,13 @@ game's data: it is one player's account.
 
 ## Casting spells for a test
 
+**A spell's picture in one minute** (logs/2026-11-19-final-audit-memory.md): `fountain-user`,
+`dismiss.sh` (the ambush starts, Lex's turn), then on Ester's turn U, her priest icon at (194,59)
+(Curse: the aiming ring comes up) and a click on the Templar standing on the view's right
+(`foepos.py`: screen 224-240,134; click 6 pixels above: 10 above said "no creature there" for
+Magical Stone and Hold Person, 2026-11-19, while 6 above hit). Lex's first wizard icon (176,59) is
+Shocking Grasp, a touch spell: "too far away" from there.
+
 From `fountain-user` clicked into Pehtucl's ambush (logs/2026-11-08-manual-spells.md):
 `spellsetup.py 0=9 2=9 hp=200` teaches the spells, fills every slot and sets each of the member's
 casting classes (any place) to level 9 (Lex, #0, is the preserver there, Ester, #2, the priest), and
@@ -875,6 +898,9 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
   each turn and paralysed some, so aim them away from the party; Cloudkill near the party: raise
   the party's levels in memory first (6 and up only take damage). Flaming Sphere cast at a foe two
   squares off struck the caster; farther off it took a slot and logged nothing.
+- **Ester's pages in `fountain-user`** (after `spellsetup.py 2=9`; logs/2026-11-19-final-audit-fixes.md):
+  level 1's second row, second icon (194,79) is Magical Stone; LEVEL (196,171) to level 2, whose
+  second row's first icon (176,79) is Hold Person (a spell save on a free target).
 - **Several casts a slot**: Magical Stone gives three throws a casting (the stone pointer comes
   back; the turn ends after the third). With the manual's spells
   (logs/2026-11-09-turn-undead-meteors.md), Minute Meteors gives five casts a slot (the pointer
@@ -891,7 +917,7 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
   saves); a natural 1 is shown before it too. Since `save_signed` (always applied, in no switch) a
   "cannot save" fails ([it used to save](HISTORY.md#cannot-save-used-to-save)). Look at the effect
   or the HP, not only the save line.
-- **Spells rolling to hit** (logs/2026-11-08-spell-to-hit.md): with `spell_to_hit` on each missile
+- **Spells rolling to hit** (logs/2026-11-08-spell-to-hit.md): each missile
   or hostile touch spell has a line `X's SPELL at Y: [touch ]attack d20 = ...` after its damage
   roll; each of Magical Stone's three throws rolls. Hits on demand and a weapon's spell on a hit:
   [spells and powers in memory](RESEARCH.md#spells-and-powers-in-memory).
@@ -1005,6 +1031,26 @@ tools, and where each is described:
     `new_content`, `speed`, `ravager`, `saves`) opens them as the window starts; the picture is x
     608-1314 from y 116 to under Restore defaults (706x1964 on 2026-11-16; with every section open
     and the fewer switches, 706x1536 on a 1400x2400 screen, 2026-11-18), saved as a 256-colour PNG.
+- **`docs/dicelog-readable.png`** (logs/2026-11-19-final-audit-fixes.md): the Loader's window
+  attached to a game the kit started, so the kit's loops still run. Xvfb `:55` at 1700x900 (start it
+  by hand before `loadsave.sh`: start.sh only starts one when none runs), DOSBox at 0,0 and the
+  window moved to 340,0 (`xdotool windowmove`; no overlap, so `click.py` still reaches the game).
+  After `loadsave.sh`, kill start.sh's text dice log by pid and start the window from a scratch
+  wrapper of `python3.12 -m dsloader view` that also appends `Viewer._append_dice`'s lines to
+  `$WORK/dice.txt` (start.sh truncates that file at each start; the wrapper's appends carry on).
+  Attach with **Reconnect** (1462,70 on the screen): first Ctrl+F10 to DOSBox (it lets the mouse
+  go), after it `xdotool windowfocus` DOSBox and a click in it (it takes the mouse back). Then
+  Seneca's backstab round as in [foes in a test fight](#foes-in-a-test-fight) (twice the loads, a
+  hit on the second). For the picture: `xdotool windowsize` 1320x880, the panes' sash dragged from
+  x 951 to 420 (mousedown, two moves, mouseup), the round cropped from the root window with **Show
+  details** ticked, and again unticked (its box at 438,240), one crop above the other.
+- **The window's Start the game in the container** (the same log): it runs `prepare_patched_game`
+  (the copies rewritten, a check of `write_atomic`), then stops at GOG's `DOSBox.exe`, a Windows
+  program ("[Errno 13] Permission denied", a message box: OK at 1000,470). Click Reconnect first
+  when the game it was attached to was killed: attached by Reconnect, it doesn't notice the DOSBox
+  going ("Connected to the game" stays) and Start does nothing while it thinks so.
+- **The party view's thief skills**: the Characters tab, the mouse wheel over the cards (25 clicks
+  of button 5) to reach the fourth; a thief's card ends `Thief skills now: pick pockets 72%, ...`.
 - **The load window** (`docs/save-pages.png`): a save's name is its STXT chunk
   (`namedsaves.NAME_CHUNK`), a fixed field padded with zeros, so ten saves with plain names are the
   kept saves copied to `$PLAYTEST_WORK/inst/SAVE01-10.SAV` with that field rewritten in place
