@@ -222,8 +222,14 @@ same bug, and the fix works in WotR's own code. The other fixes are still to be 
 fight (the Draxans' ambush) was reached with the fixed copy and played a few turns as the
 original's would; of the party's spells only Chill Touch is a fixed one, and its touch didn't
 reach a Draxan in that test; none has a "can't save" spell (`playtest/logs/2026-11-19-ravager-fight.md`).
-Next: a fixed ranged spell taught in memory for a test, then a save against a "can't save"
-spell, a whole-party thief roll and a random encounter.
+**Seen at work in a fight: Scare and the saving throw** (`playtest/logs/2026-11-19-ravager-scare.md`).
+Ar'anda was taught Scare in memory for the test (WotR keeps spells known as a bitset a member),
+then cast it in the Draxans' ambush with party members of 6th and 7th level in its reach. In WotR
+as it is, Scare's record allows no save: **Thy'rokh (6th level) was Afraid** and ran. In the fixed
+copy (the record's save bit and the signed compare), the same cast left **every member Okay**:
+6th level and up always save. Neither outcome has a roll in it, so the difference is the fixes'.
+Still to see: a "can't save" failing below 6th level (a low-level target), a fixed spell's
+damage or time, a whole-party thief roll and a random encounter.
 
 **What this means for a WotR edition.** The bug fixes split three ways: data fixes (the spell
 records, by name: the easiest), plain code fixes with identical twins (applied as they are, at

@@ -295,6 +295,15 @@ bytes at the far pointer DS:19C9h, +0 HP, the region's people all listed (`ravcr
 Of the opening party's spells only Chill Touch is a fixed one (Ar'anda's); its aimed click wasn't
 taken on a Draxan 1.5 squares off (a touch spell: too far, likely).
 
+**Fights and spells, for a test** (logs/2026-11-19-ravager-scare.md): the manual's hot keys: **Q**
+brings the END menu (**E** in it is END TURN), C the cast screen, G guard, W wait, N/P the next or
+previous foe, 1-4 the leader; Esc with nothing up quits. `ravfight.py until N` ends the others' turns
+until member N's (the order varies run to run). A caster hit this round has every icon crossed out.
+**Spells known**: a 15-byte bitset a member (bit n, spell n; wizard spells only), the roster's `SPST`
+chunk; Ar'anda's at 3F3DCh after START GAME (a set bit is offered on USE at once: a test edit, never
+saved). An area spell's reach shows as a ring of dots round the aim. A creature record's +18h is 60h
+while Afraid.
+
 **Its spells, and the fixes carried over** (2026-11-19, logs/2026-11-19-ravager-fixes.md): no
 spell table in its program; each spell is `RESOURCE.GFF`'s `DATA` 0-319, 73 bytes (SL's 32-byte
 record, then the name and an 8-letter short name), read one at a time as the spell is used

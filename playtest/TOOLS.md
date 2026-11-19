@@ -92,7 +92,9 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `ravclick.py X Y [left\|right\|none] [PID]` | Wake of the Ravager's click.py: moves the pointer to game pixel X,Y (320x200) by relative moves until the game's own pointer (DS:A109h x, A10Bh y; |
 | `ravcreatures.py [OUT] [PID]` | Wake of the Ravager's creature records (31h bytes each, at the far pointer DS:19C9h; |
 | `ravds.py HEX...` | Shattered Lands data-segment offsets to Wake of the Ravager's: for each SL instruction using the offset (mov/cmp/les... |
+| `ravfight.py [state\|end\|wait N\|cast SPELL_ICON_X SPELL_ICON_Y LEVELS] [PID]` | Wake of the Ravager's fight by its memory. |
 | `ravfixes.py [OUT]` | a copy of Wake of the Ravager ($RAV, default $WORK/rav) in OUT (default $WORK/ravfix, hard links but for the two files changed and those the game writes) with the mod's bug fixes that carry over unchanged: five of... |
+| `ravscare.sh [FOLDER]` | Scare in Wake of the Ravager's first fight (the Draxans' ambush in Tyr), for the saving throw's fixes: ravstart.sh FOLDER (default $WORK/rav; |
 | `ravstart.sh [FOLDER]` | Wake of the Ravager in DOSBox (GOG's settings, sound off), from FOLDER (default $WORK/rav; |
 | `ravthief.py [MEMBER] [PID]` | Wake of the Ravager's own thief-skill routine (its DSUN.EXE 8C647h, SL's 80240h) run in an emulator (unicorn) on the running game's memory, for party member MEMBER (default 0), once with the game's list of slots that... |
 | `rec.py [FIRST LAST]` | the combat records (58 bytes) of creatures FIRST to LAST (default the party, 0-3), hex from +10h, to find a field by comparing what the screen shows |
