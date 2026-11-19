@@ -293,9 +293,8 @@ POWER_KIND_NAMES = {"pointed": "piercing", "edged": "slashing"}  # (else the dam
 # the Options' setting for each, all on unless unticked
 RULE_SETTINGS = (("helm_ac", RULE_HELMS), ("new_spells", RULE_NEW_SPELLS), ("half_giant_hands", RULE_HALF_GIANT),
                  ("best_hit_die", RULE_HP_BEST), ("kits", RULE_KITS))
-# ... and the rule changes whose switches went from the Options tab (after 2.18, the owner's call:
-# fewer switches, the rules the mod is for kept on), always on (RULES_ALWAYS): an older settings
-# file's False for one is passed over (setting_on). Their off paths are still in DSCLOG and here.
+# ... and the rule changes with no switch, always on (RULES_ALWAYS): an older settings file's False
+# for one is passed over (setting_on). Neither DSCLOG nor the Loader has their off paths.
 RULE_SETTINGS_GONE = (("spell_save", RULE_SPELL_SAVE), ("stealth", RULE_STEALTH), ("level_10", RULE_LEVEL_10),
                       ("thief_table", RULE_THIEF_TABLE), ("protection_rules", RULE_PROTECTION),
                       ("item_saves", RULE_ITEM_SAVES), ("weapon_specialization", RULE_SPECIALIZE),
@@ -479,9 +478,8 @@ def manual_die(spell: int, sheet: bytes) -> Tuple[int, str]:
     return (best, why) if best else (6, "")
 
 
-# the rule changes with no switch, always on: AD&D's two weapons (its "two_weapons" switch gone in
-# 2.18, the user's call: an older settings file's False is passed over), and those of
-# RULE_SETTINGS_GONE (their switches gone after 2.18, the owner's call)
+# the rule changes with no switch, always on: AD&D's two weapons (an older settings file's
+# "two_weapons" False is passed over) and those of RULE_SETTINGS_GONE
 RULES_ALWAYS = RULE_TWO_WEAPONS | sum(bit for _, bit in RULE_SETTINGS_GONE)
 
 
@@ -489,14 +487,16 @@ def rules_from_settings(settings: dict) -> int:
     return RULES_ALWAYS | sum(bit for key, bit in RULE_SETTINGS if setting_on(settings, key))
 
 
-def kind_to_save(kind: int, rules: int) -> int:
-    if kind == SPELL_KIND and rules & RULE_SPELL_SAVE:
+def kind_to_save(kind: int) -> int:
+    """The sheet's save a spell's kind rolls: the spell save for SPELL_KIND (RULE_SPELL_SAVE)."""
+    if kind == SPELL_KIND:
         return SPELL_SAVE
     return KIND_TO_SAVE[kind]
 
 
 # The rules in force (DiceLog.set_rules): GameData objects made without rules of their own use these
-RULES_IN_FORCE = 0
+# (the always-on ones from the start, so nothing made before the settings are read models the stock game)
+RULES_IN_FORCE = RULES_ALWAYS
 # ... and whether a worn belt adds BELT_BONUS to picking pockets and opening locks (the Options tab's
 # cloak, boots and belt switch; DSCLOG adds it where the game works the chance out: PROBE_BELT)
 BELT_IN_FORCE = False
@@ -1021,7 +1021,7 @@ PRESERVER = 11
 # costs 5, above which each gives 5, above which each costs 3 again; the armour penalty
 THIEF_TABLE_SEG = 0x3FAA
 THIEF_BASE, THIEF_RACE, THIEF_DEX_LOW, THIEF_DEX_HIGH, THIEF_DEX_TOP, THIEF_ARMOUR = 0, 8, 0x90, 0x98, 0xA0, 0xA8
-THIEF_PER_LEVEL = 4
+THIEF_PER_LEVEL = 4  # (the game's base, DEX and per-level parts: not read, AD&D's table in their place)
 # The equipment the thief routine checks for its penalty (anything at all in these slots): a
 # list of words at the thief table's +D0h, ended by 13: the legs, the quiver and both hands. The
 # dice log's copy of the game empties it (gamepatch.py), so the Loader reads it
@@ -1097,9 +1097,8 @@ DOUBLED_KINDS = {0x02: "fire", 0x04: "cold", 0x80: "electricity"}
 
 
 class SpellRules(NamedTuple):
-    doubles_roll: bool  # the saving throw's d20 counts double
-    save_modifier: int  # added to every saving throw against the spell
-    doubled_for: str = ""  # the damage kind that doubles it: "fire", "cold" or "electricity"
+    save_modifier: int  # added to every saving throw against the spell (the game's doubled d20 for
+    # the fire, cold and electricity spells is gone: RULE_NO_DOUBLE, DSCLOG's SAVE_SUM)
 
 
 # the Spellarcher's Fine Bow (spellarrows.py): a bow of fine make, +1 to hit, not magic (DSCLOG's FINE_HIT)
@@ -1513,10 +1512,7 @@ class GameData:
         if len(rec) < SPELL_SIZE:
             return None
         nibble = (rec[0x0F] >> 1) & 0x0F
-        flags = struct.unpack_from("<H", rec, 0x0A)[0]
-        kinds = " and ".join(name for bit, name in DOUBLED_KINDS.items() if flags & bit)
-        doubled = bool(kinds) and not self.rules & RULE_NO_DOUBLE
-        return SpellRules(doubled, nibble - 16 if nibble & 8 else nibble, kinds if doubled else "")
+        return SpellRules(nibble - 16 if nibble & 8 else nibble)
 
     def set_dodge(self, on: bool) -> int:
         """Mark the fire, cold and electricity spells for DEX on their saves (CATEGORY_DODGE),
@@ -1741,7 +1737,7 @@ class GameData:
             if sheet[SHEET_RACE] in (DWARF, HALFLING):
                 out.append((con * 2 // 7, f"{'dwarf' if sheet[SHEET_RACE] == DWARF else 'halfling'} CON {con}"))
             adjust = struct.unpack("b", self.guest.read(self.ds * 16 + SAVE_CON + con, 1))[0] if con < 26 else 0
-            if self.rules & RULE_CON and sheet[SHEET_RACE] in (DWARF, HALFLING):
+            if sheet[SHEET_RACE] in (DWARF, HALFLING):
                 adjust = 0  # (only the racial bonus: DSCLOG's CON_SAVE)
             if adjust:
                 out.append((adjust, f"CON {con}"))
@@ -1829,7 +1825,7 @@ class GameData:
             if n and sheet[SHEET_RACE] == HUMAN and level >= sheet[SHEET_LEVELS]:
                 continue
             rules = self.guest.read(self.ds * 16 + SLOT_CLASS_RULES + cls, 1)[0]
-            ours = tables.slots(cls, level, spell_level) if self.rules & RULE_ADND_TABLES else None
+            ours = tables.slots(cls, level, spell_level)
             if ours is not None:  # (AD&D's for the level, the game's for WIS: DSCLOG's PROBE_ADND_SLOTS)
                 total += ours
                 rules >>= 4
@@ -1844,8 +1840,7 @@ class GameData:
                 total += min(max(count, 0), most)
                 rules >>= 4
         for kid in kids:
-            total = kits.slots(kid, bit, kitpages.kit_level(sheet, kid), spell_level, total,
-                               bool(self.rules & RULE_ADND_TABLES))
+            total = kits.slots(kid, bit, kitpages.kit_level(sheet, kid), spell_level, total, True)
         from . import robes
         return robes.slots(robes.worn_plus(self._worn(member)), bit, spell_level, total)
 
@@ -1900,23 +1895,11 @@ class GameData:
         table = self.guest.read((self.load_seg + THIEF_TABLE_SEG) * 16, THIEF_ARMOUR + 8)
         signed_byte = lambda offset: struct.unpack_from("b", table, offset)[0]
         race, dex = sheet[SHEET_RACE], rec[CREATURE_ABILITIES + 1]
-        if self.rules & RULE_THIEF_TABLE:
-            parts = [(f"thief level {level}", AD_D_THIEF[skill][min(level, len(AD_D_THIEF[0])) - 1])]
-        else:
-            parts = [("base", signed_byte(THIEF_BASE + skill)),
-                     (f"thief level {level}", level * THIEF_PER_LEVEL)]
+        parts = [(f"thief level {level}", AD_D_THIEF[skill][min(level, len(AD_D_THIEF[0])) - 1])]
         if 1 <= race <= 8:
             parts.append((RACE_NAMES[race], signed_byte(THIEF_RACE + race * 8 + skill)))
-        parts.append((f"DEX {dex}", self._dex_part(table, dex, skill)))
-        return [(what, n) for what, n in parts if n or what in ("base", parts[0][0])]
-
-    def _dex_part(self, table: bytes, dex: int, skill: int) -> int:
-        """DEX's adjustment to a thief skill: Dark Sun's table (RULE_THIEF_TABLE), else the game's
-        formula (each point below its low costs 5, above its high gives 5, above its top 3 less)."""
-        if self.rules & RULE_THIEF_TABLE:
-            return dex_adjustment(dex, skill)
-        low, high, top = (table[o + skill] for o in (THIEF_DEX_LOW, THIEF_DEX_HIGH, THIEF_DEX_TOP))
-        return -5 * max(low - dex, 0) + 5 * max(dex - high, 0) - 3 * max(dex - top, 0)
+        parts.append((f"DEX {dex}", dex_adjustment(dex, skill)))  # (Dark Sun's table: RULE_THIEF_TABLE)
+        return [(what, n) for what, n in parts if n or what == parts[0][0]]
 
     def thief_skills(self, creature: int) -> List[Tuple[str, int]]:
         """[(skill, chance before armour and the situation), ...] for a thief, else []: the skills
@@ -1972,7 +1955,7 @@ class GameData:
             parts = [(f"ranger as a Wilderness Avenger, level {level}", kits.AVENGER_STEALTH * level)]
         if 1 <= race <= 8:
             parts.append((RACE_NAMES[race], signed_byte(THIEF_RACE + race * 8 + skill)))
-        parts.append((f"DEX {dex}", self._dex_part(table, dex, skill)))
+        parts.append((f"DEX {dex}", dex_adjustment(dex, skill)))
         for kid in self.kit_ids(creature):
             if kits.stealth(kid):  # (a Stalker's)
                 parts.append((kits.name(kid), kits.stealth(kid)))
@@ -1981,11 +1964,10 @@ class GameData:
     def gear_skill(self, creature: int, skill: int, chance: int) -> int:
         """CHANCE at moving silently (3) or hiding in shadows (4) with what the character wears,
         as the stealth rule's rolls count it (stealth.turn): with the cloak, boots and belt switch
-        (BELT_IN_FORCE), a worn cloak's or boots' bonus, to no more than stealth.MOST (a chance
-        already above it, without RULE_THIEF_TABLE, kept); the Cloak or Boots of Elvenkind's
-        chance, if better (the cloak's under the open sky). Without the stealth rule, CHANCE."""
+        (BELT_IN_FORCE), a worn cloak's or boots' bonus, to no more than stealth.MOST; the Cloak or
+        Boots of Elvenkind's chance, if better (the cloak's under the open sky)."""
         from . import stealth
-        if skill not in (3, 4) or not self.rules & RULE_STEALTH:
+        if skill not in (3, 4):
             return chance
         slot, elven, best, bonus = (CLOAK_SLOT, ELVEN_CLOAK_TYPE, stealth.ELVEN_HIDE_OUT, stealth.CLOAK_HIDE) \
             if skill == 4 else (FOOT, ELVEN_BOOTS_TYPE, stealth.ELVEN_QUIET, stealth.BOOTS_QUIET)
@@ -2022,7 +2004,7 @@ class GameData:
                          gear: bool = True) -> List[Tuple[str, int]]:
         """[(skill, chance), ...] for the skills the game rolls, as they stand now: with the
         equipment penalty, a worn belt's bonus (BELT_IN_FORCE), the kits', to no more than
-        THIEF_MOST with RULE_THIEF_TABLE (as DSCLOG's PROBE_BELT), with GEAR a worn cloak's or boots'
+        THIEF_MOST (as DSCLOG's PROBE_BELT), with GEAR a worn cloak's or boots'
         (gear_skill), 0 for a skill an effect rules out (or when the thief isn't Okay or New, or wears armour that isn't light: thief_heavy), 100
         for one an effect makes certain. Not the situation's bonus (a hard lock...). [] for
         someone without thief levels. `skills`: which (numbers in THIEF_SKILLS)."""
@@ -2049,8 +2031,7 @@ class GameData:
             for kid in kids:  # (an Assassin's, a Swashbuckler's...: no less than 0, as DSCLOG's PROBE_BELT)
                 if kits.thief_skill(kid, skill, outdoors):
                     chance = max(0, chance + kits.thief_skill(kid, skill, outdoors))
-            if self.rules & RULE_THIEF_TABLE:
-                chance = min(THIEF_MOST, chance)
+            chance = min(THIEF_MOST, chance)
             if gear:
                 chance = self.gear_skill(creature, skill, chance)
             if any(skill in THIEF_CERTAIN.get(e, ()) for e in ids):
@@ -2229,7 +2210,7 @@ class GameData:
                 if sheet[SHEET_RACE] in (DWARF, HALFLING):
                     parts.append((con * 2 // 7, f"{'dwarf' if sheet[SHEET_RACE] == DWARF else 'halfling'} CON {con}"))
                 adjust = struct.unpack("b", self.guest.read(self.ds * 16 + SAVE_CON + con, 1))[0] if con < 26 else 0
-                if self.rules & RULE_CON and sheet[SHEET_RACE] in (DWARF, HALFLING):
+                if sheet[SHEET_RACE] in (DWARF, HALFLING):
                     adjust = 0
                 if adjust:
                     parts.append((adjust, f"CON {con}"))
@@ -2291,29 +2272,26 @@ class GameData:
                     + kits.ghetto_to_hit(kid, kind)
                 if kit:
                     parts.append((kits.name(kid), kit))
-            war_kid, war = kits.war_hit(self.sheet(creature), kind, base, bool(self.rules & RULE_SPECIALIZE),
-                                         bool(self.rules & RULE_KITS))
+            war_kid, war = kits.war_hit(self.sheet(creature), kind, base, True, bool(self.rules & RULE_KITS))
             if war:  # (DSCLOG's WAR_HIT: a warrior's THAC0 with the kit's chosen weapon)
                 parts.append((f"{kits.name(war_kid)} (a warrior's THAC0)", war))
             if creature in self.wild:  # (DSCLOG's WILD_TO_HIT: a Wild Fury, or Gerakis, whatever the check)
                 parts.append(("Wild Fighting", kits.WILD_TO_HIT_MOD))
             if struct.unpack_from("<H", item, ITEM_NAME)[0] == FINE_BOW_NAME:  # (DSCLOG's FINE_HIT)
                 parts.append(("fine", FINE_TO_HIT))
-            if self.rules & RULE_SPECIALIZE:  # (weapon specialization: DSCLOG's PROBE_ATTACKS)
-                from . import specialize
-                item_type = struct.unpack_from("<H", item, ITEM_TYPE)[0]  # (KIND stays the weapon kind)
-                skill = specialize.skill(self.sheet(creature), item_type)
-                parts.append((specialize.SKILL_NAMES.get(skill, ""), specialize.to_hit(skill)))
-                if missile:
-                    halves = specialize.missile_attacks(halves, skill, item_type, self.sheet(creature))
-                elif skill == specialize.EXPERT and self.sheet(creature)[SHEET_ATTACKS] <= 2:
-                    # (a Battle Mage's expertise: DSCLOG's EXPERT_HALVES)
-                    halves = specialize.expert_attacks(self.sheet(creature)[SHEET_ATTACKS], skill, self.sheet(creature))
+            from . import specialize  # (weapon specialization: DSCLOG's PROBE_ATTACKS)
+            item_type = struct.unpack_from("<H", item, ITEM_TYPE)[0]  # (KIND stays the weapon kind)
+            skill = specialize.skill(self.sheet(creature), item_type)
+            parts.append((specialize.SKILL_NAMES.get(skill, ""), specialize.to_hit(skill)))
+            if missile:
+                halves = specialize.missile_attacks(halves, skill, item_type, self.sheet(creature))
+            elif skill == specialize.EXPERT and self.sheet(creature)[SHEET_ATTACKS] <= 2:
+                # (a Battle Mage's expertise: DSCLOG's EXPERT_HALVES)
+                halves = specialize.expert_attacks(self.sheet(creature)[SHEET_ATTACKS], skill, self.sheet(creature))
             if not missile and self.rules & RULE_KITS:  # (a Crusader's or Mind Warrior's extra attacks)
                 have = self.sheet(creature)[SHEET_ATTACKS] if halves is None else halves
-                spec = bool(self.rules & RULE_SPECIALIZE)
-                if kits.warrior_attacks(have, self.sheet(creature), spec) != have:
-                    halves = kits.warrior_attacks(have, self.sheet(creature), spec)
+                if kits.warrior_attacks(have, self.sheet(creature), True) != have:
+                    halves = kits.warrior_attacks(have, self.sheet(creature), True)
             sheet = self.sheet(creature)
             if missile and kind == kits.CHATKCHA and len(sheet) > SHEET_RACE and sheet[SHEET_RACE] == kits.THRI_KREEN:
                 # (a thri-kreen's chatkcha, 2/1 as in AD&D: DSCLOG's OWN_THROWS)
@@ -2321,7 +2299,7 @@ class GameData:
             if not missile and self.wild.get(creature):
                 # (Wild Fighting, its check passed: 1 more attack a round in melee; DSCLOG's WILD_HALVES)
                 halves = (self.sheet(creature)[SHEET_ATTACKS] if halves is None else halves) + kits.WILD_HALVES
-            if not missile and self.rules & RULE_TWO_WEAPONS and slot == WEAPON_HANDS[1]:
+            if not missile and slot == WEAPON_HANDS[1]:
                 # (AD&D's two weapons: the off hand one a round, the extra attacks the main hand's;
                 # DSCLOG's OFF_HAND_HALVES)
                 have = self.sheet(creature)[SHEET_ATTACKS] if halves is None else halves
@@ -2360,8 +2338,6 @@ class GameData:
         dex = self.creature(creature)[CREATURE_ABILITIES + 1]
         sheet = self.sheet(creature)
         ranger = len(sheet) >= SHEET_FLAGS + 2 and struct.unpack_from("<H", sheet, SHEET_FLAGS)[0] & SHEET_FLAG_RANGER
-        if not self.rules & RULE_TWO_WEAPONS and not head:
-            return f"two weapons at DEX {dex}", 0 if ranger else max(0, -self.dex_initiative(dex))
         hand = f"cahulaks, {head} head" if head else "off hand" if slot == WEAPON_HANDS[1] else "main hand"
         from . import kits
         if ranger and kits.JUSTIFIER in self.kit_ids(creature):
@@ -2465,11 +2441,8 @@ class GameData:
     def protection(self, creature: int) -> List[Tuple[int, str]]:
         """What the creature's rings and cloak of protection add to its saving throws, as
         [(amount, why), ...]. The game's (with the patched game): every worn one's plus, as
-        "Ring of Protection". With RULE_PROTECTION, AD&D's: the better ring only, and the cloak
-        only without magical or metal armour (helms too) and without a shield."""
-        if not self.rules & RULE_PROTECTION:
-            ring = self.ring_plus(creature)
-            return [(ring, "Ring of Protection")] if ring else []
+        "Ring of Protection". The mod's (RULE_PROTECTION), AD&D's: the better ring only, and the
+        cloak only without magical or metal armour (helms too) and without a shield."""
         rings, cloak, blocked = [], 0, False
         for _, item, typ in self._worn(creature):
             plus = struct.unpack("b", item[ITEM_PLUS:ITEM_PLUS + 1])[0]
@@ -2544,8 +2517,6 @@ class GameData:
         "specialized", "mastery", "grand mastery", "expertise", or "not yet" for a dual-classed
         warrior whose warrior class isn't back yet; then a ranger's bow, chosen or not (DSCLOG's
         EF_LINES_OF)."""
-        if not self.rules & RULE_SPECIALIZE:
-            return []
         from . import specialize, weaponchoice
         sheet = self.sheet(creature)
         if len(sheet) < SHEET_SIZE:
@@ -2566,8 +2537,6 @@ class GameData:
     def thief_heavy(self, creature: int) -> bool:
         """With class restrictions, whether a character with a thief class wears armour that isn't
         light: no thief skills and no backstab (DSCLOG's THIEF_HEAVY; restrict.thief_heavy)."""
-        if not self.rules & RULE_RESTRICT:
-            return False
         from . import restrict
         worn = [typ for _, item, typ in self._worn(creature) if item[ITEM_SLOT] in ARMOUR_SLOTS]
         return restrict.thief_heavy(self.sheet(creature), worn)
@@ -2575,8 +2544,6 @@ class GameData:
     def no_spells(self, creature: int) -> bool:
         """With class restrictions, whether a multiclass preserver can't cast for the armour it
         wears (DSCLOG's PROBE_NO_CAST; restrict.no_spells)."""
-        if not self.rules & RULE_RESTRICT:
-            return False
         from . import restrict
         worn = [typ for _, item, typ in self._worn(creature) if item[ITEM_SLOT] in ARMOUR_SLOTS]
         return restrict.no_spells(self.sheet(creature), worn)

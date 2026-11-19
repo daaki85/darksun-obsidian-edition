@@ -242,8 +242,6 @@ class PartyTests(unittest.TestCase):
         """STATS' age bytes (DSCLOG's AGE_TEXT): the age, its category, the next and its age."""
         self.m[SHEETS + game.SPEC_SLOTS:SHEETS + game.SPEC_SLOTS + 4] = game.packed_specs((), aging.stored(HUMAN, 45))
         self.assertEqual(struct.unpack_from("<HBBH", self.log.stats_entry(0), 28), (45, aging.MIDDLE, aging.OLD, 53))
-        self.log.rules &= ~game.RULE_AGING
-        self.assertEqual(self.log.stats_entry(0)[28:34], bytes(6))
         self.assertEqual(aging.describe(self.g.sheet(0)), "45, middle-aged; old at 53")
 
 
@@ -289,18 +287,13 @@ class HasteTests(unittest.TestCase):
 
     def test_in_the_dice_log(self):
         """A new Haste on Dag, once: its line, then his system shock and his year; none again for
-        the same Haste, nor with the rule off."""
+        the same Haste."""
         self.assertEqual(self.log.effect_changes(10.0), [])
         set_effects(self.log, [(0, 0, game.HASTED_EFFECT)])
         lines = self.log.effect_changes(20.0)
         self.assertTrue(lines[0].startswith("Hasted on Dag"))
         self.assertTrue(lines[1].startswith("Dag's system shock (Haste's aging): d100 = "))
         self.assertEqual(self.log.effect_changes(30.0), [])
-        set_effects(self.log, [])
-        self.log.effect_changes(40.0)
-        self.log.rules &= ~game.RULE_AGING
-        set_effects(self.log, [(0, 0, game.HASTED_EFFECT)])
-        self.assertEqual(len(self.log.effect_changes(50.0)), 1)
 
 
 class RestoreYouthTests(unittest.TestCase):

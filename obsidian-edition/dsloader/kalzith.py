@@ -852,7 +852,6 @@ def mend(gd) -> int:
 # The copies
 
 def _write(source: str, dest: str, added) -> None:
-    import os
     from .icons import with_chunks
     with open(source, "rb") as f:
         data = f.read()

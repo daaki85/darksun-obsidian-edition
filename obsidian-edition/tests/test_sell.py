@@ -49,24 +49,19 @@ class SellTests(unittest.TestCase):
         return [i for i, _ in ring.Items(self.gd).chain(PACK, inside=False)]
 
     def test_sells_the_plain_gear(self):
-        """The plain sword sold; the sword +1, the bag and the arrows (ammunition: never) kept."""
-        self.gd.rules &= ~game.RULE_CHA_PRICES
+        """The plain sword sold, at 60% of its 50 (Shops as in AD&D); the sword +1, the bag and the
+        arrows (ammunition: never) kept."""
         lines, paid = sell.sell(self.gd, 0)
-        self.assertEqual(paid, 50)
+        self.assertEqual(paid, 30)
         self.assertEqual(self.pack(), [91, 92, 93])
-        self.assertEqual(self.gd.money(), self.money + 50)
-        self.assertTrue(lines[0].startswith("Dag sells 1 things for 50 ceramic pieces"))
-
-    def test_shops_as_in_add(self):
-        self.gd.rules |= game.RULE_CHA_PRICES
-        _, paid = sell.sell(self.gd, 0)
-        self.assertEqual(paid, 30)  # (60% of 50)
+        self.assertEqual(self.gd.money(), self.money + 30)
+        self.assertTrue(lines[0].startswith("Dag sells 1 things for 30 ceramic pieces"))
 
     def test_a_stack_times_its_count(self):
-        self.gd.rules &= ~game.RULE_CHA_PRICES
+        """A stack: 60% of one (2: 1, never below 1) times its count, 20."""
         struct.pack_into("<H", self.m, ITEMS + 93 * game.ITEM_SIZE + game.ITEM_TYPE, 71)
         _, paid = sell.sell(self.gd, 0)
-        self.assertEqual(paid, 50 + 2 * 20)
+        self.assertEqual(paid, 30 + 1 * 20)
 
     def test_nothing_to_sell(self):
         self.m[ITEMS + 90 * game.ITEM_SIZE + game.ITEM_PLUS] = 1
@@ -93,7 +88,6 @@ class SellTests(unittest.TestCase):
     def test_a_failed_unlink_is_not_paid(self):
         """The item can't be taken out of its list: no money for it."""
         from unittest import mock
-        self.gd.rules &= ~game.RULE_CHA_PRICES
         with mock.patch.object(ring, "unlink", return_value=False):
             lines, paid = sell.sell(self.gd, 0)
         self.assertEqual(paid, 0)
@@ -117,9 +111,8 @@ class SellTests(unittest.TestCase):
                 m[ITEMS + 90 * game.ITEM_SIZE:ITEMS + 91 * game.ITEM_SIZE]
             struct.pack_into("<h", m, ITEMS + item * game.ITEM_SIZE + game.ITEM_NEXT, game.NO_ITEM)
             m[ITEMS + item * game.ITEM_SIZE + game.ITEM_SLOT] = slot
-        self.gd.rules &= ~game.RULE_CHA_PRICES
         _, paid = sell.sell(self.gd, 0)
-        self.assertEqual(paid, 50)  # (the backpack's plain sword alone)
+        self.assertEqual(paid, 30)  # (the backpack's plain sword alone, at 60%)
         for thing, item in ((461, 94), (462, 95)):
             self.assertEqual([i for i, _ in ring.Items(self.gd).chain(thing, inside=False)], [item])
 

@@ -9019,7 +9019,6 @@ class RolledTests(AdndTablesTests):
         there too (CR_SEG340_AT's "mov ax,340h"); then PSP drawn again, centred on its box, and the
         age (the creation screen's roll, a human's). An operand not fixed up (0): no call and nothing drawn. Ages off:
         only the "add sp"."""
-        from dsloader import aging
         from dsloader.gamepatch import CR_NAME_SITE
         ip = 0x600 + CR_NAME_SITE * 0x10 + 3  # (the way back, as run_site lays the site out)
         restore_at, seg_at = ip + 0x65A60 - 0x66048, ip + 0x65A4C - 0x66048  # (the operands' places)

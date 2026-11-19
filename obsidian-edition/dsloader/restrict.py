@@ -204,7 +204,7 @@ def kit_allows(sheet: bytes, item_type: int, typ: bytes) -> bool:
     kind = specialize.kind_of(item_type) if is_weapon(typ) else None
     first = game.spec_kinds(sheet)[0]
     chosen = first - 1 if first else None
-    return any(kits.allows(kid, typ, kind, chosen, bool(game.RULES_IN_FORCE & game.RULE_SPECIALIZE))
+    return any(kits.allows(kid, typ, kind, chosen, True)
                for kid in kitpages.kit_ids(sheet))
 
 

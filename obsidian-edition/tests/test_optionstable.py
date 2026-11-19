@@ -4,7 +4,6 @@ separated by " / "), and every rule change and new content switch has its row.""
 
 import ast
 import os
-import re
 import unittest
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # obsidian-edition

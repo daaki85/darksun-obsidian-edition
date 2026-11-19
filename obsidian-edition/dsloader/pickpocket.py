@@ -28,7 +28,7 @@ import struct
 from dataclasses import dataclass
 from typing import Callable, List, Optional, Tuple
 
-from . import game, itemgate, restrict, ring
+from . import game, restrict, ring
 from .game import GameData
 
 PICK_POCKETS, MOVE_SILENTLY = 0, 3  # thief skill numbers

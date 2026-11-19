@@ -55,7 +55,7 @@ class TextTests(unittest.TestCase):
     def test_sixth_level_lines_by_hand(self):
         # Heartseeker's record (Slay Living's) would read as dice halved by a save, not the death on
         # a failed one: its own lines say both, the rest are still read from the record
-        gd = PriestSixStub(SpellDamage(0, 4, 0, 1, 0, 8), SpellRules(True, 0, "spell"), name="Heartseeker")
+        gd = PriestSixStub(SpellDamage(0, 4, 0, 1, 0, 8), SpellRules(0), name="Heartseeker")
         info = spellbook.spell_info(gd, game.HEARTSEEKER_SPELL, [])
         self.assertEqual((info.magic, info.level, info.damage), ("Priest", 6, "half of 4d8 (2 to 16) to one that saves"))
         self.assertIn("one that fails it dies", info.save)
@@ -64,22 +64,20 @@ class TextTests(unittest.TestCase):
             self.assertTrue(set(lines) <= {"damage", "save", "effect", "lasts"})
 
     def test_fireball(self):
-        gd = StubGame(SpellDamage(0, 1, 0, 1, 0, 6), SpellRules(True, 0, "fire"))
+        gd = StubGame(SpellDamage(0, 1, 0, 1, 0, 6), SpellRules(0))
         rec = record(kinds=0x202, save=(4 << 5) | 1)
         self.assertEqual(spellbook.damage_text(gd, 27, rec),
                          "1d6 for each caster level, counting at most level 10 [fire]")
         self.assertEqual(spellbook.save_text(gd, 27, rec, True),
-                         "petrification/polymorph, d20 doubled (against fire); saving halves the damage")
+                         "petrification/polymorph; saving halves the damage")
         self.assertEqual(spellbook.lasts_text(gd, 27, rec), "")  # instant
 
     def test_spell_save_rule(self):
-        """Kind 5, what almost every spell has: petrification/polymorph, or with the Loader's
-        rule the spell save. Kind 1 stays paralysis/poison/death."""
+        """Kind 5, what almost every spell has (the game's petrification/polymorph): the spell save,
+        the Loader's rule. Kind 1 stays paralysis/poison/death."""
         rec = record(save=(5 << 5) | 1)
-        self.assertEqual(spellbook.save_text(StubGame(), 1, rec, False), "petrification/polymorph")
-        self.assertEqual(spellbook.save_text(StubGame(game_rules=game.RULE_SPELL_SAVE), 1, rec, False), "spell")
-        self.assertEqual(spellbook.save_text(StubGame(game_rules=game.RULE_SPELL_SAVE), 1,
-                                             record(save=(1 << 5) | 1), False), "paralysis/poison/death")
+        self.assertEqual(spellbook.save_text(StubGame(), 1, rec, False), "spell")
+        self.assertEqual(spellbook.save_text(StubGame(), 1, record(save=(1 << 5) | 1), False), "paralysis/poison/death")
 
     def test_durations_and_charges(self):
         gd = StubGame(SpellDamage(0, 0, 0, 1, 0, 0))
