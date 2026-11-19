@@ -482,6 +482,10 @@ game's data: it is one player's account.
   what's spare). `leasts.sh` reads each score's least (`creationscores.py`). EXIT (278,160) leaves
   without keeping the character. The screen's memory (its sheet, the least and most, the stand-in
   sheet): [the creation screen in memory](RESEARCH.md#creation-and-levels).
+- **AGE against the dice log's age line** (logs/2026-11-19-final-audit-fixes.md): after a new roll
+  (the die, 155,97) the screen's AGE and the Loader's `NAME is N (a human: 15 + 1d8 = [k])` can
+  differ (AGE 19, 21, 22 for 23, 23, 20), with origin's Loader too: not yet looked into; read the
+  screen's for what DSCLOG draws.
 - **The race**: the big portrait (40,60) steps through the portraits, and with them the race and
   sex: read the sheet's +18h after each click (two clicks a race: 1 human, 2 dwarf, 3 elf, 4
   half-elf ... 7 mul). The race text and the small figure at the top don't change it (the figure
@@ -825,7 +829,8 @@ game's data: it is one player's account.
 **A spell's picture in one minute** (logs/2026-11-19-final-audit-memory.md): `fountain-user`,
 `dismiss.sh` (the ambush starts, Lex's turn), then on Ester's turn U, her priest icon at (194,59)
 (Curse: the aiming ring comes up) and a click on the Templar standing on the view's right
-(`foepos.py`: screen 224-240,134; click 10 pixels above). Lex's first wizard icon (176,59) is
+(`foepos.py`: screen 224-240,134; click 6 pixels above: 10 above said "no creature there" for
+Magical Stone and Hold Person, 2026-11-19, while 6 above hit). Lex's first wizard icon (176,59) is
 Shocking Grasp, a touch spell: "too far away" from there.
 
 From `fountain-user` clicked into Pehtucl's ambush (logs/2026-11-08-manual-spells.md):
@@ -893,6 +898,9 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
   each turn and paralysed some, so aim them away from the party; Cloudkill near the party: raise
   the party's levels in memory first (6 and up only take damage). Flaming Sphere cast at a foe two
   squares off struck the caster; farther off it took a slot and logged nothing.
+- **Ester's pages in `fountain-user`** (after `spellsetup.py 2=9`; logs/2026-11-19-final-audit-fixes.md):
+  level 1's second row, second icon (194,79) is Magical Stone; LEVEL (196,171) to level 2, whose
+  second row's first icon (176,79) is Hold Person (a spell save on a free target).
 - **Several casts a slot**: Magical Stone gives three throws a casting (the stone pointer comes
   back; the turn ends after the third). With the manual's spells
   (logs/2026-11-09-turn-undead-meteors.md), Minute Meteors gives five casts a slot (the pointer
@@ -1023,6 +1031,26 @@ tools, and where each is described:
     `new_content`, `speed`, `ravager`, `saves`) opens them as the window starts; the picture is x
     608-1314 from y 116 to under Restore defaults (706x1964 on 2026-11-16; with every section open
     and the fewer switches, 706x1536 on a 1400x2400 screen, 2026-11-18), saved as a 256-colour PNG.
+- **`docs/dicelog-readable.png`** (logs/2026-11-19-final-audit-fixes.md): the Loader's window
+  attached to a game the kit started, so the kit's loops still run. Xvfb `:55` at 1700x900 (start it
+  by hand before `loadsave.sh`: start.sh only starts one when none runs), DOSBox at 0,0 and the
+  window moved to 340,0 (`xdotool windowmove`; no overlap, so `click.py` still reaches the game).
+  After `loadsave.sh`, kill start.sh's text dice log by pid and start the window from a scratch
+  wrapper of `python3.12 -m dsloader view` that also appends `Viewer._append_dice`'s lines to
+  `$WORK/dice.txt` (start.sh truncates that file at each start; the wrapper's appends carry on).
+  Attach with **Reconnect** (1462,70 on the screen): first Ctrl+F10 to DOSBox (it lets the mouse
+  go), after it `xdotool windowfocus` DOSBox and a click in it (it takes the mouse back). Then
+  Seneca's backstab round as in [foes in a test fight](#foes-in-a-test-fight) (twice the loads, a
+  hit on the second). For the picture: `xdotool windowsize` 1320x880, the panes' sash dragged from
+  x 951 to 420 (mousedown, two moves, mouseup), the round cropped from the root window with **Show
+  details** ticked, and again unticked (its box at 438,240), one crop above the other.
+- **The window's Start the game in the container** (the same log): it runs `prepare_patched_game`
+  (the copies rewritten, a check of `write_atomic`), then stops at GOG's `DOSBox.exe`, a Windows
+  program ("[Errno 13] Permission denied", a message box: OK at 1000,470). Click Reconnect first
+  when the game it was attached to was killed: attached by Reconnect, it doesn't notice the DOSBox
+  going ("Connected to the game" stays) and Start does nothing while it thinks so.
+- **The party view's thief skills**: the Characters tab, the mouse wheel over the cards (25 clicks
+  of button 5) to reach the fourth; a thief's card ends `Thief skills now: pick pockets 72%, ...`.
 - **The load window** (`docs/save-pages.png`): a save's name is its STXT chunk
   (`namedsaves.NAME_CHUNK`), a fixed field padded with zeros, so ten saves with plain names are the
   kept saves copied to `$PLAYTEST_WORK/inst/SAVE01-10.SAV` with that field rewritten in place
