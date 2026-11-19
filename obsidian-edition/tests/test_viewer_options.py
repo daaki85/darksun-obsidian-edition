@@ -39,6 +39,11 @@ class OptionsTests(unittest.TestCase):
         self.addCleanup(lambda: (setattr(launch, "SETTINGS", saved[0]), setattr(launch, "find_game_dir", saved[1])))
         launch.SETTINGS = os.path.join(d, "settings.json")
         launch.find_game_dir = lambda: None
+        # (the music devices as where they can't be read, a field to type in, whatever this
+        # computer has: on Windows the real list has "Microsoft GS Wavetable Synth")
+        devices = viewer.midiout.devices
+        self.addCleanup(lambda: setattr(viewer.midiout, "devices", devices))
+        viewer.midiout.devices = lambda: None
 
         def no_game():
             raise OSError("no game in a test")
@@ -100,7 +105,7 @@ class OptionsTests(unittest.TestCase):
         used, as the defaults."""
         v = self.viewer
         self.assertEqual((v.picture.get(), v._midi_value()), ("plain", "default"))
-        self.assertIsNone(v.midi_names)  # (no Windows here: a field to type in)
+        self.assertIsNone(v.midi_names)  # (not read here, setUp: a field to type in)
         v.picture.set("scanlines")
         v._picture_chosen()
         self.assertEqual(self.saved()["picture"], "scanlines")
