@@ -257,3 +257,19 @@ at +1Bh; the XP table is RESOURCE.GFF's DATA 1000 (8 rows of 20 words, in hundre
 `lcall 5C8:20` with 3E8h); much of the code is in overlays, so a far call's segment isn't a place in
 the file. Its level-up (95860h on) caps XP at the table's entry 3 levels past each class's own, then
 raises a class under 15 (2026-11-08: no race limits, whatever its README says).
+
+**Its transfer program, CHARTRAN.EXE** (2026-11-19; the study in
+[reports/wake-of-the-ravager.md](../reports/wake-of-the-ravager.md)): `sh chartran.sh SAVE.SAV OUTDIR
+DEBUG` runs it in a headless DOSBox of its own (its own config: `C:\DSUN` holds the save as
+SAVE01.SAV, `C:\RAVAGER` CHARTRAN, `ITEMS.BIN`, `OBJEX.GFF` and the install's roster from
+`__support/save`), types Enter (the paths screen) and A (the one save), and leaves the roster it
+wrote in `OUTDIR/C/RAVAGER/CHARSAVE.GFF`; 15 seconds, no Loader, no lock. Its screen goes to
+`OUT.TXT` (the command line redirects it). `DEBUG` on its command line writes `DEBUG.DAT`: each item
+`OLD: -<SL object>, NEW: <WotR object>` (900: a money bag, for anything not in `ITEMS.BIN`'s 234
+pairs of words, so every mod item) and each spell or psionic aptitude it couldn't carry.
+The party goes into free `CHAR` slots (32-35 of the install's roster, their `CACT` set from 0 to
+the entity's number). A `CHAR` record: the creature record at `+0Ah` (name `+2Bh`), the sheet at
+`+45h`, SL's sheet less `+0Eh`-`+0Fh`, `+14h`-`+17h` (the mod's weapon specs: lost) and `+3Ch`; SL's
+`+43h` (the mod's kit byte) lands at `+3Dh` and `+45h` (second sphere) at `+3Fh`, which no
+`es:[...]` access in WotR's code reads. Tried on the user's saves `selling-junk-user`, `trap-user`
+and `rest-no-call-user`: all transferred, the kits kept.
