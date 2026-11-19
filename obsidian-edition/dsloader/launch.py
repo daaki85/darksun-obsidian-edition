@@ -521,10 +521,10 @@ def conf_encoding() -> str:
 
 
 # The Options tab's new content and game changes (settings keys), each on unless switched off;
-# the game's copies are written with them as they stand when it is started
-CONTENT = ("kalzith", "semyon", "vulture", "pens_gear", "magic_arms", "world_gear", "world_magic", "effects_kept", "stealth_gear", "arena_ring",
-           "elf_looks", "roll_store", "cilla_elf", "camera_still", "scene_pointer", "mouse_start",
-           "steady_pace", "party_spread", "spells_manual", "spell_to_hit")
+# the game's copies are written with them as they stand when it is started (the game changes with
+# no switch, game.ALWAYS_ON, are always in: none of them here)
+CONTENT = ("kalzith", "semyon", "vulture", "pens_gear", "magic_arms", "world_gear", "world_magic", "arena_ring",
+           "steady_pace")
 # the new items' parts (worldgear.data_chunks', and the arena's ring, ring.py), all switched by
 # one box: NEW_ITEMS
 ITEM_PARTS, NEW_ITEMS = ("pens_gear", "magic_arms", "world_gear", "world_magic", "arena_ring"), "new_items"
@@ -532,11 +532,9 @@ ITEM_PARTS, NEW_ITEMS = ("pens_gear", "magic_arms", "world_gear", "world_magic",
 
 def content(settings: dict) -> dict:
     """{key: on} for each of CONTENT (on unless the settings say False; the new items' parts as
-    NEW_ITEMS is; those now always on, game.ALWAYS_ON, on whatever the settings say)."""
-    from . import game
+    NEW_ITEMS is)."""
     items = settings.get(NEW_ITEMS, True) is not False
-    return {key: True if key in game.ALWAYS_ON else items if key in ITEM_PARTS
-            else settings.get(key, True) is not False for key in CONTENT}
+    return {key: items if key in ITEM_PARTS else settings.get(key, True) is not False for key in CONTENT}
 
 
 # what the last prepare_patched_game couldn't make, each "PART (FILE: why)": the game then runs with the
