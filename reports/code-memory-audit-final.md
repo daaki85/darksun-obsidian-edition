@@ -1,6 +1,7 @@
 # Final code and memory audit before the release (2026-11-19)
 
-*Findings only: nothing was fixed. The code audited is `claude/final-code-audit`, made from
+*Status: applied on branch `claude/final-audit-fixes` (2026-11-19), all three risks and the eight
+cleanups. Below is the audit as it was made, findings only. The code audited is `claude/final-code-audit`, made from
 `origin/claude/backstab-str-line` at `f1f8972`: `origin/obsidian-edition` (#110 to #115) plus the
 unmerged REAR_FRESH backstab fix. Line numbers are at that commit. The previous audit is
 `reports/code-memory-audit.md` on `origin/claude/code-memory-audit`; its fixes are #111 and #112.*

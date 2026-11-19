@@ -96,10 +96,12 @@ Run these in order, from `playtest/`, at the start of every test and again after
    prints `state.py` once loaded.
 4. **Check the window is 320x240** (`xdotool getwindowgeometry`). The window is 640x400 until a
    save is loaded; with no `obsidian-edition/settings.json` the Loader's default is 960x720
-   (window_scale 3), and every pixel check (msgbox.sh, levelup.sh, panel.sh) then fails, so message
-   boxes and CHOOSE A SPELL go unseen and the loops stall ([as they
-   did](HISTORY.md#the-window-size-and-pixel-checks)). start.sh sets `window_scale` 1, and
-   pixmatch.py samples a bigger grab down to 320x240 first.
+   (window_scale 3). start.sh sets `window_scale` 1. The pixel checks (msgbox.sh, levelup.sh,
+   panel.sh) go through pixmatch.py, which samples a bigger grab down to 320x240 first; what needs
+   320x240 is the tools that read a raw grab at the game's coordinates (figcheck.py, walkprobe.py,
+   figwatch.py, ghostturn.py), which at 960x720 read the wrong pixels (before pixmatch.py sampled down,
+   message boxes and CHOOSE A SPELL went unseen that way and the loops stalled: [the
+   story](HISTORY.md#the-window-size-and-pixel-checks)).
 5. **Check the build under test is in place** (after every restart: memory edits are lost on any
    restart). The game runs `obsidian-edition/dos/` (GPLDATA.GFF, DSUN.EXE's patched copy...).
    - For a DSCLOG change, **`python3 buildcheck.py`**: it compares 40 bytes of a set of routines in
