@@ -48,7 +48,7 @@ The same parts as for Shattered Lands (SL), the player starting WotR from the sa
 | Controls | T and Shift+T looting, S selling, Tab/Enter and the rings, scrolling the map, M/U/I, the whole party in view, the view in fights, the pointer in scenes, spells kept on the Effects screen |
 | Saves and characters | more saves and saves under names, more characters in the roster; game speed |
 | The Loader | the dice log, the window (Characters, Spells, Memory tabs), the crash and freeze reports, the Options tab |
-| The party transfer | the Loader button around CHARTRAN (wake-of-the-ravager.md), with the kits and weapon specs kept |
+| The party transfer | the Loader's own (below: every item comes across), with the kits and weapon specs kept |
 
 **Doesn't go in:**
 
@@ -56,13 +56,19 @@ The same parts as for Shattered Lands (SL), the player starting WotR from the sa
 |---|---|
 | Kalzith, Semyon, the champions' bout, Legcrusher at the fountain, the cooked vulture, Pehtucl's chest, what Dinos and the Trustee say | Shattered Lands' story: its people, places and scripts |
 | SL's script fixes (people, quests that stuck or ran twice, who is talking) | SL's own scripts; WotR's scripts are other scripts (its own bugs are a later, separate job) |
-| The mod's new items placed in SL's shops, chests and people; the game's own party's gear | placed in SL's regions; the item *rules* (acid, rings, helms, traits) go in |
-| 6th-level priest spells | WotR has them itself (the mod borrows their pictures) |
+| The mod's new items placed in SL's shops, chests and people | placed in SL's regions (the items themselves do come across with the party: below) |
 | Level cap by XP | WotR already takes characters past SL's caps |
 | Elves' and half-elves' figures, what the party wears drawn on the figures | SL's figure art: WotR's figures are other, larger pictures; a later job if wanted |
 
-**Later, if wanted** (content more than rules): the six new wizard spells (WotR has room: 320
-records), defilers' scrolls (WotR has defilers).
+**Also in, the user's decisions (2026-11-19):**
+
+| What | How |
+|---|---|
+| **The six new wizard spells** (Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook, Friends) | new spell records in RESOURCE.GFF's copy, with their icons and texts, and their effects in the helper as in SL. A character's known wizard spells are a 15-byte bitset (bit n, spell n: 0-119), so each needs a free wizard number below 120 |
+| **The 6th-level priest spells** | WotR has eight of the mod's ten under its own records (Heal 210, Harm 211, Blade Barrier 208, Wall of Thorns 214, Sunstroke 213, Fire Seeds 209, Heartseeker 212, Waters of Life 215): those are WotR's, the mod's rules where they differ to be checked one by one. **Whirlwind and Restore Youth** are added (new records, the mod's icons and effects) |
+| **Every item comes across with the party** | the mod's new items and **every item of Shattered Lands**: CHARTRAN gives WotR's counterpart where `ITEMS.BIN` has one and a money bag for the rest (the mod's items, and some of SL's own: 114 in the user's "rest no call" save). So: each SL item without a WotR counterpart is added to the copy of WotR's `OBJEX.GFF` (its object, record and icon, made from the player's own SL files; the two games' object records are near kin: OJFF 16 bytes in both, RDFF 61h bytes in SL and 68h in WotR), and **the transfer becomes the Loader's own** (Python, checked against CHARTRAN byte for byte on the games' own items) mapping each item to its counterpart or its added object |
+
+**Later, if wanted:** defilers' scrolls (WotR has defilers).
 
 ## Order of work
 
@@ -79,7 +85,8 @@ Each step is shown working in WotR in DOSBox (the playtest kit's `rav*` tools) b
 5. **What the game shows**, then **the rules**, then **customization**, **expanded features**,
    **graphics**, **controls**, **saves**: feature by feature, the cheapest and most used first,
    each with its switch on the Options tab working for WotR.
-6. **The transfer button**.
+6. **The transfer**: the Loader's own, every item and the kits and weapon specs carried; the SL
+   items and spells WotR lacks added to its data copies first.
 
 Progress is kept in the table below as features land.
 
