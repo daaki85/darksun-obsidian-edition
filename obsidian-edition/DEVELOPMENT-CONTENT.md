@@ -91,7 +91,7 @@ after the `ns_list_` patches):
   Image, whose entry that is, writes it again before its own use
   (`ns_reflect_entry`).
   Enlarge (effect 16) on a party member is named with its damage instead,
-  ENLARGED (+90% DAMAGE): the level is the Loader's (`STATS_ENLARGE`, the 25th
+  ENLARGED (+90% DICE): the level is the Loader's (`STATS_ENLARGE`, the 25th
   byte of the member's STATS, from `GameData.enlarge_level`, the caster's level
   as Dispel Magic weighs it), printed with a 0 after it. Working it out in
   DSCLOG would mean calling 598:52h, the game's sum of a creature's Enlarge
@@ -1515,11 +1515,10 @@ Gear is drawn on them by what their own colours can't tell `spritegear`
   the same place in the human woman's frame, but not her purple wristbands,
   and a belt isn't drawn over it from behind.
 
-With the switch off (`elf_looks`, always on now: [the switches always on](DEVELOPMENT-RULES.md#the-switches-always-on); `sprites.Pictures(looks=False)`), or if the
-palette or the pictures they are made from are missing, or making them fails,
-a half-elf is the human figure recoloured (`halfelf.py`), as before, and elves
-have no ears. The switch counts when the Loader writes the copy; the Loader
-dresses the party with the setting it had then. A spare is drawn as the figure
+If the palette or the pictures they are made from are missing, or making them
+fails, a half-elf is the human figure recoloured (`halfelf.py`), as before (the
+switch, `elf_looks`, went after 2.18 and with it `sprites.Pictures`' LOOKS: [the
+switches always on](DEVELOPMENT-RULES.md#the-switches-always-on)). A spare is drawn as the figure
 it stands for.
 
 Cilla, in the game's own party, is an elf with the half-elf woman's figure (7)

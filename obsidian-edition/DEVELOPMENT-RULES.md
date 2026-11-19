@@ -75,20 +75,46 @@ settings keys: the rule changes' (`game.RULE_SETTINGS_GONE`: `class_restrictions
 - `launch.load_settings` and `save_settings` drop those keys (`game.drop_always_on`, with the
   old names `no_doubled_save`, `buyback`, `backstab_dice` and `two_weapons`), so an older
   settings.json's `false` never reaches a reader.
-- Even unread, they count as on: `game.setting_on` answers True for them, `launch.content` gives
-  them True (so `prepare_patched_game` never skips `EFFECTS_KEPT`, `ROLL_STORE`, `CAMERA`,
-  `SCENE_POINTER`, `MOUSE_START`, `PARTY_SPREAD`, `SPELLS_MANUAL` or `SPELL_TO_HIT`), and
-  `DiceLog.use_settings` sets its switches (`show_shadows`, `use_targeting` ...) True.
-- DSCLOG is unchanged: `game.RULES_ALWAYS` puts each gone rule's bit in the rules words
-  (`RULES`, `RULES_HI`) whatever the settings, as it did `RULE_TWO_WEAPONS`.
+- Even unread, they count as on: `game.setting_on` answers True for them and `launch.content`
+  gives them True.
+- `game.RULES_ALWAYS` puts each gone rule's bit in the rules words (`RULES`, `RULES_HI`) whatever
+  the settings, as it did `RULE_TWO_WEAPONS`; the words' layout is as it was (no bit renumbered),
+  but DSCLOG no longer reads those bits (below).
 
-So where a section below says what happens "with the switch off" or "unticked", that is a path
-nothing now takes: in Python, the branches on those keys and `DiceLog` attributes; in DSCLOG, the
-77 tests of a gone rule's bit (`test [cs:rules]` / `[cs:rules_hi]` and the jump after it, about
-9 bytes each, some 700 bytes) and the game's-own-way code behind them, roughly 1 to 2 KB of
-DSCLOG's room in all; and `MANUAL_ON`'s tests, with `SPELLS_MANUAL` always in the copy. A later
-cleanup can take them out for the room (with a rebuild and the room figures in
-[DEVELOPMENT-INTERNALS.md](DEVELOPMENT-INTERNALS.md#room-and-memory)); `tests/test_launch.py`'s
+**What went (2026-11-19, for DSCLOG's room: about 1.1 KB).** In DSCLOG, every test of a gone rule's
+bit and the game's way behind it: rings and cloaks of protection (the game's every ring), two
+weapons (the game's DEX bonus alone, `PROBE_TWO`'s first half), the doubled d20 (`PROBE_DOUBLE` is a
+bare IRET), stealth, the level cap of 9, the thief table (the game's sums, the whole damage
+multiplied, the backstab on two attacks), class restrictions, items' saves (`PROBE_ITEM_SKIP` only
+clears ZF), multiclass hit points, weapon specialization (`WP_RULES`, the Crusader's and Mind
+Warrior's warrior attacks, `WAR_KIT_OF`, `WAR_KIT_HALVES`, the kits' kinds in `WAR_HIT`,
+`GEAR_MARK`: `CR_WEAPONS` always shows the weapon window), AD&D's tables, a ranger's casting level,
+scores as rolled (`RL_HP` a bare IRET), ages, INT's learning, CHA's prices and the buyback, Enlarge's
+whole damage (and its `% DAMAGE` word), CON as in AD&D, dual-classing, resting, Weapon traits (the
+cahulaks, the stinkpots' 1d4, the polearm's reach), creature size and held targets (`HELD_DAMAGE`
+no longer doubles); and `MANUAL_ON`, the test of `SPELLS_MANUAL` in the copy (always in now). In
+the Loader: `prepare_patched_game` leaves out only Steady pace's patches when it is unticked (every
+other group, `EFFECTS_KEPT`, `ROLL_STORE`, `CAMERA`, `SCENE_POINTER`, `MOUSE_START`, `PARTY_SPREAD`,
+`SPELLS_MANUAL`, `SPELL_TO_HIT`, always in); `icons.write_resources` and `write_objects` with STORE
+and RECALL, the manual's and the size rule's texts, the elves' looks, Cilla and the manual's
+monsters always (`sprites.Pictures`' LOOKS gone; the half-elf recolour stays, for a file without
+the pictures); `DiceLog`'s switch attributes (`pickpockets`, `show_gear`, `show_shadows`,
+`combat_log`, `scroll_map`, `show_dust`, `see_through`, `elf_looks`, `cilla_elf`, `stealth_gear`,
+`use_targeting`); the locks' and pockets' level gate always (`pickpocket`'s "too wary" gone);
+`upgrade_settings`' combat log key; the party card's reads of `rule_vars["stealth"]` and
+`["aging"]` (keys gone with their switches). The tests of an off path are tests of its bit clear
+now (`ProtectionRuleTests.test_rule_bit_clear`, `StealthTests.test_rule_bit_clear`,
+`SpecializeTests.test_rule_bit_clear` ...): the bit clear changes nothing.
+
+**What stays switchable**: the five rules of `game.RULE_SETTINGS` (`RULE_HELMS`, `RULE_HALF_GIANT`,
+`RULE_HP_BEST`, `RULE_NEW_SPELLS`, `RULE_HI_KITS`), DSCLOG's tests of them kept, and Steady pace's
+patches. **What stays in the code although unreached in play**: `GameData`'s own branches on a gone
+rule's bit (the game's thief sums, the rings, two weapons ...: the reference model many tests drive
+with explicit rules, never without the bits in the Loader, `rules_from_settings`),
+`spelltexts.chunks`' MANUAL and SIZE arguments, `kits.warrior_attacks`' `spec=False`, the header's
+`PICK_ON` and `SKILLS_ON` bits (always all set by the Loader now, but their zero also means "no
+Loader yet"). So where a section below says what happens "with the switch off" or "unticked", that
+is the game's own way, which DSCLOG no longer has; `tests/test_launch.py`'s
 `test_old_false_for_an_always_on_switch_is_passed_over` pins the rest.
 
 ## Class restrictions
@@ -992,8 +1018,8 @@ a Dying member isn't healed (pass 2 leaves it). Tests: tests/test_group4.py (`te
 ([In the features page](FEATURES.md#spells-and-psionics-as-the-manual-describes-them).)
 Once a switch, `spells_manual`, always on now ([above](#the-switches-always-on)): the patches
 in `gamepatch.SPELLS_MANUAL`; off, they were left out and the game's copy has
-DSUN.EXE's bytes, and DSCLOG's code that runs either way tells it by
-`MANUAL_ON`. The points come from reports/spells-against-the-manual.md, which
+DSUN.EXE's bytes; DSCLOG's code that runs either way told it by `MANUAL_ON`
+until the switch went (always in the copy now, the test gone). The points come from reports/spells-against-the-manual.md, which
 says what was done with each.
 
 ### The spell records, Stinking Cloud, Chaos and Free Action
@@ -1099,8 +1125,9 @@ test_spellbook's `test_casts_a_cast`.
 
 DSCLOG's sites are
 `BLUR_SITE` ... `CELL_SITE` (`NS_IMAGE` + 78 to 87, in `SITE_TAB`'s order);
-code that runs either way tells the switch by `MANUAL_ON` (Stinking Cloud's
-record's dice made 41h, as the Loader's `GameData.spells_manual`). The dice
+code that runs either way once told the switch by `MANUAL_ON` (Stinking
+Cloud's record's dice made 41h, as the Loader's `GameData.spells_manual`), gone
+with the switch: the sites are always in the copy. The dice
 log's lines are `KIND_MANUAL` (14) entries (`MN_REC`: what, then a frame of the
 creature and three words; dicelog's `_manual`).
 
@@ -1138,7 +1165,7 @@ creature and three words; dicelog's `_manual`).
   Adrenalin Control (148), a classless creature or a combatant that isn't one.
   Friends never gets there (`PROBE_GRACE_EFFECT` jumps past it). Not adding up:
   `PROBE_GRACE_ABILITY` (7B7D7h, each of a creature's effects as its abilities
-  are worked out) calls `GR_SHADOWED`, which with `MANUAL_ON` finds a bigger one
+  are worked out) calls `GR_SHADOWED`, which finds a bigger one
   of the same group on that creature (66 and 67; 54 alone; as big, the earlier
   entry wins) and puts 0 in `[bp-0Ah]`, which the game's table of cases hasn't.
   A second Strength already replaces the first in the game's add.
@@ -1153,7 +1180,7 @@ creature and three words; dicelog's `_manual`).
   the power check (5D59Dh), a user with Feeblemind (19) gets 0 (the check fails:
   the game's message and half the PSP). The INT and WIS of 3 are the game's
   (7B848h, `[bp-4]` set by effect 19, 7B9D8h). Heal's cure: `PROBE_CURE` for
-  Heal (202) with `MANUAL_ON` takes the target's Feeblemind entries out
+  Heal (202) takes the target's Feeblemind entries out
   (`DROP_EFFECT`, `HEAL_SIGHT`'s loop made a routine: Feeblemind has no timer)
   and sets the handler's `[bp-15h]` bit 1, so 79896h works the abilities out
   again.
@@ -1208,7 +1235,7 @@ record's +16h (0 people: no hit powers, 7A6BAh, and no special actions, 5A954h/5
 - `TARI_BITE` (`tari_bite`, 7A747h, `cmp ax,1` after the d10 of 538:89h): a Tari's (`[bp-0Eh]` the
   attacker's creature, kind 40) 1 needs a d2 of 1 too (`GAME_DIE`): 1 in 20.
 - `DJINN_TURN`: `PROBE_MOVE`'s end (57566h, the turn's movement: DI the combatant, SI its creature),
-  with `MANUAL_ON`: a kind 39's first turn in a fight (`DJ_DONE`, the far block's `FAR_DJ`: a bit a
+  a kind 39's first turn in a fight (`DJ_DONE`, the far block's `FAR_DJ`: a bit a
   combatant, every one up to `MAP_COUNT` (`MAP_BIT`), cleared with
   `SWEPT` and `TU_FAILED` at a fight's first round, `ACID_ROUND`) adds Invisible (23, spell 46, 14
   rounds: 4 + its 10 levels) and Mirror Images (25, spell 19, 1d4 + 3 charges: 76442h's negative
@@ -1473,7 +1500,7 @@ and the psionic powers (66E3h: 668C3h): else a character ADDed in a later sessio
 gear alone. The handshake, DSCLOG's header fields with the Loader's names:
 
 - `GEAR_DUE` (+1830, `TSR_GEAR_DUE`): set by `CR_WEAPONS` for a new member (after the weapon
-  window's picks; with weapon specialization off, with no window, by `GEAR_MARK`; not for an EDIT
+  window's picks, the window always shown since weapon specialization's switch went; not for an EDIT
   that kept its race, classes and kit, `ED_SAME`); the dice log's `_gear_due` gives the gear at
   once and clears it, but leaves it set while the weapon window is up (`TSR_CREATING`: the gear
   waits for the specs).

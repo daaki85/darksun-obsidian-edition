@@ -83,6 +83,10 @@ under "## Unreleased (branch `obsidian-edition`)
   a branch with `-2` on it for a session's handed random name.
 - **Tidying** (#102): `dsloader/guidepage.py` taken out, the combat log's design brief archived,
   the rest-order prototype moved to `playtest/logs/files/`.
+- **DSCLOG's room freed** (no pull request yet: branch `claude/free-dsclog-room`): the off paths of
+  the switches always on since #110 taken out of DSCLOG (their rules' tests, the game's ways behind
+  them, `MANUAL_ON`) and of the Loader, about 1.1 KB freed for what comes next; the rules switched
+  still are kept.
 
 ## Pull request #96 ([merged 2026-11-17](https://github.com/daaki85/darksun-obsidian-edition/pull/96))
 

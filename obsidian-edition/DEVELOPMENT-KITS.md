@@ -217,7 +217,7 @@ bullets after the table name the kits):
 | the two-weapon penalty | `PROBE_TWO`, `RG_TWO` |
 | gear forbidden or allowed | `PROBE_CAN_USE`, `KINDS_ALLOWED` (`KIT_FORBIDS`, `KIT_ALLOWS`) |
 | weapon specs and skill | `SPEC_OF_SHEET`, `KINDS_ALLOWED`, `LV_DUE` |
-| attacks a round | `EXPERT_HALVES`, `WAR_KIT_HALVES` |
+| attacks a round | `EXPERT_HALVES` |
 | hit die | `PROBE_HIT_DIE`, `PROBE_CR_DIE` |
 | max PSP | `PROBE_MAX_PSP`, `PROBE_CR_PSP` |
 
@@ -442,14 +442,12 @@ How each is done:
   (`CR_WEAPONS`) asks a Battle Mage as it asks a warrior.
 - **Attacks a round.** Wild Fury (Wild Fighting passed: 1 more in melee, `WILD_HALVES`, in
   `PROBE_ATTACKS` before the off hand's cap; not on the DAM lines); Battle Mage (its chosen weapon
-  type: expertise, 3/2, 2 from 7th preserver level); Crusader and Mind Warrior (a warrior's extra
-  attacks in melee, 3/2 from 7th level of the kit's class (2 from 13th, past the level cap), without
-  weapon specialization: with it, `WAR_KIT_HALVES` gives none and the chosen weapon spec's
-  expertise is the kit's extra attacks). Where: `EXPERT_HALVES` where `PROBE_ATTACKS`, `PROBE_DAM_LINE` and
-  `PROBE_VIEW_DAM` leave a non-warrior's (2 halves or fewer) alone; `specialize.expert_attacks`.
-  `WAR_KIT_HALVES` in the same three probes, after the rest (`WAR_KIT_OF` in `PROBE_ATTACKS`, not
-  for a missile: `[BP+16h]` above 1, or in View Character a type's `+0` bit 2);
-  `kits.warrior_attacks`, which `GameData.weapon_hits` gives the party view. Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-15-kit-rebalance-checks.md).
+  type: expertise, 3/2, 2 from 7th preserver level); Crusader and Mind Warrior (the chosen weapon
+  spec's expertise is the kit's extra attacks: weapon specialization is always on, and the
+  warrior's extra attacks they had without it, DSCLOG's `WAR_KIT_HALVES`, went with its switch;
+  `kits.warrior_attacks` still has them for `spec=False`). Where: `EXPERT_HALVES` where
+  `PROBE_ATTACKS`, `PROBE_DAM_LINE` and `PROBE_VIEW_DAM` leave a non-warrior's (2 halves or fewer)
+  alone; `specialize.expert_attacks`. Verified: [log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-15-kit-rebalance-checks.md).
 - **Hit die.** Battle Mage (d6), Arcanist (d3). Where: a level's die: `PROBE_HIT_DIE` (`INT A5h`,
   new: `mov al,es:[bx+0]`, 87308h, the die read from the class's hit point group in the routine
   rolling a level's hit points, 87250h, which both a level up and the creation screen call; `[BP-4]`
