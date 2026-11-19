@@ -223,7 +223,7 @@ def process_memory_file(pid: int) -> Optional[str]:
 # cycles. "dynamic" is DOSBox-X's dynamic core for the computer it runs on (dynamic_x86 on an x86
 # one; on an ARM one, an Apple Silicon Mac say, dynamic_rec, which does more per cycle: UNTESTED).
 SPEEDS: Dict[object, Tuple[str, int]] = {
-    "gog": ("normal", 7000),      # GOG's own: 0.74's normal core at 7000
+    "gog": ("normal", 8000),      # GOG's own: as 0.74's normal core at 7000
     20000: ("dynamic", 22000),    # Faster
     35000: ("dynamic", 42000),    # Fastest (the default)
 }

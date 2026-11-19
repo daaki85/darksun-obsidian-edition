@@ -170,6 +170,11 @@ class MemoryFileTests(unittest.TestCase):
             child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)", "-conf", "x.conf",
                                       "-nomenu"], cwd=d)
             try:
+                import time
+                for _ in range(200):  # (until the child is the program started, not still this one)
+                    if dosboxx.process_memory_file(child.pid):
+                        break
+                    time.sleep(0.01)
                 self.assertEqual(dosboxx.process_memory_file(child.pid), "/dev/shm/mine.mem")
             finally:
                 child.kill()
@@ -344,7 +349,8 @@ class LaunchTests(unittest.TestCase):
         self.addCleanup(self.dir.cleanup)
         d = self.dir.name
         names = ("SETTINGS", "HERE", "DBX_DIR", "DBX_CONF", "DBX_LOG", "GAME_LOCK", "CONF", "prepare_patched_game",
-                 "STARTED", "STARTED_ENGINE", "STARTED_DOSBOX_X", "MEMORY_FILE", "LAST_SETTINGS", "recompiled_program")
+                 "STARTED", "STARTED_ENGINE", "STARTED_DOSBOX_X", "MEMORY_FILE", "LAST_SETTINGS", "recompiled_program",
+                 "process_name")
         saved = {name: getattr(launch, name) for name in names}
         self.addCleanup(lambda: [setattr(launch, name, value) for name, value in saved.items()])
         self.addCleanup(launch.release_game)
@@ -357,6 +363,7 @@ class LaunchTests(unittest.TestCase):
         launch.CONF = os.path.join(d, "dosbox_dicelog.conf")
         launch.prepare_patched_game = lambda game_dir, settings=None: None
         launch.recompiled_program = lambda settings=None: None
+        launch.process_name = lambda pid: "dosbox-x"  # (the stand-in is a shell script: the system names its shell)
         self.game = os.path.join(d, "game")
         os.mkdir(self.game)
         open(os.path.join(self.game, "DSUN.EXE"), "wb").close()
@@ -365,7 +372,8 @@ class LaunchTests(unittest.TestCase):
 
     def program(self, version="2026.10.01", seconds=30):
         """A stand-in for DOSBox-X: a script that answers -version and otherwise sleeps."""
-        path = os.path.join(self.dir.name, "dosbox-x")
+        os.makedirs(os.path.join(self.dir.name, "bin"), exist_ok=True)
+        path = os.path.join(self.dir.name, "bin", "dosbox-x")
         with open(path, "w") as f:
             f.write(f"#!/bin/sh\n# dosbox-x-{version}.conf\n"
                     f"if [ \"$1\" = -version ]; then echo 'DOSBox-X version {version} SDL2'; exit 0; fi\n"
@@ -456,6 +464,11 @@ class LaunchTests(unittest.TestCase):
             self.assertEqual(launch.game_memory_file(proc.pid), memory)
             with self.assertRaises(launch.GameBusy):
                 launch.launch(self.game, "another Loader")
+            import time
+            for _ in range(300):  # (until the stand-in has printed its line)
+                if os.path.getsize(launch.DBX_LOG):
+                    break
+                time.sleep(0.01)
         finally:
             proc.kill()
             proc.wait()

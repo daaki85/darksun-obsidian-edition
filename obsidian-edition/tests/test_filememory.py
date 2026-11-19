@@ -268,8 +268,8 @@ class ConnectTests(unittest.TestCase):
 
     def test_the_environments_memory_file_is_used_outright(self):
         os.environ[process.MEMORY_FILE_ENV] = self.path
-        guest = self.connect(pid=77)
-        self.assertEqual((type(guest.proc), guest.proc.pid, guest.proc.path), (FileMemory, 77, self.path))
+        guest = self.connect(pid=os.getpid())
+        self.assertEqual((type(guest.proc), guest.proc.pid, guest.proc.path), (FileMemory, os.getpid(), self.path))
 
     def test_a_memory_file_not_there_yet_is_a_process_error(self):
         launch.game_memory_file = lambda pid: os.path.join(self.dir.name, "later.mem")
