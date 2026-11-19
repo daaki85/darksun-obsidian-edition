@@ -107,6 +107,41 @@ class ViewerSettingsTests(unittest.TestCase):
         v.reconnect()
         self.assertEqual(asked, [4242, "by name"])
 
+    @unittest.skipUnless(sys.platform.startswith("linux"), "Linux's /proc/<pid>/mem")
+    def test_a_reconnected_game_seen_gone(self):
+        """Attached by Reconnect to a DOSBox it didn't start, the window sees that DOSBox end (its
+        memory's reads raise, not come back empty): "Disconnected", not "Connected to the game"
+        on, and no party table error from the empty reads (game.far_pointer's unpack)."""
+        import subprocess
+        from dsloader.guestmem import GuestMemory
+        from dsloader.process import ProcessError, ProcessMemory
+        child = subprocess.Popen(["sleep", "60"])
+        self.addCleanup(child.wait)
+        self.addCleanup(child.kill)
+        try:
+            proc = ProcessMemory(child.pid)
+        except ProcessError as e:
+            self.skipTest(f"can't open another process's memory here: {e}")
+        region = next(proc.regions())
+        proc.close()
+        v = self.window(connect=lambda: GuestMemory(ProcessMemory(child.pid), region.start, region.size))
+        v.reconnect()
+        self.assertTrue(v.status.get().startswith("Connected to the game"))
+        v.ds = 0  # (as if its data segment had been found: the party table reads through it)
+        errors = []
+        v._loop_error = lambda what, err: errors.append((what, err))
+        child.kill()
+        child.wait()
+        v.next_try = float("inf")  # (no new try at attaching within the test)
+        v._tick()
+        self.assertEqual(errors, [])
+        self.assertIsNone(v.guest)
+        self.assertIn("has ended", v.status.get())
+        self.assertTrue(v.status.get().startswith("Disconnected"))
+        v.reconnect(quiet=True)  # (the window's own try again, the game still gone: the reason kept)
+        self.assertIsNone(v.guest)
+        self.assertIn("has ended", v.status.get())
+
     def test_the_lock_let_go_when_the_game_closes(self):
         v = self.window()
         launch.hold_game("the Loader's window")

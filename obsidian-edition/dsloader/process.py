@@ -207,15 +207,20 @@ else:
 
         def read(self, addr: int, size: int) -> bytes:
             try:  # (at a position of its own: the dice log's stats thread reads too)
-                return os.pread(self._mem.fileno(), size, addr)
+                data = os.pread(self._mem.fileno(), size, addr)
             except (OSError, ValueError, OverflowError) as e:
                 raise ProcessError(f"Read at {addr:#x} failed: {e}") from e
+            if len(data) < size and not self.is_alive():
+                raise ProcessError(f"process {self.pid} has ended")
+            return data
 
         def write(self, addr: int, data: bytes) -> None:
             try:
-                os.pwrite(self._mem.fileno(), data, addr)
+                done = os.pwrite(self._mem.fileno(), data, addr)
             except (OSError, ValueError, OverflowError) as e:
                 raise ProcessError(f"Write at {addr:#x} failed: {e}") from e
+            if done < len(data) and not self.is_alive():
+                raise ProcessError(f"process {self.pid} has ended")
 
         def suspend(self) -> bool:
             """The process held still (itemgate.py), True once all its threads have stopped."""
@@ -241,7 +246,12 @@ else:
                 return False
 
         def is_alive(self) -> bool:
-            return os.path.exists(f"/proc/{self.pid}")
+            """Running still: not gone, and not a zombie (ended, not yet reaped by its parent)."""
+            try:
+                with open(f"/proc/{self.pid}/stat") as f:
+                    return f.read().rsplit(")", 1)[1].split()[0] not in ("Z", "X")
+            except (OSError, IndexError):
+                return False
 
         def close(self) -> None:
             self._mem.close()
