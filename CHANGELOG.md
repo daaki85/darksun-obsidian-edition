@@ -59,6 +59,8 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+Obsidian Edition 2.19.0 ([release notes](release-notes/v2.19.0.md)).
+
 **New**
 - **Tanelyv's chest piece shines** as its arm and leg pieces do (#106).
 - **A journal** (the Loader's new **Journal** tab): every talk with the reply chosen, every reward
